@@ -367,12 +367,9 @@ async function find(query: string) {
 	}
 
 	// Include public teams here if we are sharing with teams and its enabled in the config
-	let results = []
-	if (props.shareType === 'team' && configStore.publicTeamsEnabled) {
-		results = await searchService.getAll({}, {s: query, includePublic: true})
-	} else {
-		results = await searchService.getAll({}, {s: query})
-	}
+	const results = props.shareType === 'team' && configStore.publicTeamsEnabled
+		? await searchService.getAll({}, {s: query, includePublic: true})
+		: await searchService.getAll({}, {s: query})
 
 	found.value = results
 		.filter(m => {

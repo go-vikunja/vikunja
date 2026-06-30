@@ -75,7 +75,7 @@ export default class NotificationModel extends AbstractModel<INotification> impl
 	}
 
 	toText(user: IUser | null = null) {
-		let who = ''
+		let who: string
 
 		switch (this.name) {
 			case NOTIFICATION_NAMES.TASK_COMMENT:
