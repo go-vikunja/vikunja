@@ -252,7 +252,7 @@ func (ta *TaskAttachment) ReadAll(s *xorm.Session, a web.Auth, _ string, page in
 	}
 
 	if len(attachments) == 0 {
-		return
+		return attachments, 0, 0, nil
 	}
 
 	fileIDs := make([]int64, 0, len(attachments))
