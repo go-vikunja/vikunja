@@ -12,6 +12,15 @@
 			@click="openTaskDetail"
 			@keyup.enter="openTaskDetail"
 		>
+			<button
+				v-if="task.relatedTasks?.subtask?.length"
+				class="collapse-toggle collapse-toggle-left"
+				:class="{ 'is-collapsed': isCollapsed }"
+				@click.stop="toggleCollapse"
+				:aria-label="isCollapsed ? 'Expand subtasks' : 'Collapse subtasks'"
+			>
+				<Icon icon="chevron-down" />
+			</button>
 			<span
 				v-tooltip="!canMarkAsDone ? $t('task.readOnlyCheckbox') : ''"
 				class="is-inline-flex is-align-items-center"
@@ -178,8 +187,17 @@
 				/>
 			</BaseButton>
 			<slot />
+			<button
+				v-if="task.relatedTasks?.subtask?.length"
+				class="collapse-toggle"
+				:class="{ 'is-collapsed': isCollapsed }"
+				@click.stop="toggleCollapse"
+				:aria-label="isCollapsed ? 'Expand subtasks' : 'Collapse subtasks'"
+			>
+				<Icon icon="chevron-down" />
+			</button>
 		</div>
-		<template v-if="typeof task.relatedTasks?.subtask !== 'undefined'">
+		<template v-if="task.relatedTasks?.subtask?.length && !isCollapsed">
 			<template v-for="subtask in task.relatedTasks.subtask">
 				<template v-if="getTaskById(subtask.id)">
 					<single-task-in-project
@@ -197,7 +215,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, watch, shallowReactive, onMounted, computed} from 'vue'
+import {ref, watch, shallowReactive, onMounted, computed, inject, type Ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import TaskModel, {getHexColor} from '@/models/task'
@@ -245,6 +263,24 @@ const props = withDefaults(defineProps<{
 	canMarkAsDone: true,
 	allTasks: () => [],
 })
+
+// Collapse state
+const isCollapsed = ref(false)
+const collapseAll = inject<Ref<boolean>>('collapseAll', ref(false))
+
+// Watch for global collapse/expand all
+watch(collapseAll, (newVal) => {
+	isCollapsed.value = newVal
+})
+
+const hasSubtasks = computed(() => {
+	return typeof task.value.relatedTasks?.subtask !== 'undefined' && 
+		task.value.relatedTasks.subtask.length > 0
+})
+
+function toggleCollapse() {
+	isCollapsed.value = !isCollapsed.value
+}
 
 const emit = defineEmits<{
 	'taskUpdated': [task: ITask],
@@ -603,6 +639,41 @@ defineExpose({
 
 .subtask-nested {
 	margin-inline-start: 1.75rem;
+}
+
+.collapse-toggle {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	inline-size: 20px;
+	block-size: 20px;
+	border: none;
+	background: transparent;
+	color: var(--grey-400);
+	cursor: pointer;
+	border-radius: $radius;
+	transition: transform 0.2s ease, color 0.2s ease;
+	margin-inline-start: 0.5rem;
+
+	&:hover {
+		color: var(--grey-600);
+		background: var(--grey-100);
+	}
+
+	&.is-collapsed {
+		transform: rotate(-90deg);
+	}
+}
+
+.collapse-toggle-left {
+	margin-inline-start: 0;
+	margin-inline-end: 0.5rem;
+	order: -1;
+
+	// 窄屏隐藏左侧按钮，只保留右侧
+	@media (max-width: 768px) {
+		display: none;
+	}
 }
 
 :deep(.popup) {
