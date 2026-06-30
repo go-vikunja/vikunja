@@ -1181,6 +1181,10 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 		cols := []string{}
 		fieldSet := map[string]bool{}
 		for _, f := range fields {
+			// `repeat` is the public field name for the RRULE; the stored column is `repeats`.
+			if f == "repeat" {
+				f = "repeats"
+			}
 			if !allowed[f] {
 				return ErrInvalidTaskColumn{Column: f}
 			}
