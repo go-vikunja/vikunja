@@ -337,7 +337,7 @@ func getValueForField(field reflect.StructField, rawValue string, loc *time.Loca
 		// If this is a slice of pointers we're dealing with some property which is a relation
 		// In that case we don't really care about what the actual type is, we just cast the value to an
 		// int64 since we need the id - yes, this assumes we only ever have int64 IDs, but this is fine.
-		if field.Type.Elem().Kind() == reflect.Ptr {
+		if field.Type.Elem().Kind() == reflect.Pointer {
 			value, err = strconv.ParseInt(strings.TrimSpace(rawValue), 10, 64)
 			return
 		}

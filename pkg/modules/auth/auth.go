@@ -84,7 +84,7 @@ func SetRefreshTokenCookie(c *echo.Context, token string, maxAge int) {
 	if secure {
 		sameSite = http.SameSiteNoneMode
 	}
-	c.SetCookie(&http.Cookie{
+	c.SetCookie(&http.Cookie{ //nolint:gosec // G124: Secure/SameSite are intentionally conditional on the https scheme (see above); HttpOnly is always set.
 		Name:     RefreshTokenCookieName,
 		Value:    token,
 		Path:     getRefreshTokenCookiePath(),
