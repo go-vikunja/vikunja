@@ -62,7 +62,7 @@ export function parseSubtasksViaIndention(taskTitles: string, prefixMode: Prefix
 		if (matchedSpaces > 0) {
 			// Go up the tree to find the first task with less indention than the current one
 			let pi = 1
-			let parentSpaces = 0
+			let parentSpaces: number
 			do {
 				task.parent = cleanupTitle(titles[index - pi])
 				pi++

@@ -230,7 +230,7 @@ export default Extension.create<FilterAutocompleteOptions>({
 
 					return new Promise((resolve) => {
 						debounceTimer = setTimeout(async () => {
-							let assigneeSuggestions: SuggestionItem[] = []
+							let assigneeSuggestions: SuggestionItem[]
 							try {
 								if (this.options.projectId) {
 									// @ts-expect-error - projectId is used for URL replacement but not part of IAbstract

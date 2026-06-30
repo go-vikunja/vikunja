@@ -448,7 +448,9 @@ export const useAuthStore = defineStore('auth', () => {
 			}
 			
 			console.error('Error refreshing user info:', e)
-			
+
+			// cause keeps the {e, message} shape that message/index.ts reads as cause.message
+			// eslint-disable-next-line preserve-caught-error
 			throw new Error('Error while refreshing user info:', {cause})
 		}
 	}
@@ -464,7 +466,7 @@ export const useAuthStore = defineStore('auth', () => {
 				await HTTPFactory().post('user/confirm', {token: emailVerifyToken})
 				return true
 			} catch(e) {
-				throw new Error(e.response.data.message)
+				throw new Error(e.response.data.message, {cause: e})
 			} finally {
 				localStorage.removeItem('emailConfirmToken')
 				stopLoading()
