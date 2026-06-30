@@ -146,6 +146,7 @@
 			<div
 				v-if="canWrite"
 				class="media comment d-print-none"
+				:class="{'new-comment-top': commentSortOrder === 'desc'}"
 			>
 				<figure class="media-left is-hidden-mobile">
 					<img
@@ -654,6 +655,15 @@ function getCommentUrl(commentId: string) {
 	&:hover {
 		color: var(--grey-700);
 	}
+}
+
+.comments {
+	display: flex;
+	flex-direction: column;
+}
+
+.new-comment-top {
+	order: -1;
 }
 
 .comments-container {
