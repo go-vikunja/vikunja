@@ -610,6 +610,7 @@
           "endDate": "The end date of the task",
           "doneAt": "The date and time when the task was completed",
           "assignees": "The assignees of the task",
+          "creator": "The user who created the task (matched by username)",
           "labels": "The labels associated with the task",
           "project": "The project the task belongs to (only available for saved filters, not on a project level)",
           "reminders": "The reminders of the task as a date field, will return all tasks with at least one reminder matching the query",
@@ -640,6 +641,7 @@
           "dueDatePast": "Matches tasks with a due date in the past",
           "undoneHighPriority": "Matches undone tasks with priority level 3 or higher",
           "assigneesIn": "Matches tasks assigned to either \"user1\" or \"user2\"",
+          "creatorEqual": "Matches tasks created by \"user1\"",
           "priorityOneOrTwoPastDue": "Matches tasks with priority level 1 or 2 and a due date in the past"
         }
       }

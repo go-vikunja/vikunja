@@ -51,6 +51,7 @@ const (
 	taskPropertyAssignees     string = "assignees"
 	taskPropertyLabels        string = "labels"
 	taskPropertyReminders     string = "reminders"
+	taskPropertyCreator       string = "creator"
 )
 
 const (

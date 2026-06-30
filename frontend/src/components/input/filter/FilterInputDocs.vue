@@ -28,6 +28,7 @@ const showDocs = ref(false)
 			<li><code>endDate</code>: {{ $t('filters.query.help.fields.endDate') }}</li>
 			<li><code>doneAt</code>: {{ $t('filters.query.help.fields.doneAt') }}</li>
 			<li><code>assignees</code>: {{ $t('filters.query.help.fields.assignees') }}</li>
+			<li><code>creator</code>: {{ $t('filters.query.help.fields.creator') }}</li>
 			<li><code>labels</code>: {{ $t('filters.query.help.fields.labels') }}</li>
 			<li><code>project</code>: {{ $t('filters.query.help.fields.project') }}</li>
 			<li><code>reminders</code>: {{ $t('filters.query.help.fields.reminders') }}</li>
@@ -62,6 +63,7 @@ const showDocs = ref(false)
 				{{ $t('filters.query.help.examples.undoneHighPriority') }}
 			</li>
 			<li><code>assignees in user1, user2</code>: {{ $t('filters.query.help.examples.assigneesIn') }}</li>
+			<li><code>creator = user1</code>: {{ $t('filters.query.help.examples.creatorEqual') }}</li>
 			<li>
 				<code>(priority = 1 || priority = 2) &amp;&amp; dueDate &lt;= now</code>:
 				{{ $t('filters.query.help.examples.priorityOneOrTwoPastDue') }}
