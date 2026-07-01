@@ -13,6 +13,9 @@
 			class="mbe-2"
 			@update:modelValue="() => change('modelValue')"
 		/>
+
+		<FilterQuickKeywords @insert="insertFilterKeyword" />
+
 		<div 
 			v-if="filterFromView"
 			class="tw:text-sm mbe-2"
@@ -68,6 +71,7 @@ import {
 } from '@/helpers/filters'
 import FilterInputDocs from '@/components/input/filter/FilterInputDocs.vue'
 import FilterInput from '@/components/input/filter/FilterInput.vue'
+import FilterQuickKeywords from '@/components/input/filter/FilterQuickKeywords.vue'
 
 const props = withDefaults(defineProps<{
 	modelValue: TaskFilterParams,
@@ -121,6 +125,11 @@ const labelStore = useLabelStore()
 const projectStore = useProjectStore()
 
 const filterInputRef = ref()
+
+function insertFilterKeyword(text: string) {
+	filterInputRef.value?.insertText(text)
+	filterInputRef.value?.focus()
+}
 
 // Using watchDebounced to prevent the filter re-triggering itself.
 watch(

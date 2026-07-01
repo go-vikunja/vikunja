@@ -222,12 +222,22 @@ function focus() {
 	editor.value?.commands.focus()
 }
 
+function insertText(text: string) {
+	if (!editor.value) return
+	editor.value.commands.insertContent(text + ' ')
+	const content = editor.value.getText()
+	const processed = processContent(content)
+	lastEmittedValue = processed
+	emit('update:modelValue', processed)
+}
+
 onBeforeUnmount(() => {
 	editor.value?.destroy()
 })
 
 defineExpose({
 	focus,
+	insertText,
 })
 </script>
 
