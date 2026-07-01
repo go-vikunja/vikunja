@@ -13,7 +13,6 @@ import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import FilterInputDocs from '@/components/input/filter/FilterInputDocs.vue'
 import FilterInput from '@/components/input/filter/FilterInput.vue'
 import FormField from '@/components/input/FormField.vue'
-import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 
 const props = withDefaults(defineProps<{
 	modelValue: IProjectView,
