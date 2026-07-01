@@ -4,7 +4,7 @@ import {useI18n} from 'vue-i18n'
 export function useCopyToClipboard() {
 	const {t} = useI18n({useScope: 'global'})
 	
-	function fallbackCopyTextToClipboard(text: string) {
+	function fallbackCopyTextToClipboard(text: string): boolean {
 		const textArea = document.createElement('textarea')
 		textArea.value = text
 		
@@ -17,12 +17,13 @@ export function useCopyToClipboard() {
 		textArea.focus()
 		textArea.select()
 	
+		let success = false
 		try {
 			// NOTE: the execCommand is deprecated but as of 2022_09
 			// widely supported and works without https
-			const successful = document.execCommand('copy')
-			if (!successful) {
-				throw new Error()
+			success = document.execCommand('copy')
+			if (!success) {
+				error(t('misc.copyError'))
 			}
 			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		} catch (e) {
@@ -30,18 +31,20 @@ export function useCopyToClipboard() {
 		}
 	
 		document.body.removeChild(textArea)
+		return success
 	}
 	
-	return async (text: string) => {
+	return async (text: string): Promise<boolean> => {
 		if (!navigator.clipboard) {
-			fallbackCopyTextToClipboard(text)
-			return
+			return fallbackCopyTextToClipboard(text)
 		}
 		try {
 			await navigator.clipboard.writeText(text)
+			return true
 			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		} catch(e) {
 			error(t('misc.copyError'))
+			return false
 		}
 	}
 }
