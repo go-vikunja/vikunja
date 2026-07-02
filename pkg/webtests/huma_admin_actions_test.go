@@ -295,14 +295,6 @@ func passwordHashOf(t *testing.T, userID int64) string {
 	return row.Password
 }
 
-func makeUserNonLocal(t *testing.T, userID int64) {
-	s := db.NewSession()
-	defer s.Close()
-	_, err := s.Exec("UPDATE users SET issuer = 'ldap' WHERE id = ?", userID)
-	require.NoError(t, err)
-	require.NoError(t, s.Commit())
-}
-
 func TestHumaAdminSetPassword(t *testing.T) {
 	e, err := setupTestEnv()
 	require.NoError(t, err)
@@ -335,12 +327,12 @@ func TestHumaAdminSetPassword(t *testing.T) {
 	})
 
 	t.Run("non-local account gets 412", func(t *testing.T) {
-		makeUserNonLocal(t, 3)
-		oldHash := passwordHashOf(t, 3)
+		// Fixture user 14 is an OIDC account.
+		oldHash := passwordHashOf(t, 14)
 
-		res := adminReq(t, e, http.MethodPatch, "/api/v2/admin/users/3/password", admin, `{"new_password":"averyl0ngpassword"}`)
+		res := adminReq(t, e, http.MethodPatch, "/api/v2/admin/users/14/password", admin, `{"new_password":"averyl0ngpassword"}`)
 		assert.Equal(t, http.StatusPreconditionFailed, res.Code, res.Body.String())
-		assert.Equal(t, oldHash, passwordHashOf(t, 3), "refused reset must not change the hash")
+		assert.Equal(t, oldHash, passwordHashOf(t, 14), "refused reset must not change the hash")
 	})
 
 	t.Run("rejects a too-short password with 422", func(t *testing.T) {
@@ -404,11 +396,11 @@ func TestHumaAdminPasswordResetEmail(t *testing.T) {
 	t.Run("non-local account gets 412 and writes no token", func(t *testing.T) {
 		config.MailerEnabled.Set(true)
 		defer config.MailerEnabled.Set(false)
-		makeUserNonLocal(t, 5)
 
-		res := adminReq(t, e, http.MethodPost, "/api/v2/admin/users/5/password-reset-email", admin, "")
+		// Fixture user 14 is an OIDC account.
+		res := adminReq(t, e, http.MethodPost, "/api/v2/admin/users/14/password-reset-email", admin, "")
 		assert.Equal(t, http.StatusPreconditionFailed, res.Code, res.Body.String())
-		assert.Zero(t, countResetTokens(t, 5))
+		assert.Zero(t, countResetTokens(t, 14))
 	})
 
 	t.Run("unknown user returns 404", func(t *testing.T) {
