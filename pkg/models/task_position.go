@@ -470,28 +470,16 @@ func ensureTaskPositionsForSavedFilterView(s *xorm.Session, a web.Auth, projects
 		return err
 	}
 
-	projectIDs, hasFavoritesProject := getProjectIDsFromProjects(projects)
-
-	var projectIDCond builder.Cond
-	if len(projectIDs) > 0 {
-		projectIDCond = builder.In("tasks.project_id", projectIDs)
-	}
-
-	var favoritesCond builder.Cond
-	if hasFavoritesProject {
-		favoritesCond = builder.In("tasks.id", builder.
-			Select("entity_id").
-			From("favorites").
-			Where(builder.And(
-				builder.Eq{"user_id": a.GetID()},
-				builder.Eq{"kind": FavoriteKindTask},
-			)))
+	// Saved filters can never contain the favorites pseudo-project, so plain project scoping is enough.
+	projectIDs, _ := getProjectIDsFromProjects(projects)
+	if len(projectIDs) == 0 {
+		return nil
 	}
 
 	query := s.
 		Select("tasks.*").
 		Join("LEFT", "task_positions", "task_positions.task_id = tasks.id AND task_positions.project_view_id = ?", view.ID).
-		Where(builder.And(builder.Or(projectIDCond, favoritesCond), filterCond)).
+		Where(builder.And(builder.In("tasks.project_id", projectIDs), filterCond)).
 		And("task_positions.task_id IS NULL")
 
 	if joinTaskBuckets {
