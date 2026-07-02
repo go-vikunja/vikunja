@@ -593,3 +593,89 @@ func TestResolvePositionConflictsAfterInsertFallsBackToRecalculation(t *testing.
 		seen[p.Position] = true
 	}
 }
+
+func TestUpsertTaskPosition(t *testing.T) {
+	t.Run("inserts a new row", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		err := upsertTaskPosition(s, &TaskPosition{TaskID: 100, ProjectViewID: 1, Position: 42})
+		require.NoError(t, err)
+
+		pos := &TaskPosition{}
+		has, err := s.Where("task_id = ? AND project_view_id = ?", 100, 1).Get(pos)
+		require.NoError(t, err)
+		require.True(t, has)
+		assert.InDelta(t, 42.0, pos.Position, 0.001)
+	})
+
+	t.Run("updates an existing row instead of failing on the unique index", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.Insert(&TaskPosition{TaskID: 100, ProjectViewID: 1, Position: 42})
+		require.NoError(t, err)
+
+		err = upsertTaskPosition(s, &TaskPosition{TaskID: 100, ProjectViewID: 1, Position: 555})
+		require.NoError(t, err)
+
+		positions := []*TaskPosition{}
+		err = s.Where("task_id = ? AND project_view_id = ?", 100, 1).Find(&positions)
+		require.NoError(t, err)
+		require.Len(t, positions, 1)
+		assert.InDelta(t, 555.0, positions[0].Position, 0.001)
+	})
+}
+
+func TestInsertTaskPositionsIgnoringExisting(t *testing.T) {
+	t.Run("skips rows which already exist", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.Insert(&TaskPosition{TaskID: 100, ProjectViewID: 1, Position: 50})
+		require.NoError(t, err)
+
+		err = insertTaskPositionsIgnoringExisting(s, []*TaskPosition{
+			{TaskID: 100, ProjectViewID: 1, Position: 60},
+			{TaskID: 101, ProjectViewID: 1, Position: 70},
+		})
+		require.NoError(t, err)
+
+		existing := &TaskPosition{}
+		has, err := s.Where("task_id = ? AND project_view_id = ?", 100, 1).Get(existing)
+		require.NoError(t, err)
+		require.True(t, has)
+		assert.InDelta(t, 50.0, existing.Position, 0.001, "existing row must not be overwritten")
+
+		inserted := &TaskPosition{}
+		has, err = s.Where("task_id = ? AND project_view_id = ?", 101, 1).Get(inserted)
+		require.NoError(t, err)
+		require.True(t, has)
+		assert.InDelta(t, 70.0, inserted.Position, 0.001)
+	})
+
+	t.Run("inserts more rows than a single batch", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		positions := make([]*TaskPosition, 0, 150)
+		for i := 0; i < 150; i++ {
+			positions = append(positions, &TaskPosition{
+				TaskID:        int64(10000 + i),
+				ProjectViewID: 1,
+				Position:      float64(i + 1),
+			})
+		}
+
+		err := insertTaskPositionsIgnoringExisting(s, positions)
+		require.NoError(t, err)
+
+		count, err := s.Where("project_view_id = ? AND task_id >= 10000", 1).Count(&TaskPosition{})
+		require.NoError(t, err)
+		assert.Equal(t, int64(150), count)
+	})
+}
