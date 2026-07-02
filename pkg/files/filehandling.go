@@ -47,11 +47,11 @@ func setDefaultLocalConfig() {
 }
 
 // Wrap Signer to remove header
-type gcsHttpSigner struct {
+type gcsHTTPSigner struct {
 	wrapped s3.HTTPSignerV4
 }
 
-func (s *gcsHttpSigner) SignHTTP(ctx context.Context, credentials aws.Credentials, req *http.Request, payloadHash string, service string, region string, signingTime time.Time, optFns ...func(*v4.SignerOptions)) error {
+func (s *gcsHTTPSigner) SignHTTP(ctx context.Context, credentials aws.Credentials, req *http.Request, payloadHash string, service string, region string, signingTime time.Time, optFns ...func(*v4.SignerOptions)) error {
 	req.Header.Del("Accept-Encoding")
 	return s.wrapped.SignHTTP(ctx, credentials, req, payloadHash, service, region, signingTime, optFns...)
 }
@@ -92,7 +92,7 @@ func initS3FileHandler() error {
 		o.BaseEndpoint = aws.String(endpoint)
 		o.UsePathStyle = config.FilesS3UsePathStyle.GetBool()
 		if endpoint == "https://storage.googleapis.com" {
-			o.HTTPSignerV4 = &gcsHttpSigner{wrapped: o.HTTPSignerV4}
+			o.HTTPSignerV4 = &gcsHTTPSigner{wrapped: o.HTTPSignerV4}
 			cfg.RequestChecksumCalculation = aws.RequestChecksumCalculationWhenRequired
 		}
 		if config.FilesS3DisableSigning.GetBool() {
