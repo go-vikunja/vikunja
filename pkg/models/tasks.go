@@ -288,6 +288,18 @@ func getTaskIndexFromSearchString(s string) (index int64) {
 	return
 }
 
+func getProjectIDsFromProjects(projects []*Project) (projectIDs []int64, hasFavoritesProject bool) {
+	projectIDs = []int64{}
+	for _, p := range projects {
+		if p.ID == FavoritesPseudoProject.ID {
+			hasFavoritesProject = true
+			continue
+		}
+		projectIDs = append(projectIDs, p.ID)
+	}
+	return
+}
+
 func getRawTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, opts *taskSearchOptions) (tasks []*Task, resultCount int, totalItems int64, err error) {
 
 	// If the user does not have any projects, don't try to get any tasks
@@ -296,15 +308,8 @@ func getRawTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, op
 	}
 
 	// Get all project IDs and get the tasks
-	opts.projectIDs = []int64{}
 	var hasFavoritesProject bool
-	for _, p := range projects {
-		if p.ID == FavoritesPseudoProject.ID {
-			hasFavoritesProject = true
-			continue
-		}
-		opts.projectIDs = append(opts.projectIDs, p.ID)
-	}
+	opts.projectIDs, hasFavoritesProject = getProjectIDsFromProjects(projects)
 
 	// Add the id parameter as the last parameter to sortby by default, but only if it is not already passed as the last parameter.
 	if len(opts.sortby) == 0 ||
@@ -707,35 +712,6 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 		}
 		for _, position := range positions {
 			positionsMap[position.TaskID] = position
-		}
-
-		// For saved filter views, ensure all tasks have positions
-		// This is a safety net - the cron job handles bulk position creation,
-		// but we need immediate positions for newly matching tasks
-		if GetSavedFilterIDFromProjectID(view.ProjectID) > 0 {
-			tasksNeedingPositions := make([]*Task, 0)
-			for _, task := range taskMap {
-				if _, hasPosition := positionsMap[task.ID]; !hasPosition {
-					tasksNeedingPositions = append(tasksNeedingPositions, task)
-				}
-			}
-
-			if len(tasksNeedingPositions) > 0 {
-				// Create positions for tasks that don't have them
-				if err = createPositionsForTasksInView(s, tasksNeedingPositions, view, a); err != nil {
-					return err
-				}
-
-				// Reload positions after creation
-				positions, err = getPositionsForView(s, view)
-				if err != nil {
-					return err
-				}
-				positionsMap = make(map[int64]*TaskPosition, len(positions))
-				for _, p := range positions {
-					positionsMap[p.TaskID] = p
-				}
-			}
 		}
 	}
 

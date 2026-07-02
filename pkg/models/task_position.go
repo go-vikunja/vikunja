@@ -21,6 +21,7 @@ import (
 	"math"
 	"sort"
 
+	"xorm.io/builder"
 	"xorm.io/xorm"
 
 	"code.vikunja.io/api/pkg/events"
@@ -442,6 +443,72 @@ func createPositionsForTasksInView(s *xorm.Session, tasks []*Task, view *Project
 
 	_, err = s.Insert(&newPositions)
 	return err
+}
+
+// ensureTaskPositionsForSavedFilterView creates position rows for all tasks matching a saved
+// filter which don't have one in its view yet. This must run before the fetch query: healing
+// afterwards means the query sorts fresh matches last (NULL position) and they jump to the top
+// on the next fetch once the position row exists.
+func ensureTaskPositionsForSavedFilterView(s *xorm.Session, a web.Auth, projects []*Project, view *ProjectView, opts *taskSearchOptions) (err error) {
+	if len(projects) == 0 {
+		return nil
+	}
+
+	// Parse a fresh copy of the filters because convertFiltersToDBFilterCond mutates the
+	// field names in place — reusing opts.parsedFilters would double-prefix them for the
+	// subsequent fetch query.
+	parsedFilters, err := getTaskFiltersFromFilterString(opts.filter, opts.filterTimezone)
+	if err != nil {
+		return err
+	}
+
+	// Check before converting: the conversion renames the field to task_buckets.bucket_id in place.
+	joinTaskBuckets := hasBucketIDInParsedFilter(parsedFilters)
+
+	filterCond, err := convertFiltersToDBFilterCond(parsedFilters, opts.filterIncludeNulls)
+	if err != nil {
+		return err
+	}
+
+	projectIDs, hasFavoritesProject := getProjectIDsFromProjects(projects)
+
+	var projectIDCond builder.Cond
+	if len(projectIDs) > 0 {
+		projectIDCond = builder.In("tasks.project_id", projectIDs)
+	}
+
+	var favoritesCond builder.Cond
+	if hasFavoritesProject {
+		favoritesCond = builder.In("tasks.id", builder.
+			Select("entity_id").
+			From("favorites").
+			Where(builder.And(
+				builder.Eq{"user_id": a.GetID()},
+				builder.Eq{"kind": FavoriteKindTask},
+			)))
+	}
+
+	query := s.
+		Select("tasks.*").
+		Join("LEFT", "task_positions", "task_positions.task_id = tasks.id AND task_positions.project_view_id = ?", view.ID).
+		Where(builder.And(builder.Or(projectIDCond, favoritesCond), filterCond)).
+		And("task_positions.task_id IS NULL")
+
+	if joinTaskBuckets {
+		query = query.Join("LEFT", "task_buckets", "task_buckets.task_id = tasks.id AND task_buckets.project_view_id = ?", view.ID)
+	}
+
+	tasks := []*Task{}
+	// Ordering by id keeps position assignment deterministic when multiple tasks are healed at once.
+	err = query.
+		OrderBy("tasks.id ASC").
+		Find(&tasks)
+	if err != nil {
+		sql, vals := query.LastSQL()
+		return fmt.Errorf("could not fetch unpositioned tasks, error was '%w', sql: '%v', values: %v", err, sql, vals)
+	}
+
+	return createPositionsForTasksInView(s, tasks, view, a)
 }
 
 // findPositionConflicts returns all task positions that share the same position value
