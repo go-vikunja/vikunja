@@ -633,34 +633,15 @@ func UpdateUser(s *xorm.Session, user *User, forceOverride bool) (updatedUser *U
 		return nil, &ErrInvalidTimezone{Name: user.Timezone, LoadError: err}
 	}
 
-	frontendSettingsJSON, err := json.Marshal(user.FrontendSettings)
+	cols, err := userUpdateColumns(user, forceOverride)
 	if err != nil {
 		return nil, err
 	}
-	user.FrontendSettings = frontendSettingsJSON
 
 	// Update it
 	_, err = s.
 		ID(user.ID).
-		Cols(
-			"username",
-			"email",
-			"avatar_provider",
-			"avatar_file_id",
-			"status",
-			"name",
-			"email_reminders_enabled",
-			"discoverable_by_name",
-			"discoverable_by_email",
-			"overdue_tasks_reminders_enabled",
-			"default_project_id",
-			"week_start",
-			"language",
-			"timezone",
-			"overdue_tasks_reminders_time",
-			"frontend_settings",
-			"extra_settings_links",
-		).
+		Cols(cols...).
 		Update(user)
 	if err != nil {
 		return &User{}, err
@@ -673,6 +654,52 @@ func UpdateUser(s *xorm.Session, user *User, forceOverride bool) (updatedUser *U
 	}
 
 	return updatedUser, err
+}
+
+// userUpdateColumns lists the columns UpdateUser persists and, for settings
+// updates, normalises frontend_settings into the JSON-string form xorm stores
+// correctly.
+//
+// frontend_settings is written only when forceOverride is set, which the
+// user-settings endpoints pass and which no other caller does. Skipping the
+// column elsewhere is deliberate: it is set on no other path, and listing a nil
+// interface in Cols makes xorm write NULL, wiping the user's settings on every
+// OIDC login. We marshal the value to a string ourselves because xorm passes a
+// Go map in an interface{} json column straight to the driver (an error) and
+// base64-encodes a []byte (the historical double-encoding bug).
+func userUpdateColumns(user *User, forceOverride bool) ([]string, error) {
+	cols := []string{
+		"username",
+		"email",
+		"avatar_provider",
+		"avatar_file_id",
+		"status",
+		"name",
+		"email_reminders_enabled",
+		"discoverable_by_name",
+		"discoverable_by_email",
+		"overdue_tasks_reminders_enabled",
+		"default_project_id",
+		"week_start",
+		"language",
+		"timezone",
+		"overdue_tasks_reminders_time",
+		"extra_settings_links",
+	}
+
+	if !forceOverride {
+		return cols, nil
+	}
+
+	if user.FrontendSettings != nil {
+		frontendSettingsJSON, err := json.Marshal(user.FrontendSettings)
+		if err != nil {
+			return nil, fmt.Errorf("marshal frontend settings: %w", err)
+		}
+		user.FrontendSettings = string(frontendSettingsJSON)
+	}
+
+	return append(cols, "frontend_settings"), nil
 }
 
 func SetUserStatus(s *xorm.Session, user *User, status Status) (err error) {
