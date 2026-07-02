@@ -20,6 +20,7 @@ import (
 	"context"
 	"net/http"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
@@ -48,6 +49,10 @@ type adminIsAdminPatchBody struct {
 // instead of silently reactivating.
 type adminStatusPatchBody struct {
 	Status *user.Status `json:"status" doc:"New account status (0=active, 1=email-confirmation required, 2=disabled, 3=locked). Omitting it leaves the current value unchanged."`
+}
+
+type adminSetPasswordBody struct {
+	NewPassword string `json:"new_password" valid:"bcrypt_password" minLength:"8" maxLength:"72" doc:"The new password. Max 72 bytes (a bcrypt limit), which may be fewer than 72 characters."`
 }
 
 // Permissions are enforced by the gateV2AdminRoutes path middleware, not per-handler.
@@ -89,6 +94,25 @@ func RegisterAdminUserRoutes(api huma.API) {
 		Path:        "/admin/users/{id}/status",
 		Tags:        tags,
 	}, adminUsersPatchStatus)
+
+	Register(api, huma.Operation{
+		OperationID: "admin-users-set-password",
+		Summary:     "Set a user's password (admin)",
+		Description: "Sets a new password for a local account without requiring the current one, then invalidates all of the user's sessions. Accounts managed by a third-party authentication provider are refused with 412.",
+		Method:      http.MethodPatch,
+		Path:        "/admin/users/{id}/password",
+		Tags:        tags,
+	}, adminUsersSetPassword)
+
+	Register(api, huma.Operation{
+		OperationID:   "admin-users-password-reset-email",
+		Summary:       "Send a password-reset email (admin)",
+		Description:   "Triggers the self-service password-reset email for a local account. Refused with 412 when no mailer is configured or when the account is managed by a third-party authentication provider.",
+		Method:        http.MethodPost,
+		Path:          "/admin/users/{id}/password-reset-email",
+		DefaultStatus: http.StatusOK,
+		Tags:          tags,
+	}, adminUsersPasswordResetEmail)
 
 	Register(api, huma.Operation{
 		OperationID: "admin-users-delete",
@@ -156,6 +180,39 @@ func adminUsersPatchStatus(_ context.Context, in *struct {
 	return adminCommitUser(func(s *xorm.Session) (*user.User, error) { //nolint:contextcheck // see adminCommitUser.
 		return models.SetUserStatusAsAdmin(s, in.ID, newStatus)
 	})
+}
+
+func adminUsersSetPassword(_ context.Context, in *struct {
+	ID   int64 `path:"id" doc:"The numeric ID of the user."`
+	Body adminSetPasswordBody
+}) (*adminUserBody, error) {
+	return adminCommitUser(func(s *xorm.Session) (*user.User, error) { //nolint:contextcheck // see adminCommitUser.
+		return models.SetUserPasswordAsAdmin(s, in.ID, in.Body.NewPassword)
+	})
+}
+
+func adminUsersPasswordResetEmail(_ context.Context, in *struct {
+	ID int64 `path:"id" doc:"The numeric ID of the user."`
+}) (*messageBody, error) {
+	// Checked here, not in the model action: RequestUserPasswordResetToken
+	// silently skips the email when the mailer is off, which would read as success.
+	if !config.MailerEnabled.GetBool() {
+		return nil, huma.Error412PreconditionFailed("No mailer is configured on this instance, so no password-reset email can be sent.")
+	}
+
+	s := db.NewSession()
+	defer s.Close()
+	if err := models.RequestPasswordResetAsAdmin(s, in.ID); err != nil {
+		_ = s.Rollback()
+		return nil, translateDomainError(err)
+	}
+	if err := s.Commit(); err != nil {
+		return nil, translateDomainError(err)
+	}
+
+	out := &messageBody{}
+	out.Body.Message = "A password-reset email was sent."
+	return out, nil
 }
 
 func adminUsersDelete(_ context.Context, in *struct {
