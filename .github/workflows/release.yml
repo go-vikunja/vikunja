@@ -576,7 +576,7 @@ jobs:
           name: vikunja_desktop_packages_windows-latest
 
       - name: Release
-        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
+        uses: softprops/action-gh-release@718ea10b132b3b2eba29c1007bb80653f286566b # v3.0.1
         if: github.ref_type == 'tag'
         with:
           draft: true
