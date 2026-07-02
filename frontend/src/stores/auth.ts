@@ -26,6 +26,7 @@ import {PrefixMode} from '@/modules/quickAddMagic'
 import {DATE_DISPLAY} from '@/constants/dateDisplay'
 import {TIME_FORMAT} from '@/constants/timeFormat'
 import {RELATION_KIND} from '@/types/IRelationKind'
+import {DEFAULT_PAGE} from '@/constants/defaultPage'
 import type {IProvider} from '@/types/IProvider'
 
 // Set on explicit logout so the login page won't immediately bounce the user
@@ -159,6 +160,7 @@ export const useAuthStore = defineStore('auth', () => {
 				showLastViewed: true,
 				sidebarWidth: null,
 				commentSortOrder: 'asc',
+				defaultPage: DEFAULT_PAGE.LAST_VISITED,
 				desktopQuickEntryShortcut: 'CmdOrCtrl+Shift+A',
 				...newSettings.frontendSettings,
 			},

@@ -5,16 +5,17 @@
 		:style="{'--sidebar-width': sidebarWidth}"
 	>
 		<nav class="menu top-menu">
-			<RouterLink
-				:to="{name: 'home'}"
+			<a
+				href="/"
 				class="logo"
 				:aria-label="$t('navigation.home')"
+				@click.prevent="openLandingPage"
 			>
 				<Logo
 					width="164"
 					height="48"
 				/>
-			</RouterLink>
+			</a>
 			<menu class="menu-list other-menu-items">
 				<li>
 					<RouterLink
@@ -134,6 +135,7 @@
 
 <script setup lang="ts">
 import {computed} from 'vue'
+import {useRouter} from 'vue-router'
 
 import PoweredByLink from '@/components/home/PoweredByLink.vue'
 import Logo from '@/components/home/Logo.vue'
@@ -146,10 +148,12 @@ import {PRO_FEATURE} from '@/constants/proFeatures'
 import ProjectsNavigation from '@/components/home/ProjectsNavigation.vue'
 import type {IProject} from '@/modelTypes/IProject'
 import {useSidebarResize} from '@/composables/useSidebarResize'
+import {getDefaultPageRoute} from '@/helpers/getDefaultPageRoute'
 
 const baseStore = useBaseStore()
 const projectStore = useProjectStore()
 const configStore = useConfigStore()
+const router = useRouter()
 
 const timeTrackingEnabled = computed(() => configStore.isProFeatureEnabled(PRO_FEATURE.TIME_TRACKING))
 
@@ -159,6 +163,10 @@ const {sidebarWidth, isResizing, startResize, isMobile} = useSidebarResize()
 const projects = computed(() => projectStore.notArchivedRootProjects as IProject[])
 const favoriteProjects = computed(() => projectStore.favoriteProjects as IProject[])
 const savedFilterProjects = computed(() => projectStore.savedFilterProjects as IProject[])
+
+async function openLandingPage() {
+	await router.push(await getDefaultPageRoute() ?? {name: 'home'})
+}
 </script>
 
 <style lang="scss" scoped>

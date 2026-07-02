@@ -1,4 +1,6 @@
 import {useRouter} from 'vue-router'
+
+import {getDefaultPageRoute} from '@/helpers/getDefaultPageRoute'
 import {getLastVisited, clearLastVisited} from '@/helpers/saveLastVisited'
 
 export function useRedirectToLastVisited() {
@@ -19,10 +21,10 @@ export function useRedirectToLastVisited() {
 		}
 	}
 
-	function redirectIfSaved() {
+	async function redirectIfSaved() {
 		const lastRoute = getLastVisitedRoute()
 		if (!lastRoute) {
-			return router.push({name: 'home'})
+			return router.push(await getDefaultPageRoute() ?? {name: 'home'})
 		}
 
 		return router.push(lastRoute)
