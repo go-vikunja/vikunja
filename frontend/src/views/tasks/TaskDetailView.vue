@@ -694,8 +694,8 @@ import {uploadFile} from '@/helpers/attachments'
 import {getProjectTitle} from '@/helpers/getProjectTitle'
 import {isAppleDevice} from '@/helpers/isAppleDevice'
 import {scrollIntoView} from '@/helpers/scrollIntoView'
-import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
+import {isRepeating} from '@/helpers/rrule'
 import {playPopSound} from '@/helpers/playPop'
 
 import {useTaskStore} from '@/stores/tasks'
@@ -1031,7 +1031,7 @@ function setActiveFields() {
 	activeFields.priority = task.value.priority !== PRIORITIES.UNSET
 	activeFields.relatedTasks = Object.keys(task.value.relatedTasks).length > 0
 	activeFields.reminders = task.value.reminders.length > 0
-	activeFields.repeatAfter = task.value.repeatAfter?.amount > 0 || task.value.repeatMode !== TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
+	activeFields.repeatAfter = isRepeating(task.value.repeat)
 	activeFields.startDate = task.value.startDate !== null
 }
 
@@ -1107,7 +1107,12 @@ async function saveTask(
 	}
 
 	const updatedTask = await taskStore.update(currentTask) // TODO: markraw ?
+
 	Object.assign(task.value, updatedTask)
+
+	// Wait for Vue reactivity to settle before re-evaluating active fields
+	await nextTick()
+
 	setActiveFields()
 
 	let actions: MessageAction[] = []
@@ -1197,8 +1202,8 @@ async function setPercentDone(percentDone: number) {
 }
 
 async function removeRepeatAfter() {
-	task.value.repeatAfter.amount = 0
-	task.value.repeatMode = TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
+	task.value.repeat = null
+	task.value.repeatsFromCurrentDate = false
 	await saveTask()
 }
 

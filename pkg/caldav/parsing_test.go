@@ -25,6 +25,7 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	ics "github.com/arran4/golang-ical"
+	"github.com/stretchr/testify/assert"
 	"gopkg.in/d4l3k/messagediff.v1"
 )
 
@@ -487,6 +488,28 @@ END:VCALENDAR`,
 				HexColor: "7b68ee",
 			},
 		},
+		{
+			name: "with RRULE",
+			args: args{content: `BEGIN:VCALENDAR
+VERSION:2.0
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+UID:randomuid
+DTSTAMP:20181201T011204
+SUMMARY:Recurring Task
+RRULE:FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,WE,FR
+END:VTODO
+END:VCALENDAR`,
+			},
+			wantVTask: &models.Task{
+				Title:   "Recurring Task",
+				UID:     "randomuid",
+				Updated: time.Unix(1543626724, 0).In(config.GetTimeZone()),
+				Repeats: "FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,WE,FR",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -498,6 +521,30 @@ END:VCALENDAR`,
 			if diff, equal := messagediff.PrettyDiff(got, tt.wantVTask); !equal {
 				t.Errorf("ParseTaskFromVTODO()\n gotVTask = %v\n want %v\n diff = %s", got, tt.wantVTask, diff)
 			}
+		})
+	}
+}
+
+func TestNormalizeRRule(t *testing.T) {
+	cases := []struct {
+		name   string
+		raw    string
+		want   string
+		wantOK bool
+	}{
+		{"plain valid", "FREQ=DAILY;INTERVAL=1", "FREQ=DAILY;INTERVAL=1", true},
+		{"strips RRULE prefix", "RRULE:FREQ=DAILY;INTERVAL=1", "FREQ=DAILY;INTERVAL=1", true},
+		{"strips lowercase prefix", "rrule:FREQ=WEEKLY;BYDAY=MO", "FREQ=WEEKLY;BYDAY=MO", true},
+		{"trims whitespace", "  FREQ=DAILY;INTERVAL=1  ", "FREQ=DAILY;INTERVAL=1", true},
+		{"canonicalizes leading zero", "FREQ=MONTHLY;BYMONTHDAY=01", "FREQ=MONTHLY;BYMONTHDAY=1", true},
+		{"rejects garbage", "not a rule", "", false},
+		{"rejects empty", "", "", false},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			got, ok := normalizeRRule(c.raw)
+			assert.Equal(t, c.wantOK, ok)
+			assert.Equal(t, c.want, got)
 		})
 	}
 }
@@ -533,7 +580,7 @@ func TestGetCaldavTodosForTasks(t *testing.T) {
 							EndDate:     time.Unix(1543626724, 0).In(config.GetTimeZone()),
 							Updated:     time.Unix(1543626725, 0).In(config.GetTimeZone()),
 							DoneAt:      time.Unix(1543626726, 0).In(config.GetTimeZone()),
-							RepeatAfter: 86400,
+							Repeats:     "FREQ=DAILY;INTERVAL=1",
 							Labels: []*models.Label{
 								{
 									ID:    1,

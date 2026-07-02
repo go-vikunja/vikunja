@@ -28,7 +28,27 @@ import (
 	"code.vikunja.io/api/pkg/utils"
 
 	ics "github.com/arran4/golang-ical"
+	"github.com/teambition/rrule-go"
 )
+
+// normalizeRRule strips an optional RRULE: prefix, validates the value with the
+// rrule parser, and returns it in canonical form. ok is false when the value is
+// not a parseable RRULE, so callers can skip it instead of storing or emitting
+// malformed calendar data.
+func normalizeRRule(raw string) (normalized string, ok bool) {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return "", false
+	}
+	if strings.HasPrefix(strings.ToUpper(raw), "RRULE:") {
+		raw = strings.TrimSpace(raw[len("RRULE:"):])
+	}
+	opt, err := rrule.StrToROption(raw)
+	if err != nil {
+		return "", false
+	}
+	return opt.RRuleString(), true
+}
 
 var cssColorsToHex map[string]string
 
@@ -221,18 +241,17 @@ func GetCaldavTodosForTasks(project *models.ProjectWithTasksAndBuckets, projectT
 			Description: t.Description,
 			Completed:   t.DoneAt,
 			// Organizer:     &t.CreatedBy, // Disabled until we figure out how this works
-			Categories:  categories,
-			Priority:    t.Priority,
-			Start:       t.StartDate,
-			End:         t.EndDate,
-			Created:     t.Created,
-			Updated:     t.Updated,
-			DueDate:     t.DueDate,
-			Duration:    duration,
-			RepeatAfter: t.RepeatAfter,
-			RepeatMode:  t.RepeatMode,
-			Alarms:      alarms,
-			Relations:   relations,
+			Categories: categories,
+			Priority:   t.Priority,
+			Start:      t.StartDate,
+			End:        t.EndDate,
+			Created:    t.Created,
+			Updated:    t.Updated,
+			DueDate:    t.DueDate,
+			Duration:   duration,
+			Repeats:    t.Repeats,
+			Alarms:     alarms,
+			Relations:  relations,
 		})
 	}
 
@@ -363,6 +382,18 @@ func ParseTaskFromVTODO(content string) (vTask *models.Task, err error) {
 		titleValue = summary.Value
 	}
 
+	// Parse RRULE for recurring tasks, normalizing it so a malformed value from a
+	// client is dropped (with a log line) rather than stored or later failing the
+	// whole task on validation.
+	var repeats string
+	if rruleProp, ok := task["RRULE"]; ok {
+		if normalized, valid := normalizeRRule(rruleProp.Value); valid {
+			repeats = normalized
+		} else {
+			log.Debugf("[CalDAV] Ignoring unparseable RRULE %q on imported task %q", rruleProp.Value, uidValue)
+		}
+	}
+
 	vTask = &models.Task{
 		UID:         uidValue,
 		Title:       titleValue,
@@ -374,6 +405,7 @@ func ParseTaskFromVTODO(content string) (vTask *models.Task, err error) {
 		StartDate:   caldavTimeToTimestamp(task["DTSTART"]),
 		DoneAt:      caldavTimeToTimestamp(task["COMPLETED"]),
 		HexColor:    getHexColorFromCaldavColor(color),
+		Repeats:     repeats,
 	}
 
 	for _, c := range relations {
