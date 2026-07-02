@@ -31,6 +31,8 @@ import (
 type TaskCollection struct {
 	ProjectID     int64 `param:"project" json:"-"`
 	ProjectViewID int64 `param:"view" json:"-"`
+	// If set to true, tasks from all descendant subprojects will also be returned.
+	IncludeSubprojects bool `json:"include_subprojects" query:"include_subprojects"`
 
 	Search string `query:"s" json:"s" doc:"A search term to match tasks by their title."`
 
@@ -129,6 +131,10 @@ func getTaskFilterOptsFromCollection(tf *TaskCollection, projectView *ProjectVie
 			continue
 		}
 
+		if s == taskPropertyPosition && tf.IncludeSubprojects {
+			continue
+		}
+
 		if s == taskPropertyPosition && projectView != nil {
 			param.projectViewID = projectView.ID
 		}
@@ -208,8 +214,44 @@ func getRelevantProjectsFromCollection(s *xorm.Session, a web.Auth, tf *TaskColl
 		}
 	}
 
-	return []*Project{{ID: tf.ProjectID}}, nil
+	if !tf.IncludeSubprojects || tf.ProjectID <= 0 {
+		return []*Project{{ID: tf.ProjectID}}, nil
+	}
+
+	allProjects, _, _, err := getRawProjectsForUser(s, &projectOptions{
+		user: &user.User{ID: a.GetID()},
+		page: -1,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	relevantProjects := make([]*Project, 0)
+	childrenMap := make(map[int64][]int64)
+	projectMap := make(map[int64]*Project)
+	for _, p := range allProjects {
+		projectMap[p.ID] = p
+		childrenMap[p.ParentProjectID] = append(childrenMap[p.ParentProjectID], p.ID)
+	}
+
+	queue := []int64{tf.ProjectID}
+	for len(queue) > 0 {
+		currentID := queue[0]
+		queue = queue[1:]
+
+		if p, exists := projectMap[currentID]; exists {
+			relevantProjects = append(relevantProjects, p)
+		}
+
+		if children, exists := childrenMap[currentID]; exists {
+			queue = append(queue, children...)
+		}
+	}
+
+	return relevantProjects, nil
 }
+
+
 
 func getFilterValueForBucketFilter(filter string, view *ProjectView) (newFilter string, err error) {
 	if view.BucketConfigurationMode != BucketConfigurationModeFilter {
@@ -245,6 +287,7 @@ func getFilterValueForBucketFilter(filter string, view *ProjectView) (newFilter 
 // @Produce json
 // @Param id path int true "The project ID."
 // @Param view path int true "The project view ID."
+// @Param include_subprojects query bool false "If true, also returns tasks from all descendant subprojects the user can access."
 // @Param page query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
 // @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
 // @Param s query string false "Search tasks by task text."
@@ -340,6 +383,10 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 			if view.Filter.FilterIncludeNulls {
 				tf.FilterIncludeNulls = true
 			}
+
+			if view.Filter.IncludeSubprojects {
+				tf.IncludeSubprojects = true
+			}
 		}
 
 		if strings.Contains(tf.Filter, taskPropertyBucketID) {
@@ -350,6 +397,16 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 			}
 		}
 	}
+
+	effectiveIncludeSubprojects := tf.IncludeSubprojects &&
+		tf.ProjectID > 0 &&
+		!tf.isSavedFilter
+
+	if _, is := a.(*LinkSharing); is {
+		effectiveIncludeSubprojects = false
+	}
+
+	tf.IncludeSubprojects = effectiveIncludeSubprojects
 
 	opts, err := getTaskFilterOptsFromCollection(tf, view)
 	if err != nil {
@@ -369,7 +426,7 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 	opts.expand = tf.Expand
 	opts.isSavedFilter = tf.isSavedFilter
 
-	if view != nil {
+	if view != nil && !tf.IncludeSubprojects {
 		var hasOrderByPosition bool
 		for _, param := range opts.sortby {
 			if param.sortBy == taskPropertyPosition {

@@ -69,6 +69,10 @@ onBeforeMount(() => {
 			?? (filterInput as Record<string, unknown>).filterIncludeNulls as boolean
 			?? false
 
+		filter.include_subprojects = filterInput.include_subprojects
+			?? (filterInput as Record<string, unknown>).includeSubprojects as boolean
+			?? false
+
 		return filter
 	}
 
@@ -98,6 +102,7 @@ function save() {
 		)
 		const filter: IFilters = {
 			filter_include_nulls: filterInput?.filter_include_nulls ?? false,
+			include_subprojects: filterInput?.include_subprojects ?? false,
 		}
 		if (hasFilterQuery(filterString)) {
 			filter.filter = filterString
@@ -187,6 +192,15 @@ function handleBubbleSave() {
 
 		<div class="is-size-7 mbe-2">
 			<FilterInputDocs />
+		</div>
+
+		<div class="field mbe-3">
+			<FancyCheckbox
+				v-model="view.filter.include_subprojects"
+				v-tooltip="$t('project.views.includeSubprojects')"
+			>
+				{{ $t('project.views.includeSubprojects') }}
+			</FancyCheckbox>
 		</div>
 
 		<div class="field mbe-3">

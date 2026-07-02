@@ -646,11 +646,12 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	}
 
 	type fields struct {
-		ProjectID     int64
-		ProjectViewID int64
-		Projects      []*Project
-		SortBy        []string // Is a string, since this is the place where a query string comes from the user
-		OrderBy       []string
+		ProjectID          int64
+		ProjectViewID      int64
+		IncludeSubprojects bool
+		Projects           []*Project
+		SortBy             []string // Is a string, since this is the place where a query string comes from the user
+		OrderBy            []string
 
 		FilterIncludeNulls bool
 		Filter             string
@@ -1561,6 +1562,63 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			want:    []*Task{},
 			wantErr: false,
 		},
+		{
+			name: "project tasks only by default",
+			fields: fields{
+				ProjectID: 32,
+			},
+			args: args{
+				a: &user.User{ID: 1},
+			},
+			want: []*Task{
+				task21,
+			},
+			wantErr: false,
+		},
+		{
+			name: "project tasks including subprojects",
+			fields: fields{
+				ProjectID:          32,
+				IncludeSubprojects: true,
+				SortBy:             []string{"id"},
+				OrderBy:            []string{"asc"},
+			},
+			args: args{
+				a: &user.User{ID: 1},
+			},
+			want: []*Task{
+				task21,
+				task24,
+			},
+			wantErr: false,
+		},
+		{
+			name: "project tasks including subprojects recursively",
+			fields: fields{
+				ProjectID:          12,
+				IncludeSubprojects: true,
+				SortBy:             []string{"id"},
+				OrderBy:            []string{"asc"},
+			},
+			args: args{
+				a: &user.User{ID: 1},
+			},
+			want: []*Task{
+				task39,
+			},
+			wantErr: false,
+		},
+		{
+			name: "project tasks including subprojects with no project access",
+			fields: fields{
+				ProjectID:          32,
+				IncludeSubprojects: true,
+			},
+			args: args{
+				a: &user.User{ID: 14},
+			},
+			wantErr: true,
+		},
 		// TODO filter parent project?
 		{
 			name: "filter by index",
@@ -1689,6 +1747,26 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			},
 		},
 		{
+			name: "saved filter with sort order and include subprojects",
+			fields: fields{
+				ProjectID:          -2,
+				IncludeSubprojects: true,
+				SortBy:             []string{"title", "id"},
+				OrderBy:            []string{"desc", "asc"},
+			},
+			args: args{
+				a: &user.User{ID: 1},
+			},
+			want: []*Task{
+				task9,
+				task8,
+				task7,
+				task6,
+				task5,
+				task28,
+			},
+		},
+		{
 			name: "saved filter with sort order asc",
 			fields: fields{
 				ProjectID: -2,
@@ -1778,10 +1856,11 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			defer s.Close()
 
 			lt := &TaskCollection{
-				ProjectID:     tt.fields.ProjectID,
-				ProjectViewID: tt.fields.ProjectViewID,
-				SortBy:        tt.fields.SortBy,
-				OrderBy:       tt.fields.OrderBy,
+				ProjectID:          tt.fields.ProjectID,
+				ProjectViewID:      tt.fields.ProjectViewID,
+				IncludeSubprojects: tt.fields.IncludeSubprojects,
+				SortBy:             tt.fields.SortBy,
+				OrderBy:            tt.fields.OrderBy,
 
 				FilterIncludeNulls: tt.fields.FilterIncludeNulls,
 
@@ -1831,6 +1910,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		})
 	}
 }
+
+
 
 func TestTaskCollection_SubtaskRemainsAfterMove(t *testing.T) {
 	db.LoadAndAssertFixtures(t)

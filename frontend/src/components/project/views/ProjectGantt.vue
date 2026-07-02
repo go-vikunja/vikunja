@@ -38,6 +38,15 @@
 					>
 						{{ $t('task.show.noDates') }}
 					</FancyCheckbox>
+					<FancyCheckbox
+						v-if="filters.projectId > 0"
+						v-tooltip="$t('project.views.includeSubprojectsHint')"
+						:model-value="includeSubprojects"
+						is-block
+						@update:modelValue="updateIncludeSubprojects"
+					>
+						{{ $t('project.views.includeSubprojects') }}
+					</FancyCheckbox>
 				</div>
 			</Card>
 
@@ -49,6 +58,7 @@
 				>
 					<GanttChart
 						:filters="filters"
+						:include-subprojects="includeSubprojects"
 						:tasks="tasks"
 						:is-loading="isLoading"
 						:default-task-start-date="defaultTaskStartDate"
@@ -72,6 +82,7 @@ import {useI18n} from 'vue-i18n'
 import type {RouteLocationNormalized} from 'vue-router'
 
 import {useBaseStore} from '@/stores/base'
+import {useProjectStore} from '@/stores/projects'
 import {useFlatpickrLanguage} from '@/helpers/useFlatpickrLanguage'
 
 import Foo from '@/components/misc/flatpickr/Flatpickr.vue'
@@ -83,6 +94,9 @@ import FormField from '@/components/input/FormField.vue'
 import GanttChart from '@/components/gantt/GanttChart.vue'
 import {useGanttFilters} from '../../../views/project/helpers/useGanttFilters'
 import {PERMISSIONS} from '@/constants/permissions'
+import ProjectViewService from '@/services/projectViews'
+import ProjectViewModel from '@/models/projectView'
+import {error} from '@/message'
 
 import type {DateISO} from '@/types/DateISO'
 import type {ITask} from '@/modelTypes/ITask'
@@ -98,9 +112,13 @@ const props = defineProps<{
 
 
 const baseStore = useBaseStore()
+const projectStore = useProjectStore()
 const canWrite = computed(() => baseStore.currentProject?.maxPermission > PERMISSIONS.READ)
+const projectViewService = new ProjectViewService()
 
 const {route, viewId} = toRefs(props)
+const currentView = computed(() => baseStore.currentProject?.views.find(v => v.id === viewId.value))
+const includeSubprojects = computed(() => currentView.value?.filter?.include_subprojects ?? false)
 const {
 	filters,
 	hasDefaultFilters,
@@ -109,7 +127,41 @@ const {
 	isLoading,
 	addTask,
 	updateTask,
-} = useGanttFilters(route, viewId)
+} = useGanttFilters(route, viewId, includeSubprojects)
+
+async function updateIncludeSubprojects(newValue: boolean) {
+	if (!currentView.value) {
+		return
+	}
+
+	const oldView = currentView.value
+	const oldFilter = oldView.filter || { filter: '', s: '', filter_include_nulls: false, sort_by: [], order_by: [] } as unknown
+	const oldValue = oldFilter.include_subprojects ?? false
+	if (oldValue === newValue) {
+		return
+	}
+
+	const newFilter = { ...oldFilter, include_subprojects: newValue } as unknown
+
+	projectStore.setProjectView({
+		...oldView,
+		filter: newFilter,
+	})
+
+	try {
+		const updatedView = await projectViewService.update(new ProjectViewModel({
+			...oldView,
+			filter: newFilter,
+		}))
+		projectStore.setProjectView(updatedView)
+	} catch (e) {
+		projectStore.setProjectView({
+			...oldView,
+			filter: { ...oldFilter, include_subprojects: oldValue } as unknown,
+		})
+		error(e)
+	}
+}
 
 const DEFAULT_DATE_RANGE_DAYS = 7
 
