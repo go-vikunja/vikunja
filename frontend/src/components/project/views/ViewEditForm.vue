@@ -40,6 +40,7 @@ const transformFilterFromApi = (filterInput?: IFilters): IFilters => {
 		sortBy?: IFilters['sort_by'],
 		orderBy?: IFilters['order_by'],
 		filterIncludeNulls?: boolean,
+		includeSubprojects?: boolean,
 	} | undefined
 	const filterString = transformFilterStringFromApi(
 		filterInput?.filter ?? '',
@@ -70,6 +71,10 @@ const transformFilterFromApi = (filterInput?: IFilters): IFilters => {
 
 	filter.filter_include_nulls = filterInput?.filter_include_nulls
 		?? camelCaseFilter?.filterIncludeNulls
+		?? false
+
+	filter.include_subprojects = filterInput?.include_subprojects
+		?? camelCaseFilter?.includeSubprojects
 		?? false
 
 	return filter
@@ -161,6 +166,7 @@ function save() {
 			filter: '',
 			filter_include_nulls: filterInput?.filter_include_nulls ?? false,
 			s: '',
+			include_subprojects: filterInput?.include_subprojects ?? false,
 		}
 		if (hasFilterQuery(filterString)) {
 			filter.filter = filterString
@@ -254,7 +260,7 @@ function handleBubbleSave() {
 
 		<div class="field mbe-3">
 			<FancyCheckbox
-				v-model="view.includeSubprojects"
+				v-model="view.filter.include_subprojects"
 				v-tooltip="$t('project.views.includeSubprojectsHint')"
 			>
 				{{ $t('project.views.includeSubprojects') }}

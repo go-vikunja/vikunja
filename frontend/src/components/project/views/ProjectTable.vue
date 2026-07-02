@@ -414,7 +414,7 @@ const taskList = useTaskList(
 	() => props.viewId, 
 	sortBy.value,
 	() => ['comment_count', 'is_unread'],
-	() => currentView.value?.includeSubprojects ?? false,
+	() => currentView.value?.filter?.include_subprojects ?? false,
 )
 
 const {
