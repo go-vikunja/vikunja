@@ -471,7 +471,6 @@ func ensureTaskPositionsForSavedFilterView(s *xorm.Session, a web.Auth, projects
 		return err
 	}
 
-	// Saved filters can never contain the favorites pseudo-project, so plain project scoping is enough.
 	projectIDs, _ := getProjectIDsFromProjects(projects)
 	if len(projectIDs) == 0 {
 		return nil
