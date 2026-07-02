@@ -403,6 +403,27 @@ func TestHumaAdminPasswordResetEmail(t *testing.T) {
 		assert.Zero(t, countResetTokens(t, 14))
 	})
 
+	t.Run("disabled account gets 412 and writes no token", func(t *testing.T) {
+		config.MailerEnabled.Set(true)
+		defer config.MailerEnabled.Set(false)
+
+		// Fixture user 17 is disabled; ShouldNotify would silently drop the email.
+		// It already carries a fixture reset token, so assert no NEW one appears.
+		before := countResetTokens(t, 17)
+		res := adminReq(t, e, http.MethodPost, "/api/v2/admin/users/17/password-reset-email", admin, "")
+		assert.Equal(t, http.StatusPreconditionFailed, res.Code, res.Body.String())
+		assert.Equal(t, before, countResetTokens(t, 17))
+	})
+
+	t.Run("bot account gets 400 and writes no token", func(t *testing.T) {
+		config.MailerEnabled.Set(true)
+		defer config.MailerEnabled.Set(false)
+
+		res := adminReq(t, e, http.MethodPost, "/api/v2/admin/users/23/password-reset-email", admin, "")
+		assert.Equal(t, http.StatusBadRequest, res.Code, res.Body.String())
+		assert.Zero(t, countResetTokens(t, 23))
+	})
+
 	t.Run("unknown user returns 404", func(t *testing.T) {
 		config.MailerEnabled.Set(true)
 		defer config.MailerEnabled.Set(false)

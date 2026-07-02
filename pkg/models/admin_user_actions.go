@@ -128,6 +128,16 @@ func RequestPasswordResetAsAdmin(s *xorm.Session, id int64) error {
 		return &user.ErrAccountIsNotLocal{UserID: target.ID}
 	}
 
+	// notifications.Notify silently drops emails for accounts ShouldNotify
+	// refuses (bots, disabled or locked accounts); surface that instead of
+	// reporting a sent email.
+	if target.IsBot() {
+		return ErrInvalidData{Message: "bot accounts cannot receive password-reset emails"}
+	}
+	if _, err := user.GetUserByID(s, id); err != nil {
+		return err
+	}
+
 	return user.RequestUserPasswordResetToken(s, target)
 }
 
