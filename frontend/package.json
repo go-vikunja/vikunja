@@ -13,7 +13,7 @@
   },
   "homepage": "https://vikunja.io/",
   "funding": "https://opencollective.com/vikunja",
-  "packageManager": "pnpm@10.34.4",
+  "packageManager": "pnpm@11.9.0",
   "engines": {
     "node": ">=24.0.0"
   },
@@ -160,30 +160,5 @@
     "wait-on": "9.0.10",
     "workbox-cli": "7.4.1",
     "ws": "8.21.0"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "@parcel/watcher",
-      "@sentry/cli",
-      "esbuild",
-      "puppeteer",
-      "vue-demi"
-    ],
-    "overrides": {
-      "minimatch": "10.2.5",
-      "rollup": "$rollup",
-      "basic-ftp": "6.0.1",
-      "serialize-javascript": "7.0.6",
-      "flatted": "3.4.2",
-      "ip-address": "10.2.0",
-      "postcss": "8.5.16",
-      "tmp": "0.2.7",
-      "esbuild": "0.28.1",
-      "form-data": "4.0.6",
-      "markdown-it": "14.2.0",
-      "launch-editor": "2.14.1",
-      "@babel/core": "8.0.1",
-      "js-yaml@4": "5.2.0"
-    }
   }
 }

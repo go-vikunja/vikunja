@@ -7,7 +7,7 @@ ENV PNPM_CACHE_FOLDER=.cache/pnpm/
 ENV PUPPETEER_SKIP_DOWNLOAD=true
 ENV CYPRESS_INSTALL_BINARY=0
 
-COPY frontend/pnpm-lock.yaml frontend/package.json frontend/.npmrc ./
+COPY frontend/pnpm-lock.yaml frontend/package.json frontend/pnpm-workspace.yaml ./
 RUN npm install -g corepack && corepack enable && \
     pnpm install --frozen-lockfile
 COPY frontend/ ./
