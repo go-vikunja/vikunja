@@ -49,7 +49,10 @@
 				{{ $t('task.repeat.fromCurrentDate') }}
 			</FancyCheckbox>
 		</div>
-		<div class="repeat-custom-row">
+		<div
+			v-if="!hasUnmappableFreq"
+			class="repeat-custom-row"
+		>
 			<span class="repeat-custom-label">
 				{{ $t('task.repeat.each') }}
 			</span>
@@ -138,6 +141,7 @@ import TaskModel from '@/models/task'
 import {
 	freqToUiFreq,
 	isComplexRepeat,
+	isMappableFreq,
 	repeatFromSettings,
 	type RepeatFrequency,
 } from '@/helpers/rrule'
@@ -167,6 +171,12 @@ const repeatsFromCurrentDate = ref(false)
 // It can still be removed via the parent's "remove repeat" action.
 const isComplex = computed(() => isComplexRepeat(task.value?.repeat))
 
+// The interval row can only mislead for a freq the dropdown has no unit for
+// (e.g. MINUTELY shown as "30 Days"), so hide it rather than show a wrong value.
+const hasUnmappableFreq = computed(() =>
+	task.value?.repeat != null && !isMappableFreq(task.value.repeat.freq),
+)
+
 watch(
 	() => props.modelValue,
 	(value: ITask | undefined) => {
@@ -190,7 +200,15 @@ watch(
 )
 
 function updateData() {
-	if (!task.value || isComplex.value) {
+	if (!task.value) {
+		return
+	}
+
+	// "From current date" is orthogonal to the RRULE, so it stays editable for
+	// complex rules — persist just that flag without rebuilding (and dropping) the rule.
+	if (isComplex.value) {
+		task.value.repeatsFromCurrentDate = repeatsFromCurrentDate.value
+		emit('update:modelValue', task.value)
 		return
 	}
 

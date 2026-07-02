@@ -32,6 +32,14 @@ const UI_TO_FREQ: Record<RepeatFrequency, string> = {
 }
 
 /**
+ * Whether the simple editor can represent this freq. Freqs it can't map
+ * (MINUTELY/SECONDLY, or anything unknown) have no matching unit in the dropdown.
+ */
+export function isMappableFreq(freq: string | null | undefined): boolean {
+	return !!freq && freq.toLowerCase() in FREQ_TO_UI
+}
+
+/**
  * Maps an API freq string to a UI frequency.
  */
 export function freqToUiFreq(freq: string): RepeatFrequency {
@@ -131,6 +139,11 @@ export function isRepeating(repeat: ITaskRepeat | null | undefined): boolean {
 export function isComplexRepeat(repeat: ITaskRepeat | null | undefined): boolean {
 	if (!repeat) {
 		return false
+	}
+	// A freq the simple editor doesn't map (MINUTELY/SECONDLY or anything unknown)
+	// would fall back to "daily" and silently rewrite the rule, so treat it as complex.
+	if (repeat.freq && !isMappableFreq(repeat.freq)) {
+		return true
 	}
 	if ((repeat.byMonthDay?.length ?? 0) > 1) {
 		return true

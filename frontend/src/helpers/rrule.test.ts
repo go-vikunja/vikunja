@@ -1,6 +1,6 @@
 import {describe, it, expect} from 'vitest'
 
-import {isComplexRepeat} from './rrule'
+import {isComplexRepeat, isMappableFreq} from './rrule'
 import type {ITaskRepeat} from '@/modelTypes/ITask'
 
 describe('isComplexRepeat', () => {
@@ -43,5 +43,25 @@ describe('isComplexRepeat', () => {
 
 	it('ignores empty advanced values', () => {
 		expect(isComplexRepeat({freq: 'daily', interval: 1, byDay: [], until: '', wkst: ''})).toBe(false)
+	})
+
+	it('treats a freq the simple editor cannot map as complex', () => {
+		expect(isComplexRepeat({freq: 'minutely', interval: 1})).toBe(true)
+		expect(isComplexRepeat({freq: 'secondly', interval: 1})).toBe(true)
+	})
+})
+
+describe('isMappableFreq', () => {
+	it('accepts the freqs the simple editor supports', () => {
+		for (const freq of ['hourly', 'daily', 'weekly', 'monthly', 'yearly', 'DAILY']) {
+			expect(isMappableFreq(freq)).toBe(true)
+		}
+	})
+
+	it('rejects freqs with no dropdown unit', () => {
+		expect(isMappableFreq('minutely')).toBe(false)
+		expect(isMappableFreq('secondly')).toBe(false)
+		expect(isMappableFreq('')).toBe(false)
+		expect(isMappableFreq(undefined)).toBe(false)
 	})
 })
