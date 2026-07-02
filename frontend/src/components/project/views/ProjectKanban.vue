@@ -447,7 +447,7 @@ const project = computed(() => projectId.value ? projectStore.projects[projectId
 const view = computed(() => project.value?.views.find(v => v.id === props.viewId) as IProjectView || null)
 const requestParams = computed(() => ({
 	...params.value,
-	...(view.value?.includeSubprojects ? {include_subprojects: true} : {}),
+	...(view.value?.filter?.include_subprojects ? {include_subprojects: true} : {}),
 }))
 const canWrite = computed(() => baseStore.currentProject?.maxPermission > Permissions.READ && view.value.bucketConfigurationMode === 'manual')
 const canCreateTasks = computed(() => canWrite.value && projectId.value > 0)
