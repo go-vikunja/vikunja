@@ -709,6 +709,13 @@ func TestTodoistDueStringToRRule(t *testing.T) {
 		{"every! day strict", "every! day", true, "en", "FREQ=DAILY;INTERVAL=1"},
 		{"every !week strict", "every !week", true, "en", "FREQ=WEEKLY;INTERVAL=1"},
 
+		// Time-of-day suffixes are stripped before matching
+		{"daily at time", "every day at 9am", true, "en", "FREQ=DAILY;INTERVAL=1"},
+		{"daily at clock time", "every day at 09:00", true, "en", "FREQ=DAILY;INTERVAL=1"},
+		{"weekday at time", "every friday at 10:30", true, "en", "FREQ=WEEKLY;BYDAY=FR"},
+		{"at-sign time", "every day @ 9am", true, "en", "FREQ=DAILY;INTERVAL=1"},
+		{"interval with time", "every 2 weeks at 8am", true, "en", "FREQ=WEEKLY;INTERVAL=2"},
+
 		// Unknown patterns return empty string
 		{"unknown pattern", "every third tuesday", true, "en", ""},
 		{"complex pattern", "every 2nd monday of the month", true, "en", ""},

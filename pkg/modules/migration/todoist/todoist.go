@@ -258,6 +258,12 @@ func todoistDueStringToRRule(dueString string, isRecurring bool, lang string) st
 	dueString = strings.ReplaceAll(dueString, "!", "")
 	dueString = strings.TrimSpace(dueString)
 
+	// Strip a trailing time-of-day clause ("every day at 9am", "every day @ 9am").
+	// Vikunja recurrence has no time-of-day component, and leaving it would stop the
+	// patterns below from matching, silently dropping the recurrence on import.
+	dueString = regexp.MustCompile(`\s+(?:at|@)\s+.+$`).ReplaceAllString(dueString, "")
+	dueString = strings.TrimSpace(dueString)
+
 	// Map weekday names to RRULE BYDAY values
 	weekdays := map[string]string{
 		"monday":    "MO",
