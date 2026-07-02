@@ -11,6 +11,16 @@ export function getApiBaseUrl(): string {
 	return url?.endsWith('/') ? url : url + '/'
 }
 
+/**
+ * Returns an absolute URL for an /api/v2 path. The shared axios instances pin
+ * baseURL to /api/v1; v2 callers hand axios absolute URLs to bypass that —
+ * to be folded into the service layer once the frontend moves fully onto v2.
+ */
+export function apiV2Url(path: string): string {
+	const v2Base = getApiBaseUrl().replace(/\/api\/v1\/$/, '/api/v2/')
+	return new URL(v2Base + path, window.location.origin).toString()
+}
+
 export function HTTPFactory() {
 	const instance = axios.create({
 		baseURL: getApiBaseUrl(),

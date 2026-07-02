@@ -119,6 +119,37 @@
 						</template>
 					</FormField>
 
+					<template v-if="!detailTarget.authProvider">
+						<FormField :label="$t('admin.users.newPasswordLabel')">
+							<template #default="{id}">
+								<FormInput
+									:id="id"
+									v-model="newPassword"
+									type="password"
+									autocomplete="new-password"
+								/>
+							</template>
+						</FormField>
+						<div class="admin-users__password-actions">
+							<XButton
+								variant="secondary"
+								:disabled="!newPassword || settingPassword"
+								:loading="settingPassword"
+								@click="setPassword"
+							>
+								{{ $t('admin.users.setPassword') }}
+							</XButton>
+							<XButton
+								variant="secondary"
+								:disabled="sendingResetEmail"
+								:loading="sendingResetEmail"
+								@click="sendResetEmail"
+							>
+								{{ $t('admin.users.sendResetEmail') }}
+							</XButton>
+						</div>
+					</template>
+
 					<template #footer>
 						<XButton
 							variant="tertiary"
@@ -314,6 +345,9 @@ const deleteMode = ref<DeleteUserMode | null>(null)
 const createOpen = ref(false)
 const creating = ref(false)
 const editable = reactive({isAdmin: false, status: 0})
+const newPassword = ref('')
+const settingPassword = ref(false)
+const sendingResetEmail = ref(false)
 
 function emptyCreateForm(): Required<Pick<CreateAdminUserBody, 'username' | 'email'>> & CreateAdminUserBody {
 	return {
@@ -336,6 +370,7 @@ const hasChanges = computed(() => {
 })
 
 watch(detailTarget, (u) => {
+	newPassword.value = ''
 	if (!u) return
 	editable.isAdmin = !!u.isAdmin
 	editable.status = u.status
@@ -449,6 +484,34 @@ async function saveChanges() {
 	}
 }
 
+async function setPassword() {
+	if (!detailTarget.value || !newPassword.value) return
+	settingPassword.value = true
+	try {
+		const latest = await adminUserService.setPassword(detailTarget.value.id, newPassword.value)
+		replaceUser(latest)
+		success({message: t('admin.users.setPasswordSuccess', {username: latest.username})})
+		newPassword.value = ''
+	} catch (e) {
+		error(e)
+	} finally {
+		settingPassword.value = false
+	}
+}
+
+async function sendResetEmail() {
+	if (!detailTarget.value) return
+	sendingResetEmail.value = true
+	try {
+		await adminUserService.sendPasswordResetEmail(detailTarget.value.id)
+		success({message: t('admin.users.sendResetEmailSuccess', {username: detailTarget.value.username})})
+	} catch (e) {
+		error(e)
+	} finally {
+		sendingResetEmail.value = false
+	}
+}
+
 function cancelDelete() {
 	if (deleting.value) return
 	pendingDelete.value = null
@@ -503,6 +566,12 @@ onMounted(load)
 	dd {
 		margin: 0;
 	}
+}
+
+.admin-users__password-actions {
+	display: flex;
+	gap: 0.5rem;
+	margin-block-end: 1rem;
 }
 
 .admin-users__issuer-url {
