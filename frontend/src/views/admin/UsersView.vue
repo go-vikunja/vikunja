@@ -501,10 +501,11 @@ async function setPassword() {
 
 async function sendResetEmail() {
 	if (!detailTarget.value) return
+	const target = detailTarget.value
 	sendingResetEmail.value = true
 	try {
-		await adminUserService.sendPasswordResetEmail(detailTarget.value.id)
-		success({message: t('admin.users.sendResetEmailSuccess', {username: detailTarget.value.username})})
+		await adminUserService.sendPasswordResetEmail(target.id)
+		success({message: t('admin.users.sendResetEmailSuccess', {username: target.username})})
 	} catch (e) {
 		error(e)
 	} finally {
