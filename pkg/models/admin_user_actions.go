@@ -17,6 +17,8 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
 
 	"xorm.io/xorm"
@@ -83,6 +85,54 @@ func SetUserStatusAsAdmin(s *xorm.Session, id int64, status user.Status) (*user.
 	// Reflect the change on the returned struct; GetUserByID refuses disabled accounts.
 	target.Status = status
 	return target, nil
+}
+
+// SetUserPasswordAsAdmin sets a new password for a local account and
+// invalidates all of the user's sessions, mirroring the self-service flows.
+// Non-local accounts are refused explicitly: unlike self-service, no
+// old-password verification runs here to catch them. It does not commit; the
+// caller owns the transaction.
+func SetUserPasswordAsAdmin(s *xorm.Session, id int64, newPassword string) (*user.User, error) {
+	target, err := loadAdminTargetUser(s, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if !target.IsLocalUser() {
+		return nil, &user.ErrAccountIsNotLocal{UserID: target.ID}
+	}
+
+	if err := user.UpdateUserPassword(s, target, newPassword); err != nil {
+		return nil, err
+	}
+
+	if err := DeleteAllUserSessions(s, target.ID); err != nil {
+		return nil, err
+	}
+
+	if config.MailerEnabled.GetBool() {
+		if err := notifications.Notify(target, &user.PasswordChangedNotification{User: target}, s); err != nil {
+			return nil, err
+		}
+	}
+	return target, nil
+}
+
+// RequestPasswordResetAsAdmin triggers the self-service password-reset email
+// for a local account. The caller must ensure the mailer is enabled —
+// RequestUserPasswordResetToken silently skips the email otherwise. It does
+// not commit; the caller owns the transaction.
+func RequestPasswordResetAsAdmin(s *xorm.Session, id int64) error {
+	target, err := loadAdminTargetUser(s, id)
+	if err != nil {
+		return err
+	}
+
+	if !target.IsLocalUser() {
+		return &user.ErrAccountIsNotLocal{UserID: target.ID}
+	}
+
+	return user.RequestUserPasswordResetToken(s, target)
 }
 
 // DeleteUserAsAdmin removes a user. mode "now" deletes immediately; any other
