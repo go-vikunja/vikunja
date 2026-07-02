@@ -118,7 +118,7 @@ const projectViewService = new ProjectViewService()
 
 const {route, viewId} = toRefs(props)
 const currentView = computed(() => baseStore.currentProject?.views.find(v => v.id === viewId.value))
-const includeSubprojects = computed(() => currentView.value?.includeSubprojects ?? false)
+const includeSubprojects = computed(() => currentView.value?.filter?.include_subprojects ?? false)
 const {
 	filters,
 	hasDefaultFilters,
@@ -135,26 +135,29 @@ async function updateIncludeSubprojects(newValue: boolean) {
 	}
 
 	const oldView = currentView.value
-	const oldValue = oldView.includeSubprojects ?? false
+	const oldFilter = oldView.filter || { filter: '', s: '', filter_include_nulls: false, sort_by: [], order_by: [] } as any
+	const oldValue = oldFilter.include_subprojects ?? false
 	if (oldValue === newValue) {
 		return
 	}
 
+	const newFilter = { ...oldFilter, include_subprojects: newValue } as any
+
 	projectStore.setProjectView({
 		...oldView,
-		includeSubprojects: newValue,
+		filter: newFilter,
 	})
 
 	try {
 		const updatedView = await projectViewService.update(new ProjectViewModel({
 			...oldView,
-			includeSubprojects: newValue,
+			filter: newFilter,
 		}))
 		projectStore.setProjectView(updatedView)
 	} catch (e) {
 		projectStore.setProjectView({
 			...oldView,
-			includeSubprojects: oldValue,
+			filter: { ...oldFilter, include_subprojects: oldValue } as any,
 		})
 		error(e)
 	}
