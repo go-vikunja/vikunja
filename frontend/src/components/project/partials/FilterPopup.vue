@@ -113,13 +113,13 @@ async function updateIncludeSubprojects(newValue: boolean) {
 	}
 
 	const oldView = currentView.value
-	const oldFilter = oldView.filter || { filter: '', s: '', filter_include_nulls: false, sort_by: [], order_by: [] } as any
+	const oldFilter = oldView.filter || { filter: '', s: '', filter_include_nulls: false, sort_by: [], order_by: [] } as unknown
 	const oldValue = oldFilter.include_subprojects ?? false
 	if (oldValue === newValue) {
 		return
 	}
 
-	const newFilter = { ...oldFilter, include_subprojects: newValue } as any
+	const newFilter = { ...oldFilter, include_subprojects: newValue } as unknown
 
 	projectStore.setProjectView({
 		...oldView,
@@ -135,7 +135,7 @@ async function updateIncludeSubprojects(newValue: boolean) {
 	} catch (e) {
 		projectStore.setProjectView({
 			...oldView,
-			filter: { ...oldFilter, include_subprojects: oldValue } as any,
+			filter: { ...oldFilter, include_subprojects: oldValue } as unknown,
 		})
 		error(e)
 	}
