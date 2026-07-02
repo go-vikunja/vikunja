@@ -24,6 +24,7 @@ import (
 	"xorm.io/builder"
 	"xorm.io/xorm"
 
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/web"
@@ -496,7 +497,12 @@ func ensureTaskPositionsForSavedFilterView(s *xorm.Session, a web.Auth, projects
 		return fmt.Errorf("could not fetch unpositioned tasks, error was '%w', sql: '%v', values: %v", err, sql, vals)
 	}
 
-	return createPositionsForTasksInView(s, tasks, view, a)
+	err = createPositionsForTasksInView(s, tasks, view, a)
+	if err != nil && db.IsUniqueConstraintError(err, "task_positions") {
+		// A concurrent request healed the same tasks first — the rows exist, which is all we need.
+		return nil
+	}
+	return err
 }
 
 // findPositionConflicts returns all task positions that share the same position value
