@@ -139,8 +139,8 @@ importers:
         specifier: 3.3.0
         version: 3.3.0
       marked:
-        specifier: 17.0.6
-        version: 17.0.6
+        specifier: 18.0.5
+        version: 18.0.5
       nanoid:
         specifier: 5.1.16
         version: 5.1.16
@@ -4867,8 +4867,8 @@ packages:
     resolution: {integrity: sha512-1TGiQiJVRQ3NPmZH6sx5Cfnmg6GQm9jvC1ch4TK511NjSJvjzKLzn5pPfZRNZkRPZP0HqCioSndqH8v2nRaWVQ==}
     hasBin: true
 
-  marked@17.0.6:
-    resolution: {integrity: sha512-gB0gkNafnonOw0obSTEGZTT86IuhILt2Wfx0mWH/1Au83kybTayroZ/V6nS25mN7u8ASy+5fMhgB3XPNrOZdmA==}
+  marked@18.0.5:
+    resolution: {integrity: sha512-S6GcvALHg6K4ohtu4E7x0a1AqhAjp6cV8KhLSyN9qVapnzJkusVBxZRcIU9AeYsbe6P1hKDusSbEOzGyyuce6w==}
     engines: {node: '>= 20'}
     hasBin: true
 
@@ -11832,7 +11832,7 @@ snapshots:
       punycode.js: 2.3.1
       uc.micro: 2.1.0
 
-  marked@17.0.6: {}
+  marked@18.0.5: {}
 
   math-intrinsics@1.1.0: {}
 
