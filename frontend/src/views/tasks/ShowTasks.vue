@@ -67,6 +67,14 @@
 				{{ $t('task.show.overdue') }}
 			</FancyCheckbox>
 		</p>
+		<p class="show-tasks-options">
+			<FancyCheckbox
+				v-model="hierarchical"
+				@update:modelValue="saveHierarchical"
+			>
+				{{ $t('task.show.hierarchical') }}
+			</FancyCheckbox>
+		</p>
 		<template v-if="!loading && (!tasks || tasks.length === 0) && showNothingToDo">
 			<h3 class="has-text-centered mbs-6">
 				{{ $t('task.show.noTasks') }}
@@ -81,16 +89,19 @@
 			:has-content="false"
 			:loading="loading"
 		>
-			<div class="p-2">
-				<SingleTaskInProject
-					v-for="task in tasks"
-					:key="task.id"
-					:show-project="true"
-					:the-task="task"
-					:can-mark-as-done="(projectStore.projects[task.projectId]?.maxPermission ?? 0) > PERMISSIONS.READ"
-					@taskUpdated="updateTasks"
-				/>
-			</div>
+			<TaskTreeDraggable
+				:tasks="displayedTasks"
+				:all-tasks="allTasksWithSubtasks"
+				:hierarchical="hierarchical"
+				:can-mark-task-as-done="canMarkTaskAsDone"
+				:disabled="!canDragTasks"
+				:show-project="true"
+				:dragging="drag"
+				@taskUpdated="updateTasks"
+				@dragStart="handleDragStart"
+				@drop="handleTaskTreeDrop"
+				@updateList="updateTaskTreeList"
+			/>
 		</Card>
 		<div
 			v-else
@@ -112,12 +123,16 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import Icon from '@/components/misc/Icon'
 import Message from '@/components/misc/Message.vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
-import SingleTaskInProject from '@/components/tasks/partials/SingleTaskInProject.vue'
 import DatepickerWithRange from '@/components/date/DatepickerWithRange.vue'
 import XLabel from '@/components/tasks/partials/Label.vue'
+import TaskTreeDraggable, {
+	type TaskTreeDropEvent,
+	type TaskTreeListUpdateEvent,
+} from '@/components/tasks/partials/TaskTreeDraggable.vue'
 import {DATE_RANGES} from '@/components/date/dateRanges'
 import LlamaCool from '@/assets/llama-cool.svg?component'
 import type {ITask} from '@/modelTypes/ITask'
+import {PROJECT_VIEW_KINDS} from '@/modelTypes/IProjectView'
 import {useAuthStore} from '@/stores/auth'
 import {useTaskStore} from '@/stores/tasks'
 import {useProjectStore} from '@/stores/projects'
@@ -125,6 +140,14 @@ import {useLabelStore} from '@/stores/labels'
 import type {TaskFilterParams} from '@/services/taskCollection'
 import TaskCollectionService from '@/services/taskCollection'
 import {PERMISSIONS} from '@/constants/permissions'
+import {useTaskDragToProject} from '@/composables/useTaskDragToProject'
+import {calculateItemPosition} from '@/helpers/calculateItemPosition'
+import TaskPositionService from '@/services/taskPosition'
+import TaskPositionModel from '@/models/taskPosition'
+import TaskRelationService from '@/services/taskRelation'
+import TaskRelationModel from '@/models/taskRelation'
+import {RELATION_KIND} from '@/types/IRelationKind'
+import {error} from '@/message'
 
 const props = withDefaults(defineProps<{
 	dateFrom?: Date | string,
@@ -149,6 +172,7 @@ const authStore = useAuthStore()
 const taskStore = useTaskStore()
 const projectStore = useProjectStore()
 const labelStore = useLabelStore()
+const {handleTaskDropToProject} = useTaskDragToProject()
 
 const route = useRoute()
 const router = useRouter()
@@ -157,6 +181,10 @@ const {t} = useI18n({useScope: 'global'})
 const tasks = ref<ITask[]>([])
 const showNothingToDo = ref<boolean>(false)
 const taskCollectionService = ref(new TaskCollectionService())
+const taskPositionService = ref(new TaskPositionService())
+const taskRelationService = ref(new TaskRelationService())
+const hierarchical = ref(localStorage.getItem('showTasksHierarchical') === 'true')
+const drag = ref(false)
 
 setTimeout(() => showNothingToDo.value = true, 100)
 
@@ -194,9 +222,47 @@ const pageTitle = computed(() => {
 		})
 })
 const hasTasks = computed(() => tasks.value && tasks.value.length > 0)
+
+// Build a flat list including embedded subtasks for hierarchical rendering.
+// Tasks from tasks.value take priority over embedded stubs (full data wins).
+const allTasksWithSubtasks = computed((): ITask[] => {
+	if (!hierarchical.value) return tasks.value
+	const map = new Map<number, ITask>()
+	tasks.value.forEach(t => addEmbeddedSubtasks(t, map))
+	tasks.value.forEach(t => map.set(t.id, t))
+	return [...map.values()]
+})
+
+function addEmbeddedSubtasks(task: ITask, map: Map<number, ITask>) {
+	(task.relatedTasks?.subtask ?? []).forEach(subtask => {
+		if (map.has(subtask.id)) {
+			return
+		}
+
+		map.set(subtask.id, subtask)
+		addEmbeddedSubtasks(subtask, map)
+	})
+}
+
+// Top-level tasks: a task is hidden if any of its parents exists in the full task tree.
+// relatedTasks.parenttask is always populated by the API for subtasks.
+// We check against allTasksWithSubtasks (not just tasks.value) to cover all levels.
+const displayedTasks = computed((): ITask[] => {
+	if (!hierarchical.value) return tasks.value
+	const allTaskIds = new Set(allTasksWithSubtasks.value.map(t => t.id))
+	return tasks.value.filter(t => {
+		const parentIds = (t.relatedTasks?.parenttask ?? []).map((p: ITask) => p.id)
+		return parentIds.length === 0 || !parentIds.some(pid => allTaskIds.has(pid))
+	})
+})
 const userAuthenticated = computed(() => authStore.authenticated)
 const loading = computed(() => taskStore.isLoading || taskCollectionService.value.loading)
 const filterIdUsedOnOverview = computed(() => authStore.settings?.frontendSettings?.filterIdUsedOnOverview)
+const canDragTasks = computed(() => tasks.value.some(canMarkTaskAsDone))
+
+function canMarkTaskAsDone(task: ITask) {
+	return (projectStore.projects[task.projectId]?.maxPermission ?? 0) > PERMISSIONS.READ
+}
 
 interface dateStrings {
 	dateFrom: string,
@@ -235,8 +301,139 @@ function setShowNulls(show: boolean) {
 	})
 }
 
+function saveHierarchical(value: boolean) {
+	localStorage.setItem('showTasksHierarchical', String(value))
+}
+
 function clearLabelFilter() {
 	emit('clearLabelFilter')
+}
+
+function handleDragStart(e: { item: HTMLElement }) {
+	drag.value = true
+	const taskId = parseInt(e.item.dataset.taskId ?? '', 10)
+	const task = allTasksWithSubtasks.value.find(t => t.id === taskId)
+
+	if (task) {
+		taskStore.setDraggedTask(task)
+	} else {
+		taskStore.setDraggedTask(null)
+		drag.value = false
+	}
+}
+
+function removeTaskFromOverview(task: ITask) {
+	tasks.value = tasks.value.filter(t => t.id !== task.id)
+	tasks.value.forEach(t => {
+		if (typeof t.relatedTasks?.subtask !== 'undefined') {
+			t.relatedTasks.subtask = t.relatedTasks.subtask.filter(subtask => subtask.id !== task.id)
+		}
+	})
+}
+
+function findTaskById(taskId: ITask['id'], taskList: ITask[] = allTasksWithSubtasks.value): ITask | undefined {
+	for (const task of taskList) {
+		if (task.id === taskId) {
+			return task
+		}
+
+		const found = findTaskById(taskId, task.relatedTasks?.subtask ?? [])
+		if (found) {
+			return found
+		}
+	}
+}
+
+function updateTaskTreeList({parentTaskId, tasks: updatedTasks}: TaskTreeListUpdateEvent) {
+	if (parentTaskId === null) {
+		const updatedTaskIds = new Set(updatedTasks.map(({id}) => id))
+		tasks.value = [
+			...updatedTasks,
+			...tasks.value.filter(({id}) => !updatedTaskIds.has(id)),
+		]
+		return
+	}
+
+	const parent = findTaskById(parentTaskId)
+	if (parent) {
+		parent.relatedTasks.subtask = updatedTasks
+	}
+}
+
+function getTaskTreeSiblings(parentTaskId: ITask['id'] | null): ITask[] {
+	if (parentTaskId === null) {
+		return displayedTasks.value
+	}
+
+	return findTaskById(parentTaskId)?.relatedTasks?.subtask ?? []
+}
+
+function resolveListViewId(task: ITask) {
+	return projectStore.projects[task.projectId]?.views.find(({viewKind}) => viewKind === PROJECT_VIEW_KINDS.LIST)?.id
+}
+
+async function updateTaskPosition(task: ITask, siblings: ITask[], index: number) {
+	const projectViewId = resolveListViewId(task)
+	if (typeof projectViewId === 'undefined') {
+		return
+	}
+
+	const taskBefore = siblings[index - 1] ?? null
+	const taskAfter = siblings[index + 1] ?? null
+	const position = calculateItemPosition(taskBefore?.position ?? null, taskAfter?.position ?? null)
+
+	await taskPositionService.value.update(new TaskPositionModel({
+		position,
+		projectViewId,
+		taskId: task.id,
+	}))
+	task.position = position
+}
+
+async function updateTaskParent(task: ITask, oldParentTaskId: ITask['id'] | null, newParentTaskId: ITask['id'] | null) {
+	if (oldParentTaskId === newParentTaskId) {
+		return
+	}
+
+	if (oldParentTaskId !== null) {
+		await taskRelationService.value.delete(new TaskRelationModel({
+			taskId: oldParentTaskId,
+			otherTaskId: task.id,
+			relationKind: RELATION_KIND.SUBTASK,
+		}))
+	}
+
+	if (newParentTaskId !== null) {
+		await taskRelationService.value.create(new TaskRelationModel({
+			taskId: newParentTaskId,
+			otherTaskId: task.id,
+			relationKind: RELATION_KIND.SUBTASK,
+		}))
+		task.relatedTasks.parenttask = [findTaskById(newParentTaskId)].filter((task): task is ITask => Boolean(task))
+	} else {
+		task.relatedTasks.parenttask = []
+	}
+}
+
+async function handleTaskTreeDrop(e: TaskTreeDropEvent) {
+	drag.value = false
+	const {moved} = await handleTaskDropToProject(e, removeTaskFromOverview)
+	if (moved) {
+		return
+	}
+
+	const task = findTaskById(e.taskId)
+	if (!task) {
+		return
+	}
+
+	try {
+		await updateTaskParent(task, e.oldParentTaskId, e.newParentTaskId)
+		await updateTaskPosition(task, getTaskTreeSiblings(e.newParentTaskId), e.newIndex)
+	} catch (e) {
+		error(e)
+		await loadPendingTasks(props.dateFrom, props.dateTo, filterIdUsedOnOverview.value)
+	}
 }
 
 async function loadPendingTasks(from: Date|string, to: Date|string, filterId: number | null | undefined) {
@@ -254,7 +451,7 @@ async function loadPendingTasks(from: Date|string, to: Date|string, filterId: nu
 		filter: 'done = false',
 		filter_include_nulls: props.showNulls,
 		s: '',
-		expand: ['comment_count', 'is_unread'],
+		expand: ['subtasks', 'comment_count', 'is_unread'],
 	}
 
 	if (!showAll.value) {
