@@ -217,7 +217,7 @@ func TestRRuleMigrationSQLite(t *testing.T) {
 
 	// Drop: the legacy columns are gone.
 	_, err = engine.QueryString("SELECT repeat_after FROM tasks LIMIT 1")
-	assert.Error(t, err, "repeat_after column should have been dropped")
+	require.Error(t, err, "repeat_after column should have been dropped")
 	_, err = engine.QueryString("SELECT repeat_mode FROM tasks LIMIT 1")
-	assert.Error(t, err, "repeat_mode column should have been dropped")
+	require.Error(t, err, "repeat_mode column should have been dropped")
 }
