@@ -126,10 +126,22 @@ func getOrderByDBStatement(opts *taskSearchOptions) (orderby string, err error) 
 	// Since xorm does not use placeholders for order by, it is possible to expose this with sql injection if we're directly
 	// passing user input to the db.
 	// As a workaround to prevent this, we check for valid column names here prior to passing it to the db.
-	for i, param := range opts.sortby {
+	parts := make([]string, 0, len(opts.sortby))
+	for _, param := range opts.sortby {
 		// Validate the params
 		if err := param.validate(); err != nil {
 			return "", err
+		}
+
+		if param.sortBy == taskPropertyRelevance {
+			// pdb.score is only valid SQL when the ParadeDB extension is installed.
+			// Search strips the param when the query cannot be scored, this guards
+			// any other caller. Most-relevant-first is the only useful direction,
+			// the requested order is ignored.
+			if db.ParadeDBAvailable() {
+				parts = append(parts, "pdb.score(tasks.id) DESC")
+			}
+			continue
 		}
 
 		var prefix string
@@ -142,27 +154,25 @@ func getOrderByDBStatement(opts *taskSearchOptions) (orderby string, err error) 
 			prefix = "tasks."
 		}
 
+		part := prefix + "`" + param.sortBy + "` " + param.orderBy.String()
+
 		// Mysql sorts columns with null values before ones without null value.
 		// Because it does not have support for NULLS FIRST or NULLS LAST we work around this by
 		// first sorting for null (or not null) values and then the order we actually want to.
 		if db.Type() == schemas.MYSQL {
-			orderby += prefix + "`" + param.sortBy + "` IS NULL, "
+			part = prefix + "`" + param.sortBy + "` IS NULL, " + part
 		}
-
-		orderby += prefix + "`" + param.sortBy + "` " + param.orderBy.String()
 
 		// Postgres and sqlite allow us to control how columns with null values are sorted.
 		// To make that consistent with the sort order we have and other dbms, we're adding a separate clause here.
 		if db.Type() == schemas.POSTGRES || db.Type() == schemas.SQLITE {
-			orderby += " NULLS LAST"
+			part += " NULLS LAST"
 		}
 
-		if (i + 1) < len(opts.sortby) {
-			orderby += ", "
-		}
+		parts = append(parts, part)
 	}
 
-	return
+	return strings.Join(parts, ", "), nil
 }
 
 func convertFiltersToDBFilterCond(rawFilters []*taskFilter, includeNulls bool) (filterCond builder.Cond, err error) {
@@ -414,11 +424,6 @@ func (d *dbTaskSearcher) buildSubtaskRootCondition(opts *taskSearchOptions) (bui
 //nolint:gocyclo
 func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCount int64, err error) {
 
-	orderby, err := getOrderByDBStatement(opts)
-	if err != nil {
-		return nil, 0, err
-	}
-
 	joinTaskBuckets := hasBucketIDInParsedFilter(opts.parsedFilters)
 
 	var expandSubtasks = false
@@ -457,18 +462,27 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		}
 	}
 
+	relevanceSortRequested := false
+	for _, param := range opts.sortby {
+		if param.sortBy == taskPropertyRelevance {
+			relevanceSortRequested = true
+			break
+		}
+	}
+
 	// ParadeDB exposes the BM25 relevance score via pdb.score(tasks.id) for a query
 	// containing a ParadeDB operator (the ||| from MultiFieldSearch qualifies). When
-	// searching without an explicit user sort, order by relevance so tasks matching
-	// all query words rank above tasks matching only some.
+	// searching without an explicit user sort — or when the client explicitly sorts
+	// by relevance — order by the score so tasks matching all query words rank
+	// above tasks matching only some.
 	//
 	// Limited to pure-text searches: numeric searches add an `OR index = N` branch,
 	// which pdb.score rejects as an unsupported query shape. pdb.score is also
 	// invalid SQL on sqlite/mysql/plain postgres, hence the ParadeDBAvailable() gate.
 	wantsRelevanceRanking := db.ParadeDBAvailable() &&
 		opts.search != "" &&
-		!opts.userProvidedSort &&
-		searchIndex == 0
+		searchIndex == 0 &&
+		(!opts.userProvidedSort || relevanceSortRequested)
 
 	var projectIDCond builder.Cond
 	var favoritesCond builder.Cond
@@ -518,6 +532,28 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 	limit, start := getLimitFromPageIndex(opts.page, opts.perPage)
 	cond := builder.And(builder.Or(projectIDCond, favoritesCond), where, filterCond)
 
+	// When the favorites arm is still part of the query (Favorites view, or
+	// out-of-scope favorites exist), its shape is unsupported — stay unranked.
+	rankByRelevance := wantsRelevanceRanking && favoritesCond == nil
+
+	if rankByRelevance && !relevanceSortRequested {
+		opts.sortby = append([]*sortParam{{sortBy: taskPropertyRelevance, orderBy: orderDescending}}, opts.sortby...)
+	}
+	if !rankByRelevance && relevanceSortRequested {
+		kept := make([]*sortParam, 0, len(opts.sortby))
+		for _, param := range opts.sortby {
+			if param.sortBy != taskPropertyRelevance {
+				kept = append(kept, param)
+			}
+		}
+		opts.sortby = kept
+	}
+
+	orderby, err := getOrderByDBStatement(opts)
+	if err != nil {
+		return nil, 0, err
+	}
+
 	var distinct = "tasks.*"
 	if strings.Contains(orderby, "task_positions.") {
 		distinct += ", task_positions.position"
@@ -527,17 +563,12 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		cond = builder.And(cond, subtaskRootCond)
 	}
 
-	// When the favorites arm is still part of the query (Favorites view, or
-	// out-of-scope favorites exist), its shape is unsupported — stay unranked.
-	rankByRelevance := wantsRelevanceRanking && favoritesCond == nil
-
 	query := d.s.Where(cond)
 	if rankByRelevance {
 		// Select() passes the raw column list through untouched while Distinct()
 		// (no args) still emits DISTINCT. Distinct("tasks.*, pdb.score(tasks.id)")
 		// would quote-corrupt the function call into "pdb"."score(tasks"."id)".
 		query = query.Select(distinct + ", pdb.score(tasks.id)").Distinct()
-		orderby = "pdb.score(tasks.id) DESC, " + orderby
 	} else {
 		query = query.Distinct(distinct)
 	}
