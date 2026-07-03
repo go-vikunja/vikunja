@@ -15,7 +15,7 @@ overrides:
   tmp: 0.2.7
   esbuild: 0.28.1
   form-data: 4.0.6
-  markdown-it: 14.2.0
+  markdown-it: 14.3.0
   launch-editor: 2.14.1
   '@babel/core': 8.0.1
   js-yaml@4: 5.2.1
@@ -4807,19 +4807,19 @@ packages:
     resolution: {integrity: sha512-sa2ErMQ6kKOA4l31gLGYliFQrMKkqSO0ZJgGhDHKijPf0pNFM9vghjAh3gn26pS4JDRs7Iwa9S36gxm3vgZTzg==}
     peerDependencies:
       '@types/markdown-it': '*'
-      markdown-it: 14.2.0
+      markdown-it: 14.3.0
 
   markdown-it-attrs@4.5.0:
     resolution: {integrity: sha512-dsuEyK/MDAYsdZLDIaDAQXz5+gP0AAbJ4ZjOSB0w+ZGe4lLbzyCgGg0LApC6j9zUK2F+2SA9VkzXfyNG9hL/8g==}
     engines: {node: '>=6'}
     peerDependencies:
-      markdown-it: 14.2.0
+      markdown-it: 14.3.0
 
   markdown-it-emoji@3.0.0:
     resolution: {integrity: sha512-+rUD93bXHubA4arpEZO3q80so0qgoFJEKRkRbjKX8RTdca89v2kfyF+xR3i2sQTwql9tpPZPOQN5B+PunspXRg==}
 
-  markdown-it@14.2.0:
-    resolution: {integrity: sha512-1TGiQiJVRQ3NPmZH6sx5Cfnmg6GQm9jvC1ch4TK511NjSJvjzKLzn5pPfZRNZkRPZP0HqCioSndqH8v2nRaWVQ==}
+  markdown-it@14.3.0:
+    resolution: {integrity: sha512-RCEsPjR+sr0x+AuYp601tKTkgFG4YEPLCzHST3cQ/fhlJkqAkz1L2/Qbp1j9qw5SBwQHFBoW8+hoN5xssOF0Tw==}
     hasBin: true
 
   marked@18.0.5:
@@ -11185,9 +11185,9 @@ snapshots:
       gray-matter: 4.0.3
       jiti: 2.7.0
       jsdom: 27.4.0(@noble/hashes@2.2.0)
-      markdown-it: 14.2.0
-      markdown-it-anchor: 9.2.0(@types/markdown-it@14.1.2)(markdown-it@14.2.0)
-      markdown-it-attrs: 4.5.0(markdown-it@14.2.0)
+      markdown-it: 14.3.0
+      markdown-it-anchor: 9.2.0(@types/markdown-it@14.1.2)(markdown-it@14.3.0)
+      markdown-it-attrs: 4.5.0(markdown-it@14.3.0)
       markdown-it-emoji: 3.0.0
       micromatch: 4.0.8
       mrmime: 2.0.1
@@ -11743,18 +11743,18 @@ snapshots:
 
   map-obj@4.3.0: {}
 
-  markdown-it-anchor@9.2.0(@types/markdown-it@14.1.2)(markdown-it@14.2.0):
+  markdown-it-anchor@9.2.0(@types/markdown-it@14.1.2)(markdown-it@14.3.0):
     dependencies:
       '@types/markdown-it': 14.1.2
-      markdown-it: 14.2.0
+      markdown-it: 14.3.0
 
-  markdown-it-attrs@4.5.0(markdown-it@14.2.0):
+  markdown-it-attrs@4.5.0(markdown-it@14.3.0):
     dependencies:
-      markdown-it: 14.2.0
+      markdown-it: 14.3.0
 
   markdown-it-emoji@3.0.0: {}
 
-  markdown-it@14.2.0:
+  markdown-it@14.3.0:
     dependencies:
       argparse: 2.0.1
       entities: 4.5.0
