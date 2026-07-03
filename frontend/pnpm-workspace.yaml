@@ -8,7 +8,7 @@ overrides:
   minimatch: 10.2.5
   rollup: $rollup
   basic-ftp: 6.0.1
-  serialize-javascript: 7.0.6
+  serialize-javascript: 7.0.7
   flatted: 3.4.2
   ip-address: 10.2.0
   postcss: 8.5.16
