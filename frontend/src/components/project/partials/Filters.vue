@@ -24,7 +24,7 @@
 
 		<div class="field is-flex is-flex-direction-column">
 			<FancyCheckbox
-				v-model="params.filter_include_nulls"
+				v-model="params.filterIncludeNulls"
 				@change="() => change('always')"
 			>
 				{{ $t('filters.attributes.includeNulls') }}
@@ -140,6 +140,7 @@ watch(
 	() => props.modelValue,
 	(value: TaskFilterParams) => {
 		params.value = {...value}
+		params.value.filterIncludeNulls = value.filterIncludeNulls ?? value.filter_include_nulls ?? false
 	},
 	{
 		immediate: true,
@@ -181,6 +182,7 @@ function change(event: 'blur' | 'modelValue' | 'always') {
 
 	const newParams = {
 		...params.value,
+		filter_include_nulls: params.value.filterIncludeNulls ?? false,
 		filter: s === '' ? filter : '',
 		s,
 	}

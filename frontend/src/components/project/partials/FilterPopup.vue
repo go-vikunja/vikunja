@@ -105,7 +105,7 @@ const currentView = computed(() => {
 
 const isProjectView = computed(() => Boolean(props.projectId && props.projectId > 0 && props.viewId))
 
-const includeSubprojects = computed(() => currentView.value?.filter?.include_subprojects ?? false)
+const includeSubprojects = computed(() => currentView.value?.filter?.includeSubprojects ?? currentView.value?.filter?.include_subprojects ?? false)
 
 async function updateIncludeSubprojects(newValue: boolean) {
 	if (!currentView.value || !props.projectId) {
@@ -113,13 +113,13 @@ async function updateIncludeSubprojects(newValue: boolean) {
 	}
 
 	const oldView = currentView.value
-	const oldFilter = oldView.filter || { filter: '', s: '', filter_include_nulls: false, sort_by: [], order_by: [] } as unknown
-	const oldValue = oldFilter.include_subprojects ?? false
+	const oldFilter = oldView.filter || { filter: '', s: '', filter_include_nulls: false, sort_by: [], order_by: [] } as unknown as any
+	const oldValue = oldFilter.includeSubprojects ?? oldFilter.include_subprojects ?? false
 	if (oldValue === newValue) {
 		return
 	}
 
-	const newFilter = { ...oldFilter, include_subprojects: newValue } as unknown
+	const newFilter = { ...oldFilter, include_subprojects: newValue, includeSubprojects: newValue } as unknown
 
 	projectStore.setProjectView({
 		...oldView,
@@ -135,7 +135,7 @@ async function updateIncludeSubprojects(newValue: boolean) {
 	} catch (e) {
 		projectStore.setProjectView({
 			...oldView,
-			filter: { ...oldFilter, include_subprojects: oldValue } as unknown,
+			filter: { ...oldFilter, include_subprojects: oldValue, includeSubprojects: oldValue } as unknown,
 		})
 		error(e)
 	}

@@ -65,13 +65,15 @@ onBeforeMount(() => {
 		// match the API query param format. We check both key forms here to handle
 		// data coming from either the API response (camelCased by assignData) or
 		// from a freshly constructed filter object (snake_case).
-		filter.filter_include_nulls = filterInput.filter_include_nulls
+		filter.filterIncludeNulls = filterInput.filter_include_nulls
 			?? (filterInput as Record<string, unknown>).filterIncludeNulls as boolean
 			?? false
+		filter.filter_include_nulls = filter.filterIncludeNulls
 
-		filter.include_subprojects = filterInput.include_subprojects
+		filter.includeSubprojects = filterInput.include_subprojects
 			?? (filterInput as Record<string, unknown>).includeSubprojects as boolean
 			?? false
+		filter.include_subprojects = filter.includeSubprojects
 
 		return filter
 	}
@@ -101,8 +103,10 @@ function save() {
 			},
 		)
 		const filter: IFilters = {
-			filter_include_nulls: filterInput?.filter_include_nulls ?? false,
-			include_subprojects: filterInput?.include_subprojects ?? false,
+			filter_include_nulls: filterInput?.filterIncludeNulls ?? filterInput?.filter_include_nulls ?? false,
+			filterIncludeNulls: filterInput?.filterIncludeNulls ?? filterInput?.filter_include_nulls ?? false,
+			include_subprojects: filterInput?.includeSubprojects ?? filterInput?.include_subprojects ?? false,
+			includeSubprojects: filterInput?.includeSubprojects ?? filterInput?.include_subprojects ?? false,
 		}
 		if (hasFilterQuery(filterString)) {
 			filter.filter = filterString
@@ -196,7 +200,7 @@ function handleBubbleSave() {
 
 		<div class="field mbe-3">
 			<FancyCheckbox
-				v-model="view.filter.include_subprojects"
+				v-model="view.filter.includeSubprojects"
 				v-tooltip="$t('project.views.includeSubprojects')"
 			>
 				{{ $t('project.views.includeSubprojects') }}
@@ -205,7 +209,7 @@ function handleBubbleSave() {
 
 		<div class="field mbe-3">
 			<FancyCheckbox
-				v-model="view.filter.filter_include_nulls"
+				v-model="view.filter.filterIncludeNulls"
 			>
 				{{ $t('filters.attributes.includeNulls') }}
 			</FancyCheckbox>
@@ -286,7 +290,7 @@ function handleBubbleSave() {
 
 						<div class="field mbe-3">
 							<FancyCheckbox
-								v-model="view.bucketConfiguration[index].filter.filter_include_nulls"
+								v-model="view.bucketConfiguration[index].filter.filterIncludeNulls"
 							>
 								{{ $t('filters.attributes.includeNulls') }}
 							</FancyCheckbox>
@@ -297,7 +301,7 @@ function handleBubbleSave() {
 					<XButton
 						variant="secondary"
 						icon="plus"
-						@click="() => view.bucketConfiguration.push({title: '', filter: {filter: '', filter_include_nulls: false}})"
+						@click="() => view.bucketConfiguration.push({title: '', filter: {filter: '', filter_include_nulls: false, filterIncludeNulls: false}})"
 					>
 						{{ $t('project.kanban.addBucket') }}
 					</XButton>

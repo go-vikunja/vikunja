@@ -162,7 +162,7 @@ const {
 	() => projectId.value === -1
 		? ['comment_count', 'is_unread']
 		: ['subtasks', 'comment_count', 'is_unread'],
-	() => currentView.value?.filter?.include_subprojects ?? false,
+	() => currentView.value?.filter?.includeSubprojects ?? currentView.value?.filter?.include_subprojects ?? false,
 )
 
 const taskPositionService = ref(new TaskPositionService())
