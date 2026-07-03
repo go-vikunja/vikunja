@@ -12,6 +12,8 @@ export interface CalendarSettings {
 	fullWeek: boolean
 	// Number of days shown when fullWeek is off (rolling window, 1–31).
 	daysToShow: number
+	// Show all overdue tasks in a sidebar section. Grid layout is unaffected.
+	showOverdue: boolean
 }
 
 const DEFAULTS: CalendarSettings = {
@@ -22,6 +24,7 @@ const DEFAULTS: CalendarSettings = {
 	showDone: false,
 	fullWeek: true,
 	daysToShow: 7,
+	showOverdue: false,
 }
 
 // Module-level so every caller shares the same reactive ref within the tab.

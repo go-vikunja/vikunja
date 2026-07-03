@@ -11,6 +11,7 @@ import {useTaskStore} from '@/stores/tasks'
 import {isoToKebabDate} from '@/helpers/time/isoToKebabDate'
 import {error, success} from '@/message'
 import {i18n} from '@/i18n'
+import {isOverdue, overdueAnchor, overdueCutoff} from './overdue'
 
 export interface PlannerRange {
 	from: Date
@@ -49,34 +50,53 @@ function shuffle<T>(input: T[]): T[] {
 	return arr
 }
 
-export function usePlannerTasks(range: Ref<PlannerRange>, sidebarFilter: Ref<TaskFilterParams>, sidebarSort: Ref<PlannerSidebarSort>) {
+export function usePlannerTasks(
+	range: Ref<PlannerRange>,
+	sidebarFilter: Ref<TaskFilterParams>,
+	sidebarSort: Ref<PlannerSidebarSort>,
+	overdueEnabled: Ref<boolean>,
+) {
 	const authStore = useAuthStore()
 	const taskStore = useTaskStore()
 
 	const gridService = shallowReactive(new TaskService())
 	const sidebarService = shallowReactive(new TaskService())
+	const overdueService = shallowReactive(new TaskService())
 
 	const gridTasks = ref<Map<ITask['id'], ITask>>(new Map())
 	const sidebarTasks = ref<ITask[]>([])
+	const overdueTasks = ref<ITask[]>([])
 
-	const isLoading = computed(() => gridService.loading || sidebarService.loading)
+	const isLoading = computed(() => gridService.loading || sidebarService.loading || overdueService.loading)
 	const loadError = ref(false)
 
 	// Monotonic tokens so a slow earlier load can't overwrite a newer one when the
 	// user navigates faster than requests resolve.
 	let gridLoadId = 0
 	let sidebarLoadId = 0
+	let overdueLoadId = 0
 
-	async function fetchAll(service: TaskService, params: TaskFilterParams, page = 1): Promise<ITask[]> {
-		const tasks = await service.getAll({} as ITask, params, page) as ITask[]
-		if (page < service.totalPages) {
-			return tasks.concat(await fetchAll(service, params, page + 1))
+	async function fetchAll(service: TaskService, params: TaskFilterParams): Promise<ITask[]> {
+		const first = await service.getAll({} as ITask, params, 1) as ITask[]
+		if (service.totalPages <= 1) {
+			return first
 		}
-		return tasks
+		// totalPages is known after the first page, so fetch the rest concurrently.
+		const rest = await Promise.all(Array.from(
+			{length: service.totalPages - 1},
+			(_, i) => service.getAll({} as ITask, params, i + 2) as Promise<ITask[]>,
+		))
+		return first.concat(...rest)
 	}
 
 	async function loadGrid() {
-		const from = isoToKebabDate(range.value.from.toISOString())
+		// Workaround for a backend bug: a date-only filter's `>=`/`=` comparison
+		// excludes a value landing exactly on the boundary instead of treating it
+		// as inclusive, so a task starting at local midnight on the first visible
+		// day gets silently dropped. Query from the day before and let the
+		// client-side day layout (which clamps to the real visible range) discard
+		// anything that doesn't belong.
+		const from = isoToKebabDate(dayjs(range.value.from).subtract(1, 'day').toISOString())
 		// The backend parses a date-only filter value as start-of-day, so a `<= to`
 		// bound on the last day's date would drop tasks later that same day. Use the
 		// day after the last visible day to keep the whole last day inclusive.
@@ -88,8 +108,9 @@ export function usePlannerTasks(range: Ref<PlannerRange>, sidebarFilter: Ref<Tas
 			// Last clause: recurring tasks whose stored start is before the window
 			// still project occurrences into it (expandOccurrences walks forward),
 			// so fetch any repeater that started on/before the range end. Only
-			// repeat_after is filterable (repeat_mode is not), so month-mode tasks
-			// with repeat_after = 0 aren't caught here.
+			// repeat_after is filterable until feat-filterable-repeat-mode lands
+			// (see plans/feat-filterable-repeat-mode.md), so month-mode tasks with
+			// repeat_after = 0 aren't caught here — add `|| repeat_mode != 0` then.
 			filter: '(' +
 				`(start_date >= "${from}" && start_date <= "${to}") || ` +
 				`(end_date >= "${from}" && end_date <= "${to}") || ` +
@@ -116,7 +137,7 @@ export function usePlannerTasks(range: Ref<PlannerRange>, sidebarFilter: Ref<Tas
 		} catch (_) {
 			if (id === gridLoadId) {
 				loadError.value = true
-				error(i18n.global.t('planner.loadError'))
+				error({message: i18n.global.t('planner.loadError')})
 			}
 		}
 	}
@@ -135,7 +156,10 @@ export function usePlannerTasks(range: Ref<PlannerRange>, sidebarFilter: Ref<Tas
 
 		const params: TaskFilterParams = {
 			filter,
-			filter_include_nulls: true,
+			// The sidebar's own null-date filtering happens client-side below, so
+			// include_nulls stays the user's choice from the filter popup — the
+			// backend applies it to every condition of their filter.
+			filter_include_nulls: sidebarFilter.value.filter_include_nulls ?? false,
 			filter_timezone: authStore.settings.timezone,
 			s: sidebarFilter.value.s ?? '',
 			expand: 'subtasks',
@@ -163,19 +187,53 @@ export function usePlannerTasks(range: Ref<PlannerRange>, sidebarFilter: Ref<Tas
 		} catch (_) {
 			if (id === sidebarLoadId) {
 				loadError.value = true
-				error(i18n.global.t('planner.loadError'))
+				error({message: i18n.global.t('planner.loadError')})
 			}
 		}
 	}
 
-	function load() {
-		return Promise.all([loadGrid(), loadSidebar()])
+	async function loadOverdue() {
+		const id = ++overdueLoadId
+		if (!overdueEnabled.value) {
+			overdueTasks.value = []
+			return
+		}
+
+		// Superset fetch: any not-done task dated before today. The precise
+		// "overdue" definition (a schedule reaching into today or later isn't
+		// overdue) mixes the three date fields, which the filter grammar can't
+		// express, so it is applied client-side via isOverdue below.
+		const cutoff = isoToKebabDate(overdueCutoff().toISOString())
+		const params: TaskFilterParams = {
+			filter: `(due_date < "${cutoff}" || end_date < "${cutoff}" || start_date < "${cutoff}") && done = false`,
+			filter_include_nulls: false,
+			filter_timezone: authStore.settings.timezone,
+			s: '',
+			expand: 'subtasks',
+		} as TaskFilterParams
+
+		try {
+			const loaded = await fetchAll(overdueService, params)
+			if (id !== overdueLoadId) {
+				return
+			}
+			overdueTasks.value = loaded
+				.filter(task => isOverdue(task))
+				.sort((a, b) => (overdueAnchor(a)?.getTime() ?? 0) - (overdueAnchor(b)?.getTime() ?? 0))
+			loadError.value = false
+		} catch (_) {
+			if (id === overdueLoadId) {
+				loadError.value = true
+				error({message: i18n.global.t('planner.loadError')})
+			}
+		}
 	}
 
 	watch(range, () => loadGrid(), {immediate: true, deep: true})
 	watch([sidebarFilter, sidebarSort], () => loadSidebar(), {immediate: true, deep: true})
+	watch(overdueEnabled, () => loadOverdue(), {immediate: true})
 
-	// Keep both lists in sync with edits made elsewhere (e.g. the task detail
+	// Keep the lists in sync with edits made elsewhere (e.g. the task detail
 	// modal): re-file the task into the grid or sidebar, or drop it if it's now
 	// done. Only react to tasks the planner already tracks.
 	watch(
@@ -186,6 +244,7 @@ export function usePlannerTasks(range: Ref<PlannerRange>, sidebarFilter: Ref<Tas
 			}
 			const known = gridTasks.value.has(updatedTask.id)
 				|| sidebarTasks.value.some(t => t.id === updatedTask.id)
+				|| overdueTasks.value.some(t => t.id === updatedTask.id)
 			if (known) {
 				placeTask(updatedTask)
 			}
@@ -193,7 +252,7 @@ export function usePlannerTasks(range: Ref<PlannerRange>, sidebarFilter: Ref<Tas
 	)
 
 	// Drop a task deleted elsewhere (e.g. the task detail modal opened over the
-	// planner) from both lists, since the planner stays mounted underneath.
+	// planner) from all lists, since the planner stays mounted underneath.
 	watch(
 		() => taskStore.lastDeletedTask,
 		deletedTask => {
@@ -201,31 +260,45 @@ export function usePlannerTasks(range: Ref<PlannerRange>, sidebarFilter: Ref<Tas
 				return
 			}
 			gridTasks.value.delete(deletedTask.id)
-			const index = sidebarTasks.value.findIndex(t => t.id === deletedTask.id)
-			if (index >= 0) {
-				sidebarTasks.value.splice(index, 1)
-			}
+			removeFromList(sidebarTasks.value, deletedTask.id)
+			removeFromList(overdueTasks.value, deletedTask.id)
 		},
 	)
 
-	// Put a task into whichever list it now belongs to: the grid if it has any
-	// date (timed, all-day or due), otherwise the unscheduled sidebar.
+	function removeFromList(list: ITask[], taskId: ITask['id']) {
+		const index = list.findIndex(t => t.id === taskId)
+		if (index >= 0) {
+			list.splice(index, 1)
+		}
+	}
+
+	// Put a task into whichever list(s) it now belongs to. A dated task always
+	// goes on the grid (matching the date-range fetch in loadGrid, which knows
+	// nothing about overdue status); the overdue sidebar section is a separate,
+	// additive listing of the same task when it's enabled and still not done, not
+	// an alternative to being on the grid. A dateless task falls back to the
+	// unscheduled sidebar.
 	function placeTask(task: ITask) {
 		gridTasks.value.delete(task.id)
-		const sidebarIndex = sidebarTasks.value.findIndex(t => t.id === task.id)
-		if (sidebarIndex >= 0) {
-			sidebarTasks.value.splice(sidebarIndex, 1)
-		}
+		removeFromList(sidebarTasks.value, task.id)
+		removeFromList(overdueTasks.value, task.id)
 
 		if (task.startDate || task.endDate || task.dueDate) {
 			gridTasks.value.set(task.id, task)
 		} else if (!task.done) {
 			sidebarTasks.value.unshift(task)
 		}
+
+		if (overdueEnabled.value && isOverdue(task)) {
+			overdueTasks.value.push(task)
+			overdueTasks.value.sort((a, b) => (overdueAnchor(a)?.getTime() ?? 0) - (overdueAnchor(b)?.getTime() ?? 0))
+		}
 	}
 
 	async function updateTask(partial: ITaskPartialWithId) {
-		const base = gridTasks.value.get(partial.id) ?? sidebarTasks.value.find(t => t.id === partial.id)
+		const base = gridTasks.value.get(partial.id)
+			?? sidebarTasks.value.find(t => t.id === partial.id)
+			?? overdueTasks.value.find(t => t.id === partial.id)
 		if (!base) return
 
 		const oldTask = klona(base)
@@ -236,9 +309,9 @@ export function usePlannerTasks(range: Ref<PlannerRange>, sidebarFilter: Ref<Tas
 		try {
 			const updated = await taskStore.update(newTask)
 			placeTask(updated)
-			success(i18n.global.t('planner.saved'))
+			success({message: i18n.global.t('planner.saved')})
 		} catch (_) {
-			error(i18n.global.t('planner.saveError'))
+			error({message: i18n.global.t('planner.saveError')})
 			placeTask(oldTask)
 		}
 	}
@@ -252,18 +325,18 @@ export function usePlannerTasks(range: Ref<PlannerRange>, sidebarFilter: Ref<Tas
 		try {
 			const updated = await taskStore.update(newTask)
 			placeTask(updated)
-			success(i18n.global.t('planner.saved'))
+			success({message: i18n.global.t('planner.saved')})
 		} catch (_) {
-			error(i18n.global.t('planner.saveError'))
+			error({message: i18n.global.t('planner.saveError')})
 		}
 	}
 
 	return {
 		gridTasks,
 		sidebarTasks,
+		overdueTasks,
 		isLoading,
 		loadError,
-		load,
 		updateTask,
 		scheduleTask,
 	}

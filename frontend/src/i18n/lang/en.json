@@ -760,6 +760,7 @@
     "zoomOut": "Decrease resolution",
     "unscheduled": "Unscheduled tasks",
     "noUnscheduled": "No unscheduled tasks. Everything has a time slot!",
+    "overdue": "Overdue",
     "allDay": "All day",
     "saved": "Saved",
     "saveError": "Something went wrong saving the task",
@@ -776,7 +777,8 @@
       "slotDuration": "Slot size (minutes)",
       "fullWeek": "Show full week (off: rolling days)",
       "daysToShow": "Days to show",
-      "showDone": "Show done tasks"
+      "showDone": "Show done tasks",
+      "showOverdue": "Show overdue tasks in the sidebar"
     }
   },
   "misc": {

@@ -85,4 +85,48 @@ describe('expandOccurrences', () => {
 		const out = expandOccurrences(task, new Date('2026-01-01T00:00:00'), new Date('2026-04-01T00:00:00'))
 		expect(out.map(o => o.start.getMonth())).toEqual([0, 1, 2])
 	})
+
+	it('projects a monthly task with a far-past start into the window', () => {
+		// A ms-based coarse jump computed from the first (short February) interval
+		// used to overshoot the window entirely and drop the occurrence.
+		const task = makeTask({
+			startDate: new Date('2020-02-15T09:00:00'),
+			endDate: new Date('2020-02-15T10:00:00'),
+			repeatMode: TASK_REPEAT_MODES.REPEAT_MODE_MONTH,
+			repeatAfter: 0,
+		})
+		const out = expandOccurrences(task, new Date('2026-06-01T00:00:00'), new Date('2026-07-01T00:00:00'))
+		expect(out).toHaveLength(1)
+		expect(out[0].start.getDate()).toBe(15)
+		expect(out[0].isGhost).toBe(true)
+	})
+
+	it('overflows month-end dates like the backend instead of clamping', () => {
+		// Backend addOneMonthToDate: Jan 31 + 1 month = Mar 3 (2026 is not a leap
+		// year), never Feb 28.
+		const task = makeTask({
+			startDate: new Date('2026-01-31T09:00:00'),
+			endDate: new Date('2026-01-31T10:00:00'),
+			repeatMode: TASK_REPEAT_MODES.REPEAT_MODE_MONTH,
+			repeatAfter: 0,
+		})
+		const out = expandOccurrences(task, new Date('2026-02-01T00:00:00'), new Date('2026-03-10T00:00:00'))
+		expect(out).toHaveLength(1)
+		expect(out[0].start.getMonth()).toBe(2)
+		expect(out[0].start.getDate()).toBe(3)
+	})
+
+	it('does not project ghosts for from-current-date repeats', () => {
+		// The next occurrence depends on when the user completes the task, so any
+		// projection would be fiction; only the real stored instance shows.
+		const task = makeTask({
+			startDate: new Date('2026-06-23T10:00:00'),
+			endDate: new Date('2026-06-23T11:00:00'),
+			repeatMode: TASK_REPEAT_MODES.REPEAT_MODE_FROM_CURRENT_DATE,
+			repeatAfter: {type: 'days', amount: 1},
+		})
+		const out = expandOccurrences(task, new Date('2026-06-22T00:00:00'), new Date('2026-06-29T00:00:00'))
+		expect(out).toHaveLength(1)
+		expect(out[0].isGhost).toBe(false)
+	})
 })

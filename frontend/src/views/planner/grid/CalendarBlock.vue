@@ -53,30 +53,27 @@
 </template>
 
 <script setup lang="ts">
-import {computed, onBeforeUnmount, ref} from 'vue'
+import {computed, inject, onBeforeUnmount, ref} from 'vue'
 import dayjs from 'dayjs'
 
 import {useProjectStore} from '@/stores/projects'
-import {useTimeFormat} from '@/composables/useTimeFormat'
-import {TIME_FORMAT} from '@/constants/timeFormat'
 import {getTextColor} from '@/helpers/color/getTextColor'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 import PriorityLabel from '@/components/tasks/partials/PriorityLabel.vue'
-import type {PlannedOccurrence} from '../helpers/types'
+import {ALL_DAY_DROP_TARGET, type PlannedOccurrence} from '../helpers/types'
 import {plannerTaskColor} from '../helpers/taskColor'
+import {usePlannerTimeFormatter} from '../helpers/usePlannerTimeFormatter'
 
-const props = withDefaults(defineProps<{
+const props = defineProps<{
 	occurrence: PlannedOccurrence
+	day: Date
 	col: number
 	cols: number
 	topMinutes: number
 	durationMinutes: number
 	pxPerMinute: number
 	slotMinutes: number
-	originMinutes?: number
-}>(), {
-	originMinutes: 0,
-})
+}>()
 
 const emit = defineEmits<{
 	open: [taskId: number]
@@ -84,8 +81,8 @@ const emit = defineEmits<{
 }>()
 
 const projectStore = useProjectStore()
-const {store: timeFormat} = useTimeFormat()
 const blockEl = ref<HTMLElement | null>(null)
+const allDayDropTarget = inject(ALL_DAY_DROP_TARGET, ref(null))
 
 const resizeDeltaMinutes = ref(0)
 const isInteracting = ref(false)
@@ -102,6 +99,9 @@ const color = computed(() => plannerTaskColor(
 const projectName = computed(() => projectStore.projects[props.occurrence.task.projectId]?.title ?? '')
 const textColor = computed(() => getTextColor(color.value))
 
+// One parser per block — instantiating one per tooltip recompute is wasted work.
+const descriptionParser = new DOMParser()
+
 // Hover tooltip: title plus a plain-text excerpt of the (rich-text) description,
 // since blocks are too small to show the description inline.
 const tooltip = computed(() => {
@@ -109,7 +109,7 @@ const tooltip = computed(() => {
 	if (isEditorContentEmpty(task.description)) {
 		return task.title
 	}
-	const text = new DOMParser().parseFromString(task.description, 'text/html').body.textContent?.trim() ?? ''
+	const text = descriptionParser.parseFromString(task.description, 'text/html').body.textContent?.trim() ?? ''
 	if (!text) {
 		return task.title
 	}
@@ -117,7 +117,7 @@ const tooltip = computed(() => {
 	return `${task.title}\n\n${excerpt}`
 })
 
-const effectiveTop = computed(() => (props.topMinutes - props.originMinutes) * props.pxPerMinute)
+const effectiveTop = computed(() => props.topMinutes * props.pxPerMinute)
 const effectiveHeight = computed(() => Math.max(
 	(props.durationMinutes + resizeDeltaMinutes.value) * props.pxPerMinute,
 	props.slotMinutes * props.pxPerMinute,
@@ -143,8 +143,12 @@ const previewStyle = computed(() => ({
 	'--block-text': textColor.value,
 }))
 
-const timeLabel = computed(() => dayjs(props.occurrence.start)
-	.format(timeFormat.value === TIME_FORMAT.HOURS_24 ? 'HH:mm' : 'h:mm A'))
+const formatTime = usePlannerTimeFormatter()
+const timeLabel = computed(() => formatTime.value(props.occurrence.start))
+
+// The rendered geometry may be clipped to this day's bounds, so date math for
+// updates must work from the occurrence's real start/end, not the display size.
+const realDurationMs = computed(() => dayjs(props.occurrence.end).diff(props.occurrence.start))
 
 function snap(deltaPx: number): number {
 	const minutes = deltaPx / props.pxPerMinute
@@ -155,6 +159,7 @@ function snap(deltaPx: number): number {
 // (e.g. a data reload re-keys the columns) can't leave them attached to document.
 let activeMove: ((e: PointerEvent) => void) | null = null
 let activeUp: ((e: PointerEvent) => void) | null = null
+let activeCancel: (() => void) | null = null
 function detachInteraction() {
 	if (activeMove) {
 		document.removeEventListener('pointermove', activeMove)
@@ -162,10 +167,23 @@ function detachInteraction() {
 	if (activeUp) {
 		document.removeEventListener('pointerup', activeUp)
 	}
+	if (activeCancel) {
+		document.removeEventListener('pointercancel', activeCancel)
+	}
 	activeMove = null
 	activeUp = null
+	activeCancel = null
 }
 onBeforeUnmount(detachInteraction)
+
+function attachInteraction(onMove: (e: PointerEvent) => void, onUp: (e: PointerEvent) => void, onCancel: () => void) {
+	activeMove = onMove
+	activeUp = onUp
+	activeCancel = onCancel
+	document.addEventListener('pointermove', onMove)
+	document.addEventListener('pointerup', onUp)
+	document.addEventListener('pointercancel', onCancel)
+}
 
 function onMovePointerDown(event: PointerEvent) {
 	if (props.occurrence.isGhost) {
@@ -181,28 +199,69 @@ function onMovePointerDown(event: PointerEvent) {
 	previewSize.value = {w: rect?.width ?? 0, h: rect?.height ?? 0}
 	previewPos.value = {x: rect?.left ?? startX, y: rect?.top ?? startY}
 	let moved = false
+	// Kept as plain variables so the up-handler always hit-tests the latest
+	// position; the reactive previewPos only updates once per frame.
+	let hitPos = {x: rect?.left ?? startX, y: rect?.top ?? startY}
+	let cursorPos = {x: startX, y: startY}
+	let rafId: number | null = null
 
 	const onMove = (e: PointerEvent) => {
-		previewPos.value = {x: e.clientX - grabOffset.value.x, y: e.clientY - grabOffset.value.y}
-		if (Math.abs(e.clientX - startX) > 3 || Math.abs(e.clientY - startY) > 3) {
+		if (!moved && (Math.abs(e.clientX - startX) > 3 || Math.abs(e.clientY - startY) > 3)) {
 			moved = true
 			isInteracting.value = true
 			isMoving.value = true
 		}
+		if (!moved) {
+			return
+		}
+		hitPos = {x: e.clientX - grabOffset.value.x, y: e.clientY - grabOffset.value.y}
+		cursorPos = {x: e.clientX, y: e.clientY}
+		if (rafId === null) {
+			rafId = requestAnimationFrame(() => {
+				previewPos.value = hitPos
+				// Mirror the HTML5 dragover highlight for pointer drags.
+				const hover = document.elementFromPoint(cursorPos.x, cursorPos.y)
+					?.closest<HTMLElement>('.all-day-cell, .day-head')
+				allDayDropTarget.value = hover?.dataset.day ?? null
+				rafId = null
+			})
+		}
+	}
+
+	const endInteraction = () => {
+		detachInteraction()
+		if (rafId !== null) {
+			cancelAnimationFrame(rafId)
+			rafId = null
+		}
+		allDayDropTarget.value = null
+		isInteracting.value = false
+		isMoving.value = false
 	}
 
 	const onUp = (e: PointerEvent) => {
-		detachInteraction()
+		endInteraction()
 
 		const taskId = props.occurrence.task.id
-		// Hit-test from the preview block's top-centre (what the user visually
-		// aligns), not the cursor, which sits at the grab offset further down.
-		const hitX = previewPos.value.x + previewSize.value.w / 2
-		const hitY = previewPos.value.y
-		const dropEl = document.elementFromPoint(hitX, hitY)
-		const overSidebar = dropEl?.closest('.planner-sidebar')
-		const allDayCell = dropEl?.closest<HTMLElement>('.all-day-cell')
-		const dayColumn = dropEl?.closest<HTMLElement>('.day-column')
+		// A stationary click always opens the task — never reschedules it.
+		if (!moved) {
+			emit('open', taskId)
+			return
+		}
+
+		// Small targets (the sidebar and the ~24px all-day row) are hit-tested at
+		// the cursor — that's where the user points, and requiring the preview's
+		// top edge to align with a thin row made those drops nearly impossible.
+		// The day column is still taken from the preview block's top-centre,
+		// which is what the user visually aligns for a time slot.
+		const cursorEl = document.elementFromPoint(e.clientX, e.clientY)
+		const overSidebar = cursorEl?.closest('.planner-sidebar')
+		// The day header (the date) counts as the all-day row: dropping on
+		// either means "this whole day", not the time slot beneath it.
+		const allDayCell = cursorEl?.closest<HTMLElement>('.all-day-cell, .day-head')
+		const previewEl = document.elementFromPoint(hitPos.x + previewSize.value.w / 2, hitPos.y)
+		const dayColumn = previewEl?.closest<HTMLElement>('.day-column')
+			?? cursorEl?.closest<HTMLElement>('.day-column')
 		const targetDay = dayColumn?.dataset.day ?? null
 
 		if (overSidebar) {
@@ -213,33 +272,29 @@ function onMovePointerDown(event: PointerEvent) {
 			const day = dayjs(allDayCell.dataset.day).startOf('day').toDate()
 			emit('update', {taskId, start: day, end: day})
 		} else {
-			const dayChanged = targetDay !== null && !dayjs(targetDay).isSame(props.occurrence.start, 'day')
-			if (!moved && !dayChanged) {
-				emit('open', taskId)
-			} else {
-				const origStart = dayjs(props.occurrence.start)
-				const minutesFromMidnight = origStart.diff(origStart.startOf('day'), 'minute')
-				const newMinutes = Math.min(
-					Math.max(minutesFromMidnight + snap(e.clientY - startY), 0),
-					24 * 60 - props.durationMinutes,
-				)
-				const baseDay = targetDay ? dayjs(targetDay).startOf('day') : origStart.startOf('day')
-				const newStart = baseDay.add(newMinutes, 'minute')
-				emit('update', {
-					taskId,
-					start: newStart.toDate(),
-					end: newStart.add(props.durationMinutes, 'minute').toDate(),
-				})
-			}
+			// Shift the real start by the drag delta: whole days from the column
+			// change (relative to the day this segment is rendered in, which for a
+			// clipped multi-day block is not the start's day) plus snapped minutes.
+			// The real duration is preserved — the rendered height may be clipped.
+			const origStart = dayjs(props.occurrence.start)
+			const dayDelta = targetDay
+				? dayjs(targetDay).startOf('day').diff(dayjs(props.day).startOf('day'), 'day')
+				: 0
+			const minutesFromMidnight = origStart.diff(origStart.startOf('day'), 'minute')
+			const newMinutes = Math.min(
+				Math.max(minutesFromMidnight + snap(e.clientY - startY), 0),
+				24 * 60 - props.slotMinutes,
+			)
+			const newStart = origStart.startOf('day').add(dayDelta, 'day').add(newMinutes, 'minute')
+			emit('update', {
+				taskId,
+				start: newStart.toDate(),
+				end: newStart.add(realDurationMs.value, 'millisecond').toDate(),
+			})
 		}
-		isInteracting.value = false
-		isMoving.value = false
 	}
 
-	activeMove = onMove
-	activeUp = onUp
-	document.addEventListener('pointermove', onMove)
-	document.addEventListener('pointerup', onUp)
+	attachInteraction(onMove, onUp, endInteraction)
 }
 
 function onResizePointerDown(event: PointerEvent) {
@@ -250,25 +305,33 @@ function onResizePointerDown(event: PointerEvent) {
 		resizeDeltaMinutes.value = snap(e.clientY - startY)
 	}
 
-	const onUp = () => {
+	const onCancel = () => {
 		detachInteraction()
-
-		const newDuration = Math.max(props.durationMinutes + resizeDeltaMinutes.value, props.slotMinutes)
-		if (newDuration !== props.durationMinutes) {
-			emit('update', {
-				taskId: props.occurrence.task.id,
-				start: new Date(props.occurrence.start),
-				end: dayjs(props.occurrence.start).add(newDuration, 'minute').toDate(),
-			})
-		}
 		resizeDeltaMinutes.value = 0
 		isInteracting.value = false
 	}
 
-	activeMove = onMove
-	activeUp = onUp
-	document.addEventListener('pointermove', onMove)
-	document.addEventListener('pointerup', onUp)
+	const onUp = () => {
+		const delta = resizeDeltaMinutes.value
+		onCancel()
+
+		if (delta === 0) {
+			return
+		}
+		// The user drags the visible bottom edge, so the new end is anchored to
+		// this day's rendered extent (a multi-day block is clipped to the day),
+		// while the real start is kept.
+		const dayStart = dayjs(props.day).startOf('day')
+		const visibleEnd = dayStart.add(props.topMinutes + Math.max(props.durationMinutes + delta, props.slotMinutes), 'minute')
+		const minEnd = dayjs(props.occurrence.start).add(props.slotMinutes, 'minute')
+		emit('update', {
+			taskId: props.occurrence.task.id,
+			start: new Date(props.occurrence.start),
+			end: (visibleEnd.isBefore(minEnd) ? minEnd : visibleEnd).toDate(),
+		})
+	}
+
+	attachInteraction(onMove, onUp, onCancel)
 }
 </script>
 

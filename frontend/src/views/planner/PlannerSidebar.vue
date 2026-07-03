@@ -6,6 +6,39 @@
 		@dragleave="isDropTarget = false"
 		@drop="onDrop"
 	>
+		<template v-if="overdueTasks.length > 0">
+			<h3 class="sidebar-title is-overdue">
+				{{ $t('planner.overdue') }}
+				<span class="overdue-count">{{ overdueTasks.length }}</span>
+			</h3>
+			<ul class="task-list overdue-list">
+				<li
+					v-for="task in overdueTasks"
+					:key="task.id"
+					class="sidebar-task"
+					:style="{'--task-color': taskColor(task)}"
+					draggable="true"
+					@dragstart="onDragStart($event, task)"
+					@click="emit('openTask', task.id)"
+				>
+					<span class="task-title">{{ task.title }}</span>
+					<span class="task-meta">
+						<span class="task-overdue-date">{{ overdueDateLabel(task) }}</span>
+						<span
+							v-if="projectName(task)"
+							class="task-project"
+						>
+							{{ projectName(task) }}
+						</span>
+						<PriorityLabel
+							:priority="task.priority"
+							:done="task.done"
+						/>
+					</span>
+				</li>
+			</ul>
+		</template>
+
 		<h3 class="sidebar-title">
 			{{ $t('planner.unscheduled') }}
 		</h3>
@@ -74,14 +107,17 @@ import {useI18n} from 'vue-i18n'
 
 import type {ITask} from '@/modelTypes/ITask'
 import type {TaskFilterParams} from '@/services/taskCollection'
-import type {PlannerSidebarSort} from './helpers/usePlannerTasks'
+import {formatDate} from '@/helpers/time/formatDate'
+import {PLANNER_SIDEBAR_SORTS, type PlannerSidebarSort} from './helpers/usePlannerTasks'
 import FilterPopup from '@/components/project/partials/FilterPopup.vue'
 import PriorityLabel from '@/components/tasks/partials/PriorityLabel.vue'
 import {useProjectStore} from '@/stores/projects'
 import {plannerTaskColor} from './helpers/taskColor'
+import {overdueAnchor} from './helpers/overdue'
 
 defineProps<{
 	tasks: ITask[]
+	overdueTasks: ITask[]
 }>()
 
 const emit = defineEmits<{
@@ -94,20 +130,24 @@ const sort = defineModel<PlannerSidebarSort>('sort', {required: true})
 
 const {t} = useI18n({useScope: 'global'})
 
-// Curated for unscheduled tasks: no date sorts (those tasks live in the grid),
-// no manual/position (errors cross-project), plus a client-side random shuffle.
-const sortOptions = computed<{value: PlannerSidebarSort, label: string}[]>(() => [
-	{value: 'none', label: t('planner.sortDefault')},
-	{value: 'priority:desc', label: t('sorting.options.priorityDesc')},
-	{value: 'priority:asc', label: t('sorting.options.priorityAsc')},
-	{value: 'title:asc', label: t('sorting.options.titleAsc')},
-	{value: 'title:desc', label: t('sorting.options.titleDesc')},
-	{value: 'created:desc', label: t('sorting.options.createdDesc')},
-	{value: 'created:asc', label: t('sorting.options.createdAsc')},
-	{value: 'percent_done:desc', label: t('sorting.options.percentDoneDesc')},
-	{value: 'percent_done:asc', label: t('sorting.options.percentDoneAsc')},
-	{value: 'random', label: t('planner.sortRandom')},
-])
+// Typed Record so adding a sort to PLANNER_SIDEBAR_SORTS without a label (or
+// vice versa) fails the type check instead of silently hiding the option.
+const SORT_LABEL_KEYS: Record<PlannerSidebarSort, string> = {
+	'none': 'planner.sortDefault',
+	'priority:desc': 'sorting.options.priorityDesc',
+	'priority:asc': 'sorting.options.priorityAsc',
+	'title:asc': 'sorting.options.titleAsc',
+	'title:desc': 'sorting.options.titleDesc',
+	'created:desc': 'sorting.options.createdDesc',
+	'created:asc': 'sorting.options.createdAsc',
+	'percent_done:desc': 'sorting.options.percentDoneDesc',
+	'percent_done:asc': 'sorting.options.percentDoneAsc',
+	'random': 'planner.sortRandom',
+}
+
+const sortOptions = computed<{value: PlannerSidebarSort, label: string}[]>(
+	() => PLANNER_SIDEBAR_SORTS.map(value => ({value, label: t(SORT_LABEL_KEYS[value])})),
+)
 
 const isDropTarget = ref(false)
 
@@ -127,6 +167,11 @@ function taskColor(task: ITask): string {
 
 function projectName(task: ITask): string {
 	return projectStore.projects[task.projectId]?.title ?? ''
+}
+
+function overdueDateLabel(task: ITask): string {
+	const anchor = overdueAnchor(task)
+	return anchor ? formatDate(anchor, 'll') : ''
 }
 
 function onDragStart(event: DragEvent, task: ITask) {
@@ -149,6 +194,7 @@ function onDragStart(event: DragEvent, task: ITask) {
 	background: var(--white);
 	padding: .75rem;
 	overflow-y: auto;
+	overflow-x: hidden;
 
 	&.is-drop-target {
 		border-color: var(--primary);
@@ -159,6 +205,27 @@ function onDragStart(event: DragEvent, task: ITask) {
 .sidebar-title {
 	font-size: .9rem;
 	margin-block-end: .5rem;
+
+	&.is-overdue {
+		color: var(--danger);
+	}
+}
+
+.overdue-count {
+	display: inline-block;
+	min-inline-size: 1.3em;
+	padding: 0 .3em;
+	border-radius: 1em;
+	background: var(--danger);
+	color: var(--white);
+	font-size: .75rem;
+	text-align: center;
+}
+
+.task-overdue-date {
+	color: var(--danger);
+	font-size: .75rem;
+	white-space: nowrap;
 }
 
 .sidebar-controls {
@@ -182,6 +249,10 @@ function onDragStart(event: DragEvent, task: ITask) {
 	color: var(--grey-500);
 }
 
+.overdue-list {
+	margin-block-end: 1.5rem;
+}
+
 .task-list {
 	list-style: none;
 	margin: 0;
@@ -198,6 +269,7 @@ function onDragStart(event: DragEvent, task: ITask) {
 	padding: .4rem .5rem;
 	background: var(--white);
 	font-size: .95rem;
+	min-inline-size: 0;
 
 	&:active {
 		cursor: grabbing;
@@ -210,13 +282,16 @@ function onDragStart(event: DragEvent, task: ITask) {
 
 .task-title {
 	display: block;
+	overflow-wrap: anywhere;
 }
 
 .task-meta {
 	display: flex;
 	align-items: center;
+	flex-wrap: wrap;
 	gap: .4rem;
 	margin-block-start: .15rem;
+	min-inline-size: 0;
 
 	// Tame PriorityLabel's oversized Bulma .icon box and centre it inline.
 	:deep(.priority-label) {

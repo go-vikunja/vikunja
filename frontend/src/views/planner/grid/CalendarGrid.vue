@@ -10,11 +10,17 @@
 			@touchend.passive="onTouchEnd"
 		>
 			<div class="axis-gutter" />
+			<!-- The date itself is a drop target meaning "this whole day": drops
+			here schedule all-day, same as the all-day row below it. -->
 			<div
 				v-for="day in days"
 				:key="day.toISOString()"
 				class="day-head"
-				:class="{'is-today': isToday(day)}"
+				:class="{'is-today': isToday(day), 'is-drop-target': allDayDropDay === formatDayKey(day)}"
+				:data-day="formatDayKey(day)"
+				@dragover.prevent="allDayDropDay = formatDayKey(day)"
+				@dragleave="allDayDropDay = null"
+				@drop="onAllDayDrop($event, day)"
 			>
 				<span class="day-name">{{ formatWeekday(day) }}</span>
 				<span class="day-number">{{ day.getDate() }}</span>
@@ -79,7 +85,7 @@
 						v-for="day in days"
 						:key="day.toISOString()"
 						:day="day"
-						:tasks="tasks"
+						:blocks="timedBlocks.get(formatDayKey(day)) ?? []"
 						:px-per-minute="pxPerMinute"
 						:slot-minutes="slotMinutes"
 						@openTask="taskId => emit('openTask', taskId)"
@@ -94,7 +100,8 @@
 </template>
 
 <script setup lang="ts">
-import {computed, nextTick, onBeforeUnmount, onMounted, ref, watch} from 'vue'
+import {computed, nextTick, onMounted, provide, ref, watch} from 'vue'
+import {useEventListener} from '@vueuse/core'
 import dayjs from 'dayjs'
 
 import type {ITask} from '@/modelTypes/ITask'
@@ -102,9 +109,12 @@ import {useProjectStore} from '@/stores/projects'
 import {useTimeFormat} from '@/composables/useTimeFormat'
 import {TIME_FORMAT} from '@/constants/timeFormat'
 import {getTextColor} from '@/helpers/color/getTextColor'
+import {formatDate, useWeekDayFromDate} from '@/helpers/time/formatDate'
 import CalendarDayColumn from './CalendarDayColumn.vue'
-import {allDayTasksForDay, type AllDayItem} from '../helpers/dayLayout'
+import {allDayItemsByDay as buildAllDayItemsByDay, timedBlocksByDay, dayKey} from '../helpers/dayLayout'
+import {ALL_DAY_DROP_TARGET} from '../helpers/types'
 import {plannerTaskColor} from '../helpers/taskColor'
+import {useLongPress} from '../helpers/useLongPress'
 
 const props = defineProps<{
 	days: Date[]
@@ -132,6 +142,9 @@ const {store: timeFormat} = useTimeFormat()
 const bodyEl = ref<HTMLElement | null>(null)
 const scrollbarWidth = ref(0)
 const allDayDropDay = ref<string | null>(null)
+// Blocks drive the same highlight during pointer drags (HTML5 dragover events
+// only fire for native drags from the sidebar/chips).
+provide(ALL_DAY_DROP_TARGET, allDayDropDay)
 
 function onAllDayDrop(event: DragEvent, day: Date) {
 	allDayDropDay.value = null
@@ -160,43 +173,12 @@ function onAllDayDblClick(event: MouseEvent, day: Date) {
 }
 
 // Touch/pen: long-press an empty all-day cell to create.
-let allDayTimer: ReturnType<typeof setTimeout> | undefined
-let allDayMove: ((e: PointerEvent) => void) | null = null
-let allDayEnd: ((e: PointerEvent) => void) | null = null
-function detachAllDay() {
-	clearTimeout(allDayTimer)
-	if (allDayMove) {
-		document.removeEventListener('pointermove', allDayMove)
-	}
-	if (allDayEnd) {
-		document.removeEventListener('pointerup', allDayEnd)
-	}
-	allDayMove = null
-	allDayEnd = null
-}
+const longPress = useLongPress()
 function onAllDayPointerDown(event: PointerEvent, day: Date) {
-	if (event.pointerType === 'mouse' || !onAllDayCell(event.target)) {
+	if (!onAllDayCell(event.target)) {
 		return
 	}
-	const startX = event.clientX
-	const startY = event.clientY
-	let moved = false
-	const onMove = (e: PointerEvent) => {
-		if (Math.abs(e.clientX - startX) > 10 || Math.abs(e.clientY - startY) > 10) {
-			moved = true
-			detachAllDay()
-		}
-	}
-	allDayMove = onMove
-	allDayEnd = detachAllDay
-	document.addEventListener('pointermove', onMove)
-	document.addEventListener('pointerup', detachAllDay)
-	allDayTimer = setTimeout(() => {
-		detachAllDay()
-		if (!moved) {
-			emit('createAllDay', {day})
-		}
-	}, 500)
+	longPress.start(event, () => emit('createAllDay', {day}))
 }
 
 // Horizontal wheel/trackpad scroll slides the window a day at a time, with a
@@ -238,15 +220,10 @@ function onTouchEnd(event: TouchEvent) {
 
 const pxPerMinute = computed(() => props.pxPerHour / 60)
 
-// Resolve the all-day items per day once per render instead of re-filtering all
-// tasks inside the template v-for (each lookup walks recurrences).
-const allDayItemsByDay = computed(() => {
-	const map = new Map<string, AllDayItem[]>()
-	for (const day of props.days) {
-		map.set(formatDayKey(day), allDayTasksForDay(props.tasks, day))
-	}
-	return map
-})
+// Resolve the layout maps once per render instead of per column/cell — each
+// task's recurrence is walked once for the whole visible range.
+const allDayItemsByDay = computed(() => buildAllDayItemsByDay(props.tasks, props.days))
+const timedBlocks = computed(() => timedBlocksByDay(props.tasks, props.days))
 
 // The body has a vertical scrollbar but the header/all-day rows don't; reserve
 // the same width on them so the day-column verticals line up.
@@ -293,13 +270,9 @@ onMounted(() => {
 		scrollToDayStart()
 		measureScrollbar()
 	})
-	window.addEventListener('resize', measureScrollbar)
 })
 
-onBeforeUnmount(() => {
-	window.removeEventListener('resize', measureScrollbar)
-	detachAllDay()
-})
+useEventListener(window, 'resize', measureScrollbar)
 
 watch(() => [props.dayStartHour, props.dayEndHour, props.days, props.autoFit], () => {
 	fitToWorkingHours()
@@ -318,17 +291,16 @@ function isToday(day: Date): boolean {
 	return dayjs(day).isSame(dayjs(), 'day')
 }
 
-function formatWeekday(day: Date): string {
-	return dayjs(day).format('ddd')
-}
+// Locale-aware weekday names, same as the gantt timeline header.
+const formatWeekday = useWeekDayFromDate()
 
-function formatDayKey(day: Date): string {
-	return dayjs(day).format('YYYY-MM-DD')
-}
+const formatDayKey = dayKey
 
 function formatHour(hour: number): string {
-	return dayjs().hour(hour).minute(0)
-		.format(timeFormat.value === TIME_FORMAT.HOURS_24 ? 'HH:mm' : 'h A')
+	return formatDate(
+		dayjs().hour(hour).minute(0).toDate(),
+		timeFormat.value === TIME_FORMAT.HOURS_24 ? 'HH:mm' : 'h A',
+	)
 }
 </script>
 
@@ -362,6 +334,10 @@ $gutter-width: 3.5rem;
 	&.is-today {
 		color: var(--primary);
 		font-weight: 700;
+	}
+
+	&.is-drop-target {
+		background-color: var(--grey-100);
 	}
 
 	.day-name {

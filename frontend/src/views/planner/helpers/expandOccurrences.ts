@@ -1,39 +1,65 @@
-import dayjs, {type ManipulateType} from 'dayjs'
+import dayjs from 'dayjs'
 
 import type {ITask} from '@/modelTypes/ITask'
 import type {IRepeatAfter} from '@/types/IRepeatAfter'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
-import {parseRepeatAfter} from '@/models/task'
 import type {PlannedOccurrence} from './types'
 
 // Guard against pathological repeat intervals projecting forever.
 const MAX_OCCURRENCES = 366
 
-const TYPE_TO_DAYJS: Record<IRepeatAfter['type'], ManipulateType> = {
-	seconds: 'second',
-	minutes: 'minute',
-	hours: 'hour',
-	days: 'day',
-	weeks: 'week',
-	months: 'month',
-	years: 'year',
+const TYPE_TO_SECONDS: Record<IRepeatAfter['type'], number> = {
+	seconds: 1,
+	minutes: 60,
+	hours: 3600,
+	days: 86400,
+	weeks: 604800,
+	// The task edit UI only produces hours/days/weeks; these are defensive.
+	months: 30 * 86400,
+	years: 365 * 86400,
 }
 
-function getRepeatStep(task: ITask): {amount: number, unit: ManipulateType} | null {
+type RepeatStep =
+	| {kind: 'fixed', seconds: number}
+	| {kind: 'month'}
+
+// Mirrors the backend's addOneMonthToDate (pkg/models/tasks.go): same day next
+// month, overflowing like Go's time.Date instead of clamping — Jan 31 becomes
+// Mar 2/3, not Feb 28 — so ghosts land on the days the backend will schedule.
+function addOneMonthWithOverflow(date: dayjs.Dayjs): dayjs.Dayjs {
+	return date.date(1).add(1, 'month').add(date.date() - 1, 'day')
+}
+
+function advance(date: dayjs.Dayjs, step: RepeatStep): dayjs.Dayjs {
+	return step.kind === 'month'
+		? addOneMonthWithOverflow(date)
+		// The backend adds a fixed number of seconds (not calendar units), so
+		// wall times shift across DST exactly like they will on the server.
+		: date.add(step.seconds, 'second')
+}
+
+function getRepeatStep(task: ITask): RepeatStep | null {
 	// Monthly mode repeats on the same day each month regardless of repeatAfter.
 	if (task.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH) {
-		return {amount: 1, unit: 'month'}
+		return {kind: 'month'}
 	}
 
-	const repeat: IRepeatAfter = typeof task.repeatAfter === 'number'
-		? parseRepeatAfter(task.repeatAfter)
-		: task.repeatAfter
-
-	if (!repeat || repeat.amount <= 0) {
+	// From-current-date mode computes the next occurrence from the moment the
+	// task is completed, which is unknowable ahead of time — projected ghosts
+	// would show slots the backend will never schedule, so don't project any.
+	if (task.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_FROM_CURRENT_DATE) {
 		return null
 	}
 
-	return {amount: repeat.amount, unit: TYPE_TO_DAYJS[repeat.type]}
+	const seconds = typeof task.repeatAfter === 'number'
+		? task.repeatAfter
+		: (task.repeatAfter?.amount ?? 0) * TYPE_TO_SECONDS[task.repeatAfter?.type ?? 'seconds']
+
+	if (seconds <= 0) {
+		return null
+	}
+
+	return {kind: 'fixed', seconds}
 }
 
 // Skip ahead to shortly before `towards` so a task whose stored start is far in
@@ -43,17 +69,22 @@ function getRepeatStep(task: ITask): {amount: number, unit: ManipulateType} | nu
 // isn't skipped. The caller's fine-stepping loop covers the small remainder.
 function coarseJump(
 	realStart: dayjs.Dayjs,
-	step: {amount: number, unit: ManipulateType},
+	step: RepeatStep,
 	towards: dayjs.Dayjs,
 	minBackoffMs: number,
 ): {cursor: dayjs.Dayjs, index: number} {
-	const stepMs = realStart.add(step.amount, step.unit).diff(realStart)
-	if (stepMs <= 0 || !realStart.isBefore(towards)) {
+	// Month steps depend on the previous occurrence (overflow can change the
+	// day-of-month), so they can't be jumped multiplicatively. The iteration
+	// cap still covers ~30 years of monthly steps.
+	if (step.kind === 'month') {
 		return {cursor: realStart, index: 0}
 	}
-	const backoffSteps = Math.ceil(minBackoffMs / stepMs) + 1
-	const jumps = Math.max(Math.floor(towards.diff(realStart) / stepMs) - backoffSteps, 0)
-	return {cursor: realStart.add(step.amount * jumps, step.unit), index: jumps}
+	const stepMs = step.seconds * 1000
+	if (!realStart.isBefore(towards)) {
+		return {cursor: realStart, index: 0}
+	}
+	const jumps = Math.max(Math.floor((towards.diff(realStart) - minBackoffMs) / stepMs) - 1, 0)
+	return {cursor: realStart.add(jumps * step.seconds, 'second'), index: jumps}
 }
 
 /**
@@ -99,7 +130,7 @@ export function expandOccurrences(task: ITask, from: Date, to: Date): PlannedOcc
 
 	let {cursor, index} = coarseJump(realStart, step, rangeStart, durationMs)
 	for (let i = 0; i < MAX_OCCURRENCES; i++) {
-		cursor = cursor.add(step.amount, step.unit)
+		cursor = advance(cursor, step)
 		index++
 		if (cursor.isAfter(rangeEnd)) {
 			break
@@ -111,44 +142,56 @@ export function expandOccurrences(task: ITask, from: Date, to: Date): PlannedOcc
 }
 
 /**
- * Whether an all-day task covers `day`, following its recurrence. All-day
- * occurrences sit at midnight with zero duration, which expandOccurrences'
- * range test excludes, so they get their own day-granular check here.
- * Returns isGhost = true when only a projected occurrence (not the stored
- * span) lands on the day, so the caller can render it read-only.
+ * Day keys ('YYYY-MM-DD') an all-day task covers within [from, to), following
+ * its recurrence, mapped to whether the coverage is only a projected (ghost)
+ * occurrence. All-day occurrences sit at midnight with zero duration, which
+ * expandOccurrences' range test excludes, so they get their own day-granular
+ * expansion here — one recurrence walk per task for the whole range.
  */
-export function allDayOccurrenceForDay(task: ITask, day: Date): {covered: boolean, isGhost: boolean} {
+export function allDayCoveredDays(task: ITask, from: Date, to: Date): Map<string, boolean> {
+	const covered = new Map<string, boolean>()
 	if (!task.startDate || !task.endDate) {
-		return {covered: false, isGhost: false}
+		return covered
 	}
 
-	const target = dayjs(day).startOf('day')
+	const rangeStart = dayjs(from).startOf('day')
+	const rangeEnd = dayjs(to).startOf('day')
 	const realStart = dayjs(task.startDate).startOf('day')
 	const realEnd = dayjs(task.endDate).startOf('day')
 	const spanDays = Math.max(realEnd.diff(realStart, 'day'), 0)
-	const covers = (start: dayjs.Dayjs) => !target.isBefore(start) && !target.isAfter(start.add(spanDays, 'day'))
 
-	if (covers(realStart)) {
-		return {covered: true, isGhost: false}
+	const mark = (start: dayjs.Dayjs, isGhost: boolean) => {
+		let day = start.startOf('day')
+		const last = day.add(spanDays, 'day')
+		if (day.isBefore(rangeStart)) {
+			day = rangeStart
+		}
+		for (; !day.isAfter(last) && day.isBefore(rangeEnd); day = day.add(1, 'day')) {
+			const key = day.format('YYYY-MM-DD')
+			// Real coverage wins over ghost coverage on the same day.
+			if (!isGhost || !covered.has(key)) {
+				covered.set(key, isGhost)
+			}
+		}
 	}
+
+	mark(realStart, false)
 
 	const step = getRepeatStep(task)
 	if (step === null) {
-		return {covered: false, isGhost: false}
+		return covered
 	}
 
 	// Back off by the task's span so a long all-day occurrence starting before
-	// the target day but still covering it isn't jumped over.
-	let {cursor} = coarseJump(realStart, step, target, spanDays * 24 * 60 * 60 * 1000)
+	// the range but still reaching into it isn't jumped over.
+	let {cursor} = coarseJump(realStart, step, rangeStart, (spanDays + 1) * 24 * 60 * 60 * 1000)
 	for (let i = 0; i < MAX_OCCURRENCES; i++) {
-		cursor = cursor.add(step.amount, step.unit)
-		if (cursor.isAfter(target)) {
+		cursor = advance(cursor, step)
+		if (cursor.startOf('day').isAfter(rangeEnd)) {
 			break
 		}
-		if (covers(cursor)) {
-			return {covered: true, isGhost: true}
-		}
+		mark(cursor, true)
 	}
 
-	return {covered: false, isGhost: false}
+	return covered
 }

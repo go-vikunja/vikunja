@@ -83,8 +83,9 @@
 				v-model:filter="sidebarFilter"
 				v-model:sort="sidebarSort"
 				:tasks="sidebarTasks"
+				:overdue-tasks="overdueTasks"
 				@openTask="openTask"
-				@unschedule="taskId => updateTask({id: taskId, startDate: null, endDate: null})"
+				@unschedule="unscheduleTask"
 			/>
 			<CalendarGrid
 				:days="days"
@@ -131,12 +132,12 @@ import PlannerCreateTaskModal from './PlannerCreateTaskModal.vue'
 import CalendarGrid from './grid/CalendarGrid.vue'
 
 import {setTitle} from '@/helpers/setTitle'
+import {formatDate} from '@/helpers/time/formatDate'
 import {useAuthStore} from '@/stores/auth'
 import {useBaseStore} from '@/stores/base'
-import {useTimeFormat} from '@/composables/useTimeFormat'
-import {TIME_FORMAT} from '@/constants/timeFormat'
 import type {TaskFilterParams} from '@/services/taskCollection'
 import {useCalendarSettings} from './helpers/useCalendarSettings'
+import {usePlannerTimeFormatter} from './helpers/usePlannerTimeFormatter'
 import {usePlannerTasks, type PlannerRange, type PlannerSidebarSort, PLANNER_SIDEBAR_SORTS, DEFAULT_PLANNER_SIDEBAR_SORT} from './helpers/usePlannerTasks'
 
 const router = useRouter()
@@ -195,14 +196,21 @@ const range = computed<PlannerRange>(() => ({
 
 const rangeLabel = computed(() => {
 	if (viewMode.value === 'day') {
-		return dayjs(anchor.value).format('LL')
+		return formatDate(anchor.value, 'LL')
 	}
-	const first = dayjs(days.value[0])
-	const last = dayjs(days.value[days.value.length - 1])
-	return `${first.format('ll')} – ${last.format('ll')}`
+	const first = days.value[0]
+	const last = days.value[days.value.length - 1]
+	return `${formatDate(first, 'll')} – ${formatDate(last, 'll')}`
 })
 
-const {sidebarTasks, gridTasks, isLoading, loadError, updateTask, scheduleTask} = usePlannerTasks(range, sidebarFilter, sidebarSort)
+const overdueEnabled = computed(() => settings.value.showOverdue)
+const {sidebarTasks, gridTasks, overdueTasks, isLoading, loadError, updateTask, scheduleTask} = usePlannerTasks(range, sidebarFilter, sidebarSort, overdueEnabled)
+
+function findTask(taskId: number): ITask | undefined {
+	return gridTasks.value.get(taskId)
+		?? sidebarTasks.value.find(t => t.id === taskId)
+		?? overdueTasks.value.find(t => t.id === taskId)
+}
 
 const visibleGridTasks = computed(() =>
 	[...gridTasks.value.values()].filter(task => settings.value.showDone || !task.done),
@@ -244,27 +252,56 @@ function zoomOut() {
 	pxPerHour.value = Math.max(pxPerHour.value - 12, 16)
 }
 
+function hasPastDue(task: ITask | undefined): boolean {
+	return !!task?.dueDate && dayjs(task.dueDate).isBefore(dayjs().startOf('day'))
+}
+
 function onDropTask({taskId, minutes, day}: {taskId: number, minutes: number, day: Date}) {
 	const start = dayjs(day).startOf('day').add(minutes, 'minute')
 	const end = start.add(defaultDurationMinutes.value, 'minute')
-	updateTask({id: taskId, startDate: start.toDate(), endDate: end.toDate()})
+	const partial: Parameters<typeof updateTask>[0] = {id: taskId, startDate: start.toDate(), endDate: end.toDate()}
+	// Rescheduling an overdue task also defers its missed deadline — otherwise
+	// it would stay "overdue" despite now being planned. Future deadlines are
+	// left alone: timeboxing work doesn't move its due date.
+	if (hasPastDue(findTask(taskId))) {
+		partial.dueDate = end.toDate()
+	}
+	updateTask(partial)
+}
+
+// Unscheduling must clear the due date too: any remaining date re-files the
+// task into the grid, so the drop onto the sidebar would silently no-op.
+function unscheduleTask(taskId: number) {
+	updateTask({id: taskId, startDate: null, endDate: null, dueDate: null})
 }
 
 function onUpdateBlock({taskId, start, end}: {taskId: number, start: Date | null, end: Date | null}) {
+	// Blocks only emit null dates when dropped on the sidebar → unschedule.
+	if (start === null && end === null) {
+		unscheduleTask(taskId)
+		return
+	}
 	updateTask({id: taskId, startDate: start, endDate: end})
 }
 
 function onDropAllDay({taskId, day}: {taskId: number, day: Date}) {
-	// All-day = start and end pinned to midnight of that day.
 	const midnight = dayjs(day).startOf('day').toDate()
-	updateTask({id: taskId, startDate: midnight, endDate: midnight})
+	const task = findTask(taskId)
+	// A due-only task dropped on a day keeps its due-only nature: the drag
+	// moves the deadline instead of converting it to an all-day span.
+	if (task && !task.startDate && !task.endDate && task.dueDate) {
+		updateTask({id: taskId, dueDate: midnight})
+		return
+	}
+	// All-day = start and end pinned to midnight of that day.
+	const partial: Parameters<typeof updateTask>[0] = {id: taskId, startDate: midnight, endDate: midnight}
+	if (hasPastDue(task)) {
+		partial.dueDate = midnight
+	}
+	updateTask(partial)
 }
 
-const {store: timeFormat} = useTimeFormat()
-
-function formatTime(date: dayjs.Dayjs): string {
-	return date.format(timeFormat.value === TIME_FORMAT.HOURS_24 ? 'HH:mm' : 'h:mm A')
-}
+const formatTime = usePlannerTimeFormatter()
 
 // The pending create gesture: target dates plus a label shown in the modal.
 // null while no create is in flight (and drives whether the modal is mounted).
@@ -279,7 +316,7 @@ function onCreateTask({day, startMinutes, endMinutes}: {day: Date, startMinutes:
 	createCtx.value = {
 		startDate: start.toDate(),
 		endDate: end.toDate(),
-		label: `${start.format('ll')} · ${formatTime(start)} – ${formatTime(end)}`,
+		label: `${formatDate(start.toDate(), 'll')} · ${formatTime.value(start.toDate())} – ${formatTime.value(end.toDate())}`,
 	}
 }
 
@@ -288,7 +325,7 @@ function onCreateAllDay({day}: {day: Date}) {
 	createCtx.value = {
 		startDate: midnight,
 		endDate: midnight,
-		label: t('planner.createAllDay', {date: dayjs(day).format('ll')}),
+		label: t('planner.createAllDay', {date: formatDate(day, 'll')}),
 	}
 }
 

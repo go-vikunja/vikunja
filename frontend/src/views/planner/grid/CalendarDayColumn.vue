@@ -39,6 +39,7 @@
 			v-for="block in blocks"
 			:key="block.occurrence.key"
 			:occurrence="block.occurrence"
+			:day="day"
 			:col="block.col"
 			:cols="block.cols"
 			:top-minutes="block.topMinutes"
@@ -52,16 +53,17 @@
 </template>
 
 <script setup lang="ts">
-import {computed, onBeforeUnmount, onMounted, ref} from 'vue'
+import {computed, onBeforeUnmount, ref} from 'vue'
+import {useNow} from '@vueuse/core'
 import dayjs from 'dayjs'
 
-import type {ITask} from '@/modelTypes/ITask'
 import CalendarBlock from './CalendarBlock.vue'
-import {timedBlocksForDay} from '../helpers/dayLayout'
+import type {TimedBlock} from '../helpers/dayLayout'
+import {useLongPress} from '../helpers/useLongPress'
 
 const props = defineProps<{
 	day: Date
-	tasks: ITask[]
+	blocks: TimedBlock[]
 	pxPerMinute: number
 	slotMinutes: number
 }>()
@@ -75,43 +77,38 @@ const emit = defineEmits<{
 
 const columnEl = ref<HTMLElement | null>(null)
 const isDropTarget = ref(false)
-const now = ref(new Date())
+// A ticking clock (not a mount-time snapshot) so the now-line moves to the
+// right column when midnight passes without a remount.
+const now = useNow({interval: 60_000})
 const selStart = ref<number | null>(null)
 const selEnd = ref<number | null>(null)
 
 const dayKey = computed(() => dayjs(props.day).format('YYYY-MM-DD'))
-const blocks = computed(() => timedBlocksForDay(props.tasks, props.day))
 const isToday = computed(() => dayjs(props.day).isSame(now.value, 'day'))
 const nowMinutes = computed(() => dayjs(now.value).diff(dayjs(now.value).startOf('day'), 'minute'))
 
-// Keep the current-time marker fresh. Only today's column needs the ticker.
-let timer: ReturnType<typeof setInterval> | undefined
-onMounted(() => {
-	if (dayjs(props.day).isSame(new Date(), 'day')) {
-		timer = setInterval(() => now.value = new Date(), 60_000)
-	}
-})
-
-// Listeners for an in-flight create gesture, torn down on unmount so a mid-drag
+// Listeners for an in-flight paint gesture, torn down on unmount so a mid-drag
 // re-render can't leak them onto document.
-let longPressTimer: ReturnType<typeof setTimeout> | undefined
 let activeMove: ((e: PointerEvent) => void) | null = null
 let activeEnd: ((e: PointerEvent) => void) | null = null
+let activeCancel: (() => void) | null = null
 function detachCreate() {
-	clearTimeout(longPressTimer)
 	if (activeMove) {
 		document.removeEventListener('pointermove', activeMove)
 	}
 	if (activeEnd) {
 		document.removeEventListener('pointerup', activeEnd)
 	}
+	if (activeCancel) {
+		document.removeEventListener('pointercancel', activeCancel)
+	}
 	activeMove = null
 	activeEnd = null
+	activeCancel = null
 }
-onBeforeUnmount(() => {
-	clearInterval(timer)
-	detachCreate()
-})
+onBeforeUnmount(detachCreate)
+
+const longPress = useLongPress()
 
 function onDrop(event: DragEvent) {
 	isDropTarget.value = false
@@ -152,54 +149,44 @@ function onCreatePointerDown(event: PointerEvent) {
 	const startY = event.clientY
 	const startMinutes = minutesAt(startY)
 
-	if (event.pointerType === 'mouse') {
-		// Click-drag paints a range; a plain click does nothing (dblclick handles it).
-		let painting = false
-		const onMove = (e: PointerEvent) => {
-			if (!painting && Math.abs(e.clientY - startY) > 4) {
-				painting = true
-			}
-			if (painting) {
-				const m = minutesAt(e.clientY)
-				selStart.value = Math.min(startMinutes, m)
-				selEnd.value = Math.max(startMinutes, m)
-			}
-		}
-		const onUp = () => {
-			detachCreate()
-			if (painting && selStart.value !== null && selEnd.value !== null) {
-				const end = Math.max(selEnd.value, selStart.value + props.slotMinutes)
-				emit('createTask', {startMinutes: selStart.value, endMinutes: end})
-			}
-			selStart.value = null
-			selEnd.value = null
-		}
-		activeMove = onMove
-		activeEnd = onUp
-		document.addEventListener('pointermove', onMove)
-		document.addEventListener('pointerup', onUp)
+	if (event.pointerType !== 'mouse') {
+		// Touch/pen: long-press creates at the slot; moving first bails so the
+		// gesture doesn't hijack vertical scrolling of the grid.
+		longPress.start(event, () => emit('createTask', {startMinutes, endMinutes: null}))
 		return
 	}
 
-	// Touch/pen: long-press creates at the slot. Bail out if the finger moves
-	// first, so the gesture doesn't hijack vertical scrolling of the grid.
-	let moved = false
+	// Click-drag paints a range; a plain click does nothing (dblclick handles it).
+	let painting = false
 	const onMove = (e: PointerEvent) => {
-		if (Math.abs(e.clientY - startY) > 10) {
-			moved = true
-			detachCreate()
+		if (!painting && Math.abs(e.clientY - startY) > 4) {
+			painting = true
+		}
+		if (painting) {
+			const m = minutesAt(e.clientY)
+			selStart.value = Math.min(startMinutes, m)
+			selEnd.value = Math.max(startMinutes, m)
+		}
+	}
+	const onCancel = () => {
+		detachCreate()
+		selStart.value = null
+		selEnd.value = null
+	}
+	const onUp = () => {
+		const start = selStart.value
+		const end = selEnd.value
+		onCancel()
+		if (painting && start !== null && end !== null) {
+			emit('createTask', {startMinutes: start, endMinutes: Math.max(end, start + props.slotMinutes)})
 		}
 	}
 	activeMove = onMove
-	activeEnd = detachCreate
+	activeEnd = onUp
+	activeCancel = onCancel
 	document.addEventListener('pointermove', onMove)
-	document.addEventListener('pointerup', detachCreate)
-	longPressTimer = setTimeout(() => {
-		detachCreate()
-		if (!moved) {
-			emit('createTask', {startMinutes, endMinutes: null})
-		}
-	}, 500)
+	document.addEventListener('pointerup', onUp)
+	document.addEventListener('pointercancel', onCancel)
 }
 </script>
 

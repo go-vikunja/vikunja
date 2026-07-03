@@ -61,6 +61,9 @@
 			<FancyCheckbox v-model="settings.showDone">
 				{{ $t('planner.settings.showDone') }}
 			</FancyCheckbox>
+			<FancyCheckbox v-model="settings.showOverdue">
+				{{ $t('planner.settings.showOverdue') }}
+			</FancyCheckbox>
 		</div>
 	</Dropdown>
 </template>
@@ -76,14 +79,33 @@ import {useCalendarSettings} from './helpers/useCalendarSettings'
 const {settings} = useCalendarSettings()
 
 // Plain 24h "HH:MM" text fields (no native time picker, so no OS-locale AM/PM).
-// Keep the window ordered; "HH:MM" strings compare lexically.
+// Compare as minutes, not lexically, and only once both fields hold complete
+// valid times — the watcher fires per keystroke, and clamping a half-typed
+// value (e.g. '9') would hijack the input.
+function timeToMinutes(time: string): number | null {
+	const match = /^(\d{1,2}):(\d{2})$/.exec(time?.trim() ?? '')
+	if (!match) {
+		return null
+	}
+	const hours = Number(match[1])
+	const minutes = Number(match[2])
+	if (hours > 23 || minutes > 59) {
+		return null
+	}
+	return hours * 60 + minutes
+}
+
 watch(() => settings.value.dayStart, start => {
-	if (start > settings.value.dayEnd) {
+	const startMinutes = timeToMinutes(start)
+	const endMinutes = timeToMinutes(settings.value.dayEnd)
+	if (startMinutes !== null && endMinutes !== null && startMinutes > endMinutes) {
 		settings.value.dayStart = settings.value.dayEnd
 	}
 })
 watch(() => settings.value.dayEnd, end => {
-	if (end < settings.value.dayStart) {
+	const endMinutes = timeToMinutes(end)
+	const startMinutes = timeToMinutes(settings.value.dayStart)
+	if (endMinutes !== null && startMinutes !== null && endMinutes < startMinutes) {
 		settings.value.dayEnd = settings.value.dayStart
 	}
 })
