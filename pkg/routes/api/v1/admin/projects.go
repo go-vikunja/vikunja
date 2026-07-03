@@ -21,6 +21,7 @@ import (
 	"strconv"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/models"
 	"github.com/labstack/echo/v5"
 )
@@ -58,10 +59,14 @@ func PatchProjectOwner(c *echo.Context) error {
 
 	p, err := models.ReassignProjectOwner(s, id, body.OwnerID)
 	if err != nil {
+		_ = s.Rollback()
+		events.CleanupPending(s)
 		return err
 	}
 	if err := s.Commit(); err != nil {
+		events.CleanupPending(s)
 		return err
 	}
+	events.DispatchPending(c.Request().Context(), s)
 	return c.JSON(http.StatusOK, p)
 }

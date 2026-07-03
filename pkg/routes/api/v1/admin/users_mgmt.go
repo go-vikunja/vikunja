@@ -21,6 +21,7 @@ import (
 	"strconv"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
 	"code.vikunja.io/api/pkg/routes/api/shared"
@@ -70,11 +71,14 @@ func PatchStatus(c *echo.Context) error {
 	target, err := models.SetUserStatusAsAdmin(s, id, newStatus)
 	if err != nil {
 		_ = s.Rollback()
+		events.CleanupPending(s)
 		return err
 	}
 	if err := s.Commit(); err != nil {
+		events.CleanupPending(s)
 		return err
 	}
+	events.DispatchPending(c.Request().Context(), s)
 
 	providers, err := openid.GetAllProviders()
 	if err != nil {
@@ -114,10 +118,13 @@ func DeleteUser(c *echo.Context) error {
 
 	if err := models.DeleteUserAsAdmin(s, id, mode); err != nil {
 		_ = s.Rollback()
+		events.CleanupPending(s)
 		return err
 	}
 	if err := s.Commit(); err != nil {
+		events.CleanupPending(s)
 		return err
 	}
+	events.DispatchPending(c.Request().Context(), s)
 	return c.NoContent(http.StatusNoContent)
 }
