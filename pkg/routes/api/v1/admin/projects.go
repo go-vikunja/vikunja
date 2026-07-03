@@ -23,6 +23,8 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/user"
+
 	"github.com/labstack/echo/v5"
 )
 
@@ -54,10 +56,15 @@ func PatchProjectOwner(c *echo.Context) error {
 		return models.ErrInvalidData{Message: "invalid body"}
 	}
 
+	doer, err := user.GetCurrentUser(c)
+	if err != nil {
+		return err
+	}
+
 	s := db.NewSession()
 	defer s.Close()
 
-	p, err := models.ReassignProjectOwner(s, id, body.OwnerID)
+	p, err := models.ReassignProjectOwner(s, doer, id, body.OwnerID)
 	if err != nil {
 		_ = s.Rollback()
 		events.CleanupPending(s)

@@ -65,10 +65,15 @@ func PatchStatus(c *echo.Context) error {
 		return models.ErrInvalidData{Message: "invalid status"}
 	}
 
+	doer, err := user.GetCurrentUser(c)
+	if err != nil {
+		return err
+	}
+
 	s := db.NewSession()
 	defer s.Close()
 
-	target, err := models.SetUserStatusAsAdmin(s, id, newStatus)
+	target, err := models.SetUserStatusAsAdmin(s, doer, id, newStatus)
 	if err != nil {
 		_ = s.Rollback()
 		events.CleanupPending(s)
@@ -113,10 +118,15 @@ func DeleteUser(c *echo.Context) error {
 		return models.ErrInvalidData{Message: "invalid mode, expected 'now' or 'scheduled'"}
 	}
 
+	doer, err := user.GetCurrentUser(c)
+	if err != nil {
+		return err
+	}
+
 	s := db.NewSession()
 	defer s.Close()
 
-	if err := models.DeleteUserAsAdmin(s, id, mode); err != nil {
+	if err := models.DeleteUserAsAdmin(s, doer, id, mode); err != nil {
 		_ = s.Rollback()
 		events.CleanupPending(s)
 		return err

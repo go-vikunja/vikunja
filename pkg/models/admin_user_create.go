@@ -19,6 +19,7 @@ package models
 import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/user"
 
 	"xorm.io/xorm"
@@ -41,7 +42,7 @@ type CreateUserBody struct {
 // honouring the admin-only is_admin and skip_email_confirm fields and bypassing the
 // public-registration toggle. It commits s and returns the persisted user reloaded
 // so the status reflects what was actually stored.
-func CreateUserAsAdmin(s *xorm.Session, body *CreateUserBody) (*user.User, error) {
+func CreateUserAsAdmin(s *xorm.Session, doer *user.User, body *CreateUserBody) (*user.User, error) {
 	newUser, err := RegisterUser(s, &user.User{
 		Username: body.Username,
 		Password: body.Password,
@@ -67,6 +68,10 @@ func CreateUserAsAdmin(s *xorm.Session, body *CreateUserBody) (*user.User, error
 		}
 		newUser.Status = user.StatusActive
 	}
+
+	// Queued alongside the user.created event RegisterUser dispatched; both
+	// fire when the caller runs DispatchPending after this commit.
+	events.DispatchOnCommit(s, &AdminUserCreatedEvent{User: newUser, Doer: doer})
 
 	if err := s.Commit(); err != nil {
 		return nil, err
