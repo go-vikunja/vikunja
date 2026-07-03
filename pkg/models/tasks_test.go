@@ -439,6 +439,54 @@ func TestTask_Update(t *testing.T) {
 			"bucket_id":       3,
 		})
 	})
+	t.Run("repeating tasks marked done when no default bucket is configured stay in their bucket", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// View 4 has default_bucket_id: 1. Remove it to hit the
+		// no-default branch of moveTaskToDefaultBuckets.
+		_, err := s.ID(4).Cols("default_bucket_id").Update(&ProjectView{DefaultBucketID: 0})
+		require.NoError(t, err)
+
+		// Pre-position task 28 in bucket 2 (non-default, non-done) via a
+		// raw update to bypass the bucket-limit check.
+		_, err = s.Where("task_id = ? AND project_view_id = ?", 28, 4).
+			Cols("bucket_id").
+			Update(&TaskBucket{BucketID: 2})
+		require.NoError(t, err)
+
+		task := &Task{
+			ID:          28,
+			Done:        true,
+			RepeatAfter: 3600,
+		}
+		err = task.Update(s, u)
+		require.NoError(t, err)
+		err = s.Commit()
+		require.NoError(t, err)
+
+		// updateDone should have re-opened the task for the next iteration.
+		assert.False(t, task.Done)
+
+		// The task stays in bucket 2 — not moved to the first bucket (1)
+		// and not into the done bucket (3).
+		db.AssertExists(t, "task_buckets", map[string]interface{}{
+			"task_id":         28,
+			"project_view_id": 4,
+			"bucket_id":       2,
+		}, false)
+		db.AssertMissing(t, "task_buckets", map[string]interface{}{
+			"task_id":         28,
+			"project_view_id": 4,
+			"bucket_id":       1,
+		})
+		db.AssertMissing(t, "task_buckets", map[string]interface{}{
+			"task_id":         28,
+			"project_view_id": 4,
+			"bucket_id":       3,
+		})
+	})
 	t.Run("moving a task between projects should give it a correct index", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
