@@ -63,10 +63,15 @@ func PatchAdmin(c *echo.Context) error {
 		return models.ErrInvalidData{Message: "is_admin is required"}
 	}
 
+	doer, err := user.GetCurrentUser(c)
+	if err != nil {
+		return err
+	}
+
 	s := db.NewSession()
 	defer s.Close()
 
-	target, err := models.SetUserAdminFlag(s, id, *body.IsAdmin)
+	target, err := models.SetUserAdminFlag(s, doer, id, *body.IsAdmin)
 	if err != nil {
 		_ = s.Rollback()
 		events.CleanupPending(s)

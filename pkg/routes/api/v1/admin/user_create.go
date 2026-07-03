@@ -25,6 +25,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
 	"code.vikunja.io/api/pkg/routes/api/shared"
+	"code.vikunja.io/api/pkg/user"
 
 	"github.com/labstack/echo/v5"
 )
@@ -53,10 +54,15 @@ func CreateUser(c *echo.Context) error {
 		return err
 	}
 
+	doer, err := user.GetCurrentUser(c)
+	if err != nil {
+		return err
+	}
+
 	s := db.NewSession()
 	defer s.Close()
 
-	newUser, err := models.CreateUserAsAdmin(s, body)
+	newUser, err := models.CreateUserAsAdmin(s, doer, body)
 	if err != nil {
 		_ = s.Rollback()
 		events.CleanupPending(s)

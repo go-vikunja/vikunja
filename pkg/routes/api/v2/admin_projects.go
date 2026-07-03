@@ -95,10 +95,15 @@ func adminProjectsPatchOwner(ctx context.Context, in *struct {
 		return nil, translateDomainError(models.ErrInvalidData{Message: "invalid body"})
 	}
 
+	doer, err := adminDoerFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	s := db.NewSession()
 	defer s.Close()
 
-	p, err := models.ReassignProjectOwner(s, in.ID, in.Body.OwnerID)
+	p, err := models.ReassignProjectOwner(s, doer, in.ID, in.Body.OwnerID)
 	if err != nil {
 		_ = s.Rollback()
 		events.CleanupPending(s)

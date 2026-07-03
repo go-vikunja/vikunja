@@ -435,3 +435,107 @@ type APITokenUsedEvent struct {
 func (e *APITokenUsedEvent) Name() string {
 	return "api-token.used"
 }
+
+//////////////////
+// Admin Events
+
+// Admin events cover mutations performed through the instance-admin API. They
+// exist for audit logging and are deliberately not registered as webhook
+// events — they are instance-level, not project-scoped.
+
+// AdminUserCreatedEvent represents a user being provisioned through the admin API
+type AdminUserCreatedEvent struct {
+	User *user.User `json:"user"`
+	Doer *user.User `json:"doer"`
+}
+
+// Name defines the name for AdminUserCreatedEvent
+func (e *AdminUserCreatedEvent) Name() string {
+	return "admin.user.created"
+}
+
+// AdminUserAdminGrantedEvent represents a user being promoted to instance admin
+type AdminUserAdminGrantedEvent struct {
+	User *user.User `json:"user"`
+	Doer *user.User `json:"doer"`
+}
+
+// Name defines the name for AdminUserAdminGrantedEvent
+func (e *AdminUserAdminGrantedEvent) Name() string {
+	return "admin.user.admin.granted"
+}
+
+// AdminUserAdminRevokedEvent represents a user's instance-admin flag being revoked
+type AdminUserAdminRevokedEvent struct {
+	User *user.User `json:"user"`
+	Doer *user.User `json:"doer"`
+}
+
+// Name defines the name for AdminUserAdminRevokedEvent
+func (e *AdminUserAdminRevokedEvent) Name() string {
+	return "admin.user.admin.revoked"
+}
+
+// AdminUserStatusChangedEvent represents a user's account status being changed by an admin
+type AdminUserStatusChangedEvent struct {
+	User      *user.User  `json:"user"`
+	Doer      *user.User  `json:"doer"`
+	OldStatus user.Status `json:"old_status"`
+	NewStatus user.Status `json:"new_status"`
+}
+
+// Name defines the name for AdminUserStatusChangedEvent
+func (e *AdminUserStatusChangedEvent) Name() string {
+	return "admin.user.status.changed"
+}
+
+// AdminUserPasswordSetEvent represents an admin setting a user's password.
+// It carries no password material.
+type AdminUserPasswordSetEvent struct {
+	User *user.User `json:"user"`
+	Doer *user.User `json:"doer"`
+}
+
+// Name defines the name for AdminUserPasswordSetEvent
+func (e *AdminUserPasswordSetEvent) Name() string {
+	return "admin.user.password.set"
+}
+
+// AdminUserPasswordResetSentEvent represents an admin triggering the
+// password-reset email for a user. It carries no reset token.
+type AdminUserPasswordResetSentEvent struct {
+	User *user.User `json:"user"`
+	Doer *user.User `json:"doer"`
+}
+
+// Name defines the name for AdminUserPasswordResetSentEvent
+func (e *AdminUserPasswordResetSentEvent) Name() string {
+	return "admin.user.password_reset.sent"
+}
+
+// AdminUserDeletedEvent represents a user being deleted through the admin API
+type AdminUserDeletedEvent struct {
+	User *user.User `json:"user"`
+	Doer *user.User `json:"doer"`
+	// Mode is "now" for immediate deletion or "scheduled" for the
+	// email-confirmation self-deletion flow.
+	Mode string `json:"mode"`
+}
+
+// Name defines the name for AdminUserDeletedEvent
+func (e *AdminUserDeletedEvent) Name() string {
+	return "admin.user.deleted"
+}
+
+// AdminProjectOwnerChangedEvent represents an admin reassigning a project's owner
+type AdminProjectOwnerChangedEvent struct {
+	Project    *Project   `json:"project"`
+	Doer       *user.User `json:"doer"`
+	OldOwnerID int64      `json:"old_owner_id"`
+	NewOwnerID int64      `json:"new_owner_id"`
+}
+
+// Name defines the name for AdminProjectOwnerChangedEvent
+func (e *AdminProjectOwnerChangedEvent) Name() string {
+	return "admin.project.owner.changed"
+}

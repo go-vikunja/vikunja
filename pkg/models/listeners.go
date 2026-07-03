@@ -326,6 +326,73 @@ func registerEventsForAuditLogging() {
 			Metadata: map[string]any{"member_id": e.Member.ID},
 		}
 	})
+
+	// Admin actions
+	audit.RegisterEventForAudit(func(e *AdminUserCreatedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action: audit.ActionAdminUserCreated,
+			Actor:  auditActorFromUser(e.Doer),
+			Target: audit.UserTarget(e.User.ID),
+		}
+	})
+	audit.RegisterEventForAudit(func(e *AdminUserAdminGrantedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action: audit.ActionAdminUserAdminGranted,
+			Actor:  auditActorFromUser(e.Doer),
+			Target: audit.UserTarget(e.User.ID),
+		}
+	})
+	audit.RegisterEventForAudit(func(e *AdminUserAdminRevokedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action: audit.ActionAdminUserAdminRevoked,
+			Actor:  auditActorFromUser(e.Doer),
+			Target: audit.UserTarget(e.User.ID),
+		}
+	})
+	audit.RegisterEventForAudit(func(e *AdminUserStatusChangedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action: audit.ActionAdminUserStatusChanged,
+			Actor:  auditActorFromUser(e.Doer),
+			Target: audit.UserTarget(e.User.ID),
+			Metadata: map[string]any{
+				"old_status": e.OldStatus,
+				"new_status": e.NewStatus,
+			},
+		}
+	})
+	audit.RegisterEventForAudit(func(e *AdminUserPasswordSetEvent) *audit.Entry {
+		return &audit.Entry{
+			Action: audit.ActionAdminUserPasswordSet,
+			Actor:  auditActorFromUser(e.Doer),
+			Target: audit.UserTarget(e.User.ID),
+		}
+	})
+	audit.RegisterEventForAudit(func(e *AdminUserPasswordResetSentEvent) *audit.Entry {
+		return &audit.Entry{
+			Action: audit.ActionAdminUserPasswordResetSent,
+			Actor:  auditActorFromUser(e.Doer),
+			Target: audit.UserTarget(e.User.ID),
+		}
+	})
+	audit.RegisterEventForAudit(func(e *AdminUserDeletedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action:   audit.ActionAdminUserDeleted,
+			Actor:    auditActorFromUser(e.Doer),
+			Target:   audit.UserTarget(e.User.ID),
+			Metadata: map[string]any{"mode": e.Mode},
+		}
+	})
+	audit.RegisterEventForAudit(func(e *AdminProjectOwnerChangedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action: audit.ActionAdminProjectOwnerChanged,
+			Actor:  auditActorFromUser(e.Doer),
+			Target: audit.ProjectTarget(e.Project.ID),
+			Metadata: map[string]any{
+				"old_owner_id": e.OldOwnerID,
+				"new_owner_id": e.NewOwnerID,
+			},
+		}
+	})
 }
 
 //////
