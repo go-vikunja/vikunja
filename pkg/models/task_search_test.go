@@ -251,3 +251,102 @@ func TestTaskSearchRelevanceRanking(t *testing.T) {
 		assert.NotEmpty(t, gotTasks)
 	})
 }
+
+// TestTaskSearchMatching pins ParadeDB's matching contract: per-token matching
+// across title and description, word-order independence, and fuzzy matching
+// within edit distance 1 against token prefixes (fuzzy(1, t)). Other databases
+// fall back to a substring match of the whole search string over each field and
+// intentionally match less, so this test is ParadeDB-only.
+func TestTaskSearchMatching(t *testing.T) {
+	if !db.ParadeDBAvailable() {
+		t.Skip("requires ParadeDB")
+	}
+
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	usr := &user.User{ID: 1}
+
+	newTask := func(title, description string) *Task {
+		tsk := &Task{Title: title, Description: description, ProjectID: 1}
+		require.NoError(t, tsk.Create(s, usr))
+		return tsk
+	}
+
+	helloWorld := newTask("hello world", "")
+	greenOrange := newTask("what is going on with the green orange two", "and some other data")
+	orangeTape := newTask("orange twosided tape and so twoish", "sensible data is here to test")
+	meeting := newTask("weekly meeting notes", "discuss the quarterly budget forecast")
+	ficus := newTask("untitled chore", "watering the ficus plant")
+	k8s := newTask("kubernetes cluster maintenance", "")
+
+	created := []*Task{helloWorld, greenOrange, orangeTape, meeting, ficus, k8s}
+
+	search := func(t *testing.T, query string) map[int64]int {
+		tc := &TaskCollection{ProjectID: 1}
+		got, _, _, err := tc.ReadAll(s, usr, query, 1, 50)
+		require.NoError(t, err)
+
+		gotTasks, is := got.([]*Task)
+		require.True(t, is)
+
+		pos := map[int64]int{}
+		for i, tsk := range gotTasks {
+			pos[tsk.ID] = i
+		}
+		return pos
+	}
+
+	tests := []struct {
+		name   string
+		search string
+		want   []*Task
+	}{
+		{"prefix match", "Hell", []*Task{helloWorld}},
+		// helloWorld matches too: fuzzy and prefix compose, "wo" is one edit
+		// from "two" and a prefix of "world".
+		{"prefix match across tasks", "two", []*Task{greenOrange, orangeTape, helloWorld}},
+		{"all words in one field", "Hello World", []*Task{helloWorld}},
+		{"typo one edit away", "Hello orld", []*Task{helloWorld}},
+		{"typo in one of two words", "kubernets cluster", []*Task{k8s}},
+		{"description-only match", "data", []*Task{greenOrange, orangeTape}},
+		{"description-only single task", "ficus", []*Task{ficus}},
+		{"terms split between title and description", "meeting budget", []*Task{meeting}},
+		{"terms split across tasks' fields", "data orange", []*Task{greenOrange, orangeTape}},
+		{"word order reversed", "orange green", []*Task{greenOrange, orangeTape}},
+		{"word order as written", "green orange", []*Task{greenOrange, orangeTape}},
+		{"no matching token", "xylophone", nil},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			pos := search(t, tt.search)
+
+			want := map[int64]bool{}
+			for _, tsk := range tt.want {
+				want[tsk.ID] = true
+			}
+
+			// Only the created tasks are asserted on, fixture matches are ignored.
+			for _, tsk := range created {
+				if want[tsk.ID] {
+					assert.Contains(t, pos, tsk.ID, "search %q should match task %q", tt.search, tsk.Title)
+				} else {
+					assert.NotContains(t, pos, tsk.ID, "search %q should not match task %q", tt.search, tsk.Title)
+				}
+			}
+		})
+	}
+
+	// Regardless of word order, the task matching both words must rank above
+	// the task matching only one.
+	for _, query := range []string{"green orange", "orange green"} {
+		t.Run("ranking "+query, func(t *testing.T) {
+			pos := search(t, query)
+			require.Contains(t, pos, greenOrange.ID)
+			require.Contains(t, pos, orangeTape.ID)
+			assert.Less(t, pos[greenOrange.ID], pos[orangeTape.ID], "the task matching both words should rank first")
+		})
+	}
+}
