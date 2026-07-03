@@ -361,20 +361,11 @@ func stripBucketIDFilters(filters []*taskFilter) []*taskFilter {
 // buildSubtaskRootCondition decides which tasks count as "roots" when expanding
 // subtasks: a task is a root unless its parent is itself part of this result set.
 //
-// The previous implementation used parent_tasks.project_id != tasks.project_id as
-// a proxy for "parent is not in this list". That proxy is the recurring source of
-// root-placement bugs - it was wrong for cross-project parents (#1000), deleted
-// parents (#2494) and now for same-project parents that are filtered out (#2646).
-//
 // A task is excluded from roots only when ALL of the following hold:
 //   - it has a parenttask relation, AND
 //   - the parent task exists, AND
 //   - the parent is within the queried result scope, AND
 //   - the parent satisfies the active filter.
-//
-// Note the filter (and result scope) is applied here, but not the text-search
-// predicate: search uses ParadeDB operators that don't compose against the
-// parent_tasks alias, and #2646 is purely about filters.
 func (d *dbTaskSearcher) buildSubtaskRootCondition(opts *taskSearchOptions) (builder.Cond, error) {
 	// The base result set is (projectIDCond OR favoritesCond); mirror both so the
 	// parent is considered "in scope" exactly when it could appear as a result row.
