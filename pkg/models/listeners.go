@@ -393,6 +393,24 @@ func registerEventsForAuditLogging() {
 			},
 		}
 	})
+	audit.RegisterEventForAudit(func(e *AdminUsersListedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action: audit.ActionAdminUsersListed,
+			Actor:  auditActorFromUser(e.Doer),
+		}
+	})
+	audit.RegisterEventForAudit(func(e *AdminAccessDeniedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action:  audit.ActionAdminAccessDenied,
+			Actor:   auditActorFromUser(e.Doer),
+			Outcome: audit.OutcomeFailure,
+			Reason:  "not an instance admin",
+			Metadata: map[string]any{
+				"method": e.Method,
+				"path":   e.Path,
+			},
+		}
+	})
 }
 
 //////

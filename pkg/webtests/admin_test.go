@@ -26,6 +26,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/license"
+	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/user"
 
@@ -85,8 +86,36 @@ func TestAdmin_GateNonAdmin(t *testing.T) {
 	u, err := user.GetUserByID(s, 1)
 	require.NoError(t, err)
 
+	events.ClearDispatchedEvents()
 	res := adminReq(t, e, http.MethodGet, "/api/v1/admin/overview", u, "")
 	assert.Equal(t, http.StatusNotFound, res.Code)
+
+	denied := events.GetDispatchedEvents((&models.AdminAccessDeniedEvent{}).Name())
+	require.Len(t, denied, 1)
+	evt := denied[0].(*models.AdminAccessDeniedEvent)
+	assert.Equal(t, int64(1), evt.Doer.ID)
+	assert.Equal(t, http.MethodGet, evt.Method)
+	assert.Equal(t, "/api/v1/admin/overview", evt.Path)
+}
+
+func TestAdmin_GateNonAdminV2(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	license.SetForTests([]license.Feature{license.FeatureAdminPanel})
+	defer license.ResetForTests()
+
+	s := db.NewSession()
+	defer s.Close()
+	u, err := user.GetUserByID(s, 1)
+	require.NoError(t, err)
+
+	events.ClearDispatchedEvents()
+	res := adminReq(t, e, http.MethodGet, "/api/v2/admin/overview", u, "")
+	assert.Equal(t, http.StatusNotFound, res.Code)
+
+	denied := events.GetDispatchedEvents((&models.AdminAccessDeniedEvent{}).Name())
+	require.Len(t, denied, 1)
+	assert.Equal(t, "/api/v2/admin/overview", denied[0].(*models.AdminAccessDeniedEvent).Path)
 }
 
 func TestAdmin_GateUnauthenticated(t *testing.T) {
@@ -130,12 +159,18 @@ func TestAdmin_ListUsers(t *testing.T) {
 	admin := promoteToAdmin(t, 1)
 
 	t.Run("returns users including hidden is_admin and status fields", func(t *testing.T) {
+		events.ClearDispatchedEvents()
 		res := adminReq(t, e, http.MethodGet, "/api/v1/admin/users", admin, "")
 		assert.Equal(t, http.StatusOK, res.Code)
 		body := res.Body.String()
 		assert.Contains(t, body, `"is_admin"`)
 		assert.Contains(t, body, `"status"`)
 		assert.Contains(t, body, `"username":"user1"`)
+
+		// The list exposes every user's email — the PII read is audited.
+		listed := events.GetDispatchedEvents((&models.AdminUsersListedEvent{}).Name())
+		require.Len(t, listed, 1)
+		assert.Equal(t, int64(1), listed[0].(*models.AdminUsersListedEvent).Doer.ID)
 	})
 
 	t.Run("search filters by username", func(t *testing.T) {

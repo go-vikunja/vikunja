@@ -539,3 +539,27 @@ type AdminProjectOwnerChangedEvent struct {
 func (e *AdminProjectOwnerChangedEvent) Name() string {
 	return "admin.project.owner.changed"
 }
+
+// AdminUsersListedEvent represents an admin reading the full user list,
+// which exposes every user's email address.
+type AdminUsersListedEvent struct {
+	Doer *user.User `json:"doer"`
+}
+
+// Name defines the name for AdminUsersListedEvent
+func (e *AdminUsersListedEvent) Name() string {
+	return "admin.users.listed"
+}
+
+// AdminAccessDeniedEvent represents an authenticated non-admin user being
+// refused on an /admin/* route — the privilege-probing signal.
+type AdminAccessDeniedEvent struct {
+	Doer   *user.User `json:"doer"`
+	Method string     `json:"method"`
+	Path   string     `json:"path"`
+}
+
+// Name defines the name for AdminAccessDeniedEvent
+func (e *AdminAccessDeniedEvent) Name() string {
+	return "admin.access.denied"
+}

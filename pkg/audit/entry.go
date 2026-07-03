@@ -49,12 +49,14 @@ import "time"
 // opaque ID — no names, emails or content — so GDPR erasure is satisfied by
 // deleting the referenced row.
 type Entry struct {
-	EventID   string         `json:"event_id"` // UUIDv7
-	Timestamp time.Time      `json:"timestamp"`
-	Actor     Actor          `json:"actor"`
-	Source    Source         `json:"source"`
-	Action    string         `json:"action"`
-	Target    Target         `json:"target"`
+	EventID   string    `json:"event_id"` // UUIDv7
+	Timestamp time.Time `json:"timestamp"`
+	Actor     Actor     `json:"actor"`
+	Source    Source    `json:"source"`
+	Action    string    `json:"action"`
+	// omitzero: actions without a single affected resource (list reads,
+	// denied access) have no target.
+	Target    Target         `json:"target,omitzero"`
 	Outcome   string         `json:"outcome"`
 	Reason    string         `json:"reason,omitempty"`
 	RequestID string         `json:"request_id,omitempty"`
@@ -138,6 +140,8 @@ const (
 	ActionAdminUserPasswordResetSent = "admin.user.password_reset.sent" // #nosec G101
 	ActionAdminUserDeleted           = "admin.user.deleted"
 	ActionAdminProjectOwnerChanged   = "admin.project.owner.changed"
+	ActionAdminUsersListed           = "admin.users.listed"
+	ActionAdminAccessDenied          = "admin.access.denied"
 )
 
 // The type strings are unexported; these constructors are the only way to

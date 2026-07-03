@@ -17,6 +17,8 @@
 package admin
 
 import (
+	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
 	"code.vikunja.io/api/pkg/routes/api/shared"
 	"code.vikunja.io/api/pkg/user"
@@ -43,7 +45,14 @@ type UserList struct {
 // @Success 200 {array} shared.AdminUser
 // @Failure 404 {object} web.HTTPError
 // @Router /admin/users [get]
-func (*UserList) ReadAll(s *xorm.Session, _ web.Auth, search string, page, perPage int) (interface{}, int, int64, error) {
+func (*UserList) ReadAll(s *xorm.Session, a web.Auth, search string, page, perPage int) (interface{}, int, int64, error) {
+	// The response exposes every user's email address; compliance regimes want
+	// admin PII reads logged. Queued here, dispatched by DoReadAll's
+	// DispatchPending with the request context.
+	if doer, err := user.GetFromAuth(a); err == nil {
+		events.DispatchOnCommit(s, &models.AdminUsersListedEvent{Doer: doer})
+	}
+
 	finder := s.Limit(perPage, (page-1)*perPage).OrderBy("id ASC")
 	counter := s
 	if search != "" {
