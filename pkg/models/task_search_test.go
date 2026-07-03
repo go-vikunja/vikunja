@@ -194,4 +194,60 @@ func TestTaskSearchRelevanceRanking(t *testing.T) {
 		}
 		require.Contains(t, gotIDs, allWords.ID)
 	})
+
+	// sort_by=done,relevance keeps undone tasks first and ranks by relevance within
+	// each group — the quick-actions search shape. On databases that cannot score,
+	// the relevance param is dropped and the done,id ordering remains.
+	t.Run("explicit done and relevance sort", func(t *testing.T) {
+		doneAllWords := &Task{Title: "Backup server runbook", ProjectID: 1, Done: true}
+		require.NoError(t, doneAllWords.Create(s, usr))
+
+		tc := &TaskCollection{
+			ProjectID: 1,
+			SortBy:    []string{"done", "relevance"},
+		}
+		got, _, _, err := tc.ReadAll(s, usr, "backup server", 1, 50)
+		require.NoError(t, err)
+
+		gotTasks, is := got.([]*Task)
+		require.True(t, is)
+
+		pos := map[int64]int{}
+		for i, tsk := range gotTasks {
+			pos[tsk.ID] = i
+		}
+
+		require.Contains(t, pos, allWords.ID)
+		require.Contains(t, pos, doneAllWords.ID)
+		assert.Less(t, pos[allWords.ID], pos[doneAllWords.ID], "undone tasks must come before done tasks")
+
+		if db.ParadeDBAvailable() {
+			// doneAllWords matches all query words: only the done sort taking
+			// precedence over its high BM25 score can place it last.
+			for _, undone := range []int64{allWords.ID, oneWordA.ID, oneWordB.ID, lateAllWords.ID} {
+				require.Contains(t, pos, undone)
+				assert.Less(t, pos[undone], pos[doneAllWords.ID], "undone tasks must come before the done all-words match")
+			}
+			for _, allw := range []int64{allWords.ID, lateAllWords.ID} {
+				for _, onew := range []int64{oneWordA.ID, oneWordB.ID} {
+					assert.Less(t, pos[allw], pos[onew], "within the undone group, all-words matches must rank above one-word matches")
+				}
+			}
+		}
+	})
+
+	// A numeric search cannot be scored; the relevance param must be dropped
+	// instead of producing an unsupported-query-shape error.
+	t.Run("relevance sort with numeric search falls back", func(t *testing.T) {
+		tc := &TaskCollection{
+			ProjectID: 1,
+			SortBy:    []string{"relevance"},
+		}
+		got, _, _, err := tc.ReadAll(s, usr, "#1", 1, 50)
+		require.NoError(t, err)
+
+		gotTasks, is := got.([]*Task)
+		require.True(t, is)
+		assert.NotEmpty(t, gotTasks)
+	})
 }
