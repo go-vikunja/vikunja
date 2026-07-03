@@ -23,6 +23,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"xorm.io/builder"
 )
 
 func TestFindPositionConflicts(t *testing.T) {
@@ -602,12 +603,13 @@ func TestUpsertTaskPosition(t *testing.T) {
 
 		err := upsertTaskPosition(s, &TaskPosition{TaskID: 100, ProjectViewID: 1, Position: 42})
 		require.NoError(t, err)
+		require.NoError(t, s.Commit())
 
-		pos := &TaskPosition{}
-		has, err := s.Where("task_id = ? AND project_view_id = ?", 100, 1).Get(pos)
-		require.NoError(t, err)
-		require.True(t, has)
-		assert.InDelta(t, 42.0, pos.Position, 0.001)
+		db.AssertExists(t, "task_positions", map[string]interface{}{
+			"task_id":         100,
+			"project_view_id": 1,
+			"position":        42,
+		}, false)
 	})
 
 	t.Run("updates an existing row instead of failing on the unique index", func(t *testing.T) {
@@ -620,12 +622,14 @@ func TestUpsertTaskPosition(t *testing.T) {
 
 		err = upsertTaskPosition(s, &TaskPosition{TaskID: 100, ProjectViewID: 1, Position: 555})
 		require.NoError(t, err)
+		require.NoError(t, s.Commit())
 
-		positions := []*TaskPosition{}
-		err = s.Where("task_id = ? AND project_view_id = ?", 100, 1).Find(&positions)
-		require.NoError(t, err)
-		require.Len(t, positions, 1)
-		assert.InDelta(t, 555.0, positions[0].Position, 0.001)
+		db.AssertExists(t, "task_positions", map[string]interface{}{
+			"task_id":         100,
+			"project_view_id": 1,
+			"position":        555,
+		}, false)
+		db.AssertCount(t, "task_positions", builder.Eq{"task_id": 100, "project_view_id": 1}, 1)
 	})
 }
 
@@ -643,18 +647,19 @@ func TestInsertTaskPositionsIgnoringExisting(t *testing.T) {
 			{TaskID: 101, ProjectViewID: 1, Position: 70},
 		})
 		require.NoError(t, err)
+		require.NoError(t, s.Commit())
 
-		existing := &TaskPosition{}
-		has, err := s.Where("task_id = ? AND project_view_id = ?", 100, 1).Get(existing)
-		require.NoError(t, err)
-		require.True(t, has)
-		assert.InDelta(t, 50.0, existing.Position, 0.001, "existing row must not be overwritten")
-
-		inserted := &TaskPosition{}
-		has, err = s.Where("task_id = ? AND project_view_id = ?", 101, 1).Get(inserted)
-		require.NoError(t, err)
-		require.True(t, has)
-		assert.InDelta(t, 70.0, inserted.Position, 0.001)
+		// The existing row must not be overwritten.
+		db.AssertExists(t, "task_positions", map[string]interface{}{
+			"task_id":         100,
+			"project_view_id": 1,
+			"position":        50,
+		}, false)
+		db.AssertExists(t, "task_positions", map[string]interface{}{
+			"task_id":         101,
+			"project_view_id": 1,
+			"position":        70,
+		}, false)
 	})
 
 	t.Run("inserts more rows than a single batch", func(t *testing.T) {
@@ -673,9 +678,11 @@ func TestInsertTaskPositionsIgnoringExisting(t *testing.T) {
 
 		err := insertTaskPositionsIgnoringExisting(s, positions)
 		require.NoError(t, err)
+		require.NoError(t, s.Commit())
 
-		count, err := s.Where("project_view_id = ? AND task_id >= 10000", 1).Count(&TaskPosition{})
-		require.NoError(t, err)
-		assert.Equal(t, int64(150), count)
+		db.AssertCount(t, "task_positions", builder.And(
+			builder.Eq{"project_view_id": 1},
+			builder.Gte{"task_id": 10000},
+		), 150)
 	})
 }
