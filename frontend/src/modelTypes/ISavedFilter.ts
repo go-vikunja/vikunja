@@ -7,8 +7,10 @@ export interface IFilters {
 	order_by: ('asc' | 'desc')[],
 	filter: string,
 	filter_include_nulls: boolean,
+	filterIncludeNulls?: boolean,
 	s: string,
 	include_subprojects?: boolean,
+	includeSubprojects?: boolean,
 }
 
 export interface ISavedFilter extends IAbstract {
