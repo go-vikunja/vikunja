@@ -260,7 +260,7 @@ async function markAllRead() {
 
 async function clearAll() {
 	const notificationService = new NotificationService()
-	await notificationService.clearAll()
+	await notificationService.delete(new NotificationModel({}))
 	success({message: t('notification.clearAllSuccess')})
 	allNotifications.value = []
 }
