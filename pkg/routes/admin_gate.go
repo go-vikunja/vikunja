@@ -45,10 +45,14 @@ func RequireInstanceAdmin() echo.MiddlewareFunc {
 			s := db.NewSession()
 			fresh, err := user.GetUserByID(s, u.ID)
 			_ = s.Close()
-			if err != nil || !fresh.IsAdmin {
+			if err != nil {
+				return echo.ErrNotFound
+			}
+			if !fresh.IsAdmin {
 				// Privilege-probing signal for the audit log. Only dispatched
-				// when the principal resolved to a user — the earlier refusals
-				// (no claims, link share) have no account to attribute.
+				// for a confirmed non-admin — the other refusals (no claims,
+				// link share, failed user read) can't be attributed to a
+				// verified account and would write misleading entries.
 				dispatchErr := events.DispatchWithContext(c.Request().Context(), &models.AdminAccessDeniedEvent{
 					Doer:   u,
 					Method: c.Request().Method,
