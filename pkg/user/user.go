@@ -565,6 +565,39 @@ func getClaimAsString(claims jwt.MapClaims, field string) (string, error) {
 	return value, nil
 }
 
+var baseUserUpdateColumns = [...]string{
+	"username",
+	"email",
+	"avatar_provider",
+	"avatar_file_id",
+	"status",
+	"name",
+	"email_reminders_enabled",
+	"discoverable_by_name",
+	"discoverable_by_email",
+	"overdue_tasks_reminders_enabled",
+	"default_project_id",
+	"week_start",
+	"language",
+	"timezone",
+	"overdue_tasks_reminders_time",
+	"extra_settings_links",
+}
+
+// premarshalFrontendSettings is a helper function to marshal frontend settings to JSON before 
+// handing them off to the ORM. This prevents downstream double-encoding issues for clients
+// which expect JSON objects.
+func premarshalFrontendSettings(settings interface{}) (interface{}, error) {
+	if settings == nil {
+		return nil, nil
+	}
+	settingsJSON, err := json.Marshal(settings)
+	if err != nil {
+		return nil, fmt.Errorf("marshal frontend settings: %w", err)
+	}
+	return string(settingsJSON), nil
+}
+
 // UpdateUser updates a user
 func UpdateUser(s *xorm.Session, user *User, forceOverride bool) (updatedUser *User, err error) {
 
@@ -633,40 +666,24 @@ func UpdateUser(s *xorm.Session, user *User, forceOverride bool) (updatedUser *U
 		return nil, &ErrInvalidTimezone{Name: user.Timezone, LoadError: err}
 	}
 
-	frontendSettingsJSON, err := json.Marshal(user.FrontendSettings)
-	if err != nil {
-		return nil, err
+	updateCols := baseUserUpdateColumns[:]
+	if forceOverride {
+		// forceOverride is set in paths where we should apply the FrontendSettings update.
+		user.FrontendSettings, err = premarshalFrontendSettings(user.FrontendSettings)
+		if err != nil {
+			return nil, err
+		}
+		updateCols = append(updateCols, "frontend_settings")
 	}
-	user.FrontendSettings = frontendSettingsJSON
 
-	// Update it
 	_, err = s.
 		ID(user.ID).
-		Cols(
-			"username",
-			"email",
-			"avatar_provider",
-			"avatar_file_id",
-			"status",
-			"name",
-			"email_reminders_enabled",
-			"discoverable_by_name",
-			"discoverable_by_email",
-			"overdue_tasks_reminders_enabled",
-			"default_project_id",
-			"week_start",
-			"language",
-			"timezone",
-			"overdue_tasks_reminders_time",
-			"frontend_settings",
-			"extra_settings_links",
-		).
+		Cols(updateCols...).
 		Update(user)
 	if err != nil {
 		return &User{}, err
 	}
 
-	// Get the newly updated user
 	updatedUser, err = GetUserByID(s, user.ID)
 	if err != nil && !IsErrUserStatusError(err) {
 		return &User{}, err
