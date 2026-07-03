@@ -51,7 +51,7 @@ const (
 	taskPropertyAssignees     string = "assignees"
 	taskPropertyLabels        string = "labels"
 	taskPropertyReminders     string = "reminders"
-	// Not a task column: sorts by search relevance (BM25) on ParadeDB. Valid for
+	// Not a task column: sorts by search relevance on ParadeDB. Valid for
 	// sorting only, silently skipped when the database or query cannot score.
 	taskPropertyRelevance string = "relevance"
 )

@@ -56,10 +56,10 @@ func TestKanbanViewBucketFiltering(t *testing.T) {
 }
 
 // TestTaskSearchRelevanceRanking verifies that a multi-word search ranks the task
-// matching all words above tasks matching only some. The ranking is BM25-based and
-// therefore only enforced on ParadeDB; on other databases we only assert that the
-// matching tasks are returned (no order guarantee), keeping the test green across
-// the whole CI database matrix.
+// matching all words above tasks matching only some. The ranking uses ParadeDB's
+// relevance score and is therefore only enforced on ParadeDB; on other databases
+// we only assert that the matching tasks are returned (no order guarantee),
+// keeping the test green across the whole CI database matrix.
 func TestTaskSearchRelevanceRanking(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()
@@ -75,7 +75,7 @@ func TestTaskSearchRelevanceRanking(t *testing.T) {
 	require.NoError(t, oneWordB.Create(s, usr))
 	// Created last on purpose: it has the highest id, so the default id-asc order
 	// would place it after the one-word matches. It ranking above them can only
-	// come from BM25 relevance, not from the fallback ordering.
+	// come from relevance scoring, not from the fallback ordering.
 	lateAllWords := &Task{Title: "server backup checklist", ProjectID: 1}
 	require.NoError(t, lateAllWords.Create(s, usr))
 
@@ -107,7 +107,7 @@ func TestTaskSearchRelevanceRanking(t *testing.T) {
 
 			for _, allw := range []int64{allWords.ID, lateAllWords.ID} {
 				for _, onew := range []int64{oneWordA.ID, oneWordB.ID} {
-					assert.Less(t, pos[allw], pos[onew], "tasks matching all query words should rank above one-word matches by BM25 relevance")
+					assert.Less(t, pos[allw], pos[onew], "tasks matching all query words should rank above one-word matches by relevance")
 				}
 			}
 		}
@@ -125,7 +125,7 @@ func TestTaskSearchRelevanceRanking(t *testing.T) {
 	})
 
 	// An explicit sort_by must win over relevance: with `id desc` the lowest-id
-	// task (allWords) ranks last, the opposite of what BM25 relevance would do.
+	// task (allWords) ranks last, the opposite of what relevance ranking would do.
 	// This locks the contract that user-provided sorting disables relevance
 	// ranking even on ParadeDB. Only ParadeDB's per-token search matches all
 	// three tasks, so the ordering contract is only asserted there (other
@@ -223,7 +223,7 @@ func TestTaskSearchRelevanceRanking(t *testing.T) {
 
 		if db.ParadeDBAvailable() {
 			// doneAllWords matches all query words: only the done sort taking
-			// precedence over its high BM25 score can place it last.
+			// precedence over its high relevance score can place it last.
 			for _, undone := range []int64{allWords.ID, oneWordA.ID, oneWordB.ID, lateAllWords.ID} {
 				require.Contains(t, pos, undone)
 				assert.Less(t, pos[undone], pos[doneAllWords.ID], "undone tasks must come before the done all-words match")
