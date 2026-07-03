@@ -93,10 +93,23 @@ func upsertTaskPosition(s *xorm.Session, tp *TaskPosition) (err error) {
 	return
 }
 
-// bulkInsertTaskPositions inserts position rows in batches. Rows whose
-// (task_id, project_view_id) pair already exists are updated to the given
-// position when overwrite is set and skipped otherwise. Used on paths where a
-// concurrent transaction may have created some of the rows in the meantime.
+// bulkInsertTaskPositions inserts position rows in batches, tolerating rows
+// whose (task_id, project_view_id) pair already exists because a concurrent
+// transaction created them in the meantime. The overwrite flag decides who
+// wins such a conflict:
+//
+// Callers which only add rows for tasks that had none (saved filter healing,
+// the task-created listener) pass false: if another transaction beat them to
+// it, the existing row is the correct state — e.g. a position the user set
+// via drag & drop in between — and the caller's value is stale, so the row is
+// kept as is.
+//
+// The recalculation paths pass true: they rewrite every position in the view,
+// so their values are authoritative. They hold the view lock, but writers of
+// the first kind deliberately don't take it and can slip a row in between the
+// recalculation's delete and reinsert (invisible to the delete's snapshot
+// under READ COMMITTED). A plain insert would then fail on the unique index;
+// overwriting resolves the race with the recalculated value instead.
 func bulkInsertTaskPositions(s *xorm.Session, positions []*TaskPosition, overwrite bool) (err error) {
 	// Keep statements well below the parameter limits of all supported databases.
 	const batchSize = 100
@@ -323,9 +336,6 @@ func RecalculateTaskPositions(s *xorm.Session, view *ProjectView, a web.Auth) (e
 		return
 	}
 
-	// Writers which don't take the view lock (they only ever add missing rows)
-	// can slip a row in between the delete above and this insert. The
-	// recalculated values are authoritative, so overwrite instead of failing.
 	err = bulkInsertTaskPositions(s, newPositions, true)
 	if err != nil {
 		return
@@ -391,7 +401,6 @@ func recalculateTaskPositionsForRepair(s *xorm.Session, view *ProjectView) error
 		})
 	}
 
-	// Overwrite for the same reason as in RecalculateTaskPositions.
 	err = bulkInsertTaskPositions(s, newPositions, true)
 	if err != nil {
 		return err
@@ -541,8 +550,6 @@ func createPositionsForTasksInView(s *xorm.Session, tasks []*Task, view *Project
 		})
 	}
 
-	// A concurrent request may have healed some of the same tasks already,
-	// so skip rows which exist by now instead of failing on the unique index.
 	return bulkInsertTaskPositions(s, newPositions, false)
 }
 
