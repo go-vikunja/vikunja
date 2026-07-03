@@ -470,10 +470,13 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		}
 	}
 
-	// ParadeDB exposes the BM25 relevance score via pdb.score(tasks.id) for a query
-	// containing a ParadeDB operator (the ||| from MultiFieldSearch qualifies). When
-	// searching without an explicit user sort — or when the client explicitly sorts
-	// by relevance — order by the score so tasks matching all query words rank
+	// ParadeDB exposes a relevance score via pdb.score(tasks.id) for a query
+	// containing a ParadeDB operator (the ||| from MultiFieldSearch qualifies).
+	// With the fuzzy cast MultiFieldSearch uses, this is not BM25 but a constant
+	// score sum: each query word matching a field adds 1.0 (exact/prefix) or 0.5
+	// (one edit away), title and description weighted equally. When searching
+	// without an explicit user sort — or when the client explicitly sorts by
+	// relevance — order by that score so tasks matching all query words rank
 	// above tasks matching only some.
 	//
 	// Limited to pure-text searches: numeric searches add an `OR index = N` branch,
