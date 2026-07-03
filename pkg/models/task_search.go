@@ -448,14 +448,27 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 	// Then return all tasks for that projects
 	var where builder.Cond
 
+	searchIndex := getTaskIndexFromSearchString(opts.search)
 	if opts.search != "" {
 		where = db.MultiFieldSearchWithTableAlias([]string{"title", "description"}, opts.search, "tasks")
 
-		searchIndex := getTaskIndexFromSearchString(opts.search)
 		if searchIndex > 0 {
-			where = builder.Or(where, builder.Eq{"`index`": searchIndex})
+			where = builder.Or(where, builder.Eq{"tasks.`index`": searchIndex})
 		}
 	}
+
+	// ParadeDB exposes the BM25 relevance score via pdb.score(tasks.id) for a query
+	// containing a ParadeDB operator (the ||| from MultiFieldSearch qualifies). When
+	// searching without an explicit user sort, order by relevance so tasks matching
+	// all query words rank above tasks matching only some.
+	//
+	// Limited to pure-text searches: numeric searches add an `OR index = N` branch,
+	// which pdb.score rejects as an unsupported query shape. pdb.score is also
+	// invalid SQL on sqlite/mysql/plain postgres, hence the ParadeDBAvailable() gate.
+	wantsRelevanceRanking := db.ParadeDBAvailable() &&
+		opts.search != "" &&
+		!opts.userProvidedSort &&
+		searchIndex == 0
 
 	var projectIDCond builder.Cond
 	var favoritesCond builder.Cond
@@ -464,17 +477,42 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 	}
 
 	if d.hasFavoritesProject {
-		// All favorite tasks for that user
-		favCond := builder.
-			Select("entity_id").
-			From("favorites").
-			Where(
-				builder.And(
-					builder.Eq{"user_id": d.a.GetID()},
-					builder.Eq{"kind": FavoriteKindTask},
-				))
+		addFavoritesCond := true
+		if wantsRelevanceRanking && len(opts.projectIDs) > 0 {
+			// pdb.score also rejects the favorites arm (`OR tasks.id IN (<subquery>)`).
+			// On an all-projects scope that arm is usually redundant — every favorited
+			// task already lives in one of the user's projects — so drop it and keep
+			// relevance ranking. Only favorites outside the scope (e.g. in projects the
+			// user lost access to) need the arm and keep the default, unranked ordering.
+			var hasOutOfScopeFavorites bool
+			hasOutOfScopeFavorites, err = d.s.
+				Table("favorites").
+				Join("INNER", "tasks", "tasks.id = favorites.entity_id").
+				Where(builder.And(
+					builder.Eq{"favorites.user_id": d.a.GetID()},
+					builder.Eq{"favorites.kind": FavoriteKindTask},
+					builder.NotIn("tasks.project_id", opts.projectIDs),
+				)).
+				Exist()
+			if err != nil {
+				return nil, 0, err
+			}
+			addFavoritesCond = hasOutOfScopeFavorites
+		}
 
-		favoritesCond = builder.In("tasks.id", favCond)
+		if addFavoritesCond {
+			// All favorite tasks for that user
+			favCond := builder.
+				Select("entity_id").
+				From("favorites").
+				Where(
+					builder.And(
+						builder.Eq{"user_id": d.a.GetID()},
+						builder.Eq{"kind": FavoriteKindTask},
+					))
+
+			favoritesCond = builder.In("tasks.id", favCond)
+		}
 	}
 
 	limit, start := getLimitFromPageIndex(opts.page, opts.perPage)
@@ -489,9 +527,20 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		cond = builder.And(cond, subtaskRootCond)
 	}
 
-	query := d.s.
-		Distinct(distinct).
-		Where(cond)
+	// When the favorites arm is still part of the query (Favorites view, or
+	// out-of-scope favorites exist), its shape is unsupported — stay unranked.
+	rankByRelevance := wantsRelevanceRanking && favoritesCond == nil
+
+	query := d.s.Where(cond)
+	if rankByRelevance {
+		// Select() passes the raw column list through untouched while Distinct()
+		// (no args) still emits DISTINCT. Distinct("tasks.*, pdb.score(tasks.id)")
+		// would quote-corrupt the function call into "pdb"."score(tasks"."id)".
+		query = query.Select(distinct + ", pdb.score(tasks.id)").Distinct()
+		orderby = "pdb.score(tasks.id) DESC, " + orderby
+	} else {
+		query = query.Distinct(distinct)
+	}
 	if limit > 0 {
 		query = query.Limit(limit, start)
 	}
