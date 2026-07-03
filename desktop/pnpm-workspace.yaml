@@ -6,7 +6,7 @@ overrides:
   minimatch: 10.2.5
   tar: 7.5.19
   '@tootallnate/once': 3.0.1
-  picomatch: 4.0.4
+  picomatch: 4.0.5
   tmp: 0.2.7
   ip-address: 10.2.0
   form-data: 4.0.6
