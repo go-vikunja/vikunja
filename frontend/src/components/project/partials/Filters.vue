@@ -201,6 +201,11 @@ function changeAndEmitButton() {
 
 function clearFiltersAndEmit() {
 	filterQuery.value = ''
+	params.value.filterIncludeNulls = false
+	params.value.filter_include_nulls = false
+	params.value.includeSubprojects = false
+	params.value.include_subprojects = false
+	emit('update:includeSubprojects', false)
 	changeAndEmitButton()
 }
 
