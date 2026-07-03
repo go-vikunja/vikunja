@@ -16,7 +16,7 @@ runs:
         echo "CYPRESS_INSTALL_BINARY=0"             >> $GITHUB_ENV
         echo "PUPPETEER_SKIP_DOWNLOAD=true"         >> $GITHUB_ENV
         echo "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1"   >> $GITHUB_ENV
-    - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+    - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
       with:
         run_install: false
         package_json_file: frontend/package.json

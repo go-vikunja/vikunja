@@ -5,7 +5,7 @@
   "main": "main.js",
   "repository": "https://code.vikunja.io/desktop",
   "license": "GPL-3.0-or-later",
-  "packageManager": "pnpm@10.34.4",
+  "packageManager": "pnpm@11.9.0",
   "author": {
     "email": "maintainers@vikunja.io",
     "name": "Vikunja Team"
@@ -61,28 +61,11 @@
     }
   },
   "devDependencies": {
-    "electron": "40.10.5",
+    "electron": "42.5.1",
     "electron-builder": "26.15.3",
     "unzipper": "0.12.5"
   },
   "dependencies": {
     "express": "5.2.1"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "electron"
-    ],
-    "overrides": {
-      "minimatch": "10.2.5",
-      "tar": "7.5.19",
-      "@tootallnate/once": "3.0.1",
-      "picomatch": "4.0.4",
-      "tmp": "0.2.7",
-      "ip-address": "10.2.0",
-      "form-data": "4.0.6",
-      "js-yaml": "5.2.0",
-      "undici@6": "8.5.0",
-      "undici@7": "8.5.0"
-    }
   }
 }

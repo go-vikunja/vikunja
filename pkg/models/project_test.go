@@ -79,6 +79,29 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 				"project_view_id": kanbanView.ID,
 			}, false)
 		})
+		t.Run("bot project owned by bot owner", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
+			bot := &user.User{ID: 23, Username: "bot-owner-a-assistant", BotOwnerID: 21}
+			project := Project{Title: "bot-created"}
+			err := project.Create(s, bot)
+			require.NoError(t, err)
+			require.NoError(t, s.Commit())
+
+			// The bot's owner should own the project.
+			db.AssertExists(t, "projects", map[string]interface{}{
+				"id":       project.ID,
+				"owner_id": 21,
+			}, false)
+			// The bot should retain access via a share.
+			db.AssertExists(t, "users_projects", map[string]interface{}{
+				"user_id":    23,
+				"project_id": project.ID,
+				"permission": PermissionAdmin,
+			}, false)
+		})
 		t.Run("kanban view creates To-Do, doing, done buckets", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 			s := db.NewSession()

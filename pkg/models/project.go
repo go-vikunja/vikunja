@@ -1046,8 +1046,17 @@ func CreateProject(s *xorm.Session, project *Project, auth web.Auth, createBackl
 	}
 
 	project.ID = 0
-	project.OwnerID = doer.ID
-	project.Owner = doer
+	if doer.IsBot() {
+		project.OwnerID = doer.BotOwnerID
+		owner, err := user.GetUserByID(s, doer.BotOwnerID)
+		if err != nil {
+			return err
+		}
+		project.Owner = owner
+	} else {
+		project.OwnerID = doer.ID
+		project.Owner = doer
+	}
 
 	err = checkProjectBeforeUpdateOrDelete(s, project)
 	if err != nil {
@@ -1059,6 +1068,18 @@ func CreateProject(s *xorm.Session, project *Project, auth web.Auth, createBackl
 	_, err = s.Insert(project)
 	if err != nil {
 		return
+	}
+
+	// Give the bot continued access to the project it created.
+	if doer.IsBot() {
+		pu := &ProjectUser{
+			ProjectID:  project.ID,
+			Username:   doer.Username,
+			Permission: PermissionAdmin,
+		}
+		if err = pu.Create(s, auth); err != nil {
+			return err
+		}
 	}
 
 	project.Position = calculateDefaultPosition(project.ID, project.Position)
