@@ -279,63 +279,6 @@ func TestGetProviderFromMapStringBooleans(t *testing.T) {
 	}
 }
 
-func TestGetProviderFromMapUseGroupsClaim(t *testing.T) {
-	defer CleanupSavedOpenIDProviders()
-
-	server := newMockOIDCServer()
-	defer server.Close()
-
-	base := map[string]interface{}{
-		"name":         "Test Provider",
-		"authurl":      server.URL,
-		"clientid":     "client1",
-		"clientsecret": "secret1",
-	}
-
-	t.Run("defaults to false when not set", func(t *testing.T) {
-		provider, err := getProviderFromMap(base, "test")
-		require.NoError(t, err)
-		require.NotNil(t, provider)
-		assert.False(t, provider.UseGroupsClaim)
-	})
-
-	t.Run("native bool true", func(t *testing.T) {
-		pi := copyMap(base)
-		pi["usegroupsclaim"] = true
-		provider, err := getProviderFromMap(pi, "test")
-		require.NoError(t, err)
-		require.NotNil(t, provider)
-		assert.True(t, provider.UseGroupsClaim)
-	})
-
-	t.Run("string true", func(t *testing.T) {
-		pi := copyMap(base)
-		pi["usegroupsclaim"] = "true"
-		provider, err := getProviderFromMap(pi, "test")
-		require.NoError(t, err)
-		require.NotNil(t, provider)
-		assert.True(t, provider.UseGroupsClaim)
-	})
-
-	t.Run("string false", func(t *testing.T) {
-		pi := copyMap(base)
-		pi["usegroupsclaim"] = "false"
-		provider, err := getProviderFromMap(pi, "test")
-		require.NoError(t, err)
-		require.NotNil(t, provider)
-		assert.False(t, provider.UseGroupsClaim)
-	})
-}
-
-// copyMap makes a shallow copy of a map[string]interface{} so test cases can
-// add keys without mutating the shared base map.
-func copyMap(m map[string]interface{}) map[string]interface{} {
-	out := make(map[string]interface{}, len(m))
-	for k, v := range m {
-		out[k] = v
-	}
-	return out
-}
 
 func TestFailedDiscoverySkippedInIssuerCheck(t *testing.T) {
 	defer CleanupSavedOpenIDProviders()

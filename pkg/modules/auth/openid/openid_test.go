@@ -606,7 +606,7 @@ func TestGroupsClaimTeamSync(t *testing.T) {
 			Email:  "other-email-address@some.service.com",
 			Groups: []string{"engineering"},
 		}
-		provider := &Provider{Name: "Dex", UseGroupsClaim: true}
+		provider := &Provider{Name: "Dex", Scope: "openid email profile groups"}
 		idToken := &oidc.IDToken{Issuer: "https://dex.example.com", Subject: "12345"}
 
 		u, err := getOrCreateUser(s, cl, provider, idToken)

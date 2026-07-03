@@ -23,6 +23,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -67,7 +68,6 @@ type Provider struct {
 	EmailFallback       bool   `json:"email_fallback"`
 	UsernameFallback    bool   `json:"username_fallback"`
 	ForceUserInfo       bool   `json:"force_user_info"`
-	UseGroupsClaim      bool   `json:"use_groups_claim"`
 	RequireAvailability bool   `json:"-"`
 	ClientSecret        string `json:"-"`
 	// RP-Initiated Logout endpoint, cached at init so logout never fetches.
@@ -264,7 +264,7 @@ func AuthenticateCallback(ctx context.Context, cb *Callback, providerKey string)
 
 	var teamData []*models.Team
 	teamNameSuffix := provider.Name
-	if provider.UseGroupsClaim {
+	if slices.Contains(strings.Fields(provider.Scope), "groups") {
 		teamData = getTeamDataFromGroupsClaim(cl.Groups)
 		teamNameSuffix = ""
 	} else {
