@@ -23,6 +23,7 @@ import (
 	"code.vikunja.io/api/pkg/user"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"xorm.io/xorm"
 )
 
 func TestKanbanViewBucketFiltering(t *testing.T) {
@@ -283,21 +284,6 @@ func TestTaskSearchMatching(t *testing.T) {
 
 	created := []*Task{helloWorld, greenOrange, orangeTape, meeting, ficus, k8s}
 
-	search := func(t *testing.T, query string) map[int64]int {
-		tc := &TaskCollection{ProjectID: 1}
-		got, _, _, err := tc.ReadAll(s, usr, query, 1, 50)
-		require.NoError(t, err)
-
-		gotTasks, is := got.([]*Task)
-		require.True(t, is)
-
-		pos := map[int64]int{}
-		for i, tsk := range gotTasks {
-			pos[tsk.ID] = i
-		}
-		return pos
-	}
-
 	tests := []struct {
 		name   string
 		search string
@@ -321,7 +307,7 @@ func TestTaskSearchMatching(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			pos := search(t, tt.search)
+			pos := searchTaskPositions(t, s, usr, tt.search)
 
 			want := map[int64]bool{}
 			for _, tsk := range tt.want {
@@ -343,10 +329,62 @@ func TestTaskSearchMatching(t *testing.T) {
 	// the task matching only one.
 	for _, query := range []string{"green orange", "orange green"} {
 		t.Run("ranking "+query, func(t *testing.T) {
-			pos := search(t, query)
+			pos := searchTaskPositions(t, s, usr, query)
 			require.Contains(t, pos, greenOrange.ID)
 			require.Contains(t, pos, orangeTape.ID)
 			assert.Less(t, pos[greenOrange.ID], pos[orangeTape.ID], "the task matching both words should rank first")
 		})
 	}
+}
+
+func searchTaskPositions(t *testing.T, s *xorm.Session, usr *user.User, query string) map[int64]int {
+	t.Helper()
+
+	tc := &TaskCollection{ProjectID: 1}
+	got, _, _, err := tc.ReadAll(s, usr, query, 1, 50)
+	require.NoError(t, err)
+
+	gotTasks, is := got.([]*Task)
+	require.True(t, is)
+
+	pos := map[int64]int{}
+	for i, tsk := range gotTasks {
+		pos[tsk.ID] = i
+	}
+	return pos
+}
+
+// TestTaskSearchTitleBoost pins the 1.5x title boost: a title match ranks above
+// a description match, but never above a task matching more query words.
+func TestTaskSearchTitleBoost(t *testing.T) {
+	if !db.ParadeDBAvailable() {
+		t.Skip("requires ParadeDB")
+	}
+
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	usr := &user.User{ID: 1}
+
+	titleHit := &Task{Title: "wombat expedition", ProjectID: 1}
+	require.NoError(t, titleHit.Create(s, usr))
+	descHit := &Task{Title: "some errand", Description: "planning the wombat visit", ProjectID: 1}
+	require.NoError(t, descHit.Create(s, usr))
+	descBoth := &Task{Title: "chores", Description: "wombat capybara sightings", ProjectID: 1}
+	require.NoError(t, descBoth.Create(s, usr))
+
+	t.Run("title match ranks above description match", func(t *testing.T) {
+		pos := searchTaskPositions(t, s, usr, "wombat")
+		require.Contains(t, pos, titleHit.ID)
+		require.Contains(t, pos, descHit.ID)
+		assert.Less(t, pos[titleHit.ID], pos[descHit.ID], "a boosted title match (1.5) must outrank a description match (1.0)")
+	})
+
+	t.Run("more matched words beat the title boost", func(t *testing.T) {
+		pos := searchTaskPositions(t, s, usr, "wombat capybara")
+		require.Contains(t, pos, descBoth.ID)
+		require.Contains(t, pos, titleHit.ID)
+		assert.Less(t, pos[descBoth.ID], pos[titleHit.ID], "two description matches (2.0) must outrank one boosted title match (1.5)")
+	})
 }

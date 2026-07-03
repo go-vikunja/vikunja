@@ -455,7 +455,11 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 
 	searchIndex := getTaskIndexFromSearchString(opts.search)
 	if opts.search != "" {
-		where = db.MultiFieldSearchWithTableAlias([]string{"title", "description"}, opts.search, "tasks")
+		// Title matches weigh 1.5x description matches. Scoring is a constant sum
+		// per matched word and field, so 1.5 keeps "more matched words wins": two
+		// description words (2.0) still beat a single title word (1.5), the boost
+		// only decides between tasks matching the same number of words.
+		where = db.MultiFieldSearchWithBoosts([]string{"title", "description"}, []float64{1.5, 1}, opts.search, "tasks")
 
 		if searchIndex > 0 {
 			where = builder.Or(where, builder.Eq{"tasks.`index`": searchIndex})
