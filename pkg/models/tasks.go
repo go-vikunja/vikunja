@@ -214,6 +214,10 @@ type taskSearchOptions struct {
 	projectIDs         []int64
 	expand             []TaskCollectionExpandable
 	projectViewID      int64
+
+	// userProvidedSort distinguishes an explicit sort_by from the id/position
+	// defaults appended later, so relevance ordering only replaces the default sort.
+	userProvidedSort bool
 }
 
 // ReadAll is a dummy function to still have that endpoint documented
