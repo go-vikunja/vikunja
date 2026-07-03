@@ -15,7 +15,7 @@ overrides:
   tmp: 0.2.7
   esbuild: 0.28.1
   form-data: 4.0.6
-  markdown-it: 14.2.0
+  markdown-it: 14.3.0
   launch-editor: 2.14.1
   '@babel/core': 8.0.1
   js-yaml@4: 5.2.0
