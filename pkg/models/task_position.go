@@ -24,6 +24,7 @@ import (
 
 	"xorm.io/builder"
 	"xorm.io/xorm"
+	"xorm.io/xorm/schemas"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
@@ -78,25 +79,45 @@ func (tp *TaskPosition) refresh(s *xorm.Session) (err error) {
 // with concurrent requests doing the same and violates the unique index on
 // (task_id, project_view_id).
 func upsertTaskPosition(s *xorm.Session, tp *TaskPosition) (err error) {
-	if db.GetDialect() == builder.MYSQL {
-		_, err = s.Exec(
-			"INSERT INTO task_positions (task_id, project_view_id, position) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE position = VALUES(position)",
-			tp.TaskID, tp.ProjectViewID, tp.Position)
-		return
+	onConflict := "ON CONFLICT (task_id, project_view_id) DO UPDATE SET position = excluded.position"
+	if db.Type() == schemas.MYSQL {
+		onConflict = "ON DUPLICATE KEY UPDATE position = VALUES(position)"
 	}
 
+	// Raw SQL bypasses xorm's bean-based table-name handling, so qualify the
+	// table ourselves to honor a configured postgres schema (database.schema).
+	table := s.Engine().TableName(tp, true)
 	_, err = s.Exec(
-		"INSERT INTO task_positions (task_id, project_view_id, position) VALUES (?, ?, ?) ON CONFLICT (task_id, project_view_id) DO UPDATE SET position = excluded.position",
+		"INSERT INTO "+table+" (task_id, project_view_id, position) VALUES (?, ?, ?) "+onConflict,
 		tp.TaskID, tp.ProjectViewID, tp.Position)
 	return
 }
 
-// insertTaskPositionsIgnoringExisting bulk-inserts position rows, skipping rows
-// whose (task_id, project_view_id) pair already exists. Used on paths where a
+// bulkInsertTaskPositions inserts position rows in batches. Rows whose
+// (task_id, project_view_id) pair already exists are updated to the given
+// position when overwrite is set and skipped otherwise. Used on paths where a
 // concurrent transaction may have created some of the rows in the meantime.
-func insertTaskPositionsIgnoringExisting(s *xorm.Session, positions []*TaskPosition) (err error) {
+func bulkInsertTaskPositions(s *xorm.Session, positions []*TaskPosition, overwrite bool) (err error) {
 	// Keep statements well below the parameter limits of all supported databases.
 	const batchSize = 100
+
+	var onConflict string
+	switch {
+	case db.Type() == schemas.MYSQL && overwrite:
+		onConflict = "ON DUPLICATE KEY UPDATE position = VALUES(position)"
+	case db.Type() == schemas.MYSQL:
+		// The self-assignment is a no-op update which only ignores duplicate
+		// keys, unlike INSERT IGNORE which would swallow unrelated errors too.
+		onConflict = "ON DUPLICATE KEY UPDATE position = position"
+	case overwrite:
+		onConflict = "ON CONFLICT (task_id, project_view_id) DO UPDATE SET position = excluded.position"
+	default:
+		onConflict = "ON CONFLICT (task_id, project_view_id) DO NOTHING"
+	}
+
+	// Raw SQL bypasses xorm's bean-based table-name handling, so qualify the
+	// table ourselves to honor a configured postgres schema (database.schema).
+	table := s.Engine().TableName(&TaskPosition{}, true)
 
 	for start := 0; start < len(positions); start += batchSize {
 		batch := positions[start:min(start+batchSize, len(positions))]
@@ -108,15 +129,7 @@ func insertTaskPositionsIgnoringExisting(s *xorm.Session, positions []*TaskPosit
 			args = append(args, p.TaskID, p.ProjectViewID, p.Position)
 		}
 
-		query := "INSERT INTO task_positions (task_id, project_view_id, position) VALUES " + strings.Join(placeholders, ", ")
-		if db.GetDialect() == builder.MYSQL {
-			// A no-op update only ignores duplicate keys, unlike INSERT IGNORE
-			// which would swallow unrelated errors as well.
-			query += " ON DUPLICATE KEY UPDATE position = task_positions.position"
-		} else {
-			query += " ON CONFLICT (task_id, project_view_id) DO NOTHING"
-		}
-		args[0] = query
+		args[0] = "INSERT INTO " + table + " (task_id, project_view_id, position) VALUES " + strings.Join(placeholders, ", ") + " " + onConflict
 
 		_, err = s.Exec(args...)
 		if err != nil {
@@ -134,11 +147,12 @@ func insertTaskPositionsIgnoringExisting(s *xorm.Session, positions []*TaskPosit
 // (task_id, project_view_id). SQLite allows only a single writer at a time and
 // does not support FOR UPDATE, so no explicit lock is needed there.
 func lockPositionsForViewUpdate(s *xorm.Session, viewID int64) (err error) {
-	if db.GetDialect() == builder.SQLITE {
+	if db.Type() == schemas.SQLITE {
 		return nil
 	}
 
-	_, err = s.Exec("SELECT id FROM project_views WHERE id = ? FOR UPDATE", viewID)
+	table := s.Engine().TableName(&ProjectView{}, true)
+	_, err = s.Exec("SELECT id FROM "+table+" WHERE id = ? FOR UPDATE", viewID)
 	return
 }
 
@@ -309,12 +323,15 @@ func RecalculateTaskPositions(s *xorm.Session, view *ProjectView, a web.Auth) (e
 		return
 	}
 
-	count, err := s.Insert(newPositions)
+	// Writers which don't take the view lock (they only ever add missing rows)
+	// can slip a row in between the delete above and this insert. The
+	// recalculated values are authoritative, so overwrite instead of failing.
+	err = bulkInsertTaskPositions(s, newPositions, true)
 	if err != nil {
 		return
 	}
 
-	log.Debugf("Inserted %d new positions for %d total tasks in view %d", count, len(allTasks), view.ID)
+	log.Debugf("Inserted %d new positions for %d total tasks in view %d", len(newPositions), len(allTasks), view.ID)
 
 	events.DispatchOnCommit(s, &TaskPositionsRecalculatedEvent{
 		NewTaskPositions: newPositions,
@@ -374,12 +391,13 @@ func recalculateTaskPositionsForRepair(s *xorm.Session, view *ProjectView) error
 		})
 	}
 
-	count, err := s.Insert(newPositions)
+	// Overwrite for the same reason as in RecalculateTaskPositions.
+	err = bulkInsertTaskPositions(s, newPositions, true)
 	if err != nil {
 		return err
 	}
 
-	log.Debugf("Repair: inserted %d new positions for view %d", count, view.ID)
+	log.Debugf("Repair: inserted %d new positions for view %d", len(newPositions), view.ID)
 
 	events.DispatchOnCommit(s, &TaskPositionsRecalculatedEvent{
 		NewTaskPositions: newPositions,
@@ -525,7 +543,7 @@ func createPositionsForTasksInView(s *xorm.Session, tasks []*Task, view *Project
 
 	// A concurrent request may have healed some of the same tasks already,
 	// so skip rows which exist by now instead of failing on the unique index.
-	return insertTaskPositionsIgnoringExisting(s, newPositions)
+	return bulkInsertTaskPositions(s, newPositions, false)
 }
 
 // ensureTaskPositionsForSavedFilterView creates position rows for all tasks matching a saved

@@ -905,7 +905,7 @@ func (l *UpdateTaskInSavedFilterViews) Handle(msg *message.Message) (err error) 
 		// A request healing the same filter view can insert a position row for
 		// this task between the delete above and this insert, so skip rows
 		// which exist by now instead of failing on the unique index.
-		err = insertTaskPositionsIgnoringExisting(s, taskPositions)
+		err = bulkInsertTaskPositions(s, taskPositions, false)
 		if err != nil {
 			return
 		}

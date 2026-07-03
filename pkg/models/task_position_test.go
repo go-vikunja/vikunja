@@ -633,7 +633,7 @@ func TestUpsertTaskPosition(t *testing.T) {
 	})
 }
 
-func TestInsertTaskPositionsIgnoringExisting(t *testing.T) {
+func TestBulkInsertTaskPositions(t *testing.T) {
 	t.Run("skips rows which already exist", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
@@ -642,10 +642,10 @@ func TestInsertTaskPositionsIgnoringExisting(t *testing.T) {
 		_, err := s.Insert(&TaskPosition{TaskID: 100, ProjectViewID: 1, Position: 50})
 		require.NoError(t, err)
 
-		err = insertTaskPositionsIgnoringExisting(s, []*TaskPosition{
+		err = bulkInsertTaskPositions(s, []*TaskPosition{
 			{TaskID: 100, ProjectViewID: 1, Position: 60},
 			{TaskID: 101, ProjectViewID: 1, Position: 70},
-		})
+		}, false)
 		require.NoError(t, err)
 		require.NoError(t, s.Commit())
 
@@ -655,6 +655,34 @@ func TestInsertTaskPositionsIgnoringExisting(t *testing.T) {
 			"project_view_id": 1,
 			"position":        50,
 		}, false)
+		db.AssertExists(t, "task_positions", map[string]interface{}{
+			"task_id":         101,
+			"project_view_id": 1,
+			"position":        70,
+		}, false)
+	})
+
+	t.Run("overwrites rows which already exist", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.Insert(&TaskPosition{TaskID: 100, ProjectViewID: 1, Position: 50})
+		require.NoError(t, err)
+
+		err = bulkInsertTaskPositions(s, []*TaskPosition{
+			{TaskID: 100, ProjectViewID: 1, Position: 60},
+			{TaskID: 101, ProjectViewID: 1, Position: 70},
+		}, true)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		db.AssertExists(t, "task_positions", map[string]interface{}{
+			"task_id":         100,
+			"project_view_id": 1,
+			"position":        60,
+		}, false)
+		db.AssertCount(t, "task_positions", builder.Eq{"task_id": 100, "project_view_id": 1}, 1)
 		db.AssertExists(t, "task_positions", map[string]interface{}{
 			"task_id":         101,
 			"project_view_id": 1,
@@ -676,7 +704,7 @@ func TestInsertTaskPositionsIgnoringExisting(t *testing.T) {
 			})
 		}
 
-		err := insertTaskPositionsIgnoringExisting(s, positions)
+		err := bulkInsertTaskPositions(s, positions, false)
 		require.NoError(t, err)
 		require.NoError(t, s.Commit())
 
