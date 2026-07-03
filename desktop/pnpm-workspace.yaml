@@ -10,6 +10,6 @@ overrides:
   tmp: 0.2.7
   ip-address: 10.2.0
   form-data: 4.0.6
-  js-yaml: 5.2.0
+  js-yaml: 5.2.1
   undici@6: 8.5.0
   undici@7: 8.5.0
