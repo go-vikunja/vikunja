@@ -71,6 +71,15 @@ func (d *DatabaseNotifications) CanUpdate(s *xorm.Session, a web.Auth) (bool, er
 	return notifications.CanMarkNotificationAsRead(s, &d.DatabaseNotification, a.GetID())
 }
 
+// CanDelete checks if a user can delete their notifications.
+func (d *DatabaseNotifications) CanDelete(_ *xorm.Session, a web.Auth) (bool, error) {
+	if _, is := a.(*LinkSharing); is {
+		return false, nil
+	}
+
+	return true, nil
+}
+
 // Update marks a notification as read.
 // @Summary Mark a notification as (un-)read
 // @Description Marks a notification as either read or unread. A user can only mark their own notifications as read.
@@ -87,4 +96,19 @@ func (d *DatabaseNotifications) CanUpdate(s *xorm.Session, a web.Auth) (bool, er
 // @Router /notifications/{id} [post]
 func (d *DatabaseNotifications) Update(s *xorm.Session, _ web.Auth) (err error) {
 	return notifications.MarkNotificationAsRead(s, &d.DatabaseNotification, d.Read)
+}
+
+// Delete removes all notifications of the current user.
+// @Summary Delete all notifications of the current user
+// @Description Deletes every notification belonging to the authenticated user. Only the caller's own notifications are affected.
+// @tags subscriptions
+// @Accept json
+// @Produce json
+// @Security JWTKeyAuth
+// @Success 200 {object} models.Message "All notifications deleted."
+// @Failure 403 {object} web.HTTPError "Link shares cannot have notifications."
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /notifications [delete]
+func (d *DatabaseNotifications) Delete(s *xorm.Session, a web.Auth) (err error) {
+	return notifications.DeleteAllNotificationsForUser(s, a.GetID())
 }
