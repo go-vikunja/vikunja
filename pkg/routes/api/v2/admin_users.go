@@ -22,6 +22,7 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
 	"code.vikunja.io/api/pkg/routes/api/shared"
@@ -137,15 +138,19 @@ func adminOverview(_ context.Context, _ *struct{}) (*adminOverviewBody, error) {
 	return &adminOverviewBody{Body: overview}, nil
 }
 
-func adminUsersCreate(_ context.Context, in *struct{ Body models.CreateUserBody }) (*adminUserBody, error) {
+func adminUsersCreate(ctx context.Context, in *struct{ Body models.CreateUserBody }) (*adminUserBody, error) {
 	s := db.NewSession()
 	defer s.Close()
 
 	newUser, err := models.CreateUserAsAdmin(s, &in.Body)
 	if err != nil {
 		_ = s.Rollback()
+		events.CleanupPending(s)
 		return nil, translateDomainError(err)
 	}
+	// CreateUserAsAdmin commits internally; the events RegisterUser queued on s
+	// (user.created) still need to be dispatched here.
+	events.DispatchPending(ctx, s)
 
 	providers, err := openid.GetAllProviders() //nolint:contextcheck // GetAllProviders reads a cached map; it takes no context, like the v1 admin handlers.
 	if err != nil {
@@ -154,19 +159,19 @@ func adminUsersCreate(_ context.Context, in *struct{ Body models.CreateUserBody 
 	return &adminUserBody{Body: shared.NewAdminUser(newUser, providers)}, nil //nolint:contextcheck // OIDC provider init deliberately uses a background context — provider lifetime exceeds the request
 }
 
-func adminUsersPatchAdmin(_ context.Context, in *struct {
+func adminUsersPatchAdmin(ctx context.Context, in *struct {
 	ID   int64 `path:"id" doc:"The numeric ID of the user."`
 	Body adminIsAdminPatchBody
 }) (*adminUserBody, error) {
 	if in.Body.IsAdmin == nil {
 		return nil, translateDomainError(models.ErrInvalidData{Message: "is_admin is required"})
 	}
-	return adminCommitUser(func(s *xorm.Session) (*user.User, error) { //nolint:contextcheck // see adminCommitUser.
+	return adminCommitUser(ctx, func(s *xorm.Session) (*user.User, error) { //nolint:contextcheck // see adminCommitUser.
 		return models.SetUserAdminFlag(s, in.ID, *in.Body.IsAdmin)
 	})
 }
 
-func adminUsersPatchStatus(_ context.Context, in *struct {
+func adminUsersPatchStatus(ctx context.Context, in *struct {
 	ID   int64 `path:"id" doc:"The numeric ID of the user."`
 	Body adminStatusPatchBody
 }) (*adminUserBody, error) {
@@ -177,21 +182,21 @@ func adminUsersPatchStatus(_ context.Context, in *struct {
 	if newStatus < user.StatusActive || newStatus > user.StatusAccountLocked {
 		return nil, translateDomainError(models.ErrInvalidData{Message: "invalid status"})
 	}
-	return adminCommitUser(func(s *xorm.Session) (*user.User, error) { //nolint:contextcheck // see adminCommitUser.
+	return adminCommitUser(ctx, func(s *xorm.Session) (*user.User, error) { //nolint:contextcheck // see adminCommitUser.
 		return models.SetUserStatusAsAdmin(s, in.ID, newStatus)
 	})
 }
 
-func adminUsersSetPassword(_ context.Context, in *struct {
+func adminUsersSetPassword(ctx context.Context, in *struct {
 	ID   int64 `path:"id" doc:"The numeric ID of the user."`
 	Body adminSetPasswordBody
 }) (*adminUserBody, error) {
-	return adminCommitUser(func(s *xorm.Session) (*user.User, error) { //nolint:contextcheck // see adminCommitUser.
+	return adminCommitUser(ctx, func(s *xorm.Session) (*user.User, error) { //nolint:contextcheck // see adminCommitUser.
 		return models.SetUserPasswordAsAdmin(s, in.ID, in.Body.NewPassword)
 	})
 }
 
-func adminUsersPasswordResetEmail(_ context.Context, in *struct {
+func adminUsersPasswordResetEmail(ctx context.Context, in *struct {
 	ID int64 `path:"id" doc:"The numeric ID of the user."`
 }) (*messageBody, error) {
 	// Checked here, not in the model action: RequestUserPasswordResetToken
@@ -204,18 +209,21 @@ func adminUsersPasswordResetEmail(_ context.Context, in *struct {
 	defer s.Close()
 	if err := models.RequestPasswordResetAsAdmin(s, in.ID); err != nil {
 		_ = s.Rollback()
+		events.CleanupPending(s)
 		return nil, translateDomainError(err)
 	}
 	if err := s.Commit(); err != nil {
+		events.CleanupPending(s)
 		return nil, translateDomainError(err)
 	}
+	events.DispatchPending(ctx, s)
 
 	out := &messageBody{}
 	out.Body.Message = "A password-reset email was sent."
 	return out, nil
 }
 
-func adminUsersDelete(_ context.Context, in *struct {
+func adminUsersDelete(ctx context.Context, in *struct {
 	ID   int64  `path:"id" doc:"The numeric ID of the user."`
 	Mode string `query:"mode" doc:"'now' deletes immediately; 'scheduled' (the default) triggers the email-confirmation self-deletion flow."`
 }) (*emptyBody, error) {
@@ -231,29 +239,35 @@ func adminUsersDelete(_ context.Context, in *struct {
 	defer s.Close()
 	if err := models.DeleteUserAsAdmin(s, in.ID, mode); err != nil {
 		_ = s.Rollback()
+		events.CleanupPending(s)
 		return nil, translateDomainError(err)
 	}
 	if err := s.Commit(); err != nil {
+		events.CleanupPending(s)
 		return nil, translateDomainError(err)
 	}
+	events.DispatchPending(ctx, s)
 	return &emptyBody{}, nil
 }
 
 // adminCommitUser runs a user-returning admin action in its own transaction and
 // renders the admin user view. The action does the load/guard/mutate against the
 // session (shared with v1 via the models layer); this owns the commit and response.
-func adminCommitUser(action func(s *xorm.Session) (*user.User, error)) (*adminUserBody, error) {
+func adminCommitUser(ctx context.Context, action func(s *xorm.Session) (*user.User, error)) (*adminUserBody, error) {
 	s := db.NewSession()
 	defer s.Close()
 
 	target, err := action(s)
 	if err != nil {
 		_ = s.Rollback()
+		events.CleanupPending(s)
 		return nil, translateDomainError(err)
 	}
 	if err := s.Commit(); err != nil {
+		events.CleanupPending(s)
 		return nil, translateDomainError(err)
 	}
+	events.DispatchPending(ctx, s)
 
 	providers, err := openid.GetAllProviders() //nolint:contextcheck // GetAllProviders reads a cached map; it takes no context, like the v1 admin handlers.
 	if err != nil {

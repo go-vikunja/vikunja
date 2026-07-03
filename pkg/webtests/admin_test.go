@@ -24,6 +24,7 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/user"
@@ -402,10 +403,14 @@ func TestAdmin_CreateUser(t *testing.T) {
 	admin := promoteToAdmin(t, 1)
 
 	t.Run("creates a plain user", func(t *testing.T) {
+		events.ClearDispatchedEvents()
 		body := `{"username":"adm-create-1","password":"averyl0ngpassword","email":"adm-create-1@example.com"}`
 		res := adminReq(t, e, http.MethodPost, "/api/v1/admin/users", admin, body)
 		assert.Equal(t, http.StatusOK, res.Code, res.Body.String())
 		assert.Contains(t, res.Body.String(), `"username":"adm-create-1"`)
+		// Regression: the handler used to drop the pending queue, so admin-created
+		// users never fired user.created.
+		events.AssertDispatched(t, &user.CreatedEvent{})
 	})
 
 	t.Run("creates an is_admin user", func(t *testing.T) {

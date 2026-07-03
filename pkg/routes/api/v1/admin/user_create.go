@@ -21,6 +21,7 @@ import (
 	"net/http"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
 	"code.vikunja.io/api/pkg/routes/api/shared"
@@ -58,8 +59,12 @@ func CreateUser(c *echo.Context) error {
 	newUser, err := models.CreateUserAsAdmin(s, body)
 	if err != nil {
 		_ = s.Rollback()
+		events.CleanupPending(s)
 		return err
 	}
+	// CreateUserAsAdmin commits internally; the events RegisterUser queued on s
+	// (user.created) still need to be dispatched here.
+	events.DispatchPending(c.Request().Context(), s)
 
 	providers, err := openid.GetAllProviders()
 	if err != nil {
