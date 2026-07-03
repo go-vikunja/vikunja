@@ -142,10 +142,7 @@ func updateTaskBucket(s *xorm.Session, a web.Auth, b *TaskBucket) (err error) {
 				// it back to the view's default bucket so the user sees
 				// the next iteration waiting in the "To-Do" column.
 				if view.DefaultBucketID != 0 {
-					b.BucketID, err = getDefaultBucketID(s, view)
-					if err != nil {
-						return err
-					}
+					b.BucketID = view.DefaultBucketID
 				} else {
 					b.BucketID = oldTaskBucket.BucketID
 				}

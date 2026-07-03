@@ -1528,18 +1528,13 @@ func (t *Task) moveTaskToDoneBuckets(s *xorm.Session, a web.Auth, views []*Proje
 func (t *Task) moveTaskToDefaultBuckets(s *xorm.Session, a web.Auth, views []*ProjectView) error {
 	for _, view := range views {
 		if view.DefaultBucketID != 0 {
-			defaultBucketID, err := getDefaultBucketID(s, view)
-			if err != nil {
-				return err
-			}
-
 			tb := &TaskBucket{
-				BucketID:      defaultBucketID,
+				BucketID:      view.DefaultBucketID,
 				TaskID:        t.ID,
 				ProjectViewID: view.ID,
 				ProjectID:     t.ProjectID,
 			}
-			if err = updateTaskBucket(s, a, tb); err != nil {
+			if err := updateTaskBucket(s, a, tb); err != nil {
 				return err
 			}
 		}
