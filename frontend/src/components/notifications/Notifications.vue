@@ -26,15 +26,26 @@
 			>
 				<div class="head">
 					<span>{{ $t('notification.title') }}</span>
-					<BaseButton
-						v-tooltip="$t('notification.subscribeFeed')"
-						class="feed-link"
-						:to="{name: 'user.settings.feeds'}"
-						@click="showNotifications = false"
-					>
-						<span class="is-sr-only">{{ $t('notification.subscribeFeed') }}</span>
-						<Icon icon="rss" />
-					</BaseButton>
+					<div class="actions">
+						<BaseButton
+							v-if="notifications.length > 0"
+							v-tooltip="$t('notification.clearAll')"
+							class="action-link"
+							:aria-label="$t('notification.clearAll')"
+							@click="clearAll"
+						>
+							<Icon icon="check-double" />
+						</BaseButton>
+						<BaseButton
+							v-tooltip="$t('notification.subscribeFeed')"
+							class="action-link"
+							:to="{name: 'user.settings.feeds'}"
+							@click="showNotifications = false"
+						>
+							<span class="is-sr-only">{{ $t('notification.subscribeFeed') }}</span>
+							<Icon icon="rss" />
+						</BaseButton>
+					</div>
 				</div>
 				<div
 					v-for="(n, index) in notifications"
@@ -78,14 +89,6 @@
 					@click="markAllRead"
 				>
 					{{ $t('notification.markAllRead') }}
-				</XButton>
-				<XButton
-					v-if="notifications.length > 0"
-					variant="tertiary"
-					class="mbs-2 is-fullwidth"
-					@click="clearAll"
-				>
-					{{ $t('notification.clearAll') }}
 				</XButton>
 				<p
 					v-if="notifications.length === 0"
@@ -314,7 +317,13 @@ async function clearAll() {
 			align-items: center;
 			justify-content: space-between;
 
-			.feed-link {
+			.actions {
+				display: flex;
+				align-items: center;
+				gap: .5rem;
+			}
+
+			.action-link {
 				color: var(--grey-500);
 				transition: color $transition;
 
