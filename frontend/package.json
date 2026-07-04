@@ -58,7 +58,7 @@
     "@fortawesome/vue-fontawesome": "3.3.0",
     "@intlify/unplugin-vue-i18n": "11.2.4",
     "@kyvg/vue3-notification": "3.4.2",
-    "@sentry/vue": "10.62.0",
+    "@sentry/vue": "10.63.0",
     "@tiptap/core": "3.27.1",
     "@tiptap/extension-blockquote": "3.27.1",
     "@tiptap/extension-code-block-lowlight": "3.27.1",
