@@ -4,9 +4,11 @@ allowBuilds:
   esbuild: true
   puppeteer: true
   vue-demi: true
+catalog:
+  rollup: 4.62.2
 overrides:
   minimatch: 10.2.5
-  rollup: $rollup
+  rollup: 'catalog:'
   basic-ftp: 6.0.1
   serialize-javascript: 7.0.7
   flatted: 3.4.2

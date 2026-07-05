@@ -140,7 +140,7 @@
     "postcss-easing-gradients": "3.0.1",
     "postcss-html": "1.8.1",
     "postcss-preset-env": "11.3.2",
-    "rollup": "4.62.2",
+    "rollup": "catalog:",
     "rollup-plugin-visualizer": "7.0.1",
     "sass-embedded": "1.100.0",
     "stylelint": "17.14.0",
