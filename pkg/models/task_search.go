@@ -455,10 +455,11 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 
 	searchIndex := getTaskIndexFromSearchString(opts.search)
 	if opts.search != "" {
-		// Title matches weigh 1.5x description matches. Scoring is a constant sum
-		// per matched word and field, so 1.5 keeps "more matched words wins": two
-		// description words (2.0) still beat a single title word (1.5), the boost
-		// only decides between tasks matching the same number of words.
+		// With the fuzzy cast the relevance score is a constant sum, not BM25: each
+		// query word matching a field adds 1.0 (exact/prefix) or 0.5 (one edit away),
+		// times the field's boost. Boosting titles 1.5x keeps "more matched words
+		// wins": two description words (2.0) still beat a single title word (1.5),
+		// the boost only decides between tasks matching the same number of words.
 		where = db.MultiFieldSearchWithBoosts([]string{"title", "description"}, []float64{1.5, 1}, opts.search, "tasks")
 
 		if searchIndex > 0 {
@@ -475,13 +476,11 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 	}
 
 	// ParadeDB exposes a relevance score via pdb.score(tasks.id) for a query
-	// containing a ParadeDB operator (the ||| from MultiFieldSearch qualifies).
-	// With the fuzzy cast MultiFieldSearch uses, this is not BM25 but a constant
-	// score sum: each query word matching a field adds 1.0 (exact/prefix) or 0.5
-	// (one edit away), title and description weighted equally. When searching
-	// without an explicit user sort — or when the client explicitly sorts by
-	// relevance — order by that score so tasks matching all query words rank
-	// above tasks matching only some.
+	// containing a ParadeDB operator (the ||| from MultiFieldSearchWithBoosts
+	// above qualifies; the comment there describes how the score adds up). When
+	// searching without an explicit user sort — or when the client explicitly
+	// sorts by relevance — order by that score so tasks matching all query words
+	// rank above tasks matching only some.
 	//
 	// Limited to pure-text searches: numeric searches add an `OR index = N` branch,
 	// which pdb.score rejects as an unsupported query shape. pdb.score is also

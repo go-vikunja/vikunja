@@ -81,31 +81,16 @@ func TestTaskSearchRelevanceRanking(t *testing.T) {
 	require.NoError(t, lateAllWords.Create(s, usr))
 
 	assertRelevanceRanked := func(t *testing.T, tc *TaskCollection) {
-		got, _, _, err := tc.ReadAll(s, usr, "backup server", 1, 50)
-		require.NoError(t, err)
+		pos := searchTaskPositions(t, s, usr, tc, "backup server")
 
-		gotTasks, is := got.([]*Task)
-		require.True(t, is)
-
-		gotIDs := make([]int64, len(gotTasks))
-		for i, tsk := range gotTasks {
-			gotIDs[i] = tsk.ID
-		}
-
-		require.Contains(t, gotIDs, allWords.ID, "the task matching all words should be returned")
+		require.Contains(t, pos, allWords.ID, "the task matching all words should be returned")
 
 		if db.ParadeDBAvailable() {
 			// Compare only the tasks created by this test so fixture tasks (present
 			// or future) matching the search cannot break the order assertions.
-			created := map[int64]bool{allWords.ID: true, oneWordA.ID: true, oneWordB.ID: true, lateAllWords.ID: true}
-			pos := map[int64]int{}
-			for _, id := range gotIDs {
-				if created[id] {
-					pos[id] = len(pos)
-				}
+			for _, id := range []int64{oneWordA.ID, oneWordB.ID, lateAllWords.ID} {
+				require.Contains(t, pos, id, "all created tasks should match the search")
 			}
-			require.Len(t, pos, len(created), "all created tasks should match the search")
-
 			for _, allw := range []int64{allWords.ID, lateAllWords.ID} {
 				for _, onew := range []int64{oneWordA.ID, oneWordB.ID} {
 					assert.Less(t, pos[allw], pos[onew], "tasks matching all query words should rank above one-word matches by relevance")
@@ -136,30 +121,17 @@ func TestTaskSearchRelevanceRanking(t *testing.T) {
 			t.Skip("relevance ranking only applies on ParadeDB")
 		}
 
-		tc := &TaskCollection{
+		pos := searchTaskPositions(t, s, usr, &TaskCollection{
 			ProjectID: 1,
 			SortBy:    []string{"id"},
 			OrderBy:   []string{"desc"},
-		}
-		got, _, _, err := tc.ReadAll(s, usr, "backup server", 1, 50)
-		require.NoError(t, err)
+		}, "backup server")
 
-		gotTasks, is := got.([]*Task)
-		require.True(t, is)
-
-		created := map[int64]bool{allWords.ID: true, oneWordA.ID: true, oneWordB.ID: true}
-		var orderedIDs []int64
-		for _, tsk := range gotTasks {
-			if created[tsk.ID] {
-				orderedIDs = append(orderedIDs, tsk.ID)
-			}
+		for _, id := range []int64{allWords.ID, oneWordA.ID, oneWordB.ID} {
+			require.Contains(t, pos, id, "all created tasks should match the search")
 		}
-
-		require.Len(t, orderedIDs, len(created), "all created tasks should match the search")
-		for i := 1; i < len(orderedIDs); i++ {
-			assert.Greater(t, orderedIDs[i-1], orderedIDs[i], "tasks must follow the explicit id-desc sort, not relevance")
-		}
-		assert.Equal(t, allWords.ID, orderedIDs[len(orderedIDs)-1], "the all-words match (lowest id) ranks last under id-desc, proving relevance was not applied")
+		assert.Less(t, pos[oneWordB.ID], pos[oneWordA.ID], "tasks must follow the explicit id-desc sort, not relevance")
+		assert.Less(t, pos[oneWordA.ID], pos[allWords.ID], "the all-words match (lowest id) ranks last under id-desc, proving relevance was not applied")
 	})
 
 	// The all-projects scope appends the Favorites pseudo-project whenever the user
@@ -182,18 +154,8 @@ func TestTaskSearchRelevanceRanking(t *testing.T) {
 			require.NoError(t, err)
 		}()
 
-		tc := &TaskCollection{}
-		got, _, _, err := tc.ReadAll(s, usr, "backup server", 1, 50)
-		require.NoError(t, err)
-
-		gotTasks, is := got.([]*Task)
-		require.True(t, is)
-
-		gotIDs := make([]int64, 0, len(gotTasks))
-		for _, tsk := range gotTasks {
-			gotIDs = append(gotIDs, tsk.ID)
-		}
-		require.Contains(t, gotIDs, allWords.ID)
+		pos := searchTaskPositions(t, s, usr, &TaskCollection{}, "backup server")
+		require.Contains(t, pos, allWords.ID)
 	})
 
 	// sort_by=done,relevance keeps undone tasks first and ranks by relevance within
@@ -203,20 +165,10 @@ func TestTaskSearchRelevanceRanking(t *testing.T) {
 		doneAllWords := &Task{Title: "Backup server runbook", ProjectID: 1, Done: true}
 		require.NoError(t, doneAllWords.Create(s, usr))
 
-		tc := &TaskCollection{
+		pos := searchTaskPositions(t, s, usr, &TaskCollection{
 			ProjectID: 1,
 			SortBy:    []string{"done", "relevance"},
-		}
-		got, _, _, err := tc.ReadAll(s, usr, "backup server", 1, 50)
-		require.NoError(t, err)
-
-		gotTasks, is := got.([]*Task)
-		require.True(t, is)
-
-		pos := map[int64]int{}
-		for i, tsk := range gotTasks {
-			pos[tsk.ID] = i
-		}
+		}, "backup server")
 
 		require.Contains(t, pos, allWords.ID)
 		require.Contains(t, pos, doneAllWords.ID)
@@ -240,16 +192,11 @@ func TestTaskSearchRelevanceRanking(t *testing.T) {
 	// A numeric search cannot be scored; the relevance param must be dropped
 	// instead of producing an unsupported-query-shape error.
 	t.Run("relevance sort with numeric search falls back", func(t *testing.T) {
-		tc := &TaskCollection{
+		pos := searchTaskPositions(t, s, usr, &TaskCollection{
 			ProjectID: 1,
 			SortBy:    []string{"relevance"},
-		}
-		got, _, _, err := tc.ReadAll(s, usr, "#1", 1, 50)
-		require.NoError(t, err)
-
-		gotTasks, is := got.([]*Task)
-		require.True(t, is)
-		assert.NotEmpty(t, gotTasks)
+		}, "#1")
+		assert.NotEmpty(t, pos)
 	})
 }
 
@@ -307,7 +254,7 @@ func TestTaskSearchMatching(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			pos := searchTaskPositions(t, s, usr, tt.search)
+			pos := searchTaskPositions(t, s, usr, &TaskCollection{ProjectID: 1}, tt.search)
 
 			want := map[int64]bool{}
 			for _, tsk := range tt.want {
@@ -329,7 +276,7 @@ func TestTaskSearchMatching(t *testing.T) {
 	// the task matching only one.
 	for _, query := range []string{"green orange", "orange green"} {
 		t.Run("ranking "+query, func(t *testing.T) {
-			pos := searchTaskPositions(t, s, usr, query)
+			pos := searchTaskPositions(t, s, usr, &TaskCollection{ProjectID: 1}, query)
 			require.Contains(t, pos, greenOrange.ID)
 			require.Contains(t, pos, orangeTape.ID)
 			assert.Less(t, pos[greenOrange.ID], pos[orangeTape.ID], "the task matching both words should rank first")
@@ -337,10 +284,11 @@ func TestTaskSearchMatching(t *testing.T) {
 	}
 }
 
-func searchTaskPositions(t *testing.T, s *xorm.Session, usr *user.User, query string) map[int64]int {
+// searchTaskPositions runs a search and returns each returned task's position
+// in the result order, keyed by task id.
+func searchTaskPositions(t *testing.T, s *xorm.Session, usr *user.User, tc *TaskCollection, query string) map[int64]int {
 	t.Helper()
 
-	tc := &TaskCollection{ProjectID: 1}
 	got, _, _, err := tc.ReadAll(s, usr, query, 1, 50)
 	require.NoError(t, err)
 
@@ -375,14 +323,14 @@ func TestTaskSearchTitleBoost(t *testing.T) {
 	require.NoError(t, descBoth.Create(s, usr))
 
 	t.Run("title match ranks above description match", func(t *testing.T) {
-		pos := searchTaskPositions(t, s, usr, "wombat")
+		pos := searchTaskPositions(t, s, usr, &TaskCollection{ProjectID: 1}, "wombat")
 		require.Contains(t, pos, titleHit.ID)
 		require.Contains(t, pos, descHit.ID)
 		assert.Less(t, pos[titleHit.ID], pos[descHit.ID], "a boosted title match (1.5) must outrank a description match (1.0)")
 	})
 
 	t.Run("more matched words beat the title boost", func(t *testing.T) {
-		pos := searchTaskPositions(t, s, usr, "wombat capybara")
+		pos := searchTaskPositions(t, s, usr, &TaskCollection{ProjectID: 1}, "wombat capybara")
 		require.Contains(t, pos, descBoth.ID)
 		require.Contains(t, pos, titleHit.ID)
 		assert.Less(t, pos[descBoth.ID], pos[titleHit.ID], "two description matches (2.0) must outrank one boosted title match (1.5)")
