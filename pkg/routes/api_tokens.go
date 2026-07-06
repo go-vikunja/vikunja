@@ -86,7 +86,7 @@ func shouldSkipRouteCheck(c *echo.Context) bool {
 	// (method, path) match can't express that, so mcp:access is gated in the
 	// handler instead.
 	path := c.Request().URL.Path
-	if path == "/api/v1/mcp" || strings.HasPrefix(path, "/api/v1/mcp/") {
+	if path == "/api/v2/mcp" || strings.HasPrefix(path, "/api/v2/mcp/") {
 		return true
 	}
 
