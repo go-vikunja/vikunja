@@ -53,7 +53,14 @@ func SetupTokenMiddleware() echo.MiddlewareFunc {
 
 			for _, s := range authHeader {
 				if strings.HasPrefix(s, "Bearer "+models.APITokenPrefix) {
-					skipRouteCheck := c.Request().URL.Path == "/api/v1/token/test"
+					path := c.Request().URL.Path
+					// The MCP endpoint uses POST, GET, and DELETE on the same path
+					// (streamable-HTTP transport). CanDoAPIRoute does an exact
+					// (method, path) match per permission, so we skip it here
+					// and gate inside the MCP handler via token.HasMCPAccess().
+					skipRouteCheck := path == "/api/v1/token/test" ||
+						path == "/api/v1/mcp" ||
+						strings.HasPrefix(path, "/api/v1/mcp/")
 					err := checkAPITokenAndPutItInContext(s, c, skipRouteCheck)
 					return err == nil
 				}

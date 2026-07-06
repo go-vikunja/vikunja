@@ -39,11 +39,14 @@ func TestAPIToken_ReadAll(t *testing.T) {
 	require.NoError(t, err)
 	tokens, is := result.([]*APIToken)
 	assert.Truef(t, is, "tokens are not of type []*APIToken")
-	assert.Len(t, tokens, 2)
+	assert.Len(t, tokens, 5)
 	assert.Len(t, tokens, count)
-	assert.Equal(t, int64(2), total)
+	assert.Equal(t, int64(5), total)
 	assert.Equal(t, int64(1), tokens[0].ID)
 	assert.Equal(t, int64(2), tokens[1].ID)
+	assert.Equal(t, int64(9), tokens[2].ID)
+	assert.Equal(t, int64(10), tokens[3].ID)
+	assert.Equal(t, int64(11), tokens[4].ID)
 }
 
 func TestAPIToken_CanDelete(t *testing.T) {
@@ -152,6 +155,36 @@ func TestAPIToken_HasFeedsAccess(t *testing.T) {
 			},
 		}
 		assert.True(t, token.HasFeedsAccess())
+	})
+}
+
+func TestAPIToken_HasMCPAccess(t *testing.T) {
+	t.Run("has mcp access", func(t *testing.T) {
+		token := &APIToken{
+			APIPermissions: APIPermissions{"mcp": {"access"}},
+		}
+		assert.True(t, token.HasMCPAccess())
+	})
+	t.Run("no mcp group", func(t *testing.T) {
+		token := &APIToken{
+			APIPermissions: APIPermissions{"tasks": {"read_all"}},
+		}
+		assert.False(t, token.HasMCPAccess())
+	})
+	t.Run("mcp group but wrong permission", func(t *testing.T) {
+		token := &APIToken{
+			APIPermissions: APIPermissions{"mcp": {"read_all"}},
+		}
+		assert.False(t, token.HasMCPAccess())
+	})
+	t.Run("mcp access among other permissions", func(t *testing.T) {
+		token := &APIToken{
+			APIPermissions: APIPermissions{
+				"tasks": {"read_all", "update"},
+				"mcp":   {"access"},
+			},
+		}
+		assert.True(t, token.HasMCPAccess())
 	})
 }
 
