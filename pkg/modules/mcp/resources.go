@@ -210,6 +210,7 @@ func rawToolHandler(toolName string) mcp.ToolHandler {
 	return func(ctx context.Context, req *mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		result, err := Dispatch(ctx, toolName, req.Params.Arguments)
 		if err != nil {
+			//nolint:nilerr // IsError tool result, not a JSON-RPC protocol error
 			return &mcp.CallToolResult{
 				IsError: true,
 				Content: []mcp.Content{&mcp.TextContent{Text: err.Error()}},

@@ -59,10 +59,11 @@ func TestHumaAPIToken(t *testing.T) {
 			rec := humaRequest(t, e, http.MethodGet, "/api/v2/tokens", "", user1Token, "")
 			require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
 			ids := apiTokenIDsFromReadAll(t, rec.Body.Bytes())
-			// user1 owns exactly tokens #1, #2 and #9; cardinality is pinned.
-			assert.ElementsMatch(t, []int64{1, 2, 9}, ids,
-				"ReadAll must return exactly {1,2,9}; body: %s", rec.Body.String())
-			assert.Equal(t, int64(3), apiTokenTotalFromReadAll(t, rec.Body.Bytes()))
+			// user1 owns exactly tokens #1, #2 and the MCP tokens #10-#12;
+			// cardinality is pinned.
+			assert.ElementsMatch(t, []int64{1, 2, 9, 10, 11, 12}, ids,
+				"ReadAll must return exactly {1,2,9,10,11,12}; body: %s", rec.Body.String())
+			assert.Equal(t, int64(6), apiTokenTotalFromReadAll(t, rec.Body.Bytes()))
 			assert.NotContains(t, ids, int64(3), "token #3 (owned by user2) must be hidden")
 		})
 		t.Run("Isolation - user2 sees only its own token", func(t *testing.T) {

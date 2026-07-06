@@ -95,9 +95,9 @@ func TestDispatchScopeDenied(t *testing.T) {
 	installStubCRUD(t)
 	tracker := &stubTracker{}
 	require.NoError(t, Register(Resource{
-		Name:        "stubs",
-		Model:       tracker.empty,
-		Ops:         OpCreate | OpReadOne,
+		Name:  "stubs",
+		Model: tracker.empty,
+		Ops:   OpCreate | OpReadOne,
 	}))
 
 	// Token has read_one but not create.
@@ -125,9 +125,9 @@ func TestDispatchScopeDenied_NoTokenInContext(t *testing.T) {
 	installStubCRUD(t)
 	tracker := &stubTracker{}
 	require.NoError(t, Register(Resource{
-		Name:        "stubs",
-		Model:       tracker.empty,
-		Ops:         OpReadOne,
+		Name:  "stubs",
+		Model: tracker.empty,
+		Ops:   OpReadOne,
 	}))
 
 	// User in context but no token — the scope check must still deny.
@@ -146,9 +146,9 @@ func TestDispatchDeleteScopeDenied(t *testing.T) {
 	installStubCRUD(t)
 	tracker := &stubTracker{}
 	require.NoError(t, Register(Resource{
-		Name:        "stubs",
-		Model:       tracker.empty,
-		Ops:         OpDelete,
+		Name:  "stubs",
+		Model: tracker.empty,
+		Ops:   OpDelete,
 	}))
 
 	token := &models.APIToken{
@@ -170,9 +170,9 @@ func TestDispatchScopeAllowed(t *testing.T) {
 	installStubCRUD(t)
 	tracker := &stubTracker{}
 	require.NoError(t, Register(Resource{
-		Name:        "stubs",
-		Model:       tracker.empty,
-		Ops:         OpReadOne,
+		Name:  "stubs",
+		Model: tracker.empty,
+		Ops:   OpReadOne,
 	}))
 
 	token := &models.APIToken{
