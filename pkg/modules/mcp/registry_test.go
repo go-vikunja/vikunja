@@ -87,9 +87,9 @@ func TestRegisterDuplicateName(t *testing.T) {
 	resetRegistry(t)
 
 	r := Resource{
-		Name:        "stubs",
-		Model:       func() handler.CObject { return &stubCObject{} },
-		Ops:         OpReadOne,
+		Name:  "stubs",
+		Model: func() handler.CObject { return &stubCObject{} },
+		Ops:   OpReadOne,
 	}
 	require.NoError(t, Register(r))
 	err := Register(r)
@@ -141,15 +141,15 @@ func TestToolNameResolver(t *testing.T) {
 	resetRegistry(t)
 
 	require.NoError(t, Register(Resource{
-		Name:        "projects",
-		Model:       func() handler.CObject { return &stubCObject{} },
-		Ops:         OpCreate | OpReadOne | OpReadAll | OpUpdate | OpDelete,
+		Name:  "projects",
+		Model: func() handler.CObject { return &stubCObject{} },
+		Ops:   OpCreate | OpReadOne | OpReadAll | OpUpdate | OpDelete,
 	}))
 
 	require.NoError(t, Register(Resource{
-		Name:        "task_comments",
-		Model:       func() handler.CObject { return &stubCObject{} },
-		Ops:         OpReadAll,
+		Name:  "task_comments",
+		Model: func() handler.CObject { return &stubCObject{} },
+		Ops:   OpReadAll,
 	}))
 
 	tests := []struct {
@@ -186,9 +186,9 @@ func TestRegisterOnlyExposesEnabledOps(t *testing.T) {
 	resetRegistry(t)
 
 	require.NoError(t, Register(Resource{
-		Name:        "stubs",
-		Model:       func() handler.CObject { return &stubCObject{} },
-		Ops:         OpReadOne | OpReadAll,
+		Name:  "stubs",
+		Model: func() handler.CObject { return &stubCObject{} },
+		Ops:   OpReadOne | OpReadAll,
 	}))
 
 	_, ok := lookupTool("stubs_read_one")

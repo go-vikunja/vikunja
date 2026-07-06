@@ -65,7 +65,7 @@ func findActionSchema() *jsonschema.Schema {
 	return &jsonschema.Schema{
 		Type: "object",
 		Properties: map[string]*jsonschema.Schema{
-			"action": {Type: "string", Description: "Return the full input schema for this single action (e.g. tasks_labels_create)."},
+			"action":   {Type: "string", Description: "Return the full input schema for this single action (e.g. tasks_labels_create)."},
 			"resource": {Type: "string", Description: "Return the full input schemas for every action of this resource (e.g. tasks_labels)."},
 		},
 		AdditionalProperties: falseSchema(),
@@ -138,6 +138,7 @@ func findActionHandler(token *models.APIToken) mcp.ToolHandler {
 		var args findActionArgs
 		if len(req.Params.Arguments) > 0 {
 			if err := json.Unmarshal(req.Params.Arguments, &args); err != nil {
+				//nolint:nilerr // IsError tool result, not a JSON-RPC protocol error
 				return &mcp.CallToolResult{
 					IsError: true,
 					Content: []mcp.Content{&mcp.TextContent{Text: "invalid arguments: " + err.Error()}},
@@ -160,6 +161,7 @@ func findActionHandler(token *models.APIToken) mcp.ToolHandler {
 func doActionHandler(ctx context.Context, req *mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	var args doActionArgs
 	if err := json.Unmarshal(req.Params.Arguments, &args); err != nil || args.Action == "" {
+		//nolint:nilerr // IsError tool result, not a JSON-RPC protocol error
 		return &mcp.CallToolResult{
 			IsError: true,
 			Content: []mcp.Content{&mcp.TextContent{Text: "do_action requires an \"action\" name; discover actions with find_action"}},

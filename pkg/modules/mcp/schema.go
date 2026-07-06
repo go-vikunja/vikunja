@@ -150,25 +150,7 @@ func buildOpSpec(modelType reflect.Type, op Op, r *Resource) (*opSpec, error) {
 			if !ok {
 				continue
 			}
-			include, req := false, false
-			switch op {
-			case OpCreate:
-				include = true
-				req = requiredForCreate(f, name, r)
-			case OpUpdate:
-				include = true
-				req = identity(name)
-			case OpReadOne, OpDelete:
-				// Models without an exposed id (e.g. TaskAssginee) are
-				// identified by their param-tagged fields instead;
-				// IdentityFields declares the set explicitly when the
-				// derivation can't know it (e.g. views need project_id too).
-				if (!hasExposedID && param != "") || identity(name) {
-					include, req = true, true
-				}
-			case OpReadAll:
-				include = f.Tag.Get("query") != ""
-			}
+			include, req := writableInclusion(op, f, name, param, hasExposedID, r)
 			if !include {
 				continue
 			}
@@ -257,6 +239,29 @@ func propWithDoc(s *jsonschema.Schema, f reflect.StructField) *jsonschema.Schema
 		s.Description = d
 	}
 	return s
+}
+
+// writableInclusion decides whether a writable (json-named, not readOnly)
+// field appears in the given op's schema and whether it is required.
+func writableInclusion(op Op, f reflect.StructField, name, param string, hasExposedID bool, r *Resource) (include, required bool) {
+	identity := slices.Contains(r.IdentityFields, name)
+	switch op {
+	case OpCreate:
+		return true, requiredForCreate(f, name, r)
+	case OpUpdate:
+		return true, identity
+	case OpReadOne, OpDelete:
+		// Models without an exposed id (e.g. TaskAssginee) are identified
+		// by their param-tagged fields instead; IdentityFields declares the
+		// set explicitly when the derivation can't know it (e.g. views need
+		// project_id alongside id).
+		if (!hasExposedID && param != "") || identity {
+			return true, true
+		}
+	case OpReadAll:
+		return f.Tag.Get("query") != "", false
+	}
+	return false, false
 }
 
 // requiredForCreate reports whether a writable field must be supplied on
