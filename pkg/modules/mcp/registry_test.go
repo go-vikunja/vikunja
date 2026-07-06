@@ -73,12 +73,8 @@ func TestRegisterAppends(t *testing.T) {
 	r := Resource{
 		Name:        "stubs",
 		Description: "test resource",
-		EmptyStruct: func() handler.CObject { return &stubCObject{} },
+		Model:       func() handler.CObject { return &stubCObject{} },
 		Ops:         OpCreate | OpReadOne,
-		Inputs: map[Op]any{
-			OpCreate:  &struct{}{},
-			OpReadOne: &struct{}{},
-		},
 	}
 	require.NoError(t, Register(r))
 
@@ -92,9 +88,8 @@ func TestRegisterDuplicateName(t *testing.T) {
 
 	r := Resource{
 		Name:        "stubs",
-		EmptyStruct: func() handler.CObject { return &stubCObject{} },
+		Model:       func() handler.CObject { return &stubCObject{} },
 		Ops:         OpReadOne,
-		Inputs:      map[Op]any{OpReadOne: &struct{}{}},
 	}
 	require.NoError(t, Register(r))
 	err := Register(r)
@@ -102,39 +97,42 @@ func TestRegisterDuplicateName(t *testing.T) {
 	assert.Contains(t, err.Error(), "already registered")
 }
 
-func TestRegisterMissingInputForOp(t *testing.T) {
+func TestRegisterBuildsSpecsPerOp(t *testing.T) {
 	resetRegistry(t)
 
-	r := Resource{
-		Name:        "stubs",
-		EmptyStruct: func() handler.CObject { return &stubCObject{} },
-		Ops:         OpCreate | OpReadOne,
-		// Missing input wrapper for OpReadOne.
-		Inputs: map[Op]any{OpCreate: &struct{}{}},
-	}
-	err := Register(r)
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), "input")
+	require.NoError(t, Register(Resource{
+		Name:  "stubs",
+		Model: func() handler.CObject { return &stubCObject{} },
+		Ops:   OpCreate | OpReadOne,
+	}))
+
+	got, ok := lookupResource("stubs")
+	require.True(t, ok)
+	require.NotNil(t, got.spec(OpCreate))
+	require.NotNil(t, got.spec(OpReadOne))
+	assert.Nil(t, got.spec(OpDelete), "no spec for ops outside the bitmask")
+
+	// read_one identifies by id only; create takes the writable fields.
+	assert.Equal(t, map[string]int{"id": 0}, got.spec(OpReadOne).fields)
+	assert.Equal(t, map[string]int{"title": 1}, got.spec(OpCreate).fields)
 }
 
 func TestRegisterEmptyName(t *testing.T) {
 	resetRegistry(t)
 
 	err := Register(Resource{
-		EmptyStruct: func() handler.CObject { return &stubCObject{} },
-		Ops:         OpReadOne,
-		Inputs:      map[Op]any{OpReadOne: &struct{}{}},
+		Model: func() handler.CObject { return &stubCObject{} },
+		Ops:   OpReadOne,
 	})
 	require.Error(t, err)
 }
 
-func TestRegisterRequiresEmptyStruct(t *testing.T) {
+func TestRegisterRequiresModel(t *testing.T) {
 	resetRegistry(t)
 
 	err := Register(Resource{
-		Name:   "stubs",
-		Ops:    OpReadOne,
-		Inputs: map[Op]any{OpReadOne: &struct{}{}},
+		Name: "stubs",
+		Ops:  OpReadOne,
 	})
 	require.Error(t, err)
 }
@@ -144,22 +142,14 @@ func TestToolNameResolver(t *testing.T) {
 
 	require.NoError(t, Register(Resource{
 		Name:        "projects",
-		EmptyStruct: func() handler.CObject { return &stubCObject{} },
+		Model:       func() handler.CObject { return &stubCObject{} },
 		Ops:         OpCreate | OpReadOne | OpReadAll | OpUpdate | OpDelete,
-		Inputs: map[Op]any{
-			OpCreate:  &struct{}{},
-			OpReadOne: &struct{}{},
-			OpReadAll: &struct{}{},
-			OpUpdate:  &struct{}{},
-			OpDelete:  &struct{}{},
-		},
 	}))
 
 	require.NoError(t, Register(Resource{
 		Name:        "task_comments",
-		EmptyStruct: func() handler.CObject { return &stubCObject{} },
+		Model:       func() handler.CObject { return &stubCObject{} },
 		Ops:         OpReadAll,
-		Inputs:      map[Op]any{OpReadAll: &struct{}{}},
 	}))
 
 	tests := []struct {
@@ -197,12 +187,8 @@ func TestRegisterOnlyExposesEnabledOps(t *testing.T) {
 
 	require.NoError(t, Register(Resource{
 		Name:        "stubs",
-		EmptyStruct: func() handler.CObject { return &stubCObject{} },
+		Model:       func() handler.CObject { return &stubCObject{} },
 		Ops:         OpReadOne | OpReadAll,
-		Inputs: map[Op]any{
-			OpReadOne: &struct{}{},
-			OpReadAll: &struct{}{},
-		},
 	}))
 
 	_, ok := lookupTool("stubs_read_one")

@@ -19,6 +19,7 @@ package mcp
 import (
 	"errors"
 	"fmt"
+	"reflect"
 	"sync"
 
 	"code.vikunja.io/api/pkg/web/handler"
@@ -49,8 +50,7 @@ func AllOps() []Op {
 // Permission returns the API-token permission string for this op. The
 // strings must match the permission names that pkg/models/api_routes.go
 // stores under apiTokenRoutes[group][...]; CanDoAPIRoute in the REST layer
-// and the (future) MCP per-tool scope filter both look up by these exact
-// strings.
+// and the MCP per-tool scope filter both look up by these exact strings.
 func (o Op) Permission() string {
 	switch o {
 	case OpCreate:
@@ -75,39 +75,102 @@ func (o Op) ToolSuffix() string {
 	return o.Permission()
 }
 
-// Resource describes a CRUD-able model exposed over MCP. Mirrors the
-// handler.WebHandler{EmptyStruct: ...} shape used in pkg/routes/routes.go.
-//
-// Inputs maps each enabled op to a pointer-to-zero of the wrapper struct
-// the dispatcher should unmarshal tool arguments into. The wrapper carries
-// json:/jsonschema: tags consumed by the SDK's AddTool for input-schema
-// generation, and implements the inputAdapter seam below so the dispatcher
-// can copy wrapper -> fresh model before invoking handler.Do*.
-//
-// The wrapper structs themselves live in inputs.go (introduced in Task 4).
-// Task 3 only carries them through the registry.
+// Tier controls how a resource is exposed to MCP clients.
+type Tier uint8
+
+const (
+	// TierTyped resources register one first-class tool per op — visible in
+	// tools/list with a full input schema. For the assistant-core surface.
+	TierTyped Tier = iota
+	// TierCatalog resources are only reachable through the find_action /
+	// do_action meta-tools, keeping tools/list small for the long tail.
+	TierCatalog
+)
+
+// Resource describes a CRUD-able model exposed over MCP. Everything beyond
+// this declaration — input schemas, argument application, dispatch — is
+// derived at registration time from the model's struct tags (json / doc /
+// readOnly / valid / minLength / param / query), the same contract the
+// Huma-backed /api/v2 reflects. See schema.go for the derivation rules.
 type Resource struct {
 	// Name matches the API-token scope group exactly (e.g. "projects",
-	// "task_comments"). It is also the prefix of every tool name this
+	// "tasks_comments"). It is also the prefix of every tool name this
 	// resource produces.
 	Name string
 
-	// Description is used as the prefix of each generated tool's
-	// description text.
+	// Description is used in each generated tool's description text.
 	Description string
 
-	// EmptyStruct returns a fresh, zero-valued model instance for each
-	// dispatched call. Mirrors handler.WebHandler.EmptyStruct.
-	EmptyStruct func() handler.CObject
+	// Model returns a fresh, zero-valued model instance for each dispatched
+	// call. Mirrors handler.WebHandler.EmptyStruct.
+	Model func() handler.CObject
+
+	// Models overrides Model per op — e.g. tasks list through
+	// models.TaskCollection while the other ops use models.Task.
+	Models map[Op]func() handler.CObject
 
 	// Ops is the bitmask of CRUD operations this resource supports.
 	Ops Op
 
-	// Inputs holds the per-op wrapper type. The dispatcher allocates a
-	// fresh value with reflection (via reflect.TypeOf(v).Elem()), JSON-
-	// unmarshals the call arguments into it, and then asks the wrapper to
-	// copy itself onto a fresh model via the inputAdapter interface.
-	Inputs map[Op]any
+	// Tier selects typed tools vs. catalog-only exposure.
+	Tier Tier
+
+	// Gate, when set, is consulted at session-init time; a false return
+	// hides the resource entirely (live config checks, e.g. task comments).
+	Gate func() bool
+
+	// Exclude hides fields from every op's schema, by JSON property name.
+	Exclude []string
+
+	// OptionalFields downgrades hidden param-derived fields the derivation
+	// would mark required, by JSON property name (e.g. TaskCollection's
+	// project_id — omitting it lists tasks across all projects). Writable
+	// fields are unaffected.
+	OptionalFields []string
+
+	// RequiredCreate marks additional fields required on create when the
+	// tags alone don't say so.
+	RequiredCreate []string
+
+	specs map[Op]*opSpec
+}
+
+// modelFor returns the constructor for the given op, honouring the per-op
+// override map.
+func (r *Resource) modelFor(op Op) func() handler.CObject {
+	if f, ok := r.Models[op]; ok {
+		return f
+	}
+	return r.Model
+}
+
+// spec returns the cached tool contract for the given op.
+func (r *Resource) spec(op Op) *opSpec {
+	return r.specs[op]
+}
+
+// enabled reports whether the resource's config gate (if any) allows it.
+func (r *Resource) enabled() bool {
+	return r.Gate == nil || r.Gate()
+}
+
+// toolDescription renders the generated tool's description. Update spells
+// out the partial-update contract because it is the one op whose semantics
+// an agent cannot infer from the schema.
+func (r *Resource) toolDescription(op Op) string {
+	switch op {
+	case OpCreate:
+		return "Create a new record. Resource: " + r.Description
+	case OpReadOne:
+		return "Fetch a single record. Resource: " + r.Description
+	case OpReadAll:
+		return "List records the caller has access to. Resource: " + r.Description
+	case OpUpdate:
+		return "Update an existing record; only fields present in the arguments are changed. Resource: " + r.Description
+	case OpDelete:
+		return "Delete a record. Resource: " + r.Description
+	}
+	return r.Description
 }
 
 // toolRef points a tool name back at its resource + op. Built once at
@@ -127,17 +190,16 @@ var (
 // same Name.
 var ErrDuplicateResource = errors.New("mcp: resource already registered")
 
-// Register adds a resource to the package-level registry. It validates the
-// shape (non-empty name, EmptyStruct present, an Inputs entry for each op
-// in the Ops bitmask) and populates the tool-name lookup table so the
-// dispatcher never has to string-parse tool names like
-// "task_comments_read_all".
+// Register adds a resource to the package-level registry, builds the per-op
+// input schemas from the model's struct tags, and populates the tool-name
+// lookup table so the dispatcher never has to string-parse tool names like
+// "tasks_comments_read_all".
 func Register(r Resource) error {
 	if r.Name == "" {
 		return errors.New("mcp: resource Name must not be empty")
 	}
-	if r.EmptyStruct == nil {
-		return fmt.Errorf("mcp: resource %q has no EmptyStruct", r.Name)
+	if r.Model == nil {
+		return fmt.Errorf("mcp: resource %q has no Model", r.Name)
 	}
 
 	registryMu.Lock()
@@ -147,18 +209,24 @@ func Register(r Resource) error {
 		return fmt.Errorf("%w: %s", ErrDuplicateResource, r.Name)
 	}
 
-	// Make sure every enabled op has an input wrapper, otherwise the
-	// dispatcher would crash later with a less useful error.
+	stored := r
+	stored.specs = make(map[Op]*opSpec)
 	for _, op := range AllOps() {
-		if r.Ops&op == 0 {
+		if stored.Ops&op == 0 {
 			continue
 		}
-		if _, has := r.Inputs[op]; !has {
-			return fmt.Errorf("mcp: resource %q is missing input for op %s", r.Name, op.ToolSuffix())
+		model := stored.modelFor(op)()
+		mt := reflect.TypeOf(model)
+		if mt == nil || mt.Kind() != reflect.Pointer || mt.Elem().Kind() != reflect.Struct {
+			return fmt.Errorf("mcp: resource %q model for op %s must be a pointer to struct, got %T", r.Name, op.ToolSuffix(), model)
 		}
+		spec, err := buildOpSpec(mt.Elem(), op, &stored)
+		if err != nil {
+			return err
+		}
+		stored.specs[op] = spec
 	}
 
-	stored := r
 	resources = append(resources, &stored)
 
 	for _, op := range AllOps() {
@@ -188,6 +256,15 @@ func findResourceLocked(name string) (*Resource, bool) {
 		}
 	}
 	return nil, false
+}
+
+// snapshotResources returns the registered resources in registration order.
+func snapshotResources() []*Resource {
+	registryMu.RLock()
+	defer registryMu.RUnlock()
+	out := make([]*Resource, len(resources))
+	copy(out, resources)
+	return out
 }
 
 // lookupTool returns the (resource, op) pair the given tool name was

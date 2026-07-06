@@ -18,7 +18,7 @@
 // Vikunja's CRUD API to MCP-aware clients (Claude Desktop, Cursor, etc.).
 //
 // The entry point is Handler, which is mounted by the routes package
-// inside the existing authenticated /api/v1 group. The actual MCP protocol
+// inside the authenticated /api/v2 group. The actual MCP protocol
 // (JSON-RPC framing, session management, SSE streaming) is delegated to
 // github.com/modelcontextprotocol/go-sdk.
 package mcp
@@ -39,7 +39,7 @@ import (
 // SDK handler does not care about path — it dispatches on HTTP method
 // alone — so this is only used to strip the prefix before forwarding so
 // the underlying http.Request looks like it was routed to "/".
-const routePrefix = "/api/v1/mcp"
+const routePrefix = "/api/v2/mcp"
 
 // newServer constructs a fresh *mcp.Server with Vikunja's implementation
 // metadata and the per-session set of registered tools. The SDK calls the
