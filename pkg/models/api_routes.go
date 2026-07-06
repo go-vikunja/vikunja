@@ -52,11 +52,11 @@ func init() {
 	// POST, GET and DELETE on the same path. CanDoAPIRoute only matches one
 	// (method, path) pair per RouteDetail, so the actual gate lives behind
 	// skipRouteCheck + an inline HasMCPAccess() call in the MCP handler.
-	// This entry only exists so the scope appears in GET /api/v1/routes
+	// This entry only exists so the scope appears in the /routes exposure
 	// and PermissionsAreValid accepts it.
-	apiTokenRoutes["mcp"] = APITokenRoute{
+	apiTokenRoutesV2["mcp"] = APITokenRoute{
 		"access": &RouteDetail{
-			Path:   "/api/v1/mcp",
+			Path:   "/api/v2/mcp",
 			Method: "ANY",
 		},
 	}
@@ -258,10 +258,14 @@ func CollectRoutesForAPITokenUsage(route echo.RouteInfo, requiresJWT bool) {
 
 	routeGroupName, routeParts := getRouteGroupName(route.Path)
 
+	// mcp is excluded because its scope is hand-registered in init() — the
+	// Any-method transport routes would only collect as junk entries.
 	if routeGroupName == "token_test" ||
 		routeGroupName == "subscriptions" ||
 		routeGroupName == "tokens" ||
 		routeGroupName == "*" ||
+		routeGroupName == "mcp" ||
+		strings.HasPrefix(routeGroupName, "mcp_") ||
 		strings.HasPrefix(routeGroupName, "user_") {
 		return
 	}

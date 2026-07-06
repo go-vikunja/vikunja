@@ -459,6 +459,14 @@ func registerAPIRoutesV2(e *echo.Echo, a *echo.Group) {
 	// self-register via init()/RegisterAll.
 	a.GET("/ws", ws.UpgradeHandler)
 
+	// MCP endpoint — raw echo like /ws: a JSON-RPC transport (POST, GET, and
+	// DELETE on one path), not an OpenAPI-modelable resource. CanDoAPIRoute
+	// does an exact (method, path) match per permission, so the route check is
+	// skipped in the token middleware (see api_tokens.go) and the mcp:access
+	// scope is gated inline inside the handler via APIToken.HasMCPAccess().
+	a.Any("/mcp", mcpmodule.Handler)
+	a.Any("/mcp/*", mcpmodule.Handler)
+
 	// Resources self-register via init(); RegisterAll runs them all + AutoPatch.
 	apiv2.RegisterAll(api)
 }
@@ -616,14 +624,6 @@ func registerAPIRoutes(a *echo.Group) {
 	u.GET("/bots/:bot", botHandler.ReadOneWeb)
 	u.POST("/bots/:bot", botHandler.UpdateWeb)
 	u.DELETE("/bots/:bot", botHandler.DeleteWeb)
-
-	// MCP endpoint. The streamable-HTTP transport uses POST, GET, and
-	// DELETE on the same path; CanDoAPIRoute does an exact (method,
-	// path) match per permission, so the route check is skipped in the
-	// token middleware (see api_tokens.go) and the mcp:access scope is
-	// gated inline inside the handler via APIToken.HasMCPAccess().
-	a.Any("/mcp", mcpmodule.Handler)
-	a.Any("/mcp/*", mcpmodule.Handler)
 
 	projectHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {

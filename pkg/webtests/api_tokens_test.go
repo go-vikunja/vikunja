@@ -76,13 +76,13 @@ func TestAPITokenRoutesIncludesMCP(t *testing.T) {
 func TestAPITokenMiddleware_SkipsRouteCheckForMCPPath(t *testing.T) {
 	// The MCP endpoint needs to accept POST, GET, and DELETE on the same path
 	// (streamable-HTTP transport). CanDoAPIRoute is exact (method, path) match,
-	// so we skip the route check for /api/v1/mcp and any sub-path; the
+	// so we skip the route check for /api/v2/mcp and any sub-path; the
 	// HasMCPAccess() gate is applied inside the MCP handler instead.
 	for _, method := range []string{http.MethodGet, http.MethodPost, http.MethodDelete} {
 		t.Run(method, func(t *testing.T) {
 			e, err := setupTestEnv()
 			require.NoError(t, err)
-			req := httptest.NewRequest(method, "/api/v1/mcp", nil)
+			req := httptest.NewRequest(method, "/api/v2/mcp", nil)
 			res := httptest.NewRecorder()
 			c := e.NewContext(req, res)
 
@@ -99,7 +99,7 @@ func TestAPITokenMiddleware_SkipsRouteCheckForMCPPath(t *testing.T) {
 			// not here.
 			req.Header.Set(echo.HeaderAuthorization, "Bearer tk_2eef46f40ebab3304919ab2e7e39993f75f29d2e")
 			require.NoError(t, h(c))
-			assert.True(t, called, "wrapped handler should run because /api/v1/mcp skips route check")
+			assert.True(t, called, "wrapped handler should run because /api/v2/mcp skips route check")
 			assert.NotEqual(t, http.StatusUnauthorized, res.Code)
 		})
 	}
@@ -108,7 +108,7 @@ func TestAPITokenMiddleware_SkipsRouteCheckForMCPPath(t *testing.T) {
 func TestAPITokenMiddleware_SkipsRouteCheckForMCPSubPath(t *testing.T) {
 	e, err := setupTestEnv()
 	require.NoError(t, err)
-	req := httptest.NewRequest(http.MethodPost, "/api/v1/mcp/anything", nil)
+	req := httptest.NewRequest(http.MethodPost, "/api/v2/mcp/anything", nil)
 	res := httptest.NewRecorder()
 	c := e.NewContext(req, res)
 
@@ -120,7 +120,7 @@ func TestAPITokenMiddleware_SkipsRouteCheckForMCPSubPath(t *testing.T) {
 
 	req.Header.Set(echo.HeaderAuthorization, "Bearer tk_2eef46f40ebab3304919ab2e7e39993f75f29d2e")
 	require.NoError(t, h(c))
-	assert.True(t, called, "sub-paths under /api/v1/mcp should also skip the route check")
+	assert.True(t, called, "sub-paths under /api/v2/mcp should also skip the route check")
 }
 
 func TestAPIToken(t *testing.T) {

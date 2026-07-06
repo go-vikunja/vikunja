@@ -25,9 +25,6 @@ import (
 )
 
 func TestMCP_Tasks_ToolsListMatchesOps(t *testing.T) {
-	// Token 11 has tasks:[create, read_one, update, delete]; tasks_read_all
-	// is intentionally not exposed because models.Task.ReadAll is a stub
-	// (TaskCollection is out of scope for v1).
 	c := newMCPClient(t, mcpFullProjectsToken)
 	resp := c.rpc("tools/list", map[string]any{})
 	names := toolNamesFromList(t, resp)
@@ -35,12 +32,40 @@ func TestMCP_Tasks_ToolsListMatchesOps(t *testing.T) {
 	for _, want := range []string{
 		"tasks_create",
 		"tasks_read_one",
+		"tasks_read_all",
 		"tasks_update",
 		"tasks_delete",
 	} {
 		assert.Truef(t, names[want], "missing %s in tools/list: %v", want, names)
 	}
-	assert.Falsef(t, names["tasks_read_all"], "tasks_read_all should not appear (TaskCollection is OOS)")
+}
+
+func TestMCP_Tasks_ReadAllWithFilter(t *testing.T) {
+	// Listing goes through models.TaskCollection, so the REST filter engine
+	// is available: filter/sort_by/order_by plus the generic search arg.
+	c := newMCPClient(t, mcpFullProjectsToken)
+
+	result := c.callTool("tasks_read_all", map[string]any{
+		"filter":  "done = true",
+		"sort_by": []string{"id"},
+	})
+	require.NotContains(t, result, "isError", "read_all errored: %v", result)
+
+	var tasks []map[string]any
+	require.NoError(t, json.Unmarshal([]byte(toolResultText(t, result)), &tasks))
+	require.NotEmpty(t, tasks, "fixtures contain done tasks")
+	for _, task := range tasks {
+		assert.Equal(t, true, task["done"], "filter must only return done tasks: %v", task["id"])
+	}
+
+	// Scoped to a single project via the optional project_id argument.
+	result = c.callTool("tasks_read_all", map[string]any{"project_id": 1})
+	require.NotContains(t, result, "isError")
+	require.NoError(t, json.Unmarshal([]byte(toolResultText(t, result)), &tasks))
+	require.NotEmpty(t, tasks)
+	for _, task := range tasks {
+		assert.InDelta(t, float64(1), task["project_id"], 0.0001, "task %v outside project 1", task["id"])
+	}
 }
 
 func TestMCP_Tasks_Create(t *testing.T) {

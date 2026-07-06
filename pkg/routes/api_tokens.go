@@ -59,8 +59,8 @@ func SetupTokenMiddleware() echo.MiddlewareFunc {
 					// (method, path) match per permission, so we skip it here
 					// and gate inside the MCP handler via token.HasMCPAccess().
 					skipRouteCheck := path == "/api/v1/token/test" ||
-						path == "/api/v1/mcp" ||
-						strings.HasPrefix(path, "/api/v1/mcp/")
+						path == "/api/v2/mcp" ||
+						strings.HasPrefix(path, "/api/v2/mcp/")
 					err := checkAPITokenAndPutItInContext(s, c, skipRouteCheck)
 					return err == nil
 				}
