@@ -21,7 +21,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"reflect"
 
 	"code.vikunja.io/api/pkg/web"
 	"code.vikunja.io/api/pkg/web/handler"
@@ -34,33 +33,9 @@ import (
 var ErrToolNotFound = errors.New("mcp: tool not found")
 
 // ErrNoUserInContext is returned when Dispatch is invoked without a user
-// in ctx. Task 2's entry handler always sets one, so hitting this means
-// either a programming bug or someone calling Dispatch outside the HTTP
-// pipeline.
+// in ctx. The entry handler always sets one, so hitting this means either a
+// programming bug or someone calling Dispatch outside the HTTP pipeline.
 var ErrNoUserInContext = errors.New("mcp: no user in context")
-
-// inputAdapter is the Task 3/Task 4 seam. Each per-op input wrapper struct
-// (defined in inputs.go, added by Task 4) implements ApplyTo, which copies
-// the wrapper's fields onto a fresh handler.CObject. The dispatcher
-// allocates a wrapper from Resource.Inputs[op] via reflection,
-// json.Unmarshals tool arguments into it, then calls ApplyTo on the model
-// returned by Resource.EmptyStruct().
-//
-// Defining the interface here (rather than in inputs.go) keeps the
-// dispatcher buildable in Task 3 before any wrappers exist; the
-// dispatcher tests provide their own ApplyTo implementation to exercise
-// the code path.
-type inputAdapter interface {
-	ApplyTo(dst handler.CObject) error
-}
-
-// readAllInput is the optional interface a wrapper for OpReadAll may
-// implement to expose pagination fields to the dispatcher. Wrappers that
-// don't implement it get search="", page=0, perPage=0 (the same defaults
-// the REST layer applies when callers omit the query parameters).
-type readAllInput interface {
-	ReadAllParams() (search string, page int, perPage int)
-}
 
 // crudFuncs are the framework-agnostic Do* entry points the dispatcher
 // invokes. The package-level defaults point at handler.Do*; tests swap
@@ -84,99 +59,61 @@ var defaultCRUD = crudFuncs{
 }
 
 // crud is the live set of Do* functions Dispatch uses. Tests swap it out
-// via withCRUD and restore it on teardown.
+// and restore it on teardown.
 var crud = defaultCRUD
 
-// Dispatch is the single entry point for every tools/call when the caller
-// only has raw JSON arguments (e.g. unit tests, or future non-SDK call
-// sites). It unmarshals the arguments into the wrapper registered for the
-// tool and delegates to DispatchTyped, which is also the path the
-// AddTool-generated handlers take (they pass an already-typed wrapper to
-// skip the unmarshal round-trip the SDK has already performed against the
-// input schema).
+// Dispatch is the single entry point for every tools/call — the typed
+// per-resource tools and the do_action catalog both funnel through here
+// with raw JSON arguments. It validates the arguments against the op's
+// tag-derived schema, applies the supplied keys onto a fresh model
+// (presence-based, see apply.go), and invokes the matching handler.Do*.
 //
 // Errors fall into three categories:
-//   - ErrToolNotFound / ErrNoUserInContext / ErrScopeDenied /
-//     JSON-unmarshal errors are dispatcher-level failures the caller should
-//     translate into an IsError=true tool result. We return them as errors
-//     here (rather than constructing a *mcp.CallToolResult) so the
-//     dispatcher stays SDK-agnostic; the thin AddTool handler does the
-//     wrapping.
+//   - ErrToolNotFound / ErrNoUserInContext / ErrScopeDenied and argument
+//     validation failures are dispatcher-level; callers translate them into
+//     IsError=true tool results. They're returned as errors (rather than
+//     *mcp.CallToolResult) so the dispatcher stays SDK-agnostic.
 //   - Errors returned by handler.Do* (model-layer permission denials,
-//     validation failures, etc.) are propagated as-is. The tool handler
-//     wraps them with SetError per the SDK's convention that domain
-//     failures be reported as tool results, not protocol errors.
+//     validation failures, etc.) are propagated as-is; the tool handler
+//     wraps them per the SDK's convention that domain failures be reported
+//     as tool results, not protocol errors.
 func Dispatch(ctx context.Context, toolName string, rawArgs json.RawMessage) (any, error) {
 	ref, ok := lookupTool(toolName)
 	if !ok {
 		return nil, fmt.Errorf("%w: %s", ErrToolNotFound, toolName)
 	}
 
-	// Scope check first — never allocate a wrapper or touch model state
-	// for a tool the caller isn't authorized to invoke. This guards
-	// against the (rare) case where the per-session tool registration in
-	// newServer registered a tool the current request's token doesn't
-	// have a scope for: the SDK caches the *Server across requests, but
-	// the API token is per-HTTP-request.
+	// Scope check first — never touch model state for a tool the caller
+	// isn't authorized to invoke. This guards against the (rare) case where
+	// the per-session tool registration in newServer registered a tool the
+	// current request's token doesn't have a scope for: the SDK caches the
+	// *Server across requests, but the API token is per-HTTP-request.
 	if !tokenAuthorizes(TokenFromContext(ctx), ref.resource.Name, ref.op) {
 		return nil, fmt.Errorf("%w: %s", ErrScopeDenied, toolName)
 	}
 
-	// Allocate a fresh wrapper for this call so concurrent dispatches
-	// don't share state through the prototype stored in r.Inputs.
-	wrapperProto, ok := ref.resource.Inputs[ref.op]
-	if !ok {
-		return nil, fmt.Errorf("mcp: resource %q has no input wrapper for op %s", ref.resource.Name, ref.op.ToolSuffix())
-	}
-	wrapper, err := allocateWrapper(wrapperProto)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(rawArgs) > 0 {
-		if err := json.Unmarshal(rawArgs, wrapper); err != nil {
-			return nil, fmt.Errorf("mcp: invalid arguments for %s: %w", toolName, err)
-		}
-	}
-
-	return dispatchPrepared(ctx, ref, wrapper)
-}
-
-// DispatchTyped is the dispatcher entry point for callers that already have
-// a typed wrapper value (e.g. AddTool handlers, where the SDK has already
-// unmarshalled and validated args against the input schema). It skips the
-// JSON round-trip that Dispatch performs.
-//
-// The wrapper must implement inputAdapter (and optionally readAllInput for
-// pagination). Every wrapper registered in inputs.go meets that contract.
-func DispatchTyped(ctx context.Context, toolName string, wrapper any) (any, error) {
-	ref, ok := lookupTool(toolName)
-	if !ok {
-		return nil, fmt.Errorf("%w: %s", ErrToolNotFound, toolName)
-	}
-	// Scope check mirrors Dispatch — see the comment there for why this
-	// is necessary even when newServer already filtered the tool set.
-	if !tokenAuthorizes(TokenFromContext(ctx), ref.resource.Name, ref.op) {
-		return nil, fmt.Errorf("%w: %s", ErrScopeDenied, toolName)
-	}
-	return dispatchPrepared(ctx, ref, wrapper)
-}
-
-// dispatchPrepared runs the shared post-allocation pipeline: pull the user
-// from ctx, copy the wrapper onto a fresh model via inputAdapter, then call
-// the right handler.Do* per op. Both Dispatch (raw JSON path) and
-// DispatchTyped (AddTool path) funnel through here.
-func dispatchPrepared(ctx context.Context, ref toolRef, wrapper any) (any, error) {
 	u := UserFromContext(ctx)
 	if u == nil {
 		return nil, ErrNoUserInContext
 	}
 
-	model := ref.resource.EmptyStruct()
-	if adapter, ok := wrapper.(inputAdapter); ok {
-		if err := adapter.ApplyTo(model); err != nil {
-			return nil, fmt.Errorf("mcp: copy input for %s_%s: %w", ref.resource.Name, ref.op.ToolSuffix(), err)
+	spec := ref.resource.spec(ref.op)
+	args, err := validateAndDecodeArgs(spec, rawArgs)
+	if err != nil {
+		return nil, fmt.Errorf("mcp: invalid arguments for %s: %w", toolName, err)
+	}
+
+	var search string
+	var page, perPage int
+	if ref.op == OpReadAll {
+		if search, page, perPage, err = popReadAllParams(args); err != nil {
+			return nil, fmt.Errorf("mcp: invalid arguments for %s: %w", toolName, err)
 		}
+	}
+
+	model := ref.resource.modelFor(ref.op)()
+	if err := applyArgs(model, spec, args); err != nil {
+		return nil, fmt.Errorf("mcp: invalid arguments for %s: %w", toolName, err)
 	}
 
 	switch ref.op {
@@ -193,10 +130,6 @@ func dispatchPrepared(ctx context.Context, ref toolRef, wrapper any) (any, error
 		return model, nil
 
 	case OpReadAll:
-		search, page, perPage := "", 0, 0
-		if ra, ok := wrapper.(readAllInput); ok {
-			search, page, perPage = ra.ReadAllParams()
-		}
 		result, _, _, err := crud.doReadAll(ctx, model, u, search, page, perPage)
 		if err != nil {
 			return nil, err
@@ -216,21 +149,5 @@ func dispatchPrepared(ctx context.Context, ref toolRef, wrapper any) (any, error
 		return model, nil
 	}
 
-	return nil, fmt.Errorf("mcp: unsupported op %d for tool %s_%s", ref.op, ref.resource.Name, ref.op.ToolSuffix())
-}
-
-// allocateWrapper returns a fresh pointer of the same concrete type as the
-// prototype stored in Resource.Inputs. Resource.Inputs is conventionally a
-// pointer-to-zero (e.g. &ProjectCreateInput{}); allocateWrapper takes its
-// reflect.Type, allocates a fresh value, and hands back a pointer suitable
-// for json.Unmarshal.
-func allocateWrapper(proto any) (any, error) {
-	if proto == nil {
-		return nil, errors.New("mcp: nil input prototype")
-	}
-	t := reflect.TypeOf(proto)
-	if t.Kind() != reflect.Pointer {
-		return nil, fmt.Errorf("mcp: input prototype must be a pointer, got %s", t.Kind())
-	}
-	return reflect.New(t.Elem()).Interface(), nil
+	return nil, fmt.Errorf("mcp: unsupported op %d for tool %s", ref.op, toolName)
 }

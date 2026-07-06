@@ -34,10 +34,11 @@ import (
 
 // stubCObject is a test double for handler.CObject that records which method
 // was invoked by the dispatcher. Each instance must be checked individually,
-// because handler.Do* runs against a fresh EmptyStruct() per call.
+// because handler.Do* runs against a fresh Model() per call. The json tags
+// drive the reflected input schema like on a real model.
 type stubCObject struct {
-	ID    int64 `json:"id"`
-	Title string
+	ID    int64  `json:"id"`
+	Title string `json:"title"`
 
 	// called records the most recent CRUD method invoked on this instance.
 	called string
@@ -86,38 +87,6 @@ func (s *stubTracker) empty() handler.CObject {
 	o := &stubCObject{returnErr: s.nextErr}
 	s.last = o
 	return o
-}
-
-// stubInput is the wrapper type used by the dispatcher tests for every op.
-// In the real registry each op has its own wrapper type; for testing the
-// dispatcher we only need something that unmarshal+ApplyTo work against.
-type stubInput struct {
-	ID      int64  `json:"id"`
-	Title   string `json:"title"`
-	Search  string `json:"search,omitempty"`
-	Page    int    `json:"page,omitempty"`
-	PerPage int    `json:"per_page,omitempty"`
-}
-
-// ApplyTo copies wrapper fields onto the model. This is the seam Task 4 will
-// fill in for real resources; for now the dispatcher tests provide their own
-// implementation via the inputAdapter interface so we can verify dispatch
-// without depending on the (still-absent) per-resource adapter.
-func (i *stubInput) ApplyTo(dst handler.CObject) error {
-	s, ok := dst.(*stubCObject)
-	if !ok {
-		return errors.New("stubInput: unexpected target type")
-	}
-	s.ID = i.ID
-	s.Title = i.Title
-	return nil
-}
-
-// ReadAllParams exposes the pagination fields to the dispatcher. The real
-// wrappers in Task 4 follow the same shape; the dispatcher reads these
-// without depending on the concrete struct.
-func (i *stubInput) ReadAllParams() (string, int, int) {
-	return i.Search, i.Page, i.PerPage
 }
 
 // newAuthedCtx returns a context with a test user and an API token that
@@ -177,9 +146,8 @@ func TestDispatchNoUser(t *testing.T) {
 	tracker := &stubTracker{}
 	require.NoError(t, Register(Resource{
 		Name:        "stubs",
-		EmptyStruct: tracker.empty,
+		Model:       tracker.empty,
 		Ops:         OpReadOne,
-		Inputs:      map[Op]any{OpReadOne: &stubInput{}},
 	}))
 
 	// Attach an authorising token but no user — the scope check passes,
@@ -204,9 +172,8 @@ func TestDispatchCallsCreate(t *testing.T) {
 	tracker := &stubTracker{}
 	require.NoError(t, Register(Resource{
 		Name:        "stubs",
-		EmptyStruct: tracker.empty,
+		Model:       tracker.empty,
 		Ops:         OpCreate,
-		Inputs:      map[Op]any{OpCreate: &stubInput{}},
 	}))
 
 	_, err := Dispatch(newAuthedCtx(t), "stubs_create", json.RawMessage(`{"title":"hello"}`))
@@ -222,9 +189,8 @@ func TestDispatchCallsReadOne(t *testing.T) {
 	tracker := &stubTracker{}
 	require.NoError(t, Register(Resource{
 		Name:        "stubs",
-		EmptyStruct: tracker.empty,
+		Model:       tracker.empty,
 		Ops:         OpReadOne,
-		Inputs:      map[Op]any{OpReadOne: &stubInput{}},
 	}))
 
 	out, err := Dispatch(newAuthedCtx(t), "stubs_read_one", json.RawMessage(`{"id":7}`))
@@ -242,9 +208,8 @@ func TestDispatchCallsReadAll(t *testing.T) {
 	tracker := &stubTracker{}
 	require.NoError(t, Register(Resource{
 		Name:        "stubs",
-		EmptyStruct: tracker.empty,
+		Model:       tracker.empty,
 		Ops:         OpReadAll,
-		Inputs:      map[Op]any{OpReadAll: &stubInput{}},
 	}))
 
 	out, err := Dispatch(newAuthedCtx(t), "stubs_read_all", json.RawMessage(`{"search":"foo","page":2,"per_page":50}`))
@@ -262,9 +227,8 @@ func TestDispatchCallsUpdate(t *testing.T) {
 	tracker := &stubTracker{}
 	require.NoError(t, Register(Resource{
 		Name:        "stubs",
-		EmptyStruct: tracker.empty,
+		Model:       tracker.empty,
 		Ops:         OpUpdate,
-		Inputs:      map[Op]any{OpUpdate: &stubInput{}},
 	}))
 
 	_, err := Dispatch(newAuthedCtx(t), "stubs_update", json.RawMessage(`{"id":3,"title":"new"}`))
@@ -281,9 +245,8 @@ func TestDispatchCallsDelete(t *testing.T) {
 	tracker := &stubTracker{}
 	require.NoError(t, Register(Resource{
 		Name:        "stubs",
-		EmptyStruct: tracker.empty,
+		Model:       tracker.empty,
 		Ops:         OpDelete,
-		Inputs:      map[Op]any{OpDelete: &stubInput{}},
 	}))
 
 	_, err := Dispatch(newAuthedCtx(t), "stubs_delete", json.RawMessage(`{"id":9}`))
@@ -300,9 +263,8 @@ func TestDispatchModelErrorPropagates(t *testing.T) {
 	tracker := &stubTracker{nextErr: wantErr}
 	require.NoError(t, Register(Resource{
 		Name:        "stubs",
-		EmptyStruct: tracker.empty,
+		Model:       tracker.empty,
 		Ops:         OpReadOne,
-		Inputs:      map[Op]any{OpReadOne: &stubInput{}},
 	}))
 
 	_, err := Dispatch(newAuthedCtx(t), "stubs_read_one", json.RawMessage(`{"id":1}`))
@@ -315,9 +277,8 @@ func TestDispatchInvalidJSON(t *testing.T) {
 	tracker := &stubTracker{}
 	require.NoError(t, Register(Resource{
 		Name:        "stubs",
-		EmptyStruct: tracker.empty,
+		Model:       tracker.empty,
 		Ops:         OpReadOne,
-		Inputs:      map[Op]any{OpReadOne: &stubInput{}},
 	}))
 
 	_, err := Dispatch(newAuthedCtx(t), "stubs_read_one", json.RawMessage(`{not json`))
@@ -329,9 +290,8 @@ func TestDispatchUnsupportedOpForResource(t *testing.T) {
 	tracker := &stubTracker{}
 	require.NoError(t, Register(Resource{
 		Name:        "stubs",
-		EmptyStruct: tracker.empty,
+		Model:       tracker.empty,
 		Ops:         OpReadOne, // only read_one is registered
-		Inputs:      map[Op]any{OpReadOne: &stubInput{}},
 	}))
 
 	// stubs_create was never registered, so it must be tool-not-found.
