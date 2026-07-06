@@ -100,12 +100,20 @@ func buildOpSpec(modelType reflect.Type, op Op, r *Resource) (*opSpec, error) {
 		name, hasJSON := jsonName(f)
 		param := f.Tag.Get("param")
 
+		identity := func(name string) bool { return slices.Contains(r.IdentityFields, name) }
+
 		switch {
 		case f.Name == "ID":
 			if !hasJSON || excluded("id") {
 				continue
 			}
 			if op != OpReadOne && op != OpUpdate && op != OpDelete {
+				continue
+			}
+			// Resources whose rows aren't addressed by their id (e.g. team
+			// members, addressed by team + username) declare IdentityFields
+			// without "id" and the property disappears entirely.
+			if len(r.IdentityFields) > 0 && !identity("id") {
 				continue
 			}
 			if f.Type.Kind() != reflect.Int64 {
@@ -131,7 +139,10 @@ func buildOpSpec(modelType reflect.Type, op Op, r *Resource) (*opSpec, error) {
 				required = append(required, hidden)
 			}
 
-		case !hasJSON, f.Tag.Get("readOnly") == "true", excluded(name):
+		// readOnly with a param tag means "REST takes this from the URL,
+		// not the body" (e.g. TaskRelation.TaskID) — MCP has no URL, so it
+		// stays an argument.
+		case !hasJSON, f.Tag.Get("readOnly") == "true" && param == "", excluded(name):
 			continue
 
 		default:
@@ -146,10 +157,13 @@ func buildOpSpec(modelType reflect.Type, op Op, r *Resource) (*opSpec, error) {
 				req = requiredForCreate(f, name, r)
 			case OpUpdate:
 				include = true
+				req = identity(name)
 			case OpReadOne, OpDelete:
 				// Models without an exposed id (e.g. TaskAssginee) are
-				// identified by their param-tagged fields instead.
-				if !hasExposedID && param != "" {
+				// identified by their param-tagged fields instead;
+				// IdentityFields declares the set explicitly when the
+				// derivation can't know it (e.g. views need project_id too).
+				if (!hasExposedID && param != "") || identity(name) {
 					include, req = true, true
 				}
 			case OpReadAll:
@@ -218,6 +232,22 @@ func propSchema(f reflect.StructField) (*jsonschema.Schema, bool) {
 		s.Items = &jsonschema.Schema{Type: "string"}
 	default:
 		return nil, false
+	}
+	// Named int types with a custom string MarshalJSON declare their wire
+	// type via swaggertype (e.g. ProjectViewKind).
+	if f.Tag.Get("swaggertype") == "string" {
+		s.Type = "string"
+		s.Format = ""
+	}
+	// Both huma-style `enum` and swaggo-style `enums` list allowed values.
+	enum := f.Tag.Get("enum")
+	if enum == "" {
+		enum = f.Tag.Get("enums")
+	}
+	if enum != "" && s.Type == "string" {
+		for _, v := range strings.Split(enum, ",") {
+			s.Enum = append(s.Enum, v)
+		}
 	}
 	return propWithDoc(s, f), true
 }

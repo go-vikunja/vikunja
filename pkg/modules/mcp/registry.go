@@ -132,6 +132,12 @@ type Resource struct {
 	// tags alone don't say so.
 	RequiredCreate []string
 
+	// IdentityFields overrides how read_one/update/delete address a record,
+	// by JSON property name, for models whose row isn't addressed by its id
+	// (team members go by team + username) or that need parent context the
+	// derivation can't infer (views need project_id alongside id).
+	IdentityFields []string
+
 	specs map[Op]*opSpec
 }
 
