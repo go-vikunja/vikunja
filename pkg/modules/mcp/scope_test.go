@@ -96,12 +96,8 @@ func TestDispatchScopeDenied(t *testing.T) {
 	tracker := &stubTracker{}
 	require.NoError(t, Register(Resource{
 		Name:        "stubs",
-		EmptyStruct: tracker.empty,
+		Model:       tracker.empty,
 		Ops:         OpCreate | OpReadOne,
-		Inputs: map[Op]any{
-			OpCreate:  &stubInput{},
-			OpReadOne: &stubInput{},
-		},
 	}))
 
 	// Token has read_one but not create.
@@ -115,8 +111,10 @@ func TestDispatchScopeDenied(t *testing.T) {
 	_, err := Dispatch(ctx, "stubs_create", json.RawMessage(`{"title":"x"}`))
 	require.Error(t, err)
 	require.ErrorIs(t, err, ErrScopeDenied)
-	// The denied call must not have invoked Do*.
-	assert.Nil(t, tracker.last, "Do* must not run for a denied scope")
+	// The denied call must not have invoked Do*. (Register reflects the
+	// model type once at registration time, so an instance exists — what
+	// matters is that no CRUD method ran on it.)
+	assert.Empty(t, tracker.last.called, "Do* must not run for a denied scope")
 }
 
 func TestDispatchScopeDenied_NoTokenInContext(t *testing.T) {
@@ -128,9 +126,8 @@ func TestDispatchScopeDenied_NoTokenInContext(t *testing.T) {
 	tracker := &stubTracker{}
 	require.NoError(t, Register(Resource{
 		Name:        "stubs",
-		EmptyStruct: tracker.empty,
+		Model:       tracker.empty,
 		Ops:         OpReadOne,
-		Inputs:      map[Op]any{OpReadOne: &stubInput{}},
 	}))
 
 	// User in context but no token — the scope check must still deny.
@@ -139,20 +136,19 @@ func TestDispatchScopeDenied_NoTokenInContext(t *testing.T) {
 	_, err := Dispatch(ctx, "stubs_read_one", json.RawMessage(`{"id":1}`))
 	require.Error(t, err)
 	require.ErrorIs(t, err, ErrScopeDenied)
-	assert.Nil(t, tracker.last)
+	assert.Empty(t, tracker.last.called)
 }
 
-func TestDispatchTypedScopeDenied(t *testing.T) {
-	// DispatchTyped is the path AddTool handlers take; the same scope check
-	// must apply there.
+func TestDispatchDeleteScopeDenied(t *testing.T) {
+	// Delete is the most destructive op; make sure the scope check gates it
+	// like every other op.
 	resetRegistry(t)
 	installStubCRUD(t)
 	tracker := &stubTracker{}
 	require.NoError(t, Register(Resource{
 		Name:        "stubs",
-		EmptyStruct: tracker.empty,
+		Model:       tracker.empty,
 		Ops:         OpDelete,
-		Inputs:      map[Op]any{OpDelete: &stubInput{}},
 	}))
 
 	token := &models.APIToken{
@@ -162,10 +158,10 @@ func TestDispatchTypedScopeDenied(t *testing.T) {
 	}
 	ctx := WithToken(newAuthedCtx(t), token)
 
-	_, err := DispatchTyped(ctx, "stubs_delete", &stubInput{ID: 1})
+	_, err := Dispatch(ctx, "stubs_delete", json.RawMessage(`{"id":1}`))
 	require.Error(t, err)
 	require.ErrorIs(t, err, ErrScopeDenied)
-	assert.Nil(t, tracker.last)
+	assert.Empty(t, tracker.last.called)
 }
 
 func TestDispatchScopeAllowed(t *testing.T) {
@@ -175,9 +171,8 @@ func TestDispatchScopeAllowed(t *testing.T) {
 	tracker := &stubTracker{}
 	require.NoError(t, Register(Resource{
 		Name:        "stubs",
-		EmptyStruct: tracker.empty,
+		Model:       tracker.empty,
 		Ops:         OpReadOne,
-		Inputs:      map[Op]any{OpReadOne: &stubInput{}},
 	}))
 
 	token := &models.APIToken{
