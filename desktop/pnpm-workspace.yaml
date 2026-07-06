@@ -12,4 +12,4 @@ overrides:
   form-data: 4.0.6
   js-yaml: 5.2.1
   undici@6: 8.6.0
-  undici@7: 8.5.0
+  undici@7: 8.6.0
