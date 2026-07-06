@@ -145,9 +145,9 @@ func TestDispatchNoUser(t *testing.T) {
 	resetRegistry(t)
 	tracker := &stubTracker{}
 	require.NoError(t, Register(Resource{
-		Name:        "stubs",
-		Model:       tracker.empty,
-		Ops:         OpReadOne,
+		Name:  "stubs",
+		Model: tracker.empty,
+		Ops:   OpReadOne,
 	}))
 
 	// Attach an authorising token but no user — the scope check passes,
@@ -171,9 +171,9 @@ func TestDispatchCallsCreate(t *testing.T) {
 	installStubCRUD(t)
 	tracker := &stubTracker{}
 	require.NoError(t, Register(Resource{
-		Name:        "stubs",
-		Model:       tracker.empty,
-		Ops:         OpCreate,
+		Name:  "stubs",
+		Model: tracker.empty,
+		Ops:   OpCreate,
 	}))
 
 	_, err := Dispatch(newAuthedCtx(t), "stubs_create", json.RawMessage(`{"title":"hello"}`))
@@ -188,9 +188,9 @@ func TestDispatchCallsReadOne(t *testing.T) {
 	installStubCRUD(t)
 	tracker := &stubTracker{}
 	require.NoError(t, Register(Resource{
-		Name:        "stubs",
-		Model:       tracker.empty,
-		Ops:         OpReadOne,
+		Name:  "stubs",
+		Model: tracker.empty,
+		Ops:   OpReadOne,
 	}))
 
 	out, err := Dispatch(newAuthedCtx(t), "stubs_read_one", json.RawMessage(`{"id":7}`))
@@ -207,9 +207,9 @@ func TestDispatchCallsReadAll(t *testing.T) {
 	installStubCRUD(t)
 	tracker := &stubTracker{}
 	require.NoError(t, Register(Resource{
-		Name:        "stubs",
-		Model:       tracker.empty,
-		Ops:         OpReadAll,
+		Name:  "stubs",
+		Model: tracker.empty,
+		Ops:   OpReadAll,
 	}))
 
 	out, err := Dispatch(newAuthedCtx(t), "stubs_read_all", json.RawMessage(`{"search":"foo","page":2,"per_page":50}`))
@@ -226,9 +226,9 @@ func TestDispatchCallsUpdate(t *testing.T) {
 	installStubCRUD(t)
 	tracker := &stubTracker{}
 	require.NoError(t, Register(Resource{
-		Name:        "stubs",
-		Model:       tracker.empty,
-		Ops:         OpUpdate,
+		Name:  "stubs",
+		Model: tracker.empty,
+		Ops:   OpUpdate,
 	}))
 
 	_, err := Dispatch(newAuthedCtx(t), "stubs_update", json.RawMessage(`{"id":3,"title":"new"}`))
@@ -244,9 +244,9 @@ func TestDispatchCallsDelete(t *testing.T) {
 	installStubCRUD(t)
 	tracker := &stubTracker{}
 	require.NoError(t, Register(Resource{
-		Name:        "stubs",
-		Model:       tracker.empty,
-		Ops:         OpDelete,
+		Name:  "stubs",
+		Model: tracker.empty,
+		Ops:   OpDelete,
 	}))
 
 	_, err := Dispatch(newAuthedCtx(t), "stubs_delete", json.RawMessage(`{"id":9}`))
@@ -262,9 +262,9 @@ func TestDispatchModelErrorPropagates(t *testing.T) {
 	wantErr := errors.New("simulated model error")
 	tracker := &stubTracker{nextErr: wantErr}
 	require.NoError(t, Register(Resource{
-		Name:        "stubs",
-		Model:       tracker.empty,
-		Ops:         OpReadOne,
+		Name:  "stubs",
+		Model: tracker.empty,
+		Ops:   OpReadOne,
 	}))
 
 	_, err := Dispatch(newAuthedCtx(t), "stubs_read_one", json.RawMessage(`{"id":1}`))
@@ -276,9 +276,9 @@ func TestDispatchInvalidJSON(t *testing.T) {
 	resetRegistry(t)
 	tracker := &stubTracker{}
 	require.NoError(t, Register(Resource{
-		Name:        "stubs",
-		Model:       tracker.empty,
-		Ops:         OpReadOne,
+		Name:  "stubs",
+		Model: tracker.empty,
+		Ops:   OpReadOne,
 	}))
 
 	_, err := Dispatch(newAuthedCtx(t), "stubs_read_one", json.RawMessage(`{not json`))
@@ -289,9 +289,9 @@ func TestDispatchUnsupportedOpForResource(t *testing.T) {
 	resetRegistry(t)
 	tracker := &stubTracker{}
 	require.NoError(t, Register(Resource{
-		Name:        "stubs",
-		Model:       tracker.empty,
-		Ops:         OpReadOne, // only read_one is registered
+		Name:  "stubs",
+		Model: tracker.empty,
+		Ops:   OpReadOne, // only read_one is registered
 	}))
 
 	// stubs_create was never registered, so it must be tool-not-found.
