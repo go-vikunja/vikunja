@@ -44,7 +44,7 @@ const (
 // mcpRequest builds an MCP request with the appropriate Accept + Content-Type
 // headers required by the streamable-HTTP transport.
 func mcpRequest(method, body string) *http.Request {
-	req := httptest.NewRequest(method, "/api/v1/mcp", strings.NewReader(body))
+	req := httptest.NewRequest(method, "/api/v2/mcp", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json, text/event-stream")
 	return req
