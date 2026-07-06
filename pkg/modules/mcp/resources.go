@@ -82,8 +82,9 @@ func allResources() []Resource {
 			},
 			Ops: OpCreate | OpReadOne | OpReadAll | OpUpdate | OpDelete,
 			// "s" duplicates the reserved search argument; view-scoped
-			// listing is polymorphic (buckets vs tasks) and stays REST-only.
-			Exclude: []string{"s", "project_view_id"},
+			// listing is polymorphic (buckets vs tasks) and stays REST-only;
+			// index is server-assigned despite its readOnly+param tags.
+			Exclude: []string{"s", "project_view_id", "index"},
 			// Omitting project_id lists tasks across every project the
 			// caller can see.
 			OptionalFields: []string{"project_id"},
@@ -117,6 +118,59 @@ func allResources() []Resource {
 			Model:       func() handler.CObject { return &models.TaskAssginee{} },
 			Ops:         OpCreate | OpReadAll | OpDelete,
 		},
+
+		// Catalog tier — reachable via find_action / do_action only. Ops
+		// mirror each resource's REST surface. Deliberately absent: api
+		// tokens (self-escalation), webhooks (server-side outbound
+		// requests), link shares (public exposure), buckets and task
+		// positions (their v1 token scopes don't map onto (group, op)
+		// permissions), saved filters (nested filter object).
+		{
+			Name:        "tasks_labels",
+			Description: "Labels attached to a Vikunja task; create adds a label, delete removes it",
+			Model:       func() handler.CObject { return &models.LabelTask{} },
+			Ops:         OpCreate | OpReadAll | OpDelete,
+			Tier:        TierCatalog,
+		},
+		{
+			Name:        "tasks_relations",
+			Description: "Relations between Vikunja tasks (subtask, parenttask, blocking, related, …)",
+			Model:       func() handler.CObject { return &models.TaskRelation{} },
+			Ops:         OpCreate | OpDelete,
+			Tier:        TierCatalog,
+		},
+		{
+			Name:           "teams_members",
+			Description:    "Members of a Vikunja team, addressed by team id and username",
+			Model:          func() handler.CObject { return &models.TeamMember{} },
+			Ops:            OpCreate | OpDelete,
+			Tier:           TierCatalog,
+			IdentityFields: []string{"username"},
+		},
+		{
+			Name:           "projects_users",
+			Description:    "Users a Vikunja project is shared with, addressed by project id and username",
+			Model:          func() handler.CObject { return &models.ProjectUser{} },
+			Ops:            OpCreate | OpReadAll | OpUpdate | OpDelete,
+			Tier:           TierCatalog,
+			IdentityFields: []string{"username"},
+		},
+		{
+			Name:           "projects_teams",
+			Description:    "Teams a Vikunja project is shared with, addressed by project id and team id",
+			Model:          func() handler.CObject { return &models.TeamProject{} },
+			Ops:            OpCreate | OpReadAll | OpUpdate | OpDelete,
+			Tier:           TierCatalog,
+			IdentityFields: []string{"team_id"},
+		},
+		{
+			Name:           "projects_views",
+			Description:    "Views of a Vikunja project (list, gantt, table, kanban)",
+			Model:          func() handler.CObject { return &models.ProjectView{} },
+			Ops:            OpCreate | OpReadOne | OpReadAll | OpUpdate | OpDelete,
+			Tier:           TierCatalog,
+			IdentityFields: []string{"id", "project_id"},
+		},
 	}
 }
 
@@ -143,6 +197,7 @@ func installToolsForToken(srv *mcp.Server, token *models.APIToken) {
 			}, rawToolHandler(name))
 		}
 	}
+	installCatalogTools(srv, token)
 }
 
 // rawToolHandler adapts Dispatch to the SDK's low-level ToolHandler. Domain
