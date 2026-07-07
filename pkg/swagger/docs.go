@@ -10042,6 +10042,10 @@ const docTemplate = `{
                         }
                     ]
                 },
+                "deleted_at": {
+                    "description": "A timestamp when this task was deleted. Soft-deleted tasks are kept for 30 days before they are removed permanently.\nomitzero keeps the field out of the JSON of regular tasks — it only ever appears on soft-deleted ones (the later trash listing).",
+                    "type": "string"
+                },
                 "description": {
                     "description": "The task description.",
                     "type": "string"
