@@ -279,7 +279,6 @@ func TestGetProviderFromMapStringBooleans(t *testing.T) {
 	}
 }
 
-
 func TestFailedDiscoverySkippedInIssuerCheck(t *testing.T) {
 	defer CleanupSavedOpenIDProviders()
 
