@@ -2034,6 +2034,21 @@ func hardDeleteTask(s *xorm.Session, t *Task) (err error) {
 	return
 }
 
+// GetDeletedTasksSince returns a project's soft-deleted tasks for the CalDAV
+// sync-collection 404 entries. Inclusive, because sync tokens have second
+// granularity. Tasks without a stored UID were never synced and are skipped.
+func GetDeletedTasksSince(s *xorm.Session, projectID int64, since time.Time) (tasks []*Task, err error) {
+	err = s.Unscoped().
+		Where(builder.And(
+			builder.Eq{"project_id": projectID},
+			builder.NotNull{"deleted_at"},
+			builder.Gte{"deleted_at": since.UTC()},
+			builder.Neq{"uid": ""},
+		)).
+		Find(&tasks)
+	return
+}
+
 // ReadOne gets one task by its ID
 // @Summary Get one task
 // @Description Returns one task by its ID

@@ -26,12 +26,12 @@ import (
 	"xorm.io/builder"
 )
 
-// taskDeleteRetention is how long soft-deleted tasks are kept before permanent
+// TaskDeleteRetention is how long soft-deleted tasks are kept before permanent
 // removal. Hard-coded like the user deletion grace period.
-const taskDeleteRetention = 30 * 24 * time.Hour
+const TaskDeleteRetention = 30 * 24 * time.Hour
 
 // RegisterTaskCleanupCron registers the cron job that permanently removes
-// tasks which were soft-deleted more than taskDeleteRetention ago.
+// tasks which were soft-deleted more than TaskDeleteRetention ago.
 func RegisterTaskCleanupCron() {
 	err := cron.Schedule("0 * * * *", func() {
 		deleteExpiredTasks(time.Now())
@@ -47,7 +47,7 @@ func deleteExpiredTasks(now time.Time) {
 	err := s.Unscoped().
 		Where(builder.And(
 			builder.NotNull{"deleted_at"},
-			builder.Lt{"deleted_at": now.Add(-taskDeleteRetention)},
+			builder.Lt{"deleted_at": now.Add(-TaskDeleteRetention)},
 		)).
 		Find(&tasks)
 	s.Close()

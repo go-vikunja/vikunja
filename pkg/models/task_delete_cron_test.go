@@ -32,7 +32,7 @@ func TestDeleteExpiredTasks(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		files.InitTestFileFixtures(t)
 
-		deleteExpiredTasks(deletedAt.Add(taskDeleteRetention + 24*time.Hour))
+		deleteExpiredTasks(deletedAt.Add(TaskDeleteRetention + 24*time.Hour))
 
 		db.AssertMissing(t, "tasks", map[string]interface{}{"id": 51})
 		db.AssertMissing(t, "task_reminders", map[string]interface{}{"task_id": 51})
@@ -43,7 +43,7 @@ func TestDeleteExpiredTasks(t *testing.T) {
 	t.Run("newer than the retention period", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
-		deleteExpiredTasks(deletedAt.Add(taskDeleteRetention - 24*time.Hour))
+		deleteExpiredTasks(deletedAt.Add(TaskDeleteRetention - 24*time.Hour))
 
 		db.AssertExists(t, "tasks", map[string]interface{}{"id": 51}, false)
 		db.AssertExists(t, "task_reminders", map[string]interface{}{"task_id": 51}, false)
