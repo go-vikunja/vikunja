@@ -23,6 +23,7 @@ export interface ITask extends IAbstract {
 	description: string
 	done: boolean
 	doneAt: Date | null
+	deletedAt: Date | null
 	priority: Priority
 	labels: ILabel[]
 	assignees: IUser[]

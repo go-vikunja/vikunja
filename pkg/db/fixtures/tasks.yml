@@ -447,3 +447,14 @@
   index: 1
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
+# Soft-deleted task: must never surface anywhere except through Unscoped queries
+- id: 51
+  title: 'task #51 soft deleted'
+  done: false
+  due_date: 2018-11-30 00:00:00
+  created_by_id: 1
+  project_id: 1
+  index: 34
+  deleted_at: 2018-12-01 01:12:04
+  created: 2018-12-01 01:12:04
+  updated: 2018-12-01 01:12:04

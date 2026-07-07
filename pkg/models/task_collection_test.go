@@ -1797,6 +1797,11 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				t.Errorf("Test %s, Task.ReadAll() error = %v, wantErr %v", tt.name, err, tt.wantErr)
 				return
 			}
+			if gotTasks, is := got.([]*Task); is {
+				for _, task := range gotTasks {
+					assert.NotEqual(t, int64(51), task.ID, "the soft-deleted task 51 must never appear in any result")
+				}
+			}
 			if diff, equal := messagediff.PrettyDiff(tt.want, got); !equal {
 				var is bool
 				var gotTasks []*Task
@@ -2156,4 +2161,80 @@ func TestTaskCollection_ExpandSubtasksFilterMatchesParentOnly(t *testing.T) {
 	assert.Equal(t, 1, ids[parent.ID], "parent present exactly once")
 	assert.Equal(t, 1, ids[sub.ID], "subtask rides along exactly once, no duplication")
 	assert.Len(t, tasks, 2)
+}
+
+// TestTaskCollection_ExpandSubtasksSoftDeleted covers the two soft-delete gaps
+// the xorm deleted tag can't reach in the subtask expansion: the raw recursive
+// CTE fetching subtasks, and the "tasks parent_tasks" self-join alias in the
+// root condition.
+func TestTaskCollection_ExpandSubtasksSoftDeleted(t *testing.T) {
+	u := &user.User{ID: 1}
+
+	setup := func(t *testing.T, title string) (project *Project, parent, sub *Task) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		project = &Project{Title: title, OwnerID: u.ID}
+		_, err := s.Insert(project)
+		require.NoError(t, err)
+
+		parent = &Task{Title: "parent", ProjectID: project.ID, CreatedByID: u.ID, Index: 1}
+		_, err = s.Insert(parent)
+		require.NoError(t, err)
+
+		sub = &Task{Title: "sub", ProjectID: project.ID, CreatedByID: u.ID, Index: 2}
+		_, err = s.Insert(sub)
+		require.NoError(t, err)
+
+		rel := &TaskRelation{TaskID: parent.ID, OtherTaskID: sub.ID, RelationKind: RelationKindSubtask}
+		require.NoError(t, rel.Create(s, u))
+		require.NoError(t, s.Commit())
+		return
+	}
+
+	expand := []TaskCollectionExpandable{TaskCollectionExpandSubtasks}
+
+	t.Run("soft-deleted subtask is omitted", func(t *testing.T) {
+		project, parent, sub := setup(t, "deleted-subtask")
+
+		s := db.NewSession()
+		defer s.Close()
+
+		// Soft delete the subtask; its relation rows are kept, so only the
+		// deleted_at filter in the CTE keeps it out of the expansion
+		_, err := s.ID(sub.ID).Delete(&Task{})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		s2 := db.NewSession()
+		defer s2.Close()
+
+		tasks, _, _, err := getRawTasksForProjects(s2, []*Project{project}, u, &taskSearchOptions{expand: expand})
+		require.NoError(t, err)
+
+		require.Len(t, tasks, 1, "the soft-deleted subtask must not ride along")
+		assert.Equal(t, parent.ID, tasks[0].ID)
+	})
+
+	t.Run("children of a soft-deleted parent become roots", func(t *testing.T) {
+		project, parent, sub := setup(t, "deleted-parent")
+
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.ID(parent.ID).Delete(&Task{})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		s2 := db.NewSession()
+		defer s2.Close()
+
+		tasks, _, total, err := getRawTasksForProjects(s2, []*Project{project}, u, &taskSearchOptions{expand: expand})
+		require.NoError(t, err)
+
+		assert.Equal(t, int64(1), total, "the orphaned subtask is the only root")
+		require.Len(t, tasks, 1)
+		assert.Equal(t, sub.ID, tasks[0].ID)
+	})
 }

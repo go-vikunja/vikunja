@@ -438,8 +438,11 @@ func TestProject_Delete(t *testing.T) {
 		db.AssertMissing(t, "projects", map[string]interface{}{
 			"id": 1,
 		})
+		// AssertMissing queries raw, so this covers the already-soft-deleted
+		// task 51 too: no task row of the project may survive, not even as
+		// a soft-deleted orphan.
 		db.AssertMissing(t, "tasks", map[string]interface{}{
-			"id": 1,
+			"project_id": 1,
 		})
 	})
 	t.Run("with background", func(t *testing.T) {

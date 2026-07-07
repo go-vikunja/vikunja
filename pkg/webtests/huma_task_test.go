@@ -17,16 +17,19 @@
 package webtests
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"xorm.io/builder"
 )
 
 // TestHumaTask mirrors v1's TestTask so v2 contract parity is readable
@@ -110,6 +113,23 @@ func TestHumaTask(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusNoContent, rec.Code)
 			assert.Empty(t, rec.Body.String())
+
+			// The task is soft-deleted: gone through the API, still in the db
+			_, err = testHandler.testReadOneWithUser(nil, map[string]string{"projecttask": "2"})
+			require.Error(t, err)
+			assert.Equal(t, http.StatusNotFound, getHTTPErrorCode(err))
+
+			collection := humaRequest(t, testHandler.e, http.MethodGet, "/api/v2/projects/1/tasks", "", humaTokenFor(t, &testuser1), "")
+			require.Equal(t, http.StatusOK, collection.Code)
+			for _, raw := range decodePaginatedTaskItems(t, collection) {
+				var item struct {
+					ID int64 `json:"id"`
+				}
+				require.NoError(t, json.Unmarshal(raw, &item))
+				assert.NotEqual(t, int64(2), item.ID, "the soft-deleted task must not appear in the project collection")
+			}
+
+			db.AssertCount(t, "tasks", builder.And(builder.Eq{"id": 2}, builder.NotNull{"deleted_at"}), 1)
 		})
 		t.Run("Nonexisting", func(t *testing.T) {
 			_, err := testHandler.testDeleteWithUser(nil, map[string]string{"projecttask": "99999"})

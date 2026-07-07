@@ -26,6 +26,7 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
@@ -126,6 +127,9 @@ type Task struct {
 	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"When this task was created. Set by the server; ignored on write."`
 	// A timestamp when this task was last updated. You cannot change this value.
 	Updated time.Time `xorm:"updated not null" json:"updated" readOnly:"true" doc:"When this task was last updated. Set by the server; ignored on write."`
+	// A timestamp when this task was deleted. Soft-deleted tasks are kept for 30 days before they are removed permanently.
+	// omitzero keeps the field out of the JSON of regular tasks — it only ever appears on soft-deleted ones (the later trash listing).
+	DeletedAt time.Time `xorm:"deleted datetime null INDEX 'deleted_at'" json:"deleted_at,omitzero" readOnly:"true" doc:"When this task was soft-deleted. Soft-deleted tasks are kept for 30 days before they are removed permanently."`
 
 	// The bucket id. Will only be populated when the task is accessed via a view with buckets.
 	// Can be used to move a task between buckets. In that case, the new bucket must be in the same view as the old one.
@@ -171,6 +175,15 @@ type TaskWithComments struct {
 // TableName returns the table name for tasks
 func (*Task) TableName() string {
 	return "tasks"
+}
+
+// taskNotDeletedCond filters out soft-deleted tasks in queries the xorm deleted
+// tag does not cover: raw SQL, Table("tasks") with non-Task destinations,
+// builder subqueries against the "tasks" string and joins from other beans.
+// A plain IS NULL check is enough because deleted_at is only ever set when a
+// task is soft-deleted; restoring must set it back to NULL.
+func taskNotDeletedCond(tableName string) builder.Cond {
+	return builder.IsNull{tableName + ".deleted_at"}
 }
 
 // GetFullIdentifier returns the task identifier if the task has one and the index prefixed with # otherwise.
@@ -852,7 +865,9 @@ func calculateDefaultPosition(entityID int64, position float64) float64 {
 
 func calculateNextTaskIndex(s *xorm.Session, projectID int64) (nextIndex int64, err error) {
 	latestTask := &Task{}
+	// Unscoped so an index is never reused while a soft-deleted task still holds it
 	_, err = s.
+		Unscoped().
 		Where("project_id = ?", projectID).
 		OrderBy("`index` desc").
 		Get(latestTask)
@@ -870,8 +885,8 @@ func setNewTaskIndex(s *xorm.Session, t *Task) (err error) {
 		return
 	}
 
-	// Check if the provided index is already taken
-	exists, err := s.Where("project_id = ? AND `index` = ?", t.ProjectID, t.Index).Exist(&Task{})
+	// Check if the provided index is already taken, including by soft-deleted tasks
+	exists, err := s.Unscoped().Where("project_id = ? AND `index` = ?", t.ProjectID, t.Index).Exist(&Task{})
 	if err != nil {
 		return err
 	}
@@ -1884,13 +1899,51 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
+	// Positions and bucket relations are removed right away because bucket counts
+	// and limits count task_buckets rows without joining tasks, so keeping them
+	// would leak soft-deleted tasks into kanban views. The saved-filter and
+	// position heal routines re-create both on restore. Everything else
+	// (comments, attachments, labels, relations, ...) is kept so the task can be
+	// restored until the cleanup cron removes it permanently.
+	_, err = s.Where("task_id = ?", t.ID).Delete(&TaskPosition{})
+	if err != nil {
+		return
+	}
+
+	_, err = s.Where("task_id = ?", t.ID).Delete(&TaskBucket{})
+	if err != nil {
+		return
+	}
+
+	// The deleted tag on Task.DeletedAt turns this into an update setting
+	// deleted_at. Must be a pointer: xorm tracks the after-delete closure that
+	// stamps DeletedAt in a map keyed by the bean, and a Task value is unhashable.
+	_, err = s.ID(t.ID).Delete(&Task{})
+	if err != nil {
+		return err
+	}
+
+	events.DispatchOnCommit(s, &TaskDeletedEvent{
+		Task: fullTask,
+		Doer: doerFromAuth(s, a),
+	})
+
+	err = updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
+	return
+}
+
+// hardDeleteTask permanently removes a task and all its related entities.
+// It does not dispatch a TaskDeletedEvent — that already happened when the
+// task was soft-deleted by the user.
+func hardDeleteTask(s *xorm.Session, t *Task) (err error) {
+
 	// Delete assignees
 	if _, err = s.Where("task_id = ?", t.ID).Delete(&TaskAssginee{}); err != nil {
 		return err
 	}
 
-	// Delete Favorites
-	err = removeFromFavorite(s, t.ID, a, FavoriteKindTask)
+	// Delete favorites of all users, not just the doer's like on soft delete
+	_, err = s.Where("entity_id = ? AND kind = ?", t.ID, FavoriteKindTask).Delete(&Favorite{})
 	if err != nil {
 		return
 	}
@@ -1901,17 +1954,43 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return
 	}
 
-	// Delete task attachments
+	// Delete task attachments and their files. Not attachment.Delete because that
+	// resolves the now soft-deleted task and dispatches per-attachment events.
 	attachments, err := getTaskAttachmentsByTaskIDs(s, []int64{t.ID})
 	if err != nil {
 		return err
 	}
 	for _, attachment := range attachments {
-		// Using the attachment delete method here because that takes care of removing all files properly
-		err = attachment.Delete(s, a)
-		if err != nil && !IsErrTaskAttachmentDoesNotExist(err) {
+		if attachment.File == nil {
+			continue
+		}
+		err = attachment.File.Delete(s)
+		if err != nil && !files.IsErrFileDoesNotExist(err) {
 			return err
 		}
+	}
+
+	_, err = s.Where("task_id = ?", t.ID).Delete(&TaskAttachment{})
+	if err != nil {
+		return err
+	}
+
+	// Delete reactions on the task and on its comments
+	commentIDs := []int64{}
+	err = s.Table("task_comments").Where("task_id = ?", t.ID).Cols("id").Find(&commentIDs)
+	if err != nil {
+		return err
+	}
+	if len(commentIDs) > 0 {
+		_, err = s.In("entity_id", commentIDs).And("entity_kind = ?", ReactionKindComment).Delete(&Reaction{})
+		if err != nil {
+			return err
+		}
+	}
+
+	_, err = s.Where("entity_id = ? AND entity_kind = ?", t.ID, ReactionKindTask).Delete(&Reaction{})
+	if err != nil {
+		return err
 	}
 
 	// Delete all comments
@@ -1938,30 +2017,25 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return
 	}
 
-	// Delete all positions
+	// Delete subscriptions
+	_, err = s.Where("entity_id = ? AND entity_type = ?", t.ID, SubscriptionEntityTask).Delete(&Subscription{})
+	if err != nil {
+		return
+	}
+
+	// Positions and buckets are already gone after a soft delete, but tasks
+	// hard-deleted directly (project deletion) still have them
 	_, err = s.Where("task_id = ?", t.ID).Delete(&TaskPosition{})
 	if err != nil {
 		return
 	}
 
-	// Delete all bucket relations
 	_, err = s.Where("task_id = ?", t.ID).Delete(&TaskBucket{})
 	if err != nil {
 		return
 	}
 
-	// Actually delete the task
-	_, err = s.ID(t.ID).Delete(Task{})
-	if err != nil {
-		return err
-	}
-
-	events.DispatchOnCommit(s, &TaskDeletedEvent{
-		Task: fullTask,
-		Doer: doerFromAuth(s, a),
-	})
-
-	err = updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
+	_, err = s.ID(t.ID).Unscoped().Delete(&Task{})
 	return
 }
 

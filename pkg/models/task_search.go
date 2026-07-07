@@ -411,9 +411,11 @@ func (d *dbTaskSearcher) buildSubtaskRootCondition(opts *taskSearchOptions) (bui
 		}
 	}
 
+	// A soft-deleted parent no longer counts, so its children become roots
 	parentIsRoot := builder.And(
 		builder.NotNull{"task_relations.id"},
 		builder.NotNull{"parent_tasks.id"},
+		taskNotDeletedCond("parent_tasks"),
 		parentInScope,
 		parentMatchesFilter,
 	)
@@ -512,6 +514,7 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 					builder.Eq{"favorites.user_id": d.a.GetID()},
 					builder.Eq{"favorites.kind": FavoriteKindTask},
 					builder.NotIn("tasks.project_id", opts.projectIDs),
+					taskNotDeletedCond("tasks"),
 				)).
 				Exist()
 			if err != nil {
@@ -654,7 +657,7 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		sub_tasks st ON tr.task_id = st.other_task_id
 		WHERE tr.relation_kind = '`+string(RelationKindSubtask)+`')
 		SELECT other_task_id
-		FROM sub_tasks) AND id NOT IN (`+notIn+`)`, allArgs...).Find(&subtasks)
+		FROM sub_tasks) AND id NOT IN (`+notIn+`) AND deleted_at IS NULL`, allArgs...).Find(&subtasks)
 		if err != nil {
 			return nil, totalCount, err
 		}

@@ -318,7 +318,7 @@ WITH RECURSIVE project_hierarchy AS (
         t.id AS task_id
     FROM tasks t
              JOIN projects p ON t.project_id = p.id
-    WHERE t.id IN (`+entityIDString+`)
+    WHERE t.id IN (`+entityIDString+`) AND t.deleted_at IS NULL
 
     UNION ALL
 
@@ -344,7 +344,7 @@ subscription_hierarchy AS (
         t.id AS task_id
     FROM subscriptions s
              JOIN tasks t ON s.entity_id = t.id
-    WHERE s.entity_type = ? AND t.id IN (`+entityIDString+`)`+sUserCond+`
+    WHERE s.entity_type = ? AND t.id IN (`+entityIDString+`) AND t.deleted_at IS NULL`+sUserCond+`
 
     UNION ALL
 
@@ -383,7 +383,7 @@ FROM tasks t
     FROM subscription_hierarchy
 ) sh ON t.id = sh.task_id AND sh.rn = 1
     LEFT JOIN users ON sh.user_id = users.id
-WHERE t.id IN (`+entityIDString+`)
+WHERE t.id IN (`+entityIDString+`) AND t.deleted_at IS NULL
 ORDER BY t.id, sh.user_id`,
 			SubscriptionEntityTask, SubscriptionEntityProject, SubscriptionEntityTask, SubscriptionEntityProject).
 			Find(&rawSubscriptions)

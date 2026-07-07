@@ -63,6 +63,7 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 	description = ''
 	done = false
 	doneAt: Date | null = null
+	deletedAt: Date | null = null
 	priority: Priority = PRIORITIES.UNSET
 	labels: ILabel[] = []
 	assignees: IUser[] = []
@@ -105,6 +106,7 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 		this.id = Number(this.id)
 		this.title = this.title?.trim()
 		this.doneAt = parseDateOrNull(this.doneAt)
+		this.deletedAt = parseDateOrNull(this.deletedAt)
 
 		this.labels = this.labels
 			.map(l => new LabelModel(l))
