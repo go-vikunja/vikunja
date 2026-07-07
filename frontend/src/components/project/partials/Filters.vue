@@ -48,7 +48,7 @@
 			<XButton
 				variant="secondary"
 				class="mie-2"
-				:disabled="filterQuery === ''"
+				:disabled="!hasActiveFilters"
 				@click.prevent.stop="clearFiltersAndEmit"
 			>
 				{{ $t('filters.clear') }}
@@ -129,6 +129,10 @@ watch(
 		filterQuery.value = filter || s
 	},
 )
+
+const hasActiveFilters = computed(() => {
+	return filterQuery.value !== '' || params.value.filter_include_nulls || props.includeSubprojects
+})
 
 const {getLabelByExactTitle} = useLabels()
 const projectStore = useProjectStore()
