@@ -177,11 +177,10 @@ func (*Task) TableName() string {
 	return "tasks"
 }
 
-// taskNotDeletedCond filters out soft-deleted tasks in queries the xorm deleted
-// tag does not cover: raw SQL, Table("tasks") with non-Task destinations,
-// builder subqueries against the "tasks" string and joins from other beans.
-// A plain IS NULL check is enough because deleted_at is only ever set when a
-// task is soft-deleted; restoring must set it back to NULL.
+// taskNotDeletedCond filters out soft-deleted tasks where the xorm deleted tag
+// does not apply: raw SQL, Table("tasks") with non-Task destinations, builder
+// subqueries and joins from other beans. IS NULL is enough because deleted_at
+// is only ever set on soft delete; restore must set it back to NULL.
 func taskNotDeletedCond(tableName string) builder.Cond {
 	return builder.IsNull{tableName + ".deleted_at"}
 }
@@ -1899,12 +1898,10 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
-	// Positions and bucket relations are removed right away because bucket counts
-	// and limits count task_buckets rows without joining tasks, so keeping them
-	// would leak soft-deleted tasks into kanban views. The saved-filter and
-	// position heal routines re-create both on restore. Everything else
-	// (comments, attachments, labels, relations, ...) is kept so the task can be
-	// restored until the cleanup cron removes it permanently.
+	// Bucket and position rows are removed right away because bucket counts
+	// don't join the tasks table and would leak soft-deleted tasks; the heal
+	// routines re-create them on restore. All other related data is kept until
+	// the cleanup cron permanently deletes the task.
 	_, err = s.Where("task_id = ?", t.ID).Delete(&TaskPosition{})
 	if err != nil {
 		return
@@ -1943,7 +1940,7 @@ func hardDeleteTask(s *xorm.Session, t *Task) (err error) {
 		return err
 	}
 
-	// Delete favorites of all users, not just the doer's like on soft delete
+	// Favorites of all users, not just the doer's
 	_, err = s.Where("entity_id = ? AND kind = ?", t.ID, FavoriteKindTask).Delete(&Favorite{})
 	if err != nil {
 		return
@@ -1955,8 +1952,8 @@ func hardDeleteTask(s *xorm.Session, t *Task) (err error) {
 		return
 	}
 
-	// Delete task attachments and their files. Not attachment.Delete because that
-	// resolves the now soft-deleted task and dispatches per-attachment events.
+	// Not attachment.Delete: it resolves the (now soft-deleted) task and
+	// dispatches per-attachment events.
 	attachments, err := getTaskAttachmentsByTaskIDs(s, []int64{t.ID})
 	if err != nil {
 		return err
@@ -1976,7 +1973,6 @@ func hardDeleteTask(s *xorm.Session, t *Task) (err error) {
 		return err
 	}
 
-	// Delete reactions on the task and on its comments
 	commentIDs := []int64{}
 	err = s.Table("task_comments").Where("task_id = ?", t.ID).Cols("id").Find(&commentIDs)
 	if err != nil {
@@ -2018,14 +2014,12 @@ func hardDeleteTask(s *xorm.Session, t *Task) (err error) {
 		return
 	}
 
-	// Delete subscriptions
 	_, err = s.Where("entity_id = ? AND entity_type = ?", t.ID, SubscriptionEntityTask).Delete(&Subscription{})
 	if err != nil {
 		return
 	}
 
-	// Positions and buckets are already gone after a soft delete, but tasks
-	// hard-deleted directly (project deletion) still have them
+	// Already gone after a soft delete, but project deletion hard-deletes directly
 	_, err = s.Where("task_id = ?", t.ID).Delete(&TaskPosition{})
 	if err != nil {
 		return

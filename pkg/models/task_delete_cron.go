@@ -26,9 +26,8 @@ import (
 	"xorm.io/builder"
 )
 
-// taskDeleteRetention is how long soft-deleted tasks are kept before they are
-// removed permanently. Hard-coded like the user deletion grace period; can
-// become a config option once someone needs it.
+// taskDeleteRetention is how long soft-deleted tasks are kept before permanent
+// removal. Hard-coded like the user deletion grace period.
 const taskDeleteRetention = 30 * 24 * time.Hour
 
 // RegisterTaskCleanupCron registers the cron job that permanently removes

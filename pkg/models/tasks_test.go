@@ -54,8 +54,7 @@ func TestTask_Create(t *testing.T) {
 		require.NoError(t, err)
 		// Assert getting a uid
 		assert.NotEmpty(t, task.UID)
-		// Assert getting a new index. The soft-deleted task 51 holds index 34,
-		// which must not be reused while it can still be restored.
+		// The soft-deleted task 51 holds index 34, which must not be reused
 		assert.NotEmpty(t, task.Index)
 		assert.Equal(t, int64(35), task.Index)
 		err = s.Commit()
@@ -672,7 +671,6 @@ func TestTask_Delete(t *testing.T) {
 		require.True(t, has)
 		assert.False(t, deletedTask.DeletedAt.IsZero())
 
-		// Invisible through normal reads
 		readTask := &Task{ID: 1}
 		err = readTask.ReadOne(s2, &user.User{ID: 1})
 		require.Error(t, err)

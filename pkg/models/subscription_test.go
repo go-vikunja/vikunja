@@ -347,8 +347,7 @@ func TestSubscriptionGet(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		// Task 51 is soft-deleted and has a direct subscription (id 11) for user 1;
-		// the raw CTE must not resolve it
+		// Task 51 is soft-deleted; the raw CTE must not resolve its subscription (id 11)
 		sub, err := GetSubscriptionForUser(s, SubscriptionEntityTask, 51, &user.User{ID: 1})
 		require.NoError(t, err)
 		assert.Nil(t, sub)

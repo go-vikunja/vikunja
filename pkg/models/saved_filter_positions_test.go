@@ -102,10 +102,8 @@ func TestCronInsertsNonZeroPosition(t *testing.T) {
 	assert.NotZero(t, tp.Position)
 }
 
-// The heal query fetching tasks without a bucket must not resurrect
-// soft-deleted tasks into filter buckets: task 51 matches "done = false" but
-// is soft-deleted. The existing heal tests are existence-only and would pass a
-// resurrection silently.
+// Task 51 matches "done = false" but is soft-deleted — the bucket heal must not
+// resurrect it. The existing heal tests are existence-only and would pass that.
 func TestSavedFilterHealDoesNotResurrectSoftDeletedTasks(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()

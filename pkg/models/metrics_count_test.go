@@ -52,7 +52,6 @@ func TestMetricsCountFromDatabase(t *testing.T) {
 
 			query := s.Table(table)
 			if key == metrics.TaskCountKey {
-				// The task count must exclude soft-deleted tasks
 				query = query.Where("deleted_at IS NULL")
 			}
 			expected, err := query.Count()
