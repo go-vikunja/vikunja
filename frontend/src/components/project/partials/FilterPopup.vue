@@ -72,7 +72,8 @@ watch(
 
 const hasFilters = computed(() => {
 	return value.value.filter !== '' ||
-		value.value.s !== ''
+		value.value.s !== '' ||
+		includeSubprojects.value
 })
 
 const modalOpen = ref(false)
