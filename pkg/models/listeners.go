@@ -869,6 +869,20 @@ func (s *HandleTaskUpdateLastUpdated) Handle(msg *message.Message) (err error) {
 		return err
 	}
 
+	// Also bump the project so the CalDAV ctag advances on changes to
+	// task sub-entities (relations, comments, attachments, assignees).
+	fullTask, err := GetTaskByIDSimple(sess, taskIDInt)
+	if err != nil {
+		if IsErrTaskDoesNotExist(err) {
+			return sess.Commit()
+		}
+		return err
+	}
+	err = updateProjectLastUpdated(sess, &Project{ID: fullTask.ProjectID})
+	if err != nil {
+		return err
+	}
+
 	return sess.Commit()
 }
 
