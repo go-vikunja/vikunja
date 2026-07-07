@@ -45,12 +45,9 @@ func RegisterTaskCleanupCron() {
 func deleteExpiredTasks(now time.Time) {
 	s := db.NewSession()
 	tasks := []*Task{}
-	// The inverse of xorm's not-deleted condition on a nullable column: a real
-	// (non-zero, non-null) deleted_at older than the retention period.
 	err := s.Unscoped().
 		Where(builder.And(
 			builder.NotNull{"deleted_at"},
-			builder.Neq{"deleted_at": time.Time{}},
 			builder.Lt{"deleted_at": now.Add(-taskDeleteRetention)},
 		)).
 		Find(&tasks)
