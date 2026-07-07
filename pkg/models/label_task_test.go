@@ -358,3 +358,47 @@ func TestLabelTask_Delete(t *testing.T) {
 		})
 	}
 }
+
+// Label changes must advance both the task's and the project's updated
+// timestamps so CalDAV delta syncs and ctags pick up CATEGORIES changes.
+func TestLabelTaskUpdatedTimestamps(t *testing.T) {
+	readTimes := func(t *testing.T) (task Task, project *Project) {
+		s := db.NewSession()
+		defer s.Close()
+		task, err := GetTaskByIDSimple(s, 1)
+		require.NoError(t, err)
+		project, err = GetProjectSimpleByID(s, 1)
+		require.NoError(t, err)
+		return
+	}
+
+	t.Run("create", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		taskBefore, projectBefore := readTimes(t)
+
+		s := db.NewSession()
+		defer s.Close()
+		lt := &LabelTask{TaskID: 1, LabelID: 1}
+		require.NoError(t, lt.Create(s, &user.User{ID: 1}))
+		require.NoError(t, s.Commit())
+
+		taskAfter, projectAfter := readTimes(t)
+		require.True(t, taskAfter.Updated.After(taskBefore.Updated), "task updated time must advance")
+		require.True(t, projectAfter.Updated.After(projectBefore.Updated), "project updated time must advance")
+	})
+
+	t.Run("delete", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		taskBefore, projectBefore := readTimes(t)
+
+		s := db.NewSession()
+		defer s.Close()
+		lt := &LabelTask{TaskID: 1, LabelID: 4}
+		require.NoError(t, lt.Delete(s, &user.User{ID: 1}))
+		require.NoError(t, s.Commit())
+
+		taskAfter, projectAfter := readTimes(t)
+		require.True(t, taskAfter.Updated.After(taskBefore.Updated), "task updated time must advance")
+		require.True(t, projectAfter.Updated.After(projectBefore.Updated), "project updated time must advance")
+	})
+}
