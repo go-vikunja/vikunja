@@ -690,6 +690,14 @@ func TestTask_Delete(t *testing.T) {
 		db.AssertExists(t, "task_relations", map[string]interface{}{"task_id": 1}, false)
 		db.AssertExists(t, "favorites", map[string]interface{}{"entity_id": 1, "kind": FavoriteKindTask}, false)
 		db.AssertExists(t, "reactions", map[string]interface{}{"entity_id": 1, "entity_kind": ReactionKindTask}, false)
+
+		// The project's updated timestamp is bumped — regression for the delete
+		// receiver only carrying the task id, not the project id
+		project := &Project{}
+		has, err = s2.Where("id = ?", 1).Get(project)
+		require.NoError(t, err)
+		require.True(t, has)
+		assert.True(t, project.Updated.After(deletedTask.Created))
 	})
 }
 

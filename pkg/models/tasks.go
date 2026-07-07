@@ -1928,7 +1928,8 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 		Doer: doerFromAuth(s, a),
 	})
 
-	err = updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
+	// fullTask, not t: the receiver only has the id from the route param
+	err = updateProjectLastUpdated(s, &Project{ID: fullTask.ProjectID})
 	return
 }
 
