@@ -102,6 +102,27 @@ func TestCronInsertsNonZeroPosition(t *testing.T) {
 	assert.NotZero(t, tp.Position)
 }
 
+// Task 51 matches "done = false" but is soft-deleted — the bucket heal must not
+// resurrect it. The existing heal tests are existence-only and would pass that.
+func TestSavedFilterHealDoesNotResurrectSoftDeletedTasks(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	sf := &SavedFilter{
+		Title:   "no-resurrect",
+		Filters: &TaskCollection{Filter: "done = false"},
+	}
+
+	u := &user.User{ID: 1}
+	require.NoError(t, sf.Create(s, u))
+	require.NoError(t, sf.Update(s, u))
+	require.NoError(t, s.Commit())
+
+	db.AssertMissing(t, "task_buckets", map[string]interface{}{"task_id": 51})
+	db.AssertMissing(t, "task_positions", map[string]interface{}{"task_id": 51})
+}
+
 func TestCronCreatesNonZeroPositions(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()

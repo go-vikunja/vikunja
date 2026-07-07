@@ -23,6 +23,7 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/assert"
@@ -53,9 +54,9 @@ func TestTask_Create(t *testing.T) {
 		require.NoError(t, err)
 		// Assert getting a uid
 		assert.NotEmpty(t, task.UID)
-		// Assert getting a new index
+		// The soft-deleted task 51 holds index 34, which must not be reused
 		assert.NotEmpty(t, task.Index)
-		assert.Equal(t, int64(34), task.Index)
+		assert.Equal(t, int64(35), task.Index)
 		err = s.Commit()
 		require.NoError(t, err)
 
@@ -657,10 +658,92 @@ func TestTask_Delete(t *testing.T) {
 		err = s.Commit()
 		require.NoError(t, err)
 
-		db.AssertMissing(t, "tasks", map[string]interface{}{
-			"id": 1,
-		})
+		events.DispatchPending(context.Background(), s)
+		events.AssertDispatched(t, &TaskDeletedEvent{})
+
+		s2 := db.NewSession()
+		defer s2.Close()
+
+		// The row is still there, only marked as deleted
+		deletedTask := &Task{}
+		has, err := s2.Unscoped().Where("id = ?", 1).Get(deletedTask)
+		require.NoError(t, err)
+		require.True(t, has)
+		assert.False(t, deletedTask.DeletedAt.IsZero())
+
+		readTask := &Task{ID: 1}
+		err = readTask.ReadOne(s2, &user.User{ID: 1})
+		require.Error(t, err)
+		assert.True(t, IsErrTaskDoesNotExist(err))
+
+		// Position and bucket rows are removed right away because bucket counts
+		// don't join the tasks table
+		db.AssertMissing(t, "task_positions", map[string]interface{}{"task_id": 1})
+		db.AssertMissing(t, "task_buckets", map[string]interface{}{"task_id": 1})
+
+		// Everything else is kept for a possible restore
+		db.AssertExists(t, "task_comments", map[string]interface{}{"task_id": 1}, false)
+		db.AssertExists(t, "task_attachments", map[string]interface{}{"task_id": 1}, false)
+		db.AssertExists(t, "label_tasks", map[string]interface{}{"task_id": 1}, false)
+		db.AssertExists(t, "task_relations", map[string]interface{}{"task_id": 1}, false)
+		db.AssertExists(t, "favorites", map[string]interface{}{"entity_id": 1, "kind": FavoriteKindTask}, false)
+		db.AssertExists(t, "reactions", map[string]interface{}{"entity_id": 1, "entity_kind": ReactionKindTask}, false)
+
+		// The project's updated timestamp is bumped — regression for the delete
+		// receiver only carrying the task id, not the project id
+		project := &Project{}
+		has, err = s2.Where("id = ?", 1).Get(project)
+		require.NoError(t, err)
+		require.True(t, has)
+		assert.True(t, project.Updated.After(deletedTask.Created))
 	})
+}
+
+func TestHardDeleteTask(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	files.InitTestFileFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	// Add the child rows task 1 doesn't have in the fixtures so the sweep covers
+	// every related table
+	_, err := s.Insert(&TaskAssginee{TaskID: 1, UserID: 2})
+	require.NoError(t, err)
+	_, err = s.Insert(&TaskReminder{TaskID: 1, Reminder: time.Now()})
+	require.NoError(t, err)
+	_, err = s.Insert(&TaskUnreadStatus{TaskID: 1, UserID: 2})
+	require.NoError(t, err)
+	_, err = s.Insert(&Subscription{EntityType: SubscriptionEntityTask, EntityID: 1, UserID: 2})
+	require.NoError(t, err)
+	// Comment 1 belongs to task 1
+	_, err = s.Insert(&Reaction{EntityID: 1, EntityKind: ReactionKindComment, UserID: 1, Value: "👍"})
+	require.NoError(t, err)
+
+	err = hardDeleteTask(s, &Task{ID: 1})
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+
+	db.AssertMissing(t, "tasks", map[string]interface{}{"id": 1})
+	for _, table := range []string{
+		"task_assignees",
+		"task_comments",
+		"task_attachments",
+		"label_tasks",
+		"task_relations",
+		"task_reminders",
+		"task_positions",
+		"task_buckets",
+		"task_unread_statuses",
+	} {
+		db.AssertMissing(t, table, map[string]interface{}{"task_id": 1})
+	}
+	db.AssertMissing(t, "task_relations", map[string]interface{}{"other_task_id": 1})
+	db.AssertMissing(t, "favorites", map[string]interface{}{"entity_id": 1, "kind": FavoriteKindTask})
+	db.AssertMissing(t, "subscriptions", map[string]interface{}{"entity_id": 1, "entity_type": SubscriptionEntityTask})
+	db.AssertMissing(t, "reactions", map[string]interface{}{"entity_id": 1, "entity_kind": ReactionKindTask})
+	db.AssertMissing(t, "reactions", map[string]interface{}{"entity_id": 1, "entity_kind": ReactionKindComment})
+	// The attachment files are gone too
+	db.AssertMissing(t, "files", map[string]interface{}{"id": 1})
 }
 
 func TestUpdateTasksHelper(t *testing.T) {

@@ -50,7 +50,11 @@ func TestMetricsCountFromDatabase(t *testing.T) {
 			// Drop any value cached by a previous test so we recompute from the DB.
 			require.NoError(t, metrics.InvalidateCount(key))
 
-			expected, err := s.Table(table).Count()
+			query := s.Table(table)
+			if key == metrics.TaskCountKey {
+				query = query.Where("deleted_at IS NULL")
+			}
+			expected, err := query.Count()
 			require.NoError(t, err)
 
 			count, err := metrics.GetCount(key)

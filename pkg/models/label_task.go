@@ -208,7 +208,7 @@ func GetLabelsByTaskIDs(s *xorm.Session, opts *LabelByTaskIDsOptions) (ls []*Lab
 			builder.
 				Select("id").
 				From("tasks").
-				Where(builder.In("project_id", projectIDs)),
+				Where(builder.And(builder.In("project_id", projectIDs), taskNotDeletedCond("tasks"))),
 		), cond)
 	}
 	if opts.GetUnusedLabels && !isLinkShareAuth {
