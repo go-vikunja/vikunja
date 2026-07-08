@@ -19,7 +19,7 @@ module code.vikunja.io/api
 go 1.26.4
 
 require (
-	code.dny.dev/ssrf v0.2.0
+	code.dny.dev/ssrf v0.3.0
 	dario.cat/mergo v1.0.2
 	github.com/JohannesKaufmann/dom v0.3.1
 	github.com/JohannesKaufmann/html-to-markdown/v2 v2.5.2
