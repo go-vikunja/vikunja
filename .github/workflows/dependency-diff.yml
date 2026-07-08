@@ -37,7 +37,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Check provenance downgrades
-        uses: danielroe/provenance-action@83ae780eb3618c9f6ec2e695da147c7eda2d62d9 # main
+        uses: danielroe/provenance-action@da28a90849811b7aff7a07b3ac7a7d761c8aa35d # main
         with:
           workspace-path: ${{ matrix.directory }}
           fail-on-provenance-change: true
