@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/health"
@@ -49,9 +50,15 @@ func TestHealthcheckV2OpenIDProviders(t *testing.T) {
 	e, err := setupTestEnv()
 	require.NoError(t, err)
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+	var server *httptest.Server
+	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{}`))
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
+			"issuer":                 server.URL,
+			"authorization_endpoint": server.URL + "/auth",
+			"token_endpoint":         server.URL + "/token",
+			"jwks_uri":               server.URL + "/jwks",
+		})
 	}))
 	defer server.Close()
 
@@ -77,24 +84,32 @@ func TestHealthcheckV2OpenIDProviders(t *testing.T) {
 		openid.CleanupSavedOpenIDProviders()
 	}()
 
-	rec := humaRequest(t, e, http.MethodGet, "/api/v2/health", "", "", "")
-	require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
-
 	var body struct {
 		Status          string `json:"status"`
 		OpenIDProviders []struct {
-			Key       string `json:"key"`
-			Name      string `json:"name"`
-			Reachable bool   `json:"reachable"`
+			Key        string `json:"key"`
+			Name       string `json:"name"`
+			Registered bool   `json:"registered"`
+			Reachable  bool   `json:"reachable"`
 		} `json:"openid_providers"`
 	}
-	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &body))
+
+	// Provider results are probed in the background, so the first request only
+	// kicks off the refresh and omits them; poll until they show up.
+	require.Eventually(t, func() bool {
+		rec := humaRequest(t, e, http.MethodGet, "/api/v2/health", "", "", "")
+		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &body))
+		return len(body.OpenIDProviders) > 0
+	}, 30*time.Second, 100*time.Millisecond)
 
 	assert.Equal(t, "degraded", body.Status)
 	require.Len(t, body.OpenIDProviders, 2)
 	assert.Equal(t, "down", body.OpenIDProviders[0].Key)
+	assert.False(t, body.OpenIDProviders[0].Registered)
 	assert.False(t, body.OpenIDProviders[0].Reachable)
 	assert.Equal(t, "up", body.OpenIDProviders[1].Key)
 	assert.Equal(t, "Up Provider", body.OpenIDProviders[1].Name)
+	assert.True(t, body.OpenIDProviders[1].Registered)
 	assert.True(t, body.OpenIDProviders[1].Reachable)
 }

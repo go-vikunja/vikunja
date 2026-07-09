@@ -28,8 +28,8 @@ import (
 
 type healthBody struct {
 	Body struct {
-		Status          string                        `json:"status" enum:"OK,degraded" doc:"\"OK\" when the service and its dependencies are reachable, \"degraded\" when the service itself is healthy but at least one configured OpenID Connect provider is not reachable." example:"OK"`
-		OpenIDProviders []openid.ProviderAvailability `json:"openid_providers,omitempty" doc:"Reachability of each configured OpenID Connect provider, probed via its discovery endpoint. Results are cached for up to a minute. Omitted when OpenID Connect authentication is not configured."`
+		Status          string                        `json:"status" enum:"OK,degraded" doc:"\"OK\" when the service and its dependencies are reachable, \"degraded\" when the service itself is healthy but at least one configured OpenID Connect provider is unregistered or unreachable." example:"OK"`
+		OpenIDProviders []openid.ProviderAvailability `json:"openid_providers,omitempty" doc:"Health of each configured OpenID Connect provider. Results are cached for up to a minute and refreshed in the background; omitted when OpenID Connect authentication is not configured or no probe has completed yet after startup."`
 	}
 }
 
@@ -38,7 +38,7 @@ func RegisterHealthRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "health",
 		Summary:     "Healthcheck",
-		Description: "Reports whether the service and its dependencies (database, Redis if enabled) are reachable. Returns 200 with status \"OK\" when healthy, 500 otherwise. When OpenID Connect providers are configured, their reachability is reported too; an unreachable provider degrades the status but never fails the check, since restarting Vikunja cannot fix an external identity provider. Public — no authentication required.",
+		Description: "Reports whether the service and its dependencies (database, Redis if enabled) are reachable. Returns 200 with status \"OK\" when healthy, 500 otherwise. When OpenID Connect providers are configured, each provider's registration state and reachability are reported too; an unhealthy provider degrades the status but never fails the check, since restarting Vikunja cannot fix an unreachable external identity provider and failed registrations are retried every minute without a restart. Public — no authentication required.",
 		Method:      http.MethodGet,
 		Path:        "/health",
 		Tags:        []string{"service"},
@@ -61,7 +61,7 @@ func healthcheck(ctx context.Context, _ *struct{}) (*healthBody, error) {
 	out.Body.Status = "OK"
 	out.Body.OpenIDProviders = openid.CheckProvidersAvailability(ctx)
 	for _, p := range out.Body.OpenIDProviders {
-		if !p.Reachable {
+		if !p.Registered || !p.Reachable {
 			out.Body.Status = "degraded"
 			break
 		}

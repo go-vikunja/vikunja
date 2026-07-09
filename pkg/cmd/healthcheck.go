@@ -45,14 +45,18 @@ var healthcheckCmd = &cobra.Command{
 			return
 		}
 
-		// Unreachable providers are reported but don't fail the check — this
-		// command backs Docker HEALTHCHECK, and restarting Vikunja cannot fix
-		// an external identity provider.
-		for _, p := range openid.CheckProvidersAvailability(context.Background()) {
-			if p.Reachable {
-				fmt.Printf("OpenID provider %q is reachable\n", p.Name)
-			} else {
+		// Unhealthy providers are reported but don't fail the check — this
+		// command backs Docker HEALTHCHECK, restarting Vikunja cannot fix an
+		// unreachable external identity provider, and a failed registration
+		// heals itself through the availability cron without a restart.
+		for _, p := range openid.ProbeProvidersAvailability(context.Background()) {
+			switch {
+			case !p.Registered:
+				fmt.Printf("Warning: OpenID provider %q is not registered, logging in with it is unavailable until Vikunja can reach it\n", p.Name)
+			case !p.Reachable:
 				fmt.Printf("Warning: OpenID provider %q is not reachable\n", p.Name)
+			default:
+				fmt.Printf("OpenID provider %q is registered and reachable\n", p.Name)
 			}
 		}
 

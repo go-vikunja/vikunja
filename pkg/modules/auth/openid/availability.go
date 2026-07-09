@@ -25,14 +25,21 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/cron"
+	"code.vikunja.io/api/pkg/log"
 )
 
-// ProviderAvailability reports whether one configured OpenID Connect provider
-// currently serves its discovery document.
+// ProviderAvailability reports the health of one configured OpenID Connect
+// provider.
 type ProviderAvailability struct {
-	Key       string `json:"key" doc:"The config key of the provider."`
-	Name      string `json:"name" doc:"The human-readable name of the provider."`
-	Reachable bool   `json:"reachable" doc:"True when the provider's OpenID Connect discovery endpoint responded with HTTP 200."`
+	Key  string `json:"key" doc:"The config key of the provider."`
+	Name string `json:"name" doc:"The human-readable name of the provider."`
+	// A provider can be reachable but not registered: if it was down when
+	// Vikunja last built its provider list, it is missing from that list and
+	// login through it fails even after it comes back (see vikunja#3135).
+	// Registration is retried every minute until it succeeds.
+	Registered bool `json:"registered" doc:"True when the provider is registered and can be used to log in. A configured but unregistered provider was unreachable when Vikunja last initialized its providers; registration is retried every minute."`
+	Reachable  bool `json:"reachable" doc:"True when the provider's OpenID Connect discovery endpoint currently responds with HTTP 200."`
 }
 
 const (
@@ -40,9 +47,9 @@ const (
 	availabilityProbeTimeout = 5 * time.Second
 )
 
-// The healthcheck endpoint is hit frequently by orchestrator probes, so
-// results are cached and refreshed in the background once stale — a down
-// provider must not make every /health request block on the probe timeout.
+// The healthcheck endpoint is hit frequently by orchestrator probes, so it
+// only ever serves cached results and refreshes them in the background — a
+// down provider must not make /health block on the probe timeout.
 var availabilityCache struct {
 	sync.Mutex
 	results    []ProviderAvailability
@@ -73,14 +80,29 @@ func configuredProviderEndpoints() (endpoints []providerEndpoint) {
 	return
 }
 
-// CheckProvidersAvailability probes the discovery endpoint of every configured
-// OpenID Connect provider and returns their reachability. It returns nil when
-// OpenID Connect auth is disabled or no providers are configured.
+func registeredProviderKeys() map[string]bool {
+	providers, err := GetAllProviders()
+	if err != nil {
+		log.Errorf("Could not get registered openid providers: %s", err)
+		return nil
+	}
+	keys := make(map[string]bool, len(providers))
+	for _, p := range providers {
+		keys[p.Key] = true
+	}
+	return keys
+}
+
+// CheckProvidersAvailability returns the cached availability of every
+// configured OpenID Connect provider, kicking off a background refresh when
+// the cache is stale. It returns nil when OpenID Connect auth is disabled, no
+// providers are configured, or no probe has completed yet (right after
+// startup).
 //
 // It enumerates providers from the raw config instead of GetAllProviders
 // because the latter silently drops providers whose discovery failed at
 // startup — exactly the ones a healthcheck needs to report.
-func CheckProvidersAvailability(ctx context.Context) []ProviderAvailability {
+func CheckProvidersAvailability(_ context.Context) []ProviderAvailability {
 	if !config.AuthOpenIDEnabled.GetBool() {
 		return nil
 	}
@@ -91,40 +113,44 @@ func CheckProvidersAvailability(ctx context.Context) []ProviderAvailability {
 	}
 
 	availabilityCache.Lock()
-	if !availabilityCache.fetchedAt.IsZero() {
-		results := append([]ProviderAvailability(nil), availabilityCache.results...)
-		if time.Since(availabilityCache.fetchedAt) >= availabilityCacheTTL && !availabilityCache.refreshing {
-			availabilityCache.refreshing = true
-			go func() {
-				refreshed := probeProviders(context.Background(), endpoints)
-				availabilityCache.Lock()
-				defer availabilityCache.Unlock()
-				availabilityCache.results = refreshed
-				availabilityCache.fetchedAt = time.Now()
-				availabilityCache.refreshing = false
-			}()
-		}
-		availabilityCache.Unlock()
-		return results
+	defer availabilityCache.Unlock()
+
+	results := append([]ProviderAvailability(nil), availabilityCache.results...)
+	stale := time.Since(availabilityCache.fetchedAt) >= availabilityCacheTTL
+	if (availabilityCache.fetchedAt.IsZero() || stale) && !availabilityCache.refreshing {
+		availabilityCache.refreshing = true
+		go func() {
+			refreshed := ProbeProvidersAvailability(context.Background())
+			availabilityCache.Lock()
+			defer availabilityCache.Unlock()
+			availabilityCache.results = refreshed
+			availabilityCache.fetchedAt = time.Now()
+			availabilityCache.refreshing = false
+		}()
 	}
-	availabilityCache.Unlock()
-
-	results := probeProviders(ctx, endpoints)
-	availabilityCache.Lock()
-	defer availabilityCache.Unlock()
-	availabilityCache.results = results
-	availabilityCache.fetchedAt = time.Now()
-	return append([]ProviderAvailability(nil), results...)
+	if availabilityCache.fetchedAt.IsZero() {
+		return nil
+	}
+	return results
 }
 
-func invalidateAvailabilityCache() {
-	availabilityCache.Lock()
-	defer availabilityCache.Unlock()
-	availabilityCache.results = nil
-	availabilityCache.fetchedAt = time.Time{}
+// ProbeProvidersAvailability synchronously probes every configured provider.
+// Unlike CheckProvidersAvailability it never serves cached results, so it can
+// block for several seconds — don't call it from a request handler.
+func ProbeProvidersAvailability(ctx context.Context) []ProviderAvailability {
+	if !config.AuthOpenIDEnabled.GetBool() {
+		return nil
+	}
+	return probeEndpoints(ctx, configuredProviderEndpoints())
 }
 
-func probeProviders(ctx context.Context, endpoints []providerEndpoint) []ProviderAvailability {
+func probeEndpoints(ctx context.Context, endpoints []providerEndpoint) []ProviderAvailability {
+	if len(endpoints) == 0 {
+		return nil
+	}
+
+	registered := registeredProviderKeys()
+
 	results := make([]ProviderAvailability, len(endpoints))
 	var wg sync.WaitGroup
 	for i, e := range endpoints {
@@ -132,14 +158,22 @@ func probeProviders(ctx context.Context, endpoints []providerEndpoint) []Provide
 		go func(i int, e providerEndpoint) {
 			defer wg.Done()
 			results[i] = ProviderAvailability{
-				Key:       e.key,
-				Name:      e.name,
-				Reachable: probeProvider(ctx, e.authURL),
+				Key:        e.key,
+				Name:       e.name,
+				Registered: registered[e.key],
+				Reachable:  probeProvider(ctx, e.authURL),
 			}
 		}(i, e)
 	}
 	wg.Wait()
 	return results
+}
+
+func invalidateAvailabilityCache() {
+	availabilityCache.Lock()
+	defer availabilityCache.Unlock()
+	availabilityCache.results = nil
+	availabilityCache.fetchedAt = time.Time{}
 }
 
 func probeProvider(ctx context.Context, authURL string) bool {
@@ -159,4 +193,58 @@ func probeProvider(ctx context.Context, authURL string) bool {
 	}
 	defer resp.Body.Close()
 	return resp.StatusCode == http.StatusOK
+}
+
+// registerMissingProviders re-runs provider registration when a configured
+// provider is missing from the registered set. This heals the state from
+// vikunja#3135: a provider that was down while Vikunja started stayed
+// unusable for login until a manual restart.
+func registerMissingProviders() {
+	if !config.AuthOpenIDEnabled.GetBool() {
+		return
+	}
+
+	endpoints := configuredProviderEndpoints()
+	if len(endpoints) == 0 {
+		return
+	}
+
+	registered := registeredProviderKeys()
+	var missing []string
+	for _, e := range endpoints {
+		if !registered[e.key] {
+			missing = append(missing, e.key)
+		}
+	}
+	if len(missing) == 0 {
+		return
+	}
+
+	log.Infof("Openid providers %v are configured but not registered, retrying registration", missing)
+	CleanupSavedOpenIDProviders()
+
+	providers, err := GetAllProviders()
+	if err != nil {
+		log.Errorf("Error while re-registering openid providers: %s", err)
+		return
+	}
+	nowRegistered := make(map[string]bool, len(providers))
+	for _, p := range providers {
+		nowRegistered[p.Key] = true
+	}
+	for _, key := range missing {
+		if nowRegistered[key] {
+			log.Infof("Openid provider %s successfully registered", key)
+		}
+	}
+}
+
+// RegisterProviderAvailabilityCron periodically re-registers configured
+// openid providers which could not be registered so far, typically because
+// they were unreachable while Vikunja started.
+func RegisterProviderAvailabilityCron() {
+	err := cron.Schedule("* * * * *", registerMissingProviders)
+	if err != nil {
+		log.Fatalf("Could not register openid provider availability cron: %s", err)
+	}
 }
