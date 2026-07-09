@@ -21,13 +21,15 @@ import (
 	"net/http"
 
 	"code.vikunja.io/api/pkg/health"
+	"code.vikunja.io/api/pkg/modules/auth/openid"
 
 	"github.com/danielgtaylor/huma/v2"
 )
 
 type healthBody struct {
 	Body struct {
-		Status string `json:"status" doc:"\"OK\" when the service and its dependencies are reachable." example:"OK"`
+		Status          string                        `json:"status" enum:"OK,degraded" doc:"\"OK\" when the service and its dependencies are reachable, \"degraded\" when the service itself is healthy but at least one configured OpenID Connect provider is not reachable." example:"OK"`
+		OpenIDProviders []openid.ProviderAvailability `json:"openid_providers,omitempty" doc:"Reachability of each configured OpenID Connect provider, probed via its discovery endpoint. Results are cached for up to a minute. Omitted when OpenID Connect authentication is not configured."`
 	}
 }
 
@@ -36,7 +38,7 @@ func RegisterHealthRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "health",
 		Summary:     "Healthcheck",
-		Description: "Reports whether the service and its dependencies (database) are reachable. Returns 200 with status \"OK\" when healthy, 500 otherwise. Public — no authentication required.",
+		Description: "Reports whether the service and its dependencies (database, Redis if enabled) are reachable. Returns 200 with status \"OK\" when healthy, 500 otherwise. When OpenID Connect providers are configured, their reachability is reported too; an unreachable provider degrades the status but never fails the check, since restarting Vikunja cannot fix an external identity provider. Public — no authentication required.",
 		Method:      http.MethodGet,
 		Path:        "/health",
 		Tags:        []string{"service"},
@@ -48,7 +50,7 @@ func RegisterHealthRoutes(api huma.API) {
 
 func init() { AddRouteRegistrar(RegisterHealthRoutes) }
 
-func healthcheck(_ context.Context, _ *struct{}) (*healthBody, error) {
+func healthcheck(ctx context.Context, _ *struct{}) (*healthBody, error) {
 	//nolint:contextcheck // health.Check is the shared v1/v2 probe; it takes no context and uses background contexts for its own pings.
 	if err := health.Check(); err != nil {
 		// Mirror v1: a failed check is an internal error; the cause is logged,
@@ -57,5 +59,12 @@ func healthcheck(_ context.Context, _ *struct{}) (*healthBody, error) {
 	}
 	out := &healthBody{}
 	out.Body.Status = "OK"
+	out.Body.OpenIDProviders = openid.CheckProvidersAvailability(ctx)
+	for _, p := range out.Body.OpenIDProviders {
+		if !p.Reachable {
+			out.Body.Status = "degraded"
+			break
+		}
+	}
 	return out, nil
 }

@@ -67,6 +67,52 @@ func FindDuplicateIssuers(providerIssuers map[string]string) []ErrDuplicateOIDCI
 	return duplicates
 }
 
+// rawProviderConfigs returns the normalized per-provider config maps, keyed by
+// provider key. Both the outer map and each provider map arrive as
+// map[interface{}]interface{} from YAML configs and as map[string]interface{}
+// from JSON — this handles both. Returns nil when nothing is configured.
+func rawProviderConfigs() map[string]map[string]interface{} {
+	rawProviders := config.AuthOpenIDProviders.Get()
+	if rawProviders == nil {
+		return nil
+	}
+
+	rawProvider, is := rawProviders.(map[string]interface{})
+	if !is {
+		rawProviderInterface, ok := rawProviders.(map[interface{}]interface{})
+		if !ok {
+			log.Criticalf("It looks like your openid configuration is in the wrong format. Please check the docs for the correct format.")
+			return nil
+		}
+		rawProvider = make(map[string]interface{}, len(rawProviderInterface))
+		for k, v := range rawProviderInterface {
+			if key, keyOK := k.(string); keyOK {
+				rawProvider[key] = v
+			}
+		}
+	}
+
+	configs := make(map[string]map[string]interface{}, len(rawProvider))
+	for key, p := range rawProvider {
+		pi, is := p.(map[string]interface{})
+		if !is {
+			pis, pisOK := p.(map[interface{}]interface{})
+			if !pisOK {
+				log.Errorf("Provider %s has invalid configuration format, skipping", key)
+				continue
+			}
+			pi = make(map[string]interface{}, len(pis))
+			for i, s := range pis {
+				if k, keyOK := i.(string); keyOK {
+					pi[k] = s
+				}
+			}
+		}
+		configs[key] = pi
+	}
+	return configs
+}
+
 // GetAllProviders returns all configured providers
 func GetAllProviders() (providers []*Provider, err error) {
 	if !config.AuthOpenIDEnabled.GetBool() {
@@ -76,47 +122,12 @@ func GetAllProviders() (providers []*Provider, err error) {
 	providers = []*Provider{}
 	exists, err := keyvalue.GetWithValue("openid_providers", &providers)
 	if !exists {
-		rawProviders := config.AuthOpenIDProviders.Get()
-		if rawProviders == nil {
+		rawConfigs := rawProviderConfigs()
+		if len(rawConfigs) == 0 {
 			return nil, nil
 		}
 
-		rawProvider, is := rawProviders.(map[string]interface{})
-		if !is {
-			// Try to convert from map[interface{}]interface{} (YAML format)
-			if rawProviderInterface, ok := rawProviders.(map[interface{}]interface{}); ok {
-				rawProvider = make(map[string]interface{}, len(rawProviderInterface))
-				for k, v := range rawProviderInterface {
-					if key, keyOK := k.(string); keyOK {
-						rawProvider[key] = v
-					}
-				}
-			} else {
-				log.Criticalf("It looks like your openid configuration is in the wrong format. Please check the docs for the correct format.")
-				return
-			}
-		}
-
-		for key, p := range rawProvider {
-			var pi map[string]interface{}
-			var is bool
-			pi, is = p.(map[string]interface{})
-			// JSON config is a map[string]interface{}, other providers are not. Under the hood they are all strings so
-			// it is safe to cast.
-			if !is {
-				if pis, pisOK := p.(map[interface{}]interface{}); pisOK {
-					pi = make(map[string]interface{}, len(pis))
-					for i, s := range pis {
-						if key, keyOK := i.(string); keyOK {
-							pi[key] = s
-						}
-					}
-				} else {
-					log.Errorf("Provider %s has invalid configuration format, skipping", key)
-					continue
-				}
-			}
-
+		for key, pi := range rawConfigs {
 			provider, err := getProviderFromMap(pi, key)
 
 			if err != nil {
@@ -343,4 +354,5 @@ func getProviderFromMap(pi map[string]interface{}, key string) (provider *Provid
 
 func CleanupSavedOpenIDProviders() {
 	_ = keyvalue.Del("openid_providers")
+	invalidateAvailabilityCache()
 }

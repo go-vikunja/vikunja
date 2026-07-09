@@ -17,11 +17,13 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
 
 	"code.vikunja.io/api/pkg/health"
 	"code.vikunja.io/api/pkg/initialize"
+	"code.vikunja.io/api/pkg/modules/auth/openid"
 
 	"github.com/spf13/cobra"
 )
@@ -41,6 +43,17 @@ var healthcheckCmd = &cobra.Command{
 			fmt.Printf("API server is not healthy: %v\n", err)
 			os.Exit(1)
 			return
+		}
+
+		// Unreachable providers are reported but don't fail the check — this
+		// command backs Docker HEALTHCHECK, and restarting Vikunja cannot fix
+		// an external identity provider.
+		for _, p := range openid.CheckProvidersAvailability(context.Background()) {
+			if p.Reachable {
+				fmt.Printf("OpenID provider %q is reachable\n", p.Name)
+			} else {
+				fmt.Printf("Warning: OpenID provider %q is not reachable\n", p.Name)
+			}
 		}
 
 		fmt.Println("API server is healthy")
