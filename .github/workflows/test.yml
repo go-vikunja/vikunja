@@ -3,9 +3,6 @@ name: Test
 on:
   workflow_call:
 
-env:
-  GOLANGCI_LINT_VERSION: v2.12.2
-
 jobs:
   mage:
     runs-on: ubuntu-latest
@@ -65,58 +62,23 @@ jobs:
           name: vikunja_bin
           path: ./vikunja
 
-  # Both lint jobs cache the golangci-lint analysis dir themselves instead
-  # of using the action's built-in cache: the action's key does not include
-  # the Go version, so with go-version: stable a toolchain bump restores
-  # facts cached under the previous Go release, which yields staticcheck
-  # false positives (SA5011 on t.Fatal nil-guards) on every PR until the
-  # key rotates.
   api-lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
-        id: go
-        with:
-          go-version: stable
       - name: prepare frontend files
         run: |
           mkdir -p frontend/dist
           touch frontend/dist/index.html
-      - name: Cache golangci-lint analysis
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/.cache/golangci-lint
-          key: golangci-lint-api-${{ env.GOLANGCI_LINT_VERSION }}-${{ steps.go.outputs.go-version }}-${{ hashFiles('go.sum') }}
-          restore-keys: |
-            golangci-lint-api-${{ env.GOLANGCI_LINT_VERSION }}-${{ steps.go.outputs.go-version }}-
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
-        with:
-          version: ${{ env.GOLANGCI_LINT_VERSION }}
-          skip-cache: true
+      - uses: ./.github/actions/golangci-lint
 
   veans-lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
-        id: go
+      - uses: ./.github/actions/golangci-lint
         with:
-          go-version: stable
-      - name: Cache golangci-lint analysis
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/.cache/golangci-lint
-          key: golangci-lint-veans-${{ env.GOLANGCI_LINT_VERSION }}-${{ steps.go.outputs.go-version }}-${{ hashFiles('veans/go.sum') }}
-          restore-keys: |
-            golangci-lint-veans-${{ env.GOLANGCI_LINT_VERSION }}-${{ steps.go.outputs.go-version }}-
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
-        with:
-          version: ${{ env.GOLANGCI_LINT_VERSION }}
           working-directory: veans
-          skip-cache: true
 
   veans-test:
     runs-on: ubuntu-latest
