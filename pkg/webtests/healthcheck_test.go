@@ -90,7 +90,6 @@ func TestHealthcheckV2OpenIDProviders(t *testing.T) {
 		Status          string `json:"status"`
 		OpenIDProviders []struct {
 			Key        string `json:"key"`
-			Name       string `json:"name"`
 			Registered bool   `json:"registered"`
 		} `json:"openid_providers"`
 	}
@@ -101,6 +100,5 @@ func TestHealthcheckV2OpenIDProviders(t *testing.T) {
 	assert.Equal(t, "down", body.OpenIDProviders[0].Key)
 	assert.False(t, body.OpenIDProviders[0].Registered)
 	assert.Equal(t, "up", body.OpenIDProviders[1].Key)
-	assert.Equal(t, "Up Provider", body.OpenIDProviders[1].Name)
 	assert.True(t, body.OpenIDProviders[1].Registered)
 }

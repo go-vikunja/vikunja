@@ -77,10 +77,8 @@ func TestGetProvidersStatus(t *testing.T) {
 
 		// Results are sorted by provider key.
 		assert.Equal(t, "down", statuses[0].Key)
-		assert.Equal(t, "Down Provider", statuses[0].Name)
 		assert.False(t, statuses[0].Registered)
 		assert.Equal(t, "up", statuses[1].Key)
-		assert.Equal(t, "Up Provider", statuses[1].Name)
 		assert.True(t, statuses[1].Registered)
 	})
 

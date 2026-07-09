@@ -31,31 +31,7 @@ import (
 // every minute instead, see RegisterProviderRegistrationCron.
 type ProviderStatus struct {
 	Key        string `json:"key" doc:"The config key of the provider."`
-	Name       string `json:"name" doc:"The human-readable name of the provider."`
-	Registered bool   `json:"registered" doc:"True when the provider is registered and can be used to log in. A configured but unregistered provider was unreachable when Vikunja last initialized its providers; registration is retried every minute."`
-}
-
-type configuredProvider struct {
-	key, name string
-}
-
-func configuredProviders() (providers []configuredProvider) {
-	for key, pi := range rawProviderConfigs() {
-		name, _ := pi["name"].(string)
-		authURL, _ := pi["authurl"].(string)
-		if v := config.GetConfigValueFromFile("auth.openid.providers." + key + ".name"); v != "" {
-			name = v
-		}
-		if v := config.GetConfigValueFromFile("auth.openid.providers." + key + ".authurl"); v != "" {
-			authURL = v
-		}
-		if authURL == "" {
-			continue
-		}
-		providers = append(providers, configuredProvider{key: key, name: name})
-	}
-	sort.Slice(providers, func(i, j int) bool { return providers[i].key < providers[j].key })
-	return
+	Registered bool   `json:"registered" doc:"True when the provider is registered and can be used to log in. A configured but unregistered provider was unreachable or misconfigured when Vikunja last initialized its providers; registration is retried every minute."`
 }
 
 func registeredProviderKeys() map[string]bool {
@@ -83,20 +59,20 @@ func GetProvidersStatus() []ProviderStatus {
 		return nil
 	}
 
-	configured := configuredProviders()
+	configured := rawProviderConfigs()
 	if len(configured) == 0 {
 		return nil
 	}
 
 	registered := registeredProviderKeys()
 	statuses := make([]ProviderStatus, 0, len(configured))
-	for _, p := range configured {
+	for key := range configured {
 		statuses = append(statuses, ProviderStatus{
-			Key:        p.key,
-			Name:       p.name,
-			Registered: registered[p.key],
+			Key:        key,
+			Registered: registered[key],
 		})
 	}
+	sort.Slice(statuses, func(i, j int) bool { return statuses[i].Key < statuses[j].Key })
 	return statuses
 }
 
@@ -105,20 +81,10 @@ func GetProvidersStatus() []ProviderStatus {
 // vikunja#3135: a provider that was down while Vikunja started stayed
 // unusable for login until a manual restart.
 func registerMissingProviders() {
-	if !config.AuthOpenIDEnabled.GetBool() {
-		return
-	}
-
-	configured := configuredProviders()
-	if len(configured) == 0 {
-		return
-	}
-
-	registered := registeredProviderKeys()
 	var missing []string
-	for _, p := range configured {
-		if !registered[p.key] {
-			missing = append(missing, p.key)
+	for _, p := range GetProvidersStatus() {
+		if !p.Registered {
+			missing = append(missing, p.Key)
 		}
 	}
 	if len(missing) == 0 {
@@ -128,17 +94,9 @@ func registerMissingProviders() {
 	log.Infof("Openid providers %v are configured but not registered, retrying registration", missing)
 	CleanupSavedOpenIDProviders()
 
-	providers, err := GetAllProviders()
-	if err != nil {
-		log.Errorf("Error while re-registering openid providers: %s", err)
-		return
-	}
-	nowRegistered := make(map[string]bool, len(providers))
-	for _, p := range providers {
-		nowRegistered[p.Key] = true
-	}
+	registered := registeredProviderKeys()
 	for _, key := range missing {
-		if nowRegistered[key] {
+		if registered[key] {
 			log.Infof("Openid provider %s successfully registered", key)
 		}
 	}
