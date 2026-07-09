@@ -724,6 +724,8 @@ github.com/wneessen/go-mail v0.7.3 h1:g3DravXC5SMlVdboFrQA8Jx95A8sOzoBeS5F+vzNRK
 github.com/wneessen/go-mail v0.7.3/go.mod h1:QGhBX0yNbc1J+Mkjcu7z2rpj4B4l+BmDY8gYznPC9sk=
 github.com/wneessen/go-mail v0.8.0 h1:I65TZ7+oYA+Kcme8GeJrBzfVioKDezj8f/BS+XhVpEE=
 github.com/wneessen/go-mail v0.8.0/go.mod h1:EkVXlu2G11/WYwPBElvN7QQ2c7IKIk0Nexs8BIPVsoQ=
+github.com/wneessen/go-mail v0.8.1 h1:tVcncj02/QySVFw3zr/kXOzZcuFQqBNT6K+Rbgm/pcM=
+github.com/wneessen/go-mail v0.8.1/go.mod h1:dWZ61zadzCIyvB4y1/YzC5O7MrbbzBfPkARmbosdf8w=
 github.com/x448/float16 v0.8.4 h1:qLwI1I70+NjRFUR3zs1JPUCgaCXSh3SW62uAKT1mSBM=
 github.com/x448/float16 v0.8.4/go.mod h1:14CWIYCyZA/cWjXOioeEpHeN/83MdbZDRQHoFcYsOfg=
 github.com/yosssi/gohtml v0.0.0-20201013000340-ee4748c638f4 h1:0sw0nJM544SpsihWx1bkXdYLQDlzRflMgFJQ4Yih9ts=
