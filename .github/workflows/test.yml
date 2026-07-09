@@ -3,6 +3,9 @@ name: Test
 on:
   workflow_call:
 
+env:
+  GOLANGCI_LINT_VERSION: v2.12.2
+
 jobs:
   mage:
     runs-on: ubuntu-latest
@@ -84,13 +87,13 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/golangci-lint
-          key: golangci-lint-api-${{ steps.go.outputs.go-version }}-${{ hashFiles('go.sum') }}
+          key: golangci-lint-api-${{ env.GOLANGCI_LINT_VERSION }}-${{ steps.go.outputs.go-version }}-${{ hashFiles('go.sum') }}
           restore-keys: |
-            golangci-lint-api-${{ steps.go.outputs.go-version }}-
+            golangci-lint-api-${{ env.GOLANGCI_LINT_VERSION }}-${{ steps.go.outputs.go-version }}-
       - name: golangci-lint
         uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
         with:
-          version: v2.12.2
+          version: ${{ env.GOLANGCI_LINT_VERSION }}
           skip-cache: true
 
   veans-lint:
@@ -105,13 +108,13 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/golangci-lint
-          key: golangci-lint-veans-${{ steps.go.outputs.go-version }}-${{ hashFiles('veans/go.sum') }}
+          key: golangci-lint-veans-${{ env.GOLANGCI_LINT_VERSION }}-${{ steps.go.outputs.go-version }}-${{ hashFiles('veans/go.sum') }}
           restore-keys: |
-            golangci-lint-veans-${{ steps.go.outputs.go-version }}-
+            golangci-lint-veans-${{ env.GOLANGCI_LINT_VERSION }}-${{ steps.go.outputs.go-version }}-
       - name: golangci-lint
         uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
         with:
-          version: v2.12.2
+          version: ${{ env.GOLANGCI_LINT_VERSION }}
           working-directory: veans
           skip-cache: true
 
