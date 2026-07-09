@@ -90,6 +90,12 @@ jobs:
         with:
           version: v2.12.2
           working-directory: veans
+          # The restored analysis cache goes stale when the Go toolchain
+          # bumps underneath it (go-version: stable) while veans/go.mod —
+          # part of the cache key — stays unchanged, yielding staticcheck
+          # SA5011 false positives on every PR. The module lints in ~15s,
+          # so the cache buys nothing anyway.
+          skip-cache: true
 
   veans-test:
     runs-on: ubuntu-latest
