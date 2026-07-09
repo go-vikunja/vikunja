@@ -50,8 +50,8 @@ func RegisterHealthRoutes(api huma.API) {
 
 func init() { AddRouteRegistrar(RegisterHealthRoutes) }
 
+//nolint:contextcheck // health.Check and openid.GetAllProviders are shared v1/v2 code; they take no context and use background contexts for their own pings.
 func healthcheck(_ context.Context, _ *struct{}) (*healthBody, error) {
-	//nolint:contextcheck // health.Check is the shared v1/v2 probe; it takes no context and uses background contexts for its own pings.
 	if err := health.Check(); err != nil {
 		// Mirror v1: a failed check is an internal error; the cause is logged,
 		// not leaked to the client.

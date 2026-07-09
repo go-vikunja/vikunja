@@ -115,7 +115,8 @@ func TestInitializeUnavailableProviders(t *testing.T) {
 
 	// Reserve a port, then release it to simulate a provider that is down
 	// while Vikunja starts.
-	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	var lc net.ListenConfig
+	listener, err := lc.Listen(t.Context(), "tcp", "127.0.0.1:0")
 	require.NoError(t, err)
 	addr := listener.Addr().String()
 	providerURL := "http://" + addr
@@ -153,14 +154,14 @@ func TestInitializeUnavailableProviders(t *testing.T) {
 		})
 	})
 	for range 20 {
-		listener, err = net.Listen("tcp", addr)
+		listener, err = lc.Listen(t.Context(), "tcp", addr)
 		if err == nil {
 			break
 		}
 		time.Sleep(50 * time.Millisecond)
 	}
 	require.NoError(t, err, "could not re-listen on %s", addr)
-	srv := &http.Server{Handler: mux}
+	srv := &http.Server{Handler: mux, ReadHeaderTimeout: time.Second}
 	go func() { _ = srv.Serve(listener) }()
 	defer srv.Close()
 
