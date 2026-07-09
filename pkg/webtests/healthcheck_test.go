@@ -89,8 +89,8 @@ func TestHealthcheckV2OpenIDProviders(t *testing.T) {
 	var body struct {
 		Status          string `json:"status"`
 		OpenIDProviders []struct {
-			Key        string `json:"key"`
-			Registered bool   `json:"registered"`
+			Key       string `json:"key"`
+			Available bool   `json:"available"`
 		} `json:"openid_providers"`
 	}
 	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &body))
@@ -98,7 +98,7 @@ func TestHealthcheckV2OpenIDProviders(t *testing.T) {
 	assert.Equal(t, "degraded", body.Status)
 	require.Len(t, body.OpenIDProviders, 2)
 	assert.Equal(t, "down", body.OpenIDProviders[0].Key)
-	assert.False(t, body.OpenIDProviders[0].Registered)
+	assert.False(t, body.OpenIDProviders[0].Available)
 	assert.Equal(t, "up", body.OpenIDProviders[1].Key)
-	assert.True(t, body.OpenIDProviders[1].Registered)
+	assert.True(t, body.OpenIDProviders[1].Available)
 }

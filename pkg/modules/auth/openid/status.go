@@ -25,19 +25,19 @@ import (
 )
 
 // ProviderStatus reports whether one configured OpenID Connect provider is
-// registered and thus usable for login. A configured but unregistered
-// provider was unreachable when Vikunja last initialized its providers and
-// would stay broken until a restart (vikunja#3135) — registration is retried
-// every minute instead, see RegisterProviderRegistrationCron.
+// available for login. A configured but unavailable provider was unreachable
+// when Vikunja last initialized its providers and would stay broken until a
+// restart (vikunja#3135) — initialization is retried every minute instead,
+// see RegisterProviderAvailabilityCron.
 type ProviderStatus struct {
-	Key        string `json:"key" doc:"The config key of the provider."`
-	Registered bool   `json:"registered" doc:"True when the provider is registered and can be used to log in. A configured but unregistered provider was unreachable or misconfigured when Vikunja last initialized its providers; registration is retried every minute."`
+	Key       string `json:"key" doc:"The config key of the provider."`
+	Available bool   `json:"available" doc:"True when the provider is initialized and can be used to log in. A configured but unavailable provider was unreachable or misconfigured when Vikunja last initialized its providers; initialization is retried every minute."`
 }
 
-func registeredProviderKeys() map[string]bool {
+func availableProviderKeys() map[string]bool {
 	providers, err := GetAllProviders()
 	if err != nil {
-		log.Errorf("Could not get registered openid providers: %s", err)
+		log.Errorf("Could not get available openid providers: %s", err)
 		return nil
 	}
 	keys := make(map[string]bool, len(providers))
@@ -47,12 +47,12 @@ func registeredProviderKeys() map[string]bool {
 	return keys
 }
 
-// GetProvidersStatus returns the registration state of every configured
-// OpenID Connect provider. It returns nil when OpenID Connect auth is
-// disabled or no providers are configured.
+// GetProvidersStatus returns the availability of every configured OpenID
+// Connect provider. It returns nil when OpenID Connect auth is disabled or
+// no providers are configured.
 //
 // It enumerates providers from the raw config instead of GetAllProviders
-// because the latter silently drops providers whose registration failed —
+// because the latter silently drops providers whose initialization failed —
 // exactly the ones a healthcheck needs to report.
 func GetProvidersStatus() []ProviderStatus {
 	if !config.AuthOpenIDEnabled.GetBool() {
@@ -64,50 +64,50 @@ func GetProvidersStatus() []ProviderStatus {
 		return nil
 	}
 
-	registered := registeredProviderKeys()
+	available := availableProviderKeys()
 	statuses := make([]ProviderStatus, 0, len(configured))
 	for key := range configured {
 		statuses = append(statuses, ProviderStatus{
-			Key:        key,
-			Registered: registered[key],
+			Key:       key,
+			Available: available[key],
 		})
 	}
 	sort.Slice(statuses, func(i, j int) bool { return statuses[i].Key < statuses[j].Key })
 	return statuses
 }
 
-// registerMissingProviders re-runs provider registration when a configured
-// provider is missing from the registered set. This heals the state from
-// vikunja#3135: a provider that was down while Vikunja started stayed
-// unusable for login until a manual restart.
-func registerMissingProviders() {
-	var missing []string
+// initializeUnavailableProviders re-runs provider initialization when a
+// configured provider is missing from the available set. This heals the
+// state from vikunja#3135: a provider that was down while Vikunja started
+// stayed unusable for login until a manual restart.
+func initializeUnavailableProviders() {
+	var unavailable []string
 	for _, p := range GetProvidersStatus() {
-		if !p.Registered {
-			missing = append(missing, p.Key)
+		if !p.Available {
+			unavailable = append(unavailable, p.Key)
 		}
 	}
-	if len(missing) == 0 {
+	if len(unavailable) == 0 {
 		return
 	}
 
-	log.Infof("Openid providers %v are configured but not registered, retrying registration", missing)
+	log.Infof("Openid providers %v are configured but not available, retrying initialization", unavailable)
 	CleanupSavedOpenIDProviders()
 
-	registered := registeredProviderKeys()
-	for _, key := range missing {
-		if registered[key] {
-			log.Infof("Openid provider %s successfully registered", key)
+	available := availableProviderKeys()
+	for _, key := range unavailable {
+		if available[key] {
+			log.Infof("Openid provider %s is now available", key)
 		}
 	}
 }
 
-// RegisterProviderRegistrationCron periodically re-registers configured
-// openid providers which could not be registered so far, typically because
+// RegisterProviderAvailabilityCron periodically retries initializing
+// configured openid providers which are not available, typically because
 // they were unreachable while Vikunja started.
-func RegisterProviderRegistrationCron() {
-	err := cron.Schedule("* * * * *", registerMissingProviders)
+func RegisterProviderAvailabilityCron() {
+	err := cron.Schedule("* * * * *", initializeUnavailableProviders)
 	if err != nil {
-		log.Fatalf("Could not register openid provider registration cron: %s", err)
+		log.Fatalf("Could not register openid provider availability cron: %s", err)
 	}
 }

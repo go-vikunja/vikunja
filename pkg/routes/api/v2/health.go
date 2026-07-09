@@ -28,8 +28,8 @@ import (
 
 type healthBody struct {
 	Body struct {
-		Status          string                  `json:"status" enum:"OK,degraded" doc:"\"OK\" when the service and its dependencies are reachable, \"degraded\" when the service itself is healthy but at least one configured OpenID Connect provider is not registered." example:"OK"`
-		OpenIDProviders []openid.ProviderStatus `json:"openid_providers,omitempty" doc:"Registration state of each configured OpenID Connect provider. Omitted when OpenID Connect authentication is not configured."`
+		Status          string                  `json:"status" enum:"OK,degraded" doc:"\"OK\" when the service and its dependencies are reachable, \"degraded\" when the service itself is healthy but at least one configured OpenID Connect provider is not available." example:"OK"`
+		OpenIDProviders []openid.ProviderStatus `json:"openid_providers,omitempty" doc:"Availability of each configured OpenID Connect provider. Omitted when OpenID Connect authentication is not configured."`
 	}
 }
 
@@ -38,7 +38,7 @@ func RegisterHealthRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "health",
 		Summary:     "Healthcheck",
-		Description: "Reports whether the service and its dependencies (database, Redis if enabled) are reachable. Returns 200 with status \"OK\" when healthy, 500 otherwise. When OpenID Connect providers are configured, each provider's registration state is reported too; a provider which failed registration (because it was unreachable while Vikunja started) degrades the status but never fails the check, since registration is retried every minute and a restart would not help. Public — no authentication required.",
+		Description: "Reports whether the service and its dependencies (database, Redis if enabled) are reachable. Returns 200 with status \"OK\" when healthy, 500 otherwise. When OpenID Connect providers are configured, each provider's availability is reported too; an unavailable provider (typically because it was unreachable while Vikunja started) degrades the status but never fails the check, since initialization is retried every minute and a restart would not help. Public — no authentication required.",
 		Method:      http.MethodGet,
 		Path:        "/health",
 		Tags:        []string{"service"},
@@ -61,7 +61,7 @@ func healthcheck(_ context.Context, _ *struct{}) (*healthBody, error) {
 	out.Body.Status = "OK"
 	out.Body.OpenIDProviders = openid.GetProvidersStatus()
 	for _, p := range out.Body.OpenIDProviders {
-		if !p.Registered {
+		if !p.Available {
 			out.Body.Status = "degraded"
 			break
 		}

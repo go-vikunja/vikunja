@@ -51,7 +51,7 @@ func TestGetProvidersStatus(t *testing.T) {
 		assert.Nil(t, GetProvidersStatus())
 	})
 
-	t.Run("reports registration state", func(t *testing.T) {
+	t.Run("reports provider availability", func(t *testing.T) {
 		CleanupSavedOpenIDProviders()
 		server := newMockOIDCServer()
 		defer server.Close()
@@ -77,9 +77,9 @@ func TestGetProvidersStatus(t *testing.T) {
 
 		// Results are sorted by provider key.
 		assert.Equal(t, "down", statuses[0].Key)
-		assert.False(t, statuses[0].Registered)
+		assert.False(t, statuses[0].Available)
 		assert.Equal(t, "up", statuses[1].Key)
-		assert.True(t, statuses[1].Registered)
+		assert.True(t, statuses[1].Available)
 	})
 
 	t.Run("yaml style config maps work", func(t *testing.T) {
@@ -100,11 +100,11 @@ func TestGetProvidersStatus(t *testing.T) {
 		statuses := GetProvidersStatus()
 		require.Len(t, statuses, 1)
 		assert.Equal(t, "yaml", statuses[0].Key)
-		assert.True(t, statuses[0].Registered)
+		assert.True(t, statuses[0].Available)
 	})
 }
 
-func TestRegisterMissingProviders(t *testing.T) {
+func TestInitializeUnavailableProviders(t *testing.T) {
 	defer func() {
 		config.AuthOpenIDEnabled.Set(false)
 		config.AuthOpenIDProviders.Set(nil)
@@ -133,13 +133,13 @@ func TestRegisterMissingProviders(t *testing.T) {
 
 	providers, err := GetAllProviders()
 	require.NoError(t, err)
-	assert.Empty(t, providers, "the provider must fail registration while its server is down")
+	assert.Empty(t, providers, "the provider must fail initialization while its server is down")
 
-	// Re-registration while the provider is still down must not register it.
-	registerMissingProviders()
+	// Retrying while the provider is still down must not make it available.
+	initializeUnavailableProviders()
 	statuses := GetProvidersStatus()
 	require.Len(t, statuses, 1)
-	assert.False(t, statuses[0].Registered)
+	assert.False(t, statuses[0].Available)
 
 	// The provider comes back on the same address.
 	mux := http.NewServeMux()
@@ -164,7 +164,7 @@ func TestRegisterMissingProviders(t *testing.T) {
 	go func() { _ = srv.Serve(listener) }()
 	defer srv.Close()
 
-	registerMissingProviders()
+	initializeUnavailableProviders()
 
 	providers, err = GetAllProviders()
 	require.NoError(t, err)
@@ -173,5 +173,5 @@ func TestRegisterMissingProviders(t *testing.T) {
 
 	statuses = GetProvidersStatus()
 	require.Len(t, statuses, 1)
-	assert.True(t, statuses[0].Registered)
+	assert.True(t, statuses[0].Available)
 }
