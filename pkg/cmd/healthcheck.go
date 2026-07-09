@@ -22,7 +22,6 @@ import (
 
 	"code.vikunja.io/api/pkg/health"
 	"code.vikunja.io/api/pkg/initialize"
-	"code.vikunja.io/api/pkg/modules/auth/openid"
 
 	"github.com/spf13/cobra"
 )
@@ -42,17 +41,6 @@ var healthcheckCmd = &cobra.Command{
 			fmt.Printf("API server is not healthy: %v\n", err)
 			os.Exit(1)
 			return
-		}
-
-		// Unregistered providers are reported but don't fail the check — this
-		// command backs Docker HEALTHCHECK, and a failed registration heals
-		// itself through the registration cron without a restart.
-		for _, p := range openid.GetProvidersStatus() {
-			if p.Registered {
-				fmt.Printf("OpenID provider %q is registered\n", p.Name)
-			} else {
-				fmt.Printf("Warning: OpenID provider %q is not registered, logging in with it is unavailable until Vikunja can reach it\n", p.Name)
-			}
 		}
 
 		fmt.Println("API server is healthy")
