@@ -28,8 +28,8 @@ import (
 
 type healthBody struct {
 	Body struct {
-		Status          string                        `json:"status" enum:"OK,degraded" doc:"\"OK\" when the service and its dependencies are reachable, \"degraded\" when the service itself is healthy but at least one configured OpenID Connect provider is unregistered or unreachable." example:"OK"`
-		OpenIDProviders []openid.ProviderAvailability `json:"openid_providers,omitempty" doc:"Health of each configured OpenID Connect provider. Results are cached for up to a minute and refreshed in the background; omitted when OpenID Connect authentication is not configured or no probe has completed yet after startup."`
+		Status          string                  `json:"status" enum:"OK,degraded" doc:"\"OK\" when the service and its dependencies are reachable, \"degraded\" when the service itself is healthy but at least one configured OpenID Connect provider is not registered." example:"OK"`
+		OpenIDProviders []openid.ProviderStatus `json:"openid_providers,omitempty" doc:"Registration state of each configured OpenID Connect provider. Omitted when OpenID Connect authentication is not configured."`
 	}
 }
 
@@ -38,7 +38,7 @@ func RegisterHealthRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "health",
 		Summary:     "Healthcheck",
-		Description: "Reports whether the service and its dependencies (database, Redis if enabled) are reachable. Returns 200 with status \"OK\" when healthy, 500 otherwise. When OpenID Connect providers are configured, each provider's registration state and reachability are reported too; an unhealthy provider degrades the status but never fails the check, since restarting Vikunja cannot fix an unreachable external identity provider and failed registrations are retried every minute without a restart. Public — no authentication required.",
+		Description: "Reports whether the service and its dependencies (database, Redis if enabled) are reachable. Returns 200 with status \"OK\" when healthy, 500 otherwise. When OpenID Connect providers are configured, each provider's registration state is reported too; a provider which failed registration (because it was unreachable while Vikunja started) degrades the status but never fails the check, since registration is retried every minute and a restart would not help. Public — no authentication required.",
 		Method:      http.MethodGet,
 		Path:        "/health",
 		Tags:        []string{"service"},
@@ -50,7 +50,7 @@ func RegisterHealthRoutes(api huma.API) {
 
 func init() { AddRouteRegistrar(RegisterHealthRoutes) }
 
-func healthcheck(ctx context.Context, _ *struct{}) (*healthBody, error) {
+func healthcheck(_ context.Context, _ *struct{}) (*healthBody, error) {
 	//nolint:contextcheck // health.Check is the shared v1/v2 probe; it takes no context and uses background contexts for its own pings.
 	if err := health.Check(); err != nil {
 		// Mirror v1: a failed check is an internal error; the cause is logged,
@@ -59,9 +59,9 @@ func healthcheck(ctx context.Context, _ *struct{}) (*healthBody, error) {
 	}
 	out := &healthBody{}
 	out.Body.Status = "OK"
-	out.Body.OpenIDProviders = openid.CheckProvidersAvailability(ctx)
+	out.Body.OpenIDProviders = openid.GetProvidersStatus()
 	for _, p := range out.Body.OpenIDProviders {
-		if !p.Registered || !p.Reachable {
+		if !p.Registered {
 			out.Body.Status = "degraded"
 			break
 		}

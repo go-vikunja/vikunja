@@ -354,5 +354,4 @@ func getProviderFromMap(pi map[string]interface{}, key string) (provider *Provid
 
 func CleanupSavedOpenIDProviders() {
 	_ = keyvalue.Del("openid_providers")
-	invalidateAvailabilityCache()
 }

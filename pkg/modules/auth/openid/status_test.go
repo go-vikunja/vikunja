@@ -17,12 +17,9 @@
 package openid
 
 import (
-	"context"
 	"encoding/json"
 	"net"
 	"net/http"
-	"net/http/httptest"
-	"sync/atomic"
 	"testing"
 	"time"
 
@@ -32,35 +29,30 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func resetAvailabilityTestState() {
-	invalidateAvailabilityCache()
-	CleanupSavedOpenIDProviders()
-}
-
-func TestProbeProvidersAvailability(t *testing.T) {
+func TestGetProvidersStatus(t *testing.T) {
 	defer func() {
 		config.AuthOpenIDEnabled.Set(false)
 		config.AuthOpenIDProviders.Set(nil)
-		resetAvailabilityTestState()
+		CleanupSavedOpenIDProviders()
 	}()
 
 	t.Run("disabled returns nil", func(t *testing.T) {
-		resetAvailabilityTestState()
+		CleanupSavedOpenIDProviders()
 		config.AuthOpenIDEnabled.Set(false)
 
-		assert.Nil(t, ProbeProvidersAvailability(context.Background()))
+		assert.Nil(t, GetProvidersStatus())
 	})
 
 	t.Run("no providers returns nil", func(t *testing.T) {
-		resetAvailabilityTestState()
+		CleanupSavedOpenIDProviders()
 		config.AuthOpenIDEnabled.Set(true)
 		config.AuthOpenIDProviders.Set(nil)
 
-		assert.Nil(t, ProbeProvidersAvailability(context.Background()))
+		assert.Nil(t, GetProvidersStatus())
 	})
 
-	t.Run("reports registration and reachability", func(t *testing.T) {
-		resetAvailabilityTestState()
+	t.Run("reports registration state", func(t *testing.T) {
+		CleanupSavedOpenIDProviders()
 		server := newMockOIDCServer()
 		defer server.Close()
 
@@ -80,22 +72,20 @@ func TestProbeProvidersAvailability(t *testing.T) {
 			},
 		})
 
-		results := ProbeProvidersAvailability(context.Background())
-		require.Len(t, results, 2)
+		statuses := GetProvidersStatus()
+		require.Len(t, statuses, 2)
 
 		// Results are sorted by provider key.
-		assert.Equal(t, "down", results[0].Key)
-		assert.Equal(t, "Down Provider", results[0].Name)
-		assert.False(t, results[0].Registered)
-		assert.False(t, results[0].Reachable)
-		assert.Equal(t, "up", results[1].Key)
-		assert.Equal(t, "Up Provider", results[1].Name)
-		assert.True(t, results[1].Registered)
-		assert.True(t, results[1].Reachable)
+		assert.Equal(t, "down", statuses[0].Key)
+		assert.Equal(t, "Down Provider", statuses[0].Name)
+		assert.False(t, statuses[0].Registered)
+		assert.Equal(t, "up", statuses[1].Key)
+		assert.Equal(t, "Up Provider", statuses[1].Name)
+		assert.True(t, statuses[1].Registered)
 	})
 
 	t.Run("yaml style config maps work", func(t *testing.T) {
-		resetAvailabilityTestState()
+		CleanupSavedOpenIDProviders()
 		server := newMockOIDCServer()
 		defer server.Close()
 
@@ -109,80 +99,21 @@ func TestProbeProvidersAvailability(t *testing.T) {
 			},
 		})
 
-		results := ProbeProvidersAvailability(context.Background())
-		require.Len(t, results, 1)
-		assert.Equal(t, "yaml", results[0].Key)
-		assert.True(t, results[0].Registered)
-		assert.True(t, results[0].Reachable)
+		statuses := GetProvidersStatus()
+		require.Len(t, statuses, 1)
+		assert.Equal(t, "yaml", statuses[0].Key)
+		assert.True(t, statuses[0].Registered)
 	})
-}
-
-func TestCheckProvidersAvailability(t *testing.T) {
-	defer func() {
-		config.AuthOpenIDEnabled.Set(false)
-		config.AuthOpenIDProviders.Set(nil)
-		resetAvailabilityTestState()
-	}()
-
-	resetAvailabilityTestState()
-
-	var hits atomic.Int64
-	var server *httptest.Server
-	mux := http.NewServeMux()
-	mux.HandleFunc("/.well-known/openid-configuration", func(w http.ResponseWriter, _ *http.Request) {
-		hits.Add(1)
-		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(map[string]interface{}{
-			"issuer":                 server.URL,
-			"authorization_endpoint": server.URL + "/auth",
-			"token_endpoint":         server.URL + "/token",
-			"jwks_uri":               server.URL + "/jwks",
-		})
-	})
-	server = httptest.NewServer(mux)
-	defer server.Close()
-
-	config.AuthOpenIDEnabled.Set(true)
-	config.AuthOpenIDProviders.Set(map[string]interface{}{
-		"cached": map[string]interface{}{
-			"name":         "Cached Provider",
-			"authurl":      server.URL,
-			"clientid":     "client1",
-			"clientsecret": "secret1",
-		},
-	})
-
-	// The first call cannot serve anything yet, it only kicks off the
-	// background refresh.
-	assert.Nil(t, CheckProvidersAvailability(context.Background()))
-
-	require.Eventually(t, func() bool {
-		return CheckProvidersAvailability(context.Background()) != nil
-	}, 10*time.Second, 50*time.Millisecond)
-
-	results := CheckProvidersAvailability(context.Background())
-	require.Len(t, results, 1)
-	assert.Equal(t, "cached", results[0].Key)
-	assert.True(t, results[0].Registered)
-	assert.True(t, results[0].Reachable)
-
-	// Further calls within the cache TTL serve the cached results without
-	// hitting the provider again.
-	probed := hits.Load()
-	for i := 0; i < 3; i++ {
-		require.Len(t, CheckProvidersAvailability(context.Background()), 1)
-	}
-	assert.Equal(t, probed, hits.Load())
 }
 
 func TestRegisterMissingProviders(t *testing.T) {
 	defer func() {
 		config.AuthOpenIDEnabled.Set(false)
 		config.AuthOpenIDProviders.Set(nil)
-		resetAvailabilityTestState()
+		CleanupSavedOpenIDProviders()
 	}()
 
-	resetAvailabilityTestState()
+	CleanupSavedOpenIDProviders()
 
 	// Reserve a port, then release it to simulate a provider that is down
 	// while Vikunja starts.
@@ -208,9 +139,9 @@ func TestRegisterMissingProviders(t *testing.T) {
 
 	// Re-registration while the provider is still down must not register it.
 	registerMissingProviders()
-	providers, err = GetAllProviders()
-	require.NoError(t, err)
-	assert.Empty(t, providers)
+	statuses := GetProvidersStatus()
+	require.Len(t, statuses, 1)
+	assert.False(t, statuses[0].Registered)
 
 	// The provider comes back on the same address.
 	mux := http.NewServeMux()
@@ -242,8 +173,7 @@ func TestRegisterMissingProviders(t *testing.T) {
 	require.Len(t, providers, 1)
 	assert.Equal(t, "flaky", providers[0].Key)
 
-	results := ProbeProvidersAvailability(context.Background())
-	require.Len(t, results, 1)
-	assert.True(t, results[0].Registered)
-	assert.True(t, results[0].Reachable)
+	statuses = GetProvidersStatus()
+	require.Len(t, statuses, 1)
+	assert.True(t, statuses[0].Registered)
 }
