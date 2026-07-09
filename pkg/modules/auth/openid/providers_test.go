@@ -279,6 +279,31 @@ func TestGetProviderFromMapStringBooleans(t *testing.T) {
 	}
 }
 
+func TestCleanupRemovesPerProviderEntries(t *testing.T) {
+	defer func() {
+		config.AuthOpenIDEnabled.Set(false)
+		config.AuthOpenIDProviders.Set(nil)
+		CleanupSavedOpenIDProviders()
+	}()
+
+	config.AuthOpenIDEnabled.Set(true)
+	config.AuthOpenIDProviders.Set(map[string]interface{}{
+		"stale": map[string]interface{}{
+			"name":         "Stale Provider",
+			"authurl":      "http://127.0.0.1:1",
+			"clientid":     "client1",
+			"clientsecret": "secret1",
+		},
+	})
+	require.NoError(t, keyvalue.Put("openid_provider_stale", &Provider{Name: "Stale Provider"}))
+
+	CleanupSavedOpenIDProviders()
+
+	exists, err := keyvalue.GetWithValue("openid_provider_stale", &Provider{})
+	require.NoError(t, err)
+	assert.False(t, exists, "cleanup must remove per-provider entries, they take precedence over a rebuilt provider list")
+}
+
 func TestFailedDiscoverySkippedInIssuerCheck(t *testing.T) {
 	defer CleanupSavedOpenIDProviders()
 

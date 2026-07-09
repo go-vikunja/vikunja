@@ -18,20 +18,23 @@ package openid
 
 import (
 	"sort"
+	"sync"
+	"time"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/cron"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/utils"
 )
 
 // ProviderStatus reports whether one configured OpenID Connect provider is
 // available for login. A configured but unavailable provider was unreachable
 // when Vikunja last initialized its providers and would stay broken until a
-// restart (vikunja#3135) — initialization is retried every minute instead,
+// restart (vikunja#3135) — initialization is retried automatically instead,
 // see RegisterProviderAvailabilityCron.
 type ProviderStatus struct {
 	Key       string `json:"key" doc:"The config key of the provider."`
-	Available bool   `json:"available" doc:"True when the provider is initialized and can be used to log in. A configured but unavailable provider was unreachable or misconfigured when Vikunja last initialized its providers; initialization is retried every minute."`
+	Available bool   `json:"available" doc:"True when the provider is initialized and offered for login. This reflects the last initialization attempt, not the provider's current reachability. A configured but unavailable provider was unreachable or misconfigured when Vikunja last initialized its providers; initialization is retried automatically with exponential backoff, after at most 15 minutes."`
 }
 
 func availableProviderKeys() map[string]bool {
@@ -76,21 +79,21 @@ func GetProvidersStatus() []ProviderStatus {
 	return statuses
 }
 
-// initializeUnavailableProviders re-runs provider initialization when a
-// configured provider is missing from the available set. This heals the
-// state from vikunja#3135: a provider that was down while Vikunja started
-// stayed unusable for login until a manual restart.
-func initializeUnavailableProviders() {
+func unavailableProviderKeys() []string {
 	var unavailable []string
 	for _, p := range GetProvidersStatus() {
 		if !p.Available {
 			unavailable = append(unavailable, p.Key)
 		}
 	}
-	if len(unavailable) == 0 {
-		return
-	}
+	return unavailable
+}
 
+// initializeUnavailableProviders re-runs provider initialization for the
+// given configured but unavailable providers. This heals the state from
+// vikunja#3135: a provider that was down while Vikunja started stayed
+// unusable for login until a manual restart.
+func initializeUnavailableProviders(unavailable []string) {
 	log.Infof("Openid providers %v are configured but not available, retrying initialization", unavailable)
 	CleanupSavedOpenIDProviders()
 
@@ -102,11 +105,75 @@ func initializeUnavailableProviders() {
 	}
 }
 
+const (
+	providerRetryBaseInterval = time.Minute
+	providerRetryMaxInterval  = 15 * time.Minute
+)
+
+// providerRetryState paces the initialization retries with capped
+// exponential backoff so a long-unavailable provider is not hammered on
+// every cron tick.
+var providerRetryState struct {
+	sync.Mutex
+	failures    int
+	nextAttempt time.Time
+}
+
+// retryUnavailableProviders runs on every cron tick but only attempts
+// initialization once the backoff delay has passed. The delay doubles per
+// failed attempt from providerRetryBaseInterval up to
+// providerRetryMaxInterval, with equal jitter (delay/2 + random(delay/2)) so
+// many instances don't retry in lockstep. Any success resets the backoff.
+func retryUnavailableProviders() {
+	providerRetryState.Lock()
+	defer providerRetryState.Unlock()
+
+	unavailable := unavailableProviderKeys()
+	if len(unavailable) == 0 {
+		providerRetryState.failures = 0
+		providerRetryState.nextAttempt = time.Time{}
+		return
+	}
+
+	now := time.Now()
+	if now.Before(providerRetryState.nextAttempt) {
+		return
+	}
+
+	initializeUnavailableProviders(unavailable)
+
+	unavailable = unavailableProviderKeys()
+	if len(unavailable) == 0 {
+		providerRetryState.failures = 0
+		providerRetryState.nextAttempt = time.Time{}
+		return
+	}
+
+	backoff := providerRetryBaseInterval << min(providerRetryState.failures, 10)
+	if backoff > providerRetryMaxInterval {
+		backoff = providerRetryMaxInterval
+	}
+	providerRetryState.failures++
+
+	delay := backoff/2 + randomJitter(backoff/2)
+	providerRetryState.nextAttempt = now.Add(delay)
+	log.Debugf("Openid providers %v are still not available, retrying initialization after %s", unavailable, delay)
+}
+
+func randomJitter(limit time.Duration) time.Duration {
+	n, err := utils.CryptoRandomInt(int64(limit))
+	if err != nil {
+		return limit / 2
+	}
+	return time.Duration(n)
+}
+
 // RegisterProviderAvailabilityCron periodically retries initializing
 // configured openid providers which are not available, typically because
-// they were unreachable while Vikunja started.
+// they were unreachable while Vikunja started. Retries are paced with
+// capped exponential backoff.
 func RegisterProviderAvailabilityCron() {
-	err := cron.Schedule("* * * * *", initializeUnavailableProviders)
+	err := cron.Schedule("* * * * *", retryUnavailableProviders)
 	if err != nil {
 		log.Fatalf("Could not register openid provider availability cron: %s", err)
 	}

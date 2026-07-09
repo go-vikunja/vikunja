@@ -20,6 +20,8 @@ import (
 	"encoding/json"
 	"net"
 	"net/http"
+	"net/http/httptest"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -82,6 +84,19 @@ func TestGetProvidersStatus(t *testing.T) {
 		assert.True(t, statuses[1].Available)
 	})
 
+	t.Run("invalid provider config is reported as unavailable", func(t *testing.T) {
+		CleanupSavedOpenIDProviders()
+		config.AuthOpenIDEnabled.Set(true)
+		config.AuthOpenIDProviders.Set(map[string]interface{}{
+			"broken": "not-a-map",
+		})
+
+		statuses := GetProvidersStatus()
+		require.Len(t, statuses, 1)
+		assert.Equal(t, "broken", statuses[0].Key)
+		assert.False(t, statuses[0].Available)
+	})
+
 	t.Run("yaml style config maps work", func(t *testing.T) {
 		CleanupSavedOpenIDProviders()
 		server := newMockOIDCServer()
@@ -137,7 +152,7 @@ func TestInitializeUnavailableProviders(t *testing.T) {
 	assert.Empty(t, providers, "the provider must fail initialization while its server is down")
 
 	// Retrying while the provider is still down must not make it available.
-	initializeUnavailableProviders()
+	initializeUnavailableProviders(unavailableProviderKeys())
 	statuses := GetProvidersStatus()
 	require.Len(t, statuses, 1)
 	assert.False(t, statuses[0].Available)
@@ -165,7 +180,7 @@ func TestInitializeUnavailableProviders(t *testing.T) {
 	go func() { _ = srv.Serve(listener) }()
 	defer srv.Close()
 
-	initializeUnavailableProviders()
+	initializeUnavailableProviders(unavailableProviderKeys())
 
 	providers, err = GetAllProviders()
 	require.NoError(t, err)
@@ -175,4 +190,99 @@ func TestInitializeUnavailableProviders(t *testing.T) {
 	statuses = GetProvidersStatus()
 	require.Len(t, statuses, 1)
 	assert.True(t, statuses[0].Available)
+}
+
+func resetProviderRetryState() {
+	providerRetryState.Lock()
+	defer providerRetryState.Unlock()
+	providerRetryState.failures = 0
+	providerRetryState.nextAttempt = time.Time{}
+}
+
+func setProviderRetryDue() {
+	providerRetryState.Lock()
+	defer providerRetryState.Unlock()
+	providerRetryState.nextAttempt = time.Now().Add(-time.Second)
+}
+
+func TestRetryUnavailableProvidersBackoff(t *testing.T) {
+	defer func() {
+		config.AuthOpenIDEnabled.Set(false)
+		config.AuthOpenIDProviders.Set(nil)
+		CleanupSavedOpenIDProviders()
+		resetProviderRetryState()
+	}()
+
+	CleanupSavedOpenIDProviders()
+	resetProviderRetryState()
+
+	// A provider that can be flipped between broken (500) and healthy,
+	// counting how often initialization actually dials it.
+	var healthy atomic.Bool
+	var hits atomic.Int64
+	var server *httptest.Server
+	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		hits.Add(1)
+		if !healthy.Load() {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
+			"issuer":                 server.URL,
+			"authorization_endpoint": server.URL + "/auth",
+			"token_endpoint":         server.URL + "/token",
+			"jwks_uri":               server.URL + "/jwks",
+		})
+	}))
+	defer server.Close()
+
+	config.AuthOpenIDEnabled.Set(true)
+	config.AuthOpenIDProviders.Set(map[string]interface{}{
+		"flaky": map[string]interface{}{
+			"name":         "Flaky Provider",
+			"authurl":      server.URL,
+			"clientid":     "client1",
+			"clientsecret": "secret1",
+		},
+	})
+
+	// First tick: attempt runs, fails and arms the backoff.
+	retryUnavailableProviders()
+	require.Positive(t, hits.Load())
+	providerRetryState.Lock()
+	assert.Equal(t, 1, providerRetryState.failures)
+	assert.False(t, providerRetryState.nextAttempt.IsZero())
+	providerRetryState.Unlock()
+
+	// Ticks within the backoff delay must not dial the provider.
+	dialed := hits.Load()
+	retryUnavailableProviders()
+	assert.Equal(t, dialed, hits.Load())
+
+	// Once due, the next tick attempts again and doubles the backoff.
+	setProviderRetryDue()
+	retryUnavailableProviders()
+	assert.Greater(t, hits.Load(), dialed)
+	providerRetryState.Lock()
+	assert.Equal(t, 2, providerRetryState.failures)
+	providerRetryState.Unlock()
+
+	// A successful attempt resets the backoff.
+	healthy.Store(true)
+	setProviderRetryDue()
+	retryUnavailableProviders()
+	providerRetryState.Lock()
+	assert.Equal(t, 0, providerRetryState.failures)
+	assert.True(t, providerRetryState.nextAttempt.IsZero())
+	providerRetryState.Unlock()
+
+	statuses := GetProvidersStatus()
+	require.Len(t, statuses, 1)
+	assert.True(t, statuses[0].Available)
+
+	// With everything available, further ticks don't dial at all.
+	dialed = hits.Load()
+	retryUnavailableProviders()
+	assert.Equal(t, dialed, hits.Load())
 }

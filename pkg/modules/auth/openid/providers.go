@@ -98,7 +98,11 @@ func rawProviderConfigs() map[string]map[string]interface{} {
 		if !is {
 			pis, pisOK := p.(map[interface{}]interface{})
 			if !pisOK {
-				log.Errorf("Provider %s has invalid configuration format, skipping", key)
+				log.Errorf("Provider %s has invalid configuration format", key)
+				// Keep the key with an empty config so the provider shows up
+				// as configured but unavailable in the healthcheck instead of
+				// silently disappearing.
+				configs[key] = map[string]interface{}{}
 				continue
 			}
 			pi = make(map[string]interface{}, len(pis))
@@ -352,6 +356,14 @@ func getProviderFromMap(pi map[string]interface{}, key string) (provider *Provid
 	return
 }
 
+// CleanupSavedOpenIDProviders removes all cached provider state so the next
+// GetAllProviders call rebuilds it from config. The per-provider entries must
+// be removed too: GetProvider resolves them before the provider list, so a
+// stale entry in a persistent keyvalue backend could otherwise keep serving a
+// provider whose initialization currently fails.
 func CleanupSavedOpenIDProviders() {
+	for key := range rawProviderConfigs() {
+		_ = keyvalue.Del("openid_provider_" + key)
+	}
 	_ = keyvalue.Del("openid_providers")
 }
