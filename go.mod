@@ -35,7 +35,7 @@ require (
 	github.com/bbrks/go-blurhash v1.2.0
 	github.com/c2h5oh/datasize v0.0.0-20231215233829-aa82cc1e6500
 	github.com/coder/websocket v1.8.15
-	github.com/coreos/go-oidc/v3 v3.19.0
+	github.com/coreos/go-oidc/v3 v3.20.0
 	github.com/d4l3k/messagediff v1.2.1
 	github.com/danielgtaylor/huma/v2 v2.38.0
 	github.com/disintegration/imaging v1.6.2
