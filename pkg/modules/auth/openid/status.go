@@ -17,6 +17,7 @@
 package openid
 
 import (
+	"slices"
 	"sort"
 	"sync"
 	"time"
@@ -112,11 +113,21 @@ const (
 
 // providerRetryState paces the initialization retries with capped
 // exponential backoff so a long-unavailable provider is not hammered on
-// every cron tick.
+// every cron tick. The state is global rather than per provider because an
+// initialization attempt always rebuilds the whole provider list; the backoff
+// resets whenever the set of unavailable providers changes so a newly failing
+// provider is retried promptly instead of inheriting an old long delay.
 var providerRetryState struct {
 	sync.Mutex
-	failures    int
-	nextAttempt time.Time
+	failures        int
+	nextAttempt     time.Time
+	lastUnavailable []string
+}
+
+func resetProviderRetryBackoff(unavailable []string) {
+	providerRetryState.failures = 0
+	providerRetryState.nextAttempt = time.Time{}
+	providerRetryState.lastUnavailable = unavailable
 }
 
 // retryUnavailableProviders runs on every cron tick but only attempts
@@ -130,9 +141,12 @@ func retryUnavailableProviders() {
 
 	unavailable := unavailableProviderKeys()
 	if len(unavailable) == 0 {
-		providerRetryState.failures = 0
-		providerRetryState.nextAttempt = time.Time{}
+		resetProviderRetryBackoff(nil)
 		return
+	}
+
+	if !slices.Equal(unavailable, providerRetryState.lastUnavailable) {
+		resetProviderRetryBackoff(unavailable)
 	}
 
 	now := time.Now()
@@ -144,8 +158,7 @@ func retryUnavailableProviders() {
 
 	unavailable = unavailableProviderKeys()
 	if len(unavailable) == 0 {
-		providerRetryState.failures = 0
-		providerRetryState.nextAttempt = time.Time{}
+		resetProviderRetryBackoff(nil)
 		return
 	}
 
@@ -154,6 +167,7 @@ func retryUnavailableProviders() {
 		backoff = providerRetryMaxInterval
 	}
 	providerRetryState.failures++
+	providerRetryState.lastUnavailable = unavailable
 
 	delay := backoff/2 + randomJitter(backoff/2)
 	providerRetryState.nextAttempt = now.Add(delay)

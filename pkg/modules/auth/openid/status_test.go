@@ -195,8 +195,7 @@ func TestInitializeUnavailableProviders(t *testing.T) {
 func resetProviderRetryState() {
 	providerRetryState.Lock()
 	defer providerRetryState.Unlock()
-	providerRetryState.failures = 0
-	providerRetryState.nextAttempt = time.Time{}
+	resetProviderRetryBackoff(nil)
 }
 
 func setProviderRetryDue() {
@@ -285,4 +284,62 @@ func TestRetryUnavailableProvidersBackoff(t *testing.T) {
 	dialed = hits.Load()
 	retryUnavailableProviders()
 	assert.Equal(t, dialed, hits.Load())
+}
+
+func TestRetryBackoffResetsWhenUnavailableSetChanges(t *testing.T) {
+	defer func() {
+		config.AuthOpenIDEnabled.Set(false)
+		config.AuthOpenIDProviders.Set(nil)
+		CleanupSavedOpenIDProviders()
+		resetProviderRetryState()
+	}()
+
+	CleanupSavedOpenIDProviders()
+	resetProviderRetryState()
+
+	var hits atomic.Int64
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		hits.Add(1)
+		w.WriteHeader(http.StatusServiceUnavailable)
+	}))
+	defer server.Close()
+
+	flakyConfig := map[string]interface{}{
+		"name":         "Flaky Provider",
+		"authurl":      server.URL,
+		"clientid":     "client1",
+		"clientsecret": "secret1",
+	}
+
+	config.AuthOpenIDEnabled.Set(true)
+	config.AuthOpenIDProviders.Set(map[string]interface{}{"flaky": flakyConfig})
+
+	retryUnavailableProviders()
+	providerRetryState.Lock()
+	assert.Equal(t, 1, providerRetryState.failures)
+	providerRetryState.Unlock()
+
+	// While the backoff is armed, ticks don't attempt.
+	dialed := hits.Load()
+	retryUnavailableProviders()
+	assert.Equal(t, dialed, hits.Load())
+
+	// A second provider failing changes the unavailable set, which must reset
+	// the backoff and retry immediately instead of waiting out the old delay.
+	config.AuthOpenIDProviders.Set(map[string]interface{}{
+		"flaky": flakyConfig,
+		"alsodown": map[string]interface{}{
+			"name":         "Also Down",
+			"authurl":      "http://127.0.0.1:1",
+			"clientid":     "client2",
+			"clientsecret": "secret2",
+		},
+	})
+
+	retryUnavailableProviders()
+	assert.Greater(t, hits.Load(), dialed)
+	providerRetryState.Lock()
+	assert.Equal(t, 1, providerRetryState.failures)
+	assert.Equal(t, []string{"alsodown", "flaky"}, providerRetryState.lastUnavailable)
+	providerRetryState.Unlock()
 }
