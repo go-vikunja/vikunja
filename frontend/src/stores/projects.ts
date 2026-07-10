@@ -1,4 +1,4 @@
-import {watch, reactive, shallowReactive, toValue, readonly, ref, computed, type MaybeRefOrGetter} from 'vue'
+import {watch, reactive, shallowReactive, toValue, readonly, ref, computed, type DeepReadonly, type MaybeRefOrGetter} from 'vue'
 import {acceptHMRUpdate, defineStore} from 'pinia'
 import {useI18n} from 'vue-i18n'
 import {useRouter} from 'vue-router'
@@ -12,12 +12,15 @@ import {removeProjectFromHistory} from '@/modules/projectHistory'
 import type {IProject} from '@/modelTypes/IProject'
 
 import ProjectModel from '@/models/project'
-import {success} from '@/message'
+import {error, success} from '@/message'
 import {useBaseStore} from '@/stores/base'
 import SavedFilterService from '@/services/savedFilter'
 import {getSavedFilterIdFromProjectId, isSavedFilter} from '@/services/savedFilter'
 import SavedFilterModel from '@/models/savedFilter'
+import ProjectViewService from '@/services/projectViews'
+import ProjectViewModel from '@/models/projectView'
 import type {IProjectView} from '@/modelTypes/IProjectView'
+import type {IFilters} from '@/modelTypes/ISavedFilter'
 import {PERMISSIONS} from '@/constants/permissions.ts'
 
 export const useProjectStore = defineStore('project', () => {
@@ -293,6 +296,45 @@ export const useProjectStore = defineStore('project', () => {
 		})
 	}
 	
+	async function updateViewIncludeSubprojects(readonlyView: IProjectView | DeepReadonly<IProjectView>, includeSubprojects: boolean) {
+		const view = readonlyView as IProjectView
+		const oldFilter: IFilters = view.filter ?? {
+			sort_by: [],
+			order_by: [],
+			filter: '',
+			filter_include_nulls: false,
+			s: '',
+		}
+		const oldValue = oldFilter.includeSubprojects ?? oldFilter.include_subprojects ?? false
+		if (oldValue === includeSubprojects) {
+			return
+		}
+
+		const newFilter: IFilters = {
+			...oldFilter,
+			include_subprojects: includeSubprojects,
+			includeSubprojects,
+		}
+
+		// Update the store immediately so the toggle reacts without waiting for the api
+		setProjectView({
+			...view,
+			filter: newFilter,
+		})
+
+		try {
+			const projectViewService = new ProjectViewService()
+			const updatedView = await projectViewService.update(new ProjectViewModel({
+				...view,
+				filter: newFilter,
+			}))
+			setProjectView(updatedView)
+		} catch (e) {
+			setProjectView(view)
+			error(e)
+		}
+	}
+
 	function removeProjectView(projectId: IProject['id'], viewId: IProjectView['id']) {
 		const project = projects.value[projectId]
 		const updatedViews = project.views.filter(v => v.id !== viewId)
@@ -350,6 +392,7 @@ export const useProjectStore = defineStore('project', () => {
 		deleteProject,
 		getAncestors,
 		setProjectView,
+		updateViewIncludeSubprojects,
 		removeProjectView,
 	}
 })

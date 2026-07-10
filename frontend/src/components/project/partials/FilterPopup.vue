@@ -31,7 +31,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref, watch, nextTick, shallowReactive} from 'vue'
+import {computed, ref, watch, nextTick} from 'vue'
 
 import Filters from '@/components/project/partials/Filters.vue'
 
@@ -39,9 +39,6 @@ import {type TaskFilterParams} from '@/services/taskCollection'
 import {type IProjectView} from '@/modelTypes/IProjectView'
 import {type IProject} from '@/modelTypes/IProject'
 import {useProjectStore} from '@/stores/projects'
-import ProjectViewService from '@/services/projectViews'
-import ProjectViewModel from '@/models/projectView'
-import {error} from '@/message'
 
 const props = defineProps<{
 	modelValue: TaskFilterParams,
@@ -54,7 +51,6 @@ const emit = defineEmits<{
 }>()
 
 const projectStore = useProjectStore()
-const projectViewService = shallowReactive(new ProjectViewService())
 
 const value = ref<TaskFilterParams>({})
 const filtersRef = ref()
@@ -109,37 +105,11 @@ const isProjectView = computed(() => Boolean(props.projectId && props.projectId 
 const includeSubprojects = computed(() => currentView.value?.filter?.includeSubprojects ?? currentView.value?.filter?.include_subprojects ?? false)
 
 async function updateIncludeSubprojects(newValue: boolean) {
-	if (!currentView.value || !props.projectId) {
+	if (!currentView.value) {
 		return
 	}
 
-	const oldView = currentView.value
-	const oldFilter = oldView.filter || { filter: '', s: '', filter_include_nulls: false, sort_by: [], order_by: [] } as unknown as any
-	const oldValue = oldFilter.includeSubprojects ?? oldFilter.include_subprojects ?? false
-	if (oldValue === newValue) {
-		return
-	}
-
-	const newFilter = { ...oldFilter, include_subprojects: newValue, includeSubprojects: newValue } as unknown
-
-	projectStore.setProjectView({
-		...oldView,
-		filter: newFilter,
-	})
-
-	try {
-		const updatedView = await projectViewService.update(new ProjectViewModel({
-			...oldView,
-			filter: newFilter,
-		}))
-		projectStore.setProjectView(updatedView)
-	} catch (e) {
-		projectStore.setProjectView({
-			...oldView,
-			filter: { ...oldFilter, include_subprojects: oldValue, includeSubprojects: oldValue } as unknown,
-		})
-		error(e)
-	}
+	await projectStore.updateViewIncludeSubprojects(currentView.value, newValue)
 }
 
 const filterFromView = computed(() => {
