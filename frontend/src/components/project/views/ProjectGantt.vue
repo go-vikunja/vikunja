@@ -94,9 +94,6 @@ import FormField from '@/components/input/FormField.vue'
 import GanttChart from '@/components/gantt/GanttChart.vue'
 import {useGanttFilters} from '../../../views/project/helpers/useGanttFilters'
 import {PERMISSIONS} from '@/constants/permissions'
-import ProjectViewService from '@/services/projectViews'
-import ProjectViewModel from '@/models/projectView'
-import {error} from '@/message'
 
 import type {DateISO} from '@/types/DateISO'
 import type {ITask} from '@/modelTypes/ITask'
@@ -114,11 +111,10 @@ const props = defineProps<{
 const baseStore = useBaseStore()
 const projectStore = useProjectStore()
 const canWrite = computed(() => baseStore.currentProject?.maxPermission > PERMISSIONS.READ)
-const projectViewService = new ProjectViewService()
 
 const {route, viewId} = toRefs(props)
 const currentView = computed(() => baseStore.currentProject?.views.find(v => v.id === viewId.value))
-const includeSubprojects = computed(() => currentView.value?.filter?.include_subprojects ?? false)
+const includeSubprojects = computed(() => currentView.value?.filter?.includeSubprojects ?? currentView.value?.filter?.include_subprojects ?? false)
 const {
 	filters,
 	hasDefaultFilters,
@@ -130,37 +126,11 @@ const {
 } = useGanttFilters(route, viewId, includeSubprojects)
 
 async function updateIncludeSubprojects(newValue: boolean) {
-	if (!currentView.value || !props.projectId) {
+	if (!currentView.value) {
 		return
 	}
 
-	const oldView = currentView.value
-	const oldFilter = oldView.filter || { filter: '', s: '', filter_include_nulls: false, sort_by: [], order_by: [] } as unknown as any
-	const oldValue = oldFilter.includeSubprojects ?? oldFilter.include_subprojects ?? false
-	if (oldValue === newValue) {
-		return
-	}
-
-	const newFilter = { ...oldFilter, include_subprojects: newValue, includeSubprojects: newValue } as unknown
-
-	projectStore.setProjectView({
-		...oldView,
-		filter: newFilter,
-	})
-
-	try {
-		const updatedView = await projectViewService.update(new ProjectViewModel({
-			...oldView,
-			filter: newFilter,
-		}))
-		projectStore.setProjectView(updatedView)
-	} catch (e) {
-		projectStore.setProjectView({
-			...oldView,
-			filter: { ...oldFilter, include_subprojects: oldValue, includeSubprojects: oldValue } as unknown,
-		})
-		error(e)
-	}
+	await projectStore.updateViewIncludeSubprojects(currentView.value, newValue)
 }
 
 const DEFAULT_DATE_RANGE_DAYS = 7
