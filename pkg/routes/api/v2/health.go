@@ -29,7 +29,7 @@ import (
 type healthBody struct {
 	Body struct {
 		Status          string                  `json:"status" enum:"OK,degraded" doc:"\"OK\" when the service and its dependencies are reachable, \"degraded\" when the service itself is healthy but at least one configured OpenID Connect provider is not available." example:"OK"`
-		OpenIDProviders []openid.ProviderStatus `json:"openid_providers,omitempty" doc:"Availability of each configured OpenID Connect provider. Omitted when OpenID Connect authentication is not configured."`
+		OpenIDProviders []openid.ProviderStatus `json:"openid_providers,omitempty" doc:"Availability of each configured OpenID Connect provider, from cached state — this endpoint never contacts the providers. Omitted when OpenID Connect authentication is not configured or the providers have not been initialized yet right after startup."`
 	}
 }
 

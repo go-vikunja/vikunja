@@ -52,12 +52,17 @@ func availableProviderKeys() map[string]bool {
 }
 
 // GetProvidersStatus returns the availability of every configured OpenID
-// Connect provider. It returns nil when OpenID Connect auth is disabled or
-// no providers are configured.
+// Connect provider. It returns nil when OpenID Connect auth is disabled, no
+// providers are configured, or the provider list has not been initialized
+// yet (right after startup, or while a rebuild is in flight).
 //
-// It enumerates providers from the raw config instead of GetAllProviders
+// It enumerates providers from the raw config instead of the provider list
 // because the latter silently drops providers whose initialization failed —
-// exactly the ones a healthcheck needs to report.
+// exactly the ones a healthcheck needs to report. It reads only the cached
+// list and never builds it: this runs on the /health request path, where
+// dialing providers could block for seconds per down provider (or exit the
+// process for requireavailability ones). The availability cron keeps the
+// cache fresh.
 func GetProvidersStatus() []ProviderStatus {
 	if !config.AuthOpenIDEnabled.GetBool() {
 		return nil
@@ -68,7 +73,15 @@ func GetProvidersStatus() []ProviderStatus {
 		return nil
 	}
 
-	available := availableProviderKeys()
+	cached, initialized := getCachedProviders()
+	if !initialized {
+		return nil
+	}
+	available := make(map[string]bool, len(cached))
+	for _, p := range cached {
+		available[p.Key] = true
+	}
+
 	statuses := make([]ProviderStatus, 0, len(configured))
 	for key := range configured {
 		statuses = append(statuses, ProviderStatus{
@@ -139,14 +152,21 @@ func retryUnavailableProviders() {
 	providerRetryState.Lock()
 	defer providerRetryState.Unlock()
 
-	unavailable := unavailableProviderKeys()
-	if len(unavailable) == 0 {
+	if !config.AuthOpenIDEnabled.GetBool() || len(rawProviderConfigs()) == 0 {
 		resetProviderRetryBackoff(nil)
 		return
 	}
 
-	if !slices.Equal(unavailable, providerRetryState.lastUnavailable) {
-		resetProviderRetryBackoff(unavailable)
+	_, initialized := getCachedProviders()
+	if initialized {
+		unavailable := unavailableProviderKeys()
+		if len(unavailable) == 0 {
+			resetProviderRetryBackoff(nil)
+			return
+		}
+		if !slices.Equal(unavailable, providerRetryState.lastUnavailable) {
+			resetProviderRetryBackoff(unavailable)
+		}
 	}
 
 	now := time.Now()
@@ -154,10 +174,17 @@ func retryUnavailableProviders() {
 		return
 	}
 
-	initializeUnavailableProviders(unavailable)
+	if initialized {
+		initializeUnavailableProviders(unavailableProviderKeys())
+	} else if _, err := GetAllProviders(); err != nil {
+		// The list was never built in this keyvalue store, or the last build
+		// failed (e.g. duplicate issuers) — GetAllProviders builds it so the
+		// healthcheck has cached state to serve.
+		log.Errorf("Error while initializing openid providers: %s", err)
+	}
 
-	unavailable = unavailableProviderKeys()
-	if len(unavailable) == 0 {
+	unavailable := unavailableProviderKeys()
+	if _, initialized = getCachedProviders(); initialized && len(unavailable) == 0 {
 		resetProviderRetryBackoff(nil)
 		return
 	}

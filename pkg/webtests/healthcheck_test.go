@@ -83,6 +83,11 @@ func TestHealthcheckV2OpenIDProviders(t *testing.T) {
 		openid.CleanupSavedOpenIDProviders()
 	}()
 
+	// The endpoint serves cached state only, so initialize the provider list
+	// first, like startup (or the availability cron) would.
+	_, err = openid.GetAllProviders()
+	require.NoError(t, err)
+
 	rec := humaRequest(t, e, http.MethodGet, "/api/v2/health", "", "", "")
 	require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
 

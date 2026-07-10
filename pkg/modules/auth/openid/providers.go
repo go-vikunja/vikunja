@@ -145,11 +145,6 @@ func GetAllProviders() (providers []*Provider, err error) {
 			}
 
 			providers = append(providers, provider)
-
-			err = keyvalue.Put("openid_provider_"+key, provider)
-			if err != nil {
-				return nil, err
-			}
 		}
 
 		// Check for duplicate issuers across providers
@@ -166,10 +161,32 @@ func GetAllProviders() (providers []*Provider, err error) {
 			return nil, &duplicates[0]
 		}
 
+		// Persist the per-provider entries only after the duplicate check:
+		// GetProvider resolves them directly, so writing them earlier would
+		// keep a duplicate-issuer provider usable even though the list build
+		// failed and the startup guard would have refused it.
+		for _, provider := range providers {
+			if err := keyvalue.Put("openid_provider_"+provider.Key, provider); err != nil {
+				return nil, err
+			}
+		}
+
 		err = keyvalue.Put("openid_providers", providers)
 	}
 
 	return
+}
+
+// getCachedProviders returns the cached provider list without building it, so
+// callers on a request path never dial providers.
+func getCachedProviders() (providers []*Provider, exists bool) {
+	providers = []*Provider{}
+	exists, err := keyvalue.GetWithValue("openid_providers", &providers)
+	if err != nil {
+		log.Errorf("Could not get cached openid providers: %s", err)
+		return nil, false
+	}
+	return providers, exists
 }
 
 // GetProvider retrieves a provider from keyvalue

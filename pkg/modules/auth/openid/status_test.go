@@ -74,6 +74,9 @@ func TestGetProvidersStatus(t *testing.T) {
 			},
 		})
 
+		_, err := GetAllProviders()
+		require.NoError(t, err)
+
 		statuses := GetProvidersStatus()
 		require.Len(t, statuses, 2)
 
@@ -84,12 +87,35 @@ func TestGetProvidersStatus(t *testing.T) {
 		assert.True(t, statuses[1].Available)
 	})
 
+	t.Run("nil before the provider list is initialized", func(t *testing.T) {
+		CleanupSavedOpenIDProviders()
+		server := newMockOIDCServer()
+		defer server.Close()
+
+		config.AuthOpenIDEnabled.Set(true)
+		config.AuthOpenIDProviders.Set(map[string]interface{}{
+			"up": map[string]interface{}{
+				"name":         "Up Provider",
+				"authurl":      server.URL,
+				"clientid":     "client1",
+				"clientsecret": "secret1",
+			},
+		})
+
+		// The status must come from cached state only — /health must never
+		// trigger a provider build.
+		assert.Nil(t, GetProvidersStatus())
+	})
+
 	t.Run("invalid provider config is reported as unavailable", func(t *testing.T) {
 		CleanupSavedOpenIDProviders()
 		config.AuthOpenIDEnabled.Set(true)
 		config.AuthOpenIDProviders.Set(map[string]interface{}{
 			"broken": "not-a-map",
 		})
+
+		_, err := GetAllProviders()
+		require.NoError(t, err)
 
 		statuses := GetProvidersStatus()
 		require.Len(t, statuses, 1)
@@ -111,6 +137,9 @@ func TestGetProvidersStatus(t *testing.T) {
 				"clientsecret": "secret1",
 			},
 		})
+
+		_, err := GetAllProviders()
+		require.NoError(t, err)
 
 		statuses := GetProvidersStatus()
 		require.Len(t, statuses, 1)
