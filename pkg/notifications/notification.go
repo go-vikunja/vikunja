@@ -110,8 +110,8 @@ func Notify(notifiable Notifiable, notification Notification, sessions ...*xorm.
 		s = sessions[0]
 	}
 
-	persisted, err := notifyDB(notifiable, notification, s)
-	if err != nil || persisted {
+	mailDeferred, err := notifyDB(notifiable, notification, s)
+	if err != nil || mailDeferred {
 		return err
 	}
 
@@ -143,7 +143,11 @@ func notifyMail(notifiable Notifiable, notification Notification) error {
 	return SendMail(mail, notifiable.Lang())
 }
 
-func notifyDB(notifiable Notifiable, notification Notification, existingSession *xorm.Session) (persisted bool, err error) {
+// notifyDB inserts the notification row if the notification has a DB
+// representation. mailDeferred reports that the mail will be queued from
+// AfterInsert once the (possibly caller-owned) transaction commits, so the
+// caller must not send it.
+func notifyDB(notifiable Notifiable, notification Notification, existingSession *xorm.Session) (mailDeferred bool, err error) {
 
 	dbContent := notification.ToDB()
 	if dbContent == nil {
