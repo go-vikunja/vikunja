@@ -32,7 +32,7 @@ type TaskCollection struct {
 	ProjectID     int64 `param:"project" json:"-"`
 	ProjectViewID int64 `param:"view" json:"-"`
 	// If set to true, tasks from all descendant subprojects will also be returned.
-	IncludeSubprojects bool `json:"include_subprojects" query:"include_subprojects"`
+	IncludeSubprojects bool `json:"include_subprojects,omitempty" query:"include_subprojects"`
 
 	Search string `query:"s" json:"s" doc:"A search term to match tasks by their title."`
 
@@ -165,6 +165,35 @@ func getTaskFilterOptsFromCollection(tf *TaskCollection, projectView *ProjectVie
 // The v2 tasks endpoint uses it; v1 leaves it unset for the polymorphic shape.
 func (tf *TaskCollection) SetForceFlatTasks() {
 	tf.forceFlatTasks = true
+}
+
+// normalizeIncludeSubprojects resets the include subprojects flag in all cases
+// where it is not supported: outside of a concrete project (favorites,
+// saved filters) and for link shares.
+func (tf *TaskCollection) normalizeIncludeSubprojects(a web.Auth) {
+	tf.IncludeSubprojects = tf.IncludeSubprojects &&
+		tf.ProjectID > 0 &&
+		!tf.isSavedFilter
+
+	if _, is := a.(*LinkSharing); is {
+		tf.IncludeSubprojects = false
+	}
+}
+
+// ensureDefaultPositionSort adds a sort by position for the view if no position
+// sort was requested explicitly.
+func ensureDefaultPositionSort(opts *taskSearchOptions, view *ProjectView) {
+	for _, param := range opts.sortby {
+		if param.sortBy == taskPropertyPosition {
+			return
+		}
+	}
+
+	opts.sortby = append(opts.sortby, &sortParam{
+		projectViewID: view.ID,
+		sortBy:        taskPropertyPosition,
+		orderBy:       orderAscending,
+	})
 }
 
 func getTaskOrTasksInBuckets(s *xorm.Session, a web.Auth, projects []*Project, view *ProjectView, opts *taskSearchOptions, filteringForBucket, forceFlatTasks bool) (tasks interface{}, resultCount int, totalItems int64, err error) {
@@ -391,15 +420,7 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 		}
 	}
 
-	effectiveIncludeSubprojects := tf.IncludeSubprojects &&
-		tf.ProjectID > 0 &&
-		!tf.isSavedFilter
-
-	if _, is := a.(*LinkSharing); is {
-		effectiveIncludeSubprojects = false
-	}
-
-	tf.IncludeSubprojects = effectiveIncludeSubprojects
+	tf.normalizeIncludeSubprojects(a)
 
 	opts, err := getTaskFilterOptsFromCollection(tf, view)
 	if err != nil {
@@ -420,20 +441,7 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 	opts.isSavedFilter = tf.isSavedFilter
 
 	if view != nil && !tf.IncludeSubprojects {
-		var hasOrderByPosition bool
-		for _, param := range opts.sortby {
-			if param.sortBy == taskPropertyPosition {
-				hasOrderByPosition = true
-				break
-			}
-		}
-		if !hasOrderByPosition {
-			opts.sortby = append(opts.sortby, &sortParam{
-				projectViewID: view.ID,
-				sortBy:        taskPropertyPosition,
-				orderBy:       orderAscending,
-			})
-		}
+		ensureDefaultPositionSort(opts, view)
 	}
 
 	shareAuth, is := a.(*LinkSharing)
