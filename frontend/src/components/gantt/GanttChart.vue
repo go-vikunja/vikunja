@@ -248,22 +248,20 @@ function getRoundedDate(value: string | Date | undefined, fallback: Date | strin
 	return roundToNaturalDayBoundary(value ? new Date(value) : new Date(fallback), isStart)
 }
 
-function getTaskLabel(task: ITask): string {
+// Returns the title of the project a task belongs to when it comes from a
+// subproject, so it can be shown next to the task title like the list and
+// kanban views do for tasks from other projects.
+function getTaskProjectTitle(task: ITask): string | undefined {
 	if (!props.includeSubprojects) {
-		return task.title
+		return undefined
 	}
 
 	const isProjectContext = filters.value.projectId > 0
 	if (isProjectContext && task.projectId === filters.value.projectId) {
-		return task.title
+		return undefined
 	}
 
-	const projectTitle = projectStore.projects[task.projectId]?.title
-	if (!projectTitle) {
-		return task.title
-	}
-
-	return `${task.title} · ${projectTitle}`
+	return projectStore.projects[task.projectId]?.title
 }
 
 function transformTaskToGanttBar(node: GanttTaskTreeNode): GanttBarModel {
@@ -307,7 +305,8 @@ function transformTaskToGanttBar(node: GanttTaskTreeNode): GanttBarModel {
 		start: startDate,
 		end: endDate,
 		meta: {
-			label: getTaskLabel(t),
+			label: t.title,
+			projectTitle: getTaskProjectTitle(t),
 			task: t,
 			color: taskColor,
 			hasActualDates: Boolean(t.startDate && (t.endDate || t.dueDate)),
