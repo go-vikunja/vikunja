@@ -584,18 +584,17 @@ var baseUserUpdateColumns = [...]string{
 	"extra_settings_links",
 }
 
-// premarshalFrontendSettings is a helper function to marshal frontend settings to JSON before 
-// handing them off to the ORM. This prevents downstream double-encoding issues for clients
-// which expect JSON objects.
-func premarshalFrontendSettings(settings interface{}) (interface{}, error) {
+func premarshalFrontendSettings(settings interface{}) (*string, error) {
 	if settings == nil {
 		return nil, nil
 	}
+
 	settingsJSON, err := json.Marshal(settings)
 	if err != nil {
 		return nil, fmt.Errorf("marshal frontend settings: %w", err)
 	}
-	return string(settingsJSON), nil
+	settingsString := string(settingsJSON)
+	return &settingsString, nil
 }
 
 // UpdateUser updates a user
