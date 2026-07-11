@@ -119,6 +119,25 @@ func TestBulkTask_Update(t *testing.T) {
 		assert.NotZero(t, bt.Tasks[1].DoneAt)
 	})
 
+	t.Run("update recurrence via the public repeat field", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		bt := &BulkTask{
+			TaskIDs: []int64{1, 3},
+			Fields:  []string{"repeat"},
+			Values:  &Task{Repeat: &TaskRepeat{Freq: "weekly", Interval: 1}},
+		}
+
+		err := bt.Update(s, u)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		db.AssertExists(t, "tasks", map[string]interface{}{"id": 1, "repeats": "FREQ=WEEKLY;INTERVAL=1"}, false)
+		db.AssertExists(t, "tasks", map[string]interface{}{"id": 3, "repeats": "FREQ=WEEKLY;INTERVAL=1"}, false)
+	})
+
 	t.Run("don't update done_at when bulk marking tasks done", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()

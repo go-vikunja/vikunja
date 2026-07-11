@@ -175,6 +175,24 @@ func sortParentsBeforeChildren(tasks []*tickTickTask) []*tickTickTask {
 	return result
 }
 
+// normalizeTickTickRepeat normalizes the TickTick Repeat field to a single RRULE string.
+// TickTick exports repeat rules in RRULE format, possibly across multiple lines with a
+// leading DTSTART. Vikunja only supports one RRULE, so we skip DTSTART lines and take
+// the first parseable RRULE line.
+func normalizeTickTickRepeat(repeat string) string {
+	for _, line := range strings.Split(repeat, "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(strings.ToUpper(line), "DTSTART") {
+			continue
+		}
+		if normalized, ok := models.NormalizeRRule(line); ok {
+			return normalized
+		}
+		return ""
+	}
+	return ""
+}
+
 func convertTickTickToVikunja(tasks []*tickTickTask) (result []*models.ProjectWithTasksAndBuckets) {
 	// Sort tasks so that parent tasks always come before their children.
 	// Without this, create_from_structure.go would try to create a
@@ -229,6 +247,7 @@ func convertTickTickToVikunja(tasks []*tickTickTask) (result []*models.ProjectWi
 				Position:    t.Order,
 				Priority:    int64(t.Priority),
 				Labels:      labels,
+				Repeats:     normalizeTickTickRepeat(t.Repeat),
 			},
 		}
 
