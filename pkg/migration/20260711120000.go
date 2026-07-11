@@ -27,38 +27,38 @@ import (
 )
 
 // Old task struct with legacy repeat fields for reading
-type taskOld20251229100000 struct {
+type taskOld20260711120000 struct {
 	ID          int64  `xorm:"bigint autoincr not null unique pk"`
 	RepeatAfter int64  `xorm:"bigint INDEX null"`
 	RepeatMode  int    `xorm:"not null default 0"`
 	Repeats     string `xorm:"varchar(500) null"`
 }
 
-func (taskOld20251229100000) TableName() string {
+func (taskOld20260711120000) TableName() string {
 	return "tasks"
 }
 
 // New task struct with RRULE fields only
-type taskNew20251229100000 struct {
+type taskNew20260711120000 struct {
 	ID                     int64  `xorm:"bigint autoincr not null unique pk"`
 	Repeats                string `xorm:"varchar(500) null"`
 	RepeatsFromCurrentDate bool   `xorm:"null default false"`
 }
 
-func (taskNew20251229100000) TableName() string {
+func (taskNew20260711120000) TableName() string {
 	return "tasks"
 }
 
-// taskRepeatBackup20251229100000 preserves the legacy repeat columns before they
+// taskRepeatBackup20260711120000 preserves the legacy repeat columns before they
 // are dropped, so a mis-conversion can be recovered. It can be dropped by a later
 // migration once the RRULE conversion has been verified in production.
-type taskRepeatBackup20251229100000 struct {
+type taskRepeatBackup20260711120000 struct {
 	ID          int64 `xorm:"bigint not null pk"`
 	RepeatAfter int64 `xorm:"bigint null"`
 	RepeatMode  int   `xorm:"not null default 0"`
 }
 
-func (taskRepeatBackup20251229100000) TableName() string {
+func (taskRepeatBackup20260711120000) TableName() string {
 	return "task_repeat_legacy_backup"
 }
 
@@ -68,14 +68,11 @@ func convertLegacyRepeatToRRule(repeatAfter int64, repeatMode int) string {
 		TaskRepeatModeDefault         = 0
 		TaskRepeatModeMonth           = 1
 		TaskRepeatModeFromCurrentDate = 2
-		TaskRepeatModeYear            = 3
 	)
 
 	switch repeatMode {
 	case TaskRepeatModeMonth:
 		return "FREQ=MONTHLY;INTERVAL=1"
-	case TaskRepeatModeYear:
-		return "FREQ=YEARLY;INTERVAL=1"
 	case TaskRepeatModeDefault, TaskRepeatModeFromCurrentDate:
 		if repeatAfter <= 0 {
 			return ""
@@ -111,13 +108,13 @@ func secondsToRRule(seconds int64) string {
 
 func init() {
 	migrations = append(migrations, &xormigrate.Migration{
-		ID:          "20251229100000",
+		ID:          "20260711120000",
 		Description: "Replace legacy repeat fields with RRULE",
 		Migrate: func(tx *xorm.Engine) error {
 			const TaskRepeatModeFromCurrentDate = 2
 
 			// Step 1: Add new RRULE columns
-			err := tx.Sync2(taskNew20251229100000{})
+			err := tx.Sync2(taskNew20260711120000{})
 			if err != nil {
 				return err
 			}
@@ -126,7 +123,7 @@ func init() {
 			// Page by id so we never load the whole table into memory, and copy each
 			// row's legacy values into a backup table before they are dropped below,
 			// so a mis-conversion can be recovered.
-			if err := tx.Sync2(taskRepeatBackup20251229100000{}); err != nil {
+			if err := tx.Sync2(taskRepeatBackup20260711120000{}); err != nil {
 				return err
 			}
 
@@ -136,7 +133,7 @@ func init() {
 				total, converted, skipped, unconvertible int
 			)
 			for {
-				var tasks []taskOld20251229100000
+				var tasks []taskOld20260711120000
 				err = tx.Where("(repeat_after > 0 OR repeat_mode > 0) AND id > ?", lastID).
 					OrderBy("id ASC").
 					Limit(batchSize).
@@ -149,13 +146,21 @@ func init() {
 				}
 
 				// Back up this page's legacy values before any mutation or drop.
-				backup := make([]taskRepeatBackup20251229100000, 0, len(tasks))
+				ids := make([]int64, 0, len(tasks))
+				backup := make([]taskRepeatBackup20260711120000, 0, len(tasks))
 				for _, task := range tasks {
-					backup = append(backup, taskRepeatBackup20251229100000{
+					ids = append(ids, task.ID)
+					backup = append(backup, taskRepeatBackup20260711120000{
 						ID:          task.ID,
 						RepeatAfter: task.RepeatAfter,
 						RepeatMode:  task.RepeatMode,
 					})
+				}
+				// Migrations run without a wrapping transaction; a mid-run failure can leave
+				// this page's backup rows behind, so clear them before re-inserting to keep
+				// a retry from hitting a PK conflict.
+				if _, err := tx.In("id", ids).Delete(&taskRepeatBackup20260711120000{}); err != nil {
+					return err
 				}
 				if _, err := tx.Insert(&backup); err != nil {
 					return err
@@ -184,7 +189,7 @@ func init() {
 
 					if _, err := tx.ID(task.ID).
 						Cols("repeats", "repeats_from_current_date").
-						Update(&taskNew20251229100000{
+						Update(&taskNew20260711120000{
 							Repeats:                rr,
 							RepeatsFromCurrentDate: repeatsFromCurrentDate,
 						}); err != nil {
@@ -198,8 +203,13 @@ func init() {
 
 			// Step 3: Drop legacy columns (database-specific)
 			if config.DatabaseType.GetString() == "sqlite" {
-				// SQLite requires table rebuild to drop columns
+				// SQLite requires a table rebuild to drop columns. The column list must
+				// track the current tasks schema (pkg/models Task) minus repeat_after/
+				// repeat_mode; anything omitted here is silently lost. DROP the temp table
+				// first so a retry after a mid-run failure starts from a clean slate.
 				_, err = tx.Exec(`
+drop table if exists tasks_dg_tmp;
+
 create table tasks_dg_tmp
 (
     id                         INTEGER           not null
@@ -222,21 +232,23 @@ create table tasks_dg_tmp
     cover_image_attachment_id  INTEGER default 0,
     created                    DATETIME          not null,
     updated                    DATETIME          not null,
+    deleted_at                 DATETIME,
     created_by_id              INTEGER           not null
 );
 
 insert into tasks_dg_tmp(id, title, description, done, done_at, due_date, project_id, repeats, repeats_from_current_date,
                          priority, start_date, end_date, hex_color, percent_done, "index", uid,
-                         cover_image_attachment_id, created, updated, created_by_id)
+                         cover_image_attachment_id, created, updated, deleted_at, created_by_id)
 select id, title, description, done, done_at, due_date, project_id, repeats, repeats_from_current_date,
        priority, start_date, end_date, hex_color, percent_done, "index", uid,
-       cover_image_attachment_id, created, updated, created_by_id
+       cover_image_attachment_id, created, updated, deleted_at, created_by_id
 from tasks;
 
 drop table tasks;
 
 alter table tasks_dg_tmp rename to tasks;
 
+create index IDX_tasks_deleted_at on tasks (deleted_at);
 create index IDX_tasks_done on tasks (done);
 create index IDX_tasks_done_at on tasks (done_at);
 create index IDX_tasks_due_date on tasks (due_date);
@@ -251,10 +263,10 @@ create unique index UQE_tasks_project_index on tasks (project_id, "index");
 
 			// MySQL and PostgreSQL can drop columns directly
 			if err := dropTableColum(tx, "tasks", "repeat_after"); err != nil {
-				log.Warningf("Could not drop repeat_after column: %v", err)
+				return err
 			}
 			if err := dropTableColum(tx, "tasks", "repeat_mode"); err != nil {
-				log.Warningf("Could not drop repeat_mode column: %v", err)
+				return err
 			}
 
 			return nil

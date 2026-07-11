@@ -35,7 +35,6 @@ func TestConvertLegacyRepeatToRRule(t *testing.T) {
 		modeDefault         = 0
 		modeMonth           = 1
 		modeFromCurrentDate = 2
-		modeYear            = 3
 	)
 
 	cases := []struct {
@@ -55,7 +54,6 @@ func TestConvertLegacyRepeatToRRule(t *testing.T) {
 		{"from current date no interval is empty", 0, modeFromCurrentDate, ""},
 		{"monthly ignores repeat_after", 86400, modeMonth, "FREQ=MONTHLY;INTERVAL=1"},
 		{"monthly without interval", 0, modeMonth, "FREQ=MONTHLY;INTERVAL=1"},
-		{"yearly ignores repeat_after", 86400, modeYear, "FREQ=YEARLY;INTERVAL=1"},
 		{"unknown mode is empty", 86400, 99, ""},
 	}
 
@@ -87,6 +85,8 @@ func TestSecondsToRRule(t *testing.T) {
 
 // migTestLegacyTask mirrors the pre-migration tasks schema (legacy repeat
 // columns present; repeats/repeats_from_current_date added by the migration).
+// deleted_at is included because this migration now sorts after the soft-delete
+// migration, so the SQLite rebuild must carry the column across.
 type migTestLegacyTask struct {
 	ID                     int64     `xorm:"bigint not null pk"`
 	Title                  string    `xorm:"text not null"`
@@ -107,6 +107,7 @@ type migTestLegacyTask struct {
 	CoverImageAttachmentID int64     `xorm:"bigint null default 0"`
 	Created                time.Time `xorm:"datetime not null"`
 	Updated                time.Time `xorm:"datetime not null"`
+	DeletedAt              time.Time `xorm:"datetime null 'deleted_at'"`
 	CreatedByID            int64     `xorm:"bigint not null"`
 }
 
@@ -181,13 +182,13 @@ func TestRRuleMigrationSQLite(t *testing.T) {
 	// Run the migration under test.
 	ran := false
 	for _, m := range migrations {
-		if m.ID == "20251229100000" {
+		if m.ID == "20260711120000" {
 			require.NoError(t, m.Migrate(engine))
 			ran = true
 			break
 		}
 	}
-	require.True(t, ran, "migration 20251229100000 was not found in the list")
+	require.True(t, ran, "migration 20260711120000 was not found in the list")
 
 	// Conversion: legacy modes map to the expected RRULE; mode 2 sets the flag.
 	get := func(id int64) migTestNewTask {
@@ -220,4 +221,9 @@ func TestRRuleMigrationSQLite(t *testing.T) {
 	require.Error(t, err, "repeat_after column should have been dropped")
 	_, err = engine.QueryString("SELECT repeat_mode FROM tasks LIMIT 1")
 	require.Error(t, err, "repeat_mode column should have been dropped")
+
+	// Newer columns must survive the rebuild: deleted_at was added by a migration
+	// that sorts before this one, so the hardcoded rebuild list has to preserve it.
+	_, err = engine.QueryString("SELECT deleted_at FROM tasks LIMIT 1")
+	require.NoError(t, err, "deleted_at column should survive the SQLite rebuild")
 }
