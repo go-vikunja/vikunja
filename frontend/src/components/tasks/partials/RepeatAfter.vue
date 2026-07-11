@@ -53,12 +53,16 @@
 			v-if="!hasUnmappableFreq"
 			class="repeat-custom-row"
 		>
-			<span class="repeat-custom-label">
+			<label
+				for="repeatInterval"
+				class="repeat-custom-label"
+			>
 				{{ $t('task.repeat.each') }}
-			</span>
+			</label>
 			<div class="field has-addons repeat-interval-controls">
 				<div class="control repeat-interval-amount">
 					<input
+						id="repeatInterval"
 						v-model.number="repeatInterval"
 						:disabled="disabled || isComplex || undefined"
 						class="input"
@@ -73,6 +77,7 @@
 						<select
 							v-model="repeatFrequency"
 							:disabled="disabled || isComplex || undefined"
+							:aria-label="$t('task.repeat.intervalUnit')"
 							@change="updateData"
 						>
 							<option value="hours">

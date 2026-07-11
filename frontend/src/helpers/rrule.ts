@@ -74,20 +74,6 @@ export function repeatFromSettings(amount: number, freq: RepeatFrequency, bymont
 }
 
 /**
- * Extracts UI-friendly settings from a structured repeat object.
- */
-export function repeatToSettings(repeat: ITaskRepeat | null): { amount: number; freq: RepeatFrequency; bymonthday?: number } | null {
-	if (!repeat) {
-		return null
-	}
-	return {
-		amount: repeat.interval || 1,
-		freq: freqToUiFreq(repeat.freq),
-		bymonthday: repeat.byMonthDay?.[0],
-	}
-}
-
-/**
  * Returns a human-readable description of a repeat configuration.
  */
 export function describeRepeat(repeat: ITaskRepeat | null, t: (key: string, params?: Record<string, unknown>) => string): string {
