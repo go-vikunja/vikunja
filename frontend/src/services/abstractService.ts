@@ -336,7 +336,9 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 			})
 		}
 		
-		return window.URL.createObjectURL(new Blob([response.data]))
+		// Keep the blob as-is: re-wrapping via new Blob([...]) drops the mime type,
+		// and an untyped blob url in an iframe downloads instead of opening the PDF viewer.
+		return window.URL.createObjectURL(response.data)
 	}
 
 	/**

@@ -155,6 +155,7 @@ func TestTaskAttachmentsV2(t *testing.T) {
 		assert.Equal(t, strconv.Itoa(len(content)), rec.Header().Get("Content-Length"))
 		assert.Equal(t, "no-cache", rec.Header().Get("Cache-Control"))
 		assert.NotEmpty(t, rec.Header().Get("Last-Modified"))
+		assert.Equal(t, "nosniff", rec.Header().Get("X-Content-Type-Options"))
 	})
 
 	t.Run("Delete", func(t *testing.T) {
