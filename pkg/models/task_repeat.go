@@ -87,6 +87,26 @@ var stringToWeekdayMap = map[string]rrule.Weekday{
 	"fr": rrule.FR, "sa": rrule.SA, "su": rrule.SU,
 }
 
+// NormalizeRRule strips an optional (case-insensitive) RRULE: prefix, validates
+// the value with the rrule parser, and returns it in canonical form. ok is false
+// when the value is not a parseable RRULE, so callers can skip it instead of
+// storing or emitting malformed calendar data.
+func NormalizeRRule(raw string) (normalized string, ok bool) {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return "", false
+	}
+	const prefix = "RRULE:"
+	if len(raw) >= len(prefix) && strings.EqualFold(raw[:len(prefix)], prefix) {
+		raw = strings.TrimSpace(raw[len(prefix):])
+	}
+	opt, err := rrule.StrToROption(raw)
+	if err != nil {
+		return "", false
+	}
+	return opt.RRuleString(), true
+}
+
 // taskRepeatFromRRule converts an RRULE string to a TaskRepeat struct.
 // Returns nil if the input is empty.
 func taskRepeatFromRRule(rruleStr string) *TaskRepeat {

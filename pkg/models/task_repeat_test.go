@@ -307,3 +307,28 @@ func TestTaskRepeatRoundTrip(t *testing.T) {
 		assert.Equal(t, original, result)
 	})
 }
+
+func TestNormalizeRRule(t *testing.T) {
+	cases := []struct {
+		name   string
+		raw    string
+		want   string
+		wantOK bool
+	}{
+		{"plain valid", "FREQ=DAILY;INTERVAL=1", "FREQ=DAILY;INTERVAL=1", true},
+		{"strips RRULE prefix", "RRULE:FREQ=DAILY;INTERVAL=1", "FREQ=DAILY;INTERVAL=1", true},
+		{"strips lowercase prefix", "rrule:FREQ=WEEKLY;BYDAY=MO", "FREQ=WEEKLY;BYDAY=MO", true},
+		{"strips mixed-case prefix", "Rrule:FREQ=WEEKLY;BYDAY=MO", "FREQ=WEEKLY;BYDAY=MO", true},
+		{"trims whitespace", "  FREQ=DAILY;INTERVAL=1  ", "FREQ=DAILY;INTERVAL=1", true},
+		{"canonicalizes leading zero", "FREQ=MONTHLY;BYMONTHDAY=01", "FREQ=MONTHLY;BYMONTHDAY=1", true},
+		{"rejects garbage", "not a rule", "", false},
+		{"rejects empty", "", "", false},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			got, ok := NormalizeRRule(c.raw)
+			assert.Equal(t, c.wantOK, ok)
+			assert.Equal(t, c.want, got)
+		})
+	}
+}
