@@ -1141,6 +1141,27 @@ func TestValidateRRule(t *testing.T) {
 		require.Error(t, err)
 		assert.True(t, IsErrInvalidData(err))
 	})
+	t.Run("plain sub-daily rules stay valid", func(t *testing.T) {
+		// The legacy migration and the UI only author plain sub-daily interval
+		// rules, so these must keep passing.
+		assert.NoError(t, validateRRule("FREQ=SECONDLY;INTERVAL=7200"))
+		assert.NoError(t, validateRRule("FREQ=MINUTELY;INTERVAL=30"))
+		assert.NoError(t, validateRRule("FREQ=HOURLY;INTERVAL=2"))
+	})
+	t.Run("sub-daily with by-part rejected", func(t *testing.T) {
+		// FREQ=SECONDLY;BYSECOND=0 is a time-only filter that defeats the rrule
+		// library's day-skip optimization and iterates second-by-second (DoS).
+		for _, r := range []string{
+			"FREQ=SECONDLY;BYSECOND=0",
+			"FREQ=MINUTELY;BYMINUTE=0",
+			"FREQ=HOURLY;BYHOUR=9",
+			"FREQ=SECONDLY;BYDAY=MO",
+		} {
+			err := validateRRule(r)
+			require.Error(t, err, r)
+			assert.True(t, IsErrInvalidData(err), r)
+		}
+	})
 }
 
 func TestFixedDurationForRRule(t *testing.T) {
@@ -1190,6 +1211,25 @@ func TestUpdateDone_RRuleAncientDueDate(t *testing.T) {
 	assert.True(t, newTask.DueDate.After(start), "new due date must be strictly after now")
 	assert.True(t, newTask.StartDate.After(start), "new start date must be strictly after now")
 	assert.True(t, newTask.EndDate.After(start), "new end date must be strictly after now")
+	assert.False(t, newTask.Done, "repeating task should be unmarked as done")
+}
+
+func TestUpdateDone_RRuleAncientDueDate_SlowPath(t *testing.T) {
+	// A daily rule with a By-part takes the rrule.After slow path (no fixed
+	// duration). The 10-year clamp keeps the far-past search window bounded.
+	oldTask := &Task{
+		Done:    false,
+		Repeats: "FREQ=DAILY;BYHOUR=9",
+		DueDate: time.Date(1900, 1, 1, 0, 0, 0, 0, time.UTC),
+	}
+	newTask := &Task{Done: true}
+
+	start := time.Now()
+	updateDone(oldTask, newTask)
+	elapsed := time.Since(start)
+
+	require.Less(t, elapsed, time.Second, "slow-path reschedule must stay bounded for ancient due dates")
+	assert.True(t, newTask.DueDate.After(start), "new due date must be strictly after now")
 	assert.False(t, newTask.Done, "repeating task should be unmarked as done")
 }
 
