@@ -115,7 +115,7 @@
     "@tsconfig/node24": "24.0.4",
     "@types/codemirror": "5.60.17",
     "@types/is-touch-device": "1.0.3",
-    "@types/node": "24.13.2",
+    "@types/node": "24.13.3",
     "@types/sortablejs": "1.15.9",
     "@types/ws": "8.18.1",
     "@typescript-eslint/eslint-plugin": "8.63.0",
@@ -156,7 +156,7 @@
     "vite-plugin-vue-devtools": "8.1.5",
     "vite-svg-loader": "5.1.1",
     "vitest": "4.1.10",
-    "vue-tsc": "3.3.6",
+    "vue-tsc": "3.3.7",
     "wait-on": "9.0.10",
     "workbox-cli": "7.4.1",
     "ws": "8.21.0"
