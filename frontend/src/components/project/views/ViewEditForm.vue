@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import {onBeforeMount, ref} from 'vue'
+import {computed, onBeforeMount, ref} from 'vue'
 
 import type {IProjectView} from '@/modelTypes/IProjectView'
+import type {IProject} from '@/modelTypes/IProject'
 import type {IFilters} from '@/modelTypes/ISavedFilter'
 
 import {hasFilterQuery, transformFilterStringForApi, transformFilterStringFromApi} from '@/helpers/filters'
@@ -32,6 +33,29 @@ const view = ref<IProjectView>()
 
 const labelStore = useLabelStore()
 const projectStore = useProjectStore()
+
+const descendantProjects = computed(() => {
+	const result: Array<{project: IProject, depth: number}> = []
+	const collect = (projectId: number, depth: number) => {
+		projectStore.getChildProjects(projectId).forEach(project => {
+			result.push({project, depth})
+			collect(project.id, depth + 1)
+		})
+	}
+	collect(view.value?.projectId ?? 0, 0)
+	return result
+})
+
+function isProjectIncluded(projectId: number): boolean {
+	return view.value?.includedProjectIds.includes(projectId) ?? false
+}
+
+function setProjectIncluded(projectId: number, included: boolean) {
+	if (!view.value) return
+	view.value.includedProjectIds = included
+		? [...view.value.includedProjectIds, projectId]
+		: view.value.includedProjectIds.filter(id => id !== projectId)
+}
 
 onBeforeMount(() => {
 	const transformFilterFromApi = (filterInput: IFilters): IFilter => {
@@ -171,6 +195,49 @@ function handleBubbleSave() {
 				</div>
 			</template>
 		</FormField>
+
+		<FormField
+			v-if="descendantProjects.length > 0"
+			:label="$t('project.views.projectScope')"
+		>
+			<template #default="{ id }">
+				<div class="select">
+					<select
+						:id="id"
+						v-model="view.projectScope"
+					>
+						<option value="current">
+							{{ $t('project.views.projectScopeCurrent') }}
+						</option>
+						<option value="all">
+							{{ $t('project.views.projectScopeAll') }}
+						</option>
+						<option value="selected">
+							{{ $t('project.views.projectScopeSelected') }}
+						</option>
+					</select>
+				</div>
+			</template>
+		</FormField>
+
+		<div
+			v-if="view.projectScope === 'selected'"
+			class="field mbe-3"
+		>
+			<label
+				v-for="item in descendantProjects"
+				:key="item.project.id"
+				class="project-scope-option"
+			>
+				<FancyCheckbox
+					:model-value="isProjectIncluded(item.project.id)"
+					is-block
+					@update:modelValue="setProjectIncluded(item.project.id, $event)"
+				>
+					<span :style="{paddingInlineStart: `${item.depth}rem`}">{{ item.project.title }}</span>
+				</FancyCheckbox>
+			</label>
+		</div>
 
 		<label
 			class="label"

@@ -9,6 +9,7 @@ export const PROJECT_VIEW_KINDS = {
 	KANBAN: 'kanban',
 } as const
 export type ProjectViewKind = typeof PROJECT_VIEW_KINDS[keyof typeof PROJECT_VIEW_KINDS]
+export type ProjectViewProjectScope = 'current' | 'all' | 'selected'
 
 export const DEFAULT_PROJECT_VIEW_SETTINGS = {
 	FIRST: 'first',
@@ -32,6 +33,8 @@ export interface IProjectView extends IAbstract {
 
 	filter: IFilters|undefined
 	position: number
+	projectScope: ProjectViewProjectScope
+	includedProjectIds: IProject['id'][]
 
 	bucketConfigurationMode: ProjectViewBucketConfigurationMode
 	bucketConfiguration: IProjectViewBucketConfiguration[]
