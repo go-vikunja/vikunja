@@ -35,8 +35,8 @@ import (
 	"xorm.io/xorm/schemas"
 
 	_ "github.com/go-sql-driver/mysql" // Because.
-	_ "github.com/lib/pq"              // Because.
-	_ "github.com/mattn/go-sqlite3"    // Because.
+	"github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3" // Because.
 )
 
 var (
@@ -177,11 +177,14 @@ func getPostgreSQLConnectionString(dbHost, dbUser, dbPasswd, dbName, dbSchema, d
 		connStr = fmt.Sprintf("postgres://%s:%s@%s:%s/%s%ssslmode=%s&sslcert=%s&sslkey=%s&sslrootcert=%s",
 			url.PathEscape(dbUser), url.PathEscape(dbPasswd), host, port, dbName, dbParam, dbSslMode, dbSslCert, dbSslKey, dbSslRootCert)
 	}
-	// Pin search_path so raw SQL (e.g. in migrations) resolves to the same schema as
-	// xorm-built statements. Without this, the role's default search_path decides where
-	// unqualified statements land, which can split an install across schemas (#3118).
+	// Pin search_path so raw SQL resolves to the same schema as xorm-built statements (#3118).
+	// Quoting preserves case; public stays so extension operators (e.g. ParadeDB's |||) keep resolving.
 	if dbSchema != "" {
-		connStr += "&search_path=" + url.QueryEscape(dbSchema)
+		searchPath := pq.QuoteIdentifier(dbSchema)
+		if dbSchema != "public" {
+			searchPath += ",public"
+		}
+		connStr += "&search_path=" + url.QueryEscape(searchPath)
 	}
 	return connStr
 }

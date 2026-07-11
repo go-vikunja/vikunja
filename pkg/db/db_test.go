@@ -25,14 +25,18 @@ import (
 func TestGetPostgreSQLConnectionString(t *testing.T) {
 	t.Run("with schema", func(t *testing.T) {
 		connStr := getPostgreSQLConnectionString("localhost:5432", "vikunja", "secret", "vikunja", "vikunja", "disable", "", "", "")
-		assert.Equal(t, "postgres://vikunja:secret@localhost:5432/vikunja?sslmode=disable&sslcert=&sslkey=&sslrootcert=&search_path=vikunja", connStr)
+		assert.Equal(t, "postgres://vikunja:secret@localhost:5432/vikunja?sslmode=disable&sslcert=&sslkey=&sslrootcert=&search_path=%22vikunja%22%2Cpublic", connStr)
 	})
 	t.Run("without schema", func(t *testing.T) {
 		connStr := getPostgreSQLConnectionString("localhost:5432", "vikunja", "secret", "vikunja", "", "disable", "", "", "")
 		assert.Equal(t, "postgres://vikunja:secret@localhost:5432/vikunja?sslmode=disable&sslcert=&sslkey=&sslrootcert=", connStr)
 	})
+	t.Run("schema needing quoting", func(t *testing.T) {
+		connStr := getPostgreSQLConnectionString("localhost:5432", "vikunja", "secret", "vikunja", "MySchema", "disable", "", "", "")
+		assert.Equal(t, "postgres://vikunja:secret@localhost:5432/vikunja?sslmode=disable&sslcert=&sslkey=&sslrootcert=&search_path=%22MySchema%22%2Cpublic", connStr)
+	})
 	t.Run("unix socket", func(t *testing.T) {
 		connStr := getPostgreSQLConnectionString("/var/run/postgresql", "vikunja", "secret", "vikunja", "public", "disable", "", "", "")
-		assert.Equal(t, "postgres://vikunja:secret@:5432/vikunja?sslmode=disable&sslcert=&sslkey=&sslrootcert=&host=/var/run/postgresql&search_path=public", connStr)
+		assert.Equal(t, "postgres://vikunja:secret@:5432/vikunja?sslmode=disable&sslcert=&sslkey=&sslrootcert=&host=/var/run/postgresql&search_path=%22public%22", connStr)
 	})
 }
