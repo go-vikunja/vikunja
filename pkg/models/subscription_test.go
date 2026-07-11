@@ -190,6 +190,118 @@ func TestSubscription_Create(t *testing.T) {
 	// TODO: Add tests to test triggering of notifications for subscribed things
 }
 
+// TestSubscription_CreateForOtherUser covers subscribing a different user than the caller.
+// Project 29 (pkg/db/fixtures/users_projects.yml) is shared to:
+//   - user1  (permission 2, admin)
+//   - user11 (permission 0, read)
+//   - user12 (permission 1, write)
+//   - user13 (permission 2, admin)
+//
+// user2 has no access to project 29 at all.
+func TestSubscription_CreateForOtherUser(t *testing.T) {
+	t.Run("caller with write access can subscribe a user with read access", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		caller := &user.User{ID: 1}
+		sb := &Subscription{
+			Entity:   "project",
+			EntityID: 29,
+			UserID:   11,
+		}
+
+		can, err := sb.CanCreate(s, caller)
+		require.NoError(t, err)
+		assert.True(t, can)
+
+		err = sb.Create(s, caller)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		assert.Equal(t, int64(11), sb.UserID)
+		db.AssertExists(t, "subscriptions", map[string]interface{}{
+			"entity_type": 2,
+			"entity_id":   29,
+			"user_id":     11,
+		}, false)
+	})
+	t.Run("explicit own id behaves like self-subscribe", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		caller := &user.User{ID: 12}
+		sb := &Subscription{
+			Entity:   "project",
+			EntityID: 29,
+			UserID:   12,
+		}
+
+		can, err := sb.CanCreate(s, caller)
+		require.NoError(t, err)
+		assert.True(t, can)
+
+		err = sb.Create(s, caller)
+		require.NoError(t, err)
+	})
+	t.Run("target user without access is rejected", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		caller := &user.User{ID: 1}
+		sb := &Subscription{
+			Entity:   "project",
+			EntityID: 29,
+			UserID:   2, // user2 has no access to project 29
+		}
+
+		can, err := sb.CanCreate(s, caller)
+		require.NoError(t, err)
+		assert.True(t, can, "the caller has write access, so CanCreate passes")
+
+		err = sb.Create(s, caller)
+		require.Error(t, err)
+		assert.True(t, IsErrUserDoesNotHaveAccessToProject(err))
+	})
+	t.Run("caller with read-only access cannot subscribe someone else", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		caller := &user.User{ID: 11} // read-only on project 29
+		sb := &Subscription{
+			Entity:   "project",
+			EntityID: 29,
+			UserID:   12,
+		}
+
+		can, err := sb.CanCreate(s, caller)
+		require.NoError(t, err)
+		assert.False(t, can)
+	})
+	t.Run("empty user id still subscribes the caller", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		caller := &user.User{ID: 11}
+		sb := &Subscription{
+			Entity:   "project",
+			EntityID: 29,
+		}
+
+		can, err := sb.CanCreate(s, caller)
+		require.NoError(t, err)
+		assert.True(t, can)
+
+		err = sb.Create(s, caller)
+		require.NoError(t, err)
+		assert.Equal(t, int64(11), sb.UserID)
+	})
+}
+
 func TestSubscription_Delete(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)

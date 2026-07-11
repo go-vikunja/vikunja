@@ -103,8 +103,10 @@ type Subscription struct {
 	// The id of the entity to subscribe to.
 	EntityID int64 `xorm:"bigint index not null" json:"entity_id" param:"entityID" readOnly:"true" doc:"The numeric id of the subscribed entity; taken from the request path."`
 
-	// The user who made this subscription
-	UserID int64 `xorm:"bigint index not null" json:"-"`
+	// The user who made this subscription. If left empty when creating a subscription, the currently
+	// authenticated user is subscribed. To subscribe a different user, both the authenticated user and
+	// the user to subscribe need read access to the entity.
+	UserID int64 `xorm:"bigint index not null" json:"user_id,omitempty" doc:"The id of the user to subscribe. If omitted, the currently authenticated user is subscribed. To subscribe someone else, both users need access to the entity."`
 
 	// A timestamp when this subscription was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"A timestamp when this subscription was created. You cannot change this value."`
@@ -129,15 +131,18 @@ func (sb *Subscription) TableName() string {
 	return "subscriptions"
 }
 
-// Create subscribes the current user to an entity
-// @Summary Subscribes the current user to an entity.
-// @Description Subscribes the current user to an entity.
+// Create subscribes a user to an entity. If no user is specified, the currently authenticated user is
+// subscribed. To subscribe a different user, both the authenticated user and the user to subscribe need
+// read access to the entity.
+// @Summary Subscribes a user to an entity.
+// @Description Subscribes the currently authenticated user to an entity. To subscribe a different user, pass their numeric id as `user_id` in the request body - this requires the authenticated user to have write access to the entity, and the user to subscribe needs read access to it.
 // @tags subscriptions
 // @Accept json
 // @Produce json
 // @Security JWTKeyAuth
 // @Param entity path string true "The entity the user subscribes to. Can be either `project` or `task`."
 // @Param entityID path string true "The numeric id of the entity to subscribe to."
+// @Param subscription body models.Subscription true "The user to subscribe. Leave the body empty to subscribe the currently authenticated user."
 // @Success 201 {object} models.Subscription "The subscription"
 // @Failure 403 {object} web.HTTPError "The user does not have access to subscribe to this entity."
 // @Failure 412 {object} web.HTTPError "The subscription already exists."
@@ -148,9 +153,27 @@ func (sb *Subscription) Create(s *xorm.Session, auth web.Auth) (err error) {
 	// Permissions method already does the validation of the entity type, so we don't need to do that here
 
 	sb.ID = 0
-	sb.UserID = auth.GetID()
 
-	sub, err := GetSubscriptionForUser(s, sb.EntityType, sb.EntityID, auth)
+	// subscriber defaults to the currently authenticated user; CanCreate already made sure the caller
+	// is allowed to subscribe someone else if sb.UserID is set to a different user.
+	subscriber := auth
+	if sb.UserID != 0 && sb.UserID != auth.GetID() {
+		subscriber, err = user.GetUserByID(s, sb.UserID)
+		if err != nil {
+			return err
+		}
+
+		canRead, readErr := canReadSubscriptionEntity(s, sb.EntityType, sb.EntityID, subscriber)
+		if readErr != nil {
+			return readErr
+		}
+		if !canRead {
+			return ErrUserDoesNotHaveAccessToProject{ProjectID: sb.EntityID, UserID: sb.UserID}
+		}
+	}
+	sb.UserID = subscriber.GetID()
+
+	sub, err := GetSubscriptionForUser(s, sb.EntityType, sb.EntityID, subscriber)
 	if err != nil {
 		return err
 	}
@@ -163,6 +186,20 @@ func (sb *Subscription) Create(s *xorm.Session, auth web.Auth) (err error) {
 	}
 
 	_, err = s.Insert(sb)
+	return
+}
+
+func canReadSubscriptionEntity(s *xorm.Session, entityType SubscriptionEntityType, entityID int64, a web.Auth) (can bool, err error) {
+	switch entityType {
+	case SubscriptionEntityProject:
+		p := &Project{ID: entityID}
+		can, _, err = p.CanRead(s, a)
+	case SubscriptionEntityTask:
+		t := &Task{ID: entityID}
+		can, _, err = t.CanRead(s, a)
+	default:
+		return false, &ErrUnknownSubscriptionEntityType{EntityType: entityType}
+	}
 	return
 }
 
