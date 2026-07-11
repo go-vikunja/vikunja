@@ -234,12 +234,34 @@ func (m *Migration) AuthURL() string {
 		"&state=" + state
 }
 
+var todoistRecurrenceTimeRegex = regexp.MustCompile(`\s+(?:at|@)\s+.+$`)
+
+var todoistRecurrenceIntervalRegex = regexp.MustCompile(`^every (\d+) (day|week|month|year)s?$`)
+
+// Map weekday names to RRULE BYDAY values
+var todoistRecurrenceWeekdays = map[string]string{
+	"monday":    "MO",
+	"tuesday":   "TU",
+	"wednesday": "WE",
+	"thursday":  "TH",
+	"friday":    "FR",
+	"saturday":  "SA",
+	"sunday":    "SU",
+}
+
+var todoistRecurrenceFreq = map[string]string{
+	"day":   "DAILY",
+	"week":  "WEEKLY",
+	"month": "MONTHLY",
+	"year":  "YEARLY",
+}
+
 // todoistDueStringToRRule converts Todoist's natural language due string to an RRULE.
 // Supports common English patterns like "every day", "every week", "every monday", "every 2 weeks", etc.
 // The lang parameter is the language code from the Todoist API (e.g. "en", "de", "ja").
 // Only English ("en") due strings are supported; non-English strings are skipped with a log message.
-func todoistDueStringToRRule(dueString string, isRecurring bool, lang string) string {
-	if !isRecurring || dueString == "" {
+func todoistDueStringToRRule(dueString, lang string) string {
+	if dueString == "" {
 		return ""
 	}
 
@@ -261,19 +283,8 @@ func todoistDueStringToRRule(dueString string, isRecurring bool, lang string) st
 	// Strip a trailing time-of-day clause ("every day at 9am", "every day @ 9am").
 	// Vikunja recurrence has no time-of-day component, and leaving it would stop the
 	// patterns below from matching, silently dropping the recurrence on import.
-	dueString = regexp.MustCompile(`\s+(?:at|@)\s+.+$`).ReplaceAllString(dueString, "")
+	dueString = todoistRecurrenceTimeRegex.ReplaceAllString(dueString, "")
 	dueString = strings.TrimSpace(dueString)
-
-	// Map weekday names to RRULE BYDAY values
-	weekdays := map[string]string{
-		"monday":    "MO",
-		"tuesday":   "TU",
-		"wednesday": "WE",
-		"thursday":  "TH",
-		"friday":    "FR",
-		"saturday":  "SA",
-		"sunday":    "SU",
-	}
 
 	// Common patterns
 
@@ -298,23 +309,16 @@ func todoistDueStringToRRule(dueString string, isRecurring bool, lang string) st
 	}
 
 	// "every N days/weeks/months/years"
-	re := regexp.MustCompile(`^every (\d+) (day|week|month|year)s?$`)
-	if matches := re.FindStringSubmatch(dueString); matches != nil {
+	if matches := todoistRecurrenceIntervalRegex.FindStringSubmatch(dueString); matches != nil {
 		interval := matches[1]
 		unit := matches[2]
-		freqMap := map[string]string{
-			"day":   "DAILY",
-			"week":  "WEEKLY",
-			"month": "MONTHLY",
-			"year":  "YEARLY",
-		}
-		if freq, ok := freqMap[unit]; ok {
+		if freq, ok := todoistRecurrenceFreq[unit]; ok {
 			return fmt.Sprintf("FREQ=%s;INTERVAL=%s", freq, interval)
 		}
 	}
 
 	// "every monday", "every tuesday", etc.
-	for dayName, dayCode := range weekdays {
+	for dayName, dayCode := range todoistRecurrenceWeekdays {
 		if dueString == "every "+dayName {
 			return fmt.Sprintf("FREQ=WEEKLY;BYDAY=%s", dayCode)
 		}
@@ -475,7 +479,7 @@ func convertTodoistToVikunja(sync *sync, doneItems map[string]*doneItem) (fullVi
 
 			// Convert Todoist recurrence to RRULE
 			if i.Due.IsRecurring {
-				task.Repeats = todoistDueStringToRRule(i.Due.String, i.Due.IsRecurring, i.Due.Lang)
+				task.Repeats = todoistDueStringToRRule(i.Due.String, i.Due.Lang)
 			}
 		}
 

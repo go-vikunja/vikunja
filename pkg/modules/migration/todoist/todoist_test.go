@@ -654,85 +654,84 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 
 func TestTodoistDueStringToRRule(t *testing.T) {
 	testCases := []struct {
-		name        string
-		dueString   string
-		isRecurring bool
-		lang        string
-		expected    string
+		name      string
+		dueString string
+		lang      string
+		expected  string
 	}{
-		// Non-recurring tasks
-		{"not recurring", "tomorrow", false, "en", ""},
-		{"empty string not recurring", "", false, "en", ""},
+		// Non-recurring or unparsable strings
+		{"unparsable string", "tomorrow", "en", ""},
+		{"empty string", "", "en", ""},
 
 		// Basic frequencies
-		{"every day", "every day", true, "en", "FREQ=DAILY;INTERVAL=1"},
-		{"daily", "daily", true, "en", "FREQ=DAILY;INTERVAL=1"},
-		{"every week", "every week", true, "en", "FREQ=WEEKLY;INTERVAL=1"},
-		{"weekly", "weekly", true, "en", "FREQ=WEEKLY;INTERVAL=1"},
-		{"every month", "every month", true, "en", "FREQ=MONTHLY;INTERVAL=1"},
-		{"monthly", "monthly", true, "en", "FREQ=MONTHLY;INTERVAL=1"},
-		{"every year", "every year", true, "en", "FREQ=YEARLY;INTERVAL=1"},
-		{"yearly", "yearly", true, "en", "FREQ=YEARLY;INTERVAL=1"},
-		{"annually", "annually", true, "en", "FREQ=YEARLY;INTERVAL=1"},
+		{"every day", "every day", "en", "FREQ=DAILY;INTERVAL=1"},
+		{"daily", "daily", "en", "FREQ=DAILY;INTERVAL=1"},
+		{"every week", "every week", "en", "FREQ=WEEKLY;INTERVAL=1"},
+		{"weekly", "weekly", "en", "FREQ=WEEKLY;INTERVAL=1"},
+		{"every month", "every month", "en", "FREQ=MONTHLY;INTERVAL=1"},
+		{"monthly", "monthly", "en", "FREQ=MONTHLY;INTERVAL=1"},
+		{"every year", "every year", "en", "FREQ=YEARLY;INTERVAL=1"},
+		{"yearly", "yearly", "en", "FREQ=YEARLY;INTERVAL=1"},
+		{"annually", "annually", "en", "FREQ=YEARLY;INTERVAL=1"},
 
 		// Interval variations
-		{"every 2 days", "every 2 days", true, "en", "FREQ=DAILY;INTERVAL=2"},
-		{"every 3 weeks", "every 3 weeks", true, "en", "FREQ=WEEKLY;INTERVAL=3"},
-		{"every 6 months", "every 6 months", true, "en", "FREQ=MONTHLY;INTERVAL=6"},
-		{"every 2 years", "every 2 years", true, "en", "FREQ=YEARLY;INTERVAL=2"},
+		{"every 2 days", "every 2 days", "en", "FREQ=DAILY;INTERVAL=2"},
+		{"every 3 weeks", "every 3 weeks", "en", "FREQ=WEEKLY;INTERVAL=3"},
+		{"every 6 months", "every 6 months", "en", "FREQ=MONTHLY;INTERVAL=6"},
+		{"every 2 years", "every 2 years", "en", "FREQ=YEARLY;INTERVAL=2"},
 
 		// Weekday patterns
-		{"every monday", "every monday", true, "en", "FREQ=WEEKLY;BYDAY=MO"},
-		{"every tuesday", "every tuesday", true, "en", "FREQ=WEEKLY;BYDAY=TU"},
-		{"every wednesday", "every wednesday", true, "en", "FREQ=WEEKLY;BYDAY=WE"},
-		{"every thursday", "every thursday", true, "en", "FREQ=WEEKLY;BYDAY=TH"},
-		{"every friday", "every friday", true, "en", "FREQ=WEEKLY;BYDAY=FR"},
-		{"every saturday", "every saturday", true, "en", "FREQ=WEEKLY;BYDAY=SA"},
-		{"every sunday", "every sunday", true, "en", "FREQ=WEEKLY;BYDAY=SU"},
+		{"every monday", "every monday", "en", "FREQ=WEEKLY;BYDAY=MO"},
+		{"every tuesday", "every tuesday", "en", "FREQ=WEEKLY;BYDAY=TU"},
+		{"every wednesday", "every wednesday", "en", "FREQ=WEEKLY;BYDAY=WE"},
+		{"every thursday", "every thursday", "en", "FREQ=WEEKLY;BYDAY=TH"},
+		{"every friday", "every friday", "en", "FREQ=WEEKLY;BYDAY=FR"},
+		{"every saturday", "every saturday", "en", "FREQ=WEEKLY;BYDAY=SA"},
+		{"every sunday", "every sunday", "en", "FREQ=WEEKLY;BYDAY=SU"},
 
 		// Special patterns
-		{"every weekday", "every weekday", true, "en", "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR"},
-		{"weekdays", "weekdays", true, "en", "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR"},
-		{"every weekend", "every weekend", true, "en", "FREQ=WEEKLY;BYDAY=SA,SU"},
-		{"weekends", "weekends", true, "en", "FREQ=WEEKLY;BYDAY=SA,SU"},
+		{"every weekday", "every weekday", "en", "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR"},
+		{"weekdays", "weekdays", "en", "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR"},
+		{"every weekend", "every weekend", "en", "FREQ=WEEKLY;BYDAY=SA,SU"},
+		{"weekends", "weekends", "en", "FREQ=WEEKLY;BYDAY=SA,SU"},
 
 		// "every other" patterns
-		{"every other day", "every other day", true, "en", "FREQ=DAILY;INTERVAL=2"},
-		{"every other week", "every other week", true, "en", "FREQ=WEEKLY;INTERVAL=2"},
-		{"every other month", "every other month", true, "en", "FREQ=MONTHLY;INTERVAL=2"},
+		{"every other day", "every other day", "en", "FREQ=DAILY;INTERVAL=2"},
+		{"every other week", "every other week", "en", "FREQ=WEEKLY;INTERVAL=2"},
+		{"every other month", "every other month", "en", "FREQ=MONTHLY;INTERVAL=2"},
 
 		// Case insensitivity
-		{"Every Day uppercase", "Every Day", true, "en", "FREQ=DAILY;INTERVAL=1"},
-		{"EVERY WEEK uppercase", "EVERY WEEK", true, "en", "FREQ=WEEKLY;INTERVAL=1"},
+		{"Every Day uppercase", "Every Day", "en", "FREQ=DAILY;INTERVAL=1"},
+		{"EVERY WEEK uppercase", "EVERY WEEK", "en", "FREQ=WEEKLY;INTERVAL=1"},
 
 		// Strict recurrence (with !)
-		{"every! day strict", "every! day", true, "en", "FREQ=DAILY;INTERVAL=1"},
-		{"every !week strict", "every !week", true, "en", "FREQ=WEEKLY;INTERVAL=1"},
+		{"every! day strict", "every! day", "en", "FREQ=DAILY;INTERVAL=1"},
+		{"every !week strict", "every !week", "en", "FREQ=WEEKLY;INTERVAL=1"},
 
 		// Time-of-day suffixes are stripped before matching
-		{"daily at time", "every day at 9am", true, "en", "FREQ=DAILY;INTERVAL=1"},
-		{"daily at clock time", "every day at 09:00", true, "en", "FREQ=DAILY;INTERVAL=1"},
-		{"weekday at time", "every friday at 10:30", true, "en", "FREQ=WEEKLY;BYDAY=FR"},
-		{"at-sign time", "every day @ 9am", true, "en", "FREQ=DAILY;INTERVAL=1"},
-		{"interval with time", "every 2 weeks at 8am", true, "en", "FREQ=WEEKLY;INTERVAL=2"},
+		{"daily at time", "every day at 9am", "en", "FREQ=DAILY;INTERVAL=1"},
+		{"daily at clock time", "every day at 09:00", "en", "FREQ=DAILY;INTERVAL=1"},
+		{"weekday at time", "every friday at 10:30", "en", "FREQ=WEEKLY;BYDAY=FR"},
+		{"at-sign time", "every day @ 9am", "en", "FREQ=DAILY;INTERVAL=1"},
+		{"interval with time", "every 2 weeks at 8am", "en", "FREQ=WEEKLY;INTERVAL=2"},
 
 		// Unknown patterns return empty string
-		{"unknown pattern", "every third tuesday", true, "en", ""},
-		{"complex pattern", "every 2nd monday of the month", true, "en", ""},
+		{"unknown pattern", "every third tuesday", "en", ""},
+		{"complex pattern", "every 2nd monday of the month", "en", ""},
 
 		// Language gate: empty lang defaults to English (Todoist default)
-		{"empty lang defaults to english", "every day", true, "", "FREQ=DAILY;INTERVAL=1"},
+		{"empty lang defaults to english", "every day", "", "FREQ=DAILY;INTERVAL=1"},
 
 		// Language gate: non-English languages are skipped
-		{"german skipped", "jeden Tag", true, "de", ""},
-		{"japanese skipped", "every day", true, "ja", ""},
-		{"french skipped", "tous les jours", true, "fr", ""},
-		{"spanish skipped", "every day", true, "es", ""},
+		{"german skipped", "jeden Tag", "de", ""},
+		{"japanese skipped", "every day", "ja", ""},
+		{"french skipped", "tous les jours", "fr", ""},
+		{"spanish skipped", "every day", "es", ""},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			result := todoistDueStringToRRule(tc.dueString, tc.isRecurring, tc.lang)
+			result := todoistDueStringToRRule(tc.dueString, tc.lang)
 			assert.Equal(t, tc.expected, result)
 		})
 	}
