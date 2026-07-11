@@ -1,0 +1,15 @@
+#!/sbin/openrc-run
+
+command="/usr/local/bin/projectos"
+command_background=true
+pidfile="/run/projectos.pid"
+directory="/opt/projectos"
+description="ProjectOS service"
+
+depend() {
+    need net
+}
+
+start_pre() {
+    checkpath --directory /run
+}

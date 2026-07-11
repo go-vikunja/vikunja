@@ -1,4 +1,4 @@
-// Vikunja is a to-do list application to facilitate your life.
+// ProjectOS — white-label task and project management (engine fork).
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify

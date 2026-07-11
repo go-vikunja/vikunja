@@ -521,7 +521,7 @@ func checkVikunjaVersion(versionFile *zip.File) error {
 		}
 
 		if !dumpedVersion.Equal(currentVersion) {
-			return fmt.Errorf("export was created with version %s but this is %s - please make sure you are running the same Vikunja version before restoring", dumpedVersion, currentVersion)
+			return fmt.Errorf("export was created with version %s but this is %s - please make sure you are running the same ProjectOS version before restoring", dumpedVersion, currentVersion)
 		}
 	}
 

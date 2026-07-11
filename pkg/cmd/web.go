@@ -142,7 +142,7 @@ var webCmd = &cobra.Command{
 	Run: func(_ *cobra.Command, _ []string) {
 
 		// Version notification
-		log.Infof("Vikunja version %s", version.Version)
+		log.Infof("ProjectOS version %s", version.Version)
 
 		// Start the webserver
 		e := routes.NewEcho()
