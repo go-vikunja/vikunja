@@ -1,0 +1,62 @@
+name: ProjectOS engine image
+
+# Builds the white-labeled ProjectOS engine image (runtime-themed fork of the
+# upstream task engine) and pushes it to GitHub Container Registry. One shared
+# base image serves every tenant; per-org branding is applied at runtime.
+
+on:
+  push:
+    branches: [projectos]
+  workflow_dispatch:
+    inputs:
+      release_version:
+        description: "Release version tag to build (e.g. 2.3.0)"
+        required: false
+        default: "2.3.0"
+
+concurrency:
+  group: projectos-image-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  IMAGE: ghcr.io/${{ github.repository_owner }}/projectos-engine
+  RELEASE_VERSION: ${{ github.event.inputs.release_version || '2.3.0' }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          # amd64 only for now (EC2 target is x86). arm64 is a follow-up once the
+          # xgo cross-compile path is validated for multi-arch.
+          platforms: linux/amd64
+          push: true
+          provenance: false
+          build-args: |
+            RELEASE_VERSION=${{ env.RELEASE_VERSION }}
+          tags: |
+            ${{ env.IMAGE }}:${{ env.RELEASE_VERSION }}
+            ${{ env.IMAGE }}:projectos
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

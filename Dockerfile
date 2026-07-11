@@ -39,23 +39,22 @@ RUN mkdir -p /tmp && chmod 1777 /tmp
 # The actual image
 FROM scratch
 
-LABEL org.opencontainers.image.authors='maintainers@vikunja.io'
-LABEL org.opencontainers.image.url='https://vikunja.io'
-LABEL org.opencontainers.image.documentation='https://vikunja.io/docs'
-LABEL org.opencontainers.image.source='https://code.vikunja.io/vikunja'
-LABEL org.opencontainers.image.licenses='AGPLv3'
-LABEL org.opencontainers.image.title='Vikunja'
+LABEL org.opencontainers.image.url='https://kanban.yarlis.com'
+LABEL org.opencontainers.image.source='https://github.com/siri1410/projectos-engine'
+LABEL org.opencontainers.image.licenses='AGPL-3.0-or-later'
+LABEL org.opencontainers.image.title='ProjectOS'
 
-WORKDIR /app/vikunja
-ENTRYPOINT [ "/app/vikunja/vikunja" ]
+WORKDIR /app/projectos
+ENTRYPOINT [ "/app/projectos/projectos" ]
 EXPOSE 3456
 
 COPY --from=apibuilder --chown=1000:1000 /tmp /tmp
 
 USER 1000
 
-ENV VIKUNJA_SERVICE_ROOTPATH=/app/vikunja/
-ENV VIKUNJA_DATABASE_PATH=/db/vikunja.db
+# White-label: the engine reads the PROJECTOS_ config prefix (see pkg/config/config.go).
+ENV PROJECTOS_SERVICE_ROOTPATH=/app/projectos/
+ENV PROJECTOS_DATABASE_PATH=/db/projectos.db
 
-COPY --from=apibuilder /build/vikunja-* vikunja
+COPY --from=apibuilder /build/vikunja-* projectos
 COPY --from=apibuilder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
