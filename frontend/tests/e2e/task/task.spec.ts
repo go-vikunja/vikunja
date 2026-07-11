@@ -70,7 +70,7 @@ async function addLabelToTaskAndVerify(page: Page, labelTitle: string) {
 	await expect(page.locator('.task-view .details.labels-list .multiselect .input-wrapper span.tag')).toContainText(labelTitle)
 }
 
-async function uploadAttachmentAndVerify(page: Page, taskId: number) {
+async function uploadAttachmentAndVerify(page: Page, taskId: number, file = 'tests/fixtures/image.jpg') {
 	const uploadAttachmentPromise = page.waitForResponse(response =>
 		response.url().includes(`/tasks/${taskId}/attachments`) && response.request().method() === 'PUT',
 	)
@@ -80,7 +80,7 @@ async function uploadAttachmentAndVerify(page: Page, taskId: number) {
 	const fileChooserPromise = page.waitForEvent('filechooser')
 	await page.locator('.task-view .action-buttons .button').filter({hasText: 'Add Attachments'}).click()
 	const fileChooser = await fileChooserPromise
-	await fileChooser.setFiles('tests/fixtures/image.jpg')
+	await fileChooser.setFiles(file)
 	await uploadAttachmentPromise
 
 	await expect(page.locator('.attachments .attachments .files button.attachment')).toBeVisible()
@@ -958,6 +958,32 @@ test.describe('Task', () => {
 			await page.locator('dialog[open] .modal-container > .close').click()
 
 			await expect(page.locator('.bucket .task .footer .icon svg.fa-paperclip')).toBeVisible()
+		})
+
+		test('Opens a PDF attachment in a preview modal', async ({authenticatedPage: page}) => {
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				project_id: projects[0].id,
+			})
+			await page.goto(`/tasks/${tasks[0].id}`)
+
+			await uploadAttachmentAndVerify(page, tasks[0].id, 'tests/fixtures/test.pdf')
+
+			await page.locator('.attachments .attachments .files button.attachment .filename').click()
+
+			const iframe = page.locator('iframe.pdf-preview-iframe')
+			await expect(iframe).toBeVisible()
+			const src = await iframe.getAttribute('src') ?? ''
+			expect(src).toMatch(/^blob:/)
+
+			// An untyped blob url downloads instead of rendering in the iframe,
+			// so the blob must keep the application/pdf mime type.
+			const blob = await page.evaluate(async (blobUrl: string) => {
+				const b = await fetch(blobUrl).then(r => r.blob())
+				return {type: b.type, size: b.size}
+			}, src)
+			expect(blob.type).toBe('application/pdf')
+			expect(blob.size).toBeGreaterThan(0)
 		})
 
 		test('Can delete an attachment', async ({authenticatedPage: page}) => {
