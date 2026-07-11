@@ -1789,11 +1789,12 @@ func setTaskDatesRRule(oldTask, newTask *Task) {
 			return
 		}
 		// rule.After() has no iteration cap and generates from DTSTART forward, so an
-		// ancient anchor makes it churn through decades of skipped occurrences. For
-		// DAILY/WEEKLY rules (MONTHLY/YEARLY stay cheap even from year 1), fast-forward
-		// the anchor by whole periods to just below one year ago. Whole-period day
-		// arithmetic preserves phase exactly (interval sequence, week parity, BYDAY/
-		// BYSETPOS boundaries), so After() yields the same occurrence, but cheaply.
+		// ancient anchor makes it churn through decades of skipped occurrences. Only
+		// DAILY/WEEKLY are clamped here; MONTHLY/YEARLY have the same unclamped risk
+		// (rrule-go's After() returns the zero time once the anchor exceeds ~292 years,
+		// from int64 duration overflow) but that's a pre-existing edge left alone for now.
+		// Whole-period day arithmetic preserves phase exactly (interval sequence, week
+		// parity, BYDAY/BYSETPOS boundaries), so After() yields the same occurrence, but cheaply.
 		baseDate = clampRRuleAnchor(opt, baseDate, now)
 		rule.DTStart(baseDate)
 		nextOccurrence = rule.After(searchFrom, false)

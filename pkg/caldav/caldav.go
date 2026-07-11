@@ -208,6 +208,8 @@ PRIORITY:` + strconv.Itoa(mapPriorityToCaldav(t.Priority))
 			if normalized, ok := models.NormalizeRRule(t.Repeats); ok {
 				caldavtodos += `
 RRULE:` + normalized
+			} else {
+				log.Debugf("[CalDAV] Ignoring unparseable RRULE %q on exported task %q", t.Repeats, t.UID)
 			}
 		}
 
