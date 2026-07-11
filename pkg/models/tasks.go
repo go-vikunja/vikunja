@@ -1609,25 +1609,12 @@ func validateRRule(rruleStr string) error {
 		return ErrInvalidData{Message: "Invalid RRULE: " + err.Error()}
 	}
 
-	// Sub-daily frequencies combined with any By* filter defeat the rrule
-	// library's day-skip optimization, so scanning for the next occurrence can
-	// iterate second-by-second over a large window (DoS). Nothing legitimate
-	// produces this: the legacy migration and the UI only author plain sub-daily
-	// interval rules with no By-parts, so reject the combination outright.
 	opt := rule.OrigOptions
-	if opt.Freq >= rrule.HOURLY && rruleHasByPart(&opt) {
+	if rrulePolicyRejects(&opt) {
 		return ErrInvalidData{Message: "Invalid RRULE: sub-daily frequencies cannot be combined with BY* components"}
 	}
 
 	return nil
-}
-
-// rruleHasByPart reports whether the rule carries any BY* component.
-func rruleHasByPart(opt *rrule.ROption) bool {
-	return len(opt.Bysetpos) > 0 || len(opt.Bymonth) > 0 || len(opt.Bymonthday) > 0 ||
-		len(opt.Byyearday) > 0 || len(opt.Byweekno) > 0 || len(opt.Byweekday) > 0 ||
-		len(opt.Byhour) > 0 || len(opt.Byminute) > 0 || len(opt.Bysecond) > 0 ||
-		len(opt.Byeaster) > 0
 }
 
 func fixedDurationForRRule(opt *rrule.ROption) (time.Duration, bool) {

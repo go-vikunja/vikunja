@@ -509,6 +509,29 @@ END:VCALENDAR`,
 				Repeats: "FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,WE,FR",
 			},
 		},
+		{
+			// A parseable but policy-rejected rule must drop only the recurrence,
+			// not fail the whole task sync.
+			name: "with policy-rejected RRULE",
+			args: args{content: `BEGIN:VCALENDAR
+VERSION:2.0
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+UID:randomuid
+DTSTAMP:20181201T011204
+SUMMARY:Recurring Task
+RRULE:FREQ=HOURLY;BYHOUR=9
+END:VTODO
+END:VCALENDAR`,
+			},
+			wantVTask: &models.Task{
+				Title:   "Recurring Task",
+				UID:     "randomuid",
+				Updated: time.Unix(1543626724, 0).In(config.GetTimeZone()),
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

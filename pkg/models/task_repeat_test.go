@@ -323,6 +323,8 @@ func TestNormalizeRRule(t *testing.T) {
 		{"canonicalizes leading zero", "FREQ=MONTHLY;BYMONTHDAY=01", "FREQ=MONTHLY;BYMONTHDAY=1", true},
 		{"rejects garbage", "not a rule", "", false},
 		{"rejects empty", "", "", false},
+		{"rejects policy: sub-daily with BY*", "FREQ=HOURLY;BYHOUR=9", "", false},
+		{"allows plain sub-daily", "FREQ=HOURLY;INTERVAL=2", "FREQ=HOURLY;INTERVAL=2", true},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {

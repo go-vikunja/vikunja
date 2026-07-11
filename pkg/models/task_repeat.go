@@ -89,8 +89,9 @@ var stringToWeekdayMap = map[string]rrule.Weekday{
 
 // NormalizeRRule strips an optional (case-insensitive) RRULE: prefix, validates
 // the value with the rrule parser, and returns it in canonical form. ok is false
-// when the value is not a parseable RRULE, so callers can skip it instead of
-// storing or emitting malformed calendar data.
+// when the value is not a parseable RRULE or is rejected by rrulePolicyRejects,
+// so callers can skip it instead of storing or emitting calendar data that would
+// later fail validation.
 func NormalizeRRule(raw string) (normalized string, ok bool) {
 	raw = strings.TrimSpace(raw)
 	if raw == "" {
@@ -104,7 +105,27 @@ func NormalizeRRule(raw string) (normalized string, ok bool) {
 	if err != nil {
 		return "", false
 	}
+	if rrulePolicyRejects(opt) {
+		return "", false
+	}
 	return opt.RRuleString(), true
+}
+
+// rrulePolicyRejects reports whether a rule is barred by our recurrence policy.
+// Sub-daily frequencies combined with any By* filter defeat the rrule library's
+// day-skip optimization, so scanning for the next occurrence can iterate
+// second-by-second over a large window (DoS). Nothing legitimate produces this:
+// the legacy migration and the UI only author plain sub-daily interval rules with
+// no By-parts.
+func rrulePolicyRejects(opt *rrule.ROption) bool {
+	return opt.Freq >= rrule.HOURLY && rruleHasByPart(opt)
+}
+
+func rruleHasByPart(opt *rrule.ROption) bool {
+	return len(opt.Bysetpos) > 0 || len(opt.Bymonth) > 0 || len(opt.Bymonthday) > 0 ||
+		len(opt.Byyearday) > 0 || len(opt.Byweekno) > 0 || len(opt.Byweekday) > 0 ||
+		len(opt.Byhour) > 0 || len(opt.Byminute) > 0 || len(opt.Bysecond) > 0 ||
+		len(opt.Byeaster) > 0
 }
 
 // taskRepeatFromRRule converts an RRULE string to a TaskRepeat struct.
