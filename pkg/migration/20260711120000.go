@@ -9,8 +9,9 @@ import (
 )
 
 type projectViewProjectScope20260711120000 struct {
-	ProjectScope       string  `xorm:"varchar(20) not null default 'current' 'project_scope'"`
-	IncludedProjectIDs []int64 `xorm:"json null 'included_project_ids'"`
+	ProjectScope string `xorm:"varchar(20) not null default 'current' 'project_scope'"`
+	// XORM splits an IDs suffix as i_ds during Sync unless the migration field uses Ids.
+	IncludedProjectIds []int64 `xorm:"json null"`
 }
 
 func (projectViewProjectScope20260711120000) TableName() string {
