@@ -164,7 +164,7 @@ func parsePostgreSQLHostPort(info string) (string, string) {
 }
 
 // Copied and adopted from https://github.com/go-gitea/gitea/blob/f337c32e868381c6d2d948221aca0c59f8420c13/modules/setting/database.go#L176-L186
-func getPostgreSQLConnectionString(dbHost, dbUser, dbPasswd, dbName, dbSslMode, dbSslCert, dbSslKey, dbSslRootCert string) (connStr string) {
+func getPostgreSQLConnectionString(dbHost, dbUser, dbPasswd, dbName, dbSchema, dbSslMode, dbSslCert, dbSslKey, dbSslRootCert string) (connStr string) {
 	dbParam := "?"
 	if strings.Contains(dbName, dbParam) {
 		dbParam = "&"
@@ -177,6 +177,12 @@ func getPostgreSQLConnectionString(dbHost, dbUser, dbPasswd, dbName, dbSslMode, 
 		connStr = fmt.Sprintf("postgres://%s:%s@%s:%s/%s%ssslmode=%s&sslcert=%s&sslkey=%s&sslrootcert=%s",
 			url.PathEscape(dbUser), url.PathEscape(dbPasswd), host, port, dbName, dbParam, dbSslMode, dbSslCert, dbSslKey, dbSslRootCert)
 	}
+	// Pin search_path so raw SQL (e.g. in migrations) resolves to the same schema as
+	// xorm-built statements. Without this, the role's default search_path decides where
+	// unqualified statements land, which can split an install across schemas (#3118).
+	if dbSchema != "" {
+		connStr += "&search_path=" + url.QueryEscape(dbSchema)
+	}
 	return connStr
 }
 
@@ -186,6 +192,7 @@ func initPostgresEngine() (engine *xorm.Engine, err error) {
 		config.DatabaseUser.GetString(),
 		config.DatabasePassword.GetString(),
 		config.DatabaseDatabase.GetString(),
+		config.DatabaseSchema.GetString(),
 		config.DatabaseSslMode.GetString(),
 		config.DatabaseSslCert.GetString(),
 		config.DatabaseSslKey.GetString(),
