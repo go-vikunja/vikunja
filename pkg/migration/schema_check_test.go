@@ -25,23 +25,29 @@ import (
 
 func TestValidateSchemaPlacement(t *testing.T) {
 	t.Run("fresh install", func(t *testing.T) {
-		require.NoError(t, validateSchemaPlacement("public", nil))
+		require.NoError(t, validateSchemaPlacement("public", "public", nil))
 	})
 	t.Run("data in active schema", func(t *testing.T) {
-		require.NoError(t, validateSchemaPlacement("public", []string{"public"}))
+		require.NoError(t, validateSchemaPlacement("public", "public", []string{"public"}))
 	})
 	t.Run("data in active schema with leftovers elsewhere", func(t *testing.T) {
-		require.NoError(t, validateSchemaPlacement("vikunja", []string{"public", "vikunja"}))
+		require.NoError(t, validateSchemaPlacement("vikunja", "vikunja", []string{"public", "vikunja"}))
 	})
 	t.Run("data only in another schema", func(t *testing.T) {
-		err := validateSchemaPlacement("public", []string{"vikunja"})
+		err := validateSchemaPlacement("public", "public", []string{"vikunja"})
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "vikunja")
 		assert.Contains(t, err.Error(), `"public"`)
 		assert.Contains(t, err.Error(), "database.schema")
 	})
 	t.Run("configured schema does not exist", func(t *testing.T) {
-		err := validateSchemaPlacement("", []string{"vikunja"})
+		err := validateSchemaPlacement("vikunja", "public", nil)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "does not exist")
+		assert.Contains(t, err.Error(), `"vikunja"`)
+	})
+	t.Run("no valid schema in search_path", func(t *testing.T) {
+		err := validateSchemaPlacement("", "", []string{"vikunja"})
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "does not exist")
 	})

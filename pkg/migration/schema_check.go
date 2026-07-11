@@ -26,10 +26,8 @@ import (
 	"xorm.io/xorm"
 )
 
-// checkPostgresSchemaMismatch guards against installs whose data lives in a different
-// schema than the one Vikunja operates on (e.g. a role-named schema picked up via the
-// "$user" search_path default, or a pgloader import). Running migrations in that state
-// would create a second, empty set of tables and report success (#3118).
+// checkPostgresSchemaMismatch refuses to run migrations when an existing install's tables
+// live only in a schema other than the active one, instead of creating a second empty set (#3118).
 func checkPostgresSchemaMismatch(x *xorm.Engine) error {
 	if config.DatabaseType.GetString() != "postgres" {
 		return nil
@@ -37,7 +35,7 @@ func checkPostgresSchemaMismatch(x *xorm.Engine) error {
 
 	results, err := x.Query("SELECT COALESCE(current_schema(), '') AS current_schema")
 	if err != nil {
-		return err
+		return fmt.Errorf("could not determine the current schema: %w", err)
 	}
 	currentSchema := ""
 	if len(results) > 0 {
@@ -50,17 +48,23 @@ func checkPostgresSchemaMismatch(x *xorm.Engine) error {
 		JOIN pg_tables m ON m.schemaname = u.schemaname AND m.tablename = 'migration'
 		WHERE u.tablename = 'users'`)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not check for existing Vikunja tables: %w", err)
 	}
 	dataSchemas := make([]string, 0, len(results))
 	for _, row := range results {
 		dataSchemas = append(dataSchemas, string(row["schemaname"]))
 	}
 
-	return validateSchemaPlacement(currentSchema, dataSchemas)
+	return validateSchemaPlacement(config.DatabaseSchema.GetString(), currentSchema, dataSchemas)
 }
 
-func validateSchemaPlacement(currentSchema string, dataSchemas []string) error {
+func validateSchemaPlacement(configuredSchema, currentSchema string, dataSchemas []string) error {
+	// current_schema() falls back to the next valid search_path entry (e.g. public) when the
+	// configured schema does not exist, so compare against the configured value explicitly.
+	if configuredSchema != "" && currentSchema != configuredSchema {
+		return fmt.Errorf("the configured schema %q does not exist or is not accessible to the database user (active schema: %q). Create it or set database.schema (VIKUNJA_DATABASE_SCHEMA) to an existing schema", configuredSchema, currentSchema)
+	}
+
 	others := make([]string, 0, len(dataSchemas))
 	found := false
 	for _, s := range dataSchemas {
