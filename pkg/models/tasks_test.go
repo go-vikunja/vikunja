@@ -1025,6 +1025,7 @@ func TestUpdateDone(t *testing.T) {
 			n3 := &Task{Done: true}
 			updateDone(t3, n3)
 			assert.True(t, n3.Done, "should stay done once the finite recurrence is exhausted")
+			assert.Empty(t, n3.Repeats, "exhausted recurrence should clear the rule so the UI stops showing it")
 		})
 		t.Run("repeat each month", func(t *testing.T) {
 			t.Run("due date", func(t *testing.T) {
@@ -1231,6 +1232,32 @@ func TestUpdateDone_RRuleAncientDueDate_SlowPath(t *testing.T) {
 	require.Less(t, elapsed, time.Second, "slow-path reschedule must stay bounded for ancient due dates")
 	assert.True(t, newTask.DueDate.After(start), "new due date must be strictly after now")
 	assert.False(t, newTask.Done, "repeating task should be unmarked as done")
+}
+
+func TestUpdateDone_FieldScopedRepeatPersists(t *testing.T) {
+	// Completing a repeating task through a field-scoped update (e.g. the bulk
+	// endpoint sending only `done`) must still persist the reschedule: the new
+	// due date and the reopened done state, not just done=false at the old date.
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+	u := &user.User{ID: 1}
+
+	// Fixture task 28 repeats hourly with a due date back in 2018.
+	orig := &Task{}
+	_, err := s.ID(28).Get(orig)
+	require.NoError(t, err)
+	require.False(t, orig.Done)
+
+	task := &Task{ID: 28, ProjectID: 1, Done: true}
+	require.NoError(t, task.updateSingleTask(s, u, []string{"done"}))
+
+	stored := &Task{}
+	_, err = s.ID(28).Get(stored)
+	require.NoError(t, err)
+	assert.False(t, stored.Done, "repeating task reopens for its next occurrence")
+	assert.True(t, stored.DueDate.After(time.Now()), "rescheduled due date must persist, not stay at the old date")
+	assert.True(t, stored.DueDate.After(orig.DueDate))
 }
 
 func TestTask_ReadOne(t *testing.T) {

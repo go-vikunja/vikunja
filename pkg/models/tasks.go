@@ -19,6 +19,7 @@ package models
 import (
 	"math"
 	"regexp"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -1326,10 +1327,25 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 		}
 	}
 
+	// Captured before updateDone reopens the completed repeating task below.
+	repeatingCompleted := ot.isRepeating() && !ot.Done && t.Done
+
 	// When a repeating task is marked as done, we update all deadlines and reminders and set it as undone
 	updateDoneAt := updateDone(&ot, t)
 	if updateDoneAt {
 		colsToUpdate = append(colsToUpdate, "done_at")
+	}
+
+	// A field-scoped update (e.g. the bulk endpoint completing a task) shrinks
+	// colsToUpdate to done/done_at, but rescheduling a repeating task also
+	// rewrites its dates, repeat rule and reopens it — persist those columns or
+	// the reschedule is computed and silently discarded.
+	if repeatingCompleted {
+		for _, c := range []string{"due_date", "start_date", "end_date", "repeats", "done", "done_at"} {
+			if !slices.Contains(colsToUpdate, c) {
+				colsToUpdate = append(colsToUpdate, c)
+			}
+		}
 	}
 
 	// Update the reminders
@@ -1700,9 +1716,12 @@ func setTaskDatesRRule(oldTask, newTask *Task) {
 
 	// Finite recurrence (COUNT): we treat the stored COUNT as the number of
 	// occurrences remaining, including the one just completed. If only one
-	// remains, the recurrence is exhausted — leave the task done and don't
-	// reschedule. (COUNT==0 in the rrule lib means "no limit".)
+	// remains, the recurrence is exhausted — leave the task done, clear the rule
+	// so it stops advertising an active recurrence, and don't reschedule.
+	// (COUNT==0 in the rrule lib means "no limit".)
 	if opt.Count == 1 {
+		newTask.Repeats = ""
+		newTask.Repeat = nil
 		return
 	}
 
@@ -1763,6 +1782,9 @@ func setTaskDatesRRule(oldTask, newTask *Task) {
 	// current date on every completion, so without persisting a decremented
 	// COUNT the task would repeat forever. opt.RRuleString() matches the format
 	// produced by TaskRepeat.toRRule(), so the stored value stays consistent.
+	// Interim tradeoff: only done-toggles trust this decremented DB count — a
+	// non-done-toggling update takes the client-supplied repeat, so a stale
+	// client can reset COUNT back to its original value.
 	if opt.Count > 1 {
 		opt.Count--
 		newTask.Repeats = opt.RRuleString()
@@ -1846,7 +1868,6 @@ func updateDone(oldTask *Task, newTask *Task) (updateDoneAt bool) {
 	doneStatusChanged := oldTask.Done != newTask.Done
 
 	if !oldTask.Done && newTask.Done {
-		// Use RRULE to calculate next occurrence
 		if oldTask.Repeats != "" {
 			setTaskDatesRRule(oldTask, newTask)
 		}
