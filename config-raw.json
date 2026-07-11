@@ -266,7 +266,7 @@
                 {
                     "key": "schema",
                     "default_value": "public",
-                    "comment": "The PostgreSQL schema to use. Only used with postgres. If you have an existing Vikunja installation where the tables were created in a non-public schema (e.g. via the database user's search_path), you must set this to match that schema name."
+                    "comment": "The PostgreSQL schema to use. Only used with postgres. If you have an existing Vikunja installation where the tables were created in a non-public schema (e.g. via the database user's search_path), you must set this to match that schema name. Vikunja pins the connection's search_path to this schema so that all statements resolve to it."
                 }
             ]
         },
@@ -1059,7 +1059,7 @@
                 {
                     "key": "enabled",
                     "default_value": "false",
-                    "comment": "If set to true, Vikunja will automatically request a TLS certificate from Let's Encrypt and use it to serve Vikunja over TLS. By enabling this option, you agree to Let's Encrypt's TOS.\nYou must configure a `service.publicurl` with a valid TLD where Vikunja is reachable to make this work. Furthermore, it is reccomened to set `service.interface` to `:443` if you're using this."
+                    "comment": "If set to true, Vikunja will automatically request a TLS certificate from Let's Encrypt and use it to serve Vikunja over TLS. By enabling this option, you agree to Let's Encrypt's TOS.\nYou must configure a `service.publicurl` with a valid TLD where Vikunja is reachable to make this work. Furthermore, it is recommended to set `service.interface` to `:443` if you're using this."
                 },
                 {
                     "key": "email",

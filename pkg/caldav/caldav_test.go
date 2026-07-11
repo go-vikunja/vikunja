@@ -73,6 +73,7 @@ X-OUTLOOK-COLOR:#affffeFF
 X-FUNAMBOL-COLOR:#affffeFF
 COLOR:#affffeFF
 DESCRIPTION:Lorem Ipsum\n\nDolor sit amet
+STATUS:NEEDS-ACTION
 LAST-MODIFIED:00010101T000000Z
 END:VTODO
 END:VCALENDAR`,
@@ -137,6 +138,7 @@ UID:randommduid
 DTSTAMP:20181201T011204Z
 SUMMARY:Todo #1
 DESCRIPTION:Lorem Ipsum
+STATUS:NEEDS-ACTION
 PRIORITY:9
 LAST-MODIFIED:00010101T000000Z
 END:VTODO
@@ -170,6 +172,7 @@ UID:randommduid
 DTSTAMP:20181201T011204Z
 SUMMARY:Todo #1
 DESCRIPTION:Lorem Ipsum
+STATUS:NEEDS-ACTION
 DUE:20181201T011204Z
 RRULE:FREQ=MONTHLY;BYMONTHDAY=1
 LAST-MODIFIED:00010101T000000Z
@@ -204,6 +207,7 @@ UID:randommduid
 DTSTAMP:20181201T011204Z
 SUMMARY:Todo #1
 DESCRIPTION:Lorem Ipsum
+STATUS:NEEDS-ACTION
 DUE:20181201T011204Z
 RRULE:FREQ=DAILY;INTERVAL=1
 LAST-MODIFIED:00010101T000000Z
@@ -245,6 +249,7 @@ X-APPLE-CALENDAR-COLOR:#affffeFF
 X-OUTLOOK-COLOR:#affffeFF
 X-FUNAMBOL-COLOR:#affffeFF
 COLOR:#affffeFF
+STATUS:NEEDS-ACTION
 CATEGORIES:label1,label2
 LAST-MODIFIED:00010101T000000Z
 END:VTODO
@@ -295,6 +300,7 @@ BEGIN:VTODO
 UID:randommduid
 DTSTAMP:20181201T011204Z
 SUMMARY:Todo #1
+STATUS:NEEDS-ACTION
 LAST-MODIFIED:00010101T000000Z
 BEGIN:VALARM
 TRIGGER;VALUE=DATE-TIME:20181201T011204Z
@@ -360,6 +366,7 @@ UID:randommduid
 DTSTAMP:20181201T011204Z
 SUMMARY:Todo #1
 DESCRIPTION:Lorem Ipsum
+STATUS:NEEDS-ACTION
 LAST-MODIFIED:00010101T000000Z
 RELATED-TO;RELTYPE=PARENT:parentuid
 RELATED-TO;RELTYPE=CHILD:subtaskuid
@@ -390,6 +397,7 @@ BEGIN:VTODO
 UID:randommduid
 DTSTAMP:20181201T011204Z
 SUMMARY:Meeting\nATTACH:https://evil.com/malware.exe\nX-INJECTED:pwned
+STATUS:NEEDS-ACTION
 LAST-MODIFIED:00010101T000000Z
 END:VTODO
 END:VCALENDAR`,
@@ -420,8 +428,38 @@ BEGIN:VTODO
 UID:randommduid
 DTSTAMP:20181201T011204Z
 SUMMARY:a\;b\,c\\d
+STATUS:NEEDS-ACTION
 ORGANIZER;CN=:al\;ic\,e
 CATEGORIES:lab\;el1,lab\,el2
+LAST-MODIFIED:00010101T000000Z
+END:VTODO
+END:VCALENDAR`,
+		},
+		{
+			name: "incomplete task has STATUS:NEEDS-ACTION",
+			args: args{
+				config: &Config{
+					Name:   "test",
+					ProdID: "RandomProdID which is not random",
+				},
+				todos: []*Todo{
+					{
+						Summary:   "Pending task",
+						UID:       "pending-uid",
+						Timestamp: time.Unix(1543626724, 0).In(config.GetTimeZone()),
+					},
+				},
+			},
+			wantCaldavtasks: `BEGIN:VCALENDAR
+VERSION:2.0
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+UID:pending-uid
+DTSTAMP:20181201T011204Z
+SUMMARY:Pending task
+STATUS:NEEDS-ACTION
 LAST-MODIFIED:00010101T000000Z
 END:VTODO
 END:VCALENDAR`,
@@ -483,6 +521,26 @@ func TestGetCaldavColor(t *testing.T) {
 			assert.Equal(t, tt.want, got)
 			// No output may ever contain CR or LF inside a property value.
 			assert.NotContains(t, got, "\r")
+		})
+	}
+}
+
+func Test_formatDuration(t *testing.T) {
+	tests := []struct {
+		name string
+		in   time.Duration
+		want string
+	}{
+		{"whole hours", time.Hour, "1H0M0S"},
+		{"hours and minutes", time.Hour + 30*time.Minute, "1H30M0S"},
+		{"minutes only", 30 * time.Minute, "0H30M0S"},
+		{"minutes only, not a round hour", 45 * time.Minute, "0H45M0S"},
+		{"hours, minutes and seconds", 2*time.Hour + 15*time.Minute + 30*time.Second, "2H15M30S"},
+		{"seconds only", 30 * time.Second, "0H0M30S"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, formatDuration(tt.in))
 		})
 	}
 }

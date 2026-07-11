@@ -868,6 +868,11 @@ definitions:
         allOf:
         - $ref: '#/definitions/user.User'
         description: The user who initially created the task.
+      deleted_at:
+        description: |-
+          A timestamp when this task was deleted. Soft-deleted tasks are kept for 30 days before they are removed permanently.
+          omitzero keeps the field out of the JSON of regular tasks — it only ever appears on soft-deleted ones (the later trash listing).
+        type: string
       description:
         description: The task description.
         type: string
@@ -4063,8 +4068,9 @@ paths:
           the tasks ordered by multiple different parametes, along with `order_by`.
           Possible values to sort by are `id`, `title`, `description`, `done`, `done_at`,
           `due_date`, `created_by_id`, `project_id`, `repeat_after`, `priority`, `start_date`,
-          `end_date`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default
-          is `id`.
+          `end_date`, `hex_color`, `percent_done`, `uid`, `created`, `updated`, `relevance`.
+          `relevance` sorts by search relevance (most relevant first, requires `s`;
+          ignored when the database cannot score the query). Default is `id`.
         in: query
         name: sort_by
         type: string
@@ -5212,8 +5218,9 @@ paths:
           the tasks ordered by multiple different parametes, along with `order_by`.
           Possible values to sort by are `id`, `title`, `description`, `done`, `done_at`,
           `due_date`, `created_by_id`, `project_id`, `repeat_after`, `priority`, `start_date`,
-          `end_date`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default
-          is `id`.
+          `end_date`, `hex_color`, `percent_done`, `uid`, `created`, `updated`, `relevance`.
+          `relevance` sorts by search relevance (most relevant first, requires `s`;
+          ignored when the database cannot score the query). Default is `id`.
         in: query
         name: sort_by
         type: string

@@ -1,0 +1,15 @@
+allowBuilds:
+  electron: true
+  # not built under pnpm 10 either; deny to keep behavior identical and satisfy strictDepBuilds
+  electron-winstaller: false
+overrides:
+  minimatch: 10.2.5
+  tar: 7.5.19
+  '@tootallnate/once': 3.0.1
+  picomatch: 4.0.5
+  tmp: 0.2.7
+  ip-address: 10.2.0
+  form-data: 4.0.6
+  js-yaml: 5.2.1
+  undici@6: 8.7.0
+  undici@7: 8.7.0

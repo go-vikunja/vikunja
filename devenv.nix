@@ -39,7 +39,7 @@ in {
     go = {
       enable = true;
       package = pkgs-unstable.go;
-			enableHardeningWorkaround = true;
+      enableHardeningWorkaround = true;
     };
   };
   

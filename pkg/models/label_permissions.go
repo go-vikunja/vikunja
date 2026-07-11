@@ -99,7 +99,7 @@ func (l *Label) hasAccessToLabel(s *xorm.Session, a web.Auth) (has bool, maxPerm
 		builder.
 			Select("id").
 			From("tasks").
-			Where(accessibleProjects),
+			Where(builder.And(accessibleProjects, taskNotDeletedCond("tasks"))),
 	)
 
 	accessBranches := []builder.Cond{labelAttachedToAccessibleTask}

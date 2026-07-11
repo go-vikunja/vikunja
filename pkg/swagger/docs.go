@@ -3153,7 +3153,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with ` + "`" + `order_by` + "`" + `. Possible values to sort by are ` + "`" + `id` + "`" + `, ` + "`" + `title` + "`" + `, ` + "`" + `description` + "`" + `, ` + "`" + `done` + "`" + `, ` + "`" + `done_at` + "`" + `, ` + "`" + `due_date` + "`" + `, ` + "`" + `created_by_id` + "`" + `, ` + "`" + `project_id` + "`" + `, ` + "`" + `repeat_after` + "`" + `, ` + "`" + `priority` + "`" + `, ` + "`" + `start_date` + "`" + `, ` + "`" + `end_date` + "`" + `, ` + "`" + `hex_color` + "`" + `, ` + "`" + `percent_done` + "`" + `, ` + "`" + `uid` + "`" + `, ` + "`" + `created` + "`" + `, ` + "`" + `updated` + "`" + `. Default is ` + "`" + `id` + "`" + `.",
+                        "description": "The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with ` + "`" + `order_by` + "`" + `. Possible values to sort by are ` + "`" + `id` + "`" + `, ` + "`" + `title` + "`" + `, ` + "`" + `description` + "`" + `, ` + "`" + `done` + "`" + `, ` + "`" + `done_at` + "`" + `, ` + "`" + `due_date` + "`" + `, ` + "`" + `created_by_id` + "`" + `, ` + "`" + `project_id` + "`" + `, ` + "`" + `repeat_after` + "`" + `, ` + "`" + `priority` + "`" + `, ` + "`" + `start_date` + "`" + `, ` + "`" + `end_date` + "`" + `, ` + "`" + `hex_color` + "`" + `, ` + "`" + `percent_done` + "`" + `, ` + "`" + `uid` + "`" + `, ` + "`" + `created` + "`" + `, ` + "`" + `updated` + "`" + `, ` + "`" + `relevance` + "`" + `. ` + "`" + `relevance` + "`" + ` sorts by search relevance (most relevant first, requires ` + "`" + `s` + "`" + `; ignored when the database cannot score the query). Default is ` + "`" + `id` + "`" + `.",
                         "name": "sort_by",
                         "in": "query"
                     },
@@ -4853,7 +4853,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with ` + "`" + `order_by` + "`" + `. Possible values to sort by are ` + "`" + `id` + "`" + `, ` + "`" + `title` + "`" + `, ` + "`" + `description` + "`" + `, ` + "`" + `done` + "`" + `, ` + "`" + `done_at` + "`" + `, ` + "`" + `due_date` + "`" + `, ` + "`" + `created_by_id` + "`" + `, ` + "`" + `project_id` + "`" + `, ` + "`" + `repeat_after` + "`" + `, ` + "`" + `priority` + "`" + `, ` + "`" + `start_date` + "`" + `, ` + "`" + `end_date` + "`" + `, ` + "`" + `hex_color` + "`" + `, ` + "`" + `percent_done` + "`" + `, ` + "`" + `uid` + "`" + `, ` + "`" + `created` + "`" + `, ` + "`" + `updated` + "`" + `. Default is ` + "`" + `id` + "`" + `.",
+                        "description": "The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with ` + "`" + `order_by` + "`" + `. Possible values to sort by are ` + "`" + `id` + "`" + `, ` + "`" + `title` + "`" + `, ` + "`" + `description` + "`" + `, ` + "`" + `done` + "`" + `, ` + "`" + `done_at` + "`" + `, ` + "`" + `due_date` + "`" + `, ` + "`" + `created_by_id` + "`" + `, ` + "`" + `project_id` + "`" + `, ` + "`" + `repeat_after` + "`" + `, ` + "`" + `priority` + "`" + `, ` + "`" + `start_date` + "`" + `, ` + "`" + `end_date` + "`" + `, ` + "`" + `hex_color` + "`" + `, ` + "`" + `percent_done` + "`" + `, ` + "`" + `uid` + "`" + `, ` + "`" + `created` + "`" + `, ` + "`" + `updated` + "`" + `, ` + "`" + `relevance` + "`" + `. ` + "`" + `relevance` + "`" + ` sorts by search relevance (most relevant first, requires ` + "`" + `s` + "`" + `; ignored when the database cannot score the query). Default is ` + "`" + `id` + "`" + `.",
                         "name": "sort_by",
                         "in": "query"
                     },
@@ -10041,6 +10041,10 @@ const docTemplate = `{
                             "$ref": "#/definitions/user.User"
                         }
                     ]
+                },
+                "deleted_at": {
+                    "description": "A timestamp when this task was deleted. Soft-deleted tasks are kept for 30 days before they are removed permanently.\nomitzero keeps the field out of the JSON of regular tasks — it only ever appears on soft-deleted ones (the later trash listing).",
+                    "type": "string"
                 },
                 "description": {
                     "description": "The task description.",

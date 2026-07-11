@@ -472,6 +472,9 @@ func getProjectSimple(s *xorm.Session, cond builder.Cond) (project *Project, exi
 }
 
 // GetProjectSimpleByTaskID gets a project by a task id
+// Deliberately resolves soft-deleted tasks too: event listeners and hard-delete
+// paths still need the project after a soft delete, and access is already
+// enforced earlier via GetTaskSimple. Same for the ByTaskIDs variants below.
 func GetProjectSimpleByTaskID(s *xorm.Session, taskID int64) (l *Project, err error) {
 	// We need to re-init our project object, because otherwise xorm creates a "where for every item in that project object,
 	// leading to not finding anything if the id is good, but for example the title is different.
@@ -1046,8 +1049,17 @@ func CreateProject(s *xorm.Session, project *Project, auth web.Auth, createBackl
 	}
 
 	project.ID = 0
-	project.OwnerID = doer.ID
-	project.Owner = doer
+	if doer.IsBot() {
+		project.OwnerID = doer.BotOwnerID
+		owner, err := user.GetUserByID(s, doer.BotOwnerID)
+		if err != nil {
+			return err
+		}
+		project.Owner = owner
+	} else {
+		project.OwnerID = doer.ID
+		project.Owner = doer
+	}
 
 	err = checkProjectBeforeUpdateOrDelete(s, project)
 	if err != nil {
@@ -1059,6 +1071,18 @@ func CreateProject(s *xorm.Session, project *Project, auth web.Auth, createBackl
 	_, err = s.Insert(project)
 	if err != nil {
 		return
+	}
+
+	// Give the bot continued access to the project it created.
+	if doer.IsBot() {
+		pu := &ProjectUser{
+			ProjectID:  project.ID,
+			Username:   doer.Username,
+			Permission: PermissionAdmin,
+		}
+		if err = pu.Create(s, auth); err != nil {
+			return err
+		}
 	}
 
 	project.Position = calculateDefaultPosition(project.ID, project.Position)
@@ -1381,15 +1405,17 @@ func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return &ErrCannotDeleteDefaultProject{ProjectID: p.ID}
 	}
 
-	// Delete all tasks on that project
+	// Hard-delete all tasks on that project, including soft-deleted ones —
+	// there is nothing to restore them into once the project is gone.
 	// Using the loop to make sure all related entities to all tasks are properly deleted as well.
-	tasks, _, _, err := getRawTasksForProjects(s, []*Project{p}, a, &taskSearchOptions{})
+	tasks := []*Task{}
+	err = s.Unscoped().Where("project_id = ?", p.ID).Find(&tasks)
 	if err != nil {
 		return
 	}
 
 	for _, task := range tasks {
-		err = task.Delete(s, a)
+		err = hardDeleteTask(s, task)
 		if err != nil {
 			return err
 		}

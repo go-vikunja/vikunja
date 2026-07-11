@@ -38,3 +38,9 @@
   entity_id: 9
   user_id: 6
   created: 2021-02-01 15:13:12
+# Subscription on the soft-deleted task 51 for the negative CTE test
+- id: 11
+  entity_type: 3 # Task
+  entity_id: 51
+  user_id: 1
+  created: 2021-02-01 15:13:12

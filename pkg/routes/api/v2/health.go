@@ -21,13 +21,15 @@ import (
 	"net/http"
 
 	"code.vikunja.io/api/pkg/health"
+	"code.vikunja.io/api/pkg/modules/auth/openid"
 
 	"github.com/danielgtaylor/huma/v2"
 )
 
 type healthBody struct {
 	Body struct {
-		Status string `json:"status" doc:"\"OK\" when the service and its dependencies are reachable." example:"OK"`
+		Status          string                  `json:"status" enum:"OK,degraded" doc:"\"OK\" when the service and its dependencies are reachable, \"degraded\" when the service itself is healthy but at least one configured OpenID Connect provider is not available." example:"OK"`
+		OpenIDProviders []openid.ProviderStatus `json:"openid_providers,omitempty" doc:"Availability of each configured OpenID Connect provider, from cached state — this endpoint never contacts the providers. Omitted when OpenID Connect authentication is not configured or the providers have not been initialized yet right after startup."`
 	}
 }
 
@@ -36,7 +38,7 @@ func RegisterHealthRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "health",
 		Summary:     "Healthcheck",
-		Description: "Reports whether the service and its dependencies (database) are reachable. Returns 200 with status \"OK\" when healthy, 500 otherwise. Public — no authentication required.",
+		Description: "Reports whether the service and its dependencies (database, Redis if enabled) are reachable. Returns 200 with status \"OK\" when healthy, 500 otherwise. When OpenID Connect providers are configured, each provider's availability is reported too; an unavailable provider (typically because it was unreachable while Vikunja started) degrades the status but never fails the check, since initialization is retried automatically (with exponential backoff, after at most 15 minutes) and a restart would not help. Public — no authentication required.",
 		Method:      http.MethodGet,
 		Path:        "/health",
 		Tags:        []string{"service"},
@@ -48,8 +50,8 @@ func RegisterHealthRoutes(api huma.API) {
 
 func init() { AddRouteRegistrar(RegisterHealthRoutes) }
 
+//nolint:contextcheck // health.Check and openid.GetAllProviders are shared v1/v2 code; they take no context and use background contexts for their own pings.
 func healthcheck(_ context.Context, _ *struct{}) (*healthBody, error) {
-	//nolint:contextcheck // health.Check is the shared v1/v2 probe; it takes no context and uses background contexts for its own pings.
 	if err := health.Check(); err != nil {
 		// Mirror v1: a failed check is an internal error; the cause is logged,
 		// not leaked to the client.
@@ -57,5 +59,12 @@ func healthcheck(_ context.Context, _ *struct{}) (*healthBody, error) {
 	}
 	out := &healthBody{}
 	out.Body.Status = "OK"
+	out.Body.OpenIDProviders = openid.GetProvidersStatus()
+	for _, p := range out.Body.OpenIDProviders {
+		if !p.Available {
+			out.Body.Status = "degraded"
+			break
+		}
+	}
 	return out, nil
 }

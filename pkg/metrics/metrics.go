@@ -115,7 +115,13 @@ func countFromDatabase(key string) (int64, error) {
 	s := db.NewSession()
 	defer s.Close()
 
-	return s.Table(table).Count()
+	query := s.Table(table)
+	if key == TaskCountKey {
+		// Exclude soft-deleted tasks; no bean here, so the xorm deleted tag doesn't apply
+		query = query.Where("deleted_at IS NULL")
+	}
+
+	return query.Count()
 }
 
 // InvalidateCount drops the cached count for a key so the next read recomputes it from

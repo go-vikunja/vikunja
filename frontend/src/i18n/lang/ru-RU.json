@@ -168,6 +168,7 @@
 					"yyyy/mm/dd": "ГГГГ/ММ/ДД"
 				},
 				"timeFormat": "Формат времени",
+				"timeTrackingDefaultStart": "Время начала для автозаполнения учёта времени",
 				"timeFormatOptions": {
 					"12h": "12-часовой (AM/PM)",
 					"24h": "24-часовой (ЧЧ:мм)"
@@ -987,6 +988,7 @@
 				"repeatAfter": "Задать интервал повтора",
 				"percentDone": "Задать прогресс",
 				"attachments": "Добавить вложения",
+				"timeTracking": "Учёт времени",
 				"relatedTasks": "Добавить связь",
 				"moveProject": "Переместить",
 				"duplicate": "Создать копию",
@@ -1448,6 +1450,32 @@
 		"version": "Версия: {version}",
 		"frontendVersion": "Версия фронтенда: {version}",
 		"apiVersion": "Версия API: {version}"
+	},
+	"timeTracking": {
+		"title": "Учёт времени",
+		"stop": "Остановить таймер",
+		"logTime": "Записать время",
+		"editEntry": "Редактировать запись",
+		"form": {
+			"task": "Задача",
+			"taskSearch": "Искать задачу…",
+			"commentPlaceholder": "На что вы работали?",
+			"save": "Сохранить запись",
+			"startTimer": "Запустить таймер",
+			"update": "Обновить запись",
+			"smartFill": "Заполнить из предыдущей записи"
+		},
+		"list": {
+			"emptyTask": "У этой задачи ещё нет записанного времени.",
+			"emptyFiltered": "Нет записанного времени, соответствующего выбранным фильтрам.",
+			"total": "Всего",
+			"time": "Время",
+			"duration": "Продолжительность"
+		},
+		"browse": {
+			"selectRange": "Выбрать диапазон",
+			"userSearch": "Искать пользователя…"
+		}
 	},
 	"time": {
 		"units": {

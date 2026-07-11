@@ -56,6 +56,7 @@ export default class TaskService extends AbstractService<ITask> {
 		model.startDate = parseDate(model.startDate)
 		model.endDate = parseDate(model.endDate)
 		model.doneAt = parseDate(model.doneAt)
+		model.deletedAt = parseDate(model.deletedAt)
 		model.created = new Date(model.created).toISOString()
 		model.updated = new Date(model.updated).toISOString()
 

@@ -1,4 +1,4 @@
-name: Close stale "waiting for reply" issues
+name: Close stale "waiting for reply" issues and PRs
 
 on:
   schedule:
@@ -7,12 +7,13 @@ on:
 
 permissions:
   issues: write
+  pull-requests: write
 
 jobs:
   stale:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/stale@5bef64f19d7facfb25b37b414482c7164d639639 # v9.1.0
+      - uses: actions/stale@1e223db275d687790206a7acac4d1a11bd6fe629 # v10.4.0
         with:
           only-labels: 'waiting for reply'
           days-before-issue-stale: 30
@@ -26,5 +27,9 @@ jobs:
             for the report!
           stale-pr-label: 'waiting for reply'
           days-before-pr-stale: 30
-          days-before-pr-close: -1
+          days-before-pr-close: 14
+          close-pr-message: >
+            Closing this since we haven't heard back on the open review
+            questions. If you're still interested in landing this, answer
+            them in a comment and we'll reopen.
           operations-per-run: 100

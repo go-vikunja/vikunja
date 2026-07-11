@@ -326,6 +326,91 @@ func registerEventsForAuditLogging() {
 			Metadata: map[string]any{"member_id": e.Member.ID},
 		}
 	})
+
+	// Admin actions
+	audit.RegisterEventForAudit(func(e *AdminUserCreatedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action: audit.ActionAdminUserCreated,
+			Actor:  auditActorFromUser(e.Doer),
+			Target: audit.UserTarget(e.User.ID),
+		}
+	})
+	audit.RegisterEventForAudit(func(e *AdminUserAdminGrantedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action: audit.ActionAdminUserAdminGranted,
+			Actor:  auditActorFromUser(e.Doer),
+			Target: audit.UserTarget(e.User.ID),
+		}
+	})
+	audit.RegisterEventForAudit(func(e *AdminUserAdminRevokedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action: audit.ActionAdminUserAdminRevoked,
+			Actor:  auditActorFromUser(e.Doer),
+			Target: audit.UserTarget(e.User.ID),
+		}
+	})
+	audit.RegisterEventForAudit(func(e *AdminUserStatusChangedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action: audit.ActionAdminUserStatusChanged,
+			Actor:  auditActorFromUser(e.Doer),
+			Target: audit.UserTarget(e.User.ID),
+			Metadata: map[string]any{
+				"old_status": e.OldStatus,
+				"new_status": e.NewStatus,
+			},
+		}
+	})
+	audit.RegisterEventForAudit(func(e *AdminUserPasswordSetEvent) *audit.Entry {
+		return &audit.Entry{
+			Action: audit.ActionAdminUserPasswordSet,
+			Actor:  auditActorFromUser(e.Doer),
+			Target: audit.UserTarget(e.User.ID),
+		}
+	})
+	audit.RegisterEventForAudit(func(e *AdminUserPasswordResetSentEvent) *audit.Entry {
+		return &audit.Entry{
+			Action: audit.ActionAdminUserPasswordResetSent,
+			Actor:  auditActorFromUser(e.Doer),
+			Target: audit.UserTarget(e.User.ID),
+		}
+	})
+	audit.RegisterEventForAudit(func(e *AdminUserDeletedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action:   audit.ActionAdminUserDeleted,
+			Actor:    auditActorFromUser(e.Doer),
+			Target:   audit.UserTarget(e.User.ID),
+			Metadata: map[string]any{"mode": e.Mode},
+		}
+	})
+	audit.RegisterEventForAudit(func(e *AdminProjectOwnerChangedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action: audit.ActionAdminProjectOwnerChanged,
+			Actor:  auditActorFromUser(e.Doer),
+			Target: audit.ProjectTarget(e.Project.ID),
+			Metadata: map[string]any{
+				"old_owner_id": e.OldOwnerID,
+				"new_owner_id": e.NewOwnerID,
+			},
+		}
+	})
+	audit.RegisterEventForAudit(func(e *AdminUsersListedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action: audit.ActionAdminUsersListed,
+			Actor:  auditActorFromUser(e.Doer),
+		}
+	})
+	audit.RegisterEventForAudit(func(e *AdminAccessDeniedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action:  audit.ActionAdminAccessDenied,
+			Actor:   auditActorFromUser(e.Doer),
+			Outcome: audit.OutcomeFailure,
+			Reason:  "not an instance admin",
+			Metadata: map[string]any{
+				"method": e.Method,
+				"path":   e.Path,
+			},
+		}
+	})
 }
 
 //////
@@ -784,6 +869,20 @@ func (s *HandleTaskUpdateLastUpdated) Handle(msg *message.Message) (err error) {
 		return err
 	}
 
+	// Also bump the project so the CalDAV ctag advances on changes to
+	// task sub-entities (relations, comments, attachments, assignees).
+	fullTask, err := GetTaskByIDSimple(sess, taskIDInt)
+	if err != nil {
+		if IsErrTaskDoesNotExist(err) {
+			return sess.Commit()
+		}
+		return err
+	}
+	err = updateProjectLastUpdated(sess, &Project{ID: fullTask.ProjectID})
+	if err != nil {
+		return err
+	}
+
 	return sess.Commit()
 }
 
@@ -902,7 +1001,10 @@ func (l *UpdateTaskInSavedFilterViews) Handle(msg *message.Message) (err error) 
 		if err != nil {
 			return
 		}
-		_, err = s.Insert(taskPositions)
+		// A request healing the same filter view can insert a position row for
+		// this task between the delete above and this insert, so skip rows
+		// which exist by now instead of failing on the unique index.
+		err = bulkInsertTaskPositions(s, taskPositions, false)
 		if err != nil {
 			return
 		}

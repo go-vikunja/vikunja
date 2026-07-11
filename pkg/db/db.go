@@ -35,8 +35,8 @@ import (
 	"xorm.io/xorm/schemas"
 
 	_ "github.com/go-sql-driver/mysql" // Because.
-	_ "github.com/lib/pq"              // Because.
-	_ "github.com/mattn/go-sqlite3"    // Because.
+	"github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3" // Because.
 )
 
 var (
@@ -164,7 +164,7 @@ func parsePostgreSQLHostPort(info string) (string, string) {
 }
 
 // Copied and adopted from https://github.com/go-gitea/gitea/blob/f337c32e868381c6d2d948221aca0c59f8420c13/modules/setting/database.go#L176-L186
-func getPostgreSQLConnectionString(dbHost, dbUser, dbPasswd, dbName, dbSslMode, dbSslCert, dbSslKey, dbSslRootCert string) (connStr string) {
+func getPostgreSQLConnectionString(dbHost, dbUser, dbPasswd, dbName, dbSchema, dbSslMode, dbSslCert, dbSslKey, dbSslRootCert string) (connStr string) {
 	dbParam := "?"
 	if strings.Contains(dbName, dbParam) {
 		dbParam = "&"
@@ -177,6 +177,15 @@ func getPostgreSQLConnectionString(dbHost, dbUser, dbPasswd, dbName, dbSslMode, 
 		connStr = fmt.Sprintf("postgres://%s:%s@%s:%s/%s%ssslmode=%s&sslcert=%s&sslkey=%s&sslrootcert=%s",
 			url.PathEscape(dbUser), url.PathEscape(dbPasswd), host, port, dbName, dbParam, dbSslMode, dbSslCert, dbSslKey, dbSslRootCert)
 	}
+	// Pin search_path so raw SQL resolves to the same schema as xorm-built statements (#3118).
+	// Quoting preserves case; public stays so extension operators (e.g. ParadeDB's |||) keep resolving.
+	if dbSchema != "" {
+		searchPath := pq.QuoteIdentifier(dbSchema)
+		if dbSchema != "public" {
+			searchPath += ",public"
+		}
+		connStr += "&search_path=" + url.QueryEscape(searchPath)
+	}
 	return connStr
 }
 
@@ -186,6 +195,7 @@ func initPostgresEngine() (engine *xorm.Engine, err error) {
 		config.DatabaseUser.GetString(),
 		config.DatabasePassword.GetString(),
 		config.DatabaseDatabase.GetString(),
+		config.DatabaseSchema.GetString(),
 		config.DatabaseSslMode.GetString(),
 		config.DatabaseSslCert.GetString(),
 		config.DatabaseSslKey.GetString(),
@@ -491,8 +501,8 @@ func CreateParadeDBIndexes() error {
 	if !paradedbInstalled {
 		return nil
 	}
-	// ParadeDB only allows one bm25 index per table, so we create a single index covering both fields
-	// Use optimized configuration with fast fields and field boosting for better performance
+	// ParadeDB only allows one bm25 index per table, so we create a single index covering both fields.
+	// Fast fields speed up scoring; no field boosting is configured, title and description weigh the same.
 	indexSQL := `CREATE INDEX IF NOT EXISTS idx_tasks_paradedb ON tasks USING bm25 (id, title, description, project_id, done) 
 	WITH (
 		key_field='id',

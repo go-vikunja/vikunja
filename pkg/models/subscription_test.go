@@ -342,6 +342,16 @@ func TestSubscriptionGet(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, int64(9), sub.ID)
 	})
+	t.Run("soft-deleted task resolves no subscription", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Task 51 is soft-deleted; the raw CTE must not resolve its subscription (id 11)
+		sub, err := GetSubscriptionForUser(s, SubscriptionEntityTask, 51, &user.User{ID: 1})
+		require.NoError(t, err)
+		assert.Nil(t, sub)
+	})
 }
 
 func TestSubscription_NoCrossUserProjectInheritance(t *testing.T) {

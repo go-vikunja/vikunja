@@ -1798,6 +1798,11 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				t.Errorf("Test %s, Task.ReadAll() error = %v, wantErr %v", tt.name, err, tt.wantErr)
 				return
 			}
+			if gotTasks, is := got.([]*Task); is {
+				for _, task := range gotTasks {
+					assert.NotEqual(t, int64(51), task.ID, "the soft-deleted task 51 must never appear in any result")
+				}
+			}
 			if diff, equal := messagediff.PrettyDiff(tt.want, got); !equal {
 				var is bool
 				var gotTasks []*Task
@@ -1972,4 +1977,265 @@ func TestTaskCollection_SubtaskWithMultipleParentsNoDuplicates(t *testing.T) {
 	}
 	assert.True(t, foundParent1, "Parent task 41 should be present")
 	assert.True(t, foundParent2, "Parent task 42 should be present")
+}
+
+// TestTaskCollection_ExpandSubtasksPaginatesRoots verifies the maintainer's exact
+// pagination scenario: with expand=subtasks the LIMIT must slice ROOTS (top-level
+// tasks), and subtasks ride along beyond the limit without consuming it. totalCount
+// equals the number of roots, not the flat task count. Guards #2345.
+func TestTaskCollection_ExpandSubtasksPaginatesRoots(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	u := &user.User{ID: 1}
+
+	project := &Project{Title: "pagination-roots", OwnerID: u.ID}
+	_, err := s.Insert(project)
+	require.NoError(t, err)
+
+	// 40 top-level tasks
+	topLevel := make([]*Task, 0, 40)
+	for i := 1; i <= 40; i++ {
+		task := &Task{
+			Title:       "root",
+			ProjectID:   project.ID,
+			CreatedByID: u.ID,
+			Index:       int64(i),
+		}
+		_, err = s.Insert(task)
+		require.NoError(t, err)
+		topLevel = append(topLevel, task)
+	}
+
+	// 10 subtasks, each scattered as a child of some top-level task
+	parentIdx := []int{0, 4, 9, 12, 18, 22, 27, 31, 35, 39}
+	for i, idx := range parentIdx {
+		sub := &Task{
+			Title:       "sub",
+			ProjectID:   project.ID,
+			CreatedByID: u.ID,
+			Index:       int64(41 + i),
+		}
+		_, err = s.Insert(sub)
+		require.NoError(t, err)
+
+		rel := &TaskRelation{
+			TaskID:       topLevel[idx].ID,
+			OtherTaskID:  sub.ID,
+			RelationKind: RelationKindSubtask,
+		}
+		require.NoError(t, rel.Create(s, u))
+	}
+	require.NoError(t, s.Commit())
+
+	s2 := db.NewSession()
+	defer s2.Close()
+
+	expand := []TaskCollectionExpandable{TaskCollectionExpandSubtasks}
+
+	// Page 1: 25 roots + their subtasks; totalCount = 40 roots
+	page1, _, total1, err := getRawTasksForProjects(s2, []*Project{project}, u, &taskSearchOptions{
+		expand:  expand,
+		page:    1,
+		perPage: 25,
+	})
+	require.NoError(t, err)
+	assert.Equal(t, int64(40), total1, "totalCount must count roots only (40), not the flat 50")
+
+	roots1, subs1 := countRootsAndSubs(page1)
+	assert.Equal(t, 25, roots1, "page 1 must contain exactly 25 root tasks")
+	assert.GreaterOrEqual(t, subs1, 1, "page 1 must also carry the subtasks of its roots")
+
+	// Page 2: 15 roots (26-40) + their subtasks
+	page2, _, total2, err := getRawTasksForProjects(s2, []*Project{project}, u, &taskSearchOptions{
+		expand:  expand,
+		page:    2,
+		perPage: 25,
+	})
+	require.NoError(t, err)
+	assert.Equal(t, int64(40), total2)
+
+	roots2, _ := countRootsAndSubs(page2)
+	assert.Equal(t, 15, roots2, "page 2 must contain the remaining 15 root tasks")
+}
+
+// countRootsAndSubs splits the pagination result set into top-level tasks and
+// subtasks using the titles assigned by the test ("root" vs "sub").
+func countRootsAndSubs(tasks []*Task) (roots, subs int) {
+	for _, tsk := range tasks {
+		if tsk.Title == "sub" {
+			subs++
+		} else {
+			roots++
+		}
+	}
+	return roots, subs
+}
+
+// TestTaskCollection_ExpandSubtasksFilterMatchesSubtaskOnly covers #2646 case A:
+// a filter that matches only a subtask (whose same-project parent is filtered out)
+// must return that subtask as a root. The old same-project proxy returned [].
+func TestTaskCollection_ExpandSubtasksFilterMatchesSubtaskOnly(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	u := &user.User{ID: 1}
+
+	project := &Project{Title: "filter-matches-subtask", OwnerID: u.ID}
+	_, err := s.Insert(project)
+	require.NoError(t, err)
+
+	parent := &Task{Title: "parent", ProjectID: project.ID, CreatedByID: u.ID, Index: 1, Priority: 1}
+	_, err = s.Insert(parent)
+	require.NoError(t, err)
+
+	sub := &Task{Title: "matching subtask", ProjectID: project.ID, CreatedByID: u.ID, Index: 2, Priority: 5}
+	_, err = s.Insert(sub)
+	require.NoError(t, err)
+
+	rel := &TaskRelation{TaskID: parent.ID, OtherTaskID: sub.ID, RelationKind: RelationKindSubtask}
+	require.NoError(t, rel.Create(s, u))
+	require.NoError(t, s.Commit())
+
+	s2 := db.NewSession()
+	defer s2.Close()
+
+	filters, err := getTaskFiltersFromFilterString("priority = 5", "")
+	require.NoError(t, err)
+
+	tasks, _, _, err := getRawTasksForProjects(s2, []*Project{project}, u, &taskSearchOptions{
+		expand:        []TaskCollectionExpandable{TaskCollectionExpandSubtasks},
+		parsedFilters: filters,
+	})
+	require.NoError(t, err)
+
+	require.Len(t, tasks, 1, "the matching subtask must be returned even though its parent is filtered out")
+	assert.Equal(t, sub.ID, tasks[0].ID)
+}
+
+// TestTaskCollection_ExpandSubtasksFilterMatchesParentOnly covers #2646 case B:
+// a filter matching only the parent returns the parent plus its (non-matching)
+// subtask, nested, with no duplication.
+func TestTaskCollection_ExpandSubtasksFilterMatchesParentOnly(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	u := &user.User{ID: 1}
+
+	project := &Project{Title: "filter-matches-parent", OwnerID: u.ID}
+	_, err := s.Insert(project)
+	require.NoError(t, err)
+
+	parent := &Task{Title: "matching parent", ProjectID: project.ID, CreatedByID: u.ID, Index: 1, Priority: 5}
+	_, err = s.Insert(parent)
+	require.NoError(t, err)
+
+	sub := &Task{Title: "subtask", ProjectID: project.ID, CreatedByID: u.ID, Index: 2, Priority: 1}
+	_, err = s.Insert(sub)
+	require.NoError(t, err)
+
+	rel := &TaskRelation{TaskID: parent.ID, OtherTaskID: sub.ID, RelationKind: RelationKindSubtask}
+	require.NoError(t, rel.Create(s, u))
+	require.NoError(t, s.Commit())
+
+	s2 := db.NewSession()
+	defer s2.Close()
+
+	filters, err := getTaskFiltersFromFilterString("priority = 5", "")
+	require.NoError(t, err)
+
+	tasks, _, total, err := getRawTasksForProjects(s2, []*Project{project}, u, &taskSearchOptions{
+		expand:        []TaskCollectionExpandable{TaskCollectionExpandSubtasks},
+		parsedFilters: filters,
+	})
+	require.NoError(t, err)
+
+	assert.Equal(t, int64(1), total, "only the parent is a root, so the count is 1")
+
+	ids := map[int64]int{}
+	for _, tsk := range tasks {
+		ids[tsk.ID]++
+	}
+	assert.Equal(t, 1, ids[parent.ID], "parent present exactly once")
+	assert.Equal(t, 1, ids[sub.ID], "subtask rides along exactly once, no duplication")
+	assert.Len(t, tasks, 2)
+}
+
+// TestTaskCollection_ExpandSubtasksSoftDeleted covers the two soft-delete gaps
+// the xorm deleted tag can't reach in the subtask expansion: the raw recursive
+// CTE fetching subtasks, and the "tasks parent_tasks" self-join alias in the
+// root condition.
+func TestTaskCollection_ExpandSubtasksSoftDeleted(t *testing.T) {
+	u := &user.User{ID: 1}
+
+	setup := func(t *testing.T, title string) (project *Project, parent, sub *Task) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		project = &Project{Title: title, OwnerID: u.ID}
+		_, err := s.Insert(project)
+		require.NoError(t, err)
+
+		parent = &Task{Title: "parent", ProjectID: project.ID, CreatedByID: u.ID, Index: 1}
+		_, err = s.Insert(parent)
+		require.NoError(t, err)
+
+		sub = &Task{Title: "sub", ProjectID: project.ID, CreatedByID: u.ID, Index: 2}
+		_, err = s.Insert(sub)
+		require.NoError(t, err)
+
+		rel := &TaskRelation{TaskID: parent.ID, OtherTaskID: sub.ID, RelationKind: RelationKindSubtask}
+		require.NoError(t, rel.Create(s, u))
+		require.NoError(t, s.Commit())
+		return
+	}
+
+	expand := []TaskCollectionExpandable{TaskCollectionExpandSubtasks}
+
+	t.Run("soft-deleted subtask is omitted", func(t *testing.T) {
+		project, parent, sub := setup(t, "deleted-subtask")
+
+		s := db.NewSession()
+		defer s.Close()
+
+		// Soft delete the subtask; its relation rows are kept, so only the
+		// deleted_at filter in the CTE keeps it out of the expansion
+		_, err := s.ID(sub.ID).Delete(&Task{})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		s2 := db.NewSession()
+		defer s2.Close()
+
+		tasks, _, _, err := getRawTasksForProjects(s2, []*Project{project}, u, &taskSearchOptions{expand: expand})
+		require.NoError(t, err)
+
+		require.Len(t, tasks, 1, "the soft-deleted subtask must not ride along")
+		assert.Equal(t, parent.ID, tasks[0].ID)
+	})
+
+	t.Run("children of a soft-deleted parent become roots", func(t *testing.T) {
+		project, parent, sub := setup(t, "deleted-parent")
+
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.ID(parent.ID).Delete(&Task{})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		s2 := db.NewSession()
+		defer s2.Close()
+
+		tasks, _, total, err := getRawTasksForProjects(s2, []*Project{project}, u, &taskSearchOptions{expand: expand})
+		require.NoError(t, err)
+
+		assert.Equal(t, int64(1), total, "the orphaned subtask is the only root")
+		require.Len(t, tasks, 1)
+		assert.Equal(t, sub.ID, tasks[0].ID)
+	})
 }

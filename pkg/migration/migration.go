@@ -57,6 +57,11 @@ func initMigration(x *xorm.Engine) *xormigrate.Xormigrate {
 		}
 	}
 
+	if err := checkPostgresSchemaMismatch(x); err != nil {
+		log.Fatalf("Schema check failed: %v", err)
+		return nil
+	}
+
 	// Because init() does not guarantee the order in which these are added to the slice,
 	// we need to sort them to ensure that they are in order
 	sort.Slice(migrations, func(i, j int) bool {
@@ -209,7 +214,9 @@ func columnExists(x *xorm.Engine, tableName, columnName string) (bool, error) {
 		}
 		return len(results) > 0, nil
 	case "postgres":
-		results, err := x.Query("SELECT column_name FROM information_schema.columns WHERE table_name = '" + tableName + "' AND column_name = '" + columnName + "'")
+		// Filter by current_schema() — without it, a leftover copy of the table in another
+		// schema makes this check pass while the ALTER runs against the real one (#3118).
+		results, err := x.Query("SELECT column_name FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = ? AND column_name = ?", tableName, columnName)
 		if err != nil {
 			return false, err
 		}

@@ -136,6 +136,7 @@ import type {ITask} from '@/modelTypes/ITask'
 import type {IProject} from '@/modelTypes/IProject'
 import type {IAbstract} from '@/modelTypes/IAbstract'
 import {isSavedFilter} from '@/services/savedFilter'
+import type {TaskFilterParams} from '@/services/taskCollection'
 
 const {t} = useI18n({useScope: 'global'})
 const router = useRouter()
@@ -450,9 +451,11 @@ function searchTasks() {
 		}
 	}
 
-	const params = {
+	const params: Partial<TaskFilterParams> = {
 		s: text,
-		sort_by: 'done',
+		// undone tasks first, most relevant first within each group (relevance is
+		// only honored on backends that can score the search, see the API docs)
+		sort_by: ['done', 'relevance'],
 		filter,
 	}
 

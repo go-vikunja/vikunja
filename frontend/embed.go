@@ -18,5 +18,8 @@ package frontend
 
 import "embed"
 
-//go:embed dist
+// all: is required to include files starting with _ or ., such as the
+// _plugin-vue_export-helper chunk emitted by Rolldown-based vite builds.
+//
+//go:embed all:dist
 var Files embed.FS

@@ -90,6 +90,9 @@ type Notifiable interface {
 
 // Notify notifies a notifiable of a notification.
 // An optional xorm session can be passed to reuse an existing transaction for the DB notification.
+// For persisted notifications the mail is queued from DatabaseNotification.AfterInsert,
+// i.e. only once the row is committed, so a rolled-back transaction (and its
+// event-handler retry) cannot duplicate mails (#2971).
 func Notify(notifiable Notifiable, notification Notification, sessions ...*xorm.Session) (err error) {
 	if isUnderTest {
 		sentTestNotifications = append(sentTestNotifications, notification)
@@ -102,17 +105,17 @@ func Notify(notifiable Notifiable, notification Notification, sessions ...*xorm.
 		return err
 	}
 
-	err = notifyMail(notifiable, notification)
-	if err != nil {
-		return
-	}
-
 	var s *xorm.Session
 	if len(sessions) > 0 && sessions[0] != nil {
 		s = sessions[0]
 	}
 
-	return notifyDB(notifiable, notification, s)
+	mailDeferred, err := notifyDB(notifiable, notification, s)
+	if err != nil || mailDeferred {
+		return err
+	}
+
+	return notifyMail(notifiable, notification)
 }
 
 func notifyMail(notifiable Notifiable, notification Notification) error {
@@ -140,22 +143,28 @@ func notifyMail(notifiable Notifiable, notification Notification) error {
 	return SendMail(mail, notifiable.Lang())
 }
 
-func notifyDB(notifiable Notifiable, notification Notification, existingSession *xorm.Session) (err error) {
+// notifyDB inserts the notification row if the notification has a DB
+// representation. mailDeferred reports that the mail will be queued from
+// AfterInsert once the (possibly caller-owned) transaction commits, so the
+// caller must not send it.
+func notifyDB(notifiable Notifiable, notification Notification, existingSession *xorm.Session) (mailDeferred bool, err error) {
 
 	dbContent := notification.ToDB()
 	if dbContent == nil {
-		return nil
+		return false, nil
 	}
 
 	content, err := json.Marshal(dbContent)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	dbNotification := &DatabaseNotification{
 		NotifiableID: notifiable.RouteForDB(),
 		Notification: json.RawMessage(content),
 		Name:         notification.Name(),
+		notification: notification,
+		notifiable:   notifiable,
 	}
 
 	if subject, is := notification.(SubjectID); is {
@@ -164,7 +173,7 @@ func notifyDB(notifiable Notifiable, notification Notification, existingSession 
 
 	if existingSession != nil {
 		_, err = existingSession.Insert(dbNotification)
-		return err
+		return err == nil, err
 	}
 
 	s := db.NewSession()
@@ -173,8 +182,8 @@ func notifyDB(notifiable Notifiable, notification Notification, existingSession 
 	_, err = s.Insert(dbNotification)
 	if err != nil {
 		_ = s.Rollback()
-		return err
+		return false, err
 	}
 
-	return s.Commit()
+	return true, s.Commit()
 }

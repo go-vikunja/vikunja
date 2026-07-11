@@ -17,6 +17,7 @@
 package models
 
 import (
+	"fmt"
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
@@ -99,6 +100,27 @@ func TestCronInsertsNonZeroPosition(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, exists)
 	assert.NotZero(t, tp.Position)
+}
+
+// Task 51 matches "done = false" but is soft-deleted — the bucket heal must not
+// resurrect it. The existing heal tests are existence-only and would pass that.
+func TestSavedFilterHealDoesNotResurrectSoftDeletedTasks(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	sf := &SavedFilter{
+		Title:   "no-resurrect",
+		Filters: &TaskCollection{Filter: "done = false"},
+	}
+
+	u := &user.User{ID: 1}
+	require.NoError(t, sf.Create(s, u))
+	require.NoError(t, sf.Update(s, u))
+	require.NoError(t, s.Commit())
+
+	db.AssertMissing(t, "task_buckets", map[string]interface{}{"task_id": 51})
+	db.AssertMissing(t, "task_positions", map[string]interface{}{"task_id": 51})
 }
 
 func TestCronCreatesNonZeroPositions(t *testing.T) {
@@ -312,4 +334,106 @@ func TestIssue724_SortingOnFilteredViews(t *testing.T) {
 	require.NoError(t, err)
 	assert.Zero(t, zeroCount,
 		"No position=0 records should exist in database for view %d", view.ID)
+}
+
+// A task which starts matching a saved filter has no position row in the filter's views yet.
+// Its position must be created before the fetch query runs, so it appears at the top on the
+// very first fetch instead of landing at the bottom and jumping to the top on the next one.
+func TestSavedFilterNewTaskAtTopOnFirstFetch(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	u := &user.User{ID: 1}
+
+	sf := &SavedFilter{
+		Title:   "first-fetch-position",
+		Filters: &TaskCollection{Filter: "done = false"},
+	}
+	require.NoError(t, sf.Create(s, u))
+
+	view := &ProjectView{}
+	exists, err := s.Where("project_id = ? AND view_kind = ?",
+		getProjectIDFromSavedFilterID(sf.ID), ProjectViewKindList).Get(view)
+	require.NoError(t, err)
+	require.True(t, exists)
+
+	// Position all currently matching tasks so the task created below is the only one
+	// without a position row, as after the position cron ran.
+	require.NoError(t, RecalculateTaskPositions(s, view, u))
+
+	task := &Task{Title: "new task matching the filter", ProjectID: 1}
+	require.NoError(t, task.Create(s, u))
+
+	fetchTaskIndex := func() int {
+		tc := &TaskCollection{
+			ProjectID:     getProjectIDFromSavedFilterID(sf.ID),
+			ProjectViewID: view.ID,
+			SortBy:        []string{"position"},
+			OrderBy:       []string{"asc"},
+		}
+		result, _, _, err := tc.ReadAll(s, u, "", 1, 100)
+		require.NoError(t, err)
+		tasks, ok := result.([]*Task)
+		require.True(t, ok)
+		for i, tt := range tasks {
+			if tt.ID == task.ID {
+				return i
+			}
+		}
+		t.Fatalf("task %d not found in filter results", task.ID)
+		return -1
+	}
+
+	first := fetchTaskIndex()
+	assert.Equal(t, 0, first, "newly matching task must be at the top on the first fetch")
+	assert.Equal(t, first, fetchTaskIndex(), "task order must not change between fetches")
+}
+
+// The heal must cover all matching tasks without a position, not just those on the fetched
+// page — otherwise tasks beyond the current page keep reordering until the cron runs.
+func TestSavedFilterHealsPositionsBeyondFetchedPage(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	u := &user.User{ID: 1}
+
+	sf := &SavedFilter{
+		Title:   "heal-all-pages",
+		Filters: &TaskCollection{Filter: "done = false"},
+	}
+	require.NoError(t, sf.Create(s, u))
+
+	view := &ProjectView{}
+	exists, err := s.Where("project_id = ? AND view_kind = ?",
+		getProjectIDFromSavedFilterID(sf.ID), ProjectViewKindList).Get(view)
+	require.NoError(t, err)
+	require.True(t, exists)
+
+	require.NoError(t, RecalculateTaskPositions(s, view, u))
+
+	newTasks := make([]*Task, 0, 3)
+	for i := 0; i < 3; i++ {
+		task := &Task{Title: fmt.Sprintf("unpositioned task %d", i), ProjectID: 1}
+		require.NoError(t, task.Create(s, u))
+		newTasks = append(newTasks, task)
+	}
+
+	// Fetch a single page smaller than the number of matching tasks
+	tc := &TaskCollection{
+		ProjectID:     getProjectIDFromSavedFilterID(sf.ID),
+		ProjectViewID: view.ID,
+		SortBy:        []string{"position"},
+		OrderBy:       []string{"asc"},
+	}
+	_, _, _, err = tc.ReadAll(s, u, "", 1, 2)
+	require.NoError(t, err)
+
+	for _, task := range newTasks {
+		hasPosition, err := s.Where("task_id = ? AND project_view_id = ?", task.ID, view.ID).Exist(&TaskPosition{})
+		require.NoError(t, err)
+		assert.True(t, hasPosition,
+			"task %d must get a position row after one fetch, even when not on the fetched page", task.ID)
+	}
 }
