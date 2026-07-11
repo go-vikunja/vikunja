@@ -1679,6 +1679,46 @@ func addRepeatIntervalToTime(now, t time.Time, duration time.Duration) time.Time
 	return t.Add(time.Duration(intervals) * duration)
 }
 
+// clampRRuleAnchor fast-forwards a DAILY/WEEKLY DTSTART that sits more than a year
+// before now by a whole number of periods, landing it within one period below the
+// one-year cutoff. Whole-period AddDate arithmetic preserves the rule's phase, so
+// rrule.After() past the cutoff returns the same occurrence with far fewer
+// iterations. Other frequencies (and recent anchors) are returned unchanged.
+func clampRRuleAnchor(opt *rrule.ROption, baseDate, now time.Time) time.Time {
+	if opt.Freq != rrule.DAILY && opt.Freq != rrule.WEEKLY {
+		return baseDate
+	}
+	cutoff := now.AddDate(-1, 0, 0)
+	if !baseDate.Before(cutoff) {
+		return baseDate
+	}
+
+	periodDays := opt.Interval
+	if periodDays <= 0 {
+		periodDays = 1
+	}
+	if opt.Freq == rrule.WEEKLY {
+		periodDays *= 7
+	}
+
+	// Estimate whole periods to skip, then correct for day-length variance (DST).
+	gapDays := int(cutoff.Sub(baseDate).Hours() / 24)
+	if k := gapDays / periodDays; k > 0 {
+		baseDate = baseDate.AddDate(0, 0, k*periodDays)
+	}
+	for baseDate.After(cutoff) {
+		baseDate = baseDate.AddDate(0, 0, -periodDays)
+	}
+	for {
+		next := baseDate.AddDate(0, 0, periodDays)
+		if next.After(cutoff) {
+			break
+		}
+		baseDate = next
+	}
+	return baseDate
+}
+
 // setTaskDatesRRule sets the next occurrence dates using an RRULE string.
 // If repeatsFromCurrentDate is true, the next occurrence is calculated from now.
 // Otherwise, it's calculated from the current due date.
@@ -1748,14 +1788,14 @@ func setTaskDatesRRule(oldTask, newTask *Task) {
 			log.Errorf("Failed to parse RRULE '%s' for task %d: %v", oldTask.Repeats, oldTask.ID, err)
 			return
 		}
-		// Set the DTSTART on the rule so After() works correctly
+		// rule.After() has no iteration cap and generates from DTSTART forward, so an
+		// ancient anchor makes it churn through decades of skipped occurrences. For
+		// DAILY/WEEKLY rules (MONTHLY/YEARLY stay cheap even from year 1), fast-forward
+		// the anchor by whole periods to just below one year ago. Whole-period day
+		// arithmetic preserves phase exactly (interval sequence, week parity, BYDAY/
+		// BYSETPOS boundaries), so After() yields the same occurrence, but cheaply.
+		baseDate = clampRRuleAnchor(opt, baseDate, now)
 		rule.DTStart(baseDate)
-		// Clamp the search window: rule.After() has no iteration cap, so a far-past
-		// searchFrom would scan every interval up to now. validateRRule rejects
-		// sub-daily+By rules, so the worst granularity here is daily (~3.7k steps).
-		if minSearchFrom := now.AddDate(-10, 0, 0); searchFrom.Before(minSearchFrom) {
-			searchFrom = minSearchFrom
-		}
 		nextOccurrence = rule.After(searchFrom, false)
 	}
 	if nextOccurrence.IsZero() {

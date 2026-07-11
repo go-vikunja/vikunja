@@ -1222,11 +1222,13 @@ func TestUpdateDone_RRuleAncientDueDate(t *testing.T) {
 
 func TestUpdateDone_RRuleAncientDueDate_SlowPath(t *testing.T) {
 	// A daily rule with a By-part takes the rrule.After slow path (no fixed
-	// duration). The 10-year clamp keeps the far-past search window bounded.
+	// duration). Anchored in year 1000, rrule.After hits its internal iteration
+	// cap and returns the zero time, so without clampRRuleAnchor advancing the
+	// DTSTART the task would never reschedule.
 	oldTask := &Task{
 		Done:    false,
 		Repeats: "FREQ=DAILY;BYHOUR=9",
-		DueDate: time.Date(1900, 1, 1, 0, 0, 0, 0, time.UTC),
+		DueDate: time.Date(1000, 1, 1, 0, 0, 0, 0, time.UTC),
 	}
 	newTask := &Task{Done: true}
 
@@ -1234,9 +1236,39 @@ func TestUpdateDone_RRuleAncientDueDate_SlowPath(t *testing.T) {
 	updateDone(oldTask, newTask)
 	elapsed := time.Since(start)
 
+	// FREQ=DAILY;BYHOUR=9 fires every day at 09:00:00 UTC, so the next occurrence
+	// is the first 09:00 UTC strictly after now.
+	su := start.UTC()
+	expected := time.Date(su.Year(), su.Month(), su.Day(), 9, 0, 0, 0, time.UTC)
+	if !expected.After(start) {
+		expected = expected.AddDate(0, 0, 1)
+	}
+
 	require.Less(t, elapsed, time.Second, "slow-path reschedule must stay bounded for ancient due dates")
-	assert.True(t, newTask.DueDate.After(start), "new due date must be strictly after now")
+	assert.True(t, newTask.DueDate.Equal(expected), "expected next due date %v, got %v", expected, newTask.DueDate.UTC())
 	assert.False(t, newTask.Done, "repeating task should be unmarked as done")
+}
+
+func TestUpdateDone_RRuleSlowPathPreservesPhase(t *testing.T) {
+	// clampRRuleAnchor advances the DTSTART by whole periods; the resulting next
+	// occurrence must match what the un-advanced (recent enough to iterate
+	// correctly) rule yields for the same phase. INTERVAL=3 exercises the period
+	// arithmetic; the 08:30 anchor minute proves wall-clock time is preserved.
+	const repeats = "FREQ=DAILY;INTERVAL=3;BYHOUR=9"
+	anchor := time.Date(2000, 3, 7, 8, 30, 0, 0, time.UTC)
+
+	rule, err := rrule.StrToRRule(repeats)
+	require.NoError(t, err)
+	rule.DTStart(anchor)
+	expected := rule.After(time.Now(), false)
+	require.False(t, expected.IsZero())
+
+	oldTask := &Task{Done: false, Repeats: repeats, DueDate: anchor}
+	newTask := &Task{Done: true}
+	updateDone(oldTask, newTask)
+
+	assert.True(t, newTask.DueDate.Equal(expected), "clamped anchor changed the occurrence: expected %v, got %v", expected.UTC(), newTask.DueDate.UTC())
+	assert.False(t, newTask.Done)
 }
 
 func TestUpdateDone_FieldScopedRepeatPersists(t *testing.T) {
