@@ -1619,6 +1619,27 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{
+			// Project 15 is a subproject of project 32. Requesting the
+			// subproject with include_subprojects must only return the
+			// subproject's own tasks (and its descendants), never the parent's
+			// tasks (task21 lives in project 32) - inclusion only ever walks
+			// down the hierarchy, never up to an ancestor.
+			name: "subproject tasks including subprojects do not leak the parent project's tasks",
+			fields: fields{
+				ProjectID:          15,
+				IncludeSubprojects: true,
+				SortBy:             []string{"id"},
+				OrderBy:            []string{"asc"},
+			},
+			args: args{
+				a: &user.User{ID: 1},
+			},
+			want: []*Task{
+				task24,
+			},
+			wantErr: false,
+		},
 		// TODO filter parent project?
 		{
 			name: "filter by index",
@@ -1910,8 +1931,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		})
 	}
 }
-
-
 
 func TestTaskCollection_SubtaskRemainsAfterMove(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
