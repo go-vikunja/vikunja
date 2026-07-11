@@ -3,17 +3,100 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width,initial-scale=1.0">
-	<title>Vikunja</title>
-	<meta name="description" content="Vikunja (/vɪˈkuːnjə/) - The to-do app to organize your life.">
-	<meta name="theme-color" content="#1973ff"/>
+	<title>ProjectOS</title>
+	<meta name="description" content="ProjectOS — plan, track, and ship your work.">
+	<meta name="theme-color" content="#2f6df6"/>
 
 	<link rel="icon" href="/favicon.ico">
 	<link rel="apple-touch-icon" href="/images/icons/apple-touch-icon-180x180.png"/>
 	<!--__vite-plugin-inject-preload__-->
+	<script>
+		//
+		// ProjectOS runtime white-label theming.
+		// Fetches per-tenant /branding.json (served by the platform reverse proxy
+		// from that org's brand dir) and applies it at runtime — colors, fonts,
+		// title, favicon — with no per-tenant image rebuild. Kept self-contained
+		// on purpose so it survives engine upgrades.
+		//
+		(function () {
+			var DEFAULTS = {
+				org: { name: 'ProjectOS', caption: 'Plan, track, and ship your work.' },
+				logo: { favicon: '/favicon.ico' },
+				colors: { primary: '#2f6df6' },
+				typography: {}
+			}
+			window.__BRANDING__ = DEFAULTS
+
+			function hexToHsl(hex) {
+				if (!hex) return null
+				var m = hex.replace('#', '')
+				if (m.length === 3) m = m[0] + m[0] + m[1] + m[1] + m[2] + m[2]
+				if (m.length !== 6) return null
+				var r = parseInt(m.slice(0, 2), 16) / 255,
+					g = parseInt(m.slice(2, 4), 16) / 255,
+					b = parseInt(m.slice(4, 6), 16) / 255
+				var max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min
+				var h = 0, s = 0, l = (max + min) / 2
+				if (d !== 0) {
+					s = d / (1 - Math.abs(2 * l - 1))
+					switch (max) {
+						case r: h = ((g - b) / d) % 6; break
+						case g: h = (b - r) / d + 2; break
+						default: h = (r - g) / d + 4
+					}
+					h *= 60; if (h < 0) h += 360
+				}
+				return { h: Math.round(h), s: Math.round(s * 100), l: Math.round(l * 100) }
+			}
+
+			function apply(b) {
+				try {
+					var root = document.documentElement
+					// Colors — drive the engine's HSL component vars from brand primary.
+					var hsl = hexToHsl(b.colors && b.colors.primary)
+					if (hsl) {
+						root.style.setProperty('--primary-h', hsl.h + 'deg')
+						root.style.setProperty('--primary-s', hsl.s + '%')
+						root.style.setProperty('--primary-l', hsl.l + '%')
+					}
+					if (b.colors && b.colors.accent) root.style.setProperty('--accent', b.colors.accent)
+					// Typography.
+					if (b.typography && b.typography.fontUrl) {
+						var link = document.createElement('link')
+						link.rel = 'stylesheet'; link.href = b.typography.fontUrl
+						document.head.appendChild(link)
+					}
+					if (b.typography && b.typography.fontFamily) {
+						root.style.setProperty('--font-family', b.typography.fontFamily)
+					}
+					// Title / description / theme-color / favicon.
+					if (b.org && b.org.name) document.title = b.org.name
+					var desc = document.querySelector('meta[name="description"]')
+					if (desc && b.org && b.org.caption) desc.setAttribute('content', b.org.caption)
+					var tc = document.querySelector('meta[name="theme-color"]')
+					if (tc && b.colors && b.colors.primary) tc.setAttribute('content', b.colors.primary)
+					if (b.logo && b.logo.favicon) {
+						var icon = document.querySelector('link[rel="icon"]')
+						if (icon) icon.setAttribute('href', b.logo.favicon)
+					}
+				} catch (e) { /* never block app boot on branding */ }
+			}
+
+			apply(DEFAULTS)
+			fetch('/branding.json', { cache: 'no-cache' })
+				.then(function (r) { return r.ok ? r.json() : null })
+				.then(function (b) {
+					if (!b) return
+					window.__BRANDING__ = Object.assign({}, DEFAULTS, b)
+					apply(window.__BRANDING__)
+				})
+				.catch(function () { /* keep defaults */ })
+		})()
+	</script>
 </head>
 <body>
 <noscript>
-	<strong>We're sorry but Vikunja doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
+	<strong>This application requires JavaScript. Please enable it to continue.</strong>
 </noscript>
 <div id="app"></div>
 <script type="module" src="/src/main.ts"></script>

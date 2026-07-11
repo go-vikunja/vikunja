@@ -597,8 +597,9 @@ func InitConfig() {
 	// Set defaults
 	InitDefaultConfig()
 
-	// Init checking for environment variables
-	viper.SetEnvPrefix("vikunja")
+	// Init checking for environment variables.
+	// ProjectOS white-label: generic config prefix (was "vikunja").
+	viper.SetEnvPrefix("projectos")
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv()
 
