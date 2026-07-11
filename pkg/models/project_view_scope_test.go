@@ -41,6 +41,20 @@ func TestGetProjectsForView(t *testing.T) {
 	})
 }
 
+func TestProjectViewIncludedProjectIDsPersistence(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	view := &ProjectView{ID: 1, IncludedProjectIDs: []int64{12, 21}}
+	_, err := s.ID(view.ID).Cols("included_project_ids").Update(view)
+	require.NoError(t, err)
+
+	stored, err := GetProjectViewByID(s, view.ID)
+	require.NoError(t, err)
+	assert.Equal(t, view.IncludedProjectIDs, stored.IncludedProjectIDs)
+}
+
 func projectIDs(projects []*Project) []int64 {
 	ids := make([]int64, 0, len(projects))
 	for _, project := range projects {
