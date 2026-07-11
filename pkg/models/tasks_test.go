@@ -811,8 +811,10 @@ func TestUpdateDone(t *testing.T) {
 			}
 			updateDone(oldTask, newTask)
 
-			// Next occurrence should be after now
-			assert.True(t, newTask.DueDate.After(time.Now()) || newTask.DueDate.Equal(time.Now().Truncate(24*time.Hour)))
+			// A 2-day-overdue daily rule skips the two past days and lands exactly
+			// one day in the future: oldDueDate + 3 days. Weekly would be +7 days,
+			// so an exact delta guards against the frequency being misinterpreted.
+			assert.Equal(t, oldDueDate.Add(72*time.Hour).Unix(), newTask.DueDate.Unix())
 			assert.False(t, newTask.Done)
 		})
 		t.Run("no due date is a no-op", func(t *testing.T) {
@@ -856,35 +858,38 @@ func TestUpdateDone(t *testing.T) {
 			assert.False(t, newTask.Done)
 		})
 		t.Run("update start date", func(t *testing.T) {
-			oldStartDate := time.Now().Add(-48 * time.Hour)
+			// Start and due share the same 2-day-overdue anchor, so the due date
+			// shifts by exactly 72h and start must shift by the same delta to keep
+			// its offset from the due date intact.
+			base := time.Now().Add(-48 * time.Hour)
 			oldTask := &Task{
 				Done:      false,
 				Repeats:   "FREQ=DAILY;INTERVAL=1",
-				DueDate:   time.Now().Add(-48 * time.Hour),
-				StartDate: oldStartDate,
+				DueDate:   base,
+				StartDate: base,
 			}
 			newTask := &Task{
 				Done: true,
 			}
 			updateDone(oldTask, newTask)
 
-			assert.True(t, newTask.StartDate.After(oldStartDate))
+			assert.Equal(t, base.Add(72*time.Hour).Unix(), newTask.StartDate.Unix())
 			assert.False(t, newTask.Done)
 		})
 		t.Run("update end date", func(t *testing.T) {
-			oldEndDate := time.Now().Add(-48 * time.Hour)
+			base := time.Now().Add(-48 * time.Hour)
 			oldTask := &Task{
 				Done:    false,
 				Repeats: "FREQ=DAILY;INTERVAL=1",
-				DueDate: time.Now().Add(-48 * time.Hour),
-				EndDate: oldEndDate,
+				DueDate: base,
+				EndDate: base,
 			}
 			newTask := &Task{
 				Done: true,
 			}
 			updateDone(oldTask, newTask)
 
-			assert.True(t, newTask.EndDate.After(oldEndDate))
+			assert.Equal(t, base.Add(72*time.Hour).Unix(), newTask.EndDate.Unix())
 			assert.False(t, newTask.Done)
 		})
 		t.Run("ensure due date is repeated even if the original one is in the future", func(t *testing.T) {
