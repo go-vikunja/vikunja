@@ -12,8 +12,8 @@
 		"addToHomeScreen": "Pridėkite aplikaciją į darbalaukį, lengvesniam pasiekiamumui ir geresnei patirčiai.",
 		"goToOverview": "Eiti į apžvalgą",
 		"project": {
-			"importText": "Importuokite savo projektus ir užduotis iš kitų tiekėjų į Vikunja:",
-			"import": "Importuoti duomenis į Vikunja"
+			"importText": "Importuokite savo projektus ir užduotis iš kitų tiekėjų į ProjectOS:",
+			"import": "Importuoti duomenis į ProjectOS"
 		}
 	},
 	"demo": {
@@ -22,7 +22,7 @@
 		"accountWillBeDeleted": "Tavo paskyra bus ištrinta, įskaitant visus projektus, užduotis ir prisegtukus su tuo susijusius."
 	},
 	"ready": {
-		"loading": "Vikunja kraunasi…",
+		"loading": "ProjectOS kraunasi…",
 		"errorOccured": "Įvyko klaida:",
 		"checkApiUrl": "Prašau patikrinti ar Api nuoroda yra teisinga.",
 		"noApiUrlConfigured": "Jokia Api nuoroda nebuvo sukonfiguruota. Prašau, tai padaryti žemiau:"
@@ -117,7 +117,7 @@
 			},
 			"caldav": {
 				"title": "CalDAV",
-				"more": "Daugiau informacijos apie CalDAV Vikunja",
+				"more": "Daugiau informacijos apie CalDAV ProjectOS",
 				"tokens": "CalDAV tokenai"
 			},
 			"avatar": {
@@ -134,7 +134,7 @@
 				"title": "Greito pridėjimo magijos būsena",
 				"disabled": "Išjungta",
 				"todoist": "Todoist",
-				"vikunja": "Vikunja"
+				"vikunja": "ProjectOS"
 			},
 			"appearance": {
 				"title": "Spalvų paletė",
@@ -147,7 +147,7 @@
 			},
 			"apiTokens": {
 				"title": "API sąsajos prieigos raktai",
-				"general": "API tokenai leidžia naudoti Vikunja API be prisijungimo duomenų.",
+				"general": "API tokenai leidžia naudoti ProjectOS API be prisijungimo duomenų.",
 				"apiDocs": "Peržiūrėkite api dokumentaciją",
 				"createAToken": "Sukurti prieigos raktą",
 				"createToken": "Sukurti prieigos raktą",
@@ -175,7 +175,7 @@
 			}
 		},
 		"deletion": {
-			"title": "Ištrinti savo Vikunja paskyrą",
+			"title": "Ištrinti savo ProjectOS paskyrą",
 			"text1": "Profilio ištrynimas yra neatšaukiamas. Visi projektai, užduotys ir kita susijusi informacijas bus pašalinta.",
 			"text2": "Norėdama -s tęsti, įvesk savo slaptažodį. Gausi email'ą su tolimesnėmis instrukcijomis.",
 			"text3": "Norėdami tęsti, spauskite mygtuką žemiau. Gausite el. laišką su tolimesnėmis instrukcijomis.",
@@ -183,7 +183,7 @@
 			"requestSuccess": "Tavo užklausa sėkminga. Gausi email'ą su tolimesnėmis instrukcijomis.",
 			"passwordRequired": "Prašome įvesti savo slaptažodį.",
 			"confirmSuccess": "Sėkmingai patvirtinai paskyros ištrynimą. Ištrinsime tavo paskyrą per tris dienas.",
-			"scheduled": "Ištrinsime tavo Vikunja paskyrą {date} ({dateSince}).",
+			"scheduled": "Ištrinsime tavo ProjectOS paskyrą {date} ({dateSince}).",
 			"scheduledCancel": "Norėdama -s nutraukti paskyros ištrynimą, spausk čia.",
 			"scheduledCancelText": "Norėdama -s nutraukti paskyros ištrynimą, įveskite slaptažodį žemiau:",
 			"scheduledCancelButton": "Norint atšaukti paskyros ištynimą, prašome spausti mygtuką žemiau:",
@@ -191,11 +191,11 @@
 			"scheduledCancelSuccess": "Mes neštrinsime tavo paskyros."
 		},
 		"export": {
-			"title": "Eksportuoti Vikunja duomenis",
-			"description": "Tu gali prašyti gauti visus Vikunja duomenis. Į tai įeina, Projektai, Užduotys ir viskas, kas su jais susiję. Tu gali savo duomenis vėliau įkelti į bet kurią Vikunja aplinką naudojantis migracijos funkcija.",
+			"title": "Eksportuoti ProjectOS duomenis",
+			"description": "Tu gali prašyti gauti visus ProjectOS duomenis. Į tai įeina, Projektai, Užduotys ir viskas, kas su jais susiję. Tu gali savo duomenis vėliau įkelti į bet kurią ProjectOS aplinką naudojantis migracijos funkcija.",
 			"descriptionPasswordRequired": "Prašau įvesti slaptažodį norint tęsti:",
-			"request": "Užklausti dėl Vikunja duomenų kopijos",
-			"success": "Sėkmingai užprašei Vikunja duomenų! Atsiųsime el. žinutę, kaip jie bus paruošti parsisiuntimui.",
+			"request": "Užklausti dėl ProjectOS duomenų kopijos",
+			"success": "Sėkmingai užprašei ProjectOS duomenų! Atsiųsime el. žinutę, kaip jie bus paruošti parsisiuntimui.",
 			"downloadTitle": "Parsisiųsti Vikunjos duomenis"
 		}
 	},
@@ -276,7 +276,7 @@
 			"links": {
 				"title": "Dalintis nuorodomis",
 				"what": "Kas yra pasidalinimo nuoroda?",
-				"explanation": "Pasidalintinės nuorodos leidžia lengvai pasidalinti projektu su kitais vartotojais, kurie neturi Vikunja profilio.",
+				"explanation": "Pasidalintinės nuorodos leidžia lengvai pasidalinti projektu su kitais vartotojais, kurie neturi ProjectOS profilio.",
 				"create": "Sukurti pasidalinimo nuoroda",
 				"name": "Vardas (pasirinktinai)",
 				"namePlaceholder": "pvz.: Lorem Ipsum",
@@ -484,19 +484,19 @@
 	},
 	"migrate": {
 		"title": "Importuoti iš kitų paslaugų tiekėjų",
-		"titleService": "Importuoti duomenis iš {name} į Vikunja",
-		"import": "Importuoti savo duomenis į Vikunja",
+		"titleService": "Importuoti duomenis iš {name} į ProjectOS",
+		"import": "Importuoti savo duomenis į ProjectOS",
 		"description": "Paspauskite ant trečiosios šalies logotipo norint pradėti.",
-		"descriptionDo": "Vikunja importuos visus sąrašus, užduotis, užrašus, priminimus ir dokumentus prie kurių tu turi prieigą.",
-		"authorize": "Autorizuoti Vikunja prieigą prie tavo {name} paskyros, spauskite mygtuką žemiau.",
+		"descriptionDo": "ProjectOS importuos visus sąrašus, užduotis, užrašus, priminimus ir dokumentus prie kurių tu turi prieigą.",
+		"authorize": "Autorizuoti ProjectOS prieigą prie tavo {name} paskyros, spauskite mygtuką žemiau.",
 		"getStarted": "Pradėti",
 		"inProgress": "Importavimas progrese…",
 		"alreadyMigrated1": "Atrodo, kad jau importavai savo info is {name} {date}.",
 		"alreadyMigrated2": "Dar kartą importuoti galima, tačiau tai gali sukurti dublikatus. Ar tęsti?",
 		"confirm": "Aš įsitikinęs, prašau pradėti migraciją dabar!",
-		"importUpload": "Importuoti duomenis iš {name} į Vikunja, spausk mygtuką žemiau, norėdamas pasirinkti failą.",
+		"importUpload": "Importuoti duomenis iš {name} į ProjectOS, spausk mygtuką žemiau, norėdamas pasirinkti failą.",
 		"upload": "Įkelti failą",
-		"migrationStartedWillReciveEmail": "Vikunja dabar importuos tavo sąrašus/projektus, užduotis, užrašus, priminimus ir dokumentus iš {service}. Kadangi tai užtruks, atsiųsime el. laišką, kai bus baigta. Gali uždaryti šį langą.",
+		"migrationStartedWillReciveEmail": "ProjectOS dabar importuos tavo sąrašus/projektus, užduotis, užrašus, priminimus ir dokumentus iš {service}. Kadangi tai užtruks, atsiųsime el. laišką, kai bus baigta. Gali uždaryti šį langą.",
 		"migrationInProgress": "Migracija progrese. Prašome laukti iki galo."
 	},
 	"label": {
@@ -552,7 +552,7 @@
 		"searchPlaceholder": "Rašykite čia norėdami ieškoti…",
 		"previous": "Ankstesnis",
 		"next": "Toliau",
-		"poweredBy": "Sukurta Vikunja",
+		"poweredBy": "Sukurta ProjectOS",
 		"info": "Informacija",
 		"create": "Sukurti",
 		"doit": "Atlikt!",
@@ -939,7 +939,7 @@
 			"intro": "Kuriant užduotį gali naudoti specialius raktinius žodžius norint pridėti atributus tiesiogiai naujai kuriamai užduočiai. Tai leidžia pridėti dažniausiai pasitaikančius atributus užduotims daug greičiau.",
 			"multiple": "Galima tai naudoti kelis kartus.",
 			"label1": "Norėdama -s pridėti etiketę, paprasčiausiai naudoti etiketės prefikso pavadinimą su {prefix}.",
-			"label2": "Vikunja pirmiausiai patikrins ar etiketė egzistuoja, ir sukurs, jei neegzistuoja.",
+			"label2": "ProjectOS pirmiausiai patikrins ar etiketė egzistuoja, ir sukurs, jei neegzistuoja.",
 			"label3": "Norint naudoti tarpus, paprasčiausiai pridėkite \" ar ' prieš etiketės pavadinimą.",
 			"label4": "Pavyzdžiui: {prefix} \"Etiketė su tarpais\".",
 			"priority1": "Norint nustatyti užduoties prioritetą, įrašykite skaičiuo nuo 1-5, su prefiksu {prefix}.",
@@ -1072,9 +1072,9 @@
 		"url": "Vikunjos nuoroda",
 		"urlPlaceholder": "pvz.: https://localhost:3456",
 		"change": "keisti",
-		"use": "Naudojama Vikunja instaliacija {0}",
+		"use": "Naudojama ProjectOS instaliacija {0}",
 		"error": "Vikunjos instaliacija \"{domain}\" nebuvo rasta ar panaudota. Prašome patikrinti ar nuoroda yra teisingo formato ir gali būti pasiekiama, ir bandykite dar kartą.",
-		"success": "Naudojama Vikunja instaliacija {domain}\".",
+		"success": "Naudojama ProjectOS instaliacija {domain}\".",
 		"urlRequired": "Reikalinga nuoroda."
 	},
 	"loadingError": {

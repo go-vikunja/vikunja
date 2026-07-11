@@ -12,8 +12,8 @@
 		"addToHomeScreen": "더 빠른 액세스와 향상된 경험을 위해 이 앱을 홈 화면에 추가하세요.",
 		"goToOverview": "개요 보기",
 		"project": {
-			"importText": "다른 서비스의 프로젝트 및 할 일을 Vikunja로 가져옵니다.",
-			"import": "데이터를 Vikunja로 가져오기"
+			"importText": "다른 서비스의 프로젝트 및 할 일을 ProjectOS로 가져옵니다.",
+			"import": "데이터를 ProjectOS로 가져오기"
 		}
 	},
 	"demo": {
@@ -22,7 +22,7 @@
 		"accountWillBeDeleted": "당신의 계정은 삭제되며, 이와 함께 생성하셨을 수 있는 모든 프로젝트, 작업 및 첨부파일도 삭제됩니다"
 	},
 	"ready": {
-		"loading": "Vikunja를 불러오는 중입니다...",
+		"loading": "ProjectOS를 불러오는 중입니다...",
 		"errorOccured": "오류가 발생했습니다.",
 		"checkApiUrl": "API의 주소가 올바른지 확인하십시오.",
 		"noApiUrlConfigured": "API URL이 구성되지 않았습니다. 아래에서 하나를 설정하십시오."
@@ -118,7 +118,7 @@
 			},
 			"caldav": {
 				"title": "CalDAV",
-				"more": "Vikunja의 CalDAV에 대한 자세한 정보",
+				"more": "ProjectOS의 CalDAV에 대한 자세한 정보",
 				"tokens": "CalDAV Tokens"
 			},
 			"avatar": {
@@ -136,7 +136,7 @@
 				"title": "빠른 매직 모드 추가",
 				"disabled": "비활성화됨",
 				"todoist": "Todoist",
-				"vikunja": "Vikunja"
+				"vikunja": "ProjectOS"
 			},
 			"appearance": {
 				"title": "색 구성",
@@ -149,7 +149,7 @@
 			},
 			"apiTokens": {
 				"title": "API 토큰",
-				"general": "API 토큰을 사용하면 사용자 자격 증명 없이도 Vikunja의 API를 사용할 수 있습니다.",
+				"general": "API 토큰을 사용하면 사용자 자격 증명 없이도 ProjectOS의 API를 사용할 수 있습니다.",
 				"apiDocs": "api 문서를 확인하세요",
 				"createAToken": "토큰 생성하기",
 				"createToken": "토큰 생성",
@@ -177,7 +177,7 @@
 			}
 		},
 		"deletion": {
-			"title": "Vikunja 계정 삭제",
+			"title": "ProjectOS 계정 삭제",
 			"text1": "계정 삭제는 영구적이며 되돌릴 수 없습니다. 모든 프로젝트, 할 일 및 이와 관련된 모든 항목이 삭제됩니다.",
 			"text2": "계속하려면 비밀번호를 입력하세요. 추가 안내가 담긴 이메일을 받게 됩니다.",
 			"text3": "계속하려면 아래 버튼을 눌러주세요. 추가 안내가 담긴 이메일을 받게 됩니다.",
@@ -185,7 +185,7 @@
 			"requestSuccess": "요청이 성공했습니다. 추가 지침이 담긴 이메일을 받게 됩니다.",
 			"passwordRequired": "비밀번호를 입력하십시오.",
 			"confirmSuccess": "계정 삭제를 성공적으로 확인했습니다. 3일 후에 계정이 삭제됩니다.",
-			"scheduled": "당신의 Vikunja 계정은 {date} ({dateSince})에 삭제될 예정입니다",
+			"scheduled": "당신의 ProjectOS 계정은 {date} ({dateSince})에 삭제될 예정입니다",
 			"scheduledCancel": "계정 삭제를 취소하려면 여기를 클릭하세요.",
 			"scheduledCancelText": "계정 삭제를 취소하려면 아래에 비밀번호를 입력하세요:",
 			"scheduledCancelButton": "계정 삭제를 취소하려면 아래 버튼을 눌러주세요:",
@@ -193,12 +193,12 @@
 			"scheduledCancelSuccess": "당신의 계정은 삭제되지 않습니다."
 		},
 		"export": {
-			"title": "Vikunja 데이터 내보내기",
-			"description": "모든 Vikunja 데이터의 사본을 요청할 수 있습니다. 여기에는 프로젝트, 할 일 및 이와 관련된 모든 것이 포함됩니다. 마이그레이션 기능을 통해 모든 Vikunja 인스턴스에서 이 데이터를 가져올 수 있습니다.",
+			"title": "ProjectOS 데이터 내보내기",
+			"description": "모든 ProjectOS 데이터의 사본을 요청할 수 있습니다. 여기에는 프로젝트, 할 일 및 이와 관련된 모든 것이 포함됩니다. 마이그레이션 기능을 통해 모든 ProjectOS 인스턴스에서 이 데이터를 가져올 수 있습니다.",
 			"descriptionPasswordRequired": "계속하려면 비밀번호를 입력하세요:",
-			"request": "내 Vikunja 데이터 사본 요청하기",
-			"success": "Vikunja 데이터를 성공적으로 요청하셨습니다! 다운로드할 준비가 되면 이메일을 보내드리겠습니다.",
-			"downloadTitle": "내보낸 Vikunja 데이터 다운로드"
+			"request": "내 ProjectOS 데이터 사본 요청하기",
+			"success": "ProjectOS 데이터를 성공적으로 요청하셨습니다! 다운로드할 준비가 되면 이메일을 보내드리겠습니다.",
+			"downloadTitle": "내보낸 ProjectOS 데이터 다운로드"
 		}
 	},
 	"project": {
@@ -488,18 +488,18 @@
 	"migrate": {
 		"title": "다른 서비스에서 가져오기",
 		"titleService": "{name}에서 데이터 가져오기",
-		"import": "Vikunja로 데이터 가져오기",
+		"import": "ProjectOS로 데이터 가져오기",
 		"description": "시작하려면 아래 타사 서비스의 로고를 클릭하세요.",
-		"descriptionDo": "Vikunja는 사용자가 액세스할 수 있는 모든 목록, 할 일, 노트, 미리알림 및 파일을 가져옵니다.",
-		"authorize": "Vikunja가 {name} 계정에 액세스할 수 있도록 승인하려면 아래 버튼을 클릭하세요.",
+		"descriptionDo": "ProjectOS는 사용자가 액세스할 수 있는 모든 목록, 할 일, 노트, 미리알림 및 파일을 가져옵니다.",
+		"authorize": "ProjectOS가 {name} 계정에 액세스할 수 있도록 승인하려면 아래 버튼을 클릭하세요.",
 		"getStarted": "시작하기",
 		"inProgress": "가져오기 진행 중...",
 		"alreadyMigrated1": "이미 {date}에 {name}에서 데이터를 가져온 것 같습니다.",
 		"alreadyMigrated2": "다시 가져오는 것은 가능하지만 중복이 발생할 수 있습니다. 확실하신가요?",
 		"confirm": "지금 마이그레이션을 시작하세요!",
-		"importUpload": "{name}에서 Vikunja로 데이터를 가져오려면 아래 버튼을 클릭하여 파일을 선택하세요.",
+		"importUpload": "{name}에서 ProjectOS로 데이터를 가져오려면 아래 버튼을 클릭하여 파일을 선택하세요.",
 		"upload": "파일 업로드",
-		"migrationStartedWillReciveEmail": "이제 Vikunja가 {service}에서 목록/프로젝트, 할일, 노트, 미리알림, 파일을 가져옵니다. 시간이 다소 걸리므로 완료되면 이메일을 보내드리겠습니다. 이제 이 창을 닫으셔도 됩니다.",
+		"migrationStartedWillReciveEmail": "이제 ProjectOS가 {service}에서 목록/프로젝트, 할일, 노트, 미리알림, 파일을 가져옵니다. 시간이 다소 걸리므로 완료되면 이메일을 보내드리겠습니다. 이제 이 창을 닫으셔도 됩니다.",
 		"migrationInProgress": "현재 마이그레이션이 진행 중입니다. 완료될 때까지 기다려주세요."
 	},
 	"label": {
@@ -555,7 +555,7 @@
 		"searchPlaceholder": "검색할 내용 입력...",
 		"previous": "이전",
 		"next": "다음",
-		"poweredBy": "Powered by Vikunja",
+		"poweredBy": "Powered by ProjectOS",
 		"info": "정보",
 		"create": "생성",
 		"doit": "해보세요!",
@@ -695,7 +695,7 @@
 			"canuse": "날짜 수학을 사용하여 상대적인 날짜를 필터링할 수 있습니다.",
 			"learnhow": "작동 방식 확인",
 			"title": "날짜 계산",
-			"intro": "필터를 적용할 때 Vikunja에서 즉시 확인되는 상대 날짜를 지정합니다.",
+			"intro": "필터를 적용할 때 ProjectOS에서 즉시 확인되는 상대 날짜를 지정합니다.",
 			"expression": "각 날짜 수학 표현식은 {0}이거나 {1}로 끝나는 날짜 문자열인 앵커 날짜로 시작합니다. 이 앵커 날짜 뒤에는 선택적으로 하나 이상의 수학 표현식이 올 수 있습니다.",
 			"similar": "이러한 표현식은 {0} 및 {1}에서 제공하는 표현식과 유사합니다.",
 			"add1Day": "1일 추가",
@@ -942,7 +942,7 @@
 			"intro": "할 일을 만들 때 특수 키워드를 사용해 새로 만든 할 일에 직접 속성을 추가할 수 있습니다. 이렇게 하면 자주 사용하는 속성을 할 일에 훨씬 더 빠르게 추가할 수 있습니다.",
 			"multiple": "여러 번 사용할 수 있어요.",
 			"label1": "레이블을 추가하려면 레이블 이름 앞에 {prefix}를 붙이기만 하면 됩니다.",
-			"label2": "Vikunja는 먼저 레이블이 이미 존재하는지 확인하고 없는 경우 레이블을 생성합니다.",
+			"label2": "ProjectOS는 먼저 레이블이 이미 존재하는지 확인하고 없는 경우 레이블을 생성합니다.",
 			"label3": "레이블 이름에 공백을 사용하려면 레이블 이름 주위에 \" 또는 '을 추가하면 돼요.",
 			"label4": "예: {prefix}\"공백이 들어간 라벨 이름\".",
 			"priority1": "{prefix} 앞에 숫자 1~5를 추가해서 할 일의 우선순위를 지정할 수 있어요.",
@@ -1072,12 +1072,12 @@
 		"views": "보기"
 	},
 	"apiConfig": {
-		"url": "Vikunja URL",
+		"url": "ProjectOS URL",
 		"urlPlaceholder": "예: https://localhost:3456",
 		"change": "변경",
-		"use": "{0}에서 Vikunja 설치 사용 중",
-		"error": "“{domain}\"에서 Vikunja 설치를 찾거나 사용할 수 없습니다. Url의 형식이 올바른지, 직접 액세스할 때 연결할 수 있는지 확인한 후 다시 시도하세요.",
-		"success": "“{domain}\"에 Vikunja 설치 사용.",
+		"use": "{0}에서 ProjectOS 설치 사용 중",
+		"error": "“{domain}\"에서 ProjectOS 설치를 찾거나 사용할 수 없습니다. Url의 형식이 올바른지, 직접 액세스할 때 연결할 수 있는지 확인한 후 다시 시도하세요.",
+		"success": "“{domain}\"에 ProjectOS 설치 사용.",
 		"urlRequired": "URL을 입력하세요."
 	},
 	"loadingError": {

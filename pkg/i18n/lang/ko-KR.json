@@ -2,9 +2,9 @@
 	"notifications": {
 		"greeting": "하이 %[1]s,",
 		"email_confirm": {
-			"subject": "%[1]s, Vikunja에서 이메일을 확인해 주세요",
-			"subject_new": "%[1]s + Vikunja = <3",
-			"welcome": "Vikunja!에 오신 것을 환영합니다!",
+			"subject": "%[1]s, ProjectOS에서 이메일을 확인해 주세요",
+			"subject_new": "%[1]s + ProjectOS = <3",
+			"welcome": "ProjectOS!에 오신 것을 환영합니다!",
 			"confirm": "이메일 주소를 확인하려면 아래 링크를 클릭하세요:"
 		},
 		"password": {
@@ -14,19 +14,19 @@
 				"warning": "본인이 아니라면 누군가 계정을 도용한 것일 수 있습니다. 이 경우 서버 관리자에게 문의하세요."
 			},
 			"reset": {
-				"subject": "Vikunja에서 비밀번호 재설정",
+				"subject": "ProjectOS에서 비밀번호 재설정",
 				"instructions": "비밀번호를 재설정하려면 아래 링크를 클릭하세요:",
 				"valid_duration": "이 링크는 24시간 동안 유효합니다."
 			}
 		},
 		"totp": {
 			"invalid": {
-				"subject": "누군가 방금 Vikunja 계정에 로그인을 시도했지만 실패했습니다.",
+				"subject": "누군가 방금 ProjectOS 계정에 로그인을 시도했지만 실패했습니다.",
 				"message": "누군가 방금 올바른 사용자 아이디와 비밀번호로 계정에 로그인을 시도했지만 잘못된 TOTP 비밀번호를 입력했습니다.",
 				"warning": "**본인이 아니라면 다른 사람이 비밀번호를 알고 있는 것입니다. 즉시 새로운 비밀번호를 설정해야 합니다!"
 			},
 			"account_locked": {
-				"subject": "Vikunja에서 귀하의 계정을 비활성화했습니다.",
+				"subject": "ProjectOS에서 귀하의 계정을 비활성화했습니다.",
 				"message": "누군가 회원님의 자격 증명으로 로그인을 시도했지만 유효한 TOTP 비밀번호를 제공하지 못했습니다.",
 				"disabled": "10번의 시도가 실패하면 계정을 비활성화하고 비밀번호를 재설정합니다. 새 비밀번호를 설정하려면 방금 보낸 재설정 이메일의 안내를 따르세요.",
 				"reset_instructions": "재설정 지침이 포함된 이메일을 받지 못한 경우 언제든지 [%[1]s](%[2]s)로 새 이메일을 요청할 수 있습니다."
@@ -34,7 +34,7 @@
 		},
 		"login": {
 			"failed": {
-				"subject": "누군가 방금 Vikunja 계정에 로그인을 시도했지만 올바른 비밀번호를 입력하지 못했습니다.",
+				"subject": "누군가 방금 ProjectOS 계정에 로그인을 시도했지만 올바른 비밀번호를 입력하지 못했습니다.",
 				"message": "누군가 방금 잘못된 비밀번호로 계정에 세 번 연속 로그인을 시도했습니다.",
 				"warning": "본인이 아니라면 다른 사람이 내 계정에 침입한 것일 수 있습니다.",
 				"enhance_security": "계정의 보안을 강화하려면 설정에서 더 강력한 비밀번호를 설정하거나 TOTP 인증을 사용하도록 설정할 수 있습니다:"
@@ -43,7 +43,7 @@
 		"account": {
 			"deletion": {
 				"confirm": {
-					"subject": "Vikunja 계정 삭제를 확인해 주세요.",
+					"subject": "ProjectOS 계정 삭제를 확인해 주세요.",
 					"request": "계정 삭제를 요청하셨습니다. 이를 확인하려면 아래 링크를 클릭하세요:",
 					"valid_duration": "이 링크는 24시간 동안 유효합니다.",
 					"schedule_info": "삭제를 확인하면 3일 후에 계정 삭제 일정을 잡고 그 전까지 다시 이메일을 보내드립니다.",
@@ -51,16 +51,16 @@
 					"changed_mind": "삭제를 요청하지 않았거나 마음이 바뀌었다면 이 이메일을 무시하면 됩니다."
 				},
 				"scheduled": {
-					"subject_days": "%[1]일 후에 Vikunja 계정이 삭제됩니다.",
-					"subject_tomorrow": "Vikunja 계정은 내일 삭제됩니다.",
-					"request_reminder": "최근에 Vikunja 계정 삭제를 요청하셨습니다.",
-					"deletion_time_days": "%[1]일 후에 Vikunja 계정을 삭제합니다.",
+					"subject_days": "%[1]일 후에 ProjectOS 계정이 삭제됩니다.",
+					"subject_tomorrow": "ProjectOS 계정은 내일 삭제됩니다.",
+					"request_reminder": "최근에 ProjectOS 계정 삭제를 요청하셨습니다.",
+					"deletion_time_days": "%[1]일 후에 ProjectOS 계정을 삭제합니다.",
 					"deletion_time_tomorrow": "내일 계정을 삭제할 예정입니다.",
 					"changed_mind": "마음이 바뀌었다면 아래 링크를 클릭하여 삭제를 취소하고 안내를 따르세요:"
 				},
 				"completed": {
-					"subject": "Vikunja 계정이 삭제되었습니다.",
-					"confirmation": "요청하신 대로 Vikunja 계정을 삭제했습니다.",
+					"subject": "ProjectOS 계정이 삭제되었습니다.",
+					"confirmation": "요청하신 대로 ProjectOS 계정을 삭제했습니다.",
 					"permanent": "이 삭제는 영구적으로 유지됩니다. 백업을 만들지 않았는데 지금 데이터를 복구해야 하는 경우 관리자에게 문의하세요."
 				}
 			}
@@ -101,25 +101,25 @@
 		},
 		"team": {
 			"member_added": {
-				"subject": "%[1]s 이 Vikunja의 “%[2]s” 팀에 귀하를 추가했습니다.",
-				"message": "%[1]s님이 당신을 Vikunja의 %[2]s 팀에 추가했습니다."
+				"subject": "%[1]s 이 ProjectOS의 “%[2]s” 팀에 귀하를 추가했습니다.",
+				"message": "%[1]s님이 당신을 ProjectOS의 %[2]s 팀에 추가했습니다."
 			}
 		},
 		"data_export": {
 			"ready": {
-				"subject": "당신의 Vikunja 데이터 내보내기가 준비되었습니다.",
-				"message": "Vikunja 데이터 내보내기를 다운로드할 준비가 되었습니다. 아래 버튼을 클릭하여 다운로드하세요:",
+				"subject": "당신의 ProjectOS 데이터 내보내기가 준비되었습니다.",
+				"message": "ProjectOS 데이터 내보내기를 다운로드할 준비가 되었습니다. 아래 버튼을 클릭하여 다운로드하세요:",
 				"availability": "다운로드는 향후 7일 동안 사용할 수 있습니다."
 			}
 		},
 		"migration": {
 			"done": {
-				"subject": "%[1]s에서 Vikunja로의 마이그레이션이 완료되었습니다.",
-				"imported": "Vikunja가 %[1]s에서 당신이 접근할 수 있는 모든 목록/프로젝트, 작업, 메모, 알림 및 파일을 가져왔습니다.",
+				"subject": "%[1]s에서 ProjectOS로의 마이그레이션이 완료되었습니다.",
+				"imported": "ProjectOS가 %[1]s에서 당신이 접근할 수 있는 모든 목록/프로젝트, 작업, 메모, 알림 및 파일을 가져왔습니다.",
 				"have_fun": "새로운(익숙한) 프로젝트들과 함께 즐겁게 작업하세요!"
 			},
 			"failed": {
-				"subject": "%[1]s에서 Vikunja로의 마이그레이션에 실패했습니다.",
+				"subject": "%[1]s에서 ProjectOS로의 마이그레이션에 실패했습니다.",
 				"message": "이번에는 %[1]s에서의 이전이 계획대로 진행되지 않은 것 같습니다.",
 				"retry": "걱정하지 마세요! 이전과 같은 방법으로 다시 시도해보세요. 가끔은 %[1]s 쪽의 문제로 인해 이런 작은 오류가 발생할 수 있지만, 대부분 다시 시도하면 정상적으로 진행됩니다.",
 				"error": "진행 중에 작은 오류가 발생했습니다: %[2]s.",
@@ -131,7 +131,7 @@
 			"have_nice_day": "좋은 하루 보내세요!",
 			"copy_url": "위 버튼이 작동하지 않는 경우 아래 URL을 복사하여 브라우저 주소창에 붙여넣으세요:",
 			"actions": {
-				"open_vikunja": "Vikunja 열기",
+				"open_vikunja": "ProjectOS 열기",
 				"open_project": "프로젝트 열기",
 				"open_team": "오픈팀",
 				"download": "다운로드",

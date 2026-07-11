@@ -11,12 +11,12 @@
 		"lastViewed": "Visto por última vez",
 		"addToHomeScreen": "Añade esta aplicación a tu pantalla de inicio para un acceso más rápido y una experiencia mejorada.",
 		"project": {
-			"importText": "Importa tus proyectos y tareas de otros servicios a Vikunja:",
-			"import": "Importa tus datos a Vikunja"
+			"importText": "Importa tus proyectos y tareas de otros servicios a ProjectOS:",
+			"import": "Importa tus datos a ProjectOS"
 		}
 	},
 	"ready": {
-		"loading": "Vikunja está cargando…",
+		"loading": "ProjectOS está cargando…",
 		"errorOccured": "Se ha producido un error:",
 		"checkApiUrl": "Por favor, comprueba que la url de la api es correcta.",
 		"noApiUrlConfigured": "Ninguna URL de la API fue configurada. Por favor, establezca una abajo:"
@@ -91,7 +91,7 @@
 			},
 			"caldav": {
 				"title": "CalDAV",
-				"more": "Más información sobre CalDAV en Vikunja",
+				"more": "Más información sobre CalDAV en ProjectOS",
 				"tokens": "Tokens CalDAV"
 			},
 			"avatar": {
@@ -108,7 +108,7 @@
 				"title": "Modo mágico de adición rápida",
 				"disabled": "Desactivado",
 				"todoist": "Todoist",
-				"vikunja": "Vikunja"
+				"vikunja": "ProjectOS"
 			},
 			"appearance": {
 				"title": "Esquema de colores",
@@ -121,26 +121,26 @@
 			}
 		},
 		"deletion": {
-			"title": "Eliminar tu Cuenta de Vikunja",
+			"title": "Eliminar tu Cuenta de ProjectOS",
 			"text1": "El borrado de tu cuenta es permanente y no puede deshacerse. Borraremos todos tus proyectos, tareas y todo lo que esté asociado con ellos.",
 			"text2": "Para continuar, por favor, introduce tu contraseña. Recibirás un correo electrónico con más instrucciones.",
 			"confirm": "Eliminar mi cuenta",
 			"requestSuccess": "La solicitud ha sido exitosa. Recibirás un correo electrónico con más instrucciones.",
 			"passwordRequired": "Por favor, introduce tu contraseña.",
 			"confirmSuccess": "Has confirmado con éxito la eliminación de tu cuenta. En tres días eliminaremos tu cuenta.",
-			"scheduled": "Eliminaremos tu cuenta de Vikunja en {date} ({dateSince}).",
+			"scheduled": "Eliminaremos tu cuenta de ProjectOS en {date} ({dateSince}).",
 			"scheduledCancel": "Para cancelar la eliminación de tu cuenta, haz clic aquí.",
 			"scheduledCancelText": "Para cancelar la eliminación de tu cuenta, por favor, introduce tu contraseña a continuación:",
 			"scheduledCancelConfirm": "Cancelar la eliminación de mi cuenta",
 			"scheduledCancelSuccess": "No eliminaremos tu cuenta."
 		},
 		"export": {
-			"title": "Exportar tus datos de Vikunja",
-			"description": "Puedes solicitar una copia de todos tus datos de Vikunja. Esto incluye Proyectos, Tareas y todo lo relacionado con ellos. Puede importar estos datos en cualquier instancia de Vikunja a través de la función de migración.",
+			"title": "Exportar tus datos de ProjectOS",
+			"description": "Puedes solicitar una copia de todos tus datos de ProjectOS. Esto incluye Proyectos, Tareas y todo lo relacionado con ellos. Puede importar estos datos en cualquier instancia de ProjectOS a través de la función de migración.",
 			"descriptionPasswordRequired": "Por favor, introduce tu contraseña para continuar:",
-			"request": "Solicitar una copia de mis datos de Vikunja",
-			"success": "Tu petición de datos de Vikunja ha sido procesada correctamente. Te enviaremos un correo una vez esté lista para descargar.",
-			"downloadTitle": "Descargar tus datos de Vikunja exportados"
+			"request": "Solicitar una copia de mis datos de ProjectOS",
+			"success": "Tu petición de datos de ProjectOS ha sido procesada correctamente. Te enviaremos un correo una vez esté lista para descargar.",
+			"downloadTitle": "Descargar tus datos de ProjectOS exportados"
 		}
 	},
 	"project": {
@@ -211,7 +211,7 @@
 			"links": {
 				"title": "Compartir Enlaces",
 				"what": "¿Qué es un enlace compartido?",
-				"explanation": "Los Enlaces Compartidos te permiten compartir fácilmente un proyecto con otros usuarios que no tienen una cuenta en Vikunja.",
+				"explanation": "Los Enlaces Compartidos te permiten compartir fácilmente un proyecto con otros usuarios que no tienen una cuenta en ProjectOS.",
 				"name": "Nombre (opcional)",
 				"namePlaceholder": "ej. Lorem Ipsum",
 				"nameExplanation": "Todas las acciones realizadas por este enlace compartido se mostrarán con el nombre.",
@@ -323,17 +323,17 @@
 	},
 	"migrate": {
 		"title": "Importar desde otros servicios",
-		"titleService": "Importar tus datos desde {name} a Vikunja",
-		"import": "Importar tus datos a Vikunja",
+		"titleService": "Importar tus datos desde {name} a ProjectOS",
+		"import": "Importar tus datos a ProjectOS",
 		"description": "Haz clic en el logo de uno de los servicios de terceros abajo para empezar.",
-		"descriptionDo": "Vikunja importará todas las listas, tareas, notas, recordatorios y archivos a los que tienes acceso.",
-		"authorize": "Para autorizar a Vikunja a acceder a tu cuenta {name} , haz clic en el botón de abajo.",
+		"descriptionDo": "ProjectOS importará todas las listas, tareas, notas, recordatorios y archivos a los que tienes acceso.",
+		"authorize": "Para autorizar a ProjectOS a acceder a tu cuenta {name} , haz clic en el botón de abajo.",
 		"getStarted": "Empecemos",
 		"inProgress": "Importación en progreso...",
 		"alreadyMigrated1": "Parece que ya has importado tus cosas desde {name} el {date}.",
 		"alreadyMigrated2": "Importar de nuevo es posible, pero puede crear duplicados. ¿Estás seguro?",
 		"confirm": "Estoy seguro, ¡por favor empieza a migrar ahora!",
-		"importUpload": "Para importar datos de {name} a Vikunja, haz clic en el botón de abajo para seleccionar un archivo.",
+		"importUpload": "Para importar datos de {name} a ProjectOS, haz clic en el botón de abajo para seleccionar un archivo.",
 		"upload": "Subir archivo"
 	},
 	"label": {
@@ -387,7 +387,7 @@
 		"searchPlaceholder": "Escribe algo para buscar…",
 		"previous": "Anterior",
 		"next": "Siguiente",
-		"poweredBy": "Con tecnología de Vikunja",
+		"poweredBy": "Con tecnología de ProjectOS",
 		"info": "Información",
 		"create": "Crear",
 		"doit": "¡Hazlo!",
@@ -464,7 +464,7 @@
 			"canuse": "Puedes usar ecuaciones para filtrar por fechas relacionadas.",
 			"learnhow": "Mira cómo funciona",
 			"title": "Ecuaciones",
-			"intro": "Especifique fechas relativas que se resuelvan sobre la marcha por Vikunja al aplicar el filtro.",
+			"intro": "Especifique fechas relativas que se resuelvan sobre la marcha por ProjectOS al aplicar el filtro.",
 			"expression": "Cada expresión matemática empieza con una fecha ancla, que puede ser {0}, o una cadena de texto que acabe en {1}. Opcionalmente, esta fecha puede estar seguida de una o más expresiones.",
 			"similar": "Estas expresiones son similares a las definidas en {0} y {1}.",
 			"add1Day": "Añadir un día",
@@ -697,7 +697,7 @@
 			"intro": "Al crear una tarea, puede utilizar palabras clave especiales para añadir directamente atributos a la tarea recién creada. Esto permite agregar atributos comúnmente usados en tareas mucho más rápido.",
 			"multiple": "Puedes usar esto varias veces.",
 			"label1": "Para añadir una etiqueta, simplemente prefija el nombre de la etiqueta con {prefix}.",
-			"label2": "Vikunja comprobará primero si la etiqueta ya existe y la creará en caso contrario.",
+			"label2": "ProjectOS comprobará primero si la etiqueta ya existe y la creará en caso contrario.",
 			"label3": "Para utilizar espacios, simplemente añada un \" o ' alrededor del nombre de la etiqueta.",
 			"label4": "Por ejemplo: {prefix}\"Etiqueta con espacios\".",
 			"priority1": "Para establecer la prioridad de una tarea, agregue un número 1-5, prefijado por {prefix}.",
@@ -818,11 +818,11 @@
 		"createProject": "Crear proyecto"
 	},
 	"apiConfig": {
-		"url": "URL de Vikunja",
+		"url": "URL de ProjectOS",
 		"urlPlaceholder": "ej. https://localhost:3456",
 		"change": "cambiar",
-		"use": "Utilizando la instalación de Vikunja en {0}",
-		"success": "Usando la instalación de Vikunja en \"{domain}\".",
+		"use": "Utilizando la instalación de ProjectOS en {0}",
+		"success": "Usando la instalación de ProjectOS en \"{domain}\".",
 		"urlRequired": "Se requiere una url."
 	},
 	"loadingError": {

@@ -2,31 +2,31 @@
 	"notifications": {
 		"greeting": "Olá %[1]s,",
 		"email_confirm": {
-			"subject": "%[1]s, por favor, confirma o teu e-mail no Vikunja",
-			"subject_new": "%[1]s + Vikunja = <3",
-			"welcome": "Bem-Vindo ao Vikunja!",
+			"subject": "%[1]s, por favor, confirma o teu e-mail no ProjectOS",
+			"subject_new": "%[1]s + ProjectOS = <3",
+			"welcome": "Bem-Vindo ao ProjectOS!",
 			"confirm": "Para confirmares o teu endereço de e-mail, clica no link abaixo:"
 		},
 		"password": {
 			"changed": {
-				"subject": "A tua palavra-passe no Vikunja foi alterada",
+				"subject": "A tua palavra-passe no ProjectOS foi alterada",
 				"success": "A palavra-passe da tua conta foi alterada com sucesso.",
 				"warning": "Se não foste tu, isso pode significar que alguém comprometeu a tua conta. Nesse caso, contacta o administrador do teu servidor."
 			},
 			"reset": {
-				"subject": "Redefine a tua palavra-passe no Vikunja",
+				"subject": "Redefine a tua palavra-passe no ProjectOS",
 				"instructions": "Para redefinires a tua palavra-passe, clica no link abaixo:",
 				"valid_duration": "Este link será válido por 24 horas."
 			}
 		},
 		"totp": {
 			"invalid": {
-				"subject": "Alguém tentou iniciar sessão na tua conta no Vikunja, mas sem sucesso",
+				"subject": "Alguém tentou iniciar sessão na tua conta no ProjectOS, mas sem sucesso",
 				"message": "Alguém tentou iniciar sessão na tua conta utilizando um nome de utilizador e palavra-passe corretos, mas com um código TOPT incorreto.",
 				"warning": "**Se não foste tu, significa que outra pessoa sabe a tua palavra-passe. Deves definir uma nova imediatamente!**"
 			},
 			"account_locked": {
-				"subject": "Desativamos a tua conta no Vikunja",
+				"subject": "Desativamos a tua conta no ProjectOS",
 				"message": "Alguém tentou iniciar sessão com as tuas credenciais, mas não forneceu um código TOTP válido.",
 				"disabled": "Após 10 tentativas falhadas, desativámos a tua conta e redefinimos a tua palavra-passe. Para definires uma nova palavra-passe, segue as instruções no e-mail que acabámos de te enviar.",
 				"reset_instructions": "Se não recebeste um e-mail com as instruções de redefinição, podes sempre solicitar um novo e-mail em [%[1]s](%[2]s)."
@@ -34,7 +34,7 @@
 		},
 		"login": {
 			"failed": {
-				"subject": "Alguém tento iniciar sessão na tua conta no Vikunja, mas não conseguiu fornecer uma palavra-passe correta",
+				"subject": "Alguém tento iniciar sessão na tua conta no ProjectOS, mas não conseguiu fornecer uma palavra-passe correta",
 				"message": "Alguém tentou iniciar sessão na tua conta com uma palavra-passe incorreta por três vezes consecutivas.",
 				"warning": "Se não foste tu, pode ser outra pessoa a tentar invadir a tua conta.",
 				"enhance_security": "Para aumentar a segurança da tua conta, podes querer definir uma palavra-passe mais forte ou ativar a autenticação TOTP nas definições:"
@@ -43,7 +43,7 @@
 		"account": {
 			"deletion": {
 				"confirm": {
-					"subject": "Por favor, confirma a eliminação da tua conta Vikunja",
+					"subject": "Por favor, confirma a eliminação da tua conta ProjectOS",
 					"request": "Solicitas-te a eliminação da tua conta. Para o confirmar, clica no link abaixo:",
 					"valid_duration": "Este link será válido por 24 horas.",
 					"schedule_info": "Depois de confirmares a eliminação, agendaremos a eliminação da tua conta para daí a três dias e vamos enviar-te outro e-mail até lá.",
@@ -51,16 +51,16 @@
 					"changed_mind": "Se não solicitas-te a eliminação da tua conta ou mudaste de ideias, podes simplesmente ignorar este e-mail."
 				},
 				"scheduled": {
-					"subject_days": "A tua conta Vikunja será eliminada em %[1]s dias",
-					"subject_tomorrow": "A tua conta Vikunja será eliminada amanhã",
-					"request_reminder": "Recentemente, solicitas-te a eliminação da tua conta Vikunja.",
+					"subject_days": "A tua conta ProjectOS será eliminada em %[1]s dias",
+					"subject_tomorrow": "A tua conta ProjectOS será eliminada amanhã",
+					"request_reminder": "Recentemente, solicitas-te a eliminação da tua conta ProjectOS.",
 					"deletion_time_days": "Vamos eliminar a tua conta dentro de %[1]s dias.",
 					"deletion_time_tomorrow": "Vamos eliminar a tua conta amanhã.",
 					"changed_mind": "Se mudaste de ideias, basta clicares no link abaixo para cancelares a eliminação e seguir as instruções:"
 				},
 				"completed": {
-					"subject": "A tua conta Vikunja foi eliminada",
-					"confirmation": "Como solicitado, eliminámos a tua conta Vikunja.",
+					"subject": "A tua conta ProjectOS foi eliminada",
+					"confirmation": "Como solicitado, eliminámos a tua conta ProjectOS.",
 					"permanent": "Esta eliminação é permanente. Se não criaste uma cópia de segurança e precisas dos teus dados de volta agora, fala com o teu administrador."
 				}
 			}
@@ -103,25 +103,25 @@
 		},
 		"team": {
 			"member_added": {
-				"subject": "%[1]s adicionou-te à equipa \"%[2]s\" no Vikunja",
-				"message": "%[1]s acabou de te adicionar à equipa %[2]s no Vikunja."
+				"subject": "%[1]s adicionou-te à equipa \"%[2]s\" no ProjectOS",
+				"message": "%[1]s acabou de te adicionar à equipa %[2]s no ProjectOS."
 			}
 		},
 		"data_export": {
 			"ready": {
-				"subject": "A tua Exportação de Dados do Vikunja está pronta",
-				"message": "A tua Exportação de Dados Vikunja está pronta para ser descarregada. Clique no botão abaixo para a transferir:",
+				"subject": "A tua Exportação de Dados do ProjectOS está pronta",
+				"message": "A tua Exportação de Dados ProjectOS está pronta para ser descarregada. Clique no botão abaixo para a transferir:",
 				"availability": "A transferência estará disponível durante os próximos 7 dias."
 			}
 		},
 		"migration": {
 			"done": {
-				"subject": "A migração de %[1]s para o Vikunja foi concluída",
-				"imported": "O Vikunja importou todas as listas/projetos, tarefas, notas, lembretes e ficheiros de %[1]s a que tens acesso.",
+				"subject": "A migração de %[1]s para o ProjectOS foi concluída",
+				"imported": "O ProjectOS importou todas as listas/projetos, tarefas, notas, lembretes e ficheiros de %[1]s a que tens acesso.",
 				"have_fun": "Diverte-te com os teus novos (velhos) projetos!"
 			},
 			"failed": {
-				"subject": "A migração de %[1]s para o Vikunja falhou",
+				"subject": "A migração de %[1]s para o ProjectOS falhou",
 				"message": "Parece que a migração de %[1]s não correu como planeado desta vez.",
 				"retry": "Mas não te preocupes! Basta tentar de novo, recomeçando da mesma forma que fizeste antes. Por vezes, estes contratempos acontecem devido a falhas no %[1]s, mas tentar de novo frequentemente resolve o problema.",
 				"error": "Deparámo-nos com um pequeno erro durante o processo: `%[2]s`.",
@@ -133,7 +133,7 @@
 			"have_nice_day": "Tem um ótimo dia!",
 			"copy_url": "Se o botão acima não funcionar, copia o url abaixo e cola-o na barra de endereços do teu browser:",
 			"actions": {
-				"open_vikunja": "Abrir Vikunja",
+				"open_vikunja": "Abrir ProjectOS",
 				"open_project": "Abrir Projeto",
 				"open_team": "Abrir Equipa",
 				"download": "Descarregar",

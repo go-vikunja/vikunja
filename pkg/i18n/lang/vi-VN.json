@@ -2,31 +2,31 @@
 	"notifications": {
 		"greeting": "Chào %[1]s,",
 		"email_confirm": {
-			"subject": "%[1]s, vui lòng xác thực địa chỉ email trên Vikunja của bạn",
-			"subject_new": "%[1]s + Vikunja = <3",
-			"welcome": "Chào mừng đến với Vikunja!",
+			"subject": "%[1]s, vui lòng xác thực địa chỉ email trên ProjectOS của bạn",
+			"subject_new": "%[1]s + ProjectOS = <3",
+			"welcome": "Chào mừng đến với ProjectOS!",
 			"confirm": "Để xác nhận địa chỉ email của mình, hãy nhấn vào liên kết bên dưới:"
 		},
 		"password": {
 			"changed": {
-				"subject": "Mật khẩu của bạn trên Vikunja đã được thay đổi",
+				"subject": "Mật khẩu của bạn trên ProjectOS đã được thay đổi",
 				"success": "Mật khẩu tài khoản của bạn đã được thay đổi thành công.",
 				"warning": "Nếu đây không phải là bạn, có thể đã có ai đó xâm nhập vào tài khoản của bạn. Trong trường hợp này vui lòng liên hệ với quản trị viên server của bạn."
 			},
 			"reset": {
-				"subject": "Đặt lại mật khẩu của bạn trên Vikunja",
+				"subject": "Đặt lại mật khẩu của bạn trên ProjectOS",
 				"instructions": "Để đặt lại mật khẩu, vui lòng nhấn vào đường dẫn bên dưới:",
 				"valid_duration": "Đường dẫn này có hiệu lực trong vòng 24 giờ."
 			}
 		},
 		"totp": {
 			"invalid": {
-				"subject": "Có ai đó vừa cố gắng đăng nhập vào tài khoản Vikunja của bạn, nhưng thất bại",
+				"subject": "Có ai đó vừa cố gắng đăng nhập vào tài khoản ProjectOS của bạn, nhưng thất bại",
 				"message": "Có ai đó vừa cố đăng nhập vào tài khoản của bạn với tên đăng nhập và mật khẩu chính xác nhưng sai mã TOTP.",
 				"warning": "**Nếu đây không phải là bạn, ai đó khác đã biết mật khẩu của bạn. Bạn nên đặt mới mật khẩu ngay!**"
 			},
 			"account_locked": {
-				"subject": "Chúng tôi vừa vô hiệu hóa tài khoản của bạn trên Vikunja",
+				"subject": "Chúng tôi vừa vô hiệu hóa tài khoản của bạn trên ProjectOS",
 				"message": "Có ai đó vừa cố gắng đăng nhập bằng thông tin của bạn nhưng không cung cấp được mã TOTP hợp lệ.",
 				"disabled": "Sau 10 lần thất bại, chúng tôi đã vô hiệu hóa tài khoản của bạn và đặt lại mật khẩu. Để đặt một mật khẩu mới, hãy làm theo hướng dẫn trong email đặt lại mật khẩu mà chúng tôi vừa gửi cho bạn.",
 				"reset_instructions": "Nếu bạn không nhận được email hướng dẫn đặt lại mật khẩu, bạn vẫn có thể gửi yêu cầu nhận một email mới tại [%[1]s](%[2]s)."
@@ -34,7 +34,7 @@
 		},
 		"login": {
 			"failed": {
-				"subject": "Có ai đó vừa cố gắng đăng nhập vào tài khoản Vikunja của bạn, nhưng không cung cấp đúng mật khẩu",
+				"subject": "Có ai đó vừa cố gắng đăng nhập vào tài khoản ProjectOS của bạn, nhưng không cung cấp đúng mật khẩu",
 				"message": "Có ai đó vừa cố đăng nhập vào tài khoản của bạn với mật khẩu nhập sai ba lần liên tiếp.",
 				"warning": "Nếu đây không phải bạn, có thể đang có ai đó cố gắng xâm nhập vào tài khoản của bạn.",
 				"enhance_security": "Để nâng cao bảo mật cho tài khoản, bạn có thể sẽ cần thiết lập một mật khẩu mạnh hơn hoặc bật xác thực TOTP trong phần cài đặt:"
@@ -43,7 +43,7 @@
 		"account": {
 			"deletion": {
 				"confirm": {
-					"subject": "Vui lòng xác nhận việc xóa bỏ tài khoản Vikunja của bạn",
+					"subject": "Vui lòng xác nhận việc xóa bỏ tài khoản ProjectOS của bạn",
 					"request": "Bạn đã yêu cầu xóa tài khoản của mình. Để xác nhận, vui lòng nhấn vào đường dẫn bên dưới:",
 					"valid_duration": "Liên kết này có hiệu lực trong vòng 24 giờ.",
 					"schedule_info": "Ngay khi bạn xác nhận việc xóa này chúng tôi sẽ lên lịch xóa tài khoản của bạn trong vòng 3 ngày và sẽ gửi bạn một email khác cho đến lúc đó.",
@@ -51,16 +51,16 @@
 					"changed_mind": "Nếu bạn không yêu cầu xóa hay thay đổi quyết định, bạn chỉ cần bỏ qua email này."
 				},
 				"scheduled": {
-					"subject_days": "Tài khoản Vikunja của bạn sẽ được xóa trong %[1]s ngày nữa",
+					"subject_days": "Tài khoản ProjectOS của bạn sẽ được xóa trong %[1]s ngày nữa",
 					"subject_tomorrow": "Tài khoản Vikunjia của bạn sẽ được xóa vào ngày mai",
-					"request_reminder": "Bạn gần đây có yêu cầu xóa tài khoản Vikunja của mình.",
+					"request_reminder": "Bạn gần đây có yêu cầu xóa tài khoản ProjectOS của mình.",
 					"deletion_time_days": "Chúng tôi sẽ xóa tài khoản của bạn trong %[1]s ngày nữa.",
 					"deletion_time_tomorrow": "Chúng tôi sẽ xóa tài khoản của bạn vào ngày mai.",
 					"changed_mind": "Nếu bạn thay đổi quyết đinh, chỉ cần nhấn vào đường dẫn bên dưới để hủy xóa và làm theo hướng dẫn:"
 				},
 				"completed": {
-					"subject": "Tài khoản Vikunja của bạn đã được xóa",
-					"confirmation": "Theo như yêu cầu, chúng tôi đã xóa tài khoản Vikunja của bạn.",
+					"subject": "Tài khoản ProjectOS của bạn đã được xóa",
+					"confirmation": "Theo như yêu cầu, chúng tôi đã xóa tài khoản ProjectOS của bạn.",
 					"permanent": "Việc xóa này là vĩnh viễn. Nếu chưa tạo bản sao lưu và hiện tại cần lấy lại dữ liệu của mình, vui lòng liên hệ với quản trị viên."
 				}
 			}
@@ -89,7 +89,7 @@
 		},
 		"team": {
 			"member_added": {
-				"message": "%[1]s vừa thêm bạn vào Team %[2]s trong Vikunja."
+				"message": "%[1]s vừa thêm bạn vào Team %[2]s trong ProjectOS."
 			}
 		},
 		"data_export": {

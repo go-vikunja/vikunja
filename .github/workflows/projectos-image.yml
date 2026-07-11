@@ -33,6 +33,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Re-apply the white-label product name to the checked-out source before
+      # building, so the shipped image is always branded even if a Crowdin
+      # re-import or an upstream merge reintroduced "Vikunja". See
+      # scripts/apply-branding.mjs and branding/README.md (in the platform repo).
+      - name: Apply white-label branding
+        run: node scripts/apply-branding.mjs
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 

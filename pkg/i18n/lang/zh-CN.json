@@ -1,30 +1,30 @@
 {
 	"notifications": {
 		"email_confirm": {
-			"subject": "%[1]s, 请在Vikunja确认你的邮箱地址",
-			"welcome": "欢迎使用 Vikunja！",
+			"subject": "%[1]s, 请在ProjectOS确认你的邮箱地址",
+			"welcome": "欢迎使用 ProjectOS！",
 			"confirm": "要确认您的电子邮件地址，请点击下面的链接："
 		},
 		"password": {
 			"changed": {
-				"subject": "您在 Vikunja上的密码已更改",
+				"subject": "您在 ProjectOS上的密码已更改",
 				"success": "您的帐户密码修改成功。",
 				"warning": "如果不是你，这可能意味着有人破坏你的帐户。在这种情况下，请联系你的服务器管理员。"
 			},
 			"reset": {
-				"subject": "重置您在 Vikunja 上的密码",
+				"subject": "重置您在 ProjectOS 上的密码",
 				"instructions": "如要重置您的密码，请点击下面的链接：",
 				"valid_duration": "此链接将有效期为24小时。"
 			}
 		},
 		"totp": {
 			"invalid": {
-				"subject": "有人刚刚尝试登录您的Vikunja帐户，但失败了",
+				"subject": "有人刚刚尝试登录您的ProjectOS帐户，但失败了",
 				"message": "有人刚刚试图使用正确的用户名和密码登录到您的帐户，但是TOTP 密码是错误的。",
 				"warning": "**如果不是你，意味着其他人知道你的密码。你应该立即设置一个新的密码！**"
 			},
 			"account_locked": {
-				"subject": "我们已在 Vikunja 禁用您的帐户",
+				"subject": "我们已在 ProjectOS 禁用您的帐户",
 				"message": "有人试图使用您的凭据登录，但未能提供有效的TOTP密码。",
 				"disabled": "在10次尝试失败后，我们已禁用您的账户并重置您的密码。 若要设置一个新密码，请遵循我们刚刚发送给您的重置邮件中的说明。",
 				"reset_instructions": "如果您没有收到重置指令的电子邮件，您可以在 [%[1]s](%[2]s)请求新的重置指令。"
@@ -32,7 +32,7 @@
 		},
 		"login": {
 			"failed": {
-				"subject": "有人刚试图登录您的Vikunja帐户，但未能提供正确的密码",
+				"subject": "有人刚试图登录您的ProjectOS帐户，但未能提供正确的密码",
 				"message": "有人刚刚尝试使用错误密码登录到您的帐户，连续三次登录。",
 				"warning": "如果不是您，这可能是其他人试图破坏您的帐户。",
 				"enhance_security": "为了增强您帐户的安全，您可能想要在设置中设置一个更强的密码或启用TOTP身份验证："
@@ -41,7 +41,7 @@
 		"account": {
 			"deletion": {
 				"confirm": {
-					"subject": "请确认删除您的 Vikunja 账户",
+					"subject": "请确认删除您的 ProjectOS 账户",
 					"request": "您已请求删除您的帐户。要确认这一点，请点击下面的链接：",
 					"valid_duration": "此链接的有效期为24小时。",
 					"schedule_info": "一旦您确认删除，我们将在三天内删除您的帐户，然后那时再发送一封电子邮件。",
@@ -49,16 +49,16 @@
 					"changed_mind": "如果你没有请求删除或改变主意，你可以忽略这封电子邮件。"
 				},
 				"scheduled": {
-					"subject_days": "您的 Vikunja 帐户将在 %[1]s 天内删除",
-					"subject_tomorrow": "您的Vikunja账户明天将被删除",
-					"request_reminder": "您最近请求删除您的Vikunja帐户。",
+					"subject_days": "您的 ProjectOS 帐户将在 %[1]s 天内删除",
+					"subject_tomorrow": "您的ProjectOS账户明天将被删除",
+					"request_reminder": "您最近请求删除您的ProjectOS帐户。",
 					"deletion_time_days": "我们将在 %[1]s 天内删除您的帐户。",
 					"deletion_time_tomorrow": "我们将在明天删除您的帐户。",
 					"changed_mind": "如果你改变了主意，只需点击下面的链接取消删除并按照下面的说明操作："
 				},
 				"completed": {
-					"subject": "您的 Vikunja 帐户已被删除",
-					"confirmation": "按照要求，我们已删除您的Vikunja帐户。",
+					"subject": "您的 ProjectOS 帐户已被删除",
+					"confirmation": "按照要求，我们已删除您的ProjectOS帐户。",
 					"permanent": "这个删除是永久性的。如果没有创建备份并且现在需要你的数据，请与你的管理员联系。"
 				}
 			}
@@ -99,25 +99,25 @@
 		},
 		"team": {
 			"member_added": {
-				"subject": "%[1]s 将您添加到Vikunja的\"%[2]s\"团队",
-				"message": "%[1]s 刚刚将您添加到Vikunja的\"%[2]s\"团队。"
+				"subject": "%[1]s 将您添加到ProjectOS的\"%[2]s\"团队",
+				"message": "%[1]s 刚刚将您添加到ProjectOS的\"%[2]s\"团队。"
 			}
 		},
 		"data_export": {
 			"ready": {
-				"subject": "您的 Vikunja 数据导出已准备好",
-				"message": "您的 Vikunja 数据导出已准备好下载。点击下面的按钮下载它：",
+				"subject": "您的 ProjectOS 数据导出已准备好",
+				"message": "您的 ProjectOS 数据导出已准备好下载。点击下面的按钮下载它：",
 				"availability": "能够在7天内下载。"
 			}
 		},
 		"migration": {
 			"done": {
-				"subject": "从 %[1]s 到Vikunja 的迁移已完成",
-				"imported": "Vikunja从%[1]s中导入了所有列表/项目、任务、笔记、提醒和文件。",
+				"subject": "从 %[1]s 到ProjectOS 的迁移已完成",
+				"imported": "ProjectOS从%[1]s中导入了所有列表/项目、任务、笔记、提醒和文件。",
 				"have_fun": "开始使用您的新项目(旧项目) ！"
 			},
 			"failed": {
-				"subject": "从 %[1]s 迁移到Vikunja 失败",
+				"subject": "从 %[1]s 迁移到ProjectOS 失败",
 				"message": "这次从 %[1]s 的移动似乎没有按计划进行。",
 				"retry": "不用担心！只要开始使用你以前的同样方式就让它再开一枪。 有时候，这些问题会因为在 %[1]s 的末尾有玻璃杯而出现，但又常常试图玩弄花招。",
 				"error": "我们在这段路上遇到了一些错误：`%[2]s`。",
@@ -128,7 +128,7 @@
 			"have_nice_day": "祝你有愉快的一天！",
 			"copy_url": "如果上面的按钮无法工作，请复制下面的URL并将其粘贴到您的浏览器地址栏：",
 			"actions": {
-				"open_vikunja": "打开 Vikunja",
+				"open_vikunja": "打开 ProjectOS",
 				"open_project": "打开项目",
 				"open_team": "打开团队",
 				"download": "下载",

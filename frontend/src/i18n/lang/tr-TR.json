@@ -12,8 +12,8 @@
 		"addToHomeScreen": "Daha hızlı erişim ve gelişmiş deneyim için bu uygulamayı ana ekranınıza ekleyin.",
 		"goToOverview": "Genel bakışı gör",
 		"project": {
-			"importText": "Projelerinizi ve görevlerinizi diğer hizmetlerden Vikunja'ya aktarın:",
-			"import": "Verilerinizi Vikunja'ya aktarın"
+			"importText": "Projelerinizi ve görevlerinizi diğer hizmetlerden ProjectOS'ya aktarın:",
+			"import": "Verilerinizi ProjectOS'ya aktarın"
 		}
 	},
 	"demo": {
@@ -22,7 +22,7 @@
 		"accountWillBeDeleted": "Hesabınız, oluşturabileceğiniz tüm projeler, görevler ve eklerle birlikte silinecek."
 	},
 	"ready": {
-		"loading": "Vikunja yükleniyor…",
+		"loading": "ProjectOS yükleniyor…",
 		"errorOccured": "Bir hata oluştu:",
 		"checkApiUrl": "Lütfen API URL'sinin doğru olup olmadığını kontrol edin.",
 		"noApiUrlConfigured": "API URL'si yapılandırılmadı. Lütfen aşağıdan bir tane ayarlayın:"
@@ -144,7 +144,7 @@
 			},
 			"caldav": {
 				"title": "CalDAV",
-				"more": "Vikunja’da CalDAV hakkında daha fazla bilgi",
+				"more": "ProjectOS’da CalDAV hakkında daha fazla bilgi",
 				"tokens": "CalDAV Token’ları"
 			},
 			"avatar": {
@@ -163,7 +163,7 @@
 				"title": "Hızlı Ekleme Sihir Modu",
 				"disabled": "Devre dışı",
 				"todoist": "Todoist",
-				"vikunja": "Vikunja"
+				"vikunja": "ProjectOS"
 			},
 			"appearance": {
 				"title": "Renk Şeması",
@@ -179,7 +179,7 @@
 			},
 			"apiTokens": {
 				"title": "API Token’ları",
-				"general": "API token’ları, Vikunja’nın API’sini kullanıcı kimlik bilgileri olmadan kullanmanıza olanak tanır.",
+				"general": "API token’ları, ProjectOS’nın API’sini kullanıcı kimlik bilgileri olmadan kullanmanıza olanak tanır.",
 				"apiDocs": "API belgelerine göz atın",
 				"createAToken": "Token oluştur",
 				"createToken": "Token oluştur",
@@ -207,7 +207,7 @@
 			}
 		},
 		"deletion": {
-			"title": "Vikunja Hesabınızı Silin",
+			"title": "ProjectOS Hesabınızı Silin",
 			"text1": "Hesabınızın silinmesi kalıcıdır ve geri alınamaz. Tüm projeleriniz, görevleriniz ve bunlarla ilişkili her şey silinecektir.",
 			"text2": "Devam etmek için lütfen şifrenizi girin. Daha fazla talimat içeren bir e-posta alacaksınız.",
 			"text3": "Devam etmek için lütfen aşağıdaki düğmeye basın. Daha fazla talimat içeren bir e-posta alacaksınız.",
@@ -215,7 +215,7 @@
 			"requestSuccess": "İstek başarılı oldu. Daha fazla talimat içeren bir e-posta alacaksınız.",
 			"passwordRequired": "Lütfen şifrenizi girin.",
 			"confirmSuccess": "Hesabınızın silinmesini başarıyla onayladınız. Hesabınız üç gün içinde silinecek.",
-			"scheduled": "Vikunja hesabınız {date} tarihinde silinecek ({dateSince}).",
+			"scheduled": "ProjectOS hesabınız {date} tarihinde silinecek ({dateSince}).",
 			"scheduledCancel": "Hesap silme işlemini iptal etmek için buraya tıklayın.",
 			"scheduledCancelText": "Hesap silme işlemini iptal etmek için lütfen aşağıya şifrenizi girin:",
 			"scheduledCancelButton": "Hesap silme işlemini iptal etmek için lütfen aşağıdaki düğmeye basın:",
@@ -223,12 +223,12 @@
 			"scheduledCancelSuccess": "Hesabınız silinmeyecek."
 		},
 		"export": {
-			"title": "Vikunja Verilerinizi Dışa Aktarın",
-			"description": "Tüm Vikunja verilerinizin bir kopyasını isteyebilirsiniz. Bu, projeleri, görevleri ve bunlarla ilişkili her şeyi içerir. Bu verileri herhangi bir Vikunja örneğine göç fonksiyonu aracılığıyla aktarabilirsiniz.",
+			"title": "ProjectOS Verilerinizi Dışa Aktarın",
+			"description": "Tüm ProjectOS verilerinizin bir kopyasını isteyebilirsiniz. Bu, projeleri, görevleri ve bunlarla ilişkili her şeyi içerir. Bu verileri herhangi bir ProjectOS örneğine göç fonksiyonu aracılığıyla aktarabilirsiniz.",
 			"descriptionPasswordRequired": "Devam etmek için lütfen şifrenizi girin:",
-			"request": "Vikunja Verilerimin bir kopyasını iste",
-			"success": "Vikunja Verilerinizi başarıyla talep ettiniz! İndirilmeye hazır olduğunda size bir e-posta göndereceğiz.",
-			"downloadTitle": "Dışa aktarılmış Vikunja verilerinizi indirin",
+			"request": "ProjectOS Verilerimin bir kopyasını iste",
+			"success": "ProjectOS Verilerinizi başarıyla talep ettiniz! İndirilmeye hazır olduğunda size bir e-posta göndereceğiz.",
+			"downloadTitle": "Dışa aktarılmış ProjectOS verilerinizi indirin",
 			"ready": "Dışa aktarımınız indirilmeye hazır. {0} tarihine kadar indirebilirsiniz.",
 			"requestNew": "Başka bir dışa aktarım talep et"
 		}
@@ -311,7 +311,7 @@
 			"links": {
 				"title": "Paylaşım Bağlantıları",
 				"what": "Paylaşım bağlantısı nedir?",
-				"explanation": "Paylaşım bağlantıları, Vikunja’da hesabı olmayan diğer kullanıcılarla bir projeyi kolayca paylaşmanıza olanak tanır.",
+				"explanation": "Paylaşım bağlantıları, ProjectOS’da hesabı olmayan diğer kullanıcılarla bir projeyi kolayca paylaşmanıza olanak tanır.",
 				"create": "Bir paylaşım bağlantısı oluştur",
 				"name": "İsim (isteğe bağlı)",
 				"namePlaceholder": "ör. Lorem Ipsum",
@@ -544,19 +544,19 @@
 	},
 	"migrate": {
 		"title": "Diğer hizmetlerden içe aktar",
-		"titleService": "{name}’dan verilerinizi Vikunja’ya aktarın",
-		"import": "Verilerinizi Vikunja’ya aktarın",
+		"titleService": "{name}’dan verilerinizi ProjectOS’ya aktarın",
+		"import": "Verilerinizi ProjectOS’ya aktarın",
 		"description": "Başlamak için aşağıdaki üçüncü taraf hizmetlerden birinin logosuna tıklayın.",
-		"descriptionDo": "Vikunja, erişiminiz olan tüm listeleri, görevleri, notları, hatırlatıcıları ve dosyaları içe aktaracaktır.",
-		"authorize": "Vikunja’nın {name} hesabınıza erişmesine izin vermek için aşağıdaki düğmeye tıklayın.",
+		"descriptionDo": "ProjectOS, erişiminiz olan tüm listeleri, görevleri, notları, hatırlatıcıları ve dosyaları içe aktaracaktır.",
+		"authorize": "ProjectOS’nın {name} hesabınıza erişmesine izin vermek için aşağıdaki düğmeye tıklayın.",
 		"getStarted": "Başla",
 		"inProgress": "İçe aktarma devam ediyor…",
 		"alreadyMigrated1": "{name}’dan eşyalarınızı {date} tarihinde zaten içe aktarmış gibi görünüyor.",
 		"alreadyMigrated2": "Tekrar içe aktarmak mümkün, ancak bu kopyalara neden olabilir. Emin misiniz?",
 		"confirm": "Eminim, lütfen şimdi içe aktarmaya başlayın!",
-		"importUpload": "{name}’dan Vikunja’ya veri aktarmak için aşağıdaki düğmeye tıklayarak bir dosya seçin.",
+		"importUpload": "{name}’dan ProjectOS’ya veri aktarmak için aşağıdaki düğmeye tıklayarak bir dosya seçin.",
 		"upload": "Dosya yükle",
-		"migrationStartedWillReciveEmail": "Vikunja şimdi {service}’ten listelerinizi/projelerinizi, görevlerinizi, notlarınızı, hatırlatıcılarınızı ve dosyalarınızı içe aktaracak. Bu biraz zaman alacağından, tamamlandığında size bir e-posta göndereceğiz. Bu pencereyi şimdi kapatabilirsiniz.",
+		"migrationStartedWillReciveEmail": "ProjectOS şimdi {service}’ten listelerinizi/projelerinizi, görevlerinizi, notlarınızı, hatırlatıcılarınızı ve dosyalarınızı içe aktaracak. Bu biraz zaman alacağından, tamamlandığında size bir e-posta göndereceğiz. Bu pencereyi şimdi kapatabilirsiniz.",
 		"migrationInProgress": "Şu anda bir içe aktarma devam ediyor. Lütfen tamamlanmasını bekleyin."
 	},
 	"label": {
@@ -616,7 +616,7 @@
 		"searchPlaceholder": "Aramak için yazın…",
 		"previous": "Önceki",
 		"next": "Sonraki",
-		"poweredBy": "Vikunja tarafından desteklenmektedir",
+		"poweredBy": "ProjectOS tarafından desteklenmektedir",
 		"info": "Bilgi",
 		"create": "Oluştur",
 		"doit": "Yap!",
@@ -756,7 +756,7 @@
 			"canuse": "Görece tarihleri filtrelemek için tarih matematiğini kullanabilirsiniz.",
 			"learnhow": "Nasıl çalıştığını öğrenin",
 			"title": "Tarih Matematiği",
-			"intro": "Filtre uygulanırken Vikunja tarafından anında çözülen görece tarihleri belirtin.",
+			"intro": "Filtre uygulanırken ProjectOS tarafından anında çözülen görece tarihleri belirtin.",
 			"expression": "Her Tarih Matematiği ifadesi, {0} olabilen veya {1} ile biten bir tarih dizesi olan bir çapa tarihiyle başlar. Bu çapa tarihi, isteğe bağlı olarak bir veya daha fazla matematik ifadesiyle takip edilebilir.",
 			"similar": "Bu ifadeler, {0} ve {1} tarafından sağlananlara benzerdir.",
 			"add1Day": "Bir gün ekle",
@@ -1013,7 +1013,7 @@
 			"intro": "Bir görev oluştururken, yeni oluşturulan göreve doğrudan öznitelikler eklemek için özel anahtar kelimeler kullanabilirsiniz. Bu, yaygın kullanılan öznitelikleri görevlere çok daha hızlı eklemenizi sağlar.",
 			"multiple": "Bunu birden çok kez kullanabilirsiniz.",
 			"label1": "Bir etiket eklemek için etiket adını {prefix} ile önekleyin.",
-			"label2": "Vikunja önce etiketin zaten var olup olmadığını kontrol eder ve yoksa oluşturur.",
+			"label2": "ProjectOS önce etiketin zaten var olup olmadığını kontrol eder ve yoksa oluşturur.",
 			"label3": "Boşluk kullanmak için etiket adını \" veya ' ile çevreleyin.",
 			"label4": "Örneğin: {prefix}\"Boşluklu Etiket\".",
 			"priority1": "Bir görevin önceliğini ayarlamak için 1-5 arasında bir sayı ekleyin ve bunu {prefix} ile önekleyin.",
@@ -1160,12 +1160,12 @@
 		"views": "Görünümler"
 	},
 	"apiConfig": {
-		"url": "Vikunja URL’si",
+		"url": "ProjectOS URL’si",
 		"urlPlaceholder": "ör. https://localhost:3456",
 		"change": "değiştir",
-		"use": "{0} adresindeki Vikunja kurulumunu kullanıyor",
-		"error": "\"{domain}\" adresindeki Vikunja kurulumunu bulamadı veya kullanamadı. Lütfen URL’nin doğru formatta olduğundan ve doğrudan erişebildiğinizden emin olun ve tekrar deneyin.",
-		"success": "\"{domain}\" adresindeki Vikunja kurulumunu kullanıyor.",
+		"use": "{0} adresindeki ProjectOS kurulumunu kullanıyor",
+		"error": "\"{domain}\" adresindeki ProjectOS kurulumunu bulamadı veya kullanamadı. Lütfen URL’nin doğru formatta olduğundan ve doğrudan erişebildiğinizden emin olun ve tekrar deneyin.",
+		"success": "\"{domain}\" adresindeki ProjectOS kurulumunu kullanıyor.",
 		"urlRequired": "Bir URL gerekli."
 	},
 	"loadingError": {

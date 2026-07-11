@@ -12,8 +12,8 @@
 		"addToHomeScreen": "将此应用程序添加到您的主屏幕以便更快地访问和改善体验。",
 		"goToOverview": "转到概览",
 		"project": {
-			"importText": "将您的项目和任务从其他服务导入 Vikunja：",
-			"import": "将您的数据导入到 Vikunja"
+			"importText": "将您的项目和任务从其他服务导入 ProjectOS：",
+			"import": "将您的数据导入到 ProjectOS"
 		}
 	},
 	"demo": {
@@ -22,7 +22,7 @@
 		"accountWillBeDeleted": "您的账户将被删除，包括您可能创建的所有项目、任务和附件。"
 	},
 	"ready": {
-		"loading": "Vikunja 正在加载…",
+		"loading": "ProjectOS 正在加载…",
 		"errorOccured": "发生错误：",
 		"checkApiUrl": "请检查 api 网址是否正确。",
 		"noApiUrlConfigured": "未配置 API URL。请在下框中设置："
@@ -124,7 +124,7 @@
 			},
 			"caldav": {
 				"title": "CalDAV",
-				"more": "更多关于 Vikunja 的 CalDAV 信息",
+				"more": "更多关于 ProjectOS 的 CalDAV 信息",
 				"tokens": "CalDAV Tokens"
 			},
 			"avatar": {
@@ -143,7 +143,7 @@
 				"title": "快速添加 Magic 模式",
 				"disabled": "禁用",
 				"todoist": "Todoist",
-				"vikunja": "Vikunja"
+				"vikunja": "ProjectOS"
 			},
 			"appearance": {
 				"title": "配色方案",
@@ -156,7 +156,7 @@
 			},
 			"apiTokens": {
 				"title": "API 令牌",
-				"general": "API 令牌允许您在无需用户凭据的情况下使用 Vikunja 的 API。",
+				"general": "API 令牌允许您在无需用户凭据的情况下使用 ProjectOS 的 API。",
 				"apiDocs": "查看 api 文档",
 				"createAToken": "创建令牌",
 				"createToken": "创建令牌",
@@ -184,7 +184,7 @@
 			}
 		},
 		"deletion": {
-			"title": "删除您的 Vikunja 帐户",
+			"title": "删除您的 ProjectOS 帐户",
 			"text1": "您账户的删除是永久性的且无法撤消。 我们将删除您的所有项目、任务以及与之相关的所有内容。",
 			"text2": "若要继续，请输入您的密码。您将收到一封包含更多说明的电子邮件。",
 			"text3": "若要继续，请按下面的按钮。您将收到一封包含进一步说明的电子邮件。",
@@ -192,7 +192,7 @@
 			"requestSuccess": "请求成功。您将收到一封包含更多说明的电子邮件。",
 			"passwordRequired": "请输入密码",
 			"confirmSuccess": "已成功确认您帐户的删除请求。您的帐户将在三天内注销删除。",
-			"scheduled": "您的 Vikunja帐户将于 {date} ({dateSince}) 完成注销删除。",
+			"scheduled": "您的 ProjectOS帐户将于 {date} ({dateSince}) 完成注销删除。",
 			"scheduledCancel": "要取消您的帐户删除操作，请单击此处。",
 			"scheduledCancelText": "若要取消您的帐户删除操作，请在下面输入您的密码：",
 			"scheduledCancelButton": "若要取消您的账户删除，请按下面的按钮：",
@@ -200,12 +200,12 @@
 			"scheduledCancelSuccess": "账户删除操作已撤销"
 		},
 		"export": {
-			"title": "导出 Vikunja 数据",
-			"description": "您可以索取所有 Vikunja 数据的副本。 这包括项目、任务以及与它们相关的所有内容。 您可以通过迁移功能将这些数据导入到任何 Vikunja 实例中。",
+			"title": "导出 ProjectOS 数据",
+			"description": "您可以索取所有 ProjectOS 数据的副本。 这包括项目、任务以及与它们相关的所有内容。 您可以通过迁移功能将这些数据导入到任何 ProjectOS 实例中。",
 			"descriptionPasswordRequired": "请输入您的密码以继续。",
-			"request": "请求我的 Vikunja 数据副本",
-			"success": "已成功请求您的 Vikunja 数据！一旦准备好下载，我们将向您发送一封电子邮件。",
-			"downloadTitle": "下载您导出的 Vikunja 数据",
+			"request": "请求我的 ProjectOS 数据副本",
+			"success": "已成功请求您的 ProjectOS 数据！一旦准备好下载，我们将向您发送一封电子邮件。",
+			"downloadTitle": "下载您导出的 ProjectOS 数据",
 			"ready": "您的导出已准备好下载。您可以在 {0} 之前下载。",
 			"requestNew": "请求另一个导出"
 		}
@@ -505,19 +505,19 @@
 	},
 	"migrate": {
 		"title": "从其他服务导入",
-		"titleService": "从 {name} 导入您的数据到 Vikunja",
-		"import": "导入数据到 Vikunja",
+		"titleService": "从 {name} 导入您的数据到 ProjectOS",
+		"import": "导入数据到 ProjectOS",
 		"description": "点击下面的第三方服务的徽标开始操作。",
-		"descriptionDo": "Vikunja 将导入所有您有访问权限的列表、任务、笔记、提醒和文件。",
-		"authorize": "要授权 Vikunja 访问您的 {name} 帐户，请点击下面的按钮。",
+		"descriptionDo": "ProjectOS 将导入所有您有访问权限的列表、任务、笔记、提醒和文件。",
+		"authorize": "要授权 ProjectOS 访问您的 {name} 帐户，请点击下面的按钮。",
 		"getStarted": "开始",
 		"inProgress": "导入进行中...",
 		"alreadyMigrated1": "{date} 已经从 {name} 导入过数据",
 		"alreadyMigrated2": "可以再次导入，但这可能会造成数据重复。您确定吗？",
 		"confirm": "我确定, 请立即开始迁移!",
-		"importUpload": "请点击下面的按钮选择一个文件，将 {name} 的数据导入到 Vikunja",
+		"importUpload": "请点击下面的按钮选择一个文件，将 {name} 的数据导入到 ProjectOS",
 		"upload": "点击上传文件",
-		"migrationStartedWillReciveEmail": "Vikunja 现在将从 {service} 导入您的列表/项目、任务、注释、提醒和文件。 由于这需要一段时间，完成后我们会向您发送一封电子邮件。 您现在可以关闭此窗口。",
+		"migrationStartedWillReciveEmail": "ProjectOS 现在将从 {service} 导入您的列表/项目、任务、注释、提醒和文件。 由于这需要一段时间，完成后我们会向您发送一封电子邮件。 您现在可以关闭此窗口。",
 		"migrationInProgress": "迁移正在进行中。请等待完成。"
 	},
 	"label": {
@@ -577,7 +577,7 @@
 		"searchPlaceholder": "请输入查找条件…",
 		"previous": "上一个",
 		"next": "下一个",
-		"poweredBy": "由 Vikunja 提供支持",
+		"poweredBy": "由 ProjectOS 提供支持",
 		"info": "信息",
 		"create": "创建",
 		"doit": "继续！",
@@ -716,7 +716,7 @@
 			"canuse": "你可以使用 Date Math 来筛选相对日期。",
 			"learnhow": "查看它如何工作",
 			"title": "Date Math",
-			"intro": "指定应用过滤器时 Vikunja 即时解析的相对日期。",
+			"intro": "指定应用过滤器时 ProjectOS 即时解析的相对日期。",
 			"expression": "每个 Date Math 表达式以锚点日期开头，可以是 {0}，也可以是以 {1} 结尾的日期文本。 这个锚点日期后可以跟一个或多个数学表达式。",
 			"similar": "这些表达式类似于 {0} 和 {1} 提供的表达式。",
 			"add1Day": "加一天",
@@ -969,7 +969,7 @@
 			"intro": "创建任务时，可以使用特殊关键字直接为新创建的任务添加属性。 这能够更快地将常用属性添加到任务中。",
 			"multiple": "你可以多次使用此功能。",
 			"label1": "要添加标签，只需在标签名称前加上 {prefix}。",
-			"label2": "Vikunja 首先检查标签是否存在，如果不存在则创建。",
+			"label2": "ProjectOS 首先检查标签是否存在，如果不存在则创建。",
 			"label3": "要使用空格，只需在标签名称周围添加一个 \" 或 '。",
 			"label4": "例如：{prefix} “带空格的标签”。",
 			"priority1": "要设置任务的优先级，请添加数字 1-5，并以 {prefix} 为前缀。",
@@ -1109,12 +1109,12 @@
 		"views": "视图"
 	},
 	"apiConfig": {
-		"url": "Vikunja URL",
+		"url": "ProjectOS URL",
 		"urlPlaceholder": "例如： http://localhost:3456",
 		"change": "换一换",
-		"use": "在 {0} 使用 Vikunja 安装程序",
-		"error": "无法在“{domain}”找到或使用 Vikunja 安装。 请检查url格式是否正确，直接访问是否可以访问，然后重试。",
-		"success": "在 “{domain}” 上使用 Vikunja 安装程序。",
+		"use": "在 {0} 使用 ProjectOS 安装程序",
+		"error": "无法在“{domain}”找到或使用 ProjectOS 安装。 请检查url格式是否正确，直接访问是否可以访问，然后重试。",
+		"success": "在 “{domain}” 上使用 ProjectOS 安装程序。",
 		"urlRequired": "Url 是必需的。"
 	},
 	"loadingError": {

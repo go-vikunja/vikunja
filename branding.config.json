@@ -1,0 +1,5 @@
+{
+  "$comment": "Build-time white-label config for the engine. Consumed by scripts/apply-branding.mjs to bake the DEFAULT product name (and optional user-facing external links) into the shared image and server-rendered emails. Per-tenant colors/logo/title are applied at RUNTIME via /branding.json (see the platform repo's branding/README.md) and are NOT set here.",
+  "productName": "ProjectOS",
+  "links": {}
+}

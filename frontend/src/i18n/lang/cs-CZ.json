@@ -12,8 +12,8 @@
 		"addToHomeScreen": "Přidejte tuto aplikaci na domovskou obrazovku pro rychlejší přístup a lepší zážitek.",
 		"goToOverview": "Přejít na přehled",
 		"project": {
-			"importText": "Importujte své projekty a úkoly z jiných služeb do Vikunja:",
-			"import": "Importujte svá data do Vikunja"
+			"importText": "Importujte své projekty a úkoly z jiných služeb do ProjectOS:",
+			"import": "Importujte svá data do ProjectOS"
 		}
 	},
 	"demo": {
@@ -22,7 +22,7 @@
 		"accountWillBeDeleted": "Váš účet bude smazán včetně všech projektů, úkolů a příloh, které můžete vytvořit."
 	},
 	"ready": {
-		"loading": "Vikunja se načítá…",
+		"loading": "ProjectOS se načítá…",
 		"errorOccured": "Došlo k chybě:",
 		"checkApiUrl": "Zkontrolujte, zda je adresa URL API správná.",
 		"noApiUrlConfigured": "Nebyla nakonfigurována žádná adresa API. Prosím nastavte jednu níže:"
@@ -147,7 +147,7 @@
 			},
 			"caldav": {
 				"title": "CalDAV",
-				"more": "Více informací o CalDAV ve Vikunja",
+				"more": "Více informací o CalDAV ve ProjectOS",
 				"tokens": "CalDAV tokeny"
 			},
 			"avatar": {
@@ -166,7 +166,7 @@
 				"title": "Kouzelný režim pro rychlé přidání",
 				"disabled": "Vypnuto",
 				"todoist": "Todoist",
-				"vikunja": "Vikunja"
+				"vikunja": "ProjectOS"
 			},
 			"appearance": {
 				"title": "Barevné schéma",
@@ -186,7 +186,7 @@
 			},
 			"apiTokens": {
 				"title": "API Tokeny",
-				"general": "API tokeny umožňují používat Vikunja API bez uživatelských údajů.",
+				"general": "API tokeny umožňují používat ProjectOS API bez uživatelských údajů.",
 				"apiDocs": "Podívejte se na dokumentaci api",
 				"createAToken": "Vytvořit token",
 				"createToken": "Vytvořit token",
@@ -236,7 +236,7 @@
 			"requestSuccess": "Požadavek byl úspěšný. Obdržíte e-mail s dalšími pokyny.",
 			"passwordRequired": "Prosím zadejte Vaše heslo.",
 			"confirmSuccess": "Úspěšně jste potvrdili odstranění vašeho účtu. Váš účet odstraníme během tří dnů.",
-			"scheduled": "Váš Vikunja účet odstraníme do {date} ({dateSince}).",
+			"scheduled": "Váš ProjectOS účet odstraníme do {date} ({dateSince}).",
 			"scheduledCancel": "Chcete-li zrušit smazání vašeho účtu, klikněte zde.",
 			"scheduledCancelText": "Chcete-li zrušit smazání vašeho účtu, zadejte prosím své heslo níže:",
 			"scheduledCancelButton": "Chcete-li zrušit odstranění vašeho účtu, klikněte na tlačítko níže:",
@@ -245,11 +245,11 @@
 		},
 		"export": {
 			"title": "Exportovat data účtu",
-			"description": "Můžete si vyžádat kopii všech vašich dat Vikunje. To zahrnuje projekty, úkoly a vše, co je s nimi spojeno. Tato data můžete importovat v libovolné instanci Vikunja prostřednictvím migrační funkce.",
+			"description": "Můžete si vyžádat kopii všech vašich dat Vikunje. To zahrnuje projekty, úkoly a vše, co je s nimi spojeno. Tato data můžete importovat v libovolné instanci ProjectOS prostřednictvím migrační funkce.",
 			"descriptionPasswordRequired": "Pokračujte zadáním vašeho hesla:",
 			"request": "Požádat o kopii mých dat",
 			"success": "Úspěšně jste požádali o svá data! Jakmile budou připravena ke stažení, pošleme Vám e-mail.",
-			"downloadTitle": "Stáhnout exportovaná Vikunja data",
+			"downloadTitle": "Stáhnout exportovaná ProjectOS data",
 			"ready": "Váš export je připraven ke stažení. Můžete jej stáhnout do {0}.",
 			"requestNew": "Požádat o další export"
 		}
@@ -332,7 +332,7 @@
 			"links": {
 				"title": "Sdílené odkazy",
 				"what": "Co je to sdílený odkaz?",
-				"explanation": "Sdílené odkazy vám umožní snadno sdílet projekt s ostatními uživateli, kteří nemají účet na Vikunja.",
+				"explanation": "Sdílené odkazy vám umožní snadno sdílet projekt s ostatními uživateli, kteří nemají účet na ProjectOS.",
 				"create": "Vytvořit sdílený odkaz",
 				"name": "Název (volitelné)",
 				"namePlaceholder": "např. Lorem Ipsum",
@@ -573,19 +573,19 @@
 	},
 	"migrate": {
 		"title": "Import z jiných služeb",
-		"titleService": "Importujte svá data z {name} do Vikunja",
-		"import": "Importujte svá data do Vikunja",
+		"titleService": "Importujte svá data z {name} do ProjectOS",
+		"import": "Importujte svá data do ProjectOS",
 		"description": "Chcete-li začít, klikněte na logo jedné ze služeb třetích stran.",
-		"descriptionDo": "Vikunja importuje všechny seznamy, úkoly, poznámky, připomenutí a soubory, ke kterým máte přístup.",
-		"authorize": "Chcete-li povolit Vikunja přístup k vašemu účtu {name}, klepněte na tlačítko níže.",
+		"descriptionDo": "ProjectOS importuje všechny seznamy, úkoly, poznámky, připomenutí a soubory, ke kterým máte přístup.",
+		"authorize": "Chcete-li povolit ProjectOS přístup k vašemu účtu {name}, klepněte na tlačítko níže.",
 		"getStarted": "Začněme",
 		"inProgress": "Probíhá import…",
 		"alreadyMigrated1": "Vypadá to, že jste již importovali své věci z {name} dne {date}.",
 		"alreadyMigrated2": "Import je možný, ale mohl by vytvářet duplicity. Jste si jisti?",
 		"confirm": "Jsem si jistý, začněte migrovat!",
-		"importUpload": "Chcete-li importovat data z {name} do Vikunja, klikněte na tlačítko níže pro výběr souboru.",
+		"importUpload": "Chcete-li importovat data z {name} do ProjectOS, klikněte na tlačítko níže pro výběr souboru.",
 		"upload": "Nahrát soubor",
-		"migrationStartedWillReciveEmail": "Vikunja nyní importuje vaše seznamy/projekty, úkoly, poznámky, připomenutí a soubory z {service}. Protože to bude chvíli trvat, pošleme vám e-mail až bude hotovo. Toto okno můžete nyní zavřít.",
+		"migrationStartedWillReciveEmail": "ProjectOS nyní importuje vaše seznamy/projekty, úkoly, poznámky, připomenutí a soubory z {service}. Protože to bude chvíli trvat, pošleme vám e-mail až bude hotovo. Toto okno můžete nyní zavřít.",
 		"migrationInProgress": "Probíhá migrace. Počkejte prosím na její dokončení."
 	},
 	"label": {
@@ -645,7 +645,7 @@
 		"searchPlaceholder": "Zadejte hledaný text…",
 		"previous": "Předchozí",
 		"next": "Příští",
-		"poweredBy": "Běží na Vikunja",
+		"poweredBy": "Běží na ProjectOS",
 		"info": "Info",
 		"create": "Vytvořit",
 		"doit": "Udělej to!",
@@ -1048,7 +1048,7 @@
 			"intro": "Při vytváření úkolu můžete použít speciální klíčová slova pro přímé přidání atributů k nově vytvořenému úkolu. To umožňuje přidat běžně používané atributy k úkolům mnohem rychleji.",
 			"multiple": "Toto můžete použít několikrát.",
 			"label1": "Chcete-li přidat štítek, jednoduše napište před název štítku {prefix}.",
-			"label2": "Vikunja nejprve zkontroluje, zda štítek již existuje a vytvoří jej, pokud ne.",
+			"label2": "ProjectOS nejprve zkontroluje, zda štítek již existuje a vytvoří jej, pokud ne.",
 			"label3": "Chcete-li použít mezery, uzavřete název štítku do \" nebo '.",
 			"label4": "Například: {prefix}\"Štítek s mezerami\".",
 			"priority1": "Chcete-li nastavit prioritu úkolu, přidejte číslo 1-5, s prefixem {prefix}.",
@@ -1199,12 +1199,12 @@
 		"views": "Pohledy"
 	},
 	"apiConfig": {
-		"url": "Vikunja URL",
+		"url": "ProjectOS URL",
 		"urlPlaceholder": "např. https://localhost:3456",
 		"change": "změnit",
-		"use": "Používá se instalace Vikunja v {0}",
-		"error": "Nelze najít nebo použít instalaci Vikunja na \"{domain}\". Zkontrolujte, zda má URL správný formát a můžete se k ní připojit při přímém přístupu a zkuste to znovu.",
-		"success": "Pomocí instalace Vikunja na \"{domain}\".",
+		"use": "Používá se instalace ProjectOS v {0}",
+		"error": "Nelze najít nebo použít instalaci ProjectOS na \"{domain}\". Zkontrolujte, zda má URL správný formát a můžete se k ní připojit při přímém přístupu a zkuste to znovu.",
+		"success": "Pomocí instalace ProjectOS na \"{domain}\".",
 		"urlRequired": "Je vyžadována adresa URL."
 	},
 	"loadingError": {

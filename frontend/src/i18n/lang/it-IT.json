@@ -12,8 +12,8 @@
 		"addToHomeScreen": "Aggiungi questa app alla tua schermata iniziale per un accesso più veloce e un'esperienza migliore.",
 		"goToOverview": "Vai alla panoramica",
 		"project": {
-			"importText": "Importa i tuoi progetti e attività da altri servizi in Vikunja:",
-			"import": "Importa i tuoi dati in Vikunja"
+			"importText": "Importa i tuoi progetti e attività da altri servizi in ProjectOS:",
+			"import": "Importa i tuoi dati in ProjectOS"
 		}
 	},
 	"demo": {
@@ -22,7 +22,7 @@
 		"accountWillBeDeleted": "Il tuo account verrà eliminato, inclusi tutti i progetti, attività e altre cose che potresti aver creato."
 	},
 	"ready": {
-		"loading": "Vikunja sta caricando…",
+		"loading": "ProjectOS sta caricando…",
 		"errorOccured": "Si è verificato un errore:",
 		"checkApiUrl": "Controlla se l'URL API è corretto.",
 		"noApiUrlConfigured": "Nessun URL API configurato. Impostane uno qui sotto:"
@@ -144,7 +144,7 @@
 			},
 			"caldav": {
 				"title": "CalDAV",
-				"more": "Ulteriori informazioni riguardo CalDAV in Vikunja",
+				"more": "Ulteriori informazioni riguardo CalDAV in ProjectOS",
 				"tokens": "Token CalDAV"
 			},
 			"avatar": {
@@ -163,7 +163,7 @@
 				"title": "Modalità di aggiunta rapida",
 				"disabled": "Disabilitato",
 				"todoist": "Todoist",
-				"vikunja": "Vikunja"
+				"vikunja": "ProjectOS"
 			},
 			"appearance": {
 				"title": "Tema",
@@ -179,7 +179,7 @@
 			},
 			"apiTokens": {
 				"title": "Token API",
-				"general": "I token API ti consentono di usare le API di Vikunja senza le credenziali utente.",
+				"general": "I token API ti consentono di usare le API di ProjectOS senza le credenziali utente.",
 				"apiDocs": "Consulta la documentazione delle API",
 				"createAToken": "Crea un token",
 				"createToken": "Crea token",
@@ -207,7 +207,7 @@
 			}
 		},
 		"deletion": {
-			"title": "Elimina account Vikunja",
+			"title": "Elimina account ProjectOS",
 			"text1": "La cancellazione del tuo account è definitiva e irreversibile. Elimineremo tutti i tuoi progetti, attività e tutto ciò che vi è associato.",
 			"text2": "Per continuare, inserisci la tua password. Riceverai una e-mail con ulteriori istruzioni.",
 			"text3": "Per procedere, premi il bottone qui di sotto. Riceverai una mail con ulteriori istruzioni.",
@@ -215,7 +215,7 @@
 			"requestSuccess": "Richiesta riuscita. Riceverai un'e-mail con ulteriori istruzioni.",
 			"passwordRequired": "Inserisci la tua password.",
 			"confirmSuccess": "Hai confermato la cancellazione del tuo account. Elimineremo il tuo account tra tre giorni.",
-			"scheduled": "Elimineremo il tuo account Vikunja il {date} ({dateSince}).",
+			"scheduled": "Elimineremo il tuo account ProjectOS il {date} ({dateSince}).",
 			"scheduledCancel": "Per annullare l'eliminazione del tuo account, clicca qui.",
 			"scheduledCancelText": "Per annullare l'eliminazione del tuo account, inserisci la password qui sotto:",
 			"scheduledCancelButton": "Per cancellare l'eliminazione del tuo account, premi il pulsante qui sotto:",
@@ -223,12 +223,12 @@
 			"scheduledCancelSuccess": "Non elimineremo il tuo account."
 		},
 		"export": {
-			"title": "Esporta i tuoi dati Vikunja",
-			"description": "Puoi richiedere una copia di tutti i tuoi dati su Vikunja, inclusi Progetti, Attività e tutto ciò che vi è associato. Questi dati possono essere importati in qualsiasi istanza di Vikunja utilizzando la funzione di migrazione.",
+			"title": "Esporta i tuoi dati ProjectOS",
+			"description": "Puoi richiedere una copia di tutti i tuoi dati su ProjectOS, inclusi Progetti, Attività e tutto ciò che vi è associato. Questi dati possono essere importati in qualsiasi istanza di ProjectOS utilizzando la funzione di migrazione.",
 			"descriptionPasswordRequired": "Inserisci la tua password per procedere:",
 			"request": "Richiedi una copia dei tuoi dati",
-			"success": "Hai richiesto con successo i tuoi dati Vikunja! Ti invieremo un'e-mail una volta che saranno pronti da scaricare.",
-			"downloadTitle": "Scarica i tuoi dati esportati da Vikunja",
+			"success": "Hai richiesto con successo i tuoi dati ProjectOS! Ti invieremo un'e-mail una volta che saranno pronti da scaricare.",
+			"downloadTitle": "Scarica i tuoi dati esportati da ProjectOS",
 			"ready": "La tua esportazione è pronta per il download. Puoi scaricarla fino al {0}.",
 			"requestNew": "Richiedi un'altra esportazione"
 		}
@@ -311,7 +311,7 @@
 			"links": {
 				"title": "Link di condivisione",
 				"what": "Che cos'è un link di condivisione?",
-				"explanation": "I link di condivisione consentono di condividere facilmente un progetto con altri utenti che non hanno un account su Vikunja.",
+				"explanation": "I link di condivisione consentono di condividere facilmente un progetto con altri utenti che non hanno un account su ProjectOS.",
 				"create": "Crea un nuovo link di condivisione",
 				"name": "Nome (facoltativo)",
 				"namePlaceholder": "es. Lorem Ipsum",
@@ -544,19 +544,19 @@
 	},
 	"migrate": {
 		"title": "Importa da altri servizi",
-		"titleService": "Importa i tuoi dati da {name} in Vikunja",
-		"import": "Importa i tuoi dati in Vikunja",
+		"titleService": "Importa i tuoi dati da {name} in ProjectOS",
+		"import": "Importa i tuoi dati in ProjectOS",
 		"description": "Clicca sul logo di uno dei servizi esterni qui sotto per iniziare.",
-		"descriptionDo": "Vikunja importerà tutti gli elenchi, le attività, le note, i promemoria e i file a cui hai accesso.",
-		"authorize": "Per autorizzare Vikunja ad accedere al tuo account {name}, clicca il pulsante qui sotto.",
+		"descriptionDo": "ProjectOS importerà tutti gli elenchi, le attività, le note, i promemoria e i file a cui hai accesso.",
+		"authorize": "Per autorizzare ProjectOS ad accedere al tuo account {name}, clicca il pulsante qui sotto.",
 		"getStarted": "Per Iniziare",
 		"inProgress": "Importazione in corso…",
 		"alreadyMigrated1": "Sembra che tu abbia già importato le tue cose da {name} il {date}.",
 		"alreadyMigrated2": "Importare di nuovo è possibile, ma potrebbe creare duplicati. Sei sicuro?",
 		"confirm": "Sono sicuro, per favore inizia adesso la migrazione!",
-		"importUpload": "Per importare i dati da {name} in Vikunja, fai clic sul pulsante qui sotto per selezionare un file.",
+		"importUpload": "Per importare i dati da {name} in ProjectOS, fai clic sul pulsante qui sotto per selezionare un file.",
 		"upload": "Carica file",
-		"migrationStartedWillReciveEmail": "Vikunja importerà i tuoi elenchi, progetti, attività, note, promemoria e file da {service}. Ti invieremo una e-mail quando il processo sarà completato, poiché potrebbe richiedere del tempo. Nel frattempo, puoi chiudere questa finestra.",
+		"migrationStartedWillReciveEmail": "ProjectOS importerà i tuoi elenchi, progetti, attività, note, promemoria e file da {service}. Ti invieremo una e-mail quando il processo sarà completato, poiché potrebbe richiedere del tempo. Nel frattempo, puoi chiudere questa finestra.",
 		"migrationInProgress": "Una migrazione è attualmente in corso. Si prega di attendere fino a quando non sarà terminata."
 	},
 	"label": {
@@ -616,7 +616,7 @@
 		"searchPlaceholder": "Digita per cercare…",
 		"previous": "Precedente",
 		"next": "Successivo",
-		"poweredBy": "Creato con Vikunja",
+		"poweredBy": "Creato con ProjectOS",
 		"info": "Info",
 		"create": "Crea",
 		"doit": "Esegui!",
@@ -756,7 +756,7 @@
 			"canuse": "Puoi usare le date calcolate per filtrare per date relative.",
 			"learnhow": "Scopri come funziona",
 			"title": "Date Calcolate",
-			"intro": "Le date relative vengono risolte immediatamente da Vikunja non appena viene applicato il filtro.",
+			"intro": "Le date relative vengono risolte immediatamente da ProjectOS non appena viene applicato il filtro.",
 			"expression": "Ogni Data Calcolata inizia con una data base, che può essere {0}, o una data con {1} alla fine. Questa data base può essere seguita da una o più espressioni matematiche.",
 			"similar": "Queste espressioni sono simili a quelle fornite da {0} e {1}.",
 			"add1Day": "Aggiungi un giorno",
@@ -1014,7 +1014,7 @@
 			"intro": "Quando crei un'attività, puoi usare parole chiave speciali per assegnare direttamente gli attributi, rendendo il processo più immediato.",
 			"multiple": "Puoi ripetere l'operazione più volte.",
 			"label1": "Per aggiungere un'etichetta basta inserire il nome preceduto da {prefix}.",
-			"label2": "Vikunja verificherà se l'etichetta esiste già e, in caso contrario, la creerà.",
+			"label2": "ProjectOS verificherà se l'etichetta esiste già e, in caso contrario, la creerà.",
 			"label3": "Per includere spazi nel nome dell'etichetta aggiungi \" o ' prima e dopo il nome.",
 			"label4": "Per esempio: {prefix}\"Etichetta con spazi\".",
 			"priority1": "Per assegnare la priorità a un'attività aggiungi un numero da 1 a 5 preceduto da {prefix}.",
@@ -1165,12 +1165,12 @@
 		"views": "Viste"
 	},
 	"apiConfig": {
-		"url": "URL Vikunja",
+		"url": "URL ProjectOS",
 		"urlPlaceholder": "es. https://localhost:3456",
 		"change": "modifica",
-		"use": "Usa l'installazione di Vikunja su {0}",
-		"error": "Impossibile trovare o usare l'installazione di Vikunja su \"{domain}\". Si prega di controllare se l'URL ha il formato corretto e se è raggiungibile quando si accede direttamente, quindi riprovare.",
-		"success": "Utilizzando l'installazione di Vikunja su \"{domain}\".",
+		"use": "Usa l'installazione di ProjectOS su {0}",
+		"error": "Impossibile trovare o usare l'installazione di ProjectOS su \"{domain}\". Si prega di controllare se l'URL ha il formato corretto e se è raggiungibile quando si accede direttamente, quindi riprovare.",
+		"success": "Utilizzando l'installazione di ProjectOS su \"{domain}\".",
 		"urlRequired": "L'URL è obbligatorio."
 	},
 	"loadingError": {

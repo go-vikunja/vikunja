@@ -12,8 +12,8 @@
 		"addToHomeScreen": "Voeg deze app toe aan je startscherm voor snellere toegang en verbeterde ervaring.",
 		"goToOverview": "Ga naar overzicht",
 		"project": {
-			"importText": "Importeer je projecten en taken van andere diensten naar Vikunja:",
-			"import": "Importeer je gegevens in Vikunja"
+			"importText": "Importeer je projecten en taken van andere diensten naar ProjectOS:",
+			"import": "Importeer je gegevens in ProjectOS"
 		}
 	},
 	"demo": {
@@ -22,7 +22,7 @@
 		"accountWillBeDeleted": "Je account zal worden verwijderd, inclusief alle projecten, taken en bijlagen."
 	},
 	"ready": {
-		"loading": "Vikunja is aan het laden…",
+		"loading": "ProjectOS is aan het laden…",
 		"errorOccured": "Er is een fout opgetreden:",
 		"checkApiUrl": "Controleer of de API URL juist is.",
 		"noApiUrlConfigured": "Er is geen API URL geconfigureerd. Stel er hieronder een in:"
@@ -144,7 +144,7 @@
 			},
 			"caldav": {
 				"title": "CalDAV",
-				"more": "Meer informatie over CalDAV in Vikunja",
+				"more": "Meer informatie over CalDAV in ProjectOS",
 				"tokens": "CalDAV tokens"
 			},
 			"avatar": {
@@ -163,7 +163,7 @@
 				"title": "Magische Modus Snel Toevoegen",
 				"disabled": "Uitgeschakeld",
 				"todoist": "Todoist",
-				"vikunja": "Vikunja"
+				"vikunja": "ProjectOS"
 			},
 			"appearance": {
 				"title": "Kleurenschema",
@@ -179,7 +179,7 @@
 			},
 			"apiTokens": {
 				"title": "API tokens",
-				"general": "Met API tokens kun je Vikunja's API gebruiken zonder gebruikersnaam en wachtwoord.",
+				"general": "Met API tokens kun je ProjectOS's API gebruiken zonder gebruikersnaam en wachtwoord.",
 				"apiDocs": "Bekijk de API-documentatie",
 				"createAToken": "Token aanmaken",
 				"createToken": "Token aanmaken",
@@ -207,7 +207,7 @@
 			}
 		},
 		"deletion": {
-			"title": "Verwijder je Vikunja account",
+			"title": "Verwijder je ProjectOS account",
 			"text1": "Het verwijderen van je account is permanent en kan niet ongedaan worden gemaakt. We zullen al je projecten, lijsten, taken en alles wat ermee verbonden is verwijderen.",
 			"text2": "Graag je wachtwoord invullen om verder te gaan. Je zult een e-mail ontvangen met verdere instructies.",
 			"text3": "Druk op de knop hieronder om verder te gaan. Je ontvangt een e-mail met instructies.",
@@ -215,7 +215,7 @@
 			"requestSuccess": "Het verzoek was succesvol. Je ontvangt een e-mail met verdere instructies.",
 			"passwordRequired": "Voer alsjeblieft je wachtwoord in.",
 			"confirmSuccess": "Je hebt de verwijdering van je account met succes bevestigd. We verwijderen je account over drie dagen.",
-			"scheduled": "We zullen je Vikunja account op {date} ({dateSince}) verwijderen.",
+			"scheduled": "We zullen je ProjectOS account op {date} ({dateSince}) verwijderen.",
 			"scheduledCancel": "Klik hier om de verwijdering van je account te annuleren.",
 			"scheduledCancelText": "Om het verwijderen van je account te annuleren, voer hieronder je wachtwoord in:",
 			"scheduledCancelButton": "Om het verwijderen van je account te annuleren, druk op onderstaande knop:",
@@ -223,12 +223,12 @@
 			"scheduledCancelSuccess": "We zullen je account niet verwijderen."
 		},
 		"export": {
-			"title": "Je Vikunja gegevens exporteren",
-			"description": "Je kunt een kopie van al je Vikunja-gegevens opvragen. Dit omvat projecten, taken en alles wat eraan verbonden is. Je kunt deze gegevens importeren in elke Vikunja-instantie via de migratiefunctie.",
+			"title": "Je ProjectOS gegevens exporteren",
+			"description": "Je kunt een kopie van al je ProjectOS-gegevens opvragen. Dit omvat projecten, taken en alles wat eraan verbonden is. Je kunt deze gegevens importeren in elke ProjectOS-instantie via de migratiefunctie.",
 			"descriptionPasswordRequired": "Voer je wachtwoord in om door te gaan:",
-			"request": "Een kopie van mijn Vikunja gegevens opvragen",
-			"success": "Je hebt met succes je Vikunja Data aangevraagd! We sturen je een e-mail zodra het klaar is om te downloaden.",
-			"downloadTitle": "Download je geëxporteerde Vikunja gegevens",
+			"request": "Een kopie van mijn ProjectOS gegevens opvragen",
+			"success": "Je hebt met succes je ProjectOS Data aangevraagd! We sturen je een e-mail zodra het klaar is om te downloaden.",
+			"downloadTitle": "Download je geëxporteerde ProjectOS gegevens",
 			"ready": "Je export is klaar om te downloaden. Je kunt deze downloaden tot {0}.",
 			"requestNew": "Een andere export aanvragen"
 		}
@@ -311,7 +311,7 @@
 			"links": {
 				"title": "Deelbare koppelingen",
 				"what": "Wat is een deelbare koppeling?",
-				"explanation": "Met deelbare koppelingen kun je gemakkelijk een project delen met andere gebruikers die geen account hebben op Vikunja.",
+				"explanation": "Met deelbare koppelingen kun je gemakkelijk een project delen met andere gebruikers die geen account hebben op ProjectOS.",
 				"create": "Nieuwe deelbare koppeling maken",
 				"name": "Naam (optioneel)",
 				"namePlaceholder": "bv. Lorem Ipsum",
@@ -549,19 +549,19 @@
 	},
 	"migrate": {
 		"title": "Importeer vanuit een andere dienst",
-		"titleService": "Importeer je gegevens van {name} naar Vikunja",
-		"import": "Importeer je data in Vikunja",
+		"titleService": "Importeer je gegevens van {name} naar ProjectOS",
+		"import": "Importeer je data in ProjectOS",
 		"description": "Klik op het logo van een van de externe diensten hieronder om te beginnen.",
-		"descriptionDo": "Vikunja zal alle lijsten, taken, notities, herinneringen en bestanden importeren waar je toegang toe hebt.",
-		"authorize": "Om Vikunja toegang te geven tot je {name} -account, klik op de knop hieronder.",
+		"descriptionDo": "ProjectOS zal alle lijsten, taken, notities, herinneringen en bestanden importeren waar je toegang toe hebt.",
+		"authorize": "Om ProjectOS toegang te geven tot je {name} -account, klik op de knop hieronder.",
 		"getStarted": "Aan de slag",
 		"inProgress": "Bezig met importeren…",
 		"alreadyMigrated1": "Het lijkt erop dat je je spullen van {name} al hebt geïmporteerd op {date}.",
 		"alreadyMigrated2": "Opnieuw importeren is mogelijk, maar kan duplicaten maken. Weet je het zeker?",
 		"confirm": "Ik weet het zeker, begin nu met migreren!",
-		"importUpload": "Om gegevens van {name} te importeren in Vikunja, klik je op de knop hieronder om een bestand te kiezen.",
+		"importUpload": "Om gegevens van {name} te importeren in ProjectOS, klik je op de knop hieronder om een bestand te kiezen.",
 		"upload": "Bestand uploaden",
-		"migrationStartedWillReciveEmail": "Vikunja gaat nu je lijsten/projecten, taken, notities, herinneringen en bestanden van {service} importeren. Omdat dit een tijdje zal duren, sturen we je een e-mail zodra het klaar is. Je kunt dit venster nu sluiten.",
+		"migrationStartedWillReciveEmail": "ProjectOS gaat nu je lijsten/projecten, taken, notities, herinneringen en bestanden van {service} importeren. Omdat dit een tijdje zal duren, sturen we je een e-mail zodra het klaar is. Je kunt dit venster nu sluiten.",
 		"migrationInProgress": "Er is momenteel een migratie aan de gang. Wacht tot dit voltooid is."
 	},
 	"label": {
@@ -621,7 +621,7 @@
 		"searchPlaceholder": "Typ om te zoeken…",
 		"previous": "Vorige",
 		"next": "Volgende",
-		"poweredBy": "Mogelijk gemaakt door Vikunja",
+		"poweredBy": "Mogelijk gemaakt door ProjectOS",
 		"info": "Informatie",
 		"create": "Creëren",
 		"doit": "Doe het!",
@@ -761,7 +761,7 @@
 			"canuse": "Je kunt datumberekeningen gebruiken om te filteren op relatieve datums.",
 			"learnhow": "Bekijk hoe het werkt",
 			"title": "Datumberekeningen",
-			"intro": "Geef relatieve datums op die door Vikunja direct worden omgezet wanneer het filter wordt toegepast.",
+			"intro": "Geef relatieve datums op die door ProjectOS direct worden omgezet wanneer het filter wordt toegepast.",
 			"expression": "Elke uitdrukking voor een datumberekening begint met een ankerdatum, dit kan zijn {0} of een datumstring die eindigt met {1}. Deze ankerdatum kan optioneel gevolgd worden door één of meer rekenkundige uitdrukkingen.",
 			"similar": "Deze uitdrukkingen zijn vergelijkbaar met die van {0} en {1}.",
 			"add1Day": "Eén dag optellen",
@@ -1022,7 +1022,7 @@
 			"intro": "Bij het aanmaken van een taak kun je speciale trefwoorden gebruiken om direct kenmerken toe te voegen aan de nieuwe taak. Hiermee kun je veelgebruikte kenmerken veel sneller toevoegen aan taken.",
 			"multiple": "Je kan dit meerdere keren gebruiken.",
 			"label1": "Om een label toe te voegen, prefix de naam van het label met {prefix}.",
-			"label2": "Vikunja zal eerst controleren of het label al bestaat en maakt het aan als dat niet zo is.",
+			"label2": "ProjectOS zal eerst controleren of het label al bestaat en maakt het aan als dat niet zo is.",
 			"label3": "Om spaties te gebruiken gebruik je \" of ' rond de naam van het label.",
 			"label4": "Bijvoorbeeld: {prefix}\"Label met spaties\".",
 			"priority1": "Om prioriteit aan een taak te geven voeg je een nummer tussen 1-5 toe, beginnend met een {prefix}.",
@@ -1173,12 +1173,12 @@
 		"views": "Weergaven"
 	},
 	"apiConfig": {
-		"url": "Vikunja URL",
+		"url": "ProjectOS URL",
 		"urlPlaceholder": "bv. https://localhost:3456",
 		"change": "wijzigen",
-		"use": "Gebruikt Vikunja-installatie op {0}",
-		"error": "Kon Vikunja-installatie niet vinden of gebruiken op \"{domain}\". Controleer of de URL het juiste formaat heeft en het rechtstreeks te benaderen is. Probeer het opnieuw.",
-		"success": "Gebruikt Vikunja installatie op \"{domain}\".",
+		"use": "Gebruikt ProjectOS-installatie op {0}",
+		"error": "Kon ProjectOS-installatie niet vinden of gebruiken op \"{domain}\". Controleer of de URL het juiste formaat heeft en het rechtstreeks te benaderen is. Probeer het opnieuw.",
+		"success": "Gebruikt ProjectOS installatie op \"{domain}\".",
 		"urlRequired": "Een URL is vereist."
 	},
 	"loadingError": {

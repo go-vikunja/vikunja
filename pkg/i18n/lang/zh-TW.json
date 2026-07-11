@@ -2,9 +2,9 @@
 	"notifications": {
 		"greeting": "嗨 %[1]s",
 		"email_confirm": {
-			"subject": "%[1]s，請確認您在 Vikunja 的電子郵件地址",
-			"subject_new": "%[1]s + Vikunja = <3",
-			"welcome": "歡迎來到 Vikunja！",
+			"subject": "%[1]s，請確認您在 ProjectOS 的電子郵件地址",
+			"subject_new": "%[1]s + ProjectOS = <3",
+			"welcome": "歡迎來到 ProjectOS！",
 			"confirm": "請點選以下連結以確認您的信箱："
 		},
 		"password": {
@@ -14,19 +14,19 @@
 				"warning": "若您未曾進行此操作，那可能表示有人盜用了您的帳號。請聯絡您的伺服器管理員。"
 			},
 			"reset": {
-				"subject": "重置您的Vikunja 密碼",
+				"subject": "重置您的ProjectOS 密碼",
 				"instructions": "請點選以下連結以重設您的密碼：",
 				"valid_duration": "連結將在 24 小時後失效。"
 			}
 		},
 		"totp": {
 			"invalid": {
-				"subject": "您的 Vikunja 帳號偵測到一次登入失敗",
+				"subject": "您的 ProjectOS 帳號偵測到一次登入失敗",
 				"message": "有人嘗試使用正確的使用者名稱和密碼登入您的帳號，但輸入了錯誤的 TOTP 驗證碼。",
 				"warning": "**若您未曾進行此操作，即表示您的密碼可能已被他人知悉。請您立即重設密碼！**"
 			},
 			"account_locked": {
-				"subject": "我們已停用您的 Vikunja 帳號",
+				"subject": "我們已停用您的 ProjectOS 帳號",
 				"message": "有人嘗試使用您的帳號密碼登入，但未能提供有效的 TOTP 驗證碼。",
 				"disabled": "由於連續 10 次登入失敗，我們已停用您的帳號並重設密碼。若要設定新密碼，請依照我們剛剛寄送給您的重設郵件中的指示操作。",
 				"reset_instructions": "如果您沒有收到重設指示的電子郵件，您隨時可以在  [%[1]s](%[2]s) 重新申請一封。"
@@ -34,8 +34,8 @@
 		},
 		"login": {
 			"failed": {
-				"subject": "您的 Vikunja 帳號偵測到一次密碼錯誤的登入嘗試",
-				"message": "您的 Vikunja 帳號偵測到連續 3 次密碼錯誤的登入嘗試。",
+				"subject": "您的 ProjectOS 帳號偵測到一次密碼錯誤的登入嘗試",
+				"message": "您的 ProjectOS 帳號偵測到連續 3 次密碼錯誤的登入嘗試。",
 				"warning": "若您未曾進行此操作，則可能代表有人試圖盜用您的帳號。",
 				"enhance_security": "為了提升帳號安全性，請在設定中設定更強的密碼或啟用 TOTP 驗證："
 			}
@@ -43,7 +43,7 @@
 		"account": {
 			"deletion": {
 				"confirm": {
-					"subject": "請確認刪除您的 Vikunja 帳號",
+					"subject": "請確認刪除您的 ProjectOS 帳號",
 					"request": "您已請求刪除您的帳號。若要確認，請點擊以下連結：",
 					"valid_duration": "此連結有效期限為 24 小時。",
 					"schedule_info": "一旦您確認刪除，我們將安排在三天後刪除您的帳號，並在此期間再寄送一次確認郵件給您。",
@@ -51,16 +51,16 @@
 					"changed_mind": "如果您沒有申請刪除帳號，或是改變主意，只要忽略這封信即可。"
 				},
 				"scheduled": {
-					"subject_days": "您的 Vikunja 帳號將於 %[1]s 天後被刪除",
-					"subject_tomorrow": "您的 Vikunja 帳號將於明天被刪除",
-					"request_reminder": "您最近申請了刪除您的 Vikunja 帳號。",
+					"subject_days": "您的 ProjectOS 帳號將於 %[1]s 天後被刪除",
+					"subject_tomorrow": "您的 ProjectOS 帳號將於明天被刪除",
+					"request_reminder": "您最近申請了刪除您的 ProjectOS 帳號。",
 					"deletion_time_days": "我們將在 %[1]s 天後刪除您的帳號。",
 					"deletion_time_tomorrow": "我們將在明天刪除您的帳號。",
 					"changed_mind": "如果您改變主意，只要點擊下面的連結取消刪除，並依照指示操作即可："
 				},
 				"completed": {
-					"subject": "您的 Vikunja 帳號已被刪除",
-					"confirmation": "依照您的申請，我們已刪除您的 Vikunja 帳號。",
+					"subject": "您的 ProjectOS 帳號已被刪除",
+					"confirmation": "依照您的申請，我們已刪除您的 ProjectOS 帳號。",
 					"permanent": "此刪除為永久性。如果您沒有備份，且現在需要取回資料，請聯絡您的管理員。"
 				}
 			}
@@ -103,25 +103,25 @@
 		},
 		"team": {
 			"member_added": {
-				"subject": "%[1]s 已將您加入 Vikunja 的「%[2]s」團隊",
-				"message": "%[1]s 剛剛將您加入 Vikunja 的 %[2]s 團隊。"
+				"subject": "%[1]s 已將您加入 ProjectOS 的「%[2]s」團隊",
+				"message": "%[1]s 剛剛將您加入 ProjectOS 的 %[2]s 團隊。"
 			}
 		},
 		"data_export": {
 			"ready": {
-				"subject": "您的 Vikunja 資料匯出完成",
-				"message": "您的 Vikunja 資料匯出已準備好下載。請點擊下方按鈕進行下載：",
+				"subject": "您的 ProjectOS 資料匯出完成",
+				"message": "您的 ProjectOS 資料匯出已準備好下載。請點擊下方按鈕進行下載：",
 				"availability": "此下載連結將於接下來的 7 天內有效。"
 			}
 		},
 		"migration": {
 			"done": {
-				"subject": "從 %[1]s 到 Vikunja 的資料遷移已完成",
-				"imported": "Vikunja 已匯入您在 %[1]s 的所有清單/專案、任務、筆記、提醒與檔案。",
+				"subject": "從 %[1]s 到 ProjectOS 的資料遷移已完成",
+				"imported": "ProjectOS 已匯入您在 %[1]s 的所有清單/專案、任務、筆記、提醒與檔案。",
 				"have_fun": "祝您玩得開心，享受您的新（舊）專案！"
 			},
 			"failed": {
-				"subject": "從 %[1]s 到 Vikunja 的資料遷移失敗",
+				"subject": "從 %[1]s 到 ProjectOS 的資料遷移失敗",
 				"message": "從 %[1]s 的搬移沒有按計畫順利完成。",
 				"retry": "不用擔心！請依照之前的指示重新操作一次。有時這些問題是 %[1]s 系統故障造成的，再試一次通常就能成功。",
 				"error": "在過程中遇到了一個錯誤：%[2]s。",
@@ -133,7 +133,7 @@
 			"have_nice_day": "祝您有美好的一天！",
 			"copy_url": "如果上方按鈕無法使用，請將以下網址複製到瀏覽器的網址列中：",
 			"actions": {
-				"open_vikunja": "開啟 Vikunja",
+				"open_vikunja": "開啟 ProjectOS",
 				"open_project": "開啟專案",
 				"open_team": "開啟團隊",
 				"download": "下載",

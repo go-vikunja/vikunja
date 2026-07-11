@@ -170,8 +170,8 @@ function getBuildConfig(env: Record<string, string>) {
 				injectRegister: false,
 				useCredentials: true,
 				manifest: {
-					name: 'Vikunja',
-					short_name: 'Vikunja',
+					name: 'ProjectOS',
+					short_name: 'ProjectOS',
 					theme_color: '#1973ff',
 					icons: [
 						{

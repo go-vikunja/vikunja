@@ -39,8 +39,8 @@
 		"addToHomeScreen": "Füge diese App deinem Startbildschirm hinzu, um schneller darauf zuzugreifen und das Erlebnis zu verbessern.",
 		"goToOverview": "Zur Übersicht",
 		"project": {
-			"importText": "Importiere deine Projekte und Aufgaben aus anderen Diensten in Vikunja:",
-			"import": "Importiere deine Daten in Vikunja"
+			"importText": "Importiere deine Projekte und Aufgaben aus anderen Diensten in ProjectOS:",
+			"import": "Importiere deine Daten in ProjectOS"
 		}
 	},
 	"demo": {
@@ -49,7 +49,7 @@
 		"accountWillBeDeleted": "Dein Account wird gelöscht, einschließlich aller Projekte, Aufgaben und Anhänge, die du möglicherweise erstellst."
 	},
 	"ready": {
-		"loading": "Vikunja wird geladen…",
+		"loading": "ProjectOS wird geladen…",
 		"errorOccured": "Es ist ein Fehler aufgetreten:",
 		"checkApiUrl": "Bitte überprüfe, ob die API-Url stimmt.",
 		"noApiUrlConfigured": "Es wurde keine API-Url konfiguriert. Bitte stelle unten eine ein:"
@@ -85,7 +85,7 @@
 			"oauthRedirectedToApp": "Du wurdest zur App weitergeleitet. Du kannst diesen Tab jetzt schließen.",
 			"desktopTryDemo": "Demo ausprobieren",
 			"desktopCustomServer": "Eigene Server-URL",
-			"desktopCustomServerDescription": "Gib die URL deines Vikunja Servers ein, um loszulegen.",
+			"desktopCustomServerDescription": "Gib die URL deines ProjectOS Servers ein, um loszulegen.",
 			"desktopWaitingForAuth": "Warte auf Authentifizierung…",
 			"desktopOAuthError": "Authentifizierung fehlgeschlagen: {error}",
 			"logout": "Abmelden",
@@ -187,8 +187,8 @@
 			},
 			"caldav": {
 				"title": "CalDAV",
-				"howTo": "Du kannst Vikunja mit CalDAV-Clients verbinden, um alle Aufgaben mit verschiedenen Clients anzuzeigen und zu verwalten. Gebe dazu diese URL in deinen Client ein:",
-				"more": "Weitere Informationen über CalDAV in Vikunja",
+				"howTo": "Du kannst ProjectOS mit CalDAV-Clients verbinden, um alle Aufgaben mit verschiedenen Clients anzuzeigen und zu verwalten. Gebe dazu diese URL in deinen Client ein:",
+				"more": "Weitere Informationen über CalDAV in ProjectOS",
 				"tokens": "CalDAV-Token",
 				"tokensHowTo": "Für die CalDAV-Authentifizierung kannst du entweder dein normales Passwort oder einen CalDAV-Token verwenden.",
 				"createToken": "CalDAV-Token erstellen",
@@ -214,7 +214,7 @@
 				"title": "Quick Add Magic Modus",
 				"disabled": "Deaktiviert",
 				"todoist": "Todoist",
-				"vikunja": "Vikunja"
+				"vikunja": "ProjectOS"
 			},
 			"appearance": {
 				"title": "Farbschema",
@@ -234,7 +234,7 @@
 			},
 			"apiTokens": {
 				"title": "API-Tokens",
-				"general": "Mit API-Token kannst du die API von Vikunja ohne Login-Daten verwenden.",
+				"general": "Mit API-Token kannst du die API von ProjectOS ohne Login-Daten verwenden.",
 				"apiDocs": "Schaue dir die API-Dokumentation an",
 				"createAToken": "Token erstellen",
 				"createToken": "Token erstellen",
@@ -283,7 +283,7 @@
 			}
 		},
 		"deletion": {
-			"title": "Lösche deinen Vikunja-Account",
+			"title": "Lösche deinen ProjectOS-Account",
 			"text1": "Das Löschen deines Accounts ist dauerhaft und unwiderruflich. Alle Projekte, Aufgaben und zugehörige Daten werden gelöscht.",
 			"text2": "Zum Fortfahren gib bitte dein Passwort ein. Du erhältst eine E-Mail mit weiteren Anweisungen.",
 			"text3": "Klicks zum Fortfahren auf den Button unten. Du erhältst eine E-Mail mit weiteren Anweisungen.",
@@ -291,7 +291,7 @@
 			"requestSuccess": "Die Anfrage war erfolgreich. Du erhältst eine E-Mail mit weiteren Anweisungen.",
 			"passwordRequired": "Bitte gib dein Passwort ein.",
 			"confirmSuccess": "Du hast erfolgreich die Löschung deines Accounts bestätigt. Wir werden deinen Account innerhalb von drei Tagen löschen.",
-			"scheduled": "Wir werden deinen Vikunja-Account am {date} ({dateSince}) löschen.",
+			"scheduled": "Wir werden deinen ProjectOS-Account am {date} ({dateSince}) löschen.",
 			"scheduledCancel": "Um die Löschung deines Accounts abzubrechen, klicke hier.",
 			"scheduledCancelText": "Um die Löschung deines Accounts abzubrechen, gib bitte dein Passwort unten ein:",
 			"scheduledCancelButton": "Um die Löschung deines Accounts abzubrechen, klicke unten auf den Button:",
@@ -299,12 +299,12 @@
 			"scheduledCancelSuccess": "Wir werden deinen Account nicht löschen."
 		},
 		"export": {
-			"title": "Exportiere deine Vikunja-Daten",
-			"description": "Du kannst eine Kopie deiner Daten bei Vikunja anfordern. Dazu gehören Projekte, Aufgaben und alles, was damit zusammenhängt. Du kannst diese Daten dann in jeder Vikunja-Instanz über die Migrationsfunktion importieren.",
+			"title": "Exportiere deine ProjectOS-Daten",
+			"description": "Du kannst eine Kopie deiner Daten bei ProjectOS anfordern. Dazu gehören Projekte, Aufgaben und alles, was damit zusammenhängt. Du kannst diese Daten dann in jeder ProjectOS-Instanz über die Migrationsfunktion importieren.",
 			"descriptionPasswordRequired": "Bitte gib dein Passwort ein, um fortzufahren:",
-			"request": "Eine Kopie meiner Vikunja Daten anfordern",
-			"success": "Du hast deine Daten bei Vikunja erfolgreich angefordert! Wir schicken dir eine E-Mail, sobald sie zum Download bereitstehen.",
-			"downloadTitle": "Lade deine exportierten Vikunja-Daten herunter",
+			"request": "Eine Kopie meiner ProjectOS Daten anfordern",
+			"success": "Du hast deine Daten bei ProjectOS erfolgreich angefordert! Wir schicken dir eine E-Mail, sobald sie zum Download bereitstehen.",
+			"downloadTitle": "Lade deine exportierten ProjectOS-Daten herunter",
 			"ready": "Dein Export steht zum Download bereit. Du kannst ihn bis {0} herunterladen.",
 			"requestNew": "Einen weiteren Export anfordern"
 		}
@@ -387,7 +387,7 @@
 			"links": {
 				"title": "Linkfreigaben",
 				"what": "Was ist eine Linkfreigabe?",
-				"explanation": "Mit Linkfreigaben kannst du Projekte mit Benutzer:innen ohne Vikunja-Account teilen.",
+				"explanation": "Mit Linkfreigaben kannst du Projekte mit Benutzer:innen ohne ProjectOS-Account teilen.",
 				"create": "Erstelle eine Linkfreigabe",
 				"name": "Name (optional)",
 				"namePlaceholder": "z.B. Lorem Ipsum",
@@ -628,19 +628,19 @@
 	},
 	"migrate": {
 		"title": "Aus anderen Diensten importieren",
-		"titleService": "Importiere deine Daten von {name} in Vikunja",
-		"import": "Importiere deine Daten in Vikunja",
+		"titleService": "Importiere deine Daten von {name} in ProjectOS",
+		"import": "Importiere deine Daten in ProjectOS",
 		"description": "Klicke auf das Logo eines der unten aufgeführten Drittanbieterdienste, um loszulegen.",
-		"descriptionDo": "Vikunja importiert alle Listen, Aufgaben, Notizen, Erinnerungen und Dateien, auf die du Zugriff hast.",
-		"authorize": "Ermögliche Vikunja den Zugriff auf deinen Account bei {name}, indem du auf die Schaltfläche unten klickst.",
+		"descriptionDo": "ProjectOS importiert alle Listen, Aufgaben, Notizen, Erinnerungen und Dateien, auf die du Zugriff hast.",
+		"authorize": "Ermögliche ProjectOS den Zugriff auf deinen Account bei {name}, indem du auf die Schaltfläche unten klickst.",
 		"getStarted": "Loslegen",
 		"inProgress": "Importiere…",
 		"alreadyMigrated1": "Es scheint, dass du schon von {name} am {date} importiert hast.",
 		"alreadyMigrated2": "Ein erneutes Importieren ist möglich, kann aber Duplikate erzeugen. Bist du sicher?",
 		"confirm": "Ich bin sicher, bitte starte mit der Migration!",
-		"importUpload": "Um Daten von {name} in Vikunja zu importieren, klicke auf die Schaltfläche unten, um eine Datei auszuwählen.",
+		"importUpload": "Um Daten von {name} in ProjectOS zu importieren, klicke auf die Schaltfläche unten, um eine Datei auszuwählen.",
 		"upload": "Datei hochladen",
-		"migrationStartedWillReciveEmail": "Vikunja wird nun deine Listen/Projekte, Aufgaben, Notizen, Erinnerungen und Dateien von {service} importieren. Da dies eine Weile dauern wird, senden wir dir eine E-Mail, sobald der Import abgeschlossen ist. Du kannst dieses Fenster jetzt schließen.",
+		"migrationStartedWillReciveEmail": "ProjectOS wird nun deine Listen/Projekte, Aufgaben, Notizen, Erinnerungen und Dateien von {service} importieren. Da dies eine Weile dauern wird, senden wir dir eine E-Mail, sobald der Import abgeschlossen ist. Du kannst dieses Fenster jetzt schließen.",
 		"migrationInProgress": "Ein Import wird gerade durchgeführt. Bitte warte, bis dieser abgeschlossen ist."
 	},
 	"label": {
@@ -700,7 +700,7 @@
 		"searchPlaceholder": "Beginne zu schreiben, um zu suchen…",
 		"previous": "Vorherige",
 		"next": "Weiter",
-		"poweredBy": "Powered by Vikunja",
+		"poweredBy": "Powered by ProjectOS",
 		"info": "Info",
 		"create": "Erstellen",
 		"doit": "Tu es!",
@@ -840,7 +840,7 @@
 			"canuse": "Du kannst Datumsberechnung verwenden, um nach relativen Daten zu filtern.",
 			"learnhow": "Sieh dir an, wie es funktioniert",
 			"title": "Datumsberechnung",
-			"intro": "Du kannst relative Daten angeben, die bei der Anwendung des Filters von Vikunja aufgelöst werden.",
+			"intro": "Du kannst relative Daten angeben, die bei der Anwendung des Filters von ProjectOS aufgelöst werden.",
 			"expression": "Jeder Ausdruck der Datumsberechnung beginnt mit einem Datumswert, welcher entweder {0} sein kann oder mit {1} endet. Auf diesen Datumswert kann optional ein oder mehrere mathematische Ausdrücke folgen.",
 			"similar": "Diese Ausdrücke ähneln denen von {0} und {1}.",
 			"add1Day": "Einen Tag hinzufügen",
@@ -1103,12 +1103,12 @@
 		},
 		"quickAddMagic": {
 			"hint": "Verwende magische Präfixe, um Fälligkeitsdaten, Zuweisungen und andere Aufgabeneigenschaften zu definieren.",
-			"quickEntryHint": "Verwende magische Präfixe für Datum, Labels & mehr. Öffne die Hauptanwendung von Vikunja und überprüfe den Tooltip bei der Aufgabeneingabe für weitere Details.",
+			"quickEntryHint": "Verwende magische Präfixe für Datum, Labels & mehr. Öffne die Hauptanwendung von ProjectOS und überprüfe den Tooltip bei der Aufgabeneingabe für weitere Details.",
 			"title": "Quick Add Magic",
 			"intro": "Beim Erstellen einer Aufgabe kannst du spezielle Schlüsselwörter verwenden, um Attribute direkt zu der neu erstellten Aufgabe hinzuzufügen. Dadurch können häufig verwendete Attribute schneller zu Aufgaben hinzugefügt werden.",
 			"multiple": "Du kannst das mehrmals benutzen.",
 			"label1": "Um ein Label hinzuzufügen, gibt einfach den Name mit einem vorangestellten {prefix} ein.",
-			"label2": "Vikunja prüft zuerst, ob das Label bereits vorhanden ist und erstellt es, falls nicht.",
+			"label2": "ProjectOS prüft zuerst, ob das Label bereits vorhanden ist und erstellt es, falls nicht.",
 			"label3": "Um Leerzeichen zu verwenden, füge einfach ein \" oder ' um den Namen des Labels hinzu.",
 			"label4": "Zum Beispiel: {prefix}\"Label mit Leerzeichen\".",
 			"priority1": "Um die Priorität einer Aufgabe zu setzen, gibt eine Zahl zwischen 1 und 5 mit einem vorangestellten {prefix} ein.",
@@ -1259,12 +1259,12 @@
 		"views": "Ansichten"
 	},
 	"apiConfig": {
-		"url": "Vikunja-URL",
+		"url": "ProjectOS-URL",
 		"urlPlaceholder": "z.B. https://localhost:3456",
 		"change": "ändern",
-		"use": "Verwende die Vikunja-Installation unter „{0}“",
-		"error": "Vikunja Installation unter \"{domain}\" konnte nicht gefunden oder verwendet werden. Bitte prüfe, ob die URL das richtige Format hat und direkt darauf zugreifen kannst und versuche es erneut.",
-		"success": "Verwende die Vikunja-Installation unter „{domain}“.",
+		"use": "Verwende die ProjectOS-Installation unter „{0}“",
+		"error": "ProjectOS Installation unter \"{domain}\" konnte nicht gefunden oder verwendet werden. Bitte prüfe, ob die URL das richtige Format hat und direkt darauf zugreifen kannst und versuche es erneut.",
+		"success": "Verwende die ProjectOS-Installation unter „{domain}“.",
 		"urlRequired": "Eine Url ist erforderlich."
 	},
 	"loadingError": {
@@ -1280,7 +1280,7 @@
 		"markAllReadSuccess": "Alle Benachrichtigungen erfolgreich als gelesen markiert."
 	},
 	"quickActions": {
-		"notLoggedIn": "Bitte melde dich zuerst im Hauptfenster von Vikunja an.",
+		"notLoggedIn": "Bitte melde dich zuerst im Hauptfenster von ProjectOS an.",
 		"commands": "Befehle",
 		"placeholder": "Gib einen Befehl oder eine Suche ein …",
 		"hint": "Du kannst {project} verwenden, um die Suche auf ein Projekt zu beschränken. Kombiniere {project} oder {label} (Labels) mit einer Suchabfrage, um eine Aufgabe mit diesen Labels oder auf diesem Projekt zu suchen. Verwende {assignee}, um nur nach Teams zu suchen.",

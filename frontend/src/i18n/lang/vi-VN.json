@@ -12,8 +12,8 @@
 		"addToHomeScreen": "Thêm ứng dụng vào màn hình chính để truy cập nhanh hơn với trải nghiệm tốt hơn.",
 		"goToOverview": "Đến phần tổng quan",
 		"project": {
-			"importText": "Nhập các dự án và các tác vụ từ các ứng dụng khác vào Vikunja:",
-			"import": "Nhập dữ liệu của bạn vào Vikunja"
+			"importText": "Nhập các dự án và các tác vụ từ các ứng dụng khác vào ProjectOS:",
+			"import": "Nhập dữ liệu của bạn vào ProjectOS"
 		}
 	},
 	"demo": {
@@ -22,7 +22,7 @@
 		"accountWillBeDeleted": "Tài khoản của bạn sẽ bị xóa, bao gồm tất cả các dự án, tác vụ, và tệp đính kèm mà bạn đã tạo."
 	},
 	"ready": {
-		"loading": "Vikunja đang tải…",
+		"loading": "ProjectOS đang tải…",
 		"errorOccured": "Đã có lỗi xảy ra:",
 		"checkApiUrl": "Vui lòng kiểm tra lại url api.",
 		"noApiUrlConfigured": "Không có url API nào được cấu hình. Hãy đặt một cái:"
@@ -116,7 +116,7 @@
 			},
 			"caldav": {
 				"title": "CalDAV",
-				"more": "Tìm hiểu thêm về CalDAV trên Vikunja",
+				"more": "Tìm hiểu thêm về CalDAV trên ProjectOS",
 				"tokens": "CalDAV Tokens"
 			},
 			"avatar": {
@@ -134,7 +134,7 @@
 				"title": "Chế độ Quick Add Magic",
 				"disabled": "Vô hiệu hóa",
 				"todoist": "Todoist",
-				"vikunja": "Vikunja"
+				"vikunja": "ProjectOS"
 			},
 			"appearance": {
 				"title": "Phối màu",
@@ -146,7 +146,7 @@
 				}
 			},
 			"apiTokens": {
-				"general": "API tokens cho phép bạn sử dụng API của Vikunja mà không cần user credentials.",
+				"general": "API tokens cho phép bạn sử dụng API của ProjectOS mà không cần user credentials.",
 				"apiDocs": "Xem Api docs",
 				"createAToken": "Tạo mã token",
 				"createToken": "Tạo token",
@@ -190,12 +190,12 @@
 			"scheduledCancelSuccess": "Chúng tôi sẽ không xóa tài khoản của bạn nữa."
 		},
 		"export": {
-			"title": "Xuất dữ liệu Vikunja của bạn",
-			"description": "Bạn có thể yêu cầu một bản sao tất cả dữ liệu Vikunja của mình. Điều này bao gồm Dự Án, Tác vụ và mọi thứ liên quan. Bạn có thể nhập dữ liệu này vào bất kỳ phiên bản Vikunja nào thông qua chức năng chuyển.",
+			"title": "Xuất dữ liệu ProjectOS của bạn",
+			"description": "Bạn có thể yêu cầu một bản sao tất cả dữ liệu ProjectOS của mình. Điều này bao gồm Dự Án, Tác vụ và mọi thứ liên quan. Bạn có thể nhập dữ liệu này vào bất kỳ phiên bản ProjectOS nào thông qua chức năng chuyển.",
 			"descriptionPasswordRequired": "Vui lòng nhập mật khẩu của bạn để tiếp tục:",
-			"request": "Yêu cầu một bản sao Dữ liệu Vikunja của tôi",
-			"success": "Bạn đã yêu cầu dữ liệu Vikunja của mình thành công! Chúng tôi sẽ gửi cho bạn một email sau khi nó sẵn sàng để tải xuống.",
-			"downloadTitle": "Tải xuống dữ liệu Vikunja đã xuất của bạn"
+			"request": "Yêu cầu một bản sao Dữ liệu ProjectOS của tôi",
+			"success": "Bạn đã yêu cầu dữ liệu ProjectOS của mình thành công! Chúng tôi sẽ gửi cho bạn một email sau khi nó sẵn sàng để tải xuống.",
+			"downloadTitle": "Tải xuống dữ liệu ProjectOS đã xuất của bạn"
 		}
 	},
 	"project": {
@@ -482,17 +482,17 @@
 	},
 	"migrate": {
 		"title": "Nhập từ các thiết bị khác",
-		"titleService": "Nhập dữ liệu của bạn từ {name} vào Vikunja",
-		"import": "Nhập dữ liệu của bạn vào Vikunja",
+		"titleService": "Nhập dữ liệu của bạn từ {name} vào ProjectOS",
+		"import": "Nhập dữ liệu của bạn vào ProjectOS",
 		"description": "Nhấp vào Logo của một trong các dịch vụ bên dưới để bắt đầu.",
-		"descriptionDo": "Vikunja sẽ nhập tất cả danh sách, công việc, ghi chú, lời nhắc và tệp mà bạn có quyền truy cập.",
-		"authorize": "Để cho phép Vikunja truy cập vào Tài khoản {name} của bạn, hãy nhấp vào nút bên dưới.",
+		"descriptionDo": "ProjectOS sẽ nhập tất cả danh sách, công việc, ghi chú, lời nhắc và tệp mà bạn có quyền truy cập.",
+		"authorize": "Để cho phép ProjectOS truy cập vào Tài khoản {name} của bạn, hãy nhấp vào nút bên dưới.",
 		"getStarted": "Bắt đầu",
 		"inProgress": "Đang nhập vào…",
 		"alreadyMigrated1": "Có vẻ như bạn đã nhập nội dung của mình từ {name} vào {date}.",
 		"alreadyMigrated2": "Nhập lại được luôn, nhưng có thể tạo ra các trùng lặp đấy. Bạn chắc chưa?",
 		"confirm": "Tôi chắc như đinh, hãy bắt đầu di chuyển thôi!",
-		"importUpload": "Để nhập dữ liệu từ {name} vào Vikunja, hãy nhấp vào nút bên dưới để chọn tệp.",
+		"importUpload": "Để nhập dữ liệu từ {name} vào ProjectOS, hãy nhấp vào nút bên dưới để chọn tệp.",
 		"upload": "Tải tệp lên",
 		"migrationStartedWillReciveEmail": "Vikuja hiện giờ sẽ nhập các danh sách/ dự án, tác vụ, ghi chú, nhắc nhở và thư mục của bạn từ {service}. Vì điều này có thể mất một khoảng thời gian, chúng tôi sẽ gửi một email tới bạn khi quá trình hoàn thành. Bạn hiện tại có thể đóng cửa sổ này.",
 		"migrationInProgress": "Quá trình nhập đang diễn ra. Vui lòng đợi đến khi hoàn thành."
@@ -550,7 +550,7 @@
 		"searchPlaceholder": "Gõ để tìm kiếm…",
 		"previous": "Trước đó",
 		"next": "Tiếp theo",
-		"poweredBy": "Được cung cấp bởi Vikunja",
+		"poweredBy": "Được cung cấp bởi ProjectOS",
 		"info": "Thông tin",
 		"create": "Tạo",
 		"doit": "Thực hiện!",
@@ -937,7 +937,7 @@
 			"intro": "Khi tạo một tác vụ, bạn có thể sử dụng các từ khóa đặc biệt để thêm trực tiếp các thuộc tính cho tác vụ mới tạo. Điều này cho phép thêm các thuộc tính thường được sử dụng vào các tác vụ nhanh hơn nhiều.",
 			"multiple": "Bạn có thể sử dụng tác vụ này nhiều lần.",
 			"label1": "Để thêm một nhãn, chỉ cần đặt tiền tố tên nhãn bằng {prefix}.",
-			"label2": "Đầu tiên Vikunja sẽ kiểm tra xem nhãn đã tồn tại chưa và tạo nó nếu chưa.",
+			"label2": "Đầu tiên ProjectOS sẽ kiểm tra xem nhãn đã tồn tại chưa và tạo nó nếu chưa.",
 			"label3": "Để sử dụng dấu cách, chỉ cần thêm dấu \" hoặc ' xung quanh tên nhãn.",
 			"label4": "Ví dụ: {prefix} \"Nhãn có dấu cách\".",
 			"priority1": "Để đặt mức độ ưu tiên của công việc, hãy thêm số từ 1-5, có tiền tố là {prefix}.",
@@ -1067,12 +1067,12 @@
 		"views": "Chế độ xem"
 	},
 	"apiConfig": {
-		"url": "URL Vikunja",
+		"url": "URL ProjectOS",
 		"urlPlaceholder": "ví dụ: https://localhost:3456",
 		"change": "thay đổi",
-		"use": "Sử dụng cài đặt Vikunja tại {0}",
-		"error": "Không thể tìm thấy hay sử dụng cài đặt Vikunja tại \"{domain}\". Vui lòng kiểm tra url đúng định dạng và có thể truy cập được trực tiếp và thử lại.",
-		"success": "Sử dụng cài đặt Vikunja tại \"{domain}\".",
+		"use": "Sử dụng cài đặt ProjectOS tại {0}",
+		"error": "Không thể tìm thấy hay sử dụng cài đặt ProjectOS tại \"{domain}\". Vui lòng kiểm tra url đúng định dạng và có thể truy cập được trực tiếp và thử lại.",
+		"success": "Sử dụng cài đặt ProjectOS tại \"{domain}\".",
 		"urlRequired": "Cần có một url."
 	},
 	"loadingError": {

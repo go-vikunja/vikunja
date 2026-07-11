@@ -2,38 +2,38 @@
 	"notifications": {
 		"greeting": "Moi %[1]s,",
 		"email_confirm": {
-			"subject": "%[1]s, ole hyvä ja vahvista sähköpostiosoitteesi Vikunjassa",
-			"subject_new": "%[1]s + Vikunja = <3",
-			"welcome": "Tervetuloa Vikunjaan!",
+			"subject": "%[1]s, ole hyvä ja vahvista sähköpostiosoitteesi ProjectOSssa",
+			"subject_new": "%[1]s + ProjectOS = <3",
+			"welcome": "Tervetuloa ProjectOSan!",
 			"confirm": "Vahvistaaksesi sähköpostiosoitteesi, klikkaa alla olevaa linkkiä:"
 		},
 		"password": {
 			"changed": {
-				"subject": "Salasanasi Vikunjassa vaihdettiin",
+				"subject": "Salasanasi ProjectOSssa vaihdettiin",
 				"success": "Tilisi salasana vaihdettiin onnistuneesti.",
 				"warning": "Jos tämä et ollut sinä, se voi tarkoittaa sitä että joku on vaarantanut tilisi. Tässä tapauksessa ota yhteyttä palvelimesi ylläpitäjään."
 			},
 			"reset": {
-				"subject": "Palauta salasanasi Vikunjassa",
+				"subject": "Palauta salasanasi ProjectOSssa",
 				"instructions": "Palauttaaksesi salasanasi, klikkaa alla olevaa linkkiä:",
 				"valid_duration": "Tämä linkki on voimassa 24 tuntia."
 			}
 		},
 		"totp": {
 			"invalid": {
-				"subject": "Joku yritti juuri kirjautua Vikunja-tilillesi, mutta ei onnistunut",
+				"subject": "Joku yritti juuri kirjautua ProjectOS-tilillesi, mutta ei onnistunut",
 				"message": "Joku juuri yritti kirjautua tilillesi oikealla käyttäjätunnuksella ja salasanalla, mutta väärällä TOTP-koodilla.",
 				"warning": "**Jos tämä et ollut sinä, joku muu tietää salasanasi. Sinun tulisi asettaa uusi salasana välittömästi!**"
 			},
 			"account_locked": {
-				"subject": "Olemme poistaneet Vikunja-tilisi käytöstä.",
+				"subject": "Olemme poistaneet ProjectOS-tilisi käytöstä.",
 				"message": "Joku yritti kirjautua sisään käyttäjätunnuksillasi, mutta ei pystynyt antamaan kelvollista TOTP-koodia.",
 				"disabled": "Kymmenen epäonnistuneen yrityksen jälkeen olemme poistaneet tilisi käytöstä ja nollanneet salasanasi. Asettaaksesi uuden, noudata nollaussähköpostin ohjeita, jonka juuri lähetimme sinulle."
 			}
 		},
 		"login": {
 			"failed": {
-				"subject": "Joku juuri yritti kirjautua Vikunja-tilillesi, mutta antoi väärän salasanan",
+				"subject": "Joku juuri yritti kirjautua ProjectOS-tilillesi, mutta antoi väärän salasanan",
 				"message": "Joku yritti juuri kirjautua tilillesi väärällä salasanalla kolme kertaa peräkkäin.",
 				"warning": "Jos tämä et ollut sinä, joku muu saattaa yrittää murtautua tilillesi."
 			}
@@ -41,22 +41,22 @@
 		"account": {
 			"deletion": {
 				"confirm": {
-					"subject": "Ole hyvä ja vahvista Vikunja-tilisi poistaminen",
+					"subject": "Ole hyvä ja vahvista ProjectOS-tilisi poistaminen",
 					"request": "Olet pyytänyt tilisi poistamista. Vahvistaaksesi tämän, klikkaa alla olevaa linkkiä:",
 					"valid_duration": "Tämä linkki on voimassa 24 tuntia.",
 					"changed_mind": "Jos et ole pyytänyt poistoa tai olet muuttanut mielesi, voit yksinkertaisesti jättää tämän sähköpostin huomiotta."
 				},
 				"scheduled": {
-					"subject_days": "Vikunja-tilisi poistetaan %[1]s päivässä",
-					"subject_tomorrow": "Vikunja-tilisi poistetaan huomenna",
-					"request_reminder": "Olet äskettäin pyytänyt Vikunja-tilisi poistamista.",
+					"subject_days": "ProjectOS-tilisi poistetaan %[1]s päivässä",
+					"subject_tomorrow": "ProjectOS-tilisi poistetaan huomenna",
+					"request_reminder": "Olet äskettäin pyytänyt ProjectOS-tilisi poistamista.",
 					"deletion_time_days": "Poistamme tilisi %[1]s päivässä.",
 					"deletion_time_tomorrow": "Poistamme tilisi huomenna.",
 					"changed_mind": "Jos olet muuttanut mieltäsi, klikkaa alla olevaa linkkiä peruuttaaksesi poistamisen ja noudata siellä olevia ohjeita:"
 				},
 				"completed": {
-					"subject": "Vikunja-tilisi on poistettu",
-					"confirmation": "Kuten pyydetty, olemme poistaneet Vikunja-tilisi.",
+					"subject": "ProjectOS-tilisi on poistettu",
+					"confirmation": "Kuten pyydetty, olemme poistaneet ProjectOS-tilisi.",
 					"permanent": "Tämä poisto on pysyvä. Jos et luonut varmuuskopiota ja tarvitset tietosi takaisin nyt, keskustele järjestelmänvalvojasi kanssa."
 				}
 			}
@@ -81,7 +81,7 @@
 		},
 		"team": {
 			"member_added": {
-				"message": "%[1]s on juuri lisännyt sinut %[2]s tiimiin Vikunjassa."
+				"message": "%[1]s on juuri lisännyt sinut %[2]s tiimiin ProjectOSssa."
 			}
 		},
 		"data_export": {
@@ -101,7 +101,7 @@
 			"have_nice_day": "Hauskaa päivän jatkoa!",
 			"copy_url": "Jos yläpuolella oleva nappi ei toimi, kopioi seuraava osoite selaimesi osoitepalkkiin:",
 			"actions": {
-				"open_vikunja": "Avaa Vikunja",
+				"open_vikunja": "Avaa ProjectOS",
 				"open_project": "Avaa Projekti",
 				"open_team": "Avaa Tiimi",
 				"download": "Lataa",

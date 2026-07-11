@@ -22,7 +22,7 @@
 		"accountWillBeDeleted": "Fiókja törlésre kerül, beleértve az esetlegesen létrehozott projekteket, feladatokat és mellékleteket."
 	},
 	"ready": {
-		"loading": "A Vikunja betöltődik…",
+		"loading": "A ProjectOS betöltődik…",
 		"errorOccured": "Hiba lépett fel:",
 		"checkApiUrl": "Kérjük, ellenőrizze, hogy az API url helyes-e.",
 		"noApiUrlConfigured": "Nincs API url beállítva. Kérjük, állítson be egyet alább:"
@@ -117,7 +117,7 @@
 				"title": "Gyors hozzáadás",
 				"disabled": "Kikapcsolva",
 				"todoist": "Todoist",
-				"vikunja": "Vikunja"
+				"vikunja": "ProjectOS"
 			},
 			"appearance": {
 				"title": "Színséma",
@@ -130,7 +130,7 @@
 			},
 			"apiTokens": {
 				"title": "API Tokenek",
-				"general": "Az API tokenek lehetővé teszik a Vikunja API használatát felhasználói hitelesítő adatok nélkül.",
+				"general": "Az API tokenek lehetővé teszik a ProjectOS API használatát felhasználói hitelesítő adatok nélkül.",
 				"apiDocs": "Nézze meg az API dokumentációt",
 				"createAToken": "Token létrehozása",
 				"createToken": "Token létrehozása",
@@ -157,7 +157,7 @@
 			}
 		},
 		"deletion": {
-			"title": "Törölje Vikunja fiókját",
+			"title": "Törölje ProjectOS fiókját",
 			"text1": "Fiókjának törlése végleges, és nem vonható vissza. Töröljük az összes projektjét, feladatát és minden, ami ehhez kapcsolódik.",
 			"text2": "A folytatáshoz adja meg jelszavát. Kapni fog egy e-mailt a további utasításokkal.",
 			"text3": "A folytatáshoz kattintson az alábbi gombra. Kapni fog egy e-mailt a további utasításokkal.",
@@ -165,7 +165,7 @@
 			"requestSuccess": "A kérés sikeres volt. Kapni fog egy e-mailt a további utasításokkal.",
 			"passwordRequired": "Kérjük, írja be jelszavát.",
 			"confirmSuccess": "Sikeresen megerősítette fiókja törlését. Három napon belül töröljük fiókját.",
-			"scheduled": "Vikunja fiókját a következő időpontban töröljük: {date} ({dateSince}).",
+			"scheduled": "ProjectOS fiókját a következő időpontban töröljük: {date} ({dateSince}).",
 			"scheduledCancel": "A fiók törlésének megszakításához kattintson ide.",
 			"scheduledCancelText": "Fiókja törlésének megszakításához adja meg jelszavát alább:",
 			"scheduledCancelButton": "Fiókja törlésének megszakításához kattintson az alábbi gombra:",
@@ -173,12 +173,12 @@
 			"scheduledCancelSuccess": "Fiókját nem töröljük."
 		},
 		"export": {
-			"title": "Exportálja a Vikunja adatait",
-			"description": "Kérhet másolatot az összes Vikunja adatáról. Ez magában foglalja a projekteket, feladatokat és mindent, ami ezekhez kapcsolódik. Ezeket az adatokat bármely Vikunja példányba importálhatja a migrációs felületen keresztül.",
+			"title": "Exportálja a ProjectOS adatait",
+			"description": "Kérhet másolatot az összes ProjectOS adatáról. Ez magában foglalja a projekteket, feladatokat és mindent, ami ezekhez kapcsolódik. Ezeket az adatokat bármely ProjectOS példányba importálhatja a migrációs felületen keresztül.",
 			"descriptionPasswordRequired": "Kérjük, adja meg jelszavát a folytatáshoz:",
-			"request": "Másolatot kérek a Vikunja-ban lévő adataimról",
-			"success": "Sikeresen lekérte Vikunja adatait! Amint készen áll a letöltésre, e-mailt küldünk.",
-			"downloadTitle": "Töltse le az exportált Vikunja adatait"
+			"request": "Másolatot kérek a ProjectOS-ban lévő adataimról",
+			"success": "Sikeresen lekérte ProjectOS adatait! Amint készen áll a letöltésre, e-mailt küldünk.",
+			"downloadTitle": "Töltse le az exportált ProjectOS adatait"
 		}
 	},
 	"project": {
@@ -444,8 +444,8 @@
 		"titleService": "Importálja adatait a {name} - ból Vikunjába",
 		"import": "Importálja adatait a Vikunjába",
 		"description": "A kezdéshez kattintson az alábbi, harmadik féltől származó szolgáltatások egyikének logójára.",
-		"descriptionDo": "A Vikunja importálja az összes listát, feladatot, jegyzetet, emlékeztetőt és fájlt, amelyhez Ön hozzáfér.",
-		"authorize": "Ha engedélyezni szeretné Vikunja számára, hogy hozzáférjen {name} fiókjához, kattintson az alábbi gombra.",
+		"descriptionDo": "A ProjectOS importálja az összes listát, feladatot, jegyzetet, emlékeztetőt és fájlt, amelyhez Ön hozzáfér.",
+		"authorize": "Ha engedélyezni szeretné ProjectOS számára, hogy hozzáférjen {name} fiókjához, kattintson az alábbi gombra.",
 		"getStarted": "Kezdjünk bele",
 		"inProgress": "Importálás folyamatban…",
 		"alreadyMigrated1": "Úgy tűnik, már importálta a dolgait a(z) {name} webhelyről {date} időpontban.",
@@ -453,7 +453,7 @@
 		"confirm": "Biztos vagyok benne, kezdje el a migrációt most!",
 		"importUpload": "Ha adatokat szeretne importálni a(z) {name} webhelyről a Vikunjába, kattintson az alábbi gombra a fájl kiválasztásához.",
 		"upload": "Fájl feltöltése",
-		"migrationStartedWillReciveEmail": "A Vikunja mostantól importálja listáit/projektjeit, feladatait, jegyzeteit, emlékeztetőit és fájljait a {service} szolgáltatásból. Mivel ez eltart egy ideig, amint elkészült, küldünk Önnek egy e-mailt. Most bezárhatja ezt az ablakot.",
+		"migrationStartedWillReciveEmail": "A ProjectOS mostantól importálja listáit/projektjeit, feladatait, jegyzeteit, emlékeztetőit és fájljait a {service} szolgáltatásból. Mivel ez eltart egy ideig, amint elkészült, küldünk Önnek egy e-mailt. Most bezárhatja ezt az ablakot.",
 		"migrationInProgress": "A migráció folyamatban van. Kérjük várjon, amíg elkészül."
 	},
 	"label": {
@@ -507,7 +507,7 @@
 		"searchPlaceholder": "Írja be a kereséshez…",
 		"previous": "Előző",
 		"next": "Következő",
-		"poweredBy": "Vikunja által hajtva",
+		"poweredBy": "ProjectOS által hajtva",
 		"info": "Információ",
 		"create": "Létrehozás",
 		"doit": "Csináljuk!",
@@ -645,7 +645,7 @@
 			"canuse": "A függvény segítségével szűrheti a relatív dátumokat.",
 			"learnhow": "Nézze meg, hogyan működik",
 			"title": "Függvény",
-			"intro": "Adjon meg relatív dátumokat, amelyeket a Vikunja menet közben old meg a szűrő alkalmazásakor.",
+			"intro": "Adjon meg relatív dátumokat, amelyeket a ProjectOS menet közben old meg a szűrő alkalmazásakor.",
 			"expression": "Minden függvény egy horgonydátummal kezdődik, amely lehet {0}, vagy egy {1}-re végződő dátumkarakterlánc. Ezt a rögzítési dátumot opcionálisan követheti egy vagy több matematikai kifejezés.",
 			"similar": "Ezek a kifejezések hasonlóak a {0} és {1} által biztosított kifejezésekhez.",
 			"add1Day": "Adjon hozzá egy napot",
@@ -885,7 +885,7 @@
 			"intro": "Feladat létrehozásakor speciális kulcsszavak segítségével közvetlenül hozzáadhat attribútumokat az újonnan létrehozott feladathoz. Ez lehetővé teszi a gyakran használt attribútumok hozzáadását a feladatokhoz sokkal gyorsabban.",
 			"multiple": "Ezt többször is használhatja.",
 			"label1": "Címke hozzáadásához egyszerűen írja be a címke nevébe a következőt: {prefix}.",
-			"label2": "Vikunja először ellenőrzi, hogy létezik-e már a címke és ha nem, akkor létrehozza.",
+			"label2": "ProjectOS először ellenőrzi, hogy létezik-e már a címke és ha nem, akkor létrehozza.",
 			"label3": "Szóközök használatához egyszerűen adjon hozzá egy \" ,vagy ' karaktert a címke neve köré.",
 			"label4": "Például: {prefix}\"Címke szóközökkel\".",
 			"priority1": "Egy feladat prioritásának beállításához adjon hozzá egy számot 1-től 5-ig {prefix} előtaggal.",
@@ -1013,12 +1013,12 @@
 		"views": "Nézetek"
 	},
 	"apiConfig": {
-		"url": "Vikunja URL",
+		"url": "ProjectOS URL",
 		"urlPlaceholder": "Például: https://localhost:3456",
 		"change": "csere",
-		"use": "A Vikunja telepítés használata itt: {0}",
-		"error": "Nem található, vagy nem használható a Vikunja telepítése a(z) \"{domain}\" címen. Kérjük, ellenőrizze, hogy az url formátuma megfelelő-e, és közvetlenül elérheti-e, majd próbálja újra.",
-		"success": "A Vikunja telepítés használata itt: {domain}",
+		"use": "A ProjectOS telepítés használata itt: {0}",
+		"error": "Nem található, vagy nem használható a ProjectOS telepítése a(z) \"{domain}\" címen. Kérjük, ellenőrizze, hogy az url formátuma megfelelő-e, és közvetlenül elérheti-e, majd próbálja újra.",
+		"success": "A ProjectOS telepítés használata itt: {domain}",
 		"urlRequired": "Az URL megadása kötelező."
 	},
 	"loadingError": {

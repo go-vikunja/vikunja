@@ -12,8 +12,8 @@
 		"addToHomeScreen": "ホーム画面に追加すると、すぐにアクセスできて使いやすくなります。",
 		"goToOverview": "概要に移動",
 		"project": {
-			"importText": "他のサービスからVikunjaにプロジェクトやタスクをインポートします:",
-			"import": "Vikunjaへのデータのインポート"
+			"importText": "他のサービスからProjectOSにプロジェクトやタスクをインポートします:",
+			"import": "ProjectOSへのデータのインポート"
 		}
 	},
 	"demo": {
@@ -22,7 +22,7 @@
 		"accountWillBeDeleted": "あなたのアカウントとともに、作成したすべてのプロジェクト、タスク、添付ファイルも削除されます。"
 	},
 	"ready": {
-		"loading": "Vikunjaを読み込み中…",
+		"loading": "ProjectOSを読み込み中…",
 		"errorOccured": "エラーが発生しました:",
 		"checkApiUrl": "API URLをご確認ください",
 		"noApiUrlConfigured": "API URLが設定されていません。以下の項目を設定してください:"
@@ -145,7 +145,7 @@
 			},
 			"caldav": {
 				"title": "CalDAV",
-				"more": "VikunjaのCalDAVに関する詳細情報",
+				"more": "ProjectOSのCalDAVに関する詳細情報",
 				"tokens": "CalDAVトークン"
 			},
 			"avatar": {
@@ -164,7 +164,7 @@
 				"title": "クイック追加",
 				"disabled": "無効",
 				"todoist": "Todoist",
-				"vikunja": "Vikunja"
+				"vikunja": "ProjectOS"
 			},
 			"appearance": {
 				"title": "カラースキーム",
@@ -180,7 +180,7 @@
 			},
 			"apiTokens": {
 				"title": "APIトークン",
-				"general": "APIトークンを使うとログインせずにVikunjaのAPIを利用できます。",
+				"general": "APIトークンを使うとログインせずにProjectOSのAPIを利用できます。",
 				"apiDocs": "詳しくはAPIドキュメントをご確認ください",
 				"createAToken": "トークンの生成",
 				"createToken": "トークンの生成",
@@ -222,7 +222,7 @@
 			}
 		},
 		"deletion": {
-			"title": "Vikunjaアカウントの削除",
+			"title": "ProjectOSアカウントの削除",
 			"text1": "アカウント削除は恒久的なものであり、元に戻すことはできません。あなたのプロジェクト、タスク、それらに関連するすべてを削除します。",
 			"text2": "続行するにはパスワードを入力してください。詳しい案内の記載したメールを送信します。",
 			"text3": "続行するには以下のボタンを押してください。詳しい案内を記載したメールを送信します。",
@@ -230,7 +230,7 @@
 			"requestSuccess": "リクエストは成功しました。詳しい案内はメールでお知らせします。",
 			"passwordRequired": "パスワードを入力してください。",
 			"confirmSuccess": "アカウントの削除を承認しました。3日後にアカウントは削除されます。",
-			"scheduled": "{date} ({dateSince}) にVikunjaアカウントは削除されます。",
+			"scheduled": "{date} ({dateSince}) にProjectOSアカウントは削除されます。",
 			"scheduledCancel": "アカウントの削除を取り消す場合はこちらをご覧ください。",
 			"scheduledCancelText": "アカウントの削除を取り消すにはパスワードを入力してください:",
 			"scheduledCancelButton": "アカウントの削除を取り消すには以下のボタンを押してください：",
@@ -238,12 +238,12 @@
 			"scheduledCancelSuccess": "アカウント削除は行われません。"
 		},
 		"export": {
-			"title": "Vikunjaデータのエクスポート",
-			"description": "利用しているVikunjaの全データのダウンロードをリクエストできます。これにはプロジェクト、タスク、およびそれらに関連するすべてを含みます。このデータはどのVikunjaインスタンスでもインポートすることができます。",
+			"title": "ProjectOSデータのエクスポート",
+			"description": "利用しているProjectOSの全データのダウンロードをリクエストできます。これにはプロジェクト、タスク、およびそれらに関連するすべてを含みます。このデータはどのProjectOSインスタンスでもインポートすることができます。",
 			"descriptionPasswordRequired": "続行するにはパスワードを入力してください:",
-			"request": "Vikunjaデータのリクエスト",
-			"success": "Vikunjaデータのリクエストに成功しました！ダウンロードの準備が整い次第、メールでお知らせします。",
-			"downloadTitle": "エクスポートされたVikunjaデータのダウンロード",
+			"request": "ProjectOSデータのリクエスト",
+			"success": "ProjectOSデータのリクエストに成功しました！ダウンロードの準備が整い次第、メールでお知らせします。",
+			"downloadTitle": "エクスポートされたProjectOSデータのダウンロード",
 			"ready": "エクスポートの準備が完了しました。{0} までダウンロードできます。",
 			"requestNew": "新しいエクスポートをリクエスト"
 		}
@@ -326,7 +326,7 @@
 			"links": {
 				"title": "リンクの共有",
 				"what": "共有リンクとは何ですか？",
-				"explanation": "共有リンクとは、Vikunjaのアカウントを持たない他のユーザーとプロジェクトを簡単に共有することができる機能です。",
+				"explanation": "共有リンクとは、ProjectOSのアカウントを持たない他のユーザーとプロジェクトを簡単に共有することができる機能です。",
 				"create": "共有リンクの作成",
 				"name": "名前 (オプション)",
 				"namePlaceholder": "例: Lorem Ipsum",
@@ -567,19 +567,19 @@
 	},
 	"migrate": {
 		"title": "他のサービスからのインポート",
-		"titleService": "{name}からVikunjaへのデータのインポート",
-		"import": "Vikunjaへのデータのインポート",
+		"titleService": "{name}からProjectOSへのデータのインポート",
+		"import": "ProjectOSへのデータのインポート",
 		"description": "以下のいずれかのサービスのロゴをクリックして始めましょう。",
-		"descriptionDo": "アクセス可能なリスト、タスク、メモ、リマインダー、ファイルをすべてVikunjaにインポートします。",
-		"authorize": "Vikunjaはあなたの{name}アカウントにアクセスします。よろしければ以下のボタンをクリックして許可してください。",
+		"descriptionDo": "アクセス可能なリスト、タスク、メモ、リマインダー、ファイルをすべてProjectOSにインポートします。",
+		"authorize": "ProjectOSはあなたの{name}アカウントにアクセスします。よろしければ以下のボタンをクリックして許可してください。",
 		"getStarted": "さっそく始めましょう",
 		"inProgress": "インポート中…",
 		"alreadyMigrated1": "すでに{name}からは{date}にインポート済みのようです。",
 		"alreadyMigrated2": "再びインポートすることも可能ですが、重複する可能性があります。インポートして本当によろしいですか？",
 		"confirm": "了解！インポート開始なのだ！",
-		"importUpload": "{name}からVikunjaにデータをインポートするには、以下のボタンをクリックしてファイルを選択してください。",
+		"importUpload": "{name}からProjectOSにデータをインポートするには、以下のボタンをクリックしてファイルを選択してください。",
 		"upload": "ファイルのアップロード",
-		"migrationStartedWillReciveEmail": "{service}のリスト、タスク、メモ、リマインダー、ファイルをすべてVikunjaにインポートします。完了までしばらくお待ちください。メールでお知らせします。このウィンドウは閉じても構いません。",
+		"migrationStartedWillReciveEmail": "{service}のリスト、タスク、メモ、リマインダー、ファイルをすべてProjectOSにインポートします。完了までしばらくお待ちください。メールでお知らせします。このウィンドウは閉じても構いません。",
 		"migrationInProgress": "現在移行中です。完了するまでしばらくお待ちください。"
 	},
 	"label": {
@@ -639,7 +639,7 @@
 		"searchPlaceholder": "キーワードを入力…",
 		"previous": "前へ",
 		"next": "次へ",
-		"poweredBy": "Powered by Vikunja",
+		"poweredBy": "Powered by ProjectOS",
 		"info": "詳細",
 		"create": "作成",
 		"doit": "続行",
@@ -779,7 +779,7 @@
 			"canuse": "日付計算による絞り込みが可能です。",
 			"learnhow": "使用方法",
 			"title": "日付計算",
-			"intro": "相対日付を指定すると絞り込み条件を適用する際にVikunjaによって評価されます。",
+			"intro": "相対日付を指定すると絞り込み条件を適用する際にProjectOSによって評価されます。",
 			"expression": "それぞれの日付計算式は基準日から始まります。この基準日には {0} か、{1} で区切られた複数の日付を使用できます。",
 			"similar": "{0} や {1} のような形式です。",
 			"add1Day": "1日加える",
@@ -1041,7 +1041,7 @@
 			"intro": "タスクを作成する際に特定のキーワードを使うことで項目を直接追加できます。よく使う項目とともにタスクをすぐ追加できます。",
 			"multiple": "複数使用できます。",
 			"label1": "ラベルを付けるには、ラベル名の前に {prefix} を入力します。",
-			"label2": "Vikunja はそのラベルがすでに存在するか確認し、存在しなければ作成します。",
+			"label2": "ProjectOS はそのラベルがすでに存在するか確認し、存在しなければ作成します。",
 			"label3": "空白を含む場合、ラベル名を \" \" または ' ' で囲みます。",
 			"label4": "例: {prefix}\"とある ラベル\"",
 			"priority1": "優先度を設定するには、{prefix} と 1〜5 の数字を入力します。",
@@ -1192,12 +1192,12 @@
 		"views": "ビュー"
 	},
 	"apiConfig": {
-		"url": "Vikunja URL",
+		"url": "ProjectOS URL",
 		"urlPlaceholder": "例: https://localhost:3456",
 		"change": "変更",
-		"use": "{0} に設置されたVikunjaを使用します。",
-		"error": "\"{domain}\" にはVikunjaは存在しないか使用できない状態です。URLの形式が正しいかどうか、そして直接アクセスして到達できるかどうかを確認し、もう一度お試しください。",
-		"success": "\"{domain}\" に設置されたVikunjaを使用します。",
+		"use": "{0} に設置されたProjectOSを使用します。",
+		"error": "\"{domain}\" にはProjectOSは存在しないか使用できない状態です。URLの形式が正しいかどうか、そして直接アクセスして到達できるかどうかを確認し、もう一度お試しください。",
+		"success": "\"{domain}\" に設置されたProjectOSを使用します。",
 		"urlRequired": "URLを入力してください。"
 	},
 	"loadingError": {
@@ -1331,7 +1331,7 @@
 		"0001": "その操作を行う権限がありません。"
 	},
 	"about": {
-		"title": "Vikunjaについて",
+		"title": "ProjectOSについて",
 		"version": "バージョン: {version}",
 		"frontendVersion": "フロントエンドのバージョン: {version}",
 		"apiVersion": "APIのバージョン: {version}"

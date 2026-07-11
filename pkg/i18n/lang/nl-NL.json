@@ -2,19 +2,19 @@
 	"notifications": {
 		"greeting": "Hallo %[1]s,",
 		"email_confirm": {
-			"subject": "%[1]s, bevestig je e-mailadres bij Vikunja",
-			"subject_new": "%[1]s + Vikunja = <3",
-			"welcome": "Welkom bij Vikunja!",
+			"subject": "%[1]s, bevestig je e-mailadres bij ProjectOS",
+			"subject_new": "%[1]s + ProjectOS = <3",
+			"welcome": "Welkom bij ProjectOS!",
 			"confirm": "Om je e-mailadres te bevestigen, klik op onderstaande link:"
 		},
 		"password": {
 			"changed": {
-				"subject": "Je wachtwoord bij Vikunja is gewijzigd",
+				"subject": "Je wachtwoord bij ProjectOS is gewijzigd",
 				"success": "Je accountwachtwoord is succesvol gewijzigd.",
 				"warning": "Als jij dit niet was, kan dit betekenen dat iemand je account heeft gehackt. Neem in dat geval contact op met de beheerder van uw server."
 			},
 			"reset": {
-				"subject": "Reset je wachtwoord op Vikunja",
+				"subject": "Reset je wachtwoord op ProjectOS",
 				"instructions": "Om je wachtwoord opnieuw in te stellen, klik op onderstaande link:",
 				"valid_duration": "Deze link is 24 uur geldig."
 			}
@@ -26,7 +26,7 @@
 				"warning": "**Als je dit niet zelf was, kent iemand je wachtwoord. Je moet meteen een nieuwe instellen!**"
 			},
 			"account_locked": {
-				"subject": "We hebben je account op Vikunja uitgeschakeld",
+				"subject": "We hebben je account op ProjectOS uitgeschakeld",
 				"message": "Iemand probeerde in te loggen met jouw inloggegevens maar kon geen geldige TOTP-code opgeven.",
 				"disabled": "Na 10 mislukte pogingen hebben we je account uitgeschakeld en je wachtwoord gereset. Om een nieuwe in te stellen, volg de instructies in de reset e-mail die zojuist is verstuurd.",
 				"reset_instructions": "Als je geen mail hebt ontvangen met instructies om te resetten, kun je altijd een nieuwe aanvragen via [%[1]s](%[2]s)."
@@ -34,7 +34,7 @@
 		},
 		"login": {
 			"failed": {
-				"subject": "Iemand probeerde in te loggen op je Vikunja account, maar kon geen geldig wachtwoord opgeven",
+				"subject": "Iemand probeerde in te loggen op je ProjectOS account, maar kon geen geldig wachtwoord opgeven",
 				"message": "Iemand probeerde drie keer achter elkaar in te loggen op je account met een verkeerd wachtwoord.",
 				"warning": "Als jij dit niet zelf was, kan het zijn dat iemand probeert in te breken op je account.",
 				"enhance_security": "Om de beveiliging van je account te vergroten kun je misschien een sterker wachtwoord instellen of TOTP-authenticatie inschakelen in de instellingen:"
@@ -43,7 +43,7 @@
 		"account": {
 			"deletion": {
 				"confirm": {
-					"subject": "Bevestig de verwijdering van je Vikunja-account",
+					"subject": "Bevestig de verwijdering van je ProjectOS-account",
 					"request": "Je hebt verwijdering van je account aangevraagd. Om te bevestigen, klik op onderstaande link:",
 					"valid_duration": "Deze link is 24 uur geldig.",
 					"schedule_info": "Zodra je de verwijdering bevestigt, plannen we de verwijdering van je account over drie dagen. Je ontvangt nog een e-mail.",
@@ -51,16 +51,16 @@
 					"changed_mind": "Als je geen verwijdering hebt aangevraagd of van gedachten bent veranderd, kun je deze e-mail simpelweg negeren."
 				},
 				"scheduled": {
-					"subject_days": "Je Vikunja-account wordt over %[1]s dagen verwijderd",
-					"subject_tomorrow": "Je Vikunja-account wordt morgen verwijderd",
+					"subject_days": "Je ProjectOS-account wordt over %[1]s dagen verwijderd",
+					"subject_tomorrow": "Je ProjectOS-account wordt morgen verwijderd",
 					"request_reminder": "Je vroeg recent om de verwijdering van je Vikuna-account.",
 					"deletion_time_days": "We verwijderen je account over %[1]s dagen.",
 					"deletion_time_tomorrow": "We verwijderen je account morgen.",
 					"changed_mind": "Als je van gedachten bent veranderd, klik op onderstaande link om de verwijdering te annuleren en volg de instructies:"
 				},
 				"completed": {
-					"subject": "Je Vikunja account is verwijderd",
-					"confirmation": "Zoals gevraagd hebben we je Vikunja-account verwijderd.",
+					"subject": "Je ProjectOS account is verwijderd",
+					"confirmation": "Zoals gevraagd hebben we je ProjectOS-account verwijderd.",
 					"permanent": "Deze verwijdering is definitief. Als je geen backup hebt gemaakt en toch je data weer nodig hebt, praat dan met je beheerder."
 				}
 			}
@@ -103,25 +103,25 @@
 		},
 		"team": {
 			"member_added": {
-				"subject": "%[1]s voegde je toe aan het \"%[2]s\" team in Vikunja",
-				"message": "%[1]s voegde je zojuist toe aan het %[2]s team in Vikunja."
+				"subject": "%[1]s voegde je toe aan het \"%[2]s\" team in ProjectOS",
+				"message": "%[1]s voegde je zojuist toe aan het %[2]s team in ProjectOS."
 			}
 		},
 		"data_export": {
 			"ready": {
-				"subject": "Je Vikunja gegevensexport is klaar",
-				"message": "Je Vikunja gegevensexport is klaar voor downloaden. Klik op onderstaande knop om te downloaden:",
+				"subject": "Je ProjectOS gegevensexport is klaar",
+				"message": "Je ProjectOS gegevensexport is klaar voor downloaden. Klik op onderstaande knop om te downloaden:",
 				"availability": "De download is beschikbaar gedurende 7 dagen."
 			}
 		},
 		"migration": {
 			"done": {
-				"subject": "De migratie van %[1]s naar Vikunja is voltooid",
-				"imported": "Vikunja heeft alle listen/projecten, taken, notities, herinneringen en bestanden geïmporteerd van %[1]s (waar je toegang tot hebt).",
+				"subject": "De migratie van %[1]s naar ProjectOS is voltooid",
+				"imported": "ProjectOS heeft alle listen/projecten, taken, notities, herinneringen en bestanden geïmporteerd van %[1]s (waar je toegang tot hebt).",
 				"have_fun": "Veel plezier met je nieuwe (oude) projecten!"
 			},
 			"failed": {
-				"subject": "De migratie van %[1]s naar Vikunja is mislukt",
+				"subject": "De migratie van %[1]s naar ProjectOS is mislukt",
 				"message": "Het lijkt erop dat de verhuizing van %[1]s niet verliep zoals gepland.",
 				"retry": "Maak je geen zorgen! Probeer het gewoon nog een keer op dezelfde manier als eerder. Soms ontstaan deze haperingen door storingen aan de kant van %[1]s, maar vaak helpt het om het nog een keer te proberen.",
 				"error": "We kwamen een foutje tegen onderweg: `%[2]s`.",
@@ -133,7 +133,7 @@
 			"have_nice_day": "Fijne dag!",
 			"copy_url": "Als bovenstaande knop niet werkt, kopieer dan onderstaande URL en plak deze in de adresbalk van je browser:",
 			"actions": {
-				"open_vikunja": "Vikunja openen",
+				"open_vikunja": "ProjectOS openen",
 				"open_project": "Project openen",
 				"open_team": "Team openen",
 				"download": "Downloaden",

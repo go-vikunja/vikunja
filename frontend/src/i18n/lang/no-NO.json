@@ -13,7 +13,7 @@
 		"goToOverview": "Gå til oversikt",
 		"project": {
 			"importText": "Importer prosjekter og oppgaver fra andre tjenester:",
-			"import": "Importer dine data til Vikunja"
+			"import": "Importer dine data til ProjectOS"
 		}
 	},
 	"demo": {
@@ -22,7 +22,7 @@
 		"accountWillBeDeleted": "Kontoen din blir slettet, inkludert alle prosjekter, oppgaver og vedlegg du eventuelt har opprettet."
 	},
 	"ready": {
-		"loading": "Vikunja laster…",
+		"loading": "ProjectOS laster…",
 		"errorOccured": "Det har oppstått en feil:",
 		"checkApiUrl": "Vennligst kontroller om api-url er korrekt.",
 		"noApiUrlConfigured": "Ingen api-url ble konfigurert. Angi en nedenfor:"
@@ -138,7 +138,7 @@
 			},
 			"caldav": {
 				"title": "CalDAV",
-				"more": "Mer informasjon om CalDAV i Vikunja",
+				"more": "Mer informasjon om CalDAV i ProjectOS",
 				"tokens": "CalDAV-plassholdere"
 			},
 			"avatar": {
@@ -157,7 +157,7 @@
 				"title": "Legg til hurtig/magisk modus",
 				"disabled": "Deaktivert",
 				"todoist": "Todoist",
-				"vikunja": "Vikunja"
+				"vikunja": "ProjectOS"
 			},
 			"appearance": {
 				"title": "Fargevalg",
@@ -170,7 +170,7 @@
 			},
 			"apiTokens": {
 				"title": "API-plassholdere",
-				"general": "API-plassholdere gjør at du kan bruke Vikunja API uten brukeropplysninger.",
+				"general": "API-plassholdere gjør at du kan bruke ProjectOS API uten brukeropplysninger.",
 				"apiDocs": "Les mer i dokumentasjonen til api",
 				"createAToken": "Opprett en plassholder",
 				"createToken": "Opprett plassholder",
@@ -206,7 +206,7 @@
 			"requestSuccess": "Forespørselen var vellykket. Du vil motta en e-post med ytterligere instruksjoner.",
 			"passwordRequired": "Skriv inn passordet ditt.",
 			"confirmSuccess": "Du har bekreftet slettingen av kontoen din. Vi vil slette kontoen din om tre dager.",
-			"scheduled": "Vi vil slette din Vikunja konto den {date} ({dateSince}).",
+			"scheduled": "Vi vil slette din ProjectOS konto den {date} ({dateSince}).",
 			"scheduledCancel": "For å avbryte slettingen av kontoen din, klikk her.",
 			"scheduledCancelText": "For å avbryte slettingen av kontoen din, skriv inn passordet under:",
 			"scheduledCancelButton": "For å avbryte slettingen av kontoen din, trykk på knappen under:",
@@ -215,11 +215,11 @@
 		},
 		"export": {
 			"title": "Eksporter kontodata",
-			"description": "Du kan be om en kopi av alle Vikunja dataene dine. Dette inkluderer prosjekter, oppgaver og alt tilknyttet disse. Disse dataene kan importeres i andre installasjoner av Vikunja gjennom migreringsfunksjonen.",
+			"description": "Du kan be om en kopi av alle ProjectOS dataene dine. Dette inkluderer prosjekter, oppgaver og alt tilknyttet disse. Disse dataene kan importeres i andre installasjoner av ProjectOS gjennom migreringsfunksjonen.",
 			"descriptionPasswordRequired": "Skriv inn passordet for å fortsette:",
-			"request": "Be om kopi av mine Vikunja data",
-			"success": "Du har spurt om dine Vikunja data! Vi sender deg en e-post når den er klar til å laste ned.",
-			"downloadTitle": "Last ned dine eksporterte Vikunja data",
+			"request": "Be om kopi av mine ProjectOS data",
+			"success": "Du har spurt om dine ProjectOS data! Vi sender deg en e-post når den er klar til å laste ned.",
+			"downloadTitle": "Last ned dine eksporterte ProjectOS data",
 			"ready": "Eksporten din er klar til å lastes ned. Du kan laste den ned til {0}.",
 			"requestNew": "Be om en ny eksport"
 		}
@@ -302,7 +302,7 @@
 			"links": {
 				"title": "Delelenker",
 				"what": "Hva er en delelenke?",
-				"explanation": "Delelenker lar deg enkelt dele et prosjekt med andre brukere som ikke har en konto på Vikunja.",
+				"explanation": "Delelenker lar deg enkelt dele et prosjekt med andre brukere som ikke har en konto på ProjectOS.",
 				"create": "Opprett en delelenke",
 				"name": "Navn (valgfritt)",
 				"namePlaceholder": "f.eks. Lorem Ipsum",
@@ -535,19 +535,19 @@
 	},
 	"migrate": {
 		"title": "Importer fra andre tjenester",
-		"titleService": "Importer dine data fra {name} til Vikunja",
-		"import": "Importer dine data til Vikunja",
+		"titleService": "Importer dine data fra {name} til ProjectOS",
+		"import": "Importer dine data til ProjectOS",
 		"description": "Klikk på logoen til en av tjenester fra tredjeparter nedenfor for å starte.",
-		"descriptionDo": "Vikunja vil importere alle lister, oppgaver, notater, påminnelser og filer du har tilgang til.",
-		"authorize": "For å autorisere Vikunja til din {name} konto, klikk på knappen nedenfor.",
+		"descriptionDo": "ProjectOS vil importere alle lister, oppgaver, notater, påminnelser og filer du har tilgang til.",
+		"authorize": "For å autorisere ProjectOS til din {name} konto, klikk på knappen nedenfor.",
 		"getStarted": "Kom i gang",
 		"inProgress": "Import pågår…",
 		"alreadyMigrated1": "Det ser ut som om du allerede har importert dine ting fra {name} på {date}.",
 		"alreadyMigrated2": "Importering på nytt er mulig, men kan skape duplikater. Er du sikker?",
 		"confirm": "Jeg er sikker, vennligst begynn å migrere nå!",
-		"importUpload": "For å importere data fra {name} til Vikunja, klikk på knappen nedenfor for å velge en fil.",
+		"importUpload": "For å importere data fra {name} til ProjectOS, klikk på knappen nedenfor for å velge en fil.",
 		"upload": "Last opp fil",
-		"migrationStartedWillReciveEmail": "Vikunja importerer nå dine lister/prosjekter, oppgaver, notater, påminnelser og filer fra {service}. Fra vår side vil vi sende deg en e-post når det er fullført. Du kan lukke dette vinduet nå.",
+		"migrationStartedWillReciveEmail": "ProjectOS importerer nå dine lister/prosjekter, oppgaver, notater, påminnelser og filer fra {service}. Fra vår side vil vi sende deg en e-post når det er fullført. Du kan lukke dette vinduet nå.",
 		"migrationInProgress": "Det pågår en migrering. Vent til denne er ferdig."
 	},
 	"label": {
@@ -607,7 +607,7 @@
 		"searchPlaceholder": "Skriv for å søke…",
 		"previous": "Forrige",
 		"next": "Neste",
-		"poweredBy": "Drevet av Vikunja",
+		"poweredBy": "Drevet av ProjectOS",
 		"info": "Info",
 		"create": "Opprett",
 		"doit": "Gjør det!",
@@ -747,7 +747,7 @@
 			"canuse": "Du kan bruke datamateriale til å filtrere etter relative datoer.",
 			"learnhow": "Se hvordan det fungerer",
 			"title": "Datoformat",
-			"intro": "Ved bruk av filteret kan du spesifisere relative datoer som er løst løpende av Vikunja ved bruk av filteret.",
+			"intro": "Ved bruk av filteret kan du spesifisere relative datoer som er løst løpende av ProjectOS ved bruk av filteret.",
 			"expression": "Hver datodato for uttrykket starter med en ankerdato, som enten kan være {0}, eller en dato-streng som slutter med {1}. Forankringsdatoen kan alternativt følges av ett eller flere matematiske uttrykk.",
 			"similar": "Disse uttrykkene ligner på de som er gitt av {0} og {1}.",
 			"add1Day": "Legg til en dag",
@@ -996,7 +996,7 @@
 			"intro": "Når du oppretter en oppgave, kan du bruke spesielle nøkkelord ved å legge til attributter direkte til den nylig opprettede oppgaven. Dette gjør at du kan legge til vanlig brukte attributter mye raskere.",
 			"multiple": "Dette kan du bruke flere ganger.",
 			"label1": "For å legge til en etikett, legg til prefiks på etiketten med {prefix}.",
-			"label2": "Vikunja skal først sjekke om etiketten allerede er til stede og lagre den om ikke.",
+			"label2": "ProjectOS skal først sjekke om etiketten allerede er til stede og lagre den om ikke.",
 			"label3": "For å bruke mellomrom, legg bare til en \" eller ' rundt etikettens navn.",
 			"label4": "For eksempel: {prefix}\"Etikett med mellomrom\".",
 			"priority1": "For å angi en oppgaves prioritet, legg til et nummer 1-5, med en {prefix} som prefiks.",
@@ -1143,12 +1143,12 @@
 		"views": "Visninger"
 	},
 	"apiConfig": {
-		"url": "Vikunja URL",
+		"url": "ProjectOS URL",
 		"urlPlaceholder": "f.eks. https://localhost:3456",
 		"change": "endre",
-		"use": "Bruker Vikunja installasjonen på {0}",
-		"error": "Kan ikke bruke eller finne en installasjon av Vikunja på \"{domain}\". Kontroller at URL er riktig og at det kan nås ved direkte forespørsel.",
-		"success": "Bruker Vikunja installasjonen på \"{domain}\".",
+		"use": "Bruker ProjectOS installasjonen på {0}",
+		"error": "Kan ikke bruke eller finne en installasjon av ProjectOS på \"{domain}\". Kontroller at URL er riktig og at det kan nås ved direkte forespørsel.",
+		"success": "Bruker ProjectOS installasjonen på \"{domain}\".",
 		"urlRequired": "En URL er nødvendig."
 	},
 	"loadingError": {

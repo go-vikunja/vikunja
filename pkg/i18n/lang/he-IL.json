@@ -2,30 +2,30 @@
 	"notifications": {
 		"greeting": "שלום %[1],",
 		"email_confirm": {
-			"subject": "%[1]sֿ, נא לאמת כתובת אימייל שלך ב-Vikunja",
+			"subject": "%[1]sֿ, נא לאמת כתובת אימייל שלך ב-ProjectOS",
 			"welcome": "ברוכ/ה הבא/ה לוויקוניה!",
 			"confirm": "ללחוץ על הלינק מתחת כדי לאשרר כתובת אימייל שלך"
 		},
 		"password": {
 			"changed": {
-				"subject": "סיסמתך ב-Vikunja שונתה",
-				"success": "סיסמת חשבונך ב-Vikunja שונתה בהצלחה",
+				"subject": "סיסמתך ב-ProjectOS שונתה",
+				"success": "סיסמת חשבונך ב-ProjectOS שונתה בהצלחה",
 				"warning": "אם זה לא ממך, ייתכן שמישהו סיכן את חשבונך. במקרה זה, יש ליצור קשר עם מנהל השרת"
 			},
 			"reset": {
-				"subject": "לאפס סיסמתך ב-Vikunja",
+				"subject": "לאפס סיסמתך ב-ProjectOS",
 				"instructions": "יש ללחוץ על הלינק מתחת לאפס סיסמתך",
 				"valid_duration": "הלינק יישאר למשך 24 שעות"
 			}
 		},
 		"totp": {
 			"invalid": {
-				"subject": "היה לפני רגע ניסיון כושל להיכנס לחשבוןך ב-Vikunja",
+				"subject": "היה לפני רגע ניסיון כושל להיכנס לחשבוןך ב-ProjectOS",
 				"message": "מישהו ניסה להיכנס לחשבונך עם שם משתמש וסיסמה תקינים אבל TOTP passcode לא תקין",
 				"warning": "** אם זה לא היה את/ה, אז סיסמתך נודעה. חשוב ליצור סיסמה חדשה מיידית**"
 			},
 			"account_locked": {
-				"subject": "חסמנו חשבונך ב-Vikunja",
+				"subject": "חסמנו חשבונך ב-ProjectOS",
 				"message": "מישהו ניסה להיכנס עם הזיהוי שלך אבל לא סיפק TOTP passcode תקין."
 			}
 		},

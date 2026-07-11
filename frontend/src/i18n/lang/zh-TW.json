@@ -12,8 +12,8 @@
 		"addToHomeScreen": "將此應用程序添加到您的主屏幕以便更快地訪問和改善體驗。",
 		"goToOverview": "轉到概覽",
 		"project": {
-			"importText": "將您的項目和任務從其他服務導入 Vikunja：",
-			"import": "將您的數據導入到 Vikunja"
+			"importText": "將您的項目和任務從其他服務導入 ProjectOS：",
+			"import": "將您的數據導入到 ProjectOS"
 		}
 	},
 	"demo": {
@@ -22,7 +22,7 @@
 		"accountWillBeDeleted": "您的帳戶將被刪除，包括您創建的所有項目、任務和附件。"
 	},
 	"ready": {
-		"loading": "Vikunja 正在加載…",
+		"loading": "ProjectOS 正在加載…",
 		"errorOccured": "發生錯誤：",
 		"checkApiUrl": "請檢查 API 網址是否正確。",
 		"noApiUrlConfigured": "未配置 API 網址，請在下框中設置："
@@ -144,7 +144,7 @@
 			},
 			"caldav": {
 				"title": "CalDAV",
-				"more": "更多關於 Vikunja 的 CalDAV 信息",
+				"more": "更多關於 ProjectOS 的 CalDAV 信息",
 				"tokens": "CalDAV 令牌"
 			},
 			"avatar": {
@@ -163,7 +163,7 @@
 				"title": "快速添加 Magic 模式",
 				"disabled": "停用",
 				"todoist": "Todoist",
-				"vikunja": "Vikunja"
+				"vikunja": "ProjectOS"
 			},
 			"appearance": {
 				"title": "配色方案",
@@ -179,7 +179,7 @@
 			},
 			"apiTokens": {
 				"title": "API 令牌",
-				"general": "API 令牌允許您在無需用户憑據的情況下使用 Vikunja 的 API。",
+				"general": "API 令牌允許您在無需用户憑據的情況下使用 ProjectOS 的 API。",
 				"apiDocs": "查看 api 文檔",
 				"createAToken": "建立令牌",
 				"createToken": "建立令牌",
@@ -207,7 +207,7 @@
 			}
 		},
 		"deletion": {
-			"title": "刪除您的 Vikunja 帳號",
+			"title": "刪除您的 ProjectOS 帳號",
 			"text1": "帳號的刪除是永久性的且無法撤消。 我們將刪除您的所有項目、任務以及與之相關的所有內容。",
 			"text2": "若要繼續，請輸入您的密碼。您將收到一封包含更多説明的電子郵件。",
 			"text3": "若要繼續，請按下面的按鈕。您將收到一封包含進一步説明的電子郵件。",
@@ -215,7 +215,7 @@
 			"requestSuccess": "請求成功。您將收到一封包含更多説明的電子郵件。",
 			"passwordRequired": "請輸入密碼",
 			"confirmSuccess": "已成功確認您帳號的刪除請求。您的帳户將在三天內註銷刪除。",
-			"scheduled": "您的 Vikunja 帳號將於 {date} ({dateSince}) 完成註銷刪除。",
+			"scheduled": "您的 ProjectOS 帳號將於 {date} ({dateSince}) 完成註銷刪除。",
 			"scheduledCancel": "要取消您的帳號刪除操作，請單擊此處。",
 			"scheduledCancelText": "若要取消您的帳號刪除操作，請在下面輸入您的密碼：",
 			"scheduledCancelButton": "若要取消您的帳號刪除，請按下面的按鈕：",
@@ -223,12 +223,12 @@
 			"scheduledCancelSuccess": "帳號刪除操作已撤銷。"
 		},
 		"export": {
-			"title": "導出 Vikunja 數據",
-			"description": "您可以索取所有 Vikunja 數據的副本。 這包括專案、任務以及與它們相關的所有內容。 您可以通過遷移功能將這些數據導入到任何 Vikunja 實例中。",
+			"title": "導出 ProjectOS 數據",
+			"description": "您可以索取所有 ProjectOS 數據的副本。 這包括專案、任務以及與它們相關的所有內容。 您可以通過遷移功能將這些數據導入到任何 ProjectOS 實例中。",
 			"descriptionPasswordRequired": "請輸入您的密碼以繼續。",
-			"request": "請求我的 Vikunja 資料副本",
-			"success": "已成功請求您的 Vikunja 數據！一旦準備好下載，我們將向您發送一封電子郵件。",
-			"downloadTitle": "下載您的 Vikunja 匯出資料",
+			"request": "請求我的 ProjectOS 資料副本",
+			"success": "已成功請求您的 ProjectOS 數據！一旦準備好下載，我們將向您發送一封電子郵件。",
+			"downloadTitle": "下載您的 ProjectOS 匯出資料",
 			"ready": "您的匯出檔已準備好，可下載至 {0}。",
 			"requestNew": "請求另一份匯出資料"
 		}
@@ -544,19 +544,19 @@
 	},
 	"migrate": {
 		"title": "從其他服務匯入",
-		"titleService": "從 {name} 匯入您的數據到 Vikunja",
-		"import": "匯入數據到 Vikunja",
+		"titleService": "從 {name} 匯入您的數據到 ProjectOS",
+		"import": "匯入數據到 ProjectOS",
 		"description": "點擊下方的第三方服務標誌以開始操作。",
-		"descriptionDo": "Vikunja 將導入所有您有訪問權限的清單、任務、筆記、提醒和文件。",
-		"authorize": "要授權 Vikunja 訪問您的 {name} 帳號，請點擊下面的按鈕。",
+		"descriptionDo": "ProjectOS 將導入所有您有訪問權限的清單、任務、筆記、提醒和文件。",
+		"authorize": "要授權 ProjectOS 訪問您的 {name} 帳號，請點擊下面的按鈕。",
 		"getStarted": "開始",
 		"inProgress": "匯入進行中...",
 		"alreadyMigrated1": "{date} 已經從 {name} 匯入過數據",
 		"alreadyMigrated2": "可以再次匯入，但可能會產生重複資料。您確定要繼續嗎？",
 		"confirm": "我確定, 請立即開始匯入！",
-		"importUpload": "要將 {name} 的資料匯入 Vikunja，請點擊下方按鈕選擇檔案。",
+		"importUpload": "要將 {name} 的資料匯入 ProjectOS，請點擊下方按鈕選擇檔案。",
 		"upload": "點擊上傳文件",
-		"migrationStartedWillReciveEmail": "Vikunja 現在將從 {service} 導入您的列表/項目、任務、註釋、提醒和文件。 由於這需要一段時間，完成後我們會向您發送一封電子郵件。 您現在可以關閉此窗口。",
+		"migrationStartedWillReciveEmail": "ProjectOS 現在將從 {service} 導入您的列表/項目、任務、註釋、提醒和文件。 由於這需要一段時間，完成後我們會向您發送一封電子郵件。 您現在可以關閉此窗口。",
 		"migrationInProgress": "遷移正在進行中。請等待完成。"
 	},
 	"label": {
@@ -616,7 +616,7 @@
 		"searchPlaceholder": "輸入以搜尋…",
 		"previous": "上一個",
 		"next": "下一個",
-		"poweredBy": "由 Vikunja 提供支持",
+		"poweredBy": "由 ProjectOS 提供支持",
 		"info": "信息",
 		"create": "建立",
 		"doit": "繼續！",
@@ -756,7 +756,7 @@
 			"canuse": "你可以使用日期運算來篩選相對日期。",
 			"learnhow": "查看它如何工作",
 			"title": "日期運算",
-			"intro": "請指定相對日期，Vikunja 在套用篩選時會即時解析。",
+			"intro": "請指定相對日期，ProjectOS 在套用篩選時會即時解析。",
 			"expression": "每個日期運算表達式都以一個基準日期開始，該基準日期可以是 {0}，或以 {1} 結尾的日期字串。基準日期後面可選擇性地跟隨一個或多個運算表達式。",
 			"similar": "這些運算表達式的語法與 {0} 和 {1} 所提供的方式類似。",
 			"add1Day": "加一天",
@@ -927,7 +927,7 @@
 		},
 		"quickAddMagic": {
 			"intro": "建立任務時，您可以使用特殊關鍵字直接為新建立的任務添加屬性。這可以讓您更快速地為任務加入常用屬性。",
-			"label2": "Vikunja 會先檢查標籤是否已存在，如果不存在則會建立該標籤。",
+			"label2": "ProjectOS 會先檢查標籤是否已存在，如果不存在則會建立該標籤。",
 			"priority1": "要設定任務的優先級，請添加數字 1-5，並以 {prefix} 為前綴。",
 			"assignees": "將任務分配給用户，請將帶有 {prefix} 前綴的用户名添加到此任務中。",
 			"project1": "要設定任務顯示的項目，請輸入其名稱，前綴為{prefix}。",
