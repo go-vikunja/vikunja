@@ -15,8 +15,6 @@ export default class ProjectViewModel extends AbstractModel<IProjectView> implem
 		s: '',
 	}
 	position = 0
-	projectScope: IProjectView['projectScope'] = 'current'
-	includedProjectIds: IProjectView['includedProjectIds'] = []
 	
 	bucketConfiguration = []
 	bucketConfigurationMode: ProjectViewBucketConfigurationMode = 'manual'
@@ -32,9 +30,6 @@ export default class ProjectViewModel extends AbstractModel<IProjectView> implem
 		
 		if (!this.bucketConfiguration) {
 			this.bucketConfiguration = []
-		}
-		if (!this.includedProjectIds) {
-			this.includedProjectIds = []
 		}
 	}
 

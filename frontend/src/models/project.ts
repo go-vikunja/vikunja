@@ -25,6 +25,8 @@ export default class ProjectModel extends AbstractModel<IProject> implements IPr
 	position = 0
 	backgroundBlurHash = ''
 	parentProjectId = 0
+	taskScope: IProject['taskScope'] = 'current'
+	includedProjectIds: IProject['includedProjectIds'] = []
 	views: IProjectView[] = []
 	
 	created: Date = null
@@ -35,6 +37,9 @@ export default class ProjectModel extends AbstractModel<IProject> implements IPr
 		this.assignData(data)
 
 		this.owner = new UserModel(this.owner)
+		if (!this.includedProjectIds) {
+			this.includedProjectIds = []
+		}
 
 		// Make all tasks to task models
 		this.tasks = this.tasks.map(t => {

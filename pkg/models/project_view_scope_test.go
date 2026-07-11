@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGetProjectsForView(t *testing.T) {
+func TestGetProjectsForProjectScope(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()
 	defer s.Close()
@@ -19,21 +19,21 @@ func TestGetProjectsForView(t *testing.T) {
 	current := []*Project{{ID: 27}}
 
 	t.Run("current project only", func(t *testing.T) {
-		projects, err := getProjectsForView(s, &ProjectView{ProjectID: 27, ProjectScope: ProjectViewProjectScopeCurrent}, current)
+		projects, err := getProjectsForProjectScope(s, &Project{ID: 27, TaskScope: ProjectTaskScopeCurrent}, current)
 		require.NoError(t, err)
 		assert.Equal(t, []int64{27}, projectIDs(projects))
 	})
 
 	t.Run("all descendants", func(t *testing.T) {
-		projects, err := getProjectsForView(s, &ProjectView{ProjectID: 27, ProjectScope: ProjectViewProjectScopeAll}, current)
+		projects, err := getProjectsForProjectScope(s, &Project{ID: 27, TaskScope: ProjectTaskScopeAll}, current)
 		require.NoError(t, err)
 		assert.ElementsMatch(t, []int64{27, 12, 25, 26}, projectIDs(projects))
 	})
 
 	t.Run("selected descendants ignores unrelated projects", func(t *testing.T) {
-		projects, err := getProjectsForView(s, &ProjectView{
-			ProjectID:          27,
-			ProjectScope:       ProjectViewProjectScopeSelected,
+		projects, err := getProjectsForProjectScope(s, &Project{
+			ID:                 27,
+			TaskScope:          ProjectTaskScopeSelected,
 			IncludedProjectIDs: []int64{25, 1},
 		}, current)
 		require.NoError(t, err)
@@ -41,18 +41,18 @@ func TestGetProjectsForView(t *testing.T) {
 	})
 }
 
-func TestProjectViewIncludedProjectIDsPersistence(t *testing.T) {
+func TestProjectIncludedProjectIDsPersistence(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()
 	defer s.Close()
 
-	view := &ProjectView{ID: 1, IncludedProjectIDs: []int64{12, 21}}
-	_, err := s.ID(view.ID).Cols("included_project_ids").Update(view)
+	project := &Project{ID: 27, IncludedProjectIDs: []int64{12, 21}}
+	_, err := s.ID(project.ID).Cols("included_project_ids").Update(project)
 	require.NoError(t, err)
 
-	stored, err := GetProjectViewByID(s, view.ID)
+	stored, err := GetProjectSimpleByID(s, project.ID)
 	require.NoError(t, err)
-	assert.Equal(t, view.IncludedProjectIDs, stored.IncludedProjectIDs)
+	assert.Equal(t, project.IncludedProjectIDs, stored.IncludedProjectIDs)
 }
 
 func projectIDs(projects []*Project) []int64 {

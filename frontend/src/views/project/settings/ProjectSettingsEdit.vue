@@ -21,6 +21,43 @@
 		<FormField :label="$t('project.parent')">
 			<ProjectSearch v-model="parentProject" />
 		</FormField>
+		<FormField
+			v-if="descendantProjects.length > 0"
+			:label="$t('project.edit.taskScope')"
+		>
+			<template #default="{ id }">
+				<div class="select">
+					<select
+						:id="id"
+						v-model="project.taskScope"
+					>
+						<option value="current">
+							{{ $t('project.edit.taskScopeCurrent') }}
+						</option>
+						<option value="all">
+							{{ $t('project.edit.taskScopeAll') }}
+						</option>
+						<option value="selected">
+							{{ $t('project.edit.taskScopeSelected') }}
+						</option>
+					</select>
+				</div>
+			</template>
+		</FormField>
+		<div
+			v-if="project.taskScope === 'selected'"
+			class="field mbe-4"
+		>
+			<FancyCheckbox
+				v-for="item in descendantProjects"
+				:key="item.project.id"
+				:model-value="project.includedProjectIds.includes(item.project.id)"
+				is-block
+				@update:modelValue="setProjectIncluded(item.project.id, $event)"
+			>
+				<span :style="{paddingInlineStart: `${item.depth}rem`}">{{ item.project.title }}</span>
+			</FancyCheckbox>
+		</div>
 		<FormField :label="$t('project.edit.description')">
 			<Editor
 				id="projectdescription"
@@ -65,6 +102,7 @@ import ColorPicker from '@/components/input/ColorPicker.vue'
 import CreateEdit from '@/components/misc/CreateEdit.vue'
 import FormField from '@/components/input/FormField.vue'
 import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
+import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 
 import type {IProject} from '@/modelTypes/IProject'
 
@@ -90,6 +128,24 @@ const {project, save: saveProject, isLoading} = useProject(() => props.projectId
 
 const parentProject = ref<IProject | null>(null)
 const isSaving = ref(false)
+
+const descendantProjects = computed(() => {
+	const result: Array<{project: IProject, depth: number}> = []
+	const collect = (projectId: number, depth: number) => {
+		projectStore.getChildProjects(projectId).forEach(child => {
+			result.push({project: child, depth})
+			collect(child.id, depth + 1)
+		})
+	}
+	collect(project.id, 0)
+	return result
+})
+
+function setProjectIncluded(projectId: number, included: boolean) {
+	project.includedProjectIds = included
+		? [...project.includedProjectIds, projectId]
+		: project.includedProjectIds.filter(id => id !== projectId)
+}
 
 const loadingModel = computed({
 	get: () => isSaving.value || isLoading.value,

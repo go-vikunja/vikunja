@@ -212,8 +212,8 @@ func getRelevantProjectsFromCollection(s *xorm.Session, a web.Auth, tf *TaskColl
 	return []*Project{{ID: tf.ProjectID}}, nil
 }
 
-func getProjectsForView(s *xorm.Session, view *ProjectView, current []*Project) ([]*Project, error) {
-	if view == nil || view.ProjectScope == "" || view.ProjectScope == ProjectViewProjectScopeCurrent {
+func getProjectsForProjectScope(s *xorm.Session, scopeProject *Project, current []*Project) ([]*Project, error) {
+	if scopeProject.TaskScope == "" || scopeProject.TaskScope == ProjectTaskScopeCurrent {
 		return current, nil
 	}
 
@@ -224,29 +224,36 @@ func getProjectsForView(s *xorm.Session, view *ProjectView, current []*Project) 
 		SELECT p.id, p.parent_project_id FROM projects p
 		INNER JOIN descendant_projects dp ON p.parent_project_id = dp.id
 	)
-	SELECT p.* FROM projects p INNER JOIN descendant_projects dp ON p.id = dp.id`, view.ProjectID).Find(&descendants)
+	SELECT p.* FROM projects p INNER JOIN descendant_projects dp ON p.id = dp.id`, scopeProject.ID).Find(&descendants)
 	if err != nil {
 		return nil, err
 	}
 
-	selected := make(map[int64]bool, len(view.IncludedProjectIDs))
-	for _, id := range view.IncludedProjectIDs {
+	selected := make(map[int64]bool, len(scopeProject.IncludedProjectIDs))
+	for _, id := range scopeProject.IncludedProjectIDs {
 		selected[id] = true
 	}
-	for _, project := range descendants {
-		if view.ProjectScope == ProjectViewProjectScopeAll || selected[project.ID] {
-			current = append(current, project)
+	for _, descendant := range descendants {
+		if scopeProject.TaskScope == ProjectTaskScopeAll || selected[descendant.ID] {
+			current = append(current, descendant)
 		}
 	}
 	return current, nil
 }
 
-func getRelevantProjectsForView(s *xorm.Session, a web.Auth, tf *TaskCollection, view *ProjectView) ([]*Project, error) {
+func getRelevantProjectsForView(s *xorm.Session, a web.Auth, tf *TaskCollection, _ *ProjectView) ([]*Project, error) {
 	projects, err := getRelevantProjectsFromCollection(s, a, tf)
 	if err != nil {
 		return nil, err
 	}
-	return getProjectsForView(s, view, projects)
+	if tf.ProjectID <= 0 {
+		return projects, nil
+	}
+	project, err := GetProjectSimpleByID(s, tf.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+	return getProjectsForProjectScope(s, project, projects)
 }
 
 func getFilterValueForBucketFilter(filter string, view *ProjectView) (newFilter string, err error) {

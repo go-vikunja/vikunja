@@ -149,18 +149,6 @@ type ProjectViewBucketConfiguration struct {
 	Filter *TaskCollection `json:"filter" doc:"The filter query that decides which tasks land in this bucket. See https://vikunja.io/docs/filters."`
 }
 
-type ProjectViewProjectScope string
-
-const (
-	ProjectViewProjectScopeCurrent  ProjectViewProjectScope = "current"
-	ProjectViewProjectScopeAll      ProjectViewProjectScope = "all"
-	ProjectViewProjectScopeSelected ProjectViewProjectScope = "selected"
-)
-
-func (p *ProjectViewProjectScope) Schema(_ huma.Registry) *huma.Schema {
-	return &huma.Schema{Type: "string", Enum: []any{"current", "all", "selected"}}
-}
-
 type ProjectView struct {
 	// The unique numeric id of this view
 	ID int64 `xorm:"autoincr not null unique pk" json:"id" param:"view" readOnly:"true" doc:"The unique, numeric id of this view. Set by the server."`
@@ -174,9 +162,7 @@ type ProjectView struct {
 	// The filter query to match tasks by. Check out https://vikunja.io/docs/filters for a full explanation.
 	Filter *TaskCollection `xorm:"json null default null" query:"filter" json:"filter" doc:"The filter query used to match tasks shown in this view. See https://vikunja.io/docs/filters."`
 	// The position of this view in the list. The list of all views will be sorted by this parameter.
-	Position           float64                 `xorm:"double null" json:"position" doc:"The position of this view in the project's list of views. Views are sorted ascending by this value."`
-	ProjectScope       ProjectViewProjectScope `xorm:"varchar(20) not null default 'current'" json:"project_scope" enum:"current,all,selected" doc:"Which projects supply tasks to this view: only the current project, all descendants, or selected descendants."`
-	IncludedProjectIDs []int64                 `xorm:"json null 'included_project_ids'" json:"included_project_ids" doc:"The descendant project ids included when project_scope is selected. The current project is always included."`
+	Position float64 `xorm:"double null" json:"position" doc:"The position of this view in the project's list of views. Views are sorted ascending by this value."`
 
 	// The bucket configuration mode. Can be `none`, `manual` or `filter`. `manual` allows to move tasks between buckets as you normally would. `filter` creates buckets based on a filter for each bucket.
 	BucketConfigurationMode BucketConfigurationModeKind `xorm:"default 0" json:"bucket_configuration_mode" swaggertype:"string" enums:"none,manual,filter" doc:"The bucket configuration mode. One of none, manual or filter. manual lets you move tasks between buckets; filter creates a bucket per filter."`
@@ -475,8 +461,6 @@ func (pv *ProjectView) Update(s *xorm.Session, _ web.Auth) (err error) {
 			"view_kind",
 			"filter",
 			"position",
-			"project_scope",
-			"included_project_ids",
 			"bucket_configuration_mode",
 			"bucket_configuration",
 			"default_bucket_id",

@@ -31,9 +31,22 @@ import (
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/web"
 
+	"github.com/danielgtaylor/huma/v2"
 	"xorm.io/builder"
 	"xorm.io/xorm"
 )
+
+type ProjectTaskScope string
+
+const (
+	ProjectTaskScopeCurrent  ProjectTaskScope = "current"
+	ProjectTaskScopeAll      ProjectTaskScope = "all"
+	ProjectTaskScopeSelected ProjectTaskScope = "selected"
+)
+
+func (p *ProjectTaskScope) Schema(_ huma.Registry) *huma.Schema {
+	return &huma.Schema{Type: "string", Enum: []any{"current", "all", "selected"}}
+}
 
 // Project represents a project of tasks
 type Project struct {
@@ -48,9 +61,11 @@ type Project struct {
 	// The hex color of this project
 	HexColor string `xorm:"varchar(6) null" json:"hex_color" valid:"runelength(0|7)" maxLength:"7" doc:"The hex color of this project, without the leading #."`
 
-	OwnerID         int64    `xorm:"bigint INDEX not null" json:"-"`
-	ParentProjectID int64    `xorm:"bigint INDEX null" json:"parent_project_id" doc:"The id of the parent project. 0 if this is a top-level project."`
-	ParentProject   *Project `xorm:"-" json:"-"`
+	OwnerID            int64            `xorm:"bigint INDEX not null" json:"-"`
+	ParentProjectID    int64            `xorm:"bigint INDEX null" json:"parent_project_id" doc:"The id of the parent project. 0 if this is a top-level project."`
+	ParentProject      *Project         `xorm:"-" json:"-"`
+	TaskScope          ProjectTaskScope `xorm:"varchar(20) not null default 'current'" json:"task_scope" enum:"current,all,selected" doc:"Which projects supply tasks when viewing this project: only the current project, all descendants, or selected descendants."`
+	IncludedProjectIDs []int64          `xorm:"json null 'included_project_ids'" json:"included_project_ids" doc:"The descendant project ids included when task_scope is selected. The current project is always included."`
 
 	// The user who created this project.
 	Owner *user.User `xorm:"-" json:"owner" valid:"-" readOnly:"true" doc:"The user who owns this project. Set by the server; ignored on write."`
@@ -1212,6 +1227,8 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 		"hex_color",
 		"parent_project_id",
 		"position",
+		"task_scope",
+		"included_project_ids",
 	}
 	if project.Description != "" {
 		colsToUpdate = append(colsToUpdate, "description")

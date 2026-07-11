@@ -4,6 +4,8 @@ import type {IUser} from './IUser'
 import type {ISubscription} from './ISubscription'
 import type {IProjectView} from '@/modelTypes/IProjectView'
 
+export type ProjectTaskScope = 'current' | 'all' | 'selected'
+
 
 export interface IProject extends IAbstract {
 	id: number
@@ -20,6 +22,8 @@ export interface IProject extends IAbstract {
 	position: number
 	backgroundBlurHash: string
 	parentProjectId: number
+	taskScope: ProjectTaskScope
+	includedProjectIds: IProject['id'][]
 	views: IProjectView[]
 	
 	created: Date

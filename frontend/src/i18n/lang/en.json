@@ -407,6 +407,10 @@
       "description": "Description",
       "descriptionPlaceholder": "Enter a description for this project, hit '/' for more options…",
       "color": "Color",
+      "taskScope": "Tasks to show in this project",
+      "taskScopeCurrent": "Only tasks from this project",
+      "taskScopeAll": "Tasks from this project and all child projects",
+      "taskScopeSelected": "Tasks from this project and selected child projects",
       "success": "The project was successfully updated."
     },
     "share": {
@@ -556,10 +560,6 @@
       "bucketConfig": "Bucket configuration",
       "bucketConfigManual": "Manual",
       "filter": "Filter",
-      "projectScope": "Tasks to show",
-      "projectScopeCurrent": "Only this project",
-      "projectScopeAll": "This project and all child projects",
-      "projectScopeSelected": "This project and selected child projects",
       "create": "Create view",
       "createSuccess": "The view was created successfully.",
       "titleRequired": "Please provide a title.",
