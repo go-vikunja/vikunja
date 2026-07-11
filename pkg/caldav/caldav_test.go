@@ -526,6 +526,26 @@ func TestGetCaldavColor(t *testing.T) {
 	}
 }
 
+func Test_formatDuration(t *testing.T) {
+	tests := []struct {
+		name string
+		in   time.Duration
+		want string
+	}{
+		{"whole hours", time.Hour, "1H0M0S"},
+		{"hours and minutes", time.Hour + 30*time.Minute, "1H30M0S"},
+		{"minutes only", 30 * time.Minute, "0H30M0S"},
+		{"minutes only, not a round hour", 45 * time.Minute, "0H45M0S"},
+		{"hours, minutes and seconds", 2*time.Hour + 15*time.Minute + 30*time.Second, "2H15M30S"},
+		{"seconds only", 30 * time.Second, "0H0M30S"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, formatDuration(tt.in))
+		})
+	}
+}
+
 func TestEscapeICalText(t *testing.T) {
 	tests := []struct {
 		name string

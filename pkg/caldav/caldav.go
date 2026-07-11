@@ -119,12 +119,14 @@ COLOR:` + color
 }
 
 func formatDuration(duration time.Duration) string {
-	seconds := duration.Seconds() - duration.Minutes()*60
-	minutes := duration.Minutes() - duration.Hours()*60
+	seconds := int64(duration.Seconds())
+	hours := seconds / 3600
+	minutes := (seconds % 3600) / 60
+	seconds %= 60
 
-	return strconv.FormatFloat(duration.Hours(), 'f', 0, 64) + `H` +
-		strconv.FormatFloat(minutes, 'f', 0, 64) + `M` +
-		strconv.FormatFloat(seconds, 'f', 0, 64) + `S`
+	return strconv.FormatInt(hours, 10) + `H` +
+		strconv.FormatInt(minutes, 10) + `M` +
+		strconv.FormatInt(seconds, 10) + `S`
 }
 
 func getRruleFromInterval(interval int64) (freq string, newInterval int64) {
