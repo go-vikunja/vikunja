@@ -91,15 +91,18 @@ func parseTimeFromUserInput(timeString string, loc *time.Location) (value time.T
 		if len(parts) < 3 {
 			return
 		}
-		year, err := strconv.Atoi(parts[0])
+		// Assign to the named err return (not :=) so a successful manual parse
+		// clears the error from the failed layout attempts above.
+		var year, month, day int
+		year, err = strconv.Atoi(parts[0])
 		if err != nil {
 			return value, err
 		}
-		month, err := strconv.Atoi(parts[1])
+		month, err = strconv.Atoi(parts[1])
 		if err != nil {
 			return value, err
 		}
-		day, err := strconv.Atoi(parts[2])
+		day, err = strconv.Atoi(parts[2])
 		if err != nil {
 			return value, err
 		}

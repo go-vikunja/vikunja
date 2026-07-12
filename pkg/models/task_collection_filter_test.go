@@ -250,6 +250,29 @@ func TestParseFilter(t *testing.T) {
 		resultTime := result[0].value.(time.Time)
 		assert.Equal(t, expectedDate.Format(time.RFC3339), resultTime.Format(time.RFC3339))
 	})
+	t.Run("date field with non-zero-padded date", func(t *testing.T) {
+		result, err := getTaskFiltersFromFilterString("start_date = 2023-6-5", "UTC")
+
+		require.NoError(t, err)
+		require.Len(t, result, 1)
+		assert.Equal(t, "start_date", result[0].field)
+		assert.Equal(t, taskFilterComparatorEquals, result[0].comparator)
+		expectedDate, err := time.ParseInLocation("2006-01-02", "2023-06-05", time.UTC)
+		require.NoError(t, err)
+		resultTime := result[0].value.(time.Time)
+		assert.Equal(t, expectedDate.Format(time.RFC3339), resultTime.Format(time.RFC3339))
+	})
+	t.Run("date field with non-zero-padded day", func(t *testing.T) {
+		result, err := getTaskFiltersFromFilterString("due_date = 2022-11-1", "UTC")
+
+		require.NoError(t, err)
+		require.Len(t, result, 1)
+		assert.Equal(t, "due_date", result[0].field)
+		expectedDate, err := time.ParseInLocation("2006-01-02", "2022-11-01", time.UTC)
+		require.NoError(t, err)
+		resultTime := result[0].value.(time.Time)
+		assert.Equal(t, expectedDate.Format(time.RFC3339), resultTime.Format(time.RFC3339))
+	})
 	t.Run("in query with multiple values", func(t *testing.T) {
 		result, err := getTaskFiltersFromFilterString("priority in 1,3,5", "UTC")
 
