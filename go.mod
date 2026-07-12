@@ -79,7 +79,7 @@ require (
 	github.com/traefik/yaegi v0.16.1
 	github.com/ulule/limiter/v3 v3.11.2
 	github.com/wneessen/go-mail v0.8.1
-	github.com/yuin/goldmark v1.8.2
+	github.com/yuin/goldmark v1.8.4
 	golang.org/x/crypto v0.54.0
 	golang.org/x/image v0.44.0
 	golang.org/x/net v0.57.0
