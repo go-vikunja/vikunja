@@ -97,3 +97,42 @@
   relation_kind: 'parenttask'
   created_by_id: 6
   created: 2018-12-01 15:13:12
+# Blocked/blocking pairs for relation filter tests:
+# task 10 is blocked by task 11 (open), task 4 is blocked by task 2 (done),
+# task 12 is blocking task 2 (done)
+- id: 17
+  task_id: 10
+  other_task_id: 11
+  relation_kind: 'blocked'
+  created_by_id: 1
+  created: 2018-12-01 15:13:12
+- id: 18
+  task_id: 11
+  other_task_id: 10
+  relation_kind: 'blocking'
+  created_by_id: 1
+  created: 2018-12-01 15:13:12
+- id: 19
+  task_id: 4
+  other_task_id: 2
+  relation_kind: 'blocked'
+  created_by_id: 1
+  created: 2018-12-01 15:13:12
+- id: 20
+  task_id: 2
+  other_task_id: 4
+  relation_kind: 'blocking'
+  created_by_id: 1
+  created: 2018-12-01 15:13:12
+- id: 21
+  task_id: 12
+  other_task_id: 2
+  relation_kind: 'blocking'
+  created_by_id: 1
+  created: 2018-12-01 15:13:12
+- id: 22
+  task_id: 2
+  other_task_id: 12
+  relation_kind: 'blocked'
+  created_by_id: 1
+  created: 2018-12-01 15:13:12

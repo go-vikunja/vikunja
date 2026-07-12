@@ -96,6 +96,22 @@ func TestHumaTaskCollection(t *testing.T) {
 			rec := get("/api/v2/projects/1/tasks?filter=due_date%20%3E%20invalid")
 			assert.Equal(t, http.StatusBadRequest, rec.Code, "body: %s", rec.Body.String())
 		})
+		t.Run("filter by open relations", func(t *testing.T) {
+			// open_relations = 'blocked' matches only tasks blocked by a task
+			// which is not done yet: task 10 (blocked by open task 11) and task 2
+			// (blocked by open task 12), but not task 4 (blocked by done task 2).
+			rec := get("/api/v2/projects/1/tasks?filter=open_relations%20%3D%20%27blocked%27")
+			require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+			body := rec.Body.String()
+			assert.Contains(t, body, `task #10`)
+			assert.Contains(t, body, `task #2 `)
+			assert.NotContains(t, body, `task #5 `)
+			assert.NotContains(t, body, `task #6 `)
+		})
+		t.Run("invalid relation kind in filter", func(t *testing.T) {
+			rec := get("/api/v2/projects/1/tasks?filter=relations%20%3D%20%27bogus%27")
+			assert.Equal(t, http.StatusBadRequest, rec.Code, "body: %s", rec.Body.String())
+		})
 	})
 
 	t.Run("search via q", func(t *testing.T) {

@@ -161,6 +161,13 @@ func parseFilterFromExpression(f fexpr.ExprGroup, loc *time.Location) (filter *t
 		return nil, err
 	}
 
+	// Relation filters check for the existence of a relation kind, so only
+	// equality-style comparators make sense for them.
+	if (filter.field == taskPropertyRelations || filter.field == taskPropertyOpenRelations) &&
+		!strictComparators[filter.comparator] {
+		return nil, ErrInvalidTaskFilterComparator{Comparator: filter.comparator}
+	}
+
 	reflectValue, filter.value, err = getNativeValueForTaskField(filter.field, filter.comparator, value, loc)
 	if err != nil {
 		return nil, ErrInvalidTaskFilterValue{
@@ -509,6 +516,19 @@ func getNativeValueForTaskField(fieldName string, comparator taskFilterComparato
 				continue
 			}
 			valueSlice = append(valueSlice, val)
+		}
+		return nil, valueSlice, nil
+	}
+
+	if fieldName == taskPropertyRelations || fieldName == taskPropertyOpenRelations {
+		kinds := strings.Split(value, ",")
+		valueSlice := make([]string, 0, len(kinds))
+		for _, kind := range kinds {
+			relationKind := RelationKind(strings.ToLower(strings.TrimSpace(kind)))
+			if !relationKind.isValid() {
+				return nil, nil, ErrInvalidTaskFilterValue{Field: fieldName, Value: kind}
+			}
+			valueSlice = append(valueSlice, string(relationKind))
 		}
 		return nil, valueSlice, nil
 	}
