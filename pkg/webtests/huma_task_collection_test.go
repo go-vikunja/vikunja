@@ -99,14 +99,21 @@ func TestHumaTaskCollection(t *testing.T) {
 		t.Run("filter by open relations", func(t *testing.T) {
 			// open_relations = 'blocked' matches only tasks blocked by a task
 			// which is not done yet: task 10 (blocked by open task 11) and task 2
-			// (blocked by open task 12), but not task 4 (blocked by done task 2).
+			// (blocked by open task 12), but not task 4 (blocked by done task 2)
+			// and not task 33 (blocked by the soft-deleted task 51). Substring
+			// checks would not do here since excluded tasks can still show up
+			// as related task copies inside the matched ones.
 			rec := get("/api/v2/projects/1/tasks?filter=open_relations%20%3D%20%27blocked%27")
 			require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
-			body := rec.Body.String()
-			assert.Contains(t, body, `task #10`)
-			assert.Contains(t, body, `task #2 `)
-			assert.NotContains(t, body, `task #5 `)
-			assert.NotContains(t, body, `task #6 `)
+			ids := make([]int64, 0, 2)
+			for _, raw := range decodePaginatedTaskItems(t, rec) {
+				var task struct {
+					ID int64 `json:"id"`
+				}
+				require.NoError(t, json.Unmarshal(raw, &task))
+				ids = append(ids, task.ID)
+			}
+			assert.ElementsMatch(t, []int64{2, 10}, ids)
 		})
 		t.Run("invalid relation kind in filter", func(t *testing.T) {
 			rec := get("/api/v2/projects/1/tasks?filter=relations%20%3D%20%27bogus%27")

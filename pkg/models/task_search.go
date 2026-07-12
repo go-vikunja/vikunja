@@ -69,11 +69,15 @@ var subTableFilters = SubTableFilters{
 		JoinTable:       "users",
 		JoinCond:        "users.id = user_id",
 	},
+	// A relation to a soft-deleted task no longer counts, same as in
+	// buildSubtaskRootCondition.
 	taskPropertyRelations: {
 		Table:           "task_relations",
 		BaseFilter:      "tasks.id = task_id",
 		FilterableField: "relation_kind",
 		AllowNullCheck:  true,
+		JoinTable:       "tasks related_task",
+		JoinCond:        "related_task.id = task_relations.other_task_id AND related_task.deleted_at IS NULL",
 	},
 	// Like "relations", but only matches when the related task is not done yet.
 	taskPropertyOpenRelations: {
@@ -82,7 +86,7 @@ var subTableFilters = SubTableFilters{
 		FilterableField: "relation_kind",
 		AllowNullCheck:  true,
 		JoinTable:       "tasks related_task",
-		JoinCond:        "related_task.id = task_relations.other_task_id AND related_task.done = false",
+		JoinCond:        "related_task.id = task_relations.other_task_id AND related_task.deleted_at IS NULL AND related_task.done = false",
 	},
 	"created_by": {
 		Table:           "users",
@@ -246,7 +250,9 @@ func convertFiltersToDBFilterCondWithAlias(rawFilters []*taskFilter, includeNull
 				for i+1 < len(rawFilters) {
 					next := rawFilters[i+1]
 					nextSubTable, nextOk := subTableFilters[next.field]
-					if !nextOk || nextSubTable.Table != subTableFilterParams.Table || next.join != filterConcatAnd {
+					// Compare the whole sub-table config, not just the table name:
+					// relations and open_relations share a table but join differently.
+					if !nextOk || nextSubTable != subTableFilterParams || next.join != filterConcatAnd {
 						break
 					}
 					if !isRangeComparator(next.comparator) {
