@@ -1472,15 +1472,10 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 	}
 	t.Updated = nt.Updated
 
-	changes := collectTaskChanges(&taskBeforeUpdate, t)
-	if reminderChange := diffReminders(oldReminders, persistedReminders); reminderChange != nil {
-		changes = append(changes, reminderChange)
-	}
-
 	events.DispatchOnCommit(s, &TaskUpdatedEvent{
 		Task:    t,
 		Doer:    doerFromAuth(s, a),
-		Changes: changes,
+		Changes: collectTaskChanges(&taskBeforeUpdate, t, oldReminders, persistedReminders),
 	})
 
 	return updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
@@ -1503,8 +1498,11 @@ func idValueOrNil(id int64) any {
 // collectTaskChanges compares the task state loaded from the db before an
 // update with the state that was actually persisted. Side effects of the
 // update (project moves, repeat cycles rewriting dates) therefore show up as
-// changes, while fields excluded via a partial update do not.
-func collectTaskChanges(old, updated *Task) (changes []*TaskChange) {
+// changes, while fields excluded via a partial update do not. The reminders
+// come in separately because neither task struct holds them reliably: the old
+// ones get mutated in place by the repeat handling and the updated task
+// carries the raw payload slice, not the persisted rows.
+func collectTaskChanges(old, updated *Task, oldReminders, newReminders []*TaskReminder) (changes []*TaskChange) {
 	add := func(field string, oldValue, newValue any) {
 		changes = append(changes, &TaskChange{Field: field, OldValue: oldValue, NewValue: newValue})
 	}
@@ -1548,6 +1546,9 @@ func collectTaskChanges(old, updated *Task) (changes []*TaskChange) {
 	if old.CoverImageAttachmentID != updated.CoverImageAttachmentID {
 		add("cover_image_attachment_id", idValueOrNil(old.CoverImageAttachmentID), idValueOrNil(updated.CoverImageAttachmentID))
 	}
+	if !remindersEqual(oldReminders, newReminders) {
+		add("reminders", remindersValueOrNil(oldReminders), remindersValueOrNil(newReminders))
+	}
 
 	return
 }
@@ -1559,32 +1560,23 @@ func remindersValueOrNil(reminders []*TaskReminder) any {
 	return reminders
 }
 
-// diffReminders compares by value because updateReminders rewrites all rows on
-// every update, even when nothing changed. Both sides are sorted by reminder
-// time. The values marshal to {reminder, relative_period, relative_to} — the
-// row ids are hidden via json tags and would be meaningless anyway since they
-// change on every update.
-func diffReminders(old, updated []*TaskReminder) *TaskChange {
-	if len(old) == len(updated) {
-		equal := true
-		for i, r := range old {
-			if !r.Reminder.Equal(updated[i].Reminder) ||
-				r.RelativePeriod != updated[i].RelativePeriod ||
-				r.RelativeTo != updated[i].RelativeTo {
-				equal = false
-				break
-			}
-		}
-		if equal {
-			return nil
+// remindersEqual compares by value because updateReminders rewrites all rows
+// on every update, even when nothing changed. Both sides are sorted by
+// reminder time. The values marshal to {reminder, relative_period,
+// relative_to} — the row ids are hidden via json tags and would be
+// meaningless anyway since they change on every update.
+func remindersEqual(old, updated []*TaskReminder) bool {
+	if len(old) != len(updated) {
+		return false
+	}
+	for i, r := range old {
+		if !r.Reminder.Equal(updated[i].Reminder) ||
+			r.RelativePeriod != updated[i].RelativePeriod ||
+			r.RelativeTo != updated[i].RelativeTo {
+			return false
 		}
 	}
-
-	return &TaskChange{
-		Field:    "reminders",
-		OldValue: remindersValueOrNil(old),
-		NewValue: remindersValueOrNil(updated),
-	}
+	return true
 }
 
 // updateTasks updates multiple tasks with the same payload.
