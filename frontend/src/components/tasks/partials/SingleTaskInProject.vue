@@ -13,7 +13,7 @@
 			@keyup.enter="openTaskDetail"
 		>
 			<span
-				v-tooltip="!canMarkAsDone ? $t('task.readOnlyCheckbox') : isBlockedByIncomplete ? $t('task.blockedCheckbox') : ''"
+				v-tooltip="checkboxTooltip"
 				class="is-inline-flex is-align-items-center"
 			>
 				<FancyCheckbox
@@ -220,7 +220,6 @@ import TaskService from '@/services/task'
 
 import {formatDisplayDate, formatISO, formatDateLong} from '@/helpers/time/formatDate'
 import {success, error} from '@/message'
-import {RELATION_KIND} from '@/types/IRelationKind'
 
 import {useProjectStore} from '@/stores/projects'
 import {useBaseStore} from '@/stores/base'
@@ -231,6 +230,7 @@ import {playPopSound} from '@/helpers/playPop'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 import {useGlobalNow} from '@/composables/useGlobalNow'
+import {useTaskBlockedByIncomplete} from '@/composables/useTaskBlockedByIncomplete'
 
 const props = withDefaults(defineProps<{
 	theTask: ITask,
@@ -324,9 +324,18 @@ const isOverdue = computed(() => (
 	task.value.dueDate.getTime() <= now.value.getTime()
 ))
 
-const isBlockedByIncomplete = computed(() =>
-	task.value.relatedTasks?.[RELATION_KIND.BLOCKED]?.some(t => !t.done) ?? false
-)
+const isBlockedByIncomplete = useTaskBlockedByIncomplete(task)
+const checkboxTooltip = computed(() => {
+	if (!props.canMarkAsDone) {
+		return t('task.readOnlyCheckbox')
+	}
+
+	if (isBlockedByIncomplete.value) {
+		return t('task.blockedCheckbox')
+	}
+
+	return ''
+})
 
 let oldTask
 

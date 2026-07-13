@@ -441,7 +441,7 @@
 					<template v-if="canWrite">
 						<XButton
 							v-shortcut="'KeyT'"
-							v-tooltip="!task.done && isBlockedByIncomplete ? $t('task.blockedCheckbox') : ''"
+							v-tooltip="doneActionTooltip"
 							:class="{'is-pending': !task.done}"
 							:disabled="!task.done && isBlockedByIncomplete"
 							class="button--mark-done"
@@ -709,10 +709,10 @@ import {useConfigStore} from '@/stores/config'
 
 import {useTitle} from '@/composables/useTitle'
 import {useTaskDetailShortcuts} from '@/composables/useTaskDetailShortcuts'
+import {useTaskBlockedByIncomplete} from '@/composables/useTaskBlockedByIncomplete'
 
 import {success, error} from '@/message'
 import type {Action as MessageAction} from '@/message'
-import {RELATION_KIND} from '@/types/IRelationKind'
 
 const props = defineProps<{
 	taskId: ITask['id'],
@@ -839,8 +839,9 @@ const color = computed(() => {
 
 const isModal = computed(() => Boolean(props.backdropView))
 
-const isBlockedByIncomplete = computed(() =>
-	task.value.relatedTasks?.[RELATION_KIND.BLOCKED]?.some(t => !t.done) ?? false
+const isBlockedByIncomplete = useTaskBlockedByIncomplete(task)
+const doneActionTooltip = computed(() =>
+	!task.value.done && isBlockedByIncomplete.value ? t('task.blockedCheckbox') : '',
 )
 
 async function attachmentUpload(file: File, onSuccess?: (url: string) => void) {

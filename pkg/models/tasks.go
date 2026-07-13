@@ -2144,27 +2144,15 @@ func triggerTaskUpdatedEventForTaskID(s *xorm.Session, auth web.Auth, taskID int
 // getActiveBlockingRelations returns all tasks that are blocking the given task and are not yet complete.
 // A task is actively blocking if it has a 'blocked' relation to an incomplete task.
 func getActiveBlockingRelations(s *xorm.Session, taskID int64) ([]*Task, error) {
-	// Find all 'blocked' relations where this task is the blocked one
-	// i.e., this task -> other_task with relation_kind = 'blocked'
-	relations := []*TaskRelation{}
-	err := s.Where("task_id = ? AND relation_kind = ?", taskID, RelationKindBlocked).Find(&relations)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(relations) == 0 {
-		return nil, nil
-	}
-
-	// Extract IDs of blocking tasks
-	blockingTaskIDs := make([]int64, 0, len(relations))
-	for _, rel := range relations {
-		blockingTaskIDs = append(blockingTaskIDs, rel.OtherTaskID)
-	}
-
-	// Get all blocking tasks that are NOT complete
 	blockingTasks := []*Task{}
-	err = s.In("id", blockingTaskIDs).Where("done = ?", false).Find(&blockingTasks)
+	err := s.
+		Where(
+			"done = ? AND id IN (SELECT other_task_id FROM task_relations WHERE task_id = ? AND relation_kind = ?)",
+			false,
+			taskID,
+			RelationKindBlocked,
+		).
+		Find(&blockingTasks)
 	if err != nil {
 		return nil, err
 	}
