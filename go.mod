@@ -28,9 +28,9 @@ require (
 	github.com/arran4/golang-ical v0.3.5
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/aws/aws-sdk-go-v2 v1.42.1
-	github.com/aws/aws-sdk-go-v2/config v1.32.29
-	github.com/aws/aws-sdk-go-v2/credentials v1.19.28
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.105.0
+	github.com/aws/aws-sdk-go-v2/config v1.32.30
+	github.com/aws/aws-sdk-go-v2/credentials v1.19.29
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.105.1
 	github.com/aws/smithy-go v1.27.3
 	github.com/bbrks/go-blurhash v1.2.0
 	github.com/c2h5oh/datasize v0.0.0-20231215233829-aa82cc1e6500
@@ -111,10 +111,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.9.23 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.30 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.31 // indirect
-	github.com/aws/aws-sdk-go-v2/service/signin v1.4.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.32.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.37.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sts v1.44.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/signin v1.4.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.32.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.37.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sts v1.44.1 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/beevik/etree v1.1.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
