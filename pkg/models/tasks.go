@@ -1149,6 +1149,14 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 	// Old task has the stored reminders
 	ot.Reminders = reminders
 
+	// The repeat handling below bumps the loaded reminder structs in place, so
+	// the event diff needs value copies of the stored state.
+	oldReminders := make([]*TaskReminder, len(reminders))
+	for i, r := range reminders {
+		reminder := *r
+		oldReminders[i] = &reminder
+	}
+
 	// Update the assignees
 	if err := ot.updateTaskAssignees(s, t.Assignees, a); err != nil {
 		return err
@@ -1330,6 +1338,10 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 	if err := ot.updateReminders(s, t); err != nil {
 		return err
 	}
+	// updateReminders leaves the rows it actually inserted on ot, but the mergo
+	// merge below replaces them with the raw payload slice — keep the persisted
+	// ones for the event diff.
+	persistedReminders := ot.Reminders
 
 	// If a task attachment is being set as cover image, check if the attachment actually belongs to the task
 	if t.CoverImageAttachmentID != 0 {
@@ -1460,10 +1472,15 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 	}
 	t.Updated = nt.Updated
 
+	changes := collectTaskChanges(&taskBeforeUpdate, t)
+	if reminderChange := diffReminders(oldReminders, persistedReminders); reminderChange != nil {
+		changes = append(changes, reminderChange)
+	}
+
 	events.DispatchOnCommit(s, &TaskUpdatedEvent{
 		Task:    t,
 		Doer:    doerFromAuth(s, a),
-		Changes: collectTaskChanges(&taskBeforeUpdate, t),
+		Changes: changes,
 	})
 
 	return updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
@@ -1533,6 +1550,41 @@ func collectTaskChanges(old, updated *Task) (changes []*TaskChange) {
 	}
 
 	return
+}
+
+func remindersValueOrNil(reminders []*TaskReminder) any {
+	if len(reminders) == 0 {
+		return nil
+	}
+	return reminders
+}
+
+// diffReminders compares by value because updateReminders rewrites all rows on
+// every update, even when nothing changed. Both sides are sorted by reminder
+// time. The values marshal to {reminder, relative_period, relative_to} — the
+// row ids are hidden via json tags and would be meaningless anyway since they
+// change on every update.
+func diffReminders(old, updated []*TaskReminder) *TaskChange {
+	if len(old) == len(updated) {
+		equal := true
+		for i, r := range old {
+			if !r.Reminder.Equal(updated[i].Reminder) ||
+				r.RelativePeriod != updated[i].RelativePeriod ||
+				r.RelativeTo != updated[i].RelativeTo {
+				equal = false
+				break
+			}
+		}
+		if equal {
+			return nil
+		}
+	}
+
+	return &TaskChange{
+		Field:    "reminders",
+		OldValue: remindersValueOrNil(old),
+		NewValue: remindersValueOrNil(updated),
+	}
 }
 
 // updateTasks updates multiple tasks with the same payload.

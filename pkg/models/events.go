@@ -39,6 +39,8 @@ func (t *TaskCreatedEvent) Name() string {
 // means the field was newly set, a nil NewValue means it was cleared. For the
 // description both values are always nil — only the fact that it changed is
 // recorded, to keep the potentially large HTML blobs out of event payloads.
+// Values are scalars, except for reminders which carry the full old and new
+// reminder arrays.
 type TaskChange struct {
 	Field    string `json:"field"`
 	OldValue any    `json:"old_value"`

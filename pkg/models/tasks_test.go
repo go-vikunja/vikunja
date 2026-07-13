@@ -832,6 +832,78 @@ func TestTaskUpdate_Changes(t *testing.T) {
 		assert.Equal(t, int64(1), changes[0].OldValue)
 		assert.Equal(t, int64(2), changes[0].NewValue)
 	})
+	t.Run("adding a reminder", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		events.ClearDispatchedEvents()
+		s := db.NewSession()
+		defer s.Close()
+
+		reminder := time.Date(2023, time.March, 7, 23, 0, 0, 0, time.UTC)
+		task := &Task{
+			ID:          1,
+			Title:       "task #1",
+			Description: "Lorem Ipsum",
+			Reminders:   []*TaskReminder{{Reminder: reminder}},
+		}
+		require.NoError(t, task.Update(s, u))
+		require.NoError(t, s.Commit())
+		events.DispatchPending(context.Background(), s)
+
+		changes := getDispatchedChanges(t)
+		require.Len(t, changes, 1)
+		assert.Equal(t, "reminders", changes[0].Field)
+		assert.Nil(t, changes[0].OldValue)
+		newReminders := changes[0].NewValue.([]*TaskReminder)
+		require.Len(t, newReminders, 1)
+		assert.True(t, newReminders[0].Reminder.Equal(reminder))
+	})
+	t.Run("clearing reminders", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		events.ClearDispatchedEvents()
+		s := db.NewSession()
+		defer s.Close()
+
+		task := &Task{
+			ID:    2,
+			Title: "task #2 done",
+			Done:  true,
+		}
+		require.NoError(t, task.Update(s, u))
+		require.NoError(t, s.Commit())
+		events.DispatchPending(context.Background(), s)
+
+		changes := getDispatchedChanges(t)
+		require.Len(t, changes, 1)
+		assert.Equal(t, "reminders", changes[0].Field)
+		assert.Nil(t, changes[0].NewValue)
+		oldReminders := changes[0].OldValue.([]*TaskReminder)
+		require.Len(t, oldReminders, 2)
+		assert.True(t, oldReminders[0].Reminder.Equal(time.Date(2018, 12, 1, 1, 13, 44, 0, time.UTC)))
+		assert.True(t, oldReminders[1].Reminder.Equal(time.Date(2019, 6, 1, 12, 0, 0, 0, time.UTC)))
+	})
+	t.Run("unchanged reminders produce no entry", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		events.ClearDispatchedEvents()
+		s := db.NewSession()
+		defer s.Close()
+
+		// The rows get rewritten on every update, but the values are the same.
+		task := &Task{
+			ID:    2,
+			Title: "task #2 done",
+			Done:  true,
+			Reminders: []*TaskReminder{
+				{Reminder: time.Date(2018, 12, 1, 1, 13, 44, 0, time.UTC)},
+				{Reminder: time.Date(2019, 6, 1, 12, 0, 0, 0, time.UTC)},
+			},
+		}
+		require.NoError(t, task.Update(s, u))
+		require.NoError(t, s.Commit())
+		events.DispatchPending(context.Background(), s)
+
+		changes := getDispatchedChanges(t)
+		assert.Empty(t, changes)
+	})
 }
 
 func TestTask_Delete(t *testing.T) {
