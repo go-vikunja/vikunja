@@ -35,10 +35,23 @@ func (t *TaskCreatedEvent) Name() string {
 	return "task.created"
 }
 
+// TaskChange represents a single field change of a task update. A nil OldValue
+// means the field was newly set, a nil NewValue means it was cleared. For the
+// description both values are always nil — only the fact that it changed is
+// recorded, to keep the potentially large HTML blobs out of event payloads.
+type TaskChange struct {
+	Field    string `json:"field"`
+	OldValue any    `json:"old_value"`
+	NewValue any    `json:"new_value"`
+}
+
 // TaskUpdatedEvent represents an event where a task has been updated
 type TaskUpdatedEvent struct {
 	Task *Task      `json:"task"`
 	Doer *user.User `json:"doer"`
+	// Changes contains the field-level diff of the update. It is only set when
+	// the update went through Task.Update — other dispatch sites leave it nil.
+	Changes []*TaskChange `json:"changes,omitempty"`
 }
 
 // Name defines the name for TaskUpdatedEvent

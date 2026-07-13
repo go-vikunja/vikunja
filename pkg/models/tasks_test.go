@@ -644,6 +644,196 @@ func TestTask_Update(t *testing.T) {
 	})
 }
 
+func TestTaskUpdate_Changes(t *testing.T) {
+	u := &user.User{ID: 1}
+
+	getDispatchedChanges := func(t *testing.T) []*TaskChange {
+		t.Helper()
+		dispatched := events.GetDispatchedEvents((&TaskUpdatedEvent{}).Name())
+		require.Len(t, dispatched, 1)
+		return dispatched[0].(*TaskUpdatedEvent).Changes
+	}
+
+	changesByField := func(changes []*TaskChange) map[string]*TaskChange {
+		byField := make(map[string]*TaskChange, len(changes))
+		for _, c := range changes {
+			byField[c.Field] = c
+		}
+		return byField
+	}
+
+	t.Run("single scalar change", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		events.ClearDispatchedEvents()
+		s := db.NewSession()
+		defer s.Close()
+
+		task := &Task{
+			ID:          1,
+			Title:       "New title",
+			Description: "Lorem Ipsum",
+		}
+		require.NoError(t, task.Update(s, u))
+		require.NoError(t, s.Commit())
+		events.DispatchPending(context.Background(), s)
+
+		changes := getDispatchedChanges(t)
+		require.Len(t, changes, 1)
+		assert.Equal(t, "title", changes[0].Field)
+		assert.Equal(t, "task #1", changes[0].OldValue)
+		assert.Equal(t, "New title", changes[0].NewValue)
+	})
+	t.Run("clearing a date sets new value to nil", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		events.ClearDispatchedEvents()
+		s := db.NewSession()
+		defer s.Close()
+
+		task := &Task{
+			ID:    5,
+			Title: "task #5 higher due date",
+		}
+		require.NoError(t, task.Update(s, u))
+		require.NoError(t, s.Commit())
+		events.DispatchPending(context.Background(), s)
+
+		changes := getDispatchedChanges(t)
+		require.Len(t, changes, 1)
+		assert.Equal(t, "due_date", changes[0].Field)
+		require.NotNil(t, changes[0].OldValue)
+		assert.True(t, changes[0].OldValue.(time.Time).Equal(time.Date(2018, 12, 1, 3, 58, 44, 0, time.UTC)))
+		assert.Nil(t, changes[0].NewValue)
+	})
+	t.Run("setting an unset date sets old value to nil", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		events.ClearDispatchedEvents()
+		s := db.NewSession()
+		defer s.Close()
+
+		dueDate := time.Date(2023, time.March, 7, 22, 5, 0, 0, time.UTC)
+		task := &Task{
+			ID:          1,
+			Title:       "task #1",
+			Description: "Lorem Ipsum",
+			DueDate:     dueDate,
+		}
+		require.NoError(t, task.Update(s, u))
+		require.NoError(t, s.Commit())
+		events.DispatchPending(context.Background(), s)
+
+		changes := getDispatchedChanges(t)
+		require.Len(t, changes, 1)
+		assert.Equal(t, "due_date", changes[0].Field)
+		assert.Nil(t, changes[0].OldValue)
+		require.NotNil(t, changes[0].NewValue)
+		assert.True(t, changes[0].NewValue.(time.Time).Equal(dueDate))
+	})
+	t.Run("description change is flagged without values", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		events.ClearDispatchedEvents()
+		s := db.NewSession()
+		defer s.Close()
+
+		task := &Task{
+			ID:          1,
+			Title:       "task #1",
+			Description: "Something completely different",
+		}
+		require.NoError(t, task.Update(s, u))
+		require.NoError(t, s.Commit())
+		events.DispatchPending(context.Background(), s)
+
+		changes := getDispatchedChanges(t)
+		require.Len(t, changes, 1)
+		assert.Equal(t, "description", changes[0].Field)
+		assert.Nil(t, changes[0].OldValue)
+		assert.Nil(t, changes[0].NewValue)
+	})
+	t.Run("partial update does not diff untouched fields", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		events.ClearDispatchedEvents()
+		s := db.NewSession()
+		defer s.Close()
+
+		// Description is empty in the payload but must not show up as cleared
+		// because the update is restricted to the title.
+		task := &Task{
+			ID:    1,
+			Title: "Only the title",
+		}
+		require.NoError(t, task.updateSingleTask(s, u, []string{"title"}))
+		require.NoError(t, s.Commit())
+		events.DispatchPending(context.Background(), s)
+
+		changes := getDispatchedChanges(t)
+		require.Len(t, changes, 1)
+		assert.Equal(t, "title", changes[0].Field)
+	})
+	t.Run("no-op update dispatches event without changes", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		events.ClearDispatchedEvents()
+		s := db.NewSession()
+		defer s.Close()
+
+		task := &Task{
+			ID:          1,
+			Title:       "task #1",
+			Description: "Lorem Ipsum",
+		}
+		require.NoError(t, task.Update(s, u))
+		require.NoError(t, s.Commit())
+		events.DispatchPending(context.Background(), s)
+
+		changes := getDispatchedChanges(t)
+		assert.Empty(t, changes)
+	})
+	t.Run("repeating task marked done", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		events.ClearDispatchedEvents()
+		s := db.NewSession()
+		defer s.Close()
+
+		task := &Task{
+			ID:          28,
+			Title:       "task #28 with repeat after, start_date, end_date and due_date",
+			Done:        true,
+			RepeatAfter: 3600,
+		}
+		require.NoError(t, task.Update(s, u))
+		require.NoError(t, s.Commit())
+		events.DispatchPending(context.Background(), s)
+
+		byField := changesByField(getDispatchedChanges(t))
+		assert.Contains(t, byField, "due_date")
+		assert.Contains(t, byField, "start_date")
+		assert.Contains(t, byField, "end_date")
+		// The repeat cycle sets the task back to not done, so there is no done change.
+		assert.NotContains(t, byField, "done")
+	})
+	t.Run("project move", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		events.ClearDispatchedEvents()
+		s := db.NewSession()
+		defer s.Close()
+
+		task := &Task{
+			ID:          1,
+			Title:       "task #1",
+			Description: "Lorem Ipsum",
+			ProjectID:   2,
+		}
+		require.NoError(t, task.Update(s, u))
+		require.NoError(t, s.Commit())
+		events.DispatchPending(context.Background(), s)
+
+		changes := getDispatchedChanges(t)
+		require.Len(t, changes, 1)
+		assert.Equal(t, "project_id", changes[0].Field)
+		assert.Equal(t, int64(1), changes[0].OldValue)
+		assert.Equal(t, int64(2), changes[0].NewValue)
+	})
+}
+
 func TestTask_Delete(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)

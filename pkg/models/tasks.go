@@ -1132,6 +1132,10 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 		return
 	}
 
+	// Value-copy snapshot for the event diff, taken before anything mutates ot
+	// or t. A shallow copy is enough because the diff only reads scalar fields.
+	taskBeforeUpdate := ot
+
 	if t.ProjectID == 0 {
 		t.ProjectID = ot.ProjectID
 	}
@@ -1457,11 +1461,78 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 	t.Updated = nt.Updated
 
 	events.DispatchOnCommit(s, &TaskUpdatedEvent{
-		Task: t,
-		Doer: doerFromAuth(s, a),
+		Task:    t,
+		Doer:    doerFromAuth(s, a),
+		Changes: collectTaskChanges(&taskBeforeUpdate, t),
 	})
 
 	return updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
+}
+
+func timeValueOrNil(t time.Time) any {
+	if t.IsZero() {
+		return nil
+	}
+	return t
+}
+
+func idValueOrNil(id int64) any {
+	if id == 0 {
+		return nil
+	}
+	return id
+}
+
+// collectTaskChanges compares the task state loaded from the db before an
+// update with the state that was actually persisted. Side effects of the
+// update (project moves, repeat cycles rewriting dates) therefore show up as
+// changes, while fields excluded via a partial update do not.
+func collectTaskChanges(old, updated *Task) (changes []*TaskChange) {
+	add := func(field string, oldValue, newValue any) {
+		changes = append(changes, &TaskChange{Field: field, OldValue: oldValue, NewValue: newValue})
+	}
+
+	if old.Title != updated.Title {
+		add("title", old.Title, updated.Title)
+	}
+	if old.Description != updated.Description {
+		add("description", nil, nil)
+	}
+	if old.Done != updated.Done {
+		add("done", old.Done, updated.Done)
+	}
+	if !old.DueDate.Equal(updated.DueDate) {
+		add("due_date", timeValueOrNil(old.DueDate), timeValueOrNil(updated.DueDate))
+	}
+	if !old.StartDate.Equal(updated.StartDate) {
+		add("start_date", timeValueOrNil(old.StartDate), timeValueOrNil(updated.StartDate))
+	}
+	if !old.EndDate.Equal(updated.EndDate) {
+		add("end_date", timeValueOrNil(old.EndDate), timeValueOrNil(updated.EndDate))
+	}
+	if old.Priority != updated.Priority {
+		add("priority", old.Priority, updated.Priority)
+	}
+	if old.PercentDone != updated.PercentDone {
+		add("percent_done", old.PercentDone, updated.PercentDone)
+	}
+	if old.HexColor != updated.HexColor {
+		add("hex_color", old.HexColor, updated.HexColor)
+	}
+	if old.RepeatAfter != updated.RepeatAfter {
+		add("repeat_after", old.RepeatAfter, updated.RepeatAfter)
+	}
+	if old.RepeatMode != updated.RepeatMode {
+		add("repeat_mode", old.RepeatMode, updated.RepeatMode)
+	}
+	if old.ProjectID != updated.ProjectID {
+		add("project_id", old.ProjectID, updated.ProjectID)
+	}
+	if old.CoverImageAttachmentID != updated.CoverImageAttachmentID {
+		add("cover_image_attachment_id", idValueOrNil(old.CoverImageAttachmentID), idValueOrNil(updated.CoverImageAttachmentID))
+	}
+
+	return
 }
 
 // updateTasks updates multiple tasks with the same payload.
