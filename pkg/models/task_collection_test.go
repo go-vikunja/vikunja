@@ -2238,3 +2238,160 @@ func TestTaskCollection_ExpandSubtasksSoftDeleted(t *testing.T) {
 		assert.Equal(t, sub.ID, tasks[0].ID)
 	})
 }
+
+// TestTaskCollection_ExpandSubtasksNullableFilterParent guards #3163: a filter on a
+// nullable column must not drop a matching child just because its parent's value is
+// NULL. The old NOT-over-LEFT-JOIN condition let the NULL predicate make NOT(...)
+// evaluate to NULL, silently excluding the child from the WHERE.
+func TestTaskCollection_ExpandSubtasksNullableFilterParent(t *testing.T) {
+	u := &user.User{ID: 1}
+
+	setup := func(t *testing.T, title string, apply func(parent, sub *Task)) (project *Project, parent, sub *Task) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		project = &Project{Title: title, OwnerID: u.ID}
+		_, err := s.Insert(project)
+		require.NoError(t, err)
+
+		parent = &Task{Title: "dateless parent", ProjectID: project.ID, CreatedByID: u.ID, Index: 1}
+		sub = &Task{Title: "dated child", ProjectID: project.ID, CreatedByID: u.ID, Index: 2}
+		apply(parent, sub)
+
+		_, err = s.Insert(parent)
+		require.NoError(t, err)
+		_, err = s.Insert(sub)
+		require.NoError(t, err)
+
+		rel := &TaskRelation{TaskID: parent.ID, OtherTaskID: sub.ID, RelationKind: RelationKindSubtask}
+		require.NoError(t, rel.Create(s, u))
+		require.NoError(t, s.Commit())
+		return
+	}
+
+	expand := []TaskCollectionExpandable{TaskCollectionExpandSubtasks}
+
+	t.Run("due_date <= filter, parent has NULL due_date", func(t *testing.T) {
+		project, _, sub := setup(t, "null-due-parent", func(_, sub *Task) {
+			sub.DueDate = time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
+		})
+
+		s2 := db.NewSession()
+		defer s2.Close()
+
+		filters, err := getTaskFiltersFromFilterString("due_date <= '2021-01-01T00:00:00'", "UTC")
+		require.NoError(t, err)
+
+		tasks, _, total, err := getRawTasksForProjects(s2, []*Project{project}, u, &taskSearchOptions{
+			expand:             expand,
+			parsedFilters:      filters,
+			filterIncludeNulls: false,
+		})
+		require.NoError(t, err)
+
+		assert.Equal(t, int64(1), total, "the child with a matching due date is the only root")
+		require.Len(t, tasks, 1, "the child must not be dropped by the parent's NULL due_date")
+		assert.Equal(t, sub.ID, tasks[0].ID)
+	})
+
+	t.Run("gantt-shaped OR date window, dateless parent", func(t *testing.T) {
+		project, _, sub := setup(t, "null-dates-parent", func(_, sub *Task) {
+			sub.StartDate = time.Date(2020, 6, 1, 0, 0, 0, 0, time.UTC)
+			sub.EndDate = time.Date(2020, 6, 10, 0, 0, 0, 0, time.UTC)
+			sub.DueDate = time.Date(2020, 6, 5, 0, 0, 0, 0, time.UTC)
+		})
+
+		s2 := db.NewSession()
+		defer s2.Close()
+
+		filter := "(start_date >= '2020-01-01T00:00:00' && start_date <= '2020-12-31T00:00:00') || " +
+			"(end_date >= '2020-01-01T00:00:00' && end_date <= '2020-12-31T00:00:00') || " +
+			"(due_date >= '2020-01-01T00:00:00' && due_date <= '2020-12-31T00:00:00')"
+		filters, err := getTaskFiltersFromFilterString(filter, "UTC")
+		require.NoError(t, err)
+
+		tasks, _, total, err := getRawTasksForProjects(s2, []*Project{project}, u, &taskSearchOptions{
+			expand:             expand,
+			parsedFilters:      filters,
+			filterIncludeNulls: false,
+		})
+		require.NoError(t, err)
+
+		assert.Equal(t, int64(1), total, "the child inside the date window is the only root")
+		require.Len(t, tasks, 1, "the child must not be dropped by the parent's NULL dates")
+		assert.Equal(t, sub.ID, tasks[0].ID)
+	})
+}
+
+// TestTaskCollection_ExpandSubtasksSearchMirror guards the second #3163 bug: the
+// search was never mirrored into the parent root predicate. A search matching only
+// the child must still return the child as a root; a search matching only the
+// parent keeps the parent as the sole root with the child nested below it.
+func TestTaskCollection_ExpandSubtasksSearchMirror(t *testing.T) {
+	u := &user.User{ID: 1}
+
+	setup := func(t *testing.T, title string) (project *Project, parent, sub *Task) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		project = &Project{Title: title, OwnerID: u.ID}
+		_, err := s.Insert(project)
+		require.NoError(t, err)
+
+		parent = &Task{Title: "alphaparent", ProjectID: project.ID, CreatedByID: u.ID, Index: 1}
+		_, err = s.Insert(parent)
+		require.NoError(t, err)
+
+		sub = &Task{Title: "betachild", ProjectID: project.ID, CreatedByID: u.ID, Index: 2}
+		_, err = s.Insert(sub)
+		require.NoError(t, err)
+
+		rel := &TaskRelation{TaskID: parent.ID, OtherTaskID: sub.ID, RelationKind: RelationKindSubtask}
+		require.NoError(t, rel.Create(s, u))
+		require.NoError(t, s.Commit())
+		return
+	}
+
+	expand := []TaskCollectionExpandable{TaskCollectionExpandSubtasks}
+
+	t.Run("search matches child only", func(t *testing.T) {
+		project, _, sub := setup(t, "search-child")
+
+		s2 := db.NewSession()
+		defer s2.Close()
+
+		tasks, _, total, err := getRawTasksForProjects(s2, []*Project{project}, u, &taskSearchOptions{
+			expand: expand,
+			search: "betachild",
+		})
+		require.NoError(t, err)
+
+		assert.Equal(t, int64(1), total, "the child matching the search is the only root")
+		require.Len(t, tasks, 1, "the child must not be dropped because the parent misses the search")
+		assert.Equal(t, sub.ID, tasks[0].ID)
+	})
+
+	t.Run("search matches parent only keeps child nested", func(t *testing.T) {
+		project, parent, sub := setup(t, "search-parent")
+
+		s2 := db.NewSession()
+		defer s2.Close()
+
+		tasks, _, total, err := getRawTasksForProjects(s2, []*Project{project}, u, &taskSearchOptions{
+			expand: expand,
+			search: "alphaparent",
+		})
+		require.NoError(t, err)
+
+		assert.Equal(t, int64(1), total, "only the parent is a root")
+		ids := map[int64]int{}
+		for _, tsk := range tasks {
+			ids[tsk.ID]++
+		}
+		assert.Equal(t, 1, ids[parent.ID], "parent present exactly once as the root")
+		assert.Equal(t, 1, ids[sub.ID], "child rides along nested, not as a second root")
+		assert.Len(t, tasks, 2)
+	})
+}

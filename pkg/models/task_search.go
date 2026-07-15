@@ -371,11 +371,13 @@ func stripBucketIDFilters(filters []*taskFilter) []*taskFilter {
 // buildSubtaskRootCondition decides which tasks count as "roots" when expanding
 // subtasks: a task is a root unless its parent is itself part of this result set.
 //
-// A task is excluded from roots only when ALL of the following hold:
-//   - it has a parenttask relation, AND
-//   - the parent task exists, AND
-//   - the parent is within the queried result scope, AND
-//   - the parent satisfies the active filter.
+// A task is excluded from roots only when its parenttask relation points at a
+// parent that is not soft-deleted, is within the queried result scope, and
+// satisfies both the active filter and the active search.
+//
+// A correlated NOT EXISTS (rather than NOT over LEFT JOINs) keeps SQL three-valued
+// logic from dropping the child: a NULL predicate inside EXISTS yields no row, so
+// the whole thing collapses to a clean FALSE and the child stays a root.
 func (d *dbTaskSearcher) buildSubtaskRootCondition(opts *taskSearchOptions) (builder.Cond, error) {
 	// The base result set is (projectIDCond OR favoritesCond); mirror both so the
 	// parent is considered "in scope" exactly when it could appear as a result row.
@@ -394,12 +396,15 @@ func (d *dbTaskSearcher) buildSubtaskRootCondition(opts *taskSearchOptions) (bui
 		scopes = append(scopes, builder.In("parent_tasks.id", favCond))
 	}
 
-	parentInScope := builder.Cond(builder.Expr("1 = 1"))
+	predicates := []builder.Cond{
+		builder.Expr("task_relations.task_id = tasks.id"),
+		builder.Eq{"task_relations.relation_kind": RelationKindParenttask},
+		taskNotDeletedCond("parent_tasks"),
+	}
 	if len(scopes) > 0 {
-		parentInScope = builder.Or(scopes...)
+		predicates = append(predicates, builder.Or(scopes...))
 	}
 
-	parentMatchesFilter := builder.Cond(builder.Expr("1 = 1"))
 	if len(opts.parsedFilters) > 0 {
 		parentFilters := stripBucketIDFilters(cloneTaskFilters(opts.parsedFilters))
 		filterCond, err := convertFiltersToDBFilterCondWithAlias(parentFilters, opts.filterIncludeNulls, "parent_tasks")
@@ -407,20 +412,40 @@ func (d *dbTaskSearcher) buildSubtaskRootCondition(opts *taskSearchOptions) (bui
 			return nil, err
 		}
 		if filterCond != nil {
-			parentMatchesFilter = filterCond
+			predicates = append(predicates, filterCond)
 		}
 	}
 
-	// A soft-deleted parent no longer counts, so its children become roots
-	parentIsRoot := builder.And(
-		builder.NotNull{"task_relations.id"},
-		builder.NotNull{"parent_tasks.id"},
-		taskNotDeletedCond("parent_tasks"),
-		parentInScope,
-		parentMatchesFilter,
-	)
+	if searchCond := buildParentSearchCondition(opts.search); searchCond != nil {
+		predicates = append(predicates, searchCond)
+	}
 
-	return builder.Not{parentIsRoot}, nil
+	sub := builder.
+		Select("1").
+		From("task_relations").
+		InnerJoin("tasks parent_tasks", "task_relations.other_task_id = parent_tasks.id").
+		Where(builder.And(predicates...))
+
+	return builder.NotExists(sub), nil
+}
+
+// buildParentSearchCondition mirrors the main query's search onto the parent_tasks
+// alias so an active search decides root membership the same way it decides the
+// result set. It always uses the ILIKE substring branch rather than the ParadeDB
+// operator: ParadeDB's ||| is a BM25 index scan that cannot run against an aliased
+// table inside a correlated subquery.
+func buildParentSearchCondition(search string) builder.Cond {
+	if search == "" {
+		return nil
+	}
+	cond := builder.Or(
+		db.ILIKE("parent_tasks.title", search),
+		db.ILIKE("parent_tasks.description", search),
+	)
+	if searchIndex := getTaskIndexFromSearchString(search); searchIndex > 0 {
+		cond = cond.Or(builder.Eq{"parent_tasks.`index`": searchIndex})
+	}
+	return cond
 }
 
 //nolint:gocyclo
@@ -601,11 +626,6 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 			query = query.Join("LEFT", "task_buckets", joinCond)
 		}
 	}
-	if expandSubtasks {
-		query = query.
-			Join("LEFT", "task_relations", "tasks.id = task_relations.task_id and task_relations.relation_kind = 'parenttask'").
-			Join("LEFT", "tasks parent_tasks", "task_relations.other_task_id = parent_tasks.id")
-	}
 
 	tasks = []*Task{}
 	err = query.
@@ -674,11 +694,6 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		} else {
 			queryCount = queryCount.Join("LEFT", "task_buckets", joinCond)
 		}
-	}
-	if expandSubtasks {
-		queryCount = queryCount.
-			Join("LEFT", "task_relations", "tasks.id = task_relations.task_id and task_relations.relation_kind = 'parenttask'").
-			Join("LEFT", "tasks parent_tasks", "task_relations.other_task_id = parent_tasks.id")
 	}
 	totalCount, err = queryCount.
 		Select("count(DISTINCT tasks.id)").
