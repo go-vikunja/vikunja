@@ -25,6 +25,7 @@ jobs:
         uses: e18e/action-dependency-diff@8e9b8c1957ab066d36235a43f4c1ff1522e1bdbc # v1.6.1
         with:
           working-directory: ${{ matrix.directory }}
+          duplicate-threshold: 9999
 
   check-provenance:
     runs-on: ubuntu-latest
