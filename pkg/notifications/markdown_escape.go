@@ -39,3 +39,32 @@ func EscapeMarkdown(s string) string {
 	}
 	return b.String()
 }
+
+// UnescapeMarkdown reverses EscapeMarkdown: it drops a backslash whenever it escapes
+// a character that EscapeMarkdown would have escaped (a CommonMark special char or a
+// literal backslash). Backslashes in front of any other character are left untouched,
+// so it is a precise inverse and never mangles unrelated text.
+//
+// It is used for the plain-text MIME part of notification mails: the escapes are
+// required for the Markdown-rendered HTML part, but without unescaping they leak into
+// the text part verbatim (e.g. `Test \- 1\|2` instead of `Test - 1|2`). See #3179.
+func UnescapeMarkdown(s string) string {
+	if !strings.Contains(s, `\`) {
+		return s
+	}
+	runes := []rune(s)
+	var b strings.Builder
+	b.Grow(len(s))
+	for i := 0; i < len(runes); i++ {
+		if runes[i] == '\\' && i+1 < len(runes) {
+			next := runes[i+1]
+			if next == '\\' || (next < 128 && strings.ContainsRune(markdownSpecialChars, next)) {
+				b.WriteRune(next)
+				i++
+				continue
+			}
+		}
+		b.WriteRune(runes[i])
+	}
+	return b.String()
+}

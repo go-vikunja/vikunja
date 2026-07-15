@@ -314,6 +314,29 @@ This is a footer line
 		// &#34; is the correct HTML entity for the quote character and will render as " in the browser
 		assert.Contains(t, mailopts.HTMLMessage, `&#34;Fix structured data Value in property &#34;reviewCount&#34; must be positive&#34;`)
 	})
+	t.Run("markdown escapes are stripped from the plain text part", func(t *testing.T) {
+		// Regression test for #3179: EscapeMarkdown (added for the HTML part to prevent
+		// Markdown injection) must not leak backslash escapes into the plain text part.
+		title := EscapeMarkdown(`Test - xyz - 123|456@789!`)
+		mail := NewMail().
+			From("test@example.com").
+			To("test@otherdomain.com").
+			Subject("Testmail").
+			Greeting("Hi there,").
+			Line(`This is a friendly reminder of the task "` + title + `".`)
+
+		mailopts, err := RenderMail(mail, "en")
+		require.NoError(t, err)
+
+		// Plain text must show the original title without any CommonMark backslash escapes.
+		assert.Contains(t, mailopts.Message, `Test - xyz - 123|456@789!`)
+		assert.NotContains(t, mailopts.Message, `\-`)
+		assert.NotContains(t, mailopts.Message, `\|`)
+		assert.NotContains(t, mailopts.Message, `\!`)
+
+		// The HTML part must still render the literal title (escapes consumed by Markdown).
+		assert.Contains(t, mailopts.HTMLMessage, `Test - xyz - 123|456@789!`)
+	})
 	t.Run("with pre-escaped HTML entities", func(t *testing.T) {
 		// This tests the fix for issue #1664 where HTML entities were being double-escaped
 		mail := NewMail().

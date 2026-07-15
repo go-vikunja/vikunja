@@ -295,7 +295,9 @@ func convertLinesToPlain(lines []*mailLine) []*mailLine {
 	plain := make([]*mailLine, 0, len(lines))
 	for _, line := range lines {
 		if !line.isHTML {
-			plain = append(plain, line)
+			// Drop the CommonMark escapes added for the HTML part (see EscapeMarkdown);
+			// in plain text they would otherwise show up verbatim, e.g. `Test \- 1\|2`.
+			plain = append(plain, &mailLine{Text: UnescapeMarkdown(line.Text)})
 			continue
 		}
 
@@ -352,20 +354,18 @@ func RenderMail(m *Mail, lang string) (mailOpts *mail.Opts, err error) {
 	data := make(map[string]interface{})
 
 	data["Greeting"] = m.greeting
-	if m.conversational {
-		data["IntroLines"] = convertLinesToPlain(m.introLines)
-		data["OutroLines"] = convertLinesToPlain(m.outroLines)
-		if m.headerLine != nil {
-			plainHeaders := convertLinesToPlain([]*mailLine{m.headerLine})
-			if len(plainHeaders) > 0 {
-				data["HeaderLinePlain"] = plainHeaders[0].Text
-			}
+	// The plain-text part always goes through convertLinesToPlain so the Markdown
+	// escapes added for the HTML part (EscapeMarkdown) are stripped back out and do
+	// not leak into the text part verbatim (#3179).
+	data["IntroLines"] = convertLinesToPlain(m.introLines)
+	data["OutroLines"] = convertLinesToPlain(m.outroLines)
+	if m.conversational && m.headerLine != nil {
+		plainHeaders := convertLinesToPlain([]*mailLine{m.headerLine})
+		if len(plainHeaders) > 0 {
+			data["HeaderLinePlain"] = plainHeaders[0].Text
 		}
-	} else {
-		data["IntroLines"] = m.introLines
-		data["OutroLines"] = m.outroLines
 	}
-	data["FooterLines"] = m.footerLines
+	data["FooterLines"] = convertLinesToPlain(m.footerLines)
 	data["ActionText"] = m.actionText
 	data["ActionURL"] = m.actionURL
 	data["Boundary"] = boundary

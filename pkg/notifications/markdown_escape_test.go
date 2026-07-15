@@ -99,3 +99,44 @@ func TestEscapeMarkdown_RoundTripThroughGoldmark(t *testing.T) {
 		})
 	}
 }
+
+func TestUnescapeMarkdown(t *testing.T) {
+	tests := []struct {
+		name string
+		in   string
+		want string
+	}{
+		{"empty", "", ""},
+		{"no backslash", "Hello World", "Hello World"},
+		{"escaped dash", `a\-b`, "a-b"},
+		{"escaped pipe", `a\|b`, "a|b"},
+		{"escaped bang", `a\!b`, "a!b"},
+		{"escaped backslash", `a\\b`, `a\b`},
+		{"reporter example", `Test \- xyz \- 123\|456@789\!`, "Test - xyz - 123|456@789!"},
+		// A backslash in front of a non-special char is not something EscapeMarkdown
+		// produces, so it is left untouched.
+		{"backslash before letter kept", `a\zb`, `a\zb`},
+		{"trailing lone backslash kept", `abc\`, `abc\`},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, UnescapeMarkdown(tt.in))
+		})
+	}
+}
+
+// TestUnescapeMarkdown_InvertsEscape verifies UnescapeMarkdown is a precise inverse
+// of EscapeMarkdown for arbitrary input, which is what lets the plain-text mail part
+// recover the original user text from the escaped canonical line.
+func TestUnescapeMarkdown_InvertsEscape(t *testing.T) {
+	inputs := []string{
+		"", "plain title", `Test - xyz - 123|456@789!`, `a\b`, "`code`", "*bold*",
+		"test](https://evil.com) [Click to verify", "![](https://evil.com/track.png)",
+		"<https://evil.com>", `mixed \ and - and | and !`, "#+.{}()[]<>~_",
+	}
+	for _, in := range inputs {
+		t.Run(in, func(t *testing.T) {
+			assert.Equal(t, in, UnescapeMarkdown(EscapeMarkdown(in)))
+		})
+	}
+}
