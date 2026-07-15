@@ -133,6 +133,10 @@ func NewEcho() *echo.Echo {
 		Router: echo.NewRouter(echo.RouterConfig{
 			UnescapePathParamValues: true,
 		}),
+		// Since echo v5.3.0 groups implicitly register 404 routes when middleware
+		// is added. Our route setup creates multiple groups with the same prefix
+		// (e.g. rate-limit subgroups of /api/v1), which would panic as duplicates.
+		NoGroupAutoRegister404Routes: true,
 	})
 
 	// Configure IP extraction to prevent rate limit bypass via spoofed headers.
