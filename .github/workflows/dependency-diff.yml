@@ -25,6 +25,7 @@ jobs:
         uses: e18e/action-dependency-diff@8e9b8c1957ab066d36235a43f4c1ff1522e1bdbc # v1.6.1
         with:
           working-directory: ${{ matrix.directory }}
+          duplicate-threshold: 9999
 
   check-provenance:
     runs-on: ubuntu-latest
@@ -37,7 +38,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Check provenance downgrades
-        uses: danielroe/provenance-action@da28a90849811b7aff7a07b3ac7a7d761c8aa35d # main
+        uses: danielroe/provenance-action@97ee003d615492a894bc672aefd5cc149fde798d # main
         with:
           workspace-path: ${{ matrix.directory }}
           fail-on-provenance-change: true
