@@ -1,4 +1,4 @@
 [tools]
 node = "24.18.0"  # keep in sync with frontend/.nvmrc
-pnpm = "11.11.0"  # keep in sync with frontend/package.json#packageManager
+pnpm = "11.13.1"  # keep in sync with frontend/package.json#packageManager
 go = "1.26.5"     # keep in sync with go.mod
