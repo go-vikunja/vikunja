@@ -89,17 +89,33 @@ export default function inputPrompt(pos: ClientRect, oldValue: string = '', edit
 
 		window.addEventListener('scroll', handleScroll, true)
 
+		let focusedInputEl: HTMLInputElement | null = null
+		let blurHandler: (() => void) | null = null
+		// A mousedown outside the popup is the start of a deliberate dismissal click;
+		// the blur it triggers must NOT be countered by the re-assert below.
+		let dismissing = false
+
 		nextTick(() => {
 			const inputEl = document.getElementById(id) as HTMLInputElement | null
 			inputEl?.focus()
 
-			// Over a selected image (a NodeSelection) the editor reclaims DOM focus
-			// from the input on a browser-internal timer; re-assert it the one time.
-			inputEl?.addEventListener('blur', () => {
-				if (editor && document.activeElement === editor.view.dom) {
-					inputEl.focus()
+			// ProseMirror re-asserts DOM focus to keep the selection highlight
+			// painted (notably for an image NodeSelection), stealing it from this
+			// input. activeElement is still <body> during the blur event, so defer
+			// the check a macrotask and re-focus unless the prompt is gone or focus
+			// has moved inside the popup.
+			blurHandler = () => setTimeout(() => {
+				if (
+					!dismissing
+					&& document.body.contains(inputEl)
+					&& document.activeElement !== inputEl
+					&& !popupElement.contains(document.activeElement)
+				) {
+					inputEl?.focus()
 				}
-			}, {once: true})
+			}, 0)
+			inputEl?.addEventListener('blur', blurHandler)
+			focusedInputEl = inputEl
 		})
 
 		// The prompt is a sub-modal of the enclosing task <dialog>. Native modal
@@ -116,10 +132,21 @@ export default function inputPrompt(pos: ClientRect, oldValue: string = '', edit
 			}
 		}
 
+		const handleOutsideMousedown = (event: MouseEvent) => {
+			if (!popupElement.contains(event.target as Node)) {
+				dismissing = true
+			}
+		}
+		document.addEventListener('mousedown', handleOutsideMousedown, true)
+
 		const cleanup = () => {
 			window.removeEventListener('scroll', handleScroll, true)
 			document.removeEventListener('click', handleClickOutside)
+			document.removeEventListener('mousedown', handleOutsideMousedown, true)
 			dialog?.removeEventListener('cancel', handleDialogCancel)
+			if (blurHandler) {
+				focusedInputEl?.removeEventListener('blur', blurHandler)
+			}
 			if (container.contains(popupElement)) {
 				container.removeChild(popupElement)
 			}
