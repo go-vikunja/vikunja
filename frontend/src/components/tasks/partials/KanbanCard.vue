@@ -56,7 +56,18 @@
 				</span>
 			</div>
 			
-			<h3>{{ task.title }}</h3>
+			<h3>
+				<RouterLink
+					:to="{ name: 'task.detail', params: {id: task.id} }"
+					class="kanban-card__title-link"
+					draggable="false"
+					@click.exact.prevent.stop="openTaskDetail()"
+					@click.ctrl.stop
+					@click.meta.stop
+				>
+					{{ task.title }}
+				</RouterLink>
+			</h3>
 			
 			<span
 				v-if="projectTitle"
@@ -265,6 +276,10 @@ $task-background: var(--white);
 		word-break: break-word;
 	}
 
+	.kanban-card__title-link {
+		color: inherit;
+		text-decoration: none;
+	}
 
 	.due-date {
 		float: inline-end;
