@@ -174,6 +174,7 @@ import StarterKit from '@tiptap/starter-kit'
 import {Extension, isTextSelection, mergeAttributes, type SetContentOptions} from '@tiptap/core'
 import {EditorContent, type Extensions, useEditor, VueNodeViewRenderer} from '@tiptap/vue-3'
 import {Plugin, PluginKey, type EditorState} from '@tiptap/pm/state'
+import type {EditorView} from '@tiptap/pm/view'
 import {marked} from 'marked'
 import {BubbleMenu} from '@tiptap/vue-3/menus'
 
@@ -757,12 +758,14 @@ function setLink(event: MouseEvent) {
 	setLinkInEditor(target.getBoundingClientRect(), editor.value)
 }
 
-// Compose the plugin's default predicate: keep its empty-text-block guard
-// (a doubleclicked empty paragraph reports a non-empty range), but also hide
-// the menu over a selected image node so only the image menu shows there.
-function showTextBubbleMenu({state, from, to}: {state: EditorState, from: number, to: number}) {
+// Compose the plugin's default predicate: keep its focus and empty-text-block
+// guards (a doubleclicked empty paragraph reports a non-empty range; focus
+// prevents a sibling editor's menu from lingering), but also hide the menu over
+// a selected image node so only the image menu shows there.
+function showTextBubbleMenu({view, element, state, from, to}: {view: EditorView, element: HTMLElement, state: EditorState, from: number, to: number}) {
 	const isEmptyTextBlock = !state.doc.textBetween(from, to).length && isTextSelection(state.selection)
-	return from !== to && !isEmptyTextBlock && !editor.value?.isActive('image')
+	const hasEditorFocus = view.hasFocus() || element.contains(document.activeElement)
+	return hasEditorFocus && from !== to && !isEmptyTextBlock && !editor.value?.isActive('image')
 }
 
 function showImageBubbleMenu() {
