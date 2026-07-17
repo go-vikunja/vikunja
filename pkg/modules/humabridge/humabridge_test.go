@@ -82,6 +82,48 @@ func TestAdapterRoundtrip(t *testing.T) {
 	assert.True(t, got.HasEchoCtx, "echo.Context not stashed on request ctx")
 }
 
+// TestServeHTTPSkipsAlreadyPrefixedPath proves groupPrefixAdapter.ServeHTTP
+// leaves a path alone when it already carries the group prefix, instead of
+// prepending it again. Internal Huma dispatches (e.g. autopatch) always go
+// through api.Adapter().ServeHTTP with an absolute, already-prefixed path,
+// so this exercises that call path directly rather than through e.ServeHTTP.
+// If the skip guard were removed, the prefix would be doubled to
+// "/api/v2/api/v2/ping/world", which the router wouldn't match, and this
+// test would fail with a 404.
+func TestServeHTTPSkipsAlreadyPrefixedPath(t *testing.T) {
+	_, api := newGroupAPI()
+
+	type pingInput struct {
+		Name string `path:"name"`
+	}
+	type pingOutput struct {
+		Body struct {
+			Echo string `json:"echo"`
+		}
+	}
+
+	huma.Register(api, huma.Operation{
+		OperationID: "ping-skip",
+		Method:      "GET",
+		Path:        "/ping/{name}",
+	}, func(_ context.Context, in *pingInput) (*pingOutput, error) {
+		out := &pingOutput{}
+		out.Body.Echo = in.Name
+		return out, nil
+	})
+
+	req := httptest.NewRequest("GET", testPrefix+"/ping/world", nil)
+	rec := httptest.NewRecorder()
+	api.Adapter().ServeHTTP(rec, req)
+
+	require.Equal(t, 200, rec.Code, "body: %s", rec.Body.String())
+	var got struct {
+		Echo string `json:"echo"`
+	}
+	require.NoError(t, json.NewDecoder(rec.Body).Decode(&got))
+	assert.Equal(t, "world", got.Echo)
+}
+
 // TestOpenAPISpecServed proves Huma serves the OAS 3.1 spec document
 // on its configured URL under the group prefix.
 func TestOpenAPISpecServed(t *testing.T) {
