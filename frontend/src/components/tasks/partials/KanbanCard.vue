@@ -280,7 +280,7 @@ $task-background: var(--white);
 	}
 
 	&[data-is-overdue] .due-date {
-		color: var(--danger);
+		color: var(--danger-text);
 	}
 
 	.label-wrapper .tag {

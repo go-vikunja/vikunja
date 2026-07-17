@@ -1414,13 +1414,14 @@ h3 .button {
 			background-color: transparent;
 			box-shadow: none;
 
+			// bright brand green with fixed dark text passes contrast in both themes
 			&.is-pending {
-				color: var(--success);
+				background-color: var(--success);
+				color: hsl(215, 27.9%, 16.9%);
 
 				&:hover,
 				&:focus {
-					background-color: var(--success);
-					color: #ffffff;
+					filter: brightness(1.05);
 				}
 			}
 		}
