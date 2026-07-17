@@ -155,7 +155,8 @@ func IssueUserToken(ctx context.Context, u *user.User, deviceInfo, ipAddress str
 // Cache-Control: no-store header on a response. The cookie is path-scoped to the
 // refresh endpoint, so the browser only sends it there; JavaScript never sees the
 // refresh token, which protects it from XSS. Shared by the v1 echo handlers and
-// the v2 Huma handlers (which reach the echo context via humaecho.Unwrap).
+// the v2 Huma handlers (which reach the echo context via the humabridge
+// EchoContextKey stash on their request context).
 func WriteUserAuthCookies(c *echo.Context, token *IssuedUserToken) {
 	SetRefreshTokenCookie(c, token.RefreshToken, token.CookieMaxAge)
 	c.Response().Header().Set("Cache-Control", "no-store")
