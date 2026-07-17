@@ -824,6 +824,8 @@
       "link": "Link",
       "image": "Image",
       "imageTooltip": "Upload an image from your computer.",
+      "altText": "Alt text",
+      "altTextPlaceholder": "Describe this image",
       "horizontalRule": "Horizontal Rule",
       "horizontalRuleTooltip": "Divide a section.",
       "text": "Text",

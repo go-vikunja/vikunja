@@ -19,6 +19,7 @@
 				v-if="editor"
 				v-show="isEditing"
 				:editor="editor"
+				:should-show="showTextBubbleMenu"
 			>
 				<div class="editor-bubble__wrapper">
 					<BaseButton
@@ -68,6 +69,22 @@
 						@click="setLink"
 					>
 						<Icon :icon="['fas', 'link']" />
+					</BaseButton>
+				</div>
+			</BubbleMenu>
+			<BubbleMenu
+				v-if="editor"
+				v-show="isEditing"
+				plugin-key="imageBubbleMenu"
+				:editor="editor"
+				:should-show="showImageBubbleMenu"
+			>
+				<div class="editor-bubble__wrapper">
+					<BaseButton
+						class="editor-bubble__button editor-bubble__button--text"
+						@click="setImageAlt"
+					>
+						{{ $t('input.editor.altText') }}
 					</BaseButton>
 				</div>
 			</BubbleMenu>
@@ -740,6 +757,25 @@ function setLink(event: MouseEvent) {
 	setLinkInEditor(target.getBoundingClientRect(), editor.value)
 }
 
+// The default bubble menu shows for any non-empty selection, which includes a
+// selected image node; hide it there so the image menu is the only one shown.
+function showTextBubbleMenu({from, to}: {from: number, to: number}) {
+	return from !== to && !editor.value?.isActive('image')
+}
+
+function showImageBubbleMenu() {
+	return editor.value?.isActive('image') ?? false
+}
+
+async function setImageAlt(event: MouseEvent) {
+	const target = event.target as HTMLElement
+	const previousAlt = editor.value?.getAttributes('image').alt || ''
+	const alt = await inputPrompt(target.getBoundingClientRect(), previousAlt, editor.value ?? undefined, t('input.editor.altTextPlaceholder'))
+
+	editor.value?.chain().focus().updateAttributes('image', {alt}).run()
+	bubbleNow()
+}
+
 onMounted(async () => {
 	if (props.editShortcut !== '') {
 		document.addEventListener('keydown', setFocusToEditor)
@@ -1211,6 +1247,12 @@ ul[data-type='taskList'] {
 
 	&:hover {
 		background: var(--grey-200);
+	}
+
+	&--text {
+		padding: .5rem .75rem;
+		font-size: .9rem;
+		white-space: nowrap;
 	}
 }
 

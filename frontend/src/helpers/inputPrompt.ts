@@ -5,7 +5,7 @@ import {eventToShortcutString} from '@/helpers/shortcut'
 import type {Editor} from '@tiptap/core'
 import {getPopupContainer} from '@/components/input/editor/popupContainer'
 
-export default function inputPrompt(pos: ClientRect, oldValue: string = '', editor?: Editor): Promise<string> {
+export default function inputPrompt(pos: ClientRect, oldValue: string = '', editor?: Editor, placeholder: string = 'URL'): Promise<string> {
 	return new Promise((resolve) => {
 		const id = 'link-input-' + createRandomID()
 		// Append inside the open task <dialog> (top-layer) when present, otherwise
@@ -28,7 +28,7 @@ export default function inputPrompt(pos: ClientRect, oldValue: string = '', edit
 		const wrapperDiv = document.createElement('div')
 		const inputElement = document.createElement('input')
 		inputElement.className = 'input'
-		inputElement.placeholder = 'URL'
+		inputElement.placeholder = placeholder
 		inputElement.id = id
 		inputElement.value = oldValue
 		wrapperDiv.appendChild(inputElement)
