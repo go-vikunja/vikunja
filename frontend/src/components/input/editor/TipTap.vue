@@ -772,6 +772,10 @@ async function setImageAlt(event: MouseEvent) {
 	const previousAlt = editor.value?.getAttributes('image').alt || ''
 	const alt = await inputPrompt(target.getBoundingClientRect(), previousAlt, editor.value ?? undefined, t('input.editor.altTextPlaceholder'))
 
+	if (alt === null) {
+		return
+	}
+
 	editor.value?.chain().focus().updateAttributes('image', {alt}).run()
 	bubbleNow()
 }

@@ -5,6 +5,11 @@ export async function setLinkInEditor(pos: DOMRect, editor: Editor | null | unde
 	const previousUrl = editor?.getAttributes('link').href || ''
 	const url = await inputPrompt(pos, previousUrl, editor ?? undefined)
 
+	// cancelled
+	if (url === null) {
+		return
+	}
+
 	// empty
 	if (url === '') {
 		editor

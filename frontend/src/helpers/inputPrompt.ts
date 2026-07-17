@@ -5,7 +5,7 @@ import {eventToShortcutString} from '@/helpers/shortcut'
 import type {Editor} from '@tiptap/core'
 import {getPopupContainer} from '@/components/input/editor/popupContainer'
 
-export default function inputPrompt(pos: ClientRect, oldValue: string = '', editor?: Editor, placeholder: string = 'URL'): Promise<string> {
+export default function inputPrompt(pos: ClientRect, oldValue: string = '', editor?: Editor, placeholder: string = 'URL'): Promise<string | null> {
 	return new Promise((resolve) => {
 		const id = 'link-input-' + createRandomID()
 		// Append inside the open task <dialog> (top-layer) when present, otherwise
@@ -98,7 +98,7 @@ export default function inputPrompt(pos: ClientRect, oldValue: string = '', edit
 
 		const handleClickOutside = (event: MouseEvent) => {
 			if (!popupElement.contains(event.target as Node)) {
-				resolve('')
+				resolve(null)
 				cleanup()
 			}
 		}
@@ -119,7 +119,7 @@ export default function inputPrompt(pos: ClientRect, oldValue: string = '', edit
 				// Stop the native <dialog> from closing on Escape; cancel the prompt only.
 				event.preventDefault()
 				event.stopPropagation()
-				resolve('')
+				resolve(null)
 				cleanup()
 				return
 			}
