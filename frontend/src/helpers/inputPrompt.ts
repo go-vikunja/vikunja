@@ -88,7 +88,18 @@ export default function inputPrompt(pos: ClientRect, oldValue: string = '', edit
 
 		window.addEventListener('scroll', handleScroll, true)
 
-		nextTick(() => document.getElementById(id)?.focus())
+		nextTick(() => {
+			const inputEl = document.getElementById(id) as HTMLInputElement | null
+			inputEl?.focus()
+
+			// Over a selected image (a NodeSelection) the editor reclaims DOM focus
+			// from the input on a browser-internal timer; re-assert it the one time.
+			inputEl?.addEventListener('blur', () => {
+				if (editor && document.activeElement === editor.view.dom) {
+					inputEl.focus()
+				}
+			}, {once: true})
+		})
 
 		// The prompt is a sub-modal of the enclosing task <dialog>. Native modal
 		// dialogs close themselves on Escape ("cancel"); swallow that while the
