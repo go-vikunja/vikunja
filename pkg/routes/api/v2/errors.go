@@ -146,7 +146,7 @@ func init() {
 
 	// Strip internal detail from server errors. Huma's handler-error path
 	// wraps a raw error as NewErrorWithContext(ctx, 500, "unexpected error
-	// occurred", err) and — because the humaecho5 adapter writes the
+	// occurred", err) and — because the humaecho adapter writes the
 	// response itself — bypasses Vikunja's CreateHTTPErrorHandler, which for
 	// v1 returns a generic 500 with no detail. Without this override a raw
 	// DB/driver error (SQL, table, column names) would leak into the

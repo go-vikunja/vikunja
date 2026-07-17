@@ -24,11 +24,11 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
-	"code.vikunja.io/api/pkg/modules/humaecho5"
 	webfiles "code.vikunja.io/api/pkg/web/files"
 	"code.vikunja.io/api/pkg/web/handler"
 
 	"github.com/danielgtaylor/huma/v2"
+	"github.com/danielgtaylor/huma/v2/adapters/humaecho"
 )
 
 // models.TaskAttachment.ReadAll returns []*models.TaskAttachment.
@@ -195,7 +195,7 @@ func taskAttachmentsDownload(ctx context.Context, in *struct {
 	}
 
 	return &huma.StreamResponse{Body: func(hctx huma.Context) {
-		c := humaecho5.Unwrap(hctx)
+		c := humaecho.Unwrap(hctx)
 		webfiles.WriteAttachmentDownload((*c).Response(), (*c).Request(), ta, preview)
 	}}, nil
 }
