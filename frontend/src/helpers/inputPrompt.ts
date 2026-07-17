@@ -92,7 +92,8 @@ export default function inputPrompt(pos: ClientRect, oldValue: string = '', edit
 		let focusedInputEl: HTMLInputElement | null = null
 		let blurHandler: (() => void) | null = null
 		// A mousedown outside the popup is the start of a deliberate dismissal click;
-		// the blur it triggers must NOT be countered by the re-assert below.
+		// the blur it triggers must NOT be countered by the re-assert below. Reset on
+		// mouseup so a drag that never produces a click doesn't latch this forever.
 		let dismissing = false
 
 		nextTick(() => {
@@ -102,8 +103,7 @@ export default function inputPrompt(pos: ClientRect, oldValue: string = '', edit
 			// ProseMirror re-asserts DOM focus to keep the selection highlight
 			// painted (notably for an image NodeSelection), stealing it from this
 			// input. activeElement is still <body> during the blur event, so defer
-			// the check a macrotask and re-focus unless the prompt is gone or focus
-			// has moved inside the popup.
+			// the check a macrotask.
 			blurHandler = () => setTimeout(() => {
 				if (
 					!dismissing
@@ -139,10 +139,16 @@ export default function inputPrompt(pos: ClientRect, oldValue: string = '', edit
 		}
 		document.addEventListener('mousedown', handleOutsideMousedown, true)
 
+		const handleOutsideMouseup = () => {
+			dismissing = false
+		}
+		document.addEventListener('mouseup', handleOutsideMouseup, true)
+
 		const cleanup = () => {
 			window.removeEventListener('scroll', handleScroll, true)
 			document.removeEventListener('click', handleClickOutside)
 			document.removeEventListener('mousedown', handleOutsideMousedown, true)
+			document.removeEventListener('mouseup', handleOutsideMouseup, true)
 			dialog?.removeEventListener('cancel', handleDialogCancel)
 			if (blurHandler) {
 				focusedInputEl?.removeEventListener('blur', blurHandler)
