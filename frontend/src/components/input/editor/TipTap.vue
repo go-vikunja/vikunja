@@ -171,9 +171,9 @@ import {eventToShortcutString} from '@/helpers/shortcut'
 import EditorToolbar from './EditorToolbar.vue'
 
 import StarterKit from '@tiptap/starter-kit'
-import {Extension, mergeAttributes, type SetContentOptions} from '@tiptap/core'
+import {Extension, isTextSelection, mergeAttributes, type SetContentOptions} from '@tiptap/core'
 import {EditorContent, type Extensions, useEditor, VueNodeViewRenderer} from '@tiptap/vue-3'
-import {Plugin, PluginKey} from '@tiptap/pm/state'
+import {Plugin, PluginKey, type EditorState} from '@tiptap/pm/state'
 import {marked} from 'marked'
 import {BubbleMenu} from '@tiptap/vue-3/menus'
 
@@ -757,10 +757,12 @@ function setLink(event: MouseEvent) {
 	setLinkInEditor(target.getBoundingClientRect(), editor.value)
 }
 
-// The default bubble menu shows for any non-empty selection, which includes a
-// selected image node; hide it there so the image menu is the only one shown.
-function showTextBubbleMenu({from, to}: {from: number, to: number}) {
-	return from !== to && !editor.value?.isActive('image')
+// Compose the plugin's default predicate: keep its empty-text-block guard
+// (a doubleclicked empty paragraph reports a non-empty range), but also hide
+// the menu over a selected image node so only the image menu shows there.
+function showTextBubbleMenu({state, from, to}: {state: EditorState, from: number, to: number}) {
+	const isEmptyTextBlock = !state.doc.textBetween(from, to).length && isTextSelection(state.selection)
+	return from !== to && !isEmptyTextBlock && !editor.value?.isActive('image')
 }
 
 function showImageBubbleMenu() {
