@@ -27,10 +27,10 @@ import (
 	"code.vikunja.io/api/pkg/modules/background"
 	backgroundHandler "code.vikunja.io/api/pkg/modules/background/handler"
 	"code.vikunja.io/api/pkg/modules/background/unsplash"
-	"code.vikunja.io/api/pkg/modules/humaecho5"
 	webfiles "code.vikunja.io/api/pkg/web/files"
 
 	"github.com/danielgtaylor/huma/v2"
+	"github.com/danielgtaylor/huma/v2/adapters/humaecho"
 )
 
 type backgroundSearchBody struct {
@@ -325,7 +325,7 @@ func backgroundGet(ctx context.Context, in *struct {
 
 	return &huma.StreamResponse{Body: func(hctx huma.Context) {
 		defer func() { _ = bgFile.File.Close() }()
-		c := humaecho5.Unwrap(hctx)
+		c := humaecho.Unwrap(hctx)
 		webfiles.WriteProjectBackground((*c).Response(), (*c).Request(), bgFile, stat)
 	}}, nil
 }
@@ -361,7 +361,7 @@ func backgroundUnsplashThumb(ctx context.Context, in *struct {
 func streamUnsplashProxy(body io.ReadCloser) *huma.StreamResponse {
 	return &huma.StreamResponse{Body: func(hctx huma.Context) {
 		defer func() { _ = body.Close() }()
-		c := humaecho5.Unwrap(hctx)
+		c := humaecho.Unwrap(hctx)
 		resp := (*c).Response()
 		resp.Header().Set("Content-Type", "image/jpg")
 		resp.WriteHeader(http.StatusOK)

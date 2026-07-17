@@ -29,7 +29,7 @@ import (
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
-	"code.vikunja.io/api/pkg/modules/humaecho5"
+	"code.vikunja.io/api/pkg/modules/humabridge"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
@@ -155,7 +155,7 @@ func IssueUserToken(ctx context.Context, u *user.User, deviceInfo, ipAddress str
 // Cache-Control: no-store header on a response. The cookie is path-scoped to the
 // refresh endpoint, so the browser only sends it there; JavaScript never sees the
 // refresh token, which protects it from XSS. Shared by the v1 echo handlers and
-// the v2 Huma handlers (which reach the echo context via humaecho5.Unwrap).
+// the v2 Huma handlers (which reach the echo context via humaecho.Unwrap).
 func WriteUserAuthCookies(c *echo.Context, token *IssuedUserToken) {
 	SetRefreshTokenCookie(c, token.RefreshToken, token.CookieMaxAge)
 	c.Response().Header().Set("Cache-Control", "no-store")
@@ -445,11 +445,12 @@ func SessionIDFromContext(c *echo.Context) string {
 
 // GetAuthFromContext retrieves the authenticated web.Auth from a plain
 // context.Context, bridging Huma handlers to Vikunja's echo JWT flow. The
-// humaecho5 adapter stashes the *echo.Context under EchoContextKey first.
+// humabridge group middleware stashes the *echo.Context under EchoContextKey
+// first.
 func GetAuthFromContext(ctx context.Context) (web.Auth, error) {
-	ec, ok := ctx.Value(humaecho5.EchoContextKey).(*echo.Context)
+	ec, ok := ctx.Value(humabridge.EchoContextKey).(*echo.Context)
 	if !ok {
-		return nil, fmt.Errorf("no echo.Context on request context; are you calling GetAuthFromContext from a Huma handler dispatched by humaecho5?")
+		return nil, fmt.Errorf("no echo.Context on request context; are you calling GetAuthFromContext from a Huma handler mounted via humabridge?")
 	}
 	return GetAuthFromClaims(ec)
 }

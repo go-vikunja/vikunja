@@ -21,7 +21,7 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
-	"code.vikunja.io/api/pkg/modules/humaecho5"
+	"code.vikunja.io/api/pkg/modules/humabridge"
 	"code.vikunja.io/api/pkg/richtext"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -40,7 +40,7 @@ const (
 // read here so this also catches the X-Vikunja-Format header — the only channel
 // that survives AutoPatch's PATCH re-dispatch (it strips the query).
 func requestWantsMarkdown(ctx context.Context) bool {
-	ec, ok := ctx.Value(humaecho5.EchoContextKey).(*echo.Context)
+	ec, ok := ctx.Value(humabridge.EchoContextKey).(*echo.Context)
 	if !ok {
 		return false
 	}
