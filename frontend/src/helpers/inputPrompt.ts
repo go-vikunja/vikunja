@@ -29,6 +29,7 @@ export default function inputPrompt(pos: ClientRect, oldValue: string = '', edit
 		const inputElement = document.createElement('input')
 		inputElement.className = 'input'
 		inputElement.placeholder = placeholder
+		inputElement.setAttribute('aria-label', placeholder)
 		inputElement.id = id
 		inputElement.value = oldValue
 		wrapperDiv.appendChild(inputElement)
