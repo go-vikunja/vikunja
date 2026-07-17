@@ -4,8 +4,9 @@ import {nextTick} from 'vue'
 import {eventToShortcutString} from '@/helpers/shortcut'
 import type {Editor} from '@tiptap/core'
 import {getPopupContainer} from '@/components/input/editor/popupContainer'
+import {i18n} from '@/i18n'
 
-export default function inputPrompt(pos: ClientRect, oldValue: string = '', editor?: Editor, placeholder: string = 'URL'): Promise<string | null> {
+export default function inputPrompt(pos: ClientRect, oldValue: string = '', editor?: Editor, placeholder: string = i18n.global.t('input.editor.urlPlaceholder')): Promise<string | null> {
 	return new Promise((resolve) => {
 		const id = 'link-input-' + createRandomID()
 		// Append inside the open task <dialog> (top-layer) when present, otherwise

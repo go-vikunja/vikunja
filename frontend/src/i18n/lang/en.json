@@ -826,6 +826,7 @@
       "imageTooltip": "Upload an image from your computer.",
       "altText": "Alt text",
       "altTextPlaceholder": "Describe this image",
+      "urlPlaceholder": "URL",
       "horizontalRule": "Horizontal Rule",
       "horizontalRuleTooltip": "Divide a section.",
       "text": "Text",
