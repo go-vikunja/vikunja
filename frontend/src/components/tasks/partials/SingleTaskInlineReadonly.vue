@@ -154,7 +154,7 @@ const project = computed(() => projectStore.projects[props.task.projectId])
 	}
 
 	&[data-is-overdue] .dueDate {
-		color: var(--danger);
+		color: var(--danger-text);
 	}
 
 	.task-project {

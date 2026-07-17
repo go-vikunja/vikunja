@@ -235,6 +235,10 @@
   --danger-a: 1;
   --danger: hsla(var(--danger-h), var(--danger-s), var(--danger-l), var(--danger-a));
 
+  // Darker than --danger: --danger as text fails WCAG contrast (3.46:1 on white)
+  --danger-text-l: 40%;
+  --danger-text: hsla(var(--danger-h), var(--danger-s), var(--danger-text-l), var(--danger-a));
+
   // var(--primary) / $blue is #1973ff
   --primary-h: 217deg;
   --primary-s: 98%;
@@ -317,6 +321,9 @@
       --primary-h: 217deg;
       --primary-s: 98%;
       --primary-l: 58%;
+
+      // Bright values already pass contrast on dark backgrounds; skip the light-theme darkening
+      --danger-text: var(--danger);
 
       --scheme-main-bis: var(--grey-100);
       --scheme-main-ter: var(--grey-100);

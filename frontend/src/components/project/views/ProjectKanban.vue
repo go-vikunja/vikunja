@@ -1075,7 +1075,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 			font-weight: bold;
 
 			&.is-max {
-				color: var(--danger);
+				color: var(--danger-text);
 			}
 		}
 

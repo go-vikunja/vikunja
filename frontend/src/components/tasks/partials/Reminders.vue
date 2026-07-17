@@ -95,7 +95,7 @@ function removeReminderByIndex(index: number) {
 	align-items: center;
 
 	&[data-is-overdue] :deep(.datepicker .show) {
-		color: var(--danger);
+		color: var(--danger-text);
 	}
 
 	&:last-child {
