@@ -11,7 +11,7 @@ import {
 	PROJECT_FIELDS,
 } from '@/helpers/filters'
 import {useLabelStore} from '@/stores/labels'
-import {colorIsDark} from '@/helpers/color/colorIsDark.ts'
+import {getTextColor} from '@/helpers/color/getTextColor'
 import {Node} from '@tiptap/pm/model'
 
 export const filterHighlighter = new Plugin({
@@ -109,7 +109,7 @@ function decorateDocument(doc: Node) {
 					decorations.push(
 						Decoration.inline(from, to, {
 							class: 'label-value',
-							style: `background-color: ${label.hexColor}; color: ${label.hexColor && colorIsDark(label.hexColor) ? 'white' : 'black'};`,
+							style: `background-color: ${label.hexColor}; color: ${getTextColor(label.hexColor)};`,
 						}),
 					)
 					
