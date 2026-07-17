@@ -368,28 +368,28 @@ func licenseFeatureForRoute(path string) (license.Feature, bool) {
 	return license.FeatureUnknown, false
 }
 
-func routeIsLicensed(rd *RouteDetail) bool {
-	feature, gated := licenseFeatureForRoute(rd.Path)
-	return !gated || license.IsFeatureEnabled(feature)
-}
-
 // GetAPITokenRoutes exposes the registered scoped-token routes for the /routes
 // handler and tests. v1 is the base; v2-only groups and permissions (a v2-only
 // resource like time-entries has no v1 counterpart) are merged in so tokens can
 // discover and grant them. Shared (group, permission) keys keep their v1 entry —
 // CanDoAPIRoute authorises both versions off the same key regardless.
 //
-// Routes whose license feature is currently disabled are omitted so token
-// clients don't offer scopes the instance can't serve. Filtering happens here
-// (per call) rather than at collection because license state changes at
-// runtime. PermissionsAreValid stays deliberately unfiltered: tokens granted
-// while licensed keep validating if the license lapses, and the request-time
-// gates make such scopes inert anyway.
+// License-gated routes are filtered out here, per call, because license state
+// changes at runtime. PermissionsAreValid stays unfiltered: existing tokens
+// keep validating across a license lapse; the request-time gates make them inert.
 func GetAPITokenRoutes() map[string]APITokenRoute {
 	merged := make(map[string]APITokenRoute, len(apiTokenRoutes))
+	featureEnabled := make(map[license.Feature]bool)
 	add := func(group, perm string, rd *RouteDetail) {
-		if !routeIsLicensed(rd) {
-			return
+		if feature, gated := licenseFeatureForRoute(rd.Path); gated {
+			enabled, checked := featureEnabled[feature]
+			if !checked {
+				enabled = license.IsFeatureEnabled(feature)
+				featureEnabled[feature] = enabled
+			}
+			if !enabled {
+				return
+			}
 		}
 		if merged[group] == nil {
 			merged[group] = make(APITokenRoute)
