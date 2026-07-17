@@ -28,6 +28,8 @@
 			class="title input"
 			:class="{'disabled': !canWrite}"
 			:contenteditable="canWrite ? true : undefined"
+			:tabindex="canWrite ? 0 : undefined"
+			:aria-label="canWrite ? $t('task.attributes.title') : undefined"
 			:spellcheck="false"
 			@input="handleTitleInput"
 			@blur="save(($event.target as HTMLInputElement).textContent as string)"
