@@ -76,7 +76,9 @@ if (!gotTheLock) {
 // and register it as the scheme handler ourselves.
 function registerAppImageProtocolHandler() {
 	const appImagePath = process.env.APPIMAGE
-	if (process.platform !== 'linux' || !appImagePath) {
+	// A newline in the path would break out of the quoted Exec= line and inject
+	// extra desktop-entry keys, so refuse to register such a path.
+	if (process.platform !== 'linux' || !appImagePath || /[\n\r]/.test(appImagePath)) {
 		return
 	}
 
