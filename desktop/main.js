@@ -11,6 +11,7 @@ const {
 } = require('electron')
 const path = require('path')
 const fs = require('fs')
+const {execFile} = require('child_process')
 const express = require('express')
 const portInUse = require('./portInUse.js')
 const oauth = require('./oauth.js')
@@ -69,6 +70,54 @@ if (!gotTheLock) {
 	process.exit(0)
 }
 
+// AppImages are never installed, so no desktop file registers the
+// vikunja-desktop:// scheme on the host and the OAuth login callback can't
+// reach the app. Write a handler-only desktop file pointing at the AppImage
+// and register it as the scheme handler ourselves.
+function registerAppImageProtocolHandler() {
+	const appImagePath = process.env.APPIMAGE
+	if (process.platform !== 'linux' || !appImagePath) {
+		return
+	}
+
+	try {
+		const applicationsDir = process.env.XDG_DATA_HOME
+			? path.join(process.env.XDG_DATA_HOME, 'applications')
+			: path.join(app.getPath('home'), '.local', 'share', 'applications')
+		const desktopFileName = `${PROTOCOL}-url-handler.desktop`
+		const desktopFilePath = path.join(applicationsDir, desktopFileName)
+		// Exec quoting per the desktop entry spec: escape "`$\ inside quotes, literal % as %%
+		const quotedExecPath = '"' + appImagePath.replace(/["`$\\]/g, '\\$&').replace(/%/g, '%%') + '"'
+		const desktopEntry = [
+			'[Desktop Entry]',
+			'Name=Vikunja Desktop',
+			'Type=Application',
+			`Exec=${quotedExecPath} %u`,
+			'Terminal=false',
+			'NoDisplay=true',
+			`MimeType=x-scheme-handler/${PROTOCOL};`,
+			'',
+		].join('\n')
+
+		// Rewrite when the AppImage was moved or renamed so Exec stays valid
+		let existing = null
+		try {
+			existing = fs.readFileSync(desktopFilePath, 'utf8')
+		} catch {
+			// Not written yet
+		}
+		if (existing !== desktopEntry) {
+			fs.mkdirSync(applicationsDir, {recursive: true})
+			fs.writeFileSync(desktopFilePath, desktopEntry)
+		}
+
+		execFile('xdg-mime', ['default', desktopFileName, `x-scheme-handler/${PROTOCOL}`], () => {})
+		execFile('update-desktop-database', [applicationsDir], () => {})
+	} catch {
+		// Best effort — registration failing only breaks the login deep link
+	}
+}
+
 // Register the custom protocol for deep links
 if (process.defaultApp) {
 	// During development, register with the path to the script
@@ -77,6 +126,7 @@ if (process.defaultApp) {
 	}
 } else {
 	app.setAsDefaultProtocolClient(PROTOCOL)
+	registerAppImageProtocolHandler()
 }
 
 // Handle deep link on macOS (app already running or launched via URL)
