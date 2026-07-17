@@ -70,10 +70,8 @@ if (!gotTheLock) {
 	process.exit(0)
 }
 
-// AppImages are never installed, so no desktop file registers the
-// vikunja-desktop:// scheme on the host and the OAuth login callback can't
-// reach the app. Write a handler-only desktop file pointing at the AppImage
-// and register it as the scheme handler ourselves.
+// AppImages aren't installed, so nothing registers the vikunja-desktop://
+// scheme on the host — write a handler-only desktop file and register it via xdg-mime ourselves.
 function registerAppImageProtocolHandler() {
 	const appImagePath = process.env.APPIMAGE
 	// A newline in the path would break out of the quoted Exec= line and inject
@@ -113,10 +111,19 @@ function registerAppImageProtocolHandler() {
 			fs.writeFileSync(desktopFilePath, desktopEntry)
 		}
 
-		execFile('xdg-mime', ['default', desktopFileName, `x-scheme-handler/${PROTOCOL}`], () => {})
-		execFile('update-desktop-database', [applicationsDir], () => {})
-	} catch {
-		// Best effort — registration failing only breaks the login deep link
+		execFile('xdg-mime', ['default', desktopFileName, `x-scheme-handler/${PROTOCOL}`], (err) => {
+			if (err) {
+				console.warn('Failed to set vikunja-desktop:// as default handler:', err.message)
+			}
+		})
+		execFile('update-desktop-database', [applicationsDir], (err) => {
+			if (err) {
+				console.warn('Failed to update desktop database:', err.message)
+			}
+		})
+	} catch (err) {
+		// Best effort — a failure here only breaks the login deep link
+		console.warn('Failed to register AppImage protocol handler:', err.message)
 	}
 }
 
