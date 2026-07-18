@@ -20,6 +20,7 @@ import (
 	"strings"
 	"testing"
 
+	"code.vikunja.io/api/pkg/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -229,6 +230,17 @@ This is a footer line
 
 		// Verify no action button
 		assert.NotContains(t, mailopts.HTMLMessage, `class="email-button"`)
+	})
+	t.Run("with link to notification settings in footer", func(t *testing.T) {
+		originalPublicURL := config.ServicePublicURL.GetString()
+		t.Cleanup(func() { config.ServicePublicURL.Set(originalPublicURL) })
+		config.ServicePublicURL.Set("https://vikunja.example.com/")
+
+		mailopts, err := RenderMail(NewMail().IncludeLinkToSettings("en"), "en")
+		require.NoError(t, err)
+
+		assert.Contains(t, mailopts.Message, "here (https://vikunja.example.com/user/settings/general)")
+		assert.Contains(t, mailopts.HTMLMessage, `<a href="https://vikunja.example.com/user/settings/general" rel="nofollow">here</a>`)
 	})
 	t.Run("with footer and action", func(t *testing.T) {
 		mail := NewMail().
