@@ -159,7 +159,7 @@ func GetUserDirectedWebhookEvents() []string {
 // @Security JWTKeyAuth
 // @Param id path int true "Project ID"
 // @Param webhook body models.Webhook true "The webhook target object with required fields"
-// @Success 200 {object} models.Webhook "The created webhook target."
+// @Success 201 {object} models.Webhook "The created webhook target."
 // @Failure 400 {object} web.HTTPError "Invalid webhook object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/webhooks [put]

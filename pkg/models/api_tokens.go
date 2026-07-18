@@ -84,7 +84,7 @@ func GetAPITokenByID(s *xorm.Session, id int64) (token *APIToken, err error) {
 // @Produce json
 // @Security JWTKeyAuth
 // @Param token body models.APIToken true "The token object with required fields"
-// @Success 200 {object} models.APIToken "The created token."
+// @Success 201 {object} models.APIToken "The created token."
 // @Failure 400 {object} web.HTTPError "Invalid token object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tokens [put]
