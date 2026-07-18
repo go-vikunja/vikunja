@@ -745,7 +745,7 @@ async function addImage(event: Event) {
 		return
 	}
 
-	const url = await inputPrompt(event.target.getBoundingClientRect(), '', editor.value)
+	const url = await inputPrompt(event.target.getBoundingClientRect(), t('input.editor.urlPlaceholder'), '', editor.value)
 
 	if (url) {
 		editor.value?.chain().focus().setImage({src: url}).run()
@@ -775,7 +775,7 @@ function showImageBubbleMenu() {
 async function setImageAlt(event: MouseEvent) {
 	const target = event.target as HTMLElement
 	const previousAlt = editor.value?.getAttributes('image').alt || ''
-	const alt = await inputPrompt(target.getBoundingClientRect(), previousAlt, editor.value ?? undefined, t('input.editor.altTextPlaceholder'))
+	const alt = await inputPrompt(target.getBoundingClientRect(), t('input.editor.altTextPlaceholder'), previousAlt, editor.value ?? undefined)
 
 	if (alt === null) {
 		return
