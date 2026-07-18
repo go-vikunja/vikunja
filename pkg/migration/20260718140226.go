@@ -21,30 +21,25 @@ import (
 	"xorm.io/xorm"
 )
 
+type bucket20260718140226 struct {
+	ID int64 `xorm:"bigint autoincr not null unique pk"`
+
+	// The fields to sort tasks by within this bucket, applied in order. Valid values are `priority`, `due_date`, `created`, `updated`, `title`.
+	SortBy []string `xorm:"json null default null"`
+	// The order to sort each corresponding entry in SortBy by. Valid values are `asc` and `desc`.
+	SortOrder []string `xorm:"json null default null"`
+}
+
+func (bucket20260718140226) TableName() string {
+	return "buckets"
+}
+
 func init() {
 	migrations = append(migrations, &xormigrate.Migration{
-		ID:          "20260304200000",
-		Description: "Add bucket sort options to project views",
+		ID:          "20260718140226",
+		Description: "Add per-bucket sort options",
 		Migrate: func(tx *xorm.Engine) error {
-			columns := map[string]string{
-				"bucket_sort_by":    "VARCHAR(50) NULL DEFAULT NULL",
-				"bucket_sort_order": "VARCHAR(4) NULL DEFAULT NULL",
-			}
-			for col, colType := range columns {
-				exists, err := columnExists(tx, "project_views", col)
-				if err != nil {
-					return err
-				}
-				if exists {
-					continue
-				}
-
-				if _, err = tx.Exec("ALTER TABLE project_views ADD COLUMN " + col + " " + colType); err != nil {
-					return err
-				}
-			}
-
-			return nil
+			return tx.Sync2(bucket20260718140226{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil

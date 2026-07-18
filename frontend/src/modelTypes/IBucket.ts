@@ -12,7 +12,10 @@ export interface IBucket extends IAbstract {
 	position: number
 	count: number
 	projectViewId: IProjectView['id']
-	
+
+	sortBy: string[]
+	sortOrder: string[]
+
 	createdBy: IUser
 	created: Date
 	updated: Date

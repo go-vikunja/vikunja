@@ -49,6 +49,11 @@ type Bucket struct {
 	// The position this bucket has when querying all buckets. See the tasks.position property on how to use this.
 	Position float64 `xorm:"double null" json:"position"`
 
+	// The fields to sort tasks by within this bucket, applied in order. Valid values are `priority`, `due_date`, `created`, `updated`, `title`. Defaults to manual drag order.
+	SortBy []string `xorm:"json null default null" json:"sort_by" doc:"The fields to sort tasks by within this bucket, applied in order. Valid values are priority, due_date, created, updated, title."`
+	// The order to sort each corresponding entry in sort_by by. Valid values are `asc` and `desc`. Defaults to `asc`.
+	SortOrder []string `xorm:"json null default null" json:"sort_order" doc:"The order for each corresponding entry in sort_by, either asc or desc. Defaults to asc."`
+
 	// A timestamp when this bucket was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created"`
 	// A timestamp when this bucket was last updated. You cannot change this value.
@@ -155,6 +160,37 @@ func (b *Bucket) ReadAll(s *xorm.Session, auth web.Auth, _ string, _ int, _ int)
 	return buckets, len(buckets), int64(len(buckets)), nil
 }
 
+// bucketSortParams builds the sort criteria for tasks within a single bucket, applied in
+// order. Falls back to manual (position) ordering when the bucket has no sort fields set.
+func bucketSortParams(projectViewID int64, sortBy, sortOrder []string) []*sortParam {
+	params := []*sortParam{}
+	for i, field := range sortBy {
+		if field == "" {
+			continue
+		}
+
+		order := orderAscending
+		if len(sortOrder) > i && sortOrder[i] == "desc" {
+			order = orderDescending
+		}
+		params = append(params, &sortParam{
+			projectViewID: projectViewID,
+			orderBy:       order,
+			sortBy:        field,
+		})
+	}
+
+	if len(params) == 0 {
+		params = append(params, &sortParam{
+			projectViewID: projectViewID,
+			orderBy:       orderAscending,
+			sortBy:        taskPropertyPosition,
+		})
+	}
+
+	return params
+}
+
 func GetTasksInBucketsForView(s *xorm.Session, view *ProjectView, projects []*Project, opts *taskSearchOptions, auth web.Auth) (bucketsWithTasks []*Bucket, err error) {
 	// Get all buckets for this project
 	buckets := []*Bucket{}
@@ -206,32 +242,6 @@ func GetTasksInBucketsForView(s *xorm.Session, view *ProjectView, projects []*Pr
 	tasks := []*Task{}
 
 	opts.projectViewID = view.ID
-	opts.sortby = []*sortParam{}
-	for i, sortBy := range view.BucketSortBy {
-		if sortBy == "" {
-			continue
-		}
-
-		order := orderAscending
-		if len(view.BucketSortOrder) > i && view.BucketSortOrder[i] == "desc" {
-			order = orderDescending
-		}
-		opts.sortby = append(opts.sortby, &sortParam{
-			projectViewID: view.ID,
-			orderBy:       order,
-			sortBy:        sortBy,
-		})
-	}
-
-	if len(opts.sortby) == 0 {
-		opts.sortby = []*sortParam{
-			{
-				projectViewID: view.ID,
-				orderBy:       orderAscending,
-				sortBy:        taskPropertyPosition,
-			},
-		}
-	}
 
 	for _, filter := range opts.parsedFilters {
 		if filter.field == taskPropertyBucketID {
@@ -249,6 +259,7 @@ func GetTasksInBucketsForView(s *xorm.Session, view *ProjectView, projects []*Pr
 
 	originalFilter := opts.filter
 	for id, bucket := range bucketMap {
+		opts.sortby = bucketSortParams(view.ID, bucket.SortBy, bucket.SortOrder)
 
 		if !strings.Contains(originalFilter, taskPropertyBucketID) {
 
@@ -372,6 +383,8 @@ func (b *Bucket) Update(s *xorm.Session, _ web.Auth) (err error) {
 			"limit",
 			"position",
 			"project_view_id",
+			"sort_by",
+			"sort_order",
 		).
 		Update(b)
 	return
