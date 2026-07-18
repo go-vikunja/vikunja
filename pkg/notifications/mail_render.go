@@ -303,6 +303,7 @@ func markdownToPlainText(markdown string) string {
 	document := goldmark.DefaultParser().Parse(text.NewReader(source))
 	var plain strings.Builder
 	linkStarts := make(map[ast.Node]int)
+	listItemIndents := make([]int, 0)
 
 	_ = ast.Walk(document, func(node ast.Node, entering bool) (ast.WalkStatus, error) {
 		switch n := node.(type) {
@@ -313,6 +314,9 @@ func markdownToPlainText(markdown string) string {
 			writeMarkdownText(&plain, n.Value(source), n.IsRaw())
 			if n.SoftLineBreak() || n.HardLineBreak() {
 				plain.WriteByte('\n')
+				if len(listItemIndents) > 0 {
+					plain.WriteString(strings.Repeat(" ", listItemIndents[len(listItemIndents)-1]))
+				}
 			}
 		case *ast.String:
 			if entering {
@@ -348,8 +352,9 @@ func markdownToPlainText(markdown string) string {
 			}
 		case *ast.ListItem:
 			if entering {
-				writePlainListItem(&plain, n)
+				listItemIndents = append(listItemIndents, writePlainListItem(&plain, n))
 			} else {
+				listItemIndents = listItemIndents[:len(listItemIndents)-1]
 				writePlainNewline(&plain)
 			}
 		case *ast.Paragraph, *ast.Heading:
@@ -378,8 +383,9 @@ func markdownToPlainText(markdown string) string {
 	return strings.TrimSpace(plain.String())
 }
 
-func writePlainListItem(plain *strings.Builder, item *ast.ListItem) {
+func writePlainListItem(plain *strings.Builder, item *ast.ListItem) int {
 	writePlainNewline(plain)
+	prefixStart := plain.Len()
 	list := item.Parent().(*ast.List)
 	depth := 0
 	for parent := list.Parent(); parent != nil; parent = parent.Parent() {
@@ -399,6 +405,8 @@ func writePlainListItem(plain *strings.Builder, item *ast.ListItem) {
 	} else {
 		plain.WriteString("- ")
 	}
+
+	return plain.Len() - prefixStart
 }
 
 func writeMarkdownText(plain *strings.Builder, value []byte, raw bool) {

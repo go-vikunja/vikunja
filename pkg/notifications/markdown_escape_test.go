@@ -139,3 +139,10 @@ func TestMarkdownToPlainText_PreservesListNumberingAndNesting(t *testing.T) {
 
 	assert.Equal(t, want, markdownToPlainText(markdown))
 }
+
+func TestMarkdownToPlainText_AlignsListContinuationLines(t *testing.T) {
+	markdown := "3. Parent\n   - [Nested first\n     nested second](https://example.com)\n4. Fourth"
+	want := "3. Parent\n  - Nested first\n    nested second (https://example.com)\n4. Fourth"
+
+	assert.Equal(t, want, markdownToPlainText(markdown))
+}
