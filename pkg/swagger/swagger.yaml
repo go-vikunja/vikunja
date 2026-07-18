@@ -1826,6 +1826,12 @@ definitions:
     properties:
       code:
         type: integer
+      i18n_params:
+        additionalProperties:
+          type: string
+        description: I18nParams carries Message's dynamic values, keyed by the client's
+          translation placeholder names, so clients can localise the error.
+        type: object
       message:
         type: string
     type: object
