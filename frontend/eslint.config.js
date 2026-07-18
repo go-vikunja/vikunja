@@ -4,6 +4,7 @@ import vueTsEslintConfig from '@vue/eslint-config-typescript'
 import pluginDepend from 'eslint-plugin-depend'
 import { fileURLToPath } from 'node:url'
 import { dirname } from 'node:path'
+import iconButtonAccessibleName from './eslint-rules/icon-button-accessible-name.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -18,7 +19,17 @@ export default [
 		],
 	},
 	{
+		plugins: {
+			vikunja: {
+				rules: {
+					'icon-button-accessible-name': iconButtonAccessibleName,
+				},
+			},
+		},
 		rules: {
+			// TODO(a11y): raise to 'error' once the 42 existing unnamed icon buttons have aria-labels (ACR follow-up)
+			'vikunja/icon-button-accessible-name': 'warn',
+
 			'quotes': ['error', 'single'],
 			'comma-dangle': ['error', 'always-multiline'],
 			'semi': ['error', 'never'],
