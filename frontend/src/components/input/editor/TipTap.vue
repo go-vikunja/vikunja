@@ -19,6 +19,7 @@
 				v-if="editor"
 				v-show="isEditing"
 				:editor="editor"
+				:should-show="showTextBubbleMenu"
 			>
 				<div class="editor-bubble__wrapper">
 					<BaseButton
@@ -68,6 +69,22 @@
 						@click="setLink"
 					>
 						<Icon :icon="['fas', 'link']" />
+					</BaseButton>
+				</div>
+			</BubbleMenu>
+			<BubbleMenu
+				v-if="editor"
+				v-show="isEditing"
+				plugin-key="imageBubbleMenu"
+				:editor="editor"
+				:should-show="showImageBubbleMenu"
+			>
+				<div class="editor-bubble__wrapper">
+					<BaseButton
+						class="editor-bubble__button editor-bubble__button--text"
+						@click="setImageAlt"
+					>
+						{{ $t('input.editor.altText') }}
 					</BaseButton>
 				</div>
 			</BubbleMenu>
@@ -154,9 +171,10 @@ import {eventToShortcutString} from '@/helpers/shortcut'
 import EditorToolbar from './EditorToolbar.vue'
 
 import StarterKit from '@tiptap/starter-kit'
-import {Extension, mergeAttributes, type SetContentOptions} from '@tiptap/core'
+import {Extension, isTextSelection, mergeAttributes, type SetContentOptions} from '@tiptap/core'
 import {EditorContent, type Extensions, useEditor, VueNodeViewRenderer} from '@tiptap/vue-3'
-import {Plugin, PluginKey} from '@tiptap/pm/state'
+import {Plugin, PluginKey, type EditorState} from '@tiptap/pm/state'
+import type {EditorView} from '@tiptap/pm/view'
 import {marked} from 'marked'
 import {BubbleMenu} from '@tiptap/vue-3/menus'
 
@@ -727,7 +745,7 @@ async function addImage(event: Event) {
 		return
 	}
 
-	const url = await inputPrompt(event.target.getBoundingClientRect(), '', editor.value)
+	const url = await inputPrompt(event.target.getBoundingClientRect(), t('input.editor.urlPlaceholder'), '', editor.value)
 
 	if (url) {
 		editor.value?.chain().focus().setImage({src: url}).run()
@@ -738,6 +756,33 @@ async function addImage(event: Event) {
 function setLink(event: MouseEvent) {
 	const target = event.target as HTMLElement
 	setLinkInEditor(target.getBoundingClientRect(), editor.value)
+}
+
+// Compose the plugin's default predicate: keep its focus and empty-text-block
+// guards (a doubleclicked empty paragraph reports a non-empty range; focus
+// prevents a sibling editor's menu from lingering), but also hide the menu over
+// a selected image node so only the image menu shows there.
+function showTextBubbleMenu({view, element, state, from, to}: {view: EditorView, element: HTMLElement, state: EditorState, from: number, to: number}) {
+	const isEmptyTextBlock = !state.doc.textBetween(from, to).length && isTextSelection(state.selection)
+	const hasEditorFocus = view.hasFocus() || element.contains(document.activeElement)
+	return hasEditorFocus && from !== to && !isEmptyTextBlock && !editor.value?.isActive('image')
+}
+
+function showImageBubbleMenu() {
+	return editor.value?.isActive('image') ?? false
+}
+
+async function setImageAlt(event: MouseEvent) {
+	const target = event.target as HTMLElement
+	const previousAlt = editor.value?.getAttributes('image').alt || ''
+	const alt = await inputPrompt(target.getBoundingClientRect(), t('input.editor.altTextPlaceholder'), previousAlt, editor.value ?? undefined)
+
+	if (alt === null) {
+		return
+	}
+
+	editor.value?.chain().focus().updateAttributes('image', {alt}).run()
+	bubbleNow()
 }
 
 onMounted(async () => {
@@ -1211,6 +1256,12 @@ ul[data-type='taskList'] {
 
 	&:hover {
 		background: var(--grey-200);
+	}
+
+	&--text {
+		padding: .5rem .75rem;
+		font-size: .9rem;
+		white-space: nowrap;
 	}
 }
 

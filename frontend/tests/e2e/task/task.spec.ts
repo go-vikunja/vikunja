@@ -1449,6 +1449,9 @@ Everything looks good!
 			const bubbleMenu = page.locator('.editor-bubble__wrapper')
 			await expect(bubbleMenu).toBeVisible({timeout: 5000})
 			const linkButton = bubbleMenu.locator('button').nth(5)
+			// capture position before click: opening the prompt takes focus away from the editor, hiding the bubble menu
+			const linkButtonBox = await linkButton.boundingBox()
+			expect(linkButtonBox).not.toBeNull()
 			await linkButton.click()
 
 			// Verify URL input popup appears
@@ -1457,9 +1460,7 @@ Everything looks good!
 
 			// Verify input is positioned near the toolbar button (not at top/bottom of viewport)
 			const urlInputBox = await urlInput.boundingBox()
-			const linkButtonBox = await linkButton.boundingBox()
 			expect(urlInputBox).not.toBeNull()
-			expect(linkButtonBox).not.toBeNull()
 
 			// URL input should be near the link button (within 200px vertically)
 			const verticalDistance = Math.abs(urlInputBox!.y - linkButtonBox!.y)
@@ -1495,6 +1496,9 @@ Everything looks good!
 			const bubbleMenu = page.locator('.editor-bubble__wrapper')
 			await expect(bubbleMenu).toBeVisible({timeout: 5000})
 			const linkButton = bubbleMenu.locator('button').nth(5)
+			// capture position before click: opening the prompt takes focus away from the editor, hiding the bubble menu
+			const linkButtonBox = await linkButton.boundingBox()
+			expect(linkButtonBox).not.toBeNull()
 			await linkButton.click()
 
 			// Verify URL input popup appears and is positioned correctly (not off-screen)
@@ -1503,9 +1507,7 @@ Everything looks good!
 
 			// Verify input is positioned near the toolbar button
 			const urlInputBox = await urlInput.boundingBox()
-			const linkButtonBox = await linkButton.boundingBox()
 			expect(urlInputBox).not.toBeNull()
-			expect(linkButtonBox).not.toBeNull()
 
 			// URL input should be near the link button even after scroll
 			const verticalDistance = Math.abs(urlInputBox!.y - linkButtonBox!.y)
@@ -1540,6 +1542,9 @@ Everything looks good!
 			const bubbleMenu = page.locator('.editor-bubble__wrapper')
 			await expect(bubbleMenu).toBeVisible({timeout: 5000})
 			const linkButton = bubbleMenu.locator('button').nth(5)
+			// capture position before click: opening the prompt takes focus away from the editor, hiding the bubble menu
+			const linkButtonBox = await linkButton.boundingBox()
+			expect(linkButtonBox).not.toBeNull()
 			await linkButton.click()
 
 			// Verify URL input is visible
@@ -1563,10 +1568,8 @@ Everything looks good!
 			const positionChanged = Math.abs(afterScrollBox!.y - initialBox!.y) > 50
 			expect(positionChanged).toBe(true)
 
-			// Verify input is still near the link button after scroll
-			const linkButtonBox = await linkButton.boundingBox()
-			expect(linkButtonBox).not.toBeNull()
-			const verticalDistance = Math.abs(afterScrollBox!.y - linkButtonBox!.y)
+			// Verify input followed its anchor: the content scrolled up by 300px, so the anchor did too
+			const verticalDistance = Math.abs(afterScrollBox!.y - (linkButtonBox!.y - 300))
 			expect(verticalDistance).toBeLessThan(200)
 		})
 	})
