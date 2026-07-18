@@ -1,11 +1,26 @@
 import {test, expect} from '../../support/fixtures'
+import type {Page} from '@playwright/test'
 import {TaskFactory} from '../../factories/task'
 import {ProjectFactory} from '../../factories/project'
 
-// The image extension is configured with allowBase64:false, so it drops data:
-// URIs on parse; use a static asset the frontend actually serves instead. It is
-// same-origin, so it loads without any network dependency.
-const IMAGE_SRC = '/images/icons/apple-touch-icon-76x76.png'
+// The image extension is configured with allowBase64:false, so it strips data:
+// URIs on parse — the <img> src has to be a real same-origin URL the browser can
+// fetch. The test owns that image: a Playwright route serves a tiny PNG for this
+// path, so nothing outside the test can move or rename it.
+const IMAGE_SRC = '/e2e-test-image.png'
+
+// Smallest valid 1x1 transparent PNG.
+const TEST_PNG = Buffer.from(
+	'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+	'base64',
+)
+
+async function serveTestImage(page: Page) {
+	await page.route(`**${IMAGE_SRC}`, route => route.fulfill({
+		contentType: 'image/png',
+		body: TEST_PNG,
+	}))
+}
 
 test.describe('Editor image alt text', () => {
 	test.beforeEach(async () => {
@@ -13,6 +28,8 @@ test.describe('Editor image alt text', () => {
 	})
 
 	test('sets alt text on a selected image via the image bubble menu', async ({authenticatedPage: page}) => {
+		await serveTestImage(page)
+
 		const tasks = await TaskFactory.create(1, {
 			id: 1,
 			description: `<p>before</p><img src="${IMAGE_SRC}"><p>after</p>`,
@@ -56,6 +73,8 @@ test.describe('Editor image alt text', () => {
 	})
 
 	test('does not wipe existing alt text when the prompt is cancelled', async ({authenticatedPage: page}) => {
+		await serveTestImage(page)
+
 		const tasks = await TaskFactory.create(1, {
 			id: 1,
 			description: `<p>before</p><img src="${IMAGE_SRC}" alt="existing alt text"><p>after</p>`,
