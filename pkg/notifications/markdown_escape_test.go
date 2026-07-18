@@ -99,3 +99,25 @@ func TestEscapeMarkdown_RoundTripThroughGoldmark(t *testing.T) {
 		})
 	}
 }
+
+func TestMarkdownToPlainText_RoundTripsEscapedText(t *testing.T) {
+	inputs := []string{
+		"",
+		"plain title",
+		`Test - xyz - 123|456@789!`,
+		`a\b`,
+		"`code`",
+		"*bold*",
+		"test](https://evil.com) [Click to verify",
+		"![](https://evil.com/track.png)",
+		"<https://evil.com>",
+		`mixed \ and - and | and !`,
+		"#+.{}()[]<>~_",
+	}
+
+	for _, input := range inputs {
+		t.Run(input, func(t *testing.T) {
+			assert.Equal(t, input, markdownToPlainText(EscapeMarkdown(input)))
+		})
+	}
+}
