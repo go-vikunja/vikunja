@@ -21,7 +21,7 @@ import (
 	"net/http"
 
 	"code.vikunja.io/api/pkg/modules/auth"
-	"code.vikunja.io/api/pkg/modules/humaecho5"
+	"code.vikunja.io/api/pkg/modules/humabridge"
 	"code.vikunja.io/api/pkg/routes/api/shared"
 	"code.vikunja.io/api/pkg/user"
 
@@ -122,9 +122,9 @@ func authLogout(ctx context.Context, _ *struct{}) (*logoutBody, error) {
 // echoContextFromCtx pulls the underlying *echo.Context off a Huma request
 // context so a handler can set cookies and headers the OpenAPI schema does not
 // model (the refresh-token cookie). Returns nil when the context carries no echo
-// context (it always does under the humaecho5 adapter).
+// context (it always does under the humabridge group middleware).
 func echoContextFromCtx(ctx context.Context) *echo.Context {
-	ec, ok := ctx.Value(humaecho5.EchoContextKey).(*echo.Context)
+	ec, ok := ctx.Value(humabridge.EchoContextKey).(*echo.Context)
 	if !ok || ec == nil {
 		return nil
 	}

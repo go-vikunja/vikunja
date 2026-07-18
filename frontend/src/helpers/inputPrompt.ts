@@ -5,7 +5,7 @@ import {eventToShortcutString} from '@/helpers/shortcut'
 import type {Editor} from '@tiptap/core'
 import {getPopupContainer} from '@/components/input/editor/popupContainer'
 
-export default function inputPrompt(pos: ClientRect, oldValue: string = '', editor?: Editor): Promise<string> {
+export default function inputPrompt(pos: ClientRect, placeholder: string, oldValue: string = '', editor?: Editor): Promise<string | null> {
 	return new Promise((resolve) => {
 		const id = 'link-input-' + createRandomID()
 		// Append inside the open task <dialog> (top-layer) when present, otherwise
@@ -28,7 +28,8 @@ export default function inputPrompt(pos: ClientRect, oldValue: string = '', edit
 		const wrapperDiv = document.createElement('div')
 		const inputElement = document.createElement('input')
 		inputElement.className = 'input'
-		inputElement.placeholder = 'URL'
+		inputElement.placeholder = placeholder
+		inputElement.setAttribute('aria-label', placeholder)
 		inputElement.id = id
 		inputElement.value = oldValue
 		wrapperDiv.appendChild(inputElement)
@@ -87,7 +88,34 @@ export default function inputPrompt(pos: ClientRect, oldValue: string = '', edit
 
 		window.addEventListener('scroll', handleScroll, true)
 
-		nextTick(() => document.getElementById(id)?.focus())
+		let focusedInputEl: HTMLInputElement | null = null
+		let blurHandler: (() => void) | null = null
+		// A mousedown outside the popup is the start of a deliberate dismissal click;
+		// the blur it triggers must NOT be countered by the re-assert below. Reset on
+		// mouseup so a drag that never produces a click doesn't latch this forever.
+		let dismissing = false
+
+		nextTick(() => {
+			const inputEl = document.getElementById(id) as HTMLInputElement | null
+			inputEl?.focus()
+
+			// ProseMirror re-asserts DOM focus to keep the selection highlight
+			// painted (notably for an image NodeSelection), stealing it from this
+			// input. activeElement is still <body> during the blur event, so defer
+			// the check a macrotask.
+			blurHandler = () => setTimeout(() => {
+				if (
+					!dismissing
+					&& document.body.contains(inputEl)
+					&& document.activeElement !== inputEl
+					&& !popupElement.contains(document.activeElement)
+				) {
+					inputEl?.focus()
+				}
+			}, 0)
+			inputEl?.addEventListener('blur', blurHandler)
+			focusedInputEl = inputEl
+		})
 
 		// The prompt is a sub-modal of the enclosing task <dialog>. Native modal
 		// dialogs close themselves on Escape ("cancel"); swallow that while the
@@ -98,15 +126,32 @@ export default function inputPrompt(pos: ClientRect, oldValue: string = '', edit
 
 		const handleClickOutside = (event: MouseEvent) => {
 			if (!popupElement.contains(event.target as Node)) {
-				resolve('')
+				resolve(null)
 				cleanup()
 			}
 		}
 
+		const handleOutsideMousedown = (event: MouseEvent) => {
+			if (!popupElement.contains(event.target as Node)) {
+				dismissing = true
+			}
+		}
+		document.addEventListener('mousedown', handleOutsideMousedown, true)
+
+		const handleOutsideMouseup = () => {
+			dismissing = false
+		}
+		document.addEventListener('mouseup', handleOutsideMouseup, true)
+
 		const cleanup = () => {
 			window.removeEventListener('scroll', handleScroll, true)
 			document.removeEventListener('click', handleClickOutside)
+			document.removeEventListener('mousedown', handleOutsideMousedown, true)
+			document.removeEventListener('mouseup', handleOutsideMouseup, true)
 			dialog?.removeEventListener('cancel', handleDialogCancel)
+			if (blurHandler) {
+				focusedInputEl?.removeEventListener('blur', blurHandler)
+			}
 			if (container.contains(popupElement)) {
 				container.removeChild(popupElement)
 			}
@@ -119,7 +164,7 @@ export default function inputPrompt(pos: ClientRect, oldValue: string = '', edit
 				// Stop the native <dialog> from closing on Escape; cancel the prompt only.
 				event.preventDefault()
 				event.stopPropagation()
-				resolve('')
+				resolve(null)
 				cleanup()
 				return
 			}

@@ -26,7 +26,7 @@ import (
 	"strings"
 
 	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/modules/humaecho5"
+	"code.vikunja.io/api/pkg/modules/humabridge"
 	"code.vikunja.io/api/pkg/version"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -86,7 +86,7 @@ func NewAPI(e *echo.Echo, g *echo.Group) huma.API {
 	formats[formURLEncodedContentType] = formURLEncodedFormat
 	cfg.Formats = formats
 
-	api := humaecho5.NewWithGroup(e, g, GroupPrefix, cfg)
+	api := humabridge.NewWithGroup(e, g, GroupPrefix, cfg)
 	oapi := api.OpenAPI()
 	if oapi.Info != nil {
 		oapi.Info.Description = richTextFormatAPIDescription
