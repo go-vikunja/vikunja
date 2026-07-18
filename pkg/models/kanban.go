@@ -49,8 +49,8 @@ type Bucket struct {
 	// The position this bucket has when querying all buckets. See the tasks.position property on how to use this.
 	Position float64 `xorm:"double null" json:"position"`
 
-	// The fields to sort tasks by within this bucket, applied in order. Valid values are `priority`, `due_date`, `created`, `updated`, `title`. Defaults to manual drag order.
-	SortBy []string `xorm:"json null default null" json:"sort_by" doc:"The fields to sort tasks by within this bucket, applied in order. Valid values are priority, due_date, created, updated, title."`
+	// The fields to sort tasks by within this bucket, applied in order. Valid values are `priority`, `due_date`, `start_date`, `end_date`, `created`, `updated`, `title`, `percent_done`. Defaults to manual drag order.
+	SortBy []string `xorm:"json null default null" json:"sort_by" doc:"The fields to sort tasks by within this bucket, applied in order. Valid values are priority, due_date, start_date, end_date, created, updated, title, percent_done."`
 	// The order to sort each corresponding entry in sort_by by. Valid values are `asc` and `desc`. Defaults to `asc`.
 	SortOrder []string `xorm:"json null default null" json:"sort_order" doc:"The order for each corresponding entry in sort_by, either asc or desc. Defaults to asc."`
 
