@@ -91,7 +91,7 @@
     "lowlight": "3.3.0",
     "marked": "18.0.6",
     "nanoid": "6.0.0",
-    "pinia": "3.0.4",
+    "pinia": "4.0.2",
     "register-service-worker": "1.7.2",
     "sortablejs": "1.15.7",
     "ufo": "1.6.4",
