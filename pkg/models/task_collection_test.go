@@ -2163,6 +2163,35 @@ func TestTaskCollection_ExpandSubtasksFilterMatchesParentOnly(t *testing.T) {
 	assert.Len(t, tasks, 2)
 }
 
+// setupSubtaskExpansionFixture creates a project with a parent task, a subtask and
+// the relation linking them, for tests of the subtask-expansion root condition.
+// apply, if non-nil, mutates parent and sub before they're inserted.
+func setupSubtaskExpansionFixture(t *testing.T, u *user.User, title string, apply func(parent, sub *Task)) (project *Project, parent, sub *Task) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	project = &Project{Title: title, OwnerID: u.ID}
+	_, err := s.Insert(project)
+	require.NoError(t, err)
+
+	parent = &Task{Title: "parent", ProjectID: project.ID, CreatedByID: u.ID, Index: 1}
+	sub = &Task{Title: "sub", ProjectID: project.ID, CreatedByID: u.ID, Index: 2}
+	if apply != nil {
+		apply(parent, sub)
+	}
+
+	_, err = s.Insert(parent)
+	require.NoError(t, err)
+	_, err = s.Insert(sub)
+	require.NoError(t, err)
+
+	rel := &TaskRelation{TaskID: parent.ID, OtherTaskID: sub.ID, RelationKind: RelationKindSubtask}
+	require.NoError(t, rel.Create(s, u))
+	require.NoError(t, s.Commit())
+	return
+}
+
 // TestTaskCollection_ExpandSubtasksSoftDeleted covers the two soft-delete gaps
 // the xorm deleted tag can't reach in the subtask expansion: the raw recursive
 // CTE fetching subtasks, and the "tasks parent_tasks" self-join alias in the
@@ -2170,33 +2199,10 @@ func TestTaskCollection_ExpandSubtasksFilterMatchesParentOnly(t *testing.T) {
 func TestTaskCollection_ExpandSubtasksSoftDeleted(t *testing.T) {
 	u := &user.User{ID: 1}
 
-	setup := func(t *testing.T, title string) (project *Project, parent, sub *Task) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		project = &Project{Title: title, OwnerID: u.ID}
-		_, err := s.Insert(project)
-		require.NoError(t, err)
-
-		parent = &Task{Title: "parent", ProjectID: project.ID, CreatedByID: u.ID, Index: 1}
-		_, err = s.Insert(parent)
-		require.NoError(t, err)
-
-		sub = &Task{Title: "sub", ProjectID: project.ID, CreatedByID: u.ID, Index: 2}
-		_, err = s.Insert(sub)
-		require.NoError(t, err)
-
-		rel := &TaskRelation{TaskID: parent.ID, OtherTaskID: sub.ID, RelationKind: RelationKindSubtask}
-		require.NoError(t, rel.Create(s, u))
-		require.NoError(t, s.Commit())
-		return
-	}
-
 	expand := []TaskCollectionExpandable{TaskCollectionExpandSubtasks}
 
 	t.Run("soft-deleted subtask is omitted", func(t *testing.T) {
-		project, parent, sub := setup(t, "deleted-subtask")
+		project, parent, sub := setupSubtaskExpansionFixture(t, u, "deleted-subtask", nil)
 
 		s := db.NewSession()
 		defer s.Close()
@@ -2218,7 +2224,7 @@ func TestTaskCollection_ExpandSubtasksSoftDeleted(t *testing.T) {
 	})
 
 	t.Run("children of a soft-deleted parent become roots", func(t *testing.T) {
-		project, parent, sub := setup(t, "deleted-parent")
+		project, parent, sub := setupSubtaskExpansionFixture(t, u, "deleted-parent", nil)
 
 		s := db.NewSession()
 		defer s.Close()
@@ -2246,34 +2252,12 @@ func TestTaskCollection_ExpandSubtasksSoftDeleted(t *testing.T) {
 func TestTaskCollection_ExpandSubtasksNullableFilterParent(t *testing.T) {
 	u := &user.User{ID: 1}
 
-	setup := func(t *testing.T, title string, apply func(parent, sub *Task)) (project *Project, parent, sub *Task) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		project = &Project{Title: title, OwnerID: u.ID}
-		_, err := s.Insert(project)
-		require.NoError(t, err)
-
-		parent = &Task{Title: "dateless parent", ProjectID: project.ID, CreatedByID: u.ID, Index: 1}
-		sub = &Task{Title: "dated child", ProjectID: project.ID, CreatedByID: u.ID, Index: 2}
-		apply(parent, sub)
-
-		_, err = s.Insert(parent)
-		require.NoError(t, err)
-		_, err = s.Insert(sub)
-		require.NoError(t, err)
-
-		rel := &TaskRelation{TaskID: parent.ID, OtherTaskID: sub.ID, RelationKind: RelationKindSubtask}
-		require.NoError(t, rel.Create(s, u))
-		require.NoError(t, s.Commit())
-		return
-	}
-
 	expand := []TaskCollectionExpandable{TaskCollectionExpandSubtasks}
 
 	t.Run("due_date <= filter, parent has NULL due_date", func(t *testing.T) {
-		project, _, sub := setup(t, "null-due-parent", func(_, sub *Task) {
+		project, _, sub := setupSubtaskExpansionFixture(t, u, "null-due-parent", func(parent, sub *Task) {
+			parent.Title = "dateless parent"
+			sub.Title = "dated child"
 			sub.DueDate = time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
 		})
 
@@ -2296,7 +2280,9 @@ func TestTaskCollection_ExpandSubtasksNullableFilterParent(t *testing.T) {
 	})
 
 	t.Run("gantt-shaped OR date window, dateless parent", func(t *testing.T) {
-		project, _, sub := setup(t, "null-dates-parent", func(_, sub *Task) {
+		project, _, sub := setupSubtaskExpansionFixture(t, u, "null-dates-parent", func(parent, sub *Task) {
+			parent.Title = "dateless parent"
+			sub.Title = "dated child"
 			sub.StartDate = time.Date(2020, 6, 1, 0, 0, 0, 0, time.UTC)
 			sub.EndDate = time.Date(2020, 6, 10, 0, 0, 0, 0, time.UTC)
 			sub.DueDate = time.Date(2020, 6, 5, 0, 0, 0, 0, time.UTC)
@@ -2331,33 +2317,15 @@ func TestTaskCollection_ExpandSubtasksNullableFilterParent(t *testing.T) {
 func TestTaskCollection_ExpandSubtasksSearchMirror(t *testing.T) {
 	u := &user.User{ID: 1}
 
-	setup := func(t *testing.T, title string) (project *Project, parent, sub *Task) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		project = &Project{Title: title, OwnerID: u.ID}
-		_, err := s.Insert(project)
-		require.NoError(t, err)
-
-		parent = &Task{Title: "alphaparent", ProjectID: project.ID, CreatedByID: u.ID, Index: 1}
-		_, err = s.Insert(parent)
-		require.NoError(t, err)
-
-		sub = &Task{Title: "betachild", ProjectID: project.ID, CreatedByID: u.ID, Index: 2}
-		_, err = s.Insert(sub)
-		require.NoError(t, err)
-
-		rel := &TaskRelation{TaskID: parent.ID, OtherTaskID: sub.ID, RelationKind: RelationKindSubtask}
-		require.NoError(t, rel.Create(s, u))
-		require.NoError(t, s.Commit())
-		return
+	titles := func(parent, sub *Task) {
+		parent.Title = "alphaparent"
+		sub.Title = "betachild"
 	}
 
 	expand := []TaskCollectionExpandable{TaskCollectionExpandSubtasks}
 
 	t.Run("search matches child only", func(t *testing.T) {
-		project, _, sub := setup(t, "search-child")
+		project, _, sub := setupSubtaskExpansionFixture(t, u, "search-child", titles)
 
 		s2 := db.NewSession()
 		defer s2.Close()
@@ -2374,7 +2342,7 @@ func TestTaskCollection_ExpandSubtasksSearchMirror(t *testing.T) {
 	})
 
 	t.Run("search matches parent only keeps child nested", func(t *testing.T) {
-		project, parent, sub := setup(t, "search-parent")
+		project, parent, sub := setupSubtaskExpansionFixture(t, u, "search-parent", titles)
 
 		s2 := db.NewSession()
 		defer s2.Close()
