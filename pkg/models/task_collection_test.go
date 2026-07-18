@@ -2076,27 +2076,13 @@ func countRootsAndSubs(tasks []*Task) (roots, subs int) {
 // a filter that matches only a subtask (whose same-project parent is filtered out)
 // must return that subtask as a root. The old same-project proxy returned [].
 func TestTaskCollection_ExpandSubtasksFilterMatchesSubtaskOnly(t *testing.T) {
-	db.LoadAndAssertFixtures(t)
-	s := db.NewSession()
-	defer s.Close()
-
 	u := &user.User{ID: 1}
 
-	project := &Project{Title: "filter-matches-subtask", OwnerID: u.ID}
-	_, err := s.Insert(project)
-	require.NoError(t, err)
-
-	parent := &Task{Title: "parent", ProjectID: project.ID, CreatedByID: u.ID, Index: 1, Priority: 1}
-	_, err = s.Insert(parent)
-	require.NoError(t, err)
-
-	sub := &Task{Title: "matching subtask", ProjectID: project.ID, CreatedByID: u.ID, Index: 2, Priority: 5}
-	_, err = s.Insert(sub)
-	require.NoError(t, err)
-
-	rel := &TaskRelation{TaskID: parent.ID, OtherTaskID: sub.ID, RelationKind: RelationKindSubtask}
-	require.NoError(t, rel.Create(s, u))
-	require.NoError(t, s.Commit())
+	project, _, sub := setupSubtaskExpansionFixture(t, u, "filter-matches-subtask", func(parent, sub *Task) {
+		parent.Priority = 1
+		sub.Title = "matching subtask"
+		sub.Priority = 5
+	})
 
 	s2 := db.NewSession()
 	defer s2.Close()
@@ -2118,27 +2104,14 @@ func TestTaskCollection_ExpandSubtasksFilterMatchesSubtaskOnly(t *testing.T) {
 // a filter matching only the parent returns the parent plus its (non-matching)
 // subtask, nested, with no duplication.
 func TestTaskCollection_ExpandSubtasksFilterMatchesParentOnly(t *testing.T) {
-	db.LoadAndAssertFixtures(t)
-	s := db.NewSession()
-	defer s.Close()
-
 	u := &user.User{ID: 1}
 
-	project := &Project{Title: "filter-matches-parent", OwnerID: u.ID}
-	_, err := s.Insert(project)
-	require.NoError(t, err)
-
-	parent := &Task{Title: "matching parent", ProjectID: project.ID, CreatedByID: u.ID, Index: 1, Priority: 5}
-	_, err = s.Insert(parent)
-	require.NoError(t, err)
-
-	sub := &Task{Title: "subtask", ProjectID: project.ID, CreatedByID: u.ID, Index: 2, Priority: 1}
-	_, err = s.Insert(sub)
-	require.NoError(t, err)
-
-	rel := &TaskRelation{TaskID: parent.ID, OtherTaskID: sub.ID, RelationKind: RelationKindSubtask}
-	require.NoError(t, rel.Create(s, u))
-	require.NoError(t, s.Commit())
+	project, parent, sub := setupSubtaskExpansionFixture(t, u, "filter-matches-parent", func(parent, sub *Task) {
+		parent.Title = "matching parent"
+		parent.Priority = 5
+		sub.Title = "subtask"
+		sub.Priority = 1
+	})
 
 	s2 := db.NewSession()
 	defer s2.Close()
