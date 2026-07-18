@@ -23,6 +23,7 @@
 				<div class="editor-bubble__wrapper">
 					<BaseButton
 						v-tooltip="$t('input.editor.bold')"
+						:aria-label="$t('input.editor.bold')"
 						class="editor-bubble__button"
 						:class="{ 'is-active': editor.isActive('bold') }"
 						@click="() => editor?.chain().focus().toggleBold().run()"
@@ -31,6 +32,7 @@
 					</BaseButton>
 					<BaseButton
 						v-tooltip="$t('input.editor.italic')"
+						:aria-label="$t('input.editor.italic')"
 						class="editor-bubble__button"
 						:class="{ 'is-active': editor.isActive('italic') }"
 						@click="() => editor?.chain().focus().toggleItalic().run()"
@@ -39,6 +41,7 @@
 					</BaseButton>
 					<BaseButton
 						v-tooltip="$t('input.editor.underline')"
+						:aria-label="$t('input.editor.underline')"
 						class="editor-bubble__button"
 						:class="{ 'is-active': editor.isActive('underline') }"
 						@click="() => editor?.chain().focus().toggleUnderline().run()"
@@ -47,6 +50,7 @@
 					</BaseButton>
 					<BaseButton
 						v-tooltip="$t('input.editor.strikethrough')"
+						:aria-label="$t('input.editor.strikethrough')"
 						class="editor-bubble__button"
 						:class="{ 'is-active': editor.isActive('strike') }"
 						@click="() => editor?.chain().focus().toggleStrike().run()"
@@ -55,6 +59,7 @@
 					</BaseButton>
 					<BaseButton
 						v-tooltip="$t('input.editor.code')"
+						:aria-label="$t('input.editor.code')"
 						class="editor-bubble__button"
 						:class="{ 'is-active': editor.isActive('code') }"
 						@click="() => editor?.chain().focus().toggleCode().run()"
@@ -63,6 +68,7 @@
 					</BaseButton>
 					<BaseButton
 						v-tooltip="$t('input.editor.link')"
+						:aria-label="$t('input.editor.link')"
 						class="editor-bubble__button"
 						:class="{ 'is-active': editor.isActive('link') }"
 						@click="setLink"

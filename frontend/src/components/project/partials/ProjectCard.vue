@@ -44,6 +44,7 @@
 		<BaseButton
 			v-if="!project.isArchived && project.id > -1"
 			class="favorite"
+			:aria-label="project.isFavorite ? $t('project.unfavorite') : $t('project.favorite')"
 			:class="{'is-favorite': project.isFavorite}"
 			@click.prevent.stop="projectStore.toggleProjectFavorite(project)"
 		>

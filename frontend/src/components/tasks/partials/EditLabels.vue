@@ -24,6 +24,7 @@
 				<BaseButton
 					v-if="!disabled"
 					v-cy="'taskDetail.removeLabel'"
+					:aria-label="$t('task.label.removeLabel', {label: label.title})"
 					class="delete is-small"
 					@click="removeLabel(label)"
 				/>

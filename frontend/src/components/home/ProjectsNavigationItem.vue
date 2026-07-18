@@ -11,6 +11,7 @@
 			<BaseButton
 				v-if="canCollapse && childProjects?.length > 0"
 				class="collapse-project-button"
+				:aria-label="$t('navigation.toggleChildProjects')"
 				@click="childProjectsOpen = !childProjectsOpen"
 			>
 				<Icon

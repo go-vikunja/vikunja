@@ -34,6 +34,7 @@
 								<BaseButton
 									v-if="!disabled"
 									class="delete is-small"
+									:aria-label="$t('input.multiselect.removeItem')"
 									@click="() => remove(item)"
 								/>
 							</span>
@@ -60,6 +61,7 @@
 				<BaseButton 
 					v-if="removalAvailable && !disabled"
 					class="removal-button"
+					:aria-label="$t('input.multiselect.clear')"
 					@click="resetSelectedValue"
 				>
 					<Icon icon="times" />
