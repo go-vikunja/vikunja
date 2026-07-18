@@ -2167,6 +2167,7 @@ func TestTaskCollection_ExpandSubtasksFilterMatchesParentOnly(t *testing.T) {
 // the relation linking them, for tests of the subtask-expansion root condition.
 // apply, if non-nil, mutates parent and sub before they're inserted.
 func setupSubtaskExpansionFixture(t *testing.T, u *user.User, title string, apply func(parent, sub *Task)) (project *Project, parent, sub *Task) {
+	t.Helper()
 	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()
 	defer s.Close()
