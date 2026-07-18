@@ -304,6 +304,7 @@ func markdownToPlainText(markdown string) string {
 	var plain strings.Builder
 	linkStarts := make(map[ast.Node]int)
 	listItemIndents := make([]int, 0)
+	listItemHasBlocks := make([]bool, 0)
 
 	_ = ast.Walk(document, func(node ast.Node, entering bool) (ast.WalkStatus, error) {
 		switch n := node.(type) {
@@ -352,23 +353,32 @@ func markdownToPlainText(markdown string) string {
 			}
 		case *ast.ListItem:
 			if entering {
+				if len(listItemHasBlocks) > 0 {
+					listItemHasBlocks[len(listItemHasBlocks)-1] = true
+				}
 				listItemIndents = append(listItemIndents, writePlainListItem(&plain, n))
+				listItemHasBlocks = append(listItemHasBlocks, false)
 			} else {
 				listItemIndents = listItemIndents[:len(listItemIndents)-1]
+				listItemHasBlocks = listItemHasBlocks[:len(listItemHasBlocks)-1]
 				writePlainNewline(&plain)
 			}
 		case *ast.Paragraph, *ast.Heading:
-			if !entering {
+			if entering {
+				writePlainListBlockStart(&plain, listItemIndents, listItemHasBlocks)
+			} else {
 				writePlainNewline(&plain)
 			}
 		case *ast.CodeBlock, *ast.FencedCodeBlock:
 			if entering {
-				plain.Write(node.Lines().Value(source))
+				writePlainListBlockStart(&plain, listItemIndents, listItemHasBlocks)
+				writePlainBlock(&plain, node.Lines().Value(source), listItemIndents)
 				writePlainNewline(&plain)
 				return ast.WalkSkipChildren, nil
 			}
 		case *ast.ThematicBreak:
 			if entering {
+				writePlainListBlockStart(&plain, listItemIndents, listItemHasBlocks)
 				plain.WriteString("---\n")
 			}
 		case *ast.RawHTML, *ast.HTMLBlock:
@@ -407,6 +417,33 @@ func writePlainListItem(plain *strings.Builder, item *ast.ListItem) int {
 	}
 
 	return plain.Len() - prefixStart
+}
+
+func writePlainListBlockStart(plain *strings.Builder, indents []int, hasBlocks []bool) {
+	if len(hasBlocks) == 0 {
+		return
+	}
+
+	current := len(hasBlocks) - 1
+	if hasBlocks[current] {
+		writePlainNewline(plain)
+		plain.WriteString(strings.Repeat(" ", indents[current]))
+	}
+	hasBlocks[current] = true
+}
+
+func writePlainBlock(plain *strings.Builder, value []byte, indents []int) {
+	indent := 0
+	if len(indents) > 0 {
+		indent = indents[len(indents)-1]
+	}
+
+	for i, char := range value {
+		plain.WriteByte(char)
+		if char == '\n' && i < len(value)-1 {
+			plain.WriteString(strings.Repeat(" ", indent))
+		}
+	}
 }
 
 func writeMarkdownText(plain *strings.Builder, value []byte, raw bool) {

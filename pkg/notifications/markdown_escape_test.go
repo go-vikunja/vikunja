@@ -146,3 +146,10 @@ func TestMarkdownToPlainText_AlignsListContinuationLines(t *testing.T) {
 
 	assert.Equal(t, want, markdownToPlainText(markdown))
 }
+
+func TestMarkdownToPlainText_AlignsListContinuationBlocks(t *testing.T) {
+	markdown := "- first\n\n  second\n\n  ```\n  code one\n  code two\n  ```\n- next"
+	want := "- first\n  second\n  code one\n  code two\n- next"
+
+	assert.Equal(t, want, markdownToPlainText(markdown))
+}
