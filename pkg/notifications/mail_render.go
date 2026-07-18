@@ -17,8 +17,10 @@
 package notifications
 
 import (
+	"bufio"
 	"bytes"
 	"embed"
+	"html"
 	templatehtml "html/template"
 	"net/url"
 	"regexp"
@@ -32,6 +34,9 @@ import (
 
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/ast"
+	goldmarkhtml "github.com/yuin/goldmark/renderer/html"
+	"github.com/yuin/goldmark/text"
 )
 
 const mailTemplatePlain = `
@@ -290,12 +295,115 @@ func ensurePMargins(html string) string {
 	return rePTag.ReplaceAllString(html, "<p "+pMarginStyle+">")
 }
 
-// convertLinesToPlain converts mail lines to plain text, stripping HTML from lines marked as HTML.
+var markdownTextWriter = goldmarkhtml.NewWriter()
+
+func markdownToPlainText(markdown string) string {
+	source := []byte(markdown)
+	document := goldmark.DefaultParser().Parse(text.NewReader(source))
+	var plain strings.Builder
+	linkStarts := make(map[ast.Node]int)
+
+	_ = ast.Walk(document, func(node ast.Node, entering bool) (ast.WalkStatus, error) {
+		switch n := node.(type) {
+		case *ast.Text:
+			if !entering {
+				return ast.WalkContinue, nil
+			}
+			writeMarkdownText(&plain, n.Value(source), n.IsRaw())
+			if n.SoftLineBreak() || n.HardLineBreak() {
+				plain.WriteByte('\n')
+			}
+		case *ast.String:
+			if entering {
+				writeMarkdownText(&plain, n.Value, n.IsRaw() || n.IsCode())
+			}
+		case *ast.AutoLink:
+			if entering {
+				plain.Write(n.Label(source))
+			}
+		case *ast.Link:
+			if entering {
+				linkStarts[node] = plain.Len()
+				return ast.WalkContinue, nil
+			}
+			start := linkStarts[node]
+			label := plain.String()[start:]
+			destination := string(n.Destination)
+			if destination != "" && label != destination {
+				plain.WriteString(" (")
+				plain.WriteString(destination)
+				plain.WriteByte(')')
+			}
+			delete(linkStarts, node)
+		case *ast.Image:
+			if !entering {
+				destination := string(n.Destination)
+				if destination != "" {
+					plain.WriteString(" (")
+					plain.WriteString(destination)
+					plain.WriteByte(')')
+				}
+			}
+		case *ast.ListItem:
+			if entering {
+				plain.WriteString("- ")
+			} else {
+				writePlainNewline(&plain)
+			}
+		case *ast.Paragraph, *ast.Heading:
+			if !entering {
+				writePlainNewline(&plain)
+			}
+		case *ast.CodeBlock, *ast.FencedCodeBlock:
+			if entering {
+				plain.Write(node.Lines().Value(source))
+				writePlainNewline(&plain)
+				return ast.WalkSkipChildren, nil
+			}
+		case *ast.ThematicBreak:
+			if entering {
+				plain.WriteString("---\n")
+			}
+		case *ast.RawHTML, *ast.HTMLBlock:
+			if entering {
+				return ast.WalkSkipChildren, nil
+			}
+		}
+
+		return ast.WalkContinue, nil
+	})
+
+	return strings.TrimSpace(plain.String())
+}
+
+func writeMarkdownText(plain *strings.Builder, value []byte, raw bool) {
+	if raw {
+		plain.Write(value)
+		return
+	}
+
+	var escaped bytes.Buffer
+	writer := bufio.NewWriter(&escaped)
+	markdownTextWriter.Write(writer, value)
+	_ = writer.Flush()
+	plain.WriteString(html.UnescapeString(escaped.String()))
+}
+
+func writePlainNewline(plain *strings.Builder) {
+	if plain.Len() == 0 || plain.String()[plain.Len()-1] != '\n' {
+		plain.WriteByte('\n')
+	}
+}
+
+// convertLinesToPlain renders Markdown and strips HTML to plain text.
 func convertLinesToPlain(lines []*mailLine) []*mailLine {
 	plain := make([]*mailLine, 0, len(lines))
 	for _, line := range lines {
 		if !line.isHTML {
-			plain = append(plain, line)
+			text := markdownToPlainText(line.Text)
+			if text != "" {
+				plain = append(plain, &mailLine{Text: text})
+			}
 			continue
 		}
 
@@ -352,20 +460,15 @@ func RenderMail(m *Mail, lang string) (mailOpts *mail.Opts, err error) {
 	data := make(map[string]interface{})
 
 	data["Greeting"] = m.greeting
-	if m.conversational {
-		data["IntroLines"] = convertLinesToPlain(m.introLines)
-		data["OutroLines"] = convertLinesToPlain(m.outroLines)
-		if m.headerLine != nil {
-			plainHeaders := convertLinesToPlain([]*mailLine{m.headerLine})
-			if len(plainHeaders) > 0 {
-				data["HeaderLinePlain"] = plainHeaders[0].Text
-			}
+	data["IntroLines"] = convertLinesToPlain(m.introLines)
+	data["OutroLines"] = convertLinesToPlain(m.outroLines)
+	if m.conversational && m.headerLine != nil {
+		plainHeaders := convertLinesToPlain([]*mailLine{m.headerLine})
+		if len(plainHeaders) > 0 {
+			data["HeaderLinePlain"] = plainHeaders[0].Text
 		}
-	} else {
-		data["IntroLines"] = m.introLines
-		data["OutroLines"] = m.outroLines
 	}
-	data["FooterLines"] = m.footerLines
+	data["FooterLines"] = convertLinesToPlain(m.footerLines)
 	data["ActionText"] = m.actionText
 	data["ActionURL"] = m.actionURL
 	data["Boundary"] = boundary

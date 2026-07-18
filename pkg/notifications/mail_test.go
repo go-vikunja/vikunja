@@ -163,7 +163,7 @@ Hi there,
 
 This is a line
 
-This **line** contains [a link](https://vikunja.io)
+This line contains a link (https://vikunja.io)
 
 And another one
 
@@ -254,7 +254,7 @@ Hi there,
 
 This is a line
 
-This **line** contains [a link](https://vikunja.io)
+This line contains a link (https://vikunja.io)
 
 And another one
 
@@ -314,6 +314,26 @@ This is a footer line
 		// &#34; is the correct HTML entity for the quote character and will render as " in the browser
 		assert.Contains(t, mailopts.HTMLMessage, `&#34;Fix structured data Value in property &#34;reviewCount&#34; must be positive&#34;`)
 	})
+	t.Run("renders markdown as plain text", func(t *testing.T) {
+		title := EscapeMarkdown(`Test - xyz - 123|456@789! Keep \!`)
+		mail := NewMail().
+			From("test@example.com").
+			To("test@otherdomain.com").
+			Subject("Testmail").
+			Greeting("Hi there,").
+			Line(`A **friendly** reminder for "` + title + `". See [the task](https://vikunja.io/tasks/1).`).
+			Line(`* [` + title + `](https://vikunja.io/tasks/1)`)
+
+		mailopts, err := RenderMail(mail, "en")
+		require.NoError(t, err)
+
+		assert.Contains(t, mailopts.Message, `A friendly reminder for "Test - xyz - 123|456@789! Keep \!". See the task (https://vikunja.io/tasks/1).`)
+		assert.NotContains(t, mailopts.Message, `\-`)
+		assert.NotContains(t, mailopts.Message, `**`)
+		assert.Contains(t, mailopts.Message, `- Test - xyz - 123|456@789! Keep \! (https://vikunja.io/tasks/1)`)
+		assert.Contains(t, mailopts.HTMLMessage, `<strong>friendly</strong>`)
+		assert.Contains(t, mailopts.HTMLMessage, `Test - xyz - 123|456@789! Keep \!`)
+	})
 	t.Run("with pre-escaped HTML entities", func(t *testing.T) {
 		// This tests the fix for issue #1664 where HTML entities were being double-escaped
 		mail := NewMail().
@@ -326,8 +346,7 @@ This is a footer line
 		mailopts, err := RenderMail(mail, "en")
 		require.NoError(t, err)
 
-		// Plain text should contain the HTML entity as-is (it will be interpreted by email client)
-		assert.Contains(t, mailopts.Message, `&#34;`)
+		assert.Contains(t, mailopts.Message, `"already escaped"`)
 
 		// HTML should properly handle the pre-escaped entity without double-escaping
 		// The entity should remain as &#34; (not become &amp;#34;)
