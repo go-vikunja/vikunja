@@ -433,9 +433,8 @@ func (d *dbTaskSearcher) buildSubtaskRootCondition(opts *taskSearchOptions) (bui
 // alias so an active search decides root membership the same way it decides the
 // result set. It always uses the ILIKE substring branch rather than the ParadeDB
 // operator: ParadeDB's ||| is a BM25 index scan that cannot run against an aliased
-// table inside a correlated subquery. Known limitation: on ParadeDB, BM25 tokenization
-// (main query) and ILIKE substring matching (this mirror) can disagree, so a parent's
-// root-membership can diverge from its result-set membership.
+// table inside a correlated subquery. Known limitation: on ParadeDB this can make a
+// parent's root-membership diverge from its BM25 result-set membership.
 func buildParentSearchCondition(search string) builder.Cond {
 	if search == "" {
 		return nil
