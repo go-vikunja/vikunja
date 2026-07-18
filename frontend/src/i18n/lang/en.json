@@ -190,7 +190,8 @@
       "desktop": {
         "quickEntryShortcut": "Quick Entry Shortcut",
         "shortcutRecorderPlaceholder": "Click to set shortcut",
-        "shortcutRecorderRecording": "Press a key combination…"
+        "shortcutRecorderRecording": "Press a key combination…",
+        "shortcutRecorderClear": "Clear shortcut"
       },
       "totp": {
         "title": "Two Factor Authentication",
@@ -437,6 +438,7 @@
         "shared": "Shared with these {type}",
         "you": "You",
         "notShared": "Not shared with any {type} yet.",
+        "remove": "Remove this {type}",
         "removeHeader": "Remove a {type} from the {sharable}",
         "removeText": "Are you sure you want to remove this {sharable} from the {type}? This cannot be undone!",
         "removeSuccess": "The {sharable} was successfully removed from the {type}.",
@@ -560,6 +562,7 @@
       "createSuccess": "The view was created successfully.",
       "titleRequired": "Please provide a title.",
       "delete": "Delete this view",
+      "edit": "Edit this view",
       "deleteText": "Are you sure you want to remove this view? It will no longer be possible to use it to view tasks in this project. This action won't delete any tasks. This cannot be undone!",
       "deleteSuccess": "The view was deleted successfully.",
       "onlyAdminsCanEdit": "Only project admins can edit views.",
@@ -747,7 +750,8 @@
     "imprint": "Imprint",
     "privacy": "Privacy Policy",
     "closeSidebar": "Close sidebar",
-    "home": "Vikunja home"
+    "home": "Vikunja home",
+    "toggleChildProjects": "Toggle sub-projects"
   },
   "misc": {
     "loading": "Loading…",
@@ -860,13 +864,16 @@
     },
     "multiselect": {
       "createPlaceholder": "Create",
-      "selectPlaceholder": "Click or press enter to select"
+      "selectPlaceholder": "Click or press enter to select",
+      "removeItem": "Remove this item",
+      "clear": "Clear selection"
     },
     "datepickerRange": {
       "to": "To",
       "from": "From",
       "fromto": "{from} to {to}",
       "date": "Date",
+      "openCalendar": "Open calendar",
       "ranges": {
         "today": "Today",
         "tomorrow": "Tomorrow",
@@ -941,6 +948,7 @@
     "new": "Create a task",
     "createSuccess": "The task was successfully created.",
     "addReminder": "Add a reminder…",
+    "removeReminder": "Remove this reminder",
     "doneSuccess": "The task was successfully marked as done.",
     "undoneSuccess": "The task was successfully un-marked as done.",
     "readOnlyCheckbox": "You only have read access to this task and cannot mark it as done.",
@@ -963,6 +971,11 @@
       "chooseDueDate": "Click here to set a due date",
       "chooseStartDate": "Click here to set a start date",
       "chooseEndDate": "Click here to set an end date",
+      "removeDueDate": "Remove due date",
+      "removeStartDate": "Remove start date",
+      "removeEndDate": "Remove end date",
+      "removeRepeat": "Remove repeat interval",
+      "removeAssignee": "Remove {user} as assignee",
       "move": "Move task to a different project",
       "done": "Mark task done!",
       "undone": "Mark as undone",
@@ -1100,6 +1113,7 @@
     "label": {
       "placeholder": "Type to add a label…",
       "createPlaceholder": "Add this as new label",
+      "removeLabel": "Remove label {label}",
       "addSuccess": "The label has been added successfully.",
       "removeSuccess": "The label has been removed successfully.",
       "addCreateSuccess": "The label has been created and added successfully.",

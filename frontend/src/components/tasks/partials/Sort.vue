@@ -1,5 +1,5 @@
 <template>
-	<BaseButton>
+	<BaseButton :aria-label="$t('project.list.sort')">
 		<Icon
 			v-if="order === 'asc'"
 			icon="sort-up"

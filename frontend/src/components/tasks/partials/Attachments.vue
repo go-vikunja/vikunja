@@ -74,6 +74,7 @@
 						<p>
 							<BaseButton
 								v-tooltip="$t('task.attachment.downloadTooltip')"
+								:aria-label="$t('task.attachment.downloadTooltip')"
 								class="attachment-info-meta-button"
 								@click.prevent.stop="downloadAttachment(a)"
 							>
@@ -81,6 +82,7 @@
 							</BaseButton>
 							<BaseButton
 								v-tooltip="$t('task.attachment.copyUrlTooltip')"
+								:aria-label="$t('task.attachment.copyUrlTooltip')"
 								class="attachment-info-meta-button"
 								@click.stop="copyUrl(a)"
 							>
@@ -89,6 +91,7 @@
 							<BaseButton
 								v-if="editEnabled"
 								v-tooltip="$t('task.attachment.deleteTooltip')"
+								:aria-label="$t('task.attachment.deleteTooltip')"
 								class="attachment-info-meta-button"
 								@click.prevent.stop="setAttachmentToDelete(a)"
 							>
@@ -97,6 +100,9 @@
 							<BaseButton
 								v-if="editEnabled && canPreviewImage(a)"
 								v-tooltip="task.coverImageAttachmentId === a.id
+									? $t('task.attachment.unsetAsCover')
+									: $t('task.attachment.setAsCover')"
+								:aria-label="task.coverImageAttachmentId === a.id
 									? $t('task.attachment.unsetAsCover')
 									: $t('task.attachment.setAsCover')"
 								class="attachment-info-meta-button"

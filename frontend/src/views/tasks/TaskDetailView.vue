@@ -140,6 +140,7 @@
 									<BaseButton
 										v-if="task.dueDate && canWrite"
 										class="remove"
+										:aria-label="$t('task.detail.removeDueDate')"
 										@click="() => {task.dueDate = null;saveTask()}"
 									>
 										<span class="icon is-small">
@@ -194,6 +195,7 @@
 									<BaseButton
 										v-if="task.startDate && canWrite"
 										class="remove"
+										:aria-label="$t('task.detail.removeStartDate')"
 										@click="() => {task.startDate = null;saveTask()}"
 									>
 										<span class="icon is-small">
@@ -227,6 +229,7 @@
 									<BaseButton
 										v-if="task.endDate && canWrite"
 										class="remove"
+										:aria-label="$t('task.detail.removeEndDate')"
 										@click="() => {task.endDate = null;saveTask()}"
 									>
 										<span class="icon is-small">
@@ -275,6 +278,7 @@
 									<BaseButton
 										v-if="canWrite"
 										class="remove"
+										:aria-label="$t('task.detail.removeRepeat')"
 										@click="removeRepeatAfter"
 									>
 										<span class="icon is-small">

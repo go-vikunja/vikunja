@@ -4,6 +4,7 @@
 			v-if="editEnabled && Object.keys(relatedTasks).length > 0"
 			id="showRelatedTasksFormButton"
 			v-tooltip="$t('task.relation.add')"
+			:aria-label="$t('task.relation.add')"
 			class="is-pulled-end add-task-relation-button d-print-none"
 			:class="{'is-active': showNewRelationForm}"
 			variant="secondary"
@@ -147,6 +148,7 @@
 					<BaseButton
 						v-if="editEnabled"
 						class="remove"
+						:aria-label="$t('task.relation.delete')"
 						@click="setRelationToDelete({
 							relationKind: rts.kind,
 							otherTaskId: task.id

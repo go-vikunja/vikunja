@@ -17,6 +17,7 @@
 			<BaseButton
 				v-if="!disabled"
 				class="remove"
+				:aria-label="$t('task.removeReminder')"
 				@click="removeReminderByIndex(index)"
 			>
 				<Icon icon="times" />

@@ -26,6 +26,7 @@
 			<BaseButton
 				v-tooltip="$t('task.show.clearLabelFilter')"
 				class="clear-filter-button"
+				:aria-label="$t('task.show.clearLabelFilter')"
 				@click="clearLabelFilter"
 			>
 				<Icon icon="times" />

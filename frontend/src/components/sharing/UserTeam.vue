@@ -124,6 +124,7 @@
 							<XButton
 								danger
 								icon="trash-alt"
+								:aria-label="$t('project.share.userTeam.remove', {type: shareTypeName})"
 								@click="
 									() => {
 										sharable = s

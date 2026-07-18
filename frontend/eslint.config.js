@@ -27,8 +27,7 @@ export default [
 			},
 		},
 		rules: {
-			// TODO(a11y): raise to 'error' once the 42 existing unnamed icon buttons have aria-labels (ACR follow-up)
-			'vikunja/icon-button-accessible-name': 'warn',
+			'vikunja/icon-button-accessible-name': 'error',
 
 			'quotes': ['error', 'single'],
 			'comma-dangle': ['error', 'always-multiline'],

@@ -159,6 +159,7 @@
 								<XButton
 									danger
 									icon="trash-alt"
+									:aria-label="$t('project.share.links.remove')"
 									@click="
 										() => {
 											linkIdToDelete = s.id

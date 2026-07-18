@@ -42,6 +42,7 @@ defineEmits<{
 				v-if="canRemove && !disabled"
 				:key="'delete'+user.id"
 				class="remove-assignee"
+				:aria-label="$t('task.detail.removeAssignee', {user: user.name || user.username})"
 				@click="$emit('remove', user)"
 			>
 				<Icon icon="times" />
