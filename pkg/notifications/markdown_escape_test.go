@@ -132,3 +132,10 @@ func TestMarkdownToPlainText_NormalizesDestinations(t *testing.T) {
 		markdownToPlainText(`![chart](https://e.test/a\(b\)?x=1&amp;y=2)`),
 	)
 }
+
+func TestMarkdownToPlainText_PreservesListNumberingAndNesting(t *testing.T) {
+	markdown := "3. Third\n   - Nested one\n   - Nested two\n4. Fourth"
+	want := "3. Third\n  - Nested one\n  - Nested two\n4. Fourth"
+
+	assert.Equal(t, want, markdownToPlainText(markdown))
+}

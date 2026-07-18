@@ -24,6 +24,7 @@ import (
 	templatehtml "html/template"
 	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
 	templatetext "text/template"
 
@@ -347,7 +348,7 @@ func markdownToPlainText(markdown string) string {
 			}
 		case *ast.ListItem:
 			if entering {
-				plain.WriteString("- ")
+				writePlainListItem(&plain, n)
 			} else {
 				writePlainNewline(&plain)
 			}
@@ -375,6 +376,29 @@ func markdownToPlainText(markdown string) string {
 	})
 
 	return strings.TrimSpace(plain.String())
+}
+
+func writePlainListItem(plain *strings.Builder, item *ast.ListItem) {
+	writePlainNewline(plain)
+	list := item.Parent().(*ast.List)
+	depth := 0
+	for parent := list.Parent(); parent != nil; parent = parent.Parent() {
+		if _, nested := parent.(*ast.List); nested {
+			depth++
+		}
+	}
+	plain.WriteString(strings.Repeat("  ", depth))
+
+	if list.IsOrdered() {
+		position := list.Start
+		for sibling := item.PreviousSibling(); sibling != nil; sibling = sibling.PreviousSibling() {
+			position++
+		}
+		plain.WriteString(strconv.Itoa(position))
+		plain.WriteString(". ")
+	} else {
+		plain.WriteString("- ")
+	}
 }
 
 func writeMarkdownText(plain *strings.Builder, value []byte, raw bool) {
