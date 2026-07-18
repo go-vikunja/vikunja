@@ -90,7 +90,7 @@
     "klona": "2.0.6",
     "lowlight": "3.3.0",
     "marked": "18.0.6",
-    "nanoid": "5.1.16",
+    "nanoid": "6.0.0",
     "pinia": "3.0.4",
     "register-service-worker": "1.7.2",
     "sortablejs": "1.15.7",
