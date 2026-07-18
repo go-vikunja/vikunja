@@ -328,7 +328,9 @@ func markdownToPlainText(markdown string) string {
 			}
 			start := linkStarts[node]
 			label := plain.String()[start:]
-			destination := string(n.Destination)
+			var normalized strings.Builder
+			writeMarkdownText(&normalized, n.Destination, false)
+			destination := normalized.String()
 			if destination != "" && label != destination {
 				plain.WriteString(" (")
 				plain.WriteString(destination)
@@ -337,10 +339,9 @@ func markdownToPlainText(markdown string) string {
 			delete(linkStarts, node)
 		case *ast.Image:
 			if !entering {
-				destination := string(n.Destination)
-				if destination != "" {
+				if len(n.Destination) > 0 {
 					plain.WriteString(" (")
-					plain.WriteString(destination)
+					writeMarkdownText(&plain, n.Destination, false)
 					plain.WriteByte(')')
 				}
 			}

@@ -121,3 +121,14 @@ func TestMarkdownToPlainText_RoundTripsEscapedText(t *testing.T) {
 		})
 	}
 }
+
+func TestMarkdownToPlainText_NormalizesDestinations(t *testing.T) {
+	assert.Equal(t,
+		`site (https://e.test/a(b)?x=1&y=2)`,
+		markdownToPlainText(`[site](https://e.test/a\(b\)?x=1&amp;y=2)`),
+	)
+	assert.Equal(t,
+		`chart (https://e.test/a(b)?x=1&y=2)`,
+		markdownToPlainText(`![chart](https://e.test/a\(b\)?x=1&amp;y=2)`),
+	)
+}
