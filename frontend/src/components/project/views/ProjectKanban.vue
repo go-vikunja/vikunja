@@ -14,34 +14,6 @@
 					:project-id="projectId"
 					@update:modelValue="updateFilters"
 				/>
-				<Dropdown
-					class="is-right bucket-sort-dropdown"
-					trigger-icon="sort"
-				>
-					<DropdownItem
-						v-for="option in bucketSortOptions"
-						:key="option.value"
-						:icon-class="{'has-text-primary': currentBucketSortBy === option.value}"
-						@click="setBucketSort(option.value)"
-					>
-						{{ option.label }}
-					</DropdownItem>
-					<hr class="dropdown-divider">
-					<DropdownItem
-						:icon-class="{'has-text-primary': currentBucketSortOrder === 'asc'}"
-						icon="arrow-up-short-wide"
-						@click="setBucketSortOrder('asc')"
-					>
-						{{ $t('project.kanban.sortAscending') }}
-					</DropdownItem>
-					<DropdownItem
-						:icon-class="{'has-text-primary': currentBucketSortOrder === 'desc'}"
-						icon="arrow-down-short-wide"
-						@click="setBucketSortOrder('desc')"
-					>
-						{{ $t('project.kanban.sortDescending') }}
-					</DropdownItem>
-				</Dropdown>
 			</div>
 		</template>
 
@@ -923,43 +895,6 @@ async function toggleDoneBucket(bucket: IBucket) {
 	projectStore.setProject(updatedProject)
 
 	success({message: t('project.kanban.doneBucketSavedSuccess')})
-}
-
-const bucketSortOptions = computed(() => [
-	{value: '', label: t('project.kanban.sortManual')},
-	{value: 'priority', label: t('project.kanban.sortPriority')},
-	{value: 'due_date', label: t('project.kanban.sortDueDate')},
-	{value: 'created', label: t('project.kanban.sortCreated')},
-	{value: 'updated', label: t('project.kanban.sortUpdated')},
-	{value: 'title', label: t('project.kanban.sortTitle')},
-])
-
-const currentBucketSortBy = computed(() => view.value?.bucketSortBy || '')
-const currentBucketSortOrder = computed(() => view.value?.bucketSortOrder || 'asc')
-
-async function saveBucketSortSettings(sortBy: string, sortOrder: string) {
-	const projectViewService = new ProjectViewService()
-	const updatedView = await projectViewService.update(new ProjectViewModel({
-		...view.value,
-		bucketSortBy: sortBy,
-		bucketSortOrder: sortOrder,
-	}))
-
-	const views = project.value.views.map(v => v.id === view.value?.id ? updatedView : v)
-	projectStore.setProject({...project.value, views})
-
-	// Reload buckets with new sort order
-	kanbanStore.loadBucketsForProject(projectId.value, props.viewId, params.value)
-	success({message: t('project.kanban.sortSavedSuccess')})
-}
-
-async function setBucketSort(sortBy: string) {
-	const sortOrder = sortBy === '' ? '' : (currentBucketSortOrder.value || 'asc')
-	await saveBucketSortSettings(sortBy, sortOrder)
-}
-
-async function setBucketSortOrder(order: string) {
-	await saveBucketSortSettings(currentBucketSortBy.value, order)
 }
 
 function collapseBucket(bucket: IBucket) {

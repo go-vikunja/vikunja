@@ -206,19 +206,24 @@ func GetTasksInBucketsForView(s *xorm.Session, view *ProjectView, projects []*Pr
 	tasks := []*Task{}
 
 	opts.projectViewID = view.ID
-	if view.BucketSortBy != "" && view.BucketSortBy != taskPropertyPosition {
+	opts.sortby = []*sortParam{}
+	for i, sortBy := range view.BucketSortBy {
+		if sortBy == "" {
+			continue
+		}
+
 		order := orderAscending
-		if view.BucketSortOrder == "desc" {
+		if len(view.BucketSortOrder) > i && view.BucketSortOrder[i] == "desc" {
 			order = orderDescending
 		}
-		opts.sortby = []*sortParam{
-			{
-				projectViewID: view.ID,
-				orderBy:       order,
-				sortBy:        view.BucketSortBy,
-			},
-		}
-	} else {
+		opts.sortby = append(opts.sortby, &sortParam{
+			projectViewID: view.ID,
+			orderBy:       order,
+			sortBy:        sortBy,
+		})
+	}
+
+	if len(opts.sortby) == 0 {
 		opts.sortby = []*sortParam{
 			{
 				projectViewID: view.ID,

@@ -173,10 +173,10 @@ type ProjectView struct {
 	// If tasks are moved to the done bucket, they are marked as done. If they are marked as done individually, they are moved into the done bucket.
 	DoneBucketID int64 `xorm:"bigint INDEX null" json:"done_bucket_id" doc:"The id of the done bucket. Tasks moved here are marked done, and tasks marked done are moved here."`
 
-	// The field to sort tasks by within kanban buckets. Valid values are `position`, `priority`, `due_date`, `created`, `updated`, `title`. Defaults to `position` (manual drag order).
-	BucketSortBy string `xorm:"varchar(50) null default null" json:"bucket_sort_by" swaggertype:"string" enums:"position,priority,due_date,created,updated,title"`
-	// The order in which to sort tasks within kanban buckets. Valid values are `asc` and `desc`. Defaults to `asc`.
-	BucketSortOrder string `xorm:"varchar(4) null default null" json:"bucket_sort_order" swaggertype:"string" enums:"asc,desc"`
+	// The fields to sort tasks by within kanban buckets, applied in order. Valid values are `position`, `priority`, `due_date`, `created`, `updated`, `title`. Defaults to `position` (manual drag order).
+	BucketSortBy []string `xorm:"json null default null" json:"bucket_sort_by" doc:"The fields to sort tasks by within kanban buckets, applied in order. Valid values are position, priority, due_date, created, updated, title."`
+	// The order to sort each corresponding entry in BucketSortBy by. Valid values are `asc` and `desc`. Defaults to `asc`.
+	BucketSortOrder []string `xorm:"json null default null" json:"bucket_sort_order" doc:"The order for each corresponding entry in bucket_sort_by, either asc or desc. Defaults to asc."`
 
 	// A timestamp when this view was updated. You cannot change this value.
 	Updated time.Time `xorm:"updated not null" json:"updated" readOnly:"true" doc:"A timestamp when this view was last updated. You cannot change this value."`

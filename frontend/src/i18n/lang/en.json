@@ -523,16 +523,36 @@
       "collapse": "Collapse this bucket",
       "bucketLimitReached": "You have reached the bucket limit. Remove tasks or increase the limit to add new tasks.",
       "bucketOptions": "Bucket options",
-      "sortBy": "Sort tasks",
-      "sortManual": "Manual (drag & drop)",
+      "sortBy": "Sort tasks within buckets by",
+      "sortEmptyHint": "Tasks are ordered manually via drag & drop.",
+      "addSort": "Add sort",
       "sortPriority": "Priority",
       "sortDueDate": "Due date",
       "sortCreated": "Date created",
       "sortUpdated": "Date updated",
       "sortTitle": "Title",
-      "sortAscending": "Ascending",
-      "sortDescending": "Descending",
-      "sortSavedSuccess": "The task sort order has been saved successfully."
+      "sortDirections": {
+        "priority": {
+          "asc": "Lowest priority first",
+          "desc": "Highest priority first"
+        },
+        "dueDate": {
+          "asc": "Earliest due date first",
+          "desc": "Latest due date first"
+        },
+        "created": {
+          "asc": "Oldest first",
+          "desc": "Newest first"
+        },
+        "updated": {
+          "asc": "Least recently updated first",
+          "desc": "Most recently updated first"
+        },
+        "title": {
+          "asc": "A to Z",
+          "desc": "Z to A"
+        }
+      }
     },
     "pseudo": {
       "favorites": {
