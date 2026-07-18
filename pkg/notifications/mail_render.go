@@ -420,7 +420,6 @@ func writePlainNewline(plain *strings.Builder) {
 	}
 }
 
-// convertLinesToPlain renders Markdown and strips HTML to plain text.
 func convertLinesToPlain(lines []*mailLine) []*mailLine {
 	plain := make([]*mailLine, 0, len(lines))
 	for _, line := range lines {
