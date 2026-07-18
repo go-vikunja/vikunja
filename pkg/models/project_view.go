@@ -301,7 +301,7 @@ func (pv *ProjectView) Delete(s *xorm.Session, _ web.Auth) (err error) {
 // @Security JWTKeyAuth
 // @Param project path int true "Project ID"
 // @Param view body models.ProjectView true "The project view you want to create."
-// @Success 200 {object} models.ProjectView "The created project view"
+// @Success 201 {object} models.ProjectView "The created project view"
 // @Failure 403 {object} web.HTTPError "The user does not have access to create a project view"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{project}/views [put]

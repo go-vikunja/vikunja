@@ -306,7 +306,7 @@ func GetTasksInBucketsForView(s *xorm.Session, view *ProjectView, projects []*Pr
 // @Param id path int true "Project Id"
 // @Param view path int true "Project view ID"
 // @Param bucket body models.Bucket true "The bucket object"
-// @Success 200 {object} models.Bucket "The created bucket object."
+// @Success 201 {object} models.Bucket "The created bucket object."
 // @Failure 400 {object} web.HTTPError "Invalid bucket object provided."
 // @Failure 404 {object} web.HTTPError "The project does not exist."
 // @Failure 500 {object} models.Message "Internal error"

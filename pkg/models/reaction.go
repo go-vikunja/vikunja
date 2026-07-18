@@ -169,7 +169,7 @@ func (r *Reaction) Delete(s *xorm.Session, a web.Auth) (err error) {
 // @Param id path int true "Entity ID"
 // @Param kind path int true "The kind of the entity. Can be either `tasks` or `comments` for task comments"
 // @Param project body models.Reaction true "The reaction you want to add to the entity."
-// @Success 200 {object} models.Reaction "The created reaction"
+// @Success 201 {object} models.Reaction "The created reaction"
 // @Failure 403 {object} web.HTTPError "The user does not have access to the entity"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /{kind}/{id}/reactions [put]
