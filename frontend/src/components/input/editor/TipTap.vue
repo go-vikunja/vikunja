@@ -712,7 +712,7 @@ function uploadAndInsertFiles(files: File[] | FileList) {
 		throw new Error('Can\'t add files here')
 	}
 
-	props.uploadCallback(files).then(urls => {
+	props.uploadCallback(files).then(async urls => {
 		urls?.forEach(url => {
 			if (editor.value?.isEmpty) {
 				editor.value
@@ -727,7 +727,7 @@ function uploadAndInsertFiles(files: File[] | FileList) {
 				.setImage({src: url})
 				.run()
 		})
-		
+
 		const html = editor.value?.getHTML().replace(UPLOAD_PLACEHOLDER_ELEMENT, '') ?? ''
 
 		editor.value?.commands.setContent(html, {
@@ -736,6 +736,13 @@ function uploadAndInsertFiles(files: File[] | FileList) {
 		})
 
 		bubbleNow()
+
+		// Prompt for alt text right after insertion. setContent above resets node
+		// positions, so reliably locating each image is fragile for multi-uploads —
+		// prompt only when a single image was inserted.
+		if (urls?.length === 1) {
+			await promptImageAlt(urls[0])
+		}
 	})
 }
 
@@ -767,6 +774,7 @@ async function addImage(event: Event) {
 	if (url) {
 		editor.value?.chain().focus().setImage({src: url}).run()
 		bubbleNow()
+		await promptImageAlt(url)
 	}
 }
 
@@ -789,10 +797,8 @@ function showImageBubbleMenu() {
 	return editor.value?.isActive('image') ?? false
 }
 
-async function setImageAlt(event: MouseEvent) {
-	const target = event.target as HTMLElement
-	const previousAlt = editor.value?.getAttributes('image').alt || ''
-	const alt = await inputPrompt(target.getBoundingClientRect(), t('input.editor.altTextPlaceholder'), previousAlt, editor.value ?? undefined)
+async function promptAndApplyImageAlt(rect: DOMRect, previous: string) {
+	const alt = await inputPrompt(rect, t('input.editor.altTextPlaceholder'), previous, editor.value ?? undefined)
 
 	if (alt === null) {
 		return
@@ -800,6 +806,40 @@ async function setImageAlt(event: MouseEvent) {
 
 	editor.value?.chain().focus().updateAttributes('image', {alt}).run()
 	bubbleNow()
+}
+
+async function setImageAlt(event: MouseEvent) {
+	const target = event.target as HTMLElement
+	const previousAlt = editor.value?.getAttributes('image').alt || ''
+	await promptAndApplyImageAlt(target.getBoundingClientRect(), previousAlt)
+}
+
+// Cancelling leaves the image without alt text.
+async function promptImageAlt(src: string) {
+	if (!editor.value) {
+		return
+	}
+
+	let pos: number | null = null
+	editor.value.state.doc.descendants((node, p) => {
+		if (node.type.name === 'image' && (node.attrs.src === src || node.attrs['data-src'] === src)) {
+			pos = p
+		}
+	})
+	if (pos === null) {
+		return
+	}
+
+	editor.value.chain().setNodeSelection(pos).run()
+	await nextTick()
+
+	const dom = editor.value.view.nodeDOM(pos) as HTMLElement | null
+	const rect = dom?.getBoundingClientRect() ?? new DOMRect()
+	await promptAndApplyImageAlt(rect, '')
+
+	// Drop the node selection the prompt relied on so the next insert appends a new
+	// image instead of replacing this one.
+	editor.value?.chain().setTextSelection(pos + 1).run()
 }
 
 onMounted(async () => {

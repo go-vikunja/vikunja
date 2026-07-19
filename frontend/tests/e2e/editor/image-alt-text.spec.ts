@@ -2,6 +2,11 @@ import {test, expect} from '../../support/fixtures'
 import type {Page} from '@playwright/test'
 import {TaskFactory} from '../../factories/task'
 import {ProjectFactory} from '../../factories/project'
+import {join, dirname} from 'path'
+import {fileURLToPath} from 'url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
 // The image extension is configured with allowBase64:false, so it strips data:
 // URIs on parse — the <img> src has to be a real same-origin URL the browser can
@@ -104,5 +109,60 @@ test.describe('Editor image alt text', () => {
 		await altInput.press('Escape')
 
 		await expect(editor.locator('img[alt="existing alt text"]')).toBeVisible()
+	})
+
+	test('prompts for alt text right after inserting an uploaded image', async ({authenticatedPage: page}) => {
+		const tasks = await TaskFactory.create(1, {
+			id: 1,
+			description: '',
+		})
+
+		await page.goto(`/tasks/${tasks[0].id}`)
+		await page.waitForLoadState('networkidle')
+
+		const description = page.locator('.task-view .details.content.description')
+		const editor = description.locator('.tiptap__editor .tiptap.ProseMirror')
+		await expect(editor).toBeVisible({timeout: 30_000})
+
+		const uploadPromise = page.waitForResponse(r =>
+			r.url().includes(`/tasks/${tasks[0].id}/attachments`) && r.request().method() === 'PUT',
+		)
+		await description.locator('#tiptap__image-upload').setInputFiles(join(__dirname, '../../fixtures/image.jpg'))
+		await uploadPromise
+
+		const altInput = page.locator('input.input[placeholder="Describe this image"]')
+		await expect(altInput).toBeVisible()
+		await altInput.fill('A helpful description')
+		await altInput.press('Enter')
+
+		await expect(editor.locator('img[alt="A helpful description"]')).toBeVisible()
+	})
+
+	test('leaves an inserted image without alt text when the prompt is cancelled', async ({authenticatedPage: page}) => {
+		const tasks = await TaskFactory.create(1, {
+			id: 1,
+			description: '',
+		})
+
+		await page.goto(`/tasks/${tasks[0].id}`)
+		await page.waitForLoadState('networkidle')
+
+		const description = page.locator('.task-view .details.content.description')
+		const editor = description.locator('.tiptap__editor .tiptap.ProseMirror')
+		await expect(editor).toBeVisible({timeout: 30_000})
+
+		const uploadPromise = page.waitForResponse(r =>
+			r.url().includes(`/tasks/${tasks[0].id}/attachments`) && r.request().method() === 'PUT',
+		)
+		await description.locator('#tiptap__image-upload').setInputFiles(join(__dirname, '../../fixtures/image.jpg'))
+		await uploadPromise
+
+		const altInput = page.locator('input.input[placeholder="Describe this image"]')
+		await expect(altInput).toBeVisible()
+		await altInput.press('Escape')
+
+		const img = editor.locator('img')
+		await expect(img).toBeVisible()
+		await expect(img).not.toHaveAttribute('alt', /.+/)
 	})
 })
