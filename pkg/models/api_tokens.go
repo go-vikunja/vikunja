@@ -89,6 +89,11 @@ func GetAPITokenByID(s *xorm.Session, id int64) (token *APIToken, err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tokens [put]
 func (t *APIToken) Create(s *xorm.Session, a web.Auth) (err error) {
+	caller, err := user.GetFromAuth(a)
+	if err != nil {
+		return err
+	}
+
 	t.ID = 0
 
 	salt, err := utils.CryptoRandomString(10)
@@ -105,14 +110,14 @@ func (t *APIToken) Create(s *xorm.Session, a web.Auth) (err error) {
 	t.TokenLastEight = t.Token[len(t.Token)-8:]
 
 	if t.OwnerID == 0 {
-		t.OwnerID = a.GetID()
-	} else if t.OwnerID != a.GetID() {
+		t.OwnerID = caller.ID
+	} else if t.OwnerID != caller.ID {
 		// If OwnerID is set to someone else, verify it's a bot owned by the caller.
 		botUser, err := user.GetUserByID(s, t.OwnerID)
 		if err != nil {
 			return err
 		}
-		if !botUser.IsBot() || botUser.BotOwnerID != a.GetID() {
+		if !botUser.IsBot() || botUser.BotOwnerID != caller.ID {
 			return &user.ErrBotNotOwned{UserID: t.OwnerID}
 		}
 	}
@@ -128,7 +133,7 @@ func (t *APIToken) Create(s *xorm.Session, a web.Auth) (err error) {
 
 	events.DispatchOnCommit(s, &APITokenIssuedEvent{
 		TokenID: t.ID,
-		DoerID:  a.GetID(),
+		DoerID:  caller.ID,
 		OwnerID: t.OwnerID,
 	})
 
@@ -155,16 +160,21 @@ func HashToken(token, salt string) string {
 // @Router /tokens [get]
 func (t *APIToken) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 
+	caller, err := user.GetFromAuth(a)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
 	tokens := []*APIToken{}
 
-	ownerID := a.GetID()
-	if t.OwnerID != 0 && t.OwnerID != a.GetID() {
+	ownerID := caller.ID
+	if t.OwnerID != 0 && t.OwnerID != caller.ID {
 		// If filtering by a different owner, verify it's a bot owned by the caller.
 		botUser, lookupErr := user.GetUserByID(s, t.OwnerID)
 		if lookupErr != nil {
 			return nil, 0, 0, lookupErr
 		}
-		if !botUser.IsBot() || botUser.BotOwnerID != a.GetID() {
+		if !botUser.IsBot() || botUser.BotOwnerID != caller.ID {
 			return nil, 0, 0, &user.ErrBotNotOwned{UserID: t.OwnerID}
 		}
 		ownerID = t.OwnerID
@@ -204,6 +214,11 @@ func (t *APIToken) ReadAll(s *xorm.Session, a web.Auth, search string, page int,
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tokens/{tokenID} [delete]
 func (t *APIToken) Delete(s *xorm.Session, a web.Auth) (err error) {
+	caller, err := user.GetFromAuth(a)
+	if err != nil {
+		return err
+	}
+
 	// Ownership is verified in CanDelete; delete by ID only.
 	_, err = s.Where("id = ?", t.ID).Delete(&APIToken{})
 	if err != nil {
@@ -212,7 +227,7 @@ func (t *APIToken) Delete(s *xorm.Session, a web.Auth) (err error) {
 
 	events.DispatchOnCommit(s, &APITokenRevokedEvent{
 		TokenID: t.ID,
-		DoerID:  a.GetID(),
+		DoerID:  caller.ID,
 	})
 
 	return nil
