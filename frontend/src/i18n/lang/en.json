@@ -500,7 +500,8 @@
     },
     "table": {
       "title": "Table",
-      "columns": "Columns"
+      "columns": "Columns",
+      "sortBy": "Sort by {column}"
     },
     "kanban": {
       "title": "Kanban",
@@ -809,6 +810,7 @@
     },
     "editor": {
       "edit": "Edit",
+      "label": "Rich text editor",
       "heading1": "Heading 1",
       "heading1Tooltip": "Big section heading.",
       "heading2": "Heading 2",
@@ -1379,6 +1381,7 @@
     "newTeam": "Enter the name of the new team…",
     "createTask": "Create a task in the current project ({title})",
     "createProject": "Create a project",
+    "results": "No results | {count} result | {count} results",
     "cmds": {
       "newTask": "New task",
       "newProject": "New project",

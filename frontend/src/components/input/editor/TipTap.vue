@@ -27,6 +27,7 @@
 						:aria-label="$t('input.editor.bold')"
 						class="editor-bubble__button"
 						:class="{ 'is-active': editor.isActive('bold') }"
+						:aria-pressed="editor.isActive('bold')"
 						@click="() => editor?.chain().focus().toggleBold().run()"
 					>
 						<Icon :icon="['fas', 'bold']" />
@@ -36,6 +37,7 @@
 						:aria-label="$t('input.editor.italic')"
 						class="editor-bubble__button"
 						:class="{ 'is-active': editor.isActive('italic') }"
+						:aria-pressed="editor.isActive('italic')"
 						@click="() => editor?.chain().focus().toggleItalic().run()"
 					>
 						<Icon :icon="['fas', 'italic']" />
@@ -45,6 +47,7 @@
 						:aria-label="$t('input.editor.underline')"
 						class="editor-bubble__button"
 						:class="{ 'is-active': editor.isActive('underline') }"
+						:aria-pressed="editor.isActive('underline')"
 						@click="() => editor?.chain().focus().toggleUnderline().run()"
 					>
 						<Icon :icon="['fas', 'underline']" />
@@ -54,6 +57,7 @@
 						:aria-label="$t('input.editor.strikethrough')"
 						class="editor-bubble__button"
 						:class="{ 'is-active': editor.isActive('strike') }"
+						:aria-pressed="editor.isActive('strike')"
 						@click="() => editor?.chain().focus().toggleStrike().run()"
 					>
 						<Icon :icon="['fas', 'strikethrough']" />
@@ -63,6 +67,7 @@
 						:aria-label="$t('input.editor.code')"
 						class="editor-bubble__button"
 						:class="{ 'is-active': editor.isActive('code') }"
+						:aria-pressed="editor.isActive('code')"
 						@click="() => editor?.chain().focus().toggleCode().run()"
 					>
 						<Icon :icon="['fas', 'code']" />
@@ -598,11 +603,17 @@ if (props.enableDiscardShortcut) {
 	}))
 }
 
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const editor = useEditor({
 	// eslint-disable-next-line vue/no-ref-object-reactivity-loss
 	editable: isEditing.value,
 	extensions: extensions,
 	onUpdate: bubbleNow,
+	editorProps: {
+		attributes: {
+			'aria-label': props.placeholder || t('input.editor.label'),
+		},
+	},
 	parseOptions: {
 		preserveWhitespace: true,
 	},

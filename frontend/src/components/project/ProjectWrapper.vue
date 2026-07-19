@@ -20,9 +20,10 @@
 				v-if="isOverflowing && views.length > 1"
 				class="switch-view-dropdown"
 			>
-				<template #trigger="{ toggleOpen }">
+				<template #trigger="{ toggleOpen, open }">
 					<BaseButton
 						class="switch-view switch-view-dropdown-trigger"
+						:aria-expanded="open"
 						@click="toggleOpen"
 					>
 						{{ activeViewTitle }}

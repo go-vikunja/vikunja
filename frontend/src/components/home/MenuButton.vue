@@ -4,6 +4,7 @@
 		class="menu-show-button"
 		:title="$t('keyboardShortcuts.toggleMenu')"
 		:aria-label="menuActive ? $t('misc.hideMenu') : $t('misc.showMenu')"
+		:aria-expanded="menuActive"
 		@click="baseStore.toggleMenu()"
 		@shortkey="() => baseStore.toggleMenu()"
 	/>
