@@ -144,7 +144,10 @@
 							</td>
 							<td v-if="availableViews.length > 0">
 								<div class="select">
-									<select v-model="selectedViews[s.id]">
+									<select
+										v-model="selectedViews[s.id]"
+										:aria-label="$t('project.share.links.view')"
+									>
 										<option
 											v-for="(view) in availableViews"
 											:key="view.id"
