@@ -82,9 +82,9 @@ func insertFromStructure(s *xorm.Session, str []*models.ProjectWithTasksAndBucke
 
 		oldID := p.ID
 
-		if p.ParentProjectID != 0 {
-			childRelations[p.ParentProjectID] = append(childRelations[p.ParentProjectID], oldID)
-			p.ParentProjectID = 0
+		if p.ParentProjectID != nil && *p.ParentProjectID != 0 {
+			childRelations[*p.ParentProjectID] = append(childRelations[*p.ParentProjectID], oldID)
+			p.ParentProjectID = nil
 		}
 
 		p.ID = 0
@@ -114,7 +114,7 @@ func insertFromStructure(s *xorm.Session, str []*models.ProjectWithTasksAndBucke
 				continue
 			}
 
-			child.ParentProjectID = parent.ID
+			child.ParentProjectID = models.Ptr(parent.ID)
 			err = child.Update(s, user)
 			if err != nil {
 				return err

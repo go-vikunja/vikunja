@@ -199,7 +199,7 @@ func convertTickTickToVikunja(tasks []*tickTickTask) (result []*models.ProjectWi
 			projects[t.ProjectName] = &models.ProjectWithTasksAndBuckets{
 				Project: models.Project{
 					ID:              int64(index+1) + pseudoParentID,
-					ParentProjectID: pseudoParentID,
+					ParentProjectID: &pseudoParentID,
 					Title:           t.ProjectName,
 				},
 			}

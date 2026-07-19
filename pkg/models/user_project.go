@@ -93,11 +93,11 @@ func ListUsersFromProject(s *xorm.Session, l *Project, currentUser *user.User, s
 		}
 		userids = append(userids, currentUserIDs...)
 
-		if currentProject.ParentProjectID == 0 {
+		if currentProject.parentID() == 0 {
 			break
 		}
 
-		parent, err := GetProjectSimpleByID(s, currentProject.ParentProjectID)
+		parent, err := GetProjectSimpleByID(s, currentProject.parentID())
 		if err != nil && !IsErrProjectDoesNotExist(err) {
 			return nil, err
 		}

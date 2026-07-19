@@ -159,8 +159,10 @@ func (p *Project) CanUpdate(s *xorm.Session, a web.Auth) (canUpdate bool, err er
 	// permission-check-only callers (buckets, webhooks, task ops) that
 	// pass stub &Project{ID: ...} values with ParentProjectID=0 and never
 	// commit a reparent, which would spuriously trip the gate.
-	if p.ParentProjectID != 0 && p.ParentProjectID != ol.ParentProjectID {
-		newProject := &Project{ID: p.ParentProjectID}
+	// Only a real new parent (> 0) needs a write check here; detach-to-root
+	// (explicit 0) is gated for Admin in UpdateProject instead.
+	if p.ParentProjectID != nil && *p.ParentProjectID > 0 && *p.ParentProjectID != ol.parentID() {
+		newProject := &Project{ID: *p.ParentProjectID}
 		can, err := newProject.CanWrite(s, a)
 		if err != nil {
 			return false, err
@@ -193,8 +195,8 @@ func (p *Project) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 	if isInstanceAdmin(s, a) {
 		return true, nil
 	}
-	if p.ParentProjectID != 0 {
-		parent := &Project{ID: p.ParentProjectID}
+	if pid := p.parentID(); pid > 0 {
+		parent := &Project{ID: pid}
 		return parent.CanWrite(s, a)
 	}
 	// Check if we're dealing with a share auth
