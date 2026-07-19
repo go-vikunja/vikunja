@@ -431,20 +431,14 @@ func (d *dbTaskSearcher) buildSubtaskRootCondition(opts *taskSearchOptions) (bui
 
 // buildParentSearchCondition mirrors the main query's search onto the parent_tasks
 // alias so an active search decides root membership the same way it decides the
-// result set. It always uses the ILIKE substring branch rather than the ParadeDB
-// operator: ParadeDB's ||| is a BM25 index scan that cannot run against an aliased
-// table inside a correlated subquery. Known limitation: on ParadeDB this can make a
-// parent's root-membership diverge from its BM25 result-set membership.
+// result set. No boosts: they only affect scoring, membership is identical without them.
 func buildParentSearchCondition(search string) builder.Cond {
 	if search == "" {
 		return nil
 	}
-	cond := builder.Or(
-		db.ILIKE("parent_tasks.title", search),
-		db.ILIKE("parent_tasks.description", search),
-	)
+	cond := db.MultiFieldSearchWithTableAlias([]string{"title", "description"}, search, "parent_tasks")
 	if searchIndex := getTaskIndexFromSearchString(search); searchIndex > 0 {
-		cond = cond.Or(builder.Eq{"parent_tasks.`index`": searchIndex})
+		cond = builder.Or(cond, builder.Eq{"parent_tasks.`index`": searchIndex})
 	}
 	return cond
 }
