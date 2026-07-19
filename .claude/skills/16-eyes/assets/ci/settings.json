@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "defaultMode": "dontAsk",
+    "allow": [
+      "Bash(git diff *)",
+      "Bash(git diff)",
+      "Bash(git merge-base *)",
+      "Bash(git symbolic-ref *)",
+      "Bash(git log *)",
+      "Bash(gh pr diff *)",
+      "Bash(gh pr view *)",
+      "Read(**)",
+      "Write(.16-eyes/**)",
+      "Write(**/SECURITY_AUDIT*.md)",
+      "Write(**/SECURITY_AUDIT*.json)"
+    ]
+  }
+}

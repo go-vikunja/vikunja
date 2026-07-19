@@ -1,0 +1,106 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "16-eyes config",
+  "description": "Configuration written by /16-eyes init and read by /16-eyes audit and /16-eyes fix. Not required — audit/fix work with sane defaults if this file is absent.",
+  "type": "object",
+  "required": ["version"],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "const": 1
+    },
+    "depth": {
+      "type": "string",
+      "enum": ["quick", "thorough"],
+      "default": "thorough",
+      "description": "quick = fewer lenses, 1 adversarial vote per high-impact finding. thorough = more lenses, full adversarial review."
+    },
+    "language": {
+      "type": "string",
+      "enum": ["en", "pt", "es"],
+      "default": "en",
+      "description": "Default language for the audit report and narration. Can be overridden per-invocation."
+    },
+    "excludePatterns": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Glob patterns excluded from lens investigation (vendored/generated/fixture paths)."
+    },
+    "output": {
+      "type": "object",
+      "properties": {
+        "dir": { "type": "string", "description": "Directory reports are written to, relative to repo root." },
+        "markdownPattern": { "type": "string", "description": "Filename pattern for the human-readable report. {date} is replaced with YYYY-MM-DD." },
+        "jsonPattern": { "type": "string", "description": "Filename pattern for the machine-readable companion report." },
+        "gitignoreReports": { "type": "boolean", "description": "Whether /16-eyes init added the output dir/pattern to .gitignore." }
+      }
+    },
+    "lastRunPointer": {
+      "type": "string",
+      "description": "Path to the small JSON pointer file /16-eyes audit updates after each run, so /16-eyes fix can find the latest report across sessions."
+    },
+    "lastDiffRunPointer": {
+      "type": "string",
+      "description": "Path to the small JSON pointer file /16-eyes audit-diff updates after each run, so /16-eyes fix can find the latest diff-scoped report across sessions.",
+      "default": ".16-eyes/last-diff-run.json"
+    },
+    "lensesPointer": {
+      "type": "string",
+      "description": "Path to the persisted investigation-lens set written by /16-eyes init (repo profile + tailored lenses). /16-eyes audit and /16-eyes audit-diff both load lenses from here instead of redesigning them per run. If missing, init runs automatically (non-interactively, with defaults) before either command proceeds.",
+      "default": ".16-eyes/lenses.json"
+    },
+    "ci": {
+      "type": "object",
+      "description": "Settings consumed by the optional CI templates (skills/16-eyes/assets/ci/) — not read by audit/audit-diff themselves.",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether /16-eyes init scaffolded a GitHub Actions template for this repo.",
+          "default": false
+        },
+        "failOn": {
+          "type": "string",
+          "enum": ["none", "risky", "any"],
+          "default": "none",
+          "description": "Whether the CI job should fail (block a required status check) based on audit-diff results. 'none' = comment only, never fails (default — matches the industry convention of a neutral, non-blocking check). 'risky' = fail if any RISKY finding survived adversarial review. 'any' = fail on any confirmed finding, safe or risky."
+        },
+        "commentOnPr": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether the CI job posts the audit-diff report as a PR comment."
+        }
+      }
+    },
+    "gates": {
+      "type": "object",
+      "properties": {
+        "workspaces": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["path"],
+            "properties": {
+              "path": { "type": "string", "description": "Workspace/package path relative to repo root ('.' for the whole repo if not a monorepo)." },
+              "test": { "type": "string" },
+              "lint": { "type": "string" },
+              "typecheck": { "type": "string" },
+              "build": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "adversarial": {
+      "type": "object",
+      "properties": {
+        "votesPerFinding": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5,
+          "default": 3,
+          "description": "Independent refuter agents per high-impact finding during adversarial review."
+        }
+      }
+    }
+  }
+}

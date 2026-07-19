@@ -1,0 +1,38 @@
+name: 16 Eyes — full audit (scheduled)
+
+# Optional companion to pr-audit-diff.yml — the deep, full-repo sweep,
+# decoupled from per-PR cost. Adjust the cron schedule to taste; the default
+# is weekly, since /16-eyes audit is a "deliberate, occasional" sweep, not a
+# per-commit check.
+#
+# Required secret: ANTHROPIC_API_KEY (repo or org secret).
+
+on:
+  schedule:
+    - cron: "0 6 * * 1" # every Monday at 06:00 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  full-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run /16-eyes audit
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: "/16-eyes audit"
+          claude_args: "--permission-mode dontAsk"
+
+      - name: Upload report as a workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: 16-eyes-full-audit-${{ github.run_id }}
+          path: |
+            **/SECURITY_AUDIT_20*.md
+            **/SECURITY_AUDIT_20*.json
+          if-no-files-found: warn

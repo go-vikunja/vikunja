@@ -1,0 +1,94 @@
+name: 16 Eyes — audit diff
+
+# Prerequisite: this repo must have `.claude/skills/16-eyes/` committed
+# (`npx 16-eyes install --project`) so this job needs no install step and has
+# no npm-registry dependency or version drift at review time.
+#
+# Required secret: ANTHROPIC_API_KEY (repo or org secret).
+#
+# By default this only comments on the PR — it never blocks merge. To make it
+# a required, merge-blocking check, set `ci.failOn` to "risky" or "any" in
+# `.16-eyes/config.json` AND mark this job as a required status check in your
+# branch protection rules. See docs/ci.md for details.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: 16-eyes-audit-diff-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  audit-diff:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # audit-diff needs `git merge-base` against the base branch, which
+          # needs real history, not a 1-commit shallow clone.
+          fetch-depth: 0
+
+      - name: Run /16-eyes audit-diff
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: "/16-eyes audit-diff"
+          claude_args: "--permission-mode dontAsk"
+
+      - name: Post report + apply CI gate
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+
+          CONFIG=".16-eyes/config.json"
+          OUTPUT_DIR="docs"
+          FAIL_ON="none"
+          COMMENT_ON_PR="true"
+          if [ -f "$CONFIG" ]; then
+            OUTPUT_DIR=$(jq -r '.output.dir // "docs"' "$CONFIG")
+            FAIL_ON=$(jq -r '.ci.failOn // "none"' "$CONFIG")
+            COMMENT_ON_PR=$(jq -r '(.ci.commentOnPr // true)' "$CONFIG")
+          fi
+
+          REPORT_JSON=$(ls -t "$OUTPUT_DIR"/SECURITY_AUDIT_DIFF_*.json 2>/dev/null | head -n1 || true)
+          REPORT_MD=$(ls -t "$OUTPUT_DIR"/SECURITY_AUDIT_DIFF_*.md 2>/dev/null | head -n1 || true)
+
+          if [ -z "$REPORT_JSON" ]; then
+            echo "No SECURITY_AUDIT_DIFF_*.json found under $OUTPUT_DIR — skipping comment/gate."
+            exit 0
+          fi
+
+          if [ "$COMMENT_ON_PR" = "true" ] && [ -n "$REPORT_MD" ]; then
+            gh pr comment "$PR_NUMBER" --body-file "$REPORT_MD" --edit-last --create-if-none
+          fi
+
+          SAFE=$(jq -r '.stats.safe' "$REPORT_JSON")
+          RISKY=$(jq -r '.stats.risky' "$REPORT_JSON")
+          REAL=$(jq -r '.stats.real' "$REPORT_JSON")
+          echo "16 Eyes results — safe: $SAFE, risky: $RISKY, real: $REAL, ci.failOn: $FAIL_ON"
+
+          case "$FAIL_ON" in
+            risky)
+              if [ "$RISKY" -gt 0 ]; then
+                echo "::error::$RISKY risky finding(s) survived review — failing per ci.failOn=risky"
+                exit 1
+              fi
+              ;;
+            any)
+              if [ "$REAL" -gt 0 ]; then
+                echo "::error::$REAL confirmed finding(s) — failing per ci.failOn=any"
+                exit 1
+              fi
+              ;;
+            *)
+              echo "ci.failOn=none (default) — comment only, this job never fails."
+              ;;
+          esac
