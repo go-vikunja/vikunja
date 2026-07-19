@@ -391,16 +391,22 @@ export const useTaskStore = defineStore('task', () => {
 		const mustCreateLabel = all.map(async labelTitle => {
 			let label = validateLabel(Object.values(labelStore.labels), labelTitle)
 			if (typeof label === 'undefined') {
-				// label not found, create it
 				const labelModel = new LabelModel({
 					title: labelTitle,
 					hexColor: getRandomColorHex(),
 				})
-				label = await labelStore.createLabel(labelModel)
+				try {
+					label = await labelStore.createLabel(labelModel)
+				} catch (e) {
+					// Link shares may not create labels; skip it instead of aborting task creation.
+					console.debug('Could not create label from quick add magic', {labelTitle, e})
+					return undefined
+				}
 			}
 			return label
 		})
-		return Promise.all(mustCreateLabel)
+		const resolved = await Promise.all(mustCreateLabel)
+		return resolved.filter((label): label is LabelModel => typeof label !== 'undefined')
 	}
 
 	// Do everything that is involved in finding, creating and adding the label to the task

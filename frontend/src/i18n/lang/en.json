@@ -1119,6 +1119,7 @@
       "addSuccess": "The label has been added successfully.",
       "removeSuccess": "The label has been removed successfully.",
       "addCreateSuccess": "The label has been created and added successfully.",
+      "createFailed": "These labels could not be created and were not added: {labels}",
       "delete": {
         "header": "Delete this label",
         "text1": "Are you sure you want to delete this label?",
