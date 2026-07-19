@@ -45,6 +45,10 @@ func (pv *ProjectView) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
 		return sf.CanDelete(s, a)
 	}
 
+	if _, err := GetProjectViewByIDAndProject(s, pv.ID, pv.ProjectID); err != nil {
+		return false, err
+	}
+
 	pp := pv.getProject()
 	return pp.IsAdmin(s, a)
 }
@@ -57,6 +61,11 @@ func (pv *ProjectView) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 	if filterID > 0 {
 		sf := &SavedFilter{ID: filterID}
 		return sf.CanUpdate(s, a)
+	}
+
+	// Reject a view that isn't in the path project before authorizing against it.
+	if _, err := GetProjectViewByIDAndProject(s, pv.ID, pv.ProjectID); err != nil {
+		return false, err
 	}
 
 	pp := pv.getProject()
