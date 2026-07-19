@@ -83,7 +83,7 @@ async function uploadAttachmentAndVerify(page: Page, taskId: number, file = 'tes
 	await fileChooser.setFiles(file)
 	await uploadAttachmentPromise
 
-	await expect(page.locator('.attachments .attachments .files button.attachment')).toBeVisible()
+	await expect(page.locator('.attachments .attachments .files .attachment')).toBeVisible()
 }
 
 test.describe('Task', () => {
@@ -724,7 +724,7 @@ test.describe('Task', () => {
 			await pasteFile(editor, 'image.jpg', 'image/jpeg')
 
 			await uploadAttachmentPromise
-			await expect(page.locator('.attachments .attachments .files button.attachment')).toBeVisible()
+			await expect(page.locator('.attachments .attachments .files .attachment')).toBeVisible()
 			const img = page.locator('.task-view .details.content.description .tiptap__editor .tiptap.ProseMirror img')
 			await expect(img).toBeVisible()
 			const naturalWidth = await img.evaluate((el: HTMLImageElement) => el.naturalWidth)
@@ -969,7 +969,7 @@ test.describe('Task', () => {
 
 			await uploadAttachmentAndVerify(page, tasks[0].id, 'tests/fixtures/test.pdf')
 
-			await page.locator('.attachments .attachments .files button.attachment .filename').click()
+			await page.locator('.attachments .attachments .files .attachment .filename').click()
 
 			const iframe = page.locator('iframe.pdf-preview-iframe')
 			await expect(iframe).toBeVisible()
@@ -999,7 +999,7 @@ test.describe('Task', () => {
 			// (download, copy URL, delete) inside the attachment row. Attachments.vue
 			// requests `trash-alt` but FontAwesome renders it as `trash-can`.
 			const deleteButton = page.locator(
-				'.attachments .attachments .files button.attachment .attachment-info-meta-button:has(svg[data-icon="trash-can"])',
+				'.attachments .attachments .files .attachment .attachment-info-meta-button:has(svg[data-icon="trash-can"])',
 			).first()
 			await expect(deleteButton).toBeVisible()
 
@@ -1012,7 +1012,7 @@ test.describe('Task', () => {
 			await page.locator('dialog[open] .modal-content .actions .button').filter({hasText: 'Do it!'}).click()
 			await deleted
 
-			await expect(page.locator('.attachments .attachments .files button.attachment')).toHaveCount(0)
+			await expect(page.locator('.attachments .attachments .files .attachment')).toHaveCount(0)
 		})
 
 		test('read-only shared user cannot delete attachments', async ({authenticatedPage: page, apiContext, currentUser}) => {
@@ -1065,12 +1065,12 @@ test.describe('Task', () => {
 			await page.goto(`/tasks/${sharedTask.id}`)
 
 			// The attachment must be visible to the reader.
-			await expect(page.locator('.attachments .attachments .files button.attachment')).toBeVisible()
+			await expect(page.locator('.attachments .attachments .files .attachment')).toBeVisible()
 
 			// The delete control renders only when editEnabled is true
 			// (see Attachments.vue). A read-only viewer should not see it.
 			await expect(page.locator(
-				'.attachments .attachments .files button.attachment .attachment-info-meta-button:has(svg[data-icon="trash-can"])',
+				'.attachments .attachments .files .attachment .attachment-info-meta-button:has(svg[data-icon="trash-can"])',
 			)).toHaveCount(0)
 		})
 
