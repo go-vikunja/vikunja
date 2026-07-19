@@ -349,6 +349,17 @@ $modal-width: 1024px;
 
 // scrolling-content
 // used e.g. for <TaskDetailViewModal>
+.scrolling {
+	// On desktop the scrollbar lives on .modal-content so that
+	// clicking / dragging the scrollbar does not trigger
+	// @mousedown.self on .modal-container and close the modal.
+	@media screen and (min-width: $tablet) {
+		.modal-container {
+			overflow: visible;
+		}
+	}
+}
+
 .scrolling .modal-content {
 	inline-size: 100%;
 	margin: $modal-margin auto;
@@ -360,13 +371,24 @@ $modal-width: 1024px;
 		max-inline-size: $modal-width;
 	}
 
-	@media screen and (min-width: $tablet) {
-		max-block-size: none; // reset bulma
-		margin: $modal-margin auto; // reset bulma
+	// Wide desktop: modal has 4rem top/bottom margins, so the
+	// content area must be viewport height minus those margins.
+	@media screen and (min-width: $desktop) {
+		max-block-size: calc(100dvh - #{$modal-margin} * 2);
 		inline-size: 100%;
+		overflow-y: auto;
 	}
 
-	@media screen and (max-width: $desktop), print {
+	// Narrow desktop (tablet to desktop): modal fills full width
+	// and height (margin: 0), so the content scrolls within 100dvh.
+	@media screen and (min-width: $tablet) and (max-width: $desktop) {
+		max-block-size: 100dvh;
+		inline-size: 100%;
+		overflow-y: auto;
+		margin: 0;
+	}
+
+	@media screen and (max-width: $tablet), print {
 		margin: 0;
 	}
 }
