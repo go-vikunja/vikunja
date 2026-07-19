@@ -77,8 +77,29 @@ type Provider struct {
 	Oauth2Config   *oauth2.Config `json:"-"`
 }
 
+// boolish decodes a JSON bool or the strings "true"/"false"/"1"/"0" — some
+// OIDC providers emit email_verified as a string.
+type boolish bool
+
+func (b *boolish) UnmarshalJSON(data []byte) error {
+	var raw any
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+	switch v := raw.(type) {
+	case bool:
+		*b = boolish(v)
+	case string:
+		*b = boolish(v == "true" || v == "1")
+	default:
+		*b = false
+	}
+	return nil
+}
+
 type claims struct {
 	Email              string                   `json:"email"`
+	EmailVerified      boolish                  `json:"email_verified"`
 	Name               string                   `json:"name"`
 	PreferredUsername  string                   `json:"preferred_username"`
 	Nickname           string                   `json:"nickname"`
@@ -382,10 +403,13 @@ func syncUserAvatarFromOpenID(s *xorm.Session, u *user.User, pictureURL string) 
 // GetUserWithEmail ANDs all non-zero fields, so the email (when set) is combined with each
 // username candidate.
 func fallbackSearchUsers(cl *claims, provider *Provider, idToken *oidc.IDToken) []*user.User {
+	// Only a verified email may link to an existing account — an unverified one lets an
+	// attacker asserting a victim's email take over their local account (GHSA-xv7q-fvmc-jx96).
+	emailFallbackAllowed := provider.EmailFallback && bool(cl.EmailVerified)
+
 	fallbackEmail := ""
-	if provider.EmailFallback {
+	if emailFallbackAllowed {
 		// Used alone, allow for someone to connect from various provider to the same account.
-		// Discouraged for untrusted providers where someone can set email without verification.
 		// Note: mapping on email prevents auto-updating the user email.
 		fallbackEmail = cl.Email
 	}
@@ -406,11 +430,10 @@ func fallbackSearchUsers(cl *claims, provider *Provider, idToken *oidc.IDToken) 
 			searches = append(searches, &user.User{Issuer: user.IssuerLocal, Username: preferred, Email: fallbackEmail})
 		}
 	}
-	// EmailFallback without UsernameFallback: a single email-only lookup (the caller only
-	// runs this when at least one fallback is enabled, so EmailFallback is guaranteed here).
-	// Only add it when there is a real email — an empty email would degenerate to an
-	// issuer-only lookup and link an arbitrary local user.
-	if len(searches) == 0 && cl.Email != "" {
+	// Email-only lookup when no username candidates were added. Only with a real,
+	// verified email — an empty email would degenerate to an issuer-only lookup and
+	// link an arbitrary local user.
+	if len(searches) == 0 && emailFallbackAllowed && cl.Email != "" {
 		searches = append(searches, &user.User{Issuer: user.IssuerLocal, Email: cl.Email})
 	}
 
@@ -509,6 +532,7 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 func mergeClaims(cl *claims, cl2 *claims, forceUserInfo bool) error {
 	if (forceUserInfo && cl2.Email != "") || cl.Email == "" {
 		cl.Email = cl2.Email
+		cl.EmailVerified = cl2.EmailVerified
 	}
 
 	if (forceUserInfo && cl2.Name != "") || cl.Name == "" {
