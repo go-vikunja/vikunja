@@ -348,7 +348,7 @@ func convertTodoistToVikunja(sync *sync, doneItems map[string]*doneItem) (fullVi
 		project := &models.ProjectWithTasksAndBuckets{
 			Project: models.Project{
 				ID:              int64(index+1) + pseudoParentID,
-				ParentProjectID: pseudoParentID,
+				ParentProjectID: &pseudoParentID,
 				Title:           p.Name,
 				HexColor:        todoistColors[p.Color],
 				IsArchived:      p.IsArchived,

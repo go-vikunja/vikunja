@@ -104,8 +104,8 @@ func TestConvertTicktickTasksToVikunja(t *testing.T) {
 
 	assert.Len(t, vikunjaTasks, 3)
 
-	assert.Equal(t, vikunjaTasks[1].ParentProjectID, vikunjaTasks[0].ID)
-	assert.Equal(t, vikunjaTasks[2].ParentProjectID, vikunjaTasks[0].ID)
+	assert.Equal(t, vikunjaTasks[0].ID, *vikunjaTasks[1].ParentProjectID)
+	assert.Equal(t, vikunjaTasks[0].ID, *vikunjaTasks[2].ParentProjectID)
 
 	assert.Len(t, vikunjaTasks[1].Tasks, 4)
 	assert.Equal(t, vikunjaTasks[1].Title, tickTickTasks[0].ProjectName)

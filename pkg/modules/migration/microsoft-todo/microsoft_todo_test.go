@@ -114,7 +114,7 @@ func TestConverting(t *testing.T) {
 		{
 			Project: models.Project{
 				ID:              2,
-				ParentProjectID: 1,
+				ParentProjectID: models.Ptr(int64(1)),
 				Title:           "Project 1",
 			},
 			Tasks: []*models.TaskWithComments{
@@ -172,7 +172,7 @@ func TestConverting(t *testing.T) {
 			Project: models.Project{
 				Title:           "Project 2",
 				ID:              3,
-				ParentProjectID: 1,
+				ParentProjectID: models.Ptr(int64(1)),
 			},
 			Tasks: []*models.TaskWithComments{
 				{

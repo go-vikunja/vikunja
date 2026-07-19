@@ -41,7 +41,7 @@ func TestRepairOrphanedProjects(t *testing.T) {
 		has, err := s.Get(project)
 		require.NoError(t, err)
 		assert.True(t, has)
-		assert.Equal(t, int64(0), project.ParentProjectID)
+		assert.Equal(t, int64(0), project.parentID())
 	})
 
 	t.Run("dry run does not modify anything", func(t *testing.T) {
@@ -60,7 +60,7 @@ func TestRepairOrphanedProjects(t *testing.T) {
 		has, err := s.Get(project)
 		require.NoError(t, err)
 		assert.True(t, has)
-		assert.Equal(t, int64(999999), project.ParentProjectID)
+		assert.Equal(t, int64(999999), project.parentID())
 	})
 
 	t.Run("no orphans returns zero counts", func(t *testing.T) {

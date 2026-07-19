@@ -85,7 +85,7 @@ func (pd *ProjectDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 
 	pd.Project.ID = 0
 	pd.Project.Identifier = "" // Reset the identifier to trigger regenerating a new one
-	pd.Project.ParentProjectID = pd.ParentProjectID
+	pd.Project.ParentProjectID = &pd.ParentProjectID
 	// Set the owner to the current user
 	pd.Project.OwnerID = doer.GetID()
 	pd.Project.Title += " - duplicate"
