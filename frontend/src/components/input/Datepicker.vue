@@ -112,10 +112,9 @@ function toggleDatePopup() {
 }
 
 const datepickerPopup = ref<HTMLElement | null>(null)
-const triggerButton = ref<{$el?: HTMLElement} | null>(null)
+const triggerButton = ref<InstanceType<typeof SimpleButton> | null>(null)
 
-// Focus the popup when it opens so the dialog receives focus (ARIA dialog pattern) and its Esc
-// handler is reachable. nextTick is required because the popup lives inside a v-if transition.
+// nextTick: the popup only exists once the v-if transition renders it.
 watch(show, async (isOpen) => {
 	if (!isOpen) {
 		return
@@ -144,9 +143,8 @@ function close() {
 }
 
 function closeViaEsc() {
-	// Restore focus to the trigger immediately: close() defers show=false by 200ms, but on Esc the
-	// popup is about to unmount and focus would otherwise drop to <body>.
-	triggerButton.value?.$el?.focus()
+	// close() defers unmount by 200ms; focus would otherwise drop to <body>.
+	triggerButton.value?.focus()
 	close()
 }
 </script>
