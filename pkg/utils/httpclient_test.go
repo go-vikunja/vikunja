@@ -98,6 +98,25 @@ func TestNewSSRFSafeHTTPClient(t *testing.T) {
 		assert.Contains(t, err.Error(), "Client.Timeout")
 	})
 
+	t.Run("still configures the proxy transport when the SSRF guard is also active", func(t *testing.T) {
+		config.OutgoingRequestsAllowNonRoutableIPs.Set("false")
+		config.OutgoingRequestsProxyURL.Set("http://proxy.example.com:8080")
+		config.OutgoingRequestsProxyPassword.Set("secret")
+		defer config.OutgoingRequestsProxyURL.Set("")
+		defer config.OutgoingRequestsProxyPassword.Set("")
+
+		client := NewSSRFSafeHTTPClient()
+		transport, ok := client.Transport.(*http.Transport)
+		require.True(t, ok)
+		require.NotNil(t, transport.Proxy, "the warning added alongside the guard must not prevent the proxy from still being configured")
+
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com", nil)
+		require.NoError(t, err)
+		proxyURL, err := transport.Proxy(req)
+		require.NoError(t, err)
+		assert.Equal(t, "proxy.example.com:8080", proxyURL.Host)
+	})
+
 	t.Run("allows non-routable IPs when config is true", func(t *testing.T) {
 		config.OutgoingRequestsAllowNonRoutableIPs.Set("true")
 		defer config.OutgoingRequestsAllowNonRoutableIPs.Set("false")
