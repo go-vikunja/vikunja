@@ -602,12 +602,15 @@ func exchangeOidcTokens(cb *Callback, providerKey string) (*Provider, *oauth2.To
 			details := make(map[string]interface{})
 			if err := json.Unmarshal(rerr.Body, &details); err != nil {
 				log.Errorf("Error unmarshalling token for provider %s: %v", provider.Name, err)
-				log.Debugf("Raw token value is %s", rerr.Body)
+				// Do not log rerr.Body: the raw token-endpoint response can carry
+				// sensitive request/response context. The RFC 6749 error fields are
+				// the intended human-readable diagnostic, not the raw body.
+				log.Debugf("Token endpoint error code=%q description=%q", rerr.ErrorCode, rerr.ErrorDescription)
 				return nil, nil, nil, "", err
 			}
 
 			log.Errorf("Error retrieving token: %s", err)
-			log.Debugf("Raw token value is %s", rerr.Body)
+			log.Debugf("Token endpoint error code=%q description=%q", rerr.ErrorCode, rerr.ErrorDescription)
 			return nil, nil, nil, "", &models.ErrOpenIDBadRequestWithDetails{
 				Message: "Could not authenticate against third party.",
 				Details: details,
@@ -620,7 +623,8 @@ func exchangeOidcTokens(cb *Callback, providerKey string) (*Provider, *oauth2.To
 	// Extract the ID Token from OAuth2 token.
 	rawIDToken, ok := oauth2Token.Extra("id_token").(string)
 	if !ok {
-		log.Debugf("Could not get id_token, raw token is %v", oauth2Token)
+		// Do not log oauth2Token itself: %v would print AccessToken/RefreshToken in clear text.
+		log.Debugf("Could not get id_token: response did not contain an id_token extra field (token_type=%s)", oauth2Token.TokenType)
 		return nil, nil, nil, "", &models.ErrOpenIDBadRequest{Message: "Missing token"}
 	}
 
