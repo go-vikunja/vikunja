@@ -1,4 +1,6 @@
 import {test, expect} from '../../support/fixtures'
+import {LabelFactory} from '../../factories/labels'
+import {LabelTaskFactory} from '../../factories/label_task'
 import {LinkShareFactory} from '../../factories/link_sharing'
 import {TaskFactory} from '../../factories/task'
 import {UserFactory} from '../../factories/user'
@@ -109,6 +111,40 @@ test.describe('Link shares', () => {
 		await expect(page.locator('h1.title')).toContainText(project.title)
 		await expect(page.locator('.tasks')).toContainText(tasks[0].title)
 		await expect(page).toHaveURL(`/projects/${project.id}/1#share-auth-token=${share.hash}`)
+	})
+})
+
+test.describe('Link share: label picker', () => {
+	test.beforeEach(async ({page}) => {
+		await setupApiUrl(page)
+	})
+
+	test('explains that new labels cannot be created when typing an unknown label', async ({page}) => {
+		await UserFactory.create(1)
+		const projects = await createProjects()
+		const [task] = await TaskFactory.create(1, {
+			project_id: projects[0].id,
+		})
+		// A label on the task makes the labels field render without clicking "Add Labels" first.
+		const [label] = await LabelFactory.create(1)
+		await LabelTaskFactory.create(1, {
+			task_id: task.id,
+			label_id: label.id,
+		})
+		const [share] = await LinkShareFactory.create(1, {
+			project_id: projects[0].id,
+			permission: 1,
+		})
+
+		await page.goto(`/tasks/${task.id}#share-auth-token=${share.hash}`)
+
+		const labelInput = page.locator('.task-view .details.labels-list .multiselect input')
+		await expect(labelInput).toBeVisible()
+		await labelInput.fill('label-that-does-not-exist')
+
+		const searchResults = page.locator('.task-view .details.labels-list .multiselect .search-results')
+		await expect(searchResults.locator('.search-result-hint')).toContainText('New labels can\'t be created from a shared link')
+		await expect(searchResults.locator('.is-create-option')).toHaveCount(0)
 	})
 })
 

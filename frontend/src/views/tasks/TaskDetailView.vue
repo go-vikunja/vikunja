@@ -334,6 +334,7 @@
 							:disabled="!canWrite"
 							:task-id="taskId"
 							:creatable="!authStore.isLinkShareAuth"
+							:creation-disabled-message="authStore.isLinkShareAuth ? $t('task.label.linkShareCannotCreate') : ''"
 						/>
 					</div>
 

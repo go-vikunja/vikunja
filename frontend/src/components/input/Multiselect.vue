@@ -141,6 +141,15 @@
 						{{ createPlaceholder }}
 					</span>
 				</BaseButton>
+
+				<div
+					v-if="creationHintVisible"
+					class="search-result-hint"
+					role="option"
+					aria-disabled="true"
+				>
+					{{ creationDisabledMessage }}
+				</div>
 			</div>
 		</CustomTransition>
 	</div>
@@ -173,6 +182,8 @@ const props = withDefaults(defineProps<{
 	name?: string
 	/** If true, will provide an 'add this as a new value' entry which  fires an @create event when clicking on it. */
 	creatable?: boolean
+	/** When set and `creatable` is false, shows a non-interactive hint row explaining why a non-matching query can't be added. */
+	creationDisabledMessage?: string
 	/** The text shown next to the new value option. */
 	createPlaceholder?: string
 	/** The text shown next to an option. */
@@ -199,6 +210,7 @@ const props = withDefaults(defineProps<{
 	searchResults: () => [] as T[],
 	label: '',
 	creatable: false,
+	creationDisabledMessage: '',
 	createPlaceholder: () => useI18n().t('input.multiselect.createPlaceholder'),
 	selectPlaceholder: () => useI18n().t('input.multiselect.selectPlaceholder'),
 	multiple: false,
@@ -274,18 +286,22 @@ const searchResultsVisible = computed(() => {
 
 	return showSearchResults.value && (
 		(filteredSearchResults.value.length > 0) ||
-		(props.creatable && query.value !== '')
+		(props.creatable && query.value !== '') ||
+		creationHintVisible.value
 	)
 })
 
-const creatableAvailable = computed(() => {
+const queryHasExactMatch = computed(() => {
 	const hasResult = filteredSearchResults.value.some((elem: T) => elementInResults(elem, props.label, query.value as string))
 	const hasQueryAlreadyAdded = Array.isArray(internalValue.value) && internalValue.value.some((elem: T) => elementInResults(elem, props.label, query.value))
 
-	return props.creatable
-		&& query.value !== ''
-		&& !(hasResult || hasQueryAlreadyAdded)
+	return hasResult || hasQueryAlreadyAdded
 })
+
+const creatableAvailable = computed(() => props.creatable && query.value !== '' && !queryHasExactMatch.value)
+
+// Shown in place of the create option when creation is disabled and the query matches nothing, so the field doesn't look dead.
+const creationHintVisible = computed(() => props.creationDisabledMessage !== '' && !props.creatable && query.value !== '' && !queryHasExactMatch.value)
 
 const filteredSearchResults = computed(() => {
 	const currentInternal = internalValue.value
@@ -671,6 +687,12 @@ function focus() {
 	&.is-always-visible {
 		color: var(--grey-500);
 	}
+}
+
+.search-result-hint {
+	padding: .5rem .75rem;
+	color: var(--grey-500);
+	font-size: .85rem;
 }
 
 .create-icon {

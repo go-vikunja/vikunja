@@ -1117,6 +1117,7 @@
     "label": {
       "placeholder": "Type to add a label…",
       "createPlaceholder": "Add this as new label",
+      "linkShareCannotCreate": "New labels can't be created from a shared link. Only labels already used in this project can be added.",
       "removeLabel": "Remove label {label}",
       "addSuccess": "The label has been added successfully.",
       "removeSuccess": "The label has been removed successfully.",
