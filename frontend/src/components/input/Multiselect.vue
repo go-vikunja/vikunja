@@ -52,9 +52,9 @@
 					role="combobox"
 					:name="name"
 					:placeholder="placeholder"
-					:aria-label="ariaLabel || placeholder || undefined"
+					:aria-label="accessibleName"
 					:aria-expanded="searchResultsVisible"
-					:aria-controls="listboxId"
+					:aria-controls="searchResultsVisible ? listboxId : undefined"
 					aria-autocomplete="list"
 					aria-haspopup="listbox"
 					:autocomplete="autocompleteEnabled ? undefined : 'off'"
@@ -83,7 +83,7 @@
 				class="search-results"
 				:class="{'search-results-inline': inline}"
 				role="listbox"
-				:aria-label="ariaLabel || placeholder || undefined"
+				:aria-label="accessibleName"
 			>
 				<BaseButton
 					v-for="(data, index) in filteredSearchResults"
@@ -234,6 +234,8 @@ const emit = defineEmits<{
 }>()
 
 const listboxId = useId()
+
+const accessibleName = computed(() => props.ariaLabel || props.placeholder || undefined)
 
 function elementInResults(elem: string | T, label: string, query: string): boolean {
 	// Don't make create available if we have an exact match in our search results.
