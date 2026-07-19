@@ -12,6 +12,8 @@
 				v-model="password"
 				v-focus
 				type="password"
+				:aria-label="$t('user.auth.password')"
+				:decorative-placeholder="$t('user.auth.passwordPlaceholder')"
 				@keyup.enter.prevent="authenticate()"
 			/>
 

@@ -56,6 +56,7 @@
 					v-model="password"
 					v-tooltip="$t('project.share.links.passwordExplanation')"
 					:label="$t('project.share.links.password')"
+					:decorative-placeholder="$t('user.auth.passwordPlaceholder')"
 					type="password"
 				/>
 				<XButton
