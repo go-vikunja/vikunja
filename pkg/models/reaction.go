@@ -152,7 +152,13 @@ func getReactionsForEntityIDs(s *xorm.Session, entityKind ReactionKind, entityID
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /{kind}/{id}/reactions/delete [post]
 func (r *Reaction) Delete(s *xorm.Session, a web.Auth) (err error) {
-	r.UserID = a.GetID()
+	// Reactions belong to a user; a link share (or any non-user) must not act as one
+	// via a colliding GetID() (GHSA-vvcv-vpph-h844, consistency hardening).
+	u, err := user.GetFromAuth(a)
+	if err != nil {
+		return err
+	}
+	r.UserID = u.ID
 
 	_, err = s.Where("user_id = ? AND entity_id = ? AND entity_kind = ? AND value = ?", r.UserID, r.EntityID, r.EntityKind, r.Value).
 		Delete(&Reaction{})
@@ -174,7 +180,11 @@ func (r *Reaction) Delete(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /{kind}/{id}/reactions [put]
 func (r *Reaction) Create(s *xorm.Session, a web.Auth) (err error) {
-	r.UserID = a.GetID()
+	u, err := user.GetFromAuth(a)
+	if err != nil {
+		return err
+	}
+	r.UserID = u.ID
 
 	exists, err := s.Where("user_id = ? AND entity_id = ? AND entity_kind = ? AND value = ?", r.UserID, r.EntityID, r.EntityKind, r.Value).
 		Exist(&Reaction{})

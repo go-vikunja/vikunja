@@ -485,9 +485,14 @@ func addIsUnreadToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*Tas
 		return nil
 	}
 
+	caller, isUser := a.(*user.User)
+	if !isUser {
+		return nil
+	}
+
 	unreadStatuses := []*TaskUnreadStatus{}
 	err = s.In("task_id", taskIDs).
-		Where("user_id = ?", a.GetID()).
+		Where("user_id = ?", caller.ID).
 		Find(&unreadStatuses)
 	if err != nil {
 		return err

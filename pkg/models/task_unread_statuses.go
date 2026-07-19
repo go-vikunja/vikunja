@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 	"xorm.io/xorm"
 )
@@ -53,7 +54,12 @@ func (t *TaskUnreadStatus) Update(s *xorm.Session, a web.Auth) error {
 }
 
 func markTaskAsRead(s *xorm.Session, taskID int64, a web.Auth) error {
-	_, err := s.Where("task_id = ? AND user_id = ?", taskID, a.GetID()).
+	u, err := user.GetFromAuth(a)
+	if err != nil {
+		return err
+	}
+
+	_, err = s.Where("task_id = ? AND user_id = ?", taskID, u.ID).
 		Delete(&TaskUnreadStatus{})
 
 	return err
