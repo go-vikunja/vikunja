@@ -1,6 +1,7 @@
 <template>
 	<div class="datepicker">
 		<SimpleButton
+			ref="triggerButton"
 			class="show"
 			:disabled="disabled || undefined"
 			@click.stop="toggleDatePopup"
@@ -18,7 +19,8 @@
 				class="datepicker-popup"
 				role="dialog"
 				:aria-label="chooseDateLabel"
-				@keydown.esc.stop="close"
+				tabindex="-1"
+				@keydown.esc.stop="closeViaEsc"
 			>
 				<DatepickerInline
 					v-model="date"
@@ -40,7 +42,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, onMounted, onBeforeUnmount, toRef, watch} from 'vue'
+import {ref, onMounted, onBeforeUnmount, toRef, watch, nextTick} from 'vue'
 
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import DatepickerInline from '@/components/input/DatepickerInline.vue'
@@ -110,6 +112,18 @@ function toggleDatePopup() {
 }
 
 const datepickerPopup = ref<HTMLElement | null>(null)
+const triggerButton = ref<{$el?: HTMLElement} | null>(null)
+
+// Focus the popup when it opens so the dialog receives focus (ARIA dialog pattern) and its Esc
+// handler is reachable. nextTick is required because the popup lives inside a v-if transition.
+watch(show, async (isOpen) => {
+	if (!isOpen) {
+		return
+	}
+	await nextTick()
+	datepickerPopup.value?.focus()
+})
+
 function hideDatePopup(e: MouseEvent) {
 	if (show.value && datepickerPopup.value) {
 		closeWhenClickedOutside(e, datepickerPopup.value, close)
@@ -127,6 +141,13 @@ function close() {
 			emit('closeOnChange', changed.value)
 		}
 	}, 200)
+}
+
+function closeViaEsc() {
+	// Restore focus to the trigger immediately: close() defers show=false by 200ms, but on Esc the
+	// popup is about to unmount and focus would otherwise drop to <body>.
+	triggerButton.value?.$el?.focus()
+	close()
 }
 </script>
 
