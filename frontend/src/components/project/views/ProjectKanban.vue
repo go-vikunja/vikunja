@@ -164,7 +164,7 @@
 									@end="updateTaskPosition"
 								>
 									<template #footer>
-										<div
+										<li
 											v-if="canCreateTasks"
 											class="bucket-footer"
 										>
@@ -210,7 +210,7 @@
 													bucket.tasks.length === 0 ? $t('project.kanban.addTask') : $t('project.kanban.addAnotherTask')
 												}}
 											</XButton>
-										</div>
+										</li>
 									</template>
 
 									<template #item="{element: task}">
