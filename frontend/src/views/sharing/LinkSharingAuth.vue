@@ -12,7 +12,6 @@
 				v-model="password"
 				v-focus
 				type="password"
-				:placeholder="$t('user.auth.passwordPlaceholder')"
 				@keyup.enter.prevent="authenticate()"
 			/>
 

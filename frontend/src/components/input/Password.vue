@@ -4,7 +4,6 @@
 			id="password"
 			class="input"
 			name="password"
-			:placeholder="$t('user.auth.passwordPlaceholder')"
 			required
 			:type="passwordFieldType"
 			:autocomplete="autocomplete"
