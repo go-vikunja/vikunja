@@ -86,7 +86,10 @@
 				>
 					<div class="control is-expanded">
 						<div class="select is-fullwidth has-defaults">
-							<select v-model="newTaskRelation.kind">
+							<select
+								v-model="newTaskRelation.kind"
+								:aria-label="$t('task.relation.select')"
+							>
 								<option value="unset">
 									{{ $t('task.relation.select') }}
 								</option>

@@ -443,7 +443,9 @@
         "removeText": "Are you sure you want to remove this {sharable} from the {type}? This cannot be undone!",
         "removeSuccess": "The {sharable} was successfully removed from the {type}.",
         "addedSuccess": "The {type} was successfully added.",
-        "updatedSuccess": "The {type} was successfully added."
+        "updatedSuccess": "The {type} was successfully added.",
+        "search": "Search for a {type} to share this project with",
+        "permissionFor": "Permission for {sharable}"
       },
       "permission": {
         "title": "Permission",
@@ -1161,6 +1163,9 @@
       "after": "{amount} {unit} after {type}",
       "beforeShort": "before",
       "afterShort": "after",
+      "periodUnit": "Time unit",
+      "periodDirection": "Before or after",
+      "periodRelativeTo": "Relative to",
       "onDueDate": "On the due date",
       "onStartDate": "On the start date",
       "onEndDate": "On the end date",
@@ -1360,6 +1365,7 @@
     "subscribeFeed": "Subscribe to notifications via Atom feed"
   },
   "quickActions": {
+    "title": "Search and quick actions",
     "notLoggedIn": "Please log in to the main Vikunja window first.",
     "commands": "Commands",
     "placeholder": "Type a command or search…",
