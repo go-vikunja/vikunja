@@ -261,6 +261,8 @@ func getFilterValueForBucketFilter(filter string, view *ProjectView) (newFilter 
 // @Router /projects/{id}/views/{view}/tasks [get]
 func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
 
+	tf.pinToLinkShareProject(a)
+
 	// If the project id is < -1 this means we're dealing with a saved filter - in that case we get and populate the filter
 	// -1 is the favorites project which works as intended
 	if !tf.isSavedFilter && tf.ProjectID < -1 {
@@ -402,4 +404,12 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 	}
 
 	return getTaskOrTasksInBuckets(s, a, projects, view, opts, filteringForBucket, tf.forceFlatTasks)
+}
+
+// pinToLinkShareProject forces the requested project to the link share's own
+// project so a foreign view (and its buckets) can never resolve (GHSA-rj9j).
+func (tf *TaskCollection) pinToLinkShareProject(a web.Auth) {
+	if shareAuth, is := a.(*LinkSharing); is {
+		tf.ProjectID = shareAuth.ProjectID
+	}
 }
