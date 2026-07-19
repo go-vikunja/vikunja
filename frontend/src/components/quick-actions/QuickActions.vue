@@ -3,6 +3,7 @@
 		:enabled="active"
 		:overflow="isNewTaskCommand"
 		variant="top"
+		:aria-label="$t('quickActions.title')"
 		@close="closeQuickActions"
 	>
 		<div

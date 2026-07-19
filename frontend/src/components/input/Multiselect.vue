@@ -49,13 +49,20 @@
 					v-model="query"
 					type="text"
 					class="input"
+					role="combobox"
 					:name="name"
 					:placeholder="placeholder"
+					:aria-label="ariaLabel || placeholder || undefined"
+					:aria-expanded="searchResultsVisible"
+					:aria-controls="listboxId"
+					aria-autocomplete="list"
+					aria-haspopup="listbox"
 					:autocomplete="autocompleteEnabled ? undefined : 'off'"
 					:spellcheck="autocompleteEnabled ? undefined : 'false'"
 					@keyup="search"
 					@keyup.enter.exact.prevent="() => createOrSelectOnEnter()"
 					@keydown.down.exact.prevent="() => preSelect(0)"
+					@keydown.esc.stop="closeSearchResults"
 					@focus="handleFocus"
 				>
 				<BaseButton 
@@ -72,16 +79,21 @@
 		<CustomTransition name="fade">
 			<div
 				v-if="searchResultsVisible"
+				:id="listboxId"
 				class="search-results"
 				:class="{'search-results-inline': inline}"
+				role="listbox"
+				:aria-label="ariaLabel || placeholder || undefined"
 			>
 				<BaseButton
 					v-for="(data, index) in filteredSearchResults"
 					:key="index"
 					:ref="(el) => setResult(el, index)"
 					class="search-result-button is-fullwidth"
+					role="option"
 					@keydown.up.prevent="() => preSelect(index - 1)"
 					@keydown.down.prevent="() => preSelect(index + 1)"
+					@keydown.esc.stop="closeAndRefocus"
 					@click.prevent.stop="() => select(data)"
 				>
 					<span>
@@ -104,8 +116,10 @@
 					v-if="creatableAvailable"
 					:ref="(el) => setResult(el, filteredSearchResults.length)"
 					class="search-result-button is-fullwidth is-create-option"
+					role="option"
 					@keydown.up.prevent="() => preSelect(filteredSearchResults.length - 1)"
 					@keydown.down.prevent="() => preSelect(filteredSearchResults.length + 1)"
+					@keydown.esc.stop="closeAndRefocus"
 					@keyup.enter.prevent="create"
 					@click.prevent.stop="create"
 				>
@@ -133,7 +147,7 @@
 </template>
 
 <script setup lang="ts" generic="T extends Record<string, unknown>">
-import {computed, onBeforeUnmount, onMounted, ref, toRefs, watch, type ComponentPublicInstance} from 'vue'
+import {computed, onBeforeUnmount, onMounted, ref, toRefs, useId, watch, type ComponentPublicInstance} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
@@ -177,6 +191,8 @@ const props = withDefaults(defineProps<{
 	autocompleteEnabled?: boolean
 	/** If true, disables the multiselect input */
 	disabled?: boolean
+	/** Accessible name for the search input and result list. Falls back to the placeholder. */
+	ariaLabel?: string
 }>(), {
 	loading: false,
 	placeholder: '',
@@ -194,6 +210,7 @@ const props = withDefaults(defineProps<{
 	disabled: false,
 	id: undefined,
 	name: undefined,
+	ariaLabel: undefined,
 })
 
 const emit = defineEmits<{
@@ -215,6 +232,8 @@ const emit = defineEmits<{
 	 */
 	'remove': [value: T],
 }>()
+
+const listboxId = useId()
 
 function elementInResults(elem: string | T, label: string, query: string): boolean {
 	// Don't make create available if we have an exact match in our search results.
@@ -287,7 +306,11 @@ function resetSelectedValue() {
 const searchInput = ref<HTMLInputElement | null>(null)
 
 // Searching will be triggered with a 200ms delay to avoid searching on every keyup event.
-function search() {
+function search(e?: KeyboardEvent) {
+	// The keyup of the Escape that just closed the results must not reopen them.
+	if (e?.key === 'Escape') {
+		return
+	}
 
 	// Updating the query with a binding does not work on mobile for some reason,
 	// getting the value manual does.
@@ -319,6 +342,11 @@ function hideSearchResultsHandler(e: MouseEvent) {
 
 function closeSearchResults() {
 	showSearchResults.value = false
+}
+
+function closeAndRefocus() {
+	closeSearchResults()
+	searchInput.value?.focus()
 }
 
 function handleFocus() {

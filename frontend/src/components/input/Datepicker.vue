@@ -16,6 +16,9 @@
 				v-if="show"
 				ref="datepickerPopup"
 				class="datepicker-popup"
+				role="dialog"
+				:aria-label="chooseDateLabel"
+				@keydown.esc.stop="close"
 			>
 				<DatepickerInline
 					v-model="date"

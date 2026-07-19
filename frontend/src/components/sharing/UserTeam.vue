@@ -13,6 +13,7 @@
 						v-model="sharable"
 						:loading="searchService.loading"
 						:placeholder="$t('misc.searchPlaceholder')"
+						:aria-label="$t('project.share.userTeam.search', {type: shareTypeName})"
 						:search-results="found"
 						:label="searchLabel"
 						@search="find"
@@ -99,6 +100,7 @@
 								<select
 									v-model="selectedPermission[s.id]"
 									class="mie-2"
+									:aria-label="$t('project.share.userTeam.permissionFor', {sharable: shareType === 'user' ? getDisplayName(s) : s.name})"
 									@change="toggleType(s)"
 								>
 									<option
