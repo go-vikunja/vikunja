@@ -23,6 +23,7 @@ import (
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/utils"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -642,7 +643,7 @@ func TestUserPasswordReset(t *testing.T) {
 		require.NoError(t, err)
 
 		db.AssertMissing(t, "user_tokens", map[string]interface{}{
-			"token": token,
+			"token": utils.Sha256Hex(token),
 			"kind":  TokenPasswordReset,
 		})
 	})
@@ -832,7 +833,7 @@ func TestConfirmDeletion(t *testing.T) {
 		require.NoError(t, err)
 
 		db.AssertMissing(t, "user_tokens", map[string]interface{}{
-			"token": token,
+			"token": utils.Sha256Hex(token),
 			"kind":  TokenAccountDeletion,
 		})
 	})
