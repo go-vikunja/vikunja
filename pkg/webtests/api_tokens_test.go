@@ -19,9 +19,12 @@ package webtests
 import (
 	"net/http"
 	"net/http/httptest"
+	"strconv"
+	"strings"
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/routes"
 	"code.vikunja.io/api/pkg/user"
@@ -167,5 +170,139 @@ func TestAPIToken(t *testing.T) {
 
 		req.Header.Set(echo.HeaderAuthorization, "Bearer "+jwt)
 		require.NoError(t, h(c))
+	})
+}
+
+func apiTokenReq(e *echo.Echo, method, target, jwt, body string) *httptest.ResponseRecorder {
+	req := httptest.NewRequest(method, target, strings.NewReader(body))
+	req.Header.Set(echo.HeaderAuthorization, "Bearer "+jwt)
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	res := httptest.NewRecorder()
+	e.ServeHTTP(res, req)
+	return res
+}
+
+func userJWT(t *testing.T, id int64) string {
+	s := db.NewSession()
+	defer s.Close()
+	u, err := user.GetUserByID(s, id)
+	require.NoError(t, err)
+	jwt, err := auth.NewUserJWTAuthtoken(u, "test-session-id")
+	require.NoError(t, err)
+	return jwt
+}
+
+// GHSA-vvcv-vpph-h844: link_share id 2 (hash test2) collides with user id 2,
+// who owns api_token id 3. A colliding link-share principal must not be able to
+// list, create, or delete that user's API tokens.
+func TestAPITokenLinkShareCollision(t *testing.T) {
+	linkShareJWT := func(t *testing.T) string {
+		jwt, err := auth.NewLinkShareJWTAuthtoken(&models.LinkSharing{
+			ID:          2,
+			Hash:        "test2",
+			ProjectID:   2,
+			Permission:  models.PermissionWrite,
+			SharingType: models.SharingTypeWithoutPassword,
+			SharedByID:  1,
+		})
+		require.NoError(t, err)
+		return jwt
+	}
+
+	const createBody = `{"title":"collision","permissions":{"tasks":["read_all"]},"expires_at":"2099-01-01T00:00:00Z"}`
+
+	t.Run("link share GET is forbidden and leaks no metadata", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+
+		res := apiTokenReq(e, http.MethodGet, "/api/v1/tokens", linkShareJWT(t), "")
+		assert.Equal(t, http.StatusForbidden, res.Code)
+		assert.NotContains(t, res.Body.String(), "test token 3")
+	})
+
+	t.Run("link share PUT is forbidden and creates no row", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+
+		res := apiTokenReq(e, http.MethodPut, "/api/v1/tokens", linkShareJWT(t), createBody)
+		assert.Equal(t, http.StatusForbidden, res.Code)
+
+		s := db.NewSession()
+		defer s.Close()
+		count, err := s.Where("owner_id = ?", 2).Count(&models.APIToken{})
+		require.NoError(t, err)
+		assert.Equal(t, int64(1), count, "no token must be created for the colliding user")
+	})
+
+	t.Run("link share DELETE is forbidden and retains the row", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+
+		res := apiTokenReq(e, http.MethodDelete, "/api/v1/tokens/3", linkShareJWT(t), "")
+		assert.Equal(t, http.StatusForbidden, res.Code)
+
+		s := db.NewSession()
+		defer s.Close()
+		exists, err := s.Where("id = ?", 3).Exist(&models.APIToken{})
+		require.NoError(t, err)
+		assert.True(t, exists, "the target token must be retained")
+	})
+
+	t.Run("regular user positive controls", func(t *testing.T) {
+		t.Run("GET", func(t *testing.T) {
+			e, err := setupTestEnv()
+			require.NoError(t, err)
+			res := apiTokenReq(e, http.MethodGet, "/api/v1/tokens", userJWT(t, 2), "")
+			assert.Equal(t, http.StatusOK, res.Code)
+			assert.Contains(t, res.Body.String(), "test token 3")
+		})
+		t.Run("PUT", func(t *testing.T) {
+			e, err := setupTestEnv()
+			require.NoError(t, err)
+			res := apiTokenReq(e, http.MethodPut, "/api/v1/tokens", userJWT(t, 2), createBody)
+			assert.Equal(t, http.StatusCreated, res.Code)
+		})
+		t.Run("DELETE", func(t *testing.T) {
+			e, err := setupTestEnv()
+			require.NoError(t, err)
+			res := apiTokenReq(e, http.MethodDelete, "/api/v1/tokens/3", userJWT(t, 2), "")
+			assert.Equal(t, http.StatusOK, res.Code)
+		})
+	})
+
+	t.Run("bot owner positive controls", func(t *testing.T) {
+		// user 21 owns bot user 23.
+		t.Run("create for own bot", func(t *testing.T) {
+			e, err := setupTestEnv()
+			require.NoError(t, err)
+			res := apiTokenReq(e, http.MethodPut, "/api/v1/tokens", userJWT(t, 21),
+				`{"title":"bot","owner_id":23,"permissions":{"tasks":["read_all"]},"expires_at":"2099-01-01T00:00:00Z"}`)
+			assert.Equal(t, http.StatusCreated, res.Code)
+
+			s := db.NewSession()
+			defer s.Close()
+			exists, err := s.Where("owner_id = ?", 23).Exist(&models.APIToken{})
+			require.NoError(t, err)
+			assert.True(t, exists)
+		})
+		t.Run("delete own bot token", func(t *testing.T) {
+			e, err := setupTestEnv()
+			require.NoError(t, err)
+			// First create a bot-owned token, then delete it.
+			createRes := apiTokenReq(e, http.MethodPut, "/api/v1/tokens", userJWT(t, 21),
+				`{"title":"bot","owner_id":23,"permissions":{"tasks":["read_all"]},"expires_at":"2099-01-01T00:00:00Z"}`)
+			require.Equal(t, http.StatusCreated, createRes.Code)
+
+			botToken := &models.APIToken{}
+			s := db.NewSession()
+			_, err = s.Where("owner_id = ?", 23).Get(botToken)
+			require.NoError(t, err)
+			// Close before the request: an open session holds the SQLite table
+			// lock and the delete handler's own session would deadlock.
+			s.Close()
+
+			delRes := apiTokenReq(e, http.MethodDelete, "/api/v1/tokens/"+strconv.FormatInt(botToken.ID, 10), userJWT(t, 21), "")
+			assert.Equal(t, http.StatusOK, delRes.Code)
+		})
 	})
 }
