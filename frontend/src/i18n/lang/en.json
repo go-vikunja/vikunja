@@ -838,6 +838,7 @@
       "imageTooltip": "Upload an image from your computer.",
       "altText": "Alt text",
       "altTextPlaceholder": "Describe this image",
+      "toolbarLabel": "Text formatting",
       "horizontalRule": "Horizontal Rule",
       "horizontalRuleTooltip": "Divide a section.",
       "text": "Text",
