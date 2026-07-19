@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteLocation } from 'vue-router'
-import {saveLastVisited} from '@/helpers/saveLastVisited'
+import {saveLastVisited, saveLastVisitedPage} from '@/helpers/saveLastVisited'
+import {getDefaultPageRoute} from '@/helpers/getDefaultPageRoute'
 
 import {getProjectViewId} from '@/helpers/projectView'
 import {parseDateOrString} from '@/helpers/time/parseDateOrString'
@@ -46,6 +47,13 @@ const router = createRouter({
 			path: '/',
 			name: 'home',
 			component: () => import('@/views/Home.vue'),
+			async beforeEnter(_to, from) {
+				if (from.name !== undefined) {
+					return
+				}
+
+				return getDefaultPageRoute()
+			},
 		},
 		{
 			path: '/:pathMatch(.*)*',
@@ -537,7 +545,7 @@ export async function getAuthForRoute(to: RouteLocation, authStore) {
 	const isValidUserAppRoute = !AUTH_ROUTE_NAMES.has(to.name as string) &&
 		localStorage.getItem('emailConfirmToken') === null
 
-	if (isValidUserAppRoute) {
+	if (isValidUserAppRoute && to.name !== 'home') {
 		saveLastVisited(to.name as string, to.params, to.query)
 	}
 
@@ -619,6 +627,12 @@ router.beforeEach(async (to, from) => {
 
 	if(!to.fullPath.endsWith(to.hash)) {
 		return to.fullPath + to.hash
+	}
+})
+
+router.afterEach((to) => {
+	if (!AUTH_ROUTE_NAMES.has(to.name as string) && to.name !== 'home') {
+		saveLastVisitedPage(to.name as string, to.params, to.query)
 	}
 })
 

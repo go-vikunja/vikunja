@@ -3,14 +3,21 @@ import {TaskFactory} from '../../factories/task'
 import {ProjectFactory} from '../../factories/project'
 import {createProjects} from './prepareProjects'
 
+interface ProjectWithViews {
+	id: number
+	title: string
+	views: Array<{id: number}>
+}
+
 test.describe('Projects', () => {
 	test.use({
 		// Use authenticated page for all tests
 	})
 
-	let projects: any[]
+	let projects: ProjectWithViews[]
 
-	test.beforeEach(async ({authenticatedPage}) => {
+	test.beforeEach(async ({authenticatedPage: page}) => {
+		void page
 		projects = await createProjects()
 	})
 
@@ -72,7 +79,8 @@ test.describe('Projects', () => {
 		await expect(page.locator('.project-title')).toContainText(newProjectName)
 		await expect(page.locator('.project-title')).not.toContainText(projects[0].title)
 		await expect(page.locator('.menu-container .menu-list').getByRole('listitem').filter({hasText: newProjectName})).toBeVisible()
-		await page.goto('/')
+		await page.locator('nav.menu.top-menu a').filter({hasText: 'Overview'}).click()
+		await page.waitForLoadState('networkidle')
 		await expect(page.locator('.project-grid')).toContainText(newProjectName)
 		await expect(page.locator('.project-grid')).not.toContainText(projects[0].title)
 	})
