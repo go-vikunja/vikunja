@@ -2,8 +2,8 @@
 	<div
 		ref="dropdown"
 		class="dropdown"
-		role="menu"
 		@pointerenter="initialMount = true"
+		@keydown="onKeydown"
 	>
 		<slot
 			name="trigger"
@@ -14,6 +14,7 @@
 			<BaseButton
 				class="dropdown-trigger is-flex"
 				:aria-label="triggerLabel"
+				:aria-expanded="open"
 				@click="toggleOpen"
 			>
 				<Icon
@@ -112,6 +113,27 @@ const dropdownMenuStyle = computed(() => ({
 
 function toggleOpen() {
 	open.value = !open.value
+}
+
+function onKeydown(e: KeyboardEvent) {
+	if (e.key !== 'Escape' || !open.value) {
+		return
+	}
+	e.stopPropagation()
+	close()
+	focusTrigger()
+}
+
+// Return focus to the trigger, which is the first focusable element that lives
+// outside the popup menu.
+function focusTrigger() {
+	const focusables = dropdown.value?.querySelectorAll<HTMLElement>('button, a[href], input, [tabindex]')
+	for (const el of focusables ?? []) {
+		if (!el.closest('.dropdown-menu')) {
+			el.focus()
+			return
+		}
+	}
 }
 
 watch(open, (isOpen) => {

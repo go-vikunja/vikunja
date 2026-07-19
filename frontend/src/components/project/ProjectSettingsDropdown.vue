@@ -7,6 +7,7 @@
 			>
 				<BaseButton
 					class="dropdown-trigger"
+					:aria-expanded="triggerProps.open"
 					@click="triggerProps.toggleOpen"
 				>
 					<span class="is-sr-only">{{ $t('project.openSettingsMenu') }}</span>

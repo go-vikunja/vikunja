@@ -5,6 +5,7 @@
 				v-tooltip="$t('input.editor.heading1')"
 				class="editor-toolbar__button"
 				:class="{ 'is-active': editor.isActive('heading', { level: 1 }) }"
+				:aria-pressed="editor.isActive('heading', { level: 1 })"
 				@click="editor.chain().focus().toggleHeading({ level: 1 }).run()"
 			>
 				<span class="icon">
@@ -20,6 +21,7 @@
 				v-tooltip="$t('input.editor.heading2')"
 				class="editor-toolbar__button"
 				:class="{ 'is-active': editor.isActive('heading', { level: 2 }) }"
+				:aria-pressed="editor.isActive('heading', { level: 2 })"
 				@click="editor.chain().focus().toggleHeading({ level: 2 }).run()"
 			>
 				<span class="icon">
@@ -35,6 +37,7 @@
 				v-tooltip="$t('input.editor.heading3')"
 				class="editor-toolbar__button"
 				:class="{ 'is-active': editor.isActive('heading', { level: 3 }) }"
+				:aria-pressed="editor.isActive('heading', { level: 3 })"
 				@click="editor.chain().focus().toggleHeading({ level: 3 }).run()"
 			>
 				<span class="icon">
@@ -53,6 +56,7 @@
 				v-tooltip="$t('input.editor.bold')"
 				class="editor-toolbar__button"
 				:class="{ 'is-active': editor.isActive('bold') }"
+				:aria-pressed="editor.isActive('bold')"
 				@click="editor.chain().focus().toggleBold().run()"
 			>
 				<span class="icon">
@@ -64,6 +68,7 @@
 				v-tooltip="$t('input.editor.italic')"
 				class="editor-toolbar__button"
 				:class="{ 'is-active': editor.isActive('italic') }"
+				:aria-pressed="editor.isActive('italic')"
 				@click="editor.chain().focus().toggleItalic().run()"
 			>
 				<span class="icon">
@@ -75,6 +80,7 @@
 				v-tooltip="$t('input.editor.underline')"
 				class="editor-toolbar__button"
 				:class="{ 'is-active': editor.isActive('underline') }"
+				:aria-pressed="editor.isActive('underline')"
 				@click="editor.chain().focus().toggleUnderline().run()"
 			>
 				<span class="icon">
@@ -86,6 +92,7 @@
 				v-tooltip="$t('input.editor.strikethrough')"
 				class="editor-toolbar__button"
 				:class="{ 'is-active': editor.isActive('strike') }"
+				:aria-pressed="editor.isActive('strike')"
 				@click="editor.chain().focus().toggleStrike().run()"
 			>
 				<span class="icon">
@@ -100,6 +107,7 @@
 				v-tooltip="$t('input.editor.code')"
 				class="editor-toolbar__button"
 				:class="{ 'is-active': editor.isActive('codeBlock') }"
+				:aria-pressed="editor.isActive('codeBlock')"
 				@click="editor.chain().focus().toggleCodeBlock().run()"
 			>
 				<span class="icon">
@@ -111,6 +119,7 @@
 				v-tooltip="$t('input.editor.quote')"
 				class="editor-toolbar__button"
 				:class="{ 'is-active': editor.isActive('blockquote') }"
+				:aria-pressed="editor.isActive('blockquote')"
 				@click="editor.chain().focus().toggleBlockquote().run()"
 			>
 				<span class="icon">
@@ -125,6 +134,7 @@
 				v-tooltip="$t('input.editor.bulletList')"
 				class="editor-toolbar__button"
 				:class="{ 'is-active': editor.isActive('bulletList') }"
+				:aria-pressed="editor.isActive('bulletList')"
 				@click="editor.chain().focus().toggleBulletList().run()"
 			>
 				<span class="icon">
@@ -136,6 +146,7 @@
 				v-tooltip="$t('input.editor.orderedList')"
 				class="editor-toolbar__button"
 				:class="{ 'is-active': editor.isActive('orderedList') }"
+				:aria-pressed="editor.isActive('orderedList')"
 				@click="editor.chain().focus().toggleOrderedList().run()"
 			>
 				<span class="icon">
@@ -147,6 +158,7 @@
 				v-tooltip="$t('input.editor.taskList')"
 				class="editor-toolbar__button"
 				:class="{ 'is-active': editor.isActive('taskList') }"
+				:aria-pressed="editor.isActive('taskList')"
 				@click="editor.chain().focus().toggleTaskList().run()"
 			>
 				<span class="icon">

@@ -55,6 +55,14 @@
 			</div>
 
 			<div
+				class="is-sr-only"
+				role="status"
+				aria-live="polite"
+			>
+				{{ resultAnnouncement }}
+			</div>
+
+			<div
 				v-if="selectedCmd === null"
 				class="results"
 			>
@@ -705,6 +713,34 @@ function reset() {
 	query.value = ''
 	selectedCmd.value = null
 }
+
+const resultCount = computed(() => results.value.reduce((total, group) => total + group.items.length, 0))
+
+// Announce the result count to assistive technology, debounced so it doesn't
+// fire on every keystroke while the user is still typing.
+const resultAnnouncement = ref('')
+let announceTimeout: ReturnType<typeof setTimeout> | null = null
+watch(resultCount, count => {
+	if (!active.value || selectedCmd.value !== null) {
+		return
+	}
+	if (announceTimeout !== null) {
+		clearTimeout(announceTimeout)
+	}
+	announceTimeout = setTimeout(() => {
+		resultAnnouncement.value = t('quickActions.results', count)
+	}, 300)
+})
+watch(active, isActive => {
+	if (!isActive) {
+		resultAnnouncement.value = ''
+	}
+})
+onBeforeUnmount(() => {
+	if (announceTimeout !== null) {
+		clearTimeout(announceTimeout)
+	}
+})
 </script>
 
 <style lang="scss" scoped>
