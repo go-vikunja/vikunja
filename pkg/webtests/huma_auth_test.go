@@ -212,6 +212,17 @@ func TestHumaOAuth(t *testing.T) {
 		assert.Equal(t, http.StatusUnauthorized, rec.Code)
 	})
 
+	// GHSA-v3p6-34mc-hj7v: an oauth-scoped API token must not obtain an
+	// authorization code (and with it a full session JWT).
+	t.Run("authorize rejects legacy oauth-scoped API token", func(t *testing.T) {
+		apiToken := insertLegacyOAuthScopedToken(t)
+
+		body := authorizeRequestBody("code", "vikunja", "vikunja-flutter://callback", "abc", "S256", "")
+		rec := humaRequest(t, e, http.MethodPost, "/api/v2/oauth/authorize", string(body), apiToken, "")
+		assert.Equal(t, http.StatusUnauthorized, rec.Code)
+		assert.NotContains(t, rec.Body.String(), `"code":"`)
+	})
+
 	t.Run("full code flow with PKCE (JSON token request)", func(t *testing.T) {
 		verifier := "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
 		challenge := pkceChallenge(verifier)
