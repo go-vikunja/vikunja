@@ -91,6 +91,8 @@
 				<span
 					v-if="task.attachments.length > 0"
 					class="icon"
+					role="img"
+					:aria-label="$t('task.attributes.attachment', task.attachments.length)"
 				>
 					<Icon icon="paperclip" />
 				</span>

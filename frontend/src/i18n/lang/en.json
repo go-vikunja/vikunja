@@ -1050,6 +1050,7 @@
       "repeat": "Repeat",
       "comment": "{count} comment | {count} comments",
       "commentCount": "Number of comments",
+      "attachment": "{count} attachment | {count} attachments",
       "startDate": "Start Date",
       "title": "Title",
       "updated": "Updated",

@@ -4,6 +4,8 @@
 		v-tooltip="tooltip"
 		class="comment-count"
 		:class="{'is-unread': task.isUnread}"
+		role="img"
+		:aria-label="tooltip"
 	>
 		<Icon :icon="['far', 'comments']" />
 		<span class="comment-count-badge">{{ task.commentCount }}</span>
