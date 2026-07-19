@@ -108,7 +108,8 @@ func parseTimeFromUserInput(timeString string, loc *time.Location) (value time.T
 		}
 		value = time.Date(year, time.Month(month), day, 0, 0, 0, 0, loc)
 	}
-	value = value.In(config.GetTimeZone())
+	// UTC, not service timezone — see getValueForField.
+	value = value.UTC()
 	value = adjustDateForMysql(value)
 	return value, err
 }
@@ -326,7 +327,10 @@ func getValueForField(field reflect.StructField, rawValue string, loc *time.Loca
 			var tt time.Time
 			t, err = safeDatemathParse(rawValue)
 			if err == nil {
-				tt = t.Time(datemath.WithLocation(loc)).In(config.GetTimeZone())
+				// UTC, not service timezone: due dates live in a naive UTC column and
+				// the driver drops a bound parameter's offset, so a non-UTC wall clock
+				// shifts the boundary. loc still controls how the datemath rounds.
+				tt = t.Time(datemath.WithLocation(loc)).UTC()
 				tt = adjustDateForMysql(tt)
 			} else {
 				tt, err = parseTimeFromUserInput(rawValue, loc)

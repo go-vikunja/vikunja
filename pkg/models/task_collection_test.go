@@ -2337,3 +2337,54 @@ func TestTaskCollection_ExpandSubtasksSearchMirror(t *testing.T) {
 		assert.Len(t, tasks, 2)
 	})
 }
+
+// Reproduces https://github.com/go-vikunja/vikunja/issues/3181: with a non-UTC
+// service timezone, a task due in the last hours of the local day must still
+// match "due_date < now/d+1d" when filter_timezone matches that timezone.
+func TestTaskCollection_DateFilterTimezoneBoundary(t *testing.T) {
+	la, err := time.LoadLocation("America/Los_Angeles")
+	require.NoError(t, err)
+
+	orig := config.ServiceTimeZone.GetString()
+	config.ServiceTimeZone.Set("America/Los_Angeles")
+	defer config.ServiceTimeZone.Set(orig)
+
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	u := &user.User{ID: 1}
+
+	// One hour before the next local midnight — inside the window the boundary
+	// shift dropped (up to the UTC offset, 7h/8h for America/Los_Angeles).
+	now := time.Now().In(la)
+	nextLocalMidnight := time.Date(now.Year(), now.Month(), now.Day()+1, 0, 0, 0, 0, la)
+	task := &Task{
+		Title:     "due late in the local day",
+		ProjectID: 1,
+		DueDate:   nextLocalMidnight.Add(-time.Hour).UTC(),
+	}
+	require.NoError(t, task.Create(s, u))
+	require.NoError(t, s.Commit())
+
+	s2 := db.NewSession()
+	defer s2.Close()
+
+	c := &TaskCollection{
+		Filter:         "done = false && due_date < now/d+1d",
+		FilterTimezone: "America/Los_Angeles",
+	}
+	res, _, _, err := c.ReadAll(s2, u, "", 0, 250)
+	require.NoError(t, err)
+	tasks, ok := res.([]*Task)
+	require.True(t, ok)
+
+	found := false
+	for _, tsk := range tasks {
+		if tsk.ID == task.ID {
+			found = true
+			break
+		}
+	}
+	assert.Truef(t, found, "task due %s (one hour before local midnight) should match", task.DueDate)
+}

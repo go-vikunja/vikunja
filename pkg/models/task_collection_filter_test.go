@@ -20,8 +20,10 @@ import (
 	"testing"
 	"time"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 
+	datemath "github.com/jszwedko/go-datemath"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"xorm.io/builder"
@@ -340,5 +342,49 @@ func TestParseFilter(t *testing.T) {
 		// wrapper must recover from this panic and return an error instead.
 		_, err := getTaskFiltersFromFilterString("due_date = no", "UTC")
 		require.Error(t, err)
+	})
+}
+
+// Date filter boundaries must be emitted in UTC — the driver drops a bound
+// parameter's offset against the naive UTC column, so a service-timezone wall
+// clock shifts the boundary. https://github.com/go-vikunja/vikunja/issues/3181
+func TestDateFilterTimezone(t *testing.T) {
+	la, err := time.LoadLocation("America/Los_Angeles")
+	require.NoError(t, err)
+
+	orig := config.ServiceTimeZone.GetString()
+	config.ServiceTimeZone.Set("America/Los_Angeles")
+	defer config.ServiceTimeZone.Set(orig)
+
+	for _, expr := range []string{"now/d", "now/d+1d", "now+1d/d"} {
+		t.Run(expr, func(t *testing.T) {
+			filters, err := getTaskFiltersFromFilterString("due_date < "+expr, "America/Los_Angeles")
+			require.NoError(t, err)
+			require.Len(t, filters, 1)
+
+			got, ok := filters[0].value.(time.Time)
+			require.True(t, ok)
+
+			assert.Equal(t, time.UTC, got.Location(), "filter boundary must be in UTC, got %s", got.Location())
+
+			want := datemath.MustParse(expr).Time(datemath.WithLocation(la)).UTC()
+			assert.Equal(t,
+				want.Format("2006-01-02 15:04:05"),
+				got.Format("2006-01-02 15:04:05"),
+				"boundary should be local %s midnight expressed in UTC", expr)
+		})
+	}
+
+	// 2026-07-15 00:00 PDT (UTC-7) = 07:00 UTC
+	t.Run("absolute date", func(t *testing.T) {
+		filters, err := getTaskFiltersFromFilterString("due_date < 2026-07-15", "America/Los_Angeles")
+		require.NoError(t, err)
+		require.Len(t, filters, 1)
+
+		got, ok := filters[0].value.(time.Time)
+		require.True(t, ok)
+
+		assert.Equal(t, time.UTC, got.Location(), "filter boundary must be in UTC, got %s", got.Location())
+		assert.Equal(t, "2026-07-15 07:00:00", got.Format("2006-01-02 15:04:05"))
 	})
 }
