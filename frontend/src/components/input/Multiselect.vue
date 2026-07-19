@@ -62,7 +62,7 @@
 					@keyup="search"
 					@keyup.enter.exact.prevent="() => createOrSelectOnEnter()"
 					@keydown.down.exact.prevent="() => preSelect(0)"
-					@keydown.esc.stop="closeSearchResults"
+					@keydown.esc="handleEscape"
 					@focus="handleFocus"
 				>
 				<BaseButton 
@@ -93,7 +93,7 @@
 					role="option"
 					@keydown.up.prevent="() => preSelect(index - 1)"
 					@keydown.down.prevent="() => preSelect(index + 1)"
-					@keydown.esc.stop="closeAndRefocus"
+					@keydown.esc="closeAndRefocus"
 					@click.prevent.stop="() => select(data)"
 				>
 					<span>
@@ -119,7 +119,7 @@
 					role="option"
 					@keydown.up.prevent="() => preSelect(filteredSearchResults.length - 1)"
 					@keydown.down.prevent="() => preSelect(filteredSearchResults.length + 1)"
-					@keydown.esc.stop="closeAndRefocus"
+					@keydown.esc="closeAndRefocus"
 					@keyup.enter.prevent="create"
 					@click.prevent.stop="create"
 				>
@@ -344,12 +344,32 @@ function closeSearchResults() {
 	showSearchResults.value = false
 }
 
-function closeAndRefocus() {
+function handleEscape(e: KeyboardEvent) {
+	if (!searchResultsVisible.value) {
+		return
+	}
+	// preventDefault cancels a wrapping native <dialog>'s Escape close request.
+	e.preventDefault()
+	e.stopPropagation()
 	closeSearchResults()
+}
+
+// Set while refocusing the input after Escape so the resulting focus event doesn't reopen the just-closed list.
+let suppressFocusOpen = false
+
+function closeAndRefocus(e: KeyboardEvent) {
+	e.preventDefault()
+	e.stopPropagation()
+	closeSearchResults()
+	suppressFocusOpen = true
 	searchInput.value?.focus()
+	suppressFocusOpen = false
 }
 
 function handleFocus() {
+	if (suppressFocusOpen) {
+		return
+	}
 	// We need the timeout to avoid the hideSearchResultsHandler hiding the search results right after the input
 	// is focused. That would lead to flickering pre-loaded search results and hiding them right after showing.
 	setTimeout(() => {
