@@ -994,6 +994,7 @@
       "deleteSuccess": "The task has been deleted successfully.",
       "duplicateSuccess": "The task was duplicated successfully.",
       "noBucket": "No bucket",
+      "bucketSelectLabel": "Kanban bucket: {bucket}",
       "bucketChangedSuccess": "The task bucket has been changed successfully.",
       "belongsToProject": "This task belongs to project '{project}'",
       "back": "Back to project",

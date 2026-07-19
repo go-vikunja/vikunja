@@ -7,6 +7,7 @@
 					<BaseButton
 						class="bucket-name"
 						:aria-expanded="open"
+						:aria-label="$t('task.detail.bucketSelectLabel', {bucket: currentBucketTitle})"
 						@click="toggleOpen"
 					>
 						{{ currentBucketTitle }}
