@@ -2338,6 +2338,84 @@ func TestTaskCollection_ExpandSubtasksSearchMirror(t *testing.T) {
 	})
 }
 
+// TestTaskCollection_ExpandSubtasksSearchMirrorFuzzy guards #2954: on ParadeDB the
+// parent search mirror must use the same BM25 matching as the result set. A parent
+// matching the search only via fuzzy matching (no substring match) must still demote
+// its child from the roots; the old ILIKE mirror missed it and returned the child as
+// a duplicate root.
+func TestTaskCollection_ExpandSubtasksSearchMirrorFuzzy(t *testing.T) {
+	if !db.ParadeDBAvailable() {
+		t.Skip("requires ParadeDB")
+	}
+
+	u := &user.User{ID: 1}
+
+	project, parent, sub := setupSubtaskExpansionFixture(t, u, "search-fuzzy-parent", func(parent, sub *Task) {
+		parent.Title = "wombatize errands"
+		sub.Title = "wombatise subtask"
+	})
+
+	s2 := db.NewSession()
+	defer s2.Close()
+
+	tasks, _, total, err := getRawTasksForProjects(s2, []*Project{project}, u, &taskSearchOptions{
+		expand: []TaskCollectionExpandable{TaskCollectionExpandSubtasks},
+		search: "wombatise",
+	})
+	require.NoError(t, err)
+
+	assert.Equal(t, int64(1), total, "the fuzzy-matched parent is the only root")
+	ids := map[int64]int{}
+	for _, tsk := range tasks {
+		ids[tsk.ID]++
+	}
+	assert.Equal(t, 1, ids[parent.ID], "parent present exactly once as the root")
+	assert.Equal(t, 1, ids[sub.ID], "child nests under the fuzzy-matched parent, not as a second root")
+	assert.Len(t, tasks, 2)
+}
+
+// TestTaskCollection_ExpandSubtasksMultiParentCrossScope guards the multi-parent case
+// from #2954: a task with one parent inside the queried scope and another parent
+// outside it must nest under the in-scope parent. The old per-row LEFT JOIN root check
+// let the out-of-scope parent's row promote the child to a root.
+func TestTaskCollection_ExpandSubtasksMultiParentCrossScope(t *testing.T) {
+	u := &user.User{ID: 1}
+
+	project, parent, sub := setupSubtaskExpansionFixture(t, u, "multi-parent-in-scope", nil)
+
+	s := db.NewSession()
+	defer s.Close()
+
+	otherProject := &Project{Title: "multi-parent-out-of-scope", OwnerID: u.ID}
+	_, err := s.Insert(otherProject)
+	require.NoError(t, err)
+
+	otherParent := &Task{Title: "out of scope parent", ProjectID: otherProject.ID, CreatedByID: u.ID, Index: 1}
+	_, err = s.Insert(otherParent)
+	require.NoError(t, err)
+
+	rel := &TaskRelation{TaskID: otherParent.ID, OtherTaskID: sub.ID, RelationKind: RelationKindSubtask}
+	require.NoError(t, rel.Create(s, u))
+	require.NoError(t, s.Commit())
+
+	s2 := db.NewSession()
+	defer s2.Close()
+
+	tasks, _, total, err := getRawTasksForProjects(s2, []*Project{project}, u, &taskSearchOptions{
+		expand: []TaskCollectionExpandable{TaskCollectionExpandSubtasks},
+	})
+	require.NoError(t, err)
+
+	assert.Equal(t, int64(1), total, "the in-scope parent is the only root")
+	ids := map[int64]int{}
+	for _, tsk := range tasks {
+		ids[tsk.ID]++
+	}
+	assert.Equal(t, 1, ids[parent.ID], "in-scope parent present exactly once as the root")
+	assert.Equal(t, 1, ids[sub.ID], "child nests under the in-scope parent despite the out-of-scope one")
+	assert.Len(t, tasks, 2)
+}
+
 // Reproduces https://github.com/go-vikunja/vikunja/issues/3181: with a non-UTC
 // service timezone, a task due in the last hours of the local day must still
 // match "due_date < now/d+1d" when filter_timezone matches that timezone.
