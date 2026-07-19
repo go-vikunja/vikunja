@@ -971,7 +971,9 @@ watch(
 				await baseStore.handleSetCurrentProjectIfNotSet(lastProject.value)
 			}
 		} catch (e) {
-			if (e?.response?.status === 404) {
+			// 403 means the task exists but is not visible to us; treat it like
+			// a 404 so we route away instead of rendering an empty task shell.
+			if (e?.response?.status === 404 || e?.response?.status === 403) {
 				taskNotFound.value = true
 				router.replace({name: 'not-found'})
 				return
