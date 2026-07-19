@@ -724,9 +724,17 @@ test.describe('Task', () => {
 			await pasteFile(editor, 'image.jpg', 'image/jpeg')
 
 			await uploadAttachmentPromise
+
+			// A freshly inserted image now prompts for alt text.
+			const altInput = page.locator('input.input[placeholder="Describe this image"]')
+			await expect(altInput).toBeVisible()
+			await altInput.fill('Pasted screenshot')
+			await altInput.press('Enter')
+
 			await expect(page.locator('.attachments .attachments .files .attachment')).toBeVisible()
 			const img = page.locator('.task-view .details.content.description .tiptap__editor .tiptap.ProseMirror img')
 			await expect(img).toBeVisible()
+			await expect(img).toHaveAttribute('alt', 'Pasted screenshot')
 			const naturalWidth = await img.evaluate((el: HTMLImageElement) => el.naturalWidth)
 			expect(naturalWidth).toBeGreaterThan(0)
 		})
