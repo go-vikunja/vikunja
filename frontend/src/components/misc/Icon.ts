@@ -22,6 +22,7 @@ import {
 	faCheckDouble,
 	faChessKnight,
 	faChevronDown,
+	faChevronUp,
 	faCircleInfo,
 	faCloudDownloadAlt,
 	faCloudUploadAlt,
@@ -135,6 +136,7 @@ library.add(faCheck)
 library.add(faCheckDouble)
 library.add(faChessKnight)
 library.add(faChevronDown)
+library.add(faChevronUp)
 library.add(faCircleInfo)
 library.add(faCircleQuestion)
 library.add(faClock)
