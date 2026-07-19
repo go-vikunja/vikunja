@@ -297,9 +297,8 @@ func GetTimeZone() *time.Location {
 	return timezone
 }
 
-// SetTimeZone overrides the cached time zone. It is primarily useful in tests
-// that need to exercise a non-default service timezone, since GetTimeZone caches
-// the parsed location on first use.
+// SetTimeZone overrides the zone cached by GetTimeZone, for tests that need a
+// non-default service timezone.
 func SetTimeZone(loc *time.Location) {
 	timezone = loc
 }
