@@ -287,20 +287,15 @@ var timezone *time.Location
 // It is a separate function and not done through viper because that makes handling
 // it way easier, especially when testing.
 func GetTimeZone() *time.Location {
-	if timezone == nil {
-		loc, err := time.LoadLocation(ServiceTimeZone.GetString())
+	tz := ServiceTimeZone.GetString()
+	if timezone == nil || timezone.String() != tz {
+		loc, err := time.LoadLocation(tz)
 		if err != nil {
 			log.Fatalf("Error parsing time zone: %s", err)
 		}
 		timezone = loc
 	}
 	return timezone
-}
-
-// SetTimeZone overrides the zone cached by GetTimeZone, for tests that need a
-// non-default service timezone.
-func SetTimeZone(loc *time.Location) {
-	timezone = loc
 }
 
 // Set sets a value

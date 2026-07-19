@@ -352,9 +352,9 @@ func TestDateFilterTimezone(t *testing.T) {
 	la, err := time.LoadLocation("America/Los_Angeles")
 	require.NoError(t, err)
 
-	orig := config.GetTimeZone()
-	config.SetTimeZone(la)
-	defer config.SetTimeZone(orig)
+	orig := config.ServiceTimeZone.GetString()
+	config.ServiceTimeZone.Set("America/Los_Angeles")
+	defer config.ServiceTimeZone.Set(orig)
 
 	for _, expr := range []string{"now/d", "now/d+1d", "now+1d/d"} {
 		t.Run(expr, func(t *testing.T) {

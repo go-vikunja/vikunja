@@ -2345,9 +2345,9 @@ func TestTaskCollection_DateFilterTimezoneBoundary(t *testing.T) {
 	la, err := time.LoadLocation("America/Los_Angeles")
 	require.NoError(t, err)
 
-	orig := config.GetTimeZone()
-	config.SetTimeZone(la)
-	defer config.SetTimeZone(orig)
+	orig := config.ServiceTimeZone.GetString()
+	config.ServiceTimeZone.Set("America/Los_Angeles")
+	defer config.ServiceTimeZone.Set(orig)
 
 	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()
