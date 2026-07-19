@@ -90,6 +90,7 @@
 				<RouterLink
 					:to="{ name: 'user.register' }"
 					type="secondary"
+					class="inline-link"
 				>
 					{{ $t('user.auth.createAccount') }}
 				</RouterLink>
@@ -251,6 +252,11 @@ async function submit() {
 
 .reset-password-link {
 	display: inline-block;
+}
+
+// Underline links sitting inside body text so they're not distinguished by color alone
+.inline-link {
+	text-decoration: underline;
 }
 
 .label-with-link {

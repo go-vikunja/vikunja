@@ -32,7 +32,7 @@
 			:aria-label="canWrite ? $t('task.attributes.title') : undefined"
 			:spellcheck="false"
 			@input="handleTitleInput"
-			@blur="save(($event.target as HTMLInputElement).textContent as string)"
+			@blur="save($event.target as HTMLElement)"
 			@keydown.enter.prevent.stop="!$event.isComposing && ($event.target as HTMLInputElement).blur()"
 			@keydown.esc.prevent.stop="!$event.isComposing && cancel($event.target as HTMLInputElement)"
 		>
@@ -71,7 +71,9 @@
 <script setup lang="ts">
 import {ref, computed, onMounted, onBeforeUnmount, watch} from 'vue'
 import {useRouter} from 'vue-router'
+import {useI18n} from 'vue-i18n'
 
+import {error} from '@/message'
 import BaseButton from '@/components/base/BaseButton.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import ColorBubble from '@/components/misc/ColorBubble.vue'
@@ -96,6 +98,7 @@ const emit = defineEmits<{
 
 const router = useRouter()
 const copy = useCopyToClipboard()
+const {t} = useI18n({useScope: 'global'})
 
 async function copyUrl() {
 	const route = router.resolve({name: 'task.detail', query: {taskId: props.task.id}})
@@ -144,7 +147,17 @@ function handleTitleInput(event: Event) {
 	titleHasChanges.value = target.textContent !== props.task.title
 }
 
-async function save(title: string) {
+async function save(element: HTMLElement) {
+	const title = element.textContent ?? ''
+
+	// An empty title would be discarded by the api, so revert and tell the user instead of failing silently.
+	if (title.trim() === '') {
+		element.textContent = props.task.title
+		titleHasChanges.value = false
+		error({message: t('task.detail.titleRequired')})
+		return
+	}
+
 	// We only want to save if the title was actually changed.
 	// so we only continue if the task title changed.
 	if (title === props.task.title) {

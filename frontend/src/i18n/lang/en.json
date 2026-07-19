@@ -601,6 +601,7 @@
       "success": "The filter was saved successfully."
     },
     "query": {
+      "label": "Filter query",
       "placeholder": "Type a search or filter query…",
       "help": {
         "intro": "To filter tasks, you can use a query syntax similar to SQL. The available fields for filtering include:",
@@ -753,7 +754,9 @@
     "privacy": "Privacy Policy",
     "closeSidebar": "Close sidebar",
     "home": "Vikunja home",
-    "toggleChildProjects": "Toggle sub-projects"
+    "toggleChildProjects": "Toggle sub-projects",
+    "main": "Main navigation",
+    "savedFilters": "Saved filters"
   },
   "misc": {
     "loading": "Loading…",
@@ -984,6 +987,7 @@
       "created": "Created {0} by {1}",
       "updated": "Updated {0}",
       "doneAt": "Done {0}",
+      "titleRequired": "The task title can't be empty.",
       "updateSuccess": "The task was saved successfully.",
       "deleteSuccess": "The task has been deleted successfully.",
       "duplicateSuccess": "The task was duplicated successfully.",
