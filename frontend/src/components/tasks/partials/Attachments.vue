@@ -27,93 +27,102 @@
 			v-if="attachments.length > 0"
 			class="files"
 		>
-			<button
+			<div
 				v-for="a in attachments"
 				:key="a.id"
 				class="attachment"
-				@click="viewOrDownload(a)"
 			>
 				<div class="preview-column">
-					<FilePreview
-						class="attachment-preview"
-						:model-value="a"
-					/>
+					<button
+						class="preview-open"
+						tabindex="-1"
+						aria-hidden="true"
+						@click="viewOrDownload(a)"
+					>
+						<FilePreview
+							class="attachment-preview"
+							:model-value="a"
+						/>
+					</button>
 				</div>
 				<div class="attachment-info-column">
-					<div class="filename">
-						{{ a.file.name }}
-						<span
-							v-if="task.coverImageAttachmentId === a.id"
-							class="is-task-cover"
-						>
-							{{ $t('task.attachment.usedAsCover') }}
+					<button
+						class="attachment-open"
+						@click="viewOrDownload(a)"
+					>
+						<span class="filename">
+							{{ a.file.name }}
+							<span
+								v-if="task.coverImageAttachmentId === a.id"
+								class="is-task-cover"
+							>
+								{{ $t('task.attachment.usedAsCover') }}
+							</span>
 						</span>
-					</div>
-					<div class="info">
-						<p class="attachment-info-meta">
-							<i18n-t
-								keypath="task.attachment.createdBy"
-								scope="global"
-							>
-								<span v-tooltip="formatDateLong(a.created)">
-									{{ formatDisplayDate(a.created) }}
-								</span>
-								<User
-									:avatar-size="24"
-									:user="a.createdBy"
-									:is-inline="true"
-								/>
-							</i18n-t>
-							<span>
-								{{ getHumanSize(a.file.size) }}
+					</button>
+					<p class="attachment-info-meta">
+						<i18n-t
+							keypath="task.attachment.createdBy"
+							scope="global"
+						>
+							<span v-tooltip="formatDateLong(a.created)">
+								{{ formatDisplayDate(a.created) }}
 							</span>
-							<span v-if="a.file.mime">
-								{{ a.file.mime }}
-							</span>
-						</p>
-						<p>
-							<BaseButton
-								v-tooltip="$t('task.attachment.downloadTooltip')"
-								:aria-label="$t('task.attachment.downloadTooltip')"
-								class="attachment-info-meta-button"
-								@click.prevent.stop="downloadAttachment(a)"
-							>
-								<Icon icon="download" />
-							</BaseButton>
-							<BaseButton
-								v-tooltip="$t('task.attachment.copyUrlTooltip')"
-								:aria-label="$t('task.attachment.copyUrlTooltip')"
-								class="attachment-info-meta-button"
-								@click.stop="copyUrl(a)"
-							>
-								<Icon icon="copy" />
-							</BaseButton>
-							<BaseButton
-								v-if="editEnabled"
-								v-tooltip="$t('task.attachment.deleteTooltip')"
-								:aria-label="$t('task.attachment.deleteTooltip')"
-								class="attachment-info-meta-button"
-								@click.prevent.stop="setAttachmentToDelete(a)"
-							>
-								<Icon icon="trash-alt" />
-							</BaseButton>
-							<BaseButton
-								v-if="editEnabled && canPreviewImage(a)"
-								v-tooltip="task.coverImageAttachmentId === a.id
-									? $t('task.attachment.unsetAsCover')
-									: $t('task.attachment.setAsCover')"
-								:aria-label="task.coverImageAttachmentId === a.id
-									? $t('task.attachment.unsetAsCover')
-									: $t('task.attachment.setAsCover')"
-								class="attachment-info-meta-button"
-								@click.prevent.stop="setCoverImage(task.coverImageAttachmentId === a.id ? null : a)"
-							>
-								<Icon :icon="task.coverImageAttachmentId === a.id ? 'eye-slash' : 'eye'" />
-							</BaseButton>
-						</p>
-					</div>
+							<User
+								:avatar-size="24"
+								:user="a.createdBy"
+								:is-inline="true"
+							/>
+						</i18n-t>
+						<span>
+							{{ getHumanSize(a.file.size) }}
+						</span>
+						<span v-if="a.file.mime">
+							{{ a.file.mime }}
+						</span>
+					</p>
+					<p class="attachment-actions">
+						<BaseButton
+							v-tooltip="$t('task.attachment.downloadTooltip')"
+							:aria-label="$t('task.attachment.downloadTooltip')"
+							class="attachment-info-meta-button"
+							@click.prevent.stop="downloadAttachment(a)"
+						>
+							<Icon icon="download" />
+						</BaseButton>
+						<BaseButton
+							v-tooltip="$t('task.attachment.copyUrlTooltip')"
+							:aria-label="$t('task.attachment.copyUrlTooltip')"
+							class="attachment-info-meta-button"
+							@click.stop="copyUrl(a)"
+						>
+							<Icon icon="copy" />
+						</BaseButton>
+						<BaseButton
+							v-if="editEnabled"
+							v-tooltip="$t('task.attachment.deleteTooltip')"
+							:aria-label="$t('task.attachment.deleteTooltip')"
+							class="attachment-info-meta-button"
+							@click.prevent.stop="setAttachmentToDelete(a)"
+						>
+							<Icon icon="trash-alt" />
+						</BaseButton>
+						<BaseButton
+							v-if="editEnabled && canPreviewImage(a)"
+							v-tooltip="task.coverImageAttachmentId === a.id
+								? $t('task.attachment.unsetAsCover')
+								: $t('task.attachment.setAsCover')"
+							:aria-label="task.coverImageAttachmentId === a.id
+								? $t('task.attachment.unsetAsCover')
+								: $t('task.attachment.setAsCover')"
+							class="attachment-info-meta-button"
+							@click.prevent.stop="setCoverImage(task.coverImageAttachmentId === a.id ? null : a)"
+						>
+							<Icon :icon="task.coverImageAttachmentId === a.id ? 'eye-slash' : 'eye'" />
+						</BaseButton>
+					</p>
 				</div>
-			</button>
+			</div>
 		</div>
 
 		<XButton
@@ -477,6 +486,21 @@ defineExpose({
 	}
 }
 
+.attachment-open {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	inline-size: 100%;
+	min-inline-size: 0;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	text-align: start;
+	cursor: pointer;
+}
+
 .filename {
 	display: flex;
 	align-items: center;
@@ -488,21 +512,16 @@ defineExpose({
 	min-inline-size: 0;
 }
 
-.info {
+.attachment-info-meta,
+.attachment-actions {
 	color: var(--grey-500);
 	font-size: .9rem;
+}
+
+.attachment-actions {
 	display: flex;
-	flex-direction: column;
-
-	p {
-		margin-block-end: 0;
-		display: flex;
-
-		> span,
-		> button:not(:last-child):after {
-			padding: 0 .25rem;
-		}
-	}
+	margin-block-start: .25rem;
+	margin-block-end: 0;
 }
 
 .dropzone {
@@ -560,6 +579,11 @@ defineExpose({
 .attachment-info-meta {
 	display: flex;
 	align-items: center;
+	margin-block: 0;
+
+	> span {
+		padding: 0 .25rem;
+	}
 
 	:deep(.user) {
 		display: flex !important;
@@ -573,11 +597,6 @@ defineExpose({
 
 		:deep(.user) {
 			margin: .5rem 0;
-		}
-
-		> span:not(:last-child):after,
-		> button:not(:last-child):after {
-			display: none;
 		}
 
 		.user .username {
@@ -620,6 +639,17 @@ defineExpose({
 .preview-column {
 	max-inline-size: 8rem;
 	block-size: 5.2rem;
+}
+
+// Redundant mouse-only click target; the real control is button.attachment-open.
+.preview-open {
+	display: block;
+	inline-size: 100%;
+	block-size: 100%;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	cursor: pointer;
 }
 
 .attachment-preview {
