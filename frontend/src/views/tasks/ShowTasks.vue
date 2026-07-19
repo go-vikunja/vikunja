@@ -3,9 +3,9 @@
 		v-cy="'showTasks'"
 		class="is-max-width-desktop has-text-start"
 	>
-		<h3 class="mbe-2 title">
+		<h2 class="mbe-2 title">
 			{{ pageTitle }}
-		</h3>
+		</h2>
 		<Message
 			v-if="filteredLabels.length > 0"
 			class="label-filter-info mbe-2"
@@ -82,16 +82,19 @@
 			:has-content="false"
 			:loading="loading"
 		>
-			<div class="p-2">
-				<SingleTaskInProject
+			<ul class="p-2 tasks">
+				<li
 					v-for="task in tasks"
 					:key="task.id"
-					:show-project="true"
-					:the-task="task"
-					:can-mark-as-done="(projectStore.projects[task.projectId]?.maxPermission ?? 0) > PERMISSIONS.READ"
-					@taskUpdated="updateTasks"
-				/>
-			</div>
+				>
+					<SingleTaskInProject
+						:show-project="true"
+						:the-task="task"
+						:can-mark-as-done="(projectStore.projects[task.projectId]?.maxPermission ?? 0) > PERMISSIONS.READ"
+						@taskUpdated="updateTasks"
+					/>
+				</li>
+			</ul>
 		</Card>
 		<div
 			v-else
@@ -316,6 +319,11 @@ watchEffect(() => setTitle(pageTitle.value))
 </script>
 
 <style lang="scss" scoped>
+.tasks {
+	list-style: none;
+	margin: 0;
+}
+
 .show-tasks-options {
 	display: flex;
 	flex-direction: column;

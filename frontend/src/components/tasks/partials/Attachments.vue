@@ -1,11 +1,11 @@
 <template>
 	<div class="attachments">
-		<h3>
+		<h2 class="task-section-title">
 			<span class="icon is-grey">
 				<Icon icon="paperclip" />
 			</span>
 			{{ $t('task.attachment.title') }}
-		</h3>
+		</h2>
 
 		<input
 			v-if="editEnabled"

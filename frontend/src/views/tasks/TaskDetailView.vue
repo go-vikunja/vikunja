@@ -385,12 +385,12 @@
 						v-if="activeFields.relatedTasks"
 						class="content details mbe-0"
 					>
-						<h3>
+						<h2 class="task-section-title">
 							<span class="icon is-grey">
 								<Icon icon="sitemap" />
 							</span>
 							{{ $t('task.attributes.relatedTasks') }}
-						</h3>
+						</h2>
 						<RelatedTasks
 							:ref="e => setFieldRef('relatedTasks', e)"
 							:edit-enabled="canWrite"
@@ -406,12 +406,12 @@
 						v-if="activeFields.moveProject"
 						class="content details"
 					>
-						<h3>
+						<h2 class="task-section-title">
 							<span class="icon is-grey">
 								<Icon icon="list" />
 							</span>
 							{{ $t('task.detail.move') }}
-						</h3>
+						</h2>
 						<div class="field has-addons">
 							<div class="control is-expanded">
 								<ProjectSearch
@@ -1274,7 +1274,7 @@ function setRelatedTasksActive() {
 	}
 }
 
-h3 .button {
+h2 .button {
 	vertical-align: middle;
 }
 

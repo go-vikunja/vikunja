@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<p class="has-text-weight-bold">
+		<h3 class="has-text-weight-bold share-heading">
 			{{ $t('project.share.links.title') }}
 			<span
 				v-tooltip="$t('project.share.links.explanation')"
@@ -8,7 +8,7 @@
 			>
 				{{ $t('project.share.links.what') }}
 			</span>
-		</p>
+		</h3>
 
 		<div class="sharables-project">
 			<XButton

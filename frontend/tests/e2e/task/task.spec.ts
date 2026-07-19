@@ -352,7 +352,7 @@ test.describe('Task', () => {
 			await expect(saveButton).toBeVisible()
 			await saveButton.click()
 
-			await expect(page.locator('.task-view .details.content.description h3 span.is-small.has-text-success')).toContainText('Saved!')
+			await expect(page.locator('.task-view .details.content.description h2 span.is-small.has-text-success')).toContainText('Saved!')
 		})
 
 		test('autosaves the description when leaving the task view', async ({authenticatedPage: page}) => {
@@ -1101,7 +1101,7 @@ test.describe('Task', () => {
 			await expect(page.locator('.task-view .checklist-summary')).toContainText('1 of 5 tasks')
 			await page.locator('.tiptap__editor ul > li input[type=checkbox]').nth(2).click()
 
-			await expect(page.locator('.task-view .details.content.description h3 span.is-small.has-text-success')).toContainText('Saved!')
+			await expect(page.locator('.task-view .details.content.description h2 span.is-small.has-text-success')).toContainText('Saved!')
 			await expect(page.locator('.tiptap__editor ul > li input[type=checkbox]').nth(2)).toBeChecked()
 			await expect(page.locator('.tiptap__editor input[type=checkbox]')).toHaveCount(5)
 			await expect(page.locator('.task-view .checklist-summary')).toContainText('2 of 5 tasks')
@@ -1125,7 +1125,7 @@ test.describe('Task', () => {
 			await expect(page.locator('.task-view .checklist-summary')).toContainText('0 of 2 tasks')
 			await page.locator('.tiptap__editor ul > li input[type=checkbox]').first().click()
 
-			await expect(page.locator('.task-view .details.content.description h3 span.is-small.has-text-success')).toContainText('Saved!')
+			await expect(page.locator('.task-view .details.content.description h2 span.is-small.has-text-success')).toContainText('Saved!')
 
 			await expect(page.locator('.task-view .checklist-summary')).toContainText('1 of 2 tasks')
 
@@ -1172,7 +1172,7 @@ test.describe('Task', () => {
 			// Toggle only the second checkbox
 			await page.locator('.tiptap__editor ul > li input[type=checkbox]').nth(1).click()
 
-			await expect(page.locator('.task-view .details.content.description h3 span.is-small.has-text-success')).toContainText('Saved!')
+			await expect(page.locator('.task-view .details.content.description h2 span.is-small.has-text-success')).toContainText('Saved!')
 			await expect(page.locator('.task-view .checklist-summary')).toContainText('1 of 3 tasks')
 
 			// Verify only the second checkbox is checked, not the others

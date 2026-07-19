@@ -64,7 +64,7 @@ test.describe('Editor image alt text', () => {
 		const saveButton = page.locator('[data-cy="saveEditor"]').filter({hasText: 'Save'})
 		await expect(saveButton).toBeVisible()
 		await saveButton.click()
-		await expect(description.locator('h3 span.is-small.has-text-success')).toContainText('Saved!')
+		await expect(description.locator('h2 span.is-small.has-text-success')).toContainText('Saved!')
 
 		// The alt text must survive a round-trip through the backend.
 		await page.reload()

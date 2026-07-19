@@ -2,7 +2,7 @@
 	<div
 		:class="{'d-print-none': isEmpty}"
 	>
-		<h3>
+		<h2 class="task-section-title">
 			<span class="icon is-grey">
 				<Icon icon="align-left" />
 			</span>
@@ -23,7 +23,7 @@
 					{{ $t('misc.saved') }}
 				</span>
 			</CustomTransition>
-		</h3>
+		</h2>
 		<Editor
 			v-model="description"
 			class="tiptap__task-description"

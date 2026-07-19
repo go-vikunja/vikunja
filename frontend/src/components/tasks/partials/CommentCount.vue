@@ -35,7 +35,7 @@ const tooltip = computed(() => t('task.attributes.comment', props.task.commentCo
 	align-items: center;
 	gap: 0.25rem;
 	font-size: 0.875rem;
-	color: var(--grey-500);
+	color: var(--text-muted);
 
 	.comment-count-badge {
 		font-weight: 600;

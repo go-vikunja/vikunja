@@ -1,8 +1,8 @@
 <template>
 	<div>
-		<p class="has-text-weight-bold">
+		<h3 class="has-text-weight-bold share-heading">
 			{{ $t('project.share.userTeam.shared', {type: shareTypeNames}) }}
-		</p>
+		</h3>
 		<div v-if="userIsAdmin">
 			<div class="field has-addons">
 				<p

@@ -36,7 +36,7 @@
 						@start="() => dragBucket = true"
 					>
 						<template #item="{element: bucket, index: bucketIndex }">
-							<div
+							<li
 								class="bucket"
 								:class="{'is-collapsed': collapsedBuckets[bucket.id]}"
 							>
@@ -214,7 +214,7 @@
 									</template>
 
 									<template #item="{element: task}">
-										<div
+										<li
 											class="task-item"
 											:data-task-id="task.id"
 										>
@@ -232,10 +232,10 @@
 												:project-id="projectId"
 												@taskCompletedRecurring="handleRecurringTaskCompletion"
 											/>
-										</div>
+										</li>
 									</template>
 								</draggable>
-							</div>
+							</li>
 						</template>
 					</draggable>
 
@@ -954,6 +954,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 
 	&-bucket-container {
 		display: flex;
+		list-style: none;
 	}
 
 	.ghost {
@@ -995,6 +996,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		.tasks {
 			overflow: hidden auto;
 			block-size: 100%;
+			list-style: none;
 		}
 
 		.task-item {
