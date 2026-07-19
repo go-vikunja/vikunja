@@ -1,6 +1,27 @@
-import {describe, expect, it} from 'vitest'
-import {buildDefaultRemindersForQuickAdd, runWrites} from './tasks'
+import {setActivePinia, createPinia} from 'pinia'
+import {beforeEach, describe, expect, it, vi} from 'vitest'
+
+vi.mock('@/router', () => ({
+	default: {
+		currentRoute: {value: {params: {}}},
+		isReady: () => Promise.resolve(),
+	},
+}))
+
+vi.mock('vue-i18n', () => ({
+	useI18n: () => ({t: (key: string) => key}),
+	createI18n: () => ({global: {t: (key: string) => key}}),
+}))
+
+vi.mock('@/stores/base', () => ({
+	useBaseStore: () => ({setHasTasks: vi.fn()}),
+}))
+
+import {buildDefaultRemindersForQuickAdd, runWrites, useTaskStore} from './tasks'
+import {useLabelStore} from './labels'
+import LabelModel from '@/models/label'
 import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
+import type {ILabel} from '@/modelTypes/ILabel'
 import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
 
 const aDefault: ITaskReminder = {
@@ -76,5 +97,32 @@ describe('runWrites', () => {
 		const {write, completed} = deferredWrite()
 		await runWrites([], write, false)
 		expect(completed).toHaveLength(0)
+	})
+})
+
+describe('ensureLabelsExist', () => {
+	beforeEach(() => {
+		setActivePinia(createPinia())
+	})
+
+	it('skips labels that fail to create and returns the resolved ones', async () => {
+		const taskStore = useTaskStore()
+		const labelStore = useLabelStore()
+		labelStore.setLabels([{id: 1, title: 'existing'}] as ILabel[])
+
+		vi.spyOn(labelStore, 'createLabel').mockImplementation(async label => {
+			if (label.title === 'forbidden') {
+				throw new Error('403')
+			}
+			return new LabelModel({id: 99, title: label.title})
+		})
+
+		const result = await taskStore.ensureLabelsExist(['existing', 'created', 'forbidden'])
+		const titles = result.map(l => l.title)
+
+		expect(titles).toContain('existing')
+		expect(titles).toContain('created')
+		expect(titles).not.toContain('forbidden')
+		expect(result).toHaveLength(2)
 	})
 })

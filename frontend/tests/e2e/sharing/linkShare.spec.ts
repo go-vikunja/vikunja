@@ -223,3 +223,32 @@ test.describe('Link share: permission tiers', () => {
 		await expect(page.locator('.input[placeholder="Add a task…"]')).toBeVisible()
 	})
 })
+
+test.describe('Link share: quick add magic labels', () => {
+	test.beforeEach(async ({page}) => {
+		await setupApiUrl(page)
+	})
+
+	test('creates the task and shows an error when a label cannot be created', async ({page}) => {
+		await UserFactory.create(1)
+		const projects = await createProjects()
+		await TaskFactory.create(1, {
+			project_id: projects[0].id,
+		})
+		const [share] = await LinkShareFactory.create(1, {
+			project_id: projects[0].id,
+			permission: 1,
+		})
+
+		await page.goto(`/share/${share.hash}/auth`)
+		await expect(page.locator('h1.title')).toContainText(projects[0].title)
+
+		const addTaskInput = page.locator('.input[placeholder="Add a task…"]')
+		await addTaskInput.fill('New task via share *unknownlabel')
+		await addTaskInput.press('Enter')
+
+		// Link shares may not create labels: the label is skipped with an error, the task is still created.
+		await expect(page.locator('.global-notification')).toContainText('could not be created')
+		await expect(page.locator('.tasks')).toContainText('New task via share')
+	})
+})
