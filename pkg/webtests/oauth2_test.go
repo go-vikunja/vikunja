@@ -24,10 +24,14 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/modules/auth/oauth2server"
 
+	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -53,6 +57,34 @@ func doAuthorize(e http.Handler, token string, body []byte) *httptest.ResponseRe
 	req.Header.Set("Authorization", "Bearer "+token)
 	e.ServeHTTP(rec, req)
 	return rec
+}
+
+// insertLegacyOAuthScopedToken inserts an API token scoped {"oauth":["authorize"]}
+// directly into the db, bypassing Create's permission validation, to simulate a
+// token issued before the oauth scope was removed from the grantable catalogue
+// (GHSA-v3p6-34mc-hj7v). Returns the cleartext token.
+func insertLegacyOAuthScopedToken(t *testing.T) string {
+	t.Helper()
+
+	const cleartext = "tk_legacy_oauth_scoped_token_0000deadbeef"
+	const salt = "legacysalt"
+	token := &models.APIToken{
+		Title:          "legacy oauth token",
+		TokenSalt:      salt,
+		TokenHash:      models.HashToken(cleartext, salt),
+		TokenLastEight: cleartext[len(cleartext)-8:],
+		APIPermissions: models.APIPermissions{"oauth": {"authorize"}},
+		ExpiresAt:      time.Now().Add(24 * time.Hour),
+		OwnerID:        1,
+	}
+
+	s := db.NewSession()
+	defer s.Close()
+	_, err := s.Insert(token)
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+
+	return cleartext
 }
 
 // doTokenRequest performs a JSON POST to /api/v1/oauth/token and returns the recorder.
@@ -120,6 +152,44 @@ func TestOAuth2AuthorizeEndpoint(t *testing.T) {
 		body := authorizeRequestBody("code", "vikunja", "vikunja-flutter://callback", "", "", "")
 		rec := doAuthorize(e, token, body)
 		assert.Equal(t, http.StatusBadRequest, rec.Code)
+	})
+
+	// GHSA-v3p6-34mc-hj7v: a token scoped {"oauth":["authorize"]} could mint a
+	// full session JWT via the authorize + token endpoints.
+	t.Run("rejects legacy oauth-scoped API token", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+
+		apiToken := insertLegacyOAuthScopedToken(t)
+
+		body := authorizeRequestBody("code", "vikunja", "vikunja-flutter://callback", "abc123", "S256", "")
+		rec := doAuthorize(e, apiToken, body)
+		assert.Equal(t, http.StatusUnauthorized, rec.Code)
+		assert.NotContains(t, rec.Body.String(), `"code":"`)
+	})
+
+	t.Run("rejects API-token principal at the handler", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+
+		body := authorizeRequestBody("code", "vikunja", "vikunja-flutter://callback", "abc123", "S256", "")
+		req := httptest.NewRequest(http.MethodPost, "/api/v1/oauth/authorize", bytes.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		c := e.NewContext(req, httptest.NewRecorder())
+		c.Set("api_token", &models.APIToken{ID: 1})
+
+		err = oauth2server.HandleAuthorize(c)
+		var httpErr *echo.HTTPError
+		require.ErrorAs(t, err, &httpErr)
+		assert.Equal(t, http.StatusForbidden, httpErr.Code)
+	})
+
+	t.Run("oauth scope is not grantable", func(t *testing.T) {
+		_, err := setupTestEnv()
+		require.NoError(t, err)
+
+		require.Error(t, models.PermissionsAreValid(models.APIPermissions{"oauth": {"authorize"}}))
+		assert.NotContains(t, models.GetAPITokenRoutes(), "oauth")
 	})
 }
 
