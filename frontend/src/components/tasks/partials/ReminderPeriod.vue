@@ -13,6 +13,7 @@
 		<div class="select">
 			<select
 				v-model="period.durationUnit"
+				:aria-label="$t('task.reminder.periodUnit')"
 				@change="updateData"
 			>
 				<option value="minutes">
@@ -33,6 +34,7 @@
 		<div class="select">
 			<select
 				v-model.number="period.sign"
+				:aria-label="$t('task.reminder.periodDirection')"
 				@change="updateData"
 			>
 				<option value="-1">
@@ -50,6 +52,7 @@
 		>
 			<select
 				v-model="period.relativeTo"
+				:aria-label="$t('task.reminder.periodRelativeTo')"
 				@change="updateData"
 			>
 				<option :value="REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE">
