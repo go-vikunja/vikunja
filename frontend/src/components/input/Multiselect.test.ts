@@ -120,3 +120,72 @@ describe('Multiselect.vue — combobox Escape semantics', () => {
 		wrapper.unmount()
 	})
 })
+
+describe('Multiselect.vue — creation-disabled hint', () => {
+	beforeEach(() => {
+		vi.useFakeTimers()
+	})
+
+	afterEach(() => {
+		vi.useRealTimers()
+		document.body.innerHTML = ''
+	})
+
+	function mountWithHint(props: Record<string, unknown>) {
+		return mount(Multiselect, {
+			attachTo: document.body,
+			props: {
+				modelValue: [],
+				searchResults: [],
+				multiple: true,
+				label: 'title',
+				creatable: false,
+				createPlaceholder: 'create',
+				selectPlaceholder: 'select',
+				...props,
+			},
+			global: {mocks: {$t: (key: string) => key}},
+		})
+	}
+
+	it('shows a non-interactive hint row when creation is disabled and nothing matches', async () => {
+		const wrapper = mountWithHint({creationDisabledMessage: 'cannot create here'})
+		await openResults(wrapper)
+
+		const hint = wrapper.find('.search-result-hint')
+		expect(hint.exists()).toBe(true)
+		expect(hint.text()).toBe('cannot create here')
+		// Must not be keyboard-selectable: a plain div, not a focusable option button, and no tabindex.
+		expect(hint.element.tagName).toBe('DIV')
+		expect(hint.attributes('aria-disabled')).toBe('true')
+		expect(hint.element.hasAttribute('tabindex')).toBe(false)
+
+		wrapper.unmount()
+	})
+
+	it('does not show the hint row without a creationDisabledMessage', async () => {
+		const wrapper = mountWithHint({})
+		await openResults(wrapper)
+
+		expect(wrapper.find('.search-result-hint').exists()).toBe(false)
+		expect(wrapper.find('[role="listbox"]').exists()).toBe(false)
+
+		wrapper.unmount()
+	})
+
+	it('hides the hint row when the query exactly matches an existing option', async () => {
+		const wrapper = mountWithHint({
+			searchResults: [{title: 'Alpha'}],
+			creationDisabledMessage: 'cannot create here',
+		})
+		const input = wrapper.find('input[role="combobox"]')
+		await input.setValue('Alpha')
+		await input.trigger('keyup')
+		vi.advanceTimersByTime(300)
+		await nextTick()
+
+		expect(wrapper.find('.search-result-hint').exists()).toBe(false)
+
+		wrapper.unmount()
+	})
+})
