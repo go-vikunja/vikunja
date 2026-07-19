@@ -108,7 +108,10 @@ func parseTimeFromUserInput(timeString string, loc *time.Location) (value time.T
 		}
 		value = time.Date(year, time.Month(month), day, 0, 0, 0, 0, loc)
 	}
-	value = value.In(config.GetTimeZone())
+	// Emit the instant in UTC (see the note in getValueForField): task timestamps
+	// live in a naive UTC column and the driver drops the parameter's offset, so a
+	// service-timezone wall clock would shift the comparison by the UTC offset.
+	value = value.UTC()
 	value = adjustDateForMysql(value)
 	return value, err
 }
@@ -326,7 +329,16 @@ func getValueForField(field reflect.StructField, rawValue string, loc *time.Loca
 			var tt time.Time
 			t, err = safeDatemathParse(rawValue)
 			if err == nil {
-				tt = t.Time(datemath.WithLocation(loc)).In(config.GetTimeZone())
+				// Emit the resolved instant in UTC, not the service timezone. Task
+				// timestamps are stored as UTC in a naive column, and the database
+				// driver drops the offset of a bound time parameter when comparing
+				// against such a column. Handing over a service-timezone wall clock
+				// therefore shifts relative boundaries like now/d by the UTC offset
+				// (e.g. tasks due in the last hours of the local day are dropped when
+				// the service timezone is behind UTC). loc still controls how the
+				// datemath rounds, so now/d is the start of the day in the filter's
+				// timezone.
+				tt = t.Time(datemath.WithLocation(loc)).UTC()
 				tt = adjustDateForMysql(tt)
 			} else {
 				tt, err = parseTimeFromUserInput(rawValue, loc)

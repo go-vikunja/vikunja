@@ -297,6 +297,13 @@ func GetTimeZone() *time.Location {
 	return timezone
 }
 
+// SetTimeZone overrides the cached time zone. It is primarily useful in tests
+// that need to exercise a non-default service timezone, since GetTimeZone caches
+// the parsed location on first use.
+func SetTimeZone(loc *time.Location) {
+	timezone = loc
+}
+
 // Set sets a value
 func (k Key) Set(i interface{}) {
 	viper.Set(string(k), i)

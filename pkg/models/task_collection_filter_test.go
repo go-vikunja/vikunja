@@ -20,8 +20,10 @@ import (
 	"testing"
 	"time"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 
+	datemath "github.com/jszwedko/go-datemath"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"xorm.io/builder"
@@ -340,5 +342,63 @@ func TestParseFilter(t *testing.T) {
 		// wrapper must recover from this panic and return an error instead.
 		_, err := getTaskFiltersFromFilterString("due_date = no", "UTC")
 		require.Error(t, err)
+	})
+}
+
+// TestDateFilterTimezone guards against a regression where date filter
+// boundaries (now/d, now+1d, absolute dates, …) were resolved into the service
+// timezone's wall clock instead of UTC. Task timestamps are stored in a naive
+// UTC column and the database driver drops the offset of a bound time parameter,
+// so a boundary handed over as a service-timezone wall clock is compared as if
+// it were UTC — shifting the boundary by the UTC offset whenever the service
+// timezone is not UTC (e.g. tasks due in the last hours of the local day get
+// dropped). See https://github.com/go-vikunja/vikunja/issues/3181.
+func TestDateFilterTimezone(t *testing.T) {
+	la, err := time.LoadLocation("America/Los_Angeles")
+	require.NoError(t, err)
+
+	// Reproduce a non-UTC service timezone. Restore it afterwards so other tests
+	// keep the default.
+	orig := config.GetTimeZone()
+	config.SetTimeZone(la)
+	defer config.SetTimeZone(orig)
+
+	// Relative boundaries: resolved via datemath, rounded in the filter timezone
+	// and then emitted in UTC.
+	for _, expr := range []string{"now/d", "now/d+1d", "now+1d/d"} {
+		t.Run(expr, func(t *testing.T) {
+			filters, err := getTaskFiltersFromFilterString("due_date < "+expr, "America/Los_Angeles")
+			require.NoError(t, err)
+			require.Len(t, filters, 1)
+
+			got, ok := filters[0].value.(time.Time)
+			require.True(t, ok)
+
+			// The boundary must be emitted in UTC so the naive comparison against
+			// the UTC-stored due_date matches.
+			assert.Equal(t, time.UTC, got.Location(), "filter boundary must be in UTC, got %s", got.Location())
+
+			// It must still represent the correct instant: the datemath rounded in
+			// the filter timezone (America/Los_Angeles), expressed in UTC.
+			want := datemath.MustParse(expr).Time(datemath.WithLocation(la)).UTC()
+			assert.Equal(t,
+				want.Format("2006-01-02 15:04:05"),
+				got.Format("2006-01-02 15:04:05"),
+				"boundary should be local %s midnight expressed in UTC", expr)
+		})
+	}
+
+	// Absolute dates: parsed in the filter timezone, then emitted in UTC. Local
+	// 2026-07-15 00:00 in America/Los_Angeles (PDT, UTC-7) is 2026-07-15 07:00 UTC.
+	t.Run("absolute date", func(t *testing.T) {
+		filters, err := getTaskFiltersFromFilterString("due_date < 2026-07-15", "America/Los_Angeles")
+		require.NoError(t, err)
+		require.Len(t, filters, 1)
+
+		got, ok := filters[0].value.(time.Time)
+		require.True(t, ok)
+
+		assert.Equal(t, time.UTC, got.Location(), "filter boundary must be in UTC, got %s", got.Location())
+		assert.Equal(t, "2026-07-15 07:00:00", got.Format("2006-01-02 15:04:05"))
 	})
 }
