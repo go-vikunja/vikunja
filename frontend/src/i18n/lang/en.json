@@ -572,6 +572,7 @@
     "noResults": "No results",
     "fromView": "The current view has a filter set as well:",
     "fromViewBoth": "It will be used in combination with what you enter here.",
+    "savedFilters": "Or use a saved filter:",
     "attributes": {
       "title": "Title",
       "titlePlaceholder": "The saved filter title goes here…",

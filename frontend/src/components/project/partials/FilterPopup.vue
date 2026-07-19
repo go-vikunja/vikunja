@@ -20,6 +20,7 @@
 			class="filter-popup"
 			:change-immediately="false"
 			:filter-from-view="filterFromView"
+			show-saved-filters
 			show-close
 			@close="modalOpen = false"
 			@showResults="showResults"
