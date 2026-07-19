@@ -24,6 +24,7 @@ import (
 	"code.vikunja.io/api/pkg/web"
 
 	"xorm.io/xorm"
+	"xorm.io/xorm/schemas"
 )
 
 // TeamProject defines the relation between a team and a project
@@ -191,13 +192,20 @@ func (tl *TeamProject) ReadAll(s *xorm.Session, a web.Auth, search string, page 
 
 	limit, start := getLimitFromPageIndex(page, perPage)
 
+	// The search term is always passed as a bound query argument below; the operator
+	// itself is chosen from a fixed, non-user-controlled set based on the db driver.
+	likeOperator := "LIKE"
+	if db.Type() == schemas.POSTGRES {
+		likeOperator = "ILIKE"
+	}
+
 	// Get the teams
 	all := []*TeamWithPermission{}
 	query := s.
 		Table("teams").
 		Join("INNER", "team_projects", "team_id = teams.id").
 		Where("team_projects.project_id = ?", tl.ProjectID).
-		Where(db.ILIKE("teams.name", search))
+		Where("teams.name "+likeOperator+" ?", "%"+search+"%")
 	if limit > 0 {
 		query = query.Limit(limit, start)
 	}
@@ -220,7 +228,7 @@ func (tl *TeamProject) ReadAll(s *xorm.Session, a web.Auth, search string, page 
 		Table("teams").
 		Join("INNER", "team_projects", "team_id = teams.id").
 		Where("team_projects.project_id = ?", tl.ProjectID).
-		Where("teams.name LIKE ?", "%"+search+"%").
+		Where("teams.name "+likeOperator+" ?", "%"+search+"%").
 		Count(&TeamWithPermission{})
 	if err != nil {
 		return nil, 0, 0, err
