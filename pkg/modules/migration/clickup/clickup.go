@@ -252,9 +252,11 @@ func parseClickupTimestamp(ms string) (t time.Time, ok bool) {
 }
 
 // convertTaskToVikunja converts a single ClickUp task, downloading its attachments.
-// Subtask relations are resolved by the caller once every task has been converted,
-// since a task's parent may be fetched after the task itself.
-func (m *Migration) convertTaskToVikunja(ct *clickupTask, bucketID int64) (*models.TaskWithComments, error) {
+// A failed attachment download is logged and skipped rather than failing the
+// whole task. Subtask relations are resolved by the caller once every task
+// has been converted, since a task's parent may be fetched after the task
+// itself.
+func (m *Migration) convertTaskToVikunja(ct *clickupTask, bucketID int64) *models.TaskWithComments {
 	task := &models.TaskWithComments{
 		Task: models.Task{
 			Title:       ct.Name,
@@ -307,7 +309,7 @@ func (m *Migration) convertTaskToVikunja(ct *clickupTask, bucketID int64) (*mode
 		})
 	}
 
-	return task, nil
+	return task
 }
 
 // Migrate gets all tasks from ClickUp for a user and puts them into vikunja
@@ -332,7 +334,7 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 		},
 	}}
 
-	var nextID int64 = pseudoParentID + 1
+	var nextID = pseudoParentID + 1
 	// tasksByClickupID and pendingParents let a final pass resolve subtask
 	// relations once every task in every list has been converted, regardless
 	// of which list/folder/space a task's parent happens to live in.
@@ -437,10 +439,7 @@ func (m *Migration) migrateLists(lists []*clickupList, project *models.ProjectWi
 		}
 
 		for _, ct := range tasks {
-			task, convErr := m.convertTaskToVikunja(ct, bucketID)
-			if convErr != nil {
-				return nil, convErr
-			}
+			task := m.convertTaskToVikunja(ct, bucketID)
 			project.Tasks = append(project.Tasks, task)
 			tasksByClickupID[ct.ID] = &task.Task
 			if ct.Parent != "" {

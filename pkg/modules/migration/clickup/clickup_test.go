@@ -54,8 +54,7 @@ func TestConvertTaskToVikunja(t *testing.T) {
 		Tags:        []clickupTag{{Name: "bug"}, {Name: "urgent-fix"}},
 	}
 
-	task, err := m.convertTaskToVikunja(ct, 42)
-	require.NoError(t, err)
+	task := m.convertTaskToVikunja(ct, 42)
 
 	assert.Equal(t, "A migrated task", task.Title)
 	assert.Equal(t, "Some description", task.Description)
@@ -79,8 +78,7 @@ func TestConvertTaskToVikunjaOpenTaskIsNotDone(t *testing.T) {
 		Status: clickupStatus{Status: "in progress", Type: "custom"},
 	}
 
-	task, err := m.convertTaskToVikunja(ct, 1)
-	require.NoError(t, err)
+	task := m.convertTaskToVikunja(ct, 1)
 	assert.False(t, task.Done)
 	assert.Equal(t, int64(0), task.Priority)
 }
@@ -110,8 +108,7 @@ func TestConvertTaskToVikunjaDownloadsAttachments(t *testing.T) {
 		},
 	}
 
-	task, err := m.convertTaskToVikunja(ct, 1)
-	require.NoError(t, err)
+	task := m.convertTaskToVikunja(ct, 1)
 	require.Len(t, task.Attachments, 1)
 	assert.Equal(t, "screenshot.png", task.Attachments[0].File.Name)
 	assert.Equal(t, uint64(len(fileContent)), task.Attachments[0].File.Size)
@@ -147,5 +144,5 @@ func TestAuthURLIsEmpty(t *testing.T) {
 	// ClickUp authenticates with a pasted personal token, not an OAuth
 	// redirect - an empty AuthURL is the frontend's signal to render a text
 	// input instead of a "connect" button.
-	assert.Equal(t, "", (&Migration{}).AuthURL())
+	assert.Empty(t, (&Migration{}).AuthURL())
 }
