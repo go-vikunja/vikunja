@@ -89,6 +89,8 @@ func columnsExist20260720120000(dbTable *schemas.Table, cols []string) bool {
 	return true
 }
 
+// Not schemas.Index.Equal: it's case-sensitive, doesn't trim, and requires exact
+// type match, but a unique db index should also satisfy a non-unique model index.
 func indexCoveringColsExists20260720120000(dbTable *schemas.Table, index *schemas.Index) bool {
 	for _, dbIndex := range dbTable.Indexes {
 		if index.Type == schemas.UniqueType && dbIndex.Type != schemas.UniqueType {
