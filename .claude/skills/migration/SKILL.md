@@ -61,7 +61,7 @@ If the migration touches user-supplied paths, filenames, or import blobs (restor
 
 ## Testing
 
-- Migrations can have dedicated `_test.go` files next to them using `db.CreateTestEngine()` (see `pkg/migration/20260627101958_test.go`); run with `mage test:filter <TestName>`. Otherwise, the model's feature tests must pass against the new schema — run `mage test:feature` (uses SQLite by default).
+- Migrations can have dedicated `_test.go` files next to them using `db.CreateTestEngine()` (see `pkg/migration/20260720120000_test.go`); run with `mage test:filter <TestName>`. Otherwise, the model's feature tests must pass against the new schema — run `mage test:feature` (uses SQLite by default).
 - If you suspect DB-specific behavior, flag it in the PR description so reviewers know to verify against MySQL/PostgreSQL.
 
 ## Related
