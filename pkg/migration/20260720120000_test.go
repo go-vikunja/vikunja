@@ -37,21 +37,11 @@ func (usersPartial20260720120000) TableName() string {
 
 func usersIndexOnUsername20260720120000(t *testing.T, x *xorm.Engine) *schemas.Index {
 	t.Helper()
-	tables, err := x.DBMetas()
-	require.NoError(t, err)
-	for _, table := range tables {
-		if table.Name != "users" {
-			continue
-		}
-		for _, index := range table.Indexes {
-			if len(index.Cols) == 1 && index.Cols[0] == "username" {
-				return index
-			}
-		}
+	indexes := usersIndexesOnUsername20260720120000(t, x)
+	if len(indexes) == 0 {
 		return nil
 	}
-	t.Fatal("users table not found")
-	return nil
+	return indexes[0]
 }
 
 func TestRecreateMissingIndexes20260720120000(t *testing.T) {
@@ -117,6 +107,11 @@ func TestRecreateMissingIndexesKeepsDifferentlyNamedIndex20260720120000(t *testi
 
 	_, err = x.Exec("CREATE UNIQUE INDEX some_nonmodel_name ON users (username)")
 	require.NoError(t, err)
+	t.Cleanup(func() {
+		// x is the process-global test engine; leaving this index around leaks into later tests.
+		_, err := x.Exec("DROP INDEX some_nonmodel_name")
+		require.NoError(t, err)
+	})
 
 	require.NoError(t, recreateMissingIndexes20260720120000(x))
 
