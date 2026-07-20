@@ -69,6 +69,7 @@ import (
 	"code.vikunja.io/api/pkg/modules/background/unsplash"
 	"code.vikunja.io/api/pkg/modules/background/upload"
 	"code.vikunja.io/api/pkg/modules/migration"
+	"code.vikunja.io/api/pkg/modules/migration/clickup"
 	csvmigrator "code.vikunja.io/api/pkg/modules/migration/csv"
 	migrationHandler "code.vikunja.io/api/pkg/modules/migration/handler"
 	microsofttodo "code.vikunja.io/api/pkg/modules/migration/microsoft-todo"
@@ -974,6 +975,16 @@ func registerAPIRoutes(a *echo.Group) {
 }
 
 func registerMigrations(m *echo.Group) {
+	// ClickUp
+	if config.MigrationClickupEnable.GetBool() {
+		clickupMigrationHandler := &migrationHandler.MigrationWeb{
+			MigrationStruct: func() migration.Migrator {
+				return &clickup.Migration{}
+			},
+		}
+		clickupMigrationHandler.RegisterMigrator(m)
+	}
+
 	// Todoist
 	if config.MigrationTodoistEnable.GetBool() {
 		todoistMigrationHandler := &migrationHandler.MigrationWeb{

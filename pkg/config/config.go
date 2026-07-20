@@ -183,6 +183,10 @@ const (
 	MigrationMicrosoftTodoClientID     Key = `migration.microsofttodo.clientid`
 	MigrationMicrosoftTodoClientSecret Key = `migration.microsofttodo.clientsecret`
 	MigrationMicrosoftTodoRedirectURL  Key = `migration.microsofttodo.redirecturl`
+	// ClickUp authenticates with a personal API token pasted directly into the
+	// frontend, not an OAuth redirect - so there's no clientid/clientsecret/
+	// redirecturl to configure, just the enable switch.
+	MigrationClickupEnable Key = `migration.clickup.enable`
 
 	CorsEnable  Key = `cors.enable`
 	CorsOrigins Key = `cors.origins`
@@ -471,6 +475,7 @@ func InitDefaultConfig() {
 	MigrationTodoistEnable.setDefault(false)
 	MigrationTrelloEnable.setDefault(false)
 	MigrationMicrosoftTodoEnable.setDefault(false)
+	MigrationClickupEnable.setDefault(false)
 	// Avatar
 	AvatarGravaterExpiration.setDefault(3600)
 	AvatarGravatarBaseURL.setDefault("https://www.gravatar.com")

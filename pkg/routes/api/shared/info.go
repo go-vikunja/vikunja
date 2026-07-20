@@ -21,6 +21,7 @@ import (
 	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
+	"code.vikunja.io/api/pkg/modules/migration/clickup"
 	csvmigrator "code.vikunja.io/api/pkg/modules/migration/csv"
 	microsofttodo "code.vikunja.io/api/pkg/modules/migration/microsoft-todo"
 	"code.vikunja.io/api/pkg/modules/migration/ticktick"
@@ -141,6 +142,10 @@ func BuildInfo() VikunjaInfos {
 	}
 	info.AuthInfo.OpenIDConnect.Providers = providers
 
+	if config.MigrationClickupEnable.GetBool() {
+		m := &clickup.Migration{}
+		info.AvailableMigrators = append(info.AvailableMigrators, m.Name())
+	}
 	if config.MigrationTodoistEnable.GetBool() {
 		m := &todoist.Migration{}
 		info.AvailableMigrators = append(info.AvailableMigrators, m.Name())
