@@ -133,15 +133,16 @@ func ensureNoDuplicates20260720120000(tx *xorm.Engine, table string, cols []stri
 	query := "SELECT " + strings.Join(quoted, ", ") + " FROM " + tx.Quote(table) +
 		" WHERE " + strings.Join(notNull, " AND ") +
 		" GROUP BY " + strings.Join(quoted, ", ") +
-		" HAVING COUNT(*) > 1 LIMIT 1"
+		" HAVING COUNT(*) > 1"
 	rows, err := tx.QueryString(query)
 	if err != nil {
 		return err
 	}
 	if len(rows) > 0 {
+		// Some unique-indexed columns hold secrets (token_hash, oauth codes, ...) — never log the values.
 		return fmt.Errorf(
-			"cannot recreate the unique index on %s (%s) because duplicate values exist, for example %v — remove the duplicates manually, then restart Vikunja",
-			table, strings.Join(cols, ", "), rows[0])
+			"cannot recreate the unique index on %s (%s) because %d sets of duplicate values exist — remove the duplicates manually, then restart Vikunja",
+			table, strings.Join(cols, ", "), len(rows))
 	}
 	return nil
 }
