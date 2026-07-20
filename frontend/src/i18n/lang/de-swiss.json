@@ -190,7 +190,8 @@
 			"desktop": {
 				"quickEntryShortcut": "Quick Entry Tastenkombination",
 				"shortcutRecorderPlaceholder": "Klicken, um Tastenkombination zu setzen",
-				"shortcutRecorderRecording": "Tastenkombination eingeben…"
+				"shortcutRecorderRecording": "Tastenkombination eingeben…",
+				"shortcutRecorderClear": "Tastenkürzel löschen"
 			},
 			"totp": {
 				"title": "Zweifaktor Authentifizierig",
@@ -437,6 +438,7 @@
 				"shared": "Geteilt mit diesen {type}",
 				"you": "Du",
 				"notShared": "Noch nicht mit einem {type} geteilt.",
+				"remove": "Dieses {type} entfernen",
 				"removeHeader": "Einen {type} von {sharable} entfernen",
 				"removeText": "Diesen {sharable} von {type} entfernen? Dies kann nicht rückgängig gemacht werden!",
 				"removeSuccess": "{sharable} wurde erfolgreich von {type} entfernt.",
@@ -560,6 +562,7 @@
 			"createSuccess": "Die Ansicht wurde erfolgreich erstellt.",
 			"titleRequired": "Bitte gib einen Titel ein.",
 			"delete": "Diese Ansicht löschen",
+			"edit": "Diese Ansicht bearbeiten",
 			"deleteText": "Bist du sicher, dass du diese Ansicht entfernen möchtest? Es wird nicht mehr möglich sein, sie zu verwenden, um Aufgaben in diesem Projekt anzuzeigen. Diese Aktion löscht keine Aufgaben. Dies kann nicht rückgängig gemacht werden!",
 			"deleteSuccess": "Diese Ansicht wurde erfolgreich gelöscht.",
 			"onlyAdminsCanEdit": "Nur Projektadministrator:innen können Ansichten bearbeiten.",
@@ -747,7 +750,8 @@
 		"imprint": "Immpressum",
 		"privacy": "Dateschutzerchlärig",
 		"closeSidebar": "Seitenleiste schließen",
-		"home": "Vikunja Startseite"
+		"home": "Vikunja Startseite",
+		"toggleChildProjects": "Unterprojekte ein-/ausschalten"
 	},
 	"misc": {
 		"loading": "Ladä…",
@@ -822,8 +826,11 @@
 			"orderedList": "Geordnete Liste",
 			"orderedListTooltip": "Erstelle eine Liste mit Nummerierung.",
 			"link": "Link",
+			"urlPlaceholder": "URL",
 			"image": "Bild",
 			"imageTooltip": "Lade ein Bild von deinem PC hoch.",
+			"altText": "Alternativer Text",
+			"altTextPlaceholder": "Beschreibe dieses Bild",
 			"horizontalRule": "Horizontalä Strich",
 			"horizontalRuleTooltip": "Teile einen Bereich.",
 			"text": "Text",
@@ -857,13 +864,16 @@
 		},
 		"multiselect": {
 			"createPlaceholder": "Erstellen",
-			"selectPlaceholder": "Druck uf Enter zum uuswähle"
+			"selectPlaceholder": "Druck uf Enter zum uuswähle",
+			"removeItem": "Dieses Element entfernen",
+			"clear": "Auswahl leeren"
 		},
 		"datepickerRange": {
 			"to": "Bis",
 			"from": "Von",
 			"fromto": "{from} bis {to}",
 			"date": "Datum",
+			"openCalendar": "Kalender öffnen",
 			"ranges": {
 				"today": "Heute",
 				"tomorrow": "Morgen",
@@ -938,6 +948,7 @@
 		"new": "Aufgabe erstellen",
 		"createSuccess": "Die Uufgab isch erfolgriich erstellt wordä.",
 		"addReminder": "Eine Erinnerung hinzufügen…",
+		"removeReminder": "Diese Erinnerung entfernen",
 		"doneSuccess": "Die Uufgab isch erfolgriich als \"Fertig\" markiert wordä.",
 		"undoneSuccess": "Die Uufgaab isch nüme als fertig markiert.",
 		"readOnlyCheckbox": "Du hast nur Lesezugriff auf diese Aufgabe und kannst sie nicht als erledigt markieren.",
@@ -960,6 +971,11 @@
 			"chooseDueDate": "Druck da, um es Fälligkeitsdatum z'setze",
 			"chooseStartDate": "Druck dah, um es Startdatum z'setze",
 			"chooseEndDate": "Druck da, um es Enddatum z'setze",
+			"removeDueDate": "Fälligkeitsdatum entfernen",
+			"removeStartDate": "Startdatum entfernen",
+			"removeEndDate": "Enddatum entfernen",
+			"removeRepeat": "Wiederholungsintervall entfernen",
+			"removeAssignee": "{user} als Zugewiesenen entfernen",
 			"move": "Aufgabe in ein anderes Projekt verschieben",
 			"done": "Als erledigt markieren!",
 			"undone": "Als unerledigt markierä",
@@ -1097,6 +1113,7 @@
 		"label": {
 			"placeholder": "Beginne zu schreiben, um ein Label hinzuzufügen…",
 			"createPlaceholder": "Das als neues Label hinzuefüege",
+			"removeLabel": "Label {label} entfernen",
 			"addSuccess": "Das Label isch erfolgriich hinzuegfüegt worde.",
 			"removeSuccess": "Das Label isch erfolgriich glöscht.",
 			"addCreateSuccess": "Das Label wurde erfolgreich erstellt und hinzugefügt.",
