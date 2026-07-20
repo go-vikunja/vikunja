@@ -18,6 +18,22 @@ Migrations are **irreversible in production**. Vikunja supports MySQL, PostgreSQ
    - SQLite has limited `ALTER TABLE`; prefer `xorm` migration helpers over raw SQL when possible.
    - PostgreSQL is strict about types; explicit casts are often required.
 
+## Syncing structs — never plain `tx.Sync` on an existing table
+
+xorm's `Sync` drops **every index and unique constraint the synced struct doesn't declare**. Partial-struct migrations (the usual "add a column" pattern) therefore silently wipe all other indexes on the table — this destroyed the `users` and `tasks` indexes of every upgraded install in v2.4.0 (issue #3244). On pgloader-converted Postgres DBs it even aborts the migration with 2BP01 because the PK index has a name xorm doesn't recognize (`idx_<oid>_primary`) and tries to drop.
+
+```go
+// WRONG — drops every index on users the struct doesn't declare
+return tx.Sync(users20260405194817{})
+
+// RIGHT — adds the column and its plain indexes, drops nothing
+return partialSync(tx, users20260405194817{})
+```
+
+- `partialSync` (in `migration.go`) is mandatory for any Sync into an **existing** table.
+- Because it sets `IgnoreConstrains`, `partialSync` does **not** create *unique* indexes — add a new unique index on an existing table explicitly (`CREATE UNIQUE INDEX` per dialect), and check for pre-existing duplicate values first so the migration fails with an actionable message instead of a raw constraint error.
+- Plain `tx.Sync` is fine only for **brand-new tables** (migrations whose `Rollback` drops the table).
+
 ## Error handling on DDL
 
 Every error from `tx.Exec`, `session.Exec`, or xorm calls must be handled. Silent discards are the most commonly flagged bug in migration reviews.
