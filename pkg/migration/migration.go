@@ -270,7 +270,7 @@ func renameColumn(x *xorm.Engine, tableName, oldColumn, newColumn string) error 
 	return nil
 }
 
-func initSchema(tx *xorm.Engine) error {
+func schemaBeans() []interface{} {
 	schemeBeans := []interface{}{}
 	schemeBeans = append(schemeBeans, models.GetTables()...)
 	schemeBeans = append(schemeBeans, files.GetTables()...)
@@ -278,5 +278,20 @@ func initSchema(tx *xorm.Engine) error {
 	schemeBeans = append(schemeBeans, migration.GetTables()...)
 	schemeBeans = append(schemeBeans, user.GetTables()...)
 	schemeBeans = append(schemeBeans, notifications.GetTables()...)
-	return tx.Sync2(schemeBeans...)
+	return schemeBeans
+}
+
+func initSchema(tx *xorm.Engine) error {
+	return tx.Sync2(schemaBeans()...)
+}
+
+// partialSync syncs a partial struct into an existing table. Plain tx.Sync would
+// drop every index and unique constraint the struct doesn't declare (#3244), so
+// a new unique index on an existing table must be created explicitly.
+func partialSync(tx *xorm.Engine, beans ...interface{}) error {
+	_, err := tx.SyncWithOptions(xorm.SyncOptions{
+		IgnoreConstrains:  true,
+		IgnoreDropIndices: true,
+	}, beans...)
+	return err
 }

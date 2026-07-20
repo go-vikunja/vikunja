@@ -34,7 +34,7 @@ func init() {
 		ID:          "20250402173109",
 		Description: "add extra settings links",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync(users20250402173109{})
+			return partialSync(tx, users20250402173109{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil
