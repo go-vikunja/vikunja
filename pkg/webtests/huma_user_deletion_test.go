@@ -17,6 +17,8 @@
 package webtests
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"net/http"
 	"testing"
 
@@ -37,22 +39,24 @@ const (
 	testUserPassword = "12345678"
 )
 
-// deletionTokenFor reads the cleartext account-deletion token RequestDeletion
-// stored for the user. RequestDeletion only mails the token, so the test pulls
-// it straight from user_tokens (kind 3 = TokenAccountDeletion).
+// deletionTokenFor returns a usable account-deletion token for the user.
+// Tokens are stored sha256-hashed, so the cleartext RequestDeletion mailed
+// cannot be read back; overwrite the stored hash with one for a known value
+// instead (kind 3 = TokenAccountDeletion).
 func deletionTokenFor(t *testing.T, userID int64) string {
 	t.Helper()
+	const rawToken = "webtestdeletiontoken"
+	hash := sha256.Sum256([]byte(rawToken))
 	s := db.NewSession()
 	defer s.Close()
-	tok := struct {
-		Token string `xorm:"token"`
-	}{}
-	has, err := s.Table("user_tokens").
+	updated, err := s.Table("user_tokens").
 		Where("user_id = ? AND kind = ?", userID, 3).
-		Get(&tok)
+		Update(map[string]interface{}{"token": hex.EncodeToString(hash[:])})
 	require.NoError(t, err)
-	require.True(t, has, "RequestDeletion must have stored a deletion token for user %d", userID)
-	return tok.Token
+	// The fixtures already hold a deletion token for some users, so more than one row can match.
+	require.NotZero(t, updated, "RequestDeletion must have stored a deletion token for user %d", userID)
+	require.NoError(t, s.Commit())
+	return rawToken
 }
 
 func deletionScheduledFor(t *testing.T, userID int64) bool {

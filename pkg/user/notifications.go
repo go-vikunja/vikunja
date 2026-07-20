@@ -99,7 +99,7 @@ func (n *ResetPasswordNotification) ToMail(lang string) *notifications.Mail {
 		Subject(i18n.T(lang, "notifications.password.reset.subject")).
 		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName())).
 		Line(i18n.T(lang, "notifications.password.reset.instructions")).
-		Action(i18n.T(lang, "notifications.common.actions.reset_password"), config.ServicePublicURL.GetString()+"?userPasswordReset="+n.Token.Token).
+		Action(i18n.T(lang, "notifications.common.actions.reset_password"), config.ServicePublicURL.GetString()+"?userPasswordReset="+n.Token.ClearTextToken).
 		Line(i18n.T(lang, "notifications.password.reset.valid_duration")).
 		Line(i18n.T(lang, "notifications.common.have_nice_day"))
 }

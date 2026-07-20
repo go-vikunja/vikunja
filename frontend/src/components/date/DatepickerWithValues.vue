@@ -41,6 +41,7 @@
 									<XButton
 										icon="calendar"
 										variant="secondary"
+										:aria-label="$t('input.datepickerRange.openCalendar')"
 										data-toggle
 									/>
 								</div>

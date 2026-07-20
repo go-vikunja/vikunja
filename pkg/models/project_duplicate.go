@@ -57,9 +57,10 @@ func (pd *ProjectDuplicate) CanCreate(s *xorm.Session, a web.Auth) (canCreate bo
 		return canRead, err
 	}
 
-	// Parent project exists + user has write access to is (-> can create new projects)
+	// Placing the copy under a parent requires write access to that parent.
+	// CanWrite hydrates the project, unlike CanCreate on the bare struct.
 	parent := &Project{ID: pd.ParentProjectID}
-	return parent.CanCreate(s, a)
+	return parent.CanWrite(s, a)
 }
 
 // Create duplicates a project
@@ -84,7 +85,7 @@ func (pd *ProjectDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 
 	pd.Project.ID = 0
 	pd.Project.Identifier = "" // Reset the identifier to trigger regenerating a new one
-	pd.Project.ParentProjectID = pd.ParentProjectID
+	pd.Project.ParentProjectID = &pd.ParentProjectID
 	// Set the owner to the current user
 	pd.Project.OwnerID = doer.GetID()
 	pd.Project.Title += " - duplicate"

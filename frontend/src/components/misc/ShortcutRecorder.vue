@@ -25,6 +25,7 @@
 		<BaseButton
 			v-if="modelValue"
 			class="clear-button"
+			:aria-label="$t('user.settings.desktop.shortcutRecorderClear')"
 			@click="clear"
 		>
 			<Icon icon="times" />

@@ -68,6 +68,8 @@
 			<span
 				v-if="task.attachments.length > 0"
 				class="project-task-icon"
+				role="img"
+				:aria-label="$t('task.attributes.attachment', task.attachments.length)"
 			>
 				<Icon icon="paperclip" />
 			</span>
@@ -154,7 +156,7 @@ const project = computed(() => projectStore.projects[props.task.projectId])
 	}
 
 	&[data-is-overdue] .dueDate {
-		color: var(--danger);
+		color: var(--danger-text);
 	}
 
 	.task-project {

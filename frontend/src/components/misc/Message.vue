@@ -1,5 +1,8 @@
 <template>
-	<div class="message-wrapper">
+	<div
+		class="message-wrapper"
+		:role="variant === 'danger' ? 'alert' : undefined"
+	>
 		<div
 			class="message"
 			:class="[variant, textAlignClass]"

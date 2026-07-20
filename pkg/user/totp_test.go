@@ -22,6 +22,7 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
+	"code.vikunja.io/api/pkg/utils"
 
 	"github.com/pquerna/otp/totp"
 	"github.com/stretchr/testify/assert"
@@ -107,12 +108,18 @@ func TestHandleFailedTOTPAuthLockoutCanBeUnlockedByPasswordReset(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, tokens, "HandleFailedTOTPAuth should have persisted a password reset token")
 	token := tokens[len(tokens)-1]
+	// Tokens are stored hashed and the cleartext is never persisted, so overwrite
+	// the stored hash with a known value's hash to exercise the reset end-to-end.
+	const rawToken = "totp-lockout-reset-token"
+	token.Token = utils.Sha256Hex(rawToken)
+	_, err = s.Where("id = ?", token.ID).Cols("token").Update(token)
+	require.NoError(t, err)
 	require.NoError(t, s.Commit())
 
 	s2 := db.NewSession()
 	defer s2.Close()
 	_, err = ResetPassword(s2, &PasswordReset{
-		Token:       token.Token,
+		Token:       rawToken,
 		NewPassword: "new-password-123",
 	})
 	require.NoError(t, err)

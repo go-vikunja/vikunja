@@ -226,6 +226,7 @@ function doDelete() {
 						<XButton
 							danger
 							icon="trash-alt"
+							:aria-label="$t('project.webhooks.delete')"
 							@click="() => confirmDelete(w.id)"
 						/>
 					</td>

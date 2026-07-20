@@ -94,7 +94,7 @@ func UpdateEmail(s *xorm.Session, update *EmailUpdate) (err error) {
 	n := &EmailConfirmNotification{
 		User:         update.User,
 		IsNew:        false,
-		ConfirmToken: token.Token,
+		ConfirmToken: token.ClearTextToken,
 	}
 
 	err = notifications.Notify(update.User, n, s)

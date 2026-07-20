@@ -97,34 +97,50 @@
 						<table class="table has-actions is-hoverable is-fullwidth mbe-0">
 							<thead>
 								<tr>
-									<th v-if="activeColumns.index">
+									<th
+										v-if="activeColumns.index"
+										:aria-sort="ariaSort(sortBy.index)"
+									>
 										#
 										<Sort
 											:order="sortBy.index"
+											label="#"
 											@click="sort('index', $event)"
 										/>
 									</th>
-									<th v-if="activeColumns.done">
+									<th
+										v-if="activeColumns.done"
+										:aria-sort="ariaSort(sortBy.done)"
+									>
 										{{ $t('task.attributes.done') }}
 										<Sort
 											:order="sortBy.done"
+											:label="$t('task.attributes.done')"
 											@click="sort('done', $event)"
 										/>
 									</th>
 									<th v-if="activeColumns.project">
 										{{ $t('task.attributes.project') }}
 									</th>
-									<th v-if="activeColumns.title">
+									<th
+										v-if="activeColumns.title"
+										:aria-sort="ariaSort(sortBy.title)"
+									>
 										{{ $t('task.attributes.title') }}
 										<Sort
 											:order="sortBy.title"
+											:label="$t('task.attributes.title')"
 											@click="sort('title', $event)"
 										/>
 									</th>
-									<th v-if="activeColumns.priority">
+									<th
+										v-if="activeColumns.priority"
+										:aria-sort="ariaSort(sortBy.priority)"
+									>
 										{{ $t('task.attributes.priority') }}
 										<Sort
 											:order="sortBy.priority"
+											:label="$t('task.attributes.priority')"
 											@click="sort('priority', $event)"
 										/>
 									</th>
@@ -134,55 +150,83 @@
 									<th v-if="activeColumns.assignees">
 										{{ $t('task.attributes.assignees') }}
 									</th>
-									<th v-if="activeColumns.dueDate">
+									<th
+										v-if="activeColumns.dueDate"
+										:aria-sort="ariaSort(sortBy.due_date)"
+									>
 										{{ $t('task.attributes.dueDate') }}
 										<Sort
 											:order="sortBy.due_date"
+											:label="$t('task.attributes.dueDate')"
 											@click="sort('due_date', $event)"
 										/>
 									</th>
 									<th v-if="activeColumns.commentCount">
 										{{ $t('task.attributes.commentCount') }}
 									</th>
-									<th v-if="activeColumns.startDate">
+									<th
+										v-if="activeColumns.startDate"
+										:aria-sort="ariaSort(sortBy.start_date)"
+									>
 										{{ $t('task.attributes.startDate') }}
 										<Sort
 											:order="sortBy.start_date"
+											:label="$t('task.attributes.startDate')"
 											@click="sort('start_date', $event)"
 										/>
 									</th>
-									<th v-if="activeColumns.endDate">
+									<th
+										v-if="activeColumns.endDate"
+										:aria-sort="ariaSort(sortBy.end_date)"
+									>
 										{{ $t('task.attributes.endDate') }}
 										<Sort
 											:order="sortBy.end_date"
+											:label="$t('task.attributes.endDate')"
 											@click="sort('end_date', $event)"
 										/>
 									</th>
-									<th v-if="activeColumns.percentDone">
+									<th
+										v-if="activeColumns.percentDone"
+										:aria-sort="ariaSort(sortBy.percent_done)"
+									>
 										{{ $t('task.attributes.percentDone') }}
 										<Sort
 											:order="sortBy.percent_done"
+											:label="$t('task.attributes.percentDone')"
 											@click="sort('percent_done', $event)"
 										/>
 									</th>
-									<th v-if="activeColumns.doneAt">
+									<th
+										v-if="activeColumns.doneAt"
+										:aria-sort="ariaSort(sortBy.done_at)"
+									>
 										{{ $t('task.attributes.doneAt') }}
 										<Sort
 											:order="sortBy.done_at"
+											:label="$t('task.attributes.doneAt')"
 											@click="sort('done_at', $event)"
 										/>
 									</th>
-									<th v-if="activeColumns.created">
+									<th
+										v-if="activeColumns.created"
+										:aria-sort="ariaSort(sortBy.created)"
+									>
 										{{ $t('task.attributes.created') }}
 										<Sort
 											:order="sortBy.created"
+											:label="$t('task.attributes.created')"
 											@click="sort('created', $event)"
 										/>
 									</th>
-									<th v-if="activeColumns.updated">
+									<th
+										v-if="activeColumns.updated"
+										:aria-sort="ariaSort(sortBy.updated)"
+									>
 										{{ $t('task.attributes.updated') }}
 										<Sort
 											:order="sortBy.updated"
+											:label="$t('task.attributes.updated')"
 											@click="sort('updated', $event)"
 										/>
 									</th>
@@ -382,6 +426,16 @@ watch(
 	() => setActiveColumnsSortParam(),
 	{deep: true},
 )
+
+function ariaSort(order: 'asc' | 'desc' | 'none' | undefined): 'ascending' | 'descending' | undefined {
+	if (order === 'asc') {
+		return 'ascending'
+	}
+	if (order === 'desc') {
+		return 'descending'
+	}
+	return undefined
+}
 
 // Allow sorting by multiple columns only when ctrl is pressed
 function sort(property: keyof SortBy, event?: MouseEvent) {

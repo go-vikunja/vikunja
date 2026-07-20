@@ -664,7 +664,7 @@ func convertToVikunja(rows [][]string, config *ImportConfig) []*models.ProjectWi
 			projects[projectName] = &models.ProjectWithTasksAndBuckets{
 				Project: models.Project{
 					ID:              int64(len(projects)+2) + pseudoParentID,
-					ParentProjectID: pseudoParentID,
+					ParentProjectID: &pseudoParentID,
 					Title:           projectName,
 				},
 			}

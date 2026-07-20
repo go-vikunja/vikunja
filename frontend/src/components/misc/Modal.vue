@@ -8,6 +8,7 @@
 				{ 'has-overflow': overflow },
 				variant,
 			]"
+			:aria-labelledby="headerLabelId"
 			v-bind="attrs"
 			@cancel.prevent="$emit('close')"
 		>
@@ -30,7 +31,10 @@
 					}"
 				>
 					<slot>
-						<div class="modal-header">
+						<div
+							:id="headerId"
+							class="modal-header"
+						>
 							<slot name="header" />
 						</div>
 						<div class="content">
@@ -62,7 +66,7 @@
 
 <script lang="ts" setup>
 import BaseButton from '@/components/base/BaseButton.vue'
-import {ref, useAttrs, watch, onBeforeUnmount, onMounted} from 'vue'
+import {computed, ref, useAttrs, useId, useSlots, watch, onBeforeUnmount, onMounted} from 'vue'
 
 const props = withDefaults(defineProps<{
 	enabled?: boolean,
@@ -85,6 +89,13 @@ defineOptions({
 const TRANSITION_DURATION = 150
 
 const attrs = useAttrs()
+const slots = useSlots()
+const headerId = useId()
+// Name the dialog from its header when the fallback layout renders one and the
+// caller didn't pass an explicit aria-label through the attrs.
+const headerLabelId = computed(() =>
+	!attrs['aria-label'] && !slots.default && slots.header ? headerId : undefined,
+)
 const dialogRef = ref<HTMLDialogElement | null>(null)
 const previouslyFocused = ref<Element | null>(null)
 const showDialog = ref(false)

@@ -52,7 +52,7 @@ const minimumPriority = computed(() => {
 
 <style lang="scss" scoped>
 .high-priority {
-	color: var(--danger);
+	color: var(--danger-text);
 	inline-size: auto !important; // To override the width set in tasks
 }
 

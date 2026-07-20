@@ -17,6 +17,7 @@
 package openid
 
 import (
+	"encoding/json"
 	"testing"
 	"time"
 
@@ -310,7 +311,8 @@ func TestGetOrCreateUser(t *testing.T) {
 		require.NoError(t, err)
 
 		cl := &claims{
-			Email: "user11@example.com",
+			Email:         "user11@example.com",
+			EmailVerified: true,
 		}
 		provider := &Provider{
 			EmailFallback: true,
@@ -327,6 +329,51 @@ func TestGetOrCreateUser(t *testing.T) {
 		usersAfter, err := s.Count(&user.User{})
 		require.NoError(t, err)
 		assert.Equal(t, usersBefore, usersAfter, "no new user should have been created")
+	})
+	t.Run("ProviderFallback: unverified email does not link to an existing local user", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// GHSA-xv7q-fvmc-jx96: an attacker asserting a victim's email without
+		// email_verified must not be linked to the victim's local account.
+		cl := &claims{
+			Email:             "user11@example.com",
+			EmailVerified:     false,
+			PreferredUsername: "attackerUser",
+		}
+		provider := &Provider{
+			EmailFallback: true,
+		}
+		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "attacker-subject"}
+
+		u, err := getOrCreateUser(s, cl, provider, idToken)
+		require.NoError(t, err)
+		err = s.Commit()
+		require.NoError(t, err)
+
+		assert.NotEqual(t, 11, int(u.ID), "must not link to user 11 via an unverified email")
+		assert.Equal(t, "https://some.issuer", u.Issuer, "a new separate account should have been created")
+		assert.Equal(t, "attacker-subject", u.Subject)
+	})
+	t.Run("ProviderFallback: verified email links to existing local user despite unknown subject", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		cl := &claims{
+			Email:         "user11@example.com",
+			EmailVerified: true,
+		}
+		provider := &Provider{
+			EmailFallback: true,
+		}
+		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "attacker-subject"}
+
+		u, err := getOrCreateUser(s, cl, provider, idToken)
+		require.NoError(t, err)
+		assert.Equal(t, 11, int(u.ID), "user id 11 expected")
+		assert.Equal(t, user.IssuerLocal, u.Issuer, "User should be a local one")
 	})
 	t.Run("ProviderFallback: empty email claim does not link to an arbitrary local user", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -366,7 +413,8 @@ func TestGetOrCreateUser(t *testing.T) {
 		defer s.Close()
 
 		cl := &claims{
-			Email: "user11@example.com",
+			Email:         "user11@example.com",
+			EmailVerified: true,
 		}
 		provider := &Provider{
 			UsernameFallback: true,
@@ -603,4 +651,25 @@ func TestSyncUserAvatarFromOpenID(t *testing.T) {
 		require.NoError(t, err)
 		assert.Empty(t, updatedUser.AvatarProvider, "avatar provider should remain empty for non-openid user")
 	})
+}
+
+func TestEmailVerifiedClaimDecoding(t *testing.T) {
+	// Some OIDC providers emit email_verified as a JSON string; both forms must
+	// decode without breaking the whole claims parse (GHSA-xv7q-fvmc-jx96).
+	cases := map[string]bool{
+		`{"email_verified": true}`:    true,
+		`{"email_verified": false}`:   false,
+		`{"email_verified": "true"}`:  true,
+		`{"email_verified": "false"}`: false,
+		`{"email_verified": "1"}`:     true,
+		`{"email_verified": "0"}`:     false,
+		`{}`:                          false,
+	}
+	for body, want := range cases {
+		t.Run(body, func(t *testing.T) {
+			var cl claims
+			require.NoError(t, json.Unmarshal([]byte(body), &cl))
+			assert.Equal(t, want, bool(cl.EmailVerified))
+		})
+	}
 }

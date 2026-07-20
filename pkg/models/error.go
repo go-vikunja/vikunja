@@ -175,9 +175,10 @@ const ErrCodeInvalidTimezone = 2003
 // HTTPError holds the http error description
 func (err ErrInvalidTimezone) HTTPError() web.HTTPError {
 	return web.HTTPError{
-		HTTPCode: http.StatusBadRequest,
-		Code:     ErrCodeInvalidTimezone,
-		Message:  fmt.Sprintf("The timezone '%s' is invalid", err.Name),
+		HTTPCode:   http.StatusBadRequest,
+		Code:       ErrCodeInvalidTimezone,
+		Message:    fmt.Sprintf("The timezone '%s' is invalid", err.Name),
+		I18nParams: map[string]string{"timezone": err.Name},
 	}
 }
 
@@ -2185,9 +2186,10 @@ const ErrCodeInvalidAPITokenPermission = 14002
 // HTTPError holds the http error description
 func (err *ErrInvalidAPITokenPermission) HTTPError() web.HTTPError {
 	return web.HTTPError{
-		HTTPCode: http.StatusBadRequest,
-		Code:     ErrCodeInvalidAPITokenPermission,
-		Message:  fmt.Sprintf("The permission %s of group %s is invalid.", err.Permission, err.Group),
+		HTTPCode:   http.StatusBadRequest,
+		Code:       ErrCodeInvalidAPITokenPermission,
+		Message:    fmt.Sprintf("The permission %s of group %s is invalid.", err.Permission, err.Group),
+		I18nParams: map[string]string{"permission": err.Permission, "group": err.Group},
 	}
 }
 

@@ -106,7 +106,7 @@ func RequestDeletion(s *xorm.Session, user *User) (err error) {
 
 	return notifications.Notify(user, &AccountDeletionConfirmNotification{
 		User:         user,
-		ConfirmToken: token.Token,
+		ConfirmToken: token.ClearTextToken,
 	}, s)
 }
 

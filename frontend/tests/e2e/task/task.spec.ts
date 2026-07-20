@@ -83,7 +83,7 @@ async function uploadAttachmentAndVerify(page: Page, taskId: number, file = 'tes
 	await fileChooser.setFiles(file)
 	await uploadAttachmentPromise
 
-	await expect(page.locator('.attachments .attachments .files button.attachment')).toBeVisible()
+	await expect(page.locator('.attachments .attachments .files .attachment')).toBeVisible()
 }
 
 test.describe('Task', () => {
@@ -352,7 +352,7 @@ test.describe('Task', () => {
 			await expect(saveButton).toBeVisible()
 			await saveButton.click()
 
-			await expect(page.locator('.task-view .details.content.description h3 span.is-small.has-text-success')).toContainText('Saved!')
+			await expect(page.locator('.task-view .details.content.description h2 span.is-small.has-text-success')).toContainText('Saved!')
 		})
 
 		test('autosaves the description when leaving the task view', async ({authenticatedPage: page}) => {
@@ -724,9 +724,17 @@ test.describe('Task', () => {
 			await pasteFile(editor, 'image.jpg', 'image/jpeg')
 
 			await uploadAttachmentPromise
-			await expect(page.locator('.attachments .attachments .files button.attachment')).toBeVisible()
+
+			// A freshly inserted image now prompts for alt text.
+			const altInput = page.locator('input.input[placeholder="Describe this image"]')
+			await expect(altInput).toBeVisible()
+			await altInput.fill('Pasted screenshot')
+			await altInput.press('Enter')
+
+			await expect(page.locator('.attachments .attachments .files .attachment')).toBeVisible()
 			const img = page.locator('.task-view .details.content.description .tiptap__editor .tiptap.ProseMirror img')
 			await expect(img).toBeVisible()
+			await expect(img).toHaveAttribute('alt', 'Pasted screenshot')
 			const naturalWidth = await img.evaluate((el: HTMLImageElement) => el.naturalWidth)
 			expect(naturalWidth).toBeGreaterThan(0)
 		})
@@ -969,7 +977,7 @@ test.describe('Task', () => {
 
 			await uploadAttachmentAndVerify(page, tasks[0].id, 'tests/fixtures/test.pdf')
 
-			await page.locator('.attachments .attachments .files button.attachment .filename').click()
+			await page.locator('.attachments .attachments .files .attachment .filename').click()
 
 			const iframe = page.locator('iframe.pdf-preview-iframe')
 			await expect(iframe).toBeVisible()
@@ -999,7 +1007,7 @@ test.describe('Task', () => {
 			// (download, copy URL, delete) inside the attachment row. Attachments.vue
 			// requests `trash-alt` but FontAwesome renders it as `trash-can`.
 			const deleteButton = page.locator(
-				'.attachments .attachments .files button.attachment .attachment-info-meta-button:has(svg[data-icon="trash-can"])',
+				'.attachments .attachments .files .attachment .attachment-info-meta-button:has(svg[data-icon="trash-can"])',
 			).first()
 			await expect(deleteButton).toBeVisible()
 
@@ -1012,7 +1020,7 @@ test.describe('Task', () => {
 			await page.locator('dialog[open] .modal-content .actions .button').filter({hasText: 'Do it!'}).click()
 			await deleted
 
-			await expect(page.locator('.attachments .attachments .files button.attachment')).toHaveCount(0)
+			await expect(page.locator('.attachments .attachments .files .attachment')).toHaveCount(0)
 		})
 
 		test('read-only shared user cannot delete attachments', async ({authenticatedPage: page, apiContext, currentUser}) => {
@@ -1065,12 +1073,12 @@ test.describe('Task', () => {
 			await page.goto(`/tasks/${sharedTask.id}`)
 
 			// The attachment must be visible to the reader.
-			await expect(page.locator('.attachments .attachments .files button.attachment')).toBeVisible()
+			await expect(page.locator('.attachments .attachments .files .attachment')).toBeVisible()
 
 			// The delete control renders only when editEnabled is true
 			// (see Attachments.vue). A read-only viewer should not see it.
 			await expect(page.locator(
-				'.attachments .attachments .files button.attachment .attachment-info-meta-button:has(svg[data-icon="trash-can"])',
+				'.attachments .attachments .files .attachment .attachment-info-meta-button:has(svg[data-icon="trash-can"])',
 			)).toHaveCount(0)
 		})
 
@@ -1101,7 +1109,7 @@ test.describe('Task', () => {
 			await expect(page.locator('.task-view .checklist-summary')).toContainText('1 of 5 tasks')
 			await page.locator('.tiptap__editor ul > li input[type=checkbox]').nth(2).click()
 
-			await expect(page.locator('.task-view .details.content.description h3 span.is-small.has-text-success')).toContainText('Saved!')
+			await expect(page.locator('.task-view .details.content.description h2 span.is-small.has-text-success')).toContainText('Saved!')
 			await expect(page.locator('.tiptap__editor ul > li input[type=checkbox]').nth(2)).toBeChecked()
 			await expect(page.locator('.tiptap__editor input[type=checkbox]')).toHaveCount(5)
 			await expect(page.locator('.task-view .checklist-summary')).toContainText('2 of 5 tasks')
@@ -1125,7 +1133,7 @@ test.describe('Task', () => {
 			await expect(page.locator('.task-view .checklist-summary')).toContainText('0 of 2 tasks')
 			await page.locator('.tiptap__editor ul > li input[type=checkbox]').first().click()
 
-			await expect(page.locator('.task-view .details.content.description h3 span.is-small.has-text-success')).toContainText('Saved!')
+			await expect(page.locator('.task-view .details.content.description h2 span.is-small.has-text-success')).toContainText('Saved!')
 
 			await expect(page.locator('.task-view .checklist-summary')).toContainText('1 of 2 tasks')
 
@@ -1172,7 +1180,7 @@ test.describe('Task', () => {
 			// Toggle only the second checkbox
 			await page.locator('.tiptap__editor ul > li input[type=checkbox]').nth(1).click()
 
-			await expect(page.locator('.task-view .details.content.description h3 span.is-small.has-text-success')).toContainText('Saved!')
+			await expect(page.locator('.task-view .details.content.description h2 span.is-small.has-text-success')).toContainText('Saved!')
 			await expect(page.locator('.task-view .checklist-summary')).toContainText('1 of 3 tasks')
 
 			// Verify only the second checkbox is checked, not the others

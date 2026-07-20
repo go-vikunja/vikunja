@@ -285,7 +285,7 @@ func convertMicrosoftTodoData(todoData []*project) (vikunjsStructure []*models.P
 			Project: models.Project{
 				Title:           l.DisplayName,
 				ID:              int64(index+1) + pseudoParentID,
-				ParentProjectID: pseudoParentID,
+				ParentProjectID: &pseudoParentID,
 			},
 		}
 

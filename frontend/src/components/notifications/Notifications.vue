@@ -7,6 +7,7 @@
 		>
 			<BaseButton
 				class="trigger-button"
+				:aria-expanded="showNotifications"
 				@click.stop="showNotifications = !showNotifications"
 			>
 				<span class="is-sr-only">{{ $t('notification.title') }}</span>

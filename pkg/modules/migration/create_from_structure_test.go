@@ -53,7 +53,7 @@ func TestInsertFromStructure(t *testing.T) {
 				Project: models.Project{
 					Title:           "Testproject1",
 					Description:     "Something",
-					ParentProjectID: 1,
+					ParentProjectID: models.Ptr(int64(1)),
 				},
 				Buckets: []*models.Bucket{
 					{

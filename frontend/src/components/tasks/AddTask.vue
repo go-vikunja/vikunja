@@ -72,6 +72,7 @@ import {parseSubtasksViaIndention} from '@/helpers/parseSubtasksViaIndention'
 import TaskRelationService from '@/services/taskRelation'
 import TaskRelationModel from '@/models/taskRelation'
 import {getLabelsFromPrefix} from '@/modules/quickAddMagic'
+import {error} from '@/message'
 
 import {useAuthStore} from '@/stores/auth'
 import {useTaskStore} from '@/stores/tasks'
@@ -140,7 +141,15 @@ async function addTask() {
 	// In the store it will only ever see one task at a time so there's no way to reliably 
 	// check if a new label was created before (because everything happens async).
 	const allLabels = tasksToCreate.map(({title}) => getLabelsFromPrefix(title, authStore.settings.frontendSettings.quickAddMagicMode) ?? [])
-	await taskStore.ensureLabelsExist(allLabels.flat())
+	const requestedLabels = [...new Set(allLabels.flat())]
+	const resolvedLabels = await taskStore.ensureLabelsExist(requestedLabels)
+
+	// Skipped labels (e.g. link shares may not create them) don't block task creation; just tell the user.
+	const resolvedTitles = new Set(resolvedLabels.map(l => l.title.toLowerCase()))
+	const failedLabels = requestedLabels.filter(title => !resolvedTitles.has(title.toLowerCase()))
+	if (failedLabels.length > 0) {
+		error({message: t('task.label.createFailed', {labels: failedLabels.join(', ')})})
+	}
 
 	const taskCollectionService = new TaskService()
 	const projectIndices = new Map<number, number>()

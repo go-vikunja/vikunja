@@ -95,6 +95,63 @@ func TestAPIToken_Create(t *testing.T) {
 	})
 }
 
+// nonUserAuth is a web.Auth that is neither *user.User nor *models.LinkSharing.
+// It proves the API-token guard rejects by principal type, not by matching the
+// concrete link-share struct (GHSA-vvcv-vpph-h844).
+type nonUserAuth struct {
+	id int64
+}
+
+func (a *nonUserAuth) GetID() int64 { return a.id }
+
+func TestAPIToken_RejectsNonUserPrincipal(t *testing.T) {
+	// ID 2 collides with user 2, who owns token 3.
+	a := &nonUserAuth{id: 2}
+
+	t.Run("CanCreate", func(t *testing.T) {
+		s := db.NewSession()
+		defer s.Close()
+		db.LoadAndAssertFixtures(t)
+
+		can, err := (&APIToken{}).CanCreate(s, a)
+		require.Error(t, err)
+		assert.False(t, can)
+	})
+	t.Run("CanDelete", func(t *testing.T) {
+		s := db.NewSession()
+		defer s.Close()
+		db.LoadAndAssertFixtures(t)
+
+		can, err := (&APIToken{ID: 3}).CanDelete(s, a)
+		require.Error(t, err)
+		assert.False(t, can)
+
+		exists, err := s.Where("id = ?", 3).Exist(&APIToken{})
+		require.NoError(t, err)
+		assert.True(t, exists, "token must be retained")
+	})
+	t.Run("Create", func(t *testing.T) {
+		s := db.NewSession()
+		defer s.Close()
+		db.LoadAndAssertFixtures(t)
+
+		err := (&APIToken{}).Create(s, a)
+		require.Error(t, err)
+
+		exists, err := s.Where("owner_id = ?", 2).Count(&APIToken{})
+		require.NoError(t, err)
+		assert.Equal(t, int64(1), exists, "no token must be created for the colliding id")
+	})
+	t.Run("ReadAll", func(t *testing.T) {
+		s := db.NewSession()
+		defer s.Close()
+		db.LoadAndAssertFixtures(t)
+
+		_, _, _, err := (&APIToken{}).ReadAll(s, a, "", 1, 50)
+		require.Error(t, err)
+	})
+}
+
 func TestAPIToken_HasCaldavAccess(t *testing.T) {
 	t.Run("has caldav access", func(t *testing.T) {
 		token := &APIToken{

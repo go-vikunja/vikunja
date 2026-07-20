@@ -82,9 +82,9 @@ func insertFromStructure(s *xorm.Session, str []*models.ProjectWithTasksAndBucke
 
 		oldID := p.ID
 
-		if p.ParentProjectID != 0 {
-			childRelations[p.ParentProjectID] = append(childRelations[p.ParentProjectID], oldID)
-			p.ParentProjectID = 0
+		if p.ParentProjectID != nil && *p.ParentProjectID != 0 {
+			childRelations[*p.ParentProjectID] = append(childRelations[*p.ParentProjectID], oldID)
+			p.ParentProjectID = nil
 		}
 
 		p.ID = 0
@@ -114,7 +114,7 @@ func insertFromStructure(s *xorm.Session, str []*models.ProjectWithTasksAndBucke
 				continue
 			}
 
-			child.ParentProjectID = parent.ID
+			child.ParentProjectID = models.Ptr(parent.ID)
 			err = child.Update(s, user)
 			if err != nil {
 				return err
@@ -218,6 +218,14 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		log.Debugf("[creating structure] Created bucket %d, old ID was %d", bucket.ID, oldID)
 	}
 
+	// project_view_id is intentionally not writable through Bucket.Update
+	// (blocks cross-tenant relocation, GHSA-569v). The importer legitimately
+	// remaps buckets onto same-project views, so persist that column directly.
+	persistBucketView := func(b *models.Bucket) error {
+		_, err := s.Where("id = ?", b.ID).Cols("project_view_id").Update(b)
+		return err
+	}
+
 	// Create all views, create default views if we don't have any
 	viewsByOldIDs := make(map[int64]*models.ProjectView, len(oldViews))
 	if len(oldViews) > 0 {
@@ -260,7 +268,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 			}
 
 			bucket.ProjectViewID = newView.ID
-			err = bucket.Update(s, user)
+			err = persistBucketView(bucket)
 			if err != nil {
 				return
 			}
@@ -279,7 +287,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 			if view.ViewKind == models.ProjectViewKindKanban {
 				for _, b := range bucketsByOldID {
 					b.ProjectViewID = view.ID
-					err = b.Update(s, user)
+					err = persistBucketView(b)
 					if err != nil {
 						return
 					}

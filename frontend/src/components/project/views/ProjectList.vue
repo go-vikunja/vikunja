@@ -341,6 +341,17 @@ function handleListNavigation(e: KeyboardEvent) {
 		if (e.isComposing) {
 			return
 		}
+
+		// Links and buttons activate natively on Enter; leave them alone
+		if (e.target instanceof HTMLElement && e.target.closest('a, button, [role="button"]')) {
+			return
+		}
+
+		// Only act when a row was focused via J/K roving navigation
+		if (focusedIndex.value < 0) {
+			return
+		}
+
 		e.preventDefault()
 		taskRefs.value[focusedIndex.value]?.click(e)
 	}

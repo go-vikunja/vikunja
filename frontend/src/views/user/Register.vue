@@ -81,7 +81,10 @@
 
 			<p class="mbs-2">
 				{{ $t('user.auth.alreadyHaveAnAccount') }}
-				<RouterLink :to="{ name: 'user.login' }">
+				<RouterLink
+					:to="{ name: 'user.login' }"
+					class="inline-link"
+				>
 					{{ $t('user.auth.login') }}
 				</RouterLink>
 			</p>
@@ -250,3 +253,10 @@ async function submit() {
 	}
 }
 </script>
+
+<style lang="scss" scoped>
+// Underline links sitting inside body text so they're not distinguished by color alone
+.inline-link {
+	text-decoration: underline;
+}
+</style>

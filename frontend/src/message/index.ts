@@ -6,7 +6,7 @@ export function getErrorText(r): string {
 
 	if (data?.code) {
 		const path = `error.${data.code}`
-		let message = i18n.global.t(path)
+		let message = i18n.global.t(path, data.i18n_params ?? {})
 
 		if (data?.code && data?.message && (data.code === 4016 || data.code === 4017 || data.code === 4018 || data.code === 4019 || data.code === 4024)) {
 			message += '\n' + data.message

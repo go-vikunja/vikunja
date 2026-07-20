@@ -1,10 +1,18 @@
 <template>
-	<div class="editor-toolbar">
+	<div
+		ref="toolbarRef"
+		class="editor-toolbar"
+		role="toolbar"
+		:aria-label="$t('input.editor.toolbarLabel')"
+		@keydown="onToolbarKeydown"
+		@focusin="onToolbarFocusin"
+	>
 		<div class="editor-toolbar__segment">
 			<BaseButton
 				v-tooltip="$t('input.editor.heading1')"
 				class="editor-toolbar__button"
 				:class="{ 'is-active': editor.isActive('heading', { level: 1 }) }"
+				:aria-pressed="editor.isActive('heading', { level: 1 })"
 				@click="editor.chain().focus().toggleHeading({ level: 1 }).run()"
 			>
 				<span class="icon">
@@ -20,6 +28,7 @@
 				v-tooltip="$t('input.editor.heading2')"
 				class="editor-toolbar__button"
 				:class="{ 'is-active': editor.isActive('heading', { level: 2 }) }"
+				:aria-pressed="editor.isActive('heading', { level: 2 })"
 				@click="editor.chain().focus().toggleHeading({ level: 2 }).run()"
 			>
 				<span class="icon">
@@ -35,6 +44,7 @@
 				v-tooltip="$t('input.editor.heading3')"
 				class="editor-toolbar__button"
 				:class="{ 'is-active': editor.isActive('heading', { level: 3 }) }"
+				:aria-pressed="editor.isActive('heading', { level: 3 })"
 				@click="editor.chain().focus().toggleHeading({ level: 3 }).run()"
 			>
 				<span class="icon">
@@ -53,6 +63,7 @@
 				v-tooltip="$t('input.editor.bold')"
 				class="editor-toolbar__button"
 				:class="{ 'is-active': editor.isActive('bold') }"
+				:aria-pressed="editor.isActive('bold')"
 				@click="editor.chain().focus().toggleBold().run()"
 			>
 				<span class="icon">
@@ -64,6 +75,7 @@
 				v-tooltip="$t('input.editor.italic')"
 				class="editor-toolbar__button"
 				:class="{ 'is-active': editor.isActive('italic') }"
+				:aria-pressed="editor.isActive('italic')"
 				@click="editor.chain().focus().toggleItalic().run()"
 			>
 				<span class="icon">
@@ -75,6 +87,7 @@
 				v-tooltip="$t('input.editor.underline')"
 				class="editor-toolbar__button"
 				:class="{ 'is-active': editor.isActive('underline') }"
+				:aria-pressed="editor.isActive('underline')"
 				@click="editor.chain().focus().toggleUnderline().run()"
 			>
 				<span class="icon">
@@ -86,6 +99,7 @@
 				v-tooltip="$t('input.editor.strikethrough')"
 				class="editor-toolbar__button"
 				:class="{ 'is-active': editor.isActive('strike') }"
+				:aria-pressed="editor.isActive('strike')"
 				@click="editor.chain().focus().toggleStrike().run()"
 			>
 				<span class="icon">
@@ -100,6 +114,7 @@
 				v-tooltip="$t('input.editor.code')"
 				class="editor-toolbar__button"
 				:class="{ 'is-active': editor.isActive('codeBlock') }"
+				:aria-pressed="editor.isActive('codeBlock')"
 				@click="editor.chain().focus().toggleCodeBlock().run()"
 			>
 				<span class="icon">
@@ -111,6 +126,7 @@
 				v-tooltip="$t('input.editor.quote')"
 				class="editor-toolbar__button"
 				:class="{ 'is-active': editor.isActive('blockquote') }"
+				:aria-pressed="editor.isActive('blockquote')"
 				@click="editor.chain().focus().toggleBlockquote().run()"
 			>
 				<span class="icon">
@@ -125,6 +141,7 @@
 				v-tooltip="$t('input.editor.bulletList')"
 				class="editor-toolbar__button"
 				:class="{ 'is-active': editor.isActive('bulletList') }"
+				:aria-pressed="editor.isActive('bulletList')"
 				@click="editor.chain().focus().toggleBulletList().run()"
 			>
 				<span class="icon">
@@ -136,6 +153,7 @@
 				v-tooltip="$t('input.editor.orderedList')"
 				class="editor-toolbar__button"
 				:class="{ 'is-active': editor.isActive('orderedList') }"
+				:aria-pressed="editor.isActive('orderedList')"
 				@click="editor.chain().focus().toggleOrderedList().run()"
 			>
 				<span class="icon">
@@ -147,6 +165,7 @@
 				v-tooltip="$t('input.editor.taskList')"
 				class="editor-toolbar__button"
 				:class="{ 'is-active': editor.isActive('taskList') }"
+				:aria-pressed="editor.isActive('taskList')"
 				@click="editor.chain().focus().toggleTaskList().run()"
 			>
 				<span class="icon">
@@ -261,98 +280,98 @@
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
-					:disabled="!editor.can().addColumnBefore"
+					:disabled="!editor.can().addColumnBefore()"
 					@click="editor.chain().focus().addColumnBefore().run()"
 				>
 					{{ $t('input.editor.table.addColumnBefore') }}
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
-					:disabled="!editor.can().addColumnAfter"
+					:disabled="!editor.can().addColumnAfter()"
 					@click="editor.chain().focus().addColumnAfter().run()"
 				>
 					{{ $t('input.editor.table.addColumnAfter') }}
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
-					:disabled="!editor.can().deleteColumn"
+					:disabled="!editor.can().deleteColumn()"
 					@click="editor.chain().focus().deleteColumn().run()"
 				>
 					{{ $t('input.editor.table.deleteColumn') }}
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
-					:disabled="!editor.can().addRowBefore"
+					:disabled="!editor.can().addRowBefore()"
 					@click="editor.chain().focus().addRowBefore().run()"
 				>
 					{{ $t('input.editor.table.addRowBefore') }}
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
-					:disabled="!editor.can().addRowAfter"
+					:disabled="!editor.can().addRowAfter()"
 					@click="editor.chain().focus().addRowAfter().run()"
 				>
 					{{ $t('input.editor.table.addRowAfter') }}
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
-					:disabled="!editor.can().deleteRow"
+					:disabled="!editor.can().deleteRow()"
 					@click="editor.chain().focus().deleteRow().run()"
 				>
 					{{ $t('input.editor.table.deleteRow') }}
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
-					:disabled="!editor.can().deleteTable"
+					:disabled="!editor.can().deleteTable()"
 					@click="editor.chain().focus().deleteTable().run()"
 				>
 					{{ $t('input.editor.table.deleteTable') }}
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
-					:disabled="!editor.can().mergeCells"
+					:disabled="!editor.can().mergeCells()"
 					@click="editor.chain().focus().mergeCells().run()"
 				>
 					{{ $t('input.editor.table.mergeCells') }}
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
-					:disabled="!editor.can().splitCell"
+					:disabled="!editor.can().splitCell()"
 					@click="editor.chain().focus().splitCell().run()"
 				>
 					{{ $t('input.editor.table.splitCell') }}
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
-					:disabled="!editor.can().toggleHeaderColumn"
+					:disabled="!editor.can().toggleHeaderColumn()"
 					@click="editor.chain().focus().toggleHeaderColumn().run()"
 				>
 					{{ $t('input.editor.table.toggleHeaderColumn') }}
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
-					:disabled="!editor.can().toggleHeaderRow"
+					:disabled="!editor.can().toggleHeaderRow()"
 					@click="editor.chain().focus().toggleHeaderRow().run()"
 				>
 					{{ $t('input.editor.table.toggleHeaderRow') }}
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
-					:disabled="!editor.can().toggleHeaderCell"
+					:disabled="!editor.can().toggleHeaderCell()"
 					@click="editor.chain().focus().toggleHeaderCell().run()"
 				>
 					{{ $t('input.editor.table.toggleHeaderCell') }}
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
-					:disabled="!editor.can().mergeOrSplit"
+					:disabled="!editor.can().mergeOrSplit()"
 					@click="editor.chain().focus().mergeOrSplit().run()"
 				>
 					{{ $t('input.editor.table.mergeOrSplit') }}
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
-					:disabled="!editor.can().fixTables"
+					:disabled="!editor.can().fixTables()"
 					@click="editor.chain().focus().fixTables().run()"
 				>
 					{{ $t('input.editor.table.fixTables') }}
@@ -363,7 +382,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref} from 'vue'
+import {ref, onMounted, onBeforeUnmount} from 'vue'
 import type {Editor} from '@tiptap/vue-3'
 
 import BaseButton from '@/components/base/BaseButton.vue'
@@ -380,6 +399,94 @@ const tableMode = ref(false)
 function toggleTableMode() {
 	tableMode.value = !tableMode.value
 }
+
+// Roving tabindex: the toolbar is a single Tab stop and arrow keys move between
+// buttons, so Tab always leaves the toolbar (to the editor content) instead of
+// walking through every button.
+const toolbarRef = ref<HTMLElement | null>(null)
+
+function toolbarButtons(): HTMLButtonElement[] {
+	if (!toolbarRef.value) {
+		return []
+	}
+	return Array.from(toolbarRef.value.querySelectorAll<HTMLButtonElement>('button'))
+		.filter(button => !button.disabled)
+}
+
+function setRovingTabindex(active: HTMLElement | null) {
+	const buttons = toolbarButtons()
+	if (buttons.length === 0) {
+		return
+	}
+	const target = active && buttons.includes(active as HTMLButtonElement) ? active : buttons[0]
+	buttons.forEach(button => {
+		button.tabIndex = button === target ? 0 : -1
+	})
+}
+
+function onToolbarFocusin(event: FocusEvent) {
+	const target = event.target as HTMLElement
+	if (target.tagName === 'BUTTON') {
+		setRovingTabindex(target)
+	}
+}
+
+function onToolbarKeydown(event: KeyboardEvent) {
+	if (!['ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(event.key)) {
+		return
+	}
+
+	const buttons = toolbarButtons()
+	if (buttons.length === 0) {
+		return
+	}
+
+	event.preventDefault()
+
+	const currentIndex = buttons.indexOf(document.activeElement as HTMLButtonElement)
+	const index = currentIndex === -1 ? 0 : currentIndex
+
+	let next = index
+	switch (event.key) {
+		case 'ArrowRight':
+			next = (index + 1) % buttons.length
+			break
+		case 'ArrowLeft':
+			next = (index - 1 + buttons.length) % buttons.length
+			break
+		case 'Home':
+			next = 0
+			break
+		case 'End':
+			next = buttons.length - 1
+			break
+	}
+
+	const nextButton = buttons[next]
+	setRovingTabindex(nextButton)
+	nextButton.focus()
+}
+
+// Buttons appear/disappear (table mode) and disable as the selection moves; re-assert the
+// roving tabindex so Tab can always re-enter. Filtered to 'disabled' — we write tabindex ourselves.
+let observer: MutationObserver | null = null
+
+onMounted(() => {
+	setRovingTabindex(null)
+	observer = new MutationObserver(() => setRovingTabindex(document.activeElement as HTMLElement))
+	if (toolbarRef.value) {
+		observer.observe(toolbarRef.value, {
+			subtree: true,
+			childList: true,
+			attributeFilter: ['disabled'],
+		})
+	}
+})
+
+onBeforeUnmount(() => {
+	observer?.disconnect()
+	observer = null
+})
 
 function setLink(event: MouseEvent) {
 	setLinkInEditor((event.target as HTMLElement).getBoundingClientRect(), props.editor)

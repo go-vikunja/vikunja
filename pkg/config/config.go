@@ -287,8 +287,9 @@ var timezone *time.Location
 // It is a separate function and not done through viper because that makes handling
 // it way easier, especially when testing.
 func GetTimeZone() *time.Location {
-	if timezone == nil {
-		loc, err := time.LoadLocation(ServiceTimeZone.GetString())
+	tz := ServiceTimeZone.GetString()
+	if timezone == nil || timezone.String() != tz {
+		loc, err := time.LoadLocation(tz)
 		if err != nil {
 			log.Fatalf("Error parsing time zone: %s", err)
 		}

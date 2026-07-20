@@ -2076,27 +2076,13 @@ func countRootsAndSubs(tasks []*Task) (roots, subs int) {
 // a filter that matches only a subtask (whose same-project parent is filtered out)
 // must return that subtask as a root. The old same-project proxy returned [].
 func TestTaskCollection_ExpandSubtasksFilterMatchesSubtaskOnly(t *testing.T) {
-	db.LoadAndAssertFixtures(t)
-	s := db.NewSession()
-	defer s.Close()
-
 	u := &user.User{ID: 1}
 
-	project := &Project{Title: "filter-matches-subtask", OwnerID: u.ID}
-	_, err := s.Insert(project)
-	require.NoError(t, err)
-
-	parent := &Task{Title: "parent", ProjectID: project.ID, CreatedByID: u.ID, Index: 1, Priority: 1}
-	_, err = s.Insert(parent)
-	require.NoError(t, err)
-
-	sub := &Task{Title: "matching subtask", ProjectID: project.ID, CreatedByID: u.ID, Index: 2, Priority: 5}
-	_, err = s.Insert(sub)
-	require.NoError(t, err)
-
-	rel := &TaskRelation{TaskID: parent.ID, OtherTaskID: sub.ID, RelationKind: RelationKindSubtask}
-	require.NoError(t, rel.Create(s, u))
-	require.NoError(t, s.Commit())
+	project, _, sub := setupSubtaskExpansionFixture(t, u, "filter-matches-subtask", func(parent, sub *Task) {
+		parent.Priority = 1
+		sub.Title = "matching subtask"
+		sub.Priority = 5
+	})
 
 	s2 := db.NewSession()
 	defer s2.Close()
@@ -2118,27 +2104,14 @@ func TestTaskCollection_ExpandSubtasksFilterMatchesSubtaskOnly(t *testing.T) {
 // a filter matching only the parent returns the parent plus its (non-matching)
 // subtask, nested, with no duplication.
 func TestTaskCollection_ExpandSubtasksFilterMatchesParentOnly(t *testing.T) {
-	db.LoadAndAssertFixtures(t)
-	s := db.NewSession()
-	defer s.Close()
-
 	u := &user.User{ID: 1}
 
-	project := &Project{Title: "filter-matches-parent", OwnerID: u.ID}
-	_, err := s.Insert(project)
-	require.NoError(t, err)
-
-	parent := &Task{Title: "matching parent", ProjectID: project.ID, CreatedByID: u.ID, Index: 1, Priority: 5}
-	_, err = s.Insert(parent)
-	require.NoError(t, err)
-
-	sub := &Task{Title: "subtask", ProjectID: project.ID, CreatedByID: u.ID, Index: 2, Priority: 1}
-	_, err = s.Insert(sub)
-	require.NoError(t, err)
-
-	rel := &TaskRelation{TaskID: parent.ID, OtherTaskID: sub.ID, RelationKind: RelationKindSubtask}
-	require.NoError(t, rel.Create(s, u))
-	require.NoError(t, s.Commit())
+	project, parent, sub := setupSubtaskExpansionFixture(t, u, "filter-matches-parent", func(parent, sub *Task) {
+		parent.Title = "matching parent"
+		parent.Priority = 5
+		sub.Title = "subtask"
+		sub.Priority = 1
+	})
 
 	s2 := db.NewSession()
 	defer s2.Close()
@@ -2163,6 +2136,36 @@ func TestTaskCollection_ExpandSubtasksFilterMatchesParentOnly(t *testing.T) {
 	assert.Len(t, tasks, 2)
 }
 
+// setupSubtaskExpansionFixture creates a project with a parent task, a subtask and
+// the relation linking them, for tests of the subtask-expansion root condition.
+// apply, if non-nil, mutates parent and sub before they're inserted.
+func setupSubtaskExpansionFixture(t *testing.T, u *user.User, title string, apply func(parent, sub *Task)) (project *Project, parent, sub *Task) {
+	t.Helper()
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	project = &Project{Title: title, OwnerID: u.ID}
+	_, err := s.Insert(project)
+	require.NoError(t, err)
+
+	parent = &Task{Title: "parent", ProjectID: project.ID, CreatedByID: u.ID, Index: 1}
+	sub = &Task{Title: "sub", ProjectID: project.ID, CreatedByID: u.ID, Index: 2}
+	if apply != nil {
+		apply(parent, sub)
+	}
+
+	_, err = s.Insert(parent)
+	require.NoError(t, err)
+	_, err = s.Insert(sub)
+	require.NoError(t, err)
+
+	rel := &TaskRelation{TaskID: parent.ID, OtherTaskID: sub.ID, RelationKind: RelationKindSubtask}
+	require.NoError(t, rel.Create(s, u))
+	require.NoError(t, s.Commit())
+	return
+}
+
 // TestTaskCollection_ExpandSubtasksSoftDeleted covers the two soft-delete gaps
 // the xorm deleted tag can't reach in the subtask expansion: the raw recursive
 // CTE fetching subtasks, and the "tasks parent_tasks" self-join alias in the
@@ -2170,33 +2173,10 @@ func TestTaskCollection_ExpandSubtasksFilterMatchesParentOnly(t *testing.T) {
 func TestTaskCollection_ExpandSubtasksSoftDeleted(t *testing.T) {
 	u := &user.User{ID: 1}
 
-	setup := func(t *testing.T, title string) (project *Project, parent, sub *Task) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		project = &Project{Title: title, OwnerID: u.ID}
-		_, err := s.Insert(project)
-		require.NoError(t, err)
-
-		parent = &Task{Title: "parent", ProjectID: project.ID, CreatedByID: u.ID, Index: 1}
-		_, err = s.Insert(parent)
-		require.NoError(t, err)
-
-		sub = &Task{Title: "sub", ProjectID: project.ID, CreatedByID: u.ID, Index: 2}
-		_, err = s.Insert(sub)
-		require.NoError(t, err)
-
-		rel := &TaskRelation{TaskID: parent.ID, OtherTaskID: sub.ID, RelationKind: RelationKindSubtask}
-		require.NoError(t, rel.Create(s, u))
-		require.NoError(t, s.Commit())
-		return
-	}
-
 	expand := []TaskCollectionExpandable{TaskCollectionExpandSubtasks}
 
 	t.Run("soft-deleted subtask is omitted", func(t *testing.T) {
-		project, parent, sub := setup(t, "deleted-subtask")
+		project, parent, sub := setupSubtaskExpansionFixture(t, u, "deleted-subtask", nil)
 
 		s := db.NewSession()
 		defer s.Close()
@@ -2218,7 +2198,7 @@ func TestTaskCollection_ExpandSubtasksSoftDeleted(t *testing.T) {
 	})
 
 	t.Run("children of a soft-deleted parent become roots", func(t *testing.T) {
-		project, parent, sub := setup(t, "deleted-parent")
+		project, parent, sub := setupSubtaskExpansionFixture(t, u, "deleted-parent", nil)
 
 		s := db.NewSession()
 		defer s.Close()
@@ -2237,4 +2217,252 @@ func TestTaskCollection_ExpandSubtasksSoftDeleted(t *testing.T) {
 		require.Len(t, tasks, 1)
 		assert.Equal(t, sub.ID, tasks[0].ID)
 	})
+}
+
+// TestTaskCollection_ExpandSubtasksNullableFilterParent guards #3163: a filter on a
+// nullable column must not drop a matching child just because its parent's value is
+// NULL. The old NOT-over-LEFT-JOIN condition let the NULL predicate make NOT(...)
+// evaluate to NULL, silently excluding the child from the WHERE.
+func TestTaskCollection_ExpandSubtasksNullableFilterParent(t *testing.T) {
+	u := &user.User{ID: 1}
+
+	expand := []TaskCollectionExpandable{TaskCollectionExpandSubtasks}
+
+	t.Run("due_date <= filter, parent has NULL due_date", func(t *testing.T) {
+		project, _, sub := setupSubtaskExpansionFixture(t, u, "null-due-parent", func(parent, sub *Task) {
+			parent.Title = "dateless parent"
+			sub.Title = "dated child"
+			sub.DueDate = time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
+		})
+
+		s2 := db.NewSession()
+		defer s2.Close()
+
+		filters, err := getTaskFiltersFromFilterString("due_date <= '2021-01-01T00:00:00'", "UTC")
+		require.NoError(t, err)
+
+		tasks, _, total, err := getRawTasksForProjects(s2, []*Project{project}, u, &taskSearchOptions{
+			expand:             expand,
+			parsedFilters:      filters,
+			filterIncludeNulls: false,
+		})
+		require.NoError(t, err)
+
+		assert.Equal(t, int64(1), total, "the child with a matching due date is the only root")
+		require.Len(t, tasks, 1, "the child must not be dropped by the parent's NULL due_date")
+		assert.Equal(t, sub.ID, tasks[0].ID)
+	})
+
+	t.Run("gantt-shaped OR date window, dateless parent", func(t *testing.T) {
+		project, _, sub := setupSubtaskExpansionFixture(t, u, "null-dates-parent", func(parent, sub *Task) {
+			parent.Title = "dateless parent"
+			sub.Title = "dated child"
+			sub.StartDate = time.Date(2020, 6, 1, 0, 0, 0, 0, time.UTC)
+			sub.EndDate = time.Date(2020, 6, 10, 0, 0, 0, 0, time.UTC)
+			sub.DueDate = time.Date(2020, 6, 5, 0, 0, 0, 0, time.UTC)
+		})
+
+		s2 := db.NewSession()
+		defer s2.Close()
+
+		filter := "(start_date >= '2020-01-01T00:00:00' && start_date <= '2020-12-31T00:00:00') || " +
+			"(end_date >= '2020-01-01T00:00:00' && end_date <= '2020-12-31T00:00:00') || " +
+			"(due_date >= '2020-01-01T00:00:00' && due_date <= '2020-12-31T00:00:00')"
+		filters, err := getTaskFiltersFromFilterString(filter, "UTC")
+		require.NoError(t, err)
+
+		tasks, _, total, err := getRawTasksForProjects(s2, []*Project{project}, u, &taskSearchOptions{
+			expand:             expand,
+			parsedFilters:      filters,
+			filterIncludeNulls: false,
+		})
+		require.NoError(t, err)
+
+		assert.Equal(t, int64(1), total, "the child inside the date window is the only root")
+		require.Len(t, tasks, 1, "the child must not be dropped by the parent's NULL dates")
+		assert.Equal(t, sub.ID, tasks[0].ID)
+	})
+}
+
+// TestTaskCollection_ExpandSubtasksSearchMirror guards the second #3163 bug: the
+// search was never mirrored into the parent root predicate. A search matching only
+// the child must still return the child as a root; a search matching only the
+// parent keeps the parent as the sole root with the child nested below it.
+func TestTaskCollection_ExpandSubtasksSearchMirror(t *testing.T) {
+	u := &user.User{ID: 1}
+
+	titles := func(parent, sub *Task) {
+		parent.Title = "alphaparent"
+		sub.Title = "betachild"
+	}
+
+	expand := []TaskCollectionExpandable{TaskCollectionExpandSubtasks}
+
+	t.Run("search matches child only", func(t *testing.T) {
+		project, _, sub := setupSubtaskExpansionFixture(t, u, "search-child", titles)
+
+		s2 := db.NewSession()
+		defer s2.Close()
+
+		tasks, _, total, err := getRawTasksForProjects(s2, []*Project{project}, u, &taskSearchOptions{
+			expand: expand,
+			search: "betachild",
+		})
+		require.NoError(t, err)
+
+		assert.Equal(t, int64(1), total, "the child matching the search is the only root")
+		require.Len(t, tasks, 1, "the child must not be dropped because the parent misses the search")
+		assert.Equal(t, sub.ID, tasks[0].ID)
+	})
+
+	t.Run("search matches parent only keeps child nested", func(t *testing.T) {
+		project, parent, sub := setupSubtaskExpansionFixture(t, u, "search-parent", titles)
+
+		s2 := db.NewSession()
+		defer s2.Close()
+
+		tasks, _, total, err := getRawTasksForProjects(s2, []*Project{project}, u, &taskSearchOptions{
+			expand: expand,
+			search: "alphaparent",
+		})
+		require.NoError(t, err)
+
+		assert.Equal(t, int64(1), total, "only the parent is a root")
+		ids := map[int64]int{}
+		for _, tsk := range tasks {
+			ids[tsk.ID]++
+		}
+		assert.Equal(t, 1, ids[parent.ID], "parent present exactly once as the root")
+		assert.Equal(t, 1, ids[sub.ID], "child rides along nested, not as a second root")
+		assert.Len(t, tasks, 2)
+	})
+}
+
+// TestTaskCollection_ExpandSubtasksSearchMirrorFuzzy guards #2954: on ParadeDB the
+// parent search mirror must use the same BM25 matching as the result set. A parent
+// matching the search only via fuzzy matching (no substring match) must still demote
+// its child from the roots; the old ILIKE mirror missed it and returned the child as
+// a duplicate root.
+func TestTaskCollection_ExpandSubtasksSearchMirrorFuzzy(t *testing.T) {
+	if !db.ParadeDBAvailable() {
+		t.Skip("requires ParadeDB")
+	}
+
+	u := &user.User{ID: 1}
+
+	project, parent, sub := setupSubtaskExpansionFixture(t, u, "search-fuzzy-parent", func(parent, sub *Task) {
+		parent.Title = "wombatize errands"
+		sub.Title = "wombatise subtask"
+	})
+
+	s2 := db.NewSession()
+	defer s2.Close()
+
+	tasks, _, total, err := getRawTasksForProjects(s2, []*Project{project}, u, &taskSearchOptions{
+		expand: []TaskCollectionExpandable{TaskCollectionExpandSubtasks},
+		search: "wombatise",
+	})
+	require.NoError(t, err)
+
+	assert.Equal(t, int64(1), total, "the fuzzy-matched parent is the only root")
+	ids := map[int64]int{}
+	for _, tsk := range tasks {
+		ids[tsk.ID]++
+	}
+	assert.Equal(t, 1, ids[parent.ID], "parent present exactly once as the root")
+	assert.Equal(t, 1, ids[sub.ID], "child nests under the fuzzy-matched parent, not as a second root")
+	assert.Len(t, tasks, 2)
+}
+
+// TestTaskCollection_ExpandSubtasksMultiParentCrossScope guards the multi-parent case
+// from #2954: a task with one parent inside the queried scope and another parent
+// outside it must nest under the in-scope parent. The old per-row LEFT JOIN root check
+// let the out-of-scope parent's row promote the child to a root.
+func TestTaskCollection_ExpandSubtasksMultiParentCrossScope(t *testing.T) {
+	u := &user.User{ID: 1}
+
+	project, parent, sub := setupSubtaskExpansionFixture(t, u, "multi-parent-in-scope", nil)
+
+	s := db.NewSession()
+	defer s.Close()
+
+	otherProject := &Project{Title: "multi-parent-out-of-scope", OwnerID: u.ID}
+	_, err := s.Insert(otherProject)
+	require.NoError(t, err)
+
+	otherParent := &Task{Title: "out of scope parent", ProjectID: otherProject.ID, CreatedByID: u.ID, Index: 1}
+	_, err = s.Insert(otherParent)
+	require.NoError(t, err)
+
+	rel := &TaskRelation{TaskID: otherParent.ID, OtherTaskID: sub.ID, RelationKind: RelationKindSubtask}
+	require.NoError(t, rel.Create(s, u))
+	require.NoError(t, s.Commit())
+
+	s2 := db.NewSession()
+	defer s2.Close()
+
+	tasks, _, total, err := getRawTasksForProjects(s2, []*Project{project}, u, &taskSearchOptions{
+		expand: []TaskCollectionExpandable{TaskCollectionExpandSubtasks},
+	})
+	require.NoError(t, err)
+
+	assert.Equal(t, int64(1), total, "the in-scope parent is the only root")
+	ids := map[int64]int{}
+	for _, tsk := range tasks {
+		ids[tsk.ID]++
+	}
+	assert.Equal(t, 1, ids[parent.ID], "in-scope parent present exactly once as the root")
+	assert.Equal(t, 1, ids[sub.ID], "child nests under the in-scope parent despite the out-of-scope one")
+	assert.Len(t, tasks, 2)
+}
+
+// Reproduces https://github.com/go-vikunja/vikunja/issues/3181: with a non-UTC
+// service timezone, a task due in the last hours of the local day must still
+// match "due_date < now/d+1d" when filter_timezone matches that timezone.
+func TestTaskCollection_DateFilterTimezoneBoundary(t *testing.T) {
+	la, err := time.LoadLocation("America/Los_Angeles")
+	require.NoError(t, err)
+
+	orig := config.ServiceTimeZone.GetString()
+	config.ServiceTimeZone.Set("America/Los_Angeles")
+	defer config.ServiceTimeZone.Set(orig)
+
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	u := &user.User{ID: 1}
+
+	// One hour before the next local midnight — inside the window the boundary
+	// shift dropped (up to the UTC offset, 7h/8h for America/Los_Angeles).
+	now := time.Now().In(la)
+	nextLocalMidnight := time.Date(now.Year(), now.Month(), now.Day()+1, 0, 0, 0, 0, la)
+	task := &Task{
+		Title:     "due late in the local day",
+		ProjectID: 1,
+		DueDate:   nextLocalMidnight.Add(-time.Hour).UTC(),
+	}
+	require.NoError(t, task.Create(s, u))
+	require.NoError(t, s.Commit())
+
+	s2 := db.NewSession()
+	defer s2.Close()
+
+	c := &TaskCollection{
+		Filter:         "done = false && due_date < now/d+1d",
+		FilterTimezone: "America/Los_Angeles",
+	}
+	res, _, _, err := c.ReadAll(s2, u, "", 0, 250)
+	require.NoError(t, err)
+	tasks, ok := res.([]*Task)
+	require.True(t, ok)
+
+	found := false
+	for _, tsk := range tasks {
+		if tsk.ID == task.ID {
+			found = true
+			break
+		}
+	}
+	assert.Truef(t, found, "task due %s (one hour before local midnight) should match", task.DueDate)
 }

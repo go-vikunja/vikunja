@@ -3073,7 +3073,7 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "The created bucket object.",
                         "schema": {
                             "$ref": "#/definitions/models.Bucket"
@@ -3300,7 +3300,7 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "The created webhook target.",
                         "schema": {
                             "$ref": "#/definitions/models.Webhook"
@@ -4299,7 +4299,7 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "The created project view",
                         "schema": {
                             "$ref": "#/definitions/models.ProjectView"
@@ -7030,7 +7030,7 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "The created token.",
                         "schema": {
                             "$ref": "#/definitions/models.APIToken"
@@ -8749,7 +8749,7 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "The created reaction",
                         "schema": {
                             "$ref": "#/definitions/models.Reaction"
@@ -11285,6 +11285,13 @@ const docTemplate = `{
             "properties": {
                 "code": {
                     "type": "integer"
+                },
+                "i18n_params": {
+                    "description": "I18nParams carries Message's dynamic values, keyed by the client's translation placeholder names, so clients can localise the error.",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
                 },
                 "message": {
                     "type": "string"

@@ -8,7 +8,6 @@
 			required
 			:type="passwordFieldType"
 			:autocomplete="autocomplete"
-			:tabindex="tabindex"
 			:aria-invalid="isValid !== true ? true : undefined"
 			:aria-describedby="errorId"
 			@keyup.enter="e => $emit('submit', e)"
@@ -44,13 +43,11 @@ import {validatePassword} from '@/helpers/validatePasswort'
 
 const props = withDefaults(defineProps<{
 	modelValue: string,
-	tabindex?: string,
 	// This prop is a workaround to trigger validation from the outside when the user never had focus in the input.
 	validateInitially?: boolean,
 	validateMinLength?: boolean,
 	autocomplete?: string,
 }>(), {
-	tabindex: undefined,
 	validateMinLength: true,
 	autocomplete: 'current-password',
 })

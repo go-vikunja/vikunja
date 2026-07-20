@@ -20,9 +20,10 @@
 				v-if="isOverflowing && views.length > 1"
 				class="switch-view-dropdown"
 			>
-				<template #trigger="{ toggleOpen }">
+				<template #trigger="{ toggleOpen, open }">
 					<BaseButton
 						class="switch-view switch-view-dropdown-trigger"
+						:aria-expanded="open"
 						@click="toggleOpen"
 					>
 						{{ activeViewTitle }}
@@ -228,7 +229,7 @@ function getViewRoute(view: IProjectView) {
 	gap: .25rem;
 	font-weight: bold;
 	color: var(--switch-view-color);
-	background: var(--primary);
+	background: var(--switch-view-active-background);
 }
 
 .dropdown-icon {
@@ -248,12 +249,12 @@ function getViewRoute(view: IProjectView) {
 
 	&:hover {
 		color: var(--switch-view-color);
-		background: var(--primary);
+		background: var(--switch-view-active-background);
 	}
 
 	&.is-active {
 		color: var(--switch-view-color);
-		background: var(--primary);
+		background: var(--switch-view-active-background);
 		font-weight: bold;
 		box-shadow: var(--shadow-xs);
 	}

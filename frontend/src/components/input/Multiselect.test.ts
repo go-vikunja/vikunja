@@ -1,0 +1,191 @@
+import {describe, it, expect, beforeEach, afterEach, vi} from 'vitest'
+import {mount, type VueWrapper} from '@vue/test-utils'
+import {nextTick} from 'vue'
+import Multiselect from './Multiselect.vue'
+
+const searchResults = [
+	{title: 'Alpha'},
+	{title: 'Beta'},
+]
+
+function mountMultiselect() {
+	return mount(Multiselect, {
+		attachTo: document.body,
+		props: {
+			modelValue: [],
+			searchResults,
+			multiple: true,
+			label: 'title',
+			placeholder: 'Type to search',
+			createPlaceholder: 'create',
+			selectPlaceholder: 'select',
+		},
+		global: {
+			mocks: {$t: (key: string) => key},
+		},
+	})
+}
+
+// Types into the input and advances past the search debounce + focus timeouts so the result list renders.
+async function openResults(wrapper: VueWrapper) {
+	const input = wrapper.find('input[role="combobox"]')
+	await input.setValue('a')
+	await input.trigger('keyup')
+	vi.advanceTimersByTime(300)
+	await nextTick()
+	return input
+}
+
+function dispatchEscape(el: Element) {
+	const event = new KeyboardEvent('keydown', {key: 'Escape', bubbles: true, cancelable: true})
+	const preventDefault = vi.spyOn(event, 'preventDefault')
+	const stopPropagation = vi.spyOn(event, 'stopPropagation')
+	el.dispatchEvent(event)
+	return {event, preventDefault, stopPropagation}
+}
+
+describe('Multiselect.vue — combobox Escape semantics', () => {
+	beforeEach(() => {
+		vi.useFakeTimers()
+	})
+
+	afterEach(() => {
+		vi.useRealTimers()
+		document.body.innerHTML = ''
+	})
+
+	it('Escape on the input closes the open list and stops the event, and it stays closed', async () => {
+		const wrapper = mountMultiselect()
+		const input = await openResults(wrapper)
+		expect(wrapper.find('[role="listbox"]').exists()).toBe(true)
+
+		const {preventDefault, stopPropagation} = dispatchEscape(input.element)
+		await nextTick()
+
+		expect(wrapper.find('[role="listbox"]').exists()).toBe(false)
+		expect(input.attributes('aria-expanded')).toBe('false')
+		expect(preventDefault).toHaveBeenCalled()
+		expect(stopPropagation).toHaveBeenCalled()
+
+		// The keyup of the same Escape must not re-trigger a search, and the focus
+		// timeout must not reopen the list.
+		await input.trigger('keyup', {key: 'Escape'})
+		vi.advanceTimersByTime(300)
+		await nextTick()
+		expect(wrapper.find('[role="listbox"]').exists()).toBe(false)
+
+		wrapper.unmount()
+	})
+
+	it('Escape on a focused result option closes the list, refocuses the input, and it stays closed', async () => {
+		const wrapper = mountMultiselect()
+		const input = await openResults(wrapper)
+
+		const option = wrapper.find('[role="option"]').element as HTMLElement
+		option.focus()
+		expect(document.activeElement).toBe(option)
+
+		dispatchEscape(option)
+		await nextTick()
+
+		expect(wrapper.find('[role="listbox"]').exists()).toBe(false)
+		expect(document.activeElement).toBe(input.element)
+
+		// Regression: refocusing the input fires @focus, whose 10ms timeout would
+		// otherwise reopen the just-closed list. suppressFocusOpen must prevent it.
+		vi.advanceTimersByTime(300)
+		await nextTick()
+		expect(wrapper.find('[role="listbox"]').exists()).toBe(false)
+
+		wrapper.unmount()
+	})
+
+	it('Escape on the input with the list closed lets the event through to ancestors', async () => {
+		const wrapper = mountMultiselect()
+		const input = wrapper.find('input[role="combobox"]')
+		expect(wrapper.find('[role="listbox"]').exists()).toBe(false)
+
+		const ancestorListener = vi.fn()
+		document.addEventListener('keydown', ancestorListener)
+
+		const {event, preventDefault, stopPropagation} = dispatchEscape(input.element)
+		await nextTick()
+
+		expect(preventDefault).not.toHaveBeenCalled()
+		expect(stopPropagation).not.toHaveBeenCalled()
+		expect(event.defaultPrevented).toBe(false)
+		expect(ancestorListener).toHaveBeenCalledTimes(1)
+
+		document.removeEventListener('keydown', ancestorListener)
+		wrapper.unmount()
+	})
+})
+
+describe('Multiselect.vue — creation-disabled hint', () => {
+	beforeEach(() => {
+		vi.useFakeTimers()
+	})
+
+	afterEach(() => {
+		vi.useRealTimers()
+		document.body.innerHTML = ''
+	})
+
+	function mountWithHint(props: Record<string, unknown>) {
+		return mount(Multiselect, {
+			attachTo: document.body,
+			props: {
+				modelValue: [],
+				searchResults: [],
+				multiple: true,
+				label: 'title',
+				creatable: false,
+				createPlaceholder: 'create',
+				selectPlaceholder: 'select',
+				...props,
+			},
+			global: {mocks: {$t: (key: string) => key}},
+		})
+	}
+
+	it('shows a non-interactive hint row when creation is disabled and nothing matches', async () => {
+		const wrapper = mountWithHint({creationDisabledMessage: 'cannot create here'})
+		await openResults(wrapper)
+
+		const hint = wrapper.find('.search-result-hint')
+		expect(hint.exists()).toBe(true)
+		expect(hint.text()).toBe('cannot create here')
+		// Must not be keyboard-selectable: a plain div, not a focusable option button, and no tabindex.
+		expect(hint.element.tagName).toBe('DIV')
+		expect(hint.attributes('aria-disabled')).toBe('true')
+		expect(hint.element.hasAttribute('tabindex')).toBe(false)
+
+		wrapper.unmount()
+	})
+
+	it('does not show the hint row without a creationDisabledMessage', async () => {
+		const wrapper = mountWithHint({})
+		await openResults(wrapper)
+
+		expect(wrapper.find('.search-result-hint').exists()).toBe(false)
+		expect(wrapper.find('[role="listbox"]').exists()).toBe(false)
+
+		wrapper.unmount()
+	})
+
+	it('hides the hint row when the query exactly matches an existing option', async () => {
+		const wrapper = mountWithHint({
+			searchResults: [{title: 'Alpha'}],
+			creationDisabledMessage: 'cannot create here',
+		})
+		const input = wrapper.find('input[role="combobox"]')
+		await input.setValue('Alpha')
+		await input.trigger('keyup')
+		vi.advanceTimersByTime(300)
+		await nextTick()
+
+		expect(wrapper.find('.search-result-hint').exists()).toBe(false)
+
+		wrapper.unmount()
+	})
+})

@@ -33,7 +33,6 @@
 				required
 				type="text"
 				autocomplete="username"
-				tabindex="1"
 				:error="usernameValid ? null : $t('user.auth.usernameRequired')"
 				@keyup.enter="submit"
 				@focusout="validateUsernameField()"
@@ -48,14 +47,12 @@
 						v-if="localAuthEnabled"
 						:to="{ name: 'user.password-reset.request' }"
 						class="reset-password-link"
-						tabindex="6"
 					>
 						{{ $t('user.auth.forgotPassword') }}
 					</RouterLink>
 				</div>
 				<Password
 					v-model="password"
-					tabindex="2"
 					:validate-initially="validatePasswordInitially"
 					:validate-min-length="false"
 					@submit="submit"
@@ -71,7 +68,6 @@
 				:placeholder="$t('user.auth.totpPlaceholder')"
 				required
 				type="text"
-				tabindex="3"
 				inputmode="numeric"
 				@keyup.enter="submit"
 			/>
@@ -82,7 +78,6 @@
 
 			<XButton
 				:loading="isLoading"
-				tabindex="4"
 				@click="submit"
 			>
 				{{ $t('user.auth.login') }}
@@ -95,7 +90,7 @@
 				<RouterLink
 					:to="{ name: 'user.register' }"
 					type="secondary"
-					tabindex="5"
+					class="inline-link"
 				>
 					{{ $t('user.auth.createAccount') }}
 				</RouterLink>
@@ -257,6 +252,11 @@ async function submit() {
 
 .reset-password-link {
 	display: inline-block;
+}
+
+// Underline links sitting inside body text so they're not distinguished by color alone
+.inline-link {
+	text-decoration: underline;
 }
 
 .label-with-link {
