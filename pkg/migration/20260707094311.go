@@ -36,7 +36,7 @@ func init() {
 		ID:          "20260707094311",
 		Description: "Add deleted_at column to tasks for soft deletion",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync(taskDeletedAt20260707094311{})
+			return partialSync(tx, taskDeletedAt20260707094311{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil
