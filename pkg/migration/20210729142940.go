@@ -34,7 +34,7 @@ func init() {
 		ID:          "20210729142940",
 		Description: "Add subject id to notification",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(notifications20210729142940{})
+			return partialSync(tx, notifications20210729142940{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil
