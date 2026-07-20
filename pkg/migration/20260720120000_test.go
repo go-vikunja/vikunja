@@ -109,7 +109,13 @@ func TestRecreateMissingIndexesKeepsDifferentlyNamedIndex20260720120000(t *testi
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		// x is the process-global test engine; leaving this index around leaks into later tests.
-		_, err := x.Exec("DROP INDEX some_nonmodel_name")
+		// Can't use x.Dialect().DropIndexSQL here: its sqlite3 impl ignores Index.IsRegular and
+		// always guesses an "IDX_"/"UQE_" prefix, mangling this deliberately non-convention name.
+		dropSQL := "DROP INDEX some_nonmodel_name"
+		if x.Dialect().URI().DBType == schemas.MYSQL {
+			dropSQL += " ON users"
+		}
+		_, err := x.Exec(dropSQL)
 		require.NoError(t, err)
 	})
 
