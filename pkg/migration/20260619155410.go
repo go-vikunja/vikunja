@@ -46,7 +46,7 @@ func init() {
 		ID:          "20260619155410",
 		Description: "Add oidc_id_token and oidc_provider_key columns to sessions for RP-Initiated Logout",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync(sessionOIDCLogout20260619155410{})
+			return partialSync(tx, sessionOIDCLogout20260619155410{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil
