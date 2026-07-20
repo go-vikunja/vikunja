@@ -97,14 +97,25 @@ func indexCoveringColsExists20260720120000(dbTable *schemas.Table, index *schema
 		if len(dbIndex.Cols) != len(index.Cols) {
 			continue
 		}
+		// Match columns as an unordered set: pgloader-converted DBs may list the
+		// same composite columns in a different order.
 		match := true
-		for i, col := range index.Cols {
-			if !strings.EqualFold(strings.TrimSpace(dbIndex.Cols[i]), col) {
+		for _, col := range index.Cols {
+			if !colInList20260720120000(dbIndex.Cols, col) {
 				match = false
 				break
 			}
 		}
 		if match {
+			return true
+		}
+	}
+	return false
+}
+
+func colInList20260720120000(cols []string, want string) bool {
+	for _, col := range cols {
+		if strings.EqualFold(strings.TrimSpace(col), want) {
 			return true
 		}
 	}

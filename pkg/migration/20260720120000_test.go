@@ -85,6 +85,46 @@ func TestRecreateMissingIndexes20260720120000(t *testing.T) {
 	require.NoError(t, recreateMissingIndexes20260720120000(x))
 }
 
+func usersIndexesOnUsername20260720120000(t *testing.T, x *xorm.Engine) []*schemas.Index {
+	t.Helper()
+	tables, err := x.DBMetas()
+	require.NoError(t, err)
+	for _, table := range tables {
+		if table.Name != "users" {
+			continue
+		}
+		indexes := make([]*schemas.Index, 0)
+		for _, index := range table.Indexes {
+			if len(index.Cols) == 1 && index.Cols[0] == "username" {
+				indexes = append(indexes, index)
+			}
+		}
+		return indexes
+	}
+	t.Fatal("users table not found")
+	return nil
+}
+
+// An equivalent index under a different name (as pgloader produces) must not be
+// duplicated by recreating the model's UQE_users_username index.
+func TestRecreateMissingIndexesKeepsDifferentlyNamedIndex20260720120000(t *testing.T) {
+	x, err := db.CreateTestEngine()
+	require.NoError(t, err)
+	require.NoError(t, x.Sync2(user.GetTables()...))
+
+	require.NoError(t, x.Sync(usersPartial20260720120000{}))
+	require.Nil(t, usersIndexOnUsername20260720120000(t, x))
+
+	_, err = x.Exec("CREATE UNIQUE INDEX some_nonmodel_name ON users (username)")
+	require.NoError(t, err)
+
+	require.NoError(t, recreateMissingIndexes20260720120000(x))
+
+	indexes := usersIndexesOnUsername20260720120000(t, x)
+	require.Len(t, indexes, 1)
+	require.Equal(t, "some_nonmodel_name", indexes[0].Name)
+}
+
 func TestPartialSyncKeepsIndexes20260720120000(t *testing.T) {
 	x, err := db.CreateTestEngine()
 	require.NoError(t, err)
