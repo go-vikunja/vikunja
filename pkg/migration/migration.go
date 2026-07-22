@@ -282,7 +282,7 @@ func schemaBeans() []interface{} {
 }
 
 func initSchema(tx *xorm.Engine) error {
-	return tx.Sync2(schemaBeans()...)
+	return tx.Sync2(schemaBeans()...) //nolint:forbidigo // fresh install, no existing tables
 }
 
 // partialSync syncs a partial struct into an existing table. Plain tx.Sync would
