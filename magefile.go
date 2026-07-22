@@ -1184,7 +1184,6 @@ func init() {
 		ID:          "` + date + `",
 		Description: "",
 		Migrate: func(tx *xorm.Engine) error {
-			// partialSync never drops indexes; use plain tx.Sync only when creating a brand-new table
 			return partialSync(tx, ` + str + date + `{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
