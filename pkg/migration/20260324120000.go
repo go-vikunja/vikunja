@@ -41,7 +41,7 @@ func init() {
 		ID:          "20260324120000",
 		Description: "Add license_status table",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync(LicenseStatus20260324120000{})
+			return tx.Sync(LicenseStatus20260324120000{}) //nolint:forbidigo // brand-new table, nothing to drop
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return tx.DropTables(LicenseStatus20260324120000{})

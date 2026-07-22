@@ -43,7 +43,7 @@ func init() {
 		ID:          "20230913202615",
 		Description: "",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(webhooks20230913202615{})
+			return tx.Sync2(webhooks20230913202615{}) //nolint:forbidigo // brand-new table, nothing to drop
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil

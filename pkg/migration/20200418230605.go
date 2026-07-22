@@ -39,7 +39,7 @@ func init() {
 		ID:          "20200418230605",
 		Description: "Add bucket table",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(bucket20200418230605{})
+			return tx.Sync2(bucket20200418230605{}) //nolint:forbidigo // brand-new table, nothing to drop
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return tx.DropTables(bucket20200418230605{})

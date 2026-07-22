@@ -47,7 +47,7 @@ func init() {
 		ID:          "20240315110428",
 		Description: "",
 		Migrate: func(tx *xorm.Engine) (err error) {
-			err = tx.Sync2(taskBuckets20240315110428{})
+			err = tx.Sync2(taskBuckets20240315110428{}) //nolint:forbidigo // brand-new table, nothing to drop
 			if err != nil {
 				return
 			}

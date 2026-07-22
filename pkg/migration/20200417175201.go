@@ -38,7 +38,7 @@ func init() {
 		ID:          "20200417175201",
 		Description: "Add totp table",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(totp20200417175201{})
+			return tx.Sync2(totp20200417175201{}) //nolint:forbidigo // brand-new table, nothing to drop
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return tx.DropTables(totp20200417175201{})
