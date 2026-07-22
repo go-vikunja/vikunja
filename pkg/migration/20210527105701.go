@@ -34,7 +34,7 @@ func init() {
 		ID:          "20210527105701",
 		Description: "Add default list for new tasks setting to users",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(users20210527105701{})
+			return partialSync(tx, users20210527105701{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil

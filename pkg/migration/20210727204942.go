@@ -37,7 +37,7 @@ func init() {
 		ID:          "20210727204942",
 		Description: "Add list position parameter",
 		Migrate: func(tx *xorm.Engine) error {
-			err := tx.Sync2(lists20210727204942{})
+			err := partialSync(tx, lists20210727204942{})
 			if err != nil {
 				return err
 			}

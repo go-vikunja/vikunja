@@ -34,7 +34,7 @@ func init() {
 		ID:          "20210411161337",
 		Description: "Add overdue notifications enabled setting to users",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(users20210411161337{})
+			return partialSync(tx, users20210411161337{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil

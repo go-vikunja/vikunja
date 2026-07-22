@@ -34,7 +34,7 @@ func init() {
 		ID:          "20190514192749",
 		Description: "Add task done at",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(listTask20190514192749{})
+			return partialSync(tx, listTask20190514192749{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return dropTableColum(tx, "tasks", "done_at_unix")

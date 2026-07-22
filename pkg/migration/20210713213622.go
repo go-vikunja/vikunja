@@ -36,7 +36,7 @@ func init() {
 		ID:          "20210713213622",
 		Description: "Add users status instead of is_active",
 		Migrate: func(tx *xorm.Engine) error {
-			err := tx.Sync2(users20210713213622{})
+			err := partialSync(tx, users20210713213622{})
 			if err != nil {
 				return err
 			}

@@ -38,7 +38,7 @@ func init() {
 			return dropTableColum(tx, "team_members", "updated")
 		},
 		Rollback: func(tx *xorm.Engine) error {
-			return tx.Sync2(teamMembersMigration20190328074430{})
+			return partialSync(tx, teamMembersMigration20190328074430{})
 		},
 	})
 }

@@ -59,7 +59,7 @@ func init() {
 		ID:          "20190511202210",
 		Description: "Add task uid",
 		Migrate: func(tx *xorm.Engine) error {
-			err := tx.Sync2(listTask20190511202210{})
+			err := partialSync(tx, listTask20190511202210{})
 			if err != nil {
 				return err
 			}

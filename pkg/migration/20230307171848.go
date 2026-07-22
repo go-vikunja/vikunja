@@ -35,7 +35,7 @@ func init() {
 		ID:          "20230307171848",
 		Description: "Add relative period to task reminders",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(taskReminders20230307171848{})
+			return partialSync(tx, taskReminders20230307171848{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil

@@ -47,7 +47,7 @@ func init() {
 		ID:          "20200515172220",
 		Description: "Change task text to title",
 		Migrate: func(tx *xorm.Engine) error {
-			err := tx.Sync2(task20200515172220{})
+			err := partialSync(tx, task20200515172220{})
 			if err != nil {
 				return err
 			}
@@ -66,7 +66,7 @@ func init() {
 				}
 			}
 
-			err = tx.Sync2(task20200515172221{})
+			err = partialSync(tx, task20200515172221{})
 			if err != nil {
 				return err
 			}

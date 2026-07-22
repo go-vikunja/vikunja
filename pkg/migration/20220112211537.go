@@ -35,7 +35,7 @@ func init() {
 		ID:          "20220112211537",
 		Description: "Add time zone setting for users",
 		Migrate: func(tx *xorm.Engine) error {
-			err := tx.Sync2(users20220112211537{})
+			err := partialSync(tx, users20220112211537{})
 			if err != nil {
 				return err
 			}
