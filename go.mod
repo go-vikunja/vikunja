@@ -59,14 +59,14 @@ require (
 	github.com/jinzhu/copier v0.4.0
 	github.com/jszwedko/go-datemath v0.1.1-0.20230526204004-640a500621d6
 	github.com/labstack/echo-jwt/v5 v5.0.2
-	github.com/labstack/echo/v5 v5.3.0
+	github.com/labstack/echo/v5 v5.3.1
 	github.com/lib/pq v1.12.3
 	github.com/magefile/mage v1.17.2
 	github.com/mattn/go-sqlite3 v1.14.48
 	github.com/microcosm-cc/bluemonday v1.0.27
 	github.com/olekukonko/tablewriter v1.1.4
 	github.com/pquerna/otp v1.5.0
-	github.com/prometheus/client_golang v1.23.2
+	github.com/prometheus/client_golang v1.24.0
 	github.com/redis/go-redis/v9 v9.21.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/samedi/caldav-go v3.0.0+incompatible
@@ -178,8 +178,8 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_model v0.6.2 // indirect
-	github.com/prometheus/common v0.67.5 // indirect
-	github.com/prometheus/procfs v0.20.1 // indirect
+	github.com/prometheus/common v0.70.0 // indirect
+	github.com/prometheus/procfs v0.21.1 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sagikazarmark/locafero v0.11.0 // indirect

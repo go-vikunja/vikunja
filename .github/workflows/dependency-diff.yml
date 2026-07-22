@@ -18,7 +18,7 @@ jobs:
         directory: [frontend, desktop]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
       - name: Create Diff
@@ -34,11 +34,11 @@ jobs:
         directory: [frontend, desktop]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
       - name: Check provenance downgrades
-        uses: danielroe/provenance-action@97ee003d615492a894bc672aefd5cc149fde798d # main
+        uses: danielroe/provenance-action@fcc45fd5a5b818c477432b32c838dcd0c79cd2dd # main
         with:
           workspace-path: ${{ matrix.directory }}
           fail-on-provenance-change: true
