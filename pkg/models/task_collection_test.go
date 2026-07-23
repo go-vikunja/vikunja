@@ -1648,6 +1648,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			// Task 33 is blocked as well, but only by the soft-deleted task 51,
+			// which must not count.
 			name: "filter relations blocked",
 			fields: fields{
 				Filter: "relations = 'blocked'",
@@ -1742,7 +1744,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		{
 			// The "doable now" view of #2183: open tasks which are not blocked
 			// by another open task. Task 10 is blocked by the open task 11 and
-			// disappears, task 4 is blocked by the done task 2 and stays.
+			// disappears, task 4 is blocked by the done task 2 and stays, and
+			// task 33 stays because its only blocker is soft-deleted.
 			name: "filter not blocked by an open task",
 			fields: fields{
 				ProjectID: 1,
@@ -2122,6 +2125,39 @@ func TestTaskSearchWithExpandSubtasks(t *testing.T) {
 	tasks, _, _, err := getRawTasksForProjects(s, []*Project{project}, &user.User{ID: 15}, opts)
 	require.NoError(t, err)
 	require.NotEmpty(t, tasks)
+}
+
+func TestTaskSearchExpandSubtasksWithRelationFilter(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	// The subtask expansion evaluates the filter against the parent_tasks
+	// alias as well, which must work for the relation sub-table filters too.
+	filters, err := getTaskFiltersFromFilterString("done = false && open_relations != 'blocked'", "UTC")
+	require.NoError(t, err)
+
+	project, err := GetProjectSimpleByID(s, 1)
+	require.NoError(t, err)
+
+	opts := &taskSearchOptions{
+		parsedFilters: filters,
+		expand:        []TaskCollectionExpandable{TaskCollectionExpandSubtasks},
+	}
+
+	tasks, _, _, err := getRawTasksForProjects(s, []*Project{project}, &user.User{ID: 1}, opts)
+	require.NoError(t, err)
+	require.NotEmpty(t, tasks)
+
+	ids := make([]int64, 0, len(tasks))
+	for _, task := range tasks {
+		ids = append(ids, task.ID)
+	}
+	// Task 10 is blocked by the open task 11 and must not appear, task 4 is
+	// blocked by the done task 2 and stays.
+	assert.NotContains(t, ids, int64(10))
+	assert.Contains(t, ids, int64(4))
+	assert.Contains(t, ids, int64(29), "task 29 is a subtask of task 1 and must be pulled in via expand")
 }
 
 func TestTaskCollection_SubtaskWithMultipleParentsNoDuplicates(t *testing.T) {

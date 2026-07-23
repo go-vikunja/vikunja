@@ -136,3 +136,16 @@
   relation_kind: 'blocked'
   created_by_id: 1
   created: 2018-12-01 15:13:12
+# Relation to the soft-deleted task 51: must not count for relation filters
+- id: 23
+  task_id: 33
+  other_task_id: 51
+  relation_kind: 'blocked'
+  created_by_id: 1
+  created: 2018-12-01 15:13:12
+- id: 24
+  task_id: 51
+  other_task_id: 33
+  relation_kind: 'blocking'
+  created_by_id: 1
+  created: 2018-12-01 15:13:12
