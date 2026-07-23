@@ -78,9 +78,15 @@ const baseStore = useBaseStore()
 
 const {isQuickAddMode} = useQuickAddMode()
 
-// Native #main-content activation scrolls but never moves focus into <main>; do it explicitly for SPA routing
+// Native #main-content activation scrolls but never moves focus into <main>; do it explicitly for SPA routing.
+// Safari restores focus to the activated link once the click handler returns, clobbering a synchronous
+// focus() (the skip link then does nothing under VoiceOver); defer to the next frame so our focus wins.
 function skipToMainContent() {
-	document.getElementById('main-content')?.focus()
+	const main = document.getElementById('main-content')
+	if (main === null) {
+		return
+	}
+	requestAnimationFrame(() => main.focus())
 }
 
 // Make the Electron frameless window transparent

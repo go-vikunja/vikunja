@@ -80,6 +80,7 @@
 							:key="key"
 							:ref="(el: Element | ComponentPublicInstance | null) => setResultRefs(el, k, key)"
 							class="result-item-button"
+							:aria-label="resultItemLabel(r.type, i)"
 							:class="{'is-strikethrough': (i as DoAction<ITask>)?.done}"
 							@keydown.up.prevent="select(k, key - 1)"
 							@keydown.down.prevent="select(k, key + 1)"
@@ -313,6 +314,22 @@ const results = computed<Result[]>(() => {
 		},
 	].filter((i) => i.items.length > 0)
 })
+
+const RESULT_TYPE_LABEL_KEY: Record<ACTION_TYPE, string> = {
+	[ACTION_TYPE.CMD]: 'command',
+	[ACTION_TYPE.TASK]: 'task',
+	[ACTION_TYPE.PROJECT]: 'project',
+	[ACTION_TYPE.TEAM]: 'team',
+	[ACTION_TYPE.LABELS]: 'label',
+}
+
+// Announce the result's type alongside its title so screen-reader users can tell a task from a project or team.
+function resultItemLabel(type: ACTION_TYPE, item: DoAction<IAbstract>): string {
+	return t('quickActions.resultLabel', {
+		title: item.title,
+		type: t(`quickActions.resultTypes.${RESULT_TYPE_LABEL_KEY[type]}`),
+	})
+}
 
 const loading = computed(() =>
 	taskService.loading ||
