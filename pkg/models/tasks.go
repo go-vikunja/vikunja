@@ -17,7 +17,6 @@
 package models
 
 import (
-	"fmt"
 	"math"
 	"regexp"
 	"sort"
@@ -1269,17 +1268,9 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 			return err
 		}
 		if len(blockingTasks) > 0 {
-			// Build informative error message with blocker details
-			blockingInfo := make([]string, 0, len(blockingTasks))
-			blockingIDs := make([]int64, 0, len(blockingTasks))
-			for _, blocker := range blockingTasks {
-				blockingInfo = append(blockingInfo, fmt.Sprintf("%s (ID: %d)", blocker.Title, blocker.ID))
-				blockingIDs = append(blockingIDs, blocker.ID)
-			}
 			return ErrTaskIsBlocked{
-				TaskID:           t.ID,
-				BlockingTaskIDs:  blockingIDs,
-				BlockingTaskInfo: blockingInfo,
+				TaskID:        t.ID,
+				BlockingTasks: blockingTasks,
 			}
 		}
 	}

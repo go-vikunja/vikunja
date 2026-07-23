@@ -461,7 +461,6 @@ func TestTaskBlockingEnforcement(t *testing.T) {
 		err = task.Update(s, &user.User{ID: 1})
 		require.Error(t, err)
 		assert.True(t, IsErrTaskIsBlocked(err))
-		assert.Contains(t, err.Error(), "Cannot mark task as complete")
 	})
 
 	t.Run("Task with complete blocker can be marked complete", func(t *testing.T) {
@@ -578,12 +577,10 @@ func TestTaskBlockingEnforcement(t *testing.T) {
 		require.Error(t, err)
 		assert.True(t, IsErrTaskIsBlocked(err))
 
-		// Error should contain task info
+		// Error should contain the full list of blocking tasks
 		taskErr := err.(ErrTaskIsBlocked)
-		assert.Len(t, taskErr.BlockingTaskIDs, 1)
-		assert.Equal(t, int64(3), taskErr.BlockingTaskIDs[0])
-		assert.NotEmpty(t, taskErr.BlockingTaskInfo)
-		assert.Contains(t, err.Error(), "ID: 3")
+		require.Len(t, taskErr.BlockingTasks, 1)
+		assert.Equal(t, int64(3), taskErr.BlockingTasks[0].ID)
 	})
 
 	t.Run("Unmarking as done when blocked does not fail", func(t *testing.T) {
