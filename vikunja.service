@@ -41,6 +41,10 @@ RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK
 SystemCallArchitectures=native
 SystemCallFilter=@system-service
 SystemCallFilter=~@privileged @resources
+# Return ENOSYS instead of killing the process when a syscall is not in the
+# allowlist. Syscalls newer than systemd's table can never be allowlisted, so
+# killing breaks runtimes that probe for them on new kernels (#3252).
+SystemCallErrorNumber=ENOSYS
 
 # If you want to bind Vikunja to a port below 1024 uncomment
 # the two values below

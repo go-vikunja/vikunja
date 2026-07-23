@@ -13,7 +13,7 @@
   },
   "homepage": "https://vikunja.io/",
   "funding": "https://opencollective.com/vikunja",
-  "packageManager": "pnpm@11.14.0",
+  "packageManager": "pnpm@11.15.0",
   "engines": {
     "node": ">=24.0.0"
   },
@@ -133,7 +133,7 @@
     "eslint": "10.7.0",
     "eslint-plugin-depend": "1.5.0",
     "eslint-plugin-vue": "10.9.2",
-    "happy-dom": "20.10.6",
+    "happy-dom": "20.11.0",
     "histoire": "1.0.0-beta.1",
     "otplib": "13.4.1",
     "postcss": "8.5.19",
