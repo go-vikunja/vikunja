@@ -177,7 +177,31 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Labels: []*Label{
 			label4,
 		},
-		RelatedTasks: map[RelationKind][]*Task{},
+		RelatedTasks: map[RelationKind][]*Task{
+			RelationKindBlocking: {
+				{
+					ID:          4,
+					Title:       "task #4 low prio",
+					Index:       4,
+					CreatedByID: 1,
+					ProjectID:   1,
+					Priority:    1,
+					Created:     time.Unix(1543626724, 0).In(loc),
+					Updated:     time.Unix(1543626724, 0).In(loc),
+				},
+			},
+			RelationKindBlocked: {
+				{
+					ID:          12,
+					Title:       "task #12 basic",
+					Index:       12,
+					CreatedByID: 1,
+					ProjectID:   1,
+					Created:     time.Unix(1543626724, 0).In(loc),
+					Updated:     time.Unix(1543626724, 0).In(loc),
+				},
+			},
+		},
 		Reminders: []*TaskReminder{
 			{
 				ID:       3,
@@ -209,17 +233,30 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Priority:     100,
 	}
 	task4 := &Task{
-		ID:           4,
-		Title:        "task #4 low prio",
-		Identifier:   "TEST1-4",
-		Index:        4,
-		CreatedByID:  1,
-		CreatedBy:    user1,
-		ProjectID:    1,
-		RelatedTasks: map[RelationKind][]*Task{},
-		Created:      time.Unix(1543626724, 0).In(loc),
-		Updated:      time.Unix(1543626724, 0).In(loc),
-		Priority:     1,
+		ID:          4,
+		Title:       "task #4 low prio",
+		Identifier:  "TEST1-4",
+		Index:       4,
+		CreatedByID: 1,
+		CreatedBy:   user1,
+		ProjectID:   1,
+		RelatedTasks: map[RelationKind][]*Task{
+			RelationKindBlocked: {
+				{
+					ID:          2,
+					Title:       "task #2 done",
+					Done:        true,
+					Index:       2,
+					CreatedByID: 1,
+					ProjectID:   1,
+					Created:     time.Unix(1543626724, 0).In(loc),
+					Updated:     time.Unix(1543626724, 0).In(loc),
+				},
+			},
+		},
+		Created:  time.Unix(1543626724, 0).In(loc),
+		Updated:  time.Unix(1543626724, 0).In(loc),
+		Priority: 1,
 	}
 	task5 := &Task{
 		ID:           5,
@@ -289,40 +326,77 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		EndDate:      time.Unix(1544700000, 0).In(loc),
 	}
 	task10 := &Task{
-		ID:           10,
-		Title:        "task #10 basic",
-		Identifier:   "TEST1-10",
-		Index:        10,
-		CreatedByID:  1,
-		CreatedBy:    user1,
-		ProjectID:    1,
-		RelatedTasks: map[RelationKind][]*Task{},
-		Created:      time.Unix(1543626724, 0).In(loc),
-		Updated:      time.Unix(1543626724, 0).In(loc),
+		ID:          10,
+		Title:       "task #10 basic",
+		Identifier:  "TEST1-10",
+		Index:       10,
+		CreatedByID: 1,
+		CreatedBy:   user1,
+		ProjectID:   1,
+		RelatedTasks: map[RelationKind][]*Task{
+			RelationKindBlocked: {
+				{
+					ID:          11,
+					Title:       "task #11 basic",
+					Index:       11,
+					CreatedByID: 1,
+					ProjectID:   1,
+					Created:     time.Unix(1543626724, 0).In(loc),
+					Updated:     time.Unix(1543626724, 0).In(loc),
+				},
+			},
+		},
+		Created: time.Unix(1543626724, 0).In(loc),
+		Updated: time.Unix(1543626724, 0).In(loc),
 	}
 	task11 := &Task{
-		ID:           11,
-		Title:        "task #11 basic",
-		Identifier:   "TEST1-11",
-		Index:        11,
-		CreatedByID:  1,
-		CreatedBy:    user1,
-		ProjectID:    1,
-		RelatedTasks: map[RelationKind][]*Task{},
-		Created:      time.Unix(1543626724, 0).In(loc),
-		Updated:      time.Unix(1543626724, 0).In(loc),
+		ID:          11,
+		Title:       "task #11 basic",
+		Identifier:  "TEST1-11",
+		Index:       11,
+		CreatedByID: 1,
+		CreatedBy:   user1,
+		ProjectID:   1,
+		RelatedTasks: map[RelationKind][]*Task{
+			RelationKindBlocking: {
+				{
+					ID:          10,
+					Title:       "task #10 basic",
+					Index:       10,
+					CreatedByID: 1,
+					ProjectID:   1,
+					Created:     time.Unix(1543626724, 0).In(loc),
+					Updated:     time.Unix(1543626724, 0).In(loc),
+				},
+			},
+		},
+		Created: time.Unix(1543626724, 0).In(loc),
+		Updated: time.Unix(1543626724, 0).In(loc),
 	}
 	task12 := &Task{
-		ID:           12,
-		Title:        "task #12 basic",
-		Identifier:   "TEST1-12",
-		Index:        12,
-		CreatedByID:  1,
-		CreatedBy:    user1,
-		ProjectID:    1,
-		RelatedTasks: map[RelationKind][]*Task{},
-		Created:      time.Unix(1543626724, 0).In(loc),
-		Updated:      time.Unix(1543626724, 0).In(loc),
+		ID:          12,
+		Title:       "task #12 basic",
+		Identifier:  "TEST1-12",
+		Index:       12,
+		CreatedByID: 1,
+		CreatedBy:   user1,
+		ProjectID:   1,
+		RelatedTasks: map[RelationKind][]*Task{
+			RelationKindBlocking: {
+				{
+					ID:          2,
+					Title:       "task #2 done",
+					Done:        true,
+					Index:       2,
+					CreatedByID: 1,
+					ProjectID:   1,
+					Created:     time.Unix(1543626724, 0).In(loc),
+					Updated:     time.Unix(1543626724, 0).In(loc),
+				},
+			},
+		},
+		Created: time.Unix(1543626724, 0).In(loc),
+		Updated: time.Unix(1543626724, 0).In(loc),
 	}
 	task15 := &Task{
 		ID:           15,
@@ -1572,6 +1646,148 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task5,
 			},
 			wantErr: false,
+		},
+		{
+			name: "filter relations blocked",
+			fields: fields{
+				Filter: "relations = 'blocked'",
+			},
+			args: defaultArgs,
+			want: []*Task{
+				task2,
+				task4,
+				task10,
+			},
+			wantErr: false,
+		},
+		{
+			name: "filter relations blocking",
+			fields: fields{
+				Filter: "relations = 'blocking'",
+			},
+			args: defaultArgs,
+			want: []*Task{
+				task2,
+				task11,
+				task12,
+			},
+			wantErr: false,
+		},
+		{
+			name: "filter relations in multiple kinds",
+			fields: fields{
+				Filter: "relations in 'blocked, blocking'",
+			},
+			args: defaultArgs,
+			want: []*Task{
+				task2,
+				task4,
+				task10,
+				task11,
+				task12,
+			},
+			wantErr: false,
+		},
+		{
+			name: "filter relations subtask",
+			fields: fields{
+				ProjectID: 1,
+				Filter:    "relations = 'subtask'",
+			},
+			args: defaultArgs,
+			want: []*Task{
+				task1,
+			},
+			wantErr: false,
+		},
+		{
+			name: "filter relations parenttask",
+			fields: fields{
+				ProjectID: 1,
+				Filter:    "relations = 'parenttask'",
+			},
+			args: defaultArgs,
+			want: []*Task{
+				task29,
+			},
+			wantErr: false,
+		},
+		{
+			// Only matches when the blocking task is not done yet: task 4 is
+			// blocked by the done task 2, so it does not show up here.
+			name: "filter open_relations blocked",
+			fields: fields{
+				Filter: "open_relations = 'blocked'",
+			},
+			args: defaultArgs,
+			want: []*Task{
+				task2,
+				task10,
+			},
+			wantErr: false,
+		},
+		{
+			// Task 12 blocks only the done task 2, so it does not show up here.
+			name: "filter open_relations blocking",
+			fields: fields{
+				Filter: "open_relations = 'blocking'",
+			},
+			args: defaultArgs,
+			want: []*Task{
+				task2,
+				task11,
+			},
+			wantErr: false,
+		},
+		{
+			// The "doable now" view of #2183: open tasks which are not blocked
+			// by another open task. Task 10 is blocked by the open task 11 and
+			// disappears, task 4 is blocked by the done task 2 and stays.
+			name: "filter not blocked by an open task",
+			fields: fields{
+				ProjectID: 1,
+				Filter:    "done = false && open_relations != 'blocked'",
+			},
+			args: defaultArgs,
+			want: []*Task{
+				task1,
+				task3,
+				task4,
+				task5,
+				task6,
+				task7,
+				task8,
+				task9,
+				task11,
+				task12,
+				task27,
+				task28,
+				task29,
+				task30,
+				task31,
+				task33,
+				task47,
+				task48,
+			},
+			wantErr: false,
+		},
+		{
+			name: "filter relations with invalid kind",
+			fields: fields{
+				Filter: "relations = 'befriended'",
+			},
+			args:    defaultArgs,
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "filter relations with invalid comparator",
+			fields: fields{
+				Filter: "relations > 'blocked'",
+			},
+			args:    defaultArgs,
+			want:    nil,
+			wantErr: true,
 		},
 		{
 			name: "order by position",

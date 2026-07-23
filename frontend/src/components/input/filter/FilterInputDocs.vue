@@ -33,6 +33,8 @@ const showDocs = ref(false)
 			<li><code>reminders</code>: {{ $t('filters.query.help.fields.reminders') }}</li>
 			<li><code>created</code>: {{ $t('filters.query.help.fields.created') }}</li>
 			<li><code>updated</code>: {{ $t('filters.query.help.fields.updated') }}</li>
+			<li><code>relations</code>: {{ $t('filters.query.help.fields.relations') }}</li>
+			<li><code>openRelations</code>: {{ $t('filters.query.help.fields.openRelations') }}</li>
 		</ul>
 		<p>{{ $t('filters.query.help.canUseDatemath') }}</p>
 		<p>{{ $t('filters.query.help.operators.intro') }}</p>
@@ -65,6 +67,11 @@ const showDocs = ref(false)
 			<li>
 				<code>(priority = 1 || priority = 2) &amp;&amp; dueDate &lt;= now</code>:
 				{{ $t('filters.query.help.examples.priorityOneOrTwoPastDue') }}
+			</li>
+			<li><code>relations = subtask</code>: {{ $t('filters.query.help.examples.hasSubtasks') }}</li>
+			<li>
+				<code>done = false &amp;&amp; openRelations != blocked</code>:
+				{{ $t('filters.query.help.examples.doableNow') }}
 			</li>
 		</ul>
 	</Expandable>

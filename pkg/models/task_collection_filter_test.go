@@ -343,6 +343,58 @@ func TestParseFilter(t *testing.T) {
 		_, err := getTaskFiltersFromFilterString("due_date = no", "UTC")
 		require.Error(t, err)
 	})
+	t.Run("relations", func(t *testing.T) {
+		result, err := getTaskFiltersFromFilterString("relations = blocked", "UTC")
+
+		require.NoError(t, err)
+		require.Len(t, result, 1)
+		assert.Equal(t, "relations", result[0].field)
+		assert.Equal(t, taskFilterComparatorEquals, result[0].comparator)
+		assert.Equal(t, []string{"blocked"}, result[0].value)
+	})
+	t.Run("relations in multiple kinds", func(t *testing.T) {
+		result, err := getTaskFiltersFromFilterString("relations in 'subtask, parenttask'", "UTC")
+
+		require.NoError(t, err)
+		require.Len(t, result, 1)
+		assert.Equal(t, "relations", result[0].field)
+		assert.Equal(t, taskFilterComparatorIn, result[0].comparator)
+		assert.Equal(t, []string{"subtask", "parenttask"}, result[0].value)
+	})
+	t.Run("open_relations", func(t *testing.T) {
+		result, err := getTaskFiltersFromFilterString("open_relations != 'blocked'", "UTC")
+
+		require.NoError(t, err)
+		require.Len(t, result, 1)
+		assert.Equal(t, "open_relations", result[0].field)
+		assert.Equal(t, taskFilterComparatorNotEquals, result[0].comparator)
+		assert.Equal(t, []string{"blocked"}, result[0].value)
+	})
+	t.Run("relations kind is case insensitive", func(t *testing.T) {
+		result, err := getTaskFiltersFromFilterString("relations = Blocked", "UTC")
+
+		require.NoError(t, err)
+		require.Len(t, result, 1)
+		assert.Equal(t, []string{"blocked"}, result[0].value)
+	})
+	t.Run("relations with invalid kind", func(t *testing.T) {
+		_, err := getTaskFiltersFromFilterString("relations = befriended", "UTC")
+
+		require.Error(t, err)
+		assert.True(t, IsErrInvalidTaskFilterValue(err))
+	})
+	t.Run("relations with invalid comparator", func(t *testing.T) {
+		_, err := getTaskFiltersFromFilterString("relations > blocked", "UTC")
+
+		require.Error(t, err)
+		assert.True(t, IsErrInvalidTaskFilterComparator(err))
+	})
+	t.Run("open_relations with like comparator", func(t *testing.T) {
+		_, err := getTaskFiltersFromFilterString("open_relations like blocked", "UTC")
+
+		require.Error(t, err)
+		assert.True(t, IsErrInvalidTaskFilterComparator(err))
+	})
 }
 
 // Date filter boundaries must be emitted in UTC — the driver drops a bound
