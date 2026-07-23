@@ -443,7 +443,9 @@
 				"removeText": "Diesen {sharable} von {type} entfernen? Dies kann nicht rückgängig gemacht werden!",
 				"removeSuccess": "{sharable} wurde erfolgreich von {type} entfernt.",
 				"addedSuccess": "{type} wurde erfolgreich hinzugefügt.",
-				"updatedSuccess": "{type} wurde erfolgreich hinzugefügt."
+				"updatedSuccess": "{type} wurde erfolgreich hinzugefügt.",
+				"search": "Suche nach einem {type} um dieses Projekt zu teilen",
+				"permissionFor": "Berechtigung für {sharable}"
 			},
 			"permission": {
 				"title": "Berechtigung",
@@ -498,7 +500,8 @@
 		},
 		"table": {
 			"title": "Tabelle",
-			"columns": "Spalten"
+			"columns": "Spalten",
+			"sortBy": "Sortieren nach {column}"
 		},
 		"kanban": {
 			"title": "Kanban",
@@ -599,6 +602,7 @@
 			"success": "Filter gespeichert."
 		},
 		"query": {
+			"label": "Filter-Abfrage",
 			"placeholder": "Gib eine Suche oder Filterabfrage ein…",
 			"help": {
 				"intro": "Um Aufgaben zu filtern, kannst du eine SQL-ähnliche Abfragesyntax verwenden. Du kannst die folgenden Felder in deinem Filter verwenden:",
@@ -751,7 +755,9 @@
 		"privacy": "Datenschutzerklärung",
 		"closeSidebar": "Seitenleiste schließen",
 		"home": "Vikunja Startseite",
-		"toggleChildProjects": "Unterprojekte ein-/ausschalten"
+		"toggleChildProjects": "Unterprojekte ein-/ausschalten",
+		"main": "Hauptnavigation",
+		"savedFilters": "Gespeicherte Filter"
 	},
 	"misc": {
 		"loading": "Wird geladen…",
@@ -807,6 +813,7 @@
 		},
 		"editor": {
 			"edit": "Bearbeiten",
+			"label": "Rich-Text-Editor",
 			"heading1": "Überschrift 1",
 			"heading1Tooltip": "Große Überschrift.",
 			"heading2": "Überschrift 2",
@@ -831,6 +838,7 @@
 			"imageTooltip": "Lade ein Bild von deinem PC hoch.",
 			"altText": "Alternativer Text",
 			"altTextPlaceholder": "Beschreibe dieses Bild",
+			"toolbarLabel": "Textformatierung",
 			"horizontalRule": "Horizontaler Strich",
 			"horizontalRuleTooltip": "Teile einen Bereich.",
 			"text": "Text",
@@ -982,10 +990,12 @@
 			"created": "Erstellt {0} von {1}",
 			"updated": "Aktualisiert {0}",
 			"doneAt": "Erledigt {0}",
+			"titleRequired": "Der Aufgabentitel darf nicht leer sein.",
 			"updateSuccess": "Die Aufgabe wurde erfolgreich gespeichert.",
 			"deleteSuccess": "Die Aufgabe wurde erfolgreich gelöscht.",
 			"duplicateSuccess": "Die Aufgabe wurde erfolgreich dupliziert.",
 			"noBucket": "Keine Spalte",
+			"bucketSelectLabel": "Kanban bucket: {bucket}",
 			"bucketChangedSuccess": "Die Spalte der Aufgabe wurde erfolgreich geändert.",
 			"belongsToProject": "Diese Aufgabe gehört zum Projekt „{project}“",
 			"back": "Zurück zum Projekt",
@@ -1041,6 +1051,7 @@
 			"repeat": "Wiederholen",
 			"comment": "{count} Kommentar | {count} Kommentare",
 			"commentCount": "Anzahl der Kommentare",
+			"attachment": "{count} Anhang | {count} Anhänge",
 			"startDate": "Anfangsdatum",
 			"title": "Titel",
 			"updated": "Aktualisiert",
@@ -1113,10 +1124,12 @@
 		"label": {
 			"placeholder": "Beginne zu schreiben, um ein Label hinzuzufügen…",
 			"createPlaceholder": "Dies als neues Label hinzufügen",
+			"linkShareCannotCreate": "Neue Labels können nicht mit einem Link Share erstellt werden. Es können nur Labels hinzugefügt werden, die in diesem Projekt bereits verwendet werden.",
 			"removeLabel": "Label {label} entfernen",
 			"addSuccess": "Das Label wurde erfolgreich hinzugefügt.",
 			"removeSuccess": "Das Label wurde erfolgreich entfernt.",
 			"addCreateSuccess": "Das Label wurde erfolgreich erstellt und hinzugefügt.",
+			"createFailed": "Diese Labels konnten nicht erstellt werden und wurden nicht hinzugefügt: {labels}",
 			"delete": {
 				"header": "Dieses Label löschen",
 				"text1": "Bist du sicher, dass du dieses Label löschen möchtest?",
@@ -1161,6 +1174,9 @@
 			"after": "{amount} {unit} nach {type}",
 			"beforeShort": "vor",
 			"afterShort": "nach",
+			"periodUnit": "Zeiteinheit",
+			"periodDirection": "Davor oder danach",
+			"periodRelativeTo": "Relativ zu",
 			"onDueDate": "Zum Fälligkeitsdatum",
 			"onStartDate": "Zum Startdatum",
 			"onEndDate": "Zum Enddatum",
@@ -1360,6 +1376,7 @@
 		"subscribeFeed": "Benachrichtigungen über Atom-Feed abonnieren"
 	},
 	"quickActions": {
+		"title": "Suchen und Quick Actions",
 		"notLoggedIn": "Bitte melde dich zuerst im Hauptfenster von Vikunja an.",
 		"commands": "Befehle",
 		"placeholder": "Gib einen Befehl oder eine Suche ein …",
@@ -1373,6 +1390,7 @@
 		"newTeam": "Gib den Namen des neuen Teams ein …",
 		"createTask": "Eine Aufgabe im aktuellen Projekt erstellen ({title})",
 		"createProject": "Projekt erstellen",
+		"results": "keine Ergebnisse | {count} Ergebnis | {count} Ergebnisse",
 		"cmds": {
 			"newTask": "Neue Aufgabe",
 			"newProject": "Neues Projekt",
