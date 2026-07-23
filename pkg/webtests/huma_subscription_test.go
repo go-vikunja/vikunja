@@ -20,6 +20,8 @@ import (
 	"net/http"
 	"testing"
 
+	"code.vikunja.io/api/pkg/user"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -28,6 +30,8 @@ import (
 //   - user1 has read access to task 1 and project 1.
 //   - user1 is already subscribed to task 2 (subscriptions.yml id 1).
 //   - user1 cannot see task 14 or project 20.
+//   - project 29 (users_projects.yml) is shared to user1 (admin), user11 (read)
+//     and user12 (write); user2 has no access to it at all.
 func TestHumaSubscription(t *testing.T) {
 	token := func(t *testing.T) string { return humaTokenFor(t, &testuser1) }
 
@@ -83,6 +87,38 @@ func TestHumaSubscription(t *testing.T) {
 			require.NoError(t, err)
 			rec := humaRequest(t, e, http.MethodPost, "/api/v2/subscriptions/project/20", "", token(t), "")
 			assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
+		})
+
+		// Project 29 (pkg/db/fixtures/users_projects.yml) is shared to user1 (admin),
+		// user11 (read), user12 (write) and user13 (admin). user2 has no access at all.
+		t.Run("for another user", func(t *testing.T) {
+			t.Run("caller with write access can subscribe a user with read access", func(t *testing.T) {
+				e, err := setupTestEnv()
+				require.NoError(t, err)
+				rec := humaRequest(t, e, http.MethodPost, "/api/v2/subscriptions/project/29", `{"user_id":11}`, token(t), "")
+				assert.Equal(t, http.StatusCreated, rec.Code, "body: %s", rec.Body.String())
+				assert.Contains(t, rec.Body.String(), `"user_id":11`)
+			})
+			t.Run("target user without access is rejected", func(t *testing.T) {
+				e, err := setupTestEnv()
+				require.NoError(t, err)
+				rec := humaRequest(t, e, http.MethodPost, "/api/v2/subscriptions/project/29", `{"user_id":2}`, token(t), "")
+				assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
+			})
+			t.Run("caller with read-only access cannot subscribe someone else", func(t *testing.T) {
+				e, err := setupTestEnv()
+				require.NoError(t, err)
+				rec := humaRequest(t, e, http.MethodPost, "/api/v2/subscriptions/project/29",
+					`{"user_id":12}`, humaTokenFor(t, &user.User{ID: 11}), "")
+				assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
+			})
+			t.Run("empty body still subscribes the caller", func(t *testing.T) {
+				e, err := setupTestEnv()
+				require.NoError(t, err)
+				rec := humaRequest(t, e, http.MethodPost, "/api/v2/subscriptions/project/29", "", token(t), "")
+				assert.Equal(t, http.StatusCreated, rec.Code, "body: %s", rec.Body.String())
+				assert.Contains(t, rec.Body.String(), `"user_id":1`)
+			})
 		})
 	})
 
