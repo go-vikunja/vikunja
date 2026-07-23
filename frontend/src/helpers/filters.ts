@@ -47,6 +47,8 @@ export const AVAILABLE_FILTER_FIELDS = [
 	'done',
 	'priority',
 	'percentDone',
+	'relations',
+	'openRelations',
 ]
 
 export const FILTER_OPERATORS = [

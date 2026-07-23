@@ -33,6 +33,10 @@ type SubTableFilter struct {
 	BaseFilter      string
 	FilterableField string
 	AllowNullCheck  bool
+	// JoinTable/JoinCond add an INNER JOIN to the EXISTS subquery, for filters
+	// which need columns from a table beyond the sub-table itself.
+	JoinTable string
+	JoinCond  string
 }
 
 type SubTableFilters map[string]SubTableFilter
@@ -61,6 +65,27 @@ var subTableFilters = SubTableFilters{
 		BaseFilter:      "tasks.id = task_id",
 		FilterableField: "username",
 		AllowNullCheck:  true,
+		JoinTable:       "users",
+		JoinCond:        "users.id = user_id",
+	},
+	// A relation to a soft-deleted task no longer counts, same as in
+	// buildSubtaskRootCondition.
+	taskPropertyRelations: {
+		Table:           "task_relations",
+		BaseFilter:      "tasks.id = task_id",
+		FilterableField: "relation_kind",
+		AllowNullCheck:  true,
+		JoinTable:       "tasks related_task",
+		JoinCond:        "related_task.id = task_relations.other_task_id AND related_task.deleted_at IS NULL",
+	},
+	// Like "relations", but only matches when the related task is not done yet.
+	taskPropertyOpenRelations: {
+		Table:           "task_relations",
+		BaseFilter:      "tasks.id = task_id",
+		FilterableField: "relation_kind",
+		AllowNullCheck:  true,
+		JoinTable:       "tasks related_task",
+		JoinCond:        "related_task.id = task_relations.other_task_id AND related_task.deleted_at IS NULL AND related_task.done = false",
 	},
 	"parent_project": {
 		Table:           "projects",
@@ -114,9 +139,8 @@ func (sf *SubTableFilter) ToBaseSubQuery(taskAlias string) *builder.Builder {
 		From(sf.Table).
 		Where(builder.Expr(baseFilter))
 
-	// little hack to add users table for assignees filter
-	if sf.Table == "task_assignees" {
-		cond.Join("INNER", "users", "users.id = user_id")
+	if sf.JoinTable != "" {
+		cond.Join("INNER", sf.JoinTable, sf.JoinCond)
 	}
 
 	return cond
@@ -219,7 +243,9 @@ func convertFiltersToDBFilterCondWithAlias(rawFilters []*taskFilter, includeNull
 				for i+1 < len(rawFilters) {
 					next := rawFilters[i+1]
 					nextSubTable, nextOk := subTableFilters[next.field]
-					if !nextOk || nextSubTable.Table != subTableFilterParams.Table || next.join != filterConcatAnd {
+					// Compare the whole sub-table config, not just the table name:
+					// relations and open_relations share a table but join differently.
+					if !nextOk || nextSubTable != subTableFilterParams || next.join != filterConcatAnd {
 						break
 					}
 					if !isRangeComparator(next.comparator) {
