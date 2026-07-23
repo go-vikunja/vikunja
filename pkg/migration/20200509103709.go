@@ -34,7 +34,7 @@ func init() {
 		ID:          "20200509103709",
 		Description: "Fix totp secret data type",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(totp20200509103709{})
+			return partialSync(tx, totp20200509103709{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return tx.DropTables(totp20200509103709{})

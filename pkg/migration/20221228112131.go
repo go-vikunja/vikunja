@@ -170,7 +170,7 @@ func init() {
 		ID:          "20221228112131",
 		Description: "make projects nestable",
 		Migrate: func(tx *xorm.Engine) error {
-			err := tx.Sync2(projects20221228112131{})
+			err := partialSync(tx, projects20221228112131{})
 			if err != nil {
 				return err
 			}

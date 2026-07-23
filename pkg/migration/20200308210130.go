@@ -34,7 +34,7 @@ func init() {
 		ID:          "20200308210130",
 		Description: "Add is archived flag to namepaces",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(namepsace20200308210130{})
+			return partialSync(tx, namepsace20200308210130{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return tx.DropTables(namepsace20200308210130{})

@@ -34,7 +34,7 @@ func init() {
 		ID:          "20211212151642",
 		Description: "Add user language field",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(user20211212151642{})
+			return partialSync(tx, user20211212151642{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil

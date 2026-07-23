@@ -44,7 +44,7 @@ func init() {
 		ID:          "20260226172819",
 		Description: "add oauth_codes table for OAuth 2.0 authorization codes",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync(oauthCodes20260226172819{})
+			return tx.Sync(oauthCodes20260226172819{}) //nolint:forbidigo // brand-new table, nothing to drop
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return tx.DropTables(oauthCodes20260226172819{})

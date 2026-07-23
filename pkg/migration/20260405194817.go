@@ -34,7 +34,7 @@ func init() {
 		ID:          "20260405194817",
 		Description: "Add bot_owner_id column to users",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync(users20260405194817{})
+			return partialSync(tx, users20260405194817{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil

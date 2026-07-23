@@ -44,7 +44,7 @@ func init() {
 		ID:          "20230831155832",
 		Description: "",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(apiTokens20230831155832{})
+			return tx.Sync2(apiTokens20230831155832{}) //nolint:forbidigo // brand-new table, nothing to drop
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil

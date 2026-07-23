@@ -43,7 +43,7 @@ func init() {
 		ID:          "20211212210054",
 		Description: "Add blurHash to list backgrounds.",
 		Migrate: func(tx *xorm.Engine) error {
-			err := tx.Sync2(lists20211212210054{})
+			err := partialSync(tx, lists20211212210054{})
 			if err != nil {
 				return err
 			}

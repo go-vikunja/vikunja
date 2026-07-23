@@ -42,7 +42,7 @@ func init() {
 		ID:          "20210221111953",
 		Description: "Add name property to database notifications",
 		Migrate: func(tx *xorm.Engine) error {
-			err := tx.Sync2(notifications20210221111953{})
+			err := partialSync(tx, notifications20210221111953{})
 			if err != nil {
 				return err
 			}
@@ -54,7 +54,7 @@ func init() {
 				return err
 			}
 
-			return tx.Sync2(notifications20210221111954{})
+			return partialSync(tx, notifications20210221111954{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil

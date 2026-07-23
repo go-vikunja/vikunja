@@ -40,7 +40,7 @@ func init() {
 		ID:          "20191010131430",
 		Description: "Added task attachments table",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(taskAttachment20191010131430{})
+			return tx.Sync2(taskAttachment20191010131430{}) //nolint:forbidigo // brand-new table, nothing to drop
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return tx.DropTables(taskAttachment20191010131430{})

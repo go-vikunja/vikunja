@@ -43,7 +43,7 @@ func init() {
 		ID:          "20200906184746",
 		Description: "Add the saved filters column",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(savedFilters20200906184746{})
+			return tx.Sync2(savedFilters20200906184746{}) //nolint:forbidigo // brand-new table, nothing to drop
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil

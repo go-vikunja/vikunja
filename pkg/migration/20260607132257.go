@@ -46,7 +46,7 @@ func init() {
 		ID:          "20260607132257",
 		Description: "Add time_entries table",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync(TimeEntry20260607132257{})
+			return tx.Sync(TimeEntry20260607132257{}) //nolint:forbidigo // brand-new table, nothing to drop
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return tx.DropTables(TimeEntry20260607132257{})

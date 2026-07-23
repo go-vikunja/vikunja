@@ -52,7 +52,7 @@ func init() {
 		ID:          "20190922205826",
 		Description: "Add task relations",
 		Migrate: func(tx *xorm.Engine) error {
-			err := tx.Sync2(taskRelation20190922205826{})
+			err := tx.Sync2(taskRelation20190922205826{}) //nolint:forbidigo // brand-new table, nothing to drop
 			if err != nil {
 				return err
 			}
