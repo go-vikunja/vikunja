@@ -59,6 +59,7 @@
 						class="pis-2 mie-1"
 					/>
 
+					<span class="task-id">{{ getTaskIdentifier(task) }}</span>
 					<TaskGlanceTooltip :task="task">
 						<RouterLink
 							ref="taskLinkRef"
@@ -201,7 +202,7 @@
 import {ref, watch, shallowReactive, onMounted, computed} from 'vue'
 import {useI18n} from 'vue-i18n'
 
-import TaskModel, {getHexColor} from '@/models/task'
+import TaskModel, {getHexColor, getTaskIdentifier} from '@/models/task'
 import type {ITask} from '@/modelTypes/ITask'
 
 import PriorityLabel from '@/components/tasks/partials/PriorityLabel.vue'
@@ -617,5 +618,11 @@ defineExpose({
 		padding: 1rem;
 		border: 1px solid var(--grey-200);
 	}
+}
+.task-id {
+	color: var(--grey-400);
+	margin-inline-end: .25rem;
+	font-size: .9em;
+	white-space: nowrap;
 }
 </style>
