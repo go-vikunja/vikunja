@@ -42,10 +42,14 @@ type AuthURL struct {
 	URL string `json:"url" readOnly:"true" doc:"The OAuth authorization url the client should redirect the user to. After authorizing, the obtained code is passed back to the migrate endpoint."`
 }
 
-// RegisterMigrator registers all routes for migration
+// RegisterMigrator registers all routes for migration. The /auth route is
+// only registered for migrators using an OAuth flow - token-based migrators
+// have no auth url to hand out.
 func (mw *MigrationWeb) RegisterMigrator(g *echo.Group) {
 	ms := mw.MigrationStruct()
-	g.GET("/"+ms.Name()+"/auth", mw.AuthURL)
+	if _, isOAuth := ms.(migration.OAuthMigrator); isOAuth {
+		g.GET("/"+ms.Name()+"/auth", mw.AuthURL)
+	}
 	g.GET("/"+ms.Name()+"/status", mw.Status)
 	g.POST("/"+ms.Name()+"/migrate", mw.Migrate)
 	registeredMigrators[ms.Name()] = mw
@@ -53,7 +57,12 @@ func (mw *MigrationWeb) RegisterMigrator(g *echo.Group) {
 
 // AuthURL is the web handler to get the auth url
 func (mw *MigrationWeb) AuthURL(c *echo.Context) error {
-	ms := mw.MigrationStruct()
+	ms, ok := mw.MigrationStruct().(migration.OAuthMigrator)
+	if !ok {
+		// Not reachable through the router - the route is only registered for
+		// OAuth migrators - but guard against future direct calls.
+		return echo.NewHTTPError(http.StatusNotFound, "This migrator does not use an auth url.")
+	}
 	return c.JSON(http.StatusOK, &AuthURL{URL: ms.AuthURL()})
 }
 

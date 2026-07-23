@@ -142,10 +142,9 @@ func BuildInfo() VikunjaInfos {
 	}
 	info.AuthInfo.OpenIDConnect.Providers = providers
 
-	if config.MigrationClickupEnable.GetBool() {
-		m := &clickup.Migration{}
-		info.AvailableMigrators = append(info.AvailableMigrators, m.Name())
-	}
+	// ClickUp is always available - it needs no server-side configuration.
+	info.AvailableMigrators = append(info.AvailableMigrators, (&clickup.Migration{}).Name())
+
 	if config.MigrationTodoistEnable.GetBool() {
 		m := &todoist.Migration{}
 		info.AvailableMigrators = append(info.AvailableMigrators, m.Name())

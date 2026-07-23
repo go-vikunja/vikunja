@@ -234,6 +234,13 @@ initMigration()
 const uploadInput = ref<HTMLInputElement | null>(null)
 
 async function migrate() {
+	// The submit button is disabled while the token field is empty, but the
+	// Enter key inside the input would still get here - don't fire a request
+	// that can only fail.
+	if (migrator.value.isTokenMigrator && migratorAuthCode.value === '') {
+		return
+	}
+
 	isMigrating.value = true
 	lastMigrationFinishedAt.value = null
 	message.value = ''

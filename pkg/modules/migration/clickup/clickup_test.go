@@ -17,12 +17,15 @@
 package clickup
 
 import (
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/migration"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -140,9 +143,39 @@ func TestName(t *testing.T) {
 	assert.Equal(t, "clickup", (&Migration{}).Name())
 }
 
-func TestAuthURLIsEmpty(t *testing.T) {
+func TestIsNotAnOAuthMigrator(t *testing.T) {
 	// ClickUp authenticates with a pasted personal token, not an OAuth
-	// redirect - an empty AuthURL is the frontend's signal to render a text
-	// input instead of a "connect" button.
-	assert.Empty(t, (&Migration{}).AuthURL())
+	// redirect - not implementing migration.OAuthMigrator is what keeps the
+	// /auth route from being registered for it.
+	var m interface{} = &Migration{}
+	_, isOAuth := m.(migration.OAuthMigrator)
+	assert.False(t, isOAuth)
+	_, isMigrator := m.(migration.Migrator)
+	assert.True(t, isMigrator)
+}
+
+func TestDecodeResponseRejectsNonSuccessStatus(t *testing.T) {
+	resp := &http.Response{
+		StatusCode: http.StatusUnauthorized,
+		Body:       io.NopCloser(strings.NewReader(`{"err":"Token invalid","ECODE":"OAUTH_025"}`)),
+	}
+
+	r := &teamsResponse{}
+	err := decodeResponse(resp, r)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "401")
+	assert.Contains(t, err.Error(), "Token invalid")
+	assert.Empty(t, r.Teams)
+}
+
+func TestDecodeResponseDecodesSuccess(t *testing.T) {
+	resp := &http.Response{
+		StatusCode: http.StatusOK,
+		Body:       io.NopCloser(strings.NewReader(`{"teams":[{"id":"1","name":"A Team"}]}`)),
+	}
+
+	r := &teamsResponse{}
+	require.NoError(t, decodeResponse(resp, r))
+	require.Len(t, r.Teams, 1)
+	assert.Equal(t, "A Team", r.Teams[0].Name)
 }

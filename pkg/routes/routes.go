@@ -975,15 +975,15 @@ func registerAPIRoutes(a *echo.Group) {
 }
 
 func registerMigrations(m *echo.Group) {
-	// ClickUp
-	if config.MigrationClickupEnable.GetBool() {
-		clickupMigrationHandler := &migrationHandler.MigrationWeb{
-			MigrationStruct: func() migration.Migrator {
-				return &clickup.Migration{}
-			},
-		}
-		clickupMigrationHandler.RegisterMigrator(m)
+	// ClickUp is always enabled: it authenticates with a personal API token
+	// the user pastes in, so unlike the OAuth migrators there is no server-side
+	// configuration (client id/secret) it could depend on.
+	clickupMigrationHandler := &migrationHandler.MigrationWeb{
+		MigrationStruct: func() migration.Migrator {
+			return &clickup.Migration{}
+		},
 	}
+	clickupMigrationHandler.RegisterMigrator(m)
 
 	// Todoist
 	if config.MigrationTodoistEnable.GetBool() {

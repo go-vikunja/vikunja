@@ -19,6 +19,8 @@ package clickup
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"strconv"
 	"time"
 
@@ -35,9 +37,9 @@ const apiBase = "https://api.clickup.com/api/v2"
 // Migration represents the ClickUp migration.
 //
 // Unlike the OAuth-based migrators, ClickUp is authenticated with a personal
-// API token the user pastes in directly - there is no redirect flow, so
-// AuthURL returns an empty string. The frontend treats an empty AuthURL as
-// the signal to render a plain text input instead of a "connect" button.
+// API token the user pastes in directly - there is no redirect flow. It
+// therefore deliberately does not implement migration.OAuthMigrator, which
+// means no /auth route gets registered for it.
 type Migration struct {
 	Code string `json:"code"`
 }
@@ -53,19 +55,6 @@ type Migration struct {
 // @Router /migration/clickup/status [get]
 func (m *Migration) Name() string {
 	return "clickup"
-}
-
-// AuthURL is empty for ClickUp - it uses a pasted personal token, not an OAuth redirect.
-// @Summary Get the auth url from ClickUp
-// @Description Empty for ClickUp: it authenticates with a personal API token pasted directly into the frontend, not an OAuth redirect.
-// @tags migration
-// @Produce json
-// @Security JWTKeyAuth
-// @Success 200 {object} handler.AuthURL "The (empty) auth url."
-// @Failure 500 {object} models.Message "Internal server error"
-// @Router /migration/clickup/auth [get]
-func (m *Migration) AuthURL() string {
-	return ""
 }
 
 type clickupTeam struct {
@@ -158,15 +147,30 @@ func (m *Migration) authHeader() map[string]string {
 	return map[string]string{"Authorization": m.Code}
 }
 
+// decodeResponse closes the body and decodes it into out, but only after
+// checking the response actually succeeded. DoGetWithHeaders returns 4xx
+// responses without an error, so without this check an invalid token would
+// silently decode into empty structs and look like a successful migration
+// which imported nothing.
+func decodeResponse(resp *http.Response, out any) error {
+	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, 512))
+		return fmt.Errorf("clickup api returned status %d: %s", resp.StatusCode, string(body))
+	}
+
+	return json.NewDecoder(resp.Body).Decode(out)
+}
+
 func (m *Migration) getTeams() ([]*clickupTeam, error) {
 	resp, err := migration.DoGetWithHeaders(apiBase+"/team", m.authHeader())
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
 
 	r := &teamsResponse{}
-	if err := json.NewDecoder(resp.Body).Decode(r); err != nil {
+	if err := decodeResponse(resp, r); err != nil {
 		return nil, err
 	}
 	return r.Teams, nil
@@ -177,10 +181,9 @@ func (m *Migration) getSpaces(teamID string) ([]*clickupSpace, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
 
 	r := &spacesResponse{}
-	if err := json.NewDecoder(resp.Body).Decode(r); err != nil {
+	if err := decodeResponse(resp, r); err != nil {
 		return nil, err
 	}
 	return r.Spaces, nil
@@ -191,10 +194,9 @@ func (m *Migration) getFolders(spaceID string) ([]*clickupFolder, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
 
 	r := &foldersResponse{}
-	if err := json.NewDecoder(resp.Body).Decode(r); err != nil {
+	if err := decodeResponse(resp, r); err != nil {
 		return nil, err
 	}
 	return r.Folders, nil
@@ -205,10 +207,9 @@ func (m *Migration) getFolderlessLists(spaceID string) ([]*clickupList, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
 
 	r := &listsResponse{}
-	if err := json.NewDecoder(resp.Body).Decode(r); err != nil {
+	if err := decodeResponse(resp, r); err != nil {
 		return nil, err
 	}
 	return r.Lists, nil
@@ -225,10 +226,8 @@ func (m *Migration) getTasks(listID string) ([]*clickupTask, error) {
 		}
 
 		r := &tasksResponse{}
-		decodeErr := json.NewDecoder(resp.Body).Decode(r)
-		resp.Body.Close()
-		if decodeErr != nil {
-			return nil, decodeErr
+		if err := decodeResponse(resp, r); err != nil {
+			return nil, err
 		}
 
 		all = append(all, r.Tasks...)
@@ -268,7 +267,7 @@ func (m *Migration) convertTaskToVikunja(ct *clickupTask, bucketID int64) *model
 	if ct.Status.Type == "closed" || ct.Status.Type == "done" {
 		task.Done = true
 		if closed, ok := parseClickupTimestamp(ct.DateClosed); ok {
-			task.DoneAt = closed
+			task.DoneAt = closed.In(config.GetTimeZone())
 		}
 	}
 
@@ -326,6 +325,11 @@ func (m *Migration) convertTaskToVikunja(ct *clickupTask, bucketID int64) *model
 func (m *Migration) Migrate(u *user.User) (err error) {
 	log.Debugf("[ClickUp Migration] Starting migration for user %d", u.ID)
 
+	// The project and bucket IDs assigned here are placeholders, only used to
+	// relate the entries of the hierarchy to each other - InsertFromStructure
+	// resets each ID to 0 before saving and rebuilds the relations with the
+	// real, newly created IDs, so they cannot clash with existing projects.
+	// This is the same scheme the Todoist and Trello migrators use.
 	var pseudoParentID int64 = 1
 	hierarchy := []*models.ProjectWithTasksAndBuckets{{
 		Project: models.Project{

@@ -34,6 +34,13 @@ type Migrator interface {
 	// Migrate is the interface used to migrate a user's tasks from another platform to vikunja.
 	// The user object is the user who's tasks will be migrated.
 	Migrate(user *user.User) error
+}
+
+// OAuthMigrator is a Migrator which authenticates through an OAuth flow.
+// Migrators which authenticate with a user-supplied token instead (like
+// ClickUp) do not implement it and get no /auth route.
+type OAuthMigrator interface {
+	Migrator
 	// AuthURL returns a url for clients to authenticate against.
 	// The use case for this are Oauth flows, where the server token should remain hidden and not
 	// known to the frontend.
