@@ -20,11 +20,11 @@ PRs and issues that skip these steps may be closed without detailed review — m
 
 ## Ways to Contribute
 
-- **Bug reports**: Open an issue with steps to reproduce
-- **Bug fixes**: PRs welcome - link the issue you're fixing
-- **Features**: Please open an issue to discuss before starting work
-- **Translations**: See the Translations section below
-- **Documentation**: Improvements to docs are always welcome
+- **Bug reports**: Open an issue with steps to reproduce.
+- **Bug fixes**: PRs welcome - link the issue you're fixing.
+- **Features**: Please open an issue to discuss before starting work.
+- **Translations**: See the Translations section below.
+- **Documentation**: Improvements to docs are always welcome.
 
 ## Development Setup
 
