@@ -1,10 +1,8 @@
 import type {RouteLocation} from 'vue-router'
 
-import {isAppleDevice} from '@/helpers/isAppleDevice'
+import {PRIMARY_MODIFIER_KEY, SHORTCUTS} from '@/constants/shortcuts'
 
-const ctrl = isAppleDevice() ? '⌘' : 'ctrl'
-const reminderModifier = isAppleDevice() ? 'shift' : 'alt'
-const deleteKey = isAppleDevice() ? 'backspace' : 'delete'
+const ctrl = PRIMARY_MODIFIER_KEY
 
 export interface Shortcut {
 	title: string
@@ -24,11 +22,11 @@ export const KEYBOARD_SHORTCUTS: ShortcutGroup[] = [
 		shortcuts: [
 			{
 				title: 'keyboardShortcuts.toggleMenu',
-				keys: [ctrl, 'e'],
+				keys: SHORTCUTS.toggleMenu.keys,
 			},
 			{
 				title: 'keyboardShortcuts.quickSearch',
-				keys: [ctrl, 'k'],
+				keys: SHORTCUTS.quickSearch.keys,
 			},
 		],
 	},
@@ -37,28 +35,28 @@ export const KEYBOARD_SHORTCUTS: ShortcutGroup[] = [
 		shortcuts: [
 			{
 				title: 'keyboardShortcuts.navigation.overview',
-				keys: ['g', 'o'],
-				combination: 'then',
+				keys: SHORTCUTS.navigation.overview.keys,
+				combination: SHORTCUTS.navigation.overview.combination,
 			},
 			{
 				title: 'keyboardShortcuts.navigation.upcoming',
-				keys: ['g', 'u'],
-				combination: 'then',
+				keys: SHORTCUTS.navigation.upcoming.keys,
+				combination: SHORTCUTS.navigation.upcoming.combination,
 			},
 			{
 				title: 'keyboardShortcuts.navigation.projects',
-				keys: ['g', 'p'],
-				combination: 'then',
+				keys: SHORTCUTS.navigation.projects.keys,
+				combination: SHORTCUTS.navigation.projects.combination,
 			},
 			{
 				title: 'keyboardShortcuts.navigation.labels',
-				keys: ['g', 'a'],
-				combination: 'then',
+				keys: SHORTCUTS.navigation.labels.keys,
+				combination: SHORTCUTS.navigation.labels.combination,
 			},
 			{
 				title: 'keyboardShortcuts.navigation.teams',
-				keys: ['g', 'm'],
-				combination: 'then',
+				keys: SHORTCUTS.navigation.teams.keys,
+				combination: SHORTCUTS.navigation.teams.combination,
 			},
 		],
 	},
@@ -152,39 +150,39 @@ export const KEYBOARD_SHORTCUTS: ShortcutGroup[] = [
 		shortcuts: [
 			{
 				title: 'keyboardShortcuts.task.done',
-				keys: ['t'],
+				keys: SHORTCUTS.taskDetail.done.keys,
 			},
 			{
 				title: 'keyboardShortcuts.task.assign',
-				keys: ['a'],
+				keys: SHORTCUTS.taskDetail.assignees.keys,
 			},
 			{
 				title: 'keyboardShortcuts.task.labels',
-				keys: ['l'],
+				keys: SHORTCUTS.taskDetail.labels.keys,
 			},
 			{
 				title: 'keyboardShortcuts.task.dueDate',
-				keys: ['d'],
+				keys: SHORTCUTS.taskDetail.dueDate.keys,
 			},
 			{
 				title: 'keyboardShortcuts.task.attachment',
-				keys: ['f'],
+				keys: SHORTCUTS.taskDetail.attachments.keys,
 			},
 			{
 				title: 'keyboardShortcuts.task.related',
-				keys: ['r'],
+				keys: SHORTCUTS.taskDetail.relatedTasks.keys,
 			},
 			{
 				title: 'keyboardShortcuts.task.move',
-				keys: ['m'],
+				keys: SHORTCUTS.taskDetail.moveProject.keys,
 			},
 			{
 				title: 'keyboardShortcuts.task.color',
-				keys: ['c'],
+				keys: SHORTCUTS.taskDetail.color.keys,
 			},
 			{
 				title: 'keyboardShortcuts.task.reminder',
-				keys: [reminderModifier, 'r'],
+				keys: SHORTCUTS.taskDetail.reminder.keys,
 			},
 			{
 				title: 'keyboardShortcuts.task.description',
@@ -192,19 +190,19 @@ export const KEYBOARD_SHORTCUTS: ShortcutGroup[] = [
 			},
 			{
 				title: 'keyboardShortcuts.task.priority',
-				keys: ['p'],
+				keys: SHORTCUTS.taskDetail.priority.keys,
 			},
 			{
 				title: 'keyboardShortcuts.task.delete',
-				keys: [deleteKey],
+				keys: SHORTCUTS.taskDetail.delete.keys,
 			},
 			{
 				title: 'keyboardShortcuts.task.favorite',
-				keys: ['s'],
+				keys: SHORTCUTS.taskDetail.favorite.keys,
 			},
 			{
 				title: 'keyboardShortcuts.task.openProject',
-				keys: ['u'],
+				keys: SHORTCUTS.taskDetail.openProject.keys,
 			},
 			{
 				title: 'keyboardShortcuts.task.save',

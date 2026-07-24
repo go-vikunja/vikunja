@@ -39,14 +39,14 @@
 				>
 					<a
 						v-if="router.options.history.state?.back?.includes('/projects/'+p.id+'/') || false"
-						v-shortcut="p.id === project?.id ? 'KeyU' : ''"
+						v-shortcut="p.id === project?.id ? SHORTCUTS.taskDetail.openProject.binding : ''"
 						@click="router.back()"
 					>
 						{{ getProjectTitle(p) }}
 					</a>
 					<RouterLink
 						v-else
-						v-shortcut="p.id === project?.id ? 'KeyU' : ''"
+						v-shortcut="p.id === project?.id ? SHORTCUTS.taskDetail.openProject.binding : ''"
 						:to="{ name: 'project.index', params: { projectId: p.id } }"
 					>
 						{{ getProjectTitle(p) }}
@@ -445,7 +445,7 @@
 				>
 					<template v-if="canWrite">
 						<XButton
-							v-shortcut="'KeyT'"
+							v-shortcut="SHORTCUTS.taskDetail.done.binding"
 							:class="{'is-pending': !task.done}"
 							class="button--mark-done"
 							icon="check-double"
@@ -461,7 +461,7 @@
 							@update:modelValue="sub => task.subscription = sub"
 						/>
 						<XButton
-							v-shortcut="'KeyS'"
+							v-shortcut="SHORTCUTS.taskDetail.favorite.binding"
 							variant="secondary"
 							:icon="task.isFavorite ? 'star' : ['far', 'star']"
 							@click="toggleFavorite"
@@ -474,7 +474,7 @@
 						<span class="action-heading">{{ $t('task.detail.organization') }}</span>
 						
 						<XButton
-							v-shortcut="'KeyL'"
+							v-shortcut="SHORTCUTS.taskDetail.labels.binding"
 							variant="secondary"
 							icon="tags"
 							@click="setFieldActive('labels')"
@@ -482,7 +482,7 @@
 							{{ $t('task.detail.actions.label') }}
 						</XButton>
 						<XButton
-							v-shortcut="'KeyP'"
+							v-shortcut="SHORTCUTS.taskDetail.priority.binding"
 							variant="secondary"
 							icon="exclamation-circle"
 							@click="setFieldActive('priority')"
@@ -497,7 +497,7 @@
 							{{ $t('task.detail.actions.percentDone') }}
 						</XButton>
 						<XButton
-							v-shortcut="'KeyC'"
+							v-shortcut="SHORTCUTS.taskDetail.color.binding"
 							variant="secondary"
 							icon="fill-drip"
 							:icon-color="color"
@@ -509,7 +509,7 @@
 						<span class="action-heading">{{ $t('task.detail.management') }}</span>
 
 						<XButton
-							v-shortcut="'KeyA'"
+							v-shortcut="SHORTCUTS.taskDetail.assignees.binding"
 							v-cy="'taskDetail.assign'"
 							variant="secondary"
 							icon="users"
@@ -518,7 +518,7 @@
 							{{ $t('task.detail.actions.assign') }}
 						</XButton>
 						<XButton
-							v-shortcut="'KeyF'"
+							v-shortcut="SHORTCUTS.taskDetail.attachments.binding"
 							variant="secondary"
 							icon="paperclip"
 							@click="openAttachments()"
@@ -526,7 +526,7 @@
 							{{ $t('task.detail.actions.attachments') }}
 						</XButton>
 						<XButton
-							v-shortcut="'KeyR'"
+							v-shortcut="SHORTCUTS.taskDetail.relatedTasks.binding"
 							variant="secondary"
 							icon="sitemap"
 							@click="setRelatedTasksActive()"
@@ -534,7 +534,7 @@
 							{{ $t('task.detail.actions.relatedTasks') }}
 						</XButton>
 						<XButton
-							v-shortcut="'KeyM'"
+							v-shortcut="SHORTCUTS.taskDetail.moveProject.binding"
 							variant="secondary"
 							icon="list"
 							@click="setFieldActive('moveProject')"
@@ -562,7 +562,7 @@
 						</XButton>
 
 						<XButton
-							v-shortcut="'KeyD'"
+							v-shortcut="SHORTCUTS.taskDetail.dueDate.binding"
 							variant="secondary"
 							icon="calendar"
 							@click="setFieldActive('dueDate')"
@@ -584,7 +584,7 @@
 							{{ $t('task.detail.actions.endDate') }}
 						</XButton>
 						<XButton
-							v-shortcut="reminderShortcut"
+							v-shortcut="SHORTCUTS.taskDetail.reminder.binding"
 							variant="secondary"
 							:icon="['far', 'clock']"
 							@click="setFieldActive('reminders')"
@@ -599,7 +599,7 @@
 							{{ $t('task.detail.actions.repeatAfter') }}
 						</XButton>
 						<XButton
-							v-shortcut="deleteShortcut"
+							v-shortcut="SHORTCUTS.taskDetail.delete.binding"
 							icon="trash-alt"
 							:shadow="false"
 							class="is-danger is-outlined has-no-border"
@@ -668,6 +668,7 @@ import type {IProject} from '@/modelTypes/IProject'
 import {PRIORITIES, type Priority} from '@/constants/priorities'
 import {PERMISSIONS} from '@/constants/permissions'
 import {PRO_FEATURE} from '@/constants/proFeatures'
+import {SHORTCUTS} from '@/constants/shortcuts'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 
@@ -697,7 +698,6 @@ import Reactions from '@/components/input/Reactions.vue'
 
 import {uploadFile} from '@/helpers/attachments'
 import {getProjectTitle} from '@/helpers/getProjectTitle'
-import {isAppleDevice} from '@/helpers/isAppleDevice'
 import {scrollIntoView} from '@/helpers/scrollIntoView'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
@@ -772,13 +772,6 @@ const lastProject = computed(() => {
 })
 
 const lastProjectOrTaskProject = computed(() => lastProject.value ?? project.value)
-
-// Use Shift+R on macOS (Alt+R produces special characters depending on keyboard layout)
-// Use Alt+r on other platforms
-const reminderShortcut = computed(() => isAppleDevice() ? 'Shift+KeyR' : 'Alt+KeyR')
-
-// Match native OS conventions for "delete the selected item"
-const deleteShortcut = isAppleDevice() ? 'Backspace' : 'Delete'
 
 onBeforeRouteLeave(async () => {
 	if (taskNotFound.value) {
