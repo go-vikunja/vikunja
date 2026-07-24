@@ -175,6 +175,12 @@ func (sf *SavedFilter) ReadOne(s *xorm.Session, _ web.Auth) error {
 	return err
 }
 
+// ReadAll shadows the embedded web.CRUDable method (filters are listed via the
+// pseudo-project). An unshadowed promoted method breaks Huma's $schema wrapper (go#15924).
+func (sf *SavedFilter) ReadAll(_ *xorm.Session, _ web.Auth, _ string, _ int, _ int) (interface{}, int, int64, error) {
+	return nil, 0, 0, ErrGenericForbidden{}
+}
+
 // Update updates an existing filter
 // @Summary Updates a saved filter
 // @Description Updates a saved filter by its ID.
