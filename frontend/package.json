@@ -149,7 +149,7 @@
     "stylelint-config-standard-scss": "17.0.0",
     "stylelint-use-logical": "2.1.3",
     "tailwindcss": "4.3.3",
-    "typescript": "6.0.3",
+    "typescript": "7.0.2",
     "unplugin-inject-preload": "3.0.0",
     "vite": "8.1.5",
     "vite-plugin-pwa": "1.3.0",
