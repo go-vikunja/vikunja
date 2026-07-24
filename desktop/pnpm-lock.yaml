@@ -13,7 +13,7 @@ overrides:
   ip-address: 10.2.0
   form-data: 4.0.6
   js-yaml: 5.2.1
-  undici@6: 8.7.0
+  undici@6: 8.8.0
   undici@7: 8.8.0
 
 importers:
@@ -1142,10 +1142,6 @@ packages:
   undici-types@8.3.0:
     resolution: {integrity: sha512-j375ScV60dom+YkPFIfTLcOiPxkN/buHz5GobjLhixFuANaNs3C9l4GmrWqejgXWJ7BbJcFYpTEUkS1Ge8bpZQ==}
 
-  undici@8.7.0:
-    resolution: {integrity: sha512-N7iQtfyLhIMOFgQubvmLV26svHpO0bqKnAiWotTQCVKCmWrcGbBotPuW1x+xwYZ2VHdSTVUfPQQnlEt1/LouTQ==}
-    engines: {node: '>=22.19.0'}
-
   undici@8.8.0:
     resolution: {integrity: sha512-ubshXMXwF3MQIMF1y/WxZdNBnjEKeSg2wF5mcGUtU55YTw34tnVVpKRlLf7ruDXZ5344KokPVX4RBx1wJm64Bw==}
     engines: {node: '>=22.19.0'}
@@ -2178,7 +2174,7 @@ snapshots:
       semver: 7.8.5
       tar: 7.5.20
       tinyglobby: 0.2.17
-      undici: 8.7.0
+      undici: 8.8.0
       which: 6.0.1
 
   node-int64@0.4.0: {}
@@ -2532,10 +2528,7 @@ snapshots:
 
   undici-types@8.3.0: {}
 
-  undici@8.7.0: {}
-
-  undici@8.8.0:
-    optional: true
+  undici@8.8.0: {}
 
   universalify@0.1.2: {}
 
