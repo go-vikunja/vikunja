@@ -23,7 +23,9 @@ import (
 
 // AdminUser re-exposes fields hidden by the default user.User JSON view.
 type AdminUser struct {
-	*user.User
+	// Embedded by value: a pointer embed's method set is never empty, which
+	// breaks Huma's $schema wrapper (go#15924).
+	user.User
 	IsAdmin      bool        `json:"is_admin" readOnly:"true" doc:"Whether the user is an instance admin."`
 	Status       user.Status `json:"status" readOnly:"true" doc:"Account status (0=active, 1=email-confirmation required, 2=disabled, 3=locked)."`
 	Issuer       string      `json:"issuer" readOnly:"true" doc:"Authentication issuer; empty or 'local' for local accounts."`
@@ -35,7 +37,7 @@ type AdminUser struct {
 // display name from the configured OIDC providers.
 func NewAdminUser(u *user.User, providers []*openid.Provider) *AdminUser {
 	return &AdminUser{
-		User:         u,
+		User:         *u,
 		IsAdmin:      u.IsAdmin,
 		Status:       u.Status,
 		Issuer:       u.Issuer,
