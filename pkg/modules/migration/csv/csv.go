@@ -313,10 +313,21 @@ func parseCSV(data []byte, delimiter string) ([]string, [][]string, error) {
 	return headers, dataRows, nil
 }
 
+// maxImportFileBytes caps the buffer allocated to read an uploaded CSV file
+// into memory. It mirrors the server's configured upload size limit so a
+// bogus or corrupted size value can't force an unbounded allocation.
+func maxImportFileBytes() int64 {
+	// #nosec G115 -- configured value won't exceed int64 max in practice.
+	return int64(config.GetMaxFileSizeInMBytes()) * 1024 * 1024
+}
+
 // DetectCSVStructure analyzes a CSV file and returns detection results
 func DetectCSVStructure(file io.ReaderAt, size int64) (*DetectionResult, error) {
 	if size == 0 {
 		return nil, &migration.ErrFileIsEmpty{}
+	}
+	if size < 0 || size > maxImportFileBytes() {
+		return nil, &migration.ErrNotACSVFile{}
 	}
 
 	// Read the entire file
@@ -380,6 +391,9 @@ func DetectCSVStructure(file io.ReaderAt, size int64) (*DetectionResult, error) 
 func PreviewImport(file io.ReaderAt, size int64, config *ImportConfig) (*PreviewResult, error) {
 	if size == 0 {
 		return nil, &migration.ErrFileIsEmpty{}
+	}
+	if size < 0 || size > maxImportFileBytes() {
+		return nil, &migration.ErrNotACSVFile{}
 	}
 
 	data := make([]byte, size)
@@ -577,6 +591,9 @@ func RunMigration(u *user.User, file io.ReaderAt, size int64, config *ImportConf
 func MigrateWithConfig(u *user.User, file io.ReaderAt, size int64, config *ImportConfig) error {
 	if size == 0 {
 		return &migration.ErrFileIsEmpty{}
+	}
+	if size < 0 || size > maxImportFileBytes() {
+		return &migration.ErrNotACSVFile{}
 	}
 
 	data := make([]byte, size)
