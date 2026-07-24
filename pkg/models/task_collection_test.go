@@ -1670,6 +1670,75 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			},
 		},
 		{
+			name: "order by due date from view default sort",
+			fields: fields{
+				ProjectID:     1,
+				ProjectViewID: 162,
+			},
+			args: args{
+				a: &user.User{ID: 1},
+			},
+			want: []*Task{
+				// View 162 stores sort_by due_date,id asc — same relative order as
+				// an explicit query sort, with position appended as a tiebreaker.
+				task6,
+				task5,
+				task28,
+				task1,
+				task2,
+				task3,
+				task4,
+				task7,
+				task8,
+				task9,
+				task10,
+				task11,
+				task12,
+				task27,
+				task29,
+				task30,
+				task31,
+				task33,
+				task47,
+				task48,
+			},
+		},
+		{
+			name: "query sort takes precedence over view default sort",
+			fields: fields{
+				ProjectID:     1,
+				ProjectViewID: 162,
+				SortBy:        []string{"title", "id"},
+				OrderBy:       []string{"asc", "asc"},
+			},
+			args: args{
+				a: &user.User{ID: 1},
+			},
+			want: []*Task{
+				// title asc should win over the view's due_date default
+				task48, // "Landingpages update"
+				task1,
+				task10,
+				task11,
+				task12,
+				task2,
+				task27,
+				task28,
+				task29,
+				task3,
+				task30,
+				task31,
+				task33,
+				task4,
+				task47,
+				task5,
+				task6,
+				task7,
+				task8,
+				task9,
+			},
+		},
+		{
 			name: "saved filter with sort order",
 			fields: fields{
 				ProjectID: -2,
