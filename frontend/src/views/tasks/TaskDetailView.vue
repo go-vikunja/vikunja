@@ -446,7 +446,9 @@
 					<template v-if="canWrite">
 						<XButton
 							v-shortcut="'KeyT'"
+							v-tooltip="doneActionTooltip"
 							:class="{'is-pending': !task.done}"
+							:disabled="!task.done && isBlockedByIncomplete"
 							class="button--mark-done"
 							icon="check-double"
 							variant="secondary"
@@ -712,8 +714,9 @@ import {useConfigStore} from '@/stores/config'
 
 import {useTitle} from '@/composables/useTitle'
 import {useTaskDetailShortcuts} from '@/composables/useTaskDetailShortcuts'
+import {useTaskBlockedByIncomplete} from '@/composables/useTaskBlockedByIncomplete'
 
-import {success} from '@/message'
+import {success, error} from '@/message'
 import type {Action as MessageAction} from '@/message'
 
 const props = defineProps<{
@@ -840,6 +843,11 @@ const color = computed(() => {
 })
 
 const isModal = computed(() => Boolean(props.backdropView))
+
+const isBlockedByIncomplete = useTaskBlockedByIncomplete(task)
+const doneActionTooltip = computed(() =>
+	!task.value.done && isBlockedByIncomplete.value ? t('task.blockedCheckbox') : '',
+)
 
 async function attachmentUpload(file: File, onSuccess?: (url: string) => void) {
 	const uploaded = await uploadFile(props.taskId, file, onSuccess)
@@ -1113,7 +1121,14 @@ async function saveTask(
 		currentTask.endDate = currentTask.dueDate
 	}
 
-	const updatedTask = await taskStore.update(currentTask) // TODO: markraw ?
+	let updatedTask: ITask
+	try {
+		updatedTask = await taskStore.update(currentTask) // TODO: markraw ?
+	} catch (e) {
+		task.value.done = !currentTask.done
+		error(e)
+		return
+	}
 	Object.assign(task.value, updatedTask)
 	setActiveFields()
 

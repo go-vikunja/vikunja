@@ -2627,6 +2627,37 @@ func (err ErrTimeEntryEndBeforeStart) HTTPError() web.HTTPError {
 	}
 }
 
+// Task Blocking Errors
+
+// ErrTaskIsBlocked represents an error where a user tries to mark a blocked task as complete
+// when the blocking task(s) are not yet complete.
+type ErrTaskIsBlocked struct {
+	TaskID        int64
+	BlockingTasks []*Task
+}
+
+// IsErrTaskIsBlocked checks if an error is ErrTaskIsBlocked.
+func IsErrTaskIsBlocked(err error) bool {
+	_, ok := err.(ErrTaskIsBlocked)
+	return ok
+}
+
+func (err ErrTaskIsBlocked) Error() string {
+	return fmt.Sprintf("task %d is blocked by %d task(s)", err.TaskID, len(err.BlockingTasks))
+}
+
+// ErrCodeTaskIsBlocked holds the unique world-error code of this error
+const ErrCodeTaskIsBlocked = 20001
+
+// HTTPError holds the http error description
+func (err ErrTaskIsBlocked) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusConflict,
+		Code:     ErrCodeTaskIsBlocked,
+		Message:  err.Error(),
+	}
+}
+
 // =================
 // User export errors
 // =================

@@ -1260,6 +1260,21 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 		}
 	}
 
+	// Check if task is being marked as complete (Done: false -> true)
+	// If so, verify there are no active blocking relations
+	if !ot.Done && t.Done {
+		blockingTasks, err := getActiveBlockingRelations(s, t.ID)
+		if err != nil {
+			return err
+		}
+		if len(blockingTasks) > 0 {
+			return ErrTaskIsBlocked{
+				TaskID:        t.ID,
+				BlockingTasks: blockingTasks,
+			}
+		}
+	}
+
 	// When a task was moved between projects, ensure it is in the correct bucket
 	if t.ProjectID != ot.ProjectID {
 		_, err = s.Where("task_id = ?", t.ID).Delete(&TaskBucket{})
@@ -2120,4 +2135,23 @@ func triggerTaskUpdatedEventForTaskID(s *xorm.Session, auth web.Auth, taskID int
 		Doer: doerFromAuth(s, auth),
 	})
 	return nil
+}
+
+// getActiveBlockingRelations returns all tasks that are blocking the given task and are not yet complete.
+// A task is actively blocking if it has a 'blocked' relation to an incomplete task.
+func getActiveBlockingRelations(s *xorm.Session, taskID int64) ([]*Task, error) {
+	blockingTasks := []*Task{}
+	err := s.
+		Where(
+			"done = ? AND id IN (SELECT other_task_id FROM task_relations WHERE task_id = ? AND relation_kind = ?)",
+			false,
+			taskID,
+			RelationKindBlocked,
+		).
+		Find(&blockingTasks)
+	if err != nil {
+		return nil, err
+	}
+
+	return blockingTasks, nil
 }

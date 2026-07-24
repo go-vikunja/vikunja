@@ -960,6 +960,7 @@
     "doneSuccess": "The task was successfully marked as done.",
     "undoneSuccess": "The task was successfully un-marked as done.",
     "readOnlyCheckbox": "You only have read access to this task and cannot mark it as done.",
+    "blockedCheckbox": "This task has incomplete blockers and cannot be marked as done.",
     "movedToProject": "The task was moved to {project}.",
     "undo": "Undo",
     "checklistTotal": "{checked} of {total} tasks",
@@ -1494,7 +1495,8 @@
     "13002": "The provided link share password is invalid.",
     "13003": "The provided link share token is invalid.",
     "14001": "The provided api token is invalid.",
-    "14002": "The permission {permission} of group {group} is invalid."
+    "14002": "The permission {permission} of group {group} is invalid.",
+    "20001": "This task is blocked by incomplete tasks and cannot be marked as done."
   },
   "about": {
     "title": "About",
