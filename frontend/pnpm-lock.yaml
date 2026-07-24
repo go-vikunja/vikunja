@@ -46,8 +46,8 @@ importers:
         specifier: 3.4.2
         version: 3.4.2(vue@3.5.40(typescript@6.0.3))
       '@sentry/vue':
-        specifier: 10.66.0
-        version: 10.66.0(pinia@4.0.2(@vue/devtools-api@8.1.5)(typescript@6.0.3)(vue@3.5.40(typescript@6.0.3)))(vue@3.5.40(typescript@6.0.3))
+        specifier: 10.67.0
+        version: 10.67.0(pinia@4.0.2(@vue/devtools-api@8.1.5)(typescript@6.0.3)(vue@3.5.40(typescript@6.0.3)))(vue@3.5.40(typescript@6.0.3))
       '@tiptap/core':
         specifier: 3.28.0
         version: 3.28.0(@tiptap/pm@3.28.0)
@@ -2252,12 +2252,12 @@ packages:
   '@scure/base@2.2.0':
     resolution: {integrity: sha512-b8XEupJibegiXV+tDUseI8oLQc8ei3d/4Jkb2RpbHh3MfE054ov3uIz2dhFkB3FI8iwYkEh0gGCApkrYggkPNg==}
 
-  '@sentry/browser-utils@10.66.0':
-    resolution: {integrity: sha512-sHuALvJMMEilUz84F1ZOQuDoZ3MhjwUHWHkXcElcVMrDIlnTO7Ra0E6Kh0e8JyJaLBMk4Sy9srKSqH9zimQVTQ==}
+  '@sentry/browser-utils@10.67.0':
+    resolution: {integrity: sha512-HUzaf0xAnPAB+OHBkD7N1Py+CTbD5InHulQ/pdhX4JctWtxuwD8odMD1LzdPnW8J6gVHlDVvcVBR8mXMZYSLSw==}
     engines: {node: '>=18'}
 
-  '@sentry/browser@10.66.0':
-    resolution: {integrity: sha512-MaPoBqKvI7O3UhexSJ/KO/o6T4Tr3A+vQWLZYTos0mxd59jVKMKbbJ6LxM/0uWQ5JAO2XYC/kCMRvk6VqQ5QZw==}
+  '@sentry/browser@10.67.0':
+    resolution: {integrity: sha512-/ZhsAvte4rYhg0A0RtSFFgAgXhyMOfQIeOAfMfptN+X6IVSYOfkA9jtrP+Ej4+6vlaUFWRir1HweF56y63dEEA==}
     engines: {node: '>=18'}
 
   '@sentry/bundler-plugins@10.65.0':
@@ -2336,32 +2336,32 @@ packages:
     resolution: {integrity: sha512-3aqtmM5NgNGo45BNaaBzi0LPQZAw//NEL4HKS5fXm12pJMa4KEkze8DEKnkTEIrGnWaOJKamecHKlnNg/Mqf/Q==}
     engines: {node: '>=18'}
 
-  '@sentry/core@10.66.0':
-    resolution: {integrity: sha512-9UbgSvds7bMJsP561eWmeyMLcfOmnwxtnx2QuW3yLobzP2Ob7CyJCOzP4tGzlTAGDrzShkFEZhiyuBUKiEK2oQ==}
+  '@sentry/core@10.67.0':
+    resolution: {integrity: sha512-b6U3pJ8AUvN9aouq0vl+VZI8KT8RslBsfGMFuNwRr313zOmdmFJBZqTiUw9VGgJ2jGKxLO9alm9rlxBfX4hf+w==}
     engines: {node: '>=18'}
 
-  '@sentry/feedback@10.66.0':
-    resolution: {integrity: sha512-fr69K76Gz7RRyfMerChdNjWIeQdFh+k21GJcmPCqk43dscUChOsLc3cYLS5cK7iZ/XiUmH9lVzf7EYL2kf2qsA==}
+  '@sentry/feedback@10.67.0':
+    resolution: {integrity: sha512-I4ML2/SF3enwikb6ZSoRiqolQrx0zSzTSnUgwCmugICF/jpHW0th1pCray9R+t1Zzibw/Dpj4t/DNXaSDRa2MA==}
     engines: {node: '>=18'}
 
-  '@sentry/replay-canvas@10.66.0':
-    resolution: {integrity: sha512-z7fPWEIfAJMJySKXFIqXAzFpkHjp13WGMAmB9+hlHhi9+gjAO8owD9R4XTd86lBswveGwMHKvIx5lFKNVqDcow==}
+  '@sentry/replay-canvas@10.67.0':
+    resolution: {integrity: sha512-neNA4T6MFtZzMdKYetiR+LZd9BNSd0q2szMn0wk+A15PqHE/IN7a34V6JZc9rCtmzB0wldh0eWGOBb49MSNKjA==}
     engines: {node: '>=18'}
 
-  '@sentry/replay@10.66.0':
-    resolution: {integrity: sha512-Djb4FxQa9bF8z3PoCO00Nw1u+6hma2YuI8JkMoE+F14KWRfCZKQ28sScsvk+OokbXgjtuIsxDEZj/qFGY0w01w==}
+  '@sentry/replay@10.67.0':
+    resolution: {integrity: sha512-nkEUgPCR82EcyJkCf3XCE9H0R5KisCqyCAaSGxe7NpAoQbvASHx4MUNgXVAn+D0M494gvPZh6lFH7JgzqTcSqQ==}
     engines: {node: '>=18'}
 
   '@sentry/vite-plugin@5.4.0':
     resolution: {integrity: sha512-fFJgCxs5hDyAm9BbZJ+LbA+LK2tjX5OoD0v0ARU4StR6KQmGUduoPs69yJ9AfqZ0om3Rlp5JDliiwFcNkasORA==}
     engines: {node: '>= 18'}
 
-  '@sentry/vue@10.66.0':
-    resolution: {integrity: sha512-+b9jW7JDx/BRTM+s3lncWRk7HPxRERd3UYmKSi7ywcLiVptX3m0S3xd9wo2+BznhLotIIltVaamhmns2SJPuQA==}
+  '@sentry/vue@10.67.0':
+    resolution: {integrity: sha512-oI1eHoWL6UDF9cew+R8W7LyEkzkkvtHbLuQDbeKAiwS5IG4SVe18wiREgZ9AClU/GwEVSGdWNIQMXQ8wuKR0dg==}
     engines: {node: '>=18'}
     peerDependencies:
       '@tanstack/vue-router': ^1.64.0
-      pinia: 2.x || 3.x
+      pinia: 2.x || 3.x || 4.x
       vue: 2.x || 3.x
     peerDependenciesMeta:
       '@tanstack/vue-router':
@@ -9052,19 +9052,19 @@ snapshots:
 
   '@scure/base@2.2.0': {}
 
-  '@sentry/browser-utils@10.66.0':
+  '@sentry/browser-utils@10.67.0':
     dependencies:
       '@sentry/conventions': 0.16.0
-      '@sentry/core': 10.66.0
+      '@sentry/core': 10.67.0
 
-  '@sentry/browser@10.66.0':
+  '@sentry/browser@10.67.0':
     dependencies:
-      '@sentry/browser-utils': 10.66.0
+      '@sentry/browser-utils': 10.67.0
       '@sentry/conventions': 0.16.0
-      '@sentry/core': 10.66.0
-      '@sentry/feedback': 10.66.0
-      '@sentry/replay': 10.66.0
-      '@sentry/replay-canvas': 10.66.0
+      '@sentry/core': 10.67.0
+      '@sentry/feedback': 10.67.0
+      '@sentry/replay': 10.67.0
+      '@sentry/replay-canvas': 10.67.0
 
   '@sentry/bundler-plugins@10.65.0(rollup@4.62.2)(supports-color@10.2.2)':
     dependencies:
@@ -9133,23 +9133,23 @@ snapshots:
     dependencies:
       '@sentry/conventions': 0.15.1
 
-  '@sentry/core@10.66.0':
+  '@sentry/core@10.67.0':
     dependencies:
       '@sentry/conventions': 0.16.0
 
-  '@sentry/feedback@10.66.0':
+  '@sentry/feedback@10.67.0':
     dependencies:
-      '@sentry/core': 10.66.0
+      '@sentry/core': 10.67.0
 
-  '@sentry/replay-canvas@10.66.0':
+  '@sentry/replay-canvas@10.67.0':
     dependencies:
-      '@sentry/core': 10.66.0
-      '@sentry/replay': 10.66.0
+      '@sentry/core': 10.67.0
+      '@sentry/replay': 10.67.0
 
-  '@sentry/replay@10.66.0':
+  '@sentry/replay@10.67.0':
     dependencies:
-      '@sentry/browser-utils': 10.66.0
-      '@sentry/core': 10.66.0
+      '@sentry/browser-utils': 10.67.0
+      '@sentry/core': 10.67.0
 
   '@sentry/vite-plugin@5.4.0(rollup@4.62.2)(supports-color@10.2.2)':
     dependencies:
@@ -9160,11 +9160,11 @@ snapshots:
       - supports-color
       - webpack
 
-  '@sentry/vue@10.66.0(pinia@4.0.2(@vue/devtools-api@8.1.5)(typescript@6.0.3)(vue@3.5.40(typescript@6.0.3)))(vue@3.5.40(typescript@6.0.3))':
+  '@sentry/vue@10.67.0(pinia@4.0.2(@vue/devtools-api@8.1.5)(typescript@6.0.3)(vue@3.5.40(typescript@6.0.3)))(vue@3.5.40(typescript@6.0.3))':
     dependencies:
-      '@sentry/browser': 10.66.0
+      '@sentry/browser': 10.67.0
       '@sentry/conventions': 0.16.0
-      '@sentry/core': 10.66.0
+      '@sentry/core': 10.67.0
       vue: 3.5.40(typescript@6.0.3)
     optionalDependencies:
       pinia: 4.0.2(@vue/devtools-api@8.1.5)(typescript@6.0.3)(vue@3.5.40(typescript@6.0.3))
