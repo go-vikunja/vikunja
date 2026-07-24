@@ -102,6 +102,7 @@ import type {ITask, ITaskPartialWithId} from '@/modelTypes/ITask'
 import type {DateISO} from '@/types/DateISO'
 import type {GanttFilters} from '@/views/project/helpers/useGanttFilters'
 import type {GanttBarModel, GanttBarDateType} from '@/composables/useGanttBar'
+import {useProjectStore} from '@/stores/projects'
 
 import GanttChartBody from '@/components/gantt/GanttChartBody.vue'
 import GanttRow from '@/components/gantt/GanttRow.vue'
@@ -117,6 +118,7 @@ import {roundToNaturalDayBoundary} from '@/helpers/time/roundToNaturalDayBoundar
 const props = defineProps<{
 	isLoading: boolean,
 	filters: GanttFilters,
+	includeSubprojects: boolean,
 	tasks: Map<ITask['id'], ITask>,
 	defaultTaskStartDate: DateISO
 	defaultTaskEndDate: DateISO
@@ -131,6 +133,7 @@ const dayWidthPixels = ref(0)
 let resizeObserver: ResizeObserver
 
 const {tasks, filters} = toRefs(props)
+const projectStore = useProjectStore()
 
 const dayjsLanguageLoading = useDayjsLanguageSync(dayjs)
 const ganttContainer = ref(null)
@@ -245,6 +248,22 @@ function getRoundedDate(value: string | Date | undefined, fallback: Date | strin
 	return roundToNaturalDayBoundary(value ? new Date(value) : new Date(fallback), isStart)
 }
 
+// Returns the title of the project a task belongs to when it comes from a
+// subproject, so it can be shown next to the task title like the list and
+// kanban views do for tasks from other projects.
+function getTaskProjectTitle(task: ITask): string | undefined {
+	if (!props.includeSubprojects) {
+		return undefined
+	}
+
+	const isProjectContext = filters.value.projectId > 0
+	if (isProjectContext && task.projectId === filters.value.projectId) {
+		return undefined
+	}
+
+	return projectStore.projects[task.projectId]?.title
+}
+
 function transformTaskToGanttBar(node: GanttTaskTreeNode): GanttBarModel {
 	const t = node.task
 	const DEFAULT_SPAN_DAYS = 7
@@ -287,6 +306,7 @@ function transformTaskToGanttBar(node: GanttTaskTreeNode): GanttBarModel {
 		end: endDate,
 		meta: {
 			label: t.title,
+			projectTitle: getTaskProjectTitle(t),
 			task: t,
 			color: taskColor,
 			hasActualDates: Boolean(t.startDate && (t.endDate || t.dueDate)),

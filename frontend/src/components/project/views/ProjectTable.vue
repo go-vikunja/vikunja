@@ -378,6 +378,7 @@ const props = defineProps<{
 }>()
 
 const projectStore = useProjectStore()
+const currentView = computed(() => projectStore.projects[props.projectId]?.views.find(v => v.id === props.viewId))
 
 const ACTIVE_COLUMNS_DEFAULT = {
 	index: true,
@@ -410,6 +411,7 @@ const taskList = useTaskList(
 	() => props.viewId, 
 	sortBy.value,
 	() => ['comment_count', 'is_unread'],
+	() => currentView.value?.filter?.includeSubprojects ?? currentView.value?.filter?.include_subprojects ?? false,
 )
 
 const {
