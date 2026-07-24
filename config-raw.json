@@ -131,7 +131,7 @@
                 {
                     "key": "customlogourl",
                     "default_value": "",
-                    "comment": "Allow using a custom logo via external URL."
+                    "comment": "Allow using a custom logo via external URL. Also used as the logo in notification emails when set."
                 },
                 {
                     "key": "customlogourldark",
