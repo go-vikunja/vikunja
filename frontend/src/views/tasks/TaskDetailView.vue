@@ -721,7 +721,7 @@ const props = defineProps<{
 	backdropView?: RouteLocation['fullPath'],
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
 	'close': [],
 }>()
 
@@ -1138,6 +1138,13 @@ const showDeleteModal = ref(false)
 async function deleteTask() {
 	await taskStore.delete(task.value)
 	success({message: t('task.detail.deleteSuccess')})
+	// Opened as an overlay (kanban/gantt/planner/related tasks): defer to the
+	// modal's close handler so we return to the originating view instead of the
+	// task's project list — which is wrong for the cross-project planner.
+	if (isModal.value) {
+		emit('close')
+		return
+	}
 	router.push({name: 'project.index', params: {projectId: task.value.projectId}})
 }
 

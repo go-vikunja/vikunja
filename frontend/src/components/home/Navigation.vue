@@ -43,6 +43,17 @@
 				</li>
 				<li>
 					<RouterLink
+						v-shortcut="'KeyG KeyL'"
+						:to="{ name: 'planner.index'}"
+					>
+						<span class="menu-item-icon icon">
+							<Icon icon="table-columns" />
+						</span>
+						{{ $t('navigation.planner') }}
+					</RouterLink>
+				</li>
+				<li>
+					<RouterLink
 						v-shortcut="'KeyG KeyP'"
 						:to="{ name: 'projects.index'}"
 					>

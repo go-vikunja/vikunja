@@ -579,6 +579,7 @@
     "noResults": "No results",
     "fromView": "The current view has a filter set as well:",
     "fromViewBoth": "It will be used in combination with what you enter here.",
+    "savedFilters": "Or use a saved filter:",
     "attributes": {
       "title": "Title",
       "titlePlaceholder": "The saved filter title goes here…",
@@ -750,6 +751,7 @@
   "navigation": {
     "overview": "Overview",
     "upcoming": "Upcoming",
+    "planner": "Planner",
     "settings": "Settings",
     "imprint": "Imprint",
     "privacy": "Privacy Policy",
@@ -758,6 +760,38 @@
     "toggleChildProjects": "Toggle sub-projects",
     "main": "Main navigation",
     "savedFilters": "Saved filters"
+  },
+  "planner": {
+    "title": "Planner",
+    "today": "Today",
+    "week": "Week",
+    "day": "Day",
+    "previous": "Previous",
+    "next": "Next",
+    "zoomIn": "Increase resolution",
+    "zoomOut": "Decrease resolution",
+    "unscheduled": "Unscheduled tasks",
+    "noUnscheduled": "No unscheduled tasks. Everything has a time slot!",
+    "overdue": "Overdue",
+    "allDay": "All day",
+    "saved": "Saved",
+    "saveError": "Something went wrong saving the task",
+    "loadError": "Something went wrong loading your tasks",
+    "createTitle": "New task",
+    "createAllDay": "All day · {date}",
+    "sortDefault": "Default order",
+    "sortRandom": "Random",
+    "settings": {
+      "title": "View settings",
+      "dayStart": "Day starts at",
+      "dayEnd": "Day ends at",
+      "defaultDuration": "Default duration (minutes)",
+      "slotDuration": "Slot size (minutes)",
+      "fullWeek": "Show full week (off: rolling days)",
+      "daysToShow": "Days to show",
+      "showDone": "Show done tasks",
+      "showOverdue": "Show overdue tasks in the sidebar"
+    }
   },
   "misc": {
     "loading": "Loading…",

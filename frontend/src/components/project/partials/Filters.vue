@@ -13,13 +13,34 @@
 			class="mbe-2"
 			@update:modelValue="() => change('modelValue')"
 		/>
-		<div 
+		<div
 			v-if="filterFromView"
 			class="tw:text-sm mbe-2"
 		>
 			{{ $t('filters.fromView') }}
 			<code>{{ filterFromView }}</code><br>
 			{{ $t('filters.fromViewBoth') }}
+		</div>
+
+		<div
+			v-if="showSavedFilters && savedFilters.length > 0"
+			class="mbe-2"
+		>
+			<p class="tw:text-sm mbe-1">
+				{{ $t('filters.savedFilters') }}
+			</p>
+			<XButton
+				v-for="savedFilter in savedFilters"
+				:key="savedFilter.id"
+				variant="secondary"
+				class="mie-2 mbe-1"
+				icon="filter"
+				:loading="loadingSavedFilterProjectId === savedFilter.id"
+				:disabled="loadingSavedFilterProjectId !== 0"
+				@click.prevent.stop="selectSavedFilter(savedFilter)"
+			>
+				{{ savedFilter.title }}
+			</XButton>
 		</div>
 
 		<div class="field is-flex is-flex-direction-column">
@@ -56,15 +77,19 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref, watch} from 'vue'
+import {computed, ref, shallowReactive, watch} from 'vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import {useRoute} from 'vue-router'
 import type {TaskFilterParams} from '@/services/taskCollection'
+import type {IProject} from '@/modelTypes/IProject'
 import {useLabelStore} from '@/stores/labels'
 import {useProjectStore} from '@/stores/projects'
+import SavedFilterService, {getSavedFilterIdFromProjectId} from '@/services/savedFilter'
+import SavedFilterModel from '@/models/savedFilter'
 import {
 	hasFilterQuery,
 	transformFilterStringForApi,
+	transformFilterStringFromApi,
 } from '@/helpers/filters'
 import FilterInputDocs from '@/components/input/filter/FilterInputDocs.vue'
 import FilterInput from '@/components/input/filter/FilterInput.vue'
@@ -76,12 +101,14 @@ const props = withDefaults(defineProps<{
 	changeImmediately?: boolean,
 	filterFromView?: string,
 	showClose?: boolean,
+	showSavedFilters?: boolean,
 }>(), {
 	hasTitle: false,
 	hasFooter: true,
 	changeImmediately: false,
 	filterFromView: undefined,
 	showClose: false,
+	showSavedFilters: false,
 })
 
 const emit = defineEmits<{
@@ -121,6 +148,28 @@ const labelStore = useLabelStore()
 const projectStore = useProjectStore()
 
 const filterInputRef = ref()
+
+const savedFilters = computed(() => projectStore.savedFilterProjects as IProject[])
+const savedFilterService = shallowReactive(new SavedFilterService())
+const loadingSavedFilterProjectId = ref(0)
+
+async function selectSavedFilter(project: IProject) {
+	loadingSavedFilterProjectId.value = project.id
+	try {
+		const savedFilter = await savedFilterService.get(new SavedFilterModel({
+			id: getSavedFilterIdFromProjectId(project.id),
+		}))
+		filterQuery.value = transformFilterStringFromApi(
+			savedFilter.filters.filter || savedFilter.filters.s || '',
+			labelId => labelStore.getLabelById(labelId)?.title || null,
+			filterProjectId => projectStore.projects[filterProjectId]?.title || null,
+		)
+		params.value.filter_include_nulls = !!savedFilter.filters.filter_include_nulls
+		change('always')
+	} finally {
+		loadingSavedFilterProjectId.value = 0
+	}
+}
 
 // Using watchDebounced to prevent the filter re-triggering itself.
 watch(
