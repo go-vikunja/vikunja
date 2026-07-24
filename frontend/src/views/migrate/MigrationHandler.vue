@@ -28,6 +28,36 @@
 						{{ $t('migrate.upload') }}
 					</XButton>
 				</template>
+				<template v-else-if="migrator.isTokenMigrator">
+					<p>{{ $t('migrate.authorizeToken', {name: migrator.name}) }}</p>
+					<Message
+						v-if="migrationError"
+						variant="danger"
+						class="mbe-4"
+					>
+						{{ migrationError }}
+					</Message>
+					<div class="field has-addons">
+						<div class="control is-expanded">
+							<input
+								v-model="migratorAuthCode"
+								class="input"
+								type="password"
+								:placeholder="$t('migrate.tokenPlaceholder', {name: migrator.name})"
+								@keyup.enter="migrate"
+							>
+						</div>
+						<div class="control">
+							<XButton
+								:loading="migrationService.loading"
+								:disabled="migrationService.loading || migratorAuthCode === '' || undefined"
+								@click="migrate"
+							>
+								{{ $t('migrate.getStarted') }}
+							</XButton>
+						</div>
+					</div>
+				</template>
 				<template v-else>
 					<p>{{ $t('migrate.authorize', {name: migrator.name}) }}</p>
 					<XButton
@@ -167,7 +197,7 @@ const migrationFileService = shallowReactive(new AbstractMigrationFileService(mi
 useTitle(() => t('migrate.titleService', {name: migrator.value.name}))
 
 async function initMigration() {
-	if (migrator.value.isFileMigrator) {
+	if (migrator.value.isFileMigrator || migrator.value.isTokenMigrator) {
 		return
 	}
 
@@ -204,6 +234,13 @@ initMigration()
 const uploadInput = ref<HTMLInputElement | null>(null)
 
 async function migrate() {
+	// The submit button is disabled while the token field is empty, but the
+	// Enter key inside the input would still get here - don't fire a request
+	// that can only fail.
+	if (migrator.value.isTokenMigrator && migratorAuthCode.value === '') {
+		return
+	}
+
 	isMigrating.value = true
 	lastMigrationFinishedAt.value = null
 	message.value = ''
