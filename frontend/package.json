@@ -89,7 +89,7 @@
     "is-touch-device": "1.0.1",
     "klona": "2.0.6",
     "lowlight": "3.3.0",
-    "marked": "18.0.6",
+    "marked": "18.0.7",
     "nanoid": "6.0.0",
     "pinia": "4.0.2",
     "register-service-worker": "1.7.2",
