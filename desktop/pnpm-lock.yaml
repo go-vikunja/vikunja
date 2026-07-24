@@ -12,7 +12,7 @@ overrides:
   tmp: 0.2.7
   ip-address: 10.2.0
   form-data: 4.0.6
-  js-yaml: 5.2.1
+  js-yaml: 5.2.2
   undici@6: 8.8.0
   undici@7: 8.8.0
 
@@ -688,8 +688,8 @@ packages:
     resolution: {integrity: sha512-AC/7JofJvZGrrneWNaEnJeOLUx+JlGt7tNa0wZiRPT4MY1wmfKjt2+6O2p2uz2+skll8OZZmJMNqeke7kKbNgQ==}
     hasBin: true
 
-  js-yaml@5.2.1:
-    resolution: {integrity: sha512-zfLtNfQqxVqq3uaTqSkh4x4hZw3KHobGUA0fJUj4wawW8bsQLTVqpHdXSIzidh7o+4lEW36tANuAGdaFx6Zgnw==}
+  js-yaml@5.2.2:
+    resolution: {integrity: sha512-dayzUzKkJ1MkuUtZglSebU43utNXH0OWQByK9rKOOuYIO8M5TV1y+n8ALMdG0rdzBnfNkOmZEqrURepb0ejqBw==}
     hasBin: true
 
   json-buffer@3.0.1:
@@ -1458,7 +1458,7 @@ snapshots:
       hosted-git-info: 4.1.0
       isbinaryfile: 5.0.7
       jiti: 2.7.0
-      js-yaml: 5.2.1
+      js-yaml: 5.2.2
       json5: 2.2.3
       lazy-val: 1.0.5
       minimatch: 10.2.5
@@ -1539,7 +1539,7 @@ snapshots:
       fs-extra: 10.1.0
       http-proxy-agent: 7.0.2(supports-color@7.2.0)
       https-proxy-agent: 7.0.6(supports-color@7.2.0)
-      js-yaml: 5.2.1
+      js-yaml: 5.2.2
       sanitize-filename: 1.6.4
       source-map-support: 0.5.21
       stat-mode: 1.0.0
@@ -1678,7 +1678,7 @@ snapshots:
       app-builder-lib: 26.15.3(dmg-builder@26.15.3)(electron-builder-squirrel-windows@26.15.3)(supports-color@7.2.0)
       builder-util: 26.15.3(supports-color@7.2.0)
       fs-extra: 10.1.0
-      js-yaml: 5.2.1
+      js-yaml: 5.2.2
     transitivePeerDependencies:
       - electron-builder-squirrel-windows
       - supports-color
@@ -2070,7 +2070,7 @@ snapshots:
 
   jiti@2.7.0: {}
 
-  js-yaml@5.2.1:
+  js-yaml@5.2.2:
     dependencies:
       argparse: 2.0.1
 
