@@ -113,15 +113,17 @@ import Nothing from '@/components/misc/Nothing.vue'
 import Pagination from '@/components/misc/Pagination.vue'
 import SortPopup from '@/components/project/partials/SortPopup.vue'
 
-import {useTaskList} from '@/composables/useTaskList'
+import {useTaskList, type SortBy} from '@/composables/useTaskList'
 import {useTaskDragToProject} from '@/composables/useTaskDragToProject'
 import {shouldShowTaskInListView} from '@/composables/useTaskListFiltering'
 import {PERMISSIONS as Permissions} from '@/constants/permissions'
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
+import {sortByFromViewFilter} from '@/helpers/viewSort'
 import type {ITask} from '@/modelTypes/ITask'
 import {isSavedFilter, useSavedFilter} from '@/services/savedFilter'
 
 import {useBaseStore} from '@/stores/base'
+import {useProjectStore} from '@/stores/projects'
 import {useTaskStore} from '@/stores/tasks'
 
 import type {IProject} from '@/modelTypes/IProject'
@@ -136,6 +138,15 @@ const props = defineProps<{
 }>()
 
 const projectId = toRef(props, 'projectId')
+const projectStore = useProjectStore()
+
+const LIST_SORT_DEFAULT: SortBy = {position: 'asc'}
+
+const sortByDefault = computed<SortBy>(() => {
+	const project = projectStore.projects[projectId.value]
+	const view = project?.views?.find(v => v.id === props.viewId)
+	return sortByFromViewFilter(view?.filter) ?? LIST_SORT_DEFAULT
+})
 
 defineOptions({name: 'List'})
 
@@ -154,7 +165,7 @@ const {
 } = useTaskList(
 	() => projectId.value,
 	() => props.viewId,
-	{position: 'asc'},
+	() => sortByDefault.value,
 	() => projectId.value === -1
 		? ['comment_count', 'is_unread']
 		: ['subtasks', 'comment_count', 'is_unread'],

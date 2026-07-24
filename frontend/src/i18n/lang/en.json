@@ -561,6 +561,8 @@
       "bucketConfig": "Bucket configuration",
       "bucketConfigManual": "Manual",
       "filter": "Filter",
+      "defaultSort": "Default sort",
+      "defaultSortDescription": "Used when opening this view with no sort in the URL. Everyone with access to the project shares this default.",
       "create": "Create view",
       "createSuccess": "The view was created successfully.",
       "titleRequired": "Please provide a title.",
