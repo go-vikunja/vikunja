@@ -869,3 +869,29 @@ func TestMultipleTasksWithMalformedIDsAreNotDropped(t *testing.T) {
 	}
 	assert.ElementsMatch(t, []string{"First malformed", "Second malformed", "Third malformed"}, titles)
 }
+
+// TestSortParentsBeforeChildrenHandlesParentIDCycles guards against a
+// regression where a task's parentId chain looping back on itself (e.g. two
+// rows each listing the other as parent, or a row listing itself) caused
+// sortParentsBeforeChildren to recurse forever, crashing the whole server
+// with a stack overflow instead of failing gracefully.
+func TestSortParentsBeforeChildrenHandlesParentIDCycles(t *testing.T) {
+	t.Run("mutual cycle between two tasks", func(t *testing.T) {
+		tasks := []*tickTickTask{
+			{TaskID: 1, ParentID: 2, Title: "First"},
+			{TaskID: 2, ParentID: 1, Title: "Second"},
+		}
+
+		sorted := sortParentsBeforeChildren(tasks)
+		require.Len(t, sorted, 2, "both tasks in the cycle should still be returned")
+	})
+
+	t.Run("self-referencing task", func(t *testing.T) {
+		tasks := []*tickTickTask{
+			{TaskID: 1, ParentID: 1, Title: "Its own parent"},
+		}
+
+		sorted := sortParentsBeforeChildren(tasks)
+		require.Len(t, sorted, 1, "the self-referencing task should still be returned")
+	})
+}

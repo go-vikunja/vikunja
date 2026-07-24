@@ -20,6 +20,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"code.vikunja.io/api/pkg/yaegi_symbols"
 )
 
 const examplePluginDir = "../../../examples/plugins/example"
@@ -67,4 +69,40 @@ func TestLoadPluginFull(t *testing.T) {
 		t.Fatal("UnauthRouter is nil — typed factory NewUnauthenticatedRouterPlugin not found")
 	}
 	t.Logf("UnauthRouter type: %T, name: %s", loaded.UnauthRouter, loaded.UnauthRouter.Name())
+}
+
+// TestPluginSafeSymbolsStripsDestructiveDBHelpers guards against a regression
+// where operator/test-only db helpers (WipeEverything and friends) become
+// resolvable from interpreted plugin code again - e.g. after a `yaegi
+// extract` regeneration of vikunja_db.go that a future contributor doesn't
+// realize needs the same filtering re-applied.
+func TestPluginSafeSymbolsStripsDestructiveDBHelpers(t *testing.T) {
+	filtered := pluginSafeSymbols()
+
+	dbSymbols, ok := filtered[dbPackagePath]
+	if !ok {
+		t.Fatalf("filtered symbols has no entry for %s", dbPackagePath)
+	}
+
+	for _, name := range unsafeForPlugins {
+		if _, present := dbSymbols[name]; present {
+			t.Errorf("db.%s must not be resolvable from plugin code, but is present", name)
+		}
+	}
+
+	// Sanity check: filtering shouldn't remove symbols plugins are meant to use.
+	for _, name := range []string{"NewSession", "ILIKE", "GetDialect"} {
+		if _, present := dbSymbols[name]; !present {
+			t.Errorf("db.%s should still be resolvable from plugin code, but was filtered out", name)
+		}
+	}
+
+	// The shared generated map must be untouched - other code may hold a
+	// reference to yaegi_symbols.Symbols directly.
+	original := yaegi_symbols.Symbols[dbPackagePath]
+	for _, name := range unsafeForPlugins {
+		if _, present := original[name]; !present {
+			t.Errorf("pluginSafeSymbols must not mutate the shared yaegi_symbols.Symbols map, but db.%s is missing from it", name)
+		}
+	}
 }

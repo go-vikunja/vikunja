@@ -59,12 +59,25 @@ type TOTPPasscode struct {
 
 // TOTPEnabledForUser checks if totp is enabled for a user - not if it is activated, use GetTOTPForUser to check that.
 func TOTPEnabledForUser(s *xorm.Session, user *User) (bool, error) {
-	if !config.ServiceEnableTotp.GetBool() {
-		return false, nil
-	}
 	t := &TOTP{}
 	_, err := s.Where("user_id = ?", user.ID).Get(t)
-	return t.Enabled, err
+	if err != nil {
+		return false, err
+	}
+
+	if !config.ServiceEnableTotp.GetBool() {
+		// service.enabletotp is a global kill-switch: it doesn't clear or
+		// flag this user's own totp.enabled row, so an operator disabling it
+		// silently removes 2FA enforcement for every already-enrolled user
+		// without touching their data. Surface that here so it at least
+		// shows up in logs instead of being invisible.
+		if t.Enabled {
+			log.Warningf("TOTP enforcement bypassed for user %d: service.enabletotp is globally disabled but this user has TOTP enrolled", user.ID)
+		}
+		return false, nil
+	}
+
+	return t.Enabled, nil
 }
 
 // GetTOTPForUser returns the current state of totp settings for the user.
