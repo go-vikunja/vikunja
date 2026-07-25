@@ -501,7 +501,7 @@ func RegisterAddTaskToFilterViewCron() {
 				resultTasks, _, _, err := tc.ReadAll(s, &user.User{ID: filter.OwnerID}, "", 1, -1)
 				if err != nil {
 					log.Errorf("%sError fetching tasks for filter %d: %s", logPrefix, filterID, err)
-					return
+					continue
 				}
 				tasks = resultTasks.([]*Task)
 			}

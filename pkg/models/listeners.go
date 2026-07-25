@@ -975,6 +975,12 @@ func (l *UpdateTaskInSavedFilterViews) Handle(msg *message.Message) (err error) 
 				continue
 			}
 
+			// The owner may have been disabled or deleted after the check above.
+			if user.IsErrUserStatusError(err) || user.IsErrUserDoesNotExist(err) {
+				log.Debugf("Skipping view %d, owner %d is not available: %v", view.ID, filter.OwnerID, err)
+				continue
+			}
+
 			return err
 		}
 
