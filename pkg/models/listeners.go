@@ -934,6 +934,11 @@ func (l *UpdateTaskInSavedFilterViews) Handle(msg *message.Message) (err error) 
 		return err
 	}
 
+	err = dropFiltersWithInactiveOwners(s, filters)
+	if err != nil {
+		return err
+	}
+
 	var fallbackTimezone string
 	if event.Doer != nil {
 		u, userErr := user.GetUserByID(s, event.Doer.GetID())
