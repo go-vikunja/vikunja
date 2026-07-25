@@ -19,6 +19,7 @@ package migration
 import (
 	"bytes"
 	"context"
+	"math"
 
 	"xorm.io/xorm"
 
@@ -135,6 +136,23 @@ func insertFromStructure(s *xorm.Session, str []*models.ProjectWithTasksAndBucke
 	log.Debugf("[creating structure] Done inserting new task structure")
 
 	return nil
+}
+
+// seedMissingTaskPositions numbers the tasks of an export that carries no order
+// information at all. A task without a position is inserted in front of the lowest one
+// by halving it, which hits the minimum spacing every few dozen inserts and then
+// recalculates every position in the view - O(n²) for a large import (#3297).
+// Seeding also keeps the order the export was written in.
+func seedMissingTaskPositions(tasks []*models.TaskWithComments) {
+	for _, t := range tasks {
+		if t.Position != 0 {
+			return
+		}
+	}
+
+	for i, t := range tasks {
+		t.Position = float64(i+1) * math.Pow(2, 16)
+	}
 }
 
 func createProject(s *xorm.Session, project *models.ProjectWithTasksAndBuckets, archivedProjectIDs *[]int64, labels map[string]*models.Label, user *user.User) (err error) {
@@ -326,6 +344,8 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 
 		return
 	}
+
+	seedMissingTaskPositions(tasks)
 
 	tasksByOldID := make(map[int64]*models.TaskWithComments, len(tasks))
 	newTaskIDs := []int64{}
