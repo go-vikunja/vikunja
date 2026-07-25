@@ -41,7 +41,7 @@ require (
 	github.com/disintegration/imaging v1.6.2
 	github.com/dustinkirkland/golang-petname v0.0.0-20240422154211-76c06c4bde6b
 	github.com/fatih/color v1.19.0
-	github.com/gabriel-vasile/mimetype v1.4.13
+	github.com/gabriel-vasile/mimetype v1.4.15
 	github.com/ganigeorgiev/fexpr v0.6.0
 	github.com/getsentry/sentry-go v0.48.0
 	github.com/go-ldap/ldap/v3 v3.4.14
