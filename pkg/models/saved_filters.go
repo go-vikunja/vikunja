@@ -104,13 +104,14 @@ func getSavedFiltersForUser(s *xorm.Session, auth web.Auth, search string) (filt
 
 func (sf *SavedFilter) ToProject() *Project {
 	return &Project{
-		ID:          getProjectIDFromSavedFilterID(sf.ID),
-		Title:       sf.Title,
-		Description: sf.Description,
-		IsFavorite:  sf.IsFavorite,
-		Created:     sf.Created,
-		Updated:     sf.Updated,
-		Owner:       sf.Owner,
+		ID:              getProjectIDFromSavedFilterID(sf.ID),
+		Title:           sf.Title,
+		Description:     sf.Description,
+		IsFavorite:      sf.IsFavorite,
+		Created:         sf.Created,
+		Updated:         sf.Updated,
+		Owner:           sf.Owner,
+		ParentProjectID: noParentProjectID(),
 	}
 }
 
