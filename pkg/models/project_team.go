@@ -34,8 +34,8 @@ type TeamProject struct {
 	TeamID int64 `xorm:"bigint not null INDEX" json:"team_id" param:"team" doc:"The id of the team that gets access to the project."`
 	// The project id.
 	ProjectID int64 `xorm:"bigint not null INDEX" json:"-" param:"project"`
-	// The permission this team has. 0 = Read only, 1 = Read & Write, 2 = Admin. See the docs for more details.
-	Permission Permission `xorm:"bigint INDEX not null default 0" json:"permission" valid:"length(0|2)" maximum:"2" default:"0" doc:"The permission this team has on the project: 0 = Read only, 1 = Read & Write, 2 = Admin."`
+	// The permission this team has. 0 = Read only, 1 = Read & Update, 2 = Read & Write, 3 = Admin. See the docs for more details.
+	Permission Permission `xorm:"bigint INDEX not null default 0" json:"permission" valid:"length(0|3)" maximum:"3" default:"0" doc:"The permission this team has on the project: 0 = Read only, 1 = Read & Update, 2 = Read & Write, 3 = Admin."`
 
 	// A timestamp when this relation was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"A timestamp when this relation was created. You cannot change this value."`
@@ -54,7 +54,7 @@ func (*TeamProject) TableName() string {
 // TeamWithPermission represents a team, combined with permissions.
 type TeamWithPermission struct {
 	Team       `xorm:"extends"`
-	Permission Permission `json:"permission" readOnly:"true" doc:"The permission this team has on the project: 0 = Read only, 1 = Read & Write, 2 = Admin."`
+	Permission Permission `json:"permission" readOnly:"true" doc:"The permission this team has on the project: 0 = Read only, 1 = Read & Update, 2 = Read & Write, 3 = Admin."`
 }
 
 // Create creates a new team <-> project relation

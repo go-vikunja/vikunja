@@ -320,7 +320,7 @@ WITH RECURSIVE
     project_permissions AS (SELECT ph.id,
                                    ph.original_project_id,
                                    CASE
-                                       WHEN p.owner_id = ? THEN 2
+                                       WHEN p.owner_id = ? THEN 3
                                        WHEN COALESCE(ul.permission, 0) > COALESCE(mtp.max_team_permission, 0) THEN ul.permission
                                        ELSE COALESCE(mtp.max_team_permission, 0)
                                        END AS project_permission,

@@ -67,5 +67,9 @@ func (tc *TaskComment) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 // CanCreate checks if a user can create a new comment
 func (tc *TaskComment) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 	t := Task{ID: tc.TaskID}
-	return t.CanWrite(s, a)
+	canRead, maxPerm, err := t.CanRead(s, a)
+	if err != nil || !canRead {
+		return false, err
+	}
+	return maxPerm >= int(PermissionUpdate), nil
 }

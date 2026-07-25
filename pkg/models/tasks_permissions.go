@@ -26,9 +26,74 @@ func (t *Task) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
 	return t.canDoTask(s, a)
 }
 
-// CanUpdate determines if a user has the permission to update a project task
+// CanUpdate determines if a user has the permission to update a project task.
+// Users with PermissionWrite or higher can update any task attributes.
+// Users with PermissionUpdate can only toggle task completion attributes (done, done_at).
 func (t *Task) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
-	return t.canDoTask(s, a)
+	ot, err := GetTaskByIDSimple(s, t.ID)
+	if err != nil {
+		return false, err
+	}
+
+	if t.ProjectID != 0 && t.ProjectID != ot.ProjectID {
+		newProject := &Project{ID: t.ProjectID}
+		can, err := newProject.CanWrite(s, a)
+		if err != nil {
+			return false, err
+		}
+		if !can {
+			return false, ErrGenericForbidden{}
+		}
+	}
+
+	l := &Project{ID: ot.ProjectID}
+	canRead, maxPerm, err := l.CanRead(s, a)
+	if err != nil || !canRead {
+		return false, err
+	}
+
+	if maxPerm >= int(PermissionWrite) {
+		return true, nil
+	}
+
+	if maxPerm == int(PermissionUpdate) {
+		if t.Title != "" && t.Title != ot.Title {
+			return false, ErrGenericForbidden{}
+		}
+		if t.Description != "" && t.Description != ot.Description {
+			return false, ErrGenericForbidden{}
+		}
+		if t.ProjectID != 0 && t.ProjectID != ot.ProjectID {
+			return false, ErrGenericForbidden{}
+		}
+		if !t.DueDate.Equal(ot.DueDate) {
+			return false, ErrGenericForbidden{}
+		}
+		if !t.StartDate.Equal(ot.StartDate) {
+			return false, ErrGenericForbidden{}
+		}
+		if !t.EndDate.Equal(ot.EndDate) {
+			return false, ErrGenericForbidden{}
+		}
+		if t.Priority != 0 && t.Priority != ot.Priority {
+			return false, ErrGenericForbidden{}
+		}
+		if t.RepeatAfter != 0 && t.RepeatAfter != ot.RepeatAfter {
+			return false, ErrGenericForbidden{}
+		}
+		if t.HexColor != "" && t.HexColor != ot.HexColor {
+			return false, ErrGenericForbidden{}
+		}
+		if t.PercentDone != 0 && t.PercentDone != ot.PercentDone {
+			return false, ErrGenericForbidden{}
+		}
+		if t.Assignees != nil {
+			return false, ErrGenericForbidden{}
+		}
+		return true, nil
+	}
+
+	return false, nil
 }
 
 // CanCreate determines if a user has the permission to create a project task

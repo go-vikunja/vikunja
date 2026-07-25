@@ -52,8 +52,8 @@ type LinkSharing struct {
 	Name string `xorm:"text null" json:"name" doc:"The name of this link share. All actions someone takes while authenticated through this link will appear under this name."`
 	// The ID of the shared project
 	ProjectID int64 `xorm:"bigint not null" json:"-" param:"project"`
-	// The permission this project is shared with. 0 = Read only, 1 = Read & Write, 2 = Admin. See the docs for more details.
-	Permission Permission `xorm:"bigint INDEX not null default 0" json:"permission" valid:"length(0|2)" maximum:"2" default:"0" doc:"The permission this project is shared with: 0 = read only, 1 = read & write, 2 = admin."`
+	// The permission this project is shared with. 0 = Read only, 1 = Read & Update, 2 = Read & Write, 3 = Admin. See the docs for more details.
+	Permission Permission `xorm:"bigint INDEX not null default 0" json:"permission" valid:"length(0|3)" maximum:"3" default:"0" doc:"The permission this project is shared with: 0 = read only, 1 = read & update, 2 = read & write, 3 = admin."`
 
 	// The kind of this link. 0 = undefined, 1 = without password, 2 = with password.
 	SharingType SharingType `xorm:"bigint INDEX not null default 0" json:"sharing_type" valid:"length(0|2)" maximum:"2" default:"0" readOnly:"true" doc:"The kind of this link, derived from whether a password was set: 0 = undefined, 1 = without password, 2 = with password."`

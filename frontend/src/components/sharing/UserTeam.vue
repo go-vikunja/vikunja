@@ -85,6 +85,12 @@
 								</span>
 								{{ $t('project.share.permission.readWrite') }}
 							</template>
+							<template v-else-if="s.permission === PERMISSIONS.UPDATE">
+								<span class="icon is-small">
+									<Icon icon="check" />
+								</span>
+								{{ $t('project.share.permission.update') }}
+							</template>
 							<template v-else>
 								<span class="icon is-small">
 									<Icon icon="users" />
@@ -108,6 +114,12 @@
 										:value="PERMISSIONS.READ"
 									>
 										{{ $t('project.share.permission.read') }}
+									</option>
+									<option
+										:selected="s.permission === PERMISSIONS.UPDATE"
+										:value="PERMISSIONS.UPDATE"
+									>
+										{{ $t('project.share.permission.update') }}
 									</option>
 									<option
 										:selected="s.permission === PERMISSIONS.READ_WRITE"

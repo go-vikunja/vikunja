@@ -450,6 +450,7 @@
       "permission": {
         "title": "Permission",
         "read": "Read only",
+        "update": "Can complete / update",
         "readWrite": "Read & write",
         "admin": "Admin"
       },

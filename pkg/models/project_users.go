@@ -37,8 +37,8 @@ type ProjectUser struct {
 	UserID int64 `xorm:"bigint not null INDEX" json:"-"`
 	// The project id.
 	ProjectID int64 `xorm:"bigint not null INDEX" json:"-" param:"project"`
-	// The permission this user has. 0 = Read only, 1 = Read & Write, 2 = Admin. See the docs for more details.
-	Permission Permission `xorm:"bigint INDEX not null default 0" json:"permission" valid:"length(0|2)" maximum:"2" default:"0" doc:"The permission this user has on the project. 0 = Read only, 1 = Read & Write, 2 = Admin."`
+	// The permission this user has. 0 = Read only, 1 = Read & Update, 2 = Read & Write, 3 = Admin. See the docs for more details.
+	Permission Permission `xorm:"bigint INDEX not null default 0" json:"permission" valid:"length(0|3)" maximum:"3" default:"0" doc:"The permission this user has on the project. 0 = Read only, 1 = Read & Update, 2 = Read & Write, 3 = Admin."`
 
 	// A timestamp when this relation was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"A timestamp when this relation was created. You cannot change this value."`
@@ -57,7 +57,7 @@ func (*ProjectUser) TableName() string {
 // UserWithPermission represents a user in combination with the permission it can have on a project
 type UserWithPermission struct {
 	user.User  `xorm:"extends"`
-	Permission Permission `json:"permission" readOnly:"true" doc:"The permission this user has on the project. 0 = Read only, 1 = Read & Write, 2 = Admin."`
+	Permission Permission `json:"permission" readOnly:"true" doc:"The permission this user has on the project. 0 = Read only, 1 = Read & Update, 2 = Read & Write, 3 = Admin."`
 }
 
 // Create creates a new project <-> user relation
