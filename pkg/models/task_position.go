@@ -414,33 +414,37 @@ func recalculateTaskPositionsForRepair(s *xorm.Session, view *ProjectView) error
 	return nil
 }
 
+// getLowestPositionInView returns the smallest position in a view. has is false when no
+// task in the view has a position at all.
+func getLowestPositionInView(s *xorm.Session, viewID int64) (position float64, has bool, err error) {
+	lowest := &TaskPosition{}
+	has, err = s.Where("project_view_id = ?", viewID).
+		OrderBy("position asc").
+		Get(lowest)
+	return lowest.Position, has, err
+}
+
 func calculateNewPositionForTask(s *xorm.Session, a web.Auth, t *Task, view *ProjectView) (*TaskPosition, error) {
 	position := t.Position
 	if position == 0 {
-		lowestPosition := &TaskPosition{}
-		exists, err := s.Where("project_view_id = ?", view.ID).
-			OrderBy("position asc").
-			Get(lowestPosition)
+		lowestPosition, exists, err := getLowestPositionInView(s, view.ID)
 		if err != nil {
 			return nil, err
 		}
 		if exists {
-			if lowestPosition.Position < MinPositionSpacing {
+			if lowestPosition < MinPositionSpacing {
 				err = RecalculateTaskPositions(s, view, a)
 				if err != nil {
 					return nil, err
 				}
 
-				lowestPosition = &TaskPosition{}
-				_, err = s.Where("project_view_id = ?", view.ID).
-					OrderBy("position asc").
-					Get(lowestPosition)
+				lowestPosition, _, err = getLowestPositionInView(s, view.ID)
 				if err != nil {
 					return nil, err
 				}
 			}
 
-			position = lowestPosition.Position / 2
+			position = lowestPosition / 2
 		}
 	}
 
@@ -449,6 +453,73 @@ func calculateNewPositionForTask(s *xorm.Session, a web.Auth, t *Task, view *Pro
 		ProjectViewID: view.ID,
 		Position:      calculateDefaultPosition(t.Index, position),
 	}, nil
+}
+
+// makeRoomAtTopOfView recalculates a view's positions when the gap above its first task is
+// too small to fit count more tasks, and returns the lowest position afterwards. A return
+// value of 0 means the view has no positioned tasks to insert above.
+//
+// This has to run before the new tasks are inserted: a recalculation orders by position,
+// which they do not have yet, so they would land in an arbitrary order.
+func makeRoomAtTopOfView(s *xorm.Session, view *ProjectView, count int, a web.Auth) (lowest float64, err error) {
+	lowest, has, err := getLowestPositionInView(s, view.ID)
+	if err != nil || !has || count == 0 {
+		return 0, err
+	}
+
+	if lowest/float64(count+1) >= MinPositionSpacing {
+		return lowest, nil
+	}
+
+	err = RecalculateTaskPositions(s, view, a)
+	if err != nil {
+		return 0, err
+	}
+
+	lowest, _, err = getLowestPositionInView(s, view.ID)
+	return lowest, err
+}
+
+// spreadTasksAtTopOfView places tasks in the gap above the view's first task, in slice
+// order, so a batch of tasks created together keeps the order it was passed in. Tasks
+// carrying a position of their own keep it and do not take up a slot.
+//
+// lowest is what makeRoomAtTopOfView returned for this view; 0 means there is nothing to
+// insert above and the tasks fall back to the same default a single create would get.
+func spreadTasksAtTopOfView(tasks []*Task, view *ProjectView, lowest float64) []*TaskPosition {
+	var needSlot int
+	for _, t := range tasks {
+		if t.Position == 0 {
+			needSlot++
+		}
+	}
+
+	var spacing float64
+	if lowest > 0 && needSlot > 0 {
+		spacing = lowest / float64(needSlot+1)
+	}
+
+	positions := make([]*TaskPosition, 0, len(tasks))
+	var placed int
+	for _, t := range tasks {
+		position := t.Position
+		if position == 0 {
+			if spacing > 0 {
+				placed++
+				position = spacing * float64(placed)
+			} else {
+				position = calculateDefaultPosition(t.Index, 0)
+			}
+		}
+
+		positions = append(positions, &TaskPosition{
+			TaskID:        t.ID,
+			ProjectViewID: view.ID,
+			Position:      position,
+		})
+	}
+
+	return positions
 }
 
 type taskPositionKey struct {
@@ -523,22 +594,16 @@ func createPositionsForTasksInView(s *xorm.Session, tasks []*Task, view *Project
 	}
 
 	// Get the current lowest position to place new tasks at the top
-	lowestPosition := &TaskPosition{}
-	has, err := s.
-		Where("project_view_id = ?", view.ID).
-		OrderBy("position asc").
-		Get(lowestPosition)
+	basePosition, has, err := getLowestPositionInView(s, view.ID)
 	if err != nil {
 		return err
 	}
 
-	var basePosition float64
-	if !has || lowestPosition.Position < MinPositionSpacing {
+	if !has || basePosition < MinPositionSpacing {
 		return RecalculateTaskPositions(s, view, a)
 	}
 
 	// Place new tasks before the lowest position, evenly spaced
-	basePosition = lowestPosition.Position
 	spacing := basePosition / float64(len(tasks)+1)
 
 	newPositions := make([]*TaskPosition, 0, len(tasks))
