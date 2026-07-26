@@ -471,8 +471,6 @@ export const useTaskStore = defineStore('task', () => {
 		title,
 		bucketId,
 		projectId,
-		position,
-		index,
 	} :
 		Partial<ITask>,
 	) {
@@ -485,8 +483,6 @@ export const useTaskStore = defineStore('task', () => {
 					title,
 					projectId,
 					bucketId,
-					position,
-					index,
 				}),
 				parsedLabels: [],
 			}
@@ -522,8 +518,6 @@ export const useTaskStore = defineStore('task', () => {
 			priority: parsedTask.priority,
 			assignees,
 			bucketId: bucketId || 0,
-			position,
-			index,
 		})
 		task.repeatAfter = parsedTask.repeats
 		task.reminders = buildDefaultRemindersForQuickAdd(

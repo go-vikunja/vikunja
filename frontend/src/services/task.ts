@@ -20,7 +20,6 @@ const CREATE_FIELDS = [
 	'due_date',
 	'start_date',
 	'end_date',
-	'reminders',
 	'repeat_after',
 	'repeat_mode',
 	'priority',
