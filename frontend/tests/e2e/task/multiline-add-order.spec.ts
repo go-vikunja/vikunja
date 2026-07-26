@@ -88,6 +88,10 @@ test.describe('Multi-line quick add ordering', () => {
 		await textarea.press('Enter')
 		await expect(page.locator('.tasks .tasktext').filter({hasText: flat.at(-1)})).toBeVisible()
 
+		// guards the pre-reload insertion order, not just the order after reload
+		const before = await page.locator('.tasks .tasktext').allInnerTexts()
+		expect(before.slice(0, flat.length)).toEqual(flat)
+
 		await page.reload()
 		await expect(page.locator('.tasks .tasktext')).toHaveCount(flat.length + 3)
 
