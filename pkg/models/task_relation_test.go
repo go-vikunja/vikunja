@@ -424,6 +424,7 @@ func TestTaskRelation_CanCreate(t *testing.T) {
 func TestTaskRelation_SubtaskOrder(t *testing.T) {
 	// Clients render subtasks in the order the api returns them, so the order must
 	// follow relation creation and not whatever the database hands back.
+	// SQLite returns insertion order even without ORDER BY, so this only catches regressions on MySQL/Postgres.
 	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()
 	defer s.Close()
