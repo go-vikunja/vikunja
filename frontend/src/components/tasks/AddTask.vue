@@ -81,6 +81,9 @@ import {useAutoHeightTextarea} from '@/composables/useAutoHeightTextarea'
 
 const emit = defineEmits(['taskAdded'])
 
+// Mirrors maxItems on BulkTaskCreate.Tasks in pkg/models/bulk_task_create.go
+const MAX_TASKS_PER_BATCH = 100
+
 const textareaId = computed(() => `task-add-textarea-${Math.random().toString(36).substr(2, 9)}`)
 
 const newTaskTitle = ref('')
@@ -134,6 +137,16 @@ async function addTask() {
 			...task,
 			parentIndex: task.parentIndex === null ? null : remappedIndexes[task.parentIndex],
 		}))
+
+	if (tasksToCreate.length === 0) {
+		errorMessage.value = t('project.create.addTitleRequired')
+		return
+	}
+
+	if (tasksToCreate.length > MAX_TASKS_PER_BATCH) {
+		errorMessage.value = t('project.create.tooManyTasks', {count: MAX_TASKS_PER_BATCH})
+		return
+	}
 
 	// We ensure all labels exist prior to passing them down to the create task method
 	// In the store it will only ever see one task at a time so there's no way to reliably 

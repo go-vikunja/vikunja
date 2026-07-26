@@ -361,7 +361,8 @@
       "titlePlaceholder": "The project's title goes here…",
       "addTitleRequired": "Please specify a title.",
       "createdSuccess": "The project was successfully created.",
-      "addProjectRequired": "Please specify a project or set a default project in the settings."
+      "addProjectRequired": "Please specify a project or set a default project in the settings.",
+      "tooManyTasks": "You can only add {count} tasks at once. Please add them in smaller batches."
     },
     "archive": {
       "title": "Archive \"{project}\"",
