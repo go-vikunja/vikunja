@@ -98,4 +98,35 @@ test.describe('Multi-line quick add ordering', () => {
 		const titles = await page.locator('.tasks .tasktext').allInnerTexts()
 		expect(titles.slice(0, flat.length)).toEqual(flat)
 	})
+
+	// A batch big enough that halving the lowest position for every task would run out
+	// of room and trigger a full position recalculation part way through, which drops
+	// tasks out of sequence. Guards against replacing the computed positions with
+	// "create back to front and let the api put each one on top".
+	test('keeps the entered order for a batch large enough to exhaust the gap', async ({authenticatedPage: page}) => {
+		test.setTimeout(120000)
+		await createProjects(1)
+		await TaskFactory.create(3, {
+			id: '{increment}',
+			project_id: 1,
+		})
+		await TaskPositionFactory.create(3, {
+			task_id: '{increment}',
+			project_view_id: 1,
+		})
+		await page.goto('/projects/1/1')
+		await expect(page.locator('.tasks .task')).toHaveCount(3)
+
+		const lines = Array.from({length: 60}, (_, i) => `Big ${String(i + 1).padStart(2, '0')}`)
+		const textarea = page.locator('.task-add textarea')
+		await textarea.fill(lines.join('\n'))
+		await textarea.press('Enter')
+		await expect(page.locator('.tasks .tasktext').filter({hasText: lines.at(-1)})).toBeVisible({timeout: 60000})
+
+		await page.reload()
+		// The new tasks all sort above the existing three, so page one is exactly the
+		// first 50 of them.
+		await expect(page.locator('.tasks .tasktext')).toHaveCount(50)
+		expect(await page.locator('.tasks .tasktext').allInnerTexts()).toEqual(lines.slice(0, 50))
+	})
 })
