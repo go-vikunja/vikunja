@@ -223,6 +223,10 @@ function updateTaskList(task: ITask) {
 				loadTasks()
 			})
 		}
+	} else if (!task.position) {
+		// The api picked the position and does not report it back, so we only know it
+		// puts new tasks on top.
+		allTasks.value = [task, ...allTasks.value]
 	} else {
 		// AddTask emits one event per task in entry order; inserting by position keeps a batch in order instead of reversing it
 		const i = allTasks.value.findIndex(t => t.position > task.position)
