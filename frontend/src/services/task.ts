@@ -9,10 +9,8 @@ import {SECONDS_A_DAY, SECONDS_A_HOUR, SECONDS_A_WEEK} from '@/constants/date'
 import {objectToSnakeCase} from '@/helpers/case'
 import {AuthenticatedHTTPFactory, apiV2Url} from '@/helpers/fetcher'
 
-// The fields a client may set when creating a task. v2 rejects properties it does not
-// know, and a task model carries plenty the api does not accept on write: the empty
-// createdBy user it defaults to, maxPermission on every nested model, and frontend-only
-// ones like parentTaskId.
+// v2 rejects unknown properties, and a task model carries plenty the api does not
+// accept on write (createdBy, maxPermission, parentTaskId).
 const CREATE_FIELDS = [
 	'title',
 	'description',
