@@ -211,10 +211,18 @@ function focusNewTaskInput() {
 	addTaskRef.value?.focusTaskInput()
 }
 
+let pendingReload = false
+
 function updateTaskList(task: ITask) {
 	if (!isPositionSorting.value) {
-		// reload tasks with current filter and sorting
-		loadTasks()
+		// coalesce reloads so a burst of taskAdded events in the same tick only reloads once
+		if (!pendingReload) {
+			pendingReload = true
+			nextTick(() => {
+				pendingReload = false
+				loadTasks()
+			})
+		}
 	} else {
 		// AddTask emits one event per task in entry order; inserting by position keeps a batch in order instead of reversing it
 		const i = allTasks.value.findIndex(t => t.position > task.position)
