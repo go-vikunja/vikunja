@@ -179,6 +179,28 @@ func TestBulkTaskCreate_Create(t *testing.T) {
 		assert.Equal(t, []float64{16384, 32768, 49152}, positionsOf(t, s, 4, bt.Tasks))
 	})
 
+	t.Run("puts every task in the default bucket of a kanban view", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		bt := &BulkTaskCreate{Tasks: []*Task{
+			{Title: "first", ProjectID: 1},
+			{Title: "second", ProjectID: 1},
+		}}
+
+		require.NoError(t, bt.Create(s, u))
+
+		// View 4 is a kanban view with manual buckets, bucket 1 is its default
+		for _, task := range bt.Tasks {
+			tb := &TaskBucket{}
+			has, err := s.Where("task_id = ? AND project_view_id = ?", task.ID, 4).Get(tb)
+			require.NoError(t, err)
+			require.True(t, has, "task %d is in no bucket in view 4", task.ID)
+			assert.Equal(t, int64(1), tb.BucketID)
+		}
+	})
+
 	t.Run("creates nothing when one task fails", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
