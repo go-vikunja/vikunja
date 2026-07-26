@@ -26,11 +26,12 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 )
 
-// RegisterBulkTaskRoutes wires the bulk task update action onto the Huma API.
+// RegisterBulkTaskRoutes wires the bulk task actions onto the Huma API.
 //
-// BulkTask is a CRUDable Update, so the handler reuses handler.DoUpdate; its
-// CanUpdate fans the write check out across every project the involved tasks
-// belong to, so a single project the user can't write to rejects the request.
+// Both are plain CRUDable operations, so the handlers reuse handler.DoUpdate and
+// handler.DoCreate; their Can* methods fan the write check out across every project
+// the involved tasks belong to, so a single project the user can't write to rejects
+// the request.
 func RegisterBulkTaskRoutes(api huma.API) {
 	tags := []string{"tasks"}
 
@@ -42,6 +43,15 @@ func RegisterBulkTaskRoutes(api huma.API) {
 		Path:        "/tasks/bulk",
 		Tags:        tags,
 	}, tasksBulkUpdate)
+
+	Register(api, huma.Operation{
+		OperationID: "tasks-bulk-create",
+		Summary:     "Bulk create tasks",
+		Description: "Creates all tasks in the body at once, each in the project it names. They are placed above everything their views already contain, in the order they were passed in, so a client does not have to compute positions to keep a batch ordered; a task carrying a position of its own keeps it. The user needs write access to every project involved; if write is missing on even one, or if creating any task fails, nothing is created at all. Task relations are not part of this endpoint - create them afterwards.",
+		Method:      http.MethodPost,
+		Path:        "/tasks/bulk",
+		Tags:        tags,
+	}, tasksBulkCreate)
 }
 
 func init() { AddRouteRegistrar(RegisterBulkTaskRoutes) }
@@ -67,4 +77,25 @@ func tasksBulkUpdate(ctx context.Context, in *struct {
 	// was converted to HTML above for persistence).
 	convertTasksToMarkdown(ctx, append([]*models.Task{bt.Values}, bt.Tasks...)...)
 	return &singleBody[models.BulkTask]{Body: bt}, nil
+}
+
+func tasksBulkCreate(ctx context.Context, in *struct {
+	Format string `query:"format" enum:"html,markdown" doc:"How rich-text fields are exchanged. See the API description."`
+	Body   models.BulkTaskCreate
+}) (*singleBody[models.BulkTaskCreate], error) {
+	a, err := authFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	bt := &in.Body
+	for _, task := range bt.Tasks {
+		if err := convertToHTML(ctx, &task.Description); err != nil {
+			return nil, translateDomainError(err)
+		}
+	}
+	if err := handler.DoCreate(ctx, bt, a); err != nil {
+		return nil, translateDomainError(err)
+	}
+	convertTasksToMarkdown(ctx, bt.Tasks...)
+	return &singleBody[models.BulkTaskCreate]{Body: bt}, nil
 }
