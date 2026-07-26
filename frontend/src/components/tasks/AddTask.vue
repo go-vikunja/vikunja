@@ -223,9 +223,7 @@ async function addTask() {
 			})
 		}
 	} catch (e) {
-		// A failed batch creates nothing, so the whole input goes back. Once the tasks
-		// exist only the relations can still fail, and putting the lines back would
-		// create them a second time.
+		// Only restore the input when nothing was created: re-adding it after tasks exist would duplicate them.
 		if (createdTasks.length === 0) {
 			newTaskTitle.value = taskTitleBackup
 		}
@@ -234,7 +232,7 @@ async function addTask() {
 			errorMessage.value = t('project.create.addProjectRequired')
 			return
 		}
-		throw e
+		error(e)
 	} finally {
 		// Also runs on failure so tasks whose relations could not be created still show up
 		if (createdTasks.length > 0) {
