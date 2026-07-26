@@ -135,9 +135,11 @@ async function addTask() {
 	}
 
 	const taskTitleBackup = newTaskTitle.value
-	// This allows us to find the tasks with the title they had before being parsed
-	// by quick add magic.
-	const createdTasks: { [key: ITask['title']]: ITask } = {}
+	// Keyed by position in tasksToCreate so two identical lines stay distinct.
+	const createdTasks: ITask[] = []
+	// Parents are referenced by the title they had before quick add magic parsing, so we
+	// need a title lookup as well. Duplicate titles are ambiguous; first one wins.
+	const createdTasksByTitle: { [key: ITask['title']]: ITask } = {}
 	const tasksToCreate = parseSubtasksViaIndention(newTaskTitle.value, authStore.settings.frontendSettings.quickAddMagicMode)
 	// Raw input lines, filtered the same way parseSubtasksViaIndention does so the indices
 	// line up. Used to put only the not-yet-created lines back if creating one fails.
@@ -225,12 +227,16 @@ async function addTask() {
 				position = batchPositions[index] ?? taskIndex * POSITION_SPACING
 			}
 
-			createdTasks[title] = await taskStore.createNewTask({
+			const createdTask = await taskStore.createNewTask({
 				title,
 				projectId: projectId || authStore.settings.defaultProjectId,
 				position,
 				index: taskIndex,
 			})
+			createdTasks[index] = createdTask
+			if (typeof createdTasksByTitle[title] === 'undefined') {
+				createdTasksByTitle[title] = createdTask
+			}
 		}
 
 		failedIndex = -1
@@ -239,8 +245,9 @@ async function addTask() {
 		const allParentTasks = tasksToCreate.filter(t => t.parent !== null).map(t => t.parent)
 		// Sequential as well: subtasks are rendered in the order their relations were
 		// created, so racing them scrambles the nesting.
-		for (const t of tasksToCreate) {
-			const createdTask = createdTasks[t.title]
+		for (let index = 0; index < tasksToCreate.length; index++) {
+			const t = tasksToCreate[index]
+			const createdTask = createdTasks[index]
 			if (typeof createdTask === 'undefined') {
 				continue
 			}
@@ -250,7 +257,7 @@ async function addTask() {
 				continue
 			}
 
-			const createdParentTask = createdTasks[t.parent]
+			const createdParentTask = createdTasksByTitle[t.parent]
 			if (typeof createdParentTask === 'undefined') {
 				continue
 			}
@@ -300,7 +307,7 @@ async function addTask() {
 	} finally {
 		// We're emitting all tasks at once at the end to avoid the same task showing up
 		// multiple times. Also runs on failure so already created tasks show up in the list.
-		Object.values(createdTasks).forEach(task => {
+		createdTasks.forEach(task => {
 			emit('taskAdded', task)
 		})
 	}
