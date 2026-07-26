@@ -11,12 +11,21 @@ After=network.target
 [Service]
 RestartSec=2s
 Type=simple
+User=vikunja
+Group=vikunja
 WorkingDirectory=/opt/vikunja
 ExecStart=/usr/local/bin/vikunja
 Restart=always
+StateDirectory=vikunja
+StateDirectoryMode=0750
 
 # Hardening
 NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectHome=yes
+UMask=0077
+CapabilityBoundingSet=
+AmbientCapabilities=
 ProtectProc=invisible
 ProcSubset=pid
 ProtectKernelTunables=yes
