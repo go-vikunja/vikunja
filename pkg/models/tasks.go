@@ -574,7 +574,9 @@ func getTaskReminderMap(s *xorm.Session, taskIDs []int64) (taskReminders map[int
 
 func addRelatedTasksToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*Task, a web.Auth) (err error) {
 	relatedTasks := []*TaskRelation{}
-	err = s.In("task_id", taskIDs).Find(&relatedTasks)
+	// Ordered by id so clients rendering subtasks get them in the order the relations
+	// were created in, instead of whatever order the database happens to return.
+	err = s.In("task_id", taskIDs).OrderBy("id ASC").Find(&relatedTasks)
 	if err != nil {
 		return
 	}

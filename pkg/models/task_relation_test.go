@@ -420,3 +420,33 @@ func TestTaskRelation_CanCreate(t *testing.T) {
 		assert.False(t, can)
 	})
 }
+
+func TestTaskRelation_SubtaskOrder(t *testing.T) {
+	// Clients render subtasks in the order the api returns them, so the order must
+	// follow relation creation and not whatever the database hands back.
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	u := &user.User{ID: 1}
+	subtaskIDs := []int64{12, 11, 10, 9, 8}
+	for _, subtaskID := range subtaskIDs {
+		rel := TaskRelation{
+			TaskID:       2,
+			OtherTaskID:  subtaskID,
+			RelationKind: RelationKindSubtask,
+		}
+		require.NoError(t, rel.Create(s, u))
+	}
+
+	taskMap := map[int64]*Task{
+		2: {ID: 2, RelatedTasks: map[RelationKind][]*Task{}},
+	}
+	require.NoError(t, addRelatedTasksToTasks(s, []int64{2}, taskMap, u))
+
+	var got []int64
+	for _, subtask := range taskMap[2].RelatedTasks[RelationKindSubtask] {
+		got = append(got, subtask.ID)
+	}
+	assert.Equal(t, subtaskIDs, got)
+}
