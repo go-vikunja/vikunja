@@ -24,6 +24,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"xorm.io/xorm"
 )
 
 func TestTaskRelation_Create(t *testing.T) {
@@ -422,32 +423,84 @@ func TestTaskRelation_CanCreate(t *testing.T) {
 }
 
 func TestTaskRelation_SubtaskOrder(t *testing.T) {
-	// Clients render subtasks in the order the api returns them, so the order must
-	// follow relation creation and not whatever the database hands back.
-	// SQLite returns insertion order even without ORDER BY, so this only catches regressions on MySQL/Postgres.
-	db.LoadAndAssertFixtures(t)
-	s := db.NewSession()
-	defer s.Close()
-
 	u := &user.User{ID: 1}
 	subtaskIDs := []int64{12, 11, 10, 9, 8}
-	for _, subtaskID := range subtaskIDs {
-		rel := TaskRelation{
-			TaskID:       2,
-			OtherTaskID:  subtaskID,
-			RelationKind: RelationKindSubtask,
+
+	// Relations are created in an order that does not match the subtask ids, so an
+	// accidental sort by task id can't pass these.
+	seed := func(t *testing.T, s *xorm.Session) {
+		for _, subtaskID := range subtaskIDs {
+			rel := TaskRelation{
+				TaskID:       2,
+				OtherTaskID:  subtaskID,
+				RelationKind: RelationKindSubtask,
+			}
+			require.NoError(t, rel.Create(s, u))
 		}
-		require.NoError(t, rel.Create(s, u))
 	}
 
-	taskMap := map[int64]*Task{
-		2: {ID: 2, RelatedTasks: map[RelationKind][]*Task{}},
+	readSubtaskIDs := func(t *testing.T, s *xorm.Session, view *ProjectView) (ids []int64) {
+		taskMap := map[int64]*Task{
+			2: {ID: 2, RelatedTasks: map[RelationKind][]*Task{}},
+		}
+		require.NoError(t, addRelatedTasksToTasks(s, []int64{2}, taskMap, u, view))
+		for _, subtask := range taskMap[2].RelatedTasks[RelationKindSubtask] {
+			ids = append(ids, subtask.ID)
+		}
+		return ids
 	}
-	require.NoError(t, addRelatedTasksToTasks(s, []int64{2}, taskMap, u))
 
-	var got []int64
-	for _, subtask := range taskMap[2].RelatedTasks[RelationKindSubtask] {
-		got = append(got, subtask.ID)
-	}
-	assert.Equal(t, subtaskIDs, got)
+	t.Run("sorted by their position in the view", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		seed(t, s)
+
+		// Deliberately the reverse of the relation creation order
+		for i, subtaskID := range subtaskIDs {
+			_, err := s.Insert(&TaskPosition{
+				TaskID:        subtaskID,
+				ProjectViewID: 1,
+				Position:      float64(len(subtaskIDs)-i) * 100,
+			})
+			require.NoError(t, err)
+		}
+
+		view, err := GetProjectViewByID(s, 1)
+		require.NoError(t, err)
+
+		reversed := make([]int64, 0, len(subtaskIDs))
+		for i := len(subtaskIDs) - 1; i >= 0; i-- {
+			reversed = append(reversed, subtaskIDs[i])
+		}
+		assert.Equal(t, reversed, readSubtaskIDs(t, s, view))
+	})
+
+	t.Run("falls back to relation order without a view", func(t *testing.T) {
+		// The task detail page, CalDAV and exports read tasks without a view, so there
+		// are no positions to sort by. Relation id keeps that stable.
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		seed(t, s)
+
+		assert.Equal(t, subtaskIDs, readSubtaskIDs(t, s, nil))
+	})
+
+	t.Run("sorts subtasks without a position in the view last", func(t *testing.T) {
+		// Subtasks living in another project have no position row for this view.
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		seed(t, s)
+
+		_, err := s.Insert(&TaskPosition{TaskID: 9, ProjectViewID: 1, Position: 100})
+		require.NoError(t, err)
+
+		view, err := GetProjectViewByID(s, 1)
+		require.NoError(t, err)
+
+		// 9 is positioned so it comes first, the rest keep their relation order
+		assert.Equal(t, []int64{9, 12, 11, 10, 8}, readSubtaskIDs(t, s, view))
+	})
 }

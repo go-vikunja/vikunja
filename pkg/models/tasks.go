@@ -572,10 +572,10 @@ func getTaskReminderMap(s *xorm.Session, taskIDs []int64) (taskReminders map[int
 	return
 }
 
-func addRelatedTasksToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*Task, a web.Auth) (err error) {
+func addRelatedTasksToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*Task, a web.Auth, view *ProjectView) (err error) {
 	relatedTasks := []*TaskRelation{}
-	// Ordered by id so clients rendering subtasks get them in the order the relations
-	// were created in, instead of whatever order the database happens to return.
+	// Ordered by id so the relations have a stable order to fall back to when they
+	// cannot be sorted by position - see sortRelatedTasksByPosition.
 	err = s.In("task_id", taskIDs).OrderBy("id ASC").Find(&relatedTasks)
 	if err != nil {
 		return
@@ -627,7 +627,53 @@ func addRelatedTasksToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]
 		taskMap[rt.TaskID].RelatedTasks[rt.RelationKind] = append(taskMap[rt.TaskID].RelatedTasks[rt.RelationKind], otherTask)
 	}
 
-	return
+	return sortRelatedTasksByPosition(s, taskMap, relatedTaskIDs, view)
+}
+
+// sortRelatedTasksByPosition orders every task's related tasks by the position they
+// have in the view being read, so clients rendering subtasks under their parent show
+// them in the same order as the view itself.
+//
+// Not every related task has a position to sort by: there is no view at all on the
+// task detail page, in CalDAV and in exports, and a related task living in another
+// project has no row for this view. Those keep the relation order they were fetched
+// in (by relation id) and sort after the ones that do have a position.
+func sortRelatedTasksByPosition(s *xorm.Session, taskMap map[int64]*Task, relatedTaskIDs []int64, view *ProjectView) (err error) {
+	if view == nil {
+		return nil
+	}
+
+	positions := []*TaskPosition{}
+	err = s.In("task_id", relatedTaskIDs).
+		And("project_view_id = ?", view.ID).
+		Find(&positions)
+	if err != nil {
+		return err
+	}
+	if len(positions) == 0 {
+		return nil
+	}
+
+	positionByTask := make(map[int64]float64, len(positions))
+	for _, p := range positions {
+		positionByTask[p.TaskID] = p.Position
+	}
+
+	for _, task := range taskMap {
+		for _, related := range task.RelatedTasks {
+			// Stable so tasks without a position keep their relation id order
+			sort.SliceStable(related, func(i, j int) bool {
+				a, hasA := positionByTask[related[i].ID]
+				b, hasB := positionByTask[related[j].ID]
+				if hasA != hasB {
+					return hasA
+				}
+				return hasA && a < b
+			})
+		}
+	}
+
+	return nil
 }
 
 func addBucketsToTasks(s *xorm.Session, a web.Auth, taskIDs []int64, taskMap map[int64]*Task) (err error) {
@@ -817,7 +863,7 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 	}
 
 	// Get all related tasks
-	err = addRelatedTasksToTasks(s, taskIDs, taskMap, a)
+	err = addRelatedTasksToTasks(s, taskIDs, taskMap, a, view)
 	return
 }
 

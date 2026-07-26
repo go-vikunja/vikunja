@@ -48,7 +48,7 @@ func TestAddRelatedTasksToTasks_InheritedProjectAccess(t *testing.T) {
 	}
 	taskIDs := []int64{49}
 
-	err := addRelatedTasksToTasks(s, taskIDs, taskMap, u)
+	err := addRelatedTasksToTasks(s, taskIDs, taskMap, u, nil)
 	require.NoError(t, err)
 
 	foundTask50 := false
@@ -81,7 +81,7 @@ func TestAddRelatedTasksToTasks_NoAccessToHierarchy(t *testing.T) {
 	}
 	taskIDs := []int64{49}
 
-	err := addRelatedTasksToTasks(s, taskIDs, taskMap, u)
+	err := addRelatedTasksToTasks(s, taskIDs, taskMap, u, nil)
 	require.NoError(t, err)
 
 	foundTask50 := false
@@ -117,7 +117,7 @@ func TestAddRelatedTasksToTasks_FiltersInaccessibleProjects(t *testing.T) {
 	}
 	taskIDs := []int64{1}
 
-	err := addRelatedTasksToTasks(s, taskIDs, taskMap, u)
+	err := addRelatedTasksToTasks(s, taskIDs, taskMap, u, nil)
 	require.NoError(t, err)
 
 	// Task 29 is in project 1 (same project, user 1 has access) — should be present
