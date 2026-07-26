@@ -968,10 +968,19 @@ func setNewTaskIndex(s *xorm.Session, t *Task) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/tasks [put]
 func (t *Task) Create(s *xorm.Session, a web.Auth) (err error) {
-	return createTask(s, t, a, true, true)
+	return createTask(s, t, a, createTaskOpts{updateAssignees: true, setBucket: true})
 }
 
-func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, setBucket bool) (err error) {
+// createTaskOpts holds the parts of task creation a caller can opt out of.
+type createTaskOpts struct {
+	updateAssignees bool
+	setBucket       bool
+	// skipPositions leaves the task without position rows so the caller can place a
+	// whole batch of tasks relative to each other, see BulkTaskCreate.
+	skipPositions bool
+}
+
+func createTask(s *xorm.Session, t *Task, a web.Auth, opts createTaskOpts) (err error) {
 
 	t.ID = 0
 
@@ -1026,7 +1035,7 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, setB
 		}
 	}
 
-	positions, taskBuckets, err := setTaskInBucketInViews(s, t, a, setBucket, providedBucket)
+	positions, taskBuckets, err := setTaskInBucketInViews(s, t, a, opts, providedBucket)
 	if err != nil {
 		return err
 	}
@@ -1060,7 +1069,7 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, setB
 	t.CreatedBy = createdBy
 
 	// Update the assignees
-	if updateAssignees {
+	if opts.updateAssignees {
 		if err := t.updateTaskAssignees(s, t.Assignees, a); err != nil {
 			return err
 		}
@@ -1088,7 +1097,7 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, setB
 	return
 }
 
-func setTaskInBucketInViews(s *xorm.Session, t *Task, a web.Auth, setBucket bool, providedBucket *Bucket) ([]*TaskPosition, []*TaskBucket, error) {
+func setTaskInBucketInViews(s *xorm.Session, t *Task, a web.Auth, opts createTaskOpts, providedBucket *Bucket) ([]*TaskPosition, []*TaskBucket, error) {
 	views, err := getViewsForProject(s, t.ProjectID)
 	if err != nil {
 		return nil, nil, err
@@ -1100,7 +1109,7 @@ func setTaskInBucketInViews(s *xorm.Session, t *Task, a web.Auth, setBucket bool
 	var moveToDone bool
 
 	for _, view := range views {
-		if setBucket && !moveToDone &&
+		if opts.setBucket && !moveToDone &&
 			view.ViewKind == ProjectViewKindKanban &&
 			view.BucketConfigurationMode == BucketConfigurationModeManual {
 
@@ -1140,6 +1149,10 @@ func setTaskInBucketInViews(s *xorm.Session, t *Task, a web.Auth, setBucket bool
 				TaskID:        t.ID,
 				ProjectViewID: view.ID,
 			})
+		}
+
+		if opts.skipPositions {
+			continue
 		}
 
 		newPosition, err := calculateNewPositionForTask(s, a, t, view)

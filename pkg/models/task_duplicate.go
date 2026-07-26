@@ -90,7 +90,7 @@ func (td *TaskDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 		Reminders:   originalTask.Reminders,
 	}
 
-	err = createTask(s, newTask, doer, true, true)
+	err = createTask(s, newTask, doer, createTaskOpts{updateAssignees: true, setBucket: true})
 	if err != nil {
 		return err
 	}
