@@ -19,6 +19,7 @@ package webtests
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
@@ -68,7 +69,34 @@ func TestBulkTaskV2(t *testing.T) {
 
 		rec := humaRequest(t, e, http.MethodPut, "/api/v2/tasks/bulk",
 			`{"task_ids":[],"fields":["title"],"values":{"title":"bulkupdated"}}`, token, "")
+		require.Equal(t, http.StatusUnprocessableEntity, rec.Code, "body: %s", rec.Body.String())
+	})
+
+	t.Run("unknown task ids are rejected", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		token := humaTokenFor(t, &testuser1)
+
+		rec := humaRequest(t, e, http.MethodPut, "/api/v2/tasks/bulk",
+			`{"task_ids":[99999999],"fields":["title"],"values":{"title":"bulkupdated"}}`, token, "")
 		require.Equal(t, http.StatusBadRequest, rec.Code, "body: %s", rec.Body.String())
 		assert.Contains(t, rec.Body.String(), fmt.Sprintf(`"code":%d`, models.ErrCodeBulkTasksNeedAtLeastOne), "body: %s", rec.Body.String())
+	})
+
+	t.Run("more task ids than allowed are rejected", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		token := humaTokenFor(t, &testuser1)
+
+		ids := make([]string, 0, 101)
+		for range 101 {
+			ids = append(ids, "1")
+		}
+
+		rec := humaRequest(t, e, http.MethodPut, "/api/v2/tasks/bulk",
+			`{"task_ids":[`+strings.Join(ids, ",")+`],"fields":["title"],"values":{"title":"toomany"}}`, token, "")
+		require.Equal(t, http.StatusUnprocessableEntity, rec.Code, "body: %s", rec.Body.String())
+
+		db.AssertMissing(t, "tasks", map[string]interface{}{"title": "toomany"})
 	})
 }

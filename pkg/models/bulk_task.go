@@ -24,7 +24,7 @@ import (
 
 // BulkTask represents a bulk task update payload.
 type BulkTask struct {
-	TaskIDs []int64  `json:"task_ids" doc:"The ids of the tasks to update. The user needs write access to every project these tasks belong to, or the whole request is rejected."`
+	TaskIDs []int64  `json:"task_ids" minItems:"1" maxItems:"100" doc:"The ids of the tasks to update. The user needs write access to every project these tasks belong to, or the whole request is rejected."`
 	Fields  []string `json:"fields" doc:"The names of the task fields to apply from values; only these fields are written, the rest of each task is left untouched."`
 	Values  *Task    `json:"values" doc:"The task carrying the values to set. Only the fields named in fields are read from it and applied to every task."`
 	Tasks   []*Task  `json:"tasks,omitempty" readOnly:"true" doc:"The updated tasks, returned in the response."`
@@ -35,6 +35,10 @@ type BulkTask struct {
 
 // CanUpdate checks if the user can update all provided tasks.
 func (bt *BulkTask) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
+	if len(bt.TaskIDs) == 0 {
+		return false, ErrBulkTasksNeedAtLeastOne{}
+	}
+
 	tasks, err := GetTasksSimpleByIDs(s, bt.TaskIDs)
 	if err != nil {
 		return false, err
