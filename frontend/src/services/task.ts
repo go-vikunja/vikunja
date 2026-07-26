@@ -9,6 +9,30 @@ import {SECONDS_A_DAY, SECONDS_A_HOUR, SECONDS_A_WEEK} from '@/constants/date'
 import {objectToSnakeCase} from '@/helpers/case'
 import {AuthenticatedHTTPFactory, apiV2Url} from '@/helpers/fetcher'
 
+// The fields a client may set when creating a task. v2 rejects properties it does not
+// know, and a task model carries plenty the api does not accept on write: the empty
+// createdBy user it defaults to, maxPermission on every nested model, and frontend-only
+// ones like parentTaskId.
+const CREATE_FIELDS = [
+	'title',
+	'description',
+	'done',
+	'due_date',
+	'start_date',
+	'end_date',
+	'reminders',
+	'repeat_after',
+	'repeat_mode',
+	'priority',
+	'hex_color',
+	'percent_done',
+	'project_id',
+	'bucket_id',
+	'position',
+	'index',
+	'is_favorite',
+]
+
 const parseDate = date => {
 	if (date) {
 		return new Date(date).toISOString()
@@ -133,12 +157,33 @@ export default class TaskService extends AbstractService<ITask> {
 		try {
 			// v2 only, so this bypasses the v1 baseURL the rest of this service uses
 			const {data} = await AuthenticatedHTTPFactory().post(apiV2Url('tasks/bulk'), {
-				tasks: tasks.map(task => this.processModel(task)),
+				tasks: tasks.map(task => this.createPayload(task)),
 			})
 			return data.tasks.map((task: Partial<ITask>) => this.modelCreateFactory(task))
 		} finally {
 			cancel()
 		}
+	}
+
+	createPayload(task: ITask): Record<string, unknown> {
+		const processed = this.processModel(task) as unknown as Record<string, unknown>
+		const payload = Object.fromEntries(
+			CREATE_FIELDS
+				.filter(field => processed[field] !== null && typeof processed[field] !== 'undefined')
+				.map(field => [field, processed[field]]),
+		)
+
+		// The api resolves assignees by id, and the rest of the user model does not survive
+		// validation. Reminders are picked apart for the same reason.
+		payload.assignees = (task.assignees ?? []).map(({id}) => ({id}))
+		payload.reminders = ((processed.reminders ?? []) as Record<string, unknown>[])
+			.map(reminder => ({
+				reminder: reminder.reminder,
+				relative_period: reminder.relative_period,
+				relative_to: reminder.relative_to,
+			}))
+
+		return payload
 	}
 
 	async markTaskAsRead(taskId: ITask['id']): Promise<void> {
