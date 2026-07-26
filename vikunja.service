@@ -16,15 +16,14 @@ ExecStart=/usr/local/bin/vikunja
 Restart=always
 
 # Hardening
+#
+# Deliberately limited to kernel-level restrictions. Directives that change which
+# files the service sees or which credentials it holds are opt-in via hardening.conf,
+# because data paths are admin-configurable and the package cannot know what is safe
+# to mask (#3287: masking /root broke Postgres over TLS).
 NoNewPrivileges=yes
-PrivateTmp=yes
-ProtectHome=yes
 ProtectProc=invisible
 ProcSubset=pid
-UMask=0077
-
-CapabilityBoundingSet=
-AmbientCapabilities=
 ProtectKernelTunables=yes
 ProtectKernelModules=yes
 ProtectKernelLogs=yes
