@@ -139,6 +139,11 @@ async function addTask() {
 	// by quick add magic.
 	const createdTasks: { [key: ITask['title']]: ITask } = {}
 	const tasksToCreate = parseSubtasksViaIndention(newTaskTitle.value, authStore.settings.frontendSettings.quickAddMagicMode)
+	// Raw input lines, filtered the same way parseSubtasksViaIndention does so the indices
+	// line up. Used to put only the not-yet-created lines back if creating one fails.
+	const inputLines = newTaskTitle.value
+		.split(/[\r\n]+/)
+		.filter(t => t.replace(/\s/g, '').length > 0)
 
 	// We ensure all labels exist prior to passing them down to the create task method
 	// In the store it will only ever see one task at a time so there's no way to reliably 
@@ -189,6 +194,9 @@ async function addTask() {
 		? calculateItemPositions(tasksToCreate.length, null, props.positionAfter)
 		: []
 
+	// Index of the task currently being created, -1 once all of them exist.
+	let failedIndex = -1
+
 	try {
 		newTaskTitle.value = ''
 
@@ -196,6 +204,7 @@ async function addTask() {
 		// fallback position from what already exists, so parallel creates race each
 		// other and the tasks end up in an arbitrary order.
 		for (let index = 0; index < tasksToCreate.length; index++) {
+			failedIndex = index
 			const {title, project} = tasksToCreate[index]
 			if (title === '') {
 				continue
@@ -223,6 +232,8 @@ async function addTask() {
 				index: taskIndex,
 			})
 		}
+
+		failedIndex = -1
 
 		const taskRelationService = new TaskRelationService()
 		const allParentTasks = tasksToCreate.filter(t => t.parent !== null).map(t => t.parent)
@@ -272,18 +283,26 @@ async function addTask() {
 				relatedTasks: {}, // To avoid endless references
 			})
 		}
-
-		// We're emitting all tasks at once at the end to avoid the same task showing up multiple times
-		Object.values(createdTasks).forEach(task => {
-			emit('taskAdded', task)
-		})
 	} catch (e) {
-		newTaskTitle.value = taskTitleBackup
+		// Tasks before the failing one are already persisted, so only put the lines back
+		// which did not make it.
+		if (failedIndex === 0) {
+			newTaskTitle.value = taskTitleBackup
+		} else if (failedIndex > 0) {
+			newTaskTitle.value = inputLines.slice(failedIndex).join('\n')
+		}
+
 		if (e?.message === 'NO_PROJECT') {
 			errorMessage.value = t('project.create.addProjectRequired')
 			return
 		}
 		throw e
+	} finally {
+		// We're emitting all tasks at once at the end to avoid the same task showing up
+		// multiple times. Also runs on failure so already created tasks show up in the list.
+		Object.values(createdTasks).forEach(task => {
+			emit('taskAdded', task)
+		})
 	}
 }
 
