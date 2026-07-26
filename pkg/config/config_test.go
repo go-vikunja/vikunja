@@ -18,11 +18,64 @@ package config
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+// initConfigFromYAML runs InitConfig against a config file in a temporary directory.
+// cors.enable is turned off because InitConfig aborts when it is on without a publicurl.
+func initConfigFromYAML(t *testing.T, config string) {
+	t.Helper()
+
+	dir := t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "config.yml"), []byte("cors:\n  enable: false\n"+config), 0600))
+
+	cwd, err := os.Getwd()
+	require.NoError(t, err)
+	require.NoError(t, os.Chdir(dir))
+	t.Cleanup(func() {
+		require.NoError(t, os.Chdir(cwd))
+		viper.Reset()
+	})
+
+	viper.Reset()
+	InitConfig()
+}
+
+func TestServiceSecret(t *testing.T) {
+	t.Run("service.jwtsecret is migrated to service.secret", func(t *testing.T) {
+		initConfigFromYAML(t, "service:\n  jwtsecret: legacy-secret\n")
+
+		assert.Equal(t, "legacy-secret", ServiceSecret.GetString())
+	})
+	t.Run("service.jwtsecret is migrated from the environment", func(t *testing.T) {
+		t.Setenv("VIKUNJA_SERVICE_JWTSECRET", "legacy-env-secret")
+		initConfigFromYAML(t, "")
+
+		assert.Equal(t, "legacy-env-secret", ServiceSecret.GetString())
+	})
+	t.Run("service.secret wins over service.jwtsecret", func(t *testing.T) {
+		initConfigFromYAML(t, "service:\n  secret: new-secret\n  jwtsecret: legacy-secret\n")
+
+		assert.Equal(t, "new-secret", ServiceSecret.GetString())
+	})
+	t.Run("a secret is generated when none is configured", func(t *testing.T) {
+		initConfigFromYAML(t, "")
+
+		assert.Len(t, ServiceSecret.GetString(), 64)
+	})
+	t.Run("InitDefaultConfig generates a secret on its own", func(t *testing.T) {
+		viper.Reset()
+		t.Cleanup(viper.Reset)
+		InitDefaultConfig()
+
+		assert.Len(t, ServiceSecret.GetString(), 64)
+	})
+}
 
 func TestGetRootpathLocation(t *testing.T) {
 	// The function should return the current working directory
