@@ -39,7 +39,7 @@ export const calculateItemPosition = (
  * order. Needed when inserting several items at once: giving them all the same
  * position leaves their final order up to the api's conflict repair.
  *
- * For count = 1 this returns the same value as calculateItemPosition.
+ * For count = 1 with at least one neighbour, this matches calculateItemPosition.
  */
 export const calculateItemPositions = (
 	count: number,
