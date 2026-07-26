@@ -66,7 +66,7 @@ grep -hE '^[[:space:]]*(path|basepath|dir):[[:space:]]*"?/' "$CONFIG" 2>/dev/nul
 if [ -e /opt/vikunja/vikunja.db ]; then
 	chgrp vikunja /opt/vikunja && chmod 2775 /opt/vikunja
 	echo "vikunja: the database is still in /opt/vikunja, which the service user can now write." >&2
-	echo "vikunja: moving it to $STATE_DIR is recommended - see https://vikunja.io/docs/run-as-user" >&2
+	echo "vikunja: moving it to $STATE_DIR is recommended - see https://vikunja.io/docs/systemd-hardening" >&2
 fi
 
 # The config holds the database password and the signing secret.
