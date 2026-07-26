@@ -124,11 +124,16 @@ async function addTask() {
 	}
 
 	const taskTitleBackup = newTaskTitle.value
-	// Parents are referenced by the title they had before quick add magic parsing, so we
-	// need a title lookup as well. Duplicate titles are ambiguous; first one wins.
-	const createdTasksByTitle: { [key: ITask['title']]: ITask } = {}
-	const tasksToCreate = parseSubtasksViaIndention(newTaskTitle.value, authStore.settings.frontendSettings.quickAddMagicMode)
+	const parsedTasks = parseSubtasksViaIndention(newTaskTitle.value, authStore.settings.frontendSettings.quickAddMagicMode)
+	// Dropping lines which are empty after parsing (a lone "- ") shifts indexes, so parents are remapped.
+	let keptCount = 0
+	const remappedIndexes = parsedTasks.map(({title}) => title === '' ? null : keptCount++)
+	const tasksToCreate = parsedTasks
 		.filter(({title}) => title !== '')
+		.map(task => ({
+			...task,
+			parentIndex: task.parentIndex === null ? null : remappedIndexes[task.parentIndex],
+		}))
 
 	// We ensure all labels exist prior to passing them down to the create task method
 	// In the store it will only ever see one task at a time so there's no way to reliably 
@@ -161,14 +166,7 @@ async function addTask() {
 			projectId: currentProjectId,
 		})))
 
-		tasksToCreate.forEach(({title}, index) => {
-			if (typeof createdTasksByTitle[title] === 'undefined') {
-				createdTasksByTitle[title] = createdTasks[index]
-			}
-		})
-
 		const taskRelationService = new TaskRelationService()
-		const allParentTasks = tasksToCreate.filter(t => t.parent !== null).map(t => t.parent)
 		// Sequential as well: subtasks are rendered in the order their relations were
 		// created, so racing them scrambles the nesting.
 		for (let index = 0; index < tasksToCreate.length; index++) {
@@ -178,12 +176,7 @@ async function addTask() {
 				continue
 			}
 
-			const isParent = allParentTasks.includes(t.title)
-			if (t.parent === null && !isParent) {
-				continue
-			}
-
-			const createdParentTask = createdTasksByTitle[t.parent]
+			const createdParentTask = t.parentIndex === null ? undefined : createdTasks[t.parentIndex]
 			if (typeof createdParentTask === 'undefined') {
 				continue
 			}

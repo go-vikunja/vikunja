@@ -2,7 +2,7 @@ import {getProjectFromPrefix, PrefixMode} from '@/modules/quickAddMagic'
 
 export interface TaskWithParent {
 	title: string,
-	parent: string | null,
+	parentIndex: number | null,
 	project: string | null,
 }
 
@@ -46,7 +46,7 @@ export function parseSubtasksViaIndention(taskTitles: string, prefixMode: Prefix
 	return titles.map((title, index) => {
 		const task: TaskWithParent = {
 			title: cleanupTitle(title),
-			parent: null,
+			parentIndex: null,
 			project: null,
 		}
 
@@ -62,18 +62,19 @@ export function parseSubtasksViaIndention(taskTitles: string, prefixMode: Prefix
 		if (matchedSpaces > 0) {
 			// Go up the tree to find the first task with less indention than the current one
 			let pi = 1
+			let parentTitle: string
 			let parentSpaces: number
 			do {
-				task.parent = cleanupTitle(titles[index - pi])
+				task.parentIndex = index - pi
+				parentTitle = cleanupTitle(titles[task.parentIndex])
 				pi++
-				const parentMatched = spaceRegex.exec(task.parent)
+				const parentMatched = spaceRegex.exec(parentTitle)
 				parentSpaces = parentMatched ? parentMatched[0].length : 0
 			} while (parentSpaces >= matchedSpaces)
 			task.title = cleanupTitle(task.title.replace(spaceRegex, ''))
-			task.parent = task.parent.replace(spaceRegex, '')
 			if (task.project === null) {
 				// This allows to specify a project once for the parent task and inherit it to all subtasks
-				task.project = getProjectFromPrefix(task.parent, prefixMode)
+				task.project = getProjectFromPrefix(cleanupTitle(parentTitle.replace(spaceRegex, '')), prefixMode)
 			}
 		}
 
