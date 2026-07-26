@@ -462,41 +462,42 @@ export const useTaskStore = defineStore('task', () => {
 		return foundProjectId
 	}
 	
-	async function createNewTask({
+	/**
+	 * Turns one quick add magic line into the task to create, resolving the project and
+	 * assignees it mentions. Labels come back separately because they can only be attached
+	 * once the task exists.
+	 */
+	async function buildTaskFromInput({
 		title,
 		bucketId,
 		projectId,
 		position,
 		index,
-	} : 
+	} :
 		Partial<ITask>,
 	) {
-		const cancel = setModuleLoading(setIsLoading)
 		const quickAddMagicMode = authStore.settings.frontendSettings.quickAddMagicMode
 		const parsedTask = parseTaskText(title, quickAddMagicMode)
 
 		if(parsedTask.text === '') {
-			const taskService = new TaskService()
-			try {
-				return taskService.create(new TaskModel({
+			return {
+				task: new TaskModel({
 					title,
 					projectId,
 					bucketId,
 					position,
 					index,
-				}))
-			} finally {
-				cancel()
+				}),
+				parsedLabels: [],
 			}
 		}
-	
+
 		const foundProjectId = await findProjectId({
 			project: parsedTask.project,
 			projectId: projectId || 0,
 		})
-		
+
 		if(foundProjectId === null || foundProjectId === 0) {
-			cancel()
 			throw new Error('NO_PROJECT')
 		}
 
@@ -534,18 +535,21 @@ export const useTaskStore = defineStore('task', () => {
 			task.repeatMode = TASK_REPEAT_MODES.REPEAT_MODE_MONTH
 		}
 
-		const taskService = new TaskService()
+		return {task, parsedLabels: parsedTask.labels}
+	}
+
+	async function createNewTask(taskInput: Partial<ITask>) {
+		const cancel = setModuleLoading(setIsLoading)
+
 		try {
-			const createdTask = await taskService.create(task)
-			return await addLabelsToTask({
-				task: createdTask,
-				parsedLabels: parsedTask.labels,
-			})
+			const {task, parsedLabels} = await buildTaskFromInput(taskInput)
+			const createdTask = await new TaskService().create(task)
+			return await addLabelsToTask({task: createdTask, parsedLabels})
 		} finally {
 			cancel()
 		}
 	}
-	
+
 	async function setCoverImage(task: ITask, attachment: IAttachment | null) {
 		return update({
 			...task,
