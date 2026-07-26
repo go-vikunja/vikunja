@@ -46,16 +46,10 @@ test.describe('Multi-line quick add ordering', () => {
 
 	test('keeps the entered order in a project with existing tasks', async ({authenticatedPage: page}) => {
 		await createProjects(1)
-		await TaskFactory.create(3, {
-			id: '{increment}',
-			project_id: 1,
-		})
+		await TaskFactory.create(3)
 		// The existing tasks need real positions: without them the api falls back to
 		// deriving one from the task index, which hides the ordering bug.
-		await TaskPositionFactory.create(3, {
-			task_id: '{increment}',
-			project_view_id: 1,
-		})
+		await TaskPositionFactory.create(3)
 		await page.goto('/projects/1/1')
 		await expect(page.locator('.tasks .task')).toHaveCount(3)
 
@@ -71,14 +65,8 @@ test.describe('Multi-line quick add ordering', () => {
 	// sorted by position - so this is the case that needs a position per task.
 	test('keeps the entered order for a flat list of tasks', async ({authenticatedPage: page}) => {
 		await createProjects(1)
-		await TaskFactory.create(3, {
-			id: '{increment}',
-			project_id: 1,
-		})
-		await TaskPositionFactory.create(3, {
-			task_id: '{increment}',
-			project_view_id: 1,
-		})
+		await TaskFactory.create(3)
+		await TaskPositionFactory.create(3)
 		await page.goto('/projects/1/1')
 		await expect(page.locator('.tasks .task')).toHaveCount(3)
 
@@ -115,14 +103,8 @@ test.describe('Multi-line quick add ordering', () => {
 	test('keeps the entered order for a batch large enough to exhaust the gap', async ({authenticatedPage: page}) => {
 		test.setTimeout(120000)
 		await createProjects(1)
-		await TaskFactory.create(3, {
-			id: '{increment}',
-			project_id: 1,
-		})
-		await TaskPositionFactory.create(3, {
-			task_id: '{increment}',
-			project_view_id: 1,
-		})
+		await TaskFactory.create(3)
+		await TaskPositionFactory.create(3)
 		await page.goto('/projects/1/1')
 		await expect(page.locator('.tasks .task')).toHaveCount(3)
 
