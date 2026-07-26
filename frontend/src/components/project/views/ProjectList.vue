@@ -34,7 +34,7 @@
 						v-if="!project?.isArchived && canWrite"
 						ref="addTaskRef"
 						class="list-view__add-task d-print-none"
-						:default-position="firstNewPosition"
+						:position-after="firstTaskPosition"
 						@taskAdded="updateTaskList"
 					/>
 
@@ -176,13 +176,8 @@ watch(
 
 const isPositionSorting = computed(() => 'position' in sortByParam.value)
 
-const firstNewPosition = computed(() => {
-	if (tasks.value.length === 0) {
-		return 0
-	}
-
-	return calculateItemPosition(null, tasks.value[0].position)
-})
+// New tasks are inserted above the current first one.
+const firstTaskPosition = computed(() => tasks.value[0]?.position ?? null)
 
 const baseStore = useBaseStore()
 const taskStore = useTaskStore()

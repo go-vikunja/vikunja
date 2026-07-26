@@ -72,6 +72,7 @@ import {parseSubtasksViaIndention} from '@/helpers/parseSubtasksViaIndention'
 import TaskRelationService from '@/services/taskRelation'
 import TaskRelationModel from '@/models/taskRelation'
 import {getLabelsFromPrefix} from '@/modules/quickAddMagic'
+import {calculateItemPosition, calculateItemPositions, POSITION_SPACING} from '@/helpers/calculateItemPosition'
 import {error} from '@/message'
 
 import {useAuthStore} from '@/stores/auth'
@@ -82,9 +83,11 @@ import TaskService from '@/services/task'
 import TaskModel from '@/models/task'
 
 const props = withDefaults(defineProps<{
-	defaultPosition?: number,
+	// Position of the task the new ones are inserted before, if the caller shows a
+	// sorted list. A whole batch is spread out below it so it keeps the entered order.
+	positionAfter?: number | null,
 }>(), {
-	defaultPosition: undefined,
+	positionAfter: null,
 })
 
 const emit = defineEmits(['taskAdded'])
@@ -159,8 +162,10 @@ async function addTask() {
 		currentProjectId = Number(router.currentRoute.value.params.projectId)
 	}
 
+	const isBatch = tasksToCreate.length > 1
+
 	// Create a map of project indices before creating tasks
-	if (tasksToCreate.length > 1) {
+	if (isBatch) {
 		for (const {project} of tasksToCreate) {
 			const projectId = project !== null
 				? await taskStore.findProjectId({project, projectId: 0})
@@ -178,61 +183,73 @@ async function addTask() {
 		}
 	}
 
-	const newTasks = tasksToCreate.map(async ({title, project}, index) => {
-		if (title === '') {
-			return
-		}
-
-		// If the task has a project specified, make sure to use it
-		const projectId = project !== null
-			? await taskStore.findProjectId({project, projectId: 0})
-			: currentProjectId
-
-		// Calculate new index for this task per project
-		let taskIndex: number | undefined
-		if (tasksToCreate.length > 1) {
-			const lastIndex = projectIndices.get(projectId)
-			taskIndex = lastIndex + index + 1
-		}
-
-		const task = await taskStore.createNewTask({
-			title,
-			projectId: projectId || authStore.settings.defaultProjectId,
-			position: props.defaultPosition,
-			index: taskIndex,
-		})
-		createdTasks[title] = task
-		return task
-	})
+	// One position for the whole batch would make every task collide, leaving the final
+	// order up to the api's conflict repair. Spread them out instead.
+	const batchPositions = props.positionAfter !== null
+		? calculateItemPositions(tasksToCreate.length, null, props.positionAfter)
+		: []
 
 	try {
 		newTaskTitle.value = ''
-		await Promise.all(newTasks)
+
+		// Created one after the other on purpose: the api derives a task's index and
+		// fallback position from what already exists, so parallel creates race each
+		// other and the tasks end up in an arbitrary order.
+		for (let index = 0; index < tasksToCreate.length; index++) {
+			const {title, project} = tasksToCreate[index]
+			if (title === '') {
+				continue
+			}
+
+			// If the task has a project specified, make sure to use it
+			const projectId = project !== null
+				? await taskStore.findProjectId({project, projectId: 0})
+				: currentProjectId
+
+			let taskIndex: number | undefined
+			let position: number | undefined = calculateItemPosition(null, props.positionAfter)
+			if (isBatch) {
+				// Calculate new index for this task per project
+				taskIndex = (projectIndices.get(projectId) ?? 0) + index + 1
+				// Without a task to insert before, fall back to the formula the api uses
+				// for a fresh view, which appends to the end.
+				position = batchPositions[index] ?? taskIndex * POSITION_SPACING
+			}
+
+			createdTasks[title] = await taskStore.createNewTask({
+				title,
+				projectId: projectId || authStore.settings.defaultProjectId,
+				position,
+				index: taskIndex,
+			})
+		}
 
 		const taskRelationService = new TaskRelationService()
 		const allParentTasks = tasksToCreate.filter(t => t.parent !== null).map(t => t.parent)
-		const relations = tasksToCreate.map(async t => {
+		// Sequential as well: subtasks are rendered in the order their relations were
+		// created, so racing them scrambles the nesting.
+		for (const t of tasksToCreate) {
 			const createdTask = createdTasks[t.title]
 			if (typeof createdTask === 'undefined') {
-				return
+				continue
 			}
 
 			const isParent = allParentTasks.includes(t.title)
 			if (t.parent === null && !isParent) {
-				return
+				continue
 			}
 
 			const createdParentTask = createdTasks[t.parent]
-			if (typeof createdTask === 'undefined' || typeof createdParentTask === 'undefined') {
-				return
+			if (typeof createdParentTask === 'undefined') {
+				continue
 			}
 
-			const rel = await taskRelationService.create(new TaskRelationModel({
+			await taskRelationService.create(new TaskRelationModel({
 				taskId: createdTask.id,
 				otherTaskId: createdParentTask.id,
 				relationKind: RELATION_KIND.PARENTTASK,
 			}))
-			
+
 			if (typeof createdTask.relatedTasks === 'undefined') {
 				createdTask.relatedTasks = {}
 			}
@@ -254,11 +271,8 @@ async function addTask() {
 				...createdTask,
 				relatedTasks: {}, // To avoid endless references
 			})
+		}
 
-			return rel
-		})
-		await Promise.all(relations)
-		
 		// We're emitting all tasks at once at the end to avoid the same task showing up multiple times
 		Object.values(createdTasks).forEach(task => {
 			emit('taskAdded', task)
