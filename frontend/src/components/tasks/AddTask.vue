@@ -220,8 +220,10 @@ async function addTask() {
 			let taskIndex: number | undefined
 			let position: number | undefined = calculateItemPosition(null, props.positionAfter)
 			if (isBatch) {
-				// Calculate new index for this task per project
-				taskIndex = (projectIndices.get(projectId) ?? 0) + index + 1
+				// Count up per project, not per batch: a mixed-project batch would
+				// otherwise skip indexes for every line that went elsewhere.
+				taskIndex = (projectIndices.get(projectId) ?? 0) + 1
+				projectIndices.set(projectId, taskIndex)
 				// Without a task to insert before, fall back to the formula the api uses
 				// for a fresh view, which appends to the end.
 				position = batchPositions[index] ?? taskIndex * POSITION_SPACING
