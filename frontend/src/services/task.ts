@@ -7,7 +7,7 @@ import LabelService from './label'
 import {colorFromHex} from '@/helpers/color/colorFromHex'
 import {SECONDS_A_DAY, SECONDS_A_HOUR, SECONDS_A_WEEK} from '@/constants/date'
 import {objectToSnakeCase} from '@/helpers/case'
-import {AuthenticatedHTTPFactory} from '@/helpers/fetcher'
+import {AuthenticatedHTTPFactory, apiV2Url} from '@/helpers/fetcher'
 
 const parseDate = date => {
 	if (date) {
@@ -120,6 +120,25 @@ export default class TaskService extends AbstractService<ITask> {
 		})
 
 		return transformed as ITask
+	}
+
+	/**
+	 * Creates multiple tasks in one request. The api spreads them out over the top of the
+	 * views they land in, so a batch keeps the order it is passed in without the client
+	 * having to compute positions. Fails as a whole: either all tasks are created or none.
+	 */
+	async createMultiple(tasks: ITask[]): Promise<ITask[]> {
+		const cancel = this.setLoading()
+
+		try {
+			// v2 only, so this bypasses the v1 baseURL the rest of this service uses
+			const {data} = await AuthenticatedHTTPFactory().post(apiV2Url('tasks/bulk'), {
+				tasks: tasks.map(task => this.processModel(task)),
+			})
+			return data.tasks.map((task: Partial<ITask>) => this.modelCreateFactory(task))
+		} finally {
+			cancel()
+		}
 	}
 
 	async markTaskAsRead(taskId: ITask['id']): Promise<void> {

@@ -550,6 +550,21 @@ export const useTaskStore = defineStore('task', () => {
 		}
 	}
 
+	async function createNewTasks(taskInputs: Partial<ITask>[]) {
+		const cancel = setModuleLoading(setIsLoading)
+
+		try {
+			const built = await Promise.all(taskInputs.map(taskInput => buildTaskFromInput(taskInput)))
+			const createdTasks = await new TaskService().createMultiple(built.map(({task}) => task))
+			return await Promise.all(createdTasks.map((task, index) => addLabelsToTask({
+				task,
+				parsedLabels: built[index].parsedLabels,
+			})))
+		} finally {
+			cancel()
+		}
+	}
+	
 	async function setCoverImage(task: ITask, attachment: IAttachment | null) {
 		return update({
 			...task,
@@ -619,6 +634,7 @@ export const useTaskStore = defineStore('task', () => {
 		removeLabel,
 		addLabelsToTask,
 		createNewTask,
+		createNewTasks,
 		setCoverImage,
 		findProjectId,
 		ensureLabelsExist,

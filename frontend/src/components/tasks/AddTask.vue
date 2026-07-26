@@ -72,23 +72,12 @@ import {parseSubtasksViaIndention} from '@/helpers/parseSubtasksViaIndention'
 import TaskRelationService from '@/services/taskRelation'
 import TaskRelationModel from '@/models/taskRelation'
 import {getLabelsFromPrefix} from '@/modules/quickAddMagic'
-import {calculateItemPositions, POSITION_SPACING} from '@/helpers/calculateItemPosition'
 import {error} from '@/message'
 
 import {useAuthStore} from '@/stores/auth'
 import {useTaskStore} from '@/stores/tasks'
 
 import {useAutoHeightTextarea} from '@/composables/useAutoHeightTextarea'
-import TaskService from '@/services/task'
-import TaskModel from '@/models/task'
-
-const props = withDefaults(defineProps<{
-	// Position of the task the new ones are inserted before, if the caller shows a
-	// sorted list. A whole batch is spread out below it so it keeps the entered order.
-	positionAfter?: number | null,
-}>(), {
-	positionAfter: null,
-})
 
 const emit = defineEmits(['taskAdded'])
 
@@ -135,17 +124,11 @@ async function addTask() {
 	}
 
 	const taskTitleBackup = newTaskTitle.value
-	// Keyed by position in tasksToCreate so two identical lines stay distinct.
-	const createdTasks: ITask[] = []
 	// Parents are referenced by the title they had before quick add magic parsing, so we
 	// need a title lookup as well. Duplicate titles are ambiguous; first one wins.
 	const createdTasksByTitle: { [key: ITask['title']]: ITask } = {}
 	const tasksToCreate = parseSubtasksViaIndention(newTaskTitle.value, authStore.settings.frontendSettings.quickAddMagicMode)
-	// Raw input lines, filtered the same way parseSubtasksViaIndention does so the indices
-	// line up. Used to put only the not-yet-created lines back if creating one fails.
-	const inputLines = newTaskTitle.value
-		.split(/[\r\n]+/)
-		.filter(t => t.replace(/\s/g, '').length > 0)
+		.filter(({title}) => title !== '')
 
 	// We ensure all labels exist prior to passing them down to the create task method
 	// In the store it will only ever see one task at a time so there's no way to reliably 
@@ -161,86 +144,28 @@ async function addTask() {
 		error({message: t('task.label.createFailed', {labels: failedLabels.join(', ')})})
 	}
 
-	const taskCollectionService = new TaskService()
-	const projectIndices = new Map<number, number>()
-
 	let currentProjectId = authStore.settings.defaultProjectId
 	if (typeof router.currentRoute.value.params.projectId !== 'undefined') {
 		currentProjectId = Number(router.currentRoute.value.params.projectId)
 	}
 
-	// Create a map of project indices before creating tasks
-	if (tasksToCreate.length > 1) {
-		for (const {project} of tasksToCreate) {
-			const projectId = project !== null
-				? await taskStore.findProjectId({project, projectId: 0})
-				: currentProjectId
-
-			if (!projectIndices.has(projectId)) {
-				const newestTask = await taskCollectionService.getAll(new TaskModel({}), {
-					sort_by: ['id'],
-					order_by: ['desc'],
-					per_page: 1,
-					filter: `project_id = ${projectId}`,
-				})
-				projectIndices.set(projectId, newestTask[0]?.index || 0)
-			}
-		}
-	}
-
-	// One position for the whole batch would make every task collide, leaving the final
-	// order up to the api's conflict repair. Spread them out instead.
-	const batchPositions = props.positionAfter !== null
-		? calculateItemPositions(tasksToCreate.length, null, props.positionAfter)
-		: []
-
-	// Index of the task currently being created, -1 once all of them exist.
-	let failedIndex = -1
+	let createdTasks: ITask[] = []
 
 	try {
 		newTaskTitle.value = ''
 
-		// Created one after the other on purpose: the api derives a task's index and
-		// fallback position from what already exists, so parallel creates race each
-		// other and the tasks end up in an arbitrary order.
-		for (let index = 0; index < tasksToCreate.length; index++) {
-			failedIndex = index
-			const {title, project} = tasksToCreate[index]
-			if (title === '') {
-				continue
-			}
+		// One request for the whole batch: the api numbers the tasks and places them on top
+		// in the order they are passed in. It either creates all of them or none.
+		createdTasks = await taskStore.createNewTasks(tasksToCreate.map(({title}) => ({
+			title,
+			projectId: currentProjectId,
+		})))
 
-			// If the task has a project specified, make sure to use it
-			const projectId = project !== null
-				? await taskStore.findProjectId({project, projectId: 0})
-				: currentProjectId
-
-			let taskIndex: number | undefined
-			if (tasksToCreate.length > 1) {
-				// Count up per project, not per batch: a mixed-project batch would
-				// otherwise skip indexes for every line that went elsewhere.
-				taskIndex = (projectIndices.get(projectId) ?? 0) + 1
-				projectIndices.set(projectId, taskIndex)
-			}
-
-			// With no task to insert before, keep the batch ordered with the formula the
-			// api uses for a fresh view. A single task has no order to keep, so let the
-			// api place it.
-			const position = batchPositions[index] ?? (taskIndex && taskIndex * POSITION_SPACING)
-
-			const createdTask = await taskStore.createNewTask({
-				title,
-				projectId: projectId || authStore.settings.defaultProjectId,
-				position,
-				index: taskIndex,
-			})
-			createdTasks[index] = createdTask
+		tasksToCreate.forEach(({title}, index) => {
 			if (typeof createdTasksByTitle[title] === 'undefined') {
-				createdTasksByTitle[title] = createdTask
+				createdTasksByTitle[title] = createdTasks[index]
 			}
-		}
-
-		failedIndex = -1
+		})
 
 		const taskRelationService = new TaskRelationService()
 		const allParentTasks = tasksToCreate.filter(t => t.parent !== null).map(t => t.parent)
@@ -292,12 +217,11 @@ async function addTask() {
 			})
 		}
 	} catch (e) {
-		// Tasks before the failing one are already persisted, so only put the lines back
-		// which did not make it.
-		if (failedIndex === 0) {
+		// A failed batch creates nothing, so the whole input goes back. Once the tasks
+		// exist only the relations can still fail, and putting the lines back would
+		// create them a second time.
+		if (createdTasks.length === 0) {
 			newTaskTitle.value = taskTitleBackup
-		} else if (failedIndex > 0) {
-			newTaskTitle.value = inputLines.slice(failedIndex).join('\n')
 		}
 
 		if (e?.message === 'NO_PROJECT') {
@@ -306,11 +230,10 @@ async function addTask() {
 		}
 		throw e
 	} finally {
-		// We're emitting all tasks at once at the end to avoid the same task showing up
-		// multiple times. Also runs on failure so already created tasks show up in the list.
-		createdTasks.forEach(task => {
-			emit('taskAdded', task)
-		})
+		// Also runs on failure so tasks whose relations could not be created still show up
+		if (createdTasks.length > 0) {
+			emit('taskAdded', createdTasks)
+		}
 	}
 }
 

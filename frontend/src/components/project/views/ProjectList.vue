@@ -34,7 +34,6 @@
 						v-if="!project?.isArchived && canWrite"
 						ref="addTaskRef"
 						class="list-view__add-task d-print-none"
-						:position-after="firstTaskPosition"
 						@taskAdded="updateTaskList"
 					/>
 
@@ -176,11 +175,6 @@ watch(
 
 const isPositionSorting = computed(() => 'position' in sortByParam.value)
 
-// New tasks are inserted above the current first one. A zero position means the api
-// has no position recorded for it, which is no anchor to insert before.
-// Only meaningful when sorted by position; otherwise the first task isn't the smallest.
-const firstTaskPosition = computed(() => isPositionSorting.value ? (tasks.value[0]?.position || null) : null)
-
 const baseStore = useBaseStore()
 const taskStore = useTaskStore()
 const {handleTaskDropToProject} = useTaskDragToProject()
@@ -211,28 +205,14 @@ function focusNewTaskInput() {
 	addTaskRef.value?.focusTaskInput()
 }
 
-let pendingReload = false
-
-function updateTaskList(task: ITask) {
+function updateTaskList(tasks: ITask[]) {
 	if (!isPositionSorting.value) {
-		// coalesce reloads so a burst of taskAdded events in the same tick only reloads once
-		if (!pendingReload) {
-			pendingReload = true
-			nextTick(() => {
-				pendingReload = false
-				loadTasks()
-			})
-		}
-	} else if (!task.position) {
-		// The api picked the position and does not report it back, so we only know it
-		// puts new tasks on top.
-		allTasks.value = [task, ...allTasks.value]
+		loadTasks()
 	} else {
-		// AddTask emits one event per task in entry order; inserting by position keeps a batch in order instead of reversing it
-		const i = allTasks.value.findIndex(t => t.position > task.position)
-		allTasks.value = i === -1
-			? [...allTasks.value, task]
-			: [...allTasks.value.slice(0, i), task, ...allTasks.value.slice(i)]
+		// The api puts a new batch on top, in the order it was created in. Tasks quick add
+		// magic sent to another project don't belong in this list.
+		const inThisProject = tasks.filter(t => t.projectId === projectId.value)
+		allTasks.value = [...inThisProject, ...allTasks.value]
 	}
 
 	baseStore.setHasTasks(true)
