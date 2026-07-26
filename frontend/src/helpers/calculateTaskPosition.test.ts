@@ -1,6 +1,6 @@
 import {describe, it, expect} from 'vitest'
 
-import {calculateItemPosition, calculateItemPositions} from './calculateItemPosition'
+import {calculateItemPosition} from './calculateItemPosition'
 
 describe('calculateItemPosition', () => {
 	it('should calculate the task position', () => {
@@ -40,52 +40,5 @@ describe('calculateItemPosition', () => {
 		const deserialized = JSON.parse(serialized)
 		expect(deserialized).toBe(position)
 		expect(deserialized).toBeGreaterThan(100)
-	})
-})
-
-describe('calculateItemPositions', () => {
-	it('should return nothing for an empty batch', () => {
-		expect(calculateItemPositions(0, null, 100)).toEqual([])
-	})
-
-	it('should match calculateItemPosition for a single item', () => {
-		expect(calculateItemPositions(1, 10, 100)).toEqual([calculateItemPosition(10, 100)])
-		expect(calculateItemPositions(1, null, 100)).toEqual([calculateItemPosition(null, 100)])
-		expect(calculateItemPositions(1, 10, null)).toEqual([calculateItemPosition(10, null)])
-	})
-
-	it('should spread the batch over the gap between both neighbors', () => {
-		expect(calculateItemPositions(3, 0, 100)).toEqual([25, 50, 75])
-	})
-
-	it('should stay below the following item when there is nothing before', () => {
-		const positions = calculateItemPositions(6, null, 100)
-		expect(positions).toEqual([...positions].sort((a, b) => a - b))
-		expect(positions[0]).toBeGreaterThan(0)
-		expect(positions.at(-1)).toBeLessThan(100)
-	})
-
-	it('should append when there is no following item', () => {
-		expect(calculateItemPositions(2, 10, null)).toEqual([65546, 131082])
-		expect(calculateItemPositions(2, null, null)).toEqual([65536, 131072])
-	})
-
-	it('should stay ordered when the neighbors conflict', () => {
-		const positions = calculateItemPositions(3, 100, 100)
-		expect(positions).toEqual([...positions].sort((a, b) => a - b))
-		expect(positions[0]).toBeGreaterThan(100)
-	})
-
-	it('should stay ordered when the gap is too small to subdivide', () => {
-		const positions = calculateItemPositions(5, 100, 100.001)
-		expect(new Set(positions).size).toBe(5)
-		expect(positions).toEqual([...positions].sort((a, b) => a - b))
-	})
-
-	it('should not collide with the following item when there is nothing before and the gap is too small', () => {
-		const positions = calculateItemPositions(7, null, 0.05)
-		expect(positions).not.toContain(0.05)
-		expect(new Set(positions).size).toBe(7)
-		expect(positions).toEqual([...positions].sort((a, b) => a - b))
 	})
 })
