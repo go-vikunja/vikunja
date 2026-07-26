@@ -72,7 +72,7 @@ import {parseSubtasksViaIndention} from '@/helpers/parseSubtasksViaIndention'
 import TaskRelationService from '@/services/taskRelation'
 import TaskRelationModel from '@/models/taskRelation'
 import {getLabelsFromPrefix} from '@/modules/quickAddMagic'
-import {calculateItemPosition, calculateItemPositions, POSITION_SPACING} from '@/helpers/calculateItemPosition'
+import {calculateItemPositions, POSITION_SPACING} from '@/helpers/calculateItemPosition'
 import {error} from '@/message'
 
 import {useAuthStore} from '@/stores/auth'
@@ -169,10 +169,8 @@ async function addTask() {
 		currentProjectId = Number(router.currentRoute.value.params.projectId)
 	}
 
-	const isBatch = tasksToCreate.length > 1
-
 	// Create a map of project indices before creating tasks
-	if (isBatch) {
+	if (tasksToCreate.length > 1) {
 		for (const {project} of tasksToCreate) {
 			const projectId = project !== null
 				? await taskStore.findProjectId({project, projectId: 0})
@@ -218,16 +216,17 @@ async function addTask() {
 				: currentProjectId
 
 			let taskIndex: number | undefined
-			let position: number | undefined = calculateItemPosition(null, props.positionAfter)
-			if (isBatch) {
+			if (tasksToCreate.length > 1) {
 				// Count up per project, not per batch: a mixed-project batch would
 				// otherwise skip indexes for every line that went elsewhere.
 				taskIndex = (projectIndices.get(projectId) ?? 0) + 1
 				projectIndices.set(projectId, taskIndex)
-				// Without a task to insert before, fall back to the formula the api uses
-				// for a fresh view, which appends to the end.
-				position = batchPositions[index] ?? taskIndex * POSITION_SPACING
 			}
+
+			// With no task to insert before, keep the batch ordered with the formula the
+			// api uses for a fresh view. A single task has no order to keep, so let the
+			// api place it.
+			const position = batchPositions[index] ?? (taskIndex && taskIndex * POSITION_SPACING)
 
 			const createdTask = await taskStore.createNewTask({
 				title,
