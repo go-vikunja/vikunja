@@ -462,6 +462,14 @@ func calculateNewPositionForTask(s *xorm.Session, a web.Auth, t *Task, view *Pro
 // This has to run before the new tasks are inserted: a recalculation orders by position,
 // which they do not have yet, so they would land in an arbitrary order.
 func makeRoomAtTopOfView(s *xorm.Session, view *ProjectView, count int, a web.Auth) (lowest float64, err error) {
+	// Without the lock two concurrent batches read the same lowest position and compute
+	// byte-identical slots for their tasks. Callers must take the locks in a stable view
+	// order to avoid deadlocking against each other.
+	err = lockPositionsForViewUpdate(s, view.ID)
+	if err != nil {
+		return 0, err
+	}
+
 	lowest, has, err := getLowestPositionInView(s, view.ID)
 	if err != nil || !has || count == 0 {
 		return 0, err
