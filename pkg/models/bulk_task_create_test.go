@@ -158,6 +158,27 @@ func TestBulkTaskCreate_Create(t *testing.T) {
 		assert.Greater(t, existing[0], positions[2])
 	})
 
+	t.Run("keeps the order when a task is created into the done bucket", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.Insert(&TaskPosition{TaskID: 1, ProjectViewID: 4, Position: math.Pow(2, 16)})
+		require.NoError(t, err)
+
+		// Bucket 3 is the done bucket of view 4, so creating into it flips the task to done
+		bt := &BulkTaskCreate{Tasks: []*Task{
+			{Title: "first", ProjectID: 1},
+			{Title: "second", ProjectID: 1, BucketID: 3},
+			{Title: "third", ProjectID: 1},
+		}}
+
+		require.NoError(t, bt.Create(s, u))
+
+		assert.True(t, bt.Tasks[1].Done)
+		assert.Equal(t, []float64{16384, 32768, 49152}, positionsOf(t, s, 4, bt.Tasks))
+	})
+
 	t.Run("creates nothing when one task fails", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()

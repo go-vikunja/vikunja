@@ -1134,7 +1134,7 @@ func setTaskInBucketInViews(s *xorm.Session, t *Task, a web.Auth, opts createTas
 					return nil, nil, err
 				}
 
-				err = t.moveTaskToDoneBuckets(s, a, views)
+				err = t.moveTaskToDoneBuckets(s, a, views, opts.skipPositions)
 				if err != nil {
 					return nil, nil, err
 				}
@@ -1366,7 +1366,7 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 
 	// When a task changed its done status, make sure it is in the correct bucket
 	if t.ProjectID == ot.ProjectID && !t.isRepeating() && t.Done != ot.Done {
-		err = t.moveTaskToDoneBuckets(s, a, views)
+		err = t.moveTaskToDoneBuckets(s, a, views, false)
 		if err != nil {
 			return
 		}
@@ -1544,7 +1544,7 @@ func updateTasks(s *xorm.Session, a web.Auth, t *Task, ids []int64, fields []str
 	return tasks, nil
 }
 
-func (t *Task) moveTaskToDoneBuckets(s *xorm.Session, a web.Auth, views []*ProjectView) error {
+func (t *Task) moveTaskToDoneBuckets(s *xorm.Session, a web.Auth, views []*ProjectView, skipPositions bool) error {
 	for _, view := range views {
 		currentTaskBucket := &TaskBucket{}
 		_, err := s.Where("task_id = ? AND project_view_id = ?", t.ID, view.ID).
@@ -1587,6 +1587,12 @@ func (t *Task) moveTaskToDoneBuckets(s *xorm.Session, a web.Auth, views []*Proje
 		err = updateTaskBucket(s, a, tb)
 		if err != nil {
 			return err
+		}
+
+		// A caller placing a whole batch owns the positions of these views; writing one
+		// here would invalidate the slots it computed before the tasks existed.
+		if skipPositions {
+			continue
 		}
 
 		tp := TaskPosition{
