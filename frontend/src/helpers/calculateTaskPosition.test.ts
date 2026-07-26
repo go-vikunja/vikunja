@@ -82,6 +82,13 @@ describe('calculateItemPositions', () => {
 		expect(positions).toEqual([...positions].sort((a, b) => a - b))
 	})
 
+	it('should not collide with the following item when there is nothing before and the gap is too small', () => {
+		const positions = calculateItemPositions(7, null, 0.05)
+		expect(positions).not.toContain(0.05)
+		expect(new Set(positions).size).toBe(7)
+		expect(positions).toEqual([...positions].sort((a, b) => a - b))
+	})
+
 	it('should keep distinct positions after a JSON round-trip', () => {
 		const positions = calculateItemPositions(10, null, 1)
 		const deserialized = JSON.parse(JSON.stringify(positions))

@@ -60,9 +60,9 @@ export const calculateItemPositions = (
 	const spacing = (positionAfter - base) / (count + 1)
 
 	// The gap is too small to subdivide without the values colliding after the JSON
-	// round-trip. Give up on staying inside it and only keep the batch itself ordered.
+	// round-trip. Spread past positionAfter on purpose so the batch doesn't collide with it.
 	if (spacing < MIN_POSITION_SPACING) {
-		return spread(base, MIN_POSITION_SPACING)
+		return spread(Math.max(base, positionAfter), MIN_POSITION_SPACING)
 	}
 
 	return spread(base, spacing)
