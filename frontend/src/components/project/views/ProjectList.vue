@@ -215,10 +215,11 @@ function updateTaskList(task: ITask) {
 		// reload tasks with current filter and sorting
 		loadTasks()
 	} else {
-		allTasks.value = [
-			task,
-			...allTasks.value,
-		]
+		// AddTask emits one event per task in entry order; inserting by position keeps a batch in order instead of reversing it
+		const i = allTasks.value.findIndex(t => t.position > task.position)
+		allTasks.value = i === -1
+			? [...allTasks.value, task]
+			: [...allTasks.value.slice(0, i), task, ...allTasks.value.slice(i)]
 	}
 
 	baseStore.setHasTasks(true)
