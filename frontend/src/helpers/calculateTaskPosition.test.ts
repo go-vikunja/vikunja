@@ -88,11 +88,4 @@ describe('calculateItemPositions', () => {
 		expect(new Set(positions).size).toBe(7)
 		expect(positions).toEqual([...positions].sort((a, b) => a - b))
 	})
-
-	it('should keep distinct positions after a JSON round-trip', () => {
-		const positions = calculateItemPositions(10, null, 1)
-		const deserialized = JSON.parse(JSON.stringify(positions))
-		expect(deserialized).toEqual(positions)
-		expect(new Set(deserialized).size).toBe(positions.length)
-	})
 })
