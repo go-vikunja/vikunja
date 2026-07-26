@@ -176,8 +176,9 @@ watch(
 
 const isPositionSorting = computed(() => 'position' in sortByParam.value)
 
-// New tasks are inserted above the current first one.
-const firstTaskPosition = computed(() => tasks.value[0]?.position ?? null)
+// New tasks are inserted above the current first one. A zero position means the api
+// has no position recorded for it, which is no anchor to insert before.
+const firstTaskPosition = computed(() => tasks.value[0]?.position || null)
 
 const baseStore = useBaseStore()
 const taskStore = useTaskStore()
