@@ -30,8 +30,6 @@ contents:
     type: "symlink"
   - src: vikunja.service
     dst: /usr/lib/systemd/system/vikunja.service
-  - src: hardening.conf
-    dst: /usr/share/doc/vikunja/hardening.conf
   - src: vikunja.initd
     dst: /etc/init.d/vikunja
     type: "config"
