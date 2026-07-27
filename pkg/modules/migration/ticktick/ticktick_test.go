@@ -254,6 +254,84 @@ func TestConvertTicktickTasksDeeplyNested(t *testing.T) {
 	assert.Equal(t, "Grandchild", projectTasks[2].Title)
 }
 
+// TestSortParentsBeforeChildrenWithCycle guards against a regression where a
+// parentId cycle made place() recurse forever. That is a stack overflow, which
+// Go raises as a fatal error the recover middleware cannot catch, so it took
+// down the whole process instead of failing the one import request.
+func TestSortParentsBeforeChildrenWithCycle(t *testing.T) {
+	tests := []struct {
+		name           string
+		tasks          []*tickTickTask
+		expectedTitles []string
+	}{
+		{
+			name: "two tasks pointing at each other",
+			tasks: []*tickTickTask{
+				{TaskID: 1, ParentID: 2, ProjectName: "Project 1", Title: "Task A"},
+				{TaskID: 2, ParentID: 1, ProjectName: "Project 1", Title: "Task B"},
+			},
+			expectedTitles: []string{"Task A", "Task B"},
+		},
+		{
+			name: "task is its own parent",
+			tasks: []*tickTickTask{
+				{TaskID: 1, ParentID: 1, ProjectName: "Project 1", Title: "Own parent"},
+			},
+			expectedTitles: []string{"Own parent"},
+		},
+		{
+			name: "longer cycle",
+			tasks: []*tickTickTask{
+				{TaskID: 1, ParentID: 3, ProjectName: "Project 1", Title: "Task A"},
+				{TaskID: 2, ParentID: 1, ProjectName: "Project 1", Title: "Task B"},
+				{TaskID: 3, ParentID: 2, ProjectName: "Project 1", Title: "Task C"},
+			},
+			expectedTitles: []string{"Task A", "Task B", "Task C"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			sorted := sortParentsBeforeChildren(tt.tasks)
+
+			titles := make([]string, 0, len(sorted))
+			for _, task := range sorted {
+				titles = append(titles, task.Title)
+			}
+			assert.ElementsMatch(t, tt.expectedTitles, titles, "every input task must be returned exactly once")
+
+			vikunjaTasks := convertTickTickToVikunja(tt.tasks)
+			convertedTitles := []string{}
+			for _, project := range vikunjaTasks {
+				for _, task := range project.Tasks {
+					convertedTitles = append(convertedTitles, task.Title)
+				}
+			}
+			assert.ElementsMatch(t, tt.expectedTitles, convertedTitles)
+		})
+	}
+}
+
+// TestSortParentsBeforeChildrenCycleDoesNotAffectOtherTasks makes sure breaking
+// a cycle still leaves the ordering of unrelated, acyclic tasks intact.
+func TestSortParentsBeforeChildrenCycleDoesNotAffectOtherTasks(t *testing.T) {
+	tasks := []*tickTickTask{
+		{TaskID: 1, ParentID: 2, ProjectName: "Project 1", Title: "Cycle A"},
+		{TaskID: 3, ParentID: 4, ProjectName: "Project 1", Title: "Child"},
+		{TaskID: 2, ParentID: 1, ProjectName: "Project 1", Title: "Cycle B"},
+		{TaskID: 4, ParentID: 0, ProjectName: "Project 1", Title: "Parent"},
+	}
+
+	sorted := sortParentsBeforeChildren(tasks)
+	require.Len(t, sorted, 4)
+
+	positions := make(map[string]int, len(sorted))
+	for i, task := range sorted {
+		positions[task.Title] = i
+	}
+	assert.Less(t, positions["Parent"], positions["Child"])
+}
+
 func TestLinesToSkipBeforeHeader(t *testing.T) {
 	csvContent := "Date: 2024-01-01+0000\nVersion: 7.1\n" +
 		"\"Folder Name\",\"List Name\",\"Title\",\"Kind\",\"Tags\",\"Content\",\"Is Check list\",\"Start Date\",\"Due Date\",\"Reminder\",\"Repeat\",\"Priority\",\"Status\",\"Created Time\",\"Completed Time\",\"Order\",\"Timezone\",\"Is All Day\",\"Is Floating\",\"Column Name\",\"Column Order\",\"View Mode\",\"taskId\",\"parentId\"\n" +
