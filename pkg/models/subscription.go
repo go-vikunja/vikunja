@@ -205,11 +205,11 @@ func GetSubscriptionForUser(s *xorm.Session, entityType SubscriptionEntityType, 
 
 // GetSubscriptionsForEntities returns a list of subscriptions to for an entity ID
 func GetSubscriptionsForEntities(s *xorm.Session, entityType SubscriptionEntityType, entityIDs []int64) (subscriptions map[int64][]*SubscriptionWithUser, err error) {
-	return getSubscriptionsForEntitiesAndUser(s, entityType, entityIDs, nil, false)
+	return getSubscriptionsForEntitiesAndUser(s, entityType, entityIDs, nil, false, false)
 }
 
 func GetSubscriptionsForEntitiesAndUser(s *xorm.Session, entityType SubscriptionEntityType, entityIDs []int64, u *user.User) (subscriptions map[int64][]*SubscriptionWithUser, err error) {
-	return getSubscriptionsForEntitiesAndUser(s, entityType, entityIDs, u, true)
+	return getSubscriptionsForEntitiesAndUser(s, entityType, entityIDs, u, true, false)
 }
 
 func GetSubscriptionsForEntity(s *xorm.Session, entityType SubscriptionEntityType, entityID int64) (subscriptions []*SubscriptionWithUser, err error) {
@@ -221,11 +221,43 @@ func GetSubscriptionsForEntity(s *xorm.Session, entityType SubscriptionEntityTyp
 	return subs[entityID], nil
 }
 
+// GetSubscriptionsForDeletedTask returns the subscribers of an already soft-deleted task.
+// The task deleted listener runs after the deleting transaction committed, so every other
+// lookup filters the task out and finds nobody. Permissions come from the project instead,
+// since the task itself is gone.
+func GetSubscriptionsForDeletedTask(s *xorm.Session, task *Task) (subscriptions []*SubscriptionWithUser, err error) {
+	subs, err := getSubscriptionsForEntitiesAndUser(s, SubscriptionEntityTask, []int64{task.ID}, nil, false, true)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, sub := range subs[task.ID] {
+		if sub.User == nil {
+			continue
+		}
+
+		p := &Project{ID: task.ProjectID}
+		canRead, _, err := p.CanRead(s, sub.User)
+		if err != nil {
+			if IsErrProjectDoesNotExist(err) {
+				return nil, nil
+			}
+			return nil, err
+		}
+
+		if canRead {
+			subscriptions = append(subscriptions, sub)
+		}
+	}
+
+	return subscriptions, nil
+}
+
 // This function returns a matching subscription for an entity and user.
 // It will return the next parent of a subscription. That means for tasks, it will first look for a subscription for
 // that task, if there is none it will look for a subscription on the project the task belongs to.
 // It will return a map where the key is the entity id and the value is a slice with all subscriptions for that entity.
-func getSubscriptionsForEntitiesAndUser(s *xorm.Session, entityType SubscriptionEntityType, entityIDs []int64, u *user.User, userOnly bool) (subscriptions map[int64][]*SubscriptionWithUser, err error) {
+func getSubscriptionsForEntitiesAndUser(s *xorm.Session, entityType SubscriptionEntityType, entityIDs []int64, u *user.User, userOnly, includeDeletedTasks bool) (subscriptions map[int64][]*SubscriptionWithUser, err error) {
 	if err := entityType.validate(); err != nil {
 		return nil, err
 	}
@@ -239,6 +271,11 @@ func getSubscriptionsForEntitiesAndUser(s *xorm.Session, entityType Subscription
 			return nil, &ErrMustProvideUser{}
 		}
 		sUserCond = " AND s.user_id = " + strconv.FormatInt(u.ID, 10)
+	}
+
+	tNotDeletedCond := " AND t.deleted_at IS NULL"
+	if includeDeletedTasks {
+		tNotDeletedCond = ""
 	}
 
 	switch entityType {
@@ -318,7 +355,7 @@ WITH RECURSIVE project_hierarchy AS (
         t.id AS task_id
     FROM tasks t
              JOIN projects p ON t.project_id = p.id
-    WHERE t.id IN (`+entityIDString+`) AND t.deleted_at IS NULL
+    WHERE t.id IN (`+entityIDString+`)`+tNotDeletedCond+`
 
     UNION ALL
 
@@ -344,7 +381,7 @@ subscription_hierarchy AS (
         t.id AS task_id
     FROM subscriptions s
              JOIN tasks t ON s.entity_id = t.id
-    WHERE s.entity_type = ? AND t.id IN (`+entityIDString+`) AND t.deleted_at IS NULL`+sUserCond+`
+    WHERE s.entity_type = ? AND t.id IN (`+entityIDString+`)`+tNotDeletedCond+sUserCond+`
 
     UNION ALL
 
@@ -383,7 +420,7 @@ FROM tasks t
     FROM subscription_hierarchy
 ) sh ON t.id = sh.task_id AND sh.rn = 1
     LEFT JOIN users ON sh.user_id = users.id
-WHERE t.id IN (`+entityIDString+`) AND t.deleted_at IS NULL
+WHERE t.id IN (`+entityIDString+`)`+tNotDeletedCond+`
 ORDER BY t.id, sh.user_id`,
 			SubscriptionEntityTask, SubscriptionEntityProject, SubscriptionEntityTask, SubscriptionEntityProject).
 			Find(&rawSubscriptions)
