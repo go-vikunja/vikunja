@@ -16,8 +16,21 @@
 
 package main
 
-import "code.vikunja.io/api/pkg/cmd"
+import (
+	"context"
+	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
+
+	"code.vikunja.io/api/pkg/cmd"
+)
 
 func main() {
-	cmd.Execute()
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer cancel()
+	if err := cmd.Execute(ctx, os.Args[1:]...); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1) //nolint:gocritic // It is not meaningful to 'cancel' before calling os.Exit.
+	}
 }

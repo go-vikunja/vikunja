@@ -30,6 +30,7 @@ import (
 	"math"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -38,11 +39,15 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
+	"code.vikunja.io/api/internal/fswatcher"
+	"code.vikunja.io/api/pkg/cmd"
 	"github.com/iancoleman/strcase"
 	"github.com/magefile/mage/mg"
+	pkgerrors "github.com/pkg/errors"
 )
 
 const (
@@ -192,9 +197,16 @@ func initVars(ctx context.Context) error {
 func runAndStreamOutput(ctx context.Context, cmd string, args ...string) error {
 	c := exec.CommandContext(ctx, cmd, args...)
 
-	c.Env = os.Environ()
+	c.Env = append(os.Environ(),
+		"CI=true", // Workaround for https://github.com/pnpm/pnpm/issues/6778; also unfortunately disables color
+	)
 	c.Stdout = os.Stdout
 	c.Stderr = os.Stderr
+	c.WaitDelay = 5 * time.Second
+	c.Cancel = func() error {
+		return killProcessGroup(c, syscall.SIGINT)
+	}
+	setProcessGroup(c)
 
 	fmt.Printf("%s\n\n", c.String())
 	return c.Run()
@@ -305,15 +317,22 @@ func setProcessGroup(cmd *exec.Cmd) {
 }
 
 // killProcessGroup sends a signal to the entire process group of the given command.
-func killProcessGroup(cmd *exec.Cmd) error {
+func killProcessGroup(cmd *exec.Cmd, signal syscall.Signal) error {
 	if cmd.Process == nil {
 		return nil
 	}
 	if pgid, err := syscall.Getpgid(cmd.Process.Pid); err == nil { // use best-effort to kill full process group
-		err = syscall.Kill(-pgid, syscall.SIGTERM)
+		err = syscall.Kill(-pgid, signal)
 		if err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+func killProcessGroupAndWait(cmd *exec.Cmd) error {
+	if err := killProcessGroup(cmd, syscall.SIGTERM); err != nil {
+		return err
 	}
 	return cmd.Wait()
 }
@@ -512,7 +531,7 @@ func (Test) E2E(ctx context.Context, args string) error {
 	}
 	defer func() {
 		fmt.Println("\n--- Stopping API server ---")
-		if err := killProcessGroup(apiCmd); err != nil {
+		if err := killProcessGroupAndWait(apiCmd); err != nil {
 			fmt.Println("Failed to stop API server:", err)
 		}
 	}()
@@ -548,7 +567,7 @@ func (Test) E2E(ctx context.Context, args string) error {
 	}
 	defer func() {
 		fmt.Println("\n--- Stopping frontend preview server ---")
-		if err := killProcessGroup(frontendCmd); err != nil {
+		if err := killProcessGroupAndWait(frontendCmd); err != nil {
 			fmt.Println("Failed to stop API server:", err)
 		}
 	}()
@@ -1705,6 +1724,181 @@ func (Dev) PrepareWorktree(ctx context.Context, name string, planPath string) er
 	return nil
 }
 
+// Start starts the frontend and backend using the default config with an in-memory database. Perfect for quick, local iterative development.
+func (Dev) Start(ctx context.Context) (returnedErr error) {
+	ctx, cancel := context.WithCancelCause(ctx) // Allow early termination if any tasks fail to start.
+	defer cancel(nil)
+
+	if _, pnpmErr := exec.LookPath("pnpm"); pnpmErr != nil {
+		if _, npmErr := exec.LookPath("npm"); npmErr != nil {
+			return errors.New("failed to locate pnpm executable: failed to install pnpm via npm: failed to find npm executable")
+		}
+		packageFile, err := readJSONFile[struct{ PackageManager string }]("./frontend/package.json")
+		if err != nil {
+			return err
+		}
+		if err := runAndStreamOutput(ctx, "sudo", "npm", "install", "-g", packageFile.PackageManager); err != nil {
+			return err
+		}
+	}
+	if err := runAndStreamOutput(ctx, "pnpm", "install", "--dir=frontend"); err != nil {
+		return err
+	}
+	tmpDir, err := os.MkdirTemp("", "")
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err := os.RemoveAll(tmpDir); returnedErr == nil && err != nil {
+			returnedErr = err
+		}
+	}()
+
+	var waitGroup sync.WaitGroup
+	waitGroup.Go(func() {
+		err := runDevUI(ctx)
+		cancel(err)
+	})
+	waitGroup.Go(func() {
+		watchDirectories := []string{ // avoid watching all to avoid unnecessarily high open file count
+			"pkg",
+			"internal",
+		}
+		err := fswatcher.Watch(ctx, watchDirectories, "*.go", func(ctx context.Context) error {
+			return runAndStreamOutput(ctx, "mage", "dev:runApi", tmpDir)
+		})
+		cancel(err)
+	})
+	waitGroup.Wait()
+	return context.Cause(ctx)
+}
+
+// RunAPI runs the backend API once. Use dev:start instead to auto-restart the API.
+//
+// This task is run in a subprocess to avoid reruns triggering singleton global state failures, like re-registering API routes.
+// In the future, this global state could be moved into dependencies and cleaned up on shutdown.
+func (Dev) RunAPI(ctx context.Context, persistDirectory string) error {
+	ctx, cancel := context.WithCancelCause(ctx)
+	defer cancel(nil)
+
+	const apiPort = 3456
+	apiHost := url.URL{
+		Scheme: "http",
+		Host:   fmt.Sprintf("localhost:%d", apiPort),
+	}
+	const temporaryLocalOnlyJWTSecret = "e2e-test-jwt-secret-do-not-use-in-production" //nolint:gosec // Not a credential. Temporary password for local tests.
+	for key, value := range map[string]string{
+		"VIKUNJA_SERVICE_INTERFACE":     apiHost.Host,
+		"VIKUNJA_SERVICE_PUBLICURL":     apiHost.String(),
+		"VIKUNJA_SERVICE_ROOTPATH":      persistDirectory,
+		"VIKUNJA_SERVICE_JWTSECRET":     temporaryLocalOnlyJWTSecret,
+		"VIKUNJA_LOG_LEVEL":             "WARNING",
+		"VIKUNJA_DATABASE_TYPE":         "sqlite",
+		"VIKUNJA_DATABASE_PATH":         filepath.Join(persistDirectory, "db.sqlite"),
+		"VIKUNJA_FILES_BASEPATH":        filepath.Join(persistDirectory, "files"),
+		"VIKUNJA_MAILER_ENABLED":        "false",
+		"VIKUNJA_REDIS_ENABLED":         "false",
+		"VIKUNJA_RATELIMIT_NOAUTHLIMIT": "1000",
+	} {
+		if err := os.Setenv(key, value); err != nil {
+			return err
+		}
+	}
+	go func() {
+		err := cmd.Execute(ctx, "web")
+		cancel(err)
+	}()
+
+	apiURL := apiHost.JoinPath("/api/v1")
+	if err := waitUntilReady(ctx, apiURL.JoinPath("/info")); err != nil {
+		return err
+	}
+	if err := doJSONAPIRequest(ctx, http.MethodPost, apiURL.JoinPath("/register"), `{
+		"username": "test",
+		"email": "test@test.local",
+		"password": "testtest"
+	}`); err != nil && !strings.Contains(err.Error(), `"code":1001`) { // ignore error if user already registered
+		return pkgerrors.Wrap(err, "failed to register dev user")
+	}
+	fmt.Println("Test user registered. Username: test, Password: testtest")
+
+	<-ctx.Done()
+	return context.Cause(ctx)
+}
+
+func runDevUI(ctx context.Context) error {
+	ctx, cancel := context.WithCancelCause(ctx)
+	defer cancel(nil)
+
+	go func() {
+		err := runAndStreamOutput(ctx, "pnpm", "run", "--dir=frontend", "serve")
+		cancel(err)
+	}()
+
+	uiURL := &url.URL{
+		Scheme: "http",
+		Host:   "localhost:4173",
+	}
+	if err := waitUntilReady(ctx, uiURL); err != nil {
+		return err
+	}
+	fmt.Println("UI is available at", uiURL)
+	if err := openURL(ctx, uiURL.String()); err != nil {
+		fmt.Println("  Failed to open UI URL:", err)
+	}
+	<-ctx.Done()
+	return context.Cause(ctx)
+}
+
+func waitUntilReady(ctx context.Context, healthCheck *url.URL) error {
+	const maxRetries = 5
+	var err error
+	for range maxRetries {
+		err = doJSONAPIRequest(ctx, http.MethodGet, healthCheck, "")
+		if err == nil {
+			return nil
+		}
+		select {
+		case <-time.After(time.Second):
+		case <-ctx.Done():
+			return ctx.Err()
+		}
+	}
+	return err
+}
+
+func doJSONAPIRequest(ctx context.Context, method string, path *url.URL, jsonBody string) error {
+	req, err := http.NewRequestWithContext(ctx, method, path.String(), strings.NewReader(jsonBody))
+	if err != nil {
+		return err
+	}
+	if jsonBody != "" {
+		req.Header.Set("Content-Type", "application/json")
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		body, err := io.ReadAll(resp.Body)
+		return pkgerrors.Errorf("%d %s err:%v", resp.StatusCode, string(body), err)
+	}
+	return nil
+}
+
+// openURL attempts to open the given URL in a browser for the current OS
+func openURL(ctx context.Context, url string) error {
+	switch runtime.GOOS {
+	case "linux":
+		return runAndStreamOutput(ctx, "xdg-open", url)
+	case "darwin":
+		return runAndStreamOutput(ctx, "open", url)
+	default:
+		return nil
+	}
+}
+
 // printReleaseStats prints commit statistics for the range between two refs.
 func printReleaseStats(ctx context.Context, fromRef, toRef string) error {
 	output, err := runGitCommandWithOutput(ctx, "log", fromRef+".."+toRef, "--oneline")
@@ -2064,4 +2258,17 @@ func (Plugins) Build(ctx context.Context, pathToSourceFiles string) error {
 
 	out := filepath.Join("plugins", filepath.Base(pathToSourceFiles)+".so")
 	return runAndStreamOutput(ctx, "go", "build", "-buildmode=plugin", "-tags", Tags, "-o", out, pathToSourceFiles)
+}
+
+func readJSONFile[Value any](path string) (value Value, returnedErr error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return value, err
+	}
+	defer func() {
+		if err := f.Close(); returnedErr == nil && err != nil {
+			returnedErr = err
+		}
+	}()
+	return value, json.NewDecoder(f).Decode(&value)
 }
