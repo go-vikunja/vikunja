@@ -37,7 +37,7 @@ func init() {
 		ID:          "20200120201756",
 		Description: "Add migration status table",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(status20200120201756{})
+			return tx.Sync2(status20200120201756{}) //nolint:forbidigo // brand-new table, nothing to drop
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return dropTableColum(tx, "migration_status", "index")

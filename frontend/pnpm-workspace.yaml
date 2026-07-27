@@ -11,16 +11,15 @@ overrides:
   rollup: 'catalog:'
   basic-ftp: 6.0.1
   serialize-javascript: 7.0.7
-  flatted: 3.4.2
+  flatted: 3.4.3
   ip-address: 10.2.0
-  postcss: 8.5.19
+  postcss: 8.5.22
   tmp: 0.2.7
   esbuild: 0.28.1
   form-data: 4.0.6
   markdown-it: 14.3.0
   launch-editor: 2.14.1
   '@babel/core': 8.0.1
-  js-yaml@4: 5.2.1
-  fast-uri: 3.1.4
+  js-yaml@4: 5.2.2
 publicHoistPattern:
   - '*eslint*'

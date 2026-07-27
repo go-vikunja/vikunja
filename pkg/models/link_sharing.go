@@ -220,6 +220,12 @@ func (share *LinkSharing) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
 	return
 }
 
+// Update shadows the embedded web.CRUDable method (link shares are immutable).
+// An unshadowed promoted method breaks Huma's $schema wrapper (go#15924).
+func (share *LinkSharing) Update(_ *xorm.Session, _ web.Auth) error {
+	return ErrGenericForbidden{}
+}
+
 // ReadAll returns all shares for a given project
 // @Summary Get all link shares for a project
 // @Description Returns all link shares which exist for a given project

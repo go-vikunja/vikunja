@@ -24,6 +24,7 @@ import (
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/require"
+	"xorm.io/xorm"
 )
 
 // The CalDAV ctag derives from the project's updated timestamp, so the
@@ -61,5 +62,66 @@ func TestHandleTaskUpdateLastUpdated(t *testing.T) {
 			Task: &Task{ID: 99999},
 			Doer: &user.User{ID: 1},
 		}, &HandleTaskUpdateLastUpdated{})
+	})
+}
+
+// The listener evaluates every kanban filter view in the instance, so a filter owned by
+// a disabled user used to fail the handler for everyone: recalculating positions looks
+// up the owner, which errors out with "Account is disabled".
+func TestUpdateTaskInSavedFilterViews_InactiveFilterOwner(t *testing.T) {
+	// Positions are crowded enough to force a recalculation when a task is added.
+	createCrowdedFilterView := func(t *testing.T, s *xorm.Session, filterID, viewID, ownerID int64) *ProjectView {
+		_, err := s.Insert(&SavedFilter{
+			ID:      filterID,
+			Title:   "filter",
+			OwnerID: ownerID,
+			Filters: &TaskCollection{Filter: "done = false"},
+		})
+		require.NoError(t, err)
+
+		view := &ProjectView{
+			ID:                      viewID,
+			ProjectID:               getProjectIDFromSavedFilterID(filterID),
+			Title:                   "kanban",
+			ViewKind:                ProjectViewKindKanban,
+			BucketConfigurationMode: BucketConfigurationModeManual,
+		}
+		_, err = s.Insert(view)
+		require.NoError(t, err)
+
+		_, err = s.Insert(&Bucket{ProjectViewID: view.ID, Title: "backlog", CreatedByID: ownerID})
+		require.NoError(t, err)
+
+		_, err = s.Insert(&TaskPosition{TaskID: 2, ProjectViewID: view.ID, Position: MinPositionSpacing / 2})
+		require.NoError(t, err)
+
+		return view
+	}
+
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	disabledOwnerView := createCrowdedFilterView(t, s, 9998, 9998, 17)
+	activeOwnerView := createCrowdedFilterView(t, s, 9999, 9999, 1)
+	require.NoError(t, s.Commit())
+	_ = s.Close()
+
+	events.TestListener(t, &TaskUpdatedEvent{
+		Task: &Task{ID: 1, ProjectID: 1},
+		Doer: &user.User{ID: 1},
+	}, &UpdateTaskInSavedFilterViews{})
+
+	s2 := db.NewSession()
+	defer s2.Close()
+
+	// The filter of the active owner is still maintained,
+	db.AssertExists(t, "task_buckets", map[string]interface{}{
+		"task_id":         1,
+		"project_view_id": activeOwnerView.ID,
+	}, false)
+
+	// the one of the disabled owner is skipped.
+	db.AssertMissing(t, "task_buckets", map[string]interface{}{
+		"task_id":         1,
+		"project_view_id": disabledOwnerView.ID,
 	})
 }

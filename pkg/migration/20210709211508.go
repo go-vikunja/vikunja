@@ -56,7 +56,7 @@ func init() {
 		ID:          "20210709211508",
 		Description: "Move favorites to new table",
 		Migrate: func(tx *xorm.Engine) error {
-			err := tx.Sync2(favorites20210709211508{})
+			err := tx.Sync2(favorites20210709211508{}) //nolint:forbidigo // brand-new table, nothing to drop
 			if err != nil {
 				return err
 			}

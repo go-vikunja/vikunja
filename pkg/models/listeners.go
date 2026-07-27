@@ -946,6 +946,11 @@ func (l *UpdateTaskInSavedFilterViews) Handle(msg *message.Message) (err error) 
 		return err
 	}
 
+	err = dropFiltersWithInactiveOwners(s, filters)
+	if err != nil {
+		return err
+	}
+
 	var fallbackTimezone string
 	if event.Doer != nil {
 		u, userErr := user.GetUserByID(s, event.Doer.GetID())
@@ -979,6 +984,12 @@ func (l *UpdateTaskInSavedFilterViews) Handle(msg *message.Message) (err error) 
 				IsErrInvalidTaskFilterComparator(err) ||
 				IsErrInvalidTaskField(err) {
 				log.Debugf("Invalid filter expression for view %d, expression: %v", view.ID, view.Filter)
+				continue
+			}
+
+			// The owner may have been disabled or deleted after the check above.
+			if user.IsErrUserStatusError(err) || user.IsErrUserDoesNotExist(err) {
+				log.Debugf("Skipping view %d, owner %d is not available: %v", view.ID, filter.OwnerID, err)
 				continue
 			}
 

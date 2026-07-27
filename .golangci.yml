@@ -14,6 +14,7 @@ linters:
     - errchkjson
     - errorlint
     - exhaustive
+    - forbidigo
     - gocheckcompilerdirectives
     - gochecksumtype
     - gocritic
@@ -42,6 +43,10 @@ linters:
     - goconst
     - musttag
   settings:
+    forbidigo:
+      forbid:
+        - pattern: ^tx\.Sync2?$
+          msg: plain Sync drops every index the synced struct doesn't declare (#3244) — use partialSync; tx.Sync is only safe for brand-new tables (nolint with a reason)
     goheader:
       template-path: code-header-template.txt
     nestif:
@@ -77,6 +82,10 @@ linters:
           - err113
           - exhaustive
         path: pkg/migration/*
+      # The tx.Sync ban only makes sense for migrations; everywhere else the receiver isn't a migration engine anyway.
+      - linters:
+          - forbidigo
+        path-except: pkg/migration/
       - linters:
           - exhaustive
         path: pkg/models/task_collection_filter\.go
