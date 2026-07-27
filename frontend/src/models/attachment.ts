@@ -22,6 +22,12 @@ export function canPreviewPdf(attachment: IAttachment): boolean {
 		&& attachment.file.mime.toLowerCase() === 'application/pdf'
 }
 
+// No suffix allowlist here, unlike images and pdfs: the mime is sniffed server-side and
+// an <audio> element cannot execute a mistyped file, so there is nothing to harden against.
+export function canPreviewAudio(attachment: IAttachment): boolean {
+	return attachment.file.mime.toLowerCase().startsWith('audio/')
+}
+
 export function canPreview(attachment: IAttachment): boolean {
 	return canPreviewImage(attachment) || canPreviewPdf(attachment)
 }

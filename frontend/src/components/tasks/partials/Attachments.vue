@@ -81,6 +81,10 @@
 							{{ a.file.mime }}
 						</span>
 					</p>
+					<AudioPreview
+						v-if="canPreviewAudio(a)"
+						:model-value="a"
+					/>
 					<p class="attachment-actions">
 						<BaseButton
 							v-tooltip="$t('task.attachment.downloadTooltip')"
@@ -208,7 +212,7 @@ import ProgressBar from '@/components/misc/ProgressBar.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
 import AttachmentService from '@/services/attachment'
-import {canPreviewImage, canPreviewPdf} from '@/models/attachment'
+import {canPreviewAudio, canPreviewImage, canPreviewPdf} from '@/models/attachment'
 import type {IAttachment} from '@/modelTypes/IAttachment'
 import type {ITask} from '@/modelTypes/ITask'
 
@@ -220,6 +224,7 @@ import {error, success} from '@/message'
 import {useTaskStore} from '@/stores/tasks'
 import {useI18n} from 'vue-i18n'
 import FilePreview from '@/components/tasks/partials/FilePreview.vue'
+import AudioPreview from '@/components/tasks/partials/AudioPreview.vue'
 
 const props = withDefaults(defineProps<{
 	task: ITask,
