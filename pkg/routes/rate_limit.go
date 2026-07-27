@@ -51,6 +51,7 @@ func RateLimit(rateLimiter *limiter.Limiter, rateLimitKind string) echo.Middlewa
 				}
 			default:
 				log.Errorf("Unknown rate limit kind configured: %s", rateLimitKind)
+				rateLimitKey = "ip_" + c.RealIP()
 			}
 			limiterCtx, err := rateLimiter.Get(c.Request().Context(), rateLimitKey)
 			if err != nil {

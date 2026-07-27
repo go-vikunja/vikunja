@@ -118,3 +118,25 @@ func TestRateLimitUser(t *testing.T) {
 	assert.Equal(t, http.StatusTooManyRequests, he.Code)
 	assert.Equal(t, 2, *calls)
 }
+
+// TestRateLimitUnknownKind makes sure a misconfigured kind falls back to per-ip
+// limiting instead of putting every request into one shared bucket.
+func TestRateLimitUnknownKind(t *testing.T) {
+	log.InitLogger()
+	e := echo.New()
+
+	h, calls := rateLimitTestHandler("something-invalid", 1)
+
+	c, _ := newRateLimitTestContext(e, "1.2.3.4:1234")
+	require.NoError(t, h(c))
+
+	c, _ = newRateLimitTestContext(e, "1.2.3.4:1234")
+	err := h(c)
+	var he *echo.HTTPError
+	require.ErrorAs(t, err, &he)
+	assert.Equal(t, http.StatusTooManyRequests, he.Code)
+
+	other, _ := newRateLimitTestContext(e, "5.6.7.8:1234")
+	require.NoError(t, h(other))
+	assert.Equal(t, 2, *calls)
+}
