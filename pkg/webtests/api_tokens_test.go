@@ -91,6 +91,23 @@ func TestAPIToken(t *testing.T) {
 		assert.Equal(t, http.StatusUnauthorized, res.Code)
 		assert.Contains(t, res.Body.String(), `"code":11`)
 	})
+	t.Run("token shorter than prefix+8", func(t *testing.T) {
+		for _, short := range []string{"tk_", "tk_a", "tk_abc", "tk_1234567"} {
+			e, err := setupTestEnv()
+			require.NoError(t, err)
+			req := httptest.NewRequest(http.MethodGet, "/api/v1/tasks", nil)
+			res := httptest.NewRecorder()
+			c := e.NewContext(req, res)
+			h := routes.SetupTokenMiddleware()(func(c *echo.Context) error {
+				return c.String(http.StatusOK, "test")
+			})
+
+			req.Header.Set(echo.HeaderAuthorization, "Bearer "+short)
+			require.NoError(t, h(c))
+			assert.Equal(t, http.StatusUnauthorized, res.Code, "short token %q must be rejected", short)
+			assert.Contains(t, res.Body.String(), `"code":11`)
+		}
+	})
 	t.Run("expired token", func(t *testing.T) {
 		e, err := setupTestEnv()
 		require.NoError(t, err)
