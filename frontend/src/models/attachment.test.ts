@@ -1,6 +1,6 @@
 import {describe, it, expect} from 'vitest'
 
-import {canPreviewImage, canPreviewPdf, canPreview} from './attachment'
+import {canPreviewAudio, canPreviewImage, canPreviewPdf, canPreview} from './attachment'
 import type {IAttachment} from '@/modelTypes/IAttachment'
 
 function attachment(name: string, mime: string): IAttachment {
@@ -36,6 +36,24 @@ describe('canPreviewImage', () => {
 
 	it('refuses svg since it can carry script', () => {
 		expect(canPreviewImage(attachment('evil.jpg', 'image/svg+xml'))).toBe(false)
+	})
+})
+
+describe('canPreviewAudio', () => {
+	it('previews an mp3', () => {
+		expect(canPreviewAudio(attachment('memo.mp3', 'audio/mpeg'))).toBe(true)
+	})
+
+	it('previews an ogg regardless of the file name', () => {
+		expect(canPreviewAudio(attachment('19-40-43', 'audio/ogg'))).toBe(true)
+	})
+
+	it('matches the mime case-insensitively', () => {
+		expect(canPreviewAudio(attachment('memo.mp3', 'AUDIO/MPEG'))).toBe(true)
+	})
+
+	it('refuses a non-audio mime', () => {
+		expect(canPreviewAudio(attachment('memo.mp3', 'text/html'))).toBe(false)
 	})
 })
 
