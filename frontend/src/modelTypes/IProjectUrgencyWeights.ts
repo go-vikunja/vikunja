@@ -1,10 +1,11 @@
 import type {IAbstract} from './IAbstract'
 
 export interface IProjectUrgencyWeights extends IAbstract {
-	urgencyWeights: UrgencyWeight[]
+	projectID: number
+	urgencyWeights: IProjectUrgencyWeight[]
 }
 
-export interface IUrgencyWeight {
+export interface IProjectUrgencyWeight {
 	property: string
 	weight: number
 	filter: IBasicFilter

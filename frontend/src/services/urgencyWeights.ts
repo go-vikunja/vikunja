@@ -1,16 +1,29 @@
-import AbstractService from './abstractService'
-import ProjectUrgencyWeightsModel from '@/models/projectUrgencyWeights'
-import type {IProjectUrgencyWeights} from '@/modelTypes/IProjectUrgencyWeights'
+import type {IProjectUrgencyWeights, IProjectUrgencyWeight} from '@/modelTypes/IProjectUrgencyWeights'
+import {AuthenticatedHTTPFactory, apiV2Url} from '@/helpers/fetcher'
+import {objectToCamelCase, objectToSnakeCase} from '@/helpers/case'
 
-export default class ProjectUrgencyWeightsService extends AbstractService<IProjectUrgencyWeights> {
-	constructor() {
-		super({
-			get: '/projects/{id}/urgency_weights',
-			create: '/projects/{id}/urgency_weights',
-		})
+export interface ProjectUrgencyWeightListResult {
+	items: IProjectUrgencyWeight[]
+	total: number
+	page: number
+	perPage: number
+	totalPages: number
+}
+
+export function useProjectUrgencyWeightsService() {
+	const http = AuthenticatedHTTPFactory()
+
+	async function getAll(params: IProjectUrgencyWeights): Promise<ProjectUrgencyWeightListResult> {
+		const {data} = await http.get(apiV2Url(`projects/${encodeURIComponent(params.projectID)}/urgency_weights`), {})
+		return objectToCamelCase(data)
 	}
 
-	modelFactory(data: Partial<IProjectUrgencyWeights>) {
-		return new ProjectUrgencyWeightsModel(data)
+	async function updateAll(params: IProjectUrgencyWeights): Promise<IProjectUrgencyWeights> {
+		const body = objectToSnakeCase(params)
+		delete body.project_id
+		const {data} = await http.put(apiV2Url(`projects/${encodeURIComponent(params.projectID)}/urgency_weights`), body)
+		return objectToCamelCase(data)
 	}
+
+	return {getAll, updateAll}
 }

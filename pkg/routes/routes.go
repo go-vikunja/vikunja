@@ -928,16 +928,6 @@ func registerAPIRoutes(a *echo.Group) {
 	a.DELETE("/projects/:project/views/:view", projectViewProvider.DeleteWeb)
 	a.POST("/projects/:project/views/:view", projectViewProvider.UpdateWeb)
 
-	// Project urgency weights
-	// TODO move this to API v2 before merge
-	projectUrgencyWeightsProvider := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.ProjectUrgencyWeights{}
-		},
-	}
-	a.GET("/projects/:project/urgency_weights", projectUrgencyWeightsProvider.ReadAllWeb)
-	a.PUT("/projects/:project/urgency_weights", projectUrgencyWeightsProvider.UpdateWeb)
-
 	// Kanban Task Bucket Relation
 	taskBucketProvider := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {

@@ -148,10 +148,10 @@ import DropdownItem from '@/components/misc/DropdownItem.vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import FilterInput from '@/components/input/filter/FilterInput.vue'
 import Filters from '@/components/project/partials/Filters.vue'
-import ProjectUrgencyWeightsService from '@/services/urgencyWeights'
 import TaskFilterParams, { getDefaultTaskFilterParams } from '@/services/taskCollection'
 import type {IProject} from '@/modelTypes/IProject'
 import {success} from '@/message'
+import {useProjectUrgencyWeightsService} from '@/services/urgencyWeights'
 import {useProject} from '@/stores/projects'
 import {useTitle} from '@/composables/useTitle'
 
@@ -160,7 +160,7 @@ const props = defineProps<{
 }>()
 
 const {project} = useProject(() => props.projectId)
-const service = shallowReactive(new ProjectUrgencyWeightsService())
+const service = useProjectUrgencyWeightsService()
 
 const {t} = useI18n({useScope: 'global'})
 
@@ -179,8 +179,8 @@ const newProperty = ref<string>(null)
 const weights = ref<IProjectUrgencyWeight[]>([])
 const weightsTotal = ref<number>(0)
 const weightsMax = ref<number>(0)
-service.get({id: props.projectId}).then((result: IProjectUrgencyWeights) => {
-	setWeights(result.urgencyWeights)
+service.getAll({projectID: props.projectId}).then((result: ProjectUrgencyWeightListResult) => {
+	setWeights(result.items)
 	watchEffect(() => {
 		weightsTotal.value = weights.value
 			.map(w => w.weight)
@@ -264,7 +264,7 @@ async function updateWeights(urgencyWeights: IProjectUrgencyWeight[]) {
 		}
 		return w
 	})
-	const response = await service.create({ id: props.projectId, urgencyWeights })
+	const response = await service.updateAll({ projectID: props.projectId, urgencyWeights })
 	setWeights(urgencyWeights)
 	success(response)
 }
