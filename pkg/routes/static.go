@@ -147,15 +147,7 @@ func static() echo.MiddlewareFunc {
 			if err != nil {
 				return
 			}
-			cleaned := path.Clean("/" + p) // "/"+ for security
-			if strings.Contains(cleaned, "..") {
-				return echo.NewHTTPError(http.StatusBadRequest, "Invalid path")
-			}
-			name := path.Join(rootPath, cleaned)
-			base := strings.TrimSuffix(rootPath, "/")
-			if name != base && !strings.HasPrefix(name, base+"/") {
-				return echo.NewHTTPError(http.StatusBadRequest, "Invalid path")
-			}
+			name := path.Join(rootPath, path.Clean("/"+p)) // "/"+ for security
 
 			file, err := assetFs.Open(name)
 			if err != nil {

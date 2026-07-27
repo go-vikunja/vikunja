@@ -602,9 +602,6 @@ func exchangeOidcTokens(cb *Callback, providerKey string) (*Provider, *oauth2.To
 			details := make(map[string]interface{})
 			if err := json.Unmarshal(rerr.Body, &details); err != nil {
 				log.Errorf("Error unmarshalling token for provider %s: %v", provider.Name, err)
-				// Do not log rerr.Body: the raw token-endpoint response can carry
-				// sensitive request/response context. The RFC 6749 error fields are
-				// the intended human-readable diagnostic, not the raw body.
 				log.Debugf("Token endpoint error code=%q description=%q", rerr.ErrorCode, rerr.ErrorDescription)
 				return nil, nil, nil, "", err
 			}

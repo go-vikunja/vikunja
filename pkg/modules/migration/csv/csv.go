@@ -326,7 +326,7 @@ func DetectCSVStructure(file io.ReaderAt, size int64) (*DetectionResult, error) 
 	if size == 0 {
 		return nil, &migration.ErrFileIsEmpty{}
 	}
-	if size < 0 || size > maxImportFileBytes() {
+	if size > maxImportFileBytes() {
 		return nil, &migration.ErrNotACSVFile{}
 	}
 
@@ -392,7 +392,7 @@ func PreviewImport(file io.ReaderAt, size int64, config *ImportConfig) (*Preview
 	if size == 0 {
 		return nil, &migration.ErrFileIsEmpty{}
 	}
-	if size < 0 || size > maxImportFileBytes() {
+	if size > maxImportFileBytes() {
 		return nil, &migration.ErrNotACSVFile{}
 	}
 
@@ -592,7 +592,7 @@ func MigrateWithConfig(u *user.User, file io.ReaderAt, size int64, config *Impor
 	if size == 0 {
 		return &migration.ErrFileIsEmpty{}
 	}
-	if size < 0 || size > maxImportFileBytes() {
+	if size > maxImportFileBytes() {
 		return &migration.ErrNotACSVFile{}
 	}
 
