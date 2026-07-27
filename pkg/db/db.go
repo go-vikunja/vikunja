@@ -115,6 +115,14 @@ func CreateDBEngine() (engine *xorm.Engine, err error) {
 	logger := log.NewXormLogger(config.LogEnabled.GetBool(), config.LogDatabase.GetString(), config.LogDatabaseLevel.GetString(), config.LogFormat.GetString())
 	engine.SetLogger(logger)
 
+	// xorm connects lazily, so this is where an unreachable database first surfaces. Without it
+	// the first real query reports it instead, which reads as a schema or extension bug (#3287).
+	if err = engine.Ping(); err != nil {
+		return nil, err
+	}
+
+	checkParadeDB(engine)
+
 	x = engine
 	return
 }
@@ -215,7 +223,6 @@ func initPostgresEngine() (engine *xorm.Engine, err error) {
 	}
 	engine.SetConnMaxLifetime(maxLifetime)
 
-	checkParadeDB(engine)
 	return
 }
 

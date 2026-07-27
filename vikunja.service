@@ -17,14 +17,8 @@ Restart=always
 
 # Hardening
 NoNewPrivileges=yes
-PrivateTmp=yes
-ProtectHome=yes
 ProtectProc=invisible
 ProcSubset=pid
-UMask=0077
-
-CapabilityBoundingSet=
-AmbientCapabilities=
 ProtectKernelTunables=yes
 ProtectKernelModules=yes
 ProtectKernelLogs=yes

@@ -36,7 +36,7 @@ func init() {
 		ID:          "20191207220736",
 		Description: "Add task index to tasks",
 		Migrate: func(tx *xorm.Engine) error {
-			err := tx.Sync2(task20191207220736{})
+			err := partialSync(tx, task20191207220736{})
 			if err != nil {
 				return err
 			}

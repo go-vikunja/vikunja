@@ -17,26 +17,32 @@
 package migration
 
 import (
-	"time"
+	"fmt"
+	"strings"
+
+	"code.vikunja.io/api/pkg/db"
 
 	"src.techknowlogick.com/xormigrate"
 	"xorm.io/xorm"
+	"xorm.io/xorm/schemas"
 )
-
-type notifications20210220222121 struct {
-	ReadAt time.Time `xorm:"datetime null" json:"read_at"`
-}
-
-func (notifications20210220222121) TableName() string {
-	return "notifications"
-}
 
 func init() {
 	migrations = append(migrations, &xormigrate.Migration{
-		ID:          "20210220222121",
-		Description: "Add a read_at column to notifications",
+		ID:          "20260725164934",
+		Description: "Add index on task_positions (project_view_id, position) so duplicate-position lookups during task creation don't scan the whole view",
 		Migrate: func(tx *xorm.Engine) error {
-			return partialSync(tx, notifications20210220222121{})
+			query := "CREATE INDEX IF NOT EXISTS IDX_task_positions_view_position ON task_positions (project_view_id, position)"
+			if db.Type() == schemas.MYSQL {
+				// MySQL lacks IF NOT EXISTS on CREATE INDEX.
+				query = "CREATE INDEX IDX_task_positions_view_position ON task_positions (project_view_id, position)"
+			}
+
+			_, err := tx.Exec(query)
+			if err != nil && !strings.Contains(err.Error(), "Duplicate key name") {
+				return fmt.Errorf("could not create index on task_positions: %w", err)
+			}
+			return nil
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil

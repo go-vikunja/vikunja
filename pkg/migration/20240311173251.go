@@ -41,7 +41,7 @@ func init() {
 		ID:          "20240311173251",
 		Description: "Create reactions table",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(reactions20240311173251{})
+			return tx.Sync2(reactions20240311173251{}) //nolint:forbidigo // brand-new table, nothing to drop
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil
