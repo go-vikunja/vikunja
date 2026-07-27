@@ -233,4 +233,17 @@ func TestAPIToken_GetTokenFromTokenString(t *testing.T) {
 		require.Error(t, err)
 		assert.True(t, IsErrAPITokenInvalid(err))
 	})
+	t.Run("token shorter than prefix+8 does not panic", func(t *testing.T) {
+		for _, short := range []string{"", "tk_", "tk_a", "tk_abc", "tk_1234567"} {
+			s := db.NewSession()
+			db.LoadAndAssertFixtures(t)
+
+			token, err := GetTokenFromTokenString(s, short)
+
+			require.Errorf(t, err, "short token %q must be rejected", short)
+			assert.True(t, IsErrAPITokenInvalid(err))
+			assert.Nil(t, token)
+			s.Close()
+		}
+	})
 }
