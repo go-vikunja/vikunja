@@ -125,3 +125,72 @@ func TestUpdateTaskInSavedFilterViews_InactiveFilterOwner(t *testing.T) {
 		"project_view_id": disabledOwnerView.ID,
 	})
 }
+
+// The listener runs after the deleting transaction committed, so the task is already
+// soft-deleted by the time it looks up who to notify.
+func TestSendTaskDeletedNotification(t *testing.T) {
+	// Task 32 belongs to project 3, which user 2 can read and user 6 cannot.
+	const (
+		taskID       = 32
+		projectID    = 3
+		subscriberID = 2
+		outsiderID   = 6
+	)
+
+	doer := &user.User{ID: 3}
+	notificationName := (&TaskDeletedNotification{}).Name()
+
+	deleteSubscribedTask := func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+
+		for _, userID := range []int64{subscriberID, outsiderID} {
+			_, err := s.Insert(&Subscription{
+				EntityType: SubscriptionEntityTask,
+				EntityID:   taskID,
+				UserID:     userID,
+			})
+			require.NoError(t, err)
+		}
+
+		task := &Task{ID: taskID}
+		require.NoError(t, task.ReadOne(s, doer))
+		require.Equal(t, int64(projectID), task.ProjectID)
+
+		canRead, _, err := (&Project{ID: projectID}).CanRead(s, &user.User{ID: subscriberID})
+		require.NoError(t, err)
+		require.True(t, canRead)
+		canRead, _, err = (&Project{ID: projectID}).CanRead(s, &user.User{ID: outsiderID})
+		require.NoError(t, err)
+		require.False(t, canRead)
+
+		require.NoError(t, task.Delete(s, doer))
+		require.NoError(t, s.Commit())
+		_ = s.Close()
+
+		s2 := db.NewSession()
+		softDeleted, err := s2.Unscoped().Where("id = ? AND deleted_at IS NOT NULL", taskID).Exist(&Task{})
+		require.NoError(t, err)
+		require.True(t, softDeleted, "the task must be soft-deleted before the event fires")
+		_ = s2.Close()
+
+		events.TestListener(t, &TaskDeletedEvent{Task: task, Doer: doer}, &SendTaskDeletedNotification{})
+	}
+
+	t.Run("notifies a subscriber who can read the project", func(t *testing.T) {
+		deleteSubscribedTask(t)
+
+		db.AssertExists(t, "notifications", map[string]interface{}{
+			"notifiable_id": subscriberID,
+			"name":          notificationName,
+		}, false)
+	})
+	t.Run("does not notify a subscriber who cannot read the project", func(t *testing.T) {
+		deleteSubscribedTask(t)
+
+		db.AssertMissing(t, "notifications", map[string]interface{}{
+			"notifiable_id": outsiderID,
+			"name":          notificationName,
+		})
+	})
+}
