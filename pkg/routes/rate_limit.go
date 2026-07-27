@@ -41,10 +41,14 @@ func RateLimit(rateLimiter *limiter.Limiter, rateLimitKind string) echo.Middlewa
 				rateLimitKey = c.RealIP()
 			case "user":
 				auth, err := auth2.GetAuthFromClaims(c)
-				if err != nil {
+				// Unauthenticated requests hit this middleware because v2 rate limits
+				// one group covering its public routes as well - key those by IP.
+				if err != nil || auth == nil {
 					log.Errorf("Error getting auth from jwt claims: %v", err)
+					rateLimitKey = "ip_" + c.RealIP()
+				} else {
+					rateLimitKey = "user_" + strconv.FormatInt(auth.GetID(), 10)
 				}
-				rateLimitKey = "user_" + strconv.FormatInt(auth.GetID(), 10)
 			default:
 				log.Errorf("Unknown rate limit kind configured: %s", rateLimitKind)
 			}
