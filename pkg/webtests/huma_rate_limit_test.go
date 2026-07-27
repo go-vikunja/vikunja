@@ -45,16 +45,26 @@ func TestHumaRateLimitUnauthenticated(t *testing.T) {
 	e := routes.NewEcho()
 	routes.RegisterRoutes(e)
 
-	for _, path := range []string{"/api/v2/info", "/api/v2/health"} {
-		t.Run(path, func(t *testing.T) {
-			rec := humaRequest(t, e, http.MethodGet, path, "", "", "")
-			assert.NotEqual(t, http.StatusInternalServerError, rec.Code, "body: %s", rec.Body.String())
+	// Both requests are counted against the same ip-derived key, so the
+	// remaining budget must run down across them - not reset per path.
+	for _, tc := range []struct {
+		path          string
+		wantRemaining string
+	}{
+		{"/api/v2/info", "1"},
+		{"/api/v2/health", "0"},
+	} {
+		t.Run(tc.path, func(t *testing.T) {
+			rec := humaRequest(t, e, http.MethodGet, tc.path, "", "", "")
+			assert.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
 			assert.Equal(t, "2", rec.Header().Get("X-RateLimit-Limit"))
+			assert.Equal(t, tc.wantRemaining, rec.Header().Get("X-RateLimit-Remaining"))
 		})
 	}
 
 	t.Run("limits by ip", func(t *testing.T) {
 		rec := humaRequest(t, e, http.MethodGet, "/api/v2/info", "", "", "")
 		assert.Equal(t, http.StatusTooManyRequests, rec.Code, "body: %s", rec.Body.String())
+		assert.Equal(t, "0", rec.Header().Get("X-RateLimit-Remaining"))
 	})
 }
