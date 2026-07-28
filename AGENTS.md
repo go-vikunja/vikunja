@@ -11,6 +11,12 @@ The project consists of:
 - `desktop/` – Electron wrapper application
 - `docs/` – Documentation website
 
+## Fork and PR Safety
+
+- **Never push commits or branches to the `upstream` remote.** Push only to `origin`, which must point to this fork.
+- Open pull requests from branches on this fork. Do not create branches or pull requests that require write access to the upstream repository.
+- Before any push, verify the destination with `git remote -v`.
+
 ## API Version Policy — new work goes to /api/v2
 
 **`/api/v1` is effectively deprecated and frozen.** It still runs and is fully supported for existing clients, but it should not grow.
