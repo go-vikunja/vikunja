@@ -79,15 +79,16 @@ func BasicAuth(c *echo.Context, username, password string) (bool, error) {
 		Username: username,
 		Password: password,
 	}
-	var err error
 	u, err := checkUserCaldavTokens(s, credentials)
-	if user.IsErrUserDoesNotExist(err) {
+	if err != nil {
+		log.Errorf("Error during caldav token auth: %v", err)
 		return false, nil
 	}
-	if user.IsErrUserStatusError(err) {
-		return false, nil
-	}
+
 	if u == nil {
+		// Every rejection has to end up here: CheckUserCredentials is the only
+		// credential check that equalises the cost of an unknown username with
+		// that of a known one, so returning earlier leaks which users exist.
 		u, err = user.CheckUserCredentials(c.Request().Context(), s, credentials)
 		if err != nil {
 			log.Errorf("Error during basic auth for caldav: %v", err)
@@ -96,9 +97,9 @@ func BasicAuth(c *echo.Context, username, password string) (bool, error) {
 
 		// If the user has TOTP enabled, reject password-based basic auth.
 		// They must use a CalDAV token instead.
-		totpEnabled, err := user.TOTPEnabledForUser(s, u)
-		if err != nil {
-			log.Errorf("Error checking TOTP status for caldav basic auth: %v", err)
+		totpEnabled, terr := user.TOTPEnabledForUser(s, u)
+		if terr != nil {
+			log.Errorf("Error checking TOTP status for caldav basic auth: %v", terr)
 			return false, nil
 		}
 		if totpEnabled {
@@ -106,21 +107,34 @@ func BasicAuth(c *echo.Context, username, password string) (bool, error) {
 			return false, nil
 		}
 	}
-	if u != nil && err == nil {
-		if u.IsBot() {
-			log.Warningf("CalDAV basic auth rejected for bot user %d", u.ID)
-			return false, nil
-		}
-		c.Set("userBasicAuth", u)
-		return true, nil
+
+	if u.IsBot() {
+		log.Warningf("CalDAV basic auth rejected for bot user %d", u.ID)
+		return false, nil
 	}
-	return false, nil
+	c.Set("userBasicAuth", u)
+	return true, nil
 }
 
+// checkUserCaldavTokens returns the user a caldav token belongs to, or nil if
+// no token matched. It never rejects on its own — an unknown username or an
+// unusable account yields nil so the caller falls through to
+// user.CheckUserCredentials, which hashes on a lookup miss to keep unknown and
+// known usernames equally expensive.
 func checkUserCaldavTokens(s *xorm.Session, login *user.Login) (*user.User, error) {
+	// An empty password can never match a token, and CheckUserCredentials
+	// rejects it without hashing — comparing here anyway would make token
+	// holders measurably slower than users who don't exist.
+	if login.Password == "" {
+		return nil, nil
+	}
+
 	usr, err := user.GetUserByUsername(s, login.Username)
-	if err != nil || usr == nil {
-		log.Warningf("Error while retrieving users from database: %v", err)
+	if user.IsErrUserDoesNotExist(err) || user.IsErrUserStatusError(err) {
+		return nil, nil
+	}
+	if err != nil {
+		log.Errorf("Error while retrieving user for caldav auth: %v", err)
 		return nil, err
 	}
 	tokens, err := user.GetCaldavTokensWithSession(s, usr)
