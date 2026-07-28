@@ -305,7 +305,7 @@
                 },
                 {
                     "key": "origins",
-                    "comment": "A list of origins which may access the api. These need to include the protocol (`http://` or `https://`) and port, if any.",
+                    "comment": "A list of origins which may access the api. These need to include the protocol (`http://` or `https://`) and port, if any.\nA value of `*` allows any origin for rest requests, but is ignored for websocket connections - those always allow the origins listed here plus `service.publicurl`.",
                     "children": [
                         {
                             "default_value": "http://127.0.0.1:*"
