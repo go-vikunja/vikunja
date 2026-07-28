@@ -2,13 +2,13 @@ const crypto = require('crypto')
 const fs = require('fs')
 const path = require('path')
 
-const INLINE_SCRIPT_RE = /<script((?:"[^"]*"|'[^']*'|[^>"'])*)>([\s\S]*?)<\/script>/gi
+const INLINE_SCRIPT_RE = /<script\b((?:"[^"]*"|'[^']*'|[^>"'])*)>([\s\S]*?)<\/script>/gi
 
 // build.js rewrites the inline script that sets window.API_URL, so hash what's on disk.
 function inlineScriptHashes(frontendDir) {
 	const html = fs.readFileSync(path.join(frontendDir, 'index.html'), 'utf8')
 	return [...html.matchAll(INLINE_SCRIPT_RE)]
-		.filter(([, attrs]) => !/\bsrc\s*=/.test(attrs))
+		.filter(([, attrs]) => !/(^|[\s/])src\s*=/.test(attrs))
 		// The HTML parser normalizes CRLF and lone CR to LF before the hash is taken.
 		.map(([, , body]) => `'sha256-${crypto.createHash('sha256').update(body.replace(/\r\n?/g, '\n'), 'utf8').digest('base64')}'`)
 }
