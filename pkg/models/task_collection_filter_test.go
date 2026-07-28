@@ -336,6 +336,47 @@ func TestParseFilter(t *testing.T) {
 		assert.Equal(t, taskFilterComparatorEquals, firstSet[1].comparator)
 		assert.Equal(t, int64(1), firstSet[1].value)
 	})
+	t.Run("like query with in inside a quoted value", func(t *testing.T) {
+		result, err := getTaskFiltersFromFilterString("title like 'stuff in progress'", "UTC")
+
+		require.NoError(t, err)
+		require.Len(t, result, 1)
+		assert.Equal(t, "title", result[0].field)
+		assert.Equal(t, taskFilterComparatorLike, result[0].comparator)
+		assert.Equal(t, "stuff in progress", result[0].value)
+	})
+	t.Run("like query with in inside a double quoted value", func(t *testing.T) {
+		result, err := getTaskFiltersFromFilterString(`title like "stuff in progress"`, "UTC")
+
+		require.NoError(t, err)
+		require.Len(t, result, 1)
+		assert.Equal(t, "title", result[0].field)
+		assert.Equal(t, taskFilterComparatorLike, result[0].comparator)
+		assert.Equal(t, "stuff in progress", result[0].value)
+	})
+	t.Run("like query with escaped quote and in inside the value", func(t *testing.T) {
+		result, err := getTaskFiltersFromFilterString(`title like 'it\'s in progress'`, "UTC")
+
+		require.NoError(t, err)
+		require.Len(t, result, 1)
+		assert.Equal(t, "title", result[0].field)
+		assert.Equal(t, taskFilterComparatorLike, result[0].comparator)
+		assert.Equal(t, "it's in progress", result[0].value)
+	})
+	t.Run("in outside quotes next to in inside a quoted value", func(t *testing.T) {
+		result, err := getTaskFiltersFromFilterString("title like 'stuff in progress' && project in 1,2", "UTC")
+
+		require.NoError(t, err)
+		require.Len(t, result, 2)
+		assert.Equal(t, "title", result[0].field)
+		assert.Equal(t, taskFilterComparatorLike, result[0].comparator)
+		assert.Equal(t, "stuff in progress", result[0].value)
+		assert.Equal(t, "project_id", result[1].field)
+		assert.Equal(t, taskFilterComparatorIn, result[1].comparator)
+		require.Len(t, result[1].value, 2)
+		assert.Equal(t, int64(1), result[1].value.([]interface{})[0])
+		assert.Equal(t, int64(2), result[1].value.([]interface{})[1])
+	})
 	t.Run("invalid date value should not panic", func(t *testing.T) {
 		// "no" triggers a panic in the datemath lexer because it starts
 		// recognizing "now" but hits EOF after "no". The safeDatemathParse
@@ -343,6 +384,57 @@ func TestParseFilter(t *testing.T) {
 		_, err := getTaskFiltersFromFilterString("due_date = no", "UTC")
 		require.Error(t, err)
 	})
+}
+
+func TestReplaceFilterOperators(t *testing.T) {
+	tests := []struct {
+		name   string
+		filter string
+		want   string
+	}{
+		{"no operators", "done = false && priority > 3", "done = false && priority > 3"},
+		{"in", "project in 1,2,3", "project ?= 1,2,3"},
+		{"not in", "project not in 1,2,3", "project ?!= 1,2,3"},
+		{"like", "title like foo", "title ~ foo"},
+		{"not in wins over in", "done not in true,false", "done ?!= true,false"},
+		{"multiple operators", "project in 1,2 && title like foo", "project ?= 1,2 && title ~ foo"},
+
+		{"in inside single quotes", "title like 'stuff in progress'", "title ~ 'stuff in progress'"},
+		{"not in inside single quotes", "title = 'tasks not in scope'", "title = 'tasks not in scope'"},
+		{"like inside single quotes", "title = 'things i like a lot'", "title = 'things i like a lot'"},
+		{"in inside double quotes", `title like "stuff in progress"`, `title ~ "stuff in progress"`},
+		{"not in inside double quotes", `title = "tasks not in scope"`, `title = "tasks not in scope"`},
+		{"like inside double quotes", `title = "things i like a lot"`, `title = "things i like a lot"`},
+		{"single quote inside double quoted value", `title like "it's in progress"`, `title ~ "it's in progress"`},
+
+		{
+			"operator outside quotes and same word inside a quoted value",
+			"title like 'stuff in progress' && project in 1,2",
+			"title ~ 'stuff in progress' && project ?= 1,2",
+		},
+		{
+			"escaped single quote inside value",
+			`title like 'it\'s in progress' && project in 1,2`,
+			`title ~ 'it\'s in progress' && project ?= 1,2`,
+		},
+		{
+			"escaped double quote inside value",
+			`title like "it\"s in progress" && project in 1,2`,
+			`title ~ "it\"s in progress" && project ?= 1,2`,
+		},
+		{
+			// An unclosed quote is a bare value with an apostrophe, not a string.
+			"unclosed quote does not swallow the rest of the filter",
+			"title = it's cool && project in 1,2",
+			"title = it's cool && project ?= 1,2",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.want, replaceFilterOperators(tc.filter))
+		})
+	}
 }
 
 // Date filter boundaries must be emitted in UTC — the driver drops a bound
