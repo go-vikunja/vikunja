@@ -130,17 +130,13 @@ func TestRecreateMissingIndexesKeepsDifferentlyNamedIndex20260720120000(t *testi
 // silently skips when reading the schema, so the migration tried to create them a
 // second time and aborted the whole upgrade (#3313).
 func TestRecreateMissingIndexesFindsLowercaseSQLiteIndexes20260720120000(t *testing.T) {
-	x, err := db.CreateTestEngine()
-	require.NoError(t, err)
-	if x.Dialect().URI().DBType != schemas.SQLITE {
-		t.Skip("lowercase index definitions are only invisible to xorm on sqlite")
-	}
+	x := sqliteTestEngine20260720120000(t)
 	require.NoError(t, x.Sync2(user.GetTables()...))
 
 	require.NoError(t, x.Sync(usersPartial20260720120000{}))
 	require.Nil(t, usersIndexOnUsername20260720120000(t, x))
 
-	_, err = x.Exec("create unique index UQE_users_username\n    on users (username)")
+	_, err := x.Exec("create unique index UQE_users_username\n    on users (username)")
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		// x is the process-global test engine; a lowercase index leaks into later tests.
@@ -148,9 +144,135 @@ func TestRecreateMissingIndexesFindsLowercaseSQLiteIndexes20260720120000(t *test
 		require.NoError(t, err)
 	})
 
-	require.Nil(t, usersIndexOnUsername20260720120000(t, x), "xorm should still be blind to it")
+	require.NoError(t, recreateMissingIndexes20260720120000(x))
+
+	// DBMetas is blind to the lowercase index by construction, so read the schema directly.
+	rows, err := x.QueryString("SELECT name, sql FROM sqlite_master WHERE type = 'index' AND tbl_name = 'users' AND sql LIKE '%username%'")
+	require.NoError(t, err)
+	require.Len(t, rows, 1)
+	require.Equal(t, "UQE_users_username", rows[0]["name"])
+	// sqlite canonicalizes only the leading CREATE keywords, so the lowercase tail
+	// is what identifies this as the original index rather than a recreated one.
+	require.Contains(t, rows[0]["sql"], "on users (username)")
+}
+
+// The name is taken by an index which cannot stand in for the model's, so the
+// migration must warn and move on instead of aborting the upgrade.
+func TestRecreateMissingIndexesSkipsWhenIndexNameIsTaken20260720120000(t *testing.T) {
+	x := sqliteTestEngine20260720120000(t)
+	require.NoError(t, x.Sync2(user.GetTables()...))
+
+	require.NoError(t, x.Sync(usersPartial20260720120000{}))
+	require.Nil(t, usersIndexOnUsername20260720120000(t, x))
+
+	_, err := x.Exec("CREATE UNIQUE INDEX UQE_users_username ON users (username) WHERE username IS NOT NULL")
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		// x is the process-global test engine; the index leaks into later tests.
+		_, err := x.Exec("DROP INDEX UQE_users_username")
+		require.NoError(t, err)
+	})
 
 	require.NoError(t, recreateMissingIndexes20260720120000(x))
+}
+
+func TestSQLiteIndexesReportsNonUniqueIndex20260720120000(t *testing.T) {
+	x := sqliteTestEngine20260720120000(t)
+	table := "scratch_nonunique20260720120000"
+	createScratchTable20260720120000(t, x, table, "id INTEGER PRIMARY KEY, code TEXT")
+
+	_, err := x.Exec("create index IDX_scratch_code20260720120000 on " + table + " (code)")
+	require.NoError(t, err)
+
+	dbIndexes, err := sqliteIndexes20260720120000(x)
+	require.NoError(t, err)
+
+	index := indexByName20260720120000(dbIndexes.byTable[table], "IDX_scratch_code20260720120000")
+	require.NotNil(t, index)
+	require.Equal(t, schemas.IndexType, index.Type)
+	require.Equal(t, []string{"code"}, index.Cols)
+	require.True(t, dbIndexes.usedNames["IDX_scratch_code20260720120000"])
+}
+
+// A UNIQUE column constraint creates sqlite_autoindex_*, whose sqlite_master.sql
+// is NULL — there is no DDL to parse, only the pragmas know about it.
+func TestSQLiteIndexesReportsImplicitUniqueIndex20260720120000(t *testing.T) {
+	x := sqliteTestEngine20260720120000(t)
+	table := "scratch_autoindex20260720120000"
+	createScratchTable20260720120000(t, x, table, "id INTEGER PRIMARY KEY, code TEXT UNIQUE")
+
+	dbIndexes, err := sqliteIndexes20260720120000(x)
+	require.NoError(t, err)
+
+	index := indexByName20260720120000(dbIndexes.byTable[table], "sqlite_autoindex_"+table+"_1")
+	require.NotNil(t, index)
+	require.Equal(t, schemas.UniqueType, index.Type)
+	require.Equal(t, []string{"code"}, index.Cols)
+}
+
+func TestSQLiteIndexesReportsAllColumnsInOrder20260720120000(t *testing.T) {
+	x := sqliteTestEngine20260720120000(t)
+	table := "scratch_multicol20260720120000"
+	createScratchTable20260720120000(t, x, table, "id INTEGER PRIMARY KEY, a TEXT, b TEXT")
+
+	// (b, a), not the table's column order, so the assertion pins the index order.
+	_, err := x.Exec("create index IDX_scratch_multicol20260720120000 on " + table + " (b, a)")
+	require.NoError(t, err)
+
+	dbIndexes, err := sqliteIndexes20260720120000(x)
+	require.NoError(t, err)
+
+	index := indexByName20260720120000(dbIndexes.byTable[table], "IDX_scratch_multicol20260720120000")
+	require.NotNil(t, index)
+	require.Equal(t, []string{"b", "a"}, index.Cols)
+}
+
+func TestSQLiteIndexesExcludesPartialIndexButKeepsItsName20260720120000(t *testing.T) {
+	x := sqliteTestEngine20260720120000(t)
+	table := "scratch_partial20260720120000"
+	createScratchTable20260720120000(t, x, table, "id INTEGER PRIMARY KEY, code TEXT")
+
+	// Newline before WHERE, no space after it: shapes the old sqlite_master string matching missed.
+	_, err := x.Exec("create unique index UQE_scratch_partial20260720120000 on " + table + " (code)\nwhere(code is not null)")
+	require.NoError(t, err)
+
+	dbIndexes, err := sqliteIndexes20260720120000(x)
+	require.NoError(t, err)
+
+	require.Nil(t, indexByName20260720120000(dbIndexes.byTable[table], "UQE_scratch_partial20260720120000"),
+		"a partial index covers only some rows, so it cannot stand in for a model index")
+	require.True(t, dbIndexes.usedNames["UQE_scratch_partial20260720120000"],
+		"it still occupies the name")
+}
+
+func sqliteTestEngine20260720120000(t *testing.T) *xorm.Engine {
+	t.Helper()
+	x, err := db.CreateTestEngine()
+	require.NoError(t, err)
+	if x.Dialect().URI().DBType != schemas.SQLITE {
+		t.Skip("sqlite-specific index metadata")
+	}
+	return x
+}
+
+func createScratchTable20260720120000(t *testing.T, x *xorm.Engine, name, columns string) {
+	t.Helper()
+	_, err := x.Exec("CREATE TABLE " + name + " (" + columns + ")")
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		// x is the process-global test engine; the table and its indexes leak into later tests.
+		_, err := x.Exec("DROP TABLE " + name)
+		require.NoError(t, err)
+	})
+}
+
+func indexByName20260720120000(indexes []*schemas.Index, name string) *schemas.Index {
+	for _, index := range indexes {
+		if index.Name == name {
+			return index
+		}
+	}
+	return nil
 }
 
 func TestPartialSyncKeepsIndexes20260720120000(t *testing.T) {
