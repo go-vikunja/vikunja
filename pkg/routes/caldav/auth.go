@@ -89,6 +89,8 @@ func BasicAuth(c *echo.Context, username, password string) (bool, error) {
 		// Every rejection has to end up here: CheckUserCredentials is the only
 		// credential check that equalises the cost of an unknown username with
 		// that of a known one, so returning earlier leaks which users exist.
+		// Every nil user CheckUserCredentials returns comes with an error, so
+		// returning here is what keeps u non-nil for the rest of the function.
 		u, err = user.CheckUserCredentials(c.Request().Context(), s, credentials)
 		if err != nil {
 			log.Errorf("Error during basic auth for caldav: %v", err)
