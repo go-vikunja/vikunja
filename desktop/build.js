@@ -19,6 +19,7 @@ const path = require('path')
 const {execSync} = require('child_process')
 
 const API_URL_SCRIPT_RE = /<script>(?:(?!<\/script>)[\s\S])*window\.API_URL(?:(?!<\/script>)[\s\S])*<\/script>/
+const INLINE_SCRIPT_RE = /<script\b((?:"[^"]*"|'[^']*'|[^>"'])*)>/gi
 
 // Helper function to copy directory recursively
 async function copyDir(src, dest) {
@@ -100,11 +101,13 @@ async function main() {
 		if (!API_URL_SCRIPT_RE.test(indexHtml)) {
 			throw new Error(`${indexFilePath} has no inline window.API_URL script; the desktop CSP assumes script-src 'self' with no inline scripts`)
 		}
-		await fs.promises.writeFile(
-			indexFilePath,
-			indexHtml.replace(API_URL_SCRIPT_RE, '<script src="/api-url.js"></script>'),
-			'utf8',
-		)
+		const rewrittenHtml = indexHtml.replace(API_URL_SCRIPT_RE, '<script src="/api-url.js"></script>')
+		const remainingInlineScripts = [...rewrittenHtml.matchAll(INLINE_SCRIPT_RE)]
+			.filter(([, attrs]) => !/(^|[\s/])src\s*=/i.test(attrs))
+		if (remainingInlineScripts.length > 0) {
+			throw new Error(`${indexFilePath} still has an inline script; the desktop CSP is script-src 'self', which blocks it`)
+		}
+		await fs.promises.writeFile(indexFilePath, rewrittenHtml, 'utf8')
 		await fs.promises.writeFile(path.join(frontendDir, 'api-url.js'), "window.API_URL = ''\n", 'utf8')
 
 		console.log('Step 3: Updating version in package.json...')
