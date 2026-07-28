@@ -95,6 +95,18 @@ func createRateLimiter(rate limiter.Rate) *limiter.Limiter {
 	return limiter.New(store, rate)
 }
 
+// unauthRateLimit builds a per-IP rate limit middleware for routes reachable
+// without authentication. Unlike setupRateLimit it ignores RateLimitEnabled -
+// these routes need a floor even when the global limiter is off (the default).
+// Keyed by IP because there is no user to key on before authentication.
+func unauthRateLimit() echo.MiddlewareFunc {
+	rate := limiter.Rate{
+		Period: 60 * time.Second,
+		Limit:  config.RateLimitNoAuthRoutesLimit.GetInt64(),
+	}
+	return RateLimit(createRateLimiter(rate), "ip")
+}
+
 func setupRateLimit(a *echo.Group, rateLimitKind string) {
 	if config.RateLimitEnabled.GetBool() {
 		rate := limiter.Rate{
