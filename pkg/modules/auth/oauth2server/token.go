@@ -84,18 +84,15 @@ func ExchangeToken(ctx context.Context, req *TokenRequest, deviceInfo, ipAddress
 	}
 }
 
-// consumeAuthorizationCode burns the code in its own committed transaction so
-// that a rollback during validation cannot resurrect it. Every exchange attempt
-// spends the code, valid or not; otherwise a stolen code could be replayed to
-// brute-force the PKCE verifier or probe client_id/redirect_uri values.
+// consumeAuthorizationCode commits in its own transaction so a rollback during
+// validation cannot resurrect the code.
 func consumeAuthorizationCode(code string) (*models.OAuthCode, error) {
 	s := db.NewSession()
 	defer s.Close()
 
 	oauthCode, err := models.GetAndDeleteOAuthCode(s, code)
 	if err != nil {
-		// An expired code is deleted before the error is returned, so commit
-		// that too while keeping the original error.
+		// An expired code is deleted before the error is returned.
 		if commitErr := s.Commit(); commitErr != nil {
 			log.Errorf("Could not commit authorization code deletion: %s", commitErr)
 		}
