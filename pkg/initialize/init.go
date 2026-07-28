@@ -39,6 +39,7 @@ import (
 	_ "code.vikunja.io/api/pkg/plugins/yaegi" // register yaegi plugin loader
 	"code.vikunja.io/api/pkg/red"
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/utils"
 	ws "code.vikunja.io/api/pkg/websocket"
 )
 
@@ -125,6 +126,8 @@ func FullInitWithoutAsync() {
 
 	// Initialize plugins
 	plugins.Initialize()
+
+	utils.WarnIfProxyBypassesSSRFGuard()
 }
 
 // FullInit initializes all kinds of things in the right order

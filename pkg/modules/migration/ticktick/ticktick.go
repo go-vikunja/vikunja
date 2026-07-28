@@ -146,25 +146,37 @@ func sortParentsBeforeChildren(tasks []*tickTickTask) []*tickTickTask {
 		tasksByID[t.TaskID] = t
 	}
 
-	// placed is keyed by the task itself rather than by TaskID: malformed
+	// state is keyed by the task itself rather than by TaskID: malformed
 	// exports can collapse several taskIds to 0 (see tickTickNumber), and
 	// keying by ID would treat every zero-ID task after the first as already
 	// placed and silently drop it.
-	placed := make(map[*tickTickTask]bool, len(tasks))
+	//
+	// A malicious or malformed export can make two tasks each other's parent
+	// (or a task its own parent). The three-state visited map catches this:
+	// a task marked "visiting" that's re-entered via its own parent chain is
+	// a cycle, so place() stops recursing instead of looping forever.
+	type placeState int
+	const (
+		unvisited placeState = iota
+		visiting
+		donePlacing
+	)
+	state := make(map[*tickTickTask]placeState, len(tasks))
 	result := make([]*tickTickTask, 0, len(tasks))
 
 	var place func(t *tickTickTask)
 	place = func(t *tickTickTask) {
-		if placed[t] {
+		if state[t] != unvisited {
 			return
 		}
+		state[t] = visiting
 		// If this task has a parent that we know about, place the parent first.
 		if t.ParentID != 0 {
 			if parent, ok := tasksByID[t.ParentID]; ok {
 				place(parent)
 			}
 		}
-		placed[t] = true
+		state[t] = donePlacing
 		result = append(result, t)
 	}
 

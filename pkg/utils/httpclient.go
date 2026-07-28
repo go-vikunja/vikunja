@@ -24,15 +24,28 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/version"
 
 	"code.dny.dev/ssrf"
 )
 
+// WarnIfProxyBypassesSSRFGuard logs a startup warning when a proxy is
+// configured while the non-routable-IP guard is active: the proxy dials the
+// destination itself, so it has to enforce SSRF policy on its own.
+func WarnIfProxyBypassesSSRFGuard() {
+	if config.OutgoingRequestsProxyURL.GetString() != "" &&
+		config.OutgoingRequestsProxyPassword.GetString() != "" &&
+		!config.OutgoingRequestsAllowNonRoutableIPs.GetBool() {
+		log.Warning("outgoingrequests.proxyurl is set: the proxy, not Vikunja, must block requests to internal destinations")
+	}
+}
+
 // NewSSRFSafeHTTPClient returns an *http.Client with SSRF protection applied.
 // It blocks connections to non-globally-routable IP addresses (loopback,
 // private ranges, link-local, etc.) unless outgoingrequests.allownonroutableips
 // is set to true. It also configures proxy settings from outgoingrequests config.
+// A configured proxy dials the destination itself and bypasses this guard.
 //
 // Deprecated webhooks.* config keys are migrated to outgoingrequests.* at
 // config init time (see config.InitDefaultConfig), so this function only
