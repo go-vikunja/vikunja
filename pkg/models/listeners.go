@@ -568,7 +568,8 @@ func (s *SendTaskCommentNotification) Handle(msg *message.Message) (err error) {
 		}
 		err = notifications.Notify(subscriber.User, n, sess)
 		if err != nil {
-			return
+			log.Errorf("Could not send task comment notification to user %d for task %d: %s", subscriber.UserID, event.Task.ID, err)
+			continue
 		}
 	}
 
@@ -676,7 +677,8 @@ func (s *SendTaskAssignedNotification) Handle(msg *message.Message) (err error) 
 		}
 		err = notifications.Notify(subscriber.User, n, sess)
 		if err != nil {
-			return
+			log.Errorf("Could not send task assigned notification to user %d for task %d: %s", subscriber.UserID, event.Task.ID, err)
+			continue
 		}
 
 		notifiedUsers[subscriber.UserID] = true
@@ -723,7 +725,8 @@ func (s *SendTaskDeletedNotification) Handle(msg *message.Message) (err error) {
 		}
 		err = notifications.Notify(subscriber.User, n, sess)
 		if err != nil {
-			return
+			log.Errorf("Could not send task deleted notification to user %d for task %d: %s", subscriber.UserID, event.Task.ID, err)
+			continue
 		}
 	}
 
@@ -1066,7 +1069,8 @@ func (s *SendProjectCreatedNotification) Handle(msg *message.Message) (err error
 		}
 		err = notifications.Notify(subscriber.User, n, sess)
 		if err != nil {
-			return
+			log.Errorf("Could not send project created notification to user %d for project %d: %s", subscriber.UserID, event.Project.ID, err)
+			continue
 		}
 	}
 

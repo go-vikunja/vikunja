@@ -137,6 +137,136 @@ func TestUpdateTaskInSavedFilterViews_InactiveFilterOwner(t *testing.T) {
 	})
 }
 
+// Subscriptions survive losing access to the entity they point at: nothing
+// purges them when a share is removed, and access can change with no
+// revocation event at all. Every notification listener must therefore re-check
+// read permission before delivering.
+//
+// Task 32 lives on project 3, which user 2 can read and user 6 cannot.
+func TestSubscriberNotifications_SkipUsersWithoutReadAccess(t *testing.T) {
+	const (
+		taskID      int64 = 32
+		projectID   int64 = 3
+		withAccess  int64 = 2
+		lostAccess  int64 = 6
+		doerID      int64 = 1
+		assigneeID  int64 = 3
+		childProjID int64 = 9990
+	)
+
+	subscribeBoth := func(t *testing.T, s *xorm.Session, entityType SubscriptionEntityType, entityID int64) {
+		for _, userID := range []int64{withAccess, lostAccess} {
+			_, err := s.Insert(&Subscription{
+				UserID:     userID,
+				EntityType: entityType,
+				EntityID:   entityID,
+			})
+			require.NoError(t, err)
+		}
+	}
+
+	assertOnlySubscriberWithAccessNotified := func(t *testing.T, notificationName string) {
+		db.AssertExists(t, "notifications", map[string]interface{}{
+			"notifiable_id": withAccess,
+			"name":          notificationName,
+		}, false)
+		db.AssertMissing(t, "notifications", map[string]interface{}{
+			"notifiable_id": lostAccess,
+			"name":          notificationName,
+		})
+	}
+
+	t.Run("task comment", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		subscribeBoth(t, s, SubscriptionEntityTask, taskID)
+
+		task, err := GetTaskByIDSimple(s, taskID)
+		require.NoError(t, err)
+
+		comment := &TaskComment{Comment: "secret", TaskID: taskID, AuthorID: doerID}
+		_, err = s.Insert(comment)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		_ = s.Close()
+
+		events.TestListener(t, &TaskCommentCreatedEvent{
+			Task:    &task,
+			Doer:    &user.User{ID: doerID},
+			Comment: comment,
+		}, &SendTaskCommentNotification{})
+
+		assertOnlySubscriberWithAccessNotified(t, (&TaskCommentNotification{}).Name())
+	})
+
+	t.Run("task assigned", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		subscribeBoth(t, s, SubscriptionEntityTask, taskID)
+
+		task, err := GetTaskByIDSimple(s, taskID)
+		require.NoError(t, err)
+		assignee, err := user.GetUserByID(s, assigneeID)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		_ = s.Close()
+
+		events.TestListener(t, &TaskAssigneeCreatedEvent{
+			Task:     &task,
+			Assignee: assignee,
+			Doer:     &user.User{ID: doerID},
+		}, &SendTaskAssignedNotification{})
+
+		assertOnlySubscriberWithAccessNotified(t, (&TaskAssignedNotification{}).Name())
+	})
+
+	t.Run("task deleted", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		subscribeBoth(t, s, SubscriptionEntityTask, taskID)
+
+		task, err := GetTaskByIDSimple(s, taskID)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		_ = s.Close()
+
+		events.TestListener(t, &TaskDeletedEvent{
+			Task: &task,
+			Doer: &user.User{ID: doerID},
+		}, &SendTaskDeletedNotification{})
+
+		assertOnlySubscriberWithAccessNotified(t, (&TaskDeletedNotification{}).Name())
+	})
+
+	// Subscribers are inherited from the parent project, but the notification
+	// discloses the newly created child, so the child is what gets checked.
+	t.Run("project created", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		subscribeBoth(t, s, SubscriptionEntityProject, projectID)
+
+		parentID := projectID
+		child := &Project{
+			ID:              childProjID,
+			Title:           "child",
+			Identifier:      "CHILD",
+			OwnerID:         doerID,
+			ParentProjectID: &parentID,
+		}
+		_, err := s.Insert(child)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		_ = s.Close()
+
+		events.TestListener(t, &ProjectCreatedEvent{
+			Project: child,
+			Doer:    &user.User{ID: doerID},
+		}, &SendProjectCreatedNotification{})
+
+		assertOnlySubscriberWithAccessNotified(t, (&ProjectCreatedNotification{}).Name())
+	})
+}
+
 // The listener runs after the deleting transaction committed, so the task is already
 // soft-deleted by the time it looks up who to notify.
 func TestSendTaskDeletedNotification(t *testing.T) {
