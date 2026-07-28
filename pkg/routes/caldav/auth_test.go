@@ -87,3 +87,93 @@ func TestBasicAuthAPIToken(t *testing.T) {
 		assert.Equal(t, int64(15), u.ID)
 	})
 }
+
+// Timing is not asserted here — wall-clock ratios are hopelessly flaky in CI.
+// Instead these assert the structural property the timing depends on:
+// checkUserCaldavTokens never decides an authentication by itself, so every
+// rejection leaves BasicAuth through user.CheckUserCredentials, which burns a
+// bcrypt hash when the username does not exist.
+func TestBasicAuthUsernameEnumeration(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+
+	deferredToCredentialCheck := func(t *testing.T, username, password string) {
+		t.Helper()
+
+		s := db.NewSession()
+		defer s.Close()
+
+		u, err := checkUserCaldavTokens(s, &user.Login{Username: username, Password: password})
+		require.NoError(t, err)
+		assert.Nil(t, u, "token check must defer to CheckUserCredentials for %q", username)
+	}
+
+	t.Run("token check defers unknown username", func(t *testing.T) {
+		deferredToCredentialCheck(t, "doesnotexist", "12345678")
+	})
+
+	t.Run("token check defers known username with wrong password", func(t *testing.T) {
+		deferredToCredentialCheck(t, "user1", "wrong-password")
+	})
+
+	t.Run("token check defers disabled and locked users", func(t *testing.T) {
+		deferredToCredentialCheck(t, "user17", "12345678")
+		deferredToCredentialCheck(t, "user18", "12345678")
+	})
+
+	t.Run("unknown username and wrong password are rejected identically", func(t *testing.T) {
+		unknown := newAuthContext()
+		unknownOK, unknownErr := BasicAuth(unknown, "doesnotexist", "12345678")
+
+		wrongPassword := newAuthContext()
+		wrongPasswordOK, wrongPasswordErr := BasicAuth(wrongPassword, "user1", "wrong-password")
+
+		assert.Equal(t, unknownOK, wrongPasswordOK)
+		assert.Equal(t, unknownErr, wrongPasswordErr)
+		require.NoError(t, unknownErr)
+		assert.False(t, unknownOK)
+		assert.Nil(t, unknown.Get("userBasicAuth"))
+		assert.Nil(t, wrongPassword.Get("userBasicAuth"))
+	})
+
+	t.Run("empty password is rejected", func(t *testing.T) {
+		c := newAuthContext()
+		ok, err := BasicAuth(c, "user1", "")
+		require.NoError(t, err)
+		assert.False(t, ok)
+	})
+}
+
+func TestBasicAuthCredentials(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+
+	t.Run("accepts valid password", func(t *testing.T) {
+		c := newAuthContext()
+		ok, err := BasicAuth(c, "user1", "12345678")
+		require.NoError(t, err)
+		assert.True(t, ok)
+		u, is := c.Get("userBasicAuth").(*user.User)
+		require.True(t, is)
+		assert.Equal(t, int64(1), u.ID)
+	})
+
+	t.Run("accepts valid caldav token", func(t *testing.T) {
+		c := newAuthContext()
+		// "caldavtesttoken" is the plaintext of the bcrypt hash in user_tokens.yml
+		ok, err := BasicAuth(c, "user10", "caldavtesttoken")
+		require.NoError(t, err)
+		assert.True(t, ok)
+		u, is := c.Get("userBasicAuth").(*user.User)
+		require.True(t, is)
+		assert.Equal(t, int64(10), u.ID)
+	})
+
+	t.Run("rejects disabled and locked users with the correct password", func(t *testing.T) {
+		for _, username := range []string{"user17", "user18"} {
+			c := newAuthContext()
+			ok, err := BasicAuth(c, username, "12345678")
+			require.NoError(t, err)
+			assert.False(t, ok, "%s must not be able to authenticate", username)
+			assert.Nil(t, c.Get("userBasicAuth"))
+		}
+	})
+}
