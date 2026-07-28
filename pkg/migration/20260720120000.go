@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"strings"
 
+	"code.vikunja.io/api/pkg/log"
+
 	"src.techknowlogick.com/xormigrate"
 	"xorm.io/xorm"
 	"xorm.io/xorm/schemas"
@@ -43,13 +45,13 @@ func init() {
 func recreateMissingIndexes20260720120000(tx *xorm.Engine) error {
 	dbTables, err := tx.DBMetas()
 	if err != nil {
-		return err
+		return fmt.Errorf("could not read the database schema: %w", err)
 	}
 	dbTableByName := make(map[string]*schemas.Table, len(dbTables))
 	for _, t := range dbTables {
 		dbTableByName[t.Name] = t
 	}
-	dbIndexesByTable, err := dbIndexes20260720120000(tx, dbTables)
+	dbIndexes, err := dbIndexes20260720120000(tx, dbTables)
 	if err != nil {
 		return err
 	}
@@ -57,7 +59,7 @@ func recreateMissingIndexes20260720120000(tx *xorm.Engine) error {
 	for _, bean := range schemaBeans() {
 		modelTable, err := tx.TableInfo(bean)
 		if err != nil {
-			return err
+			return fmt.Errorf("could not read the model schema of %T: %w", bean, err)
 		}
 		dbTable, exists := dbTableByName[modelTable.Name]
 		if !exists {
@@ -68,7 +70,15 @@ func recreateMissingIndexes20260720120000(tx *xorm.Engine) error {
 			if !columnsExist20260720120000(dbTable, index.Cols) {
 				continue
 			}
-			if indexCoveringColsExists20260720120000(dbIndexesByTable[dbTable.Name], index) {
+			if indexCoveringColsExists20260720120000(dbIndexes.byTable[dbTable.Name], index) {
+				continue
+			}
+			// Creating it would fail with "index already exists" and abort startup —
+			// the very failure mode this migration exists to prevent.
+			if indexName := index.XName(modelTable.Name); dbIndexes.usedNames[indexName] {
+				log.Warningf(
+					"Could not recreate the index on %s (%s): another index already uses the name %s. Drop or rename it, then restart Vikunja to heal the schema.",
+					modelTable.Name, strings.Join(index.Cols, ", "), indexName)
 				continue
 			}
 			if index.Type == schemas.UniqueType {
@@ -84,7 +94,14 @@ func recreateMissingIndexes20260720120000(tx *xorm.Engine) error {
 	return nil
 }
 
-func dbIndexes20260720120000(tx *xorm.Engine, dbTables []*schemas.Table) (map[string][]*schemas.Index, error) {
+type dbIndexes20260720120000Result struct {
+	byTable map[string][]*schemas.Index
+	// Empty outside sqlite: DBMetas strips the IDX_/UQE_ prefix from index names
+	// there, so the set could not be matched against XName.
+	usedNames map[string]bool
+}
+
+func dbIndexes20260720120000(tx *xorm.Engine, dbTables []*schemas.Table) (*dbIndexes20260720120000Result, error) {
 	if tx.Dialect().URI().DBType == schemas.SQLITE {
 		return sqliteIndexes20260720120000(tx)
 	}
@@ -94,61 +111,70 @@ func dbIndexes20260720120000(tx *xorm.Engine, dbTables []*schemas.Table) (map[st
 			byTable[dbTable.Name] = append(byTable[dbTable.Name], index)
 		}
 	}
-	return byTable, nil
+	return &dbIndexes20260720120000Result{byTable: byTable}, nil
 }
 
-// xorm's sqlite3 dialect parses index definitions by looking for the literal
-// uppercase "INDEX" and "ON", so it silently skips every index older Vikunja
-// migrations created with lowercase `create index` SQL (#3313) — and skips the
-// implicit indexes of UNIQUE column constraints, which have no SQL at all.
-// Read sqlite_master instead of trusting DBMetas.
-func sqliteIndexes20260720120000(tx *xorm.Engine) (map[string][]*schemas.Index, error) {
-	rows, err := tx.QueryString("SELECT name, tbl_name, sql FROM sqlite_master WHERE type = 'index'")
+// One row per index column, joined over sqlite's pragma table-valued functions.
+// xorm's sqlite3 dialect instead parses the DDL in sqlite_master by looking for
+// the literal uppercase "INDEX" and "ON", so it silently skips every index older
+// Vikunja migrations created with lowercase `create index` SQL (#3313) — and the
+// implicit indexes of UNIQUE constraints, which have no DDL at all. The pragmas
+// report uniqueness and partialness as authoritative flags, so nothing here has
+// to guess from DDL text.
+func sqliteIndexes20260720120000(tx *xorm.Engine) (*dbIndexes20260720120000Result, error) {
+	rows, err := tx.QueryString(`SELECT m.name AS tbl, il.name AS idx, il."unique" AS uniq, il.partial AS part, IFNULL(ii.name, '') AS col
+FROM sqlite_master m
+JOIN pragma_index_list(m.name) il
+JOIN pragma_index_info(il.name) ii
+WHERE m.type = 'table'
+ORDER BY m.name, il.name, ii.seqno`)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not read the sqlite index metadata: %w", err)
 	}
 
-	byTable := make(map[string][]*schemas.Index, len(rows))
+	type sqliteIndex struct {
+		table    string
+		unusable bool
+		index    *schemas.Index
+	}
+	seen := make(map[string]*sqliteIndex, len(rows))
+	ordered := make([]*sqliteIndex, 0, len(rows))
+	result := &dbIndexes20260720120000Result{
+		byTable:   make(map[string][]*schemas.Index),
+		usedNames: make(map[string]bool, len(rows)),
+	}
+
 	for _, row := range rows {
-		createSQL := strings.ToUpper(strings.TrimSpace(row["sql"]))
-		// A partial index only covers some rows, so it can't stand in for a full one.
-		if strings.Contains(createSQL, " WHERE ") {
+		name := row["idx"]
+		result.usedNames[name] = true
+
+		entry, ok := seen[name]
+		if !ok {
+			indexType := schemas.IndexType
+			if row["uniq"] == "1" {
+				indexType = schemas.UniqueType
+			}
+			entry = &sqliteIndex{table: row["tbl"], index: &schemas.Index{Name: name, Type: indexType}}
+			seen[name] = entry
+			ordered = append(ordered, entry)
+		}
+		// A partial index covers only some rows and an expression index (reported as a
+		// NULL column name) no column at all, so neither can stand in for a model index
+		// — but both still occupy the name.
+		if row["part"] == "1" || row["col"] == "" {
+			entry.unusable = true
 			continue
 		}
+		entry.index.Cols = append(entry.index.Cols, row["col"])
+	}
 
-		cols, err := sqliteIndexCols20260720120000(tx, row["name"])
-		if err != nil {
-			return nil, err
-		}
-		if len(cols) == 0 {
+	for _, entry := range ordered {
+		if entry.unusable {
 			continue
 		}
-
-		index := &schemas.Index{Name: row["name"], Type: schemas.IndexType, Cols: cols}
-		// No SQL means sqlite generated the index for a UNIQUE or PK constraint.
-		words := strings.Fields(createSQL)
-		if len(words) < 2 || words[1] == "UNIQUE" {
-			index.Type = schemas.UniqueType
-		}
-		byTable[row["tbl_name"]] = append(byTable[row["tbl_name"]], index)
+		result.byTable[entry.table] = append(result.byTable[entry.table], entry.index)
 	}
-	return byTable, nil
-}
-
-func sqliteIndexCols20260720120000(tx *xorm.Engine, indexName string) ([]string, error) {
-	rows, err := tx.QueryString("PRAGMA index_info(" + tx.Quote(indexName) + ")")
-	if err != nil {
-		return nil, err
-	}
-	cols := make([]string, 0, len(rows))
-	for _, row := range rows {
-		// Expression indexes report a NULL column name; they can't cover a model index.
-		if row["name"] == "" {
-			return nil, nil
-		}
-		cols = append(cols, row["name"])
-	}
-	return cols, nil
+	return result, nil
 }
 
 func columnsExist20260720120000(dbTable *schemas.Table, cols []string) bool {
@@ -209,7 +235,7 @@ func ensureNoDuplicates20260720120000(tx *xorm.Engine, table string, cols []stri
 		" HAVING COUNT(*) > 1"
 	rows, err := tx.QueryString(query)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not check %s (%s) for duplicate values: %w", table, strings.Join(cols, ", "), err)
 	}
 	if len(rows) > 0 {
 		// Some unique-indexed columns hold secrets (token_hash, oauth codes, ...) — never log the values.
