@@ -317,9 +317,7 @@ func RegisterRoutes(e *echo.Echo) {
 		}))
 	}
 
-	// /ws is unauthenticated (auth happens in the first message) and exists on
-	// both API versions - one shared limiter so the floor is per IP, not per
-	// version.
+	// Shared across both API versions so the budget is per IP, not per version.
 	wsRateLimit := unauthRateLimit()
 
 	// API Routes
@@ -463,9 +461,7 @@ func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, wsRateLimit echo.Middlewar
 	// upgrade endpoint stays a raw echo route (outside the Huma spec). It
 	// authenticates via its first message, so unauthenticatedAPIPaths exempts it
 	// from the group's JWT middleware. Health and the Atom feed are Huma ops and
-	// self-register via init()/RegisterAll. Every accepted upgrade costs two
-	// goroutines and a socket held for up to the auth timeout, so it gets the
-	// unauthenticated rate limit floor on top of the (optional) group limiter.
+	// self-register via init()/RegisterAll.
 	a.GET("/ws", ws.UpgradeHandler, wsRateLimit)
 
 	// Resources self-register via init(); RegisterAll runs them all + AutoPatch.
