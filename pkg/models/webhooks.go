@@ -46,6 +46,9 @@ import (
 
 var webhookClient *http.Client
 
+// The webhook target is user-configured, so its error body is untrusted and can be arbitrarily large.
+const maxWebhookErrorBodySize = 4096
+
 type Webhook struct {
 	// The generated ID of this webhook target
 	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"webhook" readOnly:"true" doc:"The generated ID of this webhook target."`
@@ -370,7 +373,7 @@ func (w *Webhook) sendWebhookPayload(p *WebhookPayload) (err error) {
 	defer res.Body.Close()
 
 	if res.StatusCode > 399 {
-		responseBody, readErr := io.ReadAll(res.Body)
+		responseBody, readErr := io.ReadAll(io.LimitReader(res.Body, maxWebhookErrorBodySize))
 		if readErr != nil {
 			return fmt.Errorf("webhook %d returned status %d and reading its body failed: %w", w.ID, res.StatusCode, readErr)
 		}
