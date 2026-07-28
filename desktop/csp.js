@@ -9,7 +9,8 @@ const INLINE_SCRIPT_RE = /<script\b(?![^>]*\ssrc=)[^>]*>([\s\S]*?)<\/script>/gi
 function inlineScriptHashes(frontendDir) {
 	const html = fs.readFileSync(path.join(frontendDir, 'index.html'), 'utf8')
 	return [...html.matchAll(INLINE_SCRIPT_RE)]
-		.map(([, body]) => `'sha256-${crypto.createHash('sha256').update(body, 'utf8').digest('base64')}'`)
+		// The HTML parser normalizes CRLF and lone CR to LF before the hash is taken.
+		.map(([, body]) => `'sha256-${crypto.createHash('sha256').update(body.replace(/\r\n?/g, '\n'), 'utf8').digest('base64')}'`)
 }
 
 function buildContentSecurityPolicy(frontendDir) {
