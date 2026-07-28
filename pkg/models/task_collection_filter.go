@@ -174,13 +174,74 @@ func parseFilterFromExpression(f fexpr.ExprGroup, loc *time.Location) (filter *t
 	return filter, nil
 }
 
+// filterOperatorSigils maps the human filter operators to their fexpr sigil.
+// Order matters: " not in " must be matched before " in " so the longer
+// operator wins.
+var filterOperatorSigils = []struct {
+	operator string
+	sigil    string
+}{
+	{" not in ", " " + string(fexpr.SignAnyNeq) + " "},
+	{" in ", " " + string(fexpr.SignAnyEq) + " "},
+	{" like ", " " + string(fexpr.SignLike) + " "},
+}
+
+// quotedRunEnd returns the index just past the quoted string opening at start,
+// or -1 if it is never closed. Quoting mirrors fexpr's scanner: both ' and "
+// quote, and a backslash escapes whatever follows it.
+func quotedRunEnd(filter string, start int) int {
+	quote := filter[start]
+	for i := start + 1; i < len(filter); i++ {
+		switch filter[i] {
+		case '\\':
+			i++
+		case quote:
+			return i + 1
+		}
+	}
+	return -1
+}
+
+// replaceFilterOperators rewrites the human filter operators to fexpr sigils,
+// skipping quoted values so `title like 'stuff in progress'` keeps its text.
+// An unclosed quote is treated as an ordinary character, because bare values
+// may legitimately contain an apostrophe (`title = it's cool && done = false`).
+func replaceFilterOperators(filter string) string {
+	var out strings.Builder
+	out.Grow(len(filter))
+
+	for i := 0; i < len(filter); {
+		if c := filter[i]; c == '\'' || c == '"' {
+			if end := quotedRunEnd(filter, i); end > 0 {
+				out.WriteString(filter[i:end])
+				i = end
+				continue
+			}
+		}
+
+		matched := false
+		for _, op := range filterOperatorSigils {
+			if strings.HasPrefix(filter[i:], op.operator) {
+				out.WriteString(op.sigil)
+				i += len(op.operator)
+				matched = true
+				break
+			}
+		}
+		if !matched {
+			out.WriteByte(filter[i])
+			i++
+		}
+	}
+
+	return out.String()
+}
+
 // preprocessFilterString rewrites the human filter syntax (in / not in / like)
 // into fexpr sigils and quotes bare values so fexpr.Parse accepts them. Shared
 // by every entity that filters with the task grammar.
 func preprocessFilterString(filter string) string {
-	filter = strings.ReplaceAll(filter, " not in ", " "+string(fexpr.SignAnyNeq)+" ")
-	filter = strings.ReplaceAll(filter, " in ", " ?= ")
-	filter = strings.ReplaceAll(filter, " like ", " ~ ")
+	filter = replaceFilterOperators(filter)
 
 	re := regexp.MustCompile(`(\w+)\s*(>=|<=|!=|~|\?=|\?!=|=|>|<)\s*([^&|()]+)`)
 	return re.ReplaceAllStringFunc(filter, func(match string) string {
