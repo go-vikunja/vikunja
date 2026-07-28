@@ -2,7 +2,6 @@ const crypto = require('crypto')
 const fs = require('fs')
 const path = require('path')
 
-// Matches <script> tags without a src attribute, i.e. those carrying inline code.
 const INLINE_SCRIPT_RE = /<script((?:"[^"]*"|'[^']*'|[^>"'])*)>([\s\S]*?)<\/script>/gi
 
 // build.js rewrites the inline script that sets window.API_URL, so hash what's on disk.
@@ -43,7 +42,6 @@ function buildContentSecurityPolicy(frontendDir) {
 		'connect-src * ws: wss:',
 		// PDF attachment previews render a blob: URL in an iframe.
 		'frame-src blob:',
-		// registerServiceWorker.ts registers sw.js.
 		"worker-src 'self'",
 		"object-src 'none'",
 		"base-uri 'self'",
