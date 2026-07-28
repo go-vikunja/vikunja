@@ -11,5 +11,5 @@ overrides:
   ip-address: 10.2.0
   form-data: 4.0.6
   js-yaml: 5.2.2
-  undici@6: 8.8.0
+  undici@6: 8.9.0
   undici@7: 8.9.0
