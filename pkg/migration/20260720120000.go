@@ -75,10 +75,10 @@ func recreateMissingIndexes20260720120000(tx *xorm.Engine) error {
 			}
 			// Creating it would fail with "index already exists" and abort startup —
 			// the very failure mode this migration exists to prevent.
-			if indexName := index.XName(modelTable.Name); dbIndexes.usedNames[indexName] {
+			if indexName := index.XName(modelTable.Name); dbIndexes.usedNames[strings.ToLower(indexName)] {
 				log.Warningf(
-					"Could not recreate the index on %s (%s): another index already uses the name %s. Drop or rename it, then restart Vikunja to heal the schema.",
-					modelTable.Name, strings.Join(index.Cols, ", "), indexName)
+					"Could not recreate the index on %s (%s): another index already uses the name %s. Drop or rename it, then run this manually: %s",
+					modelTable.Name, strings.Join(index.Cols, ", "), indexName, tx.Dialect().CreateIndexSQL(modelTable.Name, index))
 				continue
 			}
 			if index.Type == schemas.UniqueType {
@@ -96,8 +96,9 @@ func recreateMissingIndexes20260720120000(tx *xorm.Engine) error {
 
 type dbIndexes20260720120000Result struct {
 	byTable map[string][]*schemas.Index
-	// Empty outside sqlite: DBMetas strips the IDX_/UQE_ prefix from index names
-	// there, so the set could not be matched against XName.
+	// Keyed by lowercased name, index names being case-insensitive. One global set
+	// over-approximates on mysql, where names are per-table — that only ever costs
+	// an extra warn-and-skip, never a failed CREATE.
 	usedNames map[string]bool
 }
 
@@ -105,24 +106,32 @@ func dbIndexes20260720120000(tx *xorm.Engine, dbTables []*schemas.Table) (*dbInd
 	if tx.Dialect().URI().DBType == schemas.SQLITE {
 		return sqliteIndexes20260720120000(tx)
 	}
-	byTable := make(map[string][]*schemas.Index, len(dbTables))
+	result := &dbIndexes20260720120000Result{
+		byTable:   make(map[string][]*schemas.Index, len(dbTables)),
+		usedNames: make(map[string]bool),
+	}
 	for _, dbTable := range dbTables {
 		for _, index := range dbTable.Indexes {
-			byTable[dbTable.Name] = append(byTable[dbTable.Name], index)
+			result.byTable[dbTable.Name] = append(result.byTable[dbTable.Name], index)
+			// DBMetas strips the IDX_/UQE_ prefix it recognizes and flags those as
+			// regular; XName puts it back.
+			name := index.Name
+			if index.IsRegular {
+				name = index.XName(dbTable.Name)
+			}
+			result.usedNames[strings.ToLower(name)] = true
 		}
 	}
-	return &dbIndexes20260720120000Result{byTable: byTable}, nil
+	return result, nil
 }
 
 // One row per index column, joined over sqlite's pragma table-valued functions.
 // xorm's sqlite3 dialect instead parses the DDL in sqlite_master by looking for
 // the literal uppercase "INDEX" and "ON", so it silently skips every index older
 // Vikunja migrations created with lowercase `create index` SQL (#3313) — and the
-// implicit indexes of UNIQUE constraints, which have no DDL at all. The pragmas
-// report uniqueness and partialness as authoritative flags, so nothing here has
-// to guess from DDL text.
+// implicit indexes of UNIQUE constraints, which have no DDL at all.
 func sqliteIndexes20260720120000(tx *xorm.Engine) (*dbIndexes20260720120000Result, error) {
-	rows, err := tx.QueryString(`SELECT m.name AS tbl, il.name AS idx, il."unique" AS uniq, il.partial AS part, IFNULL(ii.name, '') AS col
+	rows, err := tx.QueryString(`SELECT m.name AS tbl, il.name AS idx, il."unique" AS uniq, il.partial AS part, ii.name AS col, (ii.name IS NULL) AS is_expr
 FROM sqlite_master m
 JOIN pragma_index_list(m.name) il
 JOIN pragma_index_info(il.name) ii
@@ -146,7 +155,7 @@ ORDER BY m.name, il.name, ii.seqno`)
 
 	for _, row := range rows {
 		name := row["idx"]
-		result.usedNames[name] = true
+		result.usedNames[strings.ToLower(name)] = true
 
 		entry, ok := seen[name]
 		if !ok {
@@ -158,10 +167,9 @@ ORDER BY m.name, il.name, ii.seqno`)
 			seen[name] = entry
 			ordered = append(ordered, entry)
 		}
-		// A partial index covers only some rows and an expression index (reported as a
-		// NULL column name) no column at all, so neither can stand in for a model index
-		// — but both still occupy the name.
-		if row["part"] == "1" || row["col"] == "" {
+		// A partial index covers only some rows and an expression index no column at
+		// all, so neither can stand in for a model index — but both still occupy the name.
+		if row["part"] == "1" || row["is_expr"] == "1" {
 			entry.unusable = true
 			continue
 		}
