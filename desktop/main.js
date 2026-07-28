@@ -15,7 +15,7 @@ const {execFile} = require('child_process')
 const express = require('express')
 const portInUse = require('./portInUse.js')
 const oauth = require('./oauth.js')
-const {applyContentSecurityPolicy} = require('./csp.js')
+const {buildContentSecurityPolicy} = require('./csp.js')
 
 const frontendPath = 'frontend/'
 const PROTOCOL = 'vikunja-desktop'
@@ -229,15 +229,25 @@ function startServer(callback) {
 			port = 0
 		}
 
-		eApp.use(express.static(path.join(__dirname, frontendPath)))
+		const csp = buildContentSecurityPolicy(path.join(__dirname, frontendPath))
+
+		// Documents only: sw.js importScripts() the workbox runtime, and a service worker
+		// inherits the CSP of its own script response rather than the page's.
+		eApp.use(express.static(path.join(__dirname, frontendPath), {
+			setHeaders: (response, filePath) => {
+				if (filePath.endsWith('index.html')) {
+					response.setHeader('Content-Security-Policy', csp)
+				}
+			},
+		}))
 		eApp.use((request, response) => {
+			response.setHeader('Content-Security-Policy', csp)
 			response.sendFile(path.join(__dirname, frontendPath, 'index.html'))
 		})
 
 		const server = eApp.listen(port, '127.0.0.1', () => {
 			serverPort = server.address().port
 			console.log(`Server started on port ${serverPort}`)
-			applyContentSecurityPolicy(serverPort, path.join(__dirname, frontendPath))
 			callback(serverPort)
 		})
 	})

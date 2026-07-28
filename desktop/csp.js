@@ -1,7 +1,6 @@
 const crypto = require('crypto')
 const fs = require('fs')
 const path = require('path')
-const {session} = require('electron')
 
 // Matches <script> tags without a src attribute, i.e. those carrying inline code.
 const INLINE_SCRIPT_RE = /<script\b(?![^>]*\ssrc=)[^>]*>([\s\S]*?)<\/script>/gi
@@ -51,30 +50,6 @@ function buildContentSecurityPolicy(frontendDir) {
 	].join('; ')
 }
 
-function applyContentSecurityPolicy(port, frontendDir) {
-	const csp = buildContentSecurityPolicy(frontendDir)
-
-	session.defaultSession.webRequest.onHeadersReceived(
-		{urls: [`http://127.0.0.1:${port}/*`]},
-		({responseHeaders, resourceType}, callback) => {
-			// Documents only: sw.js importScripts() the workbox runtime, and a service worker
-			// inherits the CSP of its own script response rather than the page's.
-			if (resourceType !== 'mainFrame') {
-				callback({})
-				return
-			}
-
-			const headers = Object.fromEntries(
-				Object.entries(responseHeaders ?? {})
-					.filter(([name]) => name.toLowerCase() !== 'content-security-policy'),
-			)
-			headers['Content-Security-Policy'] = [csp]
-			callback({responseHeaders: headers})
-		},
-	)
-}
-
 module.exports = {
-	applyContentSecurityPolicy,
 	buildContentSecurityPolicy,
 }
