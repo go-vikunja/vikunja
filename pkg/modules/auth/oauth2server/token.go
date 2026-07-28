@@ -84,34 +84,54 @@ func ExchangeToken(ctx context.Context, req *TokenRequest, deviceInfo, ipAddress
 	}
 }
 
-func exchangeAuthorizationCode(ctx context.Context, req *TokenRequest, deviceInfo, ipAddress string) (*TokenResponse, error) {
+// consumeAuthorizationCode burns the code in its own committed transaction so
+// that a rollback during validation cannot resurrect it. Every exchange attempt
+// spends the code, valid or not; otherwise a stolen code could be replayed to
+// brute-force the PKCE verifier or probe client_id/redirect_uri values.
+func consumeAuthorizationCode(code string) (*models.OAuthCode, error) {
 	s := db.NewSession()
 	defer s.Close()
 
-	// Look up and delete the authorization code (single-use)
-	oauthCode, err := models.GetAndDeleteOAuthCode(s, req.Code)
+	oauthCode, err := models.GetAndDeleteOAuthCode(s, code)
 	if err != nil {
-		_ = s.Rollback()
+		// An expired code is deleted before the error is returned, so commit
+		// that too while keeping the original error.
+		if commitErr := s.Commit(); commitErr != nil {
+			log.Errorf("Could not commit authorization code deletion: %s", commitErr)
+		}
+		return nil, err
+	}
+
+	if err := s.Commit(); err != nil {
+		return nil, err
+	}
+
+	return oauthCode, nil
+}
+
+func exchangeAuthorizationCode(ctx context.Context, req *TokenRequest, deviceInfo, ipAddress string) (*TokenResponse, error) {
+	oauthCode, err := consumeAuthorizationCode(req.Code)
+	if err != nil {
 		return nil, err
 	}
 
 	// Validate client_id matches
 	if oauthCode.ClientID != req.ClientID {
-		_ = s.Rollback()
 		return nil, &models.ErrOAuthClientNotFound{}
 	}
 
 	// Validate redirect_uri matches
 	if oauthCode.RedirectURI != req.RedirectURI {
-		_ = s.Rollback()
 		return nil, &models.ErrOAuthInvalidRedirectURI{}
 	}
 
 	// Verify PKCE
 	if !VerifyPKCE(req.CodeVerifier, oauthCode.CodeChallenge, oauthCode.CodeChallengeMethod) {
-		_ = s.Rollback()
 		return nil, &models.ErrOAuthPKCEVerifyFailed{}
 	}
+
+	s := db.NewSession()
+	defer s.Close()
 
 	// Create a session (reuses existing session infrastructure)
 	session, err := models.CreateSession(s, oauthCode.UserID, deviceInfo, ipAddress, false, nil)
