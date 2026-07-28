@@ -154,6 +154,13 @@ func registerEventsForAuditLogging() {
 			Target: audit.UserTarget(e.User.ID),
 		}
 	})
+	audit.RegisterEventForAudit(func(e *UserDataExportRequestedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action: audit.ActionUserDataExportRequested,
+			Actor:  audit.UserActor(e.User.ID),
+			Target: audit.UserTarget(e.User.ID),
+		}
+	})
 
 	// Tasks
 	audit.RegisterEventForAudit(func(e *TaskCreatedEvent) *audit.Entry {

@@ -17,12 +17,23 @@
 package models
 
 import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"os"
+	"path/filepath"
+	"sync"
 	"testing"
+	"time"
 
+	"code.vikunja.io/api/pkg/audit"
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/user"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"xorm.io/xorm"
 )
@@ -193,4 +204,50 @@ func TestSendTaskDeletedNotification(t *testing.T) {
 			"name":          notificationName,
 		})
 	})
+}
+
+// The listener registry is global and watermill rejects duplicate handler
+// names, so register once per process (relevant for -count > 1).
+var registerAuditEventsOnce sync.Once
+
+// A full personal data export is the most sensitive self-service action there
+// is. Driving it through the real router instead of calling the listener
+// directly is what makes this a regression test of the registration itself.
+func TestAuditUserDataExportRequested(t *testing.T) {
+	logfile := filepath.Join(t.TempDir(), "audit.log")
+	config.AuditLogfile.Set(logfile)
+	require.NoError(t, audit.Init())
+	t.Cleanup(audit.Close)
+
+	license.SetForTests([]license.Feature{license.FeatureAuditLogs})
+	t.Cleanup(license.ResetForTests)
+
+	registerAuditEventsOnce.Do(registerEventsForAuditLogging)
+
+	events.Unfake()
+	t.Cleanup(events.Fake)
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+	ready, err := events.InitEventsForTesting(ctx)
+	require.NoError(t, err)
+	<-ready
+
+	require.NoError(t, events.Dispatch(&UserDataExportRequestedEvent{User: &user.User{ID: 42}}))
+
+	var content []byte
+	require.Eventually(t, func() bool {
+		c, err := os.ReadFile(logfile)
+		if err != nil {
+			return false
+		}
+		content = bytes.TrimSpace(c)
+		return len(content) > 0
+	}, 5*time.Second, 10*time.Millisecond, "expected an audit entry for the export request")
+
+	var entry audit.Entry
+	require.NoError(t, json.Unmarshal(content, &entry))
+	assert.Equal(t, audit.ActionUserDataExportRequested, entry.Action)
+	assert.Equal(t, audit.UserActor(42), entry.Actor)
+	assert.Equal(t, audit.UserTarget(42), entry.Target)
+	assert.Equal(t, audit.OutcomeSuccess, entry.Outcome)
 }
