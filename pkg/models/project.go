@@ -476,6 +476,9 @@ func GetProjectSimpleByID(s *xorm.Session, projectID int64) (project *Project, e
 	}
 
 	project, exists, err := getProjectSimple(s, builder.Eq{"id": projectID})
+	if err != nil {
+		return nil, err
+	}
 	if !exists {
 		return nil, ErrProjectDoesNotExist{ID: projectID}
 	}
