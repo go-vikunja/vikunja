@@ -126,6 +126,33 @@ func TestRecreateMissingIndexesKeepsDifferentlyNamedIndex20260720120000(t *testi
 	require.Equal(t, "some_nonmodel_name", indexes[0].Name)
 }
 
+// Older migrations create indexes with lowercase SQL, which xorm's sqlite3 dialect
+// silently skips when reading the schema, so the migration tried to create them a
+// second time and aborted the whole upgrade (#3313).
+func TestRecreateMissingIndexesFindsLowercaseSQLiteIndexes20260720120000(t *testing.T) {
+	x, err := db.CreateTestEngine()
+	require.NoError(t, err)
+	if x.Dialect().URI().DBType != schemas.SQLITE {
+		t.Skip("lowercase index definitions are only invisible to xorm on sqlite")
+	}
+	require.NoError(t, x.Sync2(user.GetTables()...))
+
+	require.NoError(t, x.Sync(usersPartial20260720120000{}))
+	require.Nil(t, usersIndexOnUsername20260720120000(t, x))
+
+	_, err = x.Exec("create unique index UQE_users_username\n    on users (username)")
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		// x is the process-global test engine; a lowercase index leaks into later tests.
+		_, err := x.Exec("DROP INDEX UQE_users_username")
+		require.NoError(t, err)
+	})
+
+	require.Nil(t, usersIndexOnUsername20260720120000(t, x), "xorm should still be blind to it")
+
+	require.NoError(t, recreateMissingIndexes20260720120000(x))
+}
+
 func TestPartialSyncKeepsIndexes20260720120000(t *testing.T) {
 	x, err := db.CreateTestEngine()
 	require.NoError(t, err)
