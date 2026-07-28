@@ -176,3 +176,19 @@ test.describe('Home Page Task Overview', () => {
 		await expect(page.locator('.home.app-content .content')).not.toContainText('Or import your projects and tasks from other services into Vikunja:')
 	})
 })
+
+test.describe('Upcoming Tasks Date Range', () => {
+	test('Should show the range from the url in the datepicker', async ({authenticatedPage: page, apiContext}) => {
+		await seedTasks(apiContext, 5)
+
+		// '+' has to stay encoded or the query parser turns it into a space.
+		await page.goto('/tasks/by/upcoming?from=now%2Fw&to=now%2Fw%2B1w')
+
+		await page.locator('.datepicker-with-range-container').getByRole('button').first().click()
+
+		const picker = page.locator('.datepicker-with-range')
+		await expect(picker.locator('.control.is-fullwidth input').first()).toHaveValue('now/w')
+		await expect(picker.locator('.control.is-fullwidth input').nth(1)).toHaveValue('now/w+1w')
+		await expect(picker.locator('.selections button.is-active')).toHaveText('This Week')
+	})
+})

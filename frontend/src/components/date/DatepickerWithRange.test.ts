@@ -7,9 +7,9 @@ import en from '@/i18n/lang/en.json'
 
 const i18n = createI18n({legacy: false, locale: 'en', messages: {en}})
 
-function mountPicker() {
+function mountPicker(modelValue: {dateFrom: string | null, dateTo: string | null} = {dateFrom: '', dateTo: ''}) {
     return mount(DatepickerWithRange, {
-        props: {modelValue: {dateFrom: '', dateTo: ''}},
+        props: {modelValue},
         global: {
             plugins: [i18n],
             stubs: ['RouterLink', 'Modal', 'XButton', 'BaseButton', 'Popup', 'flat-pickr'],
@@ -49,5 +49,22 @@ describe('DatepickerWithRange predefined ranges', () => {
         await wrapper.vm.$nextTick()
         expect((wrapper.vm as any).from).toBe('')
         expect((wrapper.vm as any).to).toBe('')
+    })
+
+    it('seeds its inputs from modelValue on mount', () => {
+        const wrapper = mountPicker({dateFrom: 'now/w', dateTo: 'now/w+1w'})
+        expect((wrapper.vm as any).from).toBe('now/w')
+        expect((wrapper.vm as any).to).toBe('now/w+1w')
+    })
+
+    it('shows the matching preset name for a range restored on mount', () => {
+        const wrapper = mountPicker({dateFrom: 'now/w-1w', dateTo: 'now/w'})
+        expect((wrapper.vm as any).buttonText).toBe('Last Week')
+        expect((wrapper.vm as any).customRangeActive).toBe(false)
+    })
+
+    it('does not emit an update while seeding on mount', () => {
+        const wrapper = mountPicker({dateFrom: 'now/w', dateTo: 'now/w+1w'})
+        expect(wrapper.emitted('update:modelValue')).toBeUndefined()
     })
 })

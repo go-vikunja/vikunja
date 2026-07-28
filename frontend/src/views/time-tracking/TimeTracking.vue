@@ -113,7 +113,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, shallowReactive, watch, nextTick, onMounted} from 'vue'
+import {ref, computed, shallowReactive, watch, onMounted} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 
@@ -312,16 +312,6 @@ onMounted(async () => {
 	ready.value = true
 	// One request with the fully-restored filter — no flicker through partial filters.
 	timeTrackingStore.browseEntries(filter.value)
-})
-
-// DatepickerWithRange only syncs its display from modelValue on change, and it
-// remounts each time the modal opens — re-push the value so the range shows.
-watch(filterModalOpen, open => {
-	if (open) {
-		nextTick(() => {
-			dateRange.value = {...dateRange.value}
-		})
-	}
 })
 
 watch(filterQuery, q => {

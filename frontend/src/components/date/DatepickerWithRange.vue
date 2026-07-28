@@ -122,9 +122,11 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
+	// Always the raw input strings (a datemath expression or a date), never a Date
+	// object; null for a side that's been cleared.
 	'update:modelValue': [value: {
-		dateFrom: Date | string | null,
-		dateTo: Date | string | null
+		dateFrom: string | null,
+		dateTo: string | null
 	}]
 }>()
 
@@ -160,6 +162,9 @@ watch(
 			flatpickrRange.value = `${from.value} to ${to.value}`
 		}
 	},
+	// Runs before the from/to watchers below are registered, so seeding the
+	// inputs on mount does not emit an update back to the parent.
+	{immediate: true},
 )
 
 function emitChanged() {

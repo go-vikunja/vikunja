@@ -41,7 +41,10 @@
 			v-if="!showAll"
 			class="show-tasks-options"
 		>
-			<DatepickerWithRange @update:modelValue="setDate">
+			<DatepickerWithRange
+				:model-value="dateRange"
+				@update:modelValue="setDate"
+			>
 				<template #trigger="{toggle}">
 					<XButton
 						variant="primary"
@@ -105,7 +108,7 @@ import {computed, ref, watch, watchEffect} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 
-import {formatDate} from '@/helpers/time/formatDate'
+import {formatDate, formatISO} from '@/helpers/time/formatDate'
 import {setTitle} from '@/helpers/setTitle'
 
 import BaseButton from '@/components/base/BaseButton.vue'
@@ -162,6 +165,13 @@ setTimeout(() => showNothingToDo.value = true, 100)
 
 const showAll = computed(() => typeof props.dateFrom === 'undefined' || typeof props.dateTo === 'undefined')
 
+// Computed rather than an inline literal so the reference only changes when the
+// range does — the datepicker resyncs its inputs whenever modelValue changes.
+const dateRange = computed(() => ({
+	dateFrom: props.dateFrom ?? null,
+	dateTo: props.dateTo ?? null,
+}))
+
 const filteredLabels = computed(() => {
 	if (!props.labelIds || props.labelIds.length === 0) {
 		return []
@@ -199,16 +209,23 @@ const loading = computed(() => taskStore.isLoading || taskCollectionService.valu
 const filterIdUsedOnOverview = computed(() => authStore.settings?.frontendSettings?.filterIdUsedOnOverview)
 
 interface dateStrings {
-	dateFrom: string,
-	dateTo: string,
+	dateFrom: string | null,
+	dateTo: string | null,
+}
+
+// Datemath expressions pass through unchanged; the router hands us a Date when
+// the URL had no from/to, and that has to be serialised before going back into
+// the query or it lands there as a locale-specific string.
+function toQueryDate(date: Date | string | undefined): string | undefined {
+	return date instanceof Date ? formatISO(date) : date
 }
 
 function setDate(dates: dateStrings) {
 	router.push({
 		name: route.name as string,
 		query: {
-			from: dates.dateFrom ?? props.dateFrom,
-			to: dates.dateTo ?? props.dateTo,
+			from: dates.dateFrom ?? toQueryDate(props.dateFrom),
+			to: dates.dateTo ?? toQueryDate(props.dateTo),
 			showOverdue: props.showOverdue ? 'true' : 'false',
 			showNulls: props.showNulls ? 'true' : 'false',
 		},
