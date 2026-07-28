@@ -86,9 +86,6 @@ func BasicAuth(c *echo.Context, username, password string) (bool, error) {
 	}
 
 	if u == nil {
-		// Rejecting before this point leaks which usernames exist: only
-		// CheckUserCredentials equalises the cost of a lookup miss.
-		// Every nil user it returns carries an error, so u is non-nil below.
 		u, err = user.CheckUserCredentials(c.Request().Context(), s, credentials)
 		if err != nil {
 			log.Errorf("Error during basic auth for caldav: %v", err)
@@ -116,11 +113,10 @@ func BasicAuth(c *echo.Context, username, password string) (bool, error) {
 	return true, nil
 }
 
-// checkUserCaldavTokens never rejects on its own: it returns nil so the caller
-// falls through to CheckUserCredentials, which is timing-equalised.
+// Returns nil rather than rejecting: every failure has to reach
+// CheckUserCredentials, the only timing-equalised check.
 func checkUserCaldavTokens(s *xorm.Session, login *user.Login) (*user.User, error) {
-	// CheckUserCredentials rejects an empty password without hashing, so
-	// comparing tokens here would make real users slower than missing ones.
+	// Hashing here would out-cost CheckUserCredentials' unhashed reject.
 	if login.Password == "" {
 		return nil, nil
 	}
