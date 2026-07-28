@@ -482,8 +482,9 @@ jobs:
 
   generate-swagger-docs:
     runs-on: ubuntu-latest
+    # The push below authenticates with the SSH deploy key, not GITHUB_TOKEN.
     permissions:
-      contents: write
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
