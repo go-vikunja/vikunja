@@ -95,6 +95,16 @@ func createRateLimiter(rate limiter.Rate) *limiter.Limiter {
 	return limiter.New(store, rate)
 }
 
+// unauthRateLimit ignores RateLimitEnabled on purpose: pre-auth routes need a
+// floor even with the global limiter off, which is the default.
+func unauthRateLimit() echo.MiddlewareFunc {
+	rate := limiter.Rate{
+		Period: 60 * time.Second,
+		Limit:  config.RateLimitNoAuthRoutesLimit.GetInt64(),
+	}
+	return RateLimit(createRateLimiter(rate), "ip")
+}
+
 func setupRateLimit(a *echo.Group, rateLimitKind string) {
 	if config.RateLimitEnabled.GetBool() {
 		rate := limiter.Rate{
