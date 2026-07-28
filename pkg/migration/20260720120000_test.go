@@ -155,6 +155,10 @@ func TestRecreateMissingIndexesFindsLowercaseSQLiteIndexes20260720120000(t *test
 	require.NoError(t, err)
 	require.Len(t, rows, 1)
 	require.Equal(t, "UQE_users_username", rows[0]["name"])
+
+	dbIndexes, err := sqliteIndexes20260720120000(x)
+	require.NoError(t, err)
+	require.NotNil(t, indexByName20260720120000(dbIndexes.byTable["users"], "UQE_users_username"))
 }
 
 // The name is taken by an index which cannot stand in for the model's, so the
@@ -188,6 +192,35 @@ func TestRecreateMissingIndexesSkipsWhenIndexNameIsTaken20260720120000(t *testin
 	require.NoError(t, err)
 	require.Nil(t, indexByName20260720120000(dbIndexes.byTable["users"], "UQE_users_username"),
 		"a partial unique index does not enforce uniqueness over all rows, so it cannot stand in for the model index")
+}
+
+// sqliteIndexes20260720120000 only runs on sqlite; usedNames is built from
+// Index.IsRegular/XName on every dialect, so this must run on all of them.
+func TestRecreateMissingIndexesSkipsWhenNameCollidesOnAnyDialect20260720120000(t *testing.T) {
+	x, err := db.CreateTestEngine()
+	require.NoError(t, err)
+	require.NoError(t, x.Sync2(user.GetTables()...))
+
+	require.NoError(t, x.Sync(usersPartial20260720120000{}))
+	require.Nil(t, usersIndexOnUsername20260720120000(t, x))
+
+	// Unique on a different column under the model index's name: non-covering
+	// (columns differ), so only the name-collision guard stops the CREATE.
+	_, err = x.Exec("CREATE UNIQUE INDEX UQE_users_username ON users (email)")
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		// x is the process-global test engine; the index leaks into later tests.
+		dropSQL := "DROP INDEX UQE_users_username"
+		if x.Dialect().URI().DBType == schemas.MYSQL {
+			dropSQL += " ON users"
+		}
+		_, err := x.Exec(dropSQL)
+		require.NoError(t, err)
+		// The partial sync above dropped the model indexes on users.
+		require.NoError(t, x.Sync2(user.GetTables()...))
+	})
+
+	require.NoError(t, recreateMissingIndexes20260720120000(x))
 }
 
 func TestSQLiteIndexesReportsNonUniqueIndex20260720120000(t *testing.T) {

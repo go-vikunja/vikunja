@@ -96,9 +96,10 @@ func recreateMissingIndexes20260720120000(tx *xorm.Engine) error {
 
 type dbIndexes20260720120000Result struct {
 	byTable map[string][]*schemas.Index
-	// Keyed by lowercased name, index names being case-insensitive. One global set
-	// over-approximates on mysql, where names are per-table — that only ever costs
-	// an extra warn-and-skip, never a failed CREATE.
+	// Keyed by lowercased name. Names are case-insensitive on mysql but
+	// case-sensitive on postgres (xorm quotes them there); lowercasing
+	// over-approximates on postgres and mysql's per-table naming, which only
+	// ever costs an extra warn-and-skip, never a missed collision.
 	usedNames map[string]bool
 }
 
