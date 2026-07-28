@@ -8,7 +8,7 @@ overrides:
   '@tootallnate/once': 3.0.1
   picomatch: 4.0.5
   tmp: 0.2.7
-  ip-address: 10.2.0
+  ip-address: 10.2.2
   form-data: 4.0.6
   js-yaml: 5.2.2
   undici@6: 8.9.0
