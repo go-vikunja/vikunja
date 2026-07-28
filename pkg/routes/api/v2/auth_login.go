@@ -20,6 +20,7 @@ import (
 	"context"
 	"net/http"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/modules/humabridge"
 	"code.vikunja.io/api/pkg/routes/api/shared"
@@ -53,21 +54,23 @@ type logoutBody struct {
 func init() { AddRouteRegistrar(RegisterLoginRoutes) }
 
 // RegisterLoginRoutes wires the local/LDAP login and logout endpoints. Login is
-// always registered (LDAP-only deployments still log in here); logout inherits
-// the global JWT auth.
+// gated on local or LDAP auth, mirroring v1's gate in routes.go; logout stays
+// unconditional because it terminates any session, OIDC included.
 func RegisterLoginRoutes(api huma.API) {
 	tags := []string{"auth"}
 
-	Register(api, huma.Operation{
-		OperationID:   "auth-login",
-		Summary:       "Login",
-		Description:   "Logs a user in with username and password (and a TOTP passcode when 2FA is enabled), returning a short-lived JWT. A long-lived refresh token is set as an HttpOnly cookie scoped to the refresh endpoint.",
-		Method:        http.MethodPost,
-		Path:          "/login",
-		DefaultStatus: http.StatusOK,
-		Tags:          tags,
-		Security:      publicSecurity,
-	}, authLogin)
+	if config.AuthLocalEnabled.GetBool() || config.AuthLdapEnabled.GetBool() {
+		Register(api, huma.Operation{
+			OperationID:   "auth-login",
+			Summary:       "Login",
+			Description:   "Logs a user in with username and password (and a TOTP passcode when 2FA is enabled), returning a short-lived JWT. A long-lived refresh token is set as an HttpOnly cookie scoped to the refresh endpoint.",
+			Method:        http.MethodPost,
+			Path:          "/login",
+			DefaultStatus: http.StatusOK,
+			Tags:          tags,
+			Security:      publicSecurity,
+		}, authLogin)
+	}
 
 	Register(api, huma.Operation{
 		OperationID:   "auth-logout",

@@ -26,8 +26,10 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
+	"code.vikunja.io/api/pkg/routes"
 	"code.vikunja.io/api/pkg/user"
 
+	"github.com/labstack/echo/v5"
 	"github.com/pquerna/otp/totp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -162,6 +164,60 @@ func TestHumaLoginUnauthenticated(t *testing.T) {
 
 	rec := humaRequest(t, e, http.MethodPost, "/api/v2/login", `{"username":"user1","password":"12345678"}`, "", "")
 	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+}
+
+// TestHumaLoginRouteGate proves /api/v2/login follows the same local-or-LDAP
+// config gate v1 applies in routes.go, and that logout is never gated.
+func TestHumaLoginRouteGate(t *testing.T) {
+	_, err := setupTestEnv()
+	require.NoError(t, err)
+
+	defer func(local, ldap bool) {
+		config.AuthLocalEnabled.Set(local)
+		config.AuthLdapEnabled.Set(ldap)
+	}(config.AuthLocalEnabled.GetBool(), config.AuthLdapEnabled.GetBool())
+
+	for _, tc := range []struct {
+		name        string
+		local, ldap bool
+		registered  bool
+	}{
+		{"local enabled", true, false, true},
+		{"ldap only", false, true, true},
+		{"neither", false, false, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			config.AuthLocalEnabled.Set(tc.local)
+			config.AuthLdapEnabled.Set(tc.ldap)
+
+			e := routes.NewEcho()
+			routes.RegisterRoutes(e)
+
+			assert.Equal(t, tc.registered, hasRoute(e, http.MethodPost, "/api/v2/login"))
+			assert.True(t, hasRoute(e, http.MethodPost, "/api/v2/logout"), "logout must stay registered regardless of local auth")
+
+			rec := humaRequest(t, e, http.MethodPost, "/api/v2/login", `{"username":"user1","password":"12345678"}`, "", "")
+			switch {
+			case !tc.registered:
+				assert.Equal(t, http.StatusNotFound, rec.Code, rec.Body.String())
+			case tc.local:
+				assert.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+			default:
+				// LDAP-only: no LDAP server in tests, so the credentials fail -
+				// reachability is what matters here.
+				assert.NotEqual(t, http.StatusNotFound, rec.Code, rec.Body.String())
+			}
+		})
+	}
+}
+
+func hasRoute(e *echo.Echo, method, path string) bool {
+	for _, r := range e.Router().Routes() {
+		if r.Path == path && r.Method == method {
+			return true
+		}
+	}
+	return false
 }
 
 // TestHumaOpenIDGating proves the OIDC callback route only exists when OpenID is
