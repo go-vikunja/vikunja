@@ -94,6 +94,8 @@ const options = computed(() => {
 		{value: 'created:asc', label: t('sorting.options.createdAsc')},
 		{value: 'updated:desc', label: t('sorting.options.updatedDesc')},
 		{value: 'updated:asc', label: t('sorting.options.updatedAsc')},
+		{value: 'urgency:desc', label: t('sorting.options.urgencyDesc')},
+		{value: 'urgency:asc', label: t('sorting.options.urgencyAsc')},
 	].sort((a, b) => a.label.localeCompare(b.label))
 
 	return [manual, ...rest]

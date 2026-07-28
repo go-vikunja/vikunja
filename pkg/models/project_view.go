@@ -207,7 +207,6 @@ func getViewsForProject(s *xorm.Session, projectID int64) (views []*ProjectView,
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{project}/views [get]
 func (pv *ProjectView) ReadAll(s *xorm.Session, a web.Auth, _ string, _ int, _ int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
-
 	pp := &Project{ID: pv.ProjectID}
 	can, _, err := pp.CanRead(s, a)
 	if err != nil {
@@ -311,7 +310,7 @@ func (pv *ProjectView) Create(s *xorm.Session, a web.Auth) (err error) {
 
 func createProjectView(s *xorm.Session, p *ProjectView, a web.Auth, createBacklogBucket bool, addExistingTasksToView bool) (err error) {
 	if p.Filter != nil && p.Filter.Filter != "" {
-		_, err = getTaskFiltersFromFilterString(p.Filter.Filter, p.Filter.FilterTimezone)
+		err = p.Filter.ValidateFilterString()
 		if err != nil {
 			return
 		}
@@ -323,7 +322,7 @@ func createProjectView(s *xorm.Session, p *ProjectView, a web.Auth, createBacklo
 				continue
 			}
 			if configuration.Filter != nil && configuration.Filter.Filter != "" {
-				_, err = getTaskFiltersFromFilterString(configuration.Filter.Filter, configuration.Filter.FilterTimezone)
+				err = configuration.Filter.ValidateFilterString()
 				if err != nil {
 					return
 				}
@@ -442,7 +441,7 @@ func addTasksToView(s *xorm.Session, a web.Auth, pv *ProjectView, b *Bucket) (er
 // @Router /projects/{project}/views/{id} [post]
 func (pv *ProjectView) Update(s *xorm.Session, _ web.Auth) (err error) {
 	if pv.Filter != nil && pv.Filter.Filter != "" {
-		_, err = getTaskFiltersFromFilterString(pv.Filter.Filter, pv.Filter.FilterTimezone)
+		err = pv.Filter.ValidateFilterString()
 		if err != nil {
 			return
 		}

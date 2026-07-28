@@ -163,6 +163,10 @@ type Task struct {
 	CreatedBy   *user.User `xorm:"-" json:"created_by" valid:"-" readOnly:"true" doc:"The user who created this task. Set by the server."`
 	CreatedByID int64      `xorm:"bigint not null" json:"-"` // ID of the user who put that task on the project
 
+	// Urgency is the relative urgency score of this task. Only present when sorting tasks with the `urgency` parameter.
+	// The value is unique to the user's chosen urgency score weights, e.g. 5 for priority, 2 for progress.
+	Urgency *float64 `xorm:"-" json:"urgency,omitempty"`
+
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
 }
@@ -170,6 +174,11 @@ type Task struct {
 type TaskWithComments struct {
 	Task
 	Comments []*TaskComment `xorm:"-" json:"comments"`
+}
+
+type TaskWithUrgency struct {
+	Task    `xorm:"extends"`
+	Urgency *float64
 }
 
 // TableName returns the table name for tasks
@@ -317,7 +326,6 @@ func getProjectIDsFromProjects(projects []*Project) (projectIDs []int64, hasFavo
 }
 
 func getRawTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, opts *taskSearchOptions) (tasks []*Task, resultCount int, totalItems int64, err error) {
-
 	// If the user does not have any projects, don't try to get any tasks
 	if len(projects) == 0 {
 		return nil, 0, 0, nil
@@ -671,7 +679,6 @@ func addBucketsToTasks(s *xorm.Session, a web.Auth, taskIDs []int64, taskMap map
 //
 //nolint:gocyclo
 func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, view *ProjectView, expand []TaskCollectionExpandable) (err error) {
-
 	// No need to iterate over users and stuff if the project doesn't have tasks
 	if len(taskMap) == 0 {
 		return
@@ -725,7 +732,7 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 		return err
 	}
 
-	var positionsMap = make(map[int64]*TaskPosition)
+	positionsMap := make(map[int64]*TaskPosition)
 	if view != nil {
 		positions, err := getPositionsForView(s, view)
 		if err != nil {
@@ -924,7 +931,6 @@ func (t *Task) Create(s *xorm.Session, a web.Auth) (err error) {
 }
 
 func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, setBucket bool) (err error) {
-
 	t.ID = 0
 
 	// Check if we have at least a title
@@ -1130,7 +1136,6 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 
 //nolint:gocyclo
 func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (err error) {
-
 	// Check if the task exists and get the old values
 	ot, err := GetTaskByIDSimple(s, t.ID)
 	if err != nil {
@@ -1272,7 +1277,7 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 		}
 
 		for _, view := range views {
-			var bucketID = view.DoneBucketID
+			bucketID := view.DoneBucketID
 			if bucketID == 0 || !t.Done {
 				bucketID, err = getDefaultBucketID(s, view)
 				if err != nil {
@@ -1492,7 +1497,7 @@ func (t *Task) moveTaskToDoneBuckets(s *xorm.Session, a web.Auth, views []*Proje
 			return err
 		}
 
-		var bucketID = currentTaskBucket.BucketID
+		bucketID := currentTaskBucket.BucketID
 
 		// Task done, but no done bucket? Do nothing
 		if t.Done && view.DoneBucketID == 0 {
@@ -1829,7 +1834,6 @@ func updateRelativeReminderDates(task *Task) (err error) {
 // not make a performance difference we'll just do that.
 // The parameter is a slice which holds the new reminders.
 func (t *Task) updateReminders(s *xorm.Session, task *Task) (err error) {
-
 	_, err = s.
 		Where("task_id = ?", t.ID).
 		Delete(&TaskReminder{})
@@ -1856,7 +1860,8 @@ func (t *Task) updateReminders(s *xorm.Session, task *Task) (err error) {
 			TaskID:         t.ID,
 			Reminder:       r.Reminder,
 			RelativePeriod: r.RelativePeriod,
-			RelativeTo:     r.RelativeTo}
+			RelativeTo:     r.RelativeTo,
+		}
 		_, err = s.Insert(taskReminder)
 		if err != nil {
 			return err
@@ -1895,7 +1900,6 @@ func updateTaskLastUpdated(s *xorm.Session, task *Task) error {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id} [delete]
 func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
-
 	// duplicate the task for the event
 	fullTask := &Task{ID: t.ID}
 	err = fullTask.ReadOne(s, a)
@@ -2068,7 +2072,6 @@ func GetDeletedTasksSince(s *xorm.Session, projectID int64, since time.Time) (ta
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id} [get]
 func (t *Task) ReadOne(s *xorm.Session, a web.Auth) (err error) {
-
 	expand := t.Expand
 	if err = t.resolveIDFromProjectAndIndex(s); err != nil {
 		return

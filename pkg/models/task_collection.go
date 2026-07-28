@@ -17,6 +17,7 @@
 package models
 
 import (
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -24,6 +25,7 @@ import (
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
+	"xorm.io/builder"
 	"xorm.io/xorm"
 )
 
@@ -70,13 +72,15 @@ type TaskCollection struct {
 
 type TaskCollectionExpandable string
 
-const TaskCollectionExpandSubtasks TaskCollectionExpandable = `subtasks`
-const TaskCollectionExpandBuckets TaskCollectionExpandable = `buckets`
-const TaskCollectionExpandReactions TaskCollectionExpandable = `reactions`
-const TaskCollectionExpandComments TaskCollectionExpandable = `comments`
-const TaskCollectionExpandCommentCount TaskCollectionExpandable = `comment_count`
-const TaskCollectionExpandTimeEntriesCount TaskCollectionExpandable = `time_entries_count`
-const TaskCollectionExpandIsUnread TaskCollectionExpandable = `is_unread`
+const (
+	TaskCollectionExpandSubtasks         TaskCollectionExpandable = `subtasks`
+	TaskCollectionExpandBuckets          TaskCollectionExpandable = `buckets`
+	TaskCollectionExpandReactions        TaskCollectionExpandable = `reactions`
+	TaskCollectionExpandComments         TaskCollectionExpandable = `comments`
+	TaskCollectionExpandCommentCount     TaskCollectionExpandable = `comment_count`
+	TaskCollectionExpandTimeEntriesCount TaskCollectionExpandable = `time_entries_count`
+	TaskCollectionExpandIsUnread         TaskCollectionExpandable = `is_unread`
+)
 
 // Validate validates if the TaskCollectionExpandable value is valid.
 func (t TaskCollectionExpandable) Validate() error {
@@ -113,7 +117,7 @@ func validateTaskField(fieldName string) error {
 }
 
 func getTaskFilterOptsFromCollection(tf *TaskCollection, projectView *ProjectView) (opts *taskSearchOptions, err error) {
-	var sort = make([]*sortParam, 0, len(tf.SortBy))
+	sort := make([]*sortParam, 0, len(tf.SortBy))
 	for i, s := range tf.SortBy {
 		param := &sortParam{
 			sortBy:  s,
@@ -260,7 +264,6 @@ func getFilterValueForBucketFilter(filter string, view *ProjectView) (newFilter 
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/views/{view}/tasks [get]
 func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
-
 	tf.pinToLinkShareProject(a)
 
 	// If the project id is < -1 this means we're dealing with a saved filter - in that case we get and populate the filter
@@ -404,6 +407,18 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 	}
 
 	return getTaskOrTasksInBuckets(s, a, projects, view, opts, filteringForBucket, tf.forceFlatTasks)
+}
+
+func (tf *TaskCollection) FilterCondition() (builder.Cond, error) {
+	parsedFilters, err := getTaskFiltersFromFilterString(tf.Filter, tf.FilterTimezone)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse filter string %q: %w", tf.Filter, err)
+	}
+	filterCond, err := convertFiltersToDBFilterCond(parsedFilters, tf.FilterIncludeNulls)
+	if err != nil {
+		return nil, fmt.Errorf("could not convert filter string %q to database conditions: %w", tf.Filter, err)
+	}
+	return filterCond, nil
 }
 
 // pinToLinkShareProject forces the requested project to the link share's own

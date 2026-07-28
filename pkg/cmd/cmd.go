@@ -17,8 +17,7 @@
 package cmd
 
 import (
-	"fmt"
-	"os"
+	"context"
 
 	"github.com/spf13/cobra"
 )
@@ -40,9 +39,7 @@ Find out more at vikunja.io.`,
 }
 
 // Execute starts the application
-func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+func Execute(ctx context.Context, args ...string) error {
+	rootCmd.SetArgs(args)
+	return rootCmd.ExecuteContext(ctx)
 }

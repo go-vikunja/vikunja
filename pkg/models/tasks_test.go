@@ -54,9 +54,9 @@ func TestTask_Create(t *testing.T) {
 		require.NoError(t, err)
 		// Assert getting a uid
 		assert.NotEmpty(t, task.UID)
-		// The soft-deleted task 51 holds index 34, which must not be reused
+		// The soft-deleted task 51 holds index 35, which must not be reused
 		assert.NotEmpty(t, task.Index)
-		assert.Equal(t, int64(35), task.Index)
+		assert.Equal(t, int64(36), task.Index)
 		err = s.Commit()
 		require.NoError(t, err)
 
@@ -103,7 +103,8 @@ func TestTask_Create(t *testing.T) {
 				{
 					Reminder: time.Date(2023, time.March, 7, 23, 0, 0, 0, time.UTC),
 				},
-			}}
+			},
+		}
 		err := task.Create(s, usr)
 		require.NoError(t, err)
 		assert.Equal(t, time.Date(2023, time.March, 7, 22, 5, 1, 0, time.UTC), task.Reminders[0].Reminder)
@@ -532,7 +533,8 @@ func TestTask_Update(t *testing.T) {
 				{
 					Reminder: time.Date(2023, time.March, 7, 23, 0, 0, 0, time.UTC),
 				},
-			}}
+			},
+		}
 		err := task.Update(s, u)
 		require.NoError(t, err)
 		assert.Equal(t, time.Date(2023, time.March, 7, 22, 5, 1, 0, time.UTC), task.Reminders[0].Reminder)
@@ -586,7 +588,8 @@ func TestTask_Update(t *testing.T) {
 					RelativeTo:     "start_date",
 					RelativePeriod: -60,
 				},
-			}}
+			},
+		}
 		err := taskBefore.Create(s, u)
 		require.NoError(t, err)
 		err = s.Commit()
@@ -810,7 +813,7 @@ func TestUpdateDone(t *testing.T) {
 			}
 			updateDone(oldTask, newTask)
 
-			var expected = time.Unix(1550008600, 0)
+			expected := time.Unix(1550008600, 0)
 			for time.Since(expected) > 0 {
 				expected = expected.Add(time.Second * time.Duration(oldTask.RepeatAfter))
 			}
@@ -850,8 +853,8 @@ func TestUpdateDone(t *testing.T) {
 			}
 			updateDone(oldTask, newTask)
 
-			var expected1 = time.Unix(1550008600, 0)
-			var expected2 = time.Unix(1555008600, 0)
+			expected1 := time.Unix(1550008600, 0)
+			expected2 := time.Unix(1555008600, 0)
 			for time.Since(expected1) > 0 {
 				expected1 = expected1.Add(time.Duration(oldTask.RepeatAfter) * time.Second)
 			}
@@ -875,7 +878,7 @@ func TestUpdateDone(t *testing.T) {
 			}
 			updateDone(oldTask, newTask)
 
-			var expected = time.Unix(1550008600, 0)
+			expected := time.Unix(1550008600, 0)
 			for time.Since(expected) > 0 {
 				expected = expected.Add(time.Second * time.Duration(oldTask.RepeatAfter))
 			}
@@ -894,7 +897,7 @@ func TestUpdateDone(t *testing.T) {
 			}
 			updateDone(oldTask, newTask)
 
-			var expected = time.Unix(1550008600, 0)
+			expected := time.Unix(1550008600, 0)
 			for time.Since(expected) > 0 {
 				expected = expected.Add(time.Second * time.Duration(oldTask.RepeatAfter))
 			}
@@ -945,7 +948,8 @@ func TestUpdateDone(t *testing.T) {
 						{
 							Reminder: time.Unix(1555000000, 0),
 						},
-					}}
+					},
+				}
 				newTask := &Task{
 					Done: true,
 				}
@@ -1041,7 +1045,8 @@ func TestUpdateDone(t *testing.T) {
 						{
 							Reminder: time.Unix(1555000000, 0),
 						},
-					}}
+					},
+				}
 				newTask := &Task{
 					Done: true,
 				}

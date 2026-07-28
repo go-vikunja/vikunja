@@ -51,8 +51,10 @@ const (
 )
 
 // Guess what you get back if you ask Safari for a rfc 3339 formatted date?
-const safariDateAndTime = "2006-01-02 15:04"
-const safariDate = "2006-01-02"
+const (
+	safariDateAndTime = "2006-01-02 15:04"
+	safariDate        = "2006-01-02"
+)
 
 type taskFilter struct {
 	field      string
@@ -174,6 +176,11 @@ func parseFilterFromExpression(f fexpr.ExprGroup, loc *time.Location) (filter *t
 	return filter, nil
 }
 
+func (tf *TaskCollection) ValidateFilterString() error {
+	_, err := getTaskFiltersFromFilterString(tf.Filter, tf.FilterTimezone)
+	return err
+}
+
 // preprocessFilterString rewrites the human filter syntax (in / not in / like)
 // into fexpr sigils and quotes bare values so fexpr.Parse accepts them. Shared
 // by every entity that filters with the task grammar.
@@ -205,7 +212,6 @@ func preprocessFilterString(filter string) string {
 }
 
 func getTaskFiltersFromFilterString(filter string, filterTimezone string) (filters []*taskFilter, err error) {
-
 	if filter == "" {
 		return
 	}
@@ -305,7 +311,6 @@ func safeDatemathParse(s string) (expr datemath.Expression, err error) {
 }
 
 func getValueForField(field reflect.StructField, rawValue string, loc *time.Location) (value interface{}, err error) {
-
 	if loc == nil {
 		loc = config.GetTimeZone()
 	}
@@ -364,7 +369,6 @@ func getValueForField(field reflect.StructField, rawValue string, loc *time.Loca
 }
 
 func getNativeValueForTaskField(fieldName string, comparator taskFilterComparator, value string, loc *time.Location) (reflectField *reflect.StructField, nativeValue interface{}, err error) {
-
 	realFieldName := strings.ReplaceAll(strcase.ToCamel(fieldName), "Id", "ID")
 
 	if realFieldName == "Assignees" {

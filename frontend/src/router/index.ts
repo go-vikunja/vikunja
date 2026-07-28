@@ -270,6 +270,12 @@ const router = createRouter({
 			},
 		},
 		{
+			path: '/projects/:projectId/settings/urgency',
+			name: 'project.settings.urgent_tasks',
+			component: () => import('@/views/project/settings/Urgency.vue'),
+			props: route => ({ projectId: Number(route.params.projectId as string) }),
+		},
+		{
 			path: '/projects/:projectId/settings/background',
 			name: 'project.settings.background',
 			component: () => import('@/views/project/settings/ProjectSettingsBackground.vue'),

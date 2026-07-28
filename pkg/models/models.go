@@ -72,6 +72,7 @@ func GetTables() []interface{} {
 		&Session{},
 		&OAuthCode{},
 		&TimeEntry{},
+		&UrgencyWeight{},
 	}
 }
 
@@ -87,7 +88,6 @@ func SetEngine() (err error) {
 }
 
 func getLimitFromPageIndex(page int, perPage int) (limit, start int) {
-
 	// Get everything when page index is -1 or 0 (= not set)
 	if page < 1 {
 		return 0, 0

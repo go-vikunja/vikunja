@@ -37,20 +37,37 @@
 			v-if="hasFooter"
 			#footer
 		>
-			<XButton
-				variant="secondary"
-				class="mie-2"
-				:disabled="filterQuery === ''"
-				@click.prevent.stop="clearFiltersAndEmit"
-			>
-				{{ $t('filters.clear') }}
-			</XButton>
-			<XButton
-				variant="primary"
-				@click.prevent.stop="changeAndEmitButton"
-			>
-				{{ $t('filters.showResults') }}
-			</XButton>
+			<template v-if="editRole === 'direct'">
+				<XButton
+					variant="secondary"
+					class="mie-2"
+					:disabled="filterQuery === ''"
+					@click.prevent.stop="clearFiltersAndEmit"
+				>
+					{{ $t('filters.clear') }}
+				</XButton>
+				<XButton
+					variant="primary"
+					@click.prevent.stop="changeAndEmitButton"
+				>
+					{{ $t('filters.showResults') }}
+				</XButton>
+			</template>
+			<template v-if="editRole !== 'direct'">
+				<XButton
+					variant="secondary"
+					class="mie-2"
+					@click.prevent.stop="$emit('close')"
+				>
+					{{ $t('misc.cancel') }}
+				</XButton>
+				<XButton
+					variant="primary"
+					@click.prevent.stop="changeAndEmitButton"
+				>
+					{{ $t('misc.save') }}
+				</XButton>
+			</template>
 		</template>
 	</Card>
 </template>
@@ -60,6 +77,7 @@ import {computed, ref, watch} from 'vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import {useRoute} from 'vue-router'
 import type {TaskFilterParams} from '@/services/taskCollection'
+import {isSavedFilter} from '@/services/savedFilter'
 import {useLabelStore} from '@/stores/labels'
 import {useProjectStore} from '@/stores/projects'
 import {
@@ -76,12 +94,17 @@ const props = withDefaults(defineProps<{
 	changeImmediately?: boolean,
 	filterFromView?: string,
 	showClose?: boolean,
+	// editRole indicates how direct the edit should feel.
+	// Direct means it immediately changes filter results on the current page.
+	// Indirect may delay results.
+	editRole?: 'direct' | 'indirect',
 }>(), {
 	hasTitle: false,
 	hasFooter: true,
 	changeImmediately: false,
 	filterFromView: undefined,
 	showClose: false,
+	editRole: 'direct',
 })
 
 const emit = defineEmits<{
@@ -93,9 +116,11 @@ const emit = defineEmits<{
 const route = useRoute()
 const projectId = computed(() => {
 	if (route.name?.startsWith('project.')) {
-		return Number(route.params.projectId)
+		const projectId = Number(route.params.projectId)
+		if (! isSavedFilter({id: projectId })) {
+			return projectId
+		}
 	}
-
 	return undefined
 })
 

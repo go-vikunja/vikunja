@@ -109,7 +109,7 @@ func (sf *SubTableFilter) ToBaseSubQuery(taskAlias string) *builder.Builder {
 		baseFilter = strings.ReplaceAll(baseFilter, "tasks.", taskAlias+".")
 	}
 
-	var cond = builder.
+	cond := builder.
 		Select("1").
 		From(sf.Table).
 		Where(builder.Expr(baseFilter))
@@ -150,6 +150,8 @@ func getOrderByDBStatement(opts *taskSearchOptions) (orderby string, err error) 
 			prefix = "task_positions."
 		case taskPropertyBucketID:
 			prefix = "task_buckets."
+		case taskPropertyUrgency:
+			prefix = ""
 		default:
 			prefix = "tasks."
 		}
@@ -183,11 +185,10 @@ func convertFiltersToDBFilterCond(rawFilters []*taskFilter, includeNulls bool) (
 // given task table alias. Passing "parent_tasks" lets the subtask-expansion root
 // condition ask "does the parent satisfy the filter" (see #2646).
 func convertFiltersToDBFilterCondWithAlias(rawFilters []*taskFilter, includeNulls bool, taskAlias string) (filterCond builder.Cond, err error) {
-
-	var dbFilters = make([]builder.Cond, 0, len(rawFilters))
+	dbFilters := make([]builder.Cond, 0, len(rawFilters))
 	// Track join types separately because after merging consecutive sub-table
 	// filters, the indexes of dbFilters no longer correspond 1:1 with rawFilters.
-	var dbFilterJoins = make([]taskFilterConcatinator, 0, len(rawFilters))
+	dbFilterJoins := make([]taskFilterConcatinator, 0, len(rawFilters))
 
 	for i := 0; i < len(rawFilters); i++ {
 		f := rawFilters[i]
@@ -445,10 +446,9 @@ func buildParentSearchCondition(search string) builder.Cond {
 
 //nolint:gocyclo
 func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCount int64, err error) {
-
 	joinTaskBuckets := hasBucketIDInParsedFilter(opts.parsedFilters)
 
-	var expandSubtasks = false
+	expandSubtasks := false
 	for _, expandable := range opts.expand {
 		if expandable == TaskCollectionExpandSubtasks {
 			expandSubtasks = true
@@ -583,24 +583,54 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		return nil, 0, err
 	}
 
-	var distinct = "tasks.*"
+	var distinctColumns []string
+	distinctColumns = append(distinctColumns, x.Quote("tasks.*"))
 	if strings.Contains(orderby, "task_positions.") {
-		distinct += ", task_positions.position"
+		distinctColumns = append(distinctColumns, x.Quote("task_positions.position"))
+	}
+	var singleProjectID *int64
+	if len(opts.projectIDs) == 1 {
+		singleProjectID = &opts.projectIDs[0]
+	} else if opts.projectViewID > 0 {
+		view, err := GetProjectViewByID(d.s, opts.projectViewID)
+		if err != nil {
+			return nil, 0, err
+		}
+		singleProjectID = &view.ProjectID
+	}
+	if strings.Contains(orderby, taskPropertyUrgency) && singleProjectID != nil {
+		urgencyWeights, err := GetUrgencyWeights(d.s, *singleProjectID)
+		if err != nil {
+			return nil, 0, err
+		}
+		for _, weight := range urgencyWeights {
+			if weight.Filter != nil {
+				weight.Filter.FilterTimezone = opts.filterTimezone
+			}
+		}
+		urgencyScore, err := urgencyScoreQuery(urgencyWeights, d.s.Engine(), db.Type())
+		if err != nil {
+			return nil, 0, err
+		}
+		distinctColumns = append(distinctColumns, urgencyScore)
 	}
 
 	if expandSubtasks {
 		cond = builder.And(cond, subtaskRootCond)
 	}
 
-	query := d.s.Where(cond)
 	if rankByRelevance {
-		// Select() passes the raw column list through untouched while Distinct()
-		// (no args) still emits DISTINCT. Distinct("tasks.*, pdb.score(tasks.id)")
-		// would quote-corrupt the function call into "pdb"."score(tasks"."id)".
-		query = query.Select(distinct + ", pdb.score(tasks.id)").Distinct()
-	} else {
-		query = query.Distinct(distinct)
+		distinctColumns = append(distinctColumns, "pdb.score(tasks.id)")
 	}
+
+	// [xorm.Session.Distinct] with args quote-corrupts function calls.
+	// For example, Distinct("tasks.*, pdb.score(tasks.id)") converts "pdb.score(tasks.id)" into "pdb"."score(tasks"."id)".
+	//
+	// Instead, use [xorm.Session.Select] with all columns and [xorm.Session.Distinct] with none to pass
+	// the raw column list through untouched and still emit DISTINCT without quote-corruption.
+	query := d.s.Where(cond).
+		Select(strings.Join(distinctColumns, ", ")).
+		Distinct()
 	if limit > 0 {
 		query = query.Limit(limit, start)
 	}
@@ -622,13 +652,16 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		}
 	}
 
-	tasks = []*Task{}
+	var tasksWithUrgency []*TaskWithUrgency // The urgency value is computed and xorm doesn't recognize it as a valid column unless we "join" it with a struct like this.
 	err = query.
 		OrderBy(orderby).
-		Find(&tasks)
+		Find(&tasksWithUrgency)
 	if err != nil {
-		sql, vals := query.LastSQL()
-		return nil, 0, fmt.Errorf("could not fetch tasks, error was '%w', sql: '%v', values: %v", err, sql, vals)
+		return nil, 0, err
+	}
+	for _, task := range tasksWithUrgency {
+		task.Task.Urgency = task.Urgency
+		tasks = append(tasks, &task.Task)
 	}
 
 	// fetch subtasks when expanding
@@ -640,10 +673,10 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 			taskIDs = append(taskIDs, task.ID)
 		}
 
-		var inPlaceholders = strings.Repeat("?,", len(taskIDs))
+		inPlaceholders := strings.Repeat("?,", len(taskIDs))
 		inPlaceholders = inPlaceholders[:len(inPlaceholders)-1]
 
-		var notIn = strings.Repeat("?,", len(taskIDs))
+		notIn := strings.Repeat("?,", len(taskIDs))
 		notIn = notIn[:len(notIn)-1]
 
 		allArgs := make([]any, 0, len(taskIDs)*2)
