@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"math/rand/v2"
@@ -32,6 +33,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/version"
 )
 
@@ -44,6 +46,8 @@ const (
 	maxRetries     = 3
 	requestTimeout = 10 * time.Second
 )
+
+var errRedirectNotFollowed = errors.New("license server redirect not followed")
 
 // CheckRequest is the payload sent to the license server.
 type CheckRequest struct {
@@ -144,8 +148,14 @@ func doRequest(serverURL string, body []byte) (*Response, error) {
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{}
-	resp, err := client.Do(req) //nolint:gosec // The URL is not user-controlled, it comes from hardcoded license server constants.
+	client := utils.NewSSRFSafeHTTPClient()
+	// The license servers are a fixed JSON API which never redirects. Following one would forward
+	// the license key to whatever host the redirect names, so refuse instead of capping the chain.
+	client.CheckRedirect = func(_ *http.Request, _ []*http.Request) error {
+		return errRedirectNotFollowed
+	}
+
+	resp, err := client.Do(req) //nolint:gosec // SSRF protection is handled by the SSRF-safe client
 	if err != nil {
 		return nil, err
 	}
