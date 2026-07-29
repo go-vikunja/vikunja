@@ -170,13 +170,19 @@ async function addTask() {
 	let createdTasks: ITask[] = []
 
 	try {
+		// Indented lines inherit the project of their parent line, so a subtask can belong
+		// to another project than the one we're currently in even without its own prefix.
+		const projectIds = await Promise.all(tasksToCreate.map(({project}) => project === null
+			? currentProjectId
+			: taskStore.findProjectId({project, projectId: 0})))
+
 		newTaskTitle.value = ''
 
 		// One request for the whole batch: the api numbers the tasks and places them on top
 		// in the order they are passed in. It either creates all of them or none.
-		createdTasks = await taskStore.createNewTasks(tasksToCreate.map(({title}) => ({
+		createdTasks = await taskStore.createNewTasks(tasksToCreate.map(({title}, index) => ({
 			title,
-			projectId: currentProjectId,
+			projectId: projectIds[index] || currentProjectId,
 		})))
 
 		const taskRelationService = new TaskRelationService()

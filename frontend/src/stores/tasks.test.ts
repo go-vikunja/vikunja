@@ -1,5 +1,5 @@
 import {setActivePinia, createPinia} from 'pinia'
-import {beforeEach, describe, expect, it, vi} from 'vitest'
+import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest'
 
 vi.mock('@/router', () => ({
 	default: {
@@ -17,9 +17,12 @@ vi.mock('@/stores/base', () => ({
 	useBaseStore: () => ({setHasTasks: vi.fn()}),
 }))
 
+import router from '@/router'
 import {buildDefaultRemindersForQuickAdd, runWrites, useTaskStore} from './tasks'
 import {useLabelStore} from './labels'
 import LabelModel from '@/models/label'
+import TaskService from '@/services/task'
+import type {ITask} from '@/modelTypes/ITask'
 import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 import type {ILabel} from '@/modelTypes/ILabel'
 import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
@@ -124,5 +127,30 @@ describe('ensureLabelsExist', () => {
 		expect(titles).toContain('created')
 		expect(titles).not.toContain('forbidden')
 		expect(result).toHaveLength(2)
+	})
+})
+
+describe('createNewTasks', () => {
+	beforeEach(() => {
+		setActivePinia(createPinia())
+	})
+
+	afterEach(() => {
+		delete router.currentRoute.value.params.projectId
+		vi.restoreAllMocks()
+	})
+
+	it('keeps the project passed per task while a project is open', async () => {
+		router.currentRoute.value.params.projectId = '1'
+		const taskStore = useTaskStore()
+		const createMultiple = vi.spyOn(TaskService.prototype, 'createMultiple')
+			.mockImplementation(async (tasks: ITask[]) => tasks.map((task, index) => ({...task, id: index + 1})))
+
+		await taskStore.createNewTasks([
+			{title: 'parent task', projectId: 2},
+			{title: 'sub task', projectId: 2},
+		])
+
+		expect(createMultiple.mock.calls[0][0].map(({projectId}) => projectId)).toEqual([2, 2])
 	})
 })

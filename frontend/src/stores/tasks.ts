@@ -450,7 +450,7 @@ export const useTaskStore = defineStore('task', () => {
 	
 		//  3. Otherwise use the id from the route parameter
 		const projectIdFromRoute = Number(router.currentRoute.value.params.projectId)
-		if (typeof router.currentRoute.value.params.projectId !== 'undefined' && projectIdFromRoute > 0) {
+		if (foundProjectId === null && typeof router.currentRoute.value.params.projectId !== 'undefined' && projectIdFromRoute > 0) {
 			foundProjectId = projectIdFromRoute
 		}
 		
