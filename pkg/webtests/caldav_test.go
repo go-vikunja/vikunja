@@ -242,6 +242,82 @@ func TestCaldavDiscovery(t *testing.T) {
 		assert.Contains(t, responseBody, "<D:href>/dav/projects</D:href>")
 		assert.NotContains(t, responseBody, "/dav//projects/")
 	})
+
+	t.Run("Principal without trailing slash still works", func(t *testing.T) {
+		e, _ := setupTestEnv()
+
+		c, rec := createRequest(e, "PROPFIND", ``, nil, nil)
+		c.Request().URL.Path = caldav.PrincipalBasePath + "/user15"
+		c.Request().RequestURI = caldav.PrincipalBasePath + "/user15"
+
+		result, _ := caldav.BasicAuth(c, testuser15.Username, "12345678")
+		require.True(t, result)
+
+		err := caldav.PrincipalHandler(c)
+		require.NoError(t, err)
+		assert.Equal(t, 207, rec.Result().StatusCode)
+	})
+
+	t.Run("Sub-path under own principal 404s", func(t *testing.T) {
+		e, _ := setupTestEnv()
+
+		c, rec := createRequest(e, "PROPFIND", ``, nil, nil)
+		c.Request().URL.Path = caldav.PrincipalBasePath + "/user15/projects"
+		c.Request().RequestURI = caldav.PrincipalBasePath + "/user15/projects"
+
+		result, _ := caldav.BasicAuth(c, testuser15.Username, "12345678")
+		require.True(t, result)
+
+		err := caldav.PrincipalHandler(c)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusNotFound, rec.Result().StatusCode)
+	})
+
+	t.Run("Deeper sub-path under own principal 404s", func(t *testing.T) {
+		e, _ := setupTestEnv()
+
+		c, rec := createRequest(e, "PROPFIND", ``, nil, nil)
+		c.Request().URL.Path = caldav.PrincipalBasePath + "/user15/anything/else"
+		c.Request().RequestURI = caldav.PrincipalBasePath + "/user15/anything/else"
+
+		result, _ := caldav.BasicAuth(c, testuser15.Username, "12345678")
+		require.True(t, result)
+
+		err := caldav.PrincipalHandler(c)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusNotFound, rec.Result().StatusCode)
+	})
+
+	t.Run("Another existing user's principal 404s instead of serving own principal", func(t *testing.T) {
+		e, _ := setupTestEnv()
+
+		c, rec := createRequest(e, "PROPFIND", ``, nil, nil)
+		c.Request().URL.Path = caldav.PrincipalBasePath + "/user1/"
+		c.Request().RequestURI = caldav.PrincipalBasePath + "/user1/"
+
+		// Authenticated as user15, but requesting user1's principal path.
+		result, _ := caldav.BasicAuth(c, testuser15.Username, "12345678")
+		require.True(t, result)
+
+		err := caldav.PrincipalHandler(c)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusNotFound, rec.Result().StatusCode)
+	})
+
+	t.Run("Nonexistent username 404s with the same status as a mismatched existing one", func(t *testing.T) {
+		e, _ := setupTestEnv()
+
+		c, rec := createRequest(e, "PROPFIND", ``, nil, nil)
+		c.Request().URL.Path = caldav.PrincipalBasePath + "/does-not-exist/"
+		c.Request().RequestURI = caldav.PrincipalBasePath + "/does-not-exist/"
+
+		result, _ := caldav.BasicAuth(c, testuser15.Username, "12345678")
+		require.True(t, result)
+
+		err := caldav.PrincipalHandler(c)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusNotFound, rec.Result().StatusCode)
+	})
 }
 
 func TestCaldavSubtasks(t *testing.T) {

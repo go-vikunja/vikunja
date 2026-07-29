@@ -124,11 +124,23 @@ func TaskHandler(c *echo.Context) error {
 	return nil
 }
 
+// Sub-paths and foreign usernames must 404 (RFC 4918) instead of falling
+// through to the merged principal pseudo-resource, which would silently serve
+// the authenticated user's data and act as a username enumeration oracle.
+func isOwnPrincipalPath(path, username string) bool {
+	rest := strings.TrimPrefix(strings.TrimPrefix(path, PrincipalBasePath), "/")
+	return strings.TrimSuffix(rest, "/") == username
+}
+
 // PrincipalHandler handles all request to principal resources
 func PrincipalHandler(c *echo.Context) error {
 	u, err := getBasicAuthUserFromContext(c)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Internal server error").Wrap(err)
+	}
+
+	if !isOwnPrincipalPath(c.Request().URL.Path, u.Username) {
+		return c.String(http.StatusNotFound, "Not found")
 	}
 
 	storage := &VikunjaCaldavProjectStorage{
