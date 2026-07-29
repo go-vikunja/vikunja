@@ -80,33 +80,44 @@ async function doRefresh(persist: boolean): Promise<void> {
 	const epochAtStart = authEpoch
 	const loggedOutSinceStart = () => authEpoch !== epochAtStart
 
-	// In desktop mode, refresh via IPC to the Electron main process
-	if (isDesktopApp()) {
-		const storedRefreshToken = localStorage.getItem('desktopOAuthRefreshToken')
-		if (!storedRefreshToken) {
-			throw new Error('No desktop OAuth refresh token available')
-		}
-		try {
-			const tokens = await refreshDesktopToken(window.API_URL, storedRefreshToken)
-			if (loggedOutSinceStart()) {
-				return
-			}
-			saveToken(tokens.access_token, persist)
-			localStorage.setItem('desktopOAuthRefreshToken', tokens.refresh_token)
-		} catch (e) {
-			throw new Error('Error renewing token: ', {cause: e})
-		}
-		return
-	}
-
-	// Capture the token before waiting for the lock so we can detect
+	// Capture the tokens before waiting for the lock so we can detect
 	// if another tab refreshed while we were queued.
 	const tokenBeforeLock = localStorage.getItem('token')
+	const desktopRefreshTokenBeforeLock = localStorage.getItem('desktopOAuthRefreshToken')
 
 	const refreshUnderLock = async () => {
 		// A logout may have happened while we waited for the lock — don't
 		// re-adopt or re-fetch a token after the user signed out.
 		if (loggedOutSinceStart()) {
+			return
+		}
+
+		// In desktop mode, refresh via IPC to the Electron main process
+		if (isDesktopApp()) {
+			const storedRefreshToken = localStorage.getItem('desktopOAuthRefreshToken')
+
+			if (storedRefreshToken !== desktopRefreshTokenBeforeLock) {
+				const currentToken = localStorage.getItem('token')
+				if (currentToken) {
+					savedToken = currentToken
+					return
+				}
+			}
+
+			if (!storedRefreshToken) {
+				throw new Error('No desktop OAuth refresh token available')
+			}
+
+			try {
+				const tokens = await refreshDesktopToken(window.API_URL, storedRefreshToken)
+				if (loggedOutSinceStart()) {
+					return
+				}
+				saveToken(tokens.access_token, persist)
+				localStorage.setItem('desktopOAuthRefreshToken', tokens.refresh_token)
+			} catch (e) {
+				throw new Error('Error renewing token: ', {cause: e})
+			}
 			return
 		}
 

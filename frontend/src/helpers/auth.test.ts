@@ -1,6 +1,6 @@
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest'
 
-import {refreshToken, removeToken} from './auth'
+import {getToken, refreshToken, removeToken} from './auth'
 
 // Count how many times the refresh endpoint is actually POSTed. The whole point
 // of the in-flight dedup is that concurrent refreshToken() calls share a single
@@ -19,9 +19,14 @@ vi.mock('@/helpers/fetcher', () => ({
 	}),
 }))
 
-vi.mock('@/helpers/desktopAuth', () => ({
-	isDesktopApp: () => false,
+const desktop = vi.hoisted(() => ({
+	isDesktop: false,
 	refreshDesktopToken: vi.fn(),
+}))
+
+vi.mock('@/helpers/desktopAuth', () => ({
+	isDesktopApp: () => desktop.isDesktop,
+	refreshDesktopToken: desktop.refreshDesktopToken,
 }))
 
 const FAKE_TOKEN = 'header.payload.signature'
@@ -149,5 +154,110 @@ describe('refreshToken in-flight dedup', () => {
 
 		resolveB?.({data: {token: FAKE_TOKEN}})
 		await Promise.all([pB, pB2])
+	})
+})
+
+describe('refreshToken in desktop mode', () => {
+	const originalLocks = navigator.locks
+
+	let resolveRefresh: ((tokens: unknown) => void) | null = null
+
+	// Runs the lock callback only once the returned release function is called,
+	// so a test can act as the other renderer window while we sit in the queue.
+	function stubQueuedLocks() {
+		let openGate: (() => void) | null = null
+		const gate = new Promise<void>((resolve) => {
+			openGate = resolve
+		})
+		Object.defineProperty(navigator, 'locks', {
+			value: {
+				request: async (_name: string, cb: () => unknown) => {
+					await gate
+					return cb()
+				},
+			},
+			configurable: true,
+			writable: true,
+		})
+		return () => openGate?.()
+	}
+
+	beforeEach(() => {
+		resolveRefresh = null
+		removeToken()
+		localStorage.clear()
+
+		desktop.isDesktop = true
+		desktop.refreshDesktopToken.mockReset()
+		desktop.refreshDesktopToken.mockImplementation(() => new Promise((resolve) => {
+			resolveRefresh = resolve
+		}))
+
+		Object.defineProperty(navigator, 'locks', {
+			value: {request: (_name: string, cb: () => unknown) => cb()},
+			configurable: true,
+			writable: true,
+		})
+	})
+
+	afterEach(() => {
+		desktop.isDesktop = false
+		Object.defineProperty(navigator, 'locks', {
+			value: originalLocks,
+			configurable: true,
+			writable: true,
+		})
+	})
+
+	it('coalesces concurrent calls into a single IPC refresh', async () => {
+		localStorage.setItem('desktopOAuthRefreshToken', 'refresh-1')
+
+		const p1 = refreshToken(true)
+		const p2 = refreshToken(true)
+
+		expect(desktop.refreshDesktopToken).toHaveBeenCalledTimes(1)
+
+		resolveRefresh?.({access_token: FAKE_TOKEN, refresh_token: 'refresh-2'})
+		await Promise.all([p1, p2])
+
+		expect(desktop.refreshDesktopToken).toHaveBeenCalledTimes(1)
+		expect(localStorage.getItem('token')).toBe(FAKE_TOKEN)
+		expect(localStorage.getItem('desktopOAuthRefreshToken')).toBe('refresh-2')
+	})
+
+	it('adopts the token another renderer window refreshed instead of spending the rotated one', async () => {
+		localStorage.setItem('desktopOAuthRefreshToken', 'refresh-1')
+		localStorage.setItem('token', 'old-token')
+
+		const openGate = stubQueuedLocks()
+
+		// This window queues for the lock...
+		const p = refreshToken(true)
+
+		// ...while the other window wins it and rotates both tokens.
+		localStorage.setItem('desktopOAuthRefreshToken', 'refresh-2')
+		localStorage.setItem('token', FAKE_TOKEN)
+
+		openGate()
+		await p
+
+		expect(desktop.refreshDesktopToken).not.toHaveBeenCalled()
+		expect(getToken()).toBe(FAKE_TOKEN)
+		expect(localStorage.getItem('desktopOAuthRefreshToken')).toBe('refresh-2')
+	})
+
+	it('does not re-persist tokens when logout happens during an in-flight refresh', async () => {
+		localStorage.setItem('desktopOAuthRefreshToken', 'refresh-1')
+
+		const p = refreshToken(true)
+		expect(desktop.refreshDesktopToken).toHaveBeenCalledTimes(1)
+
+		removeToken()
+
+		resolveRefresh?.({access_token: FAKE_TOKEN, refresh_token: 'refresh-2'})
+		await p
+
+		expect(localStorage.getItem('token')).toBeNull()
+		expect(localStorage.getItem('desktopOAuthRefreshToken')).toBeNull()
 	})
 })
