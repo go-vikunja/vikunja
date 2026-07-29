@@ -40,18 +40,8 @@ func refreshNotificationsUsers(s *xorm.Session, dbNotifications []*notifications
 }
 
 func refreshNotificationUsers(s *xorm.Session, dbn *notifications.DatabaseNotification, cache map[int64]*user.User) {
-	typed, ok := notifications.Lookup(dbn.Name)
+	typed, ok := hydrateNotification(dbn)
 	if !ok {
-		return
-	}
-
-	raw, err := json.Marshal(dbn.Notification)
-	if err != nil {
-		log.Errorf("Could not marshal notification %d to refresh its users: %v", dbn.ID, err)
-		return
-	}
-	if err := json.Unmarshal(raw, typed); err != nil {
-		log.Errorf("Could not unmarshal notification %d to refresh its users: %v", dbn.ID, err)
 		return
 	}
 
@@ -59,6 +49,25 @@ func refreshNotificationUsers(s *xorm.Session, dbn *notifications.DatabaseNotifi
 		refreshUser(s, u, cache)
 	}
 	dbn.Notification = typed
+}
+
+func hydrateNotification(dbn *notifications.DatabaseNotification) (notifications.Notification, bool) {
+	typed, ok := notifications.Lookup(dbn.Name)
+	if !ok {
+		return nil, false
+	}
+
+	raw, err := json.Marshal(dbn.Notification)
+	if err != nil {
+		log.Errorf("Could not marshal notification %d: %v", dbn.ID, err)
+		return nil, false
+	}
+	if err := json.Unmarshal(raw, typed); err != nil {
+		log.Errorf("Could not unmarshal notification %d: %v", dbn.ID, err)
+		return nil, false
+	}
+
+	return typed, true
 }
 
 // notificationUsers returns the user fields a stored notification renders, so
