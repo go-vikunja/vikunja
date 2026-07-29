@@ -182,8 +182,10 @@ func TestCaldavDiscovery(t *testing.T) {
 
 		responseBody := rec.Body.String()
 		assert.Contains(t, responseBody, "/dav/projects/36")
-		assert.NotContains(t, responseBody, "<d:href>/dav/projects/</d:href>")
-		assert.NotContains(t, responseBody, "<D:href>/dav/projects/</D:href>")
+		// Only response-level hrefs: current-user-principal props legitimately
+		// contain /dav/projects/ (the Apple home-set workaround).
+		assert.NotContains(t, responseBody, "<d:response><d:href>/dav/projects/</d:href>")
+		assert.NotContains(t, responseBody, "<D:response><D:href>/dav/projects/</D:href>")
 	})
 
 	t.Run("Project home set depth 0 returns the home set itself", func(t *testing.T) {
