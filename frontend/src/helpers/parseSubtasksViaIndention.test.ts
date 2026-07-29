@@ -131,6 +131,21 @@ task two`, PrefixMode.Default)
 		expect(tasks[1].project).to.eq('list')
 		expect(tasks[2].project).to.eq('list')
 	})
+	it('Should inherit the project of the parent task through multiple levels', () => {
+		const tasks = parseSubtasksViaIndention(
+`parent task +list
+  sub task
+    sub sub task
+      sub sub sub task +otherlist
+        sub sub sub sub task`, PrefixMode.Default)
+
+		expect(tasks).to.have.length(5)
+		expect(tasks[0].project).to.eq('list')
+		expect(tasks[1].project).to.eq('list')
+		expect(tasks[2].project).to.eq('list')
+		expect(tasks[3].project).to.eq('otherlist')
+		expect(tasks[4].project).to.eq('otherlist')
+	})
 	it('Should clean the indention if there is indention on the first line', () => {
 		const tasks = parseSubtasksViaIndention(
 `  parent task

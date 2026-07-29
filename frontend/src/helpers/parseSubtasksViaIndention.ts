@@ -43,7 +43,9 @@ export function parseSubtasksViaIndention(taskTitles: string, prefixMode: Prefix
 		})
 	}
 
-	return titles.map((title, index) => {
+	const results: TaskWithParent[] = []
+
+	titles.forEach((title, index) => {
 		const task: TaskWithParent = {
 			title: cleanupTitle(title),
 			parentIndex: null,
@@ -53,7 +55,8 @@ export function parseSubtasksViaIndention(taskTitles: string, prefixMode: Prefix
 		task.project = getProjectFromPrefix(task.title, prefixMode)
 
 		if (index === 0) {
-			return task
+			results.push(task)
+			return
 		}
 
 		const matched = spaceRegex.exec(task.title)
@@ -62,22 +65,24 @@ export function parseSubtasksViaIndention(taskTitles: string, prefixMode: Prefix
 		if (matchedSpaces > 0) {
 			// Go up the tree to find the first task with less indention than the current one
 			let pi = 1
-			let parentTitle: string
 			let parentSpaces: number
 			do {
 				task.parentIndex = index - pi
-				parentTitle = cleanupTitle(titles[task.parentIndex])
+				const parentTitle = cleanupTitle(titles[task.parentIndex])
 				pi++
 				const parentMatched = spaceRegex.exec(parentTitle)
 				parentSpaces = parentMatched ? parentMatched[0].length : 0
 			} while (parentSpaces >= matchedSpaces)
 			task.title = cleanupTitle(task.title.replace(spaceRegex, ''))
 			if (task.project === null) {
-				// This allows to specify a project once for the parent task and inherit it to all subtasks
-				task.project = getProjectFromPrefix(cleanupTitle(parentTitle.replace(spaceRegex, '')), prefixMode)
+				// Inheriting the parent's resolved project instead of re-parsing its line carries
+				// a project down through every level, not just the first.
+				task.project = results[task.parentIndex].project
 			}
 		}
 
-		return task
+		results.push(task)
 	})
+
+	return results
 }
