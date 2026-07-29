@@ -59,13 +59,19 @@ type ProjectID interface {
 	ProjectID() int64
 }
 
+// PersistedNotification is stored and read back, so it must declare its project.
+type PersistedNotification interface {
+	Notification
+	ProjectID
+}
+
 // ProjectIDUnresolved marks a project-scoped notification whose project could
 // not be determined. 0 would make the row account-scoped and hand its payload
 // back unchecked.
 const ProjectIDUnresolved int64 = -1
 
-// ProjectIDOf returns the project a notification is about, or 0 for the
-// account-scoped types that do not implement ProjectID.
+// ProjectIDOf returns the project a notification is about. Unregistered types
+// need not implement ProjectID and count as account-scoped.
 func ProjectIDOf(n Notification) int64 {
 	if p, is := n.(ProjectID); is {
 		return p.ProjectID()
@@ -73,7 +79,7 @@ func ProjectIDOf(n Notification) int64 {
 	return 0
 }
 
-var registry = map[string]func() Notification{}
+var registry = map[string]func() PersistedNotification{}
 
 // Register makes a notification type discoverable by name. It should be
 // called from init() in the package that defines the type. Only notifications
@@ -81,7 +87,7 @@ var registry = map[string]func() Notification{}
 // notifications are re-hydrated from JSON (e.g. by the feed handler).
 // The name is derived from the notification's own Name() method, so it stays
 // in one place.
-func Register(factory func() Notification) {
+func Register(factory func() PersistedNotification) {
 	registry[factory().Name()] = factory
 }
 
