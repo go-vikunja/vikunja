@@ -25,6 +25,7 @@ import (
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/web"
 
+	"github.com/danielgtaylor/huma/v2"
 	"xorm.io/xorm"
 )
 
@@ -66,6 +67,15 @@ func (st SubscriptionEntityType) MarshalJSON() ([]byte, error) {
 	}
 
 	return []byte(`nil`), nil
+}
+
+// Schema lets Huma (/api/v2) reflect this type as a string enum; see the note
+// on ProjectViewKind.Schema for why this is needed.
+func (*SubscriptionEntityType) Schema(_ huma.Registry) *huma.Schema {
+	return &huma.Schema{
+		Type: "string",
+		Enum: []any{"project", "task"},
+	}
 }
 
 func getEntityTypeFromString(entityType string) SubscriptionEntityType {
