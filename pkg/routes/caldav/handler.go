@@ -127,7 +127,11 @@ func TaskHandler(c *echo.Context) error {
 // Sub-paths and foreign usernames must 404 (RFC 4918) instead of falling
 // through to the merged principal pseudo-resource, which would silently serve
 // the authenticated user's data and act as a username enumeration oracle.
+// /.well-known/caldav also routes here (RFC 6764 bootstrap).
 func isOwnPrincipalPath(path, username string) bool {
+	if strings.TrimSuffix(path, "/") == "/.well-known/caldav" {
+		return true
+	}
 	rest := strings.TrimPrefix(strings.TrimPrefix(path, PrincipalBasePath), "/")
 	return strings.TrimSuffix(rest, "/") == username
 }
