@@ -66,7 +66,7 @@ func (st SubscriptionEntityType) MarshalJSON() ([]byte, error) {
 		return []byte(`"task"`), nil
 	}
 
-	return []byte(`nil`), nil
+	return []byte(`null`), nil
 }
 
 // Schema lets Huma (/api/v2) reflect this type as a string enum; see the note
