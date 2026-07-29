@@ -920,52 +920,75 @@ func resolveTaskPositionConflicts(s *xorm.Session, projectViewID int64, conflict
 
 // resolvePositionConflictsAfterInsert checks a batch of newly inserted task positions
 // for conflicts (duplicate position values within the same view) and resolves them.
-// This is called after bulk-inserting positions during task creation.
+// This is called after bulk-inserting positions during task creation. A concurrent single
+// create computes lowest/2, which can land on a slot of the batch.
 // If resolveTaskPositionConflicts returns ErrNeedsFullRecalculation for a view,
 // it falls back to a full recalculation of all positions in that view.
 func resolvePositionConflictsAfterInsert(s *xorm.Session, positions []*TaskPosition) error {
-	// Track which (viewID, position) pairs we've already checked to avoid
-	// resolving the same conflict group twice.
-	checked := make(map[int64]map[float64]bool)
-	// Track views that have already been fully recalculated so we skip
-	// further conflict checks for them.
-	recalculated := make(map[int64]bool)
+	viewIDs := []int64{}
+	insertedByView := map[int64][]float64{}
+	seen := map[int64]map[float64]bool{}
 
 	for _, pos := range positions {
-		if recalculated[pos.ProjectViewID] {
+		if seen[pos.ProjectViewID] == nil {
+			seen[pos.ProjectViewID] = map[float64]bool{}
+			viewIDs = append(viewIDs, pos.ProjectViewID)
+		}
+		if seen[pos.ProjectViewID][pos.Position] {
 			continue
 		}
-		if checked[pos.ProjectViewID] != nil && checked[pos.ProjectViewID][pos.Position] {
-			continue
-		}
-		if checked[pos.ProjectViewID] == nil {
-			checked[pos.ProjectViewID] = make(map[float64]bool)
-		}
-		checked[pos.ProjectViewID][pos.Position] = true
+		seen[pos.ProjectViewID][pos.Position] = true
+		insertedByView[pos.ProjectViewID] = append(insertedByView[pos.ProjectViewID], pos.Position)
+	}
 
-		conflicts, err := findPositionConflicts(s, pos.ProjectViewID, pos.Position)
+	for _, viewID := range viewIDs {
+		conflicts, err := findPositionConflictsAmong(s, viewID, insertedByView[viewID])
 		if err != nil {
 			return err
 		}
 
-		if len(conflicts) <= 1 {
-			continue
-		}
-
-		err = resolveTaskPositionConflicts(s, pos.ProjectViewID, conflicts)
-		if IsErrNeedsFullRecalculation(err) {
-			view := &ProjectView{ID: pos.ProjectViewID}
-			err = recalculateTaskPositionsForRepair(s, view)
+		for _, group := range conflicts {
+			err = resolveTaskPositionConflicts(s, viewID, group)
+			if IsErrNeedsFullRecalculation(err) {
+				err = recalculateTaskPositionsForRepair(s, &ProjectView{ID: viewID})
+				if err != nil {
+					return err
+				}
+				// The recalculation gave every task in the view a unique position, so the
+				// remaining groups are gone with it.
+				break
+			}
 			if err != nil {
 				return err
 			}
-			recalculated[pos.ProjectViewID] = true
-			continue
-		}
-		if err != nil {
-			return err
 		}
 	}
 
 	return nil
+}
+
+// findPositionConflictsAmong returns the groups of task positions in a view which share a
+// position value, looking only at the given positions. One query per view instead of one per
+// position keeps a large batch from turning into a query per task and view.
+func findPositionConflictsAmong(s *xorm.Session, projectViewID int64, positions []float64) (conflicts [][]*TaskPosition, err error) {
+	// Keep statements well below the parameter limits of all supported databases.
+	const batchSize = 100
+
+	all := []*TaskPosition{}
+	for start := 0; start < len(positions); start += batchSize {
+		batch := positions[start:min(start+batchSize, len(positions))]
+
+		found := []*TaskPosition{}
+		err = s.
+			Where("project_view_id = ?", projectViewID).
+			In("position", batch).
+			Find(&found)
+		if err != nil {
+			return nil, err
+		}
+
+		all = append(all, found...)
+	}
+
+	return findDuplicatesInPositions(all), nil
 }
