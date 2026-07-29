@@ -26,6 +26,7 @@ import type {IProject} from '@/modelTypes/IProject'
 
 import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 
+import {error} from '@/message'
 import {setModuleLoading} from '@/stores/helper'
 import {useConfigStore} from '@/stores/config'
 import {useLabelStore} from '@/stores/labels'
@@ -550,10 +551,17 @@ export const useTaskStore = defineStore('task', () => {
 		try {
 			const built = await Promise.all(taskInputs.map(taskInput => buildTaskFromInput(taskInput)))
 			const createdTasks = await new TaskService().createMultiple(built.map(({task}) => task))
-			return await Promise.all(createdTasks.map((task, index) => addLabelsToTask({
+			// The tasks exist server-side already, so a failing label write must not hide them from the caller.
+			const labelWrites = await Promise.allSettled(createdTasks.map((task, index) => addLabelsToTask({
 				task,
 				parsedLabels: built[index].parsedLabels,
 			})))
+			for (const write of labelWrites) {
+				if (write.status === 'rejected') {
+					error(write.reason)
+				}
+			}
+			return createdTasks
 		} finally {
 			cancel()
 		}
