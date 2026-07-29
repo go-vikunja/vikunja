@@ -77,10 +77,6 @@ func handlePropPatch(c *echo.Context, body string, project *models.ProjectWithTa
 
 	can, _, err := project.CanRead(s, u)
 	if err != nil {
-		_ = s.Rollback()
-		return echo.NewHTTPError(http.StatusInternalServerError, "internal server error").Wrap(err)
-	}
-	if err := s.Commit(); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "internal server error").Wrap(err)
 	}
 	if !can {
