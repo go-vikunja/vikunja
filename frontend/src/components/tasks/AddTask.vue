@@ -186,25 +186,33 @@ async function addTask() {
 		})))
 
 		const taskRelationService = new TaskRelationService()
+		const failedRelations: string[] = []
 		// Sequential as well: subtasks are rendered in the order their relations were
 		// created, so racing them scrambles the nesting.
 		for (let index = 0; index < tasksToCreate.length; index++) {
-			const t = tasksToCreate[index]
+			const entry = tasksToCreate[index]
 			const createdTask = createdTasks[index]
 			if (typeof createdTask === 'undefined') {
 				continue
 			}
 
-			const createdParentTask = t.parentIndex === null ? undefined : createdTasks[t.parentIndex]
+			const createdParentTask = entry.parentIndex === null ? undefined : createdTasks[entry.parentIndex]
 			if (typeof createdParentTask === 'undefined') {
 				continue
 			}
 
-			await taskRelationService.create(new TaskRelationModel({
-				taskId: createdTask.id,
-				otherTaskId: createdParentTask.id,
-				relationKind: RELATION_KIND.PARENTTASK,
-			}))
+			try {
+				await taskRelationService.create(new TaskRelationModel({
+					taskId: createdTask.id,
+					otherTaskId: createdParentTask.id,
+					relationKind: RELATION_KIND.PARENTTASK,
+				}))
+			} catch (e) {
+				// One failing relation must not drop the nesting of all tasks after it.
+				console.debug('Could not create parent task relation', {title: createdTask.title, e})
+				failedRelations.push(createdTask.title)
+				continue
+			}
 
 			if (typeof createdTask.relatedTasks === 'undefined') {
 				createdTask.relatedTasks = {}
@@ -227,6 +235,10 @@ async function addTask() {
 				...createdTask,
 				relatedTasks: {}, // To avoid endless references
 			})
+		}
+
+		if (failedRelations.length > 0) {
+			error({message: t('task.relation.createFailed', {tasks: failedRelations.join(', ')})})
 		}
 	} catch (e) {
 		// Only restore the input when nothing was created: re-adding it after tasks exist would duplicate them.

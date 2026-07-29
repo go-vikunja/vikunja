@@ -1156,6 +1156,7 @@
       "deleteText1": "Are you sure you want to delete this task relation?",
       "select": "Select a relation kind",
       "taskRequired": "Please select a task or enter a new task title.",
+      "createFailed": "These tasks could not be added as subtasks of their parent task: {tasks}",
       "kinds": {
         "subtask": "Subtask | Subtasks",
         "parenttask": "Parent Task | Parent Tasks",
