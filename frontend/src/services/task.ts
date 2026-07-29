@@ -1,34 +1,50 @@
 import AbstractService from './abstractService'
 import TaskModel from '@/models/task'
 import type {ITask} from '@/modelTypes/ITask'
-import AttachmentService from './attachment'
-import LabelService from './label'
 
 import {colorFromHex} from '@/helpers/color/colorFromHex'
 import {SECONDS_A_DAY, SECONDS_A_HOUR, SECONDS_A_WEEK} from '@/constants/date'
 import {objectToSnakeCase} from '@/helpers/case'
 import {AuthenticatedHTTPFactory, apiV2Url} from '@/helpers/fetcher'
 
-// v2 rejects unknown properties, and a task model carries plenty the api does not
-// accept on write (createdBy, maxPermission, parentTaskId).
-const CREATE_FIELDS = [
-	'title',
-	'description',
-	'done',
-	'due_date',
-	'start_date',
-	'end_date',
-	'repeat_after',
-	'repeat_mode',
-	'priority',
-	'hex_color',
-	'percent_done',
-	'project_id',
-	'bucket_id',
-	'position',
+// Fields a task model carries that the api never reads on write, either because the
+// server owns them or because they only exist on the client. Stripping these rather than
+// listing what to send means a new writable field is sent by default; v2 would reject the
+// ones it does not know, and v1 ignores them.
+const READ_ONLY_FIELDS = new Set([
+	'attachments',
+	'buckets',
+	'comments',
+	'created_by',
+	'identifier',
 	'index',
-	'is_favorite',
-]
+	'labels',
+	'max_permission',
+	'parent_task_id',
+	'position',
+	'reactions',
+	'related_tasks',
+	'reminder_dates',
+	'repeat_from_current_date',
+	'subscription',
+])
+
+// Nested models (assignees, reminders) carry maxPermission of their own, hence recursing.
+function withoutReadOnlyFields<T>(value: T): T {
+	if (Array.isArray(value)) {
+		return value.map(withoutReadOnlyFields) as T
+	}
+
+	if (value === null || typeof value !== 'object' || value instanceof Date) {
+		return value
+	}
+
+	return Object.fromEntries(
+		Object.entries(value)
+			.filter(([key]) => !READ_ONLY_FIELDS.has(key))
+			.map(([key, nested]) => [key, withoutReadOnlyFields(nested)]),
+	) as T
+}
 
 const parseDate = date => {
 	if (date) {
@@ -82,7 +98,6 @@ export default class TaskService extends AbstractService<ITask> {
 		model.created = new Date(model.created).toISOString()
 		model.updated = new Date(model.updated).toISOString()
 
-		model.reminderDates = null
 		// remove all nulls, these would create empty reminders
 		model.reminders = model.reminders.filter(r => r !== null)
 		// Make normal timestamps from js dates
@@ -111,36 +126,11 @@ export default class TaskService extends AbstractService<ITask> {
 
 		model.hexColor = colorFromHex(model.hexColor)
 
-		// Do the same for all related tasks
-		Object.keys(model.relatedTasks).forEach(relationKind => {
-			model.relatedTasks[relationKind] = model.relatedTasks[relationKind].map(t => {
-				return this.processModel(t)
-			})
-		})
+		// The api only ever reads the ids, and the rest of a user model does not pass v2
+		// validation
+		model.assignees = (model.assignees ?? []).map((assignee: {id: number}) => ({id: assignee.id}))
 
-		// Process all attachments to prevent parsing errors
-		if (model.attachments.length > 0) {
-			const attachmentService = new AttachmentService()
-			model.attachments.map(a => {
-				return attachmentService.processModel(a)
-			})
-		}
-
-		// Preprocess all labels
-		if (model.labels.length > 0) {
-			const labelService = new LabelService()
-			model.labels = model.labels.map(l => labelService.processModel(l))
-		}
-
-		const transformed = objectToSnakeCase(model)
-
-		// We can't convert emojis to skane case, hence we add them back again
-		transformed.reactions = {}
-		Object.keys(updatedModel.reactions || {}).forEach(reaction => {
-			transformed.reactions[reaction] = updatedModel.reactions[reaction].map(u => objectToSnakeCase(u))
-		})
-
-		return transformed as ITask
+		return withoutReadOnlyFields(objectToSnakeCase(model)) as ITask
 	}
 
 	/**
@@ -154,33 +144,12 @@ export default class TaskService extends AbstractService<ITask> {
 		try {
 			// v2 only, so this bypasses the v1 baseURL the rest of this service uses
 			const {data} = await AuthenticatedHTTPFactory().post(apiV2Url('tasks/bulk'), {
-				tasks: tasks.map(task => this.createPayload(task)),
+				tasks: tasks.map(task => this.processModel(task)),
 			})
 			return data.tasks.map((task: Partial<ITask>) => this.modelCreateFactory(task))
 		} finally {
 			cancel()
 		}
-	}
-
-	createPayload(task: ITask): Record<string, unknown> {
-		const processed = this.processModel(task) as unknown as Record<string, unknown>
-		const payload = Object.fromEntries(
-			CREATE_FIELDS
-				.filter(field => processed[field] !== null && typeof processed[field] !== 'undefined')
-				.map(field => [field, processed[field]]),
-		)
-
-		// The api resolves assignees by id, and the rest of the user model does not survive
-		// validation. Reminders are picked apart for the same reason.
-		payload.assignees = (task.assignees ?? []).map(({id}) => ({id}))
-		payload.reminders = ((processed.reminders ?? []) as Record<string, unknown>[])
-			.map(reminder => ({
-				reminder: reminder.reminder,
-				relative_period: reminder.relative_period,
-				relative_to: reminder.relative_to,
-			}))
-
-		return payload
 	}
 
 	async markTaskAsRead(taskId: ITask['id']): Promise<void> {
