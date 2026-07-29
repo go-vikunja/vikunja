@@ -932,26 +932,17 @@ func calculateNextTaskIndex(s *xorm.Session, projectID int64) (nextIndex int64, 
 	return latestTask.Index + 1, nil
 }
 
-// taskCreateCache holds everything createTasks would otherwise look up again for every
-// task of the same project. Always go through newTaskCreateCache: the maps have to exist
-// before anything reads them.
-type taskCreateCache struct {
+
+// taskCreateState holds everything createTasks would otherwise look up again for every
+// task of the same project, and hands out the next free index per project.
+type taskCreateState struct {
 	projects      map[int64]*Project
 	views         map[int64][]*ProjectView
 	defaultBucket map[int64]int64
 	nextIndex     map[int64]int64
 }
 
-func newTaskCreateCache() *taskCreateCache {
-	return &taskCreateCache{
-		projects:      map[int64]*Project{},
-		views:         map[int64][]*ProjectView{},
-		defaultBucket: map[int64]int64{},
-		nextIndex:     map[int64]int64{},
-	}
-}
-
-func (c *taskCreateCache) project(s *xorm.Session, projectID int64) (project *Project, err error) {
+func (c *taskCreateState) project(s *xorm.Session, projectID int64) (project *Project, err error) {
 	project, has := c.projects[projectID]
 	if has {
 		return project, nil
@@ -962,11 +953,14 @@ func (c *taskCreateCache) project(s *xorm.Session, projectID int64) (project *Pr
 		return nil, err
 	}
 
+	if c.projects == nil {
+		c.projects = map[int64]*Project{}
+	}
 	c.projects[projectID] = project
 	return project, nil
 }
 
-func (c *taskCreateCache) viewsFor(s *xorm.Session, projectID int64) (views []*ProjectView, err error) {
+func (c *taskCreateState) viewsFor(s *xorm.Session, projectID int64) (views []*ProjectView, err error) {
 	views, has := c.views[projectID]
 	if has {
 		return views, nil
@@ -977,11 +971,14 @@ func (c *taskCreateCache) viewsFor(s *xorm.Session, projectID int64) (views []*P
 		return nil, err
 	}
 
+	if c.views == nil {
+		c.views = map[int64][]*ProjectView{}
+	}
 	c.views[projectID] = views
 	return views, nil
 }
 
-func (c *taskCreateCache) defaultBucketFor(s *xorm.Session, view *ProjectView) (bucketID int64, err error) {
+func (c *taskCreateState) defaultBucketFor(s *xorm.Session, view *ProjectView) (bucketID int64, err error) {
 	bucketID, has := c.defaultBucket[view.ID]
 	if has {
 		return bucketID, nil
@@ -992,14 +989,17 @@ func (c *taskCreateCache) defaultBucketFor(s *xorm.Session, view *ProjectView) (
 		return 0, err
 	}
 
+	if c.defaultBucket == nil {
+		c.defaultBucket = map[int64]int64{}
+	}
 	c.defaultBucket[view.ID] = bucketID
 	return bucketID, nil
 }
 
 // setNewTaskIndex gives the task the next free index in its project, counting up in memory
 // so a batch asks the database for the highest index once instead of once per task. An
-// index the caller picked is kept unless something already holds it.
-func (c *taskCreateCache) setNewTaskIndex(s *xorm.Session, t *Task) (err error) {
+// index the caller picked is kept unless it is out of range or something already holds it.
+func (c *taskCreateState) setNewTaskIndex(s *xorm.Session, t *Task) (err error) {
 	next, has := c.nextIndex[t.ProjectID]
 	if !has {
 		next, err = calculateNextTaskIndex(s, t.ProjectID)
@@ -1007,6 +1007,9 @@ func (c *taskCreateCache) setNewTaskIndex(s *xorm.Session, t *Task) (err error) 
 			return err
 		}
 	}
+
+	// The field is documented as server assigned but reaches us straight from the request
+	// body, so treat anything outside the plausible range as not supplied.
 
 	// Anything at or above the next free index cannot be taken, so only a lower one is
 	// worth a query - including against soft-deleted tasks, which still hold their index.
@@ -1016,7 +1019,7 @@ func (c *taskCreateCache) setNewTaskIndex(s *xorm.Session, t *Task) (err error) 
 			return err
 		}
 		if !taken {
-			c.nextIndex[t.ProjectID] = next
+			c.setNextIndex(t.ProjectID, next)
 			return nil
 		}
 		t.Index = 0
@@ -1026,8 +1029,17 @@ func (c *taskCreateCache) setNewTaskIndex(s *xorm.Session, t *Task) (err error) 
 		t.Index = next
 	}
 
-	c.nextIndex[t.ProjectID] = t.Index + 1
+	// An index already in the table can sit above the ceiling, so the increment still
+	// needs to be checked for a wrap.
+	c.setNextIndex(t.ProjectID, t.Index+1)
 	return nil
+}
+
+func (c *taskCreateState) setNextIndex(projectID, index int64) {
+	if c.nextIndex == nil {
+		c.nextIndex = map[int64]int64{}
+	}
+	c.nextIndex[projectID] = index
 }
 
 // Create is the implementation to create a project task
@@ -1055,9 +1067,9 @@ type createTaskOpts struct {
 	// skipPositions leaves the task without position rows so the caller can place a
 	// whole batch of tasks relative to each other, see BulkTaskCreate.
 	skipPositions bool
-	// cache lets a caller which already looked a project's views up hand them over
+	// state lets a caller which already looked a project's views up hand them over
 	// instead of having them fetched again. Optional.
-	cache *taskCreateCache
+	state *taskCreateState
 }
 
 func createTask(s *xorm.Session, t *Task, a web.Auth, opts createTaskOpts) (err error) {
@@ -1078,16 +1090,16 @@ func createTasks(s *xorm.Session, tasks []*Task, a web.Auth, opts createTaskOpts
 		return err
 	}
 
-	cache := opts.cache
-	if cache == nil {
-		cache = newTaskCreateCache()
+	state := opts.state
+	if state == nil {
+		state = &taskCreateState{}
 	}
 
 	projectIDs := []int64{}
 	seenProject := map[int64]bool{}
 
 	for _, t := range tasks {
-		err = insertNewTask(s, t, a, createdBy, opts, cache)
+		err = insertNewTask(s, t, a, createdBy, opts, state)
 		if err != nil {
 			return err
 		}
@@ -1108,7 +1120,7 @@ func createTasks(s *xorm.Session, tasks []*Task, a web.Auth, opts createTaskOpts
 	return nil
 }
 
-func insertNewTask(s *xorm.Session, t *Task, a web.Auth, createdBy *user.User, opts createTaskOpts, cache *taskCreateCache) (err error) {
+func insertNewTask(s *xorm.Session, t *Task, a web.Auth, createdBy *user.User, opts createTaskOpts, state *taskCreateState) (err error) {
 
 	t.ID = 0
 
@@ -1122,7 +1134,7 @@ func insertNewTask(s *xorm.Session, t *Task, a web.Auth, createdBy *user.User, o
 	}
 
 	// Check if the project exists
-	p, err := cache.project(s, t.ProjectID)
+	p, err := state.project(s, t.ProjectID)
 	if err != nil {
 		return err
 	}
@@ -1134,7 +1146,7 @@ func insertNewTask(s *xorm.Session, t *Task, a web.Auth, createdBy *user.User, o
 		t.UID = uuid.NewString()
 	}
 
-	err = cache.setNewTaskIndex(s, t)
+	err = state.setNewTaskIndex(s, t)
 	if err != nil {
 		return err
 	}
@@ -1159,7 +1171,7 @@ func insertNewTask(s *xorm.Session, t *Task, a web.Auth, createdBy *user.User, o
 		}
 	}
 
-	positions, taskBuckets, err := setTaskInBucketInViews(s, t, a, opts, providedBucket, cache)
+	positions, taskBuckets, err := setTaskInBucketInViews(s, t, a, opts, providedBucket, state)
 	if err != nil {
 		return err
 	}
@@ -1220,8 +1232,8 @@ func insertNewTask(s *xorm.Session, t *Task, a web.Auth, createdBy *user.User, o
 	return nil
 }
 
-func setTaskInBucketInViews(s *xorm.Session, t *Task, a web.Auth, opts createTaskOpts, providedBucket *Bucket, cache *taskCreateCache) ([]*TaskPosition, []*TaskBucket, error) {
-	views, err := cache.viewsFor(s, t.ProjectID)
+func setTaskInBucketInViews(s *xorm.Session, t *Task, a web.Auth, opts createTaskOpts, providedBucket *Bucket, state *taskCreateState) ([]*TaskPosition, []*TaskBucket, error) {
+	views, err := state.viewsFor(s, t.ProjectID)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -1241,7 +1253,7 @@ func setTaskInBucketInViews(s *xorm.Session, t *Task, a web.Auth, opts createTas
 				if providedBucket != nil && view.ID == providedBucket.ProjectViewID {
 					bucketID = providedBucket.ID
 				} else {
-					bucketID, err = cache.defaultBucketFor(s, view)
+					bucketID, err = state.defaultBucketFor(s, view)
 					if err != nil {
 						return nil, nil, err
 					}

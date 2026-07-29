@@ -72,14 +72,14 @@ func (bt *BulkTaskCreate) Create(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	// Shared with the create below so the views are fetched once for both
-	cache := newTaskCreateCache()
+	state := &taskCreateState{}
 	lowestByView := map[int64]float64{}
 	// makeRoomAtTopOfView locks each view it touches, so walk projects and views in a
 	// stable id order: two batches sharing a project would otherwise be free to grab the
 	// same locks in opposite orders and deadlock.
 	slices.Sort(projectIDs)
 	for _, projectID := range projectIDs {
-		views, err := cache.viewsFor(s, projectID)
+		views, err := state.viewsFor(s, projectID)
 		if err != nil {
 			return err
 		}
@@ -101,7 +101,7 @@ func (bt *BulkTaskCreate) Create(s *xorm.Session, a web.Auth) (err error) {
 		// Positions are set below, for the whole batch at once - one at a time would
 		// place every task at the same spot and leave the order to conflict repair.
 		skipPositions: true,
-		cache:         cache,
+		state:         state,
 	})
 	if err != nil {
 		return err
@@ -109,7 +109,7 @@ func (bt *BulkTaskCreate) Create(s *xorm.Session, a web.Auth) (err error) {
 
 	positions := []*TaskPosition{}
 	for _, projectID := range projectIDs {
-		views, err := cache.viewsFor(s, projectID)
+		views, err := state.viewsFor(s, projectID)
 		if err != nil {
 			return err
 		}
