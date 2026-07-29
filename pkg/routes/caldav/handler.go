@@ -124,7 +124,10 @@ func TaskHandler(c *echo.Context) error {
 			return echo.NewHTTPError(http.StatusInternalServerError, "Internal server error").Wrap(err)
 		}
 
-		body, _ := io.ReadAll(c.Request().Body)
+		body, err := io.ReadAll(c.Request().Body)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "Could not read request body").Wrap(err)
+		}
 		c.Request().Body = io.NopCloser(bytes.NewBuffer(body))
 
 		return handlePropPatch(c, string(body), project, u)
