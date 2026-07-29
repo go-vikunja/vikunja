@@ -17,8 +17,10 @@
 package models
 
 import (
+	"cmp"
 	"fmt"
 	"math"
+	"slices"
 	"sort"
 	"strings"
 
@@ -471,8 +473,11 @@ func makeRoomAtTopOfView(s *xorm.Session, view *ProjectView, count int, a web.Au
 	}
 
 	lowest, has, err := getLowestPositionInView(s, view.ID)
-	if err != nil || !has || count == 0 {
+	if err != nil {
 		return 0, err
+	}
+	if !has {
+		return 0, nil
 	}
 
 	if lowest/float64(count+1) >= MinPositionSpacing {
@@ -511,6 +516,70 @@ func spreadTasksAtTopOfView(tasks []*Task, view *ProjectView, lowest float64) []
 	}
 
 	return positions
+}
+
+// createTasksAtTopOfViews places a batch of tasks above everything the views of their
+// projects already contain, keeping the slice order the tasks have per project.
+//
+// insert has to create the tasks without positions and is called from here because the room
+// must exist before it runs: making room can recalculate a view, which orders by position -
+// tasks already inserted but not positioned yet would land in an arbitrary order.
+//
+// makeRoomAtTopOfView locks each view it touches, so projects and views are walked in a
+// stable id order: two batches sharing a project would otherwise be free to grab the same
+// locks in opposite orders and deadlock.
+func createTasksAtTopOfViews(s *xorm.Session, a web.Auth, tasksByProject map[int64][]*Task, state *taskCreateState, insert func() error) (err error) {
+	projectIDs := make([]int64, 0, len(tasksByProject))
+	for projectID := range tasksByProject {
+		projectIDs = append(projectIDs, projectID)
+	}
+	slices.Sort(projectIDs)
+
+	lowestByView := map[int64]float64{}
+	for _, projectID := range projectIDs {
+		views, err := state.viewsFor(s, projectID)
+		if err != nil {
+			return err
+		}
+
+		// Sorting a copy keeps the shared slice in the position order everything else
+		// relies on - the lock order is only needed here.
+		byID := slices.Clone(views)
+		slices.SortFunc(byID, func(a, b *ProjectView) int {
+			return cmp.Compare(a.ID, b.ID)
+		})
+
+		for _, view := range byID {
+			lowest, err := makeRoomAtTopOfView(s, view, len(tasksByProject[projectID]), a)
+			if err != nil {
+				return err
+			}
+			lowestByView[view.ID] = lowest
+		}
+	}
+
+	err = insert()
+	if err != nil {
+		return err
+	}
+
+	positions := []*TaskPosition{}
+	for _, projectID := range projectIDs {
+		views, err := state.viewsFor(s, projectID)
+		if err != nil {
+			return err
+		}
+		for _, view := range views {
+			positions = append(positions, spreadTasksAtTopOfView(tasksByProject[projectID], view, lowestByView[view.ID])...)
+		}
+	}
+
+	err = bulkInsertTaskPositions(s, positions, false)
+	if err != nil {
+		return err
+	}
+
+	return resolvePositionConflictsAfterInsert(s, positions)
 }
 
 type taskPositionKey struct {

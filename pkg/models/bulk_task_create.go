@@ -17,9 +17,6 @@
 package models
 
 import (
-	"cmp"
-	"slices"
-
 	"code.vikunja.io/api/pkg/web"
 
 	"xorm.io/xorm"
@@ -62,66 +59,22 @@ func (bt *BulkTaskCreate) Create(s *xorm.Session, a web.Auth) (err error) {
 		return ErrBulkTasksNeedAtLeastOne{}
 	}
 
-	projectIDs := []int64{}
 	tasksByProject := map[int64][]*Task{}
 	for _, t := range bt.Tasks {
-		if _, has := tasksByProject[t.ProjectID]; !has {
-			projectIDs = append(projectIDs, t.ProjectID)
-		}
 		tasksByProject[t.ProjectID] = append(tasksByProject[t.ProjectID], t)
 	}
 
-	// Shared with the create below so the views are fetched once for both
+	// Shared with the create so the views are fetched once for both
 	state := &taskCreateState{}
-	lowestByView := map[int64]float64{}
-	// makeRoomAtTopOfView locks each view it touches, so walk projects and views in a
-	// stable id order: two batches sharing a project would otherwise be free to grab the
-	// same locks in opposite orders and deadlock.
-	slices.Sort(projectIDs)
-	for _, projectID := range projectIDs {
-		views, err := state.viewsFor(s, projectID)
-		if err != nil {
-			return err
-		}
-		slices.SortFunc(views, func(a, b *ProjectView) int {
-			return cmp.Compare(a.ID, b.ID)
+
+	return createTasksAtTopOfViews(s, a, tasksByProject, state, func() error {
+		return createTasks(s, bt.Tasks, a, createTaskOpts{
+			updateAssignees: true,
+			setBucket:       true,
+			// Positions are set for the whole batch at once - one at a time would place
+			// every task at the same spot and leave the order to conflict repair.
+			skipPositions: true,
+			state:         state,
 		})
-
-		for _, view := range views {
-			lowestByView[view.ID], err = makeRoomAtTopOfView(s, view, len(tasksByProject[projectID]), a)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	err = createTasks(s, bt.Tasks, a, createTaskOpts{
-		updateAssignees: true,
-		setBucket:       true,
-		// Positions are set below, for the whole batch at once - one at a time would
-		// place every task at the same spot and leave the order to conflict repair.
-		skipPositions: true,
-		state:         state,
 	})
-	if err != nil {
-		return err
-	}
-
-	positions := []*TaskPosition{}
-	for _, projectID := range projectIDs {
-		views, err := state.viewsFor(s, projectID)
-		if err != nil {
-			return err
-		}
-		for _, view := range views {
-			positions = append(positions, spreadTasksAtTopOfView(tasksByProject[projectID], view, lowestByView[view.ID])...)
-		}
-	}
-
-	err = bulkInsertTaskPositions(s, positions, false)
-	if err != nil {
-		return err
-	}
-
-	return resolvePositionConflictsAfterInsert(s, positions)
 }
