@@ -15,6 +15,7 @@ const READ_ONLY_FIELDS = new Set([
 	'attachments',
 	'buckets',
 	'comments',
+	'created_by',
 	'identifier',
 	'index',
 	'labels',
@@ -28,7 +29,7 @@ const READ_ONLY_FIELDS = new Set([
 	'subscription',
 ])
 
-// Nested user models (assignees, created_by) carry a client-only maxPermission, hence recursing.
+// Read-only fields ride on nested models too (every model carries maxPermission), hence recursing.
 function withoutReadOnlyFields<T>(value: T): T {
 	if (Array.isArray(value)) {
 		return value.map(withoutReadOnlyFields) as T
@@ -139,15 +140,12 @@ export default class TaskService extends AbstractService<ITask> {
 		try {
 			// v2 only, so this bypasses the v1 baseURL the rest of this service uses
 			const {data} = await AuthenticatedHTTPFactory().post(apiV2Url('tasks/bulk'), {
-				tasks: tasks.map(task => {
-					// v2 rejects unknown properties: assignee ids only, no created_by user. Kept
-					// out of processModel because v1 echoes both back into its response.
-					const {created_by, ...payload} = this.processModel(task) as unknown as Record<string, unknown>
-					return {
-						...payload,
-						assignees: (task.assignees ?? []).map(({id}) => ({id})),
-					}
-				}),
+				tasks: tasks.map(task => ({
+					...this.processModel(task),
+					// v2 rejects unknown properties, so assignees are reduced to ids. Not done in
+					// processModel because v1 echoes the client's assignee slice back in its response.
+					assignees: (task.assignees ?? []).map(({id}) => ({id})),
+				})),
 			})
 			return data.tasks.map((task: Partial<ITask>) => this.modelCreateFactory(task))
 		} finally {

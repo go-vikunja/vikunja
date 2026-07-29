@@ -539,7 +539,13 @@ export const useTaskStore = defineStore('task', () => {
 		try {
 			const {task, parsedLabels} = await buildTaskFromInput(taskInput)
 			const createdTask = await new TaskService().create(task)
-			return await addLabelsToTask({task: createdTask, parsedLabels})
+			try {
+				// The task exists server-side already, so a failing label write must not hide it from the caller.
+				await addLabelsToTask({task: createdTask, parsedLabels})
+			} catch (e) {
+				error(e)
+			}
+			return createdTask
 		} finally {
 			cancel()
 		}
