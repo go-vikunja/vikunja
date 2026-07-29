@@ -89,6 +89,14 @@ func ProjectHandler(c *echo.Context) error {
 		return handleSyncCollectionReport(c, string(body), storage)
 	}
 
+	// caldav-go has no PROPPATCH dispatch case and falls back to a blanket 501;
+	// intercept it here, same as the sync-collection REPORT above. The home-set
+	// root (project.ID == 0) still falls through to that 501, unhandled for now.
+	if c.Request().Method == "PROPPATCH" && storage.project.ID != 0 {
+		log.Debugf("[CALDAV] PROPPATCH for project %d by user %s", storage.project.ID, u.Username)
+		return handlePropPatch(c, string(body), storage.project, u)
+	}
+
 	caldav.SetupStorage(storage)
 	caldav.SetupUser(strings.TrimPrefix(ProjectHomeSetPath, "/"))
 	caldav.SetupSupportedComponents([]string{lib.VCALENDAR, lib.VTODO})
@@ -100,6 +108,31 @@ func ProjectHandler(c *echo.Context) error {
 // TaskHandler is the handler which manages updating/deleting a single task
 func TaskHandler(c *echo.Context) error {
 	project, err := getProjectFromParam(c)
+
+	// PROPPATCH on a task resource gets the same 207/403 refusal as on a
+	// collection, rather than caldav-go's blanket 501 (see ProjectHandler).
+	if c.Request().Method == "PROPPATCH" {
+		if err != nil && models.IsErrProjectDoesNotExist(err) {
+			return c.String(http.StatusNotFound, "Project not found")
+		}
+		if err != nil {
+			return err
+		}
+
+		u, err := getBasicAuthUserFromContext(c)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "Internal server error").Wrap(err)
+		}
+
+		body, err := io.ReadAll(c.Request().Body)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "Could not read request body").Wrap(err)
+		}
+		c.Request().Body = io.NopCloser(bytes.NewBuffer(body))
+
+		return handlePropPatch(c, string(body), project, u)
+	}
+
 	if err != nil {
 		return err
 	}

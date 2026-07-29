@@ -1117,6 +1117,110 @@ END:VCALENDAR`
 	})
 }
 
+func TestCaldavProppatch(t *testing.T) {
+	const setBody = `<?xml version="1.0" encoding="utf-8" ?>
+<D:propertyupdate xmlns:D="DAV:" xmlns:ICAL="http://apple.com/ns/ical/">
+	<D:set>
+		<D:prop>
+			<D:displayname>My Project</D:displayname>
+			<ICAL:calendar-color>#FF0000FF</ICAL:calendar-color>
+		</D:prop>
+	</D:set>
+</D:propertyupdate>`
+
+	type propstat struct {
+		Status string `xml:"status"`
+	}
+	type response struct {
+		Href      string     `xml:"href"`
+		Propstats []propstat `xml:"propstat"`
+	}
+	type multistatus struct {
+		Responses []response `xml:"response"`
+	}
+
+	t.Run("Set properties on a collection returns 207 with a 403 propstat per property", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		rec, err := newCaldavTestRequestWithUser(t, e, "PROPPATCH", caldav.ProjectHandler, &testuser15, setBody, nil, map[string]string{"project": "36"})
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusMultiStatus, rec.Result().StatusCode)
+
+		body := rec.Body.String()
+		assert.Contains(t, body, "displayname")
+		assert.Contains(t, body, "calendar-color")
+
+		var ms multistatus
+		require.NoError(t, xml.Unmarshal([]byte(body), &ms))
+		require.Len(t, ms.Responses, 1)
+		require.Len(t, ms.Responses[0].Propstats, 2, "one propstat per submitted property")
+		for _, ps := range ms.Responses[0].Propstats {
+			assert.Contains(t, ps.Status, "403")
+		}
+	})
+
+	t.Run("Remove properties on a collection returns 207 with a 403 propstat per property", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		const removeBody = `<?xml version="1.0" encoding="utf-8" ?>
+<D:propertyupdate xmlns:D="DAV:">
+	<D:remove>
+		<D:prop>
+			<D:displayname/>
+		</D:prop>
+	</D:remove>
+</D:propertyupdate>`
+		rec, err := newCaldavTestRequestWithUser(t, e, "PROPPATCH", caldav.ProjectHandler, &testuser15, removeBody, nil, map[string]string{"project": "36"})
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusMultiStatus, rec.Result().StatusCode)
+
+		var ms multistatus
+		require.NoError(t, xml.Unmarshal(rec.Body.Bytes(), &ms))
+		require.Len(t, ms.Responses, 1)
+		require.Len(t, ms.Responses[0].Propstats, 1)
+		assert.Contains(t, ms.Responses[0].Propstats[0].Status, "403")
+	})
+
+	t.Run("Malformed XML body returns 400", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		rec, err := newCaldavTestRequestWithUser(t, e, "PROPPATCH", caldav.ProjectHandler, &testuser15, `this is not xml`, nil, map[string]string{"project": "36"})
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusBadRequest, rec.Result().StatusCode)
+	})
+
+	t.Run("Nonexistent project returns 404", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		rec, err := newCaldavTestRequestWithUser(t, e, "PROPPATCH", caldav.ProjectHandler, &testuser15, setBody, nil, map[string]string{"project": "999999"})
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusNotFound, rec.Result().StatusCode)
+	})
+
+	t.Run("Project without access returns 403", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		// testuser6 has no access to project 36.
+		rec, err := newCaldavTestRequestWithUser(t, e, "PROPPATCH", caldav.ProjectHandler, &testuser6, setBody, nil, map[string]string{"project": "36"})
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusForbidden, rec.Result().StatusCode)
+	})
+
+	t.Run("PROPPATCH on a task resource returns 207 with a 403 propstat", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		rec, err := newCaldavTestRequestWithUser(t, e, "PROPPATCH", caldav.TaskHandler, &testuser15, setBody, nil, map[string]string{"project": "36", "task": "uid-caldav-test"})
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusMultiStatus, rec.Result().StatusCode)
+
+		var ms multistatus
+		require.NoError(t, xml.Unmarshal(rec.Body.Bytes(), &ms))
+		require.Len(t, ms.Responses, 1)
+		require.Len(t, ms.Responses[0].Propstats, 2)
+	})
+
+	t.Run("PROPPATCH on a task resource for a nonexistent project returns 404", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		rec, err := newCaldavTestRequestWithUser(t, e, "PROPPATCH", caldav.TaskHandler, &testuser15, setBody, nil, map[string]string{"project": "999999", "task": "uid-caldav-test"})
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusNotFound, rec.Result().StatusCode)
+	})
+}
+
 func TestCaldavSyncCollection(t *testing.T) {
 	// syncReport builds a sync-collection REPORT body; an empty token becomes
 	// <D:sync-token/> (initial sync).
