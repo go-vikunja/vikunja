@@ -632,7 +632,9 @@ func addRelatedTasksToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]
 
 // sortRelatedTasksByPosition orders every task's related tasks by the position they
 // have in the view being read, so clients rendering subtasks under their parent show
-// them in the same order as the view itself.
+// them in the same order as the view itself. Every relation kind is ordered the same
+// way, not just subtasks: two kinds sorted by different rules in the same response is
+// harder to explain than one rule for all of them.
 //
 // Not every related task has a position to sort by: there is no view at all on the
 // task detail page, in CalDAV and in exports, and a related task living in another
