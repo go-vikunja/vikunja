@@ -479,6 +479,11 @@ func makeRoomAtTopOfView(s *xorm.Session, view *ProjectView, count int, a web.Au
 	if !has {
 		return 0, nil
 	}
+	// Nothing to fit, so never recalculate: lowest/1 would fail the check below for any
+	// view whose first task sits under the minimum spacing.
+	if count == 0 {
+		return 0, nil
+	}
 
 	if lowest/float64(count+1) >= MinPositionSpacing {
 		return lowest, nil
@@ -521,14 +526,23 @@ func spreadTasksAtTopOfView(tasks []*Task, view *ProjectView, lowest float64) []
 // createTasksAtTopOfViews places a batch of tasks above everything the views of their
 // projects already contain, keeping the slice order the tasks have per project.
 //
-// insert has to create the tasks without positions and is called from here because the room
-// must exist before it runs: making room can recalculate a view, which orders by position -
-// tasks already inserted but not positioned yet would land in an arbitrary order.
+// insert has to create exactly the tasks it is handed, without positions, and is called from
+// here because the room must exist before it runs: making room can recalculate a view, which
+// orders by position - tasks already inserted but not positioned yet would land in an
+// arbitrary order. The state it gets is the one used for the view lookups here, so both share
+// the same fetch.
 //
 // makeRoomAtTopOfView locks each view it touches, so projects and views are walked in a
 // stable id order: two batches sharing a project would otherwise be free to grab the same
 // locks in opposite orders and deadlock.
-func createTasksAtTopOfViews(s *xorm.Session, a web.Auth, tasksByProject map[int64][]*Task, state *taskCreateState, insert func() error) (err error) {
+func createTasksAtTopOfViews(s *xorm.Session, a web.Auth, tasks []*Task, insert func(tasks []*Task, state *taskCreateState) error) (err error) {
+	state := &taskCreateState{}
+
+	tasksByProject := map[int64][]*Task{}
+	for _, t := range tasks {
+		tasksByProject[t.ProjectID] = append(tasksByProject[t.ProjectID], t)
+	}
+
 	projectIDs := make([]int64, 0, len(tasksByProject))
 	for projectID := range tasksByProject {
 		projectIDs = append(projectIDs, projectID)
@@ -558,7 +572,7 @@ func createTasksAtTopOfViews(s *xorm.Session, a web.Auth, tasksByProject map[int
 		}
 	}
 
-	err = insert()
+	err = insert(tasks, state)
 	if err != nil {
 		return err
 	}
@@ -841,6 +855,14 @@ func findDuplicatesInPositions(positions []*TaskPosition) [][]*TaskPosition {
 			duplicates = append(duplicates, group)
 		}
 	}
+
+	// Resolving a group moves its tasks up towards the next one, shrinking the gap that
+	// group then has to work with - so the order groups come back in decides whether a view
+	// gets respaced locally or falls back to a full recalculation. Map iteration would make
+	// that differ per run.
+	slices.SortFunc(duplicates, func(a, b []*TaskPosition) int {
+		return cmp.Compare(a[0].Position, b[0].Position)
+	})
 
 	return duplicates
 }

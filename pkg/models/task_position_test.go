@@ -20,11 +20,68 @@ import (
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"xorm.io/builder"
 )
+
+func TestFindDuplicatesInPositions(t *testing.T) {
+	t.Run("returns groups sorted by position", func(t *testing.T) {
+		positions := []*TaskPosition{
+			{TaskID: 1, ProjectViewID: 1, Position: 300},
+			{TaskID: 2, ProjectViewID: 1, Position: 300},
+			{TaskID: 3, ProjectViewID: 1, Position: 100},
+			{TaskID: 4, ProjectViewID: 1, Position: 100},
+			{TaskID: 5, ProjectViewID: 1, Position: 200},
+			{TaskID: 6, ProjectViewID: 1, Position: 200},
+			{TaskID: 7, ProjectViewID: 1, Position: 400},
+		}
+
+		// Run repeatedly: a map-order dependent implementation only fails some of the time.
+		for range 20 {
+			duplicates := findDuplicatesInPositions(positions)
+			require.Len(t, duplicates, 3)
+			assert.InDelta(t, 100.0, duplicates[0][0].Position, 0)
+			assert.InDelta(t, 200.0, duplicates[1][0].Position, 0)
+			assert.InDelta(t, 300.0, duplicates[2][0].Position, 0)
+		}
+	})
+
+	t.Run("no duplicates", func(t *testing.T) {
+		duplicates := findDuplicatesInPositions([]*TaskPosition{
+			{TaskID: 1, ProjectViewID: 1, Position: 100},
+			{TaskID: 2, ProjectViewID: 1, Position: 200},
+		})
+		assert.Empty(t, duplicates)
+	})
+}
+
+func TestMakeRoomAtTopOfView(t *testing.T) {
+	t.Run("does not recalculate for zero tasks", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		viewID := int64(1)
+		_, err := s.Where("project_view_id = ?", viewID).Delete(&TaskPosition{})
+		require.NoError(t, err)
+
+		// Below MinPositionSpacing, so a count of 1 would trigger a recalculation.
+		_, err = s.Insert(&TaskPosition{TaskID: 1, ProjectViewID: viewID, Position: MinPositionSpacing / 2})
+		require.NoError(t, err)
+
+		lowest, err := makeRoomAtTopOfView(s, &ProjectView{ID: viewID}, 0, &user.User{ID: 1})
+		require.NoError(t, err)
+		assert.InDelta(t, 0.0, lowest, 0)
+
+		unchanged := &TaskPosition{}
+		_, err = s.Where("project_view_id = ?", viewID).Get(unchanged)
+		require.NoError(t, err)
+		assert.InDelta(t, MinPositionSpacing/2, unchanged.Position, 0)
+	})
+}
 
 func TestFindPositionConflicts(t *testing.T) {
 	t.Run("no conflicts", func(t *testing.T) {

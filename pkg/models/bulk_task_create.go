@@ -59,16 +59,8 @@ func (bt *BulkTaskCreate) Create(s *xorm.Session, a web.Auth) (err error) {
 		return ErrBulkTasksNeedAtLeastOne{}
 	}
 
-	tasksByProject := map[int64][]*Task{}
-	for _, t := range bt.Tasks {
-		tasksByProject[t.ProjectID] = append(tasksByProject[t.ProjectID], t)
-	}
-
-	// Shared with the create so the views are fetched once for both
-	state := &taskCreateState{}
-
-	return createTasksAtTopOfViews(s, a, tasksByProject, state, func() error {
-		return createTasks(s, bt.Tasks, a, createTaskOpts{
+	return createTasksAtTopOfViews(s, a, bt.Tasks, func(tasks []*Task, state *taskCreateState) error {
+		return createTasks(s, tasks, a, createTaskOpts{
 			updateAssignees: true,
 			setBucket:       true,
 			// Positions are set for the whole batch at once - one at a time would place
