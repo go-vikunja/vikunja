@@ -932,6 +932,11 @@ func calculateNextTaskIndex(s *xorm.Session, projectID int64) (nextIndex int64, 
 	return latestTask.Index + 1, nil
 }
 
+// maxTaskIndex is the highest index a caller may pick. The column is a bigint, but no
+// project will ever hold this many tasks - staying this far below the type's limit keeps
+// a picked index from pushing the counter into an overflow, which would wrap to negative
+// and then collide with every following task on the unique index.
+const maxTaskIndex = 1_000_000_000
 
 // taskCreateState holds everything createTasks would otherwise look up again for every
 // task of the same project, and hands out the next free index per project.
@@ -1010,6 +1015,9 @@ func (c *taskCreateState) setNewTaskIndex(s *xorm.Session, t *Task) (err error) 
 
 	// The field is documented as server assigned but reaches us straight from the request
 	// body, so treat anything outside the plausible range as not supplied.
+	if t.Index < 0 || t.Index > maxTaskIndex {
+		t.Index = 0
+	}
 
 	// Anything at or above the next free index cannot be taken, so only a lower one is
 	// worth a query - including against soft-deleted tasks, which still hold their index.
@@ -1031,7 +1039,9 @@ func (c *taskCreateState) setNewTaskIndex(s *xorm.Session, t *Task) (err error) 
 
 	// An index already in the table can sit above the ceiling, so the increment still
 	// needs to be checked for a wrap.
-	c.setNextIndex(t.ProjectID, t.Index+1)
+	if t.Index < math.MaxInt64 {
+		c.setNextIndex(t.ProjectID, t.Index+1)
+	}
 	return nil
 }
 

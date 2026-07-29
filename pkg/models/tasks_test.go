@@ -18,6 +18,7 @@ package models
 
 import (
 	"context"
+	"math"
 	"testing"
 	"time"
 
@@ -1533,6 +1534,42 @@ func TestGetTaskByProjectAndIndex(t *testing.T) {
 		require.Error(t, err)
 		assert.True(t, IsErrTaskDoesNotExist(err))
 	})
+}
+
+func TestTaskIndexOutOfRange(t *testing.T) {
+	usr := &user.User{ID: 1, Username: "user1", Email: "user1@example.com"}
+
+	// Project 1's highest index is 34, held by the soft-deleted task 51.
+	tests := []struct {
+		name          string
+		suppliedIndex int64
+		wantIndex     int64
+	}{
+		{"max int64", math.MaxInt64, 35},
+		{"above the ceiling", maxTaskIndex + 1, 35},
+		{"negative", -5, 35},
+		{"plausible index is kept", 100, 100},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
+			task := &Task{Title: "Lorem", ProjectID: 1, Index: tt.suppliedIndex}
+			require.NoError(t, task.Create(s, usr))
+			assert.Equal(t, tt.wantIndex, task.Index)
+
+			// The counter must keep working afterwards instead of wrapping into a
+			// duplicate index.
+			next := &Task{Title: "Ipsum", ProjectID: 1}
+			require.NoError(t, next.Create(s, usr))
+			assert.Equal(t, tt.wantIndex+1, next.Index)
+
+			require.NoError(t, s.Commit())
+		})
+	}
 }
 
 func TestTaskIndexUniqueConstraint(t *testing.T) {
