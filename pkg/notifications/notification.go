@@ -18,6 +18,7 @@ package notifications
 
 import (
 	"encoding/json"
+	"slices"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
@@ -52,6 +53,26 @@ type Titler interface {
 	ToTitle(lang string) string
 }
 
+// ProjectID reports the project a notification is about, 0 if it is
+// account-scoped, ProjectIDUnresolved if it is about a project it cannot name.
+type ProjectID interface {
+	ProjectID() int64
+}
+
+// ProjectIDUnresolved marks a project-scoped notification whose project could
+// not be determined. 0 would make the row account-scoped and hand its payload
+// back unchecked.
+const ProjectIDUnresolved int64 = -1
+
+// ProjectIDOf returns the project a notification is about, or 0 for the
+// account-scoped types that do not implement ProjectID.
+func ProjectIDOf(n Notification) int64 {
+	if p, is := n.(ProjectID); is {
+		return p.ProjectID()
+	}
+	return 0
+}
+
 var registry = map[string]func() Notification{}
 
 // Register makes a notification type discoverable by name. It should be
@@ -73,6 +94,16 @@ func Lookup(name string) (Notification, bool) {
 		return nil, false
 	}
 	return f(), true
+}
+
+// RegisteredNames returns every registered notification name, sorted.
+func RegisteredNames() []string {
+	names := make([]string, 0, len(registry))
+	for name := range registry {
+		names = append(names, name)
+	}
+	slices.Sort(names)
+	return names
 }
 
 // Notifiable is an entity which can be notified. Usually a user.
@@ -170,6 +201,7 @@ func notifyDB(notifiable Notifiable, notification Notification, existingSession 
 	if subject, is := notification.(SubjectID); is {
 		dbNotification.SubjectID = subject.SubjectID()
 	}
+	dbNotification.ProjectID = ProjectIDOf(notification)
 
 	if existingSession != nil {
 		_, err = existingSession.Insert(dbNotification)

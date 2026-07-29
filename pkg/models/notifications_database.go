@@ -36,7 +36,7 @@ type DatabaseNotifications struct {
 
 // ReadAll returns all database notifications for a user
 // @Summary Get all notifications for the current user
-// @Description Returns an array with all notifications for the current user.
+// @Description Returns an array with all notifications for the current user. Notifications about a project the current user can no longer read are omitted; the filtering happens in the query, so paging and the `x-pagination-*` headers all describe the visible notifications only.
 // @tags subscriptions
 // @Accept json
 // @Produce json
@@ -53,7 +53,7 @@ func (d *DatabaseNotifications) ReadAll(s *xorm.Session, a web.Auth, _ string, p
 	}
 
 	limit, start := getLimitFromPageIndex(page, perPage)
-	ns, resultCount, total, err := notifications.GetNotificationsForUser(s, a.GetID(), limit, start)
+	ns, resultCount, total, err := notifications.GetNotificationsForUser(s, a.GetID(), NotificationProjectFilter(a), limit, start)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -68,7 +68,13 @@ func (d *DatabaseNotifications) CanUpdate(s *xorm.Session, a web.Auth) (bool, er
 		return false, nil
 	}
 
-	return notifications.CanMarkNotificationAsRead(s, &d.DatabaseNotification, a.GetID())
+	can, err := notifications.CanMarkNotificationAsRead(s, &d.DatabaseNotification, a.GetID())
+	if err != nil || !can {
+		return can, err
+	}
+
+	// Marking a notification read echoes its payload back, so it needs the read check too.
+	return CanReadNotification(s, a, &d.DatabaseNotification)
 }
 
 // Update marks a notification as read.

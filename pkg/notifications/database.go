@@ -17,11 +17,13 @@
 package notifications
 
 import (
+	"errors"
 	"time"
 
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 
+	"xorm.io/builder"
 	"xorm.io/xorm"
 )
 
@@ -38,6 +40,9 @@ type DatabaseNotification struct {
 	Name string `xorm:"varchar(250) index not null" json:"name" readOnly:"true" doc:"The name identifying the kind of notification."`
 	// The thing the notification is about. Used to check if a notification for this thing already happened or not.
 	SubjectID int64 `xorm:"bigint null" json:"-"`
+	// 0 is account-scoped and always visible, > 0 needs read access to that
+	// project, ProjectIDUnresolved (-1) is visible to nobody.
+	ProjectID int64 `xorm:"bigint index not null default 0" json:"-"`
 
 	// When this notification is marked as read, this will be updated with the current timestamp.
 	ReadAt time.Time `xorm:"datetime null" json:"read_at" readOnly:"true" doc:"When the notification was marked read; zero value while unread. Set via the read flag, not written directly."`
@@ -79,9 +84,18 @@ func (d *DatabaseNotification) TableName() string {
 // GetNotificationsForUser returns all notifications for a user. It is possible to limit the amount of notifications
 // to return with the limit and start parameters.
 // We're not passing a user object in directly because every other package imports this one so we'd get import cycles.
-func GetNotificationsForUser(s *xorm.Session, notifiableID int64, limit, start int) (notifications []*DatabaseNotification, resultCount int, total int64, err error) {
+//
+// projectFilter is built by models and applied inside the query, so limit/start
+// and total all describe the rows the caller may read.
+func GetNotificationsForUser(s *xorm.Session, notifiableID int64, projectFilter builder.Cond, limit, start int) (notifications []*DatabaseNotification, resultCount int, total int64, err error) {
+	if projectFilter == nil {
+		return nil, 0, 0, errors.New("notifications cannot be read without a project filter")
+	}
+
+	cond := builder.And(builder.Eq{"notifiable_id": notifiableID}, projectFilter)
+
 	err = s.
-		Where("notifiable_id = ?", notifiableID).
+		Where(cond).
 		Limit(limit, start).
 		OrderBy("id DESC").
 		Find(&notifications)
@@ -90,7 +104,7 @@ func GetNotificationsForUser(s *xorm.Session, notifiableID int64, limit, start i
 	}
 
 	total, err = s.
-		Where("notifiable_id = ?", notifiableID).
+		Where(cond).
 		Count(&DatabaseNotification{})
 	return notifications, len(notifications), total, err
 }
