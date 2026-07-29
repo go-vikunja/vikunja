@@ -44,6 +44,12 @@ func getBasicAuthUserFromContext(c *echo.Context) (*user.User, error) {
 	return u, nil
 }
 
+// caldav-go renders current-user-principal as "/<name>/", so pass the path
+// without surrounding slashes or the href ends up with a double slash.
+func setupUser(path string) {
+	caldav.SetupUser(strings.Trim(path, "/"))
+}
+
 // ProjectHandler returns all tasks from a project
 func ProjectHandler(c *echo.Context) error {
 	project, err := getProjectFromParam(c)
@@ -98,7 +104,7 @@ func ProjectHandler(c *echo.Context) error {
 	}
 
 	caldav.SetupStorage(storage)
-	caldav.SetupUser(strings.TrimPrefix(ProjectHomeSetPath, "/"))
+	setupUser(ProjectHomeSetPath)
 	caldav.SetupSupportedComponents([]string{lib.VCALENDAR, lib.VTODO})
 	response := caldav.HandleRequest(c.Request())
 	response.Write(c.Response())
@@ -194,7 +200,7 @@ func PrincipalHandler(c *echo.Context) error {
 	log.Debugf("[CALDAV] Request Headers: %v\n", c.Request().Header)
 
 	caldav.SetupStorage(storage)
-	caldav.SetupUser(strings.TrimPrefix(principalPathForUser(u.Username), "/"))
+	setupUser(principalPathForUser(u.Username))
 	caldav.SetupSupportedComponents([]string{lib.VCALENDAR, lib.VTODO})
 
 	response := caldav.HandleRequest(c.Request())
@@ -223,7 +229,7 @@ func EntryHandler(c *echo.Context) error {
 	log.Debugf("[CALDAV] Request Headers: %v\n", c.Request().Header)
 
 	caldav.SetupStorage(storage)
-	caldav.SetupUser(strings.TrimPrefix(principalPathForUser(u.Username), "/"))
+	setupUser(principalPathForUser(u.Username))
 	caldav.SetupSupportedComponents([]string{lib.VCALENDAR, lib.VTODO})
 
 	response := caldav.HandleRequest(c.Request())
