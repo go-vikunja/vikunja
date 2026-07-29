@@ -358,16 +358,21 @@ func duplicateTasks(s *xorm.Session, doer web.Auth, ld *ProjectDuplicate) (newTa
 	// Create + update all tasks (includes reminders)
 	oldTaskIDs := make([]int64, 0, len(tasks))
 	for _, t := range tasks {
-		oldID := t.ID
+		oldTaskIDs = append(oldTaskIDs, t.ID)
 		t.ID = 0
 		t.ProjectID = ld.Project.ID
 		t.UID = ""
-		err = createTask(s, t, doer, createTaskOpts{})
-		if err != nil {
-			return nil, err
-		}
-		newTaskIDs[oldID] = t.ID
-		oldTaskIDs = append(oldTaskIDs, oldID)
+	}
+
+	// All in one call so the new project, its views and their buckets are looked up once
+	// for the whole set instead of once per task
+	err = createTasks(s, tasks, doer, createTaskOpts{})
+	if err != nil {
+		return nil, err
+	}
+
+	for i, t := range tasks {
+		newTaskIDs[oldTaskIDs[i]] = t.ID
 	}
 
 	log.Debugf("Duplicated all tasks from project %d into %d", ld.ProjectID, ld.Project.ID)
