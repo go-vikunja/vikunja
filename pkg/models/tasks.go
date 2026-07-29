@@ -17,6 +17,8 @@
 package models
 
 import (
+	"errors"
+	"fmt"
 	"math"
 	"regexp"
 	"sort"
@@ -929,14 +931,22 @@ func calculateNextTaskIndex(s *xorm.Session, projectID int64) (nextIndex int64, 
 		return 0, err
 	}
 
+	// A project can still hold an index above the ceiling from before it was enforced.
+	// Counting up from there would eventually wrap the column into negative indexes,
+	// colliding with every following task on the unique index, so refuse instead.
+	if latestTask.Index >= maxTaskIndex {
+		return 0, fmt.Errorf("cannot assign an index in project %d: %w", projectID, errMaxTaskIndexReached)
+	}
+
 	return latestTask.Index + 1, nil
 }
 
-// maxTaskIndex is the highest index a caller may pick. The column is a bigint, but no
-// project will ever hold this many tasks - staying this far below the type's limit keeps
-// a picked index from pushing the counter into an overflow, which would wrap to negative
-// and then collide with every following task on the unique index.
+// maxTaskIndex is the ceiling for task indexes. The column is a bigint, but no project will
+// ever hold this many tasks - staying this far below the type's limit keeps the counter from
+// overflowing into negative indexes.
 const maxTaskIndex = 1_000_000_000
+
+var errMaxTaskIndexReached = errors.New("the highest task index in this project has reached its maximum")
 
 // taskCreateState holds everything createTasks would otherwise look up again for every
 // task of the same project, and hands out the next free index per project.
@@ -1002,9 +1012,8 @@ func (c *taskCreateState) defaultBucketFor(s *xorm.Session, view *ProjectView) (
 }
 
 // setNewTaskIndex gives the task the next free index in its project, counting up in memory
-// so a batch asks the database for the highest index once instead of once per task. An
-// index the caller picked is kept unless it is out of range or something already holds it.
-func (c *taskCreateState) setNewTaskIndex(s *xorm.Session, t *Task) (err error) {
+// so a batch asks the database for the highest index once instead of once per task.
+func (c *taskCreateState) setNewTaskIndex(s *xorm.Session, t *Task, preserveIndex bool) (err error) {
 	next, has := c.nextIndex[t.ProjectID]
 	if !has {
 		next, err = calculateNextTaskIndex(s, t.ProjectID)
@@ -1012,10 +1021,13 @@ func (c *taskCreateState) setNewTaskIndex(s *xorm.Session, t *Task) (err error) 
 			return err
 		}
 	}
+	if next > maxTaskIndex {
+		return fmt.Errorf("cannot assign an index in project %d: %w", t.ProjectID, errMaxTaskIndexReached)
+	}
 
-	// The field is documented as server assigned but reaches us straight from the request
-	// body, so treat anything outside the plausible range as not supplied.
-	if t.Index < 0 || t.Index > maxTaskIndex {
+	// Index is documented as server assigned but reaches us straight from the request body,
+	// so a caller-picked value only survives where it is explicitly asked for.
+	if !preserveIndex || t.Index < 0 || t.Index > maxTaskIndex {
 		t.Index = 0
 	}
 
@@ -1037,11 +1049,7 @@ func (c *taskCreateState) setNewTaskIndex(s *xorm.Session, t *Task) (err error) 
 		t.Index = next
 	}
 
-	// An index already in the table can sit above the ceiling, so the increment still
-	// needs to be checked for a wrap.
-	if t.Index < math.MaxInt64 {
-		c.setNextIndex(t.ProjectID, t.Index+1)
-	}
+	c.setNextIndex(t.ProjectID, t.Index+1)
 	return nil
 }
 
@@ -1077,6 +1085,10 @@ type createTaskOpts struct {
 	// skipPositions leaves the task without position rows so the caller can place a
 	// whole batch of tasks relative to each other, see BulkTaskCreate.
 	skipPositions bool
+	// preserveIndex keeps the index the caller set instead of assigning a fresh one. Only
+	// for tasks copied from existing ones (project duplication) - never for anything which
+	// can carry a value from a request body.
+	preserveIndex bool
 	// state lets a caller which already looked a project's views up hand them over
 	// instead of having them fetched again. Optional.
 	state *taskCreateState
@@ -1156,7 +1168,7 @@ func insertNewTask(s *xorm.Session, t *Task, a web.Auth, createdBy *user.User, o
 		t.UID = uuid.NewString()
 	}
 
-	err = state.setNewTaskIndex(s, t)
+	err = state.setNewTaskIndex(s, t, opts.preserveIndex)
 	if err != nil {
 		return err
 	}

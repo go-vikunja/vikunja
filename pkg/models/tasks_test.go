@@ -19,6 +19,7 @@ package models
 import (
 	"context"
 	"math"
+	"strconv"
 	"testing"
 	"time"
 
@@ -30,6 +31,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"xorm.io/builder"
+	"xorm.io/xorm"
 )
 
 func TestTask_Create(t *testing.T) {
@@ -1536,40 +1538,69 @@ func TestGetTaskByProjectAndIndex(t *testing.T) {
 	})
 }
 
-func TestTaskIndexOutOfRange(t *testing.T) {
+func TestTaskIndex(t *testing.T) {
 	usr := &user.User{ID: 1, Username: "user1", Email: "user1@example.com"}
 
 	// Project 1's highest index is 34, held by the soft-deleted task 51.
-	tests := []struct {
-		name          string
-		suppliedIndex int64
-		wantIndex     int64
-	}{
-		{"max int64", math.MaxInt64, 35},
-		{"above the ceiling", maxTaskIndex + 1, 35},
-		{"negative", -5, 35},
-		{"plausible index is kept", 100, 100},
+	t.Run("supplied index is ignored", func(t *testing.T) {
+		for _, suppliedIndex := range []int64{math.MaxInt64, maxTaskIndex + 1, maxTaskIndex, -5, 100, 1} {
+			t.Run(strconv.FormatInt(suppliedIndex, 10), func(t *testing.T) {
+				db.LoadAndAssertFixtures(t)
+				s := db.NewSession()
+				defer s.Close()
+
+				task := &Task{Title: "Lorem", ProjectID: 1, Index: suppliedIndex}
+				require.NoError(t, task.Create(s, usr))
+				assert.Equal(t, int64(35), task.Index)
+
+				next := &Task{Title: "Ipsum", ProjectID: 1}
+				require.NoError(t, next.Create(s, usr))
+				assert.Equal(t, int64(36), next.Index)
+
+				require.NoError(t, s.Commit())
+			})
+		}
+	})
+
+	t.Run("duplication preserves indexes", func(t *testing.T) {
+		files.InitTestFileFixtures(t)
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		duplicate := &ProjectDuplicate{ProjectID: 1}
+		_, err := duplicate.CanCreate(s, usr)
+		require.NoError(t, err)
+		require.NoError(t, duplicate.Create(s, usr))
+
+		assert.Equal(t, taskIndexesInProject(t, s, 1), taskIndexesInProject(t, s, duplicate.Project.ID))
+
+		require.NoError(t, s.Commit())
+	})
+
+	t.Run("index at the ceiling", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// A row from before the ceiling was enforced must not push the counter over it.
+		_, err := s.Insert(&Task{Title: "Lorem", ProjectID: 1, Index: maxTaskIndex, CreatedByID: 1})
+		require.NoError(t, err)
+
+		err = (&Task{Title: "Ipsum", ProjectID: 1}).Create(s, usr)
+		require.ErrorIs(t, err, errMaxTaskIndexReached)
+	})
+}
+
+func taskIndexesInProject(t *testing.T, s *xorm.Session, projectID int64) []int64 {
+	tasks := []*Task{}
+	require.NoError(t, s.Where("project_id = ?", projectID).OrderBy("`index`").Find(&tasks))
+
+	indexes := make([]int64, 0, len(tasks))
+	for _, task := range tasks {
+		indexes = append(indexes, task.Index)
 	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			db.LoadAndAssertFixtures(t)
-			s := db.NewSession()
-			defer s.Close()
-
-			task := &Task{Title: "Lorem", ProjectID: 1, Index: tt.suppliedIndex}
-			require.NoError(t, task.Create(s, usr))
-			assert.Equal(t, tt.wantIndex, task.Index)
-
-			// The counter must keep working afterwards instead of wrapping into a
-			// duplicate index.
-			next := &Task{Title: "Ipsum", ProjectID: 1}
-			require.NoError(t, next.Create(s, usr))
-			assert.Equal(t, tt.wantIndex+1, next.Index)
-
-			require.NoError(t, s.Commit())
-		})
-	}
+	return indexes
 }
 
 func TestTaskIndexUniqueConstraint(t *testing.T) {

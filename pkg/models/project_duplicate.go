@@ -365,8 +365,9 @@ func duplicateTasks(s *xorm.Session, doer web.Auth, ld *ProjectDuplicate) (newTa
 	}
 
 	// All in one call so the new project, its views and their buckets are looked up once
-	// for the whole set instead of once per task
-	err = createTasks(s, tasks, doer, createTaskOpts{})
+	// for the whole set instead of once per task. preserveIndex so task numbering - and the
+	// task identifiers users refer to - stays the same in the copy.
+	err = createTasks(s, tasks, doer, createTaskOpts{preserveIndex: true})
 	if err != nil {
 		return nil, err
 	}
