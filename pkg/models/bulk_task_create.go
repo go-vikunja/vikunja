@@ -87,15 +87,8 @@ func (bt *BulkTaskCreate) Create(s *xorm.Session, a web.Auth) (err error) {
 		})
 		viewsByProject[projectID] = views
 
-		var needSlot int
-		for _, t := range tasksByProject[projectID] {
-			if t.Position == 0 {
-				needSlot++
-			}
-		}
-
 		for _, view := range views {
-			lowestByView[view.ID], err = makeRoomAtTopOfView(s, view, needSlot, a)
+			lowestByView[view.ID], err = makeRoomAtTopOfView(s, view, len(tasksByProject[projectID]), a)
 			if err != nil {
 				return err
 			}

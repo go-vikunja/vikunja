@@ -79,15 +79,13 @@ func TestBulkTaskCreate_Create(t *testing.T) {
 		require.NoError(t, bt.Create(s, u))
 
 		// View 2 of project 1 has no positioned tasks at all
-		positions := positionsOf(t, s, 2, bt.Tasks)
 		assert.Equal(t, []float64{
-			float64(bt.Tasks[0].Index) * math.Pow(2, 16),
-			float64(bt.Tasks[1].Index) * math.Pow(2, 16),
-		}, positions)
-		assert.Less(t, positions[0], positions[1])
+			math.Pow(2, 16),
+			2 * math.Pow(2, 16),
+		}, positionsOf(t, s, 2, bt.Tasks))
 	})
 
-	t.Run("keeps a position the caller passed", func(t *testing.T) {
+	t.Run("ignores a position the caller passed", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
@@ -99,9 +97,8 @@ func TestBulkTaskCreate_Create(t *testing.T) {
 
 		require.NoError(t, bt.Create(s, u))
 
-		// The passed position does not take up a slot, so the other task is placed as if
-		// it were the only one in the batch
-		assert.Equal(t, []float64{12345, 1}, positionsOf(t, s, 1, bt.Tasks))
+		// Positions are the server's to hand out, the same as for a single create
+		assert.Equal(t, []float64{2.0 / 3, 4.0 / 3}, positionsOf(t, s, 1, bt.Tasks))
 	})
 
 	t.Run("numbers and places tasks per project", func(t *testing.T) {
@@ -124,7 +121,7 @@ func TestBulkTaskCreate_Create(t *testing.T) {
 		// Project 22 already holds two tasks, so it numbers its own and places the task in
 		// its own views
 		assert.Equal(t, int64(3), bt.Tasks[1].Index)
-		assert.Equal(t, []float64{3 * math.Pow(2, 16)}, positionsOf(t, s, 85, []*Task{bt.Tasks[1]}))
+		assert.Equal(t, []float64{math.Pow(2, 16)}, positionsOf(t, s, 85, []*Task{bt.Tasks[1]}))
 	})
 
 	t.Run("recalculates when the gap is too small for the batch", func(t *testing.T) {

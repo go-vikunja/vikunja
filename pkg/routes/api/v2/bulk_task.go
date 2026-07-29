@@ -47,7 +47,7 @@ func RegisterBulkTaskRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "tasks-bulk-create",
 		Summary:     "Bulk create tasks",
-		Description: "Creates all tasks in the body at once, each in the project it names. They are placed above everything their views already contain, in the order they were passed in, so a client does not have to compute positions to keep a batch ordered; a task carrying a position of its own keeps it. The user needs write access to every project involved; if write is missing on even one, or if creating any task fails, nothing is created at all. Task relations are not part of this endpoint - create them afterwards.",
+		Description: "Creates all tasks in the body at once, each in the project it names. They are placed above everything their views already contain, in the order they were passed in, so a client does not have to compute positions to keep a batch ordered; the position of a task is picked by the server, as everywhere else. The user needs write access to every project involved; if write is missing on even one, or if creating any task fails, nothing is created at all. Task relations are not part of this endpoint - create them afterwards.",
 		Method:      http.MethodPost,
 		Path:        "/tasks/bulk",
 		Tags:        tags,

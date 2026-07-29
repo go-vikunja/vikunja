@@ -489,41 +489,24 @@ func makeRoomAtTopOfView(s *xorm.Session, view *ProjectView, count int, a web.Au
 }
 
 // spreadTasksAtTopOfView places tasks in the gap above the view's first task, in slice
-// order, so a batch of tasks created together keeps the order it was passed in. Tasks
-// carrying a position of their own keep it and do not take up a slot.
+// order, so a batch of tasks placed together keeps the order it was passed in.
 //
-// lowest is what makeRoomAtTopOfView returned for this view; 0 means there is nothing to
-// insert above and the tasks fall back to the same default a single create would get.
+// lowest is what makeRoomAtTopOfView returned for this view. 0 means there is nothing to
+// insert above, so the tasks start at the default spacing instead. Counting them off by
+// their slice position rather than their task index keeps them apart in a view spanning
+// several projects, where indexes repeat.
 func spreadTasksAtTopOfView(tasks []*Task, view *ProjectView, lowest float64) []*TaskPosition {
-	var needSlot int
-	for _, t := range tasks {
-		if t.Position == 0 {
-			needSlot++
-		}
-	}
-
-	var spacing float64
-	if lowest > 0 && needSlot > 0 {
-		spacing = lowest / float64(needSlot+1)
+	spacing := lowest / float64(len(tasks)+1)
+	if lowest == 0 {
+		spacing = math.Pow(2, 16)
 	}
 
 	positions := make([]*TaskPosition, 0, len(tasks))
-	var placed int
-	for _, t := range tasks {
-		position := t.Position
-		if position == 0 {
-			if spacing > 0 {
-				placed++
-				position = spacing * float64(placed)
-			} else {
-				position = calculateDefaultPosition(t.Index, 0)
-			}
-		}
-
+	for i, t := range tasks {
 		positions = append(positions, &TaskPosition{
 			TaskID:        t.ID,
 			ProjectViewID: view.ID,
-			Position:      position,
+			Position:      spacing * float64(i+1),
 		})
 	}
 
