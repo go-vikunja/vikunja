@@ -96,8 +96,8 @@ func TestBulkTaskCreateV2(t *testing.T) {
 		require.NoError(t, err)
 		token := humaTokenFor(t, &testuser1)
 
-		tasks := make([]string, 0, 101)
-		for range 101 {
+		tasks := make([]string, 0, 201)
+		for range 201 {
 			tasks = append(tasks, `{"title":"too many","project_id":1}`)
 		}
 

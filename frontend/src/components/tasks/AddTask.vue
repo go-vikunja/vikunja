@@ -82,7 +82,7 @@ import {useAutoHeightTextarea} from '@/composables/useAutoHeightTextarea'
 const emit = defineEmits(['taskAdded'])
 
 // Mirrors maxItems on BulkTaskCreate.Tasks in pkg/models/bulk_task_create.go
-const MAX_TASKS_PER_BATCH = 100
+const MAX_TASKS_PER_BATCH = 200
 
 const textareaId = computed(() => `task-add-textarea-${Math.random().toString(36).substr(2, 9)}`)
 

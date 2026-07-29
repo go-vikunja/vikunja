@@ -27,7 +27,7 @@ import (
 
 // BulkTaskCreate represents a bulk task creation payload.
 type BulkTaskCreate struct {
-	Tasks []*Task `json:"tasks" minItems:"1" maxItems:"100" doc:"The tasks to create, each with the project to create it in. Slice order is the order the tasks end up in: they are placed above everything the views already contain, keeping the order they were passed in."`
+	Tasks []*Task `json:"tasks" minItems:"1" maxItems:"200" doc:"The tasks to create, each with the project to create it in. Slice order is the order the tasks end up in: they are placed above everything the views already contain, keeping the order they were passed in."`
 
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
