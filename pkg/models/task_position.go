@@ -584,29 +584,12 @@ func createPositionsForTasksInView(s *xorm.Session, tasks []*Task, view *Project
 		return nil
 	}
 
-	// Get the current lowest position to place new tasks at the top
-	basePosition, has, err := getLowestPositionInView(s, view.ID)
+	lowest, err := makeRoomAtTopOfView(s, view, len(tasks), a)
 	if err != nil {
 		return err
 	}
 
-	if !has || basePosition < MinPositionSpacing {
-		return RecalculateTaskPositions(s, view, a)
-	}
-
-	// Place new tasks before the lowest position, evenly spaced
-	spacing := basePosition / float64(len(tasks)+1)
-
-	newPositions := make([]*TaskPosition, 0, len(tasks))
-	for i, task := range tasks {
-		newPositions = append(newPositions, &TaskPosition{
-			TaskID:        task.ID,
-			ProjectViewID: view.ID,
-			Position:      spacing * float64(i+1),
-		})
-	}
-
-	return bulkInsertTaskPositions(s, newPositions, false)
+	return bulkInsertTaskPositions(s, spreadTasksAtTopOfView(tasks, view, lowest), false)
 }
 
 // ensureTaskPositionsForSavedFilterView creates position rows for all tasks matching a saved
