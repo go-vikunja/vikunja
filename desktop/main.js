@@ -585,7 +585,6 @@ app.whenReady().then(() => {
 
 	startServer(() => {
 		createMainWindow()
-		createQuickEntryWindow()
 		setupTray()
 
 		registerQuickEntryShortcut(DEFAULT_QUICK_ENTRY_SHORTCUT)
