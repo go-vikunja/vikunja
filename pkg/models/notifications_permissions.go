@@ -38,6 +38,12 @@ func (n *UserMentionedInTaskNotification) ProjectID() int64 {
 
 func (n *ProjectCreatedNotification) ProjectID() int64 { return notificationProjectID(nil, n.Project) }
 
+func (n *TeamMemberAddedNotification) ProjectID() int64 { return 0 }
+
+func (n *APITokenExpiringWeekNotification) ProjectID() int64 { return 0 }
+
+func (n *APITokenExpiringDayNotification) ProjectID() int64 { return 0 }
+
 func notificationProjectID(t *Task, p *Project) int64 {
 	if p != nil && p.ID > 0 {
 		return p.ID

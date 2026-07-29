@@ -33,13 +33,13 @@ import (
 )
 
 func init() {
-	notifications.Register(func() notifications.Notification { return &ReminderDueNotification{} })
-	notifications.Register(func() notifications.Notification { return &TaskCommentNotification{} })
-	notifications.Register(func() notifications.Notification { return &TaskAssignedNotification{} })
-	notifications.Register(func() notifications.Notification { return &TaskDeletedNotification{} })
-	notifications.Register(func() notifications.Notification { return &ProjectCreatedNotification{} })
-	notifications.Register(func() notifications.Notification { return &TeamMemberAddedNotification{} })
-	notifications.Register(func() notifications.Notification { return &UserMentionedInTaskNotification{} })
+	notifications.Register(func() notifications.PersistedNotification { return &ReminderDueNotification{} })
+	notifications.Register(func() notifications.PersistedNotification { return &TaskCommentNotification{} })
+	notifications.Register(func() notifications.PersistedNotification { return &TaskAssignedNotification{} })
+	notifications.Register(func() notifications.PersistedNotification { return &TaskDeletedNotification{} })
+	notifications.Register(func() notifications.PersistedNotification { return &ProjectCreatedNotification{} })
+	notifications.Register(func() notifications.PersistedNotification { return &TeamMemberAddedNotification{} })
+	notifications.Register(func() notifications.PersistedNotification { return &UserMentionedInTaskNotification{} })
 }
 
 // getDoerAvatarDataURI returns the avatar data URI for a user, for use in email headers.

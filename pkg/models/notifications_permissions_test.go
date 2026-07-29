@@ -193,16 +193,13 @@ func TestNotificationScopeClassification(t *testing.T) {
 			require.NotEqual(t, inProject, inAccount,
 				"%q must be listed in exactly one of projectScoped and accountScoped in this test", name)
 
-			_, implements := n.(notifications.ProjectID)
-			require.Equal(t, inProject, implements,
-				"%q must implement notifications.ProjectID if and only if it is about a project", name)
-
 			// A fresh instance names no project, so a project-scoped type must fail closed.
 			want := int64(0)
 			if inProject {
 				want = notifications.ProjectIDUnresolved
 			}
-			assert.Equal(t, want, notifications.ProjectIDOf(n))
+			assert.Equal(t, want, notifications.ProjectIDOf(n),
+				"%q must report 0 if and only if it is account-scoped", name)
 		})
 	}
 }
