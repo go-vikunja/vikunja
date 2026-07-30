@@ -202,7 +202,6 @@ require (
 	go.opentelemetry.io/otel/metric v1.41.0 // indirect
 	go.opentelemetry.io/otel/trace v1.41.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
-	go.yaml.in/yaml/v2 v2.4.4 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/mod v0.37.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
@@ -220,4 +219,4 @@ tool (
 	src.techknowlogick.com/xgo
 )
 
-replace github.com/samedi/caldav-go => github.com/kolaente/caldav-go v3.0.1-0.20260326091743-a55d55891017+incompatible
+replace github.com/samedi/caldav-go => github.com/kolaente/caldav-go v3.0.1-0.20260730192520-563ea1e0ae42+incompatible
