@@ -59,6 +59,10 @@ onBeforeUnmount(() => {
 		playing?.pause()
 		playing = null
 	}
+
+	if (blobUrl.value !== undefined) {
+		window.URL.revokeObjectURL(blobUrl.value)
+	}
 })
 </script>
 
