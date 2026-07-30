@@ -39,3 +39,8 @@
   task_id: 51
   label_id: 5
   created: 2018-12-01 15:13:12
+# Label #10 lives only on task 25 (project 16, child of team-shared project 33).
+- id: 10
+  task_id: 25
+  label_id: 10
+  created: 2018-12-01 15:13:12

@@ -51,3 +51,10 @@
   created_by_id: 23
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
+# Attached only to task 25 in project 16, whose parent 33 is shared to team 1
+# with write access — covers label access inherited through child projects.
+- id: 10
+  title: 'Label #10 - attached in child project only'
+  created_by_id: 6
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12

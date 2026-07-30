@@ -89,6 +89,14 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Created:     testCreatedTime,
 		Updated:     testUpdatedTime,
 	}
+	label10 := &Label{
+		ID:          10,
+		Title:       "Label #10 - attached in child project only",
+		CreatedByID: 6,
+		CreatedBy:   user6,
+		Created:     testCreatedTime,
+		Updated:     testUpdatedTime,
+	}
 
 	// We use individual variables for the tasks here to be able to rearrange or remove ones more easily
 	task1 := &Task{
@@ -446,13 +454,16 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
 	task25 := &Task{
-		ID:           25,
-		Title:        "task #25",
-		Identifier:   "TEST16-1",
-		Index:        1,
-		CreatedByID:  6,
-		CreatedBy:    user6,
-		ProjectID:    16,
+		ID:          25,
+		Title:       "task #25",
+		Identifier:  "TEST16-1",
+		Index:       1,
+		CreatedByID: 6,
+		CreatedBy:   user6,
+		ProjectID:   16,
+		Labels: []*Label{
+			label10,
+		},
 		RelatedTasks: map[RelationKind][]*Task{},
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
@@ -1367,7 +1378,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task22,
 				task23,
 				task24,
-				task25,
+				// task25 has label #10 now, so FilterIncludeNulls no longer matches it
 				task26,
 				task27,
 				task28,
