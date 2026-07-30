@@ -62,9 +62,9 @@ type migrationStartedBody struct {
 // config flag and exposes the same three operations, so registration is driven
 // by one generic helper instead of three copy-pasted blocks.
 func RegisterMigrationOAuthRoutes(api huma.API) {
-	registerOAuthMigrator(api, config.MigrationTodoistEnable.GetBool(), func() migration.Migrator { return &todoist.Migration{} })
-	registerOAuthMigrator(api, config.MigrationTrelloEnable.GetBool(), func() migration.Migrator { return &trello.Migration{} })
-	registerOAuthMigrator(api, config.MigrationMicrosoftTodoEnable.GetBool(), func() migration.Migrator { return &microsofttodo.Migration{} })
+	registerOAuthMigrator(api, config.MigrationTodoistEnable.GetBool(), func() migration.OAuthMigrator { return &todoist.Migration{} })
+	registerOAuthMigrator(api, config.MigrationTrelloEnable.GetBool(), func() migration.OAuthMigrator { return &trello.Migration{} })
+	registerOAuthMigrator(api, config.MigrationMicrosoftTodoEnable.GetBool(), func() migration.OAuthMigrator { return &microsofttodo.Migration{} })
 }
 
 func init() { AddRouteRegistrar(RegisterMigrationOAuthRoutes) }
@@ -73,13 +73,16 @@ func init() { AddRouteRegistrar(RegisterMigrationOAuthRoutes) }
 // migrator. enabled gates the whole migrator (config early-return, no
 // middleware); factory produces a fresh migrator instance per request, matching
 // v1's MigrationStruct func so concurrent requests never share mutable state.
-func registerOAuthMigrator(api huma.API, enabled bool, factory func() migration.Migrator) {
+func registerOAuthMigrator(api huma.API, enabled bool, factory func() migration.OAuthMigrator) {
 	if !enabled {
 		return
 	}
 
 	name := factory().Name()
 	tags := []string{"migration"}
+	// The status/migrate helpers work for any migrator, so they take the base
+	// interface - Go func types aren't covariant, hence the explicit wrapper.
+	migratorFactory := func() migration.Migrator { return factory() }
 
 	Register(api, huma.Operation{
 		OperationID: "migration-" + name + "-auth",
@@ -100,7 +103,7 @@ func registerOAuthMigrator(api huma.API, enabled bool, factory func() migration.
 		Path:        "/migration/" + name + "/status",
 		Tags:        tags,
 	}, func(ctx context.Context, _ *struct{}) (*migrationStatusBody, error) {
-		return migrationOAuthStatus(ctx, factory)
+		return migrationOAuthStatus(ctx, migratorFactory)
 	})
 
 	Register(api, huma.Operation{
@@ -114,7 +117,7 @@ func registerOAuthMigrator(api huma.API, enabled bool, factory func() migration.
 		DefaultStatus: http.StatusOK,
 		Tags:          tags,
 	}, func(ctx context.Context, in *struct{ Body migrationMigrateBody }) (*migrationStartedBody, error) {
-		return migrationOAuthMigrate(ctx, factory, in.Body)
+		return migrationOAuthMigrate(ctx, migratorFactory, in.Body)
 	})
 }
 
