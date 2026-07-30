@@ -355,7 +355,9 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		t.ProjectID = project.ID
 		originalBucketID := t.BucketID
 		t.BucketID = 0
-		err = t.Create(s, user)
+		// A Vikunja dump carries the task indexes it was exported with; the other importers
+		// leave them at 0 and get one assigned.
+		err = models.CreateTaskFromDump(s, &t.Task, user)
 		if err != nil && models.IsErrTaskCannotBeEmpty(err) {
 			continue
 		}

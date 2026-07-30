@@ -277,4 +277,28 @@ func TestInsertFromStructure(t *testing.T) {
 			assert.Equal(t, int64(4), count, "task %q must keep position %v in all views", title, position)
 		}
 	})
+	t.Run("keeps task indexes the export provides", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		require.NoError(t, InsertFromStructure([]*models.ProjectWithTasksAndBuckets{{
+			Project: models.Project{Title: "Import project", Identifier: "PROJ"},
+			Tasks: []*models.TaskWithComments{
+				{Task: models.Task{Title: "Seventeen", Index: 17}},
+				{Task: models.Task{Title: "Four", Index: 4}},
+				// Importers other than the Vikunja file one send no index at all.
+				{Task: models.Task{Title: "Unnumbered"}},
+			},
+		}}, u))
+
+		s := db.NewSession()
+		defer s.Close()
+
+		for title, index := range map[string]int64{"Seventeen": 17, "Four": 4, "Unnumbered": 18} {
+			task := &models.Task{}
+			exists, err := s.Where("title = ?", title).Get(task)
+			require.NoError(t, err)
+			require.True(t, exists)
+			assert.Equal(t, index, task.Index, "task %q got the wrong index", title)
+		}
+	})
 }
