@@ -911,6 +911,46 @@ END:VTODO
 END:VCALENDAR`,
 		},
 		{
+			name: "Reopened repeating task with DoneAt set is not completed",
+			args: args{
+				list: &models.ProjectWithTasksAndBuckets{
+					Project: models.Project{
+						Title: "List title",
+					},
+				},
+				tasks: []*models.TaskWithComments{
+					{
+						Task: models.Task{
+							Title:       "Task 1",
+							UID:         "randomuid",
+							Done:        false,
+							DoneAt:      time.Unix(1543626726, 0).In(config.GetTimeZone()),
+							Created:     time.Unix(1543626721, 0).In(config.GetTimeZone()),
+							Updated:     time.Unix(1543626725, 0).In(config.GetTimeZone()),
+							DueDate:     time.Unix(1543626722, 0).In(config.GetTimeZone()),
+							RepeatAfter: 86400,
+						},
+					},
+				},
+			},
+			wantCaldav: `BEGIN:VCALENDAR
+VERSION:2.0
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:List title
+PRODID:-//Vikunja Todo App//EN
+BEGIN:VTODO
+UID:randomuid
+DTSTAMP:20181201T011205Z
+SUMMARY:Task 1
+STATUS:NEEDS-ACTION
+DUE:20181201T011202Z
+CREATED:20181201T011201Z
+RRULE:FREQ=DAILY;INTERVAL=1
+LAST-MODIFIED:20181201T011205Z
+END:VTODO
+END:VCALENDAR`,
+		},
+		{
 			name: "Format Task with Related Tasks as CalDAV",
 			args: args{
 				list: &models.ProjectWithTasksAndBuckets{
