@@ -617,6 +617,34 @@ func (err ErrInvalidTaskRepeatInterval) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrMaxTaskIndexReached represents an error where a project's highest task index
+// has reached the maximum, so no further index can be assigned in it.
+type ErrMaxTaskIndexReached struct {
+	ProjectID int64
+}
+
+// IsErrMaxTaskIndexReached checks if an error is ErrMaxTaskIndexReached.
+func IsErrMaxTaskIndexReached(err error) bool {
+	_, ok := err.(ErrMaxTaskIndexReached)
+	return ok
+}
+
+func (err ErrMaxTaskIndexReached) Error() string {
+	return fmt.Sprintf("Maximum task index reached. [ProjectID: %d]", err.ProjectID)
+}
+
+// ErrCodeMaxTaskIndexReached holds the unique world-error code of this error.
+const ErrCodeMaxTaskIndexReached = 4030
+
+// HTTPError holds the http error description.
+func (err ErrMaxTaskIndexReached) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusConflict,
+		Code:     ErrCodeMaxTaskIndexReached,
+		Message:  fmt.Sprintf("Project %d already holds a task with the highest possible index (%d), no further task can be added to or moved into it.", err.ProjectID, maxTaskIndex),
+	}
+}
+
 // ErrTaskDoesNotExist represents a "ErrProjectDoesNotExist" kind of error. Used if the project does not exist.
 type ErrTaskDoesNotExist struct {
 	ID int64
