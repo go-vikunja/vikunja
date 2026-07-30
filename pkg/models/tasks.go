@@ -1174,13 +1174,13 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 	}
 
 	// Validate fields if provided
+	fieldSet := map[string]bool{}
 	if len(fields) > 0 {
 		allowed := map[string]bool{}
 		for _, c := range colsToUpdate {
 			allowed[c] = true
 		}
 		cols := []string{}
-		fieldSet := map[string]bool{}
 		for _, f := range fields {
 			if !allowed[f] {
 				return ErrInvalidTaskColumn{Column: f}
@@ -1321,10 +1321,30 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 		}
 	}
 
+	preRepeatDueDate, preRepeatStartDate, preRepeatEndDate := t.DueDate, t.StartDate, t.EndDate
+	preRepeatDescription := t.Description
+
 	// When a repeating task is marked as done, we update all deadlines and reminders and set it as undone
 	updateDoneAt := updateDone(&ot, t)
 	if updateDoneAt {
 		colsToUpdate = append(colsToUpdate, "done_at")
+	}
+
+	// updateDone reschedules after colsToUpdate was frozen from the caller's field list,
+	// so whatever it rewrote has to be added back or it gets computed and thrown away.
+	if len(fields) > 0 {
+		if !fieldSet["due_date"] && !t.DueDate.Equal(preRepeatDueDate) {
+			colsToUpdate = append(colsToUpdate, "due_date")
+		}
+		if !fieldSet["start_date"] && !t.StartDate.Equal(preRepeatStartDate) {
+			colsToUpdate = append(colsToUpdate, "start_date")
+		}
+		if !fieldSet["end_date"] && !t.EndDate.Equal(preRepeatEndDate) {
+			colsToUpdate = append(colsToUpdate, "end_date")
+		}
+		if !fieldSet["description"] && t.Description != preRepeatDescription {
+			colsToUpdate = append(colsToUpdate, "description")
+		}
 	}
 
 	// Update the reminders
