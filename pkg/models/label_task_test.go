@@ -221,6 +221,33 @@ func TestLabelTask_Create(t *testing.T) {
 			wantErr:       true,
 			errType:       IsErrTaskDoesNotExist,
 		},
+		{
+			// Label 10 is attached only to task 25 in project 16, a child of the
+			// team-shared project 33. Task 26 lives in project 17, a child of the
+			// team-shared project 34. User 1 has no direct share on either child —
+			// both label access and task write are inherited through the parents.
+			name: "label and task access inherited via parent project",
+			fields: fields{
+				TaskID:  26,
+				LabelID: 10,
+			},
+			args: args{
+				a: &user.User{ID: 1},
+			},
+		},
+		{
+			// Task 1 is writable by user 1, but label 6 is user 13's private
+			// label — write access to the task must not grant label access.
+			name: "writable task but inaccessible label",
+			fields: fields{
+				TaskID:  1,
+				LabelID: 6,
+			},
+			args: args{
+				a: &user.User{ID: 1},
+			},
+			wantForbidden: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
