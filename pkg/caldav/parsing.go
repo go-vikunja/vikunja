@@ -219,6 +219,7 @@ func GetCaldavTodosForTasks(project *models.ProjectWithTasksAndBuckets, projectT
 			UID:         t.UID,
 			Summary:     t.Title,
 			Description: t.Description,
+			Done:        t.Done,
 			Completed:   t.DoneAt,
 			// Organizer:     &t.CreatedBy, // Disabled until we figure out how this works
 			Categories:  categories,
