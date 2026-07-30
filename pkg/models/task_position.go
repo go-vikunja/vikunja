@@ -458,12 +458,20 @@ func calculateNewPositionForTask(s *xorm.Session, a web.Auth, t *Task, view *Pro
 }
 
 // makeRoomAtTopOfView recalculates a view's positions when the gap above its first task is
-// too small to fit count more tasks, and returns the lowest position afterwards. A return
-// value of 0 means the view has no positioned tasks to insert above.
+// too small to fit count more tasks, and returns the lowest position afterwards. It returns
+// 0 both when count is 0 and when the view has no positioned tasks - in either case there is
+// nothing for the caller to insert above.
 //
 // This has to run before the new tasks are inserted: a recalculation orders by position,
 // which they do not have yet, so they would land in an arbitrary order.
 func makeRoomAtTopOfView(s *xorm.Session, view *ProjectView, count int, a web.Auth) (lowest float64, err error) {
+	// Nothing to fit, so never recalculate: lowest/1 would fail the check below for any
+	// view whose first task sits under the minimum spacing. Checked before the lock so an
+	// empty batch does not serialize against real ones.
+	if count == 0 {
+		return 0, nil
+	}
+
 	// Without the lock two concurrent batches read the same lowest position and compute
 	// byte-identical slots for their tasks. Callers must take the locks in a stable view
 	// order to avoid deadlocking against each other.
@@ -477,11 +485,6 @@ func makeRoomAtTopOfView(s *xorm.Session, view *ProjectView, count int, a web.Au
 		return 0, err
 	}
 	if !has {
-		return 0, nil
-	}
-	// Nothing to fit, so never recalculate: lowest/1 would fail the check below for any
-	// view whose first task sits under the minimum spacing.
-	if count == 0 {
 		return 0, nil
 	}
 
@@ -856,10 +859,11 @@ func findDuplicatesInPositions(positions []*TaskPosition) [][]*TaskPosition {
 		}
 	}
 
-	// Resolving a group moves its tasks up towards the next one, shrinking the gap that
-	// group then has to work with - so the order groups come back in decides whether a view
-	// gets respaced locally or falls back to a full recalculation. Map iteration would make
-	// that differ per run.
+	// Resolving a group respaces its tasks across the whole gap between its neighbours, so
+	// members land both below and above where they were and the gaps left for the remaining
+	// groups change - the order groups come back in decides whether a view gets respaced
+	// locally or falls back to a full recalculation. Map iteration would make that differ
+	// per run.
 	slices.SortFunc(duplicates, func(a, b []*TaskPosition) int {
 		return cmp.Compare(a[0].Position, b[0].Position)
 	})
