@@ -642,6 +642,29 @@ func TestTask_Update(t *testing.T) {
 		assert.Equal(t, "updated", updatedTask.Title)
 		assert.True(t, updatedTask.DoneAt.IsZero())
 	})
+	t.Run("passing fields restricts the write to the given columns", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Priority stays zero to simulate a caller not parsing that column (fixture has 100).
+		task := &Task{
+			ID:       3,
+			Title:    "updated with a field list",
+			Priority: 0,
+		}
+
+		err := task.updateSingleTask(s, u, []string{"title"})
+
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		updatedTask := &Task{ID: 3}
+		err = updatedTask.ReadOne(s, u)
+		require.NoError(t, err)
+		assert.Equal(t, "updated with a field list", updatedTask.Title)
+		assert.Equal(t, int64(100), updatedTask.Priority, "priority must survive since it wasn't in the fields list")
+	})
 }
 
 func TestTask_Delete(t *testing.T) {
