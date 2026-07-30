@@ -3,7 +3,7 @@ allowBuilds:
   # not built under pnpm 10 either; deny to keep behavior identical and satisfy strictDepBuilds
   electron-winstaller: false
 overrides:
-  minimatch: 10.2.5
+  minimatch: 10.2.6
   tar: 7.5.22
   '@tootallnate/once': 3.0.1
   picomatch: 4.0.5
