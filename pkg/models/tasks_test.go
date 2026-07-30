@@ -202,6 +202,10 @@ func TestTask_Update(t *testing.T) {
 		err = s.Commit()
 		require.NoError(t, err)
 
+		// The client never sends created_by, so the update has to fill it in itself
+		require.NotNil(t, task.CreatedBy)
+		assert.Equal(t, int64(1), task.CreatedBy.ID)
+
 		db.AssertExists(t, "tasks", map[string]interface{}{
 			"id":          1,
 			"title":       "test10000",
@@ -1588,7 +1592,34 @@ func TestTaskIndex(t *testing.T) {
 		require.NoError(t, err)
 
 		err = (&Task{Title: "Ipsum", ProjectID: 1}).Create(s, usr)
-		require.ErrorIs(t, err, errMaxTaskIndexReached)
+		require.Error(t, err)
+		assert.True(t, IsErrMaxTaskIndexReached(err))
+	})
+
+	t.Run("a preserved index below the ceiling survives a counter past it", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Taking the topmost index pushes the in-memory counter over the ceiling, which must
+		// not stop the next task from keeping an index far below it.
+		tasks := []*Task{
+			{Title: "Lorem", ProjectID: 1, Index: maxTaskIndex},
+			{Title: "Ipsum", ProjectID: 1, Index: 19},
+		}
+		require.NoError(t, createTasks(s, tasks, usr, createTaskOpts{preserveIndex: true}))
+		assert.Equal(t, int64(maxTaskIndex), tasks[0].Index)
+		assert.Equal(t, int64(19), tasks[1].Index)
+	})
+
+	t.Run("a dump restore keeps the exported index", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		restored := &Task{Title: "Lorem", ProjectID: 1, Index: 19}
+		require.NoError(t, CreateTaskFromDump(s, restored, usr))
+		assert.Equal(t, int64(19), restored.Index)
 	})
 }
 

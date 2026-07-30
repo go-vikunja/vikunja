@@ -17,8 +17,6 @@
 package models
 
 import (
-	"errors"
-	"fmt"
 	"math"
 	"regexp"
 	"sort"
@@ -935,7 +933,7 @@ func calculateNextTaskIndex(s *xorm.Session, projectID int64) (nextIndex int64, 
 	// Counting up from there would eventually wrap the column into negative indexes,
 	// colliding with every following task on the unique index, so refuse instead.
 	if latestTask.Index >= maxTaskIndex {
-		return 0, fmt.Errorf("cannot assign an index in project %d: %w", projectID, errMaxTaskIndexReached)
+		return 0, ErrMaxTaskIndexReached{ProjectID: projectID}
 	}
 
 	return latestTask.Index + 1, nil
@@ -945,8 +943,6 @@ func calculateNextTaskIndex(s *xorm.Session, projectID int64) (nextIndex int64, 
 // ever hold this many tasks - staying this far below the type's limit keeps the counter from
 // overflowing into negative indexes.
 const maxTaskIndex = 1_000_000_000
-
-var errMaxTaskIndexReached = errors.New("the highest task index in this project has reached its maximum")
 
 // taskCreateState holds everything createTasks would otherwise look up again for every
 // task of the same project, and hands out the next free index per project.
@@ -1021,9 +1017,6 @@ func (c *taskCreateState) setNewTaskIndex(s *xorm.Session, t *Task, preserveInde
 			return err
 		}
 	}
-	if next > maxTaskIndex {
-		return fmt.Errorf("cannot assign an index in project %d: %w", t.ProjectID, errMaxTaskIndexReached)
-	}
 
 	// Index is documented as server assigned but reaches us straight from the request body,
 	// so a caller-picked value only survives where it is explicitly asked for.
@@ -1046,6 +1039,11 @@ func (c *taskCreateState) setNewTaskIndex(s *xorm.Session, t *Task, preserveInde
 	}
 
 	if t.Index == 0 {
+		// Only the assigned index has to respect the ceiling - a preserved one was already
+		// checked against it above and may sit far below the in-memory counter.
+		if next > maxTaskIndex {
+			return ErrMaxTaskIndexReached{ProjectID: t.ProjectID}
+		}
 		t.Index = next
 	}
 
@@ -1078,6 +1076,14 @@ func (t *Task) Create(s *xorm.Session, a web.Auth) (err error) {
 	return createTask(s, t, a, createTaskOpts{updateAssignees: true, setBucket: true})
 }
 
+// CreateTaskFromDump creates a task from a Vikunja data dump, keeping the index it was
+// exported with. Task identifiers like PROJ-17 are built from that index and are referenced
+// from comments, descriptions and outside of Vikunja, so a restore must not renumber them.
+// Only for data which did not come from a request body.
+func CreateTaskFromDump(s *xorm.Session, t *Task, a web.Auth) (err error) {
+	return createTask(s, t, a, createTaskOpts{updateAssignees: true, setBucket: true, preserveIndex: true})
+}
+
 // createTaskOpts holds the parts of task creation a caller can opt out of.
 type createTaskOpts struct {
 	updateAssignees bool
@@ -1086,8 +1092,8 @@ type createTaskOpts struct {
 	// whole batch of tasks relative to each other, see BulkTaskCreate.
 	skipPositions bool
 	// preserveIndex keeps the index the caller set instead of assigning a fresh one. Only
-	// for tasks copied from existing ones (project duplication) - never for anything which
-	// can carry a value from a request body.
+	// for tasks copied from existing ones (project duplication, dump restore) - never for
+	// anything which can carry a value from a request body.
 	preserveIndex bool
 	// state lets a caller which already looked a project's views up hand them over
 	// instead of having them fetched again. Optional.
@@ -1678,6 +1684,14 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 		return err
 	}
 	t.Updated = nt.Updated
+
+	// CreatedBy is xorm:"-", so ot never carried it and mergo kept whatever the client sent.
+	// Look it up here so the response is correct no matter what came in.
+	creators, err := getUsersOrLinkSharesFromIDs(s, []int64{t.CreatedByID})
+	if err != nil {
+		return err
+	}
+	t.CreatedBy = creators[t.CreatedByID]
 
 	events.DispatchOnCommit(s, &TaskUpdatedEvent{
 		Task: t,
