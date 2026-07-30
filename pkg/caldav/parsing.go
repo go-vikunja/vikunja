@@ -508,15 +508,14 @@ func parseVAlarm(vAlarm *ics.VAlarm, vTask *models.Task) *models.Task {
 
 		if contains(property.ICalParameters["RELATED"], "END") {
 			// Example: TRIGGER;RELATED=END:-P2D
-			if vTask.EndDate.IsZero() {
-				vTask.Reminders = append(vTask.Reminders, &models.TaskReminder{
-					RelativePeriod: int64(duration.Seconds()),
-					RelativeTo:     models.ReminderRelationDueDate})
-			} else {
-				vTask.Reminders = append(vTask.Reminders, &models.TaskReminder{
-					RelativePeriod: int64(duration.Seconds()),
-					RelativeTo:     models.ReminderRelationEndDate})
+			// We emit due- and end-relative reminders both as RELATED=END, so prefer due_date to keep ours round-tripping.
+			relativeTo := models.ReminderRelationEndDate
+			if !vTask.DueDate.IsZero() || vTask.EndDate.IsZero() {
+				relativeTo = models.ReminderRelationDueDate
 			}
+			vTask.Reminders = append(vTask.Reminders, &models.TaskReminder{
+				RelativePeriod: int64(duration.Seconds()),
+				RelativeTo:     relativeTo})
 			continue
 		}
 
