@@ -282,6 +282,78 @@ END:VCALENDAR`,
 			wantProps: ParsedVTODOProperties{Title: true, StartDate: true, EndDate: true},
 		},
 		{
+			name: "With alarm (RELATED=END, DUE and DTEND both present)",
+			args: args{content: `BEGIN:VCALENDAR
+VERSION:2.0
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+UID:randomuid
+DTSTAMP:20181201T011204
+SUMMARY:Todo #1
+DTSTART:20230228T170000Z
+DTEND:20230301T170000Z
+DUE:20230304T150000Z
+BEGIN:VALARM
+TRIGGER;RELATED=END:-PT1H
+ACTION:DISPLAY
+END:VALARM
+END:VTODO
+END:VCALENDAR`,
+			},
+			wantVTask: &models.Task{
+				Title:     "Todo #1",
+				UID:       "randomuid",
+				StartDate: time.Date(2023, 2, 28, 17, 0, 0, 0, config.GetTimeZone()),
+				EndDate:   time.Date(2023, 3, 1, 17, 0, 0, 0, config.GetTimeZone()),
+				DueDate:   time.Date(2023, 3, 4, 15, 0, 0, 0, config.GetTimeZone()),
+				Reminders: []*models.TaskReminder{
+					{
+						RelativeTo:     models.ReminderRelationDueDate,
+						RelativePeriod: -3600,
+					},
+				},
+				Updated: time.Unix(1543626724, 0).In(config.GetTimeZone()),
+			},
+			wantProps: ParsedVTODOProperties{Title: true, StartDate: true, EndDate: true, DueDate: true},
+		},
+		{
+			name: "With alarm (RELATED=END, DTEND but no DUE)",
+			args: args{content: `BEGIN:VCALENDAR
+VERSION:2.0
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+UID:randomuid
+DTSTAMP:20181201T011204
+SUMMARY:Todo #1
+DTSTART:20230228T170000Z
+DTEND:20230301T170000Z
+BEGIN:VALARM
+TRIGGER;RELATED=END:-PT1H
+ACTION:DISPLAY
+END:VALARM
+END:VTODO
+END:VCALENDAR`,
+			},
+			wantVTask: &models.Task{
+				Title:     "Todo #1",
+				UID:       "randomuid",
+				StartDate: time.Date(2023, 2, 28, 17, 0, 0, 0, config.GetTimeZone()),
+				EndDate:   time.Date(2023, 3, 1, 17, 0, 0, 0, config.GetTimeZone()),
+				Reminders: []*models.TaskReminder{
+					{
+						RelativeTo:     models.ReminderRelationEndDate,
+						RelativePeriod: -3600,
+					},
+				},
+				Updated: time.Unix(1543626724, 0).In(config.GetTimeZone()),
+			},
+			wantProps: ParsedVTODOProperties{Title: true, StartDate: true, EndDate: true},
+		},
+		{
 			name: "With DTSTART+DURATION (RFC 5545 duration, not Go's time.ParseDuration)",
 			args: args{content: `BEGIN:VCALENDAR
 VERSION:2.0
