@@ -345,7 +345,7 @@ func (vcls *VikunjaCaldavProjectStorage) CreateResource(rpath, content string) (
 	s := db.NewSession()
 	defer s.Close()
 
-	vTask, err := caldav.ParseTaskFromVTODO(content)
+	vTask, _, err := caldav.ParseTaskFromVTODO(content)
 	if err != nil {
 		log.Errorf("[CALDAV] Failed to parse VTODO in CreateResource: %v", err)
 		log.Debugf("[CALDAV] VTODO content that failed to parse: %s", content)
@@ -437,7 +437,7 @@ func applyDescriptionFromMarkdown(s *xorm.Session, vTask *models.Task, storedHTM
 // UpdateResource updates a resource
 func (vcls *VikunjaCaldavProjectStorage) UpdateResource(rpath, content string) (*data.Resource, error) {
 
-	vTask, err := caldav.ParseTaskFromVTODO(content)
+	vTask, props, err := caldav.ParseTaskFromVTODO(content)
 	if err != nil {
 		log.Errorf("[CALDAV] Failed to parse VTODO in UpdateResource: %v", err)
 		log.Debugf("[CALDAV] VTODO content that failed to parse: %s", content)
@@ -449,7 +449,6 @@ func (vcls *VikunjaCaldavProjectStorage) UpdateResource(rpath, content string) (
 
 	// Explicitly set the ProjectID in case the task now belongs to a different project:
 	vTask.ProjectID = vcls.project.ID
-	vcls.task.ProjectID = vcls.project.ID
 
 	s := db.NewSession()
 	defer s.Close()
@@ -469,37 +468,112 @@ func (vcls *VikunjaCaldavProjectStorage) UpdateResource(rpath, content string) (
 		return nil, errs.ForbiddenError
 	}
 
+	// vcls.task comes from an earlier, already committed session - overlaying onto it would lose concurrent writes.
+	storedTasks, err := models.GetTasksByUIDs(s, []string{vcls.task.UID}, vcls.user)
+	if err != nil {
+		log.Errorf("[CALDAV] Failed to re-read task in UpdateResource: %v", err)
+		_ = s.Rollback()
+		events.CleanupPending(s)
+		return nil, err
+	}
+	if len(storedTasks) < 1 {
+		_ = s.Rollback()
+		events.CleanupPending(s)
+		return nil, errs.ResourceNotFoundError
+	}
+
+	// tasks.uid has no unique index, so a UID can match several tasks - pick the one the permission check was made against.
+	var stored *models.Task
+	for _, t := range storedTasks {
+		if t.ID == vcls.task.ID {
+			stored = t
+			break
+		}
+	}
+	if stored == nil {
+		_ = s.Rollback()
+		events.CleanupPending(s)
+		return nil, errs.ResourceNotFoundError
+	}
+
+	// Re-assert GHSA-48ch-p4gq-x46x: the GetResource guard ran in a different, already committed session.
+	if stored.ProjectID != vcls.project.ID {
+		_ = s.Rollback()
+		events.CleanupPending(s)
+		return nil, errs.ResourceNotFoundError
+	}
+
 	// Inbound markdown → canonical HTML, kept verbatim when unchanged.
-	if err := applyDescriptionFromMarkdown(s, vTask, vcls.task.Description); err != nil {
+	if err := applyDescriptionFromMarkdown(s, vTask, stored.Description); err != nil {
 		log.Errorf("[CALDAV] Failed to convert description in UpdateResource: %v", err)
 		_ = s.Rollback()
 		events.CleanupPending(s)
 		return nil, err
 	}
 
-	// Update the task
-	err = vTask.Update(s, vcls.user)
+	// Overlay only what the VTODO expressed; everything else keeps its stored value.
+	base := *stored
+	if props.Title {
+		base.Title = vTask.Title
+	}
+	if props.Description {
+		base.Description = vTask.Description
+	}
+	if props.Done {
+		base.Done = vTask.Done
+	}
+	if props.Priority {
+		base.Priority = vTask.Priority
+	}
+	if props.DueDate {
+		base.DueDate = vTask.DueDate
+	}
+	if props.StartDate {
+		base.StartDate = vTask.StartDate
+	}
+	if props.EndDate {
+		base.EndDate = vTask.EndDate
+	}
+	if props.Color {
+		base.HexColor = vTask.HexColor
+	}
+	// nil = no VALARM, keep stored reminders; non-nil (even empty) = client owns the alarm set.
+	if vTask.Reminders != nil {
+		base.Reminders = vTask.Reminders
+	}
+	// No-op: cross-project moves are already rejected by the GHSA-48ch-p4gq-x46x guard above.
+	base.ProjectID = vcls.project.ID
+
+	err = base.Update(s, vcls.user)
 	if err != nil {
-		log.Errorf("[CALDAV] Failed to update task in UpdateResource: %v, task: %+v", err, vTask)
+		log.Errorf("[CALDAV] Failed to update task in UpdateResource: %v, task: %+v", err, base)
 		_ = s.Rollback()
 		events.CleanupPending(s)
 		return nil, err
 	}
 
-	err = persistLabels(s, vcls.user, vcls.task, vTask.Labels)
-	if err != nil {
-		log.Errorf("[CALDAV] Failed to persist labels in UpdateResource: %v, labels: %+v", err, vTask.Labels)
-		_ = s.Rollback()
-		events.CleanupPending(s)
-		return nil, err
+	// nil = CATEGORIES absent, leave labels alone; non-nil (even empty) = explicit set.
+	if vTask.Labels != nil {
+		err = persistLabels(s, vcls.user, &base, vTask.Labels)
+		if err != nil {
+			log.Errorf("[CALDAV] Failed to persist labels in UpdateResource: %v, labels: %+v", err, vTask.Labels)
+			_ = s.Rollback()
+			events.CleanupPending(s)
+			return nil, err
+		}
+		base.Labels = vTask.Labels
 	}
 
-	err = persistRelations(s, vcls.user, vcls.task, vTask.RelatedTasks)
-	if err != nil {
-		log.Errorf("[CALDAV] Failed to persist relations in UpdateResource: %v, relations: %+v", err, vTask.RelatedTasks)
-		_ = s.Rollback()
-		events.CleanupPending(s)
-		return nil, err
+	// RELATED-TO has no explicit-clear form, so relations can be added or replaced via CalDAV, never removed.
+	if len(vTask.RelatedTasks) > 0 {
+		err = persistRelations(s, vcls.user, &base, vTask.RelatedTasks)
+		if err != nil {
+			log.Errorf("[CALDAV] Failed to persist relations in UpdateResource: %v, relations: %+v", err, vTask.RelatedTasks)
+			_ = s.Rollback()
+			events.CleanupPending(s)
+			return nil, err
+		}
+		base.RelatedTasks = vTask.RelatedTasks
 	}
 
 	if err := s.Commit(); err != nil {
@@ -510,10 +584,10 @@ func (vcls *VikunjaCaldavProjectStorage) UpdateResource(rpath, content string) (
 
 	events.DispatchPending(context.Background(), s)
 
-	// Build up the proper response
+	// base, not vTask: Update wrote back the Updated timestamp the etag is built from.
 	rr := VikunjaProjectResourceAdapter{
 		project: vcls.project,
-		task:    vTask,
+		task:    &base,
 	}
 	r := data.NewResource(rpath, &rr)
 	return &r, nil

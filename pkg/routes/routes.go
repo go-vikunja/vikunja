@@ -91,7 +91,6 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
-	"github.com/ulule/limiter/v3"
 )
 
 // matchCORSOrigin checks if an origin matches any of the allowed origin patterns.
@@ -318,13 +317,16 @@ func RegisterRoutes(e *echo.Echo) {
 		}))
 	}
 
+	// Shared across both API versions so the budget is per IP, not per version.
+	wsRateLimit := unauthRateLimit()
+
 	// API Routes
 	a := e.Group("/api/v1")
-	registerAPIRoutes(a)
+	registerAPIRoutes(a, wsRateLimit)
 
 	// /api/v2 — Huma-backed API, scaffolded alongside /api/v1.
 	a2 := e.Group("/api/v2")
-	registerAPIRoutesV2(e, a2)
+	registerAPIRoutesV2(e, a2, wsRateLimit)
 
 	// Collect routes for API token permissions
 	// In Echo v5, we collect routes after registration using e.Router().Routes()
@@ -438,7 +440,7 @@ func gateV2AdminRoutes() echo.MiddlewareFunc {
 // registerAPIRoutesV2 wires the /api/v2 Echo group. Token middleware is
 // attached before any route so Huma's spec and Scalar docs share the
 // resource handlers' stack; unauthenticatedAPIPaths keeps them public.
-func registerAPIRoutesV2(e *echo.Echo, a *echo.Group) {
+func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, wsRateLimit echo.MiddlewareFunc) {
 	a.Use(noStoreCacheControl())
 	a.Use(SetupTokenMiddleware())
 	// Match the authenticated v1 group: rate limiting and route metrics
@@ -460,13 +462,13 @@ func registerAPIRoutesV2(e *echo.Echo, a *echo.Group) {
 	// authenticates via its first message, so unauthenticatedAPIPaths exempts it
 	// from the group's JWT middleware. Health and the Atom feed are Huma ops and
 	// self-register via init()/RegisterAll.
-	a.GET("/ws", ws.UpgradeHandler)
+	a.GET("/ws", ws.UpgradeHandler, wsRateLimit)
 
 	// Resources self-register via init(); RegisterAll runs them all + AutoPatch.
 	apiv2.RegisterAll(api)
 }
 
-func registerAPIRoutes(a *echo.Group) {
+func registerAPIRoutes(a *echo.Group, wsRateLimit echo.MiddlewareFunc) {
 
 	// Prevent browsers from caching API responses. Without an explicit
 	// Cache-Control header browsers may heuristically cache JSON responses
@@ -485,19 +487,14 @@ func registerAPIRoutes(a *echo.Group) {
 	n.GET("/docs/redoc.standalone.js", apiv1.RedocJS)
 
 	// WebSocket (auth happens after upgrade via first message)
-	n.GET("/ws", ws.UpgradeHandler)
+	n.GET("/ws", ws.UpgradeHandler, wsRateLimit)
 
 	// Prometheus endpoint
 	setupMetrics(n)
 
 	// Separate route for unauthenticated routes to enable rate limits for it
 	ur := a.Group("")
-	rate := limiter.Rate{
-		Period: 60 * time.Second,
-		Limit:  config.RateLimitNoAuthRoutesLimit.GetInt64(),
-	}
-	rateLimiter := createRateLimiter(rate)
-	ur.Use(RateLimit(rateLimiter, "ip"))
+	ur.Use(unauthRateLimit())
 
 	if config.AuthLocalEnabled.GetBool() {
 		ur.POST("/register", apiv1.RegisterUser)

@@ -49,7 +49,7 @@ type Project struct {
 	HexColor string `xorm:"varchar(6) null" json:"hex_color" valid:"runelength(0|7)" maxLength:"7" doc:"The hex color of this project, without the leading #."`
 
 	OwnerID         int64    `xorm:"bigint INDEX not null" json:"-"`
-	ParentProjectID *int64   `xorm:"bigint INDEX null" json:"parent_project_id,omitempty" doc:"The id of the parent project. 0 or omitted for a top-level project. Sending an explicit 0 detaches the project to the top level and requires admin permission."`
+	ParentProjectID *int64   `xorm:"bigint INDEX null" json:"parent_project_id" doc:"The id of the parent project, or 0 for a top-level project. Always present in responses. Omit it on a write to leave the parent unchanged; sending an explicit 0 detaches the project to the top level and requires admin permission."`
 	ParentProject   *Project `xorm:"-" json:"-"`
 
 	// The user who created this project.
@@ -126,6 +126,22 @@ func (p *Project) parentID() int64 {
 	return *p.ParentProjectID
 }
 
+// noParentProjectID is the parent of a top-level project. nil is a request-only
+// state (field omitted, as opposed to an explicit 0 which detaches and needs
+// Admin — GHSA-44v6-7fxq-vgf4); clients parse the field as a plain int, so a
+// response must always carry a number (go-vikunja/app#295).
+func noParentProjectID() *int64 {
+	return Ptr(int64(0))
+}
+
+// AfterLoad normalizes a NULL parent_project_id — the column is nullable and rows
+// predating it were never backfilled.
+func (p *Project) AfterLoad() {
+	if p.ParentProjectID == nil {
+		p.ParentProjectID = noParentProjectID()
+	}
+}
+
 // ProjectBackgroundType holds a project background type
 type ProjectBackgroundType struct {
 	Type string
@@ -138,11 +154,12 @@ const FavoritesPseudoProjectID = -1
 
 // FavoritesPseudoProject holds all tasks marked as favorites
 var FavoritesPseudoProject = Project{
-	ID:          FavoritesPseudoProjectID,
-	Title:       "Favorites",
-	Description: "This project has all tasks marked as favorites.",
-	IsFavorite:  true,
-	Position:    -1,
+	ID:              FavoritesPseudoProjectID,
+	Title:           "Favorites",
+	Description:     "This project has all tasks marked as favorites.",
+	IsFavorite:      true,
+	Position:        -1,
+	ParentProjectID: noParentProjectID(),
 
 	Views: []*ProjectView{
 		{
@@ -246,7 +263,7 @@ func getAllRawProjects(s *xorm.Session, a web.Auth, search string, page int, per
 		projects := []*Project{project}
 		err = addProjectDetails(s, projects, a)
 		if err == nil && len(projects) > 0 {
-			projects[0].ParentProjectID = Ptr(int64(0))
+			projects[0].ParentProjectID = noParentProjectID()
 		}
 		return projects, 0, 0, err
 	}
@@ -386,17 +403,20 @@ func (p *Project) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 		if err != nil {
 			return err
 		}
+		// CanRead delegates to the saved filter and never loads a project row, so
+		// p is still the bare {ID} stub the handler built.
 		p.Title = sf.Title
 		p.Description = sf.Description
 		p.IsFavorite = sf.IsFavorite
 		p.Created = sf.Created
 		p.Updated = sf.Updated
 		p.OwnerID = sf.OwnerID
+		p.ParentProjectID = noParentProjectID()
 	}
 
 	_, isShareAuth := a.(*LinkSharing)
 	if isShareAuth {
-		p.ParentProjectID = Ptr(int64(0))
+		p.ParentProjectID = noParentProjectID()
 	}
 
 	// Get project owner
@@ -456,6 +476,9 @@ func GetProjectSimpleByID(s *xorm.Session, projectID int64) (project *Project, e
 	}
 
 	project, exists, err := getProjectSimple(s, builder.Eq{"id": projectID})
+	if err != nil {
+		return nil, err
+	}
 	if !exists {
 		return nil, ErrProjectDoesNotExist{ID: projectID}
 	}

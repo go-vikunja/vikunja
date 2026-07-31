@@ -106,7 +106,8 @@ const (
 	ActionAPITokenRevoked = "auth.api_token.revoked" // #nosec G101
 	ActionAPITokenUsed    = "auth.api_token.used"    // #nosec G101
 
-	ActionUserCreated = "user.created"
+	ActionUserCreated             = "user.created"
+	ActionUserDataExportRequested = "user.data_export.requested"
 
 	ActionTaskCreated           = "task.created"
 	ActionTaskUpdated           = "task.updated"

@@ -32,6 +32,7 @@ func TestDeleteUser(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 		notifications.Fake()
+		t.Cleanup(notifications.Unfake)
 
 		u := &user.User{ID: 6}
 		err := DeleteUser(s, u)
@@ -52,6 +53,7 @@ func TestDeleteUser(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 		notifications.Fake()
+		t.Cleanup(notifications.Unfake)
 
 		u := &user.User{ID: 4}
 		err := DeleteUser(s, u)
@@ -64,6 +66,7 @@ func TestDeleteUser(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 		notifications.Fake()
+		t.Cleanup(notifications.Unfake)
 
 		u := &user.User{ID: 16}
 		err := DeleteUser(s, u)
@@ -78,6 +81,7 @@ func TestDeleteUser(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 		notifications.Fake()
+		t.Cleanup(notifications.Unfake)
 
 		u := &user.User{ID: 17}
 		err := DeleteUser(s, u)
@@ -95,6 +99,7 @@ func TestDeleteUser(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 		notifications.Fake()
+		t.Cleanup(notifications.Unfake)
 
 		project := &Project{
 			Title:   "disabled user project",
@@ -131,6 +136,7 @@ func TestDeleteUser(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 		notifications.Fake()
+		t.Cleanup(notifications.Unfake)
 
 		task := &Task{
 			Title:       "user cleanup",

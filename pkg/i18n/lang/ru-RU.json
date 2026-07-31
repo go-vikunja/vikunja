@@ -172,5 +172,10 @@
 		"since_hours": "%[1]d час|%[1]d часа|%[1]d часов",
 		"since_minutes": "%[1]d минута|%[1]d минуты|%[1]d минут",
 		"list_last_separator": "и"
+	},
+	"feeds": {
+		"notifications": {
+			"title": "Уведомления Vikunja для %[1]s"
+		}
 	}
 }

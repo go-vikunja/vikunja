@@ -34,7 +34,7 @@ func init() {
 		ID:          "20210829194722",
 		Description: "Add data export file id to users",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(users20210829194722{})
+			return partialSync(tx, users20210829194722{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil

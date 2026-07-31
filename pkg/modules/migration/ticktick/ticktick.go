@@ -137,6 +137,14 @@ func (date *tickTickTime) UnmarshalCSV(csv string) (err error) {
 	return err
 }
 
+type placeState int
+
+const (
+	unvisited placeState = iota
+	visiting
+	donePlacing
+)
+
 // sortParentsBeforeChildren reorders tasks so that every parent task
 // appears before any of its children. Tasks without a parent come first.
 // The relative order of siblings / unrelated tasks is preserved.
@@ -146,25 +154,28 @@ func sortParentsBeforeChildren(tasks []*tickTickTask) []*tickTickTask {
 		tasksByID[t.TaskID] = t
 	}
 
-	// placed is keyed by the task itself rather than by TaskID: malformed
+	// state is keyed by the task itself rather than by TaskID: malformed
 	// exports can collapse several taskIds to 0 (see tickTickNumber), and
 	// keying by ID would treat every zero-ID task after the first as already
 	// placed and silently drop it.
-	placed := make(map[*tickTickTask]bool, len(tasks))
+	state := make(map[*tickTickTask]placeState, len(tasks))
 	result := make([]*tickTickTask, 0, len(tasks))
 
 	var place func(t *tickTickTask)
 	place = func(t *tickTickTask) {
-		if placed[t] {
+		if state[t] != unvisited {
 			return
 		}
+		// Must be marked before recursing: a parentId cycle would otherwise
+		// recurse until the stack overflows, which kills the whole process.
+		state[t] = visiting
 		// If this task has a parent that we know about, place the parent first.
 		if t.ParentID != 0 {
 			if parent, ok := tasksByID[t.ParentID]; ok {
 				place(parent)
 			}
 		}
-		placed[t] = true
+		state[t] = donePlacing
 		result = append(result, t)
 	}
 

@@ -253,6 +253,12 @@ func (t *APIToken) HasFeedsAccess() bool {
 
 // GetTokenFromTokenString returns the full token object from the original token string.
 func GetTokenFromTokenString(s *xorm.Session, token string) (apiToken *APIToken, err error) {
+	// The slice below would panic on a short string. Real tokens are prefix + 40
+	// hex chars, so anything shorter is invalid by construction.
+	if len(token) < len(APITokenPrefix)+8 {
+		return nil, &ErrAPITokenInvalid{}
+	}
+
 	lastEight := token[len(token)-8:]
 
 	tokens := []*APIToken{}

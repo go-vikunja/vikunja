@@ -25,6 +25,7 @@ import (
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/web"
 
+	"github.com/danielgtaylor/huma/v2"
 	"xorm.io/xorm"
 )
 
@@ -65,7 +66,16 @@ func (st SubscriptionEntityType) MarshalJSON() ([]byte, error) {
 		return []byte(`"task"`), nil
 	}
 
-	return []byte(`nil`), nil
+	return []byte(`null`), nil
+}
+
+// Schema lets Huma (/api/v2) reflect this type as a string enum; see the note
+// on ProjectViewKind.Schema for why this is needed.
+func (*SubscriptionEntityType) Schema(_ huma.Registry) *huma.Schema {
+	return &huma.Schema{
+		Type: "string",
+		Enum: []any{"project", "task"},
+	}
 }
 
 func getEntityTypeFromString(entityType string) SubscriptionEntityType {
@@ -205,11 +215,11 @@ func GetSubscriptionForUser(s *xorm.Session, entityType SubscriptionEntityType, 
 
 // GetSubscriptionsForEntities returns a list of subscriptions to for an entity ID
 func GetSubscriptionsForEntities(s *xorm.Session, entityType SubscriptionEntityType, entityIDs []int64) (subscriptions map[int64][]*SubscriptionWithUser, err error) {
-	return getSubscriptionsForEntitiesAndUser(s, entityType, entityIDs, nil, false)
+	return getSubscriptionsForEntitiesAndUser(s, entityType, entityIDs, nil, false, false)
 }
 
 func GetSubscriptionsForEntitiesAndUser(s *xorm.Session, entityType SubscriptionEntityType, entityIDs []int64, u *user.User) (subscriptions map[int64][]*SubscriptionWithUser, err error) {
-	return getSubscriptionsForEntitiesAndUser(s, entityType, entityIDs, u, true)
+	return getSubscriptionsForEntitiesAndUser(s, entityType, entityIDs, u, true, false)
 }
 
 func GetSubscriptionsForEntity(s *xorm.Session, entityType SubscriptionEntityType, entityID int64) (subscriptions []*SubscriptionWithUser, err error) {
@@ -221,11 +231,32 @@ func GetSubscriptionsForEntity(s *xorm.Session, entityType SubscriptionEntityTyp
 	return subs[entityID], nil
 }
 
+// GetSubscriptionsForDeletedTask returns the subscribers of an already soft-deleted task.
+// The task deleted listener runs after the deleting transaction committed, so every other
+// lookup filters the task out and finds nobody. Permissions come from the project instead,
+// since the task itself is gone.
+func GetSubscriptionsForDeletedTask(s *xorm.Session, task *Task) (subscriptions []*SubscriptionWithUser, err error) {
+	subs, err := getSubscriptionsForEntitiesAndUser(s, SubscriptionEntityTask, []int64{task.ID}, nil, false, true)
+	if err != nil {
+		return nil, err
+	}
+
+	filtered, err := filterSubscriptionsByProjectPermission(s, subs, map[int64]int64{task.ID: task.ProjectID})
+	if err != nil {
+		if IsErrProjectDoesNotExist(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return filtered[task.ID], nil
+}
+
 // This function returns a matching subscription for an entity and user.
 // It will return the next parent of a subscription. That means for tasks, it will first look for a subscription for
 // that task, if there is none it will look for a subscription on the project the task belongs to.
 // It will return a map where the key is the entity id and the value is a slice with all subscriptions for that entity.
-func getSubscriptionsForEntitiesAndUser(s *xorm.Session, entityType SubscriptionEntityType, entityIDs []int64, u *user.User, userOnly bool) (subscriptions map[int64][]*SubscriptionWithUser, err error) {
+func getSubscriptionsForEntitiesAndUser(s *xorm.Session, entityType SubscriptionEntityType, entityIDs []int64, u *user.User, userOnly, includeDeletedTasks bool) (subscriptions map[int64][]*SubscriptionWithUser, err error) {
 	if err := entityType.validate(); err != nil {
 		return nil, err
 	}
@@ -239,6 +270,11 @@ func getSubscriptionsForEntitiesAndUser(s *xorm.Session, entityType Subscription
 			return nil, &ErrMustProvideUser{}
 		}
 		sUserCond = " AND s.user_id = " + strconv.FormatInt(u.ID, 10)
+	}
+
+	tNotDeletedCond := " AND t.deleted_at IS NULL"
+	if includeDeletedTasks {
+		tNotDeletedCond = ""
 	}
 
 	switch entityType {
@@ -318,7 +354,7 @@ WITH RECURSIVE project_hierarchy AS (
         t.id AS task_id
     FROM tasks t
              JOIN projects p ON t.project_id = p.id
-    WHERE t.id IN (`+entityIDString+`) AND t.deleted_at IS NULL
+    WHERE t.id IN (`+entityIDString+`)`+tNotDeletedCond+`
 
     UNION ALL
 
@@ -344,7 +380,7 @@ subscription_hierarchy AS (
         t.id AS task_id
     FROM subscriptions s
              JOIN tasks t ON s.entity_id = t.id
-    WHERE s.entity_type = ? AND t.id IN (`+entityIDString+`) AND t.deleted_at IS NULL`+sUserCond+`
+    WHERE s.entity_type = ? AND t.id IN (`+entityIDString+`)`+tNotDeletedCond+sUserCond+`
 
     UNION ALL
 
@@ -383,7 +419,7 @@ FROM tasks t
     FROM subscription_hierarchy
 ) sh ON t.id = sh.task_id AND sh.rn = 1
     LEFT JOIN users ON sh.user_id = users.id
-WHERE t.id IN (`+entityIDString+`) AND t.deleted_at IS NULL
+WHERE t.id IN (`+entityIDString+`)`+tNotDeletedCond+`
 ORDER BY t.id, sh.user_id`,
 			SubscriptionEntityTask, SubscriptionEntityProject, SubscriptionEntityTask, SubscriptionEntityProject).
 			Find(&rawSubscriptions)
@@ -412,5 +448,111 @@ ORDER BY t.id, sh.user_id`,
 		subscriptions[sub.OriginalEntityID] = append(subscriptions[sub.OriginalEntityID], &sub.SubscriptionWithUser)
 	}
 
-	return subscriptions, nil
+	// A soft-deleted task cannot be resolved back to its project here, so that
+	// caller filters with the project id it already holds.
+	if userOnly || includeDeletedTasks {
+		return subscriptions, nil
+	}
+
+	return filterSubscriptionsByReadPermission(s, entityType, subscriptions)
+}
+
+type subscribedEntityProject struct {
+	ID        int64
+	ProjectID int64
+}
+
+// Subscription rows outlive access, so subscribers who lost read access to the entity's project are
+// filtered out here rather than deleted: a subscription is user intent and resumes once access returns.
+func filterSubscriptionsByReadPermission(s *xorm.Session, entityType SubscriptionEntityType, subscriptions map[int64][]*SubscriptionWithUser) (map[int64][]*SubscriptionWithUser, error) {
+	if len(subscriptions) == 0 {
+		return subscriptions, nil
+	}
+
+	entityIDs := make([]int64, 0, len(subscriptions))
+	for entityID := range subscriptions {
+		entityIDs = append(entityIDs, entityID)
+	}
+
+	projectIDForEntity := make(map[int64]int64, len(subscriptions))
+	switch entityType {
+	case SubscriptionEntityProject:
+		for _, entityID := range entityIDs {
+			projectIDForEntity[entityID] = entityID
+		}
+	case SubscriptionEntityTask:
+		tasks := []*subscribedEntityProject{}
+		err := s.Table("tasks").
+			In("id", entityIDs).
+			Cols("id", "project_id").
+			Find(&tasks)
+		if err != nil {
+			return nil, err
+		}
+		for _, t := range tasks {
+			projectIDForEntity[t.ID] = t.ProjectID
+		}
+	}
+
+	return filterSubscriptionsByProjectPermission(s, subscriptions, projectIDForEntity)
+}
+
+// filterSubscriptionsByProjectPermission drops subscribers who can no longer read
+// the project each entity belongs to.
+func filterSubscriptionsByProjectPermission(s *xorm.Session, subscriptions map[int64][]*SubscriptionWithUser, projectIDForEntity map[int64]int64) (map[int64][]*SubscriptionWithUser, error) {
+	subscribers := make(map[int64]*user.User)
+	projectIDs := make([]int64, 0, len(projectIDForEntity))
+	seenProjectID := make(map[int64]bool, len(projectIDForEntity))
+	for entityID, subs := range subscriptions {
+		projectID, has := projectIDForEntity[entityID]
+		if !has {
+			continue
+		}
+
+		for _, sub := range subs {
+			if sub.User == nil {
+				continue
+			}
+
+			if _, has := subscribers[sub.User.ID]; !has {
+				subscribers[sub.User.ID] = sub.User
+			}
+			if !seenProjectID[projectID] {
+				seenProjectID[projectID] = true
+				projectIDs = append(projectIDs, projectID)
+			}
+		}
+	}
+
+	readable := make(map[int64]map[int64]*projectReadPermission, len(subscribers))
+	for userID, u := range subscribers {
+		permissions, err := checkReadPermissionsForProjects(s, u, projectIDs)
+		if err != nil {
+			return nil, err
+		}
+		readable[userID] = permissions
+	}
+
+	filtered := make(map[int64][]*SubscriptionWithUser, len(subscriptions))
+	for entityID, subs := range subscriptions {
+		projectID, has := projectIDForEntity[entityID]
+		if !has {
+			continue
+		}
+
+		for _, sub := range subs {
+			if sub.User == nil {
+				continue
+			}
+
+			permission, has := readable[sub.User.ID][projectID]
+			if !has || !permission.canRead {
+				continue
+			}
+
+			filtered[entityID] = append(filtered[entityID], sub)
+		}
+	}
+
+	return filtered, nil
 }

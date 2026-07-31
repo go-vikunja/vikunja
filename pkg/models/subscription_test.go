@@ -24,6 +24,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"xorm.io/xorm"
 )
 
 func TestSubscriptionGetTypeFromString(t *testing.T) {
@@ -351,6 +352,72 @@ func TestSubscriptionGet(t *testing.T) {
 		sub, err := GetSubscriptionForUser(s, SubscriptionEntityTask, 51, &user.User{ID: 1})
 		require.NoError(t, err)
 		assert.Nil(t, sub)
+	})
+}
+
+func TestGetSubscriptionsForEntitySkipsUsersWithoutReadAccess(t *testing.T) {
+	const (
+		taskID     int64 = 32
+		projectID  int64 = 3
+		withAccess int64 = 2
+		lostAccess int64 = 6
+	)
+
+	subscribeBoth := func(t *testing.T, s *xorm.Session, entityType SubscriptionEntityType, entityID int64) {
+		for _, userID := range []int64{withAccess, lostAccess} {
+			_, err := s.Insert(&Subscription{
+				UserID:     userID,
+				EntityType: entityType,
+				EntityID:   entityID,
+			})
+			require.NoError(t, err)
+		}
+	}
+
+	subscriberIDs := func(subs []*SubscriptionWithUser) (ids []int64) {
+		for _, sub := range subs {
+			ids = append(ids, sub.UserID)
+		}
+		return ids
+	}
+
+	t.Run("task", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		subscribeBoth(t, s, SubscriptionEntityTask, taskID)
+
+		subs, err := GetSubscriptionsForEntity(s, SubscriptionEntityTask, taskID)
+		require.NoError(t, err)
+		assert.Equal(t, []int64{withAccess}, subscriberIDs(subs))
+	})
+	t.Run("project", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		subscribeBoth(t, s, SubscriptionEntityProject, projectID)
+
+		subs, err := GetSubscriptionsForEntity(s, SubscriptionEntityProject, projectID)
+		require.NoError(t, err)
+		assert.Equal(t, []int64{withAccess}, subscriberIDs(subs))
+	})
+	t.Run("user only lookup is not filtered", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		subscribeBoth(t, s, SubscriptionEntityTask, taskID)
+		subscribeBoth(t, s, SubscriptionEntityProject, projectID)
+
+		subs, err := GetSubscriptionsForEntitiesAndUser(s, SubscriptionEntityTask, []int64{taskID}, &user.User{ID: lostAccess})
+		require.NoError(t, err)
+		assert.Equal(t, []int64{lostAccess}, subscriberIDs(subs[taskID]))
+
+		subs, err = GetSubscriptionsForEntitiesAndUser(s, SubscriptionEntityProject, []int64{projectID}, &user.User{ID: lostAccess})
+		require.NoError(t, err)
+		assert.Equal(t, []int64{lostAccess}, subscriberIDs(subs[projectID]))
 	})
 }
 

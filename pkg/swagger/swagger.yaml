@@ -3261,7 +3261,10 @@ paths:
     get:
       consumes:
       - application/json
-      description: Returns an array with all notifications for the current user.
+      description: Returns an array with all notifications for the current user. Notifications
+        about a project the current user can no longer read are omitted; the filtering
+        happens in the query, so paging and the `x-pagination-*` headers all describe
+        the visible notifications only.
       parameters:
       - description: The page number. Used for pagination. If not provided, the first
           page of results is returned.

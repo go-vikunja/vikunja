@@ -190,7 +190,8 @@
 			"desktop": {
 				"quickEntryShortcut": "Швидке додавання (комбінації клавіш)",
 				"shortcutRecorderPlaceholder": "Клацніть, щоб встановити гарячі клавіші",
-				"shortcutRecorderRecording": "Натисніть комбінацію клавіш…"
+				"shortcutRecorderRecording": "Натисніть комбінацію клавіш…",
+				"shortcutRecorderClear": "Видалити комбінацію клавіш"
 			},
 			"totp": {
 				"title": "Дворівнева перевірка",
@@ -437,11 +438,14 @@
 				"shared": "Наявні {type}",
 				"you": "Ви",
 				"notShared": "Не долучені ніякі {type}.",
+				"remove": "Вилучити цей {type}",
 				"removeHeader": "Вилучити {type} з {sharable}",
 				"removeText": "Дійсно стерти {sharable} з {type}? Дія незворотна!",
 				"removeSuccess": "{sharable} вилучено з {type}.",
 				"addedSuccess": "{type} додано.",
-				"updatedSuccess": "{type} додано."
+				"updatedSuccess": "{type} додано.",
+				"search": "Шукати {type} для спільного доступу до цього проєкту",
+				"permissionFor": "Дозвіл для {sharable}"
 			},
 			"permission": {
 				"title": "Дозвіл",
@@ -496,7 +500,8 @@
 		},
 		"table": {
 			"title": "Таблиця",
-			"columns": "Заголовки"
+			"columns": "Заголовки",
+			"sortBy": "Сортувати за {column}"
 		},
 		"kanban": {
 			"title": "Дошка",
@@ -560,6 +565,7 @@
 			"createSuccess": "Подання створено.",
 			"titleRequired": "Будь ласка, введіть заголовок.",
 			"delete": "Вилучається подання",
+			"edit": "Редагувати це подання",
 			"deleteText": "Справді впровадити? Продовження ніяк не вплине на завдання, але унеможливить вживання у цьому проєкті. Подальша дія остаточна!",
 			"deleteSuccess": "Подання вилучено.",
 			"onlyAdminsCanEdit": "Лише очільники справи можуть змінювати подання.",
@@ -596,6 +602,7 @@
 			"success": "Вибірку збережено."
 		},
 		"query": {
+			"label": "Запит фільтра",
 			"placeholder": "Введіть щось, щоб знайти або запит для вибірки…",
 			"help": {
 				"intro": "Для вибірки завдань вживається синтаксис запитів подібний до SQL. Доступні такі поля:",
@@ -747,7 +754,10 @@
 		"imprint": "Наша адреса",
 		"privacy": "Правила осібности",
 		"closeSidebar": "Закрити бічну панель",
-		"home": "Домівка Vikunja"
+		"home": "Домівка Vikunja",
+		"toggleChildProjects": "Увімкнути\\вимкнути підпроєкти",
+		"main": "Головна навігація",
+		"savedFilters": "Збережені фільтри"
 	},
 	"misc": {
 		"loading": "Запускаю…",
@@ -803,6 +813,7 @@
 		},
 		"editor": {
 			"edit": "Змінити",
+			"label": "Редактор форматованого тексту",
 			"heading1": "Заголовок 1",
 			"heading1Tooltip": "Великий заголовок розділу.",
 			"heading2": "Заголовок 2",
@@ -822,8 +833,12 @@
 			"orderedList": "Список з числами",
 			"orderedListTooltip": "Створює список з числами.",
 			"link": "Посилання",
+			"urlPlaceholder": "Адреса(URL)",
 			"image": "Зображення",
 			"imageTooltip": "Додає зображення.",
+			"altText": "Альтернативний текст",
+			"altTextPlaceholder": "Опис зображення",
+			"toolbarLabel": "Форматування тексту",
 			"horizontalRule": "Горизонтальна лінія",
 			"horizontalRuleTooltip": "Ділить розділ.",
 			"text": "Введення",
@@ -857,13 +872,16 @@
 		},
 		"multiselect": {
 			"createPlaceholder": "Створити",
-			"selectPlaceholder": "Клацніть або натисніть Enter, щоб обрати"
+			"selectPlaceholder": "Клацніть або натисніть Enter, щоб обрати",
+			"removeItem": "Вилучити цей елемент",
+			"clear": "Очистити вибір"
 		},
 		"datepickerRange": {
 			"to": "До",
 			"from": "Від",
 			"fromto": "{from} до {to}",
 			"date": "День",
+			"openCalendar": "Відкрити календар",
 			"ranges": {
 				"today": "Сьогодні",
 				"tomorrow": "Завтра",
@@ -938,6 +956,7 @@
 		"new": "Створити",
 		"createSuccess": "Завдання створено.",
 		"addReminder": "Обрати…",
+		"removeReminder": "Вилучити це нагадування",
 		"doneSuccess": "Завдання закінчено.",
 		"undoneSuccess": "Завдання поновлено.",
 		"readOnlyCheckbox": "У вас доступ лише для перегляду цього завдання, і ви не можете позначити його як завершене.",
@@ -960,16 +979,23 @@
 			"chooseDueDate": "Обрати",
 			"chooseStartDate": "Обрати",
 			"chooseEndDate": "Обрати",
+			"removeDueDate": "Вилучити термін виконання",
+			"removeStartDate": "Вилучити дату початку",
+			"removeEndDate": "Вилучити дату завершення",
+			"removeRepeat": "Вилучити інтервал повторення",
+			"removeAssignee": "Вилучити виконавця {user}",
 			"move": "Перемістити завдання в інший проєкт",
 			"done": "Виконати!",
 			"undone": "Поновити",
 			"created": "Створено {0} з {1}",
 			"updated": "Оновлено {0}",
 			"doneAt": "Закінчено {0}",
+			"titleRequired": "Заголовок завдання не може бути порожнім.",
 			"updateSuccess": "Завдання збережено.",
 			"deleteSuccess": "Завдання вилучено.",
 			"duplicateSuccess": "Проєкт успішно дубльовано.",
 			"noBucket": "Не має стрічки завдань",
+			"bucketSelectLabel": "Колонка канбан-дошки: {bucket}",
 			"bucketChangedSuccess": "Стрічку завдання успішно змінено.",
 			"belongsToProject": "Завдання міститься у проєкті '{project}'",
 			"back": "Назад до проєкту",
@@ -1025,6 +1051,7 @@
 			"repeat": "Повтор",
 			"comment": "{count} коментар | {count} коментарі",
 			"commentCount": "Кількість коментарів",
+			"attachment": "{count} вкладення | {count} вкладень",
 			"startDate": "День початку",
 			"title": "Суть",
 			"updated": "Оновлено",
@@ -1097,9 +1124,12 @@
 		"label": {
 			"placeholder": "Введіть назву мітки…",
 			"createPlaceholder": "Додати це як нову позначку",
+			"linkShareCannotCreate": "Створення нових міток через спільне посилання недоступне. Можна додавати лише мітки, які вже є в цьому проєкті.",
+			"removeLabel": "Вилучити позначку {label}",
 			"addSuccess": "Позначку додано.",
 			"removeSuccess": "Позначку вилучено.",
 			"addCreateSuccess": "Позначку створено і додано.",
+			"createFailed": "Не вдалося створити нові мітки, тому їх не додано: {labels}",
 			"delete": {
 				"header": "Вилучається позначка",
 				"text1": "Справді впровадити?",
@@ -1144,6 +1174,9 @@
 			"after": "{amount} {unit} після {type}",
 			"beforeShort": "до",
 			"afterShort": "після",
+			"periodUnit": "Одиниця часу",
+			"periodDirection": "Перед або після",
+			"periodRelativeTo": "Відносно до",
 			"onDueDate": "У день виконання",
 			"onStartDate": "У день початку",
 			"onEndDate": "У день закінчення",
@@ -1343,6 +1376,7 @@
 		"subscribeFeed": "Підписатися на сповіщення через стрічку Atom"
 	},
 	"quickActions": {
+		"title": "Пошук та швидкі дії",
 		"notLoggedIn": "Будь ласка, спочатку авторизуйтесь в головному вікні Vikunja.",
 		"commands": "Вказівки",
 		"placeholder": "Введіть щось або вказівку щоб знайти…",
@@ -1356,6 +1390,7 @@
 		"newTeam": "Введіть назву нової спільноти…",
 		"createTask": "Створити завдання в поточному проєкті ({title})",
 		"createProject": "Створити проєкт",
+		"results": "Немає результатів | {count} результат | {count} результатів",
 		"cmds": {
 			"newTask": "Нове завдання",
 			"newProject": "Новий проєкт",
