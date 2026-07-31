@@ -2651,10 +2651,18 @@ const ErrCodeTaskIsBlocked = 20001
 
 // HTTPError holds the http error description
 func (err ErrTaskIsBlocked) HTTPError() web.HTTPError {
+	titles := make([]string, 0, len(err.BlockingTasks))
+	for _, t := range err.BlockingTasks {
+		titles = append(titles, t.Title)
+	}
+
 	return web.HTTPError{
 		HTTPCode: http.StatusConflict,
 		Code:     ErrCodeTaskIsBlocked,
 		Message:  err.Error(),
+		I18nParams: map[string]string{
+			"tasks": strings.Join(titles, ", "),
+		},
 	}
 }
 

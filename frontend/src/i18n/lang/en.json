@@ -1496,7 +1496,7 @@
     "13003": "The provided link share token is invalid.",
     "14001": "The provided api token is invalid.",
     "14002": "The permission {permission} of group {group} is invalid.",
-    "20001": "This task is blocked by incomplete tasks and cannot be marked as done."
+    "20001": "This task is blocked by incomplete tasks: {tasks}"
   },
   "about": {
     "title": "About",
