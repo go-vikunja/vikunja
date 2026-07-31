@@ -91,6 +91,11 @@ func Restore(filename string, overrideConfig bool) error {
 			return fmt.Errorf("unsafe path in zip archive: %q", file.Name)
 		}
 
+		// Manually repacked dumps contain directory entries, our own dumps don't
+		if file.FileInfo().IsDir() {
+			continue
+		}
+
 		if strings.HasPrefix(file.Name, "config") {
 			configFile = file
 			continue
