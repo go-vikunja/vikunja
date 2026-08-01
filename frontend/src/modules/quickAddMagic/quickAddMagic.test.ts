@@ -1,6 +1,6 @@
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest'
 
-import {parseTaskText, PrefixMode} from '.'
+import {parseTaskText, getDateFragments, PrefixMode} from '.'
 import type {ParsedTaskText} from '.'
 import {parseDate} from './dateParser'
 import {en, uk} from './locales'
@@ -938,6 +938,7 @@ describe('Parse Task Text', () => {
 			'every 5 hours': {type: 'hours', amount: 5},
 			'every 12 hours': {type: 'hours', amount: 12},
 			'every day': {type: 'days', amount: 1},
+			'everyday': {type: 'days', amount: 1},
 			'every 1 day': {type: 'days', amount: 1},
 			'every 2 days': {type: 'days', amount: 2},
 			'every week': {type: 'weeks', amount: 1},
@@ -1242,5 +1243,48 @@ describe('Parse Task Text', () => {
 			expect(result.text).toBe(text)
 			expect(result.date).toBeNull()
 		})
+	})
+})
+
+describe('getDateFragments', () => {
+	it('should return no fragments for text without dates', () => {
+		expect(getDateFragments('Lorem Ipsum')).toEqual([])
+	})
+
+	it('should return no fragments when disabled', () => {
+		expect(getDateFragments('Lorem Ipsum today', PrefixMode.Disabled)).toEqual([])
+	})
+
+	it('should return no fragments for quoted text', () => {
+		expect(getDateFragments('"Buy milk tomorrow"')).toEqual([])
+	})
+
+	it('should find a single date phrase', () => {
+		expect(getDateFragments('Buy milk tomorrow')).toEqual(['tomorrow'])
+	})
+
+	it('should find a date phrase with a time', () => {
+		expect(getDateFragments('Meeting today at 14:00')).toEqual(['today', 'at 14:00'])
+	})
+
+	it('should find repeat expressions', () => {
+		expect(getDateFragments('Water plants every week')).toEqual(['every week'])
+		expect(getDateFragments('Water plants everyday')).toEqual(['everyday'])
+	})
+
+	it('should find an ordinal day with a month name', () => {
+		expect(getDateFragments('Some task Mar 8th')).toEqual(['Mar', '8th'])
+	})
+
+	it('should find Ukrainian repeat adverbs', () => {
+		expect(getDateFragments('Полити квіти щотижня', PrefixMode.Default, new Date(), [uk])).toEqual(['щотижня'])
+	})
+
+	it('should find Ukrainian weekday repeats and the weekday', () => {
+		expect(getDateFragments('Задача кожен четвер', PrefixMode.Default, new Date(), [uk])).toEqual(['кожен', 'четвер'])
+	})
+
+	it('should find Ukrainian date phrases', () => {
+		expect(getDateFragments('Купити молоко завтра', PrefixMode.Default, new Date(), [uk])).toEqual(['завтра'])
 	})
 })

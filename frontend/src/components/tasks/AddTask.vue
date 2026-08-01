@@ -1,10 +1,11 @@
+<!-- eslint-disable vue/no-v-html -- highlightHtml escapes all user text -->
 <template>
 	<div
 		ref="taskAdd"
 		class="task-add"
 	>
 		<div class="add-task__field field">
-			<p class="control task-input-wrapper">
+			<div class="control task-input-wrapper">
 				<label
 					class="is-sr-only"
 					:for="textareaId"
@@ -14,23 +15,33 @@
 				<span class="icon is-small task-icon">
 					<Icon icon="tasks" />
 				</span>
-				<textarea
-					:id="textareaId"
-					ref="newTaskInput"
-					v-model="newTaskTitle"
-					v-focus
-					class="add-task-textarea input"
-					:class="{'textarea-empty': newTaskTitle === ''}"
-					:placeholder="$t('project.list.addPlaceholder')"
-					rows="1"
-					@keydown="resetEmptyTitleError"
-					@keydown.enter="handleEnter"
-					@keydown.esc="blurTaskInput"
-				/>
+				<div class="highlight-wrapper">
+					<div
+						v-if="newTaskTitle !== ''"
+						ref="highlightLayer"
+						class="highlight-layer"
+						aria-hidden="true"
+						v-html="highlightHtml"
+					/>
+					<textarea
+						:id="textareaId"
+						ref="newTaskInput"
+						v-model="newTaskTitle"
+						v-focus
+						class="add-task-textarea input"
+						:class="{'textarea-empty': newTaskTitle === ''}"
+						:placeholder="$t('project.list.addPlaceholder')"
+						rows="1"
+						@keydown="resetEmptyTitleError"
+						@keydown.enter="handleEnter"
+						@keydown.esc="blurTaskInput"
+						@scroll="syncHighlightScroll"
+					/>
+				</div>
 				<QuickAddMagic
 					:highlight-hint-icon="taskAddHovered"
 				/>
-			</p>
+			</div>
 			<p class="control">
 				<XButton
 					class="add-task-button"
@@ -71,7 +82,7 @@ import QuickAddMagic from '@/components/tasks/partials/QuickAddMagic.vue'
 import {parseSubtasksViaIndention} from '@/helpers/parseSubtasksViaIndention'
 import TaskRelationService from '@/services/taskRelation'
 import TaskRelationModel from '@/models/taskRelation'
-import {getLabelsFromPrefix} from '@/modules/quickAddMagic'
+import {getLabelsFromPrefix, getDateFragments} from '@/modules/quickAddMagic'
 import {error} from '@/message'
 
 import {useAuthStore} from '@/stores/auth'
@@ -119,6 +130,47 @@ function resetEmptyTitleError() {
 }
 
 const loading = computed(() => taskStore.isLoading)
+
+const escapeHtml = (value: string): string => value
+	.replace(/&/g, '&amp;')
+	.replace(/</g, '&lt;')
+	.replace(/>/g, '&gt;')
+
+// Rendered via v-html: building the same markup in the template would introduce
+// whitespace text nodes and misalign the layer from the textarea text.
+const highlightHtml = computed<string>(() => {
+	const text = newTaskTitle.value
+	if (text === '') {
+		return ''
+	}
+
+	const fragments = getDateFragments(text, authStore.settings.frontendSettings.quickAddMagicMode)
+	let html = ''
+	let cursor = 0
+	const lowerText = text.toLowerCase()
+	for (const fragment of fragments) {
+		const index = lowerText.indexOf(fragment.toLowerCase(), cursor)
+		if (index === -1) {
+			continue
+		}
+		html += escapeHtml(text.slice(cursor, index))
+		html += `<span class="date-fragment">${escapeHtml(text.slice(index, index + fragment.length))}</span>`
+		cursor = index + fragment.length
+	}
+	html += escapeHtml(text.slice(cursor))
+
+	return html
+})
+
+const highlightLayer = ref<HTMLElement | null>(null)
+
+function syncHighlightScroll() {
+	if (highlightLayer.value === null || !newTaskInput.value) {
+		return
+	}
+	highlightLayer.value.scrollTop = newTaskInput.value.scrollTop
+	highlightLayer.value.scrollLeft = newTaskInput.value.scrollLeft
+}
 
 async function addTask() {
 	if (newTaskTitle.value === '') {
@@ -324,8 +376,55 @@ defineExpose({
 	flex-shrink: 1;
 	flex-grow: 1;
 
+	.highlight-wrapper {
+		position: relative;
+		inline-size: 100%;
+	}
+
+	// The highlight layer renders the same text as the (transparent) textarea on top of it.
+	// Font metrics and padding must stay in sync with the textarea so glyphs align exactly.
+	.highlight-layer,
+	textarea {
+		font-size: 1rem;
+		line-height: 1.25;
+	}
+
+	.highlight-layer {
+		position: absolute;
+		inset: 0;
+		// bulma positions the textarea, without a z-index it would paint over this layer
+		z-index: 1;
+		text-align: start;
+		border: 1px solid transparent;
+		padding-block: calc(.5em - 1px);
+		padding-inline: 2.5rem;
+		white-space: pre-wrap;
+		overflow-wrap: break-word;
+		overflow: hidden;
+		pointer-events: none;
+	}
+
 	textarea {
 		padding-inline: 2.5rem;
+		color: transparent;
+		caret-color: var(--text-strong);
+
+		&.textarea-empty {
+			color: var(--input-color, var(--text-strong));
+		}
+	}
+
+	// v-html content has no scoped attribute, needs :deep
+	:deep(.date-fragment) {
+		font-style: italic;
+		border: 1px solid var(--primary);
+		border-radius: $radius;
+		background: var(--primary);
+		color: var(--white);
+		margin-block: -1px;
+		margin-inline: -2px;
+		padding-inline: 1px;
+		box-decoration-break: clone;
 	}
 
 	.icon {

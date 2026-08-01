@@ -22,6 +22,7 @@ export const getRepeats = (text: string, locales: QuickAddMagicLocale[] = getDef
 	return {
 		textWithoutMatched: text,
 		repeats: null,
+		matched: null,
 	}
 }
 
@@ -67,6 +68,7 @@ const matchStandardRepeat = (text: string, locale: QuickAddMagicLocale): repeatP
 			amount,
 			type,
 		},
+		matched: matchedText.trim(),
 	}
 }
 
@@ -90,5 +92,6 @@ const matchWeekdayRepeat = (text: string, locale: QuickAddMagicLocale): repeatPa
 			amount: 1,
 			type: REPEAT_TYPES.Weeks,
 		},
+		matched: results[2],
 	}
 }

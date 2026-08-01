@@ -59,3 +59,34 @@ export const parseTaskText = (text: string, prefixesMode: PrefixMode = PrefixMod
 
 	return cleanupResult(result, prefixes)
 }
+
+/**
+ * Returns the raw date-related fragments (repeat expressions, dates, times) found in the
+ * given text, exactly as they appear in it. Used to highlight parsed dates in the input.
+ */
+export const getDateFragments = (text: string, prefixesMode: PrefixMode = PrefixMode.Default, now: Date = new Date(), locales: QuickAddMagicLocale[] = getDefaultLocales()): string[] => {
+	if (PREFIXES[prefixesMode] === undefined) {
+		return []
+	}
+
+	// Quoted text skips all parsing — nothing to highlight
+	if (
+		text.length >= 2
+		&& ((text.startsWith('"') && text.endsWith('"'))
+			|| (text.startsWith('\'') && text.endsWith('\'')))
+	) {
+		return []
+	}
+
+	const fragments: string[] = []
+
+	const {textWithoutMatched, matched: repeatMatch} = getRepeats(text, locales)
+	if (repeatMatch !== null) {
+		fragments.push(repeatMatch)
+	}
+
+	const {matched: dateMatches} = parseDate(textWithoutMatched, now, locales)
+	fragments.push(...dateMatches)
+
+	return fragments.filter(f => f !== '')
+}

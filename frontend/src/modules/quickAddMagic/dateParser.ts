@@ -9,6 +9,7 @@ import type {DatePhrase} from './locales/types'
 export interface dateParseResult {
 	newText: string,
 	date: Date | null,
+	matched: string[],
 }
 
 interface dateFoundResult {
@@ -82,7 +83,7 @@ export const parseDate = (text: string, now: Date = new Date(), locales: QuickAd
 		const parsed = getDayFromText(text, now, locale)
 		if (parsed.date !== null) {
 			const month = getMonthFromText(text, parsed.date as Date, locale)
-			return addTimeToDate(month.newText, month.date, parsed.foundText, locales)
+			return addTimeToDate(month.newText, month.date, parsed.foundText, locales, month.matched !== null ? [month.matched] : [])
 		}
 	}
 
@@ -103,6 +104,7 @@ export const parseDate = (text: string, now: Date = new Date(), locales: QuickAd
 		return {
 			newText: replaceAll(text, parsed.foundText, ''),
 			date: parsed.date,
+			matched: [],
 		}
 	}
 
@@ -152,13 +154,17 @@ const applyDatePhrase = (text: string, phrase: DatePhrase, matched: string, loca
 	}
 }
 
-const addTimeToDate = (text: string, date: Date, previousMatch: string | null, locales: QuickAddMagicLocale[]): dateParseResult => {
+const addTimeToDate = (text: string, date: Date, previousMatch: string | null, locales: QuickAddMagicLocale[], extraMatched: string[] = []): dateParseResult => {
 	previousMatch = previousMatch?.trim() || ''
 	text = replaceAll(text, previousMatch, '')
+	const matched: string[] = previousMatch === ''
+		? [...extraMatched]
+		: [...extraMatched, previousMatch]
 	if (previousMatch === null) {
 		return {
 			newText: text,
 			date: null,
+			matched,
 		}
 	}
 
@@ -188,10 +194,15 @@ const addTimeToDate = (text: string, date: Date, previousMatch: string | null, l
 		date.setMilliseconds(0)
 	}
 
+	if (results !== null) {
+		matched.push(results[0].trim())
+	}
+
 	const replace = results !== null ? results[0] : previousMatch
 	return {
 		newText: replaceAll(text, replace, '').trim(),
 		date,
+		matched,
 	}
 }
 
@@ -413,7 +424,7 @@ const getDayFromText = (text: string, now: Date, locale: QuickAddMagicLocale) =>
 	}
 }
 
-const getMonthFromText = (text: string, date: Date, locale: QuickAddMagicLocale) => {
+const getMonthFromText = (text: string, date: Date, locale: QuickAddMagicLocale): {newText: string, date: Date, matched: string | null} => {
 	const group = monthFormsGroup(locale)
 	// \b only works for Latin scripts; Cyrillic needs explicit space boundaries
 	const matcher = locale.monthWordBoundary
@@ -425,6 +436,7 @@ const getMonthFromText = (text: string, date: Date, locale: QuickAddMagicLocale)
 		return {
 			newText: text,
 			date,
+			matched: null,
 		}
 	}
 
@@ -436,6 +448,7 @@ const getMonthFromText = (text: string, date: Date, locale: QuickAddMagicLocale)
 	return {
 		newText: replaceAll(text, results[0].trim(), ''),
 		date,
+		matched: results[0].trim(),
 	}
 }
 

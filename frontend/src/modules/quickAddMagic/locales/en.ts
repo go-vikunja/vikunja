@@ -67,7 +67,7 @@ export const en: QuickAddMagicLocale = {
 		{forms: ['biannually'], type: REPEAT_TYPES.Months, amount: 6},
 		{forms: ['semiannually'], type: REPEAT_TYPES.Months, amount: 6},
 		{forms: ['biennially'], type: REPEAT_TYPES.Years, amount: 2},
-		{forms: ['daily'], type: REPEAT_TYPES.Days, amount: 1},
+		{forms: ['daily', 'everyday'], type: REPEAT_TYPES.Days, amount: 1},
 		{forms: ['hourly'], type: REPEAT_TYPES.Hours, amount: 1},
 		{forms: ['monthly'], type: REPEAT_TYPES.Months, amount: 1},
 		{forms: ['weekly'], type: REPEAT_TYPES.Weeks, amount: 1},
