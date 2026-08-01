@@ -1,4 +1,5 @@
 import {parseDate} from './dateParser'
+import {getDefaultLocales, type QuickAddMagicLocale} from './locales'
 import {PREFIXES, PrefixMode} from './prefixes'
 import {getItemsFromPrefix, getLabelsFromPrefix, getProjectFromPrefix} from './prefixParser'
 import {getPriority} from './priorityParser'
@@ -11,7 +12,7 @@ import type {ParsedTaskText} from './types'
  *
  * @param text
  */
-export const parseTaskText = (text: string, prefixesMode: PrefixMode = PrefixMode.Default, now: Date = new Date()): ParsedTaskText => {
+export const parseTaskText = (text: string, prefixesMode: PrefixMode = PrefixMode.Default, now: Date = new Date(), locales: QuickAddMagicLocale[] = getDefaultLocales()): ParsedTaskText => {
 	const result: ParsedTaskText = {
 		text: text,
 		date: null,
@@ -48,11 +49,11 @@ export const parseTaskText = (text: string, prefixesMode: PrefixMode = PrefixMod
 
 	result.assignees = getItemsFromPrefix(result.text, prefixes.assignee)
 
-	const {textWithoutMatched, repeats} = getRepeats(result.text)
+	const {textWithoutMatched, repeats} = getRepeats(result.text, locales)
 	result.text = textWithoutMatched
 	result.repeats = repeats
 
-	const {newText, date} = parseDate(result.text, now)
+	const {newText, date} = parseDate(result.text, now, locales)
 	result.text = newText
 	result.date = date
 

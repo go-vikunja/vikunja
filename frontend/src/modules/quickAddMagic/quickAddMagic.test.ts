@@ -3,6 +3,7 @@ import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest'
 import {parseTaskText, PrefixMode} from '.'
 import type {ParsedTaskText} from '.'
 import {parseDate} from './dateParser'
+import {en, uk} from './locales'
 import {calculateDayInterval} from '@/helpers/time/calculateDayInterval'
 import {PRIORITIES} from '@/constants/priorities'
 import {MILLISECONDS_A_DAY} from '@/constants/date'
@@ -1009,6 +1010,237 @@ describe('Parse Task Text', () => {
 				expect(result.text).toBe(`Lorem Ipsum word${c}notword`)
 				expect(result?.repeats).toBeNull()
 			})
+		})
+	})
+
+	describe('Ukrainian locale', () => {
+		const ukLocales = [uk]
+		const ukEnLocales = [uk, en]
+
+		const expectSameDay = (date: Date, expected: Date) => {
+			expect(date.getFullYear()).toBe(expected.getFullYear())
+			expect(date.getMonth()).toBe(expected.getMonth())
+			expect(date.getDate()).toBe(expected.getDate())
+		}
+
+		const expectWeekday = (result: ParsedTaskText, day: number) => {
+			const next = new Date()
+			const distance = (day + 7 - next.getDay()) % 7
+			next.setDate(next.getDate() + distance)
+
+			expect(result.date).not.toBeNull()
+			expectSameDay(result.date as Date, next)
+		}
+
+		it('should parse завтра as tomorrow', () => {
+			const result = parseTaskText('Купити молоко завтра', PrefixMode.Default, new Date(), ukLocales)
+
+			const tomorrow = new Date()
+			tomorrow.setDate(tomorrow.getDate() + 1)
+
+			expect(result.text).toBe('Купити молоко')
+			expect(result.date).not.toBeNull()
+			expectSameDay(result.date as Date, tomorrow)
+		})
+
+		it('should parse сьогодні as today', () => {
+			const result = parseTaskText('Купити молоко сьогодні', PrefixMode.Default, new Date(), ukLocales)
+
+			expect(result.text).toBe('Купити молоко')
+			expect(result.date).not.toBeNull()
+			expectSameDay(result.date as Date, new Date())
+		})
+
+		it('should parse сьогодні ввечері as tonight', () => {
+			const result = parseTaskText('Купити молоко сьогодні ввечері', PrefixMode.Default, new Date(), ukLocales)
+
+			expect(result.text).toBe('Купити молоко')
+			expect(result.date).not.toBeNull()
+			expectSameDay(result.date as Date, new Date())
+			expect(result?.date?.getHours()).toBe(21)
+		})
+
+		it('should not parse завтрак (breakfast) as a date', () => {
+			const text = 'Купити хліб на завтрак'
+			const result = parseTaskText(text, PrefixMode.Default, new Date(), ukLocales)
+
+			expect(result.text).toBe(text)
+			expect(result.date).toBeNull()
+		})
+
+		it('should parse на вихідних as this weekend', () => {
+			const result = parseTaskText('Прибрати на вихідних', PrefixMode.Default, new Date(), ukLocales)
+
+			const weekend = new Date()
+			weekend.setDate(weekend.getDate() + calculateDayInterval('thisWeekend'))
+
+			expect(result.text).toBe('Прибрати')
+			expect(result.date).not.toBeNull()
+			expectSameDay(result.date as Date, weekend)
+		})
+
+		it('should parse наступного тижня as next week', () => {
+			const result = parseTaskText('Здзвонитися наступного тижня', PrefixMode.Default, new Date(), ukLocales)
+
+			const nextWeek = new Date()
+			nextWeek.setDate(nextWeek.getDate() + 7)
+
+			expect(result.text).toBe('Здзвонитися')
+			expect(result.date).not.toBeNull()
+			expectSameDay(result.date as Date, nextWeek)
+		})
+
+		it('should parse наступного місяця as next month', () => {
+			const result = parseTaskText('Заплатити наступного місяця', PrefixMode.Default, new Date(), ukLocales)
+
+			const nextMonth = new Date()
+			nextMonth.setDate(1)
+			nextMonth.setMonth(nextMonth.getMonth() + 1)
+
+			expect(result.text).toBe('Заплатити')
+			expect(result.date).not.toBeNull()
+			expectSameDay(result.date as Date, nextMonth)
+		})
+
+		const weekdays = {
+			'в понеділок': 1,
+			'понеділок': 1,
+			'наступного понеділка': 1,
+			'вівторок': 2,
+			'у середу': 3,
+			'середи': 3,
+			'четвер': 4,
+			'четверг': 4,
+			'п\'ятниця': 5,
+			'п’ятницю': 5,
+			'пʼятниця': 5,
+			'суботу': 6,
+			'неділя': 0,
+			'в неділю': 0,
+			'пн': 1,
+			'чт': 4,
+		} as Record<string, number>
+
+		for (const d of Object.keys(weekdays)) {
+			it(`should recognize weekday ${d}`, () => {
+				const result = parseTaskText(`Зустріч ${d}`, PrefixMode.Default, new Date(), ukLocales)
+
+				expect(result.text).toBe('Зустріч')
+				expectWeekday(result, weekdays[d])
+			})
+		}
+
+		it('should parse через 3 дні as in three days', () => {
+			const result = parseTaskText('Нагадати через 3 дні', PrefixMode.Default, new Date(), ukLocales)
+
+			const inThreeDays = new Date()
+			inThreeDays.setDate(inThreeDays.getDate() + 3)
+
+			expect(result.text).toBe('Нагадати')
+			expect(result.date).not.toBeNull()
+			expectSameDay(result.date as Date, inThreeDays)
+		})
+
+		it('should parse за 2 тижні as in two weeks', () => {
+			const result = parseTaskText('Нагадати за 2 тижні', PrefixMode.Default, new Date(), ukLocales)
+
+			const inTwoWeeks = new Date()
+			inTwoWeeks.setDate(inTwoWeeks.getDate() + 14)
+
+			expect(result.text).toBe('Нагадати')
+			expect(result.date).not.toBeNull()
+			expectSameDay(result.date as Date, inTwoWeeks)
+		})
+
+		it('should parse 21 серпня as a date', () => {
+			const result = parseTaskText('День народження 21 серпня', PrefixMode.Default, new Date(), ukLocales)
+
+			const now = new Date()
+			const expected = new Date(now.getFullYear(), 7, 21)
+			if (expected < now) {
+				expected.setFullYear(expected.getFullYear() + 1)
+			}
+
+			expect(result.text).toBe('День народження')
+			expect(result.date).not.toBeNull()
+			expectSameDay(result.date as Date, expected)
+		})
+
+		it('should parse завтра о 14:00 as tomorrow at 14:00', () => {
+			const result = parseTaskText('Дзвінок завтра о 14:00', PrefixMode.Default, new Date(), ukLocales)
+
+			const tomorrow = new Date()
+			tomorrow.setDate(tomorrow.getDate() + 1)
+
+			expect(result.text).toBe('Дзвінок')
+			expect(result.date).not.toBeNull()
+			expectSameDay(result.date as Date, tomorrow)
+			expect(result?.date?.getHours()).toBe(14)
+			expect(result?.date?.getMinutes()).toBe(0)
+		})
+
+		it('should parse кожен четвер as a weekly repeat on Thursday', () => {
+			const result = parseTaskText('Винести сміття кожен четвер', PrefixMode.Default, new Date(), ukLocales)
+
+			expect(result.text).toBe('Винести сміття')
+			expect(result?.repeats?.type).toBe('weeks')
+			expect(result?.repeats?.amount).toBe(1)
+			expectWeekday(result, 4)
+		})
+
+		it('should parse every thursday as a weekly repeat on Thursday', () => {
+			const result = parseTaskText('Lorem Ipsum every thursday')
+
+			expect(result.text).toBe('Lorem Ipsum')
+			expect(result?.repeats?.type).toBe('weeks')
+			expect(result?.repeats?.amount).toBe(1)
+			expectWeekday(result, 4)
+		})
+
+		const repeatCases = {
+			'кожен день': {type: 'days', amount: 1},
+			'кожного дня': {type: 'days', amount: 1},
+			'кожні 3 дні': {type: 'days', amount: 3},
+			'кожні два тижні': {type: 'weeks', amount: 2},
+			'кожного тижня': {type: 'weeks', amount: 1},
+			'кожен місяць': {type: 'months', amount: 1},
+			'кожні 2 роки': {type: 'years', amount: 2},
+			'кожні п\'ять годин': {type: 'hours', amount: 5},
+			'кожні девʼять годин': {type: 'hours', amount: 9},
+			'щогодини': {type: 'hours', amount: 1},
+			'щодня': {type: 'days', amount: 1},
+			'щотижня': {type: 'weeks', amount: 1},
+			'щомісяця': {type: 'months', amount: 1},
+			'щороку': {type: 'years', amount: 1},
+		} as Record<string, IRepeatAfter>
+
+		for (const c of Object.keys(repeatCases)) {
+			it(`should parse ${c} as recurring every ${repeatCases[c].amount} ${repeatCases[c].type}`, () => {
+				const result = parseTaskText(`Задача ${c}`, PrefixMode.Default, new Date(), ukLocales)
+
+				expect(result.text).toBe('Задача')
+				expect(result?.repeats?.type).toBe(repeatCases[c].type)
+				expect(result?.repeats?.amount).toBe(repeatCases[c].amount)
+			})
+		}
+
+		it('should fall back to English when Ukrainian does not match', () => {
+			const result = parseTaskText('Купити молоко tomorrow', PrefixMode.Default, new Date(), ukEnLocales)
+
+			const tomorrow = new Date()
+			tomorrow.setDate(tomorrow.getDate() + 1)
+
+			expect(result.text).toBe('Купити молоко')
+			expect(result.date).not.toBeNull()
+			expectSameDay(result.date as Date, tomorrow)
+		})
+
+		it('should not parse English dates without the English fallback', () => {
+			const text = 'Купити молоко tomorrow'
+			const result = parseTaskText(text, PrefixMode.Default, new Date(), ukLocales)
+
+			expect(result.text).toBe(text)
+			expect(result.date).toBeNull()
 		})
 	})
 })

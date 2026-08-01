@@ -1,6 +1,10 @@
 import {calculateDayInterval} from '@/helpers/time/calculateDayInterval'
 import {calculateNearestHours} from '@/helpers/time/calculateNearestHours'
 import {replaceAll} from '@/helpers/replaceAll'
+import {REPEAT_TYPES} from '@/types/IRepeatAfter'
+import {getDefaultLocales, type QuickAddMagicLocale} from './locales'
+import {findByForm, toPattern} from './locales/pattern'
+import type {DatePhrase} from './locales/types'
 
 export interface dateParseResult {
 	newText: string,
@@ -11,8 +15,6 @@ interface dateFoundResult {
 	foundText: string | null,
 	date: Date | null,
 }
-
-const monthsRegexGroup = '(january|february|march|april|june|july|august|september|october|november|december|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)'
 
 /**
  * Matches a date regex against text, rejecting matches that appear in the middle
@@ -40,77 +42,59 @@ function matchDateAtBoundary(text: string, pattern: string): RegExpExecArray | n
 	return null
 }
 
-function matchesDateExpr(text: string, dateExpr: string): boolean {
-	return text.match(new RegExp('(^| )' + dateExpr, 'gi')) !== null
+/**
+ * Returns the matched phrase text, or null. With strictBoundary, a space or
+ * end must directly follow the phrase so words merely starting with it
+ * (e.g. "завтрак") don't match.
+ */
+function matchDatePhrase(text: string, form: string, strictBoundary: boolean): string | null {
+	const tail = strictBoundary ? '($| )' : ''
+	const result = new RegExp(`(^| )${toPattern(form)}${tail}`, 'i').exec(text)
+	return result === null ? null : result[0].trim()
 }
 
-export const parseDate = (text: string, now: Date = new Date()): dateParseResult => {
-	if (matchesDateExpr(text, 'today')) {
-		return addTimeToDate(text, getDateFromInterval(calculateDayInterval('today')), 'today')
-	}
-	if (matchesDateExpr(text, 'tonight')) {
-		const taskDate = getDateFromInterval(calculateDayInterval('today'))
-		taskDate.setHours(21)
-		return addTimeToDate(text, taskDate, 'tonight')
-	}
-	if (matchesDateExpr(text, 'tomorrow')) {
-		return addTimeToDate(text, getDateFromInterval(calculateDayInterval('tomorrow')), 'tomorrow')
-	}
-	if (matchesDateExpr(text, 'next monday')) {
-		return addTimeToDate(text, getDateFromInterval(calculateDayInterval('nextMonday')), 'next monday')
-	}
-	if (matchesDateExpr(text, 'this weekend')) {
-		return addTimeToDate(text, getDateFromInterval(calculateDayInterval('thisWeekend')), 'this weekend')
-	}
-	if (matchesDateExpr(text, 'later this week')) {
-		return addTimeToDate(text, getDateFromInterval(calculateDayInterval('laterThisWeek')), 'later this week')
-	}
-	if (matchesDateExpr(text, 'later next week')) {
-		return addTimeToDate(text, getDateFromInterval(calculateDayInterval('laterNextWeek')), 'later next week')
-	}
-	if (matchesDateExpr(text, 'next week')) {
-		return addTimeToDate(text, getDateFromInterval(calculateDayInterval('nextWeek')), 'next week')
-	}
-	if (matchesDateExpr(text, 'next month')) {
-		const date: Date = new Date()
-		date.setDate(1)
-		date.setMonth(date.getMonth() + 1)
-		date.setHours(calculateNearestHours(date))
-		date.setMinutes(0)
-		date.setSeconds(0)
+const monthFormsGroup = (locale: QuickAddMagicLocale): string =>
+	`(${locale.months.flatMap(m => m.forms).map(toPattern).join('|')})`
 
-		return addTimeToDate(text, date, 'next month')
-	}
-	if (matchesDateExpr(text, 'end of month')) {
-		const curDate: Date = new Date()
-		const date: Date = new Date(curDate.getFullYear(), curDate.getMonth() + 1, 0)
-		date.setHours(calculateNearestHours(date))
-		date.setMinutes(0)
-		date.setSeconds(0)
+const timePrefixesPattern = (locales: QuickAddMagicLocale[]): string =>
+	[...new Set(locales.flatMap(l => l.timePrefixes))].map(toPattern).join('|')
 
-		return addTimeToDate(text, date, 'end of month')
+export const parseDate = (text: string, now: Date = new Date(), locales: QuickAddMagicLocale[] = getDefaultLocales()): dateParseResult => {
+	for (const locale of locales) {
+		for (const [phrase, forms] of Object.entries(locale.phrases)) {
+			for (const form of forms) {
+				const matched = matchDatePhrase(text, form, locale.phraseStrictBoundary ?? false)
+				if (matched !== null) {
+					return applyDatePhrase(text, phrase as DatePhrase, matched, locales)
+				}
+			}
+		}
 	}
 
-	let parsed = getDateFromWeekday(text, now)
-	if (parsed.date !== null) {
-		return addTimeToDate(text, parsed.date, parsed.foundText)
+	for (const locale of locales) {
+		const parsed = getDateFromWeekday(text, now, locale)
+		if (parsed.date !== null) {
+			return addTimeToDate(text, parsed.date, parsed.foundText, locales)
+		}
 	}
 
-	parsed = getDayFromText(text, now)
-	if (parsed.date !== null) {
-		const month = getMonthFromText(text, parsed.date)
-		return addTimeToDate(month.newText, month.date, parsed.foundText)
+	for (const locale of locales) {
+		const parsed = getDayFromText(text, now, locale)
+		if (parsed.date !== null) {
+			const month = getMonthFromText(text, parsed.date as Date, locale)
+			return addTimeToDate(month.newText, month.date, parsed.foundText, locales)
+		}
 	}
 
-	parsed = getDateFromTextIn(text, now)
-	if (parsed.date !== null) {
-		return addTimeToDate(text, parsed.date, parsed.foundText)
+	const parsedIn = getDateFromTextIn(text, now, locales)
+	if (parsedIn.date !== null) {
+		return addTimeToDate(text, parsedIn.date, parsedIn.foundText, locales)
 	}
 
-	parsed = getDateFromText(text, now)
+	const parsed = getDateFromText(text, now, locales)
 
 	if (parsed.date === null) {
-		const time = addTimeToDate(text, new Date(now), parsed.foundText)
+		const time = addTimeToDate(text, new Date(now), parsed.foundText, locales)
 
 		if (time.date !== null && +now !== +time.date) {
 			return time
@@ -122,10 +106,53 @@ export const parseDate = (text: string, now: Date = new Date()): dateParseResult
 		}
 	}
 
-	return addTimeToDate(text, parsed.date, parsed.foundText)
+	return addTimeToDate(text, parsed.date, parsed.foundText, locales)
 }
 
-const addTimeToDate = (text: string, date: Date, previousMatch: string | null): dateParseResult => {
+const applyDatePhrase = (text: string, phrase: DatePhrase, matched: string, locales: QuickAddMagicLocale[]): dateParseResult => {
+	switch (phrase) {
+		case 'today':
+			return addTimeToDate(text, getDateFromInterval(calculateDayInterval('today')), matched, locales)
+		case 'tonight': {
+			const taskDate = getDateFromInterval(calculateDayInterval('today'))
+			taskDate.setHours(21)
+			return addTimeToDate(text, taskDate, matched, locales)
+		}
+		case 'tomorrow':
+			return addTimeToDate(text, getDateFromInterval(calculateDayInterval('tomorrow')), matched, locales)
+		case 'nextMonday':
+			return addTimeToDate(text, getDateFromInterval(calculateDayInterval('nextMonday')), matched, locales)
+		case 'thisWeekend':
+			return addTimeToDate(text, getDateFromInterval(calculateDayInterval('thisWeekend')), matched, locales)
+		case 'laterThisWeek':
+			return addTimeToDate(text, getDateFromInterval(calculateDayInterval('laterThisWeek')), matched, locales)
+		case 'laterNextWeek':
+			return addTimeToDate(text, getDateFromInterval(calculateDayInterval('laterNextWeek')), matched, locales)
+		case 'nextWeek':
+			return addTimeToDate(text, getDateFromInterval(calculateDayInterval('nextWeek')), matched, locales)
+		case 'nextMonth': {
+			const date: Date = new Date()
+			date.setDate(1)
+			date.setMonth(date.getMonth() + 1)
+			date.setHours(calculateNearestHours(date))
+			date.setMinutes(0)
+			date.setSeconds(0)
+
+			return addTimeToDate(text, date, matched, locales)
+		}
+		case 'endOfMonth': {
+			const curDate: Date = new Date()
+			const date: Date = new Date(curDate.getFullYear(), curDate.getMonth() + 1, 0)
+			date.setHours(calculateNearestHours(date))
+			date.setMinutes(0)
+			date.setSeconds(0)
+
+			return addTimeToDate(text, date, matched, locales)
+		}
+	}
+}
+
+const addTimeToDate = (text: string, date: Date, previousMatch: string | null, locales: QuickAddMagicLocale[]): dateParseResult => {
 	previousMatch = previousMatch?.trim() || ''
 	text = replaceAll(text, previousMatch, '')
 	if (previousMatch === null) {
@@ -135,7 +162,7 @@ const addTimeToDate = (text: string, date: Date, previousMatch: string | null): 
 		}
 	}
 
-	const timeRegex = ' (at|@) ([0-9][0-9]?(:[0-9][0-9])?( ?(a|p)m)?)'
+	const timeRegex = ` (${timePrefixesPattern(locales)}) ([0-9][0-9]?(:[0-9][0-9])?( ?(a|p)m)?)`
 	const matcher = new RegExp(timeRegex, 'ig')
 	const results = matcher.exec(text)
 
@@ -168,7 +195,7 @@ const addTimeToDate = (text: string, date: Date, previousMatch: string | null): 
 	}
 }
 
-export const getDateFromText = (text: string, now: Date = new Date()) => {
+export const getDateFromText = (text: string, now: Date = new Date(), locales: QuickAddMagicLocale[] = getDefaultLocales()) => {
 	const datePatterns: string[] = [
 		'(?<found>(?<month>[0-9][0-9]?)\\/(?<day>[0-9][0-9]?)(\\/(?<year>[0-9][0-9]([0-9][0-9])?))?)',
 		'(?<found>(?<year>[0-9][0-9][0-9][0-9]?)\\/(?<month>[0-9][0-9]?)\\/(?<day>[0-9][0-9]))',
@@ -204,81 +231,121 @@ export const getDateFromText = (text: string, now: Date = new Date()) => {
 		}
 	}
 
-	// 2. Try parsing the date as something like "jan 21" or "21 jan"
-	if (result === null) {
-		const monthRegex = new RegExp(`(^| )(${monthsRegexGroup} [0-9][0-9]?|[0-9][0-9]? ${monthsRegexGroup})`, 'ig')
+	if (result !== null) {
+		const date = new Date(result)
+		if (isNaN(date.getTime())) {
+			return {
+				foundText,
+				date: null,
+			}
+		}
+
+		if (!containsYear && date < now) {
+			date.setFullYear(date.getFullYear() + 1)
+		}
+
+		return {
+			foundText,
+			date,
+		}
+	}
+
+	// 2. Try parsing the date as something like "jan 21" or "21 jan" (or "21 серпня")
+	for (const locale of locales) {
+		const monthGroup = monthFormsGroup(locale)
+		const monthRegex = new RegExp(`(^| )(${monthGroup} [0-9][0-9]?|[0-9][0-9]? ${monthGroup})`, 'i')
 		results = monthRegex.exec(text)
-		result = results === null ? null : `${results[0]} ${now.getFullYear()}`.trim()
-		foundText = results === null ? '' : results[0].trim()
-		containsYear = false
-	}
-
-	if (result === null) {
-		return {
-			foundText,
-			date: null,
+		if (results === null) {
+			continue
 		}
-	}
 
-	const date = new Date(result)
-	if (isNaN(date.getTime())) {
-		return {
-			foundText,
-			date: null,
+		const dayMatch = /[0-9][0-9]?/.exec(results[0])
+		const monthForm = results[0].replace(dayMatch?.[0] ?? '', '').trim()
+		const monthDef = findByForm(locale.months, monthForm)
+		if (dayMatch === null || monthDef === undefined) {
+			continue
 		}
-	}
 
-	if (!containsYear && date < now) {
-		date.setFullYear(date.getFullYear() + 1)
+		const day = parseInt(dayMatch[0])
+		const date = new Date(now.getFullYear(), monthDef.month, day)
+		if (date.getDate() !== day) {
+			// day overflowed into the next month — reject like "mar 32"
+			continue
+		}
+
+		if (date < now) {
+			date.setFullYear(date.getFullYear() + 1)
+		}
+
+		return {
+			foundText: results[0].trim(),
+			date,
+		}
 	}
 
 	return {
 		foundText,
-		date,
+		date: null,
 	}
 }
 
-export const getDateFromTextIn = (text: string, now: Date = new Date()) => {
-	const regex = /(in [0-9]+ (hours?|days?|weeks?|months?))/ig
-	const results = regex.exec(text)
-	if (results === null) {
+export const getDateFromTextIn = (text: string, now: Date = new Date(), locales: QuickAddMagicLocale[] = getDefaultLocales()) => {
+	for (const locale of locales) {
+		const inPrefixes = locale.inPrefixes.map(toPattern).join('|')
+		// years intentionally excluded — "in 3 years" was never supported
+		const units = locale.repeatUnits
+			.filter(u => u.type !== REPEAT_TYPES.Years)
+			.flatMap(u => u.forms)
+			.map(toPattern)
+			.join('|')
+		const regex = new RegExp(`((${inPrefixes}) [0-9]+ (${units}))`, 'ig')
+		const results = regex.exec(text)
+		if (results === null) {
+			continue
+		}
+
+		const foundText: string = results[0]
+		const date = new Date(now)
+		const parts = foundText.split(' ')
+		const amount = parseInt(parts[1])
+		const unit = findByForm(locale.repeatUnits, parts[2])
+		if (unit === undefined) {
+			continue
+		}
+
+		switch (unit.type) {
+			case REPEAT_TYPES.Hours:
+				date.setHours(date.getHours() + amount)
+				break
+			case REPEAT_TYPES.Days:
+				date.setDate(date.getDate() + amount)
+				break
+			case REPEAT_TYPES.Weeks:
+				date.setDate(date.getDate() + amount * 7)
+				break
+			case REPEAT_TYPES.Months:
+				date.setMonth(date.getMonth() + amount)
+				break
+		}
+
 		return {
-			foundText: '',
-			date: null,
+			foundText,
+			date,
 		}
 	}
 
-	const foundText: string = results[0]
-	const date = new Date(now)
-	const parts = foundText.split(' ')
-	switch (parts[2]) {
-		case 'hours':
-		case 'hour':
-			date.setHours(date.getHours() + parseInt(parts[1]))
-			break
-		case 'days':
-		case 'day':
-			date.setDate(date.getDate() + parseInt(parts[1]))
-			break
-		case 'weeks':
-		case 'week':
-			date.setDate(date.getDate() + parseInt(parts[1]) * 7)
-			break
-		case 'months':
-		case 'month':
-			date.setMonth(date.getMonth() + parseInt(parts[1]))
-			break
-	}
-
 	return {
-		foundText,
-		date,
+		foundText: '',
+		date: null,
 	}
 }
 
-const getDateFromWeekday = (text: string, date: Date = new Date()): dateFoundResult => {
-	const matcher = /(^| )(next )?(monday|mon|tuesday|tue|wednesday|wed|thursday|thu|friday|fri|saturday|sat|sunday|sun)($| )/g
-	const results: string[] | null = matcher.exec(text.toLowerCase()) // The i modifier does not seem to work.
+const getDateFromWeekday = (text: string, date: Date, locale: QuickAddMagicLocale): dateFoundResult => {
+	const forms = locale.weekdays.flatMap(w => w.forms).map(toPattern).join('|')
+	const prefixes = locale.weekdayPrefixes.map(toPattern).join('|')
+	const prefixPart = prefixes === '' ? '' : `(?:(?:${prefixes}) )?`
+	const matcher = new RegExp(`(^| )${prefixPart}(${forms})($| )`, 'g')
+	const results: RegExpExecArray | null = matcher.exec(text.toLowerCase()) // The i modifier does not seem to work.
 	if (results === null) {
 		return {
 			foundText: null,
@@ -286,46 +353,15 @@ const getDateFromWeekday = (text: string, date: Date = new Date()): dateFoundRes
 		}
 	}
 
-	const currentDay: number = date.getDay()
-	let day: number
-
-	switch (results[3]) {
-		case 'mon':
-		case 'monday':
-			day = 1
-			break
-		case 'tue':
-		case 'tuesday':
-			day = 2
-			break
-		case 'wed':
-		case 'wednesday':
-			day = 3
-			break
-		case 'thu':
-		case 'thursday':
-			day = 4
-			break
-		case 'fri':
-		case 'friday':
-			day = 5
-			break
-		case 'sat':
-		case 'saturday':
-			day = 6
-			break
-		case 'sun':
-		case 'sunday':
-			day = 0
-			break
-		default:
-			return {
-				foundText: null,
-				date: null,
-			}
+	const weekday = findByForm(locale.weekdays, results[2])
+	if (weekday === undefined) {
+		return {
+			foundText: null,
+			date: null,
+		}
 	}
 
-	const distance: number = (day + 7 - currentDay) % 7
+	const distance: number = (weekday.day + 7 - date.getDay()) % 7
 	date.setDate(date.getDate() + distance)
 
 	// This a space at the end of the found text to not break parsing suffix strings like "at 14:00" in cases where the
@@ -341,10 +377,12 @@ const getDateFromWeekday = (text: string, date: Date = new Date()): dateFoundRes
 	}
 }
 
-const getDayFromText = (text: string, now: Date = new Date()) => {
+const getDayFromText = (text: string, now: Date, locale: QuickAddMagicLocale) => {
 	// Only match ordinals when followed by end-of-string, time expressions, or month names
 	// This prevents matching "2nd Floor" or "13th floor" as dates
-	const matcher = new RegExp('(^| )(([1-2][0-9])|(3[01])|(0?[1-9]))(st|nd|rd|th|\\.)(?=$| at | @ | ' + monthsRegexGroup + ')', 'ig')
+	const suffixes = locale.ordinalSuffixes.map(toPattern).join('|')
+	const timeLookahead = locale.timePrefixes.map(p => ` ${toPattern(p)} `).join('|')
+	const matcher = new RegExp(`(^| )(([1-2][0-9])|(3[01])|(0?[1-9]))(${suffixes})(?=$|${timeLookahead}| ${monthFormsGroup(locale)})`, 'ig')
 	const results = matcher.exec(text)
 	if (results === null) {
 		return {
@@ -375,8 +413,12 @@ const getDayFromText = (text: string, now: Date = new Date()) => {
 	}
 }
 
-const getMonthFromText = (text: string, date: Date) => {
-	const matcher = new RegExp('\\b' + monthsRegexGroup + '\\b', 'ig')
+const getMonthFromText = (text: string, date: Date, locale: QuickAddMagicLocale) => {
+	const group = monthFormsGroup(locale)
+	// \b only works for Latin scripts; Cyrillic needs explicit space boundaries
+	const matcher = locale.monthWordBoundary
+		? new RegExp(`\\b${group}\\b`, 'ig')
+		: new RegExp(`(^| )${group}($| )`, 'ig')
 	const results = matcher.exec(text)
 
 	if (results === null) {
@@ -386,10 +428,13 @@ const getMonthFromText = (text: string, date: Date) => {
 		}
 	}
 
-	const fullDate = new Date(`${results[0]} 1 ${(new Date()).getFullYear()}`)
-	date.setMonth(fullDate.getMonth())
+	const monthDef = findByForm(locale.months, results[0].trim())
+	if (monthDef !== undefined) {
+		date.setMonth(monthDef.month)
+	}
+
 	return {
-		newText: replaceAll(text, results[0], ''),
+		newText: replaceAll(text, results[0].trim(), ''),
 		date,
 	}
 }
