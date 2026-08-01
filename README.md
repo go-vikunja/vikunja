@@ -15,6 +15,9 @@ We're also offering [a hosted version of Vikunja](https://vikunja.cloud/) if you
 If you or your company needs admin panel, audit logs or time tracking, check out [Vikunja Pro](https://vikunja.io/pro/).
 
 > [!NOTE]
+> This is a fork of [go-vikunja/vikunja](https://github.com/go-vikunja/vikunja) with **Ukrainian language support in quick add magic**: dates and repeats can be typed in Ukrainian when creating tasks — e.g. `завтра`, `сьогодні ввечері`, `в понеділок`, `21 серпня`, `через 3 дні`, `кожен четвер`, `щотижня`. Parsing follows the UI language, with English always recognized as a fallback.
+
+> [!NOTE]
 > For the development of Vikunja, we're using LLM-Assisted coding tools in various parts of the codebase.
 > Most contributions made @tink-bot are built that way.
 
