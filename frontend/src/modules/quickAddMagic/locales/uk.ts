@@ -21,7 +21,7 @@ export const uk: QuickAddMagicLocale = {
 		{forms: ['середи', 'середу', 'середа', 'ср'], day: 3},
 		// "четверг" is surzhyk but common enough to accept
 		{forms: ['четверга', 'четверг', 'четвер', 'чт'], day: 4},
-		{forms: ['п[\'’]ятниці', 'п[\'’]ятницю', 'п[\'’]ятниця', 'пт'], day: 5},
+		{forms: ['п[\'’ʼ`]ятниці', 'п[\'’ʼ`]ятницю', 'п[\'’ʼ`]ятниця', 'пт'], day: 5},
 		{forms: ['суботи', 'суботу', 'субота', 'сб'], day: 6},
 		{forms: ['неділі', 'неділю', 'неділя', 'нд'], day: 0},
 	],
@@ -49,11 +49,11 @@ export const uk: QuickAddMagicLocale = {
 		{forms: ['два', 'дві'], value: 2},
 		{forms: ['три'], value: 3},
 		{forms: ['чотири'], value: 4},
-		{forms: ['п[\'’]ять'], value: 5},
+		{forms: ['п[\'’ʼ`]ять'], value: 5},
 		{forms: ['шість'], value: 6},
 		{forms: ['сім'], value: 7},
 		{forms: ['вісім'], value: 8},
-		{forms: ['дев[\'’]ять'], value: 9},
+		{forms: ['дев[\'’ʼ`]ять'], value: 9},
 		{forms: ['десять'], value: 10},
 	],
 	repeatUnits: [
