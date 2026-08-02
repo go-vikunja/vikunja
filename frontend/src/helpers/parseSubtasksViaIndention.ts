@@ -20,11 +20,11 @@ export function parseSubtasksViaIndention(taskTitles: string, prefixMode: Prefix
 	let titles = taskTitles
 		.split(/[\r\n]+/)
 		.filter(t => t.replace(/\s/g, '').length > 0) // Remove titles which are empty or only contain spaces / tabs
-	
+
 	if (titles.length == 0) {
 		return []
 	}
-	
+
 	const spaceOnFirstLine = /^(\t| )+/
 	const spaces = spaceOnFirstLine.exec(titles[0])
 	if (spaces !== null) {
