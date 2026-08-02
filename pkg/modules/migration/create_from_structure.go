@@ -356,8 +356,11 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		originalBucketID := t.BucketID
 		t.BucketID = 0
 		err = t.Create(s, user)
-		if err != nil && models.IsErrTaskCannotBeEmpty(err) {
-			continue
+		if err != nil {
+			if models.IsErrTaskCannotBeEmpty(err) {
+				continue
+			}
+			return err
 		}
 
 		t.BucketID = originalBucketID
