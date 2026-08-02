@@ -15,7 +15,6 @@ export default class ProjectViewModel extends AbstractModel<IProjectView> implem
 		s: '',
 	}
 	position = 0
-	
 	bucketConfiguration = []
 	bucketConfigurationMode: ProjectViewBucketConfigurationMode = 'manual'
 	defaultBucketId = 0

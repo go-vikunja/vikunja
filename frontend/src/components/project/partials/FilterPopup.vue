@@ -21,8 +21,11 @@
 			class="filter-popup"
 			:change-immediately="false"
 			:filter-from-view="filterFromView"
+			:show-include-subprojects-toggle="isProjectView"
+			:include-subprojects="includeSubprojects"
 			show-close
 			@close="modalOpen = false"
+			@update:includeSubprojects="updateIncludeSubprojects"
 			@showResults="showResults"
 		/>
 	</Modal>
@@ -66,7 +69,8 @@ watch(
 
 const hasFilters = computed(() => {
 	return value.value.filter !== '' ||
-		value.value.s !== ''
+		value.value.s !== '' ||
+		includeSubprojects.value
 })
 
 const modalOpen = ref(false)
@@ -87,6 +91,26 @@ function showResults() {
 		s: value.value.s,
 	})
 	modalOpen.value = false
+}
+
+const currentView = computed(() => {
+	if (!isProjectView.value) {
+		return
+	}
+
+	return projectStore.projects[props.projectId]?.views.find(v => v.id === props.viewId)
+})
+
+const isProjectView = computed(() => Boolean(props.projectId && props.projectId > 0 && props.viewId))
+
+const includeSubprojects = computed(() => currentView.value?.filter?.includeSubprojects ?? currentView.value?.filter?.include_subprojects ?? false)
+
+async function updateIncludeSubprojects(newValue: boolean) {
+	if (!currentView.value) {
+		return
+	}
+
+	await projectStore.updateViewIncludeSubprojects(currentView.value, newValue)
 }
 
 const filterFromView = computed(() => {

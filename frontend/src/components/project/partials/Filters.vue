@@ -24,10 +24,18 @@
 
 		<div class="field is-flex is-flex-direction-column">
 			<FancyCheckbox
-				v-model="params.filter_include_nulls"
+				v-model="params.filterIncludeNulls"
 				@change="() => change('always')"
 			>
 				{{ $t('filters.attributes.includeNulls') }}
+			</FancyCheckbox>
+			<FancyCheckbox
+				v-if="showIncludeSubprojectsToggle"
+				v-tooltip="$t('project.views.includeSubprojectsHint')"
+				:model-value="includeSubprojects"
+				@update:modelValue="(value: boolean) => emit('update:includeSubprojects', value)"
+			>
+				{{ $t('project.views.includeSubprojects') }}
 			</FancyCheckbox>
 		</div>
 
@@ -40,7 +48,7 @@
 			<XButton
 				variant="secondary"
 				class="mie-2"
-				:disabled="filterQuery === ''"
+				:disabled="!hasActiveFilters"
 				@click.prevent.stop="clearFiltersAndEmit"
 			>
 				{{ $t('filters.clear') }}
@@ -76,16 +84,21 @@ const props = withDefaults(defineProps<{
 	changeImmediately?: boolean,
 	filterFromView?: string,
 	showClose?: boolean,
+	showIncludeSubprojectsToggle?: boolean,
+	includeSubprojects?: boolean,
 }>(), {
 	hasTitle: false,
 	hasFooter: true,
 	changeImmediately: false,
 	filterFromView: undefined,
 	showClose: false,
+	showIncludeSubprojectsToggle: false,
+	includeSubprojects: false,
 })
 
 const emit = defineEmits<{
 	'update:modelValue': [value: TaskFilterParams],
+	'update:includeSubprojects': [value: boolean],
 	'showResults': [],
 	'close': [],
 }>()
@@ -117,6 +130,10 @@ watch(
 	},
 )
 
+const hasActiveFilters = computed(() => {
+	return filterQuery.value !== '' || params.value.filterIncludeNulls || props.includeSubprojects
+})
+
 const labelStore = useLabelStore()
 const projectStore = useProjectStore()
 
@@ -127,6 +144,7 @@ watch(
 	() => props.modelValue,
 	(value: TaskFilterParams) => {
 		params.value = {...value}
+		params.value.filterIncludeNulls = value.filterIncludeNulls ?? value.filter_include_nulls ?? false
 	},
 	{
 		immediate: true,
@@ -168,6 +186,7 @@ function change(event: 'blur' | 'modelValue' | 'always') {
 
 	const newParams = {
 		...params.value,
+		filter_include_nulls: params.value.filterIncludeNulls ?? false,
 		filter: s === '' ? filter : '',
 		s,
 	}
@@ -186,6 +205,11 @@ function changeAndEmitButton() {
 
 function clearFiltersAndEmit() {
 	filterQuery.value = ''
+	params.value.filterIncludeNulls = false
+	params.value.filter_include_nulls = false
+	params.value.includeSubprojects = false
+	params.value.include_subprojects = false
+	emit('update:includeSubprojects', false)
 	changeAndEmitButton()
 }
 
