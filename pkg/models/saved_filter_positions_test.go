@@ -289,6 +289,49 @@ func TestTaskFetchCreatesPositionsOnDemand(t *testing.T) {
 	assert.Zero(t, zeroCount, "No positions should be zero")
 }
 
+// Task indexes are only unique per project, so a saved filter view spanning several can collide on the index-derived default.
+func TestSavedFilterHealEmptyViewCreatesDistinctPositions(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	u := &user.User{ID: 1}
+
+	sf := &SavedFilter{
+		Title:   "empty-view-heal",
+		Filters: &TaskCollection{Filter: "done = false"},
+	}
+	require.NoError(t, sf.Create(s, u))
+
+	view := &ProjectView{}
+	exists, err := s.Where("project_id = ? AND view_kind = ?",
+		getProjectIDFromSavedFilterID(sf.ID), ProjectViewKindList).Get(view)
+	require.NoError(t, err)
+	require.True(t, exists)
+
+	_, err = s.Where("project_view_id = ?", view.ID).Delete(&TaskPosition{})
+	require.NoError(t, err)
+
+	tc := &TaskCollection{
+		ProjectID:     view.ProjectID,
+		ProjectViewID: view.ID,
+	}
+	_, _, _, err = tc.ReadAll(s, u, "", 1, 50)
+	require.NoError(t, err)
+
+	positions := []*TaskPosition{}
+	require.NoError(t, s.Where("project_view_id = ?", view.ID).Find(&positions))
+	require.NotEmpty(t, positions)
+
+	seen := make(map[float64]int64, len(positions))
+	for _, p := range positions {
+		assert.NotZero(t, p.Position, "task %d must not get a zero position", p.TaskID)
+		other, duplicate := seen[p.Position]
+		assert.False(t, duplicate, "tasks %d and %d share position %f", other, p.TaskID, p.Position)
+		seen[p.Position] = p.TaskID
+	}
+}
+
 func TestIssue724_SortingOnFilteredViews(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()

@@ -415,40 +415,137 @@ func recalculateTaskPositionsForRepair(s *xorm.Session, view *ProjectView) error
 }
 
 func calculateNewPositionForTask(s *xorm.Session, a web.Auth, t *Task, view *ProjectView) (*TaskPosition, error) {
-	position := t.Position
-	if position == 0 {
-		lowestPosition := &TaskPosition{}
-		exists, err := s.Where("project_view_id = ?", view.ID).
+	positions, err := calculateNewPositionsForTasks(s, a, []*Task{t}, view)
+	if err != nil {
+		return nil, err
+	}
+	if len(positions) == 0 {
+		// Unreachable: the batch returns one position per task.
+		return nil, fmt.Errorf("no position calculated for task %d in view %d", t.ID, view.ID)
+	}
+
+	return positions[0], nil
+}
+
+// defaultPositionsForEmptyView derives positions from task indexes, falling back to payload order because indexes only collide-free within one project.
+func defaultPositionsForEmptyView(tasks []*Task, viewID int64) []*TaskPosition {
+	positions := make([]*TaskPosition, 0, len(tasks))
+	seen := make(map[float64]bool, len(tasks))
+	collides := false
+
+	for _, t := range tasks {
+		position := calculateDefaultPosition(t.Index, 0)
+		if position == 0 || seen[position] {
+			collides = true
+		}
+		seen[position] = true
+		positions = append(positions, &TaskPosition{
+			TaskID:        t.ID,
+			ProjectViewID: viewID,
+			Position:      position,
+		})
+	}
+
+	if collides {
+		for i, p := range positions {
+			p.Position = calculateDefaultPosition(int64(i+1), 0)
+		}
+	}
+
+	return positions
+}
+
+// calculateNewPositionsForTasks places a batch on top of one view, keeping explicit positions the migration importer seeds to preserve export order (#3297).
+func calculateNewPositionsForTasks(s *xorm.Session, a web.Auth, tasks []*Task, view *ProjectView) ([]*TaskPosition, error) {
+	positions := make([]*TaskPosition, 0, len(tasks))
+	needDefault := make([]*Task, 0, len(tasks))
+	for _, t := range tasks {
+		if t.Position != 0 {
+			positions = append(positions, &TaskPosition{
+				TaskID:        t.ID,
+				ProjectViewID: view.ID,
+				Position:      calculateDefaultPosition(t.Index, t.Position),
+			})
+			continue
+		}
+		needDefault = append(needDefault, t)
+	}
+
+	if len(needDefault) == 0 {
+		return positions, nil
+	}
+
+	lowestPosition := &TaskPosition{}
+	exists, err := s.Where("project_view_id = ?", view.ID).
+		OrderBy("position asc").
+		Get(lowestPosition)
+	if err != nil {
+		return nil, err
+	}
+
+	if !exists {
+		return append(positions, defaultPositionsForEmptyView(needDefault, view.ID)...), nil
+	}
+
+	step := lowestPosition.Position / float64(len(needDefault)+1)
+	if step < MinPositionSpacing {
+		// The recalculation persists positions for the batch's own rows too; drop only the ones it did not have before, so rows written earlier in this creation (moveTaskToDoneBuckets) survive.
+		batchIDs := make([]int64, 0, len(tasks))
+		for _, t := range tasks {
+			batchIDs = append(batchIDs, t.ID)
+		}
+
+		preexisting := []*TaskPosition{}
+		err = s.Where("project_view_id = ?", view.ID).In("task_id", batchIDs).Find(&preexisting)
+		if err != nil {
+			return nil, err
+		}
+		hadPosition := make(map[int64]bool, len(preexisting))
+		for _, p := range preexisting {
+			hadPosition[p.TaskID] = true
+		}
+
+		err = RecalculateTaskPositions(s, view, a)
+		if err != nil {
+			return nil, err
+		}
+
+		recalculated := make([]int64, 0, len(batchIDs))
+		for _, id := range batchIDs {
+			if !hadPosition[id] {
+				recalculated = append(recalculated, id)
+			}
+		}
+		if len(recalculated) > 0 {
+			_, err = s.Where("project_view_id = ?", view.ID).In("task_id", recalculated).Delete(&TaskPosition{})
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		lowestPosition = &TaskPosition{}
+		exists, err = s.Where("project_view_id = ?", view.ID).
 			OrderBy("position asc").
 			Get(lowestPosition)
 		if err != nil {
 			return nil, err
 		}
-		if exists {
-			if lowestPosition.Position < MinPositionSpacing {
-				err = RecalculateTaskPositions(s, view, a)
-				if err != nil {
-					return nil, err
-				}
-
-				lowestPosition = &TaskPosition{}
-				_, err = s.Where("project_view_id = ?", view.ID).
-					OrderBy("position asc").
-					Get(lowestPosition)
-				if err != nil {
-					return nil, err
-				}
-			}
-
-			position = lowestPosition.Position / 2
+		if !exists {
+			return append(positions, defaultPositionsForEmptyView(needDefault, view.ID)...), nil
 		}
+
+		step = lowestPosition.Position / float64(len(needDefault)+1)
 	}
 
-	return &TaskPosition{
-		TaskID:        t.ID,
-		ProjectViewID: view.ID,
-		Position:      calculateDefaultPosition(t.Index, position),
-	}, nil
+	for i, t := range needDefault {
+		positions = append(positions, &TaskPosition{
+			TaskID:        t.ID,
+			ProjectViewID: view.ID,
+			Position:      step * float64(i+1),
+		})
+	}
+
+	return positions, nil
 }
 
 type taskPositionKey struct {
@@ -458,7 +555,7 @@ type taskPositionKey struct {
 
 // filterNewTaskPositions returns the positions whose (task_id, project_view_id)
 // row does not exist yet, also deduplicating within the slice. Position creation
-// during task creation can trigger a full recalculation (calculateNewPositionForTask
+// during task creation can trigger a full recalculation (calculateNewPositionsForTasks
 // or moveTaskToDoneBuckets) that already persists rows for the new task, so inserting
 // the queued positions unconditionally would violate the unique index on
 // (task_id, project_view_id).
@@ -515,44 +612,6 @@ func DeleteOrphanedTaskPositions(s *xorm.Session, dryRun bool) (count int64, err
 	return s.Where(whereClause).Delete(&TaskPosition{})
 }
 
-// createPositionsForTasksInView creates position records for tasks that don't have them.
-// Used as a safety net during task fetching for saved filter views.
-func createPositionsForTasksInView(s *xorm.Session, tasks []*Task, view *ProjectView, a web.Auth) error {
-	if len(tasks) == 0 {
-		return nil
-	}
-
-	// Get the current lowest position to place new tasks at the top
-	lowestPosition := &TaskPosition{}
-	has, err := s.
-		Where("project_view_id = ?", view.ID).
-		OrderBy("position asc").
-		Get(lowestPosition)
-	if err != nil {
-		return err
-	}
-
-	var basePosition float64
-	if !has || lowestPosition.Position < MinPositionSpacing {
-		return RecalculateTaskPositions(s, view, a)
-	}
-
-	// Place new tasks before the lowest position, evenly spaced
-	basePosition = lowestPosition.Position
-	spacing := basePosition / float64(len(tasks)+1)
-
-	newPositions := make([]*TaskPosition, 0, len(tasks))
-	for i, task := range tasks {
-		newPositions = append(newPositions, &TaskPosition{
-			TaskID:        task.ID,
-			ProjectViewID: view.ID,
-			Position:      spacing * float64(i+1),
-		})
-	}
-
-	return bulkInsertTaskPositions(s, newPositions, false)
-}
-
 // ensureTaskPositionsForSavedFilterView creates position rows for all tasks matching a saved
 // filter which don't have one in its view yet. This must run before the fetch query: healing
 // afterwards means the query sorts fresh matches last (NULL position) and they jump to the top
@@ -603,7 +662,13 @@ func ensureTaskPositionsForSavedFilterView(s *xorm.Session, a web.Auth, projects
 		return fmt.Errorf("could not fetch unpositioned tasks, error was '%w', sql: '%v', values: %v", err, sql, vals)
 	}
 
-	return createPositionsForTasksInView(s, tasks, view, a)
+	positions, err := calculateNewPositionsForTasks(s, a, tasks, view)
+	if err != nil {
+		return err
+	}
+
+	// A concurrent heal of the same view may have inserted rows already; those are as good as these.
+	return bulkInsertTaskPositions(s, positions, false)
 }
 
 // findPositionConflicts returns all task positions that share the same position value
