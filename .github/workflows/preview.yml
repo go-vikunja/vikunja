@@ -48,6 +48,9 @@ jobs:
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        env:
+          # Under pull_request_target, github.sha is the base branch tip; tag with the PR head sha instead.
+          DOCKER_METADATA_PR_HEAD_SHA: 'true'
         with:
           images: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
           tags: |
