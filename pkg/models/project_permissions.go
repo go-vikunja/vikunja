@@ -118,10 +118,10 @@ func (p *Project) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
 	shareAuth, ok := a.(*LinkSharing)
 	if ok {
 		return p.ID == shareAuth.ProjectID &&
-			(shareAuth.Permission == PermissionRead || shareAuth.Permission == PermissionWrite || shareAuth.Permission == PermissionAdmin), int(shareAuth.Permission), nil
+			(shareAuth.Permission == PermissionRead || shareAuth.Permission == PermissionUpdate || shareAuth.Permission == PermissionWrite || shareAuth.Permission == PermissionAdmin), int(shareAuth.Permission), nil
 	}
 
-	return p.checkPermission(s, &user.User{ID: a.GetID()}, PermissionRead, PermissionWrite, PermissionAdmin)
+	return p.checkPermission(s, &user.User{ID: a.GetID()}, PermissionRead, PermissionUpdate, PermissionWrite, PermissionAdmin)
 }
 
 // CanUpdate checks if the user can update a project

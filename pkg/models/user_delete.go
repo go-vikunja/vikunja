@@ -210,7 +210,7 @@ func ensureProjectAdminUser(s *xorm.Session, l *Project) (hadUsers bool, err err
 	}
 
 	for _, lu := range projectUsers {
-		if lu.Permission == PermissionWrite {
+		if lu.Permission == PermissionWrite || lu.Permission == PermissionUpdate {
 			lu.Permission = PermissionAdmin
 			_, err = s.Where("id = ?", lu.ID).
 				Cols("permission").
@@ -257,7 +257,7 @@ func ensureProjectAdminTeam(s *xorm.Session, l *Project) (hadTeams bool, err err
 	}
 
 	for _, lu := range projectTeams {
-		if lu.Permission == PermissionWrite {
+		if lu.Permission == PermissionWrite || lu.Permission == PermissionUpdate {
 			lu.Permission = PermissionAdmin
 			_, err = s.Where("id = ?", lu.ID).
 				Cols("permission").
