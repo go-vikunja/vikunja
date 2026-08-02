@@ -617,6 +617,73 @@ func (err ErrInvalidTaskRepeatInterval) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrInvalidBulkTaskCreationCount represents an error where a bulk task creation request has no tasks or more than the maximum.
+type ErrInvalidBulkTaskCreationCount struct {
+	Count int
+}
+
+// IsErrInvalidBulkTaskCreationCount checks if an error is ErrInvalidBulkTaskCreationCount.
+func IsErrInvalidBulkTaskCreationCount(err error) bool {
+	_, ok := err.(ErrInvalidBulkTaskCreationCount)
+	return ok
+}
+
+func (err ErrInvalidBulkTaskCreationCount) Error() string {
+	return fmt.Sprintf("Invalid bulk task creation count. [Count: %d]", err.Count)
+}
+
+// ErrCodeInvalidBulkTaskCreationCount holds the unique world-error code of this error.
+const ErrCodeInvalidBulkTaskCreationCount = 4030
+
+// HTTPError holds the http error description.
+func (err ErrInvalidBulkTaskCreationCount) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeInvalidBulkTaskCreationCount,
+		Message:  fmt.Sprintf("A bulk task creation must contain between 1 and %d tasks, got %d.", MaxTasksPerBulkCreation, err.Count),
+	}
+}
+
+// ErrInvalidTaskInBulkCreation represents an error where one task of a bulk creation batch failed validation, identified by its payload index.
+type ErrInvalidTaskInBulkCreation struct {
+	Index int
+	Err   error
+}
+
+// IsErrInvalidTaskInBulkCreation checks if an error is ErrInvalidTaskInBulkCreation.
+func IsErrInvalidTaskInBulkCreation(err error) bool {
+	_, ok := err.(ErrInvalidTaskInBulkCreation)
+	return ok
+}
+
+func (err ErrInvalidTaskInBulkCreation) Error() string {
+	return fmt.Sprintf("Invalid task in bulk creation. [Index: %d, Error: %v]", err.Index, err.Err)
+}
+
+func (err ErrInvalidTaskInBulkCreation) Unwrap() error {
+	return err.Err
+}
+
+// ErrCodeInvalidTaskInBulkCreation holds the unique world-error code of this error.
+const ErrCodeInvalidTaskInBulkCreation = 4031
+
+// HTTPError holds the http error description.
+func (err ErrInvalidTaskInBulkCreation) HTTPError() web.HTTPError {
+	message := "invalid task"
+	switch e := err.Err.(type) {
+	case web.HTTPErrorProcessor:
+		message = e.HTTPError().Message
+	case ValidationHTTPError:
+		// ValidationHTTPError shadows HTTPErrorProcessor via its embedded field, so it's handled separately.
+		message = strings.Join(e.InvalidFields, ", ")
+	}
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeInvalidTaskInBulkCreation,
+		Message:  fmt.Sprintf("The task at index %d is invalid: %s", err.Index, message),
+	}
+}
+
 // ErrTaskDoesNotExist represents a "ErrProjectDoesNotExist" kind of error. Used if the project does not exist.
 type ErrTaskDoesNotExist struct {
 	ID int64
