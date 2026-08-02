@@ -137,6 +137,68 @@ func TestUpdateTaskInSavedFilterViews_InactiveFilterOwner(t *testing.T) {
 	})
 }
 
+func TestUpdateTasksBatchInSavedFilterViews(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+
+	_, err := s.Insert(&SavedFilter{
+		ID:      9999,
+		Title:   "filter",
+		OwnerID: 1,
+		Filters: &TaskCollection{Filter: "done = false"},
+	})
+	require.NoError(t, err)
+
+	view := &ProjectView{
+		ID:                      9999,
+		ProjectID:               getProjectIDFromSavedFilterID(9999),
+		Title:                   "kanban",
+		ViewKind:                ProjectViewKindKanban,
+		BucketConfigurationMode: BucketConfigurationModeManual,
+	}
+	_, err = s.Insert(view)
+	require.NoError(t, err)
+
+	_, err = s.Insert(&Bucket{ProjectViewID: view.ID, Title: "backlog", CreatedByID: 1})
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+	_ = s.Close()
+
+	events.TestListener(t, &TasksBatchCreatedEvent{
+		Tasks: []*Task{
+			{ID: 1, ProjectID: 1, Index: 1},
+			{ID: 3, ProjectID: 1, Index: 3},
+		},
+		Doer: &user.User{ID: 1},
+	}, &UpdateTasksBatchInSavedFilterViews{})
+
+	for _, taskID := range []int64{1, 3} {
+		db.AssertExists(t, "task_buckets", map[string]interface{}{
+			"task_id":         taskID,
+			"project_view_id": view.ID,
+		}, false)
+		db.AssertExists(t, "task_positions", map[string]interface{}{
+			"task_id":         taskID,
+			"project_view_id": view.ID,
+		}, false)
+	}
+
+	s2 := db.NewSession()
+	defer s2.Close()
+	positions := []*TaskPosition{}
+	require.NoError(t, s2.Where("project_view_id = ?", view.ID).In("task_id", 1, 3).Find(&positions))
+	require.Len(t, positions, 2)
+
+	positionByTask := map[int64]float64{}
+	for _, p := range positions {
+		positionByTask[p.TaskID] = p.Position
+	}
+	assert.NotZero(t, positionByTask[1])
+	assert.NotZero(t, positionByTask[3])
+	// Each task lands on top of the view, so later batch members get smaller positions.
+	assert.Less(t, positionByTask[3], positionByTask[1])
+}
+
 // Subscriptions survive losing access to the entity they point at: nothing
 // purges them when a share is removed, and access can change with no
 // revocation event at all. Every notification listener must therefore re-check

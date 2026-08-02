@@ -56,7 +56,7 @@ func RegisterListeners() {
 	events.RegisterListener((&TaskAttachmentDeletedEvent{}).Name(), &HandleTaskUpdateLastUpdated{})
 	events.RegisterListener((&TaskRelationCreatedEvent{}).Name(), &HandleTaskUpdateLastUpdated{})
 	events.RegisterListener((&TaskRelationDeletedEvent{}).Name(), &HandleTaskUpdateLastUpdated{})
-	events.RegisterListener((&TaskCreatedEvent{}).Name(), &UpdateTaskInSavedFilterViews{})
+	events.RegisterListener((&TasksBatchCreatedEvent{}).Name(), &UpdateTasksBatchInSavedFilterViews{})
 	events.RegisterListener((&TaskUpdatedEvent{}).Name(), &UpdateTaskInSavedFilterViews{})
 	events.RegisterListener((&TaskCommentCreatedEvent{}).Name(), &MarkTaskUnreadOnComment{})
 	if config.WebhooksEnabled.GetBool() {
@@ -901,7 +901,7 @@ func (l *UpdateTaskInSavedFilterViews) Name() string {
 
 // Handle is executed when the event UpdateTaskInSavedFilterViews listens on is fired
 func (l *UpdateTaskInSavedFilterViews) Handle(msg *message.Message) (err error) {
-	event := &TaskCreatedEvent{}
+	event := &TaskUpdatedEvent{}
 	err = json.Unmarshal(msg.Payload, event)
 	if err != nil {
 		return err
@@ -911,6 +911,34 @@ func (l *UpdateTaskInSavedFilterViews) Handle(msg *message.Message) (err error) 
 		return nil
 	}
 
+	return updateTasksInSavedFilterViews([]*Task{event.Task}, event.Doer)
+}
+
+// UpdateTasksBatchInSavedFilterViews handles a whole creation batch in one pass, loading the saved filters only once.
+type UpdateTasksBatchInSavedFilterViews struct {
+}
+
+// Name defines the name for the UpdateTasksBatchInSavedFilterViews listener
+func (l *UpdateTasksBatchInSavedFilterViews) Name() string {
+	return "tasks.batch.set.saved.filter.views"
+}
+
+// Handle is executed when the event UpdateTasksBatchInSavedFilterViews listens on is fired
+func (l *UpdateTasksBatchInSavedFilterViews) Handle(msg *message.Message) (err error) {
+	event := &TasksBatchCreatedEvent{}
+	err = json.Unmarshal(msg.Payload, event)
+	if err != nil {
+		return err
+	}
+
+	if len(event.Tasks) == 0 {
+		return nil
+	}
+
+	return updateTasksInSavedFilterViews(event.Tasks, event.Doer)
+}
+
+func updateTasksInSavedFilterViews(tasks []*Task, doer *user.User) (err error) {
 	// This operation is potentially very resource-heavy, because we don't know if a task is included
 	// in a filter until we evaluate that filter. We need to evaluate each filter individually - since
 	// there can be many filters, this can take a while to execute.
@@ -944,8 +972,8 @@ func (l *UpdateTaskInSavedFilterViews) Handle(msg *message.Message) (err error) 
 	}
 
 	var fallbackTimezone string
-	if event.Doer != nil {
-		u, userErr := user.GetUserByID(s, event.Doer.GetID())
+	if doer != nil {
+		u, userErr := user.GetUserByID(s, doer.GetID())
 		if userErr == nil {
 			fallbackTimezone = u.Timezone
 		}
@@ -956,72 +984,78 @@ func (l *UpdateTaskInSavedFilterViews) Handle(msg *message.Message) (err error) 
 		// When the fallback is empty, it will be handled later anyhow.
 	}
 
-	taskBuckets := []*TaskBucket{}
-	taskPositions := []*TaskPosition{}
+	for _, task := range tasks {
+		taskBuckets := []*TaskBucket{}
+		taskPositions := []*TaskPosition{}
 
-	viewIDToCleanUp := []int64{}
+		viewIDToCleanUp := []int64{}
 
-	for _, view := range kanbanFilterViews {
-		filter, exists := filters[GetSavedFilterIDFromProjectID(view.ProjectID)]
-		if !exists {
-			log.Debugf("Did not find filter for view %d", view.ID)
-			continue
-		}
-
-		taskBucket, taskPosition, err := addTaskToFilter(s, filter, view, fallbackTimezone, event.Task)
-		if err != nil {
-			if IsErrInvalidFilterExpression(err) ||
-				IsErrInvalidTaskFilterValue(err) ||
-				IsErrInvalidTaskFilterConcatinator(err) ||
-				IsErrInvalidTaskFilterComparator(err) ||
-				IsErrInvalidTaskField(err) {
-				log.Debugf("Invalid filter expression for view %d, expression: %v", view.ID, view.Filter)
+		for _, view := range kanbanFilterViews {
+			filter, exists := filters[GetSavedFilterIDFromProjectID(view.ProjectID)]
+			if !exists {
+				log.Debugf("Did not find filter for view %d", view.ID)
 				continue
 			}
 
-			// The owner may have been disabled or deleted after the check above.
-			if user.IsErrUserStatusError(err) || user.IsErrUserDoesNotExist(err) {
-				log.Debugf("Skipping view %d, owner %d is not available: %v", view.ID, filter.OwnerID, err)
-				continue
+			taskBucket, taskPosition, err := addTaskToFilter(s, filter, view, fallbackTimezone, task)
+			if err != nil {
+				if IsErrInvalidFilterExpression(err) ||
+					IsErrInvalidTaskFilterValue(err) ||
+					IsErrInvalidTaskFilterConcatinator(err) ||
+					IsErrInvalidTaskFilterComparator(err) ||
+					IsErrInvalidTaskField(err) {
+					log.Debugf("Invalid filter expression for view %d, expression: %v", view.ID, view.Filter)
+					continue
+				}
+
+				// The owner may have been disabled or deleted after the check above.
+				if user.IsErrUserStatusError(err) || user.IsErrUserDoesNotExist(err) {
+					log.Debugf("Skipping view %d, owner %d is not available: %v", view.ID, filter.OwnerID, err)
+					continue
+				}
+
+				return err
 			}
 
-			return err
+			if taskBucket != nil && taskPosition != nil {
+				taskBuckets = append(taskBuckets, taskBucket)
+				taskPositions = append(taskPositions, taskPosition)
+				viewIDToCleanUp = append(viewIDToCleanUp, view.ID)
+			}
 		}
 
-		if taskBucket != nil && taskPosition != nil {
-			taskBuckets = append(taskBuckets, taskBucket)
-			taskPositions = append(taskPositions, taskPosition)
-			viewIDToCleanUp = append(viewIDToCleanUp, view.ID)
-		}
-	}
+		if len(taskBuckets) > 0 || len(taskPositions) > 0 {
+			_, err = s.And(
+				builder.Eq{"task_id": task.ID},
+				builder.In("project_view_id", viewIDToCleanUp),
+			).
+				Delete(&TaskBucket{})
+			if err != nil {
+				return
+			}
+			_, err = s.And(
+				builder.Eq{"task_id": task.ID},
+				builder.In("project_view_id", viewIDToCleanUp),
+			).
+				Delete(&TaskPosition{})
+			if err != nil {
+				return
+			}
 
-	if len(taskBuckets) > 0 || len(taskPositions) > 0 {
-		_, err = s.And(
-			builder.Eq{"task_id": event.Task.ID},
-			builder.In("project_view_id", viewIDToCleanUp),
-		).
-			Delete(&TaskBucket{})
-		if err != nil {
-			return
-		}
-		_, err = s.And(
-			builder.Eq{"task_id": event.Task.ID},
-			builder.In("project_view_id", viewIDToCleanUp),
-		).
-			Delete(&TaskPosition{})
-		if err != nil {
-			return
-		}
-		_, err = s.Insert(taskBuckets)
-		if err != nil {
-			return
-		}
-		// A request healing the same filter view can insert a position row for
-		// this task between the delete above and this insert, so skip rows
-		// which exist by now instead of failing on the unique index.
-		err = bulkInsertTaskPositions(s, taskPositions, false)
-		if err != nil {
-			return
+			// Insert per task so a mid-loop recalculation sees earlier members' rows.
+			if len(taskBuckets) > 0 {
+				_, err = s.Insert(taskBuckets)
+				if err != nil {
+					return
+				}
+			}
+			if len(taskPositions) > 0 {
+				// A concurrent heal of the same view can insert a position row between the delete above and this insert, so skip existing rows instead of failing on the unique index.
+				err = bulkInsertTaskPositions(s, taskPositions, false)
+				if err != nil {
+					return
+				}
+			}
 		}
 	}
 
