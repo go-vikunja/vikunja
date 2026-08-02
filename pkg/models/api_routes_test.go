@@ -352,6 +352,59 @@ func TestCanDoAPIRoute_V2TasksReadAll(t *testing.T) {
 	})
 }
 
+// TestCollectRoutes_V2TasksBulkCreate pins the bulk create route to tasks.create_bulk instead of projects.tasks_bulk.
+func TestCollectRoutes_V2TasksBulkCreate(t *testing.T) {
+	apiTokenRoutes = make(map[string]APITokenRoute)
+	apiTokenRoutesV2 = make(map[string]APITokenRoute)
+
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{
+		Method: "POST",
+		Path:   "/api/v2/projects/:project/tasks/bulk",
+	}, true)
+
+	tasks, has := apiTokenRoutesV2["tasks"]
+	require.True(t, has, "tasks route group should exist")
+
+	bulkRoute, has := tasks["create_bulk"]
+	require.True(t, has, "create_bulk should exist in tasks routes")
+	assert.Equal(t, "/api/v2/projects/:project/tasks/bulk", bulkRoute.Path)
+	assert.Equal(t, "POST", bulkRoute.Method)
+
+	_, underProjects := apiTokenRoutesV2["projects"]
+	assert.False(t, underProjects, "bulk task create must not file under projects")
+}
+
+// TestCanDoAPIRoute_V2TasksBulkCreate verifies that tasks.create_bulk, not tasks.create, authorises the bulk create route.
+func TestCanDoAPIRoute_V2TasksBulkCreate(t *testing.T) {
+	apiTokenRoutes = make(map[string]APITokenRoute)
+	apiTokenRoutesV2 = make(map[string]APITokenRoute)
+
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{
+		Method: "POST",
+		Path:   "/api/v2/projects/:project/tasks/bulk",
+	}, true)
+
+	e := echo.New()
+
+	t.Run("create_bulk permission is allowed", func(t *testing.T) {
+		token := &APIToken{
+			APIPermissions: APIPermissions{"tasks": []string{"create_bulk"}},
+		}
+		req := httptest.NewRequest("POST", "/api/v2/projects/:project/tasks/bulk", nil)
+		c := e.NewContext(req, httptest.NewRecorder())
+		assert.True(t, CanDoAPIRoute(c, token))
+	})
+
+	t.Run("create permission alone is rejected", func(t *testing.T) {
+		token := &APIToken{
+			APIPermissions: APIPermissions{"tasks": []string{"create"}},
+		}
+		req := httptest.NewRequest("POST", "/api/v2/projects/:project/tasks/bulk", nil)
+		c := e.NewContext(req, httptest.NewRecorder())
+		assert.False(t, CanDoAPIRoute(c, token))
+	})
+}
+
 // End-to-end CanDoAPIRoute coverage for /api/v2 is provided by the Label
 // integration test in pkg/webtests/huma_label_test.go (see the token-auth
 // scenarios in that file) which exercises the full auth pipeline.
