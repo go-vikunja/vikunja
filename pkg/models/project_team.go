@@ -220,7 +220,7 @@ func (tl *TeamProject) ReadAll(s *xorm.Session, a web.Auth, search string, page 
 		Table("teams").
 		Join("INNER", "team_projects", "team_id = teams.id").
 		Where("team_projects.project_id = ?", tl.ProjectID).
-		Where("teams.name LIKE ?", "%"+search+"%").
+		Where(db.ILIKE("teams.name", search)).
 		Count(&TeamWithPermission{})
 	if err != nil {
 		return nil, 0, 0, err

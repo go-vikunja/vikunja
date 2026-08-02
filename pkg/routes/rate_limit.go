@@ -41,12 +41,17 @@ func RateLimit(rateLimiter *limiter.Limiter, rateLimitKind string) echo.Middlewa
 				rateLimitKey = c.RealIP()
 			case "user":
 				auth, err := auth2.GetAuthFromClaims(c)
-				if err != nil {
+				// Unauthenticated requests hit this middleware because v2 rate limits
+				// one group covering its public routes as well - key those by IP.
+				if err != nil || auth == nil {
 					log.Errorf("Error getting auth from jwt claims: %v", err)
+					rateLimitKey = "ip_" + c.RealIP()
+				} else {
+					rateLimitKey = "user_" + strconv.FormatInt(auth.GetID(), 10)
 				}
-				rateLimitKey = "user_" + strconv.FormatInt(auth.GetID(), 10)
 			default:
 				log.Errorf("Unknown rate limit kind configured: %s", rateLimitKind)
+				rateLimitKey = "ip_" + c.RealIP()
 			}
 			limiterCtx, err := rateLimiter.Get(c.Request().Context(), rateLimitKey)
 			if err != nil {
@@ -88,6 +93,16 @@ func createRateLimiter(rate limiter.Rate) *limiter.Limiter {
 		log.Fatalf("Unknown Rate limit store \"%s\"", config.RateLimitStore.GetString())
 	}
 	return limiter.New(store, rate)
+}
+
+// unauthRateLimit ignores RateLimitEnabled on purpose: pre-auth routes need a
+// floor even with the global limiter off, which is the default.
+func unauthRateLimit() echo.MiddlewareFunc {
+	rate := limiter.Rate{
+		Period: 60 * time.Second,
+		Limit:  config.RateLimitNoAuthRoutesLimit.GetInt64(),
+	}
+	return RateLimit(createRateLimiter(rate), "ip")
 }
 
 func setupRateLimit(a *echo.Group, rateLimitKind string) {

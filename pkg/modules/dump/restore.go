@@ -91,6 +91,11 @@ func Restore(filename string, overrideConfig bool) error {
 			return fmt.Errorf("unsafe path in zip archive: %q", file.Name)
 		}
 
+		// Manually repacked dumps contain directory entries, our own dumps don't
+		if file.FileInfo().IsDir() {
+			continue
+		}
+
 		if strings.HasPrefix(file.Name, "config") {
 			configFile = file
 			continue
@@ -127,7 +132,7 @@ func Restore(filename string, overrideConfig bool) error {
 	///////
 	// Restore the config file
 	if overrideConfig {
-		err = restoreConfig(configFile, dotEnvFile)
+		err = restoreConfig(configFile, dotEnvFile, cr)
 		if err != nil {
 			return err
 		}
@@ -431,7 +436,7 @@ func unmarshalFileToJSON(file *zip.File) (contents []map[string]interface{}, err
 	return
 }
 
-func restoreConfig(configFile, dotEnvFile *zip.File) error {
+func restoreConfig(configFile, dotEnvFile *zip.File, stdin *bufio.Reader) error {
 	if configFile != nil {
 		if configFile.UncompressedSize64 > maxConfigSize {
 			return fmt.Errorf("config file too large, is %d, max size is %d", configFile.UncompressedSize64, maxConfigSize)
@@ -461,7 +466,7 @@ func restoreConfig(configFile, dotEnvFile *zip.File) error {
 
 		log.Infof("The config file has been restored to '%s'.", sanitizedName)
 		log.Infof("You can now make changes to it, hit enter when you're done.")
-		if _, err := bufio.NewReader(os.Stdin).ReadString('\n'); err != nil {
+		if _, err := stdin.ReadString('\n'); err != nil {
 			return fmt.Errorf("could not read from stdin: %w", err)
 		}
 
@@ -485,7 +490,7 @@ func restoreConfig(configFile, dotEnvFile *zip.File) error {
 		log.Warningf("Please make sure the following settings are properly configured in your instance:\n%s", buf.String())
 		log.Warning("Make sure your current config matches the following env variables, confirm by pressing enter when done.")
 		log.Warning("If your config does not match, you'll have to make the changes and restart the restoring process afterwards.")
-		if _, err := bufio.NewReader(os.Stdin).ReadString('\n'); err != nil {
+		if _, err := stdin.ReadString('\n'); err != nil {
 			return fmt.Errorf("could not read from stdin: %w", err)
 		}
 	}

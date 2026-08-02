@@ -99,6 +99,10 @@ func TestDiscoveryPrincipal(t *testing.T) {
 		// Should contain the username in the principal URL
 		assert.Contains(t, body, "user15",
 			"Principal URL should contain the authenticated username")
+		assert.Contains(t, body, "/dav/principals/user15/",
+			"Principal URL should be well-formed")
+		assert.NotContains(t, body, "user15//",
+			"Principal URL must not have a double trailing slash")
 	})
 
 	t.Run("PROPFIND on /dav/principals/user15/ returns principal info", func(t *testing.T) {

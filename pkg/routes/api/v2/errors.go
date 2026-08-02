@@ -129,6 +129,23 @@ func init() {
 	// time and routes runtime errors through the same constructor, so the
 	// `code` field stays consistent between spec and wire.
 	huma.NewError = func(status int, msg string, errs ...error) huma.StatusError {
+		// Strip internal detail from server errors. The humaecho adapter writes
+		// responses itself, bypassing Vikunja's CreateHTTPErrorHandler which for
+		// v1 returns a generic 500 — so without this a raw DB/driver error (hosts,
+		// ports, credentials, schema names) leaks into problem+json `errors[]`,
+		// including on public endpoints like /health. This must live in NewError
+		// rather than NewErrorWithContext: the huma.Error5xx* helpers call NewError
+		// directly, and huma writes an already-built StatusError as-is, so NewError
+		// is the only chokepoint every 5xx passes through.
+		if status >= 500 {
+			for _, e := range errs {
+				if e != nil {
+					log.Errorf("v2: internal server error: %s", e)
+				}
+			}
+			errs = nil
+		}
+
 		details := make([]*huma.ErrorDetail, 0, len(errs))
 		for _, e := range errs {
 			if e == nil {
@@ -147,23 +164,6 @@ func init() {
 			Errors: details,
 		}}
 	}
-
-	// Strip internal detail from server errors. Huma's handler-error path
-	// wraps a raw error as NewErrorWithContext(ctx, 500, "unexpected error
-	// occurred", err) and — because the humaecho adapter writes the
-	// response itself — bypasses Vikunja's CreateHTTPErrorHandler, which for
-	// v1 returns a generic 500 with no detail. Without this override a raw
-	// DB/driver error (SQL, table, column names) would leak into the
-	// problem+json `errors[]`. Log the real cause, return a generic body.
-	huma.NewErrorWithContext = func(_ huma.Context, status int, msg string, errs ...error) huma.StatusError {
-		if status >= 500 {
-			for _, e := range errs {
-				if e != nil {
-					log.Errorf("v2: internal server error: %s", e)
-				}
-			}
-			errs = nil
-		}
-		return huma.NewError(status, msg, errs...)
-	}
+	// NewErrorWithContext is deliberately left at huma's default, which delegates
+	// to NewError above — overriding it too would log the same cause twice.
 }

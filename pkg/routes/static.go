@@ -123,10 +123,6 @@ func serveIndexFile(c *echo.Context, assetFs http.FileSystem) (err error) {
 		return err
 	}
 
-	//etag, err := generateEtag(index, info.Name())
-	//if err != nil {
-	//	return err
-	//}
 	return serveFile(c, reader, info, "")
 }
 

@@ -120,9 +120,10 @@ func (n *titlerRegisteredNotification) ToMail(_ string) *Mail   { return NewMail
 func (n *titlerRegisteredNotification) ToDB() interface{}       { return n }
 func (n *titlerRegisteredNotification) Name() string            { return "test.registry.titler" }
 func (n *titlerRegisteredNotification) ToTitle(_ string) string { return n.Title }
+func (n *titlerRegisteredNotification) ProjectID() int64        { return 0 }
 
 func TestRegistry(t *testing.T) {
-	Register(func() Notification { return &titlerRegisteredNotification{} })
+	Register(func() PersistedNotification { return &titlerRegisteredNotification{} })
 
 	t.Run("known name returns fresh instance", func(t *testing.T) {
 		n, ok := Lookup("test.registry.titler")

@@ -104,13 +104,14 @@ func getSavedFiltersForUser(s *xorm.Session, auth web.Auth, search string) (filt
 
 func (sf *SavedFilter) ToProject() *Project {
 	return &Project{
-		ID:          getProjectIDFromSavedFilterID(sf.ID),
-		Title:       sf.Title,
-		Description: sf.Description,
-		IsFavorite:  sf.IsFavorite,
-		Created:     sf.Created,
-		Updated:     sf.Updated,
-		Owner:       sf.Owner,
+		ID:              getProjectIDFromSavedFilterID(sf.ID),
+		Title:           sf.Title,
+		Description:     sf.Description,
+		IsFavorite:      sf.IsFavorite,
+		Created:         sf.Created,
+		Updated:         sf.Updated,
+		Owner:           sf.Owner,
+		ParentProjectID: noParentProjectID(),
 	}
 }
 
@@ -316,6 +317,44 @@ func (sf *SavedFilter) Delete(s *xorm.Session, _ web.Auth) error {
 	return err
 }
 
+// dropFiltersWithInactiveOwners removes filters owned by a disabled, locked or deleted
+// user. Evaluating a filter needs its owner's project list, which getRawProjectsForUser
+// refuses to return for those, so one such filter would fail the whole batch for everyone.
+func dropFiltersWithInactiveOwners(s *xorm.Session, filters map[int64]*SavedFilter) (err error) {
+	if len(filters) == 0 {
+		return nil
+	}
+
+	ownerIDs := make([]int64, 0, len(filters))
+	for _, filter := range filters {
+		ownerIDs = append(ownerIDs, filter.OwnerID)
+	}
+
+	activeOwners := []*user.User{}
+	err = s.
+		In("id", ownerIDs).
+		NotIn("status", user.StatusDisabled, user.StatusAccountLocked).
+		Cols("id").
+		Find(&activeOwners)
+	if err != nil {
+		return err
+	}
+
+	isActive := make(map[int64]bool, len(activeOwners))
+	for _, owner := range activeOwners {
+		isActive[owner.ID] = true
+	}
+
+	for id, filter := range filters {
+		if !isActive[filter.OwnerID] {
+			log.Debugf("Skipping filter %d, owner %d is disabled, locked or deleted", filter.ID, filter.OwnerID)
+			delete(filters, id)
+		}
+	}
+
+	return nil
+}
+
 func addTaskToFilter(s *xorm.Session, filter *SavedFilter, view *ProjectView, fallbackTimezone string, task *Task) (taskBucket *TaskBucket, taskPosition *TaskPosition, err error) {
 
 	filterString := filter.Filters.Filter
@@ -405,6 +444,12 @@ func RegisterAddTaskToFilterViewCron() {
 			return
 		}
 
+		err = dropFiltersWithInactiveOwners(s, filters)
+		if err != nil {
+			log.Errorf("%sError checking filter owners: %s", logPrefix, err)
+			return
+		}
+
 		if len(filters) == 0 {
 			return
 		}
@@ -457,7 +502,7 @@ func RegisterAddTaskToFilterViewCron() {
 				resultTasks, _, _, err := tc.ReadAll(s, &user.User{ID: filter.OwnerID}, "", 1, -1)
 				if err != nil {
 					log.Errorf("%sError fetching tasks for filter %d: %s", logPrefix, filterID, err)
-					return
+					continue
 				}
 				tasks = resultTasks.([]*Task)
 			}

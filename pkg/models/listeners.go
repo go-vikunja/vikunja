@@ -154,6 +154,13 @@ func registerEventsForAuditLogging() {
 			Target: audit.UserTarget(e.User.ID),
 		}
 	})
+	audit.RegisterEventForAudit(func(e *UserDataExportRequestedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action: audit.ActionUserDataExportRequested,
+			Actor:  audit.UserActor(e.User.ID),
+			Target: audit.UserTarget(e.User.ID),
+		}
+	})
 
 	// Tasks
 	audit.RegisterEventForAudit(func(e *TaskCreatedEvent) *audit.Entry {
@@ -561,7 +568,8 @@ func (s *SendTaskCommentNotification) Handle(msg *message.Message) (err error) {
 		}
 		err = notifications.Notify(subscriber.User, n, sess)
 		if err != nil {
-			return
+			log.Errorf("Could not send task comment notification to user %d for task %d: %s", subscriber.UserID, event.Task.ID, err)
+			continue
 		}
 	}
 
@@ -669,7 +677,8 @@ func (s *SendTaskAssignedNotification) Handle(msg *message.Message) (err error) 
 		}
 		err = notifications.Notify(subscriber.User, n, sess)
 		if err != nil {
-			return
+			log.Errorf("Could not send task assigned notification to user %d for task %d: %s", subscriber.UserID, event.Task.ID, err)
+			continue
 		}
 
 		notifiedUsers[subscriber.UserID] = true
@@ -698,13 +707,7 @@ func (s *SendTaskDeletedNotification) Handle(msg *message.Message) (err error) {
 	sess := db.NewSession()
 	defer sess.Close()
 
-	var subscribers []*SubscriptionWithUser
-	subscribers, err = GetSubscriptionsForEntity(sess, SubscriptionEntityTask, event.Task.ID)
-	// If the task does not exist and no one has explicitly subscribed to it, we won't find any subscriptions for it.
-	// Hence, we need to check for subscriptions to the parent project manually.
-	if err != nil && (IsErrTaskDoesNotExist(err) || IsErrProjectDoesNotExist(err)) {
-		subscribers, err = GetSubscriptionsForEntity(sess, SubscriptionEntityProject, event.Task.ProjectID)
-	}
+	subscribers, err := GetSubscriptionsForDeletedTask(sess, event.Task)
 	if err != nil {
 		return err
 	}
@@ -722,7 +725,8 @@ func (s *SendTaskDeletedNotification) Handle(msg *message.Message) (err error) {
 		}
 		err = notifications.Notify(subscriber.User, n, sess)
 		if err != nil {
-			return
+			log.Errorf("Could not send task deleted notification to user %d for task %d: %s", subscriber.UserID, event.Task.ID, err)
+			continue
 		}
 	}
 
@@ -934,6 +938,11 @@ func (l *UpdateTaskInSavedFilterViews) Handle(msg *message.Message) (err error) 
 		return err
 	}
 
+	err = dropFiltersWithInactiveOwners(s, filters)
+	if err != nil {
+		return err
+	}
+
 	var fallbackTimezone string
 	if event.Doer != nil {
 		u, userErr := user.GetUserByID(s, event.Doer.GetID())
@@ -967,6 +976,12 @@ func (l *UpdateTaskInSavedFilterViews) Handle(msg *message.Message) (err error) 
 				IsErrInvalidTaskFilterComparator(err) ||
 				IsErrInvalidTaskField(err) {
 				log.Debugf("Invalid filter expression for view %d, expression: %v", view.ID, view.Filter)
+				continue
+			}
+
+			// The owner may have been disabled or deleted after the check above.
+			if user.IsErrUserStatusError(err) || user.IsErrUserDoesNotExist(err) {
+				log.Debugf("Skipping view %d, owner %d is not available: %v", view.ID, filter.OwnerID, err)
 				continue
 			}
 
@@ -1054,7 +1069,8 @@ func (s *SendProjectCreatedNotification) Handle(msg *message.Message) (err error
 		}
 		err = notifications.Notify(subscriber.User, n, sess)
 		if err != nil {
-			return
+			log.Errorf("Could not send project created notification to user %d for project %d: %s", subscriber.UserID, event.Project.ID, err)
+			continue
 		}
 	}
 

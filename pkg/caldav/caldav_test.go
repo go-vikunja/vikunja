@@ -91,6 +91,7 @@ END:VCALENDAR`,
 						Description: "Lorem Ipsum",
 						UID:         "randommduid",
 						Timestamp:   time.Unix(1543626724, 0).In(config.GetTimeZone()),
+						Done:        true,
 						Completed:   time.Unix(1543627824, 0).In(config.GetTimeZone()),
 					},
 				},
@@ -461,6 +462,67 @@ UID:pending-uid
 DTSTAMP:20181201T011204Z
 SUMMARY:Pending task
 STATUS:NEEDS-ACTION
+LAST-MODIFIED:00010101T000000Z
+END:VTODO
+END:VCALENDAR`,
+		},
+		{
+			name: "not done but with a completion timestamp has STATUS:NEEDS-ACTION",
+			args: args{
+				config: &Config{
+					Name:   "test",
+					ProdID: "RandomProdID which is not random",
+				},
+				todos: []*Todo{
+					{
+						Summary:   "Reopened repeating task",
+						UID:       "reopened-uid",
+						Timestamp: time.Unix(1543626724, 0).In(config.GetTimeZone()),
+						Done:      false,
+						Completed: time.Unix(1543627824, 0).In(config.GetTimeZone()),
+					},
+				},
+			},
+			wantCaldavtasks: `BEGIN:VCALENDAR
+VERSION:2.0
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+UID:reopened-uid
+DTSTAMP:20181201T011204Z
+SUMMARY:Reopened repeating task
+STATUS:NEEDS-ACTION
+LAST-MODIFIED:00010101T000000Z
+END:VTODO
+END:VCALENDAR`,
+		},
+		{
+			name: "done without a completion timestamp omits COMPLETED",
+			args: args{
+				config: &Config{
+					Name:   "test",
+					ProdID: "RandomProdID which is not random",
+				},
+				todos: []*Todo{
+					{
+						Summary:   "Done task",
+						UID:       "done-uid",
+						Timestamp: time.Unix(1543626724, 0).In(config.GetTimeZone()),
+						Done:      true,
+					},
+				},
+			},
+			wantCaldavtasks: `BEGIN:VCALENDAR
+VERSION:2.0
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+UID:done-uid
+DTSTAMP:20181201T011204Z
+SUMMARY:Done task
+STATUS:COMPLETED
 LAST-MODIFIED:00010101T000000Z
 END:VTODO
 END:VCALENDAR`,

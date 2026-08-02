@@ -17,6 +17,7 @@
 package migration
 
 import (
+	"fmt"
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
@@ -209,5 +210,71 @@ func TestInsertFromStructure(t *testing.T) {
 			"title":         "Label #3 - other user",
 			"created_by_id": u.ID,
 		}, false)
+	})
+	t.Run("seeds positions when the export has none", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		const taskCount = 100
+
+		tasks := make([]*models.TaskWithComments, 0, taskCount)
+		for i := range taskCount {
+			tasks = append(tasks, &models.TaskWithComments{
+				Task: models.Task{Title: fmt.Sprintf("Task %d", i)},
+			})
+		}
+		require.NoError(t, InsertFromStructure([]*models.ProjectWithTasksAndBuckets{{
+			Project: models.Project{Title: "Import project"},
+			Tasks:   tasks,
+		}}, u))
+
+		s := db.NewSession()
+		defer s.Close()
+
+		project := &models.Project{}
+		exists, err := s.Where("title = ?", "Import project").Get(project)
+		require.NoError(t, err)
+		require.True(t, exists)
+
+		positions := []*models.TaskPosition{}
+		require.NoError(t, s.
+			Join("INNER", "tasks", "tasks.id = task_positions.task_id").
+			Where("tasks.project_id = ?", project.ID).
+			OrderBy("task_positions.project_view_id, tasks.id").
+			Find(&positions))
+		require.Len(t, positions, taskCount*4, "every task needs a position in all four default views")
+
+		// Halving the lowest position for every task collapses positions towards zero and
+		// reverses the import order, and recalculates the whole view on the way (#3297).
+		for i, p := range positions {
+			assert.GreaterOrEqualf(t, p.Position, models.MinPositionSpacing, "position %d of view %d collapsed", i, p.ProjectViewID)
+			if i > 0 && positions[i-1].ProjectViewID == p.ProjectViewID {
+				assert.Greaterf(t, p.Position, positions[i-1].Position, "tasks must keep their import order in view %d", p.ProjectViewID)
+			}
+		}
+	})
+	t.Run("keeps positions the export provides", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		require.NoError(t, InsertFromStructure([]*models.ProjectWithTasksAndBuckets{{
+			Project: models.Project{Title: "Import project"},
+			Tasks: []*models.TaskWithComments{
+				{Task: models.Task{Title: "Second", Position: 200}},
+				{Task: models.Task{Title: "First", Position: 100}},
+			},
+		}}, u))
+
+		s := db.NewSession()
+		defer s.Close()
+
+		for title, position := range map[string]float64{"First": 100, "Second": 200} {
+			task := &models.Task{}
+			exists, err := s.Where("title = ?", title).Get(task)
+			require.NoError(t, err)
+			require.True(t, exists)
+
+			count, err := s.Where("task_id = ? AND position = ?", task.ID, position).Count(&models.TaskPosition{})
+			require.NoError(t, err)
+			assert.Equal(t, int64(4), count, "task %q must keep position %v in all views", title, position)
+		}
 	})
 }

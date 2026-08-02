@@ -1184,7 +1184,7 @@ func init() {
 		ID:          "` + date + `",
 		Description: "",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync(` + str + date + `{})
+			return partialSync(tx, ` + str + date + `{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil

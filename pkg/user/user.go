@@ -376,7 +376,7 @@ func CheckUserCredentials(ctx context.Context, s *xorm.Session, u *Login) (*User
 	user, err := getUserByUsernameOrEmail(s, u.Username)
 	if err != nil {
 		// hashing the password takes a long time, so we hash something to not make it clear if the username was wrong
-		_, _ = bcrypt.GenerateFromPassword([]byte(u.Username), 14)
+		_, _ = bcrypt.GenerateFromPassword([]byte(u.Username), config.ServiceBcryptRounds.GetInt())
 		return nil, ErrWrongUsernameOrPassword{}
 	}
 

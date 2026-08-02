@@ -53,6 +53,7 @@ type Todo struct {
 	// Optional
 	Summary     string
 	Description string
+	Done        bool
 	Completed   time.Time
 	Organizer   *user.User
 	Priority    int64 // 0-9, 1 is highest
@@ -196,9 +197,14 @@ DTEND:` + makeCalDavTimeFromTimeStamp(t.End)
 DESCRIPTION:` + escapeICalText(description)
 			}
 		}
-		if t.Completed.Unix() > 0 {
+		// Keyed on Done, not Completed: a reopened repeating task keeps its done_at, and reporting
+		// it as completed makes clients echo it back as done, rescheduling it on every sync.
+		if t.Done {
+			if t.Completed.Unix() > 0 {
+				caldavtodos += `
+COMPLETED:` + makeCalDavTimeFromTimeStamp(t.Completed)
+			}
 			caldavtodos += `
-COMPLETED:` + makeCalDavTimeFromTimeStamp(t.Completed) + `
 STATUS:COMPLETED`
 		} else {
 			caldavtodos += `
