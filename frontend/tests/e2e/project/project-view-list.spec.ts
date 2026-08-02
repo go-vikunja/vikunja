@@ -32,6 +32,45 @@ test.describe('Project View List', () => {
 		await expect(page.locator('.tasks')).toContainText(newTaskTitle)
 	})
 
+	test('Should create multiple tasks from multiline input and keep their order', async ({authenticatedPage: page}) => {
+		await createProjects(1)
+		await BucketFactory.create(2, {
+			project_view_id: 4,
+		})
+
+		const titles = ['first multi task', 'second multi task', 'third multi task', 'fourth multi task']
+
+		await page.goto('/projects/1/1')
+		await page.locator('.task-add textarea').fill(titles.join('\n'))
+		await page.locator('.task-add textarea').press('Enter')
+
+		await expect(page.locator('.tasks')).toContainText(titles[3])
+		await expect(page.locator('.tasks .task .tasktext')).toContainText(titles)
+
+		// The order must survive a reload, not only hold in memory
+		await page.reload()
+		await expect(page.locator('.tasks .task .tasktext')).toContainText(titles)
+	})
+
+	test('Should create subtasks from indented multiline input', async ({authenticatedPage: page}) => {
+		await createProjects(1)
+		await BucketFactory.create(2, {
+			project_view_id: 4,
+		})
+
+		await page.goto('/projects/1/1')
+		await page.locator('.task-add textarea').fill('Parent multi task\n  Sub multi task')
+		await page.locator('.task-add textarea').press('Enter')
+
+		await expect(page.locator('.tasks')).toContainText('Sub multi task')
+
+		await page.reload()
+		await expect(page.locator('ul.tasks > div > .single-task')).toBeVisible()
+		await expect(page.locator('ul.tasks > div > .single-task').first()).toContainText('Parent multi task')
+		await expect(page.locator('ul.tasks > div > .subtask-nested')).toBeVisible()
+		await expect(page.locator('.subtask-nested')).toContainText('Sub multi task')
+	})
+
 	test('Should navigate to the task when the title is clicked', async ({authenticatedPage: page}) => {
 		await createProjects(1)
 		const tasks = await TaskFactory.create(5, {
