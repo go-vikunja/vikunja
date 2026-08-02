@@ -480,7 +480,7 @@ jobs:
             ./desktop/dist/Vikunja*
             !./desktop/dist/*.blockmap
 
-  generate-swagger-docs:
+  generate-swagger-and-yaegi:
     runs-on: ubuntu-latest
     # The push below authenticates with the SSH deploy key, not GITHUB_TOKEN.
     permissions:
@@ -505,6 +505,7 @@ jobs:
           go install github.com/swaggo/swag/cmd/swag
           chmod +x ./mage-static
           ./mage-static generate:swagger-docs
+          ./mage-static generate:yaegi-symbols
       - name: Check for changes
         id: check_changes
         run: |
@@ -518,7 +519,14 @@ jobs:
         run: |
           git config --local user.email "bot@vikunja.io"
           git config --local user.name "Frederick [Bot]"
-          git commit -am "[skip ci] Updated swagger docs"
+          if ! git diff --quiet -- pkg/swagger; then
+            git add pkg/swagger
+            git commit -m "[skip ci] Updated swagger docs"
+          fi
+          if ! git diff --quiet -- pkg/yaegi_symbols; then
+            git add pkg/yaegi_symbols
+            git commit -m "[skip ci] Updated yaegi symbols"
+          fi
       - name: Push changes
         if: steps.check_changes.outputs.changes_exist != '0'
         uses: ad-m/github-push-action@881a6320fdb16eb5318c5054f31c218aec2b324c # master
