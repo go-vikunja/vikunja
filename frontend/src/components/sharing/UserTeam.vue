@@ -345,6 +345,7 @@ async function toggleType(sharable) {
 	if (
 		selectedPermission.value[sharable.id] !== PERMISSIONS.ADMIN &&
 		selectedPermission.value[sharable.id] !== PERMISSIONS.READ &&
+		selectedPermission.value[sharable.id] !== PERMISSIONS.UPDATE &&
 		selectedPermission.value[sharable.id] !== PERMISSIONS.READ_WRITE
 	) {
 		selectedPermission.value[sharable.id] = PERMISSIONS.READ
