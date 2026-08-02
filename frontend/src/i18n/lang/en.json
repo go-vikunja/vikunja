@@ -955,6 +955,7 @@
   "task": {
     "new": "Create a task",
     "createSuccess": "The task was successfully created.",
+    "bulkCreateUnexpectedResponse": "The server returned an unexpected number of created tasks.",
     "addReminder": "Add a reminder…",
     "removeReminder": "Remove this reminder",
     "doneSuccess": "The task was successfully marked as done.",

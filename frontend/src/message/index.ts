@@ -28,6 +28,10 @@ export function getErrorText(r): string {
 	return message
 }
 
+export function translatedError(key: string): Error {
+	return new Error(i18n.global.t(key))
+}
+
 export interface Action {
 	title: string,
 	callback: () => void,
