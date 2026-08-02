@@ -33,7 +33,7 @@ test.describe('API Tokens', () => {
 		await expect(tasksGroupDiv).toBeVisible()
 
 		// Within that group, find the specific "create" permission checkbox and verify it's checked
-		const createCheckbox = tasksGroupDiv.getByRole('checkbox', {name: 'Checkbox create'})
+		const createCheckbox = tasksGroupDiv.getByRole('checkbox', {name: 'Checkbox create', exact: true})
 		await expect(createCheckbox).toBeChecked()
 	})
 
