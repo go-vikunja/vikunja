@@ -273,6 +273,7 @@ After adjusting the source string, you need to call the respective translation l
 
 **Code Style:**
 - Go: golangci-lint per `.golangci.yml`; use goimports; wrap errors with `fmt.Errorf("...: %w", err)`; enforce permissions checks in models; never log secrets; do not edit generated `pkg/swagger/*`
+- **No raw SQL.** Use XORM's query builder (`s.Where(...)`, `builder.In`, `.Cols().Update()`, etc.) — never hand-rolled SQL strings via `s.Exec`/`s.Query`/`builder.Expr`, in migrations, tests, or anywhere else. Gotcha when converting: an argument-less `builder.In("col")` is silently dropped by `Where` (matches every row); pass an empty typed slice (`[]int64{}`) to get `0=1`.
 - Vue: ESLint + TS; single quotes, trailing commas, no semicolons, tab indent; script setup + lang ts; keep services/models in sync with backend
 - Follow existing patterns for consistency
 - **Comments: document the *why*, not the *what* — default to no comment.** Don't write comments that restate the code, a function/struct/field name, or a signature; they're noise the reader skips past (a comment that takes longer to read than the code it describes should be deleted). Only comment a genuinely non-obvious *why* — a gotcha, an invariant, a rejected alternative, a cross-file constraint — in one tight line. Be aggressive about cutting on the first pass, not just when asked.
