@@ -11,7 +11,7 @@ overrides:
   rollup: 'catalog:'
   basic-ftp: 6.0.2
   serialize-javascript: 7.0.7
-  flatted: 3.4.3
+  flatted: 3.4.4
   ip-address: 10.3.1
   postcss: 8.5.25
   tmp: 0.2.7
