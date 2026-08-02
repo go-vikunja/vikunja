@@ -68,26 +68,22 @@ import type {ITask} from '@/modelTypes/ITask'
 
 import Expandable from '@/components/base/Expandable.vue'
 import QuickAddMagic from '@/components/tasks/partials/QuickAddMagic.vue'
-import {parseSubtasksViaIndention} from '@/helpers/parseSubtasksViaIndention'
+import {parseSubtasksViaIndention, type TaskWithParent} from '@/helpers/parseSubtasksViaIndention'
 import TaskRelationService from '@/services/taskRelation'
 import TaskRelationModel from '@/models/taskRelation'
 import {getLabelsFromPrefix} from '@/modules/quickAddMagic'
+import {runWrites} from '@/helpers/runWrites'
 import {error} from '@/message'
 
 import {useAuthStore} from '@/stores/auth'
+import {useConfigStore} from '@/stores/config'
 import {useTaskStore} from '@/stores/tasks'
 
 import {useAutoHeightTextarea} from '@/composables/useAutoHeightTextarea'
-import TaskService from '@/services/task'
-import TaskModel from '@/models/task'
 
-const props = withDefaults(defineProps<{
-	defaultPosition?: number,
-}>(), {
-	defaultPosition: undefined,
-})
-
-const emit = defineEmits(['taskAdded'])
+const emit = defineEmits<{
+	tasksAdded: [tasks: ITask[]],
+}>()
 
 const textareaId = computed(() => `task-add-textarea-${Math.random().toString(36).substr(2, 9)}`)
 
@@ -96,6 +92,7 @@ const {textarea: newTaskInput} = useAutoHeightTextarea(newTaskTitle)
 
 const {t} = useI18n({useScope: 'global'})
 const authStore = useAuthStore()
+const configStore = useConfigStore()
 const taskStore = useTaskStore()
 const router = useRouter()
 
@@ -132,9 +129,9 @@ async function addTask() {
 	}
 
 	const taskTitleBackup = newTaskTitle.value
-	// This allows us to find the tasks with the title they had before being parsed
-	// by quick add magic.
-	const createdTasks: { [key: ITask['title']]: ITask } = {}
+	// Keyed by the title the task had before quick add magic parsed it. A Map,
+	// because a user-entered `__proto__` would corrupt plain-object lookups.
+	const createdTasks = new Map<ITask['title'], ITask>()
 	const tasksToCreate = parseSubtasksViaIndention(newTaskTitle.value, authStore.settings.frontendSettings.quickAddMagicMode)
 
 	// We ensure all labels exist prior to passing them down to the create task method
@@ -151,68 +148,48 @@ async function addTask() {
 		error({message: t('task.label.createFailed', {labels: failedLabels.join(', ')})})
 	}
 
-	const taskCollectionService = new TaskService()
-	const projectIndices = new Map<number, number>()
-
 	let currentProjectId = authStore.settings.defaultProjectId
 	if (typeof router.currentRoute.value.params.projectId !== 'undefined') {
 		currentProjectId = Number(router.currentRoute.value.params.projectId)
 	}
 
-	// Create a map of project indices before creating tasks
-	if (tasksToCreate.length > 1) {
-		for (const {project} of tasksToCreate) {
-			const projectId = project !== null
-				? await taskStore.findProjectId({project, projectId: 0})
-				: currentProjectId
+	try {
+		newTaskTitle.value = ''
 
-			if (!projectIndices.has(projectId)) {
-				const newestTask = await taskCollectionService.getAll(new TaskModel({}), {
-					sort_by: ['id'],
-					order_by: ['desc'],
-					per_page: 1,
-					filter: `project_id = ${projectId}`,
-				})
-				projectIndices.set(projectId, newestTask[0]?.index || 0)
-			}
-		}
-	}
+		const entries = await Promise.all(tasksToCreate
+			.filter(({title}) => title !== '')
+			.map(async ({title, project}) => ({
+				title,
+				projectId: (project !== null
+					? await taskStore.findProjectId({project, projectId: 0})
+					: currentProjectId) || authStore.settings.defaultProjectId || 0,
+			})))
 
-	const newTasks = tasksToCreate.map(async ({title, project}, index) => {
-		if (title === '') {
+		// Input like a lone bullet passes the empty check but parses to nothing.
+		if (entries.length === 0) {
+			newTaskTitle.value = taskTitleBackup
+			errorMessage.value = t('project.create.addTitleRequired')
 			return
 		}
 
-		// If the task has a project specified, make sure to use it
-		const projectId = project !== null
-			? await taskStore.findProjectId({project, projectId: 0})
-			: currentProjectId
+		// Separate from createdTasks: duplicate lines create two tasks but collapse
+		// into a single map entry.
+		const allCreated: ITask[] = []
 
-		// Calculate new index for this task per project
-		let taskIndex: number | undefined
-		if (tasksToCreate.length > 1) {
-			const lastIndex = projectIndices.get(projectId)
-			taskIndex = lastIndex + index + 1
-		}
-
-		const task = await taskStore.createNewTask({
-			title,
-			projectId: projectId || authStore.settings.defaultProjectId,
-			position: props.defaultPosition,
-			index: taskIndex,
+		const bulk = await taskStore.createNewTasksBulk(entries)
+		entries.forEach(({title}, index) => {
+			const task = bulk.tasks[index]
+			if (task === null) {
+				return
+			}
+			createdTasks.set(title, task)
+			allCreated.push(task)
 		})
-		createdTasks[title] = task
-		return task
-	})
-
-	try {
-		newTaskTitle.value = ''
-		await Promise.all(newTasks)
 
 		const taskRelationService = new TaskRelationService()
 		const allParentTasks = tasksToCreate.filter(t => t.parent !== null).map(t => t.parent)
-		const relations = tasksToCreate.map(async t => {
-			const createdTask = createdTasks[t.title]
+		const createRelation = async (t: TaskWithParent) => {
+			const createdTask = createdTasks.get(t.title)
 			if (typeof createdTask === 'undefined') {
 				return
 			}
@@ -222,7 +199,7 @@ async function addTask() {
 				return
 			}
 
-			const createdParentTask = createdTasks[t.parent]
+			const createdParentTask = createdTasks.get(t.parent ?? '')
 			if (typeof createdTask === 'undefined' || typeof createdParentTask === 'undefined') {
 				return
 			}
@@ -256,13 +233,24 @@ async function addTask() {
 			})
 
 			return rel
-		})
-		await Promise.all(relations)
-		
-		// We're emitting all tasks at once at the end to avoid the same task showing up multiple times
-		Object.values(createdTasks).forEach(task => {
-			emit('taskAdded', task)
-		})
+		}
+
+		try {
+			await runWrites(tasksToCreate, createRelation, configStore.concurrentWrites)
+		} catch (e) {
+			// The tasks themselves exist by now — reporting and moving on beats
+			// restoring the input and letting the user duplicate all of them.
+			error(e)
+		}
+
+		if (allCreated.length > 0) {
+			emit('tasksAdded', allCreated)
+		}
+
+		if (bulk.error !== null) {
+			newTaskTitle.value = taskTitleBackup
+			error(bulk.error)
+		}
 	} catch (e) {
 		newTaskTitle.value = taskTitleBackup
 		if (e?.message === 'NO_PROJECT') {
