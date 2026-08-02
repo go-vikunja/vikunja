@@ -66,13 +66,13 @@ func (t *Task) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 		if t.ProjectID != 0 && t.ProjectID != ot.ProjectID {
 			return false, ErrGenericForbidden{}
 		}
-		if !t.DueDate.Equal(ot.DueDate) {
+		if !t.DueDate.IsZero() && !t.DueDate.Equal(ot.DueDate) {
 			return false, ErrGenericForbidden{}
 		}
-		if !t.StartDate.Equal(ot.StartDate) {
+		if !t.StartDate.IsZero() && !t.StartDate.Equal(ot.StartDate) {
 			return false, ErrGenericForbidden{}
 		}
-		if !t.EndDate.Equal(ot.EndDate) {
+		if !t.EndDate.IsZero() && !t.EndDate.Equal(ot.EndDate) {
 			return false, ErrGenericForbidden{}
 		}
 		if t.Priority != 0 && t.Priority != ot.Priority {
@@ -87,7 +87,7 @@ func (t *Task) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 		if t.PercentDone != 0 && t.PercentDone != ot.PercentDone {
 			return false, ErrGenericForbidden{}
 		}
-		if t.Assignees != nil {
+		if len(t.Assignees) > 0 {
 			return false, ErrGenericForbidden{}
 		}
 		return true, nil
