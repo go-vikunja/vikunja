@@ -34,6 +34,7 @@ const emit = defineEmits<{
 const service = new ApiTokenService()
 const {t} = useI18n()
 const {store: timeFormat} = useTimeFormat()
+const flatpickrLocale = useFlatpickrLanguage()
 // Zero seconds: flatpickr copies them into the native mobile input's default value where they
 // become the step base, making every minute-granularity pick a stepMismatch that blocks submit (#3175)
 const now = new Date()
@@ -105,7 +106,7 @@ const flatPickerConfig = computed(() => ({
 	dateFormat: 'Y-m-d H:i',
 	enableTime: true,
 	time_24hr: timeFormat.value === TIME_FORMAT.HOURS_24,
-	locale: useFlatpickrLanguage().value,
+	locale: flatpickrLocale.value,
 	minDate: now,
 }))
 
