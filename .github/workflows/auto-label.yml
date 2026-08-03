@@ -132,7 +132,9 @@ jobs:
 
       - name: Classify with AI
         id: classify
-        uses: appleboy/LLM-action@26e6c6aad79241353e4e0960b3d693f48f1c1bcd # v1.3.1
+        # Fork pin until appleboy/LLM-action#24 (max_completion_tokens support
+        # for reasoning models) is merged and released.
+        uses: tink-bot/LLM-action@764c84661feafac59e9302a7fa82eb1cf4434e41 # feat-max-completion-tokens
         with:
           api_key: ${{ secrets.LLM_API_KEY }}
           model: 'gpt-5.6-luna'
