@@ -5,12 +5,8 @@ import {createI18n} from 'vue-i18n'
 import {createRouter, createMemoryHistory} from 'vue-router'
 import ApiTokens from '@/views/user/settings/ApiTokens.vue'
 import Modal from '@/components/misc/Modal.vue'
-import {stubDialogMethods} from '@/helpers/tests/stubDialogMethods'
 import testid from '@/directives/testid'
 import en from '@/i18n/lang/en.json'
-
-// Makes v-cy emit data-cy attributes so the modal's primary button is selectable.
-window.TESTING = true
 
 const tokens = [
 	{
@@ -18,6 +14,14 @@ const tokens = [
 		title: 'chrome-quick-add',
 		token: '',
 		permissions: {tasks: ['create', 'read_all']},
+		expiresAt: new Date('2036-01-01'),
+		created: new Date('2026-01-01'),
+	},
+	{
+		id: 2,
+		title: 'backup-sync',
+		token: '',
+		permissions: {tasks: ['read_all']},
 		expiresAt: new Date('2036-01-01'),
 		created: new Date('2026-01-01'),
 	},
@@ -72,16 +76,34 @@ async function mountPage() {
 	return {wrapper, errors}
 }
 
+async function openDeleteModalForFirstToken(wrapper: VueWrapper) {
+	const deleteBtn = wrapper.findAll('button').find(b => /delete/i.test(b.text()))
+	expect(deleteBtn).toBeTruthy()
+	await deleteBtn!.trigger('click')
+	await flushPromises()
+
+	const confirmBtn = document.querySelector<HTMLButtonElement>('dialog [data-cy="modalPrimary"]')
+	expect(confirmBtn).toBeTruthy()
+	return confirmBtn!
+}
+
+// Modal keeps the dialog mounted for its 150ms close transition.
+async function settleCloseTransition() {
+	await flushPromises()
+	await new Promise(r => setTimeout(r, 200))
+	await flushPromises()
+}
+
 function runtimeErrorMessages(errors: unknown[]) {
 	return errors.map(e => (e instanceof Error ? e.message : String(e)))
 }
 
 describe('ApiTokens settings page', () => {
-	let dialogStubs: ReturnType<typeof stubDialogMethods>
 	let wrapper: VueWrapper | undefined
 
 	beforeEach(() => {
-		dialogStubs = stubDialogMethods()
+		// Makes v-cy emit data-cy attributes so the modal's primary button is selectable.
+		vi.stubGlobal('TESTING', true)
 		setActivePinia(createPinia())
 		document.body.innerHTML = ''
 		getAll.mockImplementation(async () => tokens.slice())
@@ -91,7 +113,7 @@ describe('ApiTokens settings page', () => {
 	afterEach(() => {
 		wrapper?.unmount()
 		wrapper = undefined
-		dialogStubs.restore()
+		vi.unstubAllGlobals()
 		document.body.innerHTML = ''
 	})
 
@@ -100,25 +122,37 @@ describe('ApiTokens settings page', () => {
 		wrapper = mounted.wrapper
 		const {errors} = mounted
 
-		const deleteBtn = wrapper.findAll('button').find(b => /delete/i.test(b.text()))
-		expect(deleteBtn).toBeTruthy()
-		await deleteBtn!.trigger('click')
-		await flushPromises()
-
-		expect(document.querySelector('dialog.modal-dialog')).toBeTruthy()
-
-		const confirmBtn = document.querySelector<HTMLButtonElement>('dialog [data-cy="modalPrimary"]')
-		expect(confirmBtn).toBeTruthy()
-		confirmBtn!.click()
-		await flushPromises()
-		// Modal keeps the dialog mounted for its close transition.
-		await new Promise(r => setTimeout(r, 200))
-		await flushPromises()
+		const confirmBtn = await openDeleteModalForFirstToken(wrapper)
+		confirmBtn.click()
+		await settleCloseTransition()
 
 		expect(del).toHaveBeenCalledTimes(1)
 		expect(del).toHaveBeenCalledWith(expect.objectContaining({id: 1}))
-		expect(wrapper.findAll('tbody tr')).toHaveLength(0)
+		expect(document.querySelector('dialog.modal-dialog')).toBeNull()
+
+		const rows = wrapper.findAll('tbody tr')
+		expect(rows).toHaveLength(1)
+		expect(rows[0].text()).toContain('backup-sync')
 		expect(wrapper.text()).not.toContain('chrome-quick-add')
 		expect(runtimeErrorMessages(errors)).toEqual([])
+	})
+
+	it('deletes only once when the confirm button is double clicked', async () => {
+		const mounted = await mountPage()
+		wrapper = mounted.wrapper
+		const {errors} = mounted
+
+		const confirmBtn = await openDeleteModalForFirstToken(wrapper)
+		confirmBtn.click()
+		confirmBtn.click()
+		await settleCloseTransition()
+
+		expect(del).toHaveBeenCalledTimes(1)
+		expect(del).toHaveBeenCalledWith(expect.objectContaining({id: 1}))
+		expect(runtimeErrorMessages(errors)).toEqual([])
+
+		const rows = wrapper.findAll('tbody tr')
+		expect(rows).toHaveLength(1)
+		expect(rows[0].text()).toContain('backup-sync')
 	})
 })

@@ -1,8 +1,7 @@
-import {describe, it, expect, beforeEach, afterEach} from 'vitest'
+import {describe, it, expect, beforeEach, afterEach, vi} from 'vitest'
 import {mount, flushPromises} from '@vue/test-utils'
 import {nextTick} from 'vue'
 import Modal from './Modal.vue'
-import {stubDialogMethods} from '@/helpers/tests/stubDialogMethods'
 
 const globalMocks = {
 	global: {
@@ -12,14 +11,14 @@ const globalMocks = {
 	},
 }
 
-let dialogStubs: ReturnType<typeof stubDialogMethods>
+let showModalSpy: ReturnType<typeof vi.spyOn<HTMLDialogElement, 'showModal'>>
 
 beforeEach(() => {
-	dialogStubs = stubDialogMethods()
+	showModalSpy = vi.spyOn(HTMLDialogElement.prototype, 'showModal')
 })
 
 afterEach(() => {
-	dialogStubs.restore()
+	showModalSpy.mockRestore()
 	document.body.innerHTML = ''
 })
 
@@ -46,7 +45,7 @@ describe('Modal.vue — open race condition (#2590)', () => {
 		const dialog = document.querySelector('dialog.modal-dialog') as HTMLDialogElement | null
 		expect(dialog).not.toBeNull()
 		expect(dialog!.hasAttribute('open')).toBe(true)
-		expect(dialogStubs.showModal).toHaveBeenCalledTimes(1)
+		expect(showModalSpy).toHaveBeenCalledTimes(1)
 
 		wrapper.unmount()
 	})
@@ -75,8 +74,8 @@ describe('Modal.vue — open race condition (#2590)', () => {
 
 		const dialog = document.querySelector('dialog.modal-dialog') as HTMLDialogElement | null
 		expect(dialog).not.toBeNull()
-		expect(dialogStubs.showModal).toHaveBeenCalled()
-		expect(dialogStubs.showModal.mock.instances[0]).toBe(dialog)
+		expect(showModalSpy).toHaveBeenCalled()
+		expect(showModalSpy.mock.instances[0]).toBe(dialog)
 		expect(dialog!.hasAttribute('open')).toBe(true)
 
 		wrapper.unmount()
@@ -103,8 +102,8 @@ describe('Modal.vue — open race condition (#2590)', () => {
 		// is false because showModal() was never called. The fix guarantees
 		// these two always agree.
 		expect(dialog!.hasAttribute('open')).toBe(true)
-		expect(dialogStubs.showModal).toHaveBeenCalled()
-		expect(dialogStubs.showModal.mock.instances[0]).toBe(dialog)
+		expect(showModalSpy).toHaveBeenCalled()
+		expect(showModalSpy.mock.instances[0]).toBe(dialog)
 
 		wrapper.unmount()
 	})
@@ -157,7 +156,7 @@ describe('Modal.vue — open race condition (#2590)', () => {
 
 		// showModal must not have been called — the final prop state is
 		// disabled.
-		expect(dialogStubs.showModal).not.toHaveBeenCalled()
+		expect(showModalSpy).not.toHaveBeenCalled()
 		expect(document.querySelector('dialog.modal-dialog')).toBeNull()
 
 		wrapper.unmount()
