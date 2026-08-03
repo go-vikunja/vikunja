@@ -1,4 +1,4 @@
-import {describe, it, expect, beforeEach, afterEach, vi} from 'vitest'
+import {describe, it, expect, beforeEach, afterEach, vi, type MockInstance} from 'vitest'
 import {mount, flushPromises} from '@vue/test-utils'
 import {nextTick} from 'vue'
 import Modal from './Modal.vue'
@@ -11,7 +11,7 @@ const globalMocks = {
 	},
 }
 
-let showModalSpy: ReturnType<typeof vi.spyOn<HTMLDialogElement, 'showModal'>>
+let showModalSpy: MockInstance<HTMLDialogElement['showModal']>
 
 beforeEach(() => {
 	showModalSpy = vi.spyOn(HTMLDialogElement.prototype, 'showModal')
