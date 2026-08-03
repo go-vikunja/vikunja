@@ -56,15 +56,22 @@ func (b *TaskBucket) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 		ProjectID:     b.ProjectID,
 		ProjectViewID: b.ProjectViewID,
 	}
-	canDoBucket, err := bucket.canDoBucket(s, a)
-	if err != nil || !canDoBucket {
+	bb, err := getBucketByID(s, bucket.ID)
+	if err != nil {
+		return false, err
+	}
+	pv, err := GetProjectViewByIDAndProject(s, bb.ProjectViewID, bucket.ProjectID)
+	if err != nil {
+		return false, err
+	}
+	p := &Project{ID: pv.ProjectID}
+	canRead, _, err := p.CanRead(s, a)
+	if err != nil || !canRead {
 		return false, err
 	}
 
-	// The task comes from the request body and may live in a different
-	// project than the bucket, so it needs its own write check.
 	task := &Task{ID: b.TaskID}
-	return task.CanWrite(s, a)
+	return task.CanUpdate(s, a)
 }
 
 func (b *TaskBucket) upsert(s *xorm.Session) (err error) {

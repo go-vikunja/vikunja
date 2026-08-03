@@ -154,7 +154,7 @@
 									:delay="isTouchDevice ? 300 : 1000"
 									:model-value="bucket.tasks"
 									:group="{name: 'tasks', put: shouldAcceptDrop(bucket) && !dragBucket}"
-									:disabled="!canWrite"
+									:disabled="!canMoveTasks"
 									:data-bucket-index="bucketIndex"
 									tag="ul"
 									:item-key="(task: ITask) => `bucket${bucket.id}-task${task.id}`"
@@ -431,7 +431,7 @@ const getTaskDraggableTaskComponentData = computed(() => (bucket: IBucket) => {
 		name: !drag.value ? 'move-card' : null,
 		class: [
 			'tasks',
-			{'dragging-disabled': !canWrite.value},
+			{'dragging-disabled': !canMoveTasks.value},
 		],
 	}
 })
@@ -446,7 +446,18 @@ const bucketDraggableComponentData = computed(() => ({
 }))
 const project = computed(() => projectId.value ? projectStore.projects[projectId.value] : null)
 const view = computed(() => project.value?.views.find(v => v.id === props.viewId) as IProjectView || null)
-const canWrite = computed(() => baseStore.currentProject?.maxPermission > Permissions.READ && view.value.bucketConfigurationMode === 'manual')
+const canMoveTasks = computed(() => (
+	baseStore.currentProject?.maxPermission !== null &&
+	baseStore.currentProject?.maxPermission !== undefined &&
+	baseStore.currentProject.maxPermission >= Permissions.UPDATE &&
+	view.value?.bucketConfigurationMode === 'manual'
+))
+const canWrite = computed(() => (
+	baseStore.currentProject?.maxPermission !== null &&
+	baseStore.currentProject?.maxPermission !== undefined &&
+	baseStore.currentProject.maxPermission >= Permissions.READ_WRITE &&
+	view.value?.bucketConfigurationMode === 'manual'
+))
 const canCreateTasks = computed(() => canWrite.value && projectId.value > 0)
 
 const isTouchDevice = ref(false)
