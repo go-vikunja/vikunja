@@ -7,6 +7,7 @@ import ApiTokenModel from '@/models/apiTokenModel'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import {MILLISECONDS_A_DAY} from '@/constants/date'
 import flatPickr from 'vue-flatpickr-component'
+import type {Hook} from 'flatpickr/dist/types/options'
 import 'flatpickr/dist/flatpickr.css'
 import {useI18n} from 'vue-i18n'
 import FormField from '@/components/input/FormField.vue'
@@ -108,6 +109,9 @@ const flatPickerConfig = computed(() => ({
 	time_24hr: timeFormat.value === TIME_FORMAT.HOURS_24,
 	locale: flatpickrLocale.value,
 	minDate: now,
+	// altInput is a fresh element inheriting no attributes from the input we render, so label it here
+	onReady: ((_dates, _str, instance) =>
+		instance.altInput?.setAttribute('aria-label', t('user.settings.apiTokens.attributes.expiresAt'))) as Hook,
 }))
 
 onMounted(async () => {
