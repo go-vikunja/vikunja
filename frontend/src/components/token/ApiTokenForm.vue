@@ -101,6 +101,13 @@ const presets: TokenPreset[] = [
 	},
 ]
 
+// altInput (or mobileInput on the mobile path) is a fresh element inheriting no attributes from the
+// input we render, so label it here
+const labelDateInput: Hook = (_dates, _str, instance) => {
+	const input = instance.mobileInput ?? instance.altInput
+	input?.setAttribute('aria-label', t('user.settings.apiTokens.attributes.expiresAt'))
+}
+
 const flatPickerConfig = computed(() => ({
 	altFormat: t('date.altFormatLong'),
 	altInput: true,
@@ -109,9 +116,7 @@ const flatPickerConfig = computed(() => ({
 	time_24hr: timeFormat.value === TIME_FORMAT.HOURS_24,
 	locale: flatpickrLocale.value,
 	minDate: now,
-	// altInput is a fresh element inheriting no attributes from the input we render, so label it here
-	onReady: ((_dates, _str, instance) =>
-		instance.altInput?.setAttribute('aria-label', t('user.settings.apiTokens.attributes.expiresAt'))) as Hook,
+	onReady: labelDateInput,
 }))
 
 onMounted(async () => {
