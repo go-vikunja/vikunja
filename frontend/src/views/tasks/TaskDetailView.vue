@@ -69,7 +69,7 @@
 			<div class="columns mbs-2">
 				<!-- Content -->
 				<div
-					:class="{'is-two-thirds': canWrite}"
+					:class="{'is-two-thirds': canWrite || canUpdate || isModal}"
 					class="column detail-content"
 				>
 					<div class="columns details">
@@ -425,7 +425,7 @@
 
 					<!-- Comments -->
 					<Comments
-						:can-write="canWrite"
+						:can-write="canUpdate"
 						:task-id="taskId"
 						:project-id="task.projectId"
 						:initial-comments="task.comments"
@@ -440,10 +440,10 @@
 				
 				<!-- Task Actions -->
 				<div
-					v-if="canWrite || isModal"
+					v-if="canWrite || canUpdate || isModal"
 					class="column is-one-third action-buttons d-print-none"
 				>
-					<template v-if="canWrite">
+					<template v-if="canUpdate">
 						<XButton
 							v-shortcut="'KeyT'"
 							:class="{'is-pending': !task.done}"
@@ -470,7 +470,9 @@
 								task.isFavorite ? $t('task.detail.actions.unfavorite') : $t('task.detail.actions.favorite')
 							}}
 						</XButton>
-						
+					</template>
+
+					<template v-if="canWrite">	
 						<span class="action-heading">{{ $t('task.detail.organization') }}</span>
 						
 						<XButton
@@ -828,7 +830,12 @@ const projectRoute = computed(() => ({
 
 const canWrite = computed(() => (
 	task.value.maxPermission !== null &&
-	task.value.maxPermission > PERMISSIONS.READ
+	task.value.maxPermission >= PERMISSIONS.READ_WRITE
+))
+
+const canUpdate = computed(() => (
+	task.value.maxPermission !== null &&
+	task.value.maxPermission >= PERMISSIONS.UPDATE
 ))
 
 const color = computed(() => {

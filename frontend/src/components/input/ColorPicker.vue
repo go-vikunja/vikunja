@@ -13,6 +13,7 @@
 				v-model="color"
 				class="picker__input"
 				type="color"
+				:disabled="props.disabled || undefined"
 				:list="colorListID"
 				:class="{'is-empty': isEmpty}"
 				:aria-label="$t('input.projectColor')"
@@ -54,8 +55,8 @@
 		</div>
 
 		<XButton
-			v-if="!isEmpty"
-			:disabled="isEmpty"
+			v-if="!isEmpty && !props.disabled"
+			:disabled="isEmpty || props.disabled"
 			class="is-small mis-2"
 			:shadow="false"
 			variant="secondary"
@@ -70,6 +71,12 @@
 import {computed, ref, watch} from 'vue'
 import {createRandomID} from '@/helpers/randomId'
 import XButton from '@/components/input/Button.vue'
+
+const props = withDefaults(defineProps<{
+	disabled?: boolean
+}>(), {
+	disabled: false,
+})
 
 const model = defineModel<string>({ required: true })
 
