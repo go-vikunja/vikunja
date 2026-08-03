@@ -49,25 +49,13 @@ async function deleteToken() {
 	if (!token) {
 		return
 	}
-
+	tokenToDelete.value = undefined
+	showDeleteModal.value = false
 	await service.delete(token)
-
 	const index = tokens.value.findIndex(el => el.id === token.id)
 	if (index !== -1) {
 		tokens.value.splice(index, 1)
 	}
-
-	// Keep tokenToDelete until the modal finish-closes: Modal keeps its dialog
-	// mounted for the close animation (~150ms) after enabled flips to false, and
-	// the slot still reads tokenToDelete.title during that window. Clearing the
-	// ref immediately caused "Cannot read properties of null (reading 'title')"
-	// and a follow-up Vue "emitsOptions" crash on later updates.
-	showDeleteModal.value = false
-}
-
-function closeDeleteModal() {
-	showDeleteModal.value = false
-	tokenToDelete.value = undefined
 }
 
 function formatPermissionTitle(title: string): string {
@@ -177,7 +165,7 @@ function onTokenCreated(token: IApiToken) {
 
 		<Modal
 			:enabled="showDeleteModal"
-			@close="closeDeleteModal"
+			@close="showDeleteModal = false"
 			@submit="deleteToken()"
 		>
 			<template #header>
@@ -185,8 +173,8 @@ function onTokenCreated(token: IApiToken) {
 			</template>
 
 			<template #text>
-				<p v-if="tokenToDelete">
-					{{ $t('user.settings.apiTokens.delete.text1', {token: tokenToDelete.title}) }}<br>
+				<p>
+					{{ $t('user.settings.apiTokens.delete.text1', {token: tokenToDelete?.title}) }}<br>
 					{{ $t('user.settings.apiTokens.delete.text2') }}
 				</p>
 			</template>
