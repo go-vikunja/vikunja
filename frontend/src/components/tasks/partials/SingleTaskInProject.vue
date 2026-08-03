@@ -85,7 +85,7 @@
 				/>
 
 				<Popup
-					v-if="+new Date(task.dueDate) > 0"
+					v-if="+new Date(task.dueDate) > 0 && canWrite"
 				>
 					<template #trigger="{toggle, isOpen}">
 						<BaseButton
@@ -110,6 +110,18 @@
 						/>
 					</template>
 				</Popup>
+				<span
+					v-else-if="+new Date(task.dueDate) > 0"
+					v-tooltip="formatDateLong(task.dueDate)"
+					class="dueDate"
+				>
+					<time
+						:datetime="formatISO(task.dueDate)"
+						class="is-italic"
+					>
+						– {{ $t('task.detail.due', {at: dueDateFormatted}) }}
+					</time>
+				</span>
 
 				<span>
 					<span
@@ -230,6 +242,7 @@ import {useIntervalFn} from '@vueuse/core'
 import {playPopSound} from '@/helpers/playPop'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
+import {PERMISSIONS} from '@/constants/permissions'
 import {useGlobalNow} from '@/composables/useGlobalNow'
 
 const props = withDefaults(defineProps<{
@@ -291,6 +304,11 @@ const currentProject = computed(() => {
 		id: 0,
 		title: '',
 	} : baseStore.currentProject
+})
+
+const canWrite = computed(() => {
+	const maxPerm = task.value.maxPermission ?? projectStore.projects[task.value.projectId]?.maxPermission
+	return maxPerm !== null && maxPerm !== undefined && maxPerm >= PERMISSIONS.READ_WRITE
 })
 
 const taskDetailRoute = computed(() => ({
