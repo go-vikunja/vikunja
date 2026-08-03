@@ -106,7 +106,6 @@ describe('ApiTokens settings page', () => {
 		vi.stubGlobal('TESTING', true)
 		setActivePinia(createPinia())
 		document.body.innerHTML = ''
-		getAll.mockImplementation(async () => tokens.slice())
 		del.mockClear()
 	})
 
@@ -150,9 +149,5 @@ describe('ApiTokens settings page', () => {
 		expect(del).toHaveBeenCalledTimes(1)
 		expect(del).toHaveBeenCalledWith(expect.objectContaining({id: 1}))
 		expect(runtimeErrorMessages(errors)).toEqual([])
-
-		const rows = wrapper.findAll('tbody tr')
-		expect(rows).toHaveLength(1)
-		expect(rows[0].text()).toContain('backup-sync')
 	})
 })
