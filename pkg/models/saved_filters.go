@@ -238,31 +238,13 @@ func (sf *SavedFilter) Update(s *xorm.Session, _ web.Auth) error {
 		return err
 	}
 
-	parsedFilters, err := getTaskFiltersFromFilterString(sf.Filters.Filter, sf.Filters.FilterTimezone)
-	if err != nil {
-		return err
-	}
-
-	filterCond, err := convertFiltersToDBFilterCond(parsedFilters, sf.Filters.FilterIncludeNulls)
-	if err != nil {
-		return err
-	}
-
 	for _, view := range kanbanFilterViews {
-		// Fetch all tasks in the filter but not in task_bucket
-		// select * from tasks where id not in (select task_id from task_buckets where project_view_id = ?) and FILTER_COND
-		tasksToAdd := []*Task{}
-		err = s.Where(builder.And(
-			builder.NotIn("id",
-				builder.
-					Select("task_id").
-					From("task_buckets").
-					Where(builder.Eq{"project_view_id": view.ID})),
-			filterCond,
-		)).
-			Find(&tasksToAdd)
+		taskIDs, err := filteredTasksWithoutBucketInView(s, view.ID, sf)
 		if err != nil {
 			return err
+		}
+		if len(taskIDs) == 0 {
+			continue
 		}
 
 		bucketID, err := getDefaultBucketID(s, view)
@@ -270,27 +252,13 @@ func (sf *SavedFilter) Update(s *xorm.Session, _ web.Auth) error {
 			return err
 		}
 
-		taskBuckets := make([]*TaskBucket, 0, len(tasksToAdd))
-		for _, task := range tasksToAdd {
-			taskBuckets = append(taskBuckets, &TaskBucket{
-				TaskID:        task.ID,
-				BucketID:      bucketID,
-				ProjectViewID: view.ID,
-			})
+		if err = insertTaskBuckets(s, view.ID, bucketID, taskIDs); err != nil {
+			return err
 		}
 
-		if len(taskBuckets) > 0 {
-			if _, err = s.Insert(taskBuckets); err != nil {
-				return err
-			}
-		}
-
-		// Recalculate positions for all tasks - this will create positions for
-		// new tasks that don't have them yet
-		if len(tasksToAdd) > 0 {
-			if err = RecalculateTaskPositions(s, view, &user.User{ID: sf.OwnerID}); err != nil {
-				return err
-			}
+		// New tasks have no position in this view yet
+		if err = RecalculateTaskPositions(s, view, &user.User{ID: sf.OwnerID}); err != nil {
+			return err
 		}
 	}
 
