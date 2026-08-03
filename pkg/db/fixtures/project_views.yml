@@ -1015,3 +1015,11 @@
   filter: '{"filter":"start_date > ''2018-12-11T03:46:40+00:00'' || end_date < ''2018-12-13T11:20:01+00:00''","filter_include_nulls":true}'
   updated: '2024-03-18 15:14:13'
   created: '2018-03-18 15:14:13'
+- id: 162
+  title: List with default due date sort
+  project_id: 1
+  view_kind: 0
+  position: 6
+  filter: '{"sort_by":["due_date","id"],"order_by":["asc","asc"],"filter":"","filter_include_nulls":false}'
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'

@@ -1,4 +1,5 @@
 import type {IProjectView, ProjectViewBucketConfigurationMode, ProjectViewKind} from '@/modelTypes/IProjectView'
+import type {IFilters} from '@/modelTypes/ISavedFilter'
 import AbstractModel from '@/models/abstractModel'
 
 export default class ProjectViewModel extends AbstractModel<IProjectView> implements IProjectView {
@@ -7,7 +8,7 @@ export default class ProjectViewModel extends AbstractModel<IProjectView> implem
 	projectId = 0
 	viewKind: ProjectViewKind =  'list'
 
-	filter: IProjectView['filters'] = {
+	filter: IFilters = {
 		sort_by: [],
 		order_by: [],
 		filter: '',
@@ -34,9 +35,11 @@ export default class ProjectViewModel extends AbstractModel<IProjectView> implem
 	}
 
 	static createWithDefaultFilter(data: Partial<IProjectView> = {}): ProjectViewModel {
-		const defaultFilter: IProjectView['filters'] = {
-			sort_by: ['done', 'id'],
-			order_by: ['asc', 'desc'],
+		// Do not bake a default sort here — once ViewEditForm preserves sort_by,
+		// a done/id sort would override manual (position) ordering for new views.
+		const defaultFilter: IFilters = {
+			sort_by: [],
+			order_by: [],
 			filter: 'done = false',
 			filter_include_nulls: true,
 			s: '',

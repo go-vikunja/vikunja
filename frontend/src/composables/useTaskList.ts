@@ -102,16 +102,26 @@ function formatSortOrder(sortBy, params) {
 
 /**
  * This mixin provides a base set of methods and properties to get tasks.
+ *
+ * `sortByDefaultGetter` may return a per-view default (from project view
+ * settings). Prefer a getter so list/table components that survive project
+ * switches still pick up the active view's saved sort.
  */
 export function useTaskList(
 	projectIdGetter: ComputedGetter<IProject['id']>,
 	projectViewIdGetter: ComputedGetter<IProjectView['id']>,
-	sortByDefault: SortBy = SORT_BY_DEFAULT,
+	sortByDefaultGetter: ComputedGetter<SortBy> | SortBy = () => SORT_BY_DEFAULT,
 	expandGetter: ComputedGetter<ExpandTaskFilterParam> = () => 'subtasks',
 ) {
 	
 	const projectId = computed(() => projectIdGetter())
 	const projectViewId = computed(() => projectViewIdGetter())
+	const sortByDefault = computed<SortBy>(() => {
+		if (typeof sortByDefaultGetter === 'function') {
+			return {...sortByDefaultGetter()}
+		}
+		return {...sortByDefaultGetter}
+	})
 
 	const router = useRouter()
 	const viewFiltersStore = useViewFiltersStore()
@@ -133,11 +143,11 @@ export function useTaskList(
 	const sortBy = computed<SortBy>({
 		get() {
 			const raw = sortQuery.value as string | undefined
-			if (!raw) return {...sortByDefault}
-			return parseSortQuery(raw, sortByDefault)
+			if (!raw) return {...sortByDefault.value}
+			return parseSortQuery(raw, sortByDefault.value)
 		},
 		set(val: SortBy) {
-			sortQuery.value = serializeSortBy(val, sortByDefault) || undefined
+			sortQuery.value = serializeSortBy(val, sortByDefault.value) || undefined
 		},
 	})
 

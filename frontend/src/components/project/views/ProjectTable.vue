@@ -368,6 +368,7 @@ import type {IProject} from '@/modelTypes/IProject'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 import type {IProjectView} from '@/modelTypes/IProjectView'
 import { camelCase } from 'change-case'
+import {sortByFromViewFilter} from '@/helpers/viewSort'
 import {isSavedFilter} from '@/services/savedFilter'
 import {useProjectStore} from '@/stores/projects'
 
@@ -405,10 +406,16 @@ const SORT_BY_DEFAULT: SortBy = {
 const activeColumns = useStorage('tableViewColumns', {...ACTIVE_COLUMNS_DEFAULT})
 const sortBy = useStorage<SortBy>('tableViewSortBy', {...SORT_BY_DEFAULT})
 
+const sortByDefault = computed<SortBy>(() => {
+	const project = projectStore.projects[props.projectId]
+	const view = project?.views?.find(v => v.id === props.viewId)
+	return sortByFromViewFilter(view?.filter) ?? sortBy.value
+})
+
 const taskList = useTaskList(
 	() => props.projectId, 
 	() => props.viewId, 
-	sortBy.value,
+	() => sortByDefault.value,
 	() => ['comment_count', 'is_unread'],
 )
 

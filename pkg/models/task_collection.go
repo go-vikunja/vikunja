@@ -343,6 +343,11 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 			if view.Filter.FilterIncludeNulls {
 				tf.FilterIncludeNulls = true
 			}
+
+			// Prepend request sort options so query params take precedence over
+			// the view's saved default sort (same pattern as saved filters).
+			tf.SortBy = append(tf.SortBy, view.Filter.SortBy...)
+			tf.OrderBy = append(tf.OrderBy, view.Filter.OrderBy...)
 		}
 
 		if strings.Contains(tf.Filter, taskPropertyBucketID) {

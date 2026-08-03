@@ -1,10 +1,17 @@
 <script setup lang="ts">
-import {onBeforeMount, ref} from 'vue'
+import {computed, onBeforeMount, ref} from 'vue'
+import {useI18n} from 'vue-i18n'
 
 import type {IProjectView} from '@/modelTypes/IProjectView'
 import type {IFilters} from '@/modelTypes/ISavedFilter'
 
 import {hasFilterQuery, transformFilterStringForApi, transformFilterStringFromApi} from '@/helpers/filters'
+import {
+	decodeSortSelection,
+	encodeSortSelection,
+	sortByFromViewFilter,
+	viewFilterSortFromSortBy,
+} from '@/helpers/viewSort'
 import {useLabelStore} from '@/stores/labels'
 import {useProjectStore} from '@/stores/projects'
 
@@ -29,21 +36,82 @@ const emit = defineEmits<{
 }>()
 
 const view = ref<IProjectView>()
+const {t} = useI18n({useScope: 'global'})
 
 const labelStore = useLabelStore()
 const projectStore = useProjectStore()
 
+const MANUAL_SORT = 'position:asc'
+
+const sortOptions = computed(() => {
+	const manual = {value: MANUAL_SORT, label: t('sorting.manually')}
+	const rest = [
+		{value: 'title:asc', label: t('sorting.options.titleAsc')},
+		{value: 'title:desc', label: t('sorting.options.titleDesc')},
+		{value: 'priority:desc', label: t('sorting.options.priorityDesc')},
+		{value: 'priority:asc', label: t('sorting.options.priorityAsc')},
+		{value: 'due_date:asc', label: t('sorting.options.dueDateAsc')},
+		{value: 'due_date:desc', label: t('sorting.options.dueDateDesc')},
+		{value: 'start_date:asc', label: t('sorting.options.startDateAsc')},
+		{value: 'start_date:desc', label: t('sorting.options.startDateDesc')},
+		{value: 'end_date:asc', label: t('sorting.options.endDateAsc')},
+		{value: 'end_date:desc', label: t('sorting.options.endDateDesc')},
+		{value: 'percent_done:desc', label: t('sorting.options.percentDoneDesc')},
+		{value: 'percent_done:asc', label: t('sorting.options.percentDoneAsc')},
+		{value: 'created:desc', label: t('sorting.options.createdDesc')},
+		{value: 'created:asc', label: t('sorting.options.createdAsc')},
+		{value: 'updated:desc', label: t('sorting.options.updatedDesc')},
+		{value: 'updated:asc', label: t('sorting.options.updatedAsc')},
+	].sort((a, b) => a.label.localeCompare(b.label))
+
+	return [manual, ...rest]
+})
+
+const showDefaultSort = computed(() =>
+	view.value?.viewKind === 'list' || view.value?.viewKind === 'table',
+)
+
+const defaultSortSelection = computed({
+	get() {
+		return encodeSortSelection(sortByFromViewFilter(view.value?.filter), MANUAL_SORT)
+	},
+	set(value: string) {
+		if (!view.value?.filter) {
+			return
+		}
+		const sort = decodeSortSelection(value)
+		const {sort_by, order_by} = viewFilterSortFromSortBy(sort)
+		view.value.filter.sort_by = sort_by
+		view.value.filter.order_by = order_by
+	},
+})
+
+function readSortArrays(filterInput: IFilters): Pick<IFilters, 'sort_by' | 'order_by'> {
+	const raw = filterInput as IFilters & {
+		sortBy?: IFilters['sort_by']
+		orderBy?: IFilters['order_by']
+	}
+	return {
+		sort_by: raw.sort_by ?? raw.sortBy ?? [],
+		order_by: raw.order_by ?? raw.orderBy ?? [],
+	}
+}
+
 onBeforeMount(() => {
-	const transformFilterFromApi = (filterInput: IFilters): IFilter => {
+	const transformFilterFromApi = (filterInput: IFilters): IFilters => {
 		const filterString = transformFilterStringFromApi(
 			filterInput.filter,
 			labelId => labelStore.getLabelById(labelId)?.title || null,
 			projectId => projectStore.projects[projectId]?.title || null,
 		)
 		
+		const {sort_by, order_by} = readSortArrays(filterInput)
 		const filter: IFilters = {
 			filter: '',
 			s: '',
+			sort_by,
+			order_by,
+			filter_include_nulls: false,
 		}
 		if (hasFilterQuery(filterString)) {
 			filter.filter = filterString
@@ -74,8 +142,14 @@ onBeforeMount(() => {
 
 	const transformed = {
 		...props.modelValue,
-		filter: transformFilterFromApi(props.modelValue.filter),
-		bucketConfiguration: props.modelValue.bucketConfiguration.map(bc => ({
+		filter: transformFilterFromApi(props.modelValue.filter ?? {
+			sort_by: [],
+			order_by: [],
+			filter: '',
+			filter_include_nulls: false,
+			s: '',
+		}),
+		bucketConfiguration: (props.modelValue.bucketConfiguration || []).map(bc => ({
 			title: bc.title,
 			filter: transformFilterFromApi(bc.filter),
 		})),
@@ -96,8 +170,19 @@ function save() {
 				return found?.id || null
 			},
 		)
+		const {sort_by, order_by} = readSortArrays(filterInput || {
+			sort_by: [],
+			order_by: [],
+			filter: '',
+			filter_include_nulls: false,
+			s: '',
+		})
 		const filter: IFilters = {
 			filter_include_nulls: filterInput?.filter_include_nulls ?? false,
+			sort_by,
+			order_by,
+			filter: '',
+			s: '',
 		}
 		if (hasFilterQuery(filterString)) {
 			filter.filter = filterString
@@ -110,7 +195,7 @@ function save() {
 
 	emit('update:modelValue', {
 		...view.value,
-		filter: transformFilterForApi(view.value?.filter),
+		filter: transformFilterForApi(view.value?.filter as IFilters),
 		bucketConfiguration: view.value?.bucketConfiguration.map(bc => ({
 			title: bc.title,
 			filter: transformFilterForApi(bc.filter),
@@ -195,6 +280,35 @@ function handleBubbleSave() {
 			>
 				{{ $t('filters.attributes.includeNulls') }}
 			</FancyCheckbox>
+		</div>
+
+		<div
+			v-if="showDefaultSort"
+			class="field mbe-3"
+		>
+			<label
+				class="label"
+				for="defaultSort"
+			>
+				{{ $t('project.views.defaultSort') }}
+			</label>
+			<p class="is-size-7 has-text-grey mbe-2">
+				{{ $t('project.views.defaultSortDescription') }}
+			</p>
+			<div class="select is-fullwidth">
+				<select
+					id="defaultSort"
+					v-model="defaultSortSelection"
+				>
+					<option
+						v-for="o in sortOptions"
+						:key="o.value"
+						:value="o.value"
+					>
+						{{ o.label }}
+					</option>
+				</select>
+			</div>
 		</div>
 
 		<div
@@ -283,7 +397,7 @@ function handleBubbleSave() {
 					<XButton
 						variant="secondary"
 						icon="plus"
-						@click="() => view.bucketConfiguration.push({title: '', filter: {filter: '', filter_include_nulls: false}})"
+						@click="() => view.bucketConfiguration.push({title: '', filter: {filter: '', filter_include_nulls: false, sort_by: [], order_by: [], s: ''}})"
 					>
 						{{ $t('project.kanban.addBucket') }}
 					</XButton>
