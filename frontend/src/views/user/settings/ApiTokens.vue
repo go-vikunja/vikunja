@@ -45,14 +45,17 @@ onMounted(async () => {
 })
 
 async function deleteToken() {
-	await service.delete(tokenToDelete.value)
-	showDeleteModal.value = false
-	const index = tokens.value.findIndex(el => el.id === tokenToDelete.value.id)
-	tokenToDelete.value = null
-	if (index === -1) {
+	const token = tokenToDelete.value
+	if (!token) {
 		return
 	}
-	tokens.value.splice(index, 1)
+	tokenToDelete.value = undefined
+	showDeleteModal.value = false
+	await service.delete(token)
+	const index = tokens.value.findIndex(el => el.id === token.id)
+	if (index !== -1) {
+		tokens.value.splice(index, 1)
+	}
 }
 
 function formatPermissionTitle(title: string): string {
