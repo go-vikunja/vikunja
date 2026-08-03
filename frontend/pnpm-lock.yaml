@@ -10,7 +10,7 @@ overrides:
   basic-ftp: 6.0.2
   serialize-javascript: 7.0.7
   flatted: 3.4.4
-  ip-address: 10.3.1
+  ip-address: 10.4.0
   postcss: 8.5.25
   tmp: 0.2.7
   esbuild: 0.28.1
@@ -4318,8 +4318,8 @@ packages:
     resolution: {integrity: sha512-4gd7VpWNQNB4UKKCFFVcp1AVv+FMOgs9NKzjHKusc8jTMhd5eL1NqQqOpE0KzMds804/yHlglp3uxgluOqAPLw==}
     engines: {node: '>= 0.4'}
 
-  ip-address@10.3.1:
-    resolution: {integrity: sha512-1e9d3kb97NHJTIJDZW9rKqW2h6+dFa50Dy0fpPSMQp2ADje5gvKsXmdiK6dwY5t76TaTt5+P5N1Y/LoToIxP6g==}
+  ip-address@10.4.0:
+    resolution: {integrity: sha512-oSK96Grm3aP6OrS263xVxbNDGVL7rzBtYdpGqlDG8iQdoenDoTs/nkki+DflYbAEE8Xl6o5YxhxlrKvI3nqKXQ==}
     engines: {node: '>= 12'}
 
   is-array-buffer@3.0.5:
@@ -11338,7 +11338,7 @@ snapshots:
       hasown: 2.0.4
       side-channel: 1.1.1
 
-  ip-address@10.3.1: {}
+  ip-address@10.4.0: {}
 
   is-array-buffer@3.0.5:
     dependencies:
@@ -13073,7 +13073,7 @@ snapshots:
 
   socks@2.8.9:
     dependencies:
-      ip-address: 10.3.1
+      ip-address: 10.4.0
       smart-buffer: 4.2.0
 
   sortablejs@1.14.0: {}
