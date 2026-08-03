@@ -134,11 +134,10 @@ jobs:
         id: classify
         uses: appleboy/LLM-action@26e6c6aad79241353e4e0960b3d693f48f1c1bcd # v1.3.1
         with:
-          base_url: ${{ vars.LLM_BASE_URL }}
           api_key: ${{ secrets.LLM_API_KEY }}
-          model: ${{ vars.LLM_MODEL || 'gpt-4.1-mini' }}
+          model: 'gpt-5.6-luna'
           temperature: '0.2'
-          max_tokens: '2000'
+          max_tokens: '4000'
           system_prompt: ${{ steps.render.outputs.system_prompt_path }}
           input_prompt: ${{ steps.prep.outputs.prompt_path }}
 
