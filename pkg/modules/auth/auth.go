@@ -40,11 +40,12 @@ import (
 	"xorm.io/xorm"
 )
 
-// These are all valid auth types
+// All valid auth types; AuthTypeUser lives in pkg/user since
+// that package parses claims and can't import this one.
 const (
-	AuthTypeUnknown int = iota
-	AuthTypeUser
-	AuthTypeLinkShare
+	AuthTypeUnknown   int = 0
+	AuthTypeUser          = user.AuthTypeUser
+	AuthTypeLinkShare int = 2
 )
 
 // Token represents an authentication token
