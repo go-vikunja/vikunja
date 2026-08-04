@@ -22,6 +22,10 @@ import (
 )
 
 func (w *Webhook) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
+	if _, is := a.(*LinkSharing); is {
+		return false, 0, nil
+	}
+
 	// User-level webhook: user owns it
 	if w.UserID > 0 {
 		return w.UserID == a.GetID(), int(PermissionRead), nil

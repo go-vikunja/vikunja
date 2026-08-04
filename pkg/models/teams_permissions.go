@@ -66,6 +66,10 @@ func (t *Team) IsAdmin(s *xorm.Session, a web.Auth) (bool, error) {
 
 // CanRead returns true if the user has read access to the team
 func (t *Team) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
+	if _, is := a.(*LinkSharing); is {
+		return false, 0, nil
+	}
+
 	if isInstanceAdmin(s, a) {
 		return true, int(PermissionAdmin), nil
 	}
