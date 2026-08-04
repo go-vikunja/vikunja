@@ -13,6 +13,15 @@ depends:
 rpm:
   signature:
     key_file: ${NFPM_GPG_KEY_FILE}
+# apk and archlinux run `scripts.postinstall` on a fresh install only — nfpm
+# maps their upgrade hooks from these packager-specific keys instead. Without
+# them, upgrading on Alpine or Arch runs no maintainer script at all.
+apk:
+  scripts:
+    postupgrade: ./build/after-install-openrc.sh
+archlinux:
+  scripts:
+    postupgrade: ./build/after-install.sh
 overrides:
   apk:
     depends:
