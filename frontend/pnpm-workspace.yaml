@@ -20,6 +20,6 @@ overrides:
   markdown-it: 15.0.0
   launch-editor: 2.14.1
   '@babel/core': 8.0.1
-  js-yaml@4: 5.2.2
+  js-yaml@4: 5.2.3
 publicHoistPattern:
   - '*eslint*'
