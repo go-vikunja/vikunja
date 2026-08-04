@@ -90,8 +90,8 @@ func getProjectIDFromSavedFilterID(filterID int64) (projectID int64) {
 
 func getSavedFiltersForUser(s *xorm.Session, auth web.Auth, search string) (filters []*SavedFilter, err error) {
 	// Link shares can't view or modify saved filters, therefore we can error out right away
-	if _, is := auth.(*LinkSharing); is {
-		return nil, ErrSavedFilterNotAvailableForLinkShare{LinkShareID: auth.GetID()}
+	if share, is := auth.(*LinkSharing); is {
+		return nil, ErrSavedFilterNotAvailableForLinkShare{LinkShareID: share.ID}
 	}
 
 	query := s.Where("owner_id = ?", auth.GetID())
