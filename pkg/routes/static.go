@@ -23,7 +23,6 @@ import (
 	"io"
 	"mime"
 	"net/http"
-	"net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -139,10 +138,10 @@ func static() echo.MiddlewareFunc {
 			if strings.HasSuffix(c.Path(), "*") { // When serving from a group, e.g. `/static*`.
 				p = c.Param("*")
 			}
-			p, err = url.PathUnescape(p)
-			if err != nil {
-				return
-			}
+			// Both URL.Path and path params are already unescaped (the latter through
+			// RouterConfig.UnescapePathParamValues). Decoding again would fail with an
+			// url.EscapeError on paths which happen to contain a `%` after the first
+			// decode, and would turn an encoded `%2f` into a real path separator.
 			name := path.Join(rootPath, path.Clean("/"+p)) // "/"+ for security
 
 			file, err := assetFs.Open(name)
