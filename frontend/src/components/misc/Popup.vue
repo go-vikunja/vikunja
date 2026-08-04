@@ -8,6 +8,7 @@
 	<div
 		ref="popup"
 		class="popup"
+		:inert="!openValue"
 		:class="{
 			'is-open': openValue,
 			'has-overflow': hasOverflow && openValue
