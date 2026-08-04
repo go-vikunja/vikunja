@@ -17,10 +17,12 @@
 package models
 
 import (
+	"bytes"
 	"testing"
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -443,4 +445,22 @@ func TestLinkSharing_CannotActAsCollidingUser(t *testing.T) {
 		require.Error(t, err)
 		assert.True(t, IsErrGenericForbidden(err))
 	})
+}
+
+func TestLinkSharing_AttachmentIsNotAttributedToCollidingUser(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	files.InitTestFileFixtures(t)
+
+	share := &LinkSharing{ID: 2, Hash: "test2", ProjectID: 2, Permission: PermissionWrite}
+
+	ta := TaskAttachment{TaskID: 32} // task 32 lives in project 2
+	content := []byte("testingstuff")
+	require.NoError(t, ta.NewAttachment(s, bytes.NewReader(content), "testfile", uint64(len(content)), share))
+
+	assert.Equal(t, int64(-2), ta.CreatedByID)
+	assert.Equal(t, int64(-2), ta.File.CreatedByID)
+	assert.Negative(t, ta.File.CreatedByID)
 }
