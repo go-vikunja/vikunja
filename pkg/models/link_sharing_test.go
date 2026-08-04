@@ -186,6 +186,14 @@ func TestLinkSharing_ReadOne(t *testing.T) {
 	})
 }
 
+// A link share id must never be mistaken for a users.id at a permission check.
+// See GHSA-32r8-5843-4qw2.
+func TestLinkSharing_GetID(t *testing.T) {
+	share := &LinkSharing{ID: 1}
+	assert.Equal(t, int64(-1), share.GetID())
+	assert.Negative(t, share.GetID())
+}
+
 func TestLinkSharing_toUser(t *testing.T) {
 	t.Run("empty name", func(t *testing.T) {
 		share := &LinkSharing{

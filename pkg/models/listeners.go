@@ -977,7 +977,7 @@ func updateTasksInSavedFilterViews(tasks []*Task, doer *user.User) (err error) {
 		if userErr == nil {
 			fallbackTimezone = u.Timezone
 		}
-		// When a link share triggered this event, the user id will be 0, and thus this fails.
+		// When a link share triggered this event, the doer id is negative and won't match a users.id, so this fails.
 		// Similarly, when the doer has been deleted, the user will not exist.
 		// Only passing the value along when the user was retrieved successfully ensures the whole handler
 		// does not fail because of that.
