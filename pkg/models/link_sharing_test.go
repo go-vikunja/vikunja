@@ -419,4 +419,28 @@ func TestLinkSharing_CannotActAsCollidingUser(t *testing.T) {
 		require.NoError(t, err)
 		assert.False(t, can)
 	})
+
+	t.Run("list the webhooks of the colliding user", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		share := &LinkSharing{ID: 1}
+		// the route fills UserID from the auth object
+		_, _, _, err := (&Webhook{UserID: share.GetID()}).ReadAll(s, share, "", 1, 50)
+		require.Error(t, err)
+		assert.True(t, IsErrGenericForbidden(err))
+	})
+
+	t.Run("list the webhooks of the project the share points at", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// link share 1 has read permission on project 1
+		share := &LinkSharing{ID: 1, ProjectID: 1, Permission: PermissionRead}
+		_, _, _, err := (&Webhook{ProjectID: 1}).ReadAll(s, share, "", 1, 50)
+		require.Error(t, err)
+		assert.True(t, IsErrGenericForbidden(err))
+	})
 }
