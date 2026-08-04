@@ -220,12 +220,17 @@ func (w *Webhook) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /projects/{id}/webhooks [get]
 func (w *Webhook) ReadAll(s *xorm.Session, a web.Auth, _ string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
+	// A link share can read its project, but webhook target_urls are secrets.
+	if _, is := a.(*LinkSharing); is {
+		return nil, 0, 0, ErrGenericForbidden{}
+	}
+
 	// w.UserID set selects the user-level list: a user may only see their own
 	// webhooks. The project list (w.UserID == 0) delegates to the project's read
 	// permission instead.
 	var listCond builder.Cond
 	if w.UserID > 0 {
-		if _, isShareAuth := a.(*LinkSharing); isShareAuth || w.UserID != a.GetID() {
+		if w.UserID != a.GetID() {
 			return nil, 0, 0, ErrGenericForbidden{}
 		}
 		listCond = builder.Eq{"user_id": w.UserID}
