@@ -354,3 +354,69 @@ func TestGetLinkShareFromClaims(t *testing.T) {
 		assert.True(t, IsErrLinkShareTokenInvalid(err))
 	})
 }
+
+func TestLinkSharing_CannotActAsCollidingUser(t *testing.T) {
+	t.Run("read a team the colliding user belongs to", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// user 1 is a member of team 1
+		can, _, err := (&Team{ID: 1}).CanRead(s, &LinkSharing{ID: 1})
+		require.NoError(t, err)
+		assert.False(t, can)
+	})
+
+	t.Run("remove the colliding user from their team", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		tm := &TeamMember{TeamID: 1, Username: "user1"}
+		can, err := tm.CanDelete(s, &LinkSharing{ID: 1})
+		require.NoError(t, err)
+		assert.False(t, can)
+	})
+
+	t.Run("act on a bot owned by the colliding user", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// user 23 is a bot owned by user 21
+		bot := &BotUser{User: user.User{ID: 23}}
+		share := &LinkSharing{ID: 21}
+
+		canRead, _, err := bot.CanRead(s, share)
+		require.NoError(t, err)
+		assert.False(t, canRead)
+
+		canUpdate, err := bot.CanUpdate(s, share)
+		require.NoError(t, err)
+		assert.False(t, canUpdate)
+
+		canDelete, err := bot.CanDelete(s, share)
+		require.NoError(t, err)
+		assert.False(t, canDelete)
+	})
+
+	t.Run("enumerate bots owned by the colliding user", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, _, _, err := (&BotUser{}).ReadAll(s, &LinkSharing{ID: 21}, "", 1, 50)
+		require.Error(t, err)
+		assert.True(t, IsErrGenericForbidden(err))
+	})
+
+	t.Run("read a user-level webhook owned by the colliding user", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		can, _, err := (&Webhook{UserID: 1}).CanRead(s, &LinkSharing{ID: 1})
+		require.NoError(t, err)
+		assert.False(t, can)
+	})
+}
