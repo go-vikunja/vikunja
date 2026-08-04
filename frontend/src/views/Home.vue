@@ -21,7 +21,7 @@
 		</Message>
 		<AddTask
 			class="is-max-width-desktop"
-			@taskAdded="updateTaskKey"
+			@tasksAdded="updateTaskKey"
 		/>
 		<ImportHint v-if="tasksLoaded" />
 		<div

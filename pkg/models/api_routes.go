@@ -99,6 +99,9 @@ func getRouteGroupName(path string) (finalName string, filteredParts []string) {
 		fallthrough
 	case "tasks_all":
 		return "tasks", []string{"tasks"}
+	case "projects_tasks_bulk":
+		// CollectRoutesForAPITokenUsage strips _bulk, filing this as group "tasks" + permission "create_bulk".
+		return "tasks_bulk", []string{"tasks_bulk"}
 	default:
 		return finalName, filteredParts
 	}

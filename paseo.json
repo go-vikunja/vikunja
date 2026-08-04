@@ -1,0 +1,10 @@
+{
+    "worktree": {
+        "setup": [
+            "mkdir -p $PASEO_WORKTREE_PATH/.claude && cp $PASEO_SOURCE_CHECKOUT_PATH/.claude/settings.local.json $PASEO_WORKTREE_PATH/.claude/ || true",
+            "sed -E \"s|^([[:space:]]*rootpath:[[:space:]]*).*|\\1\\\"$PASEO_WORKTREE_PATH\\\"|; s|^([[:space:]]*interface:[[:space:]]*).*|\\1':$PASEO_PORT'|; s|^([[:space:]]*publicurl:.*:)[0-9]+(.*)$|\\1$PASEO_PORT\\2|\" $PASEO_SOURCE_CHECKOUT_PATH/config.yml > $PASEO_WORKTREE_PATH/config.yml || true",
+            "cd $PASEO_WORKTREE_PATH/frontend && pnpm i",
+            "cd $PASEO_WORKTREE_PATH/frontend && bash -ic patch-sass-embedded || true"
+        ]
+    }
+}

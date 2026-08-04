@@ -90,7 +90,7 @@ func getDefaultBucketID(s *xorm.Session, view *ProjectView) (bucketID int64, err
 	bucket := &Bucket{}
 	_, err = s.
 		Where("project_view_id = ?", view.ID).
-		OrderBy("position asc").
+		OrderBy("position asc, id asc").
 		Get(bucket)
 	if err != nil {
 		return 0, err

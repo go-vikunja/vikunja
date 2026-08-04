@@ -3,13 +3,13 @@
 package yaegi_symbols
 
 import (
-	"reflect"
-
 	"code.vikunja.io/api/pkg/db"
+	"reflect"
 )
 
 func init() {
 	Symbols["code.vikunja.io/api/pkg/db/db"] = map[string]reflect.Value{
+		// function, constant and variable definitions
 		"AssertCount":                    reflect.ValueOf(db.AssertCount),
 		"AssertExists":                   reflect.ValueOf(db.AssertExists),
 		"AssertMissing":                  reflect.ValueOf(db.AssertMissing),
@@ -26,12 +26,19 @@ func init() {
 		"LoadAndAssertFixtures":          reflect.ValueOf(db.LoadAndAssertFixtures),
 		"LoadFixtures":                   reflect.ValueOf(db.LoadFixtures),
 		"MultiFieldSearch":               reflect.ValueOf(db.MultiFieldSearch),
+		"MultiFieldSearchWithBoosts":     reflect.ValueOf(db.MultiFieldSearchWithBoosts),
 		"MultiFieldSearchWithTableAlias": reflect.ValueOf(db.MultiFieldSearchWithTableAlias),
 		"NewSession":                     reflect.ValueOf(db.NewSession),
 		"ParadeDBAvailable":              reflect.ValueOf(db.ParadeDBAvailable),
+		"RegisterTables":                 reflect.ValueOf(db.RegisterTables),
+		"RegisteredTableNames":           reflect.ValueOf(db.RegisteredTableNames),
 		"Restore":                        reflect.ValueOf(db.Restore),
 		"RestoreAndTruncate":             reflect.ValueOf(db.RestoreAndTruncate),
+		"TruncateAllTables":              reflect.ValueOf(db.TruncateAllTables),
 		"Type":                           reflect.ValueOf(db.Type),
 		"WipeEverything":                 reflect.ValueOf(db.WipeEverything),
+
+		// type definitions
+		"DatabasePathConfig": reflect.ValueOf((*db.DatabasePathConfig)(nil)),
 	}
 }

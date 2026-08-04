@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {onBeforeMount, ref} from 'vue'
+import {onBeforeMount, ref, watch} from 'vue'
 
 import type {IProjectView} from '@/modelTypes/IProjectView'
 import type {IFilters} from '@/modelTypes/ISavedFilter'
@@ -40,7 +40,7 @@ onBeforeMount(() => {
 			labelId => labelStore.getLabelById(labelId)?.title || null,
 			projectId => projectStore.projects[projectId]?.title || null,
 		)
-		
+
 		const filter: IFilters = {
 			filter: '',
 			s: '',
@@ -50,11 +50,11 @@ onBeforeMount(() => {
 		} else {
 			filter.s = filterString
 		}
-		
+
 		if (filter.s === '') {
 			filter.s = filterInput.s
 		}
-		
+
 		if (filter.filter === '') {
 			filter.filter = filter.s
 		}
@@ -84,6 +84,13 @@ onBeforeMount(() => {
 	if (JSON.stringify(view.value) !== JSON.stringify(transformed)) {
 		view.value = transformed
 	}
+
+	// Registered after view.value is set above, so the immediate run sees the loaded view.
+	watch(() => view.value?.viewKind, kind => {
+		if (kind === 'kanban' && view.value?.bucketConfigurationMode === 'none') {
+			view.value.bucketConfigurationMode = 'manual'
+		}
+	}, {immediate: true})
 })
 
 function save() {

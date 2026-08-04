@@ -10,7 +10,6 @@ permissions:
   contents: read
   issues: write
   pull-requests: write
-  models: read
 
 concurrency:
   group: auto-label-${{ github.event.issue.number || github.event.pull_request.number }}
@@ -89,10 +88,17 @@ jobs:
             }
             const rendered = template.replace('{{TAXONOMY}}', taxonomy);
 
-            const outPath = path.join(process.env.RUNNER_TEMP, 'system-prompt.md');
-            fs.writeFileSync(outPath, rendered);
-            core.setOutput('system_prompt_path', outPath);
-            core.info(`Rendered ${managed.length} labels into ${outPath}`);
+            // LLM-action renders prompt files as Go templates — escape stray {{ so
+            // label descriptions can't break parsing.
+            const escaped = rendered.replaceAll('{{', '{{"{{"}}');
+
+            // The docker-based action only sees the mounted workspace, not the host's
+            // RUNNER_TEMP — write into the workspace and pass a relative path.
+            const outDir = path.join(process.env.GITHUB_WORKSPACE, 'ai-prompts');
+            fs.mkdirSync(outDir, { recursive: true });
+            fs.writeFileSync(path.join(outDir, 'system-prompt.md'), escaped);
+            core.setOutput('system_prompt_path', 'ai-prompts/system-prompt.md');
+            core.info(`Rendered ${managed.length} labels into ai-prompts/system-prompt.md`);
 
       - name: Build user prompt
         id: prep
@@ -101,15 +107,19 @@ jobs:
           BODY: ${{ github.event.issue.body || github.event.pull_request.body }}
           KIND: ${{ github.event_name == 'issues' && 'issue' || 'pull request' }}
         run: |
-          mkdir -p "$RUNNER_TEMP/ai"
-          python3 - <<'PY' > "$RUNNER_TEMP/ai/user-prompt.txt"
+          mkdir -p ai-prompts
+          python3 - <<'PY' > ai-prompts/user-prompt.txt
           import os
-          title = os.environ.get("TITLE", "").strip()
+          # LLM-action renders prompts as Go templates — escape {{ so user content can't break parsing
+          def esc(s):
+              return s.replace('{{', '{{"{{"}}')
+          title = esc(os.environ.get("TITLE", "").strip())
           body  = (os.environ.get("BODY", "") or "").strip() or "(no description)"
           kind  = os.environ.get("KIND", "issue")
           # Truncate very long bodies to keep token usage predictable
           if len(body) > 8000:
               body = body[:8000] + "\n\n[... truncated ...]"
+          body = esc(body)
           print(f"Classify the following {kind}. Return ONLY a JSON array of labels.\n")
           print("--- TITLE ---")
           print(title)
@@ -118,18 +128,20 @@ jobs:
           print(body)
           print("--- END ---")
           PY
-          echo "prompt_path=$RUNNER_TEMP/ai/user-prompt.txt" >> "$GITHUB_OUTPUT"
+          echo "prompt_path=ai-prompts/user-prompt.txt" >> "$GITHUB_OUTPUT"
 
       - name: Classify with AI
         id: classify
-        uses: actions/ai-inference@a7805884c80886efc241e94a5351df715968a0ad # v2.1.1
+        # Fork pin until appleboy/LLM-action#24 (max_completion_tokens support
+        # for reasoning models) is merged and released.
+        uses: tink-bot/LLM-action@764c84661feafac59e9302a7fa82eb1cf4434e41 # feat-max-completion-tokens
         with:
-          model: openai/gpt-4.1-mini
-          # GPT-5 is a reasoning model: output tokens include reasoning, so budget generously.
-          # Temperature is ignored by reasoning models and intentionally omitted.
-          max-completion-tokens: 2000
-          system-prompt-file: ${{ steps.render.outputs.system_prompt_path }}
-          prompt-file: ${{ steps.prep.outputs.prompt_path }}
+          api_key: ${{ secrets.LLM_API_KEY }}
+          model: 'gpt-5.6-luna'
+          temperature: '0.2'
+          max_tokens: '4000'
+          system_prompt: ${{ steps.render.outputs.system_prompt_path }}
+          input_prompt: ${{ steps.prep.outputs.prompt_path }}
 
       - name: Apply labels
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0

@@ -36,6 +36,8 @@ import ProjectUserService from '@/services/projectUsers'
 import {useAuthStore} from '@/stores/auth'
 import TaskCollectionService, {type TaskFilterParams} from '@/services/taskCollection'
 import {getRandomColorHex} from '@/helpers/color/randomColor'
+import {runWrites} from '@/helpers/runWrites'
+import {error} from '@/message'
 import {REPEAT_TYPES} from '@/types/IRepeatAfter'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 
@@ -58,22 +60,6 @@ export function buildDefaultRemindersForQuickAdd(
 		relativePeriod: d.relativePeriod,
 		relativeTo: REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE,
 	}))
-}
-
-// runWrites applies a write to each item. SQLite deadlocks on concurrent writes
-// (read-then-write upgrade conflict), so callers pass concurrent=false to serialize.
-export async function runWrites<T>(
-	items: readonly T[],
-	write: (item: T) => Promise<unknown>,
-	concurrent: boolean,
-): Promise<void> {
-	if (concurrent) {
-		await Promise.all(items.map(item => write(item)))
-		return
-	}
-	for (const item of items) {
-		await write(item)
-	}
 }
 
 // IDEA: maybe use a small fuzzy search here to prevent errors
@@ -462,41 +448,35 @@ export const useTaskStore = defineStore('task', () => {
 		return foundProjectId
 	}
 	
-	async function createNewTask({
+	async function buildTaskFromQuickAddTitle({
 		title,
 		bucketId,
 		projectId,
 		position,
-		index,
-	} : 
+	} :
 		Partial<ITask>,
-	) {
-		const cancel = setModuleLoading(setIsLoading)
+	): Promise<{task: TaskModel, parsedLabels: string[]}> {
 		const quickAddMagicMode = authStore.settings.frontendSettings.quickAddMagicMode
 		const parsedTask = parseTaskText(title, quickAddMagicMode)
 
 		if(parsedTask.text === '') {
-			const taskService = new TaskService()
-			try {
-				return taskService.create(new TaskModel({
+			return {
+				task: new TaskModel({
 					title,
 					projectId,
 					bucketId,
 					position,
-					index,
-				}))
-			} finally {
-				cancel()
+				}),
+				parsedLabels: [],
 			}
 		}
-	
+
 		const foundProjectId = await findProjectId({
 			project: parsedTask.project,
 			projectId: projectId || 0,
 		})
-		
+
 		if(foundProjectId === null || foundProjectId === 0) {
-			cancel()
 			throw new Error('NO_PROJECT')
 		}
 
@@ -513,7 +493,7 @@ export const useTaskStore = defineStore('task', () => {
 
 		// I don't know why, but it all goes up in flames when I just pass in the date normally.
 		const dueDate = parsedTask.date !== null ? new Date(parsedTask.date).toISOString() : null
-	
+
 		const task = new TaskModel({
 			title: cleanedTitle,
 			projectId: foundProjectId,
@@ -522,7 +502,6 @@ export const useTaskStore = defineStore('task', () => {
 			assignees,
 			bucketId: bucketId || 0,
 			position,
-			index,
 		})
 		task.repeatAfter = parsedTask.repeats
 		task.reminders = buildDefaultRemindersForQuickAdd(
@@ -534,13 +513,69 @@ export const useTaskStore = defineStore('task', () => {
 			task.repeatMode = TASK_REPEAT_MODES.REPEAT_MODE_MONTH
 		}
 
-		const taskService = new TaskService()
+		return {task, parsedLabels: parsedTask.labels}
+	}
+
+	async function createNewTask({
+		title,
+		bucketId,
+		projectId,
+		position,
+	} :
+		Partial<ITask>,
+	) {
+		const cancel = setModuleLoading(setIsLoading)
 		try {
+			const {task, parsedLabels} = await buildTaskFromQuickAddTitle({
+				title,
+				bucketId,
+				projectId,
+				position,
+			})
+
+			const taskService = new TaskService()
 			const createdTask = await taskService.create(task)
 			return await addLabelsToTask({
 				task: createdTask,
-				parsedLabels: parsedTask.labels,
+				parsedLabels,
 			})
+		} finally {
+			cancel()
+		}
+	}
+
+	// Returns the created tasks aligned 1:1 with entries (null = not created),
+	// error is null when nothing failed.
+	async function createNewTasksBulk(
+		entries: {title: string, projectId: number}[],
+	): Promise<{tasks: (ITask | null)[], error: unknown}> {
+		const cancel = setModuleLoading(setIsLoading)
+		try {
+			const built = await Promise.all(entries.map(async ({title, projectId}) => {
+				const {task, parsedLabels} = await buildTaskFromQuickAddTitle({title, projectId})
+				return {task, parsedLabels}
+			}))
+
+			const taskService = new TaskService()
+			const {tasks, error: bulkError} = await taskService.bulkCreate(built.map(b => b.task))
+
+			const withLabels = built
+				.map(({parsedLabels}, index) => ({task: tasks[index], parsedLabels}))
+				.filter(c => c.task !== null && c.parsedLabels.length > 0)
+
+			try {
+				await runWrites(
+					withLabels,
+					c => addLabelsToTask({task: c.task as ITask, parsedLabels: c.parsedLabels}),
+					configStore.concurrentWrites,
+				)
+			} catch (e) {
+				// The tasks exist by now, so failing here must not look like the
+				// whole creation failed — the caller would let the user resubmit.
+				error(e)
+			}
+
+			return {tasks, error: bulkError}
 		} finally {
 			cancel()
 		}
@@ -615,6 +650,7 @@ export const useTaskStore = defineStore('task', () => {
 		removeLabel,
 		addLabelsToTask,
 		createNewTask,
+		createNewTasksBulk,
 		setCoverImage,
 		findProjectId,
 		ensureLabelsExist,

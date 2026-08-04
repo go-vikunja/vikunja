@@ -3,26 +3,42 @@
 package yaegi_symbols
 
 import (
-	"reflect"
-
 	"code.vikunja.io/api/pkg/events"
 	"github.com/ThreeDotsLabs/watermill/message"
+	"go/constant"
+	"go/token"
+	"reflect"
 )
 
 func init() {
 	Symbols["code.vikunja.io/api/pkg/events/events"] = map[string]reflect.Value{
-		"AssertDispatched":      reflect.ValueOf(events.AssertDispatched),
-		"ClearDispatchedEvents": reflect.ValueOf(events.ClearDispatchedEvents),
-		"CountDispatchedEvents": reflect.ValueOf(events.CountDispatchedEvents),
-		"Dispatch":              reflect.ValueOf(events.Dispatch),
-		"Fake":                  reflect.ValueOf(events.Fake),
-		"InitEvents":            reflect.ValueOf(events.InitEvents),
-		"RegisterListener":      reflect.ValueOf(events.RegisterListener),
-		"TestListener":          reflect.ValueOf(events.TestListener),
+		// function, constant and variable definitions
+		"AssertDispatched":       reflect.ValueOf(events.AssertDispatched),
+		"CleanupPending":         reflect.ValueOf(events.CleanupPending),
+		"ClearDispatchedEvents":  reflect.ValueOf(events.ClearDispatchedEvents),
+		"CountDispatchedEvents":  reflect.ValueOf(events.CountDispatchedEvents),
+		"Dispatch":               reflect.ValueOf(events.Dispatch),
+		"DispatchOnCommit":       reflect.ValueOf(events.DispatchOnCommit),
+		"DispatchPending":        reflect.ValueOf(events.DispatchPending),
+		"DispatchWithContext":    reflect.ValueOf(events.DispatchWithContext),
+		"Fake":                   reflect.ValueOf(events.Fake),
+		"GetDispatchedEvents":    reflect.ValueOf(events.GetDispatchedEvents),
+		"InitEvents":             reflect.ValueOf(events.InitEvents),
+		"InitEventsForTesting":   reflect.ValueOf(events.InitEventsForTesting),
+		"MetadataKeyIP":          reflect.ValueOf(constant.MakeFromLiteral("\"request_ip\"", token.STRING, 0)),
+		"MetadataKeyRequestID":   reflect.ValueOf(constant.MakeFromLiteral("\"request_id\"", token.STRING, 0)),
+		"MetadataKeyUserAgent":   reflect.ValueOf(constant.MakeFromLiteral("\"request_user_agent\"", token.STRING, 0)),
+		"RegisterListener":       reflect.ValueOf(events.RegisterListener),
+		"RequestMetaFromContext": reflect.ValueOf(events.RequestMetaFromContext),
+		"TestListener":           reflect.ValueOf(events.TestListener),
+		"Unfake":                 reflect.ValueOf(events.Unfake),
+		"WaitForPendingHandlers": reflect.ValueOf(events.WaitForPendingHandlers),
+		"WithRequestMeta":        reflect.ValueOf(events.WithRequestMeta),
 
 		// type definitions
-		"Event":    reflect.ValueOf((*events.Event)(nil)),
-		"Listener": reflect.ValueOf((*events.Listener)(nil)),
+		"Event":       reflect.ValueOf((*events.Event)(nil)),
+		"Listener":    reflect.ValueOf((*events.Listener)(nil)),
+		"RequestMeta": reflect.ValueOf((*events.RequestMeta)(nil)),
 
 		// interface wrapper definitions
 		"_Event":    reflect.ValueOf((*_code_vikunja_io_api_pkg_events_Event)(nil)),
@@ -30,13 +46,17 @@ func init() {
 	}
 }
 
+// _code_vikunja_io_api_pkg_events_Event is an interface wrapper for Event type
 type _code_vikunja_io_api_pkg_events_Event struct {
 	IValue interface{}
 	WName  func() string
 }
 
-func (W _code_vikunja_io_api_pkg_events_Event) Name() string { return W.WName() }
+func (W _code_vikunja_io_api_pkg_events_Event) Name() string {
+	return W.WName()
+}
 
+// _code_vikunja_io_api_pkg_events_Listener is an interface wrapper for Listener type
 type _code_vikunja_io_api_pkg_events_Listener struct {
 	IValue  interface{}
 	WHandle func(msg *message.Message) error
@@ -46,4 +66,6 @@ type _code_vikunja_io_api_pkg_events_Listener struct {
 func (W _code_vikunja_io_api_pkg_events_Listener) Handle(msg *message.Message) error {
 	return W.WHandle(msg)
 }
-func (W _code_vikunja_io_api_pkg_events_Listener) Name() string { return W.WName() }
+func (W _code_vikunja_io_api_pkg_events_Listener) Name() string {
+	return W.WName()
+}
