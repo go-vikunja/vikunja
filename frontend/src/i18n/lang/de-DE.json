@@ -955,6 +955,7 @@
 	"task": {
 		"new": "Aufgabe erstellen",
 		"createSuccess": "Die Aufgabe wurde erfolgreich erstellt.",
+		"bulkCreateUnexpectedResponse": "Der Server gab eine unerwartete Anzahl von erstellten Aufgaben zurück.",
 		"addReminder": "Eine Erinnerung hinzufügen…",
 		"removeReminder": "Diese Erinnerung entfernen",
 		"doneSuccess": "Die Aufgabe wurde erfolgreich als erledigt markiert.",
