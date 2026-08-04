@@ -26,6 +26,7 @@ import (
 
 func TestGetUserFromClaims_IsAdmin(t *testing.T) {
 	claims := jwt.MapClaims{
+		"type":     float64(AuthTypeUser),
 		"id":       float64(1),
 		"username": "u1",
 		"is_admin": true,
@@ -37,10 +38,34 @@ func TestGetUserFromClaims_IsAdmin(t *testing.T) {
 
 func TestGetUserFromClaims_IsAdminMissing(t *testing.T) {
 	claims := jwt.MapClaims{
+		"type":     float64(AuthTypeUser),
 		"id":       float64(1),
 		"username": "u1",
 	}
 	u, err := GetUserFromClaims(claims)
 	require.NoError(t, err)
 	assert.False(t, u.IsAdmin)
+}
+
+func TestGetUserFromClaims_LinkShareTypeRejected(t *testing.T) {
+	claims := jwt.MapClaims{
+		"type":     float64(2),
+		"id":       float64(1),
+		"username": "u1",
+	}
+	u, err := GetUserFromClaims(claims)
+	require.Error(t, err)
+	assert.True(t, IsErrInvalidUserContext(err))
+	assert.Nil(t, u)
+}
+
+func TestGetUserFromClaims_TypeMissing(t *testing.T) {
+	claims := jwt.MapClaims{
+		"id":       float64(1),
+		"username": "u1",
+	}
+	u, err := GetUserFromClaims(claims)
+	require.Error(t, err)
+	assert.True(t, IsErrInvalidUserContext(err))
+	assert.Nil(t, u)
 }
