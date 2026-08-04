@@ -36,9 +36,11 @@ func RepairOrphanedProjects(s *xorm.Session, dryRun bool) (*RepairOrphanedProjec
 	result := &RepairOrphanedProjectsResult{}
 
 	var orphans []*Project
+	// Use raw SQL that includes soft-deleted parents to avoid false positives:
+	// a child of a soft-deleted parent is NOT orphaned.
 	err := s.SQL(`SELECT p.* FROM projects p
 		LEFT JOIN projects parent ON p.parent_project_id = parent.id
-		WHERE p.parent_project_id > 0 AND parent.id IS NULL`).
+		WHERE p.parent_project_id > 0 AND parent.id IS NULL AND p.deleted_at IS NULL`).
 		Find(&orphans)
 	if err != nil {
 		return nil, err

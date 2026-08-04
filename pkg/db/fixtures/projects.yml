@@ -393,3 +393,39 @@
   position: 4300
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
+# Soft-deleted project owned by user 1
+-
+  id: 44
+  title: Test44 soft-deleted
+  description: A soft-deleted project
+  identifier: test44
+  owner_id: 1
+  parent_project_id: 0
+  position: 44
+  deleted_at: 2026-03-20 10:00:00
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
+# Soft-deleted parent project owned by user 1 (parent of 46)
+-
+  id: 45
+  title: Test45 soft-deleted parent
+  description: A soft-deleted parent project
+  identifier: test45
+  owner_id: 1
+  parent_project_id: 0
+  position: 45
+  deleted_at: 2026-03-20 10:00:00
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
+# Soft-deleted child project owned by user 1 (child of 45)
+-
+  id: 46
+  title: Test46 soft-deleted child
+  description: A soft-deleted child project
+  identifier: test46
+  owner_id: 1
+  parent_project_id: 45
+  position: 46
+  deleted_at: 2026-03-20 10:00:00
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12

@@ -26,7 +26,8 @@ export default class ProjectModel extends AbstractModel<IProject> implements IPr
 	backgroundBlurHash = ''
 	parentProjectId = 0
 	views: IProjectView[] = []
-	
+	deletedAt: Date | null = null
+
 	created: Date = null
 	updated: Date = null
 
@@ -51,6 +52,10 @@ export default class ProjectModel extends AbstractModel<IProject> implements IPr
 		
 		this.views = this.views.map(v => new ProjectViewModel(v))
 		
+		if (this.deletedAt) {
+			this.deletedAt = new Date(this.deletedAt)
+		}
+
 		this.created = new Date(this.created)
 		this.updated = new Date(this.updated)
 	}
