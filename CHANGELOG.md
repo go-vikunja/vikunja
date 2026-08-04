@@ -7,6 +7,224 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 All releases can be found on https://code.vikunja.io/vikunja/releases.
 
+## [2.5.0] - 2026-08-04
+
+### Bug Fixes
+
+* *(api tokens)* Guard GetTokenFromTokenString against short token strings
+* *(api/v2)* Strip internal error detail in NewError, not NewErrorWithContext
+* *(api/v2)* Stop leaking the healthcheck cause to unauthenticated callers
+* *(api/v2)* Validate slice-of-struct body fields at the boundary
+* *(auth)* Use configured bcrypt rounds everywhere
+* *(auth)* Gate the v2 login route on local or ldap auth being enabled
+* *(avatar)* Bounds-check size before narrowing int64 to int
+* *(caldav)* Close username enumeration oracle in basic auth (#3349)
+* *(caldav)* Answer PROPPATCH with 207/403 instead of a blanket 501 (#3364)
+* *(caldav)* Return 404 for principal sub-paths and foreign usernames (#3371)
+* *(caldav)* Remove double trailing slash from current-user-principal href
+* *(caldav)* Don't wipe fields the parser doesn't understand on update
+* *(caldav)* Anchor RELATED=END alarm triggers on due date when the task has one
+* *(caldav)* Report completion status from Done instead of done_at
+* *(caldav)* Stop corrupting percent signs in REPORT responses
+* *(ci)* Tag preview images with the PR head sha
+* *(ci)* Describe PR head instead of base branch for preview version
+* *(ci)* Replace retired GitHub Models inference in auto-label workflow (#3415)
+* *(ci)* Pin LLM-action to fork with reasoning model support
+* *(config)* Apply deprecated service.jwtsecret to service.secret
+* *(db)* Ping the database on connect so failures report the real error
+* *(desktop)* Coordinate token refresh across renderer windows
+* *(desktop)* Create quick-entry window lazily
+* *(dump)* Parse dumped time strings so restore works on MySQL and MariaDB
+* *(dump)* Skip directory entries in dump zip when restoring
+* *(dump)* Reuse single stdin reader for all restore prompts
+* *(filter)* Don't rewrite in/not in/like inside quoted values
+* *(filters)* Skip saved filters owned by disabled users
+* *(filters)* Don't let one filter fail the whole filter view maintenance
+* *(frontend)* Route to not-found on forbidden task instead of blank shell
+* *(frontend)* Don't reload page on first service worker install
+* *(frontend)* Force rel=noopener on links in project descriptions
+* *(gravatar)* Route avatar requests through the SSRF-safe http client
+* *(labels)* Allow attaching labels via inherited child-project access (#3374)
+* *(license)* Refuse redirects and use the SSRF-safe http client for checks
+* *(mage)* Scaffold new migrations with partialSync
+* *(migration)* Seed task positions for exports without order information
+* *(migration)* Stop existing-table struct syncs from dropping indexes
+* *(migration)* Recreate indexes dropped by partial-struct sync migrations
+* *(migration)* Detect sqlite indexes created with lowercase SQL (#3354)
+* *(migration)* Prevent stack overflow on ticktick parentId cycles
+* *(migration)* Abort import on unexpected task creation error
+* *(migration)* Repair kanban views without a bucket configuration mode
+* *(migration/csv)* Cap CSV import buffer to the configured upload limit
+* *(models)* Use ILIKE for the team search count query
+* *(models)* Write back dates rescheduled by repeat logic under restricted column updates
+* *(notifications)* Deliver task deleted notifications again
+* *(notifications)* Don't notify subscribers who lost access to the entity
+* *(notifications)* Check project access when reading notifications
+* *(notifications)* Require a persisted notification to declare its project
+* *(notifications)* Delete stored notifications of unknown types
+* *(oauth2)* Burn authorization code even when validation fails (#3350)
+* *(openid)* Stop logging raw token-endpoint response bodies
+* *(packaging)* Return ENOSYS instead of SIGSYS for filtered syscalls
+* *(packaging)* Stop masking filesystem paths in the systemd unit (#3306)
+* *(plugins)* Regenerate stale yaegi symbol tables
+* *(projects)* Don't report database errors as a missing project
+* *(ratelimit)* Don't panic on unauthenticated requests
+* *(ratelimit)* Key by ip when the configured kind is unknown
+* *(security)* Rate limit the websocket upgrade endpoint (#3348)
+* *(security)* Return the negated user id from LinkSharing.GetID
+* *(security)* Reject link shares at team, bot and webhook permission checks
+* *(security)* Reject link shares in Webhook.ReadAll
+* *(security)* Reject non-user tokens in GetUserFromClaims
+* *(subscriptions)* Declare subscription entity as string enum in v2 OpenAPI schema
+* *(subscriptions)* Marshal unknown subscription entity type as null
+* *(unsplash)* Route api requests through the SSRF-safe http client
+* *(views)* Seed and maintain kanban buckets when a view's kind changes
+* *(views)* Preselect manual bucket mode in the view edit form
+* *(views)* Drop deleted bucket from view state after deleting it
+* *(web)* Stop logging the full auth object on permission denials
+* *(webhooks)* Bound the error response body read
+* Shadow embedded CRUDable Update method on LinkSharing ([c580d51](c580d516f4d1add72dcee4109b0311356077e707))
+* Shadow embedded CRUDable ReadAll method on SavedFilter ([6f65621](6f65621c1423e284531682727839dd21a580d0b9))
+* Embed user.User by value in AdminUser ([4cc647b](4cc647b9b89407ed4d93313d90b0b96bba5b3579))
+* Embed LinkSharing by value in LinkShareToken ([b8492a0](b8492a0ab94c8596318ae7f650e077f280a413a2))
+* Always serialize parent_project_id for pseudo-projects ([2e0cd81](2e0cd81ce081a0d17a7606c20c2e0b077a88fb1e))
+* Avoid panic on null jwt claim values ([ccba2e4](ccba2e4546abcca66b07f7a7706e1f23167ecea3))
+* Report the real link share id in saved filter errors ([ed8dc89](ed8dc89f75dfa7009a9d52985fb0e44533081c5e))
+
+### Dependencies
+
+* *(deps)* Update postgres:18 docker digest to 3a82e1f
+* *(deps)* Update dev-dependencies
+* *(deps)* Update actions/checkout action to v7.0.1
+* *(deps)* Update danielroe/provenance-action digest to 8ecbdd2
+* *(deps)* Update pnpm to v11.14.0
+* *(deps)* Update module github.com/prometheus/client_golang to v1.24.0
+* *(deps)* Update module github.com/labstack/echo/v5 to v5.3.1
+* *(deps)* Update danielroe/provenance-action digest to fcc45fd
+* *(deps)* Update pnpm to v11.15.0
+* *(deps)* Update aws-sdk-go-v2 monorepo
+* *(deps)* Update dependency happy-dom to v20.11.0
+* *(deps)* Update dependency postcss to v8.5.20
+* *(deps)* Update pnpm to v11.15.1
+* *(deps)* Update dependency vue-i18n to v11.4.7
+* *(deps)* Update dependency undici@7 to v8.8.0
+* *(deps)* Update docker/login-action action to v4.5.0
+* *(deps)* Update module github.com/ganigeorgiev/fexpr to v0.6.0
+* *(deps)* Update dependency marked to v18.0.7
+* *(deps)* Update dependency undici@6 to v8.8.0
+* *(deps)* Update crowdin/github-action action to v2.17.0
+* *(deps)* Update module github.com/gabriel-vasile/mimetype to v1.4.15
+* *(deps)* Update docker/login-action action to v4.5.1
+* *(deps)* Update dependency js-yaml to v5.2.2 [security]
+* *(deps)* Update dependency js-yaml@4 to v5.2.2 [security]
+* *(deps)* Update dependency @sentry/vue to v10.67.0
+* *(deps)* Update module github.com/prometheus/client_golang to v1.24.1
+* *(deps)* Update dependency tar to v7.5.21
+* *(deps)* Update dependency @fortawesome/vue-fontawesome to v3.3.3
+* *(deps)* Update dependency flatted to v3.4.3
+* *(deps)* Update dependency postcss to v8.5.22
+* *(deps)* Update pnpm to v11.16.0
+* *(deps)* Update pnpm to v11.17.0
+* *(deps)* Lock file maintenance
+* *(deps)* Update danielroe/provenance-action digest to b793421
+* *(deps)* Update dependency @sentry/vue to v10.68.0
+* *(deps)* Update dependency undici@7 to v8.9.0
+* *(deps)* Update dependency postcss to v8.5.23
+* *(deps)* Update tiptap to v3.29.0
+* *(deps)* Update module github.com/aws/smithy-go to v1.27.5
+* *(deps)* Update dependency tar to v7.5.22
+* *(deps)* Update module github.com/yuin/goldmark to v1.8.5
+* *(deps)* Update playwright to v1.62.0
+* *(deps)* Update dependency undici@6 to v8.9.0
+* *(deps)* Update dependency ip-address to v10.2.2
+* *(deps)* Update danielroe/provenance-action digest to ec1767b
+* *(deps)* Update actions/stale action to v11
+* *(deps)* Update dependency basic-ftp to v6.0.2
+* *(deps)* Update dependency ip-address to v10.3.1
+* *(deps)* Update dependency vite-plugin-vue-devtools to v8.2.1
+* *(deps)* Update docker/login-action action to v4.5.2
+* *(deps)* Update docker/login-action action to v4.6.0
+* *(deps)* Update dependency vue-i18n to v11.4.8
+* *(deps)* Update module github.com/mattn/go-sqlite3 to v1.14.49
+* *(deps)* Update module github.com/aws/smithy-go to v1.27.6
+* *(deps)* Update dependency postcss to v8.5.25
+* *(deps)* Update node.js to v24.18.1
+* *(deps)* Update dependency minimatch to v10.2.6
+* *(deps)* Update tiptap to v3.29.2
+* *(deps)* Update dependency rollup to v4.62.3
+* *(deps)* Update pnpm to v11.18.0
+* *(deps)* Update dependency @sentry/vue to v10.69.0
+* *(deps)* Update dependency axios to v1.19.0
+* *(deps)* Update vueuse to v14.4.0
+* *(deps)* Update dependency flatted to v3.4.4
+* *(deps)* Update dependency markdown-it to v15
+* *(deps)* Update pnpm/action-setup action to v6.0.10
+* *(deps)* Update pnpm to v11.19.0
+* *(deps)* Update danielroe/provenance-action digest to 193227b
+* *(deps)* Update dependency ip-address to v10.4.0
+* *(deps)* Update playwright to v1.62.1
+* *(deps)* Update module github.com/danielgtaylor/huma/v2 to v2.39.1
+* *(deps)* Update node.js to v24.19.0
+* *(deps)* Update dependency js-yaml@4 to v5.2.3
+* *(deps)* Update dependency js-yaml to v5.2.3
+* *(deps)* Update module github.com/aws/aws-sdk-go-v2/service/s3 to v1.106.4
+* *(deps)* Update module github.com/redis/go-redis/v9 to v9.22.0
+* *(deps)* Update dependency rollup to v4.62.4
+
+### Documentation
+
+* *(agents)* Explicit mention of no raw sql [skip ci]
+* *(skill)* Ban plain tx.Sync on existing tables in the migration skill
+* Update readme with LLM disclosure, update sponsors [skip ci] ([7f7d61f](7f7d61fe5d3bfbab327e2ca31180cdd564c8691c))
+
+### Features
+
+* *(api/v2)* Add bulk task creation endpoint
+* *(audit)* Audit full personal data export requests
+* *(desktop)* Add a Content Security Policy to the app window (#3351)
+* *(dev)* Add paseo config
+* *(mage)* Add generate:yaegi-symbols and check:yaegi-symbols targets
+* *(tasks)* Calculate top-of-view positions per batch
+* *(tasks)* Generalize task creation to batches
+* *(tasks)* Add BulkTaskCreation model
+* *(tasks)* Update saved-filter views once per creation batch
+* *(tasks)* Add bulk creation to the task service
+* *(tasks)* Add bulk quick-add creation to the task store
+* *(tasks)* Create quick-add tasks through the bulk endpoint
+
+### Miscellaneous Tasks
+
+* *(i18n)* Update translations via Crowdin
+* Cleanup dead code ([1e081d3](1e081d34a7107302f05d614ba8233297a5d68319))
+
+### Other
+
+* *(lint)* Forbid plain Sync in migrations via forbidigo
+* *(other)* Drop unused contents: write from generate-swagger-docs
+* *(other)* [skip ci] Updated swagger docs
+* *(other)* Auto-regenerate yaegi symbols alongside swagger docs
+* *(other)* [skip ci] Updated yaegi symbols
+
+### Performance
+
+* *(tasks)* Index task_positions on (project_view_id, position)
+
+### Refactor
+
+* *(projects)* Resolve read permissions for many projects at once
+* Drop redundant link share branch in comment permissions ([d545e3b](d545e3bbb14bb606d86bffe73e11c926ce1af378))
+
+### Testing
+
+* *(api-tokens)* Match permission checkbox name exactly
+* *(e2e)* Cover multiline creation order and subtasks
+* *(models)* Restore notification faking after user delete tests
+* *(ratelimit)* Assert exact statuses instead of absence of 500
+* Guard schema-link creation for all v2 response types ([f02df25](f02df25510827fda377e9e40bdc2b7bc06ae66d1))
+* Guard parent_project_id in project responses ([aa62c00](aa62c00b780e7493b3a276e408805284aa437590))
+* Cover link share principal confusion at the HTTP layer ([2b1558e](2b1558e8dfc9cda9b13fb52baac108108b9c3059))
+* Assert link share attachments are not attributed to a colliding user ([4b35f5d](4b35f5d7e2ca93681bdd7ed29208682a31aeb816))
+
 ## [2.4.0] - 2026-07-19
 
 ### Bug Fixes
