@@ -23,7 +23,6 @@ import (
 	"io"
 	"mime"
 	"net/http"
-	"net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -139,10 +138,8 @@ func static() echo.MiddlewareFunc {
 			if strings.HasSuffix(c.Path(), "*") { // When serving from a group, e.g. `/static*`.
 				p = c.Param("*")
 			}
-			p, err = url.PathUnescape(p)
-			if err != nil {
-				return
-			}
+			// Both arrive decoded (path params through RouterConfig.UnescapePathParamValues) -
+			// decoding again 500s on a literal `%` and promotes an encoded `%2f` to a separator.
 			name := path.Join(rootPath, path.Clean("/"+p)) // "/"+ for security
 
 			file, err := assetFs.Open(name)
