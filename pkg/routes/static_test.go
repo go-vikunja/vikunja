@@ -37,9 +37,8 @@ func newStaticTestEcho() *echo.Echo {
 	return e
 }
 
-// TestStaticEncodedPath makes sure paths which still look url-encoded after Go
-// already decoded them are not decoded a second time - that used to bubble up a
-// url.EscapeError as a 500.
+// Paths still looking url-encoded after the first decode used to be decoded twice
+// and 500 with url.EscapeError.
 // See https://github.com/go-vikunja/vikunja/issues/3434
 func TestStaticEncodedPath(t *testing.T) {
 	tests := []struct {
