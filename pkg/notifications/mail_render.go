@@ -95,7 +95,7 @@ const mailTemplateHTML = `
 <div style="width: 100%; font-family: 'Open Sans', sans-serif; Text-rendering: optimizeLegibility">
     <div style="width: 600px; margin: 0 auto; Text-align: justify;">
         <h1 style="font-size: 30px; Text-align: center;">
-            <img src="cid:logo.png" style="height: 75px;" alt="Vikunja"/>
+            <img src="{{ .LogoURL }}" style="height: 75px;" alt="Vikunja"/>
         </h1>
         <div class="email-card" style="border: 1px solid #dbdbdb; -webkit-box-shadow: 0.3em 0.3em 0.8em #e6e6e6; box-shadow: 0.3em 0.3em 0.8em #e6e6e6; color: #4a4a4a; padding: 5px 25px; border-radius: 3px; background: #fff;">
 <p>
@@ -544,6 +544,20 @@ func RenderMail(m *Mail, lang string) (mailOpts *mail.Opts, err error) {
 	data["FrontendURL"] = config.ServicePublicURL.GetString()
 	data["CopyURLText"] = i18n.T(lang, "notifications.common.copy_url")
 
+	// Use the configured custom logo in emails when set, otherwise fall back to
+	// the logo embedded in the binary (referenced by its cid). The value is
+	// wrapped in templatehtml.URL because html/template would otherwise strip
+	// the "cid:" scheme (and any non-http custom scheme) as unsafe. Both values
+	// are trusted: the cid is a constant and the custom URL is admin-configured.
+	customLogoURL := config.ServiceCustomLogoURL.GetString()
+	useCustomLogo := customLogoURL != ""
+	if useCustomLogo {
+		// #nosec G203 -- admin-configured logo URL, not user input
+		data["LogoURL"] = templatehtml.URL(customLogoURL)
+	} else {
+		data["LogoURL"] = templatehtml.URL("cid:logo.png")
+	}
+
 	if m.headerLine != nil {
 		// #nosec G203 -- the html is sanitized
 		data["HeaderLineHTML"] = templatehtml.HTML(newNotificationSanitizer().Sanitize(m.headerLine.Text))
@@ -584,7 +598,9 @@ func RenderMail(m *Mail, lang string) (mailOpts *mail.Opts, err error) {
 		ThreadID:    m.threadID,
 	}
 
-	if !m.conversational {
+	// Only embed the default logo when no custom logo URL is configured. With a
+	// custom logo the image is loaded from that remote URL instead.
+	if !m.conversational && !useCustomLogo {
 		mailOpts.EmbedFS = map[string]*embed.FS{
 			"logo.png": &logo,
 		}

@@ -141,6 +141,27 @@ This is a line
 		// Verify no action button is present
 		assert.NotContains(t, mailopts.HTMLMessage, `class="email-button"`)
 	})
+	t.Run("default logo is embedded", func(t *testing.T) {
+		config.ServiceCustomLogoURL.Set("")
+
+		mailopts, err := RenderMail(NewMail().Line("Test"), "en")
+		require.NoError(t, err)
+
+		assert.Contains(t, mailopts.HTMLMessage, `src="cid:logo.png"`)
+		require.NotNil(t, mailopts.EmbedFS)
+		assert.Contains(t, mailopts.EmbedFS, "logo.png")
+	})
+	t.Run("custom logo url is used and default logo is not embedded", func(t *testing.T) {
+		config.ServiceCustomLogoURL.Set("https://example.com/logo.png")
+		t.Cleanup(func() { config.ServiceCustomLogoURL.Set("") })
+
+		mailopts, err := RenderMail(NewMail().Line("Test"), "en")
+		require.NoError(t, err)
+
+		assert.Contains(t, mailopts.HTMLMessage, `src="https://example.com/logo.png"`)
+		assert.NotContains(t, mailopts.HTMLMessage, `src="cid:logo.png"`)
+		assert.Nil(t, mailopts.EmbedFS)
+	})
 	t.Run("with action", func(t *testing.T) {
 		mail := NewMail().
 			From("test@example.com").
