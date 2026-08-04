@@ -548,7 +548,7 @@ func getClaimAsInt(claims jwt.MapClaims, field string) (int64, error) {
 	if !ok {
 		return 0, &ErrInvalidClaimData{
 			Field: field,
-			Type:  reflect.TypeOf(claims[field]).String(),
+			Type:  fmt.Sprintf("%T", claims[field]),
 		}
 	}
 	return int64(value), nil
@@ -567,7 +567,7 @@ func getClaimAsString(claims jwt.MapClaims, field string) (string, error) {
 	if !ok {
 		return "", &ErrInvalidClaimData{
 			Field: field,
-			Type:  reflect.TypeOf(claims[field]).String(),
+			Type:  fmt.Sprintf("%T", claims[field]),
 		}
 	}
 	return value, nil
