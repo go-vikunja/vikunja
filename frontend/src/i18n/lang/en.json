@@ -1084,7 +1084,8 @@
       "setAsCover": "Make cover",
       "unsetAsCover": "Remove cover",
       "successfullyChangedCoverImage": "The cover image was successfully changed.",
-      "usedAsCover": "Cover image"
+      "usedAsCover": "Cover image",
+      "play": "Play"
     },
     "comment": {
       "title": "Comments",

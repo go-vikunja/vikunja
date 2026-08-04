@@ -85,6 +85,7 @@ import {
 	faUnlink,
 	faParagraph,
 	faTable,
+	faVolumeHigh,
 	faX, faArrowTurnDown, faListCheck, faXmark, faXmarksLines, faFont, faRulerHorizontal, faUnderline,
 } from '@fortawesome/free-solid-svg-icons'
 import {
@@ -193,6 +194,7 @@ library.add(faTrashAlt)
 library.add(faUser)
 library.add(faUserEdit)
 library.add(faUsers)
+library.add(faVolumeHigh)
 library.add(faArrowDownShortWide)
 library.add(faArrowUpFromBracket)
 library.add(faArrowUpShortWide)
