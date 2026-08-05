@@ -180,7 +180,6 @@
 					"yyyy/mm/dd": "JJJJ/MM/TT"
 				},
 				"timeFormat": "Zeitformat",
-				"defaultDueTime": "Standard-Fälligkeitszeit",
 				"timeTrackingDefaultStart": "Startzeit für die Zeiterfassung",
 				"timeFormatOptions": {
 					"12h": "12 Stunden (AM/PM)",
