@@ -133,6 +133,26 @@ test.describe('Project View List', () => {
 		await expect(page.locator('.tasks')).not.toContainText(tasks[20].title)
 	})
 
+	test('Should not navigate to a negative page when clicking previous on the first page', async ({authenticatedPage: page}) => {
+		await createProjects(1)
+		const tasks = await TaskFactory.create(100, {
+			id: '{increment}',
+			title: i => `task${i}`,
+			project_id: 1,
+		})
+		await page.goto('/projects/1/1?page=1')
+
+		await expect(page.locator('.tasks')).toContainText(tasks[20].title)
+
+		const previous = page.locator('.card-content .pagination .pagination-previous')
+		await expect(previous).toHaveAttribute('aria-disabled', 'true')
+		await previous.click({force: true})
+
+		await expect(page).not.toHaveURL(/\?page=0/)
+		await expect(page.locator('.tasks')).toContainText(tasks[20].title)
+		await expect(page.locator('.global-notification.is-danger, .global-notification.error')).not.toBeVisible()
+	})
+
 	test('Should show cross-project subtasks in their own project List view', async ({authenticatedPage: page}) => {
 		const projects = await createProjects(2)
 
