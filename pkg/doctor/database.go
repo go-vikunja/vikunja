@@ -18,6 +18,7 @@ package doctor
 
 import (
 	"fmt"
+	"strings"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
@@ -45,6 +46,10 @@ func CheckDatabase() CheckGroup {
 	results := []CheckResult{
 		checkDatabaseConnection(),
 		checkDatabaseVersion(dbType),
+	}
+
+	if dbType == "postgres" {
+		results = append(results, checkParadeDB()...)
 	}
 
 	return CheckGroup{
@@ -121,4 +126,82 @@ func checkDatabaseVersion(dbType string) CheckResult {
 		Passed: true,
 		Value:  version,
 	}
+}
+
+var paradeDBIndexes = []string{
+	"idx_tasks_paradedb",
+	"idx_projects_paradedb",
+	"idx_time_entries_paradedb",
+}
+
+// checkParadeDB reports whether the pg_search extension is installed and, if so,
+// whether the bm25 indexes Vikunja relies on exist. A missing extension is not a
+// failure — Vikunja falls back to substring search.
+func checkParadeDB() []CheckResult {
+	s := db.NewSession()
+	defer s.Close()
+
+	var version string
+	installed, err := s.Table("pg_extension").
+		Where("extname = ?", "pg_search").
+		Cols("extversion").
+		Get(&version)
+	if err != nil {
+		return []CheckResult{{
+			Name:   "ParadeDB",
+			Passed: false,
+			Error:  err.Error(),
+		}}
+	}
+
+	if !installed {
+		return []CheckResult{{
+			Name:   "ParadeDB",
+			Passed: true,
+			Value:  "not installed (using substring search)",
+		}}
+	}
+
+	results := []CheckResult{{
+		Name:   "ParadeDB",
+		Passed: true,
+		Value:  "pg_search " + version,
+	}}
+
+	var existing []string
+	err = s.Table("pg_indexes").
+		In("indexname", paradeDBIndexes).
+		Cols("indexname").
+		Find(&existing)
+	if err != nil {
+		return append(results, CheckResult{
+			Name:   "ParadeDB indexes",
+			Passed: false,
+			Error:  err.Error(),
+		})
+	}
+
+	if len(existing) < len(paradeDBIndexes) {
+		found := make(map[string]bool, len(existing))
+		for _, name := range existing {
+			found[name] = true
+		}
+		var missing []string
+		for _, name := range paradeDBIndexes {
+			if !found[name] {
+				missing = append(missing, name)
+			}
+		}
+		return append(results, CheckResult{
+			Name:   "ParadeDB indexes",
+			Passed: false,
+			Error:  fmt.Sprintf("missing: %s (restart Vikunja to create them)", strings.Join(missing, ", ")),
+		})
+	}
+
+	return append(results, CheckResult{
+		Name:   "ParadeDB indexes",
+		Passed: true,
+		Value:  fmt.Sprintf("%d present", len(paradeDBIndexes)),
+	})
 }
