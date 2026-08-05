@@ -113,7 +113,7 @@
     "@sentry/vite-plugin": "5.4.0",
     "@tailwindcss/vite": "4.3.3",
     "@tsconfig/node24": "24.0.4",
-    "@types/codemirror": "5.60.17",
+    "@types/codemirror": "5.60.18",
     "@types/is-touch-device": "1.0.3",
     "@types/node": "24.13.3",
     "@types/sortablejs": "1.15.9",
