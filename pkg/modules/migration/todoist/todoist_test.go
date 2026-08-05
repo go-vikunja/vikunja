@@ -652,6 +652,69 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 	}
 }
 
+func TestConvertTodoistToVikunjaWithBrokenAttachment(t *testing.T) {
+	// Todoist returns opaque identifiers instead of urls for attachments it does not host itself.
+	// Those must not fail the whole migration, see https://github.com/go-vikunja/vikunja/issues/3435
+	testSync := &sync{
+		Projects: []*project{
+			{
+				ID:   "396936926",
+				Name: "Project1",
+			},
+		},
+		Items: []*item{
+			{
+				ID:        "400000001",
+				ProjectID: "396936926",
+				Content:   "Task1",
+			},
+		},
+		Notes: []*note{
+			{
+				ID:      "101478",
+				ItemID:  "400000001",
+				Content: "Lorem Ipsum dolor sit amet",
+				FileAttachment: &fileAttachment{
+					FileName:    "mail attachment",
+					FileType:    "text/plain",
+					FileURL:     "[[outlook=id3=aWQ9MDAwMDAwMDBDRjVENTQ1RjUzOTJERDQ1OER, Skattemeldingen kommer ]]",
+					UploadState: "completed",
+				},
+			},
+		},
+	}
+
+	hierachie, err := convertTodoistToVikunja(testSync, make(map[string]*doneItem))
+	require.NoError(t, err)
+	require.Len(t, hierachie, 2)
+	require.Len(t, hierachie[1].Tasks, 1)
+	assert.Empty(t, hierachie[1].Tasks[0].Attachments)
+	assert.Equal(t, "Lorem Ipsum dolor sit amet", hierachie[1].Tasks[0].Description)
+}
+
+func TestIsDownloadableURL(t *testing.T) {
+	tests := []struct {
+		name string
+		url  string
+		want bool
+	}{
+		{name: "https", url: "https://todoist.com/file.md", want: true},
+		{name: "http", url: "http://todoist.com/file.md", want: true},
+		{name: "todoist mail attachment id", url: "[[outlook=id3=aWQ9MDAwMDAwMDBDRjVENTQ1RjUzOTJERDQ1OER]]", want: false},
+		{name: "no scheme", url: "todoist.com/file.md", want: false},
+		{name: "no host", url: "https://", want: false},
+		{name: "other scheme", url: "file:///etc/passwd", want: false},
+		{name: "empty", url: "", want: false},
+		{name: "invalid", url: "https://%zz", want: false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, isDownloadableURL(tt.url))
+		})
+	}
+}
+
 func TestParseTodoistRepeat(t *testing.T) {
 	tests := []struct {
 		name string

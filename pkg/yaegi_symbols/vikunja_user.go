@@ -12,6 +12,7 @@ import (
 func init() {
 	Symbols["code.vikunja.io/api/pkg/user/user"] = map[string]reflect.Value{
 		// function, constant and variable definitions
+		"AuthTypeUser":                         reflect.ValueOf(user.AuthTypeUser),
 		"CancelDeletion":                       reflect.ValueOf(user.CancelDeletion),
 		"ChangeUserEmail":                      reflect.ValueOf(user.ChangeUserEmail),
 		"CheckUserCredentials":                 reflect.ValueOf(user.CheckUserCredentials),

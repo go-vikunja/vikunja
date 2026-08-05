@@ -1843,6 +1843,33 @@ func printReleaseStats(ctx context.Context, fromRef, toRef string) error {
 	return nil
 }
 
+// commitPathIfChanged stages and commits everything under path if it has
+// uncommitted changes. No-op when the path is clean.
+func commitPathIfChanged(ctx context.Context, path, message string) error {
+	status, err := runGitCommandWithOutput(ctx, "status", "--porcelain", "--", path)
+	if err != nil {
+		return fmt.Errorf("failed to check git status for %s: %w", path, err)
+	}
+
+	if strings.TrimSpace(string(status)) == "" {
+		fmt.Printf("%s is up to date, nothing to commit.\n", path)
+		return nil
+	}
+
+	if err := exec.CommandContext(ctx, "git", "add", path).Run(); err != nil {
+		return fmt.Errorf("failed to stage %s: %w", path, err)
+	}
+
+	cmd := exec.CommandContext(ctx, "git", "commit", "-m", message)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to commit %s: %w", path, err)
+	}
+
+	return nil
+}
+
 // TagRelease creates a new release tag with changelog.
 // It updates the version badge in README.md, generates changelog using git-cliff,
 // commits the changes, and creates an annotated tag.
@@ -1881,6 +1908,24 @@ func (Dev) TagRelease(ctx context.Context, version string) error {
 
 	// Clean up the changelog
 	changelog = cleanupChangelog(changelog)
+
+	// Generated files must be part of the tag, so regenerate them here instead of
+	// waiting for the workflow which only commits them after the release ran.
+	fmt.Println("Regenerating swagger docs...")
+	if err := (Generate{}).SwaggerDocs(ctx); err != nil {
+		return fmt.Errorf("failed to generate swagger docs: %w", err)
+	}
+	if err := commitPathIfChanged(ctx, "pkg/swagger", "[skip ci] Updated swagger docs"); err != nil {
+		return err
+	}
+
+	fmt.Println("Regenerating yaegi symbols...")
+	if err := (Generate{}).YaegiSymbols(ctx); err != nil {
+		return fmt.Errorf("failed to generate yaegi symbols: %w", err)
+	}
+	if err := commitPathIfChanged(ctx, "pkg/yaegi_symbols", "[skip ci] Updated yaegi symbols"); err != nil {
+		return err
+	}
 
 	// Update README.md version badge
 	fmt.Println("Updating README.md version badge...")
