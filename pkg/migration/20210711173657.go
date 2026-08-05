@@ -52,7 +52,7 @@ func init() {
 		Migrate: func(tx *xorm.Engine) error {
 			_ = tx.DropTables(&userTokens20210711173657{}) // Allow running this migration multiple times
 
-			err := tx.Sync2(userTokens20210711173657{})
+			err := tx.Sync2(userTokens20210711173657{}) //nolint:forbidigo // brand-new table, nothing to drop
 			if err != nil {
 				return err
 			}

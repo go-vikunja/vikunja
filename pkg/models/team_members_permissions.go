@@ -29,6 +29,12 @@ func (tm *TeamMember) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 
 // CanDelete checks if the user can delete a new team member
 func (tm *TeamMember) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
+	// The self-removal shortcut below runs before IsAdmin, which holds the only
+	// other link share check in this file.
+	if _, is := a.(*LinkSharing); is {
+		return false, nil
+	}
+
 	u, err := user.GetUserByUsername(s, tm.Username)
 	if err != nil && !user.IsErrUserStatusError(err) {
 		return false, err

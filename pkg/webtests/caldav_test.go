@@ -18,9 +18,12 @@ package webtests
 
 import (
 	"encoding/xml"
+	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
@@ -179,8 +182,10 @@ func TestCaldavDiscovery(t *testing.T) {
 
 		responseBody := rec.Body.String()
 		assert.Contains(t, responseBody, "/dav/projects/36")
-		assert.NotContains(t, responseBody, "<d:href>/dav/projects/</d:href>")
-		assert.NotContains(t, responseBody, "<D:href>/dav/projects/</D:href>")
+		// Only response-level hrefs: current-user-principal props legitimately
+		// contain /dav/projects/ (the Apple home-set workaround).
+		assert.NotContains(t, responseBody, "<d:response><d:href>/dav/projects/</d:href>")
+		assert.NotContains(t, responseBody, "<D:response><D:href>/dav/projects/</D:href>")
 	})
 
 	t.Run("Project home set depth 0 returns the home set itself", func(t *testing.T) {
@@ -238,6 +243,82 @@ func TestCaldavDiscovery(t *testing.T) {
 		responseBody := rec.Body.String()
 		assert.Contains(t, responseBody, "<D:href>/dav/projects</D:href>")
 		assert.NotContains(t, responseBody, "/dav//projects/")
+	})
+
+	t.Run("Principal without trailing slash still works", func(t *testing.T) {
+		e, _ := setupTestEnv()
+
+		c, rec := createRequest(e, "PROPFIND", ``, nil, nil)
+		c.Request().URL.Path = caldav.PrincipalBasePath + "/user15"
+		c.Request().RequestURI = caldav.PrincipalBasePath + "/user15"
+
+		result, _ := caldav.BasicAuth(c, testuser15.Username, "12345678")
+		require.True(t, result)
+
+		err := caldav.PrincipalHandler(c)
+		require.NoError(t, err)
+		assert.Equal(t, 207, rec.Result().StatusCode)
+	})
+
+	t.Run("Sub-path under own principal 404s", func(t *testing.T) {
+		e, _ := setupTestEnv()
+
+		c, rec := createRequest(e, "PROPFIND", ``, nil, nil)
+		c.Request().URL.Path = caldav.PrincipalBasePath + "/user15/projects"
+		c.Request().RequestURI = caldav.PrincipalBasePath + "/user15/projects"
+
+		result, _ := caldav.BasicAuth(c, testuser15.Username, "12345678")
+		require.True(t, result)
+
+		err := caldav.PrincipalHandler(c)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusNotFound, rec.Result().StatusCode)
+	})
+
+	t.Run("Deeper sub-path under own principal 404s", func(t *testing.T) {
+		e, _ := setupTestEnv()
+
+		c, rec := createRequest(e, "PROPFIND", ``, nil, nil)
+		c.Request().URL.Path = caldav.PrincipalBasePath + "/user15/anything/else"
+		c.Request().RequestURI = caldav.PrincipalBasePath + "/user15/anything/else"
+
+		result, _ := caldav.BasicAuth(c, testuser15.Username, "12345678")
+		require.True(t, result)
+
+		err := caldav.PrincipalHandler(c)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusNotFound, rec.Result().StatusCode)
+	})
+
+	t.Run("Another existing user's principal 404s instead of serving own principal", func(t *testing.T) {
+		e, _ := setupTestEnv()
+
+		c, rec := createRequest(e, "PROPFIND", ``, nil, nil)
+		c.Request().URL.Path = caldav.PrincipalBasePath + "/user1/"
+		c.Request().RequestURI = caldav.PrincipalBasePath + "/user1/"
+
+		// Authenticated as user15, but requesting user1's principal path.
+		result, _ := caldav.BasicAuth(c, testuser15.Username, "12345678")
+		require.True(t, result)
+
+		err := caldav.PrincipalHandler(c)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusNotFound, rec.Result().StatusCode)
+	})
+
+	t.Run("Nonexistent username 404s with the same status as a mismatched existing one", func(t *testing.T) {
+		e, _ := setupTestEnv()
+
+		c, rec := createRequest(e, "PROPFIND", ``, nil, nil)
+		c.Request().URL.Path = caldav.PrincipalBasePath + "/does-not-exist/"
+		c.Request().RequestURI = caldav.PrincipalBasePath + "/does-not-exist/"
+
+		result, _ := caldav.BasicAuth(c, testuser15.Username, "12345678")
+		require.True(t, result)
+
+		err := caldav.PrincipalHandler(c)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusNotFound, rec.Result().StatusCode)
 	})
 }
 
@@ -1012,5 +1093,651 @@ func TestCaldavAPITokenAuth(t *testing.T) {
 		result, err := caldav.BasicAuth(c, testuser15.Username, "tk_this_is_totally_not_a_valid_token_at_all")
 		require.NoError(t, err)
 		assert.False(t, result, "invalid API token should be rejected")
+	})
+}
+
+// TestCaldavSync verifies that a home-set Depth:1 PROPFIND returns an updated ctag
+// after a task is created, so that iOS Reminders detects the change and fetches it.
+func TestCaldavSync(t *testing.T) {
+	// getCtag returns the getctag value for a project by ID from a Depth:1
+	// PROPFIND on the CalDAV home set.
+	getCtag := func(t *testing.T, e *echo.Echo, projectID string) string {
+		propfindBody := `<?xml version="1.0" encoding="utf-8" ?>
+<D:propfind xmlns:D="DAV:" xmlns:CS="http://calendarserver.org/ns/">
+    <D:prop><CS:getctag/></D:prop>
+</D:propfind>`
+		c, rec := createRequest(e, "PROPFIND", propfindBody, nil, nil)
+		c.Request().Header.Set(echo.HeaderContentType, echo.MIMETextXML)
+		c.Request().Header.Set("Depth", "1")
+		c.Request().URL.Path = caldav.ProjectBasePath + "/"
+		c.Request().RequestURI = caldav.ProjectBasePath + "/"
+		result, err := caldav.BasicAuth(c, testuser15.Username, "12345678")
+		require.NoError(t, err)
+		require.True(t, result)
+		require.NoError(t, caldav.ProjectHandler(c))
+		require.Equal(t, 207, rec.Result().StatusCode)
+
+		type Propstat struct {
+			Prop struct {
+				Getctag string `xml:"http://calendarserver.org/ns/ getctag"`
+			} `xml:"prop"`
+			Status string `xml:"status"`
+		}
+		type Response struct {
+			Href      string     `xml:"href"`
+			Propstats []Propstat `xml:"propstat"`
+		}
+		type Multistatus struct {
+			Responses []Response `xml:"response"`
+		}
+		var ms Multistatus
+		require.NoError(t, xml.Unmarshal(rec.Body.Bytes(), &ms))
+		for _, resp := range ms.Responses {
+			if strings.Contains(resp.Href, "/"+projectID) {
+				for _, ps := range resp.Propstats {
+					if strings.Contains(ps.Status, "200") && ps.Prop.Getctag != "" {
+						return ps.Prop.Getctag
+					}
+				}
+			}
+		}
+		return ""
+	}
+
+	t.Run("Home-set ctag changes after a task is created", func(t *testing.T) {
+		e, _ := setupTestEnv()
+
+		ctag1 := getCtag(t, e, "36")
+		require.NotEmpty(t, ctag1, "project 36 should have a ctag before task creation")
+
+		const vtodo = `BEGIN:VCALENDAR
+VERSION:2.0
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:Project 36 for Caldav tests
+PRODID:-//Vikunja Todo App//EN
+BEGIN:VTODO
+UID:uid-ctag-sync-test
+DTSTAMP:20230301T073337Z
+SUMMARY:Ctag sync test task
+CREATED:20230301T073337Z
+LAST-MODIFIED:20230301T073337Z
+STATUS:NEEDS-ACTION
+END:VTODO
+END:VCALENDAR`
+		rec2, err := newCaldavTestRequestWithUser(
+			t, e, http.MethodPut, caldav.TaskHandler, &testuser15, vtodo,
+			nil, map[string]string{"project": "36", "task": "uid-ctag-sync-test"},
+		)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusCreated, rec2.Result().StatusCode)
+
+		ctag2 := getCtag(t, e, "36")
+		require.NotEmpty(t, ctag2, "project 36 should still have a ctag after task creation")
+		assert.NotEqual(t, ctag1, ctag2, "ctag for project 36 must change after a task is created")
+	})
+
+	t.Run("Home-set ctag changes after a label is added to a task", func(t *testing.T) {
+		e, _ := setupTestEnv()
+
+		ctag1 := getCtag(t, e, "36")
+		require.NotEmpty(t, ctag1, "project 36 should have a ctag before the label change")
+
+		// Task 40 lives in project 36; label 5 is not yet attached to it.
+		s := db.NewSession()
+		defer s.Close()
+		lt := &models.LabelTask{TaskID: 40, LabelID: 5}
+		require.NoError(t, lt.Create(s, &testuser15))
+		require.NoError(t, s.Commit())
+
+		ctag2 := getCtag(t, e, "36")
+		require.NotEmpty(t, ctag2, "project 36 should still have a ctag after the label change")
+		assert.NotEqual(t, ctag1, ctag2, "ctag for project 36 must change after a label is added to one of its tasks")
+	})
+}
+
+func TestCaldavProppatch(t *testing.T) {
+	const setBody = `<?xml version="1.0" encoding="utf-8" ?>
+<D:propertyupdate xmlns:D="DAV:" xmlns:ICAL="http://apple.com/ns/ical/">
+	<D:set>
+		<D:prop>
+			<D:displayname>My Project</D:displayname>
+			<ICAL:calendar-color>#FF0000FF</ICAL:calendar-color>
+		</D:prop>
+	</D:set>
+</D:propertyupdate>`
+
+	type propstat struct {
+		Status string `xml:"status"`
+	}
+	type response struct {
+		Href      string     `xml:"href"`
+		Propstats []propstat `xml:"propstat"`
+	}
+	type multistatus struct {
+		Responses []response `xml:"response"`
+	}
+
+	t.Run("Set properties on a collection returns 207 with a 403 propstat per property", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		rec, err := newCaldavTestRequestWithUser(t, e, "PROPPATCH", caldav.ProjectHandler, &testuser15, setBody, nil, map[string]string{"project": "36"})
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusMultiStatus, rec.Result().StatusCode)
+
+		body := rec.Body.String()
+		assert.Contains(t, body, "displayname")
+		assert.Contains(t, body, "calendar-color")
+
+		var ms multistatus
+		require.NoError(t, xml.Unmarshal([]byte(body), &ms))
+		require.Len(t, ms.Responses, 1)
+		require.Len(t, ms.Responses[0].Propstats, 2, "one propstat per submitted property")
+		for _, ps := range ms.Responses[0].Propstats {
+			assert.Contains(t, ps.Status, "403")
+		}
+	})
+
+	t.Run("Remove properties on a collection returns 207 with a 403 propstat per property", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		const removeBody = `<?xml version="1.0" encoding="utf-8" ?>
+<D:propertyupdate xmlns:D="DAV:">
+	<D:remove>
+		<D:prop>
+			<D:displayname/>
+		</D:prop>
+	</D:remove>
+</D:propertyupdate>`
+		rec, err := newCaldavTestRequestWithUser(t, e, "PROPPATCH", caldav.ProjectHandler, &testuser15, removeBody, nil, map[string]string{"project": "36"})
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusMultiStatus, rec.Result().StatusCode)
+
+		var ms multistatus
+		require.NoError(t, xml.Unmarshal(rec.Body.Bytes(), &ms))
+		require.Len(t, ms.Responses, 1)
+		require.Len(t, ms.Responses[0].Propstats, 1)
+		assert.Contains(t, ms.Responses[0].Propstats[0].Status, "403")
+	})
+
+	t.Run("Malformed XML body returns 400", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		rec, err := newCaldavTestRequestWithUser(t, e, "PROPPATCH", caldav.ProjectHandler, &testuser15, `this is not xml`, nil, map[string]string{"project": "36"})
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusBadRequest, rec.Result().StatusCode)
+	})
+
+	t.Run("Nonexistent project returns 404", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		rec, err := newCaldavTestRequestWithUser(t, e, "PROPPATCH", caldav.ProjectHandler, &testuser15, setBody, nil, map[string]string{"project": "999999"})
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusNotFound, rec.Result().StatusCode)
+	})
+
+	t.Run("Project without access returns 403", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		// testuser6 has no access to project 36.
+		rec, err := newCaldavTestRequestWithUser(t, e, "PROPPATCH", caldav.ProjectHandler, &testuser6, setBody, nil, map[string]string{"project": "36"})
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusForbidden, rec.Result().StatusCode)
+	})
+
+	t.Run("PROPPATCH on a task resource returns 207 with a 403 propstat", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		rec, err := newCaldavTestRequestWithUser(t, e, "PROPPATCH", caldav.TaskHandler, &testuser15, setBody, nil, map[string]string{"project": "36", "task": "uid-caldav-test"})
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusMultiStatus, rec.Result().StatusCode)
+
+		var ms multistatus
+		require.NoError(t, xml.Unmarshal(rec.Body.Bytes(), &ms))
+		require.Len(t, ms.Responses, 1)
+		require.Len(t, ms.Responses[0].Propstats, 2)
+	})
+
+	t.Run("PROPPATCH on a task resource for a nonexistent project returns 404", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		rec, err := newCaldavTestRequestWithUser(t, e, "PROPPATCH", caldav.TaskHandler, &testuser15, setBody, nil, map[string]string{"project": "999999", "task": "uid-caldav-test"})
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusNotFound, rec.Result().StatusCode)
+	})
+}
+
+func TestCaldavSyncCollection(t *testing.T) {
+	// syncReport builds a sync-collection REPORT body; an empty token becomes
+	// <D:sync-token/> (initial sync).
+	syncReport := func(token string) string {
+		var tokenEl string
+		if token == "" {
+			tokenEl = "<D:sync-token/>"
+		} else {
+			tokenEl = "<D:sync-token>" + token + "</D:sync-token>"
+		}
+		return `<?xml version="1.0" encoding="utf-8"?>
+<D:sync-collection xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">
+  ` + tokenEl + `
+  <D:sync-level>1</D:sync-level>
+  <D:prop>
+    <D:getetag/>
+    <C:calendar-data/>
+  </D:prop>
+</D:sync-collection>`
+	}
+
+	doSyncReport := func(t *testing.T, token string) *httptest.ResponseRecorder {
+		t.Helper()
+		e, _ := setupTestEnv()
+		rec, err := newCaldavTestRequestWithUser(t, e, "REPORT", caldav.ProjectHandler, &testuser15, syncReport(token), nil, map[string]string{"project": "36"})
+		require.NoError(t, err)
+		return rec
+	}
+
+	t.Run("Empty sync-token returns all tasks with 207", func(t *testing.T) {
+		rec := doSyncReport(t, "")
+		assert.Equal(t, http.StatusMultiStatus, rec.Result().StatusCode)
+		body := rec.Body.String()
+		assert.Contains(t, body, "multistatus")
+		assert.Contains(t, body, "sync-token")
+		assert.Contains(t, body, "uid-caldav-test-parent-task")
+	})
+
+	t.Run("Valid token returns only tasks changed since", func(t *testing.T) {
+		e, _ := setupTestEnv()
+
+		// Create a new task so there is a change newer than the token.
+		const vtodo = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Vikunja Todo App//EN
+BEGIN:VTODO
+UID:uid-sync-delta-test
+DTSTAMP:20230301T073337Z
+SUMMARY:Sync delta test task
+STATUS:NEEDS-ACTION
+END:VTODO
+END:VCALENDAR`
+		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, vtodo, nil, map[string]string{"project": "36", "task": "uid-sync-delta-test"})
+		require.NoError(t, err)
+		require.Equal(t, http.StatusCreated, rec.Result().StatusCode)
+
+		recentToken := fmt.Sprintf(`data:,"36-%d"`, time.Now().Add(-time.Hour).Unix())
+		rec, err = newCaldavTestRequestWithUser(t, e, "REPORT", caldav.ProjectHandler, &testuser15, syncReport(recentToken), nil, map[string]string{"project": "36"})
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusMultiStatus, rec.Result().StatusCode)
+		body := rec.Body.String()
+		assert.Contains(t, body, "uid-sync-delta-test")
+		// Fixture tasks were last updated long before the token
+		assert.NotContains(t, body, "uid-caldav-test-parent-task")
+		assert.Contains(t, body, "sync-token")
+	})
+
+	t.Run("Valid token after all tasks returns empty delta with new token", func(t *testing.T) {
+		// Token timestamped well after all fixture tasks
+		futureToken := `data:,"36-9999999999"`
+		rec := doSyncReport(t, futureToken)
+		assert.Equal(t, http.StatusMultiStatus, rec.Result().StatusCode)
+		body := rec.Body.String()
+		// No task hrefs in an empty delta — just the sync-token element
+		assert.NotContains(t, body, "uid-caldav-test-parent-task")
+		assert.Contains(t, body, "sync-token")
+	})
+
+	t.Run("Malformed sync-token returns 403 valid-sync-token", func(t *testing.T) {
+		rec := doSyncReport(t, "not-a-valid-token")
+		assert.Equal(t, http.StatusForbidden, rec.Result().StatusCode)
+		assert.Contains(t, rec.Body.String(), "valid-sync-token")
+	})
+
+	t.Run("Token from different project returns 403 valid-sync-token", func(t *testing.T) {
+		// Token for project 99 presented to project 36
+		wrongProjectToken := `data:,"99-1000000000"`
+		rec := doSyncReport(t, wrongProjectToken)
+		assert.Equal(t, http.StatusForbidden, rec.Result().StatusCode)
+		assert.Contains(t, rec.Body.String(), "valid-sync-token")
+	})
+
+	t.Run("Token older than the retention window returns 403 valid-sync-token", func(t *testing.T) {
+		staleToken := fmt.Sprintf(`data:,"36-%d"`, time.Now().Add(-models.TaskDeleteRetention-time.Hour).Unix())
+		rec := doSyncReport(t, staleToken)
+		assert.Equal(t, http.StatusForbidden, rec.Result().StatusCode)
+		assert.Contains(t, rec.Body.String(), "valid-sync-token")
+	})
+
+	t.Run("Response includes calendar-data when requested", func(t *testing.T) {
+		rec := doSyncReport(t, "")
+		assert.Equal(t, http.StatusMultiStatus, rec.Result().StatusCode)
+		body := rec.Body.String()
+		assert.Contains(t, body, "calendar-data")
+		assert.Contains(t, body, "BEGIN:VCALENDAR")
+		assert.Contains(t, body, "VTODO")
+	})
+
+	t.Run("Delta sync returns 404 for deleted task", func(t *testing.T) {
+		e, _ := setupTestEnv()
+
+		// CalDAV DELETE soft-deletes the task; the delta must report it as a 404.
+		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodDelete, caldav.TaskHandler, &testuser15, ``, nil, map[string]string{"project": "36", "task": "uid-caldav-test-parent-task"})
+		require.NoError(t, err)
+		require.Equal(t, http.StatusNoContent, rec.Result().StatusCode)
+
+		// Use a token from before the deletion
+		oldToken := fmt.Sprintf(`data:,"36-%d"`, time.Now().Add(-time.Hour).Unix())
+		rec, err = newCaldavTestRequestWithUser(t, e, "REPORT", caldav.ProjectHandler, &testuser15, syncReport(oldToken), nil, map[string]string{"project": "36"})
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusMultiStatus, rec.Result().StatusCode)
+		body := rec.Body.String()
+		assert.Contains(t, body, "uid-caldav-test-parent-task.ics")
+		assert.Contains(t, body, "404 Not Found")
+	})
+}
+
+// TestCaldavPartialUpdate: properties a CalDAV PUT doesn't carry must survive the update.
+func TestCaldavPartialUpdate(t *testing.T) {
+	const vtodoHeader = `BEGIN:VCALENDAR
+VERSION:2.0
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:Project 36 for Caldav tests
+PRODID:-//Vikunja Todo App//EN
+`
+	const vtodoFooter = `
+END:VCALENDAR`
+
+	getTask := func(t *testing.T, uid string) *models.Task {
+		t.Helper()
+		s := db.NewSession()
+		defer s.Close()
+		tasks, err := models.GetTasksByUIDs(s, []string{uid}, &testuser15)
+		require.NoError(t, err)
+		require.Len(t, tasks, 1)
+		return tasks[0]
+	}
+
+	t.Run("PUT echoing all fields updates them (regression guard)", func(t *testing.T) {
+		e, _ := setupTestEnv()
+
+		const vtodo = vtodoHeader + `BEGIN:VTODO
+UID:uid-caldav-test
+DTSTAMP:20230301T073337Z
+SUMMARY:Updated title
+DESCRIPTION:Updated description
+PRIORITY:9
+DUE:20230305T150000Z
+STATUS:COMPLETED
+END:VTODO` + vtodoFooter
+
+		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, vtodo, nil, map[string]string{"project": "36", "task": "uid-caldav-test"})
+		require.NoError(t, err)
+		assert.Equal(t, 201, rec.Result().StatusCode)
+
+		task := getTask(t, "uid-caldav-test")
+		assert.Equal(t, "Updated title", task.Title)
+		assert.Contains(t, task.Description, "Updated description")
+		assert.Equal(t, int64(1), task.Priority)
+		assert.True(t, task.Done)
+		assert.True(t, task.DueDate.Equal(time.Date(2023, 3, 5, 15, 0, 0, 0, time.UTC)), "got %s", task.DueDate)
+	})
+
+	t.Run("PUT preserves repeat_after not present in VTODO", func(t *testing.T) {
+		e, _ := setupTestEnv()
+
+		s := db.NewSession()
+		_, err := s.ID(int64(40)).Cols("repeat_after").Update(&models.Task{RepeatAfter: 86400})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		s.Close()
+
+		const vtodo = vtodoHeader + `BEGIN:VTODO
+UID:uid-caldav-test
+DTSTAMP:20230301T073337Z
+SUMMARY:Just a title change
+END:VTODO` + vtodoFooter
+
+		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, vtodo, nil, map[string]string{"project": "36", "task": "uid-caldav-test"})
+		require.NoError(t, err)
+		assert.Equal(t, 201, rec.Result().StatusCode)
+
+		task := getTask(t, "uid-caldav-test")
+		assert.Equal(t, "Just a title change", task.Title)
+		assert.Equal(t, int64(86400), task.RepeatAfter, "repeat_after must survive a PUT that doesn't carry RRULE")
+	})
+
+	t.Run("PUT preserves percent_done not present in VTODO", func(t *testing.T) {
+		e, _ := setupTestEnv()
+
+		s := db.NewSession()
+		_, err := s.ID(int64(40)).Cols("percent_done").Update(&models.Task{PercentDone: 0.5})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		s.Close()
+
+		const vtodo = vtodoHeader + `BEGIN:VTODO
+UID:uid-caldav-test
+DTSTAMP:20230301T073337Z
+SUMMARY:Just a title change
+END:VTODO` + vtodoFooter
+
+		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, vtodo, nil, map[string]string{"project": "36", "task": "uid-caldav-test"})
+		require.NoError(t, err)
+		assert.Equal(t, 201, rec.Result().StatusCode)
+
+		task := getTask(t, "uid-caldav-test")
+		assert.InDelta(t, 0.5, task.PercentDone, 0.0001, "percent_done must survive a PUT that doesn't carry PERCENT-COMPLETE")
+	})
+
+	t.Run("PUT preserves assignees, reminders and favorite state", func(t *testing.T) {
+		e, _ := setupTestEnv()
+
+		s := db.NewSession()
+		_, err := s.Insert(&models.TaskAssginee{TaskID: 40, UserID: testuser15.ID})
+		require.NoError(t, err)
+		_, err = s.Insert(&models.Favorite{EntityID: 40, UserID: testuser15.ID, Kind: models.FavoriteKindTask})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		s.Close()
+
+		before := getTask(t, "uid-caldav-test")
+		require.Len(t, before.Assignees, 1)
+		require.Len(t, before.Reminders, 1)
+		require.True(t, before.IsFavorite)
+
+		const vtodo = vtodoHeader + `BEGIN:VTODO
+UID:uid-caldav-test
+DTSTAMP:20230301T073337Z
+SUMMARY:Just a title change
+END:VTODO` + vtodoFooter
+
+		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, vtodo, nil, map[string]string{"project": "36", "task": "uid-caldav-test"})
+		require.NoError(t, err)
+		require.Equal(t, 201, rec.Result().StatusCode)
+
+		task := getTask(t, "uid-caldav-test")
+		assert.Equal(t, "Just a title change", task.Title)
+		require.Len(t, task.Assignees, 1, "assignees must survive a PUT, a VTODO cannot express them")
+		assert.Equal(t, testuser15.ID, task.Assignees[0].ID)
+		require.Len(t, task.Reminders, 1, "reminders must survive a PUT without VALARM")
+		assert.Equal(t, before.Reminders[0].Reminder.UTC(), task.Reminders[0].Reminder.UTC())
+		assert.True(t, task.IsFavorite, "favorite state must survive a PUT, a VTODO cannot express it")
+	})
+
+	t.Run("PUT omitting CATEGORIES preserves labels; PUT with CATEGORIES replaces them", func(t *testing.T) {
+		e, _ := setupTestEnv()
+
+		const createVtodo = vtodoHeader + `BEGIN:VTODO
+UID:uid-caldav-labels-test
+DTSTAMP:20230301T073337Z
+SUMMARY:Task with labels
+CATEGORIES:tag1,tag2
+END:VTODO` + vtodoFooter
+
+		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, createVtodo, nil, map[string]string{"project": "36", "task": "uid-caldav-labels-test"})
+		require.NoError(t, err)
+		require.Equal(t, 201, rec.Result().StatusCode)
+		require.Len(t, getTask(t, "uid-caldav-labels-test").Labels, 2)
+
+		const updateVtodoNoCategories = vtodoHeader + `BEGIN:VTODO
+UID:uid-caldav-labels-test
+DTSTAMP:20230301T073337Z
+SUMMARY:Task with labels, updated
+END:VTODO` + vtodoFooter
+
+		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, updateVtodoNoCategories, nil, map[string]string{"project": "36", "task": "uid-caldav-labels-test"})
+		require.NoError(t, err)
+		require.Equal(t, 201, rec.Result().StatusCode)
+
+		task := getTask(t, "uid-caldav-labels-test")
+		assert.Equal(t, "Task with labels, updated", task.Title)
+		assert.Len(t, task.Labels, 2, "labels must survive a PUT that omits CATEGORIES")
+
+		const updateVtodoNewCategories = vtodoHeader + `BEGIN:VTODO
+UID:uid-caldav-labels-test
+DTSTAMP:20230301T073337Z
+SUMMARY:Task with labels, updated
+CATEGORIES:tag3
+END:VTODO` + vtodoFooter
+
+		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, updateVtodoNewCategories, nil, map[string]string{"project": "36", "task": "uid-caldav-labels-test"})
+		require.NoError(t, err)
+		require.Equal(t, 201, rec.Result().StatusCode)
+
+		task = getTask(t, "uid-caldav-labels-test")
+		require.Len(t, task.Labels, 1, "CATEGORIES present must replace labels")
+		assert.Equal(t, "tag3", task.Labels[0].Title)
+	})
+
+	t.Run("PUT with empty CATEGORIES clears labels", func(t *testing.T) {
+		e, _ := setupTestEnv()
+
+		const createVtodo = vtodoHeader + `BEGIN:VTODO
+UID:uid-caldav-labels-clear-test
+DTSTAMP:20230301T073337Z
+SUMMARY:Task with labels
+CATEGORIES:tag1,tag2
+END:VTODO` + vtodoFooter
+
+		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, createVtodo, nil, map[string]string{"project": "36", "task": "uid-caldav-labels-clear-test"})
+		require.NoError(t, err)
+		require.Equal(t, 201, rec.Result().StatusCode)
+		require.Len(t, getTask(t, "uid-caldav-labels-clear-test").Labels, 2)
+
+		const updateVtodoEmptyCategories = vtodoHeader + `BEGIN:VTODO
+UID:uid-caldav-labels-clear-test
+DTSTAMP:20230301T073337Z
+SUMMARY:Task with labels, cleared
+CATEGORIES:
+END:VTODO` + vtodoFooter
+
+		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, updateVtodoEmptyCategories, nil, map[string]string{"project": "36", "task": "uid-caldav-labels-clear-test"})
+		require.NoError(t, err)
+		require.Equal(t, 201, rec.Result().StatusCode)
+
+		task := getTask(t, "uid-caldav-labels-clear-test")
+		assert.Equal(t, "Task with labels, cleared", task.Title)
+		assert.Empty(t, task.Labels, "an explicitly empty CATEGORIES must clear labels")
+	})
+
+	t.Run("PUT with DTEND preserves end_date round trip", func(t *testing.T) {
+		e, _ := setupTestEnv()
+
+		const vtodo = vtodoHeader + `BEGIN:VTODO
+UID:uid-caldav-dtend-test
+DTSTAMP:20230301T073337Z
+SUMMARY:Task with due and end date
+DUE:20230304T150000Z
+DTSTART:20230301T090000Z
+DTEND:20230301T170000Z
+END:VTODO` + vtodoFooter
+
+		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, vtodo, nil, map[string]string{"project": "36", "task": "uid-caldav-dtend-test"})
+		require.NoError(t, err)
+		require.Equal(t, 201, rec.Result().StatusCode)
+
+		task := getTask(t, "uid-caldav-dtend-test")
+		require.False(t, task.EndDate.IsZero())
+		assert.True(t, task.EndDate.Equal(time.Date(2023, 3, 1, 17, 0, 0, 0, time.UTC)), "got %s", task.EndDate)
+
+		// Re-PUT the exact same VTODO, as a client echoing the resource back on update.
+		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, vtodo, nil, map[string]string{"project": "36", "task": "uid-caldav-dtend-test"})
+		require.NoError(t, err)
+		require.Equal(t, 201, rec.Result().StatusCode)
+
+		task = getTask(t, "uid-caldav-dtend-test")
+		require.False(t, task.EndDate.IsZero())
+		assert.True(t, task.EndDate.Equal(time.Date(2023, 3, 1, 17, 0, 0, 0, time.UTC)), "got %s", task.EndDate)
+	})
+
+	t.Run("DTSTART+DURATION (RFC 5545) computes end_date", func(t *testing.T) {
+		e, _ := setupTestEnv()
+
+		const vtodo = vtodoHeader + `BEGIN:VTODO
+UID:uid-caldav-duration-test
+DTSTAMP:20230301T073337Z
+SUMMARY:Task with duration
+DTSTART:20230301T090000Z
+DURATION:PT120H0M0S
+END:VTODO` + vtodoFooter
+
+		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, vtodo, nil, map[string]string{"project": "36", "task": "uid-caldav-duration-test"})
+		require.NoError(t, err)
+		require.Equal(t, 201, rec.Result().StatusCode)
+
+		task := getTask(t, "uid-caldav-duration-test")
+		require.False(t, task.EndDate.IsZero())
+		assert.Equal(t, task.StartDate.Add(120*time.Hour), task.EndDate)
+	})
+
+	t.Run("Completing a repeating task via CalDAV reschedules and keeps recurrence", func(t *testing.T) {
+		e, _ := setupTestEnv()
+
+		s := db.NewSession()
+		_, err := s.ID(int64(40)).Cols("repeat_after").Update(&models.Task{RepeatAfter: 86400})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		s.Close()
+
+		before := getTask(t, "uid-caldav-test")
+		require.False(t, before.DueDate.IsZero())
+
+		const vtodo = vtodoHeader + `BEGIN:VTODO
+UID:uid-caldav-test
+DTSTAMP:20230301T073337Z
+SUMMARY:Title Caldav Test
+DUE:20230301T150000Z
+STATUS:COMPLETED
+END:VTODO` + vtodoFooter
+
+		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, vtodo, nil, map[string]string{"project": "36", "task": "uid-caldav-test"})
+		require.NoError(t, err)
+		require.Equal(t, 201, rec.Result().StatusCode)
+
+		after := getTask(t, "uid-caldav-test")
+		assert.False(t, after.Done, "a repeating task reopens instead of staying done")
+		assert.Equal(t, int64(86400), after.RepeatAfter, "recurrence must survive completion via CalDAV")
+		assert.True(t, after.DueDate.After(before.DueDate), "due date must be rescheduled")
+	})
+
+	t.Run("Completing a repeating task without DUE still reschedules", func(t *testing.T) {
+		e, _ := setupTestEnv()
+
+		s := db.NewSession()
+		_, err := s.ID(int64(40)).Cols("repeat_after").Update(&models.Task{RepeatAfter: 86400})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		s.Close()
+
+		before := getTask(t, "uid-caldav-test")
+		require.False(t, before.DueDate.IsZero())
+
+		// Most CalDAV clients only send back STATUS:COMPLETED, without any date properties.
+		const vtodo = vtodoHeader + `BEGIN:VTODO
+UID:uid-caldav-test
+DTSTAMP:20230301T073337Z
+SUMMARY:Title Caldav Test
+STATUS:COMPLETED
+END:VTODO` + vtodoFooter
+
+		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, vtodo, nil, map[string]string{"project": "36", "task": "uid-caldav-test"})
+		require.NoError(t, err)
+		require.Equal(t, 201, rec.Result().StatusCode)
+
+		after := getTask(t, "uid-caldav-test")
+		assert.False(t, after.Done, "a repeating task reopens instead of staying done")
+		assert.Equal(t, int64(86400), after.RepeatAfter, "recurrence must survive completion via CalDAV")
+		assert.True(t, after.DueDate.After(before.DueDate),
+			"due date must be rescheduled even when the VTODO carries no DUE, got %s, was %s", after.DueDate, before.DueDate)
 	})
 }

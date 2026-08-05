@@ -132,7 +132,7 @@ func TestDuplicateIssuersDetected(t *testing.T) {
 			"clientsecret": "secret2",
 		},
 	})
-	_ = keyvalue.Del("openid_providers")
+	CleanupSavedOpenIDProviders()
 
 	providers, err := GetAllProviders()
 	require.Error(t, err)
@@ -142,6 +142,15 @@ func TestDuplicateIssuersDetected(t *testing.T) {
 	var dupErr *ErrDuplicateOIDCIssuer
 	require.ErrorAs(t, err, &dupErr)
 	assert.Equal(t, server.URL, dupErr.Issuer)
+
+	// A failed duplicate check must not leave per-provider entries behind:
+	// GetProvider resolves them directly, which would keep the duplicate
+	// providers usable even though the list build was refused.
+	for _, key := range []string{"provider1", "provider2"} {
+		exists, err := keyvalue.GetWithValue("openid_provider_"+key, &Provider{})
+		require.NoError(t, err)
+		assert.False(t, exists, "per-provider entry %s must not be persisted on a duplicate-issuer error", key)
+	}
 }
 
 func TestUniqueIssuersAllowed(t *testing.T) {
@@ -277,6 +286,31 @@ func TestGetProviderFromMapStringBooleans(t *testing.T) {
 			assert.Equal(t, tc.wantRequireAvailability, provider.RequireAvailability, "RequireAvailability")
 		})
 	}
+}
+
+func TestCleanupRemovesPerProviderEntries(t *testing.T) {
+	defer func() {
+		config.AuthOpenIDEnabled.Set(false)
+		config.AuthOpenIDProviders.Set(nil)
+		CleanupSavedOpenIDProviders()
+	}()
+
+	config.AuthOpenIDEnabled.Set(true)
+	config.AuthOpenIDProviders.Set(map[string]interface{}{
+		"stale": map[string]interface{}{
+			"name":         "Stale Provider",
+			"authurl":      "http://127.0.0.1:1",
+			"clientid":     "client1",
+			"clientsecret": "secret1",
+		},
+	})
+	require.NoError(t, keyvalue.Put("openid_provider_stale", &Provider{Name: "Stale Provider"}))
+
+	CleanupSavedOpenIDProviders()
+
+	exists, err := keyvalue.GetWithValue("openid_provider_stale", &Provider{})
+	require.NoError(t, err)
+	assert.False(t, exists, "cleanup must remove per-provider entries, they take precedence over a rebuilt provider list")
 }
 
 func TestFailedDiscoverySkippedInIssuerCheck(t *testing.T) {

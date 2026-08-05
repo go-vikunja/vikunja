@@ -23,7 +23,7 @@ import "context"
 // the bot in step 8 of init).
 func (c *Client) CreateToken(ctx context.Context, t *APIToken) (*APIToken, error) {
 	var out APIToken
-	if err := c.Do(ctx, "PUT", "/tokens", nil, t, &out); err != nil {
+	if err := c.Do(ctx, "POST", "/tokens", nil, t, &out); err != nil {
 		return nil, err
 	}
 	return &out, nil

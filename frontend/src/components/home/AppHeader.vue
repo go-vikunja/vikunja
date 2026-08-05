@@ -39,9 +39,10 @@
 				class="project-title-dropdown"
 				:project="currentProject"
 			>
-				<template #trigger="{ toggleOpen }">
+				<template #trigger="{ toggleOpen, open }">
 					<BaseButton
 						class="project-title-button"
+						:aria-expanded="open"
 						@click="toggleOpen"
 					>
 						<span class="is-sr-only">{{ $t('project.openSettingsMenu') }}</span>
@@ -71,6 +72,7 @@
 						class="username-dropdown-trigger"
 						variant="secondary"
 						:shadow="false"
+						:aria-expanded="open"
 						@click="toggleOpen"
 					>
 						<img

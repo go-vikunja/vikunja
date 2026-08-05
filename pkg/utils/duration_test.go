@@ -36,4 +36,28 @@ func TestParseISO8601Duration(t *testing.T) {
 
 		assert.Equal(t, expected, dur)
 	})
+	t.Run("weeks", func(t *testing.T) {
+		dur := ParseISO8601Duration("P1W")
+		expected, _ := time.ParseDuration("168h")
+
+		assert.Equal(t, expected, dur)
+	})
+	t.Run("negative weeks", func(t *testing.T) {
+		dur := ParseISO8601Duration("-P2W")
+		expected, _ := time.ParseDuration("-336h")
+
+		assert.Equal(t, expected, dur)
+	})
+	t.Run("weeks combined with days", func(t *testing.T) {
+		dur := ParseISO8601Duration("P1W2D")
+		expected, _ := time.ParseDuration("216h")
+
+		assert.Equal(t, expected, dur)
+	})
+	t.Run("weeks combined with other units", func(t *testing.T) {
+		dur := ParseISO8601Duration("P1W2DT3H4M5S")
+		expected, _ := time.ParseDuration("219h4m5s")
+
+		assert.Equal(t, expected, dur)
+	})
 }

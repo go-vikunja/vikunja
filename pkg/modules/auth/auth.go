@@ -29,7 +29,7 @@ import (
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
-	"code.vikunja.io/api/pkg/modules/humaecho5"
+	"code.vikunja.io/api/pkg/modules/humabridge"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
@@ -40,11 +40,12 @@ import (
 	"xorm.io/xorm"
 )
 
-// These are all valid auth types
+// All valid auth types; AuthTypeUser lives in pkg/user since
+// that package parses claims and can't import this one.
 const (
-	AuthTypeUnknown int = iota
-	AuthTypeUser
-	AuthTypeLinkShare
+	AuthTypeUnknown   int = 0
+	AuthTypeUser          = user.AuthTypeUser
+	AuthTypeLinkShare int = 2
 )
 
 // Token represents an authentication token
@@ -84,7 +85,7 @@ func SetRefreshTokenCookie(c *echo.Context, token string, maxAge int) {
 	if secure {
 		sameSite = http.SameSiteNoneMode
 	}
-	c.SetCookie(&http.Cookie{
+	c.SetCookie(&http.Cookie{ //nolint:gosec // G124: Secure/SameSite are intentionally conditional on the https scheme (see above); HttpOnly is always set.
 		Name:     RefreshTokenCookieName,
 		Value:    token,
 		Path:     getRefreshTokenCookiePath(),
@@ -112,12 +113,13 @@ type IssuedUserToken struct {
 // IssueUserToken creates a session for the user and mints a JWT access token plus
 // a refresh token for it. It is the transport-agnostic core both v1 (which writes
 // the echo response) and v2 (Huma) call; callers set the refresh cookie and the
-// Cache-Control header themselves via WriteUserAuthCookies.
-func IssueUserToken(ctx context.Context, u *user.User, deviceInfo, ipAddress string, long bool) (*IssuedUserToken, error) {
+// Cache-Control header themselves via WriteUserAuthCookies. Pass oidc for
+// OpenID Connect logins to store the logout data; nil otherwise.
+func IssueUserToken(ctx context.Context, u *user.User, deviceInfo, ipAddress string, long bool, oidc *models.SessionOIDCData) (*IssuedUserToken, error) {
 	s := db.NewSession()
 	defer s.Close()
 
-	session, err := models.CreateSession(s, u.ID, deviceInfo, ipAddress, long)
+	session, err := models.CreateSession(s, u.ID, deviceInfo, ipAddress, long, oidc)
 	if err != nil {
 		_ = s.Rollback()
 		return nil, err
@@ -154,15 +156,17 @@ func IssueUserToken(ctx context.Context, u *user.User, deviceInfo, ipAddress str
 // Cache-Control: no-store header on a response. The cookie is path-scoped to the
 // refresh endpoint, so the browser only sends it there; JavaScript never sees the
 // refresh token, which protects it from XSS. Shared by the v1 echo handlers and
-// the v2 Huma handlers (which reach the echo context via humaecho5.Unwrap).
+// the v2 Huma handlers (which reach the echo context via the humabridge
+// EchoContextKey stash on their request context).
 func WriteUserAuthCookies(c *echo.Context, token *IssuedUserToken) {
 	SetRefreshTokenCookie(c, token.RefreshToken, token.CookieMaxAge)
 	c.Response().Header().Set("Cache-Control", "no-store")
 }
 
 // NewUserAuthTokenResponse creates a new user auth token response from a user object.
-func NewUserAuthTokenResponse(u *user.User, c *echo.Context, long bool) error {
-	token, err := IssueUserToken(c.Request().Context(), u, c.Request().UserAgent(), c.RealIP(), long)
+// Pass oidc for OpenID Connect logins to store the logout data; nil otherwise.
+func NewUserAuthTokenResponse(u *user.User, c *echo.Context, long bool, oidc *models.SessionOIDCData) error {
+	token, err := IssueUserToken(c.Request().Context(), u, c.Request().UserAgent(), c.RealIP(), long, oidc)
 	if err != nil {
 		return err
 	}
@@ -443,11 +447,12 @@ func SessionIDFromContext(c *echo.Context) string {
 
 // GetAuthFromContext retrieves the authenticated web.Auth from a plain
 // context.Context, bridging Huma handlers to Vikunja's echo JWT flow. The
-// humaecho5 adapter stashes the *echo.Context under EchoContextKey first.
+// humabridge group middleware stashes the *echo.Context under EchoContextKey
+// first.
 func GetAuthFromContext(ctx context.Context) (web.Auth, error) {
-	ec, ok := ctx.Value(humaecho5.EchoContextKey).(*echo.Context)
+	ec, ok := ctx.Value(humabridge.EchoContextKey).(*echo.Context)
 	if !ok {
-		return nil, fmt.Errorf("no echo.Context on request context; are you calling GetAuthFromContext from a Huma handler dispatched by humaecho5?")
+		return nil, fmt.Errorf("no echo.Context on request context; are you calling GetAuthFromContext from a Huma handler mounted via humabridge?")
 	}
 	return GetAuthFromClaims(ec)
 }

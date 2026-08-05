@@ -52,6 +52,9 @@ const (
 	taskPropertyLabels        string = "labels"
 	taskPropertyReminders     string = "reminders"
 	taskPropertyCreator       string = "creator"
+	// Not a task column: sorts by search relevance on ParadeDB. Valid for
+	// sorting only, silently skipped when the database or query cannot score.
+	taskPropertyRelevance string = "relevance"
 )
 
 const (
@@ -81,6 +84,12 @@ func (sp *sortParam) validate() error {
 
 	if sp.sortBy == taskPropertyPosition && sp.projectViewID == 0 {
 		return ErrMustHaveProjectViewToSortByPosition{}
+	}
+
+	// Deliberately not part of validateTaskFieldForSorting: that list doubles as
+	// the filterable-field list via validateTaskField, and relevance is not filterable.
+	if sp.sortBy == taskPropertyRelevance {
+		return nil
 	}
 
 	return validateTaskFieldForSorting(sp.sortBy)

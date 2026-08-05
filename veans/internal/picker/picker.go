@@ -21,8 +21,8 @@ import (
 	"fmt"
 	"os"
 
+	tea "charm.land/bubbletea/v2"
 	"code.vikunja.io/veans/internal/client"
-	tea "github.com/charmbracelet/bubbletea"
 	"golang.org/x/term"
 )
 

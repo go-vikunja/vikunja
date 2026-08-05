@@ -34,6 +34,7 @@
 								<BaseButton
 									v-if="!disabled"
 									class="delete is-small"
+									:aria-label="$t('input.multiselect.removeItem')"
 									@click="() => remove(item)"
 								/>
 							</span>
@@ -48,18 +49,26 @@
 					v-model="query"
 					type="text"
 					class="input"
+					role="combobox"
 					:name="name"
 					:placeholder="placeholder"
+					:aria-label="accessibleName"
+					:aria-expanded="searchResultsVisible"
+					:aria-controls="searchResultsVisible ? listboxId : undefined"
+					aria-autocomplete="list"
+					aria-haspopup="listbox"
 					:autocomplete="autocompleteEnabled ? undefined : 'off'"
 					:spellcheck="autocompleteEnabled ? undefined : 'false'"
 					@keyup="search"
 					@keyup.enter.exact.prevent="() => createOrSelectOnEnter()"
 					@keydown.down.exact.prevent="() => preSelect(0)"
+					@keydown.esc="handleEscape"
 					@focus="handleFocus"
 				>
 				<BaseButton 
 					v-if="removalAvailable && !disabled"
 					class="removal-button"
+					:aria-label="$t('input.multiselect.clear')"
 					@click="resetSelectedValue"
 				>
 					<Icon icon="times" />
@@ -70,16 +79,21 @@
 		<CustomTransition name="fade">
 			<div
 				v-if="searchResultsVisible"
+				:id="listboxId"
 				class="search-results"
 				:class="{'search-results-inline': inline}"
+				role="listbox"
+				:aria-label="accessibleName"
 			>
 				<BaseButton
 					v-for="(data, index) in filteredSearchResults"
 					:key="index"
 					:ref="(el) => setResult(el, index)"
 					class="search-result-button is-fullwidth"
+					role="option"
 					@keydown.up.prevent="() => preSelect(index - 1)"
 					@keydown.down.prevent="() => preSelect(index + 1)"
+					@keydown.esc="closeAndRefocus"
 					@click.prevent.stop="() => select(data)"
 				>
 					<span>
@@ -102,8 +116,10 @@
 					v-if="creatableAvailable"
 					:ref="(el) => setResult(el, filteredSearchResults.length)"
 					class="search-result-button is-fullwidth is-create-option"
+					role="option"
 					@keydown.up.prevent="() => preSelect(filteredSearchResults.length - 1)"
 					@keydown.down.prevent="() => preSelect(filteredSearchResults.length + 1)"
+					@keydown.esc="closeAndRefocus"
 					@keyup.enter.prevent="create"
 					@click.prevent.stop="create"
 				>
@@ -125,13 +141,22 @@
 						{{ createPlaceholder }}
 					</span>
 				</BaseButton>
+
+				<div
+					v-if="creationHintVisible"
+					class="search-result-hint"
+					role="option"
+					aria-disabled="true"
+				>
+					{{ creationDisabledMessage }}
+				</div>
 			</div>
 		</CustomTransition>
 	</div>
 </template>
 
 <script setup lang="ts" generic="T extends Record<string, unknown>">
-import {computed, onBeforeUnmount, onMounted, ref, toRefs, watch, type ComponentPublicInstance} from 'vue'
+import {computed, onBeforeUnmount, onMounted, ref, toRefs, useId, watch, type ComponentPublicInstance} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
@@ -157,6 +182,8 @@ const props = withDefaults(defineProps<{
 	name?: string
 	/** If true, will provide an 'add this as a new value' entry which  fires an @create event when clicking on it. */
 	creatable?: boolean
+	/** When set and `creatable` is false, shows a non-interactive hint row explaining why a non-matching query can't be added. */
+	creationDisabledMessage?: string
 	/** The text shown next to the new value option. */
 	createPlaceholder?: string
 	/** The text shown next to an option. */
@@ -175,12 +202,15 @@ const props = withDefaults(defineProps<{
 	autocompleteEnabled?: boolean
 	/** If true, disables the multiselect input */
 	disabled?: boolean
+	/** Accessible name for the search input and result list. Falls back to the placeholder. */
+	ariaLabel?: string
 }>(), {
 	loading: false,
 	placeholder: '',
 	searchResults: () => [] as T[],
 	label: '',
 	creatable: false,
+	creationDisabledMessage: '',
 	createPlaceholder: () => useI18n().t('input.multiselect.createPlaceholder'),
 	selectPlaceholder: () => useI18n().t('input.multiselect.selectPlaceholder'),
 	multiple: false,
@@ -192,6 +222,7 @@ const props = withDefaults(defineProps<{
 	disabled: false,
 	id: undefined,
 	name: undefined,
+	ariaLabel: undefined,
 })
 
 const emit = defineEmits<{
@@ -213,6 +244,10 @@ const emit = defineEmits<{
 	 */
 	'remove': [value: T],
 }>()
+
+const listboxId = useId()
+
+const accessibleName = computed(() => props.ariaLabel || props.placeholder || undefined)
 
 function elementInResults(elem: string | T, label: string, query: string): boolean {
 	// Don't make create available if we have an exact match in our search results.
@@ -251,18 +286,22 @@ const searchResultsVisible = computed(() => {
 
 	return showSearchResults.value && (
 		(filteredSearchResults.value.length > 0) ||
-		(props.creatable && query.value !== '')
+		(props.creatable && query.value !== '') ||
+		creationHintVisible.value
 	)
 })
 
-const creatableAvailable = computed(() => {
+const queryHasExactMatch = computed(() => {
 	const hasResult = filteredSearchResults.value.some((elem: T) => elementInResults(elem, props.label, query.value as string))
 	const hasQueryAlreadyAdded = Array.isArray(internalValue.value) && internalValue.value.some((elem: T) => elementInResults(elem, props.label, query.value))
 
-	return props.creatable
-		&& query.value !== ''
-		&& !(hasResult || hasQueryAlreadyAdded)
+	return hasResult || hasQueryAlreadyAdded
 })
+
+const creatableAvailable = computed(() => props.creatable && query.value !== '' && !queryHasExactMatch.value)
+
+// Shown in place of the create option when creation is disabled and the query matches nothing, so the field doesn't look dead.
+const creationHintVisible = computed(() => props.creationDisabledMessage !== '' && !props.creatable && query.value !== '' && !queryHasExactMatch.value)
 
 const filteredSearchResults = computed(() => {
 	const currentInternal = internalValue.value
@@ -285,7 +324,11 @@ function resetSelectedValue() {
 const searchInput = ref<HTMLInputElement | null>(null)
 
 // Searching will be triggered with a 200ms delay to avoid searching on every keyup event.
-function search() {
+function search(e?: KeyboardEvent) {
+	// The keyup of the Escape that just closed the results must not reopen them.
+	if (e?.key === 'Escape') {
+		return
+	}
 
 	// Updating the query with a binding does not work on mobile for some reason,
 	// getting the value manual does.
@@ -319,7 +362,32 @@ function closeSearchResults() {
 	showSearchResults.value = false
 }
 
+function handleEscape(e: KeyboardEvent) {
+	if (!searchResultsVisible.value) {
+		return
+	}
+	// preventDefault cancels a wrapping native <dialog>'s Escape close request.
+	e.preventDefault()
+	e.stopPropagation()
+	closeSearchResults()
+}
+
+// Set while refocusing the input after Escape so the resulting focus event doesn't reopen the just-closed list.
+let suppressFocusOpen = false
+
+function closeAndRefocus(e: KeyboardEvent) {
+	e.preventDefault()
+	e.stopPropagation()
+	closeSearchResults()
+	suppressFocusOpen = true
+	searchInput.value?.focus()
+	suppressFocusOpen = false
+}
+
 function handleFocus() {
+	if (suppressFocusOpen) {
+		return
+	}
 	// We need the timeout to avoid the hideSearchResultsHandler hiding the search results right after the input
 	// is focused. That would lead to flickering pre-loaded search results and hiding them right after showing.
 	setTimeout(() => {
@@ -619,6 +687,12 @@ function focus() {
 	&.is-always-visible {
 		color: var(--grey-500);
 	}
+}
+
+.search-result-hint {
+	padding: .5rem .75rem;
+	color: var(--grey-500);
+	font-size: .85rem;
 }
 
 .create-icon {

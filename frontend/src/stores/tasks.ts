@@ -27,6 +27,7 @@ import type {IProject} from '@/modelTypes/IProject'
 import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 
 import {setModuleLoading} from '@/stores/helper'
+import {useConfigStore} from '@/stores/config'
 import {useLabelStore} from '@/stores/labels'
 import {useProjectStore} from '@/stores/projects'
 import {useKanbanStore} from '@/stores/kanban'
@@ -35,6 +36,8 @@ import ProjectUserService from '@/services/projectUsers'
 import {useAuthStore} from '@/stores/auth'
 import TaskCollectionService, {type TaskFilterParams} from '@/services/taskCollection'
 import {getRandomColorHex} from '@/helpers/color/randomColor'
+import {runWrites} from '@/helpers/runWrites'
+import {error} from '@/message'
 import {REPEAT_TYPES} from '@/types/IRepeatAfter'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 
@@ -131,6 +134,7 @@ export const useTaskStore = defineStore('task', () => {
 	const labelStore = useLabelStore()
 	const projectStore = useProjectStore()
 	const authStore = useAuthStore()
+	const configStore = useConfigStore()
 
 	const tasks = ref<{ [id: ITask['id']]: ITask }>({}) // TODO: or is this ITask[]
 	const isLoading = ref(false)
@@ -373,16 +377,22 @@ export const useTaskStore = defineStore('task', () => {
 		const mustCreateLabel = all.map(async labelTitle => {
 			let label = validateLabel(Object.values(labelStore.labels), labelTitle)
 			if (typeof label === 'undefined') {
-				// label not found, create it
 				const labelModel = new LabelModel({
 					title: labelTitle,
 					hexColor: getRandomColorHex(),
 				})
-				label = await labelStore.createLabel(labelModel)
+				try {
+					label = await labelStore.createLabel(labelModel)
+				} catch (e) {
+					// Link shares may not create labels; skip it instead of aborting task creation.
+					console.debug('Could not create label from quick add magic', {labelTitle, e})
+					return undefined
+				}
 			}
 			return label
 		})
-		return Promise.all(mustCreateLabel)
+		const resolved = await Promise.all(mustCreateLabel)
+		return resolved.filter((label): label is LabelModel => typeof label !== 'undefined')
 	}
 
 	// Do everything that is involved in finding, creating and adding the label to the task
@@ -395,10 +405,7 @@ export const useTaskStore = defineStore('task', () => {
 		}
 
 		const labels = await ensureLabelsExist(parsedLabels)
-		const labelAddsToWaitFor = labels.map(async l => addLabelToTask(task, l))
-
-		// This waits until all labels are created and added to the task
-		await Promise.all(labelAddsToWaitFor)
+		await runWrites(labels, l => addLabelToTask(task, l), configStore.concurrentWrites)
 		return task
 	}
 
@@ -441,41 +448,35 @@ export const useTaskStore = defineStore('task', () => {
 		return foundProjectId
 	}
 	
-	async function createNewTask({
+	async function buildTaskFromQuickAddTitle({
 		title,
 		bucketId,
 		projectId,
 		position,
-		index,
-	} : 
+	} :
 		Partial<ITask>,
-	) {
-		const cancel = setModuleLoading(setIsLoading)
+	): Promise<{task: TaskModel, parsedLabels: string[]}> {
 		const quickAddMagicMode = authStore.settings.frontendSettings.quickAddMagicMode
 		const parsedTask = parseTaskText(title, quickAddMagicMode)
 
 		if(parsedTask.text === '') {
-			const taskService = new TaskService()
-			try {
-				return taskService.create(new TaskModel({
+			return {
+				task: new TaskModel({
 					title,
 					projectId,
 					bucketId,
 					position,
-					index,
-				}))
-			} finally {
-				cancel()
+				}),
+				parsedLabels: [],
 			}
 		}
-	
+
 		const foundProjectId = await findProjectId({
 			project: parsedTask.project,
 			projectId: projectId || 0,
 		})
-		
+
 		if(foundProjectId === null || foundProjectId === 0) {
-			cancel()
 			throw new Error('NO_PROJECT')
 		}
 
@@ -492,7 +493,7 @@ export const useTaskStore = defineStore('task', () => {
 
 		// I don't know why, but it all goes up in flames when I just pass in the date normally.
 		const dueDate = parsedTask.date !== null ? new Date(parsedTask.date).toISOString() : null
-	
+
 		const task = new TaskModel({
 			title: cleanedTitle,
 			projectId: foundProjectId,
@@ -501,7 +502,6 @@ export const useTaskStore = defineStore('task', () => {
 			assignees,
 			bucketId: bucketId || 0,
 			position,
-			index,
 		})
 		task.repeatAfter = parsedTask.repeats
 		task.reminders = buildDefaultRemindersForQuickAdd(
@@ -513,13 +513,69 @@ export const useTaskStore = defineStore('task', () => {
 			task.repeatMode = TASK_REPEAT_MODES.REPEAT_MODE_MONTH
 		}
 
-		const taskService = new TaskService()
+		return {task, parsedLabels: parsedTask.labels}
+	}
+
+	async function createNewTask({
+		title,
+		bucketId,
+		projectId,
+		position,
+	} :
+		Partial<ITask>,
+	) {
+		const cancel = setModuleLoading(setIsLoading)
 		try {
+			const {task, parsedLabels} = await buildTaskFromQuickAddTitle({
+				title,
+				bucketId,
+				projectId,
+				position,
+			})
+
+			const taskService = new TaskService()
 			const createdTask = await taskService.create(task)
 			return await addLabelsToTask({
 				task: createdTask,
-				parsedLabels: parsedTask.labels,
+				parsedLabels,
 			})
+		} finally {
+			cancel()
+		}
+	}
+
+	// Returns the created tasks aligned 1:1 with entries (null = not created),
+	// error is null when nothing failed.
+	async function createNewTasksBulk(
+		entries: {title: string, projectId: number}[],
+	): Promise<{tasks: (ITask | null)[], error: unknown}> {
+		const cancel = setModuleLoading(setIsLoading)
+		try {
+			const built = await Promise.all(entries.map(async ({title, projectId}) => {
+				const {task, parsedLabels} = await buildTaskFromQuickAddTitle({title, projectId})
+				return {task, parsedLabels}
+			}))
+
+			const taskService = new TaskService()
+			const {tasks, error: bulkError} = await taskService.bulkCreate(built.map(b => b.task))
+
+			const withLabels = built
+				.map(({parsedLabels}, index) => ({task: tasks[index], parsedLabels}))
+				.filter(c => c.task !== null && c.parsedLabels.length > 0)
+
+			try {
+				await runWrites(
+					withLabels,
+					c => addLabelsToTask({task: c.task as ITask, parsedLabels: c.parsedLabels}),
+					configStore.concurrentWrites,
+				)
+			} catch (e) {
+				// The tasks exist by now, so failing here must not look like the
+				// whole creation failed — the caller would let the user resubmit.
+				error(e)
+			}
+
+			return {tasks, error: bulkError}
 		} finally {
 			cancel()
 		}
@@ -594,6 +650,7 @@ export const useTaskStore = defineStore('task', () => {
 		removeLabel,
 		addLabelsToTask,
 		createNewTask,
+		createNewTasksBulk,
 		setCoverImage,
 		findProjectId,
 		ensureLabelsExist,

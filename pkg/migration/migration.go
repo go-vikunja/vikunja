@@ -57,6 +57,11 @@ func initMigration(x *xorm.Engine) *xormigrate.Xormigrate {
 		}
 	}
 
+	if err := checkPostgresSchemaMismatch(x); err != nil {
+		log.Fatalf("Schema check failed: %v", err)
+		return nil
+	}
+
 	// Because init() does not guarantee the order in which these are added to the slice,
 	// we need to sort them to ensure that they are in order
 	sort.Slice(migrations, func(i, j int) bool {
@@ -209,7 +214,9 @@ func columnExists(x *xorm.Engine, tableName, columnName string) (bool, error) {
 		}
 		return len(results) > 0, nil
 	case "postgres":
-		results, err := x.Query("SELECT column_name FROM information_schema.columns WHERE table_name = '" + tableName + "' AND column_name = '" + columnName + "'")
+		// Filter by current_schema() — without it, a leftover copy of the table in another
+		// schema makes this check pass while the ALTER runs against the real one (#3118).
+		results, err := x.Query("SELECT column_name FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = ? AND column_name = ?", tableName, columnName)
 		if err != nil {
 			return false, err
 		}
@@ -263,7 +270,7 @@ func renameColumn(x *xorm.Engine, tableName, oldColumn, newColumn string) error 
 	return nil
 }
 
-func initSchema(tx *xorm.Engine) error {
+func schemaBeans() []interface{} {
 	schemeBeans := []interface{}{}
 	schemeBeans = append(schemeBeans, models.GetTables()...)
 	schemeBeans = append(schemeBeans, files.GetTables()...)
@@ -271,5 +278,20 @@ func initSchema(tx *xorm.Engine) error {
 	schemeBeans = append(schemeBeans, migration.GetTables()...)
 	schemeBeans = append(schemeBeans, user.GetTables()...)
 	schemeBeans = append(schemeBeans, notifications.GetTables()...)
-	return tx.Sync2(schemeBeans...)
+	return schemeBeans
+}
+
+func initSchema(tx *xorm.Engine) error {
+	return tx.Sync2(schemaBeans()...) //nolint:forbidigo // fresh install, no existing tables
+}
+
+// partialSync syncs a partial struct into an existing table. Plain tx.Sync would
+// drop every index and unique constraint the struct doesn't declare (#3244), so
+// a new unique index on an existing table must be created explicitly.
+func partialSync(tx *xorm.Engine, beans ...interface{}) error {
+	_, err := tx.SyncWithOptions(xorm.SyncOptions{
+		IgnoreConstrains:  true,
+		IgnoreDropIndices: true,
+	}, beans...)
+	return err
 }

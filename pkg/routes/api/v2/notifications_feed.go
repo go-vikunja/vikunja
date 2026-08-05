@@ -21,10 +21,11 @@ import (
 	"net/http"
 
 	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/modules/humaecho5"
+	"code.vikunja.io/api/pkg/modules/humabridge"
 	"code.vikunja.io/api/pkg/routes/feeds"
 
 	"github.com/danielgtaylor/huma/v2"
+	"github.com/danielgtaylor/huma/v2/adapters/humaecho"
 	"github.com/labstack/echo/v5"
 )
 
@@ -62,7 +63,7 @@ func init() { AddRouteRegistrar(RegisterNotificationsFeedRoutes) }
 // validator) and streams the Atom feed; there is no handler.Do* for a non-JSON
 // body and the auth can't ride the group's JWT middleware.
 func notificationsAtomFeed(ctx context.Context, _ *struct{}) (*huma.StreamResponse, error) {
-	c, ok := ctx.Value(humaecho5.EchoContextKey).(*echo.Context)
+	c, ok := ctx.Value(humabridge.EchoContextKey).(*echo.Context)
 	if !ok {
 		return nil, huma.Error500InternalServerError("could not resolve request context")
 	}
@@ -89,7 +90,7 @@ func notificationsAtomFeed(ctx context.Context, _ *struct{}) (*huma.StreamRespon
 	}
 
 	return &huma.StreamResponse{Body: func(hctx huma.Context) {
-		ec := humaecho5.Unwrap(hctx)
+		ec := humaecho.Unwrap(hctx)
 		(*ec).Response().Header().Set(echo.HeaderContentType, feeds.AtomContentType)
 		_, _ = (*ec).Response().Write([]byte(atom))
 	}}, nil

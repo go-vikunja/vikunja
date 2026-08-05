@@ -362,7 +362,7 @@ func (t *Team) Delete(s *xorm.Session, a web.Auth) (err error) {
 
 	events.DispatchOnCommit(s, &TeamDeletedEvent{
 		Team: t,
-		Doer: doerFromAuth(a),
+		Doer: doerFromAuth(s, a),
 	})
 	return nil
 }

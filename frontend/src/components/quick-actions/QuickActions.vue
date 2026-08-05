@@ -3,6 +3,7 @@
 		:enabled="active"
 		:overflow="isNewTaskCommand"
 		variant="top"
+		:aria-label="$t('quickActions.title')"
 		@close="closeQuickActions"
 	>
 		<div
@@ -51,6 +52,14 @@
 				class="help has-text-grey-light p-2"
 			>
 				{{ hintText }}
+			</div>
+
+			<div
+				class="is-sr-only"
+				role="status"
+				aria-live="polite"
+			>
+				{{ resultAnnouncement }}
 			</div>
 
 			<div
@@ -136,6 +145,7 @@ import type {ITask} from '@/modelTypes/ITask'
 import type {IProject} from '@/modelTypes/IProject'
 import type {IAbstract} from '@/modelTypes/IAbstract'
 import {isSavedFilter} from '@/services/savedFilter'
+import type {TaskFilterParams} from '@/services/taskCollection'
 
 const {t} = useI18n({useScope: 'global'})
 const router = useRouter()
@@ -450,9 +460,11 @@ function searchTasks() {
 		}
 	}
 
-	const params = {
+	const params: Partial<TaskFilterParams> = {
 		s: text,
-		sort_by: 'done',
+		// undone tasks first, most relevant first within each group (relevance is
+		// only honored on backends that can score the search, see the API docs)
+		sort_by: ['done', 'relevance'],
 		filter,
 	}
 
@@ -701,6 +713,34 @@ function reset() {
 	query.value = ''
 	selectedCmd.value = null
 }
+
+const resultCount = computed(() => results.value.reduce((total, group) => total + group.items.length, 0))
+
+// Announce the result count to assistive technology, debounced so it doesn't
+// fire on every keystroke while the user is still typing.
+const resultAnnouncement = ref('')
+let announceTimeout: ReturnType<typeof setTimeout> | null = null
+watch(resultCount, count => {
+	if (!active.value || selectedCmd.value !== null) {
+		return
+	}
+	if (announceTimeout !== null) {
+		clearTimeout(announceTimeout)
+	}
+	announceTimeout = setTimeout(() => {
+		resultAnnouncement.value = t('quickActions.results', count)
+	}, 300)
+})
+watch(active, isActive => {
+	if (!isActive) {
+		resultAnnouncement.value = ''
+	}
+})
+onBeforeUnmount(() => {
+	if (announceTimeout !== null) {
+		clearTimeout(announceTimeout)
+	}
+})
 </script>
 
 <style lang="scss" scoped>

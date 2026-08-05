@@ -83,6 +83,12 @@ const DateClickHandler = Extension.create({
 
 // Initialize TipTap editor
 const editor = useEditor({
+	editorProps: {
+		attributes: {
+			role: 'textbox',
+			'aria-label': t('filters.query.label'),
+		},
+	},
 	extensions: [
 		StarterKit.configure({
 			history: false, // We'll handle history ourselves

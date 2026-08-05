@@ -3,13 +3,13 @@
 package yaegi_symbols
 
 import (
-	"reflect"
-
 	"code.vikunja.io/api/pkg/log"
+	"reflect"
 )
 
 func init() {
 	Symbols["code.vikunja.io/api/pkg/log/log"] = map[string]reflect.Value{
+		// function, constant and variable definitions
 		"ConfigureStandardLogger": reflect.ValueOf(log.ConfigureStandardLogger),
 		"Critical":                reflect.ValueOf(log.Critical),
 		"Criticalf":               reflect.ValueOf(log.Criticalf),
@@ -17,12 +17,13 @@ func init() {
 		"Debugf":                  reflect.ValueOf(log.Debugf),
 		"Error":                   reflect.ValueOf(log.Error),
 		"Errorf":                  reflect.ValueOf(log.Errorf),
-		"Fatal":                   reflect.ValueOf(log.Fatal),
-		"Fatalf":                  reflect.ValueOf(log.Fatalf),
+		"Fatal":                   reflect.ValueOf(logFatal),
+		"Fatalf":                  reflect.ValueOf(logFatalf),
 		"GetLogger":               reflect.ValueOf(log.GetLogger),
 		"Info":                    reflect.ValueOf(log.Info),
 		"Infof":                   reflect.ValueOf(log.Infof),
 		"InitLogger":              reflect.ValueOf(log.InitLogger),
+		"IsInitialized":           reflect.ValueOf(log.IsInitialized),
 		"NewEchoLogger":           reflect.ValueOf(log.NewEchoLogger),
 		"NewHTTPLogger":           reflect.ValueOf(log.NewHTTPLogger),
 		"NewMailLogger":           reflect.ValueOf(log.NewMailLogger),

@@ -99,7 +99,7 @@ you want to rotate.`,
 				return err
 			}
 			if minted.Token == "" {
-				return output.New(output.CodeUnknown, "PUT /tokens did not return token plaintext")
+				return output.New(output.CodeUnknown, "POST /tokens did not return token plaintext")
 			}
 
 			if err := credentials.Default().Set(cfg.Server, cfg.Bot.Username, minted.Token); err != nil {

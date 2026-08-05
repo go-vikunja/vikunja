@@ -88,7 +88,7 @@ func newUpdateCmd() *cobra.Command {
 }
 
 // runUpdate is intentionally a single linear flow — the steps it performs
-// (concurrency check → status → field changes → comments → field POST →
+// (concurrency check → status → field changes → comments → field PATCH →
 // bucket move → label add/remove → refetch) all share the same task,
 // flag set, and error-handling shape. Splitting them produces five tiny
 // functions that each take the same five arguments.
@@ -126,17 +126,18 @@ func runUpdate(ctx context.Context, rt *runtime, id int64, f *updateFlags) (*cli
 		}
 	}
 
-	// Build the update payload incrementally so we don't clobber unmentioned
-	// fields. The base must include the ID; bucket/done are conditional.
-	body := &client.Task{ID: id}
+	// Build the merge-patch payload from only the changed fields. PATCH leaves
+	// absent fields untouched, so omitting a field preserves it — the id rides
+	// in the URL, not the body.
+	body := &client.TaskPatch{}
 	dirty := false
 
 	if f.title != "" {
-		body.Title = f.title
+		body.Title = &f.title
 		dirty = true
 	}
 	if f.priorityIsSet {
-		body.Priority = f.priority
+		body.Priority = &f.priority
 		dirty = true
 	}
 
@@ -147,7 +148,7 @@ func runUpdate(ctx context.Context, rt *runtime, id int64, f *updateFlags) (*cli
 		return nil, err
 	}
 	if descChanged {
-		body.Description = newDesc
+		body.Description = &newDesc
 		dirty = true
 	}
 
@@ -162,7 +163,8 @@ func runUpdate(ctx context.Context, rt *runtime, id int64, f *updateFlags) (*cli
 			return nil, err
 		}
 		bucketTransitionTarget = bid
-		body.Done = newStatus.Done()
+		done := newStatus.Done()
+		body.Done = &done
 		dirty = true
 	}
 

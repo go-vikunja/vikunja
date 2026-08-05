@@ -1,5 +1,5 @@
 import {test, expect} from '../../../support/fixtures'
-import {authenticator} from 'otplib'
+import {generate} from 'otplib'
 import {gotoUserSettings} from '../../../support/userSettings'
 import {TotpFactory} from '../../../factories/totp'
 import {TEST_PASSWORD} from '../../../support/constants'
@@ -14,7 +14,7 @@ test.describe('TOTP', () => {
 		const secret = await page.locator('.card strong').first().innerText()
 		expect(secret).toMatch(/^[A-Z2-7]+$/) // base32
 
-		const code = authenticator.generate(secret)
+		const code = await generate({secret})
 		await page.locator('#totpConfirmPasscode').fill(code)
 		await page.getByRole('button', {name: 'Confirm'}).click()
 

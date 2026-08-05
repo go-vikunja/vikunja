@@ -44,7 +44,7 @@ func (s *Storage) Put(key string, value interface{}) (err error) {
 
 	val := reflect.ValueOf(value)
 	// Make sure to store the underlying value when value is a pointer to a value
-	if val.Kind() == reflect.Ptr {
+	if val.Kind() == reflect.Pointer {
 		s.store[key] = val.Elem().Interface()
 		return nil
 	}
@@ -69,7 +69,7 @@ func (s *Storage) GetWithValue(key string, ptr interface{}) (exists bool, err er
 	}
 
 	val := reflect.ValueOf(ptr)
-	if val.Kind() != reflect.Ptr {
+	if val.Kind() != reflect.Pointer {
 		panic("value must be a pointer")
 	}
 	if val.IsNil() {

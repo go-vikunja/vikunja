@@ -24,6 +24,7 @@ import (
 	"image"
 	"image/png"
 	"io"
+	"math"
 	"strconv"
 
 	"code.vikunja.io/api/pkg/files"
@@ -58,6 +59,12 @@ type CachedAvatar struct {
 
 // GetAvatar returns an uploaded user avatar
 func (p *Provider) GetAvatar(u *user.User, size int64) (avatar []byte, mimeType string, err error) {
+	// size is converted to int below for imaging.Resize; reject values that
+	// would be negative or overflow on platforms where int is 32 bits.
+	if size <= 0 || size > math.MaxInt32 {
+		return nil, "", fmt.Errorf("invalid avatar size %d", size)
+	}
+
 	cacheKey := CacheKeyPrefix + strconv.Itoa(int(u.ID)) + "_" + strconv.FormatInt(size, 10)
 
 	cachedAvatar, err := keyvalue.RememberValue(cacheKey, func() (CachedAvatar, error) {

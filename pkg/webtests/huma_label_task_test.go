@@ -37,9 +37,12 @@ import (
 //   - task 14 (project 5): no access → forbidden.
 //   - task 15 (project 6): shared via team 2 read-only → readable, not writable.
 //   - task 16 (project 7): shared via team 3 with write → writable.
+//   - task 26 (project 17): child of project 34, admin-shared to team 1 →
+//     writable only through the inherited parent share.
 //   - task 34 (project 20): private to user13 → no access.
 //
-// Labels user1 may attach: #1 (own) and #4 (visible via accessible task 1).
+// Labels user1 may attach: #1 (own), #4 (visible via accessible task 1) and
+// #10 (visible via task 25 in a child of team-shared project 33).
 // Label #9999 does not exist → no access → forbidden on attach.
 func TestLabelTask(t *testing.T) {
 	// task 1 is owned by testuser1.
@@ -124,6 +127,14 @@ func TestLabelTask(t *testing.T) {
 		t.Run("Write share can attach", func(t *testing.T) {
 			// task 16 is write-shared; user1 has access to label #1.
 			rec, err := writeShared.testCreateWithUser(nil, nil, `{"label_id":1}`)
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusCreated, rec.Code)
+		})
+		t.Run("Inherited child-project access can attach", func(t *testing.T) {
+			// Task 26 and label #10 are reachable only through team 1's shares
+			// on the parent projects 34 and 33 — no direct share on either child.
+			childShared := webHandlerTestV2{user: &testuser1, basePath: "/api/v2/tasks/26/labels", idParam: "label", t: t, e: owned.e}
+			rec, err := childShared.testCreateWithUser(nil, nil, `{"label_id":10}`)
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusCreated, rec.Code)
 		})

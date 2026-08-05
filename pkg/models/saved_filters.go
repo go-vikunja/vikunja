@@ -90,8 +90,8 @@ func getProjectIDFromSavedFilterID(filterID int64) (projectID int64) {
 
 func getSavedFiltersForUser(s *xorm.Session, auth web.Auth, search string) (filters []*SavedFilter, err error) {
 	// Link shares can't view or modify saved filters, therefore we can error out right away
-	if _, is := auth.(*LinkSharing); is {
-		return nil, ErrSavedFilterNotAvailableForLinkShare{LinkShareID: auth.GetID()}
+	if share, is := auth.(*LinkSharing); is {
+		return nil, ErrSavedFilterNotAvailableForLinkShare{LinkShareID: share.ID}
 	}
 
 	query := s.Where("owner_id = ?", auth.GetID())
@@ -104,13 +104,14 @@ func getSavedFiltersForUser(s *xorm.Session, auth web.Auth, search string) (filt
 
 func (sf *SavedFilter) ToProject() *Project {
 	return &Project{
-		ID:          getProjectIDFromSavedFilterID(sf.ID),
-		Title:       sf.Title,
-		Description: sf.Description,
-		IsFavorite:  sf.IsFavorite,
-		Created:     sf.Created,
-		Updated:     sf.Updated,
-		Owner:       sf.Owner,
+		ID:              getProjectIDFromSavedFilterID(sf.ID),
+		Title:           sf.Title,
+		Description:     sf.Description,
+		IsFavorite:      sf.IsFavorite,
+		Created:         sf.Created,
+		Updated:         sf.Updated,
+		Owner:           sf.Owner,
+		ParentProjectID: noParentProjectID(),
 	}
 }
 
@@ -175,6 +176,12 @@ func (sf *SavedFilter) ReadOne(s *xorm.Session, _ web.Auth) error {
 	return err
 }
 
+// ReadAll shadows the embedded web.CRUDable method (filters are listed via the
+// pseudo-project). An unshadowed promoted method breaks Huma's $schema wrapper (go#15924).
+func (sf *SavedFilter) ReadAll(_ *xorm.Session, _ web.Auth, _ string, _ int, _ int) (interface{}, int, int64, error) {
+	return nil, 0, 0, ErrGenericForbidden{}
+}
+
 // Update updates an existing filter
 // @Summary Updates a saved filter
 // @Description Updates a saved filter by its ID.
@@ -231,31 +238,13 @@ func (sf *SavedFilter) Update(s *xorm.Session, _ web.Auth) error {
 		return err
 	}
 
-	parsedFilters, err := getTaskFiltersFromFilterString(sf.Filters.Filter, sf.Filters.FilterTimezone)
-	if err != nil {
-		return err
-	}
-
-	filterCond, err := convertFiltersToDBFilterCond(parsedFilters, sf.Filters.FilterIncludeNulls)
-	if err != nil {
-		return err
-	}
-
 	for _, view := range kanbanFilterViews {
-		// Fetch all tasks in the filter but not in task_bucket
-		// select * from tasks where id not in (select task_id from task_buckets where project_view_id = ?) and FILTER_COND
-		tasksToAdd := []*Task{}
-		err = s.Where(builder.And(
-			builder.NotIn("id",
-				builder.
-					Select("task_id").
-					From("task_buckets").
-					Where(builder.Eq{"project_view_id": view.ID})),
-			filterCond,
-		)).
-			Find(&tasksToAdd)
+		taskIDs, err := filteredTasksWithoutBucketInView(s, view.ID, sf)
 		if err != nil {
 			return err
+		}
+		if len(taskIDs) == 0 {
+			continue
 		}
 
 		bucketID, err := getDefaultBucketID(s, view)
@@ -263,27 +252,13 @@ func (sf *SavedFilter) Update(s *xorm.Session, _ web.Auth) error {
 			return err
 		}
 
-		taskBuckets := make([]*TaskBucket, 0, len(tasksToAdd))
-		for _, task := range tasksToAdd {
-			taskBuckets = append(taskBuckets, &TaskBucket{
-				TaskID:        task.ID,
-				BucketID:      bucketID,
-				ProjectViewID: view.ID,
-			})
+		if err = insertTaskBuckets(s, view.ID, bucketID, taskIDs); err != nil {
+			return err
 		}
 
-		if len(taskBuckets) > 0 {
-			if _, err = s.Insert(taskBuckets); err != nil {
-				return err
-			}
-		}
-
-		// Recalculate positions for all tasks - this will create positions for
-		// new tasks that don't have them yet
-		if len(tasksToAdd) > 0 {
-			if err = RecalculateTaskPositions(s, view, &user.User{ID: sf.OwnerID}); err != nil {
-				return err
-			}
+		// New tasks have no position in this view yet
+		if err = RecalculateTaskPositions(s, view, &user.User{ID: sf.OwnerID}); err != nil {
+			return err
 		}
 	}
 
@@ -308,6 +283,44 @@ func (sf *SavedFilter) Delete(s *xorm.Session, _ web.Auth) error {
 		Where("id = ?", sf.ID).
 		Delete(sf)
 	return err
+}
+
+// dropFiltersWithInactiveOwners removes filters owned by a disabled, locked or deleted
+// user. Evaluating a filter needs its owner's project list, which getRawProjectsForUser
+// refuses to return for those, so one such filter would fail the whole batch for everyone.
+func dropFiltersWithInactiveOwners(s *xorm.Session, filters map[int64]*SavedFilter) (err error) {
+	if len(filters) == 0 {
+		return nil
+	}
+
+	ownerIDs := make([]int64, 0, len(filters))
+	for _, filter := range filters {
+		ownerIDs = append(ownerIDs, filter.OwnerID)
+	}
+
+	activeOwners := []*user.User{}
+	err = s.
+		In("id", ownerIDs).
+		NotIn("status", user.StatusDisabled, user.StatusAccountLocked).
+		Cols("id").
+		Find(&activeOwners)
+	if err != nil {
+		return err
+	}
+
+	isActive := make(map[int64]bool, len(activeOwners))
+	for _, owner := range activeOwners {
+		isActive[owner.ID] = true
+	}
+
+	for id, filter := range filters {
+		if !isActive[filter.OwnerID] {
+			log.Debugf("Skipping filter %d, owner %d is disabled, locked or deleted", filter.ID, filter.OwnerID)
+			delete(filters, id)
+		}
+	}
+
+	return nil
 }
 
 func addTaskToFilter(s *xorm.Session, filter *SavedFilter, view *ProjectView, fallbackTimezone string, task *Task) (taskBucket *TaskBucket, taskPosition *TaskPosition, err error) {
@@ -399,6 +412,12 @@ func RegisterAddTaskToFilterViewCron() {
 			return
 		}
 
+		err = dropFiltersWithInactiveOwners(s, filters)
+		if err != nil {
+			log.Errorf("%sError checking filter owners: %s", logPrefix, err)
+			return
+		}
+
 		if len(filters) == 0 {
 			return
 		}
@@ -451,7 +470,7 @@ func RegisterAddTaskToFilterViewCron() {
 				resultTasks, _, _, err := tc.ReadAll(s, &user.User{ID: filter.OwnerID}, "", 1, -1)
 				if err != nil {
 					log.Errorf("%sError fetching tasks for filter %d: %s", logPrefix, filterID, err)
-					return
+					continue
 				}
 				tasks = resultTasks.([]*Task)
 			}

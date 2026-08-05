@@ -18,10 +18,16 @@ package utils
 
 import (
 	"crypto/sha256"
-	"fmt"
+	"encoding/hex"
 )
 
-// Sha256 calculates a sha256 hash from a string
+// Sha256Hex returns the full hex-encoded SHA-256 hash of a string.
+func Sha256Hex(cleartext string) string {
+	h := sha256.Sum256([]byte(cleartext))
+	return hex.EncodeToString(h[:])
+}
+
+// Sha256 calculates a sha256 hash from a string, truncated to 45 characters.
 func Sha256(cleartext string) string {
-	return fmt.Sprintf("%x", sha256.Sum256([]byte(cleartext)))[:45]
+	return Sha256Hex(cleartext)[:45]
 }

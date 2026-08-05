@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"time"
 
 	"code.vikunja.io/api/pkg/log"
 
@@ -28,6 +29,27 @@ import (
 )
 
 var validTableName = regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_]*$`)
+
+// Formats a dumped time value may be in, depending on the database and driver the dump was created with.
+var dumpTimeFormats = []string{
+	time.RFC3339Nano,
+	"2006-01-02 15:04:05.999999999Z07:00",
+	"2006-01-02 15:04:05.999999999",
+	"2006-01-02T15:04:05.999999999",
+	"2006-01-02",
+}
+
+// parseDumpTime parses a time string from a dump. Values without a timezone are
+// interpreted as UTC since that's what dumps are written in.
+func parseDumpTime(value string) (t time.Time, err error) {
+	for _, format := range dumpTimeFormats {
+		t, err = time.ParseInLocation(format, value, time.UTC)
+		if err == nil {
+			return t, nil
+		}
+	}
+	return t, err
+}
 
 func validateTableName(table string) error {
 	if !validTableName.MatchString(table) {
@@ -85,14 +107,33 @@ func Restore(table string, contents []map[string]interface{}) (err error) {
 
 	for _, content := range contents {
 		for colName, value := range content {
+			col := metaForCurrentTable.GetColumn(colName)
+			if col == nil {
+				log.Warningf("Column %s does not exist in table %s, dropping it from the restored data", colName, table)
+				delete(content, colName)
+				continue
+			}
+
+			strVal, is := value.(string)
+			if !is || !col.SQLType.IsTime() {
+				continue
+			}
+
 			// Date fields might get restored as 0001-01-01 from null dates. This can have unintended side-effects like
 			// users being scheduled for deletion after a restore.
 			// To avoid this, we set these dates to nil so that they'll end up as null in the db.
-			col := metaForCurrentTable.GetColumn(colName)
-			strVal, is := value.(string)
-			if is && col.SQLType.IsTime() && (strVal == "" || strings.HasPrefix(strVal, "0001-")) {
+			if strVal == "" || strings.HasPrefix(strVal, "0001-") {
 				content[colName] = nil
+				continue
 			}
+
+			// Dumps contain dates as RFC3339 strings, which MySQL and MariaDB reject ("Incorrect
+			// datetime value"). Convert to time.Time and let the driver format it for the target db.
+			t, err := parseDumpTime(strVal)
+			if err != nil {
+				return fmt.Errorf("could not parse time value %q for column %s in table %s: %w", strVal, colName, table, err)
+			}
+			content[colName] = t
 		}
 
 		if _, err := x.Table(table).Insert(content); err != nil {

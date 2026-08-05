@@ -64,7 +64,7 @@ const label = computed(() => {
 
 <style scoped lang="scss">
 .checklist-summary {
-	color: var(--grey-500);
+	color: var(--text-muted);
 	display: inline-flex;
 	align-items: center;
 	padding-inline-start: .5rem;

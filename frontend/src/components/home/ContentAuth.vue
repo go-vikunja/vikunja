@@ -24,6 +24,7 @@
 			<Navigation class="d-print-none" />
 			<main
 				id="main-content"
+				tabindex="-1"
 				class="app-content"
 				:class="[
 					{ 'is-menu-enabled': menuActive },

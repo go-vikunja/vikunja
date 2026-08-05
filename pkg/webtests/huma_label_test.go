@@ -55,6 +55,9 @@ var testuser22 = user.User{ID: 22, Username: "user_bot_owner_b", Issuer: "local"
 //   - #7: owned by user1, no task attachment — readable by its creator.
 //   - #8: owned by user1, attached only to inaccessible task #34 — still
 //     readable via the creator branch.
+//   - #10: owned by user6, attached only to task #25 in project 16, a child of
+//     project 33 which is shared to team 1 (user1 is a member) — visible via
+//     the inherited child-project access.
 func TestHumaLabel(t *testing.T) {
 	testHandler := webHandlerTestV2{
 		user:     &testuser1,
@@ -70,10 +73,11 @@ func TestHumaLabel(t *testing.T) {
 
 			ids := labelIDsFromReadAll(t, rec.Body.Bytes())
 			// Exact set: user1's own labels (#1, #2, #7, #8) plus #4 which is
-			// visible because it is attached to an accessible task. Assert the
-			// full set so the cardinality is pinned, not just contains/absent.
-			assert.ElementsMatch(t, []int64{1, 2, 4, 7, 8}, ids,
-				"ReadAll must return exactly {1,2,4,7,8}; body: %s", rec.Body.String())
+			// visible via an accessible task and #10 which is visible via a task
+			// in a child of a team-shared project. Assert the full set so the
+			// cardinality is pinned, not just contains/absent.
+			assert.ElementsMatch(t, []int64{1, 2, 4, 7, 8, 10}, ids,
+				"ReadAll must return exactly {1,2,4,7,8,10}; body: %s", rec.Body.String())
 			// #5 (other owner, only on inaccessible task) and #6 (GHSA private
 			// fixture) must be absent — assert explicitly beyond the set match.
 			assert.NotContains(t, ids, int64(3), "label #3 (other owner, unattached) must be hidden")

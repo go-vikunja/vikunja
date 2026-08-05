@@ -380,10 +380,11 @@ export function useProject(projectId: MaybeRefOrGetter<IProject['id']>) {
 		success({message: t('project.edit.success')})
 	}
 	
-	async function duplicateProject(parentProjectId: IProject['id']) {
+	async function duplicateProject(parentProjectId: IProject['id'], duplicateShares: boolean = false) {
 		const projectDuplicate = new ProjectDuplicateModel({
 			projectId: Number(toValue(projectId)),
 			parentProjectId,
+			duplicateShares,
 		})
 
 		const duplicate = await projectDuplicateService.create(projectDuplicate)

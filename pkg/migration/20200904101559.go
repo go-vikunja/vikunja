@@ -34,7 +34,7 @@ func init() {
 		ID:          "20200904101559",
 		Description: "Add limit field to kanban",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(buckets20200904101559{})
+			return partialSync(tx, buckets20200904101559{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil

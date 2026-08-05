@@ -64,7 +64,6 @@
 							ref="taskLinkRef"
 							:to="taskDetailRoute"
 							class="task-link"
-							tabindex="-1"
 						>
 							{{ task.title }}
 						</RouterLink>
@@ -116,6 +115,8 @@
 					<span
 						v-if="task.attachments.length > 0"
 						class="project-task-icon"
+						role="img"
+						:aria-label="$t('task.attributes.attachment', task.attachments.length)"
 					>
 						<Icon icon="paperclip" />
 					</span>
@@ -326,9 +327,17 @@ const isOverdue = computed(() => (
 let oldTask
 
 async function markAsDone(checked: boolean, wasReverted: boolean = false) {
-	const updateFunc = async () => {
-		oldTask = {...task.value}
-		const newTask = await taskStore.update(task.value)
+	oldTask = {...task.value}
+
+	// Fire the request immediately and with the intended done value snapshotted, so a re-render or
+	// teardown during the animation delay can neither drop the save nor make it send a stale state.
+	const updatePromise = taskStore.update({
+		...task.value,
+		done: checked,
+	})
+
+	const finish = async () => {
+		const newTask = await updatePromise
 		task.value = newTask
 
 		updateDueDate()
@@ -354,9 +363,9 @@ async function markAsDone(checked: boolean, wasReverted: boolean = false) {
 	}
 
 	if (checked) {
-		setTimeout(updateFunc, 300) // Delay it to show the animation when marking a task as done
+		setTimeout(finish, 300) // Delay only the follow-up to show the animation when marking a task as done
 	} else {
-		await updateFunc() // Don't delay it when un-marking it as it doesn't have an animation the other way around
+		await finish() // Don't delay it when un-marking it as it doesn't have an animation the other way around
 	}
 }
 
@@ -461,7 +470,7 @@ defineExpose({
 	}
 
 	&[data-is-overdue] .dueDate {
-		color: var(--danger);
+		color: var(--danger-text);
 	}
 
 	.task-project {

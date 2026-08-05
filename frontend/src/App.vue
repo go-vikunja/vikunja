@@ -12,6 +12,7 @@
 			<a
 				href="#main-content"
 				class="skip-to-content"
+				@click.prevent="skipToMainContent"
 			>
 				{{ $t('misc.skipToContent') }}
 			</a>
@@ -61,6 +62,7 @@ import {useAuthStore} from '@/stores/auth'
 import {useBaseStore} from '@/stores/base'
 
 import {useColorScheme} from '@/composables/useColorScheme'
+import {useTimeTrackingFavicon} from '@/composables/useTimeTrackingFavicon'
 import {useBodyClass} from '@/composables/useBodyClass'
 import QuickAddOverlay from '@/components/quick-actions/QuickAddOverlay.vue'
 import AddToHomeScreen from '@/components/home/AddToHomeScreen.vue'
@@ -75,6 +77,11 @@ const authStore = useAuthStore()
 const baseStore = useBaseStore()
 
 const {isQuickAddMode} = useQuickAddMode()
+
+// Native #main-content activation scrolls but never moves focus into <main>; do it explicitly for SPA routing
+function skipToMainContent() {
+	document.getElementById('main-content')?.focus()
+}
 
 // Make the Electron frameless window transparent
 if (isQuickAddMode) {
@@ -107,6 +114,7 @@ watch(accountDeletionConfirm, async (accountDeletionConfirm) => {
 
 setLanguage(authStore.settings.language ?? DEFAULT_LANGUAGE)
 useColorScheme()
+useTimeTrackingFavicon()
 </script>
 
 <style src="@/styles/tailwind.css" />

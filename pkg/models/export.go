@@ -239,6 +239,7 @@ func exportProjectsAndTasks(s *xorm.Session, u *user.User, wr *zip.Writer) (task
 	err = s.
 		Join("LEFT", "tasks", "tasks.id = task_comments.task_id").
 		In("tasks.project_id", projectIDs).
+		And("tasks.deleted_at IS NULL").
 		Find(&comments)
 	if err != nil {
 		return

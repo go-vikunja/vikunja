@@ -250,6 +250,23 @@ func AuthenticateUserInLDAP(s *xorm.Session, username, password string, syncGrou
 		return
 	}
 
+	// After verifying the user's password above the connection is bound as the
+	// end user. Many directories restrict group searches to service accounts, so
+	// re-bind as the service account before enumerating groups when configured.
+	if config.AuthLdapGroupSyncUseServiceAccount.GetBool() {
+		bindDN := config.AuthLdapBindDN.GetString()
+		bindPassword := config.AuthLdapBindPassword.GetString()
+		if bindDN != "" && bindPassword != "" {
+			if err = l.Bind(bindDN, bindPassword); err != nil {
+				return nil, fmt.Errorf("could not re-bind service account for group sync: %w", err)
+			}
+		} else {
+			if err = l.UnauthenticatedBind(""); err != nil {
+				return nil, fmt.Errorf("could not re-bind anonymously for group sync: %w", err)
+			}
+		}
+	}
+
 	err = syncUserGroups(s, l, u, userdn)
 
 	return u, err

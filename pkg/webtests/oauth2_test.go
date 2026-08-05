@@ -21,13 +21,19 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
+	"maps"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/modules/auth/oauth2server"
 
+	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -53,6 +59,34 @@ func doAuthorize(e http.Handler, token string, body []byte) *httptest.ResponseRe
 	req.Header.Set("Authorization", "Bearer "+token)
 	e.ServeHTTP(rec, req)
 	return rec
+}
+
+// insertLegacyOAuthScopedToken inserts an API token scoped {"oauth":["authorize"]}
+// directly into the db, bypassing Create's permission validation, to simulate a
+// token issued before the oauth scope was removed from the grantable catalogue
+// (GHSA-v3p6-34mc-hj7v). Returns the cleartext token.
+func insertLegacyOAuthScopedToken(t *testing.T) string {
+	t.Helper()
+
+	const cleartext = "tk_legacy_oauth_scoped_token_0000deadbeef"
+	const salt = "legacysalt"
+	token := &models.APIToken{
+		Title:          "legacy oauth token",
+		TokenSalt:      salt,
+		TokenHash:      models.HashToken(cleartext, salt),
+		TokenLastEight: cleartext[len(cleartext)-8:],
+		APIPermissions: models.APIPermissions{"oauth": {"authorize"}},
+		ExpiresAt:      time.Now().Add(24 * time.Hour),
+		OwnerID:        1,
+	}
+
+	s := db.NewSession()
+	defer s.Close()
+	_, err := s.Insert(token)
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+
+	return cleartext
 }
 
 // doTokenRequest performs a JSON POST to /api/v1/oauth/token and returns the recorder.
@@ -120,6 +154,44 @@ func TestOAuth2AuthorizeEndpoint(t *testing.T) {
 		body := authorizeRequestBody("code", "vikunja", "vikunja-flutter://callback", "", "", "")
 		rec := doAuthorize(e, token, body)
 		assert.Equal(t, http.StatusBadRequest, rec.Code)
+	})
+
+	// GHSA-v3p6-34mc-hj7v: a token scoped {"oauth":["authorize"]} could mint a
+	// full session JWT via the authorize + token endpoints.
+	t.Run("rejects legacy oauth-scoped API token", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+
+		apiToken := insertLegacyOAuthScopedToken(t)
+
+		body := authorizeRequestBody("code", "vikunja", "vikunja-flutter://callback", "abc123", "S256", "")
+		rec := doAuthorize(e, apiToken, body)
+		assert.Equal(t, http.StatusUnauthorized, rec.Code)
+		assert.NotContains(t, rec.Body.String(), `"code":"`)
+	})
+
+	t.Run("rejects API-token principal at the handler", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+
+		body := authorizeRequestBody("code", "vikunja", "vikunja-flutter://callback", "abc123", "S256", "")
+		req := httptest.NewRequest(http.MethodPost, "/api/v1/oauth/authorize", bytes.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		c := e.NewContext(req, httptest.NewRecorder())
+		c.Set("api_token", &models.APIToken{ID: 1})
+
+		err = oauth2server.HandleAuthorize(c)
+		var httpErr *echo.HTTPError
+		require.ErrorAs(t, err, &httpErr)
+		assert.Equal(t, http.StatusForbidden, httpErr.Code)
+	})
+
+	t.Run("oauth scope is not grantable", func(t *testing.T) {
+		_, err := setupTestEnv()
+		require.NoError(t, err)
+
+		require.Error(t, models.PermissionsAreValid(models.APIPermissions{"oauth": {"authorize"}}))
+		assert.NotContains(t, models.GetAPITokenRoutes(), "oauth")
 	})
 }
 
@@ -196,7 +268,8 @@ func TestOAuth2TokenEndpoint(t *testing.T) {
 
 		// Second exchange fails
 		rec2 := doTokenRequest(e, tokenParams)
-		assert.Equal(t, http.StatusBadRequest, rec2.Code)
+		require.Equal(t, http.StatusBadRequest, rec2.Code)
+		assert.Contains(t, rec2.Body.String(), fmt.Sprintf(`"code":%d`, models.ErrCodeOAuthCodeInvalid), "body: %s", rec2.Body.String())
 	})
 
 	t.Run("rejects wrong PKCE verifier", func(t *testing.T) {
@@ -267,6 +340,66 @@ func TestOAuth2TokenEndpoint(t *testing.T) {
 		assert.NotEmpty(t, refreshResp.AccessToken)
 		assert.NotEmpty(t, refreshResp.RefreshToken)
 		assert.NotEqual(t, tokenResp.RefreshToken, refreshResp.RefreshToken)
+	})
+
+	// A failed exchange must still consume the code, otherwise an attacker
+	// holding a stolen code could brute-force the PKCE verifier or probe
+	// client_id/redirect_uri values against it indefinitely.
+	t.Run("failed exchange still burns the code", func(t *testing.T) {
+		codeVerifier := "burn-on-failure-test-verifier"
+		h := sha256.Sum256([]byte(codeVerifier))
+		codeChallenge := base64.RawURLEncoding.EncodeToString(h[:])
+
+		tests := []struct {
+			name        string
+			tamper      func(params map[string]string)
+			wantErrCode int
+		}{
+			{
+				name:        "wrong client_id",
+				tamper:      func(p map[string]string) { p["client_id"] = "not-vikunja" },
+				wantErrCode: models.ErrCodeOAuthClientNotFound,
+			},
+			{
+				name:        "wrong redirect_uri",
+				tamper:      func(p map[string]string) { p["redirect_uri"] = "vikunja-flutter://attacker" },
+				wantErrCode: models.ErrCodeOAuthInvalidRedirectURI,
+			},
+			{
+				name:        "bad PKCE verifier",
+				tamper:      func(p map[string]string) { p["code_verifier"] = "wrong-verifier" },
+				wantErrCode: models.ErrCodeOAuthPKCEVerifyFailed,
+			},
+		}
+
+		for _, tc := range tests {
+			t.Run(tc.name, func(t *testing.T) {
+				e, err := setupTestEnv()
+				require.NoError(t, err)
+
+				code := getAuthorizationCode(t, e, codeChallenge, "")
+
+				validParams := map[string]string{
+					"grant_type":    "authorization_code",
+					"code":          code,
+					"client_id":     "vikunja",
+					"redirect_uri":  "vikunja-flutter://callback",
+					"code_verifier": codeVerifier,
+				}
+
+				tamperedParams := maps.Clone(validParams)
+				tc.tamper(tamperedParams)
+
+				rec := doTokenRequest(e, tamperedParams)
+				require.Equal(t, http.StatusBadRequest, rec.Code)
+				assert.Contains(t, rec.Body.String(), fmt.Sprintf(`"code":%d`, tc.wantErrCode), "body: %s", rec.Body.String())
+
+				// Retrying with the correct parameters must fail: the code is gone.
+				rec2 := doTokenRequest(e, validParams)
+				require.Equal(t, http.StatusBadRequest, rec2.Code)
+				assert.Contains(t, rec2.Body.String(), fmt.Sprintf(`"code":%d`, models.ErrCodeOAuthCodeInvalid), "body: %s", rec2.Body.String())
+			})
+		}
 	})
 
 	t.Run("refresh token rotation prevents replay", func(t *testing.T) {

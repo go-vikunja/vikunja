@@ -20,8 +20,9 @@ import (
 	"context"
 	"net/http"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/modules/auth"
-	"code.vikunja.io/api/pkg/modules/humaecho5"
+	"code.vikunja.io/api/pkg/modules/humabridge"
 	"code.vikunja.io/api/pkg/routes/api/shared"
 	"code.vikunja.io/api/pkg/user"
 
@@ -45,28 +46,31 @@ type authTokenBody struct {
 // logoutBody confirms a successful logout.
 type logoutBody struct {
 	Body struct {
-		Message string `json:"message" readOnly:"true" doc:"A human-readable confirmation message."`
+		Message       string `json:"message" readOnly:"true" doc:"A human-readable confirmation message."`
+		OIDCLogoutURL string `json:"oidc_logout_url,omitempty" readOnly:"true" doc:"RP-Initiated Logout URL to redirect to for OpenID Connect sessions; empty otherwise."`
 	}
 }
 
 func init() { AddRouteRegistrar(RegisterLoginRoutes) }
 
 // RegisterLoginRoutes wires the local/LDAP login and logout endpoints. Login is
-// always registered (LDAP-only deployments still log in here); logout inherits
-// the global JWT auth.
+// gated on local or LDAP auth, mirroring v1's gate in routes.go; logout stays
+// unconditional because it terminates any session, OIDC included.
 func RegisterLoginRoutes(api huma.API) {
 	tags := []string{"auth"}
 
-	Register(api, huma.Operation{
-		OperationID:   "auth-login",
-		Summary:       "Login",
-		Description:   "Logs a user in with username and password (and a TOTP passcode when 2FA is enabled), returning a short-lived JWT. A long-lived refresh token is set as an HttpOnly cookie scoped to the refresh endpoint.",
-		Method:        http.MethodPost,
-		Path:          "/login",
-		DefaultStatus: http.StatusOK,
-		Tags:          tags,
-		Security:      publicSecurity,
-	}, authLogin)
+	if config.AuthLocalEnabled.GetBool() || config.AuthLdapEnabled.GetBool() {
+		Register(api, huma.Operation{
+			OperationID:   "auth-login",
+			Summary:       "Login",
+			Description:   "Logs a user in with username and password (and a TOTP passcode when 2FA is enabled), returning a short-lived JWT. A long-lived refresh token is set as an HttpOnly cookie scoped to the refresh endpoint.",
+			Method:        http.MethodPost,
+			Path:          "/login",
+			DefaultStatus: http.StatusOK,
+			Tags:          tags,
+			Security:      publicSecurity,
+		}, authLogin)
+	}
 
 	Register(api, huma.Operation{
 		OperationID:   "auth-logout",
@@ -86,7 +90,7 @@ func authLogin(ctx context.Context, in *struct{ Body user.Login }) (*authTokenBo
 	}
 
 	deviceInfo, ipAddress := requestClientInfo(ctx)
-	token, err := auth.IssueUserToken(ctx, u, deviceInfo, ipAddress, in.Body.LongToken)
+	token, err := auth.IssueUserToken(ctx, u, deviceInfo, ipAddress, in.Body.LongToken, nil)
 	if err != nil {
 		return nil, translateDomainError(err)
 	}
@@ -107,21 +111,23 @@ func authLogout(ctx context.Context, _ *struct{}) (*logoutBody, error) {
 		sid = auth.SessionIDFromContext(ec)
 	}
 
-	if err := shared.DeleteSession(sid); err != nil {
+	oidcLogoutURL, err := shared.LogoutSession(sid) //nolint:contextcheck // OIDC provider discovery resolves from a cached, context-less map and runs on its own background context, like the OIDC callback.
+	if err != nil {
 		return nil, translateDomainError(err)
 	}
 
 	out := &logoutBody{}
 	out.Body.Message = "Successfully logged out."
+	out.Body.OIDCLogoutURL = oidcLogoutURL
 	return out, nil
 }
 
 // echoContextFromCtx pulls the underlying *echo.Context off a Huma request
 // context so a handler can set cookies and headers the OpenAPI schema does not
 // model (the refresh-token cookie). Returns nil when the context carries no echo
-// context (it always does under the humaecho5 adapter).
+// context (it always does under the humabridge group middleware).
 func echoContextFromCtx(ctx context.Context) *echo.Context {
-	ec, ok := ctx.Value(humaecho5.EchoContextKey).(*echo.Context)
+	ec, ok := ctx.Value(humabridge.EchoContextKey).(*echo.Context)
 	if !ok || ec == nil {
 		return nil
 	}

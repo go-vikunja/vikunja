@@ -33,7 +33,6 @@
 				required
 				type="text"
 				autocomplete="username"
-				tabindex="1"
 				:error="usernameValid ? null : $t('user.auth.usernameRequired')"
 				@keyup.enter="submit"
 				@focusout="validateUsernameField()"
@@ -48,14 +47,12 @@
 						v-if="localAuthEnabled"
 						:to="{ name: 'user.password-reset.request' }"
 						class="reset-password-link"
-						tabindex="6"
 					>
 						{{ $t('user.auth.forgotPassword') }}
 					</RouterLink>
 				</div>
 				<Password
 					v-model="password"
-					tabindex="2"
 					:validate-initially="validatePasswordInitially"
 					:validate-min-length="false"
 					@submit="submit"
@@ -71,7 +68,6 @@
 				:placeholder="$t('user.auth.totpPlaceholder')"
 				required
 				type="text"
-				tabindex="3"
 				inputmode="numeric"
 				@keyup.enter="submit"
 			/>
@@ -82,7 +78,6 @@
 
 			<XButton
 				:loading="isLoading"
-				tabindex="4"
 				@click="submit"
 			>
 				{{ $t('user.auth.login') }}
@@ -95,7 +90,7 @@
 				<RouterLink
 					:to="{ name: 'user.register' }"
 					type="secondary"
-					tabindex="5"
+					class="inline-link"
 				>
 					{{ $t('user.auth.createAccount') }}
 				</RouterLink>
@@ -136,7 +131,7 @@ import {redirectToProvider} from '@/helpers/redirectToProvider'
 import {useRedirectToLastVisited} from '@/composables/useRedirectToLastVisited'
 import {isDesktopApp} from '@/helpers/desktopAuth'
 
-import {useAuthStore} from '@/stores/auth'
+import {useAuthStore, JUST_LOGGED_OUT_KEY} from '@/stores/auth'
 import {useConfigStore} from '@/stores/config'
 
 import {useTitle} from '@/composables/useTitle'
@@ -181,6 +176,25 @@ onBeforeMount(() => {
 	// route before the submit() handler gets a chance to use it.
 	if (authenticated.value) {
 		router.push({name: 'home'})
+		return
+	}
+
+	// Don't auto-redirect right after an explicit logout, otherwise we'd
+	// immediately re-authenticate the user we just logged out.
+	if (sessionStorage.getItem(JUST_LOGGED_OUT_KEY)) {
+		sessionStorage.removeItem(JUST_LOGGED_OUT_KEY)
+		return
+	}
+
+	// When the login page offers nothing but a single OIDC provider, skip it
+	// and send the user straight there.
+	if (
+		!localAuthEnabled.value &&
+		!ldapAuthEnabled.value &&
+		hasOpenIdProviders.value &&
+		openidConnect.value.providers.length === 1
+	) {
+		redirectToProvider(openidConnect.value.providers[0])
 	}
 })
 
@@ -238,6 +252,11 @@ async function submit() {
 
 .reset-password-link {
 	display: inline-block;
+}
+
+// Underline links sitting inside body text so they're not distinguished by color alone
+.inline-link {
+	text-decoration: underline;
 }
 
 .label-with-link {

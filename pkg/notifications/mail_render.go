@@ -17,11 +17,14 @@
 package notifications
 
 import (
+	"bufio"
 	"bytes"
 	"embed"
+	"html"
 	templatehtml "html/template"
 	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
 	templatetext "text/template"
 
@@ -32,6 +35,9 @@ import (
 
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/ast"
+	goldmarkhtml "github.com/yuin/goldmark/renderer/html"
+	"github.com/yuin/goldmark/text"
 )
 
 const mailTemplatePlain = `
@@ -290,12 +296,183 @@ func ensurePMargins(html string) string {
 	return rePTag.ReplaceAllString(html, "<p "+pMarginStyle+">")
 }
 
-// convertLinesToPlain converts mail lines to plain text, stripping HTML from lines marked as HTML.
+var markdownTextWriter = goldmarkhtml.NewWriter()
+
+func markdownToPlainText(markdown string) string {
+	source := []byte(markdown)
+	document := goldmark.DefaultParser().Parse(text.NewReader(source))
+	var plain strings.Builder
+	linkStarts := make(map[ast.Node]int)
+	listItemIndents := make([]int, 0)
+	listItemHasBlocks := make([]bool, 0)
+
+	_ = ast.Walk(document, func(node ast.Node, entering bool) (ast.WalkStatus, error) {
+		switch n := node.(type) {
+		case *ast.Text:
+			if !entering {
+				return ast.WalkContinue, nil
+			}
+			writeMarkdownText(&plain, n.Value(source), n.IsRaw())
+			if n.SoftLineBreak() || n.HardLineBreak() {
+				plain.WriteByte('\n')
+				if len(listItemIndents) > 0 {
+					plain.WriteString(strings.Repeat(" ", listItemIndents[len(listItemIndents)-1]))
+				}
+			}
+		case *ast.String:
+			if entering {
+				writeMarkdownText(&plain, n.Value, n.IsRaw() || n.IsCode())
+			}
+		case *ast.AutoLink:
+			if entering {
+				plain.Write(n.Label(source))
+			}
+		case *ast.Link:
+			if entering {
+				linkStarts[node] = plain.Len()
+				return ast.WalkContinue, nil
+			}
+			start := linkStarts[node]
+			label := plain.String()[start:]
+			var normalized strings.Builder
+			writeMarkdownText(&normalized, n.Destination, false)
+			destination := normalized.String()
+			if destination != "" && label != destination {
+				plain.WriteString(" (")
+				plain.WriteString(destination)
+				plain.WriteByte(')')
+			}
+			delete(linkStarts, node)
+		case *ast.Image:
+			if !entering {
+				if len(n.Destination) > 0 {
+					plain.WriteString(" (")
+					writeMarkdownText(&plain, n.Destination, false)
+					plain.WriteByte(')')
+				}
+			}
+		case *ast.ListItem:
+			if entering {
+				if len(listItemHasBlocks) > 0 {
+					listItemHasBlocks[len(listItemHasBlocks)-1] = true
+				}
+				listItemIndents = append(listItemIndents, writePlainListItem(&plain, n))
+				listItemHasBlocks = append(listItemHasBlocks, false)
+			} else {
+				listItemIndents = listItemIndents[:len(listItemIndents)-1]
+				listItemHasBlocks = listItemHasBlocks[:len(listItemHasBlocks)-1]
+				writePlainNewline(&plain)
+			}
+		case *ast.Paragraph, *ast.Heading:
+			if entering {
+				writePlainListBlockStart(&plain, listItemIndents, listItemHasBlocks)
+			} else {
+				writePlainNewline(&plain)
+			}
+		case *ast.CodeBlock, *ast.FencedCodeBlock:
+			if entering {
+				writePlainListBlockStart(&plain, listItemIndents, listItemHasBlocks)
+				writePlainBlock(&plain, node.Lines().Value(source), listItemIndents)
+				writePlainNewline(&plain)
+				return ast.WalkSkipChildren, nil
+			}
+		case *ast.ThematicBreak:
+			if entering {
+				writePlainListBlockStart(&plain, listItemIndents, listItemHasBlocks)
+				plain.WriteString("---\n")
+			}
+		case *ast.RawHTML, *ast.HTMLBlock:
+			if entering {
+				return ast.WalkSkipChildren, nil
+			}
+		}
+
+		return ast.WalkContinue, nil
+	})
+
+	return strings.TrimSpace(plain.String())
+}
+
+func writePlainListItem(plain *strings.Builder, item *ast.ListItem) int {
+	writePlainNewline(plain)
+	prefixStart := plain.Len()
+	list := item.Parent().(*ast.List)
+	depth := 0
+	for parent := list.Parent(); parent != nil; parent = parent.Parent() {
+		if _, nested := parent.(*ast.List); nested {
+			depth++
+		}
+	}
+	plain.WriteString(strings.Repeat("  ", depth))
+
+	if list.IsOrdered() {
+		position := list.Start
+		for sibling := item.PreviousSibling(); sibling != nil; sibling = sibling.PreviousSibling() {
+			position++
+		}
+		plain.WriteString(strconv.Itoa(position))
+		plain.WriteString(". ")
+	} else {
+		plain.WriteString("- ")
+	}
+
+	return plain.Len() - prefixStart
+}
+
+func writePlainListBlockStart(plain *strings.Builder, indents []int, hasBlocks []bool) {
+	if len(hasBlocks) == 0 {
+		return
+	}
+
+	current := len(hasBlocks) - 1
+	if hasBlocks[current] {
+		writePlainNewline(plain)
+		plain.WriteString(strings.Repeat(" ", indents[current]))
+	}
+	hasBlocks[current] = true
+}
+
+func writePlainBlock(plain *strings.Builder, value []byte, indents []int) {
+	indent := 0
+	if len(indents) > 0 {
+		indent = indents[len(indents)-1]
+	}
+
+	for i, char := range value {
+		plain.WriteByte(char)
+		if char == '\n' && i < len(value)-1 {
+			plain.WriteString(strings.Repeat(" ", indent))
+		}
+	}
+}
+
+func writeMarkdownText(plain *strings.Builder, value []byte, raw bool) {
+	if raw {
+		plain.Write(value)
+		return
+	}
+
+	var escaped bytes.Buffer
+	writer := bufio.NewWriter(&escaped)
+	markdownTextWriter.Write(writer, value)
+	_ = writer.Flush()
+	plain.WriteString(html.UnescapeString(escaped.String()))
+}
+
+func writePlainNewline(plain *strings.Builder) {
+	if plain.Len() == 0 || plain.String()[plain.Len()-1] != '\n' {
+		plain.WriteByte('\n')
+	}
+}
+
 func convertLinesToPlain(lines []*mailLine) []*mailLine {
 	plain := make([]*mailLine, 0, len(lines))
 	for _, line := range lines {
 		if !line.isHTML {
-			plain = append(plain, line)
+			text := markdownToPlainText(line.Text)
+			if text != "" {
+				plain = append(plain, &mailLine{Text: text})
+			}
 			continue
 		}
 
@@ -352,20 +529,15 @@ func RenderMail(m *Mail, lang string) (mailOpts *mail.Opts, err error) {
 	data := make(map[string]interface{})
 
 	data["Greeting"] = m.greeting
-	if m.conversational {
-		data["IntroLines"] = convertLinesToPlain(m.introLines)
-		data["OutroLines"] = convertLinesToPlain(m.outroLines)
-		if m.headerLine != nil {
-			plainHeaders := convertLinesToPlain([]*mailLine{m.headerLine})
-			if len(plainHeaders) > 0 {
-				data["HeaderLinePlain"] = plainHeaders[0].Text
-			}
+	data["IntroLines"] = convertLinesToPlain(m.introLines)
+	data["OutroLines"] = convertLinesToPlain(m.outroLines)
+	if m.conversational && m.headerLine != nil {
+		plainHeaders := convertLinesToPlain([]*mailLine{m.headerLine})
+		if len(plainHeaders) > 0 {
+			data["HeaderLinePlain"] = plainHeaders[0].Text
 		}
-	} else {
-		data["IntroLines"] = m.introLines
-		data["OutroLines"] = m.outroLines
 	}
-	data["FooterLines"] = m.footerLines
+	data["FooterLines"] = convertLinesToPlain(m.footerLines)
 	data["ActionText"] = m.actionText
 	data["ActionURL"] = m.actionURL
 	data["Boundary"] = boundary

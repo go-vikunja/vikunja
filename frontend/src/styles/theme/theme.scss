@@ -9,14 +9,14 @@
   outline: none;
 }
 
-a, button {
+a, button, input[type='checkbox'], input[type='radio'], select, [tabindex], [contenteditable='true'] {
   &:focus-visible {
-    box-shadow: 0 0 0 2px hsla(var(--primary-hsl), 0.5);
+    @include focus-ring;
   }
 
   @supports not selector(:focus-visible) {
     &:focus {
-      box-shadow: 0 0 0 2px hsla(var(--primary-hsl), 0.5);
+      @include focus-ring;
     }
   }
 }

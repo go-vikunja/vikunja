@@ -76,6 +76,18 @@ func ClearDispatchedEvents() {
 	dispatchedTestEvents = nil
 }
 
+// GetDispatchedEvents returns all dispatched test events matching the given name, letting tests
+// assert on the event payload (not just that it was dispatched).
+func GetDispatchedEvents(eventName string) []Event {
+	var events []Event
+	for _, testEvent := range dispatchedTestEvents {
+		if testEvent.Name() == eventName {
+			events = append(events, testEvent)
+		}
+	}
+	return events
+}
+
 // CountDispatchedEvents counts how many events of a specific type have been dispatched.
 func CountDispatchedEvents(eventName string) int {
 	count := 0

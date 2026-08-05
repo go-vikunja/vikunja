@@ -145,7 +145,7 @@ func DeleteUser(s *xorm.Session, u *user.User) (err error) {
 	}
 
 	for _, p := range projectsToDelete {
-		if p.ParentProjectID != 0 {
+		if p.parentID() != 0 {
 			// Child projects are deleted by p.Delete
 			continue
 		}

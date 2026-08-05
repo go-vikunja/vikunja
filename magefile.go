@@ -61,21 +61,23 @@ var (
 
 	// Aliases are mage aliases of targets
 	Aliases = map[string]any{
-		"build":                 Build.Build,
-		"check:got-swag":        Check.GotSwag,
-		"dev:make-migration":    Dev.MakeMigration,
-		"dev:make-event":        Dev.MakeEvent,
-		"dev:make-listener":     Dev.MakeListener,
-		"dev:make-notification": Dev.MakeNotification,
-		"dev:prepare-worktree":  Dev.PrepareWorktree,
-		"dev:tag-release":       Dev.TagRelease,
-		"test:e2e":              Test.E2E,
-		"test:e2e-api":          Test.E2EApi,
-		"plugins:build":         Plugins.Build,
-		"lint":                  Check.Golangci,
-		"lint:fix":              Check.GolangciFix,
-		"generate:config-yaml":  Generate.ConfigYAML,
-		"generate:swagger-docs": Generate.SwaggerDocs,
+		"build":                  Build.Build,
+		"check:got-swag":         Check.GotSwag,
+		"dev:make-migration":     Dev.MakeMigration,
+		"dev:make-event":         Dev.MakeEvent,
+		"dev:make-listener":      Dev.MakeListener,
+		"dev:make-notification":  Dev.MakeNotification,
+		"dev:prepare-worktree":   Dev.PrepareWorktree,
+		"dev:tag-release":        Dev.TagRelease,
+		"test:e2e":               Test.E2E,
+		"test:e2e-api":           Test.E2EApi,
+		"plugins:build":          Plugins.Build,
+		"lint":                   Check.Golangci,
+		"lint:fix":               Check.GolangciFix,
+		"generate:config-yaml":   Generate.ConfigYAML,
+		"generate:swagger-docs":  Generate.SwaggerDocs,
+		"generate:yaegi-symbols": Generate.YaegiSymbols,
+		"check:yaegi-symbols":    Check.YaegiSymbols,
 	}
 )
 
@@ -619,6 +621,42 @@ func (Check) GotSwag(ctx context.Context) error {
 	return nil
 }
 
+// YaegiSymbols checks if the yaegi symbol tables in pkg/yaegi_symbols need to be re-generated
+func (Check) YaegiSymbols(ctx context.Context) error {
+	mg.Deps(initVars)
+
+	// Same hash-compare approach as GotSwag: regenerate in place and compare.
+	// The regenerated files are not reset afterwards, which is fine for ci.
+	oldHashes := make(map[string]string, len(yaegiSymbolPackages))
+	for _, p := range yaegiSymbolPackages {
+		hash, err := calculateSha256FileHash(filepath.Join(yaegiSymbolsDir, p.outFile))
+		if err != nil {
+			return fmt.Errorf("error getting old hash of %s: %w", p.outFile, err)
+		}
+		oldHashes[p.outFile] = hash
+	}
+
+	if err := (Generate{}).YaegiSymbols(ctx); err != nil {
+		return err
+	}
+
+	var stale []string
+	for _, p := range yaegiSymbolPackages {
+		hash, err := calculateSha256FileHash(filepath.Join(yaegiSymbolsDir, p.outFile))
+		if err != nil {
+			return fmt.Errorf("error getting new hash of %s: %w", p.outFile, err)
+		}
+		if hash != oldHashes[p.outFile] {
+			stale = append(stale, p.outFile)
+		}
+	}
+
+	if len(stale) > 0 {
+		return fmt.Errorf("yaegi symbols are not up to date (%s): run 'mage generate:yaegi-symbols' and commit the result", strings.Join(stale, ", "))
+	}
+	return nil
+}
+
 // Translations checks that all translation keys used in the code exist in
 // their respective English translation files, and conversely that no unused
 // keys exist in those files. Both the api (Go) and the frontend (Vue/TS) are
@@ -1085,6 +1123,7 @@ func (Check) All() {
 		Check.Golangci,
 		Check.GotSwag,
 		Check.Translations,
+		Check.YaegiSymbols,
 	)
 }
 
@@ -1184,7 +1223,7 @@ func init() {
 		ID:          "` + date + `",
 		Description: "",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync(` + str + date + `{})
+			return partialSync(tx, ` + str + date + `{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil
@@ -1379,6 +1418,52 @@ func (Generate) SwaggerDocs(ctx context.Context) error {
 		return err
 	}
 	return runAndStreamOutput(ctx, "swag", "init", "-g", "./pkg/routes/routes.go", "--parseDependency", "-d", ".", "-o", "./pkg/swagger")
+}
+
+const yaegiSymbolsDir = "./pkg/yaegi_symbols"
+
+// yaegiSymbolPackages maps extracted import paths to their checked-in file names in pkg/yaegi_symbols.
+var yaegiSymbolPackages = []struct {
+	importPath string
+	outFile    string
+}{
+	{"code.vikunja.io/api/pkg/db", "vikunja_db.go"},
+	{"code.vikunja.io/api/pkg/events", "vikunja_events.go"},
+	{"code.vikunja.io/api/pkg/log", "vikunja_log.go"},
+	{"code.vikunja.io/api/pkg/models", "vikunja_models.go"},
+	{"code.vikunja.io/api/pkg/plugins", "vikunja_plugins.go"},
+	{"code.vikunja.io/api/pkg/user", "vikunja_user.go"},
+	{"github.com/labstack/echo/v5", "echo.go"},
+	{"github.com/ThreeDotsLabs/watermill/message", "watermill.go"},
+}
+
+// YaegiSymbols regenerates the yaegi symbol tables in pkg/yaegi_symbols so
+// interpreted plugins see the current exported API.
+func (Generate) YaegiSymbols(ctx context.Context) error {
+	mg.Deps(initVars)
+
+	// Same replacer yaegi's extract command uses to derive the output file name.
+	replacer := strings.NewReplacer("/", "-", ".", "_", "~", "_")
+
+	for _, p := range yaegiSymbolPackages {
+		c := exec.CommandContext(ctx, "go", "run", "github.com/traefik/yaegi/cmd/yaegi", "extract", p.importPath) //nolint:gosec // import paths come from the hard-coded yaegiSymbolPackages list
+		c.Dir = yaegiSymbolsDir
+		c.Env = append(os.Environ(), "GOPACKAGE=yaegi_symbols")
+		c.Stdout = os.Stdout
+		c.Stderr = os.Stderr
+		fmt.Printf("%s\n\n", c.String())
+		if err := c.Run(); err != nil {
+			return fmt.Errorf("error extracting yaegi symbols for %s: %w", p.importPath, err)
+		}
+
+		// yaegi extract exits 0 even when extraction fails, so the missing
+		// output file surfaces here as a rename error.
+		generated := filepath.Join(yaegiSymbolsDir, replacer.Replace(p.importPath)+".go")
+		if err := os.Rename(generated, filepath.Join(yaegiSymbolsDir, p.outFile)); err != nil {
+			return fmt.Errorf("error renaming extracted yaegi symbols for %s: %w", p.importPath, err)
+		}
+	}
+	return nil
 }
 
 type ConfigNode struct {
@@ -1758,6 +1843,33 @@ func printReleaseStats(ctx context.Context, fromRef, toRef string) error {
 	return nil
 }
 
+// commitPathIfChanged stages and commits everything under path if it has
+// uncommitted changes. No-op when the path is clean.
+func commitPathIfChanged(ctx context.Context, path, message string) error {
+	status, err := runGitCommandWithOutput(ctx, "status", "--porcelain", "--", path)
+	if err != nil {
+		return fmt.Errorf("failed to check git status for %s: %w", path, err)
+	}
+
+	if strings.TrimSpace(string(status)) == "" {
+		fmt.Printf("%s is up to date, nothing to commit.\n", path)
+		return nil
+	}
+
+	if err := exec.CommandContext(ctx, "git", "add", path).Run(); err != nil {
+		return fmt.Errorf("failed to stage %s: %w", path, err)
+	}
+
+	cmd := exec.CommandContext(ctx, "git", "commit", "-m", message)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to commit %s: %w", path, err)
+	}
+
+	return nil
+}
+
 // TagRelease creates a new release tag with changelog.
 // It updates the version badge in README.md, generates changelog using git-cliff,
 // commits the changes, and creates an annotated tag.
@@ -1796,6 +1908,24 @@ func (Dev) TagRelease(ctx context.Context, version string) error {
 
 	// Clean up the changelog
 	changelog = cleanupChangelog(changelog)
+
+	// Generated files must be part of the tag, so regenerate them here instead of
+	// waiting for the workflow which only commits them after the release ran.
+	fmt.Println("Regenerating swagger docs...")
+	if err := (Generate{}).SwaggerDocs(ctx); err != nil {
+		return fmt.Errorf("failed to generate swagger docs: %w", err)
+	}
+	if err := commitPathIfChanged(ctx, "pkg/swagger", "[skip ci] Updated swagger docs"); err != nil {
+		return err
+	}
+
+	fmt.Println("Regenerating yaegi symbols...")
+	if err := (Generate{}).YaegiSymbols(ctx); err != nil {
+		return fmt.Errorf("failed to generate yaegi symbols: %w", err)
+	}
+	if err := commitPathIfChanged(ctx, "pkg/yaegi_symbols", "[skip ci] Updated yaegi symbols"); err != nil {
+		return err
+	}
 
 	// Update README.md version badge
 	fmt.Println("Updating README.md version badge...")

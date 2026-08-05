@@ -1918,7 +1918,7 @@ const docTemplate = `{
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Returns an array with all notifications for the current user.",
+                "description": "Returns an array with all notifications for the current user. Notifications about a project the current user can no longer read are omitted; the filtering happens in the query, so paging and the ` + "`" + `x-pagination-*` + "`" + ` headers all describe the visible notifications only.",
                 "consumes": [
                     "application/json"
                 ],
@@ -3073,7 +3073,7 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "The created bucket object.",
                         "schema": {
                             "$ref": "#/definitions/models.Bucket"
@@ -3153,7 +3153,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with ` + "`" + `order_by` + "`" + `. Possible values to sort by are ` + "`" + `id` + "`" + `, ` + "`" + `title` + "`" + `, ` + "`" + `description` + "`" + `, ` + "`" + `done` + "`" + `, ` + "`" + `done_at` + "`" + `, ` + "`" + `due_date` + "`" + `, ` + "`" + `created_by_id` + "`" + `, ` + "`" + `project_id` + "`" + `, ` + "`" + `repeat_after` + "`" + `, ` + "`" + `priority` + "`" + `, ` + "`" + `start_date` + "`" + `, ` + "`" + `end_date` + "`" + `, ` + "`" + `hex_color` + "`" + `, ` + "`" + `percent_done` + "`" + `, ` + "`" + `uid` + "`" + `, ` + "`" + `created` + "`" + `, ` + "`" + `updated` + "`" + `. Default is ` + "`" + `id` + "`" + `.",
+                        "description": "The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with ` + "`" + `order_by` + "`" + `. Possible values to sort by are ` + "`" + `id` + "`" + `, ` + "`" + `title` + "`" + `, ` + "`" + `description` + "`" + `, ` + "`" + `done` + "`" + `, ` + "`" + `done_at` + "`" + `, ` + "`" + `due_date` + "`" + `, ` + "`" + `created_by_id` + "`" + `, ` + "`" + `project_id` + "`" + `, ` + "`" + `repeat_after` + "`" + `, ` + "`" + `priority` + "`" + `, ` + "`" + `start_date` + "`" + `, ` + "`" + `end_date` + "`" + `, ` + "`" + `hex_color` + "`" + `, ` + "`" + `percent_done` + "`" + `, ` + "`" + `uid` + "`" + `, ` + "`" + `created` + "`" + `, ` + "`" + `updated` + "`" + `, ` + "`" + `relevance` + "`" + `. ` + "`" + `relevance` + "`" + ` sorts by search relevance (most relevant first, requires ` + "`" + `s` + "`" + `; ignored when the database cannot score the query). Default is ` + "`" + `id` + "`" + `.",
                         "name": "sort_by",
                         "in": "query"
                     },
@@ -3300,7 +3300,7 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "The created webhook target.",
                         "schema": {
                             "$ref": "#/definitions/models.Webhook"
@@ -3438,7 +3438,7 @@ const docTemplate = `{
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Copies the project, tasks, files, kanban data, assignees, comments, attachments, labels, relations, backgrounds, user/team permissions and link shares from one project to a new one. The user needs read access in the project and write access in the parent of the new project.",
+                "description": "Copies the project, tasks, files, kanban data, assignees, comments, attachments, labels, relations and backgrounds from one project to a new one. User/team permissions and link shares are only copied when duplicate_shares is set to true. The user needs read access in the project and write access in the parent of the new project.",
                 "consumes": [
                     "application/json"
                 ],
@@ -4299,7 +4299,7 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "The created project view",
                         "schema": {
                             "$ref": "#/definitions/models.ProjectView"
@@ -4853,7 +4853,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with ` + "`" + `order_by` + "`" + `. Possible values to sort by are ` + "`" + `id` + "`" + `, ` + "`" + `title` + "`" + `, ` + "`" + `description` + "`" + `, ` + "`" + `done` + "`" + `, ` + "`" + `done_at` + "`" + `, ` + "`" + `due_date` + "`" + `, ` + "`" + `created_by_id` + "`" + `, ` + "`" + `project_id` + "`" + `, ` + "`" + `repeat_after` + "`" + `, ` + "`" + `priority` + "`" + `, ` + "`" + `start_date` + "`" + `, ` + "`" + `end_date` + "`" + `, ` + "`" + `hex_color` + "`" + `, ` + "`" + `percent_done` + "`" + `, ` + "`" + `uid` + "`" + `, ` + "`" + `created` + "`" + `, ` + "`" + `updated` + "`" + `. Default is ` + "`" + `id` + "`" + `.",
+                        "description": "The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with ` + "`" + `order_by` + "`" + `. Possible values to sort by are ` + "`" + `id` + "`" + `, ` + "`" + `title` + "`" + `, ` + "`" + `description` + "`" + `, ` + "`" + `done` + "`" + `, ` + "`" + `done_at` + "`" + `, ` + "`" + `due_date` + "`" + `, ` + "`" + `created_by_id` + "`" + `, ` + "`" + `project_id` + "`" + `, ` + "`" + `repeat_after` + "`" + `, ` + "`" + `priority` + "`" + `, ` + "`" + `start_date` + "`" + `, ` + "`" + `end_date` + "`" + `, ` + "`" + `hex_color` + "`" + `, ` + "`" + `percent_done` + "`" + `, ` + "`" + `uid` + "`" + `, ` + "`" + `created` + "`" + `, ` + "`" + `updated` + "`" + `, ` + "`" + `relevance` + "`" + `. ` + "`" + `relevance` + "`" + ` sorts by search relevance (most relevant first, requires ` + "`" + `s` + "`" + `; ignored when the database cannot score the query). Default is ` + "`" + `id` + "`" + `.",
                         "name": "sort_by",
                         "in": "query"
                     },
@@ -7030,7 +7030,7 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "The created token.",
                         "schema": {
                             "$ref": "#/definitions/models.APIToken"
@@ -7456,7 +7456,7 @@ const docTemplate = `{
         },
         "/user/logout": {
             "post": {
-                "description": "Destroys the current session and clears the refresh token cookie.",
+                "description": "Destroys the current session and clears the refresh token cookie. For OpenID Connect sessions the response includes an ` + "`" + `oidc_logout_url` + "`" + ` the client should redirect to so the provider session is ended too.",
                 "produces": [
                     "application/json"
                 ],
@@ -7468,7 +7468,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Successfully logged out.",
                         "schema": {
-                            "$ref": "#/definitions/models.Message"
+                            "$ref": "#/definitions/v1.LogoutResponse"
                         }
                     }
                 }
@@ -8749,7 +8749,7 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "The created reaction",
                         "schema": {
                             "$ref": "#/definitions/models.Reaction"
@@ -9665,6 +9665,10 @@ const docTemplate = `{
         "models.ProjectDuplicate": {
             "type": "object",
             "properties": {
+                "duplicate_shares": {
+                    "description": "Whether to copy the project's shares to the duplicate",
+                    "type": "boolean"
+                },
                 "duplicated_project": {
                     "description": "The copied project",
                     "allOf": [
@@ -10037,6 +10041,10 @@ const docTemplate = `{
                             "$ref": "#/definitions/user.User"
                         }
                     ]
+                },
+                "deleted_at": {
+                    "description": "A timestamp when this task was deleted. Soft-deleted tasks are kept for 30 days before they are removed permanently.\nomitzero keeps the field out of the JSON of regular tasks — it only ever appears on soft-deleted ones (the later trash listing).",
+                    "type": "string"
                 },
                 "description": {
                     "description": "The task description.",
@@ -10902,6 +10910,10 @@ const docTemplate = `{
                 "caldav_enabled": {
                     "type": "boolean"
                 },
+                "concurrent_writes": {
+                    "description": "ConcurrentWrites reports whether the configured database can handle concurrent writes. It is false on SQLite, where overlapping write transactions deadlock, so clients should serialize batched writes instead of firing them in parallel.",
+                    "type": "boolean"
+                },
                 "demo_mode_enabled": {
                     "type": "boolean"
                 },
@@ -11141,6 +11153,18 @@ const docTemplate = `{
                 }
             }
         },
+        "v1.LogoutResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "oidc_logout_url": {
+                    "description": "RP-Initiated Logout URL the frontend redirects to. Empty for non-OIDC sessions.",
+                    "type": "string"
+                }
+            }
+        },
         "v1.UserAvatarProvider": {
             "type": "object",
             "properties": {
@@ -11261,6 +11285,13 @@ const docTemplate = `{
             "properties": {
                 "code": {
                     "type": "integer"
+                },
+                "i18n_params": {
+                    "description": "I18nParams carries Message's dynamic values, keyed by the client's translation placeholder names, so clients can localise the error.",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
                 },
                 "message": {
                     "type": "string"

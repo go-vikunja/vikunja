@@ -132,8 +132,6 @@ export function transformFilterStringForApi(
 					keywords = keyword.trim().split(',').map(k => trimQuotes(k))
 				}
 
-				let replaced = keyword
-
 				const transformedKeywords: string[] = []
 				keywords.forEach(k => {
 					let id = resolver(k)
@@ -149,11 +147,9 @@ export function transformFilterStringForApi(
 				})
 				
 				// Join the transformed keywords back together
-				if (isMultiValueOperator(operator)) {
-					replaced = transformedKeywords.join(', ')
-				} else {
-					replaced = transformedKeywords[0] || keyword
-				}
+				let replaced = isMultiValueOperator(operator)
+					? transformedKeywords.join(', ')
+					: transformedKeywords[0] || keyword
 
 				replaced = replaced.replaceAll('"', '').replaceAll('\'', '')
 

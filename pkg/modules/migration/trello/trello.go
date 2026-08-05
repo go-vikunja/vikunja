@@ -249,7 +249,7 @@ func convertTrelloDataToVikunja(organizationName string, trelloData []*trello.Bo
 		project := &models.ProjectWithTasksAndBuckets{
 			Project: models.Project{
 				ID:              int64(index+1) + pseudoParentID,
-				ParentProjectID: pseudoParentID,
+				ParentProjectID: &pseudoParentID,
 				Title:           board.Name,
 				Description:     board.Desc,
 				IsArchived:      board.Closed,

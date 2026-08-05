@@ -104,6 +104,64 @@ func TestLdapLogin(t *testing.T) {
 		}, false)
 	})
 
+	t.Run("should sync groups using service account rebind", func(t *testing.T) {
+		// Verifies that re-binding as the service account before the group
+		// search works correctly — the fix for directories where regular users
+		// cannot enumerate group membership.
+		origFlag := config.AuthLdapGroupSyncUseServiceAccount.GetBool()
+		config.AuthLdapGroupSyncUseServiceAccount.Set(true)
+		defer config.AuthLdapGroupSyncUseServiceAccount.Set(origFlag)
+
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		user, err := AuthenticateUserInLDAP(s, "professor", "professor", true, "")
+
+		require.NoError(t, err)
+		assert.Equal(t, "professor", user.Username)
+		require.NoError(t, s.Commit())
+		db.AssertExists(t, "teams", map[string]interface{}{
+			"name":        "admin_staff (LDAP)",
+			"issuer":      "ldap",
+			"external_id": "cn=admin_staff,ou=people,dc=planetexpress,dc=com",
+		}, false)
+		db.AssertExists(t, "teams", map[string]interface{}{
+			"name":        "git (LDAP)",
+			"issuer":      "ldap",
+			"external_id": "cn=git,ou=people,dc=planetexpress,dc=com",
+		}, false)
+	})
+
+	t.Run("should sync groups using user binding", func(t *testing.T) {
+		// Verifies the flag=false path where the connection stays bound as the
+		// authenticated user during the group search. Works on directories that
+		// grant regular users read access to group objects.
+		origFlag := config.AuthLdapGroupSyncUseServiceAccount.GetBool()
+		config.AuthLdapGroupSyncUseServiceAccount.Set(false)
+		defer config.AuthLdapGroupSyncUseServiceAccount.Set(origFlag)
+
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		user, err := AuthenticateUserInLDAP(s, "professor", "professor", true, "")
+
+		require.NoError(t, err)
+		assert.Equal(t, "professor", user.Username)
+		require.NoError(t, s.Commit())
+		db.AssertExists(t, "teams", map[string]interface{}{
+			"name":        "admin_staff (LDAP)",
+			"issuer":      "ldap",
+			"external_id": "cn=admin_staff,ou=people,dc=planetexpress,dc=com",
+		}, false)
+		db.AssertExists(t, "teams", map[string]interface{}{
+			"name":        "git (LDAP)",
+			"issuer":      "ldap",
+			"external_id": "cn=git,ou=people,dc=planetexpress,dc=com",
+		}, false)
+	})
+
 	t.Run("should sync avatar when enabled", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
