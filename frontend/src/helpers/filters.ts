@@ -25,6 +25,11 @@ export const ASSIGNEE_FIELDS = [
 	'assignees',
 ]
 
+// Creator is matched by username and autocompletes to users, exactly like assignees.
+export const CREATOR_FIELDS = [
+	'creator',
+]
+
 export const LABEL_FIELDS = [
 	'labels',
 ]
@@ -36,12 +41,14 @@ export const PROJECT_FIELDS = [
 export const AUTOCOMPLETE_FIELDS = [
 	...LABEL_FIELDS,
 	...ASSIGNEE_FIELDS,
+	...CREATOR_FIELDS,
 	...PROJECT_FIELDS,
 ]
 
 export const AVAILABLE_FILTER_FIELDS = [
 	...DATE_FIELDS,
 	...ASSIGNEE_FIELDS,
+	...CREATOR_FIELDS,
 	...LABEL_FIELDS,
 	...PROJECT_FIELDS,
 	'done',

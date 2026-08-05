@@ -15,7 +15,7 @@
 						class="filter-autocomplete__label"
 					/>
 					<User
-						v-else-if="item.fieldType === 'assignees'"
+						v-else-if="item.fieldType === 'users'"
 						:user="(item.item as unknown as IUser)"
 						:avatar-size="20"
 						class="filter-autocomplete__user"
