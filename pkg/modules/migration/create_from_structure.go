@@ -19,6 +19,8 @@ package migration
 import (
 	"bytes"
 	"context"
+	"errors"
+	"fmt"
 	"math"
 
 	"xorm.io/xorm"
@@ -30,6 +32,13 @@ import (
 	"code.vikunja.io/api/pkg/modules/background/handler"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
+)
+
+var (
+	errImportedViewBucketMissing  = errors.New("imported view references an unknown bucket")
+	errImportedViewBucketMismatch = errors.New("imported view references a bucket from another view")
+	errDuplicateImportedViewID    = errors.New("imported views contain a duplicate legacy id")
+	errInvalidImportedViewID      = errors.New("imported view has an invalid legacy id")
 )
 
 // InsertFromStructure takes a fully nested Vikunja data structure and a user and then creates everything for this user
@@ -174,6 +183,16 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 	originalBackgroundInformation := project.BackgroundInformation
 	needsDefaultBucket := false
 	oldViews := project.Views
+	seenViewIDs := make(map[int64]struct{}, len(oldViews))
+	for _, view := range oldViews {
+		if view.ID <= 0 {
+			return fmt.Errorf("%w: %d", errInvalidImportedViewID, view.ID)
+		}
+		if _, exists := seenViewIDs[view.ID]; exists {
+			return fmt.Errorf("%w: %d", errDuplicateImportedViewID, view.ID)
+		}
+		seenViewIDs[view.ID] = struct{}{}
+	}
 
 	// Saving the archived status to archive the project again after creating it
 	var wasArchived bool
@@ -252,22 +271,45 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 			view.ID = 0
 
 			if view.DefaultBucketID != 0 {
-				bucket, has := bucketsByOldID[view.DefaultBucketID]
-				if has {
-					view.DefaultBucketID = bucket.ID
+				oldBucketID := view.DefaultBucketID
+				bucket, has := bucketsByOldID[oldBucketID]
+				if !has {
+					return fmt.Errorf("%w: default bucket %d", errImportedViewBucketMissing, oldBucketID)
 				}
+				if bucket.ProjectViewID != oldID {
+					return fmt.Errorf("%w: view %d default bucket %d belongs to view %d", errImportedViewBucketMismatch, oldID, oldBucketID, bucket.ProjectViewID)
+				}
+				view.DefaultBucketID = bucket.ID
 			}
 
 			if view.DoneBucketID != 0 {
-				bucket, has := bucketsByOldID[view.DoneBucketID]
-				if has {
-					view.DoneBucketID = bucket.ID
+				oldBucketID := view.DoneBucketID
+				bucket, has := bucketsByOldID[oldBucketID]
+				if !has {
+					return fmt.Errorf("%w: done bucket %d", errImportedViewBucketMissing, oldBucketID)
 				}
+				if bucket.ProjectViewID != oldID {
+					return fmt.Errorf("%w: view %d done bucket %d belongs to view %d", errImportedViewBucketMismatch, oldID, oldBucketID, bucket.ProjectViewID)
+				}
+				view.DoneBucketID = bucket.ID
 			}
 
 			view.ProjectID = project.ID
 
+			defaultBucketID := view.DefaultBucketID
+			doneBucketID := view.DoneBucketID
 			err = view.Create(s, user)
+			if err != nil {
+				return
+			}
+			// ProjectView.Create treats bucket IDs as server-managed and does not
+			// persist imported values. Restore the already remapped same-project
+			// IDs directly so native file imports retain default/done semantics.
+			view.DefaultBucketID = defaultBucketID
+			view.DoneBucketID = doneBucketID
+			_, err = s.Where("id = ?", view.ID).
+				Cols("default_bucket_id", "done_bucket_id").
+				Update(view)
 			if err != nil {
 				return
 			}
@@ -517,34 +559,28 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 	// All tasks brought their own bucket with them, therefore the newly created default buckets are just extra space.
 	// Delete all default-created buckets ("To-Do", "Doing", "Done") that were auto-generated.
 	if !needsDefaultBucket {
-		b := &models.Bucket{ProjectID: project.ID}
-
-		for _, view := range project.Views {
-			if view.ViewKind == models.ProjectViewKindKanban {
-				b.ProjectViewID = view.ID
-				break
-			}
-		}
-
-		bucketsIn, _, _, err := b.ReadAll(s, user, "", 1, 1)
-		if err != nil {
-			return err
-		}
-		buckets := bucketsIn.([]*models.Bucket)
-
 		migrationBucketIDs := make(map[int64]bool)
 		for _, mb := range bucketsByOldID {
 			migrationBucketIDs[mb.ID] = true
 		}
-
-		for _, b := range buckets {
-			if migrationBucketIDs[b.ID] {
+		for _, view := range project.Views {
+			if view.ViewKind != models.ProjectViewKindKanban {
 				continue
 			}
-			b.ProjectID = project.ID
-			err = b.Delete(s, user)
-			if err != nil && !models.IsErrCannotRemoveLastBucket(err) {
-				return err
+			query := &models.Bucket{ProjectID: project.ID, ProjectViewID: view.ID}
+			bucketsIn, _, _, readErr := query.ReadAll(s, user, "", 1, 1000)
+			if readErr != nil {
+				return readErr
+			}
+			for _, bucket := range bucketsIn.([]*models.Bucket) {
+				if migrationBucketIDs[bucket.ID] {
+					continue
+				}
+				bucket.ProjectID = project.ID
+				err = bucket.Delete(s, user)
+				if err != nil && !models.IsErrCannotRemoveLastBucket(err) {
+					return err
+				}
 			}
 		}
 	}
