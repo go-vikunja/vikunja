@@ -7,13 +7,13 @@
 	>
 		<slot
 			name="previous"
-			:disabled="currentPage === 1"
+			:disabled="currentPage <= 1"
 		>
 			{{ $t('misc.previous') }}
 		</slot>
 		<slot
 			name="next"
-			:disabled="currentPage === totalPages"
+			:disabled="currentPage >= totalPages"
 		>
 			{{ $t('misc.next') }}
 		</slot>
