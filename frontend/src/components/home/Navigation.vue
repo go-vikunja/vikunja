@@ -21,7 +21,7 @@
 			<menu class="menu-list other-menu-items">
 				<li>
 					<RouterLink
-						v-shortcut="'KeyG KeyO'"
+						v-shortcut="SHORTCUTS.navigation.overview.binding"
 						:to="{ name: 'home'}"
 					>
 						<span class="menu-item-icon icon">
@@ -32,7 +32,7 @@
 				</li>
 				<li>
 					<RouterLink
-						v-shortcut="'KeyG KeyU'"
+						v-shortcut="SHORTCUTS.navigation.upcoming.binding"
 						:to="{ name: 'tasks.range'}"
 					>
 						<span class="menu-item-icon icon">
@@ -43,7 +43,7 @@
 				</li>
 				<li>
 					<RouterLink
-						v-shortcut="'KeyG KeyP'"
+						v-shortcut="SHORTCUTS.navigation.projects.binding"
 						:to="{ name: 'projects.index'}"
 					>
 						<span class="menu-item-icon icon">
@@ -54,7 +54,7 @@
 				</li>
 				<li>
 					<RouterLink
-						v-shortcut="'KeyG KeyA'"
+						v-shortcut="SHORTCUTS.navigation.labels.binding"
 						:to="{ name: 'labels.index'}"
 					>
 						<span class="menu-item-icon icon">
@@ -65,7 +65,7 @@
 				</li>
 				<li>
 					<RouterLink
-						v-shortcut="'KeyG KeyM'"
+						v-shortcut="SHORTCUTS.navigation.teams.binding"
 						:to="{ name: 'teams.index'}"
 					>
 						<span class="menu-item-icon icon">
@@ -143,6 +143,7 @@
 <script setup lang="ts">
 import {computed} from 'vue'
 
+import {SHORTCUTS} from '@/constants/shortcuts'
 import PoweredByLink from '@/components/home/PoweredByLink.vue'
 import Logo from '@/components/home/Logo.vue'
 import Loading from '@/components/misc/Loading.vue'

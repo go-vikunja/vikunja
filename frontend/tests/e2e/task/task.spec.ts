@@ -607,6 +607,21 @@ test.describe('Task', () => {
 			await expect(labelWrapper).not.toContainText(labels[0].title)
 		})
 
+		test('Can open due date with keyboard shortcut in task detail', async ({authenticatedPage: page}) => {
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				done: false,
+			})
+			await page.goto(`/tasks/${tasks[0].id}`)
+			await page.waitForLoadState('networkidle')
+
+			const dueDateColumn = page.locator('.task-view .columns.details .column').filter({hasText: 'Due Date'})
+			await expect(dueDateColumn).not.toBeVisible()
+			await page.locator('.task-view .action-buttons').click()
+			await page.locator('body').press('d')
+			await expect(dueDateColumn).toBeVisible()
+		})
+
 		test('Can set a due date for a task', async ({authenticatedPage: page}) => {
 			const tasks = await TaskFactory.create(1, {
 				id: 1,

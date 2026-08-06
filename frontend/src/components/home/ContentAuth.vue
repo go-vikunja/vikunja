@@ -64,7 +64,7 @@
 				</Modal>
 
 				<BaseButton
-					v-shortcut="'Shift+Slash'"
+					v-shortcut="SHORTCUTS.showKeyboardShortcuts.binding"
 					class="keyboard-shortcuts-button d-print-none"
 					@click="showKeyboardShortcuts()"
 				>
@@ -80,6 +80,7 @@
 import {watch, computed, onBeforeUnmount} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 
+import {SHORTCUTS} from '@/constants/shortcuts'
 import Navigation from '@/components/home/Navigation.vue'
 import QuickActions from '@/components/quick-actions/QuickActions.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
