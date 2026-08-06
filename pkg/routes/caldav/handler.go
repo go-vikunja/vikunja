@@ -44,6 +44,12 @@ func getBasicAuthUserFromContext(c *echo.Context) (*user.User, error) {
 	return u, nil
 }
 
+// caldav-go renders current-user-principal as "/<name>/", so pass the path
+// without surrounding slashes or the href ends up with a double slash.
+func setupUser(path string) {
+	caldav.SetupUser(strings.Trim(path, "/"))
+}
+
 // ProjectHandler returns all tasks from a project
 func ProjectHandler(c *echo.Context) error {
 	project, err := getProjectFromParam(c)
@@ -71,7 +77,7 @@ func ProjectHandler(c *echo.Context) error {
 	// Parse it
 	vtodo := string(body)
 	if vtodo != "" && strings.HasPrefix(vtodo, `BEGIN:VCALENDAR`) {
-		storage.task, err = caldav2.ParseTaskFromVTODO(vtodo)
+		storage.task, _, err = caldav2.ParseTaskFromVTODO(vtodo)
 		if err != nil {
 			log.Warningf("[CALDAV] Failed to parse task: %v", err)
 			return models.ErrInvalidData{Message: "Invalid task"}
@@ -81,8 +87,24 @@ func ProjectHandler(c *echo.Context) error {
 	log.Debugf("[CALDAV] Request Body: %v\n", string(body))
 	log.Debugf("[CALDAV] Request Headers: %v\n", c.Request().Header)
 
+	// RFC 6578: intercept sync-collection REPORT before caldav-go sees it.
+	// caldav-go returns 412 (empty body) for unknown REPORT types, which causes
+	// iOS to silently stop syncing after the initial account add.
+	if c.Request().Method == "REPORT" && strings.Contains(string(body), "sync-collection") {
+		log.Debugf("[CALDAV] sync-collection REPORT for project %d by user %s", storage.project.ID, u.Username)
+		return handleSyncCollectionReport(c, string(body), storage)
+	}
+
+	// caldav-go has no PROPPATCH dispatch case and falls back to a blanket 501;
+	// intercept it here, same as the sync-collection REPORT above. The home-set
+	// root (project.ID == 0) still falls through to that 501, unhandled for now.
+	if c.Request().Method == "PROPPATCH" && storage.project.ID != 0 {
+		log.Debugf("[CALDAV] PROPPATCH for project %d by user %s", storage.project.ID, u.Username)
+		return handlePropPatch(c, string(body), storage.project, u)
+	}
+
 	caldav.SetupStorage(storage)
-	caldav.SetupUser(strings.TrimPrefix(ProjectHomeSetPath, "/"))
+	setupUser(ProjectHomeSetPath)
 	caldav.SetupSupportedComponents([]string{lib.VCALENDAR, lib.VTODO})
 	response := caldav.HandleRequest(c.Request())
 	response.Write(c.Response())
@@ -92,6 +114,31 @@ func ProjectHandler(c *echo.Context) error {
 // TaskHandler is the handler which manages updating/deleting a single task
 func TaskHandler(c *echo.Context) error {
 	project, err := getProjectFromParam(c)
+
+	// PROPPATCH on a task resource gets the same 207/403 refusal as on a
+	// collection, rather than caldav-go's blanket 501 (see ProjectHandler).
+	if c.Request().Method == "PROPPATCH" {
+		if err != nil && models.IsErrProjectDoesNotExist(err) {
+			return c.String(http.StatusNotFound, "Project not found")
+		}
+		if err != nil {
+			return err
+		}
+
+		u, err := getBasicAuthUserFromContext(c)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "Internal server error").Wrap(err)
+		}
+
+		body, err := io.ReadAll(c.Request().Body)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "Could not read request body").Wrap(err)
+		}
+		c.Request().Body = io.NopCloser(bytes.NewBuffer(body))
+
+		return handlePropPatch(c, string(body), project, u)
+	}
+
 	if err != nil {
 		return err
 	}
@@ -116,11 +163,27 @@ func TaskHandler(c *echo.Context) error {
 	return nil
 }
 
+// Sub-paths and foreign usernames must 404 (RFC 4918) instead of falling
+// through to the merged principal pseudo-resource, which would silently serve
+// the authenticated user's data and act as a username enumeration oracle.
+// /.well-known/caldav also routes here (RFC 6764 bootstrap).
+func isOwnPrincipalPath(path, username string) bool {
+	if strings.TrimSuffix(path, "/") == "/.well-known/caldav" {
+		return true
+	}
+	rest := strings.TrimPrefix(strings.TrimPrefix(path, PrincipalBasePath), "/")
+	return strings.TrimSuffix(rest, "/") == username
+}
+
 // PrincipalHandler handles all request to principal resources
 func PrincipalHandler(c *echo.Context) error {
 	u, err := getBasicAuthUserFromContext(c)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Internal server error").Wrap(err)
+	}
+
+	if !isOwnPrincipalPath(c.Request().URL.Path, u.Username) {
+		return c.String(http.StatusNotFound, "Not found")
 	}
 
 	storage := &VikunjaCaldavProjectStorage{
@@ -137,7 +200,7 @@ func PrincipalHandler(c *echo.Context) error {
 	log.Debugf("[CALDAV] Request Headers: %v\n", c.Request().Header)
 
 	caldav.SetupStorage(storage)
-	caldav.SetupUser(strings.TrimPrefix(principalPathForUser(u.Username), "/"))
+	setupUser(principalPathForUser(u.Username))
 	caldav.SetupSupportedComponents([]string{lib.VCALENDAR, lib.VTODO})
 
 	response := caldav.HandleRequest(c.Request())
@@ -166,7 +229,7 @@ func EntryHandler(c *echo.Context) error {
 	log.Debugf("[CALDAV] Request Headers: %v\n", c.Request().Header)
 
 	caldav.SetupStorage(storage)
-	caldav.SetupUser(strings.TrimPrefix(principalPathForUser(u.Username), "/"))
+	setupUser(principalPathForUser(u.Username))
 	caldav.SetupSupportedComponents([]string{lib.VCALENDAR, lib.VTODO})
 
 	response := caldav.HandleRequest(c.Request())

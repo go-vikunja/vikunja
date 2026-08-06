@@ -34,7 +34,7 @@ func init() {
 		ID:          "20200905232458",
 		Description: "Add is_favorite field to lists",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(list20200905232458{})
+			return partialSync(tx, list20200905232458{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil

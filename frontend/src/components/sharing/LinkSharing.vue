@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<p class="has-text-weight-bold">
+		<h3 class="has-text-weight-bold share-heading">
 			{{ $t('project.share.links.title') }}
 			<span
 				v-tooltip="$t('project.share.links.explanation')"
@@ -8,7 +8,7 @@
 			>
 				{{ $t('project.share.links.what') }}
 			</span>
-		</p>
+		</h3>
 
 		<div class="sharables-project">
 			<XButton
@@ -144,7 +144,10 @@
 							</td>
 							<td v-if="availableViews.length > 0">
 								<div class="select">
-									<select v-model="selectedViews[s.id]">
+									<select
+										v-model="selectedViews[s.id]"
+										:aria-label="$t('project.share.links.view')"
+									>
 										<option
 											v-for="(view) in availableViews"
 											:key="view.id"
@@ -159,6 +162,7 @@
 								<XButton
 									danger
 									icon="trash-alt"
+									:aria-label="$t('project.share.links.remove')"
 									@click="
 										() => {
 											linkIdToDelete = s.id

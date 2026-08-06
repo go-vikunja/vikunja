@@ -633,9 +633,10 @@ const ErrCodeInvalidClaimData = 1024
 // HTTPError holds the http error description
 func (err *ErrInvalidClaimData) HTTPError() web.HTTPError {
 	return web.HTTPError{
-		HTTPCode: http.StatusBadRequest,
-		Code:     ErrCodeInvalidClaimData,
-		Message:  fmt.Sprintf("Invalid claim data for field %s of type %s", err.Field, err.Type),
+		HTTPCode:   http.StatusBadRequest,
+		Code:       ErrCodeInvalidClaimData,
+		Message:    fmt.Sprintf("Invalid claim data for field %s of type %s", err.Field, err.Type),
+		I18nParams: map[string]string{"field": err.Field, "type": err.Type},
 	}
 }
 
@@ -660,7 +661,12 @@ const ErrorCodeInvalidTimezone = 1025
 
 // HTTPError holds the http error description
 func (err ErrInvalidTimezone) HTTPError() web.HTTPError {
-	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrorCodeInvalidTimezone, Message: fmt.Sprintf("The timezone '%s' is invalid. Please select a valid timezone from the list.", err.Name)}
+	return web.HTTPError{
+		HTTPCode:   http.StatusBadRequest,
+		Code:       ErrorCodeInvalidTimezone,
+		Message:    fmt.Sprintf("The timezone '%s' is invalid. Please select a valid timezone from the list.", err.Name),
+		I18nParams: map[string]string{"timezone": err.Name},
+	}
 }
 
 // ErrUsernameReserved represents a "UsernameReserved" kind of error.

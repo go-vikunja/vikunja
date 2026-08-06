@@ -22,6 +22,7 @@ import (
 	"net/http"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/web/handler"
 
@@ -83,7 +84,7 @@ func adminProjectsList(ctx context.Context, in *ListParams) (*adminProjectListBo
 	return &adminProjectListBody{Body: NewPaginated(items, total, in.Page, in.PerPage)}, nil
 }
 
-func adminProjectsPatchOwner(_ context.Context, in *struct {
+func adminProjectsPatchOwner(ctx context.Context, in *struct {
 	ID   int64 `path:"id" doc:"The numeric ID of the project."`
 	Body adminOwnerPatchBody
 }) (*adminProjectBody, error) {
@@ -94,16 +95,24 @@ func adminProjectsPatchOwner(_ context.Context, in *struct {
 		return nil, translateDomainError(models.ErrInvalidData{Message: "invalid body"})
 	}
 
+	doer, err := adminDoerFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	s := db.NewSession()
 	defer s.Close()
 
-	p, err := models.ReassignProjectOwner(s, in.ID, in.Body.OwnerID)
+	p, err := models.ReassignProjectOwner(s, doer, in.ID, in.Body.OwnerID)
 	if err != nil {
 		_ = s.Rollback()
+		events.CleanupPending(s)
 		return nil, translateDomainError(err)
 	}
 	if err := s.Commit(); err != nil {
+		events.CleanupPending(s)
 		return nil, translateDomainError(err)
 	}
+	events.DispatchPending(ctx, s)
 	return &adminProjectBody{Body: p}, nil
 }

@@ -34,12 +34,15 @@ const emit = defineEmits<{
 const service = new ApiTokenService()
 const {t} = useI18n()
 const {store: timeFormat} = useTimeFormat()
+// Zero seconds: flatpickr copies them into the native mobile input's default value where they
+// become the step base, making every minute-granularity pick a stepMismatch that blocks submit (#3175)
 const now = new Date()
+now.setSeconds(0, 0)
 
 const availableRoutes = ref(null)
 const newToken = ref<IApiToken>(new ApiTokenModel())
 const newTokenExpiry = ref<string | number>(30)
-const newTokenExpiryCustom = ref(new Date())
+const newTokenExpiryCustom = ref(new Date(now))
 const newTokenPermissions = ref({})
 const newTokenPermissionsGroup = ref({})
 const newTokenTitleValid = ref(true)

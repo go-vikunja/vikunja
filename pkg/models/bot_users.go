@@ -57,6 +57,10 @@ func (b *BotUser) Create(s *xorm.Session, a web.Auth) error {
 
 // ReadAll returns all bots owned by the calling user.
 func (b *BotUser) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result any, resultCount int, numberOfTotalItems int64, err error) {
+	if _, is := a.(*LinkSharing); is {
+		return nil, 0, 0, ErrGenericForbidden{}
+	}
+
 	limit, start := getLimitFromPageIndex(page, perPage)
 	var bots []*BotUser
 	q := s.Where("bot_owner_id = ?", a.GetID())

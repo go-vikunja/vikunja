@@ -92,14 +92,15 @@ const (
 	AuthLdapVerifyTLS  Key = `auth.ldap.verifytls`
 	AuthLdapBindDN     Key = `auth.ldap.binddn`
 	// #nosec G101
-	AuthLdapBindPassword         Key = `auth.ldap.bindpassword`
-	AuthLdapGroupSyncEnabled     Key = `auth.ldap.groupsyncenabled`
-	AuthLdapGroupSyncFilter      Key = `auth.ldap.groupsyncfilter`
-	AuthLdapAvatarSyncAttribute  Key = `auth.ldap.avatarsyncattribute`
-	AuthLdapAttributeUsername    Key = `auth.ldap.attribute.username`
-	AuthLdapAttributeEmail       Key = `auth.ldap.attribute.email`
-	AuthLdapAttributeDisplayname Key = `auth.ldap.attribute.displayname`
-	AuthLdapAttributeMemberID    Key = `auth.ldap.attribute.memberid`
+	AuthLdapBindPassword               Key = `auth.ldap.bindpassword`
+	AuthLdapGroupSyncEnabled           Key = `auth.ldap.groupsyncenabled`
+	AuthLdapGroupSyncFilter            Key = `auth.ldap.groupsyncfilter`
+	AuthLdapGroupSyncUseServiceAccount Key = `auth.ldap.groupsyncuseserviceaccount`
+	AuthLdapAvatarSyncAttribute        Key = `auth.ldap.avatarsyncattribute`
+	AuthLdapAttributeUsername          Key = `auth.ldap.attribute.username`
+	AuthLdapAttributeEmail             Key = `auth.ldap.attribute.email`
+	AuthLdapAttributeDisplayname       Key = `auth.ldap.attribute.displayname`
+	AuthLdapAttributeMemberID          Key = `auth.ldap.attribute.memberid`
 
 	LegalImprintURL Key = `legal.imprinturl`
 	LegalPrivacyURL Key = `legal.privacyurl`
@@ -286,8 +287,9 @@ var timezone *time.Location
 // It is a separate function and not done through viper because that makes handling
 // it way easier, especially when testing.
 func GetTimeZone() *time.Location {
-	if timezone == nil {
-		loc, err := time.LoadLocation(ServiceTimeZone.GetString())
+	tz := ServiceTimeZone.GetString()
+	if timezone == nil || timezone.String() != tz {
+		loc, err := time.LoadLocation(tz)
 		if err != nil {
 			log.Fatalf("Error parsing time zone: %s", err)
 		}
@@ -338,14 +340,13 @@ func getRootpathLocation() string {
 // InitDefaultConfig sets default config values
 // This is an extra function so we can call it when initializing tests without initializing the full config
 func InitDefaultConfig() {
-	// Service config
-	random, err := random(32)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
+	initDefaultConfig()
+	// Callers who skip InitConfig still need a usable secret.
+	generateServiceSecretIfEmpty()
+}
 
+func initDefaultConfig() {
 	// Service
-	ServiceSecret.setDefault(random)
 	ServiceJWTTTL.setDefault(259200)      // 72 hours
 	ServiceJWTTTLLong.setDefault(2592000) // 30 days
 	ServiceJWTTTLShort.setDefault(600)    // 10 minutes
@@ -367,7 +368,6 @@ func InitDefaultConfig() {
 	ServiceEnableUserDeletion.setDefault(true)
 	ServiceMaxAvatarSize.setDefault(1024)
 	ServiceDemoMode.setDefault(false)
-	ServiceAllowIconChanges.setDefault(true)
 	ServiceEnablePublicTeams.setDefault(false)
 	ServiceBcryptRounds.setDefault(11)
 	ServiceEnableOpenIDTeamUserOnlySearch.setDefault(false)
@@ -389,6 +389,7 @@ func InitDefaultConfig() {
 	AuthLdapVerifyTLS.setDefault(true)
 	AuthLdapGroupSyncEnabled.setDefault(false)
 	AuthLdapGroupSyncFilter.setDefault("(&(objectclass=*)(|(objectclass=group)(objectclass=groupOfNames)))")
+	AuthLdapGroupSyncUseServiceAccount.setDefault(false)
 	AuthLdapAttributeUsername.setDefault("uid")
 	AuthLdapAttributeEmail.setDefault("mail")
 	AuthLdapAttributeDisplayname.setDefault("displayName")
@@ -521,6 +522,23 @@ func InitDefaultConfig() {
 	LicenseKey.setDefault("")
 }
 
+// generateServiceSecretIfEmpty sets a random service.secret when none was configured.
+// service.secret must have no default until this runs, otherwise an empty value is
+// indistinguishable from a configured one and the service.jwtsecret deprecation
+// migration can't tell whether the user set the new key.
+func generateServiceSecretIfEmpty() {
+	if ServiceSecret.GetString() != "" {
+		return
+	}
+
+	secret, err := random(32)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	ServiceSecret.setDefault(secret)
+}
+
 // ResolvePath resolves a path relative to service.rootpath.
 // If the path is already absolute, it is returned as-is (cleaned).
 // If the path is relative (or empty), it is joined with service.rootpath.
@@ -611,7 +629,7 @@ func setConfigFromEnv() error {
 func InitConfig() {
 
 	// Set defaults
-	InitDefaultConfig()
+	initDefaultConfig()
 
 	// Init checking for environment variables
 	viper.SetEnvPrefix("vikunja")
@@ -659,13 +677,15 @@ func InitConfig() {
 	// Deprecation: migrate service.JWTSecret → service.secret only when the
 	// user has not explicitly set service.secret (so the new key takes precedence).
 	if ServiceJWTSecret.GetString() != "" {
-		if viper.IsSet(string(ServiceSecret)) {
+		if ServiceSecret.GetString() != "" {
 			log.Warning("config: both service.secret and service.jwtsecret are set. Using service.secret. Please remove service.jwtsecret, it is deprecated and will be removed in a future release.")
 		} else {
 			log.Warning("config: service.jwtsecret is deprecated and will be removed in a future release. Please use service.secret instead.")
 			ServiceSecret.Set(ServiceJWTSecret.GetString())
 		}
 	}
+
+	generateServiceSecretIfEmpty()
 
 	if _, err := url.ParseRequestURI(AvatarGravatarBaseURL.GetString()); err != nil {
 		log.Fatalf("Could not parse gravatarbaseurl: %s", err)

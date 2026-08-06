@@ -226,6 +226,14 @@ func TestProject(t *testing.T) {
 			require.Error(t, err)
 			assert.Contains(t, err.(models.ValidationHTTPError).InvalidFields[0], "does not validate as runelength(1|250)")
 		})
+		t.Run("Detach to root without admin is forbidden (GHSA-44v6-7fxq-vgf4)", func(t *testing.T) {
+			// User 1 has Write (not Admin) on project 10 and inherits Write on
+			// its child project 43. Sending an explicit parent_project_id=0
+			// detaches the child to the top level, which must require Admin.
+			_, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "43"}, `{"title":"Reparent Escalation Test Child","parent_project_id":0}`)
+			require.Error(t, err)
+			assertHandlerErrorCode(t, err, models.ErrorCodeGenericForbidden)
+		})
 		t.Run("Permissions check", func(t *testing.T) {
 			t.Run("Forbidden", func(t *testing.T) {
 				// Owned by user13

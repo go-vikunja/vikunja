@@ -17,7 +17,6 @@
 package models
 
 import (
-	"crypto/sha256"
 	"encoding/hex"
 	"time"
 
@@ -70,8 +69,7 @@ func (*Session) TableName() string {
 // No salt needed because refresh tokens are high-entropy random strings,
 // not human passwords — rainbow tables and dictionary attacks don't apply.
 func HashSessionToken(token string) string {
-	h := sha256.Sum256([]byte(token))
-	return hex.EncodeToString(h[:])
+	return utils.Sha256Hex(token)
 }
 
 // generateHashedToken creates a cryptographically random token and returns both

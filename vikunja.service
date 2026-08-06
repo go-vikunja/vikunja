@@ -14,6 +14,32 @@ Type=simple
 WorkingDirectory=/opt/vikunja
 ExecStart=/usr/local/bin/vikunja
 Restart=always
+
+# Hardening
+NoNewPrivileges=yes
+ProtectProc=invisible
+ProcSubset=pid
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+PrivateDevices=yes
+RestrictNamespaces=yes
+RestrictSUIDSGID=yes
+RestrictRealtime=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources
+# Return ENOSYS instead of killing the process when a syscall is not in the
+# allowlist. Syscalls newer than systemd's table can never be allowlisted, so
+# killing breaks runtimes that probe for them on new kernels (#3252).
+SystemCallErrorNumber=ENOSYS
+
 # If you want to bind Vikunja to a port below 1024 uncomment
 # the two values below
 ###

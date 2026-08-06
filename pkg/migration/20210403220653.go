@@ -34,7 +34,7 @@ func init() {
 		ID:          "20210403220653",
 		Description: "Add the name column to link shares",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(linkShares20210403220653{})
+			return partialSync(tx, linkShares20210403220653{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil

@@ -151,7 +151,7 @@
   --input-background-color: var(--scheme-main, white);
   //--input-border-color: var(--border, #dbdbdb);
   --input-shadow: inset 0 0.0625em 0.125em rgba(var(--scheme-invert-rgb, 10.2, 10.2, 10.2), 0.05);
-  --input-placeholder-color: rgba(54, 54, 54, 0.3);
+  --input-placeholder-color: #6e6e6e;
   --input-hover-color: var(--text-strong, #363636);
   --input-hover-border-color: var(--border-hover, #b5b5b5);
   --input-focus-color: var(--text-strong, #363636);
@@ -190,6 +190,9 @@
   --grey-800: hsl(215, 27.9%, 16.9%);
   --grey-900: hsl(220.9, 39.3%, 11%);
   --site-background: var(--grey-100);
+
+  // Muted body text (metadata, counts) darkened from --grey-500 to clear 4.5:1 on both white and --grey-100
+  --text-muted: hsl(220, 8.9%, 42%);
 
   // Overrides of Bulma defaults
   --scheme-main: var(--white);
@@ -235,6 +238,10 @@
   --danger-a: 1;
   --danger: hsla(var(--danger-h), var(--danger-s), var(--danger-l), var(--danger-a));
 
+  // Darker than --danger: --danger as text fails WCAG contrast (3.46:1 on white)
+  --danger-text-l: 40%;
+  --danger-text: hsla(var(--danger-h), var(--danger-s), var(--danger-text-l), var(--danger-a));
+
   // var(--primary) / $blue is #1973ff
   --primary-h: 217deg;
   --primary-s: 98%;
@@ -254,6 +261,7 @@
 
   // Define custom color variable to prevent change in dark mode
   --switch-view-color: hsla(var(--white-h), var(--white-s), var(--white-l), var(--white-a));
+  --switch-view-active-background: var(--primary);
 
   // Define custom color variable to allow change in dark mode
   --card-border-color: var(--grey-200);
@@ -317,6 +325,14 @@
       --primary-h: 217deg;
       --primary-s: 98%;
       --primary-l: 58%;
+
+      // Muted text is a light grey on dark backgrounds and already passes; keep it
+      --text-muted: var(--grey-500);
+      // The lighter dark-mode primary fails white-text contrast on the active view tab, so darken it there
+      --switch-view-active-background: hsl(var(--primary-h), var(--primary-s), 50%);
+
+      // Bright values already pass contrast on dark backgrounds; skip the light-theme darkening
+      --danger-text: var(--danger);
 
       --scheme-main-bis: var(--grey-100);
       --scheme-main-ter: var(--grey-100);

@@ -24,8 +24,10 @@ export const redirectToProvider = (provider: IProvider) => {
 	window.location.href = `${provider.authUrl}?client_id=${provider.clientId}&redirect_uri=${redirectUrl}&response_type=code&scope=${scope}&state=${state}`
 }
 
-export const redirectToProviderOnLogout = (provider: IProvider) => {
+export const redirectToProviderOnLogout = (provider: IProvider): boolean => {
 	if (provider.logoutUrl.length > 0) {
 		window.location.href = `${provider.logoutUrl}`
+		return true
 	}
+	return false
 }

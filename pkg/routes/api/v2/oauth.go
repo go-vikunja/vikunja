@@ -82,6 +82,10 @@ func oauthToken(ctx context.Context, in *struct {
 }
 
 func oauthAuthorize(ctx context.Context, in *struct{ Body oauth2server.AuthorizeRequest }) (*oauthAuthorizeBody, error) {
+	if ec := echoContextFromCtx(ctx); ec != nil && (*ec).Get("api_token") != nil {
+		return nil, huma.Error403Forbidden("API tokens cannot be used to authorize OAuth clients")
+	}
+
 	a, err := authFromCtx(ctx)
 	if err != nil {
 		return nil, err

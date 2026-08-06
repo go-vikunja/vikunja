@@ -57,9 +57,10 @@ func (pd *ProjectDuplicate) CanCreate(s *xorm.Session, a web.Auth) (canCreate bo
 		return canRead, err
 	}
 
-	// Parent project exists + user has write access to is (-> can create new projects)
+	// Placing the copy under a parent requires write access to that parent.
+	// CanWrite hydrates the project, unlike CanCreate on the bare struct.
 	parent := &Project{ID: pd.ParentProjectID}
-	return parent.CanCreate(s, a)
+	return parent.CanWrite(s, a)
 }
 
 // Create duplicates a project
@@ -84,7 +85,7 @@ func (pd *ProjectDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 
 	pd.Project.ID = 0
 	pd.Project.Identifier = "" // Reset the identifier to trigger regenerating a new one
-	pd.Project.ParentProjectID = pd.ParentProjectID
+	pd.Project.ParentProjectID = &pd.ParentProjectID
 	// Set the owner to the current user
 	pd.Project.OwnerID = doer.GetID()
 	pd.Project.Title += " - duplicate"
@@ -186,9 +187,15 @@ func duplicateViews(s *xorm.Session, pd *ProjectDuplicate, doer web.Auth, taskMa
 
 	oldViewIDs := []int64{}
 	viewMap := make(map[int64]int64)
+	// createProjectView discards both bucket ids, they are remapped below once
+	// the duplicated buckets exist.
+	oldDefaultBucketIDs := make(map[int64]int64, len(views))
+	oldDoneBucketIDs := make(map[int64]int64, len(views))
 	for _, view := range views {
 		oldID := view.ID
 		oldViewIDs = append(oldViewIDs, oldID)
+		oldDefaultBucketIDs[oldID] = view.DefaultBucketID
+		oldDoneBucketIDs[oldID] = view.DoneBucketID
 
 		view.ID = 0
 		view.ProjectID = pd.Project.ID
@@ -228,13 +235,9 @@ func duplicateViews(s *xorm.Session, pd *ProjectDuplicate, doer web.Auth, taskMa
 		bucketMap[oldBucketID] = b.ID
 	}
 
-	for _, view := range views {
-		if view.DefaultBucketID != 0 {
-			view.DefaultBucketID = bucketMap[view.DefaultBucketID]
-		}
-		if view.DoneBucketID != 0 {
-			view.DoneBucketID = bucketMap[view.DoneBucketID]
-		}
+	for oldViewID, view := range views {
+		view.DefaultBucketID = bucketMap[oldDefaultBucketIDs[oldViewID]]
+		view.DoneBucketID = bucketMap[oldDoneBucketIDs[oldViewID]]
 
 		if view.DefaultBucketID != 0 || view.DoneBucketID != 0 {
 			err = view.Update(s, doer)

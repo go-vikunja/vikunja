@@ -8,14 +8,14 @@ jobs:
     runs-on: ubuntu-latest
     name: prepare-build-mage
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Set up Go
-        uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version: stable
       - name: Cache build mage
         id: cache-build-mage
-        uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           key: ${{ runner.os }}-build-mage-build-${{ hashFiles('build/magefile.go') }}
           path: |
@@ -33,7 +33,7 @@ jobs:
           export PATH=$PATH:$GOPATH/bin
           mage -compile ./build-mage-static
       - name: Store build mage binary
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: build_mage_bin
           path: ./build/build-mage-static
@@ -43,14 +43,14 @@ jobs:
     steps:
       - name: Git describe
         id: ghd
-        uses: proudust/gh-describe@v2
+        uses: proudust/gh-describe@80412be8ce0e77d8afba6b340e34790bc772aa45 # v2.2.0
       - name: Login to Docker Hub
-        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_PASSWORD }}
       - name: Login to GHCR
-        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
@@ -58,7 +58,7 @@ jobs:
       - name: Docker meta version
         if: ${{ github.ref_type == 'tag' }}
         id: meta
-        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         with:
           images: |
             vikunja/vikunja
@@ -67,10 +67,9 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
-            type=raw,value=latest
       - name: Build and push unstable
         if: ${{ github.ref_type != 'tag' }}
-        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8
           push: true
@@ -81,7 +80,7 @@ jobs:
             RELEASE_VERSION=${{ steps.ghd.outputs.describe }}
       - name: Build and push version
         if: ${{ github.ref_type == 'tag' }}
-        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8
           push: true
@@ -93,10 +92,10 @@ jobs:
   binaries:
     runs-on: blacksmith-8vcpu-ubuntu-2204
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Git describe
         id: ghd
-        uses: proudust/gh-describe@v2
+        uses: proudust/gh-describe@80412be8ce0e77d8afba6b340e34790bc772aa45 # v2.2.0
       - uses: ./.github/actions/release-binaries
         with:
           project: vikunja
@@ -112,10 +111,10 @@ jobs:
   veans-binaries:
     runs-on: blacksmith-8vcpu-ubuntu-2204
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Git describe
         id: ghd
-        uses: proudust/gh-describe@v2
+        uses: proudust/gh-describe@80412be8ce0e77d8afba6b340e34790bc772aa45 # v2.2.0
       - uses: ./.github/actions/release-binaries
         with:
           project: veans
@@ -147,10 +146,10 @@ jobs:
             pkg: armv7
 
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Git describe
         id: ghd
-        uses: proudust/gh-describe@v2
+        uses: proudust/gh-describe@80412be8ce0e77d8afba6b340e34790bc772aa45 # v2.2.0
       - uses: ./.github/actions/release-os-package
         with:
           project: vikunja
@@ -186,10 +185,10 @@ jobs:
             pkg: armv7
 
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Git describe
         id: ghd
-        uses: proudust/gh-describe@v2
+        uses: proudust/gh-describe@80412be8ce0e77d8afba6b340e34790bc772aa45 # v2.2.0
       - uses: ./.github/actions/release-os-package
         with:
           project: veans
@@ -235,19 +234,19 @@ jobs:
       REPO_SUITE: ${{ github.ref_type == 'tag' && 'stable' || 'unstable' }}
       RELEASE_VERSION: unstable
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Download build mage binary
         # Statically compiled in test.yml's build-mage job so it runs inside
         # ubuntu/fedora/archlinux containers without a Go toolchain.
         if: matrix.format != 'apk'
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: build_mage_bin
           path: build
 
       - name: Download all server OS packages
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           pattern: vikunja_os_package_*
           merge-multiple: true
@@ -257,14 +256,14 @@ jobs:
         # Merged into the same incoming dir so reprepro / createrepo_c /
         # repo-add / the apk loop pick them up alongside vikunja's packages
         # — same suite, same arch fan-out, no extra source entry for users.
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           pattern: veans_os_package_*
           merge-multiple: true
           path: dist/repo-work/incoming
 
       - name: Download desktop packages (Linux)
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: vikunja_desktop_packages_ubuntu-latest
           path: dist/repo-work/incoming-desktop
@@ -309,7 +308,7 @@ jobs:
 
       - name: GPG setup
         if: matrix.format != 'apk'
-        uses: kolaente/action-gpg@main
+        uses: kolaente/action-gpg@eb0fd8f16fe9b499f060f659092c470cb9f76eb7 # main
         with:
           gpg-passphrase: "${{ secrets.RELEASE_GPG_PASSPHRASE }}"
           gpg-sign-key: "${{ secrets.RELEASE_GPG_SIGN_KEY }}"
@@ -384,7 +383,7 @@ jobs:
           find dist/repo-output -type d -empty -delete 2>/dev/null || true
 
       - name: Upload to R2
-        uses: kolaente/s3-action@main
+        uses: kolaente/s3-action@7f58dddd682b2f93a6c6799c9f68e7a38f2da558 # main
         with:
           s3-access-key-id: ${{ secrets.S3_ACCESS_KEY }}
           s3-secret-access-key: ${{ secrets.S3_SECRET_KEY }}
@@ -398,12 +397,12 @@ jobs:
   config-yaml:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Git describe
         id: ghd
-        uses: proudust/gh-describe@v2
+        uses: proudust/gh-describe@80412be8ce0e77d8afba6b340e34790bc772aa45 # v2.2.0
       - name: Download Mage Binary
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: mage_bin
       - name: generate
@@ -411,7 +410,7 @@ jobs:
           chmod +x ./mage-static
           ./mage-static generate:config-yaml 1
       - name: Upload to S3
-        uses: kolaente/s3-action@main
+        uses: kolaente/s3-action@7f58dddd682b2f93a6c6799c9f68e7a38f2da558 # main
         with:
           s3-access-key-id: ${{ secrets.S3_ACCESS_KEY }}
           s3-secret-access-key: ${{ secrets.S3_SECRET_KEY }}
@@ -431,16 +430,16 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Git describe
         id: ghd
-        uses: proudust/gh-describe@v2
+        uses: proudust/gh-describe@80412be8ce0e77d8afba6b340e34790bc772aa45 # v2.2.0
       - name: Install pnpm
-        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4
+        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
         with:
           package_json_file: desktop/package.json
       - name: Setup Node
-        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version-file: frontend/.nvmrc
           cache: pnpm
@@ -451,7 +450,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install --no-install-recommends -y libopenjp2-tools rpm libarchive-tools
       - name: get frontend
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: frontend_dist
           path: frontend/dist
@@ -461,7 +460,7 @@ jobs:
           pnpm install  --frozen-lockfile --prefer-offline --fetch-timeout 100000
           node build.js "${{ steps.ghd.outputs.describe }}" ${{ github.ref_type == 'tag' }}
       - name: Upload to S3
-        uses: kolaente/s3-action@main
+        uses: kolaente/s3-action@7f58dddd682b2f93a6c6799c9f68e7a38f2da558 # main
         with:
           s3-access-key-id: ${{ secrets.S3_ACCESS_KEY }}
           s3-secret-access-key: ${{ secrets.S3_SECRET_KEY }}
@@ -473,29 +472,30 @@ jobs:
           strip-path-prefix: desktop/dist/
           exclude: "desktop/dist/*.blockmap"
       - name: Store Desktop Package
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: vikunja_desktop_packages_${{ matrix.os }}
           path: |
             ./desktop/dist/Vikunja*
             !./desktop/dist/*.blockmap
 
-  generate-swagger-docs:
+  generate-swagger-and-yaegi:
     runs-on: ubuntu-latest
+    # The push below authenticates with the SSH deploy key, not GITHUB_TOKEN.
     permissions:
-      contents: write
+      contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
           persist-credentials: true
       - name: Download Mage Binary
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: mage_bin
       - name: Set up Go
-        uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version: stable
       - name: generate
@@ -504,6 +504,7 @@ jobs:
           go install github.com/swaggo/swag/cmd/swag
           chmod +x ./mage-static
           ./mage-static generate:swagger-docs
+          ./mage-static generate:yaegi-symbols
       - name: Check for changes
         id: check_changes
         run: |
@@ -517,10 +518,17 @@ jobs:
         run: |
           git config --local user.email "bot@vikunja.io"
           git config --local user.name "Frederick [Bot]"
-          git commit -am "[skip ci] Updated swagger docs"
+          if ! git diff --quiet -- pkg/swagger; then
+            git add pkg/swagger
+            git commit -m "[skip ci] Updated swagger docs"
+          fi
+          if ! git diff --quiet -- pkg/yaegi_symbols; then
+            git add pkg/yaegi_symbols
+            git commit -m "[skip ci] Updated yaegi symbols"
+          fi
       - name: Push changes
         if: steps.check_changes.outputs.changes_exist != '0'
-        uses: ad-m/github-push-action@master
+        uses: ad-m/github-push-action@881a6320fdb16eb5318c5054f31c218aec2b324c # master
         with:
           ssh: true
           branch: ${{ github.ref }}
@@ -539,44 +547,44 @@ jobs:
       contents: write
     steps:
       - name: Download Binaries
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: vikunja_bin_packages
 
       - name: Download OS Packages
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           pattern: vikunja_os_package_*
           merge-multiple: true
 
       - name: Download Veans Binaries
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: veans_bin_packages
 
       - name: Download Veans OS Packages
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           pattern: veans_os_package_*
           merge-multiple: true
 
       - name: Download Desktop Package Linux
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: vikunja_desktop_packages_ubuntu-latest
 
       - name: Download Desktop Package MacOS
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: vikunja_desktop_packages_macos-latest
 
       - name: Download Desktop Package Windows
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: vikunja_desktop_packages_windows-latest
 
       - name: Release
-        uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2
+        uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
         if: github.ref_type == 'tag'
         with:
           draft: true

@@ -3,9 +3,11 @@
 		<span class="has-text-grey-light"> &gt; </span>
 		<template v-if="canWrite">
 			<Dropdown>
-				<template #trigger="{toggleOpen}">
+				<template #trigger="{toggleOpen, open}">
 					<BaseButton
 						class="bucket-name"
+						:aria-expanded="open"
+						:aria-label="$t('task.detail.bucketSelectLabel', {bucket: currentBucketTitle})"
 						@click="toggleOpen"
 					>
 						{{ currentBucketTitle }}

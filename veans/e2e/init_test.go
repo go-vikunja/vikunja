@@ -102,11 +102,14 @@ func TestInit_HappyPath(t *testing.T) {
 		t.Fatalf("bot %q not found on server", ws.BotUsername)
 	}
 
-	// Project shared with the bot at write permission.
-	var shares []map[string]any
+	// Project shared with the bot at write permission. v2 lists come wrapped
+	// in the standard {items,...} envelope.
+	var shares struct {
+		Items []map[string]any `json:"items"`
+	}
 	_ = h.AdminClient.Do(t.Context(), "GET", fmt.Sprintf("/projects/%d/users", project.ID), nil, nil, &shares)
 	shareFound := false
-	for _, s := range shares {
+	for _, s := range shares.Items {
 		if u, _ := s["username"].(string); u == ws.BotUsername {
 			if p, _ := s["permission"].(float64); int(p) >= 1 {
 				shareFound = true

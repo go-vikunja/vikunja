@@ -72,6 +72,9 @@ func generateToken(s *xorm.Session, u *User, kind TokenKind) (token *Token, err 
 		return nil, err
 	}
 
+	token.ClearTextToken = token.Token
+	token.Token = utils.Sha256Hex(token.ClearTextToken)
+
 	_, err = s.Insert(token)
 	return
 }
@@ -93,7 +96,7 @@ func generateHashedToken(s *xorm.Session, u *User, kind TokenKind) (token *Token
 
 func getToken(s *xorm.Session, token string, kind TokenKind) (t *Token, err error) {
 	t = &Token{}
-	has, err := s.Where("kind = ? AND token = ?", kind, token).
+	has, err := s.Where("kind = ? AND token = ?", kind, utils.Sha256Hex(token)).
 		Get(t)
 	if err != nil || !has {
 		return nil, err

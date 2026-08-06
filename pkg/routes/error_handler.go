@@ -130,7 +130,7 @@ func reportToSentry(err error, c *echo.Context) {
 	hub := GetSentryHubFromContext(c)
 	if hub != nil {
 		hub.WithScope(func(scope *sentry.Scope) {
-			scope.SetExtra("url", c.Request().URL)
+			scope.SetContext("request", sentry.Context{"url": c.Request().URL.String()})
 			hub.CaptureException(err)
 		})
 	} else {

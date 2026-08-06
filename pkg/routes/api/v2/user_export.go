@@ -23,11 +23,11 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/models"
-	"code.vikunja.io/api/pkg/modules/humaecho5"
 	"code.vikunja.io/api/pkg/user"
 	webfiles "code.vikunja.io/api/pkg/web/files"
 
 	"github.com/danielgtaylor/huma/v2"
+	"github.com/danielgtaylor/huma/v2/adapters/humaecho"
 	"xorm.io/xorm"
 )
 
@@ -153,7 +153,7 @@ func userExportDownload(ctx context.Context, in *userExportPasswordBody) (*huma.
 
 	return &huma.StreamResponse{Body: func(hctx huma.Context) {
 		defer func() { _ = exportFile.File.Close() }()
-		c := humaecho5.Unwrap(hctx)
+		c := humaecho.Unwrap(hctx)
 		webfiles.WriteFileDownload((*c).Response(), (*c).Request(), exportFile)
 	}}, nil
 }

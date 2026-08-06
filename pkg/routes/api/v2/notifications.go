@@ -50,7 +50,7 @@ func RegisterNotificationRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "notifications-list",
 		Summary:     "List notifications",
-		Description: "Returns the authenticated user's own notifications, newest first. Link shares have no notifications and are refused.",
+		Description: "Returns the authenticated user's own notifications, newest first. Notifications about a project the caller can no longer read are omitted; the filtering happens in the query, so pages come back full and total and total_pages count the visible notifications only. Link shares have no notifications and are refused.",
 		Method:      http.MethodGet,
 		Path:        "/notifications",
 		Tags:        tags,

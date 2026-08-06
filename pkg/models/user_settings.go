@@ -77,6 +77,12 @@ func ChangeUserPassword(ctx context.Context, s *xorm.Session, u *user.User, oldP
 		return err
 	}
 
+	return setUserPasswordAndInvalidateSessions(s, u, newPassword)
+}
+
+// setUserPasswordAndInvalidateSessions is shared by the self-service and admin
+// password flows: a changed password must always kill existing sessions.
+func setUserPasswordAndInvalidateSessions(s *xorm.Session, u *user.User, newPassword string) error {
 	if err := user.UpdateUserPassword(s, u, newPassword); err != nil {
 		return err
 	}

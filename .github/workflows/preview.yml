@@ -25,7 +25,7 @@ jobs:
           docker-images: false
           swap-storage: false
       - name: Checkout
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # For pull_request_target, we need to explicitly fetch the PR ref from forks
           # since the PR's commit SHA is not reachable in the base repository.
@@ -34,39 +34,44 @@ jobs:
           ref: refs/pull/${{ github.event.pull_request.number }}/head
       - name: Git describe
         id: ghd
-        uses: proudust/gh-describe@v2
+        uses: proudust/gh-describe@80412be8ce0e77d8afba6b340e34790bc772aa45 # v2.2.0
+        with:
+          # On pull_request_target, github.sha is the base branch head, so the
+          # default ref would describe main instead of the PR commit.
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Login to GHCR
-        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
         with:
           version: latest
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        env:
+          # Under pull_request_target, github.sha is the base branch tip; tag with the PR head sha instead.
+          DOCKER_METADATA_PR_HEAD_SHA: 'true'
         with:
           images: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
           tags: |
             type=ref,event=pr
             type=sha,format=long
       - name: Build and push PR image
-        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: .
           platforms: linux/amd64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
           build-args: |
             RELEASE_VERSION=${{ steps.ghd.outputs.describe }}
       - name: Comment on PR
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           DOCKER_META_TAGS: ${{ steps.meta.outputs.tags }}
         with:

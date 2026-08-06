@@ -79,9 +79,9 @@ func (*LinkSharing) TableName() string {
 	return "link_shares"
 }
 
-// GetID returns the ID of the links sharing object
+// GetID returns the negated share id (see getUserID)
 func (share *LinkSharing) GetID() int64 {
-	return share.ID
+	return share.getUserID()
 }
 
 // GetLinkShareFromClaims resolves a link share JWT against the DB on every
@@ -218,6 +218,12 @@ func (share *LinkSharing) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
 	}
 	share.Password = ""
 	return
+}
+
+// Update shadows the embedded web.CRUDable method (link shares are immutable).
+// An unshadowed promoted method breaks Huma's $schema wrapper (go#15924).
+func (share *LinkSharing) Update(_ *xorm.Session, _ web.Auth) error {
+	return ErrGenericForbidden{}
 }
 
 // ReadAll returns all shares for a given project

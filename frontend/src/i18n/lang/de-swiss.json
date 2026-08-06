@@ -190,7 +190,8 @@
 			"desktop": {
 				"quickEntryShortcut": "Quick Entry Tastenkombination",
 				"shortcutRecorderPlaceholder": "Klicken, um Tastenkombination zu setzen",
-				"shortcutRecorderRecording": "Tastenkombination eingeben…"
+				"shortcutRecorderRecording": "Tastenkombination eingeben…",
+				"shortcutRecorderClear": "Tastenkürzel löschen"
 			},
 			"totp": {
 				"title": "Zweifaktor Authentifizierig",
@@ -349,6 +350,7 @@
 		"shared": "Geteilte Projekte",
 		"noDescriptionAvailable": "Keine Projektbeschreibung verfügbar.",
 		"inboxTitle": "Eingang",
+		"myOpenTasksFilterTitle": "Meine offenen Aufgaben",
 		"favorite": "Dieses Projekt als Favorit markieren",
 		"unfavorite": "Dieses Projekt von Favoriten entfernen",
 		"openSettingsMenu": "Projekteinstellungen öffnen",
@@ -436,11 +438,14 @@
 				"shared": "Geteilt mit diesen {type}",
 				"you": "Du",
 				"notShared": "Noch nicht mit einem {type} geteilt.",
+				"remove": "Dieses {type} entfernen",
 				"removeHeader": "Einen {type} von {sharable} entfernen",
 				"removeText": "Diesen {sharable} von {type} entfernen? Dies kann nicht rückgängig gemacht werden!",
 				"removeSuccess": "{sharable} wurde erfolgreich von {type} entfernt.",
 				"addedSuccess": "{type} wurde erfolgreich hinzugefügt.",
-				"updatedSuccess": "{type} wurde erfolgreich hinzugefügt."
+				"updatedSuccess": "{type} wurde erfolgreich hinzugefügt.",
+				"search": "Suche nach einem {type} um dieses Projekt zu teilen",
+				"permissionFor": "Berechtigung für {sharable}"
 			},
 			"permission": {
 				"title": "Berechtigung",
@@ -495,7 +500,8 @@
 		},
 		"table": {
 			"title": "Tabelle",
-			"columns": "Spalten"
+			"columns": "Spalten",
+			"sortBy": "Sortieren nach {column}"
 		},
 		"kanban": {
 			"title": "Kanban",
@@ -559,6 +565,7 @@
 			"createSuccess": "Die Ansicht wurde erfolgreich erstellt.",
 			"titleRequired": "Bitte gib einen Titel ein.",
 			"delete": "Diese Ansicht löschen",
+			"edit": "Diese Ansicht bearbeiten",
 			"deleteText": "Bist du sicher, dass du diese Ansicht entfernen möchtest? Es wird nicht mehr möglich sein, sie zu verwenden, um Aufgaben in diesem Projekt anzuzeigen. Diese Aktion löscht keine Aufgaben. Dies kann nicht rückgängig gemacht werden!",
 			"deleteSuccess": "Diese Ansicht wurde erfolgreich gelöscht.",
 			"onlyAdminsCanEdit": "Nur Projektadministrator:innen können Ansichten bearbeiten.",
@@ -595,6 +602,7 @@
 			"success": "De filter isch erfolgriich g'speichered wore."
 		},
 		"query": {
+			"label": "Filter-Abfrage",
 			"placeholder": "Gib eine Suche oder Filterabfrage ein…",
 			"help": {
 				"intro": "Um Aufgaben zu filtern, kannst du eine SQL-ähnliche Abfragesyntax verwenden. Du kannst die folgenden Felder in deinem Filter verwenden:",
@@ -746,7 +754,10 @@
 		"imprint": "Immpressum",
 		"privacy": "Dateschutzerchlärig",
 		"closeSidebar": "Seitenleiste schließen",
-		"home": "Vikunja Startseite"
+		"home": "Vikunja Startseite",
+		"toggleChildProjects": "Unterprojekte ein-/ausschalten",
+		"main": "Hauptnavigation",
+		"savedFilters": "Gespeicherte Filter"
 	},
 	"misc": {
 		"loading": "Ladä…",
@@ -802,6 +813,7 @@
 		},
 		"editor": {
 			"edit": "Bearbeitä",
+			"label": "Rich-Text-Editor",
 			"heading1": "Überschrift 1",
 			"heading1Tooltip": "Große Überschrift.",
 			"heading2": "Überschrift 2",
@@ -821,8 +833,12 @@
 			"orderedList": "Geordnete Liste",
 			"orderedListTooltip": "Erstelle eine Liste mit Nummerierung.",
 			"link": "Link",
+			"urlPlaceholder": "URL",
 			"image": "Bild",
 			"imageTooltip": "Lade ein Bild von deinem PC hoch.",
+			"altText": "Alternativer Text",
+			"altTextPlaceholder": "Beschreibe dieses Bild",
+			"toolbarLabel": "Textformatierung",
 			"horizontalRule": "Horizontalä Strich",
 			"horizontalRuleTooltip": "Teile einen Bereich.",
 			"text": "Text",
@@ -856,13 +872,16 @@
 		},
 		"multiselect": {
 			"createPlaceholder": "Erstellen",
-			"selectPlaceholder": "Druck uf Enter zum uuswähle"
+			"selectPlaceholder": "Druck uf Enter zum uuswähle",
+			"removeItem": "Dieses Element entfernen",
+			"clear": "Auswahl leeren"
 		},
 		"datepickerRange": {
 			"to": "Bis",
 			"from": "Von",
 			"fromto": "{from} bis {to}",
 			"date": "Datum",
+			"openCalendar": "Kalender öffnen",
 			"ranges": {
 				"today": "Heute",
 				"tomorrow": "Morgen",
@@ -936,7 +955,9 @@
 	"task": {
 		"new": "Aufgabe erstellen",
 		"createSuccess": "Die Uufgab isch erfolgriich erstellt wordä.",
+		"bulkCreateUnexpectedResponse": "Der Server gab eine unerwartete Anzahl von erstellten Aufgaben zurück.",
 		"addReminder": "Eine Erinnerung hinzufügen…",
+		"removeReminder": "Diese Erinnerung entfernen",
 		"doneSuccess": "Die Uufgab isch erfolgriich als \"Fertig\" markiert wordä.",
 		"undoneSuccess": "Die Uufgaab isch nüme als fertig markiert.",
 		"readOnlyCheckbox": "Du hast nur Lesezugriff auf diese Aufgabe und kannst sie nicht als erledigt markieren.",
@@ -959,16 +980,23 @@
 			"chooseDueDate": "Druck da, um es Fälligkeitsdatum z'setze",
 			"chooseStartDate": "Druck dah, um es Startdatum z'setze",
 			"chooseEndDate": "Druck da, um es Enddatum z'setze",
+			"removeDueDate": "Fälligkeitsdatum entfernen",
+			"removeStartDate": "Startdatum entfernen",
+			"removeEndDate": "Enddatum entfernen",
+			"removeRepeat": "Wiederholungsintervall entfernen",
+			"removeAssignee": "{user} als Zugewiesenen entfernen",
 			"move": "Aufgabe in ein anderes Projekt verschieben",
 			"done": "Als erledigt markieren!",
 			"undone": "Als unerledigt markierä",
 			"created": "Erstellt am {0} vo {1}",
 			"updated": "{0} g'updatet",
 			"doneAt": "{0} erledigt",
+			"titleRequired": "Der Aufgabentitel darf nicht leer sein.",
 			"updateSuccess": "Die Uufgab isch erfolgriich g'speichered wore.",
 			"deleteSuccess": "Die Uufgab isch erfolgriich g'chüblet wore.",
 			"duplicateSuccess": "Die Aufgabe wurde erfolgreich dupliziert.",
 			"noBucket": "Keine Spalte",
+			"bucketSelectLabel": "Kanban bucket: {bucket}",
 			"bucketChangedSuccess": "Die Spalte der Aufgabe wurde erfolgreich geändert.",
 			"belongsToProject": "Diese Aufgabe gehört zum Projekt „{project}“",
 			"back": "Zurück zum Projekt",
@@ -1024,6 +1052,7 @@
 			"repeat": "Widerhole",
 			"comment": "{count} Kommentar | {count} Kommentare",
 			"commentCount": "Anzahl der Kommentare",
+			"attachment": "{count} Anhang | {count} Anhänge",
 			"startDate": "Aahfangs Datum",
 			"title": "Titl",
 			"updated": "Aktualisiert",
@@ -1096,9 +1125,12 @@
 		"label": {
 			"placeholder": "Beginne zu schreiben, um ein Label hinzuzufügen…",
 			"createPlaceholder": "Das als neues Label hinzuefüege",
+			"linkShareCannotCreate": "Neue Labels können nicht mit einem Link Share erstellt werden. Es können nur Labels hinzugefügt werden, die in diesem Projekt bereits verwendet werden.",
+			"removeLabel": "Label {label} entfernen",
 			"addSuccess": "Das Label isch erfolgriich hinzuegfüegt worde.",
 			"removeSuccess": "Das Label isch erfolgriich glöscht.",
 			"addCreateSuccess": "Das Label wurde erfolgreich erstellt und hinzugefügt.",
+			"createFailed": "Diese Labels konnten nicht erstellt werden und wurden nicht hinzugefügt: {labels}",
 			"delete": {
 				"header": "Dieses Label löschen",
 				"text1": "Bist du sicher, dass du dieses Label löschen möchtest?",
@@ -1143,6 +1175,9 @@
 			"after": "{amount} {unit} nach {type}",
 			"beforeShort": "vor",
 			"afterShort": "nach",
+			"periodUnit": "Zeiteinheit",
+			"periodDirection": "Davor oder danach",
+			"periodRelativeTo": "Relativ zu",
 			"onDueDate": "Zum Fälligkeitsdatum",
 			"onStartDate": "Zum Startdatum",
 			"onEndDate": "Zum Enddatum",
@@ -1342,6 +1377,7 @@
 		"subscribeFeed": "Benachrichtigungen über Atom-Feed abonnieren"
 	},
 	"quickActions": {
+		"title": "Suchen und Quick Actions",
 		"notLoggedIn": "Bitte melde dich zuerst im Hauptfenster von Vikunja an.",
 		"commands": "Befehl",
 		"placeholder": "Schriib en Befehl oder suech…",
@@ -1355,6 +1391,7 @@
 		"newTeam": "Gib en Name für da neui Team iih…",
 		"createTask": "Eine Aufgabe im aktuellen Projekt erstellen ({title})",
 		"createProject": "Projekt erstellen",
+		"results": "keine Ergebnisse | {count} Ergebnis | {count} Ergebnisse",
 		"cmds": {
 			"newTask": "Neui Uufgab",
 			"newProject": "Neues Projekt",
@@ -1544,6 +1581,11 @@
 			"skipEmailConfirm": "E-Mail-Bestätigung überspringen",
 			"createSubmit": "Account erstellen",
 			"saveButton": "Änderungen speichern",
+			"newPasswordLabel": "Neues Passwort",
+			"setPassword": "Passwort festlegen",
+			"setPasswordSuccess": "Das Passwort von {username} wurde geändert.",
+			"sendResetEmail": "E-Mail zum Zurücksetzen des Passworts senden",
+			"sendResetEmailSuccess": "Eine E-Mail zum Zurücksetzen des Passworts wurde an {username} gesendet.",
 			"createdSuccess": "Account {username} erstellt.",
 			"updatedSuccess": "Account {username} aktualisiert.",
 			"deletedSuccess": "Account {username} gelöscht.",

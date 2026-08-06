@@ -28,6 +28,11 @@ import {TIME_FORMAT} from '@/constants/timeFormat'
 import {RELATION_KIND} from '@/types/IRelationKind'
 import type {IProvider} from '@/types/IProvider'
 
+// Set on explicit logout so the login page won't immediately bounce the user
+// back to the OIDC provider. Lives in sessionStorage so it survives the
+// round-trip to the IdP within the tab and isn't wiped by localStorage.clear().
+export const JUST_LOGGED_OUT_KEY = 'justLoggedOut'
+
 function redirectToSpecifiedProvider() {
 
 	const {auth} = useConfigStore()
@@ -443,7 +448,9 @@ export const useAuthStore = defineStore('auth', () => {
 			}
 			
 			console.error('Error refreshing user info:', e)
-			
+
+			// cause keeps the {e, message} shape that message/index.ts reads as cause.message
+			// eslint-disable-next-line preserve-caught-error
 			throw new Error('Error while refreshing user info:', {cause})
 		}
 	}
@@ -459,7 +466,7 @@ export const useAuthStore = defineStore('auth', () => {
 				await HTTPFactory().post('user/confirm', {token: emailVerifyToken})
 				return true
 			} catch(e) {
-				throw new Error(e.response.data.message)
+				throw new Error(e.response.data.message, {cause: e})
 			} finally {
 				localStorage.removeItem('emailConfirmToken')
 				stopLoading()
@@ -557,19 +564,25 @@ export const useAuthStore = defineStore('auth', () => {
 		const loggedInVia = getLoggedInVia()
 		window.localStorage.clear() // Clear all settings and history we might have saved in local storage.
 		lastUserInfoRefresh.value = null
-		await router.push({name: 'user.login'})
-		await checkAuth()
+
+		sessionStorage.setItem(JUST_LOGGED_OUT_KEY, 'true')
 
 		// Redirect to the OIDC provider to end its session too. Prefer the
 		// server-built RP-Initiated Logout URL, falling back to the static one.
+		// These full-page redirects return the user to the login page, so we
+		// must not router.push there first — that would consume
+		// JUST_LOGGED_OUT_KEY before the round-trip lands.
 		if (oidcLogoutUrl) {
 			window.location.href = oidcLogoutUrl
 			return
 		}
 		const fullProvider: IProvider|undefined = configStore.auth.openidConnect.providers?.find((p: IProvider) => p.key === loggedInVia)
-		if (fullProvider) {
-			redirectToProviderOnLogout(fullProvider)
+		if (fullProvider && redirectToProviderOnLogout(fullProvider)) {
+			return
 		}
+
+		await router.push({name: 'user.login'})
+		await checkAuth()
 	}
 
 	return {

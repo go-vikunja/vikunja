@@ -190,7 +190,8 @@
       "desktop": {
         "quickEntryShortcut": "Quick Entry Shortcut",
         "shortcutRecorderPlaceholder": "Click to set shortcut",
-        "shortcutRecorderRecording": "Press a key combination…"
+        "shortcutRecorderRecording": "Press a key combination…",
+        "shortcutRecorderClear": "Clear shortcut"
       },
       "totp": {
         "title": "Two Factor Authentication",
@@ -349,6 +350,7 @@
     "shared": "Shared Projects",
     "noDescriptionAvailable": "No project description is available.",
     "inboxTitle": "Inbox",
+    "myOpenTasksFilterTitle": "My Open Tasks",
     "favorite": "Mark this project as favorite",
     "unfavorite": "Remove this project from favorites",
     "openSettingsMenu": "Open project settings menu",
@@ -436,11 +438,14 @@
         "shared": "Shared with these {type}",
         "you": "You",
         "notShared": "Not shared with any {type} yet.",
+        "remove": "Remove this {type}",
         "removeHeader": "Remove a {type} from the {sharable}",
         "removeText": "Are you sure you want to remove this {sharable} from the {type}? This cannot be undone!",
         "removeSuccess": "The {sharable} was successfully removed from the {type}.",
         "addedSuccess": "The {type} was successfully added.",
-        "updatedSuccess": "The {type} was successfully added."
+        "updatedSuccess": "The {type} was successfully added.",
+        "search": "Search for a {type} to share this project with",
+        "permissionFor": "Permission for {sharable}"
       },
       "permission": {
         "title": "Permission",
@@ -495,7 +500,8 @@
     },
     "table": {
       "title": "Table",
-      "columns": "Columns"
+      "columns": "Columns",
+      "sortBy": "Sort by {column}"
     },
     "kanban": {
       "title": "Kanban",
@@ -559,6 +565,7 @@
       "createSuccess": "The view was created successfully.",
       "titleRequired": "Please provide a title.",
       "delete": "Delete this view",
+      "edit": "Edit this view",
       "deleteText": "Are you sure you want to remove this view? It will no longer be possible to use it to view tasks in this project. This action won't delete any tasks. This cannot be undone!",
       "deleteSuccess": "The view was deleted successfully.",
       "onlyAdminsCanEdit": "Only project admins can edit views.",
@@ -596,6 +603,7 @@
       "success": "The filter was saved successfully."
     },
     "query": {
+      "label": "Filter query",
       "placeholder": "Type a search or filter query…",
       "help": {
         "intro": "To filter tasks, you can use a query syntax similar to SQL. The available fields for filtering include:",
@@ -748,7 +756,10 @@
     "imprint": "Imprint",
     "privacy": "Privacy Policy",
     "closeSidebar": "Close sidebar",
-    "home": "Vikunja home"
+    "home": "Vikunja home",
+    "toggleChildProjects": "Toggle sub-projects",
+    "main": "Main navigation",
+    "savedFilters": "Saved filters"
   },
   "planner": {
     "title": "Planner",
@@ -836,6 +847,7 @@
     },
     "editor": {
       "edit": "Edit",
+      "label": "Rich text editor",
       "heading1": "Heading 1",
       "heading1Tooltip": "Big section heading.",
       "heading2": "Heading 2",
@@ -855,8 +867,12 @@
       "orderedList": "Ordered list",
       "orderedListTooltip": "Create a list with numbering.",
       "link": "Link",
+      "urlPlaceholder": "URL",
       "image": "Image",
       "imageTooltip": "Upload an image from your computer.",
+      "altText": "Alt text",
+      "altTextPlaceholder": "Describe this image",
+      "toolbarLabel": "Text formatting",
       "horizontalRule": "Horizontal Rule",
       "horizontalRuleTooltip": "Divide a section.",
       "text": "Text",
@@ -890,13 +906,16 @@
     },
     "multiselect": {
       "createPlaceholder": "Create",
-      "selectPlaceholder": "Click or press enter to select"
+      "selectPlaceholder": "Click or press enter to select",
+      "removeItem": "Remove this item",
+      "clear": "Clear selection"
     },
     "datepickerRange": {
       "to": "To",
       "from": "From",
       "fromto": "{from} to {to}",
       "date": "Date",
+      "openCalendar": "Open calendar",
       "ranges": {
         "today": "Today",
         "tomorrow": "Tomorrow",
@@ -970,7 +989,9 @@
   "task": {
     "new": "Create a task",
     "createSuccess": "The task was successfully created.",
+    "bulkCreateUnexpectedResponse": "The server returned an unexpected number of created tasks.",
     "addReminder": "Add a reminder…",
+    "removeReminder": "Remove this reminder",
     "doneSuccess": "The task was successfully marked as done.",
     "undoneSuccess": "The task was successfully un-marked as done.",
     "readOnlyCheckbox": "You only have read access to this task and cannot mark it as done.",
@@ -993,16 +1014,23 @@
       "chooseDueDate": "Click here to set a due date",
       "chooseStartDate": "Click here to set a start date",
       "chooseEndDate": "Click here to set an end date",
+      "removeDueDate": "Remove due date",
+      "removeStartDate": "Remove start date",
+      "removeEndDate": "Remove end date",
+      "removeRepeat": "Remove repeat interval",
+      "removeAssignee": "Remove {user} as assignee",
       "move": "Move task to a different project",
       "done": "Mark task done!",
       "undone": "Mark as undone",
       "created": "Created {0} by {1}",
       "updated": "Updated {0}",
       "doneAt": "Done {0}",
+      "titleRequired": "The task title can't be empty.",
       "updateSuccess": "The task was saved successfully.",
       "deleteSuccess": "The task has been deleted successfully.",
       "duplicateSuccess": "The task was duplicated successfully.",
       "noBucket": "No bucket",
+      "bucketSelectLabel": "Kanban bucket: {bucket}",
       "bucketChangedSuccess": "The task bucket has been changed successfully.",
       "belongsToProject": "This task belongs to project '{project}'",
       "back": "Back to project",
@@ -1058,6 +1086,7 @@
       "repeat": "Repeat",
       "comment": "{count} comment | {count} comments",
       "commentCount": "Number of comments",
+      "attachment": "{count} attachment | {count} attachments",
       "startDate": "Start Date",
       "title": "Title",
       "updated": "Updated",
@@ -1130,9 +1159,12 @@
     "label": {
       "placeholder": "Type to add a label…",
       "createPlaceholder": "Add this as new label",
+      "linkShareCannotCreate": "New labels can't be created from a shared link. Only labels already used in this project can be added.",
+      "removeLabel": "Remove label {label}",
       "addSuccess": "The label has been added successfully.",
       "removeSuccess": "The label has been removed successfully.",
       "addCreateSuccess": "The label has been created and added successfully.",
+      "createFailed": "These labels could not be created and were not added: {labels}",
       "delete": {
         "header": "Delete this label",
         "text1": "Are you sure you want to delete this label?",
@@ -1177,6 +1209,9 @@
       "after": "{amount} {unit} after {type}",
       "beforeShort": "before",
       "afterShort": "after",
+      "periodUnit": "Time unit",
+      "periodDirection": "Before or after",
+      "periodRelativeTo": "Relative to",
       "onDueDate": "On the due date",
       "onStartDate": "On the start date",
       "onEndDate": "On the end date",
@@ -1377,6 +1412,7 @@
     "subscribeFeed": "Subscribe to notifications via Atom feed"
   },
   "quickActions": {
+    "title": "Search and quick actions",
     "notLoggedIn": "Please log in to the main Vikunja window first.",
     "commands": "Commands",
     "placeholder": "Type a command or search…",
@@ -1390,6 +1426,7 @@
     "newTeam": "Enter the name of the new team…",
     "createTask": "Create a task in the current project ({title})",
     "createProject": "Create a project",
+    "results": "No results | {count} result | {count} results",
     "cmds": {
       "newTask": "New task",
       "newProject": "New project",
@@ -1579,6 +1616,11 @@
       "skipEmailConfirm": "Skip email confirmation",
       "createSubmit": "Create user",
       "saveButton": "Save changes",
+      "newPasswordLabel": "New password",
+      "setPassword": "Set password",
+      "setPasswordSuccess": "The password of {username} was updated.",
+      "sendResetEmail": "Send password-reset email",
+      "sendResetEmailSuccess": "A password-reset email was sent to {username}.",
       "createdSuccess": "User {username} created.",
       "updatedSuccess": "User {username} updated.",
       "deletedSuccess": "User {username} deleted.",

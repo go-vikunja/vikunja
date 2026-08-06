@@ -17,6 +17,7 @@
 package webtests
 
 import (
+	"net/http"
 	"net/url"
 	"testing"
 
@@ -713,6 +714,71 @@ func TestLinkSharing(t *testing.T) {
 				require.Error(t, err)
 				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
+		})
+	})
+
+	// A link share JWT reaches every authenticated route — nothing rejects it at
+	// the route group. Share id 1 collides with user 1, who is a member of team 1.
+	// See GHSA-32r8-5843-4qw2.
+	t.Run("Principal confusion", func(t *testing.T) {
+		t.Run("Cannot read a team of the colliding user", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+
+			testHandler := webHandlerTest{
+				linkShare: linkshareRead,
+				strFunc:   func() handler.CObject { return &models.Team{} },
+				t:         t,
+			}
+			_, err := testHandler.testReadOneWithLinkShare(nil, map[string]string{"team": "1"})
+			require.Error(t, err)
+			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
+		})
+
+		t.Run("Cannot remove the colliding user from their team", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+
+			testHandler := webHandlerTest{
+				linkShare: linkshareRead,
+				strFunc:   func() handler.CObject { return &models.TeamMember{} },
+				t:         t,
+			}
+			_, err := testHandler.testDeleteWithLinkShare(nil, map[string]string{"team": "1", "user": "user1"})
+			require.Error(t, err)
+			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
+
+			db.AssertExists(t, "team_members", map[string]interface{}{
+				"team_id": 1,
+				"user_id": 1,
+			}, false)
+		})
+
+		t.Run("Cannot enumerate or delete bots of the colliding user", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+
+			// user 23 is a bot owned by user 21
+			botOwnerShare := &models.LinkSharing{
+				ID:          21,
+				Hash:        "testCollidesWithBotOwner", // must match pkg/db/fixtures/link_shares.yml id=21
+				ProjectID:   2,
+				Permission:  models.PermissionRead,
+				SharingType: models.SharingTypeWithoutPassword,
+				SharedByID:  1,
+			}
+			testHandler := webHandlerTest{
+				linkShare: botOwnerShare,
+				strFunc:   func() handler.CObject { return &models.BotUser{} },
+				t:         t,
+			}
+
+			_, err := testHandler.testReadAllWithLinkShare(nil, nil)
+			require.Error(t, err)
+			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
+
+			_, err = testHandler.testDeleteWithLinkShare(nil, map[string]string{"bot": "23"})
+			require.Error(t, err)
+			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
+
+			db.AssertExists(t, "users", map[string]interface{}{"id": 23}, false)
 		})
 	})
 

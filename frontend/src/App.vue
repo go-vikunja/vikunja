@@ -12,6 +12,7 @@
 			<a
 				href="#main-content"
 				class="skip-to-content"
+				@click.prevent="skipToMainContent"
 			>
 				{{ $t('misc.skipToContent') }}
 			</a>
@@ -76,6 +77,11 @@ const authStore = useAuthStore()
 const baseStore = useBaseStore()
 
 const {isQuickAddMode} = useQuickAddMode()
+
+// Native #main-content activation scrolls but never moves focus into <main>; do it explicitly for SPA routing
+function skipToMainContent() {
+	document.getElementById('main-content')?.focus()
+}
 
 // Make the Electron frameless window transparent
 if (isQuickAddMode) {

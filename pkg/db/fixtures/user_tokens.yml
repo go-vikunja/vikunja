@@ -1,31 +1,36 @@
 -
   id: 1
   user_id: 3
-  token: 'passwordresettesttoken'
+  # sha256 of 'passwordresettesttoken'
+  token: 'fb2ed870bd8a2967083ef2c15297070cc5df1a141cf0fb63042ed7eeac3f4589'
   kind: 1
   created: 2021-07-12 00:00:11
 -
   id: 2
   user_id: 4
-  token: 'tiepiQueed8ahc7zeeFe1eveiy4Ein8osooxegiephauph2Ael'
+  # sha256 of 'tiepiQueed8ahc7zeeFe1eveiy4Ein8osooxegiephauph2Ael'
+  token: 'e70d6f623259e4fd3f7442b6aaed9fd4af8c49a698c87269152a0c50cf5ccf01'
   kind: 2
   created: 2021-07-12 00:00:12
 -
   id: 3
   user_id: 5
-  token: 'tiepiQueed8ahc7zeeFe1eveiy4Ein8osooxegiephauph2Aei'
+  # sha256 of 'tiepiQueed8ahc7zeeFe1eveiy4Ein8osooxegiephauph2Aei'
+  token: 'de47860f1349f4880fc53daf4f1cede2b3b89b4fe0e3cb05113c369e340a4287'
   kind: 2
   created: 2021-07-12 00:00:13
 -
   id: 4
   user_id: 1
-  token: 'deletiontesttoken'
+  # sha256 of 'deletiontesttoken'
+  token: '424650309645a0f322d4942ccb66613fd5af6eb39be2b742b7b1f7b9093a8bed'
   kind: 3
   created: 2021-07-12 00:00:14
 -
   id: 5
   user_id: 17
-  token: 'disableduserpasswordresettoken'
+  # sha256 of 'disableduserpasswordresettoken'
+  token: '9e68b5a0270bfdf2184be65fcfb24430985d0151e855296561b10f5d3f750e24'
   kind: 1
   created: 2024-01-01 00:00:00
 -

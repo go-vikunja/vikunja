@@ -1,4 +1,6 @@
 import {test, expect} from '../../support/fixtures'
+import {LabelFactory} from '../../factories/labels'
+import {LabelTaskFactory} from '../../factories/label_task'
 import {LinkShareFactory} from '../../factories/link_sharing'
 import {TaskFactory} from '../../factories/task'
 import {UserFactory} from '../../factories/user'
@@ -112,6 +114,40 @@ test.describe('Link shares', () => {
 	})
 })
 
+test.describe('Link share: label picker', () => {
+	test.beforeEach(async ({page}) => {
+		await setupApiUrl(page)
+	})
+
+	test('explains that new labels cannot be created when typing an unknown label', async ({page}) => {
+		await UserFactory.create(1)
+		const projects = await createProjects()
+		const [task] = await TaskFactory.create(1, {
+			project_id: projects[0].id,
+		})
+		// A label on the task makes the labels field render without clicking "Add Labels" first.
+		const [label] = await LabelFactory.create(1)
+		await LabelTaskFactory.create(1, {
+			task_id: task.id,
+			label_id: label.id,
+		})
+		const [share] = await LinkShareFactory.create(1, {
+			project_id: projects[0].id,
+			permission: 1,
+		})
+
+		await page.goto(`/tasks/${task.id}#share-auth-token=${share.hash}`)
+
+		const labelInput = page.locator('.task-view .details.labels-list .multiselect input')
+		await expect(labelInput).toBeVisible()
+		await labelInput.fill('label-that-does-not-exist')
+
+		const searchResults = page.locator('.task-view .details.labels-list .multiselect .search-results')
+		await expect(searchResults.locator('.search-result-hint')).toContainText('New labels can\'t be created from a shared link')
+		await expect(searchResults.locator('.is-create-option')).toHaveCount(0)
+	})
+})
+
 test.describe('Link share: password protection', () => {
 	test.beforeEach(async ({page}) => {
 		await setupApiUrl(page)
@@ -221,5 +257,34 @@ test.describe('Link share: permission tiers', () => {
 		await expect(page).toHaveURL(`/projects/${projects[0].id}/1#share-auth-token=${share.hash}`)
 
 		await expect(page.locator('.input[placeholder="Add a task…"]')).toBeVisible()
+	})
+})
+
+test.describe('Link share: quick add magic labels', () => {
+	test.beforeEach(async ({page}) => {
+		await setupApiUrl(page)
+	})
+
+	test('creates the task and shows an error when a label cannot be created', async ({page}) => {
+		await UserFactory.create(1)
+		const projects = await createProjects()
+		await TaskFactory.create(1, {
+			project_id: projects[0].id,
+		})
+		const [share] = await LinkShareFactory.create(1, {
+			project_id: projects[0].id,
+			permission: 1,
+		})
+
+		await page.goto(`/share/${share.hash}/auth`)
+		await expect(page.locator('h1.title')).toContainText(projects[0].title)
+
+		const addTaskInput = page.locator('.input[placeholder="Add a task…"]')
+		await addTaskInput.fill('New task via share *unknownlabel')
+		await addTaskInput.press('Enter')
+
+		// Link shares may not create labels: the label is skipped with an error, the task is still created.
+		await expect(page.locator('.global-notification')).toContainText('could not be created')
+		await expect(page.locator('.tasks')).toContainText('New task via share')
 	})
 })

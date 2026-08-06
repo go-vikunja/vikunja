@@ -99,3 +99,57 @@ func TestEscapeMarkdown_RoundTripThroughGoldmark(t *testing.T) {
 		})
 	}
 }
+
+func TestMarkdownToPlainText_RoundTripsEscapedText(t *testing.T) {
+	inputs := []string{
+		"",
+		"plain title",
+		`Test - xyz - 123|456@789!`,
+		`a\b`,
+		"`code`",
+		"*bold*",
+		"test](https://evil.com) [Click to verify",
+		"![](https://evil.com/track.png)",
+		"<https://evil.com>",
+		`mixed \ and - and | and !`,
+		"#+.{}()[]<>~_",
+	}
+
+	for _, input := range inputs {
+		t.Run(input, func(t *testing.T) {
+			assert.Equal(t, input, markdownToPlainText(EscapeMarkdown(input)))
+		})
+	}
+}
+
+func TestMarkdownToPlainText_NormalizesDestinations(t *testing.T) {
+	assert.Equal(t,
+		`site (https://e.test/a(b)?x=1&y=2)`,
+		markdownToPlainText(`[site](https://e.test/a\(b\)?x=1&amp;y=2)`),
+	)
+	assert.Equal(t,
+		`chart (https://e.test/a(b)?x=1&y=2)`,
+		markdownToPlainText(`![chart](https://e.test/a\(b\)?x=1&amp;y=2)`),
+	)
+}
+
+func TestMarkdownToPlainText_PreservesListNumberingAndNesting(t *testing.T) {
+	markdown := "3. Third\n   - Nested one\n   - Nested two\n4. Fourth"
+	want := "3. Third\n  - Nested one\n  - Nested two\n4. Fourth"
+
+	assert.Equal(t, want, markdownToPlainText(markdown))
+}
+
+func TestMarkdownToPlainText_AlignsListContinuationLines(t *testing.T) {
+	markdown := "3. Parent\n   - [Nested first\n     nested second](https://example.com)\n4. Fourth"
+	want := "3. Parent\n  - Nested first\n    nested second (https://example.com)\n4. Fourth"
+
+	assert.Equal(t, want, markdownToPlainText(markdown))
+}
+
+func TestMarkdownToPlainText_AlignsListContinuationBlocks(t *testing.T) {
+	markdown := "- first\n\n  second\n\n  ```\n  code one\n  code two\n  ```\n- next"
+	want := "- first\n  second\n  code one\n  code two\n- next"
+
+	assert.Equal(t, want, markdownToPlainText(markdown))
+}

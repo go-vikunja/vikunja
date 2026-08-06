@@ -64,9 +64,12 @@ func translateDomainError(err error) error {
 		se := huma.NewError(details.HTTPCode, msg)
 		// Preserve Vikunja's numeric domain error code (the value the
 		// error docs key off) on the problem+json body. v1 exposes it as
-		// `code`; without this v2 clients always read 0.
+		// `code`; without this v2 clients always read 0. I18nParams rides
+		// along the same way so v2 clients can localise the message like
+		// v1 clients do.
 		if vm, ok := se.(*vikunjaErrorModel); ok {
 			vm.Code = details.Code
+			vm.I18nParams = details.I18nParams
 		}
 		return se
 	}
@@ -115,7 +118,8 @@ func invalidFieldDetails(fields []string) []error {
 // as the global error type via the huma.NewError override in init().
 type vikunjaErrorModel struct {
 	huma.ErrorModel
-	Code int `json:"code,omitempty" readOnly:"true" doc:"Vikunja numeric error code; see https://vikunja.io/docs/errors/"`
+	Code       int               `json:"code,omitempty" readOnly:"true" doc:"Vikunja numeric error code; see https://vikunja.io/docs/errors/"`
+	I18nParams map[string]string `json:"i18n_params,omitempty" readOnly:"true" doc:"Dynamic values referenced by the error message, keyed by translation placeholder name, for client-side localisation."`
 }
 
 func init() {
@@ -125,6 +129,23 @@ func init() {
 	// time and routes runtime errors through the same constructor, so the
 	// `code` field stays consistent between spec and wire.
 	huma.NewError = func(status int, msg string, errs ...error) huma.StatusError {
+		// Strip internal detail from server errors. The humaecho adapter writes
+		// responses itself, bypassing Vikunja's CreateHTTPErrorHandler which for
+		// v1 returns a generic 500 — so without this a raw DB/driver error (hosts,
+		// ports, credentials, schema names) leaks into problem+json `errors[]`,
+		// including on public endpoints like /health. This must live in NewError
+		// rather than NewErrorWithContext: the huma.Error5xx* helpers call NewError
+		// directly, and huma writes an already-built StatusError as-is, so NewError
+		// is the only chokepoint every 5xx passes through.
+		if status >= 500 {
+			for _, e := range errs {
+				if e != nil {
+					log.Errorf("v2: internal server error: %s", e)
+				}
+			}
+			errs = nil
+		}
+
 		details := make([]*huma.ErrorDetail, 0, len(errs))
 		for _, e := range errs {
 			if e == nil {
@@ -143,23 +164,6 @@ func init() {
 			Errors: details,
 		}}
 	}
-
-	// Strip internal detail from server errors. Huma's handler-error path
-	// wraps a raw error as NewErrorWithContext(ctx, 500, "unexpected error
-	// occurred", err) and — because the humaecho5 adapter writes the
-	// response itself — bypasses Vikunja's CreateHTTPErrorHandler, which for
-	// v1 returns a generic 500 with no detail. Without this override a raw
-	// DB/driver error (SQL, table, column names) would leak into the
-	// problem+json `errors[]`. Log the real cause, return a generic body.
-	huma.NewErrorWithContext = func(_ huma.Context, status int, msg string, errs ...error) huma.StatusError {
-		if status >= 500 {
-			for _, e := range errs {
-				if e != nil {
-					log.Errorf("v2: internal server error: %s", e)
-				}
-			}
-			errs = nil
-		}
-		return huma.NewError(status, msg, errs...)
-	}
+	// NewErrorWithContext is deliberately left at huma's default, which delegates
+	// to NewError above — overriding it too would log the same cause twice.
 }

@@ -24,8 +24,8 @@ import (
 )
 
 func init() {
-	notifications.Register(func() notifications.Notification { return &APITokenExpiringWeekNotification{} })
-	notifications.Register(func() notifications.Notification { return &APITokenExpiringDayNotification{} })
+	notifications.Register(func() notifications.PersistedNotification { return &APITokenExpiringWeekNotification{} })
+	notifications.Register(func() notifications.PersistedNotification { return &APITokenExpiringDayNotification{} })
 }
 
 // APITokenExpiringWeekNotification is sent 7 days before an API token expires.

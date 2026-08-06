@@ -37,7 +37,7 @@ func init() {
 		ID:          "20210727211037",
 		Description: "Add bucket position property",
 		Migrate: func(tx *xorm.Engine) error {
-			err := tx.Sync2(buckets20210727211037{})
+			err := partialSync(tx, buckets20210727211037{})
 			if err != nil {
 				return err
 			}

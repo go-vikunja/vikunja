@@ -177,7 +177,7 @@ export const getDateFromText = (text: string, now: Date = new Date()) => {
 	]
 
 	let result: string | null = null
-	let results: RegExpExecArray | null = null
+	let results: RegExpExecArray | null
 	let foundText: string | null = ''
 	let containsYear = true
 
@@ -287,7 +287,7 @@ const getDateFromWeekday = (text: string, date: Date = new Date()): dateFoundRes
 	}
 
 	const currentDay: number = date.getDay()
-	let day = 0
+	let day: number
 
 	switch (results[3]) {
 		case 'mon':

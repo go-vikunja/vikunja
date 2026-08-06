@@ -30,6 +30,9 @@ import (
 // Queue is the mail queue
 var Queue chan *mail.Msg
 
+// daemonDone is closed by the daemon goroutine once it has drained the queue and returned.
+var daemonDone chan struct{}
+
 func getClient() (*mail.Client, error) {
 
 	var authType mail.SMTPAuthType
@@ -101,13 +104,25 @@ func StartMailDaemon() {
 		log.Errorf("Could not create mail client: %v", err)
 		return
 	}
+
+	// Read from local copies so StopMailDaemon can reset the package vars without racing the daemon.
+	queue := Queue
+	done := make(chan struct{})
+	daemonDone = done
+
 	go func() {
+		defer close(done)
 		var err error
 		open := false
 		for {
 			select {
-			case m, ok := <-Queue:
+			case m, ok := <-queue:
 				if !ok {
+					if open {
+						if err := c.Close(); err != nil {
+							log.Errorf("Error closing the mail server connection: %s", err)
+						}
+					}
 					return
 				}
 				if !open {
@@ -138,4 +153,33 @@ func StartMailDaemon() {
 			}
 		}
 	}()
+}
+
+// StopMailDaemon closes the mail queue and blocks until the daemon has sent all
+// queued messages, so short-lived processes (CLI commands) don't exit before
+// pending mails went out. Safe to call unconditionally: it is a no-op when the
+// mailer is disabled, the daemon was never started or it was already stopped.
+func StopMailDaemon() {
+	if Queue == nil {
+		return
+	}
+
+	queue := Queue
+	done := daemonDone
+	Queue = nil
+	daemonDone = nil
+
+	// The daemon keeps receiving buffered messages from the closed channel until it is empty.
+	close(queue)
+
+	if done == nil {
+		return
+	}
+
+	timeout := (config.MailerQueueTimeout.GetDuration() + 10) * time.Second
+	select {
+	case <-done:
+	case <-time.After(timeout):
+		log.Errorf("Timed out after %s waiting for the mail queue to be sent, some queued mails were not delivered", timeout)
+	}
 }

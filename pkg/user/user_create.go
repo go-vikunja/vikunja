@@ -114,7 +114,7 @@ func CreateUser(s *xorm.Session, user *User) (newUser *User, err error) {
 	n := &EmailConfirmNotification{
 		User:         user,
 		IsNew:        true,
-		ConfirmToken: token.Token,
+		ConfirmToken: token.ClearTextToken,
 	}
 
 	err = notifications.Notify(user, n, s)

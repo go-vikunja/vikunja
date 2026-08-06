@@ -15,6 +15,7 @@ import type {IBucket} from '@/modelTypes/IBucket'
 import {useAuthStore} from '@/stores/auth'
 import type {IProjectView} from '@/modelTypes/IProjectView'
 import {useBaseStore} from '@/stores/base'
+import {useProjectStore} from '@/stores/projects'
 
 const TASKS_PER_BUCKET = 25
 
@@ -38,6 +39,7 @@ function getTaskIndicesById(buckets: IBucket[], taskId: ITask['id']) {
 export const useKanbanStore = defineStore('kanban', () => {
 	const authStore = useAuthStore()
 	const baseStore = useBaseStore()
+	const projectStore = useProjectStore()
 
 	const buckets = ref<IBucket[]>([])
 	const projectId = ref<IProject['id']>(0)
@@ -338,6 +340,17 @@ export const useKanbanStore = defineStore('kanban', () => {
 		try {
 			const response = await bucketService.delete(bucket)
 			removeBucket(bucket)
+
+			// Mirrors Bucket.Delete on the server, which zeroes these when they pointed at the deleted bucket.
+			const view = projectStore.projects[bucket.projectId]?.views?.find(v => v.id === bucket.projectViewId)
+			if (view && (view.defaultBucketId === bucket.id || view.doneBucketId === bucket.id)) {
+				projectStore.setProjectView({
+					...view,
+					defaultBucketId: view.defaultBucketId === bucket.id ? 0 : view.defaultBucketId,
+					doneBucketId: view.doneBucketId === bucket.id ? 0 : view.doneBucketId,
+				} as IProjectView)
+			}
+
 			// We reload all buckets because tasks are being moved from the deleted bucket
 			loadBucketsForProject(bucket.projectId, bucket.projectViewId, params)
 			return response

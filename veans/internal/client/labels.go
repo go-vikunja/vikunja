@@ -33,15 +33,15 @@ func (c *Client) ListLabels(ctx context.Context, search string) ([]*Label, error
 		q.Set("page", strconv.Itoa(page))
 		q.Set("per_page", "50")
 		if search != "" {
-			q.Set("s", search)
+			// v2's list search param is `q` (v1 used `s`).
+			q.Set("q", search)
 		}
-		var batch []*Label
-		total, err := c.DoPaginated(ctx, "GET", "/labels", q, &batch)
+		batch, totalPages, err := doList[*Label](ctx, c, "/labels", q)
 		if err != nil {
 			return nil, err
 		}
 		all = append(all, batch...)
-		if paginationDone(page, len(batch), 50, total) {
+		if page >= totalPages {
 			return all, nil
 		}
 		page++
@@ -51,7 +51,7 @@ func (c *Client) ListLabels(ctx context.Context, search string) ([]*Label, error
 // CreateLabel creates a new label owned by the authenticated user.
 func (c *Client) CreateLabel(ctx context.Context, l *Label) (*Label, error) {
 	var out Label
-	if err := c.Do(ctx, "PUT", "/labels", nil, l, &out); err != nil {
+	if err := c.Do(ctx, "POST", "/labels", nil, l, &out); err != nil {
 		return nil, err
 	}
 	return &out, nil
@@ -59,7 +59,7 @@ func (c *Client) CreateLabel(ctx context.Context, l *Label) (*Label, error) {
 
 // AddLabelToTask attaches an existing label to a task.
 func (c *Client) AddLabelToTask(ctx context.Context, taskID, labelID int64) error {
-	return c.Do(ctx, "PUT", fmt.Sprintf("/tasks/%d/labels", taskID), nil, &LabelTask{LabelID: labelID}, nil)
+	return c.Do(ctx, "POST", fmt.Sprintf("/tasks/%d/labels", taskID), nil, &LabelTask{LabelID: labelID}, nil)
 }
 
 // RemoveLabelFromTask detaches a label.

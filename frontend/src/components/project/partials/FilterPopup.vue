@@ -11,6 +11,7 @@
 		:enabled="modalOpen"
 		:overflow="true"
 		variant="hint-modal"
+		:aria-label="$t('filters.title')"
 		@close="() => modalOpen = false"
 	>
 		<Filters

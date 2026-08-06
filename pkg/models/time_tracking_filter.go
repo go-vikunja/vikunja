@@ -38,7 +38,7 @@ func entriesForProjectCond(projectIDCond builder.Cond) builder.Cond {
 	return builder.Or(
 		projectIDCond,
 		builder.In("task_id",
-			builder.Select("id").From("tasks").Where(projectIDCond),
+			builder.Select("id").From("tasks").Where(builder.And(projectIDCond, taskNotDeletedCond("tasks"))),
 		),
 	)
 }

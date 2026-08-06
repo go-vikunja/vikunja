@@ -47,12 +47,11 @@ func TestParseTodos(t *testing.T) {
 				},
 				todos: []*Todo{
 					{
-						Summary: "Todo #1",
-						Description: `Lorem Ipsum
-Dolor sit amet`,
-						UID:       "randommduid",
-						Timestamp: time.Unix(1543626724, 0).In(config.GetTimeZone()),
-						Color:     "affffe",
+						Summary:     "Todo #1",
+						Description: `<p>Lorem Ipsum</p><p>Dolor sit amet</p>`,
+						UID:         "randommduid",
+						Timestamp:   time.Unix(1543626724, 0).In(config.GetTimeZone()),
+						Color:       "affffe",
 					},
 				},
 			},
@@ -73,7 +72,8 @@ X-APPLE-CALENDAR-COLOR:#affffeFF
 X-OUTLOOK-COLOR:#affffeFF
 X-FUNAMBOL-COLOR:#affffeFF
 COLOR:#affffeFF
-DESCRIPTION:Lorem Ipsum\nDolor sit amet
+DESCRIPTION:Lorem Ipsum\n\nDolor sit amet
+STATUS:NEEDS-ACTION
 LAST-MODIFIED:00010101T000000Z
 END:VTODO
 END:VCALENDAR`,
@@ -91,6 +91,7 @@ END:VCALENDAR`,
 						Description: "Lorem Ipsum",
 						UID:         "randommduid",
 						Timestamp:   time.Unix(1543626724, 0).In(config.GetTimeZone()),
+						Done:        true,
 						Completed:   time.Unix(1543627824, 0).In(config.GetTimeZone()),
 					},
 				},
@@ -138,6 +139,7 @@ UID:randommduid
 DTSTAMP:20181201T011204Z
 SUMMARY:Todo #1
 DESCRIPTION:Lorem Ipsum
+STATUS:NEEDS-ACTION
 PRIORITY:9
 LAST-MODIFIED:00010101T000000Z
 END:VTODO
@@ -171,6 +173,7 @@ UID:randommduid
 DTSTAMP:20181201T011204Z
 SUMMARY:Todo #1
 DESCRIPTION:Lorem Ipsum
+STATUS:NEEDS-ACTION
 DUE:20181201T011204Z
 RRULE:FREQ=MONTHLY;BYMONTHDAY=01
 LAST-MODIFIED:00010101T000000Z
@@ -206,6 +209,7 @@ UID:randommduid
 DTSTAMP:20181201T011204Z
 SUMMARY:Todo #1
 DESCRIPTION:Lorem Ipsum
+STATUS:NEEDS-ACTION
 DUE:20181201T011204Z
 RRULE:FREQ=SECONDLY;INTERVAL=435
 LAST-MODIFIED:00010101T000000Z
@@ -247,6 +251,7 @@ X-APPLE-CALENDAR-COLOR:#affffeFF
 X-OUTLOOK-COLOR:#affffeFF
 X-FUNAMBOL-COLOR:#affffeFF
 COLOR:#affffeFF
+STATUS:NEEDS-ACTION
 CATEGORIES:label1,label2
 LAST-MODIFIED:00010101T000000Z
 END:VTODO
@@ -297,6 +302,7 @@ BEGIN:VTODO
 UID:randommduid
 DTSTAMP:20181201T011204Z
 SUMMARY:Todo #1
+STATUS:NEEDS-ACTION
 LAST-MODIFIED:00010101T000000Z
 BEGIN:VALARM
 TRIGGER;VALUE=DATE-TIME:20181201T011204Z
@@ -362,6 +368,7 @@ UID:randommduid
 DTSTAMP:20181201T011204Z
 SUMMARY:Todo #1
 DESCRIPTION:Lorem Ipsum
+STATUS:NEEDS-ACTION
 LAST-MODIFIED:00010101T000000Z
 RELATED-TO;RELTYPE=PARENT:parentuid
 RELATED-TO;RELTYPE=CHILD:subtaskuid
@@ -392,6 +399,7 @@ BEGIN:VTODO
 UID:randommduid
 DTSTAMP:20181201T011204Z
 SUMMARY:Meeting\nATTACH:https://evil.com/malware.exe\nX-INJECTED:pwned
+STATUS:NEEDS-ACTION
 LAST-MODIFIED:00010101T000000Z
 END:VTODO
 END:VCALENDAR`,
@@ -422,8 +430,99 @@ BEGIN:VTODO
 UID:randommduid
 DTSTAMP:20181201T011204Z
 SUMMARY:a\;b\,c\\d
+STATUS:NEEDS-ACTION
 ORGANIZER;CN=:al\;ic\,e
 CATEGORIES:lab\;el1,lab\,el2
+LAST-MODIFIED:00010101T000000Z
+END:VTODO
+END:VCALENDAR`,
+		},
+		{
+			name: "incomplete task has STATUS:NEEDS-ACTION",
+			args: args{
+				config: &Config{
+					Name:   "test",
+					ProdID: "RandomProdID which is not random",
+				},
+				todos: []*Todo{
+					{
+						Summary:   "Pending task",
+						UID:       "pending-uid",
+						Timestamp: time.Unix(1543626724, 0).In(config.GetTimeZone()),
+					},
+				},
+			},
+			wantCaldavtasks: `BEGIN:VCALENDAR
+VERSION:2.0
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+UID:pending-uid
+DTSTAMP:20181201T011204Z
+SUMMARY:Pending task
+STATUS:NEEDS-ACTION
+LAST-MODIFIED:00010101T000000Z
+END:VTODO
+END:VCALENDAR`,
+		},
+		{
+			name: "not done but with a completion timestamp has STATUS:NEEDS-ACTION",
+			args: args{
+				config: &Config{
+					Name:   "test",
+					ProdID: "RandomProdID which is not random",
+				},
+				todos: []*Todo{
+					{
+						Summary:   "Reopened repeating task",
+						UID:       "reopened-uid",
+						Timestamp: time.Unix(1543626724, 0).In(config.GetTimeZone()),
+						Done:      false,
+						Completed: time.Unix(1543627824, 0).In(config.GetTimeZone()),
+					},
+				},
+			},
+			wantCaldavtasks: `BEGIN:VCALENDAR
+VERSION:2.0
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+UID:reopened-uid
+DTSTAMP:20181201T011204Z
+SUMMARY:Reopened repeating task
+STATUS:NEEDS-ACTION
+LAST-MODIFIED:00010101T000000Z
+END:VTODO
+END:VCALENDAR`,
+		},
+		{
+			name: "done without a completion timestamp omits COMPLETED",
+			args: args{
+				config: &Config{
+					Name:   "test",
+					ProdID: "RandomProdID which is not random",
+				},
+				todos: []*Todo{
+					{
+						Summary:   "Done task",
+						UID:       "done-uid",
+						Timestamp: time.Unix(1543626724, 0).In(config.GetTimeZone()),
+						Done:      true,
+					},
+				},
+			},
+			wantCaldavtasks: `BEGIN:VCALENDAR
+VERSION:2.0
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+UID:done-uid
+DTSTAMP:20181201T011204Z
+SUMMARY:Done task
+STATUS:COMPLETED
 LAST-MODIFIED:00010101T000000Z
 END:VTODO
 END:VCALENDAR`,
@@ -436,6 +535,33 @@ END:VCALENDAR`,
 			assert.NotContains(t, gotCaldavtasks, "METHOD:")
 		})
 	}
+}
+
+func TestParseTodosRichTextDescription(t *testing.T) {
+	cfg := &Config{Name: "test", ProdID: "Vikunja"}
+	ts := time.Unix(1543626724, 0).In(config.GetTimeZone())
+
+	t.Run("rich html serializes as markdown", func(t *testing.T) {
+		out := ParseTodos(cfg, []*Todo{{
+			Summary:   "Todo",
+			UID:       "uid",
+			Timestamp: ts,
+			Description: `<p>Hello <strong>bold</strong> and <mention-user data-id="user1" data-label="User One">@User One</mention-user></p>` +
+				`<ul data-type="taskList"><li data-checked="true" data-type="taskItem"><label><input type="checkbox" checked="checked"><span></span></label><div><p>done</p></div></li></ul>`,
+		}})
+		// iCal escapes the markdown's newlines as "\n".
+		assert.Contains(t, out, `DESCRIPTION:Hello **bold** and @user1\n\n- [x] done`)
+	})
+
+	t.Run("empty html omits the description line", func(t *testing.T) {
+		out := ParseTodos(cfg, []*Todo{{Summary: "Todo", UID: "uid", Timestamp: ts, Description: "<p></p>"}})
+		assert.NotContains(t, out, "DESCRIPTION:")
+	})
+
+	t.Run("plain text description is unaffected", func(t *testing.T) {
+		out := ParseTodos(cfg, []*Todo{{Summary: "Todo", UID: "uid", Timestamp: ts, Description: "just plain text"}})
+		assert.Contains(t, out, "DESCRIPTION:just plain text")
+	})
 }
 
 func TestGetCaldavColor(t *testing.T) {
@@ -458,6 +584,26 @@ func TestGetCaldavColor(t *testing.T) {
 			assert.Equal(t, tt.want, got)
 			// No output may ever contain CR or LF inside a property value.
 			assert.NotContains(t, got, "\r")
+		})
+	}
+}
+
+func Test_formatDuration(t *testing.T) {
+	tests := []struct {
+		name string
+		in   time.Duration
+		want string
+	}{
+		{"whole hours", time.Hour, "1H0M0S"},
+		{"hours and minutes", time.Hour + 30*time.Minute, "1H30M0S"},
+		{"minutes only", 30 * time.Minute, "0H30M0S"},
+		{"minutes only, not a round hour", 45 * time.Minute, "0H45M0S"},
+		{"hours, minutes and seconds", 2*time.Hour + 15*time.Minute + 30*time.Second, "2H15M30S"},
+		{"seconds only", 30 * time.Second, "0H0M30S"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, formatDuration(tt.in))
 		})
 	}
 }

@@ -155,6 +155,7 @@ func TestTaskAttachmentsV2(t *testing.T) {
 		assert.Equal(t, strconv.Itoa(len(content)), rec.Header().Get("Content-Length"))
 		assert.Equal(t, "no-cache", rec.Header().Get("Cache-Control"))
 		assert.NotEmpty(t, rec.Header().Get("Last-Modified"))
+		assert.Equal(t, "nosniff", rec.Header().Get("X-Content-Type-Options"))
 	})
 
 	t.Run("Delete", func(t *testing.T) {
@@ -181,6 +182,26 @@ func TestTaskAttachmentsV2(t *testing.T) {
 		body, contentType := multipartFilesBody(t, map[string][]byte{"nope.txt": []byte("nope")})
 		rec := uploadAttachmentRequest(t, e, "34", body, contentType, token)
 		assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
+	})
+
+	t.Run("List empty returns 200 not 500", func(t *testing.T) {
+		// Regression: listing attachments on a task with zero attachments
+		// returned HTTP 500 because ReadAll returned nil instead of an empty slice.
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		token := humaTokenFor(t, &testuser1)
+
+		// Task 2 exists in project 1 (owned by testuser1) and has no attachment fixtures.
+		rec := humaRequest(t, e, http.MethodGet, "/api/v2/tasks/2/attachments", "", token, "")
+		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+
+		var resp struct {
+			Items []*models.TaskAttachment `json:"items"`
+			Total int64                    `json:"total"`
+		}
+		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &resp))
+		assert.Empty(t, resp.Items)
+		assert.Zero(t, resp.Total)
 	})
 
 	t.Run("List forbidden on inaccessible task", func(t *testing.T) {
