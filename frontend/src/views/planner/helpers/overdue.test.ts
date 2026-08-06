@@ -1,7 +1,7 @@
 import {describe, it, expect} from 'vitest'
 import dayjs from 'dayjs'
 
-import {isOverdue} from './overdue'
+import {isOverdue, overdueAnchor} from './overdue'
 import type {ITask} from '@/modelTypes/ITask'
 
 const today = dayjs('2026-07-02').startOf('day')
@@ -61,5 +61,32 @@ describe('isOverdue', () => {
 
 	it('is false for done tasks regardless of dates', () => {
 		expect(isOverdue(makeTask({done: true, dueDate: new Date('2026-06-01T09:00:00')}), today)).toBe(false)
+	})
+})
+
+describe('overdueAnchor', () => {
+	it('is null for a task without any dates', () => {
+		expect(overdueAnchor(makeTask({}))).toBeNull()
+	})
+
+	it('uses the same precedence as isOverdue: end before due', () => {
+		// The past end date is what makes this task overdue; the future due date
+		// must not surface as the (red) overdue label.
+		const endDate = new Date('2026-06-30T11:00:00')
+		const task = makeTask({
+			startDate: new Date('2026-06-30T10:00:00'),
+			endDate,
+			dueDate: new Date('2026-07-10T09:00:00'),
+		})
+		expect(isOverdue(task, today)).toBe(true)
+		expect(overdueAnchor(task)).toEqual(endDate)
+	})
+
+	it('falls back to the start date, then the due date', () => {
+		const startDate = new Date('2026-06-29T10:00:00')
+		expect(overdueAnchor(makeTask({startDate}))).toEqual(startDate)
+
+		const dueDate = new Date('2026-06-30T09:00:00')
+		expect(overdueAnchor(makeTask({dueDate}))).toEqual(dueDate)
 	})
 })

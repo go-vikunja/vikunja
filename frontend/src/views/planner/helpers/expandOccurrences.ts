@@ -5,8 +5,11 @@ import type {IRepeatAfter} from '@/types/IRepeatAfter'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 import type {PlannedOccurrence} from './types'
 
-// Guard against pathological repeat intervals projecting forever.
-const MAX_OCCURRENCES = 366
+// Guard against pathological repeat intervals projecting forever. This is a
+// cap, not the horizon — the walk stops at the range end — so it only needs to
+// be large enough that realistic short intervals cover the maximum 31-day
+// window (31 days of five-minute steps ≈ 9k occurrences).
+const MAX_OCCURRENCES = 10_000
 
 const TYPE_TO_SECONDS: Record<IRepeatAfter['type'], number> = {
 	seconds: 1,

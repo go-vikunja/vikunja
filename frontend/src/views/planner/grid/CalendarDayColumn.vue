@@ -5,7 +5,7 @@
 		:class="{'is-drop-target': isDropTarget}"
 		:data-day="dayKey"
 		@dragover.prevent="isDropTarget = true"
-		@dragleave="isDropTarget = false"
+		@dragleave="onDragLeave"
 		@drop="onDrop"
 		@dblclick="onDblClick"
 		@pointerdown="onCreatePointerDown"
@@ -109,6 +109,17 @@ function detachCreate() {
 onBeforeUnmount(detachCreate)
 
 const longPress = useLongPress()
+
+// dragleave also fires when the pointer moves onto a child block, so only
+// clear the highlight when actually leaving the column.
+function onDragLeave(event: DragEvent) {
+	if (event.currentTarget instanceof HTMLElement
+		&& event.relatedTarget instanceof Node
+		&& event.currentTarget.contains(event.relatedTarget)) {
+		return
+	}
+	isDropTarget.value = false
+}
 
 function onDrop(event: DragEvent) {
 	isDropTarget.value = false

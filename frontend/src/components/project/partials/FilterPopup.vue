@@ -20,7 +20,7 @@
 			class="filter-popup"
 			:change-immediately="false"
 			:filter-from-view="filterFromView"
-			show-saved-filters
+			:show-saved-filters="showSavedFilters"
 			show-close
 			@close="modalOpen = false"
 			@showResults="showResults"
@@ -42,6 +42,9 @@ const props = defineProps<{
 	modelValue: TaskFilterParams,
 	projectId?: IProject['id'],
 	viewId?: IProjectView['id'],
+	// Cross-project saved filters only make sense in cross-project contexts
+	// (e.g. the planner), so single-project views keep them hidden.
+	showSavedFilters?: boolean,
 }>()
 
 const emit = defineEmits<{

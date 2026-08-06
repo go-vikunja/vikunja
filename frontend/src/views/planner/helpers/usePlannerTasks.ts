@@ -41,13 +41,23 @@ export const PLANNER_SIDEBAR_SORTS: PlannerSidebarSort[] = [
 // Default: no explicit sort — show the order the server returns.
 export const DEFAULT_PLANNER_SIDEBAR_SORT: PlannerSidebarSort = 'none'
 
-function shuffle<T>(input: T[]): T[] {
-	const arr = [...input]
-	for (let i = arr.length - 1; i > 0; i--) {
-		const j = Math.floor(Math.random() * (i + 1))
-		;[arr[i], arr[j]] = [arr[j], arr[i]]
-	}
-	return arr
+// Page-fetch batch size: enough to hide latency without hammering the API when
+// a filter matches thousands of tasks (hundreds of pages).
+const PAGE_FETCH_CONCURRENCY = 4
+
+type SortableSidebarSort = Exclude<PlannerSidebarSort, 'none' | 'random'>
+
+// Mirrors the server's `sort_by=[field, id]` ordering. Sorting client-side
+// means switching the sort doesn't refetch the whole unscheduled list.
+const SIDEBAR_COMPARATORS: Record<SortableSidebarSort, (a: ITask, b: ITask) => number> = {
+	'priority:desc': (a, b) => b.priority - a.priority,
+	'priority:asc': (a, b) => a.priority - b.priority,
+	'title:asc': (a, b) => a.title.localeCompare(b.title),
+	'title:desc': (a, b) => b.title.localeCompare(a.title),
+	'created:desc': (a, b) => b.created.getTime() - a.created.getTime(),
+	'created:asc': (a, b) => a.created.getTime() - b.created.getTime(),
+	'percent_done:desc': (a, b) => b.percentDone - a.percentDone,
+	'percent_done:asc': (a, b) => a.percentDone - b.percentDone,
 }
 
 export function usePlannerTasks(
@@ -64,8 +74,42 @@ export function usePlannerTasks(
 	const overdueService = shallowReactive(new TaskService())
 
 	const gridTasks = ref<Map<ITask['id'], ITask>>(new Map())
-	const sidebarTasks = ref<ITask[]>([])
+	// Server-order list; the exposed sidebarTasks computed applies the sort.
+	const sidebarTasksRaw = ref<ITask[]>([])
 	const overdueTasks = ref<ITask[]>([])
+
+	// 'random' keys each task once so the order is stable across recomputes and
+	// a newly added task gets a slot without reshuffling the rest; re-selecting
+	// 'random' clears the keys for a fresh shuffle.
+	const randomKeys = new Map<ITask['id'], number>()
+	watch(sidebarSort, sort => {
+		if (sort === 'random') {
+			randomKeys.clear()
+		}
+	})
+
+	function randomKey(id: ITask['id']): number {
+		let key = randomKeys.get(id)
+		if (key === undefined) {
+			key = Math.random()
+			randomKeys.set(id, key)
+		}
+		return key
+	}
+
+	const sidebarTasks = computed<ITask[]>(() => {
+		// Guard against a stale/garbage stored value.
+		const sort = PLANNER_SIDEBAR_SORTS.includes(sidebarSort.value) ? sidebarSort.value : DEFAULT_PLANNER_SIDEBAR_SORT
+		if (sort === 'none') {
+			return sidebarTasksRaw.value
+		}
+		if (sort === 'random') {
+			return [...sidebarTasksRaw.value].sort((a, b) => randomKey(a.id) - randomKey(b.id))
+		}
+		const compare = SIDEBAR_COMPARATORS[sort]
+		// id desc as the final tiebreaker so the chosen column drives the order.
+		return [...sidebarTasksRaw.value].sort((a, b) => compare(a, b) || b.id - a.id)
+	})
 
 	const isLoading = computed(() => gridService.loading || sidebarService.loading || overdueService.loading)
 	const loadError = ref(false)
@@ -78,15 +122,20 @@ export function usePlannerTasks(
 
 	async function fetchAll(service: TaskService, params: TaskFilterParams): Promise<ITask[]> {
 		const first = await service.getAll({} as ITask, params, 1) as ITask[]
-		if (service.totalPages <= 1) {
+		// totalPages is known after the first page; snapshot it before later
+		// responses overwrite it on the shared service instance.
+		const totalPages = service.totalPages
+		if (totalPages <= 1) {
 			return first
 		}
-		// totalPages is known after the first page, so fetch the rest concurrently.
-		const rest = await Promise.all(Array.from(
-			{length: service.totalPages - 1},
-			(_, i) => service.getAll({} as ITask, params, i + 2) as Promise<ITask[]>,
-		))
-		return first.concat(...rest)
+		const pages = [first]
+		for (let page = 2; page <= totalPages; page += PAGE_FETCH_CONCURRENCY) {
+			pages.push(...await Promise.all(Array.from(
+				{length: Math.min(PAGE_FETCH_CONCURRENCY, totalPages - page + 1)},
+				(_, i) => service.getAll({} as ITask, params, page + i) as Promise<ITask[]>,
+			)))
+		}
+		return pages.flat()
 	}
 
 	async function loadGrid() {
@@ -149,11 +198,6 @@ export function usePlannerTasks(
 		const userFilter = sidebarFilter.value.filter?.trim()
 		const filter = userFilter ? `(${userFilter}) && done = false` : 'done = false'
 
-		// Guard against a stale/garbage stored value reaching the API as a bad sort.
-		const sort = PLANNER_SIDEBAR_SORTS.includes(sidebarSort.value) ? sidebarSort.value : DEFAULT_PLANNER_SIDEBAR_SORT
-		// 'random' has no backend sort, so fetch in server order and shuffle below.
-		const random = sort === 'random'
-
 		const params: TaskFilterParams = {
 			filter,
 			// The sidebar's own null-date filtering happens client-side below, so
@@ -165,14 +209,6 @@ export function usePlannerTasks(
 			expand: 'subtasks',
 		} as TaskFilterParams
 
-		// 'none'/'random' send no sort_by, so the server returns its own order.
-		if (sort !== 'none' && !random) {
-			const [field, order] = sort.split(':')
-			// Keep id as the final tiebreaker so the chosen column drives the order.
-			params.sort_by = [field, 'id'] as TaskFilterParams['sort_by']
-			params.order_by = [order, 'desc'] as TaskFilterParams['order_by']
-		}
-
 		// Truly unscheduled = no start, end or due date. Due-only tasks already
 		// render in the all-day row, so keep them out of the sidebar.
 		const id = ++sidebarLoadId
@@ -181,8 +217,7 @@ export function usePlannerTasks(
 			if (id !== sidebarLoadId) {
 				return
 			}
-			const unscheduled = loaded.filter(task => !task.startDate && !task.endDate && !task.dueDate)
-			sidebarTasks.value = random ? shuffle(unscheduled) : unscheduled
+			sidebarTasksRaw.value = loaded.filter(task => !task.startDate && !task.endDate && !task.dueDate)
 			loadError.value = false
 		} catch (_) {
 			if (id === sidebarLoadId) {
@@ -230,12 +265,17 @@ export function usePlannerTasks(
 	}
 
 	watch(range, () => loadGrid(), {immediate: true, deep: true})
-	watch([sidebarFilter, sidebarSort], () => loadSidebar(), {immediate: true, deep: true})
+	// Sorting happens client-side (the sidebarTasks computed), so only filter
+	// changes need a refetch.
+	watch(sidebarFilter, () => loadSidebar(), {immediate: true, deep: true})
 	watch(overdueEnabled, () => loadOverdue(), {immediate: true})
 
 	// Keep the lists in sync with edits made elsewhere (e.g. the task detail
 	// modal): re-file the task into the grid or sidebar, or drop it if it's now
-	// done. Only react to tasks the planner already tracks.
+	// done. Untracked tasks are placed too when they carry a date (e.g. one just
+	// scheduled into the visible week from quick search); untracked dateless
+	// tasks are skipped since the sidebar's server-side filter can't be
+	// evaluated client-side.
 	watch(
 		() => taskStore.lastUpdatedTask,
 		updatedTask => {
@@ -243,9 +283,9 @@ export function usePlannerTasks(
 				return
 			}
 			const known = gridTasks.value.has(updatedTask.id)
-				|| sidebarTasks.value.some(t => t.id === updatedTask.id)
+				|| sidebarTasksRaw.value.some(t => t.id === updatedTask.id)
 				|| overdueTasks.value.some(t => t.id === updatedTask.id)
-			if (known) {
+			if (known || updatedTask.startDate || updatedTask.endDate || updatedTask.dueDate) {
 				placeTask(updatedTask)
 			}
 		},
@@ -260,7 +300,7 @@ export function usePlannerTasks(
 				return
 			}
 			gridTasks.value.delete(deletedTask.id)
-			removeFromList(sidebarTasks.value, deletedTask.id)
+			removeFromList(sidebarTasksRaw.value, deletedTask.id)
 			removeFromList(overdueTasks.value, deletedTask.id)
 		},
 	)
@@ -280,13 +320,13 @@ export function usePlannerTasks(
 	// unscheduled sidebar.
 	function placeTask(task: ITask) {
 		gridTasks.value.delete(task.id)
-		removeFromList(sidebarTasks.value, task.id)
+		removeFromList(sidebarTasksRaw.value, task.id)
 		removeFromList(overdueTasks.value, task.id)
 
 		if (task.startDate || task.endDate || task.dueDate) {
 			gridTasks.value.set(task.id, task)
 		} else if (!task.done) {
-			sidebarTasks.value.unshift(task)
+			sidebarTasksRaw.value.unshift(task)
 		}
 
 		if (overdueEnabled.value && isOverdue(task)) {
@@ -297,7 +337,7 @@ export function usePlannerTasks(
 
 	async function updateTask(partial: ITaskPartialWithId) {
 		const base = gridTasks.value.get(partial.id)
-			?? sidebarTasks.value.find(t => t.id === partial.id)
+			?? sidebarTasksRaw.value.find(t => t.id === partial.id)
 			?? overdueTasks.value.find(t => t.id === partial.id)
 		if (!base) return
 
@@ -320,6 +360,7 @@ export function usePlannerTasks(
 	// dates and persist them. Used by the create-by-gesture flow, where AddTask
 	// creates a dateless task that we then schedule into the painted slot.
 	async function scheduleTask(task: ITask, dates: {startDate: Date | null, endDate: Date | null}) {
+		const oldTask = klona(task)
 		const newTask: ITask = {...task, ...dates}
 		placeTask(newTask)
 		try {
@@ -328,6 +369,9 @@ export function usePlannerTasks(
 			success({message: i18n.global.t('planner.saved')})
 		} catch (_) {
 			error({message: i18n.global.t('planner.saveError')})
+			// The task does exist (created dateless just before), so re-file it
+			// as it was instead of leaving never-persisted dates painted.
+			placeTask(oldTask)
 		}
 	}
 

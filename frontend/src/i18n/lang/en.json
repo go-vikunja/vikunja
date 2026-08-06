@@ -1316,6 +1316,7 @@
       "title": "Navigation",
       "overview": "Navigate to overview",
       "upcoming": "Navigate to upcoming tasks",
+      "planner": "Navigate to the planner",
       "labels": "Navigate to labels",
       "teams": "Navigate to teams",
       "projects": "Navigate to projects"

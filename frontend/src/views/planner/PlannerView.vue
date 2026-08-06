@@ -116,7 +116,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, nextTick, onMounted, ref, watchEffect} from 'vue'
+import {computed, nextTick, onMounted, ref, watch, watchEffect} from 'vue'
 import {useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 import {useStorage} from '@vueuse/core'
@@ -167,6 +167,10 @@ function hoursFromTime(time: string): number {
 }
 const dayStartHour = computed(() => hoursFromTime(settings.value.dayStart))
 const dayEndHour = computed(() => hoursFromTime(settings.value.dayEnd))
+
+// A manual zoom sticks (disables auto-fit), but changing the working hours is
+// an explicit request for a new visible window — let auto-fit apply it.
+watch([dayStartHour, dayEndHour], () => userZoomed.value = false)
 
 // Respect the user's configured first day of the week (0 = Sunday … 6 = Saturday).
 function startOfWeek(date: Date): dayjs.Dayjs {
@@ -272,6 +276,11 @@ function onDropTask({taskId, minutes, day}: {taskId: number, minutes: number, da
 // Unscheduling must clear the due date too: any remaining date re-files the
 // task into the grid, so the drop onto the sidebar would silently no-op.
 function unscheduleTask(taskId: number) {
+	const task = findTask(taskId)
+	// Dropping an already-unscheduled task back onto the sidebar changes nothing.
+	if (task && !task.startDate && !task.endDate && !task.dueDate) {
+		return
+	}
 	updateTask({id: taskId, startDate: null, endDate: null, dueDate: null})
 }
 

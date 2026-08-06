@@ -10,7 +10,11 @@
 		}"
 		:style="blockStyle"
 		:title="tooltip"
+		role="button"
+		tabindex="0"
 		@pointerdown="onMovePointerDown"
+		@keydown.enter.prevent="emit('open', occurrence.task.id)"
+		@keydown.space.prevent="emit('open', occurrence.task.id)"
 	>
 		<span class="block-time">{{ timeLabel }}</span>
 		<span class="block-title">{{ occurrence.task.title }}</span>

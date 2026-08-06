@@ -3,7 +3,7 @@
 		class="planner-sidebar"
 		:class="{'is-drop-target': isDropTarget}"
 		@dragover.prevent="isDropTarget = true"
-		@dragleave="isDropTarget = false"
+		@dragleave="onDragLeave"
 		@drop="onDrop"
 	>
 		<template v-if="overdueTasks.length > 0">
@@ -18,8 +18,12 @@
 					class="sidebar-task"
 					:style="{'--task-color': taskColor(task)}"
 					draggable="true"
+					role="button"
+					tabindex="0"
 					@dragstart="onDragStart($event, task)"
 					@click="emit('openTask', task.id)"
+					@keydown.enter.prevent="emit('openTask', task.id)"
+					@keydown.space.prevent="emit('openTask', task.id)"
 				>
 					<span class="task-title">{{ task.title }}</span>
 					<span class="task-meta">
@@ -44,7 +48,10 @@
 		</h3>
 
 		<div class="sidebar-controls">
-			<FilterPopup v-model="filter" />
+			<FilterPopup
+				v-model="filter"
+				show-saved-filters
+			/>
 			<div class="select is-small sort-select">
 				<select
 					v-model="sort"
@@ -75,8 +82,12 @@
 				class="sidebar-task"
 				:style="{'--task-color': taskColor(task)}"
 				draggable="true"
+				role="button"
+				tabindex="0"
 				@dragstart="onDragStart($event, task)"
 				@click="emit('openTask', task.id)"
+				@keydown.enter.prevent="emit('openTask', task.id)"
+				@keydown.space.prevent="emit('openTask', task.id)"
 			>
 				<span class="task-title">{{ task.title }}</span>
 				<span class="task-meta">
@@ -150,6 +161,17 @@ const sortOptions = computed<{value: PlannerSidebarSort, label: string}[]>(
 )
 
 const isDropTarget = ref(false)
+
+// dragleave also fires when the pointer moves onto a child (a task row), so
+// only clear the highlight when actually leaving the sidebar.
+function onDragLeave(event: DragEvent) {
+	if (event.currentTarget instanceof HTMLElement
+		&& event.relatedTarget instanceof Node
+		&& event.currentTarget.contains(event.relatedTarget)) {
+		return
+	}
+	isDropTarget.value = false
+}
 
 function onDrop(event: DragEvent) {
 	isDropTarget.value = false

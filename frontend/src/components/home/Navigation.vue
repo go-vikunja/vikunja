@@ -40,7 +40,7 @@
 				</li>
 				<li>
 					<RouterLink
-						v-shortcut="'KeyG KeyL'"
+						v-shortcut="'KeyG KeyC'"
 						:to="{ name: 'planner.index'}"
 					>
 						<span class="menu-item-icon icon">

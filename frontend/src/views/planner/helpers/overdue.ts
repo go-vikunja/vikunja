@@ -29,7 +29,9 @@ export function isOverdue(task: ITask, cutoff: dayjs.Dayjs = overdueCutoff()): b
 	return false
 }
 
-// Sort key for the overdue list: the date that made the task overdue.
+// Sort key and date label for the overdue list: the date that made the task
+// overdue, so it must follow the same precedence as isOverdue — otherwise a
+// task overdue via its past end date would be labelled with a future due date.
 export function overdueAnchor(task: ITask): Date | null {
-	return task.dueDate ?? task.endDate ?? task.startDate ?? null
+	return task.endDate ?? task.startDate ?? task.dueDate ?? null
 }

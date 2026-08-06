@@ -19,7 +19,7 @@
 				:class="{'is-today': isToday(day), 'is-drop-target': allDayDropDay === formatDayKey(day)}"
 				:data-day="formatDayKey(day)"
 				@dragover.prevent="allDayDropDay = formatDayKey(day)"
-				@dragleave="allDayDropDay = null"
+				@dragleave="onAllDayDragLeave($event, day)"
 				@drop="onAllDayDrop($event, day)"
 			>
 				<span class="day-name">{{ formatWeekday(day) }}</span>
@@ -41,7 +41,7 @@
 				:class="{'is-drop-target': allDayDropDay === formatDayKey(day)}"
 				:data-day="formatDayKey(day)"
 				@dragover.prevent="allDayDropDay = formatDayKey(day)"
-				@dragleave="allDayDropDay = null"
+				@dragleave="onAllDayDragLeave($event, day)"
 				@drop="onAllDayDrop($event, day)"
 				@dblclick="onAllDayDblClick($event, day)"
 				@pointerdown="onAllDayPointerDown($event, day)"
@@ -154,6 +154,20 @@ function onAllDayDrop(event: DragEvent, day: Date) {
 	}
 }
 
+// dragleave also fires when the pointer moves onto a child (e.g. a chip), so
+// only clear the highlight when actually leaving this cell — and only if a
+// neighbouring cell's dragover hasn't already claimed it.
+function onAllDayDragLeave(event: DragEvent, day: Date) {
+	if (event.currentTarget instanceof HTMLElement
+		&& event.relatedTarget instanceof Node
+		&& event.currentTarget.contains(event.relatedTarget)) {
+		return
+	}
+	if (allDayDropDay.value === formatDayKey(day)) {
+		allDayDropDay.value = null
+	}
+}
+
 function onChipDragStart(event: DragEvent, task: ITask) {
 	event.dataTransfer?.setData('text/plain', String(task.id))
 	if (event.dataTransfer) {
@@ -214,7 +228,7 @@ function onTouchEnd(event: TouchEvent) {
 	const dx = event.changedTouches[0].clientX - touchStartX
 	const dy = event.changedTouches[0].clientY - touchStartY
 	if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
-		emit('navigate', dx < 0 ? 1 : -1)
+		navigate(dx < 0 ? 1 : -1)
 	}
 }
 
@@ -274,13 +288,17 @@ onMounted(() => {
 
 useEventListener(window, 'resize', measureScrollbar)
 
-watch(() => [props.dayStartHour, props.dayEndHour, props.days, props.autoFit], () => {
+watch(() => [props.dayStartHour, props.dayEndHour, props.autoFit], () => {
 	fitToWorkingHours()
 	nextTick(() => {
 		scrollToDayStart()
 		measureScrollbar()
 	})
 })
+
+// Navigating (prev/next/today, week↔day) must keep the user's scroll position,
+// so day changes only re-measure — the new content can toggle the scrollbar.
+watch(() => props.days, () => nextTick(() => measureScrollbar()))
 
 watch(() => props.pxPerHour, () => nextTick(() => {
 	scrollToDayStart()
