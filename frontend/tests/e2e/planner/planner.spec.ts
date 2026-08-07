@@ -3,6 +3,7 @@ import dayjs from 'dayjs'
 
 import {TaskFactory} from '../../factories/task'
 import {ProjectFactory} from '../../factories/project'
+import {updateUserSettings} from '../../support/updateUserSettings'
 
 interface Project {
 	id: number
@@ -93,6 +94,37 @@ test.describe('Planner', () => {
 		const dialog = page.locator('.modal-dialog')
 		await expect(dialog).toContainText('New task')
 		await expect(dialog.locator('textarea')).toBeVisible()
+	})
+
+	// AddTask emits its created tasks as one batch; a mismatch between that event
+	// name and the planner's listener leaves the modal open and the task off the
+	// grid, which is invisible to the "modal opens" test above.
+	test('creating a task from the modal closes it and schedules the task on the grid', async ({authenticatedPage: page, apiContext}) => {
+		await page.goto('/planner')
+
+		// The planner is cross-project, so AddTask has no projectId from the route
+		// and falls back to the default project — without one it only errors.
+		const token = await page.evaluate(() => localStorage.getItem('token'))
+		await updateUserSettings(apiContext, token!, {
+			defaultProjectId: projects[0].id,
+			// Required-and-validated by the settings endpoint; omitting it 400s the
+			// whole payload and the default project silently never lands.
+			overdueTasksRemindersTime: '9:00',
+		})
+		await page.reload()
+		// The store must have the new setting before AddTask reads it.
+		await page.waitForLoadState('networkidle')
+
+		await page.locator('.day-column').first().dblclick({position: {x: 20, y: 200}})
+
+		const dialog = page.locator('.modal-dialog')
+		await dialog.locator('textarea').fill('Painted planner task')
+		await dialog.getByRole('button', {name: 'Add'}).click()
+
+		await expect(dialog).toBeHidden()
+		await expect(page.locator('.calendar-block')).toContainText('Painted planner task')
+		// It must land on the grid, not fall back into the unscheduled sidebar.
+		await expect(page.locator('.planner-sidebar')).not.toContainText('Painted planner task')
 	})
 
 	test('double-clicking the all-day row opens the create-task modal', async ({authenticatedPage: page}) => {

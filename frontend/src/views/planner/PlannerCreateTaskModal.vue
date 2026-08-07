@@ -13,7 +13,7 @@
 			</p>
 			<AddTask
 				ref="addTaskRef"
-				@taskAdded="task => $emit('created', task)"
+				@tasksAdded="tasks => $emit('created', tasks)"
 			/>
 		</Card>
 	</Modal>
@@ -33,7 +33,7 @@ defineProps<{
 }>()
 
 defineEmits<{
-	created: [task: ITask]
+	created: [tasks: ITask[]]
 	close: []
 }>()
 

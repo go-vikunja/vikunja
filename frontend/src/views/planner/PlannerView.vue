@@ -116,7 +116,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, nextTick, onMounted, ref, watch, watchEffect} from 'vue'
+import {computed, onMounted, ref, watch, watchEffect} from 'vue'
 import {useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 import {useStorage} from '@vueuse/core'
@@ -338,16 +338,15 @@ function onCreateAllDay({day}: {day: Date}) {
 	}
 }
 
-// AddTask emits one `taskAdded` per line synchronously, so schedule each into
-// the same painted slot and close once after the batch (nulling createCtx here
-// would drop every task after the first).
-function onCreated(task: ITask) {
+// AddTask emits the whole batch at once, so every line of a multi-line input
+// lands in the same painted slot.
+function onCreated(tasks: ITask[]) {
 	const ctx = createCtx.value
 	if (!ctx) {
 		return
 	}
-	scheduleTask(task, {startDate: ctx.startDate, endDate: ctx.endDate})
-	nextTick(() => createCtx.value = null)
+	tasks.forEach(task => scheduleTask(task, {startDate: ctx.startDate, endDate: ctx.endDate}))
+	createCtx.value = null
 }
 
 function openTask(taskId: number) {
