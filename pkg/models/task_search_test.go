@@ -336,3 +336,37 @@ func TestTaskSearchTitleBoost(t *testing.T) {
 		assert.Less(t, pos[descBoth.ID], pos[titleHit.ID], "two description matches (2.0) must outrank one boosted title match (1.5)")
 	})
 }
+
+func TestTaskSearchCurrentUserMacro(t *testing.T) {
+	t.Run("resolves @me macro to authenticated username", func(t *testing.T) {
+		filters := []*taskFilter{
+			{field: "assignees", value: "@me"},
+			{field: "assignees", value: []string{"@me", "john"}},
+			{field: "assignees", value: []interface{}{"@me", "alice"}},
+			{
+				field: "assignees",
+				value: []*taskFilter{
+					{field: "assignees", value: "@me"},
+				},
+			},
+		}
+
+		resolved := resolveCurrentUserMacros(filters, "samuel")
+		require.Len(t, resolved, 4)
+		assert.Equal(t, "samuel", resolved[0].value)
+		assert.Equal(t, []string{"samuel", "john"}, resolved[1].value)
+		assert.Equal(t, []interface{}{"samuel", "alice"}, resolved[2].value)
+
+		nested := resolved[3].value.([]*taskFilter)
+		require.Len(t, nested, 1)
+		assert.Equal(t, "samuel", nested[0].value)
+	})
+
+	t.Run("returns unchanged filters when username is empty", func(t *testing.T) {
+		filters := []*taskFilter{
+			{field: "assignees", value: "@me"},
+		}
+		resolved := resolveCurrentUserMacros(filters, "")
+		assert.Equal(t, "@me", resolved[0].value)
+	})
+}
