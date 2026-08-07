@@ -72,6 +72,7 @@
 									</span>
 									<Dropdown
 										v-if="canWrite && !collapsedBuckets[bucket.id]"
+										v-slot="{close: closeBucketMenu}"
 										class="is-right options"
 										trigger-icon="ellipsis-v"
 										:trigger-label="$t('project.kanban.bucketOptions')"
@@ -136,6 +137,13 @@
 											{{ $t('project.kanban.collapse') }}
 										</DropdownItem>
 										<DropdownItem
+											:icon-class="{'has-text-primary': bucket.sortBy?.length > 0}"
+											icon="sort"
+											@click.stop="() => { openSortPopupBucketId = bucket.id; closeBucketMenu() }"
+										>
+											{{ $t('project.kanban.bucketSort') }}
+										</DropdownItem>
+										<DropdownItem
 											v-tooltip="buckets.length <= 1 ? $t('project.kanban.deleteLast') : ''"
 											class="has-text-danger"
 											:class="{'is-disabled': buckets.length <= 1}"
@@ -146,6 +154,14 @@
 											{{ $t('misc.delete') }}
 										</DropdownItem>
 									</Dropdown>
+									<BucketSortPopup
+										v-if="canWrite"
+										:open="openSortPopupBucketId === bucket.id"
+										:model-value="{sortBy: bucket.sortBy, sortOrder: bucket.sortOrder}"
+										@update:open="(v: boolean) => openSortPopupBucketId = v ? bucket.id : null"
+										@apply="(value: {sortBy: string[], sortOrder: string[]}) => saveBucketSort(bucket.id, value)"
+										@applyAll="(value: {sortBy: string[], sortOrder: string[]}) => applyBucketSortToAll(value)"
+									/>
 								</div>
 
 								<draggable
@@ -311,6 +327,7 @@ import {useAuthStore} from '@/stores/auth'
 
 import ProjectWrapper from '@/components/project/ProjectWrapper.vue'
 import FilterPopup from '@/components/project/partials/FilterPopup.vue'
+import BucketSortPopup from '@/components/project/partials/BucketSortPopup.vue'
 import KanbanCard from '@/components/tasks/partials/KanbanCard.vue'
 import Dropdown from '@/components/misc/Dropdown.vue'
 import DropdownItem from '@/components/misc/DropdownItem.vue'
@@ -391,6 +408,7 @@ const newTaskError = ref<{ [id: IBucket['id']]: boolean }>({})
 const newTaskInputFocused = ref(false)
 
 const showSetLimitInput = ref(false)
+const openSortPopupBucketId = ref<IBucket['id'] | null>(null)
 const collapsedBuckets = ref<CollapsedBuckets>({})
 
 // We're using this to show the loading animation only at the task when updating it
@@ -826,6 +844,30 @@ async function setBucketLimit(bucketId: IBucket['id'], now: boolean = false) {
 	setBucketLimitCancel.value = setTimeout(saveBucketLimit, 2500, bucketId, limit)
 }
 
+async function saveBucketSort(bucketId: IBucket['id'], {sortBy, sortOrder}: {sortBy: string[], sortOrder: string[]}) {
+	await kanbanStore.updateBucket({
+		...kanbanStore.getBucketById(bucketId),
+		projectId: projectId.value,
+		sortBy,
+		sortOrder,
+	})
+	kanbanStore.loadBucketsForProject(projectId.value, props.viewId, params.value)
+	success({message: t('project.kanban.bucketSortSavedSuccess')})
+}
+
+async function applyBucketSortToAll({sortBy, sortOrder}: {sortBy: string[], sortOrder: string[]}) {
+	for (const bucket of buckets.value) {
+		await kanbanStore.updateBucket({
+			...bucket,
+			projectId: projectId.value,
+			sortBy,
+			sortOrder,
+		})
+	}
+	kanbanStore.loadBucketsForProject(projectId.value, props.viewId, params.value)
+	success({message: t('project.kanban.bucketSortApplyAllSuccess')})
+}
+
 function shouldAcceptDrop(bucket: IBucket) {
 	return (
 		// When dragging from a bucket who has its limit reached, dragging should still be possible
@@ -880,7 +922,7 @@ async function toggleDoneBucket(bucket: IBucket) {
 	const doneBucketId = view.value?.doneBucketId === bucket.id
 		? 0
 		: bucket.id
-	
+
 	const projectViewService = new ProjectViewService()
 	const updatedView = await projectViewService.update(new ProjectViewModel({
 		...view.value,
@@ -892,9 +934,9 @@ async function toggleDoneBucket(bucket: IBucket) {
 		...project.value,
 		views,
 	}
-	
+
 	projectStore.setProject(updatedProject)
-	
+
 	success({message: t('project.kanban.doneBucketSavedSuccess')})
 }
 
