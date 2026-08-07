@@ -955,6 +955,7 @@
 	"task": {
 		"new": "Створити",
 		"createSuccess": "Завдання створено.",
+		"bulkCreateUnexpectedResponse": "Сервер повернув непередбачувану кількість створених завдань.",
 		"addReminder": "Обрати…",
 		"removeReminder": "Вилучити це нагадування",
 		"doneSuccess": "Завдання закінчено.",
