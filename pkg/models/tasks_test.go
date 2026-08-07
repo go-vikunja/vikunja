@@ -21,6 +21,7 @@ import (
 	"testing"
 	"time"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
@@ -1139,6 +1140,21 @@ func TestUpdateDone(t *testing.T) {
 				assert.Equal(t, oldDiff, newTask.EndDate.Sub(newTask.StartDate))
 				assert.False(t, newTask.Done)
 			})
+			t.Run("due date at the end of a long month", func(t *testing.T) {
+				oldTask := &Task{
+					Done:       false,
+					RepeatMode: TaskRepeatModeMonth,
+					DueDate:    time.Date(2026, 1, 31, 9, 0, 0, 0, config.GetTimeZone()),
+				}
+				newTask := &Task{
+					Done: true,
+				}
+
+				updateDone(oldTask, newTask)
+
+				assert.Equal(t, time.Date(2026, 2, 28, 9, 0, 0, 0, config.GetTimeZone()), newTask.DueDate)
+				assert.False(t, newTask.Done)
+			})
 		})
 		t.Run("reset checklist on recurrence", func(t *testing.T) {
 			const checked = `before<ul data-type="taskList"><li data-checked="true" data-type="taskItem"><label><input type="checkbox" checked="checked"><span></span></label><div><p>Item</p></li></ul>after`
@@ -1180,6 +1196,27 @@ func TestUpdateDone(t *testing.T) {
 			assert.Equal(t, checked, newTask.Description)
 		})
 	})
+}
+
+func Test_addOneMonthToDate(t *testing.T) {
+	tz := config.GetTimeZone()
+	tests := []struct {
+		name string
+		date time.Time
+		want time.Time
+	}{
+		{"same day next month", time.Date(2026, 5, 15, 10, 30, 0, 0, tz), time.Date(2026, 6, 15, 10, 30, 0, 0, tz)},
+		{"clamped to a shorter month", time.Date(2026, 1, 31, 9, 0, 0, 0, tz), time.Date(2026, 2, 28, 9, 0, 0, 0, tz)},
+		{"clamped to a leap february", time.Date(2024, 1, 30, 9, 0, 0, 0, tz), time.Date(2024, 2, 29, 9, 0, 0, 0, tz)},
+		{"clamped to a 30 day month", time.Date(2026, 3, 31, 9, 0, 0, 0, tz), time.Date(2026, 4, 30, 9, 0, 0, 0, tz)},
+		{"across the year boundary", time.Date(2026, 12, 31, 9, 0, 0, 0, tz), time.Date(2027, 1, 31, 9, 0, 0, 0, tz)},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, addOneMonthToDate(tt.date))
+		})
+	}
 }
 
 func TestTask_RepeatAfterCap(t *testing.T) {
