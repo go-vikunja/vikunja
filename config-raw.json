@@ -343,7 +343,7 @@
                 {
                     "key": "authtype",
                     "default_value": "plain",
-                    "comment": "SMTP Auth Type. Can be either `plain`, `login` or `cram-md5`."
+                    "comment": "SMTP Auth Type. Can be either `plain`, `plain-noenc`, `login`, `login-noenc` or `cram-md5`."
                 },
                 {
                     "key": "username",
@@ -379,6 +379,11 @@
                     "key": "forcessl",
                     "default_value": "false",
                     "comment": "By default, Vikunja will try to connect with starttls, use this option to force it to use ssl."
+                },
+                {
+                    "key": "disablessl",
+                    "default_value": "false",
+                    "comment": "By default, Vikunja will try to connect with starttls, use this option to disable ssl completely."
                 }
             ]
         },
