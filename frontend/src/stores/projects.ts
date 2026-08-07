@@ -80,8 +80,10 @@ export const useProjectStore = defineStore('project', () => {
 
 	const findProjectByExactname = computed(() => {
 		return (name: string) => {
+			// Saved-filter pseudo-projects (id < 0) can't hold tasks, so a project filter
+			// value must never resolve to one — even when it shares a real project's title.
 			const project = projectsArray.value.find(l => {
-				return l.title.toLowerCase() === name.toLowerCase()
+				return l.id > 0 && l.title.toLowerCase() === name.toLowerCase()
 			})
 			return typeof project === 'undefined' ? null : project
 		}
