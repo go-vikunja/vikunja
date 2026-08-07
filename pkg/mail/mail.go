@@ -39,8 +39,12 @@ func getClient() (*mail.Client, error) {
 	switch config.MailerAuthType.GetString() {
 	case "plain":
 		authType = mail.SMTPAuthPlain
+	case "plain-noenc":
+		authType = mail.SMTPAuthPlainNoEnc
 	case "login":
 		authType = mail.SMTPAuthLogin
+	case "login-noenc":
+		authType = mail.SMTPAuthLoginNoEnc
 	case "cram-md5":
 		authType = mail.SMTPAuthCramMD5
 	}
@@ -48,6 +52,9 @@ func getClient() (*mail.Client, error) {
 	tlsPolicy := mail.TLSOpportunistic
 	if config.MailerForceSSL.GetBool() {
 		tlsPolicy = mail.TLSMandatory
+	}
+	if config.MailerDisableSSL.GetBool() {
+		tlsPolicy = mail.NoTLS
 	}
 
 	opts := []mail.Option{
