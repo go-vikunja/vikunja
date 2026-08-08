@@ -21,6 +21,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	webpush "github.com/SherClockHolmes/webpush-go"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -84,6 +85,43 @@ func TestGetRootpathLocation(t *testing.T) {
 
 	result := getRootpathLocation()
 	assert.Equal(t, expected, result)
+}
+
+func TestValidateWebPushConfig(t *testing.T) {
+	privateKey, publicKey, err := webpush.GenerateVAPIDKeys()
+	require.NoError(t, err)
+
+	oldEnabled := WebPushEnabled.GetBool()
+	oldPublicKey := WebPushPublicKey.GetString()
+	oldPrivateKey := WebPushPrivateKey.GetString()
+	oldPublicURL := ServicePublicURL.GetString()
+	t.Cleanup(func() {
+		WebPushEnabled.Set(oldEnabled)
+		WebPushPublicKey.Set(oldPublicKey)
+		WebPushPrivateKey.Set(oldPrivateKey)
+		ServicePublicURL.Set(oldPublicURL)
+	})
+
+	WebPushEnabled.Set(false)
+	require.NoError(t, ValidateWebPushConfig())
+
+	WebPushEnabled.Set(true)
+	WebPushPublicKey.Set(publicKey)
+	WebPushPrivateKey.Set(privateKey)
+	ServicePublicURL.Set("")
+	require.ErrorContains(t, ValidateWebPushConfig(), "service.publicurl")
+
+	ServicePublicURL.Set("http://tasks.example.com/")
+	require.ErrorContains(t, ValidateWebPushConfig(), "https")
+
+	ServicePublicURL.Set("http://localhost:3456/")
+	require.NoError(t, ValidateWebPushConfig())
+
+	ServicePublicURL.Set("https://tasks.example.com/")
+	require.NoError(t, ValidateWebPushConfig())
+
+	WebPushPrivateKey.Set("invalid")
+	assert.ErrorContains(t, ValidateWebPushConfig(), "privatekey")
 }
 
 func TestResolvePath(t *testing.T) {
