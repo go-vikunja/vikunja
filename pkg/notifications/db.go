@@ -26,5 +26,7 @@ func init() {
 func GetTables() []interface{} {
 	return []interface{}{
 		&DatabaseNotification{},
+		&WebPushSubscription{},
+		&WebPushDelivery{},
 	}
 }

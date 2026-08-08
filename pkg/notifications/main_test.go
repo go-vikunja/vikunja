@@ -36,7 +36,7 @@ func SetupTests() {
 		log.Fatal(err)
 	}
 
-	err = x.Sync2(&DatabaseNotification{})
+	err = x.Sync2(&DatabaseNotification{}, &WebPushSubscription{}, &WebPushDelivery{}, &webPushSessionState{})
 	if err != nil {
 		log.Fatal(err)
 	}
