@@ -5,19 +5,25 @@ import {nextTick} from 'vue'
 import {useAuthStore} from './auth'
 import {AUTH_TYPES} from '@/modelTypes/IUser'
 
-const {httpPostMock, queryClientClearMock, refreshTokenMock, routerPushMock, getTokenMock} = vi.hoisted(() => ({
-	httpPostMock: vi.fn(),
+const {queryClientClearMock, refreshTokenMock, routerPushMock, getTokenMock, httpPostMock, removeTokenMock, unsubscribeWebPushLocallyMock} = vi.hoisted(() => ({
 	queryClientClearMock: vi.fn(),
 	refreshTokenMock: vi.fn(),
 	routerPushMock: vi.fn(),
 	getTokenMock: vi.fn(() => null as string | null),
+	httpPostMock: vi.fn(),
+	removeTokenMock: vi.fn(),
+	unsubscribeWebPushLocallyMock: vi.fn(),
 }))
 
 vi.mock('@/helpers/auth', () => ({
 	refreshToken: refreshTokenMock,
 	getToken: getTokenMock,
 	saveToken: vi.fn(),
-	removeToken: vi.fn(),
+	removeToken: removeTokenMock,
+}))
+
+vi.mock('@/services/webPush', () => ({
+	unsubscribeWebPushLocally: unsubscribeWebPushLocallyMock,
 }))
 
 vi.mock('@/router', () => ({
@@ -88,6 +94,8 @@ describe('auth store renewToken retry (issue #2863)', () => {
 		queryClientClearMock.mockReset()
 		routerPushMock.mockReset()
 		getTokenMock.mockReset().mockReturnValue(null)
+		removeTokenMock.mockReset()
+		unsubscribeWebPushLocallyMock.mockReset().mockResolvedValue(undefined)
 	})
 
 	function setupExpiredUserSession(store: ReturnType<typeof useAuthStore>) {
@@ -148,6 +156,18 @@ describe('auth store renewToken retry (issue #2863)', () => {
 
 		// Initial attempt + exactly one retry — never more.
 		expect(refreshTokenMock).toHaveBeenCalledTimes(2)
+	})
+
+	it('cleans up Web Push before clearing authentication when server logout fails', async () => {
+		const store = useAuthStore()
+		httpPostMock.mockRejectedValueOnce(new Error('offline'))
+
+		await store.logout()
+
+		expect(unsubscribeWebPushLocallyMock).toHaveBeenCalledOnce()
+		expect(removeTokenMock).toHaveBeenCalledOnce()
+		expect(httpPostMock.mock.invocationCallOrder[0]).toBeLessThan(unsubscribeWebPushLocallyMock.mock.invocationCallOrder[0])
+		expect(unsubscribeWebPushLocallyMock.mock.invocationCallOrder[0]).toBeLessThan(removeTokenMock.mock.invocationCallOrder[0])
 	})
 })
 
