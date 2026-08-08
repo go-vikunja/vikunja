@@ -55,7 +55,9 @@ type VikunjaInfos struct {
 	AllowIconChanges           bool              `json:"allow_icon_changes" doc:"Whether users may change project icons."`
 	EnabledProFeatures         []license.Feature `json:"enabled_pro_features" doc:"The licensed pro features enabled on this instance."`
 	// ConcurrentWrites reports whether the configured database can handle concurrent writes. It is false on SQLite, where overlapping write transactions deadlock, so clients should serialize batched writes instead of firing them in parallel.
-	ConcurrentWrites bool `json:"concurrent_writes" doc:"Whether the configured database supports concurrent writes. False on SQLite; clients should serialize batched writes when this is false."`
+	ConcurrentWrites bool   `json:"concurrent_writes" doc:"Whether the configured database supports concurrent writes. False on SQLite; clients should serialize batched writes when this is false."`
+	WebPushEnabled   bool   `json:"web_push_enabled" doc:"Whether Web Push notifications are configured on this instance."`
+	WebPushPublicKey string `json:"web_push_public_key" doc:"The public VAPID key clients use when creating a Web Push subscription. Empty when Web Push is disabled."`
 }
 
 // AuthInfo describes the authentication methods enabled on this instance.
@@ -109,6 +111,7 @@ func BuildInfo() VikunjaInfos {
 		PublicTeamsEnabled:     config.ServiceEnablePublicTeams.GetBool(),
 		AllowIconChanges:       config.ServiceAllowIconChanges.GetBool(),
 		ConcurrentWrites:       config.DatabaseType.GetString() != "sqlite",
+		WebPushEnabled:         config.WebPushEnabled.GetBool(),
 		EnabledProFeatures:     license.EnabledProFeatures(),
 		AvailableMigrators: []string{
 			(&vikunja_file.FileMigrator{}).Name(),
@@ -132,6 +135,9 @@ func BuildInfo() VikunjaInfos {
 				Enabled: config.AuthOpenIDEnabled.GetBool(),
 			},
 		},
+	}
+	if info.WebPushEnabled {
+		info.WebPushPublicKey = config.WebPushPublicKey.GetString()
 	}
 
 	providers, err := openid.GetAllProviders()

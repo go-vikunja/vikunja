@@ -17,6 +17,7 @@
 package models
 
 import (
+	"fmt"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
@@ -346,8 +347,9 @@ func getTasksWithRemindersDueAndTheirUsers(s *xorm.Session, now time.Time, cond 
 func RegisterReminderCron() {
 	webhookEnabled := config.WebhooksEnabled.GetBool()
 	emailEnabled := config.ServiceEnableEmailReminders.GetBool() && config.MailerEnabled.GetBool()
+	pushEnabled := config.WebPushEnabled.GetBool()
 
-	if !emailEnabled && !webhookEnabled {
+	if !emailEnabled && !webhookEnabled && !pushEnabled {
 		return
 	}
 
@@ -368,7 +370,7 @@ func RegisterReminderCron() {
 		// When webhooks are enabled, we need all users so the event system can
 		// look up matching webhooks.
 		var cond builder.Cond
-		if emailEnabled && !webhookEnabled {
+		if emailEnabled && !webhookEnabled && !pushEnabled {
 			cond = builder.Eq{"users.email_reminders_enabled": true}
 		}
 
@@ -384,9 +386,32 @@ func RegisterReminderCron() {
 
 		log.Debugf("[Task Reminder Cron] Sending %d reminders", len(reminders))
 
+		pushSubscriptions := map[int64]bool{}
 		for _, n := range reminders {
-			if emailEnabled && n.User.EmailRemindersEnabled {
-				err = notifications.Notify(n.User, n, s)
+			hasPush := false
+			if pushEnabled {
+				var cached bool
+				cached, has := pushSubscriptions[n.User.ID]
+				if has {
+					hasPush = cached
+				} else {
+					hasPush, err = notifications.HasWebPushSubscription(s, n.User.ID)
+					if err != nil {
+						log.Errorf("[Task Reminder Cron] Could not check Web Push subscriptions for user %d: %s", n.User.ID, err)
+						return
+					}
+					pushSubscriptions[n.User.ID] = hasPush
+				}
+			}
+			shouldMail := emailEnabled && n.User.EmailRemindersEnabled
+			if shouldMail || hasPush {
+				err = notifications.NotifyWithOptions(n.User, n, notifications.NotifyOptions{
+					Mail:        shouldMail,
+					Database:    true,
+					WebPush:     hasPush,
+					DeliveryKey: fmt.Sprintf("task-reminder:%d:%d", n.User.ID, n.TaskReminder.ID),
+					PushTTL:     2 * time.Hour,
+				}, s)
 				if err != nil {
 					log.Errorf("[Task Reminder Cron] Could not notify user %d: %s", n.User.ID, err)
 					return
@@ -410,6 +435,10 @@ func RegisterReminderCron() {
 
 		if err := s.Commit(); err != nil {
 			log.Errorf("[Task Reminder Cron] Could not commit: %s", err)
+			return
+		}
+		if pushEnabled {
+			notifications.WakeWebPushWorker()
 		}
 	})
 	if err != nil {
