@@ -1,5 +1,9 @@
 {
-    "notifications": {
+  "notifications": {
+    "web_push": {
+      "test": "Push notifications are working on this device.",
+      "overdue_count": "You have %[1]d undone overdue tasks."
+    },
         "greeting": "Hi %[1]s,",
         "email_confirm": {
             "subject": "%[1]s, please confirm your email address at Vikunja",

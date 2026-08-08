@@ -77,7 +77,7 @@
 </template>
 
 <script lang="ts" setup>
-import {watch, computed, onBeforeUnmount} from 'vue'
+import {watch, computed, onBeforeUnmount, onMounted} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 
 import Navigation from '@/components/home/Navigation.vue'
@@ -93,8 +93,12 @@ import {useRenewTokenOnFocus} from '@/composables/useRenewTokenOnFocus'
 import {useSidebarResize} from '@/composables/useSidebarResize'
 import {useWebSocket} from '@/composables/useWebSocket'
 import {useAuthStore} from '@/stores/auth'
+import {useConfigStore} from '@/stores/config'
+import {reconcileWebPushSubscription} from '@/services/webPush'
+import {AuthenticatedHTTPFactory, apiV2Url} from '@/helpers/fetcher'
 
 const authStore = useAuthStore()
+const configStore = useConfigStore()
 const backgroundBrightness = computed(() =>
 	authStore.settings?.frontendSettings?.backgroundBrightness,
 )
@@ -114,6 +118,37 @@ function showKeyboardShortcuts() {
 
 const route = useRoute()
 const router = useRouter()
+
+async function markClickedNotificationRead(value: unknown) {
+	const notificationID = typeof value === 'string' ? Number(value) : NaN
+	if (!Number.isSafeInteger(notificationID) || notificationID <= 0) {
+		return
+	}
+
+	try {
+		await AuthenticatedHTTPFactory().put(apiV2Url(`notifications/${notificationID}`), {read: true})
+	} catch (error) {
+		console.warn('Failed to mark clicked push notification as read:', error)
+	} finally {
+		const query = {...route.query}
+		delete query.vikunja_notification
+		await router.replace({query})
+	}
+}
+
+onMounted(() => {
+	reconcileWebPushSubscription(
+		configStore.webPushEnabled,
+		configStore.webPushPublicKey,
+	).catch(error => console.warn('Failed to reconcile the Web Push subscription:', error))
+
+	markClickedNotificationRead(route.query.vikunja_notification)
+})
+
+watch(
+	() => route.query.vikunja_notification,
+	value => markClickedNotificationRead(value),
+)
 
 // FIXME: this is really error prone
 // Reset the current project highlight in menu if the current route is not project related.

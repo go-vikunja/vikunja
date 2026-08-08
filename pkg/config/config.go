@@ -18,6 +18,7 @@ package config
 
 import (
 	"crypto/rand"
+	"encoding/base64"
 	"fmt"
 	"net/url"
 	"os"
@@ -132,6 +133,10 @@ const (
 	MailerQueuelength   Key = `mailer.queuelength`
 	MailerQueueTimeout  Key = `mailer.queuetimeout`
 	MailerForceSSL      Key = `mailer.forcessl`
+
+	WebPushEnabled    Key = `webpush.enabled`
+	WebPushPublicKey  Key = `webpush.publickey`
+	WebPushPrivateKey Key = `webpush.privatekey`
 
 	RedisEnabled  Key = `redis.enabled`
 	RedisHost     Key = `redis.host`
@@ -424,6 +429,10 @@ func initDefaultConfig() {
 	MailerQueueTimeout.setDefault(30)
 	MailerForceSSL.setDefault(false)
 	MailerAuthType.setDefault("plain")
+	// Web Push
+	WebPushEnabled.setDefault(false)
+	WebPushPublicKey.setDefault("")
+	WebPushPrivateKey.setDefault("")
 	// Redis
 	RedisEnabled.setDefault(false)
 	RedisHost.setDefault("localhost:6379")
@@ -719,6 +728,10 @@ func InitConfig() {
 		}
 	}
 
+	if err := ValidateWebPushConfig(); err != nil {
+		log.Fatalf("Invalid webpush configuration: %s", err)
+	}
+
 	if MigrationTodoistRedirectURL.GetString() == "" {
 		MigrationTodoistRedirectURL.Set(ServicePublicURL.GetString() + "migrate/todoist")
 	}
@@ -744,6 +757,32 @@ func InitConfig() {
 	if err != nil {
 		log.Fatalf("Could not parse files.maxsize: %s", err)
 	}
+}
+
+// ValidateWebPushConfig validates the stable VAPID keys and public URL used by Web Push.
+func ValidateWebPushConfig() error {
+	if !WebPushEnabled.GetBool() {
+		return nil
+	}
+
+	publicURL, err := url.Parse(ServicePublicURL.GetString())
+	if err != nil || publicURL.Hostname() == "" {
+		return fmt.Errorf("service.publicurl must be configured")
+	}
+	if publicURL.Scheme != "https" && publicURL.Hostname() != "localhost" && publicURL.Hostname() != "127.0.0.1" && publicURL.Hostname() != "::1" {
+		return fmt.Errorf("service.publicurl must use https outside localhost")
+	}
+
+	publicKey, err := base64.RawURLEncoding.DecodeString(WebPushPublicKey.GetString())
+	if err != nil || len(publicKey) != 65 || publicKey[0] != 4 {
+		return fmt.Errorf("webpush.publickey must be a base64url-encoded P-256 public key")
+	}
+	privateKey, err := base64.RawURLEncoding.DecodeString(WebPushPrivateKey.GetString())
+	if err != nil || len(privateKey) != 32 {
+		return fmt.Errorf("webpush.privatekey must be a base64url-encoded P-256 private key")
+	}
+
+	return nil
 }
 
 func random(length int) (string, error) {

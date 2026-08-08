@@ -55,6 +55,12 @@ var countTables = map[string]string{
 
 var registry *prometheus.Registry
 
+// WebPushDeliveryOutcomes counts terminal and retry outcomes without retaining delivery history.
+var WebPushDeliveryOutcomes = prometheus.NewCounterVec(prometheus.CounterOpts{
+	Name: "vikunja_web_push_delivery_outcomes_total",
+	Help: "The number of Web Push delivery outcomes by result.",
+}, []string{"outcome"})
+
 func GetRegistry() *prometheus.Registry {
 	if registry == nil {
 		registry = prometheus.NewRegistry()
@@ -84,6 +90,7 @@ func registerPromMetric(key, description string) {
 // InitMetrics Initializes the metrics
 func InitMetrics() {
 	GetRegistry()
+	registry.MustRegister(WebPushDeliveryOutcomes)
 
 	registerPromMetric(ProjectCountKey, "The total number of projects on this instance")
 	registerPromMetric(UserCountKey, "The total number of users on this instance")

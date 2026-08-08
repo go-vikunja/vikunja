@@ -1003,6 +1003,27 @@
             ]
         },
         {
+            "key": "webpush",
+            "comment": "Web Push delivers notifications to installed browser apps on supported iPhone, iPad and Android devices. The VAPID key pair identifies this Vikunja instance and must be backed up and reused across deployments.",
+            "children": [
+                {
+                    "key": "enabled",
+                    "default_value": "false",
+                    "comment": "Whether to enable Web Push subscriptions and the durable delivery worker. Requires an HTTPS service.publicurl outside localhost and both VAPID keys."
+                },
+                {
+                    "key": "publickey",
+                    "default_value": "",
+                    "comment": "The base64url-encoded uncompressed P-256 VAPID public key. This key is exposed to clients so browsers can create subscriptions."
+                },
+                {
+                    "key": "privatekey",
+                    "default_value": "",
+                    "comment": "The base64url-encoded 32-byte P-256 VAPID private key. Keep this secret and stable. Replacing the key pair requires every device to subscribe again."
+                }
+            ]
+        },
+        {
             "key": "audit",
             "comment": "Audit logging writes structured JSONL records of authentication, authorization and data lifecycle events. Requires the licensed `audit_logs` feature — with `audit.enabled: true` but no active license, listeners are registered but nothing is written until a license with the feature becomes active.",
             "children": [
@@ -1039,17 +1060,22 @@
                 {
                     "key": "allownonroutableips",
                     "default_value": "false",
-                    "comment": "If set to true, outgoing HTTP requests (webhooks, avatar downloads, migration imports) may resolve to non-globally-routable IP addresses. When false (the default), Vikunja blocks these to prevent SSRF attacks. Set to true only if you need these to reach services on your internal network."
+                    "comment": "If set to true, outgoing HTTP requests (webhooks, Web Push, avatar downloads, migration imports) may resolve to non-globally-routable IP addresses. When false (the default), Vikunja blocks these to prevent SSRF attacks. Set to true only if you need these to reach services on your internal network."
                 },
                 {
                     "key": "proxyurl",
                     "default_value": "",
-                    "comment": "The URL of [a mole instance](https://github.com/frain-dev/mole) to use to proxy outgoing HTTP requests. Applies to webhooks, avatar downloads, and migration imports. You should use this and configure appropriately if you're not the only one using your Vikunja instance. More info about why: https://webhooks.fyi/best-practices/webhook-providers#implement-security-on-egress-communication. Must be used in combination with `outgoingrequests.proxypassword`."
+                    "comment": "The URL of [a mole instance](https://github.com/frain-dev/mole) to use to proxy outgoing HTTP requests. Applies to webhooks, Web Push, avatar downloads, and migration imports. You should use this and configure appropriately if you're not the only one using your Vikunja instance. More info about why: https://webhooks.fyi/best-practices/webhook-providers#implement-security-on-egress-communication. Must be used in combination with `outgoingrequests.proxypassword`."
                 },
                 {
                     "key": "proxypassword",
                     "default_value": "",
                     "comment": "The proxy password for authenticating against the proxy."
+                },
+                {
+                    "key": "timeoutseconds",
+                    "default_value": "30",
+                    "comment": "The timeout in seconds for outgoing HTTP requests, including Web Push delivery attempts."
                 }
             ]
         },
