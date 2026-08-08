@@ -136,6 +136,26 @@
         "savedSuccess": "The settings were successfully updated.",
         "emailReminders": "Send me reminders for tasks via email",
         "overdueReminders": "Send me a summary of my undone overdue tasks every day",
+        "webPush": {
+          "title": "Push notifications on this device",
+          "enable": "Enable",
+          "disable": "Disable",
+          "test": "Send test notification",
+          "enabledSuccess": "Push notifications are enabled on this device.",
+          "disabledSuccess": "Push notifications are disabled on this device.",
+          "enableFailed": "Push notifications could not be enabled.",
+          "disableFailed": "The server could not be updated, but this browser was unsubscribed.",
+          "testSuccess": "The push service accepted the test notification.",
+          "testFailed": "The test notification could not be sent.",
+          "states": {
+            "enabled": "This installed app can receive notifications while it is closed.",
+            "disabled": "Enable notifications for this installed app. Your browser will ask for permission.",
+            "unsupported": "Push notifications are not supported by this browser or connection.",
+            "permission-denied": "Notification permission is blocked. Allow it in your device settings before trying again.",
+            "requires-install": "On iPhone and iPad, install Vikunja on the Home Screen using iOS or iPadOS 16.4 or later, then open the installed app.",
+            "configuration-error": "Push notifications are not configured on this Vikunja server."
+          }
+        },
         "discoverableByName": "Allow other users to add me as a member to teams or projects when they search for my name",
         "discoverableByEmail": "Allow other users to add me as a member to teams or projects when they search for my full email",
         "playSoundWhenDone": "Play a sound when marking tasks as done",
