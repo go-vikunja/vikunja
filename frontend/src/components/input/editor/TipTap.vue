@@ -1038,6 +1038,9 @@ watch(
 .tiptap__editor {
 	&.tiptap__editor-is-edit-enabled {
 		min-block-size: 10rem;
+		background: var(--grey-200);
+		border: 1px solid var(--grey-300);
+		border-radius: $radius;
 
 		.ProseMirror {
 			padding: .5rem;
