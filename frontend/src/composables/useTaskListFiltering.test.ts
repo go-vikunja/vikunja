@@ -178,22 +178,23 @@ describe('shouldShowTaskInListView', () => {
 		expect(shouldShowTaskInListView(subtask as ITask, allTasks)).toBe(false)
 	})
 
-	it('should show subtasks in filtered views even when parent is in the same view', () => {
+	it('should hide a subtask expanded for context when its parent is in the view', () => {
 		const parentTask: Partial<ITask> = {
 			id: 1,
-			title: 'Parent Task',
+			title: 'Parent Task matching the filter',
 			projectId: 100,
 			relatedTasks: {},
 		}
 
+		// Returned by the api as an expanded subtask of the parent, not as a filter match
 		const subtask: Partial<ITask> = {
 			id: 2,
-			title: 'Subtask',
+			title: 'Subtask not matching the filter',
 			projectId: 100,
 			relatedTasks: {
 				parenttask: [{
 					id: 1,
-					title: 'Parent Task',
+					title: 'Parent Task matching the filter',
 					projectId: 100,
 				} as ITask],
 			},
@@ -201,12 +202,11 @@ describe('shouldShowTaskInListView', () => {
 
 		const allTasks = [parentTask, subtask] as ITask[]
 
-		// In a filtered view, both parent and subtask should be visible
-		expect(shouldShowTaskInListView(parentTask as ITask, allTasks, true)).toBe(true)
-		expect(shouldShowTaskInListView(subtask as ITask, allTasks, true)).toBe(true)
+		expect(shouldShowTaskInListView(parentTask as ITask, allTasks)).toBe(true)
+		expect(shouldShowTaskInListView(subtask as ITask, allTasks)).toBe(false)
 	})
 
-	it('should show subtasks in filtered views even when only subtask matches filter', () => {
+	it('should show a subtask when only it matches the filter and its parent is not in the view', () => {
 		const subtask: Partial<ITask> = {
 			id: 2,
 			title: 'Subtask matching filter',
@@ -223,6 +223,6 @@ describe('shouldShowTaskInListView', () => {
 		// Only the subtask is in the results (parent didn't match filter)
 		const allTasks = [subtask] as ITask[]
 
-		expect(shouldShowTaskInListView(subtask as ITask, allTasks, true)).toBe(true)
+		expect(shouldShowTaskInListView(subtask as ITask, allTasks)).toBe(true)
 	})
 })
