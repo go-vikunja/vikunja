@@ -498,27 +498,30 @@ function setLink(event: MouseEvent) {
 	background: var(--white);
 	border: 1px solid var(--grey-200);
 	user-select: none;
-	padding: .5rem;
+	padding: .25rem .375rem;
 	border-radius: $radius;
 	display: flex;
-	flex-wrap: wrap;
+	flex-wrap: nowrap;
+	align-items: center;
+	gap: .125rem;
+}
 
-	> * + * {
-		border-inline-start: 1px solid var(--grey-200);
-		margin-inline-start: 6px;
-		padding-inline-start: 6px;
-	}
+.editor-toolbar__segment {
+	display: contents;
 }
 
 .editor-toolbar__button {
-	min-inline-size: 2rem;
-	block-size: 2rem;
+	min-inline-size: 1.625rem;
+	block-size: 1.625rem;
 	border-radius: $radius;
 	border: 1px solid transparent;
 	color: var(--grey-700);
 	transition: all $transition;
 	background: transparent;
-	margin-inline-end: .25rem;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
 
 	&:hover {
 		background: var(--grey-100);
@@ -527,11 +530,12 @@ function setLink(event: MouseEvent) {
 
 	.icon {
 		position: relative;
+		font-size: .8125rem;
 
 		.icon__lower-text {
-			font-size: .75rem;
+			font-size: .625rem;
 			position: absolute;
-			inset-block-end: -3px;
+			inset-block-end: -2px;
 			inset-inline-end: -2px;
 			font-weight: bold;
 		}
@@ -539,11 +543,12 @@ function setLink(event: MouseEvent) {
 }
 
 .editor-toolbar__table-buttons {
-	margin-block-start: .5rem;
+	margin-block-start: .25rem;
+	display: flex;
+	flex-wrap: wrap;
+	gap: .25rem;
 
 	> .editor-toolbar__button {
-		margin-inline-end: .5rem;
-		margin-block-end: .5rem;
 		padding: 0 .25rem;
 		border: 1px solid var(--grey-400);
 		font-size: .75rem;
