@@ -212,7 +212,9 @@ function doDelete() {
 					v-for="w in webhooks"
 					:key="w.id"
 				>
-					<td>{{ w.targetUrl }}</td>
+					<td class="webhook-target-url">
+						{{ w.targetUrl }}
+					</td>
 					<td>{{ w.events.join(', ') }}</td>
 					<td>{{ formatDateShort(w.created) }}</td>
 					<td>
@@ -254,5 +256,11 @@ function doDelete() {
 .available-events-check {
 	margin-inline-end: .5rem;
 	inline-size: 12.5rem;
+}
+
+// Webhook URLs have no break opportunities, so without this the cell's min-content
+// width forces the whole table wider than its container.
+.webhook-target-url {
+	overflow-wrap: anywhere;
 }
 </style>
