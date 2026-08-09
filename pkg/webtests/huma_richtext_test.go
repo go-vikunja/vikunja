@@ -247,6 +247,51 @@ func TestHumaRichText_TaskExpandedNested(t *testing.T) {
 	assert.NotContains(t, body, "<strong>", "no nested HTML should leak")
 }
 
+// TestHumaRichText_Convert exercises the standalone POST /richtext/convert
+// endpoint used by the frontend to flip the editor between visual and markdown
+// modes without touching the database.
+func TestHumaRichText_Convert(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	token := humaTokenFor(t, &testuser1)
+
+	decode := func(raw []byte) (result string) {
+		t.Helper()
+		var body struct {
+			Result string `json:"result"`
+		}
+		require.NoError(t, json.Unmarshal(raw, &body))
+		return body.Result
+	}
+
+	t.Run("html to markdown", func(t *testing.T) {
+		rec := humaRequest(t, e, http.MethodPost, "/api/v2/richtext/convert",
+			`{"from":"html","html":"<p>Hello <strong>world</strong></p>"}`, token, "")
+		require.Equal(t, http.StatusCreated, rec.Code, "body: %s", rec.Body.String())
+		assert.Equal(t, "Hello **world**", decode(rec.Body.Bytes()))
+	})
+
+	t.Run("markdown to html", func(t *testing.T) {
+		rec := humaRequest(t, e, http.MethodPost, "/api/v2/richtext/convert",
+			`{"from":"markdown","markdown":"Hello **world**"}`, token, "")
+		require.Equal(t, http.StatusCreated, rec.Code, "body: %s", rec.Body.String())
+		assert.Equal(t, "<p>Hello <strong>world</strong></p>", decode(rec.Body.Bytes()))
+	})
+
+	t.Run("markdown task list to html", func(t *testing.T) {
+		rec := humaRequest(t, e, http.MethodPost, "/api/v2/richtext/convert",
+			`{"from":"markdown","markdown":"- [x] done\n- [ ] todo"}`, token, "")
+		require.Equal(t, http.StatusCreated, rec.Code, "body: %s", rec.Body.String())
+		assert.Contains(t, decode(rec.Body.Bytes()), `<ul data-type="taskList"`)
+	})
+
+	t.Run("invalid from value", func(t *testing.T) {
+		rec := humaRequest(t, e, http.MethodPost, "/api/v2/richtext/convert",
+			`{"from":"xml","html":"<p>x</p>"}`, token, "")
+		require.Equal(t, http.StatusUnprocessableEntity, rec.Code, "body: %s", rec.Body.String())
+	})
+}
+
 func TestHumaRichText_Write(t *testing.T) {
 	e, err := setupTestEnv()
 	require.NoError(t, err)

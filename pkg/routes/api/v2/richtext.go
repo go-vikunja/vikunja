@@ -18,6 +18,7 @@ package apiv2
 
 import (
 	"context"
+	"net/http"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
@@ -163,4 +164,62 @@ func convertToHTML(ctx context.Context, fields ...*string) error {
 		*field = htmlDesc
 	}
 	return nil
+}
+
+// RegisterRichTextRoutes wires the standalone rich-text conversion endpoint.
+func RegisterRichTextRoutes(api huma.API) {
+	tags := []string{"richtext"}
+
+	Register(api, huma.Operation{
+		OperationID: "richtext-convert",
+		Summary:     "Convert rich-text format",
+		Description: "Converts between HTML and GFM Markdown. Stateless: no database " +
+			"session is opened, so @mentions are preserved as plain text. Use the " +
+			"per-resource `?format=markdown` parameter for full mention resolution.",
+		Method: http.MethodPost,
+		Path:   "/richtext/convert",
+		Tags:   tags,
+	}, richtextConvert)
+}
+
+func init() { AddRouteRegistrar(RegisterRichTextRoutes) }
+
+type richtextConvertInput struct {
+	Body struct {
+		// Source format of the content being converted.
+		From string `json:"from" enum:"html,markdown" doc:"Source format: 'html' to convert to markdown, 'markdown' to convert to HTML."`
+		// HTML source content (required when from=html).
+		HTML string `json:"html,omitempty" doc:"HTML content to convert. Required when from=html."`
+		// Markdown source content (required when from=markdown).
+		Markdown string `json:"markdown,omitempty" doc:"Markdown content to convert. Required when from=markdown."`
+	}
+}
+
+type richtextConvertOutput struct {
+	Body struct {
+		// Converted content.
+		Result string `json:"result" doc:"The converted content in the target format."`
+	}
+}
+
+func richtextConvert(_ context.Context, in *richtextConvertInput) (*richtextConvertOutput, error) {
+	var result string
+	var err error
+
+	switch in.Body.From {
+	case "html":
+		result, err = richtext.HTMLToMarkdown(in.Body.HTML)
+	case "markdown":
+		result, err = richtext.MarkdownToHTML(in.Body.Markdown)
+	default:
+		return nil, huma.Error400BadRequest("invalid from value: must be 'html' or 'markdown'")
+	}
+
+	if err != nil {
+		return nil, huma.Error400BadRequest("conversion failed: " + err.Error())
+	}
+
+	out := &richtextConvertOutput{}
+	out.Body.Result = result
+	return out, nil
 }

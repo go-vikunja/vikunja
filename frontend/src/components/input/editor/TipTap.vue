@@ -100,7 +100,15 @@
 				</div>
 			</BubbleMenu>
 
+			<textarea
+				v-if="isEditing && isMarkdownMode"
+				v-model="markdownContent"
+				class="tiptap__markdown-editor"
+				:placeholder="$t('input.editor.placeholder')"
+				@input="onMarkdownInput"
+			/>
 			<EditorContent
+				v-show="!isMarkdownMode"
 				class="tiptap__editor"
 				:class="{'tiptap__editor-is-edit-enabled': isEditing}"
 				:editor="editor"
@@ -160,17 +168,45 @@
 				</BaseButton>
 			</li>
 		</ul>
-		<XButton
-			v-else-if="isEditing && showSave"
-			v-cy="'saveEditor'"
-			class="mbs-4"
-			variant="secondary"
-			:shadow="false"
-			:disabled="!contentHasChanged"
-			@click="bubbleSave"
+		<div
+			v-if="isEditing"
+			class="tiptap__editor-actions-row d-print-none"
 		>
-			{{ $t('misc.save') }}
-		</XButton>
+			<div
+				class="tiptap__editor-mode-toggle"
+				role="group"
+				:aria-label="$t('input.editor.toolbarLabel')"
+			>
+				<button
+					type="button"
+					class="tiptap__mode-button"
+					:class="{'tiptap__mode-button--active': !isMarkdownMode}"
+					:aria-pressed="!isMarkdownMode"
+					@click="switchToVisualMode"
+				>
+					{{ $t('input.editor.visualEditor') }}
+				</button>
+				<button
+					type="button"
+					class="tiptap__mode-button"
+					:class="{'tiptap__mode-button--active': isMarkdownMode}"
+					:aria-pressed="isMarkdownMode"
+					@click="switchToMarkdownMode"
+				>
+					{{ $t('input.editor.markdownToggle') }}
+				</button>
+			</div>
+			<XButton
+				v-if="bottomActions.length === 0 && showSave"
+				v-cy="'saveEditor'"
+				variant="secondary"
+				:shadow="false"
+				:disabled="!contentHasChanged"
+				@click="bubbleSave"
+			>
+				{{ $t('misc.save') }}
+			</XButton>
+		</div>
 	</div>
 </template>
 
@@ -223,6 +259,7 @@ import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 import inputPrompt from '@/helpers/inputPrompt'
 import {setLinkInEditor} from '@/components/input/editor/setLinkInEditor'
 import {saveEditorDraft, loadEditorDraft, clearEditorDraft} from '@/helpers/editorDraftStorage'
+import {AuthenticatedHTTPFactory, apiV2Url} from '@/helpers/fetcher'
 
 const props = withDefaults(defineProps<{
 	uploadCallback?: UploadCallback,
@@ -361,6 +398,8 @@ type Mode = 'edit' | 'preview'
 const internalMode = ref<Mode>('preview')
 const isEditing = computed(() => internalMode.value === 'edit' && props.isEditEnabled)
 const contentHasChanged = ref<boolean>(false)
+const isMarkdownMode = ref(false)
+const markdownContent = ref('')
 
 // TipTap crashes when inserting an image into an empty editor.
 // To work around this, we're inserting an element first, then insert the image, then remove the element.
@@ -626,6 +665,10 @@ watch(
 	value => {
 		if (!editor?.value) return
 
+		if (isMarkdownMode.value) {
+			return
+		}
+
 		if (editor.value.getHTML() === value) {
 			return
 		}
@@ -635,7 +678,15 @@ watch(
 	{immediate: true},
 )
 
-function bubbleNow() {
+async function bubbleNow() {
+	if (isMarkdownMode.value) {
+		contentHasChanged.value = true
+		if (props.storageKey) {
+			saveEditorDraft(props.storageKey, markdownContent.value)
+		}
+		return
+	}
+
 	const editorVal = editor.value!.getHTML()
 	if (editorVal === modelValue.value ||
 		(editorVal === '<p></p>') && modelValue.value === '') {
@@ -652,26 +703,48 @@ function bubbleNow() {
 	modelValue.value = editorVal
 }
 
-function bubbleSave() {
-	bubbleNow()
-	lastSavedState = editor.value?.getHTML() ?? ''
+async function bubbleSave() {
+	if (isMarkdownMode.value) {
+		try {
+			modelValue.value = await convertMarkdownToHtml(markdownContent.value)
+		}
+		catch (e) {
+			console.error('Failed to convert markdown to HTML:', e)
+			return
+		}
+	}
+	else {
+		bubbleNow()
+	}
+
+	const savedContent = isMarkdownMode.value
+		? modelValue.value
+		: (editor.value?.getHTML() ?? '')
+	lastSavedState = savedContent
 
 	// Clear draft from localStorage when saved
 	if (props.storageKey) {
 		clearEditorDraft(props.storageKey)
 	}
 
-	emit('save', lastSavedState)
+	emit('save', savedContent)
 	if (isEditing.value) {
 		internalMode.value = 'preview'
+		isMarkdownMode.value = false
 	}
 }
 
 function exitEditMode() {
-	editor.value?.commands.setContent(lastSavedState, {
-		...defaultSetContentOptions,
-		emitUpdate: false,
-	})
+	if (isMarkdownMode.value) {
+		markdownContent.value = lastSavedState
+		isMarkdownMode.value = false
+	}
+	else {
+		editor.value?.commands.setContent(lastSavedState, {
+			...defaultSetContentOptions,
+			emitUpdate: false,
+		})
+	}
 
 	// Clear draft from localStorage when discarding changes
 	if (props.storageKey) {
@@ -842,6 +915,61 @@ async function promptImageAlt(src: string) {
 	editor.value?.chain().setTextSelection(pos + 1).run()
 }
 
+async function convertHtmlToMarkdown(html: string): Promise<string> {
+	const http = AuthenticatedHTTPFactory()
+	const {data} = await http.post(apiV2Url('richtext/convert'), {
+		from: 'html',
+		html,
+	})
+	return data.result
+}
+
+async function convertMarkdownToHtml(markdown: string): Promise<string> {
+	const http = AuthenticatedHTTPFactory()
+	const {data} = await http.post(apiV2Url('richtext/convert'), {
+		from: 'markdown',
+		markdown,
+	})
+	return data.result
+}
+
+async function switchToMarkdownMode() {
+	if (!editor.value) return
+
+	try {
+		markdownContent.value = await convertHtmlToMarkdown(editor.value.getHTML())
+		isMarkdownMode.value = true
+	}
+	catch (e) {
+		console.error('Failed to convert to markdown:', e)
+	}
+}
+
+async function switchToVisualMode() {
+	if (!isMarkdownMode.value || !editor.value) return
+
+	try {
+		const html = await convertMarkdownToHtml(markdownContent.value)
+		editor.value.commands.setContent(html, {
+			...defaultSetContentOptions,
+			emitUpdate: false,
+		})
+		modelValue.value = editor.value.getHTML()
+		isMarkdownMode.value = false
+		editor.value.commands.focus()
+	}
+	catch (e) {
+		console.error('Failed to convert to HTML:', e)
+	}
+}
+
+function onMarkdownInput() {
+	contentHasChanged.value = true
+	if (props.storageKey) {
+		saveEditorDraft(props.storageKey, markdownContent.value)
+	}
+}
+
 onMounted(async () => {
 	if (props.editShortcut !== '') {
 		document.addEventListener('keydown', setFocusToEditor)
@@ -862,6 +990,7 @@ onMounted(async () => {
 			// Set content and force edit mode for immediate editing
 			editor.value?.commands.setContent(draft, {emitUpdate: false})
 			internalMode.value = 'edit'
+			isMarkdownMode.value = false
 			// Update the model so parent sees the restored content
 			modelValue.value = draft
 			return
@@ -879,6 +1008,7 @@ onBeforeUnmount(() => {
 
 function setModeAndValue(value: string) {
 	internalMode.value = isEditorContentEmpty(value) ? 'edit' : 'preview'
+	isMarkdownMode.value = false
 	editor.value?.commands.setContent(value, {
 		...defaultSetContentOptions,
 		emitUpdate: false,
@@ -890,6 +1020,7 @@ function setModeAndValue(value: string) {
 // Returns synchronously after the next tick to let DOM updates settle.
 async function setReplyContent(value: string) {
 	if (!editor.value) return
+	isMarkdownMode.value = false
 	editor.value.commands.setContent(value, {
 		...defaultSetContentOptions,
 		emitUpdate: false,
@@ -1038,6 +1169,9 @@ watch(
 .tiptap__editor {
 	&.tiptap__editor-is-edit-enabled {
 		min-block-size: 10rem;
+		background: var(--grey-200);
+		border: 1px solid var(--grey-300);
+		border-radius: $radius;
 
 		.ProseMirror {
 			padding: .5rem;
@@ -1349,6 +1483,67 @@ ul.tiptap__editor-actions {
 
 	a:hover {
 		text-decoration: underline;
+	}
+}
+
+.tiptap__editor-actions-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: .5rem;
+	margin-block-start: 1rem;
+}
+
+.tiptap__editor-mode-toggle {
+	display: inline-flex;
+	overflow: hidden;
+	border: 1px solid var(--grey-300);
+	border-radius: $radius;
+}
+
+.tiptap__mode-button {
+	border: none;
+	border-radius: 0;
+	padding: .25rem .6rem;
+	font-size: .8rem;
+	color: var(--grey-500);
+	background: transparent;
+	cursor: pointer;
+	transition: all $transition;
+
+	&:hover {
+		background: var(--grey-200);
+	}
+
+	&--active {
+		background: var(--grey-200);
+		color: var(--grey-700);
+	}
+}
+
+.tiptap__markdown-editor {
+	display: block;
+	inline-size: 100%;
+	min-block-size: 10rem;
+	padding: .5rem;
+	font-family: JetBrainsMono, monospace;
+	font-size: .875rem;
+	line-height: 1.5;
+	color: var(--grey-700);
+	background: var(--grey-200);
+	border: 1px solid var(--grey-300);
+	border-radius: $radius;
+	resize: vertical;
+	outline: none;
+	tab-size: 2;
+
+	&::placeholder {
+		color: var(--grey-400);
+	}
+
+	&:focus {
+		border-color: var(--primary);
+		box-shadow: 0 0 0 1px var(--primary);
 	}
 }
 </style>
