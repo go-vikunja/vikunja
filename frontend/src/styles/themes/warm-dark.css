@@ -1,0 +1,93 @@
+/*
+ * Vikunja — Warm Dark Custom Theme
+ * --------------------------------------------------------------
+ * Overrides Vikunja's standard CSS custom properties to a warm-dark
+ * palette with an amber accent. Paste this into
+ *   Settings -> Design -> Custom CSS
+ * (or import it globally). It does NOT touch any component markup,
+ * it only re-points the design tokens Vikunja already uses, so the
+ * calendar (and every other view) picks it up automatically.
+ *
+ * All values are scoped to Vikunja's own variable names
+ * (see frontend/src/styles/custom-properties/colors.scss).
+ */
+
+:root {
+	/* Ambient warm-dark surfaces */
+	--grey-50: hsl(28, 18%, 9%);
+	--grey-100: hsl(26, 16%, 11%);
+	--grey-200: hsl(25, 14%, 16%);
+	--grey-300: hsl(24, 12%, 22%);
+	--grey-400: hsl(23, 10%, 32%);
+	--grey-500: hsl(24, 9%, 46%);
+	--grey-600: hsl(26, 13%, 58%);
+	--grey-700: hsl(30, 20%, 70%);
+	--grey-800: hsl(34, 28%, 82%);
+	--grey-900: hsl(38, 35%, 92%);
+
+	--site-background: hsl(28, 18%, 9%);
+	--text: hsl(34, 28%, 82%);
+	--text-muted: hsl(28, 10%, 58%);
+	--text-strong: hsl(38, 35%, 92%);
+
+	--border: hsl(25, 14%, 18%);
+	--card-border-color: hsl(25, 14%, 22%);
+
+	/* Amber accent (#f2a65a) as the primary brand color */
+	--primary-h: 28deg;
+	--primary-s: 86%;
+	--primary-l: 65%;
+	--primary-a: 1;
+	--primary: hsla(var(--primary-h), var(--primary-s), var(--primary-l), var(--primary-a));
+	--link: var(--primary);
+	--link-hover: hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.75);
+	--switch-view-active-background: var(--primary);
+
+	/* Warm-tinted semantic colors (kept readable on dark) */
+	--success-h: 146deg; --success-s: 60%; --success-l: 55%;
+	--success: hsla(var(--success-h), var(--success-s), var(--success-l), 1);
+	--warning-h: 33deg;  --warning-s: 92%; --warning-l: 60%;
+	--warning: hsla(var(--warning-h), var(--warning-s), var(--warning-l), 1);
+	--danger-h: 6deg;   --danger-s: 80%;  --danger-l: 62%;
+	--danger: hsla(var(--danger-h), var(--danger-s), var(--danger-l), 1);
+	--danger-text-l: 55%;
+
+	--scheme-main: var(--grey-100);
+	--scheme-invert: var(--grey-900);
+	--white: var(--grey-50);
+}
+
+/* Dark-mode block: warm-dark uses the same tokens (already dark) but
+   ensures contrast stays sufficient where Vikunja flips them. */
+:root.dark, .dark {
+	--grey-800: hsl(30, 20%, 70%);
+	--grey-700: hsl(28, 16%, 58%);
+	--grey-600: hsl(26, 13%, 46%);
+	--grey-500: hsl(24, 10%, 58%);
+	--grey-400: hsl(23, 10%, 32%);
+	--grey-300: hsl(24, 12%, 22%);
+	--grey-200: hsl(25, 14%, 16%);
+	--grey-100: hsl(26, 16%, 11%);
+	--grey-50: hsl(28, 18%, 9%);
+
+	--text: hsl(34, 28%, 82%);
+	--text-muted: hsl(28, 10%, 58%);
+	--border: hsl(25, 14%, 18%);
+
+	--primary-h: 28deg;
+	--primary-s: 86%;
+	--primary-l: 65%;
+	--primary: hsla(var(--primary-h), var(--primary-s), var(--primary-l), 1);
+	--link: var(--primary);
+	--switch-view-active-background: hsl(var(--primary-h), var(--primary-s), 58%);
+	--danger-text: var(--danger);
+
+	--scheme-main: var(--grey-100);
+	--scheme-invert: var(--grey-900);
+}
+
+/* Optional: subtle warm glow on the active view tab / today marker */
+.calendar-cell.is-today {
+	border-color: var(--primary);
+	box-shadow: inset 0 0 0 1px var(--primary);
+}
