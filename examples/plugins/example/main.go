@@ -14,6 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+// This file is an example Vikunja plugin loaded at runtime via Yaegi
+// (see pkg/plugins). Yaegi evaluates the exported factory functions
+// (NewPlugin, etc.) directly. The `//go:build ignore` constraint keeps the
+// file out of `go build ./...` (it is a plugin entrypoint, not a standalone
+// binary), while Yaegi still compiles and loads it at runtime.
+//
+//go:build ignore
+
 package main
 
 import (
