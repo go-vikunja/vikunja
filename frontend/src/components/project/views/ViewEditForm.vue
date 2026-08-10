@@ -174,6 +174,9 @@ function handleBubbleSave() {
 						<option value="kanban">
 							{{ $t('project.kanban.title') }}
 						</option>
+						<option value="calendar">
+							{{ $t('project.calendar.title') }}
+						</option>
 					</select>
 				</div>
 			</template>
