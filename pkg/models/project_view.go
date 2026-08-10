@@ -345,7 +345,7 @@ func validateProjectViewFilters(p *ProjectView) (err error) {
 }
 
 func normalizeBucketConfigurationMode(p *ProjectView) {
-	if p.ViewKind != ProjectViewKindKanban && p.ViewKind != ProjectViewKindCalendar {
+	if p.ViewKind != ProjectViewKindKanban {
 		p.BucketConfigurationMode = BucketConfigurationModeNone
 		return
 	}

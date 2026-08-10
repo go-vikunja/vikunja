@@ -3,7 +3,10 @@ import {computed, onMounted, ref, watch} from 'vue'
 import {useRouter} from 'vue-router'
 import TaskService from '@/services/task'
 import type {ITask} from '@/modelTypes/ITask'
-import {useTaskStore} from '@/stores/tasks'
+import {useAuthStore} from '@/stores/auth'
+import {formatDate, useWeekDayFromDate} from '@/helpers/time/formatDate'
+import {useTimeFormat} from '@/composables/useTimeFormat'
+import {TIME_FORMAT} from '@/constants/timeFormat'
 
 const props = defineProps<{
 	projectId: number
@@ -12,18 +15,32 @@ const props = defineProps<{
 }>()
 
 const router = useRouter()
-const taskStore = useTaskStore()
+const authStore = useAuthStore()
+const weekDayFromDate = useWeekDayFromDate()
+const {store: timeFormat} = useTimeFormat()
 const tasks = ref<ITask[]>([])
 const loading = ref(false)
 const currentMonth = ref(new Date())
 const viewMode = ref<'month' | 'week'>('month')
 
+// 0 = Sunday … 6 = Saturday, matching the user setting. Monday is the fallback.
+const weekStart = computed(() => authStore.settings.weekStart ?? 1)
+
+function weekdayOffset(d: Date): number {
+	return (d.getDay() - weekStart.value + 7) % 7
+}
+
+// toISOString() would shift the day for any positive UTC offset, so the range has
+// to be formatted from the local calendar fields the grid is built from.
+function toDateParam(d: Date): string {
+	return formatDate(d, 'YYYY-MM-DD')
+}
+
 function startOfPeriod(d: Date): Date {
 	if (viewMode.value === 'month') {
 		return new Date(d.getFullYear(), d.getMonth(), 1)
 	}
-	const startWeekday = (d.getDay() + 6) % 7
-	return new Date(d.getFullYear(), d.getMonth(), d.getDate() - startWeekday)
+	return new Date(d.getFullYear(), d.getMonth(), d.getDate() - weekdayOffset(d))
 }
 function endOfPeriod(d: Date): Date {
 	if (viewMode.value === 'month') {
@@ -43,7 +60,7 @@ async function loadTasks() {
 			{} as ITask,
 			{
 				projectId: props.projectId,
-				filter: `due_date >= "${from.toISOString().slice(0, 10)} && due_date <= "${to.toISOString().slice(0, 10)}"`,
+				filter: `due_date >= "${toDateParam(from)}" && due_date <= "${toDateParam(to)}"`,
 				sort_by: ['due_date'],
 				order_by: ['asc'],
 			},
@@ -64,8 +81,7 @@ const calendarDays = computed(() => {
 		const year = currentMonth.value.getFullYear()
 		const month = currentMonth.value.getMonth()
 		const first = new Date(year, month, 1)
-		const startWeekday = (first.getDay() + 6) % 7
-		const pre = new Date(year, month, 1 - startWeekday)
+		const pre = new Date(year, month, 1 - weekdayOffset(first))
 		for (let i = 0; i < 42; i++) {
 			days.push(new Date(pre.getFullYear(), pre.getMonth(), pre.getDate() + i))
 		}
@@ -91,8 +107,7 @@ function tasksForDay(day: Date): ITask[] {
 
 function timeOf(t: ITask): string {
 	if (!t.dueDate) return ''
-	const dt = new Date(t.dueDate)
-	return dt.toLocaleTimeString('de-DE', {hour: '2-digit', minute: '2-digit'})
+	return formatDate(new Date(t.dueDate), timeFormat.value === TIME_FORMAT.HOURS_24 ? 'HH:mm' : 'hh:mm A')
 }
 
 function priorityClass(p?: number): string {
@@ -104,16 +119,18 @@ function priorityClass(p?: number): string {
 	}
 }
 
-const monthLabel = computed(() =>
-	currentMonth.value.toLocaleDateString('de-DE', {month: 'long', year: 'numeric'}),
-)
+const monthLabel = computed(() => formatDate(currentMonth.value, 'MMMM YYYY'))
 const weekLabel = computed(() => {
-	const s = startOfPeriod(currentMonth.value)
-	const e = endOfPeriod(currentMonth.value)
-	const f = s.toLocaleDateString('de-DE', {day: '2-digit', month: 'short'})
-	const t = e.toLocaleDateString('de-DE', {day: '2-digit', month: 'short', year: 'numeric'})
-	return `${f} – ${t}`
+	const f = formatDate(startOfPeriod(currentMonth.value), 'DD MMM')
+	const t = formatDate(endOfPeriod(currentMonth.value), 'DD MMM YYYY')
+	return `${f} - ${t}`
 })
+
+// 2024-01-07 was a Sunday, so it anchors the getDay() index the setting uses.
+const weekdayLabels = computed(() => Array.from(
+	{length: 7},
+	(_, i) => weekDayFromDate.value(new Date(2024, 0, 7 + ((weekStart.value + i) % 7))),
+))
 
 const isCurrentMonth = (day: Date) => day.getMonth() === currentMonth.value.getMonth()
 const isToday = (day: Date) => day.toDateString() === new Date().toDateString()
@@ -149,18 +166,54 @@ onMounted(loadTasks)
 		<div class="calendar-toolbar">
 			<h2>{{ viewMode === 'month' ? monthLabel : weekLabel }}</h2>
 			<div class="calendar-nav">
-				<button class="btn" @click="prev" aria-label="Vorheriger Zeitraum">‹</button>
-				<button class="btn" @click="today">Heute</button>
-				<button class="btn" @click="next" aria-label="Nächster Zeitraum">›</button>
+				<button
+					class="btn"
+					:aria-label="$t('project.calendar.previousPeriod')"
+					@click="prev"
+				>
+					‹
+				</button>
+				<button
+					class="btn"
+					@click="today"
+				>
+					{{ $t('project.calendar.today') }}
+				</button>
+				<button
+					class="btn"
+					:aria-label="$t('project.calendar.nextPeriod')"
+					@click="next"
+				>
+					›
+				</button>
 				<div class="view-toggle">
-					<button class="btn" :class="{active: viewMode==='month'}" @click="viewMode='month'">Monat</button>
-					<button class="btn" :class="{active: viewMode==='week'}" @click="viewMode='week'">Woche</button>
+					<button
+						class="btn"
+						:class="{active: viewMode === 'month'}"
+						@click="viewMode = 'month'"
+					>
+						{{ $t('project.calendar.month') }}
+					</button>
+					<button
+						class="btn"
+						:class="{active: viewMode === 'week'}"
+						@click="viewMode = 'week'"
+					>
+						{{ $t('project.calendar.week') }}
+					</button>
 				</div>
 			</div>
 		</div>
 
-		<div class="calendar-grid" :class="viewMode">
-			<div v-for="wd in ['Mo','Di','Mi','Do','Fr','Sa','So']" :key="wd" class="calendar-weekday">
+		<div
+			class="calendar-grid"
+			:class="viewMode"
+		>
+			<div
+				v-for="wd in weekdayLabels"
+				:key="wd"
+				class="calendar-weekday"
+			>
 				{{ wd }}
 			</div>
 			<div
@@ -169,24 +222,34 @@ onMounted(loadTasks)
 				class="calendar-cell"
 				:class="{ 'other-period': viewMode==='month' && !isCurrentMonth(day), 'is-today': isToday(day) }"
 			>
-				<div class="calendar-daynum">{{ day.getDate() }}</div>
+				<div class="calendar-daynum">
+					{{ day.getDate() }}
+				</div>
 				<div class="calendar-tasks">
 					<button
 						v-for="task in tasksForDay(day)"
 						:key="task.id"
 						class="calendar-task"
 						:class="[priorityClass(task.priority), { done: task.done }]"
-						@click="openTask(task.id)"
 						:title="task.title"
+						@click="openTask(task.id)"
 					>
-						<span class="task-time" v-if="!task.done">{{ timeOf(task) }}</span>
+						<span
+							v-if="!task.done"
+							class="task-time"
+						>{{ timeOf(task) }}</span>
 						<span class="task-title">{{ task.title }}</span>
 					</button>
 				</div>
 			</div>
 		</div>
 
-		<p v-if="loading" class="calendar-loading">Lädt…</p>
+		<p
+			v-if="loading"
+			class="calendar-loading"
+		>
+			{{ $t('misc.loading') }}
+		</p>
 	</div>
 </template>
 
@@ -198,7 +261,7 @@ onMounted(loadTasks)
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	margin-bottom: 1rem;
+	margin-block-end: 1rem;
 	flex-wrap: wrap;
 	gap: 0.5rem;
 }
@@ -212,9 +275,9 @@ onMounted(loadTasks)
 	align-items: center;
 }
 .calendar-nav .btn {
-	background: var(--surface-2, var(--grey-100));
-	border: 1px solid var(--border, var(--grey-200));
-	color: var(--text, #363636);
+	background: var(--grey-100);
+	border: 1px solid var(--border);
+	color: var(--text);
 	border-radius: 8px;
 	padding: 0.4rem 0.8rem;
 	cursor: pointer;
@@ -225,13 +288,13 @@ onMounted(loadTasks)
 }
 .calendar-nav .btn.active {
 	background: var(--primary);
-	color: var(--primary-invert, #fff);
+	color: var(--primary-invert);
 	border-color: var(--primary);
 }
 .view-toggle {
 	display: flex;
 	gap: 0.25rem;
-	margin-left: 0.5rem;
+	margin-inline-start: 0.5rem;
 }
 .calendar-grid {
 	display: grid;
@@ -239,19 +302,19 @@ onMounted(loadTasks)
 	gap: 4px;
 }
 .calendar-grid.week .calendar-cell {
-	min-height: 240px;
+	min-block-size: 240px;
 }
 .calendar-weekday {
 	text-align: center;
 	font-size: 0.75rem;
-	color: var(--text-muted, var(--grey-500));
+	color: var(--text-muted);
 	padding: 0.5rem 0;
 	font-weight: 600;
 }
 .calendar-cell {
-	min-height: 96px;
-	background: var(--surface, var(--grey-100));
-	border: 1px solid var(--border, var(--grey-200));
+	min-block-size: 96px;
+	background: var(--white);
+	border: 1px solid var(--border);
 	border-radius: 8px;
 	padding: 0.35rem;
 	overflow: hidden;
@@ -268,8 +331,8 @@ onMounted(loadTasks)
 }
 .calendar-daynum {
 	font-size: 0.8rem;
-	color: var(--text-muted, var(--grey-500));
-	margin-bottom: 2px;
+	color: var(--text-muted);
+	margin-block-end: 2px;
 	font-variant-numeric: tabular-nums;
 }
 .calendar-tasks {
@@ -282,41 +345,41 @@ onMounted(loadTasks)
 	align-items: baseline;
 	gap: 0.35rem;
 	font-size: 0.72rem;
-	text-align: left;
+	text-align: start;
 	border: none;
-	border-left: 3px solid var(--grey-400, var(--grey-300));
-	background: var(--grey-100, #f5f6f8);
-	color: var(--text, #363636);
+	border-inline-start: 3px solid var(--grey-400);
+	background: var(--grey-100);
+	color: var(--text);
 	border-radius: 4px;
 	padding: 0.2rem 0.4rem;
 	cursor: pointer;
 	font-family: inherit;
-	width: 100%;
+	inline-size: 100%;
 }
 .calendar-task:hover {
-	background: var(--grey-200, #e9ebef);
+	background: var(--grey-200);
 }
 .calendar-task.done {
 	text-decoration: line-through;
 	opacity: 0.6;
-	border-left-color: var(--success);
+	border-inline-start-color: var(--success);
 }
 .calendar-task.prio-high {
-	border-left-color: var(--danger);
+	border-inline-start-color: var(--danger);
 }
 .calendar-task.prio-medium {
-	border-left-color: var(--warning);
+	border-inline-start-color: var(--warning);
 }
 .calendar-task.prio-low {
-	border-left-color: var(--link, var(--primary));
+	border-inline-start-color: var(--link);
 }
 .calendar-task.prio-none {
-	border-left-color: var(--grey-400, var(--grey-300));
+	border-inline-start-color: var(--grey-400);
 }
 .task-time {
 	font-variant-numeric: tabular-nums;
 	font-weight: 600;
-	color: var(--text-muted, var(--grey-500));
+	color: var(--text-muted);
 	flex-shrink: 0;
 }
 .task-title {
@@ -325,7 +388,7 @@ onMounted(loadTasks)
 	text-overflow: ellipsis;
 }
 .calendar-loading {
-	color: var(--text-muted, var(--grey-500));
+	color: var(--text-muted);
 	font-size: 0.85rem;
 }
 </style>

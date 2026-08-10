@@ -470,6 +470,14 @@
       "editTask": "Edit Task",
       "sort": "Sort"
     },
+    "calendar": {
+      "title": "Calendar",
+      "today": "Today",
+      "month": "Month",
+      "week": "Week",
+      "previousPeriod": "Previous period",
+      "nextPeriod": "Next period"
+    },
     "gantt": {
       "title": "Gantt",
       "size": "Size",
