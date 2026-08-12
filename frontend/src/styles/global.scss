@@ -235,3 +235,287 @@ body.vk-dark-page {
 		color: var(--vk-text-secondary);
 	}
 }
+
+// =============================================
+// Mobile-Responsive Form & Input Improvements
+// =============================================
+
+@media screen and (max-width: $tablet) {
+	// Ensure inputs are large enough for touch interaction
+	input[type="text"],
+	input[type="email"],
+	input[type="password"],
+	input[type="number"],
+	input[type="tel"],
+	input[type="url"],
+	input[type="date"],
+	input[type="time"],
+	input[type="search"],
+	textarea,
+	select {
+		font-size: 16px !important; // Prevents zoom on iOS
+		min-height: 44px;
+		padding: 0.75rem !important;
+		border-radius: 8px;
+	}
+
+	// Label improvements
+	label {
+		font-size: 1rem;
+		display: block;
+		margin-bottom: 0.5rem;
+	}
+
+	// Checkbox and radio improvements
+	.checkbox,
+	.radio {
+		min-height: 44px;
+		display: flex;
+		align-items: center;
+		margin-bottom: 0.75rem;
+
+		input {
+			margin-right: 0.75rem;
+			width: 20px;
+			height: 20px;
+			cursor: pointer;
+		}
+	}
+
+	// Button improvements for mobile
+	.button {
+		min-height: 44px;
+		min-width: 44px;
+		font-size: 1rem;
+		padding: 0.75rem 1.5rem !important;
+		border-radius: 8px;
+		transition: all 0.2s ease;
+
+		&:active {
+			transform: scale(0.98);
+		}
+
+		&.is-fullwidth {
+			width: 100%;
+		}
+	}
+
+	// Field spacing for mobile
+	.field {
+		margin-bottom: 1.5rem;
+
+		&:last-child {
+			margin-bottom: 1rem;
+		}
+	}
+
+	// Control improvements
+	.control {
+		position: relative;
+
+		// Better spacing for icon inside controls
+		.icon {
+			pointer-events: none;
+		}
+	}
+
+	// Dropdown/select improvements
+	.select,
+	.is-loading::after {
+		select {
+			font-size: 16px !important;
+			min-height: 44px;
+			padding: 0.75rem !important;
+		}
+	}
+
+	// File input improvements
+	.file {
+		.file-label {
+			min-height: 44px;
+			display: flex;
+			align-items: center;
+
+			.file-input {
+				font-size: 16px !important;
+			}
+		}
+	}
+
+	// Message/notification improvements
+	.message {
+		margin-bottom: 1rem;
+		word-wrap: break-word;
+		overflow-wrap: break-word;
+		word-break: break-word;
+		padding: 1rem !important;
+	}
+
+	// Card improvements for mobile
+	.card {
+		margin-bottom: 1rem;
+
+		.card-header {
+			padding: 1rem !important;
+
+			.card-header-title {
+				font-size: clamp(1rem, 4vw, 1.5rem);
+				word-break: break-word;
+			}
+		}
+
+		.card-content {
+			padding: 1rem !important;
+		}
+
+		.card-footer {
+			padding: 0.75rem !important;
+			flex-direction: column;
+			gap: 0.5rem;
+
+			> * {
+				width: 100%;
+			}
+		}
+	}
+
+	// Table responsive improvements
+	.table {
+		font-size: 0.875rem;
+		margin-bottom: 1rem;
+		overflow-x: auto;
+		-webkit-overflow-scrolling: touch;
+
+		thead {
+			display: none;
+		}
+
+		tbody,
+		tr {
+			display: block;
+			margin-bottom: 1rem;
+		}
+
+		td {
+			display: block;
+			text-align: right;
+			padding-left: 50%;
+			position: relative;
+			border: none;
+			border-bottom: 1px solid var(--vk-border-soft);
+
+			&::before {
+				content: attr(data-label);
+				position: absolute;
+				left: 0;
+				font-weight: bold;
+				text-align: left;
+				padding-left: 1rem;
+				min-width: 45%;
+			}
+		}
+	}
+
+	// Navbar improvements
+	.navbar {
+		padding: 0.75rem !important;
+
+		.navbar-item {
+			padding: 0.75rem !important;
+			min-height: 44px;
+			display: flex;
+			align-items: center;
+		}
+
+		.navbar-burger {
+			height: 44px;
+			width: 44px;
+		}
+	}
+
+	// Dropdown menu improvements
+	.dropdown-menu {
+		.dropdown-item {
+			min-height: 44px;
+			padding: 0.75rem 1rem !important;
+			display: flex;
+			align-items: center;
+		}
+	}
+
+	// Pagination improvements
+	.pagination {
+		.pagination-link,
+		.pagination-previous,
+		.pagination-next {
+			min-height: 44px;
+			min-width: 44px;
+			font-size: 1rem;
+		}
+	}
+
+	// Container padding for mobile
+	.container {
+		padding-left: 1rem !important;
+		padding-right: 1rem !important;
+	}
+
+	// Content improvements
+	.content {
+		word-wrap: break-word;
+		overflow-wrap: break-word;
+
+		h1, h2, h3, h4, h5, h6 {
+			word-break: break-word;
+		}
+
+		a {
+			word-wrap: break-word;
+		}
+	}
+
+	// Prevent horizontal scrolling
+	body {
+		overflow-x: hidden;
+	}
+
+	// Improve link tap targets
+	a {
+		min-height: 44px;
+		display: inline-flex;
+		align-items: center;
+
+		&.button {
+			min-height: 44px;
+		}
+	}
+
+	// Flexbox improvements for mobile
+	.columns {
+		flex-wrap: wrap;
+
+		.column {
+			&.is-half,
+			&.is-one-third,
+			&.is-two-thirds,
+			&.is-one-quarter,
+			&.is-three-quarters {
+				@media (max-width: $tablet) {
+					width: 100% !important;
+					margin-left: 0 !important;
+					margin-right: 0 !important;
+				}
+			}
+		}
+	}
+
+	// Safe area consideration
+	html {
+		scroll-padding-top: max(44px, env(safe-area-inset-top));
+	}
+
+	// Touch-friendly spacing
+	.box {
+		padding: 1rem !important;
+	}
+}

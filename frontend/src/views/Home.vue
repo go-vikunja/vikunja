@@ -162,7 +162,7 @@ watch(() => showProjectModal.value, (isOpen) => {
 		<header class="vk-topbar">
 			<div>
 				<h1 class="vk-topbar-title">
-					{{ salutation }}, {{ username }}
+					{{ salutation }}
 				</h1>
 				<p class="vk-topbar-sub">
 					{{ todayLabel }} ·
@@ -490,7 +490,7 @@ watch(() => showProjectModal.value, (isOpen) => {
 }
 
 .vk-topbar-title {
-	font-family: 'Playfair Display', serif;
+	font-family: 'DM Sans', sans-serif;
 	font-size: 26px;
 	font-weight: 400;
 	color: var(--text-primary);
@@ -980,5 +980,284 @@ watch(() => showProjectModal.value, (isOpen) => {
 	font-size: 15px;
 	color: var(--text-secondary);
 	flex: 1;
+}
+
+/* ─────────────────────────────────────────── */
+/* MOBILE RESPONSIVE IMPROVEMENTS             */
+/* ─────────────────────────────────────────── */
+
+@media screen and (max-width: $tablet) {
+	.vk-home {
+		font-size: 15px;
+	}
+
+	/* Topbar adjustments */
+	.vk-topbar {
+		padding: 16px 1rem;
+		padding-top: calc(3.5rem + 16px);
+		flex-wrap: wrap;
+		gap: 1rem;
+	}
+
+	.vk-topbar-title {
+		font-size: clamp(1.5rem, 5vw, 2rem);
+	}
+
+	.vk-topbar-sub {
+		font-size: 13px;
+	}
+
+	.vk-topbar-actions {
+		width: 100%;
+		justify-content: flex-end;
+	}
+
+	/* Content adjustments */
+	.vk-content {
+		padding: 1rem;
+		padding-top: 1.5rem;
+	}
+
+	/* Import banner */
+	.vk-import-banner {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 0.75rem;
+		padding: 1rem;
+	}
+
+	.vk-import-text {
+		font-size: 13px;
+	}
+
+	.vk-btn-ghost {
+		align-self: flex-start;
+	}
+
+	/* Quick add */
+	.vk-quick-add {
+		flex-direction: column;
+		gap: 0.75rem;
+		margin-bottom: 1.5rem;
+	}
+
+	.vk-input {
+		padding: 12px 14px;
+		font-size: 16px !important;
+		min-height: 44px;
+		width: 100%;
+	}
+
+	.vk-btn-primary {
+		width: 100%;
+		height: 44px;
+		min-height: 44px;
+	}
+
+	/* Stats grid */
+	.vk-stats {
+		grid-template-columns: 1fr;
+		gap: 10px;
+		margin-bottom: 1.5rem;
+	}
+
+	.vk-stat {
+		padding: 14px 16px;
+	}
+
+	.vk-stat-num {
+		font-size: 24px;
+	}
+
+	/* Two-column layout to single column */
+	.vk-two-col {
+		grid-template-columns: 1fr;
+		gap: 1rem;
+	}
+
+	.vk-right-col {
+		gap: 1rem;
+	}
+
+	/* Panel adjustments */
+	.vk-panel {
+		border-radius: 8px;
+	}
+
+	.vk-panel-head {
+		padding: 12px 14px;
+		gap: 0.5rem;
+	}
+
+	.vk-panel-title {
+		font-size: 14px;
+		font-weight: 600;
+	}
+
+	.vk-panel-action {
+		font-size: 12px;
+		white-space: nowrap;
+	}
+
+	/* Empty state */
+	.vk-empty {
+		padding: 28px 1rem;
+	}
+
+	.vk-empty-icon {
+		width: 50px;
+		height: 50px;
+		font-size: 24px;
+	}
+
+	.vk-empty-title {
+		font-size: 14px;
+	}
+
+	.vk-empty-sub {
+		font-size: 12px;
+	}
+
+	/* Task items */
+	.vk-task-item {
+		padding: 12px 12px;
+		gap: 10px;
+		min-height: 48px;
+		align-items: center;
+	}
+
+	.vk-task-text {
+		font-size: 14px;
+		word-wrap: break-word;
+		overflow-wrap: break-word;
+	}
+
+	.vk-chip {
+		font-size: 11px;
+		padding: 2px 6px;
+		flex-shrink: 0;
+	}
+
+	/* Project item */
+	.vk-project-item {
+		padding: 10px 12px;
+		min-height: 44px;
+	}
+
+	.vk-project-name {
+		font-size: 14px;
+	}
+
+	/* Modal */
+	.vk-modal-overlay {
+		padding: 1rem;
+	}
+
+	.vk-modal {
+		max-width: 100%;
+		width: 100%;
+		max-height: 85vh;
+		border-radius: 12px 12px 0 0;
+		margin-top: auto;
+	}
+
+	.vk-modal-header {
+		padding: 16px;
+		gap: 0.75rem;
+	}
+
+	.vk-modal-header h3 {
+		font-size: 16px;
+		flex: 1;
+	}
+
+	.vk-modal-close {
+		width: 38px;
+		height: 38px;
+		min-width: 44px;
+		min-height: 44px;
+	}
+
+	.vk-modal-content {
+		padding: 1rem;
+	}
+
+	.vk-modal-subtitle {
+		font-size: 13px;
+		margin-bottom: 1rem;
+	}
+
+	.vk-project-list {
+		gap: 0.5rem;
+	}
+
+	.vk-project-option {
+		padding: 12px 12px;
+		font-size: 14px;
+		min-height: 44px;
+		border-radius: 6px;
+	}
+
+	/* Deletion message */
+	.vk-deletion-msg {
+		margin: 1rem;
+
+		a {
+			display: block;
+			margin-top: 0.5rem;
+		}
+	}
+
+	/* Icons in buttons */
+	.vk-icon-btn {
+		width: 40px;
+		height: 40px;
+		min-width: 44px;
+		min-height: 44px;
+	}
+
+	/* Improve text wrapping */
+	.vk-modal-subtitle strong,
+	.vk-empty-title {
+		word-wrap: break-word;
+		overflow-wrap: break-word;
+	}
+
+	/* Prevent horizontal scroll */
+	body {
+		overflow-x: hidden;
+	}
+}
+
+@media screen and (max-width: 480px) {
+	.vk-topbar {
+		padding: 12px 0.75rem;
+		padding-top: calc(3.5rem + 12px);
+	}
+
+	.vk-topbar-title {
+		font-size: 1.25rem;
+	}
+
+	.vk-content {
+		padding: 0.75rem;
+	}
+
+	.vk-stats {
+		margin-bottom: 1rem;
+	}
+
+	.vk-import-banner {
+		padding: 0.75rem;
+		margin-bottom: 1rem;
+	}
+
+	.vk-panel {
+		border-radius: 6px;
+	}
+
+	.vk-empty {
+		padding: 20px 0.75rem;
+	}
 }
 </style>

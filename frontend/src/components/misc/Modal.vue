@@ -160,6 +160,7 @@ onBeforeUnmount(() => {
 <style lang="scss" scoped>
 $modal-margin: 4rem;
 $modal-width: 1024px;
+$modal-mobile-margin: 1rem;
 
 .modal-dialog {
 	// Reset UA dialog styles
@@ -209,9 +210,14 @@ $modal-width: 1024px;
 	block-size: 100%;
 	max-block-size: 100dvh;
 	overflow: auto;
+	-webkit-overflow-scrolling: touch;
 	padding-block-start: env(safe-area-inset-top);
-	padding-block-end: env(safe-area-inset-bottom);
-
+	padding-block-end: max(env(safe-area-inset-bottom), 1rem);
+	
+	@media screen and (max-width: $tablet) {
+		padding-inline-start: $modal-mobile-margin;
+		padding-inline-end: $modal-mobile-margin;
+	}
 }
 
 .modal-content,
@@ -221,21 +227,35 @@ $modal-width: 1024px;
 	border-radius: 12px;
 	color: var(--vk-text-secondary);
 	box-shadow: none;
+	word-wrap: break-word;
+	overflow-wrap: break-word;
 }
 
 .modal-header,
 .modal-card-title {
 	color: var(--vk-text-primary);
+	word-break: break-word;
+	hyphens: auto;
 }
 
 .modal-content .content,
 .modal-card-body {
 	color: var(--vk-text-secondary);
+	word-wrap: break-word;
+	overflow-wrap: break-word;
 }
 
 .modal-content .actions,
 .modal-card-foot {
 	border-block-start: .5px solid var(--vk-border-mid);
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	
+	@media screen and (max-width: $tablet) {
+		flex-direction: column-reverse;
+		gap: 0.75rem;
+	}
 }
 
 .default .modal-content,
@@ -246,6 +266,7 @@ $modal-width: 1024px;
 	inset-block-start: 50%;
 	inset-inline-start: 50%;
 	transform: translate(-50%, -50%);
+	max-inline-size: 90vw;
 
 	[dir="rtl"] & {
 		transform: translate(50%, -50%);
@@ -255,15 +276,23 @@ $modal-width: 1024px;
 		margin: 0;
 		position: static;
 		transform: none;
+		max-inline-size: 100%;
 	}
 
 	.modal-header {
-		font-size: 2rem;
+		font-size: clamp(1.25rem, 5vw, 2rem);
 		font-weight: 700;
+		word-break: break-word;
 	}
 
 	.button {
 		margin: 0 0.5rem;
+		min-height: 44px;
+		min-width: 44px;
+		
+		@media screen and (max-width: $tablet) {
+			margin: 0.25rem 0;
+		}
 	}
 }
 
@@ -272,7 +301,6 @@ $modal-width: 1024px;
 .scrolling .modal-content {
 	inline-size: 100%;
 	margin: $modal-margin auto;
-
 	max-block-size: none; // reset bulma
 	overflow: visible; // reset bulma
 
@@ -288,12 +316,24 @@ $modal-width: 1024px;
 
 	@media screen and (max-width: $desktop), print {
 		margin: 0;
+		max-inline-size: calc(100% - 2rem);
+	}
+
+	@media screen and (max-width: $tablet) {
+		margin: 0.5rem;
+		max-inline-size: calc(100% - 1rem);
+		border-radius: 8px;
 	}
 }
 
 .is-wide {
 	max-inline-size: $desktop;
 	inline-size: calc(100% - 2rem);
+	
+	@media screen and (max-width: $tablet) {
+		max-inline-size: calc(100% - 1rem);
+		inline-size: 100%;
+	}
 }
 
 .hint-modal {
@@ -312,11 +352,19 @@ $modal-width: 1024px;
 	inset-block-start: .5rem;
 	inset-inline-end: $close-button-padding;
 	color: var(--vk-text-secondary);
-	font-size: 2rem;
+	font-size: clamp(1.5rem, 5vw, 2rem);
 	transition: color .12s;
+	padding: 8px;
+	min-height: 44px;
+	min-width: 44px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 8px;
 
 	&:hover {
 		color: var(--vk-accent-light);
+		background-color: rgba(0, 0, 0, 0.1);
 	}
 
 	@media screen and (min-width: $desktop) and (width <= calc(#{$desktop	} + #{$close-button-min-space})) {
@@ -329,6 +377,11 @@ $modal-width: 1024px;
 	@media screen and (min-width: $tablet) and (max-width: #{$desktop + $close-button-min-space}) {
 		inset-block-start: .75rem;
 	}
+
+	@media screen and (max-width: $tablet) {
+		inset-block-start: max(0.5rem, env(safe-area-inset-top));
+		inset-inline-end: max($close-button-padding, calc(env(safe-area-inset-right) + 0.5rem));
+	}
 }
 
 @media print, screen and (max-width: $tablet) {
@@ -340,12 +393,17 @@ $modal-width: 1024px;
 		block-size: auto;
 		min-block-size: 100dvh;
 		padding-block-start: env(safe-area-inset-top);
-		padding-block-end: env(safe-area-inset-bottom);
+		padding-block-end: max(env(safe-area-inset-bottom), 1rem);
+		padding-inline-start: $modal-mobile-margin;
+		padding-inline-end: $modal-mobile-margin;
 	}
 
 	.modal-content {
 		position: static;
 		max-block-size: none;
+		border-radius: 8px;
+		margin-block: 0.5rem;
+		padding: 1rem;
 	}
 
 	.close {

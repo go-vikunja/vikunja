@@ -239,19 +239,103 @@ async function submit() {
 <style lang="scss" scoped>
 .button {
 	margin: 0 0.4rem 0 0;
+	min-height: 44px;
+	font-size: 1rem;
+
+	@media screen and (max-width: $tablet) {
+		margin: 0.5rem 0;
+		width: 100%;
+	}
 }
 
 .reset-password-link {
 	display: inline-block;
+	font-size: clamp(0.875rem, 2vw, 1rem);
+
+	@media screen and (max-width: $tablet) {
+		display: block;
+		text-align: right;
+	}
 }
 
 .label-with-link {
 	display: flex;
 	justify-content: space-between;
 	margin-block-end: .5rem;
+	flex-wrap: wrap;
+	gap: 0.5rem;
 
 	.label {
 		margin-block-end: 0;
+		font-size: clamp(0.875rem, 2vw, 1rem);
+		min-width: 100px;
+
+		@media screen and (max-width: $tablet) {
+			min-width: 100%;
+		}
+	}
+
+	@media screen and (max-width: $tablet) {
+		flex-direction: column;
+		justify-content: flex-start;
+	}
+}
+
+form {
+	@media screen and (max-width: $tablet) {
+		padding: 1rem;
+
+		:deep(.field) {
+			margin-bottom: 1.5rem;
+		}
+
+		:deep(input[type="text"]),
+		:deep(input[type="email"]),
+		:deep(input[type="password"]),
+		:deep(textarea),
+		:deep(select) {
+			font-size: 16px !important;
+			min-height: 44px;
+			padding: 0.75rem;
+		}
+
+		:deep(label) {
+			font-size: 1rem;
+		}
+
+		:deep(.checkbox),
+		:deep(.radio) {
+			margin-bottom: 0.75rem;
+			min-height: 44px;
+			display: flex;
+			align-items: center;
+		}
+	}
+}
+
+p {
+	font-size: clamp(0.875rem, 2vw, 1rem);
+	margin-top: 1.5rem;
+
+	@media screen and (max-width: $tablet) {
+		margin-top: 1rem;
+		text-align: center;
+	}
+
+	a {
+		white-space: nowrap;
+	}
+}
+
+div:has(> .button[class*="is-fullwidth"]) {
+	@media screen and (max-width: $tablet) {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+
+		.button {
+			width: 100%;
+		}
 	}
 }
 </style>

@@ -318,22 +318,51 @@ watchEffect(() => setTitle(pageTitle.value))
 .show-tasks-options {
 	display: flex;
 	flex-direction: column;
+	gap: 0.5rem;
+	margin-bottom: 1.5rem;
+
+	@media screen and (max-width: $tablet) {
+		:deep(.button) {
+			width: 100%;
+			min-height: 44px;
+		}
+
+		:deep(.fancy-checkbox) {
+			min-height: 44px;
+			display: flex;
+			align-items: center;
+		}
+	}
 }
 
 .llama-cool {
 	margin: 3rem auto 0;
 	display: block;
+	max-width: 100%;
+	height: auto;
 }
 
 .label-filter-info {
 	margin-block-end: 1rem;
+	word-wrap: break-word;
+	overflow-wrap: break-word;
 	
 	.clear-filter-button {
 		margin-inline-start: auto;
 		padding: 0.25rem 0.5rem;
+		min-height: 44px;
+		min-width: 44px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 		
 		&:hover {
 			color: var(--danger);
+		}
+
+		@media screen and (max-width: $tablet) {
+			margin-inline-start: 0;
+			margin-block-start: 0.5rem;
 		}
 	}
 
@@ -343,6 +372,33 @@ watchEffect(() => setTitle(pageTitle.value))
 		align-items: center;
 		justify-content: center;
 		gap: 0.5rem;
+		flex-wrap: wrap;
+
+		@media screen and (max-width: $tablet) {
+			flex-direction: column;
+			align-items: flex-start;
+		}
+	}
+}
+
+.is-max-width-desktop {
+	@media screen and (max-width: $tablet) {
+		padding: 0;
+	}
+}
+
+h3.title {
+	font-size: clamp(1.25rem, 5vw, 1.875rem);
+	word-break: break-word;
+
+	@media screen and (max-width: $tablet) {
+		padding: 1rem 1rem 0 1rem;
+	}
+}
+
+.spinner {
+	@media screen and (max-width: $tablet) {
+		margin: 2rem auto;
 	}
 }
 </style>

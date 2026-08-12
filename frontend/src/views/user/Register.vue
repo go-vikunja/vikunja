@@ -249,3 +249,70 @@ async function submit() {
 	}
 }
 </script>
+
+<style lang="scss" scoped>
+form {
+	@media screen and (max-width: $tablet) {
+		padding: 1rem;
+
+		:deep(.field) {
+			margin-bottom: 1.5rem;
+		}
+
+		:deep(input[type="text"]),
+		:deep(input[type="email"]),
+		:deep(input[type="password"]),
+		:deep(textarea),
+		:deep(select) {
+			font-size: 16px !important;
+			min-height: 44px;
+			padding: 0.75rem;
+		}
+
+		:deep(label) {
+			font-size: 1rem;
+		}
+
+		:deep(.checkbox),
+		:deep(.radio) {
+			margin-bottom: 0.75rem;
+			min-height: 44px;
+			display: flex;
+			align-items: center;
+		}
+	}
+}
+
+.button {
+	min-height: 44px;
+	font-size: 1rem;
+
+	@media screen and (max-width: $tablet) {
+		width: 100%;
+		margin-bottom: 0.75rem;
+	}
+}
+
+p {
+	font-size: clamp(0.875rem, 2vw, 1rem);
+	margin-top: 1rem;
+
+	@media screen and (max-width: $tablet) {
+		text-align: center;
+	}
+
+	a {
+		white-space: nowrap;
+	}
+}
+
+:deep(.message) {
+	font-size: clamp(0.875rem, 2vw, 1rem);
+	
+	@media screen and (max-width: $tablet) {
+		margin-left: 1rem;
+		margin-right: 1rem;
+	}
+}
+</style>
+</script>

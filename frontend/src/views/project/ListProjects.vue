@@ -69,9 +69,12 @@ const projects = computed(() => {
 	align-items: center;
 	gap: 1rem;
 	margin-block-end: 1rem;
+	flex-wrap: wrap;
 
 	@media screen and (max-width: $tablet) {
 		flex-direction: column;
+		align-items: flex-start;
+		gap: 0.75rem;
 	}
 }
 
@@ -84,6 +87,11 @@ const projects = computed(() => {
 		inline-size: 100%;
 		flex-direction: column;
 		align-items: stretch;
+
+		:deep(.button) {
+			width: 100%;
+			min-height: 44px;
+		}
 	}
 }
 
@@ -94,6 +102,8 @@ const projects = computed(() => {
 .project-title {
 	display: flex;
 	align-items: center;
+	flex-wrap: wrap;
+	gap: 0.5rem;
 }
 
 .is-archived {
@@ -105,5 +115,12 @@ const projects = computed(() => {
 	font-family: $vikunja-font;
 	background: var(--white-translucent);
 	margin-inline-start: .5rem;
+	white-space: nowrap;
+}
+
+.content {
+	@media screen and (max-width: $tablet) {
+		padding: 1rem;
+	}
 }
 </style>
