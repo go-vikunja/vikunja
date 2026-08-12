@@ -30,7 +30,10 @@ RUN export PATH=$PATH:$GOPATH/bin && \
 	mage build:clean && \
     (cd build && mage release:xgo vikunja "${TARGETOS}/${TARGETARCH}/${TARGETVARIANT}")
 
-RUN mkdir -p /tmp && chmod 1777 /tmp
+RUN mkdir -p /tmp /app/vikunja/files && \
+	chmod 1777 /tmp && \
+	chown 568:568 /app/vikunja/files && \
+	chmod 0775 /app/vikunja/files
 
 #  ┬─┐┬ ┐┌┐┐┌┐┐┬─┐┬─┐
 #  │┬┘│ │││││││├─ │┬┘
@@ -50,9 +53,10 @@ WORKDIR /app/vikunja
 ENTRYPOINT [ "/app/vikunja/vikunja" ]
 EXPOSE 3456
 
-COPY --from=apibuilder --chown=1000:1000 --chmod=1777 /tmp /tmp
+COPY --from=apibuilder --chown=568:568 --chmod=1777 /tmp /tmp
+COPY --from=apibuilder --chown=568:568 --chmod=0775 /app/vikunja/files /app/vikunja/files
 
-USER 1000
+USER 568:568
 
 ENV VIKUNJA_SERVICE_ROOTPATH=/app/vikunja/
 ENV VIKUNJA_DATABASE_PATH=/db/vikunja.db
