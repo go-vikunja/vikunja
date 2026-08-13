@@ -7,6 +7,7 @@ import type { IAttachment } from '@/modelTypes/IAttachment'
 
 export const SUPPORTED_IMAGE_SUFFIX = ['.jpeg', '.jpg', '.png', '.bmp', '.gif']
 export const SUPPORTED_PDF_SUFFIX = ['.pdf']
+export const SUPPORTED_VIDEO_SUFFIX = ['.mp4', '.webm', '.ogg', '.ogv', '.mov', '.m4v']
 
 export function canPreviewImage(attachment: IAttachment): boolean {
 	const mime = attachment.file.mime.toLowerCase()
@@ -22,8 +23,16 @@ export function canPreviewPdf(attachment: IAttachment): boolean {
 		&& attachment.file.mime.toLowerCase() === 'application/pdf'
 }
 
+export function canPreviewVideo(attachment: IAttachment): boolean {
+	const mime = attachment.file.mime.toLowerCase()
+	// Gate on the sniffed mime, not just the extension, and let the browser
+	// decide whether it can actually play the codec.
+	return SUPPORTED_VIDEO_SUFFIX.some((suffix) => attachment.file.name.toLowerCase().endsWith(suffix))
+		&& mime.startsWith('video/')
+}
+
 export function canPreview(attachment: IAttachment): boolean {
-	return canPreviewImage(attachment) || canPreviewPdf(attachment)
+	return canPreviewImage(attachment) || canPreviewPdf(attachment) || canPreviewVideo(attachment)
 }
 
 export default class AttachmentModel extends AbstractModel<IAttachment> implements IAttachment {

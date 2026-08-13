@@ -196,6 +196,20 @@
 				class="pdf-preview-iframe"
 			/>
 		</Modal>
+
+		<!-- Attachment video modal -->
+		<Modal
+			:enabled="attachmentVideoBlobUrl !== null"
+			:wide="true"
+			@close="attachmentVideoBlobUrl = null"
+		>
+			<video
+				v-if="attachmentVideoBlobUrl"
+				:src="attachmentVideoBlobUrl"
+				class="video-preview"
+				controls
+			/>
+		</Modal>
 	</div>
 </template>
 
@@ -208,7 +222,7 @@ import ProgressBar from '@/components/misc/ProgressBar.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
 import AttachmentService from '@/services/attachment'
-import {canPreviewImage, canPreviewPdf} from '@/models/attachment'
+import {canPreviewImage, canPreviewPdf, canPreviewVideo} from '@/models/attachment'
 import type {IAttachment} from '@/modelTypes/IAttachment'
 import type {ITask} from '@/modelTypes/ITask'
 
@@ -422,12 +436,15 @@ async function deleteAttachment() {
 
 const attachmentImageBlobUrl = ref<string | null>(null)
 const attachmentPdfBlobUrl = ref<string | null>(null)
+const attachmentVideoBlobUrl = ref<string | null>(null)
 
 async function viewOrDownload(attachment: IAttachment) {
 	if (canPreviewImage(attachment)) {
 		attachmentImageBlobUrl.value = await attachmentService.getBlobUrl(attachment)
 	} else if (canPreviewPdf(attachment)) {
 		attachmentPdfBlobUrl.value = await attachmentService.getBlobUrl(attachment)
+	} else if (canPreviewVideo(attachment)) {
+		attachmentVideoBlobUrl.value = await attachmentService.getBlobUrl(attachment)
 	} else {
 		downloadAttachment(attachment)
 	}
@@ -661,6 +678,14 @@ defineExpose({
 	max-inline-size: calc(100% - 4rem);
 	block-size: calc(100vh - 40px);
 	border: none;
+	margin: 0 auto;
+	display: block;
+}
+
+.video-preview {
+	inline-size: 100%;
+	max-inline-size: calc(100% - 4rem);
+	max-block-size: calc(100vh - 40px);
 	margin: 0 auto;
 	display: block;
 }
