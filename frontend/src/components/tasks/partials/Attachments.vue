@@ -189,6 +189,20 @@
 				class="pdf-preview-iframe"
 			/>
 		</Modal>
+
+		<!-- Attachment video modal -->
+		<Modal
+			:enabled="attachmentVideoBlobUrl !== null"
+			:wide="true"
+			@close="closeVideoPreview"
+		>
+			<video
+				v-if="attachmentVideoBlobUrl"
+				:src="attachmentVideoBlobUrl"
+				class="video-preview"
+				controls
+			/>
+		</Modal>
 	</div>
 </template>
 
@@ -201,7 +215,7 @@ import ProgressBar from '@/components/misc/ProgressBar.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
 import AttachmentService from '@/services/attachment'
-import {canPreviewAudio, canPreviewImage, canPreviewPdf} from '@/models/attachment'
+import {canPreviewAudio, canPreviewImage, canPreviewPdf, canPreviewVideo} from '@/models/attachment'
 import {getDisplayName} from '@/models/user'
 import type {IAttachment} from '@/modelTypes/IAttachment'
 import type {ITask} from '@/modelTypes/ITask'
@@ -432,6 +446,7 @@ async function deleteAttachment() {
 const attachmentImageBlobUrl = ref<string | null>(null)
 const attachmentImageAlt = ref('')
 const attachmentPdfBlobUrl = ref<string | null>(null)
+const attachmentVideoBlobUrl = ref<string | null>(null)
 let previewRequestToken = 0
 
 function replaceBlobUrl(target: Ref<string | null>, blobUrl: string | null) {
@@ -450,9 +465,14 @@ function closePdfPreview() {
 	replaceBlobUrl(attachmentPdfBlobUrl, null)
 }
 
+function closeVideoPreview() {
+	replaceBlobUrl(attachmentVideoBlobUrl, null)
+}
+
 onBeforeUnmount(() => {
 	closeImageLightbox()
 	closePdfPreview()
+	closeVideoPreview()
 })
 
 const audioPlayers = new Map<IAttachment['id'], AudioPreviewInstance>()
@@ -472,7 +492,7 @@ async function viewOrDownload(attachment: IAttachment) {
 		return
 	}
 
-	if (!canPreviewImage(attachment) && !canPreviewPdf(attachment)) {
+	if (!canPreviewImage(attachment) && !canPreviewPdf(attachment) && !canPreviewVideo(attachment)) {
 		downloadAttachment(attachment)
 		return
 	}
@@ -490,6 +510,8 @@ async function viewOrDownload(attachment: IAttachment) {
 		if (canPreviewImage(attachment)) {
 			replaceBlobUrl(attachmentImageBlobUrl, blobUrl)
 			attachmentImageAlt.value = attachment.file.name
+		} else if (canPreviewVideo(attachment)) {
+			replaceBlobUrl(attachmentVideoBlobUrl, blobUrl)
 		} else {
 			replaceBlobUrl(attachmentPdfBlobUrl, blobUrl)
 		}
@@ -711,6 +733,14 @@ defineExpose({
 	max-inline-size: calc(100% - 4rem);
 	block-size: calc(100vh - 40px);
 	border: none;
+	margin: 0 auto;
+	display: block;
+}
+
+.video-preview {
+	inline-size: 100%;
+	max-inline-size: calc(100% - 4rem);
+	max-block-size: calc(100vh - 40px);
 	margin: 0 auto;
 	display: block;
 }
