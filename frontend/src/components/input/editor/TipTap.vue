@@ -105,7 +105,12 @@
 				:class="{'tiptap__editor-is-edit-enabled': isEditing}"
 				:editor="editor"
 				@dblclick="setEditIfApplicable()"
-				@click="focusIfEditing()"
+				@click="handleContentClick"
+			/>
+
+			<ImageLightbox
+				:blob-url="lightboxBlobUrl"
+				@close="lightboxBlobUrl = null"
 			/>
 		</div>
 
@@ -193,6 +198,7 @@ import {taskLinkCurrentProjectIdKey} from './taskLinkContext'
 import {createEditorExtensions} from './editorExtensions'
 import mentionSuggestionSetup from './mention/mentionSuggestion'
 import MentionUser from './mention/MentionUser.vue'
+import ImageLightbox from '@/components/misc/ImageLightbox.vue'
 
 import type {BottomAction, UploadCallback} from './types'
 import AttachmentService from '@/services/attachment'
@@ -666,6 +672,26 @@ function setFocusToEditor(event: KeyboardEvent) {
 function focusIfEditing() {
 	if (isEditing.value) {
 		editor.value?.commands.focus()
+	}
+}
+
+const lightboxBlobUrl = ref<string | null>(null)
+
+function handleContentClick(event: MouseEvent) {
+	focusIfEditing()
+	if (isEditing.value) {
+		return
+	}
+	// Preview mode: open content images in the lightbox. Their blob URL is
+	// resolved lazily by CustomImage (src stays '#' until it loads). Mention
+	// and user avatars are <img> too, so skip those.
+	const target = event.target
+	if (
+		target instanceof HTMLImageElement
+		&& !target.src.endsWith('#')
+		&& !target.closest('.mention-user, .avatar-wrapper')
+	) {
+		lightboxBlobUrl.value = target.src
 	}
 }
 

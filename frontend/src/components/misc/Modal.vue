@@ -72,7 +72,7 @@ const props = withDefaults(defineProps<{
 	enabled?: boolean,
 	overflow?: boolean,
 	wide?: boolean,
-	variant?: 'default' | 'hint-modal' | 'scrolling' | 'top',
+	variant?: 'default' | 'hint-modal' | 'scrolling' | 'top' | 'fullscreen',
 }>(), {
 	enabled: true,
 	overflow: false,
@@ -374,6 +374,19 @@ $modal-width: 1024px;
 .is-wide {
 	max-inline-size: $desktop;
 	inline-size: calc(100% - 2rem);
+}
+
+// no centering transform: it would trap fixed descendants in a small containing block
+.fullscreen .modal-content {
+	position: static;
+	inline-size: 100%;
+	block-size: 100%;
+	max-inline-size: none;
+	max-block-size: none;
+	transform: none;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
 
 .hint-modal {

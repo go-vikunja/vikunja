@@ -164,16 +164,10 @@
 			</template>
 		</Modal>
 
-		<!-- Attachment image modal -->
-		<Modal
-			:enabled="attachmentImageBlobUrl !== null"
+		<ImageLightbox
+			:blob-url="attachmentImageBlobUrl"
 			@close="attachmentImageBlobUrl = null"
-		>
-			<img
-				:src="attachmentImageBlobUrl"
-				alt=""
-			>
-		</Modal>
+		/>
 
 		<!-- Attachment PDF modal -->
 		<Modal
@@ -212,6 +206,7 @@ import {error, success} from '@/message'
 import {useTaskStore} from '@/stores/tasks'
 import {useI18n} from 'vue-i18n'
 import FilePreview from '@/components/tasks/partials/FilePreview.vue'
+import ImageLightbox from '@/components/misc/ImageLightbox.vue'
 
 const props = withDefaults(defineProps<{
 	task: ITask,
