@@ -43,7 +43,8 @@ export const useProjectStore = defineStore('project', () => {
 	const favoriteProjects = computed(() => projectsArray.value
 		.filter(p => !p.isArchived && p.isFavorite))
 	const savedFilterProjects = computed(() => projectsArray.value
-		.filter(p => !p.isArchived && p.id < -1))
+		.filter(p => !p.isArchived && p.id < -1)
+		.sort((a, b) => a.title.localeCompare(b.title)))
 	const hasProjects = computed(() => projectsArray.value.length > 0)
 
 	const getChildProjects = computed(() => {
