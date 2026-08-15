@@ -136,7 +136,7 @@ func userExportDownload(ctx context.Context, in *userExportPasswordBody) (*huma.
 		return nil, err
 	}
 
-	exportFile, err := models.GetUserDataExportFile(u)
+	exportFile, err := models.GetUserDataExportFile(s, u)
 	if err != nil {
 		_ = s.Rollback()
 		return nil, translateDomainError(err)
@@ -168,7 +168,7 @@ func userExportStatus(ctx context.Context, _ *struct{}) (*userExportStatusBody, 
 		return nil, err
 	}
 
-	status, err := models.GetUserDataExportStatus(u)
+	status, err := models.GetUserDataExportStatus(s, u)
 	if err != nil {
 		_ = s.Rollback()
 		return nil, translateDomainError(err)
