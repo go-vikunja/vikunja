@@ -405,9 +405,7 @@ func exportProjectBackgrounds(s *xorm.Session, u *user.User, wr *zip.Writer) (er
 	return utils.WriteFilesToZip(backgroundFiles, wr)
 }
 
-// GetUserDataExportFile loads the user's ready data export with its bytes open for
-// reading. It returns ErrUserDataExportDoesNotExist when the user never requested an
-// export or the underlying file is gone. The caller must close the returned reader.
+// GetUserDataExportFile loads the export's metadata; OpenUserDataExportFile reads the contents.
 func GetUserDataExportFile(s *xorm.Session, u *user.User) (*files.File, error) {
 	if u.ExportFileID == 0 {
 		return nil, ErrUserDataExportDoesNotExist{}
@@ -420,14 +418,20 @@ func GetUserDataExportFile(s *xorm.Session, u *user.User) (*files.File, error) {
 		}
 		return nil, err
 	}
-	if err := exportFile.LoadFileByID(); err != nil {
-		if os.IsNotExist(err) {
-			return nil, ErrUserDataExportDoesNotExist{}
-		}
-		return nil, err
-	}
 
 	return exportFile, nil
+}
+
+// OpenUserDataExportFile hits object storage, so callers must commit their db
+// session first; the caller must close the reader.
+func OpenUserDataExportFile(exportFile *files.File) error {
+	if err := exportFile.LoadFileByID(); err != nil {
+		if os.IsNotExist(err) {
+			return ErrUserDataExportDoesNotExist{}
+		}
+		return err
+	}
+	return nil
 }
 
 // GetUserDataExportStatus returns metadata about the user's current data export, or

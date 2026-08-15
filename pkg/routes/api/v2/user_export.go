@@ -142,12 +142,12 @@ func userExportDownload(ctx context.Context, in *userExportPasswordBody) (*huma.
 		return nil, translateDomainError(err)
 	}
 
-	// The file reader comes from object storage, not the DB session, so it stays
-	// valid after the commit; the StreamResponse callback runs after this returns.
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		// The stream callback (which closes the reader) won't run on this error path.
-		_ = exportFile.File.Close()
+		return nil, translateDomainError(err)
+	}
+
+	if err := models.OpenUserDataExportFile(exportFile); err != nil {
 		return nil, translateDomainError(err)
 	}
 
