@@ -164,9 +164,8 @@ func taskAttachmentsUpload(ctx context.Context, in *taskAttachmentUploadInput) (
 	return &taskAttachmentUploadBody{Body: webfiles.BuildUploadResult(success, failures)}, nil
 }
 
-// taskAttachmentsDownload owns auth, the session and the permission check; there is
-// no handler.Do* for a file body. It loads the attachment, then streams the bytes
-// from the StreamResponse callback (no buffering — attachments can be large).
+// taskAttachmentsDownload exists because no handler.Do* fits a file body; bytes
+// stream from the StreamResponse callback without buffering — attachments can be large.
 func taskAttachmentsDownload(ctx context.Context, in *struct {
 	TaskID       int64  `path:"task" doc:"The id of the task the attachment belongs to."`
 	AttachmentID int64  `path:"attachment" doc:"The id of the attachment to download."`
@@ -177,23 +176,13 @@ func taskAttachmentsDownload(ctx context.Context, in *struct {
 		return nil, err
 	}
 
-	s := db.NewSession()
-	defer s.Close()
-
 	previewSize := models.GetPreviewSizeFromString(in.PreviewSize)
-	ta, preview, err := models.LoadTaskAttachmentForDownload(s, a, in.TaskID, in.AttachmentID, previewSize)
+	ta, preview, err := models.GetTaskAttachmentForDownload(a, in.TaskID, in.AttachmentID, previewSize)
 	if err != nil {
-		_ = s.Rollback()
 		return nil, translateDomainError(err)
 	}
 
-	// The file reader comes from object storage, not the DB session, so it stays
-	// valid after the commit; the StreamResponse callback runs after this returns.
-	if err := s.Commit(); err != nil {
-		_ = s.Rollback()
-		return nil, translateDomainError(err)
-	}
-
+	// Reader is independent of the session; stays valid for the StreamResponse callback.
 	return &huma.StreamResponse{Body: func(hctx huma.Context) {
 		c := humaecho.Unwrap(hctx)
 		webfiles.WriteAttachmentDownload((*c).Response(), (*c).Request(), ta, preview)
