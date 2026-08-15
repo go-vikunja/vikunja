@@ -94,6 +94,8 @@ func InitMetrics() {
 
 	setupActiveUsersMetric()
 	setupActiveLinkSharesMetric()
+
+	db.RegisterConnectionPoolMetrics(registry)
 }
 
 // GetCount returns the current count for the given metric key. The value is counted
