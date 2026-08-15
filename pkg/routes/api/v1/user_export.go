@@ -124,7 +124,7 @@ func DownloadUserDataExport(c *echo.Context) error {
 		return err
 	}
 
-	exportFile, err := models.GetUserDataExportFile(u)
+	exportFile, err := models.GetUserDataExportFile(s, u)
 	if err != nil {
 		if models.IsErrUserDataExportDoesNotExist(err) {
 			return echo.NewHTTPError(http.StatusNotFound, "No user data export found.")
@@ -166,7 +166,7 @@ func GetUserExportStatus(c *echo.Context) error {
 		return err
 	}
 
-	status, err := models.GetUserDataExportStatus(u)
+	status, err := models.GetUserDataExportStatus(s, u)
 	if err != nil {
 		return err
 	}

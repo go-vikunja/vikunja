@@ -298,7 +298,7 @@ func duplicateProjectBackground(s *xorm.Session, pd *ProjectDuplicate, doer web.
 	log.Debugf("Duplicating background %d from project %d into %d", pd.Project.BackgroundFileID, pd.ProjectID, pd.Project.ID)
 
 	f := &files.File{ID: pd.Project.BackgroundFileID}
-	err = f.LoadFileMetaByID()
+	err = f.LoadFileMetaByID(s)
 	if err != nil && files.IsErrFileDoesNotExist(err) {
 		pd.Project.BackgroundFileID = 0
 		return nil
@@ -392,7 +392,7 @@ func duplicateTasks(s *xorm.Session, doer web.Auth, ld *ProjectDuplicate) (newTa
 			continue
 		}
 		attachment.File = &files.File{ID: attachment.FileID}
-		if err := attachment.File.LoadFileMetaByID(); err != nil {
+		if err := attachment.File.LoadFileMetaByID(s); err != nil {
 			if files.IsErrFileDoesNotExist(err) {
 				log.Debugf("Not duplicating attachment %d (file %d) because it does not exist from project %d into %d", oldAttachmentID, attachment.FileID, ld.ProjectID, ld.Project.ID)
 				continue

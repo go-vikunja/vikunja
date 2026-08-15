@@ -408,13 +408,13 @@ func exportProjectBackgrounds(s *xorm.Session, u *user.User, wr *zip.Writer) (er
 // GetUserDataExportFile loads the user's ready data export with its bytes open for
 // reading. It returns ErrUserDataExportDoesNotExist when the user never requested an
 // export or the underlying file is gone. The caller must close the returned reader.
-func GetUserDataExportFile(u *user.User) (*files.File, error) {
+func GetUserDataExportFile(s *xorm.Session, u *user.User) (*files.File, error) {
 	if u.ExportFileID == 0 {
 		return nil, ErrUserDataExportDoesNotExist{}
 	}
 
 	exportFile := &files.File{ID: u.ExportFileID}
-	if err := exportFile.LoadFileMetaByID(); err != nil {
+	if err := exportFile.LoadFileMetaByID(s); err != nil {
 		if files.IsErrFileDoesNotExist(err) {
 			return nil, ErrUserDataExportDoesNotExist{}
 		}
@@ -432,13 +432,13 @@ func GetUserDataExportFile(u *user.User) (*files.File, error) {
 
 // GetUserDataExportStatus returns metadata about the user's current data export, or
 // nil when none exists. The expiry mirrors the cleanup cron's 7-day retention.
-func GetUserDataExportStatus(u *user.User) (*UserExportStatus, error) {
+func GetUserDataExportStatus(s *xorm.Session, u *user.User) (*UserExportStatus, error) {
 	if u.ExportFileID == 0 {
 		return nil, nil
 	}
 
 	exportFile := &files.File{ID: u.ExportFileID}
-	if err := exportFile.LoadFileMetaByID(); err != nil {
+	if err := exportFile.LoadFileMetaByID(s); err != nil {
 		// A missing meta row means there is no export — mirror the download path
 		// (404 there) instead of surfacing a 500.
 		if files.IsErrFileDoesNotExist(err) {

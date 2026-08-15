@@ -122,7 +122,7 @@ func (td *TaskDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 		attachment.ID = 0
 		attachment.TaskID = newTask.ID
 		attachment.File = &files.File{ID: attachment.FileID}
-		if err := attachment.File.LoadFileMetaByID(); err != nil {
+		if err := attachment.File.LoadFileMetaByID(s); err != nil {
 			if files.IsErrFileDoesNotExist(err) {
 				continue
 			}
