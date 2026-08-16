@@ -294,6 +294,7 @@ func init() {
 		"MinPositionSpacing":                               reflect.ValueOf(constant.MakeFromLiteral("0.009999999999999999999796712092658967918623602599836885929107666016", token.FLOAT, 0)),
 		"NewUserGeneralSettings":                           reflect.ValueOf(models.NewUserGeneralSettings),
 		"NotificationProjectFilter":                        reflect.ValueOf(models.NotificationProjectFilter),
+		"OpenUserDataExportFile":                           reflect.ValueOf(models.OpenUserDataExportFile),
 		"PermissionAdmin":                                  reflect.ValueOf(models.PermissionAdmin),
 		"PermissionRead":                                   reflect.ValueOf(models.PermissionRead),
 		"PermissionUnknown":                                reflect.ValueOf(constant.MakeFromLiteral("-1", token.INT, 0)),

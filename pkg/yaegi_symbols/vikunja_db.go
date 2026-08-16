@@ -30,6 +30,7 @@ func init() {
 		"MultiFieldSearchWithTableAlias": reflect.ValueOf(db.MultiFieldSearchWithTableAlias),
 		"NewSession":                     reflect.ValueOf(db.NewSession),
 		"ParadeDBAvailable":              reflect.ValueOf(db.ParadeDBAvailable),
+		"RegisterConnectionPoolMetrics":  reflect.ValueOf(db.RegisterConnectionPoolMetrics),
 		"RegisterTables":                 reflect.ValueOf(db.RegisterTables),
 		"RegisteredTableNames":           reflect.ValueOf(db.RegisteredTableNames),
 		"Restore":                        reflect.ValueOf(db.Restore),
