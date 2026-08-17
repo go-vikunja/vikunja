@@ -43,9 +43,9 @@ const avatarUploadPath = "/api/v2/user/settings/avatar"
 func pngBytes(t *testing.T) []byte {
 	t.Helper()
 	img := image.NewRGBA(image.Rect(0, 0, 8, 8))
-	for x := 0; x < 8; x++ {
-		for y := 0; y < 8; y++ {
-			img.Set(x, y, color.RGBA{R: uint8(x * 16), G: uint8(y * 16), B: 100, A: 255})
+	for x := uint8(0); x < 8; x++ {
+		for y := uint8(0); y < 8; y++ {
+			img.Set(int(x), int(y), color.RGBA{R: x * 16, G: y * 16, B: 100, A: 255})
 		}
 	}
 	buf := &bytes.Buffer{}
