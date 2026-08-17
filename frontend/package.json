@@ -140,7 +140,7 @@
     "postcss-html": "1.8.1",
     "postcss-preset-env": "11.3.2",
     "rollup": "catalog:",
-    "rollup-plugin-visualizer": "7.0.1",
+    "rollup-plugin-visualizer": "7.1.1",
     "sass-embedded": "1.102.0",
     "stylelint": "17.14.1",
     "stylelint-config-property-sort-order-smacss": "11.2.0",
