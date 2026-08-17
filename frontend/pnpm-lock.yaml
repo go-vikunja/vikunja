@@ -253,9 +253,6 @@ importers:
       csstype:
         specifier: 3.2.3
         version: 3.2.3
-      esbuild:
-        specifier: 0.28.1
-        version: 0.28.1
       eslint:
         specifier: 10.8.1
         version: 10.8.1(jiti@2.7.0)(supports-color@10.2.2)

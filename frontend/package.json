@@ -129,7 +129,6 @@
     "browserslist": "4.28.8",
     "caniuse-lite": "1.0.30001809",
     "csstype": "3.2.3",
-    "esbuild": "0.28.2",
     "eslint": "10.8.1",
     "eslint-plugin-depend": "1.5.0",
     "eslint-plugin-vue": "10.10.0",
