@@ -568,8 +568,10 @@ func (s *SendTaskCommentNotification) Handle(msg *message.Message) (err error) {
 		}
 		err = notifications.Notify(subscriber.User, n, sess)
 		if err != nil {
-			log.Errorf("Could not send task comment notification to user %d for task %d: %s", subscriber.UserID, event.Task.ID, err)
-			continue
+			// Return so the event is retried: on SQLite the insert can hit
+			// SQLITE_BUSY_SNAPSHOT when a sibling listener wrote first.
+			_ = sess.Rollback()
+			return err
 		}
 	}
 
@@ -677,8 +679,8 @@ func (s *SendTaskAssignedNotification) Handle(msg *message.Message) (err error) 
 		}
 		err = notifications.Notify(subscriber.User, n, sess)
 		if err != nil {
-			log.Errorf("Could not send task assigned notification to user %d for task %d: %s", subscriber.UserID, event.Task.ID, err)
-			continue
+			_ = sess.Rollback()
+			return err
 		}
 
 		notifiedUsers[subscriber.UserID] = true
@@ -725,8 +727,8 @@ func (s *SendTaskDeletedNotification) Handle(msg *message.Message) (err error) {
 		}
 		err = notifications.Notify(subscriber.User, n, sess)
 		if err != nil {
-			log.Errorf("Could not send task deleted notification to user %d for task %d: %s", subscriber.UserID, event.Task.ID, err)
-			continue
+			_ = sess.Rollback()
+			return err
 		}
 	}
 
@@ -1103,8 +1105,8 @@ func (s *SendProjectCreatedNotification) Handle(msg *message.Message) (err error
 		}
 		err = notifications.Notify(subscriber.User, n, sess)
 		if err != nil {
-			log.Errorf("Could not send project created notification to user %d for project %d: %s", subscriber.UserID, event.Project.ID, err)
-			continue
+			_ = sess.Rollback()
+			return err
 		}
 	}
 
