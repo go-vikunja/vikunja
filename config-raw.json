@@ -64,6 +64,11 @@
                     "comment": "Enable the caldav endpoint, see the docs for more details"
                 },
                 {
+                    "key": "enablecaldavpseudoprojects",
+                    "default_value": "false",
+                    "comment": "Expose saved filters and the Favorites project as caldav calendars. Off by default: their tasks live in other projects, so most clients show these calendars as empty."
+                },
+                {
                     "key": "motd",
                     "default_value": "",
                     "comment": "Set the motd message, available from the /info endpoint"

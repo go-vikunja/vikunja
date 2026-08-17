@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/caldav"
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
@@ -47,6 +48,13 @@ const PrincipalBasePath = DavBasePath + `/principals`
 
 // ProjectHomeSetPath is the CalDAV home-set path Apple clients use after discovery.
 const ProjectHomeSetPath = ProjectBasePath + `/`
+
+// Pseudo-projects (Favorites, saved filters; all with a negative ID) hold tasks which live in
+// other projects, so getTaskURL points their hrefs outside the collection and clients render
+// them as empty. Hidden unless explicitly enabled.
+func caldavExposesPseudoProjects() bool {
+	return config.ServiceEnableCaldavPseudoProjects.GetBool()
+}
 
 // VikunjaCaldavProjectStorage represents a project storage
 type VikunjaCaldavProjectStorage struct {
@@ -146,6 +154,9 @@ func (vcls *VikunjaCaldavProjectStorage) GetResources(rpath string, withChildren
 
 	var resources []data.Resource
 	for _, l := range projects {
+		if l.ID < 0 && !caldavExposesPseudoProjects() {
+			continue
+		}
 		rr := VikunjaProjectResourceAdapter{
 			project: &models.ProjectWithTasksAndBuckets{
 				Project: *l,

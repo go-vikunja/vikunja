@@ -51,6 +51,7 @@ const (
 	ServiceUnixSocketMode                 Key = `service.unixsocketmode`
 	ServicePublicURL                      Key = `service.publicurl`
 	ServiceEnableCaldav                   Key = `service.enablecaldav`
+	ServiceEnableCaldavPseudoProjects     Key = `service.enablecaldavpseudoprojects`
 	ServiceRootpath                       Key = `service.rootpath`
 	ServiceMaxItemsPerPage                Key = `service.maxitemsperpage`
 	ServiceDemoMode                       Key = `service.demomode`
@@ -354,6 +355,7 @@ func initDefaultConfig() {
 	ServiceUnixSocket.setDefault("")
 	ServicePublicURL.setDefault("")
 	ServiceEnableCaldav.setDefault(true)
+	ServiceEnableCaldavPseudoProjects.setDefault(false)
 
 	ServiceRootpath.setDefault(getRootpathLocation())
 	ServiceMaxItemsPerPage.setDefault(50)

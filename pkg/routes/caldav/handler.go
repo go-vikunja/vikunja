@@ -252,6 +252,10 @@ func getProjectFromParam(c *echo.Context) (project *models.ProjectWithTasksAndBu
 		return nil, models.ErrProjectDoesNotExist{}
 	}
 
+	if intParam < 0 && !caldavExposesPseudoProjects() {
+		return nil, models.ErrProjectDoesNotExist{ID: intParam}
+	}
+
 	if intParam == models.FavoritesPseudoProjectID {
 		return &models.ProjectWithTasksAndBuckets{Project: models.FavoritesPseudoProject}, nil
 	}

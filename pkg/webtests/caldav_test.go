@@ -25,6 +25,7 @@ import (
 	"testing"
 	"time"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/routes/caldav"
@@ -1739,5 +1740,71 @@ END:VTODO` + vtodoFooter
 		assert.Equal(t, int64(86400), after.RepeatAfter, "recurrence must survive completion via CalDAV")
 		assert.True(t, after.DueDate.After(before.DueDate),
 			"due date must be rescheduled even when the VTODO carries no DUE, got %s, was %s", after.DueDate, before.DueDate)
+	})
+}
+
+// TestCaldavPseudoProjects: saved filters (project id <= -2) and Favorites (-1) are synthesized
+// from tasks living in other projects, so their hrefs point outside the collection and clients
+// show them as empty. user1 has both: saved filter 1 (project -2) and favorited tasks.
+func TestCaldavPseudoProjects(t *testing.T) {
+	propfindHomeSet := func(t *testing.T, e *echo.Echo) string {
+		t.Helper()
+
+		const propfindBody = `<?xml version="1.0" encoding="utf-8" ?>
+<A:propfind xmlns:A="DAV:" xmlns:B="urn:ietf:params:xml:ns:caldav">
+	<A:prop>
+		<A:resourcetype />
+	</A:prop>
+</A:propfind>`
+
+		c, rec := createRequest(e, "PROPFIND", propfindBody, nil, nil)
+		c.Request().Header.Set(echo.HeaderContentType, echo.MIMETextXML)
+		c.Request().Header.Set("Depth", "1")
+		c.Request().URL.Path = caldav.ProjectHomeSetPath
+		c.Request().RequestURI = caldav.ProjectHomeSetPath
+
+		result, _ := caldav.BasicAuth(c, testuser1.Username, "12345678")
+		require.True(t, result)
+
+		require.NoError(t, caldav.ProjectHandler(c))
+		assert.Equal(t, 207, rec.Result().StatusCode)
+		return rec.Body.String()
+	}
+
+	t.Run("are not listed as calendars", func(t *testing.T) {
+		e, _ := setupTestEnv()
+
+		body := propfindHomeSet(t, e)
+		assert.Contains(t, body, "/dav/projects/1", "real projects must still be listed")
+		assert.NotContains(t, body, "/dav/projects/-", "no pseudo-project may be listed")
+	})
+
+	t.Run("saved filter returns 404", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodGet, caldav.ProjectHandler, &testuser1, ``, nil, map[string]string{"project": "-2"})
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusNotFound, rec.Result().StatusCode)
+	})
+
+	t.Run("favorites returns 404", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodGet, caldav.ProjectHandler, &testuser1, ``, nil, map[string]string{"project": "-1"})
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusNotFound, rec.Result().StatusCode)
+	})
+
+	t.Run("are exposed again when enabled", func(t *testing.T) {
+		config.ServiceEnableCaldavPseudoProjects.Set(true)
+		defer config.ServiceEnableCaldavPseudoProjects.Set(false)
+
+		e, _ := setupTestEnv()
+
+		body := propfindHomeSet(t, e)
+		assert.Contains(t, body, "/dav/projects/-2", "saved filter must be listed again")
+		assert.Contains(t, body, "/dav/projects/-1", "favorites must be listed again")
+
+		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodGet, caldav.ProjectHandler, &testuser1, ``, nil, map[string]string{"project": "-2"})
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusOK, rec.Result().StatusCode)
 	})
 }
