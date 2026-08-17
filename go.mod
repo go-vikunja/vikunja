@@ -73,7 +73,7 @@ require (
 	github.com/schollz/progressbar/v3 v3.19.1
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0
-	github.com/stretchr/testify v1.11.1
+	github.com/stretchr/testify v1.12.0
 	github.com/swaggo/swag v1.16.6
 	github.com/tkuchiki/go-timezone v0.2.3
 	github.com/traefik/yaegi v0.16.1
