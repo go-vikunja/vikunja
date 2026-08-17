@@ -22,7 +22,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Create Diff
-        uses: e18e/action-dependency-diff@8e9b8c1957ab066d36235a43f4c1ff1522e1bdbc # v1.6.1
+        uses: e18e/action-dependency-diff@9a7f09f5f2993256322e0db17ee4c8d9339dab77 # v1.7.1
         with:
           working-directory: ${{ matrix.directory }}
           duplicate-threshold: 9999
