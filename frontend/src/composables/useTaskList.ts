@@ -78,7 +78,6 @@ export function buildStoredQuery(state: TaskListQueryState): LocationQueryRaw {
 	return query
 }
 
-
 // This makes sure an id sort order is always sorted last.
 // When tasks would be sorted first by id and then by whatever else was specified, the id sort takes
 // precedence over everything else, making any other sort columns pretty useless.
