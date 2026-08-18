@@ -620,3 +620,80 @@ func TestGetResourcesByList_URLProjectConsistency(t *testing.T) {
 		assert.Empty(t, resources, "unauthorized user must not receive any tasks")
 	})
 }
+
+// TestCreateResource_ExistingUID covers #3482: a client PUTting a task it still
+// believes lives in an old collection must not get a second copy of that task.
+func TestCreateResource_ExistingUID(t *testing.T) {
+	u := &user.User{ID: 15, Username: "user15"}
+
+	// Task 40 in fixtures: uid-caldav-test, project 36.
+	const taskUID = "uid-caldav-test"
+	const taskContent = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Vikunja Todo App//EN
+BEGIN:VTODO
+UID:uid-caldav-test
+DTSTAMP:20230301T073337Z
+SUMMARY:Title Caldav Test
+STATUS:COMPLETED
+END:VTODO
+END:VCALENDAR`
+
+	countTasksWithUID := func(t *testing.T) int64 {
+		t.Helper()
+		s := db.NewSession()
+		defer s.Close()
+		count, err := s.Where("uid = ?", taskUID).Count(&models.Task{})
+		require.NoError(t, err)
+		return count
+	}
+
+	t.Run("does not duplicate the task into another project", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		storage := &VikunjaCaldavProjectStorage{
+			project: &models.ProjectWithTasksAndBuckets{Project: models.Project{ID: 38}},
+			task:    &models.Task{UID: taskUID},
+			user:    u,
+		}
+
+		_, err := storage.CreateResource("/dav/projects/38/"+taskUID+".ics", taskContent)
+		require.ErrorIs(t, err, errs.ResourceNotFoundError)
+		assert.Equal(t, int64(1), countTasksWithUID(t))
+	})
+
+	t.Run("does not duplicate the task into its own project", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		storage := &VikunjaCaldavProjectStorage{
+			project: &models.ProjectWithTasksAndBuckets{Project: models.Project{ID: 36}},
+			task:    &models.Task{UID: taskUID},
+			user:    u,
+		}
+
+		_, err := storage.CreateResource("/dav/projects/36/"+taskUID+".ics", taskContent)
+		require.ErrorIs(t, err, errs.ResourceNotFoundError)
+		assert.Equal(t, int64(1), countTasksWithUID(t))
+	})
+
+	t.Run("creates a task when the uid is not taken", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		storage := &VikunjaCaldavProjectStorage{
+			project: &models.ProjectWithTasksAndBuckets{Project: models.Project{ID: 38}},
+			task:    &models.Task{UID: "uid-caldav-test-fresh"},
+			user:    u,
+		}
+
+		_, err := storage.CreateResource("/dav/projects/38/uid-caldav-test-fresh.ics", `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Vikunja Todo App//EN
+BEGIN:VTODO
+UID:uid-caldav-test-fresh
+DTSTAMP:20230301T073337Z
+SUMMARY:Fresh task
+END:VTODO
+END:VCALENDAR`)
+		require.NoError(t, err)
+	})
+}
