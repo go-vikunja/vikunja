@@ -423,6 +423,23 @@ func registerEventsForAuditLogging() {
 //////
 // Task Events
 
+// ensureTaskIdentifier fills in the task identifier when it is missing. The
+// simple task getters behind event payloads don't set it, which would render
+// the task as "#12" instead of "PROJ-12" in notifications.
+func ensureTaskIdentifier(s *xorm.Session, task *Task) error {
+	if task == nil || task.Identifier != "" {
+		return nil
+	}
+
+	project, err := GetProjectSimpleByID(s, task.ProjectID)
+	if err != nil {
+		return err
+	}
+
+	task.setIdentifier(project)
+	return nil
+}
+
 func notifyMentionedUsers(sess *xorm.Session, task *Task, text string, n notifications.NotificationWithSubject) (users map[int64]*user.User, err error) {
 	users, err = FindMentionedUsersInText(sess, text)
 	if err != nil {
@@ -437,7 +454,9 @@ func notifyMentionedUsers(sess *xorm.Session, task *Task, text string, n notific
 
 	var notified int
 	for _, u := range users {
-		can, _, err := task.CanRead(sess, u)
+		// CanRead replaces the task it is called on with a bare one from the db,
+		// which would drop the identifier the notification renders.
+		can, _, err := (&Task{ID: task.ID}).CanRead(sess, u)
 		if err != nil {
 			return users, err
 		}
@@ -493,6 +512,8 @@ func (s *SendTaskCommentNotification) Handle(msg *message.Message) (err error) {
 		return err
 	}
 
+	event.Task.setIdentifier(project)
+
 	n := &TaskCommentNotification{
 		Doer:      event.Doer,
 		Task:      event.Task,
@@ -517,7 +538,7 @@ func (s *SendTaskCommentNotification) Handle(msg *message.Message) (err error) {
 			continue
 		}
 
-		can, _, err := event.Task.CanRead(sess, u)
+		can, _, err := (&Task{ID: event.Task.ID}).CanRead(sess, u)
 		if err != nil {
 			return err
 		}
@@ -607,6 +628,8 @@ func (s *HandleTaskCommentEditMentions) Handle(msg *message.Message) (err error)
 		return err
 	}
 
+	event.Task.setIdentifier(project)
+
 	n := &TaskCommentNotification{
 		Doer:      event.Doer,
 		Task:      event.Task,
@@ -657,6 +680,8 @@ func (s *SendTaskAssignedNotification) Handle(msg *message.Message) (err error) 
 	if err != nil {
 		return err
 	}
+
+	task.setIdentifier(project)
 
 	notifiedUsers := make(map[int64]bool)
 
@@ -714,6 +739,10 @@ func (s *SendTaskDeletedNotification) Handle(msg *message.Message) (err error) {
 		return err
 	}
 
+	if err := ensureTaskIdentifier(sess, event.Task); err != nil {
+		return err
+	}
+
 	log.Debugf("Sending task deleted notifications to %d subscribers for task %d", len(subscribers), event.Task.ID)
 
 	for _, subscriber := range subscribers {
@@ -764,6 +793,8 @@ func (s *HandleTaskCreateMentions) Handle(msg *message.Message) (err error) {
 		return err
 	}
 
+	event.Task.setIdentifier(project)
+
 	n := &UserMentionedInTaskNotification{
 		Task:    event.Task,
 		Doer:    event.Doer,
@@ -805,6 +836,8 @@ func (s *HandleTaskUpdatedMentions) Handle(msg *message.Message) (err error) {
 	if err != nil {
 		return err
 	}
+
+	event.Task.setIdentifier(project)
 
 	n := &UserMentionedInTaskNotification{
 		Task:    event.Task,
