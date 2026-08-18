@@ -1835,16 +1835,17 @@ func setTaskDatesFromCurrentDateRepeat(oldTask, newTask *Task) {
 	}
 
 	newTask.Reminders = oldTask.Reminders
-	// When repeating from the current date, all reminders should keep their difference to each other.
-	// To make this easier, we sort them first because we can then rely on the fact the first is the smallest
+	// The earliest reminder moves to now + interval, all others keep their distance to it.
 	if len(oldTask.Reminders) > 0 {
-		sort.Slice(oldTask.Reminders, func(i, j int) bool {
-			return oldTask.Reminders[i].Reminder.Unix() < oldTask.Reminders[j].Reminder.Unix()
-		})
 		first := oldTask.Reminders[0].Reminder
+		for _, r := range oldTask.Reminders[1:] {
+			if r.Reminder.Before(first) {
+				first = r.Reminder
+			}
+		}
+		newFirst := now.Add(repeatDuration)
 		for in, r := range oldTask.Reminders {
-			diff := r.Reminder.Sub(first)
-			newTask.Reminders[in].Reminder = now.Add(repeatDuration + diff)
+			newTask.Reminders[in].Reminder = shiftTime(r.Reminder, first, newFirst)
 		}
 	}
 
@@ -1856,9 +1857,8 @@ func setTaskDatesFromCurrentDateRepeat(oldTask, newTask *Task) {
 		// end date should keep the difference to the start date when setting
 		// them as new
 		if !oldTask.StartDate.IsZero() && !oldTask.EndDate.IsZero() {
-			diff := oldTask.EndDate.Sub(oldTask.StartDate)
 			newTask.StartDate = now.Add(repeatDuration)
-			newTask.EndDate = now.Add(repeatDuration + diff)
+			newTask.EndDate = shiftTime(oldTask.EndDate, oldTask.StartDate, newTask.StartDate)
 		} else {
 			if !oldTask.StartDate.IsZero() {
 				newTask.StartDate = now.Add(repeatDuration)
@@ -1872,19 +1872,30 @@ func setTaskDatesFromCurrentDateRepeat(oldTask, newTask *Task) {
 		// If the old task has a start and due date, we set the new start date
 		// to preserve the interval between them.
 		if !oldTask.StartDate.IsZero() {
-			diff := oldTask.DueDate.Sub(oldTask.StartDate)
-			newTask.StartDate = newTask.DueDate.Add(-diff)
+			newTask.StartDate = shiftTime(oldTask.StartDate, oldTask.DueDate, newTask.DueDate)
 		}
 
 		// If the old task has an end and due date, we set the new end date
 		// to preserve the interval between them.
 		if !oldTask.EndDate.IsZero() {
-			diff := oldTask.DueDate.Sub(oldTask.EndDate)
-			newTask.EndDate = newTask.DueDate.Add(-diff)
+			newTask.EndDate = shiftTime(oldTask.EndDate, oldTask.DueDate, newTask.DueDate)
 		}
 	}
 
 	newTask.Done = false
+}
+
+// shiftTime moves t by the same offset that takes from to to.
+// time.Time.Sub saturates at ~292 years, so for larger spans the offset is
+// applied as whole years plus a small remainder instead of one Duration.
+func shiftTime(t, from, to time.Time) time.Time {
+	diff := to.Sub(from)
+	if diff != math.MaxInt64 && diff != math.MinInt64 {
+		return t.Add(diff)
+	}
+	years := to.Year() - from.Year()
+	rest := to.Sub(from.AddDate(years, 0, 0))
+	return t.AddDate(years, 0, 0).Add(rest)
 }
 
 var (
