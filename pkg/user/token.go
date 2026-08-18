@@ -23,6 +23,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/utils"
+	"xorm.io/builder"
 	"xorm.io/xorm"
 )
 
@@ -125,15 +126,28 @@ func removeTokenByID(s *xorm.Session, u *User, kind TokenKind, id int64) (err er
 	return
 }
 
-// CleanupOldTokens removes all password reset and account deletion tokens older than 24 hours.
+// CleanupOldTokens removes all password reset, account deletion and email change tokens older than 24 hours.
+// Email confirm tokens are only swept for users with a pending email change, registration confirm links never expire.
 func CleanupOldTokens(s *xorm.Session) (deleted int64, err error) {
+	cutoff := time.Now().Add(time.Hour * 24 * -1)
 	deleted, err = s.
-		Where("created < ? AND (kind = ? OR kind = ?)", time.Now().Add(time.Hour*24*-1), TokenPasswordReset, TokenAccountDeletion).
+		Where(builder.And(
+			builder.Lt{"created": cutoff},
+			builder.Or(
+				builder.In("kind", TokenPasswordReset, TokenAccountDeletion),
+				builder.And(
+					builder.Eq{"kind": TokenEmailConfirm},
+					builder.In("user_id",
+						builder.Select("id").From("users").Where(builder.Neq{"pending_email": ""}),
+					),
+				),
+			),
+		)).
 		Delete(&Token{})
 	return
 }
 
-// RegisterTokenCleanupCron registers a cron function to clean up all password reset tokens older than 24 hours
+// RegisterTokenCleanupCron registers a cron function to clean up expired tokens every hour
 func RegisterTokenCleanupCron() {
 	const logPrefix = "[User Token Cleanup Cron] "
 
