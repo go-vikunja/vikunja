@@ -54,7 +54,6 @@ package routes
 import (
 	"context"
 	"log/slog"
-	"net"
 	"strings"
 	"time"
 
@@ -138,23 +137,7 @@ func NewEcho() *echo.Echo {
 		NoGroupAutoRegister404Routes: true,
 	})
 
-	// Configure IP extraction to prevent rate limit bypass via spoofed headers.
-	// Echo's default RealIP() trusts X-Forwarded-For and X-Real-IP unconditionally,
-	// which allows attackers to bypass IP-based rate limits.
-	// See: https://echo.labstack.com/docs/ip-address
-	switch config.ServiceIPExtractionMethod.GetString() {
-	case "xff":
-		trustOptions := parseTrustedProxies(config.ServiceTrustedProxies.GetString())
-		e.IPExtractor = echo.ExtractIPFromXFFHeader(trustOptions...)
-		log.Debugf("IP extraction: X-Forwarded-For with %d trusted proxy ranges", len(trustOptions))
-	case "realip":
-		trustOptions := parseTrustedProxies(config.ServiceTrustedProxies.GetString())
-		e.IPExtractor = echo.ExtractIPFromRealIPHeader(trustOptions...)
-		log.Debugf("IP extraction: X-Real-IP with %d trusted proxy ranges", len(trustOptions))
-	default:
-		e.IPExtractor = echo.ExtractIPDirect()
-		log.Debugf("IP extraction: direct (TCP remote address)")
-	}
+	e.IPExtractor = newIPExtractor(config.ServiceIPExtractionMethod.GetString(), config.ServiceTrustedProxies.GetString())
 
 	e.Logger = log.NewEchoLogger(config.LogEnabled.GetBool(), config.LogHTTP.GetString(), config.LogFormat.GetString())
 
@@ -226,27 +209,6 @@ func NewEcho() *echo.Echo {
 	e.HTTPErrorHandler = CreateHTTPErrorHandler(e, config.SentryEnabled.GetBool())
 
 	return e
-}
-
-func parseTrustedProxies(proxies string) []echo.TrustOption {
-	if proxies == "" {
-		return nil
-	}
-
-	var options []echo.TrustOption
-	for _, cidr := range strings.Split(proxies, ",") {
-		cidr = strings.TrimSpace(cidr)
-		if cidr == "" {
-			continue
-		}
-		_, ipNet, err := net.ParseCIDR(cidr)
-		if err != nil {
-			log.Warningf("Invalid trusted proxy CIDR %q: %v", cidr, err)
-			continue
-		}
-		options = append(options, echo.TrustIPRange(ipNet))
-	}
-	return options
 }
 
 func setupSentry(e *echo.Echo) {
