@@ -75,17 +75,26 @@ func RateLimit(rateLimiter *limiter.Limiter, rateLimitKind string) echo.Middlewa
 	}
 }
 
-func createRateLimiter(rate limiter.Rate) *limiter.Limiter {
+// createRateLimiter builds a limiter with its own counters. The prefix keeps
+// those counters apart in a shared backend: the redis store namespaces keys with
+// it, so without a distinct one every limiter would decrement the same budget.
+func createRateLimiter(prefix string, rate limiter.Rate) *limiter.Limiter {
+	options := limiter.StoreOptions{
+		Prefix:          limiter.DefaultPrefix + ":" + prefix,
+		CleanUpInterval: limiter.DefaultCleanUpInterval,
+		MaxRetry:        limiter.DefaultMaxRetry,
+	}
+
 	var store limiter.Store
 	var err error
 	switch config.RateLimitStore.GetString() {
 	case "memory":
-		store = memory.NewStore()
+		store = memory.NewStoreWithOptions(options)
 	case "redis":
 		if !config.RedisEnabled.GetBool() {
 			log.Fatal("Redis is configured for rate limiting, but not enabled!")
 		}
-		store, err = redis.NewStore(red.GetRedis())
+		store, err = redis.NewStoreWithOptions(red.GetRedis(), options)
 		if err != nil {
 			log.Fatalf("Error while creating rate limit redis store: %s", err)
 		}
@@ -102,7 +111,7 @@ func unauthRateLimit() echo.MiddlewareFunc {
 		Period: 60 * time.Second,
 		Limit:  config.RateLimitNoAuthRoutesLimit.GetInt64(),
 	}
-	return RateLimit(createRateLimiter(rate), "ip")
+	return RateLimit(createRateLimiter("noauth", rate), "ip")
 }
 
 func setupRateLimit(a *echo.Group, rateLimitKind string) {
@@ -111,7 +120,7 @@ func setupRateLimit(a *echo.Group, rateLimitKind string) {
 			Period: config.RateLimitPeriod.GetDuration() * time.Second,
 			Limit:  config.RateLimitLimit.GetInt64(),
 		}
-		rateLimiter := createRateLimiter(rate)
+		rateLimiter := createRateLimiter("global", rate)
 		log.Debugf("Rate limit configured with %s and %v requests per %v", config.RateLimitStore.GetString(), rate.Limit, rate.Period)
 		a.Use(RateLimit(rateLimiter, rateLimitKind))
 	}
