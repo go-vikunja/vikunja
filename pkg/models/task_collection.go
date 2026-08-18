@@ -281,8 +281,6 @@ func getRelevantProjectsFromCollection(s *xorm.Session, a web.Auth, tf *TaskColl
 	return relevantProjects, nil
 }
 
-
-
 func getFilterValueForBucketFilter(filter string, view *ProjectView) (newFilter string, err error) {
 	if view.BucketConfigurationMode != BucketConfigurationModeFilter {
 		return filter, nil
