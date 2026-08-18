@@ -143,6 +143,7 @@ func init() {
 		"RateLimitNoAuthRoutesLimit":                 reflect.ValueOf(config.RateLimitNoAuthRoutesLimit),
 		"RateLimitPeriod":                            reflect.ValueOf(config.RateLimitPeriod),
 		"RateLimitStore":                             reflect.ValueOf(config.RateLimitStore),
+		"RateLimitTokenRefreshLimit":                 reflect.ValueOf(config.RateLimitTokenRefreshLimit),
 		"RedisDB":                                    reflect.ValueOf(config.RedisDB),
 		"RedisEnabled":                               reflect.ValueOf(config.RedisEnabled),
 		"RedisHost":                                  reflect.ValueOf(config.RedisHost),
