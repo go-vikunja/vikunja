@@ -200,6 +200,7 @@ import Mention from '@tiptap/extension-mention'
 
 import {TaskList} from '@tiptap/extension-list'
 import {TaskItemWithId} from './taskItemWithId'
+import {ListKeymapWithJoin} from './listKeymapWithJoin'
 import {BlockquoteWithCommentId} from './blockquoteWithCommentId'
 import HardBreak from '@tiptap/extension-hard-break'
 
@@ -453,7 +454,9 @@ const extensions : Extensions = [
 		codeBlock: false,
 		hardBreak: false,
 		blockquote: false,
+		listKeymap: false,
 	}),
+	ListKeymapWithJoin,
 	BlockquoteWithCommentId,
 
 	CodeBlockLowlight.configure({
