@@ -117,7 +117,7 @@
 <script setup lang="ts">
 import {computed, onBeforeMount, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {useRouter} from 'vue-router'
+import {useRoute, useRouter} from 'vue-router'
 import {useDebounceFn} from '@vueuse/core'
 
 import Message from '@/components/misc/Message.vue'
@@ -127,9 +127,10 @@ import FormCheckbox from '@/components/input/FormCheckbox.vue'
 import DesktopLogin from '@/views/user/DesktopLogin.vue'
 
 import {getErrorText} from '@/message'
-import {redirectToProvider} from '@/helpers/redirectToProvider'
+import {getAutoRedirectProvider, redirectToProvider} from '@/helpers/redirectToProvider'
 import {useRedirectToLastVisited} from '@/composables/useRedirectToLastVisited'
 import {isDesktopApp} from '@/helpers/desktopAuth'
+import {REDIRECT_HASH_PREFIX} from '@/constants/redirectHash'
 
 import {useAuthStore, JUST_LOGGED_OUT_KEY} from '@/stores/auth'
 import {useConfigStore} from '@/stores/config'
@@ -139,6 +140,7 @@ import {useTitle} from '@/composables/useTitle'
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => t('user.auth.login'))
 
+const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 const configStore = useConfigStore()
@@ -179,22 +181,23 @@ onBeforeMount(() => {
 		return
 	}
 
-	// Don't auto-redirect right after an explicit logout, otherwise we'd
-	// immediately re-authenticate the user we just logged out.
-	if (sessionStorage.getItem(JUST_LOGGED_OUT_KEY)) {
+	// Consumed on read so the next visit to the login page can auto-redirect again.
+	const justLoggedOut = sessionStorage.getItem(JUST_LOGGED_OUT_KEY) !== null
+	if (justLoggedOut) {
 		sessionStorage.removeItem(JUST_LOGGED_OUT_KEY)
-		return
 	}
 
-	// When the login page offers nothing but a single OIDC provider, skip it
-	// and send the user straight there.
-	if (
-		!localAuthEnabled.value &&
-		!ldapAuthEnabled.value &&
-		hasOpenIdProviders.value &&
-		openidConnect.value.providers.length === 1
-	) {
-		redirectToProvider(openidConnect.value.providers[0])
+	const autoRedirectProvider = getAutoRedirectProvider({
+		localAuthEnabled: localAuthEnabled.value,
+		ldapAuthEnabled: ldapAuthEnabled.value,
+		openIdEnabled: openidConnect.value.enabled,
+		providers: openidConnect.value.providers ?? [],
+		isDesktopApp: isDesktop,
+		justLoggedOut,
+		hasCopyableRedirect: route.hash.startsWith(REDIRECT_HASH_PREFIX),
+	})
+	if (autoRedirectProvider) {
+		redirectToProvider(autoRedirectProvider)
 	}
 })
 
