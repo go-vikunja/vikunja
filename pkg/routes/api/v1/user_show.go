@@ -39,6 +39,7 @@ type UserWithSettings struct {
 	IsLocalUser         bool                        `json:"is_local_user"`
 	AuthProvider        string                      `json:"auth_provider"`
 	IsAdmin             bool                        `json:"is_admin"`
+	PendingEmail        string                      `json:"pending_email,omitempty"`
 }
 
 // UserShow gets all information about the current user
@@ -72,6 +73,7 @@ func UserShow(c *echo.Context) error {
 		DeletionScheduledAt: u.DeletionScheduledAt,
 		IsLocalUser:         u.Issuer == user.IssuerLocal,
 		IsAdmin:             u.IsAdmin,
+		PendingEmail:        u.PendingEmail,
 	}
 
 	us.AuthProvider, err = shared.GetAuthProviderName(u)
