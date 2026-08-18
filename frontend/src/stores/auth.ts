@@ -238,12 +238,12 @@ export const useAuthStore = defineStore('auth', () => {
 				...credentials,
 				language,
 			})
-			return login(credentials)
+			return await login(credentials)
 		} catch (e) {
 			if (e.response?.data?.code === 2002 && e.response?.data?.invalid_fields[0]?.startsWith('language:')) {
 				return register(credentials, 'en')
 			}
-			
+
 			if (e.response?.data?.message) {
 				throw e.response.data
 			}

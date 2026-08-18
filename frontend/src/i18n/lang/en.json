@@ -104,7 +104,8 @@
       "remember": "Stay logged in",
       "registrationDisabled": "Registration is disabled.",
       "passwordResetTokenMissing": "Password reset token is missing.",
-      "registrationFailed": "An error occurred during registration. Please check your input and try again."
+      "registrationFailed": "An error occurred during registration. Please check your input and try again.",
+      "registrationConfirmEmail": "Your account was created successfully! Please check your inbox and click the link in the confirmation email before logging in."
     },
     "settings": {
       "bots": {
