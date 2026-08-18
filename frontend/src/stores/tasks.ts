@@ -376,9 +376,7 @@ export const useTaskStore = defineStore('task', () => {
 		const all = [...new Set(labels)]
 		const findLabel = (labelTitle: string) => validateLabel(Object.values(labelStore.labels) as ILabel[], labelTitle)
 
-		// The label store isn't populated everywhere (the quick add window doesn't
-		// render ContentAuth at all) and its initial load may still be running.
-		// Creating a label against an empty store duplicates an existing one.
+		// The quick add window doesn't render ContentAuth, so nothing loaded the store yet.
 		if (all.some(labelTitle => typeof findLabel(labelTitle) === 'undefined')) {
 			try {
 				await labelStore.loadAllLabels()
