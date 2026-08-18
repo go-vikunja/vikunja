@@ -479,6 +479,11 @@
                     "key": "noauthlimit",
                     "default_value": "10",
                     "comment": "The number of requests a user can make from the same IP to all unauthenticated routes (login, register,\npassword confirmation, email verification, password reset request) per minute. This limit cannot be disabled.\nYou should only change this if you know what you're doing."
+                },
+                {
+                    "key": "tokenrefreshlimit",
+                    "default_value": "60",
+                    "comment": "The number of requests a user can make from the same IP to the session renewal routes\n(token refresh and the OAuth token endpoint) per minute. These are kept separate from\n\"noauthlimit\" because every logged-in client renews its access token periodically, which\nwould otherwise use up the budget reserved for login attempts. This limit cannot be disabled."
                 }
             ]
         },

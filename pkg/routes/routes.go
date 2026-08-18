@@ -507,17 +507,20 @@ func registerAPIRoutes(a *echo.Group, wsRateLimit echo.MiddlewareFunc) {
 		ur.POST("/login", apiv1.Login)
 	}
 
-	// Refresh token endpoint — unauthenticated because it uses the refresh
-	// token cookie instead of a JWT bearer token.
-	ur.POST("/user/token/refresh", apiv1.RefreshToken)
-
 	if config.AuthOpenIDEnabled.GetBool() {
 		ur.POST("/auth/openid/:provider/callback", openid.HandleCallback)
 	}
 
+	tr := a.Group("")
+	tr.Use(tokenRefreshRateLimit())
+
+	// Refresh token endpoint — unauthenticated because it uses the refresh
+	// token cookie instead of a JWT bearer token.
+	tr.POST("/user/token/refresh", apiv1.RefreshToken)
+
 	// OAuth 2.0 token endpoint — unauthenticated because it validates
 	// credentials (authorization code or refresh token) itself.
-	ur.POST("/oauth/token", oauth2server.HandleToken)
+	tr.POST("/oauth/token", oauth2server.HandleToken)
 
 	// Testing
 	if config.ServiceTestingtoken.GetString() != "" {
