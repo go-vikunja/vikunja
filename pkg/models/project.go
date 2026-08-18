@@ -1171,7 +1171,7 @@ func CreateNewProjectForUser(s *xorm.Session, u *user.User) (err error) {
 	}
 
 	u.DefaultProjectID = p.ID
-	_, err = user.UpdateUser(s, u, false)
+	_, err = s.ID(u.ID).Cols("default_project_id").Update(u)
 	return err
 }
 
