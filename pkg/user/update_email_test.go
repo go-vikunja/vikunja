@@ -190,6 +190,23 @@ func TestUpdateEmail(t *testing.T) {
 		assert.True(t, IsErrEmailConfirmationCooldown(err))
 	})
 
+	t.Run("notifies the current address", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		config.MailerEnabled.Set(true)
+		defer config.MailerEnabled.Set(false)
+
+		resetEmailConfirmationCooldown(t, 1)
+		mail.ResetSent()
+		require.NoError(t, UpdateEmail(s, &EmailUpdate{User: &User{ID: 1}, NewEmail: "new1@example.com"}))
+
+		sent := mail.SentMails()
+		require.Len(t, sent, 2)
+		assert.Equal(t, "new1@example.com", sent[0].To)
+		assert.Equal(t, "user1@example.com", sent[1].To)
+	})
 }
 
 func TestCancelEmailUpdate(t *testing.T) {

@@ -87,7 +87,15 @@ func UpdateEmail(s *xorm.Session, update *EmailUpdate) (err error) {
 		return
 	}
 
-	return sendEmailConfirmation(s, update.User)
+	err = sendEmailConfirmation(s, update.User)
+	if err != nil {
+		return
+	}
+
+	return notifications.Notify(update.User, &EmailChangeRequestedNotification{
+		User:     update.User,
+		NewEmail: update.NewEmail,
+	}, s)
 }
 
 // CancelEmailUpdate discards a pending email change and its confirm tokens.
