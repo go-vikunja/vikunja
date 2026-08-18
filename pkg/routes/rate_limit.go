@@ -104,14 +104,23 @@ func createRateLimiter(prefix string, rate limiter.Rate) *limiter.Limiter {
 	return limiter.New(store, rate)
 }
 
-// unauthRateLimit ignores RateLimitEnabled on purpose: pre-auth routes need a
-// floor even with the global limiter off, which is the default.
-func unauthRateLimit() echo.MiddlewareFunc {
+// perMinuteIPRateLimit ignores RateLimitEnabled on purpose: pre-auth routes need
+// a floor even with the global limiter off, which is the default.
+func perMinuteIPRateLimit(prefix string, limit int64) echo.MiddlewareFunc {
 	rate := limiter.Rate{
 		Period: 60 * time.Second,
-		Limit:  config.RateLimitNoAuthRoutesLimit.GetInt64(),
+		Limit:  limit,
 	}
-	return RateLimit(createRateLimiter("noauth", rate), "ip")
+	return RateLimit(createRateLimiter(prefix, rate), "ip")
+}
+
+func unauthRateLimit() echo.MiddlewareFunc {
+	return perMinuteIPRateLimit("noauth", config.RateLimitNoAuthRoutesLimit.GetInt64())
+}
+
+// Renewal is routine traffic - sharing the credential-guessing floor let it starve /login.
+func tokenRefreshRateLimit() echo.MiddlewareFunc {
+	return perMinuteIPRateLimit("tokenrefresh", config.RateLimitTokenRefreshLimit.GetInt64())
 }
 
 func setupRateLimit(a *echo.Group, rateLimitKind string) {
