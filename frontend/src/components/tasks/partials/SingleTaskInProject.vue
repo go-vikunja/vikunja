@@ -166,6 +166,7 @@
 			>
 				{{ project.title }}
 			</RouterLink>
+
 			<BaseButton
 				:class="{'is-favorite': task.isFavorite}"
 				class="favorite"
@@ -295,8 +296,6 @@ const currentProject = computed(() => {
 		title: '',
 	} : baseStore.currentProject
 })
-
-
 
 const taskDetailRoute = computed(() => ({
 	name: 'task.detail',
