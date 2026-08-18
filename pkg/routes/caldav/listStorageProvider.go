@@ -365,6 +365,22 @@ func (vcls *VikunjaCaldavProjectStorage) CreateResource(rpath, content string) (
 		return nil, errs.ForbiddenError
 	}
 
+	// A client PUTting a UID that already exists is syncing a stale href - typically
+	// after the task moved to another project. Creating a second task would silently
+	// fork it (#3482), so 404 instead and let the client resync to the real collection.
+	if vTask.UID != "" {
+		existing, err := models.GetTasksByUIDs(s, []string{vTask.UID}, vcls.user)
+		if err != nil {
+			_ = s.Rollback()
+			return nil, err
+		}
+		if len(existing) > 0 {
+			_ = s.Rollback()
+			log.Debugf("[CALDAV] Refusing to create task with already existing UID %s in project %d", vTask.UID, vcls.project.ID)
+			return nil, errs.ResourceNotFoundError
+		}
+	}
+
 	// Inbound CalDAV descriptions are markdown; store them as canonical HTML.
 	if err := applyDescriptionFromMarkdown(s, vTask, ""); err != nil {
 		log.Errorf("[CALDAV] Failed to convert description in CreateResource: %v", err)
