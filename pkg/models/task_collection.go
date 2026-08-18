@@ -261,7 +261,7 @@ func getRelevantProjectsFromCollection(s *xorm.Session, a web.Auth, tf *TaskColl
 	projectMap := make(map[int64]*Project)
 	for _, p := range allProjects {
 		projectMap[p.ID] = p
-		childrenMap[p.ParentProjectID] = append(childrenMap[p.ParentProjectID], p.ID)
+		childrenMap[p.parentID()] = append(childrenMap[p.parentID()], p.ID)
 	}
 
 	queue := []int64{tf.ProjectID}
