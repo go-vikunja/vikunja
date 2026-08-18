@@ -14,6 +14,7 @@ function makeUser(overrides: Partial<IUser> = {}): IUser {
 		updated: new Date(),
 		settings: {} as IUser['settings'],
 		isLocalUser: true,
+		pendingEmail: '',
 		deletionScheduledAt: null,
 		...overrides,
 	}
