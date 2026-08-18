@@ -25,6 +25,7 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
+	"code.vikunja.io/api/pkg/modules/humabridge"
 	"code.vikunja.io/api/pkg/web"
 
 	echojwt "github.com/labstack/echo-jwt/v5"
@@ -53,8 +54,7 @@ func SetupTokenMiddleware() echo.MiddlewareFunc {
 
 			for _, s := range authHeader {
 				if strings.HasPrefix(s, "Bearer "+models.APITokenPrefix) {
-					skipRouteCheck := c.Path() == "/api/v1/token/test" || c.Path() == "/api/v2/token/test"
-					err := checkAPITokenAndPutItInContext(s, c, skipRouteCheck)
+					err := checkAPITokenAndPutItInContext(s, c, shouldSkipRouteCheck(c))
 					return err == nil
 				}
 			}
@@ -73,6 +73,23 @@ func SetupTokenMiddleware() echo.MiddlewareFunc {
 			return nil
 		},
 	})
+}
+
+// An autopatch leg inherits the client PATCH's authorisation only as long as it
+// resolves to the very route that PATCH was authorised against.
+func shouldSkipRouteCheck(c *echo.Context) bool {
+	if c.Path() == "/api/v1/token/test" || c.Path() == "/api/v2/token/test" {
+		return true
+	}
+
+	// Autopatch re-dispatches a bare GET on the authorised route; a query string
+	// or any other method means the client smuggled it in through the path.
+	if c.Request().Method != http.MethodGet || c.Request().URL.RawQuery != "" {
+		return false
+	}
+
+	route, ok := humabridge.InternalDispatchRoute(c.Request().Context())
+	return ok && route != "" && route == c.Path()
 }
 
 func checkAPITokenAndPutItInContext(tokenHeaderValue string, c *echo.Context, skipRouteCheck bool) error {
