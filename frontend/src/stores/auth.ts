@@ -458,12 +458,11 @@ export const useAuthStore = defineStore('auth', () => {
 	/**
 	 * Try to verify the email
 	 */
-	async function verifyEmail(): Promise<boolean> {
-		const emailVerifyToken = localStorage.getItem('emailConfirmToken')
-		if (emailVerifyToken) {
+	async function verifyEmail(token = localStorage.getItem('emailConfirmToken')): Promise<boolean> {
+		if (token) {
 			const stopLoading = setModuleLoading(setIsLoading)
 			try {
-				await HTTPFactory().post('user/confirm', {token: emailVerifyToken})
+				await HTTPFactory().post('user/confirm', {token})
 				return true
 			} catch(e) {
 				throw new Error(e.response.data.message, {cause: e})
