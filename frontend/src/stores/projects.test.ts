@@ -30,6 +30,22 @@ vi.mock('@/stores/base', () => ({
 	}),
 }))
 
+const projectServiceMock = {
+	update: vi.fn(),
+	getAll: vi.fn(),
+	totalPages: 1,
+}
+
+vi.mock('@/services/project', () => ({
+	default: class {
+		update = (project: IProject) => projectServiceMock.update(project)
+		getAll = (...args: unknown[]) => projectServiceMock.getAll(...args)
+		get totalPages() {
+			return projectServiceMock.totalPages
+		}
+	},
+}))
+
 function createMockProject(overrides: Partial<IProject>): IProject {
 	return {
 		id: 1,
@@ -209,6 +225,43 @@ describe('project store', () => {
 
 			// Dragged to an accessible parent - allow reparenting
 			expect(store.getEffectiveParentProjectId(orphanedProject, 5)).toBe(5)
+		})
+	})
+
+	describe('updateProject', () => {
+		beforeEach(() => {
+			projectServiceMock.update.mockReset()
+			projectServiceMock.getAll.mockReset()
+			projectServiceMock.totalPages = 1
+		})
+
+		it('should not reload all projects when the api kept the position', async () => {
+			const store = useProjectStore()
+			const project = createMockProject({id: 1, position: 100})
+			store.setProject(project)
+			projectServiceMock.update.mockResolvedValue(createMockProject({id: 1, position: 100}))
+
+			await store.updateProject({...project, title: 'Renamed'})
+
+			expect(projectServiceMock.getAll).not.toHaveBeenCalled()
+		})
+
+		it('should reload all projects when the api recalculated the position', async () => {
+			const store = useProjectStore()
+			store.setProject(createMockProject({id: 1, position: 0.0001}))
+			store.setProject(createMockProject({id: 2, position: 100}))
+			projectServiceMock.update.mockResolvedValue(createMockProject({id: 1, position: 2147483648}))
+			projectServiceMock.getAll.mockResolvedValue([
+				createMockProject({id: 1, position: 2147483648}),
+				createMockProject({id: 2, position: 4294967296}),
+			])
+
+			await store.updateProject(createMockProject({id: 1, position: 0.0001}))
+
+			expect(projectServiceMock.getAll).toHaveBeenCalled()
+			// Project 2 was never updated - only the reload can fix its stale position.
+			expect(store.projectsArray.map(p => p.id)).toEqual([1, 2])
+			expect(store.projects[2].position).toBe(4294967296)
 		})
 	})
 })
