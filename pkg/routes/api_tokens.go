@@ -53,7 +53,9 @@ func SetupTokenMiddleware() echo.MiddlewareFunc {
 
 			for _, s := range authHeader {
 				if strings.HasPrefix(s, "Bearer "+models.APITokenPrefix) {
-					skipRouteCheck := c.Request().URL.Path == "/api/v1/token/test"
+					// token/test is dropped from the scope tables, so no permission
+					// set can cover it; the token itself is still fully validated.
+					skipRouteCheck := c.Path() == "/api/v1/token/test" || c.Path() == "/api/v2/token/test"
 					err := checkAPITokenAndPutItInContext(s, c, skipRouteCheck)
 					return err == nil
 				}
