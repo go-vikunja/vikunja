@@ -351,6 +351,7 @@ func init() {
 		"RequestPasswordResetAsAdmin":                      reflect.ValueOf(models.RequestPasswordResetAsAdmin),
 		"RotateRefreshToken":                               reflect.ValueOf(models.RotateRefreshToken),
 		"SearchUsersForProject":                            reflect.ValueOf(models.SearchUsersForProject),
+		"SetArchiveStateForProjectDescendants":             reflect.ValueOf(models.SetArchiveStateForProjectDescendants),
 		"SetEngine":                                        reflect.ValueOf(models.SetEngine),
 		"SetProjectBackground":                             reflect.ValueOf(models.SetProjectBackground),
 		"SetUserAdminFlag":                                 reflect.ValueOf(models.SetUserAdminFlag),

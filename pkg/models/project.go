@@ -1267,7 +1267,7 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 	// Only cascade on an actual state change: a plain edit of an unarchived
 	// parent must not un-archive individually archived children.
 	if project.IsArchived != storedProject.IsArchived {
-		err = setArchiveStateForProjectDescendants(s, project.ID, project.IsArchived)
+		err = SetArchiveStateForProjectDescendants(s, project.ID, project.IsArchived)
 		if err != nil {
 			return err
 		}
@@ -1633,8 +1633,8 @@ func ClearProjectBackground(s *xorm.Session, projectID int64) (err error) {
 	return
 }
 
-// setArchiveStateForProjectDescendants uses a recursive CTE to find and set the archived status of all descendant projects.
-func setArchiveStateForProjectDescendants(s *xorm.Session, parentProjectID int64, shouldBeArchived bool) error {
+// SetArchiveStateForProjectDescendants uses a recursive CTE to find and set the archived status of all descendant projects.
+func SetArchiveStateForProjectDescendants(s *xorm.Session, parentProjectID int64, shouldBeArchived bool) error {
 	var descendantIDs []int64
 	err := s.SQL(
 		`

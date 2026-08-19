@@ -142,6 +142,14 @@ func insertFromStructure(s *xorm.Session, str []*models.ProjectWithTasksAndBucke
 		}
 	}
 
+	// Exports written before archiving cascaded carry unflagged children under archived parents.
+	for _, projectID := range archivedProjects {
+		err = models.SetArchiveStateForProjectDescendants(s, projectID, true)
+		if err != nil {
+			return err
+		}
+	}
+
 	log.Debugf("[creating structure] Done inserting new task structure")
 
 	return nil
