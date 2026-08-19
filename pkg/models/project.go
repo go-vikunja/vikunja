@@ -1170,6 +1170,13 @@ func RegisterUser(s *xorm.Session, u *user.User) (*user.User, error) {
 	return newUser, nil
 }
 
+func effectiveParentID(project, storedProject *Project) int64 {
+	if project.ParentProjectID != nil {
+		return *project.ParentProjectID
+	}
+	return storedProject.parentID()
+}
+
 // checkProjectParentBeforeUpdate gates reparenting and un-archiving. Both are
 // enforced here and not in CanUpdate: that short-circuits for instance admins
 // and is bypassed entirely by direct UpdateProject callers.
@@ -1180,10 +1187,6 @@ func RegisterUser(s *xorm.Session, u *user.User) (*user.User, error) {
 // grants Admin on the child, and detaching a child to the top level
 // severs an owner's inherited-permission chain. Both are reparent
 // operations that must require Admin on the moved project.
-//
-// ParentProjectID is a *int64 so an omitted parent_project_id (nil) is
-// distinguishable from an explicit 0 (detach-to-root). Only gate when
-// the field was sent and actually changes the parent.
 func checkProjectParentBeforeUpdate(s *xorm.Session, project, storedProject *Project, auth web.Auth) (err error) {
 	isReparent := project.ParentProjectID != nil && *project.ParentProjectID != storedProject.parentID()
 	isUnarchive := storedProject.IsArchived && !project.IsArchived
@@ -1191,10 +1194,7 @@ func checkProjectParentBeforeUpdate(s *xorm.Session, project, storedProject *Pro
 		return nil
 	}
 
-	parentID := storedProject.parentID()
-	if project.ParentProjectID != nil {
-		parentID = *project.ParentProjectID
-	}
+	parentID := effectiveParentID(project, storedProject)
 
 	var parent *Project
 	if parentID > 0 {
