@@ -263,24 +263,11 @@ func (p *Project) CanUpdate(s *xorm.Session, a web.Auth) (canUpdate bool, err er
 	}
 
 	canUpdate, err = p.CanWrite(s, a)
-	// Un-archiving an archived project is allowed, unless its parent is
-	// still archived - then the parent has to be un-archived first.
+	// Un-archiving an archived project is allowed here; whether its parent
+	// still is archived is checked in UpdateProject.
 	archivedErr := ErrProjectIsArchived{}
 	is := errors.As(err, &archivedErr)
 	if is && !p.IsArchived && archivedErr.ProjectID == p.ID {
-		parentID := ol.parentID()
-		if p.ParentProjectID != nil {
-			parentID = *p.ParentProjectID
-		}
-		if parentID > 0 {
-			parent, err := GetProjectSimpleByID(s, parentID)
-			if err != nil {
-				return false, err
-			}
-			if parent.IsArchived {
-				return canUpdate, ErrProjectIsArchived{ProjectID: parentID}
-			}
-		}
 		err = nil
 	}
 	return canUpdate, err

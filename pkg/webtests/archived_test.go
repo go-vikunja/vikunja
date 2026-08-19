@@ -167,7 +167,7 @@ func TestArchived(t *testing.T) {
 		t.Run("not unarchivable", func(t *testing.T) {
 			_, err := testProjectHandler.testUpdateWithUser(nil, map[string]string{"project": "21"}, `{"title":"LoremIpsum","is_archived":false}`)
 			require.Error(t, err)
-			assertHandlerErrorCode(t, err, models.ErrCodeProjectIsArchived)
+			assertHandlerErrorCode(t, err, models.ErrCodeParentProjectIsArchived)
 		})
 
 		taskTests("35", models.ErrCodeProjectIsArchived, t)

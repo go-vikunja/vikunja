@@ -72,7 +72,7 @@ func TestHumaArchived(t *testing.T) {
 			_, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "21"}, `{"title":"LoremIpsum","is_archived":false}`)
 			require.Error(t, err)
 			assert.Equal(t, http.StatusPreconditionFailed, getHTTPErrorCode(err))
-			assertHandlerErrorCode(t, err, models.ErrCodeProjectIsArchived)
+			assertHandlerErrorCode(t, err, models.ErrCodeParentProjectIsArchived)
 		})
 	})
 

@@ -364,6 +364,30 @@ func (err ErrProjectIsArchived) HTTPError() web.HTTPError {
 	return web.HTTPError{HTTPCode: http.StatusPreconditionFailed, Code: ErrCodeProjectIsArchived, Message: "This project is archived. Editing or creating new tasks is not possible."}
 }
 
+// ErrParentProjectIsArchived represents an error, where a project's parent is archived
+type ErrParentProjectIsArchived struct {
+	ProjectID       int64
+	ParentProjectID int64
+}
+
+// IsErrParentProjectIsArchived checks if an error is a parent project is archived error.
+func IsErrParentProjectIsArchived(err error) bool {
+	_, ok := err.(ErrParentProjectIsArchived)
+	return ok
+}
+
+func (err ErrParentProjectIsArchived) Error() string {
+	return fmt.Sprintf("Parent project is archived [ProjectID: %d, ParentProjectID: %d]", err.ProjectID, err.ParentProjectID)
+}
+
+// ErrCodeParentProjectIsArchived holds the unique world-error code of this error
+const ErrCodeParentProjectIsArchived = 3016
+
+// HTTPError holds the http error description
+func (err ErrParentProjectIsArchived) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusPreconditionFailed, Code: ErrCodeParentProjectIsArchived, Message: "The parent project is archived. Un-archive the parent project first."}
+}
+
 // ErrProjectCannotBelongToAPseudoParentProject represents an error where a project cannot belong to a pseudo project
 type ErrProjectCannotBelongToAPseudoParentProject struct {
 	ProjectID       int64
