@@ -140,8 +140,8 @@ func projectsRead(ctx context.Context, in *struct {
 	body := &projectReadBody{Project: *project}
 	convertToMarkdown(ctx, &body.Description)
 	// No ETag/conditional read: a project response carries user-scoped, derived
-	// state (subscription, favorite, views, computed archived state) that
-	// changes without bumping project.Updated, so it's always served fresh.
+	// state (subscription, favorite, views) that changes without bumping
+	// project.Updated, so it's always served fresh.
 	return &singleBody[projectReadBody]{Body: body}, nil
 }
 
