@@ -21,6 +21,7 @@ import (
 	"context"
 	"math"
 	"strings"
+	"time"
 
 	"xorm.io/xorm"
 
@@ -326,6 +327,10 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 
 	log.Debugf("[creating structure] Creating %d tasks", len(tasks))
 
+	// Moving a done task into an imported bucket flips it back to open (it left the view's done bucket); restore after the loop in bulk.
+	now := time.Now()
+	taskIDsByDoneAt := make(map[time.Time][]int64)
+
 	setBucketOrDefault := func(task *models.Task) (err error) {
 		var bucketID = task.BucketID
 		bucket, exists := bucketsByOldID[bucketID]
@@ -341,6 +346,13 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 			if err != nil {
 				log.Debugf("[creating structure] Error while updating task bucket %d for task %d: %s", bucketID, task.ID, err.Error())
 				return
+			}
+			if task.Done {
+				doneAt := task.DoneAt
+				if doneAt.IsZero() {
+					doneAt = now
+				}
+				taskIDsByDoneAt[doneAt] = append(taskIDsByDoneAt[doneAt], task.ID)
 			}
 		} else if bucketID > 0 {
 			log.Debugf("[creating structure] No bucket created for original bucket id %d", task.BucketID)
@@ -521,6 +533,13 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 				return
 			}
 			log.Debugf("[creating structure] Created new comment %d", comment.ID)
+		}
+	}
+
+	for doneAt, taskIDs := range taskIDsByDoneAt {
+		_, err = s.In("id", taskIDs).Cols("done", "done_at").Update(&models.Task{Done: true, DoneAt: doneAt})
+		if err != nil {
+			return
 		}
 	}
 
