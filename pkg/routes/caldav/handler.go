@@ -103,6 +103,39 @@ func ProjectHandler(c *echo.Context) error {
 		return handlePropPatch(c, string(body), storage.project, u)
 	}
 
+	// caldav-go advertises PUT and DELETE unconditionally; a collection the user cannot
+	// write to always answers those with 403, so clients would retry forever.
+	if c.Request().Method == http.MethodOptions && storage.project.ID != 0 {
+		s := db.NewSession()
+		defer s.Close()
+
+		canWrite, err := denyArchived(storage.project.CanWrite(s, u))
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "internal server error").Wrap(err)
+		}
+
+		if !canWrite {
+			// getProjectFromParam does no permission check, so answering 200 here
+			// would leak which project and filter ids exist.
+			can, err := storage.canReadCollection(s)
+			if err != nil {
+				return echo.NewHTTPError(http.StatusInternalServerError, "internal server error").Wrap(err)
+			}
+			if !can {
+				return c.String(http.StatusNotFound, "Project not found")
+			}
+
+			// A pseudo collection cannot be written to as a collection, but PUT and DELETE
+			// of the tasks it aggregates go through to their real projects.
+			if !models.IsPseudoProjectID(storage.project.ID) {
+				log.Debugf("[CALDAV] OPTIONS for read-only project %d by user %s", storage.project.ID, u.Username)
+				c.Response().Header().Set("DAV", "1, 3, calendar-access")
+				c.Response().Header().Set("Allow", "GET, HEAD, OPTIONS, PROPFIND, REPORT")
+				return c.NoContent(http.StatusOK)
+			}
+		}
+	}
+
 	caldav.SetupStorage(storage)
 	setupUser(ProjectHomeSetPath)
 	caldav.SetupSupportedComponents([]string{lib.VCALENDAR, lib.VTODO})
