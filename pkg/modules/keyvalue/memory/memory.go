@@ -20,43 +20,92 @@ import (
 	"reflect"
 	"strings"
 	"sync"
+	"time"
 
 	e "code.vikunja.io/api/pkg/modules/keyvalue/error"
 )
 
 // Storage is the memory implementation of a storage backend
 type Storage struct {
-	store map[string]interface{}
-	mutex sync.Mutex
+	store     map[string]interface{}
+	expires   map[string]time.Time
+	lastSweep time.Time
+	mutex     sync.Mutex
 }
+
+const sweepInterval = time.Minute
 
 // NewStorage creates a new memory storage
 func NewStorage() *Storage {
 	s := &Storage{}
 	s.store = make(map[string]interface{})
+	s.expires = make(map[string]time.Time)
 	return s
 }
 
-// Put puts a value into the memory storage
+func (s *Storage) expiredLocked(key string) bool {
+	expiresAt, has := s.expires[key]
+	if !has || time.Now().Before(expiresAt) {
+		return false
+	}
+
+	delete(s.store, key)
+	delete(s.expires, key)
+	return true
+}
+
+// Put stores values by reference: maps and slices must not be mutated after Put.
 func (s *Storage) Put(key string, value interface{}) (err error) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
+	delete(s.expires, key)
+	s.setLocked(key, value)
+	return nil
+}
+
+// PutWithTTL stores a value which is treated as absent once ttl has passed.
+func (s *Storage) PutWithTTL(key string, value interface{}, ttl time.Duration) (err error) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	s.setLocked(key, value)
+	s.expires[key] = time.Now().Add(ttl)
+	s.sweepExpiredLocked()
+	return nil
+}
+
+// Expiry is only evaluated on access, so keys nothing reads again would pile up.
+func (s *Storage) sweepExpiredLocked() {
+	if time.Since(s.lastSweep) < sweepInterval {
+		return
+	}
+	s.lastSweep = time.Now()
+
+	for key := range s.expires {
+		s.expiredLocked(key)
+	}
+}
+
+func (s *Storage) setLocked(key string, value interface{}) {
 	val := reflect.ValueOf(value)
 	// Make sure to store the underlying value when value is a pointer to a value
 	if val.Kind() == reflect.Pointer {
 		s.store[key] = val.Elem().Interface()
-		return nil
+		return
 	}
 
 	s.store[key] = value
-	return nil
 }
 
 // Get retrieves a saved value from memory storage
 func (s *Storage) Get(key string) (value interface{}, exists bool, err error) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
+
+	if s.expiredLocked(key) {
+		return nil, false, nil
+	}
 
 	value, exists = s.store[key]
 	return
@@ -86,6 +135,7 @@ func (s *Storage) Del(key string) (err error) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	delete(s.store, key)
+	delete(s.expires, key)
 	return nil
 }
 
@@ -94,6 +144,8 @@ func (s *Storage) Del(key string) (err error) {
 func (s *Storage) IncrBy(key string, update int64) (err error) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
+
+	s.expiredLocked(key)
 
 	_, exists := s.store[key]
 	if !exists {
@@ -113,6 +165,8 @@ func (s *Storage) IncrBy(key string, update int64) (err error) {
 func (s *Storage) DecrBy(key string, update int64) (err error) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
+
+	s.expiredLocked(key)
 
 	_, exists := s.store[key]
 	if !exists {
@@ -134,9 +188,10 @@ func (s *Storage) ListKeys(prefix string) ([]string, error) {
 
 	keys := make([]string, 0)
 	for k := range s.store {
-		if strings.HasPrefix(k, prefix) {
-			keys = append(keys, k)
+		if !strings.HasPrefix(k, prefix) || s.expiredLocked(k) {
+			continue
 		}
+		keys = append(keys, k)
 	}
 
 	return keys, nil
@@ -150,6 +205,7 @@ func (s *Storage) DelPrefix(prefix string) error {
 	for k := range s.store {
 		if strings.HasPrefix(k, prefix) {
 			delete(s.store, k)
+			delete(s.expires, k)
 		}
 	}
 
