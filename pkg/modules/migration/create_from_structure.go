@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"context"
 	"math"
+	"strings"
 
 	"xorm.io/xorm"
 
@@ -34,11 +35,18 @@ import (
 
 // InsertFromStructure takes a fully nested Vikunja data structure and a user and then creates everything for this user
 // (Projects, tasks, etc. Even attachments and relations.)
-func InsertFromStructure(str []*models.ProjectWithTasksAndBuckets, user *user.User) (err error) {
+func InsertFromStructure(str []*models.ProjectWithTasksAndBuckets, u *user.User) (err error) {
 	s := db.NewSession()
 	defer s.Close()
 
-	err = insertFromStructure(s, str, user)
+	// Callers may pass a user built from jwt claims; load the stored one so
+	// assignee matching sees the current email/username.
+	importer, err := user.GetUserWithEmail(s, &user.User{ID: u.ID})
+	if err != nil {
+		return err
+	}
+
+	err = insertFromStructure(s, str, importer)
 	if err != nil {
 		log.Errorf("[creating structure] Error while creating structure: %s", err.Error())
 		_ = s.Rollback()
@@ -355,6 +363,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		t.ProjectID = project.ID
 		originalBucketID := t.BucketID
 		t.BucketID = 0
+		t.Assignees = remapAssignees(t.Assignees, user)
 		err = t.Create(s, user)
 		if err != nil {
 			if models.IsErrTaskCannotBeEmpty(err) {
@@ -393,6 +402,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 					rt.ProjectID = t.ProjectID
 					originalBucketID := rt.BucketID
 					rt.BucketID = 0
+					rt.Assignees = remapAssignees(rt.Assignees, user)
 
 					err = rt.Create(s, user)
 					if err != nil {
@@ -604,5 +614,21 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 	project.Tasks = tasks
 	project.Buckets = originalBuckets
 
+	return nil
+}
+
+// Exported assignees carry user ids from a foreign instance. Only the importing
+// user can be matched (by email, then username); everyone else is dropped.
+func remapAssignees(assignees []*user.User, importer *user.User) []*user.User {
+	for _, a := range assignees {
+		if a == nil {
+			continue
+		}
+		emailMatch := a.Email != "" && importer.Email != "" && strings.EqualFold(a.Email, importer.Email)
+		usernameMatch := a.Username != "" && strings.EqualFold(a.Username, importer.Username)
+		if emailMatch || usernameMatch {
+			return []*user.User{importer}
+		}
+	}
 	return nil
 }
