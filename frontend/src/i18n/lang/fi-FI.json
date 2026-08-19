@@ -83,7 +83,6 @@
 			"passwordUpdateSuccess": "Salasana päivitettiin onnistuneesti.",
 			"updateEmailTitle": "Päivitä Sähköpostiosoitteesi",
 			"updateEmailNew": "Uusi sähköpostiosoite",
-			"updateEmailSuccess": "Sähköpostiosoitteesi päivitettiin onnistuneesti. Olemme lähettäneet sinulle vahvistus linkin.",
 			"general": {
 				"title": "Yleiset Asetukset",
 				"name": "Oma Nimi",

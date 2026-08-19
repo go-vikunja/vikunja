@@ -374,8 +374,19 @@ export const useTaskStore = defineStore('task', () => {
 	
 	async function ensureLabelsExist(labels: string[]): Promise<LabelModel[]> {
 		const all = [...new Set(labels)]
+		const findLabel = (labelTitle: string) => validateLabel(Object.values(labelStore.labels) as ILabel[], labelTitle)
+
+		// The quick add window doesn't render ContentAuth, so nothing loaded the store yet.
+		if (all.some(labelTitle => typeof findLabel(labelTitle) === 'undefined')) {
+			try {
+				await labelStore.loadAllLabels()
+			} catch (e) {
+				console.debug('Could not load labels before creating them from quick add magic', e)
+			}
+		}
+
 		const mustCreateLabel = all.map(async labelTitle => {
-			let label = validateLabel(Object.values(labelStore.labels), labelTitle)
+			let label = findLabel(labelTitle)
 			if (typeof label === 'undefined') {
 				const labelModel = new LabelModel({
 					title: labelTitle,

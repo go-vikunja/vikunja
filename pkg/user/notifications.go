@@ -87,6 +87,32 @@ func (n *PasswordChangedNotification) Name() string {
 	return ""
 }
 
+// EmailChangeRequestedNotification represents a EmailChangeRequestedNotification notification
+type EmailChangeRequestedNotification struct {
+	User     *User
+	NewEmail string
+}
+
+// ToMail returns the mail notification for EmailChangeRequestedNotification
+func (n *EmailChangeRequestedNotification) ToMail(lang string) *notifications.Mail {
+	return notifications.NewMail().
+		Subject(i18n.T(lang, "notifications.email_change.subject")).
+		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName())).
+		Line(i18n.T(lang, "notifications.email_change.requested", n.NewEmail)).
+		Line(i18n.T(lang, "notifications.email_change.warning")).
+		Action(i18n.T(lang, "notifications.common.actions.go_to_settings"), config.ServicePublicURL.GetString()+"user/settings/email-update")
+}
+
+// ToDB returns the EmailChangeRequestedNotification notification in a format which can be saved in the db
+func (n *EmailChangeRequestedNotification) ToDB() interface{} {
+	return nil
+}
+
+// Name returns the name of the notification
+func (n *EmailChangeRequestedNotification) Name() string {
+	return ""
+}
+
 // ResetPasswordNotification represents a ResetPasswordNotification notification
 type ResetPasswordNotification struct {
 	User  *User

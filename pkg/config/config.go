@@ -157,6 +157,7 @@ const (
 	RateLimitLimit             Key = `ratelimit.limit`
 	RateLimitStore             Key = `ratelimit.store`
 	RateLimitNoAuthRoutesLimit Key = `ratelimit.noauthlimit`
+	RateLimitTokenRefreshLimit Key = `ratelimit.tokenrefreshlimit`
 
 	FilesBasePath Key = `files.basepath`
 	FilesMaxSize  Key = `files.maxsize`
@@ -449,6 +450,7 @@ func initDefaultConfig() {
 	RateLimitPeriod.setDefault(60)
 	RateLimitStore.setDefault("memory")
 	RateLimitNoAuthRoutesLimit.setDefault(10)
+	RateLimitTokenRefreshLimit.setDefault(60)
 	// Files
 	FilesBasePath.setDefault("files")
 	FilesMaxSize.setDefault("20MB")

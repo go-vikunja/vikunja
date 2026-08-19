@@ -7,6 +7,11 @@
             "welcome":  "Welcome to Vikunja!",
             "confirm": "To confirm your email address, click the link below:"
         },
+        "email_change": {
+            "subject": "An email address change was requested for your Vikunja account",
+            "requested": "Someone requested to change the email address of your account to %[1]s. Your current address stays active until the new one is confirmed.",
+            "warning": "If this wasn't you, change your password immediately and cancel the pending change in your account settings."
+        },
         "password": {
             "changed": {
                 "subject": "Your Password on Vikunja was changed",

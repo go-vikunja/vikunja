@@ -26,6 +26,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"xorm.io/builder"
 )
 
 func TestProject_CreateOrUpdate(t *testing.T) {
@@ -233,6 +234,37 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 				"title":       project.Title,
 				"description": project.Description,
 			}, false)
+		})
+		t.Run("tiny position triggers recalculation which includes the project itself", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
+			project := Project{
+				ID:       1,
+				Title:    "Test1",
+				Position: 0.00001,
+			}
+			err := project.Update(s, usr)
+			require.NoError(t, err)
+			require.NoError(t, s.Commit())
+
+			// Had the lowest position, so it lands in the first slot of the new range.
+			assert.Greater(t, project.Position, 0.1)
+
+			verifySession := db.NewSession()
+			defer verifySession.Close()
+			rootProjects := []*Project{}
+			require.NoError(t, verifySession.
+				Where(builder.Or(builder.Eq{"parent_project_id": 0}, builder.IsNull{"parent_project_id"})).
+				OrderBy("position asc, id asc").
+				Find(&rootProjects))
+
+			require.NotEmpty(t, rootProjects)
+			assert.Equal(t, int64(1), rootProjects[0].ID)
+			for _, p := range rootProjects {
+				assert.Greater(t, p.Position, 0.1)
+			}
 		})
 		t.Run("nonexistent", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)

@@ -78,7 +78,6 @@
 			"passwordUpdateSuccess": "Passordet ble oppdatert.",
 			"updateEmailTitle": "Oppdater e-postadresse",
 			"updateEmailNew": "Ny e-postadresse",
-			"updateEmailSuccess": "E-postadressen ble oppdatert. Vi har sendt deg en lenke for å bekrefte den.",
 			"general": {
 				"title": "Generelle innstillinger",
 				"name": "Mitt navn",

@@ -328,10 +328,13 @@ func getTasksWithRemindersDueAndTheirUsers(s *xorm.Session, now time.Time, cond 
 			if (actualReminder.After(now) && actualReminder.Before(now.Add(time.Minute))) || actualReminder.Equal(now) {
 				seen[r.TaskID][u.User.ID] = true
 
+				project := projects[u.Task.ProjectID]
+				u.Task.setIdentifier(project)
+
 				reminderNotifications = append(reminderNotifications, &ReminderDueNotification{
 					User:         u.User,
 					Task:         u.Task,
-					Project:      projects[u.Task.ProjectID],
+					Project:      project,
 					TaskReminder: r,
 				})
 			}

@@ -78,7 +78,6 @@
 			"passwordUpdateSuccess": "Lösenordet har uppdaterats.",
 			"updateEmailTitle": "Uppdatera din e-postadress",
 			"updateEmailNew": "Ny e-postadress",
-			"updateEmailSuccess": "Din e-postadress har uppdaterats. Vi har skickat en länk till dig för att bekräfta den.",
 			"general": {
 				"title": "Allmänna inställningar",
 				"name": "Mitt namn",

@@ -156,12 +156,12 @@
                 {
                     "key": "ipextractionmethod",
                     "default_value": "direct",
-                    "comment": "Method for extracting client IP addresses. 'direct' (default) uses the TCP remote address and ignores forwarding headers — use this when Vikunja faces the internet directly. 'xff' extracts from the X-Forwarded-For header — use this behind proxies like nginx, Traefik, or cloud load balancers. 'realip' extracts from the X-Real-IP header. When using 'xff' or 'realip', configure 'service.trustedproxies' with your proxy CIDR ranges."
+                    "comment": "Method for extracting client IP addresses. 'direct' (default) uses the TCP remote address and ignores forwarding headers — use this when Vikunja faces the internet directly. 'xff' extracts from the X-Forwarded-For header — use this behind proxies like nginx, Traefik, or cloud load balancers. 'realip' extracts from the X-Real-IP header, but only honours it when the header value itself falls into a trusted range (loopback, private networks or 'service.trustedproxies') — it does not check who sent the header, so it cannot report public client IPs. Prefer 'xff' behind a reverse proxy. When using 'xff' or 'realip', configure 'service.trustedproxies' with your proxy CIDR ranges."
                 },
                 {
                     "key": "trustedproxies",
                     "default_value": "",
-                    "comment": "Comma-separated list of CIDR ranges for trusted reverse proxies. Only used when service.ipextractionmethod is 'xff' or 'realip'. X-Forwarded-For / X-Real-IP headers are only trusted from these addresses. Example: '127.0.0.1/32,::1/128,10.0.0.0/8,172.16.0.0/12'"
+                    "comment": "Comma-separated list of CIDR ranges for trusted reverse proxies. Only used when service.ipextractionmethod is 'xff' or 'realip'. With 'xff', X-Forwarded-For is only trusted when the request comes from one of these addresses; with 'realip', the X-Real-IP value itself must be within these ranges. Example: '127.0.0.1/32,::1/128,10.0.0.0/8,172.16.0.0/12'"
                 }
             ]
         },
@@ -479,6 +479,11 @@
                     "key": "noauthlimit",
                     "default_value": "10",
                     "comment": "The number of requests a user can make from the same IP to all unauthenticated routes (login, register,\npassword confirmation, email verification, password reset request) per minute. This limit cannot be disabled.\nYou should only change this if you know what you're doing."
+                },
+                {
+                    "key": "tokenrefreshlimit",
+                    "default_value": "60",
+                    "comment": "The number of requests a user can make from the same IP to the session renewal routes\n(token refresh and the OAuth token endpoint) per minute. These are kept separate from\n\"noauthlimit\" because every logged-in client renews its access token periodically, which\nwould otherwise use up the budget reserved for login attempts. This limit cannot be disabled."
                 }
             ]
         },

@@ -169,6 +169,11 @@ func TestHumaTokenMeta(t *testing.T) {
 		rec := humaRequest(t, e, http.MethodGet, "/api/v2/token/test", "", "", "")
 		assert.Equal(t, http.StatusUnauthorized, rec.Code)
 	})
+	t.Run("token test with api token", func(t *testing.T) {
+		rec := apiTokenReq(e, http.MethodGet, "/api/v2/token/test", "tk_2eef46f40ebab3304919ab2e7e39993f75f29d2e", "")
+		require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+		assert.Contains(t, rec.Body.String(), `"message":"ok"`)
+	})
 	t.Run("routes lists token routes", func(t *testing.T) {
 		rec := humaRequest(t, e, http.MethodGet, "/api/v2/routes", "", userToken, "")
 		require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())

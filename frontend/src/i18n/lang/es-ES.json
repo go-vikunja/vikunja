@@ -61,7 +61,6 @@
 			"currentPasswordPlaceholder": "Tu contraseña actual",
 			"passwordUpdateSuccess": "La contraseña se actualizó con éxito.",
 			"updateEmailTitle": "Actualiza tu Dirección de Correo Electrónico",
-			"updateEmailSuccess": "Tu dirección de correo electrónico se ha actualizado con éxito. Te hemos enviado un enlace para confirmarlo.",
 			"general": {
 				"title": "Ajustes Generales",
 				"savedSuccess": "Ajustes actualizados con éxito.",

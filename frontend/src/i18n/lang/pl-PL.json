@@ -72,7 +72,6 @@
 			"currentPasswordPlaceholder": "Twoje aktualne hasło",
 			"passwordUpdateSuccess": "Hasło zostało pomyślnie zaktualizowane.",
 			"updateEmailTitle": "Zaktualizuj swój adres e-mail",
-			"updateEmailSuccess": "Twój adres e-mail został pomyślnie zaktualizowany. Wysłaliśmy Ci link do potwierdzenia operacji.",
 			"general": {
 				"title": "Ustawienia główne",
 				"savedSuccess": "Ustawienia zostały pomyślnie zaktualizowane.",

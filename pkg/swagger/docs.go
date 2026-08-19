@@ -11265,6 +11265,9 @@ const docTemplate = `{
                     "description": "The full name of the user.",
                     "type": "string"
                 },
+                "pending_email": {
+                    "type": "string"
+                },
                 "settings": {
                     "$ref": "#/definitions/models.UserGeneralSettings"
                 },

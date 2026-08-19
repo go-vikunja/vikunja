@@ -66,7 +66,6 @@
 			"currentPasswordPlaceholder": "كلمة المرور الحالية الخاصة بك",
 			"passwordUpdateSuccess": "تم تحديث كلمة المرور بنجاح.",
 			"updateEmailTitle": "تحديث عنوان بريدك الإلكتروني",
-			"updateEmailSuccess": "تم تحديث عنوان بريدك الإلكتروني بنجاح. لقد أرسلنا لك رابط لتأكيده.",
 			"general": {
 				"title": "الإعدادات العامة",
 				"savedSuccess": "تم تحديث الإعدادات بنجاح.",

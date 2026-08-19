@@ -134,12 +134,10 @@
 		"api_token": {
 			"expiring": {
 				"week": {
-					"subject": "Dein API-Token „%[1]s“ läuft bald ab",
-					"message": "Dein API-Token „%[1]s“ läuft am %[2]s ab. Wenn du es noch brauchst, erstelle bitte ein neues bevor es abläuft."
+					"subject": "Dein API-Token „%[1]s“ läuft bald ab"
 				},
 				"day": {
-					"subject": "Dein API-Token „%[1]s“ läuft morgen ab",
-					"message": "Dein API-Token „%[1]s“ läuft am %[2]s ab. Wenn du es noch brauchst, erstelle bitte ein neues bevor es abläuft."
+					"subject": "Dein API-Token „%[1]s“ läuft morgen ab"
 				},
 				"action": "API-Token verwalten"
 			}

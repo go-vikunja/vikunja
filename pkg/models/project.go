@@ -1171,7 +1171,7 @@ func CreateNewProjectForUser(s *xorm.Session, u *user.User) (err error) {
 	}
 
 	u.DefaultProjectID = p.ID
-	_, err = user.UpdateUser(s, u, false)
+	_, err = s.ID(u.ID).Cols("default_project_id").Update(u)
 	return err
 }
 
@@ -1275,13 +1275,6 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 		colsToUpdate = append(colsToUpdate, "background_file_id", "background_blur_hash")
 	}
 
-	if project.Position < 0.1 {
-		err = recalculateProjectPositions(s, project.parentID())
-		if err != nil {
-			return err
-		}
-	}
-
 	wasFavorite, err := isFavorite(s, project.ID, auth, FavoriteKindProject)
 	if err != nil {
 		return err
@@ -1318,6 +1311,20 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 		return err
 	}
 
+	// Healing before the write would leave the project at its tiny position and every
+	// further move to the top would trigger another recalculation.
+	if l.Position < 0.1 {
+		err = recalculateProjectPositions(s, l.parentID())
+		if err != nil {
+			return err
+		}
+
+		l, err = GetProjectSimpleByID(s, project.ID)
+		if err != nil {
+			return err
+		}
+	}
+
 	*project = *l
 	err = project.ReadOne(s, auth)
 	return
@@ -1325,10 +1332,16 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 
 func recalculateProjectPositions(s *xorm.Session, parentProjectID int64) (err error) {
 
+	// Root projects may store their parent as NULL instead of 0 and would never be healed.
+	var parentCond builder.Cond = builder.Eq{"parent_project_id": parentProjectID}
+	if parentProjectID == 0 {
+		parentCond = builder.Or(parentCond, builder.IsNull{"parent_project_id"})
+	}
+
 	allProjects := []*Project{}
 	err = s.
-		Where("parent_project_id = ?", parentProjectID).
-		OrderBy("position asc").
+		Where(parentCond).
+		OrderBy("position asc, id asc").
 		Find(&allProjects)
 	if err != nil {
 		return

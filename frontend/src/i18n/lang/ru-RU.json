@@ -124,7 +124,6 @@
 			"passwordUpdateSuccess": "Пароль изменён.",
 			"updateEmailTitle": "Изменить Email",
 			"updateEmailNew": "Новый email адрес",
-			"updateEmailSuccess": "E-mail успешно изменён. Для подтверждения нажмите на ссылку в письме, отправленном на новый адрес.",
 			"general": {
 				"title": "Основные настройки",
 				"name": "Моё имя",
