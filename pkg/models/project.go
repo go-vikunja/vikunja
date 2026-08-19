@@ -1012,15 +1012,32 @@ func checkProjectBeforeUpdateOrDelete(s *xorm.Session, project *Project) (err er
 			return err
 		}
 
-		var parent *Project
-		parent = allProjects[parentID]
+		parent := allProjects[parentID]
+		if parent == nil {
+			// Un-archiving sends the whole project back, so a dangling stored parent
+			// must pass; a newly requested parent still has to exist.
+			echoesStoredParent := false
+			if project.ID != 0 {
+				stored, err := GetProjectSimpleByID(s, project.ID)
+				if err != nil {
+					return err
+				}
+				echoesStoredParent = stored.parentID() == parentID
+			}
+			if !echoesStoredParent {
+				return ErrProjectDoesNotExist{ID: parentID}
+			}
+		}
 
 		// Check if there's a cycle in the parent relation
 		parentsVisited := make(map[int64]bool)
 		parentsVisited[project.ID] = true
-		for parent.parentID() != 0 {
+		for parent != nil && parent.parentID() != 0 {
 
 			parent = allProjects[parent.parentID()]
+			if parent == nil {
+				break
+			}
 
 			if parentsVisited[parent.ID] {
 				return &ErrProjectCannotHaveACyclicRelationship{

@@ -57,6 +57,10 @@ func (b *Bucket) canDoBucket(s *xorm.Session, a web.Auth) (bool, error) {
 
 // Not Project.CanUpdate: that swallows the archived error to allow un-archiving, buckets must not get that.
 func canWriteBucketProject(s *xorm.Session, projectID int64, a web.Auth) (bool, error) {
+	if isInstanceAdmin(s, a) {
+		return true, nil
+	}
+
 	if fid := GetSavedFilterIDFromProjectID(projectID); fid > 0 {
 		sf := &SavedFilter{ID: fid}
 		return sf.CanUpdate(s, a)

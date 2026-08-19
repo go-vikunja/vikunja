@@ -556,6 +556,29 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 
 			db.AssertExists(t, "projects", map[string]interface{}{"id": 39, "is_archived": false}, false)
 		})
+		t.Run("unarchive orphaned project with echoed parent", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
+			// The frontend sends the whole project back, dangling parent included.
+			project := Project{ID: 39, Title: "Orphaned project with deleted parent", IsArchived: false, ParentProjectID: Ptr(int64(999999))}
+			err := project.Update(s, &user.User{ID: 1})
+			require.NoError(t, err)
+			require.NoError(t, s.Commit())
+
+			db.AssertExists(t, "projects", map[string]interface{}{"id": 39, "is_archived": false}, false)
+		})
+		t.Run("move under nonexistent parent", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
+			project := Project{ID: 1, Title: "Test1", ParentProjectID: Ptr(int64(999999))}
+			err := project.Update(s, &user.User{ID: 1})
+			require.Error(t, err)
+			assert.True(t, IsErrProjectDoesNotExist(err))
+		})
 		t.Run("unarchive child and detach to root in one request", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 			s := db.NewSession()
