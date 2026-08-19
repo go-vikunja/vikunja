@@ -92,8 +92,8 @@ func InitMetrics() {
 	registerPromMetric(FilesCountKey, "The total number of files on this instance")
 	registerPromMetric(AttachmentsCountKey, "The total number of attachments on this instance")
 
-	setupActiveUsersMetric()
-	setupActiveLinkSharesMetric()
+	registerActiveMetric("vikunja_active_users", "The number of users active within the last 30 seconds", activeUsersKeyPrefix)
+	registerActiveMetric("vikunja_active_link_shares", "The number of link shares active within the last 30 seconds. Similar to vikunja_active_users.", activeLinkSharesKeyPrefix)
 
 	db.RegisterConnectionPoolMetrics(registry)
 }
