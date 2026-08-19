@@ -92,6 +92,13 @@ func TestArchived(t *testing.T) {
 		},
 		t: t,
 	}
+	testBucketHandler := webHandlerTest{
+		user: &testuser1,
+		strFunc: func() handler.CObject {
+			return &models.Bucket{}
+		},
+		t: t,
+	}
 
 	taskTests := func(taskID string, errCode int, t *testing.T) {
 		t.Run("task", func(t *testing.T) {
@@ -170,6 +177,12 @@ func TestArchived(t *testing.T) {
 			assertHandlerErrorCode(t, err, models.ErrCodeParentProjectIsArchived)
 		})
 
+		t.Run("no new buckets", func(t *testing.T) {
+			_, err := testBucketHandler.testCreateWithUser(nil, map[string]string{"project": "21", "view": "84"}, `{"title":"Lorem"}`)
+			require.Error(t, err)
+			assertHandlerErrorCode(t, err, models.ErrCodeProjectIsArchived)
+		})
+
 		taskTests("35", models.ErrCodeProjectIsArchived, t)
 	})
 	// The project itself is archived
@@ -181,6 +194,11 @@ func TestArchived(t *testing.T) {
 		})
 		t.Run("no new tasks", func(t *testing.T) {
 			_, err := testTaskHandler.testCreateWithUser(nil, map[string]string{"project": "22"}, `{"title":"Lorem"}`)
+			require.Error(t, err)
+			assertHandlerErrorCode(t, err, models.ErrCodeProjectIsArchived)
+		})
+		t.Run("no new buckets", func(t *testing.T) {
+			_, err := testBucketHandler.testCreateWithUser(nil, map[string]string{"project": "22", "view": "88"}, `{"title":"Lorem"}`)
 			require.Error(t, err)
 			assertHandlerErrorCode(t, err, models.ErrCodeProjectIsArchived)
 		})

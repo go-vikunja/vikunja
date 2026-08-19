@@ -28,8 +28,7 @@ func (b *Bucket) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 		return false, err
 	}
 
-	p := &Project{ID: pv.ProjectID}
-	return p.CanUpdate(s, a)
+	return canWriteBucketProject(s, pv.ProjectID, a)
 }
 
 // CanUpdate checks if a user can update an existing bucket
@@ -53,8 +52,16 @@ func (b *Bucket) canDoBucket(s *xorm.Session, a web.Auth) (bool, error) {
 		return false, err
 	}
 
-	// TODO saved filter check
+	return canWriteBucketProject(s, pv.ProjectID, a)
+}
 
-	p := &Project{ID: pv.ProjectID}
-	return p.CanUpdate(s, a)
+// Not Project.CanUpdate: that swallows the archived error to allow un-archiving, buckets must not get that.
+func canWriteBucketProject(s *xorm.Session, projectID int64, a web.Auth) (bool, error) {
+	if fid := GetSavedFilterIDFromProjectID(projectID); fid > 0 {
+		sf := &SavedFilter{ID: fid}
+		return sf.CanUpdate(s, a)
+	}
+
+	p := &Project{ID: projectID}
+	return p.CanWrite(s, a)
 }

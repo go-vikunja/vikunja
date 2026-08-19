@@ -75,5 +75,5 @@ func (w *Webhook) canDoWebhook(s *xorm.Session, a web.Auth) (bool, error) {
 
 	// Project-level webhook: delegate to project
 	p := &Project{ID: w.ProjectID}
-	return p.CanUpdate(s, a)
+	return p.CanWrite(s, a)
 }
