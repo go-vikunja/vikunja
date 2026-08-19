@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"reflect"
 	"strconv"
 	"strings"
@@ -181,13 +182,17 @@ func TaskHandler(c *echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Internal server error").Wrap(err)
 	}
 
-	// Get the task uid
-	taskUID := strings.TrimSuffix(c.Param("task"), ".ics")
+	// echo hands back the raw, still percent-encoded path segment.
+	taskUID, err := url.PathUnescape(strings.TrimSuffix(c.Param("task"), ".ics"))
+	if err != nil {
+		return c.String(http.StatusNotFound, "Task not found")
+	}
 
 	storage := &VikunjaCaldavProjectStorage{
-		project: project,
-		task:    &models.Task{UID: taskUID},
-		user:    u,
+		project:  project,
+		task:     &models.Task{UID: taskUID},
+		user:     u,
+		taskHref: taskURL(project.ID, &models.Task{UID: taskUID}),
 	}
 
 	caldav.SetupStorage(storage)

@@ -19,6 +19,7 @@ package caldav
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"slices"
 	"strconv"
 	"strings"
@@ -59,6 +60,10 @@ type VikunjaCaldavProjectStorage struct {
 	user        *user2.User
 	isPrincipal bool
 	isEntry     bool // Entry level handling should only return a link to the principal url
+	// Canonical href of the requested task, set by TaskHandler. caldav-go derives
+	// resource paths from the decoded request path and writes them into XML
+	// unescaped, so echoing one back would re-open what taskURL closes.
+	taskHref string
 }
 
 // GetResources returns either all projects, links to the principal, or only one project, depending on the request
@@ -100,7 +105,7 @@ func (vcls *VikunjaCaldavProjectStorage) GetResources(rpath string, withChildren
 		if err != nil {
 			return nil, err
 		}
-		r := data.NewResource(rpath, &rr)
+		r := data.NewResource(vcls.hrefFor(rpath), &rr)
 		r.Name = vcls.project.Title
 
 		// If the request is withChildren (Depth: 1), we need to return all tasks of the project
@@ -200,8 +205,9 @@ func (vcls *VikunjaCaldavProjectStorage) GetResourcesByList(rpaths []string) (re
 		if !strings.HasSuffix(parts[4], ".ics") {
 			continue
 		}
-		uid := strings.TrimSuffix(parts[4], ".ics")
-		if uid == "" {
+		// echo does not decode path params either, so hrefs travel percent-encoded end to end.
+		uid, uerr := url.PathUnescape(strings.TrimSuffix(parts[4], ".ics"))
+		if uerr != nil || uid == "" {
 			continue
 		}
 		urlProjectID, perr := strconv.ParseInt(parts[3], 10, 64)
@@ -308,7 +314,7 @@ func (vcls *VikunjaCaldavProjectStorage) GetResourcesByFilters(rpath string, _ *
 	if err != nil {
 		return nil, err
 	}
-	r := data.NewResource(rpath, &rr)
+	r := data.NewResource(vcls.hrefFor(rpath), &rr)
 	r.Name = vcls.project.Title
 	return []data.Resource{r}, nil
 	// For now, filtering is disabled.
@@ -317,7 +323,36 @@ func (vcls *VikunjaCaldavProjectStorage) GetResourcesByFilters(rpath string, _ *
 
 // WebDAV requires every Depth: 1 child to live under the collection's own URI.
 func taskURL(collectionProjectID int64, task *models.Task) string {
-	return ProjectBasePath + "/" + strconv.FormatInt(collectionProjectID, 10) + `/` + task.UID + `.ics`
+	return ProjectBasePath + "/" + strconv.FormatInt(collectionProjectID, 10) + `/` + encodeURIPathSegment(task.UID) + `.ics`
+}
+
+// encodeURIPathSegment percent-encodes everything outside RFC 3986 unreserved.
+// url.PathEscape is not enough: it leaves sub-delims such as & alone, and
+// caldav-go writes hrefs into XML without escaping them.
+func encodeURIPathSegment(segment string) string {
+	const hex = "0123456789ABCDEF"
+
+	var encoded strings.Builder
+	encoded.Grow(len(segment))
+	for i := 0; i < len(segment); i++ {
+		c := segment[i]
+		if c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' ||
+			c == '-' || c == '.' || c == '_' || c == '~' {
+			encoded.WriteByte(c)
+			continue
+		}
+		encoded.WriteByte('%')
+		encoded.WriteByte(hex[c>>4])
+		encoded.WriteByte(hex[c&0x0f])
+	}
+	return encoded.String()
+}
+
+func (vcls *VikunjaCaldavProjectStorage) hrefFor(rpath string) string {
+	if vcls.taskHref != "" {
+		return vcls.taskHref
+	}
+	return rpath
 }
 
 // Project.CanWrite reports archival through its error return; caldav-go has no case for
@@ -501,7 +536,7 @@ func (vcls *VikunjaCaldavProjectStorage) GetResource(rpath string) (*data.Resour
 			project: vcls.project,
 			task:    vcls.task,
 		}
-		r := data.NewResource(rpath, &rr)
+		r := data.NewResource(vcls.hrefFor(rpath), &rr)
 		return &r, true, nil
 	}
 
