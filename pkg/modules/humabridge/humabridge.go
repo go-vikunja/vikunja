@@ -41,6 +41,16 @@ type echoContextKey struct{}
 // handler's context.Context.
 var EchoContextKey = echoContextKey{}
 
+type internalDispatchKey struct{}
+
+// InternalDispatchRoute returns the echo route template of the client request
+// Huma re-dispatched this one from. Unset for client requests, and unforgeable
+// because the key type is unexported.
+func InternalDispatchRoute(ctx context.Context) (route string, ok bool) {
+	route, ok = ctx.Value(internalDispatchKey{}).(string)
+	return route, ok
+}
+
 func stashEchoContext(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c *echo.Context) error {
 		req := c.Request()
@@ -50,16 +60,25 @@ func stashEchoContext(next echo.HandlerFunc) echo.HandlerFunc {
 }
 
 // groupPrefixAdapter prepends groupPrefix to internal Huma dispatches whose
-// path doesn't already start with it. External requests never pass through
-// here — they hit the echo router directly.
+// path doesn't already start with it, and marks them with the route the client
+// request they descend from was matched against. External requests never pass
+// through here — they hit the echo router directly.
 type groupPrefixAdapter struct {
 	huma.Adapter
 	groupPrefix string
 }
 
 func (a *groupPrefixAdapter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	route := ""
+	if c, ok := ctx.Value(EchoContextKey).(*echo.Context); ok {
+		route = c.Path()
+	}
+	// Always write the key: an inherited marker from an outer dispatch would
+	// otherwise describe a route this one isn't on.
+	ctx = context.WithValue(ctx, internalDispatchKey{}, route)
+	r = r.Clone(ctx)
 	if a.groupPrefix != "" && !strings.HasPrefix(r.URL.Path, a.groupPrefix) {
-		r = r.Clone(r.Context())
 		r.URL.Path = a.groupPrefix + r.URL.Path
 		if r.URL.RawPath != "" {
 			r.URL.RawPath = a.groupPrefix + r.URL.RawPath
