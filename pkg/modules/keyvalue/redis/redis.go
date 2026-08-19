@@ -22,6 +22,7 @@ import (
 	"encoding/gob"
 	"errors"
 	"strings"
+	"time"
 
 	"code.vikunja.io/api/pkg/red"
 	"github.com/redis/go-redis/v9"
@@ -43,6 +44,15 @@ func NewStorage() *Storage {
 
 // Put puts a value into redis
 func (s *Storage) Put(key string, value interface{}) (err error) {
+	return s.put(key, value, 0)
+}
+
+// PutWithTTL puts a value into redis which redis expires after ttl
+func (s *Storage) PutWithTTL(key string, value interface{}, ttl time.Duration) (err error) {
+	return s.put(key, value, ttl)
+}
+
+func (s *Storage) put(key string, value interface{}, ttl time.Duration) (err error) {
 
 	var v interface{}
 
@@ -64,10 +74,10 @@ func (s *Storage) Put(key string, value interface{}) (err error) {
 		if err != nil {
 			return err
 		}
-		return s.client.Set(context.Background(), key, buf.Bytes(), 0).Err()
+		return s.client.Set(context.Background(), key, buf.Bytes(), ttl).Err()
 	}
 
-	return s.client.Set(context.Background(), key, v, 0).Err()
+	return s.client.Set(context.Background(), key, v, ttl).Err()
 }
 
 // Get retrieves a saved value from redis
