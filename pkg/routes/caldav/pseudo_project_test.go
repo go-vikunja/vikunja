@@ -20,6 +20,8 @@ package caldav
 // collections, but they aggregate tasks living in real projects.
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"slices"
 	"strconv"
 	"strings"
@@ -30,6 +32,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 
+	"github.com/labstack/echo/v5"
 	"github.com/samedi/caldav-go/errs"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -253,6 +256,72 @@ func TestCanReadCollection_InstanceAdmin(t *testing.T) {
 		can, err := storageFor(admin, foreignFilterProjectID).canReadCollection(s)
 		require.NoError(t, err)
 		assert.False(t, can)
+	})
+}
+
+// The reduced Allow header must keep advertising PUT and DELETE for pseudo collections,
+// without turning OPTIONS into an oracle for collections the user cannot read.
+func TestProjectHandlerOPTIONS(t *testing.T) {
+	options := func(t *testing.T, u *user.User, projectID int64) *httptest.ResponseRecorder {
+		t.Helper()
+
+		rec := httptest.NewRecorder()
+		c := echo.New().NewContext(httptest.NewRequest(http.MethodOptions, projectPath(projectID), nil), rec)
+		c.Set("userBasicAuth", u)
+		c.SetPathValues(echo.PathValues{{Name: "project", Value: strconv.FormatInt(projectID, 10)}})
+		require.NoError(t, ProjectHandler(c))
+		return rec
+	}
+
+	t.Run("a saved filter advertises PUT and DELETE", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		pseudoID := createSavedFilter(t, caldavFilterUser, caldavFilterMatchingTasks)
+		rec := options(t, caldavFilterUser, pseudoID)
+		require.Equal(t, http.StatusOK, rec.Code)
+		assert.Contains(t, rec.Header().Get("Allow"), "PUT")
+		assert.Contains(t, rec.Header().Get("Allow"), "DELETE")
+	})
+
+	t.Run("favorites advertise PUT and DELETE", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		rec := options(t, caldavFilterUser, models.FavoritesPseudoProjectID)
+		require.Equal(t, http.StatusOK, rec.Code)
+		assert.Contains(t, rec.Header().Get("Allow"), "PUT")
+		assert.Contains(t, rec.Header().Get("Allow"), "DELETE")
+	})
+
+	t.Run("a read-only share does not", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		// Project 3 is owned by user 3 and shared read-only with user 1.
+		rec := options(t, caldavOtherUser, 3)
+		require.Equal(t, http.StatusOK, rec.Code)
+		assert.NotContains(t, rec.Header().Get("Allow"), "PUT")
+		assert.NotContains(t, rec.Header().Get("Allow"), "DELETE")
+	})
+
+	t.Run("an archived project does not", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		archiveProject(t, 36)
+
+		rec := options(t, caldavFilterUser, 36)
+		require.Equal(t, http.StatusOK, rec.Code)
+		assert.NotContains(t, rec.Header().Get("Allow"), "PUT")
+		assert.NotContains(t, rec.Header().Get("Allow"), "DELETE")
+	})
+
+	t.Run("a saved filter of another user is not found", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		assert.Equal(t, http.StatusNotFound, options(t, caldavFilterUser, foreignFilterProjectID).Code)
+	})
+
+	t.Run("a project without access is not found", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		assert.Equal(t, http.StatusNotFound, options(t, caldavOtherUser, inaccessibleProjectID).Code)
 	})
 }
 
