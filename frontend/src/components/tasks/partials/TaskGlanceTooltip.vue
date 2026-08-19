@@ -4,17 +4,17 @@
 		class="task-glance-trigger"
 		@mouseenter="handleMouseEnter"
 		@mouseleave="handleMouseLeave"
+		@focusin="handleFocusIn"
+		@focusout="handleFocusOut"
 	>
 		<slot />
 	</span>
 
-	<Teleport
-		v-if="canHover"
-		to="body"
-	>
+	<Teleport to="body">
 		<CustomTransition name="fade">
 			<div
 				v-if="showTooltip"
+				:id="tooltipId"
 				ref="tooltipRef"
 				class="task-glance-tooltip"
 				role="tooltip"
@@ -83,7 +83,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, onUnmounted, nextTick} from 'vue'
+import {ref, computed, onUnmounted, nextTick, useId} from 'vue'
 import {computePosition, flip, offset, shift} from '@floating-ui/dom'
 import {useMediaQuery} from '@vueuse/core'
 
@@ -111,7 +111,10 @@ const canHover = useMediaQuery('(hover: hover) and (pointer: fine)')
 const triggerRef = ref<HTMLElement | null>(null)
 const tooltipRef = ref<HTMLElement | null>(null)
 const showTooltip = ref(false)
+const tooltipId = useId()
 let hoverTimeout: ReturnType<typeof setTimeout> | null = null
+// The trigger span is not focusable itself, so aria-describedby has to go on whatever child took focus.
+let describedElement: HTMLElement | null = null
 
 const taskIdentifier = computed(() => getTaskIdentifier(props.task))
 
@@ -158,42 +161,67 @@ async function updatePosition() {
 	}
 }
 
-function handleMouseEnter() {
-	if (!canHover.value) {
-		return
-	}
-
-	// Clear any existing timeout
+function scheduleShow() {
 	if (hoverTimeout) {
 		clearTimeout(hoverTimeout)
 	}
 
-	// Set timeout to show tooltip after 1 second
 	hoverTimeout = setTimeout(async () => {
+		hoverTimeout = null
 		showTooltip.value = true
-		// Wait for the tooltip to be rendered in the DOM
+		document.addEventListener('keydown', handleKeydown)
+		describedElement?.setAttribute('aria-describedby', tooltipId)
+
 		await nextTick()
 		await updatePosition()
 	}, HOVER_DELAY)
 }
 
-function handleMouseLeave() {
-	// Clear timeout if user moves away before 1 second
+function hide() {
 	if (hoverTimeout) {
 		clearTimeout(hoverTimeout)
 		hoverTimeout = null
 	}
 
-	// Hide tooltip
 	showTooltip.value = false
+	document.removeEventListener('keydown', handleKeydown)
+	describedElement?.removeAttribute('aria-describedby')
+	describedElement = null
 }
 
-// Cleanup on unmount
-onUnmounted(() => {
-	if (hoverTimeout) {
-		clearTimeout(hoverTimeout)
+function handleKeydown(event: KeyboardEvent) {
+	if (event.key !== 'Escape' || !showTooltip.value) {
+		return
 	}
-})
+
+	// Swallow only the Escape that dismissed the tooltip; preventDefault keeps a native <dialog> open.
+	event.stopPropagation()
+	event.preventDefault()
+	hide()
+}
+
+function handleMouseEnter() {
+	if (!canHover.value) {
+		return
+	}
+
+	scheduleShow()
+}
+
+function handleMouseLeave() {
+	hide()
+}
+
+function handleFocusIn(event: FocusEvent) {
+	describedElement = event.target as HTMLElement
+	scheduleShow()
+}
+
+function handleFocusOut() {
+	hide()
+}
+
+onUnmounted(hide)
 </script>
 
 <style lang="scss" scoped>
