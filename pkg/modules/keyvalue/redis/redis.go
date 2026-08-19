@@ -21,6 +21,7 @@ import (
 	"context"
 	"encoding/gob"
 	"errors"
+	"strings"
 
 	"code.vikunja.io/api/pkg/red"
 	"github.com/redis/go-redis/v9"
@@ -114,10 +115,13 @@ func (s *Storage) DecrBy(key string, update int64) (err error) {
 	return s.client.DecrBy(context.Background(), key, update).Err()
 }
 
+var globEscaper = strings.NewReplacer("\\", "\\\\", "*", "\\*", "?", "\\?", "[", "\\[", "]", "\\]")
+
 // ListKeys returns all keys in redis starting with the given prefix
 func (s *Storage) ListKeys(prefix string) ([]string, error) {
 	ctx := context.Background()
-	pattern := prefix + "*"
+	// Match the prefix literally like the memory backend does; user-derived prefixes may contain glob chars.
+	pattern := globEscaper.Replace(prefix) + "*"
 	var cursor uint64
 	var keys []string
 	// SCAN may return duplicates
