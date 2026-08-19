@@ -79,7 +79,6 @@
 			"passwordUpdateSuccess": "Heslo bylo úspěšně změněno.",
 			"updateEmailTitle": "Aktualizujte svou e-mailovou adresu",
 			"updateEmailNew": "Nová emailová adresa",
-			"updateEmailSuccess": "Vaše e-mailová adresa byla úspěšně aktualizována. Poslali jsme vám odkaz pro její potvrzení.",
 			"general": {
 				"title": "Obecná nastavení",
 				"name": "Moje jméno",

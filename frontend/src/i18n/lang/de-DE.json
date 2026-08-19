@@ -128,7 +128,6 @@
 			"passwordUpdateSuccess": "Das Passwort wurde erfolgreich aktualisiert.",
 			"updateEmailTitle": "Aktualisiere deine E-Mail-Adresse",
 			"updateEmailNew": "Neue E-Mail-Adresse",
-			"updateEmailSuccess": "Deine E-Mail-Adresse wurde erfolgreich aktualisiert. Wir haben dir einen Link zur Bestätigung geschickt.",
 			"general": {
 				"title": "Allgemeine Einstellungen",
 				"name": "Mein Name",
