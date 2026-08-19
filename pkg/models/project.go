@@ -1214,11 +1214,11 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 	// ParentProjectID is a *int64 so an omitted parent_project_id (nil) is
 	// distinguishable from an explicit 0 (detach-to-root). Only gate when
 	// the field was sent and actually changes the parent.
+	storedProject, err := GetProjectSimpleByID(s, project.ID)
+	if err != nil {
+		return err
+	}
 	if project.ParentProjectID != nil {
-		storedProject, err := GetProjectSimpleByID(s, project.ID)
-		if err != nil {
-			return err
-		}
 		if *project.ParentProjectID != storedProject.parentID() {
 			canAdminMoved, err := project.IsAdmin(s, auth)
 			if err != nil {
@@ -1254,9 +1254,13 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 		}
 	}
 
-	err = setArchiveStateForProjectDescendants(s, project.ID, project.IsArchived)
-	if err != nil {
-		return err
+	// Only cascade on an actual state change: a plain edit of an unarchived
+	// parent must not un-archive individually archived children.
+	if project.IsArchived != storedProject.IsArchived {
+		err = setArchiveStateForProjectDescendants(s, project.ID, project.IsArchived)
+		if err != nil {
+			return err
+		}
 	}
 
 	// We need to specify the cols we want to update here to be able to un-archive projects

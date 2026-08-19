@@ -493,6 +493,41 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 				"is_archived": true,
 			}, false)
 		})
+		t.Run("plain edit of parent keeps individually archived child archived", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
+			// 40 is archived individually under unarchived 3
+			project := Project{ID: 3, Title: "Test3 renamed", IsArchived: false}
+			err := project.Update(s, &user.User{ID: 1})
+			require.NoError(t, err)
+			require.NoError(t, s.Commit())
+
+			db.AssertExists(t, "projects", map[string]interface{}{"id": 40, "is_archived": true}, false)
+		})
+		t.Run("move under archived parent is rejected", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
+			project := Project{ID: 1, ParentProjectID: Ptr(int64(22))}
+			_, err := project.CanUpdate(s, &user.User{ID: 1})
+			require.Error(t, err)
+			assert.True(t, IsErrProjectIsArchived(err))
+		})
+		t.Run("move archived project to root keeps it archived", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
+			project := Project{ID: 40, Title: "Test40", IsArchived: true, ParentProjectID: Ptr(int64(0))}
+			err := project.Update(s, &user.User{ID: 1})
+			require.NoError(t, err)
+			require.NoError(t, s.Commit())
+
+			db.AssertExists(t, "projects", map[string]interface{}{"id": 40, "parent_project_id": 0, "is_archived": true}, false)
+		})
 		t.Run("unarchive child under archived parent is rejected", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 			s := db.NewSession()
