@@ -424,6 +424,8 @@ github.com/klauspost/cpuid/v2 v2.3.0 h1:S4CRMLnYUhGeDFDqkGriYKdfoFlDnMtqTiI/sFzh
 github.com/klauspost/cpuid/v2 v2.3.0/go.mod h1:hqwkgyIinND0mEev00jJYCxPNVRVXFQeu1XKlok6oO0=
 github.com/kolaente/caldav-go v3.0.1-0.20260730192520-563ea1e0ae42+incompatible h1:Lf1EdgGQgiP03Og63HM19AVwKXUUquZj/OnzprmTi8U=
 github.com/kolaente/caldav-go v3.0.1-0.20260730192520-563ea1e0ae42+incompatible/go.mod h1:y1UhTNI4g0hVymJrI6yJ5/ohy09hNBeU8iJEZjgdDOw=
+github.com/kolaente/caldav-go v3.0.1-0.20260819190554-cb44e15e566f+incompatible h1:hY8Blg1flLUe0aulSltr0oTkI8UwVawCwdFY742ZhFE=
+github.com/kolaente/caldav-go v3.0.1-0.20260819190554-cb44e15e566f+incompatible/go.mod h1:y1UhTNI4g0hVymJrI6yJ5/ohy09hNBeU8iJEZjgdDOw=
 github.com/konsorten/go-windows-terminal-sequences v1.0.1/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
 github.com/konsorten/go-windows-terminal-sequences v1.0.2/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
 github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=
