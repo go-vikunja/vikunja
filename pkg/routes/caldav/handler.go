@@ -34,6 +34,7 @@ import (
 	"code.vikunja.io/api/pkg/user"
 	"github.com/labstack/echo/v5"
 	"github.com/samedi/caldav-go"
+	"github.com/samedi/caldav-go/data"
 	"github.com/samedi/caldav-go/lib"
 )
 
@@ -45,10 +46,16 @@ func getBasicAuthUserFromContext(c *echo.Context) (*user.User, error) {
 	return u, nil
 }
 
-// caldav-go renders current-user-principal as "/<name>/", so pass the path
-// without surrounding slashes or the href ends up with a double slash.
-func setupUser(path string) {
-	caldav.SetupUser(strings.Trim(path, "/"))
+// Per request, never through caldav-go's setup globals: those let concurrent
+// requests of different users answer each other with the wrong storage.
+func caldavConfig(storage data.Storage, principalPath string) caldav.Config {
+	return caldav.Config{
+		Storage: storage,
+		// caldav-go renders current-user-principal as "/<name>/", so pass the path
+		// without surrounding slashes or the href ends up with a double slash.
+		User:                &data.CalUser{Name: strings.Trim(principalPath, "/")},
+		SupportedComponents: []string{lib.VCALENDAR, lib.VTODO},
+	}
 }
 
 // ProjectHandler returns all tasks from a project
@@ -137,10 +144,7 @@ func ProjectHandler(c *echo.Context) error {
 		}
 	}
 
-	caldav.SetupStorage(storage)
-	setupUser(ProjectHomeSetPath)
-	caldav.SetupSupportedComponents([]string{lib.VCALENDAR, lib.VTODO})
-	response := caldav.HandleRequest(c.Request())
+	response := caldav.HandleRequestWithConfig(c.Request(), caldavConfig(storage, ProjectHomeSetPath))
 	response.Write(c.Response())
 	return nil
 }
@@ -197,8 +201,7 @@ func TaskHandler(c *echo.Context) error {
 		user:    u,
 	}
 
-	caldav.SetupStorage(storage)
-	response := caldav.HandleRequest(c.Request())
+	response := caldav.HandleRequestWithConfig(c.Request(), caldavConfig(storage, principalPathForUser(u.Username)))
 	response.Write(c.Response())
 	return nil
 }
@@ -239,11 +242,7 @@ func PrincipalHandler(c *echo.Context) error {
 	log.Debugf("[CALDAV] Request Body: %v\n", string(body))
 	log.Debugf("[CALDAV] Request Headers: %v\n", c.Request().Header)
 
-	caldav.SetupStorage(storage)
-	setupUser(principalPathForUser(u.Username))
-	caldav.SetupSupportedComponents([]string{lib.VCALENDAR, lib.VTODO})
-
-	response := caldav.HandleRequest(c.Request())
+	response := caldav.HandleRequestWithConfig(c.Request(), caldavConfig(storage, principalPathForUser(u.Username)))
 	response.Write(c.Response())
 	return nil
 }
@@ -268,11 +267,7 @@ func EntryHandler(c *echo.Context) error {
 	log.Debugf("[CALDAV] Request Body: %v\n", string(body))
 	log.Debugf("[CALDAV] Request Headers: %v\n", c.Request().Header)
 
-	caldav.SetupStorage(storage)
-	setupUser(principalPathForUser(u.Username))
-	caldav.SetupSupportedComponents([]string{lib.VCALENDAR, lib.VTODO})
-
-	response := caldav.HandleRequest(c.Request())
+	response := caldav.HandleRequestWithConfig(c.Request(), caldavConfig(storage, principalPathForUser(u.Username)))
 	response.Write(c.Response())
 	return nil
 }
