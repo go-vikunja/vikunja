@@ -493,6 +493,39 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 				"is_archived": true,
 			}, false)
 		})
+		t.Run("unarchive child under archived parent is rejected", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
+			project := Project{ID: 21, IsArchived: false}
+			_, err := project.CanUpdate(s, &user.User{ID: 1})
+			require.Error(t, err)
+			assert.True(t, IsErrProjectIsArchived(err))
+		})
+		t.Run("unarchive child under unarchived parent", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
+			project := Project{ID: 40, IsArchived: false}
+			can, err := project.CanUpdate(s, &user.User{ID: 1})
+			require.NoError(t, err)
+			assert.True(t, can)
+		})
+		t.Run("unarchive root unarchives subtree", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
+			project := Project{ID: 22, Title: "Test22", IsArchived: false}
+			err := project.Update(s, &user.User{ID: 1})
+			require.NoError(t, err)
+			require.NoError(t, s.Commit())
+
+			db.AssertExists(t, "projects", map[string]interface{}{"id": 22, "is_archived": false}, false)
+			db.AssertExists(t, "projects", map[string]interface{}{"id": 21, "is_archived": false}, false)
+		})
 	})
 }
 
