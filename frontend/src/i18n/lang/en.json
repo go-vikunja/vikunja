@@ -698,6 +698,19 @@
     "upload": "Upload file",
     "migrationStartedWillReciveEmail": "Vikunja will now import your lists/projects, tasks, notes, reminders and files from {service}. As this will take a while, we will send you an email once done. You can close this window now.",
     "migrationInProgress": "A migration is currently in progress. Please wait until it is done.",
+    "credentials": {
+      "description": "Enter the address of your {name} instance and how Vikunja should log in. Vikunja imports all projects and boards you have access to; the credentials are only used for this import and are not stored.",
+      "url": "{name} URL",
+      "authMethod": "Log in with",
+      "apiKey": "API key",
+      "apiKeyRequired": "Please enter an API key.",
+      "authPassword": "Username and password",
+      "start": "Start import"
+    },
+    "planka": {
+      "apiKeyHelp": "An API key must be created for your account by a Planka administrator. Copying the token from the browser does not work.",
+      "passwordHelp": "Only works for local Planka accounts without two-factor authentication that have logged in to Planka at least once. Accounts using single sign-on need an API key."
+    },
     "csv": {
       "description": "Import tasks from a CSV file with custom column mapping.",
       "uploadDescription": "Select a CSV file to import. The file should contain task data with headers in the first row.",
@@ -1505,7 +1518,12 @@
     "13002": "The provided link share password is invalid.",
     "13003": "The provided link share token is invalid.",
     "14001": "The provided api token is invalid.",
-    "14002": "The permission {permission} of group {group} is invalid."
+    "14002": "The permission {permission} of group {group} is invalid.",
+    "14005": "A migration from this service is already running. Please wait until it is done.",
+    "14201": "Planka rejected the provided credentials. Check the URL and the API key or username and password.",
+    "14202": "The Planka account requires an extra login step (two-factor code or accepting the terms). Log in to Planka in the browser once, or use an API key instead of username and password.",
+    "14203": "A Planka URL and either an API key or username and password are required.",
+    "14204": "Could not reach a Planka API at the given URL. Check the URL and that Vikunja can reach the instance."
   },
   "about": {
     "title": "About",
