@@ -277,4 +277,42 @@ func TestInsertFromStructure(t *testing.T) {
 			assert.Equal(t, int64(4), count, "task %q must keep position %v in all views", title, position)
 		}
 	})
+	t.Run("assignees from a foreign instance", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		foreignID := int64(999)
+		require.NoError(t, InsertFromStructure([]*models.ProjectWithTasksAndBuckets{{
+			Project: models.Project{Title: "Import project"},
+			Tasks: []*models.TaskWithComments{
+				{Task: models.Task{Title: "email match", Assignees: []*user.User{{ID: foreignID, Username: "someone-else", Email: "USER1@example.com"}}}},
+				{Task: models.Task{Title: "username match", Assignees: []*user.User{{ID: foreignID, Username: "user1"}}}},
+				{Task: models.Task{Title: "no match", Assignees: []*user.User{{ID: 2, Username: "other", Email: "other@example.com"}}}},
+				{Task: models.Task{
+					Title: "related",
+					RelatedTasks: map[models.RelationKind][]*models.Task{
+						models.RelationKindSubtask: {{Title: "related match", Assignees: []*user.User{{ID: foreignID, Username: "user1"}}}},
+					},
+				}},
+			},
+		}}, u))
+
+		s := db.NewSession()
+		defer s.Close()
+
+		for title, wantAssignee := range map[string]bool{"email match": true, "username match": true, "related match": true, "no match": false} {
+			task := &models.Task{}
+			exists, err := s.Where("title = ?", title).Get(task)
+			require.NoError(t, err)
+			require.True(t, exists, title)
+
+			assignees := []*models.TaskAssginee{}
+			require.NoError(t, s.Where("task_id = ?", task.ID).Find(&assignees))
+			if wantAssignee {
+				require.Len(t, assignees, 1, title)
+				assert.Equal(t, u.ID, assignees[0].UserID, title)
+			} else {
+				assert.Empty(t, assignees, title)
+			}
+		}
+	})
 }
