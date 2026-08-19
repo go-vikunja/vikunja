@@ -517,9 +517,9 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 			assert.True(t, IsErrProjectIsArchived(err))
 
 			err = UpdateProject(s, &Project{ID: 1, Title: "Test1", ParentProjectID: Ptr(int64(22))}, &user.User{ID: 1}, false)
-			var e ErrProjectIsArchived
+			var e ErrParentProjectIsArchived
 			require.ErrorAs(t, err, &e)
-			assert.Equal(t, int64(22), e.ProjectID)
+			assert.Equal(t, int64(22), e.ParentProjectID)
 		})
 		t.Run("move archived project to root keeps it archived", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
@@ -543,6 +543,18 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 			var e ErrParentProjectIsArchived
 			require.ErrorAs(t, err, &e)
 			assert.Equal(t, int64(22), e.ParentProjectID)
+		})
+		t.Run("unarchive orphaned project", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
+			project := Project{ID: 39, Title: "Orphaned project with deleted parent", IsArchived: false}
+			err := project.Update(s, &user.User{ID: 1})
+			require.NoError(t, err)
+			require.NoError(t, s.Commit())
+
+			db.AssertExists(t, "projects", map[string]interface{}{"id": 39, "is_archived": false}, false)
 		})
 		t.Run("unarchive child and detach to root in one request", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
@@ -923,7 +935,7 @@ func TestProject_ReadOne(t *testing.T) {
 			}
 		}
 		require.NotNil(t, fromList)
-		assert.Equal(t, l.IsArchived, fromList.IsArchived)
+		assert.True(t, fromList.IsArchived)
 	})
 }
 

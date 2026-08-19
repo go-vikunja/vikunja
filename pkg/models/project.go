@@ -19,6 +19,7 @@ package models
 import (
 	"fmt"
 	"math"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -1199,6 +1200,11 @@ func checkProjectParentBeforeUpdate(s *xorm.Session, project, storedProject *Pro
 	var parent *Project
 	if parentID > 0 {
 		parent, err = GetProjectSimpleByID(s, parentID)
+		// An orphaned stored parent must not block un-archiving; a missing
+		// ancestor is no ancestor. A request-supplied target stays strict.
+		if IsErrProjectDoesNotExist(err) && !isReparent {
+			parent, err = nil, nil
+		}
 		if err != nil {
 			return err
 		}
@@ -1225,7 +1231,7 @@ func checkProjectParentBeforeUpdate(s *xorm.Session, project, storedProject *Pro
 			}
 
 			if parent.IsArchived {
-				return ErrProjectIsArchived{ProjectID: parent.ID}
+				return ErrParentProjectIsArchived{ProjectID: project.ID, ParentProjectID: parent.ID}
 			}
 		}
 	}
@@ -1633,6 +1639,8 @@ func ClearProjectBackground(s *xorm.Session, projectID int64) (err error) {
 	return
 }
 
+const archiveStateUpdateBatch = 500
+
 // SetArchiveStateForProjectDescendants uses a recursive CTE to find and set the archived status of all descendant projects.
 func SetArchiveStateForProjectDescendants(s *xorm.Session, parentProjectID int64, shouldBeArchived bool) error {
 	var descendantIDs []int64
@@ -1659,13 +1667,15 @@ SELECT id FROM descendant_ids`,
 		return nil
 	}
 
-	_, err = s.In("id", descendantIDs).
-		And("is_archived != ?", shouldBeArchived).
-		Cols("is_archived").
-		Update(&Project{IsArchived: shouldBeArchived})
-	if err != nil {
-		log.Errorf("Error updating is_archived for descendant projects for parent ID %d to %t: %v", parentProjectID, shouldBeArchived, err)
-		return fmt.Errorf("failed to update is_archived for descendant projects for parent ID %d to %t: %w", parentProjectID, shouldBeArchived, err)
+	for chunk := range slices.Chunk(descendantIDs, archiveStateUpdateBatch) {
+		_, err = s.In("id", chunk).
+			And("is_archived != ?", shouldBeArchived).
+			Cols("is_archived").
+			Update(&Project{IsArchived: shouldBeArchived})
+		if err != nil {
+			log.Errorf("Error updating is_archived for descendant projects for parent ID %d to %t: %v", parentProjectID, shouldBeArchived, err)
+			return fmt.Errorf("failed to update is_archived for descendant projects for parent ID %d to %t: %w", parentProjectID, shouldBeArchived, err)
+		}
 	}
 	return nil
 }
