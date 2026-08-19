@@ -19,6 +19,7 @@ package caldav
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"slices"
 	"strconv"
 	"strings"
@@ -100,7 +101,7 @@ func (vcls *VikunjaCaldavProjectStorage) GetResources(rpath string, withChildren
 		if err != nil {
 			return nil, err
 		}
-		r := data.NewResource(rpath, &rr)
+		r := data.NewResource(vcls.hrefFor(rpath), &rr)
 		r.Name = vcls.project.Title
 
 		// If the request is withChildren (Depth: 1), we need to return all tasks of the project
@@ -200,8 +201,9 @@ func (vcls *VikunjaCaldavProjectStorage) GetResourcesByList(rpaths []string) (re
 		if !strings.HasSuffix(parts[4], ".ics") {
 			continue
 		}
-		uid := strings.TrimSuffix(parts[4], ".ics")
-		if uid == "" {
+		// echo does not decode path params either, so hrefs travel percent-encoded end to end.
+		uid, uerr := url.PathUnescape(strings.TrimSuffix(parts[4], ".ics"))
+		if uerr != nil || uid == "" {
 			continue
 		}
 		urlProjectID, perr := strconv.ParseInt(parts[3], 10, 64)
@@ -308,7 +310,7 @@ func (vcls *VikunjaCaldavProjectStorage) GetResourcesByFilters(rpath string, _ *
 	if err != nil {
 		return nil, err
 	}
-	r := data.NewResource(rpath, &rr)
+	r := data.NewResource(vcls.hrefFor(rpath), &rr)
 	r.Name = vcls.project.Title
 	return []data.Resource{r}, nil
 	// For now, filtering is disabled.
@@ -317,7 +319,21 @@ func (vcls *VikunjaCaldavProjectStorage) GetResourcesByFilters(rpath string, _ *
 
 // WebDAV requires every Depth: 1 child to live under the collection's own URI.
 func taskURL(collectionProjectID int64, task *models.Task) string {
-	return ProjectBasePath + "/" + strconv.FormatInt(collectionProjectID, 10) + `/` + task.UID + `.ics`
+	return ProjectBasePath + "/" + strconv.FormatInt(collectionProjectID, 10) + `/` + encodeURIPathSegment(task.UID) + `.ics`
+}
+
+// url.PathEscape leaves & alone, and caldav-go writes hrefs into XML unescaped.
+func encodeURIPathSegment(segment string) string {
+	return strings.ReplaceAll(url.PathEscape(segment), "&", "%26")
+}
+
+// caldav-go builds rpath from the decoded request path, so echoing it back for a
+// task resource would undo the encoding taskURL applied.
+func (vcls *VikunjaCaldavProjectStorage) hrefFor(rpath string) string {
+	if strings.HasSuffix(rpath, ".ics") && vcls.project != nil && vcls.task != nil && vcls.task.UID != "" {
+		return taskURL(vcls.project.ID, vcls.task)
+	}
+	return rpath
 }
 
 // Project.CanWrite reports archival through its error return; caldav-go has no case for
@@ -501,7 +517,7 @@ func (vcls *VikunjaCaldavProjectStorage) GetResource(rpath string) (*data.Resour
 			project: vcls.project,
 			task:    vcls.task,
 		}
-		r := data.NewResource(rpath, &rr)
+		r := data.NewResource(vcls.hrefFor(rpath), &rr)
 		return &r, true, nil
 	}
 

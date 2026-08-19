@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"reflect"
 	"strconv"
 	"strings"
@@ -181,8 +182,14 @@ func TaskHandler(c *echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Internal server error").Wrap(err)
 	}
 
-	// Get the task uid
-	taskUID := strings.TrimSuffix(c.Param("task"), ".ics")
+	// Whether c.Param("task") arrives decoded depends on router config and on which
+	// bytes were escaped; the escaped path is unambiguous, so decode that instead.
+	esc := c.Request().URL.EscapedPath()
+	seg := esc[strings.LastIndex(esc, "/")+1:]
+	taskUID, err := url.PathUnescape(strings.TrimSuffix(seg, ".ics"))
+	if err != nil {
+		return c.String(http.StatusNotFound, "Task not found")
+	}
 
 	storage := &VikunjaCaldavProjectStorage{
 		project: project,
