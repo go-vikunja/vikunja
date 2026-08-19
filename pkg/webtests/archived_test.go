@@ -39,15 +39,14 @@ import (
 // 11. Archived projects should not appear in the list with all projects.
 // 12. Projects whose parent project is archived should not appear in the project with all projects.
 //
-// All of this is tested through web tests because it's not yet clear if this will be implemented directly
-// or with some kind of middleware.
+// Archiving a project writes is_archived to all descendants, so checks only
+// look at a project's own row.
 //
-// Maybe the inheritance of projects from parents could be solved with some kind of is_archived_inherited flag -
-// that way I'd only need to implement the checking on a project level and update the flag for all projects once the
-// project is archived. The archived flag would then be used to not accedentially unarchive projects which were
-// already individually archived when the parent project was archived.
+// Known limitation: one bool can't tell "archived individually" from
+// "archived via parent", so un-archiving a parent un-archives children that
+// were archived individually before.
 //
-// Project 21 belongs to project 16
+// Project 21 belongs to archived project 22 and is therefore archived too
 // Project 22 is archived individually
 
 func TestArchived(t *testing.T) {

@@ -30,9 +30,9 @@ import (
 // TestHumaArchived ports the HTTP-observable archived-project behaviours from
 // v1's TestArchived (pkg/webtests/archived_test.go) to the v2 routes:
 //
-//   - A project whose parent is archived cannot be edited and cannot be
-//     un-archived individually (the un-archive exception only applies to the
-//     self-archived project, not an archived ancestor).
+//   - A project archived via an ancestor (its own is_archived is set too)
+//     cannot be edited, and un-archiving it is rejected with
+//     ErrCodeParentProjectIsArchived until the parent is un-archived.
 //   - A self-archived project cannot be edited, but CAN be un-archived.
 //   - Archiving a non-archived project works.
 //
@@ -67,8 +67,7 @@ func TestHumaArchived(t *testing.T) {
 			assertHandlerErrorCode(t, err, models.ErrCodeProjectIsArchived)
 		})
 		t.Run("not unarchivable", func(t *testing.T) {
-			// The un-archive exception only applies to the self-archived
-			// project; here the archived ancestor (22) still blocks it.
+			// Project 21 is archived via parent 22; parent must be un-archived first.
 			testHandler := handlerFor(&testuser1)
 			_, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "21"}, `{"title":"LoremIpsum","is_archived":false}`)
 			require.Error(t, err)

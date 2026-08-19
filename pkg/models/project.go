@@ -432,14 +432,6 @@ func (p *Project) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
-	// Check if the project is archived and set it to archived if it is not already archived individually.
-	if !p.IsArchived && !isFilter {
-		err = p.CheckIsArchived(s)
-		if err != nil {
-			p.IsArchived = true
-		}
-	}
-
 	// Get any background information if there is one set
 	if p.BackgroundFileID != 0 {
 		// Unsplash image
@@ -709,7 +701,7 @@ func getAllProjectsForUser(s *xorm.Session, userID int64, opts *projectOptions) 
 
 	baseQuery := querySQLString + `
 UNION ALL
-SELECT p.id, p.title, p.description, p.identifier, p.hex_color, p.owner_id, p.parent_project_id, (ap.is_archived OR p.is_archived) AS is_archived, p.background_file_id, p.background_blur_hash, p.position, p.created, p.updated FROM projects p
+SELECT p.id, p.title, p.description, p.identifier, p.hex_color, p.owner_id, p.parent_project_id, p.is_archived, p.background_file_id, p.background_blur_hash, p.position, p.created, p.updated FROM projects p
 INNER JOIN all_projects ap ON p.parent_project_id = ap.id`
 
 	columnStr := strings.Join([]string{
@@ -720,22 +712,7 @@ INNER JOIN all_projects ap ON p.parent_project_id = ap.id`
 		"all_projects.hex_color",
 		"all_projects.owner_id",
 		"CASE WHEN all_projects.parent_project_id IS NULL THEN 0 ELSE all_projects.parent_project_id END AS parent_project_id",
-		"MAX(CASE WHEN all_projects.is_archived THEN 1 ELSE 0 END) AS is_archived",
-		"all_projects.background_file_id",
-		"all_projects.background_blur_hash",
-		"all_projects.position",
-		"all_projects.created",
-		"all_projects.updated",
-	}, ", ")
-
-	groupByStr := strings.Join([]string{
-		"all_projects.id",
-		"all_projects.title",
-		"all_projects.description",
-		"all_projects.identifier",
-		"all_projects.hex_color",
-		"all_projects.owner_id",
-		"all_projects.parent_project_id",
+		"all_projects.is_archived",
 		"all_projects.background_file_id",
 		"all_projects.background_blur_hash",
 		"all_projects.position",
@@ -745,13 +722,13 @@ INNER JOIN all_projects ap ON p.parent_project_id = ap.id`
 
 	var archivedFilter string
 	if !opts.getArchived {
-		archivedFilter = "HAVING MAX(CASE WHEN all_projects.is_archived THEN 1 ELSE 0 END) = 0 "
+		archivedFilter = "WHERE all_projects.is_archived = false "
 	}
 
 	currentProjects := []*Project{}
 	err = s.SQL(`WITH RECURSIVE all_projects as (`+baseQuery+`)
-SELECT `+columnStr+` FROM all_projects
-GROUP BY `+groupByStr+` `+archivedFilter+`ORDER BY all_projects.position `+limitSQL, args...).Find(&currentProjects)
+SELECT DISTINCT `+columnStr+` FROM all_projects `+archivedFilter+`
+ORDER BY all_projects.position `+limitSQL, args...).Find(&currentProjects)
 	if err != nil {
 		return
 	}
@@ -762,7 +739,7 @@ GROUP BY `+groupByStr+` `+archivedFilter+`ORDER BY all_projects.position `+limit
 
 	totalCount, err = s.
 		SQL(`WITH RECURSIVE all_projects as (`+baseQuery+`)
-SELECT COUNT(*) FROM (SELECT all_projects.id FROM all_projects GROUP BY all_projects.id `+archivedFilter+`) sub`, args...).
+SELECT COUNT(*) FROM (SELECT DISTINCT all_projects.id FROM all_projects `+archivedFilter+`) sub`, args...).
 		Count(&Project{})
 	if err != nil {
 		return nil, 0, err
@@ -992,31 +969,26 @@ func addMaxPermissionToProjects(s *xorm.Session, projects []*Project, u *user.Us
 	return
 }
 
-// CheckIsArchived returns an ErrProjectIsArchived if the project or any of its parent projects is archived.
+// CheckIsArchived returns an ErrProjectIsArchived if the project is archived.
+// is_archived is materialized down the tree (archiving a parent flags all
+// descendants), so the project's own row is authoritative. A new project
+// (ID == 0) is checked against its parent's row instead.
 func (p *Project) CheckIsArchived(s *xorm.Session) (err error) {
-	if p.ID == 0 {
-		// New project — skip checking the project itself but still check the parent.
-		if pid := p.parentID(); pid > 0 {
-			parent := &Project{ID: pid}
-			return parent.CheckIsArchived(s)
+	id := p.ID
+	if id == 0 {
+		id = p.parentID()
+		if id <= 0 {
+			return nil
 		}
-		return nil
 	}
 
-	project, err := GetProjectSimpleByID(s, p.ID)
+	project, err := GetProjectSimpleByID(s, id)
 	if err != nil {
 		return err
 	}
-
 	if project.IsArchived {
-		return ErrProjectIsArchived{ProjectID: p.ID}
+		return ErrProjectIsArchived{ProjectID: id}
 	}
-
-	if pid := project.parentID(); pid > 0 {
-		parent := &Project{ID: pid}
-		return parent.CheckIsArchived(s)
-	}
-
 	return nil
 }
 
