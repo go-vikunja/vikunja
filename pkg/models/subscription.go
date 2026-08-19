@@ -288,7 +288,7 @@ WITH RECURSIVE project_hierarchy AS (
         0 AS level,
         id AS original_project_id
     FROM projects
-    WHERE id IN (`+entityIDString+`)
+    WHERE id IN (`+entityIDString+`) AND deleted_at IS NULL
 
     UNION ALL
 
@@ -300,6 +300,7 @@ WITH RECURSIVE project_hierarchy AS (
         ph.original_project_id
     FROM projects p
              INNER JOIN project_hierarchy ph ON p.id = ph.parent_project_id
+    WHERE p.deleted_at IS NULL
 ),
 
 subscription_hierarchy AS (
@@ -354,7 +355,7 @@ WITH RECURSIVE project_hierarchy AS (
         t.id AS task_id
     FROM tasks t
              JOIN projects p ON t.project_id = p.id
-    WHERE t.id IN (`+entityIDString+`)`+tNotDeletedCond+`
+    WHERE t.id IN (`+entityIDString+`) AND p.deleted_at IS NULL`+tNotDeletedCond+`
 
     UNION ALL
 
@@ -366,6 +367,7 @@ WITH RECURSIVE project_hierarchy AS (
         ph.task_id
     FROM projects p
              INNER JOIN project_hierarchy ph ON p.id = ph.parent_project_id
+    WHERE p.deleted_at IS NULL
 ),
 
 subscription_hierarchy AS (

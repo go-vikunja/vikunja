@@ -3,6 +3,7 @@ import ProjectModel from '@/models/project'
 import type {IProject} from '@/modelTypes/IProject'
 import TaskService from './task'
 import {colorFromHex} from '@/helpers/color/colorFromHex'
+import {apiV2Url} from '@/helpers/fetcher'
 
 export default class ProjectService extends AbstractService<IProject> {
 	constructor() {
@@ -50,6 +51,28 @@ export default class ProjectService extends AbstractService<IProject> {
 			responseType: 'blob',
 		})
 		return window.URL.createObjectURL(new Blob([response.data]))
+	}
+
+	async restore(projectId: IProject['id']): Promise<IProject> {
+		const cancel = this.setLoading()
+
+		try {
+			const response = await this.http.post(apiV2Url(`projects/${projectId}/restore`))
+			return this.modelFactory(response.data)
+		} finally {
+			cancel()
+		}
+	}
+
+	async getDeletedProjects(): Promise<IProject[]> {
+		const cancel = this.setLoading()
+
+		try {
+			const response = await this.http.get(apiV2Url('projects/deleted'))
+			return response.data.map((p: IProject) => this.modelFactory(p))
+		} finally {
+			cancel()
+		}
 	}
 
 	async removeBackground(project: IProject) {
