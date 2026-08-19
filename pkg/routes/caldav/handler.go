@@ -182,17 +182,19 @@ func TaskHandler(c *echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Internal server error").Wrap(err)
 	}
 
-	// echo hands back the raw, still percent-encoded path segment.
-	taskUID, err := url.PathUnescape(strings.TrimSuffix(c.Param("task"), ".ics"))
+	// Whether c.Param("task") arrives decoded depends on router config and on which
+	// bytes were escaped; the escaped path is unambiguous, so decode that instead.
+	esc := c.Request().URL.EscapedPath()
+	seg := esc[strings.LastIndex(esc, "/")+1:]
+	taskUID, err := url.PathUnescape(strings.TrimSuffix(seg, ".ics"))
 	if err != nil {
 		return c.String(http.StatusNotFound, "Task not found")
 	}
 
 	storage := &VikunjaCaldavProjectStorage{
-		project:  project,
-		task:     &models.Task{UID: taskUID},
-		user:     u,
-		taskHref: taskURL(project.ID, &models.Task{UID: taskUID}),
+		project: project,
+		task:    &models.Task{UID: taskUID},
+		user:    u,
 	}
 
 	caldav.SetupStorage(storage)

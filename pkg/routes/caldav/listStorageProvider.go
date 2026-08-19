@@ -60,10 +60,6 @@ type VikunjaCaldavProjectStorage struct {
 	user        *user2.User
 	isPrincipal bool
 	isEntry     bool // Entry level handling should only return a link to the principal url
-	// Canonical href of the requested task, set by TaskHandler. caldav-go derives
-	// resource paths from the decoded request path and writes them into XML
-	// unescaped, so echoing one back would re-open what taskURL closes.
-	taskHref string
 }
 
 // GetResources returns either all projects, links to the principal, or only one project, depending on the request
@@ -326,31 +322,16 @@ func taskURL(collectionProjectID int64, task *models.Task) string {
 	return ProjectBasePath + "/" + strconv.FormatInt(collectionProjectID, 10) + `/` + encodeURIPathSegment(task.UID) + `.ics`
 }
 
-// encodeURIPathSegment percent-encodes everything outside RFC 3986 unreserved.
-// url.PathEscape is not enough: it leaves sub-delims such as & alone, and
-// caldav-go writes hrefs into XML without escaping them.
+// url.PathEscape leaves & alone, and caldav-go writes hrefs into XML unescaped.
 func encodeURIPathSegment(segment string) string {
-	const hex = "0123456789ABCDEF"
-
-	var encoded strings.Builder
-	encoded.Grow(len(segment))
-	for i := 0; i < len(segment); i++ {
-		c := segment[i]
-		if c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' ||
-			c == '-' || c == '.' || c == '_' || c == '~' {
-			encoded.WriteByte(c)
-			continue
-		}
-		encoded.WriteByte('%')
-		encoded.WriteByte(hex[c>>4])
-		encoded.WriteByte(hex[c&0x0f])
-	}
-	return encoded.String()
+	return strings.ReplaceAll(url.PathEscape(segment), "&", "%26")
 }
 
+// caldav-go builds rpath from the decoded request path, so echoing it back for a
+// task resource would undo the encoding taskURL applied.
 func (vcls *VikunjaCaldavProjectStorage) hrefFor(rpath string) string {
-	if vcls.taskHref != "" {
-		return vcls.taskHref
+	if strings.HasSuffix(rpath, ".ics") && vcls.project != nil && vcls.task != nil && vcls.task.UID != "" {
+		return taskURL(vcls.project.ID, vcls.task)
 	}
 	return rpath
 }
