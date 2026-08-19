@@ -175,47 +175,26 @@
 </template>
 
 <script setup lang="ts">
-import {computed, nextTick, onBeforeUnmount, onMounted, ref, watch, watchEffect} from 'vue'
+import {computed, nextTick, onBeforeUnmount, onMounted, provide, ref, watch, watchEffect} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {eventToShortcutString} from '@/helpers/shortcut'
 
 import EditorToolbar from './EditorToolbar.vue'
 
-import StarterKit from '@tiptap/starter-kit'
 import {Extension, isTextSelection, mergeAttributes, type SetContentOptions} from '@tiptap/core'
 import {EditorContent, type Extensions, useEditor, VueNodeViewRenderer} from '@tiptap/vue-3'
-import {Plugin, PluginKey, type EditorState} from '@tiptap/pm/state'
+import type {EditorState} from '@tiptap/pm/state'
 import type {EditorView} from '@tiptap/pm/view'
-import {marked} from 'marked'
 import {BubbleMenu} from '@tiptap/vue-3/menus'
 
-import Link from '@tiptap/extension-link'
-import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
-import {Table, TableRow, TableCell, TableHeader} from '@tiptap/extension-table'
-import Typography from '@tiptap/extension-typography'
-import Image from '@tiptap/extension-image'
-import Underline from '@tiptap/extension-underline'
-import {Placeholder} from '@tiptap/extensions'
 import Mention from '@tiptap/extension-mention'
 
-import {TaskList} from '@tiptap/extension-list'
-import {TaskItemWithId} from './taskItemWithId'
-import {ListKeymapWithJoin} from './listKeymapWithJoin'
-import {BlockquoteWithCommentId} from './blockquoteWithCommentId'
-import HardBreak from '@tiptap/extension-hard-break'
-
-import Commands from './commands'
-import suggestionSetup from './suggestion'
-import {EmojiExtension} from './emoji/emojiExtension'
+import {taskLinkCurrentProjectIdKey} from './taskLinkContext'
+import {createEditorExtensions} from './editorExtensions'
 import mentionSuggestionSetup from './mention/mentionSuggestion'
 import MentionUser from './mention/MentionUser.vue'
 
-import {common, createLowlight} from 'lowlight'
-
 import type {BottomAction, UploadCallback} from './types'
-import type {ITask} from '@/modelTypes/ITask'
-import type {IAttachment} from '@/modelTypes/IAttachment'
-import AttachmentModel from '@/models/attachment'
 import AttachmentService from '@/services/attachment'
 import BaseButton from '@/components/base/BaseButton.vue'
 import XButton from '@/components/input/Button.vue'
@@ -234,7 +213,7 @@ const props = withDefaults(defineProps<{
 	editShortcut?: string,
 	enableDiscardShortcut?: boolean,
 	enableMentions?: boolean,
-	mentionProjectId?: number,
+	projectId?: number,
 	storageKey?: string,
 }>(), {
 	uploadCallback: undefined,
@@ -245,11 +224,13 @@ const props = withDefaults(defineProps<{
 	editShortcut: '',
 	enableDiscardShortcut: false,
 	enableMentions: false,
-	mentionProjectId: 0,
+	projectId: 0,
 	storageKey: '',
 })
 
 const emit = defineEmits(['save'])
+
+provide(taskLinkCurrentProjectIdKey, computed(() => props.projectId || undefined))
 
 const modelValue = defineModel<string>({ default: '' })
 
@@ -263,99 +244,8 @@ const defaultSetContentOptions: SetContentOptions = {
 	},
 }
 
-const CustomTableCell = TableCell.extend({
-	addAttributes() {
-		return {
-			// extend the existing attributes …
-			...this.parent?.(),
-
-			// and add a new one …
-			backgroundColor: {
-				default: null,
-				parseHTML: (element: HTMLElement) => element.getAttribute('data-background-color'),
-				renderHTML: (attributes) => {
-					return {
-						'data-background-color': attributes.backgroundColor,
-						style: `background-color: ${attributes.backgroundColor}`,
-					}
-				},
-			},
-		}
-	},
-})
-
-type CacheKey = `${ITask['id']}-${IAttachment['id']}`
-const loadedAttachments = ref<{
-	[key: CacheKey]: string
-}>({})
-
-const CustomImage = Image.extend({
-	addAttributes() {
-		return {
-			src: {
-				default: null,
-			},
-			alt: {
-				default: null,
-			},
-			title: {
-				default: null,
-			},
-			id: {
-				default: null,
-			},
-			'data-src': {
-				default: null,
-			},
-		}
-	},
-	renderHTML({HTMLAttributes}) {
-		if (HTMLAttributes.src?.startsWith(window.API_URL) || HTMLAttributes['data-src']?.startsWith(window.API_URL)) {
-			const imageUrl = HTMLAttributes['data-src'] ?? HTMLAttributes.src
-
-			// The url is something like /tasks/<id>/attachments/<id>
-			const parts = imageUrl.slice(window.API_URL.length + 1).split('/')
-			const taskId = Number(parts[1])
-			const attachmentId = Number(parts[3])
-			const cacheKey: CacheKey = `${taskId}-${attachmentId}`
-			const id = 'tiptap-image-' + cacheKey
-
-			nextTick(async () => {
-
-				const img = document.getElementById(id) as HTMLImageElement | null
-
-				if (!img || !(img instanceof HTMLImageElement)) return
-
-				if (typeof loadedAttachments.value[cacheKey] === 'undefined') {
-
-					const attachment = new AttachmentModel({taskId: taskId, id: attachmentId})
-
-					const attachmentService = new AttachmentService()
-					loadedAttachments.value[cacheKey] = await attachmentService.getBlobUrl(attachment) as string
-				}
-
-				img.src = loadedAttachments.value[cacheKey] as string
-			})
-
-			return ['img', mergeAttributes(this.options.HTMLAttributes, {
-				'data-src': imageUrl,
-				src: '#',
-				alt: HTMLAttributes.alt,
-				title: HTMLAttributes.title,
-				id,
-			})]
-		}
-
-		return ['img', mergeAttributes(this.options.HTMLAttributes, HTMLAttributes)]
-	},
-})
-
-// prevent links from extending after space
-const NonInclusiveLink = Link.extend({
-	inclusive() {
-		return false
-	},
-})
+const loadedAttachments = ref<Record<string, string>>({})
+const attachmentService = new AttachmentService()
 
 type Mode = 'edit' | 'preview'
 
@@ -388,187 +278,28 @@ watch(
 	},
 )
 
-const additionalLinkProtocols = [
-	'ftp',
-	'git',
-	'obsidian',
-	'notion',
-	'message',
-]
-
-const PasteHandler = Extension.create({
-	name: 'pasteHandler',
-
-	addProseMirrorPlugins() {
-		return [
-			new Plugin({
-				key: new PluginKey('pasteHandler'),
-				props: {
-					handlePaste: (view, event) => {
-
-						// Handle images pasted from clipboard
-						if (typeof props.uploadCallback !== 'undefined' && event.clipboardData?.items?.length) {
-
-							for (const item of event.clipboardData.items) {
-								if (item.kind === 'file' && item.type.startsWith('image/')) {
-									const file = item.getAsFile()
-									if (file) {
-										uploadAndInsertFiles([file])
-										return true
-									}
-								}
-							}
-						}
-
-						const text = event.clipboardData?.getData('text/plain') || ''
-						if (!text) {
-							return false
-						}
-
-						// Don't convert markdown when pasting inside a code block
-						const $from = view.state.selection.$from
-						if ($from.parent.type.name === 'codeBlock') {
-							return false
-						}
-
-						const hasMarkdownSyntax = new RegExp('[*`_\\[\\]#-]').test(text)
-						if (!hasMarkdownSyntax) {
-							return false
-						}
-
-						const html = marked.parse(text)
-
-						this.editor.commands.insertContent(html)
-						return true
-					},
-				},
-			}),
-		]
-	},
+const extensions: Extensions = createEditorExtensions({
+	t,
+	isEditing,
+	isEditEnabled: () => props.isEditEnabled,
+	placeholder: () => props.placeholder,
+	contentHasChanged,
+	bubbleSave,
+	getEditor: () => editor.value,
+	uploadCallback: () => props.uploadCallback,
+	uploadAndInsertFiles,
+	loadedAttachments,
+	attachmentService,
 })
 
-
-const extensions : Extensions = [
-	// Starterkit:
-	StarterKit.configure({
-		codeBlock: false,
-		hardBreak: false,
-		blockquote: false,
-		listKeymap: false,
-	}),
-	ListKeymapWithJoin,
-	BlockquoteWithCommentId,
-
-	CodeBlockLowlight.configure({
-		lowlight: createLowlight(common),
-	}),
-	HardBreak.extend({
-		addKeyboardShortcuts() {
-			return {
-				'Shift-Enter': () => this.editor.commands.setHardBreak(),
-				'Mod-Enter': () => {
-					if (contentHasChanged.value) {
-						bubbleSave()
-					}
-					return true
-				},
-			}
-		},
-	}),
-
-	Placeholder.configure({
-		placeholder({editor}) {
-			if (!isEditing.value || editor.getText() !== '' && !editor.isFocused) {
-				return ''
-			}
-
-			return props.placeholder || t('input.editor.placeholder')
-		},
-	}),
-	Typography,
-	Underline,
-	NonInclusiveLink.configure({
-		openOnClick: false,
-		validate: (href) => (new RegExp(
-			`^(https?|${additionalLinkProtocols.join('|')}):\\/\\/`,
-			'i',
-		)).test(href),
-		protocols: additionalLinkProtocols,
-	}),
-	Table.configure({
-		resizable: true,
-	}),
-	TableRow,
-	TableHeader,
-	// Custom TableCell with backgroundColor attribute
-	CustomTableCell,
-
-	CustomImage,
-
-	TaskList,
-	TaskItemWithId.configure({
-		nested: true,
-		onReadOnlyChecked(node, checked) {
-			if (!props.isEditEnabled) {
-				return false
-			}
-
-			// Use taskId attribute to reliably find the correct node
-			// This fixes GitHub issues #293 and #563
-			const targetTaskId = node.attrs.taskId
-
-			if (!targetTaskId) {
-				// Fallback to original behavior if no ID (shouldn't happen)
-				console.warn('TaskItem missing taskId, falling back to node comparison')
-				editor.value!.state.doc.descendants((subnode, pos) => {
-					if (subnode === node) {
-						const {tr} = editor.value!.state
-						tr.setNodeMarkup(pos, undefined, {
-							...node.attrs,
-							checked,
-						})
-						editor.value!.view.dispatch(tr)
-						bubbleSave()
-					}
-				})
-				return true
-			}
-
-			// Find node by taskId for reliable matching
-			editor.value!.state.doc.descendants((subnode, pos) => {
-				if (subnode.type.name === 'taskItem' && subnode.attrs.taskId === targetTaskId) {
-					const {tr} = editor.value!.state
-					tr.setNodeMarkup(pos, undefined, {
-						...subnode.attrs,
-						checked,
-					})
-					editor.value!.view.dispatch(tr)
-					bubbleSave()
-					return false // Stop iteration once found
-				}
-			})
-
-			return true
-		},
-	}),
-
-	Commands.configure({
-		suggestion: suggestionSetup(t),
-	}),
-
-	EmojiExtension,
-
-	PasteHandler,
-]
-
 // Add mention extension if enabled
-if (props.enableMentions && props.mentionProjectId > 0) {
+if (props.enableMentions && props.projectId > 0) {
 	extensions.push(
 		Mention.configure({
 			HTMLAttributes: {
 				class: 'mention',
 			},
-			suggestion: mentionSuggestionSetup(props.mentionProjectId),
+			suggestion: mentionSuggestionSetup(props.projectId),
 		}).extend({
 
 			parseHTML() {
@@ -793,7 +524,7 @@ function setLink(event: MouseEvent) {
 function showTextBubbleMenu({view, element, state, from, to}: {view: EditorView, element: HTMLElement, state: EditorState, from: number, to: number}) {
 	const isEmptyTextBlock = !state.doc.textBetween(from, to).length && isTextSelection(state.selection)
 	const hasEditorFocus = view.hasFocus() || element.contains(document.activeElement)
-	return hasEditorFocus && from !== to && !isEmptyTextBlock && !editor.value?.isActive('image')
+	return hasEditorFocus && from !== to && !isEmptyTextBlock && !editor.value?.isActive('image') && !editor.value?.isActive('taskLink')
 }
 
 function showImageBubbleMenu() {
