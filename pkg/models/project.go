@@ -152,6 +152,11 @@ const ProjectBackgroundUpload string = "upload"
 
 const FavoritesPseudoProjectID = -1
 
+// Pseudo project ids are negative: -1 is favorites, <= -2 encode saved filters.
+func IsPseudoProjectID(projectID int64) bool {
+	return projectID == FavoritesPseudoProjectID || GetSavedFilterIDFromProjectID(projectID) > 0
+}
+
 // FavoritesPseudoProject holds all tasks marked as favorites
 var FavoritesPseudoProject = Project{
 	ID:              FavoritesPseudoProjectID,
