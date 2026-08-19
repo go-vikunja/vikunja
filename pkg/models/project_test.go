@@ -515,6 +515,11 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 			_, err := project.CanUpdate(s, &user.User{ID: 1})
 			require.Error(t, err)
 			assert.True(t, IsErrProjectIsArchived(err))
+
+			err = UpdateProject(s, &Project{ID: 1, Title: "Test1", ParentProjectID: Ptr(int64(22))}, &user.User{ID: 1}, false)
+			var e ErrProjectIsArchived
+			require.ErrorAs(t, err, &e)
+			assert.Equal(t, int64(22), e.ProjectID)
 		})
 		t.Run("move archived project to root keeps it archived", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
@@ -534,9 +539,34 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 			defer s.Close()
 
 			project := Project{ID: 21, IsArchived: false}
-			_, err := project.CanUpdate(s, &user.User{ID: 1})
-			require.Error(t, err)
-			assert.True(t, IsErrProjectIsArchived(err))
+			err := project.Update(s, &user.User{ID: 1})
+			var e ErrParentProjectIsArchived
+			require.ErrorAs(t, err, &e)
+			assert.Equal(t, int64(22), e.ParentProjectID)
+		})
+		t.Run("unarchive child and detach to root in one request", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
+			project := Project{ID: 21, Title: "Test21", IsArchived: false, ParentProjectID: Ptr(int64(0))}
+			err := project.Update(s, &user.User{ID: 1})
+			require.NoError(t, err)
+			require.NoError(t, s.Commit())
+
+			db.AssertExists(t, "projects", map[string]interface{}{"id": 21, "is_archived": false, "parent_project_id": 0}, false)
+		})
+		t.Run("unarchive child and move under unarchived parent", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
+			project := Project{ID: 21, Title: "Test21", IsArchived: false, ParentProjectID: Ptr(int64(1))}
+			err := project.Update(s, &user.User{ID: 1})
+			require.NoError(t, err)
+			require.NoError(t, s.Commit())
+
+			db.AssertExists(t, "projects", map[string]interface{}{"id": 21, "is_archived": false, "parent_project_id": 1}, false)
 		})
 		t.Run("unarchive child under unarchived parent", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
@@ -882,6 +912,18 @@ func TestProject_ReadOne(t *testing.T) {
 		require.NoError(t, err)
 		require.NoError(t, l.ReadOne(s, u))
 		assert.True(t, l.IsArchived)
+
+		projects, _, err := getAllProjectsForUser(s, u.ID, &projectOptions{getArchived: true})
+		require.NoError(t, err)
+		var fromList *Project
+		for _, p := range projects {
+			if p.ID == 21 {
+				fromList = p
+				break
+			}
+		}
+		require.NotNil(t, fromList)
+		assert.Equal(t, l.IsArchived, fromList.IsArchived)
 	})
 }
 

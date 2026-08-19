@@ -1170,49 +1170,87 @@ func RegisterUser(s *xorm.Session, u *user.User) (*user.User, error) {
 	return newUser, nil
 }
 
+// checkProjectParentBeforeUpdate gates reparenting and un-archiving. Both are
+// enforced here and not in CanUpdate: that short-circuits for instance admins
+// and is bypassed entirely by direct UpdateProject callers.
+//
+// GHSA-2vq4-854f-5c72 / CVE-2026-35595 and GHSA-44v6-7fxq-vgf4 /
+// CVE-2026-55064: the recursive permission CTE cascades Admin from any
+// owned ancestor, so moving a shared child under an attacker-owned root
+// grants Admin on the child, and detaching a child to the top level
+// severs an owner's inherited-permission chain. Both are reparent
+// operations that must require Admin on the moved project.
+//
+// ParentProjectID is a *int64 so an omitted parent_project_id (nil) is
+// distinguishable from an explicit 0 (detach-to-root). Only gate when
+// the field was sent and actually changes the parent.
+func checkProjectParentBeforeUpdate(s *xorm.Session, project, storedProject *Project, auth web.Auth) (err error) {
+	isReparent := project.ParentProjectID != nil && *project.ParentProjectID != storedProject.parentID()
+	isUnarchive := storedProject.IsArchived && !project.IsArchived
+	if !isReparent && !isUnarchive {
+		return nil
+	}
+
+	parentID := storedProject.parentID()
+	if project.ParentProjectID != nil {
+		parentID = *project.ParentProjectID
+	}
+
+	var parent *Project
+	if parentID > 0 {
+		parent, err = GetProjectSimpleByID(s, parentID)
+		if err != nil {
+			return err
+		}
+	}
+
+	if isReparent {
+		canAdminMoved, err := project.IsAdmin(s, auth)
+		if err != nil {
+			return err
+		}
+		if !canAdminMoved {
+			return ErrGenericForbidden{}
+		}
+
+		// Attaching under a new parent additionally requires Admin on
+		// that parent; detaching to the top level (0) has no new parent.
+		if parent != nil {
+			canAdminNewParent, err := parent.IsAdmin(s, auth)
+			if err != nil {
+				return err
+			}
+			if !canAdminNewParent {
+				return ErrGenericForbidden{}
+			}
+
+			if parent.IsArchived {
+				return ErrProjectIsArchived{ProjectID: parent.ID}
+			}
+		}
+	}
+
+	if isUnarchive && parent != nil && parent.IsArchived {
+		return ErrParentProjectIsArchived{ProjectID: project.ID, ParentProjectID: parent.ID}
+	}
+
+	return nil
+}
+
 func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProjectBackground bool) (err error) {
 	err = checkProjectBeforeUpdateOrDelete(s, project)
 	if err != nil {
 		return
 	}
 
-	// GHSA-2vq4-854f-5c72 / CVE-2026-35595 and GHSA-44v6-7fxq-vgf4 /
-	// CVE-2026-55064: the recursive permission CTE cascades Admin from any
-	// owned ancestor, so moving a shared child under an attacker-owned root
-	// grants Admin on the child, and detaching a child to the top level
-	// severs an owner's inherited-permission chain. Both are reparent
-	// operations that must require Admin on the moved project.
-	//
-	// ParentProjectID is a *int64 so an omitted parent_project_id (nil) is
-	// distinguishable from an explicit 0 (detach-to-root). Only gate when
-	// the field was sent and actually changes the parent.
 	storedProject, err := GetProjectSimpleByID(s, project.ID)
 	if err != nil {
 		return err
 	}
-	if project.ParentProjectID != nil {
-		if *project.ParentProjectID != storedProject.parentID() {
-			canAdminMoved, err := project.IsAdmin(s, auth)
-			if err != nil {
-				return err
-			}
-			if !canAdminMoved {
-				return ErrGenericForbidden{}
-			}
 
-			// Attaching under a new parent additionally requires Admin on
-			// that parent; detaching to the top level (0) has no new parent.
-			if *project.ParentProjectID > 0 {
-				newParent := &Project{ID: *project.ParentProjectID}
-				canAdminNewParent, err := newParent.IsAdmin(s, auth)
-				if err != nil {
-					return err
-				}
-				if !canAdminNewParent {
-					return ErrGenericForbidden{}
-				}
-			}
-		}
+	err = checkProjectParentBeforeUpdate(s, project, storedProject, auth)
+	if err != nil {
+		return err
 	}
 
 	if project.IsArchived {
