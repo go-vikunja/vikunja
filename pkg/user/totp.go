@@ -142,48 +142,23 @@ func ValidateTOTPPasscode(s *xorm.Session, passcode *TOTPPasscode) (t *TOTP, err
 		return nil, ErrInvalidTOTPPasscode{Passcode: passcode.Passcode}
 	}
 
-	// Prevent passcode reuse within the validity window.
-	// Store the timestamp when the passcode was used; treat entries older than
-	// 90 seconds (30s TOTP window + clock skew) as expired.
+	// 90s = 30s TOTP window + clock skew
 	const totpUsedTTL = 90 * time.Second
 	usedKey := fmt.Sprintf("totp_used_%s_%s", strconv.FormatInt(passcode.User.ID, 10), passcode.Passcode)
-	val, exists, err := keyvalue.Get(usedKey)
+	_, exists, err := keyvalue.Get(usedKey)
 	if err != nil {
 		return nil, err
 	}
 	if exists {
-		if usedAt, ok := val.(int64); ok && time.Since(time.Unix(usedAt, 0)) < totpUsedTTL {
-			return nil, ErrTOTPPasscodeUsed{}
-		}
-		// Entry expired — allow reuse, overwrite below
+		return nil, ErrTOTPPasscodeUsed{}
 	}
 
-	// Mark this passcode as used with the current timestamp
-	err = keyvalue.Put(usedKey, time.Now().Unix())
+	err = keyvalue.PutWithTTL(usedKey, true, totpUsedTTL)
 	if err != nil {
 		return nil, err
 	}
 
-	// Lazily clean up expired entries to prevent unbounded growth
-	go cleanupExpiredTOTPKeys(totpUsedTTL)
-
 	return
-}
-
-func cleanupExpiredTOTPKeys(ttl time.Duration) {
-	keys, err := keyvalue.ListKeys("totp_used_")
-	if err != nil {
-		return
-	}
-	for _, key := range keys {
-		val, exists, err := keyvalue.Get(key)
-		if err != nil || !exists {
-			continue
-		}
-		if usedAt, ok := val.(int64); ok && time.Since(time.Unix(usedAt, 0)) >= ttl {
-			_ = keyvalue.Del(key)
-		}
-	}
 }
 
 // GetTOTPQrCodeForUser returns a qrcode for a user's totp setting
