@@ -120,13 +120,21 @@ func (s *Storage) ListKeys(prefix string) ([]string, error) {
 	pattern := prefix + "*"
 	var cursor uint64
 	var keys []string
+	// SCAN may return duplicates
+	seen := make(map[string]struct{})
 
 	for {
 		k, c, err := s.client.Scan(ctx, cursor, pattern, 100).Result()
 		if err != nil {
 			return nil, err
 		}
-		keys = append(keys, k...)
+		for _, key := range k {
+			if _, has := seen[key]; has {
+				continue
+			}
+			seen[key] = struct{}{}
+			keys = append(keys, key)
+		}
 		cursor = c
 		if cursor == 0 {
 			break
