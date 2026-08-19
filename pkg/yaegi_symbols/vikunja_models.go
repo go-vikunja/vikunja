@@ -286,6 +286,7 @@ func init() {
 		"IsErrUserDoesNotHaveAccessToProject":              reflect.ValueOf(models.IsErrUserDoesNotHaveAccessToProject),
 		"IsErrUserHasNoAccessToLabel":                      reflect.ValueOf(models.IsErrUserHasNoAccessToLabel),
 		"IsErrUserIsMemberOfTeam":                          reflect.ValueOf(models.IsErrUserIsMemberOfTeam),
+		"IsPseudoProjectID":                                reflect.ValueOf(models.IsPseudoProjectID),
 		"IsUserDirectedEvent":                              reflect.ValueOf(models.IsUserDirectedEvent),
 		"ListAllProjects":                                  reflect.ValueOf(models.ListAllProjects),
 		"ListUsersFromProject":                             reflect.ValueOf(models.ListUsersFromProject),
