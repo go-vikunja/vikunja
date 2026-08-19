@@ -198,7 +198,7 @@ func writeSyncResponse(
 	sb.WriteString(`<D:multistatus xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">` + "\n")
 
 	for _, t := range tasks {
-		href := getTaskURL(&t.Task)
+		href := taskURL(rr.project.ID, &t.Task)
 		etag := `"` + strconv.FormatInt(t.ID, 10) + `-` + strconv.FormatInt(t.Updated.Unix(), 10) + `"`
 
 		sb.WriteString("  <D:response>\n")
@@ -218,7 +218,7 @@ func writeSyncResponse(
 	}
 
 	for _, d := range deletions {
-		href := getTaskURL(d)
+		href := taskURL(rr.project.ID, d)
 		sb.WriteString("  <D:response>\n")
 		sb.WriteString("    <D:href>" + xmlEscape(href) + "</D:href>\n")
 		sb.WriteString("    <D:status>HTTP/1.1 404 Not Found</D:status>\n")
