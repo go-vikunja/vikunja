@@ -319,6 +319,19 @@ func TestInsertFromStructure(t *testing.T) {
 					ParentProjectID: models.Ptr(int64(2)),
 				},
 			},
+			{
+				Project: models.Project{
+					ID:    4,
+					Title: "Unarchived sibling root",
+				},
+			},
+			{
+				Project: models.Project{
+					ID:              5,
+					Title:           "Unarchived sibling's child",
+					ParentProjectID: models.Ptr(int64(4)),
+				},
+			},
 		}, u))
 
 		s := db.NewSession()
@@ -329,11 +342,15 @@ func TestInsertFromStructure(t *testing.T) {
 			exists, err := s.Where("title = ?", title).Get(project)
 			require.NoError(t, err)
 			require.True(t, exists)
+			assert.True(t, project.IsArchived)
+		}
 
-			db.AssertExists(t, "projects", map[string]interface{}{
-				"id":          project.ID,
-				"is_archived": true,
-			}, false)
+		for _, title := range []string{"Unarchived sibling root", "Unarchived sibling's child"} {
+			project := &models.Project{}
+			exists, err := s.Where("title = ?", title).Get(project)
+			require.NoError(t, err)
+			require.True(t, exists)
+			assert.False(t, project.IsArchived)
 		}
 	})
 	t.Run("keeps positions the export provides", func(t *testing.T) {
