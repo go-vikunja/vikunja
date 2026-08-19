@@ -631,6 +631,13 @@ func registerAPIRoutes(a *echo.Group, wsRateLimit echo.MiddlewareFunc) {
 	}
 	a.PUT("/projects/:projectid/duplicate", projectDuplicateHandler.CreateWeb)
 
+	projectTemplateHandler := &handler.WebHandler{
+		EmptyStruct: func() handler.CObject {
+			return &models.ProjectTemplate{}
+		},
+	}
+	a.PUT("/projects/:projectid/template", projectTemplateHandler.CreateWeb)
+
 	taskHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
 			return &models.Task{}
