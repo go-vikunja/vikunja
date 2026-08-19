@@ -10,7 +10,7 @@
 		<slot />
 	</span>
 
-	<Teleport to="body">
+	<Teleport :to="teleportTarget">
 		<CustomTransition name="fade">
 			<div
 				v-if="showTooltip"
@@ -92,6 +92,7 @@ import {getTaskIdentifier} from '@/models/task'
 import {formatDisplayDate} from '@/helpers/time/formatDate'
 import {getDisplayName} from '@/models/user'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
+import {getTopLayerContainer} from '@/helpers/getTopLayerContainer'
 
 import Labels from '@/components/tasks/partials/Labels.vue'
 import ChecklistSummary from '@/components/tasks/partials/ChecklistSummary.vue'
@@ -112,6 +113,7 @@ const triggerRef = ref<HTMLElement | null>(null)
 const tooltipRef = ref<HTMLElement | null>(null)
 const showTooltip = ref(false)
 const tooltipId = useId()
+const teleportTarget = ref<HTMLElement | string>('body')
 let hoverTimeout: ReturnType<typeof setTimeout> | null = null
 // The trigger span is not focusable itself, so aria-describedby has to go on whatever child took focus.
 let describedElement: HTMLElement | null = null
@@ -168,6 +170,7 @@ function scheduleShow() {
 
 	hoverTimeout = setTimeout(async () => {
 		hoverTimeout = null
+		teleportTarget.value = getTopLayerContainer(triggerRef.value)
 		showTooltip.value = true
 		document.addEventListener('keydown', handleKeydown)
 		describedElement?.setAttribute('aria-describedby', tooltipId)
