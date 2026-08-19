@@ -320,12 +320,65 @@ func taskURL(collectionProjectID int64, task *models.Task) string {
 	return ProjectBasePath + "/" + strconv.FormatInt(collectionProjectID, 10) + `/` + task.UID + `.ics`
 }
 
+// Project.CanWrite reports archival through its error return; caldav-go has no case for
+// that error and would answer 500, so collapse it into a plain denial.
+func denyArchived(can bool, err error) (bool, error) {
+	if models.IsErrProjectIsArchived(err) {
+		return false, nil
+	}
+	return can, err
+}
+
 func (vcls *VikunjaCaldavProjectStorage) canReadCollection(s *xorm.Session) (bool, error) {
 	if vcls.project == nil {
 		return false, nil
 	}
 	can, _, err := vcls.project.CanRead(s, vcls.user)
 	return can, err
+}
+
+// Read-only shares and pseudo collections are both the model's call, not the route's.
+func (vcls *VikunjaCaldavProjectStorage) canWriteCollection(s *xorm.Session) (bool, error) {
+	if vcls.project == nil {
+		return false, nil
+	}
+	return denyArchived(vcls.project.CanWrite(s, vcls.user))
+}
+
+// GHSA-48ch-p4gq-x46x: a task addressed through a collection must belong to it. A pseudo
+// collection has no project_id to compare against, so membership stands in.
+func (vcls *VikunjaCaldavProjectStorage) taskInCollection(s *xorm.Session, task *models.Task) (bool, error) {
+	if models.IsPseudoProjectID(vcls.project.ID) {
+		return vcls.collectionContains(s, task.ID)
+	}
+	return task.ProjectID == vcls.project.ID, nil
+}
+
+// A pseudo collection has no permissions of its own, so it cannot gate anything: membership
+// takes the place of the collection gate and the task's own project decides the rest.
+func (vcls *VikunjaCaldavProjectStorage) checkCollectionWrite(s *xorm.Session, task *models.Task) error {
+	if vcls.project == nil || !models.IsPseudoProjectID(vcls.project.ID) {
+		canWrite, err := vcls.canWriteCollection(s)
+		if err != nil {
+			return err
+		}
+		if !canWrite {
+			return errs.ForbiddenError
+		}
+		return nil
+	}
+
+	if task == nil {
+		return errs.ResourceNotFoundError
+	}
+	in, err := vcls.taskInCollection(s, task)
+	if err != nil {
+		return err
+	}
+	if !in {
+		return errs.ResourceNotFoundError
+	}
+	return nil
 }
 
 // One bind variable per candidate would exceed SQLite's limit of 999 once a multiget
@@ -472,32 +525,39 @@ func (vcls *VikunjaCaldavProjectStorage) GetShallowResource(rpath string) (*data
 // CreateResource creates a new resource
 func (vcls *VikunjaCaldavProjectStorage) CreateResource(rpath, content string) (*data.Resource, error) {
 
+	if vcls.project == nil {
+		return nil, errs.ForbiddenError
+	}
+
 	s := db.NewSession()
 	defer s.Close()
+
+	// Denying here would make PUT an oracle for collections every other verb answers 404 for.
+	canRead, err := vcls.canReadCollection(s)
+	if err != nil {
+		_ = s.Rollback()
+		return nil, err
+	}
+	if !canRead {
+		_ = s.Rollback()
+		log.Debugf("User %v tried to create a caldav resource in project %v which they are not allowed to access", vcls.user.Username, vcls.project.ID)
+		return nil, errs.ResourceNotFoundError
+	}
 
 	vTask, _, err := caldav.ParseTaskFromVTODO(content)
 	if err != nil {
 		log.Errorf("[CALDAV] Failed to parse VTODO in CreateResource: %v", err)
 		log.Debugf("[CALDAV] VTODO content that failed to parse: %s", content)
+		_ = s.Rollback()
 		return nil, err
 	}
 
 	vTask.ProjectID = vcls.project.ID
 
-	// Check the permissions
-	canCreate, err := vTask.CanCreate(s, vcls.user)
-	if err != nil {
-		log.Errorf("[CALDAV] Permission check failed in CreateResource for user %s, project %d: %v", vcls.user.Username, vcls.project.ID, err)
-		return nil, err
-	}
-	if !canCreate {
-		log.Warningf("[CALDAV] User %s does not have permission to create task in project %d", vcls.user.Username, vcls.project.ID)
-		return nil, errs.ForbiddenError
-	}
-
-	// A client PUTting a UID that already exists is syncing a stale href - typically
-	// after the task moved to another project. Creating a second task would silently
-	// fork it (#3482), so 404 instead and let the client resync to the real collection.
+	// A client PUTting a UID that already exists is syncing a stale href - typically after
+	// the task moved to another project or out of this collection. Creating a second task
+	// would silently fork it (#3482), and answering 403 would strand the client on a
+	// permanent denial, so 404 and let it resync to the real collection.
 	if vTask.UID != "" {
 		existing, err := models.GetTasksByUIDs(s, []string{vTask.UID}, vcls.user)
 		if err != nil {
@@ -509,6 +569,19 @@ func (vcls *VikunjaCaldavProjectStorage) CreateResource(rpath, content string) (
 			log.Debugf("[CALDAV] Refusing to create task with already existing UID %s in project %d", vTask.UID, vcls.project.ID)
 			return nil, errs.ResourceNotFoundError
 		}
+	}
+
+	// Check the permissions
+	canCreate, err := denyArchived(vTask.CanCreate(s, vcls.user))
+	if err != nil {
+		log.Errorf("[CALDAV] Permission check failed in CreateResource for user %s, project %d: %v", vcls.user.Username, vcls.project.ID, err)
+		_ = s.Rollback()
+		return nil, err
+	}
+	if !canCreate {
+		log.Warningf("[CALDAV] User %s does not have permission to create task in project %d", vcls.user.Username, vcls.project.ID)
+		_ = s.Rollback()
+		return nil, errs.ForbiddenError
 	}
 
 	// Inbound CalDAV descriptions are markdown; store them as canonical HTML.
@@ -583,10 +656,19 @@ func applyDescriptionFromMarkdown(s *xorm.Session, vTask *models.Task, storedHTM
 // UpdateResource updates a resource
 func (vcls *VikunjaCaldavProjectStorage) UpdateResource(rpath, content string) (*data.Resource, error) {
 
+	s := db.NewSession()
+	defer s.Close()
+
+	if err := vcls.checkCollectionWrite(s, vcls.task); err != nil {
+		_ = s.Rollback()
+		return nil, err
+	}
+
 	vTask, props, err := caldav.ParseTaskFromVTODO(content)
 	if err != nil {
 		log.Errorf("[CALDAV] Failed to parse VTODO in UpdateResource: %v", err)
 		log.Debugf("[CALDAV] VTODO content that failed to parse: %s", content)
+		_ = s.Rollback()
 		return nil, err
 	}
 
@@ -595,12 +677,13 @@ func (vcls *VikunjaCaldavProjectStorage) UpdateResource(rpath, content string) (
 
 	// Explicitly set the ProjectID in case the task now belongs to a different project:
 	vTask.ProjectID = vcls.project.ID
-
-	s := db.NewSession()
-	defer s.Close()
+	if models.IsPseudoProjectID(vcls.project.ID) {
+		// A pseudo id is no project to move the task into; leave it where it lives.
+		vTask.ProjectID = vcls.task.ProjectID
+	}
 
 	// Check the permissions
-	canUpdate, err := vTask.CanUpdate(s, vcls.user)
+	canUpdate, err := denyArchived(vTask.CanUpdate(s, vcls.user))
 	if err != nil {
 		log.Errorf("[CALDAV] Permission check failed in UpdateResource for user %s, task %d: %v", vcls.user.Username, vcls.task.ID, err)
 		_ = s.Rollback()
@@ -643,7 +726,13 @@ func (vcls *VikunjaCaldavProjectStorage) UpdateResource(rpath, content string) (
 	}
 
 	// Re-assert GHSA-48ch-p4gq-x46x: the GetResource guard ran in a different, already committed session.
-	if stored.ProjectID != vcls.project.ID {
+	inCollection, err := vcls.taskInCollection(s, stored)
+	if err != nil {
+		_ = s.Rollback()
+		events.CleanupPending(s)
+		return nil, err
+	}
+	if !inCollection {
 		_ = s.Rollback()
 		events.CleanupPending(s)
 		return nil, errs.ResourceNotFoundError
@@ -687,8 +776,6 @@ func (vcls *VikunjaCaldavProjectStorage) UpdateResource(rpath, content string) (
 	if vTask.Reminders != nil {
 		base.Reminders = vTask.Reminders
 	}
-	// No-op: cross-project moves are already rejected by the GHSA-48ch-p4gq-x46x guard above.
-	base.ProjectID = vcls.project.ID
 
 	err = base.Update(s, vcls.user)
 	if err != nil {
@@ -741,38 +828,44 @@ func (vcls *VikunjaCaldavProjectStorage) UpdateResource(rpath, content string) (
 
 // DeleteResource deletes a resource
 func (vcls *VikunjaCaldavProjectStorage) DeleteResource(_ string) error {
-	if vcls.task != nil {
-		s := db.NewSession()
-		defer s.Close()
+	s := db.NewSession()
+	defer s.Close()
 
-		// Check the permissions
-		canDelete, err := vcls.task.CanDelete(s, vcls.user)
-		if err != nil {
-			_ = s.Rollback()
-			events.CleanupPending(s)
-			return err
-		}
-		if !canDelete {
-			events.CleanupPending(s)
-			return errs.ForbiddenError
-		}
-
-		// Delete it
-		err = vcls.task.Delete(s, vcls.user)
-		if err != nil {
-			_ = s.Rollback()
-			events.CleanupPending(s)
-			return err
-		}
-
-		err = s.Commit()
-		if err != nil {
-			events.CleanupPending(s)
-			return err
-		}
-
-		events.DispatchPending(context.Background(), s)
+	if err := vcls.checkCollectionWrite(s, vcls.task); err != nil {
+		_ = s.Rollback()
+		return err
 	}
+
+	if vcls.task == nil {
+		_ = s.Rollback()
+		return nil
+	}
+
+	canDelete, err := denyArchived(vcls.task.CanDelete(s, vcls.user))
+	if err != nil {
+		_ = s.Rollback()
+		events.CleanupPending(s)
+		return err
+	}
+	if !canDelete {
+		events.CleanupPending(s)
+		return errs.ForbiddenError
+	}
+
+	err = vcls.task.Delete(s, vcls.user)
+	if err != nil {
+		_ = s.Rollback()
+		events.CleanupPending(s)
+		return err
+	}
+
+	err = s.Commit()
+	if err != nil {
+		events.CleanupPending(s)
+		return err
+	}
+
+	events.DispatchPending(context.Background(), s)
 
 	return nil
 }
