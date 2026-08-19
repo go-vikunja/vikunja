@@ -1,4 +1,4 @@
-import {computed, readonly, ref} from 'vue'
+import {computed, readonly, ref, watch} from 'vue'
 import {acceptHMRUpdate, defineStore} from 'pinia'
 
 import {AuthenticatedHTTPFactory, HTTPFactory} from '@/helpers/fetcher'
@@ -8,6 +8,7 @@ import UserModel, {getDisplayName, fetchAvatarBlobUrl, invalidateAvatarCache} fr
 import AvatarService from '@/services/avatar'
 import UserSettingsService from '@/services/userSettings'
 import {getToken, refreshToken, removeToken, saveToken} from '@/helpers/auth'
+import {clearTaskCache} from '@/helpers/taskCache'
 import {useWebSocket} from '@/composables/useWebSocket'
 import {setModuleLoading} from '@/stores/helper'
 import {success, error} from '@/message'
@@ -115,6 +116,14 @@ export const useAuthStore = defineStore('auth', () => {
 	const userDisplayName = computed(() => info.value ? getDisplayName(info.value) : undefined)
 	
 	const isLinkShareAuth = computed(() => info.value?.type === AUTH_TYPES.LINK_SHARE)
+
+	// Cached task links belong to one identity. Compare id and type instead of watching
+	// `info` itself: setUserSettings rebuilds the object for the same user.
+	watch(() => [info.value?.id ?? null, info.value?.type ?? null] as const, ([id, type], [prevId, prevType]) => {
+		if (id !== prevId || type !== prevType) {
+			clearTaskCache()
+		}
+	})
 
 	function setIsLoading(newIsLoading: boolean) {
 		isLoading.value = newIsLoading 
