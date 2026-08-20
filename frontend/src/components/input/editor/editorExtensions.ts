@@ -154,8 +154,17 @@ export function createEditorExtensions(deps: EditorExtensionDeps): Extensions {
 							inFlightBlobFetches.set(cacheKey, fetchPromise)
 						}
 
-						loadedAttachments.value[cacheKey] = await fetchPromise
-						inFlightBlobFetches.delete(cacheKey)
+						try {
+							loadedAttachments.value[cacheKey] = await fetchPromise
+						} catch {
+							// keep the placeholder and let the next render retry
+							return
+						} finally {
+							// clearing on the failure path too: a cached rejected promise would rethrow forever
+							if (inFlightBlobFetches.get(cacheKey) === fetchPromise) {
+								inFlightBlobFetches.delete(cacheKey)
+							}
+						}
 					}
 
 					img.src = loadedAttachments.value[cacheKey] as string
