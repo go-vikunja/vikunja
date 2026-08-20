@@ -25,8 +25,7 @@
 </template>
 
 <script lang="ts">
-// Module scope, so that starting one attachment stops whichever was playing before it -
-// every player autoplays as soon as its file arrives.
+// Module scope: starting a player pauses whichever one was playing before it.
 let playing: HTMLAudioElement | null = null
 </script>
 
@@ -49,8 +48,7 @@ const playerRef = ref<HTMLAudioElement | null>(null)
 const loading = ref(false)
 let unmounted = false
 
-// The file is only fetched on demand: the download endpoint needs the auth header, so the
-// player cannot stream from a plain url and would otherwise pull the whole file on page load.
+// Fetched on demand: the download endpoint needs the auth header, so no plain-url streaming.
 async function loadAudio() {
 	if (loading.value || blobUrl.value) {
 		return
