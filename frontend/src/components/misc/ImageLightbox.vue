@@ -107,7 +107,12 @@ let panStart = {x: 0, y: 0, translateX: 0, translateY: 0}
 let pinchStartDistance = 0
 let pinchStartScale = 1
 
-watch(() => props.blobUrl, () => {
+// Only reset while opening: the Modal keeps rendering during its close
+// transition, so resetting on null flashes the loader over the fading scrim.
+watch(() => props.blobUrl, blobUrl => {
+	if (blobUrl === null) {
+		return
+	}
 	loaded.value = false
 	reset()
 })
