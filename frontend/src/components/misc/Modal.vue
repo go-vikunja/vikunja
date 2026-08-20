@@ -420,6 +420,13 @@ $modal-width: 1024px;
 		inset-inline-end: 50%;
 		// we align the close button to the modal until there is enough space outside for it
 		transform: translateX(calc((#{$modal-width} / 2) - #{$close-button-padding}));
+
+		// fullscreen has no card to hug — keep the corner position instead
+		.fullscreen & {
+			inset-block-start: .5rem;
+			inset-inline-end: $close-button-padding;
+			transform: none;
+		}
 	}
 
 	@media screen and (min-width: $tablet) and (max-width: #{$desktop + $close-button-min-space}) {
