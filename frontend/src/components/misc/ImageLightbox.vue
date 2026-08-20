@@ -203,7 +203,15 @@ function zoomAt(clientX: number, clientY: number, factor: number) {
 }
 
 function zoomByStep(factor: number) {
-	zoomAt(window.innerWidth / 2, window.innerHeight / 2, factor)
+	const metrics = measure()
+	if (metrics === null) {
+		return
+	}
+	applyTransform(zoomAround(currentTransform(), metrics, {
+		clientX: metrics.centerX,
+		clientY: metrics.centerY,
+		factor,
+	}))
 }
 
 function onWheel(event: WheelEvent) {
