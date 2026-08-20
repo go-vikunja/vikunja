@@ -17,6 +17,17 @@
 		/>
 	</div>
 
+	<!-- Audio icon -->
+	<div
+		v-else-if="isAudio"
+		class="icon-wrapper"
+	>
+		<Icon
+			size="6x"
+			icon="volume-high"
+		/>
+	</div>
+
 	<!-- Fallback -->
 	<div
 		v-else
@@ -33,7 +44,7 @@
 import {computed, ref, shallowReactive, watchEffect} from 'vue'
 import AttachmentService, {PREVIEW_SIZE} from '@/services/attachment'
 import type {IAttachment} from '@/modelTypes/IAttachment'
-import {canPreviewImage, canPreviewPdf} from '@/models/attachment'
+import {canPreviewAudio, canPreviewImage, canPreviewPdf} from '@/models/attachment'
 
 const props = defineProps<{
 	modelValue?: IAttachment
@@ -42,6 +53,7 @@ const props = defineProps<{
 const attachmentService = shallowReactive(new AttachmentService())
 const blobUrl = ref<string | undefined>(undefined)
 const isPdf = computed(() => props.modelValue && canPreviewPdf(props.modelValue))
+const isAudio = computed(() => props.modelValue && canPreviewAudio(props.modelValue))
 
 watchEffect(async () => {
 	if (props.modelValue && canPreviewImage(props.modelValue)) {
