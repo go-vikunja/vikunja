@@ -90,7 +90,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref} from 'vue'
+import {computed, onMounted, ref} from 'vue'
 import {useEventListener} from '@vueuse/core'
 
 import Modal from '@/components/misc/Modal.vue'
@@ -134,6 +134,14 @@ function onBackdropClick(event: MouseEvent) {
 const safeSrc = computed(() => props.blobUrl !== null && props.blobUrl.startsWith('blob:')
 	? props.blobUrl
 	: null)
+
+// A rejected url renders nothing and can never emit close on its own, which would
+// strand the caller in an open state.
+onMounted(() => {
+	if (props.blobUrl !== null && safeSrc.value === null) {
+		emit('close')
+	}
+})
 
 const ZOOM_STEP = 1.4
 
