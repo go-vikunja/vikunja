@@ -288,8 +288,10 @@ function onPointerUp(event: PointerEvent) {
 	gap: .25rem;
 	padding: .35rem;
 	border-radius: 999px;
-	background: hsla(var(--grey-900-hsl), .72);
-	box-shadow: var(--shadow-md);
+	// Literal colors: the toolbar sits on the image scrim, which does not flip
+	// with the theme.
+	background: rgba(0, 0, 0, .72);
+	box-shadow: 0 10px 20px rgba(0, 0, 0, .3);
 }
 
 .image-lightbox__button {
@@ -300,7 +302,7 @@ function onPointerUp(event: PointerEvent) {
 	block-size: 2.25rem;
 	padding: 0 .5rem;
 	border-radius: 999px;
-	color: var(--white);
+	color: #fff;
 	cursor: pointer;
 	transition: background-color $transition;
 
@@ -312,7 +314,7 @@ function onPointerUp(event: PointerEvent) {
 .image-lightbox__level {
 	min-inline-size: 3rem;
 	text-align: center;
-	color: var(--white);
+	color: #fff;
 	font-size: .85rem;
 	font-variant-numeric: tabular-nums;
 	user-select: none;
