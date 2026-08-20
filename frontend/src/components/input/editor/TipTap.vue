@@ -104,7 +104,7 @@
 				class="tiptap__editor"
 				:class="{'tiptap__editor-is-edit-enabled': isEditing}"
 				:editor="editor"
-				@dblclick="setEditIfApplicable()"
+				@dblclick="setEditIfApplicable"
 				@click="handleContentClick"
 			/>
 
@@ -423,9 +423,10 @@ function exitEditMode() {
 	}
 }
 
-function setEditIfApplicable() {
+function setEditIfApplicable(event: MouseEvent) {
 	if (!props.isEditEnabled) return
 	if (isEditing.value) return
+	if (getLightboxImage(event.target) !== null) return
 
 	setEdit()
 }
