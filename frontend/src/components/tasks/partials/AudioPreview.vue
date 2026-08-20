@@ -3,7 +3,7 @@
 		v-if="blobUrl"
 		ref="playerRef"
 		:src="blobUrl"
-		:aria-label="modelValue.file.name"
+		:aria-label="attachment.file.name"
 		class="audio-player"
 		controls
 		autoplay
@@ -13,7 +13,7 @@
 	<XButton
 		v-else
 		:loading="loading"
-		:aria-label="$t('task.attachment.playFile', {file: modelValue.file.name})"
+		:aria-label="$t('task.attachment.playFile', {file: attachment.file.name})"
 		class="audio-play"
 		icon="play"
 		variant="secondary"
@@ -37,7 +37,7 @@ import type {IAttachment} from '@/modelTypes/IAttachment'
 import {error} from '@/message'
 
 const props = defineProps<{
-	modelValue: IAttachment
+	attachment: IAttachment
 }>()
 
 const {t} = useI18n({useScope: 'global'})
@@ -56,7 +56,7 @@ async function loadAudio() {
 
 	loading.value = true
 	try {
-		const url = await attachmentService.getBlobUrl(props.modelValue) as string
+		const url = await attachmentService.getBlobUrl(props.attachment) as string
 		if (unmounted) {
 			window.URL.revokeObjectURL(url)
 			return
