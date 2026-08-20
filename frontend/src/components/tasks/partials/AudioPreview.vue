@@ -93,6 +93,16 @@ function stopOtherPlayers(e: Event) {
 	playing = player
 }
 
+async function play() {
+	if (blobUrl.value === undefined) {
+		// The element autoplays as soon as it gets the blob.
+		await loadAudio()
+		return
+	}
+
+	await playerRef.value?.play()
+}
+
 onBeforeUnmount(() => {
 	unmounted = true
 
@@ -106,6 +116,8 @@ onBeforeUnmount(() => {
 		window.URL.revokeObjectURL(blobUrl.value)
 	}
 })
+
+defineExpose({play})
 </script>
 
 <style scoped lang="scss">
