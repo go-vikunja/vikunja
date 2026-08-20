@@ -3,6 +3,7 @@
 		v-if="blobUrl"
 		ref="playerRef"
 		:src="blobUrl"
+		:aria-label="modelValue.file.name"
 		class="audio-player"
 		controls
 		autoplay
@@ -12,6 +13,7 @@
 	<XButton
 		v-else
 		:loading="loading"
+		:aria-label="$t('task.attachment.playFile', {file: modelValue.file.name})"
 		class="audio-play"
 		icon="play"
 		variant="secondary"
@@ -131,6 +133,7 @@ defineExpose({play})
 }
 
 .audio-play {
+	max-inline-size: 30rem;
 	margin-block: 0 1em;
 }
 </style>
