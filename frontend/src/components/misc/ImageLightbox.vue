@@ -7,7 +7,7 @@
 	>
 		<div
 			class="image-lightbox"
-			@click.self="$emit('close')"
+			@click.self="onBackdropClick"
 			@wheel.prevent="onWheel"
 		>
 			<div
@@ -97,9 +97,18 @@ const props = defineProps<{
 	alt?: string,
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
 	close: [],
 }>()
+
+// A double click at the call site opens the lightbox on the first click; the
+// second one lands on the fresh backdrop and would close it again.
+function onBackdropClick(event: MouseEvent) {
+	if (event.detail > 1) {
+		return
+	}
+	emit('close')
+}
 
 // Never render a caller-supplied remote url as an image source.
 const safeSrc = computed(() => props.blobUrl !== null && /^(blob:|data:image\/)/.test(props.blobUrl)
