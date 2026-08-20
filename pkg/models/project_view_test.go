@@ -17,6 +17,7 @@
 package models
 
 import (
+	"encoding/json"
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
@@ -25,6 +26,37 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestProjectViewKind_JSON(t *testing.T) {
+	kinds := []struct {
+		name string
+		kind ProjectViewKind
+	}{
+		{"list", ProjectViewKindList},
+		{"gantt", ProjectViewKindGantt},
+		{"table", ProjectViewKindTable},
+		{"kanban", ProjectViewKindKanban},
+		{"calendar", ProjectViewKindCalendar},
+	}
+
+	for _, tc := range kinds {
+		t.Run(tc.name+" survives a round-trip", func(t *testing.T) {
+			marshalled, err := json.Marshal(&tc.kind)
+			require.NoError(t, err)
+			assert.JSONEq(t, `"`+tc.name+`"`, string(marshalled))
+
+			var unmarshalled ProjectViewKind
+			require.NoError(t, json.Unmarshal(marshalled, &unmarshalled))
+			assert.Equal(t, tc.kind, unmarshalled)
+		})
+	}
+
+	t.Run("unknown kind is rejected", func(t *testing.T) {
+		var kind ProjectViewKind
+		err := json.Unmarshal([]byte(`"heatmap"`), &kind)
+		require.ErrorContains(t, err, "unknown project view kind: heatmap")
+	})
+}
 
 func TestProjectView_Update(t *testing.T) {
 	u := &user.User{ID: 1}
