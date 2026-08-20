@@ -95,6 +95,28 @@ function ganttFiltersToRoute(filters: GanttFilters): RouteLocationRaw {
 	}
 }
 
+const GANTT_QUERY_PARAMS = ['dateFrom', 'dateTo', 'showTasksWithoutDates']
+
+// useRouteFilters rebuilds the whole url from the gantt filters, so anything else in the
+// query - the include_subprojects toggle, for one - would be dropped on the next filter
+// change. Carry those params over, keeping their original position so the resulting
+// fullPath still compares equal to the current one.
+function ganttFiltersToRoutePreservingQuery(
+	filters: GanttFilters,
+	currentQuery: RouteLocationNormalized['query'],
+): RouteLocationRaw {
+	const routeLocation = ganttFiltersToRoute(filters) as {query: LocationQueryRaw}
+	const ganttQuery = routeLocation.query
+	const query: LocationQueryRaw = {...currentQuery, ...ganttQuery}
+	for (const key of GANTT_QUERY_PARAMS) {
+		if (!(key in ganttQuery)) {
+			delete query[key]
+		}
+	}
+
+	return {...routeLocation, query}
+}
+
 function ganttFiltersToApiParams(filters: GanttFilters, includeSubprojects: boolean): TaskFilterParams {
 	const dateFrom = isoToKebabDate(filters.dateFrom)
 	const dateTo = isoToKebabDate(filters.dateTo)
@@ -133,7 +155,7 @@ export function useGanttFilters(
 		route,
 		ganttGetDefaultFilters,
 		ganttRouteToFilters,
-		ganttFiltersToRoute,
+		filters => ganttFiltersToRoutePreservingQuery(filters, route.value.query),
 		['project.view'],
 	)
 
