@@ -24,14 +24,15 @@ import (
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
+	"xorm.io/builder"
 	"xorm.io/xorm"
 )
 
 // TaskCollection is a struct used to hold filter details and not clutter the Task struct with information not related to actual tasks.
 type TaskCollection struct {
-	ProjectID     int64 `param:"project" json:"-"`
-	ProjectViewID int64 `param:"view" json:"-"`
-	IncludeSubprojects bool `json:"include_subprojects,omitempty" query:"include_subprojects"`
+	ProjectID          int64 `param:"project" json:"-"`
+	ProjectViewID      int64 `param:"view" json:"-"`
+	IncludeSubprojects bool  `json:"include_subprojects,omitempty" query:"include_subprojects"`
 
 	Search string `query:"s" json:"s" doc:"A search term to match tasks by their title."`
 
@@ -169,11 +170,19 @@ func (tf *TaskCollection) SetForceFlatTasks() {
 
 // normalizeIncludeSubprojects resets the include subprojects flag in all cases
 // where it is not supported: outside of a concrete project (favorites,
-// saved filters) and for link shares.
-func (tf *TaskCollection) normalizeIncludeSubprojects(a web.Auth) {
+// saved filters), for link shares and in kanban views.
+//
+// Buckets belong to a single view, so a task from a subproject has no bucket in
+// the parent project's kanban view and would be sorted into the default or done
+// bucket regardless of its actual state.
+func (tf *TaskCollection) normalizeIncludeSubprojects(a web.Auth, view *ProjectView) {
 	tf.IncludeSubprojects = tf.IncludeSubprojects &&
 		tf.ProjectID > 0 &&
 		!tf.isSavedFilter
+
+	if view != nil && view.ViewKind == ProjectViewKindKanban {
+		tf.IncludeSubprojects = false
+	}
 
 	if _, is := a.(*LinkSharing); is {
 		tf.IncludeSubprojects = false
@@ -247,37 +256,48 @@ func getRelevantProjectsFromCollection(s *xorm.Session, a web.Auth, tf *TaskColl
 		return []*Project{{ID: tf.ProjectID}}, nil
 	}
 
-	allProjects, _, _, err := getRawProjectsForUser(s, &projectOptions{
-		user: &user.User{ID: a.GetID()},
-		page: -1,
-	})
+	subprojectIDs, err := getAccessibleSubprojectIDs(s, a, tf.ProjectID)
 	if err != nil {
 		return nil, err
 	}
 
-	relevantProjects := make([]*Project, 0)
-	childrenMap := make(map[int64][]int64)
-	projectMap := make(map[int64]*Project)
-	for _, p := range allProjects {
-		projectMap[p.ID] = p
-		childrenMap[p.parentID()] = append(childrenMap[p.parentID()], p.ID)
-	}
-
-	queue := []int64{tf.ProjectID}
-	for len(queue) > 0 {
-		currentID := queue[0]
-		queue = queue[1:]
-
-		if p, exists := projectMap[currentID]; exists {
-			relevantProjects = append(relevantProjects, p)
-		}
-
-		if children, exists := childrenMap[currentID]; exists {
-			queue = append(queue, children...)
-		}
+	relevantProjects := make([]*Project, 0, len(subprojectIDs)+1)
+	relevantProjects = append(relevantProjects, &Project{ID: tf.ProjectID})
+	for _, id := range subprojectIDs {
+		relevantProjects = append(relevantProjects, &Project{ID: id})
 	}
 
 	return relevantProjects, nil
+}
+
+// getAccessibleSubprojectIDs walks down the project hierarchy from parentProjectID and
+// returns every descendant the auth can access. Subprojects without access are skipped
+// rather than failing the whole request.
+func getAccessibleSubprojectIDs(s *xorm.Session, a web.Auth, parentProjectID int64) (ids []int64, err error) {
+	accessibleSQL, accessibleArgs, err := builder.ToSQL(accessibleProjectIDsSubquery(a, "d.id"))
+	if err != nil {
+		return nil, err
+	}
+
+	args := append([]interface{}{parentProjectID}, accessibleArgs...)
+
+	ids = []int64{}
+	err = s.SQL(`
+WITH RECURSIVE descendant_ids (id) AS (
+    SELECT id
+    FROM projects
+    WHERE parent_project_id = ? AND is_archived = false
+    UNION ALL
+    SELECT p.id
+    FROM projects p
+    INNER JOIN descendant_ids di ON p.parent_project_id = di.id
+    WHERE p.is_archived = false
+)
+SELECT d.id
+FROM descendant_ids d
+WHERE `+accessibleSQL, args...).Find(&ids)
+
+	return ids, err
 }
 
 func getFilterValueForBucketFilter(filter string, view *ProjectView) (newFilter string, err error) {
@@ -427,7 +447,7 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 		}
 	}
 
-	tf.normalizeIncludeSubprojects(a)
+	tf.normalizeIncludeSubprojects(a, view)
 
 	opts, err := getTaskFilterOptsFromCollection(tf, view)
 	if err != nil {
