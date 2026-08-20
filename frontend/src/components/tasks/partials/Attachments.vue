@@ -418,7 +418,7 @@ async function deleteAttachment() {
 }
 
 const attachmentImageBlobUrl = ref<string | null>(null)
-const attachmentImageAlt = ref<string | undefined>(undefined)
+const attachmentImageAlt = ref('')
 const attachmentPdfBlobUrl = ref<string | null>(null)
 
 // Revoking before every assignment keeps rapid clicks from orphaning the previous object URL.
@@ -431,7 +431,7 @@ function replaceBlobUrl(target: Ref<string | null>, blobUrl: string | null) {
 
 function closeImageLightbox() {
 	replaceBlobUrl(attachmentImageBlobUrl, null)
-	attachmentImageAlt.value = undefined
+	attachmentImageAlt.value = ''
 }
 
 function closePdfPreview() {
