@@ -110,7 +110,8 @@
 
 			<ImageLightbox
 				:blob-url="lightboxBlobUrl"
-				@close="lightboxBlobUrl = null"
+				:alt="lightboxAlt"
+				@close="closeLightbox"
 			/>
 		</div>
 
@@ -676,6 +677,7 @@ function focusIfEditing() {
 }
 
 const lightboxBlobUrl = ref<string | null>(null)
+const lightboxAlt = ref('')
 
 // Only attachment images get a data-src from CustomImage, and their src stays the
 // '#' placeholder until the blob URL resolves.
@@ -700,7 +702,13 @@ function handleContentClick(event: MouseEvent) {
 	const image = getLightboxImage(event.target)
 	if (image !== null) {
 		lightboxBlobUrl.value = image.src
+		lightboxAlt.value = image.alt
 	}
+}
+
+function closeLightbox() {
+	lightboxBlobUrl.value = null
+	lightboxAlt.value = ''
 }
 
 function handleEscapeKey(event: KeyboardEvent) {
