@@ -178,17 +178,17 @@ const zoomable = computed(() => loaded.value && !failed.value)
 
 // Measuring right after a transform write forces a reflow, so the untransformed
 // box is cached and only re-read on load and on resize.
-const metrics = ref<ZoomMetrics | null>(null)
+let metrics: ZoomMetrics | null = null
 
 function refreshMetrics() {
 	const image = imageRef.value
 	const container = containerRef.value
 	if (!zoomable.value || !image || !container || image.offsetWidth === 0) {
-		metrics.value = null
+		metrics = null
 		return
 	}
 	const rect = container.getBoundingClientRect()
-	metrics.value = {
+	metrics = {
 		imageWidth: image.offsetWidth,
 		imageHeight: image.offsetHeight,
 		containerWidth: container.clientWidth,
@@ -199,10 +199,10 @@ function refreshMetrics() {
 }
 
 function currentMetrics(): ZoomMetrics | null {
-	if (metrics.value === null) {
+	if (metrics === null) {
 		refreshMetrics()
 	}
-	return metrics.value
+	return metrics
 }
 
 function onLoad() {
