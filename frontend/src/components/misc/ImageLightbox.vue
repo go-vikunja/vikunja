@@ -11,13 +11,19 @@
 			@wheel.prevent="onWheel"
 		>
 			<div
-				v-if="!loaded"
+				v-if="!loaded && !failed"
 				class="image-lightbox__loader"
 			>
 				<Loading />
 			</div>
+			<p
+				v-if="failed"
+				class="image-lightbox__error"
+			>
+				{{ $t('misc.imageLoadFailed') }}
+			</p>
 			<img
-				v-if="blobUrl !== null"
+				v-if="blobUrl !== null && !failed"
 				ref="imageRef"
 				:src="blobUrl"
 				:alt="alt ?? ''"
@@ -30,6 +36,7 @@
 				:style="{transform: `translate(${translateX}px, ${translateY}px) scale(${scale})`}"
 				draggable="false"
 				@load="loaded = true"
+				@error="failed = true"
 				@dblclick="toggleZoom"
 				@pointerdown="onPointerDown"
 				@pointermove="onPointerMove"
@@ -97,6 +104,7 @@ const ZOOM_STEP = 1.4
 
 const imageRef = ref<HTMLImageElement | null>(null)
 const loaded = ref(false)
+const failed = ref(false)
 
 const scale = ref(1)
 const translateX = ref(0)
@@ -111,6 +119,7 @@ let pinchStartScale = 1
 // Start fresh whenever a new image is shown (or the lightbox reopens).
 watch(() => props.blobUrl, () => {
 	loaded.value = false
+	failed.value = false
 	reset()
 })
 
@@ -250,6 +259,10 @@ function onPointerUp(event: PointerEvent) {
 	inset-block-start: 50%;
 	inset-inline-start: 50%;
 	transform: translate(-50%, -50%);
+}
+
+.image-lightbox__error {
+	color: #ffffff;
 }
 
 .image-lightbox__image {

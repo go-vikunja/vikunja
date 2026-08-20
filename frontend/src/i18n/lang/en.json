@@ -817,6 +817,7 @@
     "zoomIn": "Zoom in",
     "zoomOut": "Zoom out",
     "resetZoom": "Reset zoom",
+    "imageLoadFailed": "Failed to load image",
     "closeQuickActions": "Close quick actions",
     "skipToContent": "Skip to main content",
     "sortBy": "Sort by",
