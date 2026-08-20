@@ -90,7 +90,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref, watch} from 'vue'
+import {computed, ref} from 'vue'
 import {useEventListener} from '@vueuse/core'
 
 import Modal from '@/components/misc/Modal.vue'
@@ -108,8 +108,10 @@ import {
 	type ZoomTransform,
 } from '@/helpers/imageZoom'
 
+// Mounted only while open (callers gate it with v-if), so all per-open state is
+// just the initial state of this instance.
 const props = defineProps<{
-	// An already-resolved object URL; null keeps the lightbox closed.
+	// An already-resolved object URL.
 	blobUrl: string | null,
 	alt?: string,
 }>()
@@ -139,7 +141,7 @@ const imageRef = ref<HTMLImageElement | null>(null)
 const loaded = ref(false)
 const failed = ref(false)
 
-const scale = ref(1)
+const scale = ref(MIN_SCALE)
 const translateX = ref(0)
 const translateY = ref(0)
 
@@ -149,32 +151,8 @@ let panStart = {x: 0, y: 0, translateX: 0, translateY: 0}
 let pinchStartDistance = 0
 let pinchStartScale = 1
 
-// Closing mid-drag destroys the <img> before its pointerup, so the gesture state
-// has to be dropped on both edges or the next open starts as a phantom pinch.
-watch(safeSrc, src => {
-	resetGestures()
-	metrics.value = null
-
-	// Only reset the rest while opening: the Modal keeps rendering during its close
-	// transition, so resetting on null flashes the loader over the fading scrim.
-	if (src === null) {
-		return
-	}
-	loaded.value = false
-	failed.value = false
-	reset()
-})
-
-function resetGestures() {
-	pointers.clear()
-	isPanning.value = false
-	pinchStartDistance = 0
-	pinchStartScale = 1
-	panStart = {x: 0, y: 0, translateX: 0, translateY: 0}
-}
-
 function reset() {
-	scale.value = 1
+	scale.value = MIN_SCALE
 	translateX.value = 0
 	translateY.value = 0
 }
