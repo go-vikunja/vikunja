@@ -71,7 +71,7 @@ async function loadAudio() {
 
 // Undecodable files only fail once the element has the blob, so swap back to the play button.
 function onAudioError() {
-	if (blobUrl.value === undefined) {
+	if (unmounted || blobUrl.value === undefined) {
 		return
 	}
 
