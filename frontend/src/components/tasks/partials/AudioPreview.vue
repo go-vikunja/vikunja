@@ -84,11 +84,13 @@ function onAudioError() {
 	error({message: t('task.attachment.audioError')})
 }
 
-function stopOtherPlayers() {
-	if (playing !== null && playing !== playerRef.value) {
+function stopOtherPlayers(e: Event) {
+	const player = e.currentTarget as HTMLAudioElement
+
+	if (playing !== null && playing !== player) {
 		playing.pause()
 	}
-	playing = playerRef.value
+	playing = player
 }
 
 onBeforeUnmount(() => {
