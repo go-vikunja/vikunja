@@ -19,6 +19,7 @@ import {TaskItemWithId} from './taskItemWithId'
 import {ListKeymapWithJoin} from './listKeymapWithJoin'
 import {BlockquoteWithCommentId} from './blockquoteWithCommentId'
 import {TaskLink, LINK_HTML_ATTRIBUTES} from './taskLink'
+import {LinkPreviewExtension} from './linkPreview'
 
 import Commands from './commands'
 import suggestionSetup from './suggestion'
@@ -272,6 +273,7 @@ export function createEditorExtensions(deps: EditorExtensionDeps): Extensions {
 		CustomTableCell,
 
 		CustomImage,
+		LinkPreviewExtension,
 
 		TaskList,
 		TaskItemWithId.configure({

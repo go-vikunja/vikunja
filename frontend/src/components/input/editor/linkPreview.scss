@@ -1,0 +1,88 @@
+// Styles for the link-preview cards injected as ProseMirror widget decorations
+// by ./linkPreview.ts. They live outside a component's scoped styles because
+// the cards are built as plain DOM nodes.
+.link-preview-widget {
+	.link-preview {
+		display: flex;
+		max-inline-size: 28rem;
+		margin-block: .35rem;
+		border: 1px solid var(--grey-200);
+		border-inline-start: 4px solid var(--primary);
+		border-radius: $radius;
+		background: var(--white);
+		overflow: hidden;
+		text-decoration: none;
+		color: var(--text);
+		transition: background-color $transition;
+
+		&:hover {
+			background: var(--grey-100);
+		}
+	}
+
+	.link-preview__body {
+		display: flex;
+		flex-direction: column;
+		gap: .2rem;
+		padding: .6rem .75rem;
+		min-inline-size: 0;
+		font-size: .85rem;
+		line-height: 1.35;
+	}
+
+	.link-preview__site {
+		display: flex;
+		align-items: center;
+		gap: .35rem;
+		color: var(--grey-500);
+		font-size: .75rem;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.link-preview__favicon {
+		inline-size: 14px;
+		block-size: 14px;
+		border-radius: 3px;
+		object-fit: contain;
+		flex: 0 0 auto;
+	}
+
+	.link-preview__title {
+		font-weight: 700;
+		color: var(--text);
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+
+	.link-preview__description {
+		color: var(--grey-600);
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+
+	.link-preview__image {
+		inline-size: 8rem;
+		object-fit: cover;
+		background: var(--grey-100);
+		flex: 0 0 auto;
+	}
+
+	@media screen and (max-width: $mobile) {
+		.link-preview {
+			flex-direction: column-reverse;
+		}
+
+		.link-preview__image {
+			inline-size: 100%;
+			block-size: 8rem;
+		}
+	}
+}
