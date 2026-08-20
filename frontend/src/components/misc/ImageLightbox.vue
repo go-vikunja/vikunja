@@ -85,7 +85,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, onMounted, ref, watch} from 'vue'
+import {computed, onMounted, ref} from 'vue'
 import {useEventListener} from '@vueuse/core'
 
 import Modal from '@/components/misc/Modal.vue'
@@ -137,7 +137,7 @@ const imageRef = ref<HTMLImageElement | null>(null)
 const loaded = ref(false)
 const failed = ref(false)
 
-const scale = ref(1)
+const scale = ref(MIN_SCALE)
 const translateX = ref(0)
 const translateY = ref(0)
 
@@ -147,26 +147,8 @@ let panStart = {x: 0, y: 0, translateX: 0, translateY: 0}
 let pinchStartDistance = 0
 let pinchStartScale = 1
 
-// Closing mid-drag destroys the <img> before its pointerup, so the gesture state
-// has to be dropped on both edges or the next open starts as a phantom pinch.
-watch(safeSrc, () => {
-	resetGestures()
-	metrics.value = null
-	loaded.value = false
-	failed.value = false
-	reset()
-})
-
-function resetGestures() {
-	pointers.clear()
-	isPanning.value = false
-	pinchStartDistance = 0
-	pinchStartScale = 1
-	panStart = {x: 0, y: 0, translateX: 0, translateY: 0}
-}
-
 function reset() {
-	scale.value = 1
+	scale.value = MIN_SCALE
 	translateX.value = 0
 	translateY.value = 0
 }
