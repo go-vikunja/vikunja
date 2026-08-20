@@ -174,6 +174,7 @@
 		</Modal>
 
 		<ImageLightbox
+			v-if="attachmentImageBlobUrl !== null"
 			:blob-url="attachmentImageBlobUrl"
 			:alt="attachmentImageAlt"
 			@close="closeImageLightbox"
