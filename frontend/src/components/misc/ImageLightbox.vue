@@ -58,7 +58,11 @@
 				>
 					<Icon icon="minus" />
 				</BaseButton>
-				<span class="image-lightbox__level">{{ Math.round(scale * 100) }}%</span>
+				<span
+					class="image-lightbox__level"
+					role="status"
+					aria-live="polite"
+				>{{ Math.round(scale * 100) }}%</span>
 				<BaseButton
 					v-tooltip="$t('misc.zoomIn')"
 					:aria-label="$t('misc.zoomIn')"
