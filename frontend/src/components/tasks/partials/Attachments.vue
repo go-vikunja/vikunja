@@ -173,22 +173,19 @@
 			</template>
 		</Modal>
 
-		<!-- Attachment image modal -->
-		<Modal
-			:enabled="attachmentImageBlobUrl !== null"
-			@close="attachmentImageBlobUrl = null"
-		>
-			<img
-				:src="attachmentImageBlobUrl"
-				alt=""
-			>
-		</Modal>
+		<ImageLightbox
+			v-if="attachmentImageBlobUrl !== null"
+			:key="attachmentImageBlobUrl"
+			:blob-url="attachmentImageBlobUrl"
+			:alt="attachmentImageAlt"
+			@close="closeImageLightbox"
+		/>
 
 		<!-- Attachment PDF modal -->
 		<Modal
 			:enabled="attachmentPdfBlobUrl !== null"
 			:wide="true"
-			@close="attachmentPdfBlobUrl = null"
+			@close="closePdfPreview"
 		>
 			<iframe
 				v-if="attachmentPdfBlobUrl"
@@ -200,7 +197,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, shallowReactive, computed, watch, onMounted, onBeforeUnmount} from 'vue'
+import {ref, shallowReactive, computed, watch, onMounted, onBeforeUnmount, type Ref} from 'vue'
 import {useDropZone} from '@vueuse/core'
 
 import User from '@/components/misc/User.vue'
@@ -220,6 +217,7 @@ import {error, success} from '@/message'
 import {useTaskStore} from '@/stores/tasks'
 import {useI18n} from 'vue-i18n'
 import FilePreview from '@/components/tasks/partials/FilePreview.vue'
+import ImageLightbox from '@/components/misc/ImageLightbox.vue'
 
 const props = withDefaults(defineProps<{
 	task: ITask,
@@ -421,15 +419,57 @@ async function deleteAttachment() {
 }
 
 const attachmentImageBlobUrl = ref<string | null>(null)
+const attachmentImageAlt = ref('')
 const attachmentPdfBlobUrl = ref<string | null>(null)
+let previewRequestToken = 0
+
+// Revoking before every assignment keeps rapid clicks from orphaning the previous object URL.
+function replaceBlobUrl(target: Ref<string | null>, blobUrl: string | null) {
+	if (target.value !== null) {
+		URL.revokeObjectURL(target.value)
+	}
+	target.value = blobUrl
+}
+
+function closeImageLightbox() {
+	replaceBlobUrl(attachmentImageBlobUrl, null)
+	attachmentImageAlt.value = ''
+}
+
+function closePdfPreview() {
+	replaceBlobUrl(attachmentPdfBlobUrl, null)
+}
+
+onBeforeUnmount(() => {
+	closeImageLightbox()
+	closePdfPreview()
+})
 
 async function viewOrDownload(attachment: IAttachment) {
-	if (canPreviewImage(attachment)) {
-		attachmentImageBlobUrl.value = await attachmentService.getBlobUrl(attachment)
-	} else if (canPreviewPdf(attachment)) {
-		attachmentPdfBlobUrl.value = await attachmentService.getBlobUrl(attachment)
-	} else {
+	if (!canPreviewImage(attachment) && !canPreviewPdf(attachment)) {
 		downloadAttachment(attachment)
+		return
+	}
+
+	previewRequestToken++
+	const requestToken = previewRequestToken
+
+	try {
+		const blobUrl = await attachmentService.getBlobUrl(attachment)
+		// Revoking a superseded url before it is ever assigned keeps replaceBlobUrl
+		// from pulling the url out from under an <img> that is still decoding it.
+		if (requestToken !== previewRequestToken) {
+			URL.revokeObjectURL(blobUrl)
+			return
+		}
+		if (canPreviewImage(attachment)) {
+			replaceBlobUrl(attachmentImageBlobUrl, blobUrl)
+			attachmentImageAlt.value = attachment.file.name
+		} else {
+			replaceBlobUrl(attachmentPdfBlobUrl, blobUrl)
+		}
+	} catch (e) {
+		error(e)
 	}
 }
 

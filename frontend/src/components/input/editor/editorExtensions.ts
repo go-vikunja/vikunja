@@ -99,6 +99,9 @@ export function createEditorExtensions(deps: EditorExtensionDeps): Extensions {
 		attachmentService,
 	} = deps
 
+	// dedupes concurrent fetches: ProseMirror can call renderHTML twice for the same node on initial mount
+	const inFlightBlobFetches = new Map<CacheKey, Promise<string>>()
+
 	const CustomImage = Image.extend({
 		addAttributes() {
 			return {
@@ -113,6 +116,8 @@ export function createEditorExtensions(deps: EditorExtensionDeps): Extensions {
 				},
 				id: {
 					default: null,
+					// Ids come from renderHTML only - one planted in stored html would hijack the blob lookup below
+					parseHTML: () => null,
 				},
 				'data-src': {
 					default: null,
@@ -132,15 +137,34 @@ export function createEditorExtensions(deps: EditorExtensionDeps): Extensions {
 
 				nextTick(async () => {
 
-					const img = document.getElementById(id) as HTMLImageElement | null
+					// fail closed: no live view means no safe scope to search, never fall back to document
+					const root = getEditor()?.view?.dom
+					if (!root) return
+
+					const img = root.querySelector(`[id="${id}"]`)
 
 					if (!img || !(img instanceof HTMLImageElement)) return
 
 					if (typeof loadedAttachments.value[cacheKey] === 'undefined') {
+						let fetchPromise = inFlightBlobFetches.get(cacheKey)
 
-						const attachment = new AttachmentModel({taskId: taskId, id: attachmentId})
+						if (!fetchPromise) {
+							const attachment = new AttachmentModel({taskId: taskId, id: attachmentId})
+							fetchPromise = attachmentService.getBlobUrl(attachment) as Promise<string>
+							inFlightBlobFetches.set(cacheKey, fetchPromise)
+						}
 
-						loadedAttachments.value[cacheKey] = await attachmentService.getBlobUrl(attachment) as string
+						try {
+							loadedAttachments.value[cacheKey] = await fetchPromise
+						} catch {
+							// keep the placeholder and let the next render retry
+							return
+						} finally {
+							// clearing on the failure path too: a cached rejected promise would rethrow forever
+							if (inFlightBlobFetches.get(cacheKey) === fetchPromise) {
+								inFlightBlobFetches.delete(cacheKey)
+							}
+						}
 					}
 
 					img.src = loadedAttachments.value[cacheKey] as string
