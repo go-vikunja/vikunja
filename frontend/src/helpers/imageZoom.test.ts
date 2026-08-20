@@ -5,6 +5,7 @@ import {
 	MIN_SCALE,
 	clampScale,
 	clampTranslate,
+	wheelZoomFactor,
 	zoomAround,
 	type ZoomMetrics,
 	type ZoomTransform,
@@ -88,6 +89,39 @@ describe('zoomAround', () => {
 		}
 
 		expect(transform.scale).toBeCloseTo(2 * 1.5, 10)
+	})
+})
+
+describe('wheelZoomFactor', () => {
+	it('does not zoom without a delta', () => {
+		expect(wheelZoomFactor(0, 0)).toBe(1)
+	})
+
+	it('turns one classic wheel notch into a 1.2x - 1.4x step', () => {
+		const pixelNotch = wheelZoomFactor(-100, 0)
+		const lineNotch = wheelZoomFactor(-3, 1)
+
+		expect(pixelNotch).toBeGreaterThan(1.2)
+		expect(pixelNotch).toBeLessThan(1.4)
+		expect(lineNotch).toBeGreaterThan(1.2)
+		expect(lineNotch).toBeLessThan(1.4)
+	})
+
+	it('stays proportional for the small deltas a trackpad emits', () => {
+		// Ten 10px events must add up to the same zoom as a single 100px one.
+		const flick = Array.from({length: 10}, () => wheelZoomFactor(-10, 0))
+			.reduce((total, factor) => total * factor, 1)
+
+		expect(flick).toBeCloseTo(wheelZoomFactor(-100, 0), 10)
+	})
+
+	it('is symmetric between scrolling up and down', () => {
+		expect(wheelZoomFactor(-100, 0) * wheelZoomFactor(100, 0)).toBeCloseTo(1, 10)
+	})
+
+	it('caps a runaway delta at a 2x step', () => {
+		expect(wheelZoomFactor(-10000, 0)).toBe(2)
+		expect(wheelZoomFactor(10000, 0)).toBe(0.5)
 	})
 })
 

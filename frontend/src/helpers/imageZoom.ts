@@ -33,6 +33,28 @@ export function clampScale(scale: number): number {
 	return clamp(scale, MIN_SCALE, MAX_SCALE)
 }
 
+// Rough pixel equivalents of WheelEvent.deltaMode 0/1/2, so line- and page-based
+// wheels (Firefox, some mice) land on the same sensitivity curve as pixel ones.
+const WHEEL_PIXELS_PER_UNIT: Record<number, number> = {
+	0: 1,
+	1: 33,
+	2: 400,
+}
+// Tuned so one classic wheel notch (~100px, or 3 lines) is roughly a 1.35x step.
+const WHEEL_SENSITIVITY = 0.003
+const WHEEL_FACTOR_LIMIT = 2
+
+/**
+ * Zoom factor for a single wheel event, proportional to its delta — a trackpad
+ * emits dozens of small-delta events per flick and must not step like a notch.
+ */
+export function wheelZoomFactor(deltaY: number, deltaMode = 0): number {
+	const pixels = deltaY * (WHEEL_PIXELS_PER_UNIT[deltaMode] ?? 1)
+	const factor = Math.exp(-pixels * WHEEL_SENSITIVITY)
+
+	return clamp(factor, 1 / WHEEL_FACTOR_LIMIT, WHEEL_FACTOR_LIMIT)
+}
+
 /**
  * Pins the image edges to the container edges: the overhang of the scaled image
  * is the whole pan budget, so an image that still fits cannot be panned at all.

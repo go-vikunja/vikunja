@@ -97,6 +97,7 @@ import {
 	MIN_SCALE,
 	clampScale,
 	clampTranslate,
+	wheelZoomFactor,
 	zoomAround,
 	type ZoomMetrics,
 	type ZoomTransform,
@@ -228,7 +229,7 @@ function zoomByStep(factor: number) {
 }
 
 function onWheel(event: WheelEvent) {
-	zoomAt(event.clientX, event.clientY, event.deltaY < 0 ? ZOOM_STEP : 1 / ZOOM_STEP)
+	zoomAt(event.clientX, event.clientY, wheelZoomFactor(event.deltaY, event.deltaMode))
 }
 
 function toggleZoom(event: MouseEvent) {
