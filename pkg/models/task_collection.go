@@ -31,7 +31,6 @@ import (
 type TaskCollection struct {
 	ProjectID     int64 `param:"project" json:"-"`
 	ProjectViewID int64 `param:"view" json:"-"`
-	// If set to true, tasks from all descendant subprojects will also be returned.
 	IncludeSubprojects bool `json:"include_subprojects,omitempty" query:"include_subprojects"`
 
 	Search string `query:"s" json:"s" doc:"A search term to match tasks by their title."`
