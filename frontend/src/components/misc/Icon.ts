@@ -51,13 +51,13 @@ import {
 	faList,
 	faListOl,
 	faLock,
+	faMinus,
 	faPaperclip,
 	faPaste,
 	faPen,
 	faPencilAlt,
 	faPercent,
 	faPlay,
-	faMinus,
 	faPlus,
 	faPowerOff,
 	faRss,
@@ -164,6 +164,7 @@ library.add(faLayerGroup)
 library.add(faList)
 library.add(faListOl)
 library.add(faLock)
+library.add(faMinus)
 library.add(faPaperclip)
 library.add(faPaste)
 library.add(faPen)
@@ -171,7 +172,6 @@ library.add(faPencilAlt)
 library.add(faPercent)
 library.add(faPlay)
 library.add(faPlus)
-library.add(faMinus)
 library.add(faPowerOff)
 library.add(faRss)
 library.add(faSave)
