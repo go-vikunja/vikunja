@@ -36,7 +36,7 @@
 				}"
 				:style="{transform: `translate(${translateX}px, ${translateY}px) scale(${scale})`}"
 				draggable="false"
-				@load="loaded = true"
+				@load="onLoad"
 				@error="failed = true"
 				@dblclick="toggleZoom"
 				@pointerdown="onPointerDown"
@@ -88,6 +88,7 @@
 
 <script setup lang="ts">
 import {computed, ref, watch} from 'vue'
+import {useEventListener} from '@vueuse/core'
 
 import Modal from '@/components/misc/Modal.vue'
 import Loading from '@/components/misc/Loading.vue'
@@ -148,6 +149,7 @@ let pinchStartScale = 1
 // has to be dropped on both edges or the next open starts as a phantom pinch.
 watch(safeSrc, src => {
 	resetGestures()
+	metrics.value = null
 
 	// Only reset the rest while opening: the Modal keeps rendering during its close
 	// transition, so resetting on null flashes the loader over the fading scrim.
@@ -187,14 +189,19 @@ function applyTransform(next: ZoomTransform) {
 // into a bogus transform.
 const zoomable = computed(() => loaded.value && !failed.value)
 
-function measure(): ZoomMetrics | null {
+// Measuring right after a transform write forces a reflow, so the untransformed
+// box is cached and only re-read on load and on resize.
+const metrics = ref<ZoomMetrics | null>(null)
+
+function refreshMetrics() {
 	const image = imageRef.value
 	const container = containerRef.value
-	if (!zoomable.value || !image || !container) {
-		return null
+	if (!zoomable.value || !image || !container || image.offsetWidth === 0) {
+		metrics.value = null
+		return
 	}
 	const rect = container.getBoundingClientRect()
-	return {
+	metrics.value = {
 		imageWidth: image.offsetWidth,
 		imageHeight: image.offsetHeight,
 		containerWidth: container.clientWidth,
@@ -204,30 +211,51 @@ function measure(): ZoomMetrics | null {
 	}
 }
 
+function currentMetrics(): ZoomMetrics | null {
+	if (metrics.value === null) {
+		refreshMetrics()
+	}
+	return metrics.value
+}
+
+function onLoad() {
+	loaded.value = true
+	refreshMetrics()
+}
+
+// The 96vw/90vh box relayouts on resize while the transform persists, which can
+// leave the image outside of it.
+function onResize() {
+	refreshMetrics()
+	clampPan()
+}
+
+useEventListener(() => safeSrc.value === null ? null : window, 'resize', onResize)
+
 function clampPan() {
-	const metrics = measure()
-	if (metrics === null) {
+	const measured = currentMetrics()
+	if (measured === null) {
 		return
 	}
-	applyTransform(clampTranslate(currentTransform(), metrics))
+	applyTransform(clampTranslate(currentTransform(), measured))
 }
 
 function zoomAt(clientX: number, clientY: number, factor: number) {
-	const metrics = measure()
-	if (metrics === null) {
+	const measured = currentMetrics()
+	if (measured === null) {
 		return
 	}
-	applyTransform(zoomAround(currentTransform(), metrics, {clientX, clientY, factor}))
+	applyTransform(zoomAround(currentTransform(), measured, {clientX, clientY, factor}))
 }
 
 function zoomByStep(factor: number) {
-	const metrics = measure()
-	if (metrics === null) {
+	const measured = currentMetrics()
+	if (measured === null) {
 		return
 	}
-	applyTransform(zoomAround(currentTransform(), metrics, {
-		clientX: metrics.centerX,
-		clientY: metrics.centerY,
+	applyTransform(zoomAround(currentTransform(), measured, {
+		clientX: measured.centerX,
+		clientY: measured.centerY,
 		factor,
 	}))
 }
