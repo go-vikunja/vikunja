@@ -434,12 +434,20 @@ function closePdfPreview() {
 }
 
 async function viewOrDownload(attachment: IAttachment) {
-	if (canPreviewImage(attachment)) {
-		attachmentImageBlobUrl.value = await attachmentService.getBlobUrl(attachment)
-	} else if (canPreviewPdf(attachment)) {
-		attachmentPdfBlobUrl.value = await attachmentService.getBlobUrl(attachment)
-	} else {
+	if (!canPreviewImage(attachment) && !canPreviewPdf(attachment)) {
 		downloadAttachment(attachment)
+		return
+	}
+
+	try {
+		const blobUrl = await attachmentService.getBlobUrl(attachment)
+		if (canPreviewImage(attachment)) {
+			attachmentImageBlobUrl.value = blobUrl
+		} else {
+			attachmentPdfBlobUrl.value = blobUrl
+		}
+	} catch (e) {
+		error(e)
 	}
 }
 
