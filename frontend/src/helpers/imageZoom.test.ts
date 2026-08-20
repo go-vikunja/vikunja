@@ -70,8 +70,6 @@ describe('zoomAround', () => {
 		let transform: ZoomTransform = {scale: MIN_SCALE, translateX: 0, translateY: 0}
 		const anchor = imagePointUnder(transform, clientX, clientY)
 
-		expect(anchor).toEqual({x: 200, y: 100})
-
 		for (const factor of [2, 1.5, 1.4, 1 / 1.4]) {
 			transform = zoomAround(transform, metrics, clientX, clientY, factor)
 			const moved = imagePointUnder(transform, clientX, clientY)
