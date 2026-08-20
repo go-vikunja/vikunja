@@ -10,7 +10,7 @@ inputs:
   version:
     description: 'golangci-lint version to run'
     required: false
-    default: 'v2.12.2'
+    default: 'v2.13.0'
   working-directory:
     description: 'Module directory to lint, relative to the repo root'
     required: false

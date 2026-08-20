@@ -293,6 +293,66 @@ func TestInsertFromStructure(t *testing.T) {
 			}
 		}
 	})
+	t.Run("archives children of an archived project", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		// Old exports only flag the parent as archived.
+		require.NoError(t, InsertFromStructure([]*models.ProjectWithTasksAndBuckets{
+			{
+				Project: models.Project{
+					ID:         1,
+					Title:      "Archived parent",
+					IsArchived: true,
+				},
+			},
+			{
+				Project: models.Project{
+					ID:              2,
+					Title:           "Unflagged child",
+					ParentProjectID: models.Ptr(int64(1)),
+				},
+			},
+			{
+				Project: models.Project{
+					ID:              3,
+					Title:           "Unflagged grandchild",
+					ParentProjectID: models.Ptr(int64(2)),
+				},
+			},
+			{
+				Project: models.Project{
+					ID:    4,
+					Title: "Unarchived sibling root",
+				},
+			},
+			{
+				Project: models.Project{
+					ID:              5,
+					Title:           "Unarchived sibling's child",
+					ParentProjectID: models.Ptr(int64(4)),
+				},
+			},
+		}, u))
+
+		s := db.NewSession()
+		defer s.Close()
+
+		for _, title := range []string{"Archived parent", "Unflagged child", "Unflagged grandchild"} {
+			project := &models.Project{}
+			exists, err := s.Where("title = ?", title).Get(project)
+			require.NoError(t, err)
+			require.True(t, exists)
+			assert.True(t, project.IsArchived)
+		}
+
+		for _, title := range []string{"Unarchived sibling root", "Unarchived sibling's child"} {
+			project := &models.Project{}
+			exists, err := s.Where("title = ?", title).Get(project)
+			require.NoError(t, err)
+			require.True(t, exists)
+			assert.False(t, project.IsArchived)
+		}
+	})
 	t.Run("keeps positions the export provides", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 

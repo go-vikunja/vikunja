@@ -1,6 +1,6 @@
 module code.vikunja.io/veans
 
-go 1.26.4
+go 1.27.0
 
 require (
 	charm.land/bubbletea/v2 v2.0.9

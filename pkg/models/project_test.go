@@ -493,6 +493,139 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 				"is_archived": true,
 			}, false)
 		})
+		t.Run("plain edit of parent keeps individually archived child archived", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
+			// 40 is archived individually under unarchived 3
+			project := Project{ID: 3, Title: "Test3 renamed", IsArchived: false}
+			err := project.Update(s, &user.User{ID: 1})
+			require.NoError(t, err)
+			require.NoError(t, s.Commit())
+
+			db.AssertExists(t, "projects", map[string]interface{}{"id": 40, "is_archived": true}, false)
+		})
+		t.Run("move under archived parent is rejected", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
+			project := Project{ID: 1, ParentProjectID: Ptr(int64(22))}
+			_, err := project.CanUpdate(s, &user.User{ID: 1})
+			require.Error(t, err)
+			assert.True(t, IsErrProjectIsArchived(err))
+
+			err = UpdateProject(s, &Project{ID: 1, Title: "Test1", ParentProjectID: Ptr(int64(22))}, &user.User{ID: 1}, false)
+			var e ErrParentProjectIsArchived
+			require.ErrorAs(t, err, &e)
+			assert.Equal(t, int64(22), e.ParentProjectID)
+		})
+		t.Run("move archived project to root keeps it archived", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
+			project := Project{ID: 40, Title: "Test40", IsArchived: true, ParentProjectID: Ptr(int64(0))}
+			err := project.Update(s, &user.User{ID: 1})
+			require.NoError(t, err)
+			require.NoError(t, s.Commit())
+
+			db.AssertExists(t, "projects", map[string]interface{}{"id": 40, "parent_project_id": 0, "is_archived": true}, false)
+		})
+		t.Run("unarchive child under archived parent is rejected", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
+			project := Project{ID: 21, IsArchived: false}
+			err := project.Update(s, &user.User{ID: 1})
+			var e ErrParentProjectIsArchived
+			require.ErrorAs(t, err, &e)
+			assert.Equal(t, int64(22), e.ParentProjectID)
+		})
+		t.Run("unarchive orphaned project", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
+			project := Project{ID: 39, Title: "Orphaned project with deleted parent", IsArchived: false}
+			err := project.Update(s, &user.User{ID: 1})
+			require.NoError(t, err)
+			require.NoError(t, s.Commit())
+
+			db.AssertExists(t, "projects", map[string]interface{}{"id": 39, "is_archived": false}, false)
+		})
+		t.Run("unarchive orphaned project with echoed parent", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
+			// The frontend sends the whole project back, dangling parent included.
+			project := Project{ID: 39, Title: "Orphaned project with deleted parent", IsArchived: false, ParentProjectID: Ptr(int64(999999))}
+			err := project.Update(s, &user.User{ID: 1})
+			require.NoError(t, err)
+			require.NoError(t, s.Commit())
+
+			db.AssertExists(t, "projects", map[string]interface{}{"id": 39, "is_archived": false}, false)
+		})
+		t.Run("move under nonexistent parent", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
+			project := Project{ID: 1, Title: "Test1", ParentProjectID: Ptr(int64(999999))}
+			err := project.Update(s, &user.User{ID: 1})
+			require.Error(t, err)
+			assert.True(t, IsErrProjectDoesNotExist(err))
+		})
+		t.Run("unarchive child and detach to root in one request", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
+			project := Project{ID: 21, Title: "Test21", IsArchived: false, ParentProjectID: Ptr(int64(0))}
+			err := project.Update(s, &user.User{ID: 1})
+			require.NoError(t, err)
+			require.NoError(t, s.Commit())
+
+			db.AssertExists(t, "projects", map[string]interface{}{"id": 21, "is_archived": false, "parent_project_id": 0}, false)
+		})
+		t.Run("unarchive child and move under unarchived parent", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
+			project := Project{ID: 21, Title: "Test21", IsArchived: false, ParentProjectID: Ptr(int64(1))}
+			err := project.Update(s, &user.User{ID: 1})
+			require.NoError(t, err)
+			require.NoError(t, s.Commit())
+
+			db.AssertExists(t, "projects", map[string]interface{}{"id": 21, "is_archived": false, "parent_project_id": 1}, false)
+		})
+		t.Run("unarchive child under unarchived parent", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
+			project := Project{ID: 40, IsArchived: false}
+			can, err := project.CanUpdate(s, &user.User{ID: 1})
+			require.NoError(t, err)
+			assert.True(t, can)
+		})
+		t.Run("unarchive root unarchives subtree", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
+			project := Project{ID: 22, Title: "Test22", IsArchived: false}
+			err := project.Update(s, &user.User{ID: 1})
+			require.NoError(t, err)
+			require.NoError(t, s.Commit())
+
+			db.AssertExists(t, "projects", map[string]interface{}{"id": 22, "is_archived": false}, false)
+			db.AssertExists(t, "projects", map[string]interface{}{"id": 21, "is_archived": false}, false)
+		})
 	})
 }
 
@@ -727,11 +860,9 @@ func TestProject_ReadAll(t *testing.T) {
 		assert.Equal(t, int64(-2), ls[1].ID)
 	})
 	t.Run("archived propagation aggregation", func(t *testing.T) {
-		// Regression test for #2589. getAllProjectsForUser must:
-		//   1. Expose inherited is_archived for child projects whose parent is archived
-		//      (exercises the MAX(...) AS is_archived column expression).
-		//   2. Hide those inherited-archived rows when getArchived=false
-		//      (exercises the HAVING MAX(...) = 0 filter).
+		// Regression test for #2589. Child projects of archived parents carry
+		// is_archived themselves; getAllProjectsForUser must return that flag and
+		// hide them when getArchived=false.
 		// The CTE must use dialect-agnostic SQL — no CAST(... AS int), which MySQL 8 rejects.
 
 		db.LoadAndAssertFixtures(t)
@@ -757,16 +888,18 @@ func TestProject_ReadAll(t *testing.T) {
 
 		child := findByID(withArchived, 21)
 		require.NotNil(t, child, "child project 21 must be returned when getArchived=true")
-		assert.True(t, child.IsArchived, "project 21 must inherit is_archived from its archived parent (22)")
+		assert.True(t, child.IsArchived, "project 21 is archived in fixtures (through its parent 22)")
 
-		// getArchived=false: both rows must be filtered out by the HAVING clause.
+		// getArchived=false: both rows must be filtered out.
 		withoutArchived, _, err := getAllProjectsForUser(s, 1, &projectOptions{getArchived: false})
 		require.NoError(t, err)
 
 		assert.Nil(t, findByID(withoutArchived, 22),
 			"archived project 22 must be filtered when getArchived=false")
 		assert.Nil(t, findByID(withoutArchived, 21),
-			"child of archived project (21) must be filtered when getArchived=false (inherited archived state)")
+			"child of archived project (21) must be filtered when getArchived=false")
+		assert.Nil(t, findByID(withoutArchived, 40),
+			"archived child (40) of unarchived parent must be filtered when getArchived=false")
 
 		// Sanity: a non-archived project owned by user 1 is still present in the filtered list.
 		assert.NotNil(t, findByID(withoutArchived, 1),
@@ -803,6 +936,30 @@ func TestProject_ReadOne(t *testing.T) {
 		require.NoError(t, err)
 		assert.NotNil(t, l.Subscription)
 	})
+	t.Run("child archived through parent", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		u := &user.User{ID: 1}
+		l := &Project{ID: 21}
+		_, _, err := l.CanRead(s, u)
+		require.NoError(t, err)
+		require.NoError(t, l.ReadOne(s, u))
+		assert.True(t, l.IsArchived)
+
+		projects, _, err := getAllProjectsForUser(s, u.ID, &projectOptions{getArchived: true})
+		require.NoError(t, err)
+		var fromList *Project
+		for _, p := range projects {
+			if p.ID == 21 {
+				fromList = p
+				break
+			}
+		}
+		require.NotNil(t, fromList)
+		assert.True(t, fromList.IsArchived)
+	})
 }
 
 func TestCheckIsArchived(t *testing.T) {
@@ -829,16 +986,34 @@ func TestCheckIsArchived(t *testing.T) {
 		require.Error(t, err)
 		assert.True(t, IsErrProjectIsArchived(err))
 	})
-	t.Run("child project inherits archived from parent", func(t *testing.T) {
-		// Project 21's parent (project 22) is archived.
+	t.Run("child project archived through parent", func(t *testing.T) {
+		// Project 21 was archived through its parent (22), its own row is flagged.
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
 
-		p := &Project{ID: 21, ParentProjectID: Ptr(int64(22))}
+		p := &Project{ID: 21}
 		err := p.CheckIsArchived(s)
 		require.Error(t, err)
 		assert.True(t, IsErrProjectIsArchived(err))
+	})
+	t.Run("new project under archived parent", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		p := &Project{ParentProjectID: Ptr(int64(22))}
+		err := p.CheckIsArchived(s)
+		require.Error(t, err)
+		assert.True(t, IsErrProjectIsArchived(err))
+	})
+	t.Run("new project under unarchived parent", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		p := &Project{ParentProjectID: Ptr(int64(1))}
+		require.NoError(t, p.CheckIsArchived(s))
 	})
 	t.Run("non-archived project", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
