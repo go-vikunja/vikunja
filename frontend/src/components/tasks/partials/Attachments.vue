@@ -166,14 +166,15 @@
 
 		<ImageLightbox
 			:blob-url="attachmentImageBlobUrl"
-			@close="attachmentImageBlobUrl = null"
+			:alt="attachmentImageAlt"
+			@close="closeImageLightbox"
 		/>
 
 		<!-- Attachment PDF modal -->
 		<Modal
 			:enabled="attachmentPdfBlobUrl !== null"
 			:wide="true"
-			@close="attachmentPdfBlobUrl = null"
+			@close="closePdfPreview"
 		>
 			<iframe
 				v-if="attachmentPdfBlobUrl"
@@ -185,7 +186,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, shallowReactive, computed, watch, onMounted, onBeforeUnmount} from 'vue'
+import {ref, shallowReactive, computed, watch, onMounted, onBeforeUnmount, type Ref} from 'vue'
 import {useDropZone} from '@vueuse/core'
 
 import User from '@/components/misc/User.vue'
@@ -419,15 +420,55 @@ async function deleteAttachment() {
 }
 
 const attachmentImageBlobUrl = ref<string | null>(null)
+const attachmentImageAlt = ref('')
 const attachmentPdfBlobUrl = ref<string | null>(null)
+let previewRequestToken = 0
+
+function replaceBlobUrl(target: Ref<string | null>, blobUrl: string | null) {
+	if (target.value !== null) {
+		URL.revokeObjectURL(target.value)
+	}
+	target.value = blobUrl
+}
+
+function closeImageLightbox() {
+	replaceBlobUrl(attachmentImageBlobUrl, null)
+	attachmentImageAlt.value = ''
+}
+
+function closePdfPreview() {
+	replaceBlobUrl(attachmentPdfBlobUrl, null)
+}
+
+onBeforeUnmount(() => {
+	closeImageLightbox()
+	closePdfPreview()
+})
 
 async function viewOrDownload(attachment: IAttachment) {
-	if (canPreviewImage(attachment)) {
-		attachmentImageBlobUrl.value = await attachmentService.getBlobUrl(attachment)
-	} else if (canPreviewPdf(attachment)) {
-		attachmentPdfBlobUrl.value = await attachmentService.getBlobUrl(attachment)
-	} else {
+	if (!canPreviewImage(attachment) && !canPreviewPdf(attachment)) {
 		downloadAttachment(attachment)
+		return
+	}
+
+	previewRequestToken++
+	const requestToken = previewRequestToken
+
+	try {
+		const blobUrl = await attachmentService.getBlobUrl(attachment)
+		// stale response: revoke without assigning, the img may still be decoding the current url
+		if (requestToken !== previewRequestToken) {
+			URL.revokeObjectURL(blobUrl)
+			return
+		}
+		if (canPreviewImage(attachment)) {
+			replaceBlobUrl(attachmentImageBlobUrl, blobUrl)
+			attachmentImageAlt.value = attachment.file.name
+		} else {
+			replaceBlobUrl(attachmentPdfBlobUrl, blobUrl)
+		}
+	} catch (e) {
+		error(e)
 	}
 }
 
