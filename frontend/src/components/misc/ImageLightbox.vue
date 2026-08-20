@@ -271,6 +271,11 @@ function onKeyDown(event: KeyboardEvent) {
 		return
 	}
 
+	// Ctrl/Cmd+'-' also arrives as key '-'; swallowing it would break browser zoom (WCAG 1.4.4).
+	if (event.ctrlKey || event.metaKey || event.altKey) {
+		return
+	}
+
 	switch (event.key) {
 		case '+':
 		case '=':
