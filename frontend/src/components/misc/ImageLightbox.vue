@@ -183,10 +183,14 @@ function applyTransform(next: ZoomTransform) {
 	translateY.value = next.translateY
 }
 
+// A pending or failed image has a 0-sized box, which would turn any zoom or pan
+// into a bogus transform.
+const zoomable = computed(() => loaded.value && !failed.value)
+
 function measure(): ZoomMetrics | null {
 	const image = imageRef.value
 	const container = containerRef.value
-	if (!image || !container) {
+	if (!zoomable.value || !image || !container) {
 		return null
 	}
 	const rect = container.getBoundingClientRect()
@@ -246,6 +250,9 @@ function pointerDistance(): number {
 }
 
 function onPointerDown(event: PointerEvent) {
+	if (!zoomable.value) {
+		return
+	}
 	imageRef.value?.setPointerCapture(event.pointerId)
 	pointers.set(event.pointerId, {x: event.clientX, y: event.clientY})
 
