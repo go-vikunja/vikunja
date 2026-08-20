@@ -179,6 +179,8 @@ function measure(): ZoomMetrics | null {
 	return {
 		imageWidth: image.offsetWidth,
 		imageHeight: image.offsetHeight,
+		containerWidth: container.clientWidth,
+		containerHeight: container.clientHeight,
 		centerX: rect.left + rect.width / 2,
 		centerY: rect.top + rect.height / 2,
 	}

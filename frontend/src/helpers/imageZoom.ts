@@ -11,6 +11,9 @@ export interface ZoomMetrics {
 	/** Layout size of the image, without the zoom transform applied. */
 	imageWidth: number
 	imageHeight: number
+	/** Size of the box the image is centred in. */
+	containerWidth: number
+	containerHeight: number
 	/** Viewport coordinates of the untransformed image centre. */
 	centerX: number
 	centerY: number
@@ -30,10 +33,13 @@ export function clampScale(scale: number): number {
 	return clamp(scale, MIN_SCALE, MAX_SCALE)
 }
 
-/** Keeps the scaled image from being dragged entirely out of view. */
+/**
+ * Pins the image edges to the container edges: the overhang of the scaled image
+ * is the whole pan budget, so an image that still fits cannot be panned at all.
+ */
 export function clampTranslate(transform: ZoomTransform, metrics: ZoomMetrics): ZoomTransform {
-	const maxX = (metrics.imageWidth * transform.scale) / 2
-	const maxY = (metrics.imageHeight * transform.scale) / 2
+	const maxX = Math.max(0, (metrics.imageWidth * transform.scale - metrics.containerWidth) / 2)
+	const maxY = Math.max(0, (metrics.imageHeight * transform.scale - metrics.containerHeight) / 2)
 
 	return {
 		scale: transform.scale,
