@@ -7,10 +7,11 @@
 		controls
 		autoplay
 		@play="stopOtherPlayers"
+		@error="onAudioError"
 	/>
 	<XButton
 		v-else
-		:disabled="attachmentService.loading"
+		:loading="loading"
 		class="audio-play"
 		icon="play"
 		variant="secondary"
@@ -27,21 +28,58 @@ let playing: HTMLAudioElement | null = null
 </script>
 
 <script setup lang="ts">
-import {onBeforeUnmount, ref, shallowReactive} from 'vue'
+import {onBeforeUnmount, ref} from 'vue'
+import {useI18n} from 'vue-i18n'
 import AttachmentService from '@/services/attachment'
 import type {IAttachment} from '@/modelTypes/IAttachment'
+import {error} from '@/message'
 
 const props = defineProps<{
 	modelValue: IAttachment
 }>()
 
-const attachmentService = shallowReactive(new AttachmentService())
+const {t} = useI18n({useScope: 'global'})
+
+const attachmentService = new AttachmentService()
 const blobUrl = ref<string | undefined>(undefined)
 const playerRef = ref<HTMLAudioElement | null>(null)
+const loading = ref(false)
+let unmounted = false
 
 // Fetched on demand: the download endpoint needs the auth header, so no plain-url streaming.
 async function loadAudio() {
-	blobUrl.value = await attachmentService.getBlobUrl(props.modelValue)
+	if (loading.value || blobUrl.value) {
+		return
+	}
+
+	loading.value = true
+	try {
+		const url = await attachmentService.getBlobUrl(props.modelValue)
+		if (unmounted) {
+			window.URL.revokeObjectURL(url)
+			return
+		}
+		blobUrl.value = url
+	} catch (e) {
+		error(e)
+	} finally {
+		loading.value = false
+	}
+}
+
+// Undecodable files only fail once the element has the blob, so swap back to the play button.
+function onAudioError() {
+	if (unmounted || blobUrl.value === undefined) {
+		return
+	}
+
+	if (playing === playerRef.value) {
+		playing = null
+	}
+
+	window.URL.revokeObjectURL(blobUrl.value)
+	blobUrl.value = undefined
+	error({message: t('task.attachment.audioError')})
 }
 
 function stopOtherPlayers() {
@@ -52,6 +90,8 @@ function stopOtherPlayers() {
 }
 
 onBeforeUnmount(() => {
+	unmounted = true
+
 	// A detached element keeps playing for as long as something references it.
 	if (playing === playerRef.value) {
 		playing?.pause()
