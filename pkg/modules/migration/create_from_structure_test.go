@@ -19,6 +19,7 @@ package migration
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/files"
@@ -155,6 +156,46 @@ func TestInsertFromStructure(t *testing.T) {
 		}, false)
 		assert.NotEqual(t, 0, testStructure[1].Tasks[0].BucketID) // Should get the default bucket
 		assert.NotEqual(t, 0, testStructure[1].Tasks[6].BucketID) // Should get the default bucket
+	})
+	t.Run("done tasks stay done when placed in an imported bucket", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		doneAt := time.Date(2024, 1, 2, 3, 4, 5, 0, time.UTC)
+		structure := []*models.ProjectWithTasksAndBuckets{
+			{
+				Project: models.Project{Title: "Done bucket import"},
+				Buckets: []*models.Bucket{
+					{ID: 1, Title: "Archive"},
+				},
+				Tasks: []*models.TaskWithComments{
+					{Task: models.Task{Title: "Archived task", Done: true, BucketID: 1}},
+					{Task: models.Task{Title: "Open task", Done: false, BucketID: 1}},
+					{Task: models.Task{Title: "Task done earlier", Done: true, DoneAt: doneAt, BucketID: 1}},
+				},
+			},
+		}
+		require.NoError(t, InsertFromStructure(structure, u))
+
+		db.AssertExists(t, "tasks", map[string]interface{}{
+			"title": "Archived task",
+			"done":  true,
+		}, false)
+		db.AssertExists(t, "tasks", map[string]interface{}{
+			"title": "Open task",
+			"done":  false,
+		}, false)
+		db.AssertExists(t, "task_buckets", map[string]interface{}{
+			"task_id":   structure[0].Tasks[0].ID,
+			"bucket_id": structure[0].Buckets[0].ID,
+		}, false)
+
+		s := db.NewSession()
+		defer s.Close()
+		task := &models.Task{}
+		found, err := s.ID(structure[0].Tasks[2].ID).Get(task)
+		require.NoError(t, err)
+		require.True(t, found)
+		assert.WithinDuration(t, doneAt, task.DoneAt, time.Second, "an explicit done_at is kept")
 	})
 	t.Run("reuses existing labels across imports", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)

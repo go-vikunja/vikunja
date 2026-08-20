@@ -1,0 +1,60 @@
+{
+  "item": {"id": "10", "position": 32768, "name": "Board A", "projectId": "100"},
+  "included": {
+    "boardMemberships": [],
+    "labels": [
+      {"id": "500", "position": 65536, "name": "Bug", "color": "berry-red", "boardId": "10"},
+      {"id": "501", "position": 131072, "name": "Weird", "color": "no-such-color", "boardId": "10"},
+      {"id": "502", "position": 196608, "name": null, "color": "sunny-grass", "boardId": "10"}
+    ],
+    "lists": [
+      {"id": "1002", "type": "closed", "position": 131072, "name": "Done", "boardId": "10"},
+      {"id": "1001", "type": "active", "position": 65536, "name": "In Progress", "boardId": "10"},
+      {"id": "1000", "type": "active", "position": 32768, "name": "To Do", "boardId": "10"},
+      {"id": "1003", "type": "archive", "position": null, "name": null, "boardId": "10"},
+      {"id": "1004", "type": "trash", "position": null, "name": null, "boardId": "10"}
+    ],
+    "cards": [
+      {"id": "2000", "type": "project", "position": 65536, "name": "First card", "description": "Some **markdown**", "dueDate": "2024-03-01T10:00:00.000Z", "isClosed": false, "commentsTotal": 2, "listChangedAt": "2024-01-02T00:00:00.000Z", "boardId": "10", "listId": "1000", "creatorUserId": "1", "coverAttachmentId": "3000", "createdAt": "2024-01-01T00:00:00.000Z"},
+      {"id": "2001", "type": "project", "position": 32768, "name": "Zeroth card", "description": null, "dueDate": null, "isClosed": false, "commentsTotal": 0, "listChangedAt": "2024-01-02T00:00:00.000Z", "boardId": "10", "listId": "1000", "creatorUserId": "1", "coverAttachmentId": null, "createdAt": "2024-01-01T00:00:00.000Z"},
+      {"id": "2002", "type": "project", "position": 65536, "name": "Closed card", "description": null, "dueDate": null, "isClosed": false, "commentsTotal": 0, "listChangedAt": "2024-01-02T00:00:00.000Z", "boardId": "10", "listId": "1002", "creatorUserId": "1", "coverAttachmentId": null, "createdAt": "2024-01-01T00:00:00.000Z"},
+      {"id": "2003", "type": "project", "position": 65536, "name": "Card with checklist", "description": "", "dueDate": null, "isClosed": true, "commentsTotal": 0, "listChangedAt": "2024-01-02T00:00:00.000Z", "boardId": "10", "listId": "1001", "creatorUserId": "2", "coverAttachmentId": null, "createdAt": "2024-01-01T00:00:00.000Z"}
+    ],
+    "cardMemberships": [
+      {"id": "1", "cardId": "2000", "userId": "2"}
+    ],
+    "cardLabels": [
+      {"id": "1", "cardId": "2000", "labelId": "500"},
+      {"id": "2", "cardId": "2000", "labelId": "501"},
+      {"id": "3", "cardId": "2003", "labelId": "502"}
+    ],
+    "taskLists": [
+      {"id": "4000", "position": 65536, "name": "Steps", "showOnFrontOfCard": true, "hideCompletedTasks": false, "cardId": "2003"}
+    ],
+    "tasks": [
+      {"id": "4100", "position": 131072, "name": "second step", "isCompleted": false, "taskListId": "4000", "linkedCardId": null, "assigneeUserId": null},
+      {"id": "4101", "position": 65536, "name": "first step", "isCompleted": true, "taskListId": "4000", "linkedCardId": null, "assigneeUserId": "2"}
+    ],
+    "customFieldGroups": [
+      {"id": "5000", "position": 65536, "name": "Details", "boardId": "10", "cardId": null, "baseCustomFieldGroupId": null},
+      {"id": "5001", "position": 131072, "name": null, "boardId": null, "cardId": "2000", "baseCustomFieldGroupId": "900"}
+    ],
+    "customFields": [
+      {"id": "5100", "position": 65536, "name": "Priority", "showOnFrontOfCard": true, "baseCustomFieldGroupId": null, "customFieldGroupId": "5000"}
+    ],
+    "customFieldValues": [
+      {"id": "1", "content": "High", "cardId": "2000", "customFieldGroupId": "5000", "customFieldId": "5100"},
+      {"id": "2", "content": "3d", "cardId": "2000", "customFieldGroupId": "5001", "customFieldId": "5101"}
+    ],
+    "users": [
+      {"id": "1", "name": "Me", "username": "me"},
+      {"id": "2", "name": "Other Person", "username": "other"}
+    ],
+    "projects": [{"id": "100", "name": "Multi Board Project"}],
+    "attachments": [
+      {"id": "3000", "type": "file", "name": "cover.png", "cardId": "2000", "creatorUserId": "1", "createdAt": "2024-01-03T00:00:00.000Z", "data": {"mimeType": "image/png", "size": 4, "encoding": null, "image": {"width": 1, "height": 1}, "url": "http://planka.local/attachments/3000/download/cover.png"}},
+      {"id": "3001", "type": "file", "name": "broken.txt", "cardId": "2000", "creatorUserId": "1", "createdAt": "2024-01-03T00:00:00.000Z", "data": {"mimeType": "text/plain", "size": 4, "encoding": null, "image": null, "url": "http://planka.local/attachments/3001/download/broken.txt"}},
+      {"id": "3002", "type": "link", "name": "Vikunja", "cardId": "2000", "creatorUserId": "1", "createdAt": "2024-01-03T00:00:00.000Z", "data": {"url": "https://vikunja.io", "faviconUrl": null}}
+    ]
+  }
+}
