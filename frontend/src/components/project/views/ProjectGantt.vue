@@ -40,10 +40,9 @@
 					</FancyCheckbox>
 					<FancyCheckbox
 						v-if="filters.projectId > 0"
+						v-model="includeSubprojects"
 						v-tooltip="$t('project.views.includeSubprojectsHint')"
-						:model-value="includeSubprojects"
 						is-block
-						@update:modelValue="updateIncludeSubprojects"
 					>
 						{{ $t('project.views.includeSubprojects') }}
 					</FancyCheckbox>
@@ -82,7 +81,6 @@ import {useI18n} from 'vue-i18n'
 import type {RouteLocationNormalized} from 'vue-router'
 
 import {useBaseStore} from '@/stores/base'
-import {useProjectStore} from '@/stores/projects'
 import {useFlatpickrLanguage} from '@/helpers/useFlatpickrLanguage'
 
 import Foo from '@/components/misc/flatpickr/Flatpickr.vue'
@@ -93,6 +91,7 @@ import FormField from '@/components/input/FormField.vue'
 
 import GanttChart from '@/components/gantt/GanttChart.vue'
 import {useGanttFilters} from '../../../views/project/helpers/useGanttFilters'
+import {useIncludeSubprojects} from '@/composables/useIncludeSubprojects'
 import {PERMISSIONS} from '@/constants/permissions'
 
 import type {DateISO} from '@/types/DateISO'
@@ -109,12 +108,11 @@ const props = defineProps<{
 
 
 const baseStore = useBaseStore()
-const projectStore = useProjectStore()
 const canWrite = computed(() => baseStore.currentProject?.maxPermission > PERMISSIONS.READ)
 
 const {route, viewId} = toRefs(props)
 const currentView = computed(() => baseStore.currentProject?.views.find(v => v.id === viewId.value))
-const includeSubprojects = computed(() => currentView.value?.filter?.include_subprojects ?? false)
+const includeSubprojects = useIncludeSubprojects(() => currentView.value)
 const {
 	filters,
 	hasDefaultFilters,
@@ -125,13 +123,6 @@ const {
 	updateTask,
 } = useGanttFilters(route, viewId, includeSubprojects)
 
-async function updateIncludeSubprojects(newValue: boolean) {
-	if (!currentView.value) {
-		return
-	}
-
-	await projectStore.updateViewIncludeSubprojects(currentView.value, newValue)
-}
 
 const DEFAULT_DATE_RANGE_DAYS = 7
 
