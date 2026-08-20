@@ -1,6 +1,6 @@
 <template>
 	<Modal
-		:enabled="blobUrl !== null"
+		:enabled="safeSrc !== null"
 		:aria-label="$t('misc.imagePreview')"
 		variant="fullscreen"
 		@close="$emit('close')"
@@ -23,9 +23,9 @@
 				{{ $t('misc.imageLoadFailed') }}
 			</p>
 			<img
-				v-if="blobUrl !== null && !failed"
+				v-if="safeSrc !== null && !failed"
 				ref="imageRef"
-				:src="blobUrl"
+				:src="safeSrc"
 				:alt="alt ?? ''"
 				class="image-lightbox__image"
 				:class="{
@@ -85,7 +85,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, watch} from 'vue'
+import {computed, ref, watch} from 'vue'
 
 import Modal from '@/components/misc/Modal.vue'
 import Loading from '@/components/misc/Loading.vue'
@@ -100,6 +100,11 @@ const props = defineProps<{
 defineEmits<{
 	close: [],
 }>()
+
+// Never render a caller-supplied remote url as an image source.
+const safeSrc = computed(() => props.blobUrl !== null && /^(blob:|data:image\/)/.test(props.blobUrl)
+	? props.blobUrl
+	: null)
 
 const MIN_SCALE = 1
 const MAX_SCALE = 8
@@ -121,8 +126,8 @@ let pinchStartScale = 1
 
 // Only reset while opening: the Modal keeps rendering during its close
 // transition, so resetting on null flashes the loader over the fading scrim.
-watch(() => props.blobUrl, blobUrl => {
-	if (blobUrl === null) {
+watch(safeSrc, src => {
+	if (src === null) {
 		return
 	}
 	loaded.value = false
