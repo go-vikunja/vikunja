@@ -84,7 +84,7 @@
 					<AudioPreview
 						v-if="canPreviewAudio(a)"
 						:ref="el => setAudioPlayerRef(a, el)"
-						:model-value="a"
+						:attachment="a"
 					/>
 					<p class="attachment-actions">
 						<BaseButton
