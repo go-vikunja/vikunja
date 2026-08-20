@@ -5,6 +5,7 @@ import {
 	MIN_SCALE,
 	clampScale,
 	clampTranslate,
+	panBy,
 	wheelZoomFactor,
 	zoomAround,
 	type ZoomMetrics,
@@ -89,6 +90,22 @@ describe('zoomAround', () => {
 		}
 
 		expect(transform.scale).toBeCloseTo(2 * 1.5, 10)
+	})
+})
+
+describe('panBy', () => {
+	it('moves the image by the given step', () => {
+		expect(panBy({scale: 2, translateX: 0, translateY: 0}, metrics, -48, 48))
+			.toEqual({scale: 2, translateX: -48, translateY: 48})
+	})
+
+	it('stops at the container edge', () => {
+		expect(panBy({scale: 2, translateX: 280, translateY: 0}, metrics, 48, 0).translateX).toBe(300)
+	})
+
+	it('cannot move an image that fits the container', () => {
+		expect(panBy({scale: 1, translateX: 0, translateY: 0}, metrics, 48, 48))
+			.toEqual({scale: 1, translateX: 0, translateY: 0})
 	})
 })
 

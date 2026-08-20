@@ -28,6 +28,8 @@
 				ref="imageRef"
 				:src="safeSrc"
 				:alt="alt ?? ''"
+				:aria-label="alt ?? $t('misc.imagePreview')"
+				tabindex="0"
 				class="image-lightbox__image"
 				:class="{
 					'is-loaded': loaded,
@@ -39,6 +41,7 @@
 				@load="onLoad"
 				@error="failed = true"
 				@dblclick="toggleZoom"
+				@keydown="onKeyDown"
 				@pointerdown="onPointerDown"
 				@pointermove="onPointerMove"
 				@pointerup="onPointerUp"
@@ -98,6 +101,7 @@ import {
 	MIN_SCALE,
 	clampScale,
 	clampTranslate,
+	panBy,
 	wheelZoomFactor,
 	zoomAround,
 	type ZoomMetrics,
@@ -272,6 +276,30 @@ function toggleZoom(event: MouseEvent) {
 	}
 }
 
+// Panning has to work without a pointer (WCAG 2.1.1); an arrow key moves the
+// viewport, so the image travels the opposite way.
+const PAN_KEYS: Record<string, {x: number, y: number}> = {
+	ArrowLeft: {x: 1, y: 0},
+	ArrowRight: {x: -1, y: 0},
+	ArrowUp: {x: 0, y: 1},
+	ArrowDown: {x: 0, y: -1},
+}
+const PAN_STEP = 48
+
+function onKeyDown(event: KeyboardEvent) {
+	const direction = PAN_KEYS[event.key]
+	if (direction === undefined || scale.value <= MIN_SCALE) {
+		return
+	}
+	const measured = currentMetrics()
+	if (measured === null) {
+		return
+	}
+
+	event.preventDefault()
+	applyTransform(panBy(currentTransform(), measured, direction.x * PAN_STEP, direction.y * PAN_STEP))
+}
+
 function pointerDistance(): number {
 	const [a, b] = [...pointers.values()]
 	return Math.hypot(a.x - b.x, a.y - b.y)
@@ -376,6 +404,11 @@ function onPointerUp(event: PointerEvent) {
 	opacity: 0;
 	transition: opacity $transition;
 	will-change: transform;
+
+	&:focus-visible {
+		outline: 2px solid #ffffff;
+		outline-offset: 2px;
+	}
 
 	&.is-loaded {
 		opacity: 1;
