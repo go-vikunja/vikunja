@@ -1,6 +1,6 @@
 <template>
 	<Modal
-		:enabled="blobUrl !== null"
+		:enabled="safeSrc !== null"
 		:aria-label="$t('misc.imagePreview')"
 		variant="fullscreen"
 		@close="$emit('close')"
@@ -23,9 +23,9 @@
 				{{ $t('misc.imageLoadFailed') }}
 			</p>
 			<img
-				v-if="blobUrl !== null && !failed"
+				v-if="safeSrc !== null && !failed"
 				ref="imageRef"
-				:src="blobUrl"
+				:src="safeSrc"
 				:alt="alt ?? ''"
 				class="image-lightbox__image"
 				:class="{
@@ -83,7 +83,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, watch} from 'vue'
+import {computed, onMounted, ref, watch} from 'vue'
 
 import Modal from '@/components/misc/Modal.vue'
 import Loading from '@/components/misc/Loading.vue'
@@ -98,8 +98,20 @@ defineEmits<{
 	close: [],
 }>()
 
+// blob: only — the scheme check is the security boundary
+const safeSrc = computed(() => props.blobUrl !== null && props.blobUrl.startsWith('blob:')
+	? props.blobUrl
+	: null)
+
 const MIN_SCALE = 1
 const MAX_SCALE = 8
+
+onMounted(() => {
+	if (props.blobUrl !== null && safeSrc.value === null) {
+		emit('close')
+	}
+})
+
 const ZOOM_STEP = 1.4
 
 const imageRef = ref<HTMLImageElement | null>(null)
@@ -117,7 +129,7 @@ let pinchStartDistance = 0
 let pinchStartScale = 1
 
 // Start fresh whenever a new image is shown (or the lightbox reopens).
-watch(() => props.blobUrl, () => {
+watch(safeSrc, () => {
 	loaded.value = false
 	failed.value = false
 	reset()
