@@ -272,6 +272,26 @@ const PAN_KEYS = new Map<string, {x: number, y: number}>([
 const PAN_STEP = 48
 
 function onKeyDown(event: KeyboardEvent) {
+	if (!zoomable.value) {
+		return
+	}
+
+	switch (event.key) {
+		case '+':
+		case '=':
+			event.preventDefault()
+			zoomByStep(ZOOM_STEP)
+			return
+		case '-':
+			event.preventDefault()
+			zoomByStep(1 / ZOOM_STEP)
+			return
+		case '0':
+			event.preventDefault()
+			reset()
+			return
+	}
+
 	const direction = PAN_KEYS.get(event.key)
 	if (direction === undefined || scale.value <= MIN_SCALE) {
 		return
