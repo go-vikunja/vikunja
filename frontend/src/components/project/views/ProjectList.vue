@@ -253,10 +253,19 @@ async function saveTaskPosition(e: { originalEvent?: MouseEvent, to: HTMLElement
 
 	// Check if dropped on a sidebar project
 	const {moved} = await handleTaskDropToProject(e, (task) => {
+		// With subproject tasks in the list the task may have moved to another
+		// project this view still shows, so let the reload below decide instead.
+		if (includeSubprojects.value) {
+			return
+		}
+
 		tasks.value = tasks.value.filter(t => t.id !== task.id)
 	})
 
 	if (moved) {
+		if (includeSubprojects.value) {
+			await loadTasks(false)
+		}
 		return
 	}
 
