@@ -448,8 +448,8 @@ async function viewOrDownload(attachment: IAttachment) {
 		attachmentImageBlobUrl.value = await attachmentService.getBlobUrl(attachment)
 	} else if (canPreviewPdf(attachment)) {
 		attachmentPdfBlobUrl.value = await attachmentService.getBlobUrl(attachment)
-	} else if (canPreviewAudio(attachment)) {
-		await audioPlayers.get(attachment.id)?.play()
+	} else if (canPreviewAudio(attachment) && audioPlayers.has(attachment.id)) {
+		await audioPlayers.get(attachment.id)!.play()
 	} else {
 		downloadAttachment(attachment)
 	}
