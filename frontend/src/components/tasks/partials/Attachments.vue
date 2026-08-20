@@ -74,6 +74,7 @@
 					</p>
 					<AudioPreview
 						v-if="canPreviewAudio(a)"
+						:ref="el => setAudioPlayerRef(a, el)"
 						:model-value="a"
 					/>
 					<p class="attachment-actions">
@@ -192,7 +193,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, shallowReactive, computed, watch, onMounted, onBeforeUnmount, type Ref} from 'vue'
+import {ref, shallowReactive, computed, watch, onMounted, onBeforeUnmount, type Ref, type ComponentPublicInstance} from 'vue'
 import {useDropZone} from '@vueuse/core'
 
 import User from '@/components/misc/User.vue'
@@ -215,6 +216,8 @@ import {useI18n} from 'vue-i18n'
 import FilePreview from '@/components/tasks/partials/FilePreview.vue'
 import ImageLightbox from '@/components/misc/ImageLightbox.vue'
 import AudioPreview from '@/components/tasks/partials/AudioPreview.vue'
+
+type AudioPreviewInstance = InstanceType<typeof AudioPreview>
 
 const props = withDefaults(defineProps<{
 	task: ITask,
@@ -452,7 +455,23 @@ onBeforeUnmount(() => {
 	closePdfPreview()
 })
 
+const audioPlayers = new Map<IAttachment['id'], AudioPreviewInstance>()
+
+function setAudioPlayerRef(attachment: IAttachment, el: Element | ComponentPublicInstance | null) {
+	if (el === null) {
+		audioPlayers.delete(attachment.id)
+		return
+	}
+
+	audioPlayers.set(attachment.id, el as AudioPreviewInstance)
+}
+
 async function viewOrDownload(attachment: IAttachment) {
+	if (canPreviewAudio(attachment) && audioPlayers.has(attachment.id)) {
+		await audioPlayers.get(attachment.id)!.play()
+		return
+	}
+
 	if (!canPreviewImage(attachment) && !canPreviewPdf(attachment)) {
 		downloadAttachment(attachment)
 		return
