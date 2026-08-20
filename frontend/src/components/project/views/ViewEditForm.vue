@@ -190,7 +190,11 @@ function handleBubbleSave() {
 			<FilterInputDocs />
 		</div>
 
-		<div class="field mbe-3">
+		<!-- Buckets belong to a single view, so tasks from a subproject have no bucket here. -->
+		<div
+			v-if="view.viewKind !== 'kanban'"
+			class="field mbe-3"
+		>
 			<FancyCheckbox
 				v-model="view.filter.include_subprojects"
 				v-tooltip="$t('project.views.includeSubprojectsHint')"
