@@ -173,7 +173,6 @@
 			</template>
 		</Modal>
 
-		<!-- Attachment image lightbox -->
 		<ImageLightbox
 			:blob-url="attachmentImageBlobUrl"
 			:alt="attachmentImageAlt"
