@@ -52,8 +52,6 @@
 			<div
 				v-if="loaded"
 				class="image-lightbox__toolbar"
-				@click.stop
-				@pointerdown.stop
 			>
 				<BaseButton
 					v-tooltip="$t('misc.zoomOut')"
