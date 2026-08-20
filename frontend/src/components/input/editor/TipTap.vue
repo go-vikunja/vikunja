@@ -682,12 +682,12 @@ function focusIfEditing() {
 const lightboxBlobUrl = ref<string | null>(null)
 const lightboxAlt = ref('')
 
-// Only attachment images get a data-src from CustomImage, and their src stays the
-// '#' placeholder until the blob URL resolves.
+// data-src just hints this is an attachment image; the blob: check is what actually
+// gates the lightbox, since stored HTML could round-trip a foreign data-src attribute.
 function getLightboxImage(target: EventTarget | null): HTMLImageElement | null {
 	if (
 		target instanceof HTMLImageElement
-		&& target.matches('img[data-src]')
+		&& target.dataset.src !== undefined
 		&& target.src.startsWith('blob:')
 	) {
 		return target
