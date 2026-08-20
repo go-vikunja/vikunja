@@ -129,8 +129,9 @@ function onBackdropClick(event: MouseEvent) {
 	emit('close')
 }
 
-// Never render a caller-supplied remote url as an image source.
-const safeSrc = computed(() => props.blobUrl !== null && /^(blob:|data:image\/)/.test(props.blobUrl)
+// The blob-scheme check is the security boundary: a caller-supplied remote or
+// data url must never end up as an image source.
+const safeSrc = computed(() => props.blobUrl !== null && props.blobUrl.startsWith('blob:')
 	? props.blobUrl
 	: null)
 
