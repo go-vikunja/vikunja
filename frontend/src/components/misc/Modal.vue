@@ -439,6 +439,12 @@ $modal-width: 1024px;
 		padding-block-end: env(safe-area-inset-bottom);
 	}
 
+	// .fullscreen has no card header to center against, so it needs the
+	// container's full height, not just its content's.
+	.fullscreen .modal-container {
+		block-size: 100dvh;
+	}
+
 	.modal-content {
 		position: static;
 		max-block-size: none;
@@ -446,6 +452,11 @@ $modal-width: 1024px;
 
 	.close {
 		display: none;
+	}
+
+	// .fullscreen has no card-header close icon to fall back on.
+	.fullscreen .close {
+		display: block;
 	}
 
 	:deep(.card) {
