@@ -711,7 +711,6 @@ function handleContentClick(event: MouseEvent) {
 
 function closeLightbox() {
 	lightboxBlobUrl.value = null
-	lightboxAlt.value = ''
 }
 
 function handleEscapeKey(event: KeyboardEvent) {
