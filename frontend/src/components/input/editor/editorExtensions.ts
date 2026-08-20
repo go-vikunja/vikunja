@@ -134,7 +134,10 @@ export function createEditorExtensions(deps: EditorExtensionDeps): Extensions {
 
 				nextTick(async () => {
 
-					const root: ParentNode = getEditor()?.view.dom ?? document
+					// fail closed: no live view means no safe scope to search, never fall back to document
+					const root = getEditor()?.view?.dom
+					if (!root) return
+
 					const img = root.querySelector(`[id="${id}"]`)
 
 					if (!img || !(img instanceof HTMLImageElement)) return
