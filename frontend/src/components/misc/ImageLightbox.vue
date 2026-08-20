@@ -261,9 +261,8 @@ function toggleZoom(event: MouseEvent) {
 }
 
 // Panning has to work without a pointer (WCAG 2.1.1); an arrow key moves the
-// viewport, so the image travels the opposite way.
-// A Map, not an object: an object literal would also match keys like 'constructor'
-// off the prototype chain.
+// viewport, so the image travels the opposite way. A Map, not an object literal:
+// that would also match prototype keys like 'constructor'.
 const PAN_KEYS = new Map<string, {x: number, y: number}>([
 	['ArrowLeft', {x: 1, y: 0}],
 	['ArrowRight', {x: -1, y: 0}],
