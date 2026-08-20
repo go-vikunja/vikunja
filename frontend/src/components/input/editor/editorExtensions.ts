@@ -99,6 +99,9 @@ export function createEditorExtensions(deps: EditorExtensionDeps): Extensions {
 		attachmentService,
 	} = deps
 
+	// dedupes concurrent fetches: ProseMirror can call renderHTML twice for the same node on initial mount
+	const inFlightBlobFetches = new Map<CacheKey, Promise<string>>()
+
 	const CustomImage = Image.extend({
 		addAttributes() {
 			return {
@@ -143,10 +146,16 @@ export function createEditorExtensions(deps: EditorExtensionDeps): Extensions {
 					if (!img || !(img instanceof HTMLImageElement)) return
 
 					if (typeof loadedAttachments.value[cacheKey] === 'undefined') {
+						let fetchPromise = inFlightBlobFetches.get(cacheKey)
 
-						const attachment = new AttachmentModel({taskId: taskId, id: attachmentId})
+						if (!fetchPromise) {
+							const attachment = new AttachmentModel({taskId: taskId, id: attachmentId})
+							fetchPromise = attachmentService.getBlobUrl(attachment) as Promise<string>
+							inFlightBlobFetches.set(cacheKey, fetchPromise)
+						}
 
-						loadedAttachments.value[cacheKey] = await attachmentService.getBlobUrl(attachment) as string
+						loadedAttachments.value[cacheKey] = await fetchPromise
+						inFlightBlobFetches.delete(cacheKey)
 					}
 
 					img.src = loadedAttachments.value[cacheKey] as string
