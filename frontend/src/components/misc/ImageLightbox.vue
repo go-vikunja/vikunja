@@ -98,7 +98,6 @@ import {
 	MIN_SCALE,
 	clampScale,
 	clampTranslate,
-	panBy,
 	wheelZoomFactor,
 	zoomAround,
 	type ZoomMetrics,
@@ -302,7 +301,12 @@ function onKeyDown(event: KeyboardEvent) {
 	}
 
 	event.preventDefault()
-	applyTransform(panBy(currentTransform(), measured, direction.x * PAN_STEP, direction.y * PAN_STEP))
+	const transform = currentTransform()
+	applyTransform(clampTranslate({
+		scale: transform.scale,
+		translateX: transform.translateX + direction.x * PAN_STEP,
+		translateY: transform.translateY + direction.y * PAN_STEP,
+	}, measured))
 }
 
 function pointerDistance(): number {

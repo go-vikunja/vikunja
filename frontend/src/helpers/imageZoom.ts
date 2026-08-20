@@ -70,14 +70,6 @@ export function clampTranslate(transform: ZoomTransform, metrics: ZoomMetrics): 
 	}
 }
 
-export function panBy(transform: ZoomTransform, metrics: ZoomMetrics, dx: number, dy: number): ZoomTransform {
-	return clampTranslate({
-		scale: transform.scale,
-		translateX: transform.translateX + dx,
-		translateY: transform.translateY + dy,
-	}, metrics)
-}
-
 /** Zooms by `factor`, keeping the image point under the given viewport point put. */
 export function zoomAround(
 	transform: ZoomTransform,
