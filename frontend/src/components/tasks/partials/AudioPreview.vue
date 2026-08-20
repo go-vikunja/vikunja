@@ -56,7 +56,7 @@ async function loadAudio() {
 
 	loading.value = true
 	try {
-		const url = await attachmentService.getBlobUrl(props.attachment)
+		const url = await attachmentService.getBlobUrl(props.attachment) as string
 		if (unmounted) {
 			window.URL.revokeObjectURL(url)
 			return
@@ -100,7 +100,11 @@ async function play() {
 		return
 	}
 
-	await playerRef.value?.play()
+	try {
+		await playerRef.value?.play()
+	} catch {
+		// AbortError when another player pauses this one mid-start, NotAllowedError without a user gesture - neither deserves a toast.
+	}
 }
 
 onBeforeUnmount(() => {
