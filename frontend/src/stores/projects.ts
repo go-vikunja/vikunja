@@ -312,7 +312,7 @@ export const useProjectStore = defineStore('project', () => {
 			filter_include_nulls: false,
 			s: '',
 		}
-		const oldValue = oldFilter.includeSubprojects ?? oldFilter.include_subprojects ?? false
+		const oldValue = oldFilter.include_subprojects ?? false
 		if (oldValue === includeSubprojects) {
 			return
 		}
@@ -320,7 +320,6 @@ export const useProjectStore = defineStore('project', () => {
 		const newFilter: IFilters = {
 			...oldFilter,
 			include_subprojects: includeSubprojects,
-			includeSubprojects,
 		}
 
 		// Update the store immediately so the toggle reacts without waiting for the api

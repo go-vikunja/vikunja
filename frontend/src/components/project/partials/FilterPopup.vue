@@ -103,7 +103,7 @@ const currentView = computed(() => {
 
 const isProjectView = computed(() => Boolean(props.projectId && props.projectId > 0 && props.viewId))
 
-const includeSubprojects = computed(() => currentView.value?.filter?.includeSubprojects ?? currentView.value?.filter?.include_subprojects ?? false)
+const includeSubprojects = computed(() => currentView.value?.filter?.include_subprojects ?? false)
 
 async function updateIncludeSubprojects(newValue: boolean) {
 	if (!currentView.value) {
