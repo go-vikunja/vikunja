@@ -1,4 +1,5 @@
 import {describe, it, expect, beforeEach, afterEach, vi} from 'vitest'
+import {nextTick} from 'vue'
 import {mount, flushPromises, type VueWrapper} from '@vue/test-utils'
 import AudioPreview from './AudioPreview.vue'
 import XButton from '@/components/input/Button.vue'
@@ -21,8 +22,10 @@ function attachment(name: string): IAttachment {
 	return {id: 1, taskId: 1, file: {name, mime: 'audio/mpeg'}} as unknown as IAttachment
 }
 
+const mountedPreviews: VueWrapper[] = []
+
 function mountPreview(name = 'memo.mp3') {
-	return mount(AudioPreview, {
+	const wrapper = mount(AudioPreview, {
 		attachTo: document.body,
 		props: {attachment: attachment(name)},
 		global: {
@@ -31,10 +34,30 @@ function mountPreview(name = 'memo.mp3') {
 			mocks: {$t: (key: string) => key},
 		},
 	})
+	mountedPreviews.push(wrapper)
+	return wrapper
+}
+
+function unmountPreview(wrapper: VueWrapper) {
+	mountedPreviews.splice(mountedPreviews.indexOf(wrapper), 1)
+	wrapper.unmount()
 }
 
 async function clickPlay(wrapper: VueWrapper) {
 	await wrapper.find('button').trigger('click')
+}
+
+// The component exposes play() through defineExpose, which the wrapper type does not carry.
+function exposedPlay(wrapper: VueWrapper) {
+	return (wrapper.vm as unknown as {play: () => Promise<void>}).play()
+}
+
+function deferredBlobUrl() {
+	let resolveBlobUrl: (url: string) => void = () => {}
+	getBlobUrl.mockReturnValue(new Promise<string>(resolve => {
+		resolveBlobUrl = resolve
+	}))
+	return (url: string) => resolveBlobUrl(url)
 }
 
 let revokeObjectURL: ReturnType<typeof vi.fn<(url: string) => void>>
@@ -48,6 +71,8 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+	// The "pause the other player" bookkeeping is module state, so a leftover player leaks into the next test.
+	mountedPreviews.splice(0).forEach(wrapper => wrapper.unmount())
 	getBlobUrl.mockReset()
 	errorMessage.mockReset()
 	document.body.innerHTML = ''
@@ -73,9 +98,6 @@ describe('AudioPreview.vue', () => {
 
 		expect(pauseFirst).toHaveBeenCalledTimes(1)
 		expect(pauseSecond).not.toHaveBeenCalled()
-
-		first.unmount()
-		second.unmount()
 	})
 
 	it('revokes the object url when unmounted', async () => {
@@ -86,16 +108,13 @@ describe('AudioPreview.vue', () => {
 		await flushPromises()
 		expect(revokeObjectURL).not.toHaveBeenCalled()
 
-		wrapper.unmount()
+		unmountPreview(wrapper)
 
 		expect(revokeObjectURL).toHaveBeenCalledWith('blob:memo')
 	})
 
 	it('fetches the file once when the play button is clicked twice in a row', async () => {
-		let resolveBlobUrl: (url: string) => void = () => {}
-		getBlobUrl.mockReturnValue(new Promise(resolve => {
-			resolveBlobUrl = resolve
-		}))
+		const resolveBlobUrl = deferredBlobUrl()
 
 		const wrapper = mountPreview()
 		await clickPlay(wrapper)
@@ -108,8 +127,6 @@ describe('AudioPreview.vue', () => {
 
 		expect(getBlobUrl).toHaveBeenCalledTimes(1)
 		expect(wrapper.find('audio').exists()).toBe(true)
-
-		wrapper.unmount()
 	})
 
 	it('surfaces a failed download and leaves the play button usable', async () => {
@@ -129,7 +146,66 @@ describe('AudioPreview.vue', () => {
 
 		expect(getBlobUrl).toHaveBeenCalledTimes(2)
 		expect(wrapper.find('audio').exists()).toBe(true)
+	})
 
-		wrapper.unmount()
+	it('brings the play button back and reports when the file cannot be decoded', async () => {
+		getBlobUrl.mockResolvedValue('blob:memo')
+
+		const wrapper = mountPreview()
+		await clickPlay(wrapper)
+		await flushPromises()
+
+		wrapper.find('audio').element.dispatchEvent(new Event('error'))
+		await nextTick()
+
+		expect(revokeObjectURL).toHaveBeenCalledWith('blob:memo')
+		expect(errorMessage).toHaveBeenCalledWith({message: 'task.attachment.audioError'})
+		expect(wrapper.find('audio').exists()).toBe(false)
+		expect(wrapper.find('button').exists()).toBe(true)
+	})
+
+	it('revokes a blob that arrives after the component was unmounted', async () => {
+		const resolveBlobUrl = deferredBlobUrl()
+
+		const wrapper = mountPreview()
+		await clickPlay(wrapper)
+		unmountPreview(wrapper)
+
+		resolveBlobUrl('blob:memo')
+		await flushPromises()
+
+		expect(revokeObjectURL).toHaveBeenCalledTimes(1)
+		expect(revokeObjectURL).toHaveBeenCalledWith('blob:memo')
+		expect(document.querySelector('audio')).toBeNull()
+	})
+
+	it('plays the mounted element when play() is called with the file already loaded', async () => {
+		getBlobUrl.mockResolvedValue('blob:memo')
+
+		const wrapper = mountPreview()
+		await clickPlay(wrapper)
+		await flushPromises()
+		const playElement = vi.spyOn(wrapper.find('audio').element, 'play')
+
+		await exposedPlay(wrapper)
+
+		expect(playElement).toHaveBeenCalledTimes(1)
+		expect(getBlobUrl).toHaveBeenCalledTimes(1)
+	})
+
+	it('does not fetch again when play() is called while the download is in flight', async () => {
+		const resolveBlobUrl = deferredBlobUrl()
+
+		const wrapper = mountPreview()
+		await clickPlay(wrapper)
+		await exposedPlay(wrapper)
+
+		expect(getBlobUrl).toHaveBeenCalledTimes(1)
+
+		resolveBlobUrl('blob:memo')
+		await flushPromises()
+
+		expect(getBlobUrl).toHaveBeenCalledTimes(1)
+		expect(wrapper.find('audio').exists()).toBe(true)
 	})
 })
