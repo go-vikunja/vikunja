@@ -113,6 +113,8 @@ export function createEditorExtensions(deps: EditorExtensionDeps): Extensions {
 				},
 				id: {
 					default: null,
+					// Ids come from renderHTML only - one planted in stored html would hijack the blob lookup below
+					parseHTML: () => null,
 				},
 				'data-src': {
 					default: null,
@@ -132,7 +134,8 @@ export function createEditorExtensions(deps: EditorExtensionDeps): Extensions {
 
 				nextTick(async () => {
 
-					const img = document.getElementById(id) as HTMLImageElement | null
+					const root: ParentNode = getEditor()?.view.dom ?? document
+					const img = root.querySelector(`[id="${id}"]`)
 
 					if (!img || !(img instanceof HTMLImageElement)) return
 
