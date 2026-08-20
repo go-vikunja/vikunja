@@ -109,6 +109,8 @@
 			/>
 
 			<ImageLightbox
+				v-if="lightboxBlobUrl !== null"
+				:key="lightboxBlobUrl"
 				:blob-url="lightboxBlobUrl"
 				:alt="lightboxAlt"
 				@close="closeLightbox"
