@@ -1107,6 +1107,7 @@
       "successfullyChangedCoverImage": "The cover image was successfully changed.",
       "usedAsCover": "Cover image",
       "play": "Play",
+      "playFile": "Play {file}",
       "audioError": "Could not play this audio file."
     },
     "comment": {
