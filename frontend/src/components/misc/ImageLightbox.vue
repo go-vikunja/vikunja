@@ -43,6 +43,7 @@
 				@pointermove="onPointerMove"
 				@pointerup="onPointerUp"
 				@pointercancel="onPointerUp"
+				@lostpointercapture="onPointerUp"
 			>
 
 			<div
@@ -142,9 +143,13 @@ let panStart = {x: 0, y: 0, translateX: 0, translateY: 0}
 let pinchStartDistance = 0
 let pinchStartScale = 1
 
-// Only reset while opening: the Modal keeps rendering during its close
-// transition, so resetting on null flashes the loader over the fading scrim.
+// Closing mid-drag destroys the <img> before its pointerup, so the gesture state
+// has to be dropped on both edges or the next open starts as a phantom pinch.
 watch(safeSrc, src => {
+	resetGestures()
+
+	// Only reset the rest while opening: the Modal keeps rendering during its close
+	// transition, so resetting on null flashes the loader over the fading scrim.
 	if (src === null) {
 		return
 	}
@@ -152,6 +157,14 @@ watch(safeSrc, src => {
 	failed.value = false
 	reset()
 })
+
+function resetGestures() {
+	pointers.clear()
+	isPanning.value = false
+	pinchStartDistance = 0
+	pinchStartScale = 1
+	panStart = {x: 0, y: 0, translateX: 0, translateY: 0}
+}
 
 function reset() {
 	scale.value = 1
