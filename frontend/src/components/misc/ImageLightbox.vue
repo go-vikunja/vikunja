@@ -94,6 +94,7 @@ import {
 	MIN_SCALE,
 	clampScale,
 	clampTranslate,
+	wheelZoomFactor,
 	zoomAround,
 	type ZoomMetrics,
 	type ZoomTransform,
@@ -177,6 +178,8 @@ function measure(): ZoomMetrics | null {
 	return {
 		imageWidth: image.offsetWidth,
 		imageHeight: image.offsetHeight,
+		containerWidth: container.clientWidth,
+		containerHeight: container.clientHeight,
 		centerX: rect.left + rect.width / 2,
 		centerY: rect.top + rect.height / 2,
 	}
@@ -199,11 +202,19 @@ function zoomAt(clientX: number, clientY: number, factor: number) {
 }
 
 function zoomByStep(factor: number) {
-	zoomAt(window.innerWidth / 2, window.innerHeight / 2, factor)
+	const metrics = measure()
+	if (metrics === null) {
+		return
+	}
+	applyTransform(zoomAround(currentTransform(), metrics, {
+		clientX: metrics.centerX,
+		clientY: metrics.centerY,
+		factor,
+	}))
 }
 
 function onWheel(event: WheelEvent) {
-	zoomAt(event.clientX, event.clientY, event.deltaY < 0 ? ZOOM_STEP : 1 / ZOOM_STEP)
+	zoomAt(event.clientX, event.clientY, wheelZoomFactor(event.deltaY, event.deltaMode))
 }
 
 function toggleZoom(event: MouseEvent) {

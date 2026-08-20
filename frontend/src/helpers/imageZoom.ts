@@ -10,6 +10,8 @@ export interface ZoomTransform {
 export interface ZoomMetrics {
 	imageWidth: number
 	imageHeight: number
+	containerWidth: number
+	containerHeight: number
 	centerX: number
 	centerY: number
 }
@@ -22,10 +24,26 @@ export function clampScale(scale: number): number {
 	return clamp(scale, MIN_SCALE, MAX_SCALE)
 }
 
-/** Keeps the scaled image from being dragged entirely out of view. */
+// px equivalents of deltaMode 0/1/2 so line/page wheels match pixel sensitivity
+const WHEEL_PIXELS_PER_UNIT: Record<number, number> = {
+	0: 1,
+	1: 33,
+	2: 400,
+}
+// Tuned so one classic wheel notch (~100px, or 3 lines) is roughly a 1.35x step.
+const WHEEL_SENSITIVITY = 0.003
+const WHEEL_FACTOR_LIMIT = 2
+
+export function wheelZoomFactor(deltaY: number, deltaMode = 0): number {
+	const pixels = deltaY * (WHEEL_PIXELS_PER_UNIT[deltaMode] ?? 1)
+	const factor = Math.exp(-pixels * WHEEL_SENSITIVITY)
+
+	return clamp(factor, 1 / WHEEL_FACTOR_LIMIT, WHEEL_FACTOR_LIMIT)
+}
+
 export function clampTranslate(transform: ZoomTransform, metrics: ZoomMetrics): ZoomTransform {
-	const maxX = (metrics.imageWidth * transform.scale) / 2
-	const maxY = (metrics.imageHeight * transform.scale) / 2
+	const maxX = Math.max(0, (metrics.imageWidth * transform.scale - metrics.containerWidth) / 2)
+	const maxY = Math.max(0, (metrics.imageHeight * transform.scale - metrics.containerHeight) / 2)
 
 	return {
 		scale: transform.scale,
