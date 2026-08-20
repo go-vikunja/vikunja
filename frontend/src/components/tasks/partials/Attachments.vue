@@ -176,6 +176,7 @@
 		<!-- Attachment image lightbox -->
 		<ImageLightbox
 			:blob-url="attachmentImageBlobUrl"
+			:alt="attachmentImageAlt"
 			@close="closeImageLightbox"
 		/>
 
@@ -417,6 +418,7 @@ async function deleteAttachment() {
 }
 
 const attachmentImageBlobUrl = ref<string | null>(null)
+const attachmentImageAlt = ref<string | undefined>(undefined)
 const attachmentPdfBlobUrl = ref<string | null>(null)
 
 function closeImageLightbox() {
@@ -424,6 +426,7 @@ function closeImageLightbox() {
 		URL.revokeObjectURL(attachmentImageBlobUrl.value)
 	}
 	attachmentImageBlobUrl.value = null
+	attachmentImageAlt.value = undefined
 }
 
 function closePdfPreview() {
@@ -443,6 +446,7 @@ async function viewOrDownload(attachment: IAttachment) {
 		const blobUrl = await attachmentService.getBlobUrl(attachment)
 		if (canPreviewImage(attachment)) {
 			attachmentImageBlobUrl.value = blobUrl
+			attachmentImageAlt.value = attachment.file.name
 		} else {
 			attachmentPdfBlobUrl.value = blobUrl
 		}
