@@ -421,6 +421,7 @@ async function deleteAttachment() {
 const attachmentImageBlobUrl = ref<string | null>(null)
 const attachmentImageAlt = ref('')
 const attachmentPdfBlobUrl = ref<string | null>(null)
+let previewRequestToken = 0
 
 // Revoking before every assignment keeps rapid clicks from orphaning the previous object URL.
 function replaceBlobUrl(target: Ref<string | null>, blobUrl: string | null) {
@@ -450,8 +451,17 @@ async function viewOrDownload(attachment: IAttachment) {
 		return
 	}
 
+	previewRequestToken++
+	const requestToken = previewRequestToken
+
 	try {
 		const blobUrl = await attachmentService.getBlobUrl(attachment)
+		// Revoking a superseded url before it is ever assigned keeps replaceBlobUrl
+		// from pulling the url out from under an <img> that is still decoding it.
+		if (requestToken !== previewRequestToken) {
+			URL.revokeObjectURL(blobUrl)
+			return
+		}
 		if (canPreviewImage(attachment)) {
 			replaceBlobUrl(attachmentImageBlobUrl, blobUrl)
 			attachmentImageAlt.value = attachment.file.name
