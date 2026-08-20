@@ -27,10 +27,6 @@ export function canPreviewAudio(attachment: IAttachment): boolean {
 	return attachment.file.mime.toLowerCase().startsWith('audio/')
 }
 
-export function canPreview(attachment: IAttachment): boolean {
-	return canPreviewImage(attachment) || canPreviewPdf(attachment)
-}
-
 export default class AttachmentModel extends AbstractModel<IAttachment> implements IAttachment {
 	id = 0
 	taskId = 0

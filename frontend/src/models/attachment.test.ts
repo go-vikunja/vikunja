@@ -1,6 +1,6 @@
 import {describe, it, expect} from 'vitest'
 
-import {canPreviewAudio, canPreviewImage, canPreviewPdf, canPreview} from './attachment'
+import {canPreviewAudio, canPreviewImage, canPreviewPdf} from './attachment'
 import type {IAttachment} from '@/modelTypes/IAttachment'
 
 function attachment(name: string, mime: string): IAttachment {
@@ -54,11 +54,5 @@ describe('canPreviewAudio', () => {
 
 	it('refuses a non-audio mime', () => {
 		expect(canPreviewAudio(attachment('memo.mp3', 'text/html'))).toBe(false)
-	})
-})
-
-describe('canPreview', () => {
-	it('refuses html bytes disguised as a pdf', () => {
-		expect(canPreview(attachment('evil.pdf', 'text/html'))).toBe(false)
 	})
 })
