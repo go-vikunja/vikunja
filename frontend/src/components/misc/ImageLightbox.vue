@@ -36,13 +36,14 @@
 				}"
 				:style="{transform: `translate(${translateX}px, ${translateY}px) scale(${scale})`}"
 				draggable="false"
-				@load="loaded = true"
+				@load="onLoad"
 				@error="failed = true"
 				@dblclick="toggleZoom"
 				@pointerdown="onPointerDown"
 				@pointermove="onPointerMove"
 				@pointerup="onPointerUp"
 				@pointercancel="onPointerUp"
+				@lostpointercapture="onPointerUp"
 			>
 
 			<div
@@ -85,6 +86,7 @@
 
 <script setup lang="ts">
 import {computed, onMounted, ref, watch} from 'vue'
+import {useEventListener} from '@vueuse/core'
 
 import Modal from '@/components/misc/Modal.vue'
 import Loading from '@/components/misc/Loading.vue'
@@ -145,12 +147,23 @@ let panStart = {x: 0, y: 0, translateX: 0, translateY: 0}
 let pinchStartDistance = 0
 let pinchStartScale = 1
 
-// Start fresh whenever a new image is shown (or the lightbox reopens).
+// Closing mid-drag destroys the <img> before its pointerup, so the gesture state
+// has to be dropped on both edges or the next open starts as a phantom pinch.
 watch(safeSrc, () => {
+	resetGestures()
+	metrics.value = null
 	loaded.value = false
 	failed.value = false
 	reset()
 })
+
+function resetGestures() {
+	pointers.clear()
+	isPanning.value = false
+	pinchStartDistance = 0
+	pinchStartScale = 1
+	panStart = {x: 0, y: 0, translateX: 0, translateY: 0}
+}
 
 function reset() {
 	scale.value = 1
@@ -168,14 +181,21 @@ function applyTransform(next: ZoomTransform) {
 	translateY.value = next.translateY
 }
 
-function measure(): ZoomMetrics | null {
+// a 0-sized box before load would give bogus transforms
+const zoomable = computed(() => loaded.value && !failed.value)
+
+// cached: measuring after a transform write forces a reflow
+let metrics: ZoomMetrics | null = null
+
+function refreshMetrics() {
 	const image = imageRef.value
 	const container = containerRef.value
-	if (!image || !container) {
-		return null
+	if (!zoomable.value || !image || !container || image.offsetWidth === 0) {
+		metrics = null
+		return
 	}
 	const rect = container.getBoundingClientRect()
-	return {
+	metrics = {
 		imageWidth: image.offsetWidth,
 		imageHeight: image.offsetHeight,
 		containerWidth: container.clientWidth,
@@ -185,32 +205,47 @@ function measure(): ZoomMetrics | null {
 	}
 }
 
-function clampPan() {
-	const metrics = measure()
+function currentMetrics(): ZoomMetrics | null {
 	if (metrics === null) {
+		refreshMetrics()
+	}
+	return metrics
+}
+
+function onLoad() {
+	loaded.value = true
+	refreshMetrics()
+}
+
+function onResize() {
+	refreshMetrics()
+	clampPan()
+}
+
+useEventListener(() => safeSrc.value === null ? null : window, 'resize', onResize)
+
+function clampPan() {
+	const measured = currentMetrics()
+	if (measured === null) {
 		return
 	}
-	applyTransform(clampTranslate(currentTransform(), metrics))
+	applyTransform(clampTranslate(currentTransform(), measured))
 }
 
 function zoomAt(clientX: number, clientY: number, factor: number) {
-	const metrics = measure()
-	if (metrics === null) {
+	const measured = currentMetrics()
+	if (measured === null) {
 		return
 	}
-	applyTransform(zoomAround(currentTransform(), metrics, clientX, clientY, factor))
+	applyTransform(zoomAround(currentTransform(), measured, clientX, clientY, factor))
 }
 
 function zoomByStep(factor: number) {
-	const metrics = measure()
-	if (metrics === null) {
+	const measured = currentMetrics()
+	if (measured === null) {
 		return
 	}
-	applyTransform(zoomAround(currentTransform(), metrics, {
-		clientX: metrics.centerX,
-		clientY: metrics.centerY,
-		factor,
-	}))
+	zoomAt(measured.centerX, measured.centerY, factor)
 }
 
 function onWheel(event: WheelEvent) {
@@ -231,6 +266,9 @@ function pointerDistance(): number {
 }
 
 function onPointerDown(event: PointerEvent) {
+	if (!zoomable.value) {
+		return
+	}
 	imageRef.value?.setPointerCapture(event.pointerId)
 	pointers.set(event.pointerId, {x: event.clientX, y: event.clientY})
 
@@ -272,7 +310,21 @@ function onPointerUp(event: PointerEvent) {
 	}
 	if (pointers.size === 0) {
 		isPanning.value = false
+		return
 	}
+	if (pointers.size !== 1) {
+		return
+	}
+
+	// re-anchor the pan on the surviving pointer, else the next move snaps
+	const [survivor] = [...pointers.values()]
+	panStart = {
+		x: survivor.x,
+		y: survivor.y,
+		translateX: translateX.value,
+		translateY: translateY.value,
+	}
+	isPanning.value = scale.value > MIN_SCALE
 }
 </script>
 
