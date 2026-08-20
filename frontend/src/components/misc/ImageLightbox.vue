@@ -7,7 +7,7 @@
 	>
 		<div
 			class="image-lightbox"
-			@click.self="$emit('close')"
+			@click.self="onBackdropClick"
 			@wheel.prevent="onWheel"
 		>
 			<div
@@ -94,9 +94,17 @@ const props = defineProps<{
 	alt?: string,
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
 	close: [],
 }>()
+
+// the second click of a double-click lands on the fresh backdrop
+function onBackdropClick(event: MouseEvent) {
+	if (event.detail > 1) {
+		return
+	}
+	emit('close')
+}
 
 // blob: only — the scheme check is the security boundary
 const safeSrc = computed(() => props.blobUrl !== null && props.blobUrl.startsWith('blob:')
