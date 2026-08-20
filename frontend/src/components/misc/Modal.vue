@@ -391,6 +391,12 @@ $modal-width: 1024px;
 	justify-content: center;
 }
 
+// .modal-content fills the dialog here and would otherwise paint over the
+// fixed-position .close button, swallowing its clicks.
+.fullscreen .close {
+	z-index: 1;
+}
+
 .hint-modal {
 	:deep(.card-content) {
 		text-align: start;
