@@ -175,6 +175,7 @@
 
 		<ImageLightbox
 			v-if="attachmentImageBlobUrl !== null"
+			:key="attachmentImageBlobUrl"
 			:blob-url="attachmentImageBlobUrl"
 			:alt="attachmentImageAlt"
 			@close="closeImageLightbox"

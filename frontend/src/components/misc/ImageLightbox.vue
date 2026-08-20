@@ -104,8 +104,8 @@ import {
 	type ZoomTransform,
 } from '@/helpers/imageZoom'
 
-// Mounted only while open (callers gate it with v-if), so all per-open state is
-// just the initial state of this instance.
+// Mounted only while open (callers gate it with v-if and key it by blobUrl, so a
+// url swap remounts), which makes all per-open state the initial state here.
 const props = defineProps<{
 	// An already-resolved object URL.
 	blobUrl: string | null,
