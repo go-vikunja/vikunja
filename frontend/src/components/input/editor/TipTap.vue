@@ -677,21 +677,29 @@ function focusIfEditing() {
 
 const lightboxBlobUrl = ref<string | null>(null)
 
+// Only attachment images get a data-src from CustomImage, and their src stays the
+// '#' placeholder until the blob URL resolves.
+function getLightboxImage(target: EventTarget | null): HTMLImageElement | null {
+	if (
+		target instanceof HTMLImageElement
+		&& target.matches('img[data-src]')
+		&& target.src.startsWith('blob:')
+	) {
+		return target
+	}
+
+	return null
+}
+
 function handleContentClick(event: MouseEvent) {
 	focusIfEditing()
 	if (isEditing.value) {
 		return
 	}
-	// Preview mode: open content images in the lightbox. Their blob URL is
-	// resolved lazily by CustomImage (src stays '#' until it loads). Mention
-	// and user avatars are <img> too, so skip those.
-	const target = event.target
-	if (
-		target instanceof HTMLImageElement
-		&& !target.src.endsWith('#')
-		&& !target.closest('.mention-user, .avatar-wrapper')
-	) {
-		lightboxBlobUrl.value = target.src
+
+	const image = getLightboxImage(event.target)
+	if (image !== null) {
+		lightboxBlobUrl.value = image.src
 	}
 }
 
