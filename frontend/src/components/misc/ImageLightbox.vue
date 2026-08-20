@@ -286,7 +286,22 @@ function onPointerUp(event: PointerEvent) {
 	}
 	if (pointers.size === 0) {
 		isPanning.value = false
+		return
 	}
+	if (pointers.size !== 1) {
+		return
+	}
+
+	// Lifting one finger hands the gesture back to a pan: re-anchor on the
+	// surviving pointer, otherwise the next move snaps to the pre-pinch offset.
+	const [survivor] = [...pointers.values()]
+	panStart = {
+		x: survivor.x,
+		y: survivor.y,
+		translateX: translateX.value,
+		translateY: translateY.value,
+	}
+	isPanning.value = scale.value > MIN_SCALE
 }
 </script>
 
