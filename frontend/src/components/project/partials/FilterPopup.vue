@@ -17,15 +17,14 @@
 		<Filters
 			ref="filtersRef"
 			v-model="value"
+			v-model:include-subprojects="includeSubprojects"
 			:has-title="true"
 			class="filter-popup"
 			:change-immediately="false"
 			:filter-from-view="filterFromView"
 			:show-include-subprojects-toggle="isProjectView"
-			:include-subprojects="includeSubprojects"
 			show-close
 			@close="modalOpen = false"
-			@update:includeSubprojects="updateIncludeSubprojects"
 			@showResults="showResults"
 		/>
 	</Modal>
@@ -40,6 +39,7 @@ import {type TaskFilterParams} from '@/services/taskCollection'
 import {type IProjectView} from '@/modelTypes/IProjectView'
 import {type IProject} from '@/modelTypes/IProject'
 import {useProjectStore} from '@/stores/projects'
+import {useIncludeSubprojects} from '@/composables/useIncludeSubprojects'
 
 const props = defineProps<{
 	modelValue: TaskFilterParams,
@@ -103,15 +103,7 @@ const currentView = computed(() => {
 
 const isProjectView = computed(() => Boolean(props.projectId && props.projectId > 0 && props.viewId))
 
-const includeSubprojects = computed(() => currentView.value?.filter?.include_subprojects ?? false)
-
-async function updateIncludeSubprojects(newValue: boolean) {
-	if (!currentView.value) {
-		return
-	}
-
-	await projectStore.updateViewIncludeSubprojects(currentView.value, newValue)
-}
+const includeSubprojects = useIncludeSubprojects(() => currentView.value)
 
 const filterFromView = computed(() => {
 	if (!props.projectId || !props.viewId) {

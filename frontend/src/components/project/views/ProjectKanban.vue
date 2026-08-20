@@ -312,6 +312,7 @@ import {useAuthStore} from '@/stores/auth'
 
 import ProjectWrapper from '@/components/project/ProjectWrapper.vue'
 import FilterPopup from '@/components/project/partials/FilterPopup.vue'
+import {useIncludeSubprojects} from '@/composables/useIncludeSubprojects'
 import KanbanCard from '@/components/tasks/partials/KanbanCard.vue'
 import Dropdown from '@/components/misc/Dropdown.vue'
 import DropdownItem from '@/components/misc/DropdownItem.vue'
@@ -447,9 +448,10 @@ const bucketDraggableComponentData = computed(() => ({
 }))
 const project = computed(() => projectId.value ? projectStore.projects[projectId.value] : null)
 const view = computed(() => project.value?.views.find(v => v.id === props.viewId) as IProjectView || null)
+const includeSubprojects = useIncludeSubprojects(() => view.value)
 const requestParams = computed(() => ({
 	...params.value,
-	...(view.value?.filter?.include_subprojects ? {include_subprojects: true} : {}),
+	...(includeSubprojects.value ? {include_subprojects: true} : {}),
 }))
 const canWrite = computed(() => baseStore.currentProject?.maxPermission > Permissions.READ && view.value.bucketConfigurationMode === 'manual')
 const canCreateTasks = computed(() => canWrite.value && projectId.value > 0)
