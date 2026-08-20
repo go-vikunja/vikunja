@@ -81,10 +81,7 @@ import Loading from '@/components/misc/Loading.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
 const props = defineProps<{
-	// An already-resolved object URL. null keeps the lightbox closed, so the
-	// component stays source-agnostic: callers fetch the (authenticated) blob
-	// and pass the resulting URL, whether it is an attachment or an inline
-	// editor image.
+	// An already-resolved object URL; null keeps the lightbox closed.
 	blobUrl: string | null,
 	alt?: string,
 }>()
@@ -110,7 +107,6 @@ let panStart = {x: 0, y: 0, translateX: 0, translateY: 0}
 let pinchStartDistance = 0
 let pinchStartScale = 1
 
-// Start fresh whenever a new image is shown (or the lightbox reopens).
 watch(() => props.blobUrl, () => {
 	loaded.value = false
 	reset()
@@ -138,8 +134,7 @@ function clampPan() {
 	translateY.value = clamp(translateY.value, -maxY, maxY)
 }
 
-// Zoom around a viewport point (cursor or pinch centre) so the pixel under it
-// stays put.
+// Keeps the pixel under the given viewport point (cursor or pinch centre) put.
 function zoomAround(clientX: number, clientY: number, factor: number) {
 	const image = imageRef.value
 	if (!image) {
@@ -236,8 +231,8 @@ function onPointerUp(event: PointerEvent) {
 </script>
 
 <style scoped lang="scss">
-// Fills the parent Modal's fullscreen content box (which keeps the scrim, close
-// button and scroll lock). The empty space around the image is the backdrop.
+// Fills the parent Modal's fullscreen content box; the empty space around the
+// image is the backdrop.
 .image-lightbox {
 	position: relative;
 	inline-size: 100%;
@@ -291,8 +286,7 @@ function onPointerUp(event: PointerEvent) {
 	gap: .25rem;
 	padding: .35rem;
 	border-radius: 999px;
-	// Literal colors: the toolbar sits on the image scrim, which does not flip
-	// with the theme.
+	// Literal colors: the toolbar sits on the scrim, which never flips with the theme.
 	background: rgba(0, 0, 0, .72);
 	box-shadow: 0 10px 20px rgba(0, 0, 0, .3);
 }
