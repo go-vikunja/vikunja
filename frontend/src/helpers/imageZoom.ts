@@ -64,7 +64,7 @@ export function clampTranslate(transform: ZoomTransform, metrics: ZoomMetrics): 
 	}
 }
 
-/** Zooms by `factor`, keeping the image point under the given viewport point put. */
+/** Zooms by `factor`, keeping the image point under the given viewport point fixed. */
 export function zoomAround(
 	transform: ZoomTransform,
 	metrics: ZoomMetrics,
