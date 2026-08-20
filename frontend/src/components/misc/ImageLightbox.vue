@@ -6,6 +6,7 @@
 		@close="$emit('close')"
 	>
 		<div
+			ref="containerRef"
 			class="image-lightbox"
 			@click.self="onBackdropClick"
 			@wheel.prevent="onWheel"
@@ -91,6 +92,15 @@ import Modal from '@/components/misc/Modal.vue'
 import Loading from '@/components/misc/Loading.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
+import {
+	MIN_SCALE,
+	clampScale,
+	clampTranslate,
+	zoomAround,
+	type ZoomMetrics,
+	type ZoomTransform,
+} from '@/helpers/imageZoom'
+
 const props = defineProps<{
 	// An already-resolved object URL; null keeps the lightbox closed.
 	blobUrl: string | null,
@@ -115,10 +125,9 @@ const safeSrc = computed(() => props.blobUrl !== null && /^(blob:|data:image\/)/
 	? props.blobUrl
 	: null)
 
-const MIN_SCALE = 1
-const MAX_SCALE = 8
 const ZOOM_STEP = 1.4
 
+const containerRef = ref<HTMLElement | null>(null)
 const imageRef = ref<HTMLImageElement | null>(null)
 const loaded = ref(false)
 const failed = ref(false)
@@ -150,64 +159,60 @@ function reset() {
 	translateY.value = 0
 }
 
-function clamp(value: number, min: number, max: number): number {
-	return Math.min(max, Math.max(min, value))
+function currentTransform(): ZoomTransform {
+	return {scale: scale.value, translateX: translateX.value, translateY: translateY.value}
 }
 
-// Keep the scaled image from being dragged entirely out of view.
+function applyTransform(next: ZoomTransform) {
+	scale.value = next.scale
+	translateX.value = next.translateX
+	translateY.value = next.translateY
+}
+
+function measure(): ZoomMetrics | null {
+	const image = imageRef.value
+	const container = containerRef.value
+	if (!image || !container) {
+		return null
+	}
+	const rect = container.getBoundingClientRect()
+	return {
+		imageWidth: image.offsetWidth,
+		imageHeight: image.offsetHeight,
+		centerX: rect.left + rect.width / 2,
+		centerY: rect.top + rect.height / 2,
+	}
+}
+
 function clampPan() {
-	const image = imageRef.value
-	if (!image) {
+	const metrics = measure()
+	if (metrics === null) {
 		return
 	}
-	const maxX = (image.offsetWidth * scale.value) / 2
-	const maxY = (image.offsetHeight * scale.value) / 2
-	translateX.value = clamp(translateX.value, -maxX, maxX)
-	translateY.value = clamp(translateY.value, -maxY, maxY)
+	applyTransform(clampTranslate(currentTransform(), metrics))
 }
 
-// Keeps the pixel under the given viewport point (cursor or pinch centre) put.
-function zoomAround(clientX: number, clientY: number, factor: number) {
-	const image = imageRef.value
-	if (!image) {
+function zoomAt(clientX: number, clientY: number, factor: number) {
+	const metrics = measure()
+	if (metrics === null) {
 		return
 	}
-	const rect = image.getBoundingClientRect()
-	const centerX = rect.left + rect.width / 2
-	const centerY = rect.top + rect.height / 2
-	const offsetX = (clientX - centerX) / scale.value
-	const offsetY = (clientY - centerY) / scale.value
-
-	const next = clamp(scale.value * factor, MIN_SCALE, MAX_SCALE)
-	if (next === scale.value) {
-		return
-	}
-
-	translateX.value += offsetX * (scale.value - next)
-	translateY.value += offsetY * (scale.value - next)
-	scale.value = next
-
-	if (scale.value === MIN_SCALE) {
-		translateX.value = 0
-		translateY.value = 0
-	} else {
-		clampPan()
-	}
+	applyTransform(zoomAround(currentTransform(), metrics, {clientX, clientY, factor}))
 }
 
 function zoomByStep(factor: number) {
-	zoomAround(window.innerWidth / 2, window.innerHeight / 2, factor)
+	zoomAt(window.innerWidth / 2, window.innerHeight / 2, factor)
 }
 
 function onWheel(event: WheelEvent) {
-	zoomAround(event.clientX, event.clientY, event.deltaY < 0 ? ZOOM_STEP : 1 / ZOOM_STEP)
+	zoomAt(event.clientX, event.clientY, event.deltaY < 0 ? ZOOM_STEP : 1 / ZOOM_STEP)
 }
 
 function toggleZoom(event: MouseEvent) {
 	if (scale.value > MIN_SCALE) {
 		reset()
 	} else {
-		zoomAround(event.clientX, event.clientY, 2.5)
+		zoomAt(event.clientX, event.clientY, 2.5)
 	}
 }
 
@@ -242,8 +247,8 @@ function onPointerMove(event: PointerEvent) {
 
 	if (pointers.size === 2 && pinchStartDistance > 0) {
 		const [a, b] = [...pointers.values()]
-		const target = clamp(pinchStartScale * (pointerDistance() / pinchStartDistance), MIN_SCALE, MAX_SCALE)
-		zoomAround((a.x + b.x) / 2, (a.y + b.y) / 2, target / scale.value)
+		const target = clampScale(pinchStartScale * (pointerDistance() / pinchStartDistance))
+		zoomAt((a.x + b.x) / 2, (a.y + b.y) / 2, target / scale.value)
 	} else if (isPanning.value) {
 		translateX.value = panStart.translateX + (event.clientX - panStart.x)
 		translateY.value = panStart.translateY + (event.clientY - panStart.y)
