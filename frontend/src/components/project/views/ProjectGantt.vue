@@ -114,7 +114,7 @@ const canWrite = computed(() => baseStore.currentProject?.maxPermission > PERMIS
 
 const {route, viewId} = toRefs(props)
 const currentView = computed(() => baseStore.currentProject?.views.find(v => v.id === viewId.value))
-const includeSubprojects = computed(() => currentView.value?.filter?.includeSubprojects ?? currentView.value?.filter?.include_subprojects ?? false)
+const includeSubprojects = computed(() => currentView.value?.filter?.include_subprojects ?? false)
 const {
 	filters,
 	hasDefaultFilters,

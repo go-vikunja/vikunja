@@ -24,7 +24,7 @@
 
 		<div class="field is-flex is-flex-direction-column">
 			<FancyCheckbox
-				v-model="params.filterIncludeNulls"
+				v-model="params.filter_include_nulls"
 				@change="() => change('always')"
 			>
 				{{ $t('filters.attributes.includeNulls') }}
@@ -131,7 +131,7 @@ watch(
 )
 
 const hasActiveFilters = computed(() => {
-	return filterQuery.value !== '' || params.value.filterIncludeNulls || props.includeSubprojects
+	return filterQuery.value !== '' || params.value.filter_include_nulls || props.includeSubprojects
 })
 
 const labelStore = useLabelStore()
@@ -144,7 +144,6 @@ watch(
 	() => props.modelValue,
 	(value: TaskFilterParams) => {
 		params.value = {...value}
-		params.value.filterIncludeNulls = value.filterIncludeNulls ?? value.filter_include_nulls ?? false
 	},
 	{
 		immediate: true,
@@ -186,7 +185,6 @@ function change(event: 'blur' | 'modelValue' | 'always') {
 
 	const newParams = {
 		...params.value,
-		filter_include_nulls: params.value.filterIncludeNulls ?? false,
 		filter: s === '' ? filter : '',
 		s,
 	}
@@ -205,9 +203,7 @@ function changeAndEmitButton() {
 
 function clearFiltersAndEmit() {
 	filterQuery.value = ''
-	params.value.filterIncludeNulls = false
 	params.value.filter_include_nulls = false
-	params.value.includeSubprojects = false
 	params.value.include_subprojects = false
 	emit('update:includeSubprojects', false)
 	changeAndEmitButton()

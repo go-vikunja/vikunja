@@ -59,21 +59,8 @@ onBeforeMount(() => {
 			filter.filter = filter.s
 		}
 
-		// AbstractModel.assignData() runs objectToCamelCase recursively on all
-		// nested objects, which converts filter_include_nulls to filterIncludeNulls
-		// inside the filter object. IFilters intentionally uses snake_case keys to
-		// match the API query param format. We check both key forms here to handle
-		// data coming from either the API response (camelCased by assignData) or
-		// from a freshly constructed filter object (snake_case).
-		filter.filterIncludeNulls = filterInput.filter_include_nulls
-			?? (filterInput as Record<string, unknown>).filterIncludeNulls as boolean
-			?? false
-		filter.filter_include_nulls = filter.filterIncludeNulls
-
-		filter.includeSubprojects = filterInput.include_subprojects
-			?? (filterInput as Record<string, unknown>).includeSubprojects as boolean
-			?? false
-		filter.include_subprojects = filter.includeSubprojects
+		filter.filter_include_nulls = filterInput.filter_include_nulls ?? false
+		filter.include_subprojects = filterInput.include_subprojects ?? false
 
 		return filter
 	}
@@ -110,10 +97,8 @@ function save() {
 			},
 		)
 		const filter: IFilters = {
-			filter_include_nulls: filterInput?.filterIncludeNulls ?? filterInput?.filter_include_nulls ?? false,
-			filterIncludeNulls: filterInput?.filterIncludeNulls ?? filterInput?.filter_include_nulls ?? false,
-			include_subprojects: filterInput?.includeSubprojects ?? filterInput?.include_subprojects ?? false,
-			includeSubprojects: filterInput?.includeSubprojects ?? filterInput?.include_subprojects ?? false,
+			filter_include_nulls: filterInput?.filter_include_nulls ?? false,
+			include_subprojects: filterInput?.include_subprojects ?? false,
 		}
 		if (hasFilterQuery(filterString)) {
 			filter.filter = filterString
@@ -207,7 +192,7 @@ function handleBubbleSave() {
 
 		<div class="field mbe-3">
 			<FancyCheckbox
-				v-model="view.filter.includeSubprojects"
+				v-model="view.filter.include_subprojects"
 				v-tooltip="$t('project.views.includeSubprojectsHint')"
 			>
 				{{ $t('project.views.includeSubprojects') }}
@@ -216,7 +201,7 @@ function handleBubbleSave() {
 
 		<div class="field mbe-3">
 			<FancyCheckbox
-				v-model="view.filter.filterIncludeNulls"
+				v-model="view.filter.filter_include_nulls"
 			>
 				{{ $t('filters.attributes.includeNulls') }}
 			</FancyCheckbox>
@@ -297,7 +282,7 @@ function handleBubbleSave() {
 
 						<div class="field mbe-3">
 							<FancyCheckbox
-								v-model="view.bucketConfiguration[index].filter.filterIncludeNulls"
+								v-model="view.bucketConfiguration[index].filter.filter_include_nulls"
 							>
 								{{ $t('filters.attributes.includeNulls') }}
 							</FancyCheckbox>
@@ -308,7 +293,7 @@ function handleBubbleSave() {
 					<XButton
 						variant="secondary"
 						icon="plus"
-						@click="() => view.bucketConfiguration.push({title: '', filter: {filter: '', filter_include_nulls: false, filterIncludeNulls: false}})"
+						@click="() => view.bucketConfiguration.push({title: '', filter: {filter: '', filter_include_nulls: false}})"
 					>
 						{{ $t('project.kanban.addBucket') }}
 					</XButton>
