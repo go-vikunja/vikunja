@@ -27,8 +27,7 @@
 				v-if="safeSrc !== null && !failed"
 				ref="imageRef"
 				:src="safeSrc"
-				:alt="alt ?? ''"
-				:aria-label="alt ?? $t('misc.imagePreview')"
+				:alt="alt || $t('misc.imagePreview')"
 				tabindex="0"
 				class="image-lightbox__image"
 				:class="{
