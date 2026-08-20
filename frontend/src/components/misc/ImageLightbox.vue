@@ -240,7 +240,7 @@ function zoomByStep(factor: number) {
 	if (measured === null) {
 		return
 	}
-	applyTransform(zoomAround(currentTransform(), measured, measured.centerX, measured.centerY, factor))
+	zoomAt(measured.centerX, measured.centerY, factor)
 }
 
 function onWheel(event: WheelEvent) {
