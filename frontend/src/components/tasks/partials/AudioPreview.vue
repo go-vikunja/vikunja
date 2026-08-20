@@ -54,7 +54,7 @@ async function loadAudio() {
 
 	loading.value = true
 	try {
-		const url = await attachmentService.getBlobUrl(props.modelValue)
+		const url = await attachmentService.getBlobUrl(props.modelValue) as string
 		if (unmounted) {
 			window.URL.revokeObjectURL(url)
 			return
@@ -91,6 +91,20 @@ function stopOtherPlayers(e: Event) {
 	playing = player
 }
 
+async function play() {
+	if (blobUrl.value === undefined) {
+		// The element autoplays as soon as it gets the blob.
+		await loadAudio()
+		return
+	}
+
+	try {
+		await playerRef.value?.play()
+	} catch {
+		// AbortError when another player pauses this one mid-start, NotAllowedError without a user gesture - neither deserves a toast.
+	}
+}
+
 onBeforeUnmount(() => {
 	unmounted = true
 
@@ -104,6 +118,8 @@ onBeforeUnmount(() => {
 		window.URL.revokeObjectURL(blobUrl.value)
 	}
 })
+
+defineExpose({play})
 </script>
 
 <style scoped lang="scss">
