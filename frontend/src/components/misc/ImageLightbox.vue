@@ -28,6 +28,8 @@
 				ref="imageRef"
 				:src="safeSrc"
 				:alt="alt ?? ''"
+				:aria-label="alt ?? $t('misc.imagePreview')"
+				tabindex="0"
 				class="image-lightbox__image"
 				:class="{
 					'is-loaded': loaded,
@@ -39,6 +41,7 @@
 				@load="onLoad"
 				@error="failed = true"
 				@dblclick="toggleZoom"
+				@keydown="onKeyDown"
 				@pointerdown="onPointerDown"
 				@pointermove="onPointerMove"
 				@pointerup="onPointerUp"
@@ -242,6 +245,59 @@ function toggleZoom(event: MouseEvent) {
 	}
 }
 
+// arrows move the viewport, so the image travels the opposite way; a Map so prototype keys can't match
+const PAN_KEYS = new Map<string, {x: number, y: number}>([
+	['ArrowLeft', {x: 1, y: 0}],
+	['ArrowRight', {x: -1, y: 0}],
+	['ArrowUp', {x: 0, y: 1}],
+	['ArrowDown', {x: 0, y: -1}],
+])
+const PAN_STEP = 48
+
+function onKeyDown(event: KeyboardEvent) {
+	if (!zoomable.value) {
+		return
+	}
+
+	// Ctrl/Cmd+'-' also arrives as '-'; don't break browser zoom
+	if (event.ctrlKey || event.metaKey || event.altKey) {
+		return
+	}
+
+	switch (event.key) {
+		case '+':
+		case '=':
+			event.preventDefault()
+			zoomByStep(ZOOM_STEP)
+			return
+		case '-':
+			event.preventDefault()
+			zoomByStep(1 / ZOOM_STEP)
+			return
+		case '0':
+			event.preventDefault()
+			reset()
+			return
+	}
+
+	const direction = PAN_KEYS.get(event.key)
+	if (direction === undefined || scale.value <= MIN_SCALE) {
+		return
+	}
+	const measured = currentMetrics()
+	if (measured === null) {
+		return
+	}
+
+	event.preventDefault()
+	const transform = currentTransform()
+	applyTransform(clampTranslate({
+		scale: transform.scale,
+		translateX: transform.translateX + direction.x * PAN_STEP,
+		translateY: transform.translateY + direction.y * PAN_STEP,
+	}, measured))
+}
+
 function pointerDistance(): number {
 	const [a, b] = [...pointers.values()]
 	return Math.hypot(a.x - b.x, a.y - b.y)
@@ -343,6 +399,11 @@ function onPointerUp(event: PointerEvent) {
 	opacity: 0;
 	transition: opacity $transition;
 	will-change: transform;
+
+	&:focus-visible {
+		outline: 2px solid #ffffff;
+		outline-offset: 2px;
+	}
 
 	&.is-loaded {
 		opacity: 1;
