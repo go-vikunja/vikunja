@@ -42,14 +42,20 @@
 				class="image-lightbox__toolbar"
 			>
 				<BaseButton
+					v-tooltip="$t('misc.zoomOut')"
 					:aria-label="$t('misc.zoomOut')"
 					class="image-lightbox__button"
 					@click="zoomByStep(1 / ZOOM_STEP)"
 				>
 					<Icon icon="minus" />
 				</BaseButton>
-				<span class="image-lightbox__level">{{ Math.round(scale * 100) }}%</span>
+				<span
+					class="image-lightbox__level"
+					role="status"
+					aria-live="polite"
+				>{{ Math.round(scale * 100) }}%</span>
 				<BaseButton
+					v-tooltip="$t('misc.zoomIn')"
 					:aria-label="$t('misc.zoomIn')"
 					class="image-lightbox__button"
 					@click="zoomByStep(ZOOM_STEP)"
@@ -57,6 +63,7 @@
 					<Icon icon="plus" />
 				</BaseButton>
 				<BaseButton
+					v-tooltip="$t('misc.resetZoom')"
 					:aria-label="$t('misc.resetZoom')"
 					class="image-lightbox__button"
 					@click="reset"
@@ -280,8 +287,9 @@ function onPointerUp(event: PointerEvent) {
 	gap: .25rem;
 	padding: .35rem;
 	border-radius: 999px;
-	background: hsla(var(--grey-900-hsl), .72);
-	box-shadow: var(--shadow-md);
+	// literal colors: the scrim never flips with the theme
+	background: rgba(0, 0, 0, .72);
+	box-shadow: 0 10px 20px rgba(0, 0, 0, .3);
 }
 
 .image-lightbox__button {
@@ -292,7 +300,7 @@ function onPointerUp(event: PointerEvent) {
 	block-size: 2.25rem;
 	padding: 0 .5rem;
 	border-radius: 999px;
-	color: var(--white);
+	color: #ffffff;
 	cursor: pointer;
 	transition: background-color $transition;
 
@@ -304,7 +312,7 @@ function onPointerUp(event: PointerEvent) {
 .image-lightbox__level {
 	min-inline-size: 3rem;
 	text-align: center;
-	color: var(--white);
+	color: #ffffff;
 	font-size: .85rem;
 	font-variant-numeric: tabular-nums;
 	user-select: none;
