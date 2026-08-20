@@ -232,7 +232,7 @@ function zoomAt(clientX: number, clientY: number, factor: number) {
 	if (measured === null) {
 		return
 	}
-	applyTransform(zoomAround(currentTransform(), measured, {clientX, clientY, factor}))
+	applyTransform(zoomAround(currentTransform(), measured, clientX, clientY, factor))
 }
 
 function zoomByStep(factor: number) {
@@ -240,11 +240,7 @@ function zoomByStep(factor: number) {
 	if (measured === null) {
 		return
 	}
-	applyTransform(zoomAround(currentTransform(), measured, {
-		clientX: measured.centerX,
-		clientY: measured.centerY,
-		factor,
-	}))
+	applyTransform(zoomAround(currentTransform(), measured, measured.centerX, measured.centerY, factor))
 }
 
 function onWheel(event: WheelEvent) {

@@ -19,12 +19,6 @@ export interface ZoomMetrics {
 	centerY: number
 }
 
-export interface ZoomAroundOptions {
-	clientX: number
-	clientY: number
-	factor: number
-}
-
 function clamp(value: number, min: number, max: number): number {
 	return Math.min(max, Math.max(min, value))
 }
@@ -74,7 +68,9 @@ export function clampTranslate(transform: ZoomTransform, metrics: ZoomMetrics): 
 export function zoomAround(
 	transform: ZoomTransform,
 	metrics: ZoomMetrics,
-	{clientX, clientY, factor}: ZoomAroundOptions,
+	clientX: number,
+	clientY: number,
+	factor: number,
 ): ZoomTransform {
 	const nextScale = clampScale(transform.scale * factor)
 	if (nextScale === transform.scale) {

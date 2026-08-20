@@ -45,31 +45,23 @@ describe('clampScale', () => {
 
 describe('zoomAround', () => {
 	it('clamps at MAX_SCALE exactly', () => {
-		const result = zoomAround({scale: 6, translateX: 0, translateY: 0}, metrics, {
-			clientX: 500,
-			clientY: 400,
-			factor: 4,
-		})
+		const result = zoomAround({scale: 6, translateX: 0, translateY: 0}, metrics, 500, 400, 4)
 
 		expect(result.scale).toBe(MAX_SCALE)
 	})
 
 	it('returns to exactly 0,0 when the scale falls back to MIN_SCALE', () => {
-		const result = zoomAround({scale: 2, translateX: 137, translateY: -89}, metrics, {
-			clientX: 700,
-			clientY: 500,
-			factor: 0.1,
-		})
+		const result = zoomAround({scale: 2, translateX: 137, translateY: -89}, metrics, 700, 500, 0.1)
 
 		expect(result).toEqual({scale: MIN_SCALE, translateX: 0, translateY: 0})
 	})
 
 	it('does nothing when the scale is already at the bound', () => {
 		const atMin: ZoomTransform = {scale: MIN_SCALE, translateX: 0, translateY: 0}
-		expect(zoomAround(atMin, metrics, {clientX: 700, clientY: 500, factor: 0.5})).toEqual(atMin)
+		expect(zoomAround(atMin, metrics, 700, 500, 0.5)).toEqual(atMin)
 
 		const atMax: ZoomTransform = {scale: MAX_SCALE, translateX: 10, translateY: 10}
-		expect(zoomAround(atMax, metrics, {clientX: 700, clientY: 500, factor: 2})).toEqual(atMax)
+		expect(zoomAround(atMax, metrics, 700, 500, 2)).toEqual(atMax)
 	})
 
 	it('keeps the image point under the cursor fixed across a zoom step', () => {
@@ -81,7 +73,7 @@ describe('zoomAround', () => {
 		expect(anchor).toEqual({x: 200, y: 100})
 
 		for (const factor of [2, 1.5, 1.4, 1 / 1.4]) {
-			transform = zoomAround(transform, metrics, {clientX, clientY, factor})
+			transform = zoomAround(transform, metrics, clientX, clientY, factor)
 			const moved = imagePointUnder(transform, clientX, clientY)
 
 			expect(moved.x).toBeCloseTo(anchor.x, 10)
