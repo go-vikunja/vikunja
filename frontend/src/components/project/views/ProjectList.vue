@@ -113,6 +113,7 @@ import Pagination from '@/components/misc/Pagination.vue'
 import SortPopup from '@/components/project/partials/SortPopup.vue'
 
 import {useTaskList} from '@/composables/useTaskList'
+import {useIncludeSubprojects} from '@/composables/useIncludeSubprojects'
 import {useTaskDragToProject} from '@/composables/useTaskDragToProject'
 import {shouldShowTaskInListView} from '@/composables/useTaskListFiltering'
 import {PERMISSIONS as Permissions} from '@/constants/permissions'
@@ -142,6 +143,8 @@ const baseStore = useBaseStore()
 const project = computed(() => baseStore.currentProject)
 const currentView = computed(() => project.value?.views.find(v => v.id === props.viewId))
 
+const includeSubprojects = useIncludeSubprojects(() => currentView.value)
+
 const ctaVisible = ref(false)
 
 const drag = ref(false)
@@ -161,7 +164,7 @@ const {
 	() => projectId.value === -1
 		? ['comment_count', 'is_unread']
 		: ['subtasks', 'comment_count', 'is_unread'],
-	() => currentView.value?.filter?.include_subprojects ?? false,
+	() => includeSubprojects.value,
 )
 
 const taskPositionService = ref(new TaskPositionService())
