@@ -110,7 +110,8 @@
 
 			<ImageLightbox
 				:blob-url="lightboxBlobUrl"
-				@close="lightboxBlobUrl = null"
+				:alt="lightboxAlt"
+				@close="closeLightbox"
 			/>
 		</div>
 
@@ -677,23 +678,35 @@ function focusIfEditing() {
 }
 
 const lightboxBlobUrl = ref<string | null>(null)
+const lightboxAlt = ref('')
+
+function getLightboxImage(target: EventTarget | null): HTMLImageElement | null {
+	if (
+		target instanceof HTMLImageElement
+		&& target.dataset.src !== undefined
+		&& target.src.startsWith('blob:')
+	) {
+		return target
+	}
+
+	return null
+}
 
 function handleContentClick(event: MouseEvent) {
 	focusIfEditing()
 	if (isEditing.value) {
 		return
 	}
-	// Preview mode: open content images in the lightbox. Their blob URL is
-	// resolved lazily by CustomImage (src stays '#' until it loads). Mention
-	// and user avatars are <img> too, so skip those.
-	const target = event.target
-	if (
-		target instanceof HTMLImageElement
-		&& !target.src.endsWith('#')
-		&& !target.closest('.mention-user, .avatar-wrapper')
-	) {
-		lightboxBlobUrl.value = target.src
+
+	const image = getLightboxImage(event.target)
+	if (image !== null) {
+		lightboxBlobUrl.value = image.src
+		lightboxAlt.value = image.alt
 	}
+}
+
+function closeLightbox() {
+	lightboxBlobUrl.value = null
 }
 
 function handleEscapeKey(event: KeyboardEvent) {
