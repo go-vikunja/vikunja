@@ -284,7 +284,7 @@ function onPointerUp(event: PointerEvent) {
 }
 
 .image-lightbox__error {
-	color: #fff;
+	color: #ffffff;
 }
 
 .image-lightbox__image {
@@ -335,7 +335,7 @@ function onPointerUp(event: PointerEvent) {
 	block-size: 2.25rem;
 	padding: 0 .5rem;
 	border-radius: 999px;
-	color: #fff;
+	color: #ffffff;
 	cursor: pointer;
 	transition: background-color $transition;
 
@@ -347,7 +347,7 @@ function onPointerUp(event: PointerEvent) {
 .image-lightbox__level {
 	min-inline-size: 3rem;
 	text-align: center;
-	color: #fff;
+	color: #ffffff;
 	font-size: .85rem;
 	font-variant-numeric: tabular-nums;
 	user-select: none;
