@@ -176,14 +176,14 @@
 		<!-- Attachment image lightbox -->
 		<ImageLightbox
 			:blob-url="attachmentImageBlobUrl"
-			@close="attachmentImageBlobUrl = null"
+			@close="closeImageLightbox"
 		/>
 
 		<!-- Attachment PDF modal -->
 		<Modal
 			:enabled="attachmentPdfBlobUrl !== null"
 			:wide="true"
-			@close="attachmentPdfBlobUrl = null"
+			@close="closePdfPreview"
 		>
 			<iframe
 				v-if="attachmentPdfBlobUrl"
@@ -418,6 +418,20 @@ async function deleteAttachment() {
 
 const attachmentImageBlobUrl = ref<string | null>(null)
 const attachmentPdfBlobUrl = ref<string | null>(null)
+
+function closeImageLightbox() {
+	if (attachmentImageBlobUrl.value !== null) {
+		URL.revokeObjectURL(attachmentImageBlobUrl.value)
+	}
+	attachmentImageBlobUrl.value = null
+}
+
+function closePdfPreview() {
+	if (attachmentPdfBlobUrl.value !== null) {
+		URL.revokeObjectURL(attachmentPdfBlobUrl.value)
+	}
+	attachmentPdfBlobUrl.value = null
+}
 
 async function viewOrDownload(attachment: IAttachment) {
 	if (canPreviewImage(attachment)) {
