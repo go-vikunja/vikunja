@@ -196,7 +196,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, shallowReactive, computed, watch, onMounted, onBeforeUnmount} from 'vue'
+import {ref, shallowReactive, computed, watch, onMounted, onBeforeUnmount, type Ref} from 'vue'
 import {useDropZone} from '@vueuse/core'
 
 import User from '@/components/misc/User.vue'
@@ -421,20 +421,27 @@ const attachmentImageBlobUrl = ref<string | null>(null)
 const attachmentImageAlt = ref<string | undefined>(undefined)
 const attachmentPdfBlobUrl = ref<string | null>(null)
 
-function closeImageLightbox() {
-	if (attachmentImageBlobUrl.value !== null) {
-		URL.revokeObjectURL(attachmentImageBlobUrl.value)
+// Revoking before every assignment keeps rapid clicks from orphaning the previous object URL.
+function replaceBlobUrl(target: Ref<string | null>, blobUrl: string | null) {
+	if (target.value !== null) {
+		URL.revokeObjectURL(target.value)
 	}
-	attachmentImageBlobUrl.value = null
+	target.value = blobUrl
+}
+
+function closeImageLightbox() {
+	replaceBlobUrl(attachmentImageBlobUrl, null)
 	attachmentImageAlt.value = undefined
 }
 
 function closePdfPreview() {
-	if (attachmentPdfBlobUrl.value !== null) {
-		URL.revokeObjectURL(attachmentPdfBlobUrl.value)
-	}
-	attachmentPdfBlobUrl.value = null
+	replaceBlobUrl(attachmentPdfBlobUrl, null)
 }
+
+onBeforeUnmount(() => {
+	closeImageLightbox()
+	closePdfPreview()
+})
 
 async function viewOrDownload(attachment: IAttachment) {
 	if (!canPreviewImage(attachment) && !canPreviewPdf(attachment)) {
@@ -445,10 +452,10 @@ async function viewOrDownload(attachment: IAttachment) {
 	try {
 		const blobUrl = await attachmentService.getBlobUrl(attachment)
 		if (canPreviewImage(attachment)) {
-			attachmentImageBlobUrl.value = blobUrl
+			replaceBlobUrl(attachmentImageBlobUrl, blobUrl)
 			attachmentImageAlt.value = attachment.file.name
 		} else {
-			attachmentPdfBlobUrl.value = blobUrl
+			replaceBlobUrl(attachmentPdfBlobUrl, blobUrl)
 		}
 	} catch (e) {
 		error(e)
