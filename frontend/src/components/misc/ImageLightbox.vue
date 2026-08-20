@@ -44,6 +44,7 @@
 				@pointerdown.stop
 			>
 				<BaseButton
+					v-tooltip="$t('misc.zoomOut')"
 					:aria-label="$t('misc.zoomOut')"
 					class="image-lightbox__button"
 					@click="zoomByStep(1 / ZOOM_STEP)"
@@ -52,6 +53,7 @@
 				</BaseButton>
 				<span class="image-lightbox__level">{{ Math.round(scale * 100) }}%</span>
 				<BaseButton
+					v-tooltip="$t('misc.zoomIn')"
 					:aria-label="$t('misc.zoomIn')"
 					class="image-lightbox__button"
 					@click="zoomByStep(ZOOM_STEP)"
@@ -59,6 +61,7 @@
 					<Icon icon="plus" />
 				</BaseButton>
 				<BaseButton
+					v-tooltip="$t('misc.resetZoom')"
 					:aria-label="$t('misc.resetZoom')"
 					class="image-lightbox__button"
 					@click="reset"
