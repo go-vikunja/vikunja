@@ -32,10 +32,7 @@
 				:key="a.id"
 				class="attachment"
 			>
-				<div
-					v-tooltip="a.file.mime"
-					class="preview-column"
-				>
+				<div class="preview-column">
 					<button
 						class="preview-open"
 						tabindex="-1"
@@ -360,10 +357,14 @@ watch(() => props.editEnabled, enabled => {
 })
 
 function attachmentMetaTooltip(attachment: IAttachment): string {
-	return t('task.attachment.createdBy', [
+	const createdBy = t('task.attachment.createdBy', [
 		formatDateLong(attachment.created),
 		getDisplayName(attachment.createdBy),
 	])
+
+	return attachment.file.mime
+		? `${attachment.file.mime} · ${createdBy}`
+		: createdBy
 }
 
 function downloadAttachment(attachment: IAttachment) {
