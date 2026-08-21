@@ -32,7 +32,10 @@
 				:key="a.id"
 				class="attachment"
 			>
-				<div class="preview-column">
+				<div
+					v-tooltip="a.file.mime"
+					class="preview-column"
+				>
 					<button
 						class="preview-open"
 						tabindex="-1"
@@ -47,6 +50,7 @@
 				</div>
 				<div class="attachment-info-column">
 					<button
+						v-tooltip="attachmentMetaTooltip(a)"
 						class="attachment-open"
 						@click="viewOrDownload(a)"
 					>
@@ -61,24 +65,8 @@
 						</span>
 					</button>
 					<p class="attachment-info-meta">
-						<i18n-t
-							keypath="task.attachment.createdBy"
-							scope="global"
-						>
-							<span v-tooltip="formatDateLong(a.created)">
-								{{ formatDisplayDate(a.created) }}
-							</span>
-							<User
-								:avatar-size="24"
-								:user="a.createdBy"
-								:is-inline="true"
-							/>
-						</i18n-t>
 						<span>
 							{{ getHumanSize(a.file.size) }}
-						</span>
-						<span v-if="a.file.mime">
-							{{ a.file.mime }}
 						</span>
 					</p>
 					<p class="attachment-actions">
@@ -203,16 +191,16 @@
 import {ref, shallowReactive, computed, watch, onMounted, onBeforeUnmount} from 'vue'
 import {useDropZone} from '@vueuse/core'
 
-import User from '@/components/misc/User.vue'
 import ProgressBar from '@/components/misc/ProgressBar.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
 import AttachmentService from '@/services/attachment'
 import {canPreviewImage, canPreviewPdf} from '@/models/attachment'
+import {getDisplayName} from '@/models/user'
 import type {IAttachment} from '@/modelTypes/IAttachment'
 import type {ITask} from '@/modelTypes/ITask'
 
-import {formatDisplayDate, formatDateLong} from '@/helpers/time/formatDate'
+import {formatDateLong} from '@/helpers/time/formatDate'
 import {uploadFiles, generateAttachmentUrl} from '@/helpers/attachments'
 import {getHumanSize} from '@/helpers/getHumanSize'
 import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
@@ -370,6 +358,13 @@ watch(() => props.editEnabled, enabled => {
 		resetDragState()
 	}
 })
+
+function attachmentMetaTooltip(attachment: IAttachment): string {
+	return t('task.attachment.createdBy', [
+		formatDateLong(attachment.created),
+		getDisplayName(attachment.createdBy),
+	])
+}
 
 function downloadAttachment(attachment: IAttachment) {
 	attachmentService.download(attachment)
@@ -583,25 +578,6 @@ defineExpose({
 
 	> span {
 		padding: 0 .25rem;
-	}
-
-	:deep(.user) {
-		display: flex !important;
-		align-items: center;
-		margin: 0 .5rem;
-	}
-
-	@media screen and (max-width: $mobile) {
-		flex-direction: column;
-		align-items: flex-start;
-
-		:deep(.user) {
-			margin: .5rem 0;
-		}
-
-		.user .username {
-			display: none;
-		}
 	}
 }
 
