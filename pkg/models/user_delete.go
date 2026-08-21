@@ -177,6 +177,9 @@ func DeleteUser(s *xorm.Session, u *user.User) (err error) {
 			return err
 		}
 	}
+	if err = notifications.DeleteWebPushSubscriptionsForUser(s, u.ID); err != nil {
+		return err
+	}
 
 	// Notify before deleting the user row, because ShouldNotify will try to
 	// look up the user and fail if the row is already gone.

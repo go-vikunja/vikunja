@@ -89,6 +89,41 @@
 					@keyup.enter="updateSettings"
 				/>
 			</FormField>
+			<FormField
+				:label="$t('user.settings.general.webPush.title')"
+				layout="two-col"
+			>
+				<div class="web-push-setting">
+					<p class="help">
+						{{ webPushDescription }}
+					</p>
+					<div class="web-push-actions">
+						<XButton
+							v-if="webPushState === 'disabled'"
+							:loading="webPushLoading"
+							@click="enablePush"
+						>
+							{{ $t('user.settings.general.webPush.enable') }}
+						</XButton>
+						<XButton
+							v-if="webPushState === 'enabled'"
+							variant="tertiary"
+							:loading="webPushLoading"
+							@click="testPush"
+						>
+							{{ $t('user.settings.general.webPush.test') }}
+						</XButton>
+						<XButton
+							v-if="webPushState === 'enabled'"
+							variant="secondary"
+							:loading="webPushLoading"
+							@click="disablePush"
+						>
+							{{ $t('user.settings.general.webPush.disable') }}
+						</XButton>
+					</div>
+				</div>
+			</FormField>
 		</div>
 	</Card>
 
@@ -294,7 +329,7 @@
 
 
 <script setup lang="ts">
-import {computed, watch, ref, onBeforeMount} from 'vue'
+import {computed, watch, ref, onBeforeMount, onMounted} from 'vue'
 import {useI18n} from 'vue-i18n'
 import isEqual from 'fast-deep-equal'
 
@@ -329,6 +364,14 @@ import {isDesktopApp} from '@/helpers/desktopAuth'
 import ShortcutRecorder from '@/components/misc/ShortcutRecorder.vue'
 import Reminders from '@/components/tasks/partials/Reminders.vue'
 import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
+import {
+	disableWebPush,
+	enableWebPush,
+	getWebPushState,
+	sendWebPushTest,
+	type WebPushState,
+} from '@/services/webPush'
+import {error, success} from '@/message'
 
 defineOptions({name: 'UserSettingsGeneral'})
 
@@ -410,6 +453,61 @@ const languageOptions = computed(() =>
 const authStore = useAuthStore()
 const configStore = useConfigStore()
 const timeTrackingEnabled = computed(() => configStore.isProFeatureEnabled(PRO_FEATURE.TIME_TRACKING))
+const webPushState = ref<WebPushState>('configuration-error')
+const webPushLoading = ref(false)
+const webPushDescription = computed(() => t(`user.settings.general.webPush.states.${webPushState.value}`))
+
+async function refreshWebPushState() {
+	webPushState.value = await getWebPushState(
+		configStore.webPushEnabled,
+		configStore.webPushPublicKey,
+	)
+}
+
+async function enablePush() {
+	webPushLoading.value = true
+	try {
+		await enableWebPush(configStore.webPushPublicKey)
+		await refreshWebPushState()
+		success({message: t('user.settings.general.webPush.enabledSuccess')})
+	} catch {
+		await refreshWebPushState()
+		error({message: t('user.settings.general.webPush.enableFailed')})
+	} finally {
+		webPushLoading.value = false
+	}
+}
+
+async function disablePush() {
+	webPushLoading.value = true
+	try {
+		await disableWebPush()
+		success({message: t('user.settings.general.webPush.disabledSuccess')})
+	} catch {
+		error({message: t('user.settings.general.webPush.disableFailed')})
+	} finally {
+		await refreshWebPushState()
+		webPushLoading.value = false
+	}
+}
+
+async function testPush() {
+	webPushLoading.value = true
+	try {
+		await sendWebPushTest()
+		success({message: t('user.settings.general.webPush.testSuccess')})
+	} catch {
+		error({message: t('user.settings.general.webPush.testFailed')})
+	} finally {
+		webPushLoading.value = false
+	}
+}
+
+onMounted(() => {
+	refreshWebPushState().catch(() => {
+		webPushState.value = 'configuration-error'
+	})
+})
 
 const settings = ref<IUserSettings>({
 	...authStore.settings,
@@ -608,6 +706,18 @@ async function updateSettings() {
 .field-group {
 	display: grid;
 	grid-template-columns: 1fr;
+}
+
+.web-push-setting {
+	display: flex;
+	flex-direction: column;
+	gap: .75rem;
+}
+
+.web-push-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: .5rem;
 }
 
 .sticky-save {

@@ -146,6 +146,7 @@ onMounted(async () => {
 	}
 
 	document.addEventListener('click', hidePopup)
+	navigator.serviceWorker?.addEventListener('message', handleServiceWorkerMessage)
 
 	// Subscribe to real-time notifications
 	unsubscribeWs = subscribe('notification.created', (msg) => {
@@ -173,9 +174,16 @@ watch(wsConnected, (isConnected, wasConnected) => {
 
 onUnmounted(() => {
 	document.removeEventListener('click', hidePopup)
+	navigator.serviceWorker?.removeEventListener('message', handleServiceWorkerMessage)
 	unsubscribeWs?.()
 	stopPollingFallback()
 })
+
+function handleServiceWorkerMessage(event: MessageEvent) {
+	if (event.data?.type === 'web-push-received') {
+		loadNotifications().catch(error => console.warn('Failed to refresh notifications after Web Push:', error))
+	}
+}
 
 function startPollingFallback() {
 	pollInterval = setInterval(async () => {
