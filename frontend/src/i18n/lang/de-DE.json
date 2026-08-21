@@ -104,7 +104,8 @@
 			"remember": "Angemeldet bleiben",
 			"registrationDisabled": "Registrierung ist deaktiviert.",
 			"passwordResetTokenMissing": "Das Passwort-Reset-Token fehlt.",
-			"registrationFailed": "Bei der Registrierung ist ein Fehler aufgetreten. Bitte prüfe deine Eingabe und versuche es erneut."
+			"registrationFailed": "Bei der Registrierung ist ein Fehler aufgetreten. Bitte prüfe deine Eingabe und versuche es erneut.",
+			"registrationConfirmEmail": "Dein Account wurde erfolgreich erstellt! Bitte überprüfe deinen Posteingang und klicke auf den Link in der Bestätigungs-E-Mail, bevor du dich anmeldest."
 		},
 		"settings": {
 			"bots": {
@@ -128,7 +129,14 @@
 			"passwordUpdateSuccess": "Das Passwort wurde erfolgreich aktualisiert.",
 			"updateEmailTitle": "Aktualisiere deine E-Mail-Adresse",
 			"updateEmailNew": "Neue E-Mail-Adresse",
-			"updateEmailSuccess": "Deine E-Mail-Adresse wurde erfolgreich aktualisiert. Wir haben dir einen Link zur Bestätigung geschickt.",
+			"updateEmailSuccess": "Deine E-Mail-Adresse wurde erfolgreich geändert.",
+			"updateEmailPending": "Deine neue E-Mail-Adresse {email} wartet auf Bestätigung. Bis Du auf den dort gesendeten Link klickst, bleibt deine aktuelle Adresse aktiv.",
+			"updateEmailPendingSuccess": "Wir haben einen Bestätigungslink an deine neue Adresse gesendet. Deine aktuelle Adresse bleibt aktiv, bis du ihn bestätigst.",
+			"updateEmailResend": "Bestätigungs-E-Mail erneut senden",
+			"updateEmailResendSuccess": "Wir haben dir einen neuen Bestätigungslink geschickt.",
+			"updateEmailCancel": "Änderung abbrechen",
+			"updateEmailCancelSuccess": "Die Änderung der E-Mail-Adresse wurde storniert.",
+			"updateEmailConfirmed": "Deine neue E-Mail-Adresse wurde bestätigt.",
 			"general": {
 				"title": "Allgemeine Einstellungen",
 				"name": "Mein Name",
@@ -1432,6 +1440,8 @@
 		"1023": "Du kannst das nicht als Linkfreigabe tun.",
 		"1024": "Ungültige Claim-Daten für das Feld {field} des Typs {type}.",
 		"1025": "Die Zeitzone '{timezone}' ist ungültig. Bitte wähle eine gültige Zeitzone aus der Liste.",
+		"1035": "Es gibt keine ausstehende E-Mail-Änderung, die bestätigt werden muss.",
+		"1036": "Bitte warte eine Minute, bevor du eine weitere Bestätigungs-E-Mail anforderst.",
 		"2001": "Die ID kann nicht leer oder 0 sein.",
 		"2002": "Ein Teil der Anfragedaten ist ungültig.",
 		"2003": "Die Zeitzone '{timezone}' ist ungültig.",

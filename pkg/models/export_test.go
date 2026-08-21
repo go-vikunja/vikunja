@@ -29,14 +29,18 @@ import (
 func TestGetUserDataExportStatus(t *testing.T) {
 	t.Run("no export", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		status, err := GetUserDataExportStatus(&user.User{ID: 15})
+		s := db.NewSession()
+		defer s.Close()
+		status, err := GetUserDataExportStatus(s, &user.User{ID: 15})
 		require.NoError(t, err)
 		assert.Nil(t, status)
 	})
 
 	t.Run("with export", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		status, err := GetUserDataExportStatus(&user.User{ID: 1, ExportFileID: 1})
+		s := db.NewSession()
+		defer s.Close()
+		status, err := GetUserDataExportStatus(s, &user.User{ID: 1, ExportFileID: 1})
 		require.NoError(t, err)
 		require.NotNil(t, status)
 		assert.Equal(t, int64(1), status.ID)
@@ -46,7 +50,9 @@ func TestGetUserDataExportStatus(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		// A dangling ExportFileID must read as "no export" rather than erroring,
 		// matching the download path which 404s the same case.
-		status, err := GetUserDataExportStatus(&user.User{ID: 15, ExportFileID: 9999})
+		s := db.NewSession()
+		defer s.Close()
+		status, err := GetUserDataExportStatus(s, &user.User{ID: 15, ExportFileID: 9999})
 		require.NoError(t, err)
 		assert.Nil(t, status)
 	})

@@ -70,7 +70,6 @@
 			"currentPasswordPlaceholder": "Vaša trenutna lozinka",
 			"passwordUpdateSuccess": "Lozinka je uspješno ažurirana.",
 			"updateEmailTitle": "Ažurirajte e-mail adresu",
-			"updateEmailSuccess": "Vaša email adresa je uspješno ažurirana. Poslali smo vam poveznicu da ju potvrdite.",
 			"general": {
 				"title": "Opće postavke",
 				"savedSuccess": "Postavke su uspješno spremljene.",

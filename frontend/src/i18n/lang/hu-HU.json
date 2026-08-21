@@ -70,7 +70,6 @@
 			"currentPasswordPlaceholder": "Az Ön aktuális jelszava",
 			"passwordUpdateSuccess": "A jelszó módosítása megtörtént.",
 			"updateEmailTitle": "E-mail cím módosítása",
-			"updateEmailSuccess": "E-mail címe sikeresen frissítve. Küldtünk egy linket a megerősítéshez.",
 			"general": {
 				"title": "Általános beállítások",
 				"savedSuccess": "Beállítások sikeresen frissítve.",

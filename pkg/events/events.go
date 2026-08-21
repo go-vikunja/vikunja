@@ -94,7 +94,8 @@ func InitEvents() (err error) {
 		for s, m := range msg.Metadata {
 			meta += s + "=" + m + ", "
 		}
-		log.Errorf("Error while handling message %s, %s payload=%s", msg.UUID, meta, string(msg.Payload))
+		// The payload is deliberately not logged: events can carry credentials and user data.
+		log.Errorf("Error while handling message %s, %s", msg.UUID, meta)
 
 		if config.SentryEnabled.GetBool() {
 			sentry.CaptureException(&messageHandleFailedError{

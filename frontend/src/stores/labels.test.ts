@@ -1,5 +1,17 @@
 import {setActivePinia, createPinia} from 'pinia'
-import {describe, it, expect, beforeEach} from 'vitest'
+import {describe, it, expect, beforeEach, vi} from 'vitest'
+
+const getAll = vi.fn()
+let totalPages = 1
+
+vi.mock('@/services/label', () => ({
+	default: class {
+		getAll = getAll
+		get totalPages() {
+			return totalPages
+		}
+	},
+}))
 
 import {useLabelStore} from './labels'
 
@@ -51,5 +63,51 @@ describe('filter labels', () => {
 		const labels = store.filterLabelsByQuery(labelsToHide, 'label1')
 
 		expect(labels).toHaveLength(0)
+	})
+})
+
+describe('loadAllLabels', () => {
+	beforeEach(() => {
+		setActivePinia(createPinia())
+		totalPages = 1
+		getAll.mockReset()
+	})
+
+	it('reuses a running load instead of resolving with an empty store', async () => {
+		let resolveGetAll: (labels: ILabel[]) => void = () => {}
+		getAll.mockReturnValue(new Promise<ILabel[]>(resolve => {
+			resolveGetAll = resolve
+		}))
+
+		const store = useLabelStore()
+		const first = store.loadAllLabels()
+		const second = store.loadAllLabels()
+
+		resolveGetAll([{id: 1, title: 'foo'}] as ILabel[])
+		await Promise.all([first, second])
+
+		expect(getAll).toHaveBeenCalledTimes(1)
+		expect(store.getLabelByExactTitle('foo')?.id).toBe(1)
+	})
+
+	it('loads again once the previous load finished', async () => {
+		getAll.mockResolvedValue([{id: 1, title: 'foo'}] as ILabel[])
+
+		const store = useLabelStore()
+		await store.loadAllLabels()
+		await store.loadAllLabels()
+
+		expect(getAll).toHaveBeenCalledTimes(2)
+	})
+
+	it('retries after a failed load', async () => {
+		getAll.mockRejectedValueOnce(new Error('nope'))
+		getAll.mockResolvedValueOnce([{id: 1, title: 'foo'}] as ILabel[])
+
+		const store = useLabelStore()
+		await expect(store.loadAllLabels()).rejects.toThrow('nope')
+		await store.loadAllLabels()
+
+		expect(store.getLabelByExactTitle('foo')?.id).toBe(1)
 	})
 })

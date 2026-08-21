@@ -982,6 +982,29 @@ func TestUpdateDone(t *testing.T) {
 				assert.Equal(t, time.Now().Add(diff+time.Duration(oldTask.RepeatAfter)*time.Second).Unix(), newTask.Reminders[1].Reminder.Unix())
 				assert.False(t, newTask.Done)
 			})
+			t.Run("reminders spanning more than 292 years", func(t *testing.T) {
+				// time.Duration saturates at ~292 years; the offset between reminders
+				// must not be computed as a single Duration.
+				oldTask := &Task{
+					Done:        false,
+					RepeatAfter: 315360000,
+					RepeatMode:  TaskRepeatModeFromCurrentDate,
+					Reminders: []*TaskReminder{
+						{Reminder: time.Date(1734, 1, 1, 0, 0, 0, 0, time.UTC)},
+						{Reminder: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)},
+					}}
+				newTask := &Task{
+					Done: true,
+				}
+				updateDone(oldTask, newTask)
+
+				assert.Len(t, newTask.Reminders, 2)
+				expectedFirst := time.Now().Add(time.Duration(oldTask.RepeatAfter) * time.Second)
+				assert.Equal(t, expectedFirst.Unix(), newTask.Reminders[0].Reminder.Unix())
+				assert.Equal(t, expectedFirst.Year()+292, newTask.Reminders[1].Reminder.Year())
+				assert.True(t, newTask.Reminders[1].Reminder.After(newTask.Reminders[0].Reminder))
+				assert.False(t, newTask.Done)
+			})
 			t.Run("start date", func(t *testing.T) {
 				oldTask := &Task{
 					Done:        false,

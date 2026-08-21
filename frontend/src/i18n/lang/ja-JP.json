@@ -128,7 +128,6 @@
 			"passwordUpdateSuccess": "パスワードは正常に更新されました。",
 			"updateEmailTitle": "メールアドレスの更新",
 			"updateEmailNew": "新しいメールアドレス",
-			"updateEmailSuccess": "メールアドレスは正常に更新されました。確認のためのリンクを送信しました。",
 			"general": {
 				"title": "一般設定",
 				"name": "名前",

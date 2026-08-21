@@ -7,6 +7,11 @@
 			"welcome": "Willkommen bei Vikunja!",
 			"confirm": "Um deine E-Mail-Adresse zu bestätigen, klicke auf den Link unten:"
 		},
+		"email_change": {
+			"subject": "Es wurde eine Änderung der E-Mail-Adresse für dein Vikunja-Konto angefordert",
+			"requested": "Jemand hat beantragt, die E-Mail-Adresse deines Kontos in %[1]s zu ändern. Deine aktuelle Adresse bleibt aktiv, bis die neue bestätigt ist.",
+			"warning": "Wenn Du das nicht warst, ändere sofort dein Passwort und breche die ausstehende Änderung in den Kontoeinstellungen ab."
+		},
 		"password": {
 			"changed": {
 				"subject": "Dein Passwort bei Vikunja wurde geändert",
@@ -135,11 +140,11 @@
 			"expiring": {
 				"week": {
 					"subject": "Dein API-Token „%[1]s“ läuft bald ab",
-					"message": "Dein API-Token „%[1]s“ läuft am %[2]s ab. Wenn du es noch brauchst, erstelle bitte ein neues bevor es abläuft."
+					"message": "Dein API-Token \"%[1]s\" läuft am %[2]s ab (in %[3]s). Wenn du ihn noch brauchst, erstelle bitte vor Ablauf einen neuen Token."
 				},
 				"day": {
 					"subject": "Dein API-Token „%[1]s“ läuft morgen ab",
-					"message": "Dein API-Token „%[1]s“ läuft am %[2]s ab. Wenn du es noch brauchst, erstelle bitte ein neues bevor es abläuft."
+					"message": "Dein API-Token \"%[1]s\" läuft am %[2]s ab (in %[3]s). Wenn du es noch brauchst, erstelle bitte einen neuen Token, bevor es abläuft."
 				},
 				"action": "API-Token verwalten"
 			}

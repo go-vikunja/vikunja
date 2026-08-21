@@ -49,7 +49,7 @@ func (td *TaskDuplicate) CanCreate(s *xorm.Session, a web.Auth) (canCreate bool,
 
 	// Need write access on the project to create tasks in it
 	p := &Project{ID: originalTask.ProjectID}
-	return p.CanUpdate(s, a)
+	return p.CanWrite(s, a)
 }
 
 // Create duplicates a task
@@ -122,7 +122,7 @@ func (td *TaskDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 		attachment.ID = 0
 		attachment.TaskID = newTask.ID
 		attachment.File = &files.File{ID: attachment.FileID}
-		if err := attachment.File.LoadFileMetaByID(); err != nil {
+		if err := attachment.File.LoadFileMetaByID(s); err != nil {
 			if files.IsErrFileDoesNotExist(err) {
 				continue
 			}

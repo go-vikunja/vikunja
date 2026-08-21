@@ -104,7 +104,8 @@
       "remember": "Stay logged in",
       "registrationDisabled": "Registration is disabled.",
       "passwordResetTokenMissing": "Password reset token is missing.",
-      "registrationFailed": "An error occurred during registration. Please check your input and try again."
+      "registrationFailed": "An error occurred during registration. Please check your input and try again.",
+      "registrationConfirmEmail": "Your account was created successfully! Please check your inbox and click the link in the confirmation email before logging in."
     },
     "settings": {
       "bots": {
@@ -128,7 +129,14 @@
       "passwordUpdateSuccess": "The password was successfully updated.",
       "updateEmailTitle": "Update Your Email Address",
       "updateEmailNew": "New email address",
-      "updateEmailSuccess": "Your email address was successfully updated. We've sent you a link to confirm it.",
+      "updateEmailSuccess": "Your email address was successfully updated.",
+      "updateEmailPending": "Your new email address {email} is waiting for confirmation. Until you click the link we sent there, your current address stays active.",
+      "updateEmailPendingSuccess": "We've sent a confirmation link to your new address. Your current address stays active until you confirm.",
+      "updateEmailResend": "Resend confirmation email",
+      "updateEmailResendSuccess": "We've sent you a new confirmation link.",
+      "updateEmailCancel": "Cancel change",
+      "updateEmailCancelSuccess": "The email change was cancelled.",
+      "updateEmailConfirmed": "Your new email address is confirmed.",
       "general": {
         "title": "General Settings",
         "name": "My Name",
@@ -691,6 +699,19 @@
     "upload": "Upload file",
     "migrationStartedWillReciveEmail": "Vikunja will now import your lists/projects, tasks, notes, reminders and files from {service}. As this will take a while, we will send you an email once done. You can close this window now.",
     "migrationInProgress": "A migration is currently in progress. Please wait until it is done.",
+    "credentials": {
+      "description": "Enter the address of your {name} instance and how Vikunja should log in. Vikunja imports all projects and boards you have access to; the credentials are only used for this import and are not stored.",
+      "url": "{name} URL",
+      "authMethod": "Log in with",
+      "apiKey": "API key",
+      "apiKeyRequired": "Please enter an API key.",
+      "authPassword": "Username and password",
+      "start": "Start import"
+    },
+    "planka": {
+      "apiKeyHelp": "An API key must be created for your account by a Planka administrator. Copying the token from the browser does not work.",
+      "passwordHelp": "Only works for local Planka accounts without two-factor authentication that have logged in to Planka at least once. Accounts using single sign-on need an API key."
+    },
     "csv": {
       "description": "Import tasks from a CSV file with custom column mapping.",
       "uploadDescription": "Select a CSV file to import. The file should contain task data with headers in the first row.",
@@ -1436,6 +1457,8 @@
     "1023": "You can't do that as a link share.",
     "1024": "Invalid claim data for field {field} of type {type}.",
     "1025": "The timezone '{timezone}' is invalid. Please select a valid timezone from the list.",
+    "1035": "There is no pending email change to confirm.",
+    "1036": "Please wait a minute before requesting another confirmation email.",
     "2001": "ID cannot be empty or 0.",
     "2002": "Some of the request data was invalid.",
     "2003": "The timezone '{timezone}' is invalid.",
@@ -1445,6 +1468,7 @@
     "3006": "The project share does not exist.",
     "3007": "A project with this identifier already exists.",
     "3008": "The project is archived and can therefore only be accessed read only. This is also true for all tasks associated with this project.",
+    "3016": "The parent project is archived. Un-archive the parent project first.",
     "4001": "The task title cannot be empty.",
     "4002": "The task does not exist.",
     "4003": "All bulk editing tasks must belong to the same project.",
@@ -1496,7 +1520,12 @@
     "13002": "The provided link share password is invalid.",
     "13003": "The provided link share token is invalid.",
     "14001": "The provided api token is invalid.",
-    "14002": "The permission {permission} of group {group} is invalid."
+    "14002": "The permission {permission} of group {group} is invalid.",
+    "14005": "A migration from this service is already running. Please wait until it is done.",
+    "14201": "Planka rejected the provided credentials. Check the URL and the API key or username and password.",
+    "14202": "The Planka account requires an extra login step (two-factor code or accepting the terms). Log in to Planka in the browser once, or use an API key instead of username and password.",
+    "14203": "A Planka URL and either an API key or username and password are required.",
+    "14204": "Could not reach a Planka API at the given URL. Check the URL and that Vikunja can reach the instance."
   },
   "about": {
     "title": "About",

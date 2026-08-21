@@ -29,8 +29,8 @@ import (
 // CanWrite return whether the user can write on that project or not
 func (p *Project) CanWrite(s *xorm.Session, a web.Auth) (bool, error) {
 
-	// The favorite project can't be edited
-	if p.ID == FavoritesPseudoProject.ID {
+	// Favorites and saved filters aggregate tasks from real projects, they have no row of their own to write to.
+	if p.ID < 1 {
 		return false, nil
 	}
 
@@ -92,22 +92,7 @@ func checkReadPermissionsForProjects(s *xorm.Session, a web.Auth, projectIDs []i
 		return permissions, nil
 	}
 
-	if isInstanceAdmin(s, a) {
-		projects, err := requireProjectsByIDs(s, projectIDs)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, projectID := range projectIDs {
-			permissions[projectID] = &projectReadPermission{
-				canRead:       true,
-				maxPermission: int(PermissionAdmin),
-				project:       projects[projectID],
-			}
-		}
-		return permissions, nil
-	}
-
+	// Resolve pseudo ids before the instance admin branch below: they have no row to look up.
 	projectIDsWithRow := make([]int64, 0, len(projectIDs))
 	for _, projectID := range projectIDs {
 		switch {
@@ -147,6 +132,17 @@ func checkReadPermissionsForProjects(s *xorm.Session, a web.Auth, projectIDs []i
 	projects, err := requireProjectsByIDs(s, projectIDsWithRow)
 	if err != nil {
 		return nil, err
+	}
+
+	if isInstanceAdmin(s, a) {
+		for _, projectID := range projectIDsWithRow {
+			permissions[projectID] = &projectReadPermission{
+				canRead:       true,
+				maxPermission: int(PermissionAdmin),
+				project:       projects[projectID],
+			}
+		}
+		return permissions, nil
 	}
 
 	if shareAuth, is := a.(*LinkSharing); is {
@@ -224,10 +220,7 @@ func (p *Project) CanUpdate(s *xorm.Session, a web.Auth) (canUpdate bool, err er
 		return false, nil
 	}
 
-	if isInstanceAdmin(s, a) {
-		return true, nil
-	}
-
+	// Ahead of the admin bypass: a filter's pseudo project is the filter, and only its owner may update it.
 	fid := GetSavedFilterIDFromProjectID(p.ID)
 	if fid > 0 {
 		sf, err := GetSavedFilterSimpleByID(s, fid)
@@ -236,6 +229,10 @@ func (p *Project) CanUpdate(s *xorm.Session, a web.Auth) (canUpdate bool, err er
 		}
 
 		return sf.CanUpdate(s, a)
+	}
+
+	if isInstanceAdmin(s, a) {
+		return true, nil
 	}
 
 	// Get the project
@@ -266,7 +263,8 @@ func (p *Project) CanUpdate(s *xorm.Session, a web.Auth) (canUpdate bool, err er
 	}
 
 	canUpdate, err = p.CanWrite(s, a)
-	// If the project is archived and the user tries to un-archive it, let the request through
+	// Un-archiving an archived project is allowed here; whether its parent
+	// still is archived is checked in UpdateProject.
 	archivedErr := ErrProjectIsArchived{}
 	is := errors.As(err, &archivedErr)
 	if is && !p.IsArchived && archivedErr.ProjectID == p.ID {
@@ -277,9 +275,7 @@ func (p *Project) CanUpdate(s *xorm.Session, a web.Auth) (canUpdate bool, err er
 
 // CanDelete checks if the user can delete a project
 func (p *Project) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
-	if isInstanceAdmin(s, a) {
-		return true, nil
-	}
+	// IsAdmin covers the instance admin bypass, but only after denying pseudo projects.
 	return p.IsAdmin(s, a)
 }
 
@@ -302,8 +298,8 @@ func (p *Project) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 
 // IsAdmin returns whether the user has admin permissions on the project or not
 func (p *Project) IsAdmin(s *xorm.Session, a web.Auth) (bool, error) {
-	// The favorite project can't be edited
-	if p.ID == FavoritesPseudoProject.ID {
+	// Pseudo projects have no ACL of their own, so nobody is their admin.
+	if IsPseudoProjectID(p.ID) {
 		return false, nil
 	}
 

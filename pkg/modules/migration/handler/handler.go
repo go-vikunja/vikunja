@@ -48,7 +48,12 @@ func (mw *MigrationWeb) RegisterMigrator(g *echo.Group) {
 	g.GET("/"+ms.Name()+"/auth", mw.AuthURL)
 	g.GET("/"+ms.Name()+"/status", mw.Status)
 	g.POST("/"+ms.Name()+"/migrate", mw.Migrate)
-	registeredMigrators[ms.Name()] = mw
+	RegisterMigratorForEvents(mw.MigrationStruct)
+}
+
+// RegisterMigratorForEvents makes a migrator known to the migration listener without exposing v1 routes.
+func RegisterMigratorForEvents(factory func() migration.Migrator) {
+	registeredMigrators[factory().Name()] = &MigrationWeb{MigrationStruct: factory}
 }
 
 // AuthURL is the web handler to get the auth url
@@ -70,6 +75,12 @@ func StartMigration(ms migration.Migrator, u *user2.User) error {
 
 	if !stats.StartedAt.IsZero() && stats.FinishedAt.IsZero() {
 		return &migration.ErrMigrationAlreadyRunning{StartedAt: stats.StartedAt}
+	}
+
+	if cc, ok := ms.(migration.CredentialsChecker); ok {
+		if err := cc.CheckCredentials(); err != nil {
+			return err
+		}
 	}
 
 	return events.Dispatch(&MigrationRequestedEvent{

@@ -187,6 +187,7 @@ func newCaldavTestRequestWithUser(t *testing.T, e *echo.Echo, method string, han
 	var c *echo.Context
 	c, rec = createRequest(e, method, payload, queryParams, urlParams)
 	c.Request().Header.Set(echo.HeaderContentType, echo.MIMETextPlain)
+	setCaldavRequestPath(c, urlParams)
 
 	result, _ := caldav.BasicAuth(c, user.Username, "12345678")
 	if !result {
@@ -195,6 +196,28 @@ func newCaldavTestRequestWithUser(t *testing.T, e *echo.Echo, method string, han
 	}
 	err = handler(c)
 	return
+}
+
+// createRequest sets path values out of band, but the caldav handlers and caldav-go
+// both read the resource off the request path, so the fixture has to carry a real one.
+func setCaldavRequestPath(c *echo.Context, urlParams map[string]string) {
+	project, has := urlParams["project"]
+	if !has {
+		return
+	}
+
+	path := caldav.ProjectBasePath + "/" + project
+	if task, has := urlParams["task"]; has {
+		path += "/" + url.PathEscape(task) + ".ics"
+	}
+
+	u, err := url.Parse(path)
+	if err != nil {
+		panic(err)
+	}
+	c.Request().URL.Path = u.Path
+	c.Request().URL.RawPath = u.RawPath
+	c.Request().RequestURI = path
 }
 
 func assertHandlerErrorCode(t *testing.T, err error, expectedErrorCode int) {

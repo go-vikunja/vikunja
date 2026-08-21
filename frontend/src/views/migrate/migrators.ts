@@ -6,12 +6,15 @@ import vikunjaFileIcon from './icons/vikunja-file.png?url'
 import tickTickIcon from './icons/ticktick.svg?url'
 import wekanIcon from './icons/wekan.png?url'
 import csvIcon from './icons/csv.svg?url'
+import plankaIcon from './icons/planka.png?url'
 
 export interface Migrator {
 	id: string
 	name: string
 	isFileMigrator?: boolean
 	isCSVMigrator?: boolean
+	// Takes url + credentials in the migrate request instead of an OAuth code or a file
+	isCredentialsMigrator?: boolean
 	icon: string
 }
 
@@ -64,5 +67,11 @@ export const MIGRATORS = {
 		icon: csvIcon as string,
 		isFileMigrator: true,
 		isCSVMigrator: true,
+	},
+	planka: {
+		id: 'planka',
+		name: 'Planka',
+		icon: plankaIcon,
+		isCredentialsMigrator: true,
 	},
 } as const satisfies IMigratorRecord

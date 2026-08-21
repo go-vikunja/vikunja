@@ -51,6 +51,18 @@ linters:
       template-path: code-header-template.txt
     nestif:
       min-complexity: 6
+    staticcheck:
+      checks:
+        # defaults, plus -SA4023: its nilness analyzer panics on recover() in
+        # pointer-returning functions (sentry-go triggers it) — dominikh/go-tools#1725
+        - all
+        - -ST1000
+        - -ST1003
+        - -ST1016
+        - -ST1020
+        - -ST1021
+        - -ST1022
+        - -SA4023
   exclusions:
     generated: lax
     presets:

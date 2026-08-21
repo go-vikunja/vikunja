@@ -78,7 +78,6 @@
 			"passwordUpdateSuccess": "Şifre başarıyla güncellendi.",
 			"updateEmailTitle": "E-posta Adresinizi Güncelleyin",
 			"updateEmailNew": "Yeni e-posta adresi",
-			"updateEmailSuccess": "E-posta adresiniz başarıyla güncellendi. Onaylamak için size bir bağlantı gönderdik.",
 			"general": {
 				"title": "Genel Ayarlar",
 				"name": "Adım",
