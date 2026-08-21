@@ -51,6 +51,7 @@
 						v-if="tasks && tasks.length > 0"
 						v-model="tasks"
 						:group="{name: 'tasks', put: false}"
+						:sort="canReorderTasks"
 						:disabled="!canDragTasks || !isPositionSorting"
 						item-key="id"
 						tag="ul"
@@ -182,6 +183,12 @@ watch(
 
 const isPositionSorting = computed(() => 'position' in sortByParam.value)
 
+// Positions are stored per view, and a subproject's task has no position in this
+// project's view - the api drops the position sort for that reason. Dragging stays
+// enabled so a task can still be moved to another project, but it cannot be
+// reordered into a position that could never be stored.
+const canReorderTasks = computed(() => isPositionSorting.value && !includeSubprojects.value)
+
 const taskStore = useTaskStore()
 const {handleTaskDropToProject} = useTaskDragToProject()
 
@@ -271,6 +278,10 @@ async function saveTaskPosition(e: { originalEvent?: MouseEvent, to: HTMLElement
 
 	// If dropped outside this list
 	if (e.to !== e.from) {
+		return
+	}
+
+	if (!canReorderTasks.value) {
 		return
 	}
 
