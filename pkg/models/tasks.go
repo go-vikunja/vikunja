@@ -1718,8 +1718,22 @@ func (t *Task) moveTaskToDefaultBuckets(s *xorm.Session, a web.Auth, views []*Pr
 	return nil
 }
 
+// addOneMonthToDate advances d into the next calendar month, clamping the day
+// to that month's last day. time.Date normalizes an out-of-range day instead,
+// which made a monthly task due Jan 31 repeat to Mar 3 - skipping February
+// entirely and permanently shifting the day of month.
 func addOneMonthToDate(d time.Time) time.Time {
-	return time.Date(d.Year(), d.Month()+1, d.Day(), d.Hour(), d.Minute(), d.Second(), d.Nanosecond(), config.GetTimeZone())
+	tz := config.GetTimeZone()
+
+	// Day 0 of the month after next is the last day of next month.
+	lastDayOfNextMonth := time.Date(d.Year(), d.Month()+2, 0, 0, 0, 0, 0, tz).Day()
+
+	day := d.Day()
+	if day > lastDayOfNextMonth {
+		day = lastDayOfNextMonth
+	}
+
+	return time.Date(d.Year(), d.Month()+1, day, d.Hour(), d.Minute(), d.Second(), d.Nanosecond(), tz)
 }
 
 // addRepeatIntervalToTime advances t by whole multiples of duration until
