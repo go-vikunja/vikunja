@@ -10,22 +10,22 @@
   // see https://kolaente.dev/vikunja/frontend/issues/1064
   // Variables overridden in Vikunja specific rules below are commented out
   //--scheme-main: white;
-  --scheme-main-bis: #fafafa;
-  --scheme-main-ter: whitesmoke;
+  --scheme-main-bis: #f8fafc;
+  --scheme-main-ter: #f1f5f9;
   --scheme-invert: #0a0a0a;
   --scheme-invert-rgb: 10.2, 10.2, 10.2;
   --scheme-invert-bis: #121212;
   --scheme-invert-ter: #242424;
-  --background: whitesmoke;
+  --background: #f1f5f9;
   //--border: #dbdbdb;
   --border-rgb: 219.3, 219.3, 219.3;
   --border-hover: #b5b5b5;
   --border-light: #ededed;
   --border-light-hover: #b5b5b5;
-  --text: #4a4a4a;
+  --text: #334155;
   --text-invert: #fff;
-  --text-light: #7a7a7a;
-  --text-strong: #363636;
+  --text-light: #64748b;
+  --text-strong: #0f172a;
   --code: #da1039;
   --code-background: var(--background, whitesmoke);
   --pre: var(--text, #4a4a4a);
@@ -171,17 +171,17 @@
   //--grey: #7a7a7a;
   //--grey-light: #b5b5b5;
   //--grey-lighter: #dbdbdb;
-  --white-ter: whitesmoke;
-  --white-bis: #fafafa;
+  --white-ter: #f1f5f9;
+  --white-bis: #f8fafc;
   // END core Bulma color variables
 
 
   // Vikunja specific variables
-  --grey-50: hsl(210, 20%, 98%);
-  --grey-100-hsl: 220, 14.3%, 95.9%;
+  --grey-50: hsl(210, 40%, 99%);
+  --grey-100-hsl: 214, 32%, 96%;
   --grey-100: hsl(var(--grey-100-hsl));
-  --grey-200: hsl(220, 13%, 91%);
-  --grey-300: hsl(216, 12.2%, 83.9%);
+  --grey-200: hsl(214, 24%, 90%);
+  --grey-300: hsl(214, 19%, 82%);
   --grey-400: hsl(217.9, 10.6%, 64.9%);
   --grey-500-hsl: 220, 8.9%, 46.1%;
   --grey-500: hsl(var(--grey-500-hsl));
@@ -189,10 +189,10 @@
   --grey-700: hsl(216.9, 19.1%, 26.7%);
   --grey-800: hsl(215, 27.9%, 16.9%);
   --grey-900: hsl(220.9, 39.3%, 11%);
-  --site-background: var(--grey-100);
+  --site-background: #f6f8fb;
 
   // Muted body text (metadata, counts) darkened from --grey-500 to clear 4.5:1 on both white and --grey-100
-  --text-muted: hsl(220, 8.9%, 42%);
+  --text-muted: hsl(215, 16%, 45%);
 
   // Overrides of Bulma defaults
   --scheme-main: var(--white);
@@ -242,16 +242,16 @@
   --danger-text-l: 40%;
   --danger-text: hsla(var(--danger-h), var(--danger-s), var(--danger-text-l), var(--danger-a));
 
-  // var(--primary) / $blue is #1973ff
-  --primary-h: 217deg;
-  --primary-s: 98%;
-  --primary-l: 53%;
+  // A deep navy gives primary actions a more professional visual weight.
+  --primary-h: 215deg;
+  --primary-s: 78%;
+  --primary-l: 21%;
   --primary-a: 1;
   --primary-hsl: var(--primary-h), var(--primary-s), var(--primary-l);
   --primary: hsla(var(--primary-h), var(--primary-s), var(--primary-l), var(--primary-a));
 
   --link: var(--primary);
-  --link-hover: hsla(var(--primary-h), var(--primary-s), var(--primary-l), .75);
+  --link-hover: hsl(215, 78%, 30%);
   --border: var(--grey-200);
   --input-disabled-background-color: var(--grey-100);
   --input-disabled-border-color: var(--grey-300);
@@ -265,7 +265,12 @@
 
   // Define custom color variable to allow change in dark mode
   --card-border-color: var(--grey-200);
-  --logo-text-color: hsl(180, 1%, 15%);
+  --logo-text-color: hsl(215, 35%, 17%);
+  --surface: var(--white);
+  --surface-subtle: #f8fafc;
+  --surface-muted: #eef2f7;
+  --border-subtle: #e2e8f0;
+  --focus-ring-color: hsla(215, 78%, 21%, .32);
 
   // Code colors
   --code-variable: #da2222;
@@ -320,6 +325,11 @@
       // Custom color variables we need to override
       --card-border-color: hsla(var(--grey-100-hsl), 0.3);
       --logo-text-color: var(--grey-700);
+      --surface: var(--white);
+      --surface-subtle: var(--grey-100);
+      --surface-muted: var(--grey-200);
+      --border-subtle: var(--grey-200);
+      --focus-ring-color: hsla(var(--primary-h), var(--primary-s), var(--primary-l), .4);
 
       // Slightly different primary color to make sure it has a sufficient contrast ratio
       --primary-h: 217deg;

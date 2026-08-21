@@ -159,7 +159,7 @@ export const useAuthStore = defineStore('auth', () => {
 				// Need to set default settings here in case the user does not have any saved in the api already
 				playSoundWhenDone: true,
 				quickAddMagicMode: PrefixMode.Default,
-				colorSchema: 'auto',
+				colorSchema: 'light',
 				allowIconChanges: true,
 				dateDisplay: DATE_DISPLAY.RELATIVE,
 				timeFormat: TIME_FORMAT.HOURS_24,

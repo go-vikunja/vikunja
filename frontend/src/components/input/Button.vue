@@ -90,19 +90,19 @@ const variantClass = computed<string>(() => VARIANT_CLASS_MAP[variant.value])
 	transition: all $transition;
 	border: 0;
 	text-transform: uppercase;
-	font-size: 0.85rem;
+	font-size: 0.875rem;
 	font-weight: bold;
 	block-size: auto;
 	min-block-size: $button-height;
 	box-shadow: var(--shadow-sm);
 	line-height: 1;
-	padding-inline: .5rem;
-	gap: .25rem;
+	padding-inline: .875rem;
+	gap: .375rem;
 
 	// Default/Primary variant colors
 	background-color: var(--primary);
 	color: var(--button-text-color);
-	border-radius: $radius;
+	border-radius: 8px;
 
 	[dir="rtl"] & {
 		flex-direction: row-reverse;
@@ -151,20 +151,24 @@ const variantClass = computed<string>(() => VARIANT_CLASS_MAP[variant.value])
 	&.is-outlined {
 		background-color: var(--scheme-main);
 		color: var(--grey-900);
+		border: 1px solid var(--border-subtle);
 
 		&:hover {
-			color: var(--grey-600);
+			color: var(--primary);
+			border-color: var(--primary);
+			background-color: var(--surface-subtle);
 		}
 	}
 
 	// Tertiary/Text variant
 	&.is-text {
 		background-color: transparent;
-		color: var(--text);
+		color: var(--text-muted);
 		box-shadow: none;
 
 		&:hover {
-			background-color: var(--grey-100);
+			background-color: var(--surface-muted);
+			color: var(--text-strong);
 			box-shadow: none;
 		}
 	}

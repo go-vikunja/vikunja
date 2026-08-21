@@ -172,7 +172,7 @@ function getBuildConfig(env: Record<string, string>) {
 				manifest: {
 					name: 'Vikunja',
 					short_name: 'Vikunja',
-					theme_color: '#1973ff',
+					theme_color: '#0f172a',
 					icons: [
 						{
 							src: './images/icons/android-chrome-192x192.png',

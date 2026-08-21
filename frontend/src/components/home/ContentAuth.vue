@@ -204,7 +204,7 @@ onBeforeUnmount(() => {
 	display: flow-root;
 	z-index: 10;
 	position: relative;
-	padding: 1.5rem 0.5rem 0;
+	padding: 2rem 1rem 2.5rem;
 	// TODO refactor: DRY `transition-timing-function` with `./Navigation.vue`.
 	transition: margin-inline-start $transition-duration;
 
@@ -215,7 +215,7 @@ onBeforeUnmount(() => {
 	}
 
 	@media screen and (min-width: $tablet) {
-		padding: $navbar-height + 1.5rem 1.5rem 0 1.5rem;
+		padding: $navbar-height + 2rem 2.5rem 3rem;
 	}
 
 	&.is-menu-enabled {
@@ -231,7 +231,7 @@ onBeforeUnmount(() => {
 
 	// FIXME: This should be somehow defined inside Card.vue
 	.card {
-		background: var(--white);
+		background: var(--surface);
 	}
 }
 

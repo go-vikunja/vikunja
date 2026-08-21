@@ -1,8 +1,13 @@
 <template>
-	<div class="content has-text-centered">
-		<h1 v-if="salutation">
-			{{ salutation }}
-		</h1>
+	<div class="content home-page">
+		<PageHeader :title="salutation || $t('navigation.overview')">
+			<template #meta>
+				<span class="overview-badge">
+					<Icon icon="chart-line" />
+					{{ $t('navigation.overview') }}
+				</span>
+			</template>
+		</PageHeader>
 
 		<Message
 			v-if="deletionScheduledAt !== null"
@@ -55,6 +60,8 @@ import ShowTasks from '@/views/tasks/ShowTasks.vue'
 import ProjectCardGrid from '@/components/project/partials/ProjectCardGrid.vue'
 import AddTask from '@/components/tasks/AddTask.vue'
 import ImportHint from '@/components/home/ImportHint.vue'
+import PageHeader from '@/components/layout/PageHeader.vue'
+import Icon from '@/components/misc/Icon'
 
 import {getHistory} from '@/modules/projectHistory'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
@@ -116,5 +123,22 @@ function handleClearLabelFilter() {
 <style scoped lang="scss">
 .show-tasks {
 	margin-block-start: 2rem;
+}
+
+.home-page {
+	max-inline-size: 80rem;
+	margin-inline: auto;
+}
+
+.overview-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: .375rem;
+	padding: .375rem .625rem;
+	border: 1px solid var(--border-subtle);
+	border-radius: 999px;
+	color: var(--text-muted);
+	font-size: .75rem;
+	font-weight: 700;
 }
 </style>

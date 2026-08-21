@@ -3,9 +3,37 @@
 		v-cy="'showTasks'"
 		class="is-max-width-desktop has-text-start"
 	>
-		<h2 class="mbe-2 title">
-			{{ pageTitle }}
-		</h2>
+		<PageHeader :title="pageTitle">
+			<template #actions>
+				<div class="show-tasks-options">
+					<DatepickerWithRange @update:modelValue="setDate">
+						<template #trigger="{toggle}">
+							<XButton
+								variant="primary"
+								:shadow="false"
+								@click.prevent.stop="toggle()"
+							>
+								{{ $t('task.show.select') }}
+							</XButton>
+						</template>
+					</DatepickerWithRange>
+					<FancyCheckbox
+						v-if="!showAll"
+						:model-value="showNulls"
+						@update:modelValue="setShowNulls"
+					>
+						{{ $t('task.show.noDates') }}
+					</FancyCheckbox>
+					<FancyCheckbox
+						v-if="!showAll"
+						:model-value="showOverdue"
+						@update:modelValue="setShowOverdue"
+					>
+						{{ $t('task.show.overdue') }}
+					</FancyCheckbox>
+				</div>
+			</template>
+		</PageHeader>
 		<Message
 			v-if="filteredLabels.length > 0"
 			class="label-filter-info mbe-2"
@@ -38,41 +66,13 @@
 		>
 			{{ $t('task.show.savedFilterIgnored') }}
 		</Message>
-		<p
-			v-if="!showAll"
-			class="show-tasks-options"
-		>
-			<DatepickerWithRange @update:modelValue="setDate">
-				<template #trigger="{toggle}">
-					<XButton
-						variant="primary"
-						:shadow="false"
-						class="mbe-2"
-						@click.prevent.stop="toggle()"
-					>
-						{{ $t('task.show.select') }}
-					</XButton>
-				</template>
-			</DatepickerWithRange>
-			<FancyCheckbox
-				:model-value="showNulls"
-				class="mie-2"
-				@update:modelValue="setShowNulls"
-			>
-				{{ $t('task.show.noDates') }}
-			</FancyCheckbox>
-			<FancyCheckbox
-				:model-value="showOverdue"
-				@update:modelValue="setShowOverdue"
-			>
-				{{ $t('task.show.overdue') }}
-			</FancyCheckbox>
-		</p>
 		<template v-if="!loading && (!tasks || tasks.length === 0) && showNothingToDo">
 			<h3 class="has-text-centered mbs-6">
 				{{ $t('task.show.noTasks') }}
 			</h3>
-			<LlamaCool class="llama-cool" />
+			<div class="empty-state-icon">
+				<Icon icon="list-check" />
+			</div>
 		</template>
 
 		<Card
@@ -120,7 +120,7 @@ import SingleTaskInProject from '@/components/tasks/partials/SingleTaskInProject
 import DatepickerWithRange from '@/components/date/DatepickerWithRange.vue'
 import XLabel from '@/components/tasks/partials/Label.vue'
 import {DATE_RANGES} from '@/components/date/dateRanges'
-import LlamaCool from '@/assets/llama-cool.svg?component'
+import PageHeader from '@/components/layout/PageHeader.vue'
 import type {ITask} from '@/modelTypes/ITask'
 import {useAuthStore} from '@/stores/auth'
 import {useTaskStore} from '@/stores/tasks'
@@ -326,12 +326,18 @@ watchEffect(() => setTitle(pageTitle.value))
 
 .show-tasks-options {
 	display: flex;
-	flex-direction: column;
+	align-items: center;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	gap: .75rem;
 }
 
-.llama-cool {
+.empty-state-icon {
 	margin: 3rem auto 0;
 	display: block;
+	color: var(--primary);
+	font-size: 3rem;
+	text-align: center;
 }
 
 .label-filter-info {

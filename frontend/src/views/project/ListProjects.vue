@@ -4,15 +4,14 @@
 		class="content loader-container"
 		:class="{'is-loading': loading}"
 	>
-		<header class="project-header">
-			<FancyCheckbox
-				v-model="showArchived"
-				v-cy="'show-archived-check'"
-			>
-				{{ $t('project.showArchived') }}
-			</FancyCheckbox>
-
-			<div class="action-buttons">
+		<PageHeader :title="$t('project.title')">
+			<template #actions>
+				<FancyCheckbox
+					v-model="showArchived"
+					v-cy="'show-archived-check'"
+				>
+					{{ $t('project.showArchived') }}
+				</FancyCheckbox>
 				<XButton
 					:to="{name: 'filters.create'}"
 					icon="filter"
@@ -26,8 +25,8 @@
 				>
 					{{ $t('project.create.header') }}
 				</XButton>
-			</div>
-		</header>
+			</template>
+		</PageHeader>
 
 		<ProjectCardGrid
 			:projects="projects"
@@ -42,6 +41,7 @@ import {useI18n} from 'vue-i18n'
 
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import ProjectCardGrid from '@/components/project/partials/ProjectCardGrid.vue'
+import PageHeader from '@/components/layout/PageHeader.vue'
 
 import {useTitle} from '@/composables/useTitle'
 import {useStorage} from '@vueuse/core'
@@ -63,30 +63,6 @@ const projects = computed(() => {
 </script>
 
 <style lang="scss" scoped>
-.project-header {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	gap: 1rem;
-	margin-block-end: 1rem;
-
-	@media screen and (max-width: $tablet) {
-		flex-direction: column;
-	}
-}
-
-.action-buttons {
-	display: flex;
-	justify-content: space-between;
-	gap: 1rem;
-
-	@media screen and (max-width: $tablet) {
-		inline-size: 100%;
-		flex-direction: column;
-		align-items: stretch;
-	}
-}
-
 .project:not(:first-child) {
 	margin-block-start: 1rem;
 }

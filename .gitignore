@@ -46,6 +46,9 @@ devenv.local.nix
 # direnv
 .direnv
 
+# Local development environment
+.env
+
 # pre-commit
 .pre-commit-config.yaml
 

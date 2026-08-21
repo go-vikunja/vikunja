@@ -81,6 +81,12 @@
 					:project-id="projectId"
 					@update:modelValue="taskList.loadTasks()"
 				/>
+				<XButton
+					icon="plus"
+					@click="addTaskRef?.focusTaskInput()"
+				>
+					{{ $t('project.list.add') }}
+				</XButton>
 			</div>
 		</template>
 
@@ -89,6 +95,11 @@
 				:class="{'is-loading': loading}"
 				class="loader-container"
 			>
+				<AddTask
+					ref="addTaskRef"
+					class="table-task-add"
+					@tasksAdded="taskList.loadTasks()"
+				/>
 				<Card
 					:padding="false"
 					:has-content="false"
@@ -233,6 +244,9 @@
 									<th v-if="activeColumns.createdBy">
 										{{ $t('task.attributes.createdBy') }}
 									</th>
+									<th class="actions">
+										{{ $t('misc.actions') }}
+									</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -327,6 +341,16 @@
 											:user="t.createdBy"
 										/>
 									</td>
+									<td class="actions">
+										<RouterLink
+											class="table-action"
+											:title="$t('task.detail.title')"
+											:to="taskDetailRoutes[t.id]"
+										>
+											<Icon icon="eye" />
+											<span class="is-sr-only">{{ $t('task.detail.title') }}</span>
+										</RouterLink>
+									</td>
 								</tr>
 							</tbody>
 						</table>
@@ -343,11 +367,12 @@
 </template>
 
 <script setup lang="ts">
-import {computed, type Ref, watch} from 'vue'
+import {computed, ref, type Ref, watch} from 'vue'
 
 import {useStorage} from '@vueuse/core'
 
 import ProjectWrapper from '@/components/project/ProjectWrapper.vue'
+import AddTask from '@/components/tasks/AddTask.vue'
 import Done from '@/components/misc/Done.vue'
 import User from '@/components/misc/User.vue'
 import PriorityLabel from '@/components/tasks/partials/PriorityLabel.vue'
@@ -378,6 +403,7 @@ const props = defineProps<{
 }>()
 
 const projectStore = useProjectStore()
+const addTaskRef = ref<InstanceType<typeof AddTask> | null>(null)
 
 const ACTIVE_COLUMNS_DEFAULT = {
 	index: true,
@@ -490,13 +516,56 @@ const taskDetailRoutes = computed(() => Object.fromEntries(
 	background: transparent;
 	overflow-x: auto;
 	overflow-y: hidden;
+	border-collapse: separate;
+	border-spacing: 0;
 
 	th {
+		background: var(--surface-subtle);
+		color: var(--text-muted);
+		font-size: .6875rem;
+		font-weight: 700;
+		letter-spacing: .08em;
+		text-transform: uppercase;
 		white-space: nowrap;
+	}
+
+	th,
+	td {
+		padding: .875rem 1rem;
+		border-block-end: 1px solid var(--border-subtle);
+	}
+
+	tbody tr {
+		transition: background-color $transition;
+
+		&:hover {
+			background: var(--surface-subtle);
+		}
 	}
 
 	.user {
 		margin: 0;
+	}
+
+	.actions {
+		inline-size: 4rem;
+		text-align: end;
+	}
+
+	.table-action {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		inline-size: 2rem;
+		block-size: 2rem;
+		border-radius: 6px;
+		color: var(--text-muted);
+
+		&:hover,
+		&:focus-visible {
+			background: var(--surface-muted);
+			color: var(--primary);
+		}
 	}
 }
 
@@ -513,6 +582,14 @@ const taskDetailRoutes = computed(() => Object.fromEntries(
 	}
 }
 
+.filter-container {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	gap: .5rem;
+}
+
 .link-share-view .card {
 	border: none;
 	box-shadow: none;
@@ -520,5 +597,9 @@ const taskDetailRoutes = computed(() => Object.fromEntries(
 
 .filter-container :deep(.popup) {
 	inset-block-start: 7rem;
+}
+
+.table-task-add {
+	margin-block-end: 1rem;
 }
 </style>

@@ -82,8 +82,9 @@ const textOnlyDescription = computed(() => {
 	background: var(--white);
 	padding: var(--project-card-padding);
 	border-radius: $radius;
-	box-shadow: var(--shadow-sm);
-	transition: box-shadow $transition;
+	border: 1px solid var(--border-subtle);
+	box-shadow: var(--shadow-xs);
+	transition: box-shadow $transition, transform $transition;
 	position: relative;
 	overflow: hidden; // hide background
 
@@ -93,6 +94,7 @@ const textOnlyDescription = computed(() => {
 
 	&:hover {
 		box-shadow: var(--shadow-md);
+		transform: translateY(-1px);
 	}
 
 	&:active,

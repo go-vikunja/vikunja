@@ -10,6 +10,12 @@
 			{{ getProjectTitle(currentProject) }}
 		</h1>
 
+		<PageHeader :title="getProjectTitle(currentProject)">
+			<template #actions>
+				<slot name="header" />
+			</template>
+		</PageHeader>
+
 		<div
 			ref="switchViewContainerRef"
 			class="switch-view-container d-print-none"
@@ -66,7 +72,6 @@
 					{{ getViewTitle(view) }}
 				</BaseButton>
 			</div>
-			<slot name="header" />
 		</div>
 		<CustomTransition name="fade">
 			<Message
@@ -88,6 +93,7 @@ import {useResizeObserver} from '@vueuse/core'
 import {useI18n} from 'vue-i18n'
 
 import BaseButton from '@/components/base/BaseButton.vue'
+import PageHeader from '@/components/layout/PageHeader.vue'
 import Dropdown from '@/components/misc/Dropdown.vue'
 import DropdownItem from '@/components/misc/DropdownItem.vue'
 import Icon from '@/components/misc/Icon'

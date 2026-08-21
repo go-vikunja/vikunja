@@ -24,12 +24,20 @@
 }
 
 .table.has-actions {
-	border-block-start: 1px solid var(--grey-100);
-	border-radius: 4px;
+	border-block-start: 1px solid var(--border-subtle);
+	border-radius: 10px;
 	overflow: hidden;
+	background: var(--surface);
 
 	td {
 		vertical-align: middle;
+	}
+
+	th {
+		color: var(--text-muted);
+		font-size: .6875rem;
+		letter-spacing: .08em;
+		text-transform: uppercase;
 	}
 
 	td.actions {

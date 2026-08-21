@@ -200,7 +200,9 @@ $user-dropdown-width-mobile: 5rem;
 	gap: var(--navbar-gap-width);
 	min-block-size: $navbar-height;
 
-	background: var(--site-background);
+	background: var(--surface);
+	border-block-end: 1px solid var(--border-subtle);
+	box-shadow: 0 1px 0 hsla(var(--grey-500-hsl), .04);
 
 	@media screen and (min-width: $tablet) {
 		padding-inline-start: 2rem;
@@ -229,7 +231,9 @@ $user-dropdown-width-mobile: 5rem;
 		align-self: stretch;
 		display: flex;
 		align-items: center;
-		margin-inline-end: .5rem;
+		inline-size: 12rem;
+		margin-inline-end: 1rem;
+		padding-inline: 1.5rem;
 	}
 }
 
@@ -258,14 +262,16 @@ $user-dropdown-width-mobile: 5rem;
 }
 
 .project-title {
+	color: var(--text-strong);
 	font-size: 1rem;
+	font-weight: 700;
 	// We need the following for overflowing ellipsis to work
 	text-overflow: ellipsis;
 	overflow: hidden;
 	white-space: nowrap;
 
 	@media screen and (min-width: $tablet) {
-		font-size: 1.75rem;
+		font-size: 1.25rem;
 	}
 }
 
@@ -284,7 +290,13 @@ $user-dropdown-width-mobile: 5rem;
 	place-items: center;
 	justify-content: center;
 	font-size: var(--navbar-icon-size);
-	color: var(--grey-400);
+	color: var(--text-muted);
+	border-radius: 6px;
+
+	&:hover {
+		color: var(--primary);
+		background: var(--surface-muted);
+	}
 }
 
 .navbar-end {

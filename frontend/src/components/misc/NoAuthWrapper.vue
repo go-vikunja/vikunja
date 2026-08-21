@@ -84,8 +84,9 @@ useTitle(() => title.value)
 
 <style lang="scss" scoped>
 .no-auth-wrapper {
-	background: var(--site-background) url("@/assets/llama.svg?url") no-repeat
-		fixed bottom left;
+	background:
+		radial-gradient(circle at 12% 18%, hsla(var(--primary-h), var(--primary-s), var(--primary-l), .08), transparent 32rem),
+		var(--site-background);
 	min-block-size: 100vh;
 	display: flex;
 	flex-direction: column;

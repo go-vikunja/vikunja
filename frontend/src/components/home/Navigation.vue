@@ -187,9 +187,10 @@ const savedFilterProjects = computed(() => projectStore.savedFilterProjects as I
 
 	display: flex;
 	flex-direction: column;
-	background: var(--site-background);
+	background: var(--surface);
 	color: $vikunja-nav-color;
-	padding: 1rem 0;
+	padding: 1.25rem .75rem;
+	border-inline-end: 1px solid var(--border-subtle);
 	transition: transform $transition-duration ease-in;
 	position: fixed;
 	inset-block-start: $navbar-height;
@@ -244,10 +245,26 @@ const savedFilterProjects = computed(() => projectStore.savedFilterProjects as I
 
 	.list-menu-link,
 	li > a {
-		padding-inline-start: 2rem;
+		padding: .7rem .875rem;
+		border-radius: 8px;
+		margin-block-end: .25rem;
 		display: inline-block;
+		inline-size: 100%;
+		transition: background-color $transition, color $transition;
+
+		&:hover {
+			background: var(--surface-muted);
+			color: var(--text-strong);
+		}
+
+		&.router-link-exact-active {
+			background: hsla(var(--primary-h), var(--primary-s), var(--primary-l), .08);
+			color: var(--primary);
+		}
 
 		.icon {
+			inline-size: 1.25rem;
+			margin-inline-end: .5rem;
 			padding-block-end: .25rem;
 		}
 	}

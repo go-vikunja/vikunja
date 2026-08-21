@@ -69,10 +69,10 @@ defineEmits<{
 <style lang="scss" scoped>
 .card {
 	background-color: var(--white);
-	border-radius: $radius;
+	border-radius: 12px;
 	margin-block-end: 1rem;
 	border: 1px solid var(--card-border-color);
-	box-shadow: var(--shadow-sm);
+	box-shadow: var(--shadow-xs);
 	color: var(--text);
 	max-inline-size: 100%;
 	position: relative;
@@ -98,7 +98,7 @@ defineEmits<{
 	display: flex;
 	flex-grow: 1;
 	font-weight: 700;
-	padding: 0.75rem 1rem;
+	padding: 1rem 1.25rem;
 
 	&.is-centered {
 		justify-content: center;
@@ -115,7 +115,7 @@ defineEmits<{
 
 .card-content {
 	background-color: transparent;
-	padding: 1.5rem;
+	padding: 1.25rem;
 
 	&:first-child {
 		border-start-start-radius: $radius;
