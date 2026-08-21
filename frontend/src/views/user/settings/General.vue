@@ -65,6 +65,9 @@
 					type="time"
 				/>
 			</FormField>
+			<p class="help">
+				{{ $t('user.settings.general.defaultDueTimeDescription') }}
+			</p>
 			<FormField
 				v-if="hasFilters"
 				:label="$t('user.settings.general.filterUsedOnOverview')"
