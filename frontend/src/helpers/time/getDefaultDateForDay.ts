@@ -34,7 +34,7 @@ export function getDefaultDueTimeParts(date: Date): {hours: number, minutes: num
 	}
 }
 
-export function getDefaultDueDateForDay(date: Date): Date {
+export function getDefaultDateForDay(date: Date): Date {
 	const newDate = new Date(date)
 	const defaultDueTime = getDefaultDueTimeParts(newDate)
 	newDate.setHours(defaultDueTime.hours, defaultDueTime.minutes, 0, 0)

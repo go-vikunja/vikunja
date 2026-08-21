@@ -83,7 +83,7 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import {formatDate} from '@/helpers/time/formatDate'
 import {calculateDayInterval} from '@/helpers/time/calculateDayInterval'
 import {createDateFromString} from '@/helpers/time/createDateFromString'
-import {getDefaultDueDateForDay, getDefaultDueTimeParts} from '@/helpers/time/getDefaultDueDateForDay'
+import {getDefaultDateForDay, getDefaultDueTimeParts} from '@/helpers/time/getDefaultDateForDay'
 import {useI18n} from 'vue-i18n'
 import {useFlatpickrLanguage} from '@/helpers/useFlatpickrLanguage'
 import {useTimeFormat} from '@/composables/useTimeFormat'
@@ -218,7 +218,7 @@ function setDate(dateString: string) {
 	const interval = calculateDayInterval(dateString)
 	const newDate = new Date()
 	newDate.setDate(newDate.getDate() + interval)
-	date.value = getDefaultDueDateForDay(newDate)
+	date.value = getDefaultDateForDay(newDate)
 	updateData()
 }
 
