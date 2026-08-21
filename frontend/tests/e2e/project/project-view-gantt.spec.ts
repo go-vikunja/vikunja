@@ -6,6 +6,52 @@ import {ProjectViewFactory} from '../../factories/project_view'
 import {updateUserSettings} from '../../support/updateUserSettings'
 
 test.describe('Project View Gantt', () => {
+	test.describe('Include subprojects', () => {
+		async function createParentWithSubproject() {
+			await ProjectFactory.create(1, {id: 1, title: 'Parent Project'})
+			await ProjectFactory.create(1, {id: 2, title: 'Subproject', parent_project_id: 1}, false)
+			await ProjectViewFactory.create(1, {id: 2, project_id: 1, view_kind: 1})
+			await ProjectViewFactory.create(1, {id: 3, project_id: 2, view_kind: 1}, false)
+		}
+
+		function includeSubprojectsCheckbox(page) {
+			return page.locator('label.base-checkbox__label').filter({hasText: 'Include subprojects'})
+		}
+
+		test('Stays checked after toggling it', async ({authenticatedPage: page}) => {
+			await createParentWithSubproject()
+
+			await page.goto('/projects/1/2')
+
+			const checkbox = includeSubprojectsCheckbox(page)
+			await expect(checkbox).toBeVisible()
+			await checkbox.click()
+
+			await expect(checkbox.locator('input[type="checkbox"]')).toBeChecked()
+			await expect(page).toHaveURL(/include_subprojects=true/)
+
+			// The gantt filters rebuild the url of their own accord - the flag has to
+			// survive that, or the checkbox snaps back to unchecked.
+			await page.waitForLoadState('networkidle')
+			await expect(checkbox.locator('input[type="checkbox"]')).toBeChecked()
+		})
+
+		test('Survives a change to the other gantt filters', async ({authenticatedPage: page}) => {
+			await createParentWithSubproject()
+
+			await page.goto('/projects/1/2')
+
+			const checkbox = includeSubprojectsCheckbox(page)
+			await checkbox.click()
+			await expect(checkbox.locator('input[type="checkbox"]')).toBeChecked()
+
+			await page.locator('label.base-checkbox__label').filter({hasText: 'Show tasks without date'}).click()
+
+			await expect(page).toHaveURL(/include_subprojects=true/)
+			await expect(checkbox.locator('input[type="checkbox"]')).toBeChecked()
+		})
+	})
+
 	test('Shows the correct start of the week in the date picker', async ({authenticatedPage: page, apiContext, userToken}) => {
 		await ProjectFactory.create(1)
 		await ProjectViewFactory.create(1, {id: 2, project_id: 1, view_kind: 1})
