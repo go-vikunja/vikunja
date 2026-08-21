@@ -69,6 +69,52 @@ async function createProjectsWithTasks() {
 }
 
 test.describe('Drag Task to Project in Sidebar', () => {
+	test.describe('With subprojects included', () => {
+		async function createParentWithSubproject() {
+			const parent = (await ProjectFactory.create(1, {id: 1, title: 'Parent Project'}))[0]
+			const subproject = (await ProjectFactory.create(1, {
+				id: 2,
+				title: 'Subproject',
+				parent_project_id: 1,
+			}, false))[0]
+
+			const parentList = (await ProjectViewFactory.create(1, {id: 1, project_id: 1, view_kind: 0}))[0]
+			await ProjectViewFactory.create(1, {id: 2, project_id: 2, view_kind: 0}, false)
+
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				title: 'Task in the subproject',
+				project_id: 2,
+			})
+
+			return {parent, subproject, parentList, task: tasks[0]}
+		}
+
+		test('Keeps a task visible when it is moved from a subproject to the parent', async ({authenticatedPage: page}) => {
+			const {parent, parentList, task} = await createParentWithSubproject()
+
+			await page.goto(`/projects/${parent.id}/${parentList.id}?include_subprojects=true`)
+
+			// The subproject's task is part of the parent's list
+			await expect(page.locator('.tasks')).toContainText(task.title)
+
+			const taskInList = page.locator('.tasks .single-task').filter({hasText: task.title})
+			const parentInSidebar = page.locator('li[data-project-id="' + parent.id + '"]')
+
+			// The parent's <li> wraps the nested subproject, so aim at its own row -
+			// the centre of the element would land on the child project.
+			await taskInList.dragTo(parentInSidebar, {targetPosition: {x: 30, y: 12}})
+
+			await expect(page.locator('.global-notification')).toContainText('moved to')
+
+			// The parent is part of this very view, so the task must stay visible
+			// instead of disappearing along with the project it came from.
+			await expect(page.locator('.tasks')).toContainText(task.title)
+			await page.reload()
+			await expect(page.locator('.tasks')).toContainText(task.title)
+		})
+	})
+
 	test.describe('From List View', () => {
 		test('Can drag a task to another project in the sidebar', async ({authenticatedPage: page}) => {
 			const {sourceProject, targetProject, sourceListView, tasks} = await createProjectsWithTasks()
