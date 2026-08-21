@@ -181,6 +181,7 @@
         },
         "timeFormat": "Time format",
         "defaultDueTime": "Default due time",
+        "defaultDueTimeDescription": "Used as the default time when setting a task's due date without specifying a time, including date picker selections and Quick Add Magic.",
         "timeTrackingDefaultStart": "Time tracking smart-fill start time",
         "timeFormatOptions": {
           "12h": "12-hour (AM/PM)",
