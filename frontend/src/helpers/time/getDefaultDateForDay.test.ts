@@ -1,7 +1,7 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest'
 import {setActivePinia, createPinia} from 'pinia'
 
-import {getDefaultDueDateForDay, getDefaultDueTimeParts, parseUserDefaultDueTime} from './getDefaultDueDateForDay'
+import {getDefaultDateForDay, getDefaultDueTimeParts, parseUserDefaultDueTime} from './getDefaultDateForDay'
 import {useAuthStore} from '@/stores/auth'
 
 function setDefaultDueTime(defaultDueTime?: string) {
@@ -15,7 +15,7 @@ function setDefaultDueTime(defaultDueTime?: string) {
 	})
 }
 
-describe('getDefaultDueDateForDay', () => {
+describe('getDefaultDateForDay', () => {
 	beforeEach(() => {
 		setActivePinia(createPinia())
 		useAuthStore()
@@ -25,7 +25,7 @@ describe('getDefaultDueDateForDay', () => {
 		setDefaultDueTime('14:30')
 
 		const date = new Date(2026, 7, 4, 9, 15)
-		const result = getDefaultDueDateForDay(date)
+		const result = getDefaultDateForDay(date)
 
 		expect(result.getFullYear()).toBe(2026)
 		expect(result.getMonth()).toBe(7)
@@ -38,7 +38,7 @@ describe('getDefaultDueDateForDay', () => {
 		setDefaultDueTime(undefined)
 
 		const date = new Date(2026, 7, 4, 10, 15)
-		const result = getDefaultDueDateForDay(date)
+		const result = getDefaultDateForDay(date)
 
 		expect(result.getHours()).toBe(12)
 		expect(result.getMinutes()).toBe(0)
@@ -48,7 +48,7 @@ describe('getDefaultDueDateForDay', () => {
 		setDefaultDueTime('25:99')
 
 		const date = new Date(2026, 7, 4, 10, 15)
-		const result = getDefaultDueDateForDay(date)
+		const result = getDefaultDateForDay(date)
 
 		expect(result.getHours()).toBe(12)
 		expect(result.getMinutes()).toBe(0)
