@@ -238,6 +238,15 @@ export default Extension.create<FilterAutocompleteOptions>({
 								} else {
 									assigneeSuggestions = await userService.getAll({} as IUser, {s: autocompleteContext.search}) as SuggestionItem[]
 								}
+								if (autocompleteContext.search === '' || '@me'.startsWith(autocompleteContext.search.toLowerCase())) {
+									const meMacro = {
+										id: 0,
+										username: '@me',
+										title: '@me',
+										name: 'Current User (@me)',
+									} as unknown as SuggestionItem
+									assigneeSuggestions = [meMacro, ...assigneeSuggestions]
+								}
 								// For assignees, show suggestions even with empty search, but limit if we have many
 								if (autocompleteContext.search === '' && assigneeSuggestions.length > 10) {
 									assigneeSuggestions = assigneeSuggestions.slice(0, 10)
