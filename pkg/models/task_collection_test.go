@@ -2732,3 +2732,24 @@ func TestTaskCollection_ReadAll_IncludeSubprojectsInheritedAccess(t *testing.T) 
 	assert.Contains(t, returnedIDs, int64(21), "the requested project's own tasks")
 	assert.Contains(t, returnedIDs, int64(24), "tasks from the subproject reached through the parent")
 }
+
+// TestTaskCollection_ReadAll_IncludeSubprojectsIgnoredInKanban makes sure the flag
+// is dropped for kanban views. Buckets belong to a single view, so a subproject's
+// task has no bucket here and would be sorted into the default or done bucket.
+func TestTaskCollection_ReadAll_IncludeSubprojectsIgnoredInKanban(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	u := &user.User{ID: 1}
+	c := &TaskCollection{
+		ProjectID:          32,
+		ProjectViewID:      128, // kanban view of project 32
+		IncludeSubprojects: true,
+	}
+
+	_, _, _, err := c.ReadAll(s, u, "", 0, 50)
+	require.NoError(t, err)
+
+	assert.False(t, c.IncludeSubprojects, "the flag must be cleared for a kanban view")
+}
