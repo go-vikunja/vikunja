@@ -3,71 +3,29 @@ import {isAppleDevice} from '@/helpers/isAppleDevice'
 export const PRIMARY_MODIFIER_KEY = isAppleDevice() ? '⌘' : 'ctrl'
 
 export const SHORTCUTS = {
-	toggleMenu: {
-		binding: 'Mod+KeyE',
-	},
-	quickSearch: {
-		binding: 'Mod+KeyK',
-	},
-	showKeyboardShortcuts: {
-		binding: 'Shift+Slash',
-	},
+	toggleMenu: 'Mod+KeyE',
+	quickSearch: 'Mod+KeyK',
+	showKeyboardShortcuts: 'Shift+Slash',
 	navigation: {
-		overview: {
-			binding: 'KeyG KeyO',
-		},
-		upcoming: {
-			binding: 'KeyG KeyU',
-		},
-		projects: {
-			binding: 'KeyG KeyP',
-		},
-		labels: {
-			binding: 'KeyG KeyA',
-		},
-		teams: {
-			binding: 'KeyG KeyM',
-		},
+		overview: 'KeyG KeyO',
+		upcoming: 'KeyG KeyU',
+		projects: 'KeyG KeyP',
+		labels: 'KeyG KeyA',
+		teams: 'KeyG KeyM',
 	},
 	taskDetail: {
-		openProject: {
-			binding: 'KeyU',
-		},
-		done: {
-			binding: 'KeyT',
-		},
-		favorite: {
-			binding: 'KeyS',
-		},
-		labels: {
-			binding: 'KeyL',
-		},
-		priority: {
-			binding: 'KeyP',
-		},
-		color: {
-			binding: 'KeyC',
-		},
-		assignees: {
-			binding: 'KeyA',
-		},
-		attachments: {
-			binding: 'KeyF',
-		},
-		relatedTasks: {
-			binding: 'KeyR',
-		},
-		moveProject: {
-			binding: 'KeyM',
-		},
-		dueDate: {
-			binding: 'KeyD',
-		},
-		reminder: {
-			binding: isAppleDevice() ? 'Shift+KeyR' : 'Alt+KeyR',
-		},
-		delete: {
-			binding: isAppleDevice() ? 'Backspace' : 'Delete',
-		},
+		openProject: 'KeyU',
+		done: 'KeyT',
+		favorite: 'KeyS',
+		labels: 'KeyL',
+		priority: 'KeyP',
+		color: 'KeyC',
+		assignees: 'KeyA',
+		attachments: 'KeyF',
+		relatedTasks: 'KeyR',
+		moveProject: 'KeyM',
+		dueDate: 'KeyD',
+		reminder: isAppleDevice() ? 'Shift+KeyR' : 'Alt+KeyR',
+		delete: isAppleDevice() ? 'Backspace' : 'Delete',
 	},
 } as const

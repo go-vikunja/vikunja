@@ -39,14 +39,14 @@
 				>
 					<a
 						v-if="router.options.history.state?.back?.includes('/projects/'+p.id+'/') || false"
-						v-shortcut="p.id === project?.id ? SHORTCUTS.taskDetail.openProject.binding : ''"
+						v-shortcut="p.id === project?.id ? SHORTCUTS.taskDetail.openProject : ''"
 						@click="router.back()"
 					>
 						{{ getProjectTitle(p) }}
 					</a>
 					<RouterLink
 						v-else
-						v-shortcut="p.id === project?.id ? SHORTCUTS.taskDetail.openProject.binding : ''"
+						v-shortcut="p.id === project?.id ? SHORTCUTS.taskDetail.openProject : ''"
 						:to="{ name: 'project.index', params: { projectId: p.id } }"
 					>
 						{{ getProjectTitle(p) }}
@@ -445,7 +445,7 @@
 				>
 					<template v-if="canWrite">
 						<XButton
-							v-shortcut="SHORTCUTS.taskDetail.done.binding"
+							v-shortcut="SHORTCUTS.taskDetail.done"
 							:class="{'is-pending': !task.done}"
 							class="button--mark-done"
 							icon="check-double"
@@ -461,7 +461,7 @@
 							@update:modelValue="sub => task.subscription = sub"
 						/>
 						<XButton
-							v-shortcut="SHORTCUTS.taskDetail.favorite.binding"
+							v-shortcut="SHORTCUTS.taskDetail.favorite"
 							variant="secondary"
 							:icon="task.isFavorite ? 'star' : ['far', 'star']"
 							@click="toggleFavorite"
@@ -474,7 +474,7 @@
 						<span class="action-heading">{{ $t('task.detail.organization') }}</span>
 						
 						<XButton
-							v-shortcut="SHORTCUTS.taskDetail.labels.binding"
+							v-shortcut="SHORTCUTS.taskDetail.labels"
 							variant="secondary"
 							icon="tags"
 							@click="setFieldActive('labels')"
@@ -482,7 +482,7 @@
 							{{ $t('task.detail.actions.label') }}
 						</XButton>
 						<XButton
-							v-shortcut="SHORTCUTS.taskDetail.priority.binding"
+							v-shortcut="SHORTCUTS.taskDetail.priority"
 							variant="secondary"
 							icon="exclamation-circle"
 							@click="setFieldActive('priority')"
@@ -497,7 +497,7 @@
 							{{ $t('task.detail.actions.percentDone') }}
 						</XButton>
 						<XButton
-							v-shortcut="SHORTCUTS.taskDetail.color.binding"
+							v-shortcut="SHORTCUTS.taskDetail.color"
 							variant="secondary"
 							icon="fill-drip"
 							:icon-color="color"
@@ -509,7 +509,7 @@
 						<span class="action-heading">{{ $t('task.detail.management') }}</span>
 
 						<XButton
-							v-shortcut="SHORTCUTS.taskDetail.assignees.binding"
+							v-shortcut="SHORTCUTS.taskDetail.assignees"
 							v-cy="'taskDetail.assign'"
 							variant="secondary"
 							icon="users"
@@ -518,7 +518,7 @@
 							{{ $t('task.detail.actions.assign') }}
 						</XButton>
 						<XButton
-							v-shortcut="SHORTCUTS.taskDetail.attachments.binding"
+							v-shortcut="SHORTCUTS.taskDetail.attachments"
 							variant="secondary"
 							icon="paperclip"
 							@click="openAttachments()"
@@ -526,7 +526,7 @@
 							{{ $t('task.detail.actions.attachments') }}
 						</XButton>
 						<XButton
-							v-shortcut="SHORTCUTS.taskDetail.relatedTasks.binding"
+							v-shortcut="SHORTCUTS.taskDetail.relatedTasks"
 							variant="secondary"
 							icon="sitemap"
 							@click="setRelatedTasksActive()"
@@ -534,7 +534,7 @@
 							{{ $t('task.detail.actions.relatedTasks') }}
 						</XButton>
 						<XButton
-							v-shortcut="SHORTCUTS.taskDetail.moveProject.binding"
+							v-shortcut="SHORTCUTS.taskDetail.moveProject"
 							variant="secondary"
 							icon="list"
 							@click="setFieldActive('moveProject')"
@@ -562,7 +562,7 @@
 						</XButton>
 
 						<XButton
-							v-shortcut="SHORTCUTS.taskDetail.dueDate.binding"
+							v-shortcut="SHORTCUTS.taskDetail.dueDate"
 							variant="secondary"
 							icon="calendar"
 							@click="setFieldActive('dueDate')"
@@ -584,7 +584,7 @@
 							{{ $t('task.detail.actions.endDate') }}
 						</XButton>
 						<XButton
-							v-shortcut="SHORTCUTS.taskDetail.reminder.binding"
+							v-shortcut="SHORTCUTS.taskDetail.reminder"
 							variant="secondary"
 							:icon="['far', 'clock']"
 							@click="setFieldActive('reminders')"
@@ -599,7 +599,7 @@
 							{{ $t('task.detail.actions.repeatAfter') }}
 						</XButton>
 						<XButton
-							v-shortcut="SHORTCUTS.taskDetail.delete.binding"
+							v-shortcut="SHORTCUTS.taskDetail.delete"
 							icon="trash-alt"
 							:shadow="false"
 							class="is-danger is-outlined has-no-border"

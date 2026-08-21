@@ -21,7 +21,7 @@
 			<menu class="menu-list other-menu-items">
 				<li>
 					<RouterLink
-						v-shortcut="SHORTCUTS.navigation.overview.binding"
+						v-shortcut="SHORTCUTS.navigation.overview"
 						:to="{ name: 'home'}"
 					>
 						<span class="menu-item-icon icon">
@@ -32,7 +32,7 @@
 				</li>
 				<li>
 					<RouterLink
-						v-shortcut="SHORTCUTS.navigation.upcoming.binding"
+						v-shortcut="SHORTCUTS.navigation.upcoming"
 						:to="{ name: 'tasks.range'}"
 					>
 						<span class="menu-item-icon icon">
@@ -43,7 +43,7 @@
 				</li>
 				<li>
 					<RouterLink
-						v-shortcut="SHORTCUTS.navigation.projects.binding"
+						v-shortcut="SHORTCUTS.navigation.projects"
 						:to="{ name: 'projects.index'}"
 					>
 						<span class="menu-item-icon icon">
@@ -54,7 +54,7 @@
 				</li>
 				<li>
 					<RouterLink
-						v-shortcut="SHORTCUTS.navigation.labels.binding"
+						v-shortcut="SHORTCUTS.navigation.labels"
 						:to="{ name: 'labels.index'}"
 					>
 						<span class="menu-item-icon icon">
@@ -65,7 +65,7 @@
 				</li>
 				<li>
 					<RouterLink
-						v-shortcut="SHORTCUTS.navigation.teams.binding"
+						v-shortcut="SHORTCUTS.navigation.teams"
 						:to="{ name: 'teams.index'}"
 					>
 						<span class="menu-item-icon icon">

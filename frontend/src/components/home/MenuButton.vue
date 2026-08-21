@@ -1,6 +1,6 @@
 <template>
 	<BaseButton
-		v-shortcut="SHORTCUTS.toggleMenu.binding"
+		v-shortcut="SHORTCUTS.toggleMenu"
 		class="menu-show-button"
 		:title="$t('keyboardShortcuts.toggleMenu')"
 		:aria-label="menuActive ? $t('misc.hideMenu') : $t('misc.showMenu')"

@@ -64,7 +64,7 @@
 				</Modal>
 
 				<BaseButton
-					v-shortcut="SHORTCUTS.showKeyboardShortcuts.binding"
+					v-shortcut="SHORTCUTS.showKeyboardShortcuts"
 					class="keyboard-shortcuts-button d-print-none"
 					@click="showKeyboardShortcuts()"
 				>

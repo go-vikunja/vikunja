@@ -23,11 +23,11 @@ export const KEYBOARD_SHORTCUTS: ShortcutGroup[] = [
 		shortcuts: [
 			{
 				title: 'keyboardShortcuts.toggleMenu',
-				...shortcutBindingToDisplay(SHORTCUTS.toggleMenu.binding),
+				...shortcutBindingToDisplay(SHORTCUTS.toggleMenu),
 			},
 			{
 				title: 'keyboardShortcuts.quickSearch',
-				...shortcutBindingToDisplay(SHORTCUTS.quickSearch.binding),
+				...shortcutBindingToDisplay(SHORTCUTS.quickSearch),
 			},
 		],
 	},
@@ -36,23 +36,23 @@ export const KEYBOARD_SHORTCUTS: ShortcutGroup[] = [
 		shortcuts: [
 			{
 				title: 'keyboardShortcuts.navigation.overview',
-				...shortcutBindingToDisplay(SHORTCUTS.navigation.overview.binding),
+				...shortcutBindingToDisplay(SHORTCUTS.navigation.overview),
 			},
 			{
 				title: 'keyboardShortcuts.navigation.upcoming',
-				...shortcutBindingToDisplay(SHORTCUTS.navigation.upcoming.binding),
+				...shortcutBindingToDisplay(SHORTCUTS.navigation.upcoming),
 			},
 			{
 				title: 'keyboardShortcuts.navigation.projects',
-				...shortcutBindingToDisplay(SHORTCUTS.navigation.projects.binding),
+				...shortcutBindingToDisplay(SHORTCUTS.navigation.projects),
 			},
 			{
 				title: 'keyboardShortcuts.navigation.labels',
-				...shortcutBindingToDisplay(SHORTCUTS.navigation.labels.binding),
+				...shortcutBindingToDisplay(SHORTCUTS.navigation.labels),
 			},
 			{
 				title: 'keyboardShortcuts.navigation.teams',
-				...shortcutBindingToDisplay(SHORTCUTS.navigation.teams.binding),
+				...shortcutBindingToDisplay(SHORTCUTS.navigation.teams),
 			},
 		],
 	},
@@ -146,39 +146,39 @@ export const KEYBOARD_SHORTCUTS: ShortcutGroup[] = [
 		shortcuts: [
 			{
 				title: 'keyboardShortcuts.task.done',
-				...shortcutBindingToDisplay(SHORTCUTS.taskDetail.done.binding),
+				...shortcutBindingToDisplay(SHORTCUTS.taskDetail.done),
 			},
 			{
 				title: 'keyboardShortcuts.task.assign',
-				...shortcutBindingToDisplay(SHORTCUTS.taskDetail.assignees.binding),
+				...shortcutBindingToDisplay(SHORTCUTS.taskDetail.assignees),
 			},
 			{
 				title: 'keyboardShortcuts.task.labels',
-				...shortcutBindingToDisplay(SHORTCUTS.taskDetail.labels.binding),
+				...shortcutBindingToDisplay(SHORTCUTS.taskDetail.labels),
 			},
 			{
 				title: 'keyboardShortcuts.task.dueDate',
-				...shortcutBindingToDisplay(SHORTCUTS.taskDetail.dueDate.binding),
+				...shortcutBindingToDisplay(SHORTCUTS.taskDetail.dueDate),
 			},
 			{
 				title: 'keyboardShortcuts.task.attachment',
-				...shortcutBindingToDisplay(SHORTCUTS.taskDetail.attachments.binding),
+				...shortcutBindingToDisplay(SHORTCUTS.taskDetail.attachments),
 			},
 			{
 				title: 'keyboardShortcuts.task.related',
-				...shortcutBindingToDisplay(SHORTCUTS.taskDetail.relatedTasks.binding),
+				...shortcutBindingToDisplay(SHORTCUTS.taskDetail.relatedTasks),
 			},
 			{
 				title: 'keyboardShortcuts.task.move',
-				...shortcutBindingToDisplay(SHORTCUTS.taskDetail.moveProject.binding),
+				...shortcutBindingToDisplay(SHORTCUTS.taskDetail.moveProject),
 			},
 			{
 				title: 'keyboardShortcuts.task.color',
-				...shortcutBindingToDisplay(SHORTCUTS.taskDetail.color.binding),
+				...shortcutBindingToDisplay(SHORTCUTS.taskDetail.color),
 			},
 			{
 				title: 'keyboardShortcuts.task.reminder',
-				...shortcutBindingToDisplay(SHORTCUTS.taskDetail.reminder.binding),
+				...shortcutBindingToDisplay(SHORTCUTS.taskDetail.reminder),
 			},
 			{
 				title: 'keyboardShortcuts.task.description',
@@ -186,19 +186,19 @@ export const KEYBOARD_SHORTCUTS: ShortcutGroup[] = [
 			},
 			{
 				title: 'keyboardShortcuts.task.priority',
-				...shortcutBindingToDisplay(SHORTCUTS.taskDetail.priority.binding),
+				...shortcutBindingToDisplay(SHORTCUTS.taskDetail.priority),
 			},
 			{
 				title: 'keyboardShortcuts.task.delete',
-				...shortcutBindingToDisplay(SHORTCUTS.taskDetail.delete.binding),
+				...shortcutBindingToDisplay(SHORTCUTS.taskDetail.delete),
 			},
 			{
 				title: 'keyboardShortcuts.task.favorite',
-				...shortcutBindingToDisplay(SHORTCUTS.taskDetail.favorite.binding),
+				...shortcutBindingToDisplay(SHORTCUTS.taskDetail.favorite),
 			},
 			{
 				title: 'keyboardShortcuts.task.openProject',
-				...shortcutBindingToDisplay(SHORTCUTS.taskDetail.openProject.binding),
+				...shortcutBindingToDisplay(SHORTCUTS.taskDetail.openProject),
 			},
 			{
 				title: 'keyboardShortcuts.task.save',

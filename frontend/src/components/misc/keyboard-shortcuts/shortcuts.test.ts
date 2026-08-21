@@ -22,19 +22,19 @@ describe('keyboard shortcuts help data', () => {
 	it('uses the centralized toggle menu shortcut for the general help entry', () => {
 		const shortcut = getShortcut('keyboardShortcuts.toggleMenu', 'keyboardShortcuts.general')
 
-		expect(shortcut.keys).toEqual(shortcutBindingToDisplay(SHORTCUTS.toggleMenu.binding).keys)
+		expect(shortcut.keys).toEqual(shortcutBindingToDisplay(SHORTCUTS.toggleMenu).keys)
 		expect(shortcut.combination).toBeUndefined()
 	})
 
 	it('uses the centralized show keyboard shortcuts binding for the help dialog trigger', () => {
-		expect(shortcutBindingToDisplay(SHORTCUTS.showKeyboardShortcuts.binding)).toEqual({
+		expect(shortcutBindingToDisplay(SHORTCUTS.showKeyboardShortcuts)).toEqual({
 			keys: ['shift', '/'],
 		})
 	})
 
 	it('uses the centralized overview navigation shortcut with sequence display', () => {
 		const shortcut = getShortcut('keyboardShortcuts.navigation.overview', 'keyboardShortcuts.navigation.title')
-		const expected = shortcutBindingToDisplay(SHORTCUTS.navigation.overview.binding)
+		const expected = shortcutBindingToDisplay(SHORTCUTS.navigation.overview)
 
 		expect(shortcut.keys).toEqual(expected.keys)
 		expect(shortcut.combination).toEqual(expected.combination)
@@ -42,7 +42,7 @@ describe('keyboard shortcuts help data', () => {
 
 	it('uses the centralized due date shortcut for the task detail help entry', () => {
 		const shortcut = getShortcut('keyboardShortcuts.task.dueDate', 'keyboardShortcuts.task.title')
-		const expected = shortcutBindingToDisplay(SHORTCUTS.taskDetail.dueDate.binding)
+		const expected = shortcutBindingToDisplay(SHORTCUTS.taskDetail.dueDate)
 
 		expect(shortcut.keys).toEqual(expected.keys)
 		expect(shortcut.combination).toEqual(expected.combination)
