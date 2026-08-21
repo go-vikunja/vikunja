@@ -4,7 +4,6 @@
 			id="password"
 			class="input"
 			name="password"
-			:placeholder="$t('user.auth.passwordPlaceholder')"
 			required
 			:type="passwordFieldType"
 			:autocomplete="autocomplete"
@@ -15,6 +14,13 @@
 			@keyup="() => {validateAfterFirst ? validate() : null}"
 			@input="handleInput"
 		>
+		<span
+			v-if="password === ''"
+			class="decorative-placeholder"
+			aria-hidden="true"
+		>
+			{{ $t('user.auth.passwordPlaceholder') }}
+		</span>
 		<BaseButton
 			v-tooltip="passwordFieldType === 'password' ? $t('user.auth.showPassword') : $t('user.auth.hidePassword')"
 			class="password-field-type-toggle"

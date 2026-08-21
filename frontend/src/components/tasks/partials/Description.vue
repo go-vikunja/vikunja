@@ -7,22 +7,29 @@
 				<Icon icon="align-left" />
 			</span>
 			{{ $t('task.attributes.description') }}
-			<CustomTransition name="fade">
-				<span
-					v-if="loading && saving"
-					class="is-small is-inline-flex"
-				>
-					<span class="loader is-inline-block mie-2" />
-					{{ $t('misc.saving') }}
-				</span>
-				<span
-					v-else-if="!loading && saved"
-					class="is-small has-text-success"
-				>
-					<Icon icon="check" />
-					{{ $t('misc.saved') }}
-				</span>
-			</CustomTransition>
+			<span
+				role="status"
+				aria-live="polite"
+				aria-atomic="true"
+				class="is-inline-flex"
+			>
+				<CustomTransition name="fade">
+					<span
+						v-if="loading && saving"
+						class="is-small is-inline-flex"
+					>
+						<span class="loader is-inline-block mie-2" />
+						{{ $t('misc.saving') }}
+					</span>
+					<span
+						v-else-if="!loading && saved"
+						class="is-small has-text-success"
+					>
+						<Icon icon="check" />
+						{{ $t('misc.saved') }}
+					</span>
+				</CustomTransition>
+			</span>
 		</h2>
 		<Editor
 			v-model="description"

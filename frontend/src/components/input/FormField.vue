@@ -9,6 +9,10 @@ interface Props {
 	disabled?: boolean
 	loading?: boolean
 	layout?: 'stacked' | 'two-col'
+	// Shown like a placeholder but hidden from assistive technology —
+	// screen readers read native placeholders character by character
+	// for hints like "e.g. ••••••••••••".
+	decorativePlaceholder?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -131,6 +135,13 @@ defineExpose({
 						:aria-describedby="describedBy"
 						@input="handleInput"
 					>
+					<span
+						v-if="decorativePlaceholder && !modelValue"
+						class="decorative-placeholder"
+						aria-hidden="true"
+					>
+						{{ decorativePlaceholder }}
+					</span>
 				</slot>
 			</div>
 			<div

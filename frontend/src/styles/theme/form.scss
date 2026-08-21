@@ -105,3 +105,14 @@ h1, h2, h3 {
     height: auto;
   }
 }
+
+// Visual stand-in for a native placeholder that assistive technology must not
+// read (native placeholders are announced character by character).
+.decorative-placeholder {
+  position: absolute;
+  inset-block-start: 50%;
+  transform: translateY(-50%);
+  inset-inline-start: calc(0.75em + 1px);
+  color: var(--input-placeholder-color);
+  pointer-events: none;
+}
