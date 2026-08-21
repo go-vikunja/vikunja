@@ -147,6 +147,45 @@ describe('project store', () => {
 		})
 	})
 
+	describe('savedFilterProjects', () => {
+		it('should sort filters lexicographically by title regardless of position', () => {
+			const store = useProjectStore()
+			const filterC = createMockProject({id: -3, title: 'Charlie', position: 0})
+			const filterA = createMockProject({id: -4, title: 'Alpha', position: 0})
+			const filterB = createMockProject({id: -5, title: 'Bravo', position: 0})
+
+			store.setProject(filterC)
+			store.setProject(filterA)
+			store.setProject(filterB)
+
+			const titles = store.savedFilterProjects.map(p => p.title)
+			expect(titles).toEqual(['Alpha', 'Bravo', 'Charlie'])
+		})
+
+		it('should exclude archived filters', () => {
+			const store = useProjectStore()
+			const archivedFilter = createMockProject({id: -3, title: 'Archived', isArchived: true})
+
+			store.setProject(archivedFilter)
+
+			expect(store.savedFilterProjects).toHaveLength(0)
+		})
+
+		it('should exclude regular projects and favorites pseudo-project', () => {
+			const store = useProjectStore()
+			const regularProject = createMockProject({id: 1, title: 'Regular'})
+			const favoritesPseudoProject = createMockProject({id: -1, title: 'Favorites'})
+			const filter = createMockProject({id: -2, title: 'Filter'})
+
+			store.setProject(regularProject)
+			store.setProject(favoritesPseudoProject)
+			store.setProject(filter)
+
+			expect(store.savedFilterProjects).toHaveLength(1)
+			expect(store.savedFilterProjects[0].title).toBe('Filter')
+		})
+	})
+
 	describe('isOrphanedSubProject', () => {
 		it('should return false for root projects', () => {
 			const store = useProjectStore()
