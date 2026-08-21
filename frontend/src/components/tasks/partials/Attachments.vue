@@ -62,6 +62,12 @@
 						</span>
 					</button>
 					<p class="attachment-info-meta">
+						<User
+							:user="a.createdBy"
+							:avatar-size="20"
+							:show-username="false"
+							:is-inline="true"
+						/>
 						<span>
 							{{ getHumanSize(a.file.size) }}
 						</span>
@@ -188,6 +194,7 @@
 import {ref, shallowReactive, computed, watch, onMounted, onBeforeUnmount} from 'vue'
 import {useDropZone} from '@vueuse/core'
 
+import User from '@/components/misc/User.vue'
 import ProgressBar from '@/components/misc/ProgressBar.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
@@ -579,6 +586,10 @@ defineExpose({
 
 	> span {
 		padding: 0 .25rem;
+	}
+
+	:deep(.avatar-wrapper) {
+		margin-inline-end: 0;
 	}
 }
 
