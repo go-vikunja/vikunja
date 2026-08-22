@@ -207,6 +207,7 @@ jobs:
           - mysql
           - paradedb
         test:
+          - bench
           - feature
           - web
     services:
