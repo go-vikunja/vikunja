@@ -132,6 +132,7 @@ const (
 	MailerQueuelength   Key = `mailer.queuelength`
 	MailerQueueTimeout  Key = `mailer.queuetimeout`
 	MailerForceSSL      Key = `mailer.forcessl`
+	MailerDisableSSL    Key = `mailer.disablessl`
 
 	RedisEnabled  Key = `redis.enabled`
 	RedisHost     Key = `redis.host`
