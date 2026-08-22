@@ -34,13 +34,21 @@ type subscriptionPathParams struct {
 	EntityID int64  `path:"entityID" doc:"The numeric id of the entity to (un)subscribe from."`
 }
 
+// Body is a pointer and optional: an empty request subscribes the authenticated user. Passing a
+// user_id subscribes that user instead, provided both users have access to the entity.
+type subscriptionCreateParams struct {
+	Entity   string               `path:"entity" enum:"project,task" doc:"The kind of entity to (un)subscribe from. Either project or task."`
+	EntityID int64                `path:"entityID" doc:"The numeric id of the entity to (un)subscribe from."`
+	Body     *models.Subscription `required:"false"`
+}
+
 func RegisterSubscriptionRoutes(api huma.API) {
 	tags := []string{"subscriptions"}
 
 	Register(api, huma.Operation{
 		OperationID: "subscriptions-create",
 		Summary:     "Subscribe to an entity",
-		Description: "Subscribes the authenticated user to a project or task so they receive its notifications. The user needs read access to the entity. Fails if a subscription already exists.",
+		Description: "Subscribes a user to a project or task so they receive its notifications. Leave the body empty to subscribe the authenticated user, who only needs read access. To subscribe someone else, pass their numeric id as user_id in the body - this requires the authenticated user to have write access to the entity, and the user to subscribe needs read access to it. Fails if a subscription already exists.",
 		Method:      http.MethodPost,
 		Path:        "/subscriptions/{entity}/{entityID}",
 		Tags:        tags,
@@ -58,12 +66,15 @@ func RegisterSubscriptionRoutes(api huma.API) {
 
 func init() { AddRouteRegistrar(RegisterSubscriptionRoutes) }
 
-func subscriptionsCreate(ctx context.Context, in *subscriptionPathParams) (*singleBody[models.Subscription], error) {
+func subscriptionsCreate(ctx context.Context, in *subscriptionCreateParams) (*singleBody[models.Subscription], error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
 		return nil, err
 	}
 	sb := &models.Subscription{Entity: in.Entity, EntityID: in.EntityID}
+	if in.Body != nil {
+		sb.UserID = in.Body.UserID
+	}
 	if err := handler.DoCreate(ctx, sb, a); err != nil {
 		return nil, translateDomainError(err)
 	}

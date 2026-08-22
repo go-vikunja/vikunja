@@ -21,7 +21,8 @@ import (
 	"xorm.io/xorm"
 )
 
-// CanCreate checks if a user can subscribe to an entity
+// CanCreate checks if a user can subscribe to an entity. Subscribing yourself only requires read access,
+// subscribing someone else requires write access to the entity.
 func (sb *Subscription) CanCreate(s *xorm.Session, a web.Auth) (can bool, err error) {
 	if _, is := a.(*LinkSharing); is {
 		return false, ErrGenericForbidden{}
@@ -29,13 +30,23 @@ func (sb *Subscription) CanCreate(s *xorm.Session, a web.Auth) (can bool, err er
 
 	sb.EntityType = getEntityTypeFromString(sb.Entity)
 
+	subscribingSomeoneElse := sb.UserID != 0 && sb.UserID != a.GetID()
+
 	switch sb.EntityType {
 	case SubscriptionEntityProject:
 		l := &Project{ID: sb.EntityID}
-		can, _, err = l.CanRead(s, a)
+		if subscribingSomeoneElse {
+			can, err = l.CanUpdate(s, a)
+		} else {
+			can, _, err = l.CanRead(s, a)
+		}
 	case SubscriptionEntityTask:
 		t := &Task{ID: sb.EntityID}
-		can, _, err = t.CanRead(s, a)
+		if subscribingSomeoneElse {
+			can, err = t.CanUpdate(s, a)
+		} else {
+			can, _, err = t.CanRead(s, a)
+		}
 	default:
 		return false, &ErrUnknownSubscriptionEntityType{EntityType: sb.EntityType}
 	}
