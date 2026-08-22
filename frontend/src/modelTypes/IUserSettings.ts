@@ -29,6 +29,7 @@ export interface IFrontendSettings {
 	desktopQuickEntryShortcut: string
 	quickAddDefaultReminders: ITaskReminder[]
 	timeTrackingDefaultStart?: string
+	defaultDueTime?: string
 }
 
 export interface IExtraSettingsLink {

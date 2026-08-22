@@ -82,8 +82,8 @@ import BaseButton from '@/components/base/BaseButton.vue'
 
 import {formatDate} from '@/helpers/time/formatDate'
 import {calculateDayInterval} from '@/helpers/time/calculateDayInterval'
-import {calculateNearestHours} from '@/helpers/time/calculateNearestHours'
 import {createDateFromString} from '@/helpers/time/createDateFromString'
+import {getDefaultDateForDay, getDefaultDueTimeParts} from '@/helpers/time/getDefaultDateForDay'
 import {useI18n} from 'vue-i18n'
 import {useFlatpickrLanguage} from '@/helpers/useFlatpickrLanguage'
 import {useTimeFormat} from '@/composables/useTimeFormat'
@@ -114,15 +114,21 @@ watch(
 )
 
 const flatPickrRef = ref<InstanceType<typeof flatPickr> | null>(null)
-const flatPickerConfig = computed(() => ({
-	altFormat: t('date.altFormatLong'),
-	altInput: true,
-	dateFormat: 'Y-m-d H:i',
-	enableTime: true,
-	time_24hr: timeFormat.value === TIME_FORMAT.HOURS_24,
-	inline: true,
-	locale: useFlatpickrLanguage().value,
-}))
+const flatPickerConfig = computed(() => {
+	const defaultDueTime = getDefaultDueTimeParts(new Date())
+
+	return {
+		altFormat: t('date.altFormatLong'),
+		altInput: true,
+		dateFormat: 'Y-m-d H:i',
+		defaultHour: defaultDueTime.hours,
+		defaultMinute: defaultDueTime.minutes,
+		enableTime: true,
+		time_24hr: timeFormat.value === TIME_FORMAT.HOURS_24,
+		inline: true,
+		locale: useFlatpickrLanguage().value,
+	}
+})
 
 function formatDateToFlatpickrString(date: Date): string {
 	const year = date.getFullYear()
@@ -212,10 +218,7 @@ function setDate(dateString: string) {
 	const interval = calculateDayInterval(dateString)
 	const newDate = new Date()
 	newDate.setDate(newDate.getDate() + interval)
-	newDate.setHours(calculateNearestHours(newDate))
-	newDate.setMinutes(0)
-	newDate.setSeconds(0)
-	date.value = newDate
+	date.value = getDefaultDateForDay(newDate)
 	updateData()
 }
 
