@@ -434,3 +434,10 @@ GROUP BY ph.original_project_id`, args...).
 		Find(&projectPermissionMap)
 	return
 }
+
+// SetMaxPermission fills the MaxPermission field returned with the project.
+// PermissionUnknown marshals to null, which is how responses that don't
+// resolve a permission (create, update) report "not computed".
+func (p *Project) SetMaxPermission(permission int) {
+	p.MaxPermission = Permission(permission)
+}

@@ -22,6 +22,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/web"
 )
 
@@ -54,6 +55,10 @@ func DoCreate(ctx context.Context, obj CObject, a web.Auth) error {
 		events.CleanupPending(s)
 		return err
 	}
+
+	// Create doesn't resolve the caller's permission, so report null instead of
+	// the zero value (0 = read), which would be wrong for the new owner.
+	setMaxPermission(obj, models.PermissionUnknown)
 
 	if err := s.Commit(); err != nil {
 		events.CleanupPending(s)
@@ -94,6 +99,9 @@ func DoReadOne(ctx context.Context, obj CObject, a web.Auth) (maxPermission int,
 		events.CleanupPending(s)
 		return 0, err
 	}
+
+	// After ReadOne: CanRead and ReadOne both rebuild obj from the db row.
+	setMaxPermission(obj, maxPermission)
 
 	if err := s.Commit(); err != nil {
 		events.CleanupPending(s)
@@ -161,6 +169,8 @@ func DoUpdate(ctx context.Context, obj CObject, a web.Auth) error {
 		events.CleanupPending(s)
 		return err
 	}
+
+	setMaxPermission(obj, models.PermissionUnknown) // see DoCreate
 
 	if err := s.Commit(); err != nil {
 		events.CleanupPending(s)

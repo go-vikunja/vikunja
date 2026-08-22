@@ -31,3 +31,18 @@ type CObject interface {
 	web.CRUDable
 	web.Permissions
 }
+
+// maxPermissionReceiver is implemented by models which carry the requesting
+// user's permission in their response body. Their zero value means "read", so
+// leaving the field untouched would claim read-only access instead of "not
+// computed" — the Do* pipeline sets it explicitly for them.
+type maxPermissionReceiver interface {
+	SetMaxPermission(permission int)
+}
+
+// setMaxPermission fills obj's max permission field if it has one.
+func setMaxPermission(obj CObject, permission int) {
+	if r, is := obj.(maxPermissionReceiver); is {
+		r.SetMaxPermission(permission)
+	}
+}
