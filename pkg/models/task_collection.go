@@ -24,13 +24,15 @@ import (
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
+	"xorm.io/builder"
 	"xorm.io/xorm"
 )
 
 // TaskCollection is a struct used to hold filter details and not clutter the Task struct with information not related to actual tasks.
 type TaskCollection struct {
-	ProjectID     int64 `param:"project" json:"-"`
-	ProjectViewID int64 `param:"view" json:"-"`
+	ProjectID          int64 `param:"project" json:"-"`
+	ProjectViewID      int64 `param:"view" json:"-"`
+	IncludeSubprojects bool  `json:"include_subprojects,omitempty" query:"include_subprojects"`
 
 	Search string `query:"s" json:"s" doc:"A search term to match tasks by their title."`
 
@@ -129,6 +131,10 @@ func getTaskFilterOptsFromCollection(tf *TaskCollection, projectView *ProjectVie
 			continue
 		}
 
+		if s == taskPropertyPosition && tf.IncludeSubprojects {
+			continue
+		}
+
 		if s == taskPropertyPosition && projectView != nil {
 			param.projectViewID = projectView.ID
 		}
@@ -160,6 +166,43 @@ func getTaskFilterOptsFromCollection(tf *TaskCollection, projectView *ProjectVie
 // The v2 tasks endpoint uses it; v1 leaves it unset for the polymorphic shape.
 func (tf *TaskCollection) SetForceFlatTasks() {
 	tf.forceFlatTasks = true
+}
+
+// normalizeIncludeSubprojects resets the include subprojects flag in all cases
+// where it is not supported: outside of a concrete project (favorites,
+// saved filters), for link shares and in kanban views.
+//
+// Buckets belong to a single view, so a task from a subproject has no bucket in
+// the parent project's kanban view and would be sorted into the default or done
+// bucket regardless of its actual state.
+func (tf *TaskCollection) normalizeIncludeSubprojects(a web.Auth, view *ProjectView) {
+	tf.IncludeSubprojects = tf.IncludeSubprojects &&
+		tf.ProjectID > 0 &&
+		!tf.isSavedFilter
+
+	if view != nil && view.ViewKind == ProjectViewKindKanban {
+		tf.IncludeSubprojects = false
+	}
+
+	if _, is := a.(*LinkSharing); is {
+		tf.IncludeSubprojects = false
+	}
+}
+
+// ensureDefaultPositionSort adds a sort by position for the view if no position
+// sort was requested explicitly.
+func ensureDefaultPositionSort(opts *taskSearchOptions, view *ProjectView) {
+	for _, param := range opts.sortby {
+		if param.sortBy == taskPropertyPosition {
+			return
+		}
+	}
+
+	opts.sortby = append(opts.sortby, &sortParam{
+		projectViewID: view.ID,
+		sortBy:        taskPropertyPosition,
+		orderBy:       orderAscending,
+	})
 }
 
 func getTaskOrTasksInBuckets(s *xorm.Session, a web.Auth, projects []*Project, view *ProjectView, opts *taskSearchOptions, filteringForBucket, forceFlatTasks bool) (tasks interface{}, resultCount int, totalItems int64, err error) {
@@ -209,7 +252,52 @@ func getRelevantProjectsFromCollection(s *xorm.Session, a web.Auth, tf *TaskColl
 		}
 	}
 
-	return []*Project{{ID: tf.ProjectID}}, nil
+	if !tf.IncludeSubprojects || tf.ProjectID <= 0 {
+		return []*Project{{ID: tf.ProjectID}}, nil
+	}
+
+	subprojectIDs, err := getAccessibleSubprojectIDs(s, a, tf.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+
+	relevantProjects := make([]*Project, 0, len(subprojectIDs)+1)
+	relevantProjects = append(relevantProjects, &Project{ID: tf.ProjectID})
+	for _, id := range subprojectIDs {
+		relevantProjects = append(relevantProjects, &Project{ID: id})
+	}
+
+	return relevantProjects, nil
+}
+
+// getAccessibleSubprojectIDs walks down the project hierarchy from parentProjectID and
+// returns every descendant the auth can access. Subprojects without access are skipped
+// rather than failing the whole request.
+func getAccessibleSubprojectIDs(s *xorm.Session, a web.Auth, parentProjectID int64) (ids []int64, err error) {
+	accessibleSQL, accessibleArgs, err := builder.ToSQL(accessibleProjectIDsSubquery(a, "d.id"))
+	if err != nil {
+		return nil, err
+	}
+
+	args := append([]interface{}{parentProjectID}, accessibleArgs...)
+
+	ids = []int64{}
+	err = s.SQL(`
+WITH RECURSIVE descendant_ids (id) AS (
+    SELECT id
+    FROM projects
+    WHERE parent_project_id = ? AND is_archived = false
+    UNION ALL
+    SELECT p.id
+    FROM projects p
+    INNER JOIN descendant_ids di ON p.parent_project_id = di.id
+    WHERE p.is_archived = false
+)
+SELECT d.id
+FROM descendant_ids d
+WHERE `+accessibleSQL, args...).Find(&ids)
+
+	return ids, err
 }
 
 func getFilterValueForBucketFilter(filter string, view *ProjectView) (newFilter string, err error) {
@@ -246,6 +334,7 @@ func getFilterValueForBucketFilter(filter string, view *ProjectView) (newFilter 
 // @Produce json
 // @Param id path int true "The project ID."
 // @Param view path int true "The project view ID."
+// @Param include_subprojects query bool false "If true, also returns tasks from all descendant subprojects the user can access."
 // @Param page query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
 // @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
 // @Param s query string false "Search tasks by task text."
@@ -343,6 +432,10 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 			if view.Filter.FilterIncludeNulls {
 				tf.FilterIncludeNulls = true
 			}
+
+			if view.Filter.IncludeSubprojects {
+				tf.IncludeSubprojects = true
+			}
 		}
 
 		if strings.Contains(tf.Filter, taskPropertyBucketID) {
@@ -353,6 +446,8 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 			}
 		}
 	}
+
+	tf.normalizeIncludeSubprojects(a, view)
 
 	opts, err := getTaskFilterOptsFromCollection(tf, view)
 	if err != nil {
@@ -372,21 +467,8 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 	opts.expand = tf.Expand
 	opts.isSavedFilter = tf.isSavedFilter
 
-	if view != nil {
-		var hasOrderByPosition bool
-		for _, param := range opts.sortby {
-			if param.sortBy == taskPropertyPosition {
-				hasOrderByPosition = true
-				break
-			}
-		}
-		if !hasOrderByPosition {
-			opts.sortby = append(opts.sortby, &sortParam{
-				projectViewID: view.ID,
-				sortBy:        taskPropertyPosition,
-				orderBy:       orderAscending,
-			})
-		}
+	if view != nil && !tf.IncludeSubprojects {
+		ensureDefaultPositionSort(opts, view)
 	}
 
 	shareAuth, is := a.(*LinkSharing)

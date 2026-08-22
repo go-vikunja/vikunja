@@ -29,6 +29,14 @@
 			>
 				{{ $t('filters.attributes.includeNulls') }}
 			</FancyCheckbox>
+			<FancyCheckbox
+				v-if="showIncludeSubprojectsToggle"
+				v-tooltip="$t('project.views.includeSubprojectsHint')"
+				:model-value="includeSubprojects"
+				@update:modelValue="(value: boolean) => emit('update:includeSubprojects', value)"
+			>
+				{{ $t('project.views.includeSubprojects') }}
+			</FancyCheckbox>
 		</div>
 
 		<FilterInputDocs />
@@ -40,7 +48,7 @@
 			<XButton
 				variant="secondary"
 				class="mie-2"
-				:disabled="filterQuery === ''"
+				:disabled="!hasActiveFilters"
 				@click.prevent.stop="clearFiltersAndEmit"
 			>
 				{{ $t('filters.clear') }}
@@ -76,16 +84,21 @@ const props = withDefaults(defineProps<{
 	changeImmediately?: boolean,
 	filterFromView?: string,
 	showClose?: boolean,
+	showIncludeSubprojectsToggle?: boolean,
+	includeSubprojects?: boolean,
 }>(), {
 	hasTitle: false,
 	hasFooter: true,
 	changeImmediately: false,
 	filterFromView: undefined,
 	showClose: false,
+	showIncludeSubprojectsToggle: false,
+	includeSubprojects: false,
 })
 
 const emit = defineEmits<{
 	'update:modelValue': [value: TaskFilterParams],
+	'update:includeSubprojects': [value: boolean],
 	'showResults': [],
 	'close': [],
 }>()
@@ -116,6 +129,10 @@ watch(
 		filterQuery.value = filter || s
 	},
 )
+
+const hasActiveFilters = computed(() => {
+	return filterQuery.value !== '' || params.value.filter_include_nulls || props.includeSubprojects
+})
 
 const labelStore = useLabelStore()
 const projectStore = useProjectStore()
@@ -186,6 +203,9 @@ function changeAndEmitButton() {
 
 function clearFiltersAndEmit() {
 	filterQuery.value = ''
+	params.value.filter_include_nulls = false
+	params.value.include_subprojects = false
+	emit('update:includeSubprojects', false)
 	changeAndEmitButton()
 }
 

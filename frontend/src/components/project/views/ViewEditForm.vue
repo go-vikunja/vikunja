@@ -59,15 +59,8 @@ onBeforeMount(() => {
 			filter.filter = filter.s
 		}
 
-		// AbstractModel.assignData() runs objectToCamelCase recursively on all
-		// nested objects, which converts filter_include_nulls to filterIncludeNulls
-		// inside the filter object. IFilters intentionally uses snake_case keys to
-		// match the API query param format. We check both key forms here to handle
-		// data coming from either the API response (camelCased by assignData) or
-		// from a freshly constructed filter object (snake_case).
-		filter.filter_include_nulls = filterInput.filter_include_nulls
-			?? (filterInput as Record<string, unknown>).filterIncludeNulls as boolean
-			?? false
+		filter.filter_include_nulls = filterInput.filter_include_nulls ?? false
+		filter.include_subprojects = filterInput.include_subprojects ?? false
 
 		return filter
 	}
@@ -105,6 +98,7 @@ function save() {
 		)
 		const filter: IFilters = {
 			filter_include_nulls: filterInput?.filter_include_nulls ?? false,
+			include_subprojects: filterInput?.include_subprojects ?? false,
 		}
 		if (hasFilterQuery(filterString)) {
 			filter.filter = filterString
@@ -194,6 +188,19 @@ function handleBubbleSave() {
 
 		<div class="is-size-7 mbe-2">
 			<FilterInputDocs />
+		</div>
+
+		<!-- Buckets belong to a single view, so tasks from a subproject have no bucket here. -->
+		<div
+			v-if="view.viewKind !== 'kanban'"
+			class="field mbe-3"
+		>
+			<FancyCheckbox
+				v-model="view.filter.include_subprojects"
+				v-tooltip="$t('project.views.includeSubprojectsHint')"
+			>
+				{{ $t('project.views.includeSubprojects') }}
+			</FancyCheckbox>
 		</div>
 
 		<div class="field mbe-3">
