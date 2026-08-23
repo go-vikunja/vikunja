@@ -268,7 +268,7 @@ func backgroundUpload(ctx context.Context, in *backgroundUploadInput) (*singleBo
 	file := in.RawBody.Data().Background
 	defer func() { _ = file.Close() }()
 
-	if err := backgroundHandler.ValidateAndSaveBackgroundUpload(s, a, project, file, file.Filename, uint64(file.Size)); err != nil {
+	if err := backgroundHandler.ValidateAndSaveBackgroundUpload(s, a, project, file, file.Filename, uint64(file.Size), background.TargetBackground); err != nil {
 		_ = s.Rollback()
 		if backgroundHandler.IsErrFileIsNoImage(err) || backgroundHandler.IsErrFileUnsupportedImageFormat(err) {
 			return nil, huma.Error400BadRequest(err.Error())

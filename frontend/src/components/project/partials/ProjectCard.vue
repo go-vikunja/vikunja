@@ -59,7 +59,7 @@ import type {IProject} from '@/modelTypes/IProject'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 
-import {useProjectBackground} from '@/composables/useProjectBackground'
+import {useProjectCardBackground} from '@/composables/useProjectCardBackground'
 import {useProjectStore} from '@/stores/projects'
 import {getProjectTitle} from '@/helpers/getProjectTitle'
 
@@ -67,7 +67,7 @@ const props = defineProps<{
 	project: IProject,
 }>()
 
-const {background, blurHashUrl} = useProjectBackground(() => props.project)
+const {background, blurHashUrl} = useProjectCardBackground(() => props.project)
 
 const projectStore = useProjectStore()
 

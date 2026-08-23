@@ -20,10 +20,12 @@ export default class ProjectModel extends AbstractModel<IProject> implements IPr
 	hexColor = ''
 	identifier = ''
 	backgroundInformation: unknown | null = null
+	cardBackgroundInformation: unknown | null = null
 	isFavorite = false
 	subscription: ISubscription = null
 	position = 0
 	backgroundBlurHash = ''
+	cardBackgroundBlurHash = ''
 	parentProjectId = 0
 	views: IProjectView[] = []
 	

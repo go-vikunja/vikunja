@@ -115,7 +115,14 @@ func (pd *ProjectDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 
 	log.Debugf("Duplicated all views, buckets and positions from project %d into %d", pd.ProjectID, pd.Project.ID)
 
-	err = duplicateProjectBackground(s, pd, doer)
+	err = duplicateProjectImage(s, pd, doer, "background", pd.Project.BackgroundFileID, pd.Project.BackgroundBlurHash,
+		func() { pd.Project.BackgroundFileID = 0 }, SetProjectBackground)
+	if err != nil {
+		return
+	}
+
+	err = duplicateProjectImage(s, pd, doer, "card image", pd.Project.CardBackgroundFileID, pd.Project.CardBackgroundBlurHash,
+		func() { pd.Project.CardBackgroundFileID = 0 }, SetProjectCardBackground)
 	if err != nil {
 		return
 	}
@@ -290,17 +297,22 @@ func duplicateViews(s *xorm.Session, pd *ProjectDuplicate, doer web.Auth, taskMa
 	return
 }
 
-func duplicateProjectBackground(s *xorm.Session, pd *ProjectDuplicate, doer web.Auth) (err error) {
-	if pd.Project.BackgroundFileID == 0 {
+// duplicateProjectImage copies whichever project image (full background or card
+// image) fileID identifies into pd.Project, via setImage (SetProjectBackground or
+// SetProjectCardBackground). clearFileID resets the source project's in-memory field
+// when the underlying file already vanished, mirroring the two callers' prior
+// behavior of zeroing their own respective FileID field on that path.
+func duplicateProjectImage(s *xorm.Session, pd *ProjectDuplicate, doer web.Auth, label string, fileID int64, blurHash string, clearFileID func(), setImage func(s *xorm.Session, projectID int64, file *files.File, blurHash string) error) (err error) {
+	if fileID == 0 {
 		return
 	}
 
-	log.Debugf("Duplicating background %d from project %d into %d", pd.Project.BackgroundFileID, pd.ProjectID, pd.Project.ID)
+	log.Debugf("Duplicating %s %d from project %d into %d", label, fileID, pd.ProjectID, pd.Project.ID)
 
-	f := &files.File{ID: pd.Project.BackgroundFileID}
+	f := &files.File{ID: fileID}
 	err = f.LoadFileMetaByID(s)
 	if err != nil && files.IsErrFileDoesNotExist(err) {
-		pd.Project.BackgroundFileID = 0
+		clearFileID()
 		return nil
 	}
 	if err != nil {
@@ -322,7 +334,7 @@ func duplicateProjectBackground(s *xorm.Session, pd *ProjectDuplicate, doer web.
 	}
 
 	// Get unsplash info if applicable
-	up, err := GetUnsplashPhotoByFileID(s, pd.Project.BackgroundFileID)
+	up, err := GetUnsplashPhotoByFileID(s, fileID)
 	if err != nil && !files.IsErrFileIsNotUnsplashFile(err) {
 		return err
 	}
@@ -334,11 +346,11 @@ func duplicateProjectBackground(s *xorm.Session, pd *ProjectDuplicate, doer web.
 		}
 	}
 
-	if err := SetProjectBackground(s, pd.Project.ID, file, pd.Project.BackgroundBlurHash); err != nil {
+	if err := setImage(s, pd.Project.ID, file, blurHash); err != nil {
 		return err
 	}
 
-	log.Debugf("Duplicated project background from project %d into %d", pd.ProjectID, pd.Project.ID)
+	log.Debugf("Duplicated project %s from project %d into %d", label, pd.ProjectID, pd.Project.ID)
 
 	return nil
 }

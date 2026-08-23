@@ -194,6 +194,11 @@ func exportProjectsAndTasks(s *xorm.Session, u *user.User, wr *zip.Writer) (task
 				ID: p.BackgroundFileID,
 			}
 		}
+		if p.CardBackgroundFileID > 0 {
+			p.CardBackgroundInformation = &files.File{
+				ID: p.CardBackgroundFileID,
+			}
+		}
 		pp := &ProjectWithTasksAndBuckets{
 			Project: *p,
 		}
@@ -383,23 +388,25 @@ func exportProjectBackgrounds(s *xorm.Session, u *user.User, wr *zip.Writer) (er
 
 	backgroundFiles := make(map[int64]io.ReadCloser)
 	for _, l := range projects {
-		if l.BackgroundFileID == 0 {
-			continue
-		}
-
-		bgFile := &files.File{
-			ID: l.BackgroundFileID,
-		}
-		err = bgFile.LoadFileByID()
-		if err != nil {
-			var pathError *fs.PathError
-			if errors.As(err, &pathError) {
+		for _, fileID := range []int64{l.BackgroundFileID, l.CardBackgroundFileID} {
+			if fileID == 0 {
 				continue
 			}
-			return err
-		}
 
-		backgroundFiles[l.BackgroundFileID] = bgFile.File
+			bgFile := &files.File{
+				ID: fileID,
+			}
+			err = bgFile.LoadFileByID()
+			if err != nil {
+				var pathError *fs.PathError
+				if errors.As(err, &pathError) {
+					continue
+				}
+				return err
+			}
+
+			backgroundFiles[fileID] = bgFile.File
+		}
 	}
 
 	return utils.WriteFilesToZip(backgroundFiles, wr)

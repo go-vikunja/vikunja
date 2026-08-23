@@ -564,6 +564,33 @@ func (err *ErrProjectHasNoBackground) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrProjectHasNoCardBackground represents an error where a project has no card image set.
+type ErrProjectHasNoCardBackground struct {
+	ProjectID int64
+}
+
+// IsErrProjectHasNoCardBackground checks if an error is ErrProjectHasNoCardBackground.
+func IsErrProjectHasNoCardBackground(err error) bool {
+	_, ok := err.(*ErrProjectHasNoCardBackground)
+	return ok
+}
+
+func (err *ErrProjectHasNoCardBackground) Error() string {
+	return fmt.Sprintf("Project has no card image [ProjectID: %d]", err.ProjectID)
+}
+
+// ErrCodeProjectHasNoCardBackground holds the unique world-error code of this error
+const ErrCodeProjectHasNoCardBackground = 3017
+
+// HTTPError holds the http error description
+func (err *ErrProjectHasNoCardBackground) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusNotFound,
+		Code:     ErrCodeProjectHasNoCardBackground,
+		Message:  "Project card image not found",
+	}
+}
+
 // ErrParentProjectIsArchived represents an error, where a project's parent is archived
 type ErrParentProjectIsArchived struct {
 	ProjectID       int64

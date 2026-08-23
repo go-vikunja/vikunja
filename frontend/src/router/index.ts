@@ -280,6 +280,14 @@ const router = createRouter({
 			},
 		},
 		{
+			path: '/projects/:projectId/settings/card-image',
+			name: 'project.settings.cardImage',
+			component: () => import('@/views/project/settings/ProjectSettingsCardImage.vue'),
+			meta: {
+				showAsModal: true,
+			},
+		},
+		{
 			path: '/projects/:projectId/settings/duplicate',
 			name: 'project.settings.duplicate',
 			component: () => import('@/views/project/settings/ProjectSettingsDuplicate.vue'),

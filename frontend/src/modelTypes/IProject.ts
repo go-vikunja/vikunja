@@ -15,10 +15,12 @@ export interface IProject extends IAbstract {
 	hexColor: string
 	identifier: string
 	backgroundInformation: unknown | null // FIXME: improve type
+	cardBackgroundInformation: unknown | null // FIXME: improve type
 	isFavorite: boolean
 	subscription: ISubscription
 	position: number
 	backgroundBlurHash: string
+	cardBackgroundBlurHash: string
 	parentProjectId: number
 	views: IProjectView[]
 	

@@ -53,6 +53,10 @@ func (p *Provider) Search(_ *xorm.Session, _ string, _ int64) (result []*backgro
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/backgrounds/upload [put]
 func (p *Provider) Set(s *xorm.Session, img *background.Image, project *models.Project, _ web.Auth) (err error) {
+	if img.Target == background.TargetCard {
+		return p.setCard(s, img, project)
+	}
+
 	// Remove the old background if one exists
 	if project.BackgroundFileID != 0 {
 		file := files.File{ID: project.BackgroundFileID}
@@ -71,4 +75,25 @@ func (p *Provider) Set(s *xorm.Session, img *background.Image, project *models.P
 	project.BackgroundInformation = &models.ProjectBackgroundType{Type: models.ProjectBackgroundUpload}
 
 	return models.SetProjectBackground(s, project.ID, file, project.BackgroundBlurHash)
+}
+
+func (p *Provider) setCard(s *xorm.Session, img *background.Image, project *models.Project) (err error) {
+	// Remove the old card image if one exists
+	if project.CardBackgroundFileID != 0 {
+		file := files.File{ID: project.CardBackgroundFileID}
+		err := file.Delete(s)
+		if err != nil && !files.IsErrFileDoesNotExist(err) {
+			return err
+		}
+	}
+
+	file := &files.File{}
+	file.ID, err = strconv.ParseInt(img.ID, 10, 64)
+	if err != nil {
+		return
+	}
+
+	project.CardBackgroundInformation = &models.ProjectBackgroundType{Type: models.ProjectBackgroundUpload}
+
+	return models.SetProjectCardBackground(s, project.ID, file, project.CardBackgroundBlurHash)
 }
