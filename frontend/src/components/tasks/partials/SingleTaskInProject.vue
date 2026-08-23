@@ -482,7 +482,8 @@ defineExpose({
 		white-space: nowrap;
 	}
 
-	.tasktext :deep(.color-bubble) {
+	.tasktext :deep(.color-bubble),
+	.tasktext :deep(.avatar-wrapper) {
 		vertical-align: middle;
 	}
 
