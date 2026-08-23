@@ -35,7 +35,9 @@
 				:class="{ 'done': task.done, 'show-project': showProject && project}"
 				class="tasktext"
 			>
-				<span class="is-inline-flex is-align-items-center">
+				<!-- Must stay inline: an inline-flex box is atomic, so a wrapped title
+					would fill the whole line and push the icons after it onto their own line. -->
+				<span>
 					<RouterLink
 						v-if="showProject && typeof project !== 'undefined'"
 						v-tooltip="$t('task.detail.belongsToProject', {project: project.title})"
@@ -478,6 +480,10 @@ defineExpose({
 		color: var(--grey-400);
 		font-size: .9rem;
 		white-space: nowrap;
+	}
+
+	.tasktext :deep(.color-bubble) {
+		vertical-align: middle;
 	}
 
 	.avatar {
