@@ -83,10 +83,6 @@ defineEmits<{
 			display: inline;
 			text-wrap: nowrap;
 		}
-
-		:deep(.user > .username) {
-			margin-inline-start: .5rem;
-		}
 	}
 }
 
