@@ -483,8 +483,11 @@ defineExpose({
 	}
 
 	.tasktext :deep(.color-bubble),
-	.tasktext :deep(.avatar-wrapper) {
+	.tasktext :deep(.avatar-wrapper),
+	.tasktext :deep(.labels .tag) {
 		vertical-align: middle;
+		// middle centers on x-height, ~2px below the line-box center
+		transform: translateY(-2px);
 	}
 
 	.avatar {
