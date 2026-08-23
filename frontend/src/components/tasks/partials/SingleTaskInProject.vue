@@ -35,8 +35,6 @@
 				:class="{ 'done': task.done, 'show-project': showProject && project}"
 				class="tasktext"
 			>
-				<!-- Must stay inline: an inline-flex box is atomic, so a wrapped title
-					would fill the whole line and push the icons after it onto their own line. -->
 				<span>
 					<RouterLink
 						v-if="showProject && typeof project !== 'undefined'"
@@ -486,7 +484,6 @@ defineExpose({
 	.tasktext :deep(.avatar-wrapper),
 	.tasktext :deep(.labels .tag) {
 		vertical-align: middle;
-		// middle centers on x-height, ~2px below the line-box center
 		transform: translateY(-2px);
 	}
 
