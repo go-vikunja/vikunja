@@ -140,6 +140,7 @@ export const useTaskStore = defineStore('task', () => {
 	const isLoading = ref(false)
 	const draggedTask = ref<ITask | null>(null)
 	const lastUpdatedTask = ref<ITask | null>(null)
+	const lastDeletedTask = ref<ITask | null>(null)
 
 	const hasTasks = computed(() => Object.keys(tasks.value).length > 0)
 
@@ -200,6 +201,7 @@ export const useTaskStore = defineStore('task', () => {
 		const taskService = new TaskService()
 		const response = await taskService.delete(task)
 		kanbanStore.removeTaskInBucket(task)
+		lastDeletedTask.value = task
 		return response
 	}
 
@@ -646,6 +648,7 @@ export const useTaskStore = defineStore('task', () => {
 		isLoading,
 		draggedTask,
 		lastUpdatedTask,
+		lastDeletedTask,
 
 		hasTasks,
 

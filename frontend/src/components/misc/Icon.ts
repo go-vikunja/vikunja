@@ -51,6 +51,7 @@ import {
 	faList,
 	faListOl,
 	faLock,
+	faMinus,
 	faPaperclip,
 	faPaste,
 	faPen,
@@ -68,6 +69,7 @@ import {
 	faSortUp,
 	faStar as faStarSolid,
 	faStop,
+	faTableColumns,
 	faTachometerAlt,
 	faTags,
 	faTasks,
@@ -131,6 +133,7 @@ library.add(faBell)
 library.add(faBellSlash)
 library.add(faCalendar)
 library.add(faCalendarAlt)
+library.add(faTableColumns)
 library.add(faCheck)
 library.add(faCheckDouble)
 library.add(faChessKnight)
@@ -166,6 +169,7 @@ library.add(faLock)
 library.add(faPaperclip)
 library.add(faPaste)
 library.add(faPen)
+library.add(faMinus)
 library.add(faPencilAlt)
 library.add(faPercent)
 library.add(faPlay)
