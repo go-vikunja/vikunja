@@ -16,6 +16,17 @@ test.describe('The Menu', () => {
 		await expect(page.locator('.menu-container')).not.toHaveClass(/is-active/)
 	})
 
+	test('Can be toggled with keyboard shortcut on desktop', async ({authenticatedPage: page}) => {
+		await expect(page.locator('.menu-container')).toHaveClass(/is-active/)
+		await page.locator('body').click()
+
+		await page.locator('body').press('ControlOrMeta+e')
+		await expect(page.locator('.menu-container')).not.toHaveClass(/is-active/)
+
+		await page.locator('body').press('ControlOrMeta+e')
+		await expect(page.locator('.menu-container')).toHaveClass(/is-active/)
+	})
+
 	test('Is hidden by default on mobile', async ({authenticatedPage: page}) => {
 		await page.setViewportSize(iPhone8)
 		await expect(page.locator('.menu-container')).not.toHaveClass(/is-active/)
