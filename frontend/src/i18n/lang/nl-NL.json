@@ -104,7 +104,8 @@
 			"remember": "Ingelogd blijven",
 			"registrationDisabled": "Registratie is uitgeschakeld.",
 			"passwordResetTokenMissing": "Wachtwoord reset token ontbreekt.",
-			"registrationFailed": "Er is een fout opgetreden tijdens de registratie. Controleer je invoer en probeer opnieuw."
+			"registrationFailed": "Er is een fout opgetreden tijdens de registratie. Controleer je invoer en probeer opnieuw.",
+			"registrationConfirmEmail": "Je account is succesvol aangemaakt! Bekijk je inbox en klik op de link in de bevestigingsmail voordat je inlogt."
 		},
 		"settings": {
 			"bots": {
@@ -128,6 +129,14 @@
 			"passwordUpdateSuccess": "Het wachtwoord is succesvol bijgewerkt.",
 			"updateEmailTitle": "Je e-mailadres bijwerken",
 			"updateEmailNew": "Nieuw e-mailadres",
+			"updateEmailSuccess": "Je e-mailadres is succesvol bijgewerkt.",
+			"updateEmailPending": "Je nieuwe e-mailadres {email} wacht op bevestiging. Totdat je op de link klikt in je mailbox, blijft je huidige adres actief.",
+			"updateEmailPendingSuccess": "We hebben een bevestigingslink gestuurd naar je nieuwe e-mailadres. Je huidige e-mailadres blijft actief totdat je bevestigt.",
+			"updateEmailResend": "Bevestigingsmail opnieuw verzenden",
+			"updateEmailResendSuccess": "We hebben je een nieuwe bevestigingslink gestuurd.",
+			"updateEmailCancel": "Annuleer wijzigingen",
+			"updateEmailCancelSuccess": "De e-mailwijziging is geannuleerd.",
+			"updateEmailConfirmed": "Je nieuwe e-mailadres is bevestigd.",
 			"general": {
 				"title": "Algemene instellingen",
 				"name": "Mijn naam",
@@ -171,6 +180,7 @@
 					"yyyy/mm/dd": "YYYY/MM/DD"
 				},
 				"timeFormat": "Tijdnotatie",
+				"timeTrackingDefaultStart": "Tijdregistratie starttijd slim invullen",
 				"timeFormatOptions": {
 					"12h": "12-uurs (AM/PM)",
 					"24h": "24-uurs (UU:mm)"
@@ -188,7 +198,8 @@
 			"desktop": {
 				"quickEntryShortcut": "Sneltoets voor snelle invoer",
 				"shortcutRecorderPlaceholder": "Klik om sneltoets in te stellen",
-				"shortcutRecorderRecording": "Druk op een toetscombinatie…"
+				"shortcutRecorderRecording": "Druk op een toetscombinatie…",
+				"shortcutRecorderClear": "Sneltoets wissen"
 			},
 			"totp": {
 				"title": "Tweestapsverificatie",
@@ -347,6 +358,7 @@
 		"shared": "Gedeelde projecten",
 		"noDescriptionAvailable": "Geen projectbeschrijving beschikbaar.",
 		"inboxTitle": "Inbox",
+		"myOpenTasksFilterTitle": "Mijn open taken",
 		"favorite": "Project toevoegen aan favorieten",
 		"unfavorite": "Project verwijderen uit favorieten",
 		"openSettingsMenu": "Open projectinstellingenmenu",
@@ -391,6 +403,7 @@
 			"title": "Dit project dupliceren",
 			"label": "Dupliceer",
 			"text": "Selecteer een bovenliggend project voor het gedupliceerde project:",
+			"shares": "Kopieer gedeelde items (gebruikers, teams en deelbare koppelingen) naar het duplicaat",
 			"success": "Project succesvol gedupliceerd."
 		},
 		"edit": {
@@ -433,11 +446,14 @@
 				"shared": "Gedeeld met deze {type}",
 				"you": "Jij",
 				"notShared": "Nog niet gedeeld met een {type}.",
+				"remove": "Verwijder {type}",
 				"removeHeader": "Verwijder een {type} uit de {sharable}",
 				"removeText": "Weet je zeker dat je dit {sharable} uit de {type} wilt verwijderen? Dit kan niet ongedaan worden gemaakt!",
 				"removeSuccess": "Verwijderen {sharable} uit {type} is geslaagd.",
 				"addedSuccess": "{type} succesvol toegevoegd.",
-				"updatedSuccess": "{type} succesvol toegevoegd."
+				"updatedSuccess": "{type} succesvol toegevoegd.",
+				"search": "Zoek naar een {type} om dit project mee te delen",
+				"permissionFor": "Machtiging voor {sharable}"
 			},
 			"permission": {
 				"title": "Machtiging",
@@ -492,7 +508,8 @@
 		},
 		"table": {
 			"title": "Tabel",
-			"columns": "Kolommen"
+			"columns": "Kolommen",
+			"sortBy": "Sorteer op {column}"
 		},
 		"kanban": {
 			"title": "Kanban",
@@ -556,6 +573,7 @@
 			"createSuccess": "De weergave is succesvol aangemaakt.",
 			"titleRequired": "Voer een titel in.",
 			"delete": "Deze weergave verwijderen",
+			"edit": "Deze weergave bewerken",
 			"deleteText": "Weet je zeker dat je deze weergave wilt verwijderen? Je kunt de weergave dan niet meer gebruiken in dit project. Deze actie zal geen taken verwijderen. Dit kan niet ongedaan worden gemaakt!",
 			"deleteSuccess": "De weergave is succesvol verwijderd.",
 			"onlyAdminsCanEdit": "Alleen projectbeheerders kunnen weergaven bewerken.",
@@ -592,6 +610,7 @@
 			"success": "Het filter is succesvol opgeslagen."
 		},
 		"query": {
+			"label": "Filter",
 			"placeholder": "Typ een zoekopdracht of filter…",
 			"help": {
 				"intro": "Om taken te filteren, kun je een querysyntaxis gebruiken vergelijkbaar met SQL. De beschikbare velden om te filteren zijn:",
@@ -679,6 +698,19 @@
 		"upload": "Bestand uploaden",
 		"migrationStartedWillReciveEmail": "Vikunja gaat nu je lijsten/projecten, taken, notities, herinneringen en bestanden van {service} importeren. Omdat dit een tijdje zal duren, sturen we je een e-mail zodra het klaar is. Je kunt dit venster nu sluiten.",
 		"migrationInProgress": "Er is momenteel een migratie aan de gang. Wacht tot dit voltooid is.",
+		"credentials": {
+			"description": "Voer het adres van je {name}-instantie in en hoe Vikunja moet inloggen. Vikunja importeert alle projecten en borden waartoe je toegang hebt; de inloggegevens worden alleen gebruikt voor deze import en worden niet opgeslagen.",
+			"url": "{name} URL",
+			"authMethod": "Inloggen met",
+			"apiKey": "API-sleutel",
+			"apiKeyRequired": "Voer een API-sleutel in.",
+			"authPassword": "Gebruikersnaam en wachtwoord",
+			"start": "Import starten"
+		},
+		"planka": {
+			"apiKeyHelp": "Er moet een API-sleutel voor je account worden aangemaakt door een Planka-beheerder. Het kopiëren van het token vanuit de browser werkt niet.",
+			"passwordHelp": "Werkt alleen voor lokale Planka-accounts zonder tweefactorauthenticatie die minstens één keer zijn ingelogd op Planka. Accounts die single sign-on gebruiken, hebben een API-sleutel nodig."
+		},
 		"csv": {
 			"description": "Importeer taken uit een CSV-bestand met aangepaste kolomtoewijzing.",
 			"uploadDescription": "Kies een CSV-bestand om te importeren. Het bestand moet taakgegevens bevatten met kolomkoppen in de eerste rij.",
@@ -743,7 +775,10 @@
 		"imprint": "Imprint",
 		"privacy": "Privacybeleid",
 		"closeSidebar": "Zijbalk sluiten",
-		"home": "Vikunja home"
+		"home": "Vikunja home",
+		"toggleChildProjects": "Subprojecten in-/uitklappen",
+		"main": "Hoofdnavigatie",
+		"savedFilters": "Opgeslagen filters"
 	},
 	"misc": {
 		"loading": "Bezig met laden…",
@@ -780,7 +815,10 @@
 		"closeDialog": "Dialoogvenster sluiten",
 		"closeQuickActions": "Snelle acties sluiten",
 		"skipToContent": "Direct naar hoofdinhoud",
-		"sortBy": "Sorteren op"
+		"sortBy": "Sorteren op",
+		"dateRange": "Datumbereik",
+		"notSet": "Niet ingesteld",
+		"user": "Gebruiker"
 	},
 	"input": {
 		"projectColor": "Projectkleur",
@@ -796,6 +834,7 @@
 		},
 		"editor": {
 			"edit": "Bewerken",
+			"label": "Rich text editor",
 			"heading1": "Kop 1",
 			"heading1Tooltip": "Grote sectiekop.",
 			"heading2": "Kop 2",
@@ -815,8 +854,12 @@
 			"orderedList": "Geordende lijst",
 			"orderedListTooltip": "Maak een lijst met nummering.",
 			"link": "Koppeling",
+			"urlPlaceholder": "URL",
 			"image": "Afbeelding",
 			"imageTooltip": "Afbeelding vanaf je computer uploaden.",
+			"altText": "Alt-tekst",
+			"altTextPlaceholder": "Beschrijf deze afbeelding",
+			"toolbarLabel": "Tekstopmaak",
 			"horizontalRule": "Horizontale lijn",
 			"horizontalRuleTooltip": "Een sectie verdelen.",
 			"text": "Tekst",
@@ -850,13 +893,16 @@
 		},
 		"multiselect": {
 			"createPlaceholder": "Aanmaken",
-			"selectPlaceholder": "Klik of druk op enter om te selecteren"
+			"selectPlaceholder": "Klik of druk op enter om te selecteren",
+			"removeItem": "Verwijder dit item",
+			"clear": "Selectie wissen"
 		},
 		"datepickerRange": {
 			"to": "Aan",
 			"from": "Van",
 			"fromto": "{from} naar {to}",
 			"date": "Datum",
+			"openCalendar": "Kalender openen",
 			"ranges": {
 				"today": "Vandaag",
 				"tomorrow": "Morgen",
@@ -930,7 +976,9 @@
 	"task": {
 		"new": "Taak aanmaken",
 		"createSuccess": "De taak is succesvol aangemaakt.",
+		"bulkCreateUnexpectedResponse": "De server meldde een onverwacht aantal aangemaakte taken.",
 		"addReminder": "Herinnering toevoegen…",
+		"removeReminder": "Verwijder deze herinnering",
 		"doneSuccess": "De taak is succesvol aangemerkt als voltooid.",
 		"undoneSuccess": "Het voltooien van de taak is succesvol teruggedraaid.",
 		"readOnlyCheckbox": "Je hebt alleen leestoegang tot deze taak en kunt deze niet als voltooid markeren.",
@@ -953,16 +1001,23 @@
 			"chooseDueDate": "Klik hier om een vervaldatum in te stellen",
 			"chooseStartDate": "Klik hier om een begindatum in te stellen",
 			"chooseEndDate": "Klik hier om een einddatum in te stellen",
+			"removeDueDate": "Vervaldatum verwijderen",
+			"removeStartDate": "Startdatum verwijderen",
+			"removeEndDate": "Einddatum verwijderen",
+			"removeRepeat": "Herhalingsinterval verwijderen",
+			"removeAssignee": "Verwijder {user} als verantwoordelijke",
 			"move": "Verplaats taak naar een ander project",
 			"done": "Markeer taak als voltooid!",
 			"undone": "Markeer als niet voltooid",
 			"created": "Gemaakt {0} door {1}",
 			"updated": "{0} bijgewerkt",
 			"doneAt": "{0} voltooid",
+			"titleRequired": "De taaktitel mag niet leeg zijn.",
 			"updateSuccess": "De taak is succesvol opgeslagen.",
 			"deleteSuccess": "De taak is succesvol verwijderd.",
 			"duplicateSuccess": "De taak is succesvol gedupliceerd.",
 			"noBucket": "Geen categorie",
+			"bucketSelectLabel": "Kanban-categorie: {bucket}",
 			"bucketChangedSuccess": "De taakcategorie is succesvol gewijzigd.",
 			"belongsToProject": "Deze taak hoort bij project '{project}'",
 			"back": "Terug naar project",
@@ -990,6 +1045,7 @@
 				"repeatAfter": "Herhalingsinterval instellen",
 				"percentDone": "Voortgang instellen",
 				"attachments": "Bijlagen toevoegen",
+				"timeTracking": "Tijd registreren",
 				"relatedTasks": "Relatie toevoegen",
 				"moveProject": "Verplaatsen",
 				"duplicate": "Dupliceer",
@@ -1017,6 +1073,7 @@
 			"repeat": "Herhalen",
 			"comment": "{count} reactie | {count} reacties",
 			"commentCount": "Aantal reacties",
+			"attachment": "{count} bijlage | {count} bijlagen",
 			"startDate": "Begindatum",
 			"title": "Titel",
 			"updated": "Bijgewerkt",
@@ -1089,9 +1146,12 @@
 		"label": {
 			"placeholder": "Typ om een label toe te voegen…",
 			"createPlaceholder": "Dit toevoegen als nieuw label",
+			"linkShareCannotCreate": "Nieuwe labels kunnen niet worden aangemaakt via een gedeelde link. Alleen labels die al in dit project worden gebruikt, kunnen worden toegevoegd.",
+			"removeLabel": "Verwijder label {label}",
 			"addSuccess": "Het label is succesvol toegevoegd.",
 			"removeSuccess": "Het label is succesvol verwijderd.",
 			"addCreateSuccess": "Het label is succesvol aangemaakt en toegevoegd.",
+			"createFailed": "Deze labels konden niet worden aangemaakt en zijn niet toegevoegd: {labels}",
 			"delete": {
 				"header": "Dit label verwijderen",
 				"text1": "Weet je zeker dat je dit label wilt verwijderen?",
@@ -1136,6 +1196,9 @@
 			"after": "{amount} {unit} na {type}",
 			"beforeShort": "voor",
 			"afterShort": "na",
+			"periodUnit": "Tijdseenheid",
+			"periodDirection": "Voor of na",
+			"periodRelativeTo": "Ten opzichte van",
 			"onDueDate": "Op de vervaldatum",
 			"onStartDate": "Op de startdatum",
 			"onEndDate": "Op de einddatum",
@@ -1335,6 +1398,7 @@
 		"subscribeFeed": "Abonneren op meldingen via Atom feed"
 	},
 	"quickActions": {
+		"title": "Zoeken en snelle acties",
 		"notLoggedIn": "Log eerst in op het Vikunja hoofdscherm.",
 		"commands": "Opdrachten",
 		"placeholder": "Typ een opdracht of zoek…",
@@ -1348,6 +1412,7 @@
 		"newTeam": "Voer de naam van het nieuwe team in…",
 		"createTask": "Maak een taak in het huidige project ({title})",
 		"createProject": "Project aanmaken",
+		"results": "Geen resultaten | {count} resultaat | {count} resultaten",
 		"cmds": {
 			"newTask": "Nieuwe taak",
 			"newProject": "Nieuw project",
@@ -1388,6 +1453,8 @@
 		"1023": "Je kunt dat niet doen als een deelbare koppeling.",
 		"1024": "Ongeldige claimgegevens voor veld {field} van type {type}.",
 		"1025": "De tijdzone '{timezone}' is ongeldig. Selecteer een geldige tijdzone uit de lijst.",
+		"1035": "Er is geen e-mailadreswijziging in behandeling om te bevestigen.",
+		"1036": "Wacht een minuut voordat je een nieuwe bevestigingsmail aanvraagt.",
 		"2001": "ID kan niet leeg of 0 zijn.",
 		"2002": "Sommige request data was ongeldig.",
 		"2003": "De tijdzone '{timezone}' is ongeldig.",
@@ -1397,6 +1464,7 @@
 		"3006": "Het gedeelde project bestaat niet.",
 		"3007": "Er bestaat al een project met dit ID",
 		"3008": "Het project is gearchiveerd en kan daarom alleen als alleen-lezen worden geopend. Dit geldt ook voor alle taken die aan dit project zijn gekoppeld.",
+		"3016": "Het bovenliggend project is gearchiveerd. Haal die eerst uit het archief.",
 		"4001": "De titel van de taak mag niet leeg zijn.",
 		"4002": "De taak bestaat niet.",
 		"4003": "Alle bulkbewerkingstaken moeten deel uitmaken van hetzelfde project.",
@@ -1449,6 +1517,11 @@
 		"13003": "Het opgegeven token van de gedeelde koppeling is ongeldig.",
 		"14001": "Het verstrekte API-token is ongeldig.",
 		"14002": "De machtiging {permission} van groep {group} is ongeldig.",
+		"14005": "Er loopt al een migratie van deze dienst. Wacht tot dit gereed is.",
+		"14201": "Planka heeft de opgegeven inloggegevens geweigerd. Controleer de URL en de API-sleutel of gebruikersnaam en wachtwoord.",
+		"14202": "Het Planka-account vereist een extra inlogstap (twee-factorcode of het accepteren van de voorwaarden). Log eenmalig in op Planka in de browser, of gebruik een API-sleutel in plaats van gebruikersnaam en wachtwoord.",
+		"14203": "Een Planka-URL en een API-sleutel of een gebruikersnaam en wachtwoord zijn vereist.",
+		"14204": "Kon geen Planka-API bereiken op de opgegeven URL. Controleer de URL en dat Vikunja de instantie kan bereiken.",
 		"error": "Fout",
 		"success": "Succes",
 		"0001": "Je hebt geen toestemming om dat te doen."
@@ -1458,6 +1531,32 @@
 		"version": "Versie: {version}",
 		"frontendVersion": "Frontend versie: {version}",
 		"apiVersion": "API-versie: {version}"
+	},
+	"timeTracking": {
+		"title": "Tijdregistratie",
+		"stop": "Timer stoppen",
+		"logTime": "Tijd loggen",
+		"editEntry": "Invoer bewerken",
+		"form": {
+			"task": "Taak",
+			"taskSearch": "Zoek een taak…",
+			"commentPlaceholder": "Waar heb je aan gewerkt?",
+			"save": "Invoer opslaan",
+			"startTimer": "Timer starten",
+			"update": "Invoer bijwerken",
+			"smartFill": "Invullen met vorige invoer"
+		},
+		"list": {
+			"emptyTask": "Nog geen tijd geregistreerd voor deze taak.",
+			"emptyFiltered": "Geen tijd bijgehouden voor de geselecteerde filters.",
+			"total": "Totaal",
+			"time": "Tijd",
+			"duration": "Duur"
+		},
+		"browse": {
+			"selectRange": "Selecteer een bereik",
+			"userSearch": "Zoek een gebruiker…"
+		}
 	},
 	"time": {
 		"units": {
@@ -1511,6 +1610,11 @@
 			"skipEmailConfirm": "E-mailbevestiging overslaan",
 			"createSubmit": "Gebruiker aanmaken",
 			"saveButton": "Wijzigingen opslaan",
+			"newPasswordLabel": "Nieuw wachtwoord",
+			"setPassword": "Wachtwoord instellen",
+			"setPasswordSuccess": "Het wachtwoord van {username} is bijgewerkt.",
+			"sendResetEmail": "Verzend e-mail voor wachtwoordherstel",
+			"sendResetEmailSuccess": "Een e-mail voor wachtwoordherstel is gestuurd naar {username}.",
 			"createdSuccess": "Gebruiker {username} aangemaakt.",
 			"updatedSuccess": "Gebruiker {username} bijgewerkt.",
 			"deletedSuccess": "Gebruiker {username} verwijderd.",
