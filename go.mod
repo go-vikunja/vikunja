@@ -23,7 +23,7 @@ require (
 	dario.cat/mergo v1.0.2
 	github.com/JohannesKaufmann/dom v0.3.1
 	github.com/JohannesKaufmann/html-to-markdown/v2 v2.5.2
-	github.com/ThreeDotsLabs/watermill v1.5.2
+	github.com/ThreeDotsLabs/watermill v1.5.3
 	github.com/adlio/trello v1.12.0
 	github.com/arran4/golang-ical v0.3.6
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
