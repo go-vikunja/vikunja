@@ -35,6 +35,7 @@ import (
 	"code.vikunja.io/api/pkg/modules/auth/openid"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	migrationHandler "code.vikunja.io/api/pkg/modules/migration/handler"
+	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/plugins"
 	_ "code.vikunja.io/api/pkg/plugins/yaegi" // register yaegi plugin loader
 	"code.vikunja.io/api/pkg/red"
@@ -147,6 +148,7 @@ func FullInit() {
 	openid.RegisterEmptyOpenIDTeamCleanupCron()
 	openid.RegisterProviderAvailabilityCron()
 	models.RegisterAPITokenExpiryCheckCron()
+	notifications.StartWebPushWorker()
 
 	// Initialize WebSocket hub
 	ws.InitHub()

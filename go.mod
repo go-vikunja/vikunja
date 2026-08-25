@@ -23,6 +23,7 @@ require (
 	dario.cat/mergo v1.0.2
 	github.com/JohannesKaufmann/dom v0.3.1
 	github.com/JohannesKaufmann/html-to-markdown/v2 v2.5.2
+	github.com/SherClockHolmes/webpush-go v1.4.0
 	github.com/ThreeDotsLabs/watermill v1.5.2
 	github.com/adlio/trello v1.12.0
 	github.com/arran4/golang-ical v0.3.6

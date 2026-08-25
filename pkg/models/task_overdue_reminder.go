@@ -17,6 +17,7 @@
 package models
 
 import (
+	"fmt"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
@@ -113,8 +114,9 @@ type userWithTasks struct {
 func RegisterOverdueReminderCron() {
 	webhookEnabled := config.WebhooksEnabled.GetBool()
 	emailEnabled := config.ServiceEnableEmailReminders.GetBool() && config.MailerEnabled.GetBool()
+	pushEnabled := config.WebPushEnabled.GetBool()
 
-	if !emailEnabled && !webhookEnabled {
+	if !emailEnabled && !webhookEnabled && !pushEnabled {
 		return
 	}
 
@@ -129,7 +131,7 @@ func RegisterOverdueReminderCron() {
 		now := time.Now()
 
 		var cond builder.Cond
-		if emailEnabled && !webhookEnabled {
+		if !webhookEnabled {
 			cond = builder.Eq{"users.overdue_tasks_reminders_enabled": true}
 		}
 
@@ -159,7 +161,16 @@ func RegisterOverdueReminderCron() {
 		}
 
 		for _, ut := range uts {
-			if emailEnabled && ut.user.OverdueTasksRemindersEnabled {
+			hasPush := false
+			if pushEnabled && ut.user.OverdueTasksRemindersEnabled {
+				hasPush, err = notifications.HasWebPushSubscription(s, ut.user.ID)
+				if err != nil {
+					log.Errorf("[Undone Overdue Tasks Reminder] Could not check Web Push subscriptions for user %d: %s", ut.user.ID, err)
+					return
+				}
+			}
+			shouldMail := emailEnabled && ut.user.OverdueTasksRemindersEnabled
+			if shouldMail || hasPush {
 				var n notifications.Notification = &UndoneTasksOverdueNotification{
 					User:     ut.user,
 					Tasks:    ut.tasks,
@@ -176,7 +187,18 @@ func RegisterOverdueReminderCron() {
 					}
 				}
 
-				err = notifications.Notify(ut.user, n, s)
+				localNow := now
+				if tz, tzErr := time.LoadLocation(ut.user.Timezone); tzErr == nil {
+					localNow = now.In(tz)
+				}
+				nextSummary := localNow.AddDate(0, 0, 1)
+				err = notifications.NotifyWithOptions(ut.user, n, notifications.NotifyOptions{
+					Mail:        shouldMail,
+					Database:    false,
+					WebPush:     hasPush,
+					DeliveryKey: fmt.Sprintf("overdue:%d:%s", ut.user.ID, localNow.Format("2006-01-02")),
+					PushTTL:     nextSummary.Sub(localNow),
+				}, s)
 				if err != nil {
 					log.Errorf("[Undone Overdue Tasks Reminder] Could not notify user %d: %s", ut.user.ID, err)
 					return
@@ -213,6 +235,10 @@ func RegisterOverdueReminderCron() {
 
 		if err := s.Commit(); err != nil {
 			log.Errorf("[Undone Overdue Tasks Reminder] Could not commit: %s", err)
+			return
+		}
+		if pushEnabled {
+			notifications.WakeWebPushWorker()
 		}
 	})
 	if err != nil {
