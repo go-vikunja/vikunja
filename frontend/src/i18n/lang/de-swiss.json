@@ -104,7 +104,8 @@
 			"remember": "Angemeldet bleiben",
 			"registrationDisabled": "Registrierung ist deaktiviert.",
 			"passwordResetTokenMissing": "Das Passwort-Reset-Token fehlt.",
-			"registrationFailed": "Bei der Registrierung ist ein Fehler aufgetreten. Bitte prüfe deine Eingabe und versuche es erneut."
+			"registrationFailed": "Bei der Registrierung ist ein Fehler aufgetreten. Bitte prüfe deine Eingabe und versuche es erneut.",
+			"registrationConfirmEmail": "Dein Account wurde erfolgreich erstellt! Bitte überprüfe deinen Posteingang und klicke auf den Link in der Bestätigungs-E-Mail, bevor du dich anmeldest."
 		},
 		"settings": {
 			"bots": {
@@ -128,7 +129,14 @@
 			"passwordUpdateSuccess": "Dis Passwort isch erfolgriich aktualisiert wordä.",
 			"updateEmailTitle": "Aktualisiere deine E-Mail-Adresse",
 			"updateEmailNew": "Neue E-Mail-Adresse",
-			"updateEmailSuccess": "Dini E-Mail Adrässä isch erfolgriich gänderet worde. Mir hend dir en Link gschickt, um si zu bestätigä.",
+			"updateEmailSuccess": "Deine E-Mail-Adresse wurde erfolgreich geändert.",
+			"updateEmailPending": "Deine neue E-Mail-Adresse {email} wartet auf Bestätigung. Bis Du auf den dort gesendeten Link klickst, bleibt deine aktuelle Adresse aktiv.",
+			"updateEmailPendingSuccess": "Wir haben einen Bestätigungslink an deine neue Adresse gesendet. Deine aktuelle Adresse bleibt aktiv, bis du ihn bestätigst.",
+			"updateEmailResend": "Bestätigungs-E-Mail erneut senden",
+			"updateEmailResendSuccess": "Wir haben dir einen neuen Bestätigungslink geschickt.",
+			"updateEmailCancel": "Änderung abbrechen",
+			"updateEmailCancelSuccess": "Die Änderung der E-Mail-Adresse wurde storniert.",
+			"updateEmailConfirmed": "Deine neue E-Mail-Adresse wurde bestätigt.",
 			"general": {
 				"title": "Allgemeini Iihstellige",
 				"name": "Mein Name",
@@ -690,6 +698,19 @@
 		"upload": "Datei hochladen",
 		"migrationStartedWillReciveEmail": "Vikunja wird nun deine Listen/Projekte, Aufgaben, Notizen, Erinnerungen und Dateien von {service} importieren. Da dies eine Weile dauern wird, senden wir dir eine E-Mail, sobald der Import abgeschlossen ist. Du kannst dieses Fenster jetzt schließen.",
 		"migrationInProgress": "Ein Import wird gerade durchgeführt. Bitte warte, bis dieser abgeschlossen ist.",
+		"credentials": {
+			"description": "Gib die Adresse deiner {name}-Instanz ein und lege fest, wie Vikunja sich anmelden soll. Vikunja importiert alle Projekte und Boards, auf die du Zugriff hast; die Anmeldedaten werden nur für diesen Import verwendet und nicht gespeichert.",
+			"url": "{name}-URL",
+			"authMethod": "Anmelden mit",
+			"apiKey": "API-Schlüssel",
+			"apiKeyRequired": "Bitte gib einen API-Schlüssel ein.",
+			"authPassword": "Anmeldename und Passwort",
+			"start": "Import starten"
+		},
+		"planka": {
+			"apiKeyHelp": "Ein API-Schlüssel muss für dein Konto von einem Planka-Administrator erstellt werden. Das Token aus dem Browser zu kopieren funktioniert nicht.",
+			"passwordHelp": "Funktioniert nur für lokale Planka-Konten ohne Zwei-Faktor-Authentifizierung, die sich mindestens einmal bei Planka angemeldet haben. Konten mit Single Sign-On benötigen einen API-Schlüssel."
+		},
 		"csv": {
 			"description": "Importiere Aufgaben aus einer CSV-Datei mit eigener Spaltenzuordnung.",
 			"uploadDescription": "Wähle eine CSV-Datei, um sie zu importieren. Die Datei sollte Aufgabendaten mit Kopfzeilen in der ersten Zeile enthalten.",
@@ -1432,6 +1453,8 @@
 		"1023": "Du kannst das nicht als Linkfreigabe tun.",
 		"1024": "Ungültige Claim-Daten für das Feld {field} des Typs {type}.",
 		"1025": "Die Zeitzone '{timezone}' ist ungültig. Bitte wähle eine gültige Zeitzone aus der Liste.",
+		"1035": "Es gibt keine ausstehende E-Mail-Änderung, die bestätigt werden muss.",
+		"1036": "Bitte warte eine Minute, bevor du eine weitere Bestätigungs-E-Mail anforderst.",
 		"2001": "ID chann nid leer oder 0 sii.",
 		"2002": "Ebbis vo de Ahfragedate isch ungültig.",
 		"2003": "Die Zeitzone '{timezone}' ist ungültig.",
@@ -1441,6 +1464,7 @@
 		"3006": "Diese Linkfreigabe existiert nicht.",
 		"3007": "Ein Projekt mit diesem Bezeichner existiert bereits.",
 		"3008": "Dieses Projekt ist archiviert und kann deshalb nur gelesen werden. Dies gilt auch für alle Aufgaben, die mit diesem Projekt verbunden sind.",
+		"3016": "Das übergeordnete Projekt ist archiviert. Un-Archiviere es erst.",
 		"4001": "Der Titel darf nicht leer sein.",
 		"4002": "Diese Aufgabe existiert nicht.",
 		"4003": "Alle Massenbearbeitungen an Aufgaben müssen zum selben Projekt gehören.",
@@ -1493,6 +1517,11 @@
 		"13003": "Das Token für diese Linkfreigabe ist ungültig.",
 		"14001": "Das API-Token ist ungültig.",
 		"14002": "Die Berechtigung {permission} der Gruppe {group} ist ungültig.",
+		"14005": "Eine Migration von diesem Dienst läuft bereits. Bitte warte, bis sie fertig ist.",
+		"14201": "Planka hat die angegebenen Anmeldedaten abgelehnt. Überprüfe die URL und den API-Schlüssel oder den Benutzernamen und das Passwort.",
+		"14202": "Das Planka-Konto erfordert einen zusätzlichen Anmeldeschritt (Zwei-Faktor-Code oder das Akzeptieren der Nutzungsbedingungen). Melde dich einmal im Browser bei Planka an oder verwende stattdessen einen API-Schlüssel anstelle von Benutzername und Passwort.",
+		"14203": "Eine Planka-URL und entweder ein API-Schlüssel oder Benutzername und Passwort sind erforderlich.",
+		"14204": "Die Planka-API konnte unter der angegebenen URL nicht erreicht werden. Prüfe die URL und ob Vikunja die Instanz erreichen kann.",
 		"error": "Fähler",
 		"success": "Erfolg",
 		"0001": "Du komsch hier ned rein."

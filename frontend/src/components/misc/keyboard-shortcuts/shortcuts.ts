@@ -1,10 +1,9 @@
 import type {RouteLocation} from 'vue-router'
 
-import {isAppleDevice} from '@/helpers/isAppleDevice'
+import {PRIMARY_MODIFIER_KEY, SHORTCUTS} from '@/constants/shortcuts'
+import {shortcutBindingToDisplay} from '@/helpers/shortcut'
 
-const ctrl = isAppleDevice() ? '⌘' : 'ctrl'
-const reminderModifier = isAppleDevice() ? 'shift' : 'alt'
-const deleteKey = isAppleDevice() ? 'backspace' : 'delete'
+const ctrl = PRIMARY_MODIFIER_KEY
 
 export interface Shortcut {
 	title: string
@@ -24,11 +23,11 @@ export const KEYBOARD_SHORTCUTS: ShortcutGroup[] = [
 		shortcuts: [
 			{
 				title: 'keyboardShortcuts.toggleMenu',
-				keys: [ctrl, 'e'],
+				...shortcutBindingToDisplay(SHORTCUTS.toggleMenu),
 			},
 			{
 				title: 'keyboardShortcuts.quickSearch',
-				keys: [ctrl, 'k'],
+				...shortcutBindingToDisplay(SHORTCUTS.quickSearch),
 			},
 		],
 	},
@@ -37,28 +36,23 @@ export const KEYBOARD_SHORTCUTS: ShortcutGroup[] = [
 		shortcuts: [
 			{
 				title: 'keyboardShortcuts.navigation.overview',
-				keys: ['g', 'o'],
-				combination: 'then',
+				...shortcutBindingToDisplay(SHORTCUTS.navigation.overview),
 			},
 			{
 				title: 'keyboardShortcuts.navigation.upcoming',
-				keys: ['g', 'u'],
-				combination: 'then',
+				...shortcutBindingToDisplay(SHORTCUTS.navigation.upcoming),
 			},
 			{
 				title: 'keyboardShortcuts.navigation.projects',
-				keys: ['g', 'p'],
-				combination: 'then',
+				...shortcutBindingToDisplay(SHORTCUTS.navigation.projects),
 			},
 			{
 				title: 'keyboardShortcuts.navigation.labels',
-				keys: ['g', 'a'],
-				combination: 'then',
+				...shortcutBindingToDisplay(SHORTCUTS.navigation.labels),
 			},
 			{
 				title: 'keyboardShortcuts.navigation.teams',
-				keys: ['g', 'm'],
-				combination: 'then',
+				...shortcutBindingToDisplay(SHORTCUTS.navigation.teams),
 			},
 		],
 	},
@@ -152,39 +146,39 @@ export const KEYBOARD_SHORTCUTS: ShortcutGroup[] = [
 		shortcuts: [
 			{
 				title: 'keyboardShortcuts.task.done',
-				keys: ['t'],
+				...shortcutBindingToDisplay(SHORTCUTS.taskDetail.done),
 			},
 			{
 				title: 'keyboardShortcuts.task.assign',
-				keys: ['a'],
+				...shortcutBindingToDisplay(SHORTCUTS.taskDetail.assignees),
 			},
 			{
 				title: 'keyboardShortcuts.task.labels',
-				keys: ['l'],
+				...shortcutBindingToDisplay(SHORTCUTS.taskDetail.labels),
 			},
 			{
 				title: 'keyboardShortcuts.task.dueDate',
-				keys: ['d'],
+				...shortcutBindingToDisplay(SHORTCUTS.taskDetail.dueDate),
 			},
 			{
 				title: 'keyboardShortcuts.task.attachment',
-				keys: ['f'],
+				...shortcutBindingToDisplay(SHORTCUTS.taskDetail.attachments),
 			},
 			{
 				title: 'keyboardShortcuts.task.related',
-				keys: ['r'],
+				...shortcutBindingToDisplay(SHORTCUTS.taskDetail.relatedTasks),
 			},
 			{
 				title: 'keyboardShortcuts.task.move',
-				keys: ['m'],
+				...shortcutBindingToDisplay(SHORTCUTS.taskDetail.moveProject),
 			},
 			{
 				title: 'keyboardShortcuts.task.color',
-				keys: ['c'],
+				...shortcutBindingToDisplay(SHORTCUTS.taskDetail.color),
 			},
 			{
 				title: 'keyboardShortcuts.task.reminder',
-				keys: [reminderModifier, 'r'],
+				...shortcutBindingToDisplay(SHORTCUTS.taskDetail.reminder),
 			},
 			{
 				title: 'keyboardShortcuts.task.description',
@@ -192,19 +186,19 @@ export const KEYBOARD_SHORTCUTS: ShortcutGroup[] = [
 			},
 			{
 				title: 'keyboardShortcuts.task.priority',
-				keys: ['p'],
+				...shortcutBindingToDisplay(SHORTCUTS.taskDetail.priority),
 			},
 			{
 				title: 'keyboardShortcuts.task.delete',
-				keys: [deleteKey],
+				...shortcutBindingToDisplay(SHORTCUTS.taskDetail.delete),
 			},
 			{
 				title: 'keyboardShortcuts.task.favorite',
-				keys: ['s'],
+				...shortcutBindingToDisplay(SHORTCUTS.taskDetail.favorite),
 			},
 			{
 				title: 'keyboardShortcuts.task.openProject',
-				keys: ['u'],
+				...shortcutBindingToDisplay(SHORTCUTS.taskDetail.openProject),
 			},
 			{
 				title: 'keyboardShortcuts.task.save',

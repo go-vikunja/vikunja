@@ -555,6 +555,27 @@ test.describe('Task', () => {
 			await addLabelToTaskAndVerify(page, labels[0].title)
 		})
 
+		test('Keeps the focus in the label input after selecting a label with the keyboard', async ({authenticatedPage: page}) => {
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				project_id: 1,
+			})
+			const labels = await LabelFactory.create(1)
+
+			await page.goto(`/tasks/${tasks[0].id}`)
+
+			await page.locator('.task-view .action-buttons .button').filter({hasText: 'Add Labels'}).click()
+			const labelInput = page.locator('.task-view .details.labels-list .multiselect input')
+			await labelInput.fill(labels[0].title)
+			await page.locator('.task-view .details.labels-list .multiselect .search-results').waitFor({state: 'visible'})
+
+			await labelInput.press('ArrowDown')
+			await page.keyboard.press('Enter')
+
+			await expect(page.locator('.task-view .details.labels-list .multiselect .input-wrapper span.tag')).toContainText(labels[0].title)
+			await expect(labelInput).toBeFocused()
+		})
+
 		test('Can add a label to a task and it shows up on the kanban board afterwards', async ({authenticatedPage: page}) => {
 			const tasks = await TaskFactory.create(1, {
 				id: 1,
@@ -605,6 +626,21 @@ test.describe('Task', () => {
 
 			await expect(page.locator('.global-notification')).toContainText('Success')
 			await expect(labelWrapper).not.toContainText(labels[0].title)
+		})
+
+		test('Can open due date with keyboard shortcut in task detail', async ({authenticatedPage: page}) => {
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				done: false,
+			})
+			await page.goto(`/tasks/${tasks[0].id}`)
+			await page.waitForLoadState('networkidle')
+
+			const dueDateColumn = page.locator('.task-view .columns.details .column').filter({hasText: 'Due Date'})
+			await expect(dueDateColumn).not.toBeVisible()
+			await page.locator('.task-view .action-buttons').click()
+			await page.locator('body').press('d')
+			await expect(dueDateColumn).toBeVisible()
 		})
 
 		test('Can set a due date for a task', async ({authenticatedPage: page}) => {

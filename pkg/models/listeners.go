@@ -423,6 +423,22 @@ func registerEventsForAuditLogging() {
 //////
 // Task Events
 
+// ensureTaskIdentifier fills in the identifier the simple task getters behind
+// event payloads leave empty.
+func ensureTaskIdentifier(s *xorm.Session, task *Task) error {
+	if task == nil || task.Identifier != "" {
+		return nil
+	}
+
+	project, err := GetProjectSimpleByID(s, task.ProjectID)
+	if err != nil {
+		return err
+	}
+
+	task.setIdentifier(project)
+	return nil
+}
+
 func notifyMentionedUsers(sess *xorm.Session, task *Task, text string, n notifications.NotificationWithSubject) (users map[int64]*user.User, err error) {
 	users, err = FindMentionedUsersInText(sess, text)
 	if err != nil {
@@ -437,7 +453,7 @@ func notifyMentionedUsers(sess *xorm.Session, task *Task, text string, n notific
 
 	var notified int
 	for _, u := range users {
-		can, _, err := task.CanRead(sess, u)
+		can, _, err := (&Task{ID: task.ID}).CanRead(sess, u)
 		if err != nil {
 			return users, err
 		}
@@ -493,6 +509,8 @@ func (s *SendTaskCommentNotification) Handle(msg *message.Message) (err error) {
 		return err
 	}
 
+	event.Task.setIdentifier(project)
+
 	n := &TaskCommentNotification{
 		Doer:      event.Doer,
 		Task:      event.Task,
@@ -517,7 +535,7 @@ func (s *SendTaskCommentNotification) Handle(msg *message.Message) (err error) {
 			continue
 		}
 
-		can, _, err := event.Task.CanRead(sess, u)
+		can, _, err := (&Task{ID: event.Task.ID}).CanRead(sess, u)
 		if err != nil {
 			return err
 		}
@@ -568,8 +586,10 @@ func (s *SendTaskCommentNotification) Handle(msg *message.Message) (err error) {
 		}
 		err = notifications.Notify(subscriber.User, n, sess)
 		if err != nil {
-			log.Errorf("Could not send task comment notification to user %d for task %d: %s", subscriber.UserID, event.Task.ID, err)
-			continue
+			// Return so the event is retried: on SQLite the insert can hit
+			// SQLITE_BUSY_SNAPSHOT when a sibling listener wrote first.
+			_ = sess.Rollback()
+			return err
 		}
 	}
 
@@ -604,6 +624,8 @@ func (s *HandleTaskCommentEditMentions) Handle(msg *message.Message) (err error)
 	if err != nil {
 		return err
 	}
+
+	event.Task.setIdentifier(project)
 
 	n := &TaskCommentNotification{
 		Doer:      event.Doer,
@@ -656,6 +678,8 @@ func (s *SendTaskAssignedNotification) Handle(msg *message.Message) (err error) 
 		return err
 	}
 
+	task.setIdentifier(project)
+
 	notifiedUsers := make(map[int64]bool)
 
 	for _, subscriber := range subscribers {
@@ -677,8 +701,8 @@ func (s *SendTaskAssignedNotification) Handle(msg *message.Message) (err error) 
 		}
 		err = notifications.Notify(subscriber.User, n, sess)
 		if err != nil {
-			log.Errorf("Could not send task assigned notification to user %d for task %d: %s", subscriber.UserID, event.Task.ID, err)
-			continue
+			_ = sess.Rollback()
+			return err
 		}
 
 		notifiedUsers[subscriber.UserID] = true
@@ -712,6 +736,10 @@ func (s *SendTaskDeletedNotification) Handle(msg *message.Message) (err error) {
 		return err
 	}
 
+	if err := ensureTaskIdentifier(sess, event.Task); err != nil {
+		return err
+	}
+
 	log.Debugf("Sending task deleted notifications to %d subscribers for task %d", len(subscribers), event.Task.ID)
 
 	for _, subscriber := range subscribers {
@@ -725,8 +753,8 @@ func (s *SendTaskDeletedNotification) Handle(msg *message.Message) (err error) {
 		}
 		err = notifications.Notify(subscriber.User, n, sess)
 		if err != nil {
-			log.Errorf("Could not send task deleted notification to user %d for task %d: %s", subscriber.UserID, event.Task.ID, err)
-			continue
+			_ = sess.Rollback()
+			return err
 		}
 	}
 
@@ -761,6 +789,8 @@ func (s *HandleTaskCreateMentions) Handle(msg *message.Message) (err error) {
 	if err != nil {
 		return err
 	}
+
+	event.Task.setIdentifier(project)
 
 	n := &UserMentionedInTaskNotification{
 		Task:    event.Task,
@@ -803,6 +833,8 @@ func (s *HandleTaskUpdatedMentions) Handle(msg *message.Message) (err error) {
 	if err != nil {
 		return err
 	}
+
+	event.Task.setIdentifier(project)
 
 	n := &UserMentionedInTaskNotification{
 		Task:    event.Task,
@@ -977,7 +1009,7 @@ func updateTasksInSavedFilterViews(tasks []*Task, doer *user.User) (err error) {
 		if userErr == nil {
 			fallbackTimezone = u.Timezone
 		}
-		// When a link share triggered this event, the user id will be 0, and thus this fails.
+		// When a link share triggered this event, the doer id is negative and won't match a users.id, so this fails.
 		// Similarly, when the doer has been deleted, the user will not exist.
 		// Only passing the value along when the user was retrieved successfully ensures the whole handler
 		// does not fail because of that.
@@ -1103,8 +1135,8 @@ func (s *SendProjectCreatedNotification) Handle(msg *message.Message) (err error
 		}
 		err = notifications.Notify(subscriber.User, n, sess)
 		if err != nil {
-			log.Errorf("Could not send project created notification to user %d for project %d: %s", subscriber.UserID, event.Project.ID, err)
-			continue
+			_ = sess.Rollback()
+			return err
 		}
 	}
 

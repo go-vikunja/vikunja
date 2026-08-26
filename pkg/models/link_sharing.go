@@ -79,9 +79,9 @@ func (*LinkSharing) TableName() string {
 	return "link_shares"
 }
 
-// GetID returns the ID of the links sharing object
+// GetID returns the negated share id (see getUserID)
 func (share *LinkSharing) GetID() int64 {
-	return share.ID
+	return share.getUserID()
 }
 
 // GetLinkShareFromClaims resolves a link share JWT against the DB on every

@@ -94,6 +94,8 @@ type User struct {
 	Password string `xorm:"varchar(250) null" json:"-"`
 	// The user's email address.
 	Email string `xorm:"varchar(250) null" json:"email,omitempty" valid:"email,length(0|250)" maxLength:"250" doc:"The user's email address. Always empty for bot users."`
+	// New address awaiting confirmation; only becomes Email once the confirm token is used.
+	PendingEmail string `xorm:"varchar(250) null" json:"-"`
 
 	Status Status `xorm:"default 0" json:"-"`
 
@@ -507,8 +509,16 @@ func GetCurrentUser(c *echo.Context) (user *User, err error) {
 	return GetUserFromClaims(claims)
 }
 
+// AuthTypeUser is the value of the `type` claim in a user JWT
+const AuthTypeUser int = 1
+
 // GetUserFromClaims Returns a new user from jwt claims
 func GetUserFromClaims(claims jwt.MapClaims) (user *User, err error) {
+	typ, ok := claims["type"].(float64)
+	if !ok || int64(typ) != int64(AuthTypeUser) {
+		return nil, ErrInvalidUserContext{Reason: "token is not a user token"}
+	}
+
 	userID, err := getClaimAsInt(claims, "id")
 	if err != nil {
 		return nil, err
@@ -540,7 +550,7 @@ func getClaimAsInt(claims jwt.MapClaims, field string) (int64, error) {
 	if !ok {
 		return 0, &ErrInvalidClaimData{
 			Field: field,
-			Type:  reflect.TypeOf(claims[field]).String(),
+			Type:  fmt.Sprintf("%T", claims[field]),
 		}
 	}
 	return int64(value), nil
@@ -559,7 +569,7 @@ func getClaimAsString(claims jwt.MapClaims, field string) (string, error) {
 	if !ok {
 		return "", &ErrInvalidClaimData{
 			Field: field,
-			Type:  reflect.TypeOf(claims[field]).String(),
+			Type:  fmt.Sprintf("%T", claims[field]),
 		}
 	}
 	return value, nil
@@ -595,6 +605,30 @@ func premarshalFrontendSettings(settings interface{}) (*string, error) {
 	}
 	settingsString := string(settingsJSON)
 	return &settingsString, nil
+}
+
+func userUpdateColumns(s *xorm.Session, user, theUser *User, forceOverride bool) (cols []string, err error) {
+	cols = baseUserUpdateColumns[:]
+
+	if user.Email != "" && user.Email != theUser.Email {
+		// A direct change supersedes a pending one, the link already mailed out must not work anymore.
+		user.PendingEmail = ""
+		cols = append(cols, "pending_email")
+		if err := removeTokens(s, user, TokenEmailConfirm); err != nil {
+			return nil, err
+		}
+	}
+
+	if forceOverride {
+		// forceOverride is set in paths where we should apply the FrontendSettings update.
+		user.FrontendSettings, err = premarshalFrontendSettings(user.FrontendSettings)
+		if err != nil {
+			return nil, err
+		}
+		cols = append(cols, "frontend_settings")
+	}
+
+	return cols, nil
 }
 
 // UpdateUser updates a user
@@ -665,14 +699,9 @@ func UpdateUser(s *xorm.Session, user *User, forceOverride bool) (updatedUser *U
 		return nil, &ErrInvalidTimezone{Name: user.Timezone, LoadError: err}
 	}
 
-	updateCols := baseUserUpdateColumns[:]
-	if forceOverride {
-		// forceOverride is set in paths where we should apply the FrontendSettings update.
-		user.FrontendSettings, err = premarshalFrontendSettings(user.FrontendSettings)
-		if err != nil {
-			return nil, err
-		}
-		updateCols = append(updateCols, "frontend_settings")
+	updateCols, err := userUpdateColumns(s, user, theUser, forceOverride)
+	if err != nil {
+		return nil, err
 	}
 
 	_, err = s.

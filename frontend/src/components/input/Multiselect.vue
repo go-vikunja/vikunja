@@ -61,6 +61,7 @@
 					:spellcheck="autocompleteEnabled ? undefined : 'false'"
 					@keyup="search"
 					@keyup.enter.exact.prevent="() => createOrSelectOnEnter()"
+					@keydown="clearKeyupGuard"
 					@keydown.down.exact.prevent="() => preSelect(0)"
 					@keydown.esc="handleEscape"
 					@focus="handleFocus"
@@ -330,6 +331,10 @@ function search(e?: KeyboardEvent) {
 		return
 	}
 
+	if (ignoreNextKeyup) {
+		return
+	}
+
 	// Updating the query with a binding does not work on mobile for some reason,
 	// getting the value manual does.
 	query.value = searchInput.value?.value || ''
@@ -372,16 +377,30 @@ function handleEscape(e: KeyboardEvent) {
 	closeSearchResults()
 }
 
-// Set while refocusing the input after Escape so the resulting focus event doesn't reopen the just-closed list.
+// Set while refocusing the input so the resulting focus event doesn't reopen the just-closed list.
 let suppressFocusOpen = false
+
+// Enter activates a result option on keydown, so its keyup lands on the input we refocused and
+// would select or search a second time.
+let ignoreNextKeyup = false
+
+function clearKeyupGuard() {
+	ignoreNextKeyup = false
+}
+
+// Options unmount once the query resets, dropping focus to the body where keystrokes become global shortcuts.
+function refocusInput() {
+	ignoreNextKeyup = true
+	suppressFocusOpen = true
+	searchInput.value?.focus()
+	suppressFocusOpen = false
+}
 
 function closeAndRefocus(e: KeyboardEvent) {
 	e.preventDefault()
 	e.stopPropagation()
 	closeSearchResults()
-	suppressFocusOpen = true
-	searchInput.value?.focus()
-	suppressFocusOpen = false
+	refocusInput()
 }
 
 function handleFocus() {
@@ -403,6 +422,7 @@ function select(object: T | null) {
 			query.value = ''
 			emit('update:modelValue', null)
 			closeSearchResults()
+			refocusInput()
 		}
 		return
 	}
@@ -423,6 +443,7 @@ function select(object: T | null) {
 	if (props.closeAfterSelect && filteredSearchResults.value.length > 0 && !creatableAvailable.value) {
 		closeSearchResults()
 	}
+	refocusInput()
 }
 
 function setSelectedObject(object: string | T | null | undefined, resetOnly = false) {
@@ -494,9 +515,14 @@ function create() {
 	emit('create', query.value)
 	setSelectedObject(query.value, true)
 	closeSearchResults()
+	refocusInput()
 }
 
 function createOrSelectOnEnter() {
+	if (ignoreNextKeyup) {
+		return
+	}
+
 	if (!creatableAvailable.value && searchResults.value.length === 1) {
 		select(searchResults.value[0])
 		return

@@ -130,14 +130,7 @@ func MigrateTo(migrationID string, x *xorm.Engine) error {
 func dropTableColum(x *xorm.Engine, tableName, col string) error {
 
 	switch config.DatabaseType.GetString() {
-	case "sqlite":
-		log.Warning("Unable to drop columns in SQLite")
-	case "mysql":
-		_, err := x.Exec("ALTER TABLE " + tableName + " DROP COLUMN " + col)
-		if err != nil {
-			return err
-		}
-	case "postgres":
+	case "sqlite", "mysql", "postgres":
 		_, err := x.Exec("ALTER TABLE " + tableName + " DROP COLUMN " + col)
 		if err != nil {
 			return err

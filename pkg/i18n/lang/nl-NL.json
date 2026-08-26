@@ -7,6 +7,11 @@
 			"welcome": "Welkom bij Vikunja!",
 			"confirm": "Om je e-mailadres te bevestigen, klik op onderstaande link:"
 		},
+		"email_change": {
+			"subject": "Er is een wijziging van e-mailadres aangevraagd voor je Vikunja account",
+			"requested": "Iemand heeft gevraagd om het e-mailadres van je account te wijzigen in %[1]s. Je huidige e-mailadres blijft actief tot het nieuwe is bevestigd.",
+			"warning": "Als jij dit niet was, wijzig dan direct je wachtwoord en annuleer de openstaande wijziging in je accountinstellingen."
+		},
 		"password": {
 			"changed": {
 				"subject": "Je wachtwoord bij Vikunja is gewijzigd",
@@ -70,6 +75,10 @@
 				"subject": "Herinnering voor \"%[1]s\" (%[2]s)",
 				"message": "Dit is een vriendelijke herinnering voor taak \"%[1]s\" (%[2]s)."
 			},
+			"comment": {
+				"subject": "Re: %[1]s (%[2]s)",
+				"mentioned_subject": "%[1]s noemde je in een reactie in \"%[2]s\" (%[3]s)"
+			},
 			"assigned": {
 				"subject_to_assignee": "Je bent toegewezen aan \"%[1]s\" (%[2]s)",
 				"message_to_assignee": "%[1]s heeft je toegewezen aan \"%[2]s\".",
@@ -81,6 +90,10 @@
 			"deleted": {
 				"subject": "\"%[1]s\" (%[2]s) is verwijderd",
 				"message": "%[1]s verwijderde taak \"%[2]s\" (%[3]s)"
+			},
+			"mentioned": {
+				"subject_new": "%[1]s noemde je in een nieuwe taak \"%[2]s\" (%[3]s)",
+				"subject": "%[1]s noemde je in een taak \"%[2]s\" (%[3]s)"
 			},
 			"overdue": {
 				"subject": "Taak \"%[1]s\" (%[2]s) is te laat",
@@ -123,10 +136,24 @@
 				"working_on_it": "We hebben de foutmelding op onze radar en werken aan een spoedige oplossing."
 			}
 		},
+		"api_token": {
+			"expiring": {
+				"week": {
+					"subject": "Je API token \"%[1]s\" verloopt binnenkort",
+					"message": "Je API-token \"%[1]s\" verloopt op %[2]s (over %[3]s). Als je het nog nodig hebt, maak dan een nieuw token voordat het verloopt."
+				},
+				"day": {
+					"subject": "Je API token \"%[1]s\" verloopt morgen",
+					"message": "Je API-token \"%[1]s\" verloopt op %[2]s (over %[3]s). Als je het nog nodig hebt, maak dan een nieuw token voordat het verloopt."
+				},
+				"action": "Beheer API-tokens"
+			}
+		},
 		"common": {
 			"have_nice_day": "Fijne dag!",
 			"copy_url": "Als bovenstaande knop niet werkt, kopieer dan onderstaande URL en plak deze in de adresbalk van je browser:",
 			"actions": {
+				"open_task": "Open taak in Vikunja",
 				"open_vikunja": "Vikunja openen",
 				"open_project": "Project openen",
 				"open_team": "Team openen",
@@ -136,7 +163,11 @@
 				"confirm_email": "Bevestig je e-mailadres",
 				"abort_deletion": "Annuleer de verwijdering",
 				"confirm_account_deletion": "Bevestig de verwijdering van mijn account",
-				"change_notification_settings_link": "Je kunt je notificatie-instellingen [hier veranderen](%[1]s)."
+				"change_notification_settings_link": "Je kunt je notificatie-instellingen [hier veranderen](%[1]s).",
+				"left_comment": "%[1]s heeft een reactie achtergelaten",
+				"mentioned_you_comment": "%[1]s noemde je in een reactie",
+				"mentioned_you": "%[1]s heeft je genoemd",
+				"mentioned_you_new_task": "%[1]s noemde je in nieuwe taak"
 			}
 		}
 	},
@@ -147,5 +178,10 @@
 		"since_hours": "een uur|%[1]d uren",
 		"since_minutes": "een minuut|%[1]d minuten",
 		"list_last_separator": "en"
+	},
+	"feeds": {
+		"notifications": {
+			"title": "Vikunja-meldingen voor %[1]s"
+		}
 	}
 }

@@ -1,0 +1,26 @@
+{
+  "items": [
+    {"id": "100", "name": "Multi Board Project", "description": "Two boards"},
+    {"id": "200", "name": "Single Board Project", "description": null}
+  ],
+  "included": {
+    "projectManagers": [],
+    "baseCustomFieldGroups": [
+      {"id": "900", "name": "Base Group", "projectId": "100"}
+    ],
+    "boards": [
+      {"id": "11", "position": 65536, "name": "Board B", "projectId": "100"},
+      {"id": "10", "position": 32768, "name": "Board A", "projectId": "100"},
+      {"id": "20", "position": 65536, "name": "Only Board", "projectId": "200"}
+    ],
+    "boardMemberships": [],
+    "customFields": [
+      {"id": "5101", "position": 65536, "name": "Estimate", "showOnFrontOfCard": true, "baseCustomFieldGroupId": "900", "customFieldGroupId": null}
+    ],
+    "notificationServices": [],
+    "users": [
+      {"id": "1", "name": "Me", "username": "me", "email": "me@example.com"}
+    ],
+    "backgroundImages": []
+  }
+}

@@ -8,6 +8,7 @@ import {colorFromHex} from '@/helpers/color/colorFromHex'
 import {SECONDS_A_DAY, SECONDS_A_HOUR, SECONDS_A_WEEK} from '@/constants/date'
 import {objectToSnakeCase} from '@/helpers/case'
 import {apiV2Url, AuthenticatedHTTPFactory} from '@/helpers/fetcher'
+import {invalidateCachedTask} from '@/helpers/taskCache'
 import {translatedError} from '@/message'
 
 // Mirrors models.MaxTasksPerBulkCreation on the backend.
@@ -46,6 +47,18 @@ export default class TaskService extends AbstractService<ITask> {
 
 	autoTransformBeforePost(): boolean {
 		return false
+	}
+
+	async update(model: ITask) {
+		const updated = await super.update(model)
+		invalidateCachedTask(model.id)
+		return updated
+	}
+
+	async delete(model: ITask) {
+		const response = await super.delete(model)
+		invalidateCachedTask(model.id)
+		return response
 	}
 
 	processModel(updatedModel) {

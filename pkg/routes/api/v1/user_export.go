@@ -24,6 +24,7 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/labstack/echo/v5"
@@ -118,14 +119,21 @@ func DownloadUserDataExport(c *echo.Context) error {
 	}
 	defer s.Close()
 
-	err = s.Commit()
-	if err != nil {
-		_ = s.Rollback()
-		return err
-	}
+	var exportFile *files.File
+	if err := func() error {
+		exportFile, err = models.GetUserDataExportFile(s, u)
+		if err != nil {
+			_ = s.Rollback()
+			return err
+		}
 
-	exportFile, err := models.GetUserDataExportFile(u)
-	if err != nil {
+		if err := s.Commit(); err != nil {
+			_ = s.Rollback()
+			return err
+		}
+
+		return models.OpenUserDataExportFile(exportFile)
+	}(); err != nil {
 		if models.IsErrUserDataExportDoesNotExist(err) {
 			return echo.NewHTTPError(http.StatusNotFound, "No user data export found.")
 		}
@@ -166,7 +174,7 @@ func GetUserExportStatus(c *echo.Context) error {
 		return err
 	}
 
-	status, err := models.GetUserDataExportStatus(u)
+	status, err := models.GetUserDataExportStatus(s, u)
 	if err != nil {
 		return err
 	}

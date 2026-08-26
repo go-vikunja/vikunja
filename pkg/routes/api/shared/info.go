@@ -23,6 +23,7 @@ import (
 	"code.vikunja.io/api/pkg/modules/auth/openid"
 	csvmigrator "code.vikunja.io/api/pkg/modules/migration/csv"
 	microsofttodo "code.vikunja.io/api/pkg/modules/migration/microsoft-todo"
+	"code.vikunja.io/api/pkg/modules/migration/planka"
 	"code.vikunja.io/api/pkg/modules/migration/ticktick"
 	"code.vikunja.io/api/pkg/modules/migration/todoist"
 	"code.vikunja.io/api/pkg/modules/migration/trello"
@@ -115,6 +116,7 @@ func BuildInfo() VikunjaInfos {
 			(&ticktick.Migrator{}).Name(),
 			(&wekan.Migrator{}).Name(),
 			(&csvmigrator.Migrator{}).Name(),
+			(&planka.Migrator{}).Name(),
 		},
 		Legal: LegalInfo{
 			ImprintURL:       config.LegalImprintURL.GetString(),

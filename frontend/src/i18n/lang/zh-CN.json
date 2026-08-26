@@ -78,7 +78,6 @@
 			"passwordUpdateSuccess": "已成功更新密码",
 			"updateEmailTitle": "更新电子邮件地址",
 			"updateEmailNew": "新邮箱地址",
-			"updateEmailSuccess": "您的电子邮件地址已成功更新。我们已经向您发送了一个链接来确认。",
 			"general": {
 				"title": "通用设置",
 				"name": "我的名字",

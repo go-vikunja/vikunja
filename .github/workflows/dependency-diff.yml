@@ -22,7 +22,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Create Diff
-        uses: e18e/action-dependency-diff@8e9b8c1957ab066d36235a43f4c1ff1522e1bdbc # v1.6.1
+        uses: e18e/action-dependency-diff@9a7f09f5f2993256322e0db17ee4c8d9339dab77 # v1.7.1
         with:
           working-directory: ${{ matrix.directory }}
           duplicate-threshold: 9999
@@ -38,7 +38,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Check provenance downgrades
-        uses: danielroe/provenance-action@193227b42966e6dff17ced0ea12103633e81fbe5 # main
+        uses: danielroe/provenance-action@755e84448365565a1f0fdd8b0909450410328656 # main
         with:
           workspace-path: ${{ matrix.directory }}
           fail-on-provenance-change: true

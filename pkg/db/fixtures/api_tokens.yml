@@ -78,3 +78,13 @@
   owner_id: 13
   created: 2024-01-01 00:00:00
   # token in plaintext is tk_feeds_access_token_user_0013_feed0013
+- id: 9
+  title: 'tasks read only token for user 1'
+  token_salt: rTk4sPv8Wm
+  token_hash: 2cfec15f81ffd3e2d21670488e304a06c3c0215f38a86e918c191a15fe70f0150ebee851271cf6991d6dec88a84a8882ec58
+  token_last_eight: abcd1234
+  permissions: '{"tasks":["read_all"]}'
+  expires_at: 2099-01-01 00:00:00
+  owner_id: 1
+  created: 2024-01-01 00:00:00
+  # token in plaintext is tk_readonly_tasks_user1_00000000abcd1234

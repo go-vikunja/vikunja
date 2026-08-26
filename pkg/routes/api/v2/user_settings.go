@@ -28,6 +28,7 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/tkuchiki/go-timezone"
+	"xorm.io/xorm"
 )
 
 // userInfoBody is the GET /user response: the public user fields plus the
@@ -39,6 +40,7 @@ type userInfoBody struct {
 	IsLocalUser         bool                        `json:"is_local_user" readOnly:"true" doc:"True if the user authenticates locally (not via LDAP or OpenID)."`
 	AuthProvider        string                      `json:"auth_provider" readOnly:"true" doc:"The name of the source the user authenticated with: 'local', 'ldap', or the configured OpenID provider name."`
 	IsAdmin             bool                        `json:"is_admin" readOnly:"true" doc:"True if the user is an instance administrator."`
+	PendingEmail        string                      `json:"pending_email,omitempty" readOnly:"true" doc:"A new email address waiting for confirmation, if the user requested a change. Empty otherwise."`
 }
 
 // userAvatarProviderBody is the get/set body for the user's avatar provider.
@@ -84,6 +86,28 @@ func RegisterUserSettingsRoutes(api huma.API) {
 		Path:        "/user/settings/email",
 		Tags:        tags,
 	}, userUpdateEmail)
+
+	Register(api, huma.Operation{
+		OperationID: "user-cancel-email-update",
+		Summary:     "Cancel a pending email change",
+		Description: "Discards the unconfirmed new email address and invalidates its confirmation links. The current email stays as it is.",
+		Method:      http.MethodDelete,
+		Path:        "/user/settings/email",
+		// Returns a message body, not the wrapper's DELETE default 204.
+		DefaultStatus: http.StatusOK,
+		Tags:          tags,
+	}, userCancelEmailUpdate)
+
+	Register(api, huma.Operation{
+		OperationID: "user-resend-email-confirmation",
+		Summary:     "Resend the confirmation mail for a pending email change",
+		Description: "Invalidates earlier confirmation links and sends a new one to the pending address. Fails with 412 if no email change is pending.",
+		Method:      http.MethodPost,
+		Path:        "/user/settings/email/resend",
+		// Sends a mail, creates nothing — keep 200 over the wrapper's POST→201.
+		DefaultStatus: http.StatusOK,
+		Tags:          tags,
+	}, userResendEmailConfirmation)
 
 	Register(api, huma.Operation{
 		OperationID: "user-update-settings",
@@ -146,6 +170,7 @@ func userShow(ctx context.Context, _ *struct{}) (*singleBody[userInfoBody], erro
 		DeletionScheduledAt: u.DeletionScheduledAt,
 		IsLocalUser:         u.Issuer == user.IssuerLocal,
 		IsAdmin:             u.IsAdmin,
+		PendingEmail:        u.PendingEmail,
 	}
 
 	// nolint:contextcheck // openid.GetAllProviders/Issuer (called via shared) take
@@ -164,28 +189,9 @@ func userChangePassword(ctx context.Context, in *struct {
 		NewPassword string `json:"new_password" valid:"bcrypt_password" minLength:"8" maxLength:"72" doc:"The new password. Max 72 bytes (a bcrypt limit), which may be fewer than 72 characters."`
 	}
 }) (*singleBody[userActionMessageBody], error) {
-	a, err := authFromCtx(ctx)
-	if err != nil {
-		return nil, err
-	}
-	doer, err := user.GetFromAuth(a)
-	if err != nil {
-		return nil, translateDomainError(err)
-	}
-
-	s := db.NewSession()
-	defer s.Close()
-
-	if err := models.ChangeUserPassword(ctx, s, doer, in.Body.OldPassword, in.Body.NewPassword); err != nil {
-		_ = s.Rollback()
-		return nil, translateDomainError(err)
-	}
-
-	if err := s.Commit(); err != nil {
-		return nil, translateDomainError(err)
-	}
-
-	return &singleBody[userActionMessageBody]{Body: &userActionMessageBody{Message: "The password was updated successfully."}}, nil
+	return runUserAction(ctx, func(s *xorm.Session, u *user.User) error {
+		return models.ChangeUserPassword(ctx, s, u, in.Body.OldPassword, in.Body.NewPassword)
+	}, "The password was updated successfully.")
 }
 
 func userUpdateEmail(ctx context.Context, in *struct {
@@ -194,6 +200,20 @@ func userUpdateEmail(ctx context.Context, in *struct {
 		Password string `json:"password" doc:"The current password, for confirmation."`
 	}
 }) (*singleBody[userActionMessageBody], error) {
+	return runUserAction(ctx, func(s *xorm.Session, u *user.User) error {
+		return user.ChangeUserEmail(ctx, s, u, in.Body.Password, in.Body.NewEmail)
+	}, user.EmailUpdateMessage())
+}
+
+func userCancelEmailUpdate(ctx context.Context, _ *struct{}) (*singleBody[userActionMessageBody], error) {
+	return runUserAction(ctx, user.CancelEmailUpdate, "The pending email change was cancelled.")
+}
+
+func userResendEmailConfirmation(ctx context.Context, _ *struct{}) (*singleBody[userActionMessageBody], error) {
+	return runUserAction(ctx, user.ResendEmailConfirmation, "We sent you email with a link to confirm your email address.")
+}
+
+func runUserAction(ctx context.Context, action func(*xorm.Session, *user.User) error, message string) (*singleBody[userActionMessageBody], error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
 		return nil, err
@@ -206,7 +226,7 @@ func userUpdateEmail(ctx context.Context, in *struct {
 	s := db.NewSession()
 	defer s.Close()
 
-	if err := user.ChangeUserEmail(ctx, s, doer, in.Body.Password, in.Body.NewEmail); err != nil {
+	if err := action(s, doer); err != nil {
 		_ = s.Rollback()
 		return nil, translateDomainError(err)
 	}
@@ -215,40 +235,20 @@ func userUpdateEmail(ctx context.Context, in *struct {
 		return nil, translateDomainError(err)
 	}
 
-	return &singleBody[userActionMessageBody]{Body: &userActionMessageBody{Message: "We sent you email with a link to confirm your email address."}}, nil
+	return &singleBody[userActionMessageBody]{Body: &userActionMessageBody{Message: message}}, nil
 }
 
 func userUpdateSettings(ctx context.Context, in *struct {
 	Body models.UserGeneralSettings
 }) (*singleBody[userActionMessageBody], error) {
-	a, err := authFromCtx(ctx)
-	if err != nil {
-		return nil, err
-	}
-	doer, err := user.GetFromAuth(a)
-	if err != nil {
-		return nil, translateDomainError(err)
-	}
+	return runUserAction(ctx, func(s *xorm.Session, doer *user.User) error {
+		u, err := user.GetUserWithEmail(s, &user.User{ID: doer.ID})
+		if err != nil {
+			return err
+		}
 
-	s := db.NewSession()
-	defer s.Close()
-
-	u, err := user.GetUserWithEmail(s, &user.User{ID: doer.ID})
-	if err != nil {
-		_ = s.Rollback()
-		return nil, translateDomainError(err)
-	}
-
-	if err := models.UpdateUserGeneralSettings(s, u, &in.Body); err != nil {
-		_ = s.Rollback()
-		return nil, translateDomainError(err)
-	}
-
-	if err := s.Commit(); err != nil {
-		return nil, translateDomainError(err)
-	}
-
-	return &singleBody[userActionMessageBody]{Body: &userActionMessageBody{Message: "The settings were updated successfully."}}, nil
+		return models.UpdateUserGeneralSettings(s, u, &in.Body)
+	}, "The settings were updated successfully.")
 }
 
 func userGetAvatarProvider(ctx context.Context, _ *struct{}) (*singleBody[userAvatarProviderBody], error) {

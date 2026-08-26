@@ -68,8 +68,10 @@ func TestFileStorageIntegration(t *testing.T) {
 		assert.Equal(t, int64(1), createdFile.CreatedByID, "Creator ID should match")
 
 		// Load file metadata from database
+		s := db.NewSession()
+		defer s.Close()
 		loadedFile := &File{ID: createdFile.ID}
-		err = loadedFile.LoadFileMetaByID()
+		err = loadedFile.LoadFileMetaByID(s)
 		require.NoError(t, err, "Failed to load file metadata")
 		assert.Equal(t, testFileName, loadedFile.Name, "Loaded file name should match")
 		assert.Equal(t, uint64(len(testContent)), loadedFile.Size, "Loaded file size should match")
@@ -91,8 +93,6 @@ func TestFileStorageIntegration(t *testing.T) {
 		assert.NotNil(t, fileInfo, "File info should not be nil")
 
 		// Delete file
-		s := db.NewSession()
-		defer s.Close()
 		err = loadedFile.Delete(s)
 		require.NoError(t, err, "Failed to delete file")
 
@@ -183,7 +183,9 @@ func TestFileStorageIntegration(t *testing.T) {
 		assert.True(t, os.IsNotExist(err), "Error should indicate file does not exist")
 
 		// Try to load metadata for non-existent file
-		err = nonExistentFile.LoadFileMetaByID()
+		s := db.NewSession()
+		defer s.Close()
+		err = nonExistentFile.LoadFileMetaByID(s)
 		require.Error(t, err, "Loading metadata for non-existent file should error")
 		assert.True(t, IsErrFileDoesNotExist(err), "Error should be ErrFileDoesNotExist")
 	})

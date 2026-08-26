@@ -1097,7 +1097,7 @@ func extractFrontendTranslationKeysFromFile(filePath string) ([]TranslationKey, 
 func checkGolangCiLintInstalled(ctx context.Context) error {
 	mg.Deps(initVars, ensureFrontendDistExists)
 	if err := exec.CommandContext(ctx, "golangci-lint").Run(); err != nil && strings.Contains(err.Error(), "executable file not found") {
-		return fmt.Errorf("golangci-lint executable failed to run, please manually install golangci-lint by running the command: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.4.0")
+		return fmt.Errorf("golangci-lint executable failed to run, please manually install golangci-lint by running the command: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.13.0")
 	}
 	return nil
 }
@@ -1427,6 +1427,7 @@ var yaegiSymbolPackages = []struct {
 	importPath string
 	outFile    string
 }{
+	{"code.vikunja.io/api/pkg/config", "vikunja_config.go"},
 	{"code.vikunja.io/api/pkg/db", "vikunja_db.go"},
 	{"code.vikunja.io/api/pkg/events", "vikunja_events.go"},
 	{"code.vikunja.io/api/pkg/log", "vikunja_log.go"},
@@ -1435,6 +1436,9 @@ var yaegiSymbolPackages = []struct {
 	{"code.vikunja.io/api/pkg/user", "vikunja_user.go"},
 	{"github.com/labstack/echo/v5", "echo.go"},
 	{"github.com/ThreeDotsLabs/watermill/message", "watermill.go"},
+	{"github.com/spf13/viper", "viper.go"},
+	{"src.techknowlogick.com/xormigrate", "xormigrate.go"},
+	{"xorm.io/xorm", "xorm.go"},
 }
 
 // YaegiSymbols regenerates the yaegi symbol tables in pkg/yaegi_symbols so
@@ -1843,6 +1847,33 @@ func printReleaseStats(ctx context.Context, fromRef, toRef string) error {
 	return nil
 }
 
+// commitPathIfChanged stages and commits everything under path if it has
+// uncommitted changes. No-op when the path is clean.
+func commitPathIfChanged(ctx context.Context, path, message string) error {
+	status, err := runGitCommandWithOutput(ctx, "status", "--porcelain", "--", path)
+	if err != nil {
+		return fmt.Errorf("failed to check git status for %s: %w", path, err)
+	}
+
+	if strings.TrimSpace(string(status)) == "" {
+		fmt.Printf("%s is up to date, nothing to commit.\n", path)
+		return nil
+	}
+
+	if err := exec.CommandContext(ctx, "git", "add", path).Run(); err != nil {
+		return fmt.Errorf("failed to stage %s: %w", path, err)
+	}
+
+	cmd := exec.CommandContext(ctx, "git", "commit", "-m", message)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to commit %s: %w", path, err)
+	}
+
+	return nil
+}
+
 // TagRelease creates a new release tag with changelog.
 // It updates the version badge in README.md, generates changelog using git-cliff,
 // commits the changes, and creates an annotated tag.
@@ -1881,6 +1912,24 @@ func (Dev) TagRelease(ctx context.Context, version string) error {
 
 	// Clean up the changelog
 	changelog = cleanupChangelog(changelog)
+
+	// Generated files must be part of the tag, so regenerate them here instead of
+	// waiting for the workflow which only commits them after the release ran.
+	fmt.Println("Regenerating swagger docs...")
+	if err := (Generate{}).SwaggerDocs(ctx); err != nil {
+		return fmt.Errorf("failed to generate swagger docs: %w", err)
+	}
+	if err := commitPathIfChanged(ctx, "pkg/swagger", "[skip ci] Updated swagger docs"); err != nil {
+		return err
+	}
+
+	fmt.Println("Regenerating yaegi symbols...")
+	if err := (Generate{}).YaegiSymbols(ctx); err != nil {
+		return fmt.Errorf("failed to generate yaegi symbols: %w", err)
+	}
+	if err := commitPathIfChanged(ctx, "pkg/yaegi_symbols", "[skip ci] Updated yaegi symbols"); err != nil {
+		return err
+	}
 
 	// Update README.md version badge
 	fmt.Println("Updating README.md version badge...")

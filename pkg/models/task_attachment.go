@@ -26,6 +26,7 @@ import (
 	"strings"
 	"time"
 
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
@@ -140,39 +141,59 @@ func UploadTaskAttachments(s *xorm.Session, a web.Auth, taskID int64, uploads []
 	return success, failures, nil
 }
 
-// LoadTaskAttachmentForDownload checks read access, loads the attachment with its
-// open file, and resolves a preview if previewSize is set and the file is an image.
-// It returns the loaded attachment and, when applicable, the preview bytes (the
-// caller serves those instead of the file). The caller owns the session, the
-// commit, and writing the response. Returns ErrGenericForbidden on denied access.
-func LoadTaskAttachmentForDownload(s *xorm.Session, a web.Auth, taskID, attachmentID int64, previewSize PreviewSize) (ta *TaskAttachment, preview []byte, err error) {
+// GetTaskAttachmentForDownload returns preview bytes instead of the file when previewSize
+// is set and the attachment is an image. Returns ErrGenericForbidden on denied access.
+// Owns its own session and commits it before touching storage so no pool connection is held.
+func GetTaskAttachmentForDownload(a web.Auth, taskID, attachmentID int64, previewSize PreviewSize) (ta *TaskAttachment, preview []byte, err error) {
+	s := db.NewSession()
+	defer s.Close()
+
 	ta = &TaskAttachment{ID: attachmentID, TaskID: taskID}
 	can, _, err := ta.CanRead(s, a)
 	if err != nil {
+		_ = s.Rollback()
 		return nil, nil, err
 	}
 	if !can {
+		_ = s.Rollback()
 		return nil, nil, ErrGenericForbidden{}
 	}
 
 	if err := ta.ReadOne(s, a); err != nil {
+		_ = s.Rollback()
 		return nil, nil, err
 	}
-	if err := ta.File.LoadFileByID(); err != nil {
+
+	if err := s.Commit(); err != nil {
+		_ = s.Rollback()
 		return nil, nil, err
+	}
+
+	preview, err = ta.loadFileAndPreview(previewSize)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return ta, preview, nil
+}
+
+func (ta *TaskAttachment) loadFileAndPreview(previewSize PreviewSize) (preview []byte, err error) {
+	if err := ta.File.LoadFileByID(); err != nil {
+		return nil, err
 	}
 
 	if previewSize != PreviewSizeUnknown && strings.HasPrefix(ta.File.Mime, "image") {
 		preview = ta.GetPreview(previewSize)
-		// GetPreview consumes the file reader; re-open it for the non-preview fallback.
 		if preview == nil {
+			// GetPreview consumed the reader; close it before re-opening so it doesn't leak.
+			_ = ta.File.File.Close()
 			if err := ta.File.LoadFileByID(); err != nil {
-				return nil, nil, err
+				return nil, err
 			}
 		}
 	}
 
-	return ta, preview, nil
+	return preview, nil
 }
 
 // ReadOne returns a task attachment
@@ -198,7 +219,7 @@ func (ta *TaskAttachment) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
 
 	// Get the file
 	ta.File = &files.File{ID: ta.FileID}
-	err = ta.File.LoadFileMetaByID()
+	err = ta.File.LoadFileMetaByID(s)
 	if err != nil {
 		return
 	}

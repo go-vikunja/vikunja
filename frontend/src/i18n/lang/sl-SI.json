@@ -77,7 +77,6 @@
 			"passwordUpdateSuccess": "Geslo je bilo uspešno posodobljeno.",
 			"updateEmailTitle": "Posodobite e-poštni naslov",
 			"updateEmailNew": "Nov e-poštni naslov",
-			"updateEmailSuccess": "Vaš e-poštni naslov je bil uspešno posodobljen. Poslali smo vam povezavo za potrditev.",
 			"general": {
 				"title": "Splošne nastavitve",
 				"name": "Moje ime",

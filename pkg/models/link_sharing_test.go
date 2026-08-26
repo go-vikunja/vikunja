@@ -17,10 +17,12 @@
 package models
 
 import (
+	"bytes"
 	"testing"
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -186,6 +188,14 @@ func TestLinkSharing_ReadOne(t *testing.T) {
 	})
 }
 
+// A link share id must never be mistaken for a users.id at a permission check.
+// See GHSA-32r8-5843-4qw2.
+func TestLinkSharing_GetID(t *testing.T) {
+	share := &LinkSharing{ID: 1}
+	assert.Equal(t, int64(-1), share.GetID())
+	assert.Negative(t, share.GetID())
+}
+
 func TestLinkSharing_toUser(t *testing.T) {
 	t.Run("empty name", func(t *testing.T) {
 		share := &LinkSharing{
@@ -345,4 +355,112 @@ func TestGetLinkShareFromClaims(t *testing.T) {
 		require.Error(t, err)
 		assert.True(t, IsErrLinkShareTokenInvalid(err))
 	})
+}
+
+func TestLinkSharing_CannotActAsCollidingUser(t *testing.T) {
+	t.Run("read a team the colliding user belongs to", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// user 1 is a member of team 1
+		can, _, err := (&Team{ID: 1}).CanRead(s, &LinkSharing{ID: 1})
+		require.NoError(t, err)
+		assert.False(t, can)
+	})
+
+	t.Run("remove the colliding user from their team", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		tm := &TeamMember{TeamID: 1, Username: "user1"}
+		can, err := tm.CanDelete(s, &LinkSharing{ID: 1})
+		require.NoError(t, err)
+		assert.False(t, can)
+	})
+
+	t.Run("act on a bot owned by the colliding user", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// user 23 is a bot owned by user 21
+		bot := &BotUser{User: user.User{ID: 23}}
+		share := &LinkSharing{ID: 21}
+
+		canRead, _, err := bot.CanRead(s, share)
+		require.NoError(t, err)
+		assert.False(t, canRead)
+
+		canUpdate, err := bot.CanUpdate(s, share)
+		require.NoError(t, err)
+		assert.False(t, canUpdate)
+
+		canDelete, err := bot.CanDelete(s, share)
+		require.NoError(t, err)
+		assert.False(t, canDelete)
+	})
+
+	t.Run("enumerate bots owned by the colliding user", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, _, _, err := (&BotUser{}).ReadAll(s, &LinkSharing{ID: 21}, "", 1, 50)
+		require.Error(t, err)
+		assert.True(t, IsErrGenericForbidden(err))
+	})
+
+	t.Run("read a user-level webhook owned by the colliding user", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		can, _, err := (&Webhook{UserID: 1}).CanRead(s, &LinkSharing{ID: 1})
+		require.NoError(t, err)
+		assert.False(t, can)
+	})
+
+	t.Run("list the webhooks of the colliding user", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		share := &LinkSharing{ID: 1}
+		// the route fills UserID from the auth object
+		_, _, _, err := (&Webhook{UserID: share.GetID()}).ReadAll(s, share, "", 1, 50)
+		require.Error(t, err)
+		assert.True(t, IsErrGenericForbidden(err))
+	})
+
+	t.Run("list the webhooks of the project the share points at", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// link share 1 has read permission on project 1
+		share := &LinkSharing{ID: 1, ProjectID: 1, Permission: PermissionRead}
+		_, _, _, err := (&Webhook{ProjectID: 1}).ReadAll(s, share, "", 1, 50)
+		require.Error(t, err)
+		assert.True(t, IsErrGenericForbidden(err))
+	})
+}
+
+func TestLinkSharing_AttachmentIsNotAttributedToCollidingUser(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	files.InitTestFileFixtures(t)
+
+	share := &LinkSharing{ID: 2, Hash: "test2", ProjectID: 2, Permission: PermissionWrite}
+
+	ta := TaskAttachment{TaskID: 32} // task 32 lives in project 2
+	content := []byte("testingstuff")
+	require.NoError(t, ta.NewAttachment(s, bytes.NewReader(content), "testfile", uint64(len(content)), share))
+
+	assert.Equal(t, int64(-2), ta.CreatedByID)
+	assert.Equal(t, int64(-2), ta.File.CreatedByID)
+	assert.Negative(t, ta.File.CreatedByID)
 }

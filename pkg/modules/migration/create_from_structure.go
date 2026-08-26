@@ -20,6 +20,8 @@ import (
 	"bytes"
 	"context"
 	"math"
+	"strings"
+	"time"
 
 	"xorm.io/xorm"
 
@@ -34,11 +36,18 @@ import (
 
 // InsertFromStructure takes a fully nested Vikunja data structure and a user and then creates everything for this user
 // (Projects, tasks, etc. Even attachments and relations.)
-func InsertFromStructure(str []*models.ProjectWithTasksAndBuckets, user *user.User) (err error) {
+func InsertFromStructure(str []*models.ProjectWithTasksAndBuckets, u *user.User) (err error) {
 	s := db.NewSession()
 	defer s.Close()
 
-	err = insertFromStructure(s, str, user)
+	// Callers may pass a user built from jwt claims; load the stored one so
+	// assignee matching sees the current email/username.
+	importer, err := user.GetUserWithEmail(s, &user.User{ID: u.ID})
+	if err != nil {
+		return err
+	}
+
+	err = insertFromStructure(s, str, importer)
 	if err != nil {
 		log.Errorf("[creating structure] Error while creating structure: %s", err.Error())
 		_ = s.Rollback()
@@ -128,6 +137,14 @@ func insertFromStructure(s *xorm.Session, str []*models.ProjectWithTasksAndBucke
 			Cols("is_archived").
 			In("id", archivedProjects).
 			Update(&models.Project{IsArchived: true})
+		if err != nil {
+			return err
+		}
+	}
+
+	// Exports written before archiving cascaded carry unflagged children under archived parents.
+	for _, projectID := range archivedProjects {
+		err = models.SetArchiveStateForProjectDescendants(s, projectID, true)
 		if err != nil {
 			return err
 		}
@@ -318,6 +335,10 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 
 	log.Debugf("[creating structure] Creating %d tasks", len(tasks))
 
+	// Moving a done task into an imported bucket flips it back to open (it left the view's done bucket); restore after the loop in bulk.
+	now := time.Now()
+	taskIDsByDoneAt := make(map[time.Time][]int64)
+
 	setBucketOrDefault := func(task *models.Task) (err error) {
 		var bucketID = task.BucketID
 		bucket, exists := bucketsByOldID[bucketID]
@@ -333,6 +354,13 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 			if err != nil {
 				log.Debugf("[creating structure] Error while updating task bucket %d for task %d: %s", bucketID, task.ID, err.Error())
 				return
+			}
+			if task.Done {
+				doneAt := task.DoneAt
+				if doneAt.IsZero() {
+					doneAt = now
+				}
+				taskIDsByDoneAt[doneAt] = append(taskIDsByDoneAt[doneAt], task.ID)
 			}
 		} else if bucketID > 0 {
 			log.Debugf("[creating structure] No bucket created for original bucket id %d", task.BucketID)
@@ -355,6 +383,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		t.ProjectID = project.ID
 		originalBucketID := t.BucketID
 		t.BucketID = 0
+		t.Assignees = remapAssignees(t.Assignees, user)
 		err = t.Create(s, user)
 		if err != nil {
 			if models.IsErrTaskCannotBeEmpty(err) {
@@ -393,6 +422,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 					rt.ProjectID = t.ProjectID
 					originalBucketID := rt.BucketID
 					rt.BucketID = 0
+					rt.Assignees = remapAssignees(rt.Assignees, user)
 
 					err = rt.Create(s, user)
 					if err != nil {
@@ -514,6 +544,13 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		}
 	}
 
+	for doneAt, taskIDs := range taskIDsByDoneAt {
+		_, err = s.In("id", taskIDs).Cols("done", "done_at").Update(&models.Task{Done: true, DoneAt: doneAt})
+		if err != nil {
+			return
+		}
+	}
+
 	// All tasks brought their own bucket with them, therefore the newly created default buckets are just extra space.
 	// Delete all default-created buckets ("To-Do", "Doing", "Done") that were auto-generated.
 	if !needsDefaultBucket {
@@ -604,5 +641,21 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 	project.Tasks = tasks
 	project.Buckets = originalBuckets
 
+	return nil
+}
+
+// Exported assignees carry user ids from a foreign instance. Only the importing
+// user can be matched (by email, then username); everyone else is dropped.
+func remapAssignees(assignees []*user.User, importer *user.User) []*user.User {
+	for _, a := range assignees {
+		if a == nil {
+			continue
+		}
+		emailMatch := a.Email != "" && importer.Email != "" && strings.EqualFold(a.Email, importer.Email)
+		usernameMatch := a.Username != "" && strings.EqualFold(a.Username, importer.Username)
+		if emailMatch || usernameMatch {
+			return []*user.User{importer}
+		}
+	}
 	return nil
 }
