@@ -80,6 +80,7 @@ async function mountTaskList(query: Record<string, string>): Promise<Router> {
 
 describe('useTaskList sort handling for relevance ranking', () => {
 	beforeEach(() => {
+		localStorage.clear()
 		setActivePinia(createPinia())
 		getAll.mockClear()
 	})
