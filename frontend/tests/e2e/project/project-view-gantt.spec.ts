@@ -1,4 +1,5 @@
 import {test, expect} from '../../support/fixtures'
+import type {Page} from '@playwright/test'
 import dayjs from 'dayjs'
 import {TaskFactory} from '../../factories/task'
 import {ProjectFactory} from '../../factories/project'
@@ -14,7 +15,7 @@ test.describe('Project View Gantt', () => {
 			await ProjectViewFactory.create(1, {id: 3, project_id: 2, view_kind: 1}, false)
 		}
 
-		function includeSubprojectsCheckbox(page) {
+		function includeSubprojectsCheckbox(page: Page) {
 			return page.locator('label.base-checkbox__label').filter({hasText: 'Include subprojects'})
 		}
 
