@@ -27,6 +27,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/oauth2"
 )
 
 func TestGetAllProvidersTypeSafety(t *testing.T) {
@@ -94,6 +95,12 @@ func TestGetAllProvidersTypeSafety(t *testing.T) {
 // newMockOIDCServer creates a test HTTP server that serves a valid OIDC discovery document.
 // The issuer in the discovery document matches the server's URL.
 func newMockOIDCServer() *httptest.Server {
+	return newMockOIDCServerWithAuthMethods(nil)
+}
+
+// newMockOIDCServerWithAuthMethods is newMockOIDCServer with a
+// token_endpoint_auth_methods_supported entry. A nil slice omits the field.
+func newMockOIDCServerWithAuthMethods(authMethods []string) *httptest.Server {
 	var server *httptest.Server
 	mux := http.NewServeMux()
 	mux.HandleFunc("/.well-known/openid-configuration", func(w http.ResponseWriter, _ *http.Request) {
@@ -102,6 +109,9 @@ func newMockOIDCServer() *httptest.Server {
 			"authorization_endpoint": server.URL + "/auth",
 			"token_endpoint":         server.URL + "/token",
 			"jwks_uri":               server.URL + "/jwks",
+		}
+		if authMethods != nil {
+			discovery["token_endpoint_auth_methods_supported"] = authMethods
 		}
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(discovery)
@@ -343,4 +353,105 @@ func TestFailedDiscoverySkippedInIssuerCheck(t *testing.T) {
 	require.NoError(t, err)
 	assert.Len(t, providers, 1)
 	assert.Equal(t, "Valid Provider", providers[0].Name)
+}
+
+func TestTokenEndpointAuthStyleFromDiscovery(t *testing.T) {
+	// Regression test: left at AuthStyleAutoDetect, golang.org/x/oauth2 retries the
+	// token request with client_secret_post whenever the client_secret_basic attempt
+	// fails, and reports only the second error. A wrong client secret then looks like
+	// an auth method mismatch.
+	cases := []struct {
+		name        string
+		authMethods []string
+		want        oauth2.AuthStyle
+	}{
+		{
+			name:        "basic only",
+			authMethods: []string{"client_secret_basic"},
+			want:        oauth2.AuthStyleInHeader,
+		},
+		{
+			name:        "post only",
+			authMethods: []string{"client_secret_post"},
+			want:        oauth2.AuthStyleInParams,
+		},
+		{
+			name:        "both advertised prefers basic",
+			authMethods: []string{"client_secret_post", "client_secret_basic"},
+			want:        oauth2.AuthStyleInHeader,
+		},
+		{
+			name:        "neither advertised falls back to autodetect",
+			authMethods: []string{"private_key_jwt", "none"},
+			want:        oauth2.AuthStyleAutoDetect,
+		},
+		{
+			name:        "empty list falls back to autodetect",
+			authMethods: []string{},
+			want:        oauth2.AuthStyleAutoDetect,
+		},
+		{
+			name:        "field missing falls back to autodetect",
+			authMethods: nil,
+			want:        oauth2.AuthStyleAutoDetect,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			defer CleanupSavedOpenIDProviders()
+
+			server := newMockOIDCServerWithAuthMethods(tc.authMethods)
+			defer server.Close()
+
+			provider, err := getProviderFromMap(map[string]interface{}{
+				"name":         "Test Provider",
+				"authurl":      server.URL,
+				"clientid":     "client1",
+				"clientsecret": "secret1",
+			}, "test")
+			require.NoError(t, err)
+			require.NotNil(t, provider)
+
+			assert.Equal(t, tc.want, provider.Oauth2Config.Endpoint.AuthStyle)
+		})
+	}
+}
+
+func TestTokenEndpointAuthStyleConfigOverride(t *testing.T) {
+	cases := []struct {
+		name   string
+		method interface{}
+		want   oauth2.AuthStyle
+	}{
+		{name: "override to post", method: "client_secret_post", want: oauth2.AuthStyleInParams},
+		{name: "override to basic", method: "client_secret_basic", want: oauth2.AuthStyleInHeader},
+		{name: "uppercase and padded", method: "  Client_Secret_Post  ", want: oauth2.AuthStyleInParams},
+		{name: "auto defers to discovery", method: "auto", want: oauth2.AuthStyleInHeader},
+		{name: "empty defers to discovery", method: "", want: oauth2.AuthStyleInHeader},
+		{name: "unknown value defers to discovery", method: "private_key_jwt", want: oauth2.AuthStyleInHeader},
+		{name: "non-string defers to discovery", method: 42, want: oauth2.AuthStyleInHeader},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			defer CleanupSavedOpenIDProviders()
+
+			// Discovery advertises basic, so an override only wins when it resolves.
+			server := newMockOIDCServerWithAuthMethods([]string{"client_secret_basic"})
+			defer server.Close()
+
+			provider, err := getProviderFromMap(map[string]interface{}{
+				"name":                    "Test Provider",
+				"authurl":                 server.URL,
+				"clientid":                "client1",
+				"clientsecret":            "secret1",
+				"tokenendpointauthmethod": tc.method,
+			}, "test")
+			require.NoError(t, err)
+			require.NotNil(t, provider)
+
+			assert.Equal(t, tc.want, provider.Oauth2Config.Endpoint.AuthStyle)
+		})
+	}
 }

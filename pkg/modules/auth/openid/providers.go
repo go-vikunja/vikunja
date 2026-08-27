@@ -19,7 +19,9 @@ package openid
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"strconv"
+	"strings"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
@@ -274,6 +276,7 @@ func getProviderFromMap(pi map[string]interface{}, key string) (provider *Provid
 			"usernamefallback",
 			"forceuserinfo",
 			"requireavailability",
+			"tokenendpointauthmethod",
 		},
 		requiredKeys...,
 	)
@@ -356,11 +359,17 @@ func getProviderFromMap(pi map[string]interface{}, key string) (provider *Provid
 		return
 	}
 
+	// Discovery returns the OAuth2 endpoints, but not the auth style.
+	endpoint := provider.openIDProvider.Endpoint()
+	endpoint.AuthStyle = configuredTokenEndpointAuthStyle(pi, key)
+	if endpoint.AuthStyle == oauth2.AuthStyleAutoDetect {
+		endpoint.AuthStyle = provider.discoveredTokenEndpointAuthStyle()
+	}
+
 	provider.Oauth2Config = &oauth2.Config{
 		ClientID:     provider.ClientID,
 		ClientSecret: provider.ClientSecret,
-		// Discovery returns the OAuth2 endpoints.
-		Endpoint: provider.openIDProvider.Endpoint(),
+		Endpoint:     endpoint,
 
 		// "openid" is a required scope for OpenID Connect flows.
 		Scopes: []string{oidc.ScopeOpenID, "profile", "email"},
@@ -371,6 +380,90 @@ func getProviderFromMap(pi map[string]interface{}, key string) (provider *Provid
 	provider.EndSessionURL = provider.discoveredEndSessionEndpoint()
 
 	return
+}
+
+const (
+	authMethodBasic = "client_secret_basic"
+	authMethodPost  = "client_secret_post"
+)
+
+// authStyleName renders an oauth2.AuthStyle as the OIDC token_endpoint_auth_method
+// name it corresponds to, for log messages.
+func authStyleName(style oauth2.AuthStyle) string {
+	switch style {
+	case oauth2.AuthStyleInHeader:
+		return authMethodBasic
+	case oauth2.AuthStyleInParams:
+		return authMethodPost
+	case oauth2.AuthStyleAutoDetect:
+		return "auto"
+	default:
+		return "auto"
+	}
+}
+
+// configuredTokenEndpointAuthStyle reads the optional per-provider
+// tokenendpointauthmethod override. Anything unset, empty or "auto" defers to
+// discovery.
+func configuredTokenEndpointAuthStyle(pi map[string]interface{}, key string) oauth2.AuthStyle {
+	raw, exists := pi["tokenendpointauthmethod"]
+	if !exists {
+		return oauth2.AuthStyleAutoDetect
+	}
+
+	method, is := raw.(string)
+	if !is {
+		log.Errorf("tokenendpointauthmethod is not a string for provider %s, falling back to auto", key)
+		return oauth2.AuthStyleAutoDetect
+	}
+
+	switch strings.ToLower(strings.TrimSpace(method)) {
+	case "", "auto":
+		return oauth2.AuthStyleAutoDetect
+	case authMethodBasic:
+		return oauth2.AuthStyleInHeader
+	case authMethodPost:
+		return oauth2.AuthStyleInParams
+	default:
+		log.Errorf("Unknown tokenendpointauthmethod %q for provider %s, falling back to auto", method, key)
+		return oauth2.AuthStyleAutoDetect
+	}
+}
+
+// discoveredTokenEndpointAuthStyle reads token_endpoint_auth_methods_supported from
+// the discovery document already cached on the *oidc.Provider, so Claims unmarshals
+// in memory without a request.
+//
+// Pinning the style matters beyond saving a request: left at AuthStyleAutoDetect,
+// golang.org/x/oauth2 sends client_secret_basic first, retries with
+// client_secret_post on *any* error, and then returns only the second attempt's
+// error. An unrelated failure such as a wrong client secret therefore surfaces as a
+// bogus "the client registration does not allow client_secret_post" complaint.
+//
+// Falls back to autodetect when the OP advertises neither method: OIDC Discovery 1.0
+// says an absent field means client_secret_basic, but OPs that omit it while only
+// accepting post exist, so keep probing for those.
+func (p *Provider) discoveredTokenEndpointAuthStyle() oauth2.AuthStyle {
+	if p.openIDProvider == nil {
+		return oauth2.AuthStyleAutoDetect
+	}
+
+	var meta struct {
+		TokenEndpointAuthMethodsSupported []string `json:"token_endpoint_auth_methods_supported"`
+	}
+	if err := p.openIDProvider.Claims(&meta); err != nil {
+		log.Debugf("Could not read token_endpoint_auth_methods_supported for provider %s: %v", p.Key, err)
+		return oauth2.AuthStyleAutoDetect
+	}
+
+	switch {
+	case slices.Contains(meta.TokenEndpointAuthMethodsSupported, authMethodBasic):
+		return oauth2.AuthStyleInHeader
+	case slices.Contains(meta.TokenEndpointAuthMethodsSupported, authMethodPost):
+		return oauth2.AuthStyleInParams
+	default:
+		return oauth2.AuthStyleAutoDetect
+	}
 }
 
 // CleanupSavedOpenIDProviders removes all cached provider state so the next
