@@ -1104,6 +1104,9 @@ func createTasks(s *xorm.Session, projectID int64, tasks []*Task, a web.Auth, up
 		}
 	}
 
+	// Link shares can't have subscriptions
+	_, creatorIsUser := a.(*user.User)
+
 	for _, t := range tasks {
 		t.CreatedBy = createdBy
 
@@ -1123,6 +1126,16 @@ func createTasks(s *xorm.Session, projectID int64, tasks []*Task, a web.Auth, up
 
 		if t.IsFavorite {
 			if err := addToFavorites(s, t.ID, createdBy, FavoriteKindTask); err != nil {
+				return err
+			}
+		}
+
+		if creatorIsUser {
+			sub := &Subscription{
+				EntityType: SubscriptionEntityTask,
+				EntityID:   t.ID,
+			}
+			if err := sub.Create(s, createdBy); err != nil && !IsErrSubscriptionAlreadyExists(err) {
 				return err
 			}
 		}
