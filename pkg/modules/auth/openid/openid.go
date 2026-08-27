@@ -620,6 +620,8 @@ func exchangeOidcTokens(cb *Callback, providerKey string) (*Provider, *oauth2.To
 	// Parse the access & ID token
 	oauth2Token, err := provider.Oauth2Config.Exchange(context.Background(), cb.Code)
 	if err != nil {
+		log.Debugf("Token exchange failed for provider %s using token_endpoint_auth_method %s", provider.Key, authStyleName(provider.Oauth2Config.Endpoint.AuthStyle))
+
 		var rerr *oauth2.RetrieveError
 		if errors.As(err, &rerr) {
 
