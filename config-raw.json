@@ -788,11 +788,6 @@
                                             "key": "requireavailability",
                                             "default_value": "false",
                                             "comment": "This option requires the OpenID Connect provider to be available during Vikunja startup. When set to `true`, Vikunja will crash if it cannot connect to the provider during initialization, allowing container orchestrators like Kubernetes to handle the failure by restarting the application. This is useful in environments where you want to ensure all authentication providers are available before the application starts serving requests. Allowed value is either `true` or `false`."
-                                        },
-                                        {
-                                            "key": "tokenendpointauthmethod",
-                                            "default_value": "auto",
-                                            "comment": "How Vikunja authenticates itself at the provider's token endpoint. Allowed values are `client_secret_basic`, `client_secret_post` and `auto`.\nWith `auto`, the method is taken from the provider's `token_endpoint_auth_methods_supported` discovery value, falling back to trying both if the provider advertises neither. Only set this explicitly if your provider publishes a wrong or incomplete discovery document."
                                         }
                                     ]
                                 }

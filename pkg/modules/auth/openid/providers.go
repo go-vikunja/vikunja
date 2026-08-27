@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"slices"
 	"strconv"
-	"strings"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
@@ -276,7 +275,6 @@ func getProviderFromMap(pi map[string]interface{}, key string) (provider *Provid
 			"usernamefallback",
 			"forceuserinfo",
 			"requireavailability",
-			"tokenendpointauthmethod",
 		},
 		requiredKeys...,
 	)
@@ -361,10 +359,7 @@ func getProviderFromMap(pi map[string]interface{}, key string) (provider *Provid
 
 	// Discovery returns the OAuth2 endpoints, but not the auth style.
 	endpoint := provider.openIDProvider.Endpoint()
-	endpoint.AuthStyle = configuredTokenEndpointAuthStyle(pi, key)
-	if endpoint.AuthStyle == oauth2.AuthStyleAutoDetect {
-		endpoint.AuthStyle = provider.discoveredTokenEndpointAuthStyle()
-	}
+	endpoint.AuthStyle = provider.discoveredTokenEndpointAuthStyle()
 
 	provider.Oauth2Config = &oauth2.Config{
 		ClientID:     provider.ClientID,
@@ -399,34 +394,6 @@ func authStyleName(style oauth2.AuthStyle) string {
 		return "auto"
 	default:
 		return "auto"
-	}
-}
-
-// configuredTokenEndpointAuthStyle reads the optional per-provider
-// tokenendpointauthmethod override. Anything unset, empty or "auto" defers to
-// discovery.
-func configuredTokenEndpointAuthStyle(pi map[string]interface{}, key string) oauth2.AuthStyle {
-	raw, exists := pi["tokenendpointauthmethod"]
-	if !exists {
-		return oauth2.AuthStyleAutoDetect
-	}
-
-	method, is := raw.(string)
-	if !is {
-		log.Errorf("tokenendpointauthmethod is not a string for provider %s, falling back to auto", key)
-		return oauth2.AuthStyleAutoDetect
-	}
-
-	switch strings.ToLower(strings.TrimSpace(method)) {
-	case "", "auto":
-		return oauth2.AuthStyleAutoDetect
-	case authMethodBasic:
-		return oauth2.AuthStyleInHeader
-	case authMethodPost:
-		return oauth2.AuthStyleInParams
-	default:
-		log.Errorf("Unknown tokenendpointauthmethod %q for provider %s, falling back to auto", method, key)
-		return oauth2.AuthStyleAutoDetect
 	}
 }
 
