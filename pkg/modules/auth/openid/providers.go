@@ -382,8 +382,6 @@ const (
 	authMethodPost  = "client_secret_post"
 )
 
-// authStyleName renders an oauth2.AuthStyle as the OIDC token_endpoint_auth_method
-// name it corresponds to, for log messages.
 func authStyleName(style oauth2.AuthStyle) string {
 	switch style {
 	case oauth2.AuthStyleInHeader:
@@ -397,19 +395,7 @@ func authStyleName(style oauth2.AuthStyle) string {
 	}
 }
 
-// discoveredTokenEndpointAuthStyle reads token_endpoint_auth_methods_supported from
-// the discovery document already cached on the *oidc.Provider, so Claims unmarshals
-// in memory without a request.
-//
-// Pinning the style matters beyond saving a request: left at AuthStyleAutoDetect,
-// golang.org/x/oauth2 sends client_secret_basic first, retries with
-// client_secret_post on *any* error, and then returns only the second attempt's
-// error. An unrelated failure such as a wrong client secret therefore surfaces as a
-// bogus "the client registration does not allow client_secret_post" complaint.
-//
-// Falls back to autodetect when the OP advertises neither method: OIDC Discovery 1.0
-// says an absent field means client_secret_basic, but OPs that omit it while only
-// accepting post exist, so keep probing for those.
+// Fallback preserves autodetection for OIDC providers that omit the discovery field.
 func (p *Provider) discoveredTokenEndpointAuthStyle() oauth2.AuthStyle {
 	if p.openIDProvider == nil {
 		return oauth2.AuthStyleAutoDetect
