@@ -73,8 +73,8 @@ func (l *Label) isLabelOwner(s *xorm.Session, a web.Auth) (bool, error) {
 	return creator.IsBot() && creator.BotOwnerID == a.GetID(), nil
 }
 
-// Second direction exists so a label the human owner seeded is usable by their
-// bot before anyone has attached it (#3592).
+// Matches labels created by a bot the caller owns, or - when the caller is a
+// bot - by the human who owns it (#3592).
 func labelCreatedByBotIdentityCond(a web.Auth) builder.Cond {
 	return builder.Or(
 		builder.In("labels.created_by_id",

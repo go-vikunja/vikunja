@@ -341,7 +341,7 @@ func TestHumaLabel_BotUsesOwnerLabel(t *testing.T) {
 		rec, err := otherBot.testReadAllWithUser(nil, nil)
 		require.NoError(t, err)
 		ids := labelIDsFromReadAll(t, rec.Body.Bytes())
-		assert.NotContains(t, ids, int64(11), "label #11 (other owner's bot) must be hidden")
+		assert.Empty(t, ids, "other owner's bot must see no labels; body: %s", rec.Body.String())
 	})
 	t.Run("Update - bot cannot rename its owner's label", func(t *testing.T) {
 		_, err := bot.testUpdateWithUser(nil, map[string]string{"label": "11"}, `{"title":"renamed by bot"}`)
