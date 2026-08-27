@@ -1,5 +1,6 @@
 # Humans carry an explicit bot_owner_id: 0 because that is what CreateUser
 # writes. NULL here silently disarms the bot_owner_id > 0 identity guard.
+# User 20 is the one deliberate exception - see there.
 -
   id: 1
   username: 'user1'
@@ -166,12 +167,14 @@
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 # User scheduled for deletion — used by admin reassign-owner guard tests.
+# The only human left without bot_owner_id, i.e. NULL: migration 20260405194817
+# adds the column without a backfill, so every account predating it looks like
+# this in production. Keeps the IsNull branch of the user-search bot filter live.
 - id: 20
   username: 'user20'
   password: '$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6' # 12345678
   email: 'user20@example.com'
   issuer: local
-  bot_owner_id: 0
   deletion_scheduled_at: 2099-01-01 00:00:00
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12

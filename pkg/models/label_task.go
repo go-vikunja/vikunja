@@ -230,10 +230,7 @@ func GetLabelsByTaskIDs(s *xorm.Session, opts *LabelByTaskIDsOptions) (ls []*Lab
 		), cond)
 	}
 	if opts.GetUnusedLabels && !isLinkShareAuth {
-		cond = builder.Or(cond,
-			builder.Eq{"labels.created_by_id": opts.User.GetID()},
-			labelCreatedByBotIdentityCond(opts.User),
-		)
+		cond = builder.Or(cond, user.SameBotIdentityCond(opts.User, "labels.created_by_id"))
 	}
 
 	ids := []int64{}
