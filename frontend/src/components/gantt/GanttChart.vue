@@ -115,14 +115,16 @@ import Loading from '@/components/misc/Loading.vue'
 import {MILLISECONDS_A_DAY} from '@/constants/date'
 import {roundToNaturalDayBoundary} from '@/helpers/time/roundToNaturalDayBoundary'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
 	isLoading: boolean,
 	filters: GanttFilters,
-	includeSubprojects: boolean,
+	includeSubprojects?: boolean,
 	tasks: Map<ITask['id'], ITask>,
 	defaultTaskStartDate: DateISO
 	defaultTaskEndDate: DateISO
-}>()
+}>(), {
+	includeSubprojects: false,
+})
 
 const emit = defineEmits<{
   (e: 'update:task', task: ITaskPartialWithId): void
