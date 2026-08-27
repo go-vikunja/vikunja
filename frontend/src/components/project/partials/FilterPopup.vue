@@ -94,7 +94,7 @@ function showResults() {
 }
 
 const currentView = computed(() => {
-	if (!isProjectView.value) {
+	if (!isProjectView.value || !props.projectId) {
 		return
 	}
 
