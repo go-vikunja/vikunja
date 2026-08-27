@@ -127,7 +127,6 @@ test.describe('Link share: label picker', () => {
 		const [task] = await TaskFactory.create(1, {
 			project_id: projects[0].id,
 		})
-		// A label on the task makes the labels field render without clicking "Add Labels" first.
 		const [label] = await LabelFactory.create(1)
 		await LabelTaskFactory.create(1, {
 			task_id: task.id,
@@ -140,11 +139,11 @@ test.describe('Link share: label picker', () => {
 
 		await page.goto(`/tasks/${task.id}#share-auth-token=${share.hash}`)
 
-		const labelInput = page.locator('.task-view .details.labels-list .multiselect input')
+		const labelInput = page.locator('.task-view .property-labels .multiselect input')
 		await expect(labelInput).toBeVisible()
 		await labelInput.fill('label-that-does-not-exist')
 
-		const searchResults = page.locator('.task-view .details.labels-list .multiselect .search-results')
+		const searchResults = page.locator('.task-view .property-labels .multiselect .search-results')
 		await expect(searchResults.locator('.search-result-hint')).toContainText('New labels can\'t be created from a shared link')
 		await expect(searchResults.locator('.is-create-option')).toHaveCount(0)
 	})

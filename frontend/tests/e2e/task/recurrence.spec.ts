@@ -15,8 +15,7 @@ test.describe('Task recurrence', () => {
 		}, false)
 		await page.goto(`/tasks/${task.id}`)
 
-		// Reveal the RepeatAfter component (hidden until the user activates it)
-		await page.getByRole('button', {name: 'Set Repeating Interval'}).click()
+		await page.locator('.task-view .property-repeat .property-value-button').click()
 
 		const save = page.waitForResponse(r =>
 			r.url().includes(`/tasks/${task.id}`) && r.request().method() === 'POST',
@@ -65,8 +64,7 @@ test.describe('Task recurrence', () => {
 		const [task] = await TaskFactory.create(1, {id: 1, project_id: 1}, false)
 		await page.goto(`/tasks/${task.id}`)
 
-		// Reveal the RepeatAfter component (hidden until the user activates it)
-		await page.getByRole('button', {name: 'Set Repeating Interval'}).click()
+		await page.locator('.task-view .property-repeat .property-value-button').click()
 
 		await expect(page.locator('#repeatMode')).toBeVisible()
 		// Amount input is visible in the default repeat mode
