@@ -17,11 +17,10 @@
 package notifications
 
 import (
-	"bufio"
 	"bytes"
 	"embed"
-	"html"
 	templatehtml "html/template"
+	"io"
 	"net/url"
 	"regexp"
 	"strconv"
@@ -34,10 +33,9 @@ import (
 	"code.vikunja.io/api/pkg/utils"
 
 	"github.com/microcosm-cc/bluemonday"
-	"github.com/yuin/goldmark"
-	"github.com/yuin/goldmark/ast"
-	goldmarkhtml "github.com/yuin/goldmark/renderer/html"
-	"github.com/yuin/goldmark/text"
+	"github.com/yuin/goldmark/v2/ast"
+	"github.com/yuin/goldmark/v2/parser"
+	goldmarkhtml "github.com/yuin/goldmark/v2/renderer/html"
 )
 
 const mailTemplatePlain = `
@@ -226,9 +224,8 @@ func convertLinesToHTML(lines []*mailLine) (linesHTML []templatehtml.HTML, err e
 			continue
 		}
 
-		md := []byte(line.Text)
 		var buf bytes.Buffer
-		err = goldmark.Convert(md, &buf)
+		err = renderMarkdown([]byte(line.Text), &buf)
 		if err != nil {
 			return nil, err
 		}
@@ -251,9 +248,8 @@ func sanitizeLinesToHTML(lines []*mailLine) (linesHTML []templatehtml.HTML, err 
 			continue
 		}
 
-		md := []byte(line.Text)
 		var buf bytes.Buffer
-		err = goldmark.Convert(md, &buf)
+		err = renderMarkdown([]byte(line.Text), &buf)
 		if err != nil {
 			return nil, err
 		}
@@ -296,11 +292,18 @@ func ensurePMargins(html string) string {
 	return rePTag.ReplaceAllString(html, "<p "+pMarginStyle+">")
 }
 
-var markdownTextWriter = goldmarkhtml.NewWriter()
+var (
+	markdownParser   = parser.New()
+	markdownRenderer = goldmarkhtml.New()
+)
+
+func renderMarkdown(source []byte, w io.Writer) error {
+	return markdownRenderer.Render(w, source, markdownParser.Parse(source))
+}
 
 func markdownToPlainText(markdown string) string {
 	source := []byte(markdown)
-	document := goldmark.DefaultParser().Parse(text.NewReader(source))
+	document := markdownParser.Parse(source)
 	var plain strings.Builder
 	linkStarts := make(map[ast.Node]int)
 	listItemIndents := make([]int, 0)
@@ -312,20 +315,20 @@ func markdownToPlainText(markdown string) string {
 			if !entering {
 				return ast.WalkContinue, nil
 			}
-			writeMarkdownText(&plain, n.Value(source), n.IsRaw())
+			plain.WriteString(n.Value.Value(source))
 			if n.SoftLineBreak() || n.HardLineBreak() {
 				plain.WriteByte('\n')
 				if len(listItemIndents) > 0 {
 					plain.WriteString(strings.Repeat(" ", listItemIndents[len(listItemIndents)-1]))
 				}
 			}
-		case *ast.String:
+		case *ast.CodeSpan:
 			if entering {
-				writeMarkdownText(&plain, n.Value, n.IsRaw() || n.IsCode())
+				plain.WriteString(n.Value.Value(source))
 			}
 		case *ast.AutoLink:
 			if entering {
-				plain.Write(n.Label(source))
+				plain.WriteString(n.Label.Value(source))
 			}
 		case *ast.Link:
 			if entering {
@@ -334,9 +337,7 @@ func markdownToPlainText(markdown string) string {
 			}
 			start := linkStarts[node]
 			label := plain.String()[start:]
-			var normalized strings.Builder
-			writeMarkdownText(&normalized, n.Destination, false)
-			destination := normalized.String()
+			destination := n.Destination.Value(source)
 			if destination != "" && label != destination {
 				plain.WriteString(" (")
 				plain.WriteString(destination)
@@ -345,9 +346,9 @@ func markdownToPlainText(markdown string) string {
 			delete(linkStarts, node)
 		case *ast.Image:
 			if !entering {
-				if len(n.Destination) > 0 {
+				if !n.Destination.IsEmpty() {
 					plain.WriteString(" (")
-					writeMarkdownText(&plain, n.Destination, false)
+					plain.WriteString(n.Destination.Value(source))
 					plain.WriteByte(')')
 				}
 			}
@@ -369,10 +370,10 @@ func markdownToPlainText(markdown string) string {
 			} else {
 				writePlainNewline(&plain)
 			}
-		case *ast.CodeBlock, *ast.FencedCodeBlock:
+		case *ast.CodeBlock:
 			if entering {
 				writePlainListBlockStart(&plain, listItemIndents, listItemHasBlocks)
-				writePlainBlock(&plain, node.Lines().Value(source), listItemIndents)
+				writePlainBlock(&plain, n.Value.Bytes(source), listItemIndents)
 				writePlainNewline(&plain)
 				return ast.WalkSkipChildren, nil
 			}
@@ -444,19 +445,6 @@ func writePlainBlock(plain *strings.Builder, value []byte, indents []int) {
 			plain.WriteString(strings.Repeat(" ", indent))
 		}
 	}
-}
-
-func writeMarkdownText(plain *strings.Builder, value []byte, raw bool) {
-	if raw {
-		plain.Write(value)
-		return
-	}
-
-	var escaped bytes.Buffer
-	writer := bufio.NewWriter(&escaped)
-	markdownTextWriter.Write(writer, value)
-	_ = writer.Flush()
-	plain.WriteString(html.UnescapeString(escaped.String()))
 }
 
 func writePlainNewline(plain *strings.Builder) {
