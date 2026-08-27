@@ -58,7 +58,7 @@ type TaskListQueryParams struct {
 	Filter             string   `query:"filter" doc:"Filter query to match tasks by. See https://vikunja.io/docs/filters."`
 	FilterTimezone     string   `query:"filter_timezone" doc:"Timezone used to resolve relative date filters like \"now\"."`
 	FilterIncludeNulls bool     `query:"filter_include_nulls" doc:"If true, also include tasks whose filtered field is null."`
-	IncludeSubprojects bool     `query:"include_subprojects" doc:"If true, also returns tasks from all descendant subprojects the user can access. Ignored outside a concrete project, in kanban views and for link shares."`
+	IncludeSubprojects bool     `query:"include_subprojects" doc:"If true, also returns tasks from all descendant subprojects the user can access. Ignored outside a concrete project, in kanban views and for link shares. A sort by position is ignored while this is set, as positions are scoped to a single view."`
 	SortBy             []string `query:"sort_by,explode" doc:"Fields to sort by (e.g. done, priority). Repeatable; pair positionally with order_by. The special value relevance sorts by search relevance (most relevant first, requires s; ignored when the database cannot score the query)."`
 	OrderBy            []string `query:"order_by,explode" doc:"Sort order per sort_by field, asc or desc. Repeatable; defaults to asc."`
 	Expand             []string `query:"expand,explode" enum:"subtasks,buckets,reactions,comments,comment_count,time_entries_count,is_unread" doc:"Embed extra, more expensive data per task. Repeatable."`
