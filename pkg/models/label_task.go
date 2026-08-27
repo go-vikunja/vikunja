@@ -404,8 +404,7 @@ func (t *Task) UpdateTaskLabels(s *xorm.Session, creator web.Auth, labels []*Lab
 			return err
 		}
 		if !hasAccessToLabel {
-			user, _ := creator.(*user.User)
-			return ErrUserHasNoAccessToLabel{LabelID: l.ID, UserID: user.ID}
+			return ErrUserHasNoAccessToLabel{LabelID: l.ID, UserID: creator.GetID()}
 		}
 
 		// Insert it

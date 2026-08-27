@@ -481,3 +481,23 @@ func TestLabelTaskUpdatedTimestamps(t *testing.T) {
 		require.True(t, projectAfter.Updated.After(projectBefore.Updated), "project updated time must advance")
 	})
 }
+
+func TestLabelTaskBulk_CreateLinkShare(t *testing.T) {
+	// Link share 2 has write on project 2, so it clears the task check and
+	// reaches the per-label access check. Label 1 is on no task it can see.
+	db.LoadAndAssertFixtures(t)
+
+	s := db.NewSession()
+	defer s.Close()
+
+	share := &LinkSharing{ID: 2, Hash: "test2", ProjectID: 2, Permission: PermissionWrite}
+	ltb := &LabelTaskBulk{TaskID: 13, Labels: []*Label{{ID: 1}}}
+
+	allowed, err := ltb.CanCreate(s, share)
+	require.NoError(t, err)
+	require.True(t, allowed, "write link share must pass the task check")
+
+	err = ltb.Create(s, share)
+	require.Error(t, err)
+	require.True(t, IsErrUserHasNoAccessToLabel(err), "got %#v", err)
+}
