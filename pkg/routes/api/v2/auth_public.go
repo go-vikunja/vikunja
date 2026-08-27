@@ -96,7 +96,7 @@ func registerLocalAuthRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID:   "auth-password-token",
 		Summary:       "Request a password reset token",
-		Description:   "Requests a token to reset the password for the account with the given email. The token is sent to that email; the response is the same whether or not an account exists.",
+		Description:   "Requests a token to reset the password for the account with the given email. The token is sent to that email. Returns 404 if no account uses the given email.",
 		Method:        http.MethodPost,
 		Path:          "/user/password/token",
 		DefaultStatus: http.StatusOK,
