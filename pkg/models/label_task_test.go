@@ -294,6 +294,14 @@ func TestLabelTask_Create(t *testing.T) {
 			if !allowed && !tt.wantForbidden {
 				t.Errorf("LabelTask.CanCreate() forbidden, want %v, err %v", tt.wantForbidden, err)
 			}
+			if allowed && tt.wantForbidden {
+				t.Errorf("LabelTask.CanCreate() allowed, want forbidden")
+			}
+			// Denied means Create never runs - except where the case expects
+			// Create itself to be the thing that errors.
+			if tt.wantForbidden && !tt.wantErr {
+				return
+			}
 			err = l.Create(s, tt.args.a)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("LabelTask.Create() error = %v, wantErr %v", err, tt.wantErr)

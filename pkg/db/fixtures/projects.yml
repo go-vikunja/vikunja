@@ -394,12 +394,12 @@
   position: 4300
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
-# Owned by bot 23 so the bot has write access to task #52 without a share.
-# Used by the #3592 regression: the only thing gating the attach is label access.
+# Bot 23 reaches this project by share, not ownership - CreateProject
+# reassigns a bot's project to its owner and shares it back.
 -
   id: 44
   title: Bot Assistant Project
-  owner_id: 23
+  owner_id: 21
   position: 4400
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
