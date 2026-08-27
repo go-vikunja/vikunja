@@ -56,5 +56,5 @@ func (b *BotUser) isOwner(s *xorm.Session, a web.Auth) (bool, error) {
 		}
 		return false, err
 	}
-	return u.BotOwnerID == a.GetID(), nil
+	return u.IsBotOwnedBy(a), nil
 }

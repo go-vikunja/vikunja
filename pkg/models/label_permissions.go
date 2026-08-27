@@ -62,7 +62,6 @@ func (l *Label) isLabelOwner(s *xorm.Session, a web.Auth) (bool, error) {
 		return true, nil
 	}
 
-	// A bot owner inherits write/delete access to labels their bots created.
 	creator, err := user.GetUserByID(s, lorig.CreatedByID)
 	if err != nil {
 		if user.IsErrUserDoesNotExist(err) {
@@ -70,7 +69,7 @@ func (l *Label) isLabelOwner(s *xorm.Session, a web.Auth) (bool, error) {
 		}
 		return false, err
 	}
-	return creator.IsBot() && creator.BotOwnerID == a.GetID(), nil
+	return creator.IsBotOwnedBy(a), nil
 }
 
 // Matches labels created by a bot the caller owns, or - when the caller is a
