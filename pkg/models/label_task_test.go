@@ -207,6 +207,8 @@ func TestLabelTask_Create(t *testing.T) {
 				a: &user.User{ID: 1},
 			},
 			wantForbidden: true,
+			wantErr:       true,
+			errType:       IsErrLabelDoesNotExist,
 		},
 		{
 			name: "nonexisting task",
@@ -273,6 +275,19 @@ func TestLabelTask_Create(t *testing.T) {
 			},
 			wantForbidden: true,
 		},
+		{
+			// Task 52 is in project 44, which bot 24's owner (user 22) has no
+			// share on - neither the task nor label 11 is reachable.
+			name: "bot cannot attach a label to a task its owner cannot write",
+			fields: fields{
+				TaskID:  52,
+				LabelID: 11,
+			},
+			args: args{
+				a: &user.User{ID: 24, BotOwnerID: 22},
+			},
+			wantForbidden: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -296,9 +311,10 @@ func TestLabelTask_Create(t *testing.T) {
 			if allowed && tt.wantForbidden {
 				t.Errorf("LabelTask.CanCreate() allowed, want forbidden")
 			}
-			// Denied means Create never runs - except where the case expects
-			// Create itself to be the thing that errors.
-			if tt.wantForbidden && !tt.wantErr {
+			if tt.wantForbidden {
+				if tt.wantErr && !tt.errType(err) {
+					t.Errorf("LabelTask.CanCreate() Wrong error type! Error = %v, want = %v", err, runtime.FuncForPC(reflect.ValueOf(tt.errType).Pointer()).Name())
+				}
 				return
 			}
 			err = l.Create(s, tt.args.a)
@@ -400,6 +416,9 @@ func TestLabelTask_Delete(t *testing.T) {
 			allowed, _ := l.CanDelete(s, tt.auth)
 			if !allowed && !tt.wantForbidden {
 				t.Errorf("LabelTask.CanDelete() forbidden, want %v", tt.wantForbidden)
+			}
+			if allowed && tt.wantForbidden {
+				t.Errorf("LabelTask.CanDelete() allowed, want forbidden")
 			}
 			if !tt.wantForbidden {
 				err := l.Delete(s, tt.auth)

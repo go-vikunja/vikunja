@@ -564,6 +564,9 @@ func TestLabel_Create(t *testing.T) {
 			if !allowed && !tt.wantForbidden {
 				t.Errorf("Label.CanCreate() forbidden, want %v", tt.wantForbidden)
 			}
+			if allowed && tt.wantForbidden {
+				t.Errorf("Label.CanCreate() allowed, want forbidden")
+			}
 			if err := l.Create(s, tt.args.a); (err != nil) != tt.wantErr {
 				t.Errorf("Label.Create() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -678,10 +681,16 @@ func TestLabel_Update(t *testing.T) {
 			if !allowed && !tt.wantForbidden {
 				t.Errorf("Label.CanUpdate() forbidden, want %v", tt.wantForbidden)
 			}
+			if allowed && tt.wantForbidden {
+				t.Errorf("Label.CanUpdate() allowed, want forbidden")
+			}
+			if tt.wantForbidden {
+				return
+			}
 			if err := l.Update(s, tt.auth); (err != nil) != tt.wantErr {
 				t.Errorf("Label.Update() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			if !tt.wantErr && !tt.wantForbidden {
+			if !tt.wantErr {
 				require.NoError(t, s.Commit())
 				db.AssertExists(t, "labels", map[string]interface{}{
 					"id":    tt.fields.ID,
@@ -784,10 +793,16 @@ func TestLabel_Delete(t *testing.T) {
 			if !allowed && !tt.wantForbidden {
 				t.Errorf("Label.CanDelete() forbidden, want %v", tt.wantForbidden)
 			}
+			if allowed && tt.wantForbidden {
+				t.Errorf("Label.CanDelete() allowed, want forbidden")
+			}
+			if tt.wantForbidden {
+				return
+			}
 			if err := l.Delete(s, tt.auth); (err != nil) != tt.wantErr {
 				t.Errorf("Label.Delete() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			if !tt.wantErr && !tt.wantForbidden {
+			if !tt.wantErr {
 				require.NoError(t, s.Commit())
 				db.AssertMissing(t, "labels", map[string]interface{}{
 					"id": l.ID,
