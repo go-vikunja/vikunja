@@ -326,7 +326,8 @@ func TestHumaLabel_BotUsesOwnerLabel(t *testing.T) {
 		rec, err := bot.testReadAllWithUser(nil, nil)
 		require.NoError(t, err)
 		ids := labelIDsFromReadAll(t, rec.Body.Bytes())
-		assert.Contains(t, ids, int64(11), "label #11 (created by bot 23's owner) must be listed")
+		assert.ElementsMatch(t, []int64{9, 11}, ids,
+			"bot's ReadAll must return exactly {9,11}; body: %s", rec.Body.String())
 	})
 	t.Run("ReadOne - bot can read its owner's unattached label", func(t *testing.T) {
 		rec, err := bot.testReadOneWithUser(nil, map[string]string{"label": "11"})
@@ -337,6 +338,12 @@ func TestHumaLabel_BotUsesOwnerLabel(t *testing.T) {
 		_, err := otherBot.testReadOneWithUser(nil, map[string]string{"label": "11"})
 		require.Error(t, err)
 		assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
+	})
+	t.Run("ReadAll - a different owner's bot's listing does not surface it", func(t *testing.T) {
+		rec, err := otherBot.testReadAllWithUser(nil, nil)
+		require.NoError(t, err)
+		ids := labelIDsFromReadAll(t, rec.Body.Bytes())
+		assert.NotContains(t, ids, int64(11), "label #11 (other owner's bot) must be hidden")
 	})
 	t.Run("Update - bot cannot rename its owner's label", func(t *testing.T) {
 		_, err := bot.testUpdateWithUser(nil, map[string]string{"label": "11"}, `{"title":"renamed by bot"}`)
@@ -354,6 +361,7 @@ func TestHumaLabel_BotUsesOwnerLabel(t *testing.T) {
 	t.Run("Create - bot can attach its owner's never-used label", func(t *testing.T) {
 		rec, err := attach.testCreateWithUser(nil, nil, `{"label_id":11}`)
 		require.NoError(t, err)
+		assert.Equal(t, http.StatusCreated, rec.Code)
 		assert.Contains(t, rec.Body.String(), `"label_id":11`)
 	})
 	t.Run("Create - bot cannot attach an unrelated user's label", func(t *testing.T) {
