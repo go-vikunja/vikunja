@@ -17,24 +17,18 @@
 package migration
 
 import (
-	"bytes"
 	templatehtml "html/template"
 	"strings"
 
-	"github.com/yuin/goldmark"
 	"src.techknowlogick.com/xormigrate"
 	"xorm.io/xorm"
+
+	"code.vikunja.io/api/pkg/richtext"
 )
 
 func convertMarkdownToHTML(input string) (output string, err error) {
-	md := []byte(templatehtml.HTMLEscapeString(input))
-	var buf bytes.Buffer
-	err = goldmark.Convert(md, &buf)
-	if err != nil {
-		return
-	}
 	//#nosec - the html is escaped few lines before
-	return buf.String(), nil
+	return richtext.CommonMarkToHTML([]byte(templatehtml.HTMLEscapeString(input)))
 }
 
 func convertDescription(tx *xorm.Engine, table string, column string) (err error) {
