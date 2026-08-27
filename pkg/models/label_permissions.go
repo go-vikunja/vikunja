@@ -73,6 +73,20 @@ func (l *Label) isLabelOwner(s *xorm.Session, a web.Auth) (bool, error) {
 	return creator.IsBot() && creator.BotOwnerID == a.GetID(), nil
 }
 
+// Matches labels created by a bot the caller owns, or - when the caller is a
+// bot - by the human who owns it (#3592).
+func labelCreatedByBotIdentityCond(a web.Auth) builder.Cond {
+	return builder.Or(
+		builder.In("labels.created_by_id",
+			builder.Select("id").From("users").Where(builder.Eq{"bot_owner_id": a.GetID()}),
+		),
+		builder.In("labels.created_by_id",
+			builder.Select("bot_owner_id").From("users").
+				Where(builder.And(builder.Eq{"id": a.GetID()}, builder.Gt{"bot_owner_id": 0})),
+		),
+	)
+}
+
 // hasAccessToLabel reports whether the caller can read a label and, if so,
 // the caller's maximum permission on it.
 //
@@ -100,9 +114,7 @@ func (l *Label) hasAccessToLabel(s *xorm.Session, a web.Auth) (has bool, maxPerm
 	if !isLinkShare {
 		accessBranches = append(accessBranches,
 			builder.Eq{"labels.created_by_id": a.GetID()},
-			builder.In("labels.created_by_id",
-				builder.Select("id").From("users").Where(builder.Eq{"bot_owner_id": a.GetID()}),
-			),
+			labelCreatedByBotIdentityCond(a),
 		)
 	}
 
