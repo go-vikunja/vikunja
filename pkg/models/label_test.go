@@ -428,6 +428,44 @@ func TestLabel_ReadOne(t *testing.T) {
 			wantForbidden: true,
 			auth:          &user.User{ID: 22},
 		},
+		{
+			// Label 11 was created by user 21 and never attached to a task. Bot
+			// 23, which user 21 owns, must still be able to read it (#3592).
+			name: "bot can read never-used label created by its owner",
+			fields: fields{
+				ID: 11,
+			},
+			want: &Label{
+				ID:          11,
+				Title:       "Label #11 - created by user 21, owner of bot 23, no task attachment",
+				CreatedByID: 21,
+				CreatedBy: &user.User{
+					ID:                           21,
+					Username:                     "user_bot_owner_a",
+					Password:                     "$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6",
+					Issuer:                       "local",
+					EmailRemindersEnabled:        true,
+					OverdueTasksRemindersEnabled: true,
+					OverdueTasksRemindersTime:    "09:00",
+					Created:                      testCreatedTime,
+					Updated:                      testUpdatedTime,
+				},
+				Created: testCreatedTime,
+				Updated: testUpdatedTime,
+			},
+			auth:                &user.User{ID: 23, BotOwnerID: 21},
+			assertMaxPermission: true,
+			wantMaxPermission:   int(PermissionRead),
+		},
+		{
+			// Bot 24 belongs to user 22, so user 21's label stays out of reach.
+			name: "bot cannot read label created by a different bot owner",
+			fields: fields{
+				ID: 11,
+			},
+			wantForbidden: true,
+			auth:          &user.User{ID: 24, BotOwnerID: 22},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

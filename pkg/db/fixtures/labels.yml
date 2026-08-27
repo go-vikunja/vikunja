@@ -58,3 +58,11 @@
   created_by_id: 6
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
+# Covers the reverse bot-owner branch (#3592): created by human user 21, who
+# owns bot 23. The bot must be able to read and attach it even though it has
+# no label_tasks row yet.
+- id: 11
+  title: 'Label #11 - created by user 21, owner of bot 23, no task attachment'
+  created_by_id: 21
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12

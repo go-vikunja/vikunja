@@ -248,6 +248,32 @@ func TestLabelTask_Create(t *testing.T) {
 			},
 			wantForbidden: true,
 		},
+		{
+			// Label 11 was created by user 21, the owner of bot 23, and has no
+			// label_tasks row yet. The bot must still be able to attach it to a
+			// task it can write (#3592).
+			name: "bot can attach a never-used label created by its owner",
+			fields: fields{
+				TaskID:  52,
+				LabelID: 11,
+			},
+			args: args{
+				a: &user.User{ID: 23, BotOwnerID: 21},
+			},
+		},
+		{
+			// Same writable task, but label 6 belongs to user 13 — inheriting the
+			// owner's labels must not widen access to anyone else's.
+			name: "bot cannot attach a label unrelated to its owner",
+			fields: fields{
+				TaskID:  52,
+				LabelID: 6,
+			},
+			args: args{
+				a: &user.User{ID: 23, BotOwnerID: 21},
+			},
+			wantForbidden: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
