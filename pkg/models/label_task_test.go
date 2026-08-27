@@ -276,14 +276,15 @@ func TestLabelTask_Create(t *testing.T) {
 			wantForbidden: true,
 		},
 		{
-			// User 22 has no share on project 44, so neither axis is reachable.
-			name: "bot cannot attach a label to a task its owner cannot write",
+			// Bot 23 can see label 11 (owned by its owner, user 21), but has no
+			// share on task 1's project, isolating the task-write conjunct.
+			name: "bot cannot attach its owner's label to an unwritable task",
 			fields: fields{
-				TaskID:  52,
+				TaskID:  1,
 				LabelID: 11,
 			},
 			args: args{
-				a: &user.User{ID: 24, BotOwnerID: 22},
+				a: &user.User{ID: 23, BotOwnerID: 21},
 			},
 			wantForbidden: true,
 		},
