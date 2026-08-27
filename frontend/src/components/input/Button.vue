@@ -37,38 +37,35 @@
 </template>
 
 <script setup lang="ts">
-import {computed} from 'vue'
+import {computed, type PropType} from 'vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import type {IconProp} from '@fortawesome/fontawesome-svg-core'
 
-const props = defineProps<ButtonProps>()
+export type ButtonTypes = 'primary' | 'secondary' | 'tertiary'
 
-const VARIANT_CLASS_MAP = {
-	primary: 'is-primary',
-	secondary: 'is-outlined',
-	tertiary: 'is-text is-inverted underline-none',
-} as const
-
-export type ButtonTypes = keyof typeof VARIANT_CLASS_MAP
-
-export interface ButtonProps {
-	variant?: ButtonTypes
-	icon?: IconProp
-	iconColor?: string
-	loading?: boolean
-	disabled?: boolean
-	shadow?: boolean
-	wrap?: boolean
-	danger?: boolean
-}
+// Runtime prop declaration: with a type-only one, Vue casts absent boolean props
+// to false, so `shadow` and `wrap` would default to false instead of true.
+// Combining IconProp with withDefaults blows up the type checker (TS2590).
+const props = defineProps({
+	variant: {type: String as PropType<ButtonTypes>, default: 'primary'},
+	icon: {type: [String, Array, Object] as PropType<IconProp>, default: undefined},
+	iconColor: {type: String, default: undefined},
+	loading: {type: Boolean, default: false},
+	disabled: {type: Boolean, default: false},
+	shadow: {type: Boolean, default: true},
+	wrap: {type: Boolean, default: true},
+	danger: {type: Boolean, default: false},
+})
 
 defineOptions({name: 'XButton'})
 
-// @ts-expect-error - Complex union type from IconProp causes TS2590, but the code is correct
-const variant = computed(() => (props.variant ?? 'primary') as ButtonTypes)
-const shadow = computed(() => (props.shadow ?? true) as boolean)
-const wrap = computed(() => (props.wrap ?? true) as boolean)
-const variantClass = computed<string>(() => VARIANT_CLASS_MAP[variant.value])
+const VARIANT_CLASS_MAP: Record<ButtonTypes, string> = {
+	primary: 'is-primary',
+	secondary: 'is-outlined',
+	tertiary: 'is-text is-inverted underline-none',
+}
+
+const variantClass = computed<string>(() => VARIANT_CLASS_MAP[props.variant])
 </script>
 
 <style lang="scss" scoped>
