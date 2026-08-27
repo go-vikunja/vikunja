@@ -335,7 +335,7 @@ func getFilterValueForBucketFilter(filter string, view *ProjectView) (newFilter 
 // @Produce json
 // @Param id path int true "The project ID."
 // @Param view path int true "The project view ID."
-// @Param include_subprojects query bool false "If true, also returns tasks from all descendant subprojects the user can access."
+// @Param include_subprojects query bool false "If true, also returns tasks from all descendant subprojects the user can access. A sort by position is ignored while this is set, as positions are scoped to a single view."
 // @Param page query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
 // @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
 // @Param s query string false "Search tasks by task text."
