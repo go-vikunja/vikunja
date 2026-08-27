@@ -249,9 +249,8 @@ func TestLabelTask_Create(t *testing.T) {
 			wantForbidden: true,
 		},
 		{
-			// Label 11 was created by user 21, the owner of bot 23, and has no
-			// label_tasks row yet. The bot must still be able to attach it to a
-			// task it can write (#3592).
+			// Label 11 has no label_tasks row, so only the owner branch can
+			// grant this (#3592).
 			name: "bot can attach a never-used label created by its owner",
 			fields: fields{
 				TaskID:  52,

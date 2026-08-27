@@ -429,8 +429,7 @@ func TestLabel_ReadOne(t *testing.T) {
 			auth:          &user.User{ID: 22},
 		},
 		{
-			// Label 11 was created by user 21 and never attached to a task. Bot
-			// 23, which user 21 owns, must still be able to read it (#3592).
+			// Label 11 is unattached, so only the owner branch can grant this (#3592).
 			name: "bot can read never-used label created by its owner",
 			fields: fields{
 				ID: 11,

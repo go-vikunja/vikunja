@@ -35,8 +35,7 @@ import (
 // owner sees and acts on their own bots' resources, never the other's.
 var testuser22 = user.User{ID: 22, Username: "user_bot_owner_b", Issuer: "local"}
 
-// testbot23 is user 21's bot, testbot24 is user 22's. Used to assert a bot
-// inherits access to its own owner's labels and to nobody else's.
+// Paired to assert a bot inherits its own owner's labels and nobody else's.
 var testbot23 = user.User{ID: 23, Username: "bot-owner-a-assistant", Issuer: "local", BotOwnerID: 21}
 var testbot24 = user.User{ID: 24, Username: "bot-owner-b-assistant", Issuer: "local", BotOwnerID: 22}
 
@@ -303,9 +302,8 @@ func TestHumaLabel_BotOwner(t *testing.T) {
 	})
 }
 
-// TestHumaLabel_BotUsesOwnerLabel covers #3592: a label its human owner seeded
-// but never attached to a task must still be listable, readable and attachable
-// by that owner's bot. Fixture label #11 belongs to user 21, who owns bot 23.
+// Fixture label #11 is unattached, so attachment history cannot grant access
+// here - only the owner branch can (#3592).
 func TestHumaLabel_BotUsesOwnerLabel(t *testing.T) {
 	bot := webHandlerTestV2{
 		user:     &testbot23,
