@@ -300,6 +300,24 @@ func TestSubscriberNotifications_SkipUsersWithoutReadAccess(t *testing.T) {
 		assertOnlySubscriberWithAccessNotified(t, (&TaskDeletedNotification{}).Name())
 	})
 
+	t.Run("task created", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		subscribeBoth(t, s, SubscriptionEntityTask, taskID)
+
+		task, err := GetTaskByIDSimple(s, taskID)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		_ = s.Close()
+
+		events.TestListener(t, &TaskCreatedEvent{
+			Task: &task,
+			Doer: &user.User{ID: doerID},
+		}, &SendTaskCreatedNotification{})
+
+		assertOnlySubscriberWithAccessNotified(t, (&TaskCreatedNotification{}).Name())
+	})
+
 	// Subscribers are inherited from the parent project, but the notification
 	// discloses the newly created child, so the child is what gets checked.
 	t.Run("project created", func(t *testing.T) {

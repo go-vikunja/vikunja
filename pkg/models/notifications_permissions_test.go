@@ -169,6 +169,7 @@ func TestNotificationScopeClassification(t *testing.T) {
 		"project.created",
 		"task.assigned",
 		"task.comment",
+		"task.created",
 		"task.deleted",
 		"task.mentioned",
 		"task.reminder",

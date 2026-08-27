@@ -39,6 +39,7 @@ import (
 func RegisterListeners() {
 	events.RegisterListener((&TaskCommentCreatedEvent{}).Name(), &SendTaskCommentNotification{})
 	events.RegisterListener((&TaskAssigneeCreatedEvent{}).Name(), &SendTaskAssignedNotification{})
+	events.RegisterListener((&TaskCreatedEvent{}).Name(), &SendTaskCreatedNotification{})
 	events.RegisterListener((&TaskDeletedEvent{}).Name(), &SendTaskDeletedNotification{})
 	events.RegisterListener((&ProjectCreatedEvent{}).Name(), &SendProjectCreatedNotification{})
 	events.RegisterListener((&TeamMemberAddedEvent{}).Name(), &SendTeamMemberAddedNotification{})
@@ -701,6 +702,86 @@ func (s *SendTaskAssignedNotification) Handle(msg *message.Message) (err error) 
 		}
 		err = notifications.Notify(subscriber.User, n, sess)
 		if err != nil {
+			_ = sess.Rollback()
+			return err
+		}
+
+		notifiedUsers[subscriber.UserID] = true
+	}
+
+	return sess.Commit()
+}
+
+// SendTaskCreatedNotification  represents a listener
+type SendTaskCreatedNotification struct {
+}
+
+// Name defines the name for the SendTaskCreatedNotification listener
+func (s *SendTaskCreatedNotification) Name() string {
+	return "task.created.notification.send"
+}
+
+// Handle is executed when the event SendTaskCreatedNotification listens on is fired
+func (s *SendTaskCreatedNotification) Handle(msg *message.Message) (err error) {
+	event := &TaskCreatedEvent{}
+	err = json.Unmarshal(msg.Payload, event)
+	if err != nil {
+		return err
+	}
+
+	if event.Task == nil {
+		return nil
+	}
+
+	sess := db.NewSession()
+	defer sess.Close()
+
+	project, err := GetProjectSimpleByID(sess, event.Task.ProjectID)
+	if err != nil {
+		return err
+	}
+
+	event.Task.setIdentifier(project)
+
+	// A task can only be subscribed to through its project at this point, but going
+	// through the task resolves the whole project hierarchy for us.
+	subscribers, err := GetSubscriptionsForEntity(sess, SubscriptionEntityTask, event.Task.ID)
+	if err != nil {
+		return err
+	}
+
+	log.Debugf("Sending task created notifications to %d subscribers for task %d", len(subscribers), event.Task.ID)
+
+	// HandleTaskCreateMentions notifies these separately for the same event
+	mentioned, err := FindMentionedUsersInText(sess, event.Task.Description)
+	if err != nil {
+		return err
+	}
+
+	notifiedUsers := make(map[int64]bool)
+
+	for _, subscriber := range subscribers {
+		if subscriber.UserID == event.Doer.ID {
+			continue
+		}
+
+		if notifiedUsers[subscriber.UserID] {
+			continue
+		}
+
+		if _, has := mentioned[subscriber.UserID]; has {
+			continue
+		}
+
+		n := &TaskCreatedNotification{
+			Doer:    event.Doer,
+			Task:    event.Task,
+			Project: project,
+		}
+		err = notifications.Notify(subscriber.User, n, sess)
+		if err != nil {
+			// Return so the event is retried: on SQLite the insert can hit
+			// SQLITE_BUSY_SNAPSHOT when a sibling listener wrote first.
 			_ = sess.Rollback()
 			return err
 		}
