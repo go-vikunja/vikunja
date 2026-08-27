@@ -32,6 +32,8 @@ func (n *TaskAssignedNotification) ProjectID() int64 { return notificationProjec
 
 func (n *TaskDeletedNotification) ProjectID() int64 { return notificationProjectID(n.Task, nil) }
 
+func (n *TaskCreatedNotification) ProjectID() int64 { return notificationProjectID(n.Task, n.Project) }
+
 func (n *UserMentionedInTaskNotification) ProjectID() int64 {
 	return notificationProjectID(n.Task, n.Project)
 }

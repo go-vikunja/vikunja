@@ -37,6 +37,7 @@ func init() {
 	notifications.Register(func() notifications.PersistedNotification { return &TaskCommentNotification{} })
 	notifications.Register(func() notifications.PersistedNotification { return &TaskAssignedNotification{} })
 	notifications.Register(func() notifications.PersistedNotification { return &TaskDeletedNotification{} })
+	notifications.Register(func() notifications.PersistedNotification { return &TaskCreatedNotification{} })
 	notifications.Register(func() notifications.PersistedNotification { return &ProjectCreatedNotification{} })
 	notifications.Register(func() notifications.PersistedNotification { return &TeamMemberAddedNotification{} })
 	notifications.Register(func() notifications.PersistedNotification { return &UserMentionedInTaskNotification{} })
@@ -264,6 +265,42 @@ func (n *TaskDeletedNotification) Name() string {
 
 // ThreadID returns the thread ID for email threading
 func (n *TaskDeletedNotification) ThreadID() string {
+	return getThreadID(n.Task.ID)
+}
+
+// TaskCreatedNotification represents a TaskCreatedNotification notification
+type TaskCreatedNotification struct {
+	Doer    *user.User `json:"doer"`
+	Task    *Task      `json:"task"`
+	Project *Project   `json:"project"`
+}
+
+// ToTitle returns the translated one-line title for TaskCreatedNotification
+func (n *TaskCreatedNotification) ToTitle(lang string) string {
+	return i18n.T(lang, "notifications.task.created.subject", n.Task.Title, n.Task.GetFullIdentifier())
+}
+
+// ToMail returns the mail notification for TaskCreatedNotification
+func (n *TaskCreatedNotification) ToMail(lang string) *notifications.Mail {
+	return notifications.NewMail().
+		From(n.Doer.GetNameAndFromEmail()).
+		Line(i18n.T(lang, "notifications.task.created.message", notifications.EscapeMarkdown(n.Doer.GetName()), notifications.EscapeMarkdown(n.Task.Title), notifications.EscapeMarkdown(n.Task.GetFullIdentifier()))).
+		Action(i18n.T(lang, "notifications.common.actions.open_task"), n.Task.GetFrontendURL()).
+		IncludeLinkToSettings(lang)
+}
+
+// ToDB returns the TaskCreatedNotification notification in a format which can be saved in the db
+func (n *TaskCreatedNotification) ToDB() interface{} {
+	return n
+}
+
+// Name returns the name of the notification
+func (n *TaskCreatedNotification) Name() string {
+	return "task.created"
+}
+
+// ThreadID returns the thread ID for email threading
+func (n *TaskCreatedNotification) ThreadID() string {
 	return getThreadID(n.Task.ID)
 }
 
