@@ -302,8 +302,9 @@ func TestHumaLabel_BotOwner(t *testing.T) {
 	})
 }
 
-// Fixture label #11 is unattached, so attachment history cannot grant access
-// here - only the owner branch can (#3592).
+// Fixture labels #11 (created by the owner) and #12 (created by sibling bot 25)
+// are unattached, so attachment history cannot grant access here - only the
+// shared identity can (#3592).
 func TestHumaLabel_BotUsesOwnerLabel(t *testing.T) {
 	bot := webHandlerTestV2{
 		user:     &testbot23,
@@ -320,12 +321,22 @@ func TestHumaLabel_BotUsesOwnerLabel(t *testing.T) {
 		e:        bot.e,
 	}
 
-	t.Run("ReadAll - bot's listing surfaces its owner's unattached labels", func(t *testing.T) {
+	t.Run("ReadAll - bot's listing surfaces its owner's and its siblings' unattached labels", func(t *testing.T) {
 		rec, err := bot.testReadAllWithUser(nil, nil)
 		require.NoError(t, err)
 		ids := labelIDsFromReadAll(t, rec.Body.Bytes())
-		assert.ElementsMatch(t, []int64{9, 11}, ids,
-			"bot's ReadAll must return exactly {9,11}; body: %s", rec.Body.String())
+		assert.ElementsMatch(t, []int64{9, 11, 12}, ids,
+			"bot's ReadAll must return exactly {9,11,12}; body: %s", rec.Body.String())
+	})
+	t.Run("ReadOne - bot can read a label created by a sibling bot", func(t *testing.T) {
+		rec, err := bot.testReadOneWithUser(nil, map[string]string{"label": "12"})
+		require.NoError(t, err)
+		assert.Contains(t, rec.Body.String(), `"title":"Label #12 - created by bot 25, sibling of bot 23"`)
+	})
+	t.Run("ReadOne - a different owner's bot cannot read the sibling's label", func(t *testing.T) {
+		_, err := otherBot.testReadOneWithUser(nil, map[string]string{"label": "12"})
+		require.Error(t, err)
+		assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
 	})
 	t.Run("ReadOne - bot can read its owner's unattached label", func(t *testing.T) {
 		rec, err := bot.testReadOneWithUser(nil, map[string]string{"label": "11"})
@@ -361,6 +372,12 @@ func TestHumaLabel_BotUsesOwnerLabel(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusCreated, rec.Code)
 		assert.Contains(t, rec.Body.String(), `"label_id":11`)
+	})
+	t.Run("Create - bot can attach a never-used label created by a sibling bot", func(t *testing.T) {
+		rec, err := attach.testCreateWithUser(nil, nil, `{"label_id":12}`)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusCreated, rec.Code)
+		assert.Contains(t, rec.Body.String(), `"label_id":12`)
 	})
 	t.Run("Create - bot cannot attach an unrelated user's label", func(t *testing.T) {
 		_, err := attach.testCreateWithUser(nil, nil, `{"label_id":6}`)

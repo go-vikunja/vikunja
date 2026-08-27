@@ -64,3 +64,9 @@
   created_by_id: 21
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
+# Must remain unattached so sibling-access tests exercise identity access, not task access.
+- id: 12
+  title: 'Label #12 - created by bot 25, sibling of bot 23'
+  created_by_id: 25
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12

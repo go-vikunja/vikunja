@@ -70,6 +70,14 @@ func TestUser_IsBotOwnedBy(t *testing.T) {
 			a:    &User{ID: 23, BotOwnerID: 21},
 			want: false,
 		},
+		{
+			// Both ids are 0, so only the IsBot() half keeps a human from being
+			// reported as owned by an unresolved caller.
+			name: "human subject, zero-id owner",
+			u:    &User{ID: 5},
+			a:    &User{},
+			want: false,
+		},
 	}
 
 	for _, tt := range tests {
