@@ -17,7 +17,7 @@ import {TaskAttachmentFactory} from '../../factories/task_attachments'
 import {TaskReminderFactory} from '../../factories/task_reminders'
 import {createDefaultViews} from '../project/prepareProjects'
 import {TaskBucketFactory} from '../../factories/task_buckets'
-import {pasteFile} from '../../support/commands'
+import {pasteFile, pasteHtmlFromClipboard} from '../../support/commands'
 import {login} from '../../support/authenticateUser'
 import type {Page} from '@playwright/test'
 import {readFileSync} from 'fs'
@@ -773,6 +773,22 @@ test.describe('Task', () => {
 			await expect(img).toHaveAttribute('alt', 'Pasted screenshot')
 			const naturalWidth = await img.evaluate((el: HTMLImageElement) => el.naturalWidth)
 			expect(naturalWidth).toBeGreaterThan(0)
+		})
+
+		test('Preserves subscript and superscript when pasting rich text into the description editor', async ({authenticatedPage: page}) => {
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+			}) as Task[]
+			await page.goto(`/tasks/${tasks[0].id}`)
+
+			const editor = page.locator('.task-view .details.content.description .tiptap__editor .tiptap.ProseMirror')
+			await expect(editor).toBeVisible({timeout: 30_000})
+
+			await pasteHtmlFromClipboard(page, editor, '<p>H<sub>2</sub>O and x<sup>2</sup></p>', 'H₂O and x²')
+
+			await expect(editor.locator('sub')).toHaveText('2')
+			await expect(editor.locator('sup')).toHaveText('2')
+			await expect(editor).toContainText('H2O and x2')
 		})
 
 		test('Can set a reminder', async ({authenticatedPage: page}) => {

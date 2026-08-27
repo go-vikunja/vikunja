@@ -10,6 +10,8 @@ import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import {Table, TableRow, TableCell, TableHeader} from '@tiptap/extension-table'
 import Typography from '@tiptap/extension-typography'
 import Image from '@tiptap/extension-image'
+import Subscript from '@tiptap/extension-subscript'
+import Superscript from '@tiptap/extension-superscript'
 import Underline from '@tiptap/extension-underline'
 import {Placeholder} from '@tiptap/extensions'
 import HardBreak from '@tiptap/extension-hard-break'
@@ -252,6 +254,8 @@ export function createEditorExtensions(deps: EditorExtensionDeps): Extensions {
 			},
 		}),
 		Typography,
+		Subscript,
+		Superscript,
 		Underline,
 		NonInclusiveLink.configure({
 			openOnClick: false,
