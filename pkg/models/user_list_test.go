@@ -58,7 +58,7 @@ func TestListUsers(t *testing.T) {
 
 		all, err := user.ListAllUsers(s)
 		require.NoError(t, err)
-		assert.Len(t, all, 24)
+		assert.Len(t, all, 25)
 	})
 	t.Run("no search term", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)

@@ -31,7 +31,8 @@ import (
 )
 
 // Bot ownership fixtures (pkg/db/fixtures/users.yml):
-//   - user 21 (user_bot_owner_a) owns bot 23 (bot-owner-a-assistant).
+//   - user 21 (user_bot_owner_a) owns bots 23 (bot-owner-a-assistant) and
+//     25 (bot-owner-a-scheduler).
 //   - user 22 (user_bot_owner_b) owns bot 24 (bot-owner-b-assistant).
 //
 // These two owner/bot pairs give a clean matrix: every read/update/delete of a
@@ -71,9 +72,9 @@ func TestHumaBotUser(t *testing.T) {
 			rec, err := h.testReadAllWithUser(nil, nil)
 			require.NoError(t, err)
 			ids := botIDsFromReadAll(t, rec.Body.Bytes())
-			// user 21 owns exactly bot 23; user 22's bot 24 must never leak.
-			assert.ElementsMatch(t, []int64{23}, ids,
-				"ReadAll must return exactly {23}; body: %s", rec.Body.String())
+			// user 21 owns exactly bots 23 and 25; user 22's bot 24 must never leak.
+			assert.ElementsMatch(t, []int64{23, 25}, ids,
+				"ReadAll must return exactly {23,25}; body: %s", rec.Body.String())
 			assert.NotContains(t, ids, int64(24), "bot #24 (other owner) must be hidden")
 		})
 		t.Run("Search filters by username", func(t *testing.T) {
