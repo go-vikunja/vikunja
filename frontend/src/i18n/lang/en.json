@@ -1026,33 +1026,21 @@
       "title": "Task detail",
       "markAsDone": "Mark '{task}' as done",
       "scrollToBottom": "Scroll to bottom",
-      "organization": "Organization",
-      "management": "Management",
-      "dateAndTime": "Date and time",
+      "moreActions": "More actions",
       "delete": {
         "header": "Delete this task",
         "text1": "Are you sure you want to remove this task?",
         "text2": "This will also remove all attachments, reminders and relations associated with this task and cannot be undone!"
       },
       "actions": {
-        "assign": "Assign to User",
-        "label": "Add Labels",
-        "priority": "Set Priority",
-        "dueDate": "Set Due Date",
-        "startDate": "Set Start Date",
-        "endDate": "Set End Date",
-        "reminders": "Set Reminders",
-        "repeatAfter": "Set Repeating Interval",
-        "percentDone": "Set Progress",
-        "attachments": "Add Attachments",
+        "attachments": "Add attachments",
         "timeTracking": "Track time",
-        "relatedTasks": "Add Relation",
+        "relatedTasks": "Add relation",
         "moveProject": "Move",
         "duplicate": "Duplicate",
-        "color": "Set Color",
         "delete": "Delete",
-        "favorite": "Add to Favorites",
-        "unfavorite": "Remove from Favorites"
+        "favorite": "Add to favorites",
+        "unfavorite": "Remove from favorites"
       }
     },
     "attributes": {
@@ -1209,6 +1197,7 @@
       "everyDay": "Every Day",
       "everyWeek": "Every Week",
       "every30d": "Every 30 Days",
+      "every": "Every {amount} {unit}",
       "mode": "Repeat mode",
       "monthly": "Monthly",
       "fromCurrentDate": "From completion date",
