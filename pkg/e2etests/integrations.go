@@ -59,6 +59,10 @@ var (
 // Unlike setupTestEnv in pkg/webtests/, this does NOT call events.Fake(),
 // so events are dispatched through the real Watermill router to registered listeners.
 func setupE2ETestEnv(ctx context.Context) (e *echo.Echo, err error) {
+	// Handlers from the previous test outlive its cancelled context and hold DB
+	// sessions, which makes LoadFixtures below fail with "database table is locked".
+	events.WaitForPendingHandlers()
+
 	config.InitDefaultConfig()
 	config.ServicePublicURL.Set("https://localhost")
 	config.WebhooksEnabled.Set(true)
