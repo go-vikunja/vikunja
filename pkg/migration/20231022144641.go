@@ -27,7 +27,7 @@ import (
 )
 
 func convertMarkdownToHTML(input string) (output string, err error) {
-	//#nosec - the html is escaped few lines before
+	//#nosec - input is html-escaped before rendering
 	return richtext.CommonMarkToHTML([]byte(templatehtml.HTMLEscapeString(input)))
 }
 
