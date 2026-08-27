@@ -44,7 +44,10 @@
 			>
 				{{ $t('misc.loading') }}
 			</h1>
-			<Card class="has-text-start view">
+			<Card
+				class="has-text-start view"
+				:has-content="false"
+			>
 				<RouterView />
 				<PoweredByLink utm-medium="link_share" />
 			</Card>
