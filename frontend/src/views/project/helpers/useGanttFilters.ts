@@ -32,7 +32,7 @@ const DEFAULT_DATETO_DAY_OFFSET = +55
 
 const now = new Date()
 
-type RouteQueryValue = RouteLocationNormalized['query'][string]
+type RouteQueryValue = RouteLocationNormalized['query'][string] | undefined
 
 function normalizeRouteQueryValue(value: RouteQueryValue): string | undefined {
 	const normalizedValue = Array.isArray(value) ? value[0] : value
