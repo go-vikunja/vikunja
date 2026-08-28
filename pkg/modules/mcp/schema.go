@@ -33,7 +33,8 @@ package mcp
 //     exposed id (e.g. task assignees) instead require their param-tagged
 //     identifying fields.
 //   - read_all: search/page/per_page + `query:`-tagged fields (the
-//     TaskCollection filter surface) + hidden param fields.
+//     TaskCollection filter surface) + param fields, hidden or not — a
+//     listing scoped to a parent (project views) needs its parent id.
 
 import (
 	"fmt"
@@ -183,12 +184,8 @@ func buildOpSpec(modelType reflect.Type, op Op, r *Resource) (*opSpec, error) {
 	return &opSpec{schema: schema, resolved: resolved, fields: fields}, nil
 }
 
-// propSchema maps a struct field's Go type onto a JSON Schema property.
-// Returns false for kinds MCP doesn't expose (nested model structs/slices —
-// those relations have their own resources).
-// addQueryOnlyArgs exposes json:"-" fields that carry a query tag (REST
-// URL parameters like TaskCollection.Expand) as listing arguments under
-// their query name.
+// addQueryOnlyArgs exposes json:"-" fields that carry a query tag (REST URL
+// parameters like TaskCollection.Expand) as listing arguments.
 func addQueryOnlyArgs(modelType reflect.Type, props map[string]*jsonschema.Schema, fields map[string]int, excluded func(string) bool) {
 	for i := 0; i < modelType.NumField(); i++ {
 		f := modelType.Field(i)
@@ -203,6 +200,8 @@ func addQueryOnlyArgs(modelType reflect.Type, props map[string]*jsonschema.Schem
 	}
 }
 
+// propSchema returns false for kinds MCP doesn't expose (nested model
+// structs/slices — those relations have their own resources).
 func propSchema(f reflect.StructField) (*jsonschema.Schema, bool) {
 	s := &jsonschema.Schema{}
 	t := f.Type
@@ -271,7 +270,7 @@ func writableInclusion(op Op, f reflect.StructField, name, param string, hasExpo
 	identity := slices.Contains(r.IdentityFields, name)
 	switch op {
 	case OpCreate:
-		return true, requiredForCreate(f, name, r)
+		return true, requiredForCreate(f)
 	case OpUpdate:
 		return true, identity
 	case OpReadOne, OpDelete:
@@ -283,19 +282,23 @@ func writableInclusion(op Op, f reflect.StructField, name, param string, hasExpo
 			return true, true
 		}
 	case OpReadAll:
-		return f.Tag.Get("query") != "", false
+		if f.Tag.Get("query") != "" {
+			return true, false
+		}
+		// readOnly + param means REST scopes the listing by this field from
+		// the URL path (e.g. ProjectView.ProjectID); without it the listing
+		// would run against id 0.
+		if param != "" && f.Tag.Get("readOnly") == "true" {
+			return true, !slices.Contains(r.OptionalFields, name)
+		}
 	}
 	return false, false
 }
 
 // requiredForCreate reports whether a writable field must be supplied on
-// create: an explicit per-resource override, a `valid:"required"` rule, a
-// non-zero minLength, or a `param:` tag (REST binds it from the URL, so a
-// create without it can never succeed).
-func requiredForCreate(f reflect.StructField, name string, r *Resource) bool {
-	if slices.Contains(r.RequiredCreate, name) {
-		return true
-	}
+// create: a `valid:"required"` rule, a non-zero minLength, or a `param:` tag
+// (REST binds it from the URL, so a create without it can never succeed).
+func requiredForCreate(f reflect.StructField) bool {
 	if strings.Contains(f.Tag.Get("valid"), "required") {
 		return true
 	}
