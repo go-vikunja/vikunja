@@ -54,7 +54,7 @@ type TaskCollection struct {
 	// If set to `reactions`, the reactions of each task will be present in the response.
 	// If set to `comments`, the first 50 comments of each task will be present in the response.
 	// You can set this multiple times with different values.
-	Expand []TaskCollectionExpandable `query:"expand" json:"-"`
+	Expand []TaskCollectionExpandable `query:"expand" json:"-" enum:"subtasks,buckets,reactions,comments,comment_count,time_entries_count,is_unread" doc:"Extra data to include per task. subtasks nests each task's subtasks in related_tasks (and may return more tasks than the page size); buckets, reactions and comments (first 50) attach those; comment_count, time_entries_count and is_unread add the respective fields."`
 
 	isSavedFilter bool
 

@@ -180,3 +180,18 @@ func TestMCP_Tasks_Delete(t *testing.T) {
 	isErr, _ := readResult["isError"].(bool)
 	require.True(t, isErr, "expected isError for deleted task")
 }
+
+func TestMCP_Tasks_ReadAllExpand(t *testing.T) {
+	c := newMCPClient(t, mcpFullProjectsToken)
+	result := c.callTool("tasks_read_all", map[string]any{
+		"project_id": 1,
+		"expand":     []string{"comment_count", "reactions"},
+	})
+	require.NotContains(t, result, "isError", "unexpected error: %v", result)
+	body := toolResultText(t, result)
+	assert.Contains(t, body, `"comment_count":`)
+	assert.Contains(t, body, `"reactions":`)
+
+	result = c.callTool("tasks_read_all", map[string]any{"project_id": 1, "expand": []string{"bogus"}})
+	assert.Equal(t, true, result["isError"])
+}
