@@ -166,8 +166,8 @@ func buildOpSpec(modelType reflect.Type, op Op, r *Resource) (*opSpec, error) {
 	if op == OpReadAll {
 		addQueryOnlyArgs(modelType, props, fields, excluded)
 		props[argSearch] = &jsonschema.Schema{Type: "string", Description: "Filter results by a case-insensitive substring match on the resource's primary text field."}
-		props[argPage] = &jsonschema.Schema{Type: "integer", Description: "1-based page number; 0 or omitted uses the server default (first page)."}
-		props[argPerPage] = &jsonschema.Schema{Type: "integer", Description: "Page size; 0 or omitted uses the server default."}
+		props[argPage] = &jsonschema.Schema{Type: "integer", Description: "1-based page number; 0 or omitted means the first page. Negative values are rejected."}
+		props[argPerPage] = &jsonschema.Schema{Type: "integer", Description: "Page size; 0 or omitted uses the server maximum, and larger values are clamped to it. The response reports the page size actually applied."}
 	}
 
 	sort.Strings(required)

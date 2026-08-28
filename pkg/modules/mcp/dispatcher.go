@@ -21,7 +21,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"reflect"
+	"strings"
 
+	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 	"code.vikunja.io/api/pkg/web/handler"
 )
@@ -83,6 +87,12 @@ func Dispatch(ctx context.Context, toolName string, rawArgs json.RawMessage) (an
 		return nil, fmt.Errorf("%w: %s", ErrToolNotFound, toolName)
 	}
 
+	// tools/list and find_action already hide gated resources; do_action
+	// would otherwise reach them by name.
+	if !ref.resource.enabled() {
+		return nil, fmt.Errorf("%w: %s", ErrToolNotFound, toolName)
+	}
+
 	// Fail closed: do_action must not reach a tool the token was never
 	// registered for.
 	if !tokenAuthorizes(TokenFromContext(ctx), ref.resource.Name, ref.op) {
@@ -113,6 +123,14 @@ func Dispatch(ctx context.Context, toolName string, rawArgs json.RawMessage) (an
 		return nil, fmt.Errorf("mcp: invalid arguments for %s: %w", toolName, err)
 	}
 
+	// The REST layer runs this via echo's CustomValidator before the handler;
+	// without it MCP writes bypass every `valid:` tag rule on the model.
+	if ref.op == OpCreate || ref.op == OpUpdate {
+		if err := models.ValidateStructFields(model, suppliedFieldNames(model, spec, args)); err != nil {
+			return nil, validationFailure(toolName, err)
+		}
+	}
+
 	switch ref.op {
 	case OpCreate:
 		if err := crud.doCreate(ctx, model, u); err != nil {
@@ -127,11 +145,11 @@ func Dispatch(ctx context.Context, toolName string, rawArgs json.RawMessage) (an
 		return model, nil
 
 	case OpReadAll:
-		result, _, _, err := crud.doReadAll(ctx, model, u, search, page, perPage)
+		result, resultCount, totalItems, err := crud.doReadAll(ctx, model, u, search, page, perPage)
 		if err != nil {
 			return nil, err
 		}
-		return result, nil
+		return newReadAllResult(result, resultCount, totalItems, page, perPage), nil
 
 	case OpUpdate:
 		if err := crud.doUpdate(ctx, model, u); err != nil {
@@ -147,4 +165,62 @@ func Dispatch(ctx context.Context, toolName string, rawArgs json.RawMessage) (an
 	}
 
 	return nil, fmt.Errorf("mcp: unsupported op %d for tool %s", ref.op, toolName)
+}
+
+// validationFailure renders a `valid:` tag failure for a tool result, which is
+// plain text — ValidationHTTPError keeps the offending field names out of its
+// message.
+func validationFailure(toolName string, err error) error {
+	var invalid models.ValidationHTTPError
+	if errors.As(err, &invalid) && len(invalid.InvalidFields) > 0 {
+		return fmt.Errorf("mcp: invalid arguments for %s: %s", toolName, strings.Join(invalid.InvalidFields, "; "))
+	}
+	return fmt.Errorf("mcp: invalid arguments for %s: %w", toolName, err)
+}
+
+// suppliedFieldNames returns the names govalidator may report for the
+// arguments the caller actually sent: the JSON property name plus the Go
+// field name, which govalidator falls back to for `json:"-"` fields.
+func suppliedFieldNames(model handler.CObject, spec *opSpec, args map[string]json.RawMessage) map[string]bool {
+	modelType := reflect.TypeOf(model).Elem()
+	names := make(map[string]bool, len(args)*2)
+	for name := range args {
+		names[name] = true
+		if idx, ok := spec.fields[name]; ok {
+			names[modelType.Field(idx).Name] = true
+		}
+	}
+	return names
+}
+
+// readAllResult is the read_all envelope. A bare array left clients no way to
+// tell a truncated page from the last one, and no way to page on from it.
+type readAllResult struct {
+	Items       any   `json:"items"`
+	ResultCount int   `json:"result_count"`
+	TotalItems  int64 `json:"total_items"`
+	Page        int   `json:"page"`
+	PerPage     int   `json:"per_page"`
+}
+
+func newReadAllResult(items any, resultCount int, totalItems int64, page, perPage int) *readAllResult {
+	// read_all hands out user rows directly, skipping the per-parent
+	// serialisation the REST layer relies on to hide addresses.
+	if users, ok := items.([]*user.User); ok {
+		for _, u := range users {
+			if u != nil {
+				u.Email = ""
+			}
+		}
+	}
+	if v := reflect.ValueOf(items); !v.IsValid() || (v.Kind() == reflect.Slice && v.IsNil()) {
+		items = []any{}
+	}
+	return &readAllResult{
+		Items:       items,
+		ResultCount: resultCount,
+		TotalItems:  totalItems,
+		Page:        page,
+		PerPage:     perPage,
+	}
 }

@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"testing"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/models"
 
 	"github.com/stretchr/testify/assert"
@@ -105,6 +106,7 @@ func TestValidate_NonObjectArgumentsRejected(t *testing.T) {
 }
 
 func TestPopReadAllParams(t *testing.T) {
+	config.InitDefaultConfig()
 	args := map[string]json.RawMessage{
 		argSearch:  json.RawMessage(`"foo"`),
 		argPage:    json.RawMessage(`2`),

@@ -22,6 +22,7 @@ import (
 	"errors"
 	"testing"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
@@ -205,6 +206,7 @@ func TestDispatchCallsReadOne(t *testing.T) {
 func TestDispatchCallsReadAll(t *testing.T) {
 	resetRegistry(t)
 	installStubCRUD(t)
+	config.InitDefaultConfig()
 	tracker := &stubTracker{}
 	require.NoError(t, Register(Resource{
 		Name:  "stubs",
@@ -212,13 +214,121 @@ func TestDispatchCallsReadAll(t *testing.T) {
 		Ops:   OpReadAll,
 	}))
 
-	out, err := Dispatch(newAuthedCtx(t), "stubs_read_all", json.RawMessage(`{"search":"foo","page":2,"per_page":50}`))
+	out, err := Dispatch(newAuthedCtx(t), "stubs_read_all", json.RawMessage(`{"search":"foo","page":2,"per_page":25}`))
 	require.NoError(t, err)
 	require.NotNil(t, tracker.last)
 	assert.Equal(t, "ReadAll", tracker.last.called)
 	// The stub's ReadAll echoes the search/page/per_page so we can confirm
 	// the dispatcher threaded the wrapper's pagination fields through.
-	assert.Equal(t, []string{"foo"}, out)
+	env := requireReadAllResult(t, out)
+	assert.Equal(t, []string{"foo"}, env.Items)
+	assert.Equal(t, 2, env.Page)
+	assert.Equal(t, 25, env.PerPage)
+	assert.Equal(t, 2, env.ResultCount)
+	assert.Equal(t, int64(25), env.TotalItems)
+}
+
+func requireReadAllResult(t *testing.T, out any) *readAllResult {
+	t.Helper()
+	env, ok := out.(*readAllResult)
+	require.Truef(t, ok, "read_all must return an envelope, got %T", out)
+	return env
+}
+
+// dispatchReadAll registers a stub resource and lists it with the given raw
+// arguments.
+func dispatchReadAll(t *testing.T, rawArgs string) (any, error) {
+	t.Helper()
+	resetRegistry(t)
+	installStubCRUD(t)
+	config.InitDefaultConfig()
+	tracker := &stubTracker{}
+	require.NoError(t, Register(Resource{
+		Name:  "stubs",
+		Model: tracker.empty,
+		Ops:   OpReadAll,
+	}))
+	return Dispatch(newAuthedCtx(t), "stubs_read_all", json.RawMessage(rawArgs))
+}
+
+func TestDispatchReadAllPaginationDefaults(t *testing.T) {
+	// Omitted page/per_page must land on page 1 with the server maximum —
+	// passing them through as zero makes the models drop the LIMIT clause.
+	out, err := dispatchReadAll(t, `{}`)
+	require.NoError(t, err)
+	env := requireReadAllResult(t, out)
+	assert.Equal(t, 1, env.Page)
+	assert.Equal(t, config.ServiceMaxItemsPerPage.GetInt(), env.PerPage)
+}
+
+func TestDispatchReadAllPerPageClampedToMax(t *testing.T) {
+	out, err := dispatchReadAll(t, `{"per_page":1000000}`)
+	require.NoError(t, err)
+	env := requireReadAllResult(t, out)
+	assert.Equal(t, config.ServiceMaxItemsPerPage.GetInt(), env.PerPage)
+}
+
+func TestDispatchReadAllRejectsNegativePagination(t *testing.T) {
+	_, err := dispatchReadAll(t, `{"page":-1}`)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), `invalid value for "page"`)
+
+	_, err = dispatchReadAll(t, `{"per_page":-1}`)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), `invalid value for "per_page"`)
+}
+
+func TestDispatchGatedResourceIsNotFound(t *testing.T) {
+	// A disabled resource is hidden from tools/list and find_action;
+	// do_action must not be able to name it either.
+	resetRegistry(t)
+	installStubCRUD(t)
+	tracker := &stubTracker{}
+	require.NoError(t, Register(Resource{
+		Name:  "stubs",
+		Model: tracker.empty,
+		Ops:   OpReadOne,
+		Gate:  func() bool { return false },
+	}))
+
+	_, err := Dispatch(newAuthedCtx(t), "stubs_read_one", json.RawMessage(`{"id":1}`))
+	require.Error(t, err)
+	require.ErrorIs(t, err, ErrToolNotFound)
+	assert.Empty(t, tracker.last.called, "a gated resource must never reach its model")
+}
+
+// validatedStub carries a `valid:` tag so the dispatcher's tag validation has
+// something to reject. The embedded stub supplies the CRUD methods; schema
+// derivation skips anonymous fields, so only "amount" becomes an argument.
+type validatedStub struct {
+	Amount int64 `json:"amount" valid:"range(0|10)"`
+	stubCObject
+}
+
+func TestDispatchValidatesTagRules(t *testing.T) {
+	// `valid:` tags are enforced by echo's validator in REST; MCP has to run
+	// them itself or writes bypass them entirely.
+	resetRegistry(t)
+	installStubCRUD(t)
+	var last *validatedStub
+	require.NoError(t, Register(Resource{
+		Name: "stubs",
+		Model: func() handler.CObject {
+			last = &validatedStub{}
+			return last
+		},
+		Ops: OpCreate,
+	}))
+
+	_, err := Dispatch(newAuthedCtx(t), "stubs_create", json.RawMessage(`{"amount":50}`))
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "amount")
+	require.NotNil(t, last)
+	assert.Empty(t, last.called, "validation must run before the model is touched")
+
+	_, err = Dispatch(newAuthedCtx(t), "stubs_create", json.RawMessage(`{"amount":5}`))
+	require.NoError(t, err)
+	assert.Equal(t, "Create", last.called)
 }
 
 func TestDispatchCallsUpdate(t *testing.T) {

@@ -20,6 +20,8 @@ import (
 	"encoding/json"
 	"testing"
 
+	"code.vikunja.io/api/pkg/config"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -52,7 +54,7 @@ func TestMCP_Tasks_ReadAllWithFilter(t *testing.T) {
 	require.NotContains(t, result, "isError", "read_all errored: %v", result)
 
 	var tasks []map[string]any
-	require.NoError(t, json.Unmarshal([]byte(toolResultText(t, result)), &tasks))
+	readAllItems(t, result, &tasks)
 	require.NotEmpty(t, tasks, "fixtures contain done tasks")
 	for _, task := range tasks {
 		assert.Equal(t, true, task["done"], "filter must only return done tasks: %v", task["id"])
@@ -61,11 +63,48 @@ func TestMCP_Tasks_ReadAllWithFilter(t *testing.T) {
 	// Scoped to a single project via the optional project_id argument.
 	result = c.callTool("tasks_read_all", map[string]any{"project_id": 1})
 	require.NotContains(t, result, "isError")
-	require.NoError(t, json.Unmarshal([]byte(toolResultText(t, result)), &tasks))
+	readAllItems(t, result, &tasks)
 	require.NotEmpty(t, tasks)
 	for _, task := range tasks {
 		assert.InDelta(t, float64(1), task["project_id"], 0.0001, "task %v outside project 1", task["id"])
 	}
+}
+
+func TestMCP_Tasks_ReadAllPagination(t *testing.T) {
+	c := newMCPClient(t, mcpFullProjectsToken)
+	result := c.callTool("tasks_read_all", map[string]any{"per_page": 1000000})
+	require.NotContains(t, result, "isError", "read_all errored: %v", result)
+
+	var env struct {
+		Items       []map[string]any `json:"items"`
+		ResultCount int              `json:"result_count"`
+		TotalItems  int64            `json:"total_items"`
+		Page        int              `json:"page"`
+		PerPage     int              `json:"per_page"`
+	}
+	text := toolResultText(t, result)
+	require.NoError(t, json.Unmarshal([]byte(text), &env), "text was: %s", text)
+	assert.Equal(t, 1, env.Page, "an omitted page must default to the first one")
+	assert.Equal(t, config.ServiceMaxItemsPerPage.GetInt(), env.PerPage, "per_page must be clamped to the server maximum")
+	assert.LessOrEqual(t, len(env.Items), env.PerPage, "more items than the page size")
+	assert.Equal(t, len(env.Items), env.ResultCount)
+	assert.Positive(t, env.TotalItems)
+
+	result = c.callTool("tasks_read_all", map[string]any{"page": -1})
+	assert.Equal(t, true, result["isError"], "a negative page must be rejected: %v", result)
+}
+
+func TestMCP_Tasks_CreateRejectsInvalidTagValue(t *testing.T) {
+	// repeat_after carries valid:"range(0|...)"; without the dispatcher
+	// running the model's tag rules a negative value would reach the DB.
+	c := newMCPClient(t, mcpFullProjectsToken)
+	result := c.callTool("tasks_create", map[string]any{
+		"title":        "task with a negative repeat",
+		"project_id":   1,
+		"repeat_after": -5,
+	})
+	require.Equal(t, true, result["isError"], "expected isError: %v", result)
+	assert.Contains(t, toolResultText(t, result), "repeat_after")
 }
 
 func TestMCP_Tasks_Create(t *testing.T) {

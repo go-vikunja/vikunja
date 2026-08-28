@@ -125,6 +125,19 @@ func toolResultText(t *testing.T, result map[string]any) string {
 	return text
 }
 
+// readAllItems unmarshals the items array out of a read_all envelope into
+// dest. read_all returns {items, result_count, total_items, page, per_page},
+// not a bare array.
+func readAllItems(t *testing.T, result map[string]any, dest any) {
+	t.Helper()
+	text := toolResultText(t, result)
+	var env struct {
+		Items json.RawMessage `json:"items"`
+	}
+	require.NoError(t, json.Unmarshal([]byte(text), &env), "text was: %s", text)
+	require.NoError(t, json.Unmarshal(env.Items, dest), "items were: %s", env.Items)
+}
+
 func TestMCP_Projects_ToolsListAll(t *testing.T) {
 	// Token 11 has every project scope plus the scopes added in Task 7
 	// (tasks, labels, teams, tasks_comments, tasks_assignees). The total
@@ -227,9 +240,8 @@ func TestMCP_Projects_ReadAll(t *testing.T) {
 	result := c.callTool("projects_read_all", map[string]any{})
 	require.NotContains(t, result, "isError", "read_all errored: %v", result)
 
-	text := toolResultText(t, result)
 	var projects []map[string]any
-	require.NoError(t, json.Unmarshal([]byte(text), &projects), "text was: %s", text)
+	readAllItems(t, result, &projects)
 	require.NotEmpty(t, projects, "expected at least one project")
 
 	// User 1 owns Test1 (project id 1); confirm it's in the response.
@@ -250,9 +262,8 @@ func TestMCP_Projects_ReadAllSearch(t *testing.T) {
 	})
 	require.NotContains(t, result, "isError")
 
-	text := toolResultText(t, result)
 	var projects []map[string]any
-	require.NoError(t, json.Unmarshal([]byte(text), &projects))
+	readAllItems(t, result, &projects)
 	// At minimum the matching project Test1 should appear.
 	require.NotEmpty(t, projects)
 	for _, p := range projects {

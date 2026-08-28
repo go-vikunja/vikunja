@@ -100,7 +100,7 @@ func TestMCP_Catalog_DoActionLabelRoundTrip(t *testing.T) {
 	})
 	require.NotContains(t, result, "isError")
 	var labels []map[string]any
-	require.NoError(t, json.Unmarshal([]byte(toolResultText(t, result)), &labels))
+	readAllItems(t, result, &labels)
 	ids := map[float64]bool{}
 	for _, l := range labels {
 		ids[l["id"].(float64)] = true
@@ -123,7 +123,7 @@ func TestMCP_Catalog_DoActionListsProjectViews(t *testing.T) {
 	require.NotContains(t, result, "isError", "do_action projects_views_read_all errored: %v", result)
 
 	var views []map[string]any
-	require.NoError(t, json.Unmarshal([]byte(toolResultText(t, result)), &views))
+	readAllItems(t, result, &views)
 	require.NotEmpty(t, views)
 	for _, v := range views {
 		assert.EqualValues(t, 1, v["project_id"])

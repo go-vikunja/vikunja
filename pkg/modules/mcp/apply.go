@@ -28,6 +28,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/web/handler"
 )
 
@@ -80,8 +81,10 @@ func applyArgs(model handler.CObject, spec *opSpec, args map[string]json.RawMess
 }
 
 // popReadAllParams extracts (and removes) the reserved search/page/per_page
-// arguments so applyArgs only sees model-bound keys. They map onto
-// handler.DoReadAll's positional parameters.
+// arguments so applyArgs only sees model-bound keys, and normalises them the
+// way the REST layer does before calling handler.DoReadAll. The normalisation
+// is not optional: page < 1 makes the models skip the LIMIT clause entirely,
+// so an omitted per_page would dump every row the caller can see.
 func popReadAllParams(args map[string]json.RawMessage) (search string, page, perPage int, err error) {
 	pop := func(name string, dst any) error {
 		raw, ok := args[name]
@@ -100,6 +103,22 @@ func popReadAllParams(args map[string]json.RawMessage) (search string, page, per
 	if err = pop(argPage, &page); err != nil {
 		return
 	}
-	err = pop(argPerPage, &perPage)
-	return
+	if err = pop(argPerPage, &perPage); err != nil {
+		return
+	}
+
+	if page < 0 {
+		return "", 0, 0, fmt.Errorf("invalid value for %q: must not be negative", argPage)
+	}
+	if page == 0 {
+		page = 1
+	}
+	if perPage < 0 {
+		return "", 0, 0, fmt.Errorf("invalid value for %q: must not be negative", argPerPage)
+	}
+	maxPerPage := config.ServiceMaxItemsPerPage.GetInt()
+	if perPage == 0 || perPage > maxPerPage {
+		perPage = maxPerPage
+	}
+	return search, page, perPage, nil
 }
