@@ -637,6 +637,28 @@ func SetConfigFile(path string) {
 	configFileOverride = path
 }
 
+// anchorRootpathToConfigFile resolves a relative rootpath against a pinned
+// config file's directory, so it belongs to the install and not the caller's cwd.
+func anchorRootpathToConfigFile() {
+	if configFileOverride == "" {
+		return
+	}
+
+	configDir, err := filepath.Abs(filepath.Dir(viper.ConfigFileUsed()))
+	if err != nil {
+		return
+	}
+
+	if !viper.InConfig(string(ServiceRootpath)) {
+		ServiceRootpath.setDefault(configDir)
+	}
+
+	// An explicitly set value outranks a default, so rewrite at override level.
+	if rootpath := ServiceRootpath.GetString(); !filepath.IsAbs(rootpath) {
+		ServiceRootpath.Set(filepath.Join(configDir, rootpath))
+	}
+}
+
 // InitConfig initializes the config, sets defaults etc.
 func InitConfig() {
 
@@ -678,19 +700,7 @@ func InitConfig() {
 		log.Fatalf("Could not read config file %s: %s", configFileOverride, err.Error())
 	}
 
-	// Relative paths belong to the pinned install, not to the caller's cwd.
-	if configFileOverride != "" {
-		if configDir, absErr := filepath.Abs(filepath.Dir(viper.ConfigFileUsed())); absErr == nil {
-			if !viper.InConfig(string(ServiceRootpath)) {
-				ServiceRootpath.setDefault(configDir)
-			}
-			// An explicitly set value outranks a default, so it has to be
-			// rewritten at override level rather than re-defaulted.
-			if rootpath := ServiceRootpath.GetString(); !filepath.IsAbs(rootpath) {
-				ServiceRootpath.Set(filepath.Join(configDir, rootpath))
-			}
-		}
-	}
+	anchorRootpathToConfigFile()
 
 	if viper.ConfigFileUsed() != "" {
 		log.Infof("Using config file: %s", viper.ConfigFileUsed())
