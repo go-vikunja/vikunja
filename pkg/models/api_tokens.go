@@ -233,34 +233,35 @@ func (t *APIToken) Delete(s *xorm.Session, a web.Auth) (err error) {
 	return nil
 }
 
-// HasCaldavAccess checks whether the token has the caldav access permission.
+// HasPermission reports whether the token grants permission within group.
+// Both sides are canonicalised the same way CanDoAPIRoute does it, so a
+// hyphenated group slug stored on the token still matches.
+func (t *APIToken) HasPermission(group, permission string) bool {
+	if t == nil {
+		return false
+	}
+	group = canonicalAPITokenGroup(group)
+	for storedGroup, perms := range t.APIPermissions {
+		if canonicalAPITokenGroup(storedGroup) == group && slices.Contains(perms, permission) {
+			return true
+		}
+	}
+	return false
+}
+
 func (t *APIToken) HasCaldavAccess() bool {
-	perms, has := t.APIPermissions["caldav"]
-	if !has {
-		return false
-	}
-	return slices.Contains(perms, "access")
+	return t.HasPermission("caldav", "access")
 }
 
-// HasFeedsAccess checks whether the token has the feeds access permission.
 func (t *APIToken) HasFeedsAccess() bool {
-	perms, has := t.APIPermissions["feeds"]
-	if !has {
-		return false
-	}
-	return slices.Contains(perms, "access")
+	return t.HasPermission("feeds", "access")
 }
 
-// HasMCPAccess checks whether the token has the mcp access permission.
-// The MCP endpoint uses POST, GET, and DELETE on the same path (streamable-HTTP
-// transport), so CanDoAPIRoute can't gate it — the MCP entry handler calls
-// this directly after the middleware skips the route check.
+// HasMCPAccess is called inline by the MCP entry handler: the streamable-HTTP
+// transport uses POST, GET and DELETE on one path, which CanDoAPIRoute's exact
+// (method, path) match cannot express.
 func (t *APIToken) HasMCPAccess() bool {
-	perms, has := t.APIPermissions["mcp"]
-	if !has {
-		return false
-	}
-	return slices.Contains(perms, "access")
+	return t.HasPermission("mcp", "access")
 }
 
 // GetTokenFromTokenString returns the full token object from the original token string.

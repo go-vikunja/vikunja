@@ -246,6 +246,24 @@ func TestAPIToken_HasMCPAccess(t *testing.T) {
 	})
 }
 
+func TestAPIToken_HasPermission(t *testing.T) {
+	t.Run("nil token", func(t *testing.T) {
+		var token *APIToken
+		assert.False(t, token.HasPermission("tasks", "read_all"))
+	})
+	t.Run("nil permissions", func(t *testing.T) {
+		assert.False(t, (&APIToken{}).HasPermission("tasks", "read_all"))
+	})
+	t.Run("hyphenated group key is canonicalised", func(t *testing.T) {
+		token := &APIToken{
+			APIPermissions: APIPermissions{"time-entries": {"read_all"}},
+		}
+		assert.True(t, token.HasPermission("time_entries", "read_all"))
+		assert.True(t, token.HasPermission("time-entries", "read_all"))
+		assert.False(t, token.HasPermission("time_entries", "create"))
+	})
+}
+
 func TestAPIToken_GetTokenFromTokenString(t *testing.T) {
 	t.Run("valid token", func(t *testing.T) {
 		s := db.NewSession()

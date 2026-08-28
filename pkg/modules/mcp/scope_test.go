@@ -65,6 +65,18 @@ func TestTokenAuthorizes_NoGroup(t *testing.T) {
 	assert.False(t, tokenAuthorizes(token, "projects", OpCreate))
 }
 
+func TestTokenAuthorizes_HyphenatedGroupKey(t *testing.T) {
+	// The frontend snake_cases payloads, so a hyphenated slug must still match.
+	token := &models.APIToken{
+		APIPermissions: models.APIPermissions{
+			"time-entries": []string{"read_all"},
+		},
+	}
+
+	assert.True(t, tokenAuthorizes(token, "time_entries", OpReadAll))
+	assert.False(t, tokenAuthorizes(token, "time_entries", OpCreate))
+}
+
 func TestTokenAuthorizes_NilPermissionsMap(t *testing.T) {
 	// A token with nil APIPermissions should never authorize anything.
 	token := &models.APIToken{APIPermissions: nil}
