@@ -30,8 +30,8 @@ import (
 func CheckFiles() CheckGroup {
 	fileType := config.FilesType.GetString()
 
-	// Initialize file handler
-	if err := files.InitFileHandler(); err != nil {
+	// Not InitFileHandler: a diagnostic must not create the storage it reports on.
+	if err := files.InitStorageBackend(); err != nil {
 		return CheckGroup{
 			Name: fmt.Sprintf("Files (%s)", fileType),
 			Results: []CheckResult{
@@ -78,7 +78,6 @@ func checkLocalStorage() []CheckResult {
 		},
 	}
 
-	// Check if the directory exists
 	info, err := os.Stat(basePath)
 	if err != nil {
 		results = append(results, CheckResult{
@@ -86,7 +85,15 @@ func checkLocalStorage() []CheckResult {
 			Passed: false,
 			Error:  err.Error(),
 		})
-		// If the directory doesn't exist, skip the remaining checks
+		return results
+	}
+
+	if !info.IsDir() {
+		results = append(results, CheckResult{
+			Name:   "Directory exists",
+			Passed: false,
+			Error:  fmt.Sprintf("%s exists but is not a directory", basePath),
+		})
 		return results
 	}
 
@@ -96,17 +103,14 @@ func checkLocalStorage() []CheckResult {
 		Value:  "yes",
 	})
 
-	// Directory permissions (octal mode)
 	results = append(results, CheckResult{
 		Name:   "Directory permissions",
 		Passed: true,
 		Value:  fmt.Sprintf("%04o", info.Mode().Perm()),
 	})
 
-	// Directory ownership (platform-specific)
 	results = append(results, checkDirectoryOwnership(info)...)
 
-	// Check writable using the existing ValidateFileStorage function
 	if err := files.ValidateFileStorage(); err != nil {
 		results = append(results, CheckResult{
 			Name:   "Writable",
@@ -121,10 +125,7 @@ func checkLocalStorage() []CheckResult {
 		})
 	}
 
-	// Check disk space (platform-specific)
 	results = append(results, checkDiskSpace(basePath))
-
-	// Count files and total size in the directory
 	results = append(results, checkFileStats(basePath))
 
 	return results
@@ -200,7 +201,6 @@ func checkS3Storage() []CheckResult {
 		},
 	}
 
-	// Check writable using the existing ValidateFileStorage function
 	if err := files.ValidateFileStorage(); err != nil {
 		results = append(results, CheckResult{
 			Name:   "Writable",
