@@ -197,6 +197,7 @@ func installToolsForToken(srv *mcp.Server, token *models.APIToken) {
 			}, rawToolHandler(name))
 		}
 	}
+	installUsersSearchTool(srv, token)
 	installCatalogTools(srv, token)
 }
 
