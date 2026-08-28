@@ -18,7 +18,6 @@ package mcp
 
 import (
 	"errors"
-	"slices"
 
 	"code.vikunja.io/api/pkg/models"
 )
@@ -29,20 +28,8 @@ import (
 // the client sees a structured failure rather than a JSON-RPC protocol error.
 var ErrScopeDenied = errors.New("mcp: tool not authorized for this token")
 
-// tokenAuthorizes returns true iff the token's APIPermissions map contains
-// op.Permission() under the given resource's scope group. This is the
-// (group, permission) lookup that gates both tools/list visibility and
-// tools/call invocation; it intentionally duplicates rather than shares
-// CanDoAPIRoute's logic because MCP doesn't have a path/method to match —
-// the registry already owns the (resource, op) → (group, permission) mapping.
-//
-// A nil token or nil APIPermissions returns false (slices.Contains on a nil
-// slice is also false, so the second case is naturally handled). Defensive
-// checks here keep the dispatcher's "fail closed" contract even if the entry
-// handler somehow forgets to attach a token.
+// tokenAuthorizes maps an (mcp resource, op) pair onto the (group, permission)
+// pair the API token model stores; a nil token denies.
 func tokenAuthorizes(token *models.APIToken, resourceName string, op Op) bool {
-	if token == nil {
-		return false
-	}
-	return slices.Contains(token.APIPermissions[resourceName], op.Permission())
+	return token.HasPermission(resourceName, op.Permission())
 }

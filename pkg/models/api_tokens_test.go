@@ -248,6 +248,24 @@ func TestAPIToken_HasMCPAccess(t *testing.T) {
 	})
 }
 
+func TestAPIToken_HasPermission(t *testing.T) {
+	t.Run("nil token", func(t *testing.T) {
+		var token *APIToken
+		assert.False(t, token.HasPermission("tasks", "read_all"))
+	})
+	t.Run("nil permissions", func(t *testing.T) {
+		assert.False(t, (&APIToken{}).HasPermission("tasks", "read_all"))
+	})
+	t.Run("hyphenated group key is canonicalised", func(t *testing.T) {
+		token := &APIToken{
+			APIPermissions: APIPermissions{"time-entries": {"read_all"}},
+		}
+		assert.True(t, token.HasPermission("time_entries", "read_all"))
+		assert.True(t, token.HasPermission("time-entries", "read_all"))
+		assert.False(t, token.HasPermission("time_entries", "create"))
+	})
+}
+
 func TestAPIToken_GetTokenFromTokenString(t *testing.T) {
 	const token1 = "tk_2eef46f40ebab3304919ab2e7e39993f75f29d2e"
 	const token9 = "tk_readonly_tasks_user1_00000000abcd1234" // no token_sha256 in fixtures
