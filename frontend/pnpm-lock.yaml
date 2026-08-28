@@ -73,6 +73,12 @@ importers:
       '@tiptap/extension-mention':
         specifier: 3.30.3
         version: 3.30.3(@tiptap/core@3.30.3(@tiptap/pm@3.30.3))(@tiptap/pm@3.30.3)(@tiptap/suggestion@3.30.3(@floating-ui/dom@1.8.0)(@tiptap/core@3.30.3(@tiptap/pm@3.30.3))(@tiptap/pm@3.30.3))
+      '@tiptap/extension-subscript':
+        specifier: 3.30.3
+        version: 3.30.3(@tiptap/core@3.30.3(@tiptap/pm@3.30.3))(@tiptap/pm@3.30.3)
+      '@tiptap/extension-superscript':
+        specifier: 3.30.3
+        version: 3.30.3(@tiptap/core@3.30.3(@tiptap/pm@3.30.3))(@tiptap/pm@3.30.3)
       '@tiptap/extension-table':
         specifier: 3.30.3
         version: 3.30.3(@tiptap/core@3.30.3(@tiptap/pm@3.30.3))(@tiptap/pm@3.30.3)
@@ -2617,6 +2623,18 @@ packages:
     resolution: {integrity: sha512-e9BI8Hzei23GjmYysXxL+CHq3fIgOm29BbSUMbYXxT2cJ+TkkgJp7EvHf74gSABNME0gUN+mG0pRR5wTFoOCcg==}
     peerDependencies:
       '@tiptap/core': 3.30.3
+
+  '@tiptap/extension-subscript@3.30.3':
+    resolution: {integrity: sha512-9tviuHA6KKMzjczYXi9ge6o6UwnBkjG6oP9VnNQvxqFuIGuwZjSYFtxjZDe8nLcaPQ+xMqKDVchVQiQtJ3j2XA==}
+    peerDependencies:
+      '@tiptap/core': 3.30.3
+      '@tiptap/pm': 3.30.3
+
+  '@tiptap/extension-superscript@3.30.3':
+    resolution: {integrity: sha512-2iUddLvL49/hGSIaQfZ4sJBnpxAWuDf/cIzsdbUYsox9YEnP8kq/gw9f2sMl8ypxRFeu/Qok1oG5vmrIz2aqZA==}
+    peerDependencies:
+      '@tiptap/core': 3.30.3
+      '@tiptap/pm': 3.30.3
 
   '@tiptap/extension-table@3.30.3':
     resolution: {integrity: sha512-g9vop64Ky92sBeL51wqMnVPNv9nDOd5X1CZz3B/Y5hDn1MKxf9lo7amkj7f+B2wi4WU9k/hIVCYb4sSRSeCq2A==}
@@ -9395,6 +9413,16 @@ snapshots:
   '@tiptap/extension-strike@3.30.3(@tiptap/core@3.30.3(@tiptap/pm@3.30.3))':
     dependencies:
       '@tiptap/core': 3.30.3(@tiptap/pm@3.30.3)
+
+  '@tiptap/extension-subscript@3.30.3(@tiptap/core@3.30.3(@tiptap/pm@3.30.3))(@tiptap/pm@3.30.3)':
+    dependencies:
+      '@tiptap/core': 3.30.3(@tiptap/pm@3.30.3)
+      '@tiptap/pm': 3.30.3
+
+  '@tiptap/extension-superscript@3.30.3(@tiptap/core@3.30.3(@tiptap/pm@3.30.3))(@tiptap/pm@3.30.3)':
+    dependencies:
+      '@tiptap/core': 3.30.3(@tiptap/pm@3.30.3)
+      '@tiptap/pm': 3.30.3
 
   '@tiptap/extension-table@3.30.3(@tiptap/core@3.30.3(@tiptap/pm@3.30.3))(@tiptap/pm@3.30.3)':
     dependencies:

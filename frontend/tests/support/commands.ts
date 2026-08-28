@@ -1,4 +1,4 @@
-import type {Locator} from '@playwright/test'
+import type {Locator, Page} from '@playwright/test'
 import {readFileSync} from 'fs'
 import {join, dirname} from 'path'
 import {fileURLToPath} from 'url'
@@ -40,6 +40,23 @@ export async function pasteFile(locator: Locator, fileName: string, fileType = '
 
 		element.dispatchEvent(pasteEvent)
 	}, {base64Data: base64, name: fileName, type: fileType})
+}
+
+/**
+ * Simulates pasting HTML/plain text from the clipboard into an element
+ */
+export async function pasteHtmlFromClipboard(page: Page, locator: Locator, html: string, text: string) {
+	await page.evaluate(async ({html, text}) => {
+		const clipboardItem = new ClipboardItem({
+			'text/html': new Blob([html], {type: 'text/html'}),
+			'text/plain': new Blob([text], {type: 'text/plain'}),
+		})
+
+		await navigator.clipboard.write([clipboardItem])
+	}, {html, text})
+
+	await locator.focus()
+	await page.keyboard.press(process.platform === 'darwin' ? 'Meta+V' : 'Control+V')
 }
 
 /**

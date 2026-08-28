@@ -67,6 +67,8 @@
     "@tiptap/extension-link": "3.30.3",
     "@tiptap/extension-list": "3.30.3",
     "@tiptap/extension-mention": "3.30.3",
+    "@tiptap/extension-subscript": "3.30.3",
+    "@tiptap/extension-superscript": "3.30.3",
     "@tiptap/extension-table": "3.30.3",
     "@tiptap/extension-typography": "3.30.3",
     "@tiptap/extension-underline": "3.30.3",
