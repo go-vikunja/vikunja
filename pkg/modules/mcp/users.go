@@ -83,12 +83,16 @@ func usersSearchHandler(ctx context.Context, req *mcp.CallToolRequest) (*mcp.Cal
 			Content: []mcp.Content{&mcp.TextContent{Text: err.Error()}},
 		}, nil
 	}
-	body, err := json.Marshal(users)
+	// users_search has no paging of its own, but clients shouldn't have to
+	// special-case its shape against every other listing tool.
+	result := newReadAllResult(users, int64(len(users)), 1, len(users))
+	body, err := json.Marshal(result)
 	if err != nil {
 		return nil, fmt.Errorf("mcp: marshal %s result: %w", toolUsersSearch, err)
 	}
 	return &mcp.CallToolResult{
-		Content: []mcp.Content{&mcp.TextContent{Text: string(body)}},
+		Content:           []mcp.Content{&mcp.TextContent{Text: string(body)}},
+		StructuredContent: result,
 	}, nil
 }
 

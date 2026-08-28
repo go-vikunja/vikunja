@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"strings"
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
@@ -39,8 +40,16 @@ type stubCObject struct {
 	Title string `json:"title"`
 
 	called string
+	// calls keeps the order, which matters for the read-modify-write update path.
+	calls []string
 	// Permission checks always allow; denial scenarios live in the integration tests.
 	returnErr error
+}
+
+func (s *stubCObject) record(name string) error {
+	s.called = name
+	s.calls = append(s.calls, name)
+	return s.returnErr
 }
 
 func (s *stubCObject) CanRead(_ *xorm.Session, _ web.Auth) (bool, int, error) {
@@ -51,24 +60,19 @@ func (s *stubCObject) CanUpdate(_ *xorm.Session, _ web.Auth) (bool, error) { ret
 func (s *stubCObject) CanCreate(_ *xorm.Session, _ web.Auth) (bool, error) { return true, nil }
 
 func (s *stubCObject) Create(_ *xorm.Session, _ web.Auth) error {
-	s.called = "Create"
-	return s.returnErr
+	return s.record("Create")
 }
 func (s *stubCObject) ReadOne(_ *xorm.Session, _ web.Auth) error {
-	s.called = "ReadOne"
-	return s.returnErr
+	return s.record("ReadOne")
 }
 func (s *stubCObject) ReadAll(_ *xorm.Session, _ web.Auth, search string, page, perPage int) (any, int, int64, error) {
-	s.called = "ReadAll"
-	return []string{search}, page, int64(perPage), s.returnErr
+	return []string{search}, page, int64(perPage), s.record("ReadAll")
 }
 func (s *stubCObject) Update(_ *xorm.Session, _ web.Auth) error {
-	s.called = "Update"
-	return s.returnErr
+	return s.record("Update")
 }
 func (s *stubCObject) Delete(_ *xorm.Session, _ web.Auth) error {
-	s.called = "Delete"
-	return s.returnErr
+	return s.record("Delete")
 }
 
 // stubTracker keeps the last instance EmptyStruct handed out, for post-dispatch inspection.
@@ -206,8 +210,8 @@ func TestDispatchCallsReadAll(t *testing.T) {
 	assert.Equal(t, []string{"foo"}, env.Items)
 	assert.Equal(t, 2, env.Page)
 	assert.Equal(t, 25, env.PerPage)
-	assert.Equal(t, 2, env.ResultCount)
-	assert.Equal(t, int64(25), env.TotalItems)
+	assert.Equal(t, int64(25), env.Total)
+	assert.Equal(t, int64(1), env.TotalPages)
 }
 
 func requireReadAllResult(t *testing.T, out any) *readAllResult {
@@ -299,7 +303,7 @@ func TestDispatchValidatesTagRules(t *testing.T) {
 
 	_, err := Dispatch(newAuthedCtx(t), "stubs_create", json.RawMessage(`{"amount":50}`))
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "amount")
+	assert.Contains(t, toolErrorText(err), "amount")
 	require.NotNil(t, last)
 	assert.Empty(t, last.called, "validation must run before the model is touched")
 
@@ -385,4 +389,50 @@ func TestDispatchUnsupportedOpForResource(t *testing.T) {
 	_, err := Dispatch(newAuthedCtx(t), "stubs_create", json.RawMessage(`{}`))
 	require.Error(t, err)
 	assert.ErrorIs(t, err, ErrToolNotFound)
+}
+
+func TestDispatchUpdateHydratesBeforeWriting(t *testing.T) {
+	// The models update a fixed column list, so a partial payload must be
+	// merged onto the stored row rather than onto a zero model.
+	resetRegistry(t)
+	installStubCRUD(t)
+	tracker := &stubTracker{}
+	require.NoError(t, Register(Resource{
+		Name:  "stubs",
+		Model: tracker.empty,
+		Ops:   OpReadOne | OpUpdate,
+	}))
+
+	_, err := Dispatch(newAuthedCtx(t), "stubs_update", json.RawMessage(`{"id":3,"title":"new"}`))
+	require.NoError(t, err)
+	require.NotNil(t, tracker.last)
+	assert.Equal(t, []string{"ReadOne", "Update"}, tracker.last.calls)
+	assert.Equal(t, int64(3), tracker.last.ID)
+	assert.Equal(t, "new", tracker.last.Title)
+}
+
+func TestDispatchUpdateWithoutReadOneSkipsHydration(t *testing.T) {
+	// Resources with no read_one op (the project share models) leave
+	// web.CRUDable nil — calling ReadOne on them would panic.
+	resetRegistry(t)
+	installStubCRUD(t)
+	tracker := &stubTracker{}
+	require.NoError(t, Register(Resource{
+		Name:  "stubs",
+		Model: tracker.empty,
+		Ops:   OpUpdate,
+	}))
+
+	_, err := Dispatch(newAuthedCtx(t), "stubs_update", json.RawMessage(`{"id":3,"title":"new"}`))
+	require.NoError(t, err)
+	assert.Equal(t, []string{"Update"}, tracker.last.calls)
+}
+
+func TestToolErrorTextTruncatesInvalidFields(t *testing.T) {
+	// govalidator echoes the rejected value back, so an oversized field would
+	// otherwise land in the model's context window verbatim.
+	huge := strings.Repeat("x", 100000)
+	text := toolErrorText(models.InvalidFieldError([]string{"comment: " + huge}))
+	assert.Less(t, len(text), 1024)
+	assert.Contains(t, text, "comment: ")
 }

@@ -28,16 +28,12 @@ import (
 )
 
 // The non-zero starting state lets tests tell "explicitly cleared" from "left untouched".
-func applyOnTask(t *testing.T, op Op, raw string, start models.Task) *models.Task {
+func applyOnTask(t *testing.T, raw string, start models.Task) *models.Task {
 	t.Helper()
 	registerAllResources(t)
-	spec := specFor(t, "tasks", op)
+	spec := specFor(t, "tasks", OpUpdate)
 	args, err := validateAndDecodeArgs(spec, json.RawMessage(raw))
 	require.NoError(t, err)
-	if op == OpReadAll {
-		_, _, _, err = popReadAllParams(args)
-		require.NoError(t, err)
-	}
 	task := start
 	require.NoError(t, applyArgs(&task, spec, args))
 	return &task
@@ -48,7 +44,7 @@ func TestApply_PresentZeroValueClears(t *testing.T) {
 	// omitted key must not.
 	start := models.Task{Done: true, Priority: 5, PercentDone: 0.5}
 
-	updated := applyOnTask(t, OpUpdate, `{"id":1,"done":false,"priority":0}`, start)
+	updated := applyOnTask(t, `{"id":1,"done":false,"priority":0}`, start)
 	assert.False(t, updated.Done, "explicit done=false must clear")
 	assert.Zero(t, updated.Priority, "explicit priority=0 must clear")
 	assert.InDelta(t, 0.5, updated.PercentDone, 1e-9, "omitted percent_done must stay")
@@ -58,13 +54,13 @@ func TestApply_PresentZeroValueClears(t *testing.T) {
 func TestApply_OmittedKeysLeaveModelUntouched(t *testing.T) {
 	start := models.Task{Title: "keep me", Done: true}
 
-	updated := applyOnTask(t, OpUpdate, `{"id":3}`, start)
+	updated := applyOnTask(t, `{"id":3}`, start)
 	assert.Equal(t, "keep me", updated.Title)
 	assert.True(t, updated.Done)
 }
 
 func TestApply_TypedFields(t *testing.T) {
-	updated := applyOnTask(t, OpUpdate, `{"id":4,"repeat_mode":1,"due_date":"2026-07-06T10:00:00Z"}`, models.Task{})
+	updated := applyOnTask(t, `{"id":4,"repeat_mode":1,"due_date":"2026-07-06T10:00:00Z"}`, models.Task{})
 	assert.Equal(t, models.TaskRepeatModeMonth, updated.RepeatMode)
 	assert.Equal(t, 2026, updated.DueDate.Year())
 }
@@ -134,4 +130,38 @@ func TestApply_ReadAllFilterLandsOnTaskCollection(t *testing.T) {
 	assert.Equal(t, "done = false", tc.Filter)
 	assert.Equal(t, []string{"due_date"}, tc.SortBy)
 	assert.Equal(t, int64(7), tc.ProjectID)
+}
+
+func TestApply_IntegralFloatsAccepted(t *testing.T) {
+	// JSON Schema's "integer" accepts 1.0 and 1e3; json.Unmarshal into an int64 does not.
+	updated := applyOnTask(t, `{"id":1.0,"priority":1e3}`, models.Task{})
+	assert.Equal(t, int64(1), updated.ID)
+	assert.Equal(t, int64(1000), updated.Priority)
+}
+
+func TestApply_NonIntegralFloatRejectedCleanly(t *testing.T) {
+	// The schema rejects 1.5 for an integer property already; applyArgs must
+	// still say so in the same language rather than leaking json internals.
+	registerAllResources(t)
+	spec := specFor(t, "tasks", OpUpdate)
+
+	err := applyArgs(&models.Task{}, spec, map[string]json.RawMessage{"priority": json.RawMessage(`1.5`)})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), `invalid value for "priority": must be an integer`)
+}
+
+func TestPopReadAllParams_IntegralFloats(t *testing.T) {
+	config.InitDefaultConfig()
+	args := map[string]json.RawMessage{
+		argPage:    json.RawMessage(`1.0`),
+		argPerPage: json.RawMessage(`1e1`),
+	}
+	_, page, perPage, err := popReadAllParams(args)
+	require.NoError(t, err)
+	assert.Equal(t, 1, page)
+	assert.Equal(t, 10, perPage)
+
+	_, _, _, err = popReadAllParams(map[string]json.RawMessage{argPerPage: json.RawMessage(`1.5`)})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), `invalid value for "per_page": must be an integer`)
 }

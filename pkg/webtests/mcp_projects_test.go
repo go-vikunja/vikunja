@@ -18,113 +18,12 @@ package webtests
 
 import (
 	"encoding/json"
-	"fmt"
-	"net/http"
-	"net/http/httptest"
 	"strings"
 	"testing"
 
-	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-// Token 12 (owner user 1) has mcp:access plus every projects_* scope.
-const mcpFullProjectsToken = "tk_mcp_full_projects_token_test_0fullp003"
-
-// mcpClient does the initialize / notifications handshake against the live Echo server.
-type mcpClient struct {
-	t         *testing.T
-	e         *echo.Echo
-	token     string
-	sessionID string
-	nextID    int
-}
-
-func newMCPClient(t *testing.T, token string) *mcpClient {
-	t.Helper()
-	e, err := setupTestEnv()
-	require.NoError(t, err)
-
-	c := &mcpClient{t: t, e: e, token: token, nextID: 1}
-	c.initialize()
-	c.notifyInitialized()
-	return c
-}
-
-func (c *mcpClient) initialize() {
-	c.t.Helper()
-	body := `{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"0.1"}}}`
-	req := mcpRequest(http.MethodPost, body)
-	req.Header.Set(echo.HeaderAuthorization, "Bearer "+c.token)
-	rec := httptest.NewRecorder()
-	c.e.ServeHTTP(rec, req)
-	require.Equal(c.t, http.StatusOK, rec.Code, "initialize body: %s", rec.Body.String())
-	c.sessionID = rec.Header().Get("Mcp-Session-Id")
-	require.NotEmpty(c.t, c.sessionID, "no session id on initialize response")
-}
-
-func (c *mcpClient) notifyInitialized() {
-	c.t.Helper()
-	req := mcpRequest(http.MethodPost, `{"jsonrpc":"2.0","method":"notifications/initialized"}`)
-	req.Header.Set(echo.HeaderAuthorization, "Bearer "+c.token)
-	req.Header.Set("Mcp-Session-Id", c.sessionID)
-	rec := httptest.NewRecorder()
-	c.e.ServeHTTP(rec, req)
-	require.Less(c.t, rec.Code, 400, "notifications/initialized: %s", rec.Body.String())
-}
-
-// Each call uses a fresh request id so the SDK doesn't confuse responses.
-func (c *mcpClient) rpc(method string, params any) map[string]any {
-	c.t.Helper()
-	c.nextID++
-	paramsJSON, err := json.Marshal(params)
-	require.NoError(c.t, err)
-	body := fmt.Sprintf(`{"jsonrpc":"2.0","id":%d,"method":%q,"params":%s}`, c.nextID, method, paramsJSON)
-	req := mcpRequest(http.MethodPost, body)
-	req.Header.Set(echo.HeaderAuthorization, "Bearer "+c.token)
-	req.Header.Set("Mcp-Session-Id", c.sessionID)
-	rec := httptest.NewRecorder()
-	c.e.ServeHTTP(rec, req)
-	require.Equal(c.t, http.StatusOK, rec.Code, "rpc %s body: %s", method, rec.Body.String())
-	return readMCPJSON(c.t, rec.Body.String())
-}
-
-// callTool returns the raw "result" payload; success/failure lives in result["isError"].
-func (c *mcpClient) callTool(name string, args map[string]any) map[string]any {
-	c.t.Helper()
-	resp := c.rpc("tools/call", map[string]any{
-		"name":      name,
-		"arguments": args,
-	})
-	result, ok := resp["result"].(map[string]any)
-	require.Truef(c.t, ok, "missing result for %s: %v", name, resp)
-	return result
-}
-
-// toolResultText extracts the first TextContent entry from a tools/call result.
-func toolResultText(t *testing.T, result map[string]any) string {
-	t.Helper()
-	content, ok := result["content"].([]any)
-	require.Truef(t, ok, "no content in result: %v", result)
-	require.NotEmpty(t, content, "empty content array: %v", result)
-	first, ok := content[0].(map[string]any)
-	require.True(t, ok, "first content not an object: %v", content[0])
-	text, ok := first["text"].(string)
-	require.Truef(t, ok, "first content text missing or not a string: %v", first)
-	return text
-}
-
-// read_all returns {items, result_count, total_items, page, per_page}, not a bare array.
-func readAllItems(t *testing.T, result map[string]any, dest any) {
-	t.Helper()
-	text := toolResultText(t, result)
-	var env struct {
-		Items json.RawMessage `json:"items"`
-	}
-	require.NoError(t, json.Unmarshal([]byte(text), &env), "text was: %s", text)
-	require.NoError(t, json.Unmarshal(env.Items, dest), "items were: %s", env.Items)
-}
 
 func TestMCP_Projects_ToolsListAll(t *testing.T) {
 	// Token 12 also carries non-project scopes, so assert presence rather
@@ -296,6 +195,38 @@ func TestMCP_Projects_UpdateClearsArchived(t *testing.T) {
 	var project map[string]any
 	require.NoError(t, json.Unmarshal([]byte(toolResultText(t, readResult)), &project))
 	assert.False(t, project["is_archived"].(bool), "is_archived must be false after explicit clear")
+	assert.Equal(t, "mcp project to un-archive", project["title"], "a partial update must not blank the title")
+}
+
+// The model updates a fixed column list, so a partial payload has to be merged
+// onto the stored row or every omitted column is wiped.
+func TestMCP_Projects_UpdateKeepsOmittedFields(t *testing.T) {
+	c := newMCPClient(t, mcpFullProjectsToken)
+
+	createResult := c.callTool("projects_create", map[string]any{
+		"title":      "mcp project with all fields",
+		"identifier": "MCPKEEP",
+		"hex_color":  "ff8800",
+	})
+	require.NotContains(t, createResult, "isError")
+	var created map[string]any
+	require.NoError(t, json.Unmarshal([]byte(toolResultText(t, createResult)), &created))
+	pid := int64(created["id"].(float64))
+
+	updateResult := c.callTool("projects_update", map[string]any{
+		"id":          pid,
+		"description": "only the description changes",
+	})
+	require.NotContains(t, updateResult, "isError", "update errored: %v", updateResult)
+
+	readResult := c.callTool("projects_read_one", map[string]any{"id": pid})
+	require.NotContains(t, readResult, "isError")
+	var project map[string]any
+	require.NoError(t, json.Unmarshal([]byte(toolResultText(t, readResult)), &project))
+	assert.Equal(t, "only the description changes", project["description"])
+	assert.Equal(t, "mcp project with all fields", project["title"])
+	assert.Equal(t, "MCPKEEP", project["identifier"])
+	assert.Equal(t, "ff8800", project["hex_color"])
 }
 
 func TestMCP_Projects_Delete(t *testing.T) {
