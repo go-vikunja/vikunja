@@ -1,6 +1,6 @@
 import {describe, it, expect} from 'vitest'
 
-import {canPreviewAudio, canPreviewImage, canPreviewPdf} from './attachment'
+import {canPreviewAudio, canPreviewImage, canPreviewPdf, canPreviewVideo} from './attachment'
 import type {IAttachment} from '@/modelTypes/IAttachment'
 
 function attachment(name: string, mime: string): IAttachment {
@@ -54,5 +54,39 @@ describe('canPreviewAudio', () => {
 
 	it('refuses a non-audio mime', () => {
 		expect(canPreviewAudio(attachment('memo.mp3', 'text/html'))).toBe(false)
+	})
+})
+
+describe('canPreviewVideo', () => {
+	it('previews a real mp4', () => {
+		expect(canPreviewVideo(attachment('clip.mp4', 'video/mp4'))).toBe(true)
+	})
+
+	it('previews a real webm', () => {
+		expect(canPreviewVideo(attachment('clip.webm', 'video/webm'))).toBe(true)
+	})
+
+	it('refuses text bytes disguised as an mp4', () => {
+		expect(canPreviewVideo(attachment('evil.mp4', 'text/plain'))).toBe(false)
+	})
+
+	it('refuses a video mime without a video suffix', () => {
+		expect(canPreviewVideo(attachment('clip.txt', 'video/mp4'))).toBe(false)
+	})
+
+	it('matches the mime case-insensitively', () => {
+		expect(canPreviewVideo(attachment('clip.MP4', 'VIDEO/MP4'))).toBe(true)
+	})
+
+	it('refuses audio ogg', () => {
+		expect(canPreviewVideo(attachment('song.ogg', 'audio/ogg'))).toBe(false)
+	})
+
+	it('previews video ogg', () => {
+		expect(canPreviewVideo(attachment('clip.ogg', 'video/ogg'))).toBe(true)
+	})
+
+	it('refuses a video mime with an unsupported .mkv suffix', () => {
+		expect(canPreviewVideo(attachment('clip.mkv', 'video/x-matroska'))).toBe(false)
 	})
 })
