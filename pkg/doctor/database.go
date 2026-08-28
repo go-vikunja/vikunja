@@ -18,6 +18,7 @@ package doctor
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"code.vikunja.io/api/pkg/config"
@@ -27,35 +28,64 @@ import (
 // CheckDatabase returns database connectivity checks.
 func CheckDatabase() CheckGroup {
 	dbType := config.DatabaseType.GetString()
+	group := CheckGroup{Name: fmt.Sprintf("Database (%s)", dbType)}
 
-	// Initialize database engine
-	_, err := db.CreateDBEngine()
-	if err != nil {
-		return CheckGroup{
-			Name: fmt.Sprintf("Database (%s)", dbType),
-			Results: []CheckResult{
-				{
-					Name:   "Connection",
-					Passed: false,
-					Error:  err.Error(),
-				},
-			},
+	if dbType == "sqlite" {
+		fileCheck, ok := checkSqliteFile()
+		group.Results = append(group.Results, fileCheck)
+		if !ok {
+			// Connecting would create the database file, and a diagnostic that
+			// reports "connection OK" against a database it just made is a lie.
+			return group
 		}
 	}
 
-	results := []CheckResult{
+	if _, err := db.CreateDBEngine(); err != nil {
+		group.Results = append(group.Results, CheckResult{
+			Name:   "Connection",
+			Passed: false,
+			Error:  err.Error(),
+		})
+		return group
+	}
+
+	group.Results = append(group.Results,
 		checkDatabaseConnection(),
 		checkDatabaseVersion(dbType),
-	}
+	)
 
 	if dbType == "postgres" {
-		results = append(results, checkParadeDB()...)
+		group.Results = append(group.Results, checkParadeDB()...)
 	}
 
-	return CheckGroup{
-		Name:    fmt.Sprintf("Database (%s)", dbType),
-		Results: results,
+	return group
+}
+
+// checkSqliteFile reports the resolved database file. The bool tells the caller
+// whether connecting is safe — false means the file is missing or unreadable.
+func checkSqliteFile() (CheckResult, bool) {
+	result := CheckResult{Name: "Database file"}
+
+	path, err := db.ResolvedDatabasePath()
+	if err != nil {
+		result.Error = err.Error()
+		return result, false
 	}
+
+	if path == "memory" {
+		result.Passed = true
+		result.Value = "memory (ephemeral)"
+		return result, true
+	}
+
+	if _, err := os.Stat(path); err != nil {
+		result.Error = err.Error()
+		return result, false
+	}
+
+	result.Passed = true
+	result.Value = path
+	return result, true
 }
 
 func checkDatabaseConnection() CheckResult {
