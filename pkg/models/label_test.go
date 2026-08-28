@@ -466,10 +466,7 @@ func TestLabel_ReadOne(t *testing.T) {
 			auth:          &user.User{ID: 24, BotOwnerID: 22},
 		},
 		{
-			// Label 12 was created by bot 25, the sibling of bot 23 under user
-			// 21, and is unattached. BotOwnerID is left unset here on purpose:
-			// JWT-built auth values carry none, so the identity must come from
-			// the database.
+			// JWT auth carries no BotOwnerID, so the identity must resolve from the database.
 			name: "bot can read label created by a sibling bot",
 			fields: fields{
 				ID: 12,
@@ -723,8 +720,6 @@ func TestLabel_Update(t *testing.T) {
 			auth: &user.User{ID: 21},
 		},
 		{
-			// Sharing an identity grants read access, not write: updates stay
-			// with the creator and the human who owns it.
 			name: "bot cannot update label created by a sibling bot",
 			fields: fields{
 				ID:    12,

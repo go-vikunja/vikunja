@@ -20,7 +20,6 @@ import (
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/web"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -30,7 +29,7 @@ func TestUser_IsBotOwnedBy(t *testing.T) {
 	tests := []struct {
 		name string
 		u    *User
-		a    web.Auth
+		a    *User
 		want bool
 	}{
 		{
@@ -58,7 +57,6 @@ func TestUser_IsBotOwnedBy(t *testing.T) {
 			want: false,
 		},
 		{
-			// Reversed direction: the bot must not inherit its owner.
 			name: "caller is the bot, subject is the owner",
 			u:    &User{ID: 21},
 			a:    &User{ID: 23, BotOwnerID: 21},
@@ -71,8 +69,7 @@ func TestUser_IsBotOwnedBy(t *testing.T) {
 			want: false,
 		},
 		{
-			// Both ids are 0, so only the IsBot() half keeps a human from being
-			// reported as owned by an unresolved caller.
+			// IsBot prevents a zero-ID owner from matching a human.
 			name: "human subject, zero-id owner",
 			u:    &User{ID: 5},
 			a:    &User{},
@@ -90,9 +87,8 @@ func TestUser_IsBotOwnedBy(t *testing.T) {
 func TestSameBotIdentityCond(t *testing.T) {
 	tests := []struct {
 		name string
-		// Only the ID is set on purpose: the identity must be resolved from
-		// the database, not from the in-memory struct.
-		auth web.Auth
+		// JWT auth carries only an ID, so the identity must resolve from the database.
+		auth *User
 		want []int64
 	}{
 		{

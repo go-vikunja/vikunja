@@ -17,36 +17,37 @@
 package user
 
 import (
-	"code.vikunja.io/api/pkg/web"
-
 	"xorm.io/builder"
 )
 
-// IsBotOwnedBy reports whether u is a bot owned by a.
-//
-// Directional on purpose: it grants the owner access to what their bots own,
-// never the reverse, so a bot cannot act as the human who owns it.
-func (u *User) IsBotOwnedBy(a web.Auth) bool {
-	return u.IsBot() && u.BotOwnerID == a.GetID()
+// IsBotOwnedBy reports whether u is a bot owned by owner.
+func (u *User) IsBotOwnedBy(owner *User) bool {
+	return u.IsBot() && u.BotOwnerID == owner.ID
 }
 
-// SameBotIdentityCond matches a user id column against every user sharing the
-// caller's identity root - a bot's owner, or a human themselves. That covers
-// the caller, its owner, and all bots under that owner, in every direction.
+// SameBotIdentityCond matches a user ID column against users sharing u's root:
+// a bot's owner or a human themselves. It is symmetric across an owner's fleet.
 //
-// The root is resolved in SQL because callers run this once per row, and
-// because auth values built from a JWT or a CalDAV login carry no BotOwnerID.
-func SameBotIdentityCond(a web.Auth, column string) builder.Cond {
-	id := a.GetID()
+// The root is resolved in SQL so the result never depends on how populated the
+// passed struct happens to be; callers routinely hold a User carrying only an ID.
+//
+// Resolving only one owner hop keeps accidental bot chains out of a human's identity set.
+//
+// column is interpolated as a raw SQL identifier and must be a trusted literal.
+func SameBotIdentityCond(u *User, column string) builder.Cond {
+	if u == nil || u.ID <= 0 {
+		// Humans are stored with bot_owner_id = 0, so an unguarded zero id would
+		// match every one of them.
+		return builder.In(column, []int64{})
+	}
 
-	// Bots cannot own bots (CreateBotUser), so the root is at most one hop away.
 	root := builder.Select("bot_owner_id").From("users").
-		Where(builder.And(builder.Eq{"id": id}, builder.Gt{"bot_owner_id": 0}))
+		Where(builder.And(builder.Eq{"id": u.ID}, builder.Gt{"bot_owner_id": 0}))
 
 	return builder.In(column,
 		builder.Select("id").From("users").Where(builder.Or(
-			builder.Eq{"id": id},
-			builder.Eq{"bot_owner_id": id},
+			builder.Eq{"id": u.ID},
+			builder.Eq{"bot_owner_id": u.ID},
 			builder.In("id", root),
 			builder.In("bot_owner_id", root),
 		)),

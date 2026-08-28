@@ -72,7 +72,6 @@ func TestHumaBotUser(t *testing.T) {
 			rec, err := h.testReadAllWithUser(nil, nil)
 			require.NoError(t, err)
 			ids := botIDsFromReadAll(t, rec.Body.Bytes())
-			// user 21 owns exactly bots 23 and 25; user 22's bot 24 must never leak.
 			assert.ElementsMatch(t, []int64{23, 25}, ids,
 				"ReadAll must return exactly {23,25}; body: %s", rec.Body.String())
 			assert.NotContains(t, ids, int64(24), "bot #24 (other owner) must be hidden")

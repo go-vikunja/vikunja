@@ -289,8 +289,6 @@ func TestLabelTask_Create(t *testing.T) {
 			wantForbidden: true,
 		},
 		{
-			// Label 12 was created by bot 25 and never attached: bot 23 reaches
-			// it only through the owner both bots share.
 			name: "bot can attach a label created by a sibling bot",
 			fields: fields{
 				TaskID:  52,

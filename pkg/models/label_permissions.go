@@ -50,15 +50,21 @@ func (l *Label) CanCreate(_ *xorm.Session, a web.Auth) (bool, error) {
 
 func (l *Label) isLabelOwner(s *xorm.Session, a web.Auth) (bool, error) {
 
-	if _, is := a.(*LinkSharing); is {
+	// Link shares legitimately reach here through hasAccessToLabel, and are not
+	// users: a plain denial, not an error.
+	caller, err := user.GetFromAuth(a)
+	if user.IsErrMustNotBeLinkShare(err) {
 		return false, nil
+	}
+	if err != nil {
+		return false, err
 	}
 
 	lorig, err := getLabelByIDSimple(s, l.ID)
 	if err != nil {
 		return false, err
 	}
-	if lorig.CreatedByID == a.GetID() {
+	if lorig.CreatedByID == caller.ID {
 		return true, nil
 	}
 
@@ -69,7 +75,7 @@ func (l *Label) isLabelOwner(s *xorm.Session, a web.Auth) (bool, error) {
 		}
 		return false, err
 	}
-	return creator.IsBotOwnedBy(a), nil
+	return creator.IsBotOwnedBy(caller), nil
 }
 
 // hasAccessToLabel reports whether the caller can read a label and, if so,
@@ -97,7 +103,11 @@ func (l *Label) hasAccessToLabel(s *xorm.Session, a web.Auth) (has bool, maxPerm
 
 	accessBranches := []builder.Cond{labelAttachedToAccessibleTask}
 	if !isLinkShare {
-		accessBranches = append(accessBranches, user.SameBotIdentityCond(a, "labels.created_by_id"))
+		caller, err := user.GetFromAuth(a)
+		if err != nil {
+			return false, 0, err
+		}
+		accessBranches = append(accessBranches, user.SameBotIdentityCond(caller, "labels.created_by_id"))
 	}
 
 	cond := builder.And(
