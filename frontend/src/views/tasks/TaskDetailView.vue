@@ -265,7 +265,34 @@
 						</Dropdown>
 					</div>
 
-					<dl class="property-list">
+					<div
+						class="sidebar-layout-switch"
+						role="radiogroup"
+						:aria-label="$t('task.detail.sidebarLayout.label')"
+					>
+						<BaseButton
+							v-for="layout in SIDEBAR_LAYOUTS"
+							:key="layout"
+							role="radio"
+							:aria-checked="sidebarLayout === layout"
+							:class="{'is-active': sidebarLayout === layout}"
+							@click="sidebarLayout = layout"
+						>
+							<Icon :icon="layout === 'rows' ? 'list' : 'table-cells-large'" />
+							{{ $t(`task.detail.sidebarLayout.${layout}`) }}
+						</BaseButton>
+					</div>
+
+					<dl
+						class="property-list"
+						:class="`is-${sidebarLayout}`"
+					>
+						<h3 class="property-group property-group-schedule">
+							{{ $t('task.detail.sidebarLayout.groupSchedule') }}
+						</h3>
+						<h3 class="property-group property-group-details">
+							{{ $t('task.detail.sidebarLayout.groupDetails') }}
+						</h3>
 						<div
 							class="property property-assignees"
 							:class="{'is-set': task.assignees.length > 0}"
@@ -571,7 +598,7 @@
 import {ref, reactive, shallowReactive, computed, watch, nextTick, onMounted, onBeforeUnmount} from 'vue'
 import {useRouter, useRoute, type RouteLocation, onBeforeRouteLeave} from 'vue-router'
 import {useI18n} from 'vue-i18n'
-import {unrefElement, useDebounceFn, useElementSize, useIntersectionObserver, useMutationObserver} from '@vueuse/core'
+import {unrefElement, useDebounceFn, useElementSize, useIntersectionObserver, useMutationObserver, useStorage} from '@vueuse/core'
 import {klona} from 'klona/lite'
 
 import TaskService from '@/services/task'
@@ -932,6 +959,9 @@ function setActiveFields() {
 	activeFields.timeTracking = (task.value.timeEntriesCount ?? 0) > 0
 	activeFields.relatedTasks = Object.keys(task.value.relatedTasks).length > 0
 }
+
+const SIDEBAR_LAYOUTS = ['rows', 'cards'] as const
+const sidebarLayout = useStorage<typeof SIDEBAR_LAYOUTS[number]>('taskDetailSidebarLayout', 'rows')
 
 const hasRepeat = computed(() =>
 	(task.value.repeatAfter?.amount ?? 0) > 0 ||
@@ -1386,12 +1416,146 @@ h2 .button {
 	}
 }
 
+// --- Layout switch ---------------------------------------------------------
+
+.sidebar-layout-switch {
+	display: inline-flex;
+	gap: .125rem;
+	padding: .125rem;
+	margin-block-end: .5rem;
+	border-radius: $radius;
+	background: var(--grey-100);
+	font-size: .75rem;
+
+	.base-button {
+		display: inline-flex;
+		align-items: center;
+		gap: .375rem;
+		padding: .25rem .625rem;
+		border-radius: calc(#{$radius} - 2px);
+		color: var(--grey-500);
+		transition: color $transition, background-color $transition, box-shadow $transition;
+
+		svg {
+			inline-size: .75rem;
+		}
+
+		&:hover {
+			color: var(--text);
+		}
+
+		&.is-active {
+			color: var(--text);
+			background: var(--scheme-main);
+			box-shadow: var(--shadow-xs);
+		}
+	}
+}
+
 // --- Property list ---------------------------------------------------------
 
 .property-list {
 	margin: 0;
 	border-block-start: 1px solid var(--grey-200);
 	font-size: .9375rem;
+}
+
+.property-group {
+	display: none;
+}
+
+// Cards layout: label above value, short fields two per row, grouped under headings.
+// Same markup as the rows layout; grid `order` regroups the fields.
+.property-list.is-cards {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: .5rem;
+	border-block-start: none;
+
+	.property-group {
+		display: block;
+		grid-column: 1 / -1;
+		margin: .5rem 0 0;
+		font-size: .8125rem;
+		font-weight: 600;
+		color: var(--grey-500);
+	}
+
+	.property-group-schedule {
+		order: 0;
+		margin-block-start: 0;
+	}
+
+	.property-due-date { order: 1; }
+	.property-start-date { order: 2; }
+	.property-end-date { order: 3; }
+	.property-repeat { order: 4; }
+	.property-reminders { order: 5; }
+	.property-group-details { order: 6; }
+	.property-priority { order: 7; }
+	.property-percent-done { order: 8; }
+	.property-color { order: 9; }
+	.property-labels { order: 10; }
+	.property-assignees { order: 11; }
+
+	.property {
+		display: flex;
+		flex-direction: column;
+		align-items: stretch;
+		gap: .125rem;
+		padding: .5rem .625rem;
+		border: 1px solid var(--grey-200);
+		border-radius: $radius;
+		background: var(--scheme-main);
+
+		&:hover,
+		&:focus-within {
+			border-color: var(--grey-300);
+		}
+
+		dt {
+			min-block-size: 0;
+			font-size: .75rem;
+			font-weight: 600;
+			letter-spacing: .01em;
+		}
+
+		dd {
+			flex-wrap: wrap;
+		}
+
+		&.is-set {
+			border-inline-start: 3px solid var(--primary);
+		}
+
+		// Editors are flat on the card, so the card itself is the affordance.
+		:deep(.select select),
+		:deep(.datepicker .show),
+		.property-value-button {
+			padding-inline-start: 0;
+
+			&:hover {
+				background: transparent;
+			}
+		}
+
+		:deep(.multiselect .input-wrapper) {
+			padding-inline-start: 0;
+		}
+	}
+
+	.property-assignees,
+	.property-labels,
+	.property-reminders,
+	.property-repeat.is-expanded {
+		grid-column: 1 / -1;
+	}
+
+	.property-editor {
+		margin-block-start: .5rem;
+		padding-inline-start: 0;
+		border-inline-start: none;
+	}
 }
 
 .property {
