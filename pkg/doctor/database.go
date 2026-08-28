@@ -31,9 +31,18 @@ func CheckDatabase() CheckGroup {
 	group := CheckGroup{Name: fmt.Sprintf("Database (%s)", dbType)}
 
 	if dbType == "sqlite" {
-		fileCheck, ok := checkSqliteFile()
+		if config.DatabasePath.GetString() == db.DatabasePathMemory {
+			group.Results = append(group.Results, CheckResult{
+				Name:   "Database file",
+				Passed: true,
+				Value:  "memory (ephemeral, nothing to verify)",
+			})
+			return group
+		}
+
+		fileCheck := checkSqliteFile()
 		group.Results = append(group.Results, fileCheck)
-		if !ok {
+		if !fileCheck.Passed {
 			// Connecting would create the database file, and a diagnostic that
 			// reports "connection OK" against a database it just made is a lie.
 			return group
@@ -61,31 +70,23 @@ func CheckDatabase() CheckGroup {
 	return group
 }
 
-// checkSqliteFile reports the resolved database file. The bool tells the caller
-// whether connecting is safe — false means the file is missing or unreadable.
-func checkSqliteFile() (CheckResult, bool) {
+func checkSqliteFile() CheckResult {
 	result := CheckResult{Name: "Database file"}
 
 	path, err := db.ResolvedDatabasePath()
 	if err != nil {
 		result.Error = err.Error()
-		return result, false
-	}
-
-	if path == "memory" {
-		result.Passed = true
-		result.Value = "memory (ephemeral)"
-		return result, true
+		return result
 	}
 
 	if _, err := os.Stat(path); err != nil {
 		result.Error = err.Error()
-		return result, false
+		return result
 	}
 
 	result.Passed = true
 	result.Value = path
-	return result, true
+	return result
 }
 
 func checkDatabaseConnection() CheckResult {
