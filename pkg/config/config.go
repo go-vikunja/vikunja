@@ -657,6 +657,12 @@ func anchorRootpathToConfigFile() {
 	if rootpath := ServiceRootpath.GetString(); !filepath.IsAbs(rootpath) {
 		ServiceRootpath.Set(filepath.Join(configDir, rootpath))
 	}
+
+	// The default baked in initDefaultConfig() points at the caller's cwd, which
+	// would split the database off from the rest of the pinned install.
+	if !viper.InConfig(string(DatabasePath)) {
+		DatabasePath.setDefault(ResolvePath("vikunja.db"))
+	}
 }
 
 // InitConfig initializes the config, sets defaults etc.
