@@ -60,10 +60,12 @@ func TestMCP_TaskAssignees_ReadAllAccess(t *testing.T) {
 	// Either the model bug surfaces as IsError (current state) or the
 	// upstream fix succeeds; both are acceptable for this MCP test.
 	if isErr, _ := result["isError"].(bool); !isErr {
-		text := toolResultText(t, result)
 		var assignees []map[string]any
-		require.NoError(t, json.Unmarshal([]byte(text), &assignees))
+		readAllItems(t, result, &assignees)
 		require.NotEmpty(t, assignees, "expected at least one assignee on task 30")
+		for _, a := range assignees {
+			assert.Empty(t, a["email"], "read_all must not leak assignee email addresses: %v", a)
+		}
 	}
 }
 

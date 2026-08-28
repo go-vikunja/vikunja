@@ -83,9 +83,8 @@ func TestMCP_TaskComments_ReadAll(t *testing.T) {
 	result := c.callTool("tasks_comments_read_all", map[string]any{"task_id": 1})
 	require.NotContains(t, result, "isError")
 
-	text := toolResultText(t, result)
 	var comments []map[string]any
-	require.NoError(t, json.Unmarshal([]byte(text), &comments))
+	readAllItems(t, result, &comments)
 	// Fixture task 1 has at least one comment.
 	require.NotEmpty(t, comments)
 }
@@ -114,4 +113,25 @@ func TestMCP_TaskComments_DisabledByConfig(t *testing.T) {
 		assert.Falsef(t, strings.HasPrefix(name, "tasks_comments_"),
 			"tasks_comments_* tool must be absent when comments are disabled: %s", name)
 	}
+
+	// do_action names tools directly, bypassing tools/list, so the gate has
+	// to be re-checked in the dispatcher.
+	result := c.callTool("do_action", map[string]any{
+		"action":    "tasks_comments_create",
+		"arguments": map[string]any{"task_id": 1, "comment": "must not be created"},
+	})
+	require.Equal(t, true, result["isError"], "do_action must not reach a disabled resource: %v", result)
+	assert.Contains(t, toolResultText(t, result), "mcp: tool not found: tasks_comments_create")
+}
+
+func TestMCP_TaskComments_CreateRejectsEmptyComment(t *testing.T) {
+	// TaskComment.Comment is valid:"required"; the REST layer rejects an
+	// empty one before the handler and MCP must do the same.
+	c := newMCPClient(t, mcpFullProjectsToken)
+	result := c.callTool("tasks_comments_create", map[string]any{
+		"task_id": 1,
+		"comment": "",
+	})
+	require.Equal(t, true, result["isError"], "expected isError: %v", result)
+	assert.Contains(t, toolResultText(t, result), "comment")
 }

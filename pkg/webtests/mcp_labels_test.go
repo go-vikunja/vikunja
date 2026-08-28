@@ -62,9 +62,8 @@ func TestMCP_Labels_ReadAll(t *testing.T) {
 	result := c.callTool("labels_read_all", map[string]any{})
 	require.NotContains(t, result, "isError")
 
-	text := toolResultText(t, result)
 	var labels []map[string]any
-	require.NoError(t, json.Unmarshal([]byte(text), &labels))
+	readAllItems(t, result, &labels)
 	require.NotEmpty(t, labels, "expected at least one label")
 }
 

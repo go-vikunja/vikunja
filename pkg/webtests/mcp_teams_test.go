@@ -62,9 +62,8 @@ func TestMCP_Teams_ReadAll(t *testing.T) {
 	result := c.callTool("teams_read_all", map[string]any{})
 	require.NotContains(t, result, "isError")
 
-	text := toolResultText(t, result)
 	var teams []map[string]any
-	require.NoError(t, json.Unmarshal([]byte(text), &teams))
+	readAllItems(t, result, &teams)
 	// User 1 created several testteam* teams (fixtures).
 	require.NotEmpty(t, teams)
 }
