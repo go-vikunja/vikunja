@@ -128,10 +128,6 @@ type Resource struct {
 	// fields are unaffected.
 	OptionalFields []string
 
-	// RequiredCreate marks additional fields required on create when the
-	// tags alone don't say so.
-	RequiredCreate []string
-
 	// IdentityFields overrides how read_one/update/delete address a record,
 	// by JSON property name, for models whose row isn't addressed by its id
 	// (team members go by team + username) or that need parent context the
