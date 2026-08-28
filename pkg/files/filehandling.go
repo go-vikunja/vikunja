@@ -111,19 +111,30 @@ func initLocalFileHandler() {
 	storage = newLocalStorage(config.FilesBasePath.GetString())
 }
 
-// InitFileHandler creates a new file handler for the file backend we want to use
-func InitFileHandler() error {
+// InitStorageBackend configures the storage backend from the config. It does not create,
+// read or write anything in the underlying storage.
+func InitStorageBackend() error {
 	fileType := config.FilesType.GetString()
 
 	switch fileType {
 	case "s3":
-		if err := initS3FileHandler(); err != nil {
-			return err
-		}
+		return initS3FileHandler()
 	case "local":
 		initLocalFileHandler()
+		return nil
 	default:
 		return fmt.Errorf("invalid file storage type '%s': must be 'local' or 's3'", fileType)
+	}
+}
+
+// InitFileHandler creates a new file handler for the file backend we want to use
+func InitFileHandler() error {
+	if err := InitStorageBackend(); err != nil {
+		return err
+	}
+
+	if err := ensureLocalBasePath(); err != nil {
+		return err
 	}
 
 	if err := ValidateFileStorage(); err != nil {
@@ -183,29 +194,48 @@ func FileStat(file *File) (os.FileInfo, error) {
 	return storage.Stat(file.fileID())
 }
 
-// ValidateFileStorage checks that the configured file storage is writable
-// by creating and removing a temporary file.
-func ValidateFileStorage() error {
-	basePath := config.FilesBasePath.GetString()
-
+func storageDiagSuffix(basePath string) string {
 	diag := storageDiagnosticInfo(basePath)
-	if diag != "" {
-		diag = "\n" + diag
+	if diag == "" {
+		return ""
+	}
+	return "\n" + diag
+}
+
+// Kept out of ValidateFileStorage so read-only callers can check storage without
+// creating the very thing they are checking for.
+func ensureLocalBasePath() error {
+	if config.FilesType.GetString() != "local" {
+		return nil
 	}
 
-	// For local filesystem, ensure the base directory exists
+	basePath := config.FilesBasePath.GetString()
+
+	// Anything other than "not there" is left to ValidateFileStorage to report.
+	if _, err := os.Stat(basePath); !errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
+
+	if err := os.MkdirAll(basePath, 0755); err != nil {
+		return fmt.Errorf("failed to create file storage directory at %s: %w%s", basePath, err, storageDiagSuffix(basePath))
+	}
+
+	return nil
+}
+
+// ValidateFileStorage checks that the configured file storage is writable
+// by creating and removing a temporary file. It never creates the base
+// directory — see ensureLocalBasePath.
+func ValidateFileStorage() error {
+	basePath := config.FilesBasePath.GetString()
+	diag := storageDiagSuffix(basePath)
+
 	if config.FilesType.GetString() == "local" {
 		info, err := os.Stat(basePath)
 		if err != nil {
-			if !errors.Is(err, os.ErrNotExist) {
-				return fmt.Errorf("failed to access file storage directory at %s: %w%s", basePath, err, diag)
-			}
-
-			err = os.MkdirAll(basePath, 0755)
-			if err != nil {
-				return fmt.Errorf("failed to create file storage directory at %s: %w%s", basePath, err, diag)
-			}
-		} else if !info.IsDir() {
+			return fmt.Errorf("failed to access file storage directory at %s: %w%s", basePath, err, diag)
+		}
+		if !info.IsDir() {
 			return fmt.Errorf("file storage path exists but is not a directory: %s", basePath)
 		}
 	}
