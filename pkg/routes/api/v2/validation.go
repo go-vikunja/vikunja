@@ -23,8 +23,6 @@ import (
 	"strings"
 
 	"code.vikunja.io/api/pkg/models"
-
-	"github.com/asaskevich/govalidator"
 )
 
 // validateInputBody runs govalidator over the request body so v2 enforces the
@@ -47,27 +45,13 @@ func validateInputBody(in any) error {
 		return nil
 	}
 
-	fields := append(structErrors(body.Interface(), ""), pointerSliceErrors(body)...)
+	fields := append(models.StructFieldErrors(body.Interface(), ""), pointerSliceErrors(body)...)
 	if len(fields) == 0 {
 		return nil
 	}
 	// Map iteration order is non-deterministic; sort for a stable errors[].
 	sort.Strings(fields)
 	return models.InvalidFieldError(fields)
-}
-
-// structErrors returns govalidator failures as "<prefix><field>: <message>", the shape invalidFieldDetails expects.
-func structErrors(s any, prefix string) []string {
-	_, err := govalidator.ValidateStruct(s)
-	if err == nil {
-		return nil
-	}
-	byField := govalidator.ErrorsByField(err)
-	fields := make([]string, 0, len(byField))
-	for field, msg := range byField {
-		fields = append(fields, prefix+field+": "+msg)
-	}
-	return fields
 }
 
 // pointerSliceErrors validates elements of []*T body fields, which govalidator walks past without ever applying their `valid:` tags.
@@ -100,7 +84,7 @@ func pointerSliceErrors(body reflect.Value) []string {
 				continue
 			}
 			// "tasks[1]." matches how Huma locates its own array-element errors.
-			fields = append(fields, structErrors(el.Interface(), name+"["+strconv.Itoa(j)+"].")...)
+			fields = append(fields, models.StructFieldErrors(el.Interface(), name+"["+strconv.Itoa(j)+"].")...)
 		}
 	}
 	return fields
