@@ -71,6 +71,13 @@
 				{{ $t('menu.setBackground') }}
 			</DropdownItem>
 			<DropdownItem
+				v-if="backgroundsEnabled"
+				:to="{ name: 'project.settings.cardImage', params: { projectId: project.id } }"
+				icon="file-image"
+			>
+				{{ $t('menu.setCardImage') }}
+			</DropdownItem>
+			<DropdownItem
 				:to="{ name: 'project.settings.share', params: { projectId: project.id } }"
 				icon="share-alt"
 			>

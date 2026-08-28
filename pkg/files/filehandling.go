@@ -153,6 +153,12 @@ func InitTestFileFixtures(t *testing.T) {
 	testfile := &File{ID: 1}
 	err := storage.Write(testfile.fileID(), bytes.NewReader([]byte("testfile1")), 9)
 	require.NoError(t, err)
+
+	// File 2 backs project 35's card_background_file_id fixture (distinct from its
+	// background_file_id 1), so duplicate/download tests touching both have real bytes.
+	testCardFile := &File{ID: 2}
+	err = storage.Write(testCardFile.fileID(), bytes.NewReader([]byte("testfile2")), 9)
+	require.NoError(t, err)
 }
 
 // InitTests handles the actual bootstrapping of the test env

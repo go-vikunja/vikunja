@@ -667,6 +667,11 @@ func TestProject_Delete(t *testing.T) {
 		db.AssertMissing(t, "files", map[string]interface{}{
 			"id": 1,
 		})
+		// Project 35 also has a card image (card_background_file_id 2, distinct
+		// from the background's file 1) — deleting the project must clean both up.
+		db.AssertMissing(t, "files", map[string]interface{}{
+			"id": 2,
+		})
 	})
 	t.Run("default project of the same user", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)

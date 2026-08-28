@@ -3,6 +3,7 @@ import ProjectModel from '@/models/project'
 import type {IProject} from '@/modelTypes/IProject'
 import TaskService from './task'
 import {colorFromHex} from '@/helpers/color/colorFromHex'
+import {apiV2Url} from '@/helpers/fetcher'
 
 export default class ProjectService extends AbstractService<IProject> {
 	constructor() {
@@ -61,6 +62,35 @@ export default class ProjectService extends AbstractService<IProject> {
 				...project,
 				backgroundInformation: null,
 				backgroundBlurHash: '',
+			}
+		} finally {
+			cancel()
+		}
+	}
+
+	// The card image endpoints only exist on /api/v2, hence the absolute URLs.
+	async cardBackground(project: Pick<IProject, 'id' | 'cardBackgroundInformation'>) {
+		if (project.cardBackgroundInformation === null) {
+			return ''
+		}
+
+		const response = await this.http({
+			url: apiV2Url(`projects/${project.id}/card-background`),
+			method: 'GET',
+			responseType: 'blob',
+		})
+		return window.URL.createObjectURL(new Blob([response.data]))
+	}
+
+	async removeCardBackground(project: IProject) {
+		const cancel = this.setLoading()
+
+		try {
+			await this.http.delete(apiV2Url(`projects/${project.id}/card-background`))
+			return {
+				...project,
+				cardBackgroundInformation: null,
+				cardBackgroundBlurHash: '',
 			}
 		} finally {
 			cancel()

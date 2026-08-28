@@ -66,6 +66,13 @@ type Project struct {
 	// Contains a very small version of the project background to use as a blurry preview until the actual background is loaded. Check out https://blurha.sh/ to learn how it works.
 	BackgroundBlurHash string `xorm:"varchar(50) null" json:"background_blur_hash" readOnly:"true" doc:"A small BlurHash preview of the project background, shown until the real background loads. See https://blurha.sh/."`
 
+	// The id of the file this project has set as its card image
+	CardBackgroundFileID int64 `xorm:"null" json:"-"`
+	// Holds extra information about the card image set since some background providers require attribution or similar. If not null, the card image can be accessed at /projects/{projectID}/card-background
+	CardBackgroundInformation interface{} `xorm:"-" json:"card_background_information" readOnly:"true" doc:"Extra information about the card image (e.g. attribution). When not null, the card image is available at /projects/{projectID}/card-background."`
+	// Contains a very small version of the project card image to use as a blurry preview until the actual image is loaded. Check out https://blurha.sh/ to learn how it works.
+	CardBackgroundBlurHash string `xorm:"varchar(50) null" json:"card_background_blur_hash" readOnly:"true" doc:"A small BlurHash preview of the project card image, shown until the real image loads. See https://blurha.sh/."`
+
 	// True if a project is a favorite. Favorite projects show up in a separate parent project. This value depends on the user making the call to the api.
 	IsFavorite bool `xorm:"-" json:"is_favorite" doc:"Whether the project is a favorite of the requesting user. This value is per-user and depends on who makes the call."`
 
@@ -446,6 +453,18 @@ func (p *Project) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 		}
 	}
 
+	// Get any card image information if there is one set
+	if p.CardBackgroundFileID != 0 {
+		p.CardBackgroundInformation, err = GetUnsplashPhotoByFileID(s, p.CardBackgroundFileID)
+		if err != nil && !files.IsErrFileIsNotUnsplashFile(err) {
+			return
+		}
+
+		if err != nil && files.IsErrFileIsNotUnsplashFile(err) {
+			p.CardBackgroundInformation = &ProjectBackgroundType{Type: ProjectBackgroundUpload}
+		}
+	}
+
 	// For saved filters, IsFavorite was already set from the SavedFilter struct.
 	// Don't overwrite it with the project favorites lookup.
 	if !isFilter {
@@ -637,7 +656,7 @@ func getUserProjectsStatement(userID int64, search string) *builder.Builder {
 	}
 
 	return builder.
-		Select("l.id, l.title, l.description, l.identifier, l.hex_color, l.owner_id, l.parent_project_id, l.is_archived, l.background_file_id, l.background_blur_hash, l.position, l.created, l.updated").
+		Select("l.id, l.title, l.description, l.identifier, l.hex_color, l.owner_id, l.parent_project_id, l.is_archived, l.background_file_id, l.background_blur_hash, l.card_background_file_id, l.card_background_blur_hash, l.position, l.created, l.updated").
 		From("projects", "l").
 		Join("LEFT", "team_projects tl", "tl.project_id = l.id").
 		Join("LEFT", "team_members tm2", "tm2.team_id = tl.team_id").
@@ -702,7 +721,7 @@ func getAllProjectsForUser(s *xorm.Session, userID int64, opts *projectOptions) 
 
 	baseQuery := querySQLString + `
 UNION ALL
-SELECT p.id, p.title, p.description, p.identifier, p.hex_color, p.owner_id, p.parent_project_id, p.is_archived, p.background_file_id, p.background_blur_hash, p.position, p.created, p.updated FROM projects p
+SELECT p.id, p.title, p.description, p.identifier, p.hex_color, p.owner_id, p.parent_project_id, p.is_archived, p.background_file_id, p.background_blur_hash, p.card_background_file_id, p.card_background_blur_hash, p.position, p.created, p.updated FROM projects p
 INNER JOIN all_projects ap ON p.parent_project_id = ap.id`
 
 	columnStr := strings.Join([]string{
@@ -716,6 +735,8 @@ INNER JOIN all_projects ap ON p.parent_project_id = ap.id`
 		"all_projects.is_archived",
 		"all_projects.background_file_id",
 		"all_projects.background_blur_hash",
+		"all_projects.card_background_file_id",
+		"all_projects.card_background_blur_hash",
 		"all_projects.position",
 		"all_projects.created",
 		"all_projects.updated",
@@ -845,7 +866,7 @@ func addProjectDetails(s *xorm.Session, projects []*Project, a web.Auth) (err er
 	for _, p := range projects {
 		ownerIDs = append(ownerIDs, p.OwnerID)
 		projectIDs = append(projectIDs, p.ID)
-		fileIDs = append(fileIDs, p.BackgroundFileID)
+		fileIDs = append(fileIDs, p.BackgroundFileID, p.CardBackgroundFileID)
 	}
 
 	owners, err := user.GetUsersByIDs(s, ownerIDs)
@@ -902,6 +923,9 @@ func addProjectDetails(s *xorm.Session, projects []*Project, a web.Auth) (err er
 		if p.BackgroundFileID != 0 {
 			p.BackgroundInformation = &ProjectBackgroundType{Type: ProjectBackgroundUpload}
 		}
+		if p.CardBackgroundFileID != 0 {
+			p.CardBackgroundInformation = &ProjectBackgroundType{Type: ProjectBackgroundUpload}
+		}
 
 		// Don't override the favorite state if it was already set from before (favorite saved filters do this)
 		if p.IsFavorite {
@@ -939,6 +963,9 @@ func addProjectDetails(s *xorm.Session, projects []*Project, a web.Auth) (err er
 		// Only override the file info if we have info for unsplash backgrounds
 		if _, exists := unsplashPhotos[l.BackgroundFileID]; exists {
 			l.BackgroundInformation = unsplashPhotos[l.BackgroundFileID]
+		}
+		if _, exists := unsplashPhotos[l.CardBackgroundFileID]; exists {
+			l.CardBackgroundInformation = unsplashPhotos[l.CardBackgroundFileID]
 		}
 	}
 
@@ -1540,6 +1567,11 @@ func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return
 	}
 
+	err = fullProject.DeleteCardBackgroundFileIfExists(s)
+	if err != nil {
+		return
+	}
+
 	// If we're deleting a default project, remove it as default
 	if isDefaultProject {
 		_, err = s.Where("default_project_id = ?", p.ID).
@@ -1652,6 +1684,45 @@ func ClearProjectBackground(s *xorm.Session, projectID int64) (err error) {
 	_, err = s.
 		Where("id = ?", projectID).
 		Cols("background_file_id", "background_blur_hash").
+		Update(&Project{})
+	return
+}
+
+// DeleteCardBackgroundFileIfExists deletes the project's card image file from the db and the
+// filesystem, if one exists
+func (p *Project) DeleteCardBackgroundFileIfExists(s *xorm.Session) (err error) {
+	if p.CardBackgroundFileID == 0 {
+		return
+	}
+
+	file := files.File{ID: p.CardBackgroundFileID}
+	err = file.Delete(s)
+	if err != nil && files.IsErrFileDoesNotExist(err) {
+		return nil
+	}
+
+	return err
+}
+
+// SetProjectCardBackground sets a background file as the project's card image in the db
+func SetProjectCardBackground(s *xorm.Session, projectID int64, background *files.File, blurHash string) (err error) {
+	l := &Project{
+		ID:                     projectID,
+		CardBackgroundFileID:   background.ID,
+		CardBackgroundBlurHash: blurHash,
+	}
+	_, err = s.
+		Where("id = ?", l.ID).
+		Cols("card_background_file_id", "card_background_blur_hash").
+		Update(l)
+	return
+}
+
+// ClearProjectCardBackground clears the card image fields for a project without touching other columns.
+func ClearProjectCardBackground(s *xorm.Session, projectID int64) (err error) {
+	_, err = s.
+		Where("id = ?", projectID).
+		Cols("card_background_file_id", "card_background_blur_hash").
 		Update(&Project{})
 	return
 }

@@ -3,22 +3,30 @@ import ProjectService from '@/services/project'
 import type {IProject} from '@/modelTypes/IProject'
 import {getBlobFromBlurHash} from '@/helpers/getBlobFromBlurHash'
 
-export function useProjectBackground(project: MaybeRefOrGetter<IProject | null>) {
-	const background = ref<string | null>(null)
-	const backgroundLoading = ref(false)
+// Shared by useProjectBackground and useProjectCardBackground — same watch/blurhash
+// logic, parameterized by which pair of project fields to watch and how to fetch
+// the image itself.
+export function useProjectImage(
+	project: MaybeRefOrGetter<IProject | null>,
+	getInformation: (project: IProject) => unknown,
+	getBlurHash: (project: IProject) => string,
+	fetchImage: (project: IProject) => Promise<string>,
+) {
+	const image = ref<string | null>(null)
+	const imageLoading = ref(false)
 	const blurHashUrl = ref('')
 
 	watch(
 		() => [
 			toValue(project)?.id ?? null,
-			toValue(project)?.backgroundBlurHash ?? null,
-		] as [IProject['id'] | null, IProject['backgroundBlurHash'] | null],
+			toValue(project) ? getBlurHash(toValue(project) as IProject) : null,
+		] as [IProject['id'] | null, string | null],
 		async ([projectId, blurHash], oldValue) => {
 			const projectValue = toValue(project)
 			if (
 				projectValue === null ||
-				!projectValue.backgroundInformation ||
-				backgroundLoading.value
+				!getInformation(projectValue) ||
+				imageLoading.value
 			) {
 				return
 			}
@@ -32,28 +40,42 @@ export function useProjectBackground(project: MaybeRefOrGetter<IProject | null>)
 				return
 			}
 
-			backgroundLoading.value = true
+			imageLoading.value = true
 
 			try {
 				const blurHashPromise = getBlobFromBlurHash(blurHash).then((blurHash) => {
 					blurHashUrl.value = blurHash ? window.URL.createObjectURL(blurHash) : ''
 				})
 
-				const projectService = new ProjectService()
-				const backgroundPromise = projectService.background(projectValue).then((result) => {
-					background.value = result
+				const imagePromise = fetchImage(projectValue).then((result) => {
+					image.value = result
 				})
-				await Promise.all([blurHashPromise, backgroundPromise])
+				await Promise.all([blurHashPromise, imagePromise])
 			} finally {
-				backgroundLoading.value = false
+				imageLoading.value = false
 			}
 		},
 		{immediate: true},
 	)
 
 	return {
-		background,
+		image,
 		blurHashUrl,
-		backgroundLoading,
+		imageLoading,
+	}
+}
+
+export function useProjectBackground(project: MaybeRefOrGetter<IProject | null>) {
+	const {image, blurHashUrl, imageLoading} = useProjectImage(
+		project,
+		p => p.backgroundInformation,
+		p => p.backgroundBlurHash,
+		p => new ProjectService().background(p),
+	)
+
+	return {
+		background: image,
+		blurHashUrl,
+		backgroundLoading: imageLoading,
 	}
 }

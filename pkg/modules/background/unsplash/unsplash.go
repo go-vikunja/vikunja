@@ -325,15 +325,19 @@ func (p *Provider) Set(s *xorm.Session, image *background.Image, project *models
 		return
 	}
 
-	// Remove the old background if one exists
-	if project.BackgroundFileID != 0 {
-		file := files.File{ID: project.BackgroundFileID}
+	// Remove the old background (or card image) if one exists
+	oldFileID := project.BackgroundFileID
+	if image.Target == background.TargetCard {
+		oldFileID = project.CardBackgroundFileID
+	}
+	if oldFileID != 0 {
+		file := files.File{ID: oldFileID}
 		err = file.Delete(s)
 		if err != nil && !files.IsErrFileDoesNotExist(err) {
 			return err
 		}
 
-		err = models.RemoveUnsplashPhoto(s, project.BackgroundFileID)
+		err = models.RemoveUnsplashPhoto(s, oldFileID)
 		if err != nil && !files.IsErrFileDoesNotExist(err) {
 			return err
 		}
@@ -351,6 +355,12 @@ func (p *Provider) Set(s *xorm.Session, image *background.Image, project *models
 		return
 	}
 	log.Debugf("Saved unsplash photo %s as file %d with new entry %d", image.ID, file.ID, unsplashPhoto.ID)
+
+	if image.Target == background.TargetCard {
+		project.CardBackgroundFileID = file.ID
+		project.CardBackgroundInformation = unsplashPhoto
+		return models.SetProjectCardBackground(s, project.ID, file, photo.BlurHash)
+	}
 
 	// Set the file in the project
 	project.BackgroundFileID = file.ID

@@ -389,6 +389,16 @@
       "success": "The background has been set successfully!",
       "removeSuccess": "The background has been removed successfully!"
     },
+    "cardImage": {
+      "title": "Set project card image",
+      "remove": "Remove card image",
+      "upload": "Choose a card image from your pc",
+      "searchPlaceholder": "Search for an image…",
+      "poweredByUnsplash": "Powered by Unsplash",
+      "loadMore": "Load more photos",
+      "success": "The card image has been set successfully!",
+      "removeSuccess": "The card image has been removed successfully!"
+    },
     "delete": {
       "title": "Delete \"{project}\"",
       "header": "Delete this project",
@@ -1374,6 +1384,7 @@
     "delete": "Delete",
     "unarchive": "Un-Archive",
     "setBackground": "Background settings",
+    "setCardImage": "Card image settings",
     "share": "Share",
     "createProject": "Create project",
     "cantArchiveIsDefault": "You cannot archive this because it is your default project.",

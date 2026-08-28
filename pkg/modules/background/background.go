@@ -30,9 +30,23 @@ type Image struct {
 	BlurHash string `json:"blur_hash" doc:"A BlurHash placeholder for the image."`
 	// This can be used to supply extra information from an image provider to clients
 	Info interface{} `json:"info,omitempty" doc:"Provider-specific extra information about the image (e.g. the Unsplash author for attribution)."`
+	// Target is set server-side by the calling handler, never by the client, to tell
+	// a Provider's Set method which project field (full background vs card image) to
+	// write. It defaults to TargetBackground so every existing caller is unaffected.
+	Target Target `xorm:"-" json:"-"`
 }
 
 const MaxBackgroundImageHeight = 3840
+
+// Target tells a Provider's Set method which project image field to write.
+type Target int
+
+const (
+	// TargetBackground is the full project background shown on the project header.
+	TargetBackground Target = iota
+	// TargetCard is the small image shown on the project's card in the project grid.
+	TargetCard
+)
 
 // Provider represents something that is able to get a project of images and set one of them as background
 type Provider interface {

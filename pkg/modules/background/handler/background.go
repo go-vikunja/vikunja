@@ -206,7 +206,7 @@ func (bp *BackgroundProvider) UploadBackground(c *echo.Context) error {
 	}
 	defer srcf.Close()
 
-	if err := ValidateAndSaveBackgroundUpload(s, auth, project, srcf, file.Filename, uint64(file.Size)); err != nil {
+	if err := ValidateAndSaveBackgroundUpload(s, auth, project, srcf, file.Filename, uint64(file.Size), background.TargetBackground); err != nil {
 		_ = s.Rollback()
 		if IsErrFileIsNoImage(err) {
 			return c.JSON(http.StatusBadRequest, models.Message{Message: "Uploaded file is no image."})
@@ -235,7 +235,7 @@ func (bp *BackgroundProvider) UploadBackground(c *echo.Context) error {
 // handler. project must already be loaded and the caller must have verified write
 // permission. On a non-image it returns ErrFileIsNoImage; on a recognized but
 // undecodable format ErrFileUnsupportedImageFormat.
-func ValidateAndSaveBackgroundUpload(s *xorm.Session, auth web.Auth, project *models.Project, srcf io.ReadSeeker, filename string, filesize uint64) error {
+func ValidateAndSaveBackgroundUpload(s *xorm.Session, auth web.Auth, project *models.Project, srcf io.ReadSeeker, filename string, filesize uint64, target background.Target) error {
 	mime, err := mimetype.DetectReader(srcf)
 	if err != nil {
 		return err
@@ -256,14 +256,14 @@ func ValidateAndSaveBackgroundUpload(s *xorm.Session, auth web.Auth, project *mo
 
 	// DetectReader consumed the head of the reader; SaveBackgroundFile seeks back to
 	// the start itself, so no rewind is needed here.
-	if err := SaveBackgroundFile(s, auth, project, srcf, filename, filesize); err != nil {
+	if err := SaveBackgroundFile(s, auth, project, srcf, filename, filesize, target); err != nil {
 		return err
 	}
 
 	return project.ReadOne(s, auth)
 }
 
-func SaveBackgroundFile(s *xorm.Session, auth web.Auth, project *models.Project, srcf io.ReadSeeker, filename string, filesize uint64) (err error) {
+func SaveBackgroundFile(s *xorm.Session, auth web.Auth, project *models.Project, srcf io.ReadSeeker, filename string, filesize uint64, target background.Target) (err error) {
 	mime, _ := mimetype.DetectReader(srcf)
 	_, _ = srcf.Seek(0, io.SeekStart)
 	src, err := imaging.Decode(srcf)
@@ -299,14 +299,19 @@ func SaveBackgroundFile(s *xorm.Session, auth web.Auth, project *models.Project,
 
 	// Generate a blurHash
 	_, _ = srcf.Seek(0, io.SeekStart)
-	project.BackgroundBlurHash, err = CreateBlurHash(srcf)
+	blurHash, err := CreateBlurHash(srcf)
 	if err != nil {
 		return err
+	}
+	if target == background.TargetCard {
+		project.CardBackgroundBlurHash = blurHash
+	} else {
+		project.BackgroundBlurHash = blurHash
 	}
 
 	// Save it
 	p := upload.Provider{}
-	img := &background.Image{ID: strconv.FormatInt(f.ID, 10)}
+	img := &background.Image{ID: strconv.FormatInt(f.ID, 10), Target: target}
 	err = p.Set(s, img, project, auth)
 	return err
 }
@@ -414,8 +419,25 @@ func LoadProjectBackgroundForDownload(s *xorm.Session, project *models.Project) 
 	if project.BackgroundFileID == 0 {
 		return nil, nil, &models.ErrProjectHasNoBackground{ProjectID: project.ID}
 	}
+	return loadFileForDownload(s, project.BackgroundFileID)
+}
 
-	bgFile = &files.File{ID: project.BackgroundFileID}
+// LoadProjectCardBackgroundForDownload is the card-image counterpart of
+// LoadProjectBackgroundForDownload. Returns ErrProjectHasNoCardBackground when the
+// project has none; the caller owns committing the session and closing bgFile.File.
+func LoadProjectCardBackgroundForDownload(s *xorm.Session, project *models.Project) (bgFile *files.File, stat os.FileInfo, err error) {
+	if project.CardBackgroundFileID == 0 {
+		return nil, nil, &models.ErrProjectHasNoCardBackground{ProjectID: project.ID}
+	}
+	return loadFileForDownload(s, project.CardBackgroundFileID)
+}
+
+// loadFileForDownload opens fileID (bytes ready to read) and stats it for the modtime
+// the download uses for caching. It also fires the Unsplash pingback side effect,
+// required by Unsplash's API guidelines and done server-side so no user details are
+// exposed. The caller owns committing the session and closing bgFile.File.
+func loadFileForDownload(s *xorm.Session, fileID int64) (bgFile *files.File, stat os.FileInfo, err error) {
+	bgFile = &files.File{ID: fileID}
 	if err := bgFile.LoadFileByID(); err != nil {
 		return nil, nil, err
 	}
