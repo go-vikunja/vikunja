@@ -48,74 +48,55 @@ func TestMCP_TaskAssignees_ToolsList(t *testing.T) {
 }
 
 func TestMCP_TaskAssignees_ReadAllAccess(t *testing.T) {
-	// Task 30 is in project 1 (owned by user 1). The model's ReadAll has a
-	// known pre-existing issue with its second (count) query when the
-	// underlying join returns rows, so we cannot assert the response body
-	// here — but we can confirm the permission gate let us through. The
-	// REST API exposes the same bug; fixing it is out of scope for the
-	// MCP task. What matters for MCP is: the dispatcher accepted the call,
-	// the permission check passed, and the model was invoked.
 	c := newMCPClient(t, mcpFullProjectsToken)
 	result := c.callTool("tasks_assignees_read_all", map[string]any{"task_id": 30})
-	// Either the model bug surfaces as IsError (current state) or the
-	// upstream fix succeeds; both are acceptable for this MCP test.
-	if isErr, _ := result["isError"].(bool); !isErr {
-		var assignees []map[string]any
-		readAllItems(t, result, &assignees)
-		require.NotEmpty(t, assignees, "expected at least one assignee on task 30")
-		for _, a := range assignees {
-			assert.Empty(t, a["email"], "read_all must not leak assignee email addresses: %v", a)
-		}
+	require.NotContains(t, result, "isError", "read_all errored: %v", result)
+
+	var assignees []map[string]any
+	readAllItems(t, result, &assignees)
+
+	ids := make([]float64, 0, len(assignees))
+	for _, a := range assignees {
+		ids = append(ids, a["id"].(float64))
+		assert.Empty(t, a["email"], "read_all must not leak assignee email addresses: %v", a)
 	}
+	assert.ElementsMatch(t, []float64{1, 2}, ids)
 }
 
 func TestMCP_TaskAssignees_CreateAndDelete(t *testing.T) {
-	// Create a fresh task and assign user 1 to it. The assignment itself
-	// goes through the model's Create path, which has no count-query bug.
+	// Project 34 is shared with team 1, which holds both user 1 and user 2, so user 2 passes CanRead.
 	c := newMCPClient(t, mcpFullProjectsToken)
 
 	taskRes := c.callTool("tasks_create", map[string]any{
 		"title":      "task for assignee test",
-		"project_id": 1,
+		"project_id": 34,
 	})
 	require.NotContains(t, taskRes, "isError")
 	var task map[string]any
 	require.NoError(t, json.Unmarshal([]byte(toolResultText(t, taskRes)), &task))
 	tid := int64(task["id"].(float64))
 
-	// Assign user 2 — user 2 has access to project 1 via team membership
-	// (see team_projects.yml fixture).
 	assignRes := c.callTool("tasks_assignees_create", map[string]any{
 		"task_id": tid,
 		"user_id": 2,
 	})
-	// Some shared-access setups still reject assignment of user 2 due to
-	// CanRead returning false; in that case the result will be IsError.
-	// Try user 1 (the project owner) as a fallback before declaring the
-	// test failed.
-	if isErr, _ := assignRes["isError"].(bool); isErr {
-		assignRes = c.callTool("tasks_assignees_create", map[string]any{
-			"task_id": tid,
-			"user_id": 1,
-		})
-	}
 	require.NotContains(t, assignRes, "isError", "assign errored: %v", assignRes)
 
-	// Round-trip via delete to exercise the delete path too.
 	delRes := c.callTool("tasks_assignees_delete", map[string]any{
 		"task_id": tid,
-		"user_id": 1,
+		"user_id": 2,
 	})
-	// Delete is idempotent — even if user 1 wasn't assigned it should
-	// succeed silently. Either way, no IsError.
-	if isErr, _ := delRes["isError"].(bool); isErr {
-		t.Logf("delete returned IsError (acceptable when fallback assignment used a different user): %v", delRes)
-	}
+	require.NotContains(t, delRes, "isError", "delete errored: %v", delRes)
+
+	readRes := c.callTool("tasks_assignees_read_all", map[string]any{"task_id": tid})
+	require.NotContains(t, readRes, "isError")
+	var assignees []map[string]any
+	readAllItems(t, readRes, &assignees)
+	assert.Empty(t, assignees, "assignee should be gone after delete")
 }
 
 func TestMCP_TaskAssignees_ReadAllForbidden(t *testing.T) {
-	// Task 34 is in project 20 (user 13's private project). User 1 cannot
-	// see its assignees.
+	// Task 34 is in project 20, user 13's private project.
 	c := newMCPClient(t, mcpFullProjectsToken)
 	result := c.callTool("tasks_assignees_read_all", map[string]any{"task_id": 34})
 	isErr, _ := result["isError"].(bool)

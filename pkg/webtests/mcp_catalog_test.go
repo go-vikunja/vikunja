@@ -48,7 +48,7 @@ func TestMCP_Catalog_MetaToolsInToolsList(t *testing.T) {
 }
 
 func TestMCP_Catalog_FindActionScopeFiltered(t *testing.T) {
-	// Token 11 has tasks_labels scopes but no other catalog resource.
+	// Token 12 has tasks_labels scopes but no other catalog resource.
 	c := newMCPClient(t, mcpFullProjectsToken)
 	actions := findActions(t, c, map[string]any{})
 
@@ -131,7 +131,7 @@ func TestMCP_Catalog_DoActionListsProjectViews(t *testing.T) {
 }
 
 func TestMCP_Catalog_DoActionScopeDenied(t *testing.T) {
-	// Token 11 has no projects_users scope; the per-call re-check inside
+	// Token 12 has no projects_users scope; the per-call re-check inside
 	// Dispatch must reject the action even though it exists.
 	c := newMCPClient(t, mcpFullProjectsToken)
 	result := c.callTool("do_action", map[string]any{
@@ -154,8 +154,7 @@ func TestMCP_Catalog_DoActionUnknownAction(t *testing.T) {
 }
 
 func TestMCP_Catalog_DoActionValidatesArguments(t *testing.T) {
-	// Missing the required label_id must fail schema validation inside
-	// Dispatch, surfaced as an isError tool result.
+	// Schema validation happens inside Dispatch, so this surfaces as an isError result.
 	c := newMCPClient(t, mcpFullProjectsToken)
 	result := c.callTool("do_action", map[string]any{
 		"action":    "tasks_labels_create",

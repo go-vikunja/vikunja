@@ -29,14 +29,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Token 11 has {mcp:access, projects:[create, read_one, read_all, update, delete]}
-// — full access to every projects_* tool. Owner is user 1.
+// Token 12 (owner user 1) has mcp:access plus every projects_* scope.
 const mcpFullProjectsToken = "tk_mcp_full_projects_token_test_0fullp003"
 
-// mcpClient is a tiny harness that does the initialize / notifications /
-// tools-call dance against the live Echo server. Tests construct one per
-// case, optionally authed with a different token, and use callTool to drive
-// a single JSON-RPC method.
+// mcpClient does the initialize / notifications handshake against the live Echo server.
 type mcpClient struct {
 	t         *testing.T
 	e         *echo.Echo
@@ -78,9 +74,7 @@ func (c *mcpClient) notifyInitialized() {
 	require.Less(c.t, rec.Code, 400, "notifications/initialized: %s", rec.Body.String())
 }
 
-// rpc sends a JSON-RPC request with the given method/params and returns the
-// parsed response. Each call uses a fresh request id so the SDK doesn't
-// confuse them.
+// Each call uses a fresh request id so the SDK doesn't confuse responses.
 func (c *mcpClient) rpc(method string, params any) map[string]any {
 	c.t.Helper()
 	c.nextID++
@@ -96,9 +90,7 @@ func (c *mcpClient) rpc(method string, params any) map[string]any {
 	return readMCPJSON(c.t, rec.Body.String())
 }
 
-// callTool invokes tools/call for the given tool and returns the raw
-// "result" payload. Whether the call succeeded or failed is encoded in
-// result["isError"] per the MCP spec; tests check that explicitly.
+// callTool returns the raw "result" payload; success/failure lives in result["isError"].
 func (c *mcpClient) callTool(name string, args map[string]any) map[string]any {
 	c.t.Helper()
 	resp := c.rpc("tools/call", map[string]any{
@@ -110,9 +102,7 @@ func (c *mcpClient) callTool(name string, args map[string]any) map[string]any {
 	return result
 }
 
-// toolResultText extracts the first TextContent entry from a tools/call
-// result. The SDK guarantees Content is non-empty for both success and
-// IsError paths in our handlers.
+// toolResultText extracts the first TextContent entry from a tools/call result.
 func toolResultText(t *testing.T, result map[string]any) string {
 	t.Helper()
 	content, ok := result["content"].([]any)
@@ -125,9 +115,7 @@ func toolResultText(t *testing.T, result map[string]any) string {
 	return text
 }
 
-// readAllItems unmarshals the items array out of a read_all envelope into
-// dest. read_all returns {items, result_count, total_items, page, per_page},
-// not a bare array.
+// read_all returns {items, result_count, total_items, page, per_page}, not a bare array.
 func readAllItems(t *testing.T, result map[string]any, dest any) {
 	t.Helper()
 	text := toolResultText(t, result)
@@ -139,10 +127,8 @@ func readAllItems(t *testing.T, result map[string]any, dest any) {
 }
 
 func TestMCP_Projects_ToolsListAll(t *testing.T) {
-	// Token 11 has every project scope plus the scopes added in Task 7
-	// (tasks, labels, teams, tasks_comments, tasks_assignees). The total
-	// tool count therefore exceeds 5; what matters here is that all five
-	// project tools are present.
+	// Token 12 also carries non-project scopes, so assert presence rather
+	// than an exact tool count.
 	c := newMCPClient(t, mcpFullProjectsToken)
 	resp := c.rpc("tools/list", map[string]any{})
 	result, ok := resp["result"].(map[string]any)
@@ -185,25 +171,13 @@ func TestMCP_Projects_Create(t *testing.T) {
 }
 
 func TestMCP_Projects_CreateMissingTitle(t *testing.T) {
-	// The SDK validates input against the schema before our handler runs;
-	// "title" has no omitempty so it is required, and a request without it
-	// must come back as an error response (either a JSON-RPC error or a
-	// tool result with IsError set).
+	// "title" has no omitempty, so the SDK's schema validation rejects the
+	// call inside the tool handler — an isError result, not an RPC error.
 	c := newMCPClient(t, mcpFullProjectsToken)
-	resp := c.rpc("tools/call", map[string]any{
-		"name":      "projects_create",
-		"arguments": map[string]any{}, // missing title
-	})
-	// The SDK reports schema-validation failures as either a top-level
-	// JSON-RPC error or a tool result with isError=true. Accept either.
-	if errObj, has := resp["error"]; has {
-		require.NotNil(t, errObj)
-		return
-	}
-	result, ok := resp["result"].(map[string]any)
-	require.True(t, ok, "missing both error and result: %v", resp)
+	result := c.callTool("projects_create", map[string]any{})
 	isErr, _ := result["isError"].(bool)
-	assert.True(t, isErr, "expected isError for missing required title, got: %v", result)
+	require.Truef(t, isErr, "expected isError for missing required title: %v", result)
+	assert.Contains(t, toolResultText(t, result), "mcp: invalid arguments for projects_create")
 }
 
 func TestMCP_Projects_ReadOneOwned(t *testing.T) {
@@ -219,9 +193,7 @@ func TestMCP_Projects_ReadOneOwned(t *testing.T) {
 }
 
 func TestMCP_Projects_ReadOneForbidden(t *testing.T) {
-	// Project 20 belongs to user 13. User 1 (token 11's owner) cannot see
-	// it. The model returns a permission error; the dispatcher surfaces it
-	// as the tool handler's error path, which maps to isError=true.
+	// Project 20 belongs to user 13, so user 1's read must be denied.
 	c := newMCPClient(t, mcpFullProjectsToken)
 	result := c.callTool("projects_read_one", map[string]any{"id": 20})
 	isErr, _ := result["isError"].(bool)
@@ -275,8 +247,7 @@ func TestMCP_Projects_ReadAllSearch(t *testing.T) {
 func TestMCP_Projects_Update(t *testing.T) {
 	c := newMCPClient(t, mcpFullProjectsToken)
 
-	// First create a project so we can update it without disturbing other
-	// fixtures (project 1 is referenced from a lot of test data).
+	// Create rather than reuse a fixture: project 1 is referenced from a lot of test data.
 	createResult := c.callTool("projects_create", map[string]any{
 		"title": "mcp project to update",
 	})
@@ -292,7 +263,6 @@ func TestMCP_Projects_Update(t *testing.T) {
 	})
 	require.NotContains(t, updateResult, "isError", "update errored: %v", updateResult)
 
-	// Read it back to verify persistence.
 	readResult := c.callTool("projects_read_one", map[string]any{"id": pid})
 	require.NotContains(t, readResult, "isError")
 	var project map[string]any
@@ -301,9 +271,7 @@ func TestMCP_Projects_Update(t *testing.T) {
 	assert.Equal(t, "Updated description", project["description"])
 }
 
-// TestMCP_Projects_UpdateClearsArchived exercises the pointer-source path
-// of copyByJSONTag: an explicit `is_archived: false` must un-archive a
-// project that was previously archived.
+// An explicitly sent `is_archived: false` must un-archive, not read as "omitted".
 func TestMCP_Projects_UpdateClearsArchived(t *testing.T) {
 	c := newMCPClient(t, mcpFullProjectsToken)
 
@@ -344,11 +312,9 @@ func TestMCP_Projects_Delete(t *testing.T) {
 	deleteResult := c.callTool("projects_delete", map[string]any{"id": pid})
 	require.NotContains(t, deleteResult, "isError", "delete errored: %v", deleteResult)
 
-	// Subsequent read should fail with isError=true.
 	readResult := c.callTool("projects_read_one", map[string]any{"id": pid})
 	isErr, _ := readResult["isError"].(bool)
 	require.True(t, isErr, "expected isError for deleted project, got: %v", readResult)
-	// Sanity check the error message references the project.
 	text := strings.ToLower(toolResultText(t, readResult))
 	assert.NotEmpty(t, text)
 }

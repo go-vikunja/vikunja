@@ -77,10 +77,7 @@ func TestAPITokenRoutesIncludesMCP(t *testing.T) {
 }
 
 func TestAPITokenMiddleware_SkipsRouteCheckForMCPPath(t *testing.T) {
-	// The MCP endpoint needs to accept POST, GET, and DELETE on the same path
-	// (streamable-HTTP transport). CanDoAPIRoute is exact (method, path) match,
-	// so we skip the route check for /api/v2/mcp and any sub-path; the
-	// HasMCPAccess() gate is applied inside the MCP handler instead.
+	// The route check is skipped for /api/v2/mcp and sub-paths; HasMCPAccess gates it in the handler.
 	for _, method := range []string{http.MethodGet, http.MethodPost, http.MethodDelete} {
 		t.Run(method, func(t *testing.T) {
 			e, err := setupTestEnv()
@@ -96,11 +93,8 @@ func TestAPITokenMiddleware_SkipsRouteCheckForMCPPath(t *testing.T) {
 				return nil
 			})
 
-			// Token 1 only has {tasks: [read_all, update]} — no mcp scope.
-			// With the skipRouteCheck, the middleware must still pass the
-			// request through to the wrapped handler. The MCP-specific
-			// authorization (HasMCPAccess) is enforced inside the handler,
-			// not here.
+			// Token 1 has no mcp scope, but skipRouteCheck means the middleware
+			// still passes it through: HasMCPAccess rejects it in the handler.
 			req.Header.Set(echo.HeaderAuthorization, "Bearer tk_2eef46f40ebab3304919ab2e7e39993f75f29d2e")
 			require.NoError(t, h(c))
 			assert.True(t, called, "wrapped handler should run because /api/v2/mcp skips route check")

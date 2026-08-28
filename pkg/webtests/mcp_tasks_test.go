@@ -43,8 +43,7 @@ func TestMCP_Tasks_ToolsListMatchesOps(t *testing.T) {
 }
 
 func TestMCP_Tasks_ReadAllWithFilter(t *testing.T) {
-	// Listing goes through models.TaskCollection, so the REST filter engine
-	// is available: filter/sort_by/order_by plus the generic search arg.
+	// Listing goes through models.TaskCollection, so the REST filter engine is available.
 	c := newMCPClient(t, mcpFullProjectsToken)
 
 	result := c.callTool("tasks_read_all", map[string]any{
@@ -95,8 +94,7 @@ func TestMCP_Tasks_ReadAllPagination(t *testing.T) {
 }
 
 func TestMCP_Tasks_CreateRejectsInvalidTagValue(t *testing.T) {
-	// repeat_after carries valid:"range(0|...)"; without the dispatcher
-	// running the model's tag rules a negative value would reach the DB.
+	// repeat_after carries valid:"range(0|...)"; without the dispatcher running tag rules it would reach the DB.
 	c := newMCPClient(t, mcpFullProjectsToken)
 	result := c.callTool("tasks_create", map[string]any{
 		"title":        "task with a negative repeat",
@@ -170,9 +168,7 @@ func TestMCP_Tasks_Update(t *testing.T) {
 	assert.Equal(t, "Updated description", task["description"])
 }
 
-// TestMCP_Tasks_UpdateClearsDone exercises the pointer-source path of
-// copyByJSONTag: a `done: false` explicitly supplied through the JSON
-// args must flip a task from done back to undone.
+// An explicitly sent `done: false` must flip a task back to undone, not read as "omitted".
 func TestMCP_Tasks_UpdateClearsDone(t *testing.T) {
 	c := newMCPClient(t, mcpFullProjectsToken)
 

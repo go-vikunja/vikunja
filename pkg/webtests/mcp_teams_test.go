@@ -70,8 +70,7 @@ func TestMCP_Teams_ReadAll(t *testing.T) {
 
 func TestMCP_Teams_ReadOneForbidden(t *testing.T) {
 	// User 1 is a member of teams 1..8 (see team_members.yml fixture).
-	// Team 9 is owned by user 7 with no user-1 membership row, so user 1
-	// must not be able to read it.
+	// Team 9 is owned by user 7 with no user-1 membership row.
 	c := newMCPClient(t, mcpFullProjectsToken)
 	result := c.callTool("teams_read_one", map[string]any{"id": 9})
 	isErr, _ := result["isError"].(bool)
