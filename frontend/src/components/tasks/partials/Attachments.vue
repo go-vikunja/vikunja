@@ -192,15 +192,30 @@
 
 		<!-- Attachment video modal -->
 		<Modal
-			:enabled="attachmentVideoBlobUrl !== null"
+			:enabled="attachmentVideoLoading || attachmentVideoBlobUrl !== null"
 			:wide="true"
+			:aria-label="$t('misc.videoPreview')"
 			@close="closeVideoPreview"
 		>
+			<Loading v-if="attachmentVideoLoading" />
+			<div v-else-if="attachmentVideoFailed">
+				<p>{{ $t('misc.videoLoadFailed') }}</p>
+				<XButton
+					icon="download"
+					variant="secondary"
+					@click="downloadVideoPreview"
+				>
+					{{ $t('misc.download') }}
+				</XButton>
+			</div>
 			<video
-				v-if="attachmentVideoBlobUrl"
+				v-else-if="attachmentVideoBlobUrl"
 				:src="attachmentVideoBlobUrl"
+				:aria-label="attachmentVideoName"
 				class="video-preview"
 				controls
+				playsinline
+				@error="attachmentVideoFailed = true"
 			/>
 		</Modal>
 	</div>
@@ -212,6 +227,7 @@ import {useDropZone} from '@vueuse/core'
 
 import User from '@/components/misc/User.vue'
 import ProgressBar from '@/components/misc/ProgressBar.vue'
+import Loading from '@/components/misc/Loading.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
 import AttachmentService from '@/services/attachment'
@@ -222,6 +238,7 @@ import type {ITask} from '@/modelTypes/ITask'
 
 import {formatDateLong} from '@/helpers/time/formatDate'
 import {uploadFiles, generateAttachmentUrl} from '@/helpers/attachments'
+import {downloadBlob} from '@/helpers/downloadBlob'
 import {getHumanSize} from '@/helpers/getHumanSize'
 import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
 import {error, success} from '@/message'
@@ -447,6 +464,9 @@ const attachmentImageBlobUrl = ref<string | null>(null)
 const attachmentImageAlt = ref('')
 const attachmentPdfBlobUrl = ref<string | null>(null)
 const attachmentVideoBlobUrl = ref<string | null>(null)
+const attachmentVideoName = ref('')
+const attachmentVideoLoading = ref(false)
+const attachmentVideoFailed = ref(false)
 let previewRequestToken = 0
 
 function replaceBlobUrl(target: Ref<string | null>, blobUrl: string | null) {
@@ -469,6 +489,21 @@ function closeVideoPreview() {
 	// an in-flight blob must not re-open the dismissed modal
 	previewRequestToken++
 	replaceBlobUrl(attachmentVideoBlobUrl, null)
+	attachmentVideoName.value = ''
+	attachmentVideoLoading.value = false
+	attachmentVideoFailed.value = false
+}
+
+function downloadVideoPreview() {
+	const blobUrl = attachmentVideoBlobUrl.value
+	if (blobUrl === null) {
+		return
+	}
+
+	// downloadBlob revokes the url itself, so hand over ownership before closing
+	attachmentVideoBlobUrl.value = null
+	downloadBlob(blobUrl, attachmentVideoName.value)
+	closeVideoPreview()
 }
 
 onBeforeUnmount(() => {
@@ -500,8 +535,16 @@ async function viewOrDownload(attachment: IAttachment) {
 		return
 	}
 
+	const isVideo = canPreviewVideo(attachment)
+	if (isVideo) {
+		closeVideoPreview()
+	}
+
 	previewRequestToken++
 	const requestToken = previewRequestToken
+
+	// only video is big enough that the full-buffer wait reads as a dead click
+	attachmentVideoLoading.value = isVideo
 
 	try {
 		const blobUrl = await attachmentService.getBlobUrl(attachment)
@@ -510,11 +553,13 @@ async function viewOrDownload(attachment: IAttachment) {
 			URL.revokeObjectURL(blobUrl)
 			return
 		}
+		attachmentVideoLoading.value = false
 		if (canPreviewImage(attachment)) {
 			replaceBlobUrl(attachmentImageBlobUrl, blobUrl)
 			attachmentImageAlt.value = attachment.file.name
-		} else if (canPreviewVideo(attachment)) {
+		} else if (isVideo) {
 			replaceBlobUrl(attachmentVideoBlobUrl, blobUrl)
+			attachmentVideoName.value = attachment.file.name
 		} else if (canPreviewPdf(attachment)) {
 			replaceBlobUrl(attachmentPdfBlobUrl, blobUrl)
 		} else {
@@ -522,6 +567,9 @@ async function viewOrDownload(attachment: IAttachment) {
 			downloadAttachment(attachment)
 		}
 	} catch (e) {
+		if (requestToken === previewRequestToken) {
+			attachmentVideoLoading.value = false
+		}
 		error(e)
 	}
 }
@@ -744,7 +792,7 @@ defineExpose({
 }
 
 .video-preview {
-	inline-size: 100%;
+	inline-size: auto;
 	max-inline-size: calc(100% - 4rem);
 	max-block-size: calc(100vh - 40px);
 	margin: 0 auto;
