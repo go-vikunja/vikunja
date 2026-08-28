@@ -30,8 +30,6 @@ export function canPreviewAudio(attachment: IAttachment): boolean {
 
 export function canPreviewVideo(attachment: IAttachment): boolean {
 	const mime = attachment.file.mime.toLowerCase()
-	// Gate on the sniffed mime, not just the extension, and let the browser
-	// decide whether it can actually play the codec.
 	return SUPPORTED_VIDEO_SUFFIX.some((suffix) => attachment.file.name.toLowerCase().endsWith(suffix))
 		&& mime.startsWith('video/')
 }
