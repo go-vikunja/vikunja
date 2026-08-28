@@ -62,6 +62,12 @@ func TestMCP_UsersSearch_InProject(t *testing.T) {
 	users := mcpSearchUsers(t, c, map[string]any{"query": "user1", "project_id": 1})
 	require.NotEmpty(t, users)
 	assert.Equal(t, "user1", users[0]["username"])
+	assert.Empty(t, users[0]["email"], "email must never be returned")
+
+	// ListUsers keeps the email when the query matches it exactly
+	byEmail := mcpSearchUsers(t, c, map[string]any{"query": "user1@example.com", "project_id": 1})
+	require.NotEmpty(t, byEmail)
+	assert.Empty(t, byEmail[0]["email"], "email must never be returned")
 
 	// project 20 is not accessible to user 1
 	result := c.callTool("users_search", map[string]any{"query": "user1", "project_id": 20})

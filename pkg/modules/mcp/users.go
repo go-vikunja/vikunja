@@ -30,14 +30,16 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// users_search is the first non-CRUD tool: assignees and project shares are
-// addressed by username, so an agent needs a way to discover users. It maps
-// onto the same token scopes as the REST search endpoints so a token grant
-// covers both surfaces.
+// Scopes mirror the REST search endpoints, as named by
+// CollectRoutesForAPITokenUsage: GET /users is single-segment so it files under
+// "other", while the project variant is a sub-route of "projects".
 const (
-	toolUsersSearch         = "users_search"
-	scopeUsersSearch        = "users"
-	scopeProjectUsersSearch = "projects_users_search"
+	toolUsersSearch = "users_search"
+
+	scopeGroupUsers      = "other"
+	scopePermUsers       = "users"
+	scopeGroupProjects   = "projects"
+	scopePermUsersInProj = "users_search"
 )
 
 type usersSearchArgs struct {
@@ -63,12 +65,12 @@ var usersSearchSpec = func() *opSpec {
 }()
 
 func installUsersSearchTool(srv *mcp.Server, token *models.APIToken) {
-	if !tokenAuthorizes(token, scopeUsersSearch, OpReadAll) {
+	if !token.HasPermission(scopeGroupUsers, scopePermUsers) {
 		return
 	}
 	srv.AddTool(&mcp.Tool{
 		Name:        toolUsersSearch,
-		Description: "Find users by username, name or email — e.g. to resolve the username needed by tasks_assignees_create or projects_users_create. Email addresses are never returned.",
+		Description: "Find users by username, name or email — e.g. to resolve the user id needed by tasks_assignees_create, or the username needed by projects_users_create. Email addresses are never returned.",
 		InputSchema: usersSearchSpec.schema,
 	}, usersSearchHandler)
 }
@@ -93,7 +95,7 @@ func usersSearchHandler(ctx context.Context, req *mcp.CallToolRequest) (*mcp.Cal
 
 func searchUsers(ctx context.Context, rawArgs json.RawMessage) ([]*user.User, error) {
 	token := TokenFromContext(ctx)
-	if !tokenAuthorizes(token, scopeUsersSearch, OpReadAll) {
+	if !token.HasPermission(scopeGroupUsers, scopePermUsers) {
 		return nil, fmt.Errorf("%w: %s", ErrScopeDenied, toolUsersSearch)
 	}
 	u := UserFromContext(ctx)
@@ -108,7 +110,7 @@ func searchUsers(ctx context.Context, rawArgs json.RawMessage) ([]*user.User, er
 	if err := json.Unmarshal(rawArgs, &in); err != nil {
 		return nil, fmt.Errorf("mcp: invalid arguments for %s: %w", toolUsersSearch, err)
 	}
-	if in.ProjectID != 0 && !tokenAuthorizes(token, scopeProjectUsersSearch, OpReadAll) {
+	if in.ProjectID != 0 && !token.HasPermission(scopeGroupProjects, scopePermUsersInProj) {
 		return nil, fmt.Errorf("%w: %s with project_id", ErrScopeDenied, toolUsersSearch)
 	}
 
@@ -125,6 +127,11 @@ func searchUsers(ctx context.Context, rawArgs json.RawMessage) ([]*user.User, er
 	}
 	if !canRead {
 		return nil, errors.New("forbidden: no read access to the project")
+	}
+	// ListUsers keeps the email when the query matched it exactly; the global
+	// branch strips it via user.SearchUsers, so mirror that here.
+	for _, f := range found {
+		f.Email = ""
 	}
 	return found, nil
 }
