@@ -944,6 +944,11 @@ func addProjectDetails(s *xorm.Session, projects []*Project, a web.Auth) (err er
 func addMaxPermissionToProjects(s *xorm.Session, projects []*Project, u *user.User) (err error) {
 	projectIDs := make([]int64, 0, len(projects))
 	for _, project := range projects {
+		// No row to look up; must agree with checkReadPermissionsForProjects.
+		if project.ID == FavoritesPseudoProjectID {
+			project.MaxPermission = Ptr(PermissionRead)
+			continue
+		}
 		if GetSavedFilterIDFromProjectID(project.ID) > 0 {
 			project.MaxPermission = Ptr(PermissionAdmin)
 			continue

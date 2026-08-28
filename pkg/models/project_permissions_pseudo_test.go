@@ -348,3 +348,26 @@ func TestProjectPseudoProjectPermissionsAsInstanceAdmin(t *testing.T) {
 		assert.True(t, can)
 	})
 }
+
+func TestProjectReadAllReportsFavoritesPermission(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	u := &user.User{ID: 1, Username: "user1"}
+
+	all, _, _, err := (&Project{Expand: ProjectExpandableRights}).ReadAll(s, u, "", 1, 500)
+	require.NoError(t, err)
+
+	seen := false
+	for _, project := range all.([]*Project) {
+		if project.ID != FavoritesPseudoProjectID {
+			continue
+		}
+
+		seen = true
+		require.NotNil(t, project.MaxPermission, "favorites pseudo project must report a permission")
+		assert.Equal(t, PermissionRead, *project.MaxPermission)
+	}
+	assert.True(t, seen, "favorites pseudo project should show up in the project list")
+}
