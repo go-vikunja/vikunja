@@ -78,3 +78,20 @@ func TestDoerFromAuth_DisabledUser(t *testing.T) {
 	require.NotNil(t, doer)
 	require.Equal(t, int64(17), doer.ID)
 }
+
+func TestTaskAssignee_ReadAllHidesEmails(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	la := &TaskAssginee{TaskID: 30}
+	result, _, _, err := la.ReadAll(s, &user.User{ID: 1}, "", 1, 50)
+	require.NoError(t, err)
+
+	assignees, ok := result.([]*user.User)
+	require.True(t, ok)
+	require.NotEmpty(t, assignees)
+	for _, a := range assignees {
+		require.Empty(t, a.Email, "assignee listings must not expose email addresses")
+	}
+}
