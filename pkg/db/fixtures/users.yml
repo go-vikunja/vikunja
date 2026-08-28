@@ -226,8 +226,6 @@
   bot_owner_id: 22
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
-# Second bot owned by user 21 — sibling of bot 23, used to assert bots of the
-# same owner share an identity.
 - id: 25
   username: 'bot-owner-a-scheduler'
   name: 'Owner A Scheduler'

@@ -302,9 +302,7 @@ func TestHumaLabel_BotOwner(t *testing.T) {
 	})
 }
 
-// Fixture labels #11 (created by the owner) and #12 (created by sibling bot 25)
-// are unattached, so attachment history cannot grant access here - only the
-// shared identity can (#3592).
+// Unattached labels #11 and #12 isolate identity-based access (#3592).
 func TestHumaLabel_BotUsesOwnerLabel(t *testing.T) {
 	bot := webHandlerTestV2{
 		user:     &testbot23,
