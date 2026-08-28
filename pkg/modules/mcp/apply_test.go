@@ -27,9 +27,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// applyOnTask is a shorthand: validate + apply raw args for the given tasks
-// op onto a fresh Task with non-zero starting state, so tests can tell
-// "explicitly cleared" apart from "left untouched".
+// The non-zero starting state lets tests tell "explicitly cleared" from "left untouched".
 func applyOnTask(t *testing.T, op Op, raw string, start models.Task) *models.Task {
 	t.Helper()
 	registerAllResources(t)
@@ -46,8 +44,8 @@ func applyOnTask(t *testing.T, op Op, raw string, start models.Task) *models.Tas
 }
 
 func TestApply_PresentZeroValueClears(t *testing.T) {
-	// The a31aef393 contract, without pointer wrappers: an explicitly sent
-	// zero value must overwrite, an omitted key must not.
+	// No pointer wrappers: an explicitly sent zero value must overwrite, an
+	// omitted key must not.
 	start := models.Task{Done: true, Priority: 5, PercentDone: 0.5}
 
 	updated := applyOnTask(t, OpUpdate, `{"id":1,"done":false,"priority":0}`, start)

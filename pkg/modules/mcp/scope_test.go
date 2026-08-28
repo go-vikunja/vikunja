@@ -85,8 +85,7 @@ func TestTokenAuthorizes_NilPermissionsMap(t *testing.T) {
 }
 
 func TestTokenAuthorizes_NilToken(t *testing.T) {
-	// Defensive: a nil token (should never happen in practice because the
-	// entry handler always sets one) must not panic.
+	// Defensive: the entry handler always sets a token, but a nil one must not panic.
 	assert.False(t, tokenAuthorizes(nil, "projects", OpReadOne))
 }
 
@@ -98,7 +97,7 @@ func TestTokenAuthorizes_FullScopes(t *testing.T) {
 	}
 
 	for _, op := range AllOps() {
-		assert.Truef(t, tokenAuthorizes(token, "projects", op), "op %s should be authorized", op.ToolSuffix())
+		assert.Truef(t, tokenAuthorizes(token, "projects", op), "op %s should be authorized", op.Permission())
 	}
 }
 
@@ -123,16 +122,12 @@ func TestDispatchScopeDenied(t *testing.T) {
 	_, err := Dispatch(ctx, "stubs_create", json.RawMessage(`{"title":"x"}`))
 	require.Error(t, err)
 	require.ErrorIs(t, err, ErrScopeDenied)
-	// The denied call must not have invoked Do*. (Register reflects the
-	// model type once at registration time, so an instance exists — what
-	// matters is that no CRUD method ran on it.)
+	// Register reflects the model once, so an instance exists; what matters is that no CRUD method ran.
 	assert.Empty(t, tracker.last.called, "Do* must not run for a denied scope")
 }
 
 func TestDispatchScopeDenied_NoTokenInContext(t *testing.T) {
-	// Without a token in context, the scope check has nothing to authorize
-	// against. The dispatcher should treat a missing token as denied
-	// (defensive — the entry handler always sets one in production).
+	// A missing token must be treated as denied, not as an unrestricted call.
 	resetRegistry(t)
 	installStubCRUD(t)
 	tracker := &stubTracker{}
@@ -152,8 +147,7 @@ func TestDispatchScopeDenied_NoTokenInContext(t *testing.T) {
 }
 
 func TestDispatchDeleteScopeDenied(t *testing.T) {
-	// Delete is the most destructive op; make sure the scope check gates it
-	// like every other op.
+	// Delete is the most destructive op; the scope check must gate it too.
 	resetRegistry(t)
 	installStubCRUD(t)
 	tracker := &stubTracker{}

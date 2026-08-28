@@ -25,8 +25,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// resetRegistry clears the package-level registry so each test starts from
-// a clean slate. Tests that mutate the registry should call this at the top.
+// resetRegistry must be called by any test that mutates the package-level registry.
 func resetRegistry(t *testing.T) {
 	t.Helper()
 	registryMu.Lock()
@@ -161,8 +160,7 @@ func TestToolNameResolver(t *testing.T) {
 	_, ok := lookupTool("nonexistent_tool")
 	assert.False(t, ok)
 
-	// `task_comments_read_all` must resolve to (task_comments, read_all),
-	// not to (task, comments_read_all) or any naive underscore split.
+	// Must resolve to (task_comments, read_all), not any naive underscore split.
 	ref, ok := lookupTool("task_comments_read_all")
 	require.True(t, ok)
 	assert.Equal(t, "task_comments", ref.resource.Name)

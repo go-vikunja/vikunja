@@ -30,9 +30,8 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// Scopes mirror the REST search endpoints, as named by
-// CollectRoutesForAPITokenUsage: GET /users is single-segment so it files under
-// "other", while the project variant is a sub-route of "projects".
+// Scope names follow CollectRoutesForAPITokenUsage: single-segment GET /users
+// files under "other", the project variant under "projects".
 const (
 	toolUsersSearch = "users_search"
 

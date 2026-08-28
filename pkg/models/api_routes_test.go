@@ -27,9 +27,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// resetAPITokenRoutes empties both route tables for a test and restores the
-// collected ones afterwards, so tests that read the real tables don't depend
-// on running first.
+// resetAPITokenRoutes restores the collected tables afterwards, so tests reading the real ones don't depend on order.
 func resetAPITokenRoutes(t *testing.T) {
 	t.Helper()
 	v1, v2 := apiTokenRoutes, apiTokenRoutesV2

@@ -16,25 +16,9 @@
 
 package mcp
 
-// Tool input schemas are reflected from the model's struct tags at
-// registration time — the same tag contract the Huma-backed /api/v2 reads:
-// `json:` for property names, `doc:` for descriptions, `readOnly:"true"`
-// for server-controlled fields, `minLength`/`valid:"required"` for
-// create-required detection, and `param:` for fields the REST layer binds
-// from the URL. MCP has no URL, so param-bound fields become JSON
-// properties (hidden `json:"-"` ones under the snake_cased Go field name).
-//
-// Field selection per op:
-//   - create: every writable field (json-named, not readOnly); required if
-//     the tags say so (valid:"required", minLength ≥ 1, or URL-bound).
-//   - update: `id` (required) + every writable field, all optional. Only
-//     fields present in the arguments are applied — see apply.go.
-//   - read_one / delete: `id` + hidden param fields. Models without an
-//     exposed id (e.g. task assignees) instead require their param-tagged
-//     identifying fields.
-//   - read_all: search/page/per_page + `query:`-tagged fields (the
-//     TaskCollection filter surface) + param fields, hidden or not — a
-//     listing scoped to a parent (project views) needs its parent id.
+// Tool input schemas are reflected from the same struct tags the Huma-backed
+// /api/v2 reads. MCP has no URL, so `param:`-bound fields become plain JSON
+// properties — hidden `json:"-"` ones under their snake_cased Go field name.
 
 import (
 	"fmt"
@@ -48,17 +32,14 @@ import (
 	"github.com/google/jsonschema-go/jsonschema"
 )
 
-// Reserved read_all argument names. They map to handler.DoReadAll's
-// positional parameters, not to model fields.
+// These map to handler.DoReadAll's positional parameters, not to model fields.
 const (
 	argSearch  = "search"
 	argPage    = "page"
 	argPerPage = "per_page"
 )
 
-// opSpec is the cached per-(resource, op) tool contract: the input schema
-// exposed over MCP, its resolved form for validation, and the json-name →
-// struct-field mapping the apply step uses.
+// opSpec caches the per-(resource, op) input schema plus the json-name → struct-field index apply.go needs.
 type opSpec struct {
 	schema   *jsonschema.Schema
 	resolved *jsonschema.Resolved
@@ -67,9 +48,7 @@ type opSpec struct {
 
 var timeType = reflect.TypeOf(time.Time{})
 
-// falseSchema is JSON Schema `false` — used as additionalProperties so
-// unknown argument names are rejected at validation time with a clear error
-// instead of being silently dropped.
+// falseSchema is JSON Schema `false`: as additionalProperties it rejects unknown argument names instead of dropping them.
 func falseSchema() *jsonschema.Schema {
 	return &jsonschema.Schema{Not: &jsonschema.Schema{}}
 }
@@ -111,9 +90,7 @@ func buildOpSpec(modelType reflect.Type, op Op, r *Resource) (*opSpec, error) {
 			if op != OpReadOne && op != OpUpdate && op != OpDelete {
 				continue
 			}
-			// Resources whose rows aren't addressed by their id (e.g. team
-			// members, addressed by team + username) declare IdentityFields
-			// without "id" and the property disappears entirely.
+			// Rows not addressed by id (team members go by team + username) declare IdentityFields without "id".
 			if len(r.IdentityFields) > 0 && !identity("id") {
 				continue
 			}
@@ -125,8 +102,7 @@ func buildOpSpec(modelType reflect.Type, op Op, r *Resource) (*opSpec, error) {
 			required = append(required, "id")
 
 		case !hasJSON && param != "":
-			// URL-bound in REST with no JSON name: expose it under the
-			// snake_cased Go field name so MCP callers can supply it.
+			// URL-bound in REST with no JSON name, so MCP needs a synthetic property name.
 			hidden := snakeCase(f.Name)
 			if excluded(hidden) {
 				continue
@@ -140,9 +116,7 @@ func buildOpSpec(modelType reflect.Type, op Op, r *Resource) (*opSpec, error) {
 				required = append(required, hidden)
 			}
 
-		// readOnly with a param tag means "REST takes this from the URL,
-		// not the body" (e.g. TaskRelation.TaskID) — MCP has no URL, so it
-		// stays an argument.
+		// readOnly with a param tag means REST reads it from the URL, not the body — MCP keeps it as an argument.
 		case !hasJSON, f.Tag.Get("readOnly") == "true" && param == "", excluded(name):
 			continue
 
@@ -179,13 +153,12 @@ func buildOpSpec(modelType reflect.Type, op Op, r *Resource) (*opSpec, error) {
 	}
 	resolved, err := schema.Resolve(nil)
 	if err != nil {
-		return nil, fmt.Errorf("mcp: resolve schema for %s_%s: %w", r.Name, op.ToolSuffix(), err)
+		return nil, fmt.Errorf("mcp: resolve schema for %s_%s: %w", r.Name, op.Permission(), err)
 	}
 	return &opSpec{schema: schema, resolved: resolved, fields: fields}, nil
 }
 
-// addQueryOnlyArgs exposes json:"-" fields that carry a query tag (REST URL
-// parameters like TaskCollection.Expand) as listing arguments.
+// addQueryOnlyArgs exposes json:"-" fields carrying a query tag (e.g. TaskCollection.Expand) as listing arguments.
 func addQueryOnlyArgs(modelType reflect.Type, props map[string]*jsonschema.Schema, fields map[string]int, excluded func(string) bool) {
 	for i := 0; i < modelType.NumField(); i++ {
 		f := modelType.Field(i)
@@ -200,8 +173,7 @@ func addQueryOnlyArgs(modelType reflect.Type, props map[string]*jsonschema.Schem
 	}
 }
 
-// propSchema returns false for kinds MCP doesn't expose (nested model
-// structs/slices — those relations have their own resources).
+// propSchema returns false for nested model structs/slices; those relations have their own resources.
 func propSchema(f reflect.StructField) (*jsonschema.Schema, bool) {
 	s := &jsonschema.Schema{}
 	t := f.Type
@@ -232,8 +204,7 @@ func propSchema(f reflect.StructField) (*jsonschema.Schema, bool) {
 	default:
 		return nil, false
 	}
-	// Named int types with a custom string MarshalJSON declare their wire
-	// type via swaggertype (e.g. ProjectViewKind).
+	// Named int types with a custom string MarshalJSON declare their wire type via swaggertype.
 	if f.Tag.Get("swaggertype") == "string" {
 		s.Type = "string"
 		s.Format = ""
@@ -264,8 +235,6 @@ func propWithDoc(s *jsonschema.Schema, f reflect.StructField) *jsonschema.Schema
 	return s
 }
 
-// writableInclusion decides whether a writable (json-named, not readOnly)
-// field appears in the given op's schema and whether it is required.
 func writableInclusion(op Op, f reflect.StructField, name, param string, hasExposedID bool, r *Resource) (include, required bool) {
 	identity := slices.Contains(r.IdentityFields, name)
 	switch op {
@@ -274,10 +243,7 @@ func writableInclusion(op Op, f reflect.StructField, name, param string, hasExpo
 	case OpUpdate:
 		return true, identity
 	case OpReadOne, OpDelete:
-		// Models without an exposed id (e.g. TaskAssginee) are identified
-		// by their param-tagged fields instead; IdentityFields declares the
-		// set explicitly when the derivation can't know it (e.g. views need
-		// project_id alongside id).
+		// Models without an exposed id (e.g. TaskAssginee) are addressed by their param-tagged fields instead.
 		if (!hasExposedID && param != "") || identity {
 			return true, true
 		}
@@ -285,9 +251,7 @@ func writableInclusion(op Op, f reflect.StructField, name, param string, hasExpo
 		if f.Tag.Get("query") != "" {
 			return true, false
 		}
-		// readOnly + param means REST scopes the listing by this field from
-		// the URL path (e.g. ProjectView.ProjectID); without it the listing
-		// would run against id 0.
+		// REST scopes the listing by this field from the URL path; without it the listing runs against id 0.
 		if param != "" && f.Tag.Get("readOnly") == "true" {
 			return true, !slices.Contains(r.OptionalFields, name)
 		}
@@ -295,9 +259,7 @@ func writableInclusion(op Op, f reflect.StructField, name, param string, hasExpo
 	return false, false
 }
 
-// requiredForCreate reports whether a writable field must be supplied on
-// create: a `valid:"required"` rule, a non-zero minLength, or a `param:` tag
-// (REST binds it from the URL, so a create without it can never succeed).
+// A `param:` tag counts as required: REST binds it from the URL, so a create without it can never succeed.
 func requiredForCreate(f reflect.StructField) bool {
 	if strings.Contains(f.Tag.Get("valid"), "required") {
 		return true
@@ -308,8 +270,7 @@ func requiredForCreate(f reflect.StructField) bool {
 	return f.Tag.Get("param") != ""
 }
 
-// jsonName extracts the JSON property name from a struct field's `json`
-// tag. Returns ("", false) for fields with no tag or tagged "-".
+// jsonName returns ("", false) for fields with no json tag or tagged "-".
 func jsonName(f reflect.StructField) (string, bool) {
 	tag := f.Tag.Get("json")
 	if tag == "" || tag == "-" {
@@ -322,8 +283,7 @@ func jsonName(f reflect.StructField) (string, bool) {
 	return name, true
 }
 
-// snakeCase converts a Go field name to snake_case, collapsing acronyms:
-// TaskID → task_id, OtherTaskID → other_task_id.
+// snakeCase collapses acronyms: TaskID → task_id, OtherTaskID → other_task_id.
 func snakeCase(name string) string {
 	var b strings.Builder
 	runes := []rune(name)

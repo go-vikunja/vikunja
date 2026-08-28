@@ -22,14 +22,10 @@ import (
 	"code.vikunja.io/api/pkg/models"
 )
 
-// ErrScopeDenied is returned by the dispatcher when the token attached to
-// the call context does not have the (resource, op) scope required to invoke
-// the tool. The AddTool wrapper renders this as an IsError tool result so
-// the client sees a structured failure rather than a JSON-RPC protocol error.
+// ErrScopeDenied renders as an IsError tool result, not a JSON-RPC protocol error.
 var ErrScopeDenied = errors.New("mcp: tool not authorized for this token")
 
-// tokenAuthorizes maps an (mcp resource, op) pair onto the (group, permission)
-// pair the API token model stores; a nil token denies.
+// An mcp (resource, op) pair maps onto the (group, permission) pair the token model stores.
 func tokenAuthorizes(token *models.APIToken, resourceName string, op Op) bool {
 	return token.HasPermission(resourceName, op.Permission())
 }

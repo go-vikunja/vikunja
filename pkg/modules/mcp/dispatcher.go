@@ -30,22 +30,13 @@ import (
 	"code.vikunja.io/api/pkg/web/handler"
 )
 
-// ErrToolNotFound is returned when Dispatch is called for a tool name that
-// has not been registered. Callers should map this to an MCP tool result
-// with IsError=true (per the SDK convention for missing tools), not to a
-// JSON-RPC protocol error.
+// ErrToolNotFound maps to an IsError tool result, not a JSON-RPC protocol error.
 var ErrToolNotFound = errors.New("mcp: tool not found")
 
-// ErrNoUserInContext is returned when Dispatch is invoked without a user
-// in ctx. The entry handler always sets one, so hitting this means either a
-// programming bug or someone calling Dispatch outside the HTTP pipeline.
+// ErrNoUserInContext means Dispatch was called outside the HTTP pipeline, which always sets a user.
 var ErrNoUserInContext = errors.New("mcp: no user in context")
 
-// crudFuncs are the framework-agnostic Do* entry points the dispatcher
-// invokes. The package-level defaults point at handler.Do*; tests swap
-// them out so they can run without a database connection (handler.Do*
-// opens an xorm session, which is fine in integration tests but not in
-// the dispatcher unit tests that exercise routing logic only).
+// crudFuncs exists so the dispatcher's routing tests can run without a database.
 type crudFuncs struct {
 	doCreate  func(context.Context, handler.CObject, web.Auth) error
 	doReadOne func(context.Context, handler.CObject, web.Auth) (int, error)
@@ -62,39 +53,23 @@ var defaultCRUD = crudFuncs{
 	doDelete:  handler.DoDelete,
 }
 
-// crud is the live set of Do* functions Dispatch uses. Tests swap it out
-// and restore it on teardown.
 var crud = defaultCRUD
 
-// Dispatch is the single entry point for every tools/call — the typed
-// per-resource tools and the do_action catalog both funnel through here
-// with raw JSON arguments. It validates the arguments against the op's
-// tag-derived schema, applies the supplied keys onto a fresh model
-// (presence-based, see apply.go), and invokes the matching handler.Do*.
-//
-// Errors fall into three categories:
-//   - ErrToolNotFound / ErrNoUserInContext / ErrScopeDenied and argument
-//     validation failures are dispatcher-level; callers translate them into
-//     IsError=true tool results. They're returned as errors (rather than
-//     *mcp.CallToolResult) so the dispatcher stays SDK-agnostic.
-//   - Errors returned by handler.Do* (model-layer permission denials,
-//     validation failures, etc.) are propagated as-is; the tool handler
-//     wraps them per the SDK's convention that domain failures be reported
-//     as tool results, not protocol errors.
+// Dispatch is the single entry point for every tools/call, typed or via
+// do_action. Every error is returned as a plain error, not an SDK type, so
+// this package stays SDK-agnostic; the caller renders them as tool results.
 func Dispatch(ctx context.Context, toolName string, rawArgs json.RawMessage) (any, error) {
 	ref, ok := lookupTool(toolName)
 	if !ok {
 		return nil, fmt.Errorf("%w: %s", ErrToolNotFound, toolName)
 	}
 
-	// tools/list and find_action already hide gated resources; do_action
-	// would otherwise reach them by name.
+	// tools/list and find_action hide gated resources; do_action would reach them by name.
 	if !ref.resource.enabled() {
 		return nil, fmt.Errorf("%w: %s", ErrToolNotFound, toolName)
 	}
 
-	// Fail closed: do_action must not reach a tool the token was never
-	// registered for.
+	// Fail closed: do_action must not reach a tool the token was never registered for.
 	if !tokenAuthorizes(TokenFromContext(ctx), ref.resource.Name, ref.op) {
 		return nil, fmt.Errorf("%w: %s", ErrScopeDenied, toolName)
 	}
@@ -167,9 +142,7 @@ func Dispatch(ctx context.Context, toolName string, rawArgs json.RawMessage) (an
 	return nil, fmt.Errorf("mcp: unsupported op %d for tool %s", ref.op, toolName)
 }
 
-// validationFailure renders a `valid:` tag failure for a tool result, which is
-// plain text — ValidationHTTPError keeps the offending field names out of its
-// message.
+// ValidationHTTPError keeps the offending field names out of its message, but a tool result is plain text.
 func validationFailure(toolName string, err error) error {
 	var invalid models.ValidationHTTPError
 	if errors.As(err, &invalid) && len(invalid.InvalidFields) > 0 {
@@ -178,9 +151,7 @@ func validationFailure(toolName string, err error) error {
 	return fmt.Errorf("mcp: invalid arguments for %s: %w", toolName, err)
 }
 
-// suppliedFieldNames returns the names govalidator may report for the
-// arguments the caller actually sent: the JSON property name plus the Go
-// field name, which govalidator falls back to for `json:"-"` fields.
+// Both names are needed: govalidator falls back to the Go field name for `json:"-"` fields.
 func suppliedFieldNames(model handler.CObject, spec *opSpec, args map[string]json.RawMessage) map[string]bool {
 	modelType := reflect.TypeOf(model).Elem()
 	names := make(map[string]bool, len(args)*2)
@@ -193,8 +164,7 @@ func suppliedFieldNames(model handler.CObject, spec *opSpec, args map[string]jso
 	return names
 }
 
-// readAllResult is the read_all envelope. A bare array left clients no way to
-// tell a truncated page from the last one, and no way to page on from it.
+// A bare array left clients no way to tell a truncated page from the last one.
 type readAllResult struct {
 	Items       any   `json:"items"`
 	ResultCount int   `json:"result_count"`
@@ -204,8 +174,7 @@ type readAllResult struct {
 }
 
 func newReadAllResult(items any, resultCount int, totalItems int64, page, perPage int) *readAllResult {
-	// read_all hands out user rows directly, skipping the per-parent
-	// serialisation the REST layer relies on to hide addresses.
+	// read_all hands out user rows directly, skipping the REST serialisation that hides addresses.
 	if users, ok := items.([]*user.User); ok {
 		for _, u := range users {
 			if u != nil {

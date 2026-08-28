@@ -33,19 +33,13 @@ import (
 	"xorm.io/xorm"
 )
 
-// stubCObject is a test double for handler.CObject that records which method
-// was invoked by the dispatcher. Each instance must be checked individually,
-// because handler.Do* runs against a fresh Model() per call. The json tags
-// drive the reflected input schema like on a real model.
+// Each instance must be checked individually: handler.Do* runs against a fresh Model() per call.
 type stubCObject struct {
 	ID    int64  `json:"id"`
 	Title string `json:"title"`
 
-	// called records the most recent CRUD method invoked on this instance.
 	called string
-	// returnErr is returned from the next CRUD method invoked. Permission
-	// checks always allow access; failure scenarios are exercised by the
-	// model layer in the integration tests.
+	// Permission checks always allow; denial scenarios live in the integration tests.
 	returnErr error
 }
 
@@ -77,8 +71,7 @@ func (s *stubCObject) Delete(_ *xorm.Session, _ web.Auth) error {
 	return s.returnErr
 }
 
-// stubTracker tracks the *last* instance handed out by EmptyStruct so the
-// test can inspect which method was invoked after the dispatcher has run.
+// stubTracker keeps the last instance EmptyStruct handed out, for post-dispatch inspection.
 type stubTracker struct {
 	last    *stubCObject
 	nextErr error
@@ -90,10 +83,7 @@ func (s *stubTracker) empty() handler.CObject {
 	return o
 }
 
-// newAuthedCtx returns a context with a test user and an API token that
-// authorizes every (resource, op) on the "stubs" resource — sufficient for
-// the dispatcher's wiring tests. Scope-denied scenarios are covered in
-// scope_test.go with explicitly narrower tokens.
+// The token authorizes every op on "stubs"; scope denial is covered in scope_test.go.
 func newAuthedCtx(t *testing.T) context.Context {
 	t.Helper()
 	u := &user.User{ID: 42}
@@ -106,11 +96,7 @@ func newAuthedCtx(t *testing.T) context.Context {
 	return WithToken(ctx, token)
 }
 
-// installStubCRUD swaps the dispatcher's Do* function set with test doubles
-// that drive the model's CRUD methods directly (no xorm session). It
-// returns a teardown that restores the original handler.Do* set. Tests
-// that need to verify dispatch routing without standing up the DB should
-// call this at the top.
+// installStubCRUD drives the model's CRUD methods directly so routing tests need no database.
 func installStubCRUD(t *testing.T) {
 	t.Helper()
 	saved := crud
@@ -151,10 +137,7 @@ func TestDispatchNoUser(t *testing.T) {
 		Ops:   OpReadOne,
 	}))
 
-	// Attach an authorising token but no user — the scope check passes,
-	// the user lookup inside dispatchPrepared fails. Ordering matters: the
-	// scope check runs first so callers without a token never reach the
-	// user check.
+	// Ordering matters: the scope check runs before the user lookup.
 	token := &models.APIToken{
 		APIPermissions: models.APIPermissions{
 			"stubs": []string{"read_one"},
@@ -218,8 +201,7 @@ func TestDispatchCallsReadAll(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, tracker.last)
 	assert.Equal(t, "ReadAll", tracker.last.called)
-	// The stub's ReadAll echoes the search/page/per_page so we can confirm
-	// the dispatcher threaded the wrapper's pagination fields through.
+	// The stub's ReadAll echoes search/page/per_page back.
 	env := requireReadAllResult(t, out)
 	assert.Equal(t, []string{"foo"}, env.Items)
 	assert.Equal(t, 2, env.Page)
@@ -235,8 +217,6 @@ func requireReadAllResult(t *testing.T, out any) *readAllResult {
 	return env
 }
 
-// dispatchReadAll registers a stub resource and lists it with the given raw
-// arguments.
 func dispatchReadAll(t *testing.T, rawArgs string) (any, error) {
 	t.Helper()
 	resetRegistry(t)
@@ -252,8 +232,7 @@ func dispatchReadAll(t *testing.T, rawArgs string) (any, error) {
 }
 
 func TestDispatchReadAllPaginationDefaults(t *testing.T) {
-	// Omitted page/per_page must land on page 1 with the server maximum —
-	// passing them through as zero makes the models drop the LIMIT clause.
+	// Passing page/per_page through as zero makes the models drop the LIMIT clause.
 	out, err := dispatchReadAll(t, `{}`)
 	require.NoError(t, err)
 	env := requireReadAllResult(t, out)
@@ -297,9 +276,7 @@ func TestDispatchGatedResourceIsNotFound(t *testing.T) {
 	assert.Empty(t, tracker.last.called, "a gated resource must never reach its model")
 }
 
-// validatedStub carries a `valid:` tag so the dispatcher's tag validation has
-// something to reject. The embedded stub supplies the CRUD methods; schema
-// derivation skips anonymous fields, so only "amount" becomes an argument.
+// Schema derivation skips anonymous fields, so only "amount" becomes an argument.
 type validatedStub struct {
 	Amount int64 `json:"amount" valid:"range(0|10)"`
 	stubCObject

@@ -16,17 +16,9 @@
 
 package mcp
 
-// The action catalog: TierCatalog resources don't get first-class tools in
-// tools/list — they're reachable through two meta-tools instead, keeping the
-// per-token tool list (and the tokens it costs an LLM client) small while
-// still exposing the long tail of CRUD resources.
-//
-//   - find_action lists the catalog actions the requesting token's scopes
-//     authorise. Without arguments it returns a cheap name+description
-//     index; naming an action or resource returns full input schemas.
-//   - do_action invokes one action by name. It funnels into the same
-//     Dispatch path as the typed tools, so schema validation and the
-//     per-call scope re-check apply identically.
+// TierCatalog resources reach clients through the find_action / do_action
+// meta-tools instead of first-class tools, keeping tools/list (and the tokens
+// it costs an LLM client) small while still exposing the long tail of CRUD.
 
 import (
 	"context"
@@ -44,7 +36,6 @@ const (
 	toolDoAction   = "do_action"
 )
 
-// actionInfo is one find_action result entry.
 type actionInfo struct {
 	Name        string             `json:"name"`
 	Description string             `json:"description"`
@@ -84,9 +75,7 @@ func doActionSchema() *jsonschema.Schema {
 	}
 }
 
-// installCatalogTools registers the two meta-tools. They're always present
-// for an mcp:access token; a token with no catalog scopes just gets an
-// empty find_action result, and do_action re-checks scopes per call.
+// The meta-tools are always present: a token with no catalog scopes just gets an empty find_action result.
 func installCatalogTools(srv *mcp.Server) {
 	srv.AddTool(&mcp.Tool{
 		Name: toolFindAction,
@@ -102,9 +91,7 @@ func installCatalogTools(srv *mcp.Server) {
 	}, doActionHandler)
 }
 
-// catalogActions returns the catalog entries the token authorises,
-// optionally filtered to one action or resource, with schemas attached when
-// the filter is specific enough to keep the payload small.
+// Schemas are attached only when a filter narrows the result, to keep the payload small.
 func catalogActions(token *models.APIToken, action, resource string) []actionInfo {
 	withSchemas := action != "" || resource != ""
 	out := []actionInfo{}
@@ -119,7 +106,7 @@ func catalogActions(token *models.APIToken, action, resource string) []actionInf
 			if r.Ops&op == 0 || !tokenAuthorizes(token, r.Name, op) {
 				continue
 			}
-			name := r.Name + "_" + op.ToolSuffix()
+			name := r.Name + "_" + op.Permission()
 			if action != "" && name != action {
 				continue
 			}
@@ -165,8 +152,7 @@ func doActionHandler(ctx context.Context, req *mcp.CallToolRequest) (*mcp.CallTo
 			Content: []mcp.Content{&mcp.TextContent{Text: "do_action requires an \"action\" name; discover actions with find_action"}},
 		}, nil
 	}
-	// Dispatch validates the arguments and re-checks the token's scope, so
-	// do_action can't reach anything a direct tool call couldn't.
+	// Dispatch re-checks the token's scope, so do_action can't reach anything a direct call couldn't.
 	return rawToolHandler(args.Action)(ctx, &mcp.CallToolRequest{
 		Params: &mcp.CallToolParamsRaw{Name: args.Action, Arguments: args.Arguments},
 	})
