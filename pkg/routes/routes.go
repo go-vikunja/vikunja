@@ -288,7 +288,7 @@ func RegisterRoutes(e *echo.Echo) {
 	registerAPIRoutes(a, wsRateLimit)
 
 	// /api/v2 — Huma-backed API, scaffolded alongside /api/v1.
-	a2 := e.Group("/api/v2")
+	a2 := e.Group(apiV2Prefix)
 	registerAPIRoutesV2(e, a2, wsRateLimit)
 
 	// Collect routes for API token permissions
@@ -381,6 +381,8 @@ func noStoreCacheControl() echo.MiddlewareFunc {
 	}
 }
 
+const apiV2Prefix = "/api/v2"
+
 const v2AdminPathPrefix = "/api/v2/admin"
 
 // gateV2AdminRoutes reuses v1's RequireFeature/RequireInstanceAdmin gate (both
@@ -432,8 +434,10 @@ func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, wsRateLimit echo.Middlewar
 	// does an exact (method, path) match per permission, so the route check is
 	// skipped in the token middleware (see api_tokens.go) and the mcp:access
 	// scope is gated inline inside the handler via APIToken.HasMCPAccess().
-	a.Any("/mcp", mcpmodule.Handler)
-	a.Any("/mcp/*", mcpmodule.Handler)
+	mcpmodule.RegisterResources()
+	mcpPath := strings.TrimPrefix(mcpmodule.RoutePrefix, apiV2Prefix)
+	a.Any(mcpPath, mcpmodule.Handler)
+	a.Any(mcpPath+"/*", mcpmodule.Handler)
 
 	// Resources self-register via init(); RegisterAll runs them all + AutoPatch.
 	apiv2.RegisterAll(api)

@@ -176,7 +176,7 @@ func allResources() []Resource {
 
 // installToolsForToken registers one tool per (typed resource, op) pair the
 // given token's APIPermissions authorise, plus the catalog meta-tools.
-// Called from newServer (mcp.go) at session-init time. A nil token (which
+// Called from newServer (mcp.go) per request. A nil token (which
 // should never happen in production because the entry handler rejects
 // unauthenticated requests) yields a server with no tools — defensive, the
 // dispatcher would also reject the call.
@@ -198,7 +198,7 @@ func installToolsForToken(srv *mcp.Server, token *models.APIToken) {
 		}
 	}
 	installUsersSearchTool(srv, token)
-	installCatalogTools(srv, token)
+	installCatalogTools(srv)
 }
 
 // rawToolHandler adapts Dispatch to the SDK's low-level ToolHandler. Domain
