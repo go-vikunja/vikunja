@@ -627,6 +627,16 @@ func setConfigFromEnv() error {
 	return viper.MergeConfigMap(configMap)
 }
 
+// configFileOverride pins the config file, bypassing the search path. Set via
+// the --config flag.
+var configFileOverride string
+
+// SetConfigFile pins the config file InitConfig will load. Must be called before
+// InitConfig.
+func SetConfigFile(path string) {
+	configFileOverride = path
+}
+
 // InitConfig initializes the config, sets defaults etc.
 func InitConfig() {
 
@@ -641,20 +651,32 @@ func InitConfig() {
 	log.ConfigureStandardLogger(LogEnabled.GetBool(), LogStandard.GetString(), LogPath.GetString(), LogLevel.GetString(), LogFormat.GetString())
 
 	// Load the config file
-	viper.AddConfigPath(ServiceRootpath.GetString())
-	viper.AddConfigPath("/etc/vikunja/")
-
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		log.Debugf("No home directory found, not using config from ~/.config/vikunja/. Error was: %s\n", err.Error())
+	if configFileOverride != "" {
+		viper.SetConfigFile(configFileOverride)
 	} else {
-		viper.AddConfigPath(path.Join(homeDir, ".config", "vikunja"))
+		viper.AddConfigPath(ServiceRootpath.GetString())
+		viper.AddConfigPath("/etc/vikunja/")
+
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			log.Debugf("No home directory found, not using config from ~/.config/vikunja/. Error was: %s\n", err.Error())
+		} else {
+			viper.AddConfigPath(path.Join(homeDir, ".config", "vikunja"))
+		}
+
+		viper.AddConfigPath(".")
+		// Must not run in the override branch: SetConfigName resets the
+		// explicitly set config file in viper.
+		viper.SetConfigName("config")
 	}
 
-	viper.AddConfigPath(".")
-	viper.SetConfigName("config")
+	err := viper.ReadInConfig()
 
-	err = viper.ReadInConfig()
+	// An explicitly requested config file that can't be read is fatal — silently
+	// falling back to defaults is how people end up debugging the wrong config.
+	if configFileOverride != "" && err != nil {
+		log.Fatalf("Could not read config file %s: %s", configFileOverride, err.Error())
+	}
 
 	if viper.ConfigFileUsed() != "" {
 		log.Infof("Using config file: %s", viper.ConfigFileUsed())

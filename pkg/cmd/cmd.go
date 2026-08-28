@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"os"
 
+	"code.vikunja.io/api/pkg/config"
+
 	"github.com/spf13/cobra"
 )
 
@@ -35,8 +37,17 @@ alpine areas of the Andes and a relative of the llama.
 Vikunja is a self-hosted To-Do list application with a web app and mobile apps for all platforms. It is licensed under the AGPL-3.0-or-later.
 
 Find out more at vikunja.io.`,
+	PersistentPreRun: func(cmd *cobra.Command, _ []string) {
+		if path, err := cmd.Flags().GetString("config"); err == nil && path != "" {
+			config.SetConfigFile(path)
+		}
+	},
 	PreRun: webCmd.PreRun,
 	Run:    webCmd.Run,
+}
+
+func init() {
+	rootCmd.PersistentFlags().StringP("config", "c", "", "Path to the config file to use. Bypasses the default search path.")
 }
 
 // Execute starts the application
