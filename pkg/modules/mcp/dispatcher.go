@@ -83,11 +83,8 @@ func Dispatch(ctx context.Context, toolName string, rawArgs json.RawMessage) (an
 		return nil, fmt.Errorf("%w: %s", ErrToolNotFound, toolName)
 	}
 
-	// Scope check first — never touch model state for a tool the caller
-	// isn't authorized to invoke. This guards against the (rare) case where
-	// the per-session tool registration in newServer registered a tool the
-	// current request's token doesn't have a scope for: the SDK caches the
-	// *Server across requests, but the API token is per-HTTP-request.
+	// Fail closed: do_action must not reach a tool the token was never
+	// registered for.
 	if !tokenAuthorizes(TokenFromContext(ctx), ref.resource.Name, ref.op) {
 		return nil, fmt.Errorf("%w: %s", ErrScopeDenied, toolName)
 	}

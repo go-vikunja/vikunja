@@ -288,7 +288,7 @@ func RegisterRoutes(e *echo.Echo) {
 	setupPprof(e)
 
 	// /api/v2 — Huma-backed API, scaffolded alongside /api/v1.
-	a2 := e.Group("/api/v2")
+	a2 := e.Group(apiV2Prefix)
 	// Share the BasicAuth failure budget with CalDAV and feeds.
 	a2.Use(pathScoped(func(p string) bool { return p == "/api/v2/notifications.atom" }, basicAuthRateLimit))
 	registerAPIRoutesV2(e, a2, noAuthRateLimit, refreshRateLimit)
@@ -382,6 +382,8 @@ func noStoreCacheControl() echo.MiddlewareFunc {
 		}
 	}
 }
+
+const apiV2Prefix = "/api/v2"
 
 // match receives the matched echo route template, not the request URL.
 // v2 can't use an Echo sub-group here: that would split the Huma API and drop
@@ -479,8 +481,10 @@ func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, noAuthRateLimit, refreshRa
 	// does an exact (method, path) match per permission, so the route check is
 	// skipped in the token middleware (see api_tokens.go) and the mcp:access
 	// scope is gated inline inside the handler via APIToken.HasMCPAccess().
-	a.Any("/mcp", mcpmodule.Handler)
-	a.Any("/mcp/*", mcpmodule.Handler)
+	mcpmodule.RegisterResources()
+	mcpPath := strings.TrimPrefix(mcpmodule.RoutePrefix, apiV2Prefix)
+	a.Any(mcpPath, mcpmodule.Handler)
+	a.Any(mcpPath+"/*", mcpmodule.Handler)
 
 	// Resources self-register via init(); RegisterAll runs them all + AutoPatch.
 	apiv2.RegisterAll(api)

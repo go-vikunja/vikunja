@@ -18,7 +18,7 @@ package mcp
 
 // The action catalog: TierCatalog resources don't get first-class tools in
 // tools/list — they're reachable through two meta-tools instead, keeping the
-// per-session tool list (and the tokens it costs an LLM client) small while
+// per-token tool list (and the tokens it costs an LLM client) small while
 // still exposing the long tail of CRUD resources.
 //
 //   - find_action lists the catalog actions the requesting token's scopes
@@ -87,13 +87,13 @@ func doActionSchema() *jsonschema.Schema {
 // installCatalogTools registers the two meta-tools. They're always present
 // for an mcp:access token; a token with no catalog scopes just gets an
 // empty find_action result, and do_action re-checks scopes per call.
-func installCatalogTools(srv *mcp.Server, token *models.APIToken) {
+func installCatalogTools(srv *mcp.Server) {
 	srv.AddTool(&mcp.Tool{
 		Name: toolFindAction,
 		Description: "Discover additional Vikunja actions beyond the tools listed here: sharing projects with users or teams, task labels and relations (subtasks), team members, project views and more. " +
 			"Returns the actions your token authorises; pass action or resource to get full input schemas. Invoke them with do_action.",
 		InputSchema: findActionSchema(),
-	}, findActionHandler(token))
+	}, findActionHandler)
 
 	srv.AddTool(&mcp.Tool{
 		Name:        toolDoAction,
@@ -133,29 +133,27 @@ func catalogActions(token *models.APIToken, action, resource string) []actionInf
 	return out
 }
 
-func findActionHandler(token *models.APIToken) mcp.ToolHandler {
-	return func(_ context.Context, req *mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		var args findActionArgs
-		if len(req.Params.Arguments) > 0 {
-			if err := json.Unmarshal(req.Params.Arguments, &args); err != nil {
-				//nolint:nilerr // IsError tool result, not a JSON-RPC protocol error
-				return &mcp.CallToolResult{
-					IsError: true,
-					Content: []mcp.Content{&mcp.TextContent{Text: "invalid arguments: " + err.Error()}},
-				}, nil
-			}
+func findActionHandler(ctx context.Context, req *mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	var args findActionArgs
+	if len(req.Params.Arguments) > 0 {
+		if err := json.Unmarshal(req.Params.Arguments, &args); err != nil {
+			//nolint:nilerr // IsError tool result, not a JSON-RPC protocol error
+			return &mcp.CallToolResult{
+				IsError: true,
+				Content: []mcp.Content{&mcp.TextContent{Text: "invalid arguments: " + err.Error()}},
+			}, nil
 		}
-
-		result := map[string]any{"actions": catalogActions(token, args.Action, args.Resource)}
-		body, err := json.Marshal(result)
-		if err != nil {
-			return nil, fmt.Errorf("mcp: marshal find_action result: %w", err)
-		}
-		return &mcp.CallToolResult{
-			Content:           []mcp.Content{&mcp.TextContent{Text: string(body)}},
-			StructuredContent: result,
-		}, nil
 	}
+
+	result := map[string]any{"actions": catalogActions(TokenFromContext(ctx), args.Action, args.Resource)}
+	body, err := json.Marshal(result)
+	if err != nil {
+		return nil, fmt.Errorf("mcp: marshal find_action result: %w", err)
+	}
+	return &mcp.CallToolResult{
+		Content:           []mcp.Content{&mcp.TextContent{Text: string(body)}},
+		StructuredContent: result,
+	}, nil
 }
 
 func doActionHandler(ctx context.Context, req *mcp.CallToolRequest) (*mcp.CallToolResult, error) {

@@ -210,3 +210,44 @@ func TestMCP_SessionRoundTrip(t *testing.T) {
 	e.ServeHTTP(pingRec, pingReq)
 	require.Equal(t, http.StatusOK, pingRec.Code, "body: %s", pingRec.Body.String())
 }
+
+func TestMCP_SessionIDDoesNotCarryIdentity(t *testing.T) {
+	// A leaked Mcp-Session-Id must not let a second token inherit the tool set
+	// (and thus the scopes) of whoever opened the session.
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+
+	initReq := mcpRequest(http.MethodPost, `{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"0.1"}}}`)
+	initReq.Header.Set(echo.HeaderAuthorization, "Bearer "+mcpFullProjectsToken)
+	initRec := httptest.NewRecorder()
+	e.ServeHTTP(initRec, initReq)
+	require.Equal(t, http.StatusOK, initRec.Code, "body: %s", initRec.Body.String())
+	sessionID := initRec.Header().Get("Mcp-Session-Id")
+	require.NotEmpty(t, sessionID)
+
+	listReq := mcpRequest(http.MethodPost, `{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}`)
+	listReq.Header.Set(echo.HeaderAuthorization, "Bearer "+mcpOnlyToken)
+	listReq.Header.Set("Mcp-Session-Id", sessionID)
+	listRec := httptest.NewRecorder()
+	e.ServeHTTP(listRec, listReq)
+	require.Equal(t, http.StatusOK, listRec.Code, "body: %s", listRec.Body.String())
+
+	names := toolNamesFromList(t, readMCPJSON(t, listRec.Body.String()))
+	assert.Equal(t, map[string]bool{"find_action": true, "do_action": true}, names,
+		"mcp-only token must only see the catalog meta-tools, got %v", names)
+}
+
+func TestMCP_NonLoopbackHostAccepted(t *testing.T) {
+	// The SDK's DNS-rebinding guard would 403 the usual reverse-proxy-to-
+	// 127.0.0.1 deployment.
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+
+	req := mcpRequest(http.MethodPost, `{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"0.1"}}}`)
+	req.Header.Set(echo.HeaderAuthorization, "Bearer "+mcpOnlyToken)
+	req.Host = "vikunja.example.com"
+	rec := httptest.NewRecorder()
+	e.ServeHTTP(rec, req)
+
+	require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+}
