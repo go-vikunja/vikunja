@@ -480,7 +480,10 @@ func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, noAuthRateLimit, refreshRa
 	// CanDoAPIRoute matches (method, path) exactly, so the token middleware skips
 	// the route check and the handler gates mcp:access via HasMCPAccess() instead.
 	mcpmodule.RegisterResources()
-	mcpPath := strings.TrimPrefix(mcpmodule.RoutePrefix, apiV2Prefix)
+	mcpPath, ok := strings.CutPrefix(mcpmodule.RoutePrefix, apiV2Prefix)
+	if !ok {
+		panic("mcp: RoutePrefix " + mcpmodule.RoutePrefix + " is not under " + apiV2Prefix)
+	}
 	a.Any(mcpPath, mcpmodule.Handler)
 	a.Any(mcpPath+"/*", mcpmodule.Handler)
 
