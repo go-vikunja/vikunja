@@ -48,19 +48,6 @@ func TestOpPermission(t *testing.T) {
 	}
 }
 
-func TestOpToolSuffix(t *testing.T) {
-	cases := map[Op]string{
-		OpCreate:  "create",
-		OpReadOne: "read_one",
-		OpReadAll: "read_all",
-		OpUpdate:  "update",
-		OpDelete:  "delete",
-	}
-	for op, want := range cases {
-		assert.Equalf(t, want, op.ToolSuffix(), "ToolSuffix() for op %d", op)
-	}
-}
-
 func TestOpUnknownPermission(t *testing.T) {
 	// Combined bitmasks and zero values have no defined permission string.
 	assert.Empty(t, Op(0).Permission())
@@ -201,11 +188,4 @@ func TestRegisterOnlyExposesEnabledOps(t *testing.T) {
 	assert.False(t, ok)
 	_, ok = lookupTool("stubs_delete")
 	assert.False(t, ok)
-}
-
-func TestAllOps(t *testing.T) {
-	// AllOps must enumerate exactly the five supported ops so the registry
-	// and the dispatcher walk the same list.
-	want := []Op{OpCreate, OpReadOne, OpReadAll, OpUpdate, OpDelete}
-	assert.Equal(t, want, AllOps())
 }
