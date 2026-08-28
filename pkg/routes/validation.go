@@ -17,47 +17,13 @@
 package routes
 
 import (
-	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
-
-	"github.com/asaskevich/govalidator"
 )
 
 // CustomValidator is a dummy struct to use govalidator with echo
 type CustomValidator struct{}
 
-func init() {
-	govalidator.TagMap["time"] = func(str string) bool {
-		return govalidator.IsTime(str, "15:04")
-	}
-
-	// Custom validator for database TEXT fields that adapts to the database being used
-	govalidator.TagMap["dbtext"] = func(str string) bool {
-		// Get the current database dialect
-		dialect := db.GetDialect()
-
-		// Default limit for MySQL and unknown databases (65KB safely under TEXT limit)
-		maxLength := 65000
-
-		// For databases that support larger text fields
-		if dialect == "postgres" || dialect == "sqlite3" {
-			maxLength = 1048576 // ~1MB limit for PostgreSQL and SQLite
-		}
-
-		return len(str) <= maxLength
-	}
-}
-
 // Validate validates stuff
 func (cv *CustomValidator) Validate(i interface{}) error {
-	if _, err := govalidator.ValidateStruct(i); err != nil {
-
-		var errs []string
-		for field, e := range govalidator.ErrorsByField(err) {
-			errs = append(errs, field+": "+e)
-		}
-
-		return models.InvalidFieldError(errs)
-	}
-	return nil
+	return models.ValidateStruct(i)
 }
