@@ -163,6 +163,7 @@ func buildOpSpec(modelType reflect.Type, op Op, r *Resource) (*opSpec, error) {
 	}
 
 	if op == OpReadAll {
+		addQueryOnlyArgs(modelType, props, fields, excluded)
 		props[argSearch] = &jsonschema.Schema{Type: "string", Description: "Filter results by a case-insensitive substring match on the resource's primary text field."}
 		props[argPage] = &jsonschema.Schema{Type: "integer", Description: "1-based page number; 0 or omitted uses the server default (first page)."}
 		props[argPerPage] = &jsonschema.Schema{Type: "integer", Description: "Page size; 0 or omitted uses the server default."}
@@ -185,6 +186,23 @@ func buildOpSpec(modelType reflect.Type, op Op, r *Resource) (*opSpec, error) {
 // propSchema maps a struct field's Go type onto a JSON Schema property.
 // Returns false for kinds MCP doesn't expose (nested model structs/slices —
 // those relations have their own resources).
+// addQueryOnlyArgs exposes json:"-" fields that carry a query tag (REST
+// URL parameters like TaskCollection.Expand) as listing arguments under
+// their query name.
+func addQueryOnlyArgs(modelType reflect.Type, props map[string]*jsonschema.Schema, fields map[string]int, excluded func(string) bool) {
+	for i := 0; i < modelType.NumField(); i++ {
+		f := modelType.Field(i)
+		name := f.Tag.Get("query")
+		if _, hasJSON := jsonName(f); hasJSON || name == "" || !f.IsExported() || excluded(name) {
+			continue
+		}
+		if ps, ok := propSchema(f); ok {
+			props[name] = ps
+			fields[name] = i
+		}
+	}
+}
+
 func propSchema(f reflect.StructField) (*jsonschema.Schema, bool) {
 	s := &jsonschema.Schema{}
 	t := f.Type
@@ -226,9 +244,15 @@ func propSchema(f reflect.StructField) (*jsonschema.Schema, bool) {
 	if enum == "" {
 		enum = f.Tag.Get("enums")
 	}
-	if enum != "" && s.Type == "string" {
-		for _, v := range strings.Split(enum, ",") {
-			s.Enum = append(s.Enum, v)
+	if enum != "" {
+		target := s
+		if s.Type == "array" {
+			target = s.Items
+		}
+		if target.Type == "string" {
+			for _, v := range strings.Split(enum, ",") {
+				target.Enum = append(target.Enum, v)
+			}
 		}
 	}
 	return propWithDoc(s, f), true

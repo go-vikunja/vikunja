@@ -79,9 +79,12 @@ func TestSchema_TaskReadAllUsesTaskCollection(t *testing.T) {
 
 	props := spec.schema.Properties
 	// The filter surface comes from TaskCollection's query-tagged fields.
-	for _, want := range []string{"filter", "sort_by", "order_by", "filter_include_nulls", "project_id", argSearch, argPage, argPerPage} {
+	for _, want := range []string{"filter", "sort_by", "order_by", "filter_include_nulls", "filter_timezone", "expand", "project_id", argSearch, argPage, argPerPage} {
 		assert.Contains(t, props, want)
 	}
+	// expand is json:"-" in REST (query-only) but still an argument here.
+	assert.Equal(t, "array", props["expand"].Type)
+	assert.Contains(t, props["expand"].Items.Enum, "subtasks")
 	// "s" duplicates search and the view path stays REST-only.
 	assert.NotContains(t, props, "s")
 	assert.NotContains(t, props, "project_view_id")
