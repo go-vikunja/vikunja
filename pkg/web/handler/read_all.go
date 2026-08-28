@@ -32,6 +32,32 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
+// Shared with the MCP dispatcher, which renders them as plain tool-result text.
+var (
+	ErrNegativePage    = errors.New(`invalid value for "page": must not be negative`)
+	ErrNegativePerPage = errors.New(`invalid value for "per_page": must not be negative`)
+)
+
+// NormalizePagination clamps a (page, per_page) pair to what the models expect:
+// page < 1 makes them drop the LIMIT clause, so an unset page becomes 1 and an
+// unset or oversized per_page the configured maximum.
+func NormalizePagination(page, perPage int) (int, int, error) {
+	if page < 0 {
+		return 0, 0, ErrNegativePage
+	}
+	if page == 0 {
+		page = 1
+	}
+	if perPage < 0 {
+		return 0, 0, ErrNegativePerPage
+	}
+	maxPerPage := vconfig.ServiceMaxItemsPerPage.GetInt()
+	if perPage == 0 || perPage > maxPerPage {
+		perPage = maxPerPage
+	}
+	return page, perPage, nil
+}
+
 // ReadAllWeb is the webhandler to get all objects of a type
 func (c *WebHandler) ReadAllWeb(ctx *echo.Context) error {
 	// Get our model
@@ -62,9 +88,6 @@ func (c *WebHandler) ReadAllWeb(ctx *echo.Context) error {
 		log.Error(err.Error())
 		return echo.NewHTTPError(http.StatusBadRequest, "Bad page requested.").Wrap(err)
 	}
-	if pageNumber < 0 {
-		return echo.NewHTTPError(http.StatusBadRequest, "Page number cannot be negative.")
-	}
 
 	// Items per page
 	var perPageNumber int
@@ -78,15 +101,10 @@ func (c *WebHandler) ReadAllWeb(ctx *echo.Context) error {
 			return echo.NewHTTPError(http.StatusBadRequest, "Bad per page amount requested.").Wrap(err)
 		}
 	}
-	// Set default page count
-	if perPageNumber == 0 {
-		perPageNumber = vconfig.ServiceMaxItemsPerPage.GetInt()
-	}
-	if perPageNumber < 1 {
-		return echo.NewHTTPError(http.StatusBadRequest, "Per page amount cannot be negative.")
-	}
-	if perPageNumber > vconfig.ServiceMaxItemsPerPage.GetInt() {
-		perPageNumber = vconfig.ServiceMaxItemsPerPage.GetInt()
+
+	pageNumber, perPageNumber, err = NormalizePagination(pageNumber, perPageNumber)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error()).Wrap(err)
 	}
 
 	// Search
