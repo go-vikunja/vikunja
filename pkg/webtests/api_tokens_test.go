@@ -396,3 +396,23 @@ func TestAPITokenLinkShareCollision(t *testing.T) {
 		})
 	})
 }
+
+// Fixture permissions bypass the validation Create runs, so a scope group that
+// no route produces silently "works" in tests while no real token can grant it.
+func TestAPITokenFixturesHaveValidPermissions(t *testing.T) {
+	_, err := setupTestEnv()
+	require.NoError(t, err)
+
+	s := db.NewSession()
+	defer s.Close()
+
+	tokens := []*models.APIToken{}
+	require.NoError(t, s.Find(&tokens))
+	require.NotEmpty(t, tokens)
+
+	for _, token := range tokens {
+		t.Run(strconv.FormatInt(token.ID, 10), func(t *testing.T) {
+			assert.NoError(t, models.PermissionsAreValid(token.APIPermissions))
+		})
+	}
+}
