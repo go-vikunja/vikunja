@@ -679,9 +679,16 @@ func InitConfig() {
 	}
 
 	// Relative paths belong to the pinned install, not to the caller's cwd.
-	if configFileOverride != "" && !viper.InConfig(string(ServiceRootpath)) {
+	if configFileOverride != "" {
 		if configDir, absErr := filepath.Abs(filepath.Dir(viper.ConfigFileUsed())); absErr == nil {
-			ServiceRootpath.setDefault(configDir)
+			if !viper.InConfig(string(ServiceRootpath)) {
+				ServiceRootpath.setDefault(configDir)
+			}
+			// An explicitly set value outranks a default, so it has to be
+			// rewritten at override level rather than re-defaulted.
+			if rootpath := ServiceRootpath.GetString(); !filepath.IsAbs(rootpath) {
+				ServiceRootpath.Set(filepath.Join(configDir, rootpath))
+			}
 		}
 	}
 
