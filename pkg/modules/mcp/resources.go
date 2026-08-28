@@ -23,7 +23,9 @@ package mcp
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"strings"
 	"sync"
 
 	"code.vikunja.io/api/pkg/config"
@@ -179,7 +181,7 @@ func rawToolHandler(toolName string) mcp.ToolHandler {
 			//nolint:nilerr // IsError tool result, not a JSON-RPC protocol error
 			return &mcp.CallToolResult{
 				IsError: true,
-				Content: []mcp.Content{&mcp.TextContent{Text: err.Error()}},
+				Content: []mcp.Content{&mcp.TextContent{Text: toolErrorText(err)}},
 			}, nil
 		}
 		body, marshalErr := json.Marshal(result)
@@ -194,4 +196,30 @@ func rawToolHandler(toolName string) mcp.ToolHandler {
 		}
 		return res, nil
 	}
+}
+
+// govalidator echoes the rejected value back in its message, so a field entry
+// can be as large as the payload that failed; a tool result goes straight into
+// the model's context window.
+const maxInvalidFieldRunes = 200
+
+// ValidationHTTPError keeps the offending field names out of Error(), but a tool result is plain text.
+func toolErrorText(err error) string {
+	var invalid models.ValidationHTTPError
+	if !errors.As(err, &invalid) || len(invalid.InvalidFields) == 0 {
+		return err.Error()
+	}
+	fields := make([]string, len(invalid.InvalidFields))
+	for i, f := range invalid.InvalidFields {
+		fields[i] = truncateRunes(f, maxInvalidFieldRunes)
+	}
+	return err.Error() + ": " + strings.Join(fields, "; ")
+}
+
+func truncateRunes(s string, limit int) string {
+	runes := []rune(s)
+	if len(runes) <= limit {
+		return s
+	}
+	return string(runes[:limit]) + "…"
 }

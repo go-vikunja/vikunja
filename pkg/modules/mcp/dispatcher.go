@@ -22,10 +22,8 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"strings"
 
 	"code.vikunja.io/api/pkg/models"
-	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 	"code.vikunja.io/api/pkg/web/handler"
 )
@@ -94,6 +92,20 @@ func Dispatch(ctx context.Context, toolName string, rawArgs json.RawMessage) (an
 	}
 
 	model := ref.resource.modelFor(ref.op)()
+
+	// Updates are read-modify-write: the models write a fixed column list, so a
+	// partial payload applied to a zero model would blank every omitted column.
+	// Resources without a read_one op leave web.CRUDable nil, and their Update
+	// writes a single column anyway.
+	if ref.op == OpUpdate && ref.resource.Ops&OpReadOne != 0 {
+		if err := applyArgs(model, spec, identityArgs(spec, args)); err != nil {
+			return nil, fmt.Errorf("mcp: invalid arguments for %s: %w", toolName, err)
+		}
+		if _, err := crud.doReadOne(ctx, model, u); err != nil {
+			return nil, err
+		}
+	}
+
 	if err := applyArgs(model, spec, args); err != nil {
 		return nil, fmt.Errorf("mcp: invalid arguments for %s: %w", toolName, err)
 	}
@@ -101,8 +113,8 @@ func Dispatch(ctx context.Context, toolName string, rawArgs json.RawMessage) (an
 	// The REST layer runs this via echo's CustomValidator before the handler;
 	// without it MCP writes bypass every `valid:` tag rule on the model.
 	if ref.op == OpCreate || ref.op == OpUpdate {
-		if err := models.ValidateStructFields(model, suppliedFieldNames(model, spec, args)); err != nil {
-			return nil, validationFailure(toolName, err)
+		if err := models.ValidateStruct(model); err != nil {
+			return nil, fmt.Errorf("mcp: invalid arguments for %s: %w", toolName, err)
 		}
 	}
 
@@ -120,11 +132,11 @@ func Dispatch(ctx context.Context, toolName string, rawArgs json.RawMessage) (an
 		return model, nil
 
 	case OpReadAll:
-		result, resultCount, totalItems, err := crud.doReadAll(ctx, model, u, search, page, perPage)
+		result, _, totalItems, err := crud.doReadAll(ctx, model, u, search, page, perPage)
 		if err != nil {
 			return nil, err
 		}
-		return newReadAllResult(result, resultCount, totalItems, page, perPage), nil
+		return newReadAllResult(result, totalItems, page, perPage), nil
 
 	case OpUpdate:
 		if err := crud.doUpdate(ctx, model, u); err != nil {
@@ -142,54 +154,28 @@ func Dispatch(ctx context.Context, toolName string, rawArgs json.RawMessage) (an
 	return nil, fmt.Errorf("mcp: unsupported op %d for tool %s", ref.op, toolName)
 }
 
-// ValidationHTTPError keeps the offending field names out of its message, but a tool result is plain text.
-func validationFailure(toolName string, err error) error {
-	var invalid models.ValidationHTTPError
-	if errors.As(err, &invalid) && len(invalid.InvalidFields) > 0 {
-		return fmt.Errorf("mcp: invalid arguments for %s: %s", toolName, strings.Join(invalid.InvalidFields, "; "))
-	}
-	return fmt.Errorf("mcp: invalid arguments for %s: %w", toolName, err)
-}
-
-// Both names are needed: govalidator falls back to the Go field name for `json:"-"` fields.
-func suppliedFieldNames(model handler.CObject, spec *opSpec, args map[string]json.RawMessage) map[string]bool {
-	modelType := reflect.TypeOf(model).Elem()
-	names := make(map[string]bool, len(args)*2)
-	for name := range args {
-		names[name] = true
-		if idx, ok := spec.fields[name]; ok {
-			names[modelType.Field(idx).Name] = true
-		}
-	}
-	return names
-}
-
-// A bare array left clients no way to tell a truncated page from the last one.
+// readAllResult mirrors apiv2.Paginated field for field; mcp must not import apiv2.
 type readAllResult struct {
-	Items       any   `json:"items"`
-	ResultCount int   `json:"result_count"`
-	TotalItems  int64 `json:"total_items"`
-	Page        int   `json:"page"`
-	PerPage     int   `json:"per_page"`
+	Items      any   `json:"items"`
+	Total      int64 `json:"total"`
+	Page       int   `json:"page"`
+	PerPage    int   `json:"per_page"`
+	TotalPages int64 `json:"total_pages"`
 }
 
-func newReadAllResult(items any, resultCount int, totalItems int64, page, perPage int) *readAllResult {
-	// read_all hands out user rows directly, skipping the REST serialisation that hides addresses.
-	if users, ok := items.([]*user.User); ok {
-		for _, u := range users {
-			if u != nil {
-				u.Email = ""
-			}
-		}
-	}
+func newReadAllResult(items any, total int64, page, perPage int) *readAllResult {
 	if v := reflect.ValueOf(items); !v.IsValid() || (v.Kind() == reflect.Slice && v.IsNil()) {
 		items = []any{}
 	}
+	var totalPages int64
+	if perPage > 0 {
+		totalPages = (total + int64(perPage) - 1) / int64(perPage)
+	}
 	return &readAllResult{
-		Items:       items,
-		ResultCount: resultCount,
-		TotalItems:  totalItems,
-		Page:        page,
-		PerPage:     perPage,
+		Items:      items,
+		Total:      total,
+		Page:       page,
+		PerPage:    perPage,
+		TotalPages: totalPages,
 	}
 }

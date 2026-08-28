@@ -67,6 +67,35 @@ func TestMCP_Labels_ReadAll(t *testing.T) {
 	require.NotEmpty(t, labels, "expected at least one label")
 }
 
+// The model updates a fixed column list, so a partial payload has to be merged
+// onto the stored row or every omitted column is wiped.
+func TestMCP_Labels_UpdateKeepsOmittedFields(t *testing.T) {
+	c := newMCPClient(t, mcpFullProjectsToken)
+
+	createResult := c.callTool("labels_create", map[string]any{
+		"title":     "mcp label to update",
+		"hex_color": "ff8800",
+	})
+	require.NotContains(t, createResult, "isError")
+	var created map[string]any
+	require.NoError(t, json.Unmarshal([]byte(toolResultText(t, createResult)), &created))
+	lid := int64(created["id"].(float64))
+
+	updateResult := c.callTool("labels_update", map[string]any{
+		"id":          lid,
+		"description": "only the description changes",
+	})
+	require.NotContains(t, updateResult, "isError", "update errored: %v", updateResult)
+
+	readResult := c.callTool("labels_read_one", map[string]any{"id": lid})
+	require.NotContains(t, readResult, "isError")
+	var label map[string]any
+	require.NoError(t, json.Unmarshal([]byte(toolResultText(t, readResult)), &label))
+	assert.Equal(t, "only the description changes", label["description"])
+	assert.Equal(t, "mcp label to update", label["title"])
+	assert.Equal(t, "ff8800", label["hex_color"])
+}
+
 func TestMCP_Labels_ReadOneForbidden(t *testing.T) {
 	// Label 6 is attached only to a private task on project 20 (user 13).
 	// User 1 cannot reach it.

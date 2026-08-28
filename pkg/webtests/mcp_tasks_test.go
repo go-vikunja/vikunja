@@ -75,19 +75,19 @@ func TestMCP_Tasks_ReadAllPagination(t *testing.T) {
 	require.NotContains(t, result, "isError", "read_all errored: %v", result)
 
 	var env struct {
-		Items       []map[string]any `json:"items"`
-		ResultCount int              `json:"result_count"`
-		TotalItems  int64            `json:"total_items"`
-		Page        int              `json:"page"`
-		PerPage     int              `json:"per_page"`
+		Items      []map[string]any `json:"items"`
+		Total      int64            `json:"total"`
+		Page       int              `json:"page"`
+		PerPage    int              `json:"per_page"`
+		TotalPages int64            `json:"total_pages"`
 	}
 	text := toolResultText(t, result)
 	require.NoError(t, json.Unmarshal([]byte(text), &env), "text was: %s", text)
 	assert.Equal(t, 1, env.Page, "an omitted page must default to the first one")
 	assert.Equal(t, config.ServiceMaxItemsPerPage.GetInt(), env.PerPage, "per_page must be clamped to the server maximum")
 	assert.LessOrEqual(t, len(env.Items), env.PerPage, "more items than the page size")
-	assert.Equal(t, len(env.Items), env.ResultCount)
-	assert.Positive(t, env.TotalItems)
+	assert.Positive(t, env.Total)
+	assert.Positive(t, env.TotalPages)
 
 	result = c.callTool("tasks_read_all", map[string]any{"page": -1})
 	assert.Equal(t, true, result["isError"], "a negative page must be rejected: %v", result)
@@ -194,6 +194,39 @@ func TestMCP_Tasks_UpdateClearsDone(t *testing.T) {
 	var task map[string]any
 	require.NoError(t, json.Unmarshal([]byte(toolResultText(t, readResult)), &task))
 	assert.False(t, task["done"].(bool), "done must be false after explicit clear")
+}
+
+// The model updates a fixed column list, so a partial payload has to be merged
+// onto the stored row or every omitted column is wiped.
+func TestMCP_Tasks_UpdateKeepsOmittedFields(t *testing.T) {
+	c := newMCPClient(t, mcpFullProjectsToken)
+
+	createResult := c.callTool("tasks_create", map[string]any{
+		"title":        "mcp task with all fields",
+		"project_id":   1,
+		"description":  "a description worth keeping",
+		"priority":     4,
+		"hex_color":    "ff8800",
+		"percent_done": 0.5,
+	})
+	require.NotContains(t, createResult, "isError", "create errored: %v", createResult)
+	var created map[string]any
+	require.NoError(t, json.Unmarshal([]byte(toolResultText(t, createResult)), &created))
+	tid := int64(created["id"].(float64))
+
+	updateResult := c.callTool("tasks_update", map[string]any{"id": tid, "done": true})
+	require.NotContains(t, updateResult, "isError", "update errored: %v", updateResult)
+
+	readResult := c.callTool("tasks_read_one", map[string]any{"id": tid})
+	require.NotContains(t, readResult, "isError")
+	var task map[string]any
+	require.NoError(t, json.Unmarshal([]byte(toolResultText(t, readResult)), &task))
+	assert.True(t, task["done"].(bool))
+	assert.Equal(t, "mcp task with all fields", task["title"])
+	assert.Equal(t, "a description worth keeping", task["description"])
+	assert.InDelta(t, float64(4), task["priority"], 0.0001)
+	assert.Equal(t, "ff8800", task["hex_color"])
+	assert.InDelta(t, 0.5, task["percent_done"], 0.0001)
 }
 
 func TestMCP_Tasks_Delete(t *testing.T) {

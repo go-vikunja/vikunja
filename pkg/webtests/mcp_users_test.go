@@ -17,7 +17,6 @@
 package webtests
 
 import (
-	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -29,12 +28,12 @@ func mcpSearchUsers(t *testing.T, c *mcpClient, args map[string]any) []map[strin
 	result := c.callTool("users_search", args)
 	require.NotContains(t, result, "isError", "unexpected error: %v", result)
 	var users []map[string]any
-	require.NoError(t, json.Unmarshal([]byte(toolResultText(t, result)), &users))
+	readAllItems(t, result, &users)
 	return users
 }
 
 func TestMCP_UsersSearch_ToolsList(t *testing.T) {
-	t.Run("listed with users:read_all", func(t *testing.T) {
+	t.Run("listed with other:users", func(t *testing.T) {
 		c := newMCPClient(t, mcpFullProjectsToken)
 		names := toolNamesFromList(t, c.rpc("tools/list", map[string]any{}))
 		assert.True(t, names["users_search"])
@@ -72,6 +71,14 @@ func TestMCP_UsersSearch_InProject(t *testing.T) {
 	// project 20 is not accessible to user 1
 	result := c.callTool("users_search", map[string]any{"query": "user1", "project_id": 20})
 	assert.Equal(t, true, result["isError"])
+}
+
+func TestMCP_UsersSearch_NoMatchesReturnsEmptyArray(t *testing.T) {
+	// A nil slice would serialise as null, which clients then have to special-case.
+	c := newMCPClient(t, mcpFullProjectsToken)
+	result := c.callTool("users_search", map[string]any{"query": "nobody-matches-this-query"})
+	require.NotContains(t, result, "isError", "unexpected error: %v", result)
+	assert.Contains(t, toolResultText(t, result), `"items":[]`)
 }
 
 func TestMCP_UsersSearch_MissingQuery(t *testing.T) {

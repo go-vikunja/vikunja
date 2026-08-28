@@ -21,12 +21,14 @@ package mcp
 // pointer-typed fields: `"done": false` clears, an omitted key leaves the row.
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"reflect"
+	"strconv"
 
-	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/web/handler"
 )
 
@@ -66,6 +68,12 @@ func applyArgs(model handler.CObject, spec *opSpec, args map[string]json.RawMess
 		if !field.CanAddr() {
 			return fmt.Errorf("mcp: field for argument %q is not addressable", name)
 		}
+		if isIntegerKind(field.Kind()) {
+			var err error
+			if rawVal, err = integralNumber(rawVal); err != nil {
+				return fmt.Errorf("invalid value for %q: %w", name, err)
+			}
+		}
 		if err := json.Unmarshal(rawVal, field.Addr().Interface()); err != nil {
 			return fmt.Errorf("invalid value for %q: %w", name, err)
 		}
@@ -73,8 +81,45 @@ func applyArgs(model handler.CObject, spec *opSpec, args map[string]json.RawMess
 	return nil
 }
 
-// Normalising is not optional: page < 1 makes the models skip the LIMIT clause
-// entirely, so an omitted per_page would dump every row the caller can see.
+// The update schema marks exactly the fields that address a single row as required.
+func identityArgs(spec *opSpec, args map[string]json.RawMessage) map[string]json.RawMessage {
+	out := make(map[string]json.RawMessage, len(spec.schema.Required))
+	for _, name := range spec.schema.Required {
+		if raw, ok := args[name]; ok {
+			out[name] = raw
+		}
+	}
+	return out
+}
+
+func isIntegerKind(k reflect.Kind) bool {
+	return k >= reflect.Int && k <= reflect.Uint64
+}
+
+// JSON Schema's "integer" accepts 1.0 and 1e3, which json.Unmarshal into an
+// int64 then rejects with an internals-flavoured message.
+func integralNumber(raw json.RawMessage) (json.RawMessage, error) {
+	num := json.Number(bytes.TrimSpace(raw))
+	if _, err := num.Int64(); err == nil {
+		return raw, nil
+	}
+	f, err := num.Float64()
+	if err != nil {
+		//nolint:nilerr // not a number at all, so the real unmarshal names the field
+		return raw, nil
+	}
+	if f != math.Trunc(f) {
+		return nil, errors.New("must be an integer")
+	}
+	// Out of int64 range: leave it to the real unmarshal to say so.
+	if f < math.MinInt64 || f > math.MaxInt64 {
+		return raw, nil
+	}
+	return json.RawMessage(strconv.FormatInt(int64(f), 10)), nil
+}
+
+// popReadAllParams consumes the reserved listing arguments, leaving the
+// model-bound ones for applyArgs.
 func popReadAllParams(args map[string]json.RawMessage) (search string, page, perPage int, err error) {
 	pop := func(name string, dst any) error {
 		raw, ok := args[name]
@@ -82,6 +127,13 @@ func popReadAllParams(args map[string]json.RawMessage) (search string, page, per
 			return nil
 		}
 		delete(args, name)
+		if _, isInt := dst.(*int); isInt {
+			normalized, err := integralNumber(raw)
+			if err != nil {
+				return fmt.Errorf("invalid value for %q: %w", name, err)
+			}
+			raw = normalized
+		}
 		if err := json.Unmarshal(raw, dst); err != nil {
 			return fmt.Errorf("invalid value for %q: %w", name, err)
 		}
@@ -97,18 +149,9 @@ func popReadAllParams(args map[string]json.RawMessage) (search string, page, per
 		return
 	}
 
-	if page < 0 {
-		return "", 0, 0, fmt.Errorf("invalid value for %q: must not be negative", argPage)
-	}
-	if page == 0 {
-		page = 1
-	}
-	if perPage < 0 {
-		return "", 0, 0, fmt.Errorf("invalid value for %q: must not be negative", argPerPage)
-	}
-	maxPerPage := config.ServiceMaxItemsPerPage.GetInt()
-	if perPage == 0 || perPage > maxPerPage {
-		perPage = maxPerPage
+	page, perPage, err = handler.NormalizePagination(page, perPage)
+	if err != nil {
+		return "", 0, 0, err
 	}
 	return search, page, perPage, nil
 }

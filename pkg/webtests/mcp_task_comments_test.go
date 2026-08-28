@@ -81,6 +81,31 @@ func TestMCP_TaskComments_ReadAll(t *testing.T) {
 	require.NotEmpty(t, comments)
 }
 
+func TestMCP_TaskComments_Update(t *testing.T) {
+	c := newMCPClient(t, mcpFullProjectsToken)
+	createResult := c.callTool("tasks_comments_create", map[string]any{
+		"task_id": 1,
+		"comment": "mcp comment to update",
+	})
+	require.NotContains(t, createResult, "isError")
+	var created map[string]any
+	require.NoError(t, json.Unmarshal([]byte(toolResultText(t, createResult)), &created))
+	cid := int64(created["id"].(float64))
+
+	updateResult := c.callTool("tasks_comments_update", map[string]any{
+		"task_id": 1,
+		"id":      cid,
+		"comment": "mcp comment updated",
+	})
+	require.NotContains(t, updateResult, "isError", "update errored: %v", updateResult)
+
+	readResult := c.callTool("tasks_comments_read_one", map[string]any{"task_id": 1, "id": cid})
+	require.NotContains(t, readResult, "isError")
+	var comment map[string]any
+	require.NoError(t, json.Unmarshal([]byte(toolResultText(t, readResult)), &comment))
+	assert.Equal(t, "mcp comment updated", comment["comment"])
+}
+
 func TestMCP_TaskComments_ReadAllForbidden(t *testing.T) {
 	// Task 34 belongs to project 20, which only user 13 can access.
 	c := newMCPClient(t, mcpFullProjectsToken)
@@ -123,4 +148,18 @@ func TestMCP_TaskComments_CreateRejectsEmptyComment(t *testing.T) {
 	})
 	require.Equal(t, true, result["isError"], "expected isError: %v", result)
 	assert.Contains(t, toolResultText(t, result), "comment")
+}
+
+func TestMCP_TaskComments_OversizedCommentErrorIsBounded(t *testing.T) {
+	// govalidator's dbtext message echoes the rejected value, which would put
+	// the whole payload back into the model's context window.
+	c := newMCPClient(t, mcpFullProjectsToken)
+	result := c.callTool("tasks_comments_create", map[string]any{
+		"task_id": 1,
+		"comment": strings.Repeat("x", 2_000_000),
+	})
+	require.Equal(t, true, result["isError"], "expected isError: %v", result)
+	text := toolResultText(t, result)
+	assert.Less(t, len(text), 1024, "the error text must not echo the payload back")
+	assert.Contains(t, text, "comment")
 }
