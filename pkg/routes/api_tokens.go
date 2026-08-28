@@ -26,6 +26,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/modules/humabridge"
+	"code.vikunja.io/api/pkg/modules/mcp"
 	"code.vikunja.io/api/pkg/web"
 
 	echojwt "github.com/labstack/echo-jwt/v5"
@@ -85,8 +86,7 @@ func shouldSkipRouteCheck(c *echo.Context) bool {
 	// MCP streams POST, GET and DELETE on one path; CanDoAPIRoute's exact
 	// (method, path) match can't express that, so mcp:access is gated in the
 	// handler instead.
-	path := c.Request().URL.Path
-	if path == "/api/v2/mcp" || strings.HasPrefix(path, "/api/v2/mcp/") {
+	if c.Path() == mcp.RoutePrefix || strings.HasPrefix(c.Path(), mcp.RoutePrefix+"/") {
 		return true
 	}
 

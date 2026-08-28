@@ -88,6 +88,7 @@ func TestAPITokenMiddleware_SkipsRouteCheckForMCPPath(t *testing.T) {
 			req := httptest.NewRequest(method, "/api/v2/mcp", nil)
 			res := httptest.NewRecorder()
 			c := e.NewContext(req, res)
+			c.SetPath("/api/v2/mcp") // NewContext skips the router, which normally fills this in
 
 			called := false
 			h := routes.SetupTokenMiddleware()(func(_ *echo.Context) error {
@@ -114,6 +115,7 @@ func TestAPITokenMiddleware_SkipsRouteCheckForMCPSubPath(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/api/v2/mcp/anything", nil)
 	res := httptest.NewRecorder()
 	c := e.NewContext(req, res)
+	c.SetPath("/api/v2/mcp/*")
 
 	called := false
 	h := routes.SetupTokenMiddleware()(func(_ *echo.Context) error {
