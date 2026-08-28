@@ -17,6 +17,8 @@
 package doctor
 
 import (
+	"path/filepath"
+
 	"code.vikunja.io/api/pkg/config"
 
 	"github.com/spf13/viper"
@@ -52,10 +54,15 @@ func checkConfigFile() CheckResult {
 		}
 	}
 
+	absPath, err := filepath.Abs(configFile)
+	if err != nil {
+		absPath = configFile
+	}
+
 	return CheckResult{
 		Name:   "Config file",
 		Passed: true,
-		Value:  configFile,
+		Value:  absPath,
 	}
 }
 
