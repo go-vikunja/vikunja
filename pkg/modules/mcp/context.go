@@ -23,38 +23,26 @@ import (
 	"code.vikunja.io/api/pkg/user"
 )
 
-// Context propagation between the Echo entry handler and downstream tool
-// handlers. The SDK's RequestExtra only carries OAuth TokenInfo + headers —
-// it does not expose *http.Request — so we attach the authenticated user
-// and the API token to r.Context() at the entry boundary and pull them out
-// inside tool handlers via the accessors below.
-//
-// Typed keys (unexported empty structs) avoid collisions with any other
-// package that might write to the same context.
+// The SDK's RequestExtra carries only OAuth TokenInfo and headers, never the
+// *http.Request, so the entry handler stashes the user and token on r.Context()
+// for tool handlers to read back out.
 
 type userCtxKey struct{}
 type tokenCtxKey struct{}
 
-// WithUser returns a new context that carries the authenticated user.
 func WithUser(ctx context.Context, u *user.User) context.Context {
 	return context.WithValue(ctx, userCtxKey{}, u)
 }
 
-// WithToken returns a new context that carries the API token used for the
-// current MCP request.
 func WithToken(ctx context.Context, t *models.APIToken) context.Context {
 	return context.WithValue(ctx, tokenCtxKey{}, t)
 }
 
-// UserFromContext returns the authenticated user attached by the MCP entry
-// handler, or nil if no user is present.
 func UserFromContext(ctx context.Context) *user.User {
 	u, _ := ctx.Value(userCtxKey{}).(*user.User)
 	return u
 }
 
-// TokenFromContext returns the API token attached by the MCP entry handler,
-// or nil if no token is present.
 func TokenFromContext(ctx context.Context) *models.APIToken {
 	t, _ := ctx.Value(tokenCtxKey{}).(*models.APIToken)
 	return t

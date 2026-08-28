@@ -16,11 +16,9 @@
 
 package mcp
 
-// Presence-based argument application: arguments are decoded as a raw key →
-// value map and only the keys the caller actually sent are written onto the
-// model. This gives partial-update semantics without pointer-typed wrapper
-// fields — an explicit `"done": false` clears the flag, an omitted key
-// leaves the row untouched.
+// Arguments are decoded as a raw key → value map so only the keys the caller
+// actually sent get written onto the model. That gives partial updates without
+// pointer-typed fields: `"done": false` clears, an omitted key leaves the row.
 
 import (
 	"encoding/json"
@@ -32,9 +30,6 @@ import (
 	"code.vikunja.io/api/pkg/web/handler"
 )
 
-// validateAndDecodeArgs checks the raw arguments against the op's schema
-// (types, required properties, unknown-key rejection) and returns them as a
-// key → raw-value map for presence-based application.
 func validateAndDecodeArgs(spec *opSpec, raw json.RawMessage) (map[string]json.RawMessage, error) {
 	instance := map[string]any{}
 	if len(raw) > 0 {
@@ -54,10 +49,8 @@ func validateAndDecodeArgs(spec *opSpec, raw json.RawMessage) (map[string]json.R
 	return args, nil
 }
 
-// applyArgs unmarshals each supplied argument into its model field. The
-// schema has already validated names and types; errors here mean a value
-// that passed JSON Schema but not Go unmarshalling (e.g. a malformed
-// RFC 3339 timestamp).
+// The schema already validated names and types, so errors here mean a value that
+// passed JSON Schema but not Go unmarshalling (e.g. a malformed RFC 3339 timestamp).
 func applyArgs(model handler.CObject, spec *opSpec, args map[string]json.RawMessage) error {
 	rv := reflect.ValueOf(model)
 	if rv.Kind() != reflect.Pointer || rv.IsNil() {
@@ -80,11 +73,8 @@ func applyArgs(model handler.CObject, spec *opSpec, args map[string]json.RawMess
 	return nil
 }
 
-// popReadAllParams extracts (and removes) the reserved search/page/per_page
-// arguments so applyArgs only sees model-bound keys, and normalises them the
-// way the REST layer does before calling handler.DoReadAll. The normalisation
-// is not optional: page < 1 makes the models skip the LIMIT clause entirely,
-// so an omitted per_page would dump every row the caller can see.
+// Normalising is not optional: page < 1 makes the models skip the LIMIT clause
+// entirely, so an omitted per_page would dump every row the caller can see.
 func popReadAllParams(args map[string]json.RawMessage) (search string, page, perPage int, err error) {
 	pop := func(name string, dst any) error {
 		raw, ok := args[name]

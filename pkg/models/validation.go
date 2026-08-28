@@ -24,17 +24,15 @@ import (
 	"github.com/asaskevich/govalidator"
 )
 
-// The `valid:` tag rules live on the models, so the custom validators they
-// reference are registered here rather than in the HTTP layer — every entry
-// point that validates a model (echo's CustomValidator, /api/v2, MCP)
-// imports this package and therefore gets them.
+// The custom validators the models' `valid:` tags reference are registered here
+// rather than in the HTTP layer, so every entry point that validates a model
+// (echo's CustomValidator, /api/v2, MCP) picks them up by importing this package.
 func init() {
 	govalidator.TagMap["time"] = func(str string) bool {
 		return govalidator.IsTime(str, "15:04")
 	}
 
-	// Adapts to the database in use: MySQL TEXT tops out far below what
-	// PostgreSQL and SQLite accept.
+	// MySQL TEXT tops out far below what PostgreSQL and SQLite accept.
 	govalidator.TagMap["dbtext"] = func(str string) bool {
 		maxLength := 65000
 		if dialect := db.GetDialect(); dialect == "postgres" || dialect == "sqlite3" {
@@ -44,16 +42,13 @@ func init() {
 	}
 }
 
-// ValidateStruct checks a model against its `valid:` struct tags and reports
-// every failure as an InvalidFieldError.
+// ValidateStruct reports every `valid:` tag failure as an InvalidFieldError.
 func ValidateStruct(i interface{}) error {
 	return ValidateStructFields(i, nil)
 }
 
-// ValidateStructFields is ValidateStruct restricted to the given field names
-// (JSON names, or Go field names for `json:"-"` fields). Callers that build a
-// model from a partial payload need this: a `required` rule must not fire for
-// a field the caller never sent. A nil set means "report everything".
+// ValidateStructFields restricts ValidateStruct to the named fields (nil means all):
+// a partial payload must not trip a `required` rule for a field it never sent.
 func ValidateStructFields(i interface{}, only map[string]bool) error {
 	_, err := govalidator.ValidateStruct(i)
 	if err == nil {

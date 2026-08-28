@@ -83,9 +83,7 @@ func shouldSkipRouteCheck(c *echo.Context) bool {
 		return true
 	}
 
-	// MCP streams POST, GET and DELETE on one path; CanDoAPIRoute's exact
-	// (method, path) match can't express that, so mcp:access is gated in the
-	// handler instead.
+	// MCP's one-path, three-method transport is gated by HasMCPAccess in the handler instead.
 	if c.Path() == mcp.RoutePrefix || strings.HasPrefix(c.Path(), mcp.RoutePrefix+"/") {
 		return true
 	}

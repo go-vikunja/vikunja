@@ -23,8 +23,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// registerAllResources loads the real production declarations into a clean
-// registry so the schema tests exercise the actual derived contracts.
+// The schema tests run against the real production resource declarations.
 func registerAllResources(t *testing.T) {
 	t.Helper()
 	resetRegistry(t)
@@ -38,7 +37,7 @@ func specFor(t *testing.T, resource string, op Op) *opSpec {
 	r, ok := lookupResource(resource)
 	require.True(t, ok, "resource %s not registered", resource)
 	spec := r.spec(op)
-	require.NotNil(t, spec, "no spec for %s_%s", resource, op.ToolSuffix())
+	require.NotNil(t, spec, "no spec for %s_%s", resource, op.Permission())
 	return spec
 }
 
@@ -98,20 +97,19 @@ func TestSchema_ReadOneAndDeleteIdentifyByID(t *testing.T) {
 
 	for _, op := range []Op{OpReadOne, OpDelete} {
 		spec := specFor(t, "labels", op)
-		assert.Equal(t, []string{"id"}, spec.schema.Required, op.ToolSuffix())
-		assert.Len(t, spec.schema.Properties, 1, op.ToolSuffix())
+		assert.Equal(t, []string{"id"}, spec.schema.Required, op.Permission())
+		assert.Len(t, spec.schema.Properties, 1, op.Permission())
 	}
 }
 
 func TestSchema_TaskCommentsCarryParentTaskID(t *testing.T) {
 	registerAllResources(t)
 
-	// TaskComment.TaskID is json:"-" param:"task" — REST binds it from the
-	// URL; MCP exposes it as a required task_id argument on every op.
+	// TaskComment.TaskID is json:"-" param:"task": REST binds it from the URL, MCP demands it as an argument.
 	for _, op := range []Op{OpCreate, OpReadOne, OpReadAll, OpUpdate, OpDelete} {
 		spec := specFor(t, "tasks_comments", op)
-		assert.Contains(t, spec.schema.Properties, "task_id", op.ToolSuffix())
-		assert.Contains(t, spec.schema.Required, "task_id", op.ToolSuffix())
+		assert.Contains(t, spec.schema.Properties, "task_id", op.Permission())
+		assert.Contains(t, spec.schema.Required, "task_id", op.Permission())
 	}
 	assert.Contains(t, specFor(t, "tasks_comments", OpCreate).schema.Required, "comment")
 }
@@ -119,8 +117,7 @@ func TestSchema_TaskCommentsCarryParentTaskID(t *testing.T) {
 func TestSchema_AssigneesIdentifyByParams(t *testing.T) {
 	registerAllResources(t)
 
-	// TaskAssginee has no JSON-exposed id; delete identifies the row via its
-	// param-tagged fields instead.
+	// TaskAssginee has no JSON-exposed id, so delete goes by its param-tagged fields.
 	spec := specFor(t, "tasks_assignees", OpDelete)
 	assert.NotContains(t, spec.schema.Properties, "id")
 	assert.Equal(t, []string{"task_id", "user_id"}, spec.schema.Required)
@@ -143,8 +140,7 @@ func TestSchema_ProjectViewsReadAllScopedByProject(t *testing.T) {
 	registerAllResources(t)
 	spec := specFor(t, "projects_views", OpReadAll)
 
-	// ProjectView.ProjectID is readOnly + param:"project": REST scopes the
-	// listing by it, so MCP has to demand it.
+	// ProjectView.ProjectID is readOnly + param:"project", so MCP has to demand it.
 	assert.Equal(t, []string{"project_id"}, spec.schema.Required)
 	assert.Contains(t, spec.schema.Properties, "project_id")
 }

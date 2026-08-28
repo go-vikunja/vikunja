@@ -429,11 +429,9 @@ func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, wsRateLimit echo.Middlewar
 	// self-register via init()/RegisterAll.
 	a.GET("/ws", ws.UpgradeHandler, wsRateLimit)
 
-	// MCP endpoint — raw echo like /ws: a JSON-RPC transport (POST, GET, and
-	// DELETE on one path), not an OpenAPI-modelable resource. CanDoAPIRoute
-	// does an exact (method, path) match per permission, so the route check is
-	// skipped in the token middleware (see api_tokens.go) and the mcp:access
-	// scope is gated inline inside the handler via APIToken.HasMCPAccess().
+	// Raw echo like /ws: a JSON-RPC transport on one path, not an OpenAPI resource.
+	// CanDoAPIRoute matches (method, path) exactly, so the token middleware skips
+	// the route check and the handler gates mcp:access via HasMCPAccess() instead.
 	mcpmodule.RegisterResources()
 	mcpPath := strings.TrimPrefix(mcpmodule.RoutePrefix, apiV2Prefix)
 	a.Any(mcpPath, mcpmodule.Handler)

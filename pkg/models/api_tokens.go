@@ -233,9 +233,7 @@ func (t *APIToken) Delete(s *xorm.Session, a web.Auth) (err error) {
 	return nil
 }
 
-// HasPermission reports whether the token grants permission within group.
-// Both sides are canonicalised the same way CanDoAPIRoute does it, so a
-// hyphenated group slug stored on the token still matches.
+// Both sides are canonicalised like CanDoAPIRoute does, so a hyphenated group slug still matches.
 func (t *APIToken) HasPermission(group, permission string) bool {
 	if t == nil {
 		return false
@@ -257,9 +255,7 @@ func (t *APIToken) HasFeedsAccess() bool {
 	return t.HasPermission("feeds", "access")
 }
 
-// HasMCPAccess is called inline by the MCP entry handler: the streamable-HTTP
-// transport uses POST, GET and DELETE on one path, which CanDoAPIRoute's exact
-// (method, path) match cannot express.
+// HasMCPAccess is gated inline because CanDoAPIRoute cannot express MCP's one-path, three-method transport.
 func (t *APIToken) HasMCPAccess() bool {
 	return t.HasPermission("mcp", "access")
 }

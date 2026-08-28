@@ -15,12 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // Package mcp implements the streamable-HTTP MCP endpoint that exposes
-// Vikunja's CRUD API to MCP-aware clients (Claude Desktop, Cursor, etc.).
-//
-// The entry point is Handler, which is mounted by the routes package
-// inside the authenticated /api/v2 group. The actual MCP protocol
-// (JSON-RPC framing, session management, SSE streaming) is delegated to
-// github.com/modelcontextprotocol/go-sdk.
+// Vikunja's CRUD API to MCP-aware clients. Protocol framing, sessions and SSE
+// streaming are delegated to github.com/modelcontextprotocol/go-sdk.
 package mcp
 
 import (
@@ -35,15 +31,9 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// RoutePrefix is the absolute path the MCP endpoint is mounted under. Shared
-// with the routes package so the mount point and the token middleware's
-// route-check exemption can't drift apart.
+// RoutePrefix is shared with the routes package so the mount point and the token middleware's exemption can't drift apart.
 const RoutePrefix = "/api/v2/mcp"
 
-// newServer builds a server whose tool set is filtered to what the calling
-// request's token authorises. Stateless mode calls this per request, so the
-// filtering always reflects the token on the wire rather than whichever token
-// happened to open the session.
 func newServer(req *http.Request) *mcp.Server {
 	srv := mcp.NewServer(&mcp.Implementation{
 		Name:    "vikunja",
@@ -53,30 +43,17 @@ func newServer(req *http.Request) *mcp.Server {
 	return srv
 }
 
-// Stateless keeps identity per-request: a cached session would otherwise pin
-// every later message to the context (and token) of whoever initialized it.
-// DisableLocalhostProtection turns off the SDK's DNS-rebinding guard, which
-// would 403 the standard reverse-proxy-to-127.0.0.1 deployment.
+// Stateless keeps identity per-request: a cached session would pin every later
+// message to the token that initialized it. DisableLocalhostProtection drops the
+// DNS-rebinding guard, which would 403 reverse-proxy-to-127.0.0.1 deployments.
 var streamableHandler = mcp.NewStreamableHTTPHandler(newServer, &mcp.StreamableHTTPOptions{
 	Stateless:                  true,
 	DisableLocalhostProtection: true,
 })
 
-// Handler is the Echo entry point for the MCP endpoint. It:
-//
-//  1. Rejects JWT-authed requests with 401 — MCP is token-only because
-//     JWT bypasses CanDoAPIRoute (and therefore the mcp:access scope).
-//  2. Pulls the API token from the Echo context and rejects with 403 if
-//     it does not have the mcp:access scope.
-//  3. Attaches the authenticated user and token to r.Context() via the
-//     typed keys in context.go so tool handlers can pull them out
-//     without depending on Echo.
-//  4. Forwards to the SDK's streamable-HTTP handler with the route
-//     prefix stripped.
+// Handler is token-only: JWT auth bypasses CanDoAPIRoute and therefore the mcp:access scope.
 func Handler(c *echo.Context) error {
-	// JWT-authed requests have a *jwt.Token under "user" and do not have
-	// "api_token" set. The token middleware only populates "api_token"
-	// when it successfully resolves a Bearer tk_… header.
+	// The token middleware only sets "api_token" for a resolved Bearer tk_… header.
 	tokenAny := c.Get("api_token")
 	if tokenAny == nil {
 		log.Debugf("[mcp] rejecting non-API-token request to %s", c.Request().URL.Path)

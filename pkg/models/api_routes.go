@@ -49,12 +49,8 @@ func init() {
 			Method: "GET",
 		},
 	}
-	// The MCP endpoint serves the streamable-HTTP transport, which uses
-	// POST, GET and DELETE on the same path. CanDoAPIRoute only matches one
-	// (method, path) pair per RouteDetail, so the actual gate lives behind
-	// skipRouteCheck + an inline HasMCPAccess() call in the MCP handler.
-	// This entry only exists so the scope appears in the /routes exposure
-	// and PermissionsAreValid accepts it.
+	// MCP is gated inline by HasMCPAccess (see routes.go); this entry only exists
+	// so the scope shows up in /routes and PermissionsAreValid accepts it.
 	apiTokenRoutesV2["mcp"] = APITokenRoute{
 		"access": &RouteDetail{
 			Path:   "/api/v2/mcp",
@@ -262,8 +258,7 @@ func CollectRoutesForAPITokenUsage(route echo.RouteInfo, requiresJWT bool) {
 
 	routeGroupName, routeParts := getRouteGroupName(route.Path)
 
-	// mcp is excluded because its scope is hand-registered in init() — the
-	// Any-method transport routes would only collect as junk entries.
+	// mcp's scope is hand-registered in init(); collecting its Any-method routes would only add junk.
 	if routeGroupName == "token_test" ||
 		routeGroupName == "subscriptions" ||
 		routeGroupName == "tokens" ||
