@@ -26,12 +26,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Token 10 has {mcp:access, projects:[read_one, read_all]} — a partial scope
-// for the scope-filtered tools/list and tools/call tests.
+// Token 11 has mcp:access plus a partial projects scope: read_one and read_all only.
 const mcpMixedScopeToken = "tk_mcp_mixed_scope_token_test_00mcpmixed02"
 
-// toolNamesFromList extracts the "name" field from every tool in a tools/list
-// result payload.
+// toolNamesFromList extracts the "name" of every tool in a tools/list result.
 func toolNamesFromList(t *testing.T, resp map[string]any) map[string]bool {
 	t.Helper()
 	result, ok := resp["result"].(map[string]any)
@@ -49,8 +47,7 @@ func toolNamesFromList(t *testing.T, resp map[string]any) map[string]bool {
 }
 
 func TestMCP_Scopes_ToolsListMixed(t *testing.T) {
-	// Token 10: projects:[read_one, read_all] — should see exactly those two
-	// project tools and no others.
+	// Token 11 must see exactly its two project tools and no others.
 	c := newMCPClient(t, mcpMixedScopeToken)
 	resp := c.rpc("tools/list", map[string]any{})
 	names := toolNamesFromList(t, resp)
@@ -64,8 +61,7 @@ func TestMCP_Scopes_ToolsListMixed(t *testing.T) {
 }
 
 func TestMCP_Scopes_ToolsListMcpOnly(t *testing.T) {
-	// Token 9: only {mcp:access} — no project scopes, so no project tools
-	// must show in tools/list.
+	// Token 10 has no project scopes, so no project tools may show up.
 	c := newMCPClient(t, mcpOnlyToken)
 	resp := c.rpc("tools/list", map[string]any{})
 	names := toolNamesFromList(t, resp)
@@ -82,7 +78,7 @@ func TestMCP_Scopes_ToolsListMcpOnly(t *testing.T) {
 }
 
 func TestMCP_Scopes_ToolsListFullScopes(t *testing.T) {
-	// Token 11: mcp:access + projects:* — should see all five project tools.
+	// Token 12: mcp:access + projects:* — should see all five project tools.
 	c := newMCPClient(t, mcpFullProjectsToken)
 	resp := c.rpc("tools/list", map[string]any{})
 	names := toolNamesFromList(t, resp)
@@ -99,12 +95,8 @@ func TestMCP_Scopes_ToolsListFullScopes(t *testing.T) {
 }
 
 func TestMCP_Scopes_CallCreateForbidden(t *testing.T) {
-	// Token 10 lacks projects:create. Calling projects_create must come back
-	// as an error response without writing to the database. The SDK may
-	// return either a JSON-RPC protocol error (tool not found, because the
-	// tool wasn't registered for this session's server) or a tool result
-	// with isError=true (if the dispatcher's defensive scope check ran).
-	// Both are valid — what matters is that no DB write happened.
+	// Out-of-scope tools are never registered on the session, so the SDK
+	// rejects the call before the dispatcher sees it.
 	projectsBefore := countProjects(t)
 
 	c := newMCPClient(t, mcpMixedScopeToken)
@@ -112,41 +104,32 @@ func TestMCP_Scopes_CallCreateForbidden(t *testing.T) {
 		"name":      "projects_create",
 		"arguments": map[string]any{"title": "should not be created"},
 	})
+	requireUnknownToolError(t, resp, "projects_create")
 
-	// Either a JSON-RPC error or a tool result with isError=true is
-	// acceptable; what matters is no DB write.
-	if _, hasErr := resp["error"]; !hasErr {
-		result, ok := resp["result"].(map[string]any)
-		require.Truef(t, ok, "missing result: %v", resp)
-		isErr, _ := result["isError"].(bool)
-		assert.Truef(t, isErr, "expected isError for forbidden create: %v", result)
-	}
-
-	projectsAfter := countProjects(t)
-	assert.Equal(t, projectsBefore, projectsAfter, "no project should be created when scope is denied")
+	assert.Equal(t, projectsBefore, countProjects(t), "no project should be created when scope is denied")
 }
 
 func TestMCP_Scopes_CallNonexistentTool(t *testing.T) {
-	// An unknown tool name must result in an error tool call result (or a
-	// JSON-RPC error from the SDK saying "tool not found"). Either way, the
-	// caller sees a failure, not a JSON-parse 500.
 	c := newMCPClient(t, mcpFullProjectsToken)
 	resp := c.rpc("tools/call", map[string]any{
 		"name":      "nonexistent_tool",
 		"arguments": map[string]any{},
 	})
-
-	if _, hasErr := resp["error"]; hasErr {
-		return // SDK returned a JSON-RPC error — acceptable.
-	}
-	result, ok := resp["result"].(map[string]any)
-	require.Truef(t, ok, "missing both error and result: %v", resp)
-	isErr, _ := result["isError"].(bool)
-	assert.Truef(t, isErr, "expected isError for nonexistent tool: %v", result)
+	requireUnknownToolError(t, resp, "nonexistent_tool")
 }
 
-// countProjects returns the number of rows in the projects table. Used to
-// verify that a denied-scope tool call did not mutate the database.
+// requireUnknownToolError pins the SDK's response for a tool the session did
+// not register: a JSON-RPC "invalid params" error, not a tool result.
+func requireUnknownToolError(t *testing.T, resp map[string]any, tool string) {
+	t.Helper()
+	require.NotContains(t, resp, "result", "unregistered tool must not produce a tool result: %v", resp)
+	errObj, ok := resp["error"].(map[string]any)
+	require.Truef(t, ok, "missing JSON-RPC error: %v", resp)
+	assert.InDelta(t, float64(-32602), errObj["code"], 0.0001)
+	assert.Contains(t, errObj["message"], `unknown tool "`+tool+`"`)
+}
+
+// countProjects verifies a denied-scope tool call did not mutate the database.
 func countProjects(t *testing.T) int64 {
 	t.Helper()
 	s := db.NewSession()

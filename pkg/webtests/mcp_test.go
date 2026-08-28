@@ -33,16 +33,14 @@ import (
 )
 
 const (
-	// Token 9 has only the mcp:access scope, owned by user 1.
+	// Token 10 has only the mcp:access scope, owned by user 1.
 	mcpOnlyToken = "tk_mcp_access_token_test_0000000000mcp0001"
 	// Token 1 has only {tasks:[read_all, update]} — no mcp scope. Owner: user 1.
-	// (Token 10, mcp + projects:{read_one, read_all}, is reserved for the
-	// scope-filtering tests that land with Task 6.)
+	// Token 11 (mcp + projects:{read_one, read_all}) lives in mcp_scopes_test.go.
 	noMCPToken = "tk_2eef46f40ebab3304919ab2e7e39993f75f29d2e"
 )
 
-// mcpRequest builds an MCP request with the appropriate Accept + Content-Type
-// headers required by the streamable-HTTP transport.
+// The streamable-HTTP transport requires both Accept types.
 func mcpRequest(method, body string) *http.Request {
 	req := httptest.NewRequest(method, "/api/v2/mcp", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
@@ -50,9 +48,7 @@ func mcpRequest(method, body string) *http.Request {
 	return req
 }
 
-// readMCPJSON extracts the JSON-RPC payload from an MCP response. The SDK
-// may return either application/json (single object) or a single-event SSE
-// stream depending on negotiation.
+// The SDK returns either application/json or a single-event SSE stream, depending on negotiation.
 func readMCPJSON(t *testing.T, body string) map[string]any {
 	t.Helper()
 	body = strings.TrimSpace(body)
@@ -137,7 +133,7 @@ func TestMCP_InitializeWithMCPToken(t *testing.T) {
 }
 
 func TestMCP_ToolsListReturnsRegisteredResources(t *testing.T) {
-	// Per Task 6, an mcp-only token (no projects scope) sees zero project
+	// An mcp-only token (no projects scope) sees zero project
 	// tools in tools/list — the per-session tool registration filters by
 	// the requesting token's (group, permission) scopes. Tools/list visibility
 	// for tokens with project scopes is covered in mcp_scopes_test.go.

@@ -61,21 +61,13 @@ func TestMCP_TaskComments_Create(t *testing.T) {
 }
 
 func TestMCP_TaskComments_CreateMissingTaskID(t *testing.T) {
-	// task_id has no omitempty in TaskCommentCreateInput, so omitting it
-	// must surface as either a schema-level error or a tool result with
-	// isError=true (the task_id=0 path would dereference an invalid task).
+	// task_id has no omitempty in TaskCommentCreateInput, so schema
+	// validation rejects the call before it can dereference task 0.
 	c := newMCPClient(t, mcpFullProjectsToken)
-	resp := c.rpc("tools/call", map[string]any{
-		"name":      "tasks_comments_create",
-		"arguments": map[string]any{"comment": "missing task id"},
-	})
-	if _, hasErr := resp["error"]; hasErr {
-		return
-	}
-	result, ok := resp["result"].(map[string]any)
-	require.Truef(t, ok, "missing result: %v", resp)
+	result := c.callTool("tasks_comments_create", map[string]any{"comment": "missing task id"})
 	isErr, _ := result["isError"].(bool)
-	assert.Truef(t, isErr, "expected isError for missing task_id: %v", result)
+	require.Truef(t, isErr, "expected isError for missing task_id: %v", result)
+	assert.Contains(t, toolResultText(t, result), "mcp: invalid arguments for tasks_comments_create")
 }
 
 func TestMCP_TaskComments_ReadAll(t *testing.T) {
@@ -90,8 +82,7 @@ func TestMCP_TaskComments_ReadAll(t *testing.T) {
 }
 
 func TestMCP_TaskComments_ReadAllForbidden(t *testing.T) {
-	// Task 34 belongs to project 20, only user 13 has access. User 1
-	// cannot see its comments.
+	// Task 34 belongs to project 20, which only user 13 can access.
 	c := newMCPClient(t, mcpFullProjectsToken)
 	result := c.callTool("tasks_comments_read_all", map[string]any{"task_id": 34})
 	isErr, _ := result["isError"].(bool)
@@ -99,8 +90,7 @@ func TestMCP_TaskComments_ReadAllForbidden(t *testing.T) {
 }
 
 func TestMCP_TaskComments_DisabledByConfig(t *testing.T) {
-	// Flip ServiceEnableTaskComments off, build a new session, ensure the
-	// comment tools disappear from tools/list.
+	// The gate is read per session, so a new client must not see the comment tools.
 	original := config.ServiceEnableTaskComments.GetBool()
 	config.ServiceEnableTaskComments.Set(false)
 	t.Cleanup(func() { config.ServiceEnableTaskComments.Set(original) })
@@ -125,8 +115,7 @@ func TestMCP_TaskComments_DisabledByConfig(t *testing.T) {
 }
 
 func TestMCP_TaskComments_CreateRejectsEmptyComment(t *testing.T) {
-	// TaskComment.Comment is valid:"required"; the REST layer rejects an
-	// empty one before the handler and MCP must do the same.
+	// TaskComment.Comment is valid:"required"; MCP must enforce it like the REST layer does.
 	c := newMCPClient(t, mcpFullProjectsToken)
 	result := c.callTool("tasks_comments_create", map[string]any{
 		"task_id": 1,
