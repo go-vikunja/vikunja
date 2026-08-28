@@ -181,6 +181,7 @@
 		<Modal
 			:enabled="attachmentPdfBlobUrl !== null"
 			:wide="true"
+			:aria-label="$t('misc.pdfPreview')"
 			@close="closePdfPreview"
 		>
 			<iframe

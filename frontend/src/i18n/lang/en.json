@@ -819,6 +819,7 @@
     "resetZoom": "Reset zoom",
     "imageLoadFailed": "Failed to load image",
     "videoPreview": "Video preview",
+    "pdfPreview": "PDF preview",
     "videoLoadFailed": "This video cannot be played in your browser.",
     "closeQuickActions": "Close quick actions",
     "skipToContent": "Skip to main content",
