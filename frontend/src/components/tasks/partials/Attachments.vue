@@ -215,7 +215,7 @@
 				class="video-preview"
 				controls
 				playsinline
-				@error="attachmentVideoFailed = true"
+				@error="onVideoError"
 			/>
 		</Modal>
 	</div>
@@ -494,6 +494,14 @@ function closeVideoPreview() {
 	attachmentVideoFailed.value = false
 }
 
+// a detached <video> can still fire error after its blob url was revoked
+function onVideoError(e: Event) {
+	if ((e.target as HTMLVideoElement).src !== attachmentVideoBlobUrl.value) {
+		return
+	}
+	attachmentVideoFailed.value = true
+}
+
 function downloadVideoPreview() {
 	const blobUrl = attachmentVideoBlobUrl.value
 	if (blobUrl === null) {
@@ -536,9 +544,7 @@ async function viewOrDownload(attachment: IAttachment) {
 	}
 
 	const isVideo = canPreviewVideo(attachment)
-	if (isVideo) {
-		closeVideoPreview()
-	}
+	closeVideoPreview()
 
 	previewRequestToken++
 	const requestToken = previewRequestToken
