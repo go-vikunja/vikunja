@@ -83,7 +83,8 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import {formatDate} from '@/helpers/time/formatDate'
 import {calculateDayInterval} from '@/helpers/time/calculateDayInterval'
 import {createDateFromString} from '@/helpers/time/createDateFromString'
-import {getDefaultDateForDay, getDefaultDueTimeParts} from '@/helpers/time/getDefaultDateForDay'
+import {getDefaultDateForDay, parseUserDefaultDueTime} from '@/helpers/time/getDefaultDateForDay'
+import {useAuthStore} from '@/stores/auth'
 import {useI18n} from 'vue-i18n'
 import {useFlatpickrLanguage} from '@/helpers/useFlatpickrLanguage'
 import {useTimeFormat} from '@/composables/useTimeFormat'
@@ -115,14 +116,16 @@ watch(
 
 const flatPickrRef = ref<InstanceType<typeof flatPickr> | null>(null)
 const flatPickerConfig = computed(() => {
-	const defaultDueTime = getDefaultDueTimeParts(new Date())
+	const configuredDueTime = parseUserDefaultDueTime(useAuthStore().settings.frontendSettings.defaultDueTime)
 
 	return {
 		altFormat: t('date.altFormatLong'),
 		altInput: true,
 		dateFormat: 'Y-m-d H:i',
-		defaultHour: defaultDueTime.hours,
-		defaultMinute: defaultDueTime.minutes,
+		...(configuredDueTime === null ? {} : {
+			defaultHour: configuredDueTime.hours,
+			defaultMinute: configuredDueTime.minutes,
+		}),
 		enableTime: true,
 		time_24hr: timeFormat.value === TIME_FORMAT.HOURS_24,
 		inline: true,
