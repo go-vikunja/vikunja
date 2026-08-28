@@ -818,6 +818,7 @@
     "sortBy": "Sort by",
     "dateRange": "Date range",
     "notSet": "Not set",
+    "clear": "Clear",
     "user": "User"
   },
   "input": {
@@ -1027,10 +1028,13 @@
       "markAsDone": "Mark '{task}' as done",
       "scrollToBottom": "Scroll to bottom",
       "moreActions": "More actions",
+      "addProperty": "Add property",
+      "remindersCount": "{count} reminder | {count} reminders",
       "sidebarLayout": {
         "label": "Sidebar layout",
         "rows": "Rows",
         "cards": "Cards",
+        "chips": "Chips",
         "groupSchedule": "Schedule",
         "groupDetails": "Details"
       },

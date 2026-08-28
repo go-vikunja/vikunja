@@ -65,9 +65,15 @@
 
 			<ChecklistSummary :task="task" />
 
-			<div class="columns task-columns mbs-2">
+			<div
+				class="columns task-columns mbs-2"
+				:class="{'is-chips': sidebarLayout === 'chips'}"
+			>
 				<!-- Content -->
-				<div class="column is-two-thirds detail-content">
+				<div
+					class="column detail-content"
+					:class="sidebarLayout === 'chips' ? 'is-full' : 'is-two-thirds'"
+				>
 					<!-- Description -->
 					<div class="details content description">
 						<Description
@@ -169,121 +175,212 @@
 				</div>
 
 				<!-- Sidebar: toolbar + always-visible properties -->
-				<aside class="column is-one-third action-buttons task-sidebar d-print-none">
+				<aside
+					class="column action-buttons task-sidebar d-print-none"
+					:class="sidebarLayout === 'chips' ? 'is-full' : 'is-one-third'"
+				>
+					<div class="sidebar-head">
+						<div
+							v-if="canWrite"
+							class="sidebar-toolbar"
+						>
+							<XButton
+								v-shortcut="SHORTCUTS.taskDetail.done"
+								:class="{'is-pending': !task.done}"
+								class="button--mark-done"
+								icon="check-double"
+								variant="secondary"
+								@click="toggleTaskDone()"
+							>
+								{{ task.done ? $t('task.detail.undone') : $t('task.detail.done') }}
+							</XButton>
+							<BaseButton
+								v-shortcut="SHORTCUTS.taskDetail.favorite"
+								v-tooltip="task.isFavorite ? $t('task.detail.actions.unfavorite') : $t('task.detail.actions.favorite')"
+								class="toolbar-icon-button"
+								:class="{'is-favorite': task.isFavorite}"
+								:aria-label="task.isFavorite ? $t('task.detail.actions.unfavorite') : $t('task.detail.actions.favorite')"
+								:aria-pressed="task.isFavorite"
+								@click="toggleFavorite"
+							>
+								<Icon :icon="task.isFavorite ? 'star' : ['far', 'star']" />
+							</BaseButton>
+							<Dropdown
+								class="task-actions-menu"
+								:trigger-label="$t('task.detail.moreActions')"
+							>
+								<template #trigger="{toggleOpen, open}">
+									<BaseButton
+										v-cy="'taskDetail.moreActions'"
+										class="toolbar-icon-button"
+										:aria-label="$t('task.detail.moreActions')"
+										:aria-expanded="open"
+										@click="toggleOpen"
+									>
+										<Icon icon="ellipsis-h" />
+									</BaseButton>
+								</template>
+								<template #default="{close}">
+									<div @click="close">
+										<TaskSubscription
+											entity="task"
+											type="dropdown"
+											:entity-id="task.id"
+											:model-value="task.subscription"
+											@update:modelValue="sub => task.subscription = sub"
+										/>
+										<DropdownItem
+											icon="paperclip"
+											@click="openAttachments()"
+										>
+											{{ $t('task.detail.actions.attachments') }}
+										</DropdownItem>
+										<DropdownItem
+											icon="sitemap"
+											@click="setRelatedTasksActive()"
+										>
+											{{ $t('task.detail.actions.relatedTasks') }}
+										</DropdownItem>
+										<DropdownItem
+											v-if="timeTrackingEnabled"
+											v-cy="'taskTrackTimeAction'"
+											:icon="['far', 'clock']"
+											@click="setFieldActive('timeTracking')"
+										>
+											{{ $t('task.detail.actions.timeTracking') }}
+										</DropdownItem>
+										<DropdownItem
+											icon="list"
+											@click="setFieldActive('moveProject')"
+										>
+											{{ $t('task.detail.actions.moveProject') }}
+										</DropdownItem>
+										<DropdownItem
+											icon="copy"
+											@click="duplicateCurrentTask"
+										>
+											{{ $t('task.detail.actions.duplicate') }}
+										</DropdownItem>
+										<hr class="dropdown-divider">
+										<DropdownItem
+											icon="trash-alt"
+											icon-class="has-text-danger"
+											class="has-text-danger"
+											@click="showDeleteModal = true"
+										>
+											{{ $t('task.detail.actions.delete') }}
+										</DropdownItem>
+									</div>
+								</template>
+							</Dropdown>
+						</div>
+
+						<div
+							class="sidebar-layout-switch"
+							role="radiogroup"
+							:aria-label="$t('task.detail.sidebarLayout.label')"
+						>
+							<BaseButton
+								v-for="layout in SIDEBAR_LAYOUTS"
+								:key="layout"
+								role="radio"
+								:aria-checked="sidebarLayout === layout"
+								:class="{'is-active': sidebarLayout === layout}"
+								@click="sidebarLayout = layout"
+							>
+								<Icon :icon="LAYOUT_ICONS[layout]" />
+								{{ $t(`task.detail.sidebarLayout.${layout}`) }}
+							</BaseButton>
+						</div>
+					</div>
+
+					<!-- Chips layout: one horizontal bar of properties above the content -->
 					<div
-						v-if="canWrite"
-						class="sidebar-toolbar"
+						v-if="sidebarLayout === 'chips'"
+						class="property-chips"
 					>
-						<XButton
-							v-shortcut="SHORTCUTS.taskDetail.done"
-							:class="{'is-pending': !task.done}"
-							class="button--mark-done"
-							icon="check-double"
-							variant="secondary"
-							@click="toggleTaskDone()"
+						<PropertyChip
+							v-for="chip in visibleChips"
+							:key="chip.field"
+							:ref="e => setChipRef(chip.field, e)"
+							:class="`property property-${chip.cssName}`"
+							:icon="chip.icon"
+							:label="chip.label"
+							:is-set="chip.isSet"
+							:clearable="canWrite && chip.clearable"
+							@clear="clearField(chip.field)"
 						>
-							{{ task.done ? $t('task.detail.undone') : $t('task.detail.done') }}
-						</XButton>
-						<BaseButton
-							v-shortcut="SHORTCUTS.taskDetail.favorite"
-							v-tooltip="task.isFavorite ? $t('task.detail.actions.unfavorite') : $t('task.detail.actions.favorite')"
-							class="toolbar-icon-button"
-							:class="{'is-favorite': task.isFavorite}"
-							:aria-label="task.isFavorite ? $t('task.detail.actions.unfavorite') : $t('task.detail.actions.favorite')"
-							:aria-pressed="task.isFavorite"
-							@click="toggleFavorite"
-						>
-							<Icon :icon="task.isFavorite ? 'star' : ['far', 'star']" />
-						</BaseButton>
+							<template #value>
+								<template v-if="chip.field === 'assignees'">
+									<AssigneeList
+										:assignees="task.assignees"
+										:avatar-size="20"
+										inline
+									/>
+								</template>
+								<Labels
+									v-else-if="chip.field === 'labels'"
+									:labels="task.labels"
+								/>
+								<PriorityLabel
+									v-else-if="chip.field === 'priority'"
+									:priority="task.priority"
+									:done="false"
+									show-all
+								/>
+								<ColorBubble
+									v-else-if="chip.field === 'color'"
+									:color="color"
+								/>
+								<template v-else>
+									{{ chip.summary }}
+								</template>
+							</template>
+							<TaskPropertyEditor
+								:field="chip.field"
+								:task="task"
+								:can-write="canWrite"
+								:task-color="taskColor"
+								:reminders-default-relative-to="remindersDefaultRelativeTo"
+								:loading="taskService.loading"
+								@mutate="applyPatch"
+								@patch="savePatch"
+								@update:taskColor="setTaskColor"
+							/>
+						</PropertyChip>
+
 						<Dropdown
-							class="task-actions-menu"
-							:trigger-label="$t('task.detail.moreActions')"
+							v-if="canWrite && hiddenChips.length > 0"
+							class="add-property"
+							:trigger-label="$t('task.detail.addProperty')"
 						>
 							<template #trigger="{toggleOpen, open}">
 								<BaseButton
-									v-cy="'taskDetail.moreActions'"
-									class="toolbar-icon-button"
-									:aria-label="$t('task.detail.moreActions')"
+									class="chip chip-add"
 									:aria-expanded="open"
 									@click="toggleOpen"
 								>
-									<Icon icon="ellipsis-h" />
+									<Icon icon="plus" />
+									{{ $t('task.detail.addProperty') }}
 								</BaseButton>
 							</template>
 							<template #default="{close}">
 								<div @click="close">
-									<TaskSubscription
-										entity="task"
-										type="dropdown"
-										:entity-id="task.id"
-										:model-value="task.subscription"
-										@update:modelValue="sub => task.subscription = sub"
-									/>
 									<DropdownItem
-										icon="paperclip"
-										@click="openAttachments()"
+										v-for="chip in hiddenChips"
+										:key="chip.field"
+										:icon="chip.icon"
+										@click="revealChip(chip.field)"
 									>
-										{{ $t('task.detail.actions.attachments') }}
-									</DropdownItem>
-									<DropdownItem
-										icon="sitemap"
-										@click="setRelatedTasksActive()"
-									>
-										{{ $t('task.detail.actions.relatedTasks') }}
-									</DropdownItem>
-									<DropdownItem
-										v-if="timeTrackingEnabled"
-										v-cy="'taskTrackTimeAction'"
-										:icon="['far', 'clock']"
-										@click="setFieldActive('timeTracking')"
-									>
-										{{ $t('task.detail.actions.timeTracking') }}
-									</DropdownItem>
-									<DropdownItem
-										icon="list"
-										@click="setFieldActive('moveProject')"
-									>
-										{{ $t('task.detail.actions.moveProject') }}
-									</DropdownItem>
-									<DropdownItem
-										icon="copy"
-										@click="duplicateCurrentTask"
-									>
-										{{ $t('task.detail.actions.duplicate') }}
-									</DropdownItem>
-									<hr class="dropdown-divider">
-									<DropdownItem
-										icon="trash-alt"
-										icon-class="has-text-danger"
-										class="has-text-danger"
-										@click="showDeleteModal = true"
-									>
-										{{ $t('task.detail.actions.delete') }}
+										{{ chip.label }}
 									</DropdownItem>
 								</div>
 							</template>
 						</Dropdown>
 					</div>
 
-					<div
-						class="sidebar-layout-switch"
-						role="radiogroup"
-						:aria-label="$t('task.detail.sidebarLayout.label')"
-					>
-						<BaseButton
-							v-for="layout in SIDEBAR_LAYOUTS"
-							:key="layout"
-							role="radio"
-							:aria-checked="sidebarLayout === layout"
-							:class="{'is-active': sidebarLayout === layout}"
-							@click="sidebarLayout = layout"
-						>
-							<Icon :icon="layout === 'rows' ? 'list' : 'table-cells-large'" />
-							{{ $t(`task.detail.sidebarLayout.${layout}`) }}
-						</BaseButton>
-					</div>
-
 					<dl
+						v-else
 						class="property-list"
 						:class="`is-${sidebarLayout}`"
 					>
@@ -294,266 +391,68 @@
 							{{ $t('task.detail.sidebarLayout.groupDetails') }}
 						</h3>
 						<div
-							class="property property-assignees"
-							:class="{'is-set': task.assignees.length > 0}"
+							v-for="chip in chips"
+							:key="chip.field"
+							:class="[`property property-${chip.cssName}`, {'is-set': chip.isSet, 'is-expanded': chip.field === 'repeatAfter' && repeatEditorOpen}]"
 						>
 							<dt>
-								<Icon icon="users" />
-								{{ $t('task.attributes.assignees') }}
+								<Icon :icon="chip.icon" />
+								{{ chip.label }}
 							</dt>
-							<dd>
-								<EditAssignees
-									v-if="canWrite"
-									:ref="e => setFieldRef('assignees', e)"
-									v-model="task.assignees"
-									:project-id="task.projectId"
-									:task-id="task.id"
-								/>
-								<AssigneeList
-									v-else-if="task.assignees.length > 0"
-									:assignees="task.assignees"
-								/>
-								<span
+							<dd
+								:ref="e => chip.field !== 'repeatAfter' && setFieldRef(chip.field, e)"
+								:class="{'date-input': chip.isDate}"
+							>
+								<template v-if="chip.field === 'repeatAfter'">
+									<BaseButton
+										:ref="e => setFieldRef('repeatAfter', e)"
+										class="property-value-button"
+										:class="{'property-empty': !hasRepeat}"
+										:disabled="!canWrite"
+										:aria-expanded="repeatEditorOpen"
+										@click="repeatEditorOpen = !repeatEditorOpen"
+									>
+										{{ repeatSummary }}
+										<Icon
+											v-if="canWrite"
+											icon="chevron-down"
+											class="chevron"
+										/>
+									</BaseButton>
+								</template>
+								<TaskPropertyEditor
 									v-else
-									class="property-empty"
-								>{{ $t('misc.notSet') }}</span>
-							</dd>
-						</div>
-
-						<div
-							class="property property-labels"
-							:class="{'is-set': task.labels.length > 0}"
-						>
-							<dt>
-								<Icon icon="tags" />
-								{{ $t('task.attributes.labels') }}
-							</dt>
-							<dd>
-								<EditLabels
-									v-if="canWrite || task.labels.length > 0"
-									:ref="e => setFieldRef('labels', e)"
-									v-model="task.labels"
-									:disabled="!canWrite"
-									:task-id="taskId"
-									:creatable="!authStore.isLinkShareAuth"
-									:creation-disabled-message="authStore.isLinkShareAuth ? $t('task.label.linkShareCannotCreate') : ''"
-								/>
-								<span
-									v-else
-									class="property-empty"
-								>{{ $t('misc.notSet') }}</span>
-							</dd>
-						</div>
-
-						<div
-							class="property property-priority"
-							:class="{'is-set': task.priority !== PRIORITIES.UNSET}"
-						>
-							<dt>
-								<Icon icon="exclamation-circle" />
-								{{ $t('task.attributes.priority') }}
-							</dt>
-							<dd>
-								<PrioritySelect
-									:ref="e => setFieldRef('priority', e)"
-									v-model="task.priority"
-									:disabled="!canWrite"
-									@update:modelValue="setPriority"
-								/>
-							</dd>
-						</div>
-
-						<div
-							class="property property-percent-done"
-							:class="{'is-set': task.percentDone > 0}"
-						>
-							<dt>
-								<Icon icon="percent" />
-								{{ $t('task.attributes.percentDone') }}
-							</dt>
-							<dd>
-								<PercentDoneSelect
-									:ref="e => setFieldRef('percentDone', e)"
-									v-model="task.percentDone"
-									:disabled="!canWrite"
-									@update:modelValue="setPercentDone"
-								/>
-							</dd>
-						</div>
-
-						<div
-							class="property property-due-date"
-							:class="{'is-set': task.dueDate !== null}"
-						>
-							<dt>
-								<Icon icon="calendar" />
-								{{ $t('task.attributes.dueDate') }}
-							</dt>
-							<dd class="date-input">
-								<Datepicker
-									:ref="e => setFieldRef('dueDate', e)"
-									v-model="task.dueDate"
-									:choose-date-label="$t('task.detail.chooseDueDate')"
-									:empty-label="$t('misc.notSet')"
-									:disabled="taskService.loading || !canWrite"
-									@closeOnChange="saveTask()"
+									:field="chip.field"
+									:task="task"
+									:can-write="canWrite"
+									:task-color="taskColor"
+									:reminders-default-relative-to="remindersDefaultRelativeTo"
+									:loading="taskService.loading"
+									@mutate="applyPatch"
+									@patch="savePatch"
+									@update:taskColor="setTaskColor"
 								/>
 								<BaseButton
-									v-if="task.dueDate && canWrite"
+									v-if="chip.clearable && chip.isSet && canWrite"
 									class="remove"
-									:aria-label="$t('task.detail.removeDueDate')"
-									@click="() => {task.dueDate = null;saveTask()}"
-								>
-									<Icon icon="times" />
-								</BaseButton>
-							</dd>
-						</div>
-
-						<div
-							class="property property-start-date"
-							:class="{'is-set': task.startDate !== null}"
-						>
-							<dt>
-								<Icon icon="play" />
-								{{ $t('task.attributes.startDate') }}
-							</dt>
-							<dd class="date-input">
-								<Datepicker
-									:ref="e => setFieldRef('startDate', e)"
-									v-model="task.startDate"
-									:choose-date-label="$t('task.detail.chooseStartDate')"
-									:empty-label="$t('misc.notSet')"
-									:disabled="taskService.loading || !canWrite"
-									@closeOnChange="saveTask()"
-								/>
-								<BaseButton
-									v-if="task.startDate && canWrite"
-									class="remove"
-									:aria-label="$t('task.detail.removeStartDate')"
-									@click="() => {task.startDate = null;saveTask()}"
-								>
-									<Icon icon="times" />
-								</BaseButton>
-							</dd>
-						</div>
-
-						<div
-							class="property property-end-date"
-							:class="{'is-set': task.endDate !== null}"
-						>
-							<dt>
-								<Icon icon="stop" />
-								{{ $t('task.attributes.endDate') }}
-							</dt>
-							<dd class="date-input">
-								<Datepicker
-									:ref="e => setFieldRef('endDate', e)"
-									v-model="task.endDate"
-									:choose-date-label="$t('task.detail.chooseEndDate')"
-									:empty-label="$t('misc.notSet')"
-									:disabled="taskService.loading || !canWrite"
-									@closeOnChange="saveTask()"
-								/>
-								<BaseButton
-									v-if="task.endDate && canWrite"
-									class="remove"
-									:aria-label="$t('task.detail.removeEndDate')"
-									@click="() => {task.endDate = null;saveTask()}"
-								>
-									<Icon icon="times" />
-								</BaseButton>
-							</dd>
-						</div>
-
-						<div
-							class="property property-reminders"
-							:class="{'is-set': task.reminders.length > 0}"
-						>
-							<dt>
-								<Icon :icon="['far', 'clock']" />
-								{{ $t('task.attributes.reminders') }}
-							</dt>
-							<dd>
-								<Reminders
-									:ref="e => setFieldRef('reminders', e)"
-									v-model="task.reminders"
-									:default-relative-to="remindersDefaultRelativeTo"
-									:disabled="!canWrite"
-									@update:modelValue="saveTask()"
-								/>
-							</dd>
-						</div>
-
-						<div
-							class="property property-repeat"
-							:class="{'is-set': hasRepeat, 'is-expanded': repeatEditorOpen}"
-						>
-							<dt>
-								<Icon icon="history" />
-								{{ $t('task.attributes.repeat') }}
-							</dt>
-							<dd>
-								<BaseButton
-									:ref="e => setFieldRef('repeatAfter', e)"
-									class="property-value-button"
-									:class="{'property-empty': !hasRepeat}"
-									:disabled="!canWrite"
-									:aria-expanded="repeatEditorOpen"
-									@click="repeatEditorOpen = !repeatEditorOpen"
-								>
-									{{ repeatSummary }}
-									<Icon
-										v-if="canWrite"
-										icon="chevron-down"
-										class="chevron"
-									/>
-								</BaseButton>
-								<BaseButton
-									v-if="hasRepeat && canWrite"
-									class="remove"
-									:aria-label="$t('task.detail.removeRepeat')"
-									@click="removeRepeatAfter"
+									:aria-label="chip.removeLabel"
+									@click="clearField(chip.field)"
 								>
 									<Icon icon="times" />
 								</BaseButton>
 							</dd>
 							<div
-								v-if="repeatEditorOpen && canWrite"
+								v-if="chip.field === 'repeatAfter' && repeatEditorOpen && canWrite"
 								class="property-editor"
 							>
-								<RepeatAfter
-									v-model="task"
-									:disabled="!canWrite"
-									@update:modelValue="saveTask()"
+								<TaskPropertyEditor
+									field="repeatAfter"
+									:task="task"
+									:can-write="canWrite"
+									:task-color="taskColor"
+									@patch="savePatch"
 								/>
 							</div>
-						</div>
-
-						<div
-							class="property property-color"
-							:class="{'is-set': taskColor !== ''}"
-						>
-							<dt>
-								<Icon icon="fill-drip" />
-								{{ $t('task.attributes.color') }}
-							</dt>
-							<dd>
-								<ColorPicker
-									v-if="canWrite"
-									:ref="e => setFieldRef('color', e)"
-									v-model="taskColor"
-									menu-position="bottom"
-									@update:modelValue="saveTask()"
-								/>
-								<ColorBubble
-									v-else-if="color"
-									:color="color"
-								/>
-								<span
-									v-else
-									class="property-empty"
-								>{{ $t('misc.notSet') }}</span>
-							</dd>
 						</div>
 					</dl>
 
@@ -607,8 +506,9 @@ import TaskModel from '@/models/task'
 import type {ITask} from '@/modelTypes/ITask'
 import type {IAttachment} from '@/modelTypes/IAttachment'
 import type {IProject} from '@/modelTypes/IProject'
+import type {IconProp} from '@fortawesome/fontawesome-svg-core'
 
-import {PRIORITIES, type Priority} from '@/constants/priorities'
+import {PRIORITIES} from '@/constants/priorities'
 import {PERMISSIONS} from '@/constants/permissions'
 import {PRO_FEATURE} from '@/constants/proFeatures'
 import {SHORTCUTS} from '@/constants/shortcuts'
@@ -619,22 +519,18 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import Attachments from '@/components/tasks/partials/Attachments.vue'
 import TaskTimeTracking from '@/components/time-tracking/TaskTimeTracking.vue'
 import ChecklistSummary from '@/components/tasks/partials/ChecklistSummary.vue'
-import ColorPicker from '@/components/input/ColorPicker.vue'
 import Comments from '@/components/tasks/partials/Comments.vue'
 import CreatedUpdated from '@/components/tasks/partials/CreatedUpdated.vue'
-import Datepicker from '@/components/input/Datepicker.vue'
 import Description from '@/components/tasks/partials/Description.vue'
-import EditAssignees from '@/components/tasks/partials/EditAssignees.vue'
-import EditLabels from '@/components/tasks/partials/EditLabels.vue'
 import Heading from '@/components/tasks/partials/Heading.vue'
 import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
-import PercentDoneSelect from '@/components/tasks/partials/PercentDoneSelect.vue'
-import PrioritySelect from '@/components/tasks/partials/PrioritySelect.vue'
 import RelatedTasks from '@/components/tasks/partials/RelatedTasks.vue'
-import Reminders from '@/components/tasks/partials/Reminders.vue'
-import RepeatAfter from '@/components/tasks/partials/RepeatAfter.vue'
 import TaskSubscription from '@/components/misc/Subscription.vue'
 import Dropdown from '@/components/misc/Dropdown.vue'
+import Labels from '@/components/tasks/partials/Labels.vue'
+import PriorityLabel from '@/components/tasks/partials/PriorityLabel.vue'
+import PropertyChip from '@/components/tasks/partials/PropertyChip.vue'
+import TaskPropertyEditor, {type TaskPropertyField} from '@/components/tasks/partials/TaskPropertyEditor.vue'
 import DropdownItem from '@/components/misc/DropdownItem.vue'
 import ColorBubble from '@/components/misc/ColorBubble.vue'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
@@ -643,6 +539,7 @@ import Reactions from '@/components/input/Reactions.vue'
 
 import {uploadFile} from '@/helpers/attachments'
 import {getProjectTitle} from '@/helpers/getProjectTitle'
+import {formatDisplayDate} from '@/helpers/time/formatDate'
 import {scrollIntoView} from '@/helpers/scrollIntoView'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
@@ -652,7 +549,6 @@ import {isFormField, matchesKey, parseKey} from '@/helpers/shortcut'
 import {useTaskStore} from '@/stores/tasks'
 import {useKanbanStore} from '@/stores/kanban'
 import {useProjectStore} from '@/stores/projects'
-import {useAuthStore} from '@/stores/auth'
 import {useBaseStore} from '@/stores/base'
 import {useConfigStore} from '@/stores/config'
 
@@ -680,7 +576,6 @@ const taskStore = useTaskStore()
 const configStore = useConfigStore()
 const timeTrackingEnabled = computed(() => configStore.isProFeatureEnabled(PRO_FEATURE.TIME_TRACKING))
 const kanbanStore = useKanbanStore()
-const authStore = useAuthStore()
 const baseStore = useBaseStore()
 
 const task = ref<ITask>(new TaskModel())
@@ -960,8 +855,97 @@ function setActiveFields() {
 	activeFields.relatedTasks = Object.keys(task.value.relatedTasks).length > 0
 }
 
-const SIDEBAR_LAYOUTS = ['rows', 'cards'] as const
+const SIDEBAR_LAYOUTS = ['rows', 'cards', 'chips'] as const
+const LAYOUT_ICONS = {rows: 'list', cards: 'table-cells-large', chips: 'grip-lines'} as const
 const sidebarLayout = useStorage<typeof SIDEBAR_LAYOUTS[number]>('taskDetailSidebarLayout', 'rows')
+
+function applyPatch(patch: Partial<ITask>) {
+	Object.assign(task.value, patch)
+}
+
+async function savePatch(patch: Partial<ITask>) {
+	await saveTask({...task.value, ...patch})
+}
+
+async function setTaskColor(hexColor: string) {
+	taskColor.value = hexColor
+	await saveTask()
+}
+
+interface PropertyChipConfig {
+	field: TaskPropertyField
+	cssName: string
+	icon: IconProp
+	label: string
+	isSet: boolean
+	isDate: boolean
+	clearable: boolean
+	removeLabel: string
+	summary: string
+}
+
+const chips = computed<PropertyChipConfig[]>(() => {
+	const tv = task.value
+	const date = (field: 'dueDate' | 'startDate' | 'endDate', icon: IconProp, removeLabel: string): PropertyChipConfig => ({
+		field,
+		cssName: field.replace(/[A-Z]/g, c => '-' + c.toLowerCase()),
+		icon,
+		label: t(`task.attributes.${field}`),
+		isSet: tv[field] !== null,
+		isDate: true,
+		clearable: true,
+		removeLabel: t(removeLabel),
+		summary: tv[field] ? formatDisplayDate(tv[field]) : '',
+	})
+	return [
+		{field: 'assignees', cssName: 'assignees', icon: 'users', label: t('task.attributes.assignees'), isSet: tv.assignees.length > 0, isDate: false, clearable: false, removeLabel: '', summary: ''},
+		{field: 'labels', cssName: 'labels', icon: 'tags', label: t('task.attributes.labels'), isSet: tv.labels.length > 0, isDate: false, clearable: false, removeLabel: '', summary: ''},
+		{field: 'priority', cssName: 'priority', icon: 'exclamation-circle', label: t('task.attributes.priority'), isSet: tv.priority !== PRIORITIES.UNSET, isDate: false, clearable: true, removeLabel: '', summary: ''},
+		{field: 'percentDone', cssName: 'percent-done', icon: 'percent', label: t('task.attributes.percentDone'), isSet: tv.percentDone > 0, isDate: false, clearable: true, removeLabel: '', summary: `${Math.round(tv.percentDone * 100)}%`},
+		date('dueDate', 'calendar', 'task.detail.removeDueDate'),
+		date('startDate', 'play', 'task.detail.removeStartDate'),
+		date('endDate', 'stop', 'task.detail.removeEndDate'),
+		{field: 'reminders', cssName: 'reminders', icon: ['far', 'clock'], label: t('task.attributes.reminders'), isSet: tv.reminders.length > 0, isDate: false, clearable: false, removeLabel: '', summary: t('task.detail.remindersCount', tv.reminders.length)},
+		{field: 'repeatAfter', cssName: 'repeat', icon: 'history', label: t('task.attributes.repeat'), isSet: hasRepeat.value, isDate: false, clearable: true, removeLabel: t('task.detail.removeRepeat'), summary: repeatSummary.value},
+		{field: 'color', cssName: 'color', icon: 'fill-drip', label: t('task.attributes.color'), isSet: taskColor.value !== '', isDate: false, clearable: false, removeLabel: '', summary: ''},
+	]
+})
+
+// Chips without a value stay hidden behind "+ Add" until picked; reset per task.
+const revealedChips = ref(new Set<TaskPropertyField>())
+watch(() => task.value.id, () => revealedChips.value = new Set())
+const visibleChips = computed(() => chips.value.filter(c => c.isSet || revealedChips.value.has(c.field)))
+const hiddenChips = computed(() => chips.value.filter(c => !c.isSet && !revealedChips.value.has(c.field)))
+
+const chipRefs: Partial<Record<TaskPropertyField, InstanceType<typeof PropertyChip>>> = {}
+function setChipRef(field: TaskPropertyField, e: unknown) {
+	if (e) {
+		chipRefs[field] = e as InstanceType<typeof PropertyChip>
+	} else {
+		delete chipRefs[field]
+	}
+}
+
+async function revealChip(field: TaskPropertyField) {
+	revealedChips.value.add(field)
+	await nextTick()
+	chipRefs[field]?.open()
+}
+
+async function clearField(field: TaskPropertyField) {
+	switch (field) {
+		case 'priority':
+			return savePatch({priority: PRIORITIES.UNSET})
+		case 'percentDone':
+			return savePatch({percentDone: 0})
+		case 'dueDate':
+		case 'startDate':
+		case 'endDate':
+			return savePatch({[field]: null})
+		case 'repeatAfter':
+			return removeRepeatAfter()
+	}
+}
 
 const hasRepeat = computed(() =>
 	(task.value.repeatAfter?.amount ?? 0) > 0 ||
@@ -1015,6 +999,10 @@ const DATE_FIELDS: FieldType[] = ['dueDate', 'startDate', 'endDate']
 function setFieldActive(fieldName: FieldType) {
 	if (fieldName in activeFields) {
 		activeFields[fieldName as SectionType] = true
+	}
+	if (sidebarLayout.value === 'chips' && !(fieldName in activeFields)) {
+		revealChip(fieldName as TaskPropertyField)
+		return
 	}
 	if (fieldName === 'repeatAfter') {
 		repeatEditorOpen.value = true
@@ -1173,24 +1161,6 @@ async function duplicateCurrentTask() {
 			params: {id: duplicatedTask.id},
 		})
 	}
-}
-
-async function setPriority(priority: Priority) {
-	const newTask: ITask = {
-		...task.value,
-		priority,
-	}
-
-	return saveTask(newTask)
-}
-
-async function setPercentDone(percentDone: number) {
-	const newTask: ITask = {
-		...task.value,
-		percentDone,
-	}
-
-	return saveTask(newTask)
 }
 
 async function removeRepeatAfter() {
@@ -1413,6 +1383,149 @@ h2 .button {
 
 	.toolbar-icon-button {
 		block-size: 100%;
+	}
+}
+
+// --- Chips layout ----------------------------------------------------------
+
+.task-columns.is-chips {
+	flex-direction: column;
+
+	.task-sidebar {
+		order: -1;
+	}
+
+	.sidebar-head {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: .5rem;
+	}
+
+	.sidebar-toolbar {
+		margin-block-end: 0;
+
+		.button--mark-done {
+			flex: 0 0 auto;
+		}
+	}
+
+	.sidebar-layout-switch {
+		margin-block-end: 0;
+	}
+
+	:deep(.created) {
+		margin-block-start: .5rem;
+	}
+}
+
+.property-chips {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: .375rem;
+	padding-block: .75rem .25rem;
+
+	// Chips reuse the `.property-*` hooks (tests, shortcuts) but not the row styling.
+	.property {
+		display: inline-flex;
+		padding: 0;
+		border: none;
+	}
+
+	:deep(.popup) {
+		inset-block-start: 100%;
+		inset-inline-start: 0;
+
+		&:not(.is-open) {
+			display: none;
+		}
+
+		// Nested pickers (calendar, reminder options) extend past the popover.
+		&.is-open {
+			overflow: visible;
+		}
+	}
+
+	:deep(.label-wrapper) {
+		display: inline-flex;
+		flex-wrap: nowrap;
+		gap: .25rem;
+
+		.tag {
+			margin: 0;
+			block-size: 1.25rem;
+			font-size: .75rem;
+		}
+	}
+
+	:deep(.assignees-list) {
+		display: inline-flex;
+		align-items: center;
+		margin: 0;
+	}
+
+	// The chip already carries the priority icon.
+	:deep(.priority-label) {
+		font-size: inherit;
+
+		.icon {
+			display: none;
+		}
+	}
+
+	:deep(.color-bubble) {
+		inline-size: .875rem;
+		block-size: .875rem;
+	}
+
+	:deep(.chip-popover) {
+		.select,
+		.select select,
+		.datepicker,
+		.multiselect {
+			inline-size: 100%;
+		}
+
+		.datepicker .show {
+			display: block;
+			inline-size: 100%;
+			padding: .25rem .5rem;
+			border-radius: $radius;
+			text-align: start;
+
+			&:hover {
+				background: var(--grey-100);
+			}
+		}
+	}
+}
+
+.add-property {
+	display: inline-flex;
+
+	.chip-add {
+		display: inline-flex;
+		align-items: center;
+		gap: .375rem;
+		min-block-size: 1.875rem;
+		padding: .25rem .625rem;
+		border: 1px dashed var(--grey-300);
+		border-radius: 999px;
+		color: var(--grey-500);
+		font-size: .875rem;
+		transition: color $transition, border-color $transition;
+
+		svg {
+			inline-size: .75rem;
+		}
+
+		&:hover,
+		&:focus-visible {
+			color: var(--text);
+			border-color: var(--grey-400);
+		}
 	}
 }
 
