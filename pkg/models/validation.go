@@ -42,31 +42,31 @@ func init() {
 	}
 }
 
-// ValidateStruct reports every `valid:` tag failure as an InvalidFieldError.
-func ValidateStruct(i interface{}) error {
-	return ValidateStructFields(i, nil)
-}
-
-// ValidateStructFields restricts ValidateStruct to the named fields (nil means all):
-// a partial payload must not trip a `required` rule for a field it never sent.
-func ValidateStructFields(i interface{}, only map[string]bool) error {
+// StructFieldErrors returns the `valid:` tag failures of i as
+// "<prefix><field>: <message>", or nil if i validates. A failure govalidator
+// reports without naming a field yields an empty but non-nil slice, so callers
+// can still fail closed.
+func StructFieldErrors(i any, prefix string) []string {
 	_, err := govalidator.ValidateStruct(i)
 	if err == nil {
 		return nil
 	}
-
-	var errs []string
-	for field, e := range govalidator.ErrorsByField(err) {
-		if only != nil && !only[field] {
-			continue
-		}
-		errs = append(errs, field+": "+e)
+	byField := govalidator.ErrorsByField(err)
+	fields := make([]string, 0, len(byField))
+	for field, msg := range byField {
+		fields = append(fields, prefix+field+": "+msg)
 	}
-	if len(errs) == 0 {
+	return fields
+}
+
+// ValidateStruct reports every `valid:` tag failure as an InvalidFieldError.
+func ValidateStruct(i interface{}) error {
+	fields := StructFieldErrors(i, "")
+	if fields == nil {
 		return nil
 	}
 
 	// Map iteration order is non-deterministic; sort for a stable errors[].
-	sort.Strings(errs)
-	return InvalidFieldError(errs)
+	sort.Strings(fields)
+	return InvalidFieldError(fields)
 }
