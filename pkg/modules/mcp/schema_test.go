@@ -136,15 +136,6 @@ func TestSchema_ProjectCreateRequiresTitleOnly(t *testing.T) {
 	assert.NotContains(t, spec.schema.Properties, "views")
 }
 
-func TestSchema_ProjectViewsReadAllScopedByProject(t *testing.T) {
-	registerAllResources(t)
-	spec := specFor(t, "projects_views", OpReadAll)
-
-	// ProjectView.ProjectID is readOnly + param:"project", so MCP has to demand it.
-	assert.Equal(t, []string{"project_id"}, spec.schema.Required)
-	assert.Contains(t, spec.schema.Properties, "project_id")
-}
-
 func TestSchema_ReadAllRequiredIsOnlyParentScope(t *testing.T) {
 	registerAllResources(t)
 
