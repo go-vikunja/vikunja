@@ -114,6 +114,22 @@ func TestMCP_Catalog_DoActionLabelRoundTrip(t *testing.T) {
 	require.NotContains(t, result, "isError", "do_action delete errored: %v", result)
 }
 
+func TestMCP_Catalog_DoActionListsProjectViews(t *testing.T) {
+	c := newMCPClient(t, mcpFullProjectsToken)
+	result := c.callTool("do_action", map[string]any{
+		"action":    "projects_views_read_all",
+		"arguments": map[string]any{"project_id": 1},
+	})
+	require.NotContains(t, result, "isError", "do_action projects_views_read_all errored: %v", result)
+
+	var views []map[string]any
+	require.NoError(t, json.Unmarshal([]byte(toolResultText(t, result)), &views))
+	require.NotEmpty(t, views)
+	for _, v := range views {
+		assert.EqualValues(t, 1, v["project_id"])
+	}
+}
+
 func TestMCP_Catalog_DoActionScopeDenied(t *testing.T) {
 	// Token 11 has no projects_users scope; the per-call re-check inside
 	// Dispatch must reject the action even though it exists.

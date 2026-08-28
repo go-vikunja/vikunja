@@ -139,6 +139,36 @@ func TestSchema_ProjectCreateRequiresTitleOnly(t *testing.T) {
 	assert.NotContains(t, spec.schema.Properties, "views")
 }
 
+func TestSchema_ProjectViewsReadAllScopedByProject(t *testing.T) {
+	registerAllResources(t)
+	spec := specFor(t, "projects_views", OpReadAll)
+
+	// ProjectView.ProjectID is readOnly + param:"project": REST scopes the
+	// listing by it, so MCP has to demand it.
+	assert.Equal(t, []string{"project_id"}, spec.schema.Required)
+	assert.Contains(t, spec.schema.Properties, "project_id")
+}
+
+func TestSchema_ReadAllRequiredIsOnlyParentScope(t *testing.T) {
+	registerAllResources(t)
+
+	want := map[string][]string{
+		"projects":        nil,
+		"tasks":           nil,
+		"labels":          nil,
+		"teams":           nil,
+		"tasks_comments":  {"task_id"},
+		"tasks_assignees": {"task_id"},
+		"tasks_labels":    {"task_id"},
+		"projects_users":  {"project_id"},
+		"projects_teams":  {"project_id"},
+		"projects_views":  {"project_id"},
+	}
+	for name, required := range want {
+		assert.Equal(t, required, specFor(t, name, OpReadAll).schema.Required, name)
+	}
+}
+
 func TestSnakeCase(t *testing.T) {
 	cases := map[string]string{
 		"TaskID":      "task_id",
