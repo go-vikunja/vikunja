@@ -79,8 +79,14 @@ func checkSqliteFile() CheckResult {
 		return result
 	}
 
-	if _, err := os.Stat(path); err != nil {
+	info, err := os.Stat(path)
+	if err != nil {
 		result.Error = err.Error()
+		return result
+	}
+
+	if info.IsDir() {
+		result.Error = fmt.Sprintf("%s exists but is not a file", path)
 		return result
 	}
 
