@@ -466,10 +466,13 @@ function closePdfPreview() {
 }
 
 function closeVideoPreview() {
+	// an in-flight blob must not re-open the dismissed modal
+	previewRequestToken++
 	replaceBlobUrl(attachmentVideoBlobUrl, null)
 }
 
 onBeforeUnmount(() => {
+	previewRequestToken++
 	closeImageLightbox()
 	closePdfPreview()
 	closeVideoPreview()
@@ -512,8 +515,11 @@ async function viewOrDownload(attachment: IAttachment) {
 			attachmentImageAlt.value = attachment.file.name
 		} else if (canPreviewVideo(attachment)) {
 			replaceBlobUrl(attachmentVideoBlobUrl, blobUrl)
-		} else {
+		} else if (canPreviewPdf(attachment)) {
 			replaceBlobUrl(attachmentPdfBlobUrl, blobUrl)
+		} else {
+			URL.revokeObjectURL(blobUrl)
+			downloadAttachment(attachment)
 		}
 	} catch (e) {
 		error(e)
