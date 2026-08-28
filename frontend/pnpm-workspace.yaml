@@ -5,7 +5,7 @@ allowBuilds:
   puppeteer: true
   vue-demi: true
 catalog:
-  rollup: 4.62.5
+  rollup: 4.63.0
 overrides:
   minimatch: 10.2.6
   rollup: 'catalog:'
