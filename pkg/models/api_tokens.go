@@ -233,7 +233,8 @@ func (t *APIToken) Delete(s *xorm.Session, a web.Auth) (err error) {
 	return nil
 }
 
-// Both sides are canonicalised like CanDoAPIRoute does, so a hyphenated group slug still matches.
+// HasPermission reports whether the token grants permission in group. Both sides are
+// canonicalised like CanDoAPIRoute does, so a hyphenated group slug still matches.
 func (t *APIToken) HasPermission(group, permission string) bool {
 	if t == nil {
 		return false

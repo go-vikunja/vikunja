@@ -48,7 +48,6 @@ func TestMCP_Catalog_MetaToolsInToolsList(t *testing.T) {
 }
 
 func TestMCP_Catalog_FindActionScopeFiltered(t *testing.T) {
-	// Token 12 has tasks_labels scopes but no other catalog resource.
 	c := newMCPClient(t, mcpFullProjectsToken)
 	actions := findActions(t, c, map[string]any{})
 
@@ -57,10 +56,13 @@ func TestMCP_Catalog_FindActionScopeFiltered(t *testing.T) {
 		names[a["name"].(string)] = true
 		assert.NotContains(t, a, "input_schema", "unfiltered find_action must stay schema-free")
 	}
-	for _, want := range []string{"tasks_labels_create", "tasks_labels_read_all", "tasks_labels_delete"} {
-		assert.True(t, names[want], "missing %s: %v", want, names)
-	}
-	assert.False(t, names["projects_users_create"], "no projects_users scope on token 11")
+	// Exact set, derived from token 12's scopes, so this can't silently drift when the fixture changes.
+	assert.Equal(t, map[string]bool{
+		"tasks_labels_create":     true,
+		"tasks_labels_read_all":   true,
+		"tasks_labels_delete":     true,
+		"projects_views_read_all": true,
+	}, names)
 	assert.False(t, names["tasks_create"], "typed tools must not appear in the catalog")
 }
 

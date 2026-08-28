@@ -29,6 +29,15 @@ import (
 func resetRegistry(t *testing.T) {
 	t.Helper()
 	registryMu.Lock()
+	res, idx := resources, toolIndex
+	registryMu.Unlock()
+	t.Cleanup(func() {
+		registryMu.Lock()
+		resources, toolIndex = res, idx
+		registryMu.Unlock()
+	})
+
+	registryMu.Lock()
 	defer registryMu.Unlock()
 	resources = nil
 	toolIndex = map[string]toolRef{}
