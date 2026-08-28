@@ -678,6 +678,13 @@ func InitConfig() {
 		log.Fatalf("Could not read config file %s: %s", configFileOverride, err.Error())
 	}
 
+	// Relative paths belong to the pinned install, not to the caller's cwd.
+	if configFileOverride != "" && !viper.InConfig(string(ServiceRootpath)) {
+		if configDir, absErr := filepath.Abs(filepath.Dir(viper.ConfigFileUsed())); absErr == nil {
+			ServiceRootpath.setDefault(configDir)
+		}
+	}
+
 	if viper.ConfigFileUsed() != "" {
 		log.Infof("Using config file: %s", viper.ConfigFileUsed())
 
