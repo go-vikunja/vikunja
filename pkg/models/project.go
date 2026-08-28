@@ -79,7 +79,7 @@ type Project struct {
 	Views []*ProjectView `xorm:"-" json:"views" readOnly:"true" doc:"The views configured for this project. Managed through the project view endpoints."`
 
 	Expand        ProjectExpandable `xorm:"-" json:"-" query:"expand"`
-	MaxPermission Permission        `xorm:"-" json:"max_permission" readOnly:"true" doc:"The maximum permission the requesting user has on this project (0 = read, 1 = read/write, 2 = admin)."`
+	MaxPermission *Permission       `xorm:"-" json:"max_permission" readOnly:"true" doc:"The maximum permission the requesting user has on this project (0 = read, 1 = read/write, 2 = admin), or null when the permission was not computed for this response."`
 
 	// A timestamp when this project was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"A timestamp when this project was created. You cannot change this value."`
@@ -241,10 +241,6 @@ func (p *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, 
 		err = addMaxPermissionToProjects(s, prs, doer)
 		if err != nil {
 			return
-		}
-	} else {
-		for _, pr := range prs {
-			pr.MaxPermission = PermissionUnknown
 		}
 	}
 
@@ -949,7 +945,7 @@ func addMaxPermissionToProjects(s *xorm.Session, projects []*Project, u *user.Us
 	projectIDs := make([]int64, 0, len(projects))
 	for _, project := range projects {
 		if GetSavedFilterIDFromProjectID(project.ID) > 0 {
-			project.MaxPermission = PermissionAdmin
+			project.MaxPermission = Ptr(PermissionAdmin)
 			continue
 		}
 		projectIDs = append(projectIDs, project.ID)
@@ -963,7 +959,7 @@ func addMaxPermissionToProjects(s *xorm.Session, projects []*Project, u *user.Us
 	for _, project := range projects {
 		permission, has := permissions[project.ID]
 		if has {
-			project.MaxPermission = permission.MaxPermission
+			project.MaxPermission = Ptr(permission.MaxPermission)
 		}
 	}
 

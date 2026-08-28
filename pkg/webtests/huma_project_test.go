@@ -151,7 +151,8 @@ func TestHumaProject(t *testing.T) {
 			// is caught precisely.
 			var p models.Project
 			require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &p))
-			assert.Equal(t, models.PermissionAdmin, p.MaxPermission)
+			require.NotNil(t, p.MaxPermission)
+			assert.Equal(t, models.PermissionAdmin, *p.MaxPermission)
 			// The project read is served fresh on every call; no ETag is sent
 			// because the response carries derived state that changes without
 			// bumping project.Updated.
@@ -186,7 +187,8 @@ func TestHumaProject(t *testing.T) {
 
 				var p models.Project
 				require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &p))
-				assert.Equal(t, want, p.MaxPermission)
+				require.NotNil(t, p.MaxPermission)
+				assert.Equal(t, want, *p.MaxPermission)
 			}
 
 			t.Run("Shared Via Team readonly", func(t *testing.T) {
@@ -595,9 +597,8 @@ func TestHumaProject_PATCHMergePatch(t *testing.T) {
 // TestHumaProject_NullMaxPermissionRoundTrips guards the create/update response
 // shape: those routes return "max_permission":null (the field is not computed
 // there), and a client that PUTs the response body back verbatim must not be
-// rejected. max_permission is readOnly so Huma ignores it on the write body, and
-// Permission.UnmarshalJSON treats JSON null as a no-op (→ PermissionRead, no
-// error) anyway — so the round-trip succeeds with 200, not 422.
+// rejected. max_permission is readOnly, so Huma stays permissive about it on a
+// write body — the round-trip succeeds with 200, not 422.
 func TestHumaProject_NullMaxPermissionRoundTrips(t *testing.T) {
 	e, err := setupTestEnv()
 	require.NoError(t, err)

@@ -105,6 +105,11 @@ func TestProject(t *testing.T) {
 			assert.NotContains(t, rec.Body.String(), `"owner":{"id":2,"name":"","username":"user2",`)
 			assert.NotContains(t, rec.Body.String(), `"tasks":`)
 			assert.Equal(t, "2", rec.Result().Header.Get("x-max-permission")) // User 1 is owner, so they should have admin permissions.
+			// v1 reports the permission in the header only; the body field is
+			// filled by expand=permissions on the list route and must not
+			// fall back to its zero value (0 = read) here.
+			assert.Contains(t, rec.Body.String(), `"max_permission":null`)
+			assert.NotContains(t, rec.Body.String(), `"max_permission":0`)
 		})
 		t.Run("Nonexisting", func(t *testing.T) {
 			_, err := testHandler.testReadOneWithUser(nil, map[string]string{"project": "9999"})
@@ -204,6 +209,8 @@ func TestProject(t *testing.T) {
 			assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
 			// The description should not be updated but returned correctly
 			assert.Contains(t, rec.Body.String(), `description":"Lorem Ipsum`)
+			assert.Contains(t, rec.Body.String(), `"max_permission":null`)
+			assert.NotContains(t, rec.Body.String(), `"max_permission":0`)
 		})
 		t.Run("Nonexisting", func(t *testing.T) {
 			_, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "9999"}, `{"title":"TestLoremIpsum"}`)
@@ -398,6 +405,8 @@ func TestProject(t *testing.T) {
 			assert.Contains(t, rec.Body.String(), `"description":""`)
 			assert.Contains(t, rec.Body.String(), `"owner":{"id":1`)
 			assert.NotContains(t, rec.Body.String(), `"tasks":`)
+			assert.Contains(t, rec.Body.String(), `"max_permission":null`)
+			assert.NotContains(t, rec.Body.String(), `"max_permission":0`)
 		})
 		t.Run("Normal with description", func(t *testing.T) {
 			rec, err := testHandler.testCreateWithUser(nil, nil, `{"title":"Lorem","description":"Lorem Ipsum"}`)
