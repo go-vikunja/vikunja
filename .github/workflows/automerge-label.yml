@@ -9,6 +9,7 @@ on:
 
 env:
   AUTOMERGE_LABEL: auto-merge
+  GH_REPO: ${{ github.repository }}
 
 jobs:
   # Event-driven sync for a single PR. Never checks out PR head code.
