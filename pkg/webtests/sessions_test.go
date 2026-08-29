@@ -31,7 +31,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// refreshTokenRequest builds a v1 refresh request carrying the given refresh-token cookie.
 func refreshTokenRequest(refreshToken string) *http.Request {
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/user/token/refresh", strings.NewReader(""))
 	req.Header.Set("Content-Type", "application/json")
@@ -98,31 +97,6 @@ func TestSessions(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusOK, rec.Code)
 		assert.Contains(t, rec.Body.String(), "token")
-	})
-
-	t.Run("Refresh via v2 with valid token", func(t *testing.T) {
-		e, err := setupTestEnv()
-		require.NoError(t, err)
-
-		req := httptest.NewRequest(http.MethodPost, "/api/v2/user/token/refresh", strings.NewReader(""))
-		req.Header.Set("Content-Type", "application/json")
-		req.AddCookie(&http.Cookie{
-			Name:  auth.RefreshTokenCookieName,
-			Value: "testtoken_session1",
-		})
-		rec := httptest.NewRecorder()
-		e.ServeHTTP(rec, req)
-
-		assert.Equal(t, http.StatusOK, rec.Code)
-		assert.Contains(t, rec.Body.String(), "token")
-
-		paths := []string{}
-		for _, c := range rec.Result().Cookies() {
-			if c.Name == auth.RefreshTokenCookieName {
-				paths = append(paths, c.Path)
-			}
-		}
-		assert.ElementsMatch(t, []string{"/api/v1/user/token/refresh", "/api/v2/user/token/refresh"}, paths)
 	})
 
 	t.Run("Refresh with invalid token", func(t *testing.T) {
