@@ -1,4 +1,4 @@
-import {HTTPFactory} from '@/helpers/fetcher'
+import {apiV2Url, HTTPFactory} from '@/helpers/fetcher'
 import {isDesktopApp, refreshDesktopToken} from '@/helpers/desktopAuth'
 
 let savedToken: string | null = null
@@ -67,11 +67,12 @@ export async function refreshToken(persist: boolean): Promise<void> {
 	inFlightRefresh = p
 	// Only clear if it still points to this promise — a logout (or a newer
 	// refresh started after it) may have replaced inFlightRefresh meanwhile.
+	// .catch: callers get the rejection through p; avoid a second unhandled one.
 	p.finally(() => {
 		if (inFlightRefresh === p) {
 			inFlightRefresh = null
 		}
-	})
+	}).catch(() => {})
 	return p
 }
 
@@ -132,7 +133,21 @@ async function doRefresh(persist: boolean): Promise<void> {
 		// We hold the lock and no one else refreshed — make the API call.
 		const HTTP = HTTPFactory()
 		try {
-			const response = await HTTP.post('user/token/refresh')
+			let response
+			try {
+				response = await HTTP.post(apiV2Url('user/token/refresh'))
+			} catch (e) {
+				if ((e as {response?: {status?: number}})?.response?.status === 429) {
+					throw e
+				}
+				if (loggedOutSinceStart()) {
+					return
+				}
+				// Pre-v2 browsers only hold the v1-path cookie, and some deployments
+				// can't reach v2 at all; v1 re-seeds both cookies.
+				// Drop this fallback once pre-v2 clients have cycled out.
+				response = await HTTP.post('user/token/refresh')
+			}
 			if (loggedOutSinceStart()) {
 				return
 			}

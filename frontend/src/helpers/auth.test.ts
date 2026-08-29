@@ -2,21 +2,17 @@ import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest'
 
 import {getToken, refreshToken, removeToken} from './auth'
 
-// Count how many times the refresh endpoint is actually POSTed. The whole point
-// of the in-flight dedup is that concurrent refreshToken() calls share a single
-// underlying POST, independent of the Web Locks API.
-let postCallCount = 0
 let resolvePost: ((value: unknown) => void) | null = null
 
+const post = vi.hoisted(() => vi.fn(() => {
+	return new Promise((resolve) => {
+		resolvePost = resolve
+	})
+}))
+
 vi.mock('@/helpers/fetcher', () => ({
-	HTTPFactory: () => ({
-		post: vi.fn(() => {
-			postCallCount++
-			return new Promise((resolve) => {
-				resolvePost = resolve
-			})
-		}),
-	}),
+	apiV2Url: (path: string) => `/api/v2/${path}`,
+	HTTPFactory: () => ({post}),
 }))
 
 const desktop = vi.hoisted(() => ({
@@ -39,8 +35,8 @@ describe('refreshToken in-flight dedup', () => {
 	const originalLocks = navigator.locks
 
 	beforeEach(() => {
-		postCallCount = 0
 		resolvePost = null
+		post.mockClear()
 		removeToken()
 		localStorage.clear()
 	})
@@ -68,7 +64,7 @@ describe('refreshToken in-flight dedup', () => {
 		const p2 = refreshToken(true)
 
 		// Both calls share one underlying request.
-		expect(postCallCount).toBe(1)
+		expect(post).toHaveBeenCalledTimes(1)
 
 		settlePost()
 		await Promise.all([p1, p2])
@@ -76,7 +72,8 @@ describe('refreshToken in-flight dedup', () => {
 		// The Web Locks branch actually ran...
 		expect(requestSpy).toHaveBeenCalledWith('vikunja-token-refresh', expect.any(Function))
 		// ...and the in-flight dedup still collapsed both calls into one POST.
-		expect(postCallCount).toBe(1)
+		expect(post).toHaveBeenCalledTimes(1)
+		expect(post).toHaveBeenCalledWith('/api/v2/user/token/refresh')
 	})
 
 	it('coalesces concurrent calls into a single POST on insecure HTTP (no Web Locks)', async () => {
@@ -91,30 +88,30 @@ describe('refreshToken in-flight dedup', () => {
 		const p2 = refreshToken(true)
 		const p3 = refreshToken(true)
 
-		expect(postCallCount).toBe(1)
+		expect(post).toHaveBeenCalledTimes(1)
 
 		settlePost()
 		await Promise.all([p1, p2, p3])
 
-		expect(postCallCount).toBe(1)
+		expect(post).toHaveBeenCalledTimes(1)
 	})
 
 	it('allows a fresh refresh after the previous one settled', async () => {
 		const p1 = refreshToken(true)
 		settlePost()
 		await p1
-		expect(postCallCount).toBe(1)
+		expect(post).toHaveBeenCalledTimes(1)
 
 		// The in-flight promise was reset, so a later refresh runs anew.
 		const p2 = refreshToken(true)
-		expect(postCallCount).toBe(2)
+		expect(post).toHaveBeenCalledTimes(2)
 		settlePost()
 		await p2
 	})
 
 	it('does not re-persist the token when logout happens during an in-flight refresh', async () => {
 		const p1 = refreshToken(true)
-		expect(postCallCount).toBe(1)
+		expect(post).toHaveBeenCalledTimes(1)
 
 		// User logs out while the refresh POST is still in flight.
 		removeToken()
@@ -129,7 +126,7 @@ describe('refreshToken in-flight dedup', () => {
 	it('an older refresh settling does not clobber a newer in-flight one', async () => {
 		// Refresh A starts and stays in flight.
 		const pA = refreshToken(true)
-		expect(postCallCount).toBe(1)
+		expect(post).toHaveBeenCalledTimes(1)
 		const resolveA = resolvePost
 
 		// User logs out, which drops the in-flight reference to A.
@@ -137,7 +134,7 @@ describe('refreshToken in-flight dedup', () => {
 
 		// Refresh B starts; it must claim the in-flight slot.
 		const pB = refreshToken(true)
-		expect(postCallCount).toBe(2)
+		expect(post).toHaveBeenCalledTimes(2)
 		const resolveB = resolvePost
 
 		// A settles after B started. Its cleanup must NOT null the in-flight
@@ -150,10 +147,56 @@ describe('refreshToken in-flight dedup', () => {
 		// A concurrent caller while B is still in flight must dedup to B —
 		// no third POST.
 		const pB2 = refreshToken(true)
-		expect(postCallCount).toBe(2)
+		expect(post).toHaveBeenCalledTimes(2)
 
 		resolveB?.({data: {token: FAKE_TOKEN}})
 		await Promise.all([pB, pB2])
+	})
+})
+
+describe('refreshToken v1 cookie fallback', () => {
+	beforeEach(() => {
+		post.mockClear()
+		removeToken()
+		localStorage.clear()
+	})
+
+	it.each([
+		['401', {response: {status: 401}}],
+		['404 (e.g. misconfigured API_URL)', {response: {status: 404}}],
+		['no response (e.g. network/CORS error)', new Error('Network Error')],
+	])('retries against v1 when the v2 refresh fails with %s', async (_label, rejection) => {
+		post.mockRejectedValueOnce(rejection)
+		post.mockResolvedValueOnce({data: {token: FAKE_TOKEN}})
+
+		await refreshToken(true)
+
+		expect(post).toHaveBeenNthCalledWith(1, '/api/v2/user/token/refresh')
+		expect(post).toHaveBeenNthCalledWith(2, 'user/token/refresh')
+		expect(localStorage.getItem('token')).toBe(FAKE_TOKEN)
+	})
+
+	it('does not retry against v1 when the v2 refresh is rate limited (429)', async () => {
+		post.mockRejectedValueOnce({response: {status: 429}})
+
+		await expect(refreshToken(true)).rejects.toThrow('Error renewing token')
+
+		expect(post).toHaveBeenCalledTimes(1)
+		expect(localStorage.getItem('token')).toBeNull()
+	})
+
+	it('does not fall back to v1 when logout happens between the v2 failure and the fallback call', async () => {
+		// removeToken() runs synchronously as part of the v2 call rejecting, simulating
+		// a logout landing in the gap before the v1 fallback would otherwise fire.
+		post.mockImplementationOnce(() => {
+			removeToken()
+			return Promise.reject({response: {status: 404}})
+		})
+
+		await refreshToken(true)
+
+		expect(post).toHaveBeenCalledTimes(1)
+		expect(localStorage.getItem('token')).toBeNull()
 	})
 })
 
