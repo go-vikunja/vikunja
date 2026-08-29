@@ -33,9 +33,12 @@ import (
 )
 
 // Shared with the MCP dispatcher, which renders them as plain tool-result text.
+// The wording is the v1 400 response body, verbatim.
 var (
-	ErrNegativePage    = errors.New(`invalid value for "page": must not be negative`)
-	ErrNegativePerPage = errors.New(`invalid value for "per_page": must not be negative`)
+	//nolint:revive,staticcheck // verbatim v1 API response text
+	ErrNegativePage = errors.New("Page number cannot be negative.")
+	//nolint:revive,staticcheck // verbatim v1 API response text
+	ErrNegativePerPage = errors.New("Per page amount cannot be negative.")
 )
 
 // NormalizePagination clamps a (page, per_page) pair to what the models expect:
@@ -119,10 +122,6 @@ func (c *WebHandler) ReadAllWeb(ctx *echo.Context) error {
 	// We always round up, because if we don't have a number of items which is exactly dividable by the number of items per page,
 	// we would get a result that is one page off.
 	var numberOfPages = math.Ceil(float64(numberOfItems) / float64(perPageNumber))
-	// If we return all results, we only have one page
-	if pageNumber < 0 {
-		numberOfPages = 1
-	}
 	// If we don't have results, we don't have a page
 	if resultCount == 0 {
 		numberOfPages = 0
