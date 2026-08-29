@@ -1143,11 +1143,7 @@ func createTasks(s *xorm.Session, projectID int64, tasks []*Task, a web.Auth, up
 		}
 
 		if creatorIsUser {
-			sub := &Subscription{
-				EntityType: SubscriptionEntityTask,
-				EntityID:   t.ID,
-			}
-			if err := sub.Create(s, createdBy); err != nil && !IsErrSubscriptionAlreadyExists(err) {
+			if err := subscribeUserImplicitly(s, SubscriptionEntityTask, t.ID, createdBy); err != nil {
 				return err
 			}
 		}
