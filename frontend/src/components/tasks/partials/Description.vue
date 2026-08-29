@@ -9,21 +9,29 @@
 			{{ $t('task.attributes.description') }}
 			<CustomTransition name="fade">
 				<span
-					v-if="loading && saving"
+					v-if="saveState === 'saving'"
 					class="is-small is-inline-flex"
+					aria-hidden="true"
 				>
 					<span class="loader is-inline-block mie-2" />
 					{{ $t('misc.saving') }}
 				</span>
 				<span
-					v-else-if="!loading && saved"
+					v-else-if="saveState === 'saved'"
 					class="is-small has-text-success"
+					aria-hidden="true"
 				>
 					<Icon icon="check" />
 					{{ $t('misc.saved') }}
 				</span>
 			</CustomTransition>
 		</h2>
+		<!-- Outside the h2 so the heading keeps a stable accessible name -->
+		<span
+			class="is-sr-only"
+			role="status"
+			aria-live="polite"
+		>{{ saveStateAnnouncement }}</span>
 		<Editor
 			v-model="description"
 			class="tiptap__task-description"
@@ -43,8 +51,9 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, watchEffect,  onBeforeUnmount} from 'vue'
+import {ref, computed, watch, watchEffect, onBeforeUnmount} from 'vue'
 import {onBeforeRouteLeave} from 'vue-router'
+import {useI18n} from 'vue-i18n'
 
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import Editor from '@/components/input/AsyncEditor'
@@ -74,14 +83,72 @@ watchEffect(() => {
 })
 
 const saved = ref(false)
-
-// Since loading is global state, this variable ensures we're only showing the saving icon when saving the description.
 const saving = ref(false)
 
 const taskStore = useTaskStore()
-const loading = computed(() => taskStore.isLoading)
+
+const {t} = useI18n({useScope: 'global'})
 
 const changeTimeout = ref<ReturnType<typeof setTimeout> | null>(null)
+const savedTimeout = ref<ReturnType<typeof setTimeout> | null>(null)
+const dwellTimeout = ref<ReturnType<typeof setTimeout> | null>(null)
+
+// Saves resolve faster than "Saving…" can be read, and aria-live coalesces it away, so hold it a floor.
+const MIN_SAVING_DWELL = 500
+const dwelling = ref(false)
+
+watch(saving, isSaving => {
+	if (!isSaving) {
+		return
+	}
+
+	dwelling.value = true
+	if (dwellTimeout.value !== null) {
+		clearTimeout(dwellTimeout.value)
+	}
+	dwellTimeout.value = setTimeout(() => {
+		dwelling.value = false
+	}, MIN_SAVING_DWELL)
+})
+
+const saveState = computed(() => {
+	if (saving.value || dwelling.value) {
+		return 'saving'
+	}
+
+	if (saved.value) {
+		return 'saved'
+	}
+
+	return ''
+})
+
+// Runs from when "Saved!" reaches the screen, not from the response the floor may have delayed.
+watch(saveState, state => {
+	if (savedTimeout.value !== null) {
+		clearTimeout(savedTimeout.value)
+	}
+
+	if (state !== 'saved') {
+		return
+	}
+
+	savedTimeout.value = setTimeout(() => {
+		saved.value = false
+	}, 2000)
+})
+
+const saveStateAnnouncement = computed(() => {
+	if (saveState.value === 'saving') {
+		return t('misc.saving')
+	}
+
+	if (saveState.value === 'saved') {
+		return t('misc.saved')
+	}
+
+	return ''
+})
 
 const descriptionStorageKey = computed(() => `task-description-${props.modelValue.id}`)
 
@@ -111,6 +178,12 @@ onBeforeUnmount(async () => {
 	if (changeTimeout.value !== null) {
 		clearTimeout(changeTimeout.value)
 	}
+	if (savedTimeout.value !== null) {
+		clearTimeout(savedTimeout.value)
+	}
+	if (dwellTimeout.value !== null) {
+		clearTimeout(dwellTimeout.value)
+	}
 })
 
 onBeforeRouteLeave(() => save())
@@ -138,9 +211,6 @@ async function save() {
 		clearEditorDraft(descriptionStorageKey.value)
 
 		saved.value = true
-		setTimeout(() => {
-			saved.value = false
-		}, 2000)
 	} catch (error) {
 		// If the task was deleted (404), silently skip saving
 		if (error?.response?.status === 404) {
