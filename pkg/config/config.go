@@ -282,6 +282,17 @@ func (k Key) Get() interface{} {
 	return viper.Get(string(k))
 }
 
+// IsConfigured reports whether the value came from the user (config file or
+// environment) rather than from the default. Comparing the value against the
+// default is not enough — a configured value may coincide with it.
+func (k Key) IsConfigured() bool {
+	// setConfigFromEnv merges VIKUNJA_* into viper's config map, so InConfig
+	// already covers environment variables once InitConfig ran. The explicit
+	// lookup also covers callers that only ran initDefaultConfig.
+	return viper.InConfig(string(k)) ||
+		os.Getenv("VIKUNJA_"+strings.ToUpper(strings.ReplaceAll(string(k), ".", "_"))) != ""
+}
+
 var timezone *time.Location
 
 // GetTimeZone returns the time zone configured for vikunja
@@ -402,7 +413,7 @@ func initDefaultConfig() {
 	DatabaseUser.setDefault("vikunja")
 	DatabasePassword.setDefault("")
 	DatabaseDatabase.setDefault("vikunja")
-	DatabasePath.setDefault(ResolvePath("vikunja.db"))
+	DatabasePath.setDefault("vikunja.db")
 	DatabaseMaxOpenConnections.setDefault(100)
 	DatabaseMaxIdleConnections.setDefault(50)
 	DatabaseMaxConnectionLifetime.setDefault(10000)
@@ -438,7 +449,7 @@ func initDefaultConfig() {
 	LogDatabase.setDefault("off")
 	LogDatabaseLevel.setDefault("WARNING")
 	LogHTTP.setDefault("stdout")
-	LogPath.setDefault(ResolvePath("logs"))
+	LogPath.setDefault("logs")
 	LogEvents.setDefault("off")
 	LogEventsLevel.setDefault("INFO")
 	LogMail.setDefault("off")
@@ -503,7 +514,7 @@ func initDefaultConfig() {
 	AutoTLSRenewBefore.setDefault("720h") // 30days in hours
 	// Plugins
 	PluginsEnabled.setDefault(false)
-	PluginsDir.setDefault(ResolvePath("plugins"))
+	PluginsDir.setDefault("plugins")
 	PluginsLoader.setDefault("native")
 
 	// Migrate deprecated webhook config keys to outgoingrequests.*
@@ -676,7 +687,7 @@ func InitConfig() {
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv()
 
-	log.ConfigureStandardLogger(LogEnabled.GetBool(), LogStandard.GetString(), LogPath.GetString(), LogLevel.GetString(), LogFormat.GetString())
+	log.ConfigureStandardLogger(LogEnabled.GetBool(), LogStandard.GetString(), ResolvePath(LogPath.GetString()), LogLevel.GetString(), LogFormat.GetString())
 
 	// Load the config file
 	if configFileOverride != "" {
@@ -715,7 +726,7 @@ func InitConfig() {
 			log.Warning(err.Error())
 			log.Warning("Using default config.")
 		} else {
-			log.ConfigureStandardLogger(LogEnabled.GetBool(), LogStandard.GetString(), LogPath.GetString(), LogLevel.GetString(), LogFormat.GetString())
+			log.ConfigureStandardLogger(LogEnabled.GetBool(), LogStandard.GetString(), ResolvePath(LogPath.GetString()), LogLevel.GetString(), LogFormat.GetString())
 		}
 	} else {
 		log.Info("No config file found, using default or config from environment variables.")

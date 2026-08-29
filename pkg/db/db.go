@@ -232,9 +232,9 @@ func initPostgresEngine() (engine *xorm.Engine, err error) {
 // This struct allows the path resolution logic to be tested independently
 // of the global config package.
 type DatabasePathConfig struct {
-	ConfiguredPath string // The database.path config value
-	RootPath       string // The service.rootpath config value
-	ExecutablePath string // Directory of the executable binary
+	ConfiguredPath     string // The database.path config value
+	RootPath           string // The service.rootpath config value
+	RootPathConfigured bool   // Whether service.rootpath came from the user rather than the default
 }
 
 // resolveDatabasePath resolves a database path configuration to an absolute path.
@@ -243,9 +243,10 @@ type DatabasePathConfig struct {
 //  1. If ConfiguredPath is "memory", returns "memory" (special case for in-memory DB)
 //  2. If ConfiguredPath is already absolute, returns it as-is (cleaned)
 //  3. If ConfiguredPath is relative:
-//     a. If RootPath differs from ExecutablePath (explicitly configured),
-//     joins with RootPath
-//     b. Otherwise, joins with platform-specific user data directory
+//     a. If RootPathConfigured, joins with RootPath
+//     b. Otherwise, joins with platform-specific user data directory. This keeps
+//     unconfigured installs — Windows services in particular — from writing the
+//     database into a system directory.
 //
 // The getUserDataDir parameter allows injecting a mock for testing.
 func resolveDatabasePath(cfg DatabasePathConfig, getUserDataDir func() (string, error)) (string, error) {
@@ -258,7 +259,7 @@ func resolveDatabasePath(cfg DatabasePathConfig, getUserDataDir func() (string, 
 	switch {
 	case filepath.IsAbs(cfg.ConfiguredPath):
 		path = filepath.Clean(cfg.ConfiguredPath)
-	case cfg.RootPath != cfg.ExecutablePath:
+	case cfg.RootPathConfigured:
 		path = filepath.Join(cfg.RootPath, cfg.ConfiguredPath)
 	default:
 		dataDir, err := getUserDataDir()
@@ -273,21 +274,47 @@ func resolveDatabasePath(cfg DatabasePathConfig, getUserDataDir func() (string, 
 	return filepath.Abs(path)
 }
 
+// database.path is left unresolved on purpose: resolveDatabasePath has its own
+// rules for relative paths.
+func databasePathConfig() DatabasePathConfig {
+	return DatabasePathConfig{
+		ConfiguredPath:     config.DatabasePath.GetString(),
+		RootPath:           config.ServiceRootpath.GetString(),
+		RootPathConfigured: config.ServiceRootpath.IsConfigured(),
+	}
+}
+
+// strandedLegacyDatabasePath returns the path a database was left behind at when
+// database.path stopped being resolved eagerly against the startup working
+// directory, or "" when there is nothing to warn about. An explicitly configured
+// database.path was never affected.
+func strandedLegacyDatabasePath(resolvedPath string) string {
+	if config.DatabasePath.IsConfigured() {
+		return ""
+	}
+
+	wd, err := os.Getwd()
+	if err != nil {
+		return ""
+	}
+
+	legacyPath := filepath.Join(wd, "vikunja.db")
+	if legacyPath == resolvedPath {
+		return ""
+	}
+
+	if _, err := os.Stat(resolvedPath); err == nil {
+		return ""
+	}
+	if _, err := os.Stat(legacyPath); err != nil {
+		return ""
+	}
+
+	return legacyPath
+}
+
 func initSqliteEngine() (engine *xorm.Engine, err error) {
-	rootPath := config.ServiceRootpath.GetString()
-
-	executablePath := rootPath
-	if execPath, err := os.Executable(); err == nil {
-		executablePath = filepath.Dir(execPath)
-	}
-
-	cfg := DatabasePathConfig{
-		ConfiguredPath: config.DatabasePath.GetString(),
-		RootPath:       rootPath,
-		ExecutablePath: executablePath,
-	}
-
-	path, err := resolveDatabasePath(cfg, getUserDataDir)
+	path, err := resolveDatabasePath(databasePathConfig(), getUserDataDir)
 	if err != nil {
 		return nil, fmt.Errorf("could not resolve database path: %w", err)
 	}
@@ -318,6 +345,10 @@ func initSqliteEngine() (engine *xorm.Engine, err error) {
 	// Warn if the database is in a potentially problematic location
 	if isSystemDirectory(path) {
 		log.Warningf("Database path (%s) appears to be in a system directory. This may cause issues. Please use an absolute path or configure the database path to a user data directory.", path)
+	}
+
+	if legacy := strandedLegacyDatabasePath(path); legacy != "" {
+		log.Warningf("No database found at %s, but an existing database is still at %s. Vikunja will start empty. Move that file to the new location or set database.path to %s.", path, legacy, legacy)
 	}
 
 	// Try opening the db file to return a better error message if that does not work
