@@ -165,3 +165,17 @@ func TestMCP_Catalog_DoActionValidatesArguments(t *testing.T) {
 	isErr, _ := result["isError"].(bool)
 	require.True(t, isErr, "expected validation error: %v", result)
 }
+
+// Both meta-tools declare additionalProperties:false, so a typo has to be named
+// back to the caller instead of silently changing what the call does.
+func TestMCP_Catalog_MetaToolsRejectUnknownArguments(t *testing.T) {
+	c := newMCPClient(t, mcpFullProjectsToken)
+
+	result := c.callTool("find_action", map[string]any{"resource_name": "tasks_labels"})
+	require.Equal(t, true, result["isError"], "expected isError: %v", result)
+	assert.Contains(t, toolResultText(t, result), "resource_name")
+
+	result = c.callTool("do_action", map[string]any{"action": "tasks_labels_read_all", "argumentz": map[string]any{}})
+	require.Equal(t, true, result["isError"], "expected isError: %v", result)
+	assert.Contains(t, toolResultText(t, result), "argumentz")
+}

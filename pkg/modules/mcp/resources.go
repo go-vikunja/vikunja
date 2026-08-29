@@ -201,7 +201,10 @@ func rawToolHandler(toolName string) mcp.ToolHandler {
 // govalidator echoes the rejected value back in its message, so a field entry
 // can be as large as the payload that failed; a tool result goes straight into
 // the model's context window.
-const maxInvalidFieldRunes = 200
+const (
+	maxInvalidFieldRunes  = 200
+	maxInvalidFieldsRunes = 2000
+)
 
 // ValidationHTTPError keeps the offending field names out of Error(), but a tool result is plain text.
 func toolErrorText(err error) string {
@@ -213,10 +216,14 @@ func toolErrorText(err error) string {
 	for i, f := range invalid.InvalidFields {
 		fields[i] = truncateRunes(f, maxInvalidFieldRunes)
 	}
-	return err.Error() + ": " + strings.Join(fields, "; ")
+	return err.Error() + ": " + truncateRunes(strings.Join(fields, "; "), maxInvalidFieldsRunes)
 }
 
 func truncateRunes(s string, limit int) string {
+	// A rune is at least one byte, so a short byte length rules out truncation without the conversion.
+	if len(s) <= limit {
+		return s
+	}
 	runes := []rune(s)
 	if len(runes) <= limit {
 		return s

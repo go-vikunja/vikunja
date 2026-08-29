@@ -52,26 +52,29 @@ type doActionArgs struct {
 	Arguments json.RawMessage `json:"arguments"`
 }
 
-func findActionSchema() *jsonschema.Schema {
-	return &jsonschema.Schema{
-		Type: "object",
-		Properties: map[string]*jsonschema.Schema{
-			"action":   {Type: "string", Description: "Return the full input schema for this single action (e.g. tasks_labels_create)."},
-			"resource": {Type: "string", Description: "Return the full input schemas for every action of this resource (e.g. tasks_labels)."},
-		},
-		AdditionalProperties: falseSchema(),
-	}
-}
+var findActionSpec = mustResolveSpec(toolFindAction, &jsonschema.Schema{
+	Type: "object",
+	Properties: map[string]*jsonschema.Schema{
+		"action":   {Type: "string", Description: "Return the full input schema for this single action (e.g. tasks_labels_create)."},
+		"resource": {Type: "string", Description: "Return the full input schemas for every action of this resource (e.g. tasks_labels)."},
+	},
+	AdditionalProperties: falseSchema(),
+})
 
-func doActionSchema() *jsonschema.Schema {
-	return &jsonschema.Schema{
-		Type: "object",
-		Properties: map[string]*jsonschema.Schema{
-			"action":    {Type: "string", Description: "The action to invoke, as returned by find_action (e.g. tasks_labels_create)."},
-			"arguments": {Type: "object", Description: "The action's arguments, matching the input_schema find_action returned for it."},
-		},
-		Required:             []string{"action"},
-		AdditionalProperties: falseSchema(),
+var doActionSpec = mustResolveSpec(toolDoAction, &jsonschema.Schema{
+	Type: "object",
+	Properties: map[string]*jsonschema.Schema{
+		"action":    {Type: "string", Description: "The action to invoke, as returned by find_action (e.g. tasks_labels_create)."},
+		"arguments": {Type: "object", Description: "The action's arguments, matching the input_schema find_action returned for it."},
+	},
+	Required:             []string{"action"},
+	AdditionalProperties: falseSchema(),
+})
+
+func invalidArgsResult(toolName string, err error) *mcp.CallToolResult {
+	return &mcp.CallToolResult{
+		IsError: true,
+		Content: []mcp.Content{&mcp.TextContent{Text: fmt.Sprintf("mcp: invalid arguments for %s: %v", toolName, err)}},
 	}
 }
 
@@ -81,13 +84,13 @@ func installCatalogTools(srv *mcp.Server) {
 		Name: toolFindAction,
 		Description: "Discover additional Vikunja actions beyond the tools listed here: sharing projects with users or teams, task labels and relations (subtasks), team members, project views and more. " +
 			"Returns the actions your token authorises; pass action or resource to get full input schemas. Invoke them with do_action.",
-		InputSchema: findActionSchema(),
+		InputSchema: findActionSpec.schema,
 	}, findActionHandler)
 
 	srv.AddTool(&mcp.Tool{
 		Name:        toolDoAction,
 		Description: "Invoke an action discovered via find_action. Arguments must match the action's input_schema.",
-		InputSchema: doActionSchema(),
+		InputSchema: doActionSpec.schema,
 	}, doActionHandler)
 }
 
@@ -122,14 +125,9 @@ func catalogActions(token *models.APIToken, action, resource string) []actionInf
 
 func findActionHandler(ctx context.Context, req *mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	var args findActionArgs
-	if len(req.Params.Arguments) > 0 {
-		if err := json.Unmarshal(req.Params.Arguments, &args); err != nil {
-			//nolint:nilerr // IsError tool result, not a JSON-RPC protocol error
-			return &mcp.CallToolResult{
-				IsError: true,
-				Content: []mcp.Content{&mcp.TextContent{Text: "invalid arguments: " + err.Error()}},
-			}, nil
-		}
+	if err := decodeToolArgs(findActionSpec, req.Params.Arguments, &args); err != nil {
+		//nolint:nilerr // IsError tool result, not a JSON-RPC protocol error
+		return invalidArgsResult(toolFindAction, err), nil
 	}
 
 	result := map[string]any{"actions": catalogActions(TokenFromContext(ctx), args.Action, args.Resource)}
@@ -145,8 +143,11 @@ func findActionHandler(ctx context.Context, req *mcp.CallToolRequest) (*mcp.Call
 
 func doActionHandler(ctx context.Context, req *mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	var args doActionArgs
-	if err := json.Unmarshal(req.Params.Arguments, &args); err != nil || args.Action == "" {
+	if err := decodeToolArgs(doActionSpec, req.Params.Arguments, &args); err != nil {
 		//nolint:nilerr // IsError tool result, not a JSON-RPC protocol error
+		return invalidArgsResult(toolDoAction, err), nil
+	}
+	if args.Action == "" {
 		return &mcp.CallToolResult{
 			IsError: true,
 			Content: []mcp.Content{&mcp.TextContent{Text: "do_action requires an \"action\" name; discover actions with find_action"}},
