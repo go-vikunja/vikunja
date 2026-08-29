@@ -1424,6 +1424,13 @@
     "createTask": "Create a task in the current project ({title})",
     "createProject": "Create a project",
     "results": "No results | {count} result | {count} results",
+    "resultTypes": {
+      "command": "Command",
+      "task": "Task",
+      "project": "Project",
+      "team": "Team",
+      "label": "Label"
+    },
     "cmds": {
       "newTask": "New task",
       "newProject": "New project",
