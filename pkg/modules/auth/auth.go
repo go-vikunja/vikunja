@@ -362,7 +362,7 @@ func RefreshSession(rawRefreshToken string) (*RefreshResult, error) {
 	if err != nil {
 		_ = s.Rollback()
 		if models.IsErrSessionNotFound(err) {
-			return nil, echo.NewHTTPError(http.StatusUnauthorized, "Invalid or expired refresh token.")
+			return nil, &models.ErrInvalidRefreshToken{}
 		}
 		return nil, err
 	}
@@ -379,7 +379,7 @@ func RefreshSession(rawRefreshToken string) (*RefreshResult, error) {
 		if err := s.Commit(); err != nil {
 			return nil, err
 		}
-		return nil, echo.NewHTTPError(http.StatusUnauthorized, "Session expired.")
+		return nil, &models.ErrSessionExpired{}
 	}
 
 	if err := models.UpdateSessionLastActive(s, session.ID); err != nil {
@@ -391,7 +391,7 @@ func RefreshSession(rawRefreshToken string) (*RefreshResult, error) {
 	if err != nil {
 		_ = s.Rollback()
 		if models.IsErrSessionNotFound(err) {
-			return nil, echo.NewHTTPError(http.StatusUnauthorized, "Refresh token already used.")
+			return nil, &models.ErrRefreshTokenAlreadyUsed{}
 		}
 		return nil, err
 	}
