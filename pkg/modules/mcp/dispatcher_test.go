@@ -253,12 +253,10 @@ func TestDispatchReadAllPerPageClampedToMax(t *testing.T) {
 
 func TestDispatchReadAllRejectsNegativePagination(t *testing.T) {
 	_, err := dispatchReadAll(t, `{"page":-1}`)
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), `invalid value for "page"`)
+	require.ErrorIs(t, err, handler.ErrNegativePage)
 
 	_, err = dispatchReadAll(t, `{"per_page":-1}`)
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), `invalid value for "per_page"`)
+	require.ErrorIs(t, err, handler.ErrNegativePerPage)
 }
 
 func TestDispatchGatedResourceIsNotFound(t *testing.T) {
