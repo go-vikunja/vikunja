@@ -18,6 +18,7 @@ package auth
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -429,6 +430,14 @@ func RefreshSession(rawRefreshToken string) (*RefreshResult, error) {
 		IsLongSession:   session.IsLongSession,
 		SessionID:       session.ID,
 	}, nil
+}
+
+// IsUnusableRefreshToken reports whether the caller should clear the refresh
+// cookie. Transient errors must not clear it, nor a token rotated away by a
+// concurrent refresh: that would delete the cookie the winning refresh just set.
+func IsUnusableRefreshToken(err error) bool {
+	var expired *models.ErrSessionExpired
+	return errors.As(err, &expired) || user.IsErrUserStatusError(err)
 }
 
 // SessionIDFromContext reads the session id (the `sid` claim) off the user JWT

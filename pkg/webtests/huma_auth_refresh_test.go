@@ -71,9 +71,12 @@ func TestHumaRefreshToken(t *testing.T) {
 		newCookie := refreshCookie(first)
 		require.NotNil(t, newCookie)
 
-		// Replaying the now-rotated token must fail.
+		// Replaying the now-rotated token must fail without touching the cookie:
+		// the loser of two concurrent refreshes must not delete the cookie the
+		// winner just set.
 		replay := refreshRequest(e, "testtoken_session2")
 		assert.Equal(t, http.StatusUnauthorized, replay.Code)
+		assert.Empty(t, refreshCookiePaths(replay), "a replayed refresh token must not clear the cookie")
 
 		// The freshly rotated token still works.
 		next := refreshRequest(e, newCookie.Value)
@@ -83,10 +86,26 @@ func TestHumaRefreshToken(t *testing.T) {
 	t.Run("missing cookie", func(t *testing.T) {
 		rec := refreshRequest(e, "")
 		assert.Equal(t, http.StatusUnauthorized, rec.Code)
+		// The frontend falls back to v1 on this 401, which needs the cookie intact.
+		assert.Empty(t, refreshCookiePaths(rec), "a missing cookie must not send any refresh cookie")
 	})
 
 	t.Run("invalid cookie", func(t *testing.T) {
 		rec := refreshRequest(e, "garbage")
 		assert.Equal(t, http.StatusUnauthorized, rec.Code)
+		assert.Empty(t, refreshCookiePaths(rec), "an unknown refresh token must not clear the cookie")
+	})
+
+	t.Run("expired session", func(t *testing.T) {
+		rec := refreshRequest(e, "testtoken_session_expired")
+		assert.Equal(t, http.StatusUnauthorized, rec.Code)
+		assert.Contains(t, rec.Body.String(), "Session expired.")
+
+		assert.ElementsMatch(t, []string{auth.RefreshTokenPathV1, auth.RefreshTokenPathV2}, refreshCookiePaths(rec),
+			"an expired session must clear the cookie on both paths")
+		for _, c := range refreshCookies(rec) {
+			assert.Negative(t, c.MaxAge, "cookie for path %s must be a deletion cookie", c.Path)
+			assert.Empty(t, c.Value, "cookie for path %s must be emptied", c.Path)
+		}
 	})
 }
