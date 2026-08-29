@@ -346,6 +346,14 @@ func InitDefaultConfig() {
 	generateServiceSecretIfEmpty()
 }
 
+// ResetForTests drops every value a test set and re-applies the defaults, so a later
+// InitConfig sees what it would in a fresh process. Restoring a saved value with Set
+// instead leaves it at viper's override level, where it outranks anything InitConfig loads.
+func ResetForTests() {
+	viper.Reset()
+	InitDefaultConfig()
+}
+
 func initDefaultConfig() {
 	// Service
 	ServiceJWTTTL.setDefault(259200)      // 72 hours

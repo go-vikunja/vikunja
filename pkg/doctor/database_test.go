@@ -29,12 +29,7 @@ import (
 )
 
 func setDatabaseConfig(t *testing.T, dbType, path string) {
-	originalType := config.DatabaseType.GetString()
-	originalPath := config.DatabasePath.GetString()
-	t.Cleanup(func() {
-		config.DatabaseType.Set(originalType)
-		config.DatabasePath.Set(originalPath)
-	})
+	t.Cleanup(config.ResetForTests)
 
 	config.DatabaseType.Set(dbType)
 	config.DatabasePath.Set(path)
