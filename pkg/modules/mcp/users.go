@@ -22,6 +22,7 @@ import (
 	"errors"
 	"fmt"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
@@ -46,22 +47,15 @@ type usersSearchArgs struct {
 	ProjectID int64  `json:"project_id"`
 }
 
-var usersSearchSpec = func() *opSpec {
-	schema := &jsonschema.Schema{
-		Type: "object",
-		Properties: map[string]*jsonschema.Schema{
-			"query":      {Type: "string", Description: "Username, display name or full email address to look up. Name and email only match users who made themselves discoverable."},
-			"project_id": {Type: "integer", Description: "Restrict the search to users who already have access to this project (useful for picking assignees). Requires read access to the project."},
-		},
-		Required:             []string{"query"},
-		AdditionalProperties: falseSchema(),
-	}
-	resolved, err := schema.Resolve(nil)
-	if err != nil {
-		panic(fmt.Sprintf("mcp: resolve %s schema: %v", toolUsersSearch, err))
-	}
-	return &opSpec{schema: schema, resolved: resolved}
-}()
+var usersSearchSpec = mustResolveSpec(toolUsersSearch, &jsonschema.Schema{
+	Type: "object",
+	Properties: map[string]*jsonschema.Schema{
+		"query":      {Type: "string", Description: "Username, display name or full email address to look up. Name and email only match users who made themselves discoverable."},
+		"project_id": {Type: "integer", Description: "Restrict the search to users who already have access to this project (useful for picking assignees). Requires read access to the project."},
+	},
+	Required:             []string{"query"},
+	AdditionalProperties: falseSchema(),
+})
 
 func installUsersSearchTool(srv *mcp.Server, token *models.APIToken) {
 	if !token.HasPermission(scopeGroupUsers, scopePermUsers) {
@@ -85,7 +79,7 @@ func usersSearchHandler(ctx context.Context, req *mcp.CallToolRequest) (*mcp.Cal
 	}
 	// users_search has no paging of its own, but clients shouldn't have to
 	// special-case its shape against every other listing tool.
-	result := newReadAllResult(users, int64(len(users)), 1, len(users))
+	result := newReadAllResult(users, int64(len(users)), 1, config.ServiceMaxItemsPerPage.GetInt())
 	body, err := json.Marshal(result)
 	if err != nil {
 		return nil, fmt.Errorf("mcp: marshal %s result: %w", toolUsersSearch, err)
@@ -106,11 +100,8 @@ func searchUsers(ctx context.Context, rawArgs json.RawMessage) ([]*user.User, er
 		return nil, ErrNoUserInContext
 	}
 
-	if _, err := validateAndDecodeArgs(usersSearchSpec, rawArgs); err != nil {
-		return nil, fmt.Errorf("mcp: invalid arguments for %s: %w", toolUsersSearch, err)
-	}
 	var in usersSearchArgs
-	if err := json.Unmarshal(rawArgs, &in); err != nil {
+	if err := decodeToolArgs(usersSearchSpec, rawArgs, &in); err != nil {
 		return nil, fmt.Errorf("mcp: invalid arguments for %s: %w", toolUsersSearch, err)
 	}
 	if in.ProjectID != 0 && !token.HasPermission(scopeGroupProjects, scopePermUsersInProj) {

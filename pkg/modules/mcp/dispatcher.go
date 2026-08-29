@@ -97,8 +97,11 @@ func Dispatch(ctx context.Context, toolName string, rawArgs json.RawMessage) (an
 	// partial payload applied to a zero model would blank every omitted column.
 	// Resources without a read_one op leave web.CRUDable nil, and their Update
 	// writes a single column anyway.
+	// The read and the write run in separate transactions, so a concurrent write
+	// in between is lost; v2's AutoPatch If-Match handling is the proper fix.
 	if ref.op == OpUpdate && ref.resource.Ops&OpReadOne != 0 {
-		if err := applyArgs(model, spec, identityArgs(spec, args)); err != nil {
+		readSpec := ref.resource.spec(OpReadOne)
+		if err := applyArgs(model, readSpec, identityArgs(readSpec, args)); err != nil {
 			return nil, fmt.Errorf("mcp: invalid arguments for %s: %w", toolName, err)
 		}
 		if _, err := crud.doReadOne(ctx, model, u); err != nil {
