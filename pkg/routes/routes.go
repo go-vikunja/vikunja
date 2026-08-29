@@ -864,6 +864,7 @@ func registerAPIRoutes(a *echo.Group, noAuthRateLimit, refreshRateLimit echo.Mid
 	a.GET("/notifications", notificationHandler.ReadAllWeb)
 	a.POST("/notifications/:notificationid", notificationHandler.UpdateWeb)
 	a.POST("/notifications", apiv1.MarkAllNotificationsAsRead)
+	a.DELETE("/notifications", notificationHandler.DeleteWeb)
 
 	// Migrations
 	m := a.Group("/migration")
