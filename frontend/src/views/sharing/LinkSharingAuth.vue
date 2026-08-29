@@ -147,8 +147,8 @@ function useAuth() {
 				return
 			}
 			
-			// Log unexpected errors for debugging
-			console.error('Link share authentication error:', e)
+			// Never log the error object itself: AxiosError.config.data holds the plaintext share password.
+			console.error('Link share authentication error:', e?.response?.status, e?.response?.data?.code)
 
 			// TODO: Put this logic in a global errorMessage handler method which checks all auth codes
 			let err = t('sharing.error')
