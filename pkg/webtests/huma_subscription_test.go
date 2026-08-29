@@ -17,9 +17,14 @@
 package webtests
 
 import (
+	"encoding/json"
 	"net/http"
+	"strconv"
 	"testing"
 
+	"code.vikunja.io/api/pkg/models"
+
+	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -111,11 +116,27 @@ func TestHumaSubscription(t *testing.T) {
 			rec = humaRequest(t, e, http.MethodDelete, "/api/v2/subscriptions/task/1", "", token(t), "")
 			assert.Equal(t, http.StatusNoContent, rec.Code, "body: %s", rec.Body.String())
 
+			assert.Nil(t, taskSubscription(t, e, token(t), 1))
+
 			rec = humaRequest(t, e, http.MethodDelete, "/api/v2/subscriptions/task/1", "", token(t), "")
 			assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
 
+			rec = humaRequest(t, e, http.MethodPost, "/api/v2/subscriptions/task/1", "", token(t), "")
+			assert.Equal(t, http.StatusCreated, rec.Code, "body: %s", rec.Body.String())
+
+			sub := taskSubscription(t, e, token(t), 1)
+			require.NotNil(t, sub)
+			assert.Equal(t, models.SubscriptionEntityType(models.SubscriptionEntityTask), sub.EntityType)
+			assert.Equal(t, int64(1), sub.EntityID)
+
 			rec = humaRequest(t, e, http.MethodDelete, "/api/v2/subscriptions/project/1", "", token(t), "")
 			assert.Equal(t, http.StatusNoContent, rec.Code, "body: %s", rec.Body.String())
+
+			// Dropping the parent subscription must leave the task's own one alone
+			sub = taskSubscription(t, e, token(t), 1)
+			require.NotNil(t, sub)
+			assert.Equal(t, models.SubscriptionEntityType(models.SubscriptionEntityTask), sub.EntityType)
+			assert.Equal(t, int64(1), sub.EntityID)
 		})
 		t.Run("invalid entity kind", func(t *testing.T) {
 			e, err := setupTestEnv()
@@ -124,4 +145,16 @@ func TestHumaSubscription(t *testing.T) {
 			assert.Equal(t, http.StatusUnprocessableEntity, rec.Code, "body: %s", rec.Body.String())
 		})
 	})
+}
+
+// taskSubscription returns the caller's resolved subscription on a task, if any.
+func taskSubscription(t *testing.T, e *echo.Echo, token string, taskID int64) *models.Subscription {
+	t.Helper()
+
+	rec := humaRequest(t, e, http.MethodGet, "/api/v2/tasks/"+strconv.FormatInt(taskID, 10), "", token, "")
+	require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+
+	var task models.Task
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &task), "body: %s", rec.Body.String())
+	return task.Subscription
 }
