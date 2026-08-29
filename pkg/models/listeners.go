@@ -31,7 +31,6 @@ import (
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/ThreeDotsLabs/watermill/message"
-	"xorm.io/builder"
 	"xorm.io/xorm"
 )
 
@@ -1024,7 +1023,7 @@ func (l *UpdateTaskInSavedFilterViews) Handle(msg *message.Message) (err error) 
 		return nil
 	}
 
-	return updateTasksInSavedFilterViews([]*Task{event.Task}, event.Doer)
+	return updateTasksInSavedFilterViews([]*Task{event.Task})
 }
 
 // UpdateTasksBatchInSavedFilterViews handles a whole creation batch in one pass, loading the saved filters only once.
@@ -1048,127 +1047,66 @@ func (l *UpdateTasksBatchInSavedFilterViews) Handle(msg *message.Message) (err e
 		return nil
 	}
 
-	return updateTasksInSavedFilterViews(event.Tasks, event.Doer)
+	return updateTasksInSavedFilterViews(event.Tasks)
 }
 
-func updateTasksInSavedFilterViews(tasks []*Task, doer *user.User) (err error) {
-	// This operation is potentially very resource-heavy, because we don't know if a task is included
-	// in a filter until we evaluate that filter. We need to evaluate each filter individually - since
-	// there can be many filters, this can take a while to execute.
-	// For this reason, we do this in an asynchronous event listener.
-
+// Only filters of users who can see the task's project can contain it; evaluating the rest is the O(users) cost this avoids.
+func updateTasksInSavedFilterViews(tasks []*Task) (err error) {
 	s := db.NewSession()
 	defer s.Close()
 
-	// Get all saved filters with a manual kanban view
-	kanbanFilterViews := []*ProjectView{}
-	err = s.Where("project_id < 0 and view_kind = ? and bucket_configuration_mode = ?", ProjectViewKindKanban, BucketConfigurationModeManual).
-		Find(&kanbanFilterViews)
-	if err != nil {
-		return err
-	}
-
-	filterIDs := []int64{}
-	for _, view := range kanbanFilterViews {
-		filterIDs = append(filterIDs, GetSavedFilterIDFromProjectID(view.ProjectID))
-	}
-
-	filters := map[int64]*SavedFilter{}
-	err = s.In("id", filterIDs).Find(&filters)
-	if err != nil {
-		return err
-	}
-
-	err = dropFiltersWithInactiveOwners(s, filters)
-	if err != nil {
-		return err
-	}
-
-	var fallbackTimezone string
-	if doer != nil {
-		u, userErr := user.GetUserByID(s, doer.GetID())
-		if userErr == nil {
-			fallbackTimezone = u.Timezone
+	var tasksMissingProjectID []int64
+	for _, task := range tasks {
+		if task.ProjectID == 0 {
+			tasksMissingProjectID = append(tasksMissingProjectID, task.ID)
 		}
-		// When a link share triggered this event, the doer id is negative and won't match a users.id, so this fails.
-		// Similarly, when the doer has been deleted, the user will not exist.
-		// Only passing the value along when the user was retrieved successfully ensures the whole handler
-		// does not fail because of that.
-		// When the fallback is empty, it will be handled later anyhow.
+	}
+	if len(tasksMissingProjectID) > 0 {
+		loaded := []*Task{}
+		err = s.In("id", tasksMissingProjectID).Cols("id", "project_id").Find(&loaded)
+		if err != nil {
+			return err
+		}
+		projectIDByTaskID := make(map[int64]int64, len(loaded))
+		for _, t := range loaded {
+			projectIDByTaskID[t.ID] = t.ProjectID
+		}
+		for _, task := range tasks {
+			if pid, has := projectIDByTaskID[task.ID]; has {
+				task.ProjectID = pid
+			}
+		}
+	}
+
+	accessByProject, userIDs, err := getProjectAccessForTasks(s, tasks)
+	if err != nil || len(userIDs) == 0 {
+		return err
+	}
+
+	filters, timezoneByOwner, err := getActiveSavedFiltersOwnedBy(s, userIDs)
+	if err != nil || len(filters) == 0 {
+		return err
+	}
+
+	kanbanFilterViews, err := getKanbanFilterViewsForFilters(s, filters)
+	if err != nil || len(kanbanFilterViews) == 0 {
+		return err
+	}
+
+	viewsByTask, err := matchTasksToFilterViews(s, tasks, filters, kanbanFilterViews, accessByProject, timezoneByOwner)
+	if err != nil {
+		return err
+	}
+
+	state, err := preloadFilterViewState(s, viewsByTask)
+	if err != nil {
+		return err
 	}
 
 	for _, task := range tasks {
-		taskBuckets := []*TaskBucket{}
-		taskPositions := []*TaskPosition{}
-
-		viewIDToCleanUp := []int64{}
-
-		for _, view := range kanbanFilterViews {
-			filter, exists := filters[GetSavedFilterIDFromProjectID(view.ProjectID)]
-			if !exists {
-				log.Debugf("Did not find filter for view %d", view.ID)
-				continue
-			}
-
-			taskBucket, taskPosition, err := addTaskToFilter(s, filter, view, fallbackTimezone, task)
-			if err != nil {
-				if IsErrInvalidFilterExpression(err) ||
-					IsErrInvalidTaskFilterValue(err) ||
-					IsErrInvalidTaskFilterConcatinator(err) ||
-					IsErrInvalidTaskFilterComparator(err) ||
-					IsErrInvalidTaskField(err) {
-					log.Debugf("Invalid filter expression for view %d, expression: %v", view.ID, view.Filter)
-					continue
-				}
-
-				// The owner may have been disabled or deleted after the check above.
-				if user.IsErrUserStatusError(err) || user.IsErrUserDoesNotExist(err) {
-					log.Debugf("Skipping view %d, owner %d is not available: %v", view.ID, filter.OwnerID, err)
-					continue
-				}
-
-				return err
-			}
-
-			if taskBucket != nil && taskPosition != nil {
-				taskBuckets = append(taskBuckets, taskBucket)
-				taskPositions = append(taskPositions, taskPosition)
-				viewIDToCleanUp = append(viewIDToCleanUp, view.ID)
-			}
-		}
-
-		if len(taskBuckets) > 0 || len(taskPositions) > 0 {
-			_, err = s.And(
-				builder.Eq{"task_id": task.ID},
-				builder.In("project_view_id", viewIDToCleanUp),
-			).
-				Delete(&TaskBucket{})
-			if err != nil {
-				return
-			}
-			_, err = s.And(
-				builder.Eq{"task_id": task.ID},
-				builder.In("project_view_id", viewIDToCleanUp),
-			).
-				Delete(&TaskPosition{})
-			if err != nil {
-				return
-			}
-
-			// Insert per task so a mid-loop recalculation sees earlier members' rows.
-			if len(taskBuckets) > 0 {
-				_, err = s.Insert(taskBuckets)
-				if err != nil {
-					return
-				}
-			}
-			if len(taskPositions) > 0 {
-				// A concurrent heal of the same view can insert a position row between the delete above and this insert, so skip existing rows instead of failing on the unique index.
-				err = bulkInsertTaskPositions(s, taskPositions, false)
-				if err != nil {
-					return
-				}
-			}
+		err = addTaskToFilterViews(s, task, viewsByTask[task.ID], state)
+		if err != nil {
+			return err
 		}
 	}
 
