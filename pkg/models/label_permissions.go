@@ -100,7 +100,10 @@ func (l *Label) hasAccessToLabel(s *xorm.Session, a web.Auth) (has bool, maxPerm
 
 	// Must include projects inherited via a shared parent, otherwise users can
 	// remove but not re-add labels on tasks in child projects.
-	accessibleProjects := accessibleProjectIDsSubquery(a, "project_id")
+	accessibleProjects, err := accessibleProjectIDsCond(s, a, "project_id")
+	if err != nil {
+		return false, 0, err
+	}
 
 	labelAttachedToAccessibleTask := builder.In(
 		"label_tasks.task_id",

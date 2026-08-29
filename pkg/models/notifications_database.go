@@ -52,8 +52,13 @@ func (d *DatabaseNotifications) ReadAll(s *xorm.Session, a web.Auth, _ string, p
 		return nil, 0, 0, ErrGenericForbidden{}
 	}
 
+	filter, err := NotificationProjectFilter(s, a)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
 	limit, start := getLimitFromPageIndex(page, perPage)
-	ns, resultCount, total, err := notifications.GetNotificationsForUser(s, a.GetID(), NotificationProjectFilter(a), limit, start)
+	ns, resultCount, total, err := notifications.GetNotificationsForUser(s, a.GetID(), filter, limit, start)
 	if err != nil {
 		return nil, 0, 0, err
 	}
