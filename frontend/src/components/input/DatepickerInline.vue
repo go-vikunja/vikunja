@@ -83,7 +83,7 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import {formatDate} from '@/helpers/time/formatDate'
 import {calculateDayInterval} from '@/helpers/time/calculateDayInterval'
 import {createDateFromString} from '@/helpers/time/createDateFromString'
-import {getDefaultDateForDay, parseUserDefaultDueTime} from '@/helpers/time/getDefaultDateForDay'
+import {getDateWithTime, parseUserDefaultTime} from '@/helpers/time/getDateWithTime'
 import {useAuthStore} from '@/stores/auth'
 import {useI18n} from 'vue-i18n'
 import {useFlatpickrLanguage} from '@/helpers/useFlatpickrLanguage'
@@ -116,7 +116,7 @@ watch(
 
 const flatPickrRef = ref<InstanceType<typeof flatPickr> | null>(null)
 const flatPickerConfig = computed(() => {
-	const configuredDueTime = parseUserDefaultDueTime(useAuthStore().settings.frontendSettings.defaultDueTime)
+	const configuredDueTime = parseUserDefaultTime(useAuthStore().settings.frontendSettings.defaultDueTime)
 
 	return {
 		altFormat: t('date.altFormatLong'),
@@ -221,7 +221,7 @@ function setDate(dateString: string) {
 	const interval = calculateDayInterval(dateString)
 	const newDate = new Date()
 	newDate.setDate(newDate.getDate() + interval)
-	date.value = getDefaultDateForDay(newDate)
+	date.value = getDateWithTime(newDate)
 	updateData()
 }
 

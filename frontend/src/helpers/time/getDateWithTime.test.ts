@@ -1,7 +1,7 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest'
 import {setActivePinia, createPinia} from 'pinia'
 
-import {getDefaultDateForDay, getDefaultDueTimeParts, parseUserDefaultDueTime} from './getDefaultDateForDay'
+import {getDateWithTime, getDefaultTimeParts, parseUserDefaultTime} from './getDateWithTime'
 import {useAuthStore} from '@/stores/auth'
 
 function setDefaultDueTime(defaultDueTime?: string) {
@@ -15,7 +15,7 @@ function setDefaultDueTime(defaultDueTime?: string) {
 	})
 }
 
-describe('getDefaultDateForDay', () => {
+describe('getDateWithTime', () => {
 	beforeEach(() => {
 		setActivePinia(createPinia())
 		useAuthStore()
@@ -25,7 +25,7 @@ describe('getDefaultDateForDay', () => {
 		setDefaultDueTime('14:30')
 
 		const date = new Date(2026, 7, 4, 9, 15)
-		const result = getDefaultDateForDay(date)
+		const result = getDateWithTime(date)
 
 		expect(result.getFullYear()).toBe(2026)
 		expect(result.getMonth()).toBe(7)
@@ -38,7 +38,7 @@ describe('getDefaultDateForDay', () => {
 		setDefaultDueTime(undefined)
 
 		const date = new Date(2026, 7, 4, 10, 15)
-		const result = getDefaultDateForDay(date)
+		const result = getDateWithTime(date)
 
 		expect(result.getHours()).toBe(12)
 		expect(result.getMinutes()).toBe(0)
@@ -48,28 +48,28 @@ describe('getDefaultDateForDay', () => {
 		setDefaultDueTime('25:99')
 
 		const date = new Date(2026, 7, 4, 10, 15)
-		const result = getDefaultDateForDay(date)
+		const result = getDateWithTime(date)
 
 		expect(result.getHours()).toBe(12)
 		expect(result.getMinutes()).toBe(0)
 	})
 })
 
-describe('parseUserDefaultDueTime', () => {
+describe('parseUserDefaultTime', () => {
 	it('returns fallback parts when no user value is configured', () => {
 		setDefaultDueTime(undefined)
 
-		expect(getDefaultDueTimeParts(new Date(2026, 7, 4, 10, 15))).toStrictEqual({hours: 12, minutes: 0})
+		expect(getDefaultTimeParts(new Date(2026, 7, 4, 10, 15))).toStrictEqual({hours: 12, minutes: 0})
 	})
 
 	it('parses valid times', () => {
-		expect(parseUserDefaultDueTime('09:45')).toStrictEqual({hours: 9, minutes: 45})
+		expect(parseUserDefaultTime('09:45')).toStrictEqual({hours: 9, minutes: 45})
 	})
 
 	it('rejects invalid values', () => {
-		expect(parseUserDefaultDueTime(undefined)).toBeNull()
-		expect(parseUserDefaultDueTime('9:45')).toBeNull()
-		expect(parseUserDefaultDueTime('24:00')).toBeNull()
-		expect(parseUserDefaultDueTime('12:60')).toBeNull()
+		expect(parseUserDefaultTime(undefined)).toBeNull()
+		expect(parseUserDefaultTime('9:45')).toBeNull()
+		expect(parseUserDefaultTime('24:00')).toBeNull()
+		expect(parseUserDefaultTime('12:60')).toBeNull()
 	})
 })

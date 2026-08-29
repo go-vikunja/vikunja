@@ -1,5 +1,5 @@
 import {calculateDayInterval} from '@/helpers/time/calculateDayInterval'
-import {getDefaultDateForDay} from '@/helpers/time/getDefaultDateForDay'
+import {getDateWithTime} from '@/helpers/time/getDateWithTime'
 import {replaceAll} from '@/helpers/replaceAll'
 
 export interface dateParseResult {
@@ -76,13 +76,13 @@ export const parseDate = (text: string, now: Date = new Date()): dateParseResult
 		date.setDate(1)
 		date.setMonth(date.getMonth() + 1)
 
-		return addTimeToDate(text, getDefaultDateForDay(date), 'next month')
+		return addTimeToDate(text, getDateWithTime(date), 'next month')
 	}
 	if (matchesDateExpr(text, 'end of month')) {
 		const curDate: Date = new Date()
 		const date: Date = new Date(curDate.getFullYear(), curDate.getMonth() + 1, 0)
 
-		return addTimeToDate(text, getDefaultDateForDay(date), 'end of month')
+		return addTimeToDate(text, getDateWithTime(date), 'end of month')
 	}
 
 	let parsed = getDateFromWeekday(text, now)
@@ -392,5 +392,5 @@ const getDateFromInterval = (interval: number): Date => {
 	const newDate = new Date()
 	newDate.setDate(newDate.getDate() + interval)
 
-	return getDefaultDateForDay(newDate)
+	return getDateWithTime(newDate)
 }
