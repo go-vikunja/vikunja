@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"sync"
@@ -76,36 +77,14 @@ func TestHandleTaskUpdateLastUpdated(t *testing.T) {
 	})
 }
 
-// The listener evaluates every kanban filter view in the instance, so a filter owned by
-// a disabled user used to fail the handler for everyone: recalculating positions looks
-// up the owner, which errors out with "Account is disabled".
+// Access-filtering only excludes owners without access to the task's project, not disabled
+// ones: recalculating positions for a disabled owner's filter must not fail it for everyone.
 func TestUpdateTaskInSavedFilterViews_InactiveFilterOwner(t *testing.T) {
 	// Positions are crowded enough to force a recalculation when a task is added.
 	createCrowdedFilterView := func(t *testing.T, s *xorm.Session, filterID, viewID, ownerID int64) *ProjectView {
-		_, err := s.Insert(&SavedFilter{
-			ID:      filterID,
-			Title:   "filter",
-			OwnerID: ownerID,
-			Filters: &TaskCollection{Filter: "done = false"},
-		})
+		view, _ := createKanbanFilterView(t, s, filterID, viewID, ownerID, "done = false")
+		_, err := s.Insert(&TaskPosition{TaskID: 2, ProjectViewID: view.ID, Position: MinPositionSpacing / 2})
 		require.NoError(t, err)
-
-		view := &ProjectView{
-			ID:                      viewID,
-			ProjectID:               getProjectIDFromSavedFilterID(filterID),
-			Title:                   "kanban",
-			ViewKind:                ProjectViewKindKanban,
-			BucketConfigurationMode: BucketConfigurationModeManual,
-		}
-		_, err = s.Insert(view)
-		require.NoError(t, err)
-
-		_, err = s.Insert(&Bucket{ProjectViewID: view.ID, Title: "backlog", CreatedByID: ownerID})
-		require.NoError(t, err)
-
-		_, err = s.Insert(&TaskPosition{TaskID: 2, ProjectViewID: view.ID, Position: MinPositionSpacing / 2})
-		require.NoError(t, err)
-
 		return view
 	}
 
@@ -113,6 +92,9 @@ func TestUpdateTaskInSavedFilterViews_InactiveFilterOwner(t *testing.T) {
 	s := db.NewSession()
 	disabledOwnerView := createCrowdedFilterView(t, s, 9998, 9998, 17)
 	activeOwnerView := createCrowdedFilterView(t, s, 9999, 9999, 1)
+	// Filters of users without access are skipped anyway, so share project 1 with the disabled owner.
+	_, err := s.Insert(&ProjectUser{UserID: 17, ProjectID: 1, Permission: PermissionRead})
+	require.NoError(t, err)
 	require.NoError(t, s.Commit())
 	_ = s.Close()
 
@@ -141,26 +123,7 @@ func TestUpdateTasksBatchInSavedFilterViews(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()
 
-	_, err := s.Insert(&SavedFilter{
-		ID:      9999,
-		Title:   "filter",
-		OwnerID: 1,
-		Filters: &TaskCollection{Filter: "done = false"},
-	})
-	require.NoError(t, err)
-
-	view := &ProjectView{
-		ID:                      9999,
-		ProjectID:               getProjectIDFromSavedFilterID(9999),
-		Title:                   "kanban",
-		ViewKind:                ProjectViewKindKanban,
-		BucketConfigurationMode: BucketConfigurationModeManual,
-	}
-	_, err = s.Insert(view)
-	require.NoError(t, err)
-
-	_, err = s.Insert(&Bucket{ProjectViewID: view.ID, Title: "backlog", CreatedByID: 1})
-	require.NoError(t, err)
+	view, _ := createKanbanFilterView(t, s, 9999, 9999, 1, "done = false")
 	require.NoError(t, s.Commit())
 	_ = s.Close()
 
@@ -197,6 +160,296 @@ func TestUpdateTasksBatchInSavedFilterViews(t *testing.T) {
 	assert.NotZero(t, positionByTask[3])
 	// Each task lands on top of the view, so later batch members get smaller positions.
 	assert.Less(t, positionByTask[3], positionByTask[1])
+}
+
+func newKanbanView(t *testing.T, s *xorm.Session, viewID, projectID, ownerID int64) (*ProjectView, *Bucket) {
+	view := &ProjectView{
+		ID:                      viewID,
+		ProjectID:               projectID,
+		Title:                   "kanban",
+		ViewKind:                ProjectViewKindKanban,
+		BucketConfigurationMode: BucketConfigurationModeManual,
+	}
+	_, err := s.Insert(view)
+	require.NoError(t, err)
+
+	bucket := &Bucket{ProjectViewID: view.ID, Title: "backlog", CreatedByID: ownerID}
+	_, err = s.Insert(bucket)
+	require.NoError(t, err)
+
+	return view, bucket
+}
+
+func createKanbanFilterView(t *testing.T, s *xorm.Session, filterID, viewID, ownerID int64, filter string) (*ProjectView, *Bucket) {
+	_, err := s.Insert(&SavedFilter{
+		ID:      filterID,
+		Title:   "filter",
+		OwnerID: ownerID,
+		Filters: &TaskCollection{Filter: filter},
+	})
+	require.NoError(t, err)
+
+	return newKanbanView(t, s, viewID, getProjectIDFromSavedFilterID(filterID), ownerID)
+}
+
+// A filter can only contain tasks its owner can see, so filters of users without
+// access to the task's project must neither be evaluated nor receive rows.
+// Task 1 lives on project 1 (owner user 1), task 34 on project 20 (owner user 13); neither is shared.
+func TestUpdateTasksInSavedFilterViews_OnlyFiltersOfUsersWithAccess(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	user1View, _ := createKanbanFilterView(t, s, 9999, 9999, 1, "done = false")
+	user13View, _ := createKanbanFilterView(t, s, 9998, 9998, 13, "done = false")
+	require.NoError(t, s.Commit())
+	_ = s.Close()
+
+	events.TestListener(t, &TasksBatchCreatedEvent{
+		Tasks: []*Task{
+			{ID: 1, ProjectID: 1, Index: 1},
+			{ID: 34, ProjectID: 20, Index: 20},
+		},
+		Doer: &user.User{ID: 1},
+	}, &UpdateTasksBatchInSavedFilterViews{})
+
+	for _, table := range []string{"task_buckets", "task_positions"} {
+		db.AssertExists(t, table, map[string]interface{}{"task_id": 1, "project_view_id": user1View.ID}, false)
+		db.AssertExists(t, table, map[string]interface{}{"task_id": 34, "project_view_id": user13View.ID}, false)
+		db.AssertMissing(t, table, map[string]interface{}{"task_id": 34, "project_view_id": user1View.ID})
+		db.AssertMissing(t, table, map[string]interface{}{"task_id": 1, "project_view_id": user13View.ID})
+	}
+}
+
+// Access via share, team or ancestor ownership must feed the filter like direct ownership.
+func TestUpdateTasksInSavedFilterViews_AccessViaShareOrParent(t *testing.T) {
+	assertHasRows := func(t *testing.T, taskID, viewID int64) {
+		for _, table := range []string{"task_buckets", "task_positions"} {
+			db.AssertExists(t, table, map[string]interface{}{"task_id": taskID, "project_view_id": viewID}, false)
+		}
+	}
+	assertNoRows := func(t *testing.T, taskID, viewID int64) {
+		for _, table := range []string{"task_buckets", "task_positions"} {
+			db.AssertMissing(t, table, map[string]interface{}{"task_id": taskID, "project_view_id": viewID})
+		}
+	}
+
+	// Project 9 is owned by user 6 and shared read-only with user 1 only via users_projects id 3 (no team path); user 16 has no access.
+	t.Run("direct project share", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		sharedView, _ := createKanbanFilterView(t, s, 9999, 9999, 1, "done = false")
+		noAccessView, _ := createKanbanFilterView(t, s, 9998, 9998, 16, "done = false")
+		require.NoError(t, s.Commit())
+		_ = s.Close()
+
+		events.TestListener(t, &TaskUpdatedEvent{
+			Task: &Task{ID: 18, ProjectID: 9},
+			Doer: &user.User{ID: 1},
+		}, &UpdateTaskInSavedFilterViews{})
+
+		assertHasRows(t, 18, sharedView.ID)
+		assertNoRows(t, 18, noAccessView.ID)
+	})
+
+	// Project 6 is owned by user 6 and shared read-only with team 2 (team_projects id 2), whose only member is user 1.
+	t.Run("team project share", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		teamView, _ := createKanbanFilterView(t, s, 9999, 9999, 1, "done = false")
+		noAccessView, _ := createKanbanFilterView(t, s, 9998, 9998, 16, "done = false")
+		require.NoError(t, s.Commit())
+		_ = s.Close()
+
+		events.TestListener(t, &TaskUpdatedEvent{
+			Task: &Task{ID: 15, ProjectID: 6},
+			Doer: &user.User{ID: 1},
+		}, &UpdateTaskInSavedFilterViews{})
+
+		assertHasRows(t, 15, teamView.ID)
+		assertNoRows(t, 15, noAccessView.ID)
+	})
+
+	// Fresh parent/child pair so ancestor ownership is the only access path (project 19's
+	// owner, user 6, has a direct admin share on it too, which would otherwise mask this).
+	t.Run("parent project owner", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		const (
+			childProjectID int64 = 9991
+			taskID         int64 = 9990
+			parentOwnerID  int64 = 16
+			childOwnerID   int64 = 13
+			noAccessID     int64 = 2
+		)
+		parentProjectID := int64(9990)
+		_, err := s.Insert(&Project{ID: parentProjectID, Title: "ancestor parent", Identifier: "ANCPARENT", OwnerID: parentOwnerID})
+		require.NoError(t, err)
+		_, err = s.Insert(&Project{ID: childProjectID, Title: "ancestor child", Identifier: "ANCCHILD", OwnerID: childOwnerID, ParentProjectID: &parentProjectID})
+		require.NoError(t, err)
+		_, err = s.Insert(&Task{ID: taskID, Title: "child project task", ProjectID: childProjectID, Index: 1, CreatedByID: childOwnerID})
+		require.NoError(t, err)
+
+		parentOwnerView, _ := createKanbanFilterView(t, s, 9999, 9999, parentOwnerID, "done = false")
+		noAccessView, _ := createKanbanFilterView(t, s, 9998, 9998, noAccessID, "done = false")
+		require.NoError(t, s.Commit())
+		_ = s.Close()
+
+		events.TestListener(t, &TaskUpdatedEvent{
+			Task: &Task{ID: taskID, ProjectID: childProjectID},
+			Doer: &user.User{ID: 1},
+		}, &UpdateTaskInSavedFilterViews{})
+
+		assertHasRows(t, taskID, parentOwnerView.ID)
+		assertNoRows(t, taskID, noAccessView.ID)
+	})
+}
+
+// Tasks not matching the filter expression get no rows even though the owner can see them.
+func TestUpdateTasksInSavedFilterViews_TaskNotInFilter(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	view, _ := createKanbanFilterView(t, s, 9999, 9999, 1, "done = false")
+	require.NoError(t, s.Commit())
+	_ = s.Close()
+
+	// Task 2 is done.
+	events.TestListener(t, &TaskUpdatedEvent{
+		Task: &Task{ID: 2, ProjectID: 1},
+		Doer: &user.User{ID: 1},
+	}, &UpdateTaskInSavedFilterViews{})
+
+	db.AssertMissing(t, "task_buckets", map[string]interface{}{"task_id": 2, "project_view_id": view.ID})
+	db.AssertMissing(t, "task_positions", map[string]interface{}{"task_id": 2, "project_view_id": view.ID})
+}
+
+// Covers multi-view fan-out and the per-view bucket_id LEFT JOIN match, neither tested above.
+func TestUpdateTasksInSavedFilterViews_BucketIDFilterAndMultipleViews(t *testing.T) {
+	t.Run("multiple views of one filter", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		// createKanbanFilterView already inserts the filter, so the second view only adds a ProjectView + Bucket.
+		view1, bucket1 := createKanbanFilterView(t, s, 9990, 9990, 1, "done = false")
+		view2, bucket2 := newKanbanView(t, s, 9991, view1.ProjectID, 1)
+		require.NoError(t, s.Commit())
+		_ = s.Close()
+
+		events.TestListener(t, &TaskUpdatedEvent{
+			Task: &Task{ID: 1, ProjectID: 1},
+			Doer: &user.User{ID: 1},
+		}, &UpdateTaskInSavedFilterViews{})
+
+		for _, vb := range []struct {
+			view   *ProjectView
+			bucket *Bucket
+		}{{view1, bucket1}, {view2, bucket2}} {
+			// Each view has its own default bucket; the task must land in that view's own bucket, not the other view's.
+			db.AssertExists(t, "task_buckets", map[string]interface{}{"task_id": 1, "project_view_id": vb.view.ID, "bucket_id": vb.bucket.ID}, false)
+			db.AssertExists(t, "task_positions", map[string]interface{}{"task_id": 1, "project_view_id": vb.view.ID}, false)
+		}
+	})
+
+	t.Run("filter on bucket_id", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+
+		const filterID, viewID int64 = 9992, 9992
+		view, _ := newKanbanView(t, s, viewID, getProjectIDFromSavedFilterID(filterID), 1)
+		bucket := &Bucket{ProjectViewID: view.ID, Title: "target", CreatedByID: 1}
+		_, err := s.Insert(bucket)
+		require.NoError(t, err)
+
+		_, err = s.Insert(&SavedFilter{
+			ID:      filterID,
+			Title:   "bucket filter",
+			OwnerID: 1,
+			Filters: &TaskCollection{Filter: fmt.Sprintf("done = false && bucket_id = %d", bucket.ID)},
+		})
+		require.NoError(t, err)
+
+		plainView, _ := createKanbanFilterView(t, s, 9993, 9993, 1, "done = false")
+		require.NoError(t, s.Commit())
+		_ = s.Close()
+
+		events.TestListener(t, &TaskUpdatedEvent{
+			Task: &Task{ID: 1, ProjectID: 1},
+			Doer: &user.User{ID: 1},
+		}, &UpdateTaskInSavedFilterViews{})
+
+		// The plain done=false filter is unaffected by the bucket_id filter's join path.
+		db.AssertExists(t, "task_buckets", map[string]interface{}{"task_id": 1, "project_view_id": plainView.ID}, false)
+		db.AssertExists(t, "task_positions", map[string]interface{}{"task_id": 1, "project_view_id": plainView.ID}, false)
+
+		// Task 1 has no task_buckets row in this view yet, so the LEFT JOIN yields no match.
+		db.AssertMissing(t, "task_buckets", map[string]interface{}{"task_id": 1, "project_view_id": view.ID})
+		db.AssertMissing(t, "task_positions", map[string]interface{}{"task_id": 1, "project_view_id": view.ID})
+	})
+
+	t.Run("filter on bucket_id, task already in bucket", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+
+		const filterID, viewID int64 = 9994, 9994
+		view, _ := newKanbanView(t, s, viewID, getProjectIDFromSavedFilterID(filterID), 1)
+		bucket := &Bucket{ProjectViewID: view.ID, Title: "target", CreatedByID: 1}
+		_, err := s.Insert(bucket)
+		require.NoError(t, err)
+
+		_, err = s.Insert(&SavedFilter{
+			ID:      filterID,
+			Title:   "bucket filter",
+			OwnerID: 1,
+			Filters: &TaskCollection{Filter: fmt.Sprintf("done = false && bucket_id = %d", bucket.ID)},
+		})
+		require.NoError(t, err)
+
+		// Task 1 is already in the matching bucket for this view, so the join now matches it.
+		_, err = s.Insert(&TaskBucket{TaskID: 1, ProjectViewID: view.ID, BucketID: bucket.ID})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		_ = s.Close()
+
+		events.TestListener(t, &TaskUpdatedEvent{
+			Task: &Task{ID: 1, ProjectID: 1},
+			Doer: &user.User{ID: 1},
+		}, &UpdateTaskInSavedFilterViews{})
+
+		// The freshly computed position is written even though the bucket already existed.
+		db.AssertExists(t, "task_buckets", map[string]interface{}{"task_id": 1, "project_view_id": view.ID, "bucket_id": bucket.ID}, false)
+		db.AssertExists(t, "task_positions", map[string]interface{}{"task_id": 1, "project_view_id": view.ID}, false)
+
+		s3 := db.NewSession()
+		defer s3.Close()
+		position := &TaskPosition{}
+		has, err := s3.Where("task_id = ? AND project_view_id = ?", 1, view.ID).Get(position)
+		require.NoError(t, err)
+		require.True(t, has)
+		assert.NotZero(t, position.Position)
+	})
+}
+
+// A filter that fails to parse is logged and skipped, not treated as a listener error
+// that would abort processing for every other filter.
+func TestUpdateTasksInSavedFilterViews_InvalidFilterIsSkipped(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+
+	const brokenFilterID, brokenViewID int64 = 9995, 9995
+	// bogus_field has no corresponding Task struct field, so parsing rejects it with ErrInvalidTaskField.
+	brokenView, _ := createKanbanFilterView(t, s, brokenFilterID, brokenViewID, 1, "bogus_field = 1")
+
+	healthyView, _ := createKanbanFilterView(t, s, 9996, 9996, 1, "done = false")
+	require.NoError(t, s.Commit())
+	_ = s.Close()
+
+	events.TestListener(t, &TaskUpdatedEvent{
+		Task: &Task{ID: 1, ProjectID: 1},
+		Doer: &user.User{ID: 1},
+	}, &UpdateTaskInSavedFilterViews{})
+
+	db.AssertExists(t, "task_buckets", map[string]interface{}{"task_id": 1, "project_view_id": healthyView.ID}, false)
+	db.AssertExists(t, "task_positions", map[string]interface{}{"task_id": 1, "project_view_id": healthyView.ID}, false)
+
+	db.AssertMissing(t, "task_buckets", map[string]interface{}{"task_id": 1, "project_view_id": brokenView.ID})
+	db.AssertMissing(t, "task_positions", map[string]interface{}{"task_id": 1, "project_view_id": brokenView.ID})
 }
 
 // Subscriptions survive losing access to the entity they point at: nothing
