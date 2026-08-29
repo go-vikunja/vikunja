@@ -58,35 +58,31 @@ describe('canPreviewAudio', () => {
 })
 
 describe('canPreviewVideo', () => {
-	it('previews a real mp4', () => {
+	it('previews an mp4', () => {
 		expect(canPreviewVideo(attachment('clip.mp4', 'video/mp4'))).toBe(true)
 	})
 
-	it('previews a real webm', () => {
+	it('previews a webm', () => {
 		expect(canPreviewVideo(attachment('clip.webm', 'video/webm'))).toBe(true)
+	})
+
+	it('previews a container without a known suffix', () => {
+		expect(canPreviewVideo(attachment('clip.mkv', 'video/x-matroska'))).toBe(true)
+	})
+
+	it('previews an ogg regardless of the file name', () => {
+		expect(canPreviewVideo(attachment('19-40-43', 'video/ogg'))).toBe(true)
+	})
+
+	it('matches the mime case-insensitively', () => {
+		expect(canPreviewVideo(attachment('clip.mp4', 'VIDEO/MP4'))).toBe(true)
 	})
 
 	it('refuses text bytes disguised as an mp4', () => {
 		expect(canPreviewVideo(attachment('evil.mp4', 'text/plain'))).toBe(false)
 	})
 
-	it('refuses a video mime without a video suffix', () => {
-		expect(canPreviewVideo(attachment('clip.txt', 'video/mp4'))).toBe(false)
-	})
-
-	it('matches the mime case-insensitively', () => {
-		expect(canPreviewVideo(attachment('clip.MP4', 'VIDEO/MP4'))).toBe(true)
-	})
-
 	it('refuses audio ogg', () => {
 		expect(canPreviewVideo(attachment('song.ogg', 'audio/ogg'))).toBe(false)
-	})
-
-	it('previews video ogg', () => {
-		expect(canPreviewVideo(attachment('clip.ogg', 'video/ogg'))).toBe(true)
-	})
-
-	it('refuses a video mime with an unsupported .mkv suffix', () => {
-		expect(canPreviewVideo(attachment('clip.mkv', 'video/x-matroska'))).toBe(false)
 	})
 })
