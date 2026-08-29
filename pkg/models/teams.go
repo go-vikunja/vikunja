@@ -45,7 +45,7 @@ type Team struct {
 	Issuer string `xorm:"text null" json:"-"`
 
 	// The user who created this team.
-	CreatedBy *user.User `xorm:"-" json:"created_by" readOnly:"true" doc:"The user who created this team. Set by the server."`
+	CreatedBy *user.User `xorm:"-" json:"created_by" valid:"-" readOnly:"true" doc:"The user who created this team. Set by the server."`
 	// An array of all members in this team.
 	Members []*TeamUser `xorm:"-" json:"members" readOnly:"true" doc:"All members of this team. Managed through the team members endpoints, not by writing to this field."`
 

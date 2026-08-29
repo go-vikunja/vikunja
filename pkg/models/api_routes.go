@@ -49,6 +49,14 @@ func init() {
 			Method: "GET",
 		},
 	}
+	// MCP is gated inline by HasMCPAccess (see routes.go); this entry only exists
+	// so the scope shows up in /routes and PermissionsAreValid accepts it.
+	apiTokenRoutesV2["mcp"] = APITokenRoute{
+		"access": &RouteDetail{
+			Path:   "/api/v2/mcp",
+			Method: "ANY",
+		},
+	}
 }
 
 type APITokenRoute map[string]*RouteDetail
@@ -250,11 +258,14 @@ func CollectRoutesForAPITokenUsage(route echo.RouteInfo, requiresJWT bool) {
 
 	routeGroupName, routeParts := getRouteGroupName(route.Path)
 
+	// mcp's scope is hand-registered in init(); collecting its Any-method routes would only add junk.
 	if routeGroupName == "token_test" ||
 		routeGroupName == "subscriptions" ||
 		routeGroupName == "tokens" ||
 		routeGroupName == "*" ||
 		routeGroupName == "oauth_authorize" ||
+		routeGroupName == "mcp" ||
+		strings.HasPrefix(routeGroupName, "mcp_") ||
 		strings.HasPrefix(routeGroupName, "user_") {
 		return
 	}

@@ -14,16 +14,36 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package routes
+package mcp
 
 import (
+	"context"
+
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/user"
 )
 
-// CustomValidator is a dummy struct to use govalidator with echo
-type CustomValidator struct{}
+// The SDK's RequestExtra carries only OAuth TokenInfo and headers, never the
+// *http.Request, so the entry handler stashes the user and token on r.Context()
+// for tool handlers to read back out.
 
-// Validate validates stuff
-func (cv *CustomValidator) Validate(i interface{}) error {
-	return models.ValidateStruct(i)
+type userCtxKey struct{}
+type tokenCtxKey struct{}
+
+func WithUser(ctx context.Context, u *user.User) context.Context {
+	return context.WithValue(ctx, userCtxKey{}, u)
+}
+
+func WithToken(ctx context.Context, t *models.APIToken) context.Context {
+	return context.WithValue(ctx, tokenCtxKey{}, t)
+}
+
+func UserFromContext(ctx context.Context) *user.User {
+	u, _ := ctx.Value(userCtxKey{}).(*user.User)
+	return u
+}
+
+func TokenFromContext(ctx context.Context) *models.APIToken {
+	t, _ := ctx.Value(tokenCtxKey{}).(*models.APIToken)
+	return t
 }

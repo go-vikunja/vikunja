@@ -333,6 +333,11 @@ func (la *TaskAssginee) ReadAll(s *xorm.Session, a web.Auth, search string, page
 		return nil, 0, 0, err
 	}
 
+	// Obfuscate all user emails
+	for _, u := range taskAssignees {
+		u.Email = ""
+	}
+
 	numberOfTotalItems, err = s.Table("task_assignees").
 		Join("INNER", "users", "task_assignees.user_id = users.id").
 		Where(builder.And(

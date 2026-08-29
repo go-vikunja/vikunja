@@ -55,6 +55,73 @@ func TestAPITokenRoutesIncludesCaldav(t *testing.T) {
 	assert.Contains(t, res.Body.String(), `"access"`)
 }
 
+func TestAPITokenRoutesIncludesMCP(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+
+	s := db.NewSession()
+	defer s.Close()
+	u, err := user.GetUserByID(s, 1)
+	require.NoError(t, err)
+	jwt, err := auth.NewUserJWTAuthtoken(u, "test-session-id")
+	require.NoError(t, err)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/routes", nil)
+	req.Header.Set(echo.HeaderAuthorization, "Bearer "+jwt)
+	res := httptest.NewRecorder()
+	e.ServeHTTP(res, req)
+
+	assert.Equal(t, http.StatusOK, res.Code)
+	assert.Contains(t, res.Body.String(), `"mcp"`)
+	assert.Contains(t, res.Body.String(), `"access"`)
+}
+
+func TestAPITokenMiddleware_SkipsRouteCheckForMCPPath(t *testing.T) {
+	// The route check is skipped for /api/v2/mcp and sub-paths; HasMCPAccess gates it in the handler.
+	for _, method := range []string{http.MethodGet, http.MethodPost, http.MethodDelete} {
+		t.Run(method, func(t *testing.T) {
+			e, err := setupTestEnv()
+			require.NoError(t, err)
+			req := httptest.NewRequest(method, "/api/v2/mcp", nil)
+			res := httptest.NewRecorder()
+			c := e.NewContext(req, res)
+			c.SetPath("/api/v2/mcp") // NewContext skips the router, which normally fills this in
+
+			called := false
+			h := routes.SetupTokenMiddleware()(func(_ *echo.Context) error {
+				called = true
+				return nil
+			})
+
+			// Token 1 has no mcp scope, but skipRouteCheck means the middleware
+			// still passes it through: HasMCPAccess rejects it in the handler.
+			req.Header.Set(echo.HeaderAuthorization, "Bearer tk_2eef46f40ebab3304919ab2e7e39993f75f29d2e")
+			require.NoError(t, h(c))
+			assert.True(t, called, "wrapped handler should run because /api/v2/mcp skips route check")
+			assert.NotEqual(t, http.StatusUnauthorized, res.Code)
+		})
+	}
+}
+
+func TestAPITokenMiddleware_SkipsRouteCheckForMCPSubPath(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	req := httptest.NewRequest(http.MethodPost, "/api/v2/mcp/anything", nil)
+	res := httptest.NewRecorder()
+	c := e.NewContext(req, res)
+	c.SetPath("/api/v2/mcp/*")
+
+	called := false
+	h := routes.SetupTokenMiddleware()(func(_ *echo.Context) error {
+		called = true
+		return nil
+	})
+
+	req.Header.Set(echo.HeaderAuthorization, "Bearer tk_2eef46f40ebab3304919ab2e7e39993f75f29d2e")
+	require.NoError(t, h(c))
+	assert.True(t, called, "sub-paths under /api/v2/mcp should also skip the route check")
+}
+
 func TestAPIToken(t *testing.T) {
 	t.Run("valid token", func(t *testing.T) {
 		e, err := setupTestEnv()
@@ -322,4 +389,24 @@ func TestAPITokenLinkShareCollision(t *testing.T) {
 			assert.Equal(t, http.StatusOK, delRes.Code)
 		})
 	})
+}
+
+// Fixture permissions bypass the validation Create runs, so a scope group that
+// no route produces silently "works" in tests while no real token can grant it.
+func TestAPITokenFixturesHaveValidPermissions(t *testing.T) {
+	_, err := setupTestEnv()
+	require.NoError(t, err)
+
+	s := db.NewSession()
+	defer s.Close()
+
+	tokens := []*models.APIToken{}
+	require.NoError(t, s.Find(&tokens))
+	require.NotEmpty(t, tokens)
+
+	for _, token := range tokens {
+		t.Run(strconv.FormatInt(token.ID, 10), func(t *testing.T) {
+			assert.NoError(t, models.PermissionsAreValid(token.APIPermissions))
+		})
+	}
 }

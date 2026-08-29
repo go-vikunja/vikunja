@@ -1,0 +1,160 @@
+// Vikunja is a to-do list application to facilitate your life.
+// Copyright 2018-present Vikunja and contributors. All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+package mcp
+
+// TierCatalog resources reach clients through the find_action / do_action
+// meta-tools instead of first-class tools, keeping tools/list (and the tokens
+// it costs an LLM client) small while still exposing the long tail of CRUD.
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+
+	"code.vikunja.io/api/pkg/models"
+
+	"github.com/google/jsonschema-go/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
+)
+
+const (
+	toolFindAction = "find_action"
+	toolDoAction   = "do_action"
+)
+
+type actionInfo struct {
+	Name        string             `json:"name"`
+	Description string             `json:"description"`
+	InputSchema *jsonschema.Schema `json:"input_schema,omitempty"`
+}
+
+type findActionArgs struct {
+	Action   string `json:"action"`
+	Resource string `json:"resource"`
+}
+
+type doActionArgs struct {
+	Action    string          `json:"action"`
+	Arguments json.RawMessage `json:"arguments"`
+}
+
+var findActionSpec = mustResolveSpec(toolFindAction, &jsonschema.Schema{
+	Type: "object",
+	Properties: map[string]*jsonschema.Schema{
+		"action":   {Type: "string", Description: "Return the full input schema for this single action (e.g. tasks_labels_create)."},
+		"resource": {Type: "string", Description: "Return the full input schemas for every action of this resource (e.g. tasks_labels)."},
+	},
+	AdditionalProperties: falseSchema(),
+})
+
+var doActionSpec = mustResolveSpec(toolDoAction, &jsonschema.Schema{
+	Type: "object",
+	Properties: map[string]*jsonschema.Schema{
+		"action":    {Type: "string", Description: "The action to invoke, as returned by find_action (e.g. tasks_labels_create)."},
+		"arguments": {Type: "object", Description: "The action's arguments, matching the input_schema find_action returned for it."},
+	},
+	Required:             []string{"action"},
+	AdditionalProperties: falseSchema(),
+})
+
+func invalidArgsResult(toolName string, err error) *mcp.CallToolResult {
+	return &mcp.CallToolResult{
+		IsError: true,
+		Content: []mcp.Content{&mcp.TextContent{Text: fmt.Sprintf("mcp: invalid arguments for %s: %v", toolName, err)}},
+	}
+}
+
+// The meta-tools are always present: a token with no catalog scopes just gets an empty find_action result.
+func installCatalogTools(srv *mcp.Server) {
+	srv.AddTool(&mcp.Tool{
+		Name: toolFindAction,
+		Description: "Discover additional Vikunja actions beyond the tools listed here: sharing projects with users or teams, task labels and relations (subtasks), team members, project views and more. " +
+			"Returns the actions your token authorises; pass action or resource to get full input schemas. Invoke them with do_action.",
+		InputSchema: findActionSpec.schema,
+	}, findActionHandler)
+
+	srv.AddTool(&mcp.Tool{
+		Name:        toolDoAction,
+		Description: "Invoke an action discovered via find_action. Arguments must match the action's input_schema.",
+		InputSchema: doActionSpec.schema,
+	}, doActionHandler)
+}
+
+// Schemas are attached only when a filter narrows the result, to keep the payload small.
+func catalogActions(token *models.APIToken, action, resource string) []actionInfo {
+	withSchemas := action != "" || resource != ""
+	out := []actionInfo{}
+	for _, r := range snapshotResources() {
+		if r.Tier != TierCatalog || !r.enabled() {
+			continue
+		}
+		if resource != "" && r.Name != resource {
+			continue
+		}
+		for _, op := range AllOps() {
+			if r.Ops&op == 0 || !tokenAuthorizes(token, r.Name, op) {
+				continue
+			}
+			name := r.Name + "_" + op.Permission()
+			if action != "" && name != action {
+				continue
+			}
+			info := actionInfo{Name: name, Description: r.toolDescription(op)}
+			if withSchemas {
+				info.InputSchema = r.spec(op).schema
+			}
+			out = append(out, info)
+		}
+	}
+	return out
+}
+
+func findActionHandler(ctx context.Context, req *mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	var args findActionArgs
+	if err := decodeToolArgs(findActionSpec, req.Params.Arguments, &args); err != nil {
+		//nolint:nilerr // IsError tool result, not a JSON-RPC protocol error
+		return invalidArgsResult(toolFindAction, err), nil
+	}
+
+	result := map[string]any{"actions": catalogActions(TokenFromContext(ctx), args.Action, args.Resource)}
+	body, err := json.Marshal(result)
+	if err != nil {
+		return nil, fmt.Errorf("mcp: marshal find_action result: %w", err)
+	}
+	return &mcp.CallToolResult{
+		Content:           []mcp.Content{&mcp.TextContent{Text: string(body)}},
+		StructuredContent: result,
+	}, nil
+}
+
+func doActionHandler(ctx context.Context, req *mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	var args doActionArgs
+	if err := decodeToolArgs(doActionSpec, req.Params.Arguments, &args); err != nil {
+		//nolint:nilerr // IsError tool result, not a JSON-RPC protocol error
+		return invalidArgsResult(toolDoAction, err), nil
+	}
+	if args.Action == "" {
+		return &mcp.CallToolResult{
+			IsError: true,
+			Content: []mcp.Content{&mcp.TextContent{Text: "do_action requires an \"action\" name; discover actions with find_action"}},
+		}, nil
+	}
+	// Dispatch re-checks the token's scope, so do_action can't reach anything a direct call couldn't.
+	return rawToolHandler(args.Action)(ctx, &mcp.CallToolRequest{
+		Params: &mcp.CallToolParamsRaw{Name: args.Action, Arguments: args.Arguments},
+	})
+}

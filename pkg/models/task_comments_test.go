@@ -235,6 +235,17 @@ func TestTaskComment_ReadOne(t *testing.T) {
 		assert.Equal(t, "Lorem Ipsum Dolor Sit Amet", tc.Comment)
 		assert.NotEmpty(t, tc.Author.ID)
 	})
+	t.Run("does not leak the author's email", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		tc := &TaskComment{ID: 2, TaskID: 14}
+		err := tc.ReadOne(s, u)
+		require.NoError(t, err)
+		require.Equal(t, int64(5), tc.Author.ID)
+		assert.Empty(t, tc.Author.Email)
+	})
 	t.Run("nonexisting", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()

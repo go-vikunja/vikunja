@@ -14,16 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package routes
+package mcp
 
 import (
+	"errors"
+
 	"code.vikunja.io/api/pkg/models"
 )
 
-// CustomValidator is a dummy struct to use govalidator with echo
-type CustomValidator struct{}
+// ErrScopeDenied renders as an IsError tool result, not a JSON-RPC protocol error.
+var ErrScopeDenied = errors.New("mcp: tool not authorized for this token")
 
-// Validate validates stuff
-func (cv *CustomValidator) Validate(i interface{}) error {
-	return models.ValidateStruct(i)
+// An mcp (resource, op) pair maps onto the (group, permission) pair the token model stores.
+func tokenAuthorizes(token *models.APIToken, resourceName string, op Op) bool {
+	return token.HasPermission(resourceName, op.Permission())
 }

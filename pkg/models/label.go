@@ -39,7 +39,7 @@ type Label struct {
 
 	CreatedByID int64 `xorm:"bigint not null" json:"-"`
 	// The user who created this label
-	CreatedBy *user.User `xorm:"-" json:"created_by" readOnly:"true" doc:"The user who created this label."`
+	CreatedBy *user.User `xorm:"-" json:"created_by" valid:"-" readOnly:"true" doc:"The user who created this label."`
 
 	// A timestamp when this label was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"A timestamp when this label was created. You cannot change this value."`

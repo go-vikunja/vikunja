@@ -233,22 +233,32 @@ func (t *APIToken) Delete(s *xorm.Session, a web.Auth) (err error) {
 	return nil
 }
 
-// HasCaldavAccess checks whether the token has the caldav access permission.
-func (t *APIToken) HasCaldavAccess() bool {
-	perms, has := t.APIPermissions["caldav"]
-	if !has {
+// HasPermission reports whether the token grants permission in group. Both sides are
+// canonicalised like CanDoAPIRoute does, so a hyphenated group slug still matches.
+func (t *APIToken) HasPermission(group, permission string) bool {
+	if t == nil {
 		return false
 	}
-	return slices.Contains(perms, "access")
+	group = canonicalAPITokenGroup(group)
+	for storedGroup, perms := range t.APIPermissions {
+		if canonicalAPITokenGroup(storedGroup) == group && slices.Contains(perms, permission) {
+			return true
+		}
+	}
+	return false
 }
 
-// HasFeedsAccess checks whether the token has the feeds access permission.
+func (t *APIToken) HasCaldavAccess() bool {
+	return t.HasPermission("caldav", "access")
+}
+
 func (t *APIToken) HasFeedsAccess() bool {
-	perms, has := t.APIPermissions["feeds"]
-	if !has {
-		return false
-	}
-	return slices.Contains(perms, "access")
+	return t.HasPermission("feeds", "access")
+}
+
+// HasMCPAccess is gated inline because CanDoAPIRoute cannot express MCP's one-path, three-method transport.
+func (t *APIToken) HasMCPAccess() bool {
+	return t.HasPermission("mcp", "access")
 }
 
 // GetTokenFromTokenString returns the full token object from the original token string.

@@ -67,6 +67,7 @@ import (
 	backgroundHandler "code.vikunja.io/api/pkg/modules/background/handler"
 	"code.vikunja.io/api/pkg/modules/background/unsplash"
 	"code.vikunja.io/api/pkg/modules/background/upload"
+	mcpmodule "code.vikunja.io/api/pkg/modules/mcp"
 	"code.vikunja.io/api/pkg/modules/migration"
 	csvmigrator "code.vikunja.io/api/pkg/modules/migration/csv"
 	migrationHandler "code.vikunja.io/api/pkg/modules/migration/handler"
@@ -287,7 +288,7 @@ func RegisterRoutes(e *echo.Echo) {
 	registerAPIRoutes(a, wsRateLimit)
 
 	// /api/v2 — Huma-backed API, scaffolded alongside /api/v1.
-	a2 := e.Group("/api/v2")
+	a2 := e.Group(apiV2Prefix)
 	registerAPIRoutesV2(e, a2, wsRateLimit)
 
 	// Collect routes for API token permissions
@@ -380,6 +381,8 @@ func noStoreCacheControl() echo.MiddlewareFunc {
 	}
 }
 
+const apiV2Prefix = "/api/v2"
+
 const v2AdminPathPrefix = "/api/v2/admin"
 
 // gateV2AdminRoutes reuses v1's RequireFeature/RequireInstanceAdmin gate (both
@@ -425,6 +428,17 @@ func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, wsRateLimit echo.Middlewar
 	// from the group's JWT middleware. Health and the Atom feed are Huma ops and
 	// self-register via init()/RegisterAll.
 	a.GET("/ws", ws.UpgradeHandler, wsRateLimit)
+
+	// Raw echo like /ws: a JSON-RPC transport on one path, not an OpenAPI resource.
+	// CanDoAPIRoute matches (method, path) exactly, so the token middleware skips
+	// the route check and the handler gates mcp:access via HasMCPAccess() instead.
+	mcpmodule.RegisterResources()
+	mcpPath, ok := strings.CutPrefix(mcpmodule.RoutePrefix, apiV2Prefix)
+	if !ok {
+		panic("mcp: RoutePrefix " + mcpmodule.RoutePrefix + " is not under " + apiV2Prefix)
+	}
+	a.Any(mcpPath, mcpmodule.Handler)
+	a.Any(mcpPath+"/*", mcpmodule.Handler)
 
 	// Resources self-register via init(); RegisterAll runs them all + AutoPatch.
 	apiv2.RegisterAll(api)
