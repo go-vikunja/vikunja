@@ -280,18 +280,18 @@ func RegisterRoutes(e *echo.Echo) {
 		}))
 	}
 
-	// Shared across both API versions: building one per version would give each
-	// its own in-memory counters, doubling the effective per-IP budget.
-	wsRateLimit := unauthRateLimit()
+	// Shared across every use site: building one per version or per route group
+	// would give each its own counters, multiplying the effective per-IP budget.
+	noAuthRateLimit := unauthRateLimit()
 	refreshRateLimit := tokenRefreshRateLimit()
 
 	// API Routes
 	a := e.Group("/api/v1")
-	registerAPIRoutes(a, wsRateLimit, refreshRateLimit)
+	registerAPIRoutes(a, noAuthRateLimit, refreshRateLimit)
 
 	// /api/v2 — Huma-backed API, scaffolded alongside /api/v1.
 	a2 := e.Group("/api/v2")
-	registerAPIRoutesV2(e, a2, wsRateLimit, refreshRateLimit)
+	registerAPIRoutesV2(e, a2, noAuthRateLimit, refreshRateLimit)
 
 	// Collect routes for API token permissions
 	// In Echo v5, we collect routes after registration using e.Router().Routes()
@@ -414,7 +414,7 @@ func gateV2AdminRoutes() echo.MiddlewareFunc {
 // registerAPIRoutesV2 wires the /api/v2 Echo group. Token middleware is
 // attached before any route so Huma's spec and Scalar docs share the
 // resource handlers' stack; unauthenticatedAPIPaths keeps them public.
-func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, wsRateLimit, refreshRateLimit echo.MiddlewareFunc) {
+func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, noAuthRateLimit, refreshRateLimit echo.MiddlewareFunc) {
 	a.Use(noStoreCacheControl())
 	a.Use(SetupTokenMiddleware())
 	a.Use(pathScoped(func(p string) bool { return p == auth.RefreshTokenPathV2 }, refreshRateLimit))
@@ -437,13 +437,13 @@ func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, wsRateLimit, refreshRateLi
 	// authenticates via its first message, so unauthenticatedAPIPaths exempts it
 	// from the group's JWT middleware. Health and the Atom feed are Huma ops and
 	// self-register via init()/RegisterAll.
-	a.GET("/ws", ws.UpgradeHandler, wsRateLimit)
+	a.GET("/ws", ws.UpgradeHandler, noAuthRateLimit)
 
 	// Resources self-register via init(); RegisterAll runs them all + AutoPatch.
 	apiv2.RegisterAll(api)
 }
 
-func registerAPIRoutes(a *echo.Group, wsRateLimit, refreshRateLimit echo.MiddlewareFunc) {
+func registerAPIRoutes(a *echo.Group, noAuthRateLimit, refreshRateLimit echo.MiddlewareFunc) {
 
 	// Prevent browsers from caching API responses. Without an explicit
 	// Cache-Control header browsers may heuristically cache JSON responses
@@ -462,14 +462,14 @@ func registerAPIRoutes(a *echo.Group, wsRateLimit, refreshRateLimit echo.Middlew
 	n.GET("/docs/redoc.standalone.js", apiv1.RedocJS)
 
 	// WebSocket (auth happens after upgrade via first message)
-	n.GET("/ws", ws.UpgradeHandler, wsRateLimit)
+	n.GET("/ws", ws.UpgradeHandler, noAuthRateLimit)
 
 	// Prometheus endpoint
 	setupMetrics(n)
 
 	// Separate route for unauthenticated routes to enable rate limits for it
 	ur := a.Group("")
-	ur.Use(unauthRateLimit())
+	ur.Use(noAuthRateLimit)
 
 	if config.AuthLocalEnabled.GetBool() {
 		ur.POST("/register", apiv1.RegisterUser)
