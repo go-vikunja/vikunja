@@ -18,20 +18,31 @@ package doctor
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
+	"time"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/files"
 )
+
+// s3ProbeTimeout bounds every S3 round trip the check makes. An unreachable but
+// well-formed endpoint would otherwise block until the OS TCP timeout.
+const s3ProbeTimeout = 12 * time.Second
 
 // CheckFiles returns file storage checks.
 func CheckFiles() CheckGroup {
 	fileType := config.FilesType.GetString()
 
 	ctx := context.Background()
+	if fileType == "s3" {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, s3ProbeTimeout)
+		defer cancel()
+	}
 
 	// Not InitFileHandler: a diagnostic must not create the storage it reports on.
 	if err := files.InitStorageBackend(ctx); err != nil {
@@ -41,7 +52,7 @@ func CheckFiles() CheckGroup {
 				{
 					Name:   "Initialization",
 					Passed: false,
-					Error:  err.Error(),
+					Error:  storageError(ctx, err),
 				},
 			},
 		}
@@ -118,7 +129,7 @@ func checkLocalStorage(ctx context.Context) []CheckResult {
 		results = append(results, CheckResult{
 			Name:   "Writable",
 			Passed: false,
-			Error:  err.Error(),
+			Error:  storageError(ctx, err),
 		})
 	} else {
 		results = append(results, CheckResult{
@@ -208,7 +219,7 @@ func checkS3Storage(ctx context.Context) []CheckResult {
 		results = append(results, CheckResult{
 			Name:   "Writable",
 			Passed: false,
-			Error:  err.Error(),
+			Error:  storageError(ctx, err),
 		})
 	} else {
 		results = append(results, CheckResult{
@@ -219,4 +230,13 @@ func checkS3Storage(ctx context.Context) []CheckResult {
 	}
 
 	return results
+}
+
+// storageError replaces the raw backend error with an actionable one when our own
+// probe deadline fired.
+func storageError(ctx context.Context, err error) string {
+	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+		return fmt.Sprintf("S3 endpoint %s did not respond within %s", config.FilesS3Endpoint.GetString(), s3ProbeTimeout)
+	}
+	return err.Error()
 }
