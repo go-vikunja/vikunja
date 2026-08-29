@@ -304,6 +304,15 @@ func getTaskFiltersFromFilterString(filter string, filterTimezone string) (filte
 	return
 }
 
+func isErrInvalidFilter(err error) bool {
+	return IsErrInvalidFilterExpression(err) ||
+		IsErrInvalidTaskFilterValue(err) ||
+		IsErrInvalidTaskFilterConcatinator(err) ||
+		IsErrInvalidTaskFilterComparator(err) ||
+		IsErrInvalidTaskField(err) ||
+		IsErrInvalidTimezone(err)
+}
+
 func validateTaskFieldComparator(comparator taskFilterComparator) error {
 	switch comparator {
 	case
