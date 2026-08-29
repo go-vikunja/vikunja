@@ -34,7 +34,7 @@ test.describe('Session refresh and retry interceptor', () => {
 
 		// Spy on the refresh endpoint
 		let refreshCalled = false
-		await page.route(/\/api\/v1\/user\/token\/refresh$/, async (route) => {
+		await page.route(/\/api\/v2\/user\/token\/refresh$/, async (route) => {
 			refreshCalled = true
 			await route.continue()
 		})
@@ -82,7 +82,7 @@ test.describe('Session refresh and retry interceptor', () => {
 		let projectsFailed = false
 		let refreshAfterFailure = false
 
-		await page.route(/\/api\/v1\/user\/token\/refresh$/, async (route) => {
+		await page.route(/\/api\/v2\/user\/token\/refresh$/, async (route) => {
 			if (projectsFailed) {
 				refreshAfterFailure = true
 			}
