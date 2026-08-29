@@ -127,7 +127,7 @@ func getTaskUsersForTasks(s *xorm.Session, taskIDs []int64, cond builder.Cond) (
 			userProjects[task.ProjectID] = p.isOwner(u)
 
 			if !p.isOwner(u) {
-				userProjects[task.ProjectID], _, err = p.checkPermission(s, u, PermissionRead, PermissionWrite, PermissionAdmin)
+				userProjects[task.ProjectID], err = p.checkPermission(s, u, PermissionRead, PermissionWrite, PermissionAdmin)
 				if err != nil {
 					return err
 				}
@@ -151,6 +151,7 @@ func getTaskUsersForTasks(s *xorm.Session, taskIDs []int64, cond builder.Cond) (
 	conditions := []builder.Cond{
 		builder.In("tasks.id", taskIDs),
 		builder.Eq{"users.status": user.StatusActive},
+		taskNotDeletedCond("tasks"),
 	}
 	if cond != nil {
 		conditions = append(conditions, cond)
@@ -255,6 +256,7 @@ func getTasksWithRemindersDueAndTheirUsers(s *xorm.Session, now time.Time, cond 
 		// All reminders from -12h to +14h to include all time zones
 		Where("reminder >= ? and reminder < ?", now.Add(time.Hour*-12).Format(dbTimeFormat), nextMinute.Add(time.Hour*14).Format(dbTimeFormat)).
 		And("tasks.done = false").
+		And("tasks.deleted_at IS NULL").
 		Find(&reminders)
 	if err != nil {
 		return
@@ -326,10 +328,13 @@ func getTasksWithRemindersDueAndTheirUsers(s *xorm.Session, now time.Time, cond 
 			if (actualReminder.After(now) && actualReminder.Before(now.Add(time.Minute))) || actualReminder.Equal(now) {
 				seen[r.TaskID][u.User.ID] = true
 
+				project := projects[u.Task.ProjectID]
+				u.Task.setIdentifier(project)
+
 				reminderNotifications = append(reminderNotifications, &ReminderDueNotification{
 					User:         u.User,
 					Task:         u.Task,
-					Project:      projects[u.Task.ProjectID],
+					Project:      project,
 					TaskReminder: r,
 				})
 			}

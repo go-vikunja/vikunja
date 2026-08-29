@@ -77,7 +77,6 @@
 			"passwordUpdateSuccess": "비밀번호가 성공적으로 변경되었습니다.",
 			"updateEmailTitle": "이메일 주소 변경",
 			"updateEmailNew": "새로운 이메일 주소",
-			"updateEmailSuccess": "승인 메일을 성공적으로 발송하였습니다. 확인하여 주십시오.",
 			"general": {
 				"title": "일반 설정",
 				"name": "나의 이름",

@@ -66,13 +66,17 @@ func (f *File) LoadFileByID() (err error) {
 	return
 }
 
-// LoadFileMetaByID loads everything about a file without loading the actual file
-func (f *File) LoadFileMetaByID() (err error) {
-	exists, err := x.Where("id = ?", f.ID).Get(f)
+// LoadFileMetaByID loads the file metadata using the caller's session — an engine
+// query under an open transaction needs a second pool connection and can deadlock the pool.
+func (f *File) LoadFileMetaByID(s *xorm.Session) (err error) {
+	exists, err := s.Where("id = ?", f.ID).Get(f)
+	if err != nil {
+		return err
+	}
 	if !exists {
 		return ErrFileDoesNotExist{FileID: f.ID}
 	}
-	return
+	return nil
 }
 
 // Create creates a new file from an FileHeader

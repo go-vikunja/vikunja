@@ -23,11 +23,11 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/models"
-	"code.vikunja.io/api/pkg/modules/humaecho5"
 	"code.vikunja.io/api/pkg/user"
 	webfiles "code.vikunja.io/api/pkg/web/files"
 
 	"github.com/danielgtaylor/huma/v2"
+	"github.com/danielgtaylor/huma/v2/adapters/humaecho"
 	"xorm.io/xorm"
 )
 
@@ -136,24 +136,24 @@ func userExportDownload(ctx context.Context, in *userExportPasswordBody) (*huma.
 		return nil, err
 	}
 
-	exportFile, err := models.GetUserDataExportFile(u)
+	exportFile, err := models.GetUserDataExportFile(s, u)
 	if err != nil {
 		_ = s.Rollback()
 		return nil, translateDomainError(err)
 	}
 
-	// The file reader comes from object storage, not the DB session, so it stays
-	// valid after the commit; the StreamResponse callback runs after this returns.
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		// The stream callback (which closes the reader) won't run on this error path.
-		_ = exportFile.File.Close()
+		return nil, translateDomainError(err)
+	}
+
+	if err := models.OpenUserDataExportFile(exportFile); err != nil {
 		return nil, translateDomainError(err)
 	}
 
 	return &huma.StreamResponse{Body: func(hctx huma.Context) {
 		defer func() { _ = exportFile.File.Close() }()
-		c := humaecho5.Unwrap(hctx)
+		c := humaecho.Unwrap(hctx)
 		webfiles.WriteFileDownload((*c).Response(), (*c).Request(), exportFile)
 	}}, nil
 }
@@ -168,7 +168,7 @@ func userExportStatus(ctx context.Context, _ *struct{}) (*userExportStatusBody, 
 		return nil, err
 	}
 
-	status, err := models.GetUserDataExportStatus(u)
+	status, err := models.GetUserDataExportStatus(s, u)
 	if err != nil {
 		_ = s.Rollback()
 		return nil, translateDomainError(err)

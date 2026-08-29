@@ -26,6 +26,7 @@ import (
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/samedi/caldav-go/data"
+	"github.com/samedi/caldav-go/errs"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -424,9 +425,9 @@ END:VCALENDAR`
 	})
 
 	//
-	// Edit a subtask and remove its parent
+	// Clients that don't round-trip RELATED-TO used to silently orphan subtasks.
 	//
-	t.Run("edit subtask remove parent", func(t *testing.T) {
+	t.Run("edit subtask without RELATED-TO preserves the parent", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
 		// Edit the subtask:
@@ -461,10 +462,9 @@ END:VCALENDAR`
 		taskResource, err := storage.UpdateResource(taskUID, taskContent)
 		require.NoError(t, err)
 
-		// Check that the result CALDAV contains the new relation:
 		content, _ := taskResource.GetContentData()
 		assert.Contains(t, content, "UID:"+taskUID)
-		assert.NotContains(t, content, "RELATED-TO;RELTYPE=PARENT:uid-caldav-test-parent-task")
+		assert.Contains(t, content, "RELATED-TO;RELTYPE=PARENT:uid-caldav-test-parent-task")
 
 		// Get the task from the DB with a new session:
 		s = db.NewSession()
@@ -473,17 +473,104 @@ END:VCALENDAR`
 		require.NoError(t, err)
 		task = tasks[0]
 
-		// Check that the parent-child relationship is gone:
-		assert.Empty(t, task.RelatedTasks[models.RelationKindParenttask])
+		assert.Equal(t, "Child task for Caldav Test (edited)", task.Title)
+		require.Len(t, task.RelatedTasks[models.RelationKindParenttask], 1)
+		assert.Equal(t, "uid-caldav-test-parent-task", task.RelatedTasks[models.RelationKindParenttask][0].UID)
 
-		// Get the previous parent from the DB and check that its child is gone:
 		tasks, err = models.GetTasksByUIDs(s, []string{"uid-caldav-test-parent-task"}, u)
 		require.NoError(t, err)
 		task = tasks[0]
-		// We're gone, but our former sibling is still there:
-		assert.Len(t, task.RelatedTasks[models.RelationKindSubtask], 1)
-		formerSiblingSubTask := task.RelatedTasks[models.RelationKindSubtask][0]
-		assert.Equal(t, "uid-caldav-test-child-task-2", formerSiblingSubTask.UID)
+		assert.Len(t, task.RelatedTasks[models.RelationKindSubtask], 2)
+	})
+}
+
+// A client-supplied UID can match several tasks, so UpdateResource must write to the one the permission check covered.
+func TestUpdateResource_TaskIdentity(t *testing.T) {
+	u := &user.User{ID: 15, Username: "user15"}
+
+	// Task 40 in fixtures: uid-caldav-test, project 36, "Title Caldav Test".
+	const victimID = 40
+	const taskUID = "uid-caldav-test"
+	const taskContent = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Vikunja Todo App//EN
+BEGIN:VTODO
+UID:uid-caldav-test
+DTSTAMP:20230301T073337Z
+SUMMARY:Hijacked
+END:VTODO
+END:VCALENDAR`
+
+	assertVictimUntouched := func(t *testing.T) {
+		t.Helper()
+		s := db.NewSession()
+		defer s.Close()
+		task, err := models.GetTaskByIDSimple(s, victimID)
+		require.NoError(t, err)
+		assert.Equal(t, "Title Caldav Test", task.Title)
+		assert.Equal(t, int64(36), task.ProjectID)
+	}
+
+	t.Run("writes to the task matching the checked id, not the first UID match", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		s := db.NewSession()
+		duplicate := &models.Task{
+			Title:       "Duplicate UID task",
+			UID:         taskUID,
+			ProjectID:   38,
+			Index:       99,
+			CreatedByID: u.ID,
+		}
+		_, err := s.Insert(duplicate)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		s.Close()
+
+		storage := &VikunjaCaldavProjectStorage{
+			project: &models.ProjectWithTasksAndBuckets{Project: models.Project{ID: 38}},
+			task:    &models.Task{ID: duplicate.ID, UID: taskUID, ProjectID: 38},
+			user:    u,
+		}
+
+		_, err = storage.UpdateResource(taskUID, taskContent)
+		require.NoError(t, err)
+
+		s = db.NewSession()
+		defer s.Close()
+		updated, err := models.GetTaskByIDSimple(s, duplicate.ID)
+		require.NoError(t, err)
+		assert.Equal(t, "Hijacked", updated.Title)
+		assertVictimUntouched(t)
+	})
+
+	t.Run("rejects when no stored task matches the checked id", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		storage := &VikunjaCaldavProjectStorage{
+			project: &models.ProjectWithTasksAndBuckets{Project: models.Project{ID: 36}},
+			// id of another task the user may write to, uid of the victim
+			task: &models.Task{ID: 41, UID: taskUID, ProjectID: 36},
+			user: u,
+		}
+
+		_, err := storage.UpdateResource(taskUID, taskContent)
+		require.ErrorIs(t, err, errs.ResourceNotFoundError)
+		assertVictimUntouched(t)
+	})
+
+	t.Run("rejects when the stored task is in another project than the url", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		storage := &VikunjaCaldavProjectStorage{
+			project: &models.ProjectWithTasksAndBuckets{Project: models.Project{ID: 38}},
+			task:    &models.Task{ID: victimID, UID: taskUID, ProjectID: 36},
+			user:    u,
+		}
+
+		_, err := storage.UpdateResource(taskUID, taskContent)
+		require.ErrorIs(t, err, errs.ResourceNotFoundError)
+		assertVictimUntouched(t)
 	})
 }
 
@@ -531,5 +618,82 @@ func TestGetResourcesByList_URLProjectConsistency(t *testing.T) {
 		})
 		require.NoError(t, err)
 		assert.Empty(t, resources, "unauthorized user must not receive any tasks")
+	})
+}
+
+// TestCreateResource_ExistingUID covers #3482: a client PUTting a task it still
+// believes lives in an old collection must not get a second copy of that task.
+func TestCreateResource_ExistingUID(t *testing.T) {
+	u := &user.User{ID: 15, Username: "user15"}
+
+	// Task 40 in fixtures: uid-caldav-test, project 36.
+	const taskUID = "uid-caldav-test"
+	const taskContent = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Vikunja Todo App//EN
+BEGIN:VTODO
+UID:uid-caldav-test
+DTSTAMP:20230301T073337Z
+SUMMARY:Title Caldav Test
+STATUS:COMPLETED
+END:VTODO
+END:VCALENDAR`
+
+	countTasksWithUID := func(t *testing.T) int64 {
+		t.Helper()
+		s := db.NewSession()
+		defer s.Close()
+		count, err := s.Where("uid = ?", taskUID).Count(&models.Task{})
+		require.NoError(t, err)
+		return count
+	}
+
+	t.Run("does not duplicate the task into another project", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		storage := &VikunjaCaldavProjectStorage{
+			project: &models.ProjectWithTasksAndBuckets{Project: models.Project{ID: 38}},
+			task:    &models.Task{UID: taskUID},
+			user:    u,
+		}
+
+		_, err := storage.CreateResource("/dav/projects/38/"+taskUID+".ics", taskContent)
+		require.ErrorIs(t, err, errs.ResourceNotFoundError)
+		assert.Equal(t, int64(1), countTasksWithUID(t))
+	})
+
+	t.Run("does not duplicate the task into its own project", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		storage := &VikunjaCaldavProjectStorage{
+			project: &models.ProjectWithTasksAndBuckets{Project: models.Project{ID: 36}},
+			task:    &models.Task{UID: taskUID},
+			user:    u,
+		}
+
+		_, err := storage.CreateResource("/dav/projects/36/"+taskUID+".ics", taskContent)
+		require.ErrorIs(t, err, errs.ResourceNotFoundError)
+		assert.Equal(t, int64(1), countTasksWithUID(t))
+	})
+
+	t.Run("creates a task when the uid is not taken", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		storage := &VikunjaCaldavProjectStorage{
+			project: &models.ProjectWithTasksAndBuckets{Project: models.Project{ID: 38}},
+			task:    &models.Task{UID: "uid-caldav-test-fresh"},
+			user:    u,
+		}
+
+		_, err := storage.CreateResource("/dav/projects/38/uid-caldav-test-fresh.ics", `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Vikunja Todo App//EN
+BEGIN:VTODO
+UID:uid-caldav-test-fresh
+DTSTAMP:20230301T073337Z
+SUMMARY:Fresh task
+END:VTODO
+END:VCALENDAR`)
+		require.NoError(t, err)
 	})
 }

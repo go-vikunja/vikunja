@@ -25,6 +25,7 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/i18n"
+	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
 
@@ -43,7 +44,7 @@ const AtomContentType = "application/atom+xml; charset=utf-8"
 // against an existing session. Notifications are not marked as read by being
 // fetched here. Shared by the v1 echo handler and the v2 Huma op.
 func BuildNotificationsAtomFeed(s *xorm.Session, u *user.User) (string, error) {
-	rows, _, _, err := notifications.GetNotificationsForUser(s, u.ID, feedItemLimit, 0)
+	rows, _, _, err := notifications.GetNotificationsForUser(s, u.ID, models.NotificationProjectFilter(u), feedItemLimit, 0)
 	if err != nil {
 		return "", err
 	}

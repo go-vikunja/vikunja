@@ -17,11 +17,13 @@
 package notifications
 
 import (
+	"errors"
 	"time"
 
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 
+	"xorm.io/builder"
 	"xorm.io/xorm"
 )
 
@@ -38,23 +40,39 @@ type DatabaseNotification struct {
 	Name string `xorm:"varchar(250) index not null" json:"name" readOnly:"true" doc:"The name identifying the kind of notification."`
 	// The thing the notification is about. Used to check if a notification for this thing already happened or not.
 	SubjectID int64 `xorm:"bigint null" json:"-"`
+	// 0 is account-scoped and always visible, > 0 needs read access to that
+	// project, ProjectIDUnresolved (-1) is visible to nobody.
+	ProjectID int64 `xorm:"bigint index not null default 0" json:"-"`
 
 	// When this notification is marked as read, this will be updated with the current timestamp.
 	ReadAt time.Time `xorm:"datetime null" json:"read_at" readOnly:"true" doc:"When the notification was marked read; zero value while unread. Set via the read flag, not written directly."`
 
 	// A timestamp when this notification was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"A timestamp when this notification was created. You cannot change this value."`
+
+	// Carried in memory so AfterInsert can queue the mail only after the row
+	// is committed. Unexported, so neither xorm nor json touch them.
+	notification Notification
+	notifiable   Notifiable
 }
 
 // AfterInsert is called by XORM after the row is inserted. For transactional
 // sessions this runs during Commit(), guaranteeing the row is persisted before
-// the event fires.
+// the event fires and the mail is queued. A rolled-back transaction therefore
+// sends no mail, which keeps event-handler retries from duplicating it (#2971).
 func (d *DatabaseNotification) AfterInsert() {
 	if err := events.Dispatch(&NotificationCreatedEvent{
 		NotificationID: d.ID,
 		UserID:         d.NotifiableID,
 	}); err != nil {
 		log.Errorf("Failed to dispatch notification created event for notification %d: %v", d.ID, err)
+	}
+
+	if d.notification == nil || d.notifiable == nil {
+		return
+	}
+	if err := notifyMail(d.notifiable, d.notification); err != nil {
+		log.Errorf("Failed to send mail for notification %d: %v", d.ID, err)
 	}
 }
 
@@ -66,9 +84,18 @@ func (d *DatabaseNotification) TableName() string {
 // GetNotificationsForUser returns all notifications for a user. It is possible to limit the amount of notifications
 // to return with the limit and start parameters.
 // We're not passing a user object in directly because every other package imports this one so we'd get import cycles.
-func GetNotificationsForUser(s *xorm.Session, notifiableID int64, limit, start int) (notifications []*DatabaseNotification, resultCount int, total int64, err error) {
+//
+// projectFilter is built by models and applied inside the query, so limit/start
+// and total all describe the rows the caller may read.
+func GetNotificationsForUser(s *xorm.Session, notifiableID int64, projectFilter builder.Cond, limit, start int) (notifications []*DatabaseNotification, resultCount int, total int64, err error) {
+	if projectFilter == nil {
+		return nil, 0, 0, errors.New("notifications cannot be read without a project filter")
+	}
+
+	cond := builder.And(builder.Eq{"notifiable_id": notifiableID}, projectFilter)
+
 	err = s.
-		Where("notifiable_id = ?", notifiableID).
+		Where(cond).
 		Limit(limit, start).
 		OrderBy("id DESC").
 		Find(&notifications)
@@ -77,7 +104,7 @@ func GetNotificationsForUser(s *xorm.Session, notifiableID int64, limit, start i
 	}
 
 	total, err = s.
-		Where("notifiable_id = ?", notifiableID).
+		Where(cond).
 		Count(&DatabaseNotification{})
 	return notifications, len(notifications), total, err
 }

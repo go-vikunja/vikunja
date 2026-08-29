@@ -5,6 +5,24 @@
 	}
 }
 
+// Task detail sections are h2 for a correct heading outline but keep the smaller h3 sizing
+.content h2.task-section-title {
+	font-size: 1.5em;
+
+	.icon,
+	.is-small {
+		font-size: 1rem;
+	}
+}
+
+// Sharing dialog labels became h3 for semantics but must keep their previous inline paragraph look
+.content h3.share-heading {
+	font-family: inherit;
+	font-size: 1rem;
+	line-height: 1.5;
+	margin-block: 0 1rem;
+}
+
 .table.has-actions {
 	border-block-start: 1px solid var(--grey-100);
 	border-radius: 4px;

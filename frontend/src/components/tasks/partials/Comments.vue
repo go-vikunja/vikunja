@@ -4,9 +4,9 @@
 		ref="commentsRef"
 		class="content details comments-container"
 	>
-		<h3
+		<h2
 			v-if="canWrite || comments.length > 0"
-			class="comments-heading"
+			class="comments-heading task-section-title"
 			:class="{'d-print-none': comments.length === 0}"
 		>
 			<span>
@@ -23,7 +23,7 @@
 				<Icon :icon="commentSortOrder === 'asc' ? 'arrow-down-short-wide' : 'arrow-up-short-wide'" />
 				{{ commentSortOrder === 'asc' ? $t('task.comment.sortOldestFirst') : $t('task.comment.sortNewestFirst') }}
 			</BaseButton>
-		</h3>
+		</h2>
 		<div class="comments">
 			<span
 				v-if="taskCommentService.loading && saving === null && !creating"
@@ -113,7 +113,7 @@
 						:show-save="true"
 						:enable-discard-shortcut="true"
 						:enable-mentions="true"
-						:mention-project-id="projectId"
+						:project-id="projectId"
 						initial-mode="preview"
 						@update:modelValue="
 							() => {
@@ -146,6 +146,7 @@
 			<div
 				v-if="canWrite"
 				class="media comment d-print-none"
+				:class="{'new-comment-top': commentSortOrder === 'desc'}"
 			>
 				<figure class="media-left is-hidden-mobile">
 					<img
@@ -183,7 +184,7 @@
 								:upload-callback="attachmentUpload"
 								:placeholder="$t('task.comment.placeholder')"
 								:enable-mentions="true"
-								:mention-project-id="projectId"
+								:project-id="projectId"
 								:storage-key="commentStorageKey"
 								@save="addComment()"
 							/>
@@ -654,6 +655,15 @@ function getCommentUrl(commentId: string) {
 	&:hover {
 		color: var(--grey-700);
 	}
+}
+
+.comments {
+	display: flex;
+	flex-direction: column;
+}
+
+.new-comment-top {
+	order: -1;
 }
 
 .comments-container {

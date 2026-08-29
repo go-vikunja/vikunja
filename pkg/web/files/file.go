@@ -40,6 +40,8 @@ func WriteFileDownload(w http.ResponseWriter, r *http.Request, f *files.File) {
 	}
 	w.Header().Set("Content-Disposition", mime.FormatMediaType("attachment", map[string]string{"filename": f.Name}))
 	w.Header().Set("Content-Type", mimeToReturn)
+	// Never let the browser sniff a type other than the one we detected.
+	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.Header().Set("Content-Length", strconv.FormatUint(f.Size, 10))
 	w.Header().Set("Last-Modified", f.Created.UTC().Format(http.TimeFormat))
 

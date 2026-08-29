@@ -105,6 +105,11 @@ func TestProject(t *testing.T) {
 			assert.NotContains(t, rec.Body.String(), `"owner":{"id":2,"name":"","username":"user2",`)
 			assert.NotContains(t, rec.Body.String(), `"tasks":`)
 			assert.Equal(t, "2", rec.Result().Header.Get("x-max-permission")) // User 1 is owner, so they should have admin permissions.
+			// v1 reports the permission in the header only; the body field is
+			// filled by expand=permissions on the list route and must not
+			// fall back to its zero value (0 = read) here.
+			assert.Contains(t, rec.Body.String(), `"max_permission":null`)
+			assert.NotContains(t, rec.Body.String(), `"max_permission":0`)
 		})
 		t.Run("Nonexisting", func(t *testing.T) {
 			_, err := testHandler.testReadOneWithUser(nil, map[string]string{"project": "9999"})
@@ -204,6 +209,8 @@ func TestProject(t *testing.T) {
 			assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
 			// The description should not be updated but returned correctly
 			assert.Contains(t, rec.Body.String(), `description":"Lorem Ipsum`)
+			assert.Contains(t, rec.Body.String(), `"max_permission":null`)
+			assert.NotContains(t, rec.Body.String(), `"max_permission":0`)
 		})
 		t.Run("Nonexisting", func(t *testing.T) {
 			_, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "9999"}, `{"title":"TestLoremIpsum"}`)
@@ -225,6 +232,14 @@ func TestProject(t *testing.T) {
 			_, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "1"}, `{"title":"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea taki"}`)
 			require.Error(t, err)
 			assert.Contains(t, err.(models.ValidationHTTPError).InvalidFields[0], "does not validate as runelength(1|250)")
+		})
+		t.Run("Detach to root without admin is forbidden (GHSA-44v6-7fxq-vgf4)", func(t *testing.T) {
+			// User 1 has Write (not Admin) on project 10 and inherits Write on
+			// its child project 43. Sending an explicit parent_project_id=0
+			// detaches the child to the top level, which must require Admin.
+			_, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "43"}, `{"title":"Reparent Escalation Test Child","parent_project_id":0}`)
+			require.Error(t, err)
+			assertHandlerErrorCode(t, err, models.ErrorCodeGenericForbidden)
 		})
 		t.Run("Permissions check", func(t *testing.T) {
 			t.Run("Forbidden", func(t *testing.T) {
@@ -390,6 +405,8 @@ func TestProject(t *testing.T) {
 			assert.Contains(t, rec.Body.String(), `"description":""`)
 			assert.Contains(t, rec.Body.String(), `"owner":{"id":1`)
 			assert.NotContains(t, rec.Body.String(), `"tasks":`)
+			assert.Contains(t, rec.Body.String(), `"max_permission":null`)
+			assert.NotContains(t, rec.Body.String(), `"max_permission":0`)
 		})
 		t.Run("Normal with description", func(t *testing.T) {
 			rec, err := testHandler.testCreateWithUser(nil, nil, `{"title":"Lorem","description":"Lorem Ipsum"}`)

@@ -29,7 +29,7 @@ type User struct {
 	Email    string `json:"email,omitempty"`
 }
 
-// BotUser is what `PUT /bots` returns.
+// BotUser is what `POST /user/bots` returns.
 type BotUser struct {
 	ID       int64     `json:"id"`
 	Username string    `json:"username"`
@@ -38,7 +38,7 @@ type BotUser struct {
 	Created  time.Time `json:"created,omitempty"`
 }
 
-// BotUserCreate is the request body for PUT /bots.
+// BotUserCreate is the request body for POST /user/bots.
 type BotUserCreate struct {
 	Username string `json:"username"`
 	Name     string `json:"name,omitempty"`
@@ -119,6 +119,20 @@ type Task struct {
 	PercentDone  float64            `json:"percent_done,omitempty"`
 }
 
+// TaskPatch is the JSON Merge Patch body for UpdateTask (PATCH /tasks/{id}).
+// Every field is a pointer with omitempty so only the fields the caller sets
+// are serialized; absent fields are left untouched server-side. This is the
+// fix for issue #2962 — a status-only update no longer zeroes description or
+// priority the way the old whole-object write did. A non-nil pointer to a zero
+// value (e.g. *Priority = 0, *Done = false) still serializes, which is how an
+// explicit "clear priority" or "reopen" reaches the server.
+type TaskPatch struct {
+	Title       *string `json:"title,omitempty"`
+	Description *string `json:"description,omitempty"`
+	Done        *bool   `json:"done,omitempty"`
+	Priority    *int64  `json:"priority,omitempty"`
+}
+
 // TaskComment matches pkg/models/task_comments.TaskComment.
 type TaskComment struct {
 	ID      int64     `json:"id"`
@@ -138,12 +152,12 @@ type Label struct {
 	Updated     time.Time `json:"updated,omitempty"`
 }
 
-// LabelTask is the body for `PUT /tasks/{id}/labels`.
+// LabelTask is the body for `POST /tasks/{id}/labels`.
 type LabelTask struct {
 	LabelID int64 `json:"label_id"`
 }
 
-// TaskRelation is the body for `PUT /tasks/{id}/relations` and the row
+// TaskRelation is the body for `POST /tasks/{id}/relations` and the row
 // returned. RelationKind is one of: subtask, parenttask, related, duplicates,
 // duplicateof, blocking, blocked, precedes, follows, copiedfrom, copiedto.
 type TaskRelation struct {
@@ -152,12 +166,12 @@ type TaskRelation struct {
 	RelationKind string `json:"relation_kind"`
 }
 
-// TaskAssignee is the body for `PUT /tasks/{id}/assignees`.
+// TaskAssignee is the body for `POST /tasks/{id}/assignees`.
 type TaskAssignee struct {
 	UserID int64 `json:"user_id"`
 }
 
-// ProjectUser is the body and response for `PUT /projects/{id}/users`.
+// ProjectUser is the body and response for `POST /projects/{id}/users`.
 type ProjectUser struct {
 	ID         int64  `json:"id,omitempty"`
 	Username   string `json:"username"`
@@ -171,7 +185,7 @@ const (
 	PermissionAdmin     = 2
 )
 
-// APIToken is the request and response shape for `PUT /tokens`. The plaintext
+// APIToken is the request and response shape for `POST /tokens`. The plaintext
 // `Token` field is only populated on creation. Vikunja requires ExpiresAt;
 // callers that want a long-lived token use FarFuture (year 9999).
 type APIToken struct {
@@ -223,8 +237,9 @@ type LoginResponse struct {
 	Token string `json:"token"`
 }
 
-// OAuthTokenRequest is the JSON body for POST /api/v1/oauth/token. Vikunja's
-// OAuth server explicitly rejects form-encoded requests; everything is JSON.
+// OAuthTokenRequest is the JSON body for POST /api/v2/oauth/token. The v2
+// endpoint accepts both JSON and form-encoded bodies; veans sends JSON, which
+// Huma decodes off the Content-Type header regardless of the declared form.
 type OAuthTokenRequest struct {
 	GrantType    string `json:"grant_type"`
 	Code         string `json:"code,omitempty"`

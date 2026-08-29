@@ -92,14 +92,15 @@ const (
 	AuthLdapVerifyTLS  Key = `auth.ldap.verifytls`
 	AuthLdapBindDN     Key = `auth.ldap.binddn`
 	// #nosec G101
-	AuthLdapBindPassword         Key = `auth.ldap.bindpassword`
-	AuthLdapGroupSyncEnabled     Key = `auth.ldap.groupsyncenabled`
-	AuthLdapGroupSyncFilter      Key = `auth.ldap.groupsyncfilter`
-	AuthLdapAvatarSyncAttribute  Key = `auth.ldap.avatarsyncattribute`
-	AuthLdapAttributeUsername    Key = `auth.ldap.attribute.username`
-	AuthLdapAttributeEmail       Key = `auth.ldap.attribute.email`
-	AuthLdapAttributeDisplayname Key = `auth.ldap.attribute.displayname`
-	AuthLdapAttributeMemberID    Key = `auth.ldap.attribute.memberid`
+	AuthLdapBindPassword               Key = `auth.ldap.bindpassword`
+	AuthLdapGroupSyncEnabled           Key = `auth.ldap.groupsyncenabled`
+	AuthLdapGroupSyncFilter            Key = `auth.ldap.groupsyncfilter`
+	AuthLdapGroupSyncUseServiceAccount Key = `auth.ldap.groupsyncuseserviceaccount`
+	AuthLdapAvatarSyncAttribute        Key = `auth.ldap.avatarsyncattribute`
+	AuthLdapAttributeUsername          Key = `auth.ldap.attribute.username`
+	AuthLdapAttributeEmail             Key = `auth.ldap.attribute.email`
+	AuthLdapAttributeDisplayname       Key = `auth.ldap.attribute.displayname`
+	AuthLdapAttributeMemberID          Key = `auth.ldap.attribute.memberid`
 
 	LegalImprintURL Key = `legal.imprinturl`
 	LegalPrivacyURL Key = `legal.privacyurl`
@@ -156,6 +157,7 @@ const (
 	RateLimitLimit             Key = `ratelimit.limit`
 	RateLimitStore             Key = `ratelimit.store`
 	RateLimitNoAuthRoutesLimit Key = `ratelimit.noauthlimit`
+	RateLimitTokenRefreshLimit Key = `ratelimit.tokenrefreshlimit`
 
 	FilesBasePath Key = `files.basepath`
 	FilesMaxSize  Key = `files.maxsize`
@@ -286,8 +288,9 @@ var timezone *time.Location
 // It is a separate function and not done through viper because that makes handling
 // it way easier, especially when testing.
 func GetTimeZone() *time.Location {
-	if timezone == nil {
-		loc, err := time.LoadLocation(ServiceTimeZone.GetString())
+	tz := ServiceTimeZone.GetString()
+	if timezone == nil || timezone.String() != tz {
+		loc, err := time.LoadLocation(tz)
 		if err != nil {
 			log.Fatalf("Error parsing time zone: %s", err)
 		}
@@ -338,14 +341,21 @@ func getRootpathLocation() string {
 // InitDefaultConfig sets default config values
 // This is an extra function so we can call it when initializing tests without initializing the full config
 func InitDefaultConfig() {
-	// Service config
-	random, err := random(32)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
+	initDefaultConfig()
+	// Callers who skip InitConfig still need a usable secret.
+	generateServiceSecretIfEmpty()
+}
 
+// ResetForTests drops every value a test set and re-applies the defaults, so a later
+// InitConfig sees what it would in a fresh process. Restoring a saved value with Set
+// instead leaves it at viper's override level, where it outranks anything InitConfig loads.
+func ResetForTests() {
+	viper.Reset()
+	InitDefaultConfig()
+}
+
+func initDefaultConfig() {
 	// Service
-	ServiceSecret.setDefault(random)
 	ServiceJWTTTL.setDefault(259200)      // 72 hours
 	ServiceJWTTTLLong.setDefault(2592000) // 30 days
 	ServiceJWTTTLShort.setDefault(600)    // 10 minutes
@@ -367,7 +377,6 @@ func InitDefaultConfig() {
 	ServiceEnableUserDeletion.setDefault(true)
 	ServiceMaxAvatarSize.setDefault(1024)
 	ServiceDemoMode.setDefault(false)
-	ServiceAllowIconChanges.setDefault(true)
 	ServiceEnablePublicTeams.setDefault(false)
 	ServiceBcryptRounds.setDefault(11)
 	ServiceEnableOpenIDTeamUserOnlySearch.setDefault(false)
@@ -389,6 +398,7 @@ func InitDefaultConfig() {
 	AuthLdapVerifyTLS.setDefault(true)
 	AuthLdapGroupSyncEnabled.setDefault(false)
 	AuthLdapGroupSyncFilter.setDefault("(&(objectclass=*)(|(objectclass=group)(objectclass=groupOfNames)))")
+	AuthLdapGroupSyncUseServiceAccount.setDefault(false)
 	AuthLdapAttributeUsername.setDefault("uid")
 	AuthLdapAttributeEmail.setDefault("mail")
 	AuthLdapAttributeDisplayname.setDefault("displayName")
@@ -448,6 +458,7 @@ func InitDefaultConfig() {
 	RateLimitPeriod.setDefault(60)
 	RateLimitStore.setDefault("memory")
 	RateLimitNoAuthRoutesLimit.setDefault(10)
+	RateLimitTokenRefreshLimit.setDefault(60)
 	// Files
 	FilesBasePath.setDefault("files")
 	FilesMaxSize.setDefault("20MB")
@@ -519,6 +530,23 @@ func InitDefaultConfig() {
 	}
 	// License
 	LicenseKey.setDefault("")
+}
+
+// generateServiceSecretIfEmpty sets a random service.secret when none was configured.
+// service.secret must have no default until this runs, otherwise an empty value is
+// indistinguishable from a configured one and the service.jwtsecret deprecation
+// migration can't tell whether the user set the new key.
+func generateServiceSecretIfEmpty() {
+	if ServiceSecret.GetString() != "" {
+		return
+	}
+
+	secret, err := random(32)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	ServiceSecret.setDefault(secret)
 }
 
 // ResolvePath resolves a path relative to service.rootpath.
@@ -607,11 +635,49 @@ func setConfigFromEnv() error {
 	return viper.MergeConfigMap(configMap)
 }
 
+// configFileOverride pins the config file, bypassing the search path. Set via
+// the --config flag.
+var configFileOverride string
+
+// SetConfigFile pins the config file InitConfig will load. Must be called before
+// InitConfig.
+func SetConfigFile(path string) {
+	configFileOverride = path
+}
+
+// anchorRootpathToConfigFile resolves a relative rootpath against a pinned
+// config file's directory, so it belongs to the install and not the caller's cwd.
+func anchorRootpathToConfigFile() {
+	if configFileOverride == "" {
+		return
+	}
+
+	configDir, err := filepath.Abs(filepath.Dir(viper.ConfigFileUsed()))
+	if err != nil {
+		return
+	}
+
+	if !viper.InConfig(string(ServiceRootpath)) {
+		ServiceRootpath.setDefault(configDir)
+	}
+
+	// An explicitly set value outranks a default, so rewrite at override level.
+	if rootpath := ServiceRootpath.GetString(); !filepath.IsAbs(rootpath) {
+		ServiceRootpath.Set(filepath.Join(configDir, rootpath))
+	}
+
+	// The default baked in initDefaultConfig() points at the caller's cwd, which
+	// would split the database off from the rest of the pinned install.
+	if !viper.InConfig(string(DatabasePath)) {
+		DatabasePath.setDefault(ResolvePath("vikunja.db"))
+	}
+}
+
 // InitConfig initializes the config, sets defaults etc.
 func InitConfig() {
 
 	// Set defaults
-	InitDefaultConfig()
+	initDefaultConfig()
 
 	// Init checking for environment variables
 	viper.SetEnvPrefix("vikunja")
@@ -621,20 +687,34 @@ func InitConfig() {
 	log.ConfigureStandardLogger(LogEnabled.GetBool(), LogStandard.GetString(), LogPath.GetString(), LogLevel.GetString(), LogFormat.GetString())
 
 	// Load the config file
-	viper.AddConfigPath(ServiceRootpath.GetString())
-	viper.AddConfigPath("/etc/vikunja/")
-
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		log.Debugf("No home directory found, not using config from ~/.config/vikunja/. Error was: %s\n", err.Error())
+	if configFileOverride != "" {
+		viper.SetConfigFile(configFileOverride)
 	} else {
-		viper.AddConfigPath(path.Join(homeDir, ".config", "vikunja"))
+		viper.AddConfigPath(ServiceRootpath.GetString())
+		viper.AddConfigPath("/etc/vikunja/")
+
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			log.Debugf("No home directory found, not using config from ~/.config/vikunja/. Error was: %s\n", err.Error())
+		} else {
+			viper.AddConfigPath(path.Join(homeDir, ".config", "vikunja"))
+		}
+
+		viper.AddConfigPath(".")
+		// Must not run in the override branch: SetConfigName resets the
+		// explicitly set config file in viper.
+		viper.SetConfigName("config")
 	}
 
-	viper.AddConfigPath(".")
-	viper.SetConfigName("config")
+	err := viper.ReadInConfig()
 
-	err = viper.ReadInConfig()
+	// An explicitly requested config file that can't be read is fatal — silently
+	// falling back to defaults is how people end up debugging the wrong config.
+	if configFileOverride != "" && err != nil {
+		log.Fatalf("Could not read config file %s: %s", configFileOverride, err.Error())
+	}
+
+	anchorRootpathToConfigFile()
 
 	if viper.ConfigFileUsed() != "" {
 		log.Infof("Using config file: %s", viper.ConfigFileUsed())
@@ -659,13 +739,15 @@ func InitConfig() {
 	// Deprecation: migrate service.JWTSecret → service.secret only when the
 	// user has not explicitly set service.secret (so the new key takes precedence).
 	if ServiceJWTSecret.GetString() != "" {
-		if viper.IsSet(string(ServiceSecret)) {
+		if ServiceSecret.GetString() != "" {
 			log.Warning("config: both service.secret and service.jwtsecret are set. Using service.secret. Please remove service.jwtsecret, it is deprecated and will be removed in a future release.")
 		} else {
 			log.Warning("config: service.jwtsecret is deprecated and will be removed in a future release. Please use service.secret instead.")
 			ServiceSecret.Set(ServiceJWTSecret.GetString())
 		}
 	}
+
+	generateServiceSecretIfEmpty()
 
 	if _, err := url.ParseRequestURI(AvatarGravatarBaseURL.GetString()); err != nil {
 		log.Fatalf("Could not parse gravatarbaseurl: %s", err)

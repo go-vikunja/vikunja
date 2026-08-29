@@ -34,7 +34,7 @@ func init() {
 		ID:          "20240304153738",
 		Description: "Add issuer column to teams to track the OIDC provider this issue has bene created by",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(teams20240304153738{})
+			return partialSync(tx, teams20240304153738{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil

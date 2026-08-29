@@ -29,14 +29,16 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
 	"xorm.io/builder"
 	"xorm.io/xorm"
 	"xorm.io/xorm/names"
 	"xorm.io/xorm/schemas"
 
 	_ "github.com/go-sql-driver/mysql" // Because.
-	_ "github.com/lib/pq"              // Because.
-	_ "github.com/mattn/go-sqlite3"    // Because.
+	"github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3" // Because.
 )
 
 var (
@@ -46,6 +48,9 @@ var (
 	// and can be used for full text search.
 	paradedbInstalled bool
 )
+
+// DatabasePathMemory is the database.path value selecting an ephemeral database.
+const DatabasePathMemory = "memory"
 
 // registeredTables holds all table beans registered by Vikunja packages.
 var registeredTables []interface{}
@@ -115,6 +120,14 @@ func CreateDBEngine() (engine *xorm.Engine, err error) {
 	logger := log.NewXormLogger(config.LogEnabled.GetBool(), config.LogDatabase.GetString(), config.LogDatabaseLevel.GetString(), config.LogFormat.GetString())
 	engine.SetLogger(logger)
 
+	// xorm connects lazily, so this is where an unreachable database first surfaces. Without it
+	// the first real query reports it instead, which reads as a schema or extension bug (#3287).
+	if err = engine.Ping(); err != nil {
+		return nil, err
+	}
+
+	checkParadeDB(engine)
+
 	x = engine
 	return
 }
@@ -164,7 +177,7 @@ func parsePostgreSQLHostPort(info string) (string, string) {
 }
 
 // Copied and adopted from https://github.com/go-gitea/gitea/blob/f337c32e868381c6d2d948221aca0c59f8420c13/modules/setting/database.go#L176-L186
-func getPostgreSQLConnectionString(dbHost, dbUser, dbPasswd, dbName, dbSslMode, dbSslCert, dbSslKey, dbSslRootCert string) (connStr string) {
+func getPostgreSQLConnectionString(dbHost, dbUser, dbPasswd, dbName, dbSchema, dbSslMode, dbSslCert, dbSslKey, dbSslRootCert string) (connStr string) {
 	dbParam := "?"
 	if strings.Contains(dbName, dbParam) {
 		dbParam = "&"
@@ -177,6 +190,15 @@ func getPostgreSQLConnectionString(dbHost, dbUser, dbPasswd, dbName, dbSslMode, 
 		connStr = fmt.Sprintf("postgres://%s:%s@%s:%s/%s%ssslmode=%s&sslcert=%s&sslkey=%s&sslrootcert=%s",
 			url.PathEscape(dbUser), url.PathEscape(dbPasswd), host, port, dbName, dbParam, dbSslMode, dbSslCert, dbSslKey, dbSslRootCert)
 	}
+	// Pin search_path so raw SQL resolves to the same schema as xorm-built statements (#3118).
+	// Quoting preserves case; public stays so extension operators (e.g. ParadeDB's |||) keep resolving.
+	if dbSchema != "" {
+		searchPath := pq.QuoteIdentifier(dbSchema)
+		if dbSchema != "public" {
+			searchPath += ",public"
+		}
+		connStr += "&search_path=" + url.QueryEscape(searchPath)
+	}
 	return connStr
 }
 
@@ -186,6 +208,7 @@ func initPostgresEngine() (engine *xorm.Engine, err error) {
 		config.DatabaseUser.GetString(),
 		config.DatabasePassword.GetString(),
 		config.DatabaseDatabase.GetString(),
+		config.DatabaseSchema.GetString(),
 		config.DatabaseSslMode.GetString(),
 		config.DatabaseSslCert.GetString(),
 		config.DatabaseSslKey.GetString(),
@@ -205,7 +228,6 @@ func initPostgresEngine() (engine *xorm.Engine, err error) {
 	}
 	engine.SetConnMaxLifetime(maxLifetime)
 
-	checkParadeDB(engine)
 	return
 }
 
@@ -221,17 +243,19 @@ type DatabasePathConfig struct {
 // resolveDatabasePath resolves a database path configuration to an absolute path.
 //
 // Resolution rules:
-//  1. If ConfiguredPath is "memory", returns "memory" (special case for in-memory DB)
+//  1. If ConfiguredPath is DatabasePathMemory, returns it (ephemeral database)
 //  2. If ConfiguredPath is already absolute, returns it as-is (cleaned)
 //  3. If ConfiguredPath is relative:
 //     a. If RootPath differs from ExecutablePath (explicitly configured),
 //     joins with RootPath
-//     b. Otherwise, joins with platform-specific user data directory
+//     b. Otherwise, joins with the user data directory, falling back to RootPath
+//     when userDataDir reports the directory as unavailable
 //
-// The getUserDataDir parameter allows injecting a mock for testing.
-func resolveDatabasePath(cfg DatabasePathConfig, getUserDataDir func() (string, error)) (string, error) {
-	if cfg.ConfiguredPath == "memory" {
-		return "memory", nil
+// Directory creation only ever happens inside userDataDir, so an operator-configured
+// path never gets its parents created behind their back.
+func resolveDatabasePath(cfg DatabasePathConfig, userDataDir func() (string, error)) (string, error) {
+	if cfg.ConfiguredPath == DatabasePathMemory {
+		return DatabasePathMemory, nil
 	}
 
 	var path string
@@ -242,7 +266,7 @@ func resolveDatabasePath(cfg DatabasePathConfig, getUserDataDir func() (string, 
 	case cfg.RootPath != cfg.ExecutablePath:
 		path = filepath.Join(cfg.RootPath, cfg.ConfiguredPath)
 	default:
-		dataDir, err := getUserDataDir()
+		dataDir, err := userDataDir()
 		if err != nil {
 			log.Warningf("Could not get user data directory, falling back to rootpath: %v", err)
 			path = filepath.Join(cfg.RootPath, cfg.ConfiguredPath)
@@ -254,7 +278,7 @@ func resolveDatabasePath(cfg DatabasePathConfig, getUserDataDir func() (string, 
 	return filepath.Abs(path)
 }
 
-func initSqliteEngine() (engine *xorm.Engine, err error) {
+func databasePathConfig() DatabasePathConfig {
 	rootPath := config.ServiceRootpath.GetString()
 
 	executablePath := rootPath
@@ -262,18 +286,33 @@ func initSqliteEngine() (engine *xorm.Engine, err error) {
 		executablePath = filepath.Dir(execPath)
 	}
 
-	cfg := DatabasePathConfig{
+	return DatabasePathConfig{
 		ConfiguredPath: config.DatabasePath.GetString(),
 		RootPath:       rootPath,
 		ExecutablePath: executablePath,
 	}
+}
 
-	path, err := resolveDatabasePath(cfg, getUserDataDir)
+// ResolvedDatabasePath returns the absolute path of the SQLite database file,
+// or DatabasePathMemory for the ephemeral database. Only meaningful when
+// database.type is sqlite. It creates nothing — see ensureDatabasePath.
+func ResolvedDatabasePath() (string, error) {
+	return resolveDatabasePath(databasePathConfig(), existingUserDataDir)
+}
+
+// ensureDatabasePath returns the path ResolvedDatabasePath reports once the user data
+// directory exists, creating that directory if it is the one selected.
+func ensureDatabasePath() (string, error) {
+	return resolveDatabasePath(databasePathConfig(), createdUserDataDir)
+}
+
+func initSqliteEngine() (engine *xorm.Engine, err error) {
+	path, err := ensureDatabasePath()
 	if err != nil {
-		return nil, fmt.Errorf("could not resolve database path: %w", err)
+		return nil, fmt.Errorf("could not prepare database path: %w", err)
 	}
 
-	if path == "memory" {
+	if path == DatabasePathMemory {
 		// Use a temp file with WAL mode instead of in-memory shared cache.
 		// Shared cache (file::memory:?cache=shared) uses table-level locking
 		// where _busy_timeout is ineffective (returns SQLITE_LOCKED, not
@@ -323,8 +362,42 @@ func initSqliteEngine() (engine *xorm.Engine, err error) {
 	return
 }
 
-// getUserDataDir returns the platform-appropriate directory for application data
-func getUserDataDir() (string, error) {
+// existingUserDataDir returns the user data directory only when it is already there.
+// Treating an absent directory as unavailable keeps resolution free of side effects
+// while still reporting the path ensureDatabasePath uses, once it has run.
+func existingUserDataDir() (string, error) {
+	dir, err := resolveUserDataDir()
+	if err != nil {
+		return "", err
+	}
+
+	info, err := os.Stat(dir)
+	if err != nil {
+		return "", fmt.Errorf("could not stat data directory %s: %w", dir, err)
+	}
+	if !info.IsDir() {
+		return "", fmt.Errorf("data directory %s is not a directory", dir)
+	}
+
+	return dir, nil
+}
+
+// createdUserDataDir creates the user data directory. Creation lives here so a failure
+// surfaces as the rootpath fallback instead of a hard startup error.
+func createdUserDataDir() (string, error) {
+	dir, err := resolveUserDataDir()
+	if err != nil {
+		return "", err
+	}
+
+	if err := os.MkdirAll(dir, 0o700); err != nil { // #nosec G703 -- dir is from XDG standard paths
+		return "", fmt.Errorf("could not create data directory %s: %w", dir, err)
+	}
+
+	return dir, nil
+}
+
+func resolveUserDataDir() (string, error) {
 	var dataDir string
 
 	switch runtime.GOOS {
@@ -359,11 +432,6 @@ func getUserDataDir() (string, error) {
 			}
 			dataDir = filepath.Join(home, ".local", "share", "vikunja")
 		}
-	}
-
-	// Ensure the directory exists
-	if err := os.MkdirAll(dataDir, 0o700); err != nil { // #nosec G703 -- dataDir is from config or XDG standard paths
-		return "", fmt.Errorf("could not create data directory %s: %w", dataDir, err)
 	}
 
 	return dataDir, nil
@@ -457,6 +525,20 @@ func Type() schemas.DBType {
 	return x.Dialect().URI().DBType
 }
 
+// RegisterConnectionPoolMetrics exposes pool stats so exhaustion is visible before
+// the instance stops responding. Label is the db type only — never a path or name.
+func RegisterConnectionPoolMetrics(registry *prometheus.Registry) {
+	if x == nil {
+		log.Warningf("Database not initialized, skipping connection pool metrics")
+		return
+	}
+
+	err := registry.Register(collectors.NewDBStatsCollector(x.DB().DB, string(Type())))
+	if err != nil {
+		log.Criticalf("Could not register db stats metrics: %s", err)
+	}
+}
+
 func GetDialect() string {
 	switch config.DatabaseType.GetString() {
 	case "mysql":
@@ -491,8 +573,8 @@ func CreateParadeDBIndexes() error {
 	if !paradedbInstalled {
 		return nil
 	}
-	// ParadeDB only allows one bm25 index per table, so we create a single index covering both fields
-	// Use optimized configuration with fast fields and field boosting for better performance
+	// ParadeDB only allows one bm25 index per table, so we create a single index covering both fields.
+	// Fast fields speed up scoring; no field boosting is configured, title and description weigh the same.
 	indexSQL := `CREATE INDEX IF NOT EXISTS idx_tasks_paradedb ON tasks USING bm25 (id, title, description, project_id, done) 
 	WITH (
 		key_field='id',

@@ -45,6 +45,10 @@ func (b *BotUser) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) { return 
 func (b *BotUser) CanDelete(s *xorm.Session, a web.Auth) (bool, error) { return b.isOwner(s, a) }
 
 func (b *BotUser) isOwner(s *xorm.Session, a web.Auth) (bool, error) {
+	if _, is := a.(*LinkSharing); is {
+		return false, nil
+	}
+
 	u, err := user.GetUserByID(s, b.ID)
 	if err != nil {
 		if user.IsErrUserDoesNotExist(err) {

@@ -34,7 +34,7 @@ func init() {
 		ID:          "20200524224611",
 		Description: "Add background file id property to list",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(list20200524224611{})
+			return partialSync(tx, list20200524224611{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return tx.DropTables(list20200524224611{})

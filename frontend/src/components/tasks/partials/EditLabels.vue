@@ -7,6 +7,7 @@
 		:search-results="foundLabels"
 		label="title"
 		:creatable="creatable"
+		:creation-disabled-message="creationDisabledMessage"
 		:create-placeholder="$t('task.label.createPlaceholder')"
 		:search-delay="10"
 		:close-after-select="false"
@@ -24,6 +25,7 @@
 				<BaseButton
 					v-if="!disabled"
 					v-cy="'taskDetail.removeLabel'"
+					:aria-label="$t('task.label.removeLabel', {label: label.title})"
 					class="delete is-small"
 					@click="removeLabel(label)"
 				/>
@@ -68,10 +70,12 @@ const props = withDefaults(defineProps<{
 	taskId?: number
 	disabled?: boolean
 	creatable?: boolean
+	creationDisabledMessage?: string
 }>(), {
 	taskId: 0,
 	disabled: false,
 	creatable: true,
+	creationDisabledMessage: '',
 })
 
 const emit = defineEmits<{

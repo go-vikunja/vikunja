@@ -19,6 +19,9 @@ package migration
 import (
 	"bytes"
 	"context"
+	"math"
+	"strings"
+	"time"
 
 	"xorm.io/xorm"
 
@@ -33,11 +36,18 @@ import (
 
 // InsertFromStructure takes a fully nested Vikunja data structure and a user and then creates everything for this user
 // (Projects, tasks, etc. Even attachments and relations.)
-func InsertFromStructure(str []*models.ProjectWithTasksAndBuckets, user *user.User) (err error) {
+func InsertFromStructure(str []*models.ProjectWithTasksAndBuckets, u *user.User) (err error) {
 	s := db.NewSession()
 	defer s.Close()
 
-	err = insertFromStructure(s, str, user)
+	// Callers may pass a user built from jwt claims; load the stored one so
+	// assignee matching sees the current email/username.
+	importer, err := user.GetUserWithEmail(s, &user.User{ID: u.ID})
+	if err != nil {
+		return err
+	}
+
+	err = insertFromStructure(s, str, importer)
 	if err != nil {
 		log.Errorf("[creating structure] Error while creating structure: %s", err.Error())
 		_ = s.Rollback()
@@ -82,9 +92,9 @@ func insertFromStructure(s *xorm.Session, str []*models.ProjectWithTasksAndBucke
 
 		oldID := p.ID
 
-		if p.ParentProjectID != 0 {
-			childRelations[p.ParentProjectID] = append(childRelations[p.ParentProjectID], oldID)
-			p.ParentProjectID = 0
+		if p.ParentProjectID != nil && *p.ParentProjectID != 0 {
+			childRelations[*p.ParentProjectID] = append(childRelations[*p.ParentProjectID], oldID)
+			p.ParentProjectID = nil
 		}
 
 		p.ID = 0
@@ -114,7 +124,7 @@ func insertFromStructure(s *xorm.Session, str []*models.ProjectWithTasksAndBucke
 				continue
 			}
 
-			child.ParentProjectID = parent.ID
+			child.ParentProjectID = models.Ptr(parent.ID)
 			err = child.Update(s, user)
 			if err != nil {
 				return err
@@ -132,9 +142,34 @@ func insertFromStructure(s *xorm.Session, str []*models.ProjectWithTasksAndBucke
 		}
 	}
 
+	// Exports written before archiving cascaded carry unflagged children under archived parents.
+	for _, projectID := range archivedProjects {
+		err = models.SetArchiveStateForProjectDescendants(s, projectID, true)
+		if err != nil {
+			return err
+		}
+	}
+
 	log.Debugf("[creating structure] Done inserting new task structure")
 
 	return nil
+}
+
+// seedMissingTaskPositions numbers the tasks of an export that carries no order
+// information at all. A task without a position is inserted in front of the lowest one
+// by halving it, which hits the minimum spacing every few dozen inserts and then
+// recalculates every position in the view - O(n²) for a large import (#3297).
+// Seeding also keeps the order the export was written in.
+func seedMissingTaskPositions(tasks []*models.TaskWithComments) {
+	for _, t := range tasks {
+		if t.Position != 0 {
+			return
+		}
+	}
+
+	for i, t := range tasks {
+		t.Position = float64(i+1) * math.Pow(2, 16)
+	}
 }
 
 func createProject(s *xorm.Session, project *models.ProjectWithTasksAndBuckets, archivedProjectIDs *[]int64, labels map[string]*models.Label, user *user.User) (err error) {
@@ -218,6 +253,14 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		log.Debugf("[creating structure] Created bucket %d, old ID was %d", bucket.ID, oldID)
 	}
 
+	// project_view_id is intentionally not writable through Bucket.Update
+	// (blocks cross-tenant relocation, GHSA-569v). The importer legitimately
+	// remaps buckets onto same-project views, so persist that column directly.
+	persistBucketView := func(b *models.Bucket) error {
+		_, err := s.Where("id = ?", b.ID).Cols("project_view_id").Update(b)
+		return err
+	}
+
 	// Create all views, create default views if we don't have any
 	viewsByOldIDs := make(map[int64]*models.ProjectView, len(oldViews))
 	if len(oldViews) > 0 {
@@ -260,7 +303,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 			}
 
 			bucket.ProjectViewID = newView.ID
-			err = bucket.Update(s, user)
+			err = persistBucketView(bucket)
 			if err != nil {
 				return
 			}
@@ -279,7 +322,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 			if view.ViewKind == models.ProjectViewKindKanban {
 				for _, b := range bucketsByOldID {
 					b.ProjectViewID = view.ID
-					err = b.Update(s, user)
+					err = persistBucketView(b)
 					if err != nil {
 						return
 					}
@@ -291,6 +334,10 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 	}
 
 	log.Debugf("[creating structure] Creating %d tasks", len(tasks))
+
+	// Moving a done task into an imported bucket flips it back to open (it left the view's done bucket); restore after the loop in bulk.
+	now := time.Now()
+	taskIDsByDoneAt := make(map[time.Time][]int64)
 
 	setBucketOrDefault := func(task *models.Task) (err error) {
 		var bucketID = task.BucketID
@@ -308,6 +355,13 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 				log.Debugf("[creating structure] Error while updating task bucket %d for task %d: %s", bucketID, task.ID, err.Error())
 				return
 			}
+			if task.Done {
+				doneAt := task.DoneAt
+				if doneAt.IsZero() {
+					doneAt = now
+				}
+				taskIDsByDoneAt[doneAt] = append(taskIDsByDoneAt[doneAt], task.ID)
+			}
 		} else if bucketID > 0 {
 			log.Debugf("[creating structure] No bucket created for original bucket id %d", task.BucketID)
 			bucketID = 0
@@ -319,6 +373,8 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		return
 	}
 
+	seedMissingTaskPositions(tasks)
+
 	tasksByOldID := make(map[int64]*models.TaskWithComments, len(tasks))
 	newTaskIDs := []int64{}
 	// Create all tasks
@@ -327,9 +383,13 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		t.ProjectID = project.ID
 		originalBucketID := t.BucketID
 		t.BucketID = 0
+		t.Assignees = remapAssignees(t.Assignees, user)
 		err = t.Create(s, user)
-		if err != nil && models.IsErrTaskCannotBeEmpty(err) {
-			continue
+		if err != nil {
+			if models.IsErrTaskCannotBeEmpty(err) {
+				continue
+			}
+			return err
 		}
 
 		t.BucketID = originalBucketID
@@ -362,6 +422,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 					rt.ProjectID = t.ProjectID
 					originalBucketID := rt.BucketID
 					rt.BucketID = 0
+					rt.Assignees = remapAssignees(rt.Assignees, user)
 
 					err = rt.Create(s, user)
 					if err != nil {
@@ -483,6 +544,13 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		}
 	}
 
+	for doneAt, taskIDs := range taskIDsByDoneAt {
+		_, err = s.In("id", taskIDs).Cols("done", "done_at").Update(&models.Task{Done: true, DoneAt: doneAt})
+		if err != nil {
+			return
+		}
+	}
+
 	// All tasks brought their own bucket with them, therefore the newly created default buckets are just extra space.
 	// Delete all default-created buckets ("To-Do", "Doing", "Done") that were auto-generated.
 	if !needsDefaultBucket {
@@ -573,5 +641,21 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 	project.Tasks = tasks
 	project.Buckets = originalBuckets
 
+	return nil
+}
+
+// Exported assignees carry user ids from a foreign instance. Only the importing
+// user can be matched (by email, then username); everyone else is dropped.
+func remapAssignees(assignees []*user.User, importer *user.User) []*user.User {
+	for _, a := range assignees {
+		if a == nil {
+			continue
+		}
+		emailMatch := a.Email != "" && importer.Email != "" && strings.EqualFold(a.Email, importer.Email)
+		usernameMatch := a.Username != "" && strings.EqualFold(a.Username, importer.Username)
+		if emailMatch || usernameMatch {
+			return []*user.User{importer}
+		}
+	}
 	return nil
 }

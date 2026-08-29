@@ -14,6 +14,7 @@ linters:
     - errchkjson
     - errorlint
     - exhaustive
+    - forbidigo
     - gocheckcompilerdirectives
     - gochecksumtype
     - gocritic
@@ -42,10 +43,26 @@ linters:
     - goconst
     - musttag
   settings:
+    forbidigo:
+      forbid:
+        - pattern: ^tx\.Sync2?$
+          msg: plain Sync drops every index the synced struct doesn't declare (#3244) — use partialSync; tx.Sync is only safe for brand-new tables (nolint with a reason)
     goheader:
       template-path: code-header-template.txt
     nestif:
       min-complexity: 6
+    staticcheck:
+      checks:
+        # defaults, plus -SA4023: its nilness analyzer panics on recover() in
+        # pointer-returning functions (sentry-go triggers it) — dominikh/go-tools#1725
+        - all
+        - -ST1000
+        - -ST1003
+        - -ST1016
+        - -ST1020
+        - -ST1021
+        - -ST1022
+        - -SA4023
   exclusions:
     generated: lax
     presets:
@@ -77,6 +94,10 @@ linters:
           - err113
           - exhaustive
         path: pkg/migration/*
+      # The tx.Sync ban only makes sense for migrations; everywhere else the receiver isn't a migration engine anyway.
+      - linters:
+          - forbidigo
+        path-except: pkg/migration/
       - linters:
           - exhaustive
         path: pkg/models/task_collection_filter\.go
@@ -168,11 +189,20 @@ linters:
         path: (pkg/webtests/|pkg/e2etests/|_test\.go) # Test fixtures with bcrypt hashes, not real credentials
       - linters:
           - gosec
-        text: 'G70[24]:'
+        text: 'G70[234]:'
         path: magefile.go # Build tooling, not user-facing code
       - linters:
           - goheader
         path: plugins/
+      # gosec G124 flags synthetic request cookies in tests; they carry no security relevance.
+      - linters:
+          - gosec
+        text: 'G124:'
+        path: _test\.go
+      # noctx flags httptest.NewRequest, which builds inbound requests for handler tests where a cancellation context adds nothing.
+      - linters:
+          - noctx
+        text: 'httptest.NewRequest must not be called'
     paths:
       - third_party$
       - builtin$

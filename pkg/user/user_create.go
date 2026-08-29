@@ -114,10 +114,12 @@ func CreateUser(s *xorm.Session, user *User) (newUser *User, err error) {
 	n := &EmailConfirmNotification{
 		User:         user,
 		IsNew:        true,
-		ConfirmToken: token.Token,
+		ConfirmToken: token.ClearTextToken,
 	}
 
 	err = notifications.Notify(user, n, s)
+	// Callers passing a stale status to UpdateUser would silently reactivate the account.
+	newUserOut.Status = StatusEmailConfirmationRequired
 	return newUserOut, err
 }
 

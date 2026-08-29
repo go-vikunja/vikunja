@@ -68,9 +68,12 @@
       ]
     },
     {
-      "matchCategories": [
-        "github-actions",
-        "service"
+      "description": "Update service containers used in CI at most once a week, in separate PRs",
+      "matchManagers": [
+        "github-actions"
+      ],
+      "matchDatasources": [
+        "docker"
       ],
       "extends": [
         "schedule:weekly"

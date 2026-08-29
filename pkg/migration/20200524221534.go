@@ -38,7 +38,7 @@ func init() {
 		ID:          "20200524221534",
 		Description: "Create unsplash photo table",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(unsplashPhoto20200524221534{})
+			return tx.Sync2(unsplashPhoto20200524221534{}) //nolint:forbidigo // brand-new table, nothing to drop
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return tx.DropTables(unsplashPhoto20200524221534{})

@@ -80,6 +80,7 @@ export default class UserModel extends AbstractModel<IUser> implements IUser {
 	settings: IUserSettings
 
 	isLocalUser: boolean
+	pendingEmail = ''
 	deletionScheduledAt: null
 	isAdmin?: boolean
 	botOwnerId = 0

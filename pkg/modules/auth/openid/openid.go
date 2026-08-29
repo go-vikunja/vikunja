@@ -77,8 +77,29 @@ type Provider struct {
 	Oauth2Config   *oauth2.Config `json:"-"`
 }
 
+// boolish decodes a JSON bool or the strings "true"/"false"/"1"/"0" — some
+// OIDC providers emit email_verified as a string.
+type boolish bool
+
+func (b *boolish) UnmarshalJSON(data []byte) error {
+	var raw any
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+	switch v := raw.(type) {
+	case bool:
+		*b = boolish(v)
+	case string:
+		*b = boolish(v == "true" || v == "1")
+	default:
+		*b = false
+	}
+	return nil
+}
+
 type claims struct {
 	Email              string                   `json:"email"`
+	EmailVerified      boolish                  `json:"email_verified"`
 	Name               string                   `json:"name"`
 	PreferredUsername  string                   `json:"preferred_username"`
 	Nickname           string                   `json:"nickname"`
@@ -382,10 +403,13 @@ func syncUserAvatarFromOpenID(s *xorm.Session, u *user.User, pictureURL string) 
 // GetUserWithEmail ANDs all non-zero fields, so the email (when set) is combined with each
 // username candidate.
 func fallbackSearchUsers(cl *claims, provider *Provider, idToken *oidc.IDToken) []*user.User {
+	// Only a verified email may link to an existing account — an unverified one lets an
+	// attacker asserting a victim's email take over their local account (GHSA-xv7q-fvmc-jx96).
+	emailFallbackAllowed := provider.EmailFallback && bool(cl.EmailVerified)
+
 	fallbackEmail := ""
-	if provider.EmailFallback {
+	if emailFallbackAllowed {
 		// Used alone, allow for someone to connect from various provider to the same account.
-		// Discouraged for untrusted providers where someone can set email without verification.
 		// Note: mapping on email prevents auto-updating the user email.
 		fallbackEmail = cl.Email
 	}
@@ -406,11 +430,10 @@ func fallbackSearchUsers(cl *claims, provider *Provider, idToken *oidc.IDToken) 
 			searches = append(searches, &user.User{Issuer: user.IssuerLocal, Username: preferred, Email: fallbackEmail})
 		}
 	}
-	// EmailFallback without UsernameFallback: a single email-only lookup (the caller only
-	// runs this when at least one fallback is enabled, so EmailFallback is guaranteed here).
-	// Only add it when there is a real email — an empty email would degenerate to an
-	// issuer-only lookup and link an arbitrary local user.
-	if len(searches) == 0 && cl.Email != "" {
+	// Email-only lookup when no username candidates were added. Only with a real,
+	// verified email — an empty email would degenerate to an issuer-only lookup and
+	// link an arbitrary local user.
+	if len(searches) == 0 && emailFallbackAllowed && cl.Email != "" {
 		searches = append(searches, &user.User{Issuer: user.IssuerLocal, Email: cl.Email})
 	}
 
@@ -509,6 +532,7 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 func mergeClaims(cl *claims, cl2 *claims, forceUserInfo bool) error {
 	if (forceUserInfo && cl2.Email != "") || cl.Email == "" {
 		cl.Email = cl2.Email
+		cl.EmailVerified = cl2.EmailVerified
 	}
 
 	if (forceUserInfo && cl2.Name != "") || cl.Name == "" {
@@ -596,18 +620,20 @@ func exchangeOidcTokens(cb *Callback, providerKey string) (*Provider, *oauth2.To
 	// Parse the access & ID token
 	oauth2Token, err := provider.Oauth2Config.Exchange(context.Background(), cb.Code)
 	if err != nil {
+		log.Debugf("Token exchange failed for provider %s using token_endpoint_auth_method %s", provider.Key, authStyleName(provider.Oauth2Config.Endpoint.AuthStyle))
+
 		var rerr *oauth2.RetrieveError
 		if errors.As(err, &rerr) {
 
 			details := make(map[string]interface{})
 			if err := json.Unmarshal(rerr.Body, &details); err != nil {
 				log.Errorf("Error unmarshalling token for provider %s: %v", provider.Name, err)
-				log.Debugf("Raw token value is %s", rerr.Body)
+				log.Debugf("Token endpoint error code=%q description=%q", rerr.ErrorCode, rerr.ErrorDescription)
 				return nil, nil, nil, "", err
 			}
 
 			log.Errorf("Error retrieving token: %s", err)
-			log.Debugf("Raw token value is %s", rerr.Body)
+			log.Debugf("Token endpoint error code=%q description=%q", rerr.ErrorCode, rerr.ErrorDescription)
 			return nil, nil, nil, "", &models.ErrOpenIDBadRequestWithDetails{
 				Message: "Could not authenticate against third party.",
 				Details: details,
@@ -620,7 +646,8 @@ func exchangeOidcTokens(cb *Callback, providerKey string) (*Provider, *oauth2.To
 	// Extract the ID Token from OAuth2 token.
 	rawIDToken, ok := oauth2Token.Extra("id_token").(string)
 	if !ok {
-		log.Debugf("Could not get id_token, raw token is %v", oauth2Token)
+		// Do not log oauth2Token itself: %v would print AccessToken/RefreshToken in clear text.
+		log.Debugf("Could not get id_token: response did not contain an id_token extra field (token_type=%s)", oauth2Token.TokenType)
 		return nil, nil, nil, "", &models.ErrOpenIDBadRequest{Message: "Missing token"}
 	}
 

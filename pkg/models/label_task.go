@@ -69,6 +69,18 @@ func (lt *LabelTask) Delete(s *xorm.Session, auth web.Auth) (err error) {
 		return err
 	}
 
+	// Bump task and project updated times so delta syncs and the CalDAV ctag
+	// pick up the label change.
+	err = updateTaskLastUpdated(s, &Task{ID: lt.TaskID})
+	if err != nil {
+		return err
+	}
+
+	err = updateProjectByTaskID(s, lt.TaskID)
+	if err != nil {
+		return err
+	}
+
 	return triggerTaskUpdatedEventForTaskID(s, auth, lt.TaskID)
 }
 
@@ -99,6 +111,12 @@ func (lt *LabelTask) Create(s *xorm.Session, auth web.Auth) (err error) {
 
 	lt.ID = 0
 	_, err = s.Insert(lt)
+	if err != nil {
+		return err
+	}
+
+	// Bump the task updated time so delta syncs pick up the label change.
+	err = updateTaskLastUpdated(s, &Task{ID: lt.TaskID})
 	if err != nil {
 		return err
 	}
@@ -208,15 +226,13 @@ func GetLabelsByTaskIDs(s *xorm.Session, opts *LabelByTaskIDsOptions) (ls []*Lab
 			builder.
 				Select("id").
 				From("tasks").
-				Where(builder.In("project_id", projectIDs)),
+				Where(builder.And(builder.In("project_id", projectIDs), taskNotDeletedCond("tasks"))),
 		), cond)
 	}
 	if opts.GetUnusedLabels && !isLinkShareAuth {
 		cond = builder.Or(cond,
 			builder.Eq{"labels.created_by_id": opts.User.GetID()},
-			builder.In("labels.created_by_id",
-				builder.Select("id").From("users").Where(builder.Eq{"bot_owner_id": opts.User.GetID()}),
-			),
+			labelCreatedByBotIdentityCond(opts.User),
 		)
 	}
 
@@ -388,8 +404,7 @@ func (t *Task) UpdateTaskLabels(s *xorm.Session, creator web.Auth, labels []*Lab
 			return err
 		}
 		if !hasAccessToLabel {
-			user, _ := creator.(*user.User)
-			return ErrUserHasNoAccessToLabel{LabelID: l.ID, UserID: user.ID}
+			return ErrUserHasNoAccessToLabel{LabelID: l.ID, UserID: creator.GetID()}
 		}
 
 		// Insert it

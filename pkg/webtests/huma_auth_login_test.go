@@ -26,22 +26,39 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
+	"code.vikunja.io/api/pkg/routes"
 	"code.vikunja.io/api/pkg/user"
 
+	"github.com/labstack/echo/v5"
 	"github.com/pquerna/otp/totp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-// refreshCookie returns the Set-Cookie value for the refresh-token cookie, or ""
-// if the response set no such cookie.
-func refreshCookie(rec *httptest.ResponseRecorder) *http.Cookie {
+func refreshCookies(rec *httptest.ResponseRecorder) []*http.Cookie {
+	cookies := []*http.Cookie{}
 	for _, c := range rec.Result().Cookies() {
 		if c.Name == auth.RefreshTokenCookieName {
-			return c
+			cookies = append(cookies, c)
 		}
 	}
-	return nil
+	return cookies
+}
+
+func refreshCookie(rec *httptest.ResponseRecorder) *http.Cookie {
+	cookies := refreshCookies(rec)
+	if len(cookies) == 0 {
+		return nil
+	}
+	return cookies[0]
+}
+
+func refreshCookiePaths(rec *httptest.ResponseRecorder) []string {
+	paths := []string{}
+	for _, c := range refreshCookies(rec) {
+		paths = append(paths, c.Path)
+	}
+	return paths
 }
 
 // TestHumaLogin ports the v1 login coverage to /api/v2: it asserts the token
@@ -66,6 +83,7 @@ func TestHumaLogin(t *testing.T) {
 		require.NotNil(t, cookie, "login must set the refresh-token cookie")
 		assert.NotEmpty(t, cookie.Value)
 		assert.True(t, cookie.HttpOnly, "refresh cookie must be HttpOnly")
+		assert.ElementsMatch(t, []string{auth.RefreshTokenPathV1, auth.RefreshTokenPathV2}, refreshCookiePaths(rec))
 	})
 
 	t.Run("wrong password", func(t *testing.T) {
@@ -162,6 +180,60 @@ func TestHumaLoginUnauthenticated(t *testing.T) {
 
 	rec := humaRequest(t, e, http.MethodPost, "/api/v2/login", `{"username":"user1","password":"12345678"}`, "", "")
 	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+}
+
+// TestHumaLoginRouteGate proves /api/v2/login follows the same local-or-LDAP
+// config gate v1 applies in routes.go, and that logout is never gated.
+func TestHumaLoginRouteGate(t *testing.T) {
+	_, err := setupTestEnv()
+	require.NoError(t, err)
+
+	defer func(local, ldap bool) {
+		config.AuthLocalEnabled.Set(local)
+		config.AuthLdapEnabled.Set(ldap)
+	}(config.AuthLocalEnabled.GetBool(), config.AuthLdapEnabled.GetBool())
+
+	for _, tc := range []struct {
+		name        string
+		local, ldap bool
+		registered  bool
+	}{
+		{"local enabled", true, false, true},
+		{"ldap only", false, true, true},
+		{"neither", false, false, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			config.AuthLocalEnabled.Set(tc.local)
+			config.AuthLdapEnabled.Set(tc.ldap)
+
+			e := routes.NewEcho()
+			routes.RegisterRoutes(e)
+
+			assert.Equal(t, tc.registered, hasRoute(e, http.MethodPost, "/api/v2/login"))
+			assert.True(t, hasRoute(e, http.MethodPost, "/api/v2/logout"), "logout must stay registered regardless of local auth")
+
+			rec := humaRequest(t, e, http.MethodPost, "/api/v2/login", `{"username":"user1","password":"12345678"}`, "", "")
+			switch {
+			case !tc.registered:
+				assert.Equal(t, http.StatusNotFound, rec.Code, rec.Body.String())
+			case tc.local:
+				assert.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+			default:
+				// LDAP-only: no LDAP server in tests, so the credentials fail -
+				// reachability is what matters here.
+				assert.NotEqual(t, http.StatusNotFound, rec.Code, rec.Body.String())
+			}
+		})
+	}
+}
+
+func hasRoute(e *echo.Echo, method, path string) bool {
+	for _, r := range e.Router().Routes() {
+		if r.Path == path && r.Method == method {
+			return true
+		}
+	}
+	return false
 }
 
 // TestHumaOpenIDGating proves the OIDC callback route only exists when OpenID is

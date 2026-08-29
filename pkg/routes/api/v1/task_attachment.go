@@ -120,18 +120,9 @@ func GetTaskAttachment(c *echo.Context) error {
 		return err
 	}
 
-	s := db.NewSession()
-	defer s.Close()
-
 	previewSize := models.GetPreviewSizeFromString(c.QueryParam("preview_size"))
-	attachment, preview, err := models.LoadTaskAttachmentForDownload(s, auth, taskAttachment.TaskID, taskAttachment.ID, previewSize)
+	attachment, preview, err := models.GetTaskAttachmentForDownload(auth, taskAttachment.TaskID, taskAttachment.ID, previewSize)
 	if err != nil {
-		_ = s.Rollback()
-		return err
-	}
-
-	if err := s.Commit(); err != nil {
-		_ = s.Rollback()
 		return err
 	}
 

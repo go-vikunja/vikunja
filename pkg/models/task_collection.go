@@ -35,7 +35,7 @@ type TaskCollection struct {
 	Search string `query:"s" json:"s" doc:"A search term to match tasks by their title."`
 
 	// The query parameter to sort by. This is for ex. done, priority, etc.
-	SortBy []string `query:"sort_by" json:"sort_by" doc:"The fields to sort by, for example done or priority."`
+	SortBy []string `query:"sort_by" json:"sort_by" doc:"The fields to sort by, for example done or priority. The special value relevance sorts by search relevance (most relevant first, requires s; ignored when the database cannot score the query)."`
 	// The query parameter to order the items by. This can be either asc or desc, with asc being the default.
 	OrderBy []string `query:"order_by" json:"order_by" doc:"The order for each sort_by field, either asc or desc. Defaults to asc."`
 
@@ -142,6 +142,7 @@ func getTaskFilterOptsFromCollection(tf *TaskCollection, projectView *ProjectVie
 
 	opts = &taskSearchOptions{
 		sortby:             sort,
+		userProvidedSort:   len(tf.SortBy) > 0,
 		filterIncludeNulls: tf.FilterIncludeNulls,
 		filter:             tf.Filter,
 		filterTimezone:     tf.FilterTimezone,
@@ -162,6 +163,13 @@ func (tf *TaskCollection) SetForceFlatTasks() {
 }
 
 func getTaskOrTasksInBuckets(s *xorm.Session, a web.Auth, projects []*Project, view *ProjectView, opts *taskSearchOptions, filteringForBucket, forceFlatTasks bool) (tasks interface{}, resultCount int, totalItems int64, err error) {
+	if view != nil && GetSavedFilterIDFromProjectID(view.ProjectID) > 0 {
+		err = ensureTaskPositionsForSavedFilterView(s, a, projects, view, opts)
+		if err != nil {
+			return nil, 0, 0, err
+		}
+	}
+
 	if filteringForBucket || forceFlatTasks {
 		return getTasksForProjects(s, projects, a, opts, view)
 	}
@@ -241,7 +249,7 @@ func getFilterValueForBucketFilter(filter string, view *ProjectView) (newFilter 
 // @Param page query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
 // @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
 // @Param s query string false "Search tasks by task text."
-// @Param sort_by query string false "The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with `order_by`. Possible values to sort by are `id`, `title`, `description`, `done`, `done_at`, `due_date`, `created_by_id`, `project_id`, `repeat_after`, `priority`, `start_date`, `end_date`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default is `id`."
+// @Param sort_by query string false "The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with `order_by`. Possible values to sort by are `id`, `title`, `description`, `done`, `done_at`, `due_date`, `created_by_id`, `project_id`, `repeat_after`, `priority`, `start_date`, `end_date`, `hex_color`, `percent_done`, `uid`, `created`, `updated`, `relevance`. `relevance` sorts by search relevance (most relevant first, requires `s`; ignored when the database cannot score the query). Default is `id`."
 // @Param order_by query string false "The ordering parameter. Possible values to order by are `asc` or `desc`. Default is `asc`."
 // @Param filter query string false "The filter query to match tasks by. Check out https://vikunja.io/docs/filters for a full explanation of the feature."
 // @Param filter_timezone query string false "The time zone which should be used for date match (statements like "now" resolve to different actual times)"
@@ -252,6 +260,8 @@ func getFilterValueForBucketFilter(filter string, view *ProjectView) (newFilter 
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/views/{view}/tasks [get]
 func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
+
+	tf.pinToLinkShareProject(a)
 
 	// If the project id is < -1 this means we're dealing with a saved filter - in that case we get and populate the filter
 	// -1 is the favorites project which works as intended
@@ -394,4 +404,12 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 	}
 
 	return getTaskOrTasksInBuckets(s, a, projects, view, opts, filteringForBucket, tf.forceFlatTasks)
+}
+
+// pinToLinkShareProject forces the requested project to the link share's own
+// project so a foreign view (and its buckets) can never resolve (GHSA-rj9j).
+func (tf *TaskCollection) pinToLinkShareProject(a web.Auth) {
+	if shareAuth, is := a.(*LinkSharing); is {
+		tf.ProjectID = shareAuth.ProjectID
+	}
 }

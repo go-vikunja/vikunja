@@ -21,6 +21,7 @@ import (
 	"strconv"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
 	"code.vikunja.io/api/pkg/routes/api/shared"
@@ -62,17 +63,25 @@ func PatchAdmin(c *echo.Context) error {
 		return models.ErrInvalidData{Message: "is_admin is required"}
 	}
 
+	doer, err := user.GetCurrentUser(c)
+	if err != nil {
+		return err
+	}
+
 	s := db.NewSession()
 	defer s.Close()
 
-	target, err := models.SetUserAdminFlag(s, id, *body.IsAdmin)
+	target, err := models.SetUserAdminFlag(s, doer, id, *body.IsAdmin)
 	if err != nil {
 		_ = s.Rollback()
+		events.CleanupPending(s)
 		return err
 	}
 	if err := s.Commit(); err != nil {
+		events.CleanupPending(s)
 		return err
 	}
+	events.DispatchPending(c.Request().Context(), s)
 
 	providers, err := openid.GetAllProviders()
 	if err != nil {

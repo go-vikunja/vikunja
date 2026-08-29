@@ -22,8 +22,10 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"regexp"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
@@ -253,6 +255,81 @@ func parseDate(dateString string) (date time.Time, err error) {
 	return date, err
 }
 
+// Matching the existing migration importers, months are treated as 30 days and years as 365.
+const (
+	secondsPerDay   int64 = 60 * 60 * 24
+	secondsPerWeek        = secondsPerDay * 7
+	secondsPerMonth       = secondsPerDay * 30
+	secondsPerYear        = secondsPerDay * 365
+)
+
+var repeatUnitSeconds = map[string]int64{
+	"day":   secondsPerDay,
+	"week":  secondsPerWeek,
+	"month": secondsPerMonth,
+	"year":  secondsPerYear,
+}
+
+var (
+	todoistRepeatRegex     = regexp.MustCompile(`^(?:every\s+)?(?:(\d+)\s+|(other)\s+)?(day|week|month|year)s?$`)
+	todoistRepeatTimeRegex = regexp.MustCompile(`\s+(?:at|@)\s+.*$`)
+)
+
+// parseTodoistRepeat translates Todoist's recurrence into a repeat interval in seconds.
+// Todoist exposes recurrence only as free text (e.g. "every 3 weeks"), so we parse the
+// common, unambiguous interval phrases. Patterns we can't represent (specific weekdays,
+// days of the month, non-English strings) return 0, leaving the task non-repeating. Only
+// the cadence is kept - the due date already anchors the actual day and time.
+func parseTodoistRepeat(due *dueDate) int64 {
+	if due == nil || !due.IsRecurring {
+		return 0
+	}
+
+	s := strings.ToLower(strings.TrimSpace(due.String))
+	// The time of day is already on the due date, drop it so "every day at 9am" still matches.
+	s = todoistRepeatTimeRegex.ReplaceAllString(s, "")
+
+	switch s {
+	case "daily":
+		return secondsPerDay
+	case "weekly":
+		return secondsPerWeek
+	case "monthly":
+		return secondsPerMonth
+	case "yearly", "annually":
+		return secondsPerYear
+	}
+
+	matches := todoistRepeatRegex.FindStringSubmatch(s)
+	if matches == nil {
+		log.Debugf("[Todoist Migration] Could not parse recurrence %q, leaving task non-repeating", due.String)
+		return 0
+	}
+
+	interval := int64(1)
+	switch {
+	case matches[1] != "":
+		n, err := strconv.ParseInt(matches[1], 10, 64)
+		if err != nil || n < 1 {
+			return 0
+		}
+		interval = n
+	case matches[2] == "other":
+		interval = 2
+	}
+
+	return interval * repeatUnitSeconds[matches[3]]
+}
+
+func isDownloadableURL(rawURL string) bool {
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		return false
+	}
+
+	return (u.Scheme == "http" || u.Scheme == "https") && u.Host != ""
+}
+
 func convertTodoistToVikunja(sync *sync, doneItems map[string]*doneItem) (fullVikunjaHierachie []*models.ProjectWithTasksAndBuckets, err error) {
 
 	var pseudoParentID int64 = 1
@@ -280,7 +357,7 @@ func convertTodoistToVikunja(sync *sync, doneItems map[string]*doneItem) (fullVi
 		project := &models.ProjectWithTasksAndBuckets{
 			Project: models.Project{
 				ID:              int64(index+1) + pseudoParentID,
-				ParentProjectID: pseudoParentID,
+				ParentProjectID: &pseudoParentID,
 				Title:           p.Name,
 				HexColor:        todoistColors[p.Color],
 				IsArchived:      p.IsArchived,
@@ -358,6 +435,7 @@ func convertTodoistToVikunja(sync *sync, doneItems map[string]*doneItem) (fullVi
 				return nil, err
 			}
 			task.DueDate = dueDate.In(config.GetTimeZone())
+			task.RepeatAfter = parseTodoistRepeat(i.Due)
 		}
 
 		// Put all labels together from earlier
@@ -431,10 +509,19 @@ func convertTodoistToVikunja(sync *sync, doneItems map[string]*doneItem) (fullVi
 
 		// Only add the attachment if there's something to download
 		if len(n.FileAttachment.FileURL) > 0 {
+			// Todoist puts opaque identifiers in file_url for attachments it does not host itself
+			// (mail attachments for example) - those can't be downloaded.
+			if !isDownloadableURL(n.FileAttachment.FileURL) {
+				log.Debugf("[Todoist Migration] Skipping attachment of note %s, file url %s is not downloadable", n.ID, n.FileAttachment.FileURL)
+				continue
+			}
+
 			// Download the attachment and put it in the file
 			buf, err := migration.DownloadFile(n.FileAttachment.FileURL)
 			if err != nil {
-				return nil, err
+				// A single broken attachment must not fail the whole migration
+				log.Errorf("[Todoist Migration] Could not download attachment of note %s from %s, skipping it. Error was: %s", n.ID, n.FileAttachment.FileURL, err)
+				continue
 			}
 
 			tasks[n.ItemID].Attachments = append(tasks[n.ItemID].Attachments, &models.TaskAttachment{

@@ -79,14 +79,12 @@ func BasicAuth(c *echo.Context, username, password string) (bool, error) {
 		Username: username,
 		Password: password,
 	}
-	var err error
 	u, err := checkUserCaldavTokens(s, credentials)
-	if user.IsErrUserDoesNotExist(err) {
+	if err != nil {
+		log.Errorf("Error during caldav token auth: %v", err)
 		return false, nil
 	}
-	if user.IsErrUserStatusError(err) {
-		return false, nil
-	}
+
 	if u == nil {
 		u, err = user.CheckUserCredentials(c.Request().Context(), s, credentials)
 		if err != nil {
@@ -96,9 +94,9 @@ func BasicAuth(c *echo.Context, username, password string) (bool, error) {
 
 		// If the user has TOTP enabled, reject password-based basic auth.
 		// They must use a CalDAV token instead.
-		totpEnabled, err := user.TOTPEnabledForUser(s, u)
-		if err != nil {
-			log.Errorf("Error checking TOTP status for caldav basic auth: %v", err)
+		totpEnabled, terr := user.TOTPEnabledForUser(s, u)
+		if terr != nil {
+			log.Errorf("Error checking TOTP status for caldav basic auth: %v", terr)
 			return false, nil
 		}
 		if totpEnabled {
@@ -106,21 +104,29 @@ func BasicAuth(c *echo.Context, username, password string) (bool, error) {
 			return false, nil
 		}
 	}
-	if u != nil && err == nil {
-		if u.IsBot() {
-			log.Warningf("CalDAV basic auth rejected for bot user %d", u.ID)
-			return false, nil
-		}
-		c.Set("userBasicAuth", u)
-		return true, nil
+
+	if u.IsBot() {
+		log.Warningf("CalDAV basic auth rejected for bot user %d", u.ID)
+		return false, nil
 	}
-	return false, nil
+	c.Set("userBasicAuth", u)
+	return true, nil
 }
 
+// Returns nil rather than rejecting: every failure has to reach
+// CheckUserCredentials, the only timing-equalised check.
 func checkUserCaldavTokens(s *xorm.Session, login *user.Login) (*user.User, error) {
+	// Hashing here would out-cost CheckUserCredentials' unhashed reject.
+	if login.Password == "" {
+		return nil, nil
+	}
+
 	usr, err := user.GetUserByUsername(s, login.Username)
-	if err != nil || usr == nil {
-		log.Warningf("Error while retrieving users from database: %v", err)
+	if user.IsErrUserDoesNotExist(err) || user.IsErrUserStatusError(err) {
+		return nil, nil
+	}
+	if err != nil {
+		log.Errorf("Error while retrieving user for caldav auth: %v", err)
 		return nil, err
 	}
 	tokens, err := user.GetCaldavTokensWithSession(s, usr)

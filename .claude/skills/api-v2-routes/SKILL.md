@@ -6,7 +6,7 @@ user-invocable: true
 
 # Adding /api/v2 routes for a CRUDable resource
 
-`/api/v2` is served by [Huma v2](https://github.com/danielgtaylor/huma) mounted on an Echo group via the vendored `pkg/modules/humaecho5` adapter. Unlike v1's generic `WebHandler`, each operation is a typed Huma handler registered explicitly. The handlers are thin: they pull auth off the context, call the same `pkg/web/handler.Do*` functions v1 uses, and translate domain errors into RFC 9457 responses.
+`/api/v2` is served by [Huma v2](https://github.com/danielgtaylor/huma) mounted on an Echo group via Huma's upstream `humaecho` adapter plus the `pkg/modules/humabridge` glue (echo-context stashing, group-prefix rewriting for AutoPatch). Unlike v1's generic `WebHandler`, each operation is a typed Huma handler registered explicitly. The handlers are thin: they pull auth off the context, call the same `pkg/web/handler.Do*` functions v1 uses, and translate domain errors into RFC 9457 responses.
 
 **Reference implementation:** `pkg/routes/api/v2/labels.go` is the canonical example — copy its shape. Shared envelopes live in `pkg/routes/api/v2/types.go`; the auth/error bridge in `pkg/routes/api/v2/errors.go`; config in `pkg/routes/api/v2/huma.go`.
 

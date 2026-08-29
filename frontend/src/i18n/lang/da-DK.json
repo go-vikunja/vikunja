@@ -56,7 +56,6 @@
 			"currentPasswordPlaceholder": "Din nuværende adgangskode",
 			"passwordUpdateSuccess": "Adgangskoden blev ændret.",
 			"updateEmailTitle": "Opdater din e-mailadresse",
-			"updateEmailSuccess": "Din e-mailadresse blev opdateret. Vi har sendt dig et link til at bekræfte den.",
 			"general": {
 				"title": "Generelle Indstillinger",
 				"savedSuccess": "Indstillingerne er gemt.",

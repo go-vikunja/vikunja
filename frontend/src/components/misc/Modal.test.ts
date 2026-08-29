@@ -228,3 +228,60 @@ describe('Modal.vue — open race condition (#2590)', () => {
 		wrapper.unmount()
 	})
 })
+
+describe('Modal.vue — accessible name derivation', () => {
+	it('labels the dialog via the rendered header slot when no default slot or aria-label is given', async () => {
+		const wrapper = mount(Modal, {
+			...globalMocks,
+			attachTo: document.body,
+			props: {enabled: true},
+			slots: {header: '<span class="test-header">Delete this task</span>'},
+		})
+		await flushPromises()
+		await nextTick()
+
+		const dialog = document.querySelector('dialog.modal-dialog') as HTMLDialogElement
+		const labelledBy = dialog.getAttribute('aria-labelledby')
+		expect(labelledBy).toBeTruthy()
+
+		const headerEl = document.getElementById(labelledBy!)
+		expect(headerEl).not.toBeNull()
+		expect(headerEl!.classList.contains('modal-header')).toBe(true)
+		expect(headerEl!.textContent).toContain('Delete this task')
+
+		wrapper.unmount()
+	})
+
+	it('omits aria-labelledby when an explicit aria-label attr is passed', async () => {
+		const wrapper = mount(Modal, {
+			...globalMocks,
+			attachTo: document.body,
+			attrs: {'aria-label': 'Confirm deletion'},
+			props: {enabled: true},
+			slots: {header: '<span class="test-header">Delete this task</span>'},
+		})
+		await flushPromises()
+		await nextTick()
+
+		const dialog = document.querySelector('dialog.modal-dialog') as HTMLDialogElement
+		expect(dialog.hasAttribute('aria-labelledby')).toBe(false)
+
+		wrapper.unmount()
+	})
+
+	it('omits aria-labelledby when default slot content is provided', async () => {
+		const wrapper = mount(Modal, {
+			...globalMocks,
+			attachTo: document.body,
+			props: {enabled: true},
+			slots: {default: '<p class="test-body">hi</p>'},
+		})
+		await flushPromises()
+		await nextTick()
+
+		const dialog = document.querySelector('dialog.modal-dialog') as HTMLDialogElement
+		expect(dialog.hasAttribute('aria-labelledby')).toBe(false)
+
+		wrapper.unmount()
+	})
+})

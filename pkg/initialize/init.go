@@ -17,6 +17,7 @@
 package initialize
 
 import (
+	"context"
 	"time"
 
 	"code.vikunja.io/api/pkg/audit"
@@ -84,7 +85,7 @@ func FullInitWithoutAsync() {
 	LightInit()
 
 	// Initialize the files handler
-	err := files.InitFileHandler()
+	err := files.InitFileHandler(context.Background())
 	if err != nil {
 		log.Fatalf("Could not init file handler: %s", err)
 	}
@@ -137,6 +138,7 @@ func FullInit() {
 	models.RegisterReminderCron()
 	models.RegisterOverdueReminderCron()
 	models.RegisterUserDeletionCron()
+	models.RegisterTaskCleanupCron()
 	models.RegisterOldExportCleanupCron()
 	models.RegisterAddTaskToFilterViewCron()
 	user.RegisterTokenCleanupCron()
@@ -144,6 +146,7 @@ func FullInit() {
 	user.RegisterDeletionNotificationCron()
 	openid.CleanupSavedOpenIDProviders()
 	openid.RegisterEmptyOpenIDTeamCleanupCron()
+	openid.RegisterProviderAvailabilityCron()
 	models.RegisterAPITokenExpiryCheckCron()
 
 	// Initialize WebSocket hub

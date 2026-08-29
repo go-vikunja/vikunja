@@ -38,7 +38,7 @@ func init() {
 		ID:          "20210725153703",
 		Description: "",
 		Migrate: func(tx *xorm.Engine) error {
-			err := tx.Sync2(tasks20210725153703{})
+			err := partialSync(tx, tasks20210725153703{})
 			if err != nil {
 				return err
 			}

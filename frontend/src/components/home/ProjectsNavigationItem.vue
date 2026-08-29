@@ -11,6 +11,7 @@
 			<BaseButton
 				v-if="canCollapse && childProjects?.length > 0"
 				class="collapse-project-button"
+				:aria-label="$t('navigation.toggleChildProjects')"
 				@click="childProjectsOpen = !childProjectsOpen"
 			>
 				<Icon
@@ -65,9 +66,10 @@
 				class="menu-list-dropdown"
 				:project="project"
 			>
-				<template #trigger="{toggleOpen}">
+				<template #trigger="{toggleOpen, open}">
 					<BaseButton
 						class="menu-list-dropdown-trigger"
+						:aria-expanded="open"
 						@click="toggleOpen"
 					>
 						<span class="is-sr-only">{{ $t('project.openSettingsMenu') }}</span>
@@ -229,10 +231,6 @@ const canToggleFavorite = computed(() => {
 	opacity: 0;
 }
 
-.is-touch .color-bubble {
-	opacity: 1 !important;
-}
-
 .color-bubble-wrapper {
 	position: relative;
 	inline-size: 1rem;
@@ -280,6 +278,10 @@ const canToggleFavorite = computed(() => {
 @media (pointer: coarse) {
 	.drag-handle {
 		display: none !important;
+	}
+
+	.color-bubble {
+		opacity: 1 !important;
 	}
 }
 

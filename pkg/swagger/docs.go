@@ -1918,7 +1918,7 @@ const docTemplate = `{
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Returns an array with all notifications for the current user.",
+                "description": "Returns an array with all notifications for the current user. Notifications about a project the current user can no longer read are omitted; the filtering happens in the query, so paging and the ` + "`" + `x-pagination-*` + "`" + ` headers all describe the visible notifications only.",
                 "consumes": [
                     "application/json"
                 ],
@@ -3073,7 +3073,7 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "The created bucket object.",
                         "schema": {
                             "$ref": "#/definitions/models.Bucket"
@@ -3153,7 +3153,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with ` + "`" + `order_by` + "`" + `. Possible values to sort by are ` + "`" + `id` + "`" + `, ` + "`" + `title` + "`" + `, ` + "`" + `description` + "`" + `, ` + "`" + `done` + "`" + `, ` + "`" + `done_at` + "`" + `, ` + "`" + `due_date` + "`" + `, ` + "`" + `created_by_id` + "`" + `, ` + "`" + `project_id` + "`" + `, ` + "`" + `repeat_after` + "`" + `, ` + "`" + `priority` + "`" + `, ` + "`" + `start_date` + "`" + `, ` + "`" + `end_date` + "`" + `, ` + "`" + `hex_color` + "`" + `, ` + "`" + `percent_done` + "`" + `, ` + "`" + `uid` + "`" + `, ` + "`" + `created` + "`" + `, ` + "`" + `updated` + "`" + `. Default is ` + "`" + `id` + "`" + `.",
+                        "description": "The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with ` + "`" + `order_by` + "`" + `. Possible values to sort by are ` + "`" + `id` + "`" + `, ` + "`" + `title` + "`" + `, ` + "`" + `description` + "`" + `, ` + "`" + `done` + "`" + `, ` + "`" + `done_at` + "`" + `, ` + "`" + `due_date` + "`" + `, ` + "`" + `created_by_id` + "`" + `, ` + "`" + `project_id` + "`" + `, ` + "`" + `repeat_after` + "`" + `, ` + "`" + `priority` + "`" + `, ` + "`" + `start_date` + "`" + `, ` + "`" + `end_date` + "`" + `, ` + "`" + `hex_color` + "`" + `, ` + "`" + `percent_done` + "`" + `, ` + "`" + `uid` + "`" + `, ` + "`" + `created` + "`" + `, ` + "`" + `updated` + "`" + `, ` + "`" + `relevance` + "`" + `. ` + "`" + `relevance` + "`" + ` sorts by search relevance (most relevant first, requires ` + "`" + `s` + "`" + `; ignored when the database cannot score the query). Default is ` + "`" + `id` + "`" + `.",
                         "name": "sort_by",
                         "in": "query"
                     },
@@ -3300,7 +3300,7 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "The created webhook target.",
                         "schema": {
                             "$ref": "#/definitions/models.Webhook"
@@ -4299,7 +4299,7 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "The created project view",
                         "schema": {
                             "$ref": "#/definitions/models.ProjectView"
@@ -4853,7 +4853,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with ` + "`" + `order_by` + "`" + `. Possible values to sort by are ` + "`" + `id` + "`" + `, ` + "`" + `title` + "`" + `, ` + "`" + `description` + "`" + `, ` + "`" + `done` + "`" + `, ` + "`" + `done_at` + "`" + `, ` + "`" + `due_date` + "`" + `, ` + "`" + `created_by_id` + "`" + `, ` + "`" + `project_id` + "`" + `, ` + "`" + `repeat_after` + "`" + `, ` + "`" + `priority` + "`" + `, ` + "`" + `start_date` + "`" + `, ` + "`" + `end_date` + "`" + `, ` + "`" + `hex_color` + "`" + `, ` + "`" + `percent_done` + "`" + `, ` + "`" + `uid` + "`" + `, ` + "`" + `created` + "`" + `, ` + "`" + `updated` + "`" + `. Default is ` + "`" + `id` + "`" + `.",
+                        "description": "The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with ` + "`" + `order_by` + "`" + `. Possible values to sort by are ` + "`" + `id` + "`" + `, ` + "`" + `title` + "`" + `, ` + "`" + `description` + "`" + `, ` + "`" + `done` + "`" + `, ` + "`" + `done_at` + "`" + `, ` + "`" + `due_date` + "`" + `, ` + "`" + `created_by_id` + "`" + `, ` + "`" + `project_id` + "`" + `, ` + "`" + `repeat_after` + "`" + `, ` + "`" + `priority` + "`" + `, ` + "`" + `start_date` + "`" + `, ` + "`" + `end_date` + "`" + `, ` + "`" + `hex_color` + "`" + `, ` + "`" + `percent_done` + "`" + `, ` + "`" + `uid` + "`" + `, ` + "`" + `created` + "`" + `, ` + "`" + `updated` + "`" + `, ` + "`" + `relevance` + "`" + `. ` + "`" + `relevance` + "`" + ` sorts by search relevance (most relevant first, requires ` + "`" + `s` + "`" + `; ignored when the database cannot score the query). Default is ` + "`" + `id` + "`" + `.",
                         "name": "sort_by",
                         "in": "query"
                     },
@@ -7030,7 +7030,7 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "The created token.",
                         "schema": {
                             "$ref": "#/definitions/models.APIToken"
@@ -8749,7 +8749,7 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "The created reaction",
                         "schema": {
                             "$ref": "#/definitions/models.Reaction"
@@ -10042,6 +10042,10 @@ const docTemplate = `{
                         }
                     ]
                 },
+                "deleted_at": {
+                    "description": "A timestamp when this task was deleted. Soft-deleted tasks are kept for 30 days before they are removed permanently.\nomitzero keeps the field out of the JSON of regular tasks — it only ever appears on soft-deleted ones (the later trash listing).",
+                    "type": "string"
+                },
                 "description": {
                     "description": "The task description.",
                     "type": "string"
@@ -11261,6 +11265,9 @@ const docTemplate = `{
                     "description": "The full name of the user.",
                     "type": "string"
                 },
+                "pending_email": {
+                    "type": "string"
+                },
                 "settings": {
                     "$ref": "#/definitions/models.UserGeneralSettings"
                 },
@@ -11281,6 +11288,13 @@ const docTemplate = `{
             "properties": {
                 "code": {
                     "type": "integer"
+                },
+                "i18n_params": {
+                    "description": "I18nParams carries Message's dynamic values, keyed by the client's translation placeholder names, so clients can localise the error.",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
                 },
                 "message": {
                     "type": "string"

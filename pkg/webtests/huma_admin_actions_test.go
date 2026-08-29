@@ -19,10 +19,14 @@ package webtests
 import (
 	"net/http"
 	"testing"
+	"time"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/license"
+	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/assert"
@@ -104,10 +108,14 @@ func TestHumaAdminCreateUser(t *testing.T) {
 	admin := promoteToAdmin(t, 1)
 
 	t.Run("creates a plain user and returns 201", func(t *testing.T) {
+		events.ClearDispatchedEvents()
 		body := `{"username":"v2adm-create-1","password":"averyl0ngpassword","email":"v2adm-create-1@example.com"}`
 		res := adminReq(t, e, http.MethodPost, "/api/v2/admin/users", admin, body)
 		assert.Equal(t, http.StatusCreated, res.Code, res.Body.String())
 		assert.Contains(t, res.Body.String(), `"username":"v2adm-create-1"`)
+		// Regression: the handler used to drop the pending queue, so admin-created
+		// users never fired user.created.
+		events.AssertDispatched(t, &user.CreatedEvent{})
 	})
 
 	t.Run("creates an is_admin user", func(t *testing.T) {
@@ -277,6 +285,156 @@ func TestHumaAdminPatchStatus(t *testing.T) {
 		_, err := s.Table("users").Where("id = ?", 2).Get(&row)
 		require.NoError(t, err)
 		assert.Equal(t, int(user.StatusDisabled), row.Status, "omitted status must not silently reactivate")
+	})
+}
+
+func passwordHashOf(t *testing.T, userID int64) string {
+	s := db.NewSession()
+	defer s.Close()
+	var row struct {
+		Password string `xorm:"password"`
+	}
+	has, err := s.Table("users").Where("id = ?", userID).Get(&row)
+	require.NoError(t, err)
+	require.True(t, has)
+	return row.Password
+}
+
+func TestHumaAdminSetPassword(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	license.SetForTests([]license.Feature{license.FeatureAdminPanel})
+	defer license.ResetForTests()
+
+	admin := promoteToAdmin(t, 1)
+
+	t.Run("sets a new password and invalidates sessions", func(t *testing.T) {
+		oldHash := passwordHashOf(t, 2)
+
+		s := db.NewSession()
+		_, err := s.Insert(&models.Session{ID: "adm-pw-session", UserID: 2, TokenHash: "adm-pw-hash", LastActive: time.Now()})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		s.Close()
+
+		res := adminReq(t, e, http.MethodPatch, "/api/v2/admin/users/2/password", admin, `{"new_password":"averyl0ngpassword"}`)
+		require.Equal(t, http.StatusOK, res.Code, res.Body.String())
+
+		newHash := passwordHashOf(t, 2)
+		assert.NotEqual(t, oldHash, newHash)
+		require.NoError(t, user.CheckUserPassword(&user.User{Password: newHash}, "averyl0ngpassword"))
+
+		s2 := db.NewSession()
+		defer s2.Close()
+		count, err := s2.Where("user_id = ?", 2).Count(&models.Session{})
+		require.NoError(t, err)
+		assert.Zero(t, count, "all sessions must be invalidated after an admin password reset")
+	})
+
+	t.Run("non-local account gets 412", func(t *testing.T) {
+		// Fixture user 14 is an OIDC account.
+		oldHash := passwordHashOf(t, 14)
+
+		res := adminReq(t, e, http.MethodPatch, "/api/v2/admin/users/14/password", admin, `{"new_password":"averyl0ngpassword"}`)
+		assert.Equal(t, http.StatusPreconditionFailed, res.Code, res.Body.String())
+		assert.Equal(t, oldHash, passwordHashOf(t, 14), "refused reset must not change the hash")
+	})
+
+	t.Run("rejects a too-short password with 422", func(t *testing.T) {
+		res := adminReq(t, e, http.MethodPatch, "/api/v2/admin/users/4/password", admin, `{"new_password":"short"}`)
+		assert.Equal(t, http.StatusUnprocessableEntity, res.Code, res.Body.String())
+	})
+
+	t.Run("unknown user returns 404", func(t *testing.T) {
+		res := adminReq(t, e, http.MethodPatch, "/api/v2/admin/users/9999999/password", admin, `{"new_password":"averyl0ngpassword"}`)
+		assert.Equal(t, http.StatusNotFound, res.Code)
+	})
+
+	t.Run("notifies the user when the mailer is enabled", func(t *testing.T) {
+		config.MailerEnabled.Set(true)
+		defer config.MailerEnabled.Set(false)
+		notifications.Fake()
+		defer notifications.Unfake()
+
+		res := adminReq(t, e, http.MethodPatch, "/api/v2/admin/users/4/password", admin, `{"new_password":"averyl0ngpassword"}`)
+		require.Equal(t, http.StatusOK, res.Code, res.Body.String())
+		notifications.AssertSent(t, &user.PasswordChangedNotification{})
+	})
+}
+
+func TestHumaAdminPasswordResetEmail(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	license.SetForTests([]license.Feature{license.FeatureAdminPanel})
+	defer license.ResetForTests()
+
+	admin := promoteToAdmin(t, 1)
+
+	countResetTokens := func(t *testing.T, userID int64) int64 {
+		s := db.NewSession()
+		defer s.Close()
+		count, err := s.Table("user_tokens").Where("user_id = ? AND kind = ?", userID, user.TokenPasswordReset).Count()
+		require.NoError(t, err)
+		return count
+	}
+
+	t.Run("mailer disabled gets 412 and writes no token", func(t *testing.T) {
+		config.MailerEnabled.Set(false)
+
+		res := adminReq(t, e, http.MethodPost, "/api/v2/admin/users/2/password-reset-email", admin, "")
+		assert.Equal(t, http.StatusPreconditionFailed, res.Code, res.Body.String())
+		assert.Zero(t, countResetTokens(t, 2))
+	})
+
+	t.Run("sends the reset email", func(t *testing.T) {
+		config.MailerEnabled.Set(true)
+		defer config.MailerEnabled.Set(false)
+		notifications.Fake()
+		defer notifications.Unfake()
+
+		res := adminReq(t, e, http.MethodPost, "/api/v2/admin/users/2/password-reset-email", admin, "")
+		require.Equal(t, http.StatusOK, res.Code, res.Body.String())
+		assert.Equal(t, int64(1), countResetTokens(t, 2))
+		notifications.AssertSent(t, &user.ResetPasswordNotification{})
+	})
+
+	t.Run("non-local account gets 412 and writes no token", func(t *testing.T) {
+		config.MailerEnabled.Set(true)
+		defer config.MailerEnabled.Set(false)
+
+		// Fixture user 14 is an OIDC account.
+		res := adminReq(t, e, http.MethodPost, "/api/v2/admin/users/14/password-reset-email", admin, "")
+		assert.Equal(t, http.StatusPreconditionFailed, res.Code, res.Body.String())
+		assert.Zero(t, countResetTokens(t, 14))
+	})
+
+	t.Run("disabled account gets 412 and writes no token", func(t *testing.T) {
+		config.MailerEnabled.Set(true)
+		defer config.MailerEnabled.Set(false)
+
+		// Fixture user 17 is disabled; ShouldNotify would silently drop the email.
+		// It already carries a fixture reset token, so assert no NEW one appears.
+		before := countResetTokens(t, 17)
+		res := adminReq(t, e, http.MethodPost, "/api/v2/admin/users/17/password-reset-email", admin, "")
+		assert.Equal(t, http.StatusPreconditionFailed, res.Code, res.Body.String())
+		assert.Equal(t, before, countResetTokens(t, 17))
+	})
+
+	t.Run("bot account gets 400 and writes no token", func(t *testing.T) {
+		config.MailerEnabled.Set(true)
+		defer config.MailerEnabled.Set(false)
+
+		res := adminReq(t, e, http.MethodPost, "/api/v2/admin/users/23/password-reset-email", admin, "")
+		assert.Equal(t, http.StatusBadRequest, res.Code, res.Body.String())
+		assert.Zero(t, countResetTokens(t, 23))
+	})
+
+	t.Run("unknown user returns 404", func(t *testing.T) {
+		config.MailerEnabled.Set(true)
+		defer config.MailerEnabled.Set(false)
+
+		res := adminReq(t, e, http.MethodPost, "/api/v2/admin/users/9999999/password-reset-email", admin, "")
+		assert.Equal(t, http.StatusNotFound, res.Code)
 	})
 }
 

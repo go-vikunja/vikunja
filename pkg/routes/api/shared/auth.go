@@ -297,7 +297,9 @@ func ConfirmEmail(confirm *user.EmailConfirm) error {
 // Password is blanked by AuthenticateLinkShare before this is returned.
 type LinkShareToken struct {
 	auth.Token
-	*models.LinkSharing
+	// Embedded by value: a pointer embed's method set is never empty, which
+	// breaks Huma's $schema wrapper (go#15924).
+	models.LinkSharing
 	ProjectID int64 `json:"project_id" readOnly:"true" doc:"The id of the project this share grants access to."`
 }
 
@@ -337,7 +339,7 @@ func AuthenticateLinkShare(hash, password string) (*LinkShareToken, error) {
 
 	return &LinkShareToken{
 		Token:       auth.Token{Token: t},
-		LinkSharing: share,
+		LinkSharing: *share,
 		ProjectID:   share.ProjectID,
 	}, nil
 }

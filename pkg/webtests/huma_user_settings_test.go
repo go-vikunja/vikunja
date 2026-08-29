@@ -21,6 +21,9 @@ import (
 	"net/http"
 	"testing"
 
+	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -106,10 +109,77 @@ func TestHumaUserUpdateEmail(t *testing.T) {
 		assert.Equal(t, http.StatusUnprocessableEntity, rec.Code, "body: %s", rec.Body.String())
 	})
 	t.Run("Normal", func(t *testing.T) {
+		// The mailer is disabled by default in tests, so the change applies immediately.
 		rec := humaRequest(t, e, http.MethodPut, "/api/v2/user/settings/email",
 			`{"new_email":"new@example.com","password":"12345678"}`, token, "")
 		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
-		assert.Contains(t, rec.Body.String(), "confirm your email address")
+		assert.Contains(t, rec.Body.String(), "Your email address was updated.")
+	})
+	t.Run("Mailer enabled", func(t *testing.T) {
+		config.MailerEnabled.Set(true)
+		defer config.MailerEnabled.Set(false)
+		require.NoError(t, keyvalue.Del("email_confirm_sent_1"))
+
+		rec := humaRequest(t, e, http.MethodPut, "/api/v2/user/settings/email",
+			`{"new_email":"confirm@example.com","password":"12345678"}`, token, "")
+		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+		assert.Contains(t, rec.Body.String(), "We sent you an email with a link to confirm your new email address. Your current address stays active until you confirm.")
+
+		show := humaRequest(t, e, http.MethodGet, "/api/v2/user", "", token, "")
+		require.Equal(t, http.StatusOK, show.Code, "body: %s", show.Body.String())
+		assert.Contains(t, show.Body.String(), `"pending_email":"confirm@example.com"`)
+	})
+}
+
+func TestHumaUserPendingEmail(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	token := humaTokenFor(t, &testuser1)
+
+	config.MailerEnabled.Set(true)
+	defer config.MailerEnabled.Set(false)
+
+	t.Run("Resend without pending change", func(t *testing.T) {
+		rec := humaRequest(t, e, http.MethodPost, "/api/v2/user/settings/email/resend", "", token, "")
+		assert.Equal(t, http.StatusPreconditionFailed, rec.Code, "body: %s", rec.Body.String())
+	})
+	t.Run("Cancel without pending change", func(t *testing.T) {
+		rec := humaRequest(t, e, http.MethodDelete, "/api/v2/user/settings/email", "", token, "")
+		assert.Equal(t, http.StatusPreconditionFailed, rec.Code, "body: %s", rec.Body.String())
+	})
+	t.Run("Pending change is exposed, resend is throttled, cancel works", func(t *testing.T) {
+		rec := humaRequest(t, e, http.MethodPut, "/api/v2/user/settings/email",
+			`{"new_email":"pending@example.com","password":"12345678"}`, token, "")
+		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+
+		rec = humaRequest(t, e, http.MethodGet, "/api/v2/user", "", token, "")
+		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+		assert.Contains(t, rec.Body.String(), `"pending_email":"pending@example.com"`)
+
+		// A resend immediately after the PUT hits the 1-minute cooldown (error code 1036).
+		rec = humaRequest(t, e, http.MethodPost, "/api/v2/user/settings/email/resend", "", token, "")
+		assert.Equal(t, http.StatusTooManyRequests, rec.Code, "body: %s", rec.Body.String())
+
+		require.NoError(t, keyvalue.Del("email_confirm_sent_1"))
+		rec = humaRequest(t, e, http.MethodPost, "/api/v2/user/settings/email/resend", "", token, "")
+		assert.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+
+		rec = humaRequest(t, e, http.MethodPost, "/api/v2/user/settings/email/resend", "", token, "")
+		assert.Equal(t, http.StatusTooManyRequests, rec.Code, "body: %s", rec.Body.String())
+
+		rec = humaRequest(t, e, http.MethodDelete, "/api/v2/user/settings/email", "", token, "")
+		assert.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+
+		rec = humaRequest(t, e, http.MethodGet, "/api/v2/user", "", token, "")
+		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+		assert.NotContains(t, rec.Body.String(), "pending_email")
+	})
+	t.Run("Unauthenticated", func(t *testing.T) {
+		rec := humaRequest(t, e, http.MethodDelete, "/api/v2/user/settings/email", "", "", "")
+		assert.Equal(t, http.StatusUnauthorized, rec.Code, "body: %s", rec.Body.String())
+
+		rec = humaRequest(t, e, http.MethodPost, "/api/v2/user/settings/email/resend", "", "", "")
+		assert.Equal(t, http.StatusUnauthorized, rec.Code, "body: %s", rec.Body.String())
 	})
 }
 

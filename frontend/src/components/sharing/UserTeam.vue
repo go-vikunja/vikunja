@@ -1,8 +1,8 @@
 <template>
 	<div>
-		<p class="has-text-weight-bold">
+		<h3 class="has-text-weight-bold share-heading">
 			{{ $t('project.share.userTeam.shared', {type: shareTypeNames}) }}
-		</p>
+		</h3>
 		<div v-if="userIsAdmin">
 			<div class="field has-addons">
 				<p
@@ -13,6 +13,7 @@
 						v-model="sharable"
 						:loading="searchService.loading"
 						:placeholder="$t('misc.searchPlaceholder')"
+						:aria-label="$t('project.share.userTeam.search', {type: shareTypeName})"
 						:search-results="found"
 						:label="searchLabel"
 						@search="find"
@@ -99,6 +100,7 @@
 								<select
 									v-model="selectedPermission[s.id]"
 									class="mie-2"
+									:aria-label="$t('project.share.userTeam.permissionFor', {sharable: shareType === 'user' ? getDisplayName(s) : s.name})"
 									@change="toggleType(s)"
 								>
 									<option
@@ -124,6 +126,7 @@
 							<XButton
 								danger
 								icon="trash-alt"
+								:aria-label="$t('project.share.userTeam.remove', {type: shareTypeName})"
 								@click="
 									() => {
 										sharable = s
@@ -367,12 +370,9 @@ async function find(query: string) {
 	}
 
 	// Include public teams here if we are sharing with teams and its enabled in the config
-	let results = []
-	if (props.shareType === 'team' && configStore.publicTeamsEnabled) {
-		results = await searchService.getAll({}, {s: query, includePublic: true})
-	} else {
-		results = await searchService.getAll({}, {s: query})
-	}
+	const results = props.shareType === 'team' && configStore.publicTeamsEnabled
+		? await searchService.getAll({}, {s: query, includePublic: true})
+		: await searchService.getAll({}, {s: query})
 
 	found.value = results
 		.filter(m => {

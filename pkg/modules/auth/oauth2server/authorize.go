@@ -47,6 +47,10 @@ type AuthorizeResponse struct {
 // It validates the OAuth parameters, creates an authorization code, and
 // returns it as JSON. Authentication is handled by the token middleware.
 func HandleAuthorize(c *echo.Context) error {
+	if c.Get("api_token") != nil {
+		return echo.NewHTTPError(http.StatusForbidden, "API tokens cannot be used to authorize OAuth clients")
+	}
+
 	var req AuthorizeRequest
 	if err := c.Bind(&req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request body")

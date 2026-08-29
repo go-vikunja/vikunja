@@ -19,6 +19,7 @@ package models
 import (
 	"fmt"
 	"math"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -49,7 +50,7 @@ type Project struct {
 	HexColor string `xorm:"varchar(6) null" json:"hex_color" valid:"runelength(0|7)" maxLength:"7" doc:"The hex color of this project, without the leading #."`
 
 	OwnerID         int64    `xorm:"bigint INDEX not null" json:"-"`
-	ParentProjectID int64    `xorm:"bigint INDEX null" json:"parent_project_id" doc:"The id of the parent project. 0 if this is a top-level project."`
+	ParentProjectID *int64   `xorm:"bigint INDEX null" json:"parent_project_id" doc:"The id of the parent project, or 0 for a top-level project. Always present in responses. Omit it on a write to leave the parent unchanged; sending an explicit 0 detaches the project to the top level and requires admin permission."`
 	ParentProject   *Project `xorm:"-" json:"-"`
 
 	// The user who created this project.
@@ -78,7 +79,7 @@ type Project struct {
 	Views []*ProjectView `xorm:"-" json:"views" readOnly:"true" doc:"The views configured for this project. Managed through the project view endpoints."`
 
 	Expand        ProjectExpandable `xorm:"-" json:"-" query:"expand"`
-	MaxPermission Permission        `xorm:"-" json:"max_permission" readOnly:"true" doc:"The maximum permission the requesting user has on this project (0 = read, 1 = read/write, 2 = admin)."`
+	MaxPermission *Permission       `xorm:"-" json:"max_permission" readOnly:"true" doc:"The maximum permission the requesting user has on this project (0 = read, 1 = read/write, 2 = admin), or null when the permission was not computed for this response."`
 
 	// A timestamp when this project was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"A timestamp when this project was created. You cannot change this value."`
@@ -111,6 +112,37 @@ func (p *Project) TableName() string {
 	return "projects"
 }
 
+// Ptr returns a pointer to v. Useful for optional numeric fields like
+// ParentProjectID where nil (omitted) must stay distinct from an explicit 0.
+func Ptr[T any](v T) *T {
+	return &v
+}
+
+// parentID dereferences ParentProjectID, treating nil (field omitted on a
+// partial update) as 0 — no parent.
+func (p *Project) parentID() int64 {
+	if p.ParentProjectID == nil {
+		return 0
+	}
+	return *p.ParentProjectID
+}
+
+// noParentProjectID is the parent of a top-level project. nil is a request-only
+// state (field omitted, as opposed to an explicit 0 which detaches and needs
+// Admin — GHSA-44v6-7fxq-vgf4); clients parse the field as a plain int, so a
+// response must always carry a number (go-vikunja/app#295).
+func noParentProjectID() *int64 {
+	return Ptr(int64(0))
+}
+
+// AfterLoad normalizes a NULL parent_project_id — the column is nullable and rows
+// predating it were never backfilled.
+func (p *Project) AfterLoad() {
+	if p.ParentProjectID == nil {
+		p.ParentProjectID = noParentProjectID()
+	}
+}
+
 // ProjectBackgroundType holds a project background type
 type ProjectBackgroundType struct {
 	Type string
@@ -121,13 +153,19 @@ const ProjectBackgroundUpload string = "upload"
 
 const FavoritesPseudoProjectID = -1
 
+// Pseudo project ids are negative: -1 is favorites, <= -2 encode saved filters.
+func IsPseudoProjectID(projectID int64) bool {
+	return projectID == FavoritesPseudoProjectID || GetSavedFilterIDFromProjectID(projectID) > 0
+}
+
 // FavoritesPseudoProject holds all tasks marked as favorites
 var FavoritesPseudoProject = Project{
-	ID:          FavoritesPseudoProjectID,
-	Title:       "Favorites",
-	Description: "This project has all tasks marked as favorites.",
-	IsFavorite:  true,
-	Position:    -1,
+	ID:              FavoritesPseudoProjectID,
+	Title:           "Favorites",
+	Description:     "This project has all tasks marked as favorites.",
+	IsFavorite:      true,
+	Position:        -1,
+	ParentProjectID: noParentProjectID(),
 
 	Views: []*ProjectView{
 		{
@@ -204,10 +242,6 @@ func (p *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, 
 		if err != nil {
 			return
 		}
-	} else {
-		for _, pr := range prs {
-			pr.MaxPermission = PermissionUnknown
-		}
 	}
 
 	//////////////////////////
@@ -231,7 +265,7 @@ func getAllRawProjects(s *xorm.Session, a web.Auth, search string, page int, per
 		projects := []*Project{project}
 		err = addProjectDetails(s, projects, a)
 		if err == nil && len(projects) > 0 {
-			projects[0].ParentProjectID = 0
+			projects[0].ParentProjectID = noParentProjectID()
 		}
 		return projects, 0, 0, err
 	}
@@ -371,17 +405,20 @@ func (p *Project) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 		if err != nil {
 			return err
 		}
+		// CanRead delegates to the saved filter and never loads a project row, so
+		// p is still the bare {ID} stub the handler built.
 		p.Title = sf.Title
 		p.Description = sf.Description
 		p.IsFavorite = sf.IsFavorite
 		p.Created = sf.Created
 		p.Updated = sf.Updated
 		p.OwnerID = sf.OwnerID
+		p.ParentProjectID = noParentProjectID()
 	}
 
 	_, isShareAuth := a.(*LinkSharing)
 	if isShareAuth {
-		p.ParentProjectID = 0
+		p.ParentProjectID = noParentProjectID()
 	}
 
 	// Get project owner
@@ -390,14 +427,6 @@ func (p *Project) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 		p.Owner = nil
 	} else if err != nil {
 		return err
-	}
-
-	// Check if the project is archived and set it to archived if it is not already archived individually.
-	if !p.IsArchived && !isFilter {
-		err = p.CheckIsArchived(s)
-		if err != nil {
-			p.IsArchived = true
-		}
 	}
 
 	// Get any background information if there is one set
@@ -441,6 +470,9 @@ func GetProjectSimpleByID(s *xorm.Session, projectID int64) (project *Project, e
 	}
 
 	project, exists, err := getProjectSimple(s, builder.Eq{"id": projectID})
+	if err != nil {
+		return nil, err
+	}
 	if !exists {
 		return nil, ErrProjectDoesNotExist{ID: projectID}
 	}
@@ -472,6 +504,9 @@ func getProjectSimple(s *xorm.Session, cond builder.Cond) (project *Project, exi
 }
 
 // GetProjectSimpleByTaskID gets a project by a task id
+// Deliberately resolves soft-deleted tasks too: event listeners and hard-delete
+// paths still need the project after a soft delete, and access is already
+// enforced earlier via GetTaskSimple. Same for the ByTaskIDs variants below.
 func GetProjectSimpleByTaskID(s *xorm.Session, taskID int64) (l *Project, err error) {
 	// We need to re-init our project object, because otherwise xorm creates a "where for every item in that project object,
 	// leading to not finding anything if the id is good, but for example the title is different.
@@ -663,7 +698,7 @@ func getAllProjectsForUser(s *xorm.Session, userID int64, opts *projectOptions) 
 
 	baseQuery := querySQLString + `
 UNION ALL
-SELECT p.id, p.title, p.description, p.identifier, p.hex_color, p.owner_id, p.parent_project_id, (ap.is_archived OR p.is_archived) AS is_archived, p.background_file_id, p.background_blur_hash, p.position, p.created, p.updated FROM projects p
+SELECT p.id, p.title, p.description, p.identifier, p.hex_color, p.owner_id, p.parent_project_id, p.is_archived, p.background_file_id, p.background_blur_hash, p.position, p.created, p.updated FROM projects p
 INNER JOIN all_projects ap ON p.parent_project_id = ap.id`
 
 	columnStr := strings.Join([]string{
@@ -674,22 +709,7 @@ INNER JOIN all_projects ap ON p.parent_project_id = ap.id`
 		"all_projects.hex_color",
 		"all_projects.owner_id",
 		"CASE WHEN all_projects.parent_project_id IS NULL THEN 0 ELSE all_projects.parent_project_id END AS parent_project_id",
-		"MAX(CASE WHEN all_projects.is_archived THEN 1 ELSE 0 END) AS is_archived",
-		"all_projects.background_file_id",
-		"all_projects.background_blur_hash",
-		"all_projects.position",
-		"all_projects.created",
-		"all_projects.updated",
-	}, ", ")
-
-	groupByStr := strings.Join([]string{
-		"all_projects.id",
-		"all_projects.title",
-		"all_projects.description",
-		"all_projects.identifier",
-		"all_projects.hex_color",
-		"all_projects.owner_id",
-		"all_projects.parent_project_id",
+		"all_projects.is_archived",
 		"all_projects.background_file_id",
 		"all_projects.background_blur_hash",
 		"all_projects.position",
@@ -699,13 +719,13 @@ INNER JOIN all_projects ap ON p.parent_project_id = ap.id`
 
 	var archivedFilter string
 	if !opts.getArchived {
-		archivedFilter = "HAVING MAX(CASE WHEN all_projects.is_archived THEN 1 ELSE 0 END) = 0 "
+		archivedFilter = "WHERE all_projects.is_archived = false "
 	}
 
 	currentProjects := []*Project{}
 	err = s.SQL(`WITH RECURSIVE all_projects as (`+baseQuery+`)
-SELECT `+columnStr+` FROM all_projects
-GROUP BY `+groupByStr+` `+archivedFilter+`ORDER BY all_projects.position `+limitSQL, args...).Find(&currentProjects)
+SELECT DISTINCT `+columnStr+` FROM all_projects `+archivedFilter+`
+ORDER BY all_projects.position `+limitSQL, args...).Find(&currentProjects)
 	if err != nil {
 		return
 	}
@@ -716,7 +736,7 @@ GROUP BY `+groupByStr+` `+archivedFilter+`ORDER BY all_projects.position `+limit
 
 	totalCount, err = s.
 		SQL(`WITH RECURSIVE all_projects as (`+baseQuery+`)
-SELECT COUNT(*) FROM (SELECT all_projects.id FROM all_projects GROUP BY all_projects.id `+archivedFilter+`) sub`, args...).
+SELECT COUNT(*) FROM (SELECT DISTINCT all_projects.id FROM all_projects `+archivedFilter+`) sub`, args...).
 		Count(&Project{})
 	if err != nil {
 		return nil, 0, err
@@ -758,6 +778,15 @@ func getRawProjectsForUser(s *xorm.Session, opts *projectOptions) (projects []*P
 	}
 
 	return allProjects, len(allProjects), totalItems, err
+}
+
+func CreateDefaultSavedFiltersForUser(s *xorm.Session, u *user.User) error {
+	sf := &SavedFilter{
+		Title:   "My Open Tasks",
+		Filters: &TaskCollection{Filter: fmt.Sprintf("done = false && assignees = %s", u.Username)},
+	}
+
+	return sf.Create(s, u)
 }
 
 func getSavedFilterProjects(s *xorm.Session, doer *user.User, search string) (savedFiltersProjects []*Project, err error) {
@@ -915,8 +944,13 @@ func addProjectDetails(s *xorm.Session, projects []*Project, a web.Auth) (err er
 func addMaxPermissionToProjects(s *xorm.Session, projects []*Project, u *user.User) (err error) {
 	projectIDs := make([]int64, 0, len(projects))
 	for _, project := range projects {
+		// No row to look up; must agree with checkReadPermissionsForProjects.
+		if project.ID == FavoritesPseudoProjectID {
+			project.MaxPermission = Ptr(PermissionRead)
+			continue
+		}
 		if GetSavedFilterIDFromProjectID(project.ID) > 0 {
-			project.MaxPermission = PermissionAdmin
+			project.MaxPermission = Ptr(PermissionAdmin)
 			continue
 		}
 		projectIDs = append(projectIDs, project.ID)
@@ -930,68 +964,81 @@ func addMaxPermissionToProjects(s *xorm.Session, projects []*Project, u *user.Us
 	for _, project := range projects {
 		permission, has := permissions[project.ID]
 		if has {
-			project.MaxPermission = permission.MaxPermission
+			project.MaxPermission = Ptr(permission.MaxPermission)
 		}
 	}
 
 	return
 }
 
-// CheckIsArchived returns an ErrProjectIsArchived if the project or any of its parent projects is archived.
+// CheckIsArchived returns an ErrProjectIsArchived if the project is archived.
+// is_archived is materialized down the tree (archiving a parent flags all
+// descendants), so the project's own row is authoritative. A new project
+// (ID == 0) is checked against its parent's row instead.
 func (p *Project) CheckIsArchived(s *xorm.Session) (err error) {
-	if p.ID == 0 {
-		// New project — skip checking the project itself but still check the parent.
-		if p.ParentProjectID > 0 {
-			parent := &Project{ID: p.ParentProjectID}
-			return parent.CheckIsArchived(s)
+	id := p.ID
+	if id == 0 {
+		id = p.parentID()
+		if id <= 0 {
+			return nil
 		}
-		return nil
 	}
 
-	project, err := GetProjectSimpleByID(s, p.ID)
+	project, err := GetProjectSimpleByID(s, id)
 	if err != nil {
 		return err
 	}
-
 	if project.IsArchived {
-		return ErrProjectIsArchived{ProjectID: p.ID}
+		return ErrProjectIsArchived{ProjectID: id}
 	}
-
-	if project.ParentProjectID > 0 {
-		parent := &Project{ID: project.ParentProjectID}
-		return parent.CheckIsArchived(s)
-	}
-
 	return nil
 }
 
 func checkProjectBeforeUpdateOrDelete(s *xorm.Session, project *Project) (err error) {
-	if project.ParentProjectID < 0 {
-		return &ErrProjectCannotBelongToAPseudoParentProject{ProjectID: project.ID, ParentProjectID: project.ParentProjectID}
+	parentID := project.parentID()
+	if parentID < 0 {
+		return &ErrProjectCannotBelongToAPseudoParentProject{ProjectID: project.ID, ParentProjectID: parentID}
 	}
 
 	// Check if the parent project exists
-	if project.ParentProjectID > 0 {
-		if project.ParentProjectID == project.ID {
+	if parentID > 0 {
+		if parentID == project.ID {
 			return &ErrProjectCannotBeChildOfItself{
 				ProjectID: project.ID,
 			}
 		}
 
-		allProjects, err := GetAllParentProjects(s, project.ParentProjectID)
+		allProjects, err := GetAllParentProjects(s, parentID)
 		if err != nil {
 			return err
 		}
 
-		var parent *Project
-		parent = allProjects[project.ParentProjectID]
+		parent := allProjects[parentID]
+		if parent == nil {
+			// Un-archiving sends the whole project back, so a dangling stored parent
+			// must pass; a newly requested parent still has to exist.
+			echoesStoredParent := false
+			if project.ID != 0 {
+				stored, err := GetProjectSimpleByID(s, project.ID)
+				if err != nil {
+					return err
+				}
+				echoesStoredParent = stored.parentID() == parentID
+			}
+			if !echoesStoredParent {
+				return ErrProjectDoesNotExist{ID: parentID}
+			}
+		}
 
 		// Check if there's a cycle in the parent relation
 		parentsVisited := make(map[int64]bool)
 		parentsVisited[project.ID] = true
-		for parent.ParentProjectID != 0 {
+		for parent != nil && parent.parentID() != 0 {
 
-			parent = allProjects[parent.ParentProjectID]
+			parent = allProjects[parent.parentID()]
+			if parent == nil {
+				break
+			}
 
 			if parentsVisited[parent.ID] {
 				return &ErrProjectCannotHaveACyclicRelationship{
@@ -1037,8 +1084,17 @@ func CreateProject(s *xorm.Session, project *Project, auth web.Auth, createBackl
 	}
 
 	project.ID = 0
-	project.OwnerID = doer.ID
-	project.Owner = doer
+	if doer.IsBot() {
+		project.OwnerID = doer.BotOwnerID
+		owner, err := user.GetUserByID(s, doer.BotOwnerID)
+		if err != nil {
+			return err
+		}
+		project.Owner = owner
+	} else {
+		project.OwnerID = doer.ID
+		project.Owner = doer
+	}
 
 	err = checkProjectBeforeUpdateOrDelete(s, project)
 	if err != nil {
@@ -1047,9 +1103,27 @@ func CreateProject(s *xorm.Session, project *Project, auth web.Auth, createBackl
 
 	project.HexColor = utils.NormalizeHex(project.HexColor)
 
+	// Persist top-level projects with an explicit 0 (not NULL) so the stored
+	// value and the serialized parent_project_id stay a plain number.
+	if project.ParentProjectID == nil {
+		project.ParentProjectID = Ptr(int64(0))
+	}
+
 	_, err = s.Insert(project)
 	if err != nil {
 		return
+	}
+
+	// Give the bot continued access to the project it created.
+	if doer.IsBot() {
+		pu := &ProjectUser{
+			ProjectID:  project.ID,
+			Username:   doer.Username,
+			Permission: PermissionAdmin,
+		}
+		if err = pu.Create(s, auth); err != nil {
+			return err
+		}
 	}
 
 	project.Position = calculateDefaultPosition(project.ID, project.Position)
@@ -1093,7 +1167,7 @@ func CreateNewProjectForUser(s *xorm.Session, u *user.User) (err error) {
 	}
 
 	u.DefaultProjectID = p.ID
-	_, err = user.UpdateUser(s, u, false)
+	_, err = s.ID(u.ID).Cols("default_project_id").Update(u)
 	return err
 }
 
@@ -1108,7 +1182,83 @@ func RegisterUser(s *xorm.Session, u *user.User) (*user.User, error) {
 		return nil, err
 	}
 
+	if err := CreateDefaultSavedFiltersForUser(s, newUser); err != nil {
+		return nil, err
+	}
+
 	return newUser, nil
+}
+
+func effectiveParentID(project, storedProject *Project) int64 {
+	if project.ParentProjectID != nil {
+		return *project.ParentProjectID
+	}
+	return storedProject.parentID()
+}
+
+// checkProjectParentBeforeUpdate gates reparenting and un-archiving. Both are
+// enforced here and not in CanUpdate: that short-circuits for instance admins
+// and is bypassed entirely by direct UpdateProject callers.
+//
+// GHSA-2vq4-854f-5c72 / CVE-2026-35595 and GHSA-44v6-7fxq-vgf4 /
+// CVE-2026-55064: the recursive permission CTE cascades Admin from any
+// owned ancestor, so moving a shared child under an attacker-owned root
+// grants Admin on the child, and detaching a child to the top level
+// severs an owner's inherited-permission chain. Both are reparent
+// operations that must require Admin on the moved project.
+func checkProjectParentBeforeUpdate(s *xorm.Session, project, storedProject *Project, auth web.Auth) (err error) {
+	isReparent := project.ParentProjectID != nil && *project.ParentProjectID != storedProject.parentID()
+	isUnarchive := storedProject.IsArchived && !project.IsArchived
+	if !isReparent && !isUnarchive {
+		return nil
+	}
+
+	parentID := effectiveParentID(project, storedProject)
+
+	var parent *Project
+	if parentID > 0 {
+		parent, err = GetProjectSimpleByID(s, parentID)
+		// An orphaned stored parent must not block un-archiving; a missing
+		// ancestor is no ancestor. A request-supplied target stays strict.
+		if IsErrProjectDoesNotExist(err) && !isReparent {
+			parent, err = nil, nil
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	if isReparent {
+		canAdminMoved, err := project.IsAdmin(s, auth)
+		if err != nil {
+			return err
+		}
+		if !canAdminMoved {
+			return ErrGenericForbidden{}
+		}
+
+		// Attaching under a new parent additionally requires Admin on
+		// that parent; detaching to the top level (0) has no new parent.
+		if parent != nil {
+			canAdminNewParent, err := parent.IsAdmin(s, auth)
+			if err != nil {
+				return err
+			}
+			if !canAdminNewParent {
+				return ErrGenericForbidden{}
+			}
+
+			if parent.IsArchived {
+				return ErrParentProjectIsArchived{ProjectID: project.ID, ParentProjectID: parent.ID}
+			}
+		}
+	}
+
+	if isUnarchive && parent != nil && parent.IsArchived {
+		return ErrParentProjectIsArchived{ProjectID: project.ID, ParentProjectID: parent.ID}
+	}
+
+	return nil
 }
 
 func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProjectBackground bool) (err error) {
@@ -1117,38 +1267,14 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 		return
 	}
 
-	// GHSA-2vq4-854f-5c72 / CVE-2026-35595: the recursive permission CTE
-	// cascades Admin from any owned ancestor, so moving a shared child
-	// under an attacker-owned root grants Admin on the child. Require
-	// Admin on both sides of a reparent.
-	//
-	// Only gate on non-zero ParentProjectID: the generic update handler
-	// binds a fresh struct, so an omitted parent_project_id is
-	// indistinguishable from an explicit 0. Detach-to-root is therefore
-	// out of scope here — a proper fix needs a pointer field.
-	if project.ParentProjectID > 0 {
-		storedProject, err := GetProjectSimpleByID(s, project.ID)
-		if err != nil {
-			return err
-		}
-		if project.ParentProjectID != storedProject.ParentProjectID {
-			canAdminMoved, err := project.IsAdmin(s, auth)
-			if err != nil {
-				return err
-			}
-			if !canAdminMoved {
-				return ErrGenericForbidden{}
-			}
+	storedProject, err := GetProjectSimpleByID(s, project.ID)
+	if err != nil {
+		return err
+	}
 
-			newParent := &Project{ID: project.ParentProjectID}
-			canAdminNewParent, err := newParent.IsAdmin(s, auth)
-			if err != nil {
-				return err
-			}
-			if !canAdminNewParent {
-				return ErrGenericForbidden{}
-			}
-		}
+	err = checkProjectParentBeforeUpdate(s, project, storedProject, auth)
+	if err != nil {
+		return err
 	}
 
 	if project.IsArchived {
@@ -1162,9 +1288,13 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 		}
 	}
 
-	err = setArchiveStateForProjectDescendants(s, project.ID, project.IsArchived)
-	if err != nil {
-		return err
+	// Only cascade on an actual state change: a plain edit of an unarchived
+	// parent must not un-archive individually archived children.
+	if project.IsArchived != storedProject.IsArchived {
+		err = SetArchiveStateForProjectDescendants(s, project.ID, project.IsArchived)
+		if err != nil {
+			return err
+		}
 	}
 
 	// We need to specify the cols we want to update here to be able to un-archive projects
@@ -1173,8 +1303,12 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 		"is_archived",
 		"identifier",
 		"hex_color",
-		"parent_project_id",
 		"position",
+	}
+	// Only touch parent_project_id when it was actually sent, otherwise a
+	// partial update (nil) would silently detach the project to the top level.
+	if project.ParentProjectID != nil {
+		colsToUpdate = append(colsToUpdate, "parent_project_id")
 	}
 	if project.Description != "" {
 		colsToUpdate = append(colsToUpdate, "description")
@@ -1182,13 +1316,6 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 
 	if updateProjectBackground {
 		colsToUpdate = append(colsToUpdate, "background_file_id", "background_blur_hash")
-	}
-
-	if project.Position < 0.1 {
-		err = recalculateProjectPositions(s, project.ParentProjectID)
-		if err != nil {
-			return err
-		}
 	}
 
 	wasFavorite, err := isFavorite(s, project.ID, auth, FavoriteKindProject)
@@ -1227,6 +1354,20 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 		return err
 	}
 
+	// Healing before the write would leave the project at its tiny position and every
+	// further move to the top would trigger another recalculation.
+	if l.Position < 0.1 {
+		err = recalculateProjectPositions(s, l.parentID())
+		if err != nil {
+			return err
+		}
+
+		l, err = GetProjectSimpleByID(s, project.ID)
+		if err != nil {
+			return err
+		}
+	}
+
 	*project = *l
 	err = project.ReadOne(s, auth)
 	return
@@ -1234,10 +1375,16 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 
 func recalculateProjectPositions(s *xorm.Session, parentProjectID int64) (err error) {
 
+	// Root projects may store their parent as NULL instead of 0 and would never be healed.
+	var parentCond builder.Cond = builder.Eq{"parent_project_id": parentProjectID}
+	if parentProjectID == 0 {
+		parentCond = builder.Or(parentCond, builder.IsNull{"parent_project_id"})
+	}
+
 	allProjects := []*Project{}
 	err = s.
-		Where("parent_project_id = ?", parentProjectID).
-		OrderBy("position asc").
+		Where(parentCond).
+		OrderBy("position asc, id asc").
 		Find(&allProjects)
 	if err != nil {
 		return
@@ -1368,15 +1515,17 @@ func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return &ErrCannotDeleteDefaultProject{ProjectID: p.ID}
 	}
 
-	// Delete all tasks on that project
+	// Hard-delete all tasks on that project, including soft-deleted ones —
+	// there is nothing to restore them into once the project is gone.
 	// Using the loop to make sure all related entities to all tasks are properly deleted as well.
-	tasks, _, _, err := getRawTasksForProjects(s, []*Project{p}, a, &taskSearchOptions{})
+	tasks := []*Task{}
+	err = s.Unscoped().Where("project_id = ?", p.ID).Find(&tasks)
 	if err != nil {
 		return
 	}
 
 	for _, task := range tasks {
-		err = task.Delete(s, a)
+		err = hardDeleteTask(s, task)
 		if err != nil {
 			return err
 		}
@@ -1508,8 +1657,10 @@ func ClearProjectBackground(s *xorm.Session, projectID int64) (err error) {
 	return
 }
 
-// setArchiveStateForProjectDescendants uses a recursive CTE to find and set the archived status of all descendant projects.
-func setArchiveStateForProjectDescendants(s *xorm.Session, parentProjectID int64, shouldBeArchived bool) error {
+const archiveStateUpdateBatch = 500
+
+// SetArchiveStateForProjectDescendants uses a recursive CTE to find and set the archived status of all descendant projects.
+func SetArchiveStateForProjectDescendants(s *xorm.Session, parentProjectID int64, shouldBeArchived bool) error {
 	var descendantIDs []int64
 	err := s.SQL(
 		`
@@ -1534,13 +1685,15 @@ SELECT id FROM descendant_ids`,
 		return nil
 	}
 
-	_, err = s.In("id", descendantIDs).
-		And("is_archived != ?", shouldBeArchived).
-		Cols("is_archived").
-		Update(&Project{IsArchived: shouldBeArchived})
-	if err != nil {
-		log.Errorf("Error updating is_archived for descendant projects for parent ID %d to %t: %v", parentProjectID, shouldBeArchived, err)
-		return fmt.Errorf("failed to update is_archived for descendant projects for parent ID %d to %t: %w", parentProjectID, shouldBeArchived, err)
+	for chunk := range slices.Chunk(descendantIDs, archiveStateUpdateBatch) {
+		_, err = s.In("id", chunk).
+			And("is_archived != ?", shouldBeArchived).
+			Cols("is_archived").
+			Update(&Project{IsArchived: shouldBeArchived})
+		if err != nil {
+			log.Errorf("Error updating is_archived for descendant projects for parent ID %d to %t: %v", parentProjectID, shouldBeArchived, err)
+			return fmt.Errorf("failed to update is_archived for descendant projects for parent ID %d to %t: %w", parentProjectID, shouldBeArchived, err)
+		}
 	}
 	return nil
 }

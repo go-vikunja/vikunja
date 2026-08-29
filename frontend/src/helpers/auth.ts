@@ -1,4 +1,4 @@
-import {HTTPFactory} from '@/helpers/fetcher'
+import {apiV2Url, HTTPFactory} from '@/helpers/fetcher'
 import {isDesktopApp, refreshDesktopToken} from '@/helpers/desktopAuth'
 
 let savedToken: string | null = null
@@ -67,11 +67,12 @@ export async function refreshToken(persist: boolean): Promise<void> {
 	inFlightRefresh = p
 	// Only clear if it still points to this promise — a logout (or a newer
 	// refresh started after it) may have replaced inFlightRefresh meanwhile.
+	// .catch: callers get the rejection through p; avoid a second unhandled one.
 	p.finally(() => {
 		if (inFlightRefresh === p) {
 			inFlightRefresh = null
 		}
-	})
+	}).catch(() => {})
 	return p
 }
 
@@ -80,33 +81,44 @@ async function doRefresh(persist: boolean): Promise<void> {
 	const epochAtStart = authEpoch
 	const loggedOutSinceStart = () => authEpoch !== epochAtStart
 
-	// In desktop mode, refresh via IPC to the Electron main process
-	if (isDesktopApp()) {
-		const storedRefreshToken = localStorage.getItem('desktopOAuthRefreshToken')
-		if (!storedRefreshToken) {
-			throw new Error('No desktop OAuth refresh token available')
-		}
-		try {
-			const tokens = await refreshDesktopToken(window.API_URL, storedRefreshToken)
-			if (loggedOutSinceStart()) {
-				return
-			}
-			saveToken(tokens.access_token, persist)
-			localStorage.setItem('desktopOAuthRefreshToken', tokens.refresh_token)
-		} catch (e) {
-			throw new Error('Error renewing token: ', {cause: e})
-		}
-		return
-	}
-
-	// Capture the token before waiting for the lock so we can detect
+	// Capture the tokens before waiting for the lock so we can detect
 	// if another tab refreshed while we were queued.
 	const tokenBeforeLock = localStorage.getItem('token')
+	const desktopRefreshTokenBeforeLock = localStorage.getItem('desktopOAuthRefreshToken')
 
 	const refreshUnderLock = async () => {
 		// A logout may have happened while we waited for the lock — don't
 		// re-adopt or re-fetch a token after the user signed out.
 		if (loggedOutSinceStart()) {
+			return
+		}
+
+		// In desktop mode, refresh via IPC to the Electron main process
+		if (isDesktopApp()) {
+			const storedRefreshToken = localStorage.getItem('desktopOAuthRefreshToken')
+
+			if (storedRefreshToken !== desktopRefreshTokenBeforeLock) {
+				const currentToken = localStorage.getItem('token')
+				if (currentToken) {
+					savedToken = currentToken
+					return
+				}
+			}
+
+			if (!storedRefreshToken) {
+				throw new Error('No desktop OAuth refresh token available')
+			}
+
+			try {
+				const tokens = await refreshDesktopToken(window.API_URL, storedRefreshToken)
+				if (loggedOutSinceStart()) {
+					return
+				}
+				saveToken(tokens.access_token, persist)
+				localStorage.setItem('desktopOAuthRefreshToken', tokens.refresh_token)
+			} catch (e) {
+				throw new Error('Error renewing token: ', {cause: e})
+			}
 			return
 		}
 
@@ -121,7 +133,21 @@ async function doRefresh(persist: boolean): Promise<void> {
 		// We hold the lock and no one else refreshed — make the API call.
 		const HTTP = HTTPFactory()
 		try {
-			const response = await HTTP.post('user/token/refresh')
+			let response
+			try {
+				response = await HTTP.post(apiV2Url('user/token/refresh'))
+			} catch (e) {
+				if ((e as {response?: {status?: number}})?.response?.status === 429) {
+					throw e
+				}
+				if (loggedOutSinceStart()) {
+					return
+				}
+				// Pre-v2 browsers only hold the v1-path cookie, and some deployments
+				// can't reach v2 at all; v1 re-seeds both cookies.
+				// Drop this fallback once pre-v2 clients have cycled out.
+				response = await HTTP.post('user/token/refresh')
+			}
 			if (loggedOutSinceStart()) {
 				return
 			}

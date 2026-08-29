@@ -18,13 +18,14 @@ jobs:
         directory: [frontend, desktop]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
       - name: Create Diff
-        uses: e18e/action-dependency-diff@v1
+        uses: e18e/action-dependency-diff@9a7f09f5f2993256322e0db17ee4c8d9339dab77 # v1.7.1
         with:
           working-directory: ${{ matrix.directory }}
+          duplicate-threshold: 9999
 
   check-provenance:
     runs-on: ubuntu-latest
@@ -33,11 +34,11 @@ jobs:
         directory: [frontend, desktop]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
       - name: Check provenance downgrades
-        uses: danielroe/provenance-action@main
+        uses: danielroe/provenance-action@b3ab83001f3a6d533f9a39a53aded1e179406a2c # main
         with:
           workspace-path: ${{ matrix.directory }}
           fail-on-provenance-change: true

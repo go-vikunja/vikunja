@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
@@ -30,7 +31,7 @@ type AdminProjectList struct {
 }
 
 // ReassignProjectOwner refuses owners scheduled for deletion because DeleteUser cascades to their projects.
-func ReassignProjectOwner(s *xorm.Session, projectID, newOwnerID int64) (*Project, error) {
+func ReassignProjectOwner(s *xorm.Session, doer *user.User, projectID, newOwnerID int64) (*Project, error) {
 	p, err := GetProjectSimpleByID(s, projectID)
 	if err != nil {
 		return nil, err
@@ -44,11 +45,19 @@ func ReassignProjectOwner(s *xorm.Session, projectID, newOwnerID int64) (*Projec
 		return nil, ErrInvalidData{Message: "new owner is scheduled for deletion"}
 	}
 
+	oldOwnerID := p.OwnerID
 	p.OwnerID = newOwnerID
 	if _, err := s.ID(p.ID).Cols("owner_id").Update(p); err != nil {
 		return nil, err
 	}
 	p.Owner = newOwner
+
+	events.DispatchOnCommit(s, &AdminProjectOwnerChangedEvent{
+		Project:    p,
+		Doer:       doer,
+		OldOwnerID: oldOwnerID,
+		NewOwnerID: newOwnerID,
+	})
 	return p, nil
 }
 

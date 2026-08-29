@@ -493,4 +493,34 @@ func TestTaskCollection(t *testing.T) {
 		})
 	})
 
+	t.Run("ReadAll for link share", func(t *testing.T) {
+		linkShareHandler := webHandlerTest{
+			linkShare: &models.LinkSharing{
+				ID:          1,
+				Hash:        "test", // must match pkg/db/fixtures/link_shares.yml id=1
+				ProjectID:   1,
+				Permission:  models.PermissionRead,
+				SharingType: models.SharingTypeWithoutPassword,
+				SharedByID:  1,
+			},
+			strFunc: func() handler.CObject {
+				return &models.TaskCollection{}
+			},
+			t: t,
+		}
+		t.Run("own project and view", func(t *testing.T) {
+			rec, err := linkShareHandler.testReadAllWithLinkShare(nil, map[string]string{"project": "1", "view": "4"})
+			require.NoError(t, err)
+			assert.Contains(t, rec.Body.String(), `testbucket1`)
+			assert.Contains(t, rec.Body.String(), `task #1`)
+		})
+		t.Run("view of another project is not found", func(t *testing.T) {
+			rec, err := linkShareHandler.testReadAllWithLinkShare(nil, map[string]string{"project": "2", "view": "8"})
+			if rec != nil {
+				assert.NotContains(t, rec.Body.String(), `testbucket4 - other project`)
+			}
+			require.Error(t, err)
+			assertHandlerErrorCode(t, err, models.ErrCodeProjectViewDoesNotExist)
+		})
+	})
 }

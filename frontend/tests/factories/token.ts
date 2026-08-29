@@ -1,3 +1,4 @@
+import {createHash} from 'node:crypto'
 import {faker} from '@faker-js/faker'
 import {Factory} from '../support/factory'
 
@@ -26,4 +27,17 @@ export class TokenFactory extends Factory {
 			...(attrs ?? {}),
 		}
 	}
-} 
+
+	// The API stores reset/confirm/deletion tokens (kinds 1-3) as a SHA-256 hash
+	// and looks them up by that hash; caldav tokens (kind 4) use bcrypt and are
+	// seeded verbatim. Seed the hash so the plaintext token the test uses still
+	// resolves server-side (matches pkg/user/token.go hashUserToken).
+	static transformForSeed(item: Record<string, unknown>): Record<string, unknown> {
+		const kind = item.kind as number
+		if (typeof item.token === 'string' && kind >= 1 && kind <= 3) {
+			return {...item, token: createHash('sha256').update(item.token).digest('hex')}
+		}
+		return item
+	}
+}
+

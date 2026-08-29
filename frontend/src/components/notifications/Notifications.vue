@@ -7,6 +7,7 @@
 		>
 			<BaseButton
 				class="trigger-button"
+				:aria-expanded="showNotifications"
 				@click.stop="showNotifications = !showNotifications"
 			>
 				<span class="is-sr-only">{{ $t('notification.title') }}</span>
@@ -106,7 +107,7 @@
 
 <script lang="ts" setup>
 import {computed, onMounted, onUnmounted, ref, watch} from 'vue'
-import {useRouter, isNavigationFailure, NavigationFailureType, RouteLocationRaw} from 'vue-router'
+import {useRouter, isNavigationFailure, NavigationFailureType, type RouteLocationRaw} from 'vue-router'
 
 import NotificationService from '@/services/notification'
 import NotificationModel from '@/models/notification'
@@ -219,6 +220,7 @@ function getNotificationRoute(n: INotification): RouteLocationRaw | null {
 		case names.TASK_ASSIGNED:
 		case names.TASK_REMINDER:
 		case names.TASK_MENTIONED:
+		case names.TASK_CREATED:
 			return {name: 'task.detail', params: {id: (n.notification as {task: {id: number}}).task.id}}
 		case names.PROJECT_CREATED:
 			return {name: 'task.index', params: {projectId: (n.notification as {project: {id: number}}).project.id}}

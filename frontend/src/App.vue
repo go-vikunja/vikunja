@@ -12,6 +12,7 @@
 			<a
 				href="#main-content"
 				class="skip-to-content"
+				@click.prevent="skipToMainContent"
 			>
 				{{ $t('misc.skipToContent') }}
 			</a>
@@ -76,6 +77,12 @@ const authStore = useAuthStore()
 const baseStore = useBaseStore()
 
 const {isQuickAddMode} = useQuickAddMode()
+
+// Activating #main-content only scrolls natively, so focus has to be moved explicitly.
+// Deferred a frame because a synchronous focus() did not stick in Safari.
+function skipToMainContent() {
+	requestAnimationFrame(() => document.getElementById('main-content')?.focus())
+}
 
 // Make the Electron frameless window transparent
 if (isQuickAddMode) {

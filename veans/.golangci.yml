@@ -86,18 +86,22 @@ linters:
           - gosec
         text: 'G70[45]:'
       # E2E helpers run subprocesses with controlled inputs (git, the
-      # built veans binary). G204 (subprocess) and G703 (path traversal)
-      # don't apply to test infrastructure.
+      # built veans binary). G204 (subprocess), G702 (command injection)
+      # and G703 (path traversal) don't apply to test infrastructure.
       - linters:
           - gosec
         path: e2e/
-        text: 'G(204|306|703):'
+        text: 'G(204|306|70[23]):'
       # .veans.yml + agent hook config files are committed to the repo
       # and intentionally world-readable; 0o644 is correct.
       - linters:
           - gosec
         path: internal/(config|bootstrap)/.*\.go
         text: 'G306:'
+      # noctx flags httptest.NewRequest, which builds inbound requests for handler tests where a cancellation context adds nothing.
+      - linters:
+          - noctx
+        text: 'httptest.NewRequest must not be called'
 formatters:
   enable:
     - gofmt

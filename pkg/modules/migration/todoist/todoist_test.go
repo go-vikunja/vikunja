@@ -388,7 +388,7 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 		{
 			Project: models.Project{
 				ID:              2,
-				ParentProjectID: 1,
+				ParentProjectID: models.Ptr(int64(1)),
 				Title:           "Project1",
 				Description:     "Lorem Ipsum dolor sit amet\nLorem Ipsum dolor sit amet 2\nLorem Ipsum dolor sit amet 3",
 				HexColor:        todoistColors["berry_red"],
@@ -524,7 +524,7 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 		{
 			Project: models.Project{
 				ID:              3,
-				ParentProjectID: 1,
+				ParentProjectID: models.Ptr(int64(1)),
 				Title:           "Project2",
 				Description:     "Lorem Ipsum dolor sit amet 4\nLorem Ipsum dolor sit amet 5",
 				HexColor:        todoistColors["mint_green"],
@@ -625,7 +625,7 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 		{
 			Project: models.Project{
 				ID:              4,
-				ParentProjectID: 1,
+				ParentProjectID: models.Ptr(int64(1)),
 				Title:           "Project3 - Archived",
 				HexColor:        todoistColors["mint_green"],
 				IsArchived:      true,
@@ -649,5 +649,112 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 	assert.NotNil(t, hierachie)
 	if diff, equal := messagediff.PrettyDiff(hierachie, expectedHierachie); !equal {
 		t.Errorf("converted todoist data = %v, want %v, diff: %v", hierachie, expectedHierachie, diff)
+	}
+}
+
+func TestConvertTodoistToVikunjaWithBrokenAttachment(t *testing.T) {
+	// Todoist returns opaque identifiers instead of urls for attachments it does not host itself.
+	// Those must not fail the whole migration, see https://github.com/go-vikunja/vikunja/issues/3435
+	testSync := &sync{
+		Projects: []*project{
+			{
+				ID:   "396936926",
+				Name: "Project1",
+			},
+		},
+		Items: []*item{
+			{
+				ID:        "400000001",
+				ProjectID: "396936926",
+				Content:   "Task1",
+			},
+		},
+		Notes: []*note{
+			{
+				ID:      "101478",
+				ItemID:  "400000001",
+				Content: "Lorem Ipsum dolor sit amet",
+				FileAttachment: &fileAttachment{
+					FileName:    "mail attachment",
+					FileType:    "text/plain",
+					FileURL:     "[[outlook=id3=aWQ9MDAwMDAwMDBDRjVENTQ1RjUzOTJERDQ1OER, Skattemeldingen kommer ]]",
+					UploadState: "completed",
+				},
+			},
+		},
+	}
+
+	hierachie, err := convertTodoistToVikunja(testSync, make(map[string]*doneItem))
+	require.NoError(t, err)
+	require.Len(t, hierachie, 2)
+	require.Len(t, hierachie[1].Tasks, 1)
+	assert.Empty(t, hierachie[1].Tasks[0].Attachments)
+	assert.Equal(t, "Lorem Ipsum dolor sit amet", hierachie[1].Tasks[0].Description)
+}
+
+func TestIsDownloadableURL(t *testing.T) {
+	tests := []struct {
+		name string
+		url  string
+		want bool
+	}{
+		{name: "https", url: "https://todoist.com/file.md", want: true},
+		{name: "http", url: "http://todoist.com/file.md", want: true},
+		{name: "todoist mail attachment id", url: "[[outlook=id3=aWQ9MDAwMDAwMDBDRjVENTQ1RjUzOTJERDQ1OER]]", want: false},
+		{name: "no scheme", url: "todoist.com/file.md", want: false},
+		{name: "no host", url: "https://", want: false},
+		{name: "other scheme", url: "file:///etc/passwd", want: false},
+		{name: "empty", url: "", want: false},
+		{name: "invalid", url: "https://%zz", want: false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, isDownloadableURL(tt.url))
+		})
+	}
+}
+
+func TestParseTodoistRepeat(t *testing.T) {
+	tests := []struct {
+		name string
+		due  *dueDate
+		want int64
+	}{
+		{name: "nil due", due: nil, want: 0},
+		{name: "not recurring", due: &dueDate{String: "every day", IsRecurring: false}, want: 0},
+
+		{name: "every day", due: &dueDate{String: "every day", IsRecurring: true}, want: secondsPerDay},
+		{name: "daily", due: &dueDate{String: "daily", IsRecurring: true}, want: secondsPerDay},
+		{name: "every other day", due: &dueDate{String: "every other day", IsRecurring: true}, want: 2 * secondsPerDay},
+		{name: "every 3 days", due: &dueDate{String: "every 3 days", IsRecurring: true}, want: 3 * secondsPerDay},
+
+		{name: "every week", due: &dueDate{String: "every week", IsRecurring: true}, want: secondsPerWeek},
+		{name: "weekly", due: &dueDate{String: "weekly", IsRecurring: true}, want: secondsPerWeek},
+		{name: "every other week", due: &dueDate{String: "every other week", IsRecurring: true}, want: 2 * secondsPerWeek},
+		{name: "every 2 weeks", due: &dueDate{String: "every 2 weeks", IsRecurring: true}, want: 2 * secondsPerWeek},
+
+		{name: "every month", due: &dueDate{String: "every month", IsRecurring: true}, want: secondsPerMonth},
+		{name: "monthly", due: &dueDate{String: "monthly", IsRecurring: true}, want: secondsPerMonth},
+		{name: "every 3 months", due: &dueDate{String: "every 3 months", IsRecurring: true}, want: 3 * secondsPerMonth},
+
+		{name: "every year", due: &dueDate{String: "every year", IsRecurring: true}, want: secondsPerYear},
+		{name: "yearly", due: &dueDate{String: "yearly", IsRecurring: true}, want: secondsPerYear},
+		{name: "annually", due: &dueDate{String: "annually", IsRecurring: true}, want: secondsPerYear},
+
+		{name: "case insensitive", due: &dueDate{String: "Every Day", IsRecurring: true}, want: secondsPerDay},
+		{name: "time of day stripped", due: &dueDate{String: "every day at 9am", IsRecurring: true}, want: secondsPerDay},
+
+		// Tier 1 doesn't understand these, so the task stays non-repeating.
+		{name: "specific weekday", due: &dueDate{String: "every monday", IsRecurring: true}, want: 0},
+		{name: "day of month", due: &dueDate{String: "every 27th", IsRecurring: true}, want: 0},
+		{name: "non-english", due: &dueDate{String: "cada día", IsRecurring: true}, want: 0},
+		{name: "gibberish", due: &dueDate{String: "whenever", IsRecurring: true}, want: 0},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, parseTodoistRepeat(tt.due))
+		})
 	}
 }

@@ -4,7 +4,8 @@
 		<p>{{ $t('migrate.descriptionDo') }}</p>
 
 		<template v-if="message === '' && lastMigrationStartedAt === null && !migrationJustStarted">
-			<template v-if="isMigrating === false">
+			<!-- the credentials form stays mounted while migrating so its input survives an error -->
+			<template v-if="isMigrating === false || migrator.isCredentialsMigrator">
 				<template v-if="migrator.isFileMigrator">
 					<p>{{ $t('migrate.importUpload', {name: migrator.name}) }}</p>
 					<Message
@@ -18,7 +19,7 @@
 						ref="uploadInput"
 						class="is-hidden"
 						type="file"
-						@change="migrate"
+						@change="migrate()"
 					>
 					<XButton
 						:loading="migrationFileService.loading"
@@ -28,6 +29,16 @@
 						{{ $t('migrate.upload') }}
 					</XButton>
 				</template>
+				<MigrationCredentialsForm
+					v-else-if="migrator.isCredentialsMigrator"
+					:migrator-name="migrator.name"
+					:loading="migrationService.loading"
+					:error="migrationError"
+					:api-key-help="apiKeyHelp"
+					:password-help="passwordHelp"
+					@submit="migrate"
+					@clearError="migrationError = ''"
+				/>
 				<template v-else>
 					<p>{{ $t('migrate.authorize', {name: migrator.name}) }}</p>
 					<XButton
@@ -77,7 +88,7 @@
 				{{ $t('migrate.alreadyMigrated2') }}
 			</p>
 			<div class="migration-buttons">
-				<XButton @click="migrate">
+				<XButton @click="confirmMigrateAgain">
 					{{ $t('migrate.confirm') }}
 				</XButton>
 				<XButton
@@ -126,6 +137,7 @@ import {useI18n} from 'vue-i18n'
 
 import Logo from '@/assets/logo.svg?component'
 import Message from '@/components/misc/Message.vue'
+import MigrationCredentialsForm from './MigrationCredentialsForm.vue'
 
 import AbstractMigrationService, {type MigrationConfig} from '@/services/migrator/abstractMigration'
 import AbstractMigrationFileService from '@/services/migrator/abstractMigrationFile'
@@ -145,7 +157,7 @@ const props = defineProps<{
 
 const PROGRESS_DOTS_COUNT = 8
 
-const {t} = useI18n({useScope: 'global'})
+const {t, te} = useI18n({useScope: 'global'})
 
 const progressDotsCount = ref(PROGRESS_DOTS_COUNT)
 const authUrl = ref('')
@@ -159,6 +171,15 @@ const migrationError = ref('')
 
 const migrator = computed<Migrator>(() => MIGRATORS[props.service])
 
+const apiKeyHelp = computed(() => {
+	const key = `migrate.${migrator.value.id}.apiKeyHelp`
+	return te(key) ? t(key) : ''
+})
+const passwordHelp = computed(() => {
+	const key = `migrate.${migrator.value.id}.passwordHelp`
+	return te(key) ? t(key) : ''
+})
+
 // eslint-disable-next-line vue/no-ref-object-reactivity-loss
 const migrationService = shallowReactive(new AbstractMigrationService(migrator.value.id))
 // eslint-disable-next-line vue/no-ref-object-reactivity-loss
@@ -171,16 +192,19 @@ async function initMigration() {
 		return
 	}
 
-	authUrl.value = await migrationService.getAuthUrl().then(({url}) => url)
+	if (!migrator.value.isCredentialsMigrator) {
+		authUrl.value = await migrationService.getAuthUrl().then(({url}) => url)
 
-	const TOKEN_HASH_PREFIX = '#token='
-	migratorAuthCode.value = location.hash.startsWith(TOKEN_HASH_PREFIX)
-		? location.hash.substring(TOKEN_HASH_PREFIX.length)
-		: props.code as string
+		const TOKEN_HASH_PREFIX = '#token='
+		migratorAuthCode.value = location.hash.startsWith(TOKEN_HASH_PREFIX)
+			? location.hash.substring(TOKEN_HASH_PREFIX.length)
+			: props.code as string
 
-	if (!migratorAuthCode.value) {
-		return
+		if (!migratorAuthCode.value) {
+			return
+		}
 	}
+
 	const {started_at, finished_at} = await migrationService.getStatus()
 	if (started_at) {
 		lastMigrationStartedAt.value = parseDateOrNull(started_at)
@@ -196,6 +220,10 @@ async function initMigration() {
 		return
 	}
 
+	if (migrator.value.isCredentialsMigrator) {
+		return
+	}
+
 	await migrate()
 }
 
@@ -203,13 +231,13 @@ initMigration()
 
 const uploadInput = ref<HTMLInputElement | null>(null)
 
-async function migrate() {
+async function migrate(credentialsConfig?: MigrationConfig) {
+	let migrationConfig: MigrationConfig | File = credentialsConfig ?? {code: migratorAuthCode.value}
+
 	isMigrating.value = true
 	lastMigrationFinishedAt.value = null
 	message.value = ''
 	migrationError.value = ''
-
-	let migrationConfig: MigrationConfig | File = {code: migratorAuthCode.value}
 
 	if (migrator.value.isFileMigrator) {
 		if (uploadInput.value?.files?.length === 0) {
@@ -233,6 +261,16 @@ async function migrate() {
 	} finally {
 		isMigrating.value = false
 	}
+}
+
+// Credentials migrators have no config yet at this point, so reset the status to show the form again.
+function confirmMigrateAgain() {
+	if (!migrator.value.isCredentialsMigrator) {
+		return migrate()
+	}
+
+	lastMigrationStartedAt.value = null
+	lastMigrationFinishedAt.value = null
 }
 </script>
 

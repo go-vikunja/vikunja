@@ -33,7 +33,6 @@
 				required
 				type="text"
 				autocomplete="username"
-				tabindex="1"
 				:error="usernameValid ? null : $t('user.auth.usernameRequired')"
 				@keyup.enter="submit"
 				@focusout="validateUsernameField()"
@@ -48,14 +47,12 @@
 						v-if="localAuthEnabled"
 						:to="{ name: 'user.password-reset.request' }"
 						class="reset-password-link"
-						tabindex="6"
 					>
 						{{ $t('user.auth.forgotPassword') }}
 					</RouterLink>
 				</div>
 				<Password
 					v-model="password"
-					tabindex="2"
 					:validate-initially="validatePasswordInitially"
 					:validate-min-length="false"
 					@submit="submit"
@@ -71,7 +68,6 @@
 				:placeholder="$t('user.auth.totpPlaceholder')"
 				required
 				type="text"
-				tabindex="3"
 				inputmode="numeric"
 				@keyup.enter="submit"
 			/>
@@ -82,7 +78,6 @@
 
 			<XButton
 				:loading="isLoading"
-				tabindex="4"
 				@click="submit"
 			>
 				{{ $t('user.auth.login') }}
@@ -95,7 +90,7 @@
 				<RouterLink
 					:to="{ name: 'user.register' }"
 					type="secondary"
-					tabindex="5"
+					class="inline-link"
 				>
 					{{ $t('user.auth.createAccount') }}
 				</RouterLink>
@@ -122,7 +117,7 @@
 <script setup lang="ts">
 import {computed, onBeforeMount, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {useRouter} from 'vue-router'
+import {useRoute, useRouter} from 'vue-router'
 import {useDebounceFn} from '@vueuse/core'
 
 import Message from '@/components/misc/Message.vue'
@@ -132,11 +127,12 @@ import FormCheckbox from '@/components/input/FormCheckbox.vue'
 import DesktopLogin from '@/views/user/DesktopLogin.vue'
 
 import {getErrorText} from '@/message'
-import {redirectToProvider} from '@/helpers/redirectToProvider'
+import {getAutoRedirectProvider, redirectToProvider} from '@/helpers/redirectToProvider'
 import {useRedirectToLastVisited} from '@/composables/useRedirectToLastVisited'
 import {isDesktopApp} from '@/helpers/desktopAuth'
+import {REDIRECT_HASH_PREFIX} from '@/constants/redirectHash'
 
-import {useAuthStore} from '@/stores/auth'
+import {useAuthStore, JUST_LOGGED_OUT_KEY} from '@/stores/auth'
 import {useConfigStore} from '@/stores/config'
 
 import {useTitle} from '@/composables/useTitle'
@@ -144,6 +140,7 @@ import {useTitle} from '@/composables/useTitle'
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => t('user.auth.login'))
 
+const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 const configStore = useConfigStore()
@@ -181,6 +178,26 @@ onBeforeMount(() => {
 	// route before the submit() handler gets a chance to use it.
 	if (authenticated.value) {
 		router.push({name: 'home'})
+		return
+	}
+
+	// Consumed on read so the next visit to the login page can auto-redirect again.
+	const justLoggedOut = sessionStorage.getItem(JUST_LOGGED_OUT_KEY) !== null
+	if (justLoggedOut) {
+		sessionStorage.removeItem(JUST_LOGGED_OUT_KEY)
+	}
+
+	const autoRedirectProvider = getAutoRedirectProvider({
+		localAuthEnabled: localAuthEnabled.value,
+		ldapAuthEnabled: ldapAuthEnabled.value,
+		openIdEnabled: openidConnect.value.enabled,
+		providers: openidConnect.value.providers ?? [],
+		isDesktopApp: isDesktop,
+		justLoggedOut,
+		hasCopyableRedirect: route.hash.startsWith(REDIRECT_HASH_PREFIX),
+	})
+	if (autoRedirectProvider) {
+		redirectToProvider(autoRedirectProvider)
 	}
 })
 
@@ -238,6 +255,11 @@ async function submit() {
 
 .reset-password-link {
 	display: inline-block;
+}
+
+// Underline links sitting inside body text so they're not distinguished by color alone
+.inline-link {
+	text-decoration: underline;
 }
 
 .label-with-link {

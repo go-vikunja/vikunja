@@ -78,7 +78,6 @@
 			"passwordUpdateSuccess": "Le mot de passe a bien été mis à jour.",
 			"updateEmailTitle": "Mettre à jour votre adresse électronique",
 			"updateEmailNew": "Nouvelle adresse électronique",
-			"updateEmailSuccess": "L’adresse électronique a bien été mise à jour. Nous vous avons envoyé un lien pour confirmer ce changement.",
 			"general": {
 				"title": "Paramètres généraux",
 				"name": "Mon nom",

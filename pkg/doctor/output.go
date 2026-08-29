@@ -29,19 +29,20 @@ var (
 	bold       = color.New(color.Bold).SprintFunc()
 )
 
-// PrintResults writes all check groups to the given writer with colored output.
-func PrintResults(w io.Writer, groups []CheckGroup) {
+// PrintHeader writes the report header to the given writer.
+func PrintHeader(w io.Writer) {
 	fmt.Fprintln(w, bold("Vikunja Doctor"))
 	fmt.Fprintln(w, "==============")
 	fmt.Fprintln(w)
+}
 
-	for _, group := range groups {
-		fmt.Fprintln(w, bold(group.Name))
-		for _, result := range group.Results {
-			printResult(w, result)
-		}
-		fmt.Fprintln(w)
+// PrintGroup writes a single check group to the given writer with colored output.
+func PrintGroup(w io.Writer, group CheckGroup) {
+	fmt.Fprintln(w, bold(group.Name))
+	for _, result := range group.Results {
+		printResult(w, result)
 	}
+	fmt.Fprintln(w)
 }
 
 func printResult(w io.Writer, result CheckResult) {

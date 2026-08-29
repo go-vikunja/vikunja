@@ -39,11 +39,12 @@ func TestAPIToken_ReadAll(t *testing.T) {
 	require.NoError(t, err)
 	tokens, is := result.([]*APIToken)
 	assert.Truef(t, is, "tokens are not of type []*APIToken")
-	assert.Len(t, tokens, 2)
+	assert.Len(t, tokens, 3)
 	assert.Len(t, tokens, count)
-	assert.Equal(t, int64(2), total)
+	assert.Equal(t, int64(3), total)
 	assert.Equal(t, int64(1), tokens[0].ID)
 	assert.Equal(t, int64(2), tokens[1].ID)
+	assert.Equal(t, int64(9), tokens[2].ID)
 }
 
 func TestAPIToken_CanDelete(t *testing.T) {
@@ -92,6 +93,63 @@ func TestAPIToken_Create(t *testing.T) {
 
 		err := token.Create(s, u)
 		require.NoError(t, err)
+	})
+}
+
+// nonUserAuth is a web.Auth that is neither *user.User nor *models.LinkSharing.
+// It proves the API-token guard rejects by principal type, not by matching the
+// concrete link-share struct (GHSA-vvcv-vpph-h844).
+type nonUserAuth struct {
+	id int64
+}
+
+func (a *nonUserAuth) GetID() int64 { return a.id }
+
+func TestAPIToken_RejectsNonUserPrincipal(t *testing.T) {
+	// ID 2 collides with user 2, who owns token 3.
+	a := &nonUserAuth{id: 2}
+
+	t.Run("CanCreate", func(t *testing.T) {
+		s := db.NewSession()
+		defer s.Close()
+		db.LoadAndAssertFixtures(t)
+
+		can, err := (&APIToken{}).CanCreate(s, a)
+		require.Error(t, err)
+		assert.False(t, can)
+	})
+	t.Run("CanDelete", func(t *testing.T) {
+		s := db.NewSession()
+		defer s.Close()
+		db.LoadAndAssertFixtures(t)
+
+		can, err := (&APIToken{ID: 3}).CanDelete(s, a)
+		require.Error(t, err)
+		assert.False(t, can)
+
+		exists, err := s.Where("id = ?", 3).Exist(&APIToken{})
+		require.NoError(t, err)
+		assert.True(t, exists, "token must be retained")
+	})
+	t.Run("Create", func(t *testing.T) {
+		s := db.NewSession()
+		defer s.Close()
+		db.LoadAndAssertFixtures(t)
+
+		err := (&APIToken{}).Create(s, a)
+		require.Error(t, err)
+
+		exists, err := s.Where("owner_id = ?", 2).Count(&APIToken{})
+		require.NoError(t, err)
+		assert.Equal(t, int64(1), exists, "no token must be created for the colliding id")
+	})
+	t.Run("ReadAll", func(t *testing.T) {
+		s := db.NewSession()
+		defer s.Close()
+		db.LoadAndAssertFixtures(t)
+
+		_, _, _, err := (&APIToken{}).ReadAll(s, a, "", 1, 50)
+		require.Error(t, err)
 	})
 }
 
@@ -175,5 +233,18 @@ func TestAPIToken_GetTokenFromTokenString(t *testing.T) {
 
 		require.Error(t, err)
 		assert.True(t, IsErrAPITokenInvalid(err))
+	})
+	t.Run("token shorter than prefix+8 does not panic", func(t *testing.T) {
+		for _, short := range []string{"", "tk_", "tk_a", "tk_abc", "tk_1234567"} {
+			s := db.NewSession()
+			db.LoadAndAssertFixtures(t)
+
+			token, err := GetTokenFromTokenString(s, short)
+
+			require.Errorf(t, err, "short token %q must be rejected", short)
+			assert.True(t, IsErrAPITokenInvalid(err))
+			assert.Nil(t, token)
+			s.Close()
+		}
 	})
 }

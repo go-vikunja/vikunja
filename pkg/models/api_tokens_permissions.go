@@ -23,12 +23,17 @@ import (
 )
 
 func (t *APIToken) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
+	caller, err := user.GetFromAuth(a)
+	if err != nil {
+		return false, err
+	}
+
 	token, err := GetAPITokenByID(s, t.ID)
 	if err != nil {
 		return false, err
 	}
 
-	if token.OwnerID == a.GetID() {
+	if token.OwnerID == caller.ID {
 		*t = *token
 		return true, nil
 	}
@@ -41,7 +46,7 @@ func (t *APIToken) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
 		}
 		return false, err
 	}
-	if botUser.IsBot() && botUser.BotOwnerID == a.GetID() {
+	if botUser.IsBot() && botUser.BotOwnerID == caller.ID {
 		*t = *token
 		return true, nil
 	}
@@ -49,6 +54,11 @@ func (t *APIToken) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
 	return false, nil
 }
 
-func (t *APIToken) CanCreate(_ *xorm.Session, _ web.Auth) (bool, error) {
+func (t *APIToken) CanCreate(_ *xorm.Session, a web.Auth) (bool, error) {
+	// Ownership derives from a verified user principal, never a generic GetID();
+	// link shares (and any non-user) must not manage API tokens (GHSA-vvcv-vpph-h844).
+	if _, err := user.GetFromAuth(a); err != nil {
+		return false, err
+	}
 	return true, nil
 }

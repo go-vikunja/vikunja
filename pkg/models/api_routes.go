@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"strings"
 
+	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/log"
 
 	"github.com/labstack/echo/v5"
@@ -74,6 +75,13 @@ func stripAPIVersion(path string) string {
 	return path
 }
 
+// canonicalAPITokenGroup snake_cases a permission group name. The frontend
+// snake_cases request payloads, so a hyphenated group slug (e.g. from
+// /api/v2/time-entries) can't round-trip and fails validation on save.
+func canonicalAPITokenGroup(group string) string {
+	return strings.ReplaceAll(group, "-", "_")
+}
+
 func getRouteGroupName(path string) (finalName string, filteredParts []string) {
 	parts := strings.Split(stripAPIVersion(path), "/")
 	filteredParts = []string{}
@@ -82,7 +90,7 @@ func getRouteGroupName(path string) (finalName string, filteredParts []string) {
 			continue
 		}
 
-		filteredParts = append(filteredParts, part)
+		filteredParts = append(filteredParts, canonicalAPITokenGroup(part))
 	}
 
 	finalName = strings.Join(filteredParts, "_")
@@ -91,6 +99,9 @@ func getRouteGroupName(path string) (finalName string, filteredParts []string) {
 		fallthrough
 	case "tasks_all":
 		return "tasks", []string{"tasks"}
+	case "projects_tasks_bulk":
+		// CollectRoutesForAPITokenUsage strips _bulk, filing this as group "tasks" + permission "create_bulk".
+		return "tasks_bulk", []string{"tasks_bulk"}
 	default:
 		return finalName, filteredParts
 	}
@@ -183,7 +194,7 @@ func isStandardCRUDRoute(routeGroupName string, routeParts []string, _ string) b
 		"comments":             true,
 		"relations":            true,
 		"attachments":          true,
-		"time-entries":         true,
+		"time_entries":         true,
 		"projects_views":       true,
 		"projects_teams":       true,
 		"projects_users":       true,
@@ -243,6 +254,7 @@ func CollectRoutesForAPITokenUsage(route echo.RouteInfo, requiresJWT bool) {
 		routeGroupName == "subscriptions" ||
 		routeGroupName == "tokens" ||
 		routeGroupName == "*" ||
+		routeGroupName == "oauth_authorize" ||
 		strings.HasPrefix(routeGroupName, "user_") {
 		return
 	}
@@ -346,27 +358,58 @@ func CollectRoutesForAPITokenUsage(route echo.RouteInfo, requiresJWT bool) {
 
 }
 
+// licenseFeatureForRoute maps a route path to the license feature whose
+// request-time gate 404s it. Gated routes are always registered (the gates
+// react to license changes at runtime), so this must stay in sync with
+// timeTrackingGate and gateV2AdminRoutes in pkg/routes.
+func licenseFeatureForRoute(path string) (license.Feature, bool) {
+	switch {
+	case strings.HasPrefix(path, "/api/v1/admin/"), strings.HasPrefix(path, "/api/v2/admin/"):
+		return license.FeatureAdminPanel, true
+	case strings.Contains(path, "/time-entries"):
+		return license.FeatureTimeTracking, true
+	}
+	return license.FeatureUnknown, false
+}
+
 // GetAPITokenRoutes exposes the registered scoped-token routes for the /routes
 // handler and tests. v1 is the base; v2-only groups and permissions (a v2-only
 // resource like time-entries has no v1 counterpart) are merged in so tokens can
 // discover and grant them. Shared (group, permission) keys keep their v1 entry —
 // CanDoAPIRoute authorises both versions off the same key regardless.
+//
+// License-gated routes are filtered out here, per call, because license state
+// changes at runtime. PermissionsAreValid stays unfiltered: existing tokens
+// keep validating across a license lapse; the request-time gates make them inert.
 func GetAPITokenRoutes() map[string]APITokenRoute {
 	merged := make(map[string]APITokenRoute, len(apiTokenRoutes))
-	for group, perms := range apiTokenRoutes {
-		merged[group] = make(APITokenRoute, len(perms))
-		for perm, rd := range perms {
-			merged[group][perm] = rd
+	featureEnabled := make(map[license.Feature]bool)
+	add := func(group, perm string, rd *RouteDetail) {
+		if feature, gated := licenseFeatureForRoute(rd.Path); gated {
+			enabled, checked := featureEnabled[feature]
+			if !checked {
+				enabled = license.IsFeatureEnabled(feature)
+				featureEnabled[feature] = enabled
+			}
+			if !enabled {
+				return
+			}
 		}
-	}
-	for group, perms := range apiTokenRoutesV2 {
 		if merged[group] == nil {
 			merged[group] = make(APITokenRoute)
 		}
+		if merged[group][perm] == nil {
+			merged[group][perm] = rd
+		}
+	}
+	for group, perms := range apiTokenRoutes {
 		for perm, rd := range perms {
-			if merged[group][perm] == nil {
-				merged[group][perm] = rd
-			}
+			add(group, perm, rd)
+		}
+	}
+	for group, perms := range apiTokenRoutesV2 {
+		for perm, rd := range perms {
+			add(group, perm, rd)
 		}
 	}
 	return merged
@@ -403,7 +446,8 @@ func CanDoAPIRoute(c *echo.Context, token *APIToken) (can bool) {
 	}
 	method := c.Request().Method
 
-	for group, perms := range token.APIPermissions {
+	for rawGroup, perms := range token.APIPermissions {
+		group := canonicalAPITokenGroup(rawGroup)
 		tables := []APITokenRoute{apiTokenRoutes[group], apiTokenRoutesV2[group]}
 		for _, routes := range tables {
 			if routes == nil {
@@ -427,7 +471,8 @@ func CanDoAPIRoute(c *echo.Context, token *APIToken) (can bool) {
 				// Two list endpoints share tasks.read_all but only one
 				// survives collection, so allow either explicitly.
 				if group == "tasks" && p == "read_all" && method == http.MethodGet &&
-					(path == "/api/v1/tasks" || path == "/api/v1/projects/:project/tasks") {
+					(path == "/api/v1/tasks" || path == "/api/v1/projects/:project/tasks" ||
+						path == "/api/v2/tasks" || path == "/api/v2/projects/:project/tasks") {
 					return true
 				}
 			}
@@ -447,8 +492,9 @@ func PermissionsAreValid(permissions APIPermissions) (err error) {
 		// resources (no v1 counterpart) live solely in apiTokenRoutesV2, so
 		// validating against the union lets tokens grant them. CanDoAPIRoute
 		// already consults both tables when authorising.
-		v1Routes := apiTokenRoutes[key]
-		v2Routes := apiTokenRoutesV2[key]
+		group := canonicalAPITokenGroup(key)
+		v1Routes := apiTokenRoutes[group]
+		v2Routes := apiTokenRoutesV2[group]
 		if v1Routes == nil && v2Routes == nil {
 			return &ErrInvalidAPITokenPermission{
 				Group: key,

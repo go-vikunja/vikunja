@@ -17,6 +17,7 @@
 			<BaseButton
 				v-if="!disabled"
 				class="remove"
+				:aria-label="$t('task.removeReminder')"
 				@click="removeReminderByIndex(index)"
 			>
 				<Icon icon="times" />
@@ -95,7 +96,7 @@ function removeReminderByIndex(index: number) {
 	align-items: center;
 
 	&[data-is-overdue] :deep(.datepicker .show) {
-		color: var(--danger);
+		color: var(--danger-text);
 	}
 
 	&:last-child {

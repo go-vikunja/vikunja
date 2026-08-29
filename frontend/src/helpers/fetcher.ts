@@ -11,6 +11,16 @@ export function getApiBaseUrl(): string {
 	return url?.endsWith('/') ? url : url + '/'
 }
 
+/**
+ * Returns an absolute URL for an /api/v2 path. The shared axios instances pin
+ * baseURL to /api/v1; v2 callers hand axios absolute URLs to bypass that —
+ * to be folded into the service layer once the frontend moves fully onto v2.
+ */
+export function apiV2Url(path: string): string {
+	const v2Base = getApiBaseUrl().replace(/\/api\/v1\/$/, '/api/v2/')
+	return new URL(v2Base + path, window.location.origin).toString()
+}
+
 export function HTTPFactory() {
 	const instance = axios.create({
 		baseURL: getApiBaseUrl(),
@@ -38,7 +48,13 @@ async function doRefresh(): Promise<string | null> {
 	try {
 		await refreshToken(true)
 		return getToken()
-	} catch (_e) {
+	} catch (e) {
+		// A 429 means the refresh endpoint is already rate-limited; retrying
+		// would just send another request into the same exhausted window.
+		if ((e as {cause?: {response?: {status?: number}}})?.cause?.response?.status === 429) {
+			console.warn('[Vikunja] Token refresh rate-limited, not retrying')
+			return null
+		}
 		// Single retry after a short delay for transient failures (network
 		// blip, server restart). If this also fails, give up.
 		try {

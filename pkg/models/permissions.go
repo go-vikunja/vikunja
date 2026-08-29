@@ -54,6 +54,12 @@ func (r Permission) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON unmarshals a quoted json string to the enum value
 func (r *Permission) UnmarshalJSON(data []byte) error {
+	// json.Unmarshal treats null as a no-op for int, which would silently decode to PermissionRead.
+	if string(data) == "null" {
+		*r = PermissionUnknown
+		return nil
+	}
+
 	var s int
 	if err := json.Unmarshal(data, &s); err != nil {
 		return err
@@ -69,7 +75,7 @@ func (r *Permission) UnmarshalJSON(data []byte) error {
 	case 2:
 		*r = PermissionAdmin
 	default:
-		return fmt.Errorf("invalid Permission %q", s)
+		return fmt.Errorf("invalid Permission %d", s)
 	}
 	return nil
 }

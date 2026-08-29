@@ -40,6 +40,7 @@ func TestReminderGetTasksInTheNextMinute(t *testing.T) {
 		require.NoError(t, err)
 		assert.Len(t, notifications, 1)
 		assert.Equal(t, int64(27), notifications[0].Task.ID)
+		assert.Equal(t, "TEST1-18", notifications[0].Task.Identifier)
 	})
 	t.Run("Found No Tasks", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)

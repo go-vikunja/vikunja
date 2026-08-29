@@ -12,6 +12,8 @@
 				v-model="password"
 				v-focus
 				type="password"
+				autocomplete="off"
+				:label="$t('user.auth.password')"
 				:placeholder="$t('user.auth.passwordPlaceholder')"
 				@keyup.enter.prevent="authenticate()"
 			/>
@@ -22,15 +24,14 @@
 			>
 				{{ $t('user.auth.login') }}
 			</XButton>
-
-			<Message
-				v-if="errorMessage !== ''"
-				variant="danger"
-				class="mbs-4"
-			>
-				{{ errorMessage }}
-			</Message>
 		</Card>
+		<Message
+			v-if="errorMessage !== ''"
+			variant="danger"
+			class="mbs-4"
+		>
+			{{ errorMessage }}
+		</Message>
 	</div>
 </template>
 
@@ -102,7 +103,6 @@ function useAuth() {
 	}
 
 	async function authenticate() {
-		authenticateWithPassword.value = false
 		errorMessage.value = ''
 
 		if (authLinkShare.value) {
@@ -145,8 +145,8 @@ function useAuth() {
 				return
 			}
 			
-			// Log unexpected errors for debugging
-			console.error('Link share authentication error:', e)
+			// Never log the error object itself: AxiosError.config.data holds the plaintext share password.
+			console.error('Link share authentication error:', e?.response?.status, e?.response?.data?.code)
 
 			// TODO: Put this logic in a global errorMessage handler method which checks all auth codes
 			let err = t('sharing.error')
@@ -155,6 +155,7 @@ function useAuth() {
 			}
 			if (e?.response?.data?.code === 13002) {
 				err = t('sharing.invalidPassword')
+				authenticateWithPassword.value = true
 			}
 			errorMessage.value = err
 		} finally {

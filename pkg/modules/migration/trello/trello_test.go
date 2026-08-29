@@ -269,7 +269,7 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 			{
 				Project: models.Project{
 					ID:                    2,
-					ParentProjectID:       1,
+					ParentProjectID:       models.Ptr(int64(1)),
 					Title:                 "TestBoard",
 					Description:           "This is a description",
 					BackgroundInformation: bytes.NewBuffer(exampleFile),
@@ -395,7 +395,7 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 			{
 				Project: models.Project{
 					ID:              3,
-					ParentProjectID: 1,
+					ParentProjectID: models.Ptr(int64(1)),
 					Title:           "TestBoard Archived",
 					IsArchived:      true,
 				},
@@ -425,7 +425,7 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 			{
 				Project: models.Project{
 					ID:              2,
-					ParentProjectID: 1,
+					ParentProjectID: models.Ptr(int64(1)),
 					Title:           "TestBoard 2",
 				},
 				Buckets: []*models.Bucket{
@@ -454,7 +454,7 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 			{
 				Project: models.Project{
 					ID:              2,
-					ParentProjectID: 1,
+					ParentProjectID: models.Ptr(int64(1)),
 					Title:           "Personal Board",
 				},
 				Buckets: []*models.Bucket{

@@ -51,8 +51,8 @@ func (sf *SavedFilter) CanCreate(_ *xorm.Session, auth web.Auth) (bool, error) {
 // Helper function to check saved filter permissions sind they all have the same logic
 func (sf *SavedFilter) canDoFilter(s *xorm.Session, auth web.Auth) (can bool, err error) {
 	// Link shares can't view or modify saved filters, therefore we can error out right away
-	if _, is := auth.(*LinkSharing); is {
-		return false, ErrSavedFilterNotAvailableForLinkShare{LinkShareID: auth.GetID(), SavedFilterID: sf.ID}
+	if share, is := auth.(*LinkSharing); is {
+		return false, ErrSavedFilterNotAvailableForLinkShare{LinkShareID: share.ID, SavedFilterID: sf.ID}
 	}
 
 	sff, err := GetSavedFilterSimpleByID(s, sf.ID)

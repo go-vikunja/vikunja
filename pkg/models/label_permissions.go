@@ -73,6 +73,20 @@ func (l *Label) isLabelOwner(s *xorm.Session, a web.Auth) (bool, error) {
 	return creator.IsBot() && creator.BotOwnerID == a.GetID(), nil
 }
 
+// Matches labels created by a bot the caller owns, or - when the caller is a
+// bot - by the human who owns it (#3592).
+func labelCreatedByBotIdentityCond(a web.Auth) builder.Cond {
+	return builder.Or(
+		builder.In("labels.created_by_id",
+			builder.Select("id").From("users").Where(builder.Eq{"bot_owner_id": a.GetID()}),
+		),
+		builder.In("labels.created_by_id",
+			builder.Select("bot_owner_id").From("users").
+				Where(builder.And(builder.Eq{"id": a.GetID()}, builder.Gt{"bot_owner_id": 0})),
+		),
+	)
+}
+
 // hasAccessToLabel reports whether the caller can read a label and, if so,
 // the caller's maximum permission on it.
 //
@@ -82,33 +96,25 @@ func (l *Label) isLabelOwner(s *xorm.Session, a web.Auth) (bool, error) {
 // to any authenticated user (GHSA-hj5c-mhh2-g7jq).
 func (l *Label) hasAccessToLabel(s *xorm.Session, a web.Auth) (has bool, maxPermission int, err error) {
 
-	linkShare, isLinkShare := a.(*LinkSharing)
+	_, isLinkShare := a.(*LinkSharing)
 
-	var accessibleProjects builder.Cond
-	if isLinkShare {
-		accessibleProjects = builder.Eq{"project_id": linkShare.ProjectID}
-	} else {
-		accessibleProjects = builder.In(
-			"project_id",
-			getUserProjectsStatement(a.GetID(), "").Select("l.id"),
-		)
-	}
+	// Must include projects inherited via a shared parent, otherwise users can
+	// remove but not re-add labels on tasks in child projects.
+	accessibleProjects := accessibleProjectIDsSubquery(a, "project_id")
 
 	labelAttachedToAccessibleTask := builder.In(
 		"label_tasks.task_id",
 		builder.
 			Select("id").
 			From("tasks").
-			Where(accessibleProjects),
+			Where(builder.And(accessibleProjects, taskNotDeletedCond("tasks"))),
 	)
 
 	accessBranches := []builder.Cond{labelAttachedToAccessibleTask}
 	if !isLinkShare {
 		accessBranches = append(accessBranches,
 			builder.Eq{"labels.created_by_id": a.GetID()},
-			builder.In("labels.created_by_id",
-				builder.Select("id").From("users").Where(builder.Eq{"bot_owner_id": a.GetID()}),
-			),
+			labelCreatedByBotIdentityCond(a),
 		)
 	}
 

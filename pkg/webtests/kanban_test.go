@@ -73,6 +73,25 @@ func TestBucket(t *testing.T) {
 			require.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
 		})
+		t.Run("Ignores project_view_id from body", func(t *testing.T) {
+			// GHSA-569v-q83c-3j3g: mass-assigning project_view_id allowed
+			// relocating a bucket into another tenant's view.
+			rec, err := testHandler.testUpdateWithUser(nil, map[string]string{
+				"bucket":  "1",
+				"project": "1",
+				"view":    "4",
+			}, `{"title":"TestLoremIpsum","project_view_id":80}`)
+			require.NoError(t, err)
+			assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
+			db.AssertExists(t, "buckets", map[string]interface{}{
+				"id":              1,
+				"project_view_id": 4,
+			}, false)
+			db.AssertMissing(t, "buckets", map[string]interface{}{
+				"id":              1,
+				"project_view_id": 80,
+			})
+		})
 		t.Run("Nonexisting Bucket", func(t *testing.T) {
 			_, err := testHandler.testUpdateWithUser(nil, map[string]string{
 				"bucket":  "9999",

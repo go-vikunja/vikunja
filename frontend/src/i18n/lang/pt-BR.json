@@ -67,7 +67,6 @@
 			"currentPasswordPlaceholder": "Sua senha atual",
 			"passwordUpdateSuccess": "A senha foi atualizada com sucesso.",
 			"updateEmailTitle": "Atualizar seu endereço de e-mail",
-			"updateEmailSuccess": "Seu endereço de e-mail foi atualizado com sucesso. Nós lhe enviamos um link para confirmar.",
 			"general": {
 				"title": "Configurações Gerais",
 				"savedSuccess": "As configurações foram atualizadas com sucesso.",

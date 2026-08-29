@@ -1,11 +1,11 @@
 <template>
 	<div class="attachments">
-		<h3>
+		<h2 class="task-section-title">
 			<span class="icon is-grey">
 				<Icon icon="paperclip" />
 			</span>
 			{{ $t('task.attachment.title') }}
-		</h3>
+		</h2>
 
 		<input
 			v-if="editEnabled"
@@ -27,87 +27,98 @@
 			v-if="attachments.length > 0"
 			class="files"
 		>
-			<button
+			<div
 				v-for="a in attachments"
 				:key="a.id"
 				class="attachment"
-				@click="viewOrDownload(a)"
 			>
 				<div class="preview-column">
-					<FilePreview
-						class="attachment-preview"
-						:model-value="a"
-					/>
+					<button
+						class="preview-open"
+						tabindex="-1"
+						aria-hidden="true"
+						@click="viewOrDownload(a)"
+					>
+						<FilePreview
+							class="attachment-preview"
+							:model-value="a"
+						/>
+					</button>
 				</div>
 				<div class="attachment-info-column">
-					<div class="filename">
-						{{ a.file.name }}
-						<span
-							v-if="task.coverImageAttachmentId === a.id"
-							class="is-task-cover"
-						>
-							{{ $t('task.attachment.usedAsCover') }}
+					<button
+						v-tooltip="attachmentMetaTooltip(a)"
+						class="attachment-open"
+						@click="viewOrDownload(a)"
+					>
+						<span class="filename">
+							{{ a.file.name }}
+							<span
+								v-if="task.coverImageAttachmentId === a.id"
+								class="is-task-cover"
+							>
+								{{ $t('task.attachment.usedAsCover') }}
+							</span>
 						</span>
-					</div>
-					<div class="info">
-						<p class="attachment-info-meta">
-							<i18n-t
-								keypath="task.attachment.createdBy"
-								scope="global"
-							>
-								<span v-tooltip="formatDateLong(a.created)">
-									{{ formatDisplayDate(a.created) }}
-								</span>
-								<User
-									:avatar-size="24"
-									:user="a.createdBy"
-									:is-inline="true"
-								/>
-							</i18n-t>
-							<span>
-								{{ getHumanSize(a.file.size) }}
-							</span>
-							<span v-if="a.file.mime">
-								{{ a.file.mime }}
-							</span>
-						</p>
-						<p>
-							<BaseButton
-								v-tooltip="$t('task.attachment.downloadTooltip')"
-								class="attachment-info-meta-button"
-								@click.prevent.stop="downloadAttachment(a)"
-							>
-								<Icon icon="download" />
-							</BaseButton>
-							<BaseButton
-								v-tooltip="$t('task.attachment.copyUrlTooltip')"
-								class="attachment-info-meta-button"
-								@click.stop="copyUrl(a)"
-							>
-								<Icon icon="copy" />
-							</BaseButton>
-							<BaseButton
-								v-if="editEnabled"
-								v-tooltip="$t('task.attachment.deleteTooltip')"
-								class="attachment-info-meta-button"
-								@click.prevent.stop="setAttachmentToDelete(a)"
-							>
-								<Icon icon="trash-alt" />
-							</BaseButton>
-							<BaseButton
-								v-if="editEnabled && canPreviewImage(a)"
-								v-tooltip="task.coverImageAttachmentId === a.id
-									? $t('task.attachment.unsetAsCover')
-									: $t('task.attachment.setAsCover')"
-								class="attachment-info-meta-button"
-								@click.prevent.stop="setCoverImage(task.coverImageAttachmentId === a.id ? null : a)"
-							>
-								<Icon :icon="task.coverImageAttachmentId === a.id ? 'eye-slash' : 'eye'" />
-							</BaseButton>
-						</p>
-					</div>
+					</button>
+					<p class="attachment-info-meta">
+						<User
+							:user="a.createdBy"
+							:avatar-size="20"
+							:show-username="false"
+							:is-inline="true"
+						/>
+						<span>
+							{{ getHumanSize(a.file.size) }}
+						</span>
+					</p>
+					<AudioPreview
+						v-if="canPreviewAudio(a)"
+						:ref="el => setAudioPlayerRef(a, el)"
+						:attachment="a"
+					/>
+					<p class="attachment-actions">
+						<BaseButton
+							v-tooltip="$t('task.attachment.downloadTooltip')"
+							:aria-label="$t('task.attachment.downloadTooltip')"
+							class="attachment-info-meta-button"
+							@click.prevent.stop="downloadAttachment(a)"
+						>
+							<Icon icon="download" />
+						</BaseButton>
+						<BaseButton
+							v-tooltip="$t('task.attachment.copyUrlTooltip')"
+							:aria-label="$t('task.attachment.copyUrlTooltip')"
+							class="attachment-info-meta-button"
+							@click.stop="copyUrl(a)"
+						>
+							<Icon icon="copy" />
+						</BaseButton>
+						<BaseButton
+							v-if="editEnabled"
+							v-tooltip="$t('task.attachment.deleteTooltip')"
+							:aria-label="$t('task.attachment.deleteTooltip')"
+							class="attachment-info-meta-button"
+							@click.prevent.stop="setAttachmentToDelete(a)"
+						>
+							<Icon icon="trash-alt" />
+						</BaseButton>
+						<BaseButton
+							v-if="editEnabled && canPreviewImage(a)"
+							v-tooltip="task.coverImageAttachmentId === a.id
+								? $t('task.attachment.unsetAsCover')
+								: $t('task.attachment.setAsCover')"
+							:aria-label="task.coverImageAttachmentId === a.id
+								? $t('task.attachment.unsetAsCover')
+								: $t('task.attachment.setAsCover')"
+							class="attachment-info-meta-button"
+							@click.prevent.stop="setCoverImage(task.coverImageAttachmentId === a.id ? null : a)"
+						>
+							<Icon :icon="task.coverImageAttachmentId === a.id ? 'eye-slash' : 'eye'" />
+						</BaseButton>
+					</p>
 				</div>
-			</button>
+			</div>
 		</div>
 
 		<XButton
@@ -158,53 +169,90 @@
 			</template>
 		</Modal>
 
-		<!-- Attachment image modal -->
-		<Modal
-			:enabled="attachmentImageBlobUrl !== null"
-			@close="attachmentImageBlobUrl = null"
-		>
-			<img
-				:src="attachmentImageBlobUrl"
-				alt=""
-			>
-		</Modal>
+		<ImageLightbox
+			v-if="preview?.kind === 'image'"
+			:key="preview.blobUrl"
+			:blob-url="preview.blobUrl"
+			:alt="preview.name"
+			@close="closePreview"
+		/>
 
 		<!-- Attachment PDF modal -->
 		<Modal
-			:enabled="attachmentPdfBlobUrl !== null"
+			:enabled="preview?.kind === 'pdf'"
 			:wide="true"
-			@close="attachmentPdfBlobUrl = null"
+			:aria-label="$t('misc.pdfPreview')"
+			@close="closePreview"
 		>
 			<iframe
-				v-if="attachmentPdfBlobUrl"
-				:src="attachmentPdfBlobUrl"
+				v-if="preview?.kind === 'pdf'"
+				:src="preview.blobUrl"
 				class="pdf-preview-iframe"
+			/>
+		</Modal>
+
+		<!-- Attachment video modal -->
+		<Modal
+			:enabled="previewLoading || preview?.kind === 'video'"
+			:wide="true"
+			:aria-label="$t('misc.videoPreview')"
+			@close="closePreview"
+		>
+			<Loading v-if="previewLoading" />
+			<div
+				v-else-if="previewFailed"
+				class="video-preview-error"
+			>
+				<p>{{ $t('misc.videoLoadFailed') }}</p>
+				<XButton
+					icon="download"
+					variant="secondary"
+					@click="downloadVideoPreview"
+				>
+					{{ $t('misc.download') }}
+				</XButton>
+			</div>
+			<video
+				v-else-if="preview?.kind === 'video'"
+				:src="preview.blobUrl"
+				:aria-label="preview.name"
+				class="video-preview"
+				controls
+				playsinline
+				@error="onVideoError"
 			/>
 		</Modal>
 	</div>
 </template>
 
 <script setup lang="ts">
-import {ref, shallowReactive, computed, watch, onMounted, onBeforeUnmount} from 'vue'
+import {ref, shallowReactive, computed, watch, onMounted, onBeforeUnmount, type ComponentPublicInstance} from 'vue'
 import {useDropZone} from '@vueuse/core'
 
 import User from '@/components/misc/User.vue'
 import ProgressBar from '@/components/misc/ProgressBar.vue'
+import Loading from '@/components/misc/Loading.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
 import AttachmentService from '@/services/attachment'
-import {canPreviewImage, canPreviewPdf} from '@/models/attachment'
+import {canPreviewAudio, canPreviewImage, previewKind, type PreviewKind} from '@/models/attachment'
+import {getDisplayName} from '@/models/user'
 import type {IAttachment} from '@/modelTypes/IAttachment'
 import type {ITask} from '@/modelTypes/ITask'
 
-import {formatDisplayDate, formatDateLong} from '@/helpers/time/formatDate'
+import {formatDateLong} from '@/helpers/time/formatDate'
 import {uploadFiles, generateAttachmentUrl} from '@/helpers/attachments'
+import {downloadBlob} from '@/helpers/downloadBlob'
 import {getHumanSize} from '@/helpers/getHumanSize'
 import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
 import {error, success} from '@/message'
 import {useTaskStore} from '@/stores/tasks'
 import {useI18n} from 'vue-i18n'
 import FilePreview from '@/components/tasks/partials/FilePreview.vue'
+import ImageLightbox from '@/components/misc/ImageLightbox.vue'
+import AudioPreview from '@/components/tasks/partials/AudioPreview.vue'
+
+type AudioPreviewInstance = InstanceType<typeof AudioPreview>
 
 const props = withDefaults(defineProps<{
 	task: ITask,
@@ -356,6 +404,17 @@ watch(() => props.editEnabled, enabled => {
 	}
 })
 
+function attachmentMetaTooltip(attachment: IAttachment): string {
+	const createdBy = t('task.attachment.createdBy', [
+		formatDateLong(attachment.created),
+		getDisplayName(attachment.createdBy),
+	])
+
+	return attachment.file.mime
+		? `${attachment.file.mime} · ${createdBy}`
+		: createdBy
+}
+
 function downloadAttachment(attachment: IAttachment) {
 	attachmentService.download(attachment)
 }
@@ -405,16 +464,99 @@ async function deleteAttachment() {
 	}
 }
 
-const attachmentImageBlobUrl = ref<string | null>(null)
-const attachmentPdfBlobUrl = ref<string | null>(null)
+interface Preview {
+	kind: PreviewKind
+	blobUrl: string
+	name: string
+}
+
+const preview = ref<Preview | null>(null)
+const previewLoading = ref(false)
+const previewFailed = ref(false)
+let previewRequestToken = 0
+
+function replacePreview(next: Preview | null) {
+	if (preview.value !== null) {
+		URL.revokeObjectURL(preview.value.blobUrl)
+	}
+	preview.value = next
+}
+
+function closePreview() {
+	// an in-flight blob must not re-open the dismissed modal
+	previewRequestToken++
+	replacePreview(null)
+	previewLoading.value = false
+	previewFailed.value = false
+}
+
+// a detached <video> can still fire error after its blob url was revoked
+function onVideoError(e: Event) {
+	if ((e.target as HTMLVideoElement).src !== preview.value?.blobUrl) {
+		return
+	}
+	previewFailed.value = true
+}
+
+function downloadVideoPreview() {
+	const current = preview.value
+	if (current === null) {
+		return
+	}
+
+	// downloadBlob revokes the url itself, so hand over ownership before closing
+	preview.value = null
+	downloadBlob(current.blobUrl, current.name)
+	closePreview()
+}
+
+onBeforeUnmount(closePreview)
+
+const audioPlayers = new Map<IAttachment['id'], AudioPreviewInstance>()
+
+function setAudioPlayerRef(attachment: IAttachment, el: Element | ComponentPublicInstance | null) {
+	if (el === null) {
+		audioPlayers.delete(attachment.id)
+		return
+	}
+
+	audioPlayers.set(attachment.id, el as AudioPreviewInstance)
+}
 
 async function viewOrDownload(attachment: IAttachment) {
-	if (canPreviewImage(attachment)) {
-		attachmentImageBlobUrl.value = await attachmentService.getBlobUrl(attachment)
-	} else if (canPreviewPdf(attachment)) {
-		attachmentPdfBlobUrl.value = await attachmentService.getBlobUrl(attachment)
-	} else {
+	if (canPreviewAudio(attachment) && audioPlayers.has(attachment.id)) {
+		await audioPlayers.get(attachment.id)!.play()
+		return
+	}
+
+	const kind = previewKind(attachment)
+	if (kind === null) {
 		downloadAttachment(attachment)
+		return
+	}
+
+	closePreview()
+
+	previewRequestToken++
+	const requestToken = previewRequestToken
+
+	// only video is big enough that the full-buffer wait reads as a dead click
+	previewLoading.value = kind === 'video'
+
+	try {
+		const blobUrl = await attachmentService.getBlobUrl(attachment)
+		// stale response: revoke without assigning, the img may still be decoding the current url
+		if (requestToken !== previewRequestToken) {
+			URL.revokeObjectURL(blobUrl)
+			return
+		}
+		previewLoading.value = false
+		replacePreview({kind, blobUrl, name: attachment.file.name})
+	} catch (e) {
+		if (requestToken === previewRequestToken) {
+			previewLoading.value = false
+		}
+		error(e)
 	}
 }
 
@@ -471,6 +613,21 @@ defineExpose({
 	}
 }
 
+.attachment-open {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	inline-size: 100%;
+	min-inline-size: 0;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	text-align: start;
+	cursor: pointer;
+}
+
 .filename {
 	display: flex;
 	align-items: center;
@@ -482,21 +639,16 @@ defineExpose({
 	min-inline-size: 0;
 }
 
-.info {
+.attachment-info-meta,
+.attachment-actions {
 	color: var(--grey-500);
 	font-size: .9rem;
+}
+
+.attachment-actions {
 	display: flex;
-	flex-direction: column;
-
-	p {
-		margin-block-end: 0;
-		display: flex;
-
-		> span,
-		> button:not(:last-child):after {
-			padding: 0 .25rem;
-		}
-	}
+	margin-block-start: .25rem;
+	margin-block-end: 0;
 }
 
 .dropzone {
@@ -554,29 +706,14 @@ defineExpose({
 .attachment-info-meta {
 	display: flex;
 	align-items: center;
+	margin-block: 0;
 
-	:deep(.user) {
-		display: flex !important;
-		align-items: center;
-		margin: 0 .5rem;
+	> span {
+		padding: 0 .25rem;
 	}
 
-	@media screen and (max-width: $mobile) {
-		flex-direction: column;
-		align-items: flex-start;
-
-		:deep(.user) {
-			margin: .5rem 0;
-		}
-
-		> span:not(:last-child):after,
-		> button:not(:last-child):after {
-			display: none;
-		}
-
-		.user .username {
-			display: none;
-		}
+	:deep(.avatar-wrapper) {
+		margin-inline-end: 0;
 	}
 }
 
@@ -616,6 +753,17 @@ defineExpose({
 	block-size: 5.2rem;
 }
 
+// Redundant mouse-only click target; the real control is button.attachment-open.
+.preview-open {
+	display: block;
+	inline-size: 100%;
+	block-size: 100%;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	cursor: pointer;
+}
+
 .attachment-preview {
 	block-size: 100%;
 }
@@ -627,6 +775,29 @@ defineExpose({
 	border: none;
 	margin: 0 auto;
 	display: block;
+}
+
+.video-preview {
+	inline-size: auto;
+	max-inline-size: calc(100% - 4rem);
+	max-block-size: calc(100vh - 40px);
+	margin: 0 auto;
+	display: block;
+}
+
+// unlike the video and iframe branches, the error state has no opaque media of its own to sit on
+.video-preview-error {
+	max-inline-size: 25rem;
+	margin: 0 auto;
+	padding: 2rem;
+	border-radius: $radius;
+	background: var(--white);
+	color: var(--text);
+	text-align: center;
+
+	p {
+		margin-block-end: 1rem;
+	}
 }
 
 .is-task-cover {

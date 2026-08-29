@@ -21,14 +21,14 @@
 		</Message>
 		<AddTask
 			class="is-max-width-desktop"
-			@taskAdded="updateTaskKey"
+			@tasksAdded="updateTaskKey"
 		/>
 		<ImportHint v-if="tasksLoaded" />
 		<div
 			v-if="authStore.settings.frontendSettings.showLastViewed !== false && projectHistory.length > 0"
 			class="is-max-width-desktop has-text-start mbs-4"
 		>
-			<h3>{{ $t('home.lastViewed') }}</h3>
+			<h2>{{ $t('home.lastViewed') }}</h2>
 			<ProjectCardGrid
 				v-cy="'projectCardGrid'"
 				:projects="projectHistory"

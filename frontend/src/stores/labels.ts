@@ -83,20 +83,32 @@ export const useLabelStore = defineStore('label', () => {
 		delete labels.value[label.id]
 	}
 
-	async function loadAllLabels({forceLoad} : {forceLoad?: boolean} = {}) {
-		if (isLoading.value && !forceLoad) {
-			return
+	// isLoading only flips after a 100ms delay, so it can't be used to dedupe:
+	// callers which need the labels to actually be there (quick add magic) must
+	// be able to await an already running load instead of getting an empty store.
+	let loadAllLabelsPromise: Promise<ILabel[]> | null = null
+
+	function loadAllLabels({forceLoad} : {forceLoad?: boolean} = {}) {
+		if (loadAllLabelsPromise !== null && !forceLoad) {
+			return loadAllLabelsPromise
 		}
 
 		const cancel = setModuleLoading(setIsLoading)
 
-		try {
-			const newLabels = await getAllLabels()
-			setLabels(newLabels)
-			return newLabels
-		} finally {
-			cancel()
-		}
+		const promise: Promise<ILabel[]> = getAllLabels()
+			.then(newLabels => {
+				setLabels(newLabels)
+				return newLabels
+			})
+			.finally(() => {
+				cancel()
+				if (loadAllLabelsPromise === promise) {
+					loadAllLabelsPromise = null
+				}
+			})
+		loadAllLabelsPromise = promise
+
+		return promise
 	}
 
 	async function deleteLabel(label: ILabel) {

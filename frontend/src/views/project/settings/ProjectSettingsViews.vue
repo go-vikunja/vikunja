@@ -194,6 +194,7 @@ async function saveViewPosition(e) {
 									<XButton
 										v-if="isAdmin"
 										class="is-danger mie-2"
+										:aria-label="$t('project.views.delete')"
 										icon="trash-alt"
 										@click="() => {
 											viewIdToDelete = v.id
@@ -203,6 +204,7 @@ async function saveViewPosition(e) {
 									<XButton
 										v-if="isAdmin"
 										icon="pen"
+										:aria-label="$t('project.views.edit')"
 										@click="viewToEdit = {...v}"
 									/>
 									<span class="icon handle">
