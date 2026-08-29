@@ -60,8 +60,7 @@ func Initialize() {
 		return
 	}
 
-	paths := []string{config.PluginsDir.GetString()}
-	if err := manager.loadPlugins(paths); err != nil {
+	if err := manager.loadPlugins(pluginPaths()); err != nil {
 		log.Fatalf("Loading plugins failed: %v", err)
 	}
 
@@ -75,6 +74,10 @@ func Initialize() {
 			log.Errorf("Plugin %s failed to init: %s", p.Name(), err)
 		}
 	}
+}
+
+func pluginPaths() []string {
+	return []string{config.ResolvePath(config.PluginsDir.GetString())}
 }
 
 // Shutdown calls Shutdown on all loaded plugins.

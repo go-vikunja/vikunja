@@ -252,3 +252,19 @@ func TestWriteAuditEventNotInitialized(t *testing.T) {
 	err := audit.WriteAuditEvent(&audit.Entry{Action: "task.created"})
 	require.Error(t, err)
 }
+
+func TestAuditLogfileDefaultsUnderLogPath(t *testing.T) {
+	originalRootpath := config.ServiceRootpath.GetString()
+	t.Cleanup(func() {
+		config.ServiceRootpath.Set(originalRootpath)
+		audit.Close()
+	})
+
+	root := t.TempDir()
+	config.ServiceRootpath.Set(root)
+	config.AuditLogfile.Set("")
+
+	require.NoError(t, audit.Init())
+
+	assert.FileExists(t, filepath.Join(root, "logs", "audit.log"))
+}

@@ -53,7 +53,7 @@ func Init() error {
 
 	logfilePath = config.AuditLogfile.GetString()
 	if logfilePath == "" {
-		logfilePath = filepath.Join(config.LogPath.GetString(), "audit.log")
+		logfilePath = filepath.Join(config.ResolvePath(config.LogPath.GetString()), "audit.log")
 	}
 	maxSizeBytes = config.AuditRotationMaxSizeMB.GetInt64() * 1024 * 1024
 	maxAge = time.Duration(config.AuditRotationMaxAge.GetInt64()) * 24 * time.Hour
