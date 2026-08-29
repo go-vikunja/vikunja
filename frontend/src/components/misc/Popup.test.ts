@@ -8,6 +8,7 @@ const slots = {
 	content: (params: {close: () => void}) => h('button', {class: 'inner', onClick: params.close}, 'inner'),
 }
 
+const escapeEvent = () => new KeyboardEvent('keydown', {key: 'Escape', bubbles: true, cancelable: true})
 
 describe('Popup', () => {
 	it('marks the content wrapper inert while closed', () => {
@@ -137,6 +138,82 @@ describe('Popup', () => {
 
 		trigger.remove()
 		elsewhere.remove()
+		wrapper.unmount()
+	})
+
+	it('closes on escape and returns focus to the trigger', async () => {
+		const trigger = document.createElement('button')
+		document.body.append(trigger)
+		trigger.focus()
+
+		const wrapper = mount(Popup, {props: {open: true}, attachTo: document.body})
+
+		const inner = document.createElement('button')
+		wrapper.find('.popup').element.append(inner)
+		inner.focus()
+
+		const event = escapeEvent()
+		inner.dispatchEvent(event)
+		await nextTick()
+
+		expect(wrapper.emitted('update:open')).toEqual([[false]])
+		expect(wrapper.find('.popup').attributes('inert')).toBe('')
+		expect(document.activeElement).toBe(trigger)
+		// a wrapping native <dialog> must not treat the same Escape as its own close request
+		expect(event.defaultPrevented).toBe(true)
+
+		trigger.remove()
+		wrapper.unmount()
+	})
+
+	it('does not open a closed popup on escape', async () => {
+		const wrapper = mount(Popup, {attachTo: document.body})
+
+		const inner = document.createElement('button')
+		wrapper.find('.popup').element.append(inner)
+		inner.focus()
+
+		inner.dispatchEvent(escapeEvent())
+		await nextTick()
+
+		expect(wrapper.emitted('update:open')).toBeUndefined()
+		expect(wrapper.find('.popup').attributes('inert')).toBe('')
+
+		wrapper.unmount()
+	})
+
+	it('ignores escape pressed outside the popup and its trigger', async () => {
+		const trigger = document.createElement('button')
+		const elsewhere = document.createElement('button')
+		document.body.append(trigger, elsewhere)
+		trigger.focus()
+
+		const wrapper = mount(Popup, {props: {open: true}, attachTo: document.body})
+
+		elsewhere.focus()
+		elsewhere.dispatchEvent(escapeEvent())
+		await nextTick()
+
+		expect(wrapper.emitted('update:open')).toBeUndefined()
+
+		trigger.remove()
+		elsewhere.remove()
+		wrapper.unmount()
+	})
+
+	it('leaves escape alone when a control inside already handled it', async () => {
+		const wrapper = mount(Popup, {props: {open: true}, attachTo: document.body})
+
+		const inner = document.createElement('button')
+		wrapper.find('.popup').element.append(inner)
+		inner.addEventListener('keydown', event => event.preventDefault())
+		inner.focus()
+
+		inner.dispatchEvent(escapeEvent())
+		await nextTick()
+
+		expect(wrapper.emitted('update:open')).toBeUndefined()
+
 		wrapper.unmount()
 	})
 
