@@ -1090,7 +1090,8 @@
       "doneAt": "Done At"
     },
     "subscription": {
-      "subscribedTaskThroughParentProject": "You can't unsubscribe here because you are subscribed to this task through its project.",
+      "subscribedTaskThroughProject": "You are subscribed to this task through its project. Unsubscribing here only stops notifications for this task.",
+      "subscribedProjectThroughParentProject": "You are subscribed to this project through a parent project. Unsubscribing here stops notifications for this project and everything in it.",
       "subscribedProject": "You are currently subscribed to this project and will receive notifications for changes.",
       "notSubscribedProject": "You are not subscribed to this project and won't receive notifications for changes.",
       "subscribedTask": "You are currently subscribed to this task and will receive notifications for changes.",
