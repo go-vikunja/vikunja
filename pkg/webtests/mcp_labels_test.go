@@ -20,6 +20,9 @@ import (
 	"encoding/json"
 	"testing"
 
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/user"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -103,4 +106,26 @@ func TestMCP_Labels_ReadOneForbidden(t *testing.T) {
 	result := c.callTool("labels_read_one", map[string]any{"id": 6})
 	isErr, _ := result["isError"].(bool)
 	require.True(t, isErr, "expected isError for inaccessible label, got: %v", result)
+}
+
+// Whole-model validation recurses into relations, and user.Language is never
+// validated on write — so a bogus value on the label's author would otherwise
+// make the label permanently unwritable.
+func TestMCP_Labels_UpdateWithInvalidAuthorLanguage(t *testing.T) {
+	c := newMCPClient(t, mcpFullProjectsToken)
+
+	createResult := c.callTool("labels_create", map[string]any{"title": "mcp label with odd author"})
+	require.NotContains(t, createResult, "isError")
+	var created map[string]any
+	require.NoError(t, json.Unmarshal([]byte(toolResultText(t, createResult)), &created))
+	lid := int64(created["id"].(float64))
+
+	s := db.NewSession()
+	_, err := s.ID(1).Cols("language").Update(&user.User{Language: "xx"})
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+	require.NoError(t, s.Close())
+
+	updateResult := c.callTool("labels_update", map[string]any{"id": lid, "description": "still writable"})
+	require.NotContains(t, updateResult, "isError", "update errored: %v", updateResult)
 }
