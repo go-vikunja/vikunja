@@ -314,3 +314,10 @@ func TestValidateFileStorageS3HonorsContext(t *testing.T) {
 		t.Fatal("ValidateFileStorage ignored the cancelled context")
 	}
 }
+
+func TestS3Storage_EnsureAndValidateBasePath(t *testing.T) {
+	s := newS3Storage("bucket", "files", nil)
+
+	require.NoError(t, s.Ensure())
+	require.NoError(t, s.ValidateBasePath())
+}
