@@ -12,6 +12,8 @@
 			'is-open': openValue,
 			'has-overflow': hasOverflow && openValue
 		}"
+		:inert="!openValue"
+		@focusin="rememberFocusEntered"
 	>
 		<slot
 			name="content"
@@ -23,7 +25,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, watchEffect} from 'vue'
+import {ref, watch, watchEffect} from 'vue'
 import {onClickOutside} from '@vueuse/core'
 
 const props = withDefaults(defineProps<{
@@ -75,6 +77,29 @@ function toggle() {
 
 const popup = ref<HTMLElement | null>(null)
 
+let lastFocused: HTMLElement | null = null
+let focusEnteredPopup = false
+
+function rememberFocusEntered() {
+	focusEnteredPopup = true
+}
+
+// Pre-flush so focus is restored before `inert` blurs it to <body>; immediate so a popup mounted open still records its trigger.
+watch(openValue, open => {
+	if (open) {
+		lastFocused = document.activeElement as HTMLElement | null
+		return
+	}
+
+	// An outside click blurs to <body> at mousedown, before onClickOutside fires, so <body> still means nothing else took focus.
+	const active = document.activeElement
+	if (focusEnteredPopup && lastFocused?.isConnected && (popup.value?.contains(active) || active === document.body)) {
+		lastFocused.focus()
+	}
+	lastFocused = null
+	focusEnteredPopup = false
+}, {immediate: true})
+
 onClickOutside(popup, (event) => {
 	const target = event.target as HTMLElement
 	// Check if the click target has any of the ignored classes
@@ -83,12 +108,14 @@ onClickOutside(popup, (event) => {
 	}
 	close()
 })
+
 </script>
 
 <style scoped lang="scss">
 .popup {
 	transition: opacity $transition;
 	opacity: 0;
+	visibility: hidden;
 	block-size: 0;
 	overflow: hidden;
 	position: absolute;
@@ -97,6 +124,7 @@ onClickOutside(popup, (event) => {
 
 	&.is-open {
 		opacity: 1;
+		visibility: visible;
 		block-size: auto;
 	}
 }
