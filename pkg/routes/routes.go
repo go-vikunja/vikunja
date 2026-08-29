@@ -280,8 +280,8 @@ func RegisterRoutes(e *echo.Echo) {
 		}))
 	}
 
-	// Shared across both API versions so the budget is per IP, not per version.
-	// Building these per version would give each its own in-memory counters.
+	// Shared across both API versions: building one per version would give each
+	// its own in-memory counters, doubling the effective per-IP budget.
 	wsRateLimit := unauthRateLimit()
 	refreshRateLimit := tokenRefreshRateLimit()
 
@@ -383,39 +383,32 @@ func noStoreCacheControl() echo.MiddlewareFunc {
 	}
 }
 
-const (
-	v2AdminPathPrefix  = "/api/v2/admin"
-	v2TokenRefreshPath = "/api/v2/user/token/refresh" //nolint:gosec // a route path, not a credential
-)
-
-// Path-scoped like gateV2AdminRoutes: an Echo sub-group would split the Huma API.
-func rateLimitV2TokenRefresh(refreshLimit echo.MiddlewareFunc) echo.MiddlewareFunc {
+// match receives the matched echo route template, not the request URL.
+// v2 can't use an Echo sub-group here: that would split the Huma API and drop
+// the scoped ops from the OpenAPI spec.
+func pathScoped(match func(string) bool, mw echo.MiddlewareFunc) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		limited := refreshLimit(next)
+		scoped := mw(next)
 		return func(c *echo.Context) error {
-			if c.Request().URL.Path == v2TokenRefreshPath {
-				return limited(c)
+			if match(c.Path()) {
+				return scoped(c)
 			}
 			return next(c)
 		}
 	}
 }
 
-// gateV2AdminRoutes reuses v1's RequireFeature/RequireInstanceAdmin gate (both
-// 404-on-failure) as path-scoped middleware: splitting v2 into a gated Echo
-// sub-group would split the Huma API and drop admin ops from the OpenAPI spec.
+const v2AdminPathPrefix = "/api/v2/admin"
+
+// gateV2AdminRoutes reuses v1's RequireFeature/RequireInstanceAdmin gate, both
+// of which 404 on failure.
 func gateV2AdminRoutes() echo.MiddlewareFunc {
 	feature := RequireFeature(license.FeatureAdminPanel)
 	admin := RequireInstanceAdmin()
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		gated := feature(admin(next))
-		return func(c *echo.Context) error {
-			if strings.HasPrefix(c.Request().URL.Path, v2AdminPathPrefix) {
-				return gated(c)
-			}
-			return next(c)
-		}
-	}
+	return pathScoped(
+		func(p string) bool { return strings.HasPrefix(p, v2AdminPathPrefix) },
+		func(next echo.HandlerFunc) echo.HandlerFunc { return feature(admin(next)) },
+	)
 }
 
 // registerAPIRoutesV2 wires the /api/v2 Echo group. Token middleware is
@@ -424,7 +417,7 @@ func gateV2AdminRoutes() echo.MiddlewareFunc {
 func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, wsRateLimit, refreshRateLimit echo.MiddlewareFunc) {
 	a.Use(noStoreCacheControl())
 	a.Use(SetupTokenMiddleware())
-	a.Use(rateLimitV2TokenRefresh(refreshRateLimit))
+	a.Use(pathScoped(func(p string) bool { return p == auth.RefreshTokenPathV2 }, refreshRateLimit))
 	// Match the authenticated v1 group: rate limiting and route metrics
 	// apply to v2 resource endpoints too.
 	setupRateLimit(a, config.RateLimitKind.GetString())
