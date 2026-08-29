@@ -61,6 +61,7 @@ func TestHumaRefreshToken(t *testing.T) {
 		assert.NotEmpty(t, cookie.Value)
 		assert.NotEqual(t, "testtoken_session1", cookie.Value, "refresh token must be rotated")
 		assert.True(t, cookie.HttpOnly, "refresh cookie must be HttpOnly")
+		assert.ElementsMatch(t, []string{auth.RefreshTokenPathV1, auth.RefreshTokenPathV2}, refreshCookiePaths(rec))
 	})
 
 	t.Run("rotation invalidates the old token", func(t *testing.T) {
