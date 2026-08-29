@@ -139,4 +139,26 @@ describe('Popup', () => {
 		elsewhere.remove()
 		wrapper.unmount()
 	})
+
+	it('closes an open popup when its trigger is clicked', async () => {
+		const wrapper = mount(Popup, {props: {open: true}, slots, attachTo: document.body})
+
+		await wrapper.find('.trigger').trigger('click')
+
+		expect(wrapper.emitted('update:open')).toEqual([[false]])
+		expect(wrapper.find('.popup').attributes('inert')).toBe('')
+
+		wrapper.unmount()
+	})
+
+	it('opens a closed popup when its trigger is clicked', async () => {
+		const wrapper = mount(Popup, {slots, attachTo: document.body})
+
+		await wrapper.find('.trigger').trigger('click')
+
+		expect(wrapper.emitted('update:open')).toEqual([[true]])
+		expect(wrapper.find('.popup').attributes('inert')).toBeUndefined()
+
+		wrapper.unmount()
+	})
 })

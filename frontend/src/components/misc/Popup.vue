@@ -69,7 +69,15 @@ function close() {
 	emit('update:open', false)
 }
 
+// onClickOutside listens in the capture phase, so a trigger's `@click.stop` cannot keep it from
+// closing first — without this guard the trigger's own toggle() reopens what the same click closed.
+let closedByClickOutside = false
+
 function toggle() {
+	if (closedByClickOutside) {
+		closedByClickOutside = false
+		return false
+	}
 	openValue.value = !openValue.value
 	emit('update:open', openValue.value)
 	return openValue.value
@@ -106,6 +114,13 @@ onClickOutside(popup, (event) => {
 	if (target?.classList && props.ignoreClickClasses.some(className => target.classList.contains(className))) {
 		return
 	}
+	if (!openValue.value) {
+		return
+	}
+	closedByClickOutside = true
+	setTimeout(() => {
+		closedByClickOutside = false
+	})
 	close()
 })
 
