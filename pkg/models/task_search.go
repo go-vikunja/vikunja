@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
 	"xorm.io/builder"
@@ -443,8 +444,66 @@ func buildParentSearchCondition(search string) builder.Cond {
 	return cond
 }
 
+func replaceUserMacro(val string, username string) string {
+	valTrim := strings.TrimSpace(val)
+	if valTrim == "@me" {
+		return username
+	}
+	return val
+}
+
+func resolveCurrentUserMacros(filters []*taskFilter, username string) []*taskFilter {
+	if username == "" || len(filters) == 0 {
+		return filters
+	}
+
+	cloned := make([]*taskFilter, len(filters))
+	for i, f := range filters {
+		c := *f
+		switch v := f.value.(type) {
+		case string:
+			c.value = replaceUserMacro(v, username)
+		case []string:
+			newSlice := make([]string, len(v))
+			for idx, item := range v {
+				newSlice[idx] = replaceUserMacro(item, username)
+			}
+			c.value = newSlice
+		case []interface{}:
+			newSlice := make([]interface{}, len(v))
+			for idx, item := range v {
+				if strItem, ok := item.(string); ok {
+					newSlice[idx] = replaceUserMacro(strItem, username)
+				} else {
+					newSlice[idx] = item
+				}
+			}
+			c.value = newSlice
+		case []*taskFilter:
+			c.value = resolveCurrentUserMacros(v, username)
+		}
+		cloned[i] = &c
+	}
+	return cloned
+}
+
 //nolint:gocyclo
 func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCount int64, err error) {
+
+	if d.a != nil && d.a.GetID() > 0 {
+		var currentUsername string
+		if u, ok := d.a.(*user.User); ok && u.Username != "" {
+			currentUsername = u.Username
+		} else {
+			u, err := user.GetUserByID(d.s, d.a.GetID())
+			if err == nil && u != nil {
+				currentUsername = u.Username
+			}
+		}
+		if currentUsername != "" {
+			opts.parsedFilters = resolveCurrentUserMacros(opts.parsedFilters, currentUsername)
+		}
+	}
 
 	joinTaskBuckets := hasBucketIDInParsedFilter(opts.parsedFilters)
 
