@@ -281,15 +281,17 @@ func RegisterRoutes(e *echo.Echo) {
 	}
 
 	// Shared across both API versions so the budget is per IP, not per version.
+	// Building these per version would give each its own in-memory counters.
 	wsRateLimit := unauthRateLimit()
+	refreshRateLimit := tokenRefreshRateLimit()
 
 	// API Routes
 	a := e.Group("/api/v1")
-	registerAPIRoutes(a, wsRateLimit)
+	registerAPIRoutes(a, wsRateLimit, refreshRateLimit)
 
 	// /api/v2 — Huma-backed API, scaffolded alongside /api/v1.
 	a2 := e.Group("/api/v2")
-	registerAPIRoutesV2(e, a2, wsRateLimit)
+	registerAPIRoutesV2(e, a2, wsRateLimit, refreshRateLimit)
 
 	// Collect routes for API token permissions
 	// In Echo v5, we collect routes after registration using e.Router().Routes()
@@ -381,7 +383,23 @@ func noStoreCacheControl() echo.MiddlewareFunc {
 	}
 }
 
-const v2AdminPathPrefix = "/api/v2/admin"
+const (
+	v2AdminPathPrefix  = "/api/v2/admin"
+	v2TokenRefreshPath = "/api/v2/user/token/refresh" //nolint:gosec // a route path, not a credential
+)
+
+// Path-scoped like gateV2AdminRoutes: an Echo sub-group would split the Huma API.
+func rateLimitV2TokenRefresh(refreshLimit echo.MiddlewareFunc) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		limited := refreshLimit(next)
+		return func(c *echo.Context) error {
+			if c.Request().URL.Path == v2TokenRefreshPath {
+				return limited(c)
+			}
+			return next(c)
+		}
+	}
+}
 
 // gateV2AdminRoutes reuses v1's RequireFeature/RequireInstanceAdmin gate (both
 // 404-on-failure) as path-scoped middleware: splitting v2 into a gated Echo
@@ -403,9 +421,10 @@ func gateV2AdminRoutes() echo.MiddlewareFunc {
 // registerAPIRoutesV2 wires the /api/v2 Echo group. Token middleware is
 // attached before any route so Huma's spec and Scalar docs share the
 // resource handlers' stack; unauthenticatedAPIPaths keeps them public.
-func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, wsRateLimit echo.MiddlewareFunc) {
+func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, wsRateLimit, refreshRateLimit echo.MiddlewareFunc) {
 	a.Use(noStoreCacheControl())
 	a.Use(SetupTokenMiddleware())
+	a.Use(rateLimitV2TokenRefresh(refreshRateLimit))
 	// Match the authenticated v1 group: rate limiting and route metrics
 	// apply to v2 resource endpoints too.
 	setupRateLimit(a, config.RateLimitKind.GetString())
@@ -431,7 +450,7 @@ func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, wsRateLimit echo.Middlewar
 	apiv2.RegisterAll(api)
 }
 
-func registerAPIRoutes(a *echo.Group, wsRateLimit echo.MiddlewareFunc) {
+func registerAPIRoutes(a *echo.Group, wsRateLimit, refreshRateLimit echo.MiddlewareFunc) {
 
 	// Prevent browsers from caching API responses. Without an explicit
 	// Cache-Control header browsers may heuristically cache JSON responses
@@ -475,7 +494,7 @@ func registerAPIRoutes(a *echo.Group, wsRateLimit echo.MiddlewareFunc) {
 	}
 
 	tr := a.Group("")
-	tr.Use(tokenRefreshRateLimit())
+	tr.Use(refreshRateLimit)
 
 	// Refresh token endpoint — unauthenticated because it uses the refresh
 	// token cookie instead of a JWT bearer token.
