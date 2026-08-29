@@ -14,25 +14,37 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// Package doctor provides diagnostic checks for Vikunja installations.
 package doctor
 
-// Run executes all diagnostic checks in order and returns the results. Each group is
-// passed to emit as soon as it completes, so a slow check does not withhold the
-// groups before it.
-func Run(emit func(CheckGroup)) []CheckGroup {
-	var groups []CheckGroup
-	collect := func(group CheckGroup) {
-		groups = append(groups, group)
-		emit(group)
-	}
+import (
+	"bytes"
+	"testing"
 
-	collect(CheckSystem())
-	collect(CheckConfig())
-	collect(CheckDatabase())
-	collect(CheckFiles())
+	"github.com/stretchr/testify/assert"
+)
 
-	CheckOptionalServices(collect)
+func TestPrintGroup(t *testing.T) {
+	var buf bytes.Buffer
 
-	return groups
+	PrintHeader(&buf)
+	PrintGroup(&buf, CheckGroup{
+		Name: "Files (s3)",
+		Results: []CheckResult{
+			{Name: "Endpoint", Passed: true, Value: "http://localhost:9000"},
+			{Name: "Initialization", Passed: false, Error: "S3 endpoint http://localhost:9000 did not respond within 12s"},
+			{Name: "CORS", Passed: true, Value: "2 origins", Lines: []string{"a", "b"}},
+		},
+	})
+
+	assert.Equal(t, `Vikunja Doctor
+==============
+
+Files (s3)
+  ✓ Endpoint: http://localhost:9000
+  ✗ Initialization: S3 endpoint http://localhost:9000 did not respond within 12s
+  ✓ CORS: 2 origins
+      a
+      b
+
+`, buf.String())
 }
