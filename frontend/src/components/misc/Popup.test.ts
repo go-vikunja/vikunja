@@ -1,0 +1,142 @@
+import {describe, it, expect} from 'vitest'
+import {mount} from '@vue/test-utils'
+import {h, nextTick} from 'vue'
+import Popup from './Popup.vue'
+
+const slots = {
+	trigger: (params: {toggle: () => boolean}) => h('button', {class: 'trigger', onClick: params.toggle}, 'open'),
+	content: (params: {close: () => void}) => h('button', {class: 'inner', onClick: params.close}, 'inner'),
+}
+
+
+describe('Popup', () => {
+	it('marks the content wrapper inert while closed', () => {
+		const wrapper = mount(Popup, {slots})
+		expect(wrapper.find('.popup').attributes('inert')).toBe('')
+	})
+
+	it('removes inert from the content wrapper when open', async () => {
+		const wrapper = mount(Popup, {slots})
+
+		await wrapper.setProps({open: true})
+
+		expect(wrapper.find('.popup').attributes('inert')).toBeUndefined()
+	})
+
+	it('leaves the trigger outside the inert wrapper', () => {
+		const wrapper = mount(Popup, {slots})
+		expect(wrapper.find('.popup .trigger').exists()).toBe(false)
+		expect(wrapper.find('.trigger').exists()).toBe(true)
+	})
+
+	it('returns focus to the trigger before inert is applied when closing from inside', async () => {
+		const trigger = document.createElement('button')
+		document.body.append(trigger)
+		trigger.focus()
+
+		const wrapper = mount(Popup, {props: {open: true}, attachTo: document.body})
+
+		const popup = wrapper.find('.popup').element
+		let inertWhenFocusReturned: boolean | null = null
+		trigger.addEventListener('focus', () => {
+			inertWhenFocusReturned = popup.hasAttribute('inert')
+		})
+
+		const inner = document.createElement('button')
+		popup.append(inner)
+		inner.focus()
+		expect(document.activeElement).toBe(inner)
+
+		inertWhenFocusReturned = null
+		await wrapper.setProps({open: false})
+
+		expect(document.activeElement).toBe(trigger)
+		// focus lands back on the trigger before the DOM patch sets inert
+		expect(inertWhenFocusReturned).toBe(false)
+
+		trigger.remove()
+		wrapper.unmount()
+	})
+
+	it('returns focus to the trigger when the closing click already blurred focus to the body', async () => {
+		const trigger = document.createElement('button')
+		document.body.append(trigger)
+		trigger.focus()
+
+		const wrapper = mount(Popup, {props: {open: true}, attachTo: document.body})
+
+		const inner = document.createElement('button')
+		wrapper.find('.popup').element.append(inner)
+		inner.focus()
+		expect(document.activeElement).toBe(inner)
+
+		// the browser blurs the focused control on mousedown, before onClickOutside closes the popup on click
+		inner.blur()
+		expect(document.activeElement).toBe(document.body)
+
+		await wrapper.setProps({open: false})
+
+		expect(document.activeElement).toBe(trigger)
+
+		trigger.remove()
+		wrapper.unmount()
+	})
+
+	it('does not steal focus when the closing click moved focus to another element', async () => {
+		const trigger = document.createElement('button')
+		const elsewhere = document.createElement('button')
+		document.body.append(trigger, elsewhere)
+		trigger.focus()
+
+		const wrapper = mount(Popup, {props: {open: true}, attachTo: document.body})
+
+		const inner = document.createElement('button')
+		wrapper.find('.popup').element.append(inner)
+		inner.focus()
+
+		elsewhere.focus()
+		await wrapper.setProps({open: false})
+
+		expect(document.activeElement).toBe(elsewhere)
+
+		trigger.remove()
+		elsewhere.remove()
+		wrapper.unmount()
+	})
+
+	it('does not pull focus back to the trigger when focus never entered the popup', async () => {
+		const trigger = document.createElement('button')
+		document.body.append(trigger)
+		trigger.focus()
+
+		const wrapper = mount(Popup, {props: {open: true}, attachTo: document.body})
+
+		trigger.blur()
+		expect(document.activeElement).toBe(document.body)
+
+		await wrapper.setProps({open: false})
+
+		expect(document.activeElement).toBe(document.body)
+
+		trigger.remove()
+		wrapper.unmount()
+	})
+
+	it('does not steal focus when the popup closes while focus is elsewhere', async () => {
+		const trigger = document.createElement('button')
+		const elsewhere = document.createElement('button')
+		document.body.append(trigger, elsewhere)
+		trigger.focus()
+
+		const wrapper = mount(Popup, {props: {open: true}, attachTo: document.body})
+
+		elsewhere.focus()
+		await wrapper.setProps({open: false})
+
+		expect(document.activeElement).toBe(elsewhere)
+
+		trigger.remove()
+		elsewhere.remove()
+		wrapper.unmount()
+	})
+})
