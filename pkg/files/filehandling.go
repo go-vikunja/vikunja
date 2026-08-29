@@ -135,7 +135,7 @@ func InitFileHandler(ctx context.Context) error {
 		return err
 	}
 
-	if err := ensureLocalBasePath(); err != nil {
+	if err := storage.Ensure(); err != nil {
 		return err
 	}
 
@@ -204,43 +204,15 @@ func storageDiagSuffix(basePath string) string {
 	return "\n" + diag
 }
 
-// Kept out of ValidateFileStorage so read-only callers can check storage without
-// creating the very thing they are checking for.
-func ensureLocalBasePath() error {
-	if config.FilesType.GetString() != "local" {
-		return nil
-	}
-
-	basePath := config.FilesBasePath.GetString()
-
-	// Anything other than "not there" is left to ValidateFileStorage to report.
-	if _, err := os.Stat(basePath); !errors.Is(err, os.ErrNotExist) {
-		return nil
-	}
-
-	if err := os.MkdirAll(basePath, 0755); err != nil {
-		return fmt.Errorf("failed to create file storage directory at %s: %w%s", basePath, err, storageDiagSuffix(basePath))
-	}
-
-	return nil
-}
-
 // ValidateFileStorage checks that the configured file storage is writable
-// by creating and removing a temporary file. It never creates the base
-// directory — see ensureLocalBasePath. ctx aborts backends doing network IO.
+// by creating and removing a temporary file. It never creates anything
+// permanent — see FileStorage.Ensure. ctx aborts backends doing network IO.
 func ValidateFileStorage(ctx context.Context) error {
-	basePath := config.FilesBasePath.GetString()
-	diag := storageDiagSuffix(basePath)
-
-	if config.FilesType.GetString() == "local" {
-		info, err := os.Stat(basePath)
-		if err != nil {
-			return fmt.Errorf("failed to access file storage directory at %s: %w%s", basePath, err, diag)
-		}
-		if !info.IsDir() {
-			return fmt.Errorf("file storage path exists but is not a directory: %s", basePath)
-		}
+	if err := storage.ValidateBasePath(); err != nil {
+		return err
 	}
+
+	diag := storageDiagSuffix(config.FilesBasePath.GetString())
 
 	filename := fmt.Sprintf(".vikunja-check-%d", time.Now().UnixNano())
 

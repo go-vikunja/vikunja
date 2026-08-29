@@ -137,6 +137,14 @@ func (*s3Storage) MkdirAll(string, os.FileMode) error {
 	return nil // S3 has no directories
 }
 
+func (*s3Storage) Ensure() error {
+	return nil
+}
+
+func (*s3Storage) ValidateBasePath() error {
+	return nil
+}
+
 // s3ToPathError converts S3 SDK errors into os-compatible path errors.
 func s3ToPathError(op, name string, err error) error {
 	var respErr *smithyhttp.ResponseError

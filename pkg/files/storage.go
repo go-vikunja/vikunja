@@ -29,6 +29,10 @@ type FileStorage interface {
 	Stat(path string) (os.FileInfo, error)
 	Remove(path string) error
 	MkdirAll(path string, perm os.FileMode) error
+
+	// Ensure prepares the backend for use. It is the only place allowed to create storage.
+	Ensure() error
+	ValidateBasePath() error
 }
 
 // contextStorage is implemented by backends doing network IO, so callers can bound
