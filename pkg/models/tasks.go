@@ -456,9 +456,13 @@ func GetTaskSimpleByUUID(s *xorm.Session, uid string) (task *Task, err error) {
 // task whose project the provided auth does not have access to.
 func GetTasksByUIDs(s *xorm.Session, uids []string, a web.Auth) (tasks []*Task, err error) {
 	tasks = []*Task{}
+	accessible, err := accessibleProjectIDsCond(s, a, "`tasks`.`project_id`")
+	if err != nil {
+		return nil, err
+	}
 	err = s.
 		In("uid", uids).
-		And(accessibleProjectIDsSubquery(a, "`tasks`.`project_id`")).
+		And(accessible).
 		Find(&tasks)
 	if err != nil {
 		return
@@ -599,9 +603,13 @@ func addRelatedTasksToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]
 		return
 	}
 
+	accessible, err := accessibleProjectIDsCond(s, a, "`tasks`.`project_id`")
+	if err != nil {
+		return err
+	}
 	fullRelatedTasks := make(map[int64]*Task)
 	err = s.In("id", relatedTaskIDs).
-		And(accessibleProjectIDsSubquery(a, "`tasks`.`project_id`")).
+		And(accessible).
 		Find(&fullRelatedTasks)
 	if err != nil {
 		return
@@ -651,6 +659,10 @@ func addBucketsToTasks(s *xorm.Session, a web.Auth, taskIDs []int64, taskMap map
 		return err
 	}
 
+	accessible, err := accessibleProjectIDsCond(s, a, "project_views.project_id")
+	if err != nil {
+		return err
+	}
 	buckets := make(map[int64]*Bucket)
 	err = s.
 		Where(builder.In("id", builder.Select("bucket_id").
@@ -658,7 +670,7 @@ func addBucketsToTasks(s *xorm.Session, a web.Auth, taskIDs []int64, taskMap map
 			Where(builder.In("task_id", taskIDs)))).
 		And(builder.In("project_view_id", builder.Select("id").
 			From("project_views").
-			Where(accessibleProjectIDsSubquery(a, "project_views.project_id")))).
+			Where(accessible))).
 		Find(&buckets)
 	if err != nil {
 		return err
