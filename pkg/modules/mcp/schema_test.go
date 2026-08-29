@@ -169,3 +169,11 @@ func TestSnakeCase(t *testing.T) {
 		assert.Equal(t, want, snakeCase(in), in)
 	}
 }
+
+func TestSchema_UpdateWithoutReadOneRequiresEveryField(t *testing.T) {
+	registerAllResources(t)
+
+	// No read_one op means no hydration, so an omitted permission would be written as 0.
+	assert.Equal(t, []string{"permission", "project_id", "username"}, specFor(t, "projects_users", OpUpdate).schema.Required)
+	assert.Equal(t, []string{"permission", "project_id", "team_id"}, specFor(t, "projects_teams", OpUpdate).schema.Required)
+}

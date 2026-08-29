@@ -53,6 +53,15 @@ func falseSchema() *jsonschema.Schema {
 	return &jsonschema.Schema{Not: &jsonschema.Schema{}}
 }
 
+// mustResolveSpec builds an opSpec for the hand-written tool schemas; resource schemas come from buildOpSpec.
+func mustResolveSpec(toolName string, schema *jsonschema.Schema) *opSpec {
+	resolved, err := schema.Resolve(nil)
+	if err != nil {
+		panic(fmt.Sprintf("mcp: resolve %s schema: %v", toolName, err))
+	}
+	return &opSpec{schema: schema, resolved: resolved}
+}
+
 func buildOpSpec(modelType reflect.Type, op Op, r *Resource) (*opSpec, error) {
 	props := map[string]*jsonschema.Schema{}
 	fields := map[string]int{}
@@ -176,10 +185,7 @@ func addQueryOnlyArgs(modelType reflect.Type, props map[string]*jsonschema.Schem
 // propSchema returns false for nested model structs/slices; those relations have their own resources.
 func propSchema(f reflect.StructField) (*jsonschema.Schema, bool) {
 	s := &jsonschema.Schema{}
-	t := f.Type
-	for t.Kind() == reflect.Pointer {
-		t = t.Elem()
-	}
+	t := derefType(f.Type)
 	switch {
 	case t == timeType:
 		s.Type = "string"
@@ -228,6 +234,13 @@ func propSchema(f reflect.StructField) (*jsonschema.Schema, bool) {
 	return propWithDoc(s, f), true
 }
 
+func derefType(t reflect.Type) reflect.Type {
+	for t.Kind() == reflect.Pointer {
+		t = t.Elem()
+	}
+	return t
+}
+
 func propWithDoc(s *jsonschema.Schema, f reflect.StructField) *jsonschema.Schema {
 	if d := f.Tag.Get("doc"); d != "" {
 		s.Description = d
@@ -241,7 +254,9 @@ func writableInclusion(op Op, f reflect.StructField, name, param string, hasExpo
 	case OpCreate:
 		return true, requiredForCreate(f)
 	case OpUpdate:
-		return true, identity
+		// Without a read_one op the dispatcher can't hydrate the stored row, so every
+		// omitted writable field would be written as its zero value.
+		return true, identity || r.Ops&OpReadOne == 0
 	case OpReadOne, OpDelete:
 		// Models without an exposed id (e.g. TaskAssginee) are addressed by their param-tagged fields instead.
 		if (!hasExposedID && param != "") || identity {
