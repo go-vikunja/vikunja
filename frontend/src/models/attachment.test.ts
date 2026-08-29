@@ -1,6 +1,6 @@
 import {describe, it, expect} from 'vitest'
 
-import {canPreviewAudio, canPreviewImage, canPreviewPdf, canPreviewVideo} from './attachment'
+import {canPreviewAudio, canPreviewImage, canPreviewPdf, canPreviewVideo, previewKind} from './attachment'
 import type {IAttachment} from '@/modelTypes/IAttachment'
 
 function attachment(name: string, mime: string): IAttachment {
@@ -84,5 +84,27 @@ describe('canPreviewVideo', () => {
 
 	it('refuses audio ogg', () => {
 		expect(canPreviewVideo(attachment('song.ogg', 'audio/ogg'))).toBe(false)
+	})
+})
+
+describe('previewKind', () => {
+	it('maps an image to image', () => {
+		expect(previewKind(attachment('pic.png', 'image/png'))).toBe('image')
+	})
+
+	it('maps a pdf to pdf', () => {
+		expect(previewKind(attachment('doc.pdf', 'application/pdf'))).toBe('pdf')
+	})
+
+	it('maps an mp4 to video', () => {
+		expect(previewKind(attachment('clip.mp4', 'video/mp4'))).toBe('video')
+	})
+
+	it('returns null for a plain text file', () => {
+		expect(previewKind(attachment('notes.txt', 'text/plain'))).toBeNull()
+	})
+
+	it('returns null for audio, which does not use the blob preview path', () => {
+		expect(previewKind(attachment('memo.mp3', 'audio/mpeg'))).toBeNull()
 	})
 })

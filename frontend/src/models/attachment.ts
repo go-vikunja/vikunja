@@ -32,6 +32,21 @@ export function canPreviewVideo(attachment: IAttachment): boolean {
 	return attachment.file.mime.toLowerCase().startsWith('video/')
 }
 
+export type PreviewKind = 'image' | 'pdf' | 'video'
+
+export function previewKind(attachment: IAttachment): PreviewKind | null {
+	if (canPreviewImage(attachment)) {
+		return 'image'
+	}
+	if (canPreviewPdf(attachment)) {
+		return 'pdf'
+	}
+	if (canPreviewVideo(attachment)) {
+		return 'video'
+	}
+	return null
+}
+
 export default class AttachmentModel extends AbstractModel<IAttachment> implements IAttachment {
 	id = 0
 	taskId = 0

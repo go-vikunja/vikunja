@@ -170,36 +170,36 @@
 		</Modal>
 
 		<ImageLightbox
-			v-if="attachmentImageBlobUrl !== null"
-			:key="attachmentImageBlobUrl"
-			:blob-url="attachmentImageBlobUrl"
-			:alt="attachmentImageAlt"
-			@close="closeImageLightbox"
+			v-if="preview?.kind === 'image'"
+			:key="preview.blobUrl"
+			:blob-url="preview.blobUrl"
+			:alt="preview.name"
+			@close="closePreview"
 		/>
 
 		<!-- Attachment PDF modal -->
 		<Modal
-			:enabled="attachmentPdfBlobUrl !== null"
+			:enabled="preview?.kind === 'pdf'"
 			:wide="true"
 			:aria-label="$t('misc.pdfPreview')"
-			@close="closePdfPreview"
+			@close="closePreview"
 		>
 			<iframe
-				v-if="attachmentPdfBlobUrl"
-				:src="attachmentPdfBlobUrl"
+				v-if="preview?.kind === 'pdf'"
+				:src="preview.blobUrl"
 				class="pdf-preview-iframe"
 			/>
 		</Modal>
 
 		<!-- Attachment video modal -->
 		<Modal
-			:enabled="attachmentVideoLoading || attachmentVideoBlobUrl !== null"
+			:enabled="previewLoading || preview?.kind === 'video'"
 			:wide="true"
 			:aria-label="$t('misc.videoPreview')"
-			@close="closeVideoPreview"
+			@close="closePreview"
 		>
-			<Loading v-if="attachmentVideoLoading" />
-			<div v-else-if="attachmentVideoFailed">
+			<Loading v-if="previewLoading" />
+			<div v-else-if="previewFailed">
 				<p>{{ $t('misc.videoLoadFailed') }}</p>
 				<XButton
 					icon="download"
@@ -210,9 +210,9 @@
 				</XButton>
 			</div>
 			<video
-				v-else-if="attachmentVideoBlobUrl"
-				:src="attachmentVideoBlobUrl"
-				:aria-label="attachmentVideoName"
+				v-else-if="preview?.kind === 'video'"
+				:src="preview.blobUrl"
+				:aria-label="preview.name"
 				class="video-preview"
 				controls
 				playsinline
@@ -223,7 +223,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, shallowReactive, computed, watch, onMounted, onBeforeUnmount, type Ref, type ComponentPublicInstance} from 'vue'
+import {ref, shallowReactive, computed, watch, onMounted, onBeforeUnmount, type ComponentPublicInstance} from 'vue'
 import {useDropZone} from '@vueuse/core'
 
 import User from '@/components/misc/User.vue'
@@ -232,7 +232,7 @@ import Loading from '@/components/misc/Loading.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
 import AttachmentService from '@/services/attachment'
-import {canPreviewAudio, canPreviewImage, canPreviewPdf, canPreviewVideo} from '@/models/attachment'
+import {canPreviewAudio, canPreviewImage, previewKind, type PreviewKind} from '@/models/attachment'
 import {getDisplayName} from '@/models/user'
 import type {IAttachment} from '@/modelTypes/IAttachment'
 import type {ITask} from '@/modelTypes/ITask'
@@ -461,66 +461,53 @@ async function deleteAttachment() {
 	}
 }
 
-const attachmentImageBlobUrl = ref<string | null>(null)
-const attachmentImageAlt = ref('')
-const attachmentPdfBlobUrl = ref<string | null>(null)
-const attachmentVideoBlobUrl = ref<string | null>(null)
-const attachmentVideoName = ref('')
-const attachmentVideoLoading = ref(false)
-const attachmentVideoFailed = ref(false)
+interface Preview {
+	kind: PreviewKind
+	blobUrl: string
+	name: string
+}
+
+const preview = ref<Preview | null>(null)
+const previewLoading = ref(false)
+const previewFailed = ref(false)
 let previewRequestToken = 0
 
-function replaceBlobUrl(target: Ref<string | null>, blobUrl: string | null) {
-	if (target.value !== null) {
-		URL.revokeObjectURL(target.value)
+function replacePreview(next: Preview | null) {
+	if (preview.value !== null) {
+		URL.revokeObjectURL(preview.value.blobUrl)
 	}
-	target.value = blobUrl
+	preview.value = next
 }
 
-function closeImageLightbox() {
-	replaceBlobUrl(attachmentImageBlobUrl, null)
-	attachmentImageAlt.value = ''
-}
-
-function closePdfPreview() {
-	replaceBlobUrl(attachmentPdfBlobUrl, null)
-}
-
-function closeVideoPreview() {
+function closePreview() {
 	// an in-flight blob must not re-open the dismissed modal
 	previewRequestToken++
-	replaceBlobUrl(attachmentVideoBlobUrl, null)
-	attachmentVideoName.value = ''
-	attachmentVideoLoading.value = false
-	attachmentVideoFailed.value = false
+	replacePreview(null)
+	previewLoading.value = false
+	previewFailed.value = false
 }
 
 // a detached <video> can still fire error after its blob url was revoked
 function onVideoError(e: Event) {
-	if ((e.target as HTMLVideoElement).src !== attachmentVideoBlobUrl.value) {
+	if ((e.target as HTMLVideoElement).src !== preview.value?.blobUrl) {
 		return
 	}
-	attachmentVideoFailed.value = true
+	previewFailed.value = true
 }
 
 function downloadVideoPreview() {
-	const blobUrl = attachmentVideoBlobUrl.value
-	if (blobUrl === null) {
+	const current = preview.value
+	if (current === null) {
 		return
 	}
 
 	// downloadBlob revokes the url itself, so hand over ownership before closing
-	attachmentVideoBlobUrl.value = null
-	downloadBlob(blobUrl, attachmentVideoName.value)
-	closeVideoPreview()
+	preview.value = null
+	downloadBlob(current.blobUrl, current.name)
+	closePreview()
 }
 
-onBeforeUnmount(() => {
-	previewRequestToken++
-	closeImageLightbox()
-	closePdfPreview()
-	closeVideoPreview()
-})
+onBeforeUnmount(closePreview)
 
 const audioPlayers = new Map<IAttachment['id'], AudioPreviewInstance>()
 
@@ -539,19 +526,19 @@ async function viewOrDownload(attachment: IAttachment) {
 		return
 	}
 
-	if (!canPreviewImage(attachment) && !canPreviewPdf(attachment) && !canPreviewVideo(attachment)) {
+	const kind = previewKind(attachment)
+	if (kind === null) {
 		downloadAttachment(attachment)
 		return
 	}
 
-	const isVideo = canPreviewVideo(attachment)
-	closeVideoPreview()
+	closePreview()
 
 	previewRequestToken++
 	const requestToken = previewRequestToken
 
 	// only video is big enough that the full-buffer wait reads as a dead click
-	attachmentVideoLoading.value = isVideo
+	previewLoading.value = kind === 'video'
 
 	try {
 		const blobUrl = await attachmentService.getBlobUrl(attachment)
@@ -560,22 +547,11 @@ async function viewOrDownload(attachment: IAttachment) {
 			URL.revokeObjectURL(blobUrl)
 			return
 		}
-		attachmentVideoLoading.value = false
-		if (canPreviewImage(attachment)) {
-			replaceBlobUrl(attachmentImageBlobUrl, blobUrl)
-			attachmentImageAlt.value = attachment.file.name
-		} else if (isVideo) {
-			replaceBlobUrl(attachmentVideoBlobUrl, blobUrl)
-			attachmentVideoName.value = attachment.file.name
-		} else if (canPreviewPdf(attachment)) {
-			replaceBlobUrl(attachmentPdfBlobUrl, blobUrl)
-		} else {
-			URL.revokeObjectURL(blobUrl)
-			downloadAttachment(attachment)
-		}
+		previewLoading.value = false
+		replacePreview({kind, blobUrl, name: attachment.file.name})
 	} catch (e) {
 		if (requestToken === previewRequestToken) {
-			attachmentVideoLoading.value = false
+			previewLoading.value = false
 		}
 		error(e)
 	}
