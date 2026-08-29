@@ -61,6 +61,7 @@ import (
 	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/modules/auth/oauth2server"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
 	"code.vikunja.io/api/pkg/modules/background"
@@ -302,7 +303,7 @@ var unauthenticatedAPIPaths = map[string]bool{
 	"/api/v1/user/password/reset":            true,
 	"/api/v1/user/confirm":                   true,
 	"/api/v1/login":                          true,
-	"/api/v1/user/token/refresh":             true,
+	auth.RefreshTokenPathV1:                  true,
 	"/api/v1/auth/openid/:provider/callback": true,
 	"/api/v1/test/:table":                    true,
 	"/api/v1/info":                           true,
@@ -329,7 +330,7 @@ var unauthenticatedAPIPaths = map[string]bool{
 	"/api/v2/shares/:share/auth":             true,
 	"/api/v2/oauth/token":                    true,
 	"/api/v2/login":                          true,
-	"/api/v2/user/token/refresh":             true,
+	auth.RefreshTokenPathV2:                  true,
 	"/api/v2/auth/openid/:provider/callback": true,
 
 	// Testing endpoints authenticate with the testing token via a custom
