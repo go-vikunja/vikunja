@@ -128,6 +128,8 @@ func CreateDBEngine() (engine *xorm.Engine, err error) {
 
 	checkParadeDB(engine)
 
+	engine.AddHook(writeInvalidationHook{})
+
 	x = engine
 	return
 }
@@ -514,6 +516,7 @@ func WipeEverything() error {
 // s.Close() will auto-rollback any uncommitted transaction.
 func NewSession() *xorm.Session {
 	s := x.NewSession()
+	attachSessionCache(s)
 	if err := s.Begin(); err != nil {
 		log.Fatalf("Failed to begin database transaction: %s", err)
 	}
