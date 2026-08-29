@@ -808,27 +808,6 @@ func getSavedFilterProjects(s *xorm.Session, doer *user.User, search string) (sa
 	return
 }
 
-// GetAllParentProjects returns all parents of a given project
-func GetAllParentProjects(s *xorm.Session, projectID int64) (allProjects map[int64]*Project, err error) {
-	allProjects = make(map[int64]*Project)
-	err = s.SQL(`WITH RECURSIVE all_projects AS (
-		    SELECT
-		        p.*
-		    FROM
-		        projects p
-		    WHERE
-		        p.id = ?
-		    UNION ALL
-		    SELECT
-		        p.*
-		    FROM
-		        projects p
-		            INNER JOIN all_projects pc ON p.ID = pc.parent_project_id
-		)
-		SELECT DISTINCT * FROM all_projects`, projectID).Find(&allProjects)
-	return
-}
-
 // addProjectDetails adds owner user objects and project tasks to all projects in the slice
 func addProjectDetails(s *xorm.Session, projects []*Project, a web.Auth) (err error) {
 	if len(projects) == 0 {
