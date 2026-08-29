@@ -21,6 +21,7 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/web"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -441,4 +442,139 @@ func TestSubscription_NoCrossUserProjectInheritance(t *testing.T) {
 	sub, err := GetSubscriptionForUser(s, SubscriptionEntityTask, 32, user2)
 	require.NoError(t, err)
 	assert.Nil(t, sub)
+}
+
+func TestSubscription_Mute(t *testing.T) {
+	// User 6 is subscribed to project 32 (subscription 8), task 21 belongs to it
+	u := &user.User{ID: 6}
+
+	mute := func(t *testing.T, s *xorm.Session, a web.Auth, entity string, entityID int64) {
+		sb := &Subscription{
+			Entity:   entity,
+			EntityID: entityID,
+		}
+
+		can, err := sb.CanDelete(s, a)
+		require.NoError(t, err)
+		require.True(t, can)
+		require.NoError(t, sb.Delete(s, a))
+	}
+
+	t.Run("unsubscribing from a task subscribed through its project", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		mute(t, s, u, "task", 21)
+
+		sub, err := GetSubscriptionForUser(s, SubscriptionEntityTask, 21, u)
+		require.NoError(t, err)
+		assert.Nil(t, sub)
+
+		// The project subscription itself must stay untouched
+		sub, err = GetSubscriptionForUser(s, SubscriptionEntityProject, 32, u)
+		require.NoError(t, err)
+		require.NotNil(t, sub)
+		assert.Equal(t, int64(8), sub.ID)
+	})
+	t.Run("muted task is not notified", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// User 3 owns project 3, user 2 has it shared with them
+		owner := &user.User{ID: 3}
+		other := &user.User{ID: 2}
+		for _, a := range []web.Auth{owner, other} {
+			sb := &Subscription{Entity: "project", EntityID: 3}
+			can, err := sb.CanCreate(s, a)
+			require.NoError(t, err)
+			require.True(t, can)
+			require.NoError(t, sb.Create(s, a))
+		}
+
+		mute(t, s, other, "task", 32)
+
+		subs, err := GetSubscriptionsForEntity(s, SubscriptionEntityTask, 32)
+		require.NoError(t, err)
+		require.Len(t, subs, 1)
+		assert.Equal(t, owner.ID, subs[0].UserID)
+	})
+	t.Run("muting a project also mutes its children", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Project 25 is a child of project 12 which the user is subscribed to, project 26 is
+		// a child of 25
+		mute(t, s, u, "project", 25)
+
+		for _, projectID := range []int64{25, 26} {
+			sub, err := GetSubscriptionForUser(s, SubscriptionEntityProject, projectID, u)
+			require.NoError(t, err)
+			assert.Nil(t, sub)
+		}
+
+		sub, err := GetSubscriptionForUser(s, SubscriptionEntityProject, 12, u)
+		require.NoError(t, err)
+		require.NotNil(t, sub)
+		assert.Equal(t, int64(3), sub.ID)
+	})
+	t.Run("cannot unsubscribe twice", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		mute(t, s, u, "task", 21)
+
+		sb := &Subscription{
+			Entity:   "task",
+			EntityID: 21,
+		}
+		can, err := sb.CanDelete(s, u)
+		require.NoError(t, err)
+		assert.False(t, can)
+	})
+	t.Run("needs read access to the entity", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		sb := &Subscription{
+			Entity:   "task",
+			EntityID: 14,
+		}
+		can, err := sb.CanDelete(s, &user.User{ID: 1})
+		require.NoError(t, err)
+		assert.False(t, can)
+	})
+	t.Run("subscribing again lifts the mute", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		mute(t, s, u, "task", 21)
+
+		sb := &Subscription{
+			Entity:   "task",
+			EntityID: 21,
+		}
+		can, err := sb.CanCreate(s, u)
+		require.NoError(t, err)
+		require.True(t, can)
+		require.NoError(t, sb.Create(s, u))
+
+		sub, err := GetSubscriptionForUser(s, SubscriptionEntityTask, 21, u)
+		require.NoError(t, err)
+		require.NotNil(t, sub)
+		assert.Equal(t, SubscriptionEntityType(SubscriptionEntityTask), sub.EntityType)
+
+		require.NoError(t, s.Commit())
+		db.AssertExists(t, "subscriptions", map[string]interface{}{
+			"entity_type": SubscriptionEntityTask,
+			"entity_id":   21,
+			"user_id":     u.ID,
+			"muted":       false,
+		}, false)
+	})
 }
