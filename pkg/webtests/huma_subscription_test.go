@@ -101,6 +101,22 @@ func TestHumaSubscription(t *testing.T) {
 			rec := humaRequest(t, e, http.MethodDelete, "/api/v2/subscriptions/task/1", "", token(t), "")
 			assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
 		})
+		t.Run("subscribed through the project", func(t *testing.T) {
+			e, err := setupTestEnv()
+			require.NoError(t, err)
+			rec := humaRequest(t, e, http.MethodPost, "/api/v2/subscriptions/project/1", "", token(t), "")
+			require.Equal(t, http.StatusCreated, rec.Code, "body: %s", rec.Body.String())
+
+			// Task 1 belongs to project 1, so this only records an opt-out
+			rec = humaRequest(t, e, http.MethodDelete, "/api/v2/subscriptions/task/1", "", token(t), "")
+			assert.Equal(t, http.StatusNoContent, rec.Code, "body: %s", rec.Body.String())
+
+			rec = humaRequest(t, e, http.MethodDelete, "/api/v2/subscriptions/task/1", "", token(t), "")
+			assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
+
+			rec = humaRequest(t, e, http.MethodDelete, "/api/v2/subscriptions/project/1", "", token(t), "")
+			assert.Equal(t, http.StatusNoContent, rec.Code, "body: %s", rec.Body.String())
+		})
 		t.Run("invalid entity kind", func(t *testing.T) {
 			e, err := setupTestEnv()
 			require.NoError(t, err)
