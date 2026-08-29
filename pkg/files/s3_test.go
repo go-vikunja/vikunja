@@ -193,24 +193,7 @@ func TestFileStorageIntegration(t *testing.T) {
 
 // TestInitFileHandler_S3Configuration tests S3 configuration validation
 func TestInitFileHandler_S3Configuration(t *testing.T) {
-	// Save original config values
-	originalType := config.FilesType.GetString()
-	originalEndpoint := config.FilesS3Endpoint.GetString()
-	originalBucket := config.FilesS3Bucket.GetString()
-	originalRegion := config.FilesS3Region.GetString()
-	originalAccessKey := config.FilesS3AccessKey.GetString()
-	originalSecretKey := config.FilesS3SecretKey.GetString()
-
-	// Restore config after test
-	defer func() {
-		config.FilesType.Set(originalType)
-		config.FilesS3Endpoint.Set(originalEndpoint)
-		config.FilesS3Bucket.Set(originalBucket)
-		config.FilesS3Region.Set(originalRegion)
-		config.FilesS3AccessKey.Set(originalAccessKey)
-		config.FilesS3SecretKey.Set(originalSecretKey)
-		_ = InitFileHandler()
-	}()
+	resetFilesStateAfterTest(t)
 
 	t.Run("valid S3 configuration", func(t *testing.T) {
 		config.FilesType.Set("s3")
@@ -282,22 +265,11 @@ func TestInitFileHandler_S3Configuration(t *testing.T) {
 }
 
 func TestInitFileHandler_LocalFilesystem(t *testing.T) {
-	// Save original config values
-	originalType := config.FilesType.GetString()
-	originalBasePath := config.FilesBasePath.GetString()
-
-	// Create a temp directory for the test
-	tempDir := t.TempDir()
-
-	// Restore config after test
-	defer func() {
-		config.FilesType.Set(originalType)
-		config.FilesBasePath.Set(originalBasePath)
-	}()
+	resetFilesStateAfterTest(t)
 
 	// Test with local filesystem using writable temp directory
 	config.FilesType.Set("local")
-	config.FilesBasePath.Set(tempDir)
+	config.FilesBasePath.Set(t.TempDir())
 
 	// This should not return an error
 	err := InitFileHandler()
