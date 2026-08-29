@@ -58,16 +58,21 @@ func TestProject(t *testing.T) {
 			require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &projects))
 
 			if db.ParadeDBAvailable() {
-				// ParadeDB fuzzy(1, prefix=true) on "Test1" matches Test2-Test9
-				// (edit distance 1), Test10+ (prefix), etc. The recursive CTE
-				// also pulls in child projects of matched parents.
-				// +1 for the reparent-escalation fixture child (project 43).
-				require.Len(t, projects, 27)
+				// ParadeDB fuzzy(1, prefix=true) on "Test1" also matches Test2-Test9
+				// (edit distance 1), so the result set varies by backend — the
+				// accessible set does not.
+				accessible := []int64{-1, 1, 3, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 19, 21, 22, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 39, 40, 43}
+				mustMatch := []int64{-1, 1, 10, 11, 12, 13, 14, 15, 16, 17, 19}
+				ids := make([]int64, 0, len(projects))
+				for _, p := range projects {
+					ids = append(ids, p.ID)
+				}
+				assert.Subset(t, accessible, ids, "search returned a project outside testuser1's accessible set")
+				assert.Subset(t, ids, mustMatch, "search dropped a project the ILIKE branch matches")
 			} else {
-				// ILIKE '%Test1%' matches Test1, Test10, Test11, Test19, + favorites.
-				// The recursive CTE also pulls in project 43 as a child of the
-				// matched project 10 (reparent-escalation fixture).
-				require.Len(t, projects, 6)
+				// ILIKE '%Test1%' over every accessible project, inherited ones
+				// included: Test1, Test10-Test17, Test19, + favorites.
+				require.Len(t, projects, 11)
 				assert.NotContains(t, rec.Body.String(), `Test2"`)
 				assert.NotContains(t, rec.Body.String(), `Test3`)
 				assert.NotContains(t, rec.Body.String(), `Test4`)

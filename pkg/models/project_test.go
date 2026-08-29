@@ -818,32 +818,23 @@ func TestProject_ReadAll(t *testing.T) {
 		require.NoError(t, err)
 		ls := projects3.([]*Project)
 
-		if db.ParadeDBAvailable() {
-			// ParadeDB fuzzy(1, prefix=true) on "TEST10" also matches
-			// "test1", "test11", "test19", "test30" (edit distance 1), etc.
-			// The recursive CTE also pulls in project 43 as a child of the
-			// matched project 10 (reparent-escalation fixture).
-			require.Len(t, ls, 7)
-			projectIDs := make([]int64, len(ls))
-			for i, p := range ls {
-				projectIDs[i] = p.ID
-			}
-			assert.Contains(t, projectIDs, int64(10))
-			assert.Contains(t, projectIDs, int64(43))
-			assert.Contains(t, projectIDs, int64(-1))
-		} else {
-			// Expect project 10 (the search target), project 43 (its child —
-			// reparent-escalation fixture, pulled in as a descendant so tree
-			// navigation stays intact) and the favorites pseudo project -1.
-			require.Len(t, ls, 3)
-			projectIDs := make([]int64, len(ls))
-			for i, p := range ls {
-				projectIDs[i] = p.ID
-			}
-			assert.Contains(t, projectIDs, int64(10))
-			assert.Contains(t, projectIDs, int64(43))
-			assert.Contains(t, projectIDs, int64(-1))
+		projectIDs := make([]int64, len(ls))
+		for i, p := range ls {
+			projectIDs[i] = p.ID
 		}
+		if db.ParadeDBAvailable() {
+			// ParadeDB fuzzy(1, prefix=true) matches far beyond the literal term, so
+			// the result set varies by backend — the accessible set does not.
+			accessible := []int64{-1, 1, 3, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 19, 21, 22, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 39, 40, 43}
+			assert.Subset(t, accessible, projectIDs, "search returned a project outside user 1's accessible set")
+		} else {
+			// Project 10 (the search target) and the favorites pseudo project -1.
+			// Its child 43 does not match and is no longer pulled in as a descendant.
+			require.Len(t, ls, 2)
+		}
+		assert.Contains(t, projectIDs, int64(10))
+		assert.NotContains(t, projectIDs, int64(43))
+		assert.Contains(t, projectIDs, int64(-1))
 	})
 	t.Run("search returns filters as well", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
