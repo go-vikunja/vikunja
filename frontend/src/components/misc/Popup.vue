@@ -26,7 +26,7 @@
 
 <script setup lang="ts">
 import {ref, watch, watchEffect} from 'vue'
-import {onClickOutside} from '@vueuse/core'
+import {onClickOutside, onKeyStroke} from '@vueuse/core'
 
 const props = withDefaults(defineProps<{
 	hasOverflow?: boolean
@@ -124,6 +124,22 @@ onClickOutside(popup, (event) => {
 	close()
 })
 
+onKeyStroke('Escape', event => {
+	// defaultPrevented means an inner control (flatpickr, Multiselect, …) already consumed this Escape.
+	if (!openValue.value || event.defaultPrevented) {
+		return
+	}
+
+	// Scope to the popup owning focus — lastFocused is the trigger, which keeps focus after opening.
+	const target = event.target as Node | null
+	if (!target || (!popup.value?.contains(target) && target !== lastFocused)) {
+		return
+	}
+
+	// Cancels the close request of a wrapping native <dialog> so only the popup closes.
+	event.preventDefault()
+	close()
+})
 </script>
 
 <style scoped lang="scss">
