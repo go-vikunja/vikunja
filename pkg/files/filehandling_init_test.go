@@ -27,18 +27,21 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// setupLocalStorageTest points the file config at a not-yet-existing directory
-// inside a temp dir and restores the previous config afterwards.
-func setupLocalStorageTest(t *testing.T) (basePath string) {
-	originalType := config.FilesType.GetString()
-	originalBasePath := config.FilesBasePath.GetString()
+// resetFilesStateAfterTest restores the config and storage backend TestMain set up.
+func resetFilesStateAfterTest(t *testing.T) {
 	originalStorage := storage
 
 	t.Cleanup(func() {
-		config.FilesType.Set(originalType)
-		config.FilesBasePath.Set(originalBasePath)
+		config.ResetForTests()
+		setDefaultLocalConfig()
 		storage = originalStorage
 	})
+}
+
+// setupLocalStorageTest points the file config at a not-yet-existing directory
+// inside a temp dir.
+func setupLocalStorageTest(t *testing.T) (basePath string) {
+	resetFilesStateAfterTest(t)
 
 	basePath = filepath.Join(t.TempDir(), "files")
 	config.FilesType.Set("local")

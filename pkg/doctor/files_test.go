@@ -27,17 +27,16 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestCheckFiles_DoesNotCreateBasePath(t *testing.T) {
-	originalType := config.FilesType.GetString()
-	originalBasePath := config.FilesBasePath.GetString()
-	t.Cleanup(func() {
-		config.FilesType.Set(originalType)
-		config.FilesBasePath.Set(originalBasePath)
-	})
+func setFilesConfig(t *testing.T, filesType, basePath string) {
+	t.Cleanup(config.ResetForTests)
 
-	basePath := filepath.Join(t.TempDir(), "files")
-	config.FilesType.Set("local")
+	config.FilesType.Set(filesType)
 	config.FilesBasePath.Set(basePath)
+}
+
+func TestCheckFiles_DoesNotCreateBasePath(t *testing.T) {
+	basePath := filepath.Join(t.TempDir(), "files")
+	setFilesConfig(t, "local", basePath)
 
 	group := CheckFiles()
 
@@ -52,16 +51,8 @@ func TestCheckFiles_DoesNotCreateBasePath(t *testing.T) {
 }
 
 func TestCheckFiles_ExistingBasePath(t *testing.T) {
-	originalType := config.FilesType.GetString()
-	originalBasePath := config.FilesBasePath.GetString()
-	t.Cleanup(func() {
-		config.FilesType.Set(originalType)
-		config.FilesBasePath.Set(originalBasePath)
-	})
-
 	basePath := t.TempDir()
-	config.FilesType.Set("local")
-	config.FilesBasePath.Set(basePath)
+	setFilesConfig(t, "local", basePath)
 
 	group := CheckFiles()
 
@@ -101,17 +92,9 @@ func TestCheckFiles_ExistingBasePath(t *testing.T) {
 }
 
 func TestCheckFiles_BasePathIsAFile(t *testing.T) {
-	originalType := config.FilesType.GetString()
-	originalBasePath := config.FilesBasePath.GetString()
-	t.Cleanup(func() {
-		config.FilesType.Set(originalType)
-		config.FilesBasePath.Set(originalBasePath)
-	})
-
 	basePath := filepath.Join(t.TempDir(), "files")
 	require.NoError(t, os.WriteFile(basePath, []byte("not a directory"), 0600))
-	config.FilesType.Set("local")
-	config.FilesBasePath.Set(basePath)
+	setFilesConfig(t, "local", basePath)
 
 	group := CheckFiles()
 

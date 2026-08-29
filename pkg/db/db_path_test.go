@@ -340,15 +340,9 @@ func TestResolveUserDataDir(t *testing.T) {
 }
 
 // setupDatabasePathTest points the database config at a not-yet-existing user
-// data directory and restores the previous config afterwards.
+// data directory and resets the config afterwards.
 func setupDatabasePathTest(t *testing.T, configuredPath string) (dataHome string) {
-	originalPath := config.DatabasePath.GetString()
-	originalRootPath := config.ServiceRootpath.GetString()
-
-	t.Cleanup(func() {
-		config.DatabasePath.Set(originalPath)
-		config.ServiceRootpath.Set(originalRootPath)
-	})
+	t.Cleanup(config.ResetForTests)
 
 	dataHome = filepath.Join(t.TempDir(), "xdg")
 	t.Setenv("XDG_DATA_HOME", dataHome)
