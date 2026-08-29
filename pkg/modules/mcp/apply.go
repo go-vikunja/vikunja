@@ -28,6 +28,7 @@ import (
 	"math"
 	"reflect"
 	"strconv"
+	"strings"
 
 	"code.vikunja.io/api/pkg/web/handler"
 )
@@ -51,6 +52,18 @@ func validateAndDecodeArgs(spec *opSpec, raw json.RawMessage) (map[string]json.R
 	return args, nil
 }
 
+// decodeToolArgs validates before unmarshalling, so an unknown or mistyped key is
+// named back to the caller instead of being silently dropped.
+func decodeToolArgs(spec *opSpec, raw json.RawMessage, dst any) error {
+	if _, err := validateAndDecodeArgs(spec, raw); err != nil {
+		return err
+	}
+	if len(raw) == 0 {
+		return nil
+	}
+	return json.Unmarshal(raw, dst)
+}
+
 // The schema already validated names and types, so errors here mean a value that
 // passed JSON Schema but not Go unmarshalling (e.g. a malformed RFC 3339 timestamp).
 func applyArgs(model handler.CObject, spec *opSpec, args map[string]json.RawMessage) error {
@@ -68,7 +81,7 @@ func applyArgs(model handler.CObject, spec *opSpec, args map[string]json.RawMess
 		if !field.CanAddr() {
 			return fmt.Errorf("mcp: field for argument %q is not addressable", name)
 		}
-		if isIntegerKind(field.Kind()) {
+		if isIntegerKind(derefType(field.Type()).Kind()) {
 			var err error
 			if rawVal, err = integralNumber(rawVal); err != nil {
 				return fmt.Errorf("invalid value for %q: %w", name, err)
@@ -81,7 +94,7 @@ func applyArgs(model handler.CObject, spec *opSpec, args map[string]json.RawMess
 	return nil
 }
 
-// The update schema marks exactly the fields that address a single row as required.
+// The read_one schema's required set is exactly the fields that address a single row.
 func identityArgs(spec *opSpec, args map[string]json.RawMessage) map[string]json.RawMessage {
 	out := make(map[string]json.RawMessage, len(spec.schema.Required))
 	for _, name := range spec.schema.Required {
@@ -103,6 +116,11 @@ func integralNumber(raw json.RawMessage) (json.RawMessage, error) {
 	if _, err := num.Int64(); err == nil {
 		return raw, nil
 	}
+	// Int64 rejected a plain integer literal, so it is out of range: report that
+	// through the real unmarshal instead of rounding it through a float64.
+	if !strings.ContainsAny(string(num), ".eE") {
+		return raw, nil
+	}
 	f, err := num.Float64()
 	if err != nil {
 		//nolint:nilerr // not a number at all, so the real unmarshal names the field
@@ -111,8 +129,9 @@ func integralNumber(raw json.RawMessage) (json.RawMessage, error) {
 	if f != math.Trunc(f) {
 		return nil, errors.New("must be an integer")
 	}
-	// Out of int64 range: leave it to the real unmarshal to say so.
-	if f < math.MinInt64 || f > math.MaxInt64 {
+	// Out of int64 range: leave it to the real unmarshal to say so. The upper bound is
+	// 2^63 rather than MaxInt64 because float64(math.MaxInt64) rounds up to exactly 2^63.
+	if f < math.MinInt64 || f >= float64(1<<63) {
 		return raw, nil
 	}
 	return json.RawMessage(strconv.FormatInt(int64(f), 10)), nil
