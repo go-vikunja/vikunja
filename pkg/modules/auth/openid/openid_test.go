@@ -283,6 +283,24 @@ func TestGetOrCreateUser(t *testing.T) {
 			"subject": idToken.Subject,
 		})
 	})
+	t.Run("ProviderFallback: reject bot matched by preferred_username", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		cl := &claims{
+			Email:             "bot@example.com",
+			PreferredUsername: "bot-owner-a-assistant",
+		}
+		provider := &Provider{
+			UsernameFallback: true,
+		}
+		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "c0ffee00-dead-beef-cafe-000000000023"}
+
+		u, err := getOrCreateUser(s, cl, provider, idToken)
+		assert.True(t, user.IsErrAccountIsBot(err))
+		assert.Nil(t, u)
+	})
 	t.Run("ProviderFallback: Falls back to sub when preferred_username is empty", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
