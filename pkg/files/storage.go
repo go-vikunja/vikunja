@@ -17,6 +17,7 @@
 package files
 
 import (
+	"context"
 	"io"
 	"os"
 )
@@ -28,4 +29,11 @@ type FileStorage interface {
 	Stat(path string) (os.FileInfo, error)
 	Remove(path string) error
 	MkdirAll(path string, perm os.FileMode) error
+}
+
+// contextStorage is implemented by backends doing network IO, so callers can bound
+// them with a deadline. Local and in-memory writes cannot block indefinitely.
+type contextStorage interface {
+	writeContext(ctx context.Context, path string, content io.ReadSeeker, size uint64) error
+	removeContext(ctx context.Context, path string) error
 }

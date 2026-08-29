@@ -20,6 +20,7 @@ import (
 	"archive/zip"
 	"bufio"
 	"bytes"
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -145,7 +146,7 @@ func Restore(filename string, overrideConfig bool) error {
 	// Init the configFile again since the restored configuration is most likely different from the one before
 	initialize.LightInit()
 	initialize.InitEngines()
-	err = files.InitFileHandler()
+	err = files.InitFileHandler(context.Background())
 	if err != nil {
 		return fmt.Errorf("could not init file handler: %w", err)
 	}

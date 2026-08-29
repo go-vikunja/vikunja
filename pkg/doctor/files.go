@@ -17,6 +17,7 @@
 package doctor
 
 import (
+	"context"
 	"fmt"
 	"io/fs"
 	"os"
@@ -30,8 +31,10 @@ import (
 func CheckFiles() CheckGroup {
 	fileType := config.FilesType.GetString()
 
+	ctx := context.Background()
+
 	// Not InitFileHandler: a diagnostic must not create the storage it reports on.
-	if err := files.InitStorageBackend(); err != nil {
+	if err := files.InitStorageBackend(ctx); err != nil {
 		return CheckGroup{
 			Name: fmt.Sprintf("Files (%s)", fileType),
 			Results: []CheckResult{
@@ -48,9 +51,9 @@ func CheckFiles() CheckGroup {
 
 	switch fileType {
 	case "local":
-		results = checkLocalStorage()
+		results = checkLocalStorage(ctx)
 	case "s3":
-		results = checkS3Storage()
+		results = checkS3Storage(ctx)
 	default:
 		results = []CheckResult{
 			{
@@ -67,7 +70,7 @@ func CheckFiles() CheckGroup {
 	}
 }
 
-func checkLocalStorage() []CheckResult {
+func checkLocalStorage(ctx context.Context) []CheckResult {
 	basePath := config.FilesBasePath.GetString()
 
 	results := []CheckResult{
@@ -111,7 +114,7 @@ func checkLocalStorage() []CheckResult {
 
 	results = append(results, checkDirectoryOwnership(info)...)
 
-	if err := files.ValidateFileStorage(); err != nil {
+	if err := files.ValidateFileStorage(ctx); err != nil {
 		results = append(results, CheckResult{
 			Name:   "Writable",
 			Passed: false,
@@ -184,7 +187,7 @@ func formatBytes(b int64) string {
 	}
 }
 
-func checkS3Storage() []CheckResult {
+func checkS3Storage(ctx context.Context) []CheckResult {
 	endpoint := config.FilesS3Endpoint.GetString()
 	bucket := config.FilesS3Bucket.GetString()
 
@@ -201,7 +204,7 @@ func checkS3Storage() []CheckResult {
 		},
 	}
 
-	if err := files.ValidateFileStorage(); err != nil {
+	if err := files.ValidateFileStorage(ctx); err != nil {
 		results = append(results, CheckResult{
 			Name:   "Writable",
 			Passed: false,
