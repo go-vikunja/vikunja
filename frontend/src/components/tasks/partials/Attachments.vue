@@ -199,7 +199,10 @@
 			@close="closePreview"
 		>
 			<Loading v-if="previewLoading" />
-			<div v-else-if="previewFailed">
+			<div
+				v-else-if="previewFailed"
+				class="video-preview-error"
+			>
 				<p>{{ $t('misc.videoLoadFailed') }}</p>
 				<XButton
 					icon="download"
@@ -780,6 +783,21 @@ defineExpose({
 	max-block-size: calc(100vh - 40px);
 	margin: 0 auto;
 	display: block;
+}
+
+// unlike the video and iframe branches, the error state has no opaque media of its own to sit on
+.video-preview-error {
+	max-inline-size: 25rem;
+	margin: 0 auto;
+	padding: 2rem;
+	border-radius: $radius;
+	background: var(--white);
+	color: var(--text);
+	text-align: center;
+
+	p {
+		margin-block-end: 1rem;
+	}
 }
 
 .is-task-cover {
