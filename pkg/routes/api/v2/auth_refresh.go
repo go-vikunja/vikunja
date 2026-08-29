@@ -22,7 +22,6 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/modules/auth"
-	user2 "code.vikunja.io/api/pkg/user"
 
 	"github.com/danielgtaylor/huma/v2"
 )
@@ -57,7 +56,7 @@ func authRefreshToken(ctx context.Context, _ *struct{}) (*authTokenBody, error) 
 
 	result, err := auth.RefreshSession(cookie.Value)
 	if err != nil {
-		if user2.IsErrUserStatusError(err) {
+		if auth.IsUnusableRefreshToken(err) {
 			auth.ClearRefreshTokenCookie(ec)
 		}
 		return nil, translateDomainError(err)
