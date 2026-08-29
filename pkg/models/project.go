@@ -943,7 +943,7 @@ func addMaxPermissionToProjects(s *xorm.Session, projects []*Project, u *user.Us
 	for _, project := range projects {
 		permission, has := permissions[project.ID]
 		if has {
-			project.MaxPermission = Ptr(permission.MaxPermission)
+			project.MaxPermission = Ptr(permission)
 		}
 	}
 
