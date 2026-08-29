@@ -79,11 +79,11 @@ type Task struct {
 	// The task description.
 	Description string `xorm:"longtext null" json:"description"`
 	// Whether a task is done or not.
-	Done bool `xorm:"INDEX null" json:"done"`
+	Done bool `xorm:"INDEX null index(done_due_date)" json:"done"`
 	// The time when a task was marked as done. This field is system-controlled and cannot be set via API.
 	DoneAt time.Time `xorm:"INDEX null 'done_at'" json:"done_at" readOnly:"true" doc:"When the task was marked as done. Set by the server; ignored on write."`
 	// The time when the task is due.
-	DueDate time.Time `xorm:"DATETIME INDEX null 'due_date'" json:"due_date"`
+	DueDate time.Time `xorm:"DATETIME INDEX null index(done_due_date) 'due_date'" json:"due_date"`
 	// An array of reminders that are associated with this task.
 	Reminders []*TaskReminder `xorm:"-" json:"reminders"`
 	// The project this task belongs to.
