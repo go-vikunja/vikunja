@@ -24,15 +24,14 @@
 			>
 				{{ $t('user.auth.login') }}
 			</XButton>
-
-			<Message
-				v-if="errorMessage !== ''"
-				variant="danger"
-				class="mbs-4"
-			>
-				{{ errorMessage }}
-			</Message>
 		</Card>
+		<Message
+			v-if="errorMessage !== ''"
+			variant="danger"
+			class="mbs-4"
+		>
+			{{ errorMessage }}
+		</Message>
 	</div>
 </template>
 
@@ -104,7 +103,6 @@ function useAuth() {
 	}
 
 	async function authenticate() {
-		authenticateWithPassword.value = false
 		errorMessage.value = ''
 
 		if (authLinkShare.value) {
@@ -157,6 +155,7 @@ function useAuth() {
 			}
 			if (e?.response?.data?.code === 13002) {
 				err = t('sharing.invalidPassword')
+				authenticateWithPassword.value = true
 			}
 			errorMessage.value = err
 		} finally {
