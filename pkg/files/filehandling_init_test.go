@@ -17,6 +17,7 @@
 package files
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"testing"
@@ -54,7 +55,7 @@ func setupLocalStorageTest(t *testing.T) (basePath string) {
 func TestInitStorageBackend_DoesNotCreateBasePath(t *testing.T) {
 	basePath := setupLocalStorageTest(t)
 
-	require.NoError(t, InitStorageBackend())
+	require.NoError(t, InitStorageBackend(context.Background()))
 
 	local, ok := storage.(*localStorage)
 	require.True(t, ok)
@@ -67,7 +68,7 @@ func TestInitStorageBackend_DoesNotCreateBasePath(t *testing.T) {
 func TestInitFileHandler_CreatesBasePath(t *testing.T) {
 	basePath := setupLocalStorageTest(t)
 
-	require.NoError(t, InitFileHandler())
+	require.NoError(t, InitFileHandler(context.Background()))
 
 	info, err := os.Stat(basePath)
 	require.NoError(t, err)
@@ -77,9 +78,9 @@ func TestInitFileHandler_CreatesBasePath(t *testing.T) {
 func TestValidateFileStorage_MissingBasePathFails(t *testing.T) {
 	basePath := setupLocalStorageTest(t)
 
-	require.NoError(t, InitStorageBackend())
+	require.NoError(t, InitStorageBackend(context.Background()))
 
-	require.ErrorContains(t, ValidateFileStorage(), "failed to access file storage directory")
+	require.ErrorContains(t, ValidateFileStorage(context.Background()), "failed to access file storage directory")
 
 	_, err := os.Stat(basePath)
 	require.ErrorIs(t, err, os.ErrNotExist)
@@ -89,7 +90,7 @@ func TestValidateFileStorage_BasePathIsAFile(t *testing.T) {
 	basePath := setupLocalStorageTest(t)
 
 	require.NoError(t, os.WriteFile(basePath, []byte("not a directory"), 0600))
-	require.NoError(t, InitStorageBackend())
+	require.NoError(t, InitStorageBackend(context.Background()))
 
-	require.ErrorContains(t, ValidateFileStorage(), "file storage path exists but is not a directory")
+	require.ErrorContains(t, ValidateFileStorage(context.Background()), "file storage path exists but is not a directory")
 }
