@@ -21,6 +21,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"code.vikunja.io/api/pkg/log"
+
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -125,4 +127,83 @@ func TestResolvePath(t *testing.T) {
 			assert.Equal(t, tt.expected, result)
 		})
 	}
+}
+
+func TestPathDefaultsAreRelative(t *testing.T) {
+	viper.Reset()
+	t.Cleanup(viper.Reset)
+	InitDefaultConfig()
+
+	assert.Equal(t, "vikunja.db", DatabasePath.GetString())
+	assert.Equal(t, "logs", LogPath.GetString())
+	assert.Equal(t, "plugins", PluginsDir.GetString())
+	assert.Equal(t, "files", FilesBasePath.GetString())
+}
+
+func TestRootpathMovesPathDefaults(t *testing.T) {
+	t.Cleanup(func() {
+		log.ConfigureStandardLogger(true, "stdout", "", "INFO", "text")
+	})
+
+	assertPathsUnderRoot := func(t *testing.T, root string) {
+		t.Helper()
+
+		assert.Equal(t, "vikunja.db", DatabasePath.GetString(), "database.path must stay relative so pkg/db can resolve it")
+		assert.Equal(t, filepath.Join(root, "logs"), ResolvePath(LogPath.GetString()))
+		assert.Equal(t, filepath.Join(root, "plugins"), ResolvePath(PluginsDir.GetString()))
+		assert.Equal(t, filepath.Join(root, "files"), ResolvePath(FilesBasePath.GetString()))
+
+		// ConfigureStandardLogger creates the log directory, so this pins the path
+		// InitConfig actually handed to the logger rather than just re-resolving it.
+		assert.DirExists(t, filepath.Join(root, "logs"))
+	}
+
+	t.Run("from the config file", func(t *testing.T) {
+		root := t.TempDir()
+		initConfigFromYAML(t, "log:\n  standard: file\nservice:\n  rootpath: "+root+"\n")
+
+		assertPathsUnderRoot(t, root)
+	})
+	t.Run("from the environment", func(t *testing.T) {
+		root := t.TempDir()
+		t.Setenv("VIKUNJA_SERVICE_ROOTPATH", root)
+		t.Setenv("VIKUNJA_LOG_STANDARD", "file")
+		initConfigFromYAML(t, "")
+
+		assertPathsUnderRoot(t, root)
+	})
+}
+
+func TestKeyIsConfigured(t *testing.T) {
+	t.Run("a value from the config file is configured", func(t *testing.T) {
+		initConfigFromYAML(t, "database:\n  path: /var/lib/vikunja/vikunja.db\n")
+
+		assert.True(t, DatabasePath.IsConfigured())
+	})
+	t.Run("a value from the environment is configured", func(t *testing.T) {
+		t.Setenv("VIKUNJA_DATABASE_PATH", "/var/lib/vikunja/vikunja.db")
+		initConfigFromYAML(t, "")
+
+		assert.True(t, DatabasePath.IsConfigured())
+	})
+	t.Run("a default is not configured", func(t *testing.T) {
+		initConfigFromYAML(t, "")
+
+		assert.False(t, ServiceRootpath.IsConfigured())
+		assert.False(t, DatabasePath.IsConfigured())
+	})
+	t.Run("a rootpath equal to the default is still configured", func(t *testing.T) {
+		t.Chdir(t.TempDir())
+		root, err := os.Getwd()
+		require.NoError(t, err)
+		require.NoError(t, os.WriteFile(filepath.Join(root, "config.yml"),
+			[]byte("cors:\n  enable: false\nservice:\n  rootpath: "+root+"\n"), 0600))
+
+		viper.Reset()
+		t.Cleanup(viper.Reset)
+		InitConfig()
+
+		require.Equal(t, root, getRootpathLocation(), "the default must coincide with the configured value")
+		assert.True(t, ServiceRootpath.IsConfigured())
+	})
 }
