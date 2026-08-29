@@ -75,6 +75,17 @@ func TestAdmin_GateUnlicensed(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, res.Code)
 }
 
+func TestAdmin_GateUnlicensedV2(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	license.ResetForTests()
+
+	admin := promoteToAdmin(t, 1)
+
+	res := adminReq(t, e, http.MethodGet, "/api/v2/admin/overview", admin, "")
+	assert.Equal(t, http.StatusNotFound, res.Code)
+}
+
 func TestAdmin_GateNonAdmin(t *testing.T) {
 	e, err := setupTestEnv()
 	require.NoError(t, err)
