@@ -55,45 +55,51 @@ type Token struct {
 
 const RefreshTokenCookieName = "vikunja_refresh_token" //nolint:gosec // not a credential
 
-// getRefreshTokenCookiePath returns the cookie path for the refresh token,
-// derived from service.publicurl.
-func getRefreshTokenCookiePath() string {
-	refreshURL := "/api/v1/user/token/refresh"
+const (
+	RefreshTokenPathV1 = "/api/v1/user/token/refresh" //nolint:gosec // a route path, not a credential
+	RefreshTokenPathV2 = "/api/v2/user/token/refresh" //nolint:gosec // a route path, not a credential
+)
 
-	publicURL := config.ServicePublicURL.GetString()
-	u, err := url.Parse(publicURL)
-	if err != nil {
-		return refreshURL
+// getRefreshTokenCookiePaths prefixes each refresh endpoint with the base
+// path from service.publicurl.
+func getRefreshTokenCookiePaths() []string {
+	basePath := ""
+	if u, err := url.Parse(config.ServicePublicURL.GetString()); err == nil {
+		basePath = strings.TrimRight(u.Path, "/")
 	}
 
-	// Extract the path component and append the refresh endpoint
-	basePath := strings.TrimRight(u.Path, "/")
-	return basePath + refreshURL
+	refreshTokenPaths := []string{RefreshTokenPathV1, RefreshTokenPathV2}
+	paths := make([]string, len(refreshTokenPaths))
+	for i, p := range refreshTokenPaths {
+		paths[i] = basePath + p
+	}
+	return paths
 }
 
-// SetRefreshTokenCookie sets an HttpOnly cookie containing the refresh token.
-// The cookie is path-scoped to the refresh endpoint so the browser only sends
-// it on refresh requests. HttpOnly prevents JavaScript access (XSS protection).
+// SetRefreshTokenCookie sets one HttpOnly cookie per refresh endpoint (v1, v2),
+// path-scoped so the browser only sends it on refresh requests. A single
+// cookie at Path=/api would ship the long-lived token on every API request.
+// Browsers match cookie paths by prefix, so each endpoint needs its own.
 func SetRefreshTokenCookie(c *echo.Context, token string, maxAge int) {
 	secure := strings.HasPrefix(config.ServicePublicURL.GetString(), "https")
-	// SameSite=None allows cross-origin sending (needed for the Electron
-	// desktop app where the page is on localhost but the API is remote),
-	// however browsers require Secure=true for SameSite=None cookies.
-	// When running over plain HTTP (e.g. local dev or E2E tests), fall
-	// back to Lax so the cookie is still accepted by the browser.
+	// SameSite=None so the cookie survives split-origin deployments where the
+	// frontend and API are on different hosts, but browsers only accept that
+	// with Secure=true; fall back to Lax on plain HTTP (local dev, E2E tests).
 	sameSite := http.SameSiteLaxMode
 	if secure {
 		sameSite = http.SameSiteNoneMode
 	}
-	c.SetCookie(&http.Cookie{ //nolint:gosec // G124: Secure/SameSite are intentionally conditional on the https scheme (see above); HttpOnly is always set.
-		Name:     RefreshTokenCookieName,
-		Value:    token,
-		Path:     getRefreshTokenCookiePath(),
-		MaxAge:   maxAge,
-		HttpOnly: true,
-		Secure:   secure,
-		SameSite: sameSite,
-	})
+	for _, path := range getRefreshTokenCookiePaths() {
+		c.SetCookie(&http.Cookie{ //nolint:gosec // G124: Secure/SameSite are intentionally conditional on the https scheme (see above); HttpOnly is always set.
+			Name:     RefreshTokenCookieName,
+			Value:    token,
+			Path:     path,
+			MaxAge:   maxAge,
+			HttpOnly: true,
+			Secure:   secure,
+			SameSite: sameSite,
+		})
+	}
 }
 
 // ClearRefreshTokenCookie removes the refresh token cookie.

@@ -20,10 +20,35 @@ import (
 	"context"
 	"testing"
 
+	"code.vikunja.io/api/pkg/config"
+
 	"github.com/stretchr/testify/assert"
 )
 
 func TestGetAuthFromContext_NoEchoContext(t *testing.T) {
 	_, err := GetAuthFromContext(context.Background())
 	assert.Error(t, err, "should fail when echo.Context isn't stashed on ctx")
+}
+
+func TestGetRefreshTokenCookiePaths(t *testing.T) {
+	original := config.ServicePublicURL.GetString()
+	t.Cleanup(func() { config.ServicePublicURL.Set(original) })
+
+	tests := []struct {
+		name      string
+		publicURL string
+		basePath  string
+	}{
+		{"empty", "", ""},
+		{"root", "https://h/", ""},
+		{"subpath", "https://h/vikunja", "/vikunja"},
+		{"subpath with trailing slash", "https://h/vikunja/", "/vikunja"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			config.ServicePublicURL.Set(tt.publicURL)
+			assert.Equal(t, []string{tt.basePath + RefreshTokenPathV1, tt.basePath + RefreshTokenPathV2}, getRefreshTokenCookiePaths())
+		})
+	}
 }
