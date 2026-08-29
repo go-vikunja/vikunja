@@ -18,6 +18,7 @@ package mcp
 
 import (
 	"encoding/json"
+	"math"
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
@@ -164,4 +165,50 @@ func TestPopReadAllParams_IntegralFloats(t *testing.T) {
 	_, _, _, err = popReadAllParams(map[string]json.RawMessage{argPerPage: json.RawMessage(`1.5`)})
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), `invalid value for "per_page": must be an integer`)
+}
+
+func TestIntegralNumber_OutOfRangePassedThrough(t *testing.T) {
+	// float64(math.MaxInt64) rounds up to 2^63, so a naive `f > math.MaxInt64`
+	// guard let 2^63 through and int64(f) wrapped it to MinInt64.
+	for _, raw := range []string{
+		"9223372036854775808",     // 2^63
+		"9223372036854775807.0",   // MaxInt64 written as a float, which rounds to 2^63
+		"-9223372036854775809",    // -2^63 - 1
+		"9.223372036854775808e18", // 2^63 in exponent form
+	} {
+		out, err := integralNumber(json.RawMessage(raw))
+		require.NoError(t, err, raw)
+		assert.JSONEq(t, raw, string(out), "%s must be handed to json.Unmarshal untouched", raw)
+
+		var into int64
+		require.Error(t, json.Unmarshal(out, &into), "%s must be reported as out of range", raw)
+	}
+}
+
+func TestIntegralNumber_InRangeBounds(t *testing.T) {
+	for raw, want := range map[string]int64{
+		"9223372036854775807":      math.MaxInt64,
+		"-9223372036854775808":     math.MinInt64,
+		"-9.223372036854775808e18": math.MinInt64,
+	} {
+		out, err := integralNumber(json.RawMessage(raw))
+		require.NoError(t, err, raw)
+		var into int64
+		require.NoError(t, json.Unmarshal(out, &into), raw)
+		assert.Equal(t, want, into, raw)
+	}
+}
+
+func TestApply_IntegralFloatOnPointerField(t *testing.T) {
+	// Project.ParentProjectID is *int64: the integer normalisation has to look
+	// through the pointer or json.Unmarshal chokes on 1.0.
+	registerAllResources(t)
+	spec := specFor(t, "projects", OpUpdate)
+
+	args, err := validateAndDecodeArgs(spec, json.RawMessage(`{"id":1,"parent_project_id":2.0}`))
+	require.NoError(t, err)
+	p := &models.Project{}
+	require.NoError(t, applyArgs(p, spec, args))
+	require.NotNil(t, p.ParentProjectID)
+	assert.Equal(t, int64(2), *p.ParentProjectID)
 }
