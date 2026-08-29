@@ -398,6 +398,40 @@ func pathScoped(match func(string) bool, mw echo.MiddlewareFunc) echo.Middleware
 	}
 }
 
+type pathSet map[string]bool
+
+func (s pathSet) has(p string) bool { return s[p] }
+
+// Panics on a path that isn't JWT-exempt: such an entry is a typo, and a typo
+// here silently means no rate limit at all.
+func unauthenticatedPathSet(paths ...string) pathSet {
+	s := make(pathSet, len(paths))
+	for _, p := range paths {
+		if !unauthenticatedAPIPaths[p] {
+			panic("rate limited path " + p + " is not in unauthenticatedAPIPaths")
+		}
+		s[p] = true
+	}
+	return s
+}
+
+// The v2 counterparts of v1's unauthenticated route group - credential
+// endpoints only, never the docs/info/health ones.
+var v2CredentialPaths = unauthenticatedPathSet(
+	"/api/v2/register",
+	"/api/v2/user/password/token",
+	"/api/v2/user/password/reset",
+	"/api/v2/user/confirm",
+	"/api/v2/login",
+	"/api/v2/auth/openid/:provider/callback",
+	"/api/v2/shares/:share/auth",
+)
+
+var v2SessionRenewalPaths = unauthenticatedPathSet(
+	auth.RefreshTokenPathV2,
+	"/api/v2/oauth/token",
+)
+
 const v2AdminPathPrefix = "/api/v2/admin"
 
 // gateV2AdminRoutes reuses v1's RequireFeature/RequireInstanceAdmin gate, both
@@ -417,7 +451,8 @@ func gateV2AdminRoutes() echo.MiddlewareFunc {
 func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, noAuthRateLimit, refreshRateLimit echo.MiddlewareFunc) {
 	a.Use(noStoreCacheControl())
 	a.Use(SetupTokenMiddleware())
-	a.Use(pathScoped(func(p string) bool { return p == auth.RefreshTokenPathV2 }, refreshRateLimit))
+	a.Use(pathScoped(v2SessionRenewalPaths.has, refreshRateLimit))
+	a.Use(pathScoped(v2CredentialPaths.has, noAuthRateLimit))
 	// Match the authenticated v1 group: rate limiting and route metrics
 	// apply to v2 resource endpoints too.
 	setupRateLimit(a, config.RateLimitKind.GetString())
