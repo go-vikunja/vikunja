@@ -7,6 +7,7 @@ import type { IAttachment } from '@/modelTypes/IAttachment'
 
 export const SUPPORTED_IMAGE_SUFFIX = ['.jpeg', '.jpg', '.png', '.bmp', '.gif']
 export const SUPPORTED_PDF_SUFFIX = ['.pdf']
+export const SUPPORTED_VIDEO_SUFFIX = ['.mp4', '.webm', '.ogg', '.ogv', '.mov', '.m4v']
 
 export function canPreviewImage(attachment: IAttachment): boolean {
 	const mime = attachment.file.mime.toLowerCase()
@@ -25,6 +26,12 @@ export function canPreviewPdf(attachment: IAttachment): boolean {
 // No suffix allowlist, unlike images/pdfs: the blob is typed from the server's sniffed Content-Type, and an <audio> element neither parses HTML nor executes script.
 export function canPreviewAudio(attachment: IAttachment): boolean {
 	return attachment.file.mime.toLowerCase().startsWith('audio/')
+}
+
+export function canPreviewVideo(attachment: IAttachment): boolean {
+	const mime = attachment.file.mime.toLowerCase()
+	return SUPPORTED_VIDEO_SUFFIX.some((suffix) => attachment.file.name.toLowerCase().endsWith(suffix))
+		&& mime.startsWith('video/')
 }
 
 export default class AttachmentModel extends AbstractModel<IAttachment> implements IAttachment {
