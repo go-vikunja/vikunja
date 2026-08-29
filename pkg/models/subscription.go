@@ -108,13 +108,13 @@ type Subscription struct {
 	// The numeric ID of the subscription
 	ID int64 `xorm:"autoincr not null unique pk" json:"id" readOnly:"true" doc:"The numeric id of the subscription."`
 
-	EntityType SubscriptionEntityType `xorm:"index not null" json:"entity" readOnly:"true" doc:"The kind of entity this subscription is for. Either project or task; derived server-side from the request path."`
+	EntityType SubscriptionEntityType `xorm:"index not null unique(entity_user)" json:"entity" readOnly:"true" doc:"The kind of entity this subscription is for. Either project or task; derived server-side from the request path."`
 	Entity     string                 `xorm:"-" json:"-" param:"entity"`
 	// The id of the entity to subscribe to.
-	EntityID int64 `xorm:"bigint index not null" json:"entity_id" param:"entityID" readOnly:"true" doc:"The numeric id of the subscribed entity; taken from the request path."`
+	EntityID int64 `xorm:"bigint index not null unique(entity_user)" json:"entity_id" param:"entityID" readOnly:"true" doc:"The numeric id of the subscribed entity; taken from the request path."`
 
 	// The user who made this subscription
-	UserID int64 `xorm:"bigint index not null" json:"-"`
+	UserID int64 `xorm:"bigint index not null unique(entity_user)" json:"-"`
 
 	// Muted turns the row into an opt-out: it outranks any inherited subscription and is dropped while resolving.
 	Muted bool `xorm:"not null default false" json:"-" xml:"-"`
