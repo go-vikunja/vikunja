@@ -1765,7 +1765,7 @@ func addRepeatIntervalToTime(now, t time.Time, duration time.Duration) time.Time
 		return now.Add(duration)
 	}
 
-	intervals := int64(diff/duration) + 1
+	intervals := int64(diff / duration)
 
 	// Guard against int64 overflow when multiplying intervals by duration.
 	if intervals > math.MaxInt64/int64(duration) {
