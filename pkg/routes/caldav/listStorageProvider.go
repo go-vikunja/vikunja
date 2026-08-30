@@ -965,6 +965,16 @@ func removeStaleRelations(s *xorm.Session, a web.Auth, task *models.Task, newRel
 					OtherTaskID:  relatedTask.ID,
 					RelationKind: relationKind,
 				}
+				// rel.Delete itself does not authorize; a caller who cannot
+				// read the other task must not delete the relation. Skip instead
+				// of failing so one forbidden relation cannot abort the sync.
+				canDelete, canDeleteErr := rel.CanDelete(s, a)
+				if canDeleteErr != nil {
+					return canDeleteErr
+				}
+				if !canDelete {
+					continue
+				}
 				err = rel.Delete(s, a)
 				if err != nil {
 					return

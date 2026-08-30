@@ -697,3 +697,48 @@ END:VCALENDAR`)
 		require.NoError(t, err)
 	})
 }
+
+// TestRemoveStaleRelations_SkipsForbiddenDeletion guards the stale-relation
+// sweep: a caller who cannot delete a relation (e.g. read-only on the base
+// task) must cause a skip, not an error, and the relation must survive.
+func TestRemoveStaleRelations_SkipsForbiddenDeletion(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	owner := &user.User{ID: 1}
+	reader := &user.User{ID: 2}
+
+	proj := &models.Project{Title: "stale-rel shared project"}
+	require.NoError(t, proj.Create(s, owner))
+	_, err := s.Insert(&models.ProjectUser{UserID: reader.ID, ProjectID: proj.ID, Permission: models.PermissionRead})
+	require.NoError(t, err)
+
+	baseTask := &models.Task{Title: "stale-rel base", ProjectID: proj.ID}
+	require.NoError(t, baseTask.Create(s, owner))
+	parentTask := &models.Task{Title: "stale-rel parent", ProjectID: proj.ID}
+	require.NoError(t, parentTask.Create(s, owner))
+
+	_, err = s.Insert(&models.TaskRelation{
+		TaskID:       baseTask.ID,
+		OtherTaskID:  parentTask.ID,
+		RelationKind: models.RelationKindParenttask,
+		CreatedByID:  owner.ID,
+	})
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+
+	relationCond := map[string]interface{}{
+		"task_id":       baseTask.ID,
+		"other_task_id": parentTask.ID,
+		"relation_kind": models.RelationKindParenttask,
+	}
+
+	err = removeStaleRelations(s, reader, &models.Task{ID: baseTask.ID}, map[models.RelationKind][]*models.Task{})
+	require.NoError(t, err, "a caller without delete permission must cause a skip, not an error")
+	db.AssertExists(t, "task_relations", relationCond, false)
+
+	err = removeStaleRelations(s, owner, &models.Task{ID: baseTask.ID}, map[models.RelationKind][]*models.Task{})
+	require.NoError(t, err)
+	db.AssertMissing(t, "task_relations", relationCond)
+}
