@@ -5,12 +5,12 @@
             "children": [
                 {
                     "key": "secret",
-                    "default_value": "\u003ca-secret\u003e",
+                    "default_value": "<a-secret>",
                     "comment": "This secret is used to sign JWT tokens and for other cryptographic operations.\nDefault is a random secret which will be generated at each startup of Vikunja.\n(This means all already issued tokens will be invalid once you restart Vikunja)"
                 },
                 {
                     "key": "JWTSecret",
-                    "default_value": "\u003cjwt-secret\u003e",
+                    "default_value": "<jwt-secret>",
                     "comment": "Deprecated: use service.secret instead. If set, its value will be copied to service.secret."
                 },
                 {
@@ -50,7 +50,7 @@
                 },
                 {
                     "key": "rootpath",
-                    "default_value": "\u003crootpath\u003e",
+                    "default_value": "<rootpath>",
                     "comment": "The base path on the file system where Vikunja stores its data (database, files, logs, plugins).\nDefaults to the current working directory. When running as a systemd service, this respects the WorkingDirectory= setting.\nVikunja will also look in this path for a config file, so you could provide only this variable to point to a folder\nwith a config file which will then be used.\nWhen a config file is pinned with the `--config` flag, this search is skipped and rootpath defaults to the directory containing that config file.\nA relative rootpath set in a pinned config file is resolved against that same directory."
                 },
                 {
@@ -101,7 +101,7 @@
                 {
                     "key": "testingtoken",
                     "default_value": "",
-                    "comment": "If not empty, this will enable `/test/{table}` endpoints which allow to put any content in the database.\nUsed to reset the db before frontend tests. Because this is quite a dangerous feature allowing for lots of harm,\neach request made to this endpoint needs to provide an `Authorization: \u003ctoken\u003e` header with the token from below. \u003cbr/\u003e\n**You should never use this unless you know exactly what you're doing**"
+                    "comment": "If not empty, this will enable `/test/{table}` endpoints which allow to put any content in the database.\nUsed to reset the db before frontend tests. Because this is quite a dangerous feature allowing for lots of harm,\neach request made to this endpoint needs to provide an `Authorization: <token>` header with the token from below. <br/>\n**You should never use this unless you know exactly what you're doing**"
                 },
                 {
                     "key": "enableemailreminders",
@@ -221,7 +221,7 @@
                 {
                     "key": "path",
                     "default_value": "./vikunja.db",
-                    "comment": "When using sqlite, this is the path where to store the database file. Can be an absolute path or relative path. \u003cbr/\u003e\nRelative paths are resolved as follows: \u003cbr/\u003e\n- If the config file was pinned with the `--config` flag and this value is not set explicitly, the default is resolved against the anchored rootpath, which is the directory of that config file. \u003cbr/\u003e\n- If `service.rootpath` is explicitly configured (differs from the binary location), the database path is resolved relative to that directory. \u003cbr/\u003e\n- Otherwise, relative paths are resolved to a platform-specific user data directory to prevent database files from being created in system directories (like `C:\\Windows\\System32` on Windows when running as a service): \u003cbr/\u003e\n  - **Windows**: `%LOCALAPPDATA%\\Vikunja` (e.g., `C:\\Users\\username\\AppData\\Local\\Vikunja`) \u003cbr/\u003e\n  - **macOS**: `~/Library/Application Support/Vikunja` \u003cbr/\u003e\n  - **Linux**: `$XDG_DATA_HOME/vikunja` or `~/.local/share/vikunja` \u003cbr/\u003e\n**Recommendation**: Use an absolute path for production deployments, especially when running Vikunja as a Windows service, to have full control over the database location."
+                    "comment": "When using sqlite, this is the path where to store the database file. Can be an absolute path or relative path. <br/>\nRelative paths are resolved as follows: <br/>\n- If the config file was pinned with the `--config` flag and this value is not set explicitly, the default is resolved against the anchored rootpath, which is the directory of that config file. <br/>\n- If `service.rootpath` is explicitly configured (differs from the binary location), the database path is resolved relative to that directory. <br/>\n- Otherwise, relative paths are resolved to a platform-specific user data directory to prevent database files from being created in system directories (like `C:\\Windows\\System32` on Windows when running as a service): <br/>\n  - **Windows**: `%LOCALAPPDATA%\\Vikunja` (e.g., `C:\\Users\\username\\AppData\\Local\\Vikunja`) <br/>\n  - **macOS**: `~/Library/Application Support/Vikunja` <br/>\n  - **Linux**: `$XDG_DATA_HOME/vikunja` or `~/.local/share/vikunja` <br/>\n**Recommendation**: Use an absolute path for production deployments, especially when running Vikunja as a Windows service, to have full control over the database location."
                 },
                 {
                     "key": "maxopenconnections",
@@ -387,7 +387,7 @@
             "children": [
                 {
                     "key": "path",
-                    "default_value": "\u003crootpath\u003elogs",
+                    "default_value": "<rootpath>logs",
                     "comment": "A folder where all the logfiles should go."
                 },
                 {
@@ -484,6 +484,11 @@
                     "key": "tokenrefreshlimit",
                     "default_value": "60",
                     "comment": "The number of requests a user can make from the same IP to the session renewal routes\n(token refresh and the OAuth token endpoint) per minute. These are kept separate from\n\"noauthlimit\" because every logged-in client renews its access token periodically, which\nwould otherwise use up the budget reserved for login attempts. This limit cannot be disabled."
+                },
+                {
+                    "key": "basicauthlimit",
+                    "default_value": "10",
+                    "comment": "The number of failed HTTP BasicAuth attempts (CalDAV, feeds) a client can make from the same IP per minute before further attempts are rejected with 429. Only failures count, so successful regular syncs are never limited. This limit is separate from \"noauthlimit\" so CalDAV clients cannot starve the login budget."
                 }
             ]
         },
@@ -577,8 +582,8 @@
                         },
                         {
                             "key": "redirecturl",
-                            "default_value": "\u003cservice.publicurl\u003e/migrate/todoist",
-                            "comment": "The url where clients are redirected after they authorized Vikunja to access their Todoist items.\nIn Todoist, this is called `OAuth redirect URL` and it needs to match the url you entered when registering\nyour Vikunja instance at the Todoist developer console.\nWhen using the official Vikunja frontend, set this to `\u003cservice.publicurl\u003e/migrate/todoist` (the default value).\nOtherwise, set this to an url which then makes a request to /api/v1/migration/todoist/migrate\nwith the code obtained from the Todoist api."
+                            "default_value": "<service.publicurl>/migrate/todoist",
+                            "comment": "The url where clients are redirected after they authorized Vikunja to access their Todoist items.\nIn Todoist, this is called `OAuth redirect URL` and it needs to match the url you entered when registering\nyour Vikunja instance at the Todoist developer console.\nWhen using the official Vikunja frontend, set this to `<service.publicurl>/migrate/todoist` (the default value).\nOtherwise, set this to an url which then makes a request to /api/v1/migration/todoist/migrate\nwith the code obtained from the Todoist api."
                         }
                     ]
                 },
@@ -597,8 +602,8 @@
                         },
                         {
                             "key": "redirecturl",
-                            "default_value": "\u003cfrontend url\u003e/migrate/trello",
-                            "comment": "The url where clients are redirected after they authorized Vikunja to access their trello cards.\nThis needs to match the url you entered when registering your Vikunja instance at trello.\nWhen using the official Vikunja frontend, set this to `\u003cservice.publicurl\u003e/migrate/trello` (the default value).\nOtherwise, set this to an url which then makes a request to /api/v1/migration/trello/migrate\nwith the code obtained from the Trello api."
+                            "default_value": "<frontend url>/migrate/trello",
+                            "comment": "The url where clients are redirected after they authorized Vikunja to access their trello cards.\nThis needs to match the url you entered when registering your Vikunja instance at trello.\nWhen using the official Vikunja frontend, set this to `<service.publicurl>/migrate/trello` (the default value).\nOtherwise, set this to an url which then makes a request to /api/v1/migration/trello/migrate\nwith the code obtained from the Trello api."
                         }
                     ]
                 },
@@ -622,8 +627,8 @@
                         },
                         {
                             "key": "redirecturl",
-                            "default_value": "\u003cfrontend url\u003e/migrate/microsoft-todo",
-                            "comment": "The url where clients are redirected after they authorized Vikunja to access their Microsoft todo tasks.\nThis needs to match the url you entered when registering your Vikunja instance at Microsoft.\nWhen using the official Vikunja frontend, set this to `\u003cservice.publicurl\u003e/migrate/microsoft-todo` (the default value).\nOtherwise, set this to an url which then makes a request to /api/v1/migration/microsoft-todo/migrate\nwith the code obtained from the Microsoft Todo api."
+                            "default_value": "<frontend url>/migrate/microsoft-todo",
+                            "comment": "The url where clients are redirected after they authorized Vikunja to access their Microsoft todo tasks.\nThis needs to match the url you entered when registering your Vikunja instance at Microsoft.\nWhen using the official Vikunja frontend, set this to `<service.publicurl>/migrate/microsoft-todo` (the default value).\nOtherwise, set this to an url which then makes a request to /api/v1/migration/microsoft-todo/migrate\nwith the code obtained from the Microsoft Todo api."
                         }
                     ]
                 }
@@ -730,7 +735,7 @@
                 },
                 {
                     "key": "openid",
-                    "comment": "OpenID configuration will allow users to authenticate through a third-party OpenID Connect compatible provider.\u003cbr/\u003e\nThe provider needs to support the `openid`, `profile` and `email` scopes.\u003cbr/\u003e\n**Note:** Some openid providers (like Gitlab) only make the email of the user available through OpenID if they have set it to be publicly visible.\nIf the email is not public in those cases, authenticating will fail.\u003cbr/\u003e\n**Note 2:** The frontend expects the third party to redirect the user \u003cfrontend-url\u003e/auth/openid/\u003cauth key\u003e after authentication. Please make sure to configure the redirect url in your third party auth service accordingly if you're using the default Vikunja frontend.\nThe frontend will automatically provide the API with the redirect url, composed from the current url where it's hosted.\nIf you want to use the desktop client with OpenID, make sure to allow redirects to `127.0.0.1`.",
+                    "comment": "OpenID configuration will allow users to authenticate through a third-party OpenID Connect compatible provider.<br/>\nThe provider needs to support the `openid`, `profile` and `email` scopes.<br/>\n**Note:** Some openid providers (like Gitlab) only make the email of the user available through OpenID if they have set it to be publicly visible.\nIf the email is not public in those cases, authenticating will fail.<br/>\n**Note 2:** The frontend expects the third party to redirect the user <frontend-url>/auth/openid/<auth key> after authentication. Please make sure to configure the redirect url in your third party auth service accordingly if you're using the default Vikunja frontend.\nThe frontend will automatically provide the API with the redirect url, composed from the current url where it's hosted.\nIf you want to use the desktop client with OpenID, make sure to allow redirects to `127.0.0.1`.",
                     "children": [
                         {
                             "key": "enabled",
@@ -972,12 +977,12 @@
                 },
                 {
                     "key": "language",
-                    "default_value": "\u003cunset\u003e",
+                    "default_value": "<unset>",
                     "comment": "The language of the user interface. Must be an ISO 639-1 language code followed by an ISO 3166-1 alpha-2 country code. Check https://code.vikunja.io/vikunja/tree/main/frontend/src/i18n/lang for a list of possible languages. Will default to the browser language the user uses when signing up."
                 },
                 {
                     "key": "timezone",
-                    "default_value": "\u003ctime zone set at service.timezone\u003e",
+                    "default_value": "<time zone set at service.timezone>",
                     "comment": "The time zone of each individual user. This will affect when users get reminders and overdue task emails."
                 }
             ]

@@ -234,18 +234,27 @@ func setupSentry(e *echo.Echo) {
 // RegisterRoutes registers all routes for the application
 func RegisterRoutes(e *echo.Echo) {
 
+	// One instance keeps every BasicAuth route on the same failure budget.
+	noAuthRateLimit := unauthRateLimit()
+	refreshRateLimit := tokenRefreshRateLimit()
+	basicAuthRateLimit := basicAuthRateLimit()
+
 	if config.ServiceEnableCaldav.GetBool() {
 		// Caldav routes
 		wkg := e.Group("/.well-known")
+		// Reserve the failure budget before bcrypt runs.
+		wkg.Use(basicAuthRateLimit)
 		wkg.Use(middleware.BasicAuth(caldav.BasicAuth))
 		wkg.Any("/caldav", caldav.PrincipalHandler)
 		wkg.Any("/caldav/", caldav.PrincipalHandler)
 		c := e.Group("/dav")
+		c.Use(basicAuthRateLimit)
 		registerCalDavRoutes(c)
 	}
 
 	// Feeds routes (Atom feed for user notifications)
 	f := e.Group("/feeds")
+	f.Use(basicAuthRateLimit)
 	f.Use(middleware.BasicAuth(feeds.BasicAuth))
 	f.GET("/notifications.atom", feeds.NotificationsAtomFeed)
 
@@ -280,17 +289,14 @@ func RegisterRoutes(e *echo.Echo) {
 		}))
 	}
 
-	// Shared across every use site: building one per version or per route group
-	// would give each its own counters, multiplying the effective per-IP budget.
-	noAuthRateLimit := unauthRateLimit()
-	refreshRateLimit := tokenRefreshRateLimit()
-
 	// API Routes
 	a := e.Group("/api/v1")
 	registerAPIRoutes(a, noAuthRateLimit, refreshRateLimit)
 
 	// /api/v2 — Huma-backed API, scaffolded alongside /api/v1.
 	a2 := e.Group("/api/v2")
+	// Share the BasicAuth failure budget with CalDAV and feeds.
+	a2.Use(pathScoped(func(p string) bool { return p == "/api/v2/notifications.atom" }, basicAuthRateLimit))
 	registerAPIRoutesV2(e, a2, noAuthRateLimit, refreshRateLimit)
 
 	// Collect routes for API token permissions
