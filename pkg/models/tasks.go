@@ -79,11 +79,11 @@ type Task struct {
 	// The task description.
 	Description string `xorm:"longtext null" json:"description"`
 	// Whether a task is done or not.
-	Done bool `xorm:"INDEX null" json:"done"`
+	Done bool `xorm:"INDEX null index(done_due_date)" json:"done"`
 	// The time when a task was marked as done. This field is system-controlled and cannot be set via API.
 	DoneAt time.Time `xorm:"INDEX null 'done_at'" json:"done_at" readOnly:"true" doc:"When the task was marked as done. Set by the server; ignored on write."`
 	// The time when the task is due.
-	DueDate time.Time `xorm:"DATETIME INDEX null 'due_date'" json:"due_date"`
+	DueDate time.Time `xorm:"DATETIME INDEX null index(done_due_date) 'due_date'" json:"due_date"`
 	// An array of reminders that are associated with this task.
 	Reminders []*TaskReminder `xorm:"-" json:"reminders"`
 	// The project this task belongs to.
@@ -456,9 +456,13 @@ func GetTaskSimpleByUUID(s *xorm.Session, uid string) (task *Task, err error) {
 // task whose project the provided auth does not have access to.
 func GetTasksByUIDs(s *xorm.Session, uids []string, a web.Auth) (tasks []*Task, err error) {
 	tasks = []*Task{}
+	accessible, err := accessibleProjectIDsCond(s, a, "`tasks`.`project_id`")
+	if err != nil {
+		return nil, err
+	}
 	err = s.
 		In("uid", uids).
-		And(accessibleProjectIDsSubquery(a, "`tasks`.`project_id`")).
+		And(accessible).
 		Find(&tasks)
 	if err != nil {
 		return
@@ -599,9 +603,13 @@ func addRelatedTasksToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]
 		return
 	}
 
+	accessible, err := accessibleProjectIDsCond(s, a, "`tasks`.`project_id`")
+	if err != nil {
+		return err
+	}
 	fullRelatedTasks := make(map[int64]*Task)
 	err = s.In("id", relatedTaskIDs).
-		And(accessibleProjectIDsSubquery(a, "`tasks`.`project_id`")).
+		And(accessible).
 		Find(&fullRelatedTasks)
 	if err != nil {
 		return
@@ -651,6 +659,10 @@ func addBucketsToTasks(s *xorm.Session, a web.Auth, taskIDs []int64, taskMap map
 		return err
 	}
 
+	accessible, err := accessibleProjectIDsCond(s, a, "project_views.project_id")
+	if err != nil {
+		return err
+	}
 	buckets := make(map[int64]*Bucket)
 	err = s.
 		Where(builder.In("id", builder.Select("bucket_id").
@@ -658,7 +670,7 @@ func addBucketsToTasks(s *xorm.Session, a web.Auth, taskIDs []int64, taskMap map
 			Where(builder.In("task_id", taskIDs)))).
 		And(builder.In("project_view_id", builder.Select("id").
 			From("project_views").
-			Where(accessibleProjectIDsSubquery(a, "project_views.project_id")))).
+			Where(accessible))).
 		Find(&buckets)
 	if err != nil {
 		return err
@@ -1104,6 +1116,9 @@ func createTasks(s *xorm.Session, projectID int64, tasks []*Task, a web.Auth, up
 		}
 	}
 
+	// Link shares can't have subscriptions
+	_, creatorIsUser := a.(*user.User)
+
 	for _, t := range tasks {
 		t.CreatedBy = createdBy
 
@@ -1123,6 +1138,12 @@ func createTasks(s *xorm.Session, projectID int64, tasks []*Task, a web.Auth, up
 
 		if t.IsFavorite {
 			if err := addToFavorites(s, t.ID, createdBy, FavoriteKindTask); err != nil {
+				return err
+			}
+		}
+
+		if creatorIsUser {
+			if err := subscribeUserImplicitly(s, SubscriptionEntityTask, t.ID, createdBy); err != nil {
 				return err
 			}
 		}

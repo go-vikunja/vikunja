@@ -17,7 +17,6 @@
 package wekan
 
 import (
-	"bytes"
 	"encoding/base64"
 	"encoding/json"
 	"io"
@@ -28,9 +27,8 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
+	"code.vikunja.io/api/pkg/richtext"
 	"code.vikunja.io/api/pkg/user"
-
-	"github.com/yuin/goldmark"
 )
 
 // wekanBoard represents the top-level WeKan board JSON export.
@@ -138,12 +136,7 @@ var wekanColorMap = map[string]string{
 }
 
 func convertMarkdownToHTML(input string) (string, error) {
-	var buf bytes.Buffer
-	err := goldmark.Convert([]byte(input), &buf)
-	if err != nil {
-		return "", err
-	}
-	return buf.String(), nil
+	return richtext.CommonMarkToHTML([]byte(input))
 }
 
 func convertWekanToVikunja(board *wekanBoard) []*models.ProjectWithTasksAndBuckets {

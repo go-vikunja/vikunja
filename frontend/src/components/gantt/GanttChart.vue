@@ -128,12 +128,12 @@ const emit = defineEmits<{
 
 const DAY_WIDTH_PIXELS_MIN = 30
 const dayWidthPixels = ref(0)
-let resizeObserver: ResizeObserver
+let resizeObserver: ResizeObserver | undefined
 
 const {tasks, filters} = toRefs(props)
 
 const dayjsLanguageLoading = useDayjsLanguageSync(dayjs)
-const ganttContainer = ref(null)
+const ganttContainer = ref<HTMLElement | null>(null)
 const ganttChartBodyRef = ref<InstanceType<typeof GanttChartBody> | null>(null)
 const router = useRouter()
 
@@ -322,17 +322,22 @@ function updateDayWidthPixels() {
 	)
 }
 
-onMounted(async () => {
-	await nextTick()
-	updateDayWidthPixels()
+// The container only exists once loading finished, so measure and observe when the element appears
+// instead of on mount - otherwise the day width stays 0 until the next window resize.
+watch(ganttContainer, el => {
+	resizeObserver?.disconnect()
+	resizeObserver = undefined
 
-	if (ganttContainer.value) {
-		resizeObserver = new ResizeObserver(updateDayWidthPixels)
-		resizeObserver.observe(ganttContainer.value)
+	if (!el) {
+		return
 	}
 
-	window.addEventListener('resize', updateDayWidthPixels)
-})
+	updateDayWidthPixels()
+	resizeObserver = new ResizeObserver(updateDayWidthPixels)
+	resizeObserver.observe(el)
+}, {flush: 'post', immediate: true})
+
+onMounted(() => window.addEventListener('resize', updateDayWidthPixels))
 
 onBeforeUnmount(() => {
 	resizeObserver?.disconnect()

@@ -44,27 +44,29 @@ func SearchUsersForProject(s *xorm.Session, project *Project, a web.Auth, curren
 
 // ProjectUIDs hold all kinds of user IDs from accounts who have access to a project
 type ProjectUIDs struct {
-	ProjectOwnerID    int64 `xorm:"projectOwner"`
 	ProjectUserID     int64 `xorm:"ulID"`
 	TeamProjectUserID int64 `xorm:"tlUID"`
 }
 
-// ListUsersFromProject returns a list with all users who have access to a project, regardless of the method which gave them access
-func ListUsersFromProject(s *xorm.Session, l *Project, currentUser *user.User, search string) (users []*user.User, err error) {
-
+// getUserIDsWithProjectAccess returns the ids of all users who can access the project
+// through ownership (of the project or any parent), a direct share or a team share.
+func getUserIDsWithProjectAccess(s *xorm.Session, projectID int64) (uids []int64, err error) {
 	userids := []*ProjectUIDs{}
 
-	var currentProject *Project
-	currentProject, err = GetProjectSimpleByID(s, l.ID)
+	currentProject, err := GetProjectSimpleByID(s, projectID)
 	if err != nil {
 		return nil, err
 	}
 
-	for {
+	ownerIDs := []int64{}
+	visited := map[int64]bool{}
+
+	for !visited[currentProject.ID] {
+		visited[currentProject.ID] = true
+
 		currentUserIDs := []*ProjectUIDs{}
 		err = s.
-			Select(`l.owner_id as projectOwner,
-			ul.user_id as ulID,
+			Select(`ul.user_id as ulID,
 			tm2.user_id as tlUID`).
 			Table("projects").
 			Alias("l").
@@ -89,9 +91,10 @@ func ListUsersFromProject(s *xorm.Session, l *Project, currentUser *user.User, s
 			).
 			Find(&currentUserIDs)
 		if err != nil {
-			return
+			return nil, err
 		}
 		userids = append(userids, currentUserIDs...)
+		ownerIDs = append(ownerIDs, currentProject.OwnerID)
 
 		if currentProject.parentID() == 0 {
 			break
@@ -108,27 +111,64 @@ func ListUsersFromProject(s *xorm.Session, l *Project, currentUser *user.User, s
 		currentProject = parent
 	}
 
-	// Remove duplicates from the project of ids and make it a slice
+	// Unmatched LEFT JOIN rows scan as id 0.
 	uidmap := make(map[int64]bool)
-	uidmap[l.OwnerID] = true
+	addUID := func(id int64) {
+		if id > 0 {
+			uidmap[id] = true
+		}
+	}
+	for _, id := range ownerIDs {
+		addUID(id)
+	}
 	for _, u := range userids {
-		uidmap[u.ProjectUserID] = true
-		uidmap[u.TeamProjectUserID] = true
+		addUID(u.ProjectUserID)
+		addUID(u.TeamProjectUserID)
 	}
 
-	uids := make([]int64, 0, len(uidmap))
+	uids = make([]int64, 0, len(uidmap))
 	for id := range uidmap {
 		uids = append(uids, id)
 	}
+	return uids, nil
+}
 
-	var cond builder.Cond
+func getProjectAccessForTasks(s *xorm.Session, tasks []*Task) (accessByProject map[int64]map[int64]bool, userIDs []int64, err error) {
+	accessByProject = map[int64]map[int64]bool{}
+	seen := map[int64]bool{}
+	for _, task := range tasks {
+		if _, done := accessByProject[task.ProjectID]; done {
+			continue
+		}
+		access := map[int64]bool{}
+		accessByProject[task.ProjectID] = access
+		uids, err := getUserIDsWithProjectAccess(s, task.ProjectID)
+		if err != nil {
+			if IsErrProjectDoesNotExist(err) {
+				continue
+			}
+			return nil, nil, err
+		}
+		for _, uid := range uids {
+			access[uid] = true
+			if !seen[uid] {
+				seen[uid] = true
+				userIDs = append(userIDs, uid)
+			}
+		}
+	}
+	return accessByProject, userIDs, nil
+}
 
-	if len(uids) > 0 {
-		cond = builder.In("id", uids)
+// ListUsersFromProject returns a list with all users who have access to a project, regardless of the method which gave them access
+func ListUsersFromProject(s *xorm.Session, l *Project, currentUser *user.User, search string) (users []*user.User, err error) {
+	uids, err := getUserIDsWithProjectAccess(s, l.ID)
+	if err != nil {
+		return nil, err
 	}
 
 	users, err = user.ListUsers(s, search, currentUser, &user.ProjectUserOpts{
-		AdditionalCond:              cond,
+		AdditionalCond:              builder.In("id", uids),
 		ReturnAllIfNoSearchProvided: true,
 		MatchFuzzily:                true,
 	})

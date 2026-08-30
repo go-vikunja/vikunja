@@ -66,7 +66,7 @@
       "email": "Email address",
       "emailPlaceholder": "e.g. frederic{'@'}vikunja.io",
       "password": "Password",
-      "passwordPlaceholder": "e.g. •••••••••••",
+      "passwordPlaceholder": "Your password",
       "forgotPassword": "Forgot your password?",
       "resetPassword": "Reset your password",
       "resetPasswordAction": "Send me a password reset link",
@@ -180,6 +180,8 @@
           "yyyy\/mm\/dd": "YYYY\/MM\/DD"
         },
         "timeFormat": "Time format",
+        "defaultDueTime": "Default due time",
+        "defaultDueTimeDescription": "Used as the default time when setting a task's due date without specifying a time, including date picker selections and Quick Add Magic.",
         "timeTrackingDefaultStart": "Time tracking smart-fill start time",
         "timeFormatOptions": {
           "12h": "12-hour (AM/PM)",
@@ -813,6 +815,14 @@
     "avatarOfUser": "{user}'s profile image",
     "closeBanner": "Close banner",
     "closeDialog": "Close dialog",
+    "imagePreview": "Image preview",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "resetZoom": "Reset zoom",
+    "imageLoadFailed": "Failed to load image",
+    "videoPreview": "Video preview",
+    "pdfPreview": "PDF preview",
+    "videoLoadFailed": "This video cannot be played in your browser.",
     "closeQuickActions": "Close quick actions",
     "skipToContent": "Skip to main content",
     "sortBy": "Sort by",
@@ -1081,7 +1091,8 @@
       "doneAt": "Done At"
     },
     "subscription": {
-      "subscribedTaskThroughParentProject": "You can't unsubscribe here because you are subscribed to this task through its project.",
+      "subscribedTaskThroughProject": "You are subscribed to this task through its project. Unsubscribing here only stops notifications for this task.",
+      "subscribedProjectThroughParentProject": "You are subscribed to this project through a parent project. Unsubscribing here stops notifications for this project and everything in it.",
       "subscribedProject": "You are currently subscribed to this project and will receive notifications for changes.",
       "notSubscribedProject": "You are not subscribed to this project and won't receive notifications for changes.",
       "subscribedTask": "You are currently subscribed to this task and will receive notifications for changes.",
@@ -1106,7 +1117,10 @@
       "setAsCover": "Make cover",
       "unsetAsCover": "Remove cover",
       "successfullyChangedCoverImage": "The cover image was successfully changed.",
-      "usedAsCover": "Cover image"
+      "usedAsCover": "Cover image",
+      "play": "Play",
+      "playFile": "Play {file}",
+      "audioError": "Could not play this audio file."
     },
     "comment": {
       "title": "Comments",
@@ -1396,7 +1410,9 @@
     "explainer": "Notifications will appear here when actions, projects or tasks you subscribed to happen.",
     "markAllRead": "Mark all notifications as read",
     "markAllReadSuccess": "Successfully marked all notifications as read.",
-    "subscribeFeed": "Subscribe to notifications via Atom feed"
+    "subscribeFeed": "Subscribe to notifications via Atom feed",
+    "clearAll": "Clear notifications",
+    "clearAllSuccess": "All notifications have been cleared."
   },
   "quickActions": {
     "title": "Search and quick actions",
@@ -1414,6 +1430,13 @@
     "createTask": "Create a task in the current project ({title})",
     "createProject": "Create a project",
     "results": "No results | {count} result | {count} results",
+    "resultTypes": {
+      "command": "Command",
+      "task": "Task",
+      "project": "Project",
+      "team": "Team",
+      "label": "Label"
+    },
     "cmds": {
       "newTask": "New task",
       "newProject": "New project",

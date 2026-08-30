@@ -10,6 +10,8 @@ import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import {Table, TableRow, TableCell, TableHeader} from '@tiptap/extension-table'
 import Typography from '@tiptap/extension-typography'
 import Image from '@tiptap/extension-image'
+import Subscript from '@tiptap/extension-subscript'
+import Superscript from '@tiptap/extension-superscript'
 import Underline from '@tiptap/extension-underline'
 import {Placeholder} from '@tiptap/extensions'
 import HardBreak from '@tiptap/extension-hard-break'
@@ -99,6 +101,9 @@ export function createEditorExtensions(deps: EditorExtensionDeps): Extensions {
 		attachmentService,
 	} = deps
 
+	// ProseMirror can call renderHTML twice per node on mount
+	const inFlightBlobFetches = new Map<CacheKey, Promise<string>>()
+
 	const CustomImage = Image.extend({
 		addAttributes() {
 			return {
@@ -113,6 +118,8 @@ export function createEditorExtensions(deps: EditorExtensionDeps): Extensions {
 				},
 				id: {
 					default: null,
+					// never trust stored ids: a planted one would hijack the blob lookup
+					parseHTML: () => null,
 				},
 				'data-src': {
 					default: null,
@@ -132,15 +139,33 @@ export function createEditorExtensions(deps: EditorExtensionDeps): Extensions {
 
 				nextTick(async () => {
 
-					const img = document.getElementById(id) as HTMLImageElement | null
+					// no live view: fail closed, never fall back to document
+					const root = getEditor()?.view?.dom
+					if (!root) return
+
+					const img = root.querySelector(`[id="${id}"]`)
 
 					if (!img || !(img instanceof HTMLImageElement)) return
 
 					if (typeof loadedAttachments.value[cacheKey] === 'undefined') {
+						let fetchPromise = inFlightBlobFetches.get(cacheKey)
 
-						const attachment = new AttachmentModel({taskId: taskId, id: attachmentId})
+						if (!fetchPromise) {
+							const attachment = new AttachmentModel({taskId: taskId, id: attachmentId})
+							fetchPromise = attachmentService.getBlobUrl(attachment) as Promise<string>
+							inFlightBlobFetches.set(cacheKey, fetchPromise)
+						}
 
-						loadedAttachments.value[cacheKey] = await attachmentService.getBlobUrl(attachment) as string
+						try {
+							loadedAttachments.value[cacheKey] = await fetchPromise
+						} catch {
+							return
+						} finally {
+							// clear on failure too, else the rejected promise rethrows forever
+							if (inFlightBlobFetches.get(cacheKey) === fetchPromise) {
+								inFlightBlobFetches.delete(cacheKey)
+							}
+						}
 					}
 
 					img.src = loadedAttachments.value[cacheKey] as string
@@ -252,6 +277,8 @@ export function createEditorExtensions(deps: EditorExtensionDeps): Extensions {
 			},
 		}),
 		Typography,
+		Subscript,
+		Superscript,
 		Underline,
 		NonInclusiveLink.configure({
 			openOnClick: false,

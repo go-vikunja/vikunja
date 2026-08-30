@@ -9,6 +9,7 @@ export const NOTIFICATION_NAMES = {
 	'TASK_COMMENT': 'task.comment',
 	'TASK_ASSIGNED': 'task.assigned',
 	'TASK_DELETED': 'task.deleted',
+	'TASK_CREATED': 'task.created',
 	'TASK_REMINDER': 'task.reminder',
 	'PROJECT_CREATED': 'project.created',
 	'TEAM_MEMBER_ADDED': 'team.member.added',

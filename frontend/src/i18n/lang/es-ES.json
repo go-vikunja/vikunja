@@ -33,7 +33,6 @@
 			"email": "Dirección de correo electrónico",
 			"emailPlaceholder": "ej. federico{'@'}vikunja.io",
 			"password": "Contraseña",
-			"passwordPlaceholder": "ej. •••••••••••",
 			"forgotPassword": "¿Olvidaste tu contraseña?",
 			"resetPassword": "Restablecer tu contraseña",
 			"resetPasswordAction": "Envíame un enlace para restablecer la contraseña",
@@ -536,7 +535,6 @@
 			"updated": "Actualizado"
 		},
 		"subscription": {
-			"subscribedTaskThroughParentProject": "No puedes darte de baja aquí porque estás suscrito a esta tarea a través de su proyecto.",
 			"subscribedProject": "Actualmente estás suscrito a este proyecto y recibirás notificaciones de cambios.",
 			"notSubscribedProject": "No estás suscrito a este proyecto y no recibirás notificaciones de cambios.",
 			"subscribedTask": "Actualmente estás suscrito a esta tarea y recibirás notificaciones de cambios.",

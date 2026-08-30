@@ -50,19 +50,24 @@ func (l *Label) CanCreate(_ *xorm.Session, a web.Auth) (bool, error) {
 
 func (l *Label) isLabelOwner(s *xorm.Session, a web.Auth) (bool, error) {
 
-	if _, is := a.(*LinkSharing); is {
+	// Link shares legitimately reach here through hasAccessToLabel, and are not
+	// users: a plain denial, not an error.
+	caller, err := user.GetFromAuth(a)
+	if user.IsErrMustNotBeLinkShare(err) {
 		return false, nil
+	}
+	if err != nil {
+		return false, err
 	}
 
 	lorig, err := getLabelByIDSimple(s, l.ID)
 	if err != nil {
 		return false, err
 	}
-	if lorig.CreatedByID == a.GetID() {
+	if lorig.CreatedByID == caller.ID {
 		return true, nil
 	}
 
-	// A bot owner inherits write/delete access to labels their bots created.
 	creator, err := user.GetUserByID(s, lorig.CreatedByID)
 	if err != nil {
 		if user.IsErrUserDoesNotExist(err) {
@@ -70,7 +75,7 @@ func (l *Label) isLabelOwner(s *xorm.Session, a web.Auth) (bool, error) {
 		}
 		return false, err
 	}
-	return creator.IsBot() && creator.BotOwnerID == a.GetID(), nil
+	return creator.IsBotOwnedBy(caller), nil
 }
 
 // hasAccessToLabel reports whether the caller can read a label and, if so,
@@ -86,7 +91,10 @@ func (l *Label) hasAccessToLabel(s *xorm.Session, a web.Auth) (has bool, maxPerm
 
 	// Must include projects inherited via a shared parent, otherwise users can
 	// remove but not re-add labels on tasks in child projects.
-	accessibleProjects := accessibleProjectIDsSubquery(a, "project_id")
+	accessibleProjects, err := accessibleProjectIDsCond(s, a, "project_id")
+	if err != nil {
+		return false, 0, err
+	}
 
 	labelAttachedToAccessibleTask := builder.In(
 		"label_tasks.task_id",
@@ -98,12 +106,11 @@ func (l *Label) hasAccessToLabel(s *xorm.Session, a web.Auth) (has bool, maxPerm
 
 	accessBranches := []builder.Cond{labelAttachedToAccessibleTask}
 	if !isLinkShare {
-		accessBranches = append(accessBranches,
-			builder.Eq{"labels.created_by_id": a.GetID()},
-			builder.In("labels.created_by_id",
-				builder.Select("id").From("users").Where(builder.Eq{"bot_owner_id": a.GetID()}),
-			),
-		)
+		caller, err := user.GetFromAuth(a)
+		if err != nil {
+			return false, 0, err
+		}
+		accessBranches = append(accessBranches, user.SameBotIdentityCond(caller, "labels.created_by_id"))
 	}
 
 	cond := builder.And(

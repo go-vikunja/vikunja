@@ -49,6 +49,9 @@ var (
 	paradedbInstalled bool
 )
 
+// DatabasePathMemory is the database.path value selecting an ephemeral database.
+const DatabasePathMemory = "memory"
+
 // registeredTables holds all table beans registered by Vikunja packages.
 var registeredTables []interface{}
 
@@ -124,6 +127,8 @@ func CreateDBEngine() (engine *xorm.Engine, err error) {
 	}
 
 	checkParadeDB(engine)
+
+	engine.AddHook(writeInvalidationHook{})
 
 	x = engine
 	return
@@ -240,17 +245,19 @@ type DatabasePathConfig struct {
 // resolveDatabasePath resolves a database path configuration to an absolute path.
 //
 // Resolution rules:
-//  1. If ConfiguredPath is "memory", returns "memory" (special case for in-memory DB)
+//  1. If ConfiguredPath is DatabasePathMemory, returns it (ephemeral database)
 //  2. If ConfiguredPath is already absolute, returns it as-is (cleaned)
 //  3. If ConfiguredPath is relative:
 //     a. If RootPath differs from ExecutablePath (explicitly configured),
 //     joins with RootPath
-//     b. Otherwise, joins with platform-specific user data directory
+//     b. Otherwise, joins with the user data directory, falling back to RootPath
+//     when userDataDir reports the directory as unavailable
 //
-// The getUserDataDir parameter allows injecting a mock for testing.
-func resolveDatabasePath(cfg DatabasePathConfig, getUserDataDir func() (string, error)) (string, error) {
-	if cfg.ConfiguredPath == "memory" {
-		return "memory", nil
+// Directory creation only ever happens inside userDataDir, so an operator-configured
+// path never gets its parents created behind their back.
+func resolveDatabasePath(cfg DatabasePathConfig, userDataDir func() (string, error)) (string, error) {
+	if cfg.ConfiguredPath == DatabasePathMemory {
+		return DatabasePathMemory, nil
 	}
 
 	var path string
@@ -261,7 +268,7 @@ func resolveDatabasePath(cfg DatabasePathConfig, getUserDataDir func() (string, 
 	case cfg.RootPath != cfg.ExecutablePath:
 		path = filepath.Join(cfg.RootPath, cfg.ConfiguredPath)
 	default:
-		dataDir, err := getUserDataDir()
+		dataDir, err := userDataDir()
 		if err != nil {
 			log.Warningf("Could not get user data directory, falling back to rootpath: %v", err)
 			path = filepath.Join(cfg.RootPath, cfg.ConfiguredPath)
@@ -273,7 +280,7 @@ func resolveDatabasePath(cfg DatabasePathConfig, getUserDataDir func() (string, 
 	return filepath.Abs(path)
 }
 
-func initSqliteEngine() (engine *xorm.Engine, err error) {
+func databasePathConfig() DatabasePathConfig {
 	rootPath := config.ServiceRootpath.GetString()
 
 	executablePath := rootPath
@@ -281,18 +288,33 @@ func initSqliteEngine() (engine *xorm.Engine, err error) {
 		executablePath = filepath.Dir(execPath)
 	}
 
-	cfg := DatabasePathConfig{
+	return DatabasePathConfig{
 		ConfiguredPath: config.DatabasePath.GetString(),
 		RootPath:       rootPath,
 		ExecutablePath: executablePath,
 	}
+}
 
-	path, err := resolveDatabasePath(cfg, getUserDataDir)
+// ResolvedDatabasePath returns the absolute path of the SQLite database file,
+// or DatabasePathMemory for the ephemeral database. Only meaningful when
+// database.type is sqlite. It creates nothing — see ensureDatabasePath.
+func ResolvedDatabasePath() (string, error) {
+	return resolveDatabasePath(databasePathConfig(), existingUserDataDir)
+}
+
+// ensureDatabasePath returns the path ResolvedDatabasePath reports once the user data
+// directory exists, creating that directory if it is the one selected.
+func ensureDatabasePath() (string, error) {
+	return resolveDatabasePath(databasePathConfig(), createdUserDataDir)
+}
+
+func initSqliteEngine() (engine *xorm.Engine, err error) {
+	path, err := ensureDatabasePath()
 	if err != nil {
-		return nil, fmt.Errorf("could not resolve database path: %w", err)
+		return nil, fmt.Errorf("could not prepare database path: %w", err)
 	}
 
-	if path == "memory" {
+	if path == DatabasePathMemory {
 		// Use a temp file with WAL mode instead of in-memory shared cache.
 		// Shared cache (file::memory:?cache=shared) uses table-level locking
 		// where _busy_timeout is ineffective (returns SQLITE_LOCKED, not
@@ -342,8 +364,42 @@ func initSqliteEngine() (engine *xorm.Engine, err error) {
 	return
 }
 
-// getUserDataDir returns the platform-appropriate directory for application data
-func getUserDataDir() (string, error) {
+// existingUserDataDir returns the user data directory only when it is already there.
+// Treating an absent directory as unavailable keeps resolution free of side effects
+// while still reporting the path ensureDatabasePath uses, once it has run.
+func existingUserDataDir() (string, error) {
+	dir, err := resolveUserDataDir()
+	if err != nil {
+		return "", err
+	}
+
+	info, err := os.Stat(dir)
+	if err != nil {
+		return "", fmt.Errorf("could not stat data directory %s: %w", dir, err)
+	}
+	if !info.IsDir() {
+		return "", fmt.Errorf("data directory %s is not a directory", dir)
+	}
+
+	return dir, nil
+}
+
+// createdUserDataDir creates the user data directory. Creation lives here so a failure
+// surfaces as the rootpath fallback instead of a hard startup error.
+func createdUserDataDir() (string, error) {
+	dir, err := resolveUserDataDir()
+	if err != nil {
+		return "", err
+	}
+
+	if err := os.MkdirAll(dir, 0o700); err != nil { // #nosec G703 -- dir is from XDG standard paths
+		return "", fmt.Errorf("could not create data directory %s: %w", dir, err)
+	}
+
+	return dir, nil
+}
+
+func resolveUserDataDir() (string, error) {
 	var dataDir string
 
 	switch runtime.GOOS {
@@ -378,11 +434,6 @@ func getUserDataDir() (string, error) {
 			}
 			dataDir = filepath.Join(home, ".local", "share", "vikunja")
 		}
-	}
-
-	// Ensure the directory exists
-	if err := os.MkdirAll(dataDir, 0o700); err != nil { // #nosec G703 -- dataDir is from config or XDG standard paths
-		return "", fmt.Errorf("could not create data directory %s: %w", dataDir, err)
 	}
 
 	return dataDir, nil
@@ -465,6 +516,7 @@ func WipeEverything() error {
 // s.Close() will auto-rollback any uncommitted transaction.
 func NewSession() *xorm.Session {
 	s := x.NewSession()
+	attachSessionCache(s)
 	if err := s.Begin(); err != nil {
 		log.Fatalf("Failed to begin database transaction: %s", err)
 	}

@@ -35,15 +35,30 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// refreshCookie returns the Set-Cookie value for the refresh-token cookie, or ""
-// if the response set no such cookie.
-func refreshCookie(rec *httptest.ResponseRecorder) *http.Cookie {
+func refreshCookies(rec *httptest.ResponseRecorder) []*http.Cookie {
+	cookies := []*http.Cookie{}
 	for _, c := range rec.Result().Cookies() {
 		if c.Name == auth.RefreshTokenCookieName {
-			return c
+			cookies = append(cookies, c)
 		}
 	}
-	return nil
+	return cookies
+}
+
+func refreshCookie(rec *httptest.ResponseRecorder) *http.Cookie {
+	cookies := refreshCookies(rec)
+	if len(cookies) == 0 {
+		return nil
+	}
+	return cookies[0]
+}
+
+func refreshCookiePaths(rec *httptest.ResponseRecorder) []string {
+	paths := []string{}
+	for _, c := range refreshCookies(rec) {
+		paths = append(paths, c.Path)
+	}
+	return paths
 }
 
 // TestHumaLogin ports the v1 login coverage to /api/v2: it asserts the token
@@ -68,6 +83,7 @@ func TestHumaLogin(t *testing.T) {
 		require.NotNil(t, cookie, "login must set the refresh-token cookie")
 		assert.NotEmpty(t, cookie.Value)
 		assert.True(t, cookie.HttpOnly, "refresh cookie must be HttpOnly")
+		assert.ElementsMatch(t, []string{auth.RefreshTokenPathV1, auth.RefreshTokenPathV2}, refreshCookiePaths(rec))
 	})
 
 	t.Run("wrong password", func(t *testing.T) {

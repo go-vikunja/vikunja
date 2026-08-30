@@ -91,6 +91,10 @@
 				"subject": "„%[1]s“ (%[2]s) wurde gelöscht",
 				"message": "%[1]s hat die Aufgabe „%[2]s“ (%[3]s) gelöscht"
 			},
+			"created": {
+				"subject": "„%[1]s“ (%[2]s) wurde erstellt",
+				"message": "%[1]s hat die Aufgabe \"%[2]s\" (%[3]s) erstellt"
+			},
 			"mentioned": {
 				"subject_new": "%[1]s hat dich in einer neuen Aufgabe „%[2]s“ (%[3]s) erwähnt",
 				"subject": "%[1]s hat dich in einer Aufgabe „%[2]s“ (%[3]s) erwähnt"

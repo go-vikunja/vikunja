@@ -18,12 +18,17 @@ package files
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"os"
 	"testing"
+	"time"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -44,7 +49,7 @@ func TestFileStorageIntegration(t *testing.T) {
 	}
 
 	t.Run("Initialize file handler with s3", func(t *testing.T) {
-		err := InitFileHandler()
+		err := InitFileHandler(context.Background())
 		require.NoError(t, err, "Failed to initialize file handler with type: s3")
 		assert.NotNil(t, storage, "File storage should be initialized")
 	})
@@ -193,24 +198,7 @@ func TestFileStorageIntegration(t *testing.T) {
 
 // TestInitFileHandler_S3Configuration tests S3 configuration validation
 func TestInitFileHandler_S3Configuration(t *testing.T) {
-	// Save original config values
-	originalType := config.FilesType.GetString()
-	originalEndpoint := config.FilesS3Endpoint.GetString()
-	originalBucket := config.FilesS3Bucket.GetString()
-	originalRegion := config.FilesS3Region.GetString()
-	originalAccessKey := config.FilesS3AccessKey.GetString()
-	originalSecretKey := config.FilesS3SecretKey.GetString()
-
-	// Restore config after test
-	defer func() {
-		config.FilesType.Set(originalType)
-		config.FilesS3Endpoint.Set(originalEndpoint)
-		config.FilesS3Bucket.Set(originalBucket)
-		config.FilesS3Region.Set(originalRegion)
-		config.FilesS3AccessKey.Set(originalAccessKey)
-		config.FilesS3SecretKey.Set(originalSecretKey)
-		_ = InitFileHandler()
-	}()
+	resetFilesStateAfterTest(t)
 
 	t.Run("valid S3 configuration", func(t *testing.T) {
 		config.FilesType.Set("s3")
@@ -223,7 +211,7 @@ func TestInitFileHandler_S3Configuration(t *testing.T) {
 		// With valid configuration, InitFileHandler will succeed at config parsing
 		// but fail at storage validation (since the S3 endpoint isn't real).
 		// The error should be from validation, not from config parsing.
-		err := InitFileHandler()
+		err := InitFileHandler(context.Background())
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "storage validation failed")
 	})
@@ -236,7 +224,7 @@ func TestInitFileHandler_S3Configuration(t *testing.T) {
 		config.FilesS3SecretKey.Set("test-secret-key")
 
 		// This should return an error for missing endpoint
-		err := InitFileHandler()
+		err := InitFileHandler(context.Background())
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "endpoint")
 	})
@@ -249,7 +237,7 @@ func TestInitFileHandler_S3Configuration(t *testing.T) {
 		config.FilesS3SecretKey.Set("test-secret-key")
 
 		// This should return an error for missing bucket
-		err := InitFileHandler()
+		err := InitFileHandler(context.Background())
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "bucket")
 	})
@@ -262,7 +250,7 @@ func TestInitFileHandler_S3Configuration(t *testing.T) {
 		config.FilesS3SecretKey.Set("test-secret-key")
 
 		// This should return an error for missing access key
-		err := InitFileHandler()
+		err := InitFileHandler(context.Background())
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "access key")
 	})
@@ -275,34 +263,61 @@ func TestInitFileHandler_S3Configuration(t *testing.T) {
 		config.FilesS3SecretKey.Set("")
 
 		// This should return an error for missing secret key
-		err := InitFileHandler()
+		err := InitFileHandler(context.Background())
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "secret key")
 	})
 }
 
 func TestInitFileHandler_LocalFilesystem(t *testing.T) {
-	// Save original config values
-	originalType := config.FilesType.GetString()
-	originalBasePath := config.FilesBasePath.GetString()
-
-	// Create a temp directory for the test
-	tempDir := t.TempDir()
-
-	// Restore config after test
-	defer func() {
-		config.FilesType.Set(originalType)
-		config.FilesBasePath.Set(originalBasePath)
-	}()
+	resetFilesStateAfterTest(t)
 
 	// Test with local filesystem using writable temp directory
 	config.FilesType.Set("local")
-	config.FilesBasePath.Set(tempDir)
+	config.FilesBasePath.Set(t.TempDir())
 
 	// This should not return an error
-	err := InitFileHandler()
+	err := InitFileHandler(context.Background())
 	require.NoError(t, err)
 
 	// Verify that storage is initialized
 	assert.NotNil(t, storage)
+}
+
+func TestValidateFileStorageS3HonorsContext(t *testing.T) {
+	originalStorage := storage
+	originalType := config.FilesType.GetString()
+	t.Cleanup(func() {
+		storage = originalStorage
+		config.FilesType.Set(originalType)
+	})
+
+	config.FilesType.Set("s3")
+	storage = newS3Storage("test-bucket", "", s3.New(s3.Options{
+		Region:       "us-east-1",
+		BaseEndpoint: aws.String("http://10.255.255.1:9999"),
+	}))
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	done := make(chan error, 1)
+	go func() {
+		done <- ValidateFileStorage(ctx)
+	}()
+
+	select {
+	case err := <-done:
+		require.Error(t, err)
+		require.ErrorIs(t, err, context.Canceled)
+	case <-time.After(5 * time.Second):
+		t.Fatal("ValidateFileStorage ignored the cancelled context")
+	}
+}
+
+func TestS3Storage_EnsureAndValidateBasePath(t *testing.T) {
+	s := newS3Storage("bucket", "files", nil)
+
+	require.NoError(t, s.Ensure())
+	require.NoError(t, s.ValidateBasePath())
 }

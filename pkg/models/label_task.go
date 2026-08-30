@@ -230,12 +230,11 @@ func GetLabelsByTaskIDs(s *xorm.Session, opts *LabelByTaskIDsOptions) (ls []*Lab
 		), cond)
 	}
 	if opts.GetUnusedLabels && !isLinkShareAuth {
-		cond = builder.Or(cond,
-			builder.Eq{"labels.created_by_id": opts.User.GetID()},
-			builder.In("labels.created_by_id",
-				builder.Select("id").From("users").Where(builder.Eq{"bot_owner_id": opts.User.GetID()}),
-			),
-		)
+		caller, err := user.GetFromAuth(opts.User)
+		if err != nil {
+			return nil, 0, 0, err
+		}
+		cond = builder.Or(cond, user.SameBotIdentityCond(caller, "labels.created_by_id"))
 	}
 
 	ids := []int64{}
@@ -406,8 +405,7 @@ func (t *Task) UpdateTaskLabels(s *xorm.Session, creator web.Auth, labels []*Lab
 			return err
 		}
 		if !hasAccessToLabel {
-			user, _ := creator.(*user.User)
-			return ErrUserHasNoAccessToLabel{LabelID: l.ID, UserID: user.ID}
+			return ErrUserHasNoAccessToLabel{LabelID: l.ID, UserID: creator.GetID()}
 		}
 
 		// Insert it

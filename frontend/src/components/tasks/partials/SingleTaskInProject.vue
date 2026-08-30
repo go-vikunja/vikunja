@@ -35,7 +35,7 @@
 				:class="{ 'done': task.done, 'show-project': showProject && project}"
 				class="tasktext"
 			>
-				<span class="is-inline-flex is-align-items-center">
+				<span>
 					<RouterLink
 						v-if="showProject && typeof project !== 'undefined'"
 						v-tooltip="$t('task.detail.belongsToProject', {project: project.title})"
@@ -498,6 +498,13 @@ defineExpose({
 		color: var(--grey-400);
 		font-size: .9rem;
 		white-space: nowrap;
+	}
+
+	.tasktext :deep(.color-bubble),
+	.tasktext :deep(.avatar-wrapper),
+	.tasktext :deep(.labels .tag) {
+		vertical-align: middle;
+		transform: translateY(-2px);
 	}
 
 	.avatar {

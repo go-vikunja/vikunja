@@ -108,13 +108,16 @@ type Subscription struct {
 	// The numeric ID of the subscription
 	ID int64 `xorm:"autoincr not null unique pk" json:"id" readOnly:"true" doc:"The numeric id of the subscription."`
 
-	EntityType SubscriptionEntityType `xorm:"index not null" json:"entity" readOnly:"true" doc:"The kind of entity this subscription is for. Either project or task; derived server-side from the request path."`
+	EntityType SubscriptionEntityType `xorm:"index not null unique(entity_user)" json:"entity" readOnly:"true" doc:"The kind of entity this subscription is for. Either project or task; derived server-side from the request path."`
 	Entity     string                 `xorm:"-" json:"-" param:"entity"`
 	// The id of the entity to subscribe to.
-	EntityID int64 `xorm:"bigint index not null" json:"entity_id" param:"entityID" readOnly:"true" doc:"The numeric id of the subscribed entity; taken from the request path."`
+	EntityID int64 `xorm:"bigint index not null unique(entity_user)" json:"entity_id" param:"entityID" readOnly:"true" doc:"The numeric id of the subscribed entity; taken from the request path."`
 
 	// The user who made this subscription
-	UserID int64 `xorm:"bigint index not null" json:"-"`
+	UserID int64 `xorm:"bigint index not null unique(entity_user)" json:"-"`
+
+	// Muted turns the row into an opt-out: it outranks any inherited subscription and is dropped while resolving.
+	Muted bool `xorm:"not null default false" json:"-" xml:"-"`
 
 	// A timestamp when this subscription was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"A timestamp when this subscription was created. You cannot change this value."`
@@ -159,7 +162,32 @@ func (sb *Subscription) Create(s *xorm.Session, auth web.Auth) (err error) {
 
 	sb.ID = 0
 	sb.UserID = auth.GetID()
+	sb.Muted = false
 
+	own, err := getOwnSubscription(s, sb.EntityType, sb.EntityID, sb.UserID)
+	if err != nil {
+		return err
+	}
+	if own != nil {
+		if !own.Muted {
+			return &ErrSubscriptionAlreadyExists{
+				EntityID:   sb.EntityID,
+				EntityType: sb.EntityType,
+				UserID:     sb.UserID,
+			}
+		}
+
+		// Subscribing again lifts a previous opt-out.
+		sb.ID = own.ID
+		sb.Created = time.Now().UTC()
+		_, err = s.
+			Where("entity_id = ? AND entity_type = ? AND user_id = ?", sb.EntityID, sb.EntityType, sb.UserID).
+			Cols("muted", "created").
+			Update(&Subscription{Muted: false, Created: sb.Created})
+		return err
+	}
+
+	// Without an own row, only a parent entity can still make the user subscribed.
 	sub, err := GetSubscriptionForUser(s, sb.EntityType, sb.EntityID, auth)
 	if err != nil {
 		return err
@@ -178,7 +206,7 @@ func (sb *Subscription) Create(s *xorm.Session, auth web.Auth) (err error) {
 
 // Delete unsubscribes the current user to an entity
 // @Summary Unsubscribe the current user from an entity.
-// @Description Unsubscribes the current user to an entity.
+// @Description Unsubscribes the current user to an entity. If the subscription is inherited from a parent project, an opt-out is stored for this entity instead.
 // @tags subscriptions
 // @Accept json
 // @Produce json
@@ -191,12 +219,68 @@ func (sb *Subscription) Create(s *xorm.Session, auth web.Auth) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /subscriptions/{entity}/{entityID} [delete]
 func (sb *Subscription) Delete(s *xorm.Session, auth web.Auth) (err error) {
+	if err := sb.EntityType.validate(); err != nil {
+		return err
+	}
+
 	sb.UserID = auth.GetID()
 
 	_, err = s.
 		Where("entity_id = ? AND entity_type = ? AND user_id = ?", sb.EntityID, sb.EntityType, sb.UserID).
 		Delete(&Subscription{})
-	return
+	if err != nil {
+		return err
+	}
+
+	// Removing the row can uncover a parent entity's subscription, which only an explicit opt-out overrides.
+	inherited, err := GetSubscriptionForUser(s, sb.EntityType, sb.EntityID, auth)
+	if err != nil || inherited == nil {
+		return err
+	}
+
+	// CanDelete lets a user who lost access clean up their own row, so gate only the opt-out insert.
+	canRead, err := sb.canReadEntity(s, auth)
+	if err != nil || !canRead {
+		return err
+	}
+
+	sb.ID = 0
+	sb.Muted = true
+	_, err = s.Insert(sb)
+	return err
+}
+
+// subscribeUserImplicitly subscribes u only if no row exists: muted or not, an existing row is the user's own decision.
+func subscribeUserImplicitly(s *xorm.Session, entityType SubscriptionEntityType, entityID int64, u *user.User) error {
+	own, err := getOwnSubscription(s, entityType, entityID, u.ID)
+	if err != nil || own != nil {
+		return err
+	}
+
+	inherited, err := GetSubscriptionForUser(s, entityType, entityID, u)
+	if err != nil || inherited != nil {
+		return err
+	}
+
+	_, err = s.Insert(&Subscription{
+		EntityType: entityType,
+		EntityID:   entityID,
+		UserID:     u.ID,
+	})
+	return err
+}
+
+// getOwnSubscription returns the row for exactly this entity, ignoring inherited subscriptions.
+func getOwnSubscription(s *xorm.Session, entityType SubscriptionEntityType, entityID, userID int64) (subscription *Subscription, err error) {
+	subscription = &Subscription{}
+	exists, err := s.
+		Where("entity_id = ? AND entity_type = ? AND user_id = ?", entityID, entityType, userID).
+		Get(subscription)
+	if err != nil || !exists {
+		return nil, err
+	}
+
+	return subscription, nil
 }
 
 func GetSubscriptionForUser(s *xorm.Session, entityType SubscriptionEntityType, entityID int64, a web.Auth) (subscription *SubscriptionWithUser, err error) {
@@ -310,6 +394,7 @@ subscription_hierarchy AS (
         s.entity_id,
         s.created,
         s.user_id,
+        s.muted,
         CASE
             WHEN s.entity_id = ph.original_project_id THEN 1  -- Direct project match
             ELSE ph.level + 1  -- Parent projects
@@ -327,6 +412,7 @@ SELECT
     sh.entity_id,
     sh.created,
     sh.user_id,
+    sh.muted,
     CASE
         WHEN sh.priority = 1 THEN 'Direct Project'
         ELSE 'Parent Project'
@@ -376,6 +462,7 @@ subscription_hierarchy AS (
         s.entity_id,
         s.created,
         s.user_id,
+        s.muted,
         1 AS priority,
         t.id AS task_id
     FROM subscriptions s
@@ -391,6 +478,7 @@ subscription_hierarchy AS (
         s.entity_id,
         s.created,
         s.user_id,
+        s.muted,
         ph.level + 2 AS priority,
         ph.task_id
     FROM subscriptions s
@@ -405,6 +493,7 @@ SELECT
     sh.entity_id,
     sh.created,
     sh.user_id,
+    sh.muted,
     CASE
         WHEN sh.entity_type = ? THEN 'Task'
         WHEN sh.priority = ? THEN 'Direct Project'
@@ -432,6 +521,11 @@ ORDER BY t.id, sh.user_id`,
 	for _, sub := range rawSubscriptions {
 
 		if sub.EntityID == 0 {
+			continue
+		}
+
+		// Already outranked the parent's subscription, so dropping it unsubscribes the user.
+		if sub.Muted {
 			continue
 		}
 

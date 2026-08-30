@@ -6,7 +6,8 @@ import {useProjectStore} from './projects'
 import type {IProject} from '@/modelTypes/IProject'
 
 // Mock the dependencies that the store imports
-vi.mock('vue-router', () => ({
+vi.mock('vue-router', async (importOriginal) => ({
+	...await importOriginal<typeof import('vue-router')>(),
 	useRouter: () => ({
 		push: vi.fn(),
 	}),

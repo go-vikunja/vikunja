@@ -17,28 +17,42 @@
 package doctor
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
+	"time"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/files"
 )
 
+// s3ProbeTimeout bounds every S3 round trip the check makes. An unreachable but
+// well-formed endpoint would otherwise block until the OS TCP timeout.
+const s3ProbeTimeout = 12 * time.Second
+
 // CheckFiles returns file storage checks.
 func CheckFiles() CheckGroup {
 	fileType := config.FilesType.GetString()
 
-	// Initialize file handler
-	if err := files.InitFileHandler(); err != nil {
+	ctx := context.Background()
+	if fileType == "s3" {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, s3ProbeTimeout)
+		defer cancel()
+	}
+
+	// Not InitFileHandler: a diagnostic must not create the storage it reports on.
+	if err := files.InitStorageBackend(ctx); err != nil {
 		return CheckGroup{
 			Name: fmt.Sprintf("Files (%s)", fileType),
 			Results: []CheckResult{
 				{
 					Name:   "Initialization",
 					Passed: false,
-					Error:  err.Error(),
+					Error:  storageError(ctx, err),
 				},
 			},
 		}
@@ -48,9 +62,9 @@ func CheckFiles() CheckGroup {
 
 	switch fileType {
 	case "local":
-		results = checkLocalStorage()
+		results = checkLocalStorage(ctx)
 	case "s3":
-		results = checkS3Storage()
+		results = checkS3Storage(ctx)
 	default:
 		results = []CheckResult{
 			{
@@ -67,7 +81,7 @@ func CheckFiles() CheckGroup {
 	}
 }
 
-func checkLocalStorage() []CheckResult {
+func checkLocalStorage(ctx context.Context) []CheckResult {
 	basePath := config.FilesBasePath.GetString()
 
 	results := []CheckResult{
@@ -78,7 +92,6 @@ func checkLocalStorage() []CheckResult {
 		},
 	}
 
-	// Check if the directory exists
 	info, err := os.Stat(basePath)
 	if err != nil {
 		results = append(results, CheckResult{
@@ -86,7 +99,15 @@ func checkLocalStorage() []CheckResult {
 			Passed: false,
 			Error:  err.Error(),
 		})
-		// If the directory doesn't exist, skip the remaining checks
+		return results
+	}
+
+	if !info.IsDir() {
+		results = append(results, CheckResult{
+			Name:   "Directory exists",
+			Passed: false,
+			Error:  fmt.Sprintf("%s exists but is not a directory", basePath),
+		})
 		return results
 	}
 
@@ -96,22 +117,19 @@ func checkLocalStorage() []CheckResult {
 		Value:  "yes",
 	})
 
-	// Directory permissions (octal mode)
 	results = append(results, CheckResult{
 		Name:   "Directory permissions",
 		Passed: true,
 		Value:  fmt.Sprintf("%04o", info.Mode().Perm()),
 	})
 
-	// Directory ownership (platform-specific)
 	results = append(results, checkDirectoryOwnership(info)...)
 
-	// Check writable using the existing ValidateFileStorage function
-	if err := files.ValidateFileStorage(); err != nil {
+	if err := files.ValidateFileStorage(ctx); err != nil {
 		results = append(results, CheckResult{
 			Name:   "Writable",
 			Passed: false,
-			Error:  err.Error(),
+			Error:  storageError(ctx, err),
 		})
 	} else {
 		results = append(results, CheckResult{
@@ -121,10 +139,7 @@ func checkLocalStorage() []CheckResult {
 		})
 	}
 
-	// Check disk space (platform-specific)
 	results = append(results, checkDiskSpace(basePath))
-
-	// Count files and total size in the directory
 	results = append(results, checkFileStats(basePath))
 
 	return results
@@ -183,7 +198,7 @@ func formatBytes(b int64) string {
 	}
 }
 
-func checkS3Storage() []CheckResult {
+func checkS3Storage(ctx context.Context) []CheckResult {
 	endpoint := config.FilesS3Endpoint.GetString()
 	bucket := config.FilesS3Bucket.GetString()
 
@@ -200,12 +215,11 @@ func checkS3Storage() []CheckResult {
 		},
 	}
 
-	// Check writable using the existing ValidateFileStorage function
-	if err := files.ValidateFileStorage(); err != nil {
+	if err := files.ValidateFileStorage(ctx); err != nil {
 		results = append(results, CheckResult{
 			Name:   "Writable",
 			Passed: false,
-			Error:  err.Error(),
+			Error:  storageError(ctx, err),
 		})
 	} else {
 		results = append(results, CheckResult{
@@ -216,4 +230,13 @@ func checkS3Storage() []CheckResult {
 	}
 
 	return results
+}
+
+// storageError replaces the raw backend error with an actionable one when our own
+// probe deadline fired.
+func storageError(ctx context.Context, err error) string {
+	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+		return fmt.Sprintf("S3 endpoint %s did not respond within %s", config.FilesS3Endpoint.GetString(), s3ProbeTimeout)
+	}
+	return err.Error()
 }

@@ -39,7 +39,6 @@
 			"email": "이메일 주소",
 			"emailPlaceholder": "이메일을 입력해주세요.",
 			"password": "비밀번호",
-			"passwordPlaceholder": "비밀번호를 입력해주세요.",
 			"forgotPassword": "비밀번호를 잊으셨나요?",
 			"resetPassword": "비밀번호 재설정",
 			"resetPasswordAction": "비밀번호 재설정 링크 보내기",
@@ -769,7 +768,6 @@
 			"doneAt": "완료 시점"
 		},
 		"subscription": {
-			"subscribedTaskThroughParentProject": "해당 프로젝트를 통해 이 할 일을 구독하고 있으므로 여기서 구독을 취소할 수 없습니다.",
 			"subscribedProject": "현재 이 프로젝트를 구독 중이며 변경 사항에 대한 알림을 받게 됩니다.",
 			"notSubscribedProject": "이 프로젝트를 구독하지 않으므로 변경 사항에 대한 알림을 받지 못합니다.",
 			"subscribedTask": "현재 이 할 일을 구독 중이며 변경 사항에 대한 알림을 받게 됩니다.",

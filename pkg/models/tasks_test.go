@@ -71,9 +71,56 @@ func TestTask_Create(t *testing.T) {
 			"task_id":   task.ID,
 			"bucket_id": 1,
 		}, false)
+		db.AssertExists(t, "subscriptions", map[string]interface{}{
+			"entity_type": SubscriptionEntityTask,
+			"entity_id":   task.ID,
+			"user_id":     usr.ID,
+		}, false)
 
 		events.DispatchPending(context.Background(), s)
 		events.AssertDispatched(t, &TaskCreatedEvent{})
+	})
+	t.Run("already subscribed to the project", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// user6 is subscribed to project 12 (fixture), so the inherited subscription must not
+		// be duplicated with a task level one
+		usr6 := &user.User{ID: 6, Username: "user6"}
+		task := &Task{
+			Title:     "Lorem",
+			ProjectID: 12,
+		}
+		err := task.Create(s, usr6)
+		require.NoError(t, err)
+		err = s.Commit()
+		require.NoError(t, err)
+
+		db.AssertMissing(t, "subscriptions", map[string]interface{}{
+			"entity_type": SubscriptionEntityTask,
+			"entity_id":   task.ID,
+		})
+	})
+	t.Run("created by link share is not subscribed", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		linkShare := &LinkSharing{ID: 2, ProjectID: 2, Permission: PermissionWrite}
+		task := &Task{
+			Title:     "Lorem",
+			ProjectID: 2,
+		}
+		err := task.Create(s, linkShare)
+		require.NoError(t, err)
+		err = s.Commit()
+		require.NoError(t, err)
+
+		db.AssertMissing(t, "subscriptions", map[string]interface{}{
+			"entity_type": SubscriptionEntityTask,
+			"entity_id":   task.ID,
+		})
 	})
 	t.Run("with reminders", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)

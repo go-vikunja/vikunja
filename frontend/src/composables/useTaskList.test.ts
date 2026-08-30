@@ -80,6 +80,7 @@ async function mountTaskList(query: Record<string, string>): Promise<Router> {
 
 describe('useTaskList sort handling for relevance ranking', () => {
 	beforeEach(() => {
+		localStorage.clear()
 		setActivePinia(createPinia())
 		getAll.mockClear()
 	})
@@ -111,5 +112,31 @@ describe('useTaskList sort handling for relevance ranking', () => {
 		// id always sorts last so other sort columns take precedence.
 		expect(params.sort_by).toEqual(['id'])
 		expect(params.order_by).toEqual(['desc'])
+	})
+})
+
+describe('useTaskList restoring stored query into the url', () => {
+	beforeEach(() => {
+		localStorage.clear()
+		setActivePinia(createPinia())
+		getAll.mockClear()
+	})
+
+	it('writes the persisted sort into the url when the url has none', async () => {
+		localStorage.setItem('viewFilters', JSON.stringify({1: {sort: 'due_date:asc'}}))
+
+		const router = await mountTaskList({})
+		await flushPromises()
+
+		expect(router.currentRoute.value.query.sort).toBe('due_date:asc')
+		expect(lastRequestParams().sort_by).toEqual(['due_date'])
+	})
+
+	it('keeps an explicit url sort over the persisted one', async () => {
+		localStorage.setItem('viewFilters', JSON.stringify({1: {sort: 'due_date:asc'}}))
+
+		const router = await mountTaskList({sort: 'title:desc'})
+
+		expect(router.currentRoute.value.query.sort).toBe('title:desc')
 	})
 })

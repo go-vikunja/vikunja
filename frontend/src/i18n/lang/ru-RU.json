@@ -62,7 +62,6 @@
 			"email": "Email адрес",
 			"emailPlaceholder": "напр. frederic{'@'}vikunja.io",
 			"password": "Пароль",
-			"passwordPlaceholder": "напр. •••••••••••",
 			"forgotPassword": "Забыли пароль?",
 			"resetPassword": "Сбросить пароль",
 			"resetPasswordAction": "Отправить ссылку на сброс пароля",
@@ -1045,7 +1044,6 @@
 			"doneAt": "Дата завершения"
 		},
 		"subscription": {
-			"subscribedTaskThroughParentProject": "Вы не можете отписаться здесь, потому что вы подписаны эту задачу через её проект.",
 			"subscribedProject": "Вы подписаны на этот проект и будете получать уведомления об изменениях.",
 			"notSubscribedProject": "Вы не подписаны на этот проект и не будете получать уведомления об изменениях.",
 			"subscribedTask": "Вы подписаны на эту задачу и будете получать уведомления об изменениях.",

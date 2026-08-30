@@ -428,6 +428,90 @@ func TestLabel_ReadOne(t *testing.T) {
 			wantForbidden: true,
 			auth:          &user.User{ID: 22},
 		},
+		{
+			// Label 11 is unattached, so only the owner branch can grant this (#3592).
+			name: "bot can read never-used label created by its owner",
+			fields: fields{
+				ID: 11,
+			},
+			want: &Label{
+				ID:          11,
+				Title:       "Label #11 - created by user 21, owner of bot 23, no task attachment",
+				CreatedByID: 21,
+				CreatedBy: &user.User{
+					ID:                           21,
+					Username:                     "user_bot_owner_a",
+					Password:                     "$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6",
+					Issuer:                       "local",
+					EmailRemindersEnabled:        true,
+					OverdueTasksRemindersEnabled: true,
+					OverdueTasksRemindersTime:    "09:00",
+					Created:                      testCreatedTime,
+					Updated:                      testUpdatedTime,
+				},
+				Created: testCreatedTime,
+				Updated: testUpdatedTime,
+			},
+			auth:                &user.User{ID: 23, BotOwnerID: 21},
+			assertMaxPermission: true,
+			wantMaxPermission:   int(PermissionRead),
+		},
+		{
+			// Bot 24 belongs to user 22, so user 21's label stays out of reach.
+			name: "bot cannot read label created by a different bot owner",
+			fields: fields{
+				ID: 11,
+			},
+			wantForbidden: true,
+			auth:          &user.User{ID: 24, BotOwnerID: 22},
+		},
+		{
+			// JWT auth carries no BotOwnerID, so the identity must resolve from the database.
+			name: "bot can read label created by a sibling bot",
+			fields: fields{
+				ID: 12,
+			},
+			want: &Label{
+				ID:          12,
+				Title:       "Label #12 - created by bot 25, sibling of bot 23",
+				CreatedByID: 25,
+				CreatedBy: &user.User{
+					ID:                           25,
+					Name:                         "Owner A Scheduler",
+					Username:                     "bot-owner-a-scheduler",
+					Issuer:                       "local",
+					BotOwnerID:                   21,
+					EmailRemindersEnabled:        true,
+					OverdueTasksRemindersEnabled: true,
+					OverdueTasksRemindersTime:    "09:00",
+					Created:                      testCreatedTime,
+					Updated:                      testUpdatedTime,
+				},
+				Created: testCreatedTime,
+				Updated: testUpdatedTime,
+			},
+			auth:                &user.User{ID: 23},
+			assertMaxPermission: true,
+			wantMaxPermission:   int(PermissionRead),
+		},
+		{
+			name:          "other owner's bot cannot read a sibling bot's label",
+			fields:        fields{ID: 12},
+			wantForbidden: true,
+			auth:          &user.User{ID: 24, BotOwnerID: 22},
+		},
+		{
+			name:          "unrelated user cannot read a sibling bot's label",
+			fields:        fields{ID: 12},
+			wantForbidden: true,
+			auth:          &user.User{ID: 1},
+		},
+		{
+			name:          "other bot owner cannot read a sibling bot's label",
+			fields:        fields{ID: 12},
+			wantForbidden: true,
+			auth:          &user.User{ID: 22},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -448,7 +532,8 @@ func TestLabel_ReadOne(t *testing.T) {
 			s := db.NewSession()
 			defer s.Close()
 
-			allowed, maxPermission, _ := l.CanRead(s, tt.auth)
+			allowed, maxPermission, err := l.CanRead(s, tt.auth)
+			require.NoError(t, err)
 			if !allowed && !tt.wantForbidden {
 				t.Errorf("Label.CanRead() forbidden, want %v", tt.wantForbidden)
 			}
@@ -458,7 +543,7 @@ func TestLabel_ReadOne(t *testing.T) {
 			if tt.assertMaxPermission && maxPermission != tt.wantMaxPermission {
 				t.Errorf("Label.CanRead() maxPermission = %d, want %d", maxPermission, tt.wantMaxPermission)
 			}
-			err := l.ReadOne(s, tt.auth)
+			err = l.ReadOne(s, tt.auth)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Label.ReadOne() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -509,6 +594,7 @@ func TestLabel_Create(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
 			l := &Label{
 				ID:          tt.fields.ID,
 				Title:       tt.fields.Title,
@@ -526,6 +612,9 @@ func TestLabel_Create(t *testing.T) {
 			allowed, _ := l.CanCreate(s, tt.args.a)
 			if !allowed && !tt.wantForbidden {
 				t.Errorf("Label.CanCreate() forbidden, want %v", tt.wantForbidden)
+			}
+			if allowed && tt.wantForbidden {
+				t.Errorf("Label.CanCreate() allowed, want forbidden")
 			}
 			if err := l.Create(s, tt.args.a); (err != nil) != tt.wantErr {
 				t.Errorf("Label.Create() error = %v, wantErr %v", err, tt.wantErr)
@@ -557,11 +646,12 @@ func TestLabel_Update(t *testing.T) {
 		Permissions web.Permissions
 	}
 	tests := []struct {
-		name          string
-		fields        fields
-		wantErr       bool
-		auth          web.Auth
-		wantForbidden bool
+		name              string
+		fields            fields
+		wantErr           bool
+		auth              web.Auth
+		wantForbidden     bool
+		permissionErrType func(error) bool
 	}{
 		{
 			name: "normal",
@@ -577,9 +667,10 @@ func TestLabel_Update(t *testing.T) {
 				ID:    99999,
 				Title: "new and better",
 			},
-			auth:          &user.User{ID: 1},
-			wantForbidden: true,
-			wantErr:       true,
+			auth:              &user.User{ID: 1},
+			wantForbidden:     true,
+			wantErr:           true,
+			permissionErrType: IsErrLabelDoesNotExist,
 		},
 		{
 			name: "no permissions",
@@ -620,9 +711,27 @@ func TestLabel_Update(t *testing.T) {
 			auth:          &user.User{ID: 22},
 			wantForbidden: true,
 		},
+		{
+			name: "bot owner can update label created by their second bot",
+			fields: fields{
+				ID:    12,
+				Title: "new and better",
+			},
+			auth: &user.User{ID: 21},
+		},
+		{
+			name: "bot cannot update label created by a sibling bot",
+			fields: fields{
+				ID:    12,
+				Title: "new and better",
+			},
+			auth:          &user.User{ID: 23},
+			wantForbidden: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
 			l := &Label{
 				ID:          tt.fields.ID,
 				Title:       tt.fields.Title,
@@ -637,14 +746,26 @@ func TestLabel_Update(t *testing.T) {
 			}
 			s := db.NewSession()
 			defer s.Close()
-			allowed, _ := l.CanUpdate(s, tt.auth)
+			allowed, err := l.CanUpdate(s, tt.auth)
+			if tt.permissionErrType != nil {
+				require.Error(t, err)
+				require.True(t, tt.permissionErrType(err))
+			} else {
+				require.NoError(t, err)
+			}
 			if !allowed && !tt.wantForbidden {
 				t.Errorf("Label.CanUpdate() forbidden, want %v", tt.wantForbidden)
+			}
+			if allowed && tt.wantForbidden {
+				t.Errorf("Label.CanUpdate() allowed, want forbidden")
+			}
+			if tt.wantForbidden {
+				return
 			}
 			if err := l.Update(s, tt.auth); (err != nil) != tt.wantErr {
 				t.Errorf("Label.Update() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			if !tt.wantErr && !tt.wantForbidden {
+			if !tt.wantErr {
 				require.NoError(t, s.Commit())
 				db.AssertExists(t, "labels", map[string]interface{}{
 					"id":    tt.fields.ID,
@@ -729,6 +850,7 @@ func TestLabel_Delete(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
 			l := &Label{
 				ID:          tt.fields.ID,
 				Title:       tt.fields.Title,
@@ -747,10 +869,16 @@ func TestLabel_Delete(t *testing.T) {
 			if !allowed && !tt.wantForbidden {
 				t.Errorf("Label.CanDelete() forbidden, want %v", tt.wantForbidden)
 			}
+			if allowed && tt.wantForbidden {
+				t.Errorf("Label.CanDelete() allowed, want forbidden")
+			}
+			if tt.wantForbidden {
+				return
+			}
 			if err := l.Delete(s, tt.auth); (err != nil) != tt.wantErr {
 				t.Errorf("Label.Delete() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			if !tt.wantErr && !tt.wantForbidden {
+			if !tt.wantErr {
 				require.NoError(t, s.Commit())
 				db.AssertMissing(t, "labels", map[string]interface{}{
 					"id": l.ID,

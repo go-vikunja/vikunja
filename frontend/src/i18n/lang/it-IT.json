@@ -39,7 +39,6 @@
 			"email": "Indirizzo e-mail",
 			"emailPlaceholder": "per es. frederic{'@'}vikunja.io",
 			"password": "Password",
-			"passwordPlaceholder": "es. ••••••••••••",
 			"forgotPassword": "Password dimenticata?",
 			"resetPassword": "Reimposta la tua password",
 			"resetPasswordAction": "Inviami il link per reimpostare la password",
@@ -838,7 +837,6 @@
 			"doneAt": "Completato il"
 		},
 		"subscription": {
-			"subscribedTaskThroughParentProject": "Non puoi annullare l'iscrizione perché sei iscritto a quest'attività tramite il suo progetto.",
 			"subscribedProject": "Sei iscritto a questo progetto e riceverai avvisato delle modifiche.",
 			"notSubscribedProject": "Non sei iscritto a questo progetto e non riceverai notifiche per le modifiche.",
 			"subscribedTask": "Sei iscritto a questa attività e verrai notificato delle modifiche.",

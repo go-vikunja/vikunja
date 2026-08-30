@@ -21,6 +21,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"testing"
@@ -57,7 +58,7 @@ func (s *gcsHTTPSigner) SignHTTP(ctx context.Context, credentials aws.Credential
 }
 
 // initS3FileHandler initializes the S3 file backend
-func initS3FileHandler() error {
+func initS3FileHandler(ctx context.Context) error {
 	// Get S3 configuration
 	endpoint := config.FilesS3Endpoint.GetString()
 	bucket := config.FilesS3Bucket.GetString()
@@ -79,7 +80,7 @@ func initS3FileHandler() error {
 	}
 
 	// Create AWS SDK v2 config
-	cfg, err := awsconfig.LoadDefaultConfig(context.Background(),
+	cfg, err := awsconfig.LoadDefaultConfig(ctx,
 		awsconfig.WithRegion(region),
 		awsconfig.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(accessKey, secretKey, "")),
 	)
@@ -111,22 +112,34 @@ func initLocalFileHandler() {
 	storage = newLocalStorage(config.FilesBasePath.GetString())
 }
 
-// InitFileHandler creates a new file handler for the file backend we want to use
-func InitFileHandler() error {
+// InitStorageBackend configures the storage backend from the config. It does not create,
+// read or write anything in the underlying storage.
+func InitStorageBackend(ctx context.Context) error {
 	fileType := config.FilesType.GetString()
 
 	switch fileType {
 	case "s3":
-		if err := initS3FileHandler(); err != nil {
-			return err
-		}
+		return initS3FileHandler(ctx)
 	case "local":
 		initLocalFileHandler()
+		return nil
 	default:
 		return fmt.Errorf("invalid file storage type '%s': must be 'local' or 's3'", fileType)
 	}
+}
 
-	if err := ValidateFileStorage(); err != nil {
+// InitFileHandler creates a new file handler for the file backend we want to use.
+// ctx bounds the storage validation probe.
+func InitFileHandler(ctx context.Context) error {
+	if err := InitStorageBackend(ctx); err != nil {
+		return err
+	}
+
+	if err := storage.Ensure(); err != nil {
+		return err
+	}
+
+	if err := ValidateFileStorage(ctx); err != nil {
 		return fmt.Errorf("storage validation failed: %w", err)
 	}
 
@@ -183,41 +196,42 @@ func FileStat(file *File) (os.FileInfo, error) {
 	return storage.Stat(file.fileID())
 }
 
-// ValidateFileStorage checks that the configured file storage is writable
-// by creating and removing a temporary file.
-func ValidateFileStorage() error {
-	basePath := config.FilesBasePath.GetString()
-
+func storageDiagSuffix(basePath string) string {
 	diag := storageDiagnosticInfo(basePath)
-	if diag != "" {
-		diag = "\n" + diag
+	if diag == "" {
+		return ""
+	}
+	return "\n" + diag
+}
+
+// ValidateFileStorage checks that the configured file storage is writable
+// by creating and removing a temporary file. It never creates anything
+// permanent — see FileStorage.Ensure. ctx aborts backends doing network IO.
+func ValidateFileStorage(ctx context.Context) error {
+	if err := storage.ValidateBasePath(); err != nil {
+		return err
 	}
 
-	// For local filesystem, ensure the base directory exists
-	if config.FilesType.GetString() == "local" {
-		info, err := os.Stat(basePath)
-		if err != nil {
-			if !errors.Is(err, os.ErrNotExist) {
-				return fmt.Errorf("failed to access file storage directory at %s: %w%s", basePath, err, diag)
-			}
-
-			err = os.MkdirAll(basePath, 0755)
-			if err != nil {
-				return fmt.Errorf("failed to create file storage directory at %s: %w%s", basePath, err, diag)
-			}
-		} else if !info.IsDir() {
-			return fmt.Errorf("file storage path exists but is not a directory: %s", basePath)
-		}
-	}
+	diag := storageDiagSuffix(config.FilesBasePath.GetString())
 
 	filename := fmt.Sprintf(".vikunja-check-%d", time.Now().UnixNano())
 
-	err := storage.Write(filename, bytes.NewReader([]byte{}), 0)
+	write, remove := storage.Write, storage.Remove
+	if cs, ok := storage.(contextStorage); ok {
+		write = func(name string, content io.ReadSeeker, size uint64) error {
+			return cs.writeContext(ctx, name, content, size)
+		}
+		remove = func(name string) error {
+			return cs.removeContext(ctx, name)
+		}
+	}
+
+	err := write(filename, bytes.NewReader([]byte{}), 0)
 	if err != nil {
 		return fmt.Errorf("failed to create test file: %w%s", err, diag)
 	}
 
-	err = storage.Remove(filename)
+	err = remove(filename)
 	if err != nil {
 		return fmt.Errorf("failed to remove test file: %w", err)
 	}

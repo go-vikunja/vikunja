@@ -101,3 +101,10 @@ func TestMemStorage_MkdirAll(t *testing.T) {
 	err := s.MkdirAll("/some/path", 0755)
 	require.NoError(t, err)
 }
+
+func TestMemStorage_EnsureAndValidateBasePath(t *testing.T) {
+	s := newMemStorage()
+
+	require.NoError(t, s.Ensure())
+	require.NoError(t, s.ValidateBasePath())
+}

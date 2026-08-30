@@ -61,6 +61,7 @@ import (
 	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/modules/auth/oauth2server"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
 	"code.vikunja.io/api/pkg/modules/background"
@@ -279,16 +280,18 @@ func RegisterRoutes(e *echo.Echo) {
 		}))
 	}
 
-	// Shared across both API versions so the budget is per IP, not per version.
-	wsRateLimit := unauthRateLimit()
+	// Shared across every use site: building one per version or per route group
+	// would give each its own counters, multiplying the effective per-IP budget.
+	noAuthRateLimit := unauthRateLimit()
+	refreshRateLimit := tokenRefreshRateLimit()
 
 	// API Routes
 	a := e.Group("/api/v1")
-	registerAPIRoutes(a, wsRateLimit)
+	registerAPIRoutes(a, noAuthRateLimit, refreshRateLimit)
 
 	// /api/v2 — Huma-backed API, scaffolded alongside /api/v1.
 	a2 := e.Group("/api/v2")
-	registerAPIRoutesV2(e, a2, wsRateLimit)
+	registerAPIRoutesV2(e, a2, noAuthRateLimit, refreshRateLimit)
 
 	// Collect routes for API token permissions
 	// In Echo v5, we collect routes after registration using e.Router().Routes()
@@ -302,7 +305,7 @@ var unauthenticatedAPIPaths = map[string]bool{
 	"/api/v1/user/password/reset":            true,
 	"/api/v1/user/confirm":                   true,
 	"/api/v1/login":                          true,
-	"/api/v1/user/token/refresh":             true,
+	auth.RefreshTokenPathV1:                  true,
 	"/api/v1/auth/openid/:provider/callback": true,
 	"/api/v1/test/:table":                    true,
 	"/api/v1/info":                           true,
@@ -329,7 +332,7 @@ var unauthenticatedAPIPaths = map[string]bool{
 	"/api/v2/shares/:share/auth":             true,
 	"/api/v2/oauth/token":                    true,
 	"/api/v2/login":                          true,
-	"/api/v2/user/token/refresh":             true,
+	auth.RefreshTokenPathV2:                  true,
 	"/api/v2/auth/openid/:provider/callback": true,
 
 	// Testing endpoints authenticate with the testing token via a custom
@@ -380,31 +383,76 @@ func noStoreCacheControl() echo.MiddlewareFunc {
 	}
 }
 
-const v2AdminPathPrefix = "/api/v2/admin"
-
-// gateV2AdminRoutes reuses v1's RequireFeature/RequireInstanceAdmin gate (both
-// 404-on-failure) as path-scoped middleware: splitting v2 into a gated Echo
-// sub-group would split the Huma API and drop admin ops from the OpenAPI spec.
-func gateV2AdminRoutes() echo.MiddlewareFunc {
-	feature := RequireFeature(license.FeatureAdminPanel)
-	admin := RequireInstanceAdmin()
+// match receives the matched echo route template, not the request URL.
+// v2 can't use an Echo sub-group here: that would split the Huma API and drop
+// the scoped ops from the OpenAPI spec.
+func pathScoped(match func(string) bool, mw echo.MiddlewareFunc) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		gated := feature(admin(next))
+		scoped := mw(next)
 		return func(c *echo.Context) error {
-			if strings.HasPrefix(c.Request().URL.Path, v2AdminPathPrefix) {
-				return gated(c)
+			if match(c.Path()) {
+				return scoped(c)
 			}
 			return next(c)
 		}
 	}
 }
 
+type pathSet map[string]bool
+
+func (s pathSet) has(p string) bool { return s[p] }
+
+// Panics on a path that isn't JWT-exempt: such an entry is a typo, and a typo
+// here silently means no rate limit at all.
+func unauthenticatedPathSet(paths ...string) pathSet {
+	s := make(pathSet, len(paths))
+	for _, p := range paths {
+		if !unauthenticatedAPIPaths[p] {
+			panic("rate limited path " + p + " is not in unauthenticatedAPIPaths")
+		}
+		s[p] = true
+	}
+	return s
+}
+
+// The v2 counterparts of v1's unauthenticated route group - credential
+// endpoints only, never the docs/info/health ones.
+var v2CredentialPaths = unauthenticatedPathSet(
+	"/api/v2/register",
+	"/api/v2/user/password/token",
+	"/api/v2/user/password/reset",
+	"/api/v2/user/confirm",
+	"/api/v2/login",
+	"/api/v2/auth/openid/:provider/callback",
+	"/api/v2/shares/:share/auth",
+)
+
+var v2SessionRenewalPaths = unauthenticatedPathSet(
+	auth.RefreshTokenPathV2,
+	"/api/v2/oauth/token",
+)
+
+const v2AdminPathPrefix = "/api/v2/admin"
+
+// gateV2AdminRoutes reuses v1's RequireFeature/RequireInstanceAdmin gate, both
+// of which 404 on failure.
+func gateV2AdminRoutes() echo.MiddlewareFunc {
+	feature := RequireFeature(license.FeatureAdminPanel)
+	admin := RequireInstanceAdmin()
+	return pathScoped(
+		func(p string) bool { return strings.HasPrefix(p, v2AdminPathPrefix) },
+		func(next echo.HandlerFunc) echo.HandlerFunc { return feature(admin(next)) },
+	)
+}
+
 // registerAPIRoutesV2 wires the /api/v2 Echo group. Token middleware is
 // attached before any route so Huma's spec and Scalar docs share the
 // resource handlers' stack; unauthenticatedAPIPaths keeps them public.
-func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, wsRateLimit echo.MiddlewareFunc) {
+func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, noAuthRateLimit, refreshRateLimit echo.MiddlewareFunc) {
 	a.Use(noStoreCacheControl())
 	a.Use(SetupTokenMiddleware())
+	a.Use(pathScoped(v2SessionRenewalPaths.has, refreshRateLimit))
+	a.Use(pathScoped(v2CredentialPaths.has, noAuthRateLimit))
 	// Match the authenticated v1 group: rate limiting and route metrics
 	// apply to v2 resource endpoints too.
 	setupRateLimit(a, config.RateLimitKind.GetString())
@@ -424,13 +472,13 @@ func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, wsRateLimit echo.Middlewar
 	// authenticates via its first message, so unauthenticatedAPIPaths exempts it
 	// from the group's JWT middleware. Health and the Atom feed are Huma ops and
 	// self-register via init()/RegisterAll.
-	a.GET("/ws", ws.UpgradeHandler, wsRateLimit)
+	a.GET("/ws", ws.UpgradeHandler, noAuthRateLimit)
 
 	// Resources self-register via init(); RegisterAll runs them all + AutoPatch.
 	apiv2.RegisterAll(api)
 }
 
-func registerAPIRoutes(a *echo.Group, wsRateLimit echo.MiddlewareFunc) {
+func registerAPIRoutes(a *echo.Group, noAuthRateLimit, refreshRateLimit echo.MiddlewareFunc) {
 
 	// Prevent browsers from caching API responses. Without an explicit
 	// Cache-Control header browsers may heuristically cache JSON responses
@@ -449,14 +497,14 @@ func registerAPIRoutes(a *echo.Group, wsRateLimit echo.MiddlewareFunc) {
 	n.GET("/docs/redoc.standalone.js", apiv1.RedocJS)
 
 	// WebSocket (auth happens after upgrade via first message)
-	n.GET("/ws", ws.UpgradeHandler, wsRateLimit)
+	n.GET("/ws", ws.UpgradeHandler, noAuthRateLimit)
 
 	// Prometheus endpoint
 	setupMetrics(n)
 
 	// Separate route for unauthenticated routes to enable rate limits for it
 	ur := a.Group("")
-	ur.Use(unauthRateLimit())
+	ur.Use(noAuthRateLimit)
 
 	if config.AuthLocalEnabled.GetBool() {
 		ur.POST("/register", apiv1.RegisterUser)
@@ -474,7 +522,7 @@ func registerAPIRoutes(a *echo.Group, wsRateLimit echo.MiddlewareFunc) {
 	}
 
 	tr := a.Group("")
-	tr.Use(tokenRefreshRateLimit())
+	tr.Use(refreshRateLimit)
 
 	// Refresh token endpoint — unauthenticated because it uses the refresh
 	// token cookie instead of a JWT bearer token.
@@ -816,6 +864,7 @@ func registerAPIRoutes(a *echo.Group, wsRateLimit echo.MiddlewareFunc) {
 	a.GET("/notifications", notificationHandler.ReadAllWeb)
 	a.POST("/notifications/:notificationid", notificationHandler.UpdateWeb)
 	a.POST("/notifications", apiv1.MarkAllNotificationsAsRead)
+	a.DELETE("/notifications", notificationHandler.DeleteWeb)
 
 	// Migrations
 	m := a.Group("/migration")

@@ -31,6 +31,16 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func refreshTokenRequest(refreshToken string) *http.Request {
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/user/token/refresh", strings.NewReader(""))
+	req.Header.Set("Content-Type", "application/json")
+	req.AddCookie(&http.Cookie{
+		Name:  auth.RefreshTokenCookieName,
+		Value: refreshToken,
+	})
+	return req
+}
+
 func TestSessions(t *testing.T) {
 	t.Run("List sessions for user", func(t *testing.T) {
 		testHandler := webHandlerTest{
@@ -80,14 +90,8 @@ func TestSessions(t *testing.T) {
 		e, err := setupTestEnv()
 		require.NoError(t, err)
 
-		req := httptest.NewRequest(http.MethodPost, "/api/v1/user/token/refresh", strings.NewReader(""))
-		req.Header.Set("Content-Type", "application/json")
-		req.AddCookie(&http.Cookie{
-			Name:  auth.RefreshTokenCookieName,
-			Value: "testtoken_session1",
-		})
 		rec := httptest.NewRecorder()
-		c := e.NewContext(req, rec)
+		c := e.NewContext(refreshTokenRequest("testtoken_session1"), rec)
 
 		err = apiv1.RefreshToken(c)
 		require.NoError(t, err)
@@ -99,18 +103,51 @@ func TestSessions(t *testing.T) {
 		e, err := setupTestEnv()
 		require.NoError(t, err)
 
-		req := httptest.NewRequest(http.MethodPost, "/api/v1/user/token/refresh", strings.NewReader(""))
-		req.Header.Set("Content-Type", "application/json")
-		req.AddCookie(&http.Cookie{
-			Name:  auth.RefreshTokenCookieName,
-			Value: "garbage",
-		})
 		rec := httptest.NewRecorder()
-		c := e.NewContext(req, rec)
+		c := e.NewContext(refreshTokenRequest("garbage"), rec)
 
 		err = apiv1.RefreshToken(c)
 		require.Error(t, err)
 		assert.Equal(t, http.StatusUnauthorized, getHTTPErrorCode(err))
+		assert.Equal(t, "Invalid or expired refresh token.", getHTTPErrorMessage(err))
+		assert.Empty(t, refreshCookiePaths(rec), "an unknown refresh token must not clear the cookie")
+	})
+
+	t.Run("Refresh with expired session", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+
+		rec := httptest.NewRecorder()
+		c := e.NewContext(refreshTokenRequest("testtoken_session_expired"), rec)
+
+		err = apiv1.RefreshToken(c)
+		require.Error(t, err)
+		assert.Equal(t, http.StatusUnauthorized, getHTTPErrorCode(err))
+		assert.Equal(t, "Session expired.", getHTTPErrorMessage(err))
+		assert.ElementsMatch(t, []string{auth.RefreshTokenPathV1, auth.RefreshTokenPathV2}, refreshCookiePaths(rec),
+			"an expired session must clear the cookie on both paths")
+		for _, cookie := range refreshCookies(rec) {
+			assert.Negative(t, cookie.MaxAge, "cookie for path %s must be a deletion cookie", cookie.Path)
+			assert.Empty(t, cookie.Value, "cookie for path %s must be emptied", cookie.Path)
+		}
+	})
+
+	t.Run("Refresh with an already rotated token", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+
+		first := httptest.NewRecorder()
+		require.NoError(t, apiv1.RefreshToken(e.NewContext(refreshTokenRequest("testtoken_session2"), first)))
+
+		// The loser of two concurrent refreshes must not delete the cookie the
+		// winner just set. Sequentially the rotated-away token no longer resolves
+		// to a session, so this is the not-found rather than the replay error.
+		rec := httptest.NewRecorder()
+		err = apiv1.RefreshToken(e.NewContext(refreshTokenRequest("testtoken_session2"), rec))
+		require.Error(t, err)
+		assert.Equal(t, http.StatusUnauthorized, getHTTPErrorCode(err))
+		assert.Equal(t, "Invalid or expired refresh token.", getHTTPErrorMessage(err))
+		assert.Empty(t, refreshCookiePaths(rec), "a replayed refresh token must not clear the cookie")
 	})
 
 	t.Run("Login creates session", func(t *testing.T) {

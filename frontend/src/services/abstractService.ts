@@ -318,7 +318,7 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 		}
 	}
 
-	async getBlobUrl(url : string, method : Method = 'GET', data = {}) {
+	async getBlobUrl(url : string, method : Method = 'GET', data = {}): Promise<string> {
 		const response = await this.http({
 			url,
 			method,
@@ -328,7 +328,7 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 		
 		// Handle SVG blobs specially - convert to data URL for better browser compatibility
 		if (response.data.type === 'image/svg+xml') {
-			return new Promise((resolve, reject) => {
+			return new Promise<string>((resolve, reject) => {
 				const reader = new FileReader()
 				reader.onload = () => resolve(reader.result as string)
 				reader.onerror = reject

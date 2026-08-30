@@ -104,8 +104,16 @@
 				class="tiptap__editor"
 				:class="{'tiptap__editor-is-edit-enabled': isEditing}"
 				:editor="editor"
-				@dblclick="setEditIfApplicable()"
-				@click="focusIfEditing()"
+				@dblclick="setEditIfApplicable"
+				@click="handleContentClick"
+			/>
+
+			<ImageLightbox
+				v-if="lightboxBlobUrl !== null"
+				:key="lightboxBlobUrl"
+				:blob-url="lightboxBlobUrl"
+				:alt="lightboxAlt"
+				@close="closeLightbox"
 			/>
 		</div>
 
@@ -193,6 +201,7 @@ import {taskLinkCurrentProjectIdKey} from './taskLinkContext'
 import {createEditorExtensions} from './editorExtensions'
 import mentionSuggestionSetup from './mention/mentionSuggestion'
 import MentionUser from './mention/MentionUser.vue'
+import ImageLightbox from '@/components/misc/ImageLightbox.vue'
 
 import type {BottomAction, UploadCallback} from './types'
 import AttachmentService from '@/services/attachment'
@@ -417,9 +426,10 @@ function exitEditMode() {
 	}
 }
 
-function setEditIfApplicable() {
+function setEditIfApplicable(event: MouseEvent) {
 	if (!props.isEditEnabled) return
 	if (isEditing.value) return
+	if (getLightboxImage(event.target) !== null) return
 
 	setEdit()
 }
@@ -667,6 +677,38 @@ function focusIfEditing() {
 	if (isEditing.value) {
 		editor.value?.commands.focus()
 	}
+}
+
+const lightboxBlobUrl = ref<string | null>(null)
+const lightboxAlt = ref('')
+
+function getLightboxImage(target: EventTarget | null): HTMLImageElement | null {
+	if (
+		target instanceof HTMLImageElement
+		&& target.dataset.src !== undefined
+		&& target.src.startsWith('blob:')
+	) {
+		return target
+	}
+
+	return null
+}
+
+function handleContentClick(event: MouseEvent) {
+	focusIfEditing()
+	if (isEditing.value) {
+		return
+	}
+
+	const image = getLightboxImage(event.target)
+	if (image !== null) {
+		lightboxBlobUrl.value = image.src
+		lightboxAlt.value = image.alt
+	}
+}
+
+function closeLightbox() {
+	lightboxBlobUrl.value = null
 }
 
 function handleEscapeKey(event: KeyboardEvent) {
