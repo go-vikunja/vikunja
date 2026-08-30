@@ -15,7 +15,9 @@ jobs:
     # Fork pull_request_target runs skip the usual outside-contributor approval prompt.
     # `preview-fork` carries required reviewers to put that gate back; `preview-trusted`
     # has no protection rules so same-repo PRs still build without a click.
-    environment: ${{ github.event.pull_request.head.repo.full_name == github.repository && 'preview-trusted' || 'preview-fork' }}
+    environment:
+      name: ${{ github.event.pull_request.head.repo.full_name == github.repository && 'preview-trusted' || 'preview-fork' }}
+      url: https://pr-${{ github.event.pull_request.number }}.preview.vikunja.dev
     permissions:
       packages: write
       contents: read
