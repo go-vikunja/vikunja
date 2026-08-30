@@ -326,20 +326,21 @@ func TestLinkSharing(t *testing.T) {
 					t: t,
 				}
 				t.Run("ReadAll", func(t *testing.T) {
+					// Link shares must not see the user directory of a project, no matter the share permission.
 					t.Run("Shared readonly", func(t *testing.T) {
-						rec, err := testHandlerProjectUserReadOnly.testReadAllWithLinkShare(nil, map[string]string{"project": "1"})
-						require.NoError(t, err)
-						assert.Contains(t, rec.Body.String(), `[]`)
+						_, err := testHandlerProjectUserReadOnly.testReadAllWithLinkShare(nil, map[string]string{"project": "1"})
+						require.Error(t, err)
+						assert.Contains(t, getHTTPErrorMessage(err), `link share`)
 					})
 					t.Run("Shared write", func(t *testing.T) {
-						rec, err := testHandlerProjectUserWrite.testReadAllWithLinkShare(nil, map[string]string{"project": "2"})
-						require.NoError(t, err)
-						assert.Contains(t, rec.Body.String(), `[]`)
+						_, err := testHandlerProjectUserWrite.testReadAllWithLinkShare(nil, map[string]string{"project": "2"})
+						require.Error(t, err)
+						assert.Contains(t, getHTTPErrorMessage(err), `link share`)
 					})
 					t.Run("Shared admin", func(t *testing.T) {
-						rec, err := testHandlerProjectUserAdmin.testReadAllWithLinkShare(nil, map[string]string{"project": "3"})
-						require.NoError(t, err)
-						assert.Contains(t, rec.Body.String(), `"username":"user1"`)
+						_, err := testHandlerProjectUserAdmin.testReadAllWithLinkShare(nil, map[string]string{"project": "3"})
+						require.Error(t, err)
+						assert.Contains(t, getHTTPErrorMessage(err), `link share`)
 					})
 				})
 				t.Run("Create", func(t *testing.T) {
@@ -418,20 +419,21 @@ func TestLinkSharing(t *testing.T) {
 					t: t,
 				}
 				t.Run("ReadAll", func(t *testing.T) {
+					// Link shares must not see the teams of a project, no matter the share permission.
 					t.Run("Shared readonly", func(t *testing.T) {
-						rec, err := testHandlerProjectTeamReadOnly.testReadAllWithLinkShare(nil, map[string]string{"project": "1"})
-						require.NoError(t, err)
-						assert.Contains(t, rec.Body.String(), `[]`)
+						_, err := testHandlerProjectTeamReadOnly.testReadAllWithLinkShare(nil, map[string]string{"project": "1"})
+						require.Error(t, err)
+						assert.Contains(t, getHTTPErrorMessage(err), `link share`)
 					})
 					t.Run("Shared write", func(t *testing.T) {
-						rec, err := testHandlerProjectTeamWrite.testReadAllWithLinkShare(nil, map[string]string{"project": "2"})
-						require.NoError(t, err)
-						assert.Contains(t, rec.Body.String(), `[]`)
+						_, err := testHandlerProjectTeamWrite.testReadAllWithLinkShare(nil, map[string]string{"project": "2"})
+						require.Error(t, err)
+						assert.Contains(t, getHTTPErrorMessage(err), `link share`)
 					})
 					t.Run("Shared admin", func(t *testing.T) {
-						rec, err := testHandlerProjectTeamAdmin.testReadAllWithLinkShare(nil, map[string]string{"project": "3"})
-						require.NoError(t, err)
-						assert.Contains(t, rec.Body.String(), `"name":"testteam1"`)
+						_, err := testHandlerProjectTeamAdmin.testReadAllWithLinkShare(nil, map[string]string{"project": "3"})
+						require.Error(t, err)
+						assert.Contains(t, getHTTPErrorMessage(err), `link share`)
 					})
 				})
 				t.Run("Create", func(t *testing.T) {

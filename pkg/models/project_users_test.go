@@ -236,6 +236,17 @@ func TestProjectUser_ReadAll(t *testing.T) {
 				user2Read,
 			},
 		},
+		{
+			name: "Link share principals are rejected even with project access",
+			fields: fields{
+				ProjectID: 1,
+			},
+			args: args{
+				a: &LinkSharing{ID: 1, Hash: "test", ProjectID: 1, Permission: PermissionRead},
+			},
+			wantErr: true,
+			errType: user.IsErrMustNotBeLinkShare,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
