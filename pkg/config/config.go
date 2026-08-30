@@ -184,6 +184,7 @@ const (
 	MigrationMicrosoftTodoClientID     Key = `migration.microsofttodo.clientid`
 	MigrationMicrosoftTodoClientSecret Key = `migration.microsofttodo.clientsecret`
 	MigrationMicrosoftTodoRedirectURL  Key = `migration.microsofttodo.redirecturl`
+	MigrationClaimTimeout              Key = `migration.claimtimeout`
 
 	CorsEnable  Key = `cors.enable`
 	CorsOrigins Key = `cors.origins`
@@ -480,6 +481,7 @@ func initDefaultConfig() {
 	MigrationTodoistEnable.setDefault(false)
 	MigrationTrelloEnable.setDefault(false)
 	MigrationMicrosoftTodoEnable.setDefault(false)
+	MigrationClaimTimeout.setDefault("24h")
 	// Avatar
 	AvatarGravaterExpiration.setDefault(3600)
 	AvatarGravatarBaseURL.setDefault("https://www.gravatar.com")

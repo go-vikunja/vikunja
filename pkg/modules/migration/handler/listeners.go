@@ -78,7 +78,11 @@ func (s *MigrationListener) Handle(msg *message.Message) (err error) {
 
 	m, err := migrateInListener(ms, event)
 	if err != nil {
-		log.Errorf("[Migration] Migration %d from %s for user %d failed. Error was: %s", m.ID, event.MigratorKind, event.User.ID, err.Error())
+		migrationID := int64(0)
+		if m != nil {
+			migrationID = m.ID
+		}
+		log.Errorf("[Migration] Migration %d from %s for user %d failed. Error was: %s", migrationID, event.MigratorKind, event.User.ID, err.Error())
 
 		var nerr error
 		if config.SentryEnabled.GetBool() {
@@ -96,13 +100,15 @@ func (s *MigrationListener) Handle(msg *message.Message) (err error) {
 			})
 		}
 		if nerr != nil {
-			log.Errorf("[Migration] Could not sent failed migration notification for migration %d to user %d, error was: %s", m.ID, event.User.ID, err.Error())
+			log.Errorf("[Migration] Could not sent failed migration notification for migration %d to user %d, error was: %s", migrationID, event.User.ID, err.Error())
 		}
 
 		// Still need to finish the migration, otherwise restarting will not work
-		err = migration.FinishMigration(m)
-		if err != nil {
-			log.Errorf("[Migration] Could not finish migration %d for user %d, error was: %s", m.ID, event.User.ID, err.Error())
+		if m != nil {
+			err = migration.FinishMigration(m)
+			if err != nil {
+				log.Errorf("[Migration] Could not finish migration %d for user %d, error was: %s", m.ID, event.User.ID, err.Error())
+			}
 		}
 	}
 
@@ -110,10 +116,30 @@ func (s *MigrationListener) Handle(msg *message.Message) (err error) {
 }
 
 func migrateInListener(ms migration.Migrator, event *MigrationRequestedEvent) (m *migration.Status, err error) {
-	m, err = migration.StartMigration(ms, event.User)
-	if err != nil {
-		return
+	if event.MigrationStatusID == 0 {
+		// Events queued before claim support must acquire one during an upgrade.
+		m, err = migration.ClaimMigration(ms, event.User)
+		if err != nil {
+			return
+		}
+	} else {
+		m, err = migration.GetMigrationStatusByID(event.MigrationStatusID)
+		if err != nil {
+			return
+		}
+		if !m.FinishedAt.IsZero() {
+			log.Debugf("[Migration] Skipping stale migration event for status %d of user %d", m.ID, event.User.ID)
+			return
+		}
 	}
+
+	// Convert panics to errors so the caller releases the claim.
+	defer func() {
+		if r := recover(); r != nil {
+			log.Errorf("[Migration] Migration %d from %s for user %d panicked: %v", m.ID, event.MigratorKind, event.User.ID, r)
+			err = fmt.Errorf("migration panicked: %v", r)
+		}
+	}()
 
 	log.Debugf("[Migration] Starting migration %d from %s for user %d", m.ID, event.MigratorKind, event.User.ID)
 	err = ms.Migrate(event.User)

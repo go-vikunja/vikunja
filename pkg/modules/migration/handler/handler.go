@@ -20,6 +20,7 @@ import (
 	"net/http"
 
 	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
 	user2 "code.vikunja.io/api/pkg/user"
@@ -62,32 +63,37 @@ func (mw *MigrationWeb) AuthURL(c *echo.Context) error {
 	return c.JSON(http.StatusOK, &AuthURL{URL: ms.AuthURL()})
 }
 
-// StartMigration kicks off a migration for the given user: it refuses with
-// migration.ErrMigrationAlreadyRunning if one is already in progress, then
-// dispatches the MigrationRequestedEvent that runs the migration asynchronously.
-// The migrator must already carry its request payload (e.g. the OAuth code).
-// Shared by the v1 and v2 HTTP layers so the orchestration lives in one place.
+// StartMigration validates credentials and dispatches a migration while holding its claim.
 func StartMigration(ms migration.Migrator, u *user2.User) error {
-	stats, err := migration.GetMigrationStatus(ms, u)
+	status, err := migration.ClaimMigration(ms, u)
 	if err != nil {
 		return err
 	}
 
-	if !stats.StartedAt.IsZero() && stats.FinishedAt.IsZero() {
-		return &migration.ErrMigrationAlreadyRunning{StartedAt: stats.StartedAt}
-	}
-
 	if cc, ok := ms.(migration.CredentialsChecker); ok {
 		if err := cc.CheckCredentials(); err != nil {
+			releaseClaim(status, u, "failed credential check")
 			return err
 		}
 	}
 
-	return events.Dispatch(&MigrationRequestedEvent{
-		Migrator:     ms,
-		MigratorKind: ms.Name(),
-		User:         u,
-	})
+	if err := events.Dispatch(&MigrationRequestedEvent{
+		Migrator:          ms,
+		MigratorKind:      ms.Name(),
+		User:              u,
+		MigrationStatusID: status.ID,
+	}); err != nil {
+		releaseClaim(status, u, "failed event dispatch")
+		return err
+	}
+
+	return nil
+}
+
+func releaseClaim(status *migration.Status, u *user2.User, reason string) {
+	if ferr := migration.FinishMigration(status); ferr != nil {
+		log.Errorf("[Migration] Could not release claim of migration %d for user %d after %s: %s", status.ID, u.ID, reason, ferr)
+	}
 }
 
 // Migrate calls the migration method
@@ -98,18 +104,6 @@ func (mw *MigrationWeb) Migrate(c *echo.Context) error {
 	user, err := user2.GetCurrentUser(c)
 	if err != nil {
 		return err
-	}
-
-	stats, err := migration.GetMigrationStatus(ms, user)
-	if err != nil {
-		return err
-	}
-
-	if !stats.StartedAt.IsZero() && stats.FinishedAt.IsZero() {
-		return c.JSON(http.StatusPreconditionFailed, map[string]string{
-			"message":       "Migration already running",
-			"running_since": stats.StartedAt.String(),
-		})
 	}
 
 	// Bind user request stuff

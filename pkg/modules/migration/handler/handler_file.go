@@ -20,6 +20,7 @@ import (
 	"io"
 	"net/http"
 
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
 	user2 "code.vikunja.io/api/pkg/user"
@@ -37,16 +38,17 @@ func (fw *FileMigratorWeb) RegisterRoutes(g *echo.Group) {
 	g.PUT("/"+ms.Name()+"/migrate", fw.Migrate)
 }
 
-// RunFileMigration records the migration's start, runs the file migrator and
-// records its finish. Shared by the v1 and v2 HTTP layers so the orchestration
-// lives in one place; the caller supplies the already-opened upload.
+// RunFileMigration runs a file import while holding the user's migration claim.
 func RunFileMigration(ms migration.FileMigrator, u *user2.User, file io.ReaderAt, size int64) error {
-	m, err := migration.StartMigration(ms, u)
+	m, err := migration.ClaimMigration(ms, u)
 	if err != nil {
 		return err
 	}
 
 	if err := ms.Migrate(u, file, size); err != nil {
+		if ferr := migration.FinishMigration(m); ferr != nil {
+			log.Errorf("[Migration] Could not release claim of migration %d for user %d after failed import: %s", m.ID, u.ID, ferr)
+		}
 		return err
 	}
 

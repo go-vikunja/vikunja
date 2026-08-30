@@ -17,19 +17,40 @@
 package handler
 
 import (
+	"os"
+	"testing"
+
+	"code.vikunja.io/api/pkg/events"
+
+	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/files"
+	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/user"
 )
 
-// MigrationRequestedEvent represents a MigrationRequestedEvent event
-type MigrationRequestedEvent struct {
-	Migrator     interface{} `json:"migrator"`
-	User         *user.User  `json:"user"`
-	MigratorKind string      `json:"migrator_kind"`
-	// MigrationStatusID lets the listener reuse the claim after the event round trip.
-	MigrationStatusID int64 `json:"migration_status_id"`
-}
+func TestMain(m *testing.M) {
+	log.InitLogger()
 
-// Name defines the name for MigrationRequestedEvent
-func (t *MigrationRequestedEvent) Name() string {
-	return "migration.requested"
+	config.InitDefaultConfig()
+	// Allow non-routable IPs in tests so httptest.NewServer (127.0.0.1) works
+	config.OutgoingRequestsAllowNonRoutableIPs.Set("true")
+
+	files.InitTests()
+	user.InitTests()
+	models.SetupTests()
+
+	// models.SetupTests only syncs model tables; the migration package owns migration_status.
+	x, err := db.CreateTestEngine()
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err := x.Sync2(&migration.Status{}); err != nil {
+		log.Fatal(err)
+	}
+
+	events.Fake()
+	os.Exit(m.Run())
 }
