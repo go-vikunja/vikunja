@@ -17,6 +17,7 @@
 package models
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -265,13 +266,74 @@ func preprocessFilterString(filter string) string {
 	})
 }
 
+// These caps block GHSA-xxc3-xpmc-vmvr before fexpr allocates while leaving
+// realistic hand-written filters unaffected.
+const (
+	maxFilterBytes = 16 * 1024
+	maxFilterDepth = 100
+)
+
+func validateFilterComplexity(filter string) error {
+	if len(filter) > maxFilterBytes {
+		return &ErrFilterTooComplex{Reason: fmt.Sprintf("it exceeds the %d-byte limit", maxFilterBytes)}
+	}
+
+	depth := 0
+	for i := 0; i < len(filter); {
+		switch c := filter[i]; c {
+		case '\'', '"':
+			if end := quotedRunEnd(filter, i); end > 0 {
+				i = end
+				continue
+			}
+			i++
+		case '(':
+			depth++
+			if depth > maxFilterDepth {
+				return &ErrFilterTooComplex{Reason: fmt.Sprintf("it exceeds the %d-level nesting limit", maxFilterDepth)}
+			}
+			i++
+		case ')':
+			depth--
+			if depth < 0 {
+				return &ErrInvalidFilterExpression{
+					Expression:      filter,
+					ExpressionError: errors.New("unexpected closing parenthesis"),
+				}
+			}
+			i++
+		default:
+			i++
+		}
+	}
+
+	return nil
+}
+
+func prepareFilterForParsing(filter string) (string, error) {
+	// Preprocessing may shrink or expand input, so enforce the cap on both forms.
+	if err := validateFilterComplexity(filter); err != nil {
+		return "", err
+	}
+
+	filter = preprocessFilterString(filter)
+	if err := validateFilterComplexity(filter); err != nil {
+		return "", err
+	}
+
+	return filter, nil
+}
+
 func getTaskFiltersFromFilterString(filter string, filterTimezone string) (filters []*taskFilter, err error) {
 
 	if filter == "" {
 		return
 	}
 
-	filter = preprocessFilterString(filter)
+	filter, err = prepareFilterForParsing(filter)
+	if err != nil {
+		return nil, err
+	}
 
 	parsedFilter, err := fexpr.Parse(filter)
 	if err != nil {
@@ -306,6 +368,7 @@ func getTaskFiltersFromFilterString(filter string, filterTimezone string) (filte
 
 func isErrInvalidFilter(err error) bool {
 	return IsErrInvalidFilterExpression(err) ||
+		IsErrFilterTooComplex(err) ||
 		IsErrInvalidTaskFilterValue(err) ||
 		IsErrInvalidTaskFilterConcatinator(err) ||
 		IsErrInvalidTaskFilterComparator(err) ||
