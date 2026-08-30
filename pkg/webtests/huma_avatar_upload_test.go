@@ -18,8 +18,10 @@ package webtests
 
 import (
 	"bytes"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"hash/crc32"
 	"image"
 	"image/color"
 	"image/png"
@@ -39,7 +41,6 @@ import (
 
 const avatarUploadPath = "/api/v2/user/settings/avatar"
 
-// pngBytes builds a small valid PNG so StoreAvatarFile can decode and resize it.
 func pngBytes(t *testing.T) []byte {
 	t.Helper()
 	img := image.NewRGBA(image.Rect(0, 0, 8, 8))
@@ -53,7 +54,6 @@ func pngBytes(t *testing.T) []byte {
 	return buf.Bytes()
 }
 
-// multipartAvatarBody uses CreateFormFile, which sets the part Content-Type to application/octet-stream, mirroring how many programmatic clients upload.
 func multipartAvatarBody(t *testing.T, fieldName, filename string, content []byte) (*bytes.Buffer, string) {
 	t.Helper()
 	buf := &bytes.Buffer{}
@@ -66,7 +66,6 @@ func multipartAvatarBody(t *testing.T, fieldName, filename string, content []byt
 	return buf, w.FormDataContentType()
 }
 
-// multipartAvatarBodyWithPartType sets a caller-chosen part Content-Type, mirroring how a browser declares a real image type (e.g. image/png).
 func multipartAvatarBodyWithPartType(t *testing.T, fieldName, filename, partContentType string, content []byte) (*bytes.Buffer, string) {
 	t.Helper()
 	buf := &bytes.Buffer{}
@@ -114,7 +113,6 @@ func TestAvatarUpload(t *testing.T) {
 	})
 
 	t.Run("Real image content-type on the part", func(t *testing.T) {
-		// MimeTypeValidator must accept a real image part type or it 422s before the handler.
 		e, err := setupTestEnv()
 		require.NoError(t, err)
 		token := humaTokenFor(t, &testuser1)
@@ -189,7 +187,6 @@ func TestAvatarUpload(t *testing.T) {
 		e.ServeHTTP(rec, req)
 		require.Equal(t, http.StatusOK, rec.Code)
 
-		// Loose decode: Huma can emit `type` as a string or an array.
 		var spec map[string]any
 		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &spec))
 
@@ -206,5 +203,57 @@ func TestAvatarUpload(t *testing.T) {
 		avatarProp, ok := props["avatar"].(map[string]any)
 		require.True(t, ok, "the avatar field must appear in the multipart schema")
 		assert.Equal(t, "binary", avatarProp["format"], "avatar field must be a binary file in the spec")
+	})
+}
+
+func pngWithClaimedDimensionsPatch(t *testing.T, width, height int) []byte {
+	t.Helper()
+	data := pngBytes(t)
+	binary.BigEndian.PutUint32(data[16:20], uint32(width))  // #nosec G115 - test constant
+	binary.BigEndian.PutUint32(data[20:24], uint32(height)) // #nosec G115 - test constant
+	crc := crc32.ChecksumIEEE(data[12:29])
+	binary.BigEndian.PutUint32(data[29:33], crc)
+	return data
+}
+
+// Guards image allocation bounds (GHSA-4vh2-39rq-rq8j).
+func TestAvatarUploadImageBounds(t *testing.T) {
+	t.Run("8000 by 8000 avatar upload is rejected", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		token := humaTokenFor(t, &testuser1)
+
+		body, contentType := multipartAvatarBody(t, "avatar", "bomb.png", pngWithClaimedDimensionsPatch(t, 8000, 8000))
+		rec := uploadAvatarRequest(t, e, body, contentType, token)
+		assert.Equal(t, http.StatusBadRequest, rec.Code, "body: %s", rec.Body.String())
+	})
+
+	t.Run("avatar reads are fitted, never upscaled", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		token := humaTokenFor(t, &testuser1)
+
+		body, contentType := multipartAvatarBody(t, "avatar", "avatar.png", pngBytes(t))
+		rec := uploadAvatarRequest(t, e, body, contentType, token)
+		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+
+		get := func(t *testing.T, size string) image.Image {
+			rec := humaRequest(t, e, http.MethodGet, "/api/v2/avatar/"+testuser1.Username+"?size="+size, "", token, "")
+			require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+			img, _, err := image.Decode(bytes.NewReader(rec.Body.Bytes()))
+			require.NoError(t, err)
+			return img
+		}
+
+		t.Run("smaller size scales down", func(t *testing.T) {
+			img := get(t, "4")
+			assert.Equal(t, 4, img.Bounds().Dx())
+			assert.Equal(t, 4, img.Bounds().Dy())
+		})
+		t.Run("larger size keeps the native size", func(t *testing.T) {
+			img := get(t, "1024")
+			assert.Equal(t, 8, img.Bounds().Dx(), "Fit must not upscale a small source")
+			assert.Equal(t, 8, img.Bounds().Dy())
+		})
 	})
 }
