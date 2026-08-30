@@ -408,3 +408,104 @@ func TestCanDoAPIRoute_V2TasksBulkCreate(t *testing.T) {
 // End-to-end CanDoAPIRoute coverage for /api/v2 is provided by the Label
 // integration test in pkg/webtests/huma_label_test.go (see the token-auth
 // scenarios in that file) which exercises the full auth pipeline.
+
+// Guards cross-group expansions (GHSA-9rg3-v78m-26q8).
+func TestCanDoAPIRoute_ExpandScopes(t *testing.T) {
+	apiTokenRoutes = make(map[string]APITokenRoute)
+	apiTokenRoutesV2 = make(map[string]APITokenRoute)
+
+	for _, r := range []echo.RouteInfo{
+		{Method: "GET", Path: "/api/v1/tasks"},
+		{Method: "GET", Path: "/api/v1/tasks/:projecttask"},
+		{Method: "GET", Path: "/api/v1/projects/:project/tasks"},
+		{Method: "GET", Path: "/api/v1/projects/:project/tasks/by-index/:index"},
+		{Method: "GET", Path: "/api/v1/projects/:project/views/:view/tasks"},
+		{Method: "GET", Path: "/api/v1/projects/:project/views/:view/buckets"},
+		{Method: "GET", Path: "/api/v2/tasks"},
+		{Method: "GET", Path: "/api/v2/tasks/:projecttask"},
+		{Method: "GET", Path: "/api/v2/projects/:project/tasks"},
+		{Method: "GET", Path: "/api/v2/projects/:project/tasks/by-index/:index"},
+		{Method: "GET", Path: "/api/v2/projects/:project/views/:view/tasks"},
+		{Method: "GET", Path: "/api/v2/projects/:project/views/:view/buckets/tasks"},
+	} {
+		CollectRoutesForAPITokenUsage(r, true)
+	}
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v1/tasks/:task/comments"}, true)
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v1/:entitykind/:entityid/reactions"}, true)
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v1/time-entries"}, true)
+
+	e := echo.New()
+	do := func(_ *testing.T, url string, token *APIToken) bool {
+		req := httptest.NewRequest("GET", url, nil)
+		c := e.NewContext(req, httptest.NewRecorder())
+		return CanDoAPIRoute(c, token)
+	}
+
+	basePerms := APIPermissions{
+		"tasks":                []string{"read_all", "read_one"},
+		"projects":             []string{"tasks_by_index", "views_buckets", "views_buckets_tasks"},
+		"projects_views_tasks": []string{"read_all"},
+	}
+	tasksOnly := &APIToken{APIPermissions: basePerms}
+	withScopesPerms := APIPermissions{
+		"tasks_comments": []string{"read_all"},
+		"reactions":      []string{"read_all"},
+		"time_entries":   []string{"read_all"},
+	}
+	for k, v := range basePerms {
+		withScopesPerms[k] = v
+	}
+	withScopes := &APIToken{APIPermissions: withScopesPerms}
+
+	t.Run("each expand value requires its own scope", func(t *testing.T) {
+		for _, expand := range []string{"comments", "comment_count", "reactions", "time_entries_count"} {
+			assert.False(t, do(t, "/api/v1/tasks?expand="+expand, tasksOnly),
+				"a tasks-only token must not expand %s", expand)
+			assert.False(t, do(t, "/api/v2/tasks?expand="+expand, tasksOnly),
+				"a tasks-only token must not expand %s", expand)
+			assert.True(t, do(t, "/api/v1/tasks?expand="+expand, withScopes),
+				"a token with the expansion scope may expand %s", expand)
+			assert.True(t, do(t, "/api/v2/tasks?expand="+expand, withScopes))
+		}
+	})
+
+	t.Run("repeated and comma-mixed expand params", func(t *testing.T) {
+		assert.False(t, do(t, "/api/v1/tasks?expand=subtasks&expand=comments", tasksOnly))
+		assert.True(t, do(t, "/api/v1/tasks?expand=subtasks&expand=comments", withScopes))
+		assert.False(t, do(t, "/api/v2/tasks?expand=buckets,reactions", tasksOnly))
+		assert.True(t, do(t, "/api/v2/tasks?expand=buckets,reactions", withScopes))
+	})
+
+	t.Run("unprotected expansions stay available to a tasks-only token", func(t *testing.T) {
+		for _, expand := range []string{"subtasks", "buckets", "is_unread"} {
+			assert.True(t, do(t, "/api/v1/tasks?expand="+expand, tasksOnly))
+		}
+		assert.True(t, do(t, "/api/v1/tasks?expand=subtasks&expand=buckets&expand=is_unread", tasksOnly))
+		assert.True(t, do(t, "/api/v1/tasks", tasksOnly), "no expand at all must stay allowed")
+	})
+
+	t.Run("protected route shapes", func(t *testing.T) {
+		for _, path := range []string{
+			"/api/v1/tasks/:projecttask",
+			"/api/v1/projects/:project/tasks",
+			"/api/v1/projects/:project/tasks/by-index/:index",
+			"/api/v1/projects/:project/views/:view/tasks",
+			"/api/v1/projects/:project/views/:view/buckets",
+			"/api/v2/tasks/:projecttask",
+			"/api/v2/projects/:project/tasks",
+			"/api/v2/projects/:project/tasks/by-index/:index",
+			"/api/v2/projects/:project/views/:view/tasks",
+			"/api/v2/projects/:project/views/:view/buckets/tasks",
+		} {
+			assert.False(t, do(t, path+"?expand=comments", tasksOnly), "%s must require the comment scope", path)
+			assert.True(t, do(t, path+"?expand=comments", withScopes), "%s must allow the expansion with the scope", path)
+		}
+	})
+
+	t.Run("expand is ignored on unrelated routes", func(t *testing.T) {
+		CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v1/projects"}, true)
+		projectsToken := &APIToken{APIPermissions: APIPermissions{"projects": []string{"read_all"}}}
+		assert.True(t, do(t, "/api/v1/projects?expand=comments", projectsToken),
+			"expand on a route which does not consume it must not require any scope")
+	})
+}
