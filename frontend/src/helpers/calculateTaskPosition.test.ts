@@ -41,4 +41,13 @@ describe('calculateItemPosition', () => {
 		expect(deserialized).toBe(position)
 		expect(deserialized).toBeGreaterThan(100)
 	})
+
+	// Dedicated repro: the result must be the midpoint BETWEEN the two
+	// neighbors, not past either of them.
+	it('should place the new position strictly between its neighbors', () => {
+		const result = calculateItemPosition(10, 20)
+		expect(result).toBe(15)
+		expect(result).toBeGreaterThan(10)
+		expect(result).toBeLessThan(20)
+	})
 })
