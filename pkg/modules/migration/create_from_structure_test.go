@@ -17,7 +17,14 @@
 package migration
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
+	"image"
+	"image/color"
+	"image/png"
+	"io"
+	"io/fs"
 	"testing"
 	"time"
 
@@ -29,6 +36,41 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+type testFileProvider struct {
+	background io.ReadSeekCloser
+	err        error
+}
+
+func (p *testFileProvider) OpenAttachment(_ *models.TaskAttachment) (io.ReadSeekCloser, int64, error) {
+	return nil, 0, p.err
+}
+
+func (p *testFileProvider) OpenBackground(_ *models.ProjectWithTasksAndBuckets) (io.ReadSeekCloser, int64, error) {
+	if p.err != nil && p.background == nil {
+		return nil, 0, p.err
+	}
+	return p.background, 73, nil
+}
+
+type trackedReadSeekCloser struct {
+	*bytes.Reader
+	closed bool
+}
+
+func (r *trackedReadSeekCloser) Close() error {
+	r.closed = true
+	return nil
+}
+
+func testBackground(t *testing.T) []byte {
+	t.Helper()
+	var buf bytes.Buffer
+	img := image.NewRGBA(image.Rect(0, 0, 1, 1))
+	img.Set(0, 0, color.RGBA{R: 1, G: 2, B: 3, A: 255})
+	require.NoError(t, png.Encode(&buf, img))
+	return buf.Bytes()
+}
 
 func TestInsertFromStructure(t *testing.T) {
 	u := &user.User{
@@ -415,5 +457,55 @@ func TestInsertFromStructure(t *testing.T) {
 				assert.Empty(t, assignees, title)
 			}
 		}
+	})
+}
+
+func TestInsertFromStructureFileProvider(t *testing.T) {
+	u := &user.User{ID: 1}
+
+	t.Run("propagates background provider errors", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		budgetErr := errors.New("storage budget exceeded")
+		provider := &testFileProvider{err: budgetErr}
+		structure := []*models.ProjectWithTasksAndBuckets{{Project: models.Project{Title: "provider error"}}}
+
+		err := InsertFromStructureWithFileProvider(structure, u, provider)
+		require.ErrorIs(t, err, budgetErr)
+		db.AssertMissing(t, "projects", map[string]interface{}{"title": "provider error"})
+	})
+
+	t.Run("rollback preserves colliding blobs and removes the new background", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		unrelated, err := files.Create(bytes.NewReader([]byte("unrelated")), "unrelated", 9, u)
+		require.NoError(t, err)
+		newBackgroundID := unrelated.ID + 1
+		background := &trackedReadSeekCloser{Reader: bytes.NewReader(testBackground(t))}
+		providerErr := errors.New("stop after background")
+		provider := &testFileProvider{background: background, err: providerErr}
+		structure := []*models.ProjectWithTasksAndBuckets{{
+			Project: models.Project{Title: "background rollback", BackgroundFileID: unrelated.ID},
+			Tasks: []*models.TaskWithComments{{Task: models.Task{
+				Title:       "task",
+				Attachments: []*models.TaskAttachment{{File: &files.File{Name: "stop"}}},
+			}}},
+		}}
+
+		err = InsertFromStructureWithFileProvider(structure, u, provider)
+		require.ErrorIs(t, err, providerErr)
+		assert.True(t, background.closed, "the background reader must be closed")
+		assert.Equal(t, newBackgroundID, structure[0].Project.BackgroundFileID)
+
+		_, err = files.FileStat(unrelated)
+		require.NoError(t, err, "rollback must preserve an unrelated colliding blob")
+		_, err = files.FileStat(&files.File{ID: newBackgroundID})
+		require.Error(t, err, "rollback must remove the newly created background blob")
+		require.ErrorIs(t, err, fs.ErrNotExist)
+
+		replacement, err := files.Create(bytes.NewReader([]byte("replacement")), "replacement", 11, u)
+		require.NoError(t, err)
+		assert.Equal(t, newBackgroundID, replacement.ID, "SQLite reuses the rolled-back id")
+		_, err = files.FileStat(replacement)
+		require.NoError(t, err, "cleanup must finish before the id becomes reusable")
 	})
 }
