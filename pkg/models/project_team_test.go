@@ -78,12 +78,12 @@ func TestTeamProject_ReadAll(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
-		teams, _, _, err := tl.ReadAll(s, u, "TEAM9", 1, 50)
+		teams, _, _, err := tl.ReadAll(s, u, "TEAM8", 1, 50)
 		require.NoError(t, err)
 		assert.Equal(t, reflect.Slice, reflect.TypeOf(teams).Kind())
 		ts := teams.([]*TeamWithPermission)
 		assert.Len(t, ts, 1)
-		assert.Equal(t, int64(9), ts[0].ID)
+		assert.Equal(t, int64(8), ts[0].ID)
 	})
 	t.Run("link share principals are rejected even with project access", func(t *testing.T) {
 		tl := TeamProject{

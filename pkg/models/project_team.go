@@ -19,11 +19,13 @@ package models
 import (
 	"time"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
+	"xorm.io/builder"
 	"xorm.io/xorm"
 )
 
@@ -56,6 +58,19 @@ func (*TeamProject) TableName() string {
 type TeamWithPermission struct {
 	Team       `xorm:"extends"`
 	Permission Permission `json:"permission" readOnly:"true" doc:"The permission this team has on the project: 0 = Read only, 1 = Read & Write, 2 = Admin."`
+}
+
+func readableTeamSearchCond(a web.Auth) builder.Cond {
+	readableTeams := builder.In(
+		"teams.id",
+		builder.Select("team_id").
+			From("team_members").
+			Where(builder.Eq{"user_id": a.GetID()}),
+	)
+	if config.ServiceEnablePublicTeams.GetBool() {
+		return builder.Or(readableTeams, builder.Eq{"teams.is_public": true})
+	}
+	return readableTeams
 }
 
 // Create creates a new team <-> project relation
@@ -180,7 +195,6 @@ func (tl *TeamProject) Delete(s *xorm.Session, _ web.Auth) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/teams [get]
 func (tl *TeamProject) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
-	// Link shares must not see the teams of a project
 	if _, is := a.(*LinkSharing); is {
 		return nil, 0, 0, &user.ErrMustNotBeLinkShare{}
 	}
@@ -204,6 +218,10 @@ func (tl *TeamProject) ReadAll(s *xorm.Session, a web.Auth, search string, page 
 		Join("INNER", "team_projects", "team_id = teams.id").
 		Where("team_projects.project_id = ?", tl.ProjectID).
 		Where(db.ILIKE("teams.name", search))
+	searchReadableTeamsOnly := search != "" && !isInstanceAdmin(s, a)
+	if searchReadableTeamsOnly {
+		query = query.Where(readableTeamSearchCond(a))
+	}
 	if limit > 0 {
 		query = query.Limit(limit, start)
 	}
@@ -212,9 +230,25 @@ func (tl *TeamProject) ReadAll(s *xorm.Session, a web.Auth, search string, page 
 		return nil, 0, 0, err
 	}
 
+	// Keep legacy relations visible while scrubbing unreadable team details.
 	teams := []*Team{}
 	for i := range all {
-		teams = append(teams, &all[i].Team)
+		canRead, _, readErr := all[i].CanRead(s, a)
+		if readErr != nil {
+			return nil, 0, 0, readErr
+		}
+		if !canRead && config.ServiceEnablePublicTeams.GetBool() {
+			canRead = all[i].IsPublic
+		}
+		if canRead {
+			teams = append(teams, &all[i].Team)
+			continue
+		}
+		permission := all[i].Permission
+		all[i] = &TeamWithPermission{
+			Team:       Team{ID: all[i].ID},
+			Permission: permission,
+		}
 	}
 
 	err = addMoreInfoToTeams(s, teams)
@@ -222,12 +256,15 @@ func (tl *TeamProject) ReadAll(s *xorm.Session, a web.Auth, search string, page 
 		return
 	}
 
-	totalItems, err = s.
+	countQuery := s.
 		Table("teams").
 		Join("INNER", "team_projects", "team_id = teams.id").
 		Where("team_projects.project_id = ?", tl.ProjectID).
-		Where(db.ILIKE("teams.name", search)).
-		Count(&TeamWithPermission{})
+		Where(db.ILIKE("teams.name", search))
+	if searchReadableTeamsOnly {
+		countQuery = countQuery.Where(readableTeamSearchCond(a))
+	}
+	totalItems, err = countQuery.Count(&TeamWithPermission{})
 	if err != nil {
 		return nil, 0, 0, err
 	}
