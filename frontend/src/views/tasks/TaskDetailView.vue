@@ -135,6 +135,7 @@
 										v-model="task.dueDate"
 										:choose-date-label="$t('task.detail.chooseDueDate')"
 										:disabled="taskService.loading || !canWrite"
+										show-exact-date
 										@closeOnChange="saveTask()"
 									/>
 									<BaseButton
@@ -190,6 +191,7 @@
 										v-model="task.startDate"
 										:choose-date-label="$t('task.detail.chooseStartDate')"
 										:disabled="taskService.loading || !canWrite"
+										show-exact-date
 										@closeOnChange="saveTask()"
 									/>
 									<BaseButton
@@ -224,6 +226,7 @@
 										v-model="task.endDate"
 										:choose-date-label="$t('task.detail.chooseEndDate')"
 										:disabled="taskService.loading || !canWrite"
+										show-exact-date
 										@closeOnChange="saveTask()"
 									/>
 									<BaseButton
