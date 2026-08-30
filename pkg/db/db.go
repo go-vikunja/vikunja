@@ -622,5 +622,18 @@ func CreateParadeDBIndexes() error {
 		return fmt.Errorf("could not ensure paradedb time entry index: %w", err)
 	}
 
+	// Create ParadeDB index for labels (title/description search via MultiFieldSearch)
+	labelsIndexSQL := `CREATE INDEX IF NOT EXISTS idx_labels_paradedb ON labels USING bm25 (id, title, description)
+	WITH (
+		key_field='id',
+		text_fields='{
+			"title": {"fast": true, "record": "freq"},
+			"description": {"fast": true, "record": "freq"}
+		}'
+	)`
+	if _, err := x.Exec(labelsIndexSQL); err != nil {
+		return fmt.Errorf("could not ensure paradedb label index: %w", err)
+	}
+
 	return nil
 }

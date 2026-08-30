@@ -237,6 +237,24 @@ func TestLabel_ReadAll_LinkShare(t *testing.T) {
 	assert.ElementsMatch(t, []int64{4}, ids, "link share for project 1 must see exactly {4}; got %v", ids)
 }
 
+func TestLabel_ReadAll_SearchMatchesDescription(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	_, err := s.ID(7).Cols("description").Update(&Label{Description: "haystackneedle"})
+	require.NoError(t, err)
+
+	l := &Label{}
+	gotLs, _, _, err := l.ReadAll(s, &user.User{ID: 1}, "haystackneedle", 0, 0)
+	require.NoError(t, err)
+
+	labels, ok := gotLs.([]*LabelWithTaskID)
+	require.True(t, ok)
+	require.Len(t, labels, 1)
+	assert.Equal(t, int64(7), labels[0].ID)
+}
+
 func TestLabel_ReadOne(t *testing.T) {
 	type fields struct {
 		ID          int64

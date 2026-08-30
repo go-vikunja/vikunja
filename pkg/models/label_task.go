@@ -334,7 +334,8 @@ func labelSearchCond(searches []string) builder.Cond {
 			continue
 		}
 
-		searchcond = builder.Or(searchcond, db.ILIKE("labels.title", search))
+		// Qualified with the table name: the per-task query joins label_tasks.
+		searchcond = builder.Or(searchcond, db.MultiFieldSearchWithTableAlias([]string{"title", "description"}, search, "labels"))
 	}
 
 	return searchcond
