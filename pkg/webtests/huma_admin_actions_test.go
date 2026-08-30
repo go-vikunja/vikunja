@@ -110,17 +110,20 @@ func TestHumaAdminUsersList(t *testing.T) {
 
 		var envelope struct {
 			Items []struct {
-				Username string `json:"username"`
+				Username string      `json:"username"`
+				Email    string      `json:"email"`
+				IsAdmin  bool        `json:"is_admin"`
+				Status   user.Status `json:"status"`
 			} `json:"items"`
 			Total int64 `json:"total"`
 		}
 		require.NoError(t, json.Unmarshal(res.Body.Bytes(), &envelope))
-		assert.NotEmpty(t, envelope.Items)
+		require.NotEmpty(t, envelope.Items)
 		assert.Equal(t, int64(len(envelope.Items)), envelope.Total)
-		body := res.Body.String()
-		assert.Contains(t, body, `"is_admin"`)
-		assert.Contains(t, body, `"status"`)
-		assert.Contains(t, body, `"username":"user1"`)
+		assert.Equal(t, "user1", envelope.Items[0].Username)
+		assert.Equal(t, "user1@example.com", envelope.Items[0].Email)
+		assert.True(t, envelope.Items[0].IsAdmin)
+		assert.Equal(t, user.StatusActive, envelope.Items[0].Status)
 
 		// The list exposes every user's email — the PII read is audited.
 		listed := events.GetDispatchedEvents((&models.AdminUsersListedEvent{}).Name())
