@@ -20,13 +20,16 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/utils"
@@ -34,10 +37,93 @@ import (
 	"github.com/c2h5oh/datasize"
 )
 
-// maxResponseBytes caps how much json a planka instance can make us buffer.
-const maxResponseBytes = 64 << 20
+// Budgets cap hostile response expansion and pagination (GHSA-wq92-8x3r-fm38).
+const (
+	defaultMaxResponseBytes = 4 << 20
+	budgetResponseBytes     = 128 << 20
+	budgetAttachmentBytes   = 64 << 20
+	budgetEntities          = 50000
+	// Count retries because hostile 5xx responses multiply logical requests.
+	budgetRequestAttempts = 2000
+)
 
 const maxRedirects = 10
+
+type jobBudget struct {
+	maxResponseBytes   int64
+	maxAggregateBytes  int64
+	maxAttachmentBytes int64
+	maxEntities        int64
+	maxRequests        int64
+
+	responseBytes   int64
+	attachmentBytes int64
+	entities        int64
+	requests        int64
+}
+
+func newJobBudget() *jobBudget {
+	return &jobBudget{
+		maxResponseBytes:   defaultMaxResponseBytes,
+		maxAggregateBytes:  budgetResponseBytes,
+		maxAttachmentBytes: budgetAttachmentBytes,
+		maxEntities:        budgetEntities,
+		maxRequests:        budgetRequestAttempts,
+	}
+}
+
+type countingReader struct {
+	r io.Reader
+	b *jobBudget
+}
+
+func (cr *countingReader) Read(p []byte) (int, error) {
+	n, err := cr.r.Read(p)
+	cr.b.responseBytes += int64(n)
+	return n, err
+}
+
+type attachmentCountingReadCloser struct {
+	io.ReadCloser
+	b *jobBudget
+}
+
+func (r *attachmentCountingReadCloser) Read(p []byte) (int, error) {
+	n, err := r.ReadCloser.Read(p)
+	r.b.attachmentBytes += int64(n)
+	return n, err
+}
+
+// budgetTransport marks budget failures as non-retryable.
+type budgetTransport struct {
+	base   http.RoundTripper
+	budget *jobBudget
+}
+
+type attachmentBudgetTransport struct {
+	base   http.RoundTripper
+	budget *jobBudget
+}
+
+func (t *attachmentBudgetTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	resp, err := t.base.RoundTrip(req)
+	if resp != nil {
+		resp.Body = &attachmentCountingReadCloser{ReadCloser: resp.Body, b: t.budget}
+	}
+	return resp, err
+}
+
+func (t *budgetTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	if t.budget.requests >= t.budget.maxRequests {
+		return nil, fmt.Errorf("%w: %w", utils.ErrDoNotRetry, &ErrImportBudgetExceeded{Exceeded: "outbound request attempts"})
+	}
+	t.budget.requests++
+	base := t.base
+	if base == nil {
+		base = http.DefaultTransport
+	}
+	return base.RoundTrip(req)
+}
 
 // One deadline for login + probes + logout: the check runs inside an http handler and is not retried.
 const credentialCheckTimeout = 15 * time.Second
@@ -53,6 +139,7 @@ type client struct {
 	currentUserID string
 	// downloadHC follows the redirect planka answers with when attachments live on object storage.
 	downloadHC *http.Client
+	budget     *jobBudget
 }
 
 // newClient normalises the url: trailing slashes and a trailing "/api" are stripped.
@@ -79,10 +166,19 @@ func newClient(rawURL string) (*client, error) {
 	downloadHC := utils.NewSSRFSafeHTTPClient()
 	downloadHC.CheckRedirect = downloadRedirectPolicy(u)
 
+	budget := newJobBudget()
+	// Wrap the SSRF-safe transport so retries count as separate attempts.
+	hc.Transport = &budgetTransport{base: hc.Transport, budget: budget}
+	downloadHC.Transport = &attachmentBudgetTransport{
+		base:   &budgetTransport{base: downloadHC.Transport, budget: budget},
+		budget: budget,
+	}
+
 	return &client{
 		baseURL:    u.String(),
 		hc:         hc,
 		downloadHC: downloadHC,
+		budget:     budget,
 	}, nil
 }
 
@@ -211,7 +307,11 @@ func (c *client) probeMe(ctx context.Context) (me *plankaUserResponse, status in
 
 	me = &plankaUserResponse{}
 	if resp.StatusCode == http.StatusOK {
-		if err := migration.DecodeJSONLimited(resp.Body, me, maxResponseBytes); err != nil {
+		if err := c.decodeJSONLimited(resp.Body, me); err != nil {
+			var budgetErr *ErrImportBudgetExceeded
+			if errors.As(err, &budgetErr) {
+				return nil, 0, err
+			}
 			return nil, 0, &ErrNoPlankaAtURL{Reason: err.Error()}
 		}
 	}
@@ -244,8 +344,14 @@ func (c *client) loginWithPassword(ctx context.Context, username, password strin
 		Item string `json:"item"`
 		Step string `json:"step"`
 	}
-	if err := migration.DecodeJSONLimited(resp.Body, &result, maxResponseBytes); err != nil && resp.StatusCode == http.StatusOK {
-		return fmt.Errorf("could not decode planka login response: %w", err)
+	if err := c.decodeJSONLimited(resp.Body, &result); err != nil {
+		var budgetErr *ErrImportBudgetExceeded
+		if errors.As(err, &budgetErr) {
+			return err
+		}
+		if resp.StatusCode == http.StatusOK {
+			return fmt.Errorf("could not decode planka login response: %w", err)
+		}
 	}
 
 	if result.Step != "" {
@@ -332,10 +438,156 @@ func (c *client) getRaw(path string, query url.Values, out any) (int, error) {
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return resp.StatusCode, nil
 	}
-	if err := migration.DecodeJSONLimited(resp.Body, out, maxResponseBytes); err != nil {
+	if err := c.decodeJSONLimited(resp.Body, out); err != nil {
 		return resp.StatusCode, fmt.Errorf("could not decode planka response for %s: %w", path, err)
 	}
 	return resp.StatusCode, nil
+}
+
+func (c *client) decodeJSONLimited(body io.Reader, out any) error {
+	limited := &io.LimitedReader{
+		R: &countingReader{r: body, b: c.budget},
+		N: c.budget.maxResponseBytes + 1,
+	}
+	raw, err := io.ReadAll(limited)
+	if c.budget.responseBytes > c.budget.maxAggregateBytes {
+		return &ErrImportBudgetExceeded{Exceeded: "aggregate response bytes"}
+	}
+	if int64(len(raw)) > c.budget.maxResponseBytes {
+		return &ErrImportBudgetExceeded{Exceeded: "response bytes"}
+	}
+	if err != nil {
+		return err
+	}
+
+	entityCount, err := countResponseEntities(raw, out)
+	if err != nil {
+		return err
+	}
+	if c.budget.entities+int64(entityCount) > c.budget.maxEntities {
+		return &ErrImportBudgetExceeded{Exceeded: "decoded entities"}
+	}
+	if err := json.NewDecoder(bytes.NewReader(raw)).Decode(out); err != nil {
+		return err
+	}
+	c.budget.entities += int64(entityCount)
+	return nil
+}
+
+type entityResponseKind uint8
+
+const (
+	entityResponseNone entityResponseKind = iota
+	entityResponseProjects
+	entityResponseBoard
+	entityResponseListCards
+	entityResponseComments
+)
+
+func countResponseEntities(raw []byte, out any) (int, error) {
+	kind := entityKind(out)
+	if kind == entityResponseNone {
+		return 0, nil
+	}
+	decoder := json.NewDecoder(bytes.NewReader(raw))
+	token, err := decoder.Token()
+	if err != nil {
+		return 0, err
+	}
+	return countEntityValues(decoder, token, kind, "")
+}
+
+func entityKind(out any) entityResponseKind {
+	switch out.(type) {
+	case *projectsResponse:
+		return entityResponseProjects
+	case *boardResponse:
+		return entityResponseBoard
+	case *listCardsResponse:
+		return entityResponseListCards
+	case *commentsResponse:
+		return entityResponseComments
+	default:
+		return entityResponseNone
+	}
+}
+
+func countEntityValues(decoder *json.Decoder, token json.Token, kind entityResponseKind, path string) (int, error) {
+	delim, isDelim := token.(json.Delim)
+	if !isDelim {
+		return 0, nil
+	}
+
+	count := 0
+	switch delim {
+	case '{':
+		for decoder.More() {
+			key, err := decoder.Token()
+			if err != nil {
+				return 0, err
+			}
+			value, err := decoder.Token()
+			if err != nil {
+				return 0, err
+			}
+			childPath := key.(string)
+			if path != "" {
+				childPath = path + "." + childPath
+			}
+			n, err := countEntityValues(decoder, value, kind, childPath)
+			if err != nil {
+				return 0, err
+			}
+			count += n
+		}
+	case '[':
+		tracked := isEntityArray(kind, path)
+		for decoder.More() {
+			value, err := decoder.Token()
+			if err != nil {
+				return 0, err
+			}
+			if tracked {
+				count++
+			}
+			n, err := countEntityValues(decoder, value, kind, path+"[]")
+			if err != nil {
+				return 0, err
+			}
+			count += n
+		}
+	}
+	_, err := decoder.Token()
+	return count, err
+}
+
+func isEntityArray(kind entityResponseKind, path string) bool {
+	switch kind {
+	case entityResponseNone:
+		return false
+	case entityResponseProjects:
+		return path == "items" || path == "included.boards" ||
+			path == "included.baseCustomFieldGroups" || path == "included.customFields"
+	case entityResponseBoard:
+		return isBoardEntityArray(path)
+	case entityResponseListCards:
+		return path == "items" || isBoardEntityArray(path)
+	case entityResponseComments:
+		return path == "items" || path == "included.users"
+	default:
+		return false
+	}
+}
+
+func isBoardEntityArray(path string) bool {
+	switch path {
+	case "included.users", "included.labels", "included.lists", "included.cards",
+		"included.cardLabels", "included.taskLists", "included.tasks", "included.attachments",
+		"included.customFieldGroups", "included.customFields", "included.customFieldValues":
+		return true
+	default:
+		return false
+	}
 }
 
 // get performs an authenticated GET and fails on any non-2xx status.
@@ -357,8 +609,26 @@ func maxAttachmentSize() int64 {
 	return int64(config.GetMaxFileSizeInMBytes()) * int64(datasize.MB) //nolint:gosec // config value is small
 }
 
-// download fetches a file attachment, capped at files.maxsize.
 func (c *client) download(attachmentID, filename string) (*bytes.Buffer, error) {
 	u := c.baseURL + "/attachments/" + url.PathEscape(attachmentID) + "/download/" + url.PathEscape(filename)
-	return migration.DownloadFileWithHeadersLimited(c.downloadHC, u, c.downloadHeaders(), maxAttachmentSize())
+
+	maxSize := maxAttachmentSize()
+	limit := maxSize
+	if remaining := c.budget.maxAttachmentBytes - c.budget.attachmentBytes; remaining < limit {
+		limit = remaining
+	}
+	if limit <= 0 {
+		return nil, &ErrImportBudgetExceeded{Exceeded: "attachment bytes"}
+	}
+
+	buf, err := migration.DownloadFileWithHeadersLimited(c.downloadHC, u, c.downloadHeaders(), limit)
+	if err != nil {
+		// A reduced limit means the job budget, not files.maxsize, was exhausted.
+		var tooLarge files.ErrFileIsTooLarge
+		if limit < maxSize && errors.As(err, &tooLarge) {
+			return nil, &ErrImportBudgetExceeded{Exceeded: "attachment bytes"}
+		}
+		return nil, err
+	}
+	return buf, nil
 }
