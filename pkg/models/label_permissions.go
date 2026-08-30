@@ -17,6 +17,8 @@
 package models
 
 import (
+	"fmt"
+
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 	"xorm.io/builder"
@@ -112,7 +114,14 @@ func labelVisibleCond(s *xorm.Session, a web.Auth) (builder.Cond, error) {
 		accessBranches = append(accessBranches, user.SameBotIdentityCond(caller, "labels.created_by_id"))
 	}
 
-	return builder.Or(accessBranches...), nil
+	visible := builder.Or(accessBranches...)
+	// Both consumers embed this in a builder.And, which silently drops an invalid
+	// cond - the query would then match every label instead of failing.
+	if visible == nil || !visible.IsValid() {
+		return nil, fmt.Errorf("refusing to return an empty label visibility condition for auth %d", a.GetID())
+	}
+
+	return visible, nil
 }
 
 // hasAccessToLabel reports whether the caller can read a label and, if so,

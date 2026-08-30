@@ -1020,3 +1020,29 @@ func TestLabel_ReadAllMatchesCanRead(t *testing.T) {
 		})
 	}
 }
+
+// A cond that came back invalid would be dropped by the callers' builder.And,
+// widening their queries to every label instead of erroring.
+func TestLabelVisibleCondIsValid(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	share, err := GetLinkShareByID(s, 1)
+	require.NoError(t, err)
+
+	auths := map[string]web.Auth{
+		"user":                     &user.User{ID: 1},
+		"link share":               share,
+		"user without any project": &user.User{ID: 17},
+	}
+
+	for name, a := range auths {
+		t.Run(name, func(t *testing.T) {
+			cond, err := labelVisibleCond(s, a)
+			require.NoError(t, err)
+			require.NotNil(t, cond)
+			assert.True(t, cond.IsValid())
+		})
+	}
+}
