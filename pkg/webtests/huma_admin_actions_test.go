@@ -17,6 +17,7 @@
 package webtests
 
 import (
+	"encoding/json"
 	"net/http"
 	"testing"
 	"time"
@@ -91,6 +92,59 @@ func TestHumaAdminOverview(t *testing.T) {
 		assert.Contains(t, body, `"license"`)
 		assert.Contains(t, body, `"licensed":true`)
 		assert.Contains(t, body, `"instance_id"`)
+	})
+}
+
+func TestHumaAdminUsersList(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	license.SetForTests([]license.Feature{license.FeatureAdminPanel})
+	defer license.ResetForTests()
+
+	admin := promoteToAdmin(t, 1)
+
+	t.Run("returns users including hidden is_admin and status fields", func(t *testing.T) {
+		events.ClearDispatchedEvents()
+		res := adminReq(t, e, http.MethodGet, "/api/v2/admin/users", admin, "")
+		require.Equal(t, http.StatusOK, res.Code, res.Body.String())
+
+		var envelope struct {
+			Items []struct {
+				Username string `json:"username"`
+			} `json:"items"`
+			Total int64 `json:"total"`
+		}
+		require.NoError(t, json.Unmarshal(res.Body.Bytes(), &envelope))
+		assert.NotEmpty(t, envelope.Items)
+		assert.Equal(t, int64(len(envelope.Items)), envelope.Total)
+		body := res.Body.String()
+		assert.Contains(t, body, `"is_admin"`)
+		assert.Contains(t, body, `"status"`)
+		assert.Contains(t, body, `"username":"user1"`)
+
+		// The list exposes every user's email — the PII read is audited.
+		listed := events.GetDispatchedEvents((&models.AdminUsersListedEvent{}).Name())
+		require.Len(t, listed, 1)
+		assert.Equal(t, int64(1), listed[0].(*models.AdminUsersListedEvent).Doer.ID)
+	})
+
+	t.Run("q filters by username", func(t *testing.T) {
+		res := adminReq(t, e, http.MethodGet, "/api/v2/admin/users?q=user2", admin, "")
+		require.Equal(t, http.StatusOK, res.Code, res.Body.String())
+		body := res.Body.String()
+		assert.Contains(t, body, `"username":"user2"`)
+		assert.NotContains(t, body, `"username":"user15"`)
+	})
+
+	t.Run("non-admin caller gets 404", func(t *testing.T) {
+		s := db.NewSession()
+		defer s.Close()
+		u, err := user.GetUserByID(s, 2)
+		require.NoError(t, err)
+		require.False(t, u.IsAdmin, "fixture precondition: user2 is not an admin")
+
+		res := adminReq(t, e, http.MethodGet, "/api/v2/admin/users", u, "")
+		assert.Equal(t, http.StatusNotFound, res.Code)
 	})
 }
 
