@@ -45,8 +45,6 @@ type UserList struct {
 // @Failure 404 {object} web.HTTPError
 // @Router /admin/users [get]
 func (*UserList) ReadAll(s *xorm.Session, a web.Auth, search string, page, perPage int) (any, int, int64, error) {
-	// The admin gate guarantees the principal is a user; failing hard here keeps
-	// the audit event (queued in the model, dispatched by DoReadAll) reliable.
 	doer, err := user.GetFromAuth(a)
 	if err != nil {
 		return nil, 0, 0, err
