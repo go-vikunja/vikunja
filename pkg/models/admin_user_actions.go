@@ -189,3 +189,30 @@ func DeleteUserAsAdmin(s *xorm.Session, doer *user.User, id int64, mode string) 
 	events.DispatchOnCommit(s, &AdminUserDeletedEvent{User: target, Doer: doer, Mode: mode})
 	return nil
 }
+
+// ListUsersAsAdmin returns paginated users ordered by id, optionally filtered
+// by a username/email substring match. The result exposes every user's email
+// address; compliance regimes want admin PII reads logged, so an audit event is
+// queued for the caller's commit.
+func ListUsersAsAdmin(s *xorm.Session, doer *user.User, search string, page, perPage int) ([]*user.User, int64, error) {
+	events.DispatchOnCommit(s, &AdminUsersListedEvent{Doer: doer})
+
+	finder := s.Limit(perPage, (page-1)*perPage).OrderBy("id ASC")
+	counter := s
+	if search != "" {
+		q := "%" + search + "%"
+		finder = finder.Where("username LIKE ? OR email LIKE ?", q, q)
+		counter = s.Where("username LIKE ? OR email LIKE ?", q, q)
+	}
+
+	var users []*user.User
+	if err := finder.Find(&users); err != nil {
+		return nil, 0, err
+	}
+
+	total, err := counter.Count(&user.User{})
+	if err != nil {
+		return nil, 0, err
+	}
+	return users, total, nil
+}
