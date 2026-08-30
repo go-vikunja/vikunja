@@ -437,6 +437,8 @@ func GetAvailableAPIRoutesForToken(c *echo.Context) error {
 // routes; we walk apiTokenRoutes and apiTokenRoutesV2 in turn. On v2,
 // PATCH is accepted as an alias for the stored PUT on the same path
 // (AutoPatch collapses both onto the "update" permission).
+//
+// Expansion scopes are enforced after the route match (GHSA-9rg3-v78m-26q8).
 func CanDoAPIRoute(c *echo.Context, token *APIToken) (can bool) {
 	path := c.Path()
 	if path == "" {
@@ -446,6 +448,16 @@ func CanDoAPIRoute(c *echo.Context, token *APIToken) (can bool) {
 	}
 	method := c.Request().Method
 
+	if !tokenAuthorizesRoute(token, path, method) {
+		log.Debugf("[auth] Token %d tried to use route %s %s which is not covered by its permissions %v",
+			token.ID, method, path, token.APIPermissions)
+		return false
+	}
+
+	return expandScopesSatisfied(c, token, path, method)
+}
+
+func tokenAuthorizesRoute(token *APIToken, path, method string) bool {
 	for rawGroup, perms := range token.APIPermissions {
 		group := canonicalAPITokenGroup(rawGroup)
 		tables := []APITokenRoute{apiTokenRoutes[group], apiTokenRoutesV2[group]}
@@ -479,9 +491,77 @@ func CanDoAPIRoute(c *echo.Context, token *APIToken) (can bool) {
 		}
 	}
 
-	log.Debugf("[auth] Token %d tried to use route %s %s which is not covered by its permissions %v",
-		token.ID, method, path, token.APIPermissions)
+	return false
+}
 
+// Unlisted routes ignore expand and need no expansion scopes.
+var expandScopeRoutes = map[string]bool{
+	"/api/v1/tasks":                                       true,
+	"/api/v1/tasks/:projecttask":                          true,
+	"/api/v1/projects/:project/tasks":                     true,
+	"/api/v1/projects/:project/tasks/by-index/:index":     true,
+	"/api/v1/projects/:project/views/:view/tasks":         true,
+	"/api/v1/projects/:project/views/:view/buckets":       true,
+	"/api/v2/tasks":                                       true,
+	"/api/v2/tasks/:projecttask":                          true,
+	"/api/v2/projects/:project/tasks":                     true,
+	"/api/v2/projects/:project/tasks/by-index/:index":     true,
+	"/api/v2/projects/:project/views/:view/tasks":         true,
+	"/api/v2/projects/:project/views/:view/buckets/tasks": true,
+}
+
+func requiredScopeForExpand(value string) (group, permission string, needsScope bool) {
+	switch TaskCollectionExpandable(value) {
+	case TaskCollectionExpandComments, TaskCollectionExpandCommentCount:
+		return "tasks_comments", "read_all", true
+	case TaskCollectionExpandReactions:
+		return "reactions", "read_all", true
+	case TaskCollectionExpandTimeEntriesCount:
+		return "time_entries", "read_all", true
+	case TaskCollectionExpandSubtasks, TaskCollectionExpandBuckets, TaskCollectionExpandIsUnread:
+		return "", "", false
+	}
+	return "", "", false
+}
+
+// Task scopes must not unlock embedded comments, reactions, or time entries (GHSA-9rg3-v78m-26q8).
+func expandScopesSatisfied(c *echo.Context, token *APIToken, path, method string) bool {
+	if method != http.MethodGet || !expandScopeRoutes[path] {
+		return true
+	}
+
+	rawExpands, has := c.Request().URL.Query()["expand"]
+	if !has {
+		return true
+	}
+
+	for _, raw := range rawExpands {
+		for _, value := range strings.Split(raw, ",") {
+			group, permission, needsScope := requiredScopeForExpand(value)
+			if !needsScope {
+				continue
+			}
+			if !tokenHasPermission(token, group, permission) {
+				log.Debugf("[auth] Token %d tried to expand %q on %s which is not covered by its permissions %v",
+					token.ID, value, path, token.APIPermissions)
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func tokenHasPermission(token *APIToken, group, permission string) bool {
+	for rawGroup, perms := range token.APIPermissions {
+		if canonicalAPITokenGroup(rawGroup) != group {
+			continue
+		}
+		for _, p := range perms {
+			if p == permission {
+				return true
+			}
+		}
+	}
 	return false
 }
 
