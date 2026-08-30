@@ -60,6 +60,11 @@ func (f *File) fileID() string {
 	return strconv.FormatInt(f.ID, 10)
 }
 
+// DeleteBlob removes a stored blob after its database row has been rolled back.
+func DeleteBlob(id int64) error {
+	return storage.Remove(strconv.FormatInt(id, 10))
+}
+
 // LoadFileByID returns a file by its ID
 func (f *File) LoadFileByID() (err error) {
 	f.File, err = storage.Open(f.fileID())

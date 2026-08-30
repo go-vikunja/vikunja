@@ -20,20 +20,25 @@ import (
 	"archive/zip"
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"math"
+	"net/http"
+	"os"
 	"strconv"
 	"strings"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 	vversion "code.vikunja.io/api/pkg/version"
+	"code.vikunja.io/api/pkg/web"
 
 	"github.com/c2h5oh/datasize"
 	"github.com/hashicorp/go-version"
@@ -63,10 +68,8 @@ func maxZipEntrySize() int64 {
 // ErrFileTooLarge is returned when a file in the zip archive exceeds the effective cap.
 var ErrFileTooLarge = fmt.Errorf("zip entry exceeds the configured maximum file size")
 
-// readZipEntry reads from r into a buffer, returning ErrFileTooLarge if
-// the content exceeds the effective cap. Unlike io.LimitReader it
-// explicitly detects overflow rather than silently truncating.
-func readZipEntry(r io.Reader) (*bytes.Buffer, error) {
+// readZipEntry detects cap overflow and charges actual bytes to the import budget.
+func readZipEntry(r io.Reader, budget *importBudget) (*bytes.Buffer, error) {
 	limit := maxZipEntrySize()
 	// Avoid limit+1 overflowing to MinInt64 when limit == MaxInt64,
 	// which io.LimitReader would treat as EOF (every entry reads empty).
@@ -83,7 +86,178 @@ func readZipEntry(r io.Reader) (*bytes.Buffer, error) {
 	if n > limit {
 		return nil, ErrFileTooLarge
 	}
+	if err := budget.count(n); err != nil {
+		return nil, err
+	}
 	return &buf, nil
+}
+
+// importBudget verifies actual bytes after the ZIP metadata preflight (GHSA-w7jp-mf2v-8342).
+type importBudget struct {
+	remaining int64
+}
+
+type storageBudget struct {
+	remaining int64
+}
+
+// ErrVikunjaFileImportTooLarge is returned when the export exceeds the
+// configured size, file-count or storage-quota limits.
+type ErrVikunjaFileImportTooLarge struct {
+	Reason string
+}
+
+func (err *ErrVikunjaFileImportTooLarge) Error() string {
+	return "The Vikunja export is too large: " + err.Reason
+}
+
+// ErrCodeVikunjaFileImportTooLarge holds the unique world-error code of this error
+const ErrCodeVikunjaFileImportTooLarge = 14007
+
+// HTTPError holds the http error description
+func (err *ErrVikunjaFileImportTooLarge) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeVikunjaFileImportTooLarge,
+		Message:  "The Vikunja export is too large: " + err.Reason,
+	}
+}
+
+func vikunjaFileMaxSize() (int64, error) {
+	var size datasize.ByteSize
+	if err := size.UnmarshalText([]byte(config.MigrationVikunjaFileMaxSize.GetString())); err != nil {
+		return 0, fmt.Errorf("could not parse migration.vikunjafile.maxsize: %w", err)
+	}
+	return int64(size.Bytes()), nil //nolint:gosec // config value is bounded in practice
+}
+
+func vikunjaFileMaxUserStorage() (int64, error) {
+	var size datasize.ByteSize
+	if err := size.UnmarshalText([]byte(config.MigrationVikunjaFileMaxUserStorage.GetString())); err != nil {
+		return 0, fmt.Errorf("could not parse migration.vikunjafile.maxuserstorage: %w", err)
+	}
+	return int64(size.Bytes()), nil //nolint:gosec // config value is bounded in practice
+}
+
+func (b *importBudget) count(n int64) error {
+	b.remaining -= n
+	if b.remaining < 0 {
+		return &ErrVikunjaFileImportTooLarge{Reason: "it contains more decompressed data than migration.vikunjafile.maxsize allows"}
+	}
+	return nil
+}
+
+func (b *storageBudget) count(n int64) error {
+	if n > b.remaining {
+		return &ErrVikunjaFileImportTooLarge{Reason: "it would exceed the import storage quota of migration.vikunjafile.maxuserstorage"}
+	}
+	b.remaining -= n
+	return nil
+}
+
+// lazyFileProvider holds only one decompressed ZIP entry at a time.
+type lazyFileProvider struct {
+	attachments map[*models.TaskAttachment]*zip.File
+	backgrounds map[*models.ProjectWithTasksAndBuckets]*zip.File
+	budget      *importBudget
+	storage     *storageBudget
+}
+
+func (p *lazyFileProvider) OpenAttachment(attachment *models.TaskAttachment) (io.ReadSeekCloser, int64, error) {
+	f, has := p.attachments[attachment]
+	if !has {
+		return nil, 0, nil
+	}
+	return p.openZipFile(f, true)
+}
+
+func (p *lazyFileProvider) OpenBackground(project *models.ProjectWithTasksAndBuckets) (io.ReadSeekCloser, int64, error) {
+	f, has := p.backgrounds[project]
+	if !has {
+		return nil, 0, nil
+	}
+	return p.openZipFile(f, false)
+}
+
+func (p *lazyFileProvider) CountBackgroundFile(size int64) error {
+	return p.storage.count(size)
+}
+
+// Oversized entries use files.ErrFileIsTooLarge to preserve skip behavior.
+func (p *lazyFileProvider) openZipFile(f *zip.File, countStorage bool) (io.ReadSeekCloser, int64, error) {
+	rc, err := f.Open()
+	if err != nil {
+		return nil, 0, err
+	}
+	defer func() { _ = rc.Close() }()
+
+	tmp, err := os.CreateTemp("", "vikunja-import-*")
+	if err != nil {
+		return nil, 0, err
+	}
+
+	written, err := p.copyCounted(tmp, rc)
+	if err != nil {
+		_ = tmp.Close()
+		_ = os.Remove(tmp.Name())
+		return nil, 0, err
+	}
+	if written > maxZipEntrySize() {
+		_ = tmp.Close()
+		_ = os.Remove(tmp.Name())
+		return nil, 0, files.ErrFileIsTooLarge{Size: uint64(written)} //nolint:gosec // written is bounded by the budget
+	}
+	if countStorage {
+		err = p.storage.count(written)
+	}
+	if err != nil {
+		_ = tmp.Close()
+		_ = os.Remove(tmp.Name())
+		return nil, 0, err
+	}
+	if _, err := tmp.Seek(0, io.SeekStart); err != nil {
+		_ = tmp.Close()
+		_ = os.Remove(tmp.Name())
+		return nil, 0, err
+	}
+	return &tempFileReadSeekCloser{f: tmp}, written, nil
+}
+
+func (p *lazyFileProvider) copyCounted(dst io.Writer, src io.Reader) (int64, error) {
+	buf := make([]byte, 64*1024)
+	var total int64
+	for {
+		n, err := src.Read(buf)
+		if n > 0 {
+			total += int64(n)
+			if berr := p.budget.count(int64(n)); berr != nil {
+				return total, berr
+			}
+			if _, werr := dst.Write(buf[:n]); werr != nil {
+				return total, werr
+			}
+		}
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				return total, nil
+			}
+			return total, err
+		}
+	}
+}
+
+type tempFileReadSeekCloser struct {
+	f *os.File
+}
+
+func (t *tempFileReadSeekCloser) Read(p []byte) (int, error) { return t.f.Read(p) }
+func (t *tempFileReadSeekCloser) Seek(o int64, whence int) (int64, error) {
+	return t.f.Seek(o, whence)
+}
+func (t *tempFileReadSeekCloser) Close() error {
+	err := t.f.Close()
+	_ = os.Remove(t.f.Name())
+	return err
 }
 
 type FileMigrator struct {
@@ -128,16 +302,24 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 	var filterFile *zip.File
 	var versionFile *zip.File
 	storedFiles := make(map[int64]*zip.File)
+	var storedFileCount int64
 	for _, f := range r.File {
 		if utils.ContainsPathTraversal(f.Name) {
 			return fmt.Errorf("unsafe path in zip archive: %q", f.Name)
 		}
 
 		if strings.HasPrefix(f.Name, "files/") {
+			storedFileCount++
+			if storedFileCount > config.MigrationVikunjaFileMaxFiles.GetInt64() {
+				return &ErrVikunjaFileImportTooLarge{Reason: "it contains more files than migration.vikunjafile.maxfiles allows"}
+			}
 			fname := strings.TrimPrefix(f.Name, "files/")
 			id, err := strconv.ParseInt(fname, 10, 64)
 			if err != nil {
 				return fmt.Errorf("could not convert file id: %w", err)
+			}
+			if _, exists := storedFiles[id]; exists {
+				return fmt.Errorf("duplicate file id %d", id)
 			}
 			storedFiles[id] = f
 			log.Debugf(logPrefix + "Found a blob file")
@@ -162,6 +344,42 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 		return fmt.Errorf("no data file provided")
 	}
 
+	// Preflight: bound the import before anything is read (GHSA-w7jp-mf2v-8342).
+	maxSize, err := vikunjaFileMaxSize()
+	if err != nil {
+		return err
+	}
+	var totalUncompressed uint64
+	for _, f := range r.File {
+		totalUncompressed += f.UncompressedSize64
+		if totalUncompressed < f.UncompressedSize64 {
+			return &ErrVikunjaFileImportTooLarge{Reason: "the sum of file sizes overflows"}
+		}
+	}
+	if totalUncompressed > uint64(maxSize) { //nolint:gosec // maxSize fits uint64 by construction
+		return &ErrVikunjaFileImportTooLarge{Reason: "it decompresses to more than migration.vikunjafile.maxsize allows"}
+	}
+	maxUserStorage, err := vikunjaFileMaxUserStorage()
+	if err != nil {
+		return err
+	}
+	qs := db.NewSession()
+	var existingStorage int64
+	_, err = qs.
+		Table("files").
+		Select("COALESCE(SUM(size), 0)").
+		Where("created_by_id = ?", user.ID).
+		Get(&existingStorage)
+	_ = qs.Close()
+	if err != nil {
+		return fmt.Errorf("could not check the storage quota: %w", err)
+	}
+	if existingStorage > maxUserStorage {
+		return &ErrVikunjaFileImportTooLarge{Reason: "it would exceed the import storage quota of migration.vikunjafile.maxuserstorage"}
+	}
+
+	budget := &importBudget{remaining: maxSize}
+
 	log.Debugf(logPrefix + "")
 
 	//////
@@ -175,7 +393,7 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 	}
 	defer vf.Close()
 
-	bufVersion, err := readZipEntry(vf)
+	bufVersion, err := readZipEntry(vf, budget)
 	if err != nil {
 		return fmt.Errorf("could not read version file: %w", err)
 	}
@@ -206,7 +424,7 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 	}
 	defer df.Close()
 
-	bufData, err := readZipEntry(df)
+	bufData, err := readZipEntry(df, budget)
 	if err != nil {
 		return fmt.Errorf("could not read data file: %w", err)
 	}
@@ -216,14 +434,20 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 		return fmt.Errorf("could not read data: %w", err)
 	}
 
+	provider := &lazyFileProvider{
+		attachments: map[*models.TaskAttachment]*zip.File{},
+		backgrounds: map[*models.ProjectWithTasksAndBuckets]*zip.File{},
+		budget:      budget,
+		storage:     &storageBudget{remaining: maxUserStorage - existingStorage},
+	}
 	for _, p := range projects {
-		err = addDetailsToProjectAndChildren(p, storedFiles)
+		err = addDetailsToProjectAndChildren(p, storedFiles, provider)
 		if err != nil {
 			return err
 		}
 	}
 
-	err = migration.InsertFromStructure(projects, user)
+	err = migration.InsertFromStructureWithFileProvider(projects, user, provider)
 	if err != nil {
 		return fmt.Errorf("could not insert data: %w", err)
 	}
@@ -241,7 +465,7 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 	}
 	defer ff.Close()
 
-	bufFilter, err := readZipEntry(ff)
+	bufFilter, err := readZipEntry(ff, budget)
 	if err != nil {
 		return fmt.Errorf("could not read filters file: %w", err)
 	}
@@ -268,14 +492,14 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 	return s.Commit()
 }
 
-func addDetailsToProjectAndChildren(p *models.ProjectWithTasksAndBuckets, storedFiles map[int64]*zip.File) (err error) {
-	err = addDetailsToProject(p, storedFiles)
+func addDetailsToProjectAndChildren(p *models.ProjectWithTasksAndBuckets, storedFiles map[int64]*zip.File, provider *lazyFileProvider) (err error) {
+	err = addDetailsToProject(p, storedFiles, provider)
 	if err != nil {
 		return err
 	}
 
 	for _, cp := range p.ChildProjects {
-		err = addDetailsToProjectAndChildren(cp, storedFiles)
+		err = addDetailsToProjectAndChildren(cp, storedFiles, provider)
 		if err != nil {
 			return
 		}
@@ -284,7 +508,7 @@ func addDetailsToProjectAndChildren(p *models.ProjectWithTasksAndBuckets, stored
 	return
 }
 
-func addDetailsToProject(l *models.ProjectWithTasksAndBuckets, storedFiles map[int64]*zip.File) (err error) {
+func addDetailsToProject(l *models.ProjectWithTasksAndBuckets, storedFiles map[int64]*zip.File, provider *lazyFileProvider) (err error) {
 	var backgroundFileID int64
 	bginfo, is := l.BackgroundInformation.(map[string]interface{})
 	if is {
@@ -297,18 +521,9 @@ func addDetailsToProject(l *models.ProjectWithTasksAndBuckets, storedFiles map[i
 			backgroundFileID = int64(bgidFloat)
 		}
 	}
+	// Preserve the map so the insert does not mistake it for preloaded bytes.
 	if b, exists := storedFiles[backgroundFileID]; exists {
-		bf, err := b.Open()
-		if err != nil {
-			return fmt.Errorf("could not open project background file %d for reading: %w", l.BackgroundFileID, err)
-		}
-		buf, err := readZipEntry(bf)
-		bf.Close()
-		if err != nil {
-			return fmt.Errorf("could not read project background file %d: %w", l.BackgroundFileID, err)
-		}
-
-		l.BackgroundInformation = buf
+		provider.backgrounds[l] = b
 	}
 
 	for _, t := range l.Tasks {
@@ -324,21 +539,9 @@ func addDetailsToProject(l *models.ProjectWithTasksAndBuckets, storedFiles map[i
 				log.Debugf(logPrefix+"Could not find attachment file %d for attachment %d", attachment.File.ID, attachment.ID)
 				continue
 			}
-			af, err := attachmentFile.Open()
-			if err != nil {
-				log.Warningf(logPrefix+"Could not open attachment %d for reading: %v, skipping", attachment.ID, err)
-				continue
-			}
-			buf, err := readZipEntry(af)
-			af.Close()
-			if err != nil {
-				log.Warningf(logPrefix+"Could not read attachment %d: %v, skipping", attachment.ID, err)
-				continue
-			}
 
-			attachment.ID = 0
+			provider.attachments[attachment] = attachmentFile
 			attachment.File.ID = 0
-			attachment.File.FileContent = buf.Bytes()
 		}
 	}
 

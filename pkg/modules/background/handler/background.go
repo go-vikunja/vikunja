@@ -235,7 +235,7 @@ func (bp *BackgroundProvider) UploadBackground(c *echo.Context) error {
 }
 
 // ValidateAndSaveBackgroundUpload is shared by the v1 and v2 upload handlers.
-func ValidateAndSaveBackgroundUpload(s *xorm.Session, auth web.Auth, project *models.Project, srcf io.ReadSeeker, filename string, filesize uint64) error {
+func ValidateAndSaveBackgroundUpload(s *xorm.Session, auth web.Auth, project *models.Project, srcf io.ReadSeeker, filename string, _ uint64) error {
 	mime, err := mimetype.DetectReader(srcf)
 	if err != nil {
 		return err
@@ -255,31 +255,31 @@ func ValidateAndSaveBackgroundUpload(s *xorm.Session, auth web.Auth, project *mo
 	}
 
 	// SaveBackgroundFile rewinds after DetectReader.
-	if err := SaveBackgroundFile(s, auth, project, srcf, filename, filesize); err != nil {
+	if _, err := SaveBackgroundFile(s, auth, project, srcf, filename); err != nil {
 		return err
 	}
 
 	return project.ReadOne(s, auth)
 }
 
-func SaveBackgroundFile(s *xorm.Session, auth web.Auth, project *models.Project, srcf io.ReadSeeker, filename string, filesize uint64) (err error) {
+func SaveBackgroundFile(s *xorm.Session, auth web.Auth, project *models.Project, srcf io.ReadSeeker, filename string) (storedSize int64, err error) {
 	mime, _ := mimetype.DetectReader(srcf)
 	_, _ = srcf.Seek(0, io.SeekStart)
 
 	// Reject hostile dimensions before decoding (GHSA-4vh2-39rq-rq8j).
 	if _, err := imageutils.ValidateReader(srcf); err != nil {
 		if !imageutils.IsErrImageTooLarge(err) && strings.Contains(err.Error(), "unknown format") {
-			return ErrFileUnsupportedImageFormat{Mime: mime.String()}
+			return 0, ErrFileUnsupportedImageFormat{Mime: mime.String()}
 		}
-		return err
+		return 0, err
 	}
 	_, _ = srcf.Seek(0, io.SeekStart)
 	src, err := imaging.Decode(srcf)
 	if err != nil {
 		if strings.Contains(err.Error(), "unknown format") {
-			return ErrFileUnsupportedImageFormat{Mime: mime.String()}
+			return 0, ErrFileUnsupportedImageFormat{Mime: mime.String()}
 		}
-		return err
+		return 0, err
 	}
 
 	buf := bytes.Buffer{}
@@ -287,24 +287,28 @@ func SaveBackgroundFile(s *xorm.Session, auth web.Auth, project *models.Project,
 	dst := imaging.Fit(src, background.MaxBackgroundImageHeight, background.MaxBackgroundImageHeight, imaging.Lanczos)
 	err = imaging.Encode(&buf, dst, imaging.JPEG, imaging.JPEGQuality(80))
 	if err != nil {
-		return err
+		return 0, err
 	}
+	storedSize = int64(buf.Len())
 
-	f, err := files.CreateWithSession(s, bytes.NewReader(buf.Bytes()), filename, filesize, auth)
+	f, err := files.CreateWithSession(s, bytes.NewReader(buf.Bytes()), filename, uint64(storedSize), auth)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	project.BackgroundBlurHash, err = CreateBlurHashFromImage(src)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	// Save it
 	p := upload.Provider{}
 	img := &background.Image{ID: strconv.FormatInt(f.ID, 10)}
-	err = p.Set(s, img, project, auth)
-	return err
+	if err = p.Set(s, img, project, auth); err != nil {
+		return 0, err
+	}
+	project.BackgroundFileID = f.ID
+	return storedSize, nil
 }
 
 func checkProjectBackgroundRights(s *xorm.Session, c *echo.Context) (project *models.Project, auth web.Auth, err error) {

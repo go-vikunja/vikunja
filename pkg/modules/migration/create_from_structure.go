@@ -19,6 +19,9 @@ package migration
 import (
 	"bytes"
 	"context"
+	"errors"
+	"io"
+	"io/fs"
 	"math"
 	"strings"
 	"time"
@@ -27,6 +30,7 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/background/handler"
@@ -34,9 +38,29 @@ import (
 	"code.vikunja.io/api/pkg/utils"
 )
 
+// FileProvider opens attachment and background bytes lazily.
+// Readers must be seekable; the second return value is their size in bytes.
+type FileProvider interface {
+	OpenAttachment(attachment *models.TaskAttachment) (io.ReadSeekCloser, int64, error)
+	OpenBackground(project *models.ProjectWithTasksAndBuckets) (io.ReadSeekCloser, int64, error)
+}
+
+type backgroundFileStorageCounter interface {
+	CountBackgroundFile(size int64) error
+}
+
 // InsertFromStructure takes a fully nested Vikunja data structure and a user and then creates everything for this user
 // (Projects, tasks, etc. Even attachments and relations.)
 func InsertFromStructure(str []*models.ProjectWithTasksAndBuckets, u *user.User) (err error) {
+	return insertFromStructureWithFileProvider(str, u, nil)
+}
+
+// InsertFromStructureWithFileProvider imports lazily opened attachment and background bytes.
+func InsertFromStructureWithFileProvider(str []*models.ProjectWithTasksAndBuckets, u *user.User, provider FileProvider) (err error) {
+	return insertFromStructureWithFileProvider(str, u, provider)
+}
+
+func insertFromStructureWithFileProvider(str []*models.ProjectWithTasksAndBuckets, u *user.User, provider FileProvider) (err error) {
 	s := db.NewSession()
 	defer s.Close()
 
@@ -47,10 +71,13 @@ func InsertFromStructure(str []*models.ProjectWithTasksAndBuckets, u *user.User)
 		return err
 	}
 
-	err = insertFromStructure(s, str, importer)
+	// Failed transactions roll back file rows, not blobs written before commit.
+	createdFiles := &[]int64{}
+
+	err = insertFromStructure(s, str, importer, provider, createdFiles)
 	if err != nil {
 		log.Errorf("[creating structure] Error while creating structure: %s", err.Error())
-		_ = s.Rollback()
+		cleanupAndRollback(s, *createdFiles)
 		events.CleanupPending(s)
 		return err
 	}
@@ -65,7 +92,24 @@ func InsertFromStructure(str []*models.ProjectWithTasksAndBuckets, u *user.User)
 	return nil
 }
 
-func insertFromStructure(s *xorm.Session, str []*models.ProjectWithTasksAndBuckets, user *user.User) (err error) {
+func cleanupAndRollback(s *xorm.Session, fileIDs []int64) {
+	cleanupCreatedFiles(fileIDs)
+	_ = s.Rollback()
+}
+
+// Delete blobs before rollback releases their reusable database IDs.
+func cleanupCreatedFiles(fileIDs []int64) {
+	for _, id := range fileIDs {
+		if err := files.DeleteBlob(id); err != nil {
+			if errors.Is(err, fs.ErrNotExist) {
+				continue
+			}
+			log.Errorf("[creating structure] Could not clean up file %d of a failed import: %s", id, err)
+		}
+	}
+}
+
+func insertFromStructure(s *xorm.Session, str []*models.ProjectWithTasksAndBuckets, user *user.User, provider FileProvider, createdFiles *[]int64) (err error) {
 
 	log.Debugf("[creating structure] Creating %d projects", len(str))
 
@@ -103,7 +147,7 @@ func insertFromStructure(s *xorm.Session, str []*models.ProjectWithTasksAndBucke
 			view.ProjectID = 0
 		}
 
-		err = createProject(s, p, &archivedProjects, labels, user)
+		err = createProject(s, p, &archivedProjects, labels, user, provider, createdFiles)
 		if err != nil {
 			return err
 		}
@@ -172,8 +216,8 @@ func seedMissingTaskPositions(tasks []*models.TaskWithComments) {
 	}
 }
 
-func createProject(s *xorm.Session, project *models.ProjectWithTasksAndBuckets, archivedProjectIDs *[]int64, labels map[string]*models.Label, user *user.User) (err error) {
-	err = createProjectWithEverything(s, project, archivedProjectIDs, labels, user)
+func createProject(s *xorm.Session, project *models.ProjectWithTasksAndBuckets, archivedProjectIDs *[]int64, labels map[string]*models.Label, user *user.User, provider FileProvider, createdFiles *[]int64) (err error) {
+	err = createProjectWithEverything(s, project, archivedProjectIDs, labels, user, provider, createdFiles)
 	if err != nil {
 		return err
 	}
@@ -183,7 +227,7 @@ func createProject(s *xorm.Session, project *models.ProjectWithTasksAndBuckets, 
 	return
 }
 
-func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTasksAndBuckets, archivedProjects *[]int64, labels map[string]*models.Label, user *user.User) (err error) {
+func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTasksAndBuckets, archivedProjects *[]int64, labels map[string]*models.Label, user *user.User, provider FileProvider, createdFiles *[]int64) (err error) {
 	// The tasks and bucket slices are going to be reset during the creation of the project, so we rescue it here
 	// to be able to still loop over them aftere the project was created.
 	tasks := project.Tasks
@@ -200,6 +244,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 	}
 
 	project.ID = 0
+	project.Project.BackgroundFileID = 0
 	err = models.CreateProject(s, &project.Project, user, false, false)
 	if err != nil && models.IsErrProjectIdentifierIsNotUnique(err) {
 		project.Identifier = ""
@@ -222,12 +267,40 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 
 		log.Debugf("[creating structure] Creating a background file for project %d", project.ID)
 
-		err = handler.SaveBackgroundFile(s, user, &project.Project, backgroundFile, "", uint64(backgroundFile.Len()))
+		_, err = handler.SaveBackgroundFile(s, user, &project.Project, backgroundFile, "")
 		if err != nil {
 			log.Errorf("[creating structure] Could not create background for project %d, error was %v", project.ID, err)
+		} else {
+			*createdFiles = append(*createdFiles, project.Project.BackgroundFileID)
 		}
 
 		log.Debugf("[creating structure] Created a background file for project %d", project.ID)
+	} else if provider != nil {
+		backgroundFile, _, perr := provider.OpenBackground(project)
+		if perr != nil {
+			return perr
+		}
+		if backgroundFile != nil {
+			log.Debugf("[creating structure] Creating a background file for project %d", project.ID)
+
+			var storedSize int64
+			storedSize, err = handler.SaveBackgroundFile(s, user, &project.Project, backgroundFile, "")
+			closeErr := backgroundFile.Close()
+			if err != nil {
+				return err
+			}
+			*createdFiles = append(*createdFiles, project.Project.BackgroundFileID)
+			if counter, ok := provider.(backgroundFileStorageCounter); ok {
+				if err = counter.CountBackgroundFile(storedSize); err != nil {
+					return err
+				}
+			}
+			if closeErr != nil {
+				return closeErr
+			}
+
+			log.Debugf("[creating structure] Created a background file for project %d", project.ID)
+		}
 	}
 
 	// Create all buckets
@@ -471,6 +544,14 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 			log.Debugf("[creating structure] Creating %d attachments", len(t.Attachments))
 		}
 		for _, a := range t.Attachments {
+			if provider != nil {
+				err = createAttachmentFromProvider(s, t, a, user, provider, createdFiles)
+				if err != nil {
+					return
+				}
+				continue
+			}
+
 			// Check if we have a file to create
 			if len(a.File.FileContent) > 0 {
 				oldID := a.ID
@@ -488,6 +569,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 					}
 					return
 				}
+				*createdFiles = append(*createdFiles, a.File.ID)
 				log.Debugf("[creating structure] Created new attachment %d", a.ID)
 
 				if t.CoverImageAttachmentID == oldID {
@@ -644,8 +726,51 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 	return nil
 }
 
-// Exported assignees carry user ids from a foreign instance. Only the importing
-// user can be matched (by email, then username); everyone else is dropped.
+// Oversized provider files retain the preloaded path's skip behavior.
+func createAttachmentFromProvider(s *xorm.Session, t *models.TaskWithComments, a *models.TaskAttachment, user *user.User, provider FileProvider, createdFiles *[]int64) (err error) {
+	oldID := a.ID
+
+	content, size, err := provider.OpenAttachment(a)
+	if err != nil {
+		if files.IsErrFileIsTooLarge(err) {
+			log.Warningf("[creating structure] Attachment %s is too large, skipping: %v", a.File.Name, err)
+			return nil
+		}
+		return err
+	}
+	if content == nil {
+		return nil
+	}
+	defer func() {
+		_ = content.Close()
+	}()
+
+	a.ID = 0
+	a.TaskID = t.ID
+	// Import metadata can forge a smaller size than the stream (GHSA-qh78-rvg3-cv54).
+	a.File.Size = uint64(size) //nolint:gosec // size is bounded by the import budget
+	err = a.NewAttachment(s, content, a.File.Name, uint64(size), user)
+	if err != nil {
+		if models.IsErrTaskAttachmentIsTooLarge(err) {
+			log.Warningf("[creating structure] Attachment %s is too large (%d bytes), skipping: %v", a.File.Name, size, err)
+			return nil
+		}
+		return err
+	}
+	*createdFiles = append(*createdFiles, a.File.ID)
+	log.Debugf("[creating structure] Created new attachment %d", a.ID)
+
+	if t.CoverImageAttachmentID == oldID {
+		t.CoverImageAttachmentID = a.ID
+		err = t.Update(s, user)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// Foreign assignee IDs are invalid; only the importer can be matched by email or username.
 func remapAssignees(assignees []*user.User, importer *user.User) []*user.User {
 	for _, a := range assignees {
 		if a == nil {
