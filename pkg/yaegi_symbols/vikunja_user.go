@@ -133,6 +133,7 @@ func init() {
 		"RequestUserPasswordResetTokenByEmail": reflect.ValueOf(user.RequestUserPasswordResetTokenByEmail),
 		"ResendEmailConfirmation":              reflect.ValueOf(user.ResendEmailConfirmation),
 		"ResetPassword":                        reflect.ValueOf(user.ResetPassword),
+		"SameBotIdentityCond":                  reflect.ValueOf(user.SameBotIdentityCond),
 		"ScheduleDeletion":                     reflect.ValueOf(user.ScheduleDeletion),
 		"SearchUsers":                          reflect.ValueOf(user.SearchUsers),
 		"SetUserStatus":                        reflect.ValueOf(user.SetUserStatus),
