@@ -46,11 +46,17 @@ func SearchUsersForProject(s *xorm.Session, project *Project, a web.Auth, curren
 type ProjectUIDs struct {
 	ProjectUserID     int64 `xorm:"ulID"`
 	TeamProjectUserID int64 `xorm:"tlUID"`
+	// Carries the source team so filtering joined rows preserves direct shares.
+	TeamProjectTeamID int64 `xorm:"tlTID"`
 }
 
 // getUserIDsWithProjectAccess returns the ids of all users who can access the project
 // through ownership (of the project or any parent), a direct share or a team share.
 func getUserIDsWithProjectAccess(s *xorm.Session, projectID int64) (uids []int64, err error) {
+	return getUserIDsWithProjectAccessFiltered(s, projectID, nil)
+}
+
+func getUserIDsWithProjectAccessFiltered(s *xorm.Session, projectID int64, teamFilter func(teamID int64) (bool, error)) (uids []int64, err error) {
 	userids := []*ProjectUIDs{}
 
 	currentProject, err := GetProjectSimpleByID(s, projectID)
@@ -67,7 +73,8 @@ func getUserIDsWithProjectAccess(s *xorm.Session, projectID int64) (uids []int64
 		currentUserIDs := []*ProjectUIDs{}
 		err = s.
 			Select(`ul.user_id as ulID,
-			tm2.user_id as tlUID`).
+			tm2.user_id as tlUID,
+			tl.team_id as tlTID`).
 			Table("projects").
 			Alias("l").
 			// User stuff
@@ -121,9 +128,35 @@ func getUserIDsWithProjectAccess(s *xorm.Session, projectID int64) (uids []int64
 	for _, id := range ownerIDs {
 		addUID(id)
 	}
+	// Joined rows repeat teams, so cache each team-read check.
+	readableTeams := make(map[int64]bool)
+	teamIsReadable := func(teamID int64) (bool, error) {
+		if teamID <= 0 {
+			return false, nil
+		}
+		if readable, has := readableTeams[teamID]; has {
+			return readable, nil
+		}
+		readable, err := teamFilter(teamID)
+		if err != nil {
+			return false, err
+		}
+		readableTeams[teamID] = readable
+		return readable, nil
+	}
 	for _, u := range userids {
 		addUID(u.ProjectUserID)
-		addUID(u.TeamProjectUserID)
+		if teamFilter == nil {
+			addUID(u.TeamProjectUserID)
+			continue
+		}
+		readable, err := teamIsReadable(u.TeamProjectTeamID)
+		if err != nil {
+			return nil, err
+		}
+		if readable {
+			addUID(u.TeamProjectUserID)
+		}
 	}
 
 	uids = make([]int64, 0, len(uidmap))
@@ -162,7 +195,21 @@ func getProjectAccessForTasks(s *xorm.Session, tasks []*Task) (accessByProject m
 
 // ListUsersFromProject returns a list with all users who have access to a project, regardless of the method which gave them access
 func ListUsersFromProject(s *xorm.Session, l *Project, currentUser *user.User, search string) (users []*user.User, err error) {
-	uids, err := getUserIDsWithProjectAccess(s, l.ID)
+	isAdmin, err := (&Project{ID: l.ID}).IsAdmin(s, currentUser)
+	if err != nil {
+		return nil, err
+	}
+
+	var uids []int64
+	if isAdmin {
+		uids, err = getUserIDsWithProjectAccess(s, l.ID)
+	} else {
+		uids, err = getUserIDsWithProjectAccessFiltered(s, l.ID, func(teamID int64) (bool, error) {
+			t := &Team{ID: teamID}
+			canRead, _, err := t.CanRead(s, currentUser)
+			return canRead, err
+		})
+	}
 	if err != nil {
 		return nil, err
 	}
