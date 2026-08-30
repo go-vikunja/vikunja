@@ -66,7 +66,6 @@
 			"email": "Е.скринька",
 			"emailPlaceholder": "напр. maksym{'@'}vikunja.io",
 			"password": "Пароль",
-			"passwordPlaceholder": "напр. •••••••••••",
 			"forgotPassword": "Поновити пароль?",
 			"resetPassword": "Скинути пароль",
 			"resetPasswordAction": "Надіслати лист",
@@ -1058,7 +1057,6 @@
 			"doneAt": "Виконано"
 		},
 		"subscription": {
-			"subscribedTaskThroughParentProject": "Ви не можете відписатися, бо підписані на завдання через проєкт.",
 			"subscribedProject": "Ви підписані на цей проєкт та одержуватимете сповіщення про зміни.",
 			"notSubscribedProject": "Ви не підписані на цей проєкт і не одержуватимете сповіщень про зміни.",
 			"subscribedTask": "Ви підписані на це завдання та одержуватиме сповіщення про зміни.",

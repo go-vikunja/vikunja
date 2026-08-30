@@ -66,7 +66,6 @@
 			"email": "E-Mail-Adresse",
 			"emailPlaceholder": "z.B. frederic{'@'}vikunja.io",
 			"password": "Passwort",
-			"passwordPlaceholder": "z.B. •••••••••••",
 			"forgotPassword": "Passwort vergessen?",
 			"resetPassword": "Setz diis Passwort zrugg",
 			"resetPasswordAction": "Schick mir en Passwort zruggsetz Link",
@@ -813,6 +812,11 @@
 		"avatarOfUser": "{user}'s Profilbild",
 		"closeBanner": "Banner schließen",
 		"closeDialog": "Dialog schließen",
+		"imagePreview": "Bildvorschau",
+		"zoomIn": "Heranzoomen",
+		"zoomOut": "Herauszoomen",
+		"resetZoom": "Zoom zurücksetzen",
+		"imageLoadFailed": "Bild konnte nicht geladen werden",
 		"closeQuickActions": "Schnellaktionen schließen",
 		"skipToContent": "Überspringen und zum Hauptinhalt gehen",
 		"sortBy": "Sortieren nach",
@@ -1080,7 +1084,6 @@
 			"doneAt": "Erledigt am"
 		},
 		"subscription": {
-			"subscribedTaskThroughParentProject": "Du kannst hier nicht de-abonnieren, da du diese Aufgabe über ihr Projekt abonniert hast.",
 			"subscribedProject": "Du hast dieses Projekt abonniert und erhältst Benachrichtigungen über Änderungen.",
 			"notSubscribedProject": "Du hast dieses Projekt nicht abonniert und erhältst keine Benachrichtigungen über Änderungen.",
 			"subscribedTask": "Du hast diese Aufgabe abonniert und erhältst Benachrichtigungen über Änderungen.",
@@ -1105,7 +1108,10 @@
 			"setAsCover": "Als Titelbild setzen",
 			"unsetAsCover": "Titelbild entfernen",
 			"successfullyChangedCoverImage": "Das Titelbild wurde erfolgreich geändert.",
-			"usedAsCover": "Titelbild"
+			"usedAsCover": "Titelbild",
+			"play": "Abspielen",
+			"playFile": "{file} abspielen",
+			"audioError": "Diese Audiodatei konnte nicht abgespielt werden."
 		},
 		"comment": {
 			"title": "Kommentär",

@@ -38,7 +38,6 @@
 			"email": "عنوان البريد الإلكتروني",
 			"emailPlaceholder": "مثال: ahmed{'@'}vikunja.io",
 			"password": "كلمة المرور",
-			"passwordPlaceholder": "مثال: •••••••••••",
 			"forgotPassword": "نسيت كلمة المرور؟",
 			"resetPassword": "إعادة تعيين كلمة المرور",
 			"resetPasswordAction": "أرسل لي رابط إعادة تعيين كلمة المرور",
@@ -575,7 +574,6 @@
 			"updated": "تاريخ التحديث"
 		},
 		"subscription": {
-			"subscribedTaskThroughParentProject": "لا يمكنك إلغاء الاشتراك هنا لأنك مشترك في هذه المهمة من خلال المشروع.",
 			"subscribedProject": "أنت مشترك حاليا في هذا المشروع وسوف تتلقى إشعارات للتغييرات.",
 			"notSubscribedProject": "أنت غير مشترك في هذا المشروع ولن تتلقى إشعارات للتغييرات.",
 			"subscribedTask": "أنت مشترك حاليا في هذه المهمة وسوف تتلقى إشعارات للتغييرات.",

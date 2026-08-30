@@ -66,7 +66,6 @@
 			"email": "メールアドレス",
 			"emailPlaceholder": "例: frederic{'@'}vikunja.io",
 			"password": "パスワード",
-			"passwordPlaceholder": "例: •••••••••••",
 			"forgotPassword": "パスワードをお忘れですか？",
 			"resetPassword": "パスワードの再設定",
 			"resetPasswordAction": "パスワード再設定リンクの送信",
@@ -1023,7 +1022,6 @@
 			"doneAt": "完了日"
 		},
 		"subscription": {
-			"subscribedTaskThroughParentProject": "現在プロジェクトを通して購読しているため、ここでこのタスクの購読を解除することはできません。",
 			"subscribedProject": "現在このプロジェクトを購読しており、変更通知が届きます。",
 			"notSubscribedProject": "このプロジェクトを購読していないため、変更通知は届きません。",
 			"subscribedTask": "現在このタスクを購読しており、変更通知が届きます。",

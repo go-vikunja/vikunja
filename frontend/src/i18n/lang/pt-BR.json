@@ -39,7 +39,6 @@
 			"email": "Endereço de e-mail",
 			"emailPlaceholder": "por exemplo, frederic{'@'}vikunja.io",
 			"password": "Senha",
-			"passwordPlaceholder": "ex.: •••••••••••••",
 			"forgotPassword": "Esqueceu sua senha?",
 			"resetPassword": "Redefinir sua senha",
 			"resetPasswordAction": "Envie-me um link para redefinir a senha",
@@ -632,7 +631,6 @@
 			"updated": "Atualizado"
 		},
 		"subscription": {
-			"subscribedTaskThroughParentProject": "Você não pode cancelar a inscrição aqui porque está inscrito nesta tarefa em seu projeto.",
 			"subscribedProject": "Você está atualmente inscrito para esse projeto e receberá notificações de alterações.",
 			"notSubscribedProject": "Você não está inscrito para este projeto e não receberá notificações para alterações.",
 			"subscribedTask": "Você está atualmente inscrito a essa tarefa e receberá notificações de alterações.",

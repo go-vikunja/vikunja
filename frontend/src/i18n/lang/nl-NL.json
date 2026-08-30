@@ -66,7 +66,6 @@
 			"email": "E-mailadres",
 			"emailPlaceholder": "bv. frederic{'@'}vikunja.io",
 			"password": "Wachtwoord",
-			"passwordPlaceholder": "bv. •••••••••••",
 			"forgotPassword": "Wachtwoord vergeten?",
 			"resetPassword": "Je wachtwoord opnieuw instellen",
 			"resetPasswordAction": "Stuur me een wachtwoord reset link",
@@ -1080,7 +1079,6 @@
 			"doneAt": "Voltooid op"
 		},
 		"subscription": {
-			"subscribedTaskThroughParentProject": "Je kunt hier niet uitschrijven omdat je via het project op deze taak bent geabonneerd.",
 			"subscribedProject": "Je bent momenteel geabonneerd op dit project en ontvangt meldingen bij wijzigingen.",
 			"notSubscribedProject": "Je bent niet geabonneerd op dit project en ontvangt geen meldingen bij wijzigingen.",
 			"subscribedTask": "Je bent momenteel geabonneerd op deze taak en ontvangt meldingen bij wijzigingen.",
