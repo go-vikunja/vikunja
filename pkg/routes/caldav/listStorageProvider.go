@@ -900,11 +900,10 @@ func persistLabels(s *xorm.Session, a web.Auth, task *models.Task, labels []*mod
 
 	// Using readall ensures the current user has the permission to see the labels they provided via caldav.
 	existingLabels, _, _, err := models.GetLabelsByTaskIDs(s, &models.LabelByTaskIDsOptions{
-		Search:              labelTitles,
-		User:                u,
-		GetForUser:          true,
-		GetUnusedLabels:     true,
-		GroupByLabelIDsOnly: true,
+		Search:          labelTitles,
+		User:            u,
+		GetForUser:      true,
+		GetUnusedLabels: true,
 	})
 	if err != nil {
 		return err

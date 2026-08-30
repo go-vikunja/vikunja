@@ -70,3 +70,10 @@
   created_by_id: 25
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
+# Attached only to the soft-deleted task 51 in project 1, which user 1 owns:
+# if a label visibility query stops filtering deleted tasks, this one leaks.
+- id: 13
+  title: 'Label #13 - attached only to a soft-deleted task'
+  created_by_id: 13
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12

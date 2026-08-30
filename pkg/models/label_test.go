@@ -26,6 +26,7 @@ import (
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/d4l3k/messagediff.v1"
 )
@@ -127,6 +128,17 @@ func TestLabel_ReadAll(t *testing.T) {
 					},
 				},
 				{
+					// Task 35 (project 21, owned by user1); archiving a project doesn't hide its tasks.
+					Label: Label{
+						ID:          5,
+						Title:       "Label #5",
+						CreatedByID: 2,
+						CreatedBy:   user2,
+						Created:     testCreatedTime,
+						Updated:     testUpdatedTime,
+					},
+				},
+				{
 					Label: Label{
 						ID:          7,
 						Title:       "Label #7 - created by user 1, no task attachment",
@@ -198,6 +210,31 @@ func TestLabel_ReadAll(t *testing.T) {
 			}
 		})
 	}
+}
+
+// Separate from the table above: its args are built before a session exists, so the share can't be loaded yet.
+func TestLabel_ReadAll_LinkShare(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	share, err := GetLinkShareByID(s, 1)
+	require.NoError(t, err)
+
+	l := &Label{}
+	gotLs, _, _, err := l.ReadAll(s, share, "", 0, 0)
+	require.NoError(t, err)
+
+	labels, ok := gotLs.([]*LabelWithTaskID)
+	require.True(t, ok)
+
+	ids := make([]int64, 0, len(labels))
+	for _, lb := range labels {
+		ids = append(ids, lb.ID)
+	}
+	// Label #4: on tasks #1/#2 (project 1) - visible via the share.
+	// Label #5: only on project-21 tasks and soft-deleted task #51 - stays out.
+	assert.ElementsMatch(t, []int64{4}, ids, "link share for project 1 must see exactly {4}; got %v", ids)
 }
 
 func TestLabel_ReadOne(t *testing.T) {
