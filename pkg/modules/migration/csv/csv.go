@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/user"
@@ -571,16 +572,20 @@ func (m *Migrator) Migrate(_ *user.User, _ io.ReaderAt, _ int64) error {
 	return &migration.ErrCSVConfigRequired{}
 }
 
-// RunMigration records the migration's start, imports the CSV with the given
-// config and records its finish. Shared by the v1 and v2 HTTP layers so the
+// RunMigration claims the user's migration slot, imports the CSV with the given
+// config and releases the claim. Shared by the v1 and v2 HTTP layers so the
 // status bookkeeping around MigrateWithConfig lives in one place.
 func RunMigration(u *user.User, file io.ReaderAt, size int64, config *ImportConfig) error {
-	status, err := migration.StartMigration(&Migrator{}, u)
+	status, err := migration.ClaimMigration(&Migrator{}, u)
 	if err != nil {
 		return err
 	}
 
 	if err := MigrateWithConfig(u, file, size, config); err != nil {
+		// Release the claim so the user can retry immediately.
+		if ferr := migration.FinishMigration(status); ferr != nil {
+			log.Errorf("[CSV migration] Could not release claim of migration %d for user %d after failed import: %s", status.ID, u.ID, ferr)
+		}
 		return err
 	}
 

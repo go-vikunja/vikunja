@@ -24,13 +24,19 @@ import (
 )
 
 // ErrMigrationAlreadyRunning is returned when a migration is started for a user
-// who already has one in progress (started but not yet finished).
+// who already has one in progress (started but not yet finished). Any migrator
+// holds the account's single migration slot, so the name of the running
+// migrator is included so the frontend can show what to wait for.
 type ErrMigrationAlreadyRunning struct {
-	StartedAt time.Time
+	StartedAt    time.Time
+	MigratorName string
 }
 
 func (err *ErrMigrationAlreadyRunning) Error() string {
-	return "Migration already running"
+	if err.MigratorName == "" {
+		return "Migration already running"
+	}
+	return "Migration already running: " + err.MigratorName
 }
 
 // ErrCodeMigrationAlreadyRunning holds the unique world-error code of this error
@@ -41,7 +47,7 @@ func (err *ErrMigrationAlreadyRunning) HTTPError() web.HTTPError {
 	return web.HTTPError{
 		HTTPCode: http.StatusPreconditionFailed,
 		Code:     ErrCodeMigrationAlreadyRunning,
-		Message:  "Migration already running",
+		Message:  err.Error(),
 	}
 }
 
