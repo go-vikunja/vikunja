@@ -55,3 +55,6 @@ PLAN.md
 plans/
 /.crush/
 /.playwright-mcp
+
+# Agent (Port.io take-home)
+.env

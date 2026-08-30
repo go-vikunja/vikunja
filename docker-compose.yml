@@ -1,0 +1,45 @@
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: vikunja
+      POSTGRES_PASSWORD: vikunja
+      POSTGRES_DB: vikunja
+    volumes:
+      - vikunja-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vikunja"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Vikunja ships as a single binary that serves both the API and the
+  # built frontend (see Dockerfile) — there is no separate frontend
+  # container upstream. This builds that same image from the repo's
+  # own Dockerfile.
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3456:3456"
+    environment:
+      VIKUNJA_DATABASE_TYPE: postgres
+      VIKUNJA_DATABASE_HOST: db
+      VIKUNJA_DATABASE_USER: vikunja
+      VIKUNJA_DATABASE_PASSWORD: vikunja
+      VIKUNJA_DATABASE_DATABASE: vikunja
+      VIKUNJA_SERVICE_JWTSECRET: change-me-local-dev-only
+      VIKUNJA_SERVICE_ENABLEREGISTRATION: "true"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - vikunja-files:/app/vikunja/files
+
+volumes:
+  vikunja-db:
+  vikunja-files:
