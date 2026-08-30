@@ -176,7 +176,6 @@ func adminUsersList(ctx context.Context, in *ListParams) (*adminUserListBody, er
 		events.CleanupPending(s)
 		return nil, translateDomainError(err)
 	}
-	// Commit dispatches the queued audit event; the list itself writes nothing.
 	if err := s.Commit(); err != nil {
 		events.CleanupPending(s)
 		return nil, translateDomainError(err)
