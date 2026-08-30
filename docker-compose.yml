@@ -34,12 +34,13 @@ services:
       VIKUNJA_DATABASE_DATABASE: vikunja
       VIKUNJA_SERVICE_JWTSECRET: change-me-local-dev-only
       VIKUNJA_SERVICE_ENABLEREGISTRATION: "true"
+      VIKUNJA_SERVICE_PUBLICURL: "http://localhost:3456"
+      # /app/vikunja isn't writable by the container's non-root user; /tmp is
+      # (see the Dockerfile's --chown=1000:1000 --chmod=1777 on /tmp).
+      VIKUNJA_FILES_BASEPATH: "/tmp/files"
     depends_on:
       db:
         condition: service_healthy
-    volumes:
-      - vikunja-files:/app/vikunja/files
 
 volumes:
   vikunja-db:
-  vikunja-files:
