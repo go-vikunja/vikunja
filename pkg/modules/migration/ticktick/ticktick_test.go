@@ -20,11 +20,16 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/csv"
+	"errors"
 	"io"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
+
+	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/modules/migration"
 
 	"code.vikunja.io/api/pkg/models"
 	"github.com/gocarina/gocsv"
@@ -946,4 +951,59 @@ func TestMultipleTasksWithMalformedIDsAreNotDropped(t *testing.T) {
 		}
 	}
 	assert.ElementsMatch(t, []string{"First malformed", "Second malformed", "Third malformed"}, titles)
+}
+
+// TestTickTickRowLimit covers TickTick's bounded CSV decoder (GHSA-pqf9-h8g4-8gmh).
+func TestTickTickRowLimit(t *testing.T) {
+	config.MigrationMaxCSVRows.Set("3")
+	defer config.MigrationMaxCSVRows.Set("100000")
+
+	buildTickTickCSV := func(rows int) string {
+		content := "Date: 2024-01-01+0000\nVersion: 7.1\n" +
+			"\"Folder Name\",\"List Name\",\"Title\",\"Kind\",\"Tags\",\"Content\",\"Is Check list\",\"Start Date\",\"Due Date\",\"Reminder\",\"Repeat\",\"Priority\",\"Status\",\"Created Time\",\"Completed Time\",\"Order\",\"Timezone\",\"Is All Day\",\"Is Floating\",\"Column Name\",\"Column Order\",\"View Mode\",\"taskId\",\"parentId\"\n"
+		for i := 0; i < rows; i++ {
+			content += ",\"list\",\"task" + strconv.Itoa(i) + "\",\"TEXT\",\"\",\"\",\"N\",\"\",\"\",\"\",\"\",\"0\",\"0\",\"2022-10-09T15:09:48+0000\",\"\",\"-1099511627776\",\"\",\"true\",\"false\",,,\"list\",\"1\",\"\"\n"
+		}
+		return content
+	}
+
+	decode := func(t *testing.T, content string) ([]*tickTickTask, error) {
+		t.Helper()
+		lines, err := linesToSkipBeforeHeader(bytes.NewReader([]byte(content)), int64(len(content)))
+		require.NoError(t, err)
+		dec, err := newLineSkipDecoder(bytes.NewReader([]byte(content)), lines)
+		require.NoError(t, err)
+		tasks := []*tickTickTask{}
+		err = gocsv.UnmarshalDecoder(dec, &tasks)
+		return tasks, err
+	}
+
+	t.Run("exactly the limit passes", func(t *testing.T) {
+		tasks, err := decode(t, buildTickTickCSV(3))
+		require.NoError(t, err)
+		require.Len(t, tasks, 3)
+	})
+
+	t.Run("limit+1 rows fail with the typed error", func(t *testing.T) {
+		_, err := decode(t, buildTickTickCSV(4))
+		require.Error(t, err)
+		var limitErr *migration.ErrImportRowLimitExceeded
+		require.True(t, errors.As(err, &limitErr), "expected ErrImportRowLimitExceeded, got %v", err)
+	})
+
+	t.Run("multiline metadata still skips correctly", func(t *testing.T) {
+		content := "\uFEFF\"Date: 2025-11-25+0000\"\n" +
+			"\"Version: 7.1\"\n" +
+			"\"Status: \n" +
+			"0 Normal\n" +
+			"1 Completed\n" +
+			"2 Archived\"\n" +
+			"\"Folder Name\",\"List Name\",\"Title\",\"Kind\",\"Tags\",\"Content\",\"Is Check list\",\"Start Date\",\"Due Date\",\"Reminder\",\"Repeat\",\"Priority\",\"Status\",\"Created Time\",\"Completed Time\",\"Order\",\"Timezone\",\"Is All Day\",\"Is Floating\",\"Column Name\",\"Column Order\",\"View Mode\",\"taskId\",\"parentId\"\n" +
+			"\"dsx\",\"x\",\"this task repeats\",\"TEXT\",\"\",\"\",\"N\",\"\",\"\",\"\",\"\",\"0\",\"0\",\"2022-10-09T15:09:48+0000\",\"\",\"-1099511627776\",\"Europe/Berlin\",,\"false\",,,\"list\",\"2\",\"\"\n"
+
+		tasks, err := decode(t, content)
+		require.NoError(t, err)
+		require.Len(t, tasks, 1)
+		assert.Equal(t, "this task repeats", tasks[0].Title)
+	})
 }

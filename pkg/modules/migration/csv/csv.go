@@ -279,8 +279,8 @@ func suggestMapping(columns []string) []ColumnMapping {
 	return mappings
 }
 
-// parseCSV parses CSV data with the given configuration
-func parseCSV(data []byte, delimiter string) ([]string, [][]string, error) {
+// One lookahead record detects migration.maxcsvrows overflow without retaining it (GHSA-pqf9-h8g4-8gmh).
+func parseCSV(data []byte, delimiter string) (headers []string, dataRows [][]string, err error) {
 	data = stripBOM(data)
 
 	// Go's csv.Reader only supports double-quote as the quote character.
@@ -296,19 +296,32 @@ func parseCSV(data []byte, delimiter string) ([]string, [][]string, error) {
 	reader.LazyQuotes = true
 	reader.TrimLeadingSpace = true
 
-	records, err := reader.ReadAll()
+	headers, err = reader.Read()
 	if err != nil {
+		if errors.Is(err, io.EOF) {
+			return nil, nil, &migration.ErrFileIsEmpty{}
+		}
 		return nil, nil, err
 	}
 
-	if len(records) == 0 {
-		return nil, nil, &migration.ErrFileIsEmpty{}
+	maxRows := config.MigrationMaxCSVRows.GetInt64()
+	if maxRows <= 0 {
+		maxRows = 100000
 	}
-
-	headers := records[0]
-	var dataRows [][]string
-	if len(records) > 1 {
-		dataRows = records[1:]
+	for int64(len(dataRows)) < maxRows {
+		record, readErr := reader.Read()
+		if readErr != nil {
+			if errors.Is(readErr, io.EOF) {
+				break
+			}
+			return nil, nil, readErr
+		}
+		dataRows = append(dataRows, record)
+	}
+	if _, readErr := reader.Read(); readErr == nil {
+		return nil, nil, &migration.ErrImportRowLimitExceeded{MaxRows: maxRows}
+	} else if !errors.Is(readErr, io.EOF) {
+		return nil, nil, readErr
 	}
 
 	return headers, dataRows, nil
@@ -347,6 +360,10 @@ func DetectCSVStructure(file io.ReaderAt, size int64) (*DetectionResult, error) 
 	if err != nil {
 		var emptyErr *migration.ErrFileIsEmpty
 		if errors.As(err, &emptyErr) {
+			return nil, err
+		}
+		var limitErr *migration.ErrImportRowLimitExceeded
+		if errors.As(err, &limitErr) {
 			return nil, err
 		}
 		return nil, &migration.ErrNotACSVFile{}
@@ -407,6 +424,10 @@ func PreviewImport(file io.ReaderAt, size int64, config *ImportConfig) (*Preview
 	if err != nil {
 		var emptyErr *migration.ErrFileIsEmpty
 		if errors.As(err, &emptyErr) {
+			return nil, err
+		}
+		var limitErr *migration.ErrImportRowLimitExceeded
+		if errors.As(err, &limitErr) {
 			return nil, err
 		}
 		return nil, &migration.ErrNotACSVFile{}
@@ -572,9 +593,7 @@ func (m *Migrator) Migrate(_ *user.User, _ io.ReaderAt, _ int64) error {
 	return &migration.ErrCSVConfigRequired{}
 }
 
-// RunMigration claims the user's migration slot, imports the CSV with the given
-// config and releases the claim. Shared by the v1 and v2 HTTP layers so the
-// status bookkeeping around MigrateWithConfig lives in one place.
+// RunMigration imports a CSV while holding the user's migration claim.
 func RunMigration(u *user.User, file io.ReaderAt, size int64, config *ImportConfig) error {
 	status, err := migration.ClaimMigration(&Migrator{}, u)
 	if err != nil {
@@ -582,7 +601,6 @@ func RunMigration(u *user.User, file io.ReaderAt, size int64, config *ImportConf
 	}
 
 	if err := MigrateWithConfig(u, file, size, config); err != nil {
-		// Release the claim so the user can retry immediately.
 		if ferr := migration.FinishMigration(status); ferr != nil {
 			log.Errorf("[CSV migration] Could not release claim of migration %d for user %d after failed import: %s", status.ID, u.ID, ferr)
 		}
@@ -611,6 +629,10 @@ func MigrateWithConfig(u *user.User, file io.ReaderAt, size int64, config *Impor
 	if err != nil {
 		var emptyErr *migration.ErrFileIsEmpty
 		if errors.As(err, &emptyErr) {
+			return err
+		}
+		var limitErr *migration.ErrImportRowLimitExceeded
+		if errors.As(err, &limitErr) {
 			return err
 		}
 		return &migration.ErrNotACSVFile{}

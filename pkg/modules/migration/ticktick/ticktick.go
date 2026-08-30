@@ -27,6 +27,7 @@ import (
 	"strings"
 	"time"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/user"
@@ -313,44 +314,72 @@ func newLineSkipDecoder(r io.Reader, linesToSkip int) (gocsv.SimpleDecoder, erro
 	// Strip BOM if present - this must be done consistently with linesToSkipBeforeHeader
 	r = stripBOM(r)
 
-	// Read all content into memory so we can work with it
-	// This is acceptable since CSV imports are typically not huge files
-	allBytes, err := io.ReadAll(r)
-	if err != nil {
-		return nil, err
-	}
-
-	// Skip the metadata lines before the CSV header by finding newlines
-	// linesToSkipBeforeHeader counts raw text lines (newlines), not CSV records,
-	// because even metadata can have multiline quoted fields.
-	// We manually search for newlines (no buffer size limits like bufio.Scanner)
-	bytesSkipped := 0
+	// Metadata may contain quoted newlines, so skip raw lines without buffering the file.
+	br := bufio.NewReader(r)
 	linesFound := 0
-	for i := 0; i < len(allBytes) && linesFound < linesToSkip; i++ {
-		if allBytes[i] == '\n' {
-			linesFound++
-			if linesFound == linesToSkip {
-				// Position is right after the Nth newline
-				bytesSkipped = i + 1
-				break
+	for linesFound < linesToSkip {
+		if _, err := br.ReadBytes('\n'); err != nil {
+			if errors.Is(err, io.EOF) {
+				return nil, io.ErrUnexpectedEOF
 			}
+			return nil, err
 		}
+		linesFound++
 	}
 
-	if linesFound < linesToSkip {
-		return nil, io.ErrUnexpectedEOF
-	}
-
-	// Now create a CSV reader starting from after the skipped lines
 	// The CSV reader will properly handle any multiline quoted fields in the actual data
-	remainingContent := allBytes[bytesSkipped:]
-	reader := csv.NewReader(bytes.NewReader(remainingContent))
+	reader := csv.NewReader(br)
 
 	// Allow variable field counts and be lenient with parsing
 	reader.FieldsPerRecord = -1
 	reader.LazyQuotes = true
 	reader.TrimLeadingSpace = true
-	return gocsv.NewSimpleDecoderFromCSVReader(reader), nil
+	return boundedSimpleDecoder{inner: gocsv.NewSimpleDecoderFromCSVReader(reader)}, nil
+}
+
+// boundedSimpleDecoder replaces gocsv's unbounded ReadAll path (GHSA-pqf9-h8g4-8gmh).
+type boundedSimpleDecoder struct {
+	inner   gocsv.SimpleDecoder
+	maxRows int64
+}
+
+func (d boundedSimpleDecoder) limit() int64 {
+	if d.maxRows > 0 {
+		return d.maxRows
+	}
+	if maxRows := config.MigrationMaxCSVRows.GetInt64(); maxRows > 0 {
+		return maxRows
+	}
+	return 100000
+}
+
+func (d boundedSimpleDecoder) GetCSVRows() ([][]string, error) {
+	// GetCSVRows includes the header row, which does not count against the limit.
+	rows := make([][]string, 0)
+	for int64(len(rows)) < d.limit()+1 {
+		record, err := d.inner.GetCSVRow()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				return rows, nil
+			}
+			return nil, err
+		}
+		rows = append(rows, record)
+	}
+	if _, err := d.inner.GetCSVRow(); err == nil {
+		return nil, &migration.ErrImportRowLimitExceeded{MaxRows: d.limit()}
+	} else if !errors.Is(err, io.EOF) {
+		return nil, err
+	}
+	return rows, nil
+}
+
+func (d boundedSimpleDecoder) GetCSVRow() ([]string, error) {
+	record, err := d.inner.GetCSVRow()
+	if err != nil {
+		return nil, err
+	}
+	return record, nil
 }
 
 func linesToSkipBeforeHeader(file io.ReaderAt, size int64) (int, error) {

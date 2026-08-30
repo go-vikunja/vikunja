@@ -23,10 +23,7 @@ import (
 	"code.vikunja.io/api/pkg/web"
 )
 
-// ErrMigrationAlreadyRunning is returned when a migration is started for a user
-// who already has one in progress (started but not yet finished). Any migrator
-// holds the account's single migration slot, so the name of the running
-// migrator is included so the frontend can show what to wait for.
+// ErrMigrationAlreadyRunning includes the migrator holding the account-wide claim.
 type ErrMigrationAlreadyRunning struct {
 	StartedAt    time.Time
 	MigratorName string
@@ -48,6 +45,27 @@ func (err *ErrMigrationAlreadyRunning) HTTPError() web.HTTPError {
 		HTTPCode: http.StatusPreconditionFailed,
 		Code:     ErrCodeMigrationAlreadyRunning,
 		Message:  err.Error(),
+	}
+}
+
+// ErrImportRowLimitExceeded reports a CSV exceeding migration.maxcsvrows.
+type ErrImportRowLimitExceeded struct {
+	MaxRows int64
+}
+
+func (err *ErrImportRowLimitExceeded) Error() string {
+	return "The import file contains too many rows"
+}
+
+// ErrCodeImportRowLimitExceeded holds the unique world-error code of this error
+const ErrCodeImportRowLimitExceeded = 14006
+
+// HTTPError holds the http error description
+func (err *ErrImportRowLimitExceeded) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeImportRowLimitExceeded,
+		Message:  "The import file contains more rows than the configured maximum.",
 	}
 }
 
