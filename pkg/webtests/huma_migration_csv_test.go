@@ -18,7 +18,10 @@ package webtests
 
 import (
 	"net/http"
+	"strings"
 	"testing"
+
+	"code.vikunja.io/api/pkg/config"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -34,8 +37,6 @@ const csvTestConfig = `{"delimiter":",","quote_char":"\"","date_format":"2006-01
 	`{"column_index":2,"column_name":"Done","attribute":"done"},` +
 	`{"column_index":3,"column_name":"Priority","attribute":"priority"}]}`
 
-// TestHumaMigrationCSV covers the generic CSV importer's v2 endpoints:
-// status, detect, preview and migrate. No v1 webtest exists to mirror.
 func TestHumaMigrationCSV(t *testing.T) {
 	e := setupMigrationTestEnv(t)
 	token := humaTokenFor(t, &testuser1)
@@ -69,7 +70,6 @@ func TestHumaMigrationCSV(t *testing.T) {
 		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
 		assert.Contains(t, rec.Body.String(), `"message":"Everything was migrated successfully."`)
 
-		// The status now reflects a finished migration.
 		rec = humaRequest(t, e, http.MethodGet, "/api/v2/migration/csv/status", "", token, "")
 		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
 		assert.NotContains(t, rec.Body.String(), `"started_at":"0001-01-01T00:00:00Z"`,
@@ -77,15 +77,11 @@ func TestHumaMigrationCSV(t *testing.T) {
 	})
 }
 
-// TestHumaMigrationCSV_BadInput covers the negative paths: missing config,
-// malformed config JSON, and an empty file.
 func TestHumaMigrationCSV_BadInput(t *testing.T) {
 	e := setupMigrationTestEnv(t)
 	token := humaTokenFor(t, &testuser1)
 
 	t.Run("missing config is rejected with 422", func(t *testing.T) {
-		// The config form value is required:"true", so Huma's multipart
-		// validation refuses the request before the handler runs.
 		body, contentType := multipartImportBody(t, "import.csv", []byte(csvTestFile), nil)
 		rec := migrationUploadRequest(t, e, "/api/v2/migration/csv/migrate", body, contentType, token)
 		assert.Equal(t, http.StatusUnprocessableEntity, rec.Code, "body: %s", rec.Body.String())
@@ -104,7 +100,6 @@ func TestHumaMigrationCSV_BadInput(t *testing.T) {
 	})
 }
 
-// TestHumaMigrationCSV_Unauthenticated proves all CSV ops require auth.
 func TestHumaMigrationCSV_Unauthenticated(t *testing.T) {
 	e := setupMigrationTestEnv(t)
 
@@ -122,4 +117,31 @@ func TestHumaMigrationCSV_Unauthenticated(t *testing.T) {
 		rec := migrationUploadRequest(t, e, "/api/v2/migration/csv/migrate", body, contentType, "")
 		assert.Equal(t, http.StatusUnauthorized, rec.Code, "body: %s", rec.Body.String())
 	})
+}
+
+// TestHumaMigrationCSV_RowLimit verifies rejection and claim release (GHSA-pqf9-h8g4-8gmh).
+func TestHumaMigrationCSV_RowLimit(t *testing.T) {
+	config.MigrationMaxCSVRows.Set("10")
+	defer config.MigrationMaxCSVRows.Set("100000")
+
+	e := setupMigrationTestEnv(t)
+	token := humaTokenFor(t, &testuser1)
+
+	var sb strings.Builder
+	sb.WriteString("Title,Description\n")
+	for i := 0; i < 11; i++ {
+		sb.WriteString("Task,Description\n")
+	}
+	oversized := sb.String()
+
+	body, contentType := multipartImportBody(t, "import.csv", []byte(oversized), map[string]string{"config": csvTestConfig})
+	rec := migrationUploadRequest(t, e, "/api/v2/migration/csv/migrate", body, contentType, token)
+	assert.Equal(t, http.StatusBadRequest, rec.Code, "body: %s", rec.Body.String())
+
+	rec = humaRequest(t, e, http.MethodGet, "/api/v2/migration/csv/status", "", token, "")
+	require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+
+	body, contentType = multipartImportBody(t, "import.csv", []byte(csvTestFile), map[string]string{"config": csvTestConfig})
+	rec = migrationUploadRequest(t, e, "/api/v2/migration/csv/migrate", body, contentType, token)
+	require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
 }
