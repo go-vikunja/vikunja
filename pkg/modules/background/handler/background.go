@@ -43,6 +43,7 @@ import (
 	"code.vikunja.io/api/pkg/modules/background"
 	"code.vikunja.io/api/pkg/modules/background/unsplash"
 	"code.vikunja.io/api/pkg/modules/background/upload"
+	"code.vikunja.io/api/pkg/modules/imageutils"
 	"code.vikunja.io/api/pkg/web"
 	webfiles "code.vikunja.io/api/pkg/web/files"
 
@@ -176,6 +177,11 @@ func CreateBlurHash(srcf io.Reader) (hash string, err error) {
 		return "", err
 	}
 
+	return CreateBlurHashFromImage(src)
+}
+
+// CreateBlurHashFromImage avoids decoding uploads twice.
+func CreateBlurHashFromImage(src image.Image) (hash string, err error) {
 	dst := image.NewRGBA(image.Rect(0, 0, 32, 32))
 	draw.NearestNeighbor.Scale(dst, dst.Rect, src, src.Bounds(), draw.Over, nil)
 
@@ -228,13 +234,7 @@ func (bp *BackgroundProvider) UploadBackground(c *echo.Context) error {
 	return c.JSON(http.StatusOK, project)
 }
 
-// ValidateAndSaveBackgroundUpload validates that srcf is a decodable image of an
-// allowed type, stores it as the project's background and reloads the project so
-// callers get the updated background metadata. It is the shared body of the v1 and
-// v2 upload handlers; the multipart parsing and error-to-HTTP mapping stay in each
-// handler. project must already be loaded and the caller must have verified write
-// permission. On a non-image it returns ErrFileIsNoImage; on a recognized but
-// undecodable format ErrFileUnsupportedImageFormat.
+// ValidateAndSaveBackgroundUpload is shared by the v1 and v2 upload handlers.
 func ValidateAndSaveBackgroundUpload(s *xorm.Session, auth web.Auth, project *models.Project, srcf io.ReadSeeker, filename string, filesize uint64) error {
 	mime, err := mimetype.DetectReader(srcf)
 	if err != nil {
@@ -254,8 +254,7 @@ func ValidateAndSaveBackgroundUpload(s *xorm.Session, auth web.Auth, project *mo
 		return ErrFileUnsupportedImageFormat{Mime: mime.String()}
 	}
 
-	// DetectReader consumed the head of the reader; SaveBackgroundFile seeks back to
-	// the start itself, so no rewind is needed here.
+	// SaveBackgroundFile rewinds after DetectReader.
 	if err := SaveBackgroundFile(s, auth, project, srcf, filename, filesize); err != nil {
 		return err
 	}
@@ -266,6 +265,15 @@ func ValidateAndSaveBackgroundUpload(s *xorm.Session, auth web.Auth, project *mo
 func SaveBackgroundFile(s *xorm.Session, auth web.Auth, project *models.Project, srcf io.ReadSeeker, filename string, filesize uint64) (err error) {
 	mime, _ := mimetype.DetectReader(srcf)
 	_, _ = srcf.Seek(0, io.SeekStart)
+
+	// Reject hostile dimensions before decoding (GHSA-4vh2-39rq-rq8j).
+	if _, err := imageutils.ValidateReader(srcf); err != nil {
+		if !imageutils.IsErrImageTooLarge(err) && strings.Contains(err.Error(), "unknown format") {
+			return ErrFileUnsupportedImageFormat{Mime: mime.String()}
+		}
+		return err
+	}
+	_, _ = srcf.Seek(0, io.SeekStart)
 	src, err := imaging.Decode(srcf)
 	if err != nil {
 		if strings.Contains(err.Error(), "unknown format") {
@@ -274,19 +282,9 @@ func SaveBackgroundFile(s *xorm.Session, auth web.Auth, project *models.Project,
 		return err
 	}
 
-	_, _ = srcf.Seek(0, io.SeekStart)
-	imgConfig, _, err := image.DecodeConfig(srcf)
-	if err != nil {
-		return err
-	}
-
-	height := imgConfig.Height
-	if imgConfig.Height > background.MaxBackgroundImageHeight {
-		height = background.MaxBackgroundImageHeight
-	}
-
 	buf := bytes.Buffer{}
-	dst := imaging.Resize(src, 0, height, imaging.Lanczos)
+	// Fit bounds both dimensions without upscaling.
+	dst := imaging.Fit(src, background.MaxBackgroundImageHeight, background.MaxBackgroundImageHeight, imaging.Lanczos)
 	err = imaging.Encode(&buf, dst, imaging.JPEG, imaging.JPEGQuality(80))
 	if err != nil {
 		return err
@@ -297,9 +295,7 @@ func SaveBackgroundFile(s *xorm.Session, auth web.Auth, project *models.Project,
 		return err
 	}
 
-	// Generate a blurHash
-	_, _ = srcf.Seek(0, io.SeekStart)
-	project.BackgroundBlurHash, err = CreateBlurHash(srcf)
+	project.BackgroundBlurHash, err = CreateBlurHashFromImage(src)
 	if err != nil {
 		return err
 	}

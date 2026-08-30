@@ -18,7 +18,6 @@ package models
 
 import (
 	"bytes"
-	"fmt"
 	"image"
 	"image/png"
 	"io"
@@ -30,6 +29,7 @@ import (
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/modules/imageutils"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
@@ -329,13 +329,12 @@ func (ta *TaskAttachment) GetPreview(previewSize PreviewSize) []byte {
 
 		// Check image dimensions before full decode to prevent DoS
 		// from decompression bombs (small file, huge pixel dimensions)
-		const maxPixels = 50_000_000 // 50 megapixels
 		cfg, _, err := image.DecodeConfig(bytes.NewReader(data))
 		if err != nil {
 			return nil, err
 		}
-		if cfg.Width*cfg.Height > maxPixels {
-			return nil, fmt.Errorf("image dimensions %dx%d exceed maximum of %d pixels", cfg.Width, cfg.Height, maxPixels)
+		if err := imageutils.ValidateConfig(cfg); err != nil {
+			return nil, err
 		}
 
 		img, _, err := image.Decode(bytes.NewReader(data))
