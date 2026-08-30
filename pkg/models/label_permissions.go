@@ -78,49 +78,54 @@ func (l *Label) isLabelOwner(s *xorm.Session, a web.Auth) (bool, error) {
 	return creator.IsBotOwnedBy(caller), nil
 }
 
-// hasAccessToLabel reports whether the caller can read a label and, if so,
-// the caller's maximum permission on it.
+// labelVisibleCond matches every label the caller may see: used on a task in a
+// project they can access, or created by their own bot identity. It is the one
+// definition of label visibility - single-label reads and the list must not drift.
 //
-// The access cond is assembled with explicit builder.And / builder.Or.
-// Chaining xorm's session .Where/.Or/.And instead flattens the SQL to
-// `A OR B OR C AND D`, which leaked any label with any label_tasks row
+// The cond is assembled from builder.And / builder.Or values and must be handed
+// to Where in one shot. Chaining xorm's session .Where/.Or/.And instead flattens
+// the SQL to `A OR B OR C AND D`, which leaked any label with any label_tasks row
 // to any authenticated user (GHSA-hj5c-mhh2-g7jq).
-func (l *Label) hasAccessToLabel(s *xorm.Session, a web.Auth) (has bool, maxPermission int, err error) {
-
-	_, isLinkShare := a.(*LinkSharing)
+func labelVisibleCond(s *xorm.Session, a web.Auth) (builder.Cond, error) {
 
 	// Must include projects inherited via a shared parent, otherwise users can
 	// remove but not re-add labels on tasks in child projects.
-	accessibleProjects, err := accessibleProjectIDsCond(s, a, "project_id")
+	accessibleProjects, err := accessibleProjectIDsCond(s, a, "tasks.project_id")
 	if err != nil {
-		return false, 0, err
+		return nil, err
 	}
 
-	labelAttachedToAccessibleTask := builder.In(
-		"label_tasks.task_id",
+	usedOnAccessibleTask := builder.In("labels.id",
 		builder.
-			Select("id").
-			From("tasks").
+			Select("label_tasks.label_id").
+			From("label_tasks").
+			InnerJoin("tasks", "tasks.id = label_tasks.task_id").
 			Where(builder.And(accessibleProjects, taskNotDeletedCond("tasks"))),
 	)
 
-	accessBranches := []builder.Cond{labelAttachedToAccessibleTask}
-	if !isLinkShare {
+	accessBranches := []builder.Cond{usedOnAccessibleTask}
+	if _, isLinkShare := a.(*LinkSharing); !isLinkShare {
 		caller, err := user.GetFromAuth(a)
 		if err != nil {
-			return false, 0, err
+			return nil, err
 		}
 		accessBranches = append(accessBranches, user.SameBotIdentityCond(caller, "labels.created_by_id"))
 	}
 
-	cond := builder.And(
-		builder.Eq{"labels.id": l.ID},
-		builder.Or(accessBranches...),
-	)
+	return builder.Or(accessBranches...), nil
+}
+
+// hasAccessToLabel reports whether the caller can read a label and, if so,
+// the caller's maximum permission on it.
+func (l *Label) hasAccessToLabel(s *xorm.Session, a web.Auth) (has bool, maxPermission int, err error) {
+
+	visible, err := labelVisibleCond(s, a)
+	if err != nil {
+		return false, 0, err
+	}
 
 	has, err = s.Table("labels").
-		Join("LEFT", "label_tasks", "label_tasks.label_id = labels.id").
-		Where(cond).
+		Where(builder.And(builder.Eq{"labels.id": l.ID}, visible)).
 		Exist(&Label{})
 	if err != nil || !has {
 		return

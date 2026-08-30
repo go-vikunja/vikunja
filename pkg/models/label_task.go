@@ -228,17 +228,11 @@ func GetLabelsByTaskIDs(s *xorm.Session, taskIDs []int64, search []string, page 
 	return labels, len(labels), totalEntries, err
 }
 
-// GetLabelsForUser returns every label the caller can see, mirroring the access
-// branches of Label.hasAccessToLabel.
-//
-// Uses an uncorrelated subquery for the task branch instead of the LEFT JOIN
-// + GROUP BY over label_tasks the per-task query needs.
+// GetLabelsForUser returns every label the caller can see.
 func GetLabelsForUser(s *xorm.Session, a web.Auth, search []string, page, perPage int) (ls []*LabelWithTaskID, resultCount int, totalEntries int64, err error) {
 
-	var caller *user.User
-	_, isLinkShareAuth := a.(*LinkSharing)
-	if !isLinkShareAuth {
-		caller, err = user.GetFromAuth(a)
+	if _, isLinkShareAuth := a.(*LinkSharing); !isLinkShareAuth {
+		caller, err := user.GetFromAuth(a)
 		if err != nil {
 			return nil, 0, 0, err
 		}
@@ -247,25 +241,12 @@ func GetLabelsForUser(s *xorm.Session, a web.Auth, search []string, page, perPag
 		}
 	}
 
-	accessibleProjects, err := accessibleProjectIDsCond(s, a, "tasks.project_id")
+	visible, err := labelVisibleCond(s, a)
 	if err != nil {
 		return nil, 0, 0, err
 	}
 
-	usedOnAccessibleTask := builder.In("labels.id",
-		builder.
-			Select("label_tasks.label_id").
-			From("label_tasks").
-			InnerJoin("tasks", "tasks.id = label_tasks.task_id").
-			Where(builder.And(accessibleProjects, taskNotDeletedCond("tasks"))),
-	)
-
-	accessBranches := []builder.Cond{usedOnAccessibleTask}
-	if !isLinkShareAuth {
-		accessBranches = append(accessBranches, user.SameBotIdentityCond(caller, "labels.created_by_id"))
-	}
-
-	cond := builder.And(builder.Or(accessBranches...), labelSearchCond(search))
+	cond := builder.And(visible, labelSearchCond(search))
 
 	limit, start := getLimitFromPageIndex(page, perPage)
 
