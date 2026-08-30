@@ -942,3 +942,81 @@ func TestLabel_Delete(t *testing.T) {
 		})
 	}
 }
+
+// The list and the single-label read must agree; they drifted apart before,
+// letting GET /labels/{id} return a label the list hid.
+func TestLabel_ReadAllMatchesCanRead(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	share, err := GetLinkShareByID(s, 1)
+	require.NoError(t, err)
+
+	var allLabels []*Label
+	require.NoError(t, s.Find(&allLabels))
+	require.NotEmpty(t, allLabels)
+
+	auths := map[string]web.Auth{
+		"user 1":       &user.User{ID: 1},
+		"user 13":      &user.User{ID: 13},
+		"user 21":      &user.User{ID: 21},
+		"link share 1": share,
+	}
+
+	// Pinned independently of labelVisibleCond, so a widening of the shared
+	// cond (e.g. dropping taskNotDeletedCond or the bot-identity branch)
+	// can't slip through just because both sides of the parity check moved
+	// together. Cross-checked against TestLabel_ReadAll and
+	// TestLabel_ReadAll_LinkShare, and against labels.yml/label_tasks.yml/
+	// tasks.yml/link_shares.yml.
+	want := map[string][]int64{
+		// Owner (1, 2, 7): unattached, readable via the creator branch.
+		// Task access (4, 5, 10): attached to tasks in projects 1/21/16 that
+		// user 1 owns or reaches via the team share on parent project 33.
+		// Owner despite an inaccessible attachment (8): only label_tasks row
+		// points at task 34 in project 20, which user 1 can't reach.
+		// Excluded: 3 (other user, unattached), 6/9/11/12 (other
+		// users'/bots' identities), 13 (only attached to soft-deleted task 51).
+		"user 1": {1, 2, 4, 5, 7, 8, 10},
+		// Owner (6, 13): user 13's own labels, readable regardless of attachment.
+		// Task access (8): attached to task 34 in project 20, which user 13 owns.
+		"user 13": {6, 8, 13},
+		// Bot-identity branch only: 9 (bot 23), 11 (self), 12 (bot 25) all
+		// resolve to owner 21 via SameBotIdentityCond. User 21's own project
+		// (44) has no labeled tasks, so nothing arrives via task access.
+		"user 21": {9, 11, 12},
+		// Link share 1 grants read on project 1. Only tasks 1 and 2 there
+		// carry a label (4); task 51 is soft-deleted and excluded, and link
+		// shares don't get the bot-identity branch.
+		"link share 1": {4},
+	}
+
+	for name, a := range auths {
+		t.Run(name, func(t *testing.T) {
+			l := &Label{}
+			gotLs, _, _, err := l.ReadAll(s, a, "", 0, 0)
+			require.NoError(t, err)
+			labels, ok := gotLs.([]*LabelWithTaskID)
+			require.True(t, ok)
+
+			listed := make([]int64, 0, len(labels))
+			for _, lb := range labels {
+				listed = append(listed, lb.ID)
+			}
+
+			readable := []int64{}
+			for _, lb := range allLabels {
+				single := &Label{ID: lb.ID}
+				can, _, err := single.CanRead(s, a)
+				require.NoError(t, err)
+				if can {
+					readable = append(readable, lb.ID)
+				}
+			}
+
+			assert.ElementsMatch(t, readable, listed, "ReadAll returned %v but CanRead allows %v", listed, readable)
+			assert.ElementsMatch(t, want[name], listed, "ReadAll for %s = %v, want %v", name, listed, want[name])
+		})
+	}
+}
