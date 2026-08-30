@@ -339,13 +339,24 @@ func TestResolveUserDataDir(t *testing.T) {
 	}
 }
 
-// setupDatabasePathTest points the database config at a not-yet-existing user
-// data directory and resets the config afterwards.
-func setupDatabasePathTest(t *testing.T, configuredPath string) (dataHome string) {
+func setUserDataDirForTest(t *testing.T, basePath string) string {
+	switch runtime.GOOS {
+	case "windows":
+		t.Setenv("LOCALAPPDATA", basePath)
+		return filepath.Join(basePath, "Vikunja")
+	case "darwin":
+		t.Setenv("HOME", basePath)
+		return filepath.Join(basePath, "Library", "Application Support", "Vikunja")
+	default:
+		t.Setenv("XDG_DATA_HOME", basePath)
+		return filepath.Join(basePath, "vikunja")
+	}
+}
+
+func setupDatabasePathTest(t *testing.T, configuredPath string) (dataDir string) {
 	t.Cleanup(config.ResetForTests)
 
-	dataHome = filepath.Join(t.TempDir(), "xdg")
-	t.Setenv("XDG_DATA_HOME", dataHome)
+	dataDir = setUserDataDirForTest(t, filepath.Join(t.TempDir(), "data"))
 
 	execPath, err := os.Executable()
 	require.NoError(t, err)
@@ -354,28 +365,28 @@ func setupDatabasePathTest(t *testing.T, configuredPath string) (dataHome string
 	// Matching the executable dir is what makes resolution use the data dir.
 	config.ServiceRootpath.Set(filepath.Dir(execPath))
 
-	return dataHome
+	return dataDir
 }
 
 func TestResolvedDatabasePath_DoesNotCreateDataDir(t *testing.T) {
-	dataHome := setupDatabasePathTest(t, "vikunja.db")
+	dataDir := setupDatabasePathTest(t, "vikunja.db")
 
 	path, err := ResolvedDatabasePath()
 	require.NoError(t, err)
 	assert.Contains(t, path, "vikunja.db")
 
-	_, err = os.Stat(dataHome)
+	_, err = os.Stat(dataDir)
 	require.ErrorIs(t, err, os.ErrNotExist, "ResolvedDatabasePath must not create the data directory")
 }
 
 func TestResolvedDatabasePath_MatchesEnsureDatabasePath(t *testing.T) {
-	dataHome := setupDatabasePathTest(t, "vikunja.db")
+	dataDir := setupDatabasePathTest(t, "vikunja.db")
 
 	// Order matters: until the data directory exists, resolution reports the rootpath
 	// fallback instead - see TestResolvedDatabasePath_FallsBackWhileDataDirMissing.
 	ensured, err := ensureDatabasePath()
 	require.NoError(t, err)
-	assert.Equal(t, filepath.Join(dataHome, "vikunja", "vikunja.db"), ensured)
+	assert.Equal(t, filepath.Join(dataDir, "vikunja.db"), ensured)
 
 	info, err := os.Stat(filepath.Dir(ensured))
 	require.NoError(t, err)
@@ -425,12 +436,11 @@ func TestEnsureDatabasePath_DoesNotCreateConfiguredDirectories(t *testing.T) {
 }
 
 func TestEnsureDatabasePath_CreatesUserDataDir(t *testing.T) {
-	dataHome := setupDatabasePathTest(t, "vikunja.db")
+	dataDir := setupDatabasePathTest(t, "vikunja.db")
 
 	path, err := ensureDatabasePath()
 	require.NoError(t, err)
 
-	dataDir := filepath.Join(dataHome, "vikunja")
 	assert.Equal(t, filepath.Join(dataDir, "vikunja.db"), path)
 
 	info, err := os.Stat(dataDir)
@@ -446,7 +456,7 @@ func TestEnsureDatabasePath_FallsBackWhenDataDirIsNotCreatable(t *testing.T) {
 	setupDatabasePathTest(t, "vikunja.db")
 
 	readOnly := t.TempDir()
-	t.Setenv("XDG_DATA_HOME", filepath.Join(readOnly, "xdg"))
+	setUserDataDirForTest(t, filepath.Join(readOnly, "data"))
 	require.NoError(t, os.Chmod(readOnly, 0o500))
 	t.Cleanup(func() { _ = os.Chmod(readOnly, 0o700) })
 
