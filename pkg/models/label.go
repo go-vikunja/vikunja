@@ -150,13 +150,12 @@ func (l *Label) Delete(s *xorm.Session, _ web.Auth) (err error) {
 // @Router /labels [get]
 func (l *Label) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (ls interface{}, resultCount int, numberOfEntries int64, err error) {
 	return GetLabelsByTaskIDs(s, &LabelByTaskIDsOptions{
-		Search:              []string{search},
-		User:                a,
-		Page:                page,
-		PerPage:             perPage,
-		GetUnusedLabels:     true,
-		GroupByLabelIDsOnly: true,
-		GetForUser:          true,
+		Search:          []string{search},
+		User:            a,
+		Page:            page,
+		PerPage:         perPage,
+		GetUnusedLabels: true,
+		GetForUser:      true,
 	})
 }
 
