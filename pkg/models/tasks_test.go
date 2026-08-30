@@ -1423,6 +1423,22 @@ func TestAddRepeatIntervalToTime(t *testing.T) {
 	}
 }
 
+// TestAddRepeatIntervalToTime_ExactMultipleLandsStrictlyAfterNow is a
+// dedicated repro for the boundary case where diff is an exact whole
+// multiple of duration: a naive interval count (diff/duration, no +1)
+// lands the result exactly on now instead of one interval past it.
+func TestAddRepeatIntervalToTime_ExactMultipleLandsStrictlyAfterNow(t *testing.T) {
+	now := time.Date(2026, 4, 9, 12, 0, 0, 0, time.UTC)
+	day := 24 * time.Hour
+
+	// Due date exactly one week ago, daily repeat: gap is exactly 7 whole
+	// intervals, the case the naive count gets wrong.
+	got := addRepeatIntervalToTime(now, now.Add(-7*day), day)
+
+	assert.True(t, got.After(now), "new due date %v must be strictly after now (%v), not equal to it", got, now)
+	assert.Equal(t, now.Add(day), got)
+}
+
 func TestTask_ReadOne(t *testing.T) {
 	u := &user.User{ID: 1}
 
