@@ -579,6 +579,12 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 	}
 
 	if d.hasFavoritesProject {
+		// Favorites outlive project access, so this arm needs its own access check.
+		favoritesAccessible, err := accessibleProjectIDsCond(d.s, d.a, "tasks.project_id")
+		if err != nil {
+			return nil, 0, err
+		}
+
 		addFavoritesCond := true
 		if wantsRelevanceRanking && len(opts.projectIDs) > 0 {
 			// pdb.score also rejects the favorites arm (`OR tasks.id IN (<subquery>)`).
@@ -595,6 +601,7 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 					builder.Eq{"favorites.kind": FavoriteKindTask},
 					builder.NotIn("tasks.project_id", opts.projectIDs),
 					taskNotDeletedCond("tasks"),
+					favoritesAccessible,
 				)).
 				Exist()
 			if err != nil {
@@ -614,7 +621,10 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 						builder.Eq{"kind": FavoriteKindTask},
 					))
 
-			favoritesCond = builder.In("tasks.id", favCond)
+			favoritesCond = builder.And(
+				builder.In("tasks.id", favCond),
+				favoritesAccessible,
+			)
 		}
 	}
 
