@@ -965,9 +965,7 @@ func removeStaleRelations(s *xorm.Session, a web.Auth, task *models.Task, newRel
 					OtherTaskID:  relatedTask.ID,
 					RelationKind: relationKind,
 				}
-				// rel.Delete itself does not authorize; a caller who cannot
-				// read the other task must not delete the relation. Skip instead
-				// of failing so one forbidden relation cannot abort the sync.
+				// Skip forbidden relations without aborting the sync.
 				canDelete, canDeleteErr := rel.CanDelete(s, a)
 				if canDeleteErr != nil {
 					return canDeleteErr
@@ -994,6 +992,24 @@ func persistRelations(s *xorm.Session, a web.Auth, task *models.Task, newRelatio
 		return err
 	}
 
+	// Inaccessible and missing UIDs must remain indistinguishable.
+	allUIDs := make([]string, 0)
+	for _, relatedTasksInVTODO := range newRelations {
+		for _, relatedTaskInVTODO := range relatedTasksInVTODO {
+			allUIDs = append(allUIDs, relatedTaskInVTODO.UID)
+		}
+	}
+	accessibleTasksByUID := make(map[string]*models.Task)
+	if len(allUIDs) > 0 {
+		accessibleTasks, err := models.GetTasksByUIDs(s, allUIDs, a)
+		if err != nil {
+			return err
+		}
+		for _, accessibleTask := range accessibleTasks {
+			accessibleTasksByUID[accessibleTask.UID] = accessibleTask
+		}
+	}
+
 	// Ensure the current relations exist:
 	for relationType, relatedTasksInVTODO := range newRelations {
 		// Persist each relation independently:
@@ -1003,21 +1019,20 @@ func persistRelations(s *xorm.Session, a web.Auth, task *models.Task, newRelatio
 			createDummy := false
 
 			// Get the task from the DB:
-			relatedTaskInDB, err := models.GetTaskSimpleByUUID(s, relatedTaskInVTODO.UID)
-			if err != nil {
+			if accessible, has := accessibleTasksByUID[relatedTaskInVTODO.UID]; has {
+				relatedTask = accessible
+			} else {
 				relatedTask = relatedTaskInVTODO
 				createDummy = true
-			} else {
-				relatedTask = relatedTaskInDB
 			}
 
-			// If the related task doesn't exist, create a dummy one now in the same list.
-			// It'll probably be populated right after in a following request.
-			// In the worst case, this was an error by the client and we are left with
-			// this dummy task to clean up.
+			// Placeholders stay in the caller's project so CanCreate applies.
 			if createDummy {
-				relatedTask.ProjectID = task.ProjectID
-				relatedTask.Title = "DUMMY-UID-" + relatedTask.UID
+				relatedTask = &models.Task{
+					ProjectID: task.ProjectID,
+					Title:     "DUMMY-UID-" + relatedTaskInVTODO.UID,
+					UID:       relatedTaskInVTODO.UID,
+				}
 				err = relatedTask.Create(s, a)
 				if err != nil {
 					return err
@@ -1030,13 +1045,20 @@ func persistRelations(s *xorm.Session, a web.Auth, task *models.Task, newRelatio
 				OtherTaskID:  relatedTask.ID,
 				RelationKind: relationType,
 			}
-			err = rel.Create(s, a)
-			if err != nil && !models.IsErrRelationAlreadyExists(err) {
-				return err
+			canCreate, canCreateErr := rel.CanCreate(s, a)
+			if canCreateErr != nil {
+				return canCreateErr
+			}
+			if !canCreate {
+				continue
+			}
+			createErr := rel.Create(s, a)
+			if createErr != nil && !models.IsErrRelationAlreadyExists(createErr) {
+				return createErr
 			}
 		}
 	}
-	return err
+	return nil
 }
 
 // VikunjaProjectResourceAdapter holds the actual resource
