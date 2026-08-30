@@ -85,6 +85,18 @@ func TestTeamProject_ReadAll(t *testing.T) {
 		assert.Len(t, ts, 1)
 		assert.Equal(t, int64(9), ts[0].ID)
 	})
+	t.Run("link share principals are rejected even with project access", func(t *testing.T) {
+		tl := TeamProject{
+			ProjectID: 1,
+		}
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		linkShare := &LinkSharing{ID: 1, Hash: "test", ProjectID: 1, Permission: PermissionRead}
+		_, _, _, err := tl.ReadAll(s, linkShare, "", 1, 50)
+		require.Error(t, err)
+		assert.True(t, user.IsErrMustNotBeLinkShare(err))
+	})
 }
 
 func TestTeamProject_Create(t *testing.T) {

@@ -21,6 +21,7 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
 	"xorm.io/xorm"
@@ -179,6 +180,11 @@ func (tl *TeamProject) Delete(s *xorm.Session, _ web.Auth) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/teams [get]
 func (tl *TeamProject) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
+	// Link shares must not see the teams of a project
+	if _, is := a.(*LinkSharing); is {
+		return nil, 0, 0, &user.ErrMustNotBeLinkShare{}
+	}
+
 	// Check if the user can read the project
 	l := &Project{ID: tl.ProjectID}
 	canRead, _, err := l.CanRead(s, a)
