@@ -129,11 +129,28 @@ func TestHumaAdminUsersList(t *testing.T) {
 	})
 
 	t.Run("q filters by username", func(t *testing.T) {
-		res := adminReq(t, e, http.MethodGet, "/api/v2/admin/users?q=user2", admin, "")
+		res := adminReq(t, e, http.MethodGet, "/api/v2/admin/users?q=user2&page=1&per_page=1", admin, "")
 		require.Equal(t, http.StatusOK, res.Code, res.Body.String())
-		body := res.Body.String()
-		assert.Contains(t, body, `"username":"user2"`)
-		assert.NotContains(t, body, `"username":"user15"`)
+
+		var envelope struct {
+			Items []struct {
+				Username string `json:"username"`
+			} `json:"items"`
+			Total      int64 `json:"total"`
+			Page       int   `json:"page"`
+			PerPage    int   `json:"per_page"`
+			TotalPages int64 `json:"total_pages"`
+		}
+		require.NoError(t, json.Unmarshal(res.Body.Bytes(), &envelope))
+		usernames := make([]string, 0, len(envelope.Items))
+		for _, item := range envelope.Items {
+			usernames = append(usernames, item.Username)
+		}
+		assert.Equal(t, []string{"user2"}, usernames)
+		assert.Equal(t, int64(2), envelope.Total)
+		assert.Equal(t, 1, envelope.Page)
+		assert.Equal(t, 1, envelope.PerPage)
+		assert.Equal(t, int64(2), envelope.TotalPages)
 	})
 
 	t.Run("non-admin caller gets 404", func(t *testing.T) {

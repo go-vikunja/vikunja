@@ -197,20 +197,14 @@ func DeleteUserAsAdmin(s *xorm.Session, doer *user.User, id int64, mode string) 
 func ListUsersAsAdmin(s *xorm.Session, doer *user.User, search string, page, perPage int) ([]*user.User, int64, error) {
 	events.DispatchOnCommit(s, &AdminUsersListedEvent{Doer: doer})
 
-	finder := s.Limit(perPage, (page-1)*perPage).OrderBy("id ASC")
-	counter := s
+	query := s.Limit(perPage, (page-1)*perPage).OrderBy("id ASC")
 	if search != "" {
 		q := "%" + search + "%"
-		finder = finder.Where("username LIKE ? OR email LIKE ?", q, q)
-		counter = s.Where("username LIKE ? OR email LIKE ?", q, q)
+		query = query.Where("username LIKE ? OR email LIKE ?", q, q)
 	}
 
 	var users []*user.User
-	if err := finder.Find(&users); err != nil {
-		return nil, 0, err
-	}
-
-	total, err := counter.Count(&user.User{})
+	total, err := query.FindAndCount(&users)
 	if err != nil {
 		return nil, 0, err
 	}
