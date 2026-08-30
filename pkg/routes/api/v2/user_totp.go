@@ -173,7 +173,7 @@ func totpGet(ctx context.Context, _ *struct{}) (*totpStatusBody, error) {
 	if err := s.Commit(); err != nil {
 		return nil, translateDomainError(err)
 	}
-	return &totpStatusBody{Body: t}, nil
+	return &totpStatusBody{Body: t.APICopy()}, nil
 }
 
 func totpEnroll(ctx context.Context, _ *struct{}) (*totpStatusBody, error) {

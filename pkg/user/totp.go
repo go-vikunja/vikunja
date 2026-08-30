@@ -51,6 +51,14 @@ func (t *TOTP) TableName() string {
 	return "totp"
 }
 
+// APICopy hides enabled secrets while GetTOTPForUser retains them for login validation.
+func (t *TOTP) APICopy() *TOTP {
+	if !t.Enabled {
+		return t
+	}
+	return &TOTP{UserID: t.UserID, Enabled: true}
+}
+
 // TOTPPasscode is used to validate a users totp passcode
 type TOTPPasscode struct {
 	User     *User  `json:"-"`
@@ -166,6 +174,11 @@ func GetTOTPQrCodeForUser(s *xorm.Session, user *User) (qrcode image.Image, err 
 	t, err := GetTOTPForUser(s, user)
 	if err != nil {
 		return
+	}
+
+	// The QR code carries the provisioning secret.
+	if t.Enabled {
+		return nil, ErrTOTPQrCodeNotAvailable{}
 	}
 
 	key, err := otp.NewKeyFromURL(t.URL)
