@@ -18,6 +18,7 @@ package models
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"code.vikunja.io/api/pkg/db"
@@ -399,7 +400,15 @@ func (d *dbTaskSearcher) buildSubtaskRootCondition(opts *taskSearchOptions) (bui
 				builder.Eq{"user_id": d.a.GetID()},
 				builder.Eq{"kind": FavoriteKindTask},
 			))
-		scopes = append(scopes, builder.In("parent_tasks.id", favCond))
+		// Inaccessible favorites must not hide readable children from the roots.
+		accessible, err := accessibleProjectIDsCond(d.s, d.a, "parent_tasks.project_id")
+		if err != nil {
+			return nil, err
+		}
+		scopes = append(scopes, builder.And(
+			builder.In("parent_tasks.id", favCond),
+			accessible,
+		))
 	}
 
 	predicates := []builder.Cond{
@@ -433,6 +442,51 @@ func (d *dbTaskSearcher) buildSubtaskRootCondition(opts *taskSearchOptions) (bui
 		Where(builder.And(predicates...))
 
 	return builder.NotExists(sub), nil
+}
+
+// Inaccessible tasks cannot bridge the traversal; seen terminates cycles.
+func (d *dbTaskSearcher) fetchAccessibleSubtasks(rootIDs []int64) ([]*Task, error) {
+	accessible, err := accessibleProjectIDsCond(d.s, d.a, "`tasks`.`project_id`")
+	if err != nil {
+		return nil, err
+	}
+
+	seen := make(map[int64]bool, len(rootIDs))
+	for _, id := range rootIDs {
+		seen[id] = true
+	}
+
+	frontier := rootIDs
+	subtasks := []*Task{}
+	for len(frontier) > 0 {
+		var nextFrontier []int64
+		for chunk := range slices.Chunk(frontier, 1000) {
+			childIDs := builder.
+				Select("other_task_id").
+				From("task_relations").
+				Where(builder.And(
+					builder.In("task_id", chunk),
+					builder.Eq{"relation_kind": RelationKindSubtask},
+				))
+			found := []*Task{}
+			if err := d.s.Where(builder.In("tasks.id", childIDs)).
+				And(accessible).
+				And(taskNotDeletedCond("tasks")).
+				Find(&found); err != nil {
+				return nil, err
+			}
+			for _, t := range found {
+				if seen[t.ID] {
+					continue
+				}
+				seen[t.ID] = true
+				subtasks = append(subtasks, t)
+				nextFrontier = append(nextFrontier, t.ID)
+			}
+		}
+		frontier = nextFrontier
+	}
+	return subtasks, nil
 }
 
 // buildParentSearchCondition mirrors the main query's search onto the parent_tasks
@@ -653,46 +707,12 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 
 	// fetch subtasks when expanding
 	if expandSubtasks && len(tasks) > 0 {
-		subtasks := []*Task{}
-
-		taskIDs := []any{}
+		taskIDs := make([]int64, 0, len(tasks))
 		for _, task := range tasks {
 			taskIDs = append(taskIDs, task.ID)
 		}
 
-		var inPlaceholders = strings.Repeat("?,", len(taskIDs))
-		inPlaceholders = inPlaceholders[:len(inPlaceholders)-1]
-
-		var notIn = strings.Repeat("?,", len(taskIDs))
-		notIn = notIn[:len(notIn)-1]
-
-		allArgs := make([]any, 0, len(taskIDs)*2)
-		allArgs = append(allArgs, taskIDs...)
-		allArgs = append(allArgs, taskIDs...)
-
-		err = d.s.SQL(`SELECT * FROM tasks WHERE id IN (WITH RECURSIVE sub_tasks AS (
-		SELECT task_id,
-			other_task_id,
-			relation_kind,
-			created_by_id,
-			created
-		FROM task_relations
-		WHERE task_id IN (`+inPlaceholders+`)
-		AND relation_kind = '`+string(RelationKindSubtask)+`'
-
-		UNION ALL
-
-		SELECT tr.task_id,
-			tr.other_task_id,
-			tr.relation_kind,
-			tr.created_by_id,
-			tr.created
-		FROM task_relations tr
-		INNER JOIN
-		sub_tasks st ON tr.task_id = st.other_task_id
-		WHERE tr.relation_kind = '`+string(RelationKindSubtask)+`')
-		SELECT other_task_id
-		FROM sub_tasks) AND id NOT IN (`+notIn+`) AND deleted_at IS NULL`, allArgs...).Find(&subtasks)
+		subtasks, err := d.fetchAccessibleSubtasks(taskIDs)
 		if err != nil {
 			return nil, totalCount, err
 		}
