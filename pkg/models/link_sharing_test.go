@@ -188,6 +188,36 @@ func TestLinkSharing_ReadOne(t *testing.T) {
 	})
 }
 
+// Guards by-ID hash disclosure (GHSA-qfwc-vx6f-3g6g).
+func TestLinkSharing_CanReadAdminOnly(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	u1 := &user.User{ID: 1}
+
+	readOnly := &LinkSharing{ID: 99, ProjectID: 9}
+	can, _, err := readOnly.CanRead(s, u1)
+	require.NoError(t, err)
+	require.False(t, can, "a read-only member must not read link shares (the hash would leak)")
+
+	write := &LinkSharing{ID: 99, ProjectID: 10}
+	can, _, err = write.CanRead(s, u1)
+	require.NoError(t, err)
+	require.False(t, can, "a write member must not read link shares (the hash would leak)")
+
+	admin := &LinkSharing{ID: 99, ProjectID: 11}
+	can, _, err = admin.CanRead(s, u1)
+	require.NoError(t, err)
+	require.True(t, can, "a project admin may read link shares")
+
+	// Public authentication resolves shares by hash without a ProjectID.
+	byHash := &LinkSharing{ID: 1, Hash: "test"}
+	can, _, err = byHash.CanRead(s, u1)
+	require.NoError(t, err)
+	require.True(t, can, "resolving a share purely by its public hash must keep working")
+}
+
 // A link share id must never be mistaken for a users.id at a permission check.
 // See GHSA-32r8-5843-4qw2.
 func TestLinkSharing_GetID(t *testing.T) {

@@ -134,6 +134,22 @@ func TestLinkSharing(t *testing.T) {
 				assert.Contains(t, req.Body.String(), `"hash":`)
 			})
 		})
+		t.Run("ReadOne requires project admin", func(t *testing.T) {
+			// A by-ID read discloses the access-bearing hash (GHSA-qfwc-vx6f-3g6g).
+			insertTestShare(t, 7, 9)
+			_, err := testHandler.testReadOneWithUser(nil, map[string]string{"project": "9", "share": "7"})
+			require.Error(t, err)
+			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
+
+			insertTestShare(t, 8, 10)
+			_, err = testHandler.testReadOneWithUser(nil, map[string]string{"project": "10", "share": "8"})
+			require.Error(t, err)
+			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
+
+			rec, err := testHandler.testReadOneWithUser(nil, map[string]string{"project": "1", "share": "1"})
+			require.NoError(t, err)
+			assert.Contains(t, rec.Body.String(), `"hash":"test"`)
+		})
 	})
 
 	t.Run("Projects", func(t *testing.T) {
@@ -326,7 +342,6 @@ func TestLinkSharing(t *testing.T) {
 					t: t,
 				}
 				t.Run("ReadAll", func(t *testing.T) {
-					// Link shares must not see the user directory of a project, no matter the share permission.
 					t.Run("Shared readonly", func(t *testing.T) {
 						_, err := testHandlerProjectUserReadOnly.testReadAllWithLinkShare(nil, map[string]string{"project": "1"})
 						require.Error(t, err)
@@ -419,7 +434,6 @@ func TestLinkSharing(t *testing.T) {
 					t: t,
 				}
 				t.Run("ReadAll", func(t *testing.T) {
-					// Link shares must not see the teams of a project, no matter the share permission.
 					t.Run("Shared readonly", func(t *testing.T) {
 						_, err := testHandlerProjectTeamReadOnly.testReadAllWithLinkShare(nil, map[string]string{"project": "1"})
 						require.Error(t, err)
