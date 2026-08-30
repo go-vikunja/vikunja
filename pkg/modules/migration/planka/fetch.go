@@ -17,6 +17,7 @@
 package planka
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"slices"
@@ -36,7 +37,6 @@ func fetchAll(c *client) (*plankaData, error) {
 	if err := c.get("/api/projects", nil, projects); err != nil {
 		return nil, err
 	}
-
 	data := &plankaData{
 		CurrentUserID:         c.currentUserID,
 		Users:                 map[string]plankaUser{},
@@ -86,7 +86,6 @@ func fetchBoard(c *client, boardID string) (*plankaBoardData, error) {
 	if err := c.get("/api/boards/"+url.PathEscape(boardID), nil, resp); err != nil {
 		return nil, err
 	}
-
 	// Planka v1 lists have no type; v2 always sets one.
 	for _, l := range resp.Included.Lists {
 		if l.Type == "" {
@@ -106,6 +105,10 @@ func fetchBoard(c *client, boardID string) (*plankaBoardData, error) {
 			continue
 		}
 		if err := fetchArchivedCards(c, l.ID, bd); err != nil {
+			var budgetErr *ErrImportBudgetExceeded
+			if errors.As(err, &budgetErr) {
+				return nil, err
+			}
 			log.Errorf("[Planka Migration] Could not fetch all cards of archive list %s on board %s, keeping the ones already fetched: %s", l.ID, boardID, err)
 		}
 	}
@@ -116,6 +119,10 @@ func fetchBoard(c *client, boardID string) (*plankaBoardData, error) {
 		}
 		comments, users, err := fetchComments(c, card.ID)
 		if err != nil {
+			var budgetErr *ErrImportBudgetExceeded
+			if errors.As(err, &budgetErr) {
+				return nil, err
+			}
 			log.Errorf("[Planka Migration] Could not fetch all comments of card %s, keeping the %d already fetched: %s", card.ID, len(comments), err)
 		}
 		bd.Comments[card.ID] = comments
