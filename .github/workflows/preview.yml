@@ -2,17 +2,20 @@ name: Preview
 
 on:
   # pull_request_target gives write access to GHCR even for PRs from forks.
-  # This is safe because:
-  # 1. We explicitly checkout the PR's head commit (no base branch code execution)
-  # 2. We ONLY build a Docker image (isolated container, no workflow scripts from PR)
-  # 3. The github-script step only uses safe PR metadata (number, SHA) — no PR-supplied
-  #    text (title, body, commit messages) is interpolated, so there is no injection risk
-  # 4. Build happens in isolated Docker container with well-defined Dockerfile
+  # The workflow definition always comes from the base ref, so a fork cannot change
+  # these steps. What a fork *does* control is the Dockerfile and everything it RUNs,
+  # which executes on the runner inside buildkit. It never sees GITHUB_TOKEN (not passed
+  # as a build-arg), but it does get network egress from a job holding packages: write.
+  # The `preview` environment below gates that behind maintainer approval.
   pull_request_target:
 
 jobs:
   docker:
     runs-on: ubuntu-latest
+    # Fork pull_request_target runs skip the usual outside-contributor approval prompt.
+    # `preview-fork` carries required reviewers to put that gate back; `preview-trusted`
+    # has no protection rules so same-repo PRs still build without a click.
+    environment: ${{ github.event.pull_request.head.repo.full_name == github.repository && 'preview-trusted' || 'preview-fork' }}
     permissions:
       packages: write
       contents: read
@@ -27,11 +30,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          # For pull_request_target, we need to explicitly fetch the PR ref from forks
-          # since the PR's commit SHA is not reachable in the base repository.
-          # This is safe because no PR code is executed in workflow context.
-          # Only Docker build uses the PR code (isolated in container).
+          # The PR's commit SHA is not reachable in the base repository, so fetch the
+          # fork's ref explicitly. checkout >= v7 refuses this under pull_request_target
+          # unless opted in; see the threat model at the top of this file.
           ref: refs/pull/${{ github.event.pull_request.number }}/head
+          allow-unsafe-pr-checkout: true
       - name: Git describe
         id: ghd
         uses: proudust/gh-describe@80412be8ce0e77d8afba6b340e34790bc772aa45 # v2.2.0
