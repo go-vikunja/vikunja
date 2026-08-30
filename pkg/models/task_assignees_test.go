@@ -78,3 +78,35 @@ func TestDoerFromAuth_DisabledUser(t *testing.T) {
 	require.NotNil(t, doer)
 	require.Equal(t, int64(17), doer.ID)
 }
+
+// Guards assignee email disclosure (GHSA-8wvg-r2j4-3737).
+func TestTaskAssigneeReadAll_BlanksEmails(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	doer := &user.User{ID: 1}
+	ta := &TaskAssginee{TaskID: 30}
+
+	result, _, total, err := ta.ReadAll(s, doer, "", 1, -1)
+	require.NoError(t, err)
+	require.EqualValues(t, 2, total)
+
+	assignees, ok := result.([]*user.User)
+	require.True(t, ok, "ReadAll must return a []*user.User, got %T", result)
+	usernames := []string{}
+	for _, a := range assignees {
+		require.Empty(t, a.Email, "assignee email must be blanked")
+		usernames = append(usernames, a.Username)
+	}
+	require.ElementsMatch(t, []string{"user1", "user2"}, usernames)
+
+	result, _, total, err = ta.ReadAll(s, doer, "user2", 1, -1)
+	require.NoError(t, err)
+	require.EqualValues(t, 1, total)
+	assignees, ok = result.([]*user.User)
+	require.True(t, ok)
+	require.Len(t, assignees, 1)
+	require.Equal(t, "user2", assignees[0].Username)
+	require.Empty(t, assignees[0].Email)
+}

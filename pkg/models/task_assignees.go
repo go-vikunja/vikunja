@@ -311,9 +311,11 @@ func (la *TaskAssginee) ReadAll(s *xorm.Session, a web.Auth, search string, page
 		return nil, 0, 0, ErrGenericForbidden{}
 	}
 	limit, start := getLimitFromPageIndex(page, perPage)
-	var taskAssignees []*user.User
+
+	// Resolve IDs through GetUsersByIDs so email addresses stay blanked.
+	var assigneeIDs []int64
 	query := s.Table("task_assignees").
-		Select("users.*").
+		Select("task_assignees.user_id").
 		Join("INNER", "users", "task_assignees.user_id = users.id").
 		Where(builder.And(
 			builder.Eq{"task_id": la.TaskID},
@@ -322,9 +324,20 @@ func (la *TaskAssginee) ReadAll(s *xorm.Session, a web.Auth, search string, page
 	if limit > 0 {
 		query = query.Limit(limit, start)
 	}
-	err = query.Find(&taskAssignees)
+	err = query.Find(&assigneeIDs)
 	if err != nil {
 		return nil, 0, 0, err
+	}
+
+	usersByIDs, err := user.GetUsersByIDs(s, assigneeIDs)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+	var taskAssignees []*user.User
+	for _, id := range assigneeIDs {
+		if u, ok := usersByIDs[id]; ok {
+			taskAssignees = append(taskAssignees, u)
+		}
 	}
 
 	numberOfTotalItems, err = s.Table("task_assignees").
