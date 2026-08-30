@@ -27,5 +27,5 @@ export const calculateItemPosition = (
 	}
 
 	// If we have both a task before and after it, we actually calculate the position
-	return positionBefore + (positionAfter - positionBefore) / 2
+	return positionAfter + (positionAfter - positionBefore) / 2
 }
