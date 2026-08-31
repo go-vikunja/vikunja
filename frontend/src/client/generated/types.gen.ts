@@ -7108,6 +7108,15 @@ export type TasksReadByIndexData = {
     url: '/projects/{project}/tasks/by-index/{index}';
 };
 
+export type TasksReadByIndexErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type TasksReadByIndexError = TasksReadByIndexErrors[keyof TasksReadByIndexErrors];
+
 export type TasksReadByIndexResponses = {
     /**
      * OK

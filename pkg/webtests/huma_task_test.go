@@ -367,6 +367,16 @@ func TestHumaTask_ReadByIndexOpenAPI(t *testing.T) {
 	require.True(t, ok)
 	assert.Contains(t, headers, "Location")
 	assert.Contains(t, headers, "Cache-Control")
+
+	defaultError, ok := responses["default"].(map[string]any)
+	require.True(t, ok)
+	content, ok := defaultError["content"].(map[string]any)
+	require.True(t, ok)
+	problem, ok := content["application/problem+json"].(map[string]any)
+	require.True(t, ok)
+	schema, ok := problem["schema"].(map[string]any)
+	require.True(t, ok)
+	assert.Equal(t, "#/components/schemas/VikunjaErrorModel", schema["$ref"])
 }
 
 // TestHumaTask_Expand asserts the expand query param populates the extra,

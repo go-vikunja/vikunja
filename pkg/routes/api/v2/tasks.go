@@ -75,6 +75,7 @@ func RegisterTaskRoutes(api huma.API) {
 		Path:        "/projects/{project}/tasks/by-index/{index}",
 		Tags:        tags,
 		Responses: map[string]*huma.Response{
+			"default": defaultErrorResponse(api),
 			"307": {
 				Description: "The task moved to another project index. The redirect is temporary and must not be cached.",
 				Headers: map[string]*huma.Param{
