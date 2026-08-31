@@ -436,6 +436,9 @@ export async function updateProject(
 		queryClient.cancelQueries({queryKey: projectKeys.detailRoot(id)}),
 	])
 	const previous = queryClient.getQueryData<ProjectResponse>(projectKeys.detail(id))
+		?? queryClient.getQueriesData<ProjectListResult>({queryKey: projectKeys.lists()})
+			.flatMap(([, result]) => result?.projects ?? [])
+			.find(project => project.id === id)
 	const {data} = await projectsUpdate({
 		path: {id},
 		body: projectBody(project),
@@ -445,6 +448,7 @@ export async function updateProject(
 		...previous,
 		...data,
 		max_permission: data.max_permission ?? previous?.max_permission,
+		views: data.views ?? previous?.views,
 	})
 	if (format === 'html') {
 		setProjectInDefaultList(updated)
