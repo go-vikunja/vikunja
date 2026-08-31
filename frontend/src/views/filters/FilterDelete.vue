@@ -14,7 +14,7 @@
 </template>
 
 <script setup lang="ts">
-import {useSavedFilter} from '@/services/savedFilter'
+import {useSavedFilter} from '@/composables/useSavedFilter'
 
 const props = defineProps<{
 	projectId: number,

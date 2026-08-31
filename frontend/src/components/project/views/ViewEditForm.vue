@@ -7,7 +7,6 @@ import {
 	createProjectViewUpdate,
 	type ProjectViewDraft,
 } from '@/client/queries/projectViews'
-import type {IFilters} from '@/modelTypes/ISavedFilter'
 
 import {hasFilterQuery, transformFilterStringForApi, transformFilterStringFromApi} from '@/helpers/filters'
 import {useLabels} from '@/composables/useLabels'
@@ -34,25 +33,29 @@ const emit = defineEmits<{
 }>()
 
 type ProjectViewFormValue = ProjectViewWritable & Pick<ProjectView, 'id' | 'project_id'>
+type EditableFilters = Required<Omit<TaskCollection, 'sort_by' | 'order_by'>> & {
+	sort_by: string[]
+	order_by: string[]
+}
 type LoadedProjectView = Omit<ProjectViewDraft, 'filter' | 'bucket_configuration'> &
 	Pick<ProjectView, 'id' | 'project_id'> & {
-		filter: IFilters
-		bucket_configuration: Array<{title: string, filter: IFilters}>
+		filter: EditableFilters
+		bucket_configuration: Array<{title: string, filter: EditableFilters}>
 	}
 
 const {isPending, getLabelByExactTitle, getLabelById} = useLabels()
 const projectNavigation = useProjectNavigation()
 
-const transformFilterFromApi = (filterInput?: TaskCollection): IFilters => {
+const transformFilterFromApi = (filterInput?: TaskCollection): EditableFilters => {
 	const filterString = transformFilterStringFromApi(
 		filterInput?.filter ?? '',
 		labelId => getLabelById(labelId)?.title || null,
 		projectId => projectNavigation.projects[projectId]?.title || null,
 	)
 
-	const filter: IFilters = {
-		sort_by: (filterInput?.sort_by ?? []) as IFilters['sort_by'],
-		order_by: (filterInput?.order_by ?? []) as IFilters['order_by'],
+	const filter: EditableFilters = {
+		sort_by: filterInput?.sort_by ?? [],
+		order_by: filterInput?.order_by ?? [],
 		filter: '',
 		filter_include_nulls: false,
 		s: '',
@@ -151,7 +154,7 @@ function save() {
 		return
 	}
 
-	const transformFilterForApi = (filterInput?: IFilters): IFilters => {
+	const transformFilterForApi = (filterInput?: EditableFilters): EditableFilters => {
 		const filterString = transformFilterStringForApi(
 			filterInput?.filter || '',
 			labelTitle => getLabelByExactTitle(labelTitle)?.id || null,
@@ -160,7 +163,7 @@ function save() {
 				return found?.id || null
 			},
 		)
-		const filter: IFilters = {
+		const filter: EditableFilters = {
 			sort_by: filterInput?.sort_by ?? [],
 			order_by: filterInput?.order_by ?? [],
 			filter: '',

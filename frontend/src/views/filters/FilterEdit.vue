@@ -15,7 +15,7 @@
 				v-focus
 				:label="$t('filters.attributes.title')"
 				:class="{ 'is-danger': !titleValid }"
-				:disabled="filterService.loading"
+				:disabled="isLoading"
 				:placeholder="$t('filters.attributes.titlePlaceholder')"
 				type="text"
 				:error="titleValid ? null : $t('filters.create.titleRequired')"
@@ -25,16 +25,16 @@
 				<Editor
 					id="description"
 					v-model="filter.description"
-					:class="{ 'disabled': filterService.loading}"
-					:disabled="filterService.loading"
+					:class="{ 'disabled': isLoading}"
+					:disabled="isLoading"
 					:placeholder="$t('filters.attributes.descriptionPlaceholder')"
 				/>
 			</FormField>
 			<FormField :label="$t('filters.title')">
 				<Filters
 					v-model="filters"
-					:class="{ 'disabled': filterService.loading}"
-					:disabled="filterService.loading"
+					:class="{ 'disabled': isLoading}"
+					:disabled="isLoading"
 					class="has-no-shadow has-no-border"
 					:has-footer="false"
 					:change-immediately="true"
@@ -57,7 +57,7 @@ import CreateEdit from '@/components/misc/CreateEdit.vue'
 import FormField from '@/components/input/FormField.vue'
 import Filters from '@/components/project/partials/Filters.vue'
 
-import {useSavedFilter} from '@/services/savedFilter'
+import {useSavedFilter} from '@/composables/useSavedFilter'
 
 const props = defineProps<{
 	projectId: number,
@@ -67,7 +67,7 @@ const {
 	saveFilterWithValidation,
 	filter,
 	filters,
-	filterService,
+	isLoading,
 	titleValid,
 	validateTitleField,
 } = useSavedFilter(() => props.projectId)
@@ -75,7 +75,7 @@ const {
 const isSubmitting = ref(false)
 
 const loadingModel = computed({
-	get: () => isSubmitting.value || filterService.loading,
+	get: () => isSubmitting.value || isLoading.value,
 	set(value: boolean) {
 		isSubmitting.value = value
 	},
