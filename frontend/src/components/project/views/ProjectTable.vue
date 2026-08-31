@@ -359,21 +359,19 @@ import Popup from '@/components/misc/Popup.vue'
 import type {SortBy} from '@/composables/useTaskList'
 import {useTaskList} from '@/composables/useTaskList'
 import type {ITask} from '@/modelTypes/ITask'
-import type {IProject} from '@/modelTypes/IProject'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
-import type {IProjectView} from '@/modelTypes/IProjectView'
 import {getTaskIdentifier} from '@/models/task'
 import { camelCase } from 'change-case'
 import {isSavedFilter} from '@/services/savedFilter'
-import {useProjectStore} from '@/stores/projects'
+import {useProjectNavigation} from '@/composables/useProjectNavigation'
 
 const props = defineProps<{
 	isLoadingProject: boolean,
-	projectId: IProject['id'],
-	viewId: IProjectView['id'],
+	projectId: number,
+	viewId: number,
 }>()
 
-const projectStore = useProjectStore()
+const projectStore = useProjectNavigation()
 
 const ACTIVE_COLUMNS_DEFAULT = {
 	index: true,

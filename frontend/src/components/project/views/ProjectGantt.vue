@@ -71,8 +71,8 @@ import type Flatpickr from 'flatpickr'
 import {useI18n} from 'vue-i18n'
 import type {RouteLocationNormalized} from 'vue-router'
 
-import {useBaseStore} from '@/stores/base'
 import {useFlatpickrLanguage} from '@/helpers/useFlatpickrLanguage'
+import {useCurrentProject} from '@/composables/useCurrentProject'
 
 import Foo from '@/components/misc/flatpickr/Flatpickr.vue'
 import ProjectWrapper from '@/components/project/ProjectWrapper.vue'
@@ -85,22 +85,23 @@ import {useGanttFilters} from '../../../views/project/helpers/useGanttFilters'
 import {PERMISSIONS} from '@/constants/permissions'
 
 import type {DateISO} from '@/types/DateISO'
-import type {IProject} from '@/modelTypes/IProject'
 import type {ITask} from '@/modelTypes/ITask'
-import type {IProjectView} from '@/modelTypes/IProjectView'
 
 type Options = Flatpickr.Options.Options
 
 const props = defineProps<{
 	isLoadingProject: boolean,
-	projectId: IProject['id']
+	projectId: number,
 	route: RouteLocationNormalized
-	viewId: IProjectView['id']
+	viewId: number
 }>()
 
 
-const baseStore = useBaseStore()
-const canWrite = computed(() => baseStore.currentProject?.maxPermission > PERMISSIONS.READ)
+const {currentProject} = useCurrentProject()
+const canWrite = computed(() =>
+	typeof currentProject.value?.max_permission === 'number' &&
+	currentProject.value.max_permission > PERMISSIONS.READ,
+)
 
 const {route, projectId, viewId} = toRefs(props)
 const {

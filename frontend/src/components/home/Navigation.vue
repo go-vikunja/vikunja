@@ -149,25 +149,23 @@ import Logo from '@/components/home/Logo.vue'
 import Loading from '@/components/misc/Loading.vue'
 
 import {useBaseStore} from '@/stores/base'
-import {useProjectStore} from '@/stores/projects'
+import {useProjectNavigation} from '@/composables/useProjectNavigation'
 import {useConfigStore} from '@/stores/config'
 import {PRO_FEATURE} from '@/constants/proFeatures'
 import ProjectsNavigation from '@/components/home/ProjectsNavigation.vue'
-import type {IProject} from '@/modelTypes/IProject'
 import {useSidebarResize} from '@/composables/useSidebarResize'
 
 const baseStore = useBaseStore()
-const projectStore = useProjectStore()
+const projectStore = useProjectNavigation()
 const configStore = useConfigStore()
 
 const timeTrackingEnabled = computed(() => configStore.isProFeatureEnabled(PRO_FEATURE.TIME_TRACKING))
 
 const {sidebarWidth, isResizing, startResize, isMobile} = useSidebarResize()
 
-// Cast readonly arrays to mutable type - the arrays are not actually mutated by the component
-const projects = computed(() => projectStore.notArchivedRootProjects as IProject[])
-const favoriteProjects = computed(() => projectStore.favoriteProjects as IProject[])
-const savedFilterProjects = computed(() => projectStore.savedFilterProjects as IProject[])
+const projects = computed(() => projectStore.notArchivedRootProjects)
+const favoriteProjects = computed(() => projectStore.favoriteProjects)
+const savedFilterProjects = computed(() => projectStore.savedFilterProjects)
 </script>
 
 <style lang="scss" scoped>

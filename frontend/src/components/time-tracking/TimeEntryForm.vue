@@ -125,9 +125,9 @@ import TaskModel from '@/models/task'
 import {smartFillStart} from '@/helpers/time/smartFillStart'
 import {useTimeTrackingStore} from '@/stores/timeTracking'
 import {useAuthStore} from '@/stores/auth'
-import {useProjectStore} from '@/stores/projects'
+import {useProjectNavigation} from '@/composables/useProjectNavigation'
 
-import type {IProject} from '@/modelTypes/IProject'
+import type {ProjectResponse} from '@/client/queries/projects'
 import type {ITask} from '@/modelTypes/ITask'
 import type {ITimeEntry} from '@/modelTypes/ITimeEntry'
 
@@ -151,12 +151,12 @@ const emit = defineEmits<{
 
 const timeTrackingStore = useTimeTrackingStore()
 const authStore = useAuthStore()
-const projectStore = useProjectStore()
+const projectNavigation = useProjectNavigation()
 
 const isEditing = computed(() => props.entry != null)
 
 const formEl = ref<HTMLFormElement | null>(null)
-const selectedProject = ref<IProject | null>(null)
+const selectedProject = ref<ProjectResponse | null>(null)
 const selectedTask = ref<ITask | null>(null)
 const from = ref<Date | null>(new Date())
 const to = ref<Date | null>(null)
@@ -261,7 +261,7 @@ watch(() => props.entry, async entry => {
 		}
 	} else if (entry.projectId > 0) {
 		selectedTask.value = null
-		selectedProject.value = (projectStore.projects[entry.projectId] as IProject) ?? null
+		selectedProject.value = projectNavigation.projects[entry.projectId] ?? null
 	}
 }, {immediate: true})
 

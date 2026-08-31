@@ -6,7 +6,7 @@
 			'has-background': blurHashUrl !== '' || background !== null
 		}"
 		:style="{
-			'border-inline-start': project.hexColor ? `0.25rem solid ${project.hexColor}` : undefined,
+			'border-inline-start': project.hex_color ? `0.25rem solid ${project.hex_color}` : undefined,
 			'background-image': blurHashUrl !== '' ? `url(${blurHashUrl})` : undefined,
 		}"
 	>
@@ -16,7 +16,7 @@
 			:style="{'background-image': background !== null ? `url(${background})` : undefined}"
 		/>
 		<span
-			v-if="project.isArchived"
+			v-if="project.is_archived"
 			class="is-archived"
 		>{{ $t('project.archived') }}</span>
 
@@ -42,34 +42,34 @@
 			}"
 		/>
 		<BaseButton
-			v-if="!project.isArchived && project.id > -1"
+			v-if="!project.is_archived && project.id > -1"
 			class="favorite"
-			:aria-label="project.isFavorite ? $t('project.unfavorite') : $t('project.favorite')"
-			:class="{'is-favorite': project.isFavorite}"
-			@click.prevent.stop="projectStore.toggleProjectFavorite(project)"
+			:aria-label="project.is_favorite ? $t('project.unfavorite') : $t('project.favorite')"
+			:class="{'is-favorite': project.is_favorite}"
+			@click.prevent.stop="projectNavigation.toggleProjectFavorite(project)"
 		>
-			<Icon :icon="project.isFavorite ? 'star' : ['far', 'star']" />
+			<Icon :icon="project.is_favorite ? 'star' : ['far', 'star']" />
 		</BaseButton>
 	</div>
 </template>
 
 <script lang="ts" setup>
 import {computed} from 'vue'
-import type {IProject} from '@/modelTypes/IProject'
+import type {ProjectResponse} from '@/client/queries/projects'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 
 import {useProjectBackground} from '@/composables/useProjectBackground'
-import {useProjectStore} from '@/stores/projects'
+import {useProjectNavigation} from '@/composables/useProjectNavigation'
 import {getProjectTitle} from '@/helpers/getProjectTitle'
 
 const props = defineProps<{
-	project: IProject,
+	project: ProjectResponse,
 }>()
 
 const {background, blurHashUrl} = useProjectBackground(() => props.project)
 
-const projectStore = useProjectStore()
+const projectNavigation = useProjectNavigation()
 
 const textOnlyDescription = computed(() => {
 	return props.project.description ? props.project.description.replace(/<[^>]*>/g, '') : ''

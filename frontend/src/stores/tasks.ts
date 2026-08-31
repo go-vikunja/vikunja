@@ -17,13 +17,12 @@ import type {ITask} from '@/modelTypes/ITask'
 import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
 import type {IUser} from '@/modelTypes/IUser'
 import type {IAttachment} from '@/modelTypes/IAttachment'
-import type {IProject} from '@/modelTypes/IProject'
 
 import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 
 import {setModuleLoading} from '@/stores/helper'
 import {useConfigStore} from '@/stores/config'
-import {useProjectStore} from '@/stores/projects'
+import {useProjectNavigation} from '@/composables/useProjectNavigation'
 import {useKanbanStore} from '@/stores/kanban'
 import {useBaseStore} from '@/stores/base'
 import ProjectUserService from '@/services/projectUsers'
@@ -136,7 +135,7 @@ async function findAssignees(parsedTaskAssignees: string[], projectId: number): 
 export const useTaskStore = defineStore('task', () => {
 	const baseStore = useBaseStore()
 	const kanbanStore = useKanbanStore()
-	const projectStore = useProjectStore()
+	const projectNavigation = useProjectNavigation()
 	const authStore = useAuthStore()
 	const configStore = useConfigStore()
 
@@ -163,7 +162,7 @@ export const useTaskStore = defineStore('task', () => {
 
 	async function loadTasks(
 		params: TaskFilterParams, 
-		projectId: IProject['id'] | null = null,
+		projectId: number | null = null,
 	) {
 		
 		if (!params.filter_timezone || params.filter_timezone === '') {
@@ -437,16 +436,16 @@ export const useTaskStore = defineStore('task', () => {
 
 	function findProjectId(
 		{ project: projectName, projectId }:
-		{ project: string, projectId: IProject['id'] }) {
+		{project: string, projectId: number}) {
 		let foundProjectId = null
 
 		// Uses the following ways to get the project id of the new task:
 		//  1. If specified in quick add magic, look in store if it exists and use it if it does
 		if (typeof projectName !== 'undefined' && projectName !== null) {
-			let project = projectStore.findProjectByExactname(projectName)
+			let project = projectNavigation.findProjectByExactname(projectName)
 			
 			if (project === null) {
-				project = projectStore.findProjectByIdentifier(projectName)
+				project = projectNavigation.findProjectByIdentifier(projectName)
 			}
 			
 			foundProjectId = project === null ? null : project.id
@@ -620,7 +619,7 @@ export const useTaskStore = defineStore('task', () => {
 		task = await taskService.update(task)
 		
 		// reloading the projects list so that the Favorites project shows up or is hidden when there are (or are not) favorite tasks
-		await projectStore.loadAllProjects() 
+		await projectNavigation.loadAllProjects()
 		
 		return task
 	}

@@ -108,12 +108,14 @@
 
 <script setup lang="ts">
 import {ref, onMounted} from 'vue'
-import type {IProject} from '@/modelTypes/IProject'
+import {
+	adminProjectsList,
+	adminProjectsPatchOwner,
+} from '@/client/generated'
+import type {Project} from '@/client/generated'
 import type {IAdminUser} from '@/modelTypes/IAdminUser'
-import AdminProjectService from '@/services/admin/projectService'
 import AdminUserService from '@/services/admin/userService'
 import AdminUserModel from '@/models/adminUser'
-import ProjectModel from '@/models/project'
 import Card from '@/components/misc/Card.vue'
 import Modal from '@/components/misc/Modal.vue'
 import PaginationEmit from '@/components/misc/PaginationEmit.vue'
@@ -129,15 +131,16 @@ import {useI18n} from 'vue-i18n'
 
 const {t} = useI18n({useScope: 'global'})
 
-const adminProjectService = new AdminProjectService()
 const adminUserService = new AdminUserService()
 
-const projects = ref<IProject[]>([])
+type AdminProject = Project & Required<Pick<Project, 'id'>>
+
+const projects = ref<AdminProject[]>([])
 const loading = ref(false)
 const currentPage = ref(1)
 const totalPages = ref(1)
 
-const reassignTarget = ref<IProject | null>(null)
+const reassignTarget = ref<AdminProject | null>(null)
 const userResults = ref<IAdminUser[]>([])
 const userSearchLoading = ref(false)
 const selectedUser = ref<IAdminUser | null>(null)
@@ -145,8 +148,9 @@ const selectedUser = ref<IAdminUser | null>(null)
 async function load() {
 	loading.value = true
 	try {
-		projects.value = await adminProjectService.getAll(new ProjectModel(), {}, currentPage.value)
-		totalPages.value = adminProjectService.totalPages || 1
+		const {data} = await adminProjectsList({query: {page: currentPage.value}})
+		projects.value = (data.items ?? []).filter((project): project is AdminProject => project.id !== undefined)
+		totalPages.value = data.total_pages ?? 1
 	} catch (e) {
 		error(e)
 	} finally {
@@ -159,7 +163,7 @@ function goToPage(page: number) {
 	load()
 }
 
-function openReassign(p: IProject) {
+function openReassign(p: AdminProject) {
 	reassignTarget.value = p
 	userResults.value = []
 	selectedUser.value = null
@@ -186,9 +190,12 @@ async function doReassign() {
 	const newOwnerId = selectedUser.value.id
 	reassignTarget.value = null
 	try {
-		const updated = await adminProjectService.reassignOwner(target.id, newOwnerId)
+		const {data: updated} = await adminProjectsPatchOwner({
+			path: {id: target.id},
+			body: {owner_id: newOwnerId},
+		})
 		const idx = projects.value.findIndex(x => x.id === target.id)
-		if (idx !== -1) projects.value[idx] = updated
+		if (idx !== -1) projects.value[idx] = {...projects.value[idx], ...updated}
 		success({message: t('admin.projects.reassignedSuccess')})
 	} catch (e) {
 		error(e)
@@ -204,4 +211,3 @@ onMounted(load)
 	overflow: visible;
 }
 </style>
-

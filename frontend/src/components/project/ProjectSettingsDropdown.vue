@@ -19,7 +19,7 @@
 			</slot>
 		</template>
 
-		<template v-if="isSavedFilter(project)">
+		<template v-if="isSavedFilterProject(project)">
 			<DropdownItem
 				:to="{ name: 'filter.settings.edit', params: { projectId: project.id } }"
 				icon="pen"
@@ -42,7 +42,7 @@
 			</DropdownItem>
 		</template>
 
-		<template v-else-if="project.isArchived">
+		<template v-else-if="project.is_archived">
 			<DropdownItem
 				:to="{ name: 'project.settings.archive', params: { projectId: project.id } }"
 				icon="archive"
@@ -94,7 +94,7 @@
 				class="has-no-shadow"
 				entity="project"
 				:entity-id="project.id"
-				:model-value="project.subscription"
+				:model-value="subscription"
 				type="dropdown"
 				@update:modelValue="setSubscriptionInStore"
 			/>
@@ -112,7 +112,7 @@
 			</DropdownItem>
 			<slot name="before-delete" />
 			<DropdownItem
-				v-if="forceAllActions || project.maxPermission === PERMISSIONS.ADMIN"
+				v-if="forceAllActions || project.max_permission === PERMISSIONS.ADMIN"
 				v-tooltip="isDefaultProject ? $t('menu.cantDeleteIsDefault') : ''"
 				:to="{ name: 'project.settings.delete', params: { projectId: project.id } }"
 				icon="trash-alt"
@@ -132,36 +132,56 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import Dropdown from '@/components/misc/Dropdown.vue'
 import DropdownItem from '@/components/misc/DropdownItem.vue'
 import Subscription from '@/components/misc/Subscription.vue'
-import type {IProject} from '@/modelTypes/IProject'
+import type {Project, Subscription as ProjectSubscription} from '@/client/generated'
 import type {ISubscription} from '@/modelTypes/ISubscription'
+import SubscriptionModel from '@/models/subscription'
 
-import {isSavedFilter} from '@/services/savedFilter'
+import {isSavedFilterProject} from '@/client/queries/projects'
 import {useConfigStore} from '@/stores/config'
-import {useProjectStore} from '@/stores/projects'
+import {useProjectNavigation} from '@/composables/useProjectNavigation'
 import {useAuthStore} from '@/stores/auth'
 import {PERMISSIONS} from '@/constants/permissions'
 
 const props = withDefaults(defineProps<{
-	project: IProject
+	project: Project & Required<Pick<Project, 'id'>>
 	forceAllActions?: boolean
 }>(), {
 	forceAllActions: false,
 })
 
-const projectStore = useProjectStore()
+const projectStore = useProjectNavigation()
 const subscription = ref<ISubscription | null>(null)
 watchEffect(() => {
-	subscription.value = props.project.subscription ?? null
+	const value = props.project.subscription
+	subscription.value = value
+		? new SubscriptionModel({
+			id: value.id,
+			entity: value.entity,
+			entityId: value.entity_id,
+			created: value.created ? new Date(value.created) : undefined,
+		})
+		: null
 })
 
 const configStore = useConfigStore()
 const backgroundsEnabled = computed(() => configStore.enabledBackgroundProviders?.length > 0)
 
-function setSubscriptionInStore(sub: ISubscription) {
+function toProjectSubscription(sub: ISubscription | null): ProjectSubscription | undefined {
+	return sub
+		? {
+			id: sub.id,
+			entity: sub.entity as ProjectSubscription['entity'],
+			entity_id: sub.entityId,
+			created: sub.created?.toISOString(),
+		}
+		: undefined
+}
+
+function setSubscriptionInStore(sub: ISubscription | null) {
 	subscription.value = sub
 	const updatedProject = {
 		...props.project,
-		subscription: sub,
+		subscription: toProjectSubscription(sub),
 	}
 	projectStore.setProject(updatedProject)
 }
