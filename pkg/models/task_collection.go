@@ -275,7 +275,12 @@ func getRelevantProjectsFromCollection(s *xorm.Session, a web.Auth, tf *TaskColl
 // returns every descendant the auth can access. Subprojects without access are skipped
 // rather than failing the whole request.
 func getAccessibleSubprojectIDs(s *xorm.Session, a web.Auth, parentProjectID int64) (ids []int64, err error) {
-	accessibleSQL, accessibleArgs, err := builder.ToSQL(accessibleProjectIDsSubquery(a, "d.id"))
+	accessible, err := accessibleProjectIDsCond(s, a, "d.id")
+	if err != nil {
+		return nil, err
+	}
+
+	accessibleSQL, accessibleArgs, err := builder.ToSQL(accessible)
 	if err != nil {
 		return nil, err
 	}
