@@ -23,6 +23,7 @@
 			:change-immediately="false"
 			:filter-from-view="filterFromView"
 			:show-include-subprojects-toggle="supportsIncludeSubprojects"
+			:include-subprojects-from-view="includeSubprojectsFromView"
 			show-close
 			@close="modalOpen = false"
 			@showResults="showResults"
@@ -108,6 +109,9 @@ const isProjectView = computed(() => Boolean(props.projectId && props.projectId 
 const supportsIncludeSubprojects = computed(() => isProjectView.value && currentView.value?.viewKind !== 'kanban')
 
 const includeSubprojects = useIncludeSubprojects(() => currentView.value)
+
+// The api ors the view's own setting in, so the query param cannot turn it back off.
+const includeSubprojectsFromView = computed(() => currentView.value?.filter?.include_subprojects ?? false)
 
 const filterFromView = computed(() => {
 	if (!props.projectId || !props.viewId) {
