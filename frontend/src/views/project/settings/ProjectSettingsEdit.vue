@@ -107,6 +107,13 @@ const loadingModel = computed({
 	},
 })
 watch(
+	() => props.projectId,
+	() => {
+		parentProjectChanged.value = false
+		parentProject.value = null
+	},
+)
+watch(
 	() => projectStore.projects[project.value.parent_project_id],
 	parent => {
 		if (!parentProjectChanged.value) {
