@@ -119,11 +119,18 @@ describe('useSavedFilter', () => {
 	})
 
 	it('settles the loading state when the detail query fails', async () => {
+		const data = ref<{
+			id: number
+			title: string
+			description: string
+			filters: ReturnType<typeof queryLayer.createSavedFilterDraft>['filters']
+			is_favorite: boolean
+		} | undefined>(undefined)
 		const error = ref<Error | null>(null)
 		const isError = ref(false)
 		const isFetching = ref(true)
 		useQuery.mockReturnValue({
-			data: ref(undefined),
+			data,
 			isPending: ref(false),
 			isFetching,
 			isError,
@@ -140,6 +147,19 @@ describe('useSavedFilter', () => {
 
 		expect(state.value.isLoading.value).toBe(false)
 		expect(state.value.error.value).toBe(error.value)
+
+		data.value = {
+			id: 1,
+			title: 'Recovered',
+			description: '',
+			filters: queryLayer.createSavedFilterDraft().filters,
+			is_favorite: false,
+		}
+		error.value = null
+		isError.value = false
+		await nextTick()
+
+		expect(state.value.filter.value.title).toBe('Recovered')
 		wrapper.unmount()
 	})
 })
