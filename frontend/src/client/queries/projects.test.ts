@@ -14,7 +14,19 @@ const sdk = vi.hoisted(() => ({
 	patchProjectsRead: vi.fn(),
 }))
 
+const requestContext = vi.hoisted(() => ({
+	identity: {id: 1, type: 1} as {id: number; type: number} | null,
+	apiV2BaseUrl: 'https://identity-a.example/api/v2/',
+}))
+
 vi.mock('@/client/generated', () => sdk)
+vi.mock('@/helpers/auth', () => ({
+	getToken: () => null,
+	getTokenIdentity: () => requestContext.identity,
+}))
+vi.mock('@/helpers/fetcher', () => ({
+	getApiV2BaseUrl: () => requestContext.apiV2BaseUrl,
+}))
 
 import {
 	createProject,
@@ -59,6 +71,11 @@ function serverProject(overrides: Partial<ProjectResponse> = {}): ProjectRespons
 		...overrides,
 	}
 }
+
+beforeEach(() => {
+	requestContext.identity = {id: 1, type: 1}
+	requestContext.apiV2BaseUrl = 'https://identity-a.example/api/v2/'
+})
 
 describe('project queries', () => {
 	beforeEach(() => {
@@ -209,10 +226,93 @@ describe('project hierarchy and navigation derivations', () => {
 
 describe('project drafts and cache mutations', () => {
 	const listKey = projectKeys.list({is_archived: true, expand: 'permissions'})
+	const delayedMutationCases = [
+		{
+			name: 'create',
+			mock: sdk.projectsCreate,
+			run: () => createProject({title: 'Identity A project'}),
+			response: {data: serverProject({id: 5, title: 'Identity A project'})},
+		},
+		{
+			name: 'update',
+			mock: sdk.projectsUpdate,
+			run: () => updateProject({...serverProject(), title: 'Identity A update'}),
+			response: {data: serverProject({title: 'Identity A update'})},
+		},
+		{
+			name: 'favorite',
+			mock: sdk.patchProjectsRead,
+			run: () => patchProjectFavorite(1, true),
+			response: {data: serverProject({is_favorite: true})},
+		},
+		{
+			name: 'delete',
+			mock: sdk.projectsDelete,
+			run: () => deleteProject(1),
+			response: {data: undefined},
+		},
+		{
+			name: 'duplicate',
+			mock: sdk.projectsDuplicate,
+			run: () => duplicateProject({projectId: 1}),
+			response: {data: {duplicated_project: serverProject({id: 9, title: 'Identity A copy'})}},
+		},
+	]
+	const contextChanges = [
+		{
+			name: 'authenticated identity',
+			change: () => {
+				requestContext.identity = {id: 2, type: 1}
+			},
+		},
+		{
+			name: 'API origin',
+			change: () => {
+				requestContext.apiV2BaseUrl = 'https://identity-b.example/api/v2/'
+			},
+		},
+	]
 
 	beforeEach(() => {
 		queryClient.clear()
 		Object.values(sdk).forEach(mock => mock.mockReset())
+	})
+
+	describe.each(contextChanges)('after the $name changes', ({change}) => {
+		it.each(delayedMutationCases)('discards a delayed $name completion', async ({mock, run, response}) => {
+			const identityAProject = serverProject({title: 'Identity A project'})
+			const identityBProject = serverProject({title: 'Identity B project'})
+			queryClient.setQueryData(listKey, {
+				projects: [identityAProject],
+				favoriteProject: null,
+				savedFilterProjects: [],
+			})
+			queryClient.setQueryData(projectKeys.detail(1), identityAProject)
+			let resolveRequest: (value: unknown) => void = () => {}
+			mock.mockReturnValue(new Promise(resolve => {
+				resolveRequest = resolve
+			}))
+
+			const mutation = run()
+			await vi.waitFor(() => expect(mock).toHaveBeenCalledOnce())
+			change()
+			queryClient.clear()
+			const identityBList = {
+				projects: [identityBProject],
+				favoriteProject: null,
+				savedFilterProjects: [],
+			}
+			queryClient.setQueryData(listKey, identityBList)
+			queryClient.setQueryData(projectKeys.detail(1), identityBProject)
+			resolveRequest(response)
+
+			await expect(mutation).rejects.toMatchObject({name: 'AbortError'})
+			expect(queryClient.getQueryData(listKey)).toEqual(identityBList)
+			expect(queryClient.getQueryData(projectKeys.detail(1))).toEqual(identityBProject)
+			expect(queryClient.getQueryData(projectKeys.detail(5))).toBeUndefined()
+			expect(queryClient.getQueryData(projectKeys.detail(9))).toBeUndefined()
+			expect(queryClient.getQueryState(listKey)?.isInvalidated).toBe(false)
+		})
 	})
 
 	it('creates a generated-type draft with stable UI defaults', () => {
