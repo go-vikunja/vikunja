@@ -173,14 +173,14 @@ func TestHumaTask_Create(t *testing.T) {
 		assert.NotContains(t, rec.Body.String(), `"project_id":7`)
 	})
 	t.Run("Read-only index is ignored", func(t *testing.T) {
-		rec := create("7", `{"title":"client index","index":9223372036854775807}`)
+		rec := create("1", `{"title":"client index","index":9223372036854775807}`)
 		require.Equal(t, http.StatusCreated, rec.Code, "body: %s", rec.Body.String())
 		first := &models.Task{}
 		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), first))
 		assert.Positive(t, first.Index)
 		assert.NotEqual(t, int64(math.MaxInt64), first.Index)
 
-		rec = create("7", `{"title":"next index"}`)
+		rec = create("1", `{"title":"next index"}`)
 		require.Equal(t, http.StatusCreated, rec.Code, "body: %s", rec.Body.String())
 		next := &models.Task{}
 		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), next))
