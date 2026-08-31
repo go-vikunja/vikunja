@@ -11,7 +11,7 @@
 					v-model="sortByParam"
 				/>
 				<FilterPopup
-					v-if="!isSavedFilter(project)"
+					v-if="!isSavedFilterProject(project)"
 					v-model="params"
 					:view-id="viewId"
 					:project-id="projectId"
@@ -119,7 +119,7 @@ import {shouldShowTaskInListView} from '@/composables/useTaskListFiltering'
 import {PERMISSIONS as Permissions} from '@/constants/permissions'
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 import type {ITask} from '@/modelTypes/ITask'
-import {isSavedFilter, useSavedFilter} from '@/services/savedFilter'
+import {isSavedFilterProject} from '@/client/queries/projects'
 
 import {useBaseStore} from '@/stores/base'
 import {useTaskStore} from '@/stores/tasks'
@@ -160,9 +160,6 @@ const {
 
 const taskPositionService = ref(new TaskPositionService())
 
-// Saved filter composable for accessing filter data
-const _savedFilter = useSavedFilter(() => isSavedFilter({id: projectId.value}) ? projectId.value : undefined).filter
-
 const tasks = ref<ITask[]>([])
 watch(
 	allTasks,
@@ -184,14 +181,14 @@ const canWrite = computed(() => {
 		project.value.id > 0
 })
 
-const isPseudoProject = computed(() => (project.value && isSavedFilter(project.value)) || project.value?.id === -1)
+const isPseudoProject = computed(() => isSavedFilterProject(project.value) || project.value?.id === -1)
 
 onMounted(async () => {
 	await nextTick()
 	ctaVisible.value = true
 })
 
-const canDragTasks = computed(() => canWrite.value || isSavedFilter(project.value))
+const canDragTasks = computed(() => canWrite.value || isSavedFilterProject(project.value))
 
 const isTouchDevice = ref(false)
 if (typeof window !== 'undefined') {
