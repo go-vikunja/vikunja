@@ -7,13 +7,14 @@ import {normalizeProject, type ProjectResponse} from '@/client/queries/projects'
 const state = vi.hoisted(() => ({
 	project: undefined as Ref<ProjectResponse> | undefined,
 	projects: undefined as Record<number, ProjectResponse> | undefined,
+	savedParentProjectIds: [] as number[],
 }))
 
 vi.mock('@/composables/useProject', () => ({
 	useProject: () => ({
 		project: state.project,
 		isLoading: ref(false),
-		save: vi.fn(),
+		save: vi.fn(() => state.savedParentProjectIds.push(state.project!.value.parent_project_id)),
 	}),
 }))
 
@@ -45,6 +46,27 @@ describe('ProjectSettingsEdit', () => {
 	beforeEach(() => {
 		state.project = ref(normalizeProject({id: 101, parent_project_id: 100}))
 		state.projects = reactive({})
+		state.savedParentProjectIds = []
+	})
+
+	it('preserves an inaccessible parent when saving without changing it', async () => {
+		const wrapper = shallowMount(ProjectSettingsEdit, {
+			props: {projectId: 101},
+			global: {
+				stubs: {
+					CreateEdit: SlotStub,
+					FormField: SlotStub,
+					ProjectSearch: ProjectSearchStub,
+				},
+				mocks: {$t: (key: string) => key, $router: {push: vi.fn()}},
+				directives: {focus: () => {}, tooltip: () => {}},
+			},
+		})
+
+		await (wrapper.vm as unknown as {save: () => Promise<void>}).save()
+
+		expect(state.savedParentProjectIds).toEqual([100])
+		expect(state.project.value.parent_project_id).toBe(100)
 	})
 
 	it('selects the parent when navigation projects load after project detail', async () => {
