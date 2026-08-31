@@ -36,19 +36,20 @@ import {computed, ref, watchEffect} from 'vue'
 import {useTitle} from '@/composables/useTitle'
 import {useI18n} from 'vue-i18n'
 import {useRoute, useRouter} from 'vue-router'
-import {success} from '@/message'
+import {useDeleteProjectMutation} from '@/client/queries/projects'
 import Loading from '@/components/misc/Loading.vue'
-import {useProjectStore} from '@/stores/projects'
+import {useProjects} from '@/composables/useProjects'
 import TaskService from '@/services/task'
 
 const {t} = useI18n({useScope: 'global'})
-const projectStore = useProjectStore()
+const projectList = useProjects()
+const deleteMutation = useDeleteProjectMutation()
 const route = useRoute()
 const router = useRouter()
 
 const totalTasks = ref<number | null>(null)
 
-const project = computed(() => projectStore.projects[route.params.projectId])
+const project = computed(() => projectList.projects[route.params.projectId])
 const projectIdsToDelete = ref<number[]>([])
 
 watchEffect(
@@ -57,7 +58,7 @@ watchEffect(
 			return
 		}
 
-		projectIdsToDelete.value = projectStore
+		projectIdsToDelete.value = projectList
 			.getChildProjects(parseInt(route.params.projectId))
 			.map(p => p.id)
 
@@ -88,8 +89,7 @@ async function deleteProject() {
 		return
 	}
 
-	await projectStore.deleteProject(project.value)
-	success({message: t('project.delete.success')})
+	await deleteMutation.mutateAsync(project.value.id)
 	router.push({name: 'home'})
 }
 </script>

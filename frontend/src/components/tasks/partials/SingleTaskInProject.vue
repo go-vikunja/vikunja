@@ -226,8 +226,8 @@ import TaskService from '@/services/task'
 import {formatDisplayDate, formatISO, formatDateLong} from '@/helpers/time/formatDate'
 import {success} from '@/message'
 
-import {useProjectStore} from '@/stores/projects'
-import {useBaseStore} from '@/stores/base'
+import {useProjects} from '@/composables/useProjects'
+import {useCurrentProject} from '@/composables/useCurrentProject'
 import {useTaskStore} from '@/stores/tasks'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 import {useIntervalFn} from '@vueuse/core'
@@ -281,21 +281,15 @@ watch(
 	},
 )
 
-const baseStore = useBaseStore()
-const projectStore = useProjectStore()
+const projectList = useProjects()
 const taskStore = useTaskStore()
 
-const project = computed(() => projectStore.projects[task.value.projectId])
-const projectColor = computed(() => project.value ? project.value?.hexColor : '')
+const project = computed(() => projectList.projects[task.value.projectId])
+const projectColor = computed(() => project.value?.hex_color ?? '')
 
 const showProjectSeparately = computed(() => !props.showProject && currentProject.value?.id !== task.value.projectId && project.value)
 
-const currentProject = computed(() => {
-	return typeof baseStore.currentProject === 'undefined' ? {
-		id: 0,
-		title: '',
-	} : baseStore.currentProject
-})
+const {currentProject} = useCurrentProject()
 
 const taskDetailRoute = computed(() => ({
 	name: 'task.detail',

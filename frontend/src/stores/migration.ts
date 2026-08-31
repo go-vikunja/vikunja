@@ -3,7 +3,7 @@ import {acceptHMRUpdate, defineStore} from 'pinia'
 
 import type {MigrationErrorKind, MigrationStatus} from '@/services/migrator/abstractMigration'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
-import {useProjectStore} from '@/stores/projects'
+import {refreshProjects} from '@/client/queries/projects'
 
 const POLL_INTERVAL = 3000
 const POLL_DEADLINE = 20 * 60 * 1000
@@ -62,7 +62,7 @@ export const useMigrationStore = defineStore('migration', () => {
 		errorKind.value = error_kind ?? ''
 		errorMessage.value = error_message ?? ''
 		if (!hasFailed.value) {
-			await useProjectStore().loadAllProjects()
+			await refreshProjects()
 		}
 		return true
 	}

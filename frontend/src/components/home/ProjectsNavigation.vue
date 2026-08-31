@@ -41,26 +41,27 @@ import type {SortableEvent} from 'sortablejs'
 import ProjectsNavigationItem from '@/components/home/ProjectsNavigationItem.vue'
 
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
-import type {IProject} from '@/modelTypes/IProject'
+import {useUpdateProjectMutation, type ProjectResponse} from '@/client/queries/projects'
 
-import {useProjectStore} from '@/stores/projects'
+import {useProjects} from '@/composables/useProjects'
 
 const props = defineProps<{
-	modelValue?: IProject[],
+	modelValue?: ProjectResponse[],
 	canEditOrder: boolean,
 	canCollapse?: boolean,
 }>()
 const emit = defineEmits<{
-	(e: 'update:modelValue', projects: IProject[]): void
+	(e: 'update:modelValue', projects: ProjectResponse[]): void
 }>()
 
 const drag = ref(false)
 
-const projectStore = useProjectStore()
+const projectList = useProjects()
+const updateMutation = useUpdateProjectMutation()
 
 // Vue draggable will modify the projects list as it changes their position which will not work on a prop.
 // Hence, we'll clone the prop and work on the clone.
-const availableProjects = ref<IProject[]>([])
+const availableProjects = ref<ProjectResponse[]>([])
 watch(
 	() => props.modelValue,
 	projects => {
@@ -69,7 +70,7 @@ watch(
 	{immediate: true},
 )
 
-const projectUpdating = ref<{ [id: IProject['id']]: boolean }>({})
+const projectUpdating = ref<Record<number, boolean>>({})
 
 async function saveProjectPosition(e: SortableEvent) {
 	drag.value = false
@@ -85,12 +86,12 @@ async function saveProjectPosition(e: SortableEvent) {
 	if (!projectIdStr) return
 
 	const projectId = parseInt(projectIdStr)
-	const project = projectStore.projects[projectId]
+	const project = projectList.projects[projectId]
 	if (!project) return
 
 	const parentNode = e.to.parentNode as HTMLElement | null
 	const parentProjectIdFromDom = parentNode?.dataset?.projectId ? parseInt(parentNode.dataset.projectId) : 0
-	const parentProjectId = projectStore.getEffectiveParentProjectId(project, parentProjectIdFromDom)
+	const parentProjectId = projectList.getEffectiveParentProjectId(project, parentProjectIdFromDom)
 	const projectBefore = projectsActive[newIndex - 1] ?? null
 	const projectAfter = projectsActive[newIndex + 1] ?? null
 	projectUpdating.value[project.id] = true
@@ -101,12 +102,11 @@ async function saveProjectPosition(e: SortableEvent) {
 	)
 
 	try {
-		// create a copy of the project in order to not violate pinia manipulation
-		await projectStore.updateProject({
+		await updateMutation.mutateAsync({
 			...project,
 			position,
-			parentProjectId,
-		} as IProject)
+			parent_project_id: parentProjectId,
+		})
 		emit('update:modelValue', availableProjects.value)
 	} finally {
 		projectUpdating.value[project.id] = false

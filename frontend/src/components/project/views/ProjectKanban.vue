@@ -305,7 +305,6 @@ import BucketModel from '@/models/bucket'
 import type {IBucket} from '@/modelTypes/IBucket'
 import type {ITask} from '@/modelTypes/ITask'
 
-import {useBaseStore} from '@/stores/base'
 import {useTaskStore} from '@/stores/tasks'
 import {useKanbanStore} from '@/stores/kanban'
 import {useAuthStore} from '@/stores/auth'
@@ -324,9 +323,11 @@ import {
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 
 import {isSavedFilter, useSavedFilter} from '@/services/savedFilter'
+import {useCurrentProject} from '@/composables/useCurrentProject'
 import {useTaskDragToProject} from '@/composables/useTaskDragToProject'
 import {success} from '@/message'
 import {useProjectStore} from '@/stores/projects'
+import {refreshProject, refreshProjects} from '@/client/queries/projects'
 import type {TaskFilterParams} from '@/services/taskCollection'
 import type {IProjectView} from '@/modelTypes/IProjectView'
 import TaskPositionService from '@/services/taskPosition'
@@ -358,7 +359,6 @@ const MIN_SCROLL_HEIGHT_PERCENT = 0.25
 
 const {t} = useI18n({useScope: 'global'})
 
-const baseStore = useBaseStore()
 const kanbanStore = useKanbanStore()
 const taskStore = useTaskStore()
 const projectStore = useProjectStore()
@@ -447,7 +447,12 @@ const bucketDraggableComponentData = computed(() => ({
 }))
 const project = computed(() => projectId.value ? projectStore.projects[projectId.value] : null)
 const view = computed(() => project.value?.views.find(v => v.id === props.viewId) as IProjectView || null)
-const canWrite = computed(() => baseStore.currentProject?.maxPermission > Permissions.READ && view.value.bucketConfigurationMode === 'manual')
+const {currentProject} = useCurrentProject()
+const canWrite = computed(() =>
+	typeof currentProject.value?.max_permission === 'number' &&
+	currentProject.value.max_permission > Permissions.READ &&
+	view.value?.bucketConfigurationMode === 'manual',
+)
 const canCreateTasks = computed(() => canWrite.value && projectId.value > 0)
 
 const isTouchDevice = ref(false)
@@ -877,6 +882,7 @@ async function toggleDefaultBucket(bucket: IBucket) {
 	}
 
 	projectStore.setProject(updatedProject)
+	await Promise.all([refreshProject(projectIdWithFallback.value), refreshProjects()])
 
 	success({message: t('project.kanban.defaultBucketSavedSuccess')})
 }
@@ -899,6 +905,7 @@ async function toggleDoneBucket(bucket: IBucket) {
 	}
 	
 	projectStore.setProject(updatedProject)
+	await Promise.all([refreshProject(projectIdWithFallback.value), refreshProjects()])
 	
 	success({message: t('project.kanban.doneBucketSavedSuccess')})
 }

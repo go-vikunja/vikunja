@@ -27,7 +27,7 @@
 <script lang="ts" setup>
 import {computed} from 'vue'
 import DOMPurify from 'dompurify'
-import {useProjectStore} from '@/stores/projects'
+import {useProjects} from '@/composables/useProjects'
 import {useI18n} from 'vue-i18n'
 
 const props = defineProps<{
@@ -45,8 +45,8 @@ DOMPurify.addHook('afterSanitizeAttributes', node => {
 	}
 })
 
-const projectStore = useProjectStore()
-const project = computed(() => projectStore.projects[props.projectId])
+const projectList = useProjects()
+const project = computed(() => projectList.projects[props.projectId])
 const htmlDescription = computed(() => {
 	const description = project.value?.description || ''
 	if (description === '') {
