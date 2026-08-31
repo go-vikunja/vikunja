@@ -50,23 +50,22 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, shallowReactive, watch} from 'vue'
+import {ref, computed, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 
-import LabelModel from '@/models/label'
-import LabelTaskService from '@/services/labelTask'
 import {success} from '@/message'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import Multiselect from '@/components/input/Multiselect.vue'
-import type {ILabel} from '@/modelTypes/ILabel'
-import {useLabelStore} from '@/stores/labels'
+import type {Label} from '@/client/generated'
+import {useCreateLabelMutation} from '@/client/queries/labels'
 import {useTaskStore} from '@/stores/tasks'
 import {getRandomColorHex} from '@/helpers/color/randomColor'
 import {useLabelStyles} from '@/composables/useLabelStyles'
+import {useLabels} from '@/composables/useLabels'
 
 const props = withDefaults(defineProps<{
-	modelValue: ILabel[] | undefined
+	modelValue: Label[] | undefined
 	taskId?: number
 	disabled?: boolean
 	creatable?: boolean
@@ -79,19 +78,18 @@ const props = withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{
-	'update:modelValue': [labels: ILabel[]],
+	'update:modelValue': [labels: Label[]],
 }>()
 
 const {t} = useI18n({useScope: 'global'})
 
-const labelTaskService = shallowReactive(new LabelTaskService())
-const labels = ref<ILabel[]>([])
+const labels = ref<Label[]>([])
 const query = ref('')
 
 watch(
 	() => props.modelValue,
 	(value) => {
-		labels.value = Array.from(new Map(value.map(label => [label.id, label])).values())
+		labels.value = Array.from(new Map((value ?? []).map(label => [label.id, label])).values())
 	},
 	{
 		immediate: true,
@@ -100,17 +98,18 @@ watch(
 )
 
 const taskStore = useTaskStore()
-const labelStore = useLabelStore()
+const {filterLabelsByQuery, isPending} = useLabels()
+const createLabelMutation = useCreateLabelMutation()
 const {getLabelStyles} = useLabelStyles()
 
-const foundLabels = computed(() => labelStore.filterLabelsByQuery(labels.value, query.value))
-const loading = computed(() => labelTaskService.loading || labelStore.isLoading)
+const foundLabels = computed(() => filterLabelsByQuery(labels.value, query.value))
+const loading = computed(() => isPending.value || createLabelMutation.isPending.value || taskStore.isLoading)
 
 function findLabel(newQuery: string) {
 	query.value = newQuery
 }
 
-async function addLabel(label: ILabel, showNotification = true) {
+async function addLabel(label: Label, showNotification = true) {
 	if (props.taskId === 0) {
 		emit('update:modelValue', labels.value)
 		return
@@ -123,7 +122,7 @@ async function addLabel(label: ILabel, showNotification = true) {
 	}
 }
 
-async function removeLabel(label: ILabel) {
+async function removeLabel(label: Label) {
 	if (props.taskId !== 0) {
 		await taskStore.removeLabel({label, taskId: props.taskId})
 	}
@@ -141,11 +140,11 @@ async function createAndAddLabel(title: string) {
 		return
 	}
 
-	const newLabel = await labelStore.createLabel(new LabelModel({
+	const newLabel = await createLabelMutation.mutateAsync({
 		title,
-		hexColor: getRandomColorHex(),
-	}))
-	addLabel(newLabel, false)
+		hex_color: getRandomColorHex(),
+	})
+	await addLabel(newLabel, false)
 	labels.value.push(newLabel)
 	success({message: t('task.label.addCreateSuccess')})
 }

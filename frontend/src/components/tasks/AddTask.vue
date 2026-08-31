@@ -142,7 +142,7 @@ async function addTask() {
 	const resolvedLabels = await taskStore.ensureLabelsExist(requestedLabels)
 
 	// Skipped labels (e.g. link shares may not create them) don't block task creation; just tell the user.
-	const resolvedTitles = new Set(resolvedLabels.map(l => l.title.toLowerCase()))
+	const resolvedTitles = new Set(resolvedLabels.map(l => (l.title ?? '').toLowerCase()))
 	const failedLabels = requestedLabels.filter(title => !resolvedTitles.has(title.toLowerCase()))
 	if (failedLabels.length > 0) {
 		error({message: t('task.label.createFailed', {labels: failedLabels.join(', ')})})

@@ -4,20 +4,15 @@ import router from '@/router'
 
 import TaskService from '@/services/task'
 import TaskAssigneeService from '@/services/taskAssignee'
-import LabelTaskService from '@/services/labelTask'
 import TaskDuplicateService from '@/services/taskDuplicateService'
 import TaskDuplicateModel from '@/models/taskDuplicateModel'
 
 import {cleanupItemText, parseTaskText, PREFIXES} from '@/modules/quickAddMagic'
 
 import TaskAssigneeModel from '@/models/taskAssignee'
-import LabelTaskModel from '@/models/labelTask'
-import LabelTask from '@/models/labelTask'
 import TaskModel from '@/models/task'
-import LabelModel from '@/models/label'
 import TaskReminderModel from '@/models/taskReminder'
 
-import type {ILabel} from '@/modelTypes/ILabel'
 import type {ITask} from '@/modelTypes/ITask'
 import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
 import type {IUser} from '@/modelTypes/IUser'
@@ -28,7 +23,6 @@ import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelative
 
 import {setModuleLoading} from '@/stores/helper'
 import {useConfigStore} from '@/stores/config'
-import {useLabelStore} from '@/stores/labels'
 import {useProjectStore} from '@/stores/projects'
 import {useKanbanStore} from '@/stores/kanban'
 import {useBaseStore} from '@/stores/base'
@@ -40,6 +34,14 @@ import {runWrites} from '@/helpers/runWrites'
 import {error} from '@/message'
 import {REPEAT_TYPES} from '@/types/IRepeatAfter'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
+import {taskLabelsCreate, taskLabelsDelete} from '@/client/generated'
+import type {Label} from '@/client/generated'
+import {
+	createLabel,
+	ensureLabels,
+	getLabelByExactTitle,
+	refreshLabels,
+} from '@/client/queries/labels'
 
 interface MatchedAssignee extends IUser {
 	match: string,
@@ -94,19 +96,21 @@ function validateUser(
 }
 
 // Check if the label exists
-function validateLabel(labels: ILabel[], label: string) {
-	return findPropertyByValue(labels, 'title', label)
+function validateLabel(labels: Label[], label: string) {
+	return getLabelByExactTitle(labels, label)
 }
 
-async function addLabelToTask(task: ITask, label: ILabel) {
-	const labelTask = new LabelTask({
-		taskId: task.id,
-		labelId: label.id,
+async function addLabelToTask(task: ITask, label: Label) {
+	if (typeof label.id === 'undefined') {
+		throw new Error('Cannot add a label without an id')
+	}
+
+	const {data} = await taskLabelsCreate({
+		path: {projecttask: task.id},
+		body: {label_id: label.id},
 	})
-	const labelTaskService = new LabelTaskService()
-	const response = await labelTaskService.create(labelTask)
 	task.labels.push(label)
-	return response
+	return data
 }
 
 async function findAssignees(parsedTaskAssignees: string[], projectId: number): Promise<MatchedAssignee[]> {
@@ -131,7 +135,6 @@ async function findAssignees(parsedTaskAssignees: string[], projectId: number): 
 export const useTaskStore = defineStore('task', () => {
 	const baseStore = useBaseStore()
 	const kanbanStore = useKanbanStore()
-	const labelStore = useLabelStore()
 	const projectStore = useProjectStore()
 	const authStore = useAuthStore()
 	const configStore = useConfigStore()
@@ -309,21 +312,24 @@ export const useTaskStore = defineStore('task', () => {
 		label,
 		taskId,
 	} : {
-		label: ILabel,
+		label: Label,
 		taskId: ITask['id']
 	}) {
-		const labelTaskService = new LabelTaskService()
-		const r = await labelTaskService.create(new LabelTaskModel({
-			taskId,
-			labelId: label.id,
-		}))
+		if (typeof label.id === 'undefined') {
+			throw new Error('Cannot add a label without an id')
+		}
+
+		const {data} = await taskLabelsCreate({
+			path: {projecttask: taskId},
+			body: {label_id: label.id},
+		})
 		const t = kanbanStore.getTaskById(taskId)
 		if (t.task === null) {
 			// Don't try further adding a label if the task is not in kanban
 			// Usually this means the kanban board hasn't been accessed until now.
 			// Vuex seems to have its difficulties with that, so we just log the error and fail silently.
 			console.debug('Could not add label to task in kanban, task not found', {taskId, t})
-			return r
+			return data
 		}
 
 		kanbanStore.setTaskInBucketByIndex({
@@ -337,25 +343,27 @@ export const useTaskStore = defineStore('task', () => {
 			},
 		})
 
-		return r
+		return data
 	}
 
 	async function removeLabel(
 		{label, taskId}:
-		{label: ILabel, taskId: ITask['id']},
+		{label: Label, taskId: ITask['id']},
 	) {
-		const labelTaskService = new LabelTaskService()
-		const response = await labelTaskService.delete(new LabelTaskModel({
-			taskId, labelId:
-			label.id,
-		}))
+		if (typeof label.id === 'undefined') {
+			throw new Error('Cannot remove a label without an id')
+		}
+
+		const {data} = await taskLabelsDelete({
+			path: {projecttask: taskId, label: label.id},
+		})
 		const t = kanbanStore.getTaskById(taskId)
 		if (t.task === null) {
 			// Don't try further adding a label if the task is not in kanban
 			// Usually this means the kanban board hasn't been accessed until now.
 			// Vuex seems to have its difficulties with that, so we just log the error and fail silently.
 			console.debug('Could not remove label from task in kanban, task not found', t)
-			return response
+			return data
 		}
 
 		// Remove the label from the project
@@ -369,31 +377,37 @@ export const useTaskStore = defineStore('task', () => {
 			},
 		})
 
-		return response
+		return data
 	}
 	
-	async function ensureLabelsExist(labels: string[]): Promise<LabelModel[]> {
+	async function ensureLabelsExist(labels: string[]): Promise<Label[]> {
 		const all = [...new Set(labels)]
-		const findLabel = (labelTitle: string) => validateLabel(Object.values(labelStore.labels) as ILabel[], labelTitle)
+		let availableLabels: Label[] = []
+		let labelsLoaded = false
+		try {
+			availableLabels = await ensureLabels()
+			labelsLoaded = true
+		} catch (e) {
+			console.debug('Could not load labels before creating them from quick add magic', e)
+		}
 
-		// The quick add window doesn't render ContentAuth, so nothing loaded the store yet.
-		if (all.some(labelTitle => typeof findLabel(labelTitle) === 'undefined')) {
+		const hasMissingLabels = all.some(labelTitle => !validateLabel(availableLabels, labelTitle))
+		if (labelsLoaded && hasMissingLabels) {
 			try {
-				await labelStore.loadAllLabels()
+				availableLabels = await refreshLabels()
 			} catch (e) {
-				console.debug('Could not load labels before creating them from quick add magic', e)
+				console.debug('Could not refresh labels before creating them from quick add magic', e)
 			}
 		}
 
 		const mustCreateLabel = all.map(async labelTitle => {
-			let label = findLabel(labelTitle)
+			let label = validateLabel(availableLabels, labelTitle)
 			if (typeof label === 'undefined') {
-				const labelModel = new LabelModel({
-					title: labelTitle,
-					hexColor: getRandomColorHex(),
-				})
 				try {
-					label = await labelStore.createLabel(labelModel)
+					label = await createLabel({
+						title: labelTitle,
+						hex_color: getRandomColorHex(),
+					})
 				} catch (e) {
 					// Link shares may not create labels; skip it instead of aborting task creation.
 					console.debug('Could not create label from quick add magic', {labelTitle, e})
@@ -403,7 +417,7 @@ export const useTaskStore = defineStore('task', () => {
 			return label
 		})
 		const resolved = await Promise.all(mustCreateLabel)
-		return resolved.filter((label): label is LabelModel => typeof label !== 'undefined')
+		return resolved.filter((label): label is Label => typeof label !== 'undefined')
 	}
 
 	// Do everything that is involved in finding, creating and adding the label to the task

@@ -5,7 +5,7 @@ import type {IProjectView} from '@/modelTypes/IProjectView'
 import type {IFilters} from '@/modelTypes/ISavedFilter'
 
 import {hasFilterQuery, transformFilterStringForApi, transformFilterStringFromApi} from '@/helpers/filters'
-import {useLabelStore} from '@/stores/labels'
+import {useLabels} from '@/composables/useLabels'
 import {useProjectStore} from '@/stores/projects'
 
 import XButton from '@/components/input/Button.vue'
@@ -28,64 +28,112 @@ const emit = defineEmits<{
 	'cancel': [],
 }>()
 
-const view = ref<IProjectView>()
+type LoadedProjectView = Omit<IProjectView, 'filter'> & {filter: IFilters}
 
-const labelStore = useLabelStore()
+const view = ref<LoadedProjectView>()
+
+const {isPending, getLabelByExactTitle, getLabelById} = useLabels()
 const projectStore = useProjectStore()
 
-onBeforeMount(() => {
-	const transformFilterFromApi = (filterInput: IFilters): IFilter => {
-		const filterString = transformFilterStringFromApi(
-			filterInput.filter,
-			labelId => labelStore.getLabelById(labelId)?.title || null,
-			projectId => projectStore.projects[projectId]?.title || null,
-		)
+const transformFilterFromApi = (filterInput?: IFilters): IFilters => {
+	const camelCaseFilter = filterInput as unknown as {
+		sortBy?: IFilters['sort_by'],
+		orderBy?: IFilters['order_by'],
+		filterIncludeNulls?: boolean,
+	} | undefined
+	const filterString = transformFilterStringFromApi(
+		filterInput?.filter ?? '',
+		labelId => getLabelById(labelId)?.title || null,
+		projectId => projectStore.projects[projectId]?.title || null,
+	)
 
-		const filter: IFilters = {
-			filter: '',
-			s: '',
-		}
-		if (hasFilterQuery(filterString)) {
-			filter.filter = filterString
-		} else {
-			filter.s = filterString
-		}
-
-		if (filter.s === '') {
-			filter.s = filterInput.s
-		}
-
-		if (filter.filter === '') {
-			filter.filter = filter.s
-		}
-
-		// AbstractModel.assignData() runs objectToCamelCase recursively on all
-		// nested objects, which converts filter_include_nulls to filterIncludeNulls
-		// inside the filter object. IFilters intentionally uses snake_case keys to
-		// match the API query param format. We check both key forms here to handle
-		// data coming from either the API response (camelCased by assignData) or
-		// from a freshly constructed filter object (snake_case).
-		filter.filter_include_nulls = filterInput.filter_include_nulls
-			?? (filterInput as Record<string, unknown>).filterIncludeNulls as boolean
-			?? false
-
-		return filter
+	const filter: IFilters = {
+		sort_by: filterInput?.sort_by ?? camelCaseFilter?.sortBy ?? [],
+		order_by: filterInput?.order_by ?? camelCaseFilter?.orderBy ?? [],
+		filter: '',
+		filter_include_nulls: false,
+		s: '',
+	}
+	if (hasFilterQuery(filterString)) {
+		filter.filter = filterString
+	} else {
+		filter.s = filterString
 	}
 
-	const transformed = {
-		...props.modelValue,
-		filter: transformFilterFromApi(props.modelValue.filter),
-		bucketConfiguration: props.modelValue.bucketConfiguration.map(bc => ({
+	if (filter.s === '') {
+		filter.s = filterInput?.s ?? ''
+	}
+
+	if (filter.filter === '') {
+		filter.filter = filter.s
+	}
+
+	filter.filter_include_nulls = filterInput?.filter_include_nulls
+		?? camelCaseFilter?.filterIncludeNulls
+		?? false
+
+	return filter
+}
+
+function transformViewFromApi(modelValue: IProjectView): LoadedProjectView {
+	return {
+		...modelValue,
+		filter: transformFilterFromApi(modelValue.filter),
+		bucketConfiguration: modelValue.bucketConfiguration.map(bc => ({
 			title: bc.title,
 			filter: transformFilterFromApi(bc.filter),
 		})),
 	}
+}
+
+onBeforeMount(() => {
+	const transformed = transformViewFromApi(props.modelValue)
 
 	if (JSON.stringify(view.value) !== JSON.stringify(transformed)) {
 		view.value = transformed
 	}
 
-	// Registered after view.value is set above, so the immediate run sees the loaded view.
+	const initialFilter = transformed.filter.filter
+	const initialBuckets = transformed.bucketConfiguration.map(bucket => ({
+		title: bucket.title,
+		filter: bucket.filter.filter,
+	}))
+
+	watch(isPending, pending => {
+		if (pending || !view.value) {
+			return
+		}
+
+		const resolved = transformViewFromApi(props.modelValue)
+		if (view.value.filter.filter === initialFilter) {
+			view.value.filter = {
+				...view.value.filter,
+				filter: resolved.filter.filter,
+			}
+		}
+
+		view.value.bucketConfiguration = view.value.bucketConfiguration.map((bucket, index) => {
+			const initial = initialBuckets[index]
+			const resolvedBucket = resolved.bucketConfiguration[index]
+			if (
+				!initial ||
+				!resolvedBucket ||
+				bucket.title !== initial.title ||
+				bucket.filter.filter !== initial.filter
+			) {
+				return bucket
+			}
+
+			return {
+				...bucket,
+				filter: {
+					...bucket.filter,
+					filter: resolvedBucket.filter.filter,
+				},
+			}
+		})
+	}, {immediate: true})
+
 	watch(() => view.value?.viewKind, kind => {
 		if (kind === 'kanban' && view.value?.bucketConfigurationMode === 'none') {
 			view.value.bucketConfigurationMode = 'manual'
@@ -94,17 +142,25 @@ onBeforeMount(() => {
 })
 
 function save() {
-	const transformFilterForApi = (filterInput: IFilters): IFilters => {
+	if (!view.value) {
+		return
+	}
+
+	const transformFilterForApi = (filterInput?: IFilters): IFilters => {
 		const filterString = transformFilterStringForApi(
 			filterInput?.filter || '',
-			labelTitle => labelStore.getLabelByExactTitle(labelTitle)?.id || null,
+			labelTitle => getLabelByExactTitle(labelTitle)?.id || null,
 			projectTitle => {
 				const found = projectStore.findProjectByExactname(projectTitle)
 				return found?.id || null
 			},
 		)
 		const filter: IFilters = {
+			sort_by: filterInput?.sort_by ?? [],
+			order_by: filterInput?.order_by ?? [],
+			filter: '',
 			filter_include_nulls: filterInput?.filter_include_nulls ?? false,
+			s: '',
 		}
 		if (hasFilterQuery(filterString)) {
 			filter.filter = filterString
@@ -117,8 +173,8 @@ function save() {
 
 	emit('update:modelValue', {
 		...view.value,
-		filter: transformFilterForApi(view.value?.filter),
-		bucketConfiguration: view.value?.bucketConfiguration.map(bc => ({
+		filter: transformFilterForApi(view.value.filter),
+		bucketConfiguration: view.value.bucketConfiguration.map(bc => ({
 			title: bc.title,
 			filter: transformFilterForApi(bc.filter),
 		})),
