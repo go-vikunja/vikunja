@@ -1,16 +1,5 @@
 # AGENT Instructions
 
-## Project Overview
-
-Vikunja is a comprehensive todo and task management application with a Vue.js frontend and Go backend. It supports multiple project views (List, Kanban, Gantt, Table), team collaboration, file attachments, and extensive integrations.
-
-The project consists of:
-- `pkg/` – Go code for the API service
-- `frontend/` – Vue.js based web client
-- `magefile.go` – Mage build script providing tasks for development and release
-- `desktop/` – Electron wrapper application
-- `docs/` – Documentation website
-
 ## API Version Policy — new work goes to /api/v2
 
 **`/api/v1` is effectively deprecated and frozen.** It still runs and is fully supported for existing clients, but it should not grow.
@@ -29,6 +18,8 @@ Before writing code in these areas, invoke the matching skill with the `Skill` t
 - Adding or modifying a model in `pkg/models/` (new CRUD, new or changed `Can*` methods, anything touching permissions): invoke `crudable`.
 - Creating or editing any file under `pkg/migration/`: invoke `migration`.
 - Adding **any** new API route (new entity, custom action, or porting from v1) — all new routes go on the Huma-backed `/api/v2`, editing `pkg/routes/api/v2/`: invoke `api-v2-routes`. See the API Version Policy above.
+- Setting up an isolated worktree to implement a plan: invoke `prepare-worktree`.
+- Running the Playwright end-to-end suite: invoke `run-e2e-tests`.
 
 ## Plans and Worktrees
 
@@ -38,85 +29,23 @@ When the user asks you to create a plan to fix or implement something:
 - NEVER commit plans to git
 - Give the plan a descriptive name using kebab-case (e.g., `fix-position-healing.md`, `feat-new-feature.md`)
 
-### Preparing a Worktree for Implementation
-
-When the user tells you to prepare a worktree for a plan, use the mage command to set up an isolated workspace:
-
-```bash
-mage dev:prepare-worktree <name> <plan-path>
-```
-
-**Arguments:**
-- `<name>` - Required. Becomes both the folder name and branch name. Use conventions like `fix-<description>` for bug fixes or `feat-<description>` for new features.
-- `<plan-path>` - Required. Path to a plan file (relative to repo root) that will be copied to the new worktree's `plans/` directory. Pass `""` to skip copying a plan.
-
-This will initialize a new worktree in the parent directory and copy some files over.
-
-**Example:**
-```bash
-# Create worktree for a bug fix with a plan
-mage dev:prepare-worktree fix-position-healing plans/fix-position-healing.md
-
-# Create worktree for a new feature without a plan
-mage dev:prepare-worktree feat-dark-mode ""
-```
-
-**Result:**
-```
-parent-directory/
-├── main/                    # Original workspace
-├── fix-position-healing/    # New worktree
-│   ├── config.yml           # With updated rootpath
-│   └── plans/
-│       └── fix-position-healing.md
-└── ...
-```
-
-After creation, tell the user where they can find the new worktree.
+When the user tells you to prepare a worktree for a plan, invoke the `prepare-worktree` skill.
 
 ## Development Commands
 
-### Backend (Go)
-- **Build**: `mage build` - Builds the Go binary
-- **Test Features**: `mage test:feature` - Runs feature tests
-- **Test Web**: `mage test:web` - Runs web tests
-- You can run specific tests with `mage test:filter <filter>` where `<filter>` is a go test filter string.
-- **Lint**: `mage lint` - Runs golangci-lint
-- **Lint Fix**: `mage lint:fix` - Runs golangci-lint with auto-fix
-- **Generate Swagger Docs**: `mage generate:swagger-docs` - Updates API documentation (Generally you won't need to run this unless the user tells you to. It is updated automatically in the CI workflow)
-- **Check Swagger**: `mage check:got-swag` - Verifies swagger docs are up to date
-- **Generate Config**: `mage generate:config-yaml` - Generate sample config from `config-raw.json`
-- **Clean**: `mage build:clean` - Cleans build artifacts
-- **Format**: `mage fmt` - Format Go code before committing
+`mage -l` lists every target; `pnpm run` in `frontend/` lists the frontend scripts. The non-obvious parts:
 
-**IMPORTANT:** To run api tests, you MUST use the `mage test:web`, or `mage test:feature` or `mage test:filter` commands. Using plain `go test` will not work!
+- **API tests MUST go through mage** — `mage test:web`, `mage test:feature`, or `mage test:filter <go-test-filter>`. Plain `go test` will not work.
+- **E2E tests**: never run `pnpm test:e2e` directly — invoke the `run-e2e-tests` skill.
+- `mage generate:swagger-docs` is CI's job. Don't run it unless the user asks.
+- `pnpm dev` serves on port 4173 unless `--port` says otherwise.
+- `mage dev:make-migration <StructName>` scaffolds a migration (prompts if the name is omitted). Siblings: `make-event`, `make-listener`, `make-notification`.
 
-**Go Tips:**
-- To see source files from a dependency, or to answer questions about a dependency, run `go mod download -json MODULE` and use the returned `Dir` path to read the files.
-- Use `go doc foo.Bar` or `go doc -all foo` to read documentation for packages, types, functions, etc.
-
--Development helpers under the `dev` namespace:
-- **Migration**: `mage dev:make-migration <StructName>` - Creates new database migration. If you omit `<StructName>`, the command will prompt for it.
-- **Event**: `mage dev:make-event` - Create an event type
-- **Listener**: `mage dev:make-listener` - Create an event listener
-- **Notification**: `mage dev:make-notification` - Create a notification skeleton
-- **Prepare Worktree**: `mage dev:prepare-worktree <name> <plan-path>` - Creates a new git worktree in `../` with the given name as folder and branch. Copies a plan file if provided (pass `""` to skip). Copies `config.yml` with updated rootpath and initializes the frontend.
-
-### Frontend (Vue.js)
-Navigate to `frontend/` directory:
-- **Dev Server**: `pnpm dev` - Starts development server, running on port 4173 unless changed with the `--port` flag
-- **Build**: `pnpm build` - Production build
-- **Build Dev**: `pnpm build:dev` - Development build  
-- **Lint**: `pnpm lint` - ESLint check
-- **Lint Fix**: `pnpm lint:fix` - ESLint with auto-fix
-- **Lint Styles**: `pnpm lint:styles` - Stylelint check for CSS/SCSS
-- **Lint Styles Fix**: `pnpm lint:styles:fix` - Stylelint with auto-fix
-- **Type Check**: `pnpm typecheck` - Vue TypeScript checking
-- **Test Unit**: `pnpm test:unit` - Vitest unit tests
-- **Test E2E**: Do NOT run `pnpm test:e2e` directly. Use `mage test:e2e` instead (see below).
+**Always save test output to a file** (`2>&1 | tee /tmp/out.log`), then read the file. Tests here are expensive — never re-run one just to grep the output differently.
 
 ### Pre-commit Checks
-Always run both lint before committing:
+
+Always run lint before committing:
 ```bash
 # Backend
 mage lint:fix
@@ -129,117 +58,18 @@ Fix any errors the lint commands report, then try comitting again.
 
 You only need to run the lint for the backend when changing backend code, and the lint for the frontend only when changing frontend code. Similarly, only run style linting when modifying CSS/SCSS files or Vue component styles.
 
-## Architecture Overview
+## API Development
 
-### Backend Architecture (Go)
-The Go backend follows a layered architecture with clear separation of concerns:
-
-**Core Layers:**
-- **Models** (`pkg/models/`) - Domain entities with business logic and CRUD operations
-- **Services** (`pkg/services/`) - Business logic layer handling complex operations
-- **Routes** (`pkg/routes/`) - HTTP API endpoints and routing configuration
-- **Web** (`pkg/web/`) - Generic CRUD handlers and web framework abstractions
-
-**Key Patterns:**
-- **Generic CRUD**: Models implement `CRUDable` interface for standardized database operations
-- **Permissions System**: Three-tier permissions (Read/Write/Admin) enforced across all operations
-- **Event-Driven**: Event system for notifications, webhooks, and cross-cutting concerns
-- **Modular Design**: Pluggable authentication, avatar providers, migration tools
-
-**Database:**
-- XORM ORM with support for MySQL, PostgreSQL, SQLite
-- Migration system in `pkg/migration/` with timestamped files
-- Database sessions with automatic transaction handling
-
-**Authentication:**
-- Multi-provider: Local, LDAP, OpenID Connect
-- JWT tokens for API access
-- API tokens with scoped permissions
-- TOTP/2FA support
-
-### Frontend Architecture (Vue.js)
-Modern Vue 3 composition API application with TypeScript:
-
-**State Management:**
-- **Pinia** stores in `src/stores/` for global state
-- Composables in `src/composables/` for reusable logic
-- Component-level state with Vue 3 Composition API
-
-**Key Directories:**
-- `src/components/` - Reusable Vue components organized by feature
-- `src/views/` - Page-level components and routing
-- `src/stores/` - Pinia state management
-- `src/services/` - API service layer matching backend models
-- `src/models/` - TypeScript interfaces matching backend models
-- `src/helpers/` - Utility functions and business logic
-
-**UI Framework:**
-- Bulma CSS framework with CSS variables for theming
-- FontAwesome icons with tree-shaking
-- TipTap rich text editor for task descriptions
-- Custom component library in `src/components/base/`
-
-## Development Workflows
-
-### Adding New Features
-
-**Backend Changes:**
-1. Create/modify models in `pkg/models/` with proper CRUD and Permissions interfaces as required (invoke the `crudable` skill)
-2. Add database migration if needed: `mage dev:make-migration <StructName>` (invoke the `migration` skill)
-3. Create/update services in `pkg/services/` for complex business logic
-4. Add API routes on **`/api/v2`** in `pkg/routes/api/v2/` — invoke the `api-v2-routes` skill. Do **not** add new routes to `/api/v1`; it is frozen (see API Version Policy above)
-
-**Frontend Changes:**
-1. Create TypeScript interfaces in `src/modelTypes/` matching backend models
-2. Add/update services in `src/services/` for API communication
-3. Create components in appropriate `src/components/` subdirectories
-4. Add views/pages in `src/views/` with proper routing
-5. Update Pinia stores if global state changes are needed
-
-### Database Changes
-1. Run `mage dev:make-migration <StructName>`
-2. Edit the generated migration file in `pkg/migration/`
-3. Update corresponding model in `pkg/models/`
-4. Update TypeScript interfaces in frontend `src/modelTypes/`
-
-### API Development
 - **New endpoints go on `/api/v2`** (Huma-backed, `pkg/routes/api/v2/`). `/api/v1` is frozen — see the API Version Policy near the top. Invoke the `api-v2-routes` skill before writing v2 routes.
 - v2 verb conventions differ from v1: POST creates, PUT/PATCH update (v1 used PUT to create, POST to update).
 - Both versions reuse the generic `pkg/web/handler/` `Do*` functions for standard CRUD, which enforce permissions via the model's `Can*` methods.
 - Implement permission checks at the model level via the Permissions interface — never in the route handler (the exception: non-CRUD v2 actions must call `Can*` explicitly; the skill covers this).
 - v2 generates its OpenAPI spec from Go types automatically — no Swagger annotations. v1's swaggo annotations stay as-is but no new ones are needed.
 
-### Testing
-- Backend: Feature tests alongside source files, web tests in `pkg/webtests/`
-- Frontend: Unit tests with Vitest, E2E tests with Playwright
-- Always test both positive and negative authorization scenarios
-- Use test fixtures in `pkg/db/fixtures/` for consistent test data
+## Testing
 
-### Running E2E Tests
-
-**IMPORTANT: ALWAYS use `mage test:e2e` to run end-to-end tests.** Do NOT run `pnpm test:e2e` directly. The mage command builds the API, starts it with an isolated SQLite database, builds and serves the frontend, runs the Playwright tests, and tears everything down automatically.
-
-```bash
-mage test:e2e ""                                      # run all tests
-mage test:e2e "tests/e2e/misc/menu.spec.ts"           # specific file
-mage test:e2e "--grep menu"                            # filter by name
-mage test:e2e "--headed tests/e2e/misc/menu.spec.ts"  # headed mode
-```
-
-**IMPORTANT: Always save test output to a file.** E2E tests are expensive (they rebuild the API, start servers, run browsers, etc.). NEVER re-run tests just to look at the output differently (e.g., with different `grep`/`tail` filters). Instead, save the output on the first run and then read the file:
-
-```bash
-# First run: save output to a file
-mage test:e2e "tests/e2e/misc/menu.spec.ts" 2>&1 | tee /tmp/e2e-output.log
-
-# Subsequent analysis: read the file, don't re-run
-cat /tmp/e2e-output.log | grep -E '(passed|failed)'
-cat /tmp/e2e-output.log | tail -20
-```
-
-This also applies to `mage test:web`, `mage test:feature`, and `mage test:filter`.
-
-Set `VIKUNJA_E2E_SKIP_BUILD=true` to skip rebuilding the API binary when iterating on frontend-only changes.
+- Always test both positive and negative authorization scenarios.
+- Use test fixtures in `pkg/db/fixtures/` for consistent test data.
 
 ## Swagger API Documentation
 
@@ -251,7 +81,7 @@ Use the **Conventional Commits** style when committing changes (for example, `fe
 
 ## Frontend Development Guidelines
 
-The web client lives in `frontend/` and uses Vue 3 + TypeScript. ESLint rules enforce: single quotes, trailing commas, no semicolons, tab indent, Vue <script lang="ts">, PascalCase component names, camelCase events. See `frontend/eslint.config.js` and `frontend/.editorconfig` and obey formatting rules outlined there.
+The web client lives in `frontend/` and uses Vue 3 + TypeScript. Formatting and style are enforced by `frontend/eslint.config.js` and `frontend/.editorconfig` — obey what they specify.
 
 ## Translations
 
@@ -264,30 +94,18 @@ After adjusting the source string, you need to call the respective translation l
 
 **Do not add a new language from scratch or translate strings into other languages yourself.** Translations are managed through a dedicated workflow. If you are asked to add a new language, translate existing strings, or update translations for non-English locales, point the user to the translation guide instead: https://vikunja.io/docs/translations/
 
-## Key Files and Conventions
+## Code Style
 
-**Configuration:**
-- `config.yml.sample` - Example configuration (generated from `config-raw.json`)
-- Environment variables override config file settings
-- Use `pkg/config/` for configuration management
-
-**Code Style:**
-- Go: golangci-lint per `.golangci.yml`; use goimports; wrap errors with `fmt.Errorf("...: %w", err)`; enforce permissions checks in models; never log secrets; do not edit generated `pkg/swagger/*`
+- Wrap errors with `fmt.Errorf("...: %w", err)`.
 - **No raw SQL.** Use XORM's query builder (`s.Where(...)`, `builder.In`, `.Cols().Update()`, etc.) — never hand-rolled SQL strings via `s.Exec`/`s.Query`/`builder.Expr`, in migrations, tests, or anywhere else. Gotcha when converting: an argument-less `builder.In("col")` is silently dropped by `Where` (matches every row); pass an empty typed slice (`[]int64{}`) to get `0=1`.
-- Vue: ESLint + TS; single quotes, trailing commas, no semicolons, tab indent; script setup + lang ts; keep services/models in sync with backend
-- Follow existing patterns for consistency
+- Never log secrets.
 - **Comments: document the *why*, not the *what* — default to no comment.** Don't write comments that restate the code, a function/struct/field name, or a signature; they're noise the reader skips past (a comment that takes longer to read than the code it describes should be deleted). Only comment a genuinely non-obvious *why* — a gotcha, an invariant, a rejected alternative, a cross-file constraint — in one tight line. Be aggressive about cutting on the first pass, not just when asked.
 - Before creating a new file, function, or helper, search the codebase (`grep` / `rg`) for existing code that does the same thing. Prefer extending an existing helper over duplicating it. If logic overlaps an existing function significantly, reuse it.
+- API endpoints: kebab-case in URLs, snake_case in JSON.
 
-**Naming Conventions:**
-- Go: Standard Go conventions (PascalCase for exports, camelCase for private)
-- Vue: PascalCase for components, camelCase for composables
-- API endpoints: kebab-case in URLs, snake_case in JSON
+## Configuration
 
-**Permissions and Permissions:**
-- Always implement Permissions interface for new models
-- Use `CanRead`, `CanWrite`, `CanCreate`, `CanDelete` methods
-- Permissions are enforced at the model level, not just routes
+`config.yml.sample` is generated from `config-raw.json` via `mage generate:config-yaml` — edit the JSON, not the sample. Environment variables override config file settings.
 
 ## License System
 
@@ -299,7 +117,5 @@ The license system in `pkg/license/` funds Vikunja's ongoing development. Vikunj
 
 - Database migrations are irreversible in production - test thoroughly
 - Frontend services must match backend model structure exactly
-- Permissions checking is mandatory for all CRUD operations
+- Permissions checking is mandatory for all CRUD operations, and is enforced at the model level via `CanRead`/`CanWrite`/`CanCreate`/`CanDelete` — not in routes
 - Event listeners in `pkg/*/listeners.go` must be registered properly
-- CORS settings in backend must allow frontend domain
-- API tokens have different scopes - check permissions carefully
