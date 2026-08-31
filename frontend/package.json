@@ -59,7 +59,7 @@
     "@fortawesome/vue-fontawesome": "3.3.3",
     "@intlify/unplugin-vue-i18n": "11.2.5",
     "@kyvg/vue3-notification": "3.4.2",
-    "@sentry/vue": "10.71.0",
+    "@sentry/vue": "10.72.0",
     "@tanstack/vue-query": "5.102.8",
     "@tiptap/core": "3.30.5",
     "@tiptap/extension-blockquote": "3.30.5",
