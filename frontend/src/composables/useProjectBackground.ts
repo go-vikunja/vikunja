@@ -1,62 +1,102 @@
-import {ref, toValue, watch, type MaybeRefOrGetter} from 'vue'
-import ProjectService from '@/services/project'
-import type {ProjectResponse} from '@/client/queries/projects'
+import {
+	computed,
+	onBeforeUnmount,
+	ref,
+	toValue,
+	watch,
+	type MaybeRefOrGetter,
+} from 'vue'
+import {useQuery} from '@tanstack/vue-query'
+
+import type {Project} from '@/client/generated'
+import {projectBackgroundQuery} from '@/client/queries/projectBackgrounds'
 import {getBlobFromBlurHash} from '@/helpers/getBlobFromBlurHash'
 
-export function useProjectBackground(project: MaybeRefOrGetter<ProjectResponse | null>) {
+type ProjectWithBackground = Pick<
+	Project,
+	'id' | 'background_information' | 'background_blur_hash'
+>
+
+export function useProjectBackground(project: MaybeRefOrGetter<ProjectWithBackground | null>) {
+	const projectId = computed(() => toValue(project)?.id ?? 0)
+	const hasBackground = computed(() => Boolean(toValue(project)?.background_information))
+	const blurHash = computed(() => toValue(project)?.background_blur_hash ?? '')
+	const query = useQuery(computed(() => ({
+		...projectBackgroundQuery(projectId.value),
+		enabled: projectId.value > 0 && hasBackground.value,
+	})))
+
 	const background = ref<string | null>(null)
-	const backgroundLoading = ref(false)
 	const blurHashUrl = ref('')
+	const blurHashLoading = ref(false)
+
+	function clearBackground() {
+		if (background.value !== null) {
+			window.URL.revokeObjectURL(background.value)
+			background.value = null
+		}
+	}
+
+	function clearBlurHash() {
+		if (blurHashUrl.value !== '') {
+			window.URL.revokeObjectURL(blurHashUrl.value)
+			blurHashUrl.value = ''
+		}
+	}
+
+	watch([projectId, hasBackground], () => {
+		clearBackground()
+		if (!hasBackground.value) {
+			clearBlurHash()
+		}
+	}, {immediate: true})
+
+	watch(query.data, blob => {
+		clearBackground()
+		if (hasBackground.value && blob) {
+			background.value = window.URL.createObjectURL(blob)
+		}
+	}, {immediate: true})
 
 	watch(
-		() => [
-			toValue(project)?.id ?? null,
-			toValue(project)?.background_blur_hash ?? null,
-		] as [number | null, string | null],
-		async ([projectId, blurHash], oldValue) => {
-			const projectValue = toValue(project)
-			if (
-				projectValue === null ||
-				!projectValue.background_information ||
-				backgroundLoading.value
-			) {
+		[projectId, hasBackground, blurHash],
+		async ([, projectHasBackground, projectBlurHash], _, onCleanup) => {
+			let active = true
+			onCleanup(() => {
+				active = false
+			})
+
+			clearBlurHash()
+			if (!projectHasBackground || projectBlurHash === '') {
+				blurHashLoading.value = false
 				return
 			}
 
-			const [oldProjectId, oldBlurHash] = oldValue || []
-			if (
-				oldValue !== undefined &&
-				projectId === oldProjectId && blurHash === oldBlurHash
-			) {
-				// project hasn't changed
-				return
-			}
-
-			backgroundLoading.value = true
-
+			blurHashLoading.value = true
 			try {
-				const blurHashPromise = getBlobFromBlurHash(blurHash).then((blurHash) => {
-					blurHashUrl.value = blurHash ? window.URL.createObjectURL(blurHash) : ''
-				})
-
-				const projectService = new ProjectService()
-				const backgroundPromise = projectService.background({
-					id: projectValue.id,
-					backgroundInformation: projectValue.background_information,
-				}).then((result) => {
-					background.value = result
-				})
-				await Promise.all([blurHashPromise, backgroundPromise])
+				const blob = await getBlobFromBlurHash(projectBlurHash)
+				if (active && blob) {
+					blurHashUrl.value = window.URL.createObjectURL(blob)
+				}
 			} finally {
-				backgroundLoading.value = false
+				if (active) {
+					blurHashLoading.value = false
+				}
 			}
 		},
 		{immediate: true},
 	)
 
+	onBeforeUnmount(() => {
+		clearBackground()
+		clearBlurHash()
+	})
+
 	return {
 		background,
 		blurHashUrl,
-		backgroundLoading,
+		backgroundLoading: computed(() =>
+			hasBackground.value && (query.isPending.value || blurHashLoading.value),
+		),
 	}
 }
