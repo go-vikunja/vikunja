@@ -228,11 +228,13 @@ describe('project drafts and cache mutations', () => {
 		})
 	})
 
-	it('creates a project, strips the display color prefix, and inserts it into cache', async () => {
-		const created = serverProject({id: 5, title: 'Created', hex_color: 'abcdef'})
-		const normalizedCreated = {...created, hex_color: '#abcdef'}
+	it('does not seed the detail cache from a sparse create response', async () => {
+		const created = {id: 5, title: 'Created', hex_color: 'abcdef'}
+		const hydrated = serverProject({id: 5, title: 'Created', hex_color: 'abcdef'})
+		const normalizedCreated = {...hydrated, hex_color: '#abcdef'}
 		queryClient.setQueryData(listKey, {projects: [], favoriteProject: null, savedFilterProjects: []})
 		sdk.projectsCreate.mockResolvedValue({data: created})
+		sdk.projectsRead.mockResolvedValue({data: hydrated})
 
 		await expect(createProject({title: 'Created', hex_color: '#abcdef'})).resolves.toMatchObject(normalizedCreated)
 
@@ -240,8 +242,10 @@ describe('project drafts and cache mutations', () => {
 			body: {title: 'Created', hex_color: 'abcdef'},
 			query: {format: 'html'},
 		})
+		expect(sdk.projectsRead).not.toHaveBeenCalled()
 		expect(queryClient.getQueryData<{projects: Project[]}>(listKey)?.projects).toContainEqual(normalizedCreated)
-		expect(queryClient.getQueryData<Project>(projectKeys.detail(5))).toMatchObject(normalizedCreated)
+		expect(queryClient.getQueryData(projectKeys.detail(5))).toBeUndefined()
+		expect(queryClient.getQueryState(listKey)?.isInvalidated).toBe(true)
 	})
 
 	it('does not let an older list response overwrite a created project', async () => {
