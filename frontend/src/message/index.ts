@@ -2,7 +2,7 @@ import {i18n} from '@/i18n'
 import {notify} from '@kyvg/vue3-notification'
 
 export function getErrorText(r): string {
-	const data = r?.reason?.response?.data || r?.response?.data
+	const data = r?.reason?.response?.data || r?.response?.data || r
 
 	if (data?.code) {
 		const path = `error.${data.code}`

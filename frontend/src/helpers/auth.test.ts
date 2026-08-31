@@ -1,6 +1,6 @@
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest'
 
-import {getToken, refreshToken, removeToken} from './auth'
+import {getToken, getTokenIdentity, getTokenType, refreshToken, removeToken} from './auth'
 
 let resolvePost: ((value: unknown) => void) | null = null
 
@@ -26,6 +26,34 @@ vi.mock('@/helpers/desktopAuth', () => ({
 }))
 
 const FAKE_TOKEN = 'header.payload.signature'
+
+describe('getTokenType', () => {
+	it('reads the numeric JWT type claim', () => {
+		const payload = btoa(JSON.stringify({type: 2}))
+
+		expect(getTokenType(`header.${payload}.signature`)).toBe(2)
+	})
+
+	it('returns null for missing or malformed tokens', () => {
+		expect(getTokenType(null)).toBeNull()
+		expect(getTokenType('not-a-jwt')).toBeNull()
+	})
+})
+
+describe('getTokenIdentity', () => {
+	it('reads numeric identity claims from a JWT', () => {
+		const payload = btoa(JSON.stringify({id: 42, type: 1}))
+
+		expect(getTokenIdentity(`header.${payload}.signature`)).toEqual({id: 42, type: 1})
+	})
+
+	it('returns null for incomplete identity claims', () => {
+		const payload = btoa(JSON.stringify({type: 1}))
+
+		expect(getTokenIdentity(`header.${payload}.signature`)).toBeNull()
+		expect(getTokenIdentity(null)).toBeNull()
+	})
+})
 
 function settlePost() {
 	resolvePost?.({data: {token: FAKE_TOKEN}})

@@ -57,4 +57,13 @@ describe('getErrorText', () => {
 
 		expect(text).toBe('some backend message')
 	})
+
+	it('reads a direct problem response', () => {
+		const text = getErrorText({
+			code: 99999,
+			detail: 'direct problem detail',
+		})
+
+		expect(text).toBe('direct problem detail')
+	})
 })
