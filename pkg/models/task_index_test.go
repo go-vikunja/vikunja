@@ -27,6 +27,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"xorm.io/xorm/schemas"
 )
 
 func TestTaskIndexStateFixtures(t *testing.T) {
@@ -229,11 +230,18 @@ func TestSetNewTaskIndexes(t *testing.T) {
 
 	t.Run("concurrent reservations are unique", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		oldMaxOpen := x.DB().Stats().MaxOpenConnections
-		x.SetMaxOpenConns(1)
-		defer x.SetMaxOpenConns(oldMaxOpen)
+		if db.Type() == schemas.SQLITE {
+			t.Skip("the shared in-memory sqlite harness cannot exercise concurrent writes")
+		}
 
-		start := make(chan struct{})
+		oldMaxOpen := x.DB().Stats().MaxOpenConnections
+		if oldMaxOpen == 1 {
+			x.SetMaxOpenConns(2)
+			defer x.SetMaxOpenConns(oldMaxOpen)
+		}
+
+		ready := make(chan struct{}, 2)
+		allocate := make(chan struct{})
 		indexes := make(chan int64, 2)
 		errs := make(chan error, 2)
 		var wg sync.WaitGroup
@@ -241,9 +249,10 @@ func TestSetNewTaskIndexes(t *testing.T) {
 		for range 2 {
 			go func() {
 				defer wg.Done()
-				<-start
 				s := db.NewSession()
 				defer s.Close()
+				ready <- struct{}{}
+				<-allocate
 				tasks := []*Task{{}}
 				if err := setNewTaskIndexes(s, 4, tasks); err != nil {
 					errs <- err
@@ -256,7 +265,9 @@ func TestSetNewTaskIndexes(t *testing.T) {
 				indexes <- tasks[0].Index
 			}()
 		}
-		close(start)
+		<-ready
+		<-ready
+		close(allocate)
 		wg.Wait()
 		close(indexes)
 		close(errs)
