@@ -1419,6 +1419,15 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 
 	// If the task is being moved between projects, make sure to move the bucket + index as well
 	if t.ProjectID != 0 && ot.ProjectID != t.ProjectID {
+		_, err = s.Insert(&TaskIndexAlias{
+			ProjectID: ot.ProjectID,
+			Index:     ot.Index,
+			TaskID:    ot.ID,
+		})
+		if err != nil {
+			return err
+		}
+
 		t.Index = 0
 		err = setNewTaskIndexes(s, t.ProjectID, []*Task{t})
 		if err != nil {
@@ -2241,6 +2250,11 @@ func hardDeleteTask(s *xorm.Session, t *Task) (err error) {
 	}
 
 	_, err = s.Where("task_id = ?", t.ID).Delete(&TaskBucket{})
+	if err != nil {
+		return
+	}
+
+	_, err = s.Where("task_id = ?", t.ID).Delete(&TaskIndexAlias{})
 	if err != nil {
 		return
 	}

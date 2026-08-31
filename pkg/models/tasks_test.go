@@ -783,6 +783,11 @@ func TestHardDeleteTask(t *testing.T) {
 	require.NoError(t, err)
 	_, err = s.Insert(&TaskUnreadStatus{TaskID: 1, UserID: 2})
 	require.NoError(t, err)
+	_, err = s.Insert(
+		&TaskIndexAlias{ProjectID: 2, Index: 99, TaskID: 1},
+		&TaskIndexAlias{ProjectID: 3, Index: 99, TaskID: 1},
+	)
+	require.NoError(t, err)
 	_, err = s.Insert(&Subscription{EntityType: SubscriptionEntityTask, EntityID: 1, UserID: 2})
 	require.NoError(t, err)
 	// Comment 1 belongs to task 1
@@ -810,6 +815,7 @@ func TestHardDeleteTask(t *testing.T) {
 	db.AssertMissing(t, "task_relations", map[string]interface{}{"other_task_id": 1})
 	db.AssertMissing(t, "favorites", map[string]interface{}{"entity_id": 1, "kind": FavoriteKindTask})
 	db.AssertMissing(t, "subscriptions", map[string]interface{}{"entity_id": 1, "entity_type": SubscriptionEntityTask})
+	db.AssertMissing(t, "task_index_aliases", map[string]interface{}{"task_id": 1})
 	db.AssertMissing(t, "reactions", map[string]interface{}{"entity_id": 1, "entity_kind": ReactionKindTask})
 	db.AssertMissing(t, "reactions", map[string]interface{}{"entity_id": 1, "entity_kind": ReactionKindComment})
 	// The attachment files are gone too

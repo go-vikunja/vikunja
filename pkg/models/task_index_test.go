@@ -332,5 +332,105 @@ func TestTaskIndexReservationRollsBackWithTaskChanges(t *testing.T) {
 		require.NoError(t, err)
 		require.True(t, has)
 		assert.Equal(t, int64(1), persisted.ProjectID)
+
+		aliases, err := s.Where("task_id = ?", 12).Count(&TaskIndexAlias{})
+		require.NoError(t, err)
+		assert.Zero(t, aliases)
+	})
+}
+
+func TestTaskIndexAliases(t *testing.T) {
+	t.Run("move records the retired address", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		moved := &Task{ID: 12, ProjectID: 2}
+		require.NoError(t, moved.Update(s, &user.User{ID: 1}))
+		assert.Equal(t, int64(3), moved.Index)
+
+		alias := &TaskIndexAlias{}
+		has, err := s.Where("project_id = ? AND `index` = ?", 1, 12).Get(alias)
+		require.NoError(t, err)
+		require.True(t, has)
+		assert.Equal(t, int64(12), alias.TaskID)
+	})
+
+	t.Run("ordinary update records no alias", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		require.NoError(t, (&Task{ID: 12, Title: "still here"}).Update(s, &user.User{ID: 1}))
+		aliases, err := s.Count(&TaskIndexAlias{})
+		require.NoError(t, err)
+		assert.Zero(t, aliases)
+	})
+
+	t.Run("moving back retains every retired address", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		firstMove := &Task{ID: 12, ProjectID: 2}
+		require.NoError(t, firstMove.Update(s, &user.User{ID: 1}))
+		assert.Equal(t, int64(3), firstMove.Index)
+
+		secondMove := &Task{ID: 12, ProjectID: 1}
+		require.NoError(t, secondMove.Update(s, &user.User{ID: 1}))
+		assert.Equal(t, int64(35), secondMove.Index)
+
+		aliases := []*TaskIndexAlias{}
+		require.NoError(t, s.Where("task_id = ?", 12).OrderBy("project_id").Find(&aliases))
+		require.Len(t, aliases, 2)
+		assert.Equal(t, &TaskIndexAlias{ProjectID: 1, Index: 12, TaskID: 12}, aliases[0])
+		assert.Equal(t, &TaskIndexAlias{ProjectID: 2, Index: 3, TaskID: 12}, aliases[1])
+	})
+
+	t.Run("alias conflict aborts the move", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.Insert(&TaskIndexAlias{ProjectID: 1, Index: 12, TaskID: 1})
+		require.NoError(t, err)
+		require.Error(t, (&Task{ID: 12, ProjectID: 2}).Update(s, &user.User{ID: 1}))
+
+		counter := &ProjectTaskCounter{}
+		has, err := s.ID(2).Get(counter)
+		require.NoError(t, err)
+		require.True(t, has)
+		assert.Equal(t, int64(2), counter.LastIndex)
+
+		persisted := &Task{ID: 12}
+		has, err = s.Get(persisted)
+		require.NoError(t, err)
+		require.True(t, has)
+		assert.Equal(t, int64(1), persisted.ProjectID)
+	})
+
+	t.Run("soft deletion retains aliases and counters", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		moveSession := db.NewSession()
+		moved := &Task{ID: 12, ProjectID: 2}
+		require.NoError(t, moved.Update(moveSession, &user.User{ID: 1}))
+		require.NoError(t, moveSession.Commit())
+		require.NoError(t, moveSession.Close())
+
+		deleteSession := db.NewSession()
+		require.NoError(t, (&Task{ID: 12}).Delete(deleteSession, &user.User{ID: 3}))
+		require.NoError(t, deleteSession.Commit())
+		require.NoError(t, deleteSession.Close())
+
+		s := db.NewSession()
+		defer s.Close()
+		aliases, err := s.Where("task_id = ?", 12).Count(&TaskIndexAlias{})
+		require.NoError(t, err)
+		assert.Equal(t, int64(1), aliases)
+		counter := &ProjectTaskCounter{}
+		has, err := s.ID(2).Get(counter)
+		require.NoError(t, err)
+		require.True(t, has)
+		assert.Equal(t, int64(3), counter.LastIndex)
 	})
 }
