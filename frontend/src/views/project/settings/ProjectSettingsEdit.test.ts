@@ -36,6 +36,7 @@ vi.mock('vue-i18n', async importOriginal => ({
 const ProjectSearchStub = defineComponent({
 	name: 'ProjectSearch',
 	props: ['modelValue'],
+	emits: ['update:modelValue'],
 	template: '<div />',
 })
 const SlotStub = defineComponent({template: '<div><slot /></div>'})
@@ -66,7 +67,7 @@ describe('ProjectSettingsEdit', () => {
 		await (wrapper.vm as unknown as {save: () => Promise<void>}).save()
 
 		expect(state.savedParentProjectIds).toEqual([100])
-		expect(state.project.value.parent_project_id).toBe(100)
+		expect(state.project!.value.parent_project_id).toBe(100)
 	})
 
 	it('selects the parent when navigation projects load after project detail', async () => {
@@ -92,6 +93,39 @@ describe('ProjectSettingsEdit', () => {
 		expect(projectSearch.props('modelValue')).toMatchObject({
 			id: 100,
 			title: 'Parent Project',
+		})
+	})
+
+	it('resets the parent selection when the route reuses the component', async () => {
+		state.projects![100] = normalizeProject({id: 100, title: 'First Parent'})
+		const wrapper = shallowMount(ProjectSettingsEdit, {
+			props: {projectId: 101},
+			global: {
+				stubs: {
+					CreateEdit: SlotStub,
+					FormField: SlotStub,
+					ProjectSearch: ProjectSearchStub,
+				},
+				mocks: {$t: (key: string) => key, $router: {push: vi.fn()}},
+				directives: {focus: () => {}, tooltip: () => {}},
+			},
+		})
+
+		const projectSearch = wrapper.findComponent({name: 'ProjectSearch'})
+		projectSearch.vm.$emit('update:modelValue', normalizeProject({id: 200, title: 'Changed Parent'}))
+		await nextTick()
+		expect(projectSearch.props('modelValue')).toMatchObject({id: 200})
+
+		await wrapper.setProps({projectId: 102})
+		state.project!.value = normalizeProject({id: 102, parent_project_id: 300})
+		await nextTick()
+		expect(projectSearch.props('modelValue')).toBeNull()
+
+		state.projects![300] = normalizeProject({id: 300, title: 'Second Parent'})
+		await nextTick()
+		expect(projectSearch.props('modelValue')).toMatchObject({
+			id: 300,
+			title: 'Second Parent',
 		})
 	})
 })
