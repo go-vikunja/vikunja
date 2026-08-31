@@ -189,3 +189,21 @@ func DeleteUserAsAdmin(s *xorm.Session, doer *user.User, id int64, mode string) 
 	events.DispatchOnCommit(s, &AdminUserDeletedEvent{User: target, Doer: doer, Mode: mode})
 	return nil
 }
+
+// ListUsersAsAdmin queues an audit event because results include email addresses.
+func ListUsersAsAdmin(s *xorm.Session, doer *user.User, search string, page, perPage int) ([]*user.User, int64, error) {
+	events.DispatchOnCommit(s, &AdminUsersListedEvent{Doer: doer})
+
+	query := s.Limit(perPage, (page-1)*perPage).OrderBy("id ASC")
+	if search != "" {
+		q := "%" + search + "%"
+		query = query.Where("username LIKE ? OR email LIKE ?", q, q)
+	}
+
+	var users []*user.User
+	total, err := query.FindAndCount(&users)
+	if err != nil {
+		return nil, 0, err
+	}
+	return users, total, nil
+}
