@@ -18,6 +18,8 @@ package apiv2
 
 import (
 	"context"
+	"net/http"
+	"net/url"
 	"strconv"
 
 	"code.vikunja.io/api/pkg/db"
@@ -68,10 +70,25 @@ func RegisterTaskRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "tasks-read-by-index",
 		Summary:     "Get a task by its project index",
-		Description: "Returns a single task addressed by its per-project index. The {project} segment accepts either a numeric project id or a textual project identifier (e.g. \"PROJ\"); a value made solely of digits is always treated as an id. " + expandDoc,
+		Description: "Returns a single task addressed by its per-project index. Historical addresses return a temporary redirect to the task's current address. The {project} segment accepts either a numeric project id or a textual project identifier (e.g. \"PROJ\"); a value made solely of digits is always treated as an id. " + expandDoc,
 		Method:      "GET",
 		Path:        "/projects/{project}/tasks/by-index/{index}",
 		Tags:        tags,
+		Responses: map[string]*huma.Response{
+			"307": {
+				Description: "The task moved to another project index. The redirect is temporary and must not be cached.",
+				Headers: map[string]*huma.Param{
+					"Location": {
+						Description: "The task's current v2 by-index address, including the original query string.",
+						Schema:      &huma.Schema{Type: huma.TypeString, Format: "uri-reference"},
+					},
+					"Cache-Control": {
+						Description: "Always no-store for historical task redirects.",
+						Schema:      &huma.Schema{Type: huma.TypeString},
+					},
+				},
+			},
+		},
 	}, tasksReadByIndex)
 
 	Register(api, huma.Operation{
@@ -133,13 +150,21 @@ func tasksRead(ctx context.Context, in *struct {
 	return conditionalReadResponse(&in.Params, body, task.Updated, maxPermission)
 }
 
+type taskReadByIndexResponse struct {
+	Status       int
+	ETag         string  `header:"ETag"`
+	Location     *string `header:"Location" hidden:"true"`
+	CacheControl *string `header:"Cache-Control" hidden:"true"`
+	Body         *taskReadOneBody
+}
+
 func tasksReadByIndex(ctx context.Context, in *struct {
 	Project string   `path:"project" doc:"A numeric project id or a textual project identifier (e.g. \"PROJ\")."`
 	Index   int64    `path:"index" doc:"The per-project task index."`
 	Expand  []string `query:"expand,explode" enum:"subtasks,buckets,reactions,comments,comment_count,time_entries_count,is_unread" doc:"Embed extra data per task. Repeatable."`
 	Format  string   `query:"format" enum:"html,markdown" doc:"How rich-text fields are exchanged. See the API description."`
 	conditional.Params
-}) (*singleReadBody[taskReadOneBody], error) {
+}) (*taskReadByIndexResponse, error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
 		return nil, err
@@ -153,16 +178,52 @@ func tasksReadByIndex(ctx context.Context, in *struct {
 		return nil, err
 	}
 
-	// ID 0 + ProjectID + Index makes the model resolve the id from the
-	// (project, index) pair in both CanRead and ReadOne.
 	task := &models.Task{ProjectID: projectID, Index: in.Index, Expand: expand}
 	maxPermission, err := handler.DoReadOne(ctx, task, a)
+	if err == nil {
+		body := &taskReadOneBody{Task: *task, MaxPermission: models.Permission(maxPermission)}
+		convertTasksToMarkdown(ctx, &body.Task)
+		response, err := conditionalReadResponse(&in.Params, body, task.Updated, maxPermission)
+		if err != nil {
+			return nil, err
+		}
+		return &taskReadByIndexResponse{
+			Status: http.StatusOK,
+			ETag:   response.ETag,
+			Body:   response.Body,
+		}, nil
+	}
+	if !models.IsErrTaskDoesNotExist(err) {
+		return nil, translateDomainError(err)
+	}
+
+	s := db.NewSession()
+	taskID, err := models.GetTaskIDByIndexAlias(s, projectID, in.Index)
+	_ = s.Close()
 	if err != nil {
 		return nil, translateDomainError(err)
 	}
-	body := &taskReadOneBody{Task: *task, MaxPermission: models.Permission(maxPermission)}
-	convertTasksToMarkdown(ctx, &body.Task)
-	return conditionalReadResponse(&in.Params, body, task.Updated, maxPermission)
+
+	task = &models.Task{ID: taskID, Expand: expand}
+	_, err = handler.DoReadOne(ctx, task, a)
+	if err != nil {
+		return nil, translateDomainError(err)
+	}
+
+	location := &url.URL{
+		Path: GroupPrefix + "/projects/" + strconv.FormatInt(task.ProjectID, 10) +
+			"/tasks/by-index/" + strconv.FormatInt(task.Index, 10),
+	}
+	if ec := echoContextFromCtx(ctx); ec != nil {
+		location.RawQuery = (*ec).Request().URL.RawQuery
+	}
+	locationValue := location.String()
+	cacheControl := "no-store"
+	return &taskReadByIndexResponse{
+		Status:       http.StatusTemporaryRedirect,
+		Location:     &locationValue,
+		CacheControl: &cacheControl,
+	}, nil
 }
 
 func tasksCreate(ctx context.Context, in *struct {

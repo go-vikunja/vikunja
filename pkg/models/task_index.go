@@ -16,6 +16,8 @@
 
 package models
 
+import "xorm.io/xorm"
+
 type ProjectTaskCounter struct {
 	ProjectID int64 `xorm:"bigint not null pk"`
 	LastIndex int64 `xorm:"bigint not null default 0"`
@@ -30,3 +32,20 @@ type TaskIndexAlias struct {
 }
 
 func (*TaskIndexAlias) TableName() string { return "task_index_aliases" }
+
+// GetTaskIDByIndexAlias resolves a retired task address.
+func GetTaskIDByIndexAlias(s *xorm.Session, projectID, index int64) (int64, error) {
+	if projectID < 1 || index < 1 {
+		return 0, ErrTaskDoesNotExist{}
+	}
+
+	alias := &TaskIndexAlias{}
+	has, err := s.Where("project_id = ? AND `index` = ?", projectID, index).Get(alias)
+	if err != nil {
+		return 0, err
+	}
+	if !has {
+		return 0, ErrTaskDoesNotExist{}
+	}
+	return alias.TaskID, nil
+}
