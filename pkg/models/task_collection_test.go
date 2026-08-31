@@ -1341,7 +1341,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		{
 			name: "filter by creator username",
 			fields: fields{
-				Filter: "creator = 'user6'",
+				Filter: "created_by = 'user6'",
 			},
 			args: defaultArgs,
 			want: []*Task{
@@ -1363,7 +1363,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		{
 			name: "filter by creator username in list",
 			fields: fields{
-				Filter: "creator ?= 'user6'",
+				Filter: "created_by ?= 'user6'",
 			},
 			args: defaultArgs,
 			want: []*Task{
@@ -1385,7 +1385,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		{
 			name: "filter by creator username not equals",
 			fields: fields{
-				Filter: "creator != 'user6'",
+				Filter: "created_by != 'user6'",
 			},
 			args: defaultArgs,
 			want: []*Task{
@@ -1417,7 +1417,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		{
 			name: "filter by creator unknown username",
 			fields: fields{
-				Filter: "creator = 'nonexistentuser'",
+				Filter: "created_by = 'nonexistentuser'",
 			},
 			args:    defaultArgs,
 			want:    []*Task{},

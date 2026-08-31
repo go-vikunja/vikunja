@@ -62,7 +62,7 @@ var subTableFilters = SubTableFilters{
 		FilterableField: "username",
 		AllowNullCheck:  true,
 	},
-	"creator": {
+	"created_by": {
 		Table:           "users",
 		BaseFilter:      "tasks.created_by_id = users.id",
 		FilterableField: "username",
@@ -210,7 +210,7 @@ func convertFiltersToDBFilterCondWithAlias(rawFilters []*taskFilter, includeNull
 
 		subTableFilterParams, ok := subTableFilters[f.field]
 		if ok {
-			if (f.field == "assignees" || f.field == "creator") && (f.comparator == taskFilterComparatorLike) {
+			if (f.field == "assignees" || f.field == "created_by") && (f.comparator == taskFilterComparatorLike) {
 				continue
 			}
 
