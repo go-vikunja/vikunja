@@ -55,12 +55,13 @@ func RegisterUserExportRoutes(api huma.API) {
 	}, userExportRequest)
 
 	Register(api, huma.Operation{
-		OperationID: "user-export-download",
-		Summary:     "Download the data export",
-		Description: "Streams the authenticated user's prepared data export as a zip file. Local users must confirm with their password. Fails with 404 if no export has been prepared. A POST (not GET) because the password is sent in the body.",
-		Method:      http.MethodPost,
-		Path:        "/user/export/download",
-		Tags:        tags,
+		OperationID:   "user-export-download",
+		Summary:       "Download the data export",
+		Description:   "Streams the authenticated user's prepared data export as a zip file. Local users must confirm with their password. Fails with 404 if no export has been prepared. A POST (not GET) because the password is sent in the body.",
+		Method:        http.MethodPost,
+		Path:          "/user/export/download",
+		Tags:          tags,
+		DefaultStatus: http.StatusOK,
 		// Spell out the binary response; the default would be modeled as JSON.
 		Responses: map[string]*huma.Response{
 			"200": {

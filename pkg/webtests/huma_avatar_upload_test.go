@@ -195,6 +195,7 @@ func TestAvatarUpload(t *testing.T) {
 		put, ok := op["put"].(map[string]any)
 		require.True(t, ok, "PUT /user/settings/avatar must be in the spec")
 		content, _ := put["requestBody"].(map[string]any)
+		assert.Equal(t, true, content["required"], "avatar upload body must be required")
 		contentMap, _ := content["content"].(map[string]any)
 		mp, ok := contentMap["multipart/form-data"].(map[string]any)
 		require.True(t, ok, "avatar upload must be modeled as multipart/form-data")

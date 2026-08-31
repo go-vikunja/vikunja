@@ -42,5 +42,24 @@ func RegisterAll(api huma.API) {
 		r(api)
 	}
 	EnableAutoPatch(api)
+	requireMultipartBodies(api)
 	stripPatchFormatQuery(api)
+}
+
+func requireMultipartBodies(api huma.API) {
+	for _, item := range api.OpenAPI().Paths {
+		if item == nil {
+			continue
+		}
+		operations := []*huma.Operation{item.Get, item.Put, item.Post, item.Delete, item.Options, item.Head, item.Patch}
+		for _, operation := range operations {
+			if operation == nil || operation.RequestBody == nil {
+				continue
+			}
+			media := operation.RequestBody.Content["multipart/form-data"]
+			if media != nil && media.Schema != nil && len(media.Schema.Required) > 0 {
+				operation.RequestBody.Required = true
+			}
+		}
+	}
 }
