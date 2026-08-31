@@ -448,43 +448,72 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 
 	seedMissingTaskPositions(tasks)
 
-	tasksByOldID := make(map[int64]*models.TaskWithComments, len(tasks))
+	tasksByOldID := make(map[int64]*models.Task, len(tasks))
 	newTaskIDs := make([]int64, 0, len(tasks))
 	type initialTask struct {
-		task     *models.TaskWithComments
+		task     *models.Task
+		comments []*models.TaskComment
 		oldID    int64
 		bucketID int64
 	}
 	initialTasks := make([]initialTask, 0, len(tasks))
-	tasksToCreate := make([]*models.Task, 0, len(tasks))
+	seenTaskIDs := make(map[int64]bool, len(tasks))
+	seenTasks := make(map[*models.Task]bool, len(tasks))
+	addTask := func(task *models.Task, comments []*models.TaskComment) {
+		if seenTasks[task] || (task.ID != 0 && seenTaskIDs[task.ID]) {
+			return
+		}
+		seenTasks[task] = true
+		if task.ID != 0 {
+			seenTaskIDs[task.ID] = true
+		}
+		initialTasks = append(initialTasks, initialTask{
+			task:     task,
+			comments: comments,
+			oldID:    task.ID,
+			bucketID: task.BucketID,
+		})
+	}
 	for _, t := range tasks {
 		if t.Title == "" {
 			continue
 		}
-		state := initialTask{task: t, oldID: t.ID, bucketID: t.BucketID}
-		t.ProjectID = project.ID
-		t.BucketID = 0
-		t.Assignees = remapAssignees(t.Assignees, user)
-		initialTasks = append(initialTasks, state)
-		tasksToCreate = append(tasksToCreate, &t.Task)
+		addTask(&t.Task, t.Comments)
+	}
+	for i := 0; i < len(initialTasks); i++ {
+		for _, relatedTasks := range initialTasks[i].task.RelatedTasks {
+			for _, related := range relatedTasks {
+				addTask(related, nil)
+			}
+		}
+	}
+
+	tasksToCreate := make([]*models.Task, 0, len(initialTasks))
+	for _, state := range initialTasks {
+		state.task.ProjectID = project.ID
+		state.task.BucketID = 0
+		state.task.Assignees = remapAssignees(state.task.Assignees, user)
+		tasksToCreate = append(tasksToCreate, state.task)
 	}
 	err = models.CreateTasksForImport(s, project.ID, tasksToCreate, user)
 	if err != nil {
 		return err
+	}
+	for _, state := range initialTasks {
+		newTaskIDs = append(newTaskIDs, state.task.ID)
+		if state.oldID != 0 {
+			tasksByOldID[state.oldID] = state.task
+		}
 	}
 
 	for _, state := range initialTasks {
 		t := state.task
 		t.BucketID = state.bucketID
 
-		err = setBucketOrDefault(&t.Task)
+		err = setBucketOrDefault(t)
 		if err != nil {
 			return
 		}
-
-		newTaskIDs = append(newTaskIDs, t.ID)
-
-		tasksByOldID[state.oldID] = t
 
 		log.Debugf("[creating structure] Created task %d", t.ID)
 		if len(t.RelatedTasks) > 0 {
@@ -499,31 +528,6 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 			}
 
 			for _, rt := range tasks {
-				// First create the related tasks if they do not exist
-				if _, exists := tasksByOldID[rt.ID]; !exists || rt.ID == 0 {
-					oldid := rt.ID
-					rt.ProjectID = t.ProjectID
-					originalBucketID := rt.BucketID
-					rt.BucketID = 0
-					rt.Assignees = remapAssignees(rt.Assignees, user)
-
-					err = rt.Create(s, user)
-					if err != nil {
-						log.Debugf("[creating structure] Error while creating related task %d: %s", rt.ID, err.Error())
-						return
-					}
-
-					rt.BucketID = originalBucketID
-
-					err = setBucketOrDefault(rt)
-					if err != nil {
-						return
-					}
-					tasksByOldID[oldid] = &models.TaskWithComments{Task: *rt}
-					log.Debugf("[creating structure] Created related task %d", rt.ID)
-				}
-
-				// Then create the relation
 				taskRel := &models.TaskRelation{
 					TaskID:       t.ID,
 					OtherTaskID:  rt.ID,
@@ -625,7 +629,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		}
 
 		// Comments
-		for _, comment := range t.Comments {
+		for _, comment := range state.comments {
 			comment.TaskID = t.ID
 			comment.ID = 0
 			err = comment.CreateWithTimestamps(s, user)
@@ -737,7 +741,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 }
 
 // Oversized provider files retain the preloaded path's skip behavior.
-func createAttachmentFromProvider(s *xorm.Session, t *models.TaskWithComments, a *models.TaskAttachment, user *user.User, provider FileProvider, createdFiles *[]int64) (err error) {
+func createAttachmentFromProvider(s *xorm.Session, t *models.Task, a *models.TaskAttachment, user *user.User, provider FileProvider, createdFiles *[]int64) (err error) {
 	oldID := a.ID
 
 	content, size, err := provider.OpenAttachment(a)

@@ -446,6 +446,35 @@ func TestInsertFromStructure(t *testing.T) {
 		require.True(t, has)
 		assert.Equal(t, int64(11), counter.LastIndex)
 	})
+	t.Run("preserves related-only task indexes in the initial batch", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		child := &models.Task{Title: "related child", Index: 5}
+		structure := []*models.ProjectWithTasksAndBuckets{{
+			Project: models.Project{Title: "Related task indexes"},
+			Tasks: []*models.TaskWithComments{{
+				Task: models.Task{
+					Title: "parent",
+					Index: 10,
+					RelatedTasks: models.RelatedTaskMap{
+						models.RelationKindSubtask: {child},
+					},
+				},
+			}},
+		}}
+		require.NoError(t, InsertFromStructure(structure, u))
+
+		assert.Equal(t, int64(10), structure[0].Tasks[0].Index)
+		assert.Equal(t, int64(5), child.Index)
+
+		s := db.NewSession()
+		defer s.Close()
+		counter := &models.ProjectTaskCounter{}
+		has, err := s.ID(structure[0].ID).Get(counter)
+		require.NoError(t, err)
+		require.True(t, has)
+		assert.Equal(t, int64(10), counter.LastIndex)
+	})
 	t.Run("assignees from a foreign instance", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
