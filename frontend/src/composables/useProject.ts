@@ -29,15 +29,16 @@ export function useProject(projectId: MaybeRefOrGetter<number>) {
 		if (loadedProjectId.value !== id) {
 			project.value = normalizeProject({id})
 		}
-		if (!isFetching && loadedProjectId.value !== id) {
-			if (value) {
-				project.value = normalizeProject(value)
-			}
+		if (!isFetching && value && loadedProjectId.value !== id) {
+			project.value = normalizeProject(value)
 			loadedProjectId.value = id
 		}
 	}, {immediate: true})
 
 	async function save() {
+		if (loadedProjectId.value !== Number(toValue(projectId))) {
+			throw new Error('Project details are not loaded')
+		}
 		isSaving.value = true
 		try {
 			project.value = await updateProject({
@@ -71,7 +72,7 @@ export function useProject(projectId: MaybeRefOrGetter<number>) {
 		project,
 		isLoading: computed(() =>
 			query.isFetching.value ||
-			loadedProjectId.value !== Number(toValue(projectId)) ||
+			(!query.isError.value && loadedProjectId.value !== Number(toValue(projectId))) ||
 			isSaving.value,
 		),
 		error: query.error,
