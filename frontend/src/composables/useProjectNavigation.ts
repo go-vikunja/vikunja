@@ -16,6 +16,7 @@ import {
 	isSavedFilterProject,
 	normalizeProject,
 	patchProjectFavorite,
+	projectKeys,
 	projectQuery,
 	projectsQuery,
 	refreshProjects,
@@ -112,7 +113,7 @@ export function useProjectNavigation() {
 			return
 		}
 		queryClient.setQueryData(projectQuery(normalized.id).queryKey, normalized)
-		queryClient.invalidateQueries({queryKey: ['projects', 'list']})
+		queryClient.invalidateQueries({queryKey: projectKeys.lists()})
 	}
 
 	function setProjectView(view: ProjectView) {
