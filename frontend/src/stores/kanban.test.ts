@@ -18,12 +18,15 @@ vi.mock('vue-i18n', () => ({
 	createI18n: () => ({global: {t: (key: string) => key}}),
 }))
 
-vi.mock('@/stores/base', () => ({
-	useBaseStore: () => ({
+vi.mock('@/stores/base', async () => {
+	const {reactive, ref} = await import('vue')
+	const baseStore = reactive({
+		currentProjectId: ref(0),
 		currentProject: null,
 		setCurrentProject: vi.fn(),
-	}),
-}))
+	})
+	return {useBaseStore: () => baseStore}
+})
 
 vi.mock('@/stores/auth', () => ({
 	useAuthStore: () => ({
@@ -34,6 +37,8 @@ vi.mock('@/stores/auth', () => ({
 
 import {useKanbanStore} from './kanban'
 
+import {queryClient} from '@/client/queryClient'
+import {projectKeys, type ProjectListResult} from '@/client/queries/projects'
 import type {IBucket} from '@/modelTypes/IBucket'
 import type {ITask} from '@/modelTypes/ITask'
 
@@ -58,6 +63,11 @@ function makeTask(id: number, bucketId: number): ITask {
 describe('kanban store: moveTaskToBucket', () => {
 	beforeEach(() => {
 		setActivePinia(createPinia())
+		queryClient.setQueryData<ProjectListResult>(projectKeys.list(), {
+			projects: [],
+			favoriteProject: null,
+			savedFilterProjects: [],
+		})
 	})
 
 	it('relocates a task from its current bucket into the target bucket', () => {
