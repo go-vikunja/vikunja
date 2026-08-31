@@ -1,33 +1,39 @@
 <script setup lang="ts">
 import CreateEdit from '@/components/misc/CreateEdit.vue'
-import {watch, ref, shallowReactive} from 'vue'
-import {useProjectStore} from '@/stores/projects'
-import ProjectViewModel from '@/models/projectView'
-import type {IProjectView} from '@/modelTypes/IProjectView'
+import {computed, watch, ref} from 'vue'
+import {useQuery} from '@tanstack/vue-query'
+import type {ProjectView} from '@/client/generated'
+import {
+	createProjectView,
+	createProjectViewDraft,
+	deleteProjectView,
+	projectViewsQuery,
+	updateProjectView,
+	type ProjectViewDraft,
+} from '@/client/queries/projectViews'
 import ViewEditForm from '@/components/project/views/ViewEditForm.vue'
-import ProjectViewService from '@/services/projectViews'
 import XButton from '@/components/input/Button.vue'
 import {error, success} from '@/message'
 import {useI18n} from 'vue-i18n'
-import ProjectService from '@/services/project'
 import {PERMISSIONS} from '@/constants/permissions'
-import ProjectModel from '@/models/project'
 import Message from '@/components/misc/Message.vue'
 import draggable from 'zhyswan-vuedraggable'
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
+import {useProject} from '@/composables/useProject'
 
 const props = defineProps<{
 	projectId: number
 }>()
 
-const projectStore = useProjectStore()
 const {t} = useI18n()
+const query = useQuery(computed(() => projectViewsQuery(props.projectId)))
+const {project} = useProject(() => props.projectId)
 
-const views = ref<IProjectView[]>([])
+const views = ref<ProjectView[]>([])
 watch(
-	() => projectStore.projects[props.projectId]?.views || [],
+	query.data,
 	allViews => {
-		views.value = [...allViews]
+		views.value = [...(allViews ?? [])]
 	},
 	{
 		deep: true,
@@ -37,22 +43,19 @@ watch(
 
 const showCreateForm = ref(false)
 
-const projectViewService = shallowReactive(new ProjectViewService())
-const newView = ref<IProjectView>(ProjectViewModel.createWithDefaultFilter())
+type EditableProjectView = ProjectViewDraft & Pick<ProjectView, 'id' | 'project_id'>
+const createNewView = (): EditableProjectView => ({
+	...createProjectViewDraft(),
+	project_id: props.projectId,
+})
+const newView = ref<EditableProjectView>(createNewView())
 const viewIdToDelete = ref<number | null>(null)
 const showDeleteModal = ref(false)
-const viewToEdit = ref<IProjectView | null>(null)
+const viewToEdit = ref<ProjectView | null>(null)
+const isMutating = ref(false)
+const isLoading = computed(() => query.isPending.value || isMutating.value)
 
-const isAdmin = ref<boolean>(false)
-watch(
-	() => props.projectId,
-	async () => {
-		const projectService = new ProjectService()
-		const project = await projectService.get(new ProjectModel({id: props.projectId}))
-		isAdmin.value = project.maxPermission === PERMISSIONS.ADMIN
-	},
-	{immediate: true},
-)
+const isAdmin = computed(() => project.value?.max_permission === PERMISSIONS.ADMIN)
 
 async function createView() {
 	if (!showCreateForm.value) {
@@ -65,48 +68,63 @@ async function createView() {
 	}
 
 	try {
-		newView.value.bucketConfigurationMode = newView.value.viewKind === 'kanban'
-			? newView.value.bucketConfigurationMode
+		isMutating.value = true
+		newView.value.bucket_configuration_mode = newView.value.view_kind === 'kanban'
+			? newView.value.bucket_configuration_mode
 			: 'none'
-		newView.value.projectId = props.projectId
 
-		const result: IProjectView = await projectViewService.create(newView.value)
+		await createProjectView({projectId: props.projectId, view: newView.value})
 		success({message: t('project.views.createSuccess')})
 		showCreateForm.value = false
-		projectStore.setProjectView(result)
-		newView.value = new ProjectViewModel({})
+		newView.value = createNewView()
 	} catch (e) {
 		error(e)
+	} finally {
+		isMutating.value = false
 	}
 }
 
-async function deleteView(viewId: number) {
+async function deleteView(viewId: number | null) {
 	if (!viewId) {
 		return
 	}
 
-	await projectViewService.delete(new ProjectViewModel({
-		id: viewId,
-		projectId: props.projectId,
-	}))
-
-	projectStore.removeProjectView(props.projectId, viewId)
-
-	showDeleteModal.value = false
-}
-
-async function saveView(view: IProjectView) {
-	if (view?.viewKind !== 'kanban') {
-		view.bucketConfigurationMode = 'none'
+	isMutating.value = true
+	try {
+		await deleteProjectView({projectId: props.projectId, viewId})
+		showDeleteModal.value = false
+	} finally {
+		isMutating.value = false
 	}
-	const result = await projectViewService.update(view)
-	projectStore.setProjectView(result)
-	viewToEdit.value = null
-	success({message: t('project.views.updateSuccess')})
 }
 
-async function saveViewPosition(e) {
+async function saveView(view: ProjectView) {
+	if (!view.id) {
+		return
+	}
+	const updated = createProjectViewDraft(view)
+	if (updated.view_kind !== 'kanban') {
+		updated.bucket_configuration_mode = 'none'
+	}
+	isMutating.value = true
+	try {
+		await updateProjectView({
+			projectId: props.projectId,
+			viewId: view.id,
+			view: updated,
+		})
+		viewToEdit.value = null
+		success({message: t('project.views.updateSuccess')})
+	} finally {
+		isMutating.value = false
+	}
+}
+
+async function saveViewPosition(e: {newIndex: number}) {
 	const view = views.value[e.newIndex]
+	if (!view?.id) {
+		return
+	}
 	const viewBefore = views.value[e.newIndex - 1]
 	const viewAfter = views.value[e.newIndex + 1]
 	
@@ -114,12 +132,17 @@ async function saveViewPosition(e) {
 		viewBefore?.position,
 		viewAfter?.position,
 	)
-	const result = await projectViewService.update({
-		...view,
-		position,
-	})
-	projectStore.setProjectView(result)
-	success({message: t('project.views.updateSuccess')})
+	isMutating.value = true
+	try {
+		await updateProjectView({
+			projectId: props.projectId,
+			viewId: view.id,
+			view: createProjectViewDraft({...view, position}),
+		})
+		success({message: t('project.views.updateSuccess')})
+	} finally {
+		isMutating.value = false
+	}
 }
 </script>
 
@@ -139,7 +162,7 @@ async function saveViewPosition(e) {
 			class="is-flex is-justify-content-end mbe-4"
 		>
 			<XButton
-				:loading="projectViewService.loading"
+				:loading="isLoading"
 				:disabled="showCreateForm && newView.title === ''"
 				@click="createView"
 			>
@@ -180,16 +203,16 @@ async function saveViewPosition(e) {
 									<ViewEditForm
 										v-model="viewToEdit"
 										class="mbe-4"
-										:loading="projectViewService.loading"
+										:loading="isLoading"
 										:show-save-buttons="true"
 										@cancel="viewToEdit = null"
-										@update:modelValue="saveView(viewToEdit)"
+										@update:modelValue="saveView"
 									/>
 								</td>
 							</template>
 							<template v-else>
 								<td>{{ v.title }}</td>
-								<td>{{ v.viewKind }}</td>
+								<td>{{ v.view_kind }}</td>
 								<td class="has-text-end actions">
 									<XButton
 										v-if="isAdmin"
@@ -197,7 +220,7 @@ async function saveViewPosition(e) {
 										:aria-label="$t('project.views.delete')"
 										icon="trash-alt"
 										@click="() => {
-											viewIdToDelete = v.id
+											viewIdToDelete = v.id ?? null
 											showDeleteModal = true
 										}"
 									/>
