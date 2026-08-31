@@ -29,6 +29,11 @@ import {
 import type {ProjectResponse} from '@/client/queries/projects'
 import type {Project, ProjectView, ProjectWritable} from '@/client/generated'
 import {queryClient} from '@/client/queryClient'
+import {
+	assertClientRequestContext,
+	captureClientRequestContext,
+	isClientRequestContextCurrent,
+} from '@/client/requestContext'
 import SavedFilterModel from '@/models/savedFilter'
 import SavedFilterService from '@/services/savedFilter'
 
@@ -69,6 +74,7 @@ export function useProjectNavigation() {
 			return
 		}
 
+		const context = captureClientRequestContext()
 		const previous = project.is_favorite
 		updateProjectNavigationItemInCache(project.id, current => ({
 			...current,
@@ -81,13 +87,17 @@ export function useProjectNavigation() {
 			}
 			const service = new SavedFilterService()
 			const filter = await service.get(new SavedFilterModel({id: filterId}))
+			assertClientRequestContext(context)
 			filter.isFavorite = !previous
 			await service.update(filter)
+			assertClientRequestContext(context)
 		} catch (error) {
-			updateProjectNavigationItemInCache(project.id, current => ({
-				...current,
-				is_favorite: previous,
-			}))
+			if (isClientRequestContextCurrent(context)) {
+				updateProjectNavigationItemInCache(project.id, current => ({
+					...current,
+					is_favorite: previous,
+				}))
+			}
 			throw error
 		}
 	}

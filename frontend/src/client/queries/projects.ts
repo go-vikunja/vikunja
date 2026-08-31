@@ -16,10 +16,9 @@ import type {
 	ProjectWritable,
 } from '@/client/generated'
 import {queryClient} from '@/client/queryClient'
+import {assertClientRequestContext, captureClientRequestContext} from '@/client/requestContext'
 import {PERMISSIONS} from '@/constants/permissions'
-import {getToken, getTokenIdentity} from '@/helpers/auth'
 import {colorFromHex} from '@/helpers/color/colorFromHex'
-import {getApiV2BaseUrl} from '@/helpers/fetcher'
 import {removeProjectFromHistory} from '@/modules/projectHistory'
 
 export type ProjectListArgs = Omit<NonNullable<ProjectsListData['query']>, 'page' | 'per_page'>
@@ -73,11 +72,6 @@ export type DuplicateProjectInput = {
 	duplicateShares?: boolean
 }
 
-type ProjectMutationContext = {
-	identity: ReturnType<typeof getTokenIdentity>
-	apiV2BaseUrl: string
-}
-
 export const defaultProjectListArgs = {
 	is_archived: true,
 	expand: 'permissions',
@@ -95,23 +89,6 @@ export const projectKeys = {
 		id,
 		format,
 	] as const,
-}
-
-function getProjectMutationContext(): ProjectMutationContext {
-	return {
-		identity: getTokenIdentity(getToken()),
-		apiV2BaseUrl: getApiV2BaseUrl(),
-	}
-}
-
-function assertProjectMutationContext(context: ProjectMutationContext): void {
-	const identity = getTokenIdentity(getToken())
-	const identityMatches = context.identity === null
-		? identity === null
-		: identity?.id === context.identity.id && identity.type === context.identity.type
-	if (!identityMatches || context.apiV2BaseUrl !== getApiV2BaseUrl()) {
-		throw new DOMException('Project mutation context changed', 'AbortError')
-	}
 }
 
 export function createProjectDraft(project: Partial<ProjectWritable> = {}): ProjectDraft {
@@ -419,17 +396,17 @@ export async function createProject(
 	project: ProjectWritable,
 	format: 'html' | 'markdown' = 'html',
 ): Promise<ProjectResponse> {
-	const context = getProjectMutationContext()
+	const context = captureClientRequestContext()
 	await queryClient.cancelQueries({queryKey: projectKeys.lists()})
-	assertProjectMutationContext(context)
+	assertClientRequestContext(context)
 	const {data} = await projectsCreate({body: projectBody(project), query: {format}})
-	assertProjectMutationContext(context)
+	assertClientRequestContext(context)
 	const created = normalizeProject(data)
 	if (format === 'html') {
 		setProjectInDefaultList(created)
 	}
 	await queryClient.invalidateQueries({queryKey: projectKeys.lists()})
-	assertProjectMutationContext(context)
+	assertClientRequestContext(context)
 	return created
 }
 
@@ -437,12 +414,12 @@ export async function updateProject(
 	{id, ...project}: UpdateProjectInput,
 	format: 'html' | 'markdown' = 'html',
 ): Promise<ProjectResponse> {
-	const context = getProjectMutationContext()
+	const context = captureClientRequestContext()
 	await Promise.all([
 		queryClient.cancelQueries({queryKey: projectKeys.lists()}),
 		queryClient.cancelQueries({queryKey: projectKeys.detailRoot(id)}),
 	])
-	assertProjectMutationContext(context)
+	assertClientRequestContext(context)
 	const previous = queryClient.getQueryData<ProjectResponse>(projectKeys.detail(id))
 		?? queryClient.getQueriesData<ProjectListResult>({queryKey: projectKeys.lists()})
 			.flatMap(([, result]) => result?.projects ?? [])
@@ -452,7 +429,7 @@ export async function updateProject(
 		body: projectBody(project),
 		query: {format},
 	})
-	assertProjectMutationContext(context)
+	assertClientRequestContext(context)
 	const updated = normalizeProject({
 		...previous,
 		...data,
@@ -464,26 +441,26 @@ export async function updateProject(
 	}
 	setProjectDetail(updated, format)
 	await queryClient.invalidateQueries({queryKey: projectKeys.lists()})
-	assertProjectMutationContext(context)
+	assertClientRequestContext(context)
 	return updated
 }
 
 export async function patchProjectFavorite(id: number, isFavorite: boolean): Promise<ProjectResponse> {
-	const context = getProjectMutationContext()
+	const context = captureClientRequestContext()
 	await Promise.all([
 		queryClient.cancelQueries({queryKey: projectKeys.lists()}),
 		queryClient.cancelQueries({queryKey: projectKeys.detailRoot(id)}),
 	])
-	assertProjectMutationContext(context)
+	assertClientRequestContext(context)
 	const {data} = await patchProjectsRead({
 		path: {id},
 		body: [{op: 'replace', path: '/is_favorite', value: isFavorite}],
 	})
-	assertProjectMutationContext(context)
+	assertClientRequestContext(context)
 	const updated = normalizeProject(data)
 	updateProjectInCache(id, project => ({...project, is_favorite: updated.is_favorite}))
 	await queryClient.invalidateQueries({queryKey: projectKeys.lists()})
-	assertProjectMutationContext(context)
+	assertClientRequestContext(context)
 	return updated
 }
 
@@ -496,11 +473,11 @@ function descendantIds(projects: readonly ProjectResponse[], projectId: number):
 }
 
 export async function deleteProject(projectId: number): Promise<void> {
-	const context = getProjectMutationContext()
+	const context = captureClientRequestContext()
 	await queryClient.cancelQueries({queryKey: projectKeys.all})
-	assertProjectMutationContext(context)
+	assertClientRequestContext(context)
 	await projectsDelete({path: {id: projectId}})
-	assertProjectMutationContext(context)
+	assertClientRequestContext(context)
 	const ids = new Set<number>([projectId])
 	queryClient.setQueriesData<ProjectListResult>(
 		{queryKey: projectKeys.lists()},
@@ -524,9 +501,9 @@ export async function duplicateProject({
 	parentProjectId = 0,
 	duplicateShares = false,
 }: DuplicateProjectInput): Promise<ProjectResponse> {
-	const context = getProjectMutationContext()
+	const context = captureClientRequestContext()
 	await queryClient.cancelQueries({queryKey: projectKeys.lists()})
-	assertProjectMutationContext(context)
+	assertClientRequestContext(context)
 	const {data} = await projectsDuplicate({
 		path: {projectid: projectId},
 		body: {
@@ -534,7 +511,7 @@ export async function duplicateProject({
 			duplicate_shares: duplicateShares,
 		},
 	})
-	assertProjectMutationContext(context)
+	assertClientRequestContext(context)
 	if (!data.duplicated_project) {
 		throw new Error('Project duplicate response is missing the duplicated project')
 	}
@@ -545,6 +522,6 @@ export async function duplicateProject({
 	setProjectInDefaultList(duplicate)
 	setProjectDetail(duplicate, 'html')
 	await queryClient.invalidateQueries({queryKey: projectKeys.lists()})
-	assertProjectMutationContext(context)
+	assertClientRequestContext(context)
 	return duplicate
 }
