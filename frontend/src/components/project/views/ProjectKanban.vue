@@ -8,7 +8,7 @@
 		<template #header>
 			<div class="filter-container">
 				<FilterPopup
-					v-if="!isSavedFilter(project)"
+					v-if="!isSavedFilterProject(project)"
 					v-model="params"
 					:view-id="viewId"
 					:project-id="projectId"
@@ -321,7 +321,8 @@ import {
 } from '@/helpers/saveCollapsedBucketState'
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 
-import {isSavedFilter, useSavedFilter} from '@/services/savedFilter'
+import {isSavedFilterProject} from '@/client/queries/projects'
+import {useSavedFilter} from '@/composables/useSavedFilter'
 import {useCurrentProject} from '@/composables/useCurrentProject'
 import {useTaskDragToProject} from '@/composables/useTaskDragToProject'
 import {success} from '@/message'
@@ -364,8 +365,7 @@ const {handleTaskDropToProject} = useTaskDragToProject()
 const taskPositionService = ref(new TaskPositionService())
 const taskBucketService = ref(new TaskBucketService())
 
-// Saved filter composable for accessing filter data
-const savedFilter = useSavedFilter(() => isSavedFilter({id: projectId.value}) ? projectId.value : undefined).filter
+const savedFilter = useSavedFilter(() => isSavedFilterProject({id: projectId.value}) ? projectId.value : undefined).filter
 
 const taskContainerRefs = ref<{ [id: IBucket['id']]: HTMLElement }>({})
 const bucketLimitInputRef = ref<HTMLInputElement | null>(null)
@@ -764,7 +764,7 @@ function updateBuckets(value: IBucket[]) {
 
 function handleRecurringTaskCompletion() {
 	// Only reload if we're in a saved filter and the filter contains date fields
-	if (!isSavedFilter(project.value)) {
+	if (!isSavedFilterProject(project.value)) {
 		return
 	}
 

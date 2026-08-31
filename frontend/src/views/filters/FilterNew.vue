@@ -16,7 +16,7 @@
 				v-focus
 				:label="$t('filters.attributes.title')"
 				:class="{ 'is-danger': !titleValid }"
-				:disabled="filterService.loading"
+				:disabled="isLoading"
 				:placeholder="$t('filters.attributes.titlePlaceholder')"
 				type="text"
 				:error="titleValid ? null : $t('filters.create.titleRequired')"
@@ -27,16 +27,16 @@
 					id="description"
 					:key="filter.id"
 					v-model="filter.description"
-					:class="{ 'disabled': filterService.loading}"
-					:disabled="filterService.loading"
+					:class="{ 'disabled': isLoading}"
+					:disabled="isLoading"
 					:placeholder="$t('filters.attributes.descriptionPlaceholder')"
 				/>
 			</FormField>
 			<FormField :label="$t('filters.title')">
 				<Filters
 					v-model="filters"
-					:class="{ 'disabled': filterService.loading}"
-					:disabled="filterService.loading"
+					:class="{ 'disabled': isLoading}"
+					:disabled="isLoading"
 					class="has-no-shadow has-no-border"
 					:has-footer="false"
 					:change-immediately="true"
@@ -45,8 +45,8 @@
 
 			<template #footer>
 				<XButton
-					:loading="filterService.loading"
-					:disabled="filterService.loading || !titleValid"
+					:loading="isLoading"
+					:disabled="isLoading || !titleValid"
 					class="is-fullwidth"
 					@click="createFilterWithValidation()"
 				>
@@ -62,13 +62,13 @@ import Editor from '@/components/input/AsyncEditor'
 import FormField from '@/components/input/FormField.vue'
 import Filters from '@/components/project/partials/Filters.vue'
 
-import {useSavedFilter} from '@/services/savedFilter'
+import {useSavedFilter} from '@/composables/useSavedFilter'
 
 const {
 	filter,
 	filters,
 	createFilterWithValidation,
-	filterService,
+	isLoading,
 	titleValid,
 	validateTitleField,
 } = useSavedFilter()
