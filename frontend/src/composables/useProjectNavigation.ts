@@ -39,7 +39,7 @@ import SavedFilterService from '@/services/savedFilter'
 
 export function useProjectNavigation() {
 	const router = useRouter()
-	const query = useQuery(projectsQuery())
+	const query = useQuery(projectsQuery(), queryClient)
 	const realProjects = computed(() => query.data.value?.projects ?? [])
 	const favoriteProject = computed(() => query.data.value?.favoriteProject ?? null)
 	const savedFilterProjects = computed(() => query.data.value?.savedFilterProjects ?? [])
