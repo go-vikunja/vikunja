@@ -86,6 +86,7 @@ import QuickActions from '@/components/quick-actions/QuickActions.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
 import {useBaseStore} from '@/stores/base'
+import {useProjectStore} from '@/stores/projects'
 
 import {useRouteWithModal} from '@/composables/useRouteWithModal'
 import {useRenewTokenOnFocus} from '@/composables/useRenewTokenOnFocus'
@@ -143,6 +144,9 @@ useRenewTokenOnFocus()
 
 const {connect} = useWebSocket()
 connect()
+
+const projectStore = useProjectStore()
+projectStore.loadAllProjects()
 
 // Listen for task creation from the quick-entry window
 const taskUpdateChannel = new BroadcastChannel('vikunja-task-updates')
