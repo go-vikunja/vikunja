@@ -1,3 +1,4 @@
+import {readFile} from 'node:fs/promises'
 import {test, expect} from '../../support/fixtures'
 import {TaskFactory} from '../../factories/task'
 import {ProjectFactory} from '../../factories/project'
@@ -108,6 +109,59 @@ test.describe('Projects', () => {
 
 		await expect(page.locator('.global-notification')).toContainText('Success')
 		await expect(page.locator('main.app-content')).toContainText('This project is archived. It is not possible to create new or edit tasks for it.')
+	})
+
+	test('Should upload and remove a project background without stale previews', async ({authenticatedPage: page}) => {
+		const project = projects[0]
+		const background = page.locator('.app-container-background')
+		const card = page.locator('.project-card').filter({has: page.getByRole('link', {name: project.title, exact: true})})
+
+		async function openBackgroundSettings() {
+			await page.locator('.project-title-dropdown .project-title-button').click()
+			await page.locator(`a[href="/projects/${project.id}/settings/background"]`).click()
+			await expect(page.locator('.project-background-setting')).toBeVisible()
+		}
+
+		await page.goto(`/projects/${project.id}/${project.views[0].id}`)
+		await expect(page.locator('.project-title')).toContainText(project.title)
+		await openBackgroundSettings()
+		const upload = page.waitForResponse(response =>
+			new URL(response.url()).pathname.endsWith(`/projects/${project.id}/backgrounds/upload`) &&
+			response.request().method() === 'PUT',
+		)
+		await page.locator('.project-background-setting input[type="file"]').setInputFiles({
+			name: 'image-blue.png',
+			mimeType: 'image/png',
+			buffer: await readFile('tests/fixtures/image-blue.png'),
+		})
+		expect((await upload).ok()).toBe(true)
+		await expect(background).toHaveClass(/is-visible/)
+		await expect(background).toHaveCSS('background-image', /url\(/)
+		await page.locator('.project-background-setting footer.card-footer').getByRole('button', {name: 'Close', exact: true}).click()
+
+		await page.reload()
+		await expect(background).toHaveClass(/is-visible/)
+		await expect(background).toHaveCSS('background-image', /url\(/)
+		await page.goto('/projects')
+		await expect(card.locator('.project-background')).toHaveCSS('background-image', /url\(/)
+
+		await card.getByRole('link', {name: project.title, exact: true}).click()
+		await openBackgroundSettings()
+		const removal = page.waitForResponse(response =>
+			new URL(response.url()).pathname.endsWith(`/projects/${project.id}/background`) &&
+			response.request().method() === 'DELETE',
+		)
+		await page.getByRole('button', {name: 'Remove Background', exact: true}).click()
+		expect((await removal).ok()).toBe(true)
+		await expect(background).not.toHaveClass(/is-visible/)
+		await expect(background).toHaveCSS('background-image', 'none')
+
+		await page.reload()
+		await expect(page.locator('.project-title')).toContainText(project.title)
+		await expect(background).toHaveCSS('background-image', 'none')
+		await page.goto('/projects')
+		await expect(card).not.toHaveClass(/has-background/)
+		await expect(card.locator('.project-background')).toHaveCSS('background-image', 'none')
 	})
 
 	test('Should show all projects on the projects page', async ({authenticatedPage: page}) => {

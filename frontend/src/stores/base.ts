@@ -1,4 +1,4 @@
-import {computed, onScopeDispose, readonly, ref} from 'vue'
+import {computed, onScopeDispose, readonly, ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {defineStore, acceptHMRUpdate} from 'pinia'
 
@@ -12,22 +12,7 @@ import {useMenuActive} from '@/composables/useMenuActive'
 import {useAuthStore} from '@/stores/auth'
 import router from '@/router'
 import type {ProjectResponse} from '@/client/queries/projects'
-import ProjectService from '@/services/project'
-import type {IProject} from '@/modelTypes/IProject'
-
-type CurrentProjectInput = ProjectResponse | IProject
-
-function getBackgroundInformation(project: CurrentProjectInput) {
-	return 'background_information' in project
-		? project.background_information
-		: (project as IProject).backgroundInformation
-}
-
-function getBackgroundBlurHash(project: CurrentProjectInput) {
-	return 'background_blur_hash' in project
-		? project.background_blur_hash ?? ''
-		: (project as IProject).backgroundBlurHash
-}
+import {refreshProjectBackground} from '@/client/queries/projectBackgrounds'
 
 export const useBaseStore = defineStore('base', () => {
 	const authStore = useAuthStore()
@@ -50,7 +35,7 @@ export const useBaseStore = defineStore('base', () => {
 	const logoVisible = ref(true)
 	const updateAvailable = ref(false)
 
-	function setCurrentProject(newCurrentProject: CurrentProjectInput | null, currentViewId?: number) {
+	function setCurrentProject(newCurrentProject: ProjectResponse | null, currentViewId?: number) {
 		if (currentProjectId.value !== (newCurrentProject?.id ?? 0)) {
 			setBackground('')
 			setBlurHash('')
@@ -89,6 +74,14 @@ export const useBaseStore = defineStore('base', () => {
 		blurHash.value = newBlurHash
 	}
 
+	// SPA logout keeps this store alive, so reset on identity change.
+	watch(() => authStore.identityKey, () => {
+		setBackground('')
+		setBlurHash('')
+		setCurrentProject(null)
+		setHasTasks(false)
+	}, {flush: 'sync'})
+
 	function setLogoVisible(visible: boolean) {
 		logoVisible.value = visible
 	}
@@ -99,7 +92,7 @@ export const useBaseStore = defineStore('base', () => {
 
 	async function handleSetCurrentProject(
 		{project, forceUpdate = false, currentProjectViewId: viewId = undefined}: {
-			project: CurrentProjectInput | null
+			project: ProjectResponse | null
 			forceUpdate?: boolean
 			currentProjectViewId?: number
 		},
@@ -112,21 +105,16 @@ export const useBaseStore = defineStore('base', () => {
 		setCurrentProject(project, viewId)
 
 		if (project.id !== previousProjectId || forceUpdate) {
-			const backgroundInformation = getBackgroundInformation(project)
-			if (backgroundInformation) {
+			if (project.background_information) {
 				try {
-					const preview = await getBlobFromBlurHash(getBackgroundBlurHash(project))
+					const preview = await getBlobFromBlurHash(project.background_blur_hash ?? '')
 					if (currentProjectId.value !== project.id) {
 						return
 					}
 					setBlurHash(preview ? window.URL.createObjectURL(preview) : '')
-					const projectService = new ProjectService()
-					const image = await projectService.background({
-						id: project.id,
-						backgroundInformation,
-					})
+					const image = await refreshProjectBackground(project.id)
 					if (currentProjectId.value === project.id) {
-						setBackground(image)
+						setBackground(window.URL.createObjectURL(image))
 					}
 				} catch (e) {
 					console.error('Error getting background image for project', project.id, e)
@@ -135,15 +123,15 @@ export const useBaseStore = defineStore('base', () => {
 		}
 
 		if (
-			typeof getBackgroundInformation(project) === 'undefined' ||
-			getBackgroundInformation(project) === null
+			typeof project.background_information === 'undefined' ||
+			project.background_information === null
 		) {
 			setBackground('')
 			setBlurHash('')
 		}
 	}
 
-	async function handleSetCurrentProjectIfNotSet(project: CurrentProjectInput) {
+	async function handleSetCurrentProjectIfNotSet(project: ProjectResponse) {
 		if (currentProjectId.value !== project.id) {
 			await handleSetCurrentProject({project})
 		}
