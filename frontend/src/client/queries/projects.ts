@@ -423,7 +423,6 @@ export async function createProject(
 	if (format === 'html') {
 		setProjectInDefaultList(created)
 	}
-	setProjectDetail(created, format)
 	await queryClient.invalidateQueries({queryKey: projectKeys.lists()})
 	return created
 }
