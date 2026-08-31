@@ -303,6 +303,33 @@ describe('project drafts and cache mutations', () => {
 		expect(queryClient.getQueryData(projectKeys.detail(1, 'markdown'))).toBeUndefined()
 	})
 
+	it('preserves list-only permission and views when the update response is sparse', async () => {
+		const views = [{id: 12, project_id: 1, title: 'List', view_kind: 'list'}] as const
+		const cached = serverProject({id: 1, title: 'Before', max_permission: 2, views: [...views]})
+		queryClient.setQueryData(listKey, {projects: [cached], favoriteProject: null, savedFilterProjects: []})
+		sdk.projectsUpdate.mockResolvedValue({
+			data: {id: 1, title: 'After', max_permission: null, views: null},
+		})
+
+		const updated = await updateProject({...cached, title: 'After'})
+
+		expect(updated).toMatchObject({
+			title: 'After',
+			max_permission: 2,
+			views,
+		})
+		expect(queryClient.getQueryData<Project>(projectKeys.detail(1))).toMatchObject({
+			title: 'After',
+			max_permission: 2,
+			views,
+		})
+		expect(queryClient.getQueryData<{projects: Project[]}>(listKey)?.projects[0]).toMatchObject({
+			title: 'After',
+			max_permission: 2,
+			views,
+		})
+	})
+
 	it('patches only the favorite field', async () => {
 		const cached = serverProject({id: 1, title: 'Project', is_favorite: false})
 		queryClient.setQueryData(listKey, {projects: [cached], favoriteProject: null, savedFilterProjects: []})
