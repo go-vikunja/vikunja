@@ -1,5 +1,10 @@
 import {client} from '@/client/generated/client.gen'
 import type {ResolvedRequestOptions} from '@/client/generated/client/types.gen'
+import {
+	assertClientRequestContext,
+	captureClientRequestContext,
+	type ClientRequestContext,
+} from '@/client/requestContext'
 import {getToken, getTokenIdentity, refreshToken} from '@/helpers/auth'
 import {getApiV2BaseUrl} from '@/helpers/fetcher'
 import {AUTH_TYPES} from '@/modelTypes/IUser'
@@ -13,13 +18,14 @@ async function getProblemCode(response: Response): Promise<number | null> {
 	}
 }
 
-export function configureApiClient(): void {
-	const retryRequests = new WeakMap<Request, {
-		request: Request
-		token: string
-		identity: {id: number; type: number} | null
-	}>()
+const requestContexts = new WeakMap<Request, ClientRequestContext>()
+const retryRequests = new WeakMap<Request, {
+	request: Request
+	token: string
+	identity: {id: number; type: number} | null
+}>()
 
+export function configureApiClient(): void {
 	client.setConfig({
 		baseUrl: getApiV2BaseUrl(),
 		credentials: 'include',
@@ -30,30 +36,44 @@ export function configureApiClient(): void {
 	client.interceptors.error.clear()
 
 	client.interceptors.request.use((request) => {
+		let managedRequest = request
 		if (request.headers.has('Authorization')) {
-			return request
+			requestContexts.set(managedRequest, captureClientRequestContext())
+			return managedRequest
 		}
 
-		const headers = new Headers(request.headers)
 		const token = getToken()
-		if (!token) {
-			return request
+		if (token) {
+			const headers = new Headers(request.headers)
+			headers.set('Authorization', `Bearer ${token}`)
+			managedRequest = new Request(request, {headers})
+			retryRequests.set(managedRequest, {
+				request: managedRequest.clone(),
+				token,
+				identity: getTokenIdentity(token),
+			})
 		}
-
-		headers.set('Authorization', `Bearer ${token}`)
-		const managedRequest = new Request(request, {headers})
-		retryRequests.set(managedRequest, {
-			request: managedRequest.clone(),
-			token,
-			identity: getTokenIdentity(token),
-		})
+		requestContexts.set(managedRequest, captureClientRequestContext())
 		return managedRequest
 	})
 
 	client.interceptors.response.use(async (response, request, options: ResolvedRequestOptions) => {
+		const context = requestContexts.get(request)
+		requestContexts.delete(request)
+		if (context) {
+			assertClientRequestContext(context)
+		}
+
 		const retryRequest = retryRequests.get(request)
 		retryRequests.delete(request)
-		if (!retryRequest || response.status !== 401 || await getProblemCode(response) !== 11) {
+		if (!retryRequest || response.status !== 401) {
+			return response
+		}
+		const problemCode = await getProblemCode(response)
+		if (context) {
+			assertClientRequestContext(context)
+		}
+		if (problemCode !== 11) {
 			return response
 		}
 
@@ -76,7 +96,13 @@ export function configureApiClient(): void {
 			try {
 				await refreshToken(true)
 			} catch {
+				if (context) {
+					assertClientRequestContext(context)
+				}
 				return response
+			}
+			if (context) {
+				assertClientRequestContext(context)
 			}
 
 			replacementToken = getToken()
@@ -88,6 +114,10 @@ export function configureApiClient(): void {
 		const headers = new Headers(retryRequest.request.headers)
 		headers.set('Authorization', `Bearer ${replacementToken}`)
 		const retry = new Request(retryRequest.request, {headers})
-		return (options.fetch ?? globalThis.fetch)(retry)
+		const retryResponse = await (options.fetch ?? globalThis.fetch)(retry)
+		if (context) {
+			assertClientRequestContext(context)
+		}
+		return retryResponse
 	})
 }

@@ -16,11 +16,13 @@ const sdk = vi.hoisted(() => ({
 
 const requestContext = vi.hoisted(() => ({
 	identity: {id: 1, type: 1} as {id: number; type: number} | null,
+	sessionEpoch: 1,
 	apiV2BaseUrl: 'https://identity-a.example/api/v2/',
 }))
 
 vi.mock('@/client/generated', () => sdk)
 vi.mock('@/helpers/auth', () => ({
+	getAuthSessionEpoch: () => requestContext.sessionEpoch,
 	getToken: () => null,
 	getTokenIdentity: () => requestContext.identity,
 }))
@@ -75,6 +77,7 @@ function serverProject(overrides: Partial<ProjectResponse> = {}): ProjectRespons
 
 beforeEach(() => {
 	requestContext.identity = {id: 1, type: 1}
+	requestContext.sessionEpoch = 1
 	requestContext.apiV2BaseUrl = 'https://identity-a.example/api/v2/'
 })
 
@@ -270,6 +273,12 @@ describe('project drafts and cache mutations', () => {
 		},
 	]
 	const contextChanges = [
+		{
+			name: 'authenticated session for the same identity',
+			change: () => {
+				requestContext.sessionEpoch++
+			},
+		},
 		{
 			name: 'authenticated identity',
 			change: () => {
