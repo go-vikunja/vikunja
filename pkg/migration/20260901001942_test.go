@@ -17,6 +17,8 @@
 package migration
 
 import (
+	"context"
+	"strings"
 	"testing"
 	"time"
 
@@ -24,7 +26,25 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"xorm.io/xorm/contexts"
 )
+
+type taskSelectCounter20260901001942 struct {
+	count int
+}
+
+func (h *taskSelectCounter20260901001942) BeforeProcess(c *contexts.ContextHook) (context.Context, error) {
+	return c.Ctx, nil
+}
+
+func (h *taskSelectCounter20260901001942) AfterProcess(c *contexts.ContextHook) error {
+	sql := strings.ToLower(strings.TrimSpace(c.SQL))
+	sql = strings.NewReplacer("`", "", `"`, "").Replace(sql)
+	if strings.HasPrefix(sql, "select") && strings.Contains(sql, " from tasks") {
+		h.count++
+	}
+	return nil
+}
 
 type projectBefore20260901001942 struct {
 	ID int64 `xorm:"bigint autoincr not null unique pk"`
@@ -70,7 +90,10 @@ func TestAddTaskIndexState20260901001942(t *testing.T) {
 	)
 	require.NoError(t, err)
 
+	taskSelects := &taskSelectCounter20260901001942{}
+	x.AddHook(taskSelects)
 	require.NoError(t, addTaskIndexState20260901001942(x))
+	assert.Equal(t, 1, taskSelects.count)
 
 	counters := []*ProjectTaskCounter20260901001942{}
 	require.NoError(t, x.OrderBy("project_id").Find(&counters))

@@ -69,21 +69,23 @@ func addTaskIndexState20260901001942(tx *xorm.Engine) error {
 		return err
 	}
 
+	taskIndexes := []*taskProjectIndex20260901001942{}
+	if err := s.Asc("project_id").Desc("index").Find(&taskIndexes); err != nil {
+		_ = s.Rollback()
+		return err
+	}
+	lastIndexes := make(map[int64]int64, len(projects))
+	for _, task := range taskIndexes {
+		if _, exists := lastIndexes[task.ProjectID]; !exists {
+			lastIndexes[task.ProjectID] = task.Index
+		}
+	}
+
 	counters := make([]*ProjectTaskCounter20260901001942, 0, len(projects))
 	for _, project := range projects {
-		latest := &taskProjectIndex20260901001942{}
-		has, err := s.Where("project_id = ?", project.ID).Desc("index").Get(latest)
-		if err != nil {
-			_ = s.Rollback()
-			return err
-		}
-		lastIndex := int64(0)
-		if has {
-			lastIndex = latest.Index
-		}
 		counters = append(counters, &ProjectTaskCounter20260901001942{
 			ProjectID: project.ID,
-			LastIndex: lastIndex,
+			LastIndex: lastIndexes[project.ID],
 		})
 	}
 
