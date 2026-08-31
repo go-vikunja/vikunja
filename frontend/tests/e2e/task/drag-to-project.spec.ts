@@ -95,20 +95,17 @@ test.describe('Drag Task to Project in Sidebar', () => {
 
 			await page.goto(`/projects/${parent.id}/${parentList.id}?include_subprojects=true`)
 
-			// The subproject's task is part of the parent's list
 			await expect(page.locator('.tasks')).toContainText(task.title)
 
 			const taskInList = page.locator('.tasks .single-task').filter({hasText: task.title})
 			const parentInSidebar = page.locator('li[data-project-id="' + parent.id + '"]')
 
-			// The parent's <li> wraps the nested subproject, so aim at its own row -
-			// the centre of the element would land on the child project.
+			// The parent's <li> wraps the subproject, so the centre would hit the child row.
 			await taskInList.dragTo(parentInSidebar, {targetPosition: {x: 30, y: 12}})
 
 			await expect(page.locator('.global-notification')).toContainText('moved to')
 
-			// The parent is part of this very view, so the task must stay visible
-			// instead of disappearing along with the project it came from.
+			// The parent is part of this same list, so the task must stay visible.
 			await expect(page.locator('.tasks')).toContainText(task.title)
 			await page.reload()
 			await expect(page.locator('.tasks')).toContainText(task.title)

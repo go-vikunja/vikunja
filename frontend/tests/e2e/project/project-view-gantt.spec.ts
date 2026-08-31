@@ -31,8 +31,7 @@ test.describe('Project View Gantt', () => {
 			await expect(checkbox.locator('input[type="checkbox"]')).toBeChecked()
 			await expect(page).toHaveURL(/include_subprojects=true/)
 
-			// The gantt filters rebuild the url of their own accord - the flag has to
-			// survive that, or the checkbox snaps back to unchecked.
+			// The gantt filters rebuild the url, and the flag has to survive that.
 			await page.waitForLoadState('networkidle')
 			await expect(checkbox.locator('input[type="checkbox"]')).toBeChecked()
 		})

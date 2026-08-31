@@ -250,9 +250,6 @@ function getRoundedDate(value: string | Date | undefined, fallback: Date | strin
 	return roundToNaturalDayBoundary(value ? new Date(value) : new Date(fallback), isStart)
 }
 
-// Returns the title of the project a task belongs to when it comes from a
-// subproject, so it can be shown next to the task title like the list and
-// kanban views do for tasks from other projects.
 function getTaskProjectTitle(task: ITask): string | undefined {
 	if (!props.includeSubprojects) {
 		return undefined

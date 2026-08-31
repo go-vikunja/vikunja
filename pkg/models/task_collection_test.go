@@ -1705,10 +1705,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			// User 14 has no access to project 32 itself, so the whole request is
-			// denied - the same as without the flag. Descendants the user cannot
-			// see are a separate case, covered in
-			// TestTaskCollection_ReadAll_IncludeSubprojectsPartialAccess.
+			// User 14 cannot access project 32 itself, so the whole request is denied.
 			name: "project tasks including subprojects without access to the requested project",
 			fields: fields{
 				ProjectID:          32,
@@ -1720,11 +1717,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			// Project 15 is a subproject of project 32. Requesting the
-			// subproject with include_subprojects must only return the
-			// subproject's own tasks (and its descendants), never the parent's
-			// tasks (task21 lives in project 32) - inclusion only ever walks
-			// down the hierarchy, never up to an ancestor.
+			// Inclusion only walks down, so the parent's task21 must not appear.
 			name: "subproject tasks including subprojects do not leak the parent project's tasks",
 			fields: fields{
 				ProjectID:          15,
@@ -2667,16 +2660,8 @@ func TestTaskCollection_DateFilterTimezoneBoundary(t *testing.T) {
 	assert.Truef(t, found, "task due %s (one hour before local midnight) should match", task.DueDate)
 }
 
-// TestTaskCollection_ReadAll_IncludeSubprojectsPartialAccess covers what
-// include_subprojects does with descendants the user cannot see: they are
-// skipped, and the request still succeeds with the tasks from the rest.
-//
-// Read permissions are inherited down the hierarchy - checkPermissionsForProjects
-// resolves a project's permission by walking up to its ancestors - so a
-// descendant of a project the user can read is always readable too. A subproject
-// therefore drops out of the result only when it is archived, which is what this
-// test exercises. The accessible-projects intersection in the query keeps the
-// "skip, don't fail" behaviour if that inheritance ever changes.
+// Read permissions are inherited downwards, so a descendant only drops out of the result
+// when it is archived - which is the case this exercises.
 func TestTaskCollection_ReadAll_IncludeSubprojectsPartialAccess(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()
@@ -2704,9 +2689,7 @@ func TestTaskCollection_ReadAll_IncludeSubprojectsPartialAccess(t *testing.T) {
 	assert.NotContains(t, returnedIDs, int64(35), "tasks of the archived subproject 21 are skipped")
 }
 
-// TestTaskCollection_ReadAll_IncludeSubprojectsInheritedAccess makes sure a
-// subproject that is not shared with the user directly is still included: user 1
-// reaches project 32 through team 1 and project 15 only through project 32.
+// User 1 reaches project 32 through team 1, and project 15 only through project 32.
 func TestTaskCollection_ReadAll_IncludeSubprojectsInheritedAccess(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()
@@ -2733,9 +2716,7 @@ func TestTaskCollection_ReadAll_IncludeSubprojectsInheritedAccess(t *testing.T) 
 	assert.Contains(t, returnedIDs, int64(24), "tasks from the subproject reached through the parent")
 }
 
-// TestTaskCollection_ReadAll_IncludeSubprojectsIgnoredInKanban makes sure the flag
-// is dropped for kanban views. Buckets belong to a single view, so a subproject's
-// task has no bucket here and would be sorted into the default or done bucket.
+// A subproject's task has no bucket in this view, so the flag is dropped for kanban.
 func TestTaskCollection_ReadAll_IncludeSubprojectsIgnoredInKanban(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()
