@@ -7,8 +7,14 @@ import {useBaseStore} from '@/stores/base'
 
 export function useCurrentProject() {
 	const {currentProjectId} = storeToRefs(useBaseStore())
-	const detailQuery = useQuery(computed(() => projectQuery(currentProjectId.value)))
-	const navigationQuery = useQuery(projectsQuery())
+	const detailQuery = useQuery(computed(() => ({
+		...projectQuery(currentProjectId.value),
+		enabled: currentProjectId.value > 0,
+	})))
+	const navigationQuery = useQuery(computed(() => ({
+		...projectsQuery(),
+		enabled: currentProjectId.value < 0,
+	})))
 
 	return {
 		currentProject: computed(() => {
