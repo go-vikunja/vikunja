@@ -35,6 +35,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"xorm.io/xorm/schemas"
 )
 
 type testFileProvider struct {
@@ -504,8 +505,10 @@ func TestInsertFromStructureFileProvider(t *testing.T) {
 
 		replacement, err := files.Create(bytes.NewReader([]byte("replacement")), "replacement", 11, u)
 		require.NoError(t, err)
-		assert.Equal(t, newBackgroundID, replacement.ID, "SQLite reuses the rolled-back id")
+		if db.Type() == schemas.SQLITE {
+			assert.Equal(t, newBackgroundID, replacement.ID, "SQLite reuses the rolled-back id")
+		}
 		_, err = files.FileStat(replacement)
-		require.NoError(t, err, "cleanup must finish before the id becomes reusable")
+		require.NoError(t, err, "replacement blob must remain after cleanup")
 	})
 }
