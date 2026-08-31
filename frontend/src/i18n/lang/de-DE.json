@@ -66,6 +66,7 @@
 			"email": "E-Mail-Adresse",
 			"emailPlaceholder": "z.B. frederic{'@'}vikunja.io",
 			"password": "Passwort",
+			"passwordPlaceholder": "Dein Passwort",
 			"forgotPassword": "Passwort vergessen?",
 			"resetPassword": "Setze dein Passwort zurück",
 			"resetPasswordAction": "Sende mir einen Link zum Zurücksetzen des Passworts",
@@ -179,6 +180,8 @@
 					"yyyy/mm/dd": "JJJJ/MM/TT"
 				},
 				"timeFormat": "Zeitformat",
+				"defaultDueTime": "Standard-Fälligkeitsuhrzeit",
+				"defaultDueTimeDescription": "Wird als Standardzeit verwendet, wenn ein Fälligkeitsdatum für eine Aufgabe festgelegt wird, ohne eine Uhrzeit anzugeben, einschließlich der Auswahl im Datumswähler sowie Quick Add Magic.",
 				"timeTrackingDefaultStart": "Startzeit für die Zeiterfassung",
 				"timeFormatOptions": {
 					"12h": "12 Stunden (AM/PM)",
@@ -817,6 +820,9 @@
 		"zoomOut": "Herauszoomen",
 		"resetZoom": "Zoom zurücksetzen",
 		"imageLoadFailed": "Bild konnte nicht geladen werden",
+		"videoPreview": "Videovorschau",
+		"pdfPreview": "PDF-Vorschau",
+		"videoLoadFailed": "Dieses Video kann in deinem Browser nicht abgespielt werden.",
 		"closeQuickActions": "Schnellaktionen schließen",
 		"skipToContent": "Überspringen und zum Hauptinhalt gehen",
 		"sortBy": "Sortieren nach",
@@ -1084,6 +1090,8 @@
 			"doneAt": "Erledigt am"
 		},
 		"subscription": {
+			"subscribedTaskThroughProject": "Du hast diese Aufgabe über das zugehörige Projekt abonniert. Wenn du das Abonnement hier beendest, erhältst du nur für diese Aufgabe keine Benachrichtigungen mehr.",
+			"subscribedProjectThroughParentProject": "Du hast dieses Projekt über ein übergeordnetes Projekt abonniert. Wenn du dich hier abmeldest, erhältst du keine Benachrichtigungen mehr für dieses Projekt und alles darin.",
 			"subscribedProject": "Du hast dieses Projekt abonniert und erhältst Benachrichtigungen über Änderungen.",
 			"notSubscribedProject": "Du hast dieses Projekt nicht abonniert und erhältst keine Benachrichtigungen über Änderungen.",
 			"subscribedTask": "Du hast diese Aufgabe abonniert und erhältst Benachrichtigungen über Änderungen.",
@@ -1401,7 +1409,9 @@
 		"explainer": "Benachrichtigungen werden hier angezeigt, wenn Aktionen für Projekte oder Aufgaben, die du abonniert hast, ausgeführt werden.",
 		"markAllRead": "Alle Benachrichtigungen als gelesen markieren",
 		"markAllReadSuccess": "Alle Benachrichtigungen erfolgreich als gelesen markiert.",
-		"subscribeFeed": "Benachrichtigungen über Atom-Feed abonnieren"
+		"subscribeFeed": "Benachrichtigungen über Atom-Feed abonnieren",
+		"clearAll": "Benachrichtigungen leeren",
+		"clearAllSuccess": "Alle Benachrichtigungen wurden geleert."
 	},
 	"quickActions": {
 		"title": "Suchen und Quick Actions",
@@ -1419,6 +1429,13 @@
 		"createTask": "Eine Aufgabe im aktuellen Projekt erstellen ({title})",
 		"createProject": "Projekt erstellen",
 		"results": "keine Ergebnisse | {count} Ergebnis | {count} Ergebnisse",
+		"resultTypes": {
+			"command": "Aktion",
+			"task": "Aufgabe",
+			"project": "Projekt",
+			"team": "Team",
+			"label": "Label"
+		},
 		"cmds": {
 			"newTask": "Neue Aufgabe",
 			"newProject": "Neues Projekt",
