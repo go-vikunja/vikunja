@@ -202,21 +202,10 @@ describe('project hierarchy and navigation derivations', () => {
 				serverProject({id: 1, title: 'Favorite project', is_favorite: true, position: 100}),
 				serverProject({id: 2, title: 'Archived favorite', is_favorite: true, is_archived: true, position: 200}),
 			],
-			favoriteProject: {
-				...serverProject({id: -1, title: 'Favorites', is_favorite: true, position: -1}),
-				kind: 'favorites',
-			},
+			favoriteProject: serverProject({id: -1, title: 'Favorites', is_favorite: true, position: -1}),
 			savedFilterProjects: [
-				{
-					...serverProject({id: -2, title: 'Favorite filter', is_favorite: true}),
-					kind: 'saved-filter',
-					savedFilterId: 1,
-				},
-				{
-					...serverProject({id: -3, title: 'Other filter'}),
-					kind: 'saved-filter',
-					savedFilterId: 2,
-				},
+				serverProject({id: -2, title: 'Favorite filter', is_favorite: true}),
+				serverProject({id: -3, title: 'Other filter'}),
 			],
 		}
 
