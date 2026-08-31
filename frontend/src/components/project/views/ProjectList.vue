@@ -183,10 +183,7 @@ watch(
 
 const isPositionSorting = computed(() => 'position' in sortByParam.value)
 
-// Positions are stored per view, and a subproject's task has no position in this
-// project's view - the api drops the position sort for that reason. Dragging stays
-// enabled so a task can still be moved to another project, but it cannot be
-// reordered into a position that could never be stored.
+// A subproject's task has no position in this view, so the api drops the position sort.
 const canReorderTasks = computed(() => isPositionSorting.value && !includeSubprojects.value)
 
 const taskStore = useTaskStore()
@@ -260,8 +257,7 @@ async function saveTaskPosition(e: { originalEvent?: MouseEvent, to: HTMLElement
 
 	// Check if dropped on a sidebar project
 	const {moved} = await handleTaskDropToProject(e, (task) => {
-		// With subproject tasks in the list the task may have moved to another
-		// project this view still shows, so let the reload below decide instead.
+		// The target project may still be part of this list, so let the reload decide.
 		if (includeSubprojects.value) {
 			return
 		}

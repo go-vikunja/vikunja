@@ -169,13 +169,8 @@ func (tf *TaskCollection) SetForceFlatTasks() {
 	tf.forceFlatTasks = true
 }
 
-// normalizeIncludeSubprojects resets the include subprojects flag in all cases
-// where it is not supported: outside of a concrete project (favorites,
-// saved filters), for link shares and in kanban views.
-//
-// Buckets belong to a single view, so a task from a subproject has no bucket in
-// the parent project's kanban view and would be sorted into the default or done
-// bucket regardless of its actual state.
+// Kanban is excluded because a subproject's task has no bucket in the parent's view and
+// would be sorted into the default or done bucket regardless of its state.
 func (tf *TaskCollection) normalizeIncludeSubprojects(a web.Auth, view *ProjectView) {
 	tf.IncludeSubprojects = tf.IncludeSubprojects &&
 		tf.ProjectID > 0 &&
@@ -190,8 +185,6 @@ func (tf *TaskCollection) normalizeIncludeSubprojects(a web.Auth, view *ProjectV
 	}
 }
 
-// ensureDefaultPositionSort adds a sort by position for the view if no position
-// sort was requested explicitly.
 func ensureDefaultPositionSort(opts *taskSearchOptions, view *ProjectView) {
 	for _, param := range opts.sortby {
 		if param.sortBy == taskPropertyPosition {
@@ -271,9 +264,7 @@ func getRelevantProjectsFromCollection(s *xorm.Session, a web.Auth, tf *TaskColl
 	return relevantProjects, nil
 }
 
-// getAccessibleSubprojectIDs walks down the project hierarchy from parentProjectID and
-// returns every descendant the auth can access. Subprojects without access are skipped
-// rather than failing the whole request.
+// Descendants the auth cannot access are skipped rather than failing the request.
 func getAccessibleSubprojectIDs(s *xorm.Session, a web.Auth, parentProjectID int64) (ids []int64, err error) {
 	accessible, err := accessibleProjectIDsCond(s, a, "d.id")
 	if err != nil {
