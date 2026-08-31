@@ -589,9 +589,17 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		return nil, 0, err
 	}
 
-	var distinct = "tasks.*"
-	if strings.Contains(orderby, "task_positions.") {
-		distinct += ", task_positions.position"
+	// The only join that can multiply rows is task_buckets without a view to pin
+	// it — task_positions and task_buckets are both unique on (task_id,
+	// project_view_id), everything else filters through subqueries. DISTINCT
+	// otherwise costs a full sort+unique of every matching row before the LIMIT,
+	// which is what stops `ORDER BY due_date … LIMIT n` from walking an index.
+	needsDistinct := joinTaskBuckets && opts.projectViewID == 0
+
+	var selectCols = "tasks.*"
+	if needsDistinct && strings.Contains(orderby, "task_positions.") {
+		// Postgres requires ORDER BY expressions to be in the DISTINCT select list.
+		selectCols += ", task_positions.position"
 	}
 
 	if expandSubtasks {
@@ -599,13 +607,19 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 	}
 
 	query := d.s.Where(cond)
-	if rankByRelevance {
+	switch {
+	case rankByRelevance:
 		// Select() passes the raw column list through untouched while Distinct()
 		// (no args) still emits DISTINCT. Distinct("tasks.*, pdb.score(tasks.id)")
 		// would quote-corrupt the function call into "pdb"."score(tasks"."id)".
-		query = query.Select(distinct + ", pdb.score(tasks.id)").Distinct()
-	} else {
-		query = query.Distinct(distinct)
+		query = query.Select(selectCols + ", pdb.score(tasks.id)")
+		if needsDistinct {
+			query = query.Distinct()
+		}
+	case needsDistinct:
+		query = query.Distinct(selectCols)
+	default:
+		query = query.Select(selectCols)
 	}
 	if limit > 0 {
 		query = query.Limit(limit, start)
@@ -696,8 +710,12 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 			queryCount = queryCount.Join("LEFT", "task_buckets", joinCond)
 		}
 	}
+	countCol := "count(tasks.id)"
+	if needsDistinct {
+		countCol = "count(DISTINCT tasks.id)"
+	}
 	totalCount, err = queryCount.
-		Select("count(DISTINCT tasks.id)").
+		Select(countCol).
 		Count(&Task{})
 	if err != nil {
 		sql, vals := queryCount.LastSQL()

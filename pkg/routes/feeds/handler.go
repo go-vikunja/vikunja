@@ -44,7 +44,12 @@ const AtomContentType = "application/atom+xml; charset=utf-8"
 // against an existing session. Notifications are not marked as read by being
 // fetched here. Shared by the v1 echo handler and the v2 Huma op.
 func BuildNotificationsAtomFeed(s *xorm.Session, u *user.User) (string, error) {
-	rows, _, _, err := notifications.GetNotificationsForUser(s, u.ID, models.NotificationProjectFilter(u), feedItemLimit, 0)
+	filter, err := models.NotificationProjectFilter(s, u)
+	if err != nil {
+		return "", err
+	}
+
+	rows, _, _, err := notifications.GetNotificationsForUser(s, u.ID, filter, feedItemLimit, 0)
 	if err != nil {
 		return "", err
 	}

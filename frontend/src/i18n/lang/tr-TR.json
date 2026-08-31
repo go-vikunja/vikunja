@@ -39,7 +39,6 @@
 			"email": "E-posta adresi",
 			"emailPlaceholder": "ör. frederic{'@'}vikunja.io",
 			"password": "Şifre",
-			"passwordPlaceholder": "ör. •••••••••••",
 			"forgotPassword": "Şifrenizi mi unuttunuz?",
 			"resetPassword": "Şifrenizi sıfırlayın",
 			"resetPasswordAction": "Bana şifre sıfırlama bağlantısı gönder",
@@ -78,7 +77,6 @@
 			"passwordUpdateSuccess": "Şifre başarıyla güncellendi.",
 			"updateEmailTitle": "E-posta Adresinizi Güncelleyin",
 			"updateEmailNew": "Yeni e-posta adresi",
-			"updateEmailSuccess": "E-posta adresiniz başarıyla güncellendi. Onaylamak için size bir bağlantı gönderdik.",
 			"general": {
 				"title": "Genel Ayarlar",
 				"name": "Adım",
@@ -838,7 +836,6 @@
 			"doneAt": "Tamamlanma Tarihi"
 		},
 		"subscription": {
-			"subscribedTaskThroughParentProject": "Bu göreve üst projesi üzerinden abone olduğunuz için burada abonelikten çıkamazsınız.",
 			"subscribedProject": "Bu projeye şu anda abonesiniz ve değişiklikler için bildirim alacaksınız.",
 			"notSubscribedProject": "Bu projeye abone değilsiniz ve değişiklikler için bildirim almayacaksınız.",
 			"subscribedTask": "Bu göreve şu anda abonesiniz ve değişiklikler için bildirim alacaksınız.",

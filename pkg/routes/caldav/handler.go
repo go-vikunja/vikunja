@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"reflect"
 	"strconv"
 	"strings"
@@ -33,6 +34,7 @@ import (
 	"code.vikunja.io/api/pkg/user"
 	"github.com/labstack/echo/v5"
 	"github.com/samedi/caldav-go"
+	"github.com/samedi/caldav-go/data"
 	"github.com/samedi/caldav-go/lib"
 )
 
@@ -44,10 +46,16 @@ func getBasicAuthUserFromContext(c *echo.Context) (*user.User, error) {
 	return u, nil
 }
 
-// caldav-go renders current-user-principal as "/<name>/", so pass the path
-// without surrounding slashes or the href ends up with a double slash.
-func setupUser(path string) {
-	caldav.SetupUser(strings.Trim(path, "/"))
+// Per request, never through caldav-go's setup globals: those let concurrent
+// requests of different users answer each other with the wrong storage.
+func caldavConfig(storage data.Storage, principalPath string) caldav.Config {
+	return caldav.Config{
+		Storage: storage,
+		// caldav-go renders current-user-principal as "/<name>/", so pass the path
+		// without surrounding slashes or the href ends up with a double slash.
+		User:                &data.CalUser{Name: strings.Trim(principalPath, "/")},
+		SupportedComponents: []string{lib.VCALENDAR, lib.VTODO},
+	}
 }
 
 // ProjectHandler returns all tasks from a project
@@ -103,10 +111,40 @@ func ProjectHandler(c *echo.Context) error {
 		return handlePropPatch(c, string(body), storage.project, u)
 	}
 
-	caldav.SetupStorage(storage)
-	setupUser(ProjectHomeSetPath)
-	caldav.SetupSupportedComponents([]string{lib.VCALENDAR, lib.VTODO})
-	response := caldav.HandleRequest(c.Request())
+	// caldav-go advertises PUT and DELETE unconditionally; a collection the user cannot
+	// write to always answers those with 403, so clients would retry forever.
+	if c.Request().Method == http.MethodOptions && storage.project.ID != 0 {
+		s := db.NewSession()
+		defer s.Close()
+
+		canWrite, err := denyArchived(storage.project.CanWrite(s, u))
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "internal server error").Wrap(err)
+		}
+
+		if !canWrite {
+			// getProjectFromParam does no permission check, so answering 200 here
+			// would leak which project and filter ids exist.
+			can, err := storage.canReadCollection(s)
+			if err != nil {
+				return echo.NewHTTPError(http.StatusInternalServerError, "internal server error").Wrap(err)
+			}
+			if !can {
+				return c.String(http.StatusNotFound, "Project not found")
+			}
+
+			// A pseudo collection cannot be written to as a collection, but PUT and DELETE
+			// of the tasks it aggregates go through to their real projects.
+			if !models.IsPseudoProjectID(storage.project.ID) {
+				log.Debugf("[CALDAV] OPTIONS for read-only project %d by user %s", storage.project.ID, u.Username)
+				c.Response().Header().Set("DAV", "1, 3, calendar-access")
+				c.Response().Header().Set("Allow", "GET, HEAD, OPTIONS, PROPFIND, REPORT")
+				return c.NoContent(http.StatusOK)
+			}
+		}
+	}
+
+	response := caldav.HandleRequestWithConfig(c.Request(), caldavConfig(storage, ProjectHomeSetPath))
 	response.Write(c.Response())
 	return nil
 }
@@ -148,8 +186,14 @@ func TaskHandler(c *echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Internal server error").Wrap(err)
 	}
 
-	// Get the task uid
-	taskUID := strings.TrimSuffix(c.Param("task"), ".ics")
+	// Whether c.Param("task") arrives decoded depends on router config and on which
+	// bytes were escaped; the escaped path is unambiguous, so decode that instead.
+	esc := c.Request().URL.EscapedPath()
+	seg := esc[strings.LastIndex(esc, "/")+1:]
+	taskUID, err := url.PathUnescape(strings.TrimSuffix(seg, ".ics"))
+	if err != nil {
+		return c.String(http.StatusNotFound, "Task not found")
+	}
 
 	storage := &VikunjaCaldavProjectStorage{
 		project: project,
@@ -157,8 +201,7 @@ func TaskHandler(c *echo.Context) error {
 		user:    u,
 	}
 
-	caldav.SetupStorage(storage)
-	response := caldav.HandleRequest(c.Request())
+	response := caldav.HandleRequestWithConfig(c.Request(), caldavConfig(storage, principalPathForUser(u.Username)))
 	response.Write(c.Response())
 	return nil
 }
@@ -199,11 +242,7 @@ func PrincipalHandler(c *echo.Context) error {
 	log.Debugf("[CALDAV] Request Body: %v\n", string(body))
 	log.Debugf("[CALDAV] Request Headers: %v\n", c.Request().Header)
 
-	caldav.SetupStorage(storage)
-	setupUser(principalPathForUser(u.Username))
-	caldav.SetupSupportedComponents([]string{lib.VCALENDAR, lib.VTODO})
-
-	response := caldav.HandleRequest(c.Request())
+	response := caldav.HandleRequestWithConfig(c.Request(), caldavConfig(storage, principalPathForUser(u.Username)))
 	response.Write(c.Response())
 	return nil
 }
@@ -228,11 +267,7 @@ func EntryHandler(c *echo.Context) error {
 	log.Debugf("[CALDAV] Request Body: %v\n", string(body))
 	log.Debugf("[CALDAV] Request Headers: %v\n", c.Request().Header)
 
-	caldav.SetupStorage(storage)
-	setupUser(principalPathForUser(u.Username))
-	caldav.SetupSupportedComponents([]string{lib.VCALENDAR, lib.VTODO})
-
-	response := caldav.HandleRequest(c.Request())
+	response := caldav.HandleRequestWithConfig(c.Request(), caldavConfig(storage, principalPathForUser(u.Username)))
 	response.Write(c.Response())
 	return nil
 }

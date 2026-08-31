@@ -39,7 +39,6 @@
 			"email": "כתובת אימייל",
 			"emailPlaceholder": "למשל david{'@'}vikunja.io",
 			"password": "סיסמה",
-			"passwordPlaceholder": "למשל •••••••••••",
 			"forgotPassword": "שכחת סיסמתך?",
 			"resetPassword": "לאפס סיסמתך",
 			"resetPasswordAction": "לשלוח לי לינק לאיפוס סיסמה",
@@ -77,7 +76,6 @@
 			"passwordUpdateSuccess": "סיסמה עודכנה בהצלחה.",
 			"updateEmailTitle": "עדכון כתובת אימייל",
 			"updateEmailNew": "כתובת אימייל חדשה",
-			"updateEmailSuccess": "כתובת אימייל שלך עודכנה בהצלחה. שלחנו לך במייל לינק לאשר.",
 			"general": {
 				"title": "הגדרות כלליות",
 				"name": "השם שלי",
@@ -748,7 +746,6 @@
 			"doneAt": "הסתיים ב"
 		},
 		"subscription": {
-			"subscribedTaskThroughParentProject": "אין לך הרשאה לביטול מנוי כאן כי המנוי שלך למטלה הוא דרך הפרויקט שלה.",
 			"subscribedProject": "את/ה מנוי/ה לפרויקט הזה כעת ותקבל הודעות על שינויים.",
 			"notSubscribedProject": "אינך מנוי/ה לפרויקט ולא תקבל/י הודעות על שינויים.",
 			"subscribedTask": "את/ה מנוי/ה כעת למטלה הזו ותקבל/י הודעות על שינויים.",

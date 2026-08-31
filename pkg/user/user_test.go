@@ -21,6 +21,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"testing"
+	"time"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/utils"
@@ -478,6 +479,49 @@ func TestUpdateUser(t *testing.T) {
 		require.Error(t, err)
 		assert.True(t, IsErrUserDoesNotExist(err))
 	})
+	t.Run("pending email survives an update without email change", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.Where("id = ?", 1).Cols("pending_email").Update(&User{PendingEmail: "p@example.com"})
+		require.NoError(t, err)
+
+		_, err = UpdateUser(s, &User{
+			ID:   1,
+			Name: "Lorem Ipsum",
+		}, false)
+		require.NoError(t, err)
+
+		updated, err := GetUserWithEmail(s, &User{ID: 1})
+		require.NoError(t, err)
+		assert.Equal(t, "p@example.com", updated.PendingEmail)
+	})
+	t.Run("direct email change discards the pending one", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.Where("id = ?", 1).Cols("pending_email").Update(&User{PendingEmail: "p@example.com"})
+		require.NoError(t, err)
+		_, err = generateToken(s, &User{ID: 1}, TokenEmailConfirm)
+		require.NoError(t, err)
+
+		_, err = UpdateUser(s, &User{
+			ID:    1,
+			Email: "testing@example.com",
+		}, false)
+		require.NoError(t, err)
+
+		updated, err := GetUserWithEmail(s, &User{ID: 1})
+		require.NoError(t, err)
+		assert.Equal(t, "testing@example.com", updated.Email)
+		assert.Empty(t, updated.PendingEmail)
+
+		tokens, err := getTokensForKind(s, &User{ID: 1}, TokenEmailConfirm)
+		require.NoError(t, err)
+		assert.Empty(t, tokens)
+	})
 	t.Run("frontend settings survive profile-only update", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
@@ -753,6 +797,31 @@ func TestCleanupOldTokens(t *testing.T) {
 			"token": "recenttoken",
 			"kind":  TokenPasswordReset,
 		}, false)
+	})
+	t.Run("deletes old email confirm tokens only with a pending email change", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.Where("id = ?", 1).Cols("pending_email").Update(&User{PendingEmail: "p@example.com"})
+		require.NoError(t, err)
+
+		withPending, err := generateToken(s, &User{ID: 1}, TokenEmailConfirm)
+		require.NoError(t, err)
+		withoutPending, err := generateToken(s, &User{ID: 2}, TokenEmailConfirm)
+		require.NoError(t, err)
+
+		_, err = s.In("id", withPending.ID, withoutPending.ID).
+			Cols("created").
+			Update(&Token{Created: time.Now().Add(-25 * time.Hour)})
+		require.NoError(t, err)
+
+		_, err = CleanupOldTokens(s)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		db.AssertMissing(t, "user_tokens", map[string]interface{}{"id": withPending.ID})
+		db.AssertExists(t, "user_tokens", map[string]interface{}{"id": withoutPending.ID}, false)
 	})
 	t.Run("does not delete email confirm tokens", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)

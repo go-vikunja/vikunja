@@ -39,7 +39,6 @@
 			"email": "Adres e-mail",
 			"emailPlaceholder": "np. frederic{'@'}vikunja.io",
 			"password": "Hasło",
-			"passwordPlaceholder": "np. •••••••••••",
 			"forgotPassword": "Zapomniałeś hasła?",
 			"resetPassword": "Zresetuj swoje hasło",
 			"resetPasswordAction": "Wyślij mi link do resetowania hasła",
@@ -72,7 +71,6 @@
 			"currentPasswordPlaceholder": "Twoje aktualne hasło",
 			"passwordUpdateSuccess": "Hasło zostało pomyślnie zaktualizowane.",
 			"updateEmailTitle": "Zaktualizuj swój adres e-mail",
-			"updateEmailSuccess": "Twój adres e-mail został pomyślnie zaktualizowany. Wysłaliśmy Ci link do potwierdzenia operacji.",
 			"general": {
 				"title": "Ustawienia główne",
 				"savedSuccess": "Ustawienia zostały pomyślnie zaktualizowane.",
@@ -736,7 +734,6 @@
 			"doneAt": "Wykonano"
 		},
 		"subscription": {
-			"subscribedTaskThroughParentProject": "Nie możesz zrezygnować z subskrypcji, ponieważ subskrybujesz to zadanie poprzez jego projekt.",
 			"subscribedProject": "Jesteś obecnie zapisany do tego projektu i będziesz otrzymywać powiadomienia o zmianach.",
 			"notSubscribedProject": "Nie jesteś zapisany do tego projektu i nie będziesz otrzymywać powiadomień o zmianach.",
 			"subscribedTask": "Jesteś obecnie zapisany do tego zadania i będziesz otrzymywać powiadomienia o zmianach.",

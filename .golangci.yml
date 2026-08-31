@@ -47,10 +47,24 @@ linters:
       forbid:
         - pattern: ^tx\.Sync2?$
           msg: plain Sync drops every index the synced struct doesn't declare (#3244) — use partialSync; tx.Sync is only safe for brand-new tables (nolint with a reason)
+        - pattern: ^(s|sess|tx)\.Context$
+          msg: replacing a session context drops the memo pointer the write hook invalidates through, leaving stale permissions — use db.SetSessionContext
     goheader:
       template-path: code-header-template.txt
     nestif:
       min-complexity: 6
+    staticcheck:
+      checks:
+        # defaults, plus -SA4023: its nilness analyzer panics on recover() in
+        # pointer-returning functions (sentry-go triggers it) — dominikh/go-tools#1725
+        - all
+        - -ST1000
+        - -ST1003
+        - -ST1016
+        - -ST1020
+        - -ST1021
+        - -ST1022
+        - -SA4023
   exclusions:
     generated: lax
     presets:
@@ -82,10 +96,16 @@ linters:
           - err113
           - exhaustive
         path: pkg/migration/*
-      # The tx.Sync ban only makes sense for migrations; everywhere else the receiver isn't a migration engine anyway.
+      # The Sync ban only makes sense for migrations; everywhere else the receiver isn't a migration engine anyway.
       - linters:
           - forbidigo
         path-except: pkg/migration/
+        text: partialSync
+      # pkg/db owns the memo, so it is the one place allowed to set a session context.
+      - linters:
+          - forbidigo
+        path: pkg/db/
+        text: db.SetSessionContext
       - linters:
           - exhaustive
         path: pkg/models/task_collection_filter\.go
@@ -161,6 +181,9 @@ linters:
       - linters:
           - contextcheck
         path: pkg/routes/api/v2/backgrounds.go # the unsplash provider intentionally uses context.Background(); its interface is shared with v1 and can't take a context
+      - linters:
+          - contextcheck
+        text: attachSessionCache # db.NewSession takes no context; the session context it builds only carries the session-scoped memo
       - linters:
           - revive
         text: 'var-naming: avoid package names that conflict with Go standard library package names'

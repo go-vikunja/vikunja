@@ -39,7 +39,6 @@
 			"email": "E-postadress",
 			"emailPlaceholder": "t.ex. frederic{'@'}vikunja.io",
 			"password": "Lösenord",
-			"passwordPlaceholder": "t.ex. •••••••••••",
 			"forgotPassword": "Har du glömt ditt lösenord?",
 			"resetPassword": "Återställ ditt lösenord",
 			"resetPasswordAction": "Skicka en länk för återställning av lösenord",
@@ -78,7 +77,6 @@
 			"passwordUpdateSuccess": "Lösenordet har uppdaterats.",
 			"updateEmailTitle": "Uppdatera din e-postadress",
 			"updateEmailNew": "Ny e-postadress",
-			"updateEmailSuccess": "Din e-postadress har uppdaterats. Vi har skickat en länk till dig för att bekräfta den.",
 			"general": {
 				"title": "Allmänna inställningar",
 				"name": "Mitt namn",
@@ -842,7 +840,6 @@
 			"doneAt": "Klar vid"
 		},
 		"subscription": {
-			"subscribedTaskThroughParentProject": "Du kan inte avregistrera dig här eftersom du prenumererar på denna uppgift genom dess projekt.",
 			"subscribedProject": "Du prenumererar för närvarande på detta projekt och kommer att få notiser om ändringar.",
 			"notSubscribedProject": "Du prenumererar inte på detta projekt och kommer inte att få notiser om ändringar.",
 			"subscribedTask": "Du prenumererar för närvarande på denna uppgift och kommer att få notiser om ändringar.",

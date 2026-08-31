@@ -1,4 +1,4 @@
-import {computed, readonly, ref} from 'vue'
+import {computed, readonly, ref, watch} from 'vue'
 import {acceptHMRUpdate, defineStore} from 'pinia'
 
 import {AuthenticatedHTTPFactory, HTTPFactory} from '@/helpers/fetcher'
@@ -8,6 +8,7 @@ import UserModel, {getDisplayName, fetchAvatarBlobUrl, invalidateAvatarCache} fr
 import AvatarService from '@/services/avatar'
 import UserSettingsService from '@/services/userSettings'
 import {getToken, refreshToken, removeToken, saveToken} from '@/helpers/auth'
+import {clearTaskCache} from '@/helpers/taskCache'
 import {useWebSocket} from '@/composables/useWebSocket'
 import {setModuleLoading} from '@/stores/helper'
 import {success, error} from '@/message'
@@ -116,6 +117,14 @@ export const useAuthStore = defineStore('auth', () => {
 	
 	const isLinkShareAuth = computed(() => info.value?.type === AUTH_TYPES.LINK_SHARE)
 
+	// Cached task links belong to one identity. Compare id and type instead of watching
+	// `info` itself: setUserSettings rebuilds the object for the same user.
+	watch(() => [info.value?.id ?? null, info.value?.type ?? null] as const, ([id, type], [prevId, prevType]) => {
+		if (id !== prevId || type !== prevType) {
+			clearTaskCache()
+		}
+	})
+
 	function setIsLoading(newIsLoading: boolean) {
 		isLoading.value = newIsLoading 
 	}
@@ -160,6 +169,7 @@ export const useAuthStore = defineStore('auth', () => {
 				sidebarWidth: null,
 				commentSortOrder: 'asc',
 				desktopQuickEntryShortcut: 'CmdOrCtrl+Shift+A',
+				defaultDueTime: undefined,
 				...newSettings.frontendSettings,
 			},
 		})
@@ -238,12 +248,12 @@ export const useAuthStore = defineStore('auth', () => {
 				...credentials,
 				language,
 			})
-			return login(credentials)
+			return await login(credentials)
 		} catch (e) {
 			if (e.response?.data?.code === 2002 && e.response?.data?.invalid_fields[0]?.startsWith('language:')) {
 				return register(credentials, 'en')
 			}
-			
+
 			if (e.response?.data?.message) {
 				throw e.response.data
 			}
@@ -458,12 +468,11 @@ export const useAuthStore = defineStore('auth', () => {
 	/**
 	 * Try to verify the email
 	 */
-	async function verifyEmail(): Promise<boolean> {
-		const emailVerifyToken = localStorage.getItem('emailConfirmToken')
-		if (emailVerifyToken) {
+	async function verifyEmail(token = localStorage.getItem('emailConfirmToken')): Promise<boolean> {
+		if (token) {
 			const stopLoading = setModuleLoading(setIsLoading)
 			try {
-				await HTTPFactory().post('user/confirm', {token: emailVerifyToken})
+				await HTTPFactory().post('user/confirm', {token})
 				return true
 			} catch(e) {
 				throw new Error(e.response.data.message, {cause: e})

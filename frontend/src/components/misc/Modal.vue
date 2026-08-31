@@ -72,7 +72,7 @@ const props = withDefaults(defineProps<{
 	enabled?: boolean,
 	overflow?: boolean,
 	wide?: boolean,
-	variant?: 'default' | 'hint-modal' | 'scrolling' | 'top',
+	variant?: 'default' | 'hint-modal' | 'scrolling' | 'top' | 'fullscreen',
 }>(), {
 	enabled: true,
 	overflow: false,
@@ -376,6 +376,24 @@ $modal-width: 1024px;
 	inline-size: calc(100% - 2rem);
 }
 
+// no centering transform: it would trap fixed descendants in a small containing block
+.fullscreen .modal-content {
+	position: static;
+	inline-size: 100%;
+	block-size: 100%;
+	max-inline-size: none;
+	max-block-size: none;
+	transform: none;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+// .modal-content would otherwise paint over the fixed .close
+.fullscreen .close {
+	z-index: 1;
+}
+
 .hint-modal {
 	:deep(.card-content) {
 		text-align: start;
@@ -399,6 +417,13 @@ $modal-width: 1024px;
 		inset-inline-end: 50%;
 		// we align the close button to the modal until there is enough space outside for it
 		transform: translateX(calc((#{$modal-width} / 2) - #{$close-button-padding}));
+
+		// fullscreen has no card to hug — keep the corner position instead
+		.fullscreen & {
+			inset-block-start: .5rem;
+			inset-inline-end: $close-button-padding;
+			transform: none;
+		}
 	}
 
 	@media screen and (min-width: $tablet) and (max-width: #{$desktop + $close-button-min-space}) {
@@ -418,6 +443,11 @@ $modal-width: 1024px;
 		padding-block-end: env(safe-area-inset-bottom);
 	}
 
+	// no card to center against, so the container needs full height
+	.fullscreen .modal-container {
+		block-size: 100dvh;
+	}
+
 	.modal-content {
 		position: static;
 		max-block-size: none;
@@ -425,6 +455,11 @@ $modal-width: 1024px;
 
 	.close {
 		display: none;
+	}
+
+	// no card-header close icon to fall back on
+	.fullscreen .close {
+		display: block;
 	}
 
 	:deep(.card) {

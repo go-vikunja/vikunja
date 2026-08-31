@@ -18,11 +18,16 @@ package user
 
 import (
 	"context"
+	"strconv"
+	"time"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/notifications"
 	"xorm.io/xorm"
 )
+
+const emailConfirmationResendCooldown = time.Minute
 
 // EmailUpdate is the data structure to update a user's email address
 type EmailUpdate struct {
@@ -31,6 +36,14 @@ type EmailUpdate struct {
 	NewEmail string `json:"new_email" valid:"email,length(0|250),required"`
 	// The password of the user for confirmation.
 	Password string `json:"password"`
+}
+
+func EmailUpdateMessage() string {
+	if config.MailerEnabled.GetBool() {
+		return "We sent you an email with a link to confirm your new email address. Your current address stays active until you confirm."
+	}
+
+	return "Your email address was updated."
 }
 
 // ChangeUserEmail verifies the user's password, then sets a new email address
@@ -44,59 +57,141 @@ func ChangeUserEmail(ctx context.Context, s *xorm.Session, u *User, password, ne
 	return UpdateEmail(s, &EmailUpdate{User: verified, NewEmail: newEmail})
 }
 
-// UpdateEmail lets a user update their email address
+// UpdateEmail stages the address as PendingEmail until confirmed; with the mailer off it applies immediately.
 func UpdateEmail(s *xorm.Session, update *EmailUpdate) (err error) {
-
-	// Check the email is not already used
-	user := &User{}
-	has, err := s.Where("email = ?", update.NewEmail).Get(user)
-	if err != nil {
-		return
+	if err := checkEmailNotTaken(s, update.NewEmail); err != nil {
+		return err
 	}
 
-	if has {
-		return ErrUserEmailExists{UserID: user.ID, Email: update.NewEmail}
-	}
-
-	// Set the user as unconfirmed and the new email address
 	update.User, err = GetUserWithEmail(s, &User{ID: update.User.ID})
 	if err != nil {
 		return
 	}
 
-	update.User.Email = update.NewEmail
-
-	// Send the confirmation mail
 	if !config.MailerEnabled.GetBool() {
-		update.User.Status = StatusActive
+		update.User.Email = update.NewEmail
+		update.User.PendingEmail = ""
 		_, err = s.
 			Where("id = ?", update.User.ID).
-			Cols("email", "status").
+			Cols("email", "pending_email").
 			Update(update.User)
 		return
 	}
 
-	update.User.Status = StatusEmailConfirmationRequired
+	update.User.PendingEmail = update.NewEmail
 	_, err = s.
 		Where("id = ?", update.User.ID).
-		Cols("email", "status").
+		Cols("pending_email").
 		Update(update.User)
 	if err != nil {
 		return
 	}
 
-	token, err := generateToken(s, update.User, TokenEmailConfirm)
+	err = sendEmailConfirmation(s, update.User)
 	if err != nil {
 		return
 	}
 
-	// Send the user a mail with a link to confirm the mail
+	return notifications.Notify(update.User, &EmailChangeRequestedNotification{
+		User:     update.User,
+		NewEmail: update.NewEmail,
+	}, s)
+}
+
+// CancelEmailUpdate discards a pending email change and its confirm tokens.
+func CancelEmailUpdate(s *xorm.Session, u *User) (err error) {
+	u, err = GetUserWithEmail(s, &User{ID: u.ID})
+	if err != nil {
+		return
+	}
+	if u.PendingEmail == "" {
+		return ErrNoPendingEmail{UserID: u.ID}
+	}
+
+	err = removeTokens(s, u, TokenEmailConfirm)
+	if err != nil {
+		return
+	}
+	_, err = s.
+		Where("id = ?", u.ID).
+		Cols("pending_email").
+		Update(&User{PendingEmail: ""})
+	return
+}
+
+// ResendEmailConfirmation sends a fresh confirm link for a pending email change.
+func ResendEmailConfirmation(s *xorm.Session, u *User) (err error) {
+	u, err = GetUserWithEmail(s, &User{ID: u.ID})
+	if err != nil {
+		return
+	}
+	if u.PendingEmail == "" {
+		return ErrNoPendingEmail{UserID: u.ID}
+	}
+
+	return sendEmailConfirmation(s, u)
+}
+
+func emailConfirmationCooldownKey(userID int64) string {
+	return "email_confirm_sent_" + strconv.FormatInt(userID, 10)
+}
+
+func sendEmailConfirmation(s *xorm.Session, u *User) (err error) {
+	// Kept outside the db so the cooldown survives cancelling the change or rotating tokens.
+	cooldownKey := emailConfirmationCooldownKey(u.ID)
+	lastSent, exists, err := keyvalue.Get(cooldownKey)
+	if err != nil {
+		return
+	}
+	if exists {
+		var sentAt int64
+		switch v := lastSent.(type) {
+		case int64:
+			sentAt = v
+		case float64:
+			sentAt = int64(v)
+		}
+		if time.Since(time.Unix(sentAt, 0)) < emailConfirmationResendCooldown {
+			return ErrEmailConfirmationCooldown{UserID: u.ID}
+		}
+	}
+
+	err = removeTokens(s, u, TokenEmailConfirm)
+	if err != nil {
+		return
+	}
+
+	token, err := generateToken(s, u, TokenEmailConfirm)
+	if err != nil {
+		return
+	}
+
+	// RouteForMail sends to User.Email; swap in the pending address on a copy.
+	recipient := *u
+	recipient.Email = u.PendingEmail
+
 	n := &EmailConfirmNotification{
-		User:         update.User,
+		User:         &recipient,
 		IsNew:        false,
 		ConfirmToken: token.ClearTextToken,
 	}
 
-	err = notifications.Notify(update.User, n, s)
-	return
+	err = notifications.Notify(&recipient, n, s)
+	if err != nil {
+		return
+	}
+
+	return keyvalue.Put(cooldownKey, time.Now().Unix())
+}
+
+func checkEmailNotTaken(s *xorm.Session, email string) error {
+	user := &User{}
+	has, err := s.Where("email = ?", email).Get(user)
+	if err != nil {
+		return err
+	}
+	if has {
+		return ErrUserEmailExists{UserID: user.ID, Email: email}
+	}
+	return nil
 }

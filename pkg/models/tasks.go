@@ -79,11 +79,11 @@ type Task struct {
 	// The task description.
 	Description string `xorm:"longtext null" json:"description"`
 	// Whether a task is done or not.
-	Done bool `xorm:"INDEX null" json:"done"`
+	Done bool `xorm:"INDEX null index(done_due_date)" json:"done"`
 	// The time when a task was marked as done. This field is system-controlled and cannot be set via API.
 	DoneAt time.Time `xorm:"INDEX null 'done_at'" json:"done_at" readOnly:"true" doc:"When the task was marked as done. Set by the server; ignored on write."`
 	// The time when the task is due.
-	DueDate time.Time `xorm:"DATETIME INDEX null 'due_date'" json:"due_date"`
+	DueDate time.Time `xorm:"DATETIME INDEX null index(done_due_date) 'due_date'" json:"due_date"`
 	// An array of reminders that are associated with this task.
 	Reminders []*TaskReminder `xorm:"-" json:"reminders"`
 	// The project this task belongs to.
@@ -456,9 +456,13 @@ func GetTaskSimpleByUUID(s *xorm.Session, uid string) (task *Task, err error) {
 // task whose project the provided auth does not have access to.
 func GetTasksByUIDs(s *xorm.Session, uids []string, a web.Auth) (tasks []*Task, err error) {
 	tasks = []*Task{}
+	accessible, err := accessibleProjectIDsCond(s, a, "`tasks`.`project_id`")
+	if err != nil {
+		return nil, err
+	}
 	err = s.
 		In("uid", uids).
-		And(accessibleProjectIDsSubquery(a, "`tasks`.`project_id`")).
+		And(accessible).
 		Find(&tasks)
 	if err != nil {
 		return
@@ -537,10 +541,7 @@ func addAssigneesToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*Ta
 
 // Get all labels for all the tasks
 func addLabelsToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*Task) (err error) {
-	labels, _, _, err := GetLabelsByTaskIDs(s, &LabelByTaskIDsOptions{
-		TaskIDs: taskIDs,
-		Page:    -1,
-	})
+	labels, _, _, err := GetLabelsByTaskIDs(s, taskIDs, nil, -1)
 	if err != nil {
 		return
 	}
@@ -599,9 +600,13 @@ func addRelatedTasksToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]
 		return
 	}
 
+	accessible, err := accessibleProjectIDsCond(s, a, "`tasks`.`project_id`")
+	if err != nil {
+		return err
+	}
 	fullRelatedTasks := make(map[int64]*Task)
 	err = s.In("id", relatedTaskIDs).
-		And(accessibleProjectIDsSubquery(a, "`tasks`.`project_id`")).
+		And(accessible).
 		Find(&fullRelatedTasks)
 	if err != nil {
 		return
@@ -651,6 +656,10 @@ func addBucketsToTasks(s *xorm.Session, a web.Auth, taskIDs []int64, taskMap map
 		return err
 	}
 
+	accessible, err := accessibleProjectIDsCond(s, a, "project_views.project_id")
+	if err != nil {
+		return err
+	}
 	buckets := make(map[int64]*Bucket)
 	err = s.
 		Where(builder.In("id", builder.Select("bucket_id").
@@ -658,7 +667,7 @@ func addBucketsToTasks(s *xorm.Session, a web.Auth, taskIDs []int64, taskMap map
 			Where(builder.In("task_id", taskIDs)))).
 		And(builder.In("project_view_id", builder.Select("id").
 			From("project_views").
-			Where(accessibleProjectIDsSubquery(a, "project_views.project_id")))).
+			Where(accessible))).
 		Find(&buckets)
 	if err != nil {
 		return err
@@ -1104,6 +1113,9 @@ func createTasks(s *xorm.Session, projectID int64, tasks []*Task, a web.Auth, up
 		}
 	}
 
+	// Link shares can't have subscriptions
+	_, creatorIsUser := a.(*user.User)
+
 	for _, t := range tasks {
 		t.CreatedBy = createdBy
 
@@ -1123,6 +1135,12 @@ func createTasks(s *xorm.Session, projectID int64, tasks []*Task, a web.Auth, up
 
 		if t.IsFavorite {
 			if err := addToFavorites(s, t.ID, createdBy, FavoriteKindTask); err != nil {
+				return err
+			}
+		}
+
+		if creatorIsUser {
+			if err := subscribeUserImplicitly(s, SubscriptionEntityTask, t.ID, createdBy); err != nil {
 				return err
 			}
 		}
@@ -1835,16 +1853,17 @@ func setTaskDatesFromCurrentDateRepeat(oldTask, newTask *Task) {
 	}
 
 	newTask.Reminders = oldTask.Reminders
-	// When repeating from the current date, all reminders should keep their difference to each other.
-	// To make this easier, we sort them first because we can then rely on the fact the first is the smallest
+	// The earliest reminder moves to now + interval, all others keep their distance to it.
 	if len(oldTask.Reminders) > 0 {
-		sort.Slice(oldTask.Reminders, func(i, j int) bool {
-			return oldTask.Reminders[i].Reminder.Unix() < oldTask.Reminders[j].Reminder.Unix()
-		})
 		first := oldTask.Reminders[0].Reminder
+		for _, r := range oldTask.Reminders[1:] {
+			if r.Reminder.Before(first) {
+				first = r.Reminder
+			}
+		}
+		newFirst := now.Add(repeatDuration)
 		for in, r := range oldTask.Reminders {
-			diff := r.Reminder.Sub(first)
-			newTask.Reminders[in].Reminder = now.Add(repeatDuration + diff)
+			newTask.Reminders[in].Reminder = shiftTime(r.Reminder, first, newFirst)
 		}
 	}
 
@@ -1856,9 +1875,8 @@ func setTaskDatesFromCurrentDateRepeat(oldTask, newTask *Task) {
 		// end date should keep the difference to the start date when setting
 		// them as new
 		if !oldTask.StartDate.IsZero() && !oldTask.EndDate.IsZero() {
-			diff := oldTask.EndDate.Sub(oldTask.StartDate)
 			newTask.StartDate = now.Add(repeatDuration)
-			newTask.EndDate = now.Add(repeatDuration + diff)
+			newTask.EndDate = shiftTime(oldTask.EndDate, oldTask.StartDate, newTask.StartDate)
 		} else {
 			if !oldTask.StartDate.IsZero() {
 				newTask.StartDate = now.Add(repeatDuration)
@@ -1872,19 +1890,30 @@ func setTaskDatesFromCurrentDateRepeat(oldTask, newTask *Task) {
 		// If the old task has a start and due date, we set the new start date
 		// to preserve the interval between them.
 		if !oldTask.StartDate.IsZero() {
-			diff := oldTask.DueDate.Sub(oldTask.StartDate)
-			newTask.StartDate = newTask.DueDate.Add(-diff)
+			newTask.StartDate = shiftTime(oldTask.StartDate, oldTask.DueDate, newTask.DueDate)
 		}
 
 		// If the old task has an end and due date, we set the new end date
 		// to preserve the interval between them.
 		if !oldTask.EndDate.IsZero() {
-			diff := oldTask.DueDate.Sub(oldTask.EndDate)
-			newTask.EndDate = newTask.DueDate.Add(-diff)
+			newTask.EndDate = shiftTime(oldTask.EndDate, oldTask.DueDate, newTask.DueDate)
 		}
 	}
 
 	newTask.Done = false
+}
+
+// shiftTime moves t by the same offset that takes from to to.
+// time.Time.Sub saturates at ~292 years, so for larger spans the offset is
+// applied as whole years plus a small remainder instead of one Duration.
+func shiftTime(t, from, to time.Time) time.Time {
+	diff := to.Sub(from)
+	if diff != math.MaxInt64 && diff != math.MinInt64 {
+		return t.Add(diff)
+	}
+	years := to.Year() - from.Year()
+	rest := to.Sub(from.AddDate(years, 0, 0))
+	return t.AddDate(years, 0, 0).Add(rest)
 }
 
 var (

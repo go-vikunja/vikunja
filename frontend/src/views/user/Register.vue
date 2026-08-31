@@ -7,6 +7,13 @@
 		>
 			{{ errorMessage }}
 		</Message>
+		<Message
+			v-if="confirmEmailMessage !== ''"
+			variant="success"
+			class="mbe-4"
+		>
+			{{ confirmEmailMessage }}
+		</Message>
 		<form
 			id="registerform"
 			@submit.prevent="submit"
@@ -136,6 +143,7 @@ const credentials = reactive({
 
 const isLoading = computed(() => authStore.isLoading)
 const errorMessage = ref('')
+const confirmEmailMessage = ref('')
 const validatePasswordInitially = ref(false)
 const serverValidationErrors = ref<Partial<Record<string, string>>>({})
 
@@ -233,6 +241,12 @@ async function submit() {
 		await authStore.register(toRaw(credentials))
 		redirectIfSaved()
 	} catch (e: unknown) {
+		// 1012 = email not confirmed: registration itself succeeded
+		if (e instanceof Object && 'code' in e && e.code === 1012) {
+			confirmEmailMessage.value = t('user.auth.registrationConfirmEmail')
+			return
+		}
+
 		// Parse field-specific validation errors
 		if (isApiValidationError(e)) {
 			const fieldErrors = parseValidationErrors(e)

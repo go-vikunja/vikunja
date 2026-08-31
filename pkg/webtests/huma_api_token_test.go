@@ -42,7 +42,7 @@ var testuser21 = user.User{ID: 21, Username: "user_bot_owner_a", Issuer: "local"
 // first's tokens. One env, one secret, all callers via humaTokenFor.
 //
 // Fixture topology (pkg/db/fixtures/api_tokens.yml):
-//   - tokens #1, #2: owned by user1.
+//   - tokens #1, #2, #9: owned by user1.
 //   - token #3: owned by user2 — never visible to user1, never deletable by user1.
 //   - tokens #4, #5: owned by disabled/locked users 17/18.
 //   - tokens #6, #7: owned by user15.
@@ -59,10 +59,10 @@ func TestHumaAPIToken(t *testing.T) {
 			rec := humaRequest(t, e, http.MethodGet, "/api/v2/tokens", "", user1Token, "")
 			require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
 			ids := apiTokenIDsFromReadAll(t, rec.Body.Bytes())
-			// user1 owns exactly tokens #1 and #2; cardinality is pinned.
-			assert.ElementsMatch(t, []int64{1, 2}, ids,
-				"ReadAll must return exactly {1,2}; body: %s", rec.Body.String())
-			assert.Equal(t, int64(2), apiTokenTotalFromReadAll(t, rec.Body.Bytes()))
+			// user1 owns exactly tokens #1, #2 and #9; cardinality is pinned.
+			assert.ElementsMatch(t, []int64{1, 2, 9}, ids,
+				"ReadAll must return exactly {1,2,9}; body: %s", rec.Body.String())
+			assert.Equal(t, int64(3), apiTokenTotalFromReadAll(t, rec.Body.Bytes()))
 			assert.NotContains(t, ids, int64(3), "token #3 (owned by user2) must be hidden")
 		})
 		t.Run("Isolation - user2 sees only its own token", func(t *testing.T) {

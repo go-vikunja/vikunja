@@ -134,7 +134,7 @@ func RefreshToken(c *echo.Context) (err error) {
 
 	result, err := auth.RefreshSession(cookie.Value)
 	if err != nil {
-		if user2.IsErrUserStatusError(err) {
+		if auth.IsUnusableRefreshToken(err) {
 			auth.ClearRefreshTokenCookie(c)
 		}
 		return err

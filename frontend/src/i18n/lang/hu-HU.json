@@ -39,7 +39,6 @@
 			"email": "E-mail cím",
 			"emailPlaceholder": "Például: frigyes{'@'}vikunja.io",
 			"password": "Jelszó",
-			"passwordPlaceholder": "Például: •••••••••••",
 			"forgotPassword": "Elfelejtette a jelszavát?",
 			"resetPassword": "Jelszó visszaállítása",
 			"resetPasswordAction": "Jelszó-visszaállítási linket kérek",
@@ -70,7 +69,6 @@
 			"currentPasswordPlaceholder": "Az Ön aktuális jelszava",
 			"passwordUpdateSuccess": "A jelszó módosítása megtörtént.",
 			"updateEmailTitle": "E-mail cím módosítása",
-			"updateEmailSuccess": "E-mail címe sikeresen frissítve. Küldtünk egy linket a megerősítéshez.",
 			"general": {
 				"title": "Általános beállítások",
 				"savedSuccess": "Beállítások sikeresen frissítve.",
@@ -719,7 +717,6 @@
 			"doneAt": "Befejezve ekkor"
 		},
 		"subscription": {
-			"subscribedTaskThroughParentProject": "Itt nem iratkozhat le, mert a projektjén keresztül feliratkozott erre a feladatra.",
 			"subscribedProject": "Jelenleg fel van iratkozva erre a projektre és értesítéseket fog kapni a változásokról.",
 			"notSubscribedProject": "Nem iratkozott fel erre a projektre és nem kap értesítést a változásokról.",
 			"subscribedTask": "Jelenleg fel van iratkozva erre a feladatra és értesítéseket fog kapni a változásokról.",

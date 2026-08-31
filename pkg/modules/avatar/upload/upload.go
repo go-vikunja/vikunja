@@ -79,10 +79,6 @@ func (p *Provider) GetAvatar(u *user.User, size int64) (avatar []byte, mimeType 
 			return CachedAvatar{}, err
 		}
 
-		if err := f.LoadFileMetaByID(); err != nil {
-			return CachedAvatar{}, err
-		}
-
 		img, _, err := image.Decode(f.File)
 		if err != nil {
 			return CachedAvatar{}, err

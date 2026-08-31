@@ -7,6 +7,7 @@ export default class NotificationService extends AbstractService<INotification> 
 		super({
 			getAll: '/notifications',
 			update: '/notifications/{id}',
+			delete: '/notifications',
 		})
 	}
 

@@ -1992,6 +1992,44 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Deletes every notification belonging to the authenticated user. Only the caller's own notifications are affected.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "subscriptions"
+                ],
+                "summary": "Delete all notifications of the current user",
+                "responses": {
+                    "200": {
+                        "description": "All notifications deleted.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "403": {
+                        "description": "Link shares cannot have notifications.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
             }
         },
         "/notifications/{id}": {
@@ -4759,7 +4797,7 @@ const docTemplate = `{
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Unsubscribes the current user to an entity.",
+                "description": "Unsubscribes the current user to an entity. If the subscription is inherited from a parent project, an opt-out is stored for this entity instead.",
                 "consumes": [
                     "application/json"
                 ],
@@ -11263,6 +11301,9 @@ const docTemplate = `{
                 },
                 "name": {
                     "description": "The full name of the user.",
+                    "type": "string"
+                },
+                "pending_email": {
                     "type": "string"
                 },
                 "settings": {

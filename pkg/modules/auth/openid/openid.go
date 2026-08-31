@@ -483,6 +483,10 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 		}
 	}
 
+	if fallbackMatchFound && u.IsBot() {
+		return nil, &user.ErrAccountIsBot{UserID: u.ID}
+	}
+
 	if !alreadyCreatedFromIssuer && !fallbackMatchFound {
 
 		// If no user exists, create one with the preferred username if it is not already taken
@@ -620,6 +624,8 @@ func exchangeOidcTokens(cb *Callback, providerKey string) (*Provider, *oauth2.To
 	// Parse the access & ID token
 	oauth2Token, err := provider.Oauth2Config.Exchange(context.Background(), cb.Code)
 	if err != nil {
+		log.Debugf("Token exchange failed for provider %s using token_endpoint_auth_method %s", provider.Key, authStyleName(provider.Oauth2Config.Endpoint.AuthStyle))
+
 		var rerr *oauth2.RetrieveError
 		if errors.As(err, &rerr) {
 

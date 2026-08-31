@@ -39,7 +39,6 @@
 			"email": "Endereço de e-mail",
 			"emailPlaceholder": "por exemplo, frederic{'@'}vikunja.io",
 			"password": "Senha",
-			"passwordPlaceholder": "ex.: •••••••••••••",
 			"forgotPassword": "Esqueceu sua senha?",
 			"resetPassword": "Redefinir sua senha",
 			"resetPasswordAction": "Envie-me um link para redefinir a senha",
@@ -67,7 +66,6 @@
 			"currentPasswordPlaceholder": "Sua senha atual",
 			"passwordUpdateSuccess": "A senha foi atualizada com sucesso.",
 			"updateEmailTitle": "Atualizar seu endereço de e-mail",
-			"updateEmailSuccess": "Seu endereço de e-mail foi atualizado com sucesso. Nós lhe enviamos um link para confirmar.",
 			"general": {
 				"title": "Configurações Gerais",
 				"savedSuccess": "As configurações foram atualizadas com sucesso.",
@@ -633,7 +631,6 @@
 			"updated": "Atualizado"
 		},
 		"subscription": {
-			"subscribedTaskThroughParentProject": "Você não pode cancelar a inscrição aqui porque está inscrito nesta tarefa em seu projeto.",
 			"subscribedProject": "Você está atualmente inscrito para esse projeto e receberá notificações de alterações.",
 			"notSubscribedProject": "Você não está inscrito para este projeto e não receberá notificações para alterações.",
 			"subscribedTask": "Você está atualmente inscrito a essa tarefa e receberá notificações de alterações.",

@@ -1,5 +1,5 @@
 import {calculateDayInterval} from '@/helpers/time/calculateDayInterval'
-import {calculateNearestHours} from '@/helpers/time/calculateNearestHours'
+import {getDateWithTime} from '@/helpers/time/getDateWithTime'
 import {replaceAll} from '@/helpers/replaceAll'
 
 export interface dateParseResult {
@@ -75,20 +75,14 @@ export const parseDate = (text: string, now: Date = new Date()): dateParseResult
 		const date: Date = new Date()
 		date.setDate(1)
 		date.setMonth(date.getMonth() + 1)
-		date.setHours(calculateNearestHours(date))
-		date.setMinutes(0)
-		date.setSeconds(0)
 
-		return addTimeToDate(text, date, 'next month')
+		return addTimeToDate(text, getDateWithTime(date), 'next month')
 	}
 	if (matchesDateExpr(text, 'end of month')) {
 		const curDate: Date = new Date()
 		const date: Date = new Date(curDate.getFullYear(), curDate.getMonth() + 1, 0)
-		date.setHours(calculateNearestHours(date))
-		date.setMinutes(0)
-		date.setSeconds(0)
 
-		return addTimeToDate(text, date, 'end of month')
+		return addTimeToDate(text, getDateWithTime(date), 'end of month')
 	}
 
 	let parsed = getDateFromWeekday(text, now)
@@ -397,7 +391,6 @@ const getMonthFromText = (text: string, date: Date) => {
 const getDateFromInterval = (interval: number): Date => {
 	const newDate = new Date()
 	newDate.setDate(newDate.getDate() + interval)
-	newDate.setHours(calculateNearestHours(newDate), 0, 0)
 
-	return newDate
+	return getDateWithTime(newDate)
 }

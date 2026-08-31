@@ -1,7 +1,9 @@
 import {test, expect} from '../../support/fixtures'
 import {LabelFactory} from '../../factories/labels'
 import {LabelTaskFactory} from '../../factories/label_task'
+import {BucketFactory} from '../../factories/bucket'
 import {LinkShareFactory} from '../../factories/link_sharing'
+import {TaskBucketFactory} from '../../factories/task_buckets'
 import {TaskFactory} from '../../factories/task'
 import {UserFactory} from '../../factories/user'
 import {createProjects} from '../project/prepareProjects'
@@ -286,5 +288,68 @@ test.describe('Link share: quick add magic labels', () => {
 		// Link shares may not create labels: the label is skipped with an error, the task is still created.
 		await expect(page.locator('.global-notification')).toContainText('could not be created')
 		await expect(page.locator('.tasks')).toContainText('New task via share')
+	})
+})
+
+// Regression test for #3584: the link share shell wraps the router view in a
+// Card, which used to add Bulma's `.content` typography class around the whole
+// project view. The Kanban board is built from nested ul/li, so `.content ul`,
+// `.content ul ul` and `.content li + li` leaked margins that the logged-in
+// view (rendered without `.content`) never had.
+test.describe('Link share: Kanban margins', () => {
+	test.beforeEach(async ({page}) => {
+		await setupApiUrl(page)
+	})
+
+	test('does not leak Bulma .content list margins into the Kanban board', async ({page}) => {
+		await UserFactory.create(1)
+		const projects = await createProjects()
+		const kanbanView = projects[0].views[3]
+		const buckets = await BucketFactory.create(1, {
+			project_view_id: kanbanView.id,
+		})
+		const tasks = await TaskFactory.create(2, {
+			project_id: projects[0].id,
+		})
+		for (const task of tasks) {
+			await TaskBucketFactory.create(1, {
+				task_id: task.id,
+				bucket_id: buckets[0].id,
+				project_view_id: kanbanView.id,
+			}, false)
+		}
+		const [share] = await LinkShareFactory.create(1, {
+			project_id: projects[0].id,
+			permission: 0,
+		})
+
+		await page.goto(`/projects/${projects[0].id}/${kanbanView.id}#share-auth-token=${share.hash}`)
+
+		const bucketContainer = page.locator('ul.kanban-bucket-container')
+		await expect(bucketContainer).toBeVisible()
+		await expect(page.locator('.task-item')).toHaveCount(2)
+
+		const margins = await page.evaluate(() => {
+			const marginOf = (el: Element | null) => {
+				if (el === null) {
+					return null
+				}
+				const style = window.getComputedStyle(el)
+				return {
+					top: style.marginBlockStart,
+					start: style.marginInlineStart,
+				}
+			}
+
+			return {
+				bucketContainer: marginOf(document.querySelector('ul.kanban-bucket-container')),
+				taskList: marginOf(document.querySelector('.bucket ul.tasks')),
+				secondTask: marginOf(document.querySelectorAll('.bucket .task-item')[1] ?? null),
+			}
+		})
+
+		expect(margins.bucketContainer).toEqual({top: '0px', start: '0px'})
+		expect(margins.taskList).toEqual({top: '0px', start: '0px'})
+		expect(margins.secondTask).toEqual({top: '0px', start: '0px'})
 	})
 })

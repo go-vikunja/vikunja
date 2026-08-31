@@ -1,10 +1,11 @@
 import {defineStore} from 'pinia'
-import {ref} from 'vue'
+import {useLocalStorage} from '@vueuse/core'
 import type {LocationQueryRaw} from 'vue-router'
 import type {IProjectView} from '@/modelTypes/IProjectView'
 
 export const useViewFiltersStore = defineStore('viewFilters', () => {
-	const viewQueries = ref<Record<IProjectView['id'], LocationQueryRaw>>({})
+	// localStorage so sort/filter survive reloads; URL query still wins when present.
+	const viewQueries = useLocalStorage<Record<IProjectView['id'], LocationQueryRaw>>('viewFilters', {})
 
 	function setViewQuery(viewId: IProjectView['id'], query: LocationQueryRaw) {
 		viewQueries.value[viewId] = query

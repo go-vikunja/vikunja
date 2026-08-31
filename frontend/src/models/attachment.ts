@@ -22,8 +22,29 @@ export function canPreviewPdf(attachment: IAttachment): boolean {
 		&& attachment.file.mime.toLowerCase() === 'application/pdf'
 }
 
-export function canPreview(attachment: IAttachment): boolean {
-	return canPreviewImage(attachment) || canPreviewPdf(attachment)
+// No suffix allowlist, unlike images/pdfs: the blob is typed from the server's sniffed Content-Type, and an <audio> element neither parses HTML nor executes script.
+export function canPreviewAudio(attachment: IAttachment): boolean {
+	return attachment.file.mime.toLowerCase().startsWith('audio/')
+}
+
+// No suffix allowlist, for the same reason as audio: a <video> element neither parses HTML nor executes script, so the sniffed mime is the whole boundary.
+export function canPreviewVideo(attachment: IAttachment): boolean {
+	return attachment.file.mime.toLowerCase().startsWith('video/')
+}
+
+export type PreviewKind = 'image' | 'pdf' | 'video'
+
+export function previewKind(attachment: IAttachment): PreviewKind | null {
+	if (canPreviewImage(attachment)) {
+		return 'image'
+	}
+	if (canPreviewPdf(attachment)) {
+		return 'pdf'
+	}
+	if (canPreviewVideo(attachment)) {
+		return 'video'
+	}
+	return null
 }
 
 export default class AttachmentModel extends AbstractModel<IAttachment> implements IAttachment {

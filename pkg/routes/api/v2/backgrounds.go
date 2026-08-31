@@ -194,7 +194,7 @@ func backgroundUnsplashSet(ctx context.Context, in *struct {
 	defer s.Close()
 
 	project := &models.Project{ID: in.ProjectID}
-	can, err := project.CanUpdate(s, a)
+	can, err := project.CanWrite(s, a)
 	if err != nil {
 		_ = s.Rollback()
 		return nil, translateDomainError(err)
@@ -250,7 +250,7 @@ func backgroundUpload(ctx context.Context, in *backgroundUploadInput) (*singleBo
 	defer s.Close()
 
 	project := &models.Project{ID: in.ProjectID}
-	can, err := project.CanUpdate(s, a)
+	can, err := project.CanWrite(s, a)
 	if err != nil {
 		_ = s.Rollback()
 		return nil, translateDomainError(err)
@@ -381,7 +381,7 @@ func backgroundRemove(ctx context.Context, in *struct {
 	defer s.Close()
 
 	project := &models.Project{ID: in.ProjectID}
-	can, err := project.CanUpdate(s, a)
+	can, err := project.CanWrite(s, a)
 	if err != nil {
 		_ = s.Rollback()
 		return nil, translateDomainError(err)

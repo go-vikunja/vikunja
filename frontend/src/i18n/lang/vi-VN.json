@@ -39,7 +39,6 @@
 			"email": "Địa chỉ Email",
 			"emailPlaceholder": "ví dụ: frederic{'@'}vikunja.io",
 			"password": "Mật khẩu",
-			"passwordPlaceholder": "ví dụ: •••••••••••",
 			"forgotPassword": "Bạn quên mật khẩu?",
 			"resetPassword": "Reset mật khẩu của bạn",
 			"resetPasswordAction": "Gửi cho tôi liên kết reset mật khẩu",
@@ -77,7 +76,6 @@
 			"passwordUpdateSuccess": "Mật khẩu đã được cập nhật thành công.",
 			"updateEmailTitle": "Cập nhật địa chỉ e-mail của bạn",
 			"updateEmailNew": "Địa chỉ email mới",
-			"updateEmailSuccess": "Địa chỉ email của bạn đã được cập nhật thành công. Chúng tôi đã gửi cho bạn một liên kết để xác nhận nó.",
 			"general": {
 				"title": "Cài đặt chung",
 				"name": "Tên của tôi",
@@ -765,7 +763,6 @@
 			"doneAt": "Hoàn thành lúc"
 		},
 		"subscription": {
-			"subscribedTaskThroughParentProject": "Bạn không thể hủy theo dõi ở đây vì bạn đã theo dõi tác vụ này thông qua dự án của nó.",
 			"subscribedProject": "Bạn hiện đã đăng kí theo dõi dự án này và sẽ nhận được thông báo về các thay đổi của dự án.",
 			"notSubscribedProject": "Bạn chưa đăng kí theo dõi dự án này và sẽ không nhận được thông báo cho các thay đổi của dự án.",
 			"subscribedTask": "Bạn hiện đã đăng kí tác vụ này và sẽ nhận được thông báo cho các thay đổi của nó.",

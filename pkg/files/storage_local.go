@@ -17,6 +17,8 @@
 package files
 
 import (
+	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -65,4 +67,30 @@ func (l *localStorage) Remove(name string) error {
 
 func (l *localStorage) MkdirAll(p string, perm os.FileMode) error {
 	return os.MkdirAll(l.path(p), perm)
+}
+
+func (l *localStorage) Ensure() error {
+	// Anything other than "not there" is left to ValidateBasePath to report.
+	if _, err := os.Stat(l.basePath); !errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
+
+	if err := os.MkdirAll(l.basePath, 0755); err != nil {
+		return fmt.Errorf("failed to create file storage directory at %s: %w%s", l.basePath, err, storageDiagSuffix(l.basePath))
+	}
+
+	return nil
+}
+
+func (l *localStorage) ValidateBasePath() error {
+	info, err := os.Stat(l.basePath)
+	if err != nil {
+		return fmt.Errorf("failed to access file storage directory at %s: %w%s", l.basePath, err, storageDiagSuffix(l.basePath))
+	}
+
+	if !info.IsDir() {
+		return fmt.Errorf("file storage path exists but is not a directory: %s", l.basePath)
+	}
+
+	return nil
 }

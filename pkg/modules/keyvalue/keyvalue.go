@@ -28,6 +28,7 @@ import (
 // Storage defines an interface for saving key-value pairs
 type Storage interface {
 	Put(key string, value interface{}) (err error)
+	PutWithTTL(key string, value interface{}, ttl time.Duration) (err error)
 	Get(key string) (value interface{}, exists bool, err error)
 	GetWithValue(key string, value interface{}) (exists bool, err error)
 	Del(key string) (err error)
@@ -57,6 +58,15 @@ func InitStorage() {
 // Put puts a value in the storage backend
 func Put(key string, value interface{}) error {
 	return store.Put(key, value)
+}
+
+// PutWithTTL puts a value in the storage backend which expires after ttl
+func PutWithTTL(key string, value interface{}, ttl time.Duration) error {
+	if ttl <= 0 {
+		// backends disagree on ttl<=0 (redis keeps forever, memory expires at once)
+		return store.Del(key)
+	}
+	return store.PutWithTTL(key, value, ttl)
 }
 
 // Get returns a value from a storage backend

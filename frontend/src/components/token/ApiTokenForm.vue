@@ -7,6 +7,7 @@ import ApiTokenModel from '@/models/apiTokenModel'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import {MILLISECONDS_A_DAY} from '@/constants/date'
 import flatPickr from 'vue-flatpickr-component'
+import type {Hook} from 'flatpickr/dist/types/options'
 import 'flatpickr/dist/flatpickr.css'
 import {useI18n} from 'vue-i18n'
 import FormField from '@/components/input/FormField.vue'
@@ -34,6 +35,7 @@ const emit = defineEmits<{
 const service = new ApiTokenService()
 const {t} = useI18n()
 const {store: timeFormat} = useTimeFormat()
+const flatpickrLocale = useFlatpickrLanguage()
 // Zero seconds: flatpickr copies them into the native mobile input's default value where they
 // become the step base, making every minute-granularity pick a stepMismatch that blocks submit (#3175)
 const now = new Date()
@@ -99,14 +101,22 @@ const presets: TokenPreset[] = [
 	},
 ]
 
+// altInput (or mobileInput on the mobile path) is a fresh element inheriting no attributes from the
+// input we render, so label it here
+const labelDateInput: Hook = (_dates, _str, instance) => {
+	const input = instance.mobileInput ?? instance.altInput
+	input?.setAttribute('aria-label', t('user.settings.apiTokens.attributes.expiresAt'))
+}
+
 const flatPickerConfig = computed(() => ({
 	altFormat: t('date.altFormatLong'),
 	altInput: true,
 	dateFormat: 'Y-m-d H:i',
 	enableTime: true,
 	time_24hr: timeFormat.value === TIME_FORMAT.HOURS_24,
-	locale: useFlatpickrLanguage().value,
+	locale: flatpickrLocale.value,
 	minDate: now,
+	onReady: labelDateInput,
 }))
 
 onMounted(async () => {

@@ -18,6 +18,8 @@ package caldav
 
 import (
 	"context"
+	"fmt"
+	"net/url"
 	"slices"
 	"strconv"
 	"strings"
@@ -99,23 +101,29 @@ func (vcls *VikunjaCaldavProjectStorage) GetResources(rpath string, withChildren
 		if err != nil {
 			return nil, err
 		}
-		r := data.NewResource(rpath, &rr)
+		r := data.NewResource(vcls.hrefFor(rpath), &rr)
 		r.Name = vcls.project.Title
 
 		// If the request is withChildren (Depth: 1), we need to return all tasks of the project
 		if withChildren {
 			resources := []data.Resource{r}
 
-			// Check if there are tasks to iterate over
-			if vcls.project.Tasks != nil {
-				for i := range vcls.project.Tasks {
-					taskResource := VikunjaProjectResourceAdapter{
-						project:      vcls.project,
-						task:         &vcls.project.Tasks[i].Task,
-						isCollection: false,
-					}
-					addTaskResource(&vcls.project.Tasks[i].Task, &taskResource, &resources)
+			emitted := make(map[string]bool, len(vcls.project.Tasks))
+			for i := range vcls.project.Tasks {
+				task := &vcls.project.Tasks[i].Task
+				// tasks.uid has no unique index, so two same-UID tasks would map to one href.
+				href := taskURL(vcls.project.ID, task)
+				if emitted[href] {
+					continue
 				}
+				emitted[href] = true
+
+				taskResource := VikunjaProjectResourceAdapter{
+					project:      vcls.project,
+					task:         task,
+					isCollection: false,
+				}
+				addTaskResource(vcls.project.ID, task, &taskResource, &resources)
 			}
 			return resources, nil
 		}
@@ -193,8 +201,9 @@ func (vcls *VikunjaCaldavProjectStorage) GetResourcesByList(rpaths []string) (re
 		if !strings.HasSuffix(parts[4], ".ics") {
 			continue
 		}
-		uid := strings.TrimSuffix(parts[4], ".ics")
-		if uid == "" {
+		// echo does not decode path params either, so hrefs travel percent-encoded end to end.
+		uid, uerr := url.PathUnescape(strings.TrimSuffix(parts[4], ".ics"))
+		if uerr != nil || uid == "" {
 			continue
 		}
 		urlProjectID, perr := strconv.ParseInt(parts[3], 10, 64)
@@ -219,21 +228,57 @@ func (vcls *VikunjaCaldavProjectStorage) GetResourcesByList(rpaths []string) (re
 		_ = s.Rollback()
 		return
 	}
-	err = s.Commit()
-	if err != nil {
-		return
-	}
 
+	// One membership lookup for the whole request: a multiget REPORT can name thousands
+	// of hrefs and TaskCollection.ReadAll is expensive.
+	var candidates []int64
 	for _, t := range tasks {
-		// Closes the URL-path leak for calendar-multiget REPORTs
-		// (GHSA-48ch-p4gq-x46x).
-		if urlProjectID, ok := uidURLProjects[t.UID]; ok && urlProjectID != t.ProjectID {
+		urlProjectID, ok := uidURLProjects[t.UID]
+		if !ok || urlProjectID == t.ProjectID {
 			continue
 		}
+		if !models.IsPseudoProjectID(urlProjectID) || vcls.project == nil || urlProjectID != vcls.project.ID {
+			continue
+		}
+		candidates = append(candidates, t.ID)
+	}
+
+	members, err := vcls.collectionContainsAll(s, candidates)
+	if err != nil {
+		_ = s.Rollback()
+		return nil, err
+	}
+
+	emitted := make(map[string]bool, len(tasks))
+	for _, t := range tasks {
+		urlProjectID, ok := uidURLProjects[t.UID]
+		if !ok {
+			continue
+		}
+		// Closes the URL-path leak for calendar-multiget REPORTs (GHSA-48ch-p4gq-x46x).
+		if urlProjectID != t.ProjectID {
+			if !models.IsPseudoProjectID(urlProjectID) || vcls.project == nil || urlProjectID != vcls.project.ID {
+				continue
+			}
+			if !members[t.ID] {
+				continue
+			}
+		}
+		// tasks.uid has no unique index, so two same-UID tasks would map to one href.
+		href := taskURL(urlProjectID, t)
+		if emitted[href] {
+			continue
+		}
+		emitted[href] = true
 		rr := VikunjaProjectResourceAdapter{
 			task: t,
 		}
-		addTaskResource(t, &rr, &resources)
+		addTaskResource(urlProjectID, t, &rr, &resources)
+	}
+
+	err = s.Commit()
+	if err != nil {
+		return nil, err
 	}
 
 	return
@@ -253,7 +298,7 @@ func (vcls *VikunjaCaldavProjectStorage) GetResourcesByFilters(rpath string, _ *
 				task:         &vcls.project.Tasks[i].Task,
 				isCollection: false,
 			}
-			r := data.NewResource(getTaskURL(&vcls.project.Tasks[i].Task), &rr)
+			r := data.NewResource(taskURL(vcls.project.ID, &vcls.project.Tasks[i].Task), &rr)
 			r.Name = vcls.project.Tasks[i].Title
 			resources = append(resources, r)
 		}
@@ -265,15 +310,146 @@ func (vcls *VikunjaCaldavProjectStorage) GetResourcesByFilters(rpath string, _ *
 	if err != nil {
 		return nil, err
 	}
-	r := data.NewResource(rpath, &rr)
+	r := data.NewResource(vcls.hrefFor(rpath), &rr)
 	r.Name = vcls.project.Title
 	return []data.Resource{r}, nil
 	// For now, filtering is disabled.
 	// return vcls.GetResources(rpath, false)
 }
 
-func getTaskURL(task *models.Task) string {
-	return ProjectBasePath + "/" + strconv.FormatInt(task.ProjectID, 10) + `/` + task.UID + `.ics`
+// WebDAV requires every Depth: 1 child to live under the collection's own URI.
+func taskURL(collectionProjectID int64, task *models.Task) string {
+	return ProjectBasePath + "/" + strconv.FormatInt(collectionProjectID, 10) + `/` + encodeURIPathSegment(task.UID) + `.ics`
+}
+
+// url.PathEscape leaves & alone, and caldav-go writes hrefs into XML unescaped.
+func encodeURIPathSegment(segment string) string {
+	return strings.ReplaceAll(url.PathEscape(segment), "&", "%26")
+}
+
+// caldav-go builds rpath from the decoded request path, so echoing it back for a
+// task resource would undo the encoding taskURL applied.
+func (vcls *VikunjaCaldavProjectStorage) hrefFor(rpath string) string {
+	if strings.HasSuffix(rpath, ".ics") && vcls.project != nil && vcls.task != nil && vcls.task.UID != "" {
+		return taskURL(vcls.project.ID, vcls.task)
+	}
+	return rpath
+}
+
+// Project.CanWrite reports archival through its error return; caldav-go has no case for
+// that error and would answer 500, so collapse it into a plain denial.
+func denyArchived(can bool, err error) (bool, error) {
+	if models.IsErrProjectIsArchived(err) {
+		return false, nil
+	}
+	return can, err
+}
+
+func (vcls *VikunjaCaldavProjectStorage) canReadCollection(s *xorm.Session) (bool, error) {
+	if vcls.project == nil {
+		return false, nil
+	}
+	can, _, err := vcls.project.CanRead(s, vcls.user)
+	return can, err
+}
+
+// Read-only shares and pseudo collections are both the model's call, not the route's.
+func (vcls *VikunjaCaldavProjectStorage) canWriteCollection(s *xorm.Session) (bool, error) {
+	if vcls.project == nil {
+		return false, nil
+	}
+	return denyArchived(vcls.project.CanWrite(s, vcls.user))
+}
+
+// GHSA-48ch-p4gq-x46x: a task addressed through a collection must belong to it. A pseudo
+// collection has no project_id to compare against, so membership stands in.
+func (vcls *VikunjaCaldavProjectStorage) taskInCollection(s *xorm.Session, task *models.Task) (bool, error) {
+	if models.IsPseudoProjectID(vcls.project.ID) {
+		return vcls.collectionContains(s, task.ID)
+	}
+	return task.ProjectID == vcls.project.ID, nil
+}
+
+// A pseudo collection has no permissions of its own, so it cannot gate anything: membership
+// takes the place of the collection gate and the task's own project decides the rest.
+func (vcls *VikunjaCaldavProjectStorage) checkCollectionWrite(s *xorm.Session, task *models.Task) error {
+	if vcls.project == nil || !models.IsPseudoProjectID(vcls.project.ID) {
+		canWrite, err := vcls.canWriteCollection(s)
+		if err != nil {
+			return err
+		}
+		if !canWrite {
+			return errs.ForbiddenError
+		}
+		return nil
+	}
+
+	if task == nil {
+		return errs.ResourceNotFoundError
+	}
+	in, err := vcls.taskInCollection(s, task)
+	if err != nil {
+		return err
+	}
+	if !in {
+		return errs.ResourceNotFoundError
+	}
+	return nil
+}
+
+// One bind variable per candidate would exceed SQLite's limit of 999 once a multiget
+// REPORT names that many hrefs. A var only so tests can lower it.
+var membershipQueryChunkSize = 500
+
+// Callers must have access-gated the candidates first (via models.GetTasksByUIDs): the
+// favorites arm of TaskCollection.ReadAll is not project-scoped, so membership alone
+// does not prove the user may still read the task.
+func (vcls *VikunjaCaldavProjectStorage) collectionContainsAll(s *xorm.Session, taskIDs []int64) (map[int64]bool, error) {
+	members := make(map[int64]bool, len(taskIDs))
+	if len(taskIDs) == 0 {
+		return members, nil
+	}
+
+	for candidates := range slices.Chunk(taskIDs, membershipQueryChunkSize) {
+		ids := make([]string, 0, len(candidates))
+		for _, id := range candidates {
+			ids = append(ids, strconv.FormatInt(id, 10))
+		}
+
+		tc := models.TaskCollection{
+			ProjectID: vcls.project.ID,
+			Filter:    "id in " + strings.Join(ids, ","),
+		}
+		// No paging - the filter already bounds the result to the candidates.
+		result, _, _, err := tc.ReadAll(s, vcls.user, "", 0, -1)
+		if err != nil {
+			// A stale href naming an unreadable saved filter is a miss: a 500 here would leak
+			// filter ids and abort the whole multiget REPORT. Unreadable applies to the whole
+			// collection, so drop earlier chunks instead of reporting a truncated membership.
+			if models.IsErrGenericForbidden(err) || models.IsErrSavedFilterDoesNotExist(err) {
+				return map[int64]bool{}, nil
+			}
+			return nil, err
+		}
+
+		tasks, ok := result.([]*models.Task)
+		if !ok {
+			return nil, fmt.Errorf("unexpected task collection result type %T", result)
+		}
+		for _, t := range tasks {
+			members[t.ID] = true
+		}
+	}
+
+	return members, nil
+}
+
+func (vcls *VikunjaCaldavProjectStorage) collectionContains(s *xorm.Session, taskID int64) (bool, error) {
+	members, err := vcls.collectionContainsAll(s, []int64{taskID})
+	if err != nil {
+		return false, err
+	}
+	return members[taskID], nil
 }
 
 // GetResource fetches a single resource
@@ -294,21 +470,44 @@ func (vcls *VikunjaCaldavProjectStorage) GetResource(rpath string) (*data.Resour
 			}
 			return nil, false, err
 		}
+
+		if len(tasks) < 1 {
+			_ = s.Rollback()
+			return nil, false, errs.ResourceNotFoundError
+		}
+		task := tasks[0]
+
+		// The URL project must match the task's real project (GHSA-48ch-p4gq-x46x).
+		if vcls.project != nil && vcls.project.ID != 0 && task.ProjectID != vcls.project.ID {
+			if !models.IsPseudoProjectID(vcls.project.ID) {
+				_ = s.Rollback()
+				return nil, false, errs.ResourceNotFoundError
+			}
+
+			// tasks.uid has no unique index, so the first candidate may be a same-UID sibling.
+			task = nil
+			for _, candidate := range tasks {
+				inCollection, err := vcls.collectionContains(s, candidate.ID)
+				if err != nil {
+					_ = s.Rollback()
+					return nil, false, err
+				}
+				if inCollection {
+					task = candidate
+					break
+				}
+			}
+			if task == nil {
+				_ = s.Rollback()
+				return nil, false, errs.ResourceNotFoundError
+			}
+		}
+
 		if err := s.Commit(); err != nil {
 			return nil, false, err
 		}
 
-		if len(tasks) < 1 {
-			return nil, false, errs.ResourceNotFoundError
-		}
-		vcls.task = tasks[0]
-
-		// Reject reads where the URL project (set by TaskHandler in handler.go
-		// from the :project param) doesn't match the task's real project
-		// (GHSA-48ch-p4gq-x46x).
-		if vcls.project != nil && vcls.project.ID != 0 && vcls.task.ProjectID != vcls.project.ID {
-			return nil, false, errs.ResourceNotFoundError
-		}
+		vcls.task = task
 
 		if updated.Unix() > 0 {
 			vcls.task.Updated = updated
@@ -318,7 +517,7 @@ func (vcls *VikunjaCaldavProjectStorage) GetResource(rpath string) (*data.Resour
 			project: vcls.project,
 			task:    vcls.task,
 		}
-		r := data.NewResource(rpath, &rr)
+		r := data.NewResource(vcls.hrefFor(rpath), &rr)
 		return &r, true, nil
 	}
 
@@ -342,26 +541,62 @@ func (vcls *VikunjaCaldavProjectStorage) GetShallowResource(rpath string) (*data
 // CreateResource creates a new resource
 func (vcls *VikunjaCaldavProjectStorage) CreateResource(rpath, content string) (*data.Resource, error) {
 
+	if vcls.project == nil {
+		return nil, errs.ForbiddenError
+	}
+
 	s := db.NewSession()
 	defer s.Close()
+
+	// Denying here would make PUT an oracle for collections every other verb answers 404 for.
+	canRead, err := vcls.canReadCollection(s)
+	if err != nil {
+		_ = s.Rollback()
+		return nil, err
+	}
+	if !canRead {
+		_ = s.Rollback()
+		log.Debugf("User %v tried to create a caldav resource in project %v which they are not allowed to access", vcls.user.Username, vcls.project.ID)
+		return nil, errs.ResourceNotFoundError
+	}
 
 	vTask, _, err := caldav.ParseTaskFromVTODO(content)
 	if err != nil {
 		log.Errorf("[CALDAV] Failed to parse VTODO in CreateResource: %v", err)
 		log.Debugf("[CALDAV] VTODO content that failed to parse: %s", content)
+		_ = s.Rollback()
 		return nil, err
 	}
 
 	vTask.ProjectID = vcls.project.ID
 
+	// A client PUTting a UID that already exists is syncing a stale href - typically after
+	// the task moved to another project or out of this collection. Creating a second task
+	// would silently fork it (#3482), and answering 403 would strand the client on a
+	// permanent denial, so 404 and let it resync to the real collection.
+	if vTask.UID != "" {
+		existing, err := models.GetTasksByUIDs(s, []string{vTask.UID}, vcls.user)
+		if err != nil {
+			_ = s.Rollback()
+			return nil, err
+		}
+		if len(existing) > 0 {
+			_ = s.Rollback()
+			log.Debugf("[CALDAV] Refusing to create task with already existing UID %s in project %d", vTask.UID, vcls.project.ID)
+			return nil, errs.ResourceNotFoundError
+		}
+	}
+
 	// Check the permissions
-	canCreate, err := vTask.CanCreate(s, vcls.user)
+	canCreate, err := denyArchived(vTask.CanCreate(s, vcls.user))
 	if err != nil {
 		log.Errorf("[CALDAV] Permission check failed in CreateResource for user %s, project %d: %v", vcls.user.Username, vcls.project.ID, err)
+		_ = s.Rollback()
 		return nil, err
 	}
 	if !canCreate {
 		log.Warningf("[CALDAV] User %s does not have permission to create task in project %d", vcls.user.Username, vcls.project.ID)
+		_ = s.Rollback()
 		return nil, errs.ForbiddenError
 	}
 
@@ -437,10 +672,19 @@ func applyDescriptionFromMarkdown(s *xorm.Session, vTask *models.Task, storedHTM
 // UpdateResource updates a resource
 func (vcls *VikunjaCaldavProjectStorage) UpdateResource(rpath, content string) (*data.Resource, error) {
 
+	s := db.NewSession()
+	defer s.Close()
+
+	if err := vcls.checkCollectionWrite(s, vcls.task); err != nil {
+		_ = s.Rollback()
+		return nil, err
+	}
+
 	vTask, props, err := caldav.ParseTaskFromVTODO(content)
 	if err != nil {
 		log.Errorf("[CALDAV] Failed to parse VTODO in UpdateResource: %v", err)
 		log.Debugf("[CALDAV] VTODO content that failed to parse: %s", content)
+		_ = s.Rollback()
 		return nil, err
 	}
 
@@ -449,12 +693,13 @@ func (vcls *VikunjaCaldavProjectStorage) UpdateResource(rpath, content string) (
 
 	// Explicitly set the ProjectID in case the task now belongs to a different project:
 	vTask.ProjectID = vcls.project.ID
-
-	s := db.NewSession()
-	defer s.Close()
+	if models.IsPseudoProjectID(vcls.project.ID) {
+		// A pseudo id is no project to move the task into; leave it where it lives.
+		vTask.ProjectID = vcls.task.ProjectID
+	}
 
 	// Check the permissions
-	canUpdate, err := vTask.CanUpdate(s, vcls.user)
+	canUpdate, err := denyArchived(vTask.CanUpdate(s, vcls.user))
 	if err != nil {
 		log.Errorf("[CALDAV] Permission check failed in UpdateResource for user %s, task %d: %v", vcls.user.Username, vcls.task.ID, err)
 		_ = s.Rollback()
@@ -497,7 +742,13 @@ func (vcls *VikunjaCaldavProjectStorage) UpdateResource(rpath, content string) (
 	}
 
 	// Re-assert GHSA-48ch-p4gq-x46x: the GetResource guard ran in a different, already committed session.
-	if stored.ProjectID != vcls.project.ID {
+	inCollection, err := vcls.taskInCollection(s, stored)
+	if err != nil {
+		_ = s.Rollback()
+		events.CleanupPending(s)
+		return nil, err
+	}
+	if !inCollection {
 		_ = s.Rollback()
 		events.CleanupPending(s)
 		return nil, errs.ResourceNotFoundError
@@ -541,8 +792,6 @@ func (vcls *VikunjaCaldavProjectStorage) UpdateResource(rpath, content string) (
 	if vTask.Reminders != nil {
 		base.Reminders = vTask.Reminders
 	}
-	// No-op: cross-project moves are already rejected by the GHSA-48ch-p4gq-x46x guard above.
-	base.ProjectID = vcls.project.ID
 
 	err = base.Update(s, vcls.user)
 	if err != nil {
@@ -595,38 +844,44 @@ func (vcls *VikunjaCaldavProjectStorage) UpdateResource(rpath, content string) (
 
 // DeleteResource deletes a resource
 func (vcls *VikunjaCaldavProjectStorage) DeleteResource(_ string) error {
-	if vcls.task != nil {
-		s := db.NewSession()
-		defer s.Close()
+	s := db.NewSession()
+	defer s.Close()
 
-		// Check the permissions
-		canDelete, err := vcls.task.CanDelete(s, vcls.user)
-		if err != nil {
-			_ = s.Rollback()
-			events.CleanupPending(s)
-			return err
-		}
-		if !canDelete {
-			events.CleanupPending(s)
-			return errs.ForbiddenError
-		}
-
-		// Delete it
-		err = vcls.task.Delete(s, vcls.user)
-		if err != nil {
-			_ = s.Rollback()
-			events.CleanupPending(s)
-			return err
-		}
-
-		err = s.Commit()
-		if err != nil {
-			events.CleanupPending(s)
-			return err
-		}
-
-		events.DispatchPending(context.Background(), s)
+	if err := vcls.checkCollectionWrite(s, vcls.task); err != nil {
+		_ = s.Rollback()
+		return err
 	}
+
+	if vcls.task == nil {
+		_ = s.Rollback()
+		return nil
+	}
+
+	canDelete, err := denyArchived(vcls.task.CanDelete(s, vcls.user))
+	if err != nil {
+		_ = s.Rollback()
+		events.CleanupPending(s)
+		return err
+	}
+	if !canDelete {
+		events.CleanupPending(s)
+		return errs.ForbiddenError
+	}
+
+	err = vcls.task.Delete(s, vcls.user)
+	if err != nil {
+		_ = s.Rollback()
+		events.CleanupPending(s)
+		return err
+	}
+
+	err = s.Commit()
+	if err != nil {
+		events.CleanupPending(s)
+		return err
+	}
+
+	events.DispatchPending(context.Background(), s)
 
 	return nil
 }
@@ -644,13 +899,7 @@ func persistLabels(s *xorm.Session, a web.Auth, task *models.Task, labels []*mod
 	}
 
 	// Using readall ensures the current user has the permission to see the labels they provided via caldav.
-	existingLabels, _, _, err := models.GetLabelsByTaskIDs(s, &models.LabelByTaskIDsOptions{
-		Search:              labelTitles,
-		User:                u,
-		GetForUser:          true,
-		GetUnusedLabels:     true,
-		GroupByLabelIDsOnly: true,
-	})
+	existingLabels, _, _, err := models.GetLabelsForUser(s, u, labelTitles, 0, 0)
 	if err != nil {
 		return err
 	}
@@ -860,15 +1109,16 @@ func (vcls *VikunjaCaldavProjectStorage) getProjectRessource(isCollection bool) 
 		return
 	}
 
-	can, _, err := vcls.project.CanRead(s, vcls.user)
+	can, err := vcls.canReadCollection(s)
 	if err != nil {
 		_ = s.Rollback()
 		return
 	}
 	if !can {
 		_ = s.Rollback()
-		log.Errorf("User %v tried to access a caldav resource (Project %v) which they are not allowed to access", vcls.user.Username, vcls.project.ID)
-		return rr, models.ErrUserDoesNotHaveAccessToProject{ProjectID: vcls.project.ID, UserID: vcls.user.ID}
+		log.Debugf("User %v tried to access a caldav resource (Project %v) which they are not allowed to access", vcls.user.Username, vcls.project.ID)
+		// Any other error becomes a 500 in caldav-go, which would tell the client the collection exists.
+		return rr, errs.ResourceNotFoundError
 	}
 	err = vcls.project.ReadOne(s, vcls.user)
 	if err != nil {
@@ -910,8 +1160,8 @@ func (vcls *VikunjaCaldavProjectStorage) getProjectRessource(isCollection bool) 
 	return
 }
 
-func addTaskResource(task *models.Task, rr *VikunjaProjectResourceAdapter, resources *[]data.Resource) {
-	taskResourceInstance := data.NewResource(getTaskURL(task), rr)
+func addTaskResource(collectionProjectID int64, task *models.Task, rr *VikunjaProjectResourceAdapter, resources *[]data.Resource) {
+	taskResourceInstance := data.NewResource(taskURL(collectionProjectID, task), rr)
 	taskResourceInstance.Name = task.Title
 	*resources = append(*resources, taskResourceInstance)
 }

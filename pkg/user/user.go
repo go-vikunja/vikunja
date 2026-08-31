@@ -94,6 +94,8 @@ type User struct {
 	Password string `xorm:"varchar(250) null" json:"-"`
 	// The user's email address.
 	Email string `xorm:"varchar(250) null" json:"email,omitempty" valid:"email,length(0|250)" maxLength:"250" doc:"The user's email address. Always empty for bot users."`
+	// New address awaiting confirmation; only becomes Email once the confirm token is used.
+	PendingEmail string `xorm:"varchar(250) null" json:"-"`
 
 	Status Status `xorm:"default 0" json:"-"`
 
@@ -605,6 +607,30 @@ func premarshalFrontendSettings(settings interface{}) (*string, error) {
 	return &settingsString, nil
 }
 
+func userUpdateColumns(s *xorm.Session, user, theUser *User, forceOverride bool) (cols []string, err error) {
+	cols = baseUserUpdateColumns[:]
+
+	if user.Email != "" && user.Email != theUser.Email {
+		// A direct change supersedes a pending one, the link already mailed out must not work anymore.
+		user.PendingEmail = ""
+		cols = append(cols, "pending_email")
+		if err := removeTokens(s, user, TokenEmailConfirm); err != nil {
+			return nil, err
+		}
+	}
+
+	if forceOverride {
+		// forceOverride is set in paths where we should apply the FrontendSettings update.
+		user.FrontendSettings, err = premarshalFrontendSettings(user.FrontendSettings)
+		if err != nil {
+			return nil, err
+		}
+		cols = append(cols, "frontend_settings")
+	}
+
+	return cols, nil
+}
+
 // UpdateUser updates a user
 func UpdateUser(s *xorm.Session, user *User, forceOverride bool) (updatedUser *User, err error) {
 
@@ -673,14 +699,9 @@ func UpdateUser(s *xorm.Session, user *User, forceOverride bool) (updatedUser *U
 		return nil, &ErrInvalidTimezone{Name: user.Timezone, LoadError: err}
 	}
 
-	updateCols := baseUserUpdateColumns[:]
-	if forceOverride {
-		// forceOverride is set in paths where we should apply the FrontendSettings update.
-		user.FrontendSettings, err = premarshalFrontendSettings(user.FrontendSettings)
-		if err != nil {
-			return nil, err
-		}
-		updateCols = append(updateCols, "frontend_settings")
+	updateCols, err := userUpdateColumns(s, user, theUser, forceOverride)
+	if err != nil {
+		return nil, err
 	}
 
 	_, err = s.

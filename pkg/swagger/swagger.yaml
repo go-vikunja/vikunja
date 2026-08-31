@@ -1810,6 +1810,8 @@ definitions:
       name:
         description: The full name of the user.
         type: string
+      pending_email:
+        type: string
       settings:
         $ref: '#/definitions/models.UserGeneralSettings'
       updated:
@@ -3258,6 +3260,31 @@ paths:
       tags:
       - migration
   /notifications:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes every notification belonging to the authenticated user.
+        Only the caller's own notifications are affected.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: All notifications deleted.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "403":
+          description: Link shares cannot have notifications.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Delete all notifications of the current user
+      tags:
+      - subscriptions
     get:
       consumes:
       - application/json
@@ -5126,7 +5153,8 @@ paths:
     delete:
       consumes:
       - application/json
-      description: Unsubscribes the current user to an entity.
+      description: Unsubscribes the current user to an entity. If the subscription
+        is inherited from a parent project, an opt-out is stored for this entity instead.
       parameters:
       - description: The entity the user subscribed to. Can be either `project` or
           `task`.

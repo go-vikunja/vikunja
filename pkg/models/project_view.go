@@ -570,16 +570,7 @@ func tasksWithoutBucketInView(s *xorm.Session, pv *ProjectView) (taskIDs []int64
 // Saved filter views have no project of their own, their task set only exists
 // once the filter is evaluated.
 func filteredTasksWithoutBucketInView(s *xorm.Session, viewID int64, sf *SavedFilter) (taskIDs []int64, err error) {
-	parsedFilters, err := getTaskFiltersFromFilterString(sf.Filters.Filter, sf.Filters.FilterTimezone)
-	if err != nil {
-		return nil, err
-	}
-
-	// convertFiltersToDBFilterCond rewrites the field names in place, so this has
-	// to be answered before it runs.
-	joinTaskBuckets := hasBucketIDInParsedFilter(parsedFilters)
-
-	filterCond, err := convertFiltersToDBFilterCond(parsedFilters, sf.Filters.FilterIncludeNulls)
+	filterCond, joinTaskBuckets, err := parseFilterCond(sf.Filters.Filter, sf.Filters.FilterTimezone, sf.Filters.FilterIncludeNulls)
 	if err != nil {
 		return nil, err
 	}
@@ -601,26 +592,43 @@ func filteredTasksWithoutBucketInView(s *xorm.Session, viewID int64, sf *SavedFi
 	), joinTaskBuckets)
 }
 
-// Selecting ids instead of beans means xorm adds no soft-delete condition of its own.
-func taskIDsWithoutBucketInView(s *xorm.Session, viewID int64, cond builder.Cond, joinTaskBuckets bool) (taskIDs []int64, err error) {
-	taskIDs = []int64{}
-	query := s.Table("tasks")
-	// convertFiltersToDBFilterCond resolves bucket_id against task_buckets, which
-	// is only in scope through this join.
-	if joinTaskBuckets {
-		query = query.Join("LEFT", "task_buckets", "task_buckets.task_id = tasks.id AND task_buckets.project_view_id = ?", viewID)
-	}
+func taskIDsMatching(s *xorm.Session, cond builder.Cond) (taskIDs []int64, err error) {
+	return findTaskIDs(s.Table("tasks"), cond)
+}
 
+// taskIDsMatchingInView is for conditions built by convertFiltersToDBFilterCond which
+// resolve bucket_id against task_buckets, only in scope through this join.
+func taskIDsMatchingInView(s *xorm.Session, viewID int64, cond builder.Cond) (taskIDs []int64, err error) {
+	return findTaskIDs(
+		s.Table("tasks").Join("LEFT", "task_buckets", "task_buckets.task_id = tasks.id AND task_buckets.project_view_id = ?", viewID),
+		cond,
+	)
+}
+
+// Selecting ids instead of beans means xorm adds no soft-delete condition of its own.
+func findTaskIDs(query *xorm.Session, cond builder.Cond) (taskIDs []int64, err error) {
+	taskIDs = []int64{}
 	err = query.
 		Where(cond).
 		And(taskNotDeletedCond("tasks")).
-		And(builder.NotIn("tasks.id", builder.
-			Select("task_id").
-			From("task_buckets").
-			Where(builder.Eq{"project_view_id": viewID}))).
 		Cols("tasks.id").
 		Find(&taskIDs)
 	return
+}
+
+func taskIDsWithoutBucketInView(s *xorm.Session, viewID int64, cond builder.Cond, joinTaskBuckets bool) (taskIDs []int64, err error) {
+	cond = builder.And(
+		cond,
+		builder.NotIn("tasks.id", builder.
+			Select("task_id").
+			From("task_buckets").
+			Where(builder.Eq{"project_view_id": viewID})),
+	)
+
+	if joinTaskBuckets {
+		return taskIDsMatchingInView(s, viewID, cond)
+	}
+	return taskIDsMatching(s, cond)
 }
 
 // Update is the handler to update a project view

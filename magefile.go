@@ -1097,7 +1097,7 @@ func extractFrontendTranslationKeysFromFile(filePath string) ([]TranslationKey, 
 func checkGolangCiLintInstalled(ctx context.Context) error {
 	mg.Deps(initVars, ensureFrontendDistExists)
 	if err := exec.CommandContext(ctx, "golangci-lint").Run(); err != nil && strings.Contains(err.Error(), "executable file not found") {
-		return fmt.Errorf("golangci-lint executable failed to run, please manually install golangci-lint by running the command: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.4.0")
+		return fmt.Errorf("golangci-lint executable failed to run, please manually install golangci-lint by running the command: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.13.0")
 	}
 	return nil
 }
@@ -1427,6 +1427,7 @@ var yaegiSymbolPackages = []struct {
 	importPath string
 	outFile    string
 }{
+	{"code.vikunja.io/api/pkg/config", "vikunja_config.go"},
 	{"code.vikunja.io/api/pkg/db", "vikunja_db.go"},
 	{"code.vikunja.io/api/pkg/events", "vikunja_events.go"},
 	{"code.vikunja.io/api/pkg/log", "vikunja_log.go"},
@@ -1435,6 +1436,9 @@ var yaegiSymbolPackages = []struct {
 	{"code.vikunja.io/api/pkg/user", "vikunja_user.go"},
 	{"github.com/labstack/echo/v5", "echo.go"},
 	{"github.com/ThreeDotsLabs/watermill/message", "watermill.go"},
+	{"github.com/spf13/viper", "viper.go"},
+	{"src.techknowlogick.com/xormigrate", "xormigrate.go"},
+	{"xorm.io/xorm", "xorm.go"},
 }
 
 // YaegiSymbols regenerates the yaegi symbol tables in pkg/yaegi_symbols so

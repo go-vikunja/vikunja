@@ -39,7 +39,6 @@
 			"email": "Adresse électronique",
 			"emailPlaceholder": "p. ex. frederic{'@'}vikunja.io",
 			"password": "Mot de passe",
-			"passwordPlaceholder": "par ex. •••••••••••",
 			"forgotPassword": "Mot de passe oublié ?",
 			"resetPassword": "Réinitialiser votre mot de passe",
 			"resetPasswordAction": "M’envoyer un lien de réinitialisation du mot de passe",
@@ -78,7 +77,6 @@
 			"passwordUpdateSuccess": "Le mot de passe a bien été mis à jour.",
 			"updateEmailTitle": "Mettre à jour votre adresse électronique",
 			"updateEmailNew": "Nouvelle adresse électronique",
-			"updateEmailSuccess": "L’adresse électronique a bien été mise à jour. Nous vous avons envoyé un lien pour confirmer ce changement.",
 			"general": {
 				"title": "Paramètres généraux",
 				"name": "Mon nom",
@@ -811,7 +809,6 @@
 			"doneAt": "Fait le"
 		},
 		"subscription": {
-			"subscribedTaskThroughParentProject": "Impossible de se désabonner ici, car vous êtes abonné·e à cette tâche depuis son projet.",
 			"subscribedProject": "Vous êtes abonné·e à ce projet et vous recevrez ses notifications.",
 			"notSubscribedProject": "Vous n’êtes pas abonné·e à ce projet et vous ne recevrez pas de notifications.",
 			"subscribedTask": "Vous êtes abonné·e à cette tâche et vous recevrez ses notifications.",

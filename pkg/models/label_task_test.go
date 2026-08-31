@@ -207,6 +207,8 @@ func TestLabelTask_Create(t *testing.T) {
 				a: &user.User{ID: 1},
 			},
 			wantForbidden: true,
+			wantErr:       true,
+			errType:       IsErrLabelDoesNotExist,
 		},
 		{
 			name: "nonexisting task",
@@ -248,6 +250,54 @@ func TestLabelTask_Create(t *testing.T) {
 			},
 			wantForbidden: true,
 		},
+		{
+			// Label 11 has no label_tasks row, so only the owner branch can
+			// grant this (#3592).
+			name: "bot can attach a never-used label created by its owner",
+			fields: fields{
+				TaskID:  52,
+				LabelID: 11,
+			},
+			args: args{
+				a: &user.User{ID: 23},
+			},
+		},
+		{
+			// Same writable task, but label 6 belongs to user 13 — inheriting the
+			// owner's labels must not widen access to anyone else's.
+			name: "bot cannot attach a label unrelated to its owner",
+			fields: fields{
+				TaskID:  52,
+				LabelID: 6,
+			},
+			args: args{
+				a: &user.User{ID: 23},
+			},
+			wantForbidden: true,
+		},
+		{
+			// Bot 23 can see label 11 (owned by its owner, user 21), but has no
+			// share on task 1's project, isolating the task-write conjunct.
+			name: "bot cannot attach its owner's label to an unwritable task",
+			fields: fields{
+				TaskID:  1,
+				LabelID: 11,
+			},
+			args: args{
+				a: &user.User{ID: 23},
+			},
+			wantForbidden: true,
+		},
+		{
+			name: "bot can attach a label created by a sibling bot",
+			fields: fields{
+				TaskID:  52,
+				LabelID: 12,
+			},
+			args: args{
+				a: &user.User{ID: 23},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -267,6 +317,15 @@ func TestLabelTask_Create(t *testing.T) {
 			allowed, err := l.CanCreate(s, tt.args.a)
 			if !allowed && !tt.wantForbidden {
 				t.Errorf("LabelTask.CanCreate() forbidden, want %v, err %v", tt.wantForbidden, err)
+			}
+			if allowed && tt.wantForbidden {
+				t.Errorf("LabelTask.CanCreate() allowed, want forbidden")
+			}
+			if tt.wantForbidden {
+				if tt.wantErr && !tt.errType(err) {
+					t.Errorf("LabelTask.CanCreate() Wrong error type! Error = %v, want = %v", err, runtime.FuncForPC(reflect.ValueOf(tt.errType).Pointer()).Name())
+				}
+				return
 			}
 			err = l.Create(s, tt.args.a)
 			if (err != nil) != tt.wantErr {
@@ -368,6 +427,9 @@ func TestLabelTask_Delete(t *testing.T) {
 			if !allowed && !tt.wantForbidden {
 				t.Errorf("LabelTask.CanDelete() forbidden, want %v", tt.wantForbidden)
 			}
+			if allowed && tt.wantForbidden {
+				t.Errorf("LabelTask.CanDelete() allowed, want forbidden")
+			}
 			if !tt.wantForbidden {
 				err := l.Delete(s, tt.auth)
 				if (err != nil) != tt.wantErr {
@@ -428,4 +490,24 @@ func TestLabelTaskUpdatedTimestamps(t *testing.T) {
 		require.True(t, taskAfter.Updated.After(taskBefore.Updated), "task updated time must advance")
 		require.True(t, projectAfter.Updated.After(projectBefore.Updated), "project updated time must advance")
 	})
+}
+
+func TestLabelTaskBulk_CreateLinkShare(t *testing.T) {
+	// Link share 2 has write on project 2, so it clears the task check and
+	// reaches the per-label access check. Label 1 is on no task it can see.
+	db.LoadAndAssertFixtures(t)
+
+	s := db.NewSession()
+	defer s.Close()
+
+	share := &LinkSharing{ID: 2, Hash: "test2", ProjectID: 2, Permission: PermissionWrite}
+	ltb := &LabelTaskBulk{TaskID: 13, Labels: []*Label{{ID: 1}}}
+
+	allowed, err := ltb.CanCreate(s, share)
+	require.NoError(t, err)
+	require.True(t, allowed, "write link share must pass the task check")
+
+	err = ltb.Create(s, share)
+	require.Error(t, err)
+	require.True(t, IsErrUserHasNoAccessToLabel(err), "got %#v", err)
 }

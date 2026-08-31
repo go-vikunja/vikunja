@@ -624,15 +624,7 @@ func ensureTaskPositionsForSavedFilterView(s *xorm.Session, a web.Auth, projects
 	// Parse a fresh copy of the filters because convertFiltersToDBFilterCond mutates the
 	// field names in place — reusing opts.parsedFilters would double-prefix them for the
 	// subsequent fetch query.
-	parsedFilters, err := getTaskFiltersFromFilterString(opts.filter, opts.filterTimezone)
-	if err != nil {
-		return err
-	}
-
-	// Check before converting: the conversion renames the field to task_buckets.bucket_id in place.
-	joinTaskBuckets := hasBucketIDInParsedFilter(parsedFilters)
-
-	filterCond, err := convertFiltersToDBFilterCond(parsedFilters, opts.filterIncludeNulls)
+	filterCond, joinTaskBuckets, err := parseFilterCond(opts.filter, opts.filterTimezone, opts.filterIncludeNulls)
 	if err != nil {
 		return err
 	}

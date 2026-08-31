@@ -6,7 +6,8 @@ import {useProjectStore} from './projects'
 import type {IProject} from '@/modelTypes/IProject'
 
 // Mock the dependencies that the store imports
-vi.mock('vue-router', () => ({
+vi.mock('vue-router', async (importOriginal) => ({
+	...await importOriginal<typeof import('vue-router')>(),
 	useRouter: () => ({
 		push: vi.fn(),
 	}),
@@ -28,6 +29,22 @@ vi.mock('@/stores/base', () => ({
 		currentProject: null,
 		setCurrentProject: vi.fn(),
 	}),
+}))
+
+const projectServiceMock = {
+	update: vi.fn(),
+	getAll: vi.fn(),
+	totalPages: 1,
+}
+
+vi.mock('@/services/project', () => ({
+	default: class {
+		update = (project: IProject) => projectServiceMock.update(project)
+		getAll = (...args: unknown[]) => projectServiceMock.getAll(...args)
+		get totalPages() {
+			return projectServiceMock.totalPages
+		}
+	},
 }))
 
 function createMockProject(overrides: Partial<IProject>): IProject {
@@ -131,6 +148,45 @@ describe('project store', () => {
 		})
 	})
 
+	describe('savedFilterProjects', () => {
+		it('should sort filters lexicographically by title regardless of position', () => {
+			const store = useProjectStore()
+			const filterC = createMockProject({id: -3, title: 'Charlie', position: 0})
+			const filterA = createMockProject({id: -4, title: 'Alpha', position: 0})
+			const filterB = createMockProject({id: -5, title: 'Bravo', position: 0})
+
+			store.setProject(filterC)
+			store.setProject(filterA)
+			store.setProject(filterB)
+
+			const titles = store.savedFilterProjects.map(p => p.title)
+			expect(titles).toEqual(['Alpha', 'Bravo', 'Charlie'])
+		})
+
+		it('should exclude archived filters', () => {
+			const store = useProjectStore()
+			const archivedFilter = createMockProject({id: -3, title: 'Archived', isArchived: true})
+
+			store.setProject(archivedFilter)
+
+			expect(store.savedFilterProjects).toHaveLength(0)
+		})
+
+		it('should exclude regular projects and favorites pseudo-project', () => {
+			const store = useProjectStore()
+			const regularProject = createMockProject({id: 1, title: 'Regular'})
+			const favoritesPseudoProject = createMockProject({id: -1, title: 'Favorites'})
+			const filter = createMockProject({id: -2, title: 'Filter'})
+
+			store.setProject(regularProject)
+			store.setProject(favoritesPseudoProject)
+			store.setProject(filter)
+
+			expect(store.savedFilterProjects).toHaveLength(1)
+			expect(store.savedFilterProjects[0].title).toBe('Filter')
+		})
+	})
+
 	describe('isOrphanedSubProject', () => {
 		it('should return false for root projects', () => {
 			const store = useProjectStore()
@@ -209,6 +265,43 @@ describe('project store', () => {
 
 			// Dragged to an accessible parent - allow reparenting
 			expect(store.getEffectiveParentProjectId(orphanedProject, 5)).toBe(5)
+		})
+	})
+
+	describe('updateProject', () => {
+		beforeEach(() => {
+			projectServiceMock.update.mockReset()
+			projectServiceMock.getAll.mockReset()
+			projectServiceMock.totalPages = 1
+		})
+
+		it('should not reload all projects when the api kept the position', async () => {
+			const store = useProjectStore()
+			const project = createMockProject({id: 1, position: 100})
+			store.setProject(project)
+			projectServiceMock.update.mockResolvedValue(createMockProject({id: 1, position: 100}))
+
+			await store.updateProject({...project, title: 'Renamed'})
+
+			expect(projectServiceMock.getAll).not.toHaveBeenCalled()
+		})
+
+		it('should reload all projects when the api recalculated the position', async () => {
+			const store = useProjectStore()
+			store.setProject(createMockProject({id: 1, position: 0.0001}))
+			store.setProject(createMockProject({id: 2, position: 100}))
+			projectServiceMock.update.mockResolvedValue(createMockProject({id: 1, position: 2147483648}))
+			projectServiceMock.getAll.mockResolvedValue([
+				createMockProject({id: 1, position: 2147483648}),
+				createMockProject({id: 2, position: 4294967296}),
+			])
+
+			await store.updateProject(createMockProject({id: 1, position: 0.0001}))
+
+			expect(projectServiceMock.getAll).toHaveBeenCalled()
+			// Project 2 was never updated - only the reload can fix its stale position.
+			expect(store.projectsArray.map(p => p.id)).toEqual([1, 2])
+			expect(store.projects[2].position).toBe(4294967296)
 		})
 	})
 })

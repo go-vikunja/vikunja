@@ -42,7 +42,6 @@
 			"email": "Sähköpostiosoite",
 			"emailPlaceholder": "esim. frederic{'@'}vikunja.io",
 			"password": "Salasana",
-			"passwordPlaceholder": "esim. •••••••••••",
 			"forgotPassword": "Unohditko salasanasi?",
 			"resetPassword": "Palauta salasanasi",
 			"resetPasswordAction": "Lähetä minulle salasanan palautuslinkki",
@@ -83,7 +82,6 @@
 			"passwordUpdateSuccess": "Salasana päivitettiin onnistuneesti.",
 			"updateEmailTitle": "Päivitä Sähköpostiosoitteesi",
 			"updateEmailNew": "Uusi sähköpostiosoite",
-			"updateEmailSuccess": "Sähköpostiosoitteesi päivitettiin onnistuneesti. Olemme lähettäneet sinulle vahvistus linkin.",
 			"general": {
 				"title": "Yleiset Asetukset",
 				"name": "Oma Nimi",
@@ -736,7 +734,6 @@
 			"doneAt": "Valmistumisaika"
 		},
 		"subscription": {
-			"subscribedTaskThroughParentProject": "Et voi perua ilmoitusten tilausta tästä, koska olet tilannut ilmoitukset tehtävän projektilta.",
 			"subscribedProject": "Olet tällä hetkellä tilannut ilmoitukset tästä projektista ja saat ilmoitukset muutoksista.",
 			"notSubscribedProject": "Et ole tilannut tätä projektia etkä saa ilmoituksia muutoksista.",
 			"subscribedTask": "Olet tällä hetkellä tilannut ilmoitukset tästä tehtäväst ja saat ilmoitukset muutoksista.",

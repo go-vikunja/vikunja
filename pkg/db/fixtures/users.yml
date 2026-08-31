@@ -1,9 +1,13 @@
+# Humans carry an explicit bot_owner_id: 0 because that is what CreateUser
+# writes. NULL here silently disarms the bot_owner_id > 0 identity guard.
+# User 20 is the one deliberate exception - see there.
 -
   id: 1
   username: 'user1'
   password: '$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6' # 12345678
   email: 'user1@example.com'
   issuer: local
+  bot_owner_id: 0
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
   export_file_id: 1
@@ -13,6 +17,7 @@
   password: '$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6' # 12345678
   email: 'user2@example.com'
   issuer: local
+  bot_owner_id: 0
   default_project_id: 4
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
@@ -22,6 +27,7 @@
   password: '$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6' # 12345678
   email: 'user3@example.com'
   issuer: local
+  bot_owner_id: 0
   default_project_id: 4
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
@@ -32,6 +38,7 @@
   email: 'user4@example.com'
   status: 1
   issuer: local
+  bot_owner_id: 0
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 -
@@ -41,6 +48,7 @@
   email: 'user5@example.com'
   status: 1
   issuer: local
+  bot_owner_id: 0
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 # This use is used to create a whole bunch of projects which are then shared directly with a user
@@ -49,6 +57,7 @@
   password: '$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6' # 12345678
   email: 'user6@example.com'
   issuer: local
+  bot_owner_id: 0
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 - id: 7
@@ -56,6 +65,7 @@
   password: '$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6' # 12345678
   email: 'user7@example.com'
   issuer: local
+  bot_owner_id: 0
   discoverable_by_email: true
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
@@ -64,6 +74,7 @@
   password: '$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6' # 12345678
   email: 'user8@example.com'
   issuer: local
+  bot_owner_id: 0
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 - id: 9
@@ -71,6 +82,7 @@
   password: '$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6' # 12345678
   email: 'user9@example.com'
   issuer: local
+  bot_owner_id: 0
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 - id: 10
@@ -78,6 +90,7 @@
   password: '$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6' # 12345678
   email: 'user10@example.com'
   issuer: local
+  bot_owner_id: 0
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 - id: 11
@@ -86,6 +99,7 @@
   password: '$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6' # 12345678
   email: 'user11@example.com'
   issuer: local
+  bot_owner_id: 0
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 - id: 12
@@ -94,6 +108,7 @@
   password: '$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6' # 12345678
   email: 'user12@example.com'
   issuer: local
+  bot_owner_id: 0
   discoverable_by_name: true
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
@@ -102,6 +117,7 @@
   password: '$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6' # 12345678
   email: 'user14@example.com'
   issuer: local
+  bot_owner_id: 0
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 - id: 14
@@ -110,6 +126,7 @@
   email: 'user15@some.service.com'
   issuer: 'https://some.service.com'
   subject: '12345'
+  bot_owner_id: 0
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 - id: 15
@@ -117,6 +134,7 @@
   password: '$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6' # 12345678
   email: 'user15@example.com'
   issuer: local
+  bot_owner_id: 0
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 - id: 16
@@ -124,6 +142,7 @@
   password: '$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6' # 12345678
   email: 'user16@example.com'
   issuer: local
+  bot_owner_id: 0
   default_project_id: 37
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
@@ -134,6 +153,7 @@
   email: 'user17@example.com'
   status: 2
   issuer: local
+  bot_owner_id: 0
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 # Locked user for security tests
@@ -143,9 +163,13 @@
   email: 'user18@example.com'
   status: 3
   issuer: local
+  bot_owner_id: 0
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 # User scheduled for deletion — used by admin reassign-owner guard tests.
+# The only human left without bot_owner_id, i.e. NULL: migration 20260405194817
+# adds the column without a backfill, so every account predating it looks like
+# this in production. Keeps the IsNull branch of the user-search bot filter live.
 - id: 20
   username: 'user20'
   password: '$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6' # 12345678
@@ -161,6 +185,7 @@
   email: 'user_openid_avatar@example.com'
   issuer: 'https://some.service.com'
   subject: 'openid-avatar-test'
+  bot_owner_id: 0
   avatar_provider: 'openid'
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
@@ -173,6 +198,7 @@
   password: '$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6'
   email: 'user_bot_owner_a@example.com'
   issuer: local
+  bot_owner_id: 0
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 - id: 22
@@ -180,6 +206,7 @@
   password: '$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6'
   email: 'user_bot_owner_b@example.com'
   issuer: local
+  bot_owner_id: 0
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 # Bot owned by user 21 — used to assert own bots are always returned
@@ -197,5 +224,12 @@
   name: 'Owner B Assistant'
   issuer: local
   bot_owner_id: 22
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
+- id: 25
+  username: 'bot-owner-a-scheduler'
+  name: 'Owner A Scheduler'
+  issuer: local
+  bot_owner_id: 21
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12

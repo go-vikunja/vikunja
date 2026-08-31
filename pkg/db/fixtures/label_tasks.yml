@@ -33,8 +33,6 @@
   task_id: 34
   label_id: 8
   created: 2018-12-01 15:13:12
-# Label 5 is otherwise invisible to user 1; attaching it to the soft-deleted
-# task 51 (project 1) turns the label visibility subqueries into leak detectors.
 - id: 9
   task_id: 51
   label_id: 5
@@ -43,4 +41,9 @@
 - id: 10
   task_id: 25
   label_id: 10
+  created: 2018-12-01 15:13:12
+# Label #13 lives only on the soft-deleted task 51 in project 1.
+- id: 11
+  task_id: 51
+  label_id: 13
   created: 2018-12-01 15:13:12

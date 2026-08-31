@@ -43,7 +43,8 @@ export const useProjectStore = defineStore('project', () => {
 	const favoriteProjects = computed(() => projectsArray.value
 		.filter(p => !p.isArchived && p.isFavorite))
 	const savedFilterProjects = computed(() => projectsArray.value
-		.filter(p => !p.isArchived && p.id < -1))
+		.filter(p => !p.isArchived && p.id < -1)
+		.sort((a, b) => a.title.localeCompare(b.title)))
 	const hasProjects = computed(() => projectsArray.value.length > 0)
 
 	const getChildProjects = computed(() => {
@@ -223,6 +224,12 @@ export const useProjectStore = defineStore('project', () => {
 		try {
 			const updatedProject = await projectService.update(project)
 			setProject(project)
+
+			// The api renumbers all sibling positions once they drift too close together but
+			// only returns the updated project, so the rest would keep stale positions.
+			if (updatedProject.position !== project.position) {
+				await loadAllProjects()
+			}
 
 			// the returned project from projectService.update is the same!
 			// in order to not create a manipulation in pinia store we have to create a new copy

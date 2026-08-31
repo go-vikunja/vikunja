@@ -116,10 +116,9 @@ import {ref, computed, watch} from 'vue'
 import Card from '@/components/misc/Card.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
-import TaskService from '@/services/task'
-import TaskModel from '@/models/task'
 import {useProjectStore} from '@/stores/projects'
 import {useAuthStore} from '@/stores/auth'
+import {fetchTaskById} from '@/helpers/fetchTaskById'
 import {getProjectTitle} from '@/helpers/getProjectTitle'
 import {formatDate} from '@/helpers/time/formatDate'
 import {useTimeFormat} from '@/composables/useTimeFormat'
@@ -157,27 +156,18 @@ const {store: timeFormat} = useTimeFormat()
 const authStore = useAuthStore()
 const currentUserId = computed(() => authStore.info?.id)
 
-// Task entries carry only a task id; resolve the full task lazily (for its
-// title, identifier, and parent project) and cache it.
-const taskService = new TaskService()
+// Entries carry only a task id; the full task (title, identifier, parent project) is resolved lazily.
 const tasks = ref<Record<number, ITask>>({})
-const inFlight = new Set<number>()
-async function ensureTask(taskId: number) {
-	if (taskId === 0 || tasks.value[taskId] !== undefined || inFlight.has(taskId)) {
-		return
-	}
-	inFlight.add(taskId)
-	try {
-		tasks.value[taskId] = await taskService.get(new TaskModel({id: taskId}))
-	} catch {
-		// Leave unresolved — the row falls back to #<id>.
-	} finally {
-		inFlight.delete(taskId)
-	}
-}
 
 watch(() => props.entries, entries => {
-	entries.forEach(entry => ensureTask(entry.taskId))
+	entries.forEach(({taskId}) => {
+		if (taskId === 0) {
+			return
+		}
+		fetchTaskById(taskId).then(task => {
+			tasks.value[taskId] = task
+		}).catch(() => {})
+	})
 }, {immediate: true})
 
 function entrySeconds(entry: ITimeEntry): number {
