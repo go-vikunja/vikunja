@@ -40,18 +40,16 @@ export function useSavedFilter(projectId?: MaybeRefOrGetter<number | undefined>)
 		if (loadedSavedFilterId.value !== id) {
 			filter.value = {id: 0, ...createSavedFilterDraft()}
 		}
-		if (!isFetching && loadedSavedFilterId.value !== id) {
-			if (value) {
-				filter.value = {
-					...value,
-					filters: {
-						...value.filters,
-						sort_by: [...value.filters.sort_by],
-						order_by: [...value.filters.order_by],
-					},
-				}
-				titleValid.value = value.title !== ''
+		if (!isFetching && value && loadedSavedFilterId.value !== id) {
+			filter.value = {
+				...value,
+				filters: {
+					...value.filters,
+					sort_by: [...value.filters.sort_by],
+					order_by: [...value.filters.order_by],
+				},
 			}
+			titleValid.value = value.title !== ''
 			loadedSavedFilterId.value = id
 		}
 	}, {immediate: true})
@@ -90,6 +88,10 @@ export function useSavedFilter(projectId?: MaybeRefOrGetter<number | undefined>)
 	}
 
 	async function saveFilter() {
+		if (loadedSavedFilterId.value !== savedFilterId.value || filter.value.id <= 0) {
+			throw new Error('Saved filter details are not loaded')
+		}
+
 		isSaving.value = true
 		try {
 			filter.value = await updateSavedFilter({
@@ -136,7 +138,8 @@ export function useSavedFilter(projectId?: MaybeRefOrGetter<number | undefined>)
 		filters,
 		isLoading: computed(() =>
 			(savedFilterId.value > 0 && (
-				query.isFetching.value || loadedSavedFilterId.value !== savedFilterId.value
+				query.isFetching.value ||
+				(!query.isError.value && loadedSavedFilterId.value !== savedFilterId.value)
 			)) || isSaving.value,
 		),
 		error: query.error,
