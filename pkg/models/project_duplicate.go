@@ -357,19 +357,20 @@ func duplicateTasks(s *xorm.Session, doer web.Auth, ld *ProjectDuplicate) (newTa
 	// This map contains the old task id as key and the new duplicated task id as value.
 	// It is used to map old task items to new ones.
 	newTaskIDs = make(map[int64]int64, len(tasks))
-	// Create + update all tasks (includes reminders)
 	oldTaskIDs := make([]int64, 0, len(tasks))
 	for _, t := range tasks {
-		oldID := t.ID
+		oldTaskIDs = append(oldTaskIDs, t.ID)
 		t.ID = 0
 		t.ProjectID = ld.Project.ID
 		t.UID = ""
-		err = createTask(s, t, doer, false, false)
-		if err != nil {
-			return nil, err
-		}
-		newTaskIDs[oldID] = t.ID
-		oldTaskIDs = append(oldTaskIDs, oldID)
+	}
+
+	err = createTasks(s, ld.Project.ID, tasks, doer, false, false)
+	if err != nil {
+		return nil, err
+	}
+	for i, t := range tasks {
+		newTaskIDs[oldTaskIDs[i]] = t.ID
 	}
 
 	log.Debugf("Duplicated all tasks from project %d into %d", ld.ProjectID, ld.Project.ID)

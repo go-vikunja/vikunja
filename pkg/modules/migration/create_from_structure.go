@@ -449,32 +449,42 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 	seedMissingTaskPositions(tasks)
 
 	tasksByOldID := make(map[int64]*models.TaskWithComments, len(tasks))
-	newTaskIDs := []int64{}
-	// Create all tasks
-	for i, t := range tasks {
-		oldid := t.ID
+	newTaskIDs := make([]int64, 0, len(tasks))
+	type initialTask struct {
+		task     *models.TaskWithComments
+		oldID    int64
+		bucketID int64
+	}
+	initialTasks := make([]initialTask, 0, len(tasks))
+	tasksToCreate := make([]*models.Task, 0, len(tasks))
+	for _, t := range tasks {
+		if t.Title == "" {
+			continue
+		}
+		state := initialTask{task: t, oldID: t.ID, bucketID: t.BucketID}
 		t.ProjectID = project.ID
-		originalBucketID := t.BucketID
 		t.BucketID = 0
 		t.Assignees = remapAssignees(t.Assignees, user)
-		err = t.Create(s, user)
-		if err != nil {
-			if models.IsErrTaskCannotBeEmpty(err) {
-				continue
-			}
-			return err
-		}
+		initialTasks = append(initialTasks, state)
+		tasksToCreate = append(tasksToCreate, &t.Task)
+	}
+	err = models.CreateTasksForImport(s, project.ID, tasksToCreate, user)
+	if err != nil {
+		return err
+	}
 
-		t.BucketID = originalBucketID
+	for _, state := range initialTasks {
+		t := state.task
+		t.BucketID = state.bucketID
 
-		err = setBucketOrDefault(&tasks[i].Task)
+		err = setBucketOrDefault(&t.Task)
 		if err != nil {
 			return
 		}
 
 		newTaskIDs = append(newTaskIDs, t.ID)
 
-		tasksByOldID[oldid] = t
+		tasksByOldID[state.oldID] = t
 
 		log.Debugf("[creating structure] Created task %d", t.ID)
 		if len(t.RelatedTasks) > 0 {

@@ -421,6 +421,31 @@ func TestInsertFromStructure(t *testing.T) {
 			assert.Equal(t, int64(4), count, "task %q must keep position %v in all views", title, position)
 		}
 	})
+	t.Run("preserves out-of-order indexes before assigning automatic indexes", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		structure := []*models.ProjectWithTasksAndBuckets{{
+			Project: models.Project{Title: "Import task indexes"},
+			Tasks: []*models.TaskWithComments{
+				{Task: models.Task{Title: "high index", Index: 10}},
+				{Task: models.Task{Title: "low index", Index: 5}},
+				{Task: models.Task{Title: "automatic index"}},
+			},
+		}}
+		require.NoError(t, InsertFromStructure(structure, u))
+
+		assert.Equal(t, int64(10), structure[0].Tasks[0].Index)
+		assert.Equal(t, int64(5), structure[0].Tasks[1].Index)
+		assert.Equal(t, int64(11), structure[0].Tasks[2].Index)
+
+		s := db.NewSession()
+		defer s.Close()
+		counter := &models.ProjectTaskCounter{}
+		has, err := s.ID(structure[0].ID).Get(counter)
+		require.NoError(t, err)
+		require.True(t, has)
+		assert.Equal(t, int64(11), counter.LastIndex)
+	})
 	t.Run("assignees from a foreign instance", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 

@@ -18,6 +18,7 @@ package models
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"regexp"
 	"sort"
@@ -881,38 +882,42 @@ func calculateDefaultPosition(entityID int64, position float64) float64 {
 	return position
 }
 
-func calculateNextTaskIndex(s *xorm.Session, projectID int64) (nextIndex int64, err error) {
-	latestTask := &Task{}
-	// Unscoped so an index is never reused while a soft-deleted task still holds it
-	_, err = s.
-		Unscoped().
-		Where("project_id = ?", projectID).
-		OrderBy("`index` desc").
-		Get(latestTask)
-	if err != nil {
-		return 0, err
+func setNewTaskIndexes(s *xorm.Session, projectID int64, tasks []*Task) (err error) {
+	if len(tasks) == 0 {
+		return nil
 	}
 
-	return latestTask.Index + 1, nil
-}
-
-// setNewTaskIndexes keeps preset indexes when free (the migration importer relies on them) and assigns the next free one otherwise.
-func setNewTaskIndexes(s *xorm.Session, projectID int64, tasks []*Task) (err error) {
-	nextIndex, err := calculateNextTaskIndex(s, projectID)
+	reserved := int64(len(tasks))
+	affected, err := s.ID(projectID).
+		Incr("last_index", reserved).
+		Update(&ProjectTaskCounter{})
 	if err != nil {
 		return err
 	}
+	if affected != 1 {
+		return fmt.Errorf("task index counter for project %d is missing", projectID)
+	}
 
-	taken := make(map[int64]bool)
+	counter := &ProjectTaskCounter{}
+	has, err := s.ID(projectID).Get(counter)
+	if err != nil {
+		return err
+	}
+	if !has {
+		return fmt.Errorf("task index counter for project %d is missing", projectID)
+	}
+	previousIndex := counter.LastIndex - reserved
+
 	presets := make([]int64, 0, len(tasks))
 	for _, t := range tasks {
-		if t.Index != 0 {
+		if t.Index > previousIndex {
 			presets = append(presets, t.Index)
 		}
 	}
+
+	taken := make(map[int64]bool, len(presets))
 	if len(presets) > 0 {
 		existing := []*Task{}
-		// Unscoped so an index is never reused while a soft-deleted task still holds it
 		err = s.Unscoped().
 			Cols("index").
 			Where("project_id = ?", projectID).
@@ -926,17 +931,38 @@ func setNewTaskIndexes(s *xorm.Session, projectID int64, tasks []*Task) (err err
 		}
 	}
 
-	for _, t := range tasks {
-		if t.Index != 0 && !taken[t.Index] {
+	accepted := make([]bool, len(tasks))
+	acceptedMax := previousIndex
+	for i, t := range tasks {
+		if t.Index > previousIndex && !taken[t.Index] {
+			accepted[i] = true
 			taken[t.Index] = true
+			if t.Index > acceptedMax {
+				acceptedMax = t.Index
+			}
+		}
+	}
+
+	nextIndex := acceptedMax + 1
+	for i, t := range tasks {
+		if accepted[i] {
 			continue
 		}
-		for taken[nextIndex] {
-			nextIndex++
-		}
 		t.Index = nextIndex
-		taken[nextIndex] = true
 		nextIndex++
+	}
+
+	finalIndex := nextIndex - 1
+	if extra := finalIndex - counter.LastIndex; extra > 0 {
+		affected, err = s.ID(projectID).
+			Incr("last_index", extra).
+			Update(&ProjectTaskCounter{})
+		if err != nil {
+			return err
+		}
+		if affected != 1 {
+			return fmt.Errorf("task index counter for project %d is missing", projectID)
+		}
 	}
 
 	return nil
@@ -966,6 +992,16 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, setB
 	var berr ErrInvalidTaskInBulkCreation
 	if errors.As(err, &berr) {
 		return berr.Err
+	}
+	return err
+}
+
+// CreateTasksForImport preserves preset indexes across the whole imported batch.
+func CreateTasksForImport(s *xorm.Session, projectID int64, tasks []*Task, a web.Auth) error {
+	err := createTasks(s, projectID, tasks, a, true, true)
+	var batchErr ErrInvalidTaskInBulkCreation
+	if errors.As(err, &batchErr) {
+		return batchErr.Err
 	}
 	return err
 }
@@ -1383,7 +1419,8 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 
 	// If the task is being moved between projects, make sure to move the bucket + index as well
 	if t.ProjectID != 0 && ot.ProjectID != t.ProjectID {
-		t.Index, err = calculateNextTaskIndex(s, t.ProjectID)
+		t.Index = 0
+		err = setNewTaskIndexes(s, t.ProjectID, []*Task{t})
 		if err != nil {
 			return err
 		}

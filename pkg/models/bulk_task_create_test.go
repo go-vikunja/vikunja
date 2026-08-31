@@ -196,9 +196,9 @@ func TestBulkTaskCreation_Create(t *testing.T) {
 		require.NoError(t, s.Commit())
 
 		assert.Equal(t, int64(100), btc.Tasks[0].Index)
-		assert.Equal(t, int64(35), btc.Tasks[1].Index)
-		assert.Equal(t, int64(36), btc.Tasks[2].Index)
-		assert.Equal(t, int64(37), btc.Tasks[3].Index)
+		assert.Equal(t, int64(101), btc.Tasks[1].Index)
+		assert.Equal(t, int64(102), btc.Tasks[2].Index)
+		assert.Equal(t, int64(103), btc.Tasks[3].Index)
 	})
 
 	t.Run("explicit bucket", func(t *testing.T) {
