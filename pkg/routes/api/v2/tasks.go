@@ -204,7 +204,7 @@ func tasksReadByIndex(ctx context.Context, in *struct {
 		return nil, translateDomainError(err)
 	}
 
-	task = &models.Task{ID: taskID, Expand: expand}
+	task = &models.Task{ID: taskID}
 	_, err = handler.DoReadOne(ctx, task, a)
 	if err != nil {
 		return nil, translateDomainError(err)
