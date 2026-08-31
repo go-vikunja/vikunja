@@ -13,7 +13,7 @@
 
 		<div class="content">
 			<h1>{{ $t('label.manage') }}</h1>
-			<p v-if="labelStore.labelsArray.length > 0">
+			<p v-if="labels.length > 0">
 				{{ $t('label.description') }}
 			</p>
 			<p
@@ -30,15 +30,15 @@
 		<div class="columns">
 			<div class="labels-list column">
 				<RouterLink
-					v-for="label in labelStore.labelsArray"
+					v-for="label in labels"
 					:key="label.id"
-					:to="{name: 'home', query: {labels: label.id.toString()}}"
+					:to="{name: 'home', query: {labels: label.id}}"
 					:style="getLabelStyles(label)"
 					class="tag"
 				>
 					<span>{{ label.title }}</span>
 					<BaseButton
-						v-if="userInfo.id === label.createdBy.id"
+						v-if="userInfo?.id === label.created_by?.id"
 						class="label-edit-button is-small"
 						:aria-label="$t('label.edit.header')"
 						@click.stop.prevent="editLabel(label)"
@@ -74,7 +74,7 @@
 							/>
 						</FormField>
 						<FormField :label="$t('label.attributes.color')">
-							<ColorPicker v-model="labelEditLabel.hexColor" />
+							<ColorPicker v-model="labelEditLabel.hex_color" />
 						</FormField>
 						<div class="field has-addons">
 							<div class="control is-expanded">
@@ -128,59 +128,61 @@ import Editor from '@/components/input/AsyncEditor'
 import ColorPicker from '@/components/input/ColorPicker.vue'
 import FormField from '@/components/input/FormField.vue'
 
-import LabelModel from '@/models/label'
-import type {ILabel} from '@/modelTypes/ILabel'
 import {useAuthStore} from '@/stores/auth'
-import {useLabelStore} from '@/stores/labels'
 
 import { useTitle } from '@/composables/useTitle'
 import {useLabelStyles} from '@/composables/useLabelStyles'
+import {useLabels} from '@/composables/useLabels'
+import {
+	type UpdateLabelInput,
+	useDeleteLabelMutation,
+	useUpdateLabelMutation,
+} from '@/client/queries/labels'
+import type {Label} from '@/client/generated'
 
 const {t} = useI18n({useScope: 'global'})
 
-const labelEditLabel = ref<ILabel>(new LabelModel())
+const labelEditLabel = ref<Required<UpdateLabelInput>>({id: 0, title: '', description: '', hex_color: ''})
 const isLabelEdit = ref(false)
 const editorActive = ref(false)
 const showDeleteModal = ref(false)
-const labelToDelete = ref<ILabel | undefined>(undefined)
+const labelToDelete = ref<Label | undefined>(undefined)
 
 useTitle(() => t('label.title'))
 
 const authStore = useAuthStore()
 const userInfo = computed(() => authStore.info)
 
-const labelStore = useLabelStore()
-labelStore.loadAllLabels()
-
-const loading = computed(() => labelStore.isLoading)
+const {labels, isPending} = useLabels()
+const updateLabelMutation = useUpdateLabelMutation()
+const deleteLabelMutation = useDeleteLabelMutation()
+const loading = computed(() => isPending.value || updateLabelMutation.isPending.value || deleteLabelMutation.isPending.value)
 const {getLabelStyles} = useLabelStyles()
 
-function deleteLabel(label?: ILabel) {
+function deleteLabel(label?: Label) {
 	if (!label) {
 		return
 	}
 
 	showDeleteModal.value = false
 	isLabelEdit.value = false
-	return labelStore.deleteLabel(label)
+	return deleteLabelMutation.mutateAsync(label)
 }
 
 function editLabelSubmit() {
-	return labelStore.updateLabel(labelEditLabel.value)
+	return updateLabelMutation.mutateAsync(labelEditLabel.value)
 }
 
-function editLabel(label: ILabel) {
-	if (label.createdBy.id !== userInfo.value.id) {
+function editLabel(label: Label) {
+	if (typeof label.id === 'undefined' || label.created_by?.id !== userInfo.value?.id) {
 		return
 	}
-	// Duplicating the label to make sure it does not look like changes take effect immediatly as the label 
-	// object passed to this function here still has a reference to the store.
-	labelEditLabel.value = new LabelModel({
-		...label,
-		// The model does not support passing dates into it directly so we need to convert them first				
-		created: +label.created,
-		updated: +label.updated,
-	})
+	labelEditLabel.value = {
+		id: label.id,
+		title: label.title ?? '',
+		description: label.description ?? '',
+		hex_color: label.hex_color ?? '',
+	}
 	isLabelEdit.value = true
 
 	// This makes the editor trigger its mounted function again which makes it forget every input
@@ -192,7 +194,7 @@ function editLabel(label: ILabel) {
 	nextTick(() => editorActive.value = true)
 }
 
-function showDeleteDialoge(label: ILabel) {
+function showDeleteDialoge(label: Label) {
 	labelToDelete.value = label
 	showDeleteModal.value = true
 }

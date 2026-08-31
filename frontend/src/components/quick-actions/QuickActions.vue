@@ -137,9 +137,9 @@ import SingleTaskInlineReadonly from '@/components/tasks/partials/SingleTaskInli
 
 import {useBaseStore} from '@/stores/base'
 import {useProjectStore} from '@/stores/projects'
-import {useLabelStore} from '@/stores/labels'
 import {useTaskStore} from '@/stores/tasks'
 import {useAuthStore} from '@/stores/auth'
+import {useLabels} from '@/composables/useLabels'
 
 import {getHistory} from '@/modules/projectHistory'
 import {parseTaskText, PREFIXES, PrefixMode} from '@/modules/quickAddMagic'
@@ -157,7 +157,7 @@ const router = useRouter()
 
 const baseStore = useBaseStore()
 const projectStore = useProjectStore()
-const labelStore = useLabelStore()
+const {filterLabelsByQuery, getLabelsByExactTitles} = useLabels()
 const taskStore = useTaskStore()
 const authStore = useAuthStore()
 
@@ -272,10 +272,10 @@ const foundLabels = computed(() => {
 	}
 
 	if (labels.length > 0) {
-		return labelStore.filterLabelsByQuery([], labels[0])
+		return filterLabelsByQuery([], labels[0])
 	}
 
-	return labelStore.filterLabelsByQuery([], text)
+	return filterLabelsByQuery([], text)
 })
 
 // FIXME: use fuzzysearch
@@ -471,7 +471,9 @@ function searchTasks() {
 	}
 
 	if (labels.length > 0) {
-		const labelIds = labelStore.getLabelsByExactTitles(labels).map((l) => l.id)
+		const labelIds = getLabelsByExactTitles(labels)
+			.map(label => label.id)
+			.filter((id): id is number => typeof id === 'number')
 		if (labelIds.length > 0) {
 			filter += 'labels in ' + labelIds.join(', ')
 		}

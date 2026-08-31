@@ -15,13 +15,13 @@ import {
 	PROJECT_FIELDS,
 } from '@/helpers/filters'
 
-import {useLabelStore} from '@/stores/labels'
+import {useLabels} from '@/composables/useLabels'
 import {useProjectStore} from '@/stores/projects'
 import UserService from '@/services/user'
 import ProjectUserService from '@/services/projectUsers'
 import type { IUser } from '@/modelTypes/IUser'
 import type { IProject } from '@/modelTypes/IProject'
-import type { ILabel } from '@/modelTypes/ILabel'
+import type { Label } from '@/client/generated'
 
 export interface FilterAutocompleteOptions {
 	projectId?: number
@@ -88,7 +88,7 @@ export function calculateReplacementRange(
 export interface AutocompleteItem {
 	id: number | string
 	title: string
-	item: ILabel | IUser | IProject
+	item: Label | IUser | IProject
 	fieldType: AutocompleteField
 	context: AutocompleteContext
 }
@@ -103,7 +103,7 @@ export default Extension.create<FilterAutocompleteOptions>({
 	},
 
 	addProseMirrorPlugins() {
-		const labelStore = useLabelStore()
+		const {filterLabelsByQuery} = useLabels()
 		const projectStore = useProjectStore()
 		const userService = new UserService()
 		const projectUserService = new ProjectUserService()
@@ -220,7 +220,7 @@ export default Extension.create<FilterAutocompleteOptions>({
 		const fetchSuggestions = async (autocompleteContext: AutocompleteContext, fieldType: AutocompleteField): Promise<SuggestionItem[]> => {
 			try {
 				if (fieldType === 'labels') {
-					return labelStore.filterLabelsByQuery([], autocompleteContext.search).filter((label): label is ILabel => label !== undefined) as SuggestionItem[]
+					return filterLabelsByQuery([], autocompleteContext.search) as SuggestionItem[]
 				}
 
 				if (fieldType === 'users') {
@@ -391,7 +391,7 @@ export default Extension.create<FilterAutocompleteOptions>({
 							// Handle selection
 							const newValue = item.fieldType === 'users'
 								? (item.item as IUser).username
-								: (item.item as IProject | ILabel).title
+								: (item.item as IProject | Label).title
 							// Use currentAutocompleteContext (outer variable) for up-to-date positions
 							// The local autocompleteContext would be stale since this callback
 							// was created on first component render

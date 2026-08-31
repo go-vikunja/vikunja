@@ -125,7 +125,7 @@ import type {ITask} from '@/modelTypes/ITask'
 import {useAuthStore} from '@/stores/auth'
 import {useTaskStore} from '@/stores/tasks'
 import {useProjectStore} from '@/stores/projects'
-import {useLabelStore} from '@/stores/labels'
+import {useLabels} from '@/composables/useLabels'
 import type {TaskFilterParams} from '@/services/taskCollection'
 import TaskCollectionService from '@/services/taskCollection'
 import {PERMISSIONS} from '@/constants/permissions'
@@ -152,7 +152,7 @@ const emit = defineEmits<{
 const authStore = useAuthStore()
 const taskStore = useTaskStore()
 const projectStore = useProjectStore()
-const labelStore = useLabelStore()
+const {getLabelById} = useLabels()
 
 const route = useRoute()
 const router = useRouter()
@@ -171,7 +171,7 @@ const filteredLabels = computed(() => {
 		return []
 	}
 	return props.labelIds
-		.map(id => labelStore.getLabelById(Number(id)))
+		.map(id => getLabelById(Number(id)))
 		.filter(label => label !== null && label !== undefined)
 })
 

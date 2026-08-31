@@ -2,7 +2,6 @@ import type {Priority} from '@/constants/priorities'
 
 import type {IAbstract} from './IAbstract'
 import type {IUser} from './IUser'
-import type {ILabel} from './ILabel'
 import type {IAttachment} from './IAttachment'
 import type {ISubscription} from './ISubscription'
 import type {IProject} from './IProject'
@@ -16,6 +15,7 @@ import type {PartialWithId} from '@/types/PartialWithId'
 import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
 import type {IReactionPerEntity} from '@/modelTypes/IReaction'
 import type {ITaskComment} from '@/modelTypes/ITaskComment.ts'
+import type {Label} from '@/client/generated'
 
 export interface ITask extends IAbstract {
 	id: number
@@ -25,7 +25,7 @@ export interface ITask extends IAbstract {
 	doneAt: Date | null
 	deletedAt: Date | null
 	priority: Priority
-	labels: ILabel[]
+	labels: Label[]
 	assignees: IUser[]
 
 	dueDate: Date | null
