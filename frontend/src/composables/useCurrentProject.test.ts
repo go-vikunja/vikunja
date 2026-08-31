@@ -1,8 +1,9 @@
-import {defineComponent, h, ref} from 'vue'
+import {defineComponent, effectScope, h, ref} from 'vue'
 import {mount} from '@vue/test-utils'
-import {QueryClient, VueQueryPlugin} from '@tanstack/vue-query'
+import {VueQueryPlugin} from '@tanstack/vue-query'
 import {beforeEach, describe, expect, it, vi} from 'vitest'
 
+import {queryClient} from '@/client/queryClient'
 import {projectKeys} from '@/client/queries/projects'
 
 const sdk = vi.hoisted(() => ({
@@ -18,9 +19,6 @@ import {useCurrentProject} from './useCurrentProject'
 
 async function mountCurrentProject(projectId: number) {
 	useBaseStore.mockReturnValue({currentProjectId: ref(projectId)})
-	const queryClient = new QueryClient({
-		defaultOptions: {queries: {retry: false}},
-	})
 	const component = defineComponent({
 		setup() {
 			useCurrentProject()
@@ -38,9 +36,18 @@ async function mountCurrentProject(projectId: number) {
 
 describe('useCurrentProject', () => {
 	beforeEach(() => {
+		queryClient.clear()
 		Object.values(sdk).forEach(mock => mock.mockReset())
 		sdk.projectsRead.mockResolvedValue({data: {id: 42, title: 'Project'}})
 		sdk.projectsList.mockResolvedValue({data: {items: [], total_pages: 1}})
+	})
+
+	it('can be created outside a Vue injection context', () => {
+		useBaseStore.mockReturnValue({currentProjectId: ref(0)})
+		const scope = effectScope()
+
+		expect(() => scope.run(() => useCurrentProject())).not.toThrow()
+		scope.stop()
 	})
 
 	it('activates only the detail query for a real project', async () => {
