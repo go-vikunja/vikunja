@@ -73,9 +73,12 @@ func ClaimMigration(m MigratorName, u *user.User) (status *Status, err error) {
 	}
 	if _, err = s.Insert(status); err != nil {
 		if db.IsUniqueConstraintError(err, "active_user_id") {
+			_ = s.Rollback()
 			e := &ErrMigrationAlreadyRunning{}
+			runningSession := db.NewSession()
+			defer runningSession.Close()
 			running := &Status{}
-			if has, gerr := s.Where("active_user_id = ?", u.ID).Desc("id").Get(running); gerr == nil && has {
+			if has, gerr := runningSession.Where("active_user_id = ?", u.ID).Desc("id").Get(running); gerr == nil && has {
 				e.StartedAt = running.StartedAt
 				e.MigratorName = running.MigratorName
 			}
