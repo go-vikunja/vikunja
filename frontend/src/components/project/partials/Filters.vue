@@ -31,8 +31,11 @@
 			</FancyCheckbox>
 			<FancyCheckbox
 				v-if="showIncludeSubprojectsToggle"
-				v-tooltip="$t('project.views.includeSubprojectsHint')"
+				v-tooltip="includeSubprojectsFromView
+					? $t('project.views.includeSubprojectsFromView')
+					: $t('project.views.includeSubprojectsHint')"
 				:model-value="includeSubprojects"
+				:disabled="includeSubprojectsFromView"
 				@update:modelValue="(value: boolean) => emit('update:includeSubprojects', value)"
 			>
 				{{ $t('project.views.includeSubprojects') }}
@@ -86,6 +89,7 @@ const props = withDefaults(defineProps<{
 	showClose?: boolean,
 	showIncludeSubprojectsToggle?: boolean,
 	includeSubprojects?: boolean,
+	includeSubprojectsFromView?: boolean,
 }>(), {
 	hasTitle: false,
 	hasFooter: true,
@@ -94,6 +98,7 @@ const props = withDefaults(defineProps<{
 	showClose: false,
 	showIncludeSubprojectsToggle: false,
 	includeSubprojects: false,
+	includeSubprojectsFromView: false,
 })
 
 const emit = defineEmits<{
@@ -131,7 +136,9 @@ watch(
 )
 
 const hasActiveFilters = computed(() => {
-	return filterQuery.value !== '' || params.value.filter_include_nulls || props.includeSubprojects
+	// A flag coming from the view is not something clearing the filters can undo.
+	const subprojectsToggled = props.includeSubprojects && !props.includeSubprojectsFromView
+	return filterQuery.value !== '' || params.value.filter_include_nulls || subprojectsToggled
 })
 
 const {getLabelByExactTitle} = useLabels()
@@ -204,8 +211,10 @@ function changeAndEmitButton() {
 function clearFiltersAndEmit() {
 	filterQuery.value = ''
 	params.value.filter_include_nulls = false
-	params.value.include_subprojects = false
-	emit('update:includeSubprojects', false)
+	if (!props.includeSubprojectsFromView) {
+		params.value.include_subprojects = false
+		emit('update:includeSubprojects', false)
+	}
 	changeAndEmitButton()
 }
 
