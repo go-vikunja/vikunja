@@ -1,4 +1,4 @@
-import {defineComponent, h} from 'vue'
+import {defineComponent, effectScope, h} from 'vue'
 import {mount} from '@vue/test-utils'
 import {VueQueryPlugin} from '@tanstack/vue-query'
 import {beforeEach, describe, expect, it, vi} from 'vitest'
@@ -66,6 +66,18 @@ describe('useProjectNavigation', () => {
 		removeToken()
 		window.API_URL = 'https://identity-a.example/api/v1/'
 		saveToken(token(1), false)
+	})
+
+	it('can be created outside a Vue injection context', () => {
+		queryClient.setQueryData<ProjectListResult>(projectKeys.list(), {
+			projects: [],
+			favoriteProject: null,
+			savedFilterProjects: [],
+		})
+		const scope = effectScope()
+
+		expect(() => scope.run(() => useProjectNavigation())).not.toThrow()
+		scope.stop()
 	})
 
 	it('does not update or roll back a saved filter after its session changes', async () => {

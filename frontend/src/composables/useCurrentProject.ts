@@ -2,6 +2,7 @@ import {computed} from 'vue'
 import {useQuery} from '@tanstack/vue-query'
 import {storeToRefs} from 'pinia'
 
+import {queryClient} from '@/client/queryClient'
 import {projectQuery, projectsQuery} from '@/client/queries/projects'
 import {useBaseStore} from '@/stores/base'
 
@@ -10,11 +11,11 @@ export function useCurrentProject() {
 	const detailQuery = useQuery(computed(() => ({
 		...projectQuery(currentProjectId.value),
 		enabled: currentProjectId.value > 0,
-	})))
+	})), queryClient)
 	const navigationQuery = useQuery(computed(() => ({
 		...projectsQuery(),
 		enabled: currentProjectId.value < 0,
-	})))
+	})), queryClient)
 
 	return {
 		currentProject: computed(() => {
