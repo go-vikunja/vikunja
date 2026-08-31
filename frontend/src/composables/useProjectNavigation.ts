@@ -28,15 +28,13 @@ import {
 	updateProjectNavigationItemInCache,
 } from '@/client/queries/projects'
 import type {ProjectResponse} from '@/client/queries/projects'
+import {patchSavedFilterFavorite} from '@/client/queries/savedFilters'
 import type {Project, ProjectView, ProjectWritable} from '@/client/generated'
 import {queryClient} from '@/client/queryClient'
 import {
-	assertClientRequestContext,
 	captureClientRequestContext,
 	isClientRequestContextCurrent,
 } from '@/client/requestContext'
-import SavedFilterModel from '@/models/savedFilter'
-import SavedFilterService from '@/services/savedFilter'
 
 // One observer and one derived list set for the dozens of consumers.
 const useSharedProjectNavigation = createSharedComposable(() => {
@@ -114,12 +112,7 @@ export function useProjectNavigation() {
 			if (!filterId) {
 				return
 			}
-			const service = new SavedFilterService()
-			const filter = await service.get(new SavedFilterModel({id: filterId}))
-			assertClientRequestContext(context)
-			filter.isFavorite = !previous
-			await service.update(filter)
-			assertClientRequestContext(context)
+			await patchSavedFilterFavorite(filterId, !previous)
 		} catch (error) {
 			if (isClientRequestContextCurrent(context)) {
 				updateProjectNavigationItemInCache(project.id, current => ({
