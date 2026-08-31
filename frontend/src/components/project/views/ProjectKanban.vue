@@ -45,7 +45,7 @@
 									@click="() => unCollapseBucket(bucket)"
 								>
 									<span
-										v-if="bucket.id !== 0 && view?.doneBucketId === bucket.id"
+										v-if="bucket.id !== 0 && view?.done_bucket_id === bucket.id"
 										v-tooltip="$t('project.kanban.doneBucketHint')"
 										class="icon is-small has-text-success mie-2"
 										@click.stop="() => collapseBucket(bucket)"
@@ -115,7 +115,7 @@
 										</DropdownItem>
 										<DropdownItem
 											v-tooltip="$t('project.kanban.doneBucketHintExtended')"
-											:icon-class="{'has-text-success': bucket.id === view?.doneBucketId}"
+											:icon-class="{'has-text-success': bucket.id === view?.done_bucket_id}"
 											icon="check-double"
 											@click.stop="toggleDoneBucket(bucket)"
 										>
@@ -123,7 +123,7 @@
 										</DropdownItem>
 										<DropdownItem
 											v-tooltip="$t('project.kanban.defaultBucketHint')"
-											:icon-class="{'has-text-primary': bucket.id === view?.defaultBucketId}"
+											:icon-class="{'has-text-primary': bucket.id === view?.default_bucket_id}"
 											icon="th"
 											@click.stop="toggleDefaultBucket(bucket)"
 										>
@@ -325,21 +325,19 @@ import {isSavedFilter, useSavedFilter} from '@/services/savedFilter'
 import {useCurrentProject} from '@/composables/useCurrentProject'
 import {useTaskDragToProject} from '@/composables/useTaskDragToProject'
 import {success} from '@/message'
-import {useProjectStore} from '@/stores/projects'
 import type {TaskFilterParams} from '@/services/taskCollection'
-import type {IProjectView} from '@/modelTypes/IProjectView'
+import type {ProjectView} from '@/client/generated'
 import TaskPositionService from '@/services/taskPosition'
 import TaskPositionModel from '@/models/taskPosition'
 import {i18n} from '@/i18n'
-import ProjectViewService from '@/services/projectViews'
-import ProjectViewModel from '@/models/projectView'
+import {createProjectViewDraft, updateProjectView} from '@/client/queries/projectViews'
 import TaskBucketService from '@/services/taskBucket'
 import TaskBucketModel from '@/models/taskBucket'
 
 const props = defineProps<{
 	isLoadingProject: boolean,
 	projectId: number,
-	viewId: IProjectView['id'],
+	viewId: number,
 }>()
 
 const projectId = toRef(props, 'projectId')
@@ -359,7 +357,6 @@ const {t} = useI18n({useScope: 'global'})
 
 const kanbanStore = useKanbanStore()
 const taskStore = useTaskStore()
-const projectStore = useProjectStore()
 const authStore = useAuthStore()
 
 const alwaysShowBucketTaskCount = computed(() => authStore.settings.frontendSettings.alwaysShowBucketTaskCount)
@@ -443,13 +440,12 @@ const bucketDraggableComponentData = computed(() => ({
 		{'dragging-disabled': !canWrite.value},
 	],
 }))
-const project = computed(() => projectId.value ? projectStore.projects[projectId.value] : null)
-const view = computed(() => project.value?.views.find(v => v.id === props.viewId) as IProjectView || null)
-const {currentProject} = useCurrentProject()
+const {currentProject: project} = useCurrentProject()
+const view = computed(() => project.value?.views.find(view => view.id === props.viewId) as ProjectView || null)
 const canWrite = computed(() =>
-	typeof currentProject.value?.max_permission === 'number' &&
-	currentProject.value.max_permission > Permissions.READ &&
-	view.value?.bucketConfigurationMode === 'manual',
+	typeof project.value?.max_permission === 'number' &&
+	project.value.max_permission > Permissions.READ &&
+	view.value?.bucket_configuration_mode === 'manual',
 )
 const canCreateTasks = computed(() => canWrite.value && projectId.value > 0)
 
@@ -859,45 +855,37 @@ function handleTaskDragStart(e) {
 }
 
 async function toggleDefaultBucket(bucket: IBucket) {
-	const defaultBucketId = view.value?.defaultBucketId === bucket.id
+	const currentView = view.value
+	if (!currentView?.id) {
+		return
+	}
+	const defaultBucketId = currentView.default_bucket_id === bucket.id
 		? 0
 		: bucket.id
 
-	const projectViewService = new ProjectViewService()
-	const updatedView = await projectViewService.update(new ProjectViewModel({
-		...view.value,
-		defaultBucketId,
-	}))
-
-	const views = project.value.views.map(v => v.id === view.value?.id ? updatedView : v)
-	const updatedProject = {
-		...project.value,
-		views,
-	}
-
-	projectStore.setProject(updatedProject)
+	await updateProjectView({
+		projectId: projectId.value,
+		viewId: currentView.id,
+		view: createProjectViewDraft({...currentView, default_bucket_id: defaultBucketId}),
+	})
 
 	success({message: t('project.kanban.defaultBucketSavedSuccess')})
 }
 
 async function toggleDoneBucket(bucket: IBucket) {
-	const doneBucketId = view.value?.doneBucketId === bucket.id
+	const currentView = view.value
+	if (!currentView?.id) {
+		return
+	}
+	const doneBucketId = currentView.done_bucket_id === bucket.id
 		? 0
 		: bucket.id
 	
-	const projectViewService = new ProjectViewService()
-	const updatedView = await projectViewService.update(new ProjectViewModel({
-		...view.value,
-		doneBucketId,
-	}))
-
-	const views = project.value.views.map(v => v.id === view.value?.id ? updatedView : v)
-	const updatedProject = {
-		...project.value,
-		views,
-	}
-	
-	projectStore.setProject(updatedProject)
+	await updateProjectView({
+		projectId: projectId.value,
+		viewId: currentView.id,
+		view: createProjectViewDraft({...currentView, done_bucket_id: doneBucketId}),
+	})
 	
 	success({message: t('project.kanban.doneBucketSavedSuccess')})
 }
