@@ -231,6 +231,33 @@ func TestParseFilter(t *testing.T) {
 		assert.Equal(t, taskFilterComparatorNotEquals, result[0].comparator)
 		assert.Equal(t, int64(3), result[0].value)
 	})
+	t.Run("created by resolves to usernames, not an int64 id", func(t *testing.T) {
+		result, err := getTaskFiltersFromFilterString("created_by in 'user1,user6'", "UTC")
+
+		require.NoError(t, err)
+		require.Len(t, result, 1)
+		assert.Equal(t, "created_by", result[0].field)
+		assert.Equal(t, taskFilterComparatorIn, result[0].comparator)
+		assert.Equal(t, []string{"user1", "user6"}, result[0].value)
+	})
+	t.Run("created by usernames are trimmed of surrounding whitespace", func(t *testing.T) {
+		result, err := getTaskFiltersFromFilterString("created_by in 'user1, user6'", "UTC")
+
+		require.NoError(t, err)
+		require.Len(t, result, 1)
+		assert.Equal(t, "created_by", result[0].field)
+		assert.Equal(t, taskFilterComparatorIn, result[0].comparator)
+		assert.Equal(t, []string{"user1", "user6"}, result[0].value)
+	})
+	t.Run("created by usernames drop empty entries from stray commas", func(t *testing.T) {
+		result, err := getTaskFiltersFromFilterString("created_by in 'user1, , user6,'", "UTC")
+
+		require.NoError(t, err)
+		require.Len(t, result, 1)
+		assert.Equal(t, "created_by", result[0].field)
+		assert.Equal(t, taskFilterComparatorIn, result[0].comparator)
+		assert.Equal(t, []string{"user1", "user6"}, result[0].value)
+	})
 	t.Run("less than or equal comparator", func(t *testing.T) {
 		result, err := getTaskFiltersFromFilterString("percent_done <= 50", "UTC")
 

@@ -15,6 +15,7 @@ describe('Filter Transformation', () => {
 		'doneAt': 'done_at',
 		'reminders': 'reminders',
 		'assignees': 'assignees',
+		'createdBy': 'created_by',
 		'labels': 'labels',
 	}
 
