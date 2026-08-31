@@ -1,23 +1,14 @@
 import {shallowMount} from '@vue/test-utils'
 import {describe, expect, it, vi} from 'vitest'
 
-vi.mock('@/stores/projects', () => ({
-	useProjectStore: () => ({
-		projects: {
-			1: {
-				id: 1,
-				title: 'Test',
-				views: [
-					{id: 10, title: 'List', viewKind: 'list'},
-					{id: 11, title: 'Kanban', viewKind: 'kanban'},
-				],
-			},
-		},
-	}),
+import type {ProjectResponse} from '@/client/queries/projects'
+
+const {currentProject} = vi.hoisted(() => ({
+	currentProject: {value: null as ProjectResponse | null},
 }))
 
-vi.mock('@/stores/base', () => ({
-	useBaseStore: () => ({currentProject: null}),
+vi.mock('@/composables/useCurrentProject', () => ({
+	useCurrentProject: () => ({currentProject, isPending: {value: false}}),
 }))
 
 vi.mock('@/stores/viewFilters', () => ({
@@ -49,15 +40,26 @@ function mountWrapper(projectId: number) {
 
 describe('ProjectWrapper', () => {
 	// The task detail modal renders a project view as its backdrop, where the project id can
-	// resolve to NaN – the project is then missing from the store.
-	it('renders when the project is not in the store', () => {
+	// resolve to NaN – the query then has no project to hand out.
+	it('renders when the project is not loaded', () => {
+		currentProject.value = null
+
 		const wrapper = mountWrapper(NaN)
 
 		expect(wrapper.find('.switch-view-container').exists()).toBe(true)
 		expect(wrapper.find('.switch-view').exists()).toBe(false)
 	})
 
-	it('renders the view switcher for a project in the store', () => {
+	it('renders the view switcher for a loaded project', () => {
+		currentProject.value = {
+			id: 1,
+			title: 'Test',
+			views: [
+				{id: 10, title: 'List', view_kind: 'list'},
+				{id: 11, title: 'Kanban', view_kind: 'kanban'},
+			],
+		} as ProjectResponse
+
 		const wrapper = mountWrapper(1)
 
 		expect(wrapper.find('.switch-view').exists()).toBe(true)

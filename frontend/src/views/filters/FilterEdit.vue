@@ -59,10 +59,8 @@ import Filters from '@/components/project/partials/Filters.vue'
 
 import {useSavedFilter} from '@/services/savedFilter'
 
-import type {IProject} from '@/modelTypes/IProject'
-
 const props = defineProps<{
-	projectId: IProject['id'],
+	projectId: number,
 }>()
 
 const {

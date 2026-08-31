@@ -60,27 +60,26 @@ import {computed, ref, watch, onMounted} from 'vue'
 import {useRoute} from 'vue-router'
 
 import {useBaseStore} from '@/stores/base'
-import {useProjectStore} from '@/stores/projects'
 import {useAuthStore} from '@/stores/auth'
+import {useCurrentProject} from '@/composables/useCurrentProject'
+import {queryClient} from '@/client/queryClient'
+import {projectQuery} from '@/client/queries/projects'
 
 import Logo from '@/components/home/Logo.vue'
 import PoweredByLink from './PoweredByLink.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import Card from '@/components/misc/Card.vue'
 import Message from '@/components/misc/Message.vue'
-import {PROJECT_VIEW_KINDS} from '@/modelTypes/IProjectView'
+import {PROJECT_VIEW_KINDS} from '@/constants/projectView'
 
 const baseStore = useBaseStore()
-const projectStore = useProjectStore()
 const authStore = useAuthStore()
 const route = useRoute()
 
-const currentProject = computed(() => baseStore.currentProject)
+const {currentProject} = useCurrentProject()
 const background = computed(() => baseStore.background)
 const logoVisible = computed(() => baseStore.logoVisible)
 const projectLoadError = ref(false)
-
-projectStore.loadAllProjects()
 
 // Ensure project is loaded for link share
 async function ensureProjectLoaded() {
@@ -94,7 +93,7 @@ async function ensureProjectLoaded() {
 		// Load project if not already loaded
 		const projectId = Number(route.params.projectId)
 		if (!currentProject.value || currentProject.value.id !== projectId) {
-			await projectStore.loadProject(projectId)
+			await queryClient.ensureQueryData(projectQuery(projectId))
 		}
 	} catch (e) {
 		console.error('Failed to load project for link share:', e)
@@ -118,7 +117,7 @@ function getProjectRoute() {
 
 	// Default to the first available view or list view
 	const projectId = currentProject.value.id
-	const firstView = projectStore.projects[projectId]?.views?.[0]
+	const firstView = currentProject.value.views[0]
 	
 	if (firstView) {
 		return {
@@ -142,10 +141,12 @@ const isFullWidth = computed(() => {
 		return false
 	}
 
-	const view = projectStore.projects[Number(projectId)]?.views.find(v => v.id === Number(viewId))
+	const view = currentProject.value?.id === Number(projectId)
+		? currentProject.value.views.find(view => view.id === Number(viewId))
+		: undefined
 
-	return view?.viewKind === PROJECT_VIEW_KINDS.KANBAN ||
-		view?.viewKind === PROJECT_VIEW_KINDS.GANTT
+	return view?.view_kind === PROJECT_VIEW_KINDS.KANBAN ||
+		view?.view_kind === PROJECT_VIEW_KINDS.GANTT
 })
 </script>
 

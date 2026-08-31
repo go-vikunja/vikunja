@@ -4,7 +4,7 @@
 		:title="$t('project.edit.header')"
 		primary-icon=""
 		:primary-label="$t('misc.save')"
-		:tertiary="project.maxPermission === PERMISSIONS.ADMIN ? $t('misc.delete') : undefined"
+		:tertiary="project.max_permission === PERMISSIONS.ADMIN ? $t('misc.delete') : undefined"
 		@primary="save"
 		@tertiary="$router.push({ name: 'project.settings.delete', params: { id: projectId } })"
 	>
@@ -48,7 +48,7 @@
 
 			<div class="column">
 				<FormField :label="$t('project.edit.color')">
-					<ColorPicker v-model="project.hexColor" />
+					<ColorPicker v-model="project.hex_color" />
 				</FormField>
 			</div>
 		</div>
@@ -66,29 +66,29 @@ import CreateEdit from '@/components/misc/CreateEdit.vue'
 import FormField from '@/components/input/FormField.vue'
 import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
 
-import type {IProject} from '@/modelTypes/IProject'
+import type {ProjectResponse} from '@/client/queries/projects'
 
 import {useBaseStore} from '@/stores/base'
-import {useProjectStore} from '@/stores/projects'
-import {useProject} from '@/stores/projects'
+import {useProjectNavigation} from '@/composables/useProjectNavigation'
+import {useProject} from '@/composables/useProject'
 
 import {useTitle} from '@/composables/useTitle'
 import {PERMISSIONS} from '@/constants/permissions'
 
 const props = defineProps<{
-	projectId: IProject['id'],
+	projectId: number,
 }>()
 
 defineOptions({name: 'ProjectSettingEdit'})
 
 const router = useRouter()
-const projectStore = useProjectStore()
+const projectStore = useProjectNavigation()
 
 const {t} = useI18n({useScope: 'global'})
 
 const {project, save: saveProject, isLoading} = useProject(() => props.projectId)
 
-const parentProject = ref<IProject | null>(null)
+const parentProject = ref<ProjectResponse | null>(null)
 const isSaving = ref(false)
 
 const loadingModel = computed({
@@ -98,16 +98,12 @@ const loadingModel = computed({
 	},
 })
 watch(
-	() => project.parentProjectId,
-	parentProjectId => {
-		if (parentProjectId) {
-			parentProject.value = projectStore.projects[parentProjectId]
-		}
-	},
+	() => projectStore.projects[project.value.parent_project_id],
+	parent => parentProject.value = parent ?? null,
 	{immediate: true},
 )
 
-useTitle(() => project?.title ? t('project.edit.title', {project: project.title}) : '')
+useTitle(() => project.value.title ? t('project.edit.title', {project: project.value.title}) : '')
 
 async function save() {
 	if (isSaving.value) {
@@ -117,9 +113,9 @@ async function save() {
 	isSaving.value = true
 
 	try {
-		project.parentProjectId = parentProject.value === null ? 0 : (parentProject.value?.id ?? project.parentProjectId)
+		project.value.parent_project_id = parentProject.value?.id ?? 0
 		await saveProject()
-		await useBaseStore().handleSetCurrentProject({project})
+		await useBaseStore().handleSetCurrentProject({project: project.value})
 		router.back()
 	} finally {
 		isSaving.value = false

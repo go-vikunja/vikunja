@@ -9,8 +9,8 @@
 			v-model="project.title"
 			v-focus
 			:label="$t('project.title')"
-			:disabled="projectService.loading"
-			:loading="projectService.loading"
+			:disabled="isSubmitting"
+			:loading="isSubmitting"
 			:placeholder="$t('project.create.titlePlaceholder')"
 			type="text"
 			name="projectTitle"
@@ -25,26 +25,24 @@
 			<ProjectSearch v-model="parentProject" />
 		</FormField>
 		<FormField :label="$t('project.color')">
-			<ColorPicker v-model="project.hexColor" />
+			<ColorPicker v-model="project.hex_color" />
 		</FormField>
 	</CreateEdit>
 </template>
 
 <script setup lang="ts">
-import {ref, reactive, shallowReactive, watch} from 'vue'
+import {ref, reactive, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 
-import ProjectService from '@/services/project'
-import ProjectModel from '@/models/project'
 import CreateEdit from '@/components/misc/CreateEdit.vue'
 import ColorPicker from '@/components/input/ColorPicker.vue'
 import FormField from '@/components/input/FormField.vue'
 
 import {success} from '@/message'
 import {useTitle} from '@/composables/useTitle'
-import {useProjectStore} from '@/stores/projects'
+import {useProjectNavigation} from '@/composables/useProjectNavigation'
 import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
-import type {IProject} from '@/modelTypes/IProject'
+import {createProjectDraft, type ProjectResponse} from '@/client/queries/projects'
 
 const props = defineProps<{
 	parentProjectId?: number,
@@ -55,10 +53,9 @@ const {t} = useI18n({useScope: 'global'})
 useTitle(() => t('project.create.header'))
 
 const showError = ref(false)
-const project = reactive(new ProjectModel())
-const projectService = shallowReactive(new ProjectService())
-const projectStore = useProjectStore()
-const parentProject = ref<IProject | null>(null)
+const project = reactive(createProjectDraft())
+const projectStore = useProjectNavigation()
+const parentProject = ref<ProjectResponse | null>(null)
 const isSubmitting = ref(false)
 
 watch(
@@ -81,7 +78,7 @@ async function createProject() {
 	isSubmitting.value = true
 
 	if (parentProject.value) {
-		project.parentProjectId = parentProject.value.id
+		project.parent_project_id = parentProject.value.id
 	}
 
 	try {

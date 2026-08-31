@@ -326,12 +326,12 @@ import {formatDisplayDateFormat} from '@/helpers/time/formatDate'
 
 import {useTitle} from '@/composables/useTitle'
 
-import {useProjectStore} from '@/stores/projects'
+import {useProjectNavigation} from '@/composables/useProjectNavigation'
 import {useAuthStore} from '@/stores/auth'
 import {useConfigStore} from '@/stores/config'
 import type {IUserSettings} from '@/modelTypes/IUserSettings'
-import {isSavedFilter} from '@/services/savedFilter'
-import {DEFAULT_PROJECT_VIEW_SETTINGS} from '@/modelTypes/IProjectView'
+import {isSavedFilterProject} from '@/client/queries/projects'
+import {DEFAULT_PROJECT_VIEW_SETTINGS} from '@/constants/projectView'
 import {PRIORITIES} from '@/constants/priorities'
 import {DATE_DISPLAY} from '@/constants/dateDisplay'
 import {TIME_FORMAT} from '@/constants/timeFormat'
@@ -578,20 +578,20 @@ watch(
 	{immediate: true},
 )
 
-const projectStore = useProjectStore()
+const projectNavigation = useProjectNavigation()
 const defaultProject = computed({
-	get: () => projectStore.projects[settings.value.defaultProjectId],
+	get: () => projectNavigation.projects[settings.value.defaultProjectId],
 	set(l) {
 		settings.value.defaultProjectId = l ? l.id : DEFAULT_PROJECT_ID
 	},
 })
 const filterUsedInOverview = computed({
-	get: () => projectStore.projects[settings.value.frontendSettings.filterIdUsedOnOverview],
+	get: () => projectNavigation.projects[settings.value.frontendSettings.filterIdUsedOnOverview],
 	set(l) {
 		settings.value.frontendSettings.filterIdUsedOnOverview = l ? l.id : null
 	},
 })
-const hasFilters = computed(() => typeof projectStore.projectsArray.find(p => isSavedFilter(p)) !== 'undefined')
+const hasFilters = computed(() => projectNavigation.projectsArray.some(isSavedFilterProject))
 const loading = computed(() => authStore.isLoadingGeneralSettings)
 
 async function updateSettings() {
