@@ -181,7 +181,7 @@ func TestSetNewTaskIndexes(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
-		defer s.Rollback()
+		defer func() { _ = s.Rollback() }()
 
 		err := setNewTaskIndexes(s, 4, []*Task{{Index: math.MaxInt64}, {}})
 		require.ErrorContains(t, err, "exhausted")
@@ -200,7 +200,7 @@ func TestSetNewTaskIndexes(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
-		defer s.Rollback()
+		defer func() { _ = s.Rollback() }()
 		_, err := s.ID(4).Cols("last_index").Update(&ProjectTaskCounter{LastIndex: math.MaxInt64})
 		require.NoError(t, err)
 
