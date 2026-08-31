@@ -20,6 +20,7 @@ import Message from '@/components/misc/Message.vue'
 import draggable from 'zhyswan-vuedraggable'
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 import {useProject} from '@/composables/useProject'
+import ErrorMessage from '@/components/misc/Error.vue'
 
 const props = defineProps<{
 	projectId: number
@@ -27,7 +28,8 @@ const props = defineProps<{
 
 const {t} = useI18n()
 const query = useQuery(computed(() => projectViewsQuery(props.projectId)))
-const {project} = useProject(() => props.projectId)
+const {project, error: projectError} = useProject(() => props.projectId)
+const loadError = computed(() => projectError.value ?? query.error.value)
 
 const views = ref<ProjectView[]>([])
 watch(
@@ -152,94 +154,97 @@ async function saveViewPosition(e: {newIndex: number}) {
 		:primary-label="$t('misc.save')"
 		:has-primary-action="false"
 	>
-		<ViewEditForm
-			v-if="showCreateForm"
-			v-model="newView"
-			class="mbe-4"
-		/>
-		<div
-			v-if="isAdmin"
-			class="is-flex is-justify-content-end mbe-4"
-		>
-			<XButton
-				:loading="isLoading"
-				:disabled="showCreateForm && newView.title === ''"
-				@click="createView"
+		<ErrorMessage v-if="loadError" />
+		<template v-else>
+			<ViewEditForm
+				v-if="showCreateForm"
+				v-model="newView"
+				class="mbe-4"
+			/>
+			<div
+				v-if="isAdmin"
+				class="is-flex is-justify-content-end mbe-4"
 			>
-				{{ $t('project.views.create') }}
-			</XButton>
-		</div>
-
-		<Message v-if="!isAdmin">
-			{{ $t('project.views.onlyAdminsCanEdit') }}
-		</Message>
-
-		<div
-			v-if="views?.length > 0"
-			class="has-horizontal-overflow"
-		>
-			<table class="table has-actions is-striped is-hoverable is-fullwidth">
-				<thead>
-					<tr>
-						<th>{{ $t('project.views.title') }}</th>
-						<th>{{ $t('project.views.kind') }}</th>
-						<th class="has-text-end">
-							{{ $t('project.views.actions') }}
-						</th>
-					</tr>
-				</thead>
-				<draggable
-					v-model="views"
-					tag="tbody"
-					item-key="id"
-					handle=".handle"
-					:animation="100"
-					@end="saveViewPosition"
+				<XButton
+					:loading="isLoading"
+					:disabled="showCreateForm && newView.title === ''"
+					@click="createView"
 				>
-					<template #item="{element: v}">
+					{{ $t('project.views.create') }}
+				</XButton>
+			</div>
+
+			<Message v-if="!isAdmin">
+				{{ $t('project.views.onlyAdminsCanEdit') }}
+			</Message>
+
+			<div
+				v-if="views?.length > 0"
+				class="has-horizontal-overflow"
+			>
+				<table class="table has-actions is-striped is-hoverable is-fullwidth">
+					<thead>
 						<tr>
-							<template v-if="viewToEdit !== null && viewToEdit.id === v.id">
-								<td colspan="3">
-									<ViewEditForm
-										v-model="viewToEdit"
-										class="mbe-4"
-										:loading="isLoading"
-										:show-save-buttons="true"
-										@cancel="viewToEdit = null"
-										@update:modelValue="saveView"
-									/>
-								</td>
-							</template>
-							<template v-else>
-								<td>{{ v.title }}</td>
-								<td>{{ v.view_kind }}</td>
-								<td class="has-text-end actions">
-									<XButton
-										v-if="isAdmin"
-										class="is-danger mie-2"
-										:aria-label="$t('project.views.delete')"
-										icon="trash-alt"
-										@click="() => {
-											viewIdToDelete = v.id ?? null
-											showDeleteModal = true
-										}"
-									/>
-									<XButton
-										v-if="isAdmin"
-										icon="pen"
-										:aria-label="$t('project.views.edit')"
-										@click="viewToEdit = {...v}"
-									/>
-									<span class="icon handle">
-										<Icon icon="grip-lines" />
-									</span>
-								</td>
-							</template>
+							<th>{{ $t('project.views.title') }}</th>
+							<th>{{ $t('project.views.kind') }}</th>
+							<th class="has-text-end">
+								{{ $t('project.views.actions') }}
+							</th>
 						</tr>
-					</template>
-				</draggable>
-			</table>
-		</div>
+					</thead>
+					<draggable
+						v-model="views"
+						tag="tbody"
+						item-key="id"
+						handle=".handle"
+						:animation="100"
+						@end="saveViewPosition"
+					>
+						<template #item="{element: v}">
+							<tr>
+								<template v-if="viewToEdit !== null && viewToEdit.id === v.id">
+									<td colspan="3">
+										<ViewEditForm
+											v-model="viewToEdit"
+											class="mbe-4"
+											:loading="isLoading"
+											:show-save-buttons="true"
+											@cancel="viewToEdit = null"
+											@update:modelValue="saveView"
+										/>
+									</td>
+								</template>
+								<template v-else>
+									<td>{{ v.title }}</td>
+									<td>{{ v.view_kind }}</td>
+									<td class="has-text-end actions">
+										<XButton
+											v-if="isAdmin"
+											class="is-danger mie-2"
+											:aria-label="$t('project.views.delete')"
+											icon="trash-alt"
+											@click="() => {
+												viewIdToDelete = v.id ?? null
+												showDeleteModal = true
+											}"
+										/>
+										<XButton
+											v-if="isAdmin"
+											icon="pen"
+											:aria-label="$t('project.views.edit')"
+											@click="viewToEdit = {...v}"
+										/>
+										<span class="icon handle">
+											<Icon icon="grip-lines" />
+										</span>
+									</td>
+								</template>
+							</tr>
+						</template>
+					</draggable>
+				</table>
+			</div>
+		</template>
 	</CreateEdit>
 
 	<Modal
