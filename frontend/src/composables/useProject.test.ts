@@ -62,11 +62,12 @@ describe('useProject', () => {
 	})
 
 	it('settles the loading state when the detail query fails', async () => {
+		const data = ref<ReturnType<typeof normalizeProject> | undefined>(undefined)
 		const error = ref<Error | null>(null)
 		const isError = ref(false)
 		const isFetching = ref(true)
 		useQuery.mockReturnValue({
-			data: ref(undefined),
+			data,
 			isFetching,
 			isError,
 			error,
@@ -82,6 +83,13 @@ describe('useProject', () => {
 
 		expect(state.value.isLoading.value).toBe(false)
 		expect(state.value.error.value).toBe(error.value)
+
+		data.value = normalizeProject({id: 1, title: 'Recovered'})
+		error.value = null
+		isError.value = false
+		await nextTick()
+
+		expect(state.value.project.value.title).toBe('Recovered')
 		wrapper.unmount()
 	})
 })
