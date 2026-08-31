@@ -206,7 +206,7 @@ import CSVMigrationService, {
 } from '@/services/migrator/csvMigration'
 
 import {useTitle} from '@/composables/useTitle'
-import {useProjectStore} from '@/stores/projects'
+import {refreshProjects} from '@/client/queries/projects'
 import {getErrorText} from '@/message'
 
 type Step = 'upload' | 'mapping' | 'success'
@@ -356,9 +356,7 @@ async function performImport() {
 		const result = await csvService.migrate(selectedFile.value, config.value)
 		successMessage.value = result.message
 
-		// Reload projects
-		const projectStore = useProjectStore()
-		await projectStore.loadAllProjects()
+		await refreshProjects()
 
 		step.value = 'success'
 	} catch (e) {
