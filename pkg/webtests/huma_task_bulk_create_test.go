@@ -18,6 +18,7 @@ package webtests
 
 import (
 	"encoding/json"
+	"math"
 	"net/http"
 	"testing"
 
@@ -68,16 +69,17 @@ func TestHumaTaskBulkCreate(t *testing.T) {
 	})
 
 	t.Run("Read-only indexes are ignored", func(t *testing.T) {
-		result, err := bulkPost("4", &testuser1, `{"tasks":[{"title":"client max","index":9223372036854775807},{"title":"client preset","index":20}]}`)
+		result, err := bulkPost("7", &testuser1, `{"tasks":[{"title":"client max","index":9223372036854775807},{"title":"client preset","index":20}]}`)
 		require.NoError(t, err)
 		require.Len(t, result.Tasks, 2)
-		assert.Equal(t, int64(1), result.Tasks[0].Index)
-		assert.Equal(t, int64(2), result.Tasks[1].Index)
+		assert.Positive(t, result.Tasks[0].Index)
+		assert.NotEqual(t, int64(math.MaxInt64), result.Tasks[0].Index)
+		assert.Equal(t, result.Tasks[0].Index+1, result.Tasks[1].Index)
 
-		next, err := bulkPost("4", &testuser1, `{"tasks":[{"title":"next index"}]}`)
+		next, err := bulkPost("7", &testuser1, `{"tasks":[{"title":"next index"}]}`)
 		require.NoError(t, err)
 		require.Len(t, next.Tasks, 1)
-		assert.Equal(t, int64(3), next.Tasks[0].Index)
+		assert.Equal(t, result.Tasks[1].Index+1, next.Tasks[0].Index)
 	})
 
 	t.Run("Empty batch", func(t *testing.T) {

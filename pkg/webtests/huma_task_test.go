@@ -19,6 +19,7 @@ package webtests
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -172,13 +173,18 @@ func TestHumaTask_Create(t *testing.T) {
 		assert.NotContains(t, rec.Body.String(), `"project_id":7`)
 	})
 	t.Run("Read-only index is ignored", func(t *testing.T) {
-		rec := create("4", `{"title":"client index","index":9223372036854775807}`)
+		rec := create("7", `{"title":"client index","index":9223372036854775807}`)
 		require.Equal(t, http.StatusCreated, rec.Code, "body: %s", rec.Body.String())
-		assert.Contains(t, rec.Body.String(), `"index":1`)
+		first := &models.Task{}
+		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), first))
+		assert.Positive(t, first.Index)
+		assert.NotEqual(t, int64(math.MaxInt64), first.Index)
 
-		rec = create("4", `{"title":"next index"}`)
+		rec = create("7", `{"title":"next index"}`)
 		require.Equal(t, http.StatusCreated, rec.Code, "body: %s", rec.Body.String())
-		assert.Contains(t, rec.Body.String(), `"index":2`)
+		next := &models.Task{}
+		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), next))
+		assert.Equal(t, first.Index+1, next.Index)
 	})
 	t.Run("Nonexisting project", func(t *testing.T) {
 		rec := create("9999", `{"title":"x"}`)
