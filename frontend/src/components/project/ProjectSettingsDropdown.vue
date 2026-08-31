@@ -132,7 +132,7 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import Dropdown from '@/components/misc/Dropdown.vue'
 import DropdownItem from '@/components/misc/DropdownItem.vue'
 import Subscription from '@/components/misc/Subscription.vue'
-import type {Project, Subscription as ProjectSubscription} from '@/client/generated'
+import type {Project} from '@/client/generated'
 import type {ISubscription} from '@/modelTypes/ISubscription'
 import SubscriptionModel from '@/models/subscription'
 
@@ -166,24 +166,9 @@ watchEffect(() => {
 const configStore = useConfigStore()
 const backgroundsEnabled = computed(() => configStore.enabledBackgroundProviders?.length > 0)
 
-function toProjectSubscription(sub: ISubscription | null): ProjectSubscription | undefined {
-	return sub
-		? {
-			id: sub.id,
-			entity: sub.entity as ProjectSubscription['entity'],
-			entity_id: sub.entityId,
-			created: sub.created?.toISOString(),
-		}
-		: undefined
-}
-
-function setSubscriptionInStore(sub: ISubscription | null) {
+async function setSubscriptionInStore(sub: ISubscription | null) {
 	subscription.value = sub
-	const updatedProject = {
-		...props.project,
-		subscription: toProjectSubscription(sub),
-	}
-	projectStore.setProject(updatedProject)
+	await projectStore.invalidateProjects()
 }
 
 const authStore = useAuthStore()

@@ -231,6 +231,10 @@ export function refreshProjects(args: ProjectListArgs = defaultProjectListArgs):
 	return queryClient.fetchQuery({...projectsQuery(args), staleTime: 0})
 }
 
+export function invalidateProjects(): Promise<void> {
+	return queryClient.invalidateQueries({queryKey: projectKeys.all})
+}
+
 export function getProjectById(projects: readonly ProjectResponse[], id: number): ProjectResponse | undefined {
 	return projects.find(project => project.id === id)
 }

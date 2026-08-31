@@ -40,6 +40,7 @@ import {
 	getFavoriteNavigationItems,
 	getProjectAncestors,
 	getRootProjects,
+	invalidateProjects,
 	normalizeProject,
 	projectKeys,
 	projectQuery,
@@ -90,6 +91,27 @@ describe('project queries', () => {
 		expect(projectKeys.details()).toEqual(['projects', 'detail'])
 		expect(projectKeys.detail(42)).toEqual(['projects', 'detail', 42, 'html'])
 		expect(projectKeys.detail(42, 'markdown')).toEqual(['projects', 'detail', 42, 'markdown'])
+	})
+
+	it('invalidates every project list and detail cache', async () => {
+		const projectQueryKeys = [
+			projectKeys.list(),
+			projectKeys.list(listArgs),
+			projectKeys.detail(1),
+			projectKeys.detail(2, 'markdown'),
+		]
+		const unrelatedQueryKey = ['tasks', 'list'] as const
+
+		for (const queryKey of [...projectQueryKeys, unrelatedQueryKey]) {
+			queryClient.setQueryData(queryKey, {})
+		}
+
+		await invalidateProjects()
+
+		for (const queryKey of projectQueryKeys) {
+			expect(queryClient.getQueryState(queryKey)?.isInvalidated).toBe(true)
+		}
+		expect(queryClient.getQueryState(unrelatedQueryKey)?.isInvalidated).toBe(false)
 	})
 
 	it('loads every page and partitions pseudo projects from real projects', async () => {
