@@ -16,27 +16,27 @@
 				v-focus
 				:label="$t('filters.attributes.title')"
 				:class="{ 'is-danger': !titleValid }"
-				:disabled="filterService.loading"
+				:disabled="isLoading"
 				:placeholder="$t('filters.attributes.titlePlaceholder')"
 				type="text"
 				:error="titleValid ? null : $t('filters.create.titleRequired')"
-				@focusout="validateTitleField"
+				@focusout="markTitleTouched"
 			/>
 			<FormField :label="$t('filters.attributes.description')">
 				<Editor
 					id="description"
 					:key="filter.id"
 					v-model="filter.description"
-					:class="{ 'disabled': filterService.loading}"
-					:disabled="filterService.loading"
+					:class="{ 'disabled': isLoading}"
+					:disabled="isLoading"
 					:placeholder="$t('filters.attributes.descriptionPlaceholder')"
 				/>
 			</FormField>
 			<FormField :label="$t('filters.title')">
 				<Filters
-					v-model="filters"
-					:class="{ 'disabled': filterService.loading}"
-					:disabled="filterService.loading"
+					v-model="filter.filters"
+					:class="{ 'disabled': isLoading}"
+					:disabled="isLoading"
 					class="has-no-shadow has-no-border"
 					:has-footer="false"
 					:change-immediately="true"
@@ -45,10 +45,10 @@
 
 			<template #footer>
 				<XButton
-					:loading="filterService.loading"
-					:disabled="filterService.loading || !titleValid"
+					:loading="isLoading"
+					:disabled="isLoading || !titleValid"
 					class="is-fullwidth"
-					@click="createFilterWithValidation()"
+					@click="create()"
 				>
 					{{ $t('filters.create.action') }}
 				</XButton>
@@ -58,18 +58,47 @@
 </template>
 
 <script setup lang="ts">
+import {useRouter} from 'vue-router'
+
 import Editor from '@/components/input/AsyncEditor'
 import FormField from '@/components/input/FormField.vue'
 import Filters from '@/components/project/partials/Filters.vue'
 
-import {useSavedFilter} from '@/services/savedFilter'
+import {getProjectIdFromSavedFilterId} from '@/client/queries/projects'
+import {useIsAlive} from '@/composables/useIsAlive'
+import {useSavedFilterDraft} from '@/composables/useSavedFilter'
+import {useCreateSavedFilterMutation} from '@/client/queries/savedFilters'
+
+const router = useRouter()
+
+const alive = useIsAlive()
 
 const {
 	filter,
-	filters,
-	createFilterWithValidation,
-	filterService,
+	validate,
 	titleValid,
-	validateTitleField,
-} = useSavedFilter()
+	markTitleTouched,
+} = useSavedFilterDraft()
+const createMutation = useCreateSavedFilterMutation(() => alive.value)
+const isLoading = createMutation.isPending
+
+async function create() {
+	if (isLoading.value) {
+		return
+	}
+	const payload = validate()
+	if (!payload) {
+		return
+	}
+	const created = await createMutation.mutateAsync(payload).catch(() => undefined)
+	if (!alive.value) {
+		return
+	}
+	if (created) {
+		await router.push({
+			name: 'project.index',
+			params: {projectId: getProjectIdFromSavedFilterId(created.id)},
+		})
+	}
+}
 </script>

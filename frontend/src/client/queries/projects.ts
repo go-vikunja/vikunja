@@ -230,6 +230,10 @@ export function getSavedFilterIdFromProjectId(projectId: number): number {
 	return Math.max(0, projectId * -1 - 1)
 }
 
+export function getProjectIdFromSavedFilterId(savedFilterId: number): number {
+	return savedFilterId > 0 ? savedFilterId * -1 - 1 : 0
+}
+
 export function isSavedFilterProject(project: Pick<Project, 'id'> | null | undefined): boolean {
 	return getSavedFilterIdFromProjectId(project?.id ?? 0) > 0
 }
@@ -539,46 +543,6 @@ export function duplicateProjectMutationOptions() {
 	})
 }
 
-export function legacySavedFilterFavoriteMutationOptions() {
-	return mutationOptions({
-		mutationFn: async ({id, isFavorite}: {id: number; isFavorite: boolean}) => {
-			const request = captureClientRequestContext()
-			const [{default: SavedFilterService}, {default: SavedFilterModel}] = await Promise.all([
-				import('@/services/savedFilter'),
-				import('@/models/savedFilter'),
-			])
-			assertClientRequestContext(request)
-			const service = new SavedFilterService()
-			const filter = await service.get(new SavedFilterModel({id}))
-			assertClientRequestContext(request)
-			filter.isFavorite = isFavorite
-			const updated = await service.update(filter)
-			assertClientRequestContext(request)
-			return updated
-		},
-		onMutate: async ({id, isFavorite}, {client}) => {
-			const snapshot = await snapshotProjects(client)
-			client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
-				current ? mapProjectNavigationItem(current, -id - 1, project => ({...project, is_favorite: isFavorite})) : current,
-			)
-			return snapshot
-		},
-		onError: (_error, _input, context, {client}) => restoreProjects(client, context),
-		onSuccess: (updated, {id}, context, {client}) => {
-			assertClientRequestContext(context.request)
-			client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
-				current ? mapProjectNavigationItem(current, -id - 1, project => ({...project, is_favorite: updated.isFavorite})) : current,
-			)
-		},
-		onSettled: async (_data, _error, _input, context, {client}) => {
-			if (context && isClientRequestContextCurrent(context.request)) {
-				await client.invalidateQueries({queryKey: projectKeys.list()})
-				assertClientRequestContext(context.request)
-			}
-		},
-	})
-}
-
 export function useCreateProjectMutation() {
 	return useMutation(createProjectMutationOptions())
 }
@@ -601,8 +565,4 @@ export function useDeleteProjectMutation() {
 
 export function useDuplicateProjectMutation() {
 	return useMutation(duplicateProjectMutationOptions())
-}
-
-export function useLegacySavedFilterFavoriteMutation() {
-	return useMutation(legacySavedFilterFavoriteMutationOptions())
 }
