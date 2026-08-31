@@ -2,13 +2,12 @@ import AbstractModel from './abstractModel'
 import TaskModel from '@/models/task'
 import UserModel from '@/models/user'
 import SubscriptionModel from '@/models/subscription'
-import ProjectViewModel from '@/models/projectView'
 
 import type {IProject} from '@/modelTypes/IProject'
 import type {IUser} from '@/modelTypes/IUser'
 import type {ITask} from '@/modelTypes/ITask'
 import type {ISubscription} from '@/modelTypes/ISubscription'
-import type { IProjectView } from '@/modelTypes/IProjectView'
+import type {ProjectView} from '@/client/generated'
 
 export default class ProjectModel extends AbstractModel<IProject> implements IProject {
 	id = 0
@@ -25,7 +24,7 @@ export default class ProjectModel extends AbstractModel<IProject> implements IPr
 	position = 0
 	backgroundBlurHash = ''
 	parentProjectId = 0
-	views: IProjectView[] = []
+	views: ProjectView[] = []
 	
 	created: Date = null
 	updated: Date = null
@@ -48,8 +47,6 @@ export default class ProjectModel extends AbstractModel<IProject> implements IPr
 		if (typeof this.subscription !== 'undefined' && this.subscription !== null) {
 			this.subscription = new SubscriptionModel(this.subscription)
 		}
-		
-		this.views = this.views.map(v => new ProjectViewModel(v))
 		
 		this.created = new Date(this.created)
 		this.updated = new Date(this.updated)

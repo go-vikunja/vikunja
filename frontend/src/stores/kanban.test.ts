@@ -1,12 +1,26 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest'
 import {createPinia, setActivePinia} from 'pinia'
 
-const {bucketUpdate} = vi.hoisted(() => ({bucketUpdate: vi.fn()}))
+const {bucketUpdate, bucketDelete, loadBuckets, refreshProjects, refreshProject} = vi.hoisted(() => ({
+	bucketUpdate: vi.fn(),
+	bucketDelete: vi.fn(),
+	loadBuckets: vi.fn(),
+	refreshProjects: vi.fn(),
+	refreshProject: vi.fn(),
+}))
 
 vi.mock('@/services/bucket', () => ({
 	default: class {
 		update = bucketUpdate
+		delete = bucketDelete
 	},
+}))
+
+vi.mock('@/services/taskCollection', () => ({default: class {getAll = loadBuckets}}))
+vi.mock('@/client/queries/projects', async importOriginal => ({
+	...await importOriginal<typeof import('@/client/queries/projects')>(),
+	refreshProjects,
+	refreshProject,
 }))
 
 vi.mock('vue-router', () => ({
@@ -36,9 +50,10 @@ vi.mock('@/stores/auth', () => ({
 }))
 
 import {useKanbanStore} from './kanban'
+import {useBaseStore} from '@/stores/base'
 
 import {queryClient} from '@/client/queryClient'
-import {projectKeys, type ProjectListResult} from '@/client/queries/projects'
+import {normalizeProject, projectKeys, type ProjectListResult} from '@/client/queries/projects'
 import type {IBucket} from '@/modelTypes/IBucket'
 import type {ITask} from '@/modelTypes/ITask'
 
@@ -59,6 +74,77 @@ function makeTask(id: number, bucketId: number): ITask {
 		bucketId,
 	} as ITask
 }
+
+describe('kanban store: synchronous project reads', () => {
+	beforeEach(() => {
+		setActivePinia(createPinia())
+		queryClient.clear()
+		useBaseStore().currentProjectId = 0
+		useBaseStore().currentProjectViewId = 2
+	})
+
+	it('does not subscribe to project queries during store setup', () => {
+		useKanbanStore()
+		expect(queryClient.getQueryCache().getAll()).toEqual([])
+	})
+
+	it('uses the current project cache on each synchronous bucket-placement call', () => {
+		const kanban = useKanbanStore()
+		useBaseStore().currentProjectId = 1
+		queryClient.setQueryData(projectKeys.detail(1), normalizeProject({id: 1, views: [{id: 2, default_bucket_id: 3, done_bucket_id: 4}]}))
+		kanban.setBuckets([makeBucket(3, 'Default'), makeBucket(4, 'Done')])
+		const task = {...makeTask(9, 3), done: true}
+		kanban.addTaskToBucket(task)
+
+		expect(kanban.ensureTaskIsInCorrectBucket(task)).toBeUndefined()
+		expect(kanban.buckets[1].tasks[0].id).toBe(9)
+
+		queryClient.setQueryData(projectKeys.detail(1), normalizeProject({id: 1, views: [{id: 2, default_bucket_id: 3, done_bucket_id: 4}]}))
+		task.done = false
+		kanban.ensureTaskIsInCorrectBucket(task)
+		expect(kanban.buckets[0].tasks[0].id).toBe(9)
+	})
+})
+
+describe('kanban store: deleteBucket', () => {
+	beforeEach(() => {
+		setActivePinia(createPinia())
+		queryClient.clear()
+		bucketDelete.mockReset().mockResolvedValue(undefined)
+		loadBuckets.mockReset().mockResolvedValue([])
+		refreshProject.mockReset().mockResolvedValue(undefined)
+		refreshProjects.mockReset().mockResolvedValue(undefined)
+	})
+
+	it.each([
+		{defaultBucket: 5, doneBucket: 0, refresh: true},
+		{defaultBucket: 0, doneBucket: 5, refresh: true},
+		{defaultBucket: 1, doneBucket: 2, refresh: false},
+	])('refreshes the project only when deleting a configured bucket: %j', async ({defaultBucket, doneBucket, refresh}) => {
+		const project = normalizeProject({id: 1, views: [{
+			id: 2,
+			project_id: 1,
+			default_bucket_id: defaultBucket,
+			done_bucket_id: doneBucket,
+		}]})
+		queryClient.setQueryData<ProjectListResult>(projectKeys.list(), {
+			projects: [project], favoriteProject: null, savedFilterProjects: [],
+		})
+		const kanban = useKanbanStore()
+		const bucket = {...makeBucket(5, 'Delete'), projectId: 1, projectViewId: 2}
+		kanban.setBuckets([bucket])
+
+		await kanban.deleteBucket({bucket, params: {}})
+
+		expect(bucketDelete).toHaveBeenCalledWith(bucket)
+		expect(refreshProject).toHaveBeenCalledTimes(Number(refresh))
+		expect(refreshProjects).toHaveBeenCalledTimes(Number(refresh))
+		if (refresh) {
+			expect(refreshProject).toHaveBeenCalledWith(1)
+		}
+		expect(loadBuckets).toHaveBeenCalledOnce()
+	})
+})
 
 describe('kanban store: moveTaskToBucket', () => {
 	beforeEach(() => {

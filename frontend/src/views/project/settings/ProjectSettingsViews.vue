@@ -1,32 +1,37 @@
 <script setup lang="ts">
 import CreateEdit from '@/components/misc/CreateEdit.vue'
-import {watch, ref, shallowReactive} from 'vue'
-import {useProjectStore} from '@/stores/projects'
-import ProjectViewModel from '@/models/projectView'
-import type {IProjectView} from '@/modelTypes/IProjectView'
+import {computed, watch, ref} from 'vue'
+import type {ProjectView} from '@/client/generated'
+import {
+	createProjectViewDraft,
+	createProjectViewUpdate,
+	useCreateProjectViewMutation,
+	useDeleteProjectViewMutation,
+	useUpdateProjectViewMutation,
+	type ProjectViewDraft,
+} from '@/client/queries/projectViews'
 import ViewEditForm from '@/components/project/views/ViewEditForm.vue'
-import ProjectViewService from '@/services/projectViews'
 import XButton from '@/components/input/Button.vue'
-import {error, success} from '@/message'
-import {useI18n} from 'vue-i18n'
-import ProjectService from '@/services/project'
 import {PERMISSIONS} from '@/constants/permissions'
-import ProjectModel from '@/models/project'
 import Message from '@/components/misc/Message.vue'
 import draggable from 'zhyswan-vuedraggable'
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
-import {refreshProject, refreshProjects} from '@/client/queries/projects'
+import {useProject} from '@/composables/useProject'
+import {useProjectViews} from '@/composables/useProjectViews'
+import ErrorMessage from '@/components/misc/Error.vue'
 
 const props = defineProps<{
 	projectId: number
 }>()
 
-const projectStore = useProjectStore()
-const {t} = useI18n()
+const query = useProjectViews(() => props.projectId)
+// useProject snapshots its project, which suits the permission check but would freeze the table.
+const {project, error: projectError} = useProject(() => props.projectId)
+const loadError = computed(() => projectError.value ?? query.error.value)
 
-const views = ref<IProjectView[]>([])
+const views = ref<ProjectView[]>([])
 watch(
-	() => projectStore.projects[props.projectId]?.views || [],
+	query.views,
 	allViews => {
 		views.value = [...allViews]
 	},
@@ -38,22 +43,33 @@ watch(
 
 const showCreateForm = ref(false)
 
-const projectViewService = shallowReactive(new ProjectViewService())
-const newView = ref<IProjectView>(ProjectViewModel.createWithDefaultFilter())
+type EditableProjectView = ProjectViewDraft & Pick<ProjectView, 'id' | 'project_id'>
+const createNewView = (): EditableProjectView => ({
+	...createProjectViewDraft(),
+	project_id: props.projectId,
+})
+const newView = ref<EditableProjectView>(createNewView())
 const viewIdToDelete = ref<number | null>(null)
 const showDeleteModal = ref(false)
-const viewToEdit = ref<IProjectView | null>(null)
+const viewToEdit = ref<ProjectView | null>(null)
 
-const isAdmin = ref<boolean>(false)
-watch(
-	() => props.projectId,
-	async () => {
-		const projectService = new ProjectService()
-		const project = await projectService.get(new ProjectModel({id: props.projectId}))
-		isAdmin.value = project.maxPermission === PERMISSIONS.ADMIN
-	},
-	{immediate: true},
-)
+const isCurrentProject = ({projectId}: {projectId: number}) => props.projectId === projectId
+const create = useCreateProjectViewMutation(isCurrentProject)
+const update = useUpdateProjectViewMutation(undefined, isCurrentProject)
+const remove = useDeleteProjectViewMutation(isCurrentProject)
+
+const isSaving = computed(() => update.isPending.value)
+const isLoading = computed(() => query.isPending.value || create.isPending.value)
+
+watch(() => props.projectId, () => {
+	showCreateForm.value = false
+	newView.value = createNewView()
+	viewIdToDelete.value = null
+	showDeleteModal.value = false
+	viewToEdit.value = null
+})
+
+const isAdmin = computed(() => project.value?.max_permission === PERMISSIONS.ADMIN)
 
 async function createView() {
 	if (!showCreateForm.value) {
@@ -65,66 +81,88 @@ async function createView() {
 		return
 	}
 
+	const projectId = props.projectId
 	try {
-		newView.value.bucketConfigurationMode = newView.value.viewKind === 'kanban'
-			? newView.value.bucketConfigurationMode
+		newView.value.bucket_configuration_mode = newView.value.view_kind === 'kanban'
+			? newView.value.bucket_configuration_mode
 			: 'none'
-		newView.value.projectId = props.projectId
 
-		const result: IProjectView = await projectViewService.create(newView.value)
-		success({message: t('project.views.createSuccess')})
+		await create.mutateAsync({projectId, view: newView.value})
+		if (props.projectId !== projectId) {
+			return
+		}
 		showCreateForm.value = false
-		projectStore.setProjectView(result)
-		await Promise.all([refreshProject(props.projectId), refreshProjects()])
-		newView.value = new ProjectViewModel({})
-	} catch (e) {
-		error(e)
+		newView.value = createNewView()
+	} catch {
+		// Mutation callbacks report errors for the current project.
 	}
 }
 
-async function deleteView(viewId: number) {
+async function deleteView(viewId: number | null) {
 	if (!viewId) {
 		return
 	}
 
-	await projectViewService.delete(new ProjectViewModel({
-		id: viewId,
-		projectId: props.projectId,
-	}))
-
-	projectStore.removeProjectView(props.projectId, viewId)
-	await Promise.all([refreshProject(props.projectId), refreshProjects()])
-
-	showDeleteModal.value = false
-}
-
-async function saveView(view: IProjectView) {
-	if (view?.viewKind !== 'kanban') {
-		view.bucketConfigurationMode = 'none'
+	const projectId = props.projectId
+	try {
+		await remove.mutateAsync({projectId, viewId})
+		if (props.projectId !== projectId) {
+			return
+		}
+		showDeleteModal.value = false
+	} catch {
+		// Keep the delete dialog open when the request fails.
 	}
-	const result = await projectViewService.update(view)
-	projectStore.setProjectView(result)
-	await Promise.all([refreshProject(props.projectId), refreshProjects()])
-	viewToEdit.value = null
-	success({message: t('project.views.updateSuccess')})
 }
 
-async function saveViewPosition(e) {
+async function saveView(view: ProjectView) {
+	if (!view.id) {
+		return
+	}
+	const updated = createProjectViewUpdate(view)
+	if (updated.view_kind !== 'kanban') {
+		updated.bucket_configuration_mode = 'none'
+	}
+
+	const projectId = props.projectId
+	try {
+		await update.mutateAsync({
+			projectId,
+			viewId: view.id,
+			view: updated,
+		})
+		if (props.projectId !== projectId) {
+			return
+		}
+		viewToEdit.value = null
+	} catch {
+		// Keep the edit form open when the request fails.
+	}
+}
+
+async function saveViewPosition(e: {newIndex: number}) {
 	const view = views.value[e.newIndex]
+	if (!view?.id) {
+		return
+	}
 	const viewBefore = views.value[e.newIndex - 1]
 	const viewAfter = views.value[e.newIndex + 1]
-	
+
 	const position = calculateItemPosition(
 		viewBefore?.position,
 		viewAfter?.position,
 	)
-	const result = await projectViewService.update({
-		...view,
-		position,
-	})
-	projectStore.setProjectView(result)
-	await Promise.all([refreshProject(props.projectId), refreshProjects()])
-	success({message: t('project.views.updateSuccess')})
+
+	const projectId = props.projectId
+	try {
+		await update.mutateAsync({
+			projectId,
+			viewId: view.id,
+			view: createProjectViewUpdate({...view, position}),
+		})
+	} catch {
+		// Mutation callbacks report errors for the current project.
+	}
 }
 </script>
 
@@ -134,94 +172,97 @@ async function saveViewPosition(e) {
 		:primary-label="$t('misc.save')"
 		:has-primary-action="false"
 	>
-		<ViewEditForm
-			v-if="showCreateForm"
-			v-model="newView"
-			class="mbe-4"
-		/>
-		<div
-			v-if="isAdmin"
-			class="is-flex is-justify-content-end mbe-4"
-		>
-			<XButton
-				:loading="projectViewService.loading"
-				:disabled="showCreateForm && newView.title === ''"
-				@click="createView"
+		<ErrorMessage v-if="loadError" />
+		<template v-else>
+			<ViewEditForm
+				v-if="showCreateForm"
+				v-model="newView"
+				class="mbe-4"
+			/>
+			<div
+				v-if="isAdmin"
+				class="is-flex is-justify-content-end mbe-4"
 			>
-				{{ $t('project.views.create') }}
-			</XButton>
-		</div>
-
-		<Message v-if="!isAdmin">
-			{{ $t('project.views.onlyAdminsCanEdit') }}
-		</Message>
-
-		<div
-			v-if="views?.length > 0"
-			class="has-horizontal-overflow"
-		>
-			<table class="table has-actions is-striped is-hoverable is-fullwidth">
-				<thead>
-					<tr>
-						<th>{{ $t('project.views.title') }}</th>
-						<th>{{ $t('project.views.kind') }}</th>
-						<th class="has-text-end">
-							{{ $t('project.views.actions') }}
-						</th>
-					</tr>
-				</thead>
-				<draggable
-					v-model="views"
-					tag="tbody"
-					item-key="id"
-					handle=".handle"
-					:animation="100"
-					@end="saveViewPosition"
+				<XButton
+					:loading="isLoading"
+					:disabled="showCreateForm && newView.title === ''"
+					@click="createView"
 				>
-					<template #item="{element: v}">
+					{{ $t('project.views.create') }}
+				</XButton>
+			</div>
+
+			<Message v-if="!isAdmin">
+				{{ $t('project.views.onlyAdminsCanEdit') }}
+			</Message>
+
+			<div
+				v-if="views?.length > 0"
+				class="has-horizontal-overflow"
+			>
+				<table class="table has-actions is-striped is-hoverable is-fullwidth">
+					<thead>
 						<tr>
-							<template v-if="viewToEdit !== null && viewToEdit.id === v.id">
-								<td colspan="3">
-									<ViewEditForm
-										v-model="viewToEdit"
-										class="mbe-4"
-										:loading="projectViewService.loading"
-										:show-save-buttons="true"
-										@cancel="viewToEdit = null"
-										@update:modelValue="saveView(viewToEdit)"
-									/>
-								</td>
-							</template>
-							<template v-else>
-								<td>{{ v.title }}</td>
-								<td>{{ v.viewKind }}</td>
-								<td class="has-text-end actions">
-									<XButton
-										v-if="isAdmin"
-										class="is-danger mie-2"
-										:aria-label="$t('project.views.delete')"
-										icon="trash-alt"
-										@click="() => {
-											viewIdToDelete = v.id
-											showDeleteModal = true
-										}"
-									/>
-									<XButton
-										v-if="isAdmin"
-										icon="pen"
-										:aria-label="$t('project.views.edit')"
-										@click="viewToEdit = {...v}"
-									/>
-									<span class="icon handle">
-										<Icon icon="grip-lines" />
-									</span>
-								</td>
-							</template>
+							<th>{{ $t('project.views.title') }}</th>
+							<th>{{ $t('project.views.kind') }}</th>
+							<th class="has-text-end">
+								{{ $t('project.views.actions') }}
+							</th>
 						</tr>
-					</template>
-				</draggable>
-			</table>
-		</div>
+					</thead>
+					<draggable
+						v-model="views"
+						tag="tbody"
+						item-key="id"
+						handle=".handle"
+						:animation="100"
+						@end="saveViewPosition"
+					>
+						<template #item="{element: v}">
+							<tr>
+								<template v-if="viewToEdit !== null && viewToEdit.id === v.id">
+									<td colspan="3">
+										<ViewEditForm
+											v-model="viewToEdit"
+											class="mbe-4"
+											:loading="isSaving"
+											:show-save-buttons="true"
+											@cancel="viewToEdit = null"
+											@update:modelValue="saveView"
+										/>
+									</td>
+								</template>
+								<template v-else>
+									<td>{{ v.title }}</td>
+									<td>{{ v.view_kind }}</td>
+									<td class="has-text-end actions">
+										<XButton
+											v-if="isAdmin"
+											class="is-danger mie-2"
+											:aria-label="$t('project.views.delete')"
+											icon="trash-alt"
+											@click="() => {
+												viewIdToDelete = v.id ?? null
+												showDeleteModal = true
+											}"
+										/>
+										<XButton
+											v-if="isAdmin"
+											icon="pen"
+											:aria-label="$t('project.views.edit')"
+											@click="viewToEdit = {...v}"
+										/>
+										<span class="icon handle">
+											<Icon icon="grip-lines" />
+										</span>
+									</td>
+								</template>
+							</tr>
+						</template>
+					</draggable>
+				</table>
+			</div>
+		</template>
 	</CreateEdit>
 
 	<Modal
