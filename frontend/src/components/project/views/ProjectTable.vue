@@ -242,12 +242,7 @@
 								>
 									<td v-if="activeColumns.index">
 										<RouterLink :to="taskDetailRoutes[t.id]">
-											<template v-if="t.identifier === ''">
-												#{{ t.index }}
-											</template>
-											<template v-else>
-												{{ t.identifier }}
-											</template>
+											{{ getTaskIdentifier(t) }}
 										</RouterLink>
 									</td>
 									<td v-if="activeColumns.done">
@@ -367,6 +362,7 @@ import type {ITask} from '@/modelTypes/ITask'
 import type {IProject} from '@/modelTypes/IProject'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 import type {IProjectView} from '@/modelTypes/IProjectView'
+import {getTaskIdentifier} from '@/models/task'
 import { camelCase } from 'change-case'
 import {isSavedFilter} from '@/services/savedFilter'
 import {useProjectStore} from '@/stores/projects'
