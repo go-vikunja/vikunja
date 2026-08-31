@@ -28,18 +28,19 @@ import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 
 import {success} from '@/message'
 import {useTitle} from '@/composables/useTitle'
-import {useProject, useProjectStore} from '@/stores/projects'
-import type {IProject} from '@/modelTypes/IProject'
+import {useProject} from '@/composables/useProject'
+import {useProjectNavigation} from '@/composables/useProjectNavigation'
+import type {ProjectResponse} from '@/client/queries/projects'
 
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => t('project.duplicate.title'))
 
 const route = useRoute()
-const projectStore = useProjectStore()
+const projectStore = useProjectNavigation()
 
 const {project, isLoading, duplicateProject} = useProject(route.params.projectId)
 
-const parentProject = ref<IProject | null>(null)
+const parentProject = ref<ProjectResponse | null>(null)
 const duplicateShares = ref(true)
 const isDuplicating = ref(false)
 
@@ -50,10 +51,8 @@ const loadingModel = computed({
 	},
 })
 watch(
-	() => project.parentProjectId,
-	parentProjectId => {
-		parentProject.value = projectStore.projects[parentProjectId]
-	},
+	() => projectStore.projects[project.value.parent_project_id],
+	parent => parentProject.value = parent ?? null,
 	{immediate: true},
 )
 

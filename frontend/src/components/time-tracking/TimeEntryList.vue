@@ -116,7 +116,7 @@ import {ref, computed, watch} from 'vue'
 import Card from '@/components/misc/Card.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
-import {useProjectStore} from '@/stores/projects'
+import {useProjectNavigation} from '@/composables/useProjectNavigation'
 import {useAuthStore} from '@/stores/auth'
 import {fetchTaskById} from '@/helpers/fetchTaskById'
 import {getProjectTitle} from '@/helpers/getProjectTitle'
@@ -126,7 +126,6 @@ import {TIME_FORMAT} from '@/constants/timeFormat'
 
 import type {ITimeEntry} from '@/modelTypes/ITimeEntry'
 import type {ITask} from '@/modelTypes/ITask'
-import type {IProject} from '@/modelTypes/IProject'
 
 const props = withDefaults(defineProps<{
 	entries: ITimeEntry[]
@@ -148,7 +147,7 @@ const emit = defineEmits<{
 	edit: [entry: ITimeEntry]
 }>()
 
-const projectStore = useProjectStore()
+const projectNavigation = useProjectNavigation()
 const {store: timeFormat} = useTimeFormat()
 
 // Only the author can update/delete (enforced server-side); shared lists include
@@ -178,8 +177,8 @@ function entrySeconds(entry: ITimeEntry): number {
 const rows = computed(() => props.entries.map(entry => {
 	const task = entry.taskId > 0 ? tasks.value[entry.taskId] : undefined
 	const projectId = task?.projectId ?? (entry.projectId > 0 ? entry.projectId : 0)
-	const project = projectId > 0 ? projectStore.projects[projectId] as IProject | undefined : undefined
-	const ancestors = project ? projectStore.getAncestors(project) : []
+	const project = projectId > 0 ? projectNavigation.projects[projectId] : undefined
+	const ancestors = project ? projectNavigation.getAncestors(project) : []
 
 	return {
 		entry,

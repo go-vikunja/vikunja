@@ -1,7 +1,7 @@
 import {i18n} from '@/i18n'
-import type {IProject} from '@/modelTypes/IProject'
+import type {Project} from '@/client/generated'
 
-export function getProjectTitle(project: Pick<IProject, 'id' | 'title'>) {
+export function getProjectTitle(project: Required<Pick<Project, 'id' | 'title'>>) {
 	if (project.id === -1) {
 		return i18n.global.t('project.pseudo.favorites.title')
 	}

@@ -9,17 +9,15 @@ import {parseBooleanProp} from '@/helpers/time/parseBooleanProp'
 import {useRouteFilters, type UseRouteFiltersReturn} from '@/composables/useRouteFilters'
 import {useGanttTaskList, type UseGanttTaskListReturn} from './useGanttTaskList'
 
-import type {IProject} from '@/modelTypes/IProject'
 import type {TaskFilterParams} from '@/services/taskCollection'
 
 import type {DateISO} from '@/types/DateISO'
 import type {DateKebab} from '@/types/DateKebab'
-import type {IProjectView} from '@/modelTypes/IProjectView'
 
 // convenient internal filter object
 export interface GanttFilters {
-	projectId: IProject['id']
-	viewId: IProjectView['id'],
+	projectId: number
+	viewId: number,
 	dateFrom: DateISO
 	dateTo: DateISO
 	showTasksWithoutDates: boolean
@@ -108,7 +106,7 @@ export type UseGanttFiltersReturn =
 	UseRouteFiltersReturn<GanttFilters> &
 	UseGanttTaskListReturn
 
-export function useGanttFilters(route: Ref<RouteLocationNormalized>, viewId: Ref<IProjectView['id']>): UseGanttFiltersReturn {
+export function useGanttFilters(route: Ref<RouteLocationNormalized>, viewId: Ref<number>): UseGanttFiltersReturn {
 	const viewFiltersStore = useViewFiltersStore()
 
 	const {

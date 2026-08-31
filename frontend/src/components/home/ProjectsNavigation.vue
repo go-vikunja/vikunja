@@ -41,26 +41,26 @@ import type {SortableEvent} from 'sortablejs'
 import ProjectsNavigationItem from '@/components/home/ProjectsNavigationItem.vue'
 
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
-import type {IProject} from '@/modelTypes/IProject'
+import type {ProjectResponse} from '@/client/queries/projects'
 
-import {useProjectStore} from '@/stores/projects'
+import {useProjectNavigation} from '@/composables/useProjectNavigation'
 
 const props = defineProps<{
-	modelValue?: IProject[],
+	modelValue?: ProjectResponse[],
 	canEditOrder: boolean,
 	canCollapse?: boolean,
 }>()
 const emit = defineEmits<{
-	(e: 'update:modelValue', projects: IProject[]): void
+	(e: 'update:modelValue', projects: ProjectResponse[]): void
 }>()
 
 const drag = ref(false)
 
-const projectStore = useProjectStore()
+const projectStore = useProjectNavigation()
 
 // Vue draggable will modify the projects list as it changes their position which will not work on a prop.
 // Hence, we'll clone the prop and work on the clone.
-const availableProjects = ref<IProject[]>([])
+const availableProjects = ref<ProjectResponse[]>([])
 watch(
 	() => props.modelValue,
 	projects => {
@@ -69,7 +69,7 @@ watch(
 	{immediate: true},
 )
 
-const projectUpdating = ref<{ [id: IProject['id']]: boolean }>({})
+const projectUpdating = ref<Record<number, boolean>>({})
 
 async function saveProjectPosition(e: SortableEvent) {
 	drag.value = false
@@ -105,8 +105,8 @@ async function saveProjectPosition(e: SortableEvent) {
 		await projectStore.updateProject({
 			...project,
 			position,
-			parentProjectId,
-		} as IProject)
+			parent_project_id: parentProjectId,
+		})
 		emit('update:modelValue', availableProjects.value)
 	} finally {
 		projectUpdating.value[project.id] = false

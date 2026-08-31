@@ -1,20 +1,20 @@
 <script setup lang="ts">
-import {computed, ref, shallowReactive, watch, watchEffect} from 'vue'
+import {computed, watch, watchEffect} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
+import {useQuery} from '@tanstack/vue-query'
 
 import {useBaseStore} from '@/stores/base'
-import {useProjectStore} from '@/stores/projects'
 import {useAuthStore} from '@/stores/auth'
 
 import {saveProjectView} from '@/helpers/projectView'
-import ProjectService from '@/services/project'
+import {projectQuery} from '@/client/queries/projects'
 
 import ProjectList from '@/components/project/views/ProjectList.vue'
 import ProjectGantt from '@/components/project/views/ProjectGantt.vue'
 import ProjectTable from '@/components/project/views/ProjectTable.vue'
 import ProjectKanban from '@/components/project/views/ProjectKanban.vue'
 
-import {DEFAULT_PROJECT_VIEW_SETTINGS} from '@/modelTypes/IProjectView'
+import {DEFAULT_PROJECT_VIEW_SETTINGS} from '@/constants/projectView'
 import {saveProjectToHistory} from '@/modules/projectHistory'
 
 const props = defineProps<{
@@ -23,48 +23,20 @@ const props = defineProps<{
 }>()
 
 const router = useRouter()
-const baseStore = useBaseStore()
-const projectStore = useProjectStore()
-const authStore = useAuthStore()
 const route = useRoute()
-
-const currentProject = computed(() => projectStore.projects[props.projectId])
+const baseStore = useBaseStore()
+const authStore = useAuthStore()
+const project = useQuery(computed(() => projectQuery(props.projectId)))
+const currentProject = computed(() => project.data.value)
 
 const currentView = computed(() => {
 	return currentProject.value?.views.find(v => v.id === props.viewId)
 })
 
-const projectService = shallowReactive(new ProjectService())
-const isLoadingProject = computed(() => projectService.loading)
-const loadedProjectId = ref(0)
+const isLoadingProject = project.isPending
 
 watch(
-	() => props.projectId,
-	// loadProject
-	async (projectIdToLoad, oldProjectIdToLoad) => {
-
-		console.debug('Loading project, $route.params =', route.params, `, loadedProjectId = ${loadedProjectId.value}, currentProject = `, currentProject.value)
-
-
-		if (projectIdToLoad !== oldProjectIdToLoad) {
-			loadedProjectId.value = 0
-		}
-
-		try {
-			const loadedProject = await projectService.get({id: projectIdToLoad})
-
-			// Here, we only set the new project in the projectStore.
-			// Setting that projet as the current one in the baseStore is handled by the watcher below.
-			projectStore.setProject(loadedProject)
-		} finally {
-			loadedProjectId.value = projectIdToLoad
-		}
-	},
-	{immediate: true},
-)
-
-watch(
-	() => [currentProject.value, props.viewId],
+	() => [currentProject.value, props.viewId] as const,
 	([newCurrentProject, newViewId]) => {
 		if (!newCurrentProject) {
 			baseStore.handleSetCurrentProject({project: null})
@@ -87,15 +59,16 @@ function redirectToDefaultViewIfNecessary() {
 		// are not always loaded then.
 
 		const defaultView  = authStore.settings.frontendSettings.defaultView
+		const views = currentProject.value?.views ?? []
 
 		let view
 		if (defaultView !== DEFAULT_PROJECT_VIEW_SETTINGS.FIRST) {
-			view = currentProject.value?.views.find(v => v.viewKind === defaultView)
+			view = views.find(view => view.view_kind === defaultView)
 		}
 
 		// Use the first view as fallback if the default view is not available
-		if (view === undefined && currentProject.value?.views?.length > 0) {
-			view = currentProject.value?.views[0]
+		if (view === undefined && views.length > 0) {
+			view = views[0]
 		}
 
 		if (view) {
@@ -134,25 +107,25 @@ watchEffect(() => baseStore.setCurrentProjectViewId(props.viewId))
 
 <template>
 	<ProjectList
-		v-if="currentView?.viewKind === 'list'"
+		v-if="currentView?.view_kind === 'list'"
 		:project-id="projectId"
 		:is-loading-project="isLoadingProject"
 		:view-id
 	/>
 	<ProjectGantt
-		v-if="currentView?.viewKind === 'gantt'"
+		v-if="currentView?.view_kind === 'gantt'"
 		:route
 		:is-loading-project="isLoadingProject"
 		:view-id
 	/>
 	<ProjectTable
-		v-if="currentView?.viewKind === 'table'"
+		v-if="currentView?.view_kind === 'table'"
 		:project-id="projectId"
 		:is-loading-project="isLoadingProject"
 		:view-id
 	/>
 	<ProjectKanban
-		v-if="currentView?.viewKind === 'kanban'"
+		v-if="currentView?.view_kind === 'kanban'"
 		:project-id="projectId"
 		:is-loading-project="isLoadingProject"
 		:view-id

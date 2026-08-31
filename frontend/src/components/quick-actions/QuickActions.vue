@@ -128,7 +128,6 @@ import TaskService from '@/services/task'
 import TeamService from '@/services/team'
 
 import TeamModel from '@/models/team'
-import ProjectModel from '@/models/project'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import QuickAddMagic from '@/components/tasks/partials/QuickAddMagic.vue'
@@ -136,7 +135,8 @@ import XLabel from '@/components/tasks/partials/Label.vue'
 import SingleTaskInlineReadonly from '@/components/tasks/partials/SingleTaskInlineReadonly.vue'
 
 import {useBaseStore} from '@/stores/base'
-import {useProjectStore} from '@/stores/projects'
+import {useProjectNavigation} from '@/composables/useProjectNavigation'
+import {useCurrentProject} from '@/composables/useCurrentProject'
 import {useTaskStore} from '@/stores/tasks'
 import {useAuthStore} from '@/stores/auth'
 import {useLabels} from '@/composables/useLabels'
@@ -147,16 +147,20 @@ import {success} from '@/message'
 
 import type {ITeam} from '@/modelTypes/ITeam'
 import type {ITask} from '@/modelTypes/ITask'
-import type {IProject} from '@/modelTypes/IProject'
 import type {IAbstract} from '@/modelTypes/IAbstract'
-import {isSavedFilter} from '@/services/savedFilter'
 import type {TaskFilterParams} from '@/services/taskCollection'
+import {
+	createProjectDraft,
+	isSavedFilterProject,
+	type ProjectResponse,
+} from '@/client/queries/projects'
 
 const {t} = useI18n({useScope: 'global'})
 const router = useRouter()
 
 const baseStore = useBaseStore()
-const projectStore = useProjectStore()
+const projectNavigation = useProjectNavigation()
+const {currentProject: selectedProject} = useCurrentProject()
 const {filterLabelsByQuery, getLabelsByExactTitles} = useLabels()
 const taskStore = useTaskStore()
 const authStore = useAuthStore()
@@ -247,7 +251,7 @@ const foundProjects = computed(() => {
 	const {project, text, labels, assignees} = parsedQuery.value
 
 	if (project !== null) {
-		return projectStore.searchProjectAndFilter(project ?? text)
+		return projectNavigation.searchProjectAndFilter(project ?? text)
 			.filter(p => Boolean(p))
 	}
 
@@ -257,11 +261,11 @@ const foundProjects = computed(() => {
 
 	if (text === '') {
 		const history = getHistory()
-		return history.map((p) => projectStore.projects[p.id])
+		return history.map((p) => projectNavigation.projects[p.id])
 			.filter(p => Boolean(p))
 	}
 
-	return projectStore.searchProjectAndFilter(project ?? text)
+	return projectNavigation.searchProjectAndFilter(project ?? text)
 		.filter(p => Boolean(p))
 })
 
@@ -333,7 +337,7 @@ function isDone(item: unknown): boolean {
 
 const loading = computed(() =>
 	taskService.loading ||
-	projectStore.isLoading ||
+	projectNavigation.isLoading ||
 	teamService.loading,
 )
 
@@ -368,11 +372,11 @@ const commands = computed<{ [key in COMMAND_TYPE]: Command }>(() => ({
 const placeholder = computed(() => selectedCmd.value?.placeholder || t('quickActions.placeholder'))
 
 const currentProject = computed(() => {
-	if (Object.keys(baseStore.currentProject).length === 0 || isSavedFilter(baseStore.currentProject)) {
+	if (!selectedProject.value || isSavedFilterProject(selectedProject.value)) {
 		return null
 	}
 
-	return baseStore.currentProject
+	return selectedProject.value
 })
 
 const hintText = computed(() => {
@@ -463,8 +467,7 @@ function searchTasks() {
 	let filter = ''
 
 	if (projectName !== null) {
-		const project = projectStore.findProjectByExactname(projectName)
-		console.log({project})
+		const project = projectNavigation.findProjectByExactname(projectName)
 		if (project !== null) {
 			filter += ' project = ' + project.id
 		}
@@ -566,7 +569,7 @@ async function doAction(type: ACTION_TYPE, item: DoAction) {
 			if (!isQuickAddMode) {
 				await router.push({
 					name: 'project.index',
-					params: {projectId: (item as DoAction<IProject>).id},
+					params: {projectId: (item as DoAction<ProjectResponse>).id},
 				})
 			}
 			break
@@ -667,9 +670,9 @@ async function newTask() {
 
 async function newProject() {
 	const parentProjectId = currentProject.value?.id ?? 0
-	await projectStore.createProject(new ProjectModel({
+	await projectNavigation.createProject(createProjectDraft({
 		title: query.value,
-		parentProjectId: Math.max(parentProjectId, 0),
+		parent_project_id: Math.max(parentProjectId, 0),
 	}))
 	success({message: t('project.create.createdSuccess')})
 }

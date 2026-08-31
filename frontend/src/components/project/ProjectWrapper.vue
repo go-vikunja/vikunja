@@ -3,7 +3,7 @@
 		class="loader-container"
 		:class="{
 			'is-loading': isLoadingProject,
-			'is-archived': currentProject?.isArchived,
+			'is-archived': currentProject.is_archived,
 		}"
 	>
 		<h1 class="project-title-print">
@@ -70,7 +70,7 @@
 		</div>
 		<CustomTransition name="fade">
 			<Message
-				v-if="currentProject?.isArchived"
+				v-if="currentProject.is_archived"
 				variant="warning"
 				class="mbe-4"
 			>
@@ -97,24 +97,22 @@ import CustomTransition from '@/components/misc/CustomTransition.vue'
 import {getProjectTitle} from '@/helpers/getProjectTitle'
 import {useTitle} from '@/composables/useTitle'
 
-import {useBaseStore} from '@/stores/base'
-import {useProjectStore} from '@/stores/projects'
 import {useViewFiltersStore} from '@/stores/viewFilters'
+import {useCurrentProject} from '@/composables/useCurrentProject'
 
-import type {IProject} from '@/modelTypes/IProject'
-import type {IProjectView} from '@/modelTypes/IProjectView'
+import type {ProjectView} from '@/client/generated'
+import {normalizeProject} from '@/client/queries/projects'
 
 const props = defineProps<{
 	isLoadingProject: boolean,
-	projectId: IProject['id'],
-	viewId: IProjectView['id'],
+	projectId: number,
+	viewId: number,
 }>()
 
 const {t} = useI18n()
 
-const baseStore = useBaseStore()
-const projectStore = useProjectStore()
 const viewFiltersStore = useViewFiltersStore()
+const {currentProject: queriedProject} = useCurrentProject()
 
 const switchViewContainerRef = ref<HTMLElement>()
 const switchViewRef = ref<HTMLElement>()
@@ -139,20 +137,13 @@ useResizeObserver(switchViewContainerRef, () => {
 	requestAnimationFrame(() => checkOverflow())
 })
 
-const currentProject = computed<IProject>(() => {
-	return baseStore.currentProject || {
-		id: 0,
-		title: '',
-		isArchived: false,
-		maxPermission: null,
-	}
-})
+const currentProject = computed(() => queriedProject.value ?? normalizeProject({id: 0}))
 useTitle(() => currentProject.value?.id ? getProjectTitle(currentProject.value) : '')
 
-const views = computed(() => projectStore.projects[props.projectId]?.views)
+const views = computed(() => currentProject.value.views)
 
 const activeViewTitle = computed(() => {
-	const activeView = views.value?.find((v: IProjectView) => v.id === props.viewId)
+	const activeView = views.value?.find((view: ProjectView) => view.id === props.viewId)
 	return activeView ? getViewTitle(activeView) : ''
 })
 
@@ -161,7 +152,7 @@ watch(views, () => {
 	nextTick(() => checkOverflow())
 })
 
-function getViewTitle(view: IProjectView) {
+function getViewTitle(view: ProjectView) {
 	switch (view.title) {
 		case 'List':
 			return t('project.list.title')
@@ -173,14 +164,15 @@ function getViewTitle(view: IProjectView) {
 			return t('project.kanban.title')
 	}
 
-	return view.title
+	return view.title ?? ''
 }
 
-function getViewRoute(view: IProjectView) {
-	const storedQuery = viewFiltersStore.getViewQuery(view.id)
+function getViewRoute(view: ProjectView) {
+	const viewId = view.id ?? 0
+	const storedQuery = viewFiltersStore.getViewQuery(viewId)
 	return {
 		name: 'project.view',
-		params: {projectId: props.projectId, viewId: view.id},
+		params: {projectId: props.projectId, viewId},
 		query: storedQuery,
 	}
 }
