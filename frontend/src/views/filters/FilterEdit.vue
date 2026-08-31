@@ -4,11 +4,16 @@
 		:title="$t('filters.edit.title')"
 		primary-icon=""
 		:primary-label="$t('misc.save')"
+		:primary-disabled="Boolean(loadError)"
 		:tertiary="$t('misc.delete')"
 		@primary="handleSave"
 		@tertiary="$router.push({ name: 'filter.settings.delete', params: { id: projectId } })"
 	>
-		<form @submit.prevent="handleSave()">
+		<ErrorMessage v-if="loadError" />
+		<form
+			v-else
+			@submit.prevent="handleSave()"
+		>
 			<FormField
 				id="Title"
 				v-model="filter.title"
@@ -56,6 +61,7 @@ import Editor from '@/components/input/AsyncEditor'
 import CreateEdit from '@/components/misc/CreateEdit.vue'
 import FormField from '@/components/input/FormField.vue'
 import Filters from '@/components/project/partials/Filters.vue'
+import ErrorMessage from '@/components/misc/Error.vue'
 
 import {useSavedFilter} from '@/composables/useSavedFilter'
 
@@ -68,6 +74,7 @@ const {
 	filter,
 	filters,
 	isLoading,
+	error: loadError,
 	titleValid,
 	validateTitleField,
 } = useSavedFilter(() => props.projectId)
