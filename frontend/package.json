@@ -46,6 +46,7 @@
     "fonts:update": "pnpm fonts:download && pnpm fonts:subset",
     "fonts:download": "./scripts/fonts-download.sh",
     "fonts:subset": "./scripts/fonts-subset.sh",
+    "generate:api-client": "openapi-ts",
     "story:dev": "histoire dev",
     "story:build": "histoire build",
     "story:preview": "histoire preview"
@@ -109,6 +110,7 @@
   "devDependencies": {
     "@eslint/js": "10.0.1",
     "@faker-js/faker": "10.6.0",
+    "@hey-api/openapi-ts": "0.99.0",
     "@histoire/plugin-screenshot": "1.0.0-beta.1",
     "@histoire/plugin-vue": "1.0.0-beta.1",
     "@playwright/test": "1.62.1",

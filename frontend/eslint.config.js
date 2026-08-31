@@ -16,6 +16,7 @@ export default [
 	{
 		ignores: [
 			'**/*.test.ts',
+			'src/client/generated/**',
 		],
 	},
 	{
