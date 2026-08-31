@@ -64,6 +64,7 @@ var (
 	// Aliases are mage aliases of targets
 	Aliases = map[string]any{
 		"build":                    Build.Build,
+		"check:frontend-client":    Check.FrontendClient,
 		"check:got-swag":           Check.GotSwag,
 		"dev:make-migration":       Dev.MakeMigration,
 		"dev:make-event":           Dev.MakeEvent,
@@ -594,6 +595,63 @@ func (Test) E2E(ctx context.Context, args string) error {
 }
 
 type Check mg.Namespace
+
+func (Check) FrontendClient(ctx context.Context) error {
+	if err := (Generate{}).FrontendClient(ctx); err != nil {
+		return err
+	}
+	firstHash, err := frontendClientDirectoryHash()
+	if err != nil {
+		return err
+	}
+
+	if err := (Generate{}).FrontendClient(ctx); err != nil {
+		return err
+	}
+	secondHash, err := frontendClientDirectoryHash()
+	if err != nil {
+		return err
+	}
+	if firstHash != secondHash {
+		return errors.New("frontend API client generation is not idempotent")
+	}
+
+	status, err := runGitCommandWithOutput(ctx, "status", "--porcelain", "--", "frontend/src/client/generated")
+	if err != nil {
+		return err
+	}
+	if len(bytes.TrimSpace(status)) > 0 {
+		return errors.New("frontend API client is not up to date: run 'mage generate:frontend-client' and commit the result")
+	}
+	return nil
+}
+
+func frontendClientDirectoryHash() (string, error) {
+	const root = "frontend/src/client/generated"
+	hash := sha256.New()
+	err := filepath.Walk(root, func(path string, info os.FileInfo, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if info.IsDir() {
+			return nil
+		}
+		fileHash, err := calculateSha256FileHash(path)
+		if err != nil {
+			return err
+		}
+		relativePath, err := filepath.Rel(root, path)
+		if err != nil {
+			return err
+		}
+		_, err = fmt.Fprintf(hash, "%s\x00%o\x00%s\n", relativePath, info.Mode().Perm(), fileHash)
+		return err
+	})
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%x", hash.Sum(nil)), nil
+}
 
 // GotSwag checks if the swagger docs need to be re-generated from the code annotations
 func (Check) GotSwag(ctx context.Context) error {
