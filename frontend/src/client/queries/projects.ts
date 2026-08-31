@@ -1,4 +1,4 @@
-import {queryOptions, useMutation} from '@tanstack/vue-query'
+import {queryOptions} from '@tanstack/vue-query'
 
 import {
 	projectsCreate,
@@ -48,15 +48,10 @@ export type ProjectResponse = Omit<Project,
 	views: ProjectView[]
 }
 
-export type ProjectNavigationItem = ProjectResponse & {
-	kind: 'favorites' | 'saved-filter'
-	savedFilterId?: number
-}
-
 export type ProjectListResult = {
 	projects: ProjectResponse[]
-	favoriteProject: ProjectNavigationItem | null
-	savedFilterProjects: ProjectNavigationItem[]
+	favoriteProject: ProjectResponse | null
+	savedFilterProjects: ProjectResponse[]
 }
 
 export type ProjectDraft = Required<Pick<ProjectWritable,
@@ -155,23 +150,11 @@ export function normalizeProject(project: Project): ProjectResponse {
 	}
 }
 
-function toNavigationItem(project: ProjectResponse): ProjectNavigationItem {
-	if (project.id === -1) {
-		return {...project, kind: 'favorites'}
-	}
-
-	return {
-		...project,
-		kind: 'saved-filter',
-		savedFilterId: getSavedFilterIdFromProjectId(project.id),
-	}
-}
-
 function sortProjects(projects: ProjectResponse[]): ProjectResponse[] {
 	return [...projects].sort((a, b) => a.position - b.position)
 }
 
-function sortSavedFilters(projects: ProjectNavigationItem[]): ProjectNavigationItem[] {
+function sortSavedFilters(projects: ProjectResponse[]): ProjectResponse[] {
 	return [...projects].sort((a, b) => a.title.localeCompare(b.title))
 }
 
@@ -192,9 +175,9 @@ function partitionProjects(projects: Project[]): ProjectListResult {
 		if (project.id > 0) {
 			result.projects.push(project)
 		} else if (project.id === -1) {
-			result.favoriteProject = toNavigationItem(project)
+			result.favoriteProject = project
 		} else {
-			result.savedFilterProjects.push(toNavigationItem(project))
+			result.savedFilterProjects.push(project)
 		}
 	}
 
@@ -403,13 +386,6 @@ export function updateProjectInCache(
 	)
 }
 
-export async function cancelProjectQueries(projectId: number): Promise<void> {
-	await Promise.all([
-		queryClient.cancelQueries({queryKey: projectKeys.lists()}),
-		queryClient.cancelQueries({queryKey: projectKeys.detailRoot(projectId)}),
-	])
-}
-
 export function updateProjectNavigationItemInCache(
 	projectId: number,
 	updater: (project: ProjectResponse) => Project,
@@ -427,11 +403,9 @@ export function updateProjectNavigationItemInCache(
 			return {
 				projects: sortProjects(current.projects.map(update)),
 				favoriteProject: current.favoriteProject?.id === projectId
-					? toNavigationItem(update(current.favoriteProject))
+					? update(current.favoriteProject)
 					: current.favoriteProject,
-				savedFilterProjects: sortSavedFilters(current.savedFilterProjects.map(project =>
-					toNavigationItem(update(project)),
-				)),
+				savedFilterProjects: sortSavedFilters(current.savedFilterProjects.map(update)),
 			}
 		},
 	)
@@ -569,20 +543,4 @@ export async function duplicateProject({
 	await queryClient.invalidateQueries({queryKey: projectKeys.lists()})
 	assertProjectMutationContext(context)
 	return duplicate
-}
-
-export function useCreateProjectMutation() {
-	return useMutation({mutationFn: (project: ProjectWritable) => createProject(project)})
-}
-
-export function useUpdateProjectMutation() {
-	return useMutation({mutationFn: (project: UpdateProjectInput) => updateProject(project)})
-}
-
-export function useDeleteProjectMutation() {
-	return useMutation({mutationFn: deleteProject})
-}
-
-export function useDuplicateProjectMutation() {
-	return useMutation({mutationFn: duplicateProject})
 }
