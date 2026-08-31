@@ -365,7 +365,7 @@ func duplicateTasks(s *xorm.Session, doer web.Auth, ld *ProjectDuplicate) (newTa
 		t.UID = ""
 	}
 
-	err = createTasks(s, ld.Project.ID, tasks, doer, false, false)
+	err = createTasks(s, ld.Project.ID, tasks, doer, false, false, true)
 	if err != nil {
 		return nil, err
 	}

@@ -17,6 +17,7 @@
 package models
 
 import (
+	"math"
 	"sort"
 	"sync"
 	"testing"
@@ -175,6 +176,43 @@ func TestSetNewTaskIndexes(t *testing.T) {
 		require.ErrorContains(t, err, "task index counter")
 	})
 
+	t.Run("trusted batch cannot allocate past max int", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		defer s.Rollback()
+
+		err := setNewTaskIndexes(s, 4, []*Task{{Index: math.MaxInt64}, {}})
+		require.ErrorContains(t, err, "exhausted")
+		require.NoError(t, s.Rollback())
+
+		check := db.NewSession()
+		defer check.Close()
+		counter := &ProjectTaskCounter{}
+		has, err := check.ID(4).Get(counter)
+		require.NoError(t, err)
+		require.True(t, has)
+		assert.Zero(t, counter.LastIndex)
+	})
+
+	t.Run("exhausted counter rejects another reservation", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		defer s.Rollback()
+		_, err := s.ID(4).Cols("last_index").Update(&ProjectTaskCounter{LastIndex: math.MaxInt64})
+		require.NoError(t, err)
+
+		err = setNewTaskIndexes(s, 4, []*Task{{}})
+		require.ErrorContains(t, err, "exhausted")
+
+		counter := &ProjectTaskCounter{}
+		has, err := s.ID(4).Get(counter)
+		require.NoError(t, err)
+		require.True(t, has)
+		assert.Equal(t, int64(math.MaxInt64), counter.LastIndex)
+	})
+
 	t.Run("rollback releases the reservation", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
@@ -232,6 +270,45 @@ func TestSetNewTaskIndexes(t *testing.T) {
 		}
 		sort.Slice(got, func(i, j int) bool { return got[i] < got[j] })
 		assert.Equal(t, []int64{1, 2}, got)
+	})
+}
+
+func TestPublicTaskCreationIgnoresPresetIndexes(t *testing.T) {
+	usr := &user.User{ID: 1}
+
+	t.Run("single create", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		first := &Task{Title: "client index", ProjectID: 4, Index: math.MaxInt64}
+		require.NoError(t, first.Create(s, usr))
+		assert.Equal(t, int64(1), first.Index)
+
+		next := &Task{Title: "next index", ProjectID: 4}
+		require.NoError(t, next.Create(s, usr))
+		assert.Equal(t, int64(2), next.Index)
+	})
+
+	t.Run("bulk create", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		batch := &BulkTaskCreation{
+			ProjectID: 4,
+			Tasks: []*Task{
+				{Title: "client max", Index: math.MaxInt64},
+				{Title: "client preset", Index: 20},
+			},
+		}
+		require.NoError(t, batch.Create(s, usr))
+		assert.Equal(t, int64(1), batch.Tasks[0].Index)
+		assert.Equal(t, int64(2), batch.Tasks[1].Index)
+
+		next := &Task{Title: "next index", ProjectID: 4}
+		require.NoError(t, next.Create(s, usr))
+		assert.Equal(t, int64(3), next.Index)
 	})
 }
 

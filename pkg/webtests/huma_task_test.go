@@ -171,6 +171,15 @@ func TestHumaTask_Create(t *testing.T) {
 		assert.Contains(t, rec.Body.String(), `"project_id":1`)
 		assert.NotContains(t, rec.Body.String(), `"project_id":7`)
 	})
+	t.Run("Read-only index is ignored", func(t *testing.T) {
+		rec := create("4", `{"title":"client index","index":9223372036854775807}`)
+		require.Equal(t, http.StatusCreated, rec.Code, "body: %s", rec.Body.String())
+		assert.Contains(t, rec.Body.String(), `"index":1`)
+
+		rec = create("4", `{"title":"next index"}`)
+		require.Equal(t, http.StatusCreated, rec.Code, "body: %s", rec.Body.String())
+		assert.Contains(t, rec.Body.String(), `"index":2`)
+	})
 	t.Run("Nonexisting project", func(t *testing.T) {
 		rec := create("9999", `{"title":"x"}`)
 		assert.Equal(t, http.StatusNotFound, rec.Code, "body: %s", rec.Body.String())

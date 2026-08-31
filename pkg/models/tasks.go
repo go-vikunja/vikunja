@@ -889,15 +889,12 @@ func setNewTaskIndexes(s *xorm.Session, projectID int64, tasks []*Task) (err err
 
 	reserved := int64(len(tasks))
 	affected, err := s.ID(projectID).
+		Where("last_index <= ?", math.MaxInt64-reserved).
 		Incr("last_index", reserved).
 		Update(&ProjectTaskCounter{})
 	if err != nil {
 		return err
 	}
-	if affected != 1 {
-		return fmt.Errorf("task index counter for project %d is missing", projectID)
-	}
-
 	counter := &ProjectTaskCounter{}
 	has, err := s.ID(projectID).Get(counter)
 	if err != nil {
@@ -905,6 +902,9 @@ func setNewTaskIndexes(s *xorm.Session, projectID int64, tasks []*Task) (err err
 	}
 	if !has {
 		return fmt.Errorf("task index counter for project %d is missing", projectID)
+	}
+	if affected != 1 {
+		return fmt.Errorf("task index counter for project %d is exhausted", projectID)
 	}
 	previousIndex := counter.LastIndex - reserved
 
@@ -943,18 +943,29 @@ func setNewTaskIndexes(s *xorm.Session, projectID int64, tasks []*Task) (err err
 		}
 	}
 
-	nextIndex := acceptedMax + 1
+	unassigned := int64(0)
+	for _, isAccepted := range accepted {
+		if !isAccepted {
+			unassigned++
+		}
+	}
+	if acceptedMax > math.MaxInt64-unassigned {
+		return fmt.Errorf("task index counter for project %d is exhausted", projectID)
+	}
+
+	nextIndex := acceptedMax
 	for i, t := range tasks {
 		if accepted[i] {
 			continue
 		}
-		t.Index = nextIndex
 		nextIndex++
+		t.Index = nextIndex
 	}
 
-	finalIndex := nextIndex - 1
+	finalIndex := nextIndex
 	if extra := finalIndex - counter.LastIndex; extra > 0 {
 		affected, err = s.ID(projectID).
+			Where("last_index <= ?", math.MaxInt64-extra).
 			Incr("last_index", extra).
 			Update(&ProjectTaskCounter{})
 		if err != nil {
@@ -987,7 +998,7 @@ func (t *Task) Create(s *xorm.Session, a web.Auth) (err error) {
 }
 
 func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, setBucket bool) (err error) {
-	err = createTasks(s, t.ProjectID, []*Task{t}, a, updateAssignees, setBucket)
+	err = createTasks(s, t.ProjectID, []*Task{t}, a, updateAssignees, setBucket, false)
 	// Single-create callers expect the raw error type, not the batch wrapper.
 	var berr ErrInvalidTaskInBulkCreation
 	if errors.As(err, &berr) {
@@ -998,7 +1009,7 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, setB
 
 // CreateTasksForImport preserves preset indexes across the whole imported batch.
 func CreateTasksForImport(s *xorm.Session, projectID int64, tasks []*Task, a web.Auth) error {
-	err := createTasks(s, projectID, tasks, a, true, true)
+	err := createTasks(s, projectID, tasks, a, true, true, true)
 	var batchErr ErrInvalidTaskInBulkCreation
 	if errors.As(err, &batchErr) {
 		return batchErr.Err
@@ -1066,7 +1077,7 @@ func resolveProvidedBuckets(s *xorm.Session, a web.Auth, projectID int64, tasks 
 }
 
 // createTasks inserts row by row because multi-row inserts don't reliably return autoincrement ids on all supported databases.
-func createTasks(s *xorm.Session, projectID int64, tasks []*Task, a web.Auth, updateAssignees bool, setBucket bool) (err error) {
+func createTasks(s *xorm.Session, projectID int64, tasks []*Task, a web.Auth, updateAssignees bool, setBucket, preserveIndexes bool) (err error) {
 	if len(tasks) == 0 {
 		return nil
 	}
@@ -1079,6 +1090,9 @@ func createTasks(s *xorm.Session, projectID int64, tasks []*Task, a web.Auth, up
 
 		t.ProjectID = projectID
 		t.ID = 0
+		if !preserveIndexes {
+			t.Index = 0
+		}
 	}
 
 	// Check if the project exists

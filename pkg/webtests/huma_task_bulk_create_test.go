@@ -67,6 +67,19 @@ func TestHumaTaskBulkCreate(t *testing.T) {
 		assert.Equal(t, int64(1), result.Tasks[0].ProjectID)
 	})
 
+	t.Run("Read-only indexes are ignored", func(t *testing.T) {
+		result, err := bulkPost("4", &testuser1, `{"tasks":[{"title":"client max","index":9223372036854775807},{"title":"client preset","index":20}]}`)
+		require.NoError(t, err)
+		require.Len(t, result.Tasks, 2)
+		assert.Equal(t, int64(1), result.Tasks[0].Index)
+		assert.Equal(t, int64(2), result.Tasks[1].Index)
+
+		next, err := bulkPost("4", &testuser1, `{"tasks":[{"title":"next index"}]}`)
+		require.NoError(t, err)
+		require.Len(t, next.Tasks, 1)
+		assert.Equal(t, int64(3), next.Tasks[0].Index)
+	})
+
 	t.Run("Empty batch", func(t *testing.T) {
 		// minItems:"1" on Tasks is enforced by Huma before the handler runs.
 		_, err := bulkPost("1", &testuser1, `{"tasks":[]}`)
