@@ -1,6 +1,6 @@
 import axios from 'axios'
 import type {AxiosRequestConfig} from 'axios'
-import {getToken, refreshToken} from '@/helpers/auth'
+import {getToken, getTokenType, refreshToken} from '@/helpers/auth'
 import {AUTH_TYPES} from '@/modelTypes/IUser'
 
 /**
@@ -11,14 +11,17 @@ export function getApiBaseUrl(): string {
 	return url?.endsWith('/') ? url : url + '/'
 }
 
+export function getApiV2BaseUrl(): string {
+	return getApiBaseUrl().replace(/\/api\/v1\/$/, '/api/v2/')
+}
+
 /**
  * Returns an absolute URL for an /api/v2 path. The shared axios instances pin
  * baseURL to /api/v1; v2 callers hand axios absolute URLs to bypass that —
  * to be folded into the service layer once the frontend moves fully onto v2.
  */
 export function apiV2Url(path: string): string {
-	const v2Base = getApiBaseUrl().replace(/\/api\/v1\/$/, '/api/v2/')
-	return new URL(v2Base + path, window.location.origin).toString()
+	return new URL(getApiV2BaseUrl() + path, window.location.origin).toString()
 }
 
 export function HTTPFactory() {
@@ -68,21 +71,6 @@ async function doRefresh(): Promise<string | null> {
 			console.warn('[Vikunja] Token refresh failed:', retryErr)
 			return null
 		}
-	}
-}
-
-/**
- * Returns the `type` claim from a JWT without verifying the signature.
- * Returns null if the token is missing or malformed.
- */
-function getTokenType(token: string | null): number | null {
-	if (!token) return null
-	try {
-		const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
-		const payload = JSON.parse(atob(base64))
-		return typeof payload.type === 'number' ? payload.type : null
-	} catch {
-		return null
 	}
 }
 

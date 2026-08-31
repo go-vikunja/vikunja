@@ -28,6 +28,7 @@ import {DATE_DISPLAY} from '@/constants/dateDisplay'
 import {TIME_FORMAT} from '@/constants/timeFormat'
 import {RELATION_KIND} from '@/types/IRelationKind'
 import type {IProvider} from '@/types/IProvider'
+import {queryClient} from '@/client/queryClient'
 
 // Set on explicit logout so the login page won't immediately bounce the user
 // back to the OIDC provider. Lives in sessionStorage so it survives the
@@ -117,13 +118,13 @@ export const useAuthStore = defineStore('auth', () => {
 	
 	const isLinkShareAuth = computed(() => info.value?.type === AUTH_TYPES.LINK_SHARE)
 
-	// Cached task links belong to one identity. Compare id and type instead of watching
-	// `info` itself: setUserSettings rebuilds the object for the same user.
+	// Identity-bound caches survive same-user object replacements.
 	watch(() => [info.value?.id ?? null, info.value?.type ?? null] as const, ([id, type], [prevId, prevType]) => {
 		if (id !== prevId || type !== prevType) {
 			clearTaskCache()
+			queryClient.clear()
 		}
-	})
+	}, {flush: 'sync'})
 
 	function setIsLoading(newIsLoading: boolean) {
 		isLoading.value = newIsLoading 
@@ -571,8 +572,10 @@ export const useAuthStore = defineStore('auth', () => {
 
 		removeToken()
 		const loggedInVia = getLoggedInVia()
-		window.localStorage.clear() // Clear all settings and history we might have saved in local storage.
 		lastUserInfoRefresh.value = null
+		setAuthenticated(false)
+		setUser(null)
+		window.localStorage.clear() // Clear all settings and history we might have saved in local storage.
 
 		sessionStorage.setItem(JUST_LOGGED_OUT_KEY, 'true')
 

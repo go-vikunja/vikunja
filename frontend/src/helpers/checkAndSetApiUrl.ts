@@ -1,4 +1,6 @@
 import {useConfigStore} from '@/stores/config'
+import {configureApiClient} from '@/client/http'
+import {queryClient} from '@/client/queryClient'
 
 const API_DEFAULT_PORT = '3456'
 const API_PATH_SUFFIX = '/api/v1'
@@ -118,6 +120,10 @@ export const checkAndSetApiUrl = (pUrl: string | undefined | null): Promise<stri
 		})
 		.then(success => {
 			if (success) {
+				if (window.API_URL !== oldUrl) {
+					configureApiClient()
+					queryClient.clear()
+				}
 				localStorage.setItem('API_URL', window.API_URL)
 				return window.API_URL
 			}
