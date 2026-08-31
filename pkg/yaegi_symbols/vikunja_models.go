@@ -298,6 +298,7 @@ func init() {
 		"IsPseudoProjectID":                                reflect.ValueOf(models.IsPseudoProjectID),
 		"IsUserDirectedEvent":                              reflect.ValueOf(models.IsUserDirectedEvent),
 		"ListAllProjects":                                  reflect.ValueOf(models.ListAllProjects),
+		"ListUsersAsAdmin":                                 reflect.ValueOf(models.ListUsersAsAdmin),
 		"ListUsersFromProject":                             reflect.ValueOf(models.ListUsersFromProject),
 		"MaxTaskRepeatAfterSeconds":                        reflect.ValueOf(models.MaxTaskRepeatAfterSeconds),
 		"MaxTasksPerBulkCreation":                          reflect.ValueOf(constant.MakeFromLiteral("100", token.INT, 0)),
