@@ -22,7 +22,10 @@
 				@keyup.enter="save"
 			/>
 			<FormField :label="$t('project.parent')">
-				<ProjectSearch v-model="parentProject" />
+				<ProjectSearch
+					:model-value="parentProject"
+					@update:modelValue="setParentProject"
+				/>
 			</FormField>
 			<FormField :label="$t('project.edit.description')">
 				<Editor
@@ -94,6 +97,7 @@ const {t} = useI18n({useScope: 'global'})
 const {project, save: saveProject, isLoading, error: loadError} = useProject(() => props.projectId)
 
 const parentProject = ref<ProjectResponse | null>(null)
+const parentProjectChanged = ref(false)
 const isSaving = ref(false)
 
 const loadingModel = computed({
@@ -104,9 +108,18 @@ const loadingModel = computed({
 })
 watch(
 	() => projectStore.projects[project.value.parent_project_id],
-	parent => parentProject.value = parent ?? null,
+	parent => {
+		if (!parentProjectChanged.value) {
+			parentProject.value = parent ?? null
+		}
+	},
 	{immediate: true},
 )
+
+function setParentProject(parent: ProjectResponse | null) {
+	parentProject.value = parent
+	parentProjectChanged.value = true
+}
 
 useTitle(() => project.value.title ? t('project.edit.title', {project: project.value.title}) : '')
 
@@ -118,7 +131,9 @@ async function save() {
 	isSaving.value = true
 
 	try {
-		project.value.parent_project_id = parentProject.value?.id ?? 0
+		if (parentProjectChanged.value) {
+			project.value.parent_project_id = parentProject.value?.id ?? 0
+		}
 		await saveProject()
 		await useBaseStore().handleSetCurrentProject({project: project.value})
 		router.back()
