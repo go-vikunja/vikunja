@@ -51,8 +51,7 @@ func TestHumaTaskCollection(t *testing.T) {
 	}
 
 	t.Run("include_subprojects", func(t *testing.T) {
-		// Project 32 is shared with user1 through team 1 and has project 15 as its
-		// only subproject; task #21 lives in 32, task #24 in 15.
+		// Project 32 is shared with user1 via team 1; task #21 is in 32, task #24 in its child 15.
 		t.Run("off by default", func(t *testing.T) {
 			rec := get("/api/v2/projects/32/views/125/tasks")
 			require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
@@ -66,7 +65,6 @@ func TestHumaTaskCollection(t *testing.T) {
 			assert.Contains(t, rec.Body.String(), `task #24`)
 		})
 		t.Run("ignored for a kanban view", func(t *testing.T) {
-			// Buckets belong to a single view, so a subproject task has no bucket here.
 			rec := get("/api/v2/projects/32/views/128/buckets/tasks?include_subprojects=true")
 			require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
 			assert.NotContains(t, rec.Body.String(), `task #24`)

@@ -488,8 +488,6 @@ function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEv
 	user-select: none;
 }
 
-// Muted source project label for tasks from subprojects, mirroring the
-// project title shown next to tasks in the list and kanban views.
 .gantt-bar-project {
 	font-size: .9em;
 	opacity: .75;

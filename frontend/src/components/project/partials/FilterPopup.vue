@@ -104,8 +104,7 @@ const currentView = computed(() => {
 
 const isProjectView = computed(() => Boolean(props.projectId && props.projectId > 0 && props.viewId))
 
-// Buckets belong to a single view, so tasks from a subproject have no bucket in a
-// kanban view - the api ignores the flag there as well.
+// A subproject's task has no bucket in a kanban view, so the api ignores the flag there.
 const supportsIncludeSubprojects = computed(() => isProjectView.value && currentView.value?.viewKind !== 'kanban')
 
 const includeSubprojects = useIncludeSubprojects(() => currentView.value)

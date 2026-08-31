@@ -5,13 +5,8 @@ import type {IProjectView} from '@/modelTypes/IProjectView'
 
 export const INCLUDE_SUBPROJECTS_QUERY_PARAM = 'include_subprojects'
 
-/**
- * Whether the current view should show tasks from subprojects.
- *
- * The flag saved on the view is only the default - toggling it from the filter popup
- * writes a query param instead, so it stays local to the url the user is on like every
- * other filter. Setting it back to the view default drops the param again.
- */
+// The flag saved on the view is only the default; toggling it writes a query param, and
+// setting it back to that default drops the param again.
 export function useIncludeSubprojects(
 	viewGetter: ComputedGetter<IProjectView | DeepReadonly<IProjectView> | undefined>,
 ): WritableComputedRef<boolean> {

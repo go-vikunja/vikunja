@@ -32,9 +32,7 @@ type LoadedProjectView = Omit<IProjectView, 'filter'> & {filter: IFilters}
 
 const view = ref<LoadedProjectView>()
 
-// IFilters keeps include_subprojects optional so filters without it stay valid, which
-// leaves the checkbox binding as boolean | undefined. Read it through a computed rather
-// than making every filter object carry the key.
+// include_subprojects is optional on IFilters, so the binding needs a boolean fallback.
 const includeSubprojects = computed({
 	get: () => view.value?.filter?.include_subprojects ?? false,
 	set: (value: boolean) => {
@@ -270,7 +268,6 @@ function handleBubbleSave() {
 			<FilterInputDocs />
 		</div>
 
-		<!-- Buckets belong to a single view, so tasks from a subproject have no bucket here. -->
 		<div
 			v-if="view.viewKind !== 'kanban'"
 			class="field mbe-3"

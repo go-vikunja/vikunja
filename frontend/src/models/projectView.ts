@@ -33,8 +33,7 @@ export default class ProjectViewModel extends AbstractModel<IProjectView> implem
 			this.bucketConfiguration = []
 		}
 
-		// assignData camelCases nested objects, but filters stay snake_case to match
-		// the api query params - same as SavedFilterModel does for its filters.
+		// assignData camelCases nested objects; filters stay snake_case, as in SavedFilterModel.
 		this.filter = objectToSnakeCase(this.filter) as IFilters
 		this.bucketConfiguration = this.bucketConfiguration.map(bc => ({
 			...bc,
