@@ -157,9 +157,14 @@ function partitionProjects(projects: Project[]): ProjectListResult {
 		favoriteProject: null,
 		savedFilterProjects: [],
 	}
+	const seenProjectIds = new Set<number>()
 
 	for (const rawProject of projects) {
 		const project = normalizeProject(rawProject)
+		if (seenProjectIds.has(project.id)) {
+			continue
+		}
+		seenProjectIds.add(project.id)
 		if (project.id > 0) {
 			result.projects.push(project)
 		} else if (project.id === -1) {

@@ -92,6 +92,7 @@ describe('project queries', () => {
 					items: [
 						serverProject({id: 1, title: 'First', position: 100}),
 						serverProject({id: -2, title: 'Alpha filter'}),
+						serverProject({id: -3, title: 'Zulu filter'}),
 					],
 					total_pages: 2,
 				},
