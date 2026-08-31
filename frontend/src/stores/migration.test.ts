@@ -4,14 +4,12 @@ import {describe, it, expect, beforeEach, afterEach, vi} from 'vitest'
 import {useMigrationStore} from './migration'
 import type {MigrationStatus} from '@/services/migrator/abstractMigration'
 
-const {loadAllProjectsMock} = vi.hoisted(() => ({
-	loadAllProjectsMock: vi.fn(),
+const {refreshProjectsMock} = vi.hoisted(() => ({
+	refreshProjectsMock: vi.fn(),
 }))
 
-vi.mock('@/stores/projects', () => ({
-	useProjectStore: () => ({
-		loadAllProjects: loadAllProjectsMock,
-	}),
+vi.mock('@/client/queries/projects', () => ({
+	refreshProjects: refreshProjectsMock,
 }))
 
 const POLL_INTERVAL = 3000
@@ -36,7 +34,7 @@ describe('migration store', () => {
 	beforeEach(() => {
 		vi.useFakeTimers()
 		setActivePinia(createPinia())
-		loadAllProjectsMock.mockReset()
+		refreshProjectsMock.mockReset()
 	})
 
 	afterEach(() => {
@@ -74,7 +72,7 @@ describe('migration store', () => {
 
 		expect(store.isFinished).toBe(true)
 		expect(store.hasFailed).toBe(false)
-		expect(loadAllProjectsMock).toHaveBeenCalledTimes(1)
+		expect(refreshProjectsMock).toHaveBeenCalledTimes(1)
 		expect(getStatus).toHaveBeenCalledTimes(1)
 	})
 
@@ -90,7 +88,7 @@ describe('migration store', () => {
 
 		expect(store.hasFailed).toBe(true)
 		expect(store.failureKey).toBe('migrate.failure.interrupted')
-		expect(loadAllProjectsMock).not.toHaveBeenCalled()
+		expect(refreshProjectsMock).not.toHaveBeenCalled()
 	})
 
 	it('renders a detail failure with the raw message', async () => {
@@ -147,7 +145,7 @@ describe('migration store', () => {
 		await tick()
 
 		expect(store.isFinished).toBe(false)
-		expect(loadAllProjectsMock).not.toHaveBeenCalled()
+		expect(refreshProjectsMock).not.toHaveBeenCalled()
 	})
 
 	it('gives up after the consecutive failure cap', async () => {

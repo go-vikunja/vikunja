@@ -29,8 +29,8 @@ vi.mock('@/composables/useLabels', async () => {
 	}
 })
 
-vi.mock('@/stores/projects', () => ({
-	useProjectStore: () => ({
+vi.mock('@/composables/useProjects', () => ({
+	useProjects: () => ({
 		projects: {},
 		findProjectByExactname: () => null,
 	}),

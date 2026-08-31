@@ -4,7 +4,6 @@ import type {IAbstract} from './IAbstract'
 import type {IUser} from './IUser'
 import type {IAttachment} from './IAttachment'
 import type {ISubscription} from './ISubscription'
-import type {IProject} from './IProject'
 import type {IBucket} from './IBucket'
 
 import type {IRelationKind} from '@/types/IRelationKind'
@@ -58,7 +57,7 @@ export interface ITask extends IAbstract {
 	created: Date
 	updated: Date
 
-	projectId: IProject['id'] // Meta, only used when creating a new task
+	projectId: number // Meta, only used when creating a new task
 	bucketId: IBucket['id']
 	buckets: IBucket[]
 }

@@ -11,7 +11,7 @@ const auth = reactive({
 
 vi.mock('@/stores/auth', () => ({useAuthStore: () => auth}))
 vi.mock('@/stores/tasks', () => ({useTaskStore: () => ({loadTasks, isLoading: false})}))
-vi.mock('@/stores/projects', () => ({useProjectStore: () => ({projects: {}})}))
+vi.mock('@/composables/useProjects', () => ({useProjects: () => ({projects: {}})}))
 vi.mock('@/composables/useLabels', () => ({useLabels: () => ({getLabelById: vi.fn()})}))
 vi.mock('@/helpers/setTitle', () => ({setTitle: vi.fn()}))
 vi.mock('vue-i18n', async importOriginal => ({
