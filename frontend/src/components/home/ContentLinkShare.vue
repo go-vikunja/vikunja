@@ -60,6 +60,7 @@ import {computed, ref, watch, onMounted} from 'vue'
 import {useRoute} from 'vue-router'
 
 import {useBaseStore} from '@/stores/base'
+import {useProjectStore} from '@/stores/projects'
 import {useAuthStore} from '@/stores/auth'
 import {useCurrentProject} from '@/composables/useCurrentProject'
 import {queryClient} from '@/client/queryClient'
@@ -73,6 +74,7 @@ import Message from '@/components/misc/Message.vue'
 import {PROJECT_VIEW_KINDS} from '@/constants/projectView'
 
 const baseStore = useBaseStore()
+const projectStore = useProjectStore()
 const authStore = useAuthStore()
 const route = useRoute()
 
@@ -80,6 +82,8 @@ const {currentProject} = useCurrentProject()
 const background = computed(() => baseStore.background)
 const logoVisible = computed(() => baseStore.logoVisible)
 const projectLoadError = ref(false)
+
+projectStore.loadAllProjects()
 
 // Ensure project is loaded for link share
 async function ensureProjectLoaded() {
