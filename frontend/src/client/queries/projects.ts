@@ -204,6 +204,21 @@ export function refreshProject(id: number): Promise<ProjectResponse> {
 	return queryClient.fetchQuery({...projectQuery(id), staleTime: 0})
 }
 
+export function getCachedProject(id: number): ProjectResponse | undefined {
+	const list = queryClient.getQueryData<ProjectListResult>(projectKeys.list())
+
+	// Pseudo projects have no detail endpoint, so the navigation list is their only source.
+	if (id === -1) {
+		return list?.favoriteProject ?? undefined
+	}
+	if (id < 0) {
+		return list?.savedFilterProjects.find(project => project.id === id)
+	}
+
+	return queryClient.getQueryData<ProjectResponse>(projectKeys.detail(id))
+		?? list?.projects.find(project => project.id === id)
+}
+
 export function findProjectByExactTitle(
 	projects: readonly ProjectResponse[],
 	title: string,
