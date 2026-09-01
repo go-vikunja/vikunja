@@ -87,6 +87,9 @@
 				</XButton>
 			</template>
 		</template>
+		<p v-else-if="project.data.value">
+			{{ $t('project.background.noPermission') }}
+		</p>
 
 		<template #footer>
 			<XButton
