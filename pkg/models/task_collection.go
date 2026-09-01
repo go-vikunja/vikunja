@@ -169,8 +169,7 @@ func (tf *TaskCollection) SetForceFlatTasks() {
 	tf.forceFlatTasks = true
 }
 
-// Kanban is excluded because a subproject's task has no bucket in the parent's view and
-// would be sorted into the default or done bucket regardless of its state.
+// A subproject's task has no bucket in the parent's kanban view, so it would be mis-bucketed.
 func (tf *TaskCollection) normalizeIncludeSubprojects(a web.Auth, view *ProjectView) {
 	tf.IncludeSubprojects = tf.IncludeSubprojects &&
 		tf.ProjectID > 0 &&

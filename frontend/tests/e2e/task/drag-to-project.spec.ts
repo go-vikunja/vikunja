@@ -105,7 +105,6 @@ test.describe('Drag Task to Project in Sidebar', () => {
 
 			await expect(page.locator('.global-notification')).toContainText('moved to')
 
-			// The parent is part of this same list, so the task must stay visible.
 			await expect(page.locator('.tasks')).toContainText(task.title)
 			await page.reload()
 			await expect(page.locator('.tasks')).toContainText(task.title)
