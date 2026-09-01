@@ -421,6 +421,80 @@ func TestInsertFromStructure(t *testing.T) {
 			assert.Equal(t, int64(4), count, "task %q must keep position %v in all views", title, position)
 		}
 	})
+	t.Run("preserves generated view rows for related-only tasks", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		child := &models.Task{ID: 20, Title: "Related child"}
+		structure := []*models.ProjectWithTasksAndBuckets{{
+			Project: models.Project{
+				Title: "Import project",
+				Views: []*models.ProjectView{{
+					ID:                      100,
+					Title:                   "Kanban",
+					ViewKind:                models.ProjectViewKindKanban,
+					BucketConfigurationMode: models.BucketConfigurationModeManual,
+					DefaultBucketID:         200,
+				}},
+			},
+			Tasks: []*models.TaskWithComments{{Task: models.Task{
+				ID:       10,
+				Title:    "Parent",
+				BucketID: 200,
+				RelatedTasks: map[models.RelationKind][]*models.Task{
+					models.RelationKindSubtask: {child},
+				},
+			}}},
+			Buckets: []*models.Bucket{{
+				ID:            200,
+				Title:         "Backlog",
+				ProjectViewID: 100,
+			}},
+			Positions: []*models.TaskPosition{{
+				TaskID:        10,
+				ProjectViewID: 100,
+				Position:      123,
+			}},
+			TaskBuckets: []*models.TaskBucket{{
+				TaskID:        10,
+				BucketID:      200,
+				ProjectViewID: 100,
+			}},
+		}}
+
+		require.NoError(t, InsertFromStructure(structure, u))
+
+		s := db.NewSession()
+		defer s.Close()
+
+		viewID := structure[0].Views[0].ID
+		for title, taskID := range map[string]int64{
+			"Parent":        structure[0].Tasks[0].ID,
+			"Related child": child.ID,
+		} {
+			positionCount, err := s.Where("task_id = ? AND project_view_id = ?", taskID, viewID).Count(&models.TaskPosition{})
+			require.NoError(t, err)
+			assert.Equal(t, int64(1), positionCount, "task %q needs a position", title)
+
+			bucketCount, err := s.Where("task_id = ? AND project_view_id = ?", taskID, viewID).Count(&models.TaskBucket{})
+			require.NoError(t, err)
+			assert.Equal(t, int64(1), bucketCount, "task %q needs a bucket", title)
+		}
+
+		parentPosition := &models.TaskPosition{}
+		exists, err := s.Where("task_id = ? AND project_view_id = ?", structure[0].Tasks[0].ID, viewID).Get(parentPosition)
+		require.NoError(t, err)
+		require.True(t, exists)
+		assert.InDelta(t, 123, parentPosition.Position, 0)
+
+		parentBucketCount, err := s.Where(
+			"task_id = ? AND project_view_id = ? AND bucket_id = ?",
+			structure[0].Tasks[0].ID,
+			viewID,
+			structure[0].Buckets[0].ID,
+		).Count(&models.TaskBucket{})
+		require.NoError(t, err)
+		assert.Equal(t, int64(1), parentBucketCount)
+	})
 	t.Run("preserves out-of-order indexes before assigning automatic indexes", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 

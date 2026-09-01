@@ -449,7 +449,6 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 	seedMissingTaskPositions(tasks)
 
 	tasksByOldID := make(map[int64]*models.Task, len(tasks))
-	newTaskIDs := make([]int64, 0, len(tasks))
 	type initialTask struct {
 		task     *models.Task
 		comments []*models.TaskComment
@@ -500,7 +499,6 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		return err
 	}
 	for _, state := range initialTasks {
-		newTaskIDs = append(newTaskIDs, state.task.ID)
 		if state.oldID != 0 {
 			tasksByOldID[state.oldID] = state.task
 		}
@@ -684,6 +682,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 
 	if len(viewsByOldIDs) > 0 {
 		newPositions := []*models.TaskPosition{}
+		positionTaskIDs := make([]int64, 0, len(project.Positions))
 		for _, pos := range project.Positions {
 			_, hasTask := tasksByOldID[pos.TaskID]
 			_, hasView := viewsByOldIDs[pos.ProjectViewID]
@@ -695,10 +694,11 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 				ProjectViewID: viewsByOldIDs[pos.ProjectViewID].ID,
 				Position:      pos.Position,
 			})
+			positionTaskIDs = append(positionTaskIDs, tasksByOldID[pos.TaskID].ID)
 		}
 
 		if len(newPositions) > 0 {
-			_, err = s.In("task_id", newTaskIDs).Delete(&models.TaskPosition{})
+			_, err = s.In("task_id", positionTaskIDs).Delete(&models.TaskPosition{})
 			if err != nil {
 				return
 			}
@@ -709,6 +709,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		}
 
 		newTaskBuckets := make([]*models.TaskBucket, 0, len(project.TaskBuckets))
+		bucketTaskIDs := make([]int64, 0, len(project.TaskBuckets))
 		for _, tb := range project.TaskBuckets {
 			_, hasTask := tasksByOldID[tb.TaskID]
 			_, hasBucket := bucketsByOldID[tb.BucketID]
@@ -720,10 +721,11 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 				BucketID:      bucketsByOldID[tb.BucketID].ID,
 				ProjectViewID: bucketsByOldID[tb.BucketID].ProjectViewID,
 			})
+			bucketTaskIDs = append(bucketTaskIDs, tasksByOldID[tb.TaskID].ID)
 		}
 
 		if len(newTaskBuckets) > 0 {
-			_, err = s.In("task_id", newTaskIDs).Delete(&models.TaskBucket{})
+			_, err = s.In("task_id", bucketTaskIDs).Delete(&models.TaskBucket{})
 			if err != nil {
 				return
 			}
