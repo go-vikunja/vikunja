@@ -175,6 +175,16 @@ describe('configureApiClient', () => {
 		expect(requests).toHaveLength(0)
 	})
 
+	it('rejects an outdated API base with an extra trailing slash', async () => {
+		window.API_URL = 'https://api.example.com/root/api/v2//'
+		configureApiClient()
+		window.API_URL = 'https://api.example.com/root/api/v1'
+
+		await expect(client.get({url: '/probe'})).rejects.toMatchObject({name: 'AbortError'})
+
+		expect(requests).toHaveLength(0)
+	})
+
 	it('rejects when the session changes while reading a successful response body', async () => {
 		auth.token = 'session-token'
 		auth.type = 1

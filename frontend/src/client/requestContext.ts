@@ -32,10 +32,8 @@ export function assertClientRequestContext(context: ClientRequestContext): void 
 	}
 }
 
-function normalizeApiBaseUrl(apiBaseUrl: string | undefined): string {
-	const normalized = new URL(apiBaseUrl ?? '', window.location.origin)
-	normalized.pathname = normalized.pathname.replace(/\/+$/, '') + '/'
-	return normalized.toString()
+function canonicalApiBaseUrl(apiBaseUrl: string | undefined): string {
+	return new URL(apiBaseUrl ?? '', window.location.origin).toString()
 }
 
 export function assertClientRequestMatchesContext(
@@ -46,12 +44,17 @@ export function assertClientRequestMatchesContext(
 	assertClientRequestContext(context)
 
 	const requestUrl = new URL(request.url, window.location.origin)
-	const normalizedApiV2BaseUrl = normalizeApiBaseUrl(context.apiV2BaseUrl)
-	if (normalizeApiBaseUrl(configuredApiV2BaseUrl) !== normalizedApiV2BaseUrl) {
+	const expectedConfiguredBaseUrl = context.apiV2BaseUrl.endsWith('/')
+		? context.apiV2BaseUrl.slice(0, -1)
+		: context.apiV2BaseUrl
+	if (canonicalApiBaseUrl(configuredApiV2BaseUrl) !== canonicalApiBaseUrl(expectedConfiguredBaseUrl)) {
 		throw new DOMException('Client request API changed', 'AbortError')
 	}
 
-	const apiV2BaseUrl = new URL(normalizedApiV2BaseUrl)
+	const apiV2BaseUrl = new URL(context.apiV2BaseUrl, window.location.origin)
+	if (!apiV2BaseUrl.pathname.endsWith('/')) {
+		apiV2BaseUrl.pathname += '/'
+	}
 	if (requestUrl.origin !== apiV2BaseUrl.origin || !requestUrl.pathname.startsWith(apiV2BaseUrl.pathname)) {
 		throw new DOMException('Client request API changed', 'AbortError')
 	}
