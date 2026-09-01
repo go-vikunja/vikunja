@@ -4,7 +4,8 @@ import {klona} from 'klona/lite'
 import type {Filters} from '@/composables/useRouteFilters'
 import type {ITask, ITaskPartialWithId} from '@/modelTypes/ITask'
 
-import TaskCollectionService, {type TaskFilterParams} from '@/services/taskCollection'
+import TaskCollectionService from '@/services/taskCollection'
+import type {TaskFilterParams} from '@/types/TaskFilterParams'
 import TaskService from '@/services/task'
 
 import TaskModel from '@/models/task'
