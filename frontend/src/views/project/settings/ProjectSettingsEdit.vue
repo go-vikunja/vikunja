@@ -107,15 +107,19 @@ const loadingModel = computed({
 	},
 })
 watch(
-	() => props.projectId,
-	() => {
-		parentProjectChanged.value = false
-		parentProject.value = null
-	},
-)
-watch(
-	() => projectStore.projects[project.value.parent_project_id],
-	parent => {
+	() => [
+		props.projectId,
+		project.value.id,
+		projectStore.projects[project.value.parent_project_id],
+	] as const,
+	([projectId, loadedProjectId, parent], previous) => {
+		if (projectId !== previous?.[0] || projectId !== loadedProjectId) {
+			parentProjectChanged.value = false
+			parentProject.value = null
+		}
+		if (projectId !== loadedProjectId) {
+			return
+		}
 		if (!parentProjectChanged.value) {
 			parentProject.value = parent ?? null
 		}
