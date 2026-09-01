@@ -64,19 +64,14 @@ describe('project view queries', () => {
 		expect(projectViewQuery(7, 3).queryKey).not.toEqual(projectViewQuery(7, 2).queryKey)
 	})
 
-	it('loads every list page with the maximum page size', async () => {
-		sdk.projectViewsList
-			.mockResolvedValueOnce({data: {items: views.slice(0, 2), total_pages: 2}})
-			.mockResolvedValueOnce({data: {items: views.slice(2), total_pages: 2}})
+	it('loads the non-paginated view response exactly once', async () => {
+		sdk.projectViewsList.mockResolvedValue({data: {items: views, total_pages: 2}})
 
 		await expect(queryClient.fetchQuery(projectViewsQuery(7, {q: 'work'}))).resolves.toEqual(views)
-		expect(sdk.projectViewsList).toHaveBeenNthCalledWith(1, {
+		expect(sdk.projectViewsList).toHaveBeenCalledOnce()
+		expect(sdk.projectViewsList).toHaveBeenCalledWith({
 			path: {project: 7},
 			query: {page: 1, per_page: 1000, q: 'work'},
-		})
-		expect(sdk.projectViewsList).toHaveBeenNthCalledWith(2, {
-			path: {project: 7},
-			query: {page: 2, per_page: 1000, q: 'work'},
 		})
 	})
 
