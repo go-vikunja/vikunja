@@ -128,4 +128,35 @@ describe('ProjectSettingsEdit', () => {
 			title: 'Second Parent',
 		})
 	})
+
+	it('rehydrates a shared parent when cached project details replace each other', async () => {
+		state.projects![100] = normalizeProject({id: 100, title: 'Shared Parent'})
+		const wrapper = shallowMount(ProjectSettingsEdit, {
+			props: {projectId: 101},
+			global: {
+				stubs: {
+					CreateEdit: SlotStub,
+					FormField: SlotStub,
+					ProjectSearch: ProjectSearchStub,
+				},
+				mocks: {$t: (key: string) => key, $router: {push: vi.fn()}},
+				directives: {focus: () => {}, tooltip: () => {}},
+			},
+		})
+
+		const projectSearch = wrapper.findComponent({name: 'ProjectSearch'})
+		projectSearch.vm.$emit('update:modelValue', normalizeProject({id: 200, title: 'Changed Parent'}))
+		await nextTick()
+
+		const routeChange = wrapper.setProps({projectId: 102})
+		state.project!.value = normalizeProject({id: 102, parent_project_id: 100})
+		await routeChange
+
+		expect(projectSearch.props('modelValue')).toMatchObject({
+			id: 100,
+			title: 'Shared Parent',
+		})
+		await (wrapper.vm as unknown as {save: () => Promise<void>}).save()
+		expect(state.savedParentProjectIds).toEqual([100])
+	})
 })
