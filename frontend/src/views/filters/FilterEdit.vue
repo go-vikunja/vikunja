@@ -55,6 +55,7 @@
 </template>
 
 <script setup lang="ts">
+import {useMounted} from '@vueuse/core'
 import {useI18n} from 'vue-i18n'
 import {useRouter} from 'vue-router'
 
@@ -73,6 +74,7 @@ const props = defineProps<{
 
 const {t} = useI18n({useScope: 'global'})
 const router = useRouter()
+const isMounted = useMounted()
 
 const {
 	saveFilter,
@@ -86,6 +88,9 @@ const {
 
 async function save() {
 	const saved = await saveFilter()
+	if (!isMounted.value) {
+		return
+	}
 	if (saved) {
 		success({message: t('filters.edit.success')})
 		router.back()
