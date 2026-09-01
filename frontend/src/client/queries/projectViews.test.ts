@@ -16,8 +16,22 @@ const projectCache = vi.hoisted(() => ({
 	updateProjectInCache: vi.fn(),
 }))
 
+const requestContext = vi.hoisted(() => ({
+	identity: {id: 1, type: 1} as {id: number; type: number} | null,
+	sessionEpoch: 1,
+	apiV2BaseUrl: 'https://identity-a.example/api/v2/',
+}))
+
 vi.mock('@/client/generated', () => sdk)
 vi.mock('./projects', () => projectCache)
+vi.mock('@/helpers/auth', () => ({
+	getAuthSessionEpoch: () => requestContext.sessionEpoch,
+	getToken: () => null,
+	getTokenIdentity: () => requestContext.identity,
+}))
+vi.mock('@/helpers/fetcher', () => ({
+	getApiV2BaseUrl: () => requestContext.apiV2BaseUrl,
+}))
 
 import {
 	createProjectView,
@@ -43,6 +57,12 @@ function applyProjectUpdate(project: Project): Project {
 	expect(updater).toEqual(expect.any(Function))
 	return updater(project)
 }
+
+beforeEach(() => {
+	requestContext.identity = {id: 1, type: 1}
+	requestContext.sessionEpoch = 1
+	requestContext.apiV2BaseUrl = 'https://identity-a.example/api/v2/'
+})
 
 describe('project view queries', () => {
 	beforeEach(() => {
@@ -131,11 +151,85 @@ describe('project view queries', () => {
 })
 
 describe('project view cache reconciliation', () => {
+	const listKey = projectViewKeys.list(7, {})
+	const delayedMutationCases = [
+		{
+			name: 'create',
+			mock: sdk.projectViewsCreate,
+			run: () => createProjectView({
+				projectId: 7,
+				view: createProjectViewDraft({title: 'Identity A view'}),
+			}),
+			response: {data: {...views[0], id: 4, title: 'Identity A view'}},
+		},
+		{
+			name: 'update',
+			mock: sdk.projectViewsUpdate,
+			run: () => updateProjectView({
+				projectId: 7,
+				viewId: 2,
+				view: createProjectViewUpdate({...views[2], title: 'Identity A update'}),
+			}),
+			response: {data: {...views[2], title: 'Identity A update'}},
+		},
+		{
+			name: 'delete',
+			mock: sdk.projectViewsDelete,
+			run: () => deleteProjectView({projectId: 7, viewId: 2}),
+			response: {data: undefined},
+		},
+	]
+	const contextChanges = [
+		{
+			name: 'authenticated session for the same identity',
+			change: () => {
+				requestContext.sessionEpoch++
+			},
+		},
+		{
+			name: 'authenticated identity',
+			change: () => {
+				requestContext.identity = {id: 2, type: 1}
+			},
+		},
+		{
+			name: 'API origin',
+			change: () => {
+				requestContext.apiV2BaseUrl = 'https://identity-b.example/api/v2/'
+			},
+		},
+	]
+
 	beforeEach(() => {
 		queryClient.clear()
 		vi.clearAllMocks()
-		queryClient.setQueryData(projectViewKeys.list(7, {}), views)
+		queryClient.setQueryData(listKey, views)
 		queryClient.setQueryData(projectViewKeys.list(7, {q: 'board'}), [views[2]])
+	})
+
+	describe.each(contextChanges)('after the $name changes', ({change}) => {
+		it.each(delayedMutationCases)('discards a delayed $name completion', async ({mock, run, response}) => {
+			let resolveRequest: (value: unknown) => void = () => {}
+			mock.mockReturnValue(new Promise(resolve => {
+				resolveRequest = resolve
+			}))
+
+			const mutation = run()
+			await vi.waitFor(() => expect(mock).toHaveBeenCalledOnce())
+			change()
+			queryClient.clear()
+			const identityBViews = views.map(view => ({...view, title: `Identity B ${view.title}`}))
+			queryClient.setQueryData(listKey, identityBViews)
+			queryClient.setQueryData(projectViewKeys.detail(7, 2), identityBViews[2])
+			resolveRequest(response)
+
+			await expect(mutation).rejects.toMatchObject({name: 'AbortError'})
+			expect(queryClient.getQueryData(listKey)).toEqual(identityBViews)
+			expect(queryClient.getQueryData(projectViewKeys.detail(7, 2))).toEqual(identityBViews[2])
+			expect(queryClient.getQueryData(projectViewKeys.detail(7, 4))).toBeUndefined()
+			expect(queryClient.getQueryState(listKey)?.isInvalidated).toBe(false)
+			expect(projectCache.updateProjectInCache).not.toHaveBeenCalled()
+		})
 	})
 
 	it('adds a created view to view and nested project caches', async () => {
