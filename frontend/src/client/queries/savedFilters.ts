@@ -16,9 +16,13 @@ import {queryClient} from '@/client/queryClient'
 import {assertClientRequestContext, captureClientRequestContext} from '@/client/requestContext'
 import type {ClientRequestContext} from '@/client/requestContext'
 import {removeProjectFromHistory} from '@/modules/projectHistory'
-import type {EditableTaskCollection, TaskFilterParams} from '@/types/TaskFilterParams'
+import type {EditableTaskCollection} from '@/types/EditableTaskCollection'
+import type {TaskFilterParams} from '@/types/TaskFilterParams'
 
 import {getProjectIdFromSavedFilterId, projectKeys} from './projects'
+
+// The literal unions keep the shared Filters.vue v-model typed.
+type SavedFilterFilters = EditableTaskCollection & Pick<TaskFilterParams, 'sort_by' | 'order_by'>
 
 export type SavedFilterResponse = Omit<SavedFilterReadBody,
 	'id' |
@@ -30,12 +34,12 @@ export type SavedFilterResponse = Omit<SavedFilterReadBody,
 	id: number
 	title: string
 	description: string
-	filters: EditableTaskCollection
+	filters: SavedFilterFilters
 	is_favorite: boolean
 }
 
 export type SavedFilterDraft = Required<Omit<SavedFilterWritable, 'filters'>> & {
-	filters: EditableTaskCollection
+	filters: SavedFilterFilters
 }
 
 export type UpdateSavedFilterInput = SavedFilterDraft & {id: number}
@@ -48,23 +52,23 @@ export const savedFilterKeys = {
 	] as const,
 }
 
-export function createSavedFilterDraft(filter: Partial<SavedFilterWritable> = {}): SavedFilterDraft {
+export function newSavedFilterDraft(): SavedFilterDraft {
 	return {
-		title: filter.title ?? '',
-		description: filter.description ?? '',
+		title: '',
+		description: '',
 		filters: {
-			sort_by: (filter.filters?.sort_by ?? ['done', 'id']) as TaskFilterParams['sort_by'],
-			order_by: (filter.filters?.order_by ?? ['asc', 'desc']) as TaskFilterParams['order_by'],
-			filter: filter.filters?.filter ?? 'done = false',
-			filter_include_nulls: filter.filters?.filter_include_nulls ?? true,
-			s: filter.filters?.s ?? '',
+			sort_by: ['done', 'id'],
+			order_by: ['asc', 'desc'],
+			filter: 'done = false',
+			filter_include_nulls: true,
+			s: '',
 		},
-		is_favorite: filter.is_favorite ?? false,
+		is_favorite: false,
 	}
 }
 
 // Unset fields arrive as null; creation defaults here would be written back on save.
-function normalizeSavedFilterCollection(filters?: TaskCollection): EditableTaskCollection {
+function normalizeSavedFilterCollection(filters?: TaskCollection): SavedFilterFilters {
 	return {
 		sort_by: (filters?.sort_by ?? []) as TaskFilterParams['sort_by'],
 		order_by: (filters?.order_by ?? []) as TaskFilterParams['order_by'],
@@ -123,7 +127,7 @@ export async function updateSavedFilter({id, ...filter}: UpdateSavedFilterInput)
 	assertClientRequestContext(context)
 	const updated = normalizeSavedFilter(data)
 	queryClient.setQueryData(savedFilterKeys.detail(id), updated)
-	await queryClient.invalidateQueries({queryKey: savedFilterKeys.detailRoot(id)})
+	await queryClient.invalidateQueries({queryKey: savedFilterKeys.detail(id, 'markdown')})
 	await invalidateProjectNavigation(context)
 	return updated
 }
