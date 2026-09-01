@@ -19,9 +19,9 @@
 				/>
 				<button
 					class="collapse-all-btn"
-					:class="{ 'is-collapsed': collapseAll }"
+					:class="{ 'is-collapsed': collapseAllSubtasks.collapsed }"
+					:title="collapseAllSubtasks.collapsed ? $t('task.expandAllSubtasks') : $t('task.collapseAllSubtasks')"
 					@click="toggleCollapseAll"
-					:title="collapseAll ? 'Expand all subtasks' : 'Collapse all subtasks'"
 				>
 					<Icon icon="chevron-down" />
 				</button>
@@ -112,6 +112,7 @@ import {ref, computed, nextTick, onMounted, onBeforeUnmount, watch, toRef, provi
 import draggable from 'zhyswan-vuedraggable'
 
 import ProjectWrapper from '@/components/project/ProjectWrapper.vue'
+import {collapseAllSubtasksKey, type CollapseAllSubtasksState} from '@/components/tasks/partials/collapseAllSubtasks'
 import ButtonLink from '@/components/misc/ButtonLink.vue'
 import AddTask from '@/components/tasks/AddTask.vue'
 import SingleTaskInProject from '@/components/tasks/partials/SingleTaskInProject.vue'
@@ -150,12 +151,14 @@ const ctaVisible = ref(false)
 
 const drag = ref(false)
 
-// Collapse all subtasks
-const collapseAll = ref(false)
-provide('collapseAll', collapseAll)
+const collapseAllSubtasks = ref<CollapseAllSubtasksState>({collapsed: false, token: 0})
+provide(collapseAllSubtasksKey, collapseAllSubtasks)
 
 function toggleCollapseAll() {
-	collapseAll.value = !collapseAll.value
+	collapseAllSubtasks.value = {
+		collapsed: !collapseAllSubtasks.value.collapsed,
+		token: collapseAllSubtasks.value.token + 1,
+	}
 }
 
 const {
@@ -396,7 +399,11 @@ onBeforeUnmount(() => {
 	color: var(--grey-500);
 	cursor: pointer;
 	border-radius: $radius;
-	transition: all 0.2s ease;
+	transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+
+	:deep(svg) {
+		transition: transform 0.2s ease;
+	}
 
 	&:hover {
 		color: var(--grey-700);
@@ -407,7 +414,10 @@ onBeforeUnmount(() => {
 	&.is-collapsed {
 		color: var(--primary);
 		border-color: var(--primary);
-		transform: rotate(-90deg);
+
+		:deep(svg) {
+			transform: rotate(-90deg);
+		}
 	}
 }
 

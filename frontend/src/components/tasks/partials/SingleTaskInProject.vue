@@ -16,8 +16,8 @@
 				v-if="task.relatedTasks?.subtask?.length"
 				class="collapse-toggle collapse-toggle-left"
 				:class="{ 'is-collapsed': isCollapsed }"
+				:aria-label="isCollapsed ? $t('task.expandSubtasks') : $t('task.collapseSubtasks')"
 				@click.stop="toggleCollapse"
-				:aria-label="isCollapsed ? 'Expand subtasks' : 'Collapse subtasks'"
 			>
 				<Icon icon="chevron-down" />
 			</button>
@@ -192,8 +192,8 @@
 				v-if="task.relatedTasks?.subtask?.length"
 				class="collapse-toggle"
 				:class="{ 'is-collapsed': isCollapsed }"
+				:aria-label="isCollapsed ? $t('task.expandSubtasks') : $t('task.collapseSubtasks')"
 				@click.stop="toggleCollapse"
-				:aria-label="isCollapsed ? 'Expand subtasks' : 'Collapse subtasks'"
 			>
 				<Icon icon="chevron-down" />
 			</button>
@@ -216,11 +216,12 @@
 </template>
 
 <script setup lang="ts">
-import {ref, watch, shallowReactive, onMounted, computed, inject, type Ref} from 'vue'
+import {ref, watch, shallowReactive, onMounted, computed, inject} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import TaskModel, {getHexColor} from '@/models/task'
 import type {ITask} from '@/modelTypes/ITask'
+import {collapseAllSubtasksKey} from '@/components/tasks/partials/collapseAllSubtasks'
 
 import PriorityLabel from '@/components/tasks/partials/PriorityLabel.vue'
 import Labels from '@/components/tasks/partials/Labels.vue'
@@ -265,27 +266,20 @@ const props = withDefaults(defineProps<{
 	allTasks: () => [],
 })
 
-// Collapse state
+const emit = defineEmits<{
+	'taskUpdated': [task: ITask],
+}>()
+
 const isCollapsed = ref(false)
-const collapseAll = inject<Ref<boolean>>('collapseAll', ref(false))
 
-// Watch for global collapse/expand all
-watch(collapseAll, (newVal) => {
-	isCollapsed.value = newVal
-})
-
-const hasSubtasks = computed(() => {
-	return typeof task.value.relatedTasks?.subtask !== 'undefined' && 
-		task.value.relatedTasks.subtask.length > 0
+const collapseAllSubtasks = inject(collapseAllSubtasksKey, undefined)
+watch(() => collapseAllSubtasks?.value.token, () => {
+	isCollapsed.value = collapseAllSubtasks?.value.collapsed ?? false
 })
 
 function toggleCollapse() {
 	isCollapsed.value = !isCollapsed.value
 }
-
-const emit = defineEmits<{
-	'taskUpdated': [task: ITask],
-}>()
 
 function getTaskById(taskId: number): ITask | undefined {
 	if (typeof props.allTasks === 'undefined' || props.allTasks.length === 0) {
@@ -660,15 +654,19 @@ defineExpose({
 	color: var(--grey-400);
 	cursor: pointer;
 	border-radius: $radius;
-	transition: transform 0.2s ease, color 0.2s ease;
+	transition: color 0.2s ease;
 	margin-inline-start: 0.5rem;
+
+	:deep(svg) {
+		transition: transform 0.2s ease;
+	}
 
 	&:hover {
 		color: var(--grey-600);
 		background: var(--grey-100);
 	}
 
-	&.is-collapsed {
+	&.is-collapsed :deep(svg) {
 		transform: rotate(-90deg);
 	}
 }
@@ -678,8 +676,7 @@ defineExpose({
 	margin-inline-end: 0.5rem;
 	order: -1;
 
-	// 窄屏隐藏左侧按钮，只保留右侧
-	@media (max-width: 768px) {
+	@media (width <= 768px) {
 		display: none;
 	}
 }
