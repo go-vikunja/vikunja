@@ -1,23 +1,27 @@
-import {defineComponent, ref, type Ref} from 'vue'
-import {shallowMount} from '@vue/test-utils'
+import {defineComponent, ref, toValue, type Ref} from 'vue'
+import {flushPromises, shallowMount} from '@vue/test-utils'
 import {beforeEach, describe, expect, it, vi} from 'vitest'
 
+import type {Image} from '@/client/generated'
 import type {ProjectResponse} from '@/client/queries/projects'
-import type {UnsplashSearchImage} from '@/client/queries/projectBackgrounds'
 
-type SearchData = {pages: UnsplashSearchImage[][]}
+type SearchData = {pages: Image[][]}
 
 const state = vi.hoisted(() => ({
 	currentProjectId: 0,
+	routeParams: undefined as {projectId: string} | undefined,
 	project: undefined as Ref<ProjectResponse | undefined> | undefined,
+	projectIsError: undefined as Ref<boolean> | undefined,
 	searchData: undefined as Ref<SearchData | undefined> | undefined,
 	searchIsError: undefined as Ref<boolean> | undefined,
 }))
 
 const refetchSearch = vi.hoisted(() => vi.fn())
+const infiniteQueryOptions = vi.hoisted(() => [] as unknown[])
 
 const handleSetCurrentProject = vi.hoisted(() => vi.fn())
 const routerBack = vi.hoisted(() => vi.fn())
+const success = vi.hoisted(() => vi.fn())
 const backgrounds = vi.hoisted(() => ({
 	deleteProjectBackground: vi.fn(),
 	setUnsplashProjectBackground: vi.fn(),
@@ -31,6 +35,7 @@ vi.mock('@/client/queries/projectBackgrounds', async () => {
 		projectBackgroundQuery: (projectId: number) => ({queryKey: ['project-backgrounds', 'project', projectId]}),
 		unsplashBackgroundSearchQuery: (query: string) => ({queryKey: ['project-backgrounds', 'unsplash', 'search', query]}),
 		unsplashBackgroundThumbnailQuery: (imageId: string) => ({queryKey: ['project-backgrounds', 'unsplash', 'thumbnail', imageId]}),
+		unsplashAuthor: () => null,
 		useDeleteProjectBackgroundMutation: () => ({
 			isPending: ref(false),
 			mutateAsync: backgrounds.deleteProjectBackground,
@@ -50,16 +55,24 @@ vi.mock('@tanstack/vue-query', async importOriginal => {
 	const {ref} = await import('vue')
 	return {
 		...await importOriginal<typeof import('@tanstack/vue-query')>(),
-		useQuery: () => ({data: state.project, error: ref(null), isPending: ref(false)}),
-		useInfiniteQuery: () => ({
-			data: state.searchData,
-			isFetching: ref(false),
-			hasNextPage: ref(false),
-			isFetchingNextPage: ref(false),
-			fetchNextPage: vi.fn(),
-			isError: state.searchIsError,
-			refetch: refetchSearch,
+		useQuery: () => ({
+			data: state.project,
+			error: ref(null),
+			isPending: ref(false),
+			isError: state.projectIsError,
 		}),
+		useInfiniteQuery: (options: unknown) => {
+			infiniteQueryOptions.push(options)
+			return {
+				data: state.searchData,
+				isFetching: ref(false),
+				hasNextPage: ref(false),
+				isFetchingNextPage: ref(false),
+				fetchNextPage: vi.fn(),
+				isError: state.searchIsError,
+				refetch: refetchSearch,
+			}
+		},
 	}
 })
 
@@ -76,22 +89,27 @@ vi.mock('@/stores/config', () => ({
 	useConfigStore: () => ({enabledBackgroundProviders: ['unsplash', 'upload']}),
 }))
 
-vi.mock('@/message', () => ({error: vi.fn(), success: vi.fn()}))
+vi.mock('@/message', () => ({error: vi.fn(), success}))
 vi.mock('@/composables/useTitle', () => ({useTitle: vi.fn()}))
-vi.mock('vue-router', () => ({
-	useRoute: () => ({params: {projectId: '7'}}),
-	useRouter: () => ({back: routerBack}),
-}))
+vi.mock('vue-router', async () => {
+	const {reactive} = await import('vue')
+	state.routeParams = reactive({projectId: '7'})
+	return {
+		useRoute: () => ({params: state.routeParams}),
+		useRouter: () => ({back: routerBack}),
+	}
+})
 vi.mock('vue-i18n', async importOriginal => ({
 	...await importOriginal<typeof import('vue-i18n')>(),
 	useI18n: () => ({t: (key: string) => key}),
 }))
 
+import UnsplashBackgroundThumbnail from '@/components/project/partials/UnsplashBackgroundThumbnail.vue'
 import ProjectSettingsBackground from './ProjectSettingsBackground.vue'
 
-const SlotStub = defineComponent({template: '<div><slot /></div>'})
+const CreateEditStub = defineComponent({template: '<div><slot /><slot name="footer" /></div>'})
 const BaseButtonStub = defineComponent({template: '<a><slot /></a>'})
-const XButtonStub = defineComponent({template: '<button @click="$emit(\'click\')"><slot /></button>'})
+const XButtonStub = defineComponent({emits: ['click'], template: '<button @click="$emit(\'click\', $event)"><slot /></button>'})
 
 function project(overrides: Partial<ProjectResponse> = {}) {
 	return {
@@ -107,24 +125,35 @@ function project(overrides: Partial<ProjectResponse> = {}) {
 function mountView() {
 	return shallowMount(ProjectSettingsBackground, {
 		global: {
-			stubs: {BaseButton: BaseButtonStub, CreateEdit: SlotStub, XButton: XButtonStub},
+			stubs: {BaseButton: BaseButtonStub, CreateEdit: CreateEditStub, XButton: XButtonStub},
 			mocks: {$t: (key: string) => key, $router: {back: routerBack}},
 			directives: {focus: () => {}, tooltip: () => {}},
 		},
 	})
 }
 
-type Vm = {removeBackground: () => Promise<void>}
+function findButton(wrapper: ReturnType<typeof mountView>, text: string) {
+	return wrapper.findAll('button').find(button => button.text() === text)
+}
+
+async function clickRemove(wrapper: ReturnType<typeof mountView>) {
+	await findButton(wrapper, 'project.background.remove')?.trigger('click')
+	await flushPromises()
+}
 
 describe('ProjectSettingsBackground', () => {
 	beforeEach(() => {
 		state.currentProjectId = 7
+		state.routeParams!.projectId = '7'
 		state.project = ref(project())
+		state.projectIsError = ref(false)
 		state.searchData = ref({pages: []})
 		state.searchIsError = ref(false)
+		infiniteQueryOptions.splice(0)
 		handleSetCurrentProject.mockClear()
 		routerBack.mockClear()
 		refetchSearch.mockClear()
+		success.mockClear()
 		backgrounds.deleteProjectBackground.mockReset()
 		backgrounds.setUnsplashProjectBackground.mockReset()
 		backgrounds.uploadProjectBackground.mockReset()
@@ -135,39 +164,60 @@ describe('ProjectSettingsBackground', () => {
 		backgrounds.deleteProjectBackground.mockResolvedValue(updated)
 		const wrapper = mountView()
 
-		await (wrapper.vm as unknown as Vm).removeBackground()
+		await clickRemove(wrapper)
 
 		expect(backgrounds.deleteProjectBackground).toHaveBeenCalledWith(7)
 		expect(handleSetCurrentProject).toHaveBeenCalledWith({project: updated, forceUpdate: true})
+		expect(success).toHaveBeenCalled()
 		expect(routerBack).toHaveBeenCalled()
 	})
 
-	it('does not touch the base store when the current project changed while removing', async () => {
+	it('still reports success when another project is currently displayed', async () => {
+		state.currentProjectId = 99
+		backgrounds.deleteProjectBackground.mockResolvedValue(project({background_information: null}))
+		const wrapper = mountView()
+
+		await clickRemove(wrapper)
+
+		expect(backgrounds.deleteProjectBackground).toHaveBeenCalledWith(7)
+		expect(handleSetCurrentProject).not.toHaveBeenCalled()
+		expect(success).toHaveBeenCalled()
+		expect(routerBack).toHaveBeenCalled()
+	})
+
+	it('does nothing when the route left the project while removing', async () => {
 		backgrounds.deleteProjectBackground.mockImplementation(async () => {
-			state.currentProjectId = 99
+			state.routeParams!.projectId = '99'
 			return project({background_information: null})
 		})
 		const wrapper = mountView()
 
-		await (wrapper.vm as unknown as Vm).removeBackground()
+		await clickRemove(wrapper)
 
 		expect(backgrounds.deleteProjectBackground).toHaveBeenCalledWith(7)
 		expect(handleSetCurrentProject).not.toHaveBeenCalled()
+		expect(success).not.toHaveBeenCalled()
 		expect(routerBack).not.toHaveBeenCalled()
 	})
 
-	it('renders an encoded attribution link only for images with a known author', () => {
-		state.searchData = ref({pages: [[
-			{id: 'no-author', blur_hash: 'hash', author: '', author_name: ''},
-			{id: 'with-author', blur_hash: 'hash', author: 'a b', author_name: 'A B'},
-		]]})
+	it.each([0, null])('hides every background action for max_permission %s', maxPermission => {
+		state.project = ref(project({max_permission: maxPermission} as Partial<ProjectResponse>))
 		const wrapper = mountView()
 
-		const links = wrapper.findAll('.image-search__info')
+		expect(findButton(wrapper, 'project.background.upload')).toBeUndefined()
+		expect(findButton(wrapper, 'project.background.remove')).toBeUndefined()
+		expect(wrapper.find('input[type="text"]').exists()).toBe(false)
+		expect(toValue(infiniteQueryOptions[0])).toMatchObject({enabled: false})
+	})
 
-		expect(links).toHaveLength(1)
-		expect(links[0].attributes('href')).toBe('https://unsplash.com/@a%20b?utm_source=vikunja&utm_medium=referral')
-		expect(links[0].text()).toBe('A B')
+	it('renders a thumbnail only for search results with an id', () => {
+		state.searchData = ref({pages: [[{blur_hash: 'hash'}, {id: 'with-id', blur_hash: 'hash'}]]})
+		const wrapper = mountView()
+
+		const thumbnails = wrapper.findAllComponents(UnsplashBackgroundThumbnail)
+
+		expect(thumbnails).toHaveLength(1)
+		expect(thumbnails[0].props('image')).toMatchObject({id: 'with-id'})
 	})
 
 	it('shows a retry button when the unsplash search failed and refetches on click', async () => {
@@ -176,8 +226,7 @@ describe('ProjectSettingsBackground', () => {
 
 		expect(wrapper.text()).toContain('project.background.searchError')
 
-		const retryButton = wrapper.findAll('button').find(button => button.text() === 'project.background.retry')
-		await retryButton?.trigger('click')
+		await findButton(wrapper, 'project.background.retry')?.trigger('click')
 
 		expect(refetchSearch).toHaveBeenCalled()
 	})
