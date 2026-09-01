@@ -2,6 +2,7 @@
 import {onBeforeMount, ref, watch} from 'vue'
 
 import type {ProjectView, ProjectViewWritable, TaskCollection} from '@/client/generated'
+import type {EditableTaskCollection} from '@/types/TaskFilterParams'
 import {
 	createProjectViewDraft,
 	createProjectViewUpdate,
@@ -33,29 +34,33 @@ const emit = defineEmits<{
 }>()
 
 type ProjectViewFormValue = ProjectViewWritable & Pick<ProjectView, 'id' | 'project_id'>
-type EditableFilters = Required<Omit<TaskCollection, 'sort_by' | 'order_by'>> & {
-	sort_by: string[]
-	order_by: string[]
-}
+type SortField = EditableTaskCollection['sort_by'][number]
+type SortOrder = EditableTaskCollection['order_by'][number]
 type LoadedProjectView = Omit<ProjectViewDraft, 'filter' | 'bucket_configuration'> &
 	Pick<ProjectView, 'id' | 'project_id'> & {
-		filter: EditableFilters
-		bucket_configuration: Array<{title: string, filter: EditableFilters}>
+		filter: EditableTaskCollection
+		bucket_configuration: Array<{title: string, filter: EditableTaskCollection}>
 	}
 
 const {isPending, getLabelByExactTitle, getLabelById} = useLabels()
 const projectNavigation = useProjectNavigation()
 
-const transformFilterFromApi = (filterInput?: TaskCollection): EditableFilters => {
+const SORT_FIELDS: readonly SortField[] = ['start_date', 'end_date', 'due_date', 'done', 'id', 'position', 'title', 'relevance']
+const SORT_ORDERS: readonly SortOrder[] = ['asc', 'desc']
+
+const isSortField = (value: string): value is SortField => SORT_FIELDS.some(field => field === value)
+const isSortOrder = (value: string): value is SortOrder => SORT_ORDERS.some(order => order === value)
+
+const transformFilterFromApi = (filterInput?: TaskCollection): EditableTaskCollection => {
 	const filterString = transformFilterStringFromApi(
 		filterInput?.filter ?? '',
 		labelId => getLabelById(labelId)?.title || null,
 		projectId => projectNavigation.projects[projectId]?.title || null,
 	)
 
-	const filter: EditableFilters = {
-		sort_by: filterInput?.sort_by ?? [],
-		order_by: filterInput?.order_by ?? [],
+	const filter: EditableTaskCollection = {
+		sort_by: (filterInput?.sort_by ?? []).filter(isSortField),
+		order_by: (filterInput?.order_by ?? []).filter(isSortOrder),
 		filter: '',
 		filter_include_nulls: false,
 		s: '',
@@ -154,7 +159,7 @@ function save() {
 		return
 	}
 
-	const transformFilterForApi = (filterInput?: EditableFilters): EditableFilters => {
+	const transformFilterForApi = (filterInput?: EditableTaskCollection): EditableTaskCollection => {
 		const filterString = transformFilterStringForApi(
 			filterInput?.filter || '',
 			labelTitle => getLabelByExactTitle(labelTitle)?.id || null,
@@ -163,7 +168,7 @@ function save() {
 				return found?.id || null
 			},
 		)
-		const filter: EditableFilters = {
+		const filter: EditableTaskCollection = {
 			sort_by: filterInput?.sort_by ?? [],
 			order_by: filterInput?.order_by ?? [],
 			filter: '',
