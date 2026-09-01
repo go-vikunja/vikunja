@@ -21,6 +21,8 @@ export type ProjectViewDraft = Required<Omit<ProjectViewWritable, 'bucket_config
 	bucket_configuration: NonNullable<ProjectViewWritable['bucket_configuration']>
 }
 
+export type ProjectViewUpdate = Omit<ProjectViewDraft, 'filter'> & Pick<ProjectViewWritable, 'filter'>
+
 export type CreateProjectViewInput = {
 	projectId: number
 	view: ProjectViewWritable
@@ -70,6 +72,13 @@ export function createProjectViewDraft(view: Partial<ProjectViewWritable> = {}):
 		bucket_configuration: view.bucket_configuration ?? [],
 		default_bucket_id: view.default_bucket_id ?? 0,
 		done_bucket_id: view.done_bucket_id ?? 0,
+	}
+}
+
+export function createProjectViewUpdate(view: Partial<ProjectViewWritable>): ProjectViewUpdate {
+	return {
+		...createProjectViewDraft(view),
+		filter: view.filter,
 	}
 }
 
