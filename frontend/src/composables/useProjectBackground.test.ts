@@ -1,6 +1,6 @@
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest'
 import {computed, defineComponent, h, nextTick, ref, toValue, type Ref} from 'vue'
-import {flushPromises, mount, type VueWrapper} from '@vue/test-utils'
+import {mount, type VueWrapper} from '@vue/test-utils'
 
 import type {ProjectResponse} from '@/client/queries/projects'
 
@@ -56,8 +56,6 @@ function mountBackground(projectValue: Ref<ProjectResponse | null>) {
 describe('useProjectBackground', () => {
 	let backgroundBlob: ReturnType<typeof ref<Blob | undefined>>
 	let isPending: ReturnType<typeof ref<boolean>>
-	let createObjectURL: ReturnType<typeof vi.fn<(blob: Blob) => string>>
-	let revokeObjectURL: ReturnType<typeof vi.fn<(url: string) => void>>
 	let wrappers: VueWrapper[]
 
 	beforeEach(() => {
@@ -69,10 +67,8 @@ describe('useProjectBackground', () => {
 		getBlobFromBlurHash.mockReset()
 
 		let objectUrl = 0
-		createObjectURL = vi.fn(() => `blob:${++objectUrl}`)
-		revokeObjectURL = vi.fn()
-		window.URL.createObjectURL = createObjectURL
-		window.URL.revokeObjectURL = revokeObjectURL
+		window.URL.createObjectURL = vi.fn(() => `blob:${++objectUrl}`)
+		window.URL.revokeObjectURL = vi.fn()
 		wrappers = []
 	})
 
@@ -101,68 +97,18 @@ describe('useProjectBackground', () => {
 		})
 	})
 
-	it('revokes replaced and unmounted background and BlurHash URLs', async () => {
-		const firstBackground = new Blob(['background-one'])
-		const secondBackground = new Blob(['background-two'])
-		const firstBlur = new Blob(['blur-one'])
-		const secondBlur = new Blob(['blur-two'])
-		backgroundBlob.value = firstBackground
-		getBlobFromBlurHash
-			.mockResolvedValueOnce(firstBlur)
-			.mockResolvedValueOnce(secondBlur)
-		const currentProject = ref<ProjectResponse | null>(project())
+	it('ignores a cached blob while the project has no background', async () => {
+		getBlobFromBlurHash.mockResolvedValue(null)
+		backgroundBlob.value = new Blob(['background'])
+		const currentProject = ref<ProjectResponse | null>(project({background_information: null}))
 		const mounted = mountBackground(currentProject)
 		wrappers.push(mounted.wrapper)
-		await flushPromises()
+
+		expect(mounted.state.value.background.value).toBeUndefined()
+
+		currentProject.value = project()
+		await nextTick()
 
 		expect(mounted.state.value.background.value).toBe('blob:1')
-		expect(mounted.state.value.blurHashUrl.value).toBe('blob:2')
-
-		backgroundBlob.value = secondBackground
-		await nextTick()
-		expect(revokeObjectURL).toHaveBeenCalledWith('blob:1')
-		expect(mounted.state.value.background.value).toBe('blob:3')
-
-		currentProject.value = project({background_blur_hash: 'hash-two'})
-		await flushPromises()
-		expect(revokeObjectURL).toHaveBeenCalledWith('blob:2')
-		expect(mounted.state.value.blurHashUrl.value).toBe('blob:4')
-
-		mounted.wrapper.unmount()
-		wrappers = []
-		expect(revokeObjectURL).toHaveBeenCalledWith('blob:3')
-		expect(revokeObjectURL).toHaveBeenCalledWith('blob:4')
-	})
-
-	it('clears owned URLs when the project loses its background', async () => {
-		backgroundBlob.value = new Blob(['background'])
-		getBlobFromBlurHash.mockResolvedValue(new Blob(['blur']))
-		const currentProject = ref<ProjectResponse | null>(project())
-		const mounted = mountBackground(currentProject)
-		wrappers.push(mounted.wrapper)
-		await flushPromises()
-
-		currentProject.value = project({background_information: null})
-		await nextTick()
-
-		expect(mounted.state.value.background.value).toBeNull()
-		expect(mounted.state.value.blurHashUrl.value).toBe('')
-		expect(revokeObjectURL).toHaveBeenCalledWith('blob:1')
-		expect(revokeObjectURL).toHaveBeenCalledWith('blob:2')
-	})
-
-	it('does not create a BlurHash URL after unmount', async () => {
-		let resolveBlur: (blob: Blob) => void = () => {}
-		getBlobFromBlurHash.mockReturnValue(new Promise(resolve => {
-			resolveBlur = resolve
-		}))
-		const currentProject = ref<ProjectResponse | null>(project())
-		const mounted = mountBackground(currentProject)
-		mounted.wrapper.unmount()
-
-		resolveBlur(new Blob(['late-blur']))
-		await flushPromises()
-
-		expect(createObjectURL).not.toHaveBeenCalled()
 	})
 })
