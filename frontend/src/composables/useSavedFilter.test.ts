@@ -5,7 +5,7 @@ import {beforeEach, describe, expect, it, vi} from 'vitest'
 const useQuery = vi.hoisted(() => vi.fn())
 const queryLayer = vi.hoisted(() => ({
 	createSavedFilter: vi.fn(),
-	createSavedFilterDraft: vi.fn(() => ({
+	newSavedFilterDraft: vi.fn(() => ({
 		title: '',
 		description: '',
 		filters: {
@@ -40,7 +40,7 @@ function savedFilterResponse(id: number, title: string) {
 		id,
 		title,
 		description: '',
-		filters: queryLayer.createSavedFilterDraft().filters,
+		filters: queryLayer.newSavedFilterDraft().filters,
 		is_favorite: false,
 	}
 }
@@ -63,7 +63,6 @@ describe('useSavedFilter', () => {
 		useQuery.mockReturnValue({
 			data: ref(undefined),
 			isPending: ref(true),
-			isFetching: ref(true),
 			error: ref(null),
 		})
 		queryLayer.savedFilterQuery.mockClear()
@@ -71,38 +70,37 @@ describe('useSavedFilter', () => {
 		queryLayer.updateSavedFilter.mockReset()
 	})
 
-	it('waits for the initial refresh and does not overwrite an edited draft later', async () => {
+	it('seeds cached data immediately and does not overwrite an edited draft later', async () => {
 		const data = ref(savedFilterResponse(1, 'Cached'))
-		const isPending = ref(true)
-		const isFetching = ref(true)
 		useQuery.mockReturnValue({
 			data,
-			isPending,
-			isFetching,
+			isPending: ref(false),
 			error: ref(null),
 		})
 
 		const {wrapper, state} = mountSavedFilter(-2)
-		expect(state.value.filter.value.title).toBe('')
-		expect(state.value.isLoading.value).toBe(true)
-
-		data.value = {...data.value, title: 'Fresh'}
-		isPending.value = false
-		isFetching.value = false
-		await nextTick()
-		expect(state.value.filter.value.title).toBe('Fresh')
-
-		state.value.filter.value.title = 'Local edit'
-		isFetching.value = true
-		data.value = {...data.value, title: 'Background refresh'}
-		await nextTick()
-		// isPending stays false during a background refetch, so the form must not go read-only.
+		expect(state.value.filter.value.title).toBe('Cached')
+		// A background refetch keeps isPending false, so the form must not go read-only.
 		expect(state.value.isLoading.value).toBe(false)
 
-		isFetching.value = false
+		state.value.filter.value.title = 'Local edit'
+		data.value = {...data.value, title: 'Background refresh'}
 		await nextTick()
 
 		expect(state.value.filter.value.title).toBe('Local edit')
+		wrapper.unmount()
+	})
+
+	it('never seeds data belonging to another saved filter', () => {
+		useQuery.mockReturnValue({
+			data: ref(savedFilterResponse(1, 'Other filter')),
+			isPending: ref(false),
+			error: ref(null),
+		})
+
+		const {wrapper, state} = mountSavedFilter(-43)
+		expect(state.value.filter.value.id).toBe(0)
+		expect(state.value.filter.value.title).toBe('')
 		wrapper.unmount()
 	})
 
@@ -110,11 +108,9 @@ describe('useSavedFilter', () => {
 		const data = ref<ReturnType<typeof savedFilterResponse> | undefined>(undefined)
 		const error = ref<Error | null>(null)
 		const isPending = ref(true)
-		const isFetching = ref(true)
 		useQuery.mockReturnValue({
 			data,
 			isPending,
-			isFetching,
 			error,
 		})
 
@@ -123,7 +119,6 @@ describe('useSavedFilter', () => {
 
 		error.value = new Error('Not found')
 		isPending.value = false
-		isFetching.value = false
 		await nextTick()
 
 		expect(state.value.isLoading.value).toBe(false)
@@ -144,7 +139,6 @@ describe('useSavedFilter', () => {
 			return {
 				data: computed(() => savedFilterId.value > 0 ? cached : undefined),
 				isPending: computed(() => savedFilterId.value <= 0),
-				isFetching: ref(false),
 				error: ref(null),
 			}
 		})
@@ -172,13 +166,13 @@ describe('useSavedFilter', () => {
 		const {wrapper, state} = mountSavedFilter()
 		state.value.filter.value.title = 'New'
 
-		const result = await state.value.createFilter()
+		const result = await state.value.submit()
 
 		expect(result).toBe(created)
 		expect(queryLayer.createSavedFilter).toHaveBeenCalledWith({
 			title: 'New',
 			description: '',
-			filters: queryLayer.createSavedFilterDraft().filters,
+			filters: queryLayer.newSavedFilterDraft().filters,
 			is_favorite: false,
 		})
 
@@ -189,8 +183,19 @@ describe('useSavedFilter', () => {
 
 	it('does not save while the loaded draft does not match the current saved filter', async () => {
 		const {wrapper, state} = mountSavedFilter(-2)
+		state.value.filter.value.title = 'Loaded'
 
-		expect(await state.value.saveFilter()).toBeUndefined()
+		expect(await state.value.submit()).toBeUndefined()
+		expect(queryLayer.updateSavedFilter).not.toHaveBeenCalled()
+		wrapper.unmount()
+	})
+
+	it('does not create a filter when submitting an unloaded draft for an existing one', async () => {
+		const {wrapper, state} = mountSavedFilter(-2)
+		state.value.filter.value.title = 'Loaded'
+
+		expect(await state.value.submit()).toBeUndefined()
+		expect(queryLayer.createSavedFilter).not.toHaveBeenCalled()
 		expect(queryLayer.updateSavedFilter).not.toHaveBeenCalled()
 		wrapper.unmount()
 	})
@@ -199,7 +204,7 @@ describe('useSavedFilter', () => {
 		const {wrapper, state} = mountSavedFilter()
 		expect(state.value.titleValid.value).toBe(true)
 
-		state.value.validateTitleField()
+		state.value.markTitleTouched()
 		expect(state.value.titleValid.value).toBe(false)
 
 		state.value.filter.value.title = 'Some title'
