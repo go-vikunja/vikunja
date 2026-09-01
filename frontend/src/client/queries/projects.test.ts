@@ -50,6 +50,9 @@ import {
 	duplicateProjectMutationOptions,
 	findProjectByExactTitle,
 	getCachedProject,
+	getProjectIdFromSavedFilterId,
+	getSavedFilterIdFromProjectId,
+	isSavedFilterProject,
 	normalizeProject,
 	projectKeys,
 	projectQuery,
@@ -535,5 +538,25 @@ describe('project drafts and cache mutations', () => {
 		expect(sdk.subscriptionsDelete).toHaveBeenCalledWith({path: {entity: 'project', entityID: 1}})
 		expect(queryClient.getQueryData<ProjectListResult>(listKey)?.projects[0].subscription).toBeUndefined()
 		expect(queryClient.getQueryData<ProjectResponse>(projectKeys.detail(1))?.subscription).toBeUndefined()
+	})
+})
+
+describe('saved filter project ids', () => {
+	it('maps saved filters to negative pseudo-project ids and back', () => {
+		expect(getProjectIdFromSavedFilterId(1)).toBe(-2)
+		expect(getProjectIdFromSavedFilterId(42)).toBe(-43)
+		expect(getProjectIdFromSavedFilterId(0)).toBe(0)
+		expect(getProjectIdFromSavedFilterId(-1)).toBe(0)
+		expect(getSavedFilterIdFromProjectId(-2)).toBe(1)
+		expect(getSavedFilterIdFromProjectId(-43)).toBe(42)
+		expect(getSavedFilterIdFromProjectId(-1)).toBe(0)
+		expect(getSavedFilterIdFromProjectId(1)).toBe(0)
+	})
+
+	it('recognizes only saved-filter pseudo-projects', () => {
+		expect(isSavedFilterProject({id: -2})).toBe(true)
+		expect(isSavedFilterProject({id: -1})).toBe(false)
+		expect(isSavedFilterProject({id: 1})).toBe(false)
+		expect(isSavedFilterProject(null)).toBe(false)
 	})
 })

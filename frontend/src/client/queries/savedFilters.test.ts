@@ -13,15 +13,26 @@ const sdk = vi.hoisted(() => ({
 	patchFiltersRead: vi.fn(),
 }))
 
+const requestContext = vi.hoisted(() => ({
+	identity: {id: 1, type: 1} as {id: number; type: number} | null,
+	sessionEpoch: 1,
+	apiV2BaseUrl: 'https://identity-a.example/api/v2/',
+}))
+
 vi.mock('@/client/generated', () => sdk)
+vi.mock('@/helpers/auth', () => ({
+	getAuthSessionEpoch: () => requestContext.sessionEpoch,
+	getToken: () => null,
+	getTokenIdentity: () => requestContext.identity,
+}))
+vi.mock('@/helpers/fetcher', () => ({
+	getApiV2BaseUrl: () => requestContext.apiV2BaseUrl,
+}))
 
 import {
 	createSavedFilter,
 	createSavedFilterDraft,
 	deleteSavedFilter,
-	getProjectIdFromSavedFilterId,
-	getSavedFilterIdFromProjectId,
-	isSavedFilterProject,
 	patchSavedFilterFavorite,
 	savedFilterKeys,
 	savedFilterQuery,
@@ -51,23 +62,21 @@ const emptyProjectList: ProjectListResult = {
 	savedFilterProjects: [],
 }
 
+beforeEach(() => {
+	requestContext.identity = {id: 1, type: 1}
+	requestContext.sessionEpoch = 1
+	requestContext.apiV2BaseUrl = 'https://identity-a.example/api/v2/'
+})
+
 describe('saved filter queries', () => {
 	beforeEach(() => {
 		queryClient.clear()
 		Object.values(sdk).forEach(mock => mock.mockReset())
 	})
 
-	it('keys details by id and rich-text format', () => {
-		expect(savedFilterKeys.all).toEqual(['saved-filters'])
-		expect(savedFilterKeys.details()).toEqual(['saved-filters', 'detail'])
-		expect(savedFilterKeys.detailRoot(42)).toEqual(['saved-filters', 'detail', 42])
-		expect(savedFilterKeys.detail(42)).toEqual(['saved-filters', 'detail', 42, 'html'])
-		expect(savedFilterKeys.detail(42, 'markdown')).toEqual(['saved-filters', 'detail', 42, 'markdown'])
-	})
-
-	it('reads and normalizes a saved filter', async () => {
+	it('reads a saved filter without inventing creation defaults', async () => {
 		sdk.filtersRead.mockResolvedValue({
-			data: {id: 42, title: 'Upcoming'},
+			data: {id: 42, title: 'Upcoming', filters: {sort_by: null, order_by: null}},
 		})
 
 		const result = await queryClient.fetchQuery(savedFilterQuery(42, 'markdown'))
@@ -81,10 +90,10 @@ describe('saved filter queries', () => {
 			title: 'Upcoming',
 			description: '',
 			filters: {
-				sort_by: ['done', 'id'],
-				order_by: ['asc', 'desc'],
-				filter: 'done = false',
-				filter_include_nulls: true,
+				sort_by: [],
+				order_by: [],
+				filter: '',
+				filter_include_nulls: false,
 				s: '',
 			},
 			is_favorite: false,
@@ -112,17 +121,14 @@ describe('saved filter queries', () => {
 		const created = serverSavedFilter({id: 8, title: 'Created'})
 		sdk.filtersCreate.mockResolvedValue({data: created})
 
-		await expect(createSavedFilter({title: 'Created'}, 'markdown')).resolves.toEqual(created)
+		await expect(createSavedFilter({title: 'Created'})).resolves.toEqual(created)
 
-		expect(sdk.filtersCreate).toHaveBeenCalledWith({
-			body: {title: 'Created'},
-			query: {format: 'markdown'},
-		})
-		expect(queryClient.getQueryData(savedFilterKeys.detail(8, 'markdown'))).toEqual(created)
+		expect(sdk.filtersCreate).toHaveBeenCalledWith({body: {title: 'Created'}})
+		expect(queryClient.getQueryData(savedFilterKeys.detail(8))).toEqual(created)
 		expect(queryClient.getQueryState(listKey)?.isInvalidated).toBe(true)
 	})
 
-	it('updates only the selected detail format and invalidates project navigation', async () => {
+	it('updates the detail cache, invalidates other formats and project navigation', async () => {
 		const listKey = projectKeys.list()
 		queryClient.setQueryData(listKey, emptyProjectList)
 		queryClient.setQueryData(savedFilterKeys.detail(8), serverSavedFilter({
@@ -138,7 +144,7 @@ describe('saved filter queries', () => {
 		sdk.filtersUpdate.mockResolvedValue({data: serverSavedFilter({id: 8, title: 'After'})})
 
 		const writable = createSavedFilterDraft({title: 'After'})
-		await expect(updateSavedFilter({id: 8, ...writable}, 'markdown')).resolves.toMatchObject({
+		await expect(updateSavedFilter({id: 8, ...writable})).resolves.toMatchObject({
 			id: 8,
 			title: 'After',
 		})
@@ -146,14 +152,15 @@ describe('saved filter queries', () => {
 		expect(sdk.filtersUpdate).toHaveBeenCalledWith({
 			path: {filter: 8},
 			body: writable,
-			query: {format: 'markdown'},
 		})
-		expect(queryClient.getQueryData(savedFilterKeys.detail(8))).toBeUndefined()
-		expect(queryClient.getQueryData<SavedFilterResponse>(savedFilterKeys.detail(8, 'markdown'))?.title).toBe('After')
+		expect(queryClient.getQueryData<SavedFilterResponse>(savedFilterKeys.detail(8))?.title).toBe('After')
+		expect(queryClient.getQueryState(savedFilterKeys.detail(8, 'markdown'))?.isInvalidated).toBe(true)
 		expect(queryClient.getQueryState(listKey)?.isInvalidated).toBe(true)
 	})
 
 	it('patches only the favorite field in every cached format', async () => {
+		const listKey = projectKeys.list()
+		queryClient.setQueryData(listKey, emptyProjectList)
 		const html = serverSavedFilter({id: 8, description: '<p>HTML</p>'})
 		const markdown = serverSavedFilter({id: 8, description: 'Markdown'})
 		queryClient.setQueryData(savedFilterKeys.detail(8), html)
@@ -174,39 +181,101 @@ describe('saved filter queries', () => {
 			description: 'Markdown',
 			is_favorite: true,
 		})
+		expect(queryClient.getQueryState(listKey)?.isInvalidated).toBe(true)
 	})
 
-	it('deletes every cached detail format and invalidates project navigation', async () => {
+	it('deletes every cached detail format, the pseudo-project and invalidates project navigation', async () => {
 		const listKey = projectKeys.list()
 		queryClient.setQueryData(listKey, emptyProjectList)
 		queryClient.setQueryData(savedFilterKeys.detail(8), serverSavedFilter({id: 8}))
 		queryClient.setQueryData(savedFilterKeys.detail(8, 'markdown'), serverSavedFilter({id: 8}))
+		queryClient.setQueryData(projectKeys.detail(-9), {id: -9, title: 'Filter'})
 		sdk.filtersDelete.mockResolvedValue({data: undefined})
 
 		await deleteSavedFilter(8)
 
 		expect(sdk.filtersDelete).toHaveBeenCalledWith({path: {filter: 8}})
 		expect(queryClient.getQueriesData({queryKey: savedFilterKeys.detailRoot(8)})).toEqual([])
+		expect(queryClient.getQueriesData({queryKey: projectKeys.detailRoot(-9)})).toEqual([])
 		expect(queryClient.getQueryState(listKey)?.isInvalidated).toBe(true)
 	})
 })
 
-describe('saved filter project ids', () => {
-	it('maps saved filters to negative pseudo-project ids and back', () => {
-		expect(getProjectIdFromSavedFilterId(1)).toBe(-2)
-		expect(getProjectIdFromSavedFilterId(42)).toBe(-43)
-		expect(getProjectIdFromSavedFilterId(0)).toBe(0)
-		expect(getProjectIdFromSavedFilterId(-1)).toBe(0)
-		expect(getSavedFilterIdFromProjectId(-2)).toBe(1)
-		expect(getSavedFilterIdFromProjectId(-43)).toBe(42)
-		expect(getSavedFilterIdFromProjectId(-1)).toBe(0)
-		expect(getSavedFilterIdFromProjectId(1)).toBe(0)
+describe('saved filter mutations after the request context changes', () => {
+	const listKey = projectKeys.list()
+	const delayedMutationCases = [
+		{
+			name: 'create',
+			mock: sdk.filtersCreate,
+			run: () => createSavedFilter({title: 'Identity A filter'}),
+			response: {data: serverSavedFilter({id: 8, title: 'Identity A filter'})},
+		},
+		{
+			name: 'update',
+			mock: sdk.filtersUpdate,
+			run: () => updateSavedFilter({id: 8, ...createSavedFilterDraft({title: 'Identity A update'})}),
+			response: {data: serverSavedFilter({id: 8, title: 'Identity A update'})},
+		},
+		{
+			name: 'favorite',
+			mock: sdk.patchFiltersRead,
+			run: () => patchSavedFilterFavorite(8, true),
+			response: {data: serverSavedFilter({id: 8, is_favorite: true})},
+		},
+		{
+			name: 'delete',
+			mock: sdk.filtersDelete,
+			run: () => deleteSavedFilter(8),
+			response: {data: undefined},
+		},
+	]
+	const contextChanges = [
+		{
+			name: 'authenticated session for the same identity',
+			change: () => {
+				requestContext.sessionEpoch++
+			},
+		},
+		{
+			name: 'authenticated identity',
+			change: () => {
+				requestContext.identity = {id: 2, type: 1}
+			},
+		},
+		{
+			name: 'API origin',
+			change: () => {
+				requestContext.apiV2BaseUrl = 'https://identity-b.example/api/v2/'
+			},
+		},
+	]
+
+	beforeEach(() => {
+		queryClient.clear()
+		Object.values(sdk).forEach(mock => mock.mockReset())
 	})
 
-	it('recognizes only saved-filter pseudo-projects', () => {
-		expect(isSavedFilterProject({id: -2})).toBe(true)
-		expect(isSavedFilterProject({id: -1})).toBe(false)
-		expect(isSavedFilterProject({id: 1})).toBe(false)
-		expect(isSavedFilterProject(null)).toBe(false)
+	describe.each(contextChanges)('after the $name changes', ({change}) => {
+		it.each(delayedMutationCases)('discards a delayed $name completion', async ({mock, run, response}) => {
+			queryClient.setQueryData(listKey, emptyProjectList)
+			queryClient.setQueryData(savedFilterKeys.detail(8), serverSavedFilter({id: 8, title: 'Identity A'}))
+			let resolveRequest: (value: unknown) => void = () => {}
+			mock.mockReturnValue(new Promise(resolve => {
+				resolveRequest = resolve
+			}))
+
+			const mutation = run()
+			await vi.waitFor(() => expect(mock).toHaveBeenCalledOnce())
+			change()
+			queryClient.clear()
+			const identityBFilter = serverSavedFilter({id: 8, title: 'Identity B'})
+			queryClient.setQueryData(listKey, emptyProjectList)
+			queryClient.setQueryData(savedFilterKeys.detail(8), identityBFilter)
+			resolveRequest(response)
+
+			await expect(mutation).rejects.toMatchObject({name: 'AbortError'})
+			expect(queryClient.getQueryData(savedFilterKeys.detail(8))).toEqual(identityBFilter)
+			expect(queryClient.getQueryState(listKey)?.isInvalidated).toBe(false)
+		})
 	})
 })
