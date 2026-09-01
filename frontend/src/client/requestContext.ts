@@ -33,7 +33,24 @@ export function assertClientRequestContext(context: ClientRequestContext): void 
 }
 
 function canonicalApiBaseUrl(apiBaseUrl: string | undefined): string {
-	return new URL(apiBaseUrl ?? '', window.location.origin).toString()
+	const isRootRelative = apiBaseUrl?.startsWith('/') && !apiBaseUrl.startsWith('//')
+	const isHttpUrl = /^https?:\/\//i.test(apiBaseUrl ?? '')
+	if (!isRootRelative && !isHttpUrl) {
+		throw new DOMException('Invalid client API URL', 'AbortError')
+	}
+
+	try {
+		const normalized = new URL(apiBaseUrl, window.location.origin)
+		if (normalized.protocol !== 'http:' && normalized.protocol !== 'https:') {
+			throw new DOMException('Invalid client API URL', 'AbortError')
+		}
+		return normalized.toString()
+	} catch (error) {
+		if (error instanceof DOMException && error.name === 'AbortError') {
+			throw error
+		}
+		throw new DOMException('Invalid client API URL', 'AbortError')
+	}
 }
 
 export function assertClientRequestMatchesContext(
