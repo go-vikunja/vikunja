@@ -18,7 +18,6 @@ package models
 
 import (
 	"errors"
-	"fmt"
 	"math"
 	"regexp"
 	"sort"
@@ -882,101 +881,52 @@ func calculateDefaultPosition(entityID int64, position float64) float64 {
 	return position
 }
 
-func setNewTaskIndexes(s *xorm.Session, projectID int64, tasks []*Task) (err error) {
+func setNewTaskIndexes(s *xorm.Session, projectID int64, tasks []*Task) error {
 	if len(tasks) == 0 {
 		return nil
 	}
 
 	reserved := int64(len(tasks))
-	affected, err := s.ID(projectID).
-		Where("last_index <= ?", math.MaxInt64-reserved).
-		Incr("last_index", reserved).
-		Update(&ProjectTaskCounter{})
+	lastIndex, err := reserveTaskIndexes(s, projectID, reserved)
 	if err != nil {
 		return err
 	}
-	counter := &ProjectTaskCounter{}
-	has, err := s.ID(projectID).Get(counter)
-	if err != nil {
-		return err
-	}
-	if !has {
-		return fmt.Errorf("task index counter for project %d is missing", projectID)
-	}
-	if affected != 1 {
-		return fmt.Errorf("task index counter for project %d is exhausted", projectID)
-	}
-	previousIndex := counter.LastIndex - reserved
+	previous := lastIndex - reserved
 
-	presets := make([]int64, 0, len(tasks))
+	// Presets above the old high water mark cannot collide with anything, everything else gets a fresh index.
+	used := make(map[int64]bool, len(tasks))
+	highest := lastIndex
 	for _, t := range tasks {
-		if t.Index > previousIndex {
-			presets = append(presets, t.Index)
-		}
-	}
-
-	taken := make(map[int64]bool, len(presets))
-	if len(presets) > 0 {
-		existing := []*Task{}
-		err = s.Unscoped().
-			Cols("index").
-			Where("project_id = ?", projectID).
-			In("`index`", presets).
-			Find(&existing)
-		if err != nil {
-			return err
-		}
-		for _, t := range existing {
-			taken[t.Index] = true
-		}
-	}
-
-	accepted := make([]bool, len(tasks))
-	acceptedMax := previousIndex
-	for i, t := range tasks {
-		if t.Index > previousIndex && !taken[t.Index] {
-			accepted[i] = true
-			taken[t.Index] = true
-			if t.Index > acceptedMax {
-				acceptedMax = t.Index
-			}
-		}
-	}
-
-	unassigned := int64(0)
-	for _, isAccepted := range accepted {
-		if !isAccepted {
-			unassigned++
-		}
-	}
-	if acceptedMax > math.MaxInt64-unassigned {
-		return fmt.Errorf("task index counter for project %d is exhausted", projectID)
-	}
-
-	nextIndex := acceptedMax
-	for i, t := range tasks {
-		if accepted[i] {
+		if t.Index <= previous || used[t.Index] {
+			t.Index = 0
 			continue
 		}
-		nextIndex++
-		t.Index = nextIndex
-	}
-
-	finalIndex := nextIndex
-	if extra := finalIndex - counter.LastIndex; extra > 0 {
-		affected, err = s.ID(projectID).
-			Where("last_index <= ?", math.MaxInt64-extra).
-			Incr("last_index", extra).
-			Update(&ProjectTaskCounter{})
-		if err != nil {
-			return err
-		}
-		if affected != 1 {
-			return fmt.Errorf("task index counter for project %d is missing", projectID)
+		used[t.Index] = true
+		if t.Index > highest {
+			highest = t.Index
 		}
 	}
 
-	return nil
+	next := previous
+	for _, t := range tasks {
+		if t.Index != 0 {
+			continue
+		}
+		next++
+		for used[next] {
+			next++
+		}
+		t.Index = next
+	}
+
+	if highest > lastIndex {
+		_, err = s.ID(projectID).
+			Where("last_index < ?", highest).
+			Cols("last_index").
+			Update(&ProjectTaskCounter{LastIndex: highest})
+	}
+
+	return err
 }
 
 // Create is the implementation to create a project task

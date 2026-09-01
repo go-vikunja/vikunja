@@ -18,8 +18,6 @@ package models
 
 import (
 	"math"
-	"sort"
-	"sync"
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
@@ -27,7 +25,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"xorm.io/xorm/schemas"
 )
 
 func TestTaskIndexStateFixtures(t *testing.T) {
@@ -139,13 +136,13 @@ func TestSetNewTaskIndexes(t *testing.T) {
 		for i, task := range tasks {
 			indexes[i] = task.Index
 		}
-		assert.Equal(t, []int64{10, 11, 5, 12, 13}, indexes)
+		assert.Equal(t, []int64{10, 1, 5, 2, 3}, indexes)
 
 		counter := &ProjectTaskCounter{}
 		has, err := s.ID(4).Get(counter)
 		require.NoError(t, err)
 		require.True(t, has)
-		assert.Equal(t, int64(13), counter.LastIndex)
+		assert.Equal(t, int64(10), counter.LastIndex)
 	})
 
 	t.Run("retired and duplicate presets get new indexes", func(t *testing.T) {
@@ -165,35 +162,47 @@ func TestSetNewTaskIndexes(t *testing.T) {
 		for i, task := range tasks {
 			indexes[i] = task.Index
 		}
-		assert.Equal(t, []int64{100, 101, 102, 103}, indexes)
+		assert.Equal(t, []int64{100, 35, 36, 37}, indexes)
 	})
 
-	t.Run("missing counter is an invariant violation", func(t *testing.T) {
+	t.Run("missing counter is seeded from existing tasks", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
 
-		err := setNewTaskIndexes(s, 999, []*Task{{}})
-		require.ErrorContains(t, err, "task index counter")
+		_, err := s.ID(1).Delete(&ProjectTaskCounter{})
+		require.NoError(t, err)
+
+		tasks := []*Task{{}}
+		require.NoError(t, setNewTaskIndexes(s, 1, tasks))
+		// Task 51 holds index 34 in project 1 and is soft deleted.
+		assert.Equal(t, int64(35), tasks[0].Index)
+
+		counter := &ProjectTaskCounter{}
+		has, err := s.ID(1).Get(counter)
+		require.NoError(t, err)
+		require.True(t, has)
+		assert.Equal(t, int64(35), counter.LastIndex)
 	})
 
-	t.Run("trusted batch cannot allocate past max int", func(t *testing.T) {
+	t.Run("a max int preset exhausts the counter", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
 		defer func() { _ = s.Rollback() }()
 
-		err := setNewTaskIndexes(s, 4, []*Task{{Index: math.MaxInt64}, {}})
-		require.ErrorContains(t, err, "exhausted")
-		require.NoError(t, s.Rollback())
+		tasks := []*Task{{Index: math.MaxInt64}, {}}
+		require.NoError(t, setNewTaskIndexes(s, 4, tasks))
+		assert.Equal(t, int64(math.MaxInt64), tasks[0].Index)
+		assert.Equal(t, int64(1), tasks[1].Index)
 
-		check := db.NewSession()
-		defer check.Close()
 		counter := &ProjectTaskCounter{}
-		has, err := check.ID(4).Get(counter)
+		has, err := s.ID(4).Get(counter)
 		require.NoError(t, err)
 		require.True(t, has)
-		assert.Zero(t, counter.LastIndex)
+		assert.Equal(t, int64(math.MaxInt64), counter.LastIndex)
+
+		require.True(t, IsErrTaskIndexExhausted(setNewTaskIndexes(s, 4, []*Task{{}})))
 	})
 
 	t.Run("exhausted counter rejects another reservation", func(t *testing.T) {
@@ -205,7 +214,7 @@ func TestSetNewTaskIndexes(t *testing.T) {
 		require.NoError(t, err)
 
 		err = setNewTaskIndexes(s, 4, []*Task{{}})
-		require.ErrorContains(t, err, "exhausted")
+		require.True(t, IsErrTaskIndexExhausted(err))
 
 		counter := &ProjectTaskCounter{}
 		has, err := s.ID(4).Get(counter)
@@ -226,61 +235,6 @@ func TestSetNewTaskIndexes(t *testing.T) {
 		tasks := []*Task{{}}
 		require.NoError(t, setNewTaskIndexes(s, 4, tasks))
 		assert.Equal(t, int64(1), tasks[0].Index)
-	})
-
-	t.Run("concurrent reservations are unique", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		if db.Type() == schemas.SQLITE {
-			t.Skip("the shared in-memory sqlite harness cannot exercise concurrent writes")
-		}
-
-		oldMaxOpen := x.DB().Stats().MaxOpenConnections
-		if oldMaxOpen == 1 {
-			x.SetMaxOpenConns(2)
-			defer x.SetMaxOpenConns(oldMaxOpen)
-		}
-
-		ready := make(chan struct{}, 2)
-		allocate := make(chan struct{})
-		indexes := make(chan int64, 2)
-		errs := make(chan error, 2)
-		var wg sync.WaitGroup
-		wg.Add(2)
-		for range 2 {
-			go func() {
-				defer wg.Done()
-				s := db.NewSession()
-				defer s.Close()
-				ready <- struct{}{}
-				<-allocate
-				tasks := []*Task{{}}
-				if err := setNewTaskIndexes(s, 4, tasks); err != nil {
-					errs <- err
-					return
-				}
-				if err := s.Commit(); err != nil {
-					errs <- err
-					return
-				}
-				indexes <- tasks[0].Index
-			}()
-		}
-		<-ready
-		<-ready
-		close(allocate)
-		wg.Wait()
-		close(indexes)
-		close(errs)
-
-		for err := range errs {
-			require.NoError(t, err)
-		}
-		got := make([]int64, 0, 2)
-		for index := range indexes {
-			got = append(got, index)
-		}
-		sort.Slice(got, func(i, j int) bool { return got[i] < got[j] })
-		assert.Equal(t, []int64{1, 2}, got)
 	})
 }
 

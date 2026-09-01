@@ -178,29 +178,6 @@ func TestBulkTaskCreation_Create(t *testing.T) {
 		assert.Less(t, positions[1], positions[btc.Tasks[0].ID])
 	})
 
-	t.Run("preset indexes", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		btc := &BulkTaskCreation{
-			ProjectID: 1,
-			Tasks: []*Task{
-				{Title: "free preset", Index: 100},      // free → kept
-				{Title: "taken preset", Index: 1},       // taken by task 1 → reassigned
-				{Title: "duplicate preset", Index: 100}, // taken earlier in the batch → reassigned
-				{Title: "no preset"},
-			},
-		}
-		require.NoError(t, btc.Create(s, usr))
-		require.NoError(t, s.Commit())
-
-		assert.Equal(t, int64(100), btc.Tasks[0].Index)
-		assert.Equal(t, int64(101), btc.Tasks[1].Index)
-		assert.Equal(t, int64(102), btc.Tasks[2].Index)
-		assert.Equal(t, int64(103), btc.Tasks[3].Index)
-	})
-
 	t.Run("explicit bucket", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()

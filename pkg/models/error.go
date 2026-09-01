@@ -709,6 +709,33 @@ func (err ErrInvalidTaskInBulkCreation) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrTaskIndexExhausted represents an error where a project ran out of task indexes.
+type ErrTaskIndexExhausted struct {
+	ProjectID int64
+}
+
+// IsErrTaskIndexExhausted checks if an error is ErrTaskIndexExhausted.
+func IsErrTaskIndexExhausted(err error) bool {
+	_, ok := err.(ErrTaskIndexExhausted)
+	return ok
+}
+
+func (err ErrTaskIndexExhausted) Error() string {
+	return fmt.Sprintf("Task indexes of the project are exhausted. [ProjectID: %d]", err.ProjectID)
+}
+
+// ErrCodeTaskIndexExhausted holds the unique world-error code of this error.
+const ErrCodeTaskIndexExhausted = 4034
+
+// HTTPError holds the http error description.
+func (err ErrTaskIndexExhausted) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusConflict,
+		Code:     ErrCodeTaskIndexExhausted,
+		Message:  "The project cannot allocate more task indexes.",
+	}
+}
+
 // ErrTaskDoesNotExist represents a "ErrProjectDoesNotExist" kind of error. Used if the project does not exist.
 type ErrTaskDoesNotExist struct {
 	ID int64

@@ -16,7 +16,11 @@
 
 package models
 
-import "xorm.io/xorm"
+import (
+	"math"
+
+	"xorm.io/xorm"
+)
 
 type ProjectTaskCounter struct {
 	ProjectID int64 `xorm:"bigint not null pk"`
@@ -24,6 +28,51 @@ type ProjectTaskCounter struct {
 }
 
 func (*ProjectTaskCounter) TableName() string { return "project_task_counters" }
+
+// reserveTaskIndexes atomically claims count indexes and returns the new high water mark.
+func reserveTaskIndexes(s *xorm.Session, projectID, count int64) (lastIndex int64, err error) {
+	affected, err := s.ID(projectID).
+		Where("last_index <= ?", math.MaxInt64-count).
+		Incr("last_index", count).
+		Update(&ProjectTaskCounter{})
+	if err != nil {
+		return 0, err
+	}
+
+	counter := &ProjectTaskCounter{}
+	has, err := s.ID(projectID).Get(counter)
+	if err != nil {
+		return 0, err
+	}
+	if has {
+		if affected == 0 {
+			return 0, ErrTaskIndexExhausted{ProjectID: projectID}
+		}
+		return counter.LastIndex, nil
+	}
+
+	// Projects inserted outside CreateProject (fixtures, test seeding) have no counter row.
+	highest := &Task{}
+	_, err = s.Unscoped().
+		Where("project_id = ?", projectID).
+		Desc("index").
+		Cols("index").
+		Get(highest)
+	if err != nil {
+		return 0, err
+	}
+	if highest.Index > math.MaxInt64-count {
+		return 0, ErrTaskIndexExhausted{ProjectID: projectID}
+	}
+
+	lastIndex = highest.Index + count
+	_, err = s.Insert(&ProjectTaskCounter{ProjectID: projectID, LastIndex: lastIndex})
+	if err != nil {
+		return 0, err
+	}
+
+	return lastIndex, nil
+}
 
 type TaskIndexAlias struct {
 	ProjectID int64 `xorm:"bigint not null unique(task_index_alias)"`
