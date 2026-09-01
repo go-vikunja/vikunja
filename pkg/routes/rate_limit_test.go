@@ -17,11 +17,14 @@
 package routes
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
+	"sync/atomic"
 	"testing"
 	"time"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 	auth2 "code.vikunja.io/api/pkg/modules/auth"
 
@@ -32,6 +35,35 @@ import (
 	"github.com/ulule/limiter/v3"
 	"github.com/ulule/limiter/v3/drivers/store/memory"
 )
+
+const rateLimitTestTimeout = 5 * time.Second
+
+func receiveRateLimitTestValue[T any](t *testing.T, ch <-chan T) T {
+	t.Helper()
+	select {
+	case value := <-ch:
+		return value
+	case <-time.After(rateLimitTestTimeout):
+		t.Fatal("timed out waiting for rate limit test")
+		var zero T
+		return zero
+	}
+}
+
+type contextCheckingRateLimitStore struct {
+	limiter.Store
+	refunds atomic.Int32
+}
+
+func (s *contextCheckingRateLimitStore) Increment(ctx context.Context, key string, count int64, rate limiter.Rate) (limiter.Context, error) {
+	if err := ctx.Err(); err != nil {
+		return limiter.Context{}, err
+	}
+	if count < 0 {
+		s.refunds.Add(1)
+	}
+	return s.Store.Increment(ctx, key, count, rate)
+}
 
 func newRateLimitTestContext(e *echo.Echo, remoteAddr string) (*echo.Context, *httptest.ResponseRecorder) {
 	req := httptest.NewRequest(http.MethodGet, "/api/v2/info", nil)
@@ -139,4 +171,134 @@ func TestRateLimitUnknownKind(t *testing.T) {
 	other, _ := newRateLimitTestContext(e, "5.6.7.8:1234")
 	require.NoError(t, h(other))
 	assert.Equal(t, 2, *calls)
+}
+
+func TestBasicAuthRateLimitBoundsConcurrentAuthentication(t *testing.T) {
+	log.InitLogger()
+	previousStore := config.RateLimitStore.GetString()
+	previousLimit := config.RateLimitBasicAuthLimit.GetString()
+	config.RateLimitStore.Set("memory")
+	config.RateLimitBasicAuthLimit.Set("2")
+	t.Cleanup(func() {
+		config.RateLimitStore.Set(previousStore)
+		config.RateLimitBasicAuthLimit.Set(previousLimit)
+	})
+
+	e := echo.New()
+	entered := make(chan struct{}, 3)
+	release := make(chan struct{})
+	completed := make(chan int, 3)
+	var calls atomic.Int32
+	h := basicAuthRateLimit()(func(_ *echo.Context) error {
+		calls.Add(1)
+		entered <- struct{}{}
+		<-release
+		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
+	})
+
+	start := make(chan struct{})
+	for range 3 {
+		go func() {
+			<-start
+			c, _ := newRateLimitTestContext(e, "1.2.3.4:1234")
+			c.Request().SetBasicAuth("user", "wrong-password")
+			completed <- echo.StatusCode(h(c))
+		}()
+	}
+	close(start)
+
+	receiveRateLimitTestValue(t, entered)
+	receiveRateLimitTestValue(t, entered)
+	thirdStatus := 0
+	completedCount := 0
+	select {
+	case <-entered:
+	case thirdStatus = <-completed:
+		completedCount++
+	case <-time.After(rateLimitTestTimeout):
+		t.Fatal("timed out waiting for the third authentication")
+	}
+	close(release)
+	for completedCount < 3 {
+		status := receiveRateLimitTestValue(t, completed)
+		completedCount++
+		if status == http.StatusTooManyRequests {
+			thirdStatus = status
+		}
+	}
+
+	assert.LessOrEqual(t, calls.Load(), int32(2))
+	assert.Equal(t, http.StatusTooManyRequests, thirdStatus)
+}
+
+func TestBasicAuthRateLimitDoesNotRefundAnExpiredReservation(t *testing.T) {
+	log.InitLogger()
+	e := echo.New()
+	store := &contextCheckingRateLimitStore{Store: memory.NewStore()}
+	rateLimiter := limiter.New(store, limiter.Rate{Period: 1100 * time.Millisecond, Limit: 1})
+	initialNow := time.Now()
+	var nowNanos atomic.Int64
+	nowNanos.Store(initialNow.UnixNano())
+	now := func() time.Time {
+		return time.Unix(0, nowNanos.Load())
+	}
+
+	firstEntered := make(chan struct{})
+	releaseFirst := make(chan struct{})
+	firstCompleted := make(chan error, 1)
+	var calls atomic.Int32
+	h := basicAuthRateLimitWithClock(rateLimiter, now)(func(_ *echo.Context) error {
+		if calls.Add(1) == 1 {
+			close(firstEntered)
+			<-releaseFirst
+			return nil
+		}
+		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
+	})
+
+	go func() {
+		c, _ := newRateLimitTestContext(e, "1.2.3.4:1234")
+		c.Request().SetBasicAuth("user", "password")
+		firstCompleted <- h(c)
+	}()
+	receiveRateLimitTestValue(t, firstEntered)
+
+	nowNanos.Store(initialNow.Add(time.Minute).UnixNano())
+
+	second, _ := newRateLimitTestContext(e, "1.2.3.4:1234")
+	second.Request().SetBasicAuth("user", "wrong-password")
+	assert.Equal(t, http.StatusUnauthorized, echo.StatusCode(h(second)))
+
+	close(releaseFirst)
+	require.NoError(t, receiveRateLimitTestValue(t, firstCompleted))
+	assert.Zero(t, store.refunds.Load())
+
+	third, _ := newRateLimitTestContext(e, "1.2.3.4:1234")
+	third.Request().SetBasicAuth("user", "wrong-password")
+	assert.Equal(t, http.StatusTooManyRequests, echo.StatusCode(h(third)))
+	assert.Equal(t, int32(2), calls.Load())
+}
+
+func TestBasicAuthRateLimitRefundIgnoresCanceledRequestContext(t *testing.T) {
+	log.InitLogger()
+	e := echo.New()
+	store := &contextCheckingRateLimitStore{Store: memory.NewStore()}
+	rateLimiter := limiter.New(store, limiter.Rate{Period: time.Minute, Limit: 1})
+
+	var cancel context.CancelFunc
+	h := basicAuthRateLimitWithLimiter(rateLimiter)(func(_ *echo.Context) error {
+		cancel()
+		return nil
+	})
+
+	c, _ := newRateLimitTestContext(e, "1.2.3.4:1234")
+	requestContext, requestCancel := context.WithCancel(c.Request().Context())
+	c.SetRequest(c.Request().WithContext(requestContext))
+	c.Request().SetBasicAuth("user", "password")
+	cancel = requestCancel
+	t.Cleanup(requestCancel)
+
+	require.NoError(t, h(c))
+
+	assert.Equal(t, int32(1), store.refunds.Load())
 }

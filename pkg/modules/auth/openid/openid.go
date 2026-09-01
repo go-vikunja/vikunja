@@ -483,6 +483,10 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 		}
 	}
 
+	if fallbackMatchFound && u.IsBot() {
+		return nil, &user.ErrAccountIsBot{UserID: u.ID}
+	}
+
 	if !alreadyCreatedFromIssuer && !fallbackMatchFound {
 
 		// If no user exists, create one with the preferred username if it is not already taken

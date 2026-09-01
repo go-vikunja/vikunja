@@ -39,7 +39,6 @@
 			"email": "电子邮箱地址",
 			"emailPlaceholder": "例如：xxxx{'@'}qq.com",
 			"password": "密码",
-			"passwordPlaceholder": "例如：···························",
 			"forgotPassword": "忘记密码",
 			"resetPassword": "重置密码",
 			"resetPasswordAction": "发送密码重置链接",
@@ -793,7 +792,6 @@
 			"doneAt": "完成于"
 		},
 		"subscription": {
-			"subscribedTaskThroughParentProject": "你无法在此处取消订阅，因为你已通过其项目订阅了此任务。",
 			"subscribedProject": "你当前订阅了此项目，并将收到更改通知。",
 			"notSubscribedProject": "你没有订阅此项目，也不会收到更改通知。",
 			"subscribedTask": "你当前已订阅此任务并将收到更改通知。",

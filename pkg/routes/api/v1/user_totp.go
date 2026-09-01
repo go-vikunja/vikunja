@@ -242,5 +242,5 @@ func UserTOTP(c *echo.Context) error {
 		return err
 	}
 
-	return c.JSON(http.StatusOK, t)
+	return c.JSON(http.StatusOK, t.APICopy())
 }

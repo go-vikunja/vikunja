@@ -2,7 +2,6 @@ import AbstractService from './abstractService'
 import TaskModel from '@/models/task'
 import type {ITask} from '@/modelTypes/ITask'
 import AttachmentService from './attachment'
-import LabelService from './label'
 
 import {colorFromHex} from '@/helpers/color/colorFromHex'
 import {SECONDS_A_DAY, SECONDS_A_HOUR, SECONDS_A_WEEK} from '@/constants/date'
@@ -122,12 +121,6 @@ export default class TaskService extends AbstractService<ITask> {
 			})
 		}
 
-		// Preprocess all labels
-		if (model.labels.length > 0) {
-			const labelService = new LabelService()
-			model.labels = model.labels.map(l => labelService.processModel(l))
-		}
-
 		const transformed = objectToSnakeCase(model)
 
 		// We can't convert emojis to skane case, hence we add them back again
@@ -245,4 +238,3 @@ export default class TaskService extends AbstractService<ITask> {
 		}
 	}
 }
-

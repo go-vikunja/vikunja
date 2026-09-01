@@ -72,6 +72,11 @@
 							{{ getHumanSize(a.file.size) }}
 						</span>
 					</p>
+					<AudioPreview
+						v-if="canPreviewAudio(a)"
+						:ref="el => setAudioPlayerRef(a, el)"
+						:attachment="a"
+					/>
 					<p class="attachment-actions">
 						<BaseButton
 							v-tooltip="$t('task.attachment.downloadTooltip')"
@@ -165,44 +170,79 @@
 		</Modal>
 
 		<ImageLightbox
-			v-if="attachmentImageBlobUrl !== null"
-			:key="attachmentImageBlobUrl"
-			:blob-url="attachmentImageBlobUrl"
-			:alt="attachmentImageAlt"
-			@close="closeImageLightbox"
+			v-if="preview?.kind === 'image'"
+			:key="preview.blobUrl"
+			:blob-url="preview.blobUrl"
+			:alt="preview.name"
+			@close="closePreview"
 		/>
 
 		<!-- Attachment PDF modal -->
 		<Modal
-			:enabled="attachmentPdfBlobUrl !== null"
+			:enabled="preview?.kind === 'pdf'"
 			:wide="true"
-			@close="closePdfPreview"
+			:aria-label="$t('misc.pdfPreview')"
+			@close="closePreview"
 		>
 			<iframe
-				v-if="attachmentPdfBlobUrl"
-				:src="attachmentPdfBlobUrl"
+				v-if="preview?.kind === 'pdf'"
+				:src="preview.blobUrl"
 				class="pdf-preview-iframe"
+			/>
+		</Modal>
+
+		<!-- Attachment video modal -->
+		<Modal
+			:enabled="previewLoading || preview?.kind === 'video'"
+			:wide="true"
+			:aria-label="$t('misc.videoPreview')"
+			@close="closePreview"
+		>
+			<Loading v-if="previewLoading" />
+			<div
+				v-else-if="previewFailed"
+				class="video-preview-error"
+			>
+				<p>{{ $t('misc.videoLoadFailed') }}</p>
+				<XButton
+					icon="download"
+					variant="secondary"
+					@click="downloadVideoPreview"
+				>
+					{{ $t('misc.download') }}
+				</XButton>
+			</div>
+			<video
+				v-else-if="preview?.kind === 'video'"
+				:src="preview.blobUrl"
+				:aria-label="preview.name"
+				class="video-preview"
+				controls
+				playsinline
+				@error="onVideoError"
 			/>
 		</Modal>
 	</div>
 </template>
 
 <script setup lang="ts">
-import {ref, shallowReactive, computed, watch, onMounted, onBeforeUnmount, type Ref} from 'vue'
+import {ref, shallowReactive, computed, watch, onMounted, onBeforeUnmount, type ComponentPublicInstance} from 'vue'
 import {useDropZone} from '@vueuse/core'
 
 import User from '@/components/misc/User.vue'
 import ProgressBar from '@/components/misc/ProgressBar.vue'
+import Loading from '@/components/misc/Loading.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
 import AttachmentService from '@/services/attachment'
-import {canPreviewImage, canPreviewPdf} from '@/models/attachment'
+import {canPreviewAudio, canPreviewImage, previewKind, type PreviewKind} from '@/models/attachment'
 import {getDisplayName} from '@/models/user'
 import type {IAttachment} from '@/modelTypes/IAttachment'
 import type {ITask} from '@/modelTypes/ITask'
 
 import {formatDateLong} from '@/helpers/time/formatDate'
 import {uploadFiles, generateAttachmentUrl} from '@/helpers/attachments'
+import {downloadBlob} from '@/helpers/downloadBlob'
 import {getHumanSize} from '@/helpers/getHumanSize'
 import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
 import {error, success} from '@/message'
@@ -210,6 +250,9 @@ import {useTaskStore} from '@/stores/tasks'
 import {useI18n} from 'vue-i18n'
 import FilePreview from '@/components/tasks/partials/FilePreview.vue'
 import ImageLightbox from '@/components/misc/ImageLightbox.vue'
+import AudioPreview from '@/components/tasks/partials/AudioPreview.vue'
+
+type AudioPreviewInstance = InstanceType<typeof AudioPreview>
 
 const props = withDefaults(defineProps<{
 	task: ITask,
@@ -421,40 +464,84 @@ async function deleteAttachment() {
 	}
 }
 
-const attachmentImageBlobUrl = ref<string | null>(null)
-const attachmentImageAlt = ref('')
-const attachmentPdfBlobUrl = ref<string | null>(null)
+interface Preview {
+	kind: PreviewKind
+	blobUrl: string
+	name: string
+}
+
+const preview = ref<Preview | null>(null)
+const previewLoading = ref(false)
+const previewFailed = ref(false)
 let previewRequestToken = 0
 
-function replaceBlobUrl(target: Ref<string | null>, blobUrl: string | null) {
-	if (target.value !== null) {
-		URL.revokeObjectURL(target.value)
+function replacePreview(next: Preview | null) {
+	if (preview.value !== null) {
+		URL.revokeObjectURL(preview.value.blobUrl)
 	}
-	target.value = blobUrl
+	preview.value = next
 }
 
-function closeImageLightbox() {
-	replaceBlobUrl(attachmentImageBlobUrl, null)
-	attachmentImageAlt.value = ''
+function closePreview() {
+	// an in-flight blob must not re-open the dismissed modal
+	previewRequestToken++
+	replacePreview(null)
+	previewLoading.value = false
+	previewFailed.value = false
 }
 
-function closePdfPreview() {
-	replaceBlobUrl(attachmentPdfBlobUrl, null)
+// a detached <video> can still fire error after its blob url was revoked
+function onVideoError(e: Event) {
+	if ((e.target as HTMLVideoElement).src !== preview.value?.blobUrl) {
+		return
+	}
+	previewFailed.value = true
 }
 
-onBeforeUnmount(() => {
-	closeImageLightbox()
-	closePdfPreview()
-})
+function downloadVideoPreview() {
+	const current = preview.value
+	if (current === null) {
+		return
+	}
+
+	// downloadBlob revokes the url itself, so hand over ownership before closing
+	preview.value = null
+	downloadBlob(current.blobUrl, current.name)
+	closePreview()
+}
+
+onBeforeUnmount(closePreview)
+
+const audioPlayers = new Map<IAttachment['id'], AudioPreviewInstance>()
+
+function setAudioPlayerRef(attachment: IAttachment, el: Element | ComponentPublicInstance | null) {
+	if (el === null) {
+		audioPlayers.delete(attachment.id)
+		return
+	}
+
+	audioPlayers.set(attachment.id, el as AudioPreviewInstance)
+}
 
 async function viewOrDownload(attachment: IAttachment) {
-	if (!canPreviewImage(attachment) && !canPreviewPdf(attachment)) {
+	if (canPreviewAudio(attachment) && audioPlayers.has(attachment.id)) {
+		await audioPlayers.get(attachment.id)!.play()
+		return
+	}
+
+	const kind = previewKind(attachment)
+	if (kind === null) {
 		downloadAttachment(attachment)
 		return
 	}
 
+	closePreview()
+
 	previewRequestToken++
 	const requestToken = previewRequestToken
+
+	// only video is big enough that the full-buffer wait reads as a dead click
+	previewLoading.value = kind === 'video'
 
 	try {
 		const blobUrl = await attachmentService.getBlobUrl(attachment)
@@ -463,13 +550,12 @@ async function viewOrDownload(attachment: IAttachment) {
 			URL.revokeObjectURL(blobUrl)
 			return
 		}
-		if (canPreviewImage(attachment)) {
-			replaceBlobUrl(attachmentImageBlobUrl, blobUrl)
-			attachmentImageAlt.value = attachment.file.name
-		} else {
-			replaceBlobUrl(attachmentPdfBlobUrl, blobUrl)
-		}
+		previewLoading.value = false
+		replacePreview({kind, blobUrl, name: attachment.file.name})
 	} catch (e) {
+		if (requestToken === previewRequestToken) {
+			previewLoading.value = false
+		}
 		error(e)
 	}
 }
@@ -689,6 +775,29 @@ defineExpose({
 	border: none;
 	margin: 0 auto;
 	display: block;
+}
+
+.video-preview {
+	inline-size: auto;
+	max-inline-size: calc(100% - 4rem);
+	max-block-size: calc(100vh - 40px);
+	margin: 0 auto;
+	display: block;
+}
+
+// unlike the video and iframe branches, the error state has no opaque media of its own to sit on
+.video-preview-error {
+	max-inline-size: 25rem;
+	margin: 0 auto;
+	padding: 2rem;
+	border-radius: $radius;
+	background: var(--white);
+	color: var(--text);
+	text-align: center;
+
+	p {
+		margin-block-end: 1rem;
+	}
 }
 
 .is-task-cover {

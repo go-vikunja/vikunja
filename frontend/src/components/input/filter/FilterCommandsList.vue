@@ -11,11 +11,11 @@
 				<div class="filter-autocomplete__content">
 					<XLabel
 						v-if="item.fieldType === 'labels'"
-						:label="(item.item as unknown as ILabel)"
+						:label="(item.item as unknown as Label)"
 						class="filter-autocomplete__label"
 					/>
 					<User
-						v-else-if="item.fieldType === 'assignees'"
+						v-else-if="item.fieldType === 'users'"
 						:user="(item.item as unknown as IUser)"
 						:avatar-size="20"
 						class="filter-autocomplete__user"
@@ -42,7 +42,7 @@
 import XLabel from '@/components/tasks/partials/Label.vue'
 import User from '@/components/misc/User.vue'
 import { ref, watch } from 'vue'
-import type { ILabel } from '@/modelTypes/ILabel'
+import type { Label } from '@/client/generated'
 import type { IUser } from '@/modelTypes/IUser'
 import type { AutocompleteItem } from './FilterAutocomplete'
 

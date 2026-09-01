@@ -17,13 +17,36 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/web"
 	"xorm.io/xorm"
 )
 
 // CanCreate checks if the user can create a team <-> project relation
 func (tl *TeamProject) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
-	return tl.canDoTeamProject(s, a)
+	can, err := tl.canDoTeamProject(s, a)
+	if err != nil || !can {
+		return can, err
+	}
+
+	// Attaching a team exposes its details and grants its members project access.
+	team := &Team{}
+	teamExists, err := s.ID(tl.TeamID).Get(team)
+	if err != nil {
+		return false, err
+	}
+	if !teamExists {
+		return false, ErrTeamDoesNotExist{TeamID: tl.TeamID}
+	}
+
+	canRead, _, err := team.CanRead(s, a)
+	if err != nil {
+		return false, err
+	}
+	if canRead {
+		return true, nil
+	}
+	return config.ServiceEnablePublicTeams.GetBool() && team.IsPublic, nil
 }
 
 // CanDelete checks if the user can delete a team <-> project relation

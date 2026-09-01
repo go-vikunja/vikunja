@@ -18,6 +18,7 @@ package webtests
 
 import (
 	"net/http"
+	"strconv"
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
@@ -70,6 +71,29 @@ func TestTokenRefreshRateLimit(t *testing.T) {
 		require.NotEqual(t, http.StatusTooManyRequests, rec.Code, "body: %s", rec.Body.String())
 
 		rec = humaRequest(t, e, http.MethodPost, "/api/v1/user/token/refresh", "", "", "")
+		assert.Equal(t, http.StatusTooManyRequests, rec.Code, "body: %s", rec.Body.String())
+		assert.Equal(t, "0", rec.Header().Get("X-RateLimit-Remaining"))
+	})
+
+	// Fresh instance: v1 and v2 count against the same per-IP budget, so reusing
+	// the outer e would carry over budget already spent above.
+	t.Run("v1 and v2 share the renewal budget", func(t *testing.T) {
+		e := routes.NewEcho()
+		routes.RegisterRoutes(e)
+
+		paths := []string{
+			"/api/v2/user/token/refresh",
+			"/api/v1/user/token/refresh",
+			"/api/v2/user/token/refresh",
+			"/api/v1/user/token/refresh",
+		}
+		for i, path := range paths {
+			rec := humaRequest(t, e, http.MethodPost, path, "", "", "")
+			require.NotEqual(t, http.StatusTooManyRequests, rec.Code, "request %d (%s), body: %s", i, path, rec.Body.String())
+			assert.Equal(t, strconv.Itoa(len(paths)-i-1), rec.Header().Get("X-RateLimit-Remaining"), "request %d (%s)", i, path)
+		}
+
+		rec := humaRequest(t, e, http.MethodPost, "/api/v1/user/token/refresh", "", "", "")
 		assert.Equal(t, http.StatusTooManyRequests, rec.Code, "body: %s", rec.Body.String())
 		assert.Equal(t, "0", rec.Header().Get("X-RateLimit-Remaining"))
 	})

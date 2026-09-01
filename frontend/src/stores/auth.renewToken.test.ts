@@ -1,10 +1,13 @@
 import {describe, it, expect, beforeEach, vi} from 'vitest'
 import {setActivePinia, createPinia} from 'pinia'
+import {nextTick} from 'vue'
 
 import {useAuthStore} from './auth'
 import {AUTH_TYPES} from '@/modelTypes/IUser'
 
-const {refreshTokenMock, routerPushMock, getTokenMock} = vi.hoisted(() => ({
+const {httpPostMock, queryClientClearMock, refreshTokenMock, routerPushMock, getTokenMock} = vi.hoisted(() => ({
+	httpPostMock: vi.fn(),
+	queryClientClearMock: vi.fn(),
 	refreshTokenMock: vi.fn(),
 	routerPushMock: vi.fn(),
 	getTokenMock: vi.fn(() => null as string | null),
@@ -21,13 +24,17 @@ vi.mock('@/router', () => ({
 	default: {push: routerPushMock},
 }))
 
+vi.mock('@/client/queryClient', () => ({
+	queryClient: {clear: queryClientClearMock},
+}))
+
 vi.mock('@/composables/useWebSocket', () => ({
 	useWebSocket: () => ({disconnect: vi.fn(), connect: vi.fn()}),
 }))
 
 function fakeHttp() {
 	return {
-		post: vi.fn().mockResolvedValue({data: {}}),
+		post: httpPostMock,
 		get: vi.fn().mockResolvedValue({data: {}}),
 		request: vi.fn().mockResolvedValue({data: {}}),
 		interceptors: {
@@ -72,7 +79,9 @@ function freshUserJwt() {
 describe('auth store renewToken retry (issue #2863)', () => {
 	beforeEach(() => {
 		setActivePinia(createPinia())
+		httpPostMock.mockReset().mockResolvedValue({data: {}})
 		refreshTokenMock.mockReset()
+		queryClientClearMock.mockReset()
 		routerPushMock.mockReset()
 		getTokenMock.mockReset().mockReturnValue(null)
 	})
@@ -135,5 +144,102 @@ describe('auth store renewToken retry (issue #2863)', () => {
 
 		// Initial attempt + exactly one retry — never more.
 		expect(refreshTokenMock).toHaveBeenCalledTimes(2)
+	})
+})
+
+describe('auth store logout query lifecycle', () => {
+	beforeEach(() => {
+		setActivePinia(createPinia())
+		localStorage.clear()
+		httpPostMock.mockReset().mockResolvedValue({data: {}})
+		queryClientClearMock.mockReset()
+		routerPushMock.mockReset().mockResolvedValue(undefined)
+	})
+
+	it('clears server data before navigating away', async () => {
+		const store = useAuthStore()
+		store.setUser({id: 1, type: AUTH_TYPES.USER} as never, false)
+		queryClientClearMock.mockReset()
+
+		await store.logout()
+
+		expect(queryClientClearMock).toHaveBeenCalledOnce()
+		expect(queryClientClearMock.mock.invocationCallOrder[0]).toBeLessThan(routerPushMock.mock.invocationCallOrder[0])
+	})
+
+	it('clears browser data after reactive logout cleanup', async () => {
+		const store = useAuthStore()
+		store.setAuthenticated(true)
+		store.setUser({id: 1, type: AUTH_TYPES.USER} as never, false)
+		queryClientClearMock.mockReset()
+		localStorage.setItem('projectHistory', '[{"id":1}]')
+
+		const events: string[] = []
+		const clear = localStorage.clear.bind(localStorage)
+		const clearSpy = vi.spyOn(localStorage, 'clear').mockImplementation(() => {
+			events.push('storage')
+			clear()
+		})
+		queryClientClearMock.mockImplementation(() => {
+			events.push(`query:${store.authenticated}`)
+			localStorage.setItem('projectHistory', '[{"id":1}]')
+		})
+
+		await store.logout()
+		clearSpy.mockRestore()
+
+		expect(events).toEqual(['query:false', 'storage'])
+		expect(localStorage.getItem('projectHistory')).toBeNull()
+	})
+})
+
+describe('auth store query identity lifecycle', () => {
+	beforeEach(() => {
+		setActivePinia(createPinia())
+		httpPostMock.mockReset().mockResolvedValue({data: {}})
+		queryClientClearMock.mockReset()
+	})
+
+	async function seedIdentity(id: number, type: AUTH_TYPES) {
+		useAuthStore().setUser({id, type} as never, false)
+		await nextTick()
+		queryClientClearMock.mockReset()
+	}
+
+	it('clears server data when changing users', async () => {
+		await seedIdentity(1, AUTH_TYPES.USER)
+
+		useAuthStore().setUser({id: 2, type: AUTH_TYPES.USER} as never, false)
+		await nextTick()
+
+		expect(queryClientClearMock).toHaveBeenCalledOnce()
+	})
+
+	it('clears server data when changing from user to link share', async () => {
+		await seedIdentity(1, AUTH_TYPES.USER)
+
+		useAuthStore().setUser({id: 1, type: AUTH_TYPES.LINK_SHARE} as never, false)
+		await nextTick()
+
+		expect(queryClientClearMock).toHaveBeenCalledOnce()
+	})
+
+	it('preserves server data when authentication fails without an identity transition', async () => {
+		await seedIdentity(1, AUTH_TYPES.USER)
+		httpPostMock.mockRejectedValueOnce(new Error('invalid credentials'))
+
+		await expect(useAuthStore().login({username: 'user', password: 'wrong'})).rejects.toThrow('invalid credentials')
+		await nextTick()
+
+		expect(queryClientClearMock).not.toHaveBeenCalled()
+	})
+
+	it('preserves server data when renewing the same identity', async () => {
+		await seedIdentity(1, AUTH_TYPES.USER)
+
+		useAuthStore().setUser({id: 1, type: AUTH_TYPES.USER, exp: 42} as never, false)
+		await nextTick()
+
+		expect(queryClientClearMock).not.toHaveBeenCalled()
 	})
 })

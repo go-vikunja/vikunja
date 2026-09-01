@@ -18,7 +18,11 @@ package webtests
 
 import (
 	"bytes"
+	"encoding/binary"
 	"encoding/json"
+	"hash/crc32"
+	"image"
+	"io"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
@@ -26,6 +30,7 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/routes"
 
@@ -34,9 +39,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// multipartFileBody builds a multipart body with a single file part under the
-// given field name. CreateFormFile sets the part Content-Type to
-// application/octet-stream, mirroring how many programmatic clients upload.
 func multipartFileBody(t *testing.T, fieldName, filename string, content []byte) (*bytes.Buffer, string) {
 	t.Helper()
 	buf := &bytes.Buffer{}
@@ -66,7 +68,6 @@ func TestHumaProjectBackgroundUpload(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("Owner uploads a background", func(t *testing.T) {
-		// testuser1 owns project 1, which starts without a background.
 		body, contentType := multipartFileBody(t, "background", "bg.png", pngBytes(t))
 		rec := uploadBackgroundRequest(t, e, "1", humaTokenFor(t, &testuser1), body, contentType)
 		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
@@ -88,14 +89,12 @@ func TestHumaProjectBackgroundUpload(t *testing.T) {
 	})
 
 	t.Run("Read-only user is forbidden", func(t *testing.T) {
-		// testuser15 has read-only access to project 35.
 		body, contentType := multipartFileBody(t, "background", "bg.png", pngBytes(t))
 		rec := uploadBackgroundRequest(t, e, "35", humaTokenFor(t, &testuser15), body, contentType)
 		assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
 	})
 
 	t.Run("No access at all is forbidden", func(t *testing.T) {
-		// testuser1 has no access to project 35.
 		body, contentType := multipartFileBody(t, "background", "bg.png", pngBytes(t))
 		rec := uploadBackgroundRequest(t, e, "35", humaTokenFor(t, &testuser1), body, contentType)
 		assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
@@ -132,9 +131,6 @@ func TestHumaProjectBackgroundUpload(t *testing.T) {
 	})
 }
 
-// TestHumaProjectBackgroundUploadDisabledByConfig verifies the upload route is
-// absent (404) when the upload provider is disabled, even though backgrounds
-// themselves are enabled.
 func TestHumaProjectBackgroundUploadDisabledByConfig(t *testing.T) {
 	_, err := setupTestEnv()
 	require.NoError(t, err)
@@ -148,4 +144,44 @@ func TestHumaProjectBackgroundUploadDisabledByConfig(t *testing.T) {
 	body, contentType := multipartFileBody(t, "background", "bg.png", pngBytes(t))
 	rec := uploadBackgroundRequest(t, e, "1", humaTokenFor(t, &testuser1), body, contentType)
 	assert.Equal(t, http.StatusNotFound, rec.Code, "route must be absent when background upload is disabled; body: %s", rec.Body.String())
+}
+
+// Guards image allocation bounds (GHSA-4vh2-39rq-rq8j).
+func TestHumaProjectBackgroundUploadImageBounds(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+
+	t.Run("8000 by 8000 background is rejected", func(t *testing.T) {
+		data := pngBytes(t)
+		binary.BigEndian.PutUint32(data[16:20], uint32(8000))
+		binary.BigEndian.PutUint32(data[20:24], uint32(8000))
+		binary.BigEndian.PutUint32(data[29:33], crc32.ChecksumIEEE(data[12:29]))
+
+		body, contentType := multipartFileBody(t, "background", "bomb.png", data)
+		rec := uploadBackgroundRequest(t, e, "1", humaTokenFor(t, &testuser1), body, contentType)
+		assert.Equal(t, http.StatusBadRequest, rec.Code, "body: %s", rec.Body.String())
+	})
+
+	t.Run("normal background keeps its native size when smaller than the cap", func(t *testing.T) {
+		body, contentType := multipartFileBody(t, "background", "bg.png", pngBytes(t))
+		rec := uploadBackgroundRequest(t, e, "1", humaTokenFor(t, &testuser1), body, contentType)
+		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+
+		s := db.NewSession()
+		defer s.Close()
+		project := models.Project{ID: 1}
+		has, err := s.Get(&project)
+		require.NoError(t, err)
+		require.True(t, has)
+		assert.NotEmpty(t, project.BackgroundBlurHash, "the blur hash must be computed from the single decode")
+
+		f := &files.File{ID: project.BackgroundFileID}
+		require.NoError(t, f.LoadFileByID())
+		data, err := io.ReadAll(f.File)
+		require.NoError(t, err)
+		img, _, err := image.Decode(bytes.NewReader(data))
+		require.NoError(t, err)
+		assert.Equal(t, 8, img.Bounds().Dx(), "a small background must keep its native size")
+		assert.Equal(t, 8, img.Bounds().Dy())
+	})
 }

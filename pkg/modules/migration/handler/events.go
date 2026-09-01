@@ -25,6 +25,8 @@ type MigrationRequestedEvent struct {
 	Migrator     interface{} `json:"migrator"`
 	User         *user.User  `json:"user"`
 	MigratorKind string      `json:"migrator_kind"`
+	// MigrationStatusID lets the listener reuse the claim after the event round trip.
+	MigrationStatusID int64 `json:"migration_status_id"`
 }
 
 // Name defines the name for MigrationRequestedEvent

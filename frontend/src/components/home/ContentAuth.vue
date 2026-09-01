@@ -86,7 +86,6 @@ import QuickActions from '@/components/quick-actions/QuickActions.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
 import {useBaseStore} from '@/stores/base'
-import {useLabelStore} from '@/stores/labels'
 import {useProjectStore} from '@/stores/projects'
 
 import {useRouteWithModal} from '@/composables/useRouteWithModal'
@@ -145,9 +144,6 @@ useRenewTokenOnFocus()
 
 const {connect} = useWebSocket()
 connect()
-
-const labelStore = useLabelStore()
-labelStore.loadAllLabels()
 
 const projectStore = useProjectStore()
 projectStore.loadAllProjects()

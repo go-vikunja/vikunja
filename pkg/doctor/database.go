@@ -18,6 +18,7 @@ package doctor
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"code.vikunja.io/api/pkg/config"
@@ -27,35 +28,71 @@ import (
 // CheckDatabase returns database connectivity checks.
 func CheckDatabase() CheckGroup {
 	dbType := config.DatabaseType.GetString()
+	group := CheckGroup{Name: fmt.Sprintf("Database (%s)", dbType)}
 
-	// Initialize database engine
-	_, err := db.CreateDBEngine()
-	if err != nil {
-		return CheckGroup{
-			Name: fmt.Sprintf("Database (%s)", dbType),
-			Results: []CheckResult{
-				{
-					Name:   "Connection",
-					Passed: false,
-					Error:  err.Error(),
-				},
-			},
+	if dbType == "sqlite" {
+		if config.DatabasePath.GetString() == db.DatabasePathMemory {
+			group.Results = append(group.Results, CheckResult{
+				Name:   "Database file",
+				Passed: true,
+				Value:  "memory (ephemeral, nothing to verify)",
+			})
+			return group
+		}
+
+		fileCheck := checkSqliteFile()
+		group.Results = append(group.Results, fileCheck)
+		if !fileCheck.Passed {
+			// Connecting would create the database file, and a diagnostic that
+			// reports "connection OK" against a database it just made is a lie.
+			return group
 		}
 	}
 
-	results := []CheckResult{
+	if _, err := db.CreateDBEngine(); err != nil {
+		group.Results = append(group.Results, CheckResult{
+			Name:   "Connection",
+			Passed: false,
+			Error:  err.Error(),
+		})
+		return group
+	}
+
+	group.Results = append(group.Results,
 		checkDatabaseConnection(),
 		checkDatabaseVersion(dbType),
-	}
+	)
 
 	if dbType == "postgres" {
-		results = append(results, checkParadeDB()...)
+		group.Results = append(group.Results, checkParadeDB()...)
 	}
 
-	return CheckGroup{
-		Name:    fmt.Sprintf("Database (%s)", dbType),
-		Results: results,
+	return group
+}
+
+func checkSqliteFile() CheckResult {
+	result := CheckResult{Name: "Database file"}
+
+	path, err := db.ResolvedDatabasePath()
+	if err != nil {
+		result.Error = err.Error()
+		return result
 	}
+
+	info, err := os.Stat(path)
+	if err != nil {
+		result.Error = err.Error()
+		return result
+	}
+
+	if info.IsDir() {
+		result.Error = fmt.Sprintf("%s exists but is not a file", path)
+		return result
+	}
+
+	result.Passed = true
+	result.Value = path
+	return result
 }
 
 func checkDatabaseConnection() CheckResult {

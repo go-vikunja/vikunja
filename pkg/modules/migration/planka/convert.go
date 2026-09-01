@@ -18,6 +18,7 @@ package planka
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"maps"
 	"math"
@@ -279,6 +280,11 @@ func (c *converter) convertBoard(bd *plankaBoardData, project *models.ProjectWit
 				}
 				buf, err := c.download(a)
 				if err != nil {
+					// Budget failures abort; ordinary download failures remain skippable.
+					var budgetErr *ErrImportBudgetExceeded
+					if errors.As(err, &budgetErr) {
+						return err
+					}
 					log.Errorf("[Planka Migration] Could not download attachment %s of card %s, skipping: %s", a.ID, card.ID, err)
 					continue
 				}

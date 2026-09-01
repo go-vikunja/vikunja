@@ -82,16 +82,21 @@ func TestHumaProject(t *testing.T) {
 			require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &paginated))
 
 			if db.ParadeDBAvailable() {
-				// ParadeDB fuzzy(1, prefix=true) on "Test1" matches Test2-Test9
-				// (edit distance 1), Test10+ (prefix), etc. The recursive CTE
-				// also pulls in child projects of matched parents.
-				// +1 for the reparent-escalation fixture child (project 43).
-				require.Len(t, paginated.Items, 27)
+				// ParadeDB fuzzy(1, prefix=true) on "Test1" also matches Test2-Test9
+				// (edit distance 1), so the result set varies by backend — the
+				// accessible set does not.
+				accessible := []int64{-1, 1, 3, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 19, 21, 22, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 39, 40, 43}
+				mustMatch := []int64{-1, 1, 10, 11, 12, 13, 14, 15, 16, 17, 19}
+				ids := make([]int64, 0, len(paginated.Items))
+				for _, p := range paginated.Items {
+					ids = append(ids, p.ID)
+				}
+				assert.Subset(t, accessible, ids, "search returned a project outside testuser1's accessible set")
+				assert.Subset(t, ids, mustMatch, "search dropped a project the ILIKE branch matches")
 			} else {
-				// ILIKE '%Test1%' matches Test1, Test10, Test11, Test19, + favorites.
-				// The recursive CTE also pulls in project 43 as a child of the
-				// matched project 10 (reparent-escalation fixture).
-				require.Len(t, paginated.Items, 6)
+				// ILIKE '%Test1%' over every accessible project, inherited ones
+				// included: Test1, Test10-Test17, Test19, + favorites.
+				require.Len(t, paginated.Items, 11)
 				assert.NotContains(t, rec.Body.String(), `Test2"`)
 				assert.NotContains(t, rec.Body.String(), `Test3`)
 				assert.NotContains(t, rec.Body.String(), `Test4`)
@@ -151,7 +156,8 @@ func TestHumaProject(t *testing.T) {
 			// is caught precisely.
 			var p models.Project
 			require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &p))
-			assert.Equal(t, models.PermissionAdmin, p.MaxPermission)
+			require.NotNil(t, p.MaxPermission)
+			assert.Equal(t, models.PermissionAdmin, *p.MaxPermission)
 			// The project read is served fresh on every call; no ETag is sent
 			// because the response carries derived state that changes without
 			// bumping project.Updated.
@@ -186,7 +192,8 @@ func TestHumaProject(t *testing.T) {
 
 				var p models.Project
 				require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &p))
-				assert.Equal(t, want, p.MaxPermission)
+				require.NotNil(t, p.MaxPermission)
+				assert.Equal(t, want, *p.MaxPermission)
 			}
 
 			t.Run("Shared Via Team readonly", func(t *testing.T) {
@@ -595,9 +602,8 @@ func TestHumaProject_PATCHMergePatch(t *testing.T) {
 // TestHumaProject_NullMaxPermissionRoundTrips guards the create/update response
 // shape: those routes return "max_permission":null (the field is not computed
 // there), and a client that PUTs the response body back verbatim must not be
-// rejected. max_permission is readOnly so Huma ignores it on the write body, and
-// Permission.UnmarshalJSON treats JSON null as a no-op (→ PermissionRead, no
-// error) anyway — so the round-trip succeeds with 200, not 422.
+// rejected. max_permission is readOnly, so Huma stays permissive about it on a
+// write body — the round-trip succeeds with 200, not 422.
 func TestHumaProject_NullMaxPermissionRoundTrips(t *testing.T) {
 	e, err := setupTestEnv()
 	require.NoError(t, err)

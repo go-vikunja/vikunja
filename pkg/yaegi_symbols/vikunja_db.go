@@ -4,6 +4,8 @@ package yaegi_symbols
 
 import (
 	"code.vikunja.io/api/pkg/db"
+	"go/constant"
+	"go/token"
 	"reflect"
 )
 
@@ -16,6 +18,7 @@ func init() {
 		"CreateDBEngine":                 reflect.ValueOf(db.CreateDBEngine),
 		"CreateParadeDBIndexes":          reflect.ValueOf(db.CreateParadeDBIndexes),
 		"CreateTestEngine":               reflect.ValueOf(db.CreateTestEngine),
+		"DatabasePathMemory":             reflect.ValueOf(constant.MakeFromLiteral("\"memory\"", token.STRING, 0)),
 		"Dump":                           reflect.ValueOf(db.Dump),
 		"GetDialect":                     reflect.ValueOf(db.GetDialect),
 		"ILIKE":                          reflect.ValueOf(db.ILIKE),
@@ -33,8 +36,10 @@ func init() {
 		"RegisterConnectionPoolMetrics":  reflect.ValueOf(db.RegisterConnectionPoolMetrics),
 		"RegisterTables":                 reflect.ValueOf(db.RegisterTables),
 		"RegisteredTableNames":           reflect.ValueOf(db.RegisteredTableNames),
+		"ResolvedDatabasePath":           reflect.ValueOf(db.ResolvedDatabasePath),
 		"Restore":                        reflect.ValueOf(db.Restore),
 		"RestoreAndTruncate":             reflect.ValueOf(db.RestoreAndTruncate),
+		"SetSessionContext":              reflect.ValueOf(db.SetSessionContext),
 		"TruncateAllTables":              reflect.ValueOf(db.TruncateAllTables),
 		"Type":                           reflect.ValueOf(db.Type),
 		"WipeEverything":                 reflect.ValueOf(db.WipeEverything),

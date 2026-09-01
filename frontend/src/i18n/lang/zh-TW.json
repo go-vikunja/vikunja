@@ -39,7 +39,6 @@
 			"email": "電子郵箱地址",
 			"emailPlaceholder": "例如：frederic{'@'}vikunja.io",
 			"password": "密碼",
-			"passwordPlaceholder": "例如：···························",
 			"forgotPassword": "忘記密碼？",
 			"resetPassword": "重置密碼",
 			"resetPasswordAction": "發送密碼重置鏈接",
@@ -837,7 +836,6 @@
 			"doneAt": "完成於"
 		},
 		"subscription": {
-			"subscribedTaskThroughParentProject": "您無法在此取消訂閱，因為您是透過該任務所屬的專案訂閱的。",
 			"subscribedProject": "您已訂閱此專案，將會收到變更通知。",
 			"notSubscribedProject": "您尚未訂閱此專案，將不會收到變更通知。",
 			"subscribedTask": "您已訂閱此任務，變動時將會收到通知。",

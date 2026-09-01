@@ -29,6 +29,7 @@ import (
 
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/modules/imageutils"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/user"
 
@@ -79,11 +80,22 @@ func (p *Provider) GetAvatar(u *user.User, size int64) (avatar []byte, mimeType 
 			return CachedAvatar{}, err
 		}
 
-		img, _, err := image.Decode(f.File)
+		// Validation and decoding both need the non-seekable file.
+		data, err := io.ReadAll(f.File)
 		if err != nil {
 			return CachedAvatar{}, err
 		}
-		resizedImg := imaging.Resize(img, 0, int(size), imaging.Lanczos)
+
+		// Reject hostile dimensions before decoding (GHSA-4vh2-39rq-rq8j).
+		if _, err := imageutils.ValidateReader(bytes.NewReader(data)); err != nil {
+			return CachedAvatar{}, err
+		}
+		img, _, err := image.Decode(bytes.NewReader(data))
+		if err != nil {
+			return CachedAvatar{}, err
+		}
+		// Fit bounds both dimensions without upscaling.
+		resizedImg := imaging.Fit(img, int(size), int(size), imaging.Lanczos)
 		buf := &bytes.Buffer{}
 		if err := png.Encode(buf, resizedImg); err != nil {
 			return CachedAvatar{}, err
@@ -133,12 +145,19 @@ func StoreAvatarFile(s *xorm.Session, u *user.User, src io.Reader) (err error) {
 		u.AvatarFileID = 0
 	}
 
-	// Resize the new file to a max height of 1024
-	img, _, err := image.Decode(src)
+	data, err := io.ReadAll(src)
 	if err != nil {
 		return
 	}
-	resizedImg := imaging.Resize(img, 0, 1024, imaging.Lanczos)
+	if _, err := imageutils.ValidateReader(bytes.NewReader(data)); err != nil {
+		return err
+	}
+	img, _, err := image.Decode(bytes.NewReader(data))
+	if err != nil {
+		return
+	}
+	// Fit bounds both dimensions without upscaling.
+	resizedImg := imaging.Fit(img, 1024, 1024, imaging.Lanczos)
 	buf := &bytes.Buffer{}
 	err = png.Encode(buf, resizedImg)
 	if err != nil {

@@ -29,6 +29,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 )
 
@@ -60,7 +61,74 @@ func (tp *TaskPosition) TableName() string {
 
 func (tp *TaskPosition) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 	t := &Task{ID: tp.TaskID}
-	return t.CanUpdate(s, a)
+	can, err := t.CanUpdate(s, a)
+	if err != nil {
+		return false, err
+	}
+	if !can {
+		return false, nil
+	}
+
+	view, err := GetProjectViewByID(s, tp.ProjectViewID)
+	if err != nil {
+		return false, err
+	}
+
+	// Saved-filter views also require the task to match the filter.
+	if filterID := GetSavedFilterIDFromProjectID(view.ProjectID); filterID > 0 {
+		return tp.canPositionTaskInSavedFilterView(s, a, view, filterID)
+	}
+
+	task, err := GetTaskByIDSimple(s, tp.TaskID)
+	if err != nil {
+		return false, err
+	}
+	if view.ProjectID != task.ProjectID {
+		return false, nil
+	}
+	canRead, _, err := view.CanRead(s, a)
+	if err != nil {
+		return false, err
+	}
+	return canRead, nil
+}
+
+// Reuse fetch matching so relative dates use the saved filter owner's timezone.
+func (tp *TaskPosition) canPositionTaskInSavedFilterView(s *xorm.Session, a web.Auth, view *ProjectView, filterID int64) (bool, error) {
+	sf := &SavedFilter{ID: filterID}
+	canRead, _, err := sf.CanRead(s, a)
+	if err != nil {
+		return false, err
+	}
+	if !canRead {
+		return false, nil
+	}
+
+	filter, err := GetSavedFilterSimpleByID(s, filterID)
+	if err != nil {
+		return false, err
+	}
+	task, err := GetTaskByIDSimple(s, tp.TaskID)
+	if err != nil {
+		return false, err
+	}
+
+	accessByProject, _, err := getProjectAccessForTasks(s, []*Task{&task})
+	if err != nil {
+		return false, err
+	}
+
+	owner, err := user.GetUserByID(s, filter.OwnerID)
+	if err != nil {
+		return false, err
+	}
+
+	matched, err := matchTasksToViewsOfFilter(s, []*Task{&task}, filter, []*ProjectView{view}, accessByProject, owner.Timezone)
+	if err != nil {
+		return false, err
+	}
+	_, matches := matched[task.ID]
+	return matches, nil
 }
 
 func (tp *TaskPosition) refresh(s *xorm.Session) (err error) {
@@ -624,15 +692,7 @@ func ensureTaskPositionsForSavedFilterView(s *xorm.Session, a web.Auth, projects
 	// Parse a fresh copy of the filters because convertFiltersToDBFilterCond mutates the
 	// field names in place — reusing opts.parsedFilters would double-prefix them for the
 	// subsequent fetch query.
-	parsedFilters, err := getTaskFiltersFromFilterString(opts.filter, opts.filterTimezone)
-	if err != nil {
-		return err
-	}
-
-	// Check before converting: the conversion renames the field to task_buckets.bucket_id in place.
-	joinTaskBuckets := hasBucketIDInParsedFilter(parsedFilters)
-
-	filterCond, err := convertFiltersToDBFilterCond(parsedFilters, opts.filterIncludeNulls)
+	filterCond, joinTaskBuckets, err := parseFilterCond(opts.filter, opts.filterTimezone, opts.filterIncludeNulls)
 	if err != nil {
 		return err
 	}

@@ -39,7 +39,6 @@
 			"email": "E-poštni naslov",
 			"emailPlaceholder": "npr. janez{'@'}vikunja.io",
 			"password": "Geslo",
-			"passwordPlaceholder": "npr. •••••••••••",
 			"forgotPassword": "Ste pozabili svoje geslo?",
 			"resetPassword": "Ponastavite geslo",
 			"resetPasswordAction": "Pošljite mi povezavo za ponastavitev gesla",
@@ -759,7 +758,6 @@
 			"doneAt": "Končano ob"
 		},
 		"subscription": {
-			"subscribedTaskThroughParentProject": "Ker ste na to nalogo naročeni prek njenega projekta, se tu ne morete odjaviti.",
 			"subscribedProject": "Trenutno ste naročeni na ta projekt in boste prejemali obvestila o spremembah.",
 			"notSubscribedProject": "Niste naročeni na ta projekt in ne boste prejemali obvestil o spremembah.",
 			"subscribedTask": "Trenutno ste naročeni na to nalogo in boste prejemali obvestila o spremembah.",

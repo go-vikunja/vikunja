@@ -39,7 +39,6 @@
 			"email": "E-postadresse",
 			"emailPlaceholder": "f.eks. frederic{'@'}vikunja.io",
 			"password": "Passord",
-			"passwordPlaceholder": "f.eks. •••••••••••",
 			"forgotPassword": "Glemt passordet?",
 			"resetPassword": "Tilbakestill passordet ditt",
 			"resetPasswordAction": "Send lenke for tilbakestilling av passord",
@@ -823,7 +822,6 @@
 			"doneAt": "Ferdigstilt"
 		},
 		"subscription": {
-			"subscribedTaskThroughParentProject": "Du kan ikke melde deg ut her fordi du abonnerer på denne oppgaven gjennom prosjektet.",
 			"subscribedProject": "Du abonnerer for øyeblikket på dette prosjektet og vil motta varsler om endringer.",
 			"notSubscribedProject": "Du abonnerer ikke på dette prosjektet og vil ikke motta varsler om endringer.",
 			"subscribedTask": "Du abonnerer for øyeblikket på denne oppgaven og vil motta varsler om endringer.",

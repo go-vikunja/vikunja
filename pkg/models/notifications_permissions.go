@@ -59,18 +59,23 @@ func notificationProjectID(t *Task, p *Project) int64 {
 // NotificationProjectFilter restricts stored notifications to the ones the
 // caller may read. No isInstanceAdmin bypass on purpose: admin says nothing
 // about whether they may still read a project they were removed from.
-func NotificationProjectFilter(a web.Auth) builder.Cond {
+func NotificationProjectFilter(s *xorm.Session, a web.Auth) (builder.Cond, error) {
 	if isLinkShare(a) {
 		// The empty slice is load-bearing: builder.In with no argument is not a
 		// valid cond and gets dropped, matching every row.
-		return builder.In("project_id", []int64{})
+		return builder.In("project_id", []int64{}), nil
+	}
+
+	accessible, err := accessibleProjectIDsCond(s, a, "project_id")
+	if err != nil {
+		return nil, err
 	}
 
 	// The unresolved sentinel is negative, so it matches neither arm.
 	return builder.Or(
 		builder.Eq{"project_id": 0},
-		accessibleProjectIDsSubquery(a, "project_id"),
-	)
+		accessible,
+	), nil
 }
 
 // CanReadNotification is NotificationProjectFilter for a single loaded row.
@@ -85,16 +90,21 @@ func CanReadNotification(s *xorm.Session, a web.Auth, dbn *notifications.Databas
 		return false, nil
 	}
 
+	accessible, err := accessibleProjectIDsCond(s, a, "id")
+	if err != nil {
+		return false, err
+	}
+
 	count, err := s.
 		Where(builder.And(
 			builder.Eq{"id": dbn.ProjectID},
-			accessibleProjectIDsSubquery(a, "id"),
+			accessible,
 		)).
 		Count(&Project{})
 	return count > 0, err
 }
 
-// A link share owns no notifications; accessibleProjectIDsSubquery would hand it
+// A link share owns no notifications; accessibleProjectIDsCond would hand it
 // every row of the project it is shared on.
 func isLinkShare(a web.Auth) bool {
 	_, is := a.(*LinkSharing)

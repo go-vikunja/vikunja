@@ -58,7 +58,7 @@ func TestListUsers(t *testing.T) {
 
 		all, err := user.ListAllUsers(s)
 		require.NoError(t, err)
-		assert.Len(t, all, 24)
+		assert.Len(t, all, 25)
 	})
 	t.Run("no search term", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -171,9 +171,7 @@ func TestListUsers(t *testing.T) {
 			MatchFuzzily: true,
 		})
 		require.NoError(t, err)
-		// 22 non-bot users have "user" in their username; the two bot
-		// fixtures are filtered out because they don't belong to user1
-		// and their usernames/names don't contain "user".
+		// Bot fixtures are excluded regardless of name match: they're not owned by user1.
 		assert.Len(t, all, 22)
 	})
 

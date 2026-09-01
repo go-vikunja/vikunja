@@ -149,15 +149,7 @@ func (l *Label) Delete(s *xorm.Session, _ web.Auth) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /labels [get]
 func (l *Label) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (ls interface{}, resultCount int, numberOfEntries int64, err error) {
-	return GetLabelsByTaskIDs(s, &LabelByTaskIDsOptions{
-		Search:              []string{search},
-		User:                a,
-		Page:                page,
-		PerPage:             perPage,
-		GetUnusedLabels:     true,
-		GroupByLabelIDsOnly: true,
-		GetForUser:          true,
-	})
+	return GetLabelsForUser(s, a, []string{search}, page, perPage)
 }
 
 // ReadOne gets one label

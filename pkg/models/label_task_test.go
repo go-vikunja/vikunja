@@ -259,7 +259,7 @@ func TestLabelTask_Create(t *testing.T) {
 				LabelID: 11,
 			},
 			args: args{
-				a: &user.User{ID: 23, BotOwnerID: 21},
+				a: &user.User{ID: 23},
 			},
 		},
 		{
@@ -271,7 +271,7 @@ func TestLabelTask_Create(t *testing.T) {
 				LabelID: 6,
 			},
 			args: args{
-				a: &user.User{ID: 23, BotOwnerID: 21},
+				a: &user.User{ID: 23},
 			},
 			wantForbidden: true,
 		},
@@ -284,9 +284,19 @@ func TestLabelTask_Create(t *testing.T) {
 				LabelID: 11,
 			},
 			args: args{
-				a: &user.User{ID: 23, BotOwnerID: 21},
+				a: &user.User{ID: 23},
 			},
 			wantForbidden: true,
+		},
+		{
+			name: "bot can attach a label created by a sibling bot",
+			fields: fields{
+				TaskID:  52,
+				LabelID: 12,
+			},
+			args: args{
+				a: &user.User{ID: 23},
+			},
 		},
 	}
 	for _, tt := range tests {

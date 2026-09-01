@@ -8,19 +8,20 @@ import FilterCommandsList from './FilterCommandsList.vue'
 import {
 	ASSIGNEE_FIELDS,
 	AUTOCOMPLETE_FIELDS,
+	CREATED_BY_FIELDS,
 	FILTER_OPERATORS_REGEX,
 	isMultiValueOperator,
 	LABEL_FIELDS,
 	PROJECT_FIELDS,
 } from '@/helpers/filters'
 
-import {useLabelStore} from '@/stores/labels'
+import {useLabels} from '@/composables/useLabels'
 import {useProjectStore} from '@/stores/projects'
 import UserService from '@/services/user'
 import ProjectUserService from '@/services/projectUsers'
 import type { IUser } from '@/modelTypes/IUser'
 import type { IProject } from '@/modelTypes/IProject'
-import type { ILabel } from '@/modelTypes/ILabel'
+import type { Label } from '@/client/generated'
 
 export interface FilterAutocompleteOptions {
 	projectId?: number
@@ -45,7 +46,7 @@ interface SuggestionItem {
 	name?: string
 }
 
-export type AutocompleteField = 'labels' | 'assignees' | 'projects'
+export type AutocompleteField = 'labels' | 'users' | 'projects'
 
 /**
  * Calculates the replacement range for autocomplete selection.
@@ -87,7 +88,7 @@ export function calculateReplacementRange(
 export interface AutocompleteItem {
 	id: number | string
 	title: string
-	item: ILabel | IUser | IProject
+	item: Label | IUser | IProject
 	fieldType: AutocompleteField
 	context: AutocompleteContext
 }
@@ -102,7 +103,7 @@ export default Extension.create<FilterAutocompleteOptions>({
 	},
 
 	addProseMirrorPlugins() {
-		const labelStore = useLabelStore()
+		const {filterLabelsByQuery} = useLabels()
 		const projectStore = useProjectStore()
 		const userService = new UserService()
 		const projectUserService = new ProjectUserService()
@@ -219,10 +220,10 @@ export default Extension.create<FilterAutocompleteOptions>({
 		const fetchSuggestions = async (autocompleteContext: AutocompleteContext, fieldType: AutocompleteField): Promise<SuggestionItem[]> => {
 			try {
 				if (fieldType === 'labels') {
-					return labelStore.filterLabelsByQuery([], autocompleteContext.search).filter((label): label is ILabel => label !== undefined) as SuggestionItem[]
+					return filterLabelsByQuery([], autocompleteContext.search) as SuggestionItem[]
 				}
 
-				if (fieldType === 'assignees') {
+				if (fieldType === 'users') {
 
 					if (debounceTimer) {
 						clearTimeout(debounceTimer)
@@ -230,23 +231,23 @@ export default Extension.create<FilterAutocompleteOptions>({
 
 					return new Promise((resolve) => {
 						debounceTimer = setTimeout(async () => {
-							let assigneeSuggestions: SuggestionItem[]
+							let userSuggestions: SuggestionItem[]
 							try {
 								if (this.options.projectId) {
 									// @ts-expect-error - projectId is used for URL replacement but not part of IAbstract
-									assigneeSuggestions = await projectUserService.getAll({projectId: this.options.projectId}, {s: autocompleteContext.search}) as SuggestionItem[]
+									userSuggestions = await projectUserService.getAll({projectId: this.options.projectId}, {s: autocompleteContext.search}) as SuggestionItem[]
 								} else {
-									assigneeSuggestions = await userService.getAll({} as IUser, {s: autocompleteContext.search}) as SuggestionItem[]
+									userSuggestions = await userService.getAll({} as IUser, {s: autocompleteContext.search}) as SuggestionItem[]
 								}
-								// For assignees, show suggestions even with empty search, but limit if we have many
-								if (autocompleteContext.search === '' && assigneeSuggestions.length > 10) {
-									assigneeSuggestions = assigneeSuggestions.slice(0, 10)
+								// Show suggestions even with empty search, but limit if we have many
+								if (autocompleteContext.search === '' && userSuggestions.length > 10) {
+									userSuggestions = userSuggestions.slice(0, 10)
 								}
 							} catch (error) {
-								console.error('Error fetching assignee suggestions:', error)
-								assigneeSuggestions = []
+								console.error('Error fetching user suggestions:', error)
+								userSuggestions = []
 							}
-							resolve(assigneeSuggestions)
+							resolve(userSuggestions)
 						}, 300)
 					})
 				}
@@ -338,8 +339,8 @@ export default Extension.create<FilterAutocompleteOptions>({
 
 					if (LABEL_FIELDS.includes(field)) {
 						fieldType = 'labels'
-					} else if (ASSIGNEE_FIELDS.includes(field)) {
-						fieldType = 'assignees'
+					} else if (ASSIGNEE_FIELDS.includes(field) || CREATED_BY_FIELDS.includes(field)) {
+						fieldType = 'users'
 					} else if (PROJECT_FIELDS.includes(field)) {
 						fieldType = 'projects'
 					}
@@ -363,8 +364,8 @@ export default Extension.create<FilterAutocompleteOptions>({
 
 			const items = suggestions.map(item => ({
 				id: item.id,
-				title: fieldType === 'assignees' ? item.username : item.title,
-				description: fieldType === 'assignees' ? `${item.name || item.username}` : item.title,
+				title: fieldType === 'users' ? item.username : item.title,
+				description: fieldType === 'users' ? `${item.name || item.username}` : item.title,
 				item,
 				fieldType,
 				context: autocompleteContext,
@@ -388,9 +389,9 @@ export default Extension.create<FilterAutocompleteOptions>({
 						items,
 						command: (item: AutocompleteItem) => {
 							// Handle selection
-							const newValue = item.fieldType === 'assignees'
+							const newValue = item.fieldType === 'users'
 								? (item.item as IUser).username
-								: (item.item as IProject | ILabel).title
+								: (item.item as IProject | Label).title
 							// Use currentAutocompleteContext (outer variable) for up-to-date positions
 							// The local autocompleteContext would be stale since this callback
 							// was created on first component render

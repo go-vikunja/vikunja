@@ -1,7 +1,6 @@
 import {PRIORITIES, type Priority} from '@/constants/priorities'
 
 import type {ITask} from '@/modelTypes/ITask'
-import type {ILabel} from '@/modelTypes/ILabel'
 import type {IUser} from '@/modelTypes/IUser'
 import type {IAttachment} from '@/modelTypes/IAttachment'
 import type {IProject} from '@/modelTypes/IProject'
@@ -11,12 +10,13 @@ import type {IBucket} from '@/modelTypes/IBucket'
 import type {IRepeatAfter} from '@/types/IRepeatAfter'
 import type {IRelationKind} from '@/types/IRelationKind'
 import {TASK_REPEAT_MODES, type IRepeatMode} from '@/types/IRepeatMode'
+import type {Label} from '@/client/generated'
 
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {secondsToPeriod} from '@/helpers/time/period'
+import {objectToSnakeCase} from '@/helpers/case'
 
 import AbstractModel from './abstractModel'
-import LabelModel from './label'
 import UserModel from './user'
 import AttachmentModel from './attachment'
 import SubscriptionModel from './subscription'
@@ -65,7 +65,7 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 	doneAt: Date | null = null
 	deletedAt: Date | null = null
 	priority: Priority = PRIORITIES.UNSET
-	labels: ILabel[] = []
+	labels: Label[] = []
 	assignees: IUser[] = []
 
 	dueDate: Date | null = 0
@@ -101,6 +101,7 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 
 	constructor(data: Partial<ITask> = {}) {
 		super()
+		const labels = (data.labels ?? []).map(label => objectToSnakeCase(label) as Label)
 		this.assignData(data)
 
 		this.id = Number(this.id)
@@ -108,9 +109,7 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 		this.doneAt = parseDateOrNull(this.doneAt)
 		this.deletedAt = parseDateOrNull(this.deletedAt)
 
-		this.labels = this.labels
-			.map(l => new LabelModel(l))
-			.sort((a, b) => a.title.localeCompare(b.title))
+		this.labels = labels.sort((a, b) => (a.title ?? '').localeCompare(b.title ?? ''))
 
 		// Parse the assignees into user models
 		this.assignees = this.assignees.map(a => {
@@ -174,4 +173,3 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 		return getHexColor(this.hexColor)
 	}
 }
-

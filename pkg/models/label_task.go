@@ -155,12 +155,7 @@ func (lt *LabelTask) ReadAll(s *xorm.Session, a web.Auth, search string, page in
 		return nil, 0, 0, ErrNoPermissionToSeeTask{lt.TaskID, a.GetID()}
 	}
 
-	return GetLabelsByTaskIDs(s, &LabelByTaskIDsOptions{
-		User:    a,
-		Search:  []string{search},
-		Page:    page,
-		TaskIDs: []int64{lt.TaskID},
-	})
+	return GetLabelsByTaskIDs(s, []int64{lt.TaskID}, []string{search}, page)
 }
 
 // LabelWithTaskID is a helper struct, contains the label + its task ID
@@ -169,76 +164,130 @@ type LabelWithTaskID struct {
 	Label  `xorm:"extends"`
 }
 
-// LabelByTaskIDsOptions is a struct to not clutter the function with too many optional parameters.
-type LabelByTaskIDsOptions struct {
-	User                web.Auth
-	Search              []string
-	Page                int
-	PerPage             int
-	TaskIDs             []int64
-	GetUnusedLabels     bool
-	GroupByLabelIDsOnly bool
-	GetForUser          bool
-}
+// GetLabelsByTaskIDs returns the labels attached to the given tasks. It runs no
+// permission check; callers must have verified read access to those tasks.
+func GetLabelsByTaskIDs(s *xorm.Session, taskIDs []int64, search []string, page int) (ls []*LabelWithTaskID, resultCount int, totalEntries int64, err error) {
 
-// GetLabelsByTaskIDs is a helper function to get all labels for a set of tasks
-// Used when getting all labels for one task as well when getting all labels
-func GetLabelsByTaskIDs(s *xorm.Session, opts *LabelByTaskIDsOptions) (ls []*LabelWithTaskID, resultCount int, totalEntries int64, err error) {
-
-	linkShare, isLinkShareAuth := opts.User.(*LinkSharing)
-
-	// We still need the task ID when we want to get all labels for a task, but because of this, we get the same label
-	// multiple times when it is associated to more than one task.
-	// Because of this whole thing, we need this extra switch here to only group by Task IDs if needed.
-	// Probably not the most ideataskdetaill solution.
-	var groupBy = "labels.id,label_tasks.task_id"
-	var selectStmt = "labels.*, label_tasks.task_id"
-	if opts.GroupByLabelIDsOnly {
-		groupBy = "labels.id"
-		selectStmt = "labels.*"
+	// builder.In on an empty slice renders 0=1, so skip the query instead of running a guaranteed-empty one.
+	if len(taskIDs) == 0 {
+		return nil, 0, 0, nil
 	}
 
 	// Get all labels associated with these tasks
 	var labels []*LabelWithTaskID
-	cond := builder.And(builder.NotNull{"label_tasks.label_id"})
-	if len(opts.TaskIDs) > 0 && !opts.GetForUser {
-		cond = builder.And(builder.In("label_tasks.task_id", opts.TaskIDs), cond)
-	}
-	if opts.GetForUser {
+	cond := builder.And(
+		builder.In("label_tasks.task_id", taskIDs),
+		builder.NotNull{"label_tasks.label_id"},
+		labelSearchCond(search),
+	)
 
-		var projectIDs []int64
-		if isLinkShareAuth {
-			projectIDs = []int64{linkShare.ProjectID}
-		} else {
-			projects, _, _, err := getRawProjectsForUser(s, &projectOptions{
-				user: &user.User{ID: opts.User.GetID()},
-			})
-			if err != nil {
-				return nil, 0, 0, err
-			}
-			projectIDs = make([]int64, 0, len(projects))
-			for _, project := range projects {
-				projectIDs = append(projectIDs, project.ID)
-			}
+	limit, start := getLimitFromPageIndex(page, 0)
+
+	query := s.Table("labels").
+		Select("labels.*, label_tasks.task_id").
+		Join("LEFT", "label_tasks", "label_tasks.label_id = labels.id").
+		Where(cond).
+		// Group by task id too, else a label on multiple tasks would collapse into one row.
+		GroupBy("labels.id,label_tasks.task_id").
+		OrderBy("labels.id ASC")
+	if limit > 0 {
+		query = query.Limit(limit, start)
+	}
+	err = query.Find(&labels)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	if len(labels) == 0 {
+		return nil, 0, 0, nil
+	}
+
+	err = addLabelCreators(s, labels)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	if limit > 0 {
+		// One row per label-task pair, so len(labels) isn't the distinct label count.
+		totalEntries, err = s.Table("labels").
+			Select("count(DISTINCT labels.id)").
+			Join("LEFT", "label_tasks", "label_tasks.label_id = labels.id").
+			Where(cond).
+			Count(&Label{})
+		if err != nil {
+			return nil, 0, 0, err
 		}
-
-		cond = builder.And(builder.In("label_tasks.task_id",
-			builder.
-				Select("id").
-				From("tasks").
-				Where(builder.And(builder.In("project_id", projectIDs), taskNotDeletedCond("tasks"))),
-		), cond)
-	}
-	if opts.GetUnusedLabels && !isLinkShareAuth {
-		cond = builder.Or(cond,
-			builder.Eq{"labels.created_by_id": opts.User.GetID()},
-			labelCreatedByBotIdentityCond(opts.User),
-		)
+	} else {
+		distinct := make(map[int64]bool, len(labels))
+		for _, l := range labels {
+			distinct[l.ID] = true
+		}
+		totalEntries = int64(len(distinct))
 	}
 
+	return labels, len(labels), totalEntries, err
+}
+
+// GetLabelsForUser returns every label the caller can see.
+func GetLabelsForUser(s *xorm.Session, a web.Auth, search []string, page, perPage int) (ls []*LabelWithTaskID, resultCount int, totalEntries int64, err error) {
+
+	if _, isLinkShareAuth := a.(*LinkSharing); !isLinkShareAuth {
+		caller, err := user.GetFromAuth(a)
+		if err != nil {
+			return nil, 0, 0, err
+		}
+		if caller == nil || caller.ID < 1 {
+			return nil, 0, 0, user.ErrUserDoesNotExist{}
+		}
+	}
+
+	visible, err := labelVisibleCond(s, a)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	cond := builder.And(visible, labelSearchCond(search))
+
+	limit, start := getLimitFromPageIndex(page, perPage)
+
+	var labels []*LabelWithTaskID
+	query := s.Table("labels").
+		Select("labels.*").
+		Where(cond).
+		OrderBy("labels.id ASC")
+	if limit > 0 {
+		query = query.Limit(limit, start)
+	}
+	err = query.Find(&labels)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	if len(labels) == 0 && start == 0 {
+		return nil, 0, 0, nil
+	}
+
+	err = addLabelCreators(s, labels)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	// A non-full page is the last one, so start+len(labels) is already the total.
+	totalEntries = int64(start + len(labels))
+	if limit > 0 && (len(labels) == limit || len(labels) == 0) {
+		totalEntries, err = s.Table("labels").Where(cond).Count(&Label{})
+		if err != nil {
+			return nil, 0, 0, err
+		}
+	}
+
+	return labels, len(labels), totalEntries, nil
+}
+
+func labelSearchCond(searches []string) builder.Cond {
 	ids := []int64{}
 
-	for _, search := range opts.Search {
+	for _, search := range searches {
 		search = strings.Trim(search, " ")
 		if search == "" {
 			continue
@@ -256,78 +305,49 @@ func GetLabelsByTaskIDs(s *xorm.Session, opts *LabelByTaskIDsOptions) (ls []*Lab
 	}
 
 	if len(ids) > 0 {
-		cond = builder.And(cond, builder.In("labels.id", ids))
-	} else if len(opts.Search) > 0 {
+		return builder.In("labels.id", ids)
+	}
 
-		var searchcond builder.Cond
-		for _, search := range opts.Search {
-			search = strings.Trim(search, " ")
-			if search == "" {
-				continue
-			}
-
-			searchcond = builder.Or(searchcond, db.ILIKE("labels.title", search))
+	var searchcond builder.Cond
+	for _, search := range searches {
+		search = strings.Trim(search, " ")
+		if search == "" {
+			continue
 		}
 
-		cond = builder.And(cond, searchcond)
+		// Qualified with the table name: the per-task query joins label_tasks.
+		searchcond = builder.Or(searchcond, db.MultiFieldSearchWithTableAlias([]string{"title", "description"}, search, "labels"))
 	}
 
-	limit, start := getLimitFromPageIndex(opts.Page, opts.PerPage)
+	return searchcond
+}
 
-	query := s.Table("labels").
-		Select(selectStmt).
-		Join("LEFT", "label_tasks", "label_tasks.label_id = labels.id").
-		Where(cond).
-		GroupBy(groupBy).
-		OrderBy("labels.id ASC")
-	if limit > 0 {
-		query = query.Limit(limit, start)
-	}
-	err = query.Find(&labels)
-	if err != nil {
-		return nil, 0, 0, err
-	}
-
-	if len(labels) == 0 {
-		return nil, 0, 0, nil
-	}
-
-	// Get all created by users
-	var userids []int64
+func addLabelCreators(s *xorm.Session, labels []*LabelWithTaskID) (err error) {
+	useridSet := make(map[int64]struct{}, len(labels))
 	for _, l := range labels {
-		userids = append(userids, l.CreatedByID)
+		useridSet[l.CreatedByID] = struct{}{}
 	}
-	users := make(map[int64]*user.User)
-	if len(userids) > 0 {
-		err = s.In("id", userids).Find(&users)
-		if err != nil {
-			return nil, 0, 0, err
-		}
+	if len(useridSet) == 0 {
+		return nil
 	}
 
-	// Obfuscate all user emails
-	for _, u := range users {
-		u.Email = ""
+	userids := make([]int64, 0, len(useridSet))
+	for id := range useridSet {
+		userids = append(userids, id)
 	}
 
-	// Put it all together
+	users, err := user.GetUsersByIDs(s, userids)
+	if err != nil {
+		return err
+	}
+
 	for in, l := range labels {
 		if createdBy, has := users[l.CreatedByID]; has {
 			labels[in].CreatedBy = createdBy
 		}
 	}
 
-	// Get the total number of entries
-	totalEntries, err = s.Table("labels").
-		Select("count(DISTINCT labels.id)").
-		Join("LEFT", "label_tasks", "label_tasks.label_id = labels.id").
-		Where(cond).
-		Count(&Label{})
-	if err != nil {
-		return nil, 0, 0, err
-	}
-
-	return labels, len(labels), totalEntries, err
+	return nil
 }
 
 // Create or update a bunch of task labels
@@ -455,9 +475,7 @@ func (ltb *LabelTaskBulk) Create(s *xorm.Session, a web.Auth) (err error) {
 	if err != nil {
 		return
 	}
-	labels, _, _, err := GetLabelsByTaskIDs(s, &LabelByTaskIDsOptions{
-		TaskIDs: []int64{ltb.TaskID},
-	})
+	labels, _, _, err := GetLabelsByTaskIDs(s, []int64{ltb.TaskID}, nil, 0)
 	if err != nil {
 		return err
 	}

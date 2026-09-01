@@ -33,14 +33,6 @@ import (
 // route must refuse it. See pkg/db/fixtures/users.yml.
 var testuser14 = user.User{ID: 14, Username: "user14", Issuer: "https://some.service.com"}
 
-// TestHumaTOTP mirrors v1's TestUserTOTPLocalUser and adds the enable/disable
-// flows, the qr-code blob endpoint, and the local-account-only guard.
-//
-// Fixture topology (pkg/db/fixtures/totp.yml + users.yml):
-//   - user1:  totp enrolled, not enabled (secret HXDMVJEC…).
-//   - user10: totp enabled (secret JBSWY3DP…), local, password 12345678.
-//   - user15: local, no totp enrollment.
-//   - user14: non-local (OIDC) account.
 func TestHumaTOTP(t *testing.T) {
 	t.Run("Get status for enrolled user", func(t *testing.T) {
 		e, err := setupTestEnv()
@@ -70,7 +62,6 @@ func TestHumaTOTP(t *testing.T) {
 	t.Run("Enroll a fresh user", func(t *testing.T) {
 		e, err := setupTestEnv()
 		require.NoError(t, err)
-		// user15 has no totp enrollment in the fixtures.
 		rec := humaRequest(t, e, http.MethodPost, "/api/v2/user/settings/totp/enroll", "", humaTokenFor(t, &testuser15), "")
 		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
 		assert.Contains(t, rec.Body.String(), `"secret"`)
@@ -88,7 +79,6 @@ func TestHumaTOTP(t *testing.T) {
 	t.Run("Enable with a valid passcode", func(t *testing.T) {
 		e, err := setupTestEnv()
 		require.NoError(t, err)
-		// user1's fixture secret; generate a passcode that is valid right now.
 		passcode, err := totp.GenerateCode("HXDMVJECJJWSRB3HWIZR4IFUGFTMXBOZ", time.Now())
 		require.NoError(t, err)
 		rec := humaRequest(t, e, http.MethodPost, "/api/v2/user/settings/totp/enable",
@@ -108,7 +98,6 @@ func TestHumaTOTP(t *testing.T) {
 	t.Run("Disable with the correct password", func(t *testing.T) {
 		e, err := setupTestEnv()
 		require.NoError(t, err)
-		// user10 has totp enabled; 12345678 is their fixture password.
 		rec := humaRequest(t, e, http.MethodPost, "/api/v2/user/settings/totp/disable",
 			`{"password":"12345678"}`, humaTokenFor(t, &testuser10), "")
 		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
@@ -140,5 +129,25 @@ func TestHumaTOTP(t *testing.T) {
 			assert.Equal(t, http.StatusPreconditionFailed, rec.Code,
 				"%s %s must refuse a non-local account; body: %s", tc.method, tc.path, rec.Body.String())
 		}
+	})
+}
+
+// Guards enabled provisioning secrets on v2 (GHSA-88f6-4rjv-x774).
+func TestHumaTOTPSecretHiddenWhenEnabled(t *testing.T) {
+	t.Run("Get settings hides secret and url once enabled", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		rec := humaRequest(t, e, http.MethodGet, "/api/v2/user/settings/totp", "", humaTokenFor(t, &testuser10), "")
+		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+		assert.Contains(t, rec.Body.String(), `"enabled":true`)
+		assert.NotContains(t, rec.Body.String(), `JBSWY3DPEHPK3PXP`, "the secret must not be disclosed once enabled")
+		assert.NotContains(t, rec.Body.String(), `otpauth://`, "the url must not be disclosed once enabled")
+	})
+
+	t.Run("Get qrcode is refused once enabled", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		rec := humaRequest(t, e, http.MethodGet, "/api/v2/user/settings/totp/qrcode", "", humaTokenFor(t, &testuser10), "")
+		assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
 	})
 }

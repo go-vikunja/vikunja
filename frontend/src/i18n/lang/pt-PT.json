@@ -39,7 +39,6 @@
 			"email": "Endereço de e-mail",
 			"emailPlaceholder": "ex. frederico{'@'}vikunja.io",
 			"password": "Palavra-Passe",
-			"passwordPlaceholder": "ex.: •••••••••••••",
 			"forgotPassword": "Esqueceste a tua palavra-passe?",
 			"resetPassword": "Redefine a tua palavra-passe",
 			"resetPasswordAction": "Enviem-me um link para redefinição da palavra-passe",
@@ -838,7 +837,6 @@
 			"doneAt": "Concluído Em"
 		},
 		"subscription": {
-			"subscribedTaskThroughParentProject": "Não podes cancelar a tua subscrição aqui porque estás subscrito nesta tarefa através do seu projeto.",
 			"subscribedProject": "Estás atualmente subscrito a este projeto e serás notificado de alterações.",
 			"notSubscribedProject": "Não estás subscrito a este projeto e não serás notificado de alterações.",
 			"subscribedTask": "Estás atualmente subscrito a esta tarefa e serás notificado de alterações.",

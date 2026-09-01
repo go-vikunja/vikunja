@@ -39,7 +39,6 @@
 			"email": "E-mailová adresa",
 			"emailPlaceholder": "např. jarmil{'@'}vikunja.io",
 			"password": "Heslo",
-			"passwordPlaceholder": "např. • • • • • • • •",
 			"forgotPassword": "Zapomenuté heslo?",
 			"resetPassword": "Obnovit heslo",
 			"resetPasswordAction": "Poslat odkaz na obnovení hesla",
@@ -870,7 +869,6 @@
 			"doneAt": "Dokončeno"
 		},
 		"subscription": {
-			"subscribedTaskThroughParentProject": "Zde se nemůžete odhlásit, protože jste přihlášeni k odběru tohoto úkolu prostřednictvím jeho projektu.",
 			"subscribedProject": "Nyní jste přihlášeni k odběru tohoto projektu a budete dostávat oznámení o změnách.",
 			"notSubscribedProject": "Nejste přihlášeni k tomuto projektu a nebudete dostávat oznámení o změnách.",
 			"subscribedTask": "Nyní jste přihlášeni k odběru tohoto úkolu a budete dostávat oznámení o změnách.",

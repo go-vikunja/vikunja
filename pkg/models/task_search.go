@@ -18,6 +18,7 @@ package models
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"code.vikunja.io/api/pkg/db"
@@ -61,6 +62,12 @@ var subTableFilters = SubTableFilters{
 		BaseFilter:      "tasks.id = task_id",
 		FilterableField: "username",
 		AllowNullCheck:  true,
+	},
+	"created_by": {
+		Table:           "users",
+		BaseFilter:      "tasks.created_by_id = users.id",
+		FilterableField: "username",
+		AllowNullCheck:  false,
 	},
 	"parent_project": {
 		Table:           "projects",
@@ -204,7 +211,7 @@ func convertFiltersToDBFilterCondWithAlias(rawFilters []*taskFilter, includeNull
 
 		subTableFilterParams, ok := subTableFilters[f.field]
 		if ok {
-			if f.field == "assignees" && (f.comparator == taskFilterComparatorLike) {
+			if (f.field == "assignees" || f.field == "created_by") && (f.comparator == taskFilterComparatorLike) {
 				continue
 			}
 
@@ -393,7 +400,15 @@ func (d *dbTaskSearcher) buildSubtaskRootCondition(opts *taskSearchOptions) (bui
 				builder.Eq{"user_id": d.a.GetID()},
 				builder.Eq{"kind": FavoriteKindTask},
 			))
-		scopes = append(scopes, builder.In("parent_tasks.id", favCond))
+		// Inaccessible favorites must not hide readable children from the roots.
+		accessible, err := accessibleProjectIDsCond(d.s, d.a, "parent_tasks.project_id")
+		if err != nil {
+			return nil, err
+		}
+		scopes = append(scopes, builder.And(
+			builder.In("parent_tasks.id", favCond),
+			accessible,
+		))
 	}
 
 	predicates := []builder.Cond{
@@ -427,6 +442,51 @@ func (d *dbTaskSearcher) buildSubtaskRootCondition(opts *taskSearchOptions) (bui
 		Where(builder.And(predicates...))
 
 	return builder.NotExists(sub), nil
+}
+
+// Inaccessible tasks cannot bridge the traversal; seen terminates cycles.
+func (d *dbTaskSearcher) fetchAccessibleSubtasks(rootIDs []int64) ([]*Task, error) {
+	accessible, err := accessibleProjectIDsCond(d.s, d.a, "`tasks`.`project_id`")
+	if err != nil {
+		return nil, err
+	}
+
+	seen := make(map[int64]bool, len(rootIDs))
+	for _, id := range rootIDs {
+		seen[id] = true
+	}
+
+	frontier := rootIDs
+	subtasks := []*Task{}
+	for len(frontier) > 0 {
+		var nextFrontier []int64
+		for chunk := range slices.Chunk(frontier, 1000) {
+			childIDs := builder.
+				Select("other_task_id").
+				From("task_relations").
+				Where(builder.And(
+					builder.In("task_id", chunk),
+					builder.Eq{"relation_kind": RelationKindSubtask},
+				))
+			found := []*Task{}
+			if err := d.s.Where(builder.In("tasks.id", childIDs)).
+				And(accessible).
+				And(taskNotDeletedCond("tasks")).
+				Find(&found); err != nil {
+				return nil, err
+			}
+			for _, t := range found {
+				if seen[t.ID] {
+					continue
+				}
+				seen[t.ID] = true
+				subtasks = append(subtasks, t)
+				nextFrontier = append(nextFrontier, t.ID)
+			}
+		}
+		frontier = nextFrontier
+	}
+	return subtasks, nil
 }
 
 // buildParentSearchCondition mirrors the main query's search onto the parent_tasks
@@ -519,6 +579,12 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 	}
 
 	if d.hasFavoritesProject {
+		// Favorites outlive project access, so this arm needs its own access check.
+		favoritesAccessible, err := accessibleProjectIDsCond(d.s, d.a, "tasks.project_id")
+		if err != nil {
+			return nil, 0, err
+		}
+
 		addFavoritesCond := true
 		if wantsRelevanceRanking && len(opts.projectIDs) > 0 {
 			// pdb.score also rejects the favorites arm (`OR tasks.id IN (<subquery>)`).
@@ -535,6 +601,7 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 					builder.Eq{"favorites.kind": FavoriteKindTask},
 					builder.NotIn("tasks.project_id", opts.projectIDs),
 					taskNotDeletedCond("tasks"),
+					favoritesAccessible,
 				)).
 				Exist()
 			if err != nil {
@@ -554,7 +621,10 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 						builder.Eq{"kind": FavoriteKindTask},
 					))
 
-			favoritesCond = builder.In("tasks.id", favCond)
+			favoritesCond = builder.And(
+				builder.In("tasks.id", favCond),
+				favoritesAccessible,
+			)
 		}
 	}
 
@@ -583,9 +653,17 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		return nil, 0, err
 	}
 
-	var distinct = "tasks.*"
-	if strings.Contains(orderby, "task_positions.") {
-		distinct += ", task_positions.position"
+	// The only join that can multiply rows is task_buckets without a view to pin
+	// it — task_positions and task_buckets are both unique on (task_id,
+	// project_view_id), everything else filters through subqueries. DISTINCT
+	// otherwise costs a full sort+unique of every matching row before the LIMIT,
+	// which is what stops `ORDER BY due_date … LIMIT n` from walking an index.
+	needsDistinct := joinTaskBuckets && opts.projectViewID == 0
+
+	var selectCols = "tasks.*"
+	if needsDistinct && strings.Contains(orderby, "task_positions.") {
+		// Postgres requires ORDER BY expressions to be in the DISTINCT select list.
+		selectCols += ", task_positions.position"
 	}
 
 	if expandSubtasks {
@@ -593,13 +671,19 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 	}
 
 	query := d.s.Where(cond)
-	if rankByRelevance {
+	switch {
+	case rankByRelevance:
 		// Select() passes the raw column list through untouched while Distinct()
 		// (no args) still emits DISTINCT. Distinct("tasks.*, pdb.score(tasks.id)")
 		// would quote-corrupt the function call into "pdb"."score(tasks"."id)".
-		query = query.Select(distinct + ", pdb.score(tasks.id)").Distinct()
-	} else {
-		query = query.Distinct(distinct)
+		query = query.Select(selectCols + ", pdb.score(tasks.id)")
+		if needsDistinct {
+			query = query.Distinct()
+		}
+	case needsDistinct:
+		query = query.Distinct(selectCols)
+	default:
+		query = query.Select(selectCols)
 	}
 	if limit > 0 {
 		query = query.Limit(limit, start)
@@ -633,46 +717,12 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 
 	// fetch subtasks when expanding
 	if expandSubtasks && len(tasks) > 0 {
-		subtasks := []*Task{}
-
-		taskIDs := []any{}
+		taskIDs := make([]int64, 0, len(tasks))
 		for _, task := range tasks {
 			taskIDs = append(taskIDs, task.ID)
 		}
 
-		var inPlaceholders = strings.Repeat("?,", len(taskIDs))
-		inPlaceholders = inPlaceholders[:len(inPlaceholders)-1]
-
-		var notIn = strings.Repeat("?,", len(taskIDs))
-		notIn = notIn[:len(notIn)-1]
-
-		allArgs := make([]any, 0, len(taskIDs)*2)
-		allArgs = append(allArgs, taskIDs...)
-		allArgs = append(allArgs, taskIDs...)
-
-		err = d.s.SQL(`SELECT * FROM tasks WHERE id IN (WITH RECURSIVE sub_tasks AS (
-		SELECT task_id,
-			other_task_id,
-			relation_kind,
-			created_by_id,
-			created
-		FROM task_relations
-		WHERE task_id IN (`+inPlaceholders+`)
-		AND relation_kind = '`+string(RelationKindSubtask)+`'
-
-		UNION ALL
-
-		SELECT tr.task_id,
-			tr.other_task_id,
-			tr.relation_kind,
-			tr.created_by_id,
-			tr.created
-		FROM task_relations tr
-		INNER JOIN
-		sub_tasks st ON tr.task_id = st.other_task_id
-		WHERE tr.relation_kind = '`+string(RelationKindSubtask)+`')
-		SELECT other_task_id
-		FROM sub_tasks) AND id NOT IN (`+notIn+`) AND deleted_at IS NULL`, allArgs...).Find(&subtasks)
+		subtasks, err := d.fetchAccessibleSubtasks(taskIDs)
 		if err != nil {
 			return nil, totalCount, err
 		}
@@ -690,8 +740,12 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 			queryCount = queryCount.Join("LEFT", "task_buckets", joinCond)
 		}
 	}
+	countCol := "count(tasks.id)"
+	if needsDistinct {
+		countCol = "count(DISTINCT tasks.id)"
+	}
 	totalCount, err = queryCount.
-		Select("count(DISTINCT tasks.id)").
+		Select(countCol).
 		Count(&Task{})
 	if err != nil {
 		sql, vals := queryCount.LastSQL()

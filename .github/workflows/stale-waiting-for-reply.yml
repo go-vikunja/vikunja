@@ -1,9 +1,11 @@
-name: Close stale "waiting for reply" issues and PRs
+name: Manage "waiting for reply" issues and PRs
 
 on:
   schedule:
     - cron: '0 2 * * *'
   workflow_dispatch:
+  pull_request_target:
+    types: [synchronize]
 
 permissions:
   issues: write
@@ -11,6 +13,7 @@ permissions:
 
 jobs:
   stale:
+    if: github.event_name != 'pull_request_target'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/stale@4391f3da665fdf50b6810c1a66712fb9ba21aa93 # v11.0.0
@@ -33,3 +36,22 @@ jobs:
             questions. If you're still interested in landing this, answer
             them in a comment and we'll reopen.
           operations-per-run: 100
+
+  # The stale job only unstales on updated_at, which a push to the head branch
+  # doesn't bump — so a contributor who answers with code instead of a comment
+  # keeps the label and gets auto-closed.
+  unlabel-on-push:
+    if: >
+      github.event_name == 'pull_request_target' &&
+      contains(github.event.pull_request.labels.*.name, 'waiting for reply')
+    runs-on: ubuntu-latest
+    concurrency:
+      group: unlabel-waiting-for-reply-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    steps:
+      - name: Remove label
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        # gh errors when removing a label the PR no longer has — tolerate that.
+        run: gh pr edit ${{ github.event.pull_request.number }} --remove-label "waiting for reply" || true

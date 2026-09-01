@@ -80,7 +80,7 @@
 							:key="key"
 							:ref="(el: Element | ComponentPublicInstance | null) => setResultRefs(el, k, key)"
 							class="result-item-button"
-							:class="{'is-strikethrough': (i as DoAction<ITask>)?.done}"
+							:class="{'is-strikethrough': isDone(i)}"
 							@keydown.up.prevent="select(k, key - 1)"
 							@keydown.down.prevent="select(k, key + 1)"
 							@click.prevent.stop="doAction(r.type, i)"
@@ -95,6 +95,10 @@
 									:task="i"
 									:show-project="true"
 								/>
+								<span
+									v-if="isDone(i)"
+									class="is-sr-only"
+								>{{ $t('task.attributes.done') }}</span>
 							</template>
 							<template v-else>
 								<span
@@ -105,6 +109,7 @@
 								</span>
 								{{ i.title }}
 							</template>
+							<span class="is-sr-only">{{ r.typeLabel }}</span>
 						</BaseButton>
 					</div>
 				</div>
@@ -132,9 +137,9 @@ import SingleTaskInlineReadonly from '@/components/tasks/partials/SingleTaskInli
 
 import {useBaseStore} from '@/stores/base'
 import {useProjectStore} from '@/stores/projects'
-import {useLabelStore} from '@/stores/labels'
 import {useTaskStore} from '@/stores/tasks'
 import {useAuthStore} from '@/stores/auth'
+import {useLabels} from '@/composables/useLabels'
 
 import {getHistory} from '@/modules/projectHistory'
 import {parseTaskText, PREFIXES, PrefixMode} from '@/modules/quickAddMagic'
@@ -152,7 +157,7 @@ const router = useRouter()
 
 const baseStore = useBaseStore()
 const projectStore = useProjectStore()
-const labelStore = useLabelStore()
+const {filterLabelsByQuery, getLabelsByExactTitles} = useLabels()
 const taskStore = useTaskStore()
 const authStore = useAuthStore()
 
@@ -267,10 +272,10 @@ const foundLabels = computed(() => {
 	}
 
 	if (labels.length > 0) {
-		return labelStore.filterLabelsByQuery([], labels[0])
+		return filterLabelsByQuery([], labels[0])
 	}
 
-	return labelStore.filterLabelsByQuery([], text)
+	return filterLabelsByQuery([], text)
 })
 
 // FIXME: use fuzzysearch
@@ -281,6 +286,8 @@ const foundCommands = computed(() => availableCmds.value.filter((a) =>
 interface Result {
 	type: ACTION_TYPE
 	title: string
+	// singular, unlike the plural group heading in `title`: it is announced per item
+	typeLabel: string
 	items: DoAction<IAbstract>
 }
 
@@ -289,30 +296,40 @@ const results = computed<Result[]>(() => {
 		{
 			type: ACTION_TYPE.CMD,
 			title: t('quickActions.commands'),
+			typeLabel: t('quickActions.resultTypes.command'),
 			items: foundCommands.value,
 		},
 		{
 			type: ACTION_TYPE.PROJECT,
 			title: t('quickActions.projects'),
+			typeLabel: t('quickActions.resultTypes.project'),
 			items: foundProjects.value,
 		},
 		{
 			type: ACTION_TYPE.TASK,
 			title: t('quickActions.tasks'),
+			typeLabel: t('quickActions.resultTypes.task'),
 			items: foundTasks.value,
 		},
 		{
 			type: ACTION_TYPE.LABELS,
 			title: t('quickActions.labels'),
+			typeLabel: t('quickActions.resultTypes.label'),
 			items: foundLabels.value,
 		},
 		{
 			type: ACTION_TYPE.TEAM,
 			title: t('quickActions.teams'),
+			typeLabel: t('quickActions.resultTypes.team'),
 			items: foundTeams.value,
 		},
 	].filter((i) => i.items.length > 0)
 })
+
+// `unknown` because Result.items isn't typed as an array, so v-for widens each item to its property union
+function isDone(item: unknown): boolean {
+	return Boolean((item as ITask | undefined)?.done)
+}
 
 const loading = computed(() =>
 	taskService.loading ||
@@ -454,7 +471,9 @@ function searchTasks() {
 	}
 
 	if (labels.length > 0) {
-		const labelIds = labelStore.getLabelsByExactTitles(labels).map((l) => l.id)
+		const labelIds = getLabelsByExactTitles(labels)
+			.map(label => label.id)
+			.filter((id): id is number => typeof id === 'number')
 		if (labelIds.length > 0) {
 			filter += 'labels in ' + labelIds.join(', ')
 		}

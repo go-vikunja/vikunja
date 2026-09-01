@@ -22,6 +22,15 @@ import (
 	"code.vikunja.io/api/pkg/web"
 )
 
+// ErrImportBudgetExceeded aborts a Planka import whose job budget is exhausted (GHSA-wq92-8x3r-fm38).
+type ErrImportBudgetExceeded struct {
+	Exceeded string
+}
+
+func (err *ErrImportBudgetExceeded) Error() string {
+	return "The planka import exceeded its resource budget: " + err.Exceeded
+}
+
 // ErrInvalidCredentials is returned when Planka rejects the token or username/password.
 type ErrInvalidCredentials struct{}
 

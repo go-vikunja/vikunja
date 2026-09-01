@@ -27,15 +27,26 @@
 			>
 				<div class="head">
 					<span>{{ $t('notification.title') }}</span>
-					<BaseButton
-						v-tooltip="$t('notification.subscribeFeed')"
-						class="feed-link"
-						:to="{name: 'user.settings.feeds'}"
-						@click="showNotifications = false"
-					>
-						<span class="is-sr-only">{{ $t('notification.subscribeFeed') }}</span>
-						<Icon icon="rss" />
-					</BaseButton>
+					<div class="actions">
+						<BaseButton
+							v-if="notifications.length > 0"
+							v-tooltip="$t('notification.clearAll')"
+							class="action-link"
+							:aria-label="$t('notification.clearAll')"
+							@click="clearAll"
+						>
+							<Icon icon="check-double" />
+						</BaseButton>
+						<BaseButton
+							v-tooltip="$t('notification.subscribeFeed')"
+							class="action-link"
+							:to="{name: 'user.settings.feeds'}"
+							@click="showNotifications = false"
+						>
+							<span class="is-sr-only">{{ $t('notification.subscribeFeed') }}</span>
+							<Icon icon="rss" />
+						</BaseButton>
+					</div>
 				</div>
 				<div
 					v-for="(n, index) in notifications"
@@ -75,7 +86,7 @@
 				<XButton
 					v-if="notifications.length > 0 && unreadNotifications > 0"
 					variant="tertiary"
-					class="mbs-2 is-fullwidth" 
+					class="mbs-2 is-fullwidth"
 					@click="markAllRead"
 				>
 					{{ $t('notification.markAllRead') }}
@@ -248,8 +259,15 @@ async function markAllRead() {
 	const notificationService = new NotificationService()
 	await notificationService.markAllRead()
 	success({message: t('notification.markAllReadSuccess')})
-	
+
 	notifications.value.forEach(n => n.readAt = new Date())
+}
+
+async function clearAll() {
+	const notificationService = new NotificationService()
+	await notificationService.delete(new NotificationModel({}))
+	success({message: t('notification.clearAllSuccess')})
+	allNotifications.value = []
 }
 </script>
 
@@ -301,7 +319,13 @@ async function markAllRead() {
 			align-items: center;
 			justify-content: space-between;
 
-			.feed-link {
+			.actions {
+				display: flex;
+				align-items: center;
+				gap: .5rem;
+			}
+
+			.action-link {
 				color: var(--grey-500);
 				transition: color $transition;
 

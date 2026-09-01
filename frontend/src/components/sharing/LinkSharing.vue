@@ -58,6 +58,7 @@
 					:label="$t('project.share.links.password')"
 					type="password"
 					:placeholder="$t('user.auth.passwordPlaceholder')"
+					autocomplete="new-password"
 				/>
 				<XButton
 					icon="plus"

@@ -2,7 +2,7 @@
 import {onBeforeUnmount, onMounted, ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import DatepickerWithValues from '@/components/date/DatepickerWithValues.vue'
-import {useLabelStore} from '@/stores/labels'
+import {useLabels} from '@/composables/useLabels'
 import {useProjectStore} from '@/stores/projects'
 import {
 	transformFilterStringForApi,
@@ -15,7 +15,10 @@ import {Extension} from '@tiptap/core'
 import StarterKit from '@tiptap/starter-kit'
 import {Placeholder} from '@tiptap/extensions'
 import {Plugin, PluginKey} from '@tiptap/pm/state'
-import {filterHighlighter} from '@/components/input/filter/highlighter.ts'
+import {
+	createFilterHighlighter,
+	filterHighlighterKey,
+} from '@/components/input/filter/highlighter.ts'
 import FilterAutocomplete from '@/components/input/filter/FilterAutocomplete'
 import type {IProject} from '@/modelTypes/IProject'
 
@@ -28,7 +31,7 @@ const emit = defineEmits(['update:modelValue'])
 const {t} = useI18n()
 
 // Services and stores for autocomplete
-const labelStore = useLabelStore()
+const {labels, isPending, getLabelByExactTitle, getLabelById} = useLabels()
 const projectStore = useProjectStore()
 
 // Date picker functionality
@@ -43,7 +46,7 @@ const FilterHighlighter = Extension.create({
 
 	addProseMirrorPlugins() {
 		return [
-			filterHighlighter,
+			createFilterHighlighter(() => labels.value),
 		]
 	},
 })
@@ -135,7 +138,7 @@ const editor = useEditor({
 const processContent = (content: string) => {
 	return transformFilterStringForApi(
 		content,
-		labelTitle => labelStore.getLabelByExactTitle(labelTitle)?.id || null,
+		labelTitle => getLabelByExactTitle(labelTitle)?.id || null,
 		projectTitle => {
 			const found = projectStore.findProjectByExactname(projectTitle)
 			return found?.id || null
@@ -144,6 +147,9 @@ const processContent = (content: string) => {
 }
 
 let lastEmittedValue: string | undefined
+let pendingEditorContent: string | undefined
+let pendingModelValue: string | undefined
+let waitingForLabels = false
 
 // Watch for changes to the model value from external sources.
 // Skip when the change originated from the editor itself (onUpdate emit)
@@ -163,12 +169,29 @@ watch(
 
 onMounted(() => setEditorContentFromModelValue(props.modelValue))
 
+watch(isPending, pending => {
+	if (pending || !waitingForLabels || editor.value?.getText() !== pendingEditorContent) {
+		return
+	}
+
+	waitingForLabels = false
+	setEditorContentFromModelValue(pendingModelValue)
+})
+
+watch(labels, () => {
+	if (!editor.value) {
+		return
+	}
+
+	editor.value.view.dispatch(editor.value.state.tr.setMeta(filterHighlighterKey, true))
+})
+
 function setEditorContentFromModelValue(newValue: string | undefined) {
 	if (!editor.value) return
 
 	const content = newValue ? transformFilterStringFromApi(
 		newValue,
-		labelId => labelStore.getLabelById(labelId)?.title || null,
+		labelId => getLabelById(labelId)?.title || null,
 		projectId => projectStore.projects[projectId]?.title || null,
 	) : ''
 
@@ -194,6 +217,12 @@ function setEditorContentFromModelValue(newValue: string | undefined) {
 		const maxPosition = editor.value.state.doc.content.size
 		const safePosition = Math.min(currentPosition, maxPosition)
 		editor.value.commands.setTextSelection(safePosition)
+	}
+
+	if (isPending.value) {
+		pendingEditorContent = content
+		pendingModelValue = newValue
+		waitingForLabels = true
 	}
 }
 

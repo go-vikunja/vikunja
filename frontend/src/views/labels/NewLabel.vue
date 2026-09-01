@@ -18,13 +18,13 @@
 			@keyup.enter="newLabel()"
 		/>
 		<FormField :label="$t('label.attributes.color')">
-			<ColorPicker v-model="label.hexColor" />
+			<ColorPicker v-model="label.hex_color" />
 		</FormField>
 	</CreateEdit>
 </template>
 
 <script setup lang="ts">
-import {computed, onBeforeMount, ref} from 'vue'
+import {computed, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useRouter} from 'vue-router'
 
@@ -32,24 +32,21 @@ import CreateEdit from '@/components/misc/CreateEdit.vue'
 import ColorPicker from '@/components/input/ColorPicker.vue'
 import FormField from '@/components/input/FormField.vue'
 
-import LabelModel from '@/models/label'
-import {useLabelStore} from '@/stores/labels'
 import {useTitle} from '@/composables/useTitle'
 import {success} from '@/message'
 import {getRandomColorHex} from '@/helpers/color/randomColor'
+import {createLabelDraft, useCreateLabelMutation} from '@/client/queries/labels'
 
 const router = useRouter()
 
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => t('label.create.title'))
 
-const labelStore = useLabelStore()
-const label = ref(new LabelModel())
-
-onBeforeMount(() => label.value.hexColor = getRandomColorHex())
+const label = ref(createLabelDraft({hex_color: getRandomColorHex()}))
+const createLabelMutation = useCreateLabelMutation()
 
 const showError = ref(false)
-const loading = computed(() => labelStore.isLoading)
+const loading = computed(() => createLabelMutation.isPending.value)
 const isSubmitting = ref(false)
 
 const loadingModel = computed({
@@ -73,7 +70,7 @@ async function newLabel() {
 	isSubmitting.value = true
 
 	try {
-		const newLabel = await labelStore.createLabel(label.value)
+		const newLabel = await createLabelMutation.mutateAsync(label.value)
 		router.push({
 			name: 'labels.index',
 			params: {id: newLabel.id},

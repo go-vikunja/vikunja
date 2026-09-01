@@ -346,6 +346,25 @@ func (err ErrTOTPNotEnabled) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrTOTPQrCodeNotAvailable represents a "TOTPQrCodeNotAvailable" kind of error.
+type ErrTOTPQrCodeNotAvailable struct{}
+
+func (err ErrTOTPQrCodeNotAvailable) Error() string {
+	return "The totp qrcode is not available because totp is already enabled for this user"
+}
+
+// ErrCodeTOTPQrCodeNotAvailable holds the unique world-error code of this error
+const ErrCodeTOTPQrCodeNotAvailable = 1037
+
+// HTTPError holds the http error description
+func (err ErrTOTPQrCodeNotAvailable) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusForbidden,
+		Code:     ErrCodeTOTPQrCodeNotAvailable,
+		Message:  "The totp qrcode is not available because totp is already enabled for this user.",
+	}
+}
+
 // ErrInvalidTOTPPasscode represents a "InvalidTOTPPasscode" kind of error.
 type ErrInvalidTOTPPasscode struct {
 	Passcode string

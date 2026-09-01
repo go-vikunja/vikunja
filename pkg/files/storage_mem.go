@@ -90,6 +90,14 @@ func (*memStorage) MkdirAll(string, os.FileMode) error {
 	return nil
 }
 
+func (*memStorage) Ensure() error {
+	return nil
+}
+
+func (*memStorage) ValidateBasePath() error {
+	return nil
+}
+
 type memFileInfo struct {
 	name string
 	size int64

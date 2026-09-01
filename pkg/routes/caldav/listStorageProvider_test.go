@@ -29,6 +29,8 @@ import (
 	"github.com/samedi/caldav-go/errs"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"xorm.io/builder"
+	"xorm.io/xorm"
 )
 
 // Check logic related to creating sub-tasks
@@ -695,5 +697,145 @@ SUMMARY:Fresh task
 END:VTODO
 END:VCALENDAR`)
 		require.NoError(t, err)
+	})
+}
+
+func TestRemoveStaleRelations_SkipsForbiddenDeletion(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	owner := &user.User{ID: 1}
+	reader := &user.User{ID: 2}
+
+	proj := &models.Project{Title: "stale-rel shared project"}
+	require.NoError(t, proj.Create(s, owner))
+	_, err := s.Insert(&models.ProjectUser{UserID: reader.ID, ProjectID: proj.ID, Permission: models.PermissionRead})
+	require.NoError(t, err)
+
+	baseTask := &models.Task{Title: "stale-rel base", ProjectID: proj.ID}
+	require.NoError(t, baseTask.Create(s, owner))
+	parentTask := &models.Task{Title: "stale-rel parent", ProjectID: proj.ID}
+	require.NoError(t, parentTask.Create(s, owner))
+
+	_, err = s.Insert(&models.TaskRelation{
+		TaskID:       baseTask.ID,
+		OtherTaskID:  parentTask.ID,
+		RelationKind: models.RelationKindParenttask,
+		CreatedByID:  owner.ID,
+	})
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+
+	relationCond := map[string]interface{}{
+		"task_id":       baseTask.ID,
+		"other_task_id": parentTask.ID,
+		"relation_kind": models.RelationKindParenttask,
+	}
+
+	err = removeStaleRelations(s, reader, &models.Task{ID: baseTask.ID}, map[models.RelationKind][]*models.Task{})
+	require.NoError(t, err, "a caller without delete permission must cause a skip, not an error")
+	db.AssertExists(t, "task_relations", relationCond, false)
+
+	err = removeStaleRelations(s, owner, &models.Task{ID: baseTask.ID}, map[models.RelationKind][]*models.Task{})
+	require.NoError(t, err)
+	db.AssertMissing(t, "task_relations", relationCond)
+}
+
+// Guards inaccessible RELATED-TO UIDs (GHSA-g38j-7v97-x298).
+func TestPersistRelations_AuthorizesRelationUIDs(t *testing.T) {
+	setup := func(t *testing.T) (s *xorm.Session, proj, privateProj *models.Project, taskA, foreignTask *models.Task, writer *user.User) {
+		t.Helper()
+		db.LoadAndAssertFixtures(t)
+		s = db.NewSession()
+
+		owner := &user.User{ID: 1}
+		writer = &user.User{ID: 2}
+
+		proj = &models.Project{Title: "persist-rel shared project"}
+		require.NoError(t, proj.Create(s, owner))
+		_, err := s.Insert(&models.ProjectUser{UserID: writer.ID, ProjectID: proj.ID, Permission: models.PermissionWrite})
+		require.NoError(t, err)
+
+		taskA = &models.Task{Title: "persist-rel base", ProjectID: proj.ID, UID: "uid-persist-rel-base"}
+		require.NoError(t, taskA.Create(s, owner))
+
+		privateProj = &models.Project{Title: "persist-rel private project"}
+		require.NoError(t, privateProj.Create(s, owner))
+		foreignTask = &models.Task{Title: "persist-rel foreign", ProjectID: privateProj.ID, UID: "uid-persist-rel-foreign"}
+		require.NoError(t, foreignTask.Create(s, owner))
+		require.NoError(t, s.Commit())
+
+		return
+	}
+
+	t.Run("inaccessible UID yields a placeholder, never a relation to the foreign task", func(t *testing.T) {
+		s, proj, privateProj, taskA, foreignTask, writer := setup(t)
+		defer s.Close()
+
+		newRelations := map[models.RelationKind][]*models.Task{
+			models.RelationKindParenttask: {{UID: "uid-persist-rel-foreign"}},
+		}
+		require.NoError(t, persistRelations(s, writer, &models.Task{ID: taskA.ID, ProjectID: proj.ID}, newRelations))
+		require.NoError(t, s.Commit())
+
+		db.AssertMissing(t, "task_relations", map[string]interface{}{
+			"task_id":       taskA.ID,
+			"other_task_id": foreignTask.ID,
+		})
+
+		db.AssertCount(t, "tasks", builder.Eq{"project_id": privateProj.ID}, 1)
+
+		placeholder := &models.Task{}
+		found, err := s.Where("project_id = ? AND title = ?", proj.ID, "DUMMY-UID-uid-persist-rel-foreign").Get(placeholder)
+		require.NoError(t, err)
+		require.True(t, found, "a placeholder must be created in the caller's project")
+		db.AssertExists(t, "task_relations", map[string]interface{}{
+			"task_id":       taskA.ID,
+			"other_task_id": placeholder.ID,
+			"relation_kind": models.RelationKindParenttask,
+		}, false)
+	})
+
+	t.Run("unknown UID also yields a placeholder", func(t *testing.T) {
+		s, proj, _, taskA, _, writer := setup(t)
+		defer s.Close()
+
+		newRelations := map[models.RelationKind][]*models.Task{
+			models.RelationKindParenttask: {{UID: "uid-persist-rel-unknown"}},
+		}
+		require.NoError(t, persistRelations(s, writer, &models.Task{ID: taskA.ID, ProjectID: proj.ID}, newRelations))
+		require.NoError(t, s.Commit())
+
+		placeholder := &models.Task{}
+		found, err := s.Where("project_id = ? AND title = ?", proj.ID, "DUMMY-UID-uid-persist-rel-unknown").Get(placeholder)
+		require.NoError(t, err)
+		require.True(t, found)
+		db.AssertExists(t, "task_relations", map[string]interface{}{
+			"task_id":       taskA.ID,
+			"other_task_id": placeholder.ID,
+			"relation_kind": models.RelationKindParenttask,
+		}, false)
+	})
+
+	t.Run("accessible relations still work", func(t *testing.T) {
+		s, proj, _, taskA, _, writer := setup(t)
+		defer s.Close()
+
+		taskC := &models.Task{Title: "persist-rel peer", ProjectID: proj.ID, UID: "uid-persist-rel-peer"}
+		require.NoError(t, taskC.Create(s, &user.User{ID: 1}))
+		require.NoError(t, s.Commit())
+
+		newRelations := map[models.RelationKind][]*models.Task{
+			models.RelationKindParenttask: {{UID: "uid-persist-rel-peer"}},
+		}
+		require.NoError(t, persistRelations(s, writer, &models.Task{ID: taskA.ID, ProjectID: proj.ID}, newRelations))
+		require.NoError(t, s.Commit())
+
+		db.AssertExists(t, "task_relations", map[string]interface{}{
+			"task_id":       taskA.ID,
+			"other_task_id": taskC.ID,
+			"relation_kind": models.RelationKindParenttask,
+		}, false)
 	})
 }

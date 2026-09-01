@@ -17,6 +17,7 @@
 package models
 
 import (
+	"slices"
 	"time"
 
 	"code.vikunja.io/api/pkg/cron"
@@ -288,81 +289,149 @@ func (sf *SavedFilter) Delete(s *xorm.Session, _ web.Auth) error {
 // dropFiltersWithInactiveOwners removes filters owned by a disabled, locked or deleted
 // user. Evaluating a filter needs its owner's project list, which getRawProjectsForUser
 // refuses to return for those, so one such filter would fail the whole batch for everyone.
-func dropFiltersWithInactiveOwners(s *xorm.Session, filters map[int64]*SavedFilter) (err error) {
+func dropFiltersWithInactiveOwners(s *xorm.Session, filters map[int64]*SavedFilter) (timezoneByOwner map[int64]string, err error) {
+	timezoneByOwner = map[int64]string{}
 	if len(filters) == 0 {
-		return nil
+		return timezoneByOwner, nil
 	}
 
+	seenOwners := map[int64]bool{}
 	ownerIDs := make([]int64, 0, len(filters))
 	for _, filter := range filters {
+		if seenOwners[filter.OwnerID] {
+			continue
+		}
+		seenOwners[filter.OwnerID] = true
 		ownerIDs = append(ownerIDs, filter.OwnerID)
 	}
 
-	activeOwners := []*user.User{}
-	err = s.
-		In("id", ownerIDs).
-		NotIn("status", user.StatusDisabled, user.StatusAccountLocked).
-		Cols("id").
-		Find(&activeOwners)
-	if err != nil {
-		return err
-	}
+	for chunk := range slices.Chunk(ownerIDs, idChunkSize) {
+		activeOwners := []*user.User{}
+		err = s.
+			In("id", chunk).
+			NotIn("status", user.StatusDisabled, user.StatusAccountLocked).
+			Cols("id", "timezone").
+			Find(&activeOwners)
+		if err != nil {
+			return nil, err
+		}
 
-	isActive := make(map[int64]bool, len(activeOwners))
-	for _, owner := range activeOwners {
-		isActive[owner.ID] = true
+		for _, owner := range activeOwners {
+			timezoneByOwner[owner.ID] = owner.Timezone
+		}
 	}
 
 	for id, filter := range filters {
-		if !isActive[filter.OwnerID] {
+		if _, isActive := timezoneByOwner[filter.OwnerID]; !isActive {
 			log.Debugf("Skipping filter %d, owner %d is disabled, locked or deleted", filter.ID, filter.OwnerID)
 			delete(filters, id)
 		}
 	}
 
-	return nil
+	return timezoneByOwner, nil
 }
 
-func addTaskToFilter(s *xorm.Session, filter *SavedFilter, view *ProjectView, fallbackTimezone string, task *Task) (taskBucket *TaskBucket, taskPosition *TaskPosition, err error) {
-
-	filterString := filter.Filters.Filter
-
-	if filter.Filters.FilterTimezone == "" {
-		filter.Filters.FilterTimezone = fallbackTimezone
-	}
-
-	parsedFilters, err := getTaskFiltersFromFilterString(filterString, filter.Filters.FilterTimezone)
+func parseFilterCond(filter, timezone string, includeNulls bool) (cond builder.Cond, joinTaskBuckets bool, err error) {
+	parsedFilters, err := getTaskFiltersFromFilterString(filter, timezone)
 	if err != nil {
-		log.Errorf("Could not parse filter string '%s' from view %d and saved filter %d: %v", filterString, view.ID, filter.ID, err)
-		return
+		return nil, false, err
 	}
 
-	filterCond, err := convertFiltersToDBFilterCond(parsedFilters, filter.Filters.FilterIncludeNulls)
-	if err != nil {
-		log.Errorf("Could not convert filter string '%s' from view %d and saved filter %d to db conditions: %v", filterString, view.ID, filter.ID, err)
-		return
+	// convertFiltersToDBFilterCond rewrites the field names in place, so this has
+	// to be answered before it runs.
+	joinTaskBuckets = hasBucketIDInParsedFilter(parsedFilters)
+
+	cond, err = convertFiltersToDBFilterCond(parsedFilters, includeNulls)
+	return cond, joinTaskBuckets, err
+}
+
+type filterView struct {
+	view   *ProjectView
+	filter *SavedFilter
+}
+
+type viewTask struct {
+	viewID int64
+	taskID int64
+}
+
+// Existing bucket and position rows are preloaded so the per-task loop issues no
+// existence queries; default bucket ids are memoized on first use.
+type filterViewState struct {
+	hasBucket        map[viewTask]bool
+	hasPosition      map[viewTask]bool
+	defaultBucketIDs map[int64]int64
+}
+
+func (state *filterViewState) defaultBucketID(s *xorm.Session, view *ProjectView) (bucketID int64, err error) {
+	bucketID, has := state.defaultBucketIDs[view.ID]
+	if has {
+		return bucketID, nil
 	}
 
-	taskIsInCurrentFilterAndView, err := s.Where(builder.And(
-		filterCond,
-		builder.Eq{"id": task.ID},
-	)).Exist(&Task{})
-	if !taskIsInCurrentFilterAndView {
-		return
-	}
+	bucketID, err = getDefaultBucketID(s, view)
 	if err != nil {
-		return nil, nil, err
+		return 0, err
+	}
+	state.defaultBucketIDs[view.ID] = bucketID
+	return bucketID, nil
+}
+
+func preloadFilterViewState(s *xorm.Session, viewsByTask map[int64][]filterView) (state *filterViewState, err error) {
+	state = &filterViewState{
+		hasBucket:        map[viewTask]bool{},
+		hasPosition:      map[viewTask]bool{},
+		defaultBucketIDs: map[int64]int64{},
 	}
 
-	taskHasBucketInView, err := s.Where(builder.And(
-		builder.Eq{"task_id": task.ID},
-		builder.Eq{"project_view_id": view.ID},
-	)).Exist(&TaskBucket{})
-	if err != nil {
-		return nil, nil, err
+	taskIDs := make([]int64, 0, len(viewsByTask))
+	viewIDs := []int64{}
+	seenViews := map[int64]bool{}
+	for taskID, views := range viewsByTask {
+		if len(views) == 0 {
+			continue
+		}
+		taskIDs = append(taskIDs, taskID)
+		for _, fv := range views {
+			if !seenViews[fv.view.ID] {
+				seenViews[fv.view.ID] = true
+				viewIDs = append(viewIDs, fv.view.ID)
+			}
+		}
 	}
-	if !taskHasBucketInView {
-		bucketID, err := getDefaultBucketID(s, view)
+	if len(taskIDs) == 0 || len(viewIDs) == 0 {
+		return state, nil
+	}
+
+	cond := builder.And(
+		builder.In("task_id", taskIDs),
+		builder.In("project_view_id", viewIDs),
+	)
+
+	taskBuckets := []*TaskBucket{}
+	err = s.Where(cond).Find(&taskBuckets)
+	if err != nil {
+		return nil, err
+	}
+	for _, tb := range taskBuckets {
+		state.hasBucket[viewTask{viewID: tb.ProjectViewID, taskID: tb.TaskID}] = true
+	}
+
+	taskPositions := []*TaskPosition{}
+	err = s.Where(cond).Find(&taskPositions)
+	if err != nil {
+		return nil, err
+	}
+	for _, tp := range taskPositions {
+		state.hasPosition[viewTask{viewID: tp.ProjectViewID, taskID: tp.TaskID}] = true
+	}
+
+	return state, nil
+}
+
+func addTaskToFilterView(s *xorm.Session, filter *SavedFilter, view *ProjectView, task *Task, state *filterViewState) (taskBucket *TaskBucket, taskPosition *TaskPosition, err error) {
+	if !state.hasBucket[viewTask{viewID: view.ID, taskID: task.ID}] {
+		bucketID, err := state.defaultBucketID(s, view)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -374,15 +443,7 @@ func addTaskToFilter(s *xorm.Session, filter *SavedFilter, view *ProjectView, fa
 		}
 	}
 
-	// Check if a position for this task already exists
-	existingTaskPosition, err := s.Where(builder.And(
-		builder.Eq{"task_id": task.ID},
-		builder.Eq{"project_view_id": view.ID},
-	)).Exist(&TaskPosition{})
-	if err != nil {
-		return nil, nil, err
-	}
-	if !existingTaskPosition {
+	if !state.hasPosition[viewTask{viewID: view.ID, taskID: task.ID}] {
 		taskPosition, err = calculateNewPositionForTask(s, &user.User{ID: filter.OwnerID}, task, view)
 		if err != nil {
 			return nil, nil, err
@@ -390,6 +451,171 @@ func addTaskToFilter(s *xorm.Session, filter *SavedFilter, view *ProjectView, fa
 	}
 
 	return
+}
+
+// Keeps IN clauses well below the parameter limits of all supported databases.
+const idChunkSize = 100
+
+func getActiveSavedFiltersOwnedBy(s *xorm.Session, ownerIDs []int64) (filters map[int64]*SavedFilter, timezoneByOwner map[int64]string, err error) {
+	filters = map[int64]*SavedFilter{}
+	for chunk := range slices.Chunk(ownerIDs, idChunkSize) {
+		batch := map[int64]*SavedFilter{}
+		err = s.In("owner_id", chunk).Find(&batch)
+		if err != nil {
+			return nil, nil, err
+		}
+		for id, filter := range batch {
+			filters[id] = filter
+		}
+	}
+
+	timezoneByOwner, err = dropFiltersWithInactiveOwners(s, filters)
+	if err != nil {
+		return nil, nil, err
+	}
+	return filters, timezoneByOwner, nil
+}
+
+func getKanbanFilterViewsForFilters(s *xorm.Session, filters map[int64]*SavedFilter) (views []*ProjectView, err error) {
+	if len(filters) == 0 {
+		return nil, nil
+	}
+
+	filterProjectIDs := make([]int64, 0, len(filters))
+	for _, filter := range filters {
+		filterProjectIDs = append(filterProjectIDs, getProjectIDFromSavedFilterID(filter.ID))
+	}
+
+	views = []*ProjectView{}
+	for chunk := range slices.Chunk(filterProjectIDs, idChunkSize) {
+		chunkViews := []*ProjectView{}
+		err = s.And(
+			builder.Eq{"view_kind": ProjectViewKindKanban},
+			builder.Eq{"bucket_configuration_mode": BucketConfigurationModeManual},
+			builder.In("project_id", chunk),
+		).Find(&chunkViews)
+		if err != nil {
+			return nil, err
+		}
+		views = append(views, chunkViews...)
+	}
+	return views, nil
+}
+
+func matchTasksToFilterViews(s *xorm.Session, tasks []*Task, filters map[int64]*SavedFilter, views []*ProjectView, accessByProject map[int64]map[int64]bool, timezoneByOwner map[int64]string) (viewsByTask map[int64][]filterView, err error) {
+	viewsByTask = map[int64][]filterView{}
+
+	filterIDs := []int64{}
+	viewsByFilter := map[int64][]*ProjectView{}
+	for _, view := range views {
+		filterID := GetSavedFilterIDFromProjectID(view.ProjectID)
+		if _, has := viewsByFilter[filterID]; !has {
+			filterIDs = append(filterIDs, filterID)
+		}
+		viewsByFilter[filterID] = append(viewsByFilter[filterID], view)
+	}
+
+	for _, filterID := range filterIDs {
+		filter := filters[filterID]
+		matched, err := matchTasksToViewsOfFilter(s, tasks, filter, viewsByFilter[filterID], accessByProject, timezoneByOwner[filter.OwnerID])
+		if err != nil {
+			return nil, err
+		}
+		for taskID, matchedViews := range matched {
+			viewsByTask[taskID] = append(viewsByTask[taskID], matchedViews...)
+		}
+	}
+
+	return viewsByTask, nil
+}
+
+func matchTasksToViewsOfFilter(s *xorm.Session, tasks []*Task, filter *SavedFilter, views []*ProjectView, accessByProject map[int64]map[int64]bool, fallbackTimezone string) (viewsByTask map[int64][]filterView, err error) {
+	viewsByTask = map[int64][]filterView{}
+
+	if filter.Filters == nil {
+		log.Warningf("Skipping filter %d, it has no filters", filter.ID)
+		return viewsByTask, nil
+	}
+
+	timezone := filter.Filters.FilterTimezone
+	if timezone == "" {
+		timezone = fallbackTimezone
+	}
+
+	cond, joinTaskBuckets, err := parseFilterCond(filter.Filters.Filter, timezone, filter.Filters.FilterIncludeNulls)
+	if err != nil {
+		if !isErrInvalidFilter(err) {
+			return nil, err
+		}
+		log.Warningf("Skipping filter %d, it cannot be parsed: %v", filter.ID, err)
+		return viewsByTask, nil
+	}
+
+	candidateIDs := []int64{}
+	for _, task := range tasks {
+		if accessByProject[task.ProjectID][filter.OwnerID] {
+			candidateIDs = append(candidateIDs, task.ID)
+		}
+	}
+	if len(candidateIDs) == 0 {
+		return viewsByTask, nil
+	}
+
+	matchCond := builder.And(cond, builder.In("tasks.id", candidateIDs))
+
+	// A filter on bucket_id resolves against task_buckets, which only has meaning per view.
+	if joinTaskBuckets {
+		for _, view := range views {
+			matchingIDs, err := taskIDsMatchingInView(s, view.ID, matchCond)
+			if err != nil {
+				return nil, err
+			}
+			for _, id := range matchingIDs {
+				viewsByTask[id] = append(viewsByTask[id], filterView{view: view, filter: filter})
+			}
+		}
+		return viewsByTask, nil
+	}
+
+	matchingIDs, err := taskIDsMatching(s, matchCond)
+	if err != nil {
+		return nil, err
+	}
+	for _, id := range matchingIDs {
+		for _, view := range views {
+			viewsByTask[id] = append(viewsByTask[id], filterView{view: view, filter: filter})
+		}
+	}
+
+	return viewsByTask, nil
+}
+
+// Insert per task so a mid-loop recalculation sees earlier members' rows.
+func addTaskToFilterViews(s *xorm.Session, task *Task, views []filterView, state *filterViewState) (err error) {
+	taskPositions := []*TaskPosition{}
+
+	for _, fv := range views {
+		taskBucket, taskPosition, err := addTaskToFilterView(s, fv.filter, fv.view, task, state)
+		if err != nil {
+			return err
+		}
+
+		if taskBucket != nil {
+			if err := insertTaskBuckets(s, taskBucket.ProjectViewID, taskBucket.BucketID, []int64{task.ID}); err != nil {
+				return err
+			}
+		}
+		if taskPosition != nil {
+			taskPositions = append(taskPositions, taskPosition)
+		}
+	}
+
+	if len(taskPositions) == 0 {
+		return nil
+	}
+
+	// The cron writes the same (task_id, project_view_id) key every minute, so skip rows it already created.
+	return bulkInsertTaskPositions(s, taskPositions, false)
 }
 
 func RegisterAddTaskToFilterViewCron() {
@@ -412,7 +638,7 @@ func RegisterAddTaskToFilterViewCron() {
 			return
 		}
 
-		err = dropFiltersWithInactiveOwners(s, filters)
+		_, err = dropFiltersWithInactiveOwners(s, filters)
 		if err != nil {
 			log.Errorf("%sError checking filter owners: %s", logPrefix, err)
 			return
@@ -422,18 +648,7 @@ func RegisterAddTaskToFilterViewCron() {
 			return
 		}
 
-		filterProjectIDs := []int64{}
-		for _, f := range filters {
-			filterProjectIDs = append(filterProjectIDs, getProjectIDFromSavedFilterID(f.ID))
-		}
-
-		kanbanFilterViews := []*ProjectView{}
-		err = s.And(
-			builder.Eq{"view_kind": ProjectViewKindKanban},
-			builder.Eq{"bucket_configuration_mode": BucketConfigurationModeManual},
-			builder.In("project_id", filterProjectIDs),
-		).
-			Find(&kanbanFilterViews)
+		kanbanFilterViews, err := getKanbanFilterViewsForFilters(s, filters)
 		if err != nil {
 			log.Errorf("%sError fetching kanban filter views: %s", logPrefix, err)
 			return
@@ -455,11 +670,7 @@ func RegisterAddTaskToFilterViewCron() {
 		}{}
 		for _, view := range kanbanFilterViews {
 			filterID := GetSavedFilterIDFromProjectID(view.ProjectID)
-			filter, exists := filters[filterID]
-			if !exists {
-				log.Debugf("%sDid not find filter for view %d", logPrefix, view.ID)
-				continue
-			}
+			filter := filters[filterID]
 
 			// currently saved
 			tasks, has := filterTasksCache[filterID]

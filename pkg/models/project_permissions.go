@@ -20,7 +20,6 @@ import (
 	"errors"
 
 	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/web"
 
 	"xorm.io/xorm"
@@ -165,11 +164,8 @@ func checkReadPermissionsForProjects(s *xorm.Session, a web.Auth, projectIDs []i
 	for _, projectID := range projectIDsWithRow {
 		permission := &projectReadPermission{project: projects[projectID]}
 		if pp, has := projectPermissions[projectID]; has {
-			switch pp.MaxPermission {
-			case PermissionRead, PermissionWrite, PermissionAdmin:
-				permission.canRead = true
-				permission.maxPermission = int(pp.MaxPermission)
-			}
+			permission.canRead = true
+			permission.maxPermission = int(pp)
 		}
 		permissions[projectID] = permission
 	}
@@ -347,7 +343,7 @@ func (p *Project) checkPermission(s *xorm.Session, u *user.User, permissions ...
 	}
 
 	for _, r := range permissions {
-		if r == permission.MaxPermission {
+		if r == permission {
 			return true, nil
 		}
 	}
@@ -355,82 +351,22 @@ func (p *Project) checkPermission(s *xorm.Session, u *user.User, permissions ...
 	return false, nil
 }
 
-type projectPermission struct {
-	ID            int64 `xorm:"pk autoincr"`
-	MaxPermission Permission
-}
-
-func checkPermissionsForProjects(s *xorm.Session, u *user.User, projectIDs []int64) (projectPermissionMap map[int64]*projectPermission, err error) {
-	projectPermissionMap = make(map[int64]*projectPermission)
-
+// checkPermissionsForProjects returns the effective permission of the user on each of
+// the given projects. Projects the user cannot access are absent from the result.
+func checkPermissionsForProjects(s *xorm.Session, u *user.User, projectIDs []int64) (map[int64]Permission, error) {
+	permissions := make(map[int64]Permission, len(projectIDs))
 	if len(projectIDs) < 1 {
-		return
+		return permissions, nil
 	}
 
-	args := []interface{}{
-		u.ID,
-		u.ID,
-		u.ID,
-		u.ID,
-		u.ID,
-		u.ID,
+	access, err := getProjectAccessForUser(s, u.ID)
+	if err != nil {
+		return nil, err
 	}
-
-	err = s.SQL(`
-WITH RECURSIVE
-    project_hierarchy AS (
-        -- Base case: Start with the specified projects
-        SELECT id,
-               parent_project_id,
-               0  AS level,
-               id AS original_project_id
-        FROM projects
-        WHERE id IN (`+utils.JoinInt64Slice(projectIDs, ", ")+`)
-
-        UNION ALL
-
-        -- Recursive case: Traverse up the hierarchy
-        SELECT p.id,
-               p.parent_project_id,
-               ph.level + 1,
-               ph.original_project_id
-        FROM projects p
-                 INNER JOIN project_hierarchy ph ON p.id = ph.parent_project_id),
-
-    -- Calculate max team permission for each project/user combination
-    max_team_permissions AS (
-        SELECT tl.project_id,
-               MAX(tl.permission) AS max_team_permission
-        FROM team_projects tl
-                 INNER JOIN team_members tm ON tm.team_id = tl.team_id AND tm.user_id = ?
-        GROUP BY tl.project_id
-    ),
-
-    project_permissions AS (SELECT ph.id,
-                                   ph.original_project_id,
-                                   CASE
-                                       WHEN p.owner_id = ? THEN 2
-                                       WHEN COALESCE(ul.permission, 0) > COALESCE(mtp.max_team_permission, 0) THEN ul.permission
-                                       ELSE COALESCE(mtp.max_team_permission, 0)
-                                       END AS project_permission,
-            CASE
-                WHEN p.owner_id = ? THEN 1  -- Direct project ownership
-                ELSE ph.level + 1  -- Derived from parent project
-            END AS priority
-                            FROM project_hierarchy ph
-                                LEFT JOIN projects p
-                            ON ph.id = p.id
-                                LEFT JOIN users_projects ul ON ul.project_id = ph.id AND ul.user_id = ?
-                                LEFT JOIN max_team_permissions mtp ON mtp.project_id = ph.id
-                            WHERE p.owner_id = ? OR ul.user_id = ? OR mtp.max_team_permission IS NOT NULL)
-
-SELECT ph.original_project_id AS id,
-       COALESCE(MAX(pp.project_permission), -1) AS max_permission
-FROM project_hierarchy ph
-         LEFT JOIN (SELECT *,
-                           ROW_NUMBER() OVER (PARTITION BY original_project_id ORDER BY priority) AS rn
-                    FROM project_permissions) pp ON ph.id = pp.id AND pp.rn = 1
-GROUP BY ph.original_project_id`, args...).
-		Find(&projectPermissionMap)
-	return
+	for _, id := range projectIDs {
+		if p, has := access.permission(id); has {
+			permissions[id] = p
+		}
+	}
+	return permissions, nil
 }

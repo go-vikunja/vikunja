@@ -53,7 +53,12 @@ func timeEntryFilterCond(filter, filterTimezone string) (builder.Cond, error) {
 		return nil, nil
 	}
 
-	parsed, err := fexpr.Parse(preprocessFilterString(filter))
+	filter, err := prepareFilterForParsing(filter)
+	if err != nil {
+		return nil, err
+	}
+
+	parsed, err := fexpr.Parse(filter)
 	if err != nil {
 		return nil, &ErrInvalidFilterExpression{Expression: filter, ExpressionError: err}
 	}

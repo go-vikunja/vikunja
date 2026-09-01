@@ -57,6 +57,18 @@
 				/>
 			</FormField>
 			<FormField
+				:label="$t('user.settings.general.defaultDueTime')"
+				layout="two-col"
+			>
+				<FormInput
+					v-model="settings.frontendSettings.defaultDueTime"
+					type="time"
+				/>
+			</FormField>
+			<p class="help">
+				{{ $t('user.settings.general.defaultDueTimeDescription') }}
+			</p>
+			<FormField
 				v-if="hasFilters"
 				:label="$t('user.settings.general.filterUsedOnOverview')"
 				layout="two-col"

@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 
@@ -52,8 +53,9 @@ var testbot24 = user.User{ID: 24, Username: "bot-owner-b-assistant", Issuer: "lo
 //   - #4: owned by user2, attached to task #1 in project 1 (user1 is admin),
 //     so user1 can READ it (visible via an accessible task) but must NOT be
 //     able to update/delete it (not the owner).
-//   - #5: owned by user2, attached only to task #35 (inaccessible to user1) —
-//     invisible to user1.
+//   - #5: owned by user2, attached to task #35 in project 21, which user1 owns
+//     but has archived — archiving does not hide a project's tasks, so user1
+//     can read it.
 //   - #6: owned by user13, attached only to task #34 in private project 20
 //     (GHSA-hj5c-mhh2-g7jq regression fixture) — invisible to user1.
 //   - #7: owned by user1, no task attachment — readable by its creator.
@@ -62,6 +64,8 @@ var testbot24 = user.User{ID: 24, Username: "bot-owner-b-assistant", Issuer: "lo
 //   - #10: owned by user6, attached only to task #25 in project 16, a child of
 //     project 33 which is shared to team 1 (user1 is a member) — visible via
 //     the inherited child-project access.
+//   - #13: owned by user13, attached only to the soft-deleted task #51 in
+//     project 1 — invisible to user1 despite the accessible project.
 func TestHumaLabel(t *testing.T) {
 	testHandler := webHandlerTestV2{
 		user:     &testuser1,
@@ -76,17 +80,45 @@ func TestHumaLabel(t *testing.T) {
 			require.NoError(t, err)
 
 			ids := labelIDsFromReadAll(t, rec.Body.Bytes())
-			// Exact set: user1's own labels (#1, #2, #7, #8) plus #4 which is
-			// visible via an accessible task and #10 which is visible via a task
-			// in a child of a team-shared project. Assert the full set so the
-			// cardinality is pinned, not just contains/absent.
-			assert.ElementsMatch(t, []int64{1, 2, 4, 7, 8, 10}, ids,
-				"ReadAll must return exactly {1,2,4,7,8,10}; body: %s", rec.Body.String())
-			// #5 (other owner, only on inaccessible task) and #6 (GHSA private
-			// fixture) must be absent — assert explicitly beyond the set match.
-			assert.NotContains(t, ids, int64(3), "label #3 (other owner, unattached) must be hidden")
-			assert.NotContains(t, ids, int64(5), "label #5 (other owner, inaccessible task) must be hidden")
-			assert.NotContains(t, ids, int64(6), "label #6 (GHSA private fixture) must be hidden")
+			assert.ElementsMatch(t, []int64{1, 2, 4, 5, 7, 8, 10}, ids,
+				"ReadAll must return exactly {1,2,4,5,7,8,10}; body: %s", rec.Body.String())
+		})
+
+		t.Run("Pagination - full page forces the Count() fallback", func(t *testing.T) {
+			rec, err := testHandler.testReadAllWithUser(url.Values{"page": {"1"}, "per_page": {"3"}}, nil)
+			require.NoError(t, err)
+			ids := labelIDsFromReadAll(t, rec.Body.Bytes())
+			assert.Equal(t, []int64{1, 2, 4}, ids,
+				"a full page 1 of 3 must slice the first 3 ids in order; body: %s", rec.Body.String())
+			assert.EqualValues(t, 7, totalFromReadAll(t, rec.Body.Bytes()),
+				"a full unfiltered page must report the true total via Count(); body: %s", rec.Body.String())
+		})
+		t.Run("Pagination - partial last page uses the start+len shortcut", func(t *testing.T) {
+			rec, err := testHandler.testReadAllWithUser(url.Values{"page": {"3"}, "per_page": {"3"}}, nil)
+			require.NoError(t, err)
+			ids := labelIDsFromReadAll(t, rec.Body.Bytes())
+			assert.Equal(t, []int64{10}, ids,
+				"the short last page must contain only the trailing id; body: %s", rec.Body.String())
+			assert.EqualValues(t, 7, totalFromReadAll(t, rec.Body.Bytes()),
+				"a short last page must still report the true total; body: %s", rec.Body.String())
+		})
+		t.Run("Pagination - page past the end still reports the true total", func(t *testing.T) {
+			rec, err := testHandler.testReadAllWithUser(url.Values{"page": {"4"}, "per_page": {"3"}}, nil)
+			require.NoError(t, err)
+			ids := labelIDsFromReadAll(t, rec.Body.Bytes())
+			assert.Empty(t, ids, "a page past the end must return no items; body: %s", rec.Body.String())
+			assert.EqualValues(t, 7, totalFromReadAll(t, rec.Body.Bytes()),
+				"an empty page with a non-zero offset must fall back to Count(), not report 0 or the offset; body: %s", rec.Body.String())
+		})
+		t.Run("Pagination - full non-last page respects the q filter", func(t *testing.T) {
+			// q keeps 4 labels, so a full page 1 (2 of 4) isn't the last page - start+len would wrongly report 2.
+			rec, err := testHandler.testReadAllWithUser(url.Values{"q": {"1,2,4,5"}, "page": {"1"}, "per_page": {"2"}}, nil)
+			require.NoError(t, err)
+			ids := labelIDsFromReadAll(t, rec.Body.Bytes())
+			assert.Equal(t, []int64{1, 2}, ids,
+				"a full filtered page 1 of 2 must slice the first 2 filtered ids; body: %s", rec.Body.String())
+			assert.EqualValues(t, 4, totalFromReadAll(t, rec.Body.Bytes()),
+				"a full non-last page must report the true filtered total, not start+len; body: %s", rec.Body.String())
 		})
 	})
 
@@ -140,6 +172,12 @@ func TestHumaLabel(t *testing.T) {
 				rec, err := testHandler.testReadOneWithUser(nil, map[string]string{"label": "8"})
 				require.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Label #8 - user 1 creator, only attached to inaccessible task"`)
+			})
+			t.Run("Forbidden - only on a soft-deleted task in an accessible project (#13)", func(t *testing.T) {
+				// Task #51 is soft-deleted but in project 1 (user1's), so this only passes if the deleted-task filter runs.
+				_, err := testHandler.testReadOneWithUser(nil, map[string]string{"label": "13"})
+				require.Error(t, err)
+				assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
 			})
 		})
 	})
@@ -302,8 +340,7 @@ func TestHumaLabel_BotOwner(t *testing.T) {
 	})
 }
 
-// Fixture label #11 is unattached, so attachment history cannot grant access
-// here - only the owner branch can (#3592).
+// Unattached labels #11 and #12 isolate identity-based access (#3592).
 func TestHumaLabel_BotUsesOwnerLabel(t *testing.T) {
 	bot := webHandlerTestV2{
 		user:     &testbot23,
@@ -320,12 +357,22 @@ func TestHumaLabel_BotUsesOwnerLabel(t *testing.T) {
 		e:        bot.e,
 	}
 
-	t.Run("ReadAll - bot's listing surfaces its owner's unattached labels", func(t *testing.T) {
+	t.Run("ReadAll - bot's listing surfaces its owner's and its siblings' unattached labels", func(t *testing.T) {
 		rec, err := bot.testReadAllWithUser(nil, nil)
 		require.NoError(t, err)
 		ids := labelIDsFromReadAll(t, rec.Body.Bytes())
-		assert.ElementsMatch(t, []int64{9, 11}, ids,
-			"bot's ReadAll must return exactly {9,11}; body: %s", rec.Body.String())
+		assert.ElementsMatch(t, []int64{9, 11, 12}, ids,
+			"bot's ReadAll must return exactly {9,11,12}; body: %s", rec.Body.String())
+	})
+	t.Run("ReadOne - bot can read a label created by a sibling bot", func(t *testing.T) {
+		rec, err := bot.testReadOneWithUser(nil, map[string]string{"label": "12"})
+		require.NoError(t, err)
+		assert.Contains(t, rec.Body.String(), `"title":"Label #12 - created by bot 25, sibling of bot 23"`)
+	})
+	t.Run("ReadOne - a different owner's bot cannot read the sibling's label", func(t *testing.T) {
+		_, err := otherBot.testReadOneWithUser(nil, map[string]string{"label": "12"})
+		require.Error(t, err)
+		assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
 	})
 	t.Run("ReadOne - bot can read its owner's unattached label", func(t *testing.T) {
 		rec, err := bot.testReadOneWithUser(nil, map[string]string{"label": "11"})
@@ -362,6 +409,12 @@ func TestHumaLabel_BotUsesOwnerLabel(t *testing.T) {
 		assert.Equal(t, http.StatusCreated, rec.Code)
 		assert.Contains(t, rec.Body.String(), `"label_id":11`)
 	})
+	t.Run("Create - bot can attach a never-used label created by a sibling bot", func(t *testing.T) {
+		rec, err := attach.testCreateWithUser(nil, nil, `{"label_id":12}`)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusCreated, rec.Code)
+		assert.Contains(t, rec.Body.String(), `"label_id":12`)
+	})
 	t.Run("Create - bot cannot attach an unrelated user's label", func(t *testing.T) {
 		_, err := attach.testCreateWithUser(nil, nil, `{"label_id":6}`)
 		require.Error(t, err)
@@ -384,6 +437,15 @@ func labelIDsFromReadAll(t *testing.T, body []byte) []int64 {
 		ids = append(ids, it.ID)
 	}
 	return ids
+}
+
+func totalFromReadAll(t *testing.T, body []byte) int64 {
+	t.Helper()
+	var resp struct {
+		Total int64 `json:"total"`
+	}
+	require.NoError(t, json.Unmarshal(body, &resp), "ReadAll body must be a paginated envelope: %s", string(body))
+	return resp.Total
 }
 
 // The two tests below cover v2-only behaviour with no v1 counterpart:

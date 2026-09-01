@@ -1,4 +1,4 @@
-import {HTTPFactory} from '@/helpers/fetcher'
+import {apiV2Url, HTTPFactory} from '@/helpers/fetcher'
 import {isDesktopApp, refreshDesktopToken} from '@/helpers/desktopAuth'
 
 let savedToken: string | null = null
@@ -24,6 +24,30 @@ export const getToken = (): string | null => {
 
 	savedToken = localStorage.getItem('token')
 	return savedToken
+}
+
+function getTokenPayload(token: string | null): Record<string, unknown> | null {
+	if (!token) return null
+	try {
+		const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
+		return JSON.parse(atob(base64))
+	} catch {
+		return null
+	}
+}
+
+export function getTokenType(token: string | null): number | null {
+	const payload = getTokenPayload(token)
+	return typeof payload?.type === 'number' ? payload.type : null
+}
+
+export function getTokenIdentity(token: string | null): {id: number; type: number} | null {
+	const payload = getTokenPayload(token)
+	if (typeof payload?.id !== 'number' || typeof payload.type !== 'number') {
+		return null
+	}
+
+	return {id: payload.id, type: payload.type}
 }
 
 /**
@@ -67,11 +91,12 @@ export async function refreshToken(persist: boolean): Promise<void> {
 	inFlightRefresh = p
 	// Only clear if it still points to this promise — a logout (or a newer
 	// refresh started after it) may have replaced inFlightRefresh meanwhile.
+	// .catch: callers get the rejection through p; avoid a second unhandled one.
 	p.finally(() => {
 		if (inFlightRefresh === p) {
 			inFlightRefresh = null
 		}
-	})
+	}).catch(() => {})
 	return p
 }
 
@@ -132,7 +157,21 @@ async function doRefresh(persist: boolean): Promise<void> {
 		// We hold the lock and no one else refreshed — make the API call.
 		const HTTP = HTTPFactory()
 		try {
-			const response = await HTTP.post('user/token/refresh')
+			let response
+			try {
+				response = await HTTP.post(apiV2Url('user/token/refresh'))
+			} catch (e) {
+				if ((e as {response?: {status?: number}})?.response?.status === 429) {
+					throw e
+				}
+				if (loggedOutSinceStart()) {
+					return
+				}
+				// Pre-v2 browsers only hold the v1-path cookie, and some deployments
+				// can't reach v2 at all; v1 re-seeds both cookies.
+				// Drop this fallback once pre-v2 clients have cycled out.
+				response = await HTTP.post('user/token/refresh')
+			}
 			if (loggedOutSinceStart()) {
 				return
 			}
@@ -149,4 +188,3 @@ async function doRefresh(persist: boolean): Promise<void> {
 		await refreshUnderLock()
 	}
 }
-

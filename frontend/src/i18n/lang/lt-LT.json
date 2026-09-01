@@ -39,7 +39,6 @@
 			"email": "El. pašto adresas",
 			"emailPlaceholder": "pvz.: frederic{'@'}vikunja.io",
 			"password": "Slaptažodis",
-			"passwordPlaceholder": "pvz.: •••••••••••",
 			"forgotPassword": "Pamiršote slaptažodį?",
 			"resetPassword": "Pakeisti slaptažodį",
 			"resetPasswordAction": "Atsiųskite man slaptažodžio atnaujinimo nuorodą",
@@ -766,7 +765,6 @@
 			"doneAt": "Atlikta"
 		},
 		"subscription": {
-			"subscribedTaskThroughParentProject": "Čia nutraukti prenumeratos negalima, nes esi užsiprenumeravęs per projektą.",
 			"subscribedProject": "Esi užsiprenumeravęs šį projektą, todėl gausi pranešimus apie pakeitimus.",
 			"notSubscribedProject": "Nesi užsiprenumeravęs projekto naujienų, todėl negausi pranešimų apie pakeitimus.",
 			"subscribedTask": "Esi užsiprenumeravęs šios užduoties naujienas, todėl gausi pranešimus apie pakeitimus.",

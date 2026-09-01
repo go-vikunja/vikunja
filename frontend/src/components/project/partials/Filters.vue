@@ -60,7 +60,7 @@ import {computed, ref, watch} from 'vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import {useRoute} from 'vue-router'
 import type {TaskFilterParams} from '@/services/taskCollection'
-import {useLabelStore} from '@/stores/labels'
+import {useLabels} from '@/composables/useLabels'
 import {useProjectStore} from '@/stores/projects'
 import {
 	hasFilterQuery,
@@ -117,7 +117,7 @@ watch(
 	},
 )
 
-const labelStore = useLabelStore()
+const {getLabelByExactTitle} = useLabels()
 const projectStore = useProjectStore()
 
 const filterInputRef = ref()
@@ -152,7 +152,7 @@ function change(event: 'blur' | 'modelValue' | 'always') {
 
 	const filter = transformFilterStringForApi(
 		filterQuery.value,
-		labelTitle => labelStore.getLabelByExactTitle(labelTitle)?.id || null,
+		labelTitle => getLabelByExactTitle(labelTitle)?.id || null,
 		projectTitle => {
 			const found = projectStore.findProjectByExactname(projectTitle)
 			return found?.id || null

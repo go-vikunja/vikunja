@@ -28,7 +28,6 @@
 			"email": "E-mailadresse",
 			"emailPlaceholder": "f.eks. frederic{'@'}vikunja.io",
 			"password": "Kodeord",
-			"passwordPlaceholder": "f.eks. •••••••••••••••",
 			"forgotPassword": "Har du glemt din adgangskode?",
 			"resetPassword": "Nulstil din adgangskode",
 			"resetPasswordAction": "Send mig et link til nulstilling af adgangskode",
