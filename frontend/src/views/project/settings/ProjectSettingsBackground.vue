@@ -126,7 +126,7 @@ import {
 	useSetUnsplashProjectBackgroundMutation,
 	useUploadProjectBackgroundMutation,
 } from '@/client/queries/projectBackgrounds'
-import {projectQuery} from '@/client/queries/projects'
+import {projectQuery, type ProjectResponse} from '@/client/queries/projects'
 import BaseButton from '@/components/base/BaseButton.vue'
 import UnsplashBackgroundThumbnail from '@/components/project/partials/UnsplashBackgroundThumbnail.vue'
 
@@ -182,6 +182,18 @@ const backgroundMutationLoading = computed(() =>
 	deleteBackgroundMutation.isPending.value,
 )
 
+async function applyBackground(id: number, updated: ProjectResponse, message: string): Promise<boolean> {
+	if (projectId.value !== id) {
+		return false
+	}
+	// The modal can be open for a project other than the one currently displayed.
+	if (baseStore.currentProjectId === id) {
+		await baseStore.handleSetCurrentProject({project: updated, forceUpdate: true})
+	}
+	success({message})
+	return true
+}
+
 async function setBackground(backgroundId: string) {
 	if (setBackgroundMutation.isPending.value) {
 		return
@@ -192,14 +204,7 @@ async function setBackground(backgroundId: string) {
 		imageId: backgroundId,
 		projectId: id,
 	})
-	if (projectId.value !== id) {
-		return
-	}
-	// The modal can be open for a project other than the one currently displayed.
-	if (baseStore.currentProjectId === id) {
-		await baseStore.handleSetCurrentProject({project: updated, forceUpdate: true})
-	}
-	success({message: t('project.background.success')})
+	await applyBackground(id, updated, t('project.background.success'))
 }
 
 const backgroundUploadInput = ref<HTMLInputElement | null>(null)
@@ -211,26 +216,15 @@ async function uploadBackground() {
 
 	const id = projectId.value
 	const updated = await uploadBackgroundMutation.mutateAsync({projectId: id, file})
-	if (projectId.value !== id) {
-		return
-	}
-	if (baseStore.currentProjectId === id) {
-		await baseStore.handleSetCurrentProject({project: updated, forceUpdate: true})
-	}
-	success({message: t('project.background.success')})
+	await applyBackground(id, updated, t('project.background.success'))
 }
 
 async function removeBackground() {
 	const id = projectId.value
 	const updated = await deleteBackgroundMutation.mutateAsync(id)
-	if (projectId.value !== id) {
-		return
+	if (await applyBackground(id, updated, t('project.background.removeSuccess'))) {
+		router.back()
 	}
-	if (baseStore.currentProjectId === id) {
-		await baseStore.handleSetCurrentProject({project: updated, forceUpdate: true})
-	}
-	success({message: t('project.background.removeSuccess')})
-	router.back()
 }
 </script>
 
