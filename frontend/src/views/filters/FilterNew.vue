@@ -20,7 +20,7 @@
 				:placeholder="$t('filters.attributes.titlePlaceholder')"
 				type="text"
 				:error="titleValid ? null : $t('filters.create.titleRequired')"
-				@focusout="validateTitleField"
+				@focusout="markTitleTouched"
 			/>
 			<FormField :label="$t('filters.attributes.description')">
 				<Editor
@@ -58,7 +58,7 @@
 </template>
 
 <script setup lang="ts">
-import {useMounted} from '@vueuse/core'
+import {onUnmounted, ref} from 'vue'
 import {useRouter} from 'vue-router'
 
 import Editor from '@/components/input/AsyncEditor'
@@ -69,20 +69,25 @@ import {getProjectIdFromSavedFilterId} from '@/client/queries/projects'
 import {useSavedFilter} from '@/composables/useSavedFilter'
 
 const router = useRouter()
-const isMounted = useMounted()
+
+// useMounted() never flips back on unmount, so track liveness ourselves.
+const alive = ref(true)
+onUnmounted(() => {
+	alive.value = false
+})
 
 const {
 	filter,
 	filters,
-	createFilter,
+	submit,
 	isLoading,
 	titleValid,
-	validateTitleField,
+	markTitleTouched,
 } = useSavedFilter()
 
 async function create() {
-	const created = await createFilter()
-	if (!isMounted.value) {
+	const created = await submit()
+	if (!alive.value) {
 		return
 	}
 	if (created) {

@@ -1,11 +1,12 @@
 <template>
 	<CreateEdit
-		:loading="isLoading"
+		:loading="isBusy"
 		:title="$t('filters.edit.title')"
 		primary-icon=""
 		:primary-label="$t('misc.save')"
-		:primary-disabled="Boolean(loadError) || isLoading"
+		:primary-disabled="Boolean(loadError) || isBusy"
 		:tertiary="$t('misc.delete')"
+		@update:loading="isSubmitting = $event"
 		@primary="save"
 		@tertiary="$router.push({ name: 'filter.settings.delete', params: { id: projectId } })"
 	>
@@ -20,26 +21,26 @@
 				v-focus
 				:label="$t('filters.attributes.title')"
 				:class="{ 'is-danger': !titleValid }"
-				:disabled="isLoading"
+				:disabled="isBusy"
 				:placeholder="$t('filters.attributes.titlePlaceholder')"
 				type="text"
 				:error="titleValid ? null : $t('filters.create.titleRequired')"
-				@focusout="validateTitleField"
+				@focusout="markTitleTouched"
 			/>
 			<FormField :label="$t('filters.attributes.description')">
 				<Editor
 					id="description"
 					v-model="filter.description"
-					:class="{ 'disabled': isLoading}"
-					:disabled="isLoading"
+					:class="{ 'disabled': isBusy}"
+					:disabled="isBusy"
 					:placeholder="$t('filters.attributes.descriptionPlaceholder')"
 				/>
 			</FormField>
 			<FormField :label="$t('filters.title')">
 				<Filters
 					v-model="filters"
-					:class="{ 'disabled': isLoading}"
-					:disabled="isLoading"
+					:class="{ 'disabled': isBusy}"
+					:disabled="isBusy"
 					class="has-no-shadow has-no-border"
 					:has-footer="false"
 					:change-immediately="true"
@@ -55,7 +56,7 @@
 </template>
 
 <script setup lang="ts">
-import {useMounted} from '@vueuse/core'
+import {computed, onUnmounted, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useRouter} from 'vue-router'
 
@@ -74,21 +75,38 @@ const props = defineProps<{
 
 const {t} = useI18n({useScope: 'global'})
 const router = useRouter()
-const isMounted = useMounted()
+
+// useMounted() never flips back on unmount, so track liveness ourselves.
+const alive = ref(true)
+onUnmounted(() => {
+	alive.value = false
+})
 
 const {
-	saveFilter,
+	submit,
 	filter,
 	filters,
 	isLoading,
 	error: loadError,
 	titleValid,
-	validateTitleField,
+	markTitleTouched,
 } = useSavedFilter(() => props.projectId)
 
+// CreateEdit latches loading on click; the prop must toggle back on early return.
+const isSubmitting = ref(false)
+const isBusy = computed(() => isLoading.value || isSubmitting.value)
+
 async function save() {
-	const saved = await saveFilter()
-	if (!isMounted.value) {
+	const id = props.projectId
+	isSubmitting.value = true
+	let saved
+	try {
+		saved = await submit()
+	} finally {
+		isSubmitting.value = false
+	}
+	// The route param can change on this same instance, so a stale save must not navigate.
+	if (!alive.value || props.projectId !== id) {
 		return
 	}
 	if (saved) {
