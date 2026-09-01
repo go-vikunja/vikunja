@@ -52,20 +52,32 @@ func reserveTaskIndexes(s *xorm.Session, projectID, count int64) (lastIndex int6
 	}
 
 	// Projects inserted outside CreateProject (fixtures, test seeding) have no counter row.
-	highest := &Task{}
+	highestTask := &Task{}
 	_, err = s.Unscoped().
 		Where("project_id = ?", projectID).
 		Desc("index").
 		Cols("index").
-		Get(highest)
+		Get(highestTask)
 	if err != nil {
 		return 0, err
 	}
-	if highest.Index > math.MaxInt64-count {
+
+	// Aliases keep indexes of moved-away tasks reserved, so they can outrank every remaining task.
+	highestAlias := &TaskIndexAlias{}
+	_, err = s.Where("project_id = ?", projectID).
+		Desc("index").
+		Cols("index").
+		Get(highestAlias)
+	if err != nil {
+		return 0, err
+	}
+
+	highest := max(highestTask.Index, highestAlias.Index)
+	if highest > math.MaxInt64-count {
 		return 0, ErrTaskIndexExhausted{ProjectID: projectID}
 	}
 
-	lastIndex = highest.Index + count
+	lastIndex = highest + count
 	_, err = s.Insert(&ProjectTaskCounter{ProjectID: projectID, LastIndex: lastIndex})
 	if err != nil {
 		return 0, err
@@ -84,10 +96,6 @@ func (*TaskIndexAlias) TableName() string { return "task_index_aliases" }
 
 // GetTaskIDByIndexAlias resolves a retired task address.
 func GetTaskIDByIndexAlias(s *xorm.Session, projectID, index int64) (int64, error) {
-	if projectID < 1 || index < 1 {
-		return 0, ErrTaskDoesNotExist{}
-	}
-
 	alias := &TaskIndexAlias{}
 	has, err := s.Where("project_id = ? AND `index` = ?", projectID, index).Get(alias)
 	if err != nil {
