@@ -1,4 +1,4 @@
-import {computed, onScopeDispose, readonly, ref} from 'vue'
+import {computed, onScopeDispose, readonly, ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {defineStore, acceptHMRUpdate} from 'pinia'
 
@@ -74,6 +74,15 @@ export const useBaseStore = defineStore('base', () => {
 		}
 		blurHash.value = newBlurHash
 	}
+
+	// SPA logout keeps this store alive; reset with the auth store's identity watcher.
+	watch(() => [authStore.info?.id ?? null, authStore.info?.type ?? null] as const, ([id, type], [prevId, prevType]) => {
+		if (id !== prevId || type !== prevType) {
+			setBackground('')
+			setBlurHash('')
+			setCurrentProject(null)
+		}
+	}, {flush: 'sync'})
 
 	function setLogoVisible(visible: boolean) {
 		logoVisible.value = visible
