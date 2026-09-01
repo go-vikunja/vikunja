@@ -70,7 +70,7 @@ import {useSavedFilter} from '@/composables/useSavedFilter'
 
 const router = useRouter()
 
-// useMounted() never flips back on unmount, so track liveness ourselves.
+// useMounted() never resets on unmount.
 const alive = ref(true)
 onUnmounted(() => {
 	alive.value = false
