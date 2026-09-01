@@ -45,6 +45,12 @@ vi.mock('vue-i18n', async importOriginal => ({
 }))
 
 import ProjectSettingsViews from './ProjectSettingsViews.vue'
+import {
+	createProjectView,
+	deleteProjectView,
+	updateProjectView,
+} from '@/client/queries/projectViews'
+import {error, success} from '@/message'
 
 type ProjectSettingsViewsVm = {
 	showCreateForm: boolean
@@ -52,27 +58,46 @@ type ProjectSettingsViewsVm = {
 	viewIdToDelete: number | null
 	showDeleteModal: boolean
 	viewToEdit: ProjectView | null
+	isMutating: boolean
+	createView: () => Promise<void>
+	deleteView: (viewId: number | null) => Promise<void>
+	saveView: (view: ProjectView) => Promise<void>
+}
+
+function deferred<T>() {
+	let resolve!: (value: T) => void
+	let reject!: (reason: unknown) => void
+	const promise = new Promise<T>((resolvePromise, rejectPromise) => {
+		resolve = resolvePromise
+		reject = rejectPromise
+	})
+	return {promise, resolve, reject}
+}
+
+function mountView(projectId = 1) {
+	return shallowMount(ProjectSettingsViews, {
+		props: {projectId},
+		global: {
+			mocks: {$t: (key: string) => key},
+			stubs: {
+				CreateEdit: {template: '<div><slot /></div>'},
+				Icon: true,
+				Modal: true,
+				draggable: true,
+			},
+		},
+	})
 }
 
 describe('ProjectSettingsViews', () => {
 	beforeEach(() => {
 		state.views = ref([])
 		state.project = ref({id: 1, max_permission: 2})
+		vi.clearAllMocks()
 	})
 
 	it('resets route-scoped editor state when the project changes', async () => {
-		const wrapper = shallowMount(ProjectSettingsViews, {
-			props: {projectId: 1},
-			global: {
-				mocks: {$t: (key: string) => key},
-				stubs: {
-					CreateEdit: {template: '<div><slot /></div>'},
-					Icon: true,
-					Modal: true,
-					draggable: true,
-				},
-			},
-		})
+		const wrapper = mountView()
 		const vm = wrapper.vm as unknown as ProjectSettingsViewsVm
 		const staleView: ProjectView = {
 			id: 10,
@@ -96,5 +121,132 @@ describe('ProjectSettingsViews', () => {
 		expect(vm.viewToEdit).toBeNull()
 		expect(vm.viewIdToDelete).toBeNull()
 		expect(vm.showDeleteModal).toBe(false)
+	})
+
+	it('does not reset the new project draft when an old create finishes', async () => {
+		const create = deferred<ProjectView>()
+		vi.mocked(createProjectView).mockReturnValue(create.promise)
+		const wrapper = mountView()
+		const vm = wrapper.vm as unknown as ProjectSettingsViewsVm
+
+		vm.showCreateForm = true
+		vm.newView.title = 'Project A draft'
+		const pendingCreate = vm.createView()
+		await vi.waitFor(() => expect(createProjectView).toHaveBeenCalledOnce())
+
+		await wrapper.setProps({projectId: 2})
+		vm.showCreateForm = true
+		vm.newView.title = 'Project B draft'
+		const projectBDraft = vm.newView
+
+		create.resolve({id: 10, project_id: 1, title: 'Project A view', view_kind: 'list'})
+		await pendingCreate
+
+		expect(vm.showCreateForm).toBe(true)
+		expect(vm.newView).toBe(projectBDraft)
+		expect(vm.newView.title).toBe('Project B draft')
+		expect(success).not.toHaveBeenCalled()
+	})
+
+	it('does not close the new project modal when an old delete finishes', async () => {
+		const remove = deferred<void>()
+		vi.mocked(deleteProjectView).mockReturnValue(remove.promise)
+		const wrapper = mountView()
+		const vm = wrapper.vm as unknown as ProjectSettingsViewsVm
+
+		vm.showDeleteModal = true
+		vm.viewIdToDelete = 10
+		const pendingDelete = vm.deleteView(10)
+		await vi.waitFor(() => expect(deleteProjectView).toHaveBeenCalledOnce())
+
+		await wrapper.setProps({projectId: 2})
+		vm.showDeleteModal = true
+		vm.viewIdToDelete = 20
+
+		remove.resolve()
+		await pendingDelete
+
+		expect(vm.showDeleteModal).toBe(true)
+		expect(vm.viewIdToDelete).toBe(20)
+	})
+
+	it('suppresses an old create error without clearing a new project mutation', async () => {
+		const projectACreate = deferred<ProjectView>()
+		const projectBSave = deferred<ProjectView>()
+		vi.mocked(createProjectView).mockReturnValue(projectACreate.promise)
+		vi.mocked(updateProjectView).mockReturnValue(projectBSave.promise)
+		const wrapper = mountView()
+		const vm = wrapper.vm as unknown as ProjectSettingsViewsVm
+
+		vm.showCreateForm = true
+		vm.newView.title = 'Project A draft'
+		const pendingProjectACreate = vm.createView()
+		await vi.waitFor(() => expect(createProjectView).toHaveBeenCalledOnce())
+
+		await wrapper.setProps({projectId: 2})
+		const projectBView: ProjectView = {
+			id: 20,
+			project_id: 2,
+			title: 'Project B view',
+			view_kind: 'list',
+		}
+		vm.viewToEdit = projectBView
+		const pendingProjectBSave = vm.saveView(projectBView)
+		await vi.waitFor(() => expect(updateProjectView).toHaveBeenCalledOnce())
+
+		projectACreate.reject(new Error('Project A failed'))
+		await pendingProjectACreate
+
+		expect(error).not.toHaveBeenCalled()
+		expect(vm.viewToEdit).toEqual(projectBView)
+		expect(vm.isMutating).toBe(true)
+
+		projectBSave.resolve(projectBView)
+		await pendingProjectBSave
+	})
+
+	it('keeps the new project edit pending when an old save finishes', async () => {
+		const projectASave = deferred<ProjectView>()
+		const projectBSave = deferred<ProjectView>()
+		vi.mocked(updateProjectView)
+			.mockReturnValueOnce(projectASave.promise)
+			.mockReturnValueOnce(projectBSave.promise)
+		const wrapper = mountView()
+		const vm = wrapper.vm as unknown as ProjectSettingsViewsVm
+		const projectAView: ProjectView = {
+			id: 10,
+			project_id: 1,
+			title: 'Project A view',
+			view_kind: 'list',
+		}
+		const projectBView: ProjectView = {
+			id: 20,
+			project_id: 2,
+			title: 'Project B view',
+			view_kind: 'list',
+		}
+
+		vm.viewToEdit = projectAView
+		const pendingProjectASave = vm.saveView(projectAView)
+		await vi.waitFor(() => expect(updateProjectView).toHaveBeenCalledOnce())
+
+		await wrapper.setProps({projectId: 2})
+		vm.viewToEdit = projectBView
+		const pendingProjectBSave = vm.saveView(projectBView)
+		await vi.waitFor(() => expect(updateProjectView).toHaveBeenCalledTimes(2))
+
+		projectASave.resolve(projectAView)
+		await pendingProjectASave
+
+		expect(vm.viewToEdit).toEqual(projectBView)
+		expect(vm.isMutating).toBe(true)
+		expect(success).not.toHaveBeenCalled()
+
+		projectBSave.resolve(projectBView)
+		await pendingProjectBSave
+
+		expect(vm.viewToEdit).toBeNull()
+		expect(vm.isMutating).toBe(false)
+		expect(success).toHaveBeenCalledOnce()
 	})
 })
