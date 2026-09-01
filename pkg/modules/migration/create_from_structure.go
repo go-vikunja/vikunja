@@ -472,7 +472,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		}
 	}
 	for _, t := range tasks {
-		if t.Title == "" {
+		if t == nil || t.Title == "" {
 			continue
 		}
 		queue(&t.Task, t.Comments)
@@ -482,11 +482,16 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 			// Reusing the backing array is safe, we never write past the read position.
 			kept := relatedTasks[:0]
 			for _, related := range relatedTasks {
-				if related.Title == "" {
+				if related == nil {
 					continue
 				}
+				// Id-only references (TickTick emits these for parents) must resolve before the
+				// title check, an unresolvable untitled stub cannot be created.
 				if canonical, exists := canonicalByOldID[related.ID]; exists {
 					kept = append(kept, canonical)
+					continue
+				}
+				if related.Title == "" {
 					continue
 				}
 				queue(related, nil)

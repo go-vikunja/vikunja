@@ -642,6 +642,38 @@ func TestInsertFromStructure(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, int64(0), relationCount)
 	})
+	t.Run("resolves id-only related tasks to already queued tasks", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		structure := []*models.ProjectWithTasksAndBuckets{{
+			Project: models.Project{Title: "Id only relation"},
+			Tasks: []*models.TaskWithComments{
+				{Task: models.Task{ID: 100, Title: "parent"}},
+				{Task: models.Task{ID: 101, Title: "child", RelatedTasks: models.RelatedTaskMap{
+					models.RelationKindParenttask: {{ID: 100}},
+				}}},
+			},
+		}}
+		require.NoError(t, InsertFromStructure(structure, u))
+
+		s := db.NewSession()
+		defer s.Close()
+
+		ids := make(map[string]int64, 2)
+		for _, title := range []string{"parent", "child"} {
+			task := &models.Task{}
+			exists, err := s.Where("project_id = ? AND title = ?", structure[0].ID, title).Get(task)
+			require.NoError(t, err)
+			require.True(t, exists, title)
+			ids[title] = task.ID
+		}
+
+		relationCount, err := s.
+			Where("task_id = ? AND other_task_id = ? AND relation_kind = ?", ids["child"], ids["parent"], models.RelationKindParenttask).
+			Count(&models.TaskRelation{})
+		require.NoError(t, err)
+		assert.Equal(t, int64(1), relationCount)
+	})
 	t.Run("assignees from a foreign instance", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
