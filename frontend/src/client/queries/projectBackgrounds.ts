@@ -8,9 +8,9 @@ import {
 	projectsBackgroundUnsplashSet,
 	projectsBackgroundUpload,
 } from '@/client/generated'
-import type {Project} from '@/client/generated'
+import type {Image, Project} from '@/client/generated'
 import {queryClient} from '@/client/queryClient'
-import {cancelProjectQueries, normalizeProject, projectKeys, updateProjectInCache} from '@/client/queries/projects'
+import {cancelProjectQueries, getCachedProject, projectQuery, updateProjectInCache} from '@/client/queries/projects'
 import type {ProjectResponse} from '@/client/queries/projects'
 import {assertClientRequestContext, captureClientRequestContext} from '@/client/requestContext'
 
@@ -21,13 +21,6 @@ export const projectBackgroundKeys = {
 	thumbnail: (imageId: string) => ['project-backgrounds', 'unsplash', 'thumbnail', imageId] as const,
 }
 
-export type UnsplashSearchImage = {
-	id: string
-	blur_hash: string
-	author: string
-	author_name: string
-}
-
 function asBackgroundBlob(data: unknown): Blob {
 	if (!(data instanceof Blob)) {
 		throw new Error('Background response was not an image')
@@ -35,13 +28,19 @@ function asBackgroundBlob(data: unknown): Blob {
 	return data
 }
 
-function isUnsplashAuthorInfo(info: unknown): info is {author: string, author_name: string} {
-	return typeof info === 'object' &&
-		info !== null &&
-		'author' in info &&
-		typeof info.author === 'string' &&
-		'author_name' in info &&
-		typeof info.author_name === 'string'
+export function unsplashAuthor(info: unknown): {author: string, author_name: string} | null {
+	if (
+		typeof info !== 'object' ||
+		info === null ||
+		!('author' in info) ||
+		typeof info.author !== 'string' ||
+		!('author_name' in info) ||
+		typeof info.author_name !== 'string'
+	) {
+		return null
+	}
+
+	return {author: info.author, author_name: info.author_name}
 }
 
 export function projectBackgroundQuery(projectId: number) {
@@ -57,25 +56,11 @@ export function projectBackgroundQuery(projectId: number) {
 export function unsplashBackgroundSearchQuery(query: string) {
 	return infiniteQueryOptions({
 		queryKey: projectBackgroundKeys.search(query),
-		queryFn: async ({pageParam}): Promise<UnsplashSearchImage[]> => {
+		queryFn: async ({pageParam}): Promise<Image[]> => {
 			const {data} = await backgroundsUnsplashSearch({
 				query: {q: query, page: pageParam},
 			})
-			return (data.items ?? []).flatMap(image => {
-				if (typeof image.id !== 'string') {
-					return []
-				}
-
-				const info = isUnsplashAuthorInfo(image.info)
-					? image.info
-					: {author: '', author_name: ''}
-				return [{
-					id: image.id,
-					blur_hash: image.blur_hash ?? '',
-					author: info.author,
-					author_name: info.author_name,
-				}]
-			})
+			return data.items ?? []
 		},
 		initialPageParam: 1,
 		getNextPageParam: (lastPage, _pages, lastPageParam) =>
@@ -93,17 +78,12 @@ export function unsplashBackgroundThumbnailQuery(imageId: string) {
 	})
 }
 
-type BackgroundFields = {
-	background_information: unknown
-	background_blur_hash: string
-}
+type BackgroundFields = Required<Pick<Project, 'background_information' | 'background_blur_hash'>>
 
 // Wire responses are sparse (delete returns only an id), so hand back the merged cache entry.
 async function mutateProjectBackground(
 	projectId: number,
 	request: () => Promise<Project>,
-	toBackground: (project: Project) => BackgroundFields,
-	cachedBackground: 'invalidate' | 'remove',
 ): Promise<ProjectResponse> {
 	const context = captureClientRequestContext()
 	await Promise.all([
@@ -115,17 +95,18 @@ async function mutateProjectBackground(
 	const data = await request()
 	assertClientRequestContext(context)
 
-	const background = toBackground(data)
+	const background = backgroundFromResponse(data)
 	updateProjectInCache(projectId, current => ({...current, ...background}))
-	if (cachedBackground === 'remove') {
+	if (background.background_information === null) {
 		queryClient.removeQueries({queryKey: projectBackgroundKeys.project(projectId)})
 	} else {
 		await queryClient.invalidateQueries({queryKey: projectBackgroundKeys.project(projectId)})
 	}
+
+	const merged = getCachedProject(projectId) ?? await queryClient.fetchQuery(projectQuery(projectId))
 	assertClientRequestContext(context)
 
-	return queryClient.getQueryData<ProjectResponse>(projectKeys.detail(projectId))
-		?? normalizeProject({...data, ...background})
+	return merged
 }
 
 function backgroundFromResponse(project: Project): BackgroundFields {
@@ -151,8 +132,6 @@ export function setUnsplashProjectBackground({
 			})
 			return data
 		},
-		backgroundFromResponse,
-		'invalidate',
 	)
 }
 
@@ -172,8 +151,6 @@ export function uploadProjectBackground({
 			})
 			return data
 		},
-		backgroundFromResponse,
-		'invalidate',
 	)
 }
 
@@ -184,8 +161,6 @@ export function deleteProjectBackground(projectId: number): Promise<ProjectRespo
 			const {data} = await projectsBackgroundDelete({path: {project: projectId}})
 			return data
 		},
-		() => ({background_information: null, background_blur_hash: ''}),
-		'remove',
 	)
 }
 

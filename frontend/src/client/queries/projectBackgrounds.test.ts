@@ -10,6 +10,7 @@ const sdk = vi.hoisted(() => ({
 	projectsBackgroundUnsplashSet: vi.fn(),
 	projectsBackgroundUpload: vi.fn(),
 	projectsBackgroundDelete: vi.fn(),
+	projectsRead: vi.fn(),
 }))
 
 const projects = vi.hoisted(() => ({
@@ -42,6 +43,7 @@ import {
 	projectBackgroundKeys,
 	projectBackgroundQuery,
 	setUnsplashProjectBackground,
+	unsplashAuthor,
 	unsplashBackgroundSearchQuery,
 	unsplashBackgroundThumbnailQuery,
 	uploadProjectBackground,
@@ -49,7 +51,6 @@ import {
 import {normalizeProject, projectKeys} from './projects'
 
 import type {Project} from '@/client/generated'
-import type {ProjectResponse} from './projects'
 
 const projectBefore: Project = {
 	id: 7,
@@ -135,31 +136,41 @@ describe('project background queries', () => {
 			.rejects.toThrowError('Background response was not an image')
 	})
 
-	it('maps Unsplash results to attribution-ready images and drops entries without an id', async () => {
-		sdk.backgroundsUnsplashSearch.mockResolvedValue({
-			data: {
-				items: [
-					{id: 'image-1', blur_hash: 'hash', info: backgroundInformation},
-					{blur_hash: 'no-id', info: backgroundInformation},
-					{id: 'image-2'},
-					{id: 'image-3', blur_hash: 'hash-3', info: {author: 42, author_name: 'Ada Lovelace'}},
-				],
-			},
-		})
+	it('returns raw Unsplash search pages and paginates while pages are not empty', async () => {
+		const items = [
+			{id: 'image-1', blur_hash: 'hash', info: backgroundInformation},
+			{blur_hash: 'no-id', info: backgroundInformation},
+			{id: 'image-2'},
+		]
+		sdk.backgroundsUnsplashSearch.mockResolvedValue({data: {items}})
 
 		const options = unsplashBackgroundSearchQuery('forest')
 		const result = await queryClient.fetchInfiniteQuery(options)
 		const getNextPageParam = unref(toValue(options).getNextPageParam)
 		const firstPage = result.pages[0]
 
-		expect(firstPage).toEqual([
-			{id: 'image-1', blur_hash: 'hash', author: 'ada', author_name: 'Ada Lovelace'},
-			{id: 'image-2', blur_hash: '', author: '', author_name: ''},
-			{id: 'image-3', blur_hash: 'hash-3', author: '', author_name: ''},
-		])
+		expect(firstPage).toEqual(items)
 		expect(sdk.backgroundsUnsplashSearch).toHaveBeenCalledWith({query: {q: 'forest', page: 1}})
 		expect(getNextPageParam(firstPage, [firstPage], 1, [1])).toBe(2)
 		expect(getNextPageParam([], [firstPage, []], 2, [1, 2])).toBeUndefined()
+	})
+
+	it('returns an empty page when the Unsplash response has no items', async () => {
+		sdk.backgroundsUnsplashSearch.mockResolvedValue({data: {}})
+
+		const result = await queryClient.fetchInfiniteQuery(unsplashBackgroundSearchQuery('forest'))
+
+		expect(result.pages).toEqual([[]])
+	})
+
+	it.each([
+		{name: 'a complete author info object', info: backgroundInformation, expected: backgroundInformation},
+		{name: 'missing info', info: undefined, expected: null},
+		{name: 'null info', info: null, expected: null},
+		{name: 'info without an author name', info: {author: 'ada'}, expected: null},
+		{name: 'info with non-string fields', info: {author: 42, author_name: 'Ada Lovelace'}, expected: null},
+	])('narrows $name to Unsplash attribution fields', ({info, expected}) => {
+		expect(unsplashAuthor(info)).toEqual(expected)
 	})
 
 	it('fetches and caches an Unsplash thumbnail as a blob', async () => {
@@ -254,25 +265,12 @@ describe('project background mutations', () => {
 		expect(queryClient.getQueryData(projectBackgroundKeys.project(7))).toBeUndefined()
 	})
 
-	it('falls back to the sparse response when the project is not cached', async () => {
+	it('fetches the project when it is not cached', async () => {
 		sdk.projectsBackgroundDelete.mockResolvedValue({data: {id: 7}})
+		sdk.projectsRead.mockResolvedValue({data: projectBefore})
 
-		const fallback: ProjectResponse = {
-			id: 7,
-			title: '',
-			description: '',
-			hex_color: '',
-			identifier: '',
-			is_archived: false,
-			is_favorite: false,
-			parent_project_id: 0,
-			position: 0,
-			views: [],
-			background_information: null,
-			background_blur_hash: '',
-		}
-
-		await expect(deleteProjectBackground(7)).resolves.toEqual(fallback)
+		await expect(deleteProjectBackground(7)).resolves.toEqual(normalizeProject(projectBefore))
+		expect(sdk.projectsRead).toHaveBeenCalledWith({path: {id: 7}, query: {format: 'html'}})
 	})
 
 	it.each([
