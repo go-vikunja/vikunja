@@ -1,6 +1,7 @@
 <template>
 	<BaseButton
 		class="image-search__image-button"
+		:aria-label="image.author_name !== '' ? $t('project.background.setBackgroundBy', {author: image.author_name}) : $t('project.background.setBackground')"
 		:style="blurHashUrl ? {'background-image': `url(${blurHashUrl})`} : undefined"
 		@click="emit('select')"
 	>

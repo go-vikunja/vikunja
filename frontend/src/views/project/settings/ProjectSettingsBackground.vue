@@ -44,6 +44,22 @@
 				</BaseButton>
 			</p>
 
+			<div
+				v-if="backgroundSearchQuery.isError.value"
+				class="has-text-centered mbs-4"
+			>
+				<p class="has-text-danger">
+					{{ $t('project.background.searchError') }}
+				</p>
+				<XButton
+					variant="secondary"
+					:shadow="false"
+					@click="backgroundSearchQuery.refetch()"
+				>
+					{{ $t('project.background.retry') }}
+				</XButton>
+			</div>
+
 			<ul class="image-search__result-list">
 				<li
 					v-for="im in backgroundSearchResult"
@@ -241,8 +257,6 @@ async function removeBackground() {
 .image-search__result-item {
 	margin-block-start: 0; // FIXME: removes padding from .content
 	aspect-ratio: 16 / 10;
-	background-size: cover;
-	background-position: center;
 	display: flex;
 	position: relative;
 }
@@ -260,8 +274,10 @@ async function removeBackground() {
 	color: $white;
 	transition: opacity $transition;
 }
-.image-search__result-item:hover .image-search__info {
-		opacity: 1;
+.image-search__result-item:hover .image-search__info,
+.image-search__result-item:focus-within .image-search__info,
+.image-search__info:focus-visible {
+	opacity: 1;
 }
 
 .is-load-more-button {

@@ -389,7 +389,11 @@
       "poweredByUnsplash": "Powered by Unsplash",
       "loadMore": "Load more photos",
       "success": "The background has been set successfully!",
-      "removeSuccess": "The background has been removed successfully!"
+      "removeSuccess": "The background has been removed successfully!",
+      "searchError": "Loading backgrounds from Unsplash failed.",
+      "retry": "Try again",
+      "setBackground": "Set as project background",
+      "setBackgroundBy": "Set photo by {author} as project background"
     },
     "delete": {
       "title": "Delete \"{project}\"",
