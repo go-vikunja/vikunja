@@ -1,5 +1,3 @@
-import type {TaskCollection} from '@/client/generated'
-
 export type ExpandTaskFilterParam = 'subtasks' | 'buckets' | 'reactions' | 'comment_count' | 'is_unread' | null
 
 export interface TaskFilterParams {
@@ -12,6 +10,3 @@ export interface TaskFilterParams {
 	per_page?: number,
 	expand?: ExpandTaskFilterParam,
 }
-
-export type EditableTaskCollection = Required<Omit<TaskCollection, 'sort_by' | 'order_by'>> &
-	Pick<TaskFilterParams, 'sort_by' | 'order_by'>
