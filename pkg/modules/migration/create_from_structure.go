@@ -456,22 +456,27 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		bucketID int64
 	}
 	initialTasks := make([]initialTask, 0, len(tasks))
-	seenTaskIDs := make(map[int64]bool, len(tasks))
+	canonicalByOldID := make(map[int64]*models.Task, len(tasks))
 	seenTasks := make(map[*models.Task]bool, len(tasks))
-	addTask := func(task *models.Task, comments []*models.TaskComment) {
-		if seenTasks[task] || (task.ID != 0 && seenTaskIDs[task.ID]) {
-			return
+	// Returns the struct actually queued for creation so callers can replace duplicates with it.
+	addTask := func(task *models.Task, comments []*models.TaskComment) *models.Task {
+		if seenTasks[task] {
+			return task
+		}
+		if task.ID != 0 {
+			if canonical, exists := canonicalByOldID[task.ID]; exists {
+				return canonical
+			}
+			canonicalByOldID[task.ID] = task
 		}
 		seenTasks[task] = true
-		if task.ID != 0 {
-			seenTaskIDs[task.ID] = true
-		}
 		initialTasks = append(initialTasks, initialTask{
 			task:     task,
 			comments: comments,
 			oldID:    task.ID,
 			bucketID: task.BucketID,
 		})
+		return task
 	}
 	for _, t := range tasks {
 		if t.Title == "" {
@@ -481,8 +486,8 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 	}
 	for i := 0; i < len(initialTasks); i++ {
 		for _, relatedTasks := range initialTasks[i].task.RelatedTasks {
-			for _, related := range relatedTasks {
-				addTask(related, nil)
+			for j, related := range relatedTasks {
+				relatedTasks[j] = addTask(related, nil)
 			}
 		}
 	}
@@ -530,9 +535,6 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 					TaskID:       t.ID,
 					OtherTaskID:  rt.ID,
 					RelationKind: kind,
-				}
-				if ttt, exists := tasksByOldID[rt.ID]; exists {
-					taskRel.OtherTaskID = ttt.ID
 				}
 
 				// Add this check to prevent self-relations

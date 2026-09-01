@@ -549,6 +549,53 @@ func TestInsertFromStructure(t *testing.T) {
 		require.True(t, has)
 		assert.Equal(t, int64(10), counter.LastIndex)
 	})
+	t.Run("relates the right task when an old id collides with a new one", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		// Task ids are handed out consecutively, so a probe import reveals which ids the next one gets.
+		probe := []*models.ProjectWithTasksAndBuckets{{
+			Project: models.Project{Title: "Id probe"},
+			Tasks:   []*models.TaskWithComments{{Task: models.Task{Title: "probe"}}},
+		}}
+		require.NoError(t, InsertFromStructure(probe, u))
+
+		// The import below creates parent, decoy and child in that order.
+		childNewID := probe[0].Tasks[0].ID + 3
+
+		child := &models.Task{ID: 11, Title: "child"}
+		structure := []*models.ProjectWithTasksAndBuckets{{
+			Project: models.Project{Title: "Colliding task ids"},
+			Tasks: []*models.TaskWithComments{
+				{Task: models.Task{
+					ID:    10,
+					Title: "parent",
+					RelatedTasks: models.RelatedTaskMap{
+						models.RelationKindSubtask: {child},
+					},
+				}},
+				{Task: models.Task{ID: childNewID, Title: "decoy"}},
+			},
+		}}
+		require.NoError(t, InsertFromStructure(structure, u))
+
+		s := db.NewSession()
+		defer s.Close()
+
+		require.Equal(t, childNewID, child.ID, "the child needs to collide with the decoy's old id")
+
+		relation := &models.TaskRelation{}
+		exists, err := s.
+			Where("task_id = ? AND relation_kind = ?", structure[0].Tasks[0].ID, models.RelationKindSubtask).
+			Get(relation)
+		require.NoError(t, err)
+		require.True(t, exists)
+
+		other := &models.Task{}
+		exists, err = s.ID(relation.OtherTaskID).Get(other)
+		require.NoError(t, err)
+		require.True(t, exists)
+		assert.Equal(t, "child", other.Title)
+	})
 	t.Run("assignees from a foreign instance", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
