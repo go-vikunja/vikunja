@@ -32,11 +32,26 @@ export function assertClientRequestContext(context: ClientRequestContext): void 
 	}
 }
 
-export function assertClientRequestMatchesContext(request: Request, context: ClientRequestContext): void {
+function normalizeApiBaseUrl(apiBaseUrl: string | undefined): string {
+	const normalized = new URL(apiBaseUrl ?? '', window.location.origin)
+	normalized.pathname = normalized.pathname.replace(/\/+$/, '') + '/'
+	return normalized.toString()
+}
+
+export function assertClientRequestMatchesContext(
+	request: Request,
+	context: ClientRequestContext,
+	configuredApiV2BaseUrl: string | undefined,
+): void {
 	assertClientRequestContext(context)
 
 	const requestUrl = new URL(request.url, window.location.origin)
-	const apiV2BaseUrl = new URL(context.apiV2BaseUrl, window.location.origin)
+	const normalizedApiV2BaseUrl = normalizeApiBaseUrl(context.apiV2BaseUrl)
+	if (normalizeApiBaseUrl(configuredApiV2BaseUrl) !== normalizedApiV2BaseUrl) {
+		throw new DOMException('Client request API changed', 'AbortError')
+	}
+
+	const apiV2BaseUrl = new URL(normalizedApiV2BaseUrl)
 	if (requestUrl.origin !== apiV2BaseUrl.origin || !requestUrl.pathname.startsWith(apiV2BaseUrl.pathname)) {
 		throw new DOMException('Client request API changed', 'AbortError')
 	}

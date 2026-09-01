@@ -61,9 +61,9 @@ export function configureApiClient(): void {
 	client.interceptors.response.clear()
 	client.interceptors.error.clear()
 
-	client.interceptors.request.use((request) => {
+	client.interceptors.request.use((request, options: ResolvedRequestOptions) => {
 		const context = captureClientRequestContext()
-		assertClientRequestMatchesContext(request, context)
+		assertClientRequestMatchesContext(request, context, options.baseUrl)
 
 		let managedRequest = request
 		if (request.headers.has('Authorization')) {
