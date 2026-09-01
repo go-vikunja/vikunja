@@ -74,22 +74,11 @@ export function createProjectViewDraft(view: Partial<ProjectViewWritable> = {}):
 }
 
 async function fetchProjectViews(projectId: number, args: ProjectViewListArgs): Promise<ProjectView[]> {
-	const result: ProjectView[] = []
-	let page = 1
-
-	while (true) {
-		const {data} = await projectViewsList({
-			path: {project: projectId},
-			query: {page, per_page: 1000, ...args},
-		})
-		result.push(...(data.items ?? []))
-		if (page >= (data.total_pages ?? 1)) {
-			break
-		}
-		page++
-	}
-
-	return result
+	const {data} = await projectViewsList({
+		path: {project: projectId},
+		query: {page: 1, per_page: 1000, ...args},
+	})
+	return data.items ?? []
 }
 
 export function projectViewsQuery(projectId: number, args: ProjectViewListArgs = {}) {
