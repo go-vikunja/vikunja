@@ -10,7 +10,7 @@ overrides:
   minimatch: 10.2.6
   rollup: 'catalog:'
   basic-ftp: 6.2.1
-  serialize-javascript: 7.1.0
+  serialize-javascript: 7.1.1
   flatted: 3.4.4
   ip-address: 10.7.0
   postcss: 8.5.26
