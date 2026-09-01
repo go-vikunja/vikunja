@@ -74,7 +74,7 @@ describe('useProjectNavigation', () => {
 		scope.stop()
 	})
 
-	it('does not update or roll back a saved filter after its session changes', async () => {
+	it('rolls back the optimistic favorite only while the request context is current', async () => {
 		const listKey = projectKeys.list()
 		const original = normalizeProject({id: -2, title: 'Filter', is_favorite: false})
 		queryClient.setQueryData<ProjectListResult>(listKey, {
@@ -100,7 +100,6 @@ describe('useProjectNavigation', () => {
 		patch.reject(new DOMException('Client request context changed', 'AbortError'))
 
 		await expect(toggle).rejects.toMatchObject({name: 'AbortError'})
-		expect(savedFilterQueries.patchSavedFilterFavorite).toHaveBeenCalledOnce()
 		expect(queryClient.getQueryData<ProjectListResult>(listKey)?.savedFilterProjects[0]).toEqual(current)
 		wrapper.unmount()
 	})

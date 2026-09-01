@@ -4,7 +4,7 @@ import {useQuery} from '@tanstack/vue-query'
 import {getSavedFilterIdFromProjectId} from '@/client/queries/projects'
 import {
 	createSavedFilter,
-	createSavedFilterDraft,
+	newSavedFilterDraft,
 	savedFilterQuery,
 	updateSavedFilter,
 } from '@/client/queries/savedFilters'
@@ -13,7 +13,7 @@ import type {SavedFilterDraft, SavedFilterResponse} from '@/client/queries/saved
 type SavedFilterForm = SavedFilterDraft & Pick<SavedFilterResponse, 'id'>
 
 function newDraft(): SavedFilterForm {
-	return {id: 0, ...createSavedFilterDraft()}
+	return {id: 0, ...newSavedFilterDraft()}
 }
 
 // Deep enough clone that v-model edits never write into the query cache entry.
@@ -39,12 +39,12 @@ export function useSavedFilter(projectId?: MaybeRefOrGetter<number | undefined>)
 	const isSaving = ref(false)
 	const titleTouched = ref(false)
 
-	watch([savedFilterId, query.data, query.isFetching], ([id, value, isFetching], [previousId]) => {
+	watch([savedFilterId, query.data], ([id, value], [previousId]) => {
 		if (id !== previousId) {
 			filter.value = newDraft()
 		}
-		// Seeding only when the ids differ keeps a locally edited draft alive across background refetches.
-		if (!isFetching && value && value.id !== filter.value.id) {
+		// Seed once per id; same-id refetches never overwrite the draft.
+		if (value && value.id === id && value.id !== filter.value.id) {
 			filter.value = toDraft(value)
 		}
 	}, {immediate: true})
@@ -58,7 +58,7 @@ export function useSavedFilter(projectId?: MaybeRefOrGetter<number | undefined>)
 
 	const titleValid = computed(() => !titleTouched.value || filter.value.title !== '')
 
-	function validateTitleField() {
+	function markTitleTouched() {
 		titleTouched.value = true
 	}
 
@@ -71,31 +71,24 @@ export function useSavedFilter(projectId?: MaybeRefOrGetter<number | undefined>)
 		}
 	}
 
-	async function createFilter(): Promise<SavedFilterResponse | undefined> {
+	async function submit(): Promise<SavedFilterResponse | undefined> {
 		titleTouched.value = true
 		if (!titleValid.value) {
 			return
 		}
 
-		isSaving.value = true
-		try {
-			const created = await createSavedFilter(writableFilter())
-			filter.value = toDraft(created)
-			return created
-		} finally {
-			isSaving.value = false
-		}
-	}
-
-	async function saveFilter(): Promise<SavedFilterResponse | undefined> {
-		titleTouched.value = true
-		if (!titleValid.value || filter.value.id !== savedFilterId.value) {
+		const id = savedFilterId.value
+		const isCreate = id === 0
+		// An untouched draft still carries id 0, which must never be sent as an update target.
+		if (!isCreate && (id <= 0 || filter.value.id !== id)) {
 			return
 		}
 
 		isSaving.value = true
 		try {
-			const saved = await updateSavedFilter({id: filter.value.id, ...writableFilter()})
+			const saved = isCreate
+				? await createSavedFilter(writableFilter())
+				: await updateSavedFilter({id: filter.value.id, ...writableFilter()})
 			filter.value = toDraft(saved)
 			return saved
 		} finally {
@@ -112,8 +105,7 @@ export function useSavedFilter(projectId?: MaybeRefOrGetter<number | undefined>)
 		),
 		error: query.error,
 		titleValid,
-		validateTitleField,
-		createFilter,
-		saveFilter,
+		markTitleTouched,
+		submit,
 	}
 }
