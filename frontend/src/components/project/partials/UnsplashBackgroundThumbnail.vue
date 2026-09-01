@@ -55,7 +55,7 @@ const thumbUrl = useObjectUrl(thumb.data)
 
 watch(thumb.error, error => {
 	if (error !== null) {
-		console.error('Failed to load Unsplash thumbnail', props.image.id, error.message)
+		console.error('Failed to load Unsplash thumbnail', props.image.id, error instanceof Error ? error.message : error)
 	}
 })
 
