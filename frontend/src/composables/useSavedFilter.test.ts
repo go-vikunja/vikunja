@@ -73,10 +73,11 @@ describe('useSavedFilter', () => {
 
 	it('waits for the initial refresh and does not overwrite an edited draft later', async () => {
 		const data = ref(savedFilterResponse(1, 'Cached'))
+		const isPending = ref(true)
 		const isFetching = ref(true)
 		useQuery.mockReturnValue({
 			data,
-			isPending: ref(false),
+			isPending,
 			isFetching,
 			error: ref(null),
 		})
@@ -86,6 +87,7 @@ describe('useSavedFilter', () => {
 		expect(state.value.isLoading.value).toBe(true)
 
 		data.value = {...data.value, title: 'Fresh'}
+		isPending.value = false
 		isFetching.value = false
 		await nextTick()
 		expect(state.value.filter.value.title).toBe('Fresh')
@@ -93,6 +95,10 @@ describe('useSavedFilter', () => {
 		state.value.filter.value.title = 'Local edit'
 		isFetching.value = true
 		data.value = {...data.value, title: 'Background refresh'}
+		await nextTick()
+		// isPending stays false during a background refetch, so the form must not go read-only.
+		expect(state.value.isLoading.value).toBe(false)
+
 		isFetching.value = false
 		await nextTick()
 
@@ -103,10 +109,11 @@ describe('useSavedFilter', () => {
 	it('settles the loading state when the detail query fails', async () => {
 		const data = ref<ReturnType<typeof savedFilterResponse> | undefined>(undefined)
 		const error = ref<Error | null>(null)
+		const isPending = ref(true)
 		const isFetching = ref(true)
 		useQuery.mockReturnValue({
 			data,
-			isPending: ref(false),
+			isPending,
 			isFetching,
 			error,
 		})
@@ -115,6 +122,7 @@ describe('useSavedFilter', () => {
 		expect(state.value.isLoading.value).toBe(true)
 
 		error.value = new Error('Not found')
+		isPending.value = false
 		isFetching.value = false
 		await nextTick()
 
