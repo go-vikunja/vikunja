@@ -41,7 +41,10 @@ import {
 	getEffectiveParentProjectId,
 	getFavoriteNavigationItems,
 	getProjectAncestors,
+	getProjectIdFromSavedFilterId,
 	getRootProjects,
+	getSavedFilterIdFromProjectId,
+	isSavedFilterProject,
 	invalidateProjects,
 	normalizeProject,
 	projectKeys,
@@ -513,5 +516,25 @@ describe('project drafts and cache mutations', () => {
 		expect(duplicate).toMatchObject({id: 9, max_permission: 2})
 		expect(queryClient.getQueryData<{projects: Project[]}>(listKey)?.projects).toContainEqual(duplicate)
 		expect(queryClient.getQueryData(projectKeys.detail(9))).toEqual(duplicate)
+	})
+})
+
+describe('saved filter project ids', () => {
+	it('maps saved filters to negative pseudo-project ids and back', () => {
+		expect(getProjectIdFromSavedFilterId(1)).toBe(-2)
+		expect(getProjectIdFromSavedFilterId(42)).toBe(-43)
+		expect(getProjectIdFromSavedFilterId(0)).toBe(0)
+		expect(getProjectIdFromSavedFilterId(-1)).toBe(0)
+		expect(getSavedFilterIdFromProjectId(-2)).toBe(1)
+		expect(getSavedFilterIdFromProjectId(-43)).toBe(42)
+		expect(getSavedFilterIdFromProjectId(-1)).toBe(0)
+		expect(getSavedFilterIdFromProjectId(1)).toBe(0)
+	})
+
+	it('recognizes only saved-filter pseudo-projects', () => {
+		expect(isSavedFilterProject({id: -2})).toBe(true)
+		expect(isSavedFilterProject({id: -1})).toBe(false)
+		expect(isSavedFilterProject({id: 1})).toBe(false)
+		expect(isSavedFilterProject(null)).toBe(false)
 	})
 })
