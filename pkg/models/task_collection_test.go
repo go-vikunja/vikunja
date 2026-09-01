@@ -2660,8 +2660,7 @@ func TestTaskCollection_DateFilterTimezoneBoundary(t *testing.T) {
 	assert.Truef(t, found, "task due %s (one hour before local midnight) should match", task.DueDate)
 }
 
-// Read permissions are inherited downwards, so a descendant only drops out of the result
-// when it is archived - which is the case this exercises.
+// Read permissions are inherited downwards, so only an archived descendant drops out.
 func TestTaskCollection_ReadAll_IncludeSubprojectsPartialAccess(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()
