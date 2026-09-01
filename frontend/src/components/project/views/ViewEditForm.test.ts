@@ -68,7 +68,7 @@ function mountForm(modelValue: ProjectView = {
 	})
 }
 
-describe('ViewEditForm label loading', () => {
+describe('ViewEditForm', () => {
 	beforeEach(() => {
 		labelState.labels!.value = []
 		labelState.isPending!.value = true
@@ -138,5 +138,32 @@ describe('ViewEditForm label loading', () => {
 			sort_by: ['position'],
 			order_by: ['desc'],
 		})
+	})
+
+	it('does not save while focus moves to another control in the form', async () => {
+		const wrapper = mountForm({
+			id: 1,
+			project_id: 1,
+			title: 'Board',
+			view_kind: 'kanban',
+			bucket_configuration_mode: 'manual',
+		})
+		const manualMode = wrapper.find<HTMLInputElement>('input[value="manual"]')
+		const filterMode = wrapper.find<HTMLInputElement>('input[value="filter"]')
+
+		await manualMode.trigger('focusout', {relatedTarget: filterMode.element})
+
+		expect(wrapper.emitted('update:modelValue')).toBeUndefined()
+		await filterMode.trigger('click')
+		expect(filterMode.element.checked).toBe(true)
+		expect(wrapper.emitted('update:modelValue')).toBeUndefined()
+	})
+
+	it('saves when focus leaves the form without explicit save buttons', async () => {
+		const wrapper = mountForm()
+
+		await wrapper.find('form').trigger('focusout', {relatedTarget: document.body})
+
+		expect(wrapper.emitted('update:modelValue')).toHaveLength(1)
 	})
 })

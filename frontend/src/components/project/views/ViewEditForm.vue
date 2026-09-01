@@ -192,8 +192,9 @@ function validateTitle() {
 	titleValid.value = view.value?.title !== ''
 }
 
-function handleBubbleSave() {
-	if (props.showSaveButtons) {
+function handleBubbleSave(event: FocusEvent) {
+	const form = event.currentTarget as HTMLFormElement | null
+	if (props.showSaveButtons || form?.contains(event.relatedTarget as Node | null)) {
 		return
 	}
 
