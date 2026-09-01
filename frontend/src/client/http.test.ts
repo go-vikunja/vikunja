@@ -116,6 +116,15 @@ describe('configureApiClient', () => {
 		expect(requests[0].credentials).toBe('include')
 	})
 
+	it('supports a root-relative API base', async () => {
+		window.API_URL = '/api/v1'
+		configureApiClient()
+
+		await client.get({url: '/probe'})
+
+		expect(requests[0].url).toBe('http://localhost:3000/api/v2/probe')
+	})
+
 	it('adds the current bearer token', async () => {
 		auth.token = 'current-token'
 
@@ -179,6 +188,24 @@ describe('configureApiClient', () => {
 		window.API_URL = 'https://api.example.com/root/api/v2//'
 		configureApiClient()
 		window.API_URL = 'https://api.example.com/root/api/v1'
+
+		await expect(client.get({url: '/probe'})).rejects.toMatchObject({name: 'AbortError'})
+
+		expect(requests).toHaveLength(0)
+	})
+
+	it('rejects a missing API base before sending', async () => {
+		window.API_URL = undefined as unknown as string
+		configureApiClient()
+
+		await expect(client.get({url: '/probe'})).rejects.toMatchObject({name: 'AbortError'})
+
+		expect(requests).toHaveLength(0)
+	})
+
+	it('rejects a malformed relative API base before sending', async () => {
+		window.API_URL = 'not-an-api-url'
+		configureApiClient()
 
 		await expect(client.get({url: '/probe'})).rejects.toMatchObject({name: 'AbortError'})
 
