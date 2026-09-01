@@ -2,7 +2,7 @@
 import {onBeforeMount, ref, watch} from 'vue'
 
 import type {ProjectView, ProjectViewWritable, TaskCollection} from '@/client/generated'
-import type {EditableTaskCollection} from '@/types/TaskFilterParams'
+import type {EditableTaskCollection} from '@/types/EditableTaskCollection'
 import {
 	createProjectViewDraft,
 	createProjectViewUpdate,
@@ -34,8 +34,6 @@ const emit = defineEmits<{
 }>()
 
 type ProjectViewFormValue = ProjectViewWritable & Pick<ProjectView, 'id' | 'project_id'>
-type SortField = EditableTaskCollection['sort_by'][number]
-type SortOrder = EditableTaskCollection['order_by'][number]
 type LoadedProjectView = Omit<ProjectViewDraft, 'filter' | 'bucket_configuration'> &
 	Pick<ProjectView, 'id' | 'project_id'> & {
 		filter: EditableTaskCollection
@@ -45,12 +43,6 @@ type LoadedProjectView = Omit<ProjectViewDraft, 'filter' | 'bucket_configuration
 const {isPending, getLabelByExactTitle, getLabelById} = useLabels()
 const projectNavigation = useProjectNavigation()
 
-const SORT_FIELDS: readonly SortField[] = ['start_date', 'end_date', 'due_date', 'done', 'id', 'position', 'title', 'relevance']
-const SORT_ORDERS: readonly SortOrder[] = ['asc', 'desc']
-
-const isSortField = (value: string): value is SortField => SORT_FIELDS.some(field => field === value)
-const isSortOrder = (value: string): value is SortOrder => SORT_ORDERS.some(order => order === value)
-
 const transformFilterFromApi = (filterInput?: TaskCollection): EditableTaskCollection => {
 	const filterString = transformFilterStringFromApi(
 		filterInput?.filter ?? '',
@@ -59,8 +51,8 @@ const transformFilterFromApi = (filterInput?: TaskCollection): EditableTaskColle
 	)
 
 	const filter: EditableTaskCollection = {
-		sort_by: (filterInput?.sort_by ?? []).filter(isSortField),
-		order_by: (filterInput?.order_by ?? []).filter(isSortOrder),
+		sort_by: filterInput?.sort_by ?? [],
+		order_by: filterInput?.order_by ?? [],
 		filter: '',
 		filter_include_nulls: false,
 		s: '',
