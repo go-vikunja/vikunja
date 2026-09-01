@@ -41,7 +41,10 @@ function canonicalApiBaseUrl(apiBaseUrl: string | undefined): string {
 
 	try {
 		const normalized = new URL(apiBaseUrl, window.location.origin)
-		if (normalized.protocol !== 'http:' && normalized.protocol !== 'https:') {
+		if (
+			(isRootRelative && normalized.origin !== window.location.origin) ||
+			(normalized.protocol !== 'http:' && normalized.protocol !== 'https:')
+		) {
 			throw new DOMException('Invalid client API URL', 'AbortError')
 		}
 		return normalized.toString()
