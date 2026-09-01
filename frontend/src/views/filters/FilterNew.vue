@@ -48,7 +48,7 @@
 					:loading="isLoading"
 					:disabled="isLoading || !titleValid"
 					class="is-fullwidth"
-					@click="createFilterWithValidation()"
+					@click="create()"
 				>
 					{{ $t('filters.create.action') }}
 				</XButton>
@@ -58,18 +58,33 @@
 </template>
 
 <script setup lang="ts">
+import {useRouter} from 'vue-router'
+
 import Editor from '@/components/input/AsyncEditor'
 import FormField from '@/components/input/FormField.vue'
 import Filters from '@/components/project/partials/Filters.vue'
 
+import {getProjectIdFromSavedFilterId} from '@/client/queries/projects'
 import {useSavedFilter} from '@/composables/useSavedFilter'
+
+const router = useRouter()
 
 const {
 	filter,
 	filters,
-	createFilterWithValidation,
+	createFilter,
 	isLoading,
 	titleValid,
 	validateTitleField,
 } = useSavedFilter()
+
+async function create() {
+	const created = await createFilter()
+	if (created) {
+		await router.push({
+			name: 'project.index',
+			params: {projectId: getProjectIdFromSavedFilterId(created.id)},
+		})
+	}
+}
 </script>
