@@ -49,6 +49,36 @@ type taskProjectIndex20260901001942 struct {
 
 func (taskProjectIndex20260901001942) TableName() string { return "tasks" }
 
+type taskIndexRows20260901001942 interface {
+	Next() bool
+	Scan(...any) error
+	Err() error
+	Close() error
+}
+
+func collectTaskIndexHighWaterMarks20260901001942(rows taskIndexRows20260901001942, projectCount int) (lastIndexes map[int64]int64, err error) {
+	defer func() {
+		if closeErr := rows.Close(); err == nil {
+			err = closeErr
+		}
+	}()
+
+	lastIndexes = make(map[int64]int64, projectCount)
+	task := &taskProjectIndex20260901001942{}
+	for rows.Next() {
+		if err = rows.Scan(task); err != nil {
+			return nil, err
+		}
+		if _, exists := lastIndexes[task.ProjectID]; !exists {
+			lastIndexes[task.ProjectID] = task.Index
+		}
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	return lastIndexes, nil
+}
+
 func addTaskIndexState20260901001942(tx *xorm.Engine) error {
 	if err := tx.Sync( //nolint:forbidigo // both tables are new
 		ProjectTaskCounter20260901001942{},
@@ -69,16 +99,15 @@ func addTaskIndexState20260901001942(tx *xorm.Engine) error {
 		return err
 	}
 
-	taskIndexes := []*taskProjectIndex20260901001942{}
-	if err := s.Asc("project_id").Desc("index").Find(&taskIndexes); err != nil {
+	rows, err := s.Asc("project_id").Desc("index").Rows(&taskProjectIndex20260901001942{})
+	if err != nil {
 		_ = s.Rollback()
 		return err
 	}
-	lastIndexes := make(map[int64]int64, len(projects))
-	for _, task := range taskIndexes {
-		if _, exists := lastIndexes[task.ProjectID]; !exists {
-			lastIndexes[task.ProjectID] = task.Index
-		}
+	lastIndexes, err := collectTaskIndexHighWaterMarks20260901001942(rows, len(projects))
+	if err != nil {
+		_ = s.Rollback()
+		return err
 	}
 
 	counters := make([]*ProjectTaskCounter20260901001942, 0, len(projects))
