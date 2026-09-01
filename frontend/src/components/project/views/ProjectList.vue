@@ -18,10 +18,11 @@
 					@update:modelValue="loadTasks()"
 				/>
 				<button
+					v-if="hasTasksWithSubtasks"
 					class="collapse-all-btn"
-					:class="{ 'is-collapsed': collapseAllSubtasks.collapsed }"
-					:title="collapseAllSubtasks.collapsed ? $t('task.expandAllSubtasks') : $t('task.collapseAllSubtasks')"
-					@click="toggleCollapseAll"
+					:class="{ 'is-collapsed': allSubtasksCollapsed }"
+					:title="allSubtasksCollapsed ? $t('task.expandAllSubtasks') : $t('task.collapseAllSubtasks')"
+					@click="toggleAllSubtasks"
 				>
 					<Icon icon="chevron-down" />
 				</button>
@@ -108,11 +109,11 @@
 
 
 <script setup lang="ts">
-import {ref, computed, nextTick, onMounted, onBeforeUnmount, watch, toRef, provide} from 'vue'
+import {ref, computed, nextTick, onMounted, onBeforeUnmount, watch, toRef} from 'vue'
 import draggable from 'zhyswan-vuedraggable'
 
 import ProjectWrapper from '@/components/project/ProjectWrapper.vue'
-import {collapseAllSubtasksKey, type CollapseAllSubtasksState} from '@/components/tasks/partials/collapseAllSubtasks'
+import {useCollapseAllSubtasks} from '@/composables/useCollapsedSubtasks'
 import ButtonLink from '@/components/misc/ButtonLink.vue'
 import AddTask from '@/components/tasks/AddTask.vue'
 import SingleTaskInProject from '@/components/tasks/partials/SingleTaskInProject.vue'
@@ -151,16 +152,6 @@ const ctaVisible = ref(false)
 
 const drag = ref(false)
 
-const collapseAllSubtasks = ref<CollapseAllSubtasksState>({collapsed: false, token: 0})
-provide(collapseAllSubtasksKey, collapseAllSubtasks)
-
-function toggleCollapseAll() {
-	collapseAllSubtasks.value = {
-		collapsed: !collapseAllSubtasks.value.collapsed,
-		token: collapseAllSubtasks.value.token + 1,
-	}
-}
-
 const {
 	tasks: allTasks,
 	loading,
@@ -177,6 +168,12 @@ const {
 		? ['comment_count', 'is_unread']
 		: ['subtasks', 'comment_count', 'is_unread'],
 )
+
+const {
+	allCollapsed: allSubtasksCollapsed,
+	hasTasksWithSubtasks,
+	toggleAll: toggleAllSubtasks,
+} = useCollapseAllSubtasks(allTasks)
 
 const taskPositionService = ref(new TaskPositionService())
 

@@ -216,12 +216,11 @@
 </template>
 
 <script setup lang="ts">
-import {ref, watch, shallowReactive, onMounted, computed, inject} from 'vue'
+import {ref, watch, shallowReactive, onMounted, computed} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import TaskModel, {getHexColor} from '@/models/task'
 import type {ITask} from '@/modelTypes/ITask'
-import {collapseAllSubtasksKey} from '@/components/tasks/partials/collapseAllSubtasks'
 
 import PriorityLabel from '@/components/tasks/partials/PriorityLabel.vue'
 import Labels from '@/components/tasks/partials/Labels.vue'
@@ -250,6 +249,7 @@ import {playPopSound} from '@/helpers/playPop'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 import {useGlobalNow} from '@/composables/useGlobalNow'
+import {useSubtasksCollapsed} from '@/composables/useCollapsedSubtasks'
 
 const props = withDefaults(defineProps<{
 	theTask: ITask,
@@ -270,12 +270,7 @@ const emit = defineEmits<{
 	'taskUpdated': [task: ITask],
 }>()
 
-const isCollapsed = ref(false)
-
-const collapseAllSubtasks = inject(collapseAllSubtasksKey, undefined)
-watch(() => collapseAllSubtasks?.value.token, () => {
-	isCollapsed.value = collapseAllSubtasks?.value.collapsed ?? false
-})
+const isCollapsed = useSubtasksCollapsed(() => task.value.id)
 
 function toggleCollapse() {
 	isCollapsed.value = !isCollapsed.value
