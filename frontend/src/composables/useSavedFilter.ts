@@ -32,6 +32,7 @@ function toDraft(value: SavedFilterResponse): SavedFilterForm {
 }
 
 export function useSavedFilter(projectId?: MaybeRefOrGetter<number | undefined>) {
+	const isCreate = computed(() => toValue(projectId) === undefined)
 	const savedFilterId = computed(() => getSavedFilterIdFromProjectId(toValue(projectId) ?? 0))
 	const query = useQuery(computed(() => savedFilterQuery(savedFilterId.value)))
 
@@ -48,13 +49,6 @@ export function useSavedFilter(projectId?: MaybeRefOrGetter<number | undefined>)
 			filter.value = toDraft(value)
 		}
 	}, {immediate: true})
-
-	const filters = computed({
-		get: () => filter.value.filters,
-		set(value) {
-			filter.value.filters = value
-		},
-	})
 
 	const titleValid = computed(() => !titleTouched.value || filter.value.title !== '')
 
@@ -77,19 +71,21 @@ export function useSavedFilter(projectId?: MaybeRefOrGetter<number | undefined>)
 			return
 		}
 
-		const id = savedFilterId.value
-		const isCreate = id === 0
-		// An untouched draft still carries id 0, which must never be sent as an update target.
-		if (!isCreate && (id <= 0 || filter.value.id !== id)) {
+		// Updates need a real filter id and the draft seeded from it; an unseeded draft still carries id 0.
+		if (!isCreate.value && (!(savedFilterId.value > 0) || filter.value.id !== savedFilterId.value)) {
 			return
 		}
 
+		const id = savedFilterId.value
 		isSaving.value = true
 		try {
-			const saved = isCreate
+			const saved = isCreate.value
 				? await createSavedFilter(writableFilter())
 				: await updateSavedFilter({id: filter.value.id, ...writableFilter()})
-			filter.value = toDraft(saved)
+			// The route id can change mid-flight; the watcher already reset the draft for it.
+			if (savedFilterId.value === id) {
+				filter.value = toDraft(saved)
+			}
 			return saved
 		} finally {
 			isSaving.value = false
@@ -98,7 +94,6 @@ export function useSavedFilter(projectId?: MaybeRefOrGetter<number | undefined>)
 
 	return {
 		filter,
-		filters,
 		// Disabled queries stay pending forever; refetches must not lock the form.
 		isLoading: computed(() =>
 			(savedFilterId.value > 0 && query.isPending.value) || isSaving.value,

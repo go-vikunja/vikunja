@@ -180,12 +180,32 @@ describe('useSavedFilter', () => {
 		wrapper.unmount()
 	})
 
-	it('does not save while the loaded draft does not match the current saved filter', async () => {
-		const {wrapper, state} = mountSavedFilter(-2)
-		state.value.filter.value.title = 'Loaded'
+	it('updates the seeded draft and re-seeds it from the response', async () => {
+		useQuery.mockReturnValue({
+			data: ref(savedFilterResponse(1, 'Loaded')),
+			isPending: ref(false),
+			error: ref(null),
+		})
+		const updated = savedFilterResponse(1, 'Renamed')
+		queryLayer.updateSavedFilter.mockResolvedValue(updated)
 
-		expect(await state.value.submit()).toBeUndefined()
-		expect(queryLayer.updateSavedFilter).not.toHaveBeenCalled()
+		const {wrapper, state} = mountSavedFilter(-2)
+		state.value.filter.value.title = 'Renamed'
+
+		const result = await state.value.submit()
+
+		expect(result).toBe(updated)
+		expect(queryLayer.createSavedFilter).not.toHaveBeenCalled()
+		expect(queryLayer.updateSavedFilter).toHaveBeenCalledWith({
+			id: 1,
+			title: 'Renamed',
+			description: '',
+			filters: queryLayer.newSavedFilterDraft().filters,
+			is_favorite: false,
+		})
+		expect(state.value.filter.value).toEqual(updated)
+		expect(state.value.filter.value).not.toBe(updated)
+		expect(state.value.filter.value.filters).not.toBe(updated.filters)
 		wrapper.unmount()
 	})
 
