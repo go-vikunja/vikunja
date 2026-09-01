@@ -106,9 +106,9 @@ export function useSavedFilter(projectId?: MaybeRefOrGetter<number | undefined>)
 	return {
 		filter,
 		filters,
-		// A disabled query stays pending forever, hence the id guard.
+		// A disabled query stays pending forever, hence the id guard. isFetching is excluded so background refetches don't disable the form.
 		isLoading: computed(() =>
-			(savedFilterId.value > 0 && (query.isPending.value || query.isFetching.value)) || isSaving.value,
+			(savedFilterId.value > 0 && query.isPending.value) || isSaving.value,
 		),
 		error: query.error,
 		titleValid,
