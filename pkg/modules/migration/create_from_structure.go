@@ -485,8 +485,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 				if related == nil {
 					continue
 				}
-				// Id-only references (TickTick emits these for parents) must resolve before the
-				// title check, an unresolvable untitled stub cannot be created.
+				// Id-only references (TickTick parents) must resolve before the title check.
 				if canonical, exists := canonicalByOldID[related.ID]; exists {
 					kept = append(kept, canonical)
 					continue
