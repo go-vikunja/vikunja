@@ -142,6 +142,10 @@ async function deleteView(viewId: number | null) {
 			return
 		}
 		showDeleteModal.value = false
+	} catch (e) {
+		if (isCurrentScope(scope)) {
+			error(e)
+		}
 	} finally {
 		finishMutation(scope)
 	}
@@ -167,6 +171,10 @@ async function saveView(view: ProjectView) {
 		}
 		viewToEdit.value = null
 		success({message: t('project.views.updateSuccess')})
+	} catch (e) {
+		if (isCurrentScope(scope)) {
+			error(e)
+		}
 	} finally {
 		finishMutation(scope)
 	}
@@ -195,6 +203,10 @@ async function saveViewPosition(e: {newIndex: number}) {
 			return
 		}
 		success({message: t('project.views.updateSuccess')})
+	} catch (e) {
+		if (isCurrentScope(scope)) {
+			error(e)
+		}
 	} finally {
 		finishMutation(scope)
 	}
