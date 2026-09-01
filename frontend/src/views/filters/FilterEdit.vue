@@ -1,12 +1,11 @@
 <template>
 	<CreateEdit
-		:loading="isBusy"
+		v-model:loading="loadingModel"
 		:title="$t('filters.edit.title')"
 		primary-icon=""
 		:primary-label="$t('misc.save')"
-		:primary-disabled="Boolean(loadError) || isBusy"
+		:primary-disabled="Boolean(loadError) || loadingModel"
 		:tertiary="$t('misc.delete')"
-		@update:loading="isSubmitting = $event"
 		@primary="save"
 		@tertiary="$router.push({ name: 'filter.settings.delete', params: { id: projectId } })"
 	>
@@ -21,7 +20,7 @@
 				v-focus
 				:label="$t('filters.attributes.title')"
 				:class="{ 'is-danger': !titleValid }"
-				:disabled="isBusy"
+				:disabled="loadingModel"
 				:placeholder="$t('filters.attributes.titlePlaceholder')"
 				type="text"
 				:error="titleValid ? null : $t('filters.create.titleRequired')"
@@ -31,16 +30,16 @@
 				<Editor
 					id="description"
 					v-model="filter.description"
-					:class="{ 'disabled': isBusy}"
-					:disabled="isBusy"
+					:class="{ 'disabled': loadingModel}"
+					:disabled="loadingModel"
 					:placeholder="$t('filters.attributes.descriptionPlaceholder')"
 				/>
 			</FormField>
 			<FormField :label="$t('filters.title')">
 				<Filters
-					v-model="filters"
-					:class="{ 'disabled': isBusy}"
-					:disabled="isBusy"
+					v-model="filter.filters"
+					:class="{ 'disabled': loadingModel}"
+					:disabled="loadingModel"
 					class="has-no-shadow has-no-border"
 					:has-footer="false"
 					:change-immediately="true"
@@ -85,7 +84,6 @@ onUnmounted(() => {
 const {
 	submit,
 	filter,
-	filters,
 	isLoading,
 	error: loadError,
 	titleValid,
@@ -94,9 +92,19 @@ const {
 
 // CreateEdit latches loading on click; the prop must toggle back on early return.
 const isSubmitting = ref(false)
-const isBusy = computed(() => isLoading.value || isSubmitting.value)
+const loadingModel = computed({
+	get: () => isLoading.value || isSubmitting.value,
+	set(value: boolean) {
+		isSubmitting.value = value
+	},
+})
 
 async function save() {
+	// The hidden submit button bypasses CreateEdit's own click latch.
+	if (isSubmitting.value) {
+		return
+	}
+
 	const id = props.projectId
 	isSubmitting.value = true
 	let saved
