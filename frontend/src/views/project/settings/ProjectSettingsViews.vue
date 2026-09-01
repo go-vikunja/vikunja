@@ -58,6 +58,14 @@ const viewToEdit = ref<ProjectView | null>(null)
 const isMutating = ref(false)
 const isLoading = computed(() => query.isPending.value || isMutating.value)
 
+watch(() => props.projectId, () => {
+	showCreateForm.value = false
+	newView.value = createNewView()
+	viewIdToDelete.value = null
+	showDeleteModal.value = false
+	viewToEdit.value = null
+})
+
 const isAdmin = computed(() => project.value?.max_permission === PERMISSIONS.ADMIN)
 
 async function createView() {
