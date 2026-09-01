@@ -8,27 +8,21 @@ import {
 } from 'vue'
 import {useQuery} from '@tanstack/vue-query'
 
-import type {Project} from '@/client/generated'
+import type {ProjectResponse} from '@/client/queries/projects'
 import {projectBackgroundQuery} from '@/client/queries/projectBackgrounds'
 import {getBlobFromBlurHash} from '@/helpers/getBlobFromBlurHash'
 
-type ProjectWithBackground = Pick<
-	Project,
-	'id' | 'background_information' | 'background_blur_hash'
->
-
-export function useProjectBackground(project: MaybeRefOrGetter<ProjectWithBackground | null>) {
+export function useProjectBackground(project: MaybeRefOrGetter<ProjectResponse | null>) {
 	const projectId = computed(() => toValue(project)?.id ?? 0)
 	const hasBackground = computed(() => Boolean(toValue(project)?.background_information))
 	const blurHash = computed(() => toValue(project)?.background_blur_hash ?? '')
 	const query = useQuery(computed(() => ({
 		...projectBackgroundQuery(projectId.value),
-		enabled: projectId.value > 0 && hasBackground.value,
+		enabled: hasBackground.value,
 	})))
 
 	const background = ref<string | null>(null)
 	const blurHashUrl = ref('')
-	const blurHashLoading = ref(false)
 
 	function clearBackground() {
 		if (background.value !== null) {
@@ -68,20 +62,16 @@ export function useProjectBackground(project: MaybeRefOrGetter<ProjectWithBackgr
 
 			clearBlurHash()
 			if (!projectHasBackground || projectBlurHash === '') {
-				blurHashLoading.value = false
 				return
 			}
 
-			blurHashLoading.value = true
 			try {
 				const blob = await getBlobFromBlurHash(projectBlurHash)
 				if (active && blob) {
 					blurHashUrl.value = window.URL.createObjectURL(blob)
 				}
-			} finally {
-				if (active) {
-					blurHashLoading.value = false
-				}
+			} catch (e) {
+				console.error('Error generating blur hash preview', e)
 			}
 		},
 		{immediate: true},
@@ -95,8 +85,5 @@ export function useProjectBackground(project: MaybeRefOrGetter<ProjectWithBackgr
 	return {
 		background,
 		blurHashUrl,
-		backgroundLoading: computed(() =>
-			hasBackground.value && (query.isPending.value || blurHashLoading.value),
-		),
 	}
 }
