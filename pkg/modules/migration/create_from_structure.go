@@ -456,39 +456,43 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		bucketID int64
 	}
 	initialTasks := make([]initialTask, 0, len(tasks))
+	// Only related-task references are deduplicated by old id; the first queued struct wins.
 	canonicalByOldID := make(map[int64]*models.Task, len(tasks))
-	seenTasks := make(map[*models.Task]bool, len(tasks))
-	// Returns the struct actually queued for creation so callers can replace duplicates with it.
-	addTask := func(task *models.Task, comments []*models.TaskComment) *models.Task {
-		if seenTasks[task] {
-			return task
-		}
-		if task.ID != 0 {
-			if canonical, exists := canonicalByOldID[task.ID]; exists {
-				return canonical
-			}
-			canonicalByOldID[task.ID] = task
-		}
-		seenTasks[task] = true
+	queue := func(task *models.Task, comments []*models.TaskComment) {
 		initialTasks = append(initialTasks, initialTask{
 			task:     task,
 			comments: comments,
 			oldID:    task.ID,
 			bucketID: task.BucketID,
 		})
-		return task
+		if task.ID != 0 {
+			if _, exists := canonicalByOldID[task.ID]; !exists {
+				canonicalByOldID[task.ID] = task
+			}
+		}
 	}
 	for _, t := range tasks {
 		if t.Title == "" {
 			continue
 		}
-		addTask(&t.Task, t.Comments)
+		queue(&t.Task, t.Comments)
 	}
 	for i := 0; i < len(initialTasks); i++ {
-		for _, relatedTasks := range initialTasks[i].task.RelatedTasks {
-			for j, related := range relatedTasks {
-				relatedTasks[j] = addTask(related, nil)
+		for kind, relatedTasks := range initialTasks[i].task.RelatedTasks {
+			// Reusing the backing array is safe, we never write past the read position.
+			kept := relatedTasks[:0]
+			for _, related := range relatedTasks {
+				if related.Title == "" {
+					continue
+				}
+				if canonical, exists := canonicalByOldID[related.ID]; exists {
+					kept = append(kept, canonical)
+					continue
+				}
+				queue(related, nil)
+				kept = append(kept, related)
 			}
+			initialTasks[i].task.RelatedTasks[kind] = kept
 		}
 	}
 
@@ -504,7 +508,10 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		return err
 	}
 	for _, state := range initialTasks {
-		if state.oldID != 0 {
+		if state.oldID == 0 {
+			continue
+		}
+		if _, exists := tasksByOldID[state.oldID]; !exists {
 			tasksByOldID[state.oldID] = state.task
 		}
 	}

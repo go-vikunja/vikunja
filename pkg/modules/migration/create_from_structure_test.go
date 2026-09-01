@@ -596,6 +596,52 @@ func TestInsertFromStructure(t *testing.T) {
 		require.True(t, exists)
 		assert.Equal(t, "child", other.Title)
 	})
+	t.Run("creates both top-level tasks when their old ids collide", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		structure := []*models.ProjectWithTasksAndBuckets{{
+			Project: models.Project{Title: "Duplicate old ids"},
+			Tasks: []*models.TaskWithComments{
+				{Task: models.Task{ID: 42, Title: "first duplicate"}},
+				{Task: models.Task{ID: 42, Title: "second duplicate"}},
+			},
+		}}
+		require.NoError(t, InsertFromStructure(structure, u))
+
+		s := db.NewSession()
+		defer s.Close()
+
+		for _, title := range []string{"first duplicate", "second duplicate"} {
+			count, err := s.Where("project_id = ? AND title = ?", structure[0].ID, title).Count(&models.Task{})
+			require.NoError(t, err)
+			assert.Equal(t, int64(1), count, "task %q must exist", title)
+		}
+	})
+	t.Run("skips related tasks without a title", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		structure := []*models.ProjectWithTasksAndBuckets{{
+			Project: models.Project{Title: "Untitled relation"},
+			Tasks: []*models.TaskWithComments{{Task: models.Task{
+				Title: "parent",
+				RelatedTasks: models.RelatedTaskMap{
+					models.RelationKindSubtask: {{ID: 11}},
+				},
+			}}},
+		}}
+		require.NoError(t, InsertFromStructure(structure, u))
+
+		s := db.NewSession()
+		defer s.Close()
+
+		taskCount, err := s.Where("project_id = ?", structure[0].ID).Count(&models.Task{})
+		require.NoError(t, err)
+		assert.Equal(t, int64(1), taskCount)
+
+		relationCount, err := s.Where("task_id = ?", structure[0].Tasks[0].ID).Count(&models.TaskRelation{})
+		require.NoError(t, err)
+		assert.Equal(t, int64(0), relationCount)
+	})
 	t.Run("assignees from a foreign instance", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
