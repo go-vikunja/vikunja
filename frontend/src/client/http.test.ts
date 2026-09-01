@@ -212,6 +212,26 @@ describe('configureApiClient', () => {
 		expect(requests).toHaveLength(0)
 	})
 
+	it('rejects a root-relative API base that canonicalizes to another origin', async () => {
+		window.API_URL = '/\\evil.example/api/v1'
+		configureApiClient()
+		auth.token = 'current-token'
+
+		await expect(client.get({url: '/probe'})).rejects.toMatchObject({name: 'AbortError'})
+
+		expect(requests).toHaveLength(0)
+	})
+
+	it('rejects a whitespace-obscured cross-origin API base', async () => {
+		window.API_URL = '/\t/evil.example/api/v1'
+		configureApiClient()
+		auth.token = 'current-token'
+
+		await expect(client.get({url: '/probe'})).rejects.toMatchObject({name: 'AbortError'})
+
+		expect(requests).toHaveLength(0)
+	})
+
 	it('rejects when the session changes while reading a successful response body', async () => {
 		auth.token = 'session-token'
 		auth.type = 1
