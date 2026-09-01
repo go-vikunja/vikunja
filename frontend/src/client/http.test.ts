@@ -51,6 +51,39 @@ function deferred<T>() {
 	return {promise, resolve}
 }
 
+function deferredJsonResponse() {
+	const bodyStarted = deferred<void>()
+	const bodyFinished = deferred<void>()
+	const response = new Response(new ReadableStream({
+		async pull(controller) {
+			bodyStarted.resolve()
+			await bodyFinished.promise
+			controller.enqueue(new TextEncoder().encode(JSON.stringify({ok: true})))
+			controller.close()
+		},
+	}, {highWaterMark: 0}), {
+		status: 200,
+		headers: {'Content-Type': 'application/json'},
+	})
+
+	return {bodyFinished, bodyStarted, response}
+}
+
+function deferredErrorResponse() {
+	const bodyStarted = deferred<void>()
+	const bodyFinished = deferred<void>()
+	const response = new Response(new ReadableStream({
+		async pull(controller) {
+			bodyStarted.resolve()
+			await bodyFinished.promise
+			controller.enqueue(new TextEncoder().encode('request failed'))
+			controller.close()
+		},
+	}, {highWaterMark: 0}), {status: 400})
+
+	return {bodyFinished, bodyStarted, response}
+}
+
 describe('configureApiClient', () => {
 	let requests: Request[]
 	let responses: Response[]
@@ -124,6 +157,48 @@ describe('configureApiClient', () => {
 		await expect(request).rejects.toMatchObject({name: 'AbortError'})
 	})
 
+	it('rejects a request built for an outdated configured API before sending', async () => {
+		window.API_URL = 'https://other.example/api/v1'
+
+		await expect(client.get({url: '/probe'})).rejects.toMatchObject({name: 'AbortError'})
+
+		expect(requests).toHaveLength(0)
+	})
+
+	it('rejects when the session changes while reading a successful response body', async () => {
+		auth.token = 'session-token'
+		auth.type = 1
+		const {bodyFinished, bodyStarted, response} = deferredJsonResponse()
+		vi.stubGlobal('fetch', vi.fn(async (request: Request) => {
+			requests.push(request)
+			return response
+		}))
+
+		const request = client.get({url: '/probe'})
+		await bodyStarted.promise
+		auth.sessionEpoch++
+		bodyFinished.resolve()
+
+		await expect(request).rejects.toMatchObject({name: 'AbortError'})
+	})
+
+	it('rejects when the session changes while reading a headerless error body', async () => {
+		auth.token = 'session-token'
+		auth.type = 1
+		const {bodyFinished, bodyStarted, response} = deferredErrorResponse()
+		vi.stubGlobal('fetch', vi.fn(async (request: Request) => {
+			requests.push(request)
+			return response
+		}))
+
+		const request = client.get({url: '/probe'})
+		await bodyStarted.promise
+		auth.sessionEpoch++
+		bodyFinished.resolve()
+
+		await expect(request).rejects.toMatchObject({name: 'AbortError'})
+	})
+
 	it('preserves explicit basic authorization', async () => {
 		auth.token = 'session-token'
 
@@ -164,6 +239,24 @@ describe('configureApiClient', () => {
 		expect(auth.refreshToken).toHaveBeenCalledWith(true)
 		expect(requests).toHaveLength(2)
 		expect(requests[1].headers.get('Authorization')).toBe('Bearer replacement-token')
+	})
+
+	it('rejects when the session changes while reading a retried response body', async () => {
+		auth.token = 'expired-token'
+		auth.type = 1
+		const {bodyFinished, bodyStarted, response} = deferredJsonResponse()
+		responses = [problem(11), response]
+		auth.refreshToken.mockImplementation(async () => {
+			auth.token = 'replacement-token'
+		})
+
+		const request = client.get({url: '/probe'})
+		await bodyStarted.promise
+		auth.sessionEpoch++
+		bodyFinished.resolve()
+
+		await expect(request).rejects.toMatchObject({name: 'AbortError'})
+		expect(requests).toHaveLength(2)
 	})
 
 	it.each(['POST', 'PUT', 'PATCH'] as const)('replays a consumed %s body after refreshing', async (method) => {

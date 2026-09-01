@@ -2,6 +2,7 @@ import {client} from '@/client/generated/client.gen'
 import type {ResolvedRequestOptions} from '@/client/generated/client/types.gen'
 import {
 	assertClientRequestContext,
+	assertClientRequestMatchesContext,
 	captureClientRequestContext,
 	type ClientRequestContext,
 } from '@/client/requestContext'
@@ -25,6 +26,31 @@ const retryRequests = new WeakMap<Request, {
 	identity: {id: number; type: number} | null
 }>()
 
+function isStreamingResponse(response: Response, options: ResolvedRequestOptions): boolean {
+	return response.ok && (options.parseAs === 'stream' ||
+		(options.parseAs === 'auto' && response.headers.get('Content-Type') === null)
+	)
+}
+
+async function fenceResponseBody(
+	response: Response,
+	context: ClientRequestContext | undefined,
+	options: ResolvedRequestOptions,
+): Promise<Response> {
+	if (!context) {
+		return response
+	}
+
+	assertClientRequestContext(context)
+	if (response.body === null || isStreamingResponse(response, options)) {
+		return response
+	}
+
+	await response.clone().arrayBuffer()
+	assertClientRequestContext(context)
+	return response
+}
+
 export function configureApiClient(): void {
 	client.setConfig({
 		baseUrl: getApiV2BaseUrl(),
@@ -36,9 +62,12 @@ export function configureApiClient(): void {
 	client.interceptors.error.clear()
 
 	client.interceptors.request.use((request) => {
+		const context = captureClientRequestContext()
+		assertClientRequestMatchesContext(request, context)
+
 		let managedRequest = request
 		if (request.headers.has('Authorization')) {
-			requestContexts.set(managedRequest, captureClientRequestContext())
+			requestContexts.set(managedRequest, context)
 			return managedRequest
 		}
 
@@ -53,16 +82,14 @@ export function configureApiClient(): void {
 				identity: getTokenIdentity(token),
 			})
 		}
-		requestContexts.set(managedRequest, captureClientRequestContext())
+		requestContexts.set(managedRequest, context)
 		return managedRequest
 	})
 
 	client.interceptors.response.use(async (response, request, options: ResolvedRequestOptions) => {
 		const context = requestContexts.get(request)
 		requestContexts.delete(request)
-		if (context) {
-			assertClientRequestContext(context)
-		}
+		response = await fenceResponseBody(response, context, options)
 
 		const retryRequest = retryRequests.get(request)
 		retryRequests.delete(request)
@@ -115,9 +142,6 @@ export function configureApiClient(): void {
 		headers.set('Authorization', `Bearer ${replacementToken}`)
 		const retry = new Request(retryRequest.request, {headers})
 		const retryResponse = await (options.fetch ?? globalThis.fetch)(retry)
-		if (context) {
-			assertClientRequestContext(context)
-		}
-		return retryResponse
+		return fenceResponseBody(retryResponse, context, options)
 	})
 }

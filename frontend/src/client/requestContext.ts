@@ -31,3 +31,13 @@ export function assertClientRequestContext(context: ClientRequestContext): void 
 		throw new DOMException('Client request context changed', 'AbortError')
 	}
 }
+
+export function assertClientRequestMatchesContext(request: Request, context: ClientRequestContext): void {
+	assertClientRequestContext(context)
+
+	const requestUrl = new URL(request.url, window.location.origin)
+	const apiV2BaseUrl = new URL(context.apiV2BaseUrl, window.location.origin)
+	if (requestUrl.origin !== apiV2BaseUrl.origin || !requestUrl.pathname.startsWith(apiV2BaseUrl.pathname)) {
+		throw new DOMException('Client request API changed', 'AbortError')
+	}
+}
