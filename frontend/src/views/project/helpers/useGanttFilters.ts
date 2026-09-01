@@ -97,8 +97,7 @@ function ganttFiltersToRoute(filters: GanttFilters): RouteLocationRaw {
 
 const GANTT_QUERY_PARAMS = ['dateFrom', 'dateTo', 'showTasksWithoutDates']
 
-// useRouteFilters rebuilds the url from the gantt filters alone, dropping every other
-// query param. Keep their original position so the rebuilt fullPath still compares equal.
+// useRouteFilters rebuilds the url from gantt filters alone; carry the rest over, in place.
 function ganttFiltersToRoutePreservingQuery(
 	filters: GanttFilters,
 	currentQuery: RouteLocationNormalized['query'],

@@ -5,8 +5,7 @@ import type {IProjectView} from '@/modelTypes/IProjectView'
 
 export const INCLUDE_SUBPROJECTS_QUERY_PARAM = 'include_subprojects'
 
-// The flag saved on the view is only the default; toggling it writes a query param, and
-// setting it back to that default drops the param again.
+// The view's own flag is only the default; toggling writes a query param instead.
 export function useIncludeSubprojects(
 	viewGetter: ComputedGetter<IProjectView | DeepReadonly<IProjectView> | undefined>,
 ): WritableComputedRef<boolean> {
