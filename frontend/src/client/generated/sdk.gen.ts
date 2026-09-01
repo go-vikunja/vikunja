@@ -1573,7 +1573,7 @@ export const tasksBulkCreate = <ThrowOnError extends boolean = true>(options: Op
 /**
  * Get a task by its project index
  *
- * Returns a single task addressed by its per-project index. Historical addresses return a temporary redirect to the task's current address. The {project} segment accepts either a numeric project id or a textual project identifier (e.g. "PROJ"); a value made solely of digits is always treated as an id. Embed extra, more expensive data in each task. Repeatable. One of: subtasks, buckets, reactions, comments, comment_count, time_entries_count, is_unread. Expanding can return more tasks than the page limit (subtasks) and inflate the response.
+ * Returns a single task addressed by its per-project index. Historical addresses redirect. The {project} segment accepts either a numeric project id or a textual project identifier (e.g. "PROJ"); a value made solely of digits is always treated as an id. Embed extra, more expensive data in each task. Repeatable. One of: subtasks, buckets, reactions, comments, comment_count, time_entries_count, is_unread. Expanding can return more tasks than the page limit (subtasks) and inflate the response.
  */
 export const tasksReadByIndex = <ThrowOnError extends boolean = true>(options: Options<TasksReadByIndexData, ThrowOnError>): RequestResult<TasksReadByIndexResponses, TasksReadByIndexErrors, ThrowOnError> => (options.client ?? client).get<TasksReadByIndexResponses, TasksReadByIndexErrors, ThrowOnError>({
     security: [{
