@@ -208,6 +208,7 @@ describe('ProjectSettingsBackground', () => {
 		expect(findButton(wrapper, 'project.background.remove')).toBeUndefined()
 		expect(wrapper.find('input[type="text"]').exists()).toBe(false)
 		expect(toValue(infiniteQueryOptions[0])).toMatchObject({enabled: false})
+		expect(wrapper.text()).toContain('project.background.noPermission')
 	})
 
 	it('renders a thumbnail only for search results with an id', () => {
