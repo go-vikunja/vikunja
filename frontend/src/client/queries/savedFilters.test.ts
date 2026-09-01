@@ -2,7 +2,7 @@ import {beforeEach, describe, expect, it, vi} from 'vitest'
 
 import type {ProjectListResult} from './projects'
 import {projectKeys} from './projects'
-import type {SavedFilterResponse} from './savedFilters'
+import type {SavedFilterDraft, SavedFilterResponse} from './savedFilters'
 import {queryClient} from '@/client/queryClient'
 
 const sdk = vi.hoisted(() => ({
@@ -31,8 +31,8 @@ vi.mock('@/helpers/fetcher', () => ({
 
 import {
 	createSavedFilter,
-	createSavedFilterDraft,
 	deleteSavedFilter,
+	newSavedFilterDraft,
 	patchSavedFilterFavorite,
 	savedFilterKeys,
 	savedFilterQuery,
@@ -100,9 +100,9 @@ describe('saved filter queries', () => {
 		})
 	})
 
-	it('creates a stable draft with overrides', () => {
-		expect(createSavedFilterDraft({title: 'Today', is_favorite: true})).toEqual({
-			title: 'Today',
+	it('creates a stable draft', () => {
+		expect(newSavedFilterDraft()).toEqual({
+			title: '',
 			description: '',
 			filters: {
 				sort_by: ['done', 'id'],
@@ -111,7 +111,7 @@ describe('saved filter queries', () => {
 				filter_include_nulls: true,
 				s: '',
 			},
-			is_favorite: true,
+			is_favorite: false,
 		})
 	})
 
@@ -128,7 +128,7 @@ describe('saved filter queries', () => {
 		expect(queryClient.getQueryState(listKey)?.isInvalidated).toBe(true)
 	})
 
-	it('updates the detail cache, invalidates other formats and project navigation', async () => {
+	it('updates the detail cache, invalidates the other format and project navigation', async () => {
 		const listKey = projectKeys.list()
 		queryClient.setQueryData(listKey, emptyProjectList)
 		queryClient.setQueryData(savedFilterKeys.detail(8), serverSavedFilter({
@@ -143,7 +143,18 @@ describe('saved filter queries', () => {
 		}))
 		sdk.filtersUpdate.mockResolvedValue({data: serverSavedFilter({id: 8, title: 'After'})})
 
-		const writable = createSavedFilterDraft({title: 'After'})
+		const writable: SavedFilterDraft = {
+			title: 'After',
+			description: '',
+			filters: {
+				sort_by: ['done', 'id'],
+				order_by: ['asc', 'desc'],
+				filter: 'done = false',
+				filter_include_nulls: true,
+				s: '',
+			},
+			is_favorite: false,
+		}
 		await expect(updateSavedFilter({id: 8, ...writable})).resolves.toMatchObject({
 			id: 8,
 			title: 'After',
@@ -154,6 +165,7 @@ describe('saved filter queries', () => {
 			body: writable,
 		})
 		expect(queryClient.getQueryData<SavedFilterResponse>(savedFilterKeys.detail(8))?.title).toBe('After')
+		expect(queryClient.getQueryState(savedFilterKeys.detail(8))?.isInvalidated).toBe(false)
 		expect(queryClient.getQueryState(savedFilterKeys.detail(8, 'markdown'))?.isInvalidated).toBe(true)
 		expect(queryClient.getQueryState(listKey)?.isInvalidated).toBe(true)
 	})
@@ -213,7 +225,7 @@ describe('saved filter mutations after the request context changes', () => {
 		{
 			name: 'update',
 			mock: sdk.filtersUpdate,
-			run: () => updateSavedFilter({id: 8, ...createSavedFilterDraft({title: 'Identity A update'})}),
+			run: () => updateSavedFilter({id: 8, ...newSavedFilterDraft(), title: 'Identity A update'}),
 			response: {data: serverSavedFilter({id: 8, title: 'Identity A update'})},
 		},
 		{
