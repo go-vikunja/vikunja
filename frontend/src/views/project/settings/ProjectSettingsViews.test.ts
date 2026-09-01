@@ -62,6 +62,7 @@ type ProjectSettingsViewsVm = {
 	createView: () => Promise<void>
 	deleteView: (viewId: number | null) => Promise<void>
 	saveView: (view: ProjectView) => Promise<void>
+	saveViewPosition: (event: {newIndex: number}) => Promise<void>
 }
 
 function deferred<T>() {
@@ -248,5 +249,90 @@ describe('ProjectSettingsViews', () => {
 		expect(vm.viewToEdit).toBeNull()
 		expect(vm.isMutating).toBe(false)
 		expect(success).toHaveBeenCalledOnce()
+	})
+
+	it('suppresses an old delete error after the project changes', async () => {
+		const remove = deferred<void>()
+		vi.mocked(deleteProjectView).mockReturnValue(remove.promise)
+		const wrapper = mountView()
+		const vm = wrapper.vm as unknown as ProjectSettingsViewsVm
+		const pendingDelete = vm.deleteView(10)
+		await vi.waitFor(() => expect(deleteProjectView).toHaveBeenCalledOnce())
+
+		await wrapper.setProps({projectId: 2})
+		remove.reject(new Error('Project A delete failed'))
+		await pendingDelete
+
+		expect(error).not.toHaveBeenCalled()
+	})
+
+	it('suppresses an old save error after the project changes', async () => {
+		const save = deferred<ProjectView>()
+		vi.mocked(updateProjectView).mockReturnValue(save.promise)
+		const wrapper = mountView()
+		const vm = wrapper.vm as unknown as ProjectSettingsViewsVm
+		const view: ProjectView = {
+			id: 10,
+			project_id: 1,
+			title: 'Project A view',
+			view_kind: 'list',
+		}
+		const pendingSave = vm.saveView(view)
+		await vi.waitFor(() => expect(updateProjectView).toHaveBeenCalledOnce())
+
+		await wrapper.setProps({projectId: 2})
+		save.reject(new Error('Project A save failed'))
+		await pendingSave
+
+		expect(error).not.toHaveBeenCalled()
+	})
+
+	it('suppresses an old reorder error after the project changes', async () => {
+		const view: ProjectView = {
+			id: 10,
+			project_id: 1,
+			title: 'Project A view',
+			view_kind: 'list',
+		}
+		state.views = ref([view])
+		const save = deferred<ProjectView>()
+		vi.mocked(updateProjectView).mockReturnValue(save.promise)
+		const wrapper = mountView()
+		const vm = wrapper.vm as unknown as ProjectSettingsViewsVm
+		const pendingSave = vm.saveViewPosition({newIndex: 0})
+		await vi.waitFor(() => expect(updateProjectView).toHaveBeenCalledOnce())
+
+		await wrapper.setProps({projectId: 2})
+		save.reject(new Error('Project A reorder failed'))
+		await pendingSave
+
+		expect(error).not.toHaveBeenCalled()
+	})
+
+	it('reports current-project delete, save, and reorder errors', async () => {
+		const view: ProjectView = {
+			id: 10,
+			project_id: 1,
+			title: 'Project A view',
+			view_kind: 'list',
+		}
+		state.views = ref([view])
+		const removeError = new Error('Delete failed')
+		const saveError = new Error('Save failed')
+		const reorderError = new Error('Reorder failed')
+		vi.mocked(deleteProjectView).mockRejectedValueOnce(removeError)
+		vi.mocked(updateProjectView)
+			.mockRejectedValueOnce(saveError)
+			.mockRejectedValueOnce(reorderError)
+		const wrapper = mountView()
+		const vm = wrapper.vm as unknown as ProjectSettingsViewsVm
+
+		await vm.deleteView(10)
+		await vm.saveView(view)
+		await vm.saveViewPosition({newIndex: 0})
+
+		expect(error).toHaveBeenNthCalledWith(1, removeError)
+		expect(error).toHaveBeenNthCalledWith(2, saveError)
+		expect(error).toHaveBeenNthCalledWith(3, reorderError)
 	})
 })
