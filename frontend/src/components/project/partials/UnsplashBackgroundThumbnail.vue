@@ -1,41 +1,54 @@
 <template>
-	<BaseButton
-		class="image-search__image-button"
-		:aria-label="image.author_name !== '' ? $t('project.background.setBackgroundBy', {author: image.author_name}) : $t('project.background.setBackground')"
-		:style="blurHashUrl ? {'background-image': `url(${blurHashUrl})`} : undefined"
-		@click="emit('select')"
-	>
-		<CustomTransition name="fade">
-			<img
-				v-if="thumbUrl"
-				class="image-search__image"
-				:src="thumbUrl"
-				alt=""
-			>
-		</CustomTransition>
-	</BaseButton>
+	<div class="unsplash-thumbnail">
+		<BaseButton
+			class="unsplash-thumbnail__button"
+			:aria-label="author?.author_name ? $t('project.background.setBackgroundBy', {author: author.author_name}) : $t('project.background.setBackground')"
+			:style="blurHashUrl ? {'background-image': `url(${blurHashUrl})`} : undefined"
+			@click="emit('select')"
+		>
+			<CustomTransition name="fade">
+				<img
+					v-if="thumbUrl"
+					class="unsplash-thumbnail__image"
+					:src="thumbUrl"
+					alt=""
+				>
+			</CustomTransition>
+		</BaseButton>
+
+		<BaseButton
+			v-if="author"
+			:href="`https://unsplash.com/@${encodeURIComponent(author.author)}?utm_source=vikunja&utm_medium=referral`"
+			class="unsplash-thumbnail__info"
+		>
+			{{ author.author_name }}
+		</BaseButton>
+	</div>
 </template>
 
 <script setup lang="ts">
-import {computed, shallowRef, watch} from 'vue'
+import {computed, watch} from 'vue'
 import {useQuery} from '@tanstack/vue-query'
 import {useObjectUrl} from '@vueuse/core'
 
+import type {Image} from '@/client/generated'
 import {
+	unsplashAuthor,
 	unsplashBackgroundThumbnailQuery,
-	type UnsplashSearchImage,
 } from '@/client/queries/projectBackgrounds'
 import BaseButton from '@/components/base/BaseButton.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
-import {getBlobFromBlurHash} from '@/helpers/getBlobFromBlurHash'
+import {useBlurHashUrl} from '@/composables/useBlurHashUrl'
 
 const props = defineProps<{
-	image: UnsplashSearchImage,
+	image: Image & {id: string},
 }>()
 
 const emit = defineEmits<{
 	select: [],
 }>()
+
+const author = computed(() => unsplashAuthor(props.image.info))
 
 const thumb = useQuery(computed(() => unsplashBackgroundThumbnailQuery(props.image.id)))
 const thumbUrl = useObjectUrl(thumb.data)
@@ -46,35 +59,48 @@ watch(thumb.error, error => {
 	}
 })
 
-const blurBlob = shallowRef<Blob | null>(null)
-watch(() => props.image.blur_hash, (blurHash, _previous, onCleanup) => {
-	let current = true
-	onCleanup(() => {
-		current = false
-	})
-
-	blurBlob.value = null
-	getBlobFromBlurHash(blurHash)
-		.then(blob => {
-			if (current) {
-				blurBlob.value = blob
-			}
-		})
-		.catch(error => console.error(error))
-}, {immediate: true})
-const blurHashUrl = useObjectUrl(blurBlob)
+const blurHashUrl = useBlurHashUrl(() => props.image.blur_hash ?? '')
 </script>
 
 <style lang="scss" scoped>
-.image-search__image-button {
+.unsplash-thumbnail {
+	position: relative;
+	display: flex;
+	inline-size: 100%;
+}
+
+.unsplash-thumbnail__button {
 	inline-size: 100%;
 	background-size: cover;
 	background-position: center;
 }
 
-.image-search__image {
+.unsplash-thumbnail__image {
 	inline-size: 100%;
 	block-size: 100%;
 	object-fit: cover;
+}
+
+.unsplash-thumbnail__info {
+	position: absolute;
+	inset-block-end: 0;
+	inline-size: 100%;
+	padding: .25rem 0;
+	opacity: 0;
+	text-align: center;
+	background: rgba(0, 0, 0, 0.5);
+	font-size: .75rem;
+	font-weight: bold;
+	color: $white;
+	transition: opacity $transition;
+
+	&:focus-visible {
+		opacity: 1;
+	}
+}
+
+.unsplash-thumbnail:hover .unsplash-thumbnail__info,
+.unsplash-thumbnail:focus-within .unsplash-thumbnail__info {
+	opacity: 1;
 }
 </style>
