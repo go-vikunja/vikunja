@@ -109,7 +109,12 @@ describe('base store identity reset', () => {
 		window.URL.revokeObjectURL = vi.fn()
 	})
 
-	it('clears the background, blur hash and current project when the auth identity changes', async () => {
+	it.each([
+		{label: 'user switch', next: {id: 2, type: AUTH_TYPES.USER}, resets: true},
+		{label: 'logout', next: null, resets: true},
+		{label: 'link share with the same numeric id', next: {id: 1, type: AUTH_TYPES.LINK_SHARE}, resets: true},
+		{label: 'same identity', next: {id: 1, type: AUTH_TYPES.USER}, resets: false},
+	])('$label resets the background, blur hash, current project and tasks flag: $resets', async ({next, resets}) => {
 		const authStore = useAuthStore()
 		const baseStore = useBaseStore()
 		await baseStore.appReady
@@ -119,53 +124,20 @@ describe('base store identity reset', () => {
 		baseStore.setCurrentProject(project(42))
 		baseStore.setBackground('blob:old-background')
 		baseStore.setBlurHash('blob:old-blur')
+		baseStore.setHasTasks(true)
 
 		expect(baseStore.currentProjectId).toBe(42)
 
-		authStore.setUser({id: 2, type: AUTH_TYPES.USER} as never, false)
+		authStore.setUser(next as never, false)
 
-		expect(baseStore.background).toBe('')
-		expect(baseStore.blurHash).toBe('')
-		expect(baseStore.currentProjectId).toBe(0)
-		expect(window.URL.revokeObjectURL).toHaveBeenCalledWith('blob:old-background')
-		expect(window.URL.revokeObjectURL).toHaveBeenCalledWith('blob:old-blur')
-	})
-
-	it('clears the background, blur hash, current project and tasks flag on logout', async () => {
-		const authStore = useAuthStore()
-		const baseStore = useBaseStore()
-		await baseStore.appReady
-
-		authStore.setUser({id: 1, type: AUTH_TYPES.USER} as never, false)
-
-		baseStore.setCurrentProject(project(42))
-		baseStore.setBackground('blob:old-background')
-		baseStore.setBlurHash('blob:old-blur')
-		baseStore.setHasTasks(true)
-
-		authStore.setUser(null, false)
-
-		expect(baseStore.background).toBe('')
-		expect(baseStore.blurHash).toBe('')
-		expect(baseStore.currentProjectId).toBe(0)
-		expect(baseStore.hasTasks).toBe(false)
-		expect(window.URL.revokeObjectURL).toHaveBeenCalledWith('blob:old-background')
-		expect(window.URL.revokeObjectURL).toHaveBeenCalledWith('blob:old-blur')
-	})
-
-	it('clears state when switching from a user to a link share with the same numeric id', async () => {
-		const authStore = useAuthStore()
-		const baseStore = useBaseStore()
-		await baseStore.appReady
-
-		authStore.setUser({id: 1, type: AUTH_TYPES.USER} as never, false)
-
-		baseStore.setCurrentProject(project(42))
-		baseStore.setBackground('blob:old-background')
-		baseStore.setBlurHash('blob:old-blur')
-		baseStore.setHasTasks(true)
-
-		authStore.setUser({id: 1, type: AUTH_TYPES.LINK_SHARE} as never, false)
+		if (!resets) {
+			expect(baseStore.background).toBe('blob:old-background')
+			expect(baseStore.blurHash).toBe('blob:old-blur')
+			expect(baseStore.currentProjectId).toBe(42)
+			expect(baseStore.hasTasks).toBe(true)
+			expect(window.URL.revokeObjectURL).not.toHaveBeenCalled()
+			return
+		}
 
 		expect(baseStore.background).toBe('')
 		expect(baseStore.blurHash).toBe('')
