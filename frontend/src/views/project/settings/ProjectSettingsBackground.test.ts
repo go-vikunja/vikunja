@@ -11,7 +11,10 @@ const state = vi.hoisted(() => ({
 	currentProjectId: 0,
 	project: undefined as Ref<ProjectResponse | undefined> | undefined,
 	searchData: undefined as Ref<SearchData | undefined> | undefined,
+	searchIsError: undefined as Ref<boolean> | undefined,
 }))
+
+const refetchSearch = vi.hoisted(() => vi.fn())
 
 const handleSetCurrentProject = vi.hoisted(() => vi.fn())
 const routerBack = vi.hoisted(() => vi.fn())
@@ -54,6 +57,8 @@ vi.mock('@tanstack/vue-query', async importOriginal => {
 			hasNextPage: ref(false),
 			isFetchingNextPage: ref(false),
 			fetchNextPage: vi.fn(),
+			isError: state.searchIsError,
+			refetch: refetchSearch,
 		}),
 	}
 })
@@ -86,6 +91,7 @@ import ProjectSettingsBackground from './ProjectSettingsBackground.vue'
 
 const SlotStub = defineComponent({template: '<div><slot /></div>'})
 const BaseButtonStub = defineComponent({template: '<a><slot /></a>'})
+const XButtonStub = defineComponent({template: '<button @click="$emit(\'click\')"><slot /></button>'})
 
 function project(overrides: Partial<ProjectResponse> = {}) {
 	return {
@@ -101,7 +107,7 @@ function project(overrides: Partial<ProjectResponse> = {}) {
 function mountView() {
 	return shallowMount(ProjectSettingsBackground, {
 		global: {
-			stubs: {BaseButton: BaseButtonStub, CreateEdit: SlotStub},
+			stubs: {BaseButton: BaseButtonStub, CreateEdit: SlotStub, XButton: XButtonStub},
 			mocks: {$t: (key: string) => key, $router: {back: routerBack}},
 			directives: {focus: () => {}, tooltip: () => {}},
 		},
@@ -115,8 +121,10 @@ describe('ProjectSettingsBackground', () => {
 		state.currentProjectId = 7
 		state.project = ref(project())
 		state.searchData = ref({pages: []})
+		state.searchIsError = ref(false)
 		handleSetCurrentProject.mockClear()
 		routerBack.mockClear()
+		refetchSearch.mockClear()
 		backgrounds.deleteProjectBackground.mockReset()
 		backgrounds.setUnsplashProjectBackground.mockReset()
 		backgrounds.uploadProjectBackground.mockReset()
@@ -160,5 +168,17 @@ describe('ProjectSettingsBackground', () => {
 		expect(links).toHaveLength(1)
 		expect(links[0].attributes('href')).toBe('https://unsplash.com/@a%20b?utm_source=vikunja&utm_medium=referral')
 		expect(links[0].text()).toBe('A B')
+	})
+
+	it('shows a retry button when the unsplash search failed and refetches on click', async () => {
+		state.searchIsError = ref(true)
+		const wrapper = mountView()
+
+		expect(wrapper.text()).toContain('project.background.searchError')
+
+		const retryButton = wrapper.findAll('button').find(button => button.text() === 'project.background.retry')
+		await retryButton?.trigger('click')
+
+		expect(refetchSearch).toHaveBeenCalled()
 	})
 })
