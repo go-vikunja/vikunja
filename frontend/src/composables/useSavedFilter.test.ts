@@ -80,7 +80,6 @@ describe('useSavedFilter', () => {
 
 		const {wrapper, state} = mountSavedFilter(-2)
 		expect(state.value.filter.value.title).toBe('Cached')
-		// A background refetch keeps isPending false, so the form must not go read-only.
 		expect(state.value.isLoading.value).toBe(false)
 
 		state.value.filter.value.title = 'Local edit'
