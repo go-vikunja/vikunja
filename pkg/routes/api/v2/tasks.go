@@ -201,8 +201,7 @@ func tasksReadByIndex(ctx context.Context, in *struct {
 	s := db.NewSession()
 	defer s.Close()
 
-	// Without this the retired indexes of a project the caller cannot see are
-	// probeable: 307/403 vs 404 reveals which historical addresses existed.
+	// Otherwise 307/403 vs 404 lets callers probe retired indexes of projects they cannot read.
 	canReadProject, _, err := (&models.Project{ID: projectID}).CanRead(s, a)
 	if err != nil {
 		return nil, translateDomainError(err)

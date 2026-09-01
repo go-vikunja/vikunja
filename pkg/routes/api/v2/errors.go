@@ -88,9 +88,7 @@ func translateDomainError(err error) error {
 	return err
 }
 
-// errReadForbidden is the exact error handler.DoReadOne returns on a read
-// permission denial, so handlers doing their own read checks emit an
-// identical body to the generic CRUD path.
+// Same 403 body handler.DoReadOne produces, so hand-rolled read checks match the CRUD path.
 func errReadForbidden() error {
 	return translateDomainError(handler.ErrGenericForbidden{Message: "You don't have the permission to see this"})
 }
