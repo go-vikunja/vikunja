@@ -75,13 +75,12 @@ export const useBaseStore = defineStore('base', () => {
 		blurHash.value = newBlurHash
 	}
 
-	// SPA logout keeps this store alive; reset with the auth store's identity watcher.
-	watch(() => [authStore.info?.id ?? null, authStore.info?.type ?? null] as const, ([id, type], [prevId, prevType]) => {
-		if (id !== prevId || type !== prevType) {
-			setBackground('')
-			setBlurHash('')
-			setCurrentProject(null)
-		}
+	// SPA logout keeps this store alive; reset on identity change via the auth store's shared key.
+	watch(() => authStore.identityKey, () => {
+		setBackground('')
+		setBlurHash('')
+		setCurrentProject(null)
+		setHasTasks(false)
 	}, {flush: 'sync'})
 
 	function setLogoVisible(visible: boolean) {
