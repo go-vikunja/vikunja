@@ -2,18 +2,18 @@
 	<div
 		class="project-card"
 		:class="{
-			'has-light-text': background !== null,
-			'has-background': blurHashUrl !== '' || background !== null
+			'has-light-text': Boolean(background),
+			'has-background': Boolean(blurHashUrl || background)
 		}"
 		:style="{
 			'border-inline-start': project.hex_color ? `0.25rem solid ${project.hex_color}` : undefined,
-			'background-image': blurHashUrl !== '' ? `url(${blurHashUrl})` : undefined,
+			'background-image': blurHashUrl ? `url(${blurHashUrl})` : undefined,
 		}"
 	>
 		<div
 			class="project-background background-fade-in"
 			:class="{'is-visible': background}"
-			:style="{'background-image': background !== null ? `url(${background})` : undefined}"
+			:style="{'background-image': background ? `url(${background})` : undefined}"
 		/>
 		<span
 			v-if="project.is_archived"
