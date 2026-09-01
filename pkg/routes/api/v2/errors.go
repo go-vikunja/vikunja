@@ -111,6 +111,7 @@ type vikunjaErrorModel struct {
 	I18nParams map[string]string `json:"i18n_params,omitempty" readOnly:"true" doc:"Dynamic values referenced by the error message, keyed by translation placeholder name, for client-side localisation."`
 }
 
+// Huma skips its default error response once an operation declares any response; declaring 307 would drop the error schema.
 func defaultErrorResponse(api huma.API) *huma.Response {
 	return &huma.Response{
 		Description: "Error",

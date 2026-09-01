@@ -70,21 +70,21 @@ func RegisterTaskRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "tasks-read-by-index",
 		Summary:     "Get a task by its project index",
-		Description: "Returns a single task addressed by its per-project index. Historical addresses return a temporary redirect to the task's current address. The {project} segment accepts either a numeric project id or a textual project identifier (e.g. \"PROJ\"); a value made solely of digits is always treated as an id. " + expandDoc,
+		Description: "Returns a single task addressed by its per-project index. Historical addresses redirect. The {project} segment accepts either a numeric project id or a textual project identifier (e.g. \"PROJ\"); a value made solely of digits is always treated as an id. " + expandDoc,
 		Method:      "GET",
 		Path:        "/projects/{project}/tasks/by-index/{index}",
 		Tags:        tags,
 		Responses: map[string]*huma.Response{
 			"default": defaultErrorResponse(api),
 			"307": {
-				Description: "The task moved to another project index. The redirect is temporary and must not be cached.",
+				Description: "Historical address; Location holds the task's current one.",
 				Headers: map[string]*huma.Param{
 					"Location": {
-						Description: "The task's current v2 by-index address, including the original query string.",
+						Description: "Current v2 by-index address, query string preserved.",
 						Schema:      &huma.Schema{Type: huma.TypeString, Format: "uri-reference"},
 					},
 					"Cache-Control": {
-						Description: "Always no-store for historical task redirects.",
+						Description: "no-store",
 						Schema:      &huma.Schema{Type: huma.TypeString},
 					},
 				},
@@ -199,16 +199,20 @@ func tasksReadByIndex(ctx context.Context, in *struct {
 	}
 
 	s := db.NewSession()
+	defer s.Close()
+
 	taskID, err := models.GetTaskIDByIndexAlias(s, projectID, in.Index)
-	_ = s.Close()
 	if err != nil {
 		return nil, translateDomainError(err)
 	}
 
 	task = &models.Task{ID: taskID}
-	_, err = handler.DoReadOne(ctx, task, a)
+	canRead, _, err := task.CanRead(s, a)
 	if err != nil {
 		return nil, translateDomainError(err)
+	}
+	if !canRead {
+		return nil, huma.Error403Forbidden("forbidden")
 	}
 
 	location := &url.URL{
