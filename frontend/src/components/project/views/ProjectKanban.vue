@@ -330,7 +330,7 @@ import type {ProjectView} from '@/client/generated'
 import TaskPositionService from '@/services/taskPosition'
 import TaskPositionModel from '@/models/taskPosition'
 import {i18n} from '@/i18n'
-import {createProjectViewDraft, updateProjectView} from '@/client/queries/projectViews'
+import {createProjectViewUpdate, updateProjectView} from '@/client/queries/projectViews'
 import TaskBucketService from '@/services/taskBucket'
 import TaskBucketModel from '@/models/taskBucket'
 
@@ -866,7 +866,7 @@ async function toggleDefaultBucket(bucket: IBucket) {
 	await updateProjectView({
 		projectId: projectId.value,
 		viewId: currentView.id,
-		view: createProjectViewDraft({...currentView, default_bucket_id: defaultBucketId}),
+		view: createProjectViewUpdate({...currentView, default_bucket_id: defaultBucketId}),
 	})
 
 	success({message: t('project.kanban.defaultBucketSavedSuccess')})
@@ -884,7 +884,7 @@ async function toggleDoneBucket(bucket: IBucket) {
 	await updateProjectView({
 		projectId: projectId.value,
 		viewId: currentView.id,
-		view: createProjectViewDraft({...currentView, done_bucket_id: doneBucketId}),
+		view: createProjectViewUpdate({...currentView, done_bucket_id: doneBucketId}),
 	})
 	
 	success({message: t('project.kanban.doneBucketSavedSuccess')})

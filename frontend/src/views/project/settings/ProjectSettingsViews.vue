@@ -6,6 +6,7 @@ import type {ProjectView} from '@/client/generated'
 import {
 	createProjectView,
 	createProjectViewDraft,
+	createProjectViewUpdate,
 	deleteProjectView,
 	projectViewsQuery,
 	updateProjectView,
@@ -104,7 +105,7 @@ async function saveView(view: ProjectView) {
 	if (!view.id) {
 		return
 	}
-	const updated = createProjectViewDraft(view)
+	const updated = createProjectViewUpdate(view)
 	if (updated.view_kind !== 'kanban') {
 		updated.bucket_configuration_mode = 'none'
 	}
@@ -139,7 +140,7 @@ async function saveViewPosition(e: {newIndex: number}) {
 		await updateProjectView({
 			projectId: props.projectId,
 			viewId: view.id,
-			view: createProjectViewDraft({...view, position}),
+			view: createProjectViewUpdate({...view, position}),
 		})
 		success({message: t('project.views.updateSuccess')})
 	} finally {
