@@ -22,6 +22,7 @@ vi.mock('./projects', () => projectCache)
 import {
 	createProjectView,
 	createProjectViewDraft,
+	createProjectViewUpdate,
 	deleteProjectView,
 	projectViewKeys,
 	projectViewQuery,
@@ -118,6 +119,14 @@ describe('project view queries', () => {
 		expect(draft.title).toBe('Board')
 		expect(draft.view_kind).toBe('kanban')
 		expect(draft.bucket_configuration).toEqual([])
+	})
+
+	it('preserves an unfiltered Kanban view when serializing a reorder update', () => {
+		const update = createProjectViewUpdate({...views[2], position: 15})
+		const serialized = JSON.parse(JSON.stringify(update))
+
+		expect(serialized).toMatchObject({view_kind: 'kanban', position: 15})
+		expect(serialized).not.toHaveProperty('filter')
 	})
 })
 

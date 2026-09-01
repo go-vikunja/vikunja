@@ -2,7 +2,11 @@
 import {onBeforeMount, ref, watch} from 'vue'
 
 import type {ProjectView, ProjectViewWritable, TaskCollection} from '@/client/generated'
-import {createProjectViewDraft, type ProjectViewDraft} from '@/client/queries/projectViews'
+import {
+	createProjectViewDraft,
+	createProjectViewUpdate,
+	type ProjectViewDraft,
+} from '@/client/queries/projectViews'
 import type {IFilters} from '@/modelTypes/ISavedFilter'
 
 import {hasFilterQuery, transformFilterStringForApi, transformFilterStringFromApi} from '@/helpers/filters'
@@ -73,7 +77,7 @@ const transformFilterFromApi = (filterInput?: TaskCollection): IFilters => {
 }
 
 function transformViewFromApi(modelValue: ProjectViewFormValue): LoadedProjectView {
-	const draft = createProjectViewDraft(modelValue)
+	const draft = createProjectViewUpdate(modelValue)
 	return {
 		...modelValue,
 		...draft,
