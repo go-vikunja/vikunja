@@ -44,8 +44,7 @@ type taskProjectIndex20260901001942 struct {
 
 func (taskProjectIndex20260901001942) TableName() string { return "tasks" }
 
-// SQLite allows 32766 bind parameters per statement, Postgres 65535, so one
-// insert for every project blows up on instances with more than ~16k projects.
+// Keeps each insert under SQLite's 32766 bind-parameter limit.
 const counterBackfillBatch20260901001942 = 500
 
 func addProjectTaskCounters20260901001942(tx *xorm.Engine) error {
