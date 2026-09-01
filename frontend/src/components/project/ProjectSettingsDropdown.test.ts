@@ -40,6 +40,7 @@ const SubscriptionStub = defineComponent({
 
 import ProjectSettingsDropdown from './ProjectSettingsDropdown.vue'
 import type {ISubscription} from '@/modelTypes/ISubscription'
+import UserModel from '@/models/user'
 
 describe('ProjectSettingsDropdown subscriptions', () => {
 	beforeEach(() => {
@@ -68,7 +69,7 @@ describe('ProjectSettingsDropdown subscriptions', () => {
 			id: 7,
 			entity: 'project',
 			entityId: 1,
-			user: {},
+			user: new UserModel({id: 1, username: 'test', name: 'Test User'}),
 			created: new Date('2026-09-01T00:00:00Z'),
 			maxPermission: null,
 		}
