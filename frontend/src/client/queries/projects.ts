@@ -300,6 +300,10 @@ export function getSavedFilterIdFromProjectId(projectId: number): number {
 	return Math.max(0, projectId * -1 - 1)
 }
 
+export function getProjectIdFromSavedFilterId(savedFilterId: number): number {
+	return savedFilterId > 0 ? savedFilterId * -1 - 1 : 0
+}
+
 export function isSavedFilterProject(project: Pick<Project, 'id'> | null | undefined): boolean {
 	return getSavedFilterIdFromProjectId(project?.id ?? 0) > 0
 }
