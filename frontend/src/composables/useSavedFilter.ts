@@ -1,56 +1,51 @@
 import {computed, ref, toValue, watch, type MaybeRefOrGetter} from 'vue'
 import {useQuery} from '@tanstack/vue-query'
-import {useDebounceFn} from '@vueuse/core'
-import {useI18n} from 'vue-i18n'
-import {useRouter} from 'vue-router'
 
+import {getSavedFilterIdFromProjectId} from '@/client/queries/projects'
 import {
 	createSavedFilter,
 	createSavedFilterDraft,
-	deleteSavedFilter,
-	getProjectIdFromSavedFilterId,
-	getSavedFilterIdFromProjectId,
 	savedFilterQuery,
 	updateSavedFilter,
 } from '@/client/queries/savedFilters'
 import type {SavedFilterDraft, SavedFilterResponse} from '@/client/queries/savedFilters'
-import {success} from '@/message'
 
 type SavedFilterForm = SavedFilterDraft & Pick<SavedFilterResponse, 'id'>
 
-export function useSavedFilter(projectId?: MaybeRefOrGetter<number | undefined>) {
-	const router = useRouter()
-	const {t} = useI18n({useScope: 'global'})
-	const savedFilterId = computed(() => getSavedFilterIdFromProjectId(toValue(projectId) ?? 0))
-	const query = useQuery(computed(() => ({
-		...savedFilterQuery(savedFilterId.value),
-		enabled: savedFilterId.value > 0,
-	})))
-	const filter = ref<SavedFilterForm>({id: 0, ...createSavedFilterDraft()})
-	const loadedSavedFilterId = ref(0)
-	const isSaving = ref(false)
-	const titleValid = ref(true)
+function newDraft(): SavedFilterForm {
+	return {id: 0, ...createSavedFilterDraft()}
+}
 
-	watch([
-		savedFilterId,
-		query.data,
-		query.isFetching,
-		query.isError,
-	], ([id, value, isFetching]) => {
-		if (loadedSavedFilterId.value !== id) {
-			filter.value = {id: 0, ...createSavedFilterDraft()}
+// Deep enough clone that v-model edits never write into the query cache entry.
+function toDraft(value: SavedFilterResponse): SavedFilterForm {
+	return {
+		id: value.id,
+		title: value.title,
+		description: value.description,
+		is_favorite: value.is_favorite,
+		filters: {
+			...value.filters,
+			sort_by: [...value.filters.sort_by],
+			order_by: [...value.filters.order_by],
+		},
+	}
+}
+
+export function useSavedFilter(projectId?: MaybeRefOrGetter<number | undefined>) {
+	const savedFilterId = computed(() => getSavedFilterIdFromProjectId(toValue(projectId) ?? 0))
+	const query = useQuery(computed(() => savedFilterQuery(savedFilterId.value)))
+
+	const filter = ref<SavedFilterForm>(newDraft())
+	const isSaving = ref(false)
+	const titleTouched = ref(false)
+
+	watch([savedFilterId, query.data, query.isFetching], ([id, value, isFetching], [previousId]) => {
+		if (id !== previousId) {
+			filter.value = newDraft()
 		}
-		if (!isFetching && value && loadedSavedFilterId.value !== id) {
-			filter.value = {
-				...value,
-				filters: {
-					...value.filters,
-					sort_by: [...value.filters.sort_by],
-					order_by: [...value.filters.order_by],
-				},
-			}
-			titleValid.value = value.title !== ''
-			loadedSavedFilterId.value = id
+		// Seeding only when the ids differ keeps a locally edited draft alive across background refetches.
+		if (!isFetching && value && value.id !== filter.value.id) {
+			filter.value = toDraft(value)
 		}
 	}, {immediate: true})
 
@@ -61,9 +56,11 @@ export function useSavedFilter(projectId?: MaybeRefOrGetter<number | undefined>)
 		},
 	})
 
-	const validateTitleField = useDebounceFn(() => {
-		titleValid.value = filter.value.title !== ''
-	}, 100)
+	const titleValid = computed(() => !titleTouched.value || filter.value.title !== '')
+
+	function validateTitleField() {
+		titleTouched.value = true
+	}
 
 	function writableFilter(): SavedFilterDraft {
 		return {
@@ -74,76 +71,49 @@ export function useSavedFilter(projectId?: MaybeRefOrGetter<number | undefined>)
 		}
 	}
 
-	async function createFilter() {
+	async function createFilter(): Promise<SavedFilterResponse | undefined> {
+		titleTouched.value = true
+		if (!titleValid.value) {
+			return
+		}
+
 		isSaving.value = true
 		try {
-			filter.value = await createSavedFilter(writableFilter())
-			await router.push({
-				name: 'project.index',
-				params: {projectId: getProjectIdFromSavedFilterId(filter.value.id)},
-			})
+			const created = await createSavedFilter(writableFilter())
+			filter.value = toDraft(created)
+			return created
 		} finally {
 			isSaving.value = false
 		}
 	}
 
-	async function saveFilter() {
-		if (loadedSavedFilterId.value !== savedFilterId.value || filter.value.id <= 0) {
-			throw new Error('Saved filter details are not loaded')
+	async function saveFilter(): Promise<SavedFilterResponse | undefined> {
+		titleTouched.value = true
+		if (!titleValid.value || filter.value.id !== savedFilterId.value) {
+			return
 		}
 
 		isSaving.value = true
 		try {
-			filter.value = await updateSavedFilter({
-				id: filter.value.id,
-				...writableFilter(),
-			})
-			success({message: t('filters.edit.success')})
-			router.back()
+			const saved = await updateSavedFilter({id: filter.value.id, ...writableFilter()})
+			filter.value = toDraft(saved)
+			return saved
 		} finally {
 			isSaving.value = false
-		}
-	}
-
-	async function deleteFilter() {
-		isSaving.value = true
-		try {
-			await deleteSavedFilter(savedFilterId.value)
-			success({message: t('filters.delete.success')})
-			await router.push({name: 'projects.index'})
-		} finally {
-			isSaving.value = false
-		}
-	}
-
-	async function createFilterWithValidation() {
-		if (titleValid.value) {
-			return createFilter()
-		}
-	}
-
-	async function saveFilterWithValidation() {
-		if (titleValid.value) {
-			return saveFilter()
 		}
 	}
 
 	return {
-		createFilter,
-		createFilterWithValidation,
-		saveFilter,
-		saveFilterWithValidation,
-		deleteFilter,
 		filter,
 		filters,
+		// A disabled query stays pending forever, hence the id guard.
 		isLoading: computed(() =>
-			(savedFilterId.value > 0 && (
-				query.isFetching.value ||
-				(!query.isError.value && loadedSavedFilterId.value !== savedFilterId.value)
-			)) || isSaving.value,
+			(savedFilterId.value > 0 && (query.isPending.value || query.isFetching.value)) || isSaving.value,
 		),
 		error: query.error,
 		titleValid,
 		validateTitleField,
+		createFilter,
+		saveFilter,
 	}
 }
