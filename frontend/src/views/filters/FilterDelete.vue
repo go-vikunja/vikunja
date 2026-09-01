@@ -8,15 +8,20 @@
 		</template>
 
 		<template #text>
-			<p>{{ $t('filters.delete.text') }}</p>
+			<ErrorMessage v-if="!(filterId > 0)" />
+			<p v-else>
+				{{ $t('filters.delete.text') }}
+			</p>
 		</template>
 	</Modal>
 </template>
 
 <script setup lang="ts">
-import {onUnmounted, ref} from 'vue'
+import {computed, onUnmounted, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useRouter} from 'vue-router'
+
+import ErrorMessage from '@/components/misc/Error.vue'
 
 import {getSavedFilterIdFromProjectId} from '@/client/queries/projects'
 import {deleteSavedFilter} from '@/client/queries/savedFilters'
@@ -29,6 +34,8 @@ const props = defineProps<{
 const {t} = useI18n({useScope: 'global'})
 const router = useRouter()
 
+const filterId = computed(() => getSavedFilterIdFromProjectId(props.projectId))
+
 // useMounted() never resets on unmount.
 const alive = ref(true)
 onUnmounted(() => {
@@ -37,12 +44,11 @@ onUnmounted(() => {
 
 async function remove() {
 	const id = props.projectId
-	const filterId = getSavedFilterIdFromProjectId(id)
-	if (filterId <= 0) {
+	if (!(filterId.value > 0)) {
 		return
 	}
 
-	await deleteSavedFilter(filterId)
+	await deleteSavedFilter(filterId.value)
 	// The route param can change on this same instance, so a stale delete must not navigate.
 	if (!alive.value || props.projectId !== id) {
 		return

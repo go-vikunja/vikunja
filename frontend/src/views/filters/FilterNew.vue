@@ -34,7 +34,7 @@
 			</FormField>
 			<FormField :label="$t('filters.title')">
 				<Filters
-					v-model="filters"
+					v-model="filter.filters"
 					:class="{ 'disabled': isLoading}"
 					:disabled="isLoading"
 					class="has-no-shadow has-no-border"
@@ -78,7 +78,6 @@ onUnmounted(() => {
 
 const {
 	filter,
-	filters,
 	submit,
 	isLoading,
 	titleValid,
