@@ -392,6 +392,13 @@ export function updateProjectNavigationItemInCache(
 	)
 }
 
+export function getCachedProject(id: number): ProjectResponse | undefined {
+	return queryClient.getQueryData<ProjectResponse>(projectKeys.detail(id))
+		?? queryClient.getQueriesData<ProjectListResult>({queryKey: projectKeys.lists()})
+			.flatMap(([, result]) => result?.projects ?? [])
+			.find(project => project.id === id)
+}
+
 export async function cancelProjectQueries(projectId: number): Promise<void> {
 	await Promise.all([
 		queryClient.cancelQueries({queryKey: projectKeys.lists()}),
@@ -427,10 +434,7 @@ export async function updateProject(
 		queryClient.cancelQueries({queryKey: projectKeys.detailRoot(id)}),
 	])
 	assertClientRequestContext(context)
-	const previous = queryClient.getQueryData<ProjectResponse>(projectKeys.detail(id))
-		?? queryClient.getQueriesData<ProjectListResult>({queryKey: projectKeys.lists()})
-			.flatMap(([, result]) => result?.projects ?? [])
-			.find(project => project.id === id)
+	const previous = getCachedProject(id)
 	const {data} = await projectsUpdate({
 		path: {id},
 		body: projectBody(project),
