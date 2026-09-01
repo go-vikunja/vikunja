@@ -2,94 +2,90 @@
 	<CreateEdit
 		v-if="uploadBackgroundEnabled || unsplashBackgroundEnabled"
 		:title="$t('project.background.title')"
-		:loading="backgroundMutationLoading"
+		:loading="backgroundMutationLoading || project.isPending.value"
 		class="project-background-setting"
 		:wide="true"
 	>
-		<div
-			v-if="uploadBackgroundEnabled && canWrite"
-			class="mbe-4"
-		>
-			<input
-				ref="backgroundUploadInput"
-				accept="image/*"
-				class="is-hidden"
-				type="file"
-				@change="uploadBackground"
-			>
-			<XButton
-				:loading="uploadBackgroundMutation.isPending.value"
-				variant="primary"
-				@click="backgroundUploadInput?.click()"
-			>
-				{{ $t('project.background.upload') }}
-			</XButton>
-		</div>
-		<template v-if="unsplashBackgroundEnabled && canWrite">
-			<input
-				v-model="backgroundSearchInput"
-				:class="{'is-loading': backgroundSearchQuery.isFetching.value}"
-				class="input is-expanded"
-				:placeholder="$t('project.background.searchPlaceholder')"
-				type="text"
-				@keyup="debounceNewBackgroundSearch()"
-			>
+		<ErrorMessage v-if="project.isError.value" />
 
-			<p class="unsplash-credit">
-				<BaseButton
-					class="unsplash-credit__link"
-					href="https://unsplash.com"
-				>
-					{{ $t('project.background.poweredByUnsplash') }}
-				</BaseButton>
-			</p>
-
+		<template v-if="canWrite">
 			<div
-				v-if="backgroundSearchQuery.isError.value"
-				class="has-text-centered mbs-4"
+				v-if="uploadBackgroundEnabled"
+				class="mbe-4"
 			>
-				<p class="has-text-danger">
-					{{ $t('project.background.searchError') }}
-				</p>
-				<XButton
-					variant="secondary"
-					:shadow="false"
-					@click="backgroundSearchQuery.refetch()"
+				<input
+					ref="backgroundUploadInput"
+					accept="image/*"
+					class="is-hidden"
+					type="file"
+					@change="uploadBackground"
 				>
-					{{ $t('project.background.retry') }}
+				<XButton
+					:loading="uploadBackgroundMutation.isPending.value"
+					variant="primary"
+					@click="backgroundUploadInput?.click()"
+				>
+					{{ $t('project.background.upload') }}
 				</XButton>
 			</div>
-
-			<ul class="image-search__result-list">
-				<li
-					v-for="im in backgroundSearchResult"
-					:key="im.id"
-					class="image-search__result-item"
+			<template v-if="unsplashBackgroundEnabled">
+				<input
+					v-model="backgroundSearchInput"
+					:class="{'is-loading': backgroundSearchQuery.isFetching.value}"
+					class="input is-expanded"
+					:placeholder="$t('project.background.searchPlaceholder')"
+					type="text"
+					@keyup="debounceNewBackgroundSearch()"
 				>
-					<UnsplashBackgroundThumbnail
-						:image="im"
-						@select="setBackground(im.id)"
-					/>
 
+				<p class="unsplash-credit">
 					<BaseButton
-						v-if="im.author !== ''"
-						:href="`https://unsplash.com/@${encodeURIComponent(im.author)}?utm_source=vikunja&utm_medium=referral`"
-						class="image-search__info"
+						class="unsplash-credit__link"
+						href="https://unsplash.com"
 					>
-						{{ im.author_name }}
+						{{ $t('project.background.poweredByUnsplash') }}
 					</BaseButton>
-				</li>
-			</ul>
-			<XButton
-				v-if="backgroundSearchResult.length > 0 && backgroundSearchQuery.hasNextPage.value"
-				:disabled="backgroundSearchQuery.isFetchingNextPage.value"
-				class="is-load-more-button mbs-4"
-				:shadow="false"
-				variant="secondary"
-				@click="backgroundSearchQuery.fetchNextPage()"
-			>
-				{{ backgroundSearchQuery.isFetchingNextPage.value ? $t('misc.loading') : $t('project.background.loadMore') }}
-			</XButton>
+				</p>
+
+				<div
+					v-if="backgroundSearchQuery.isError.value"
+					class="has-text-centered mbs-4"
+				>
+					<p class="has-text-danger">
+						{{ $t('project.background.searchError') }}
+					</p>
+					<XButton
+						variant="secondary"
+						:shadow="false"
+						@click="backgroundSearchQuery.refetch()"
+					>
+						{{ $t('project.background.retry') }}
+					</XButton>
+				</div>
+
+				<ul class="image-search__result-list">
+					<li
+						v-for="im in backgroundSearchResult"
+						:key="im.id"
+						class="image-search__result-item"
+					>
+						<UnsplashBackgroundThumbnail
+							:image="im"
+							@select="setBackground(im.id)"
+						/>
+					</li>
+				</ul>
+				<XButton
+					v-if="backgroundSearchResult.length > 0 && backgroundSearchQuery.hasNextPage.value"
+					:disabled="backgroundSearchQuery.isFetchingNextPage.value"
+					class="is-load-more-button mbs-4"
+					:shadow="false"
+					variant="secondary"
+					@click="backgroundSearchQuery.fetchNextPage()"
+				>
+					{{ backgroundSearchQuery.isFetchingNextPage.value ? $t('misc.loading') : $t('project.background.loadMore') }}
+				</XButton>
+			</template>
 		</template>
 
 		<template #footer>
@@ -120,6 +116,7 @@ import {useI18n} from 'vue-i18n'
 import {useRoute, useRouter} from 'vue-router'
 import {useDebounceFn} from '@vueuse/core'
 
+import type {Image} from '@/client/generated'
 import {
 	unsplashBackgroundSearchQuery,
 	useDeleteProjectBackgroundMutation,
@@ -138,6 +135,7 @@ import {useBaseStore} from '@/stores/base'
 import {useTitle} from '@/composables/useTitle'
 
 import CreateEdit from '@/components/misc/CreateEdit.vue'
+import ErrorMessage from '@/components/misc/Error.vue'
 import {success} from '@/message'
 
 defineOptions({name: 'ProjectSettingBackground'})
@@ -156,14 +154,15 @@ const unsplashBackgroundEnabled = computed(() => configStore.enabledBackgroundPr
 const uploadBackgroundEnabled = computed(() => configStore.enabledBackgroundProviders.includes('upload'))
 const projectId = computed(() => Number(route.params.projectId))
 const project = useQuery(computed(() => projectQuery(projectId.value)))
-const canWrite = computed(() => (project.data.value?.max_permission ?? 0) >= PERMISSIONS.READ_WRITE)
+const canWrite = computed(() => project.data.value !== undefined && (project.data.value.max_permission ?? 0) >= PERMISSIONS.READ_WRITE)
 const backgroundSearchTerm = ref('')
 const backgroundSearchInput = ref('')
 const backgroundSearchQuery = useInfiniteQuery(computed(() => ({
 	...unsplashBackgroundSearchQuery(backgroundSearchTerm.value),
-	enabled: unsplashBackgroundEnabled.value,
+	enabled: unsplashBackgroundEnabled.value && canWrite.value,
 })))
-const backgroundSearchResult = computed(() => backgroundSearchQuery.data.value?.pages.flat() ?? [])
+const backgroundSearchResult = computed(() => (backgroundSearchQuery.data.value?.pages.flat() ?? [])
+	.filter((image): image is Image & {id: string} => typeof image.id === 'string'))
 
 const hasBackground = computed(() => Boolean(project.data.value?.background_information))
 
@@ -190,11 +189,13 @@ async function setBackground(backgroundId: string) {
 		imageId: backgroundId,
 		projectId: id,
 	})
-	// The user may have navigated to another project while the request was in flight
-	if (baseStore.currentProjectId !== id) {
+	if (projectId.value !== id) {
 		return
 	}
-	await baseStore.handleSetCurrentProject({project: updated, forceUpdate: true})
+	// The modal can be open for a project other than the one currently displayed.
+	if (baseStore.currentProjectId === id) {
+		await baseStore.handleSetCurrentProject({project: updated, forceUpdate: true})
+	}
 	success({message: t('project.background.success')})
 }
 
@@ -207,20 +208,24 @@ async function uploadBackground() {
 
 	const id = projectId.value
 	const updated = await uploadBackgroundMutation.mutateAsync({projectId: id, file})
-	if (baseStore.currentProjectId !== id) {
+	if (projectId.value !== id) {
 		return
 	}
-	await baseStore.handleSetCurrentProject({project: updated, forceUpdate: true})
+	if (baseStore.currentProjectId === id) {
+		await baseStore.handleSetCurrentProject({project: updated, forceUpdate: true})
+	}
 	success({message: t('project.background.success')})
 }
 
 async function removeBackground() {
 	const id = projectId.value
 	const updated = await deleteBackgroundMutation.mutateAsync(id)
-	if (baseStore.currentProjectId !== id) {
+	if (projectId.value !== id) {
 		return
 	}
-	await baseStore.handleSetCurrentProject({project: updated, forceUpdate: true})
+	if (baseStore.currentProjectId === id) {
+		await baseStore.handleSetCurrentProject({project: updated, forceUpdate: true})
+	}
 	success({message: t('project.background.removeSuccess')})
 	router.back()
 }
@@ -258,26 +263,6 @@ async function removeBackground() {
 	margin-block-start: 0; // FIXME: removes padding from .content
 	aspect-ratio: 16 / 10;
 	display: flex;
-	position: relative;
-}
-
-.image-search__info {
-	position: absolute;
-	inset-block-end: 0;
-	inline-size: 100%;
-	padding: .25rem 0;
-	opacity: 0;
-	text-align: center;
-	background: rgba(0, 0, 0, 0.5);
-	font-size: .75rem;
-	font-weight: bold;
-	color: $white;
-	transition: opacity $transition;
-}
-.image-search__result-item:hover .image-search__info,
-.image-search__result-item:focus-within .image-search__info,
-.image-search__info:focus-visible {
-	opacity: 1;
 }
 
 .is-load-more-button {
