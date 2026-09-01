@@ -13,6 +13,7 @@ import type {
 	ProjectViewWritable,
 } from '@/client/generated'
 import {queryClient} from '@/client/queryClient'
+import {assertClientRequestContext, captureClientRequestContext} from '@/client/requestContext'
 import {cancelProjectQueries, updateProjectInCache} from './projects'
 
 type ProjectViewListArgs = Pick<NonNullable<ProjectViewsListData['query']>, 'q'>
@@ -130,13 +131,17 @@ function setProjectViewInCache(projectId: number, view: ProjectView) {
 }
 
 export async function createProjectView({projectId, view}: CreateProjectViewInput): Promise<ProjectView> {
+	const context = captureClientRequestContext()
 	await Promise.all([
 		queryClient.cancelQueries({queryKey: projectViewKeys.lists(projectId)}),
 		cancelProjectQueries(projectId),
 	])
+	assertClientRequestContext(context)
 	const {data} = await projectViewsCreate({path: {project: projectId}, body: view})
+	assertClientRequestContext(context)
 	setProjectViewInCache(projectId, data)
 	await queryClient.invalidateQueries({queryKey: projectViewKeys.lists(projectId)})
+	assertClientRequestContext(context)
 	return data
 }
 
@@ -145,27 +150,34 @@ export async function updateProjectView({
 	viewId,
 	view,
 }: UpdateProjectViewInput): Promise<ProjectView> {
+	const context = captureClientRequestContext()
 	await Promise.all([
 		queryClient.cancelQueries({queryKey: projectViewKeys.lists(projectId)}),
 		queryClient.cancelQueries({queryKey: projectViewKeys.detail(projectId, viewId)}),
 		cancelProjectQueries(projectId),
 	])
+	assertClientRequestContext(context)
 	const {data} = await projectViewsUpdate({
 		path: {project: projectId, view: viewId},
 		body: view,
 	})
+	assertClientRequestContext(context)
 	setProjectViewInCache(projectId, data)
 	await queryClient.invalidateQueries({queryKey: projectViewKeys.lists(projectId)})
+	assertClientRequestContext(context)
 	return data
 }
 
 export async function deleteProjectView({projectId, viewId}: DeleteProjectViewInput): Promise<void> {
+	const context = captureClientRequestContext()
 	await Promise.all([
 		queryClient.cancelQueries({queryKey: projectViewKeys.lists(projectId)}),
 		queryClient.cancelQueries({queryKey: projectViewKeys.detail(projectId, viewId)}),
 		cancelProjectQueries(projectId),
 	])
+	assertClientRequestContext(context)
 	await projectViewsDelete({path: {project: projectId, view: viewId}})
+	assertClientRequestContext(context)
 	queryClient.setQueryData<ProjectView[]>(
 		projectViewKeys.list(projectId),
 		current => current
@@ -178,4 +190,5 @@ export async function deleteProjectView({projectId, viewId}: DeleteProjectViewIn
 		views: sortProjectViewsByPosition((project.views ?? []).filter(view => view.id !== viewId)),
 	}))
 	await queryClient.invalidateQueries({queryKey: projectViewKeys.lists(projectId)})
+	assertClientRequestContext(context)
 }
