@@ -74,6 +74,23 @@ describe('useProjectNavigation', () => {
 		scope.stop()
 	})
 
+	it('rolls back the optimistic favorite when the request fails in the same context', async () => {
+		const listKey = projectKeys.list()
+		const original = normalizeProject({id: -2, title: 'Filter', is_favorite: false})
+		queryClient.setQueryData<ProjectListResult>(listKey, {
+			projects: [],
+			favoriteProject: null,
+			savedFilterProjects: [original],
+		})
+		savedFilterQueries.patchSavedFilterFavorite.mockRejectedValue(new Error('Request failed'))
+		const {navigation, wrapper} = mountProjectNavigation()
+
+		await expect(navigation.toggleProjectFavorite(original)).rejects.toThrow('Request failed')
+
+		expect(queryClient.getQueryData<ProjectListResult>(listKey)?.savedFilterProjects[0].is_favorite).toBe(false)
+		wrapper.unmount()
+	})
+
 	it('rolls back the optimistic favorite only while the request context is current', async () => {
 		const listKey = projectKeys.list()
 		const original = normalizeProject({id: -2, title: 'Filter', is_favorite: false})
