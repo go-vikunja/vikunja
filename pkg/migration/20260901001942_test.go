@@ -17,9 +17,6 @@
 package migration
 
 import (
-	"context"
-	"errors"
-	"strings"
 	"testing"
 	"time"
 
@@ -27,83 +24,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"xorm.io/xorm/contexts"
+	"xorm.io/xorm"
 )
-
-type taskSelectCounter20260901001942 struct {
-	count int
-}
-
-type taskIndexRowsStub20260901001942 struct {
-	tasks    []taskProjectIndex20260901001942
-	index    int
-	scanErr  error
-	rowsErr  error
-	closeErr error
-	closed   bool
-}
-
-func (r *taskIndexRowsStub20260901001942) Next() bool {
-	return r.index < len(r.tasks)
-}
-
-func (r *taskIndexRowsStub20260901001942) Scan(beans ...any) error {
-	if r.scanErr != nil {
-		return r.scanErr
-	}
-	*(beans[0].(*taskProjectIndex20260901001942)) = r.tasks[r.index]
-	r.index++
-	return nil
-}
-
-func (r *taskIndexRowsStub20260901001942) Err() error {
-	return r.rowsErr
-}
-
-func (r *taskIndexRowsStub20260901001942) Close() error {
-	r.closed = true
-	return r.closeErr
-}
-
-func (h *taskSelectCounter20260901001942) BeforeProcess(c *contexts.ContextHook) (context.Context, error) {
-	return c.Ctx, nil
-}
-
-func (h *taskSelectCounter20260901001942) AfterProcess(c *contexts.ContextHook) error {
-	sql := strings.ToLower(strings.TrimSpace(c.SQL))
-	sql = strings.NewReplacer("`", "", `"`, "").Replace(sql)
-	if strings.HasPrefix(sql, "select") && strings.Contains(sql, " from tasks") {
-		h.count++
-	}
-	return nil
-}
-
-func TestCollectTaskIndexHighWaterMarks20260901001942(t *testing.T) {
-	t.Run("keeps the first ordered index per project", func(t *testing.T) {
-		rows := &taskIndexRowsStub20260901001942{tasks: []taskProjectIndex20260901001942{
-			{ProjectID: 1, Index: 8},
-			{ProjectID: 1, Index: 3},
-			{ProjectID: 2, Index: 2},
-		}}
-
-		indexes, err := collectTaskIndexHighWaterMarks20260901001942(rows, 2)
-		require.NoError(t, err)
-		assert.Equal(t, map[int64]int64{1: 8, 2: 2}, indexes)
-		assert.True(t, rows.closed)
-	})
-
-	for name, rows := range map[string]*taskIndexRowsStub20260901001942{
-		"scan error":  {tasks: []taskProjectIndex20260901001942{{ProjectID: 1, Index: 8}}, scanErr: errors.New("scan")},
-		"rows error":  {rowsErr: errors.New("rows")},
-		"close error": {closeErr: errors.New("close")},
-	} {
-		t.Run(name, func(t *testing.T) {
-			_, err := collectTaskIndexHighWaterMarks20260901001942(rows, 1)
-			require.EqualError(t, err, strings.TrimSuffix(name, " error"))
-			assert.True(t, rows.closed)
-		})
-	}
-}
 
 type projectBefore20260901001942 struct {
 	ID int64 `xorm:"bigint autoincr not null unique pk"`
@@ -120,7 +42,7 @@ type taskBefore20260901001942 struct {
 
 func (taskBefore20260901001942) TableName() string { return "tasks" }
 
-func TestAddTaskIndexState20260901001942(t *testing.T) {
+func setupTaskIndexTables20260901001942(t *testing.T) *xorm.Engine {
 	x, err := db.CreateTestEngine()
 	require.NoError(t, err)
 
@@ -128,7 +50,6 @@ func TestAddTaskIndexState20260901001942(t *testing.T) {
 		projectBefore20260901001942{},
 		taskBefore20260901001942{},
 		ProjectTaskCounter20260901001942{},
-		TaskIndexAlias20260901001942{},
 	}
 	t.Cleanup(func() {
 		require.NoError(t, x.DropTables(tables...))
@@ -136,7 +57,13 @@ func TestAddTaskIndexState20260901001942(t *testing.T) {
 	require.NoError(t, x.DropTables(tables...))
 	require.NoError(t, x.Sync2(projectBefore20260901001942{}, taskBefore20260901001942{}))
 
-	_, err = x.Insert(
+	return x
+}
+
+func TestAddProjectTaskCounters20260901001942(t *testing.T) {
+	x := setupTaskIndexTables20260901001942(t)
+
+	_, err := x.Insert(
 		&projectBefore20260901001942{ID: 1},
 		&projectBefore20260901001942{ID: 2},
 		&projectBefore20260901001942{ID: 3},
@@ -149,10 +76,7 @@ func TestAddTaskIndexState20260901001942(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	taskSelects := &taskSelectCounter20260901001942{}
-	x.AddHook(taskSelects)
-	require.NoError(t, addTaskIndexState20260901001942(x))
-	assert.Equal(t, 1, taskSelects.count)
+	require.NoError(t, addProjectTaskCounters20260901001942(x))
 
 	counters := []*ProjectTaskCounter20260901001942{}
 	require.NoError(t, x.OrderBy("project_id").Find(&counters))
@@ -162,14 +86,32 @@ func TestAddTaskIndexState20260901001942(t *testing.T) {
 		{ProjectID: 3, LastIndex: 0},
 	}, counters)
 
-	aliasCount, err := x.Count(&TaskIndexAlias20260901001942{})
-	require.NoError(t, err)
-	assert.Zero(t, aliasCount)
-
 	_, err = x.Insert(&ProjectTaskCounter20260901001942{ProjectID: 1, LastIndex: 9})
 	require.Error(t, err)
-	_, err = x.Insert(&TaskIndexAlias20260901001942{ProjectID: 1, Index: 3, TaskID: 1})
+}
+
+func TestAddProjectTaskCountersMoreProjectsThanBatch20260901001942(t *testing.T) {
+	x := setupTaskIndexTables20260901001942(t)
+
+	projectCount := counterBackfillBatch20260901001942 + 1
+	projects := make([]*projectBefore20260901001942, 0, projectCount)
+	for id := 1; id <= projectCount; id++ {
+		projects = append(projects, &projectBefore20260901001942{ID: int64(id)})
+	}
+	_, err := x.Insert(projects)
 	require.NoError(t, err)
-	_, err = x.Insert(&TaskIndexAlias20260901001942{ProjectID: 1, Index: 3, TaskID: 2})
-	require.Error(t, err)
+	_, err = x.Insert(&taskBefore20260901001942{ID: 1, ProjectID: int64(projectCount), Index: 5})
+	require.NoError(t, err)
+
+	require.NoError(t, addProjectTaskCounters20260901001942(x))
+
+	counterCount, err := x.Count(&ProjectTaskCounter20260901001942{})
+	require.NoError(t, err)
+	assert.EqualValues(t, projectCount, counterCount)
+
+	last := &ProjectTaskCounter20260901001942{}
+	found, err := x.Where("project_id = ?", projectCount).Get(last)
+	require.NoError(t, err)
+	require.True(t, found)
+	assert.EqualValues(t, 5, last.LastIndex)
 }
