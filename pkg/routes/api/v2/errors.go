@@ -27,6 +27,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/web"
+	"code.vikunja.io/api/pkg/web/handler"
 
 	"github.com/danielgtaylor/huma/v2"
 )
@@ -85,6 +86,13 @@ func translateDomainError(err error) error {
 		return se
 	}
 	return err
+}
+
+// errReadForbidden is the exact error handler.DoReadOne returns on a read
+// permission denial, so handlers doing their own read checks emit an
+// identical body to the generic CRUD path.
+func errReadForbidden() error {
+	return translateDomainError(handler.ErrGenericForbidden{Message: "You don't have the permission to see this"})
 }
 
 // invalidFieldDetails turns ValidationHTTPError's invalid_fields into RFC 9457

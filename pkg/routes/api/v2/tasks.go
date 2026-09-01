@@ -201,6 +201,16 @@ func tasksReadByIndex(ctx context.Context, in *struct {
 	s := db.NewSession()
 	defer s.Close()
 
+	// Without this the retired indexes of a project the caller cannot see are
+	// probeable: 307/403 vs 404 reveals which historical addresses existed.
+	canReadProject, _, err := (&models.Project{ID: projectID}).CanRead(s, a)
+	if err != nil {
+		return nil, translateDomainError(err)
+	}
+	if !canReadProject {
+		return nil, errReadForbidden()
+	}
+
 	taskID, err := models.GetTaskIDByIndexAlias(s, projectID, in.Index)
 	if err != nil {
 		return nil, translateDomainError(err)
@@ -212,7 +222,7 @@ func tasksReadByIndex(ctx context.Context, in *struct {
 		return nil, translateDomainError(err)
 	}
 	if !canRead {
-		return nil, huma.Error403Forbidden("forbidden")
+		return nil, errReadForbidden()
 	}
 
 	location := &url.URL{
