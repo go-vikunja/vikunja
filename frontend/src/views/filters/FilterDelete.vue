@@ -14,7 +14,7 @@
 </template>
 
 <script setup lang="ts">
-import {useMounted} from '@vueuse/core'
+import {onUnmounted, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useRouter} from 'vue-router'
 
@@ -28,11 +28,23 @@ const props = defineProps<{
 
 const {t} = useI18n({useScope: 'global'})
 const router = useRouter()
-const isMounted = useMounted()
+
+// useMounted() never flips back on unmount, so track liveness ourselves.
+const alive = ref(true)
+onUnmounted(() => {
+	alive.value = false
+})
 
 async function remove() {
-	await deleteSavedFilter(getSavedFilterIdFromProjectId(props.projectId))
-	if (!isMounted.value) {
+	const id = props.projectId
+	const filterId = getSavedFilterIdFromProjectId(id)
+	if (filterId <= 0) {
+		return
+	}
+
+	await deleteSavedFilter(filterId)
+	// The route param can change on this same instance, so a stale delete must not navigate.
+	if (!alive.value || props.projectId !== id) {
 		return
 	}
 	success({message: t('filters.delete.success')})
