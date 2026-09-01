@@ -67,7 +67,7 @@ func addProjectTaskCounters20260901001942(tx *xorm.Engine) error {
 		return fail(err)
 	}
 
-	rows, err := s.Asc("project_id").Desc("index").Rows(&taskProjectIndex20260901001942{})
+	rows, err := s.Rows(&taskProjectIndex20260901001942{})
 	if err != nil {
 		return fail(err)
 	}
@@ -78,8 +78,7 @@ func addProjectTaskCounters20260901001942(tx *xorm.Engine) error {
 		if err := rows.Scan(task); err != nil {
 			return fail(errors.Join(err, rows.Close()))
 		}
-		// Rows are ordered by descending index, so the first row of a project is its high water mark.
-		if _, exists := lastIndexes[task.ProjectID]; !exists {
+		if task.Index > lastIndexes[task.ProjectID] {
 			lastIndexes[task.ProjectID] = task.Index
 		}
 	}
