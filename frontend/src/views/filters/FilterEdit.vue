@@ -1,18 +1,18 @@
 <template>
 	<CreateEdit
-		v-model:loading="loadingModel"
+		:loading="isLoading"
 		:title="$t('filters.edit.title')"
 		primary-icon=""
 		:primary-label="$t('misc.save')"
-		:primary-disabled="Boolean(loadError)"
+		:primary-disabled="Boolean(loadError) || isLoading"
 		:tertiary="$t('misc.delete')"
-		@primary="handleSave"
+		@primary="save"
 		@tertiary="$router.push({ name: 'filter.settings.delete', params: { id: projectId } })"
 	>
 		<ErrorMessage v-if="loadError" />
 		<form
 			v-else
-			@submit.prevent="handleSave()"
+			@submit.prevent="save()"
 		>
 			<FormField
 				id="Title"
@@ -55,7 +55,8 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref} from 'vue'
+import {useI18n} from 'vue-i18n'
+import {useRouter} from 'vue-router'
 
 import Editor from '@/components/input/AsyncEditor'
 import CreateEdit from '@/components/misc/CreateEdit.vue'
@@ -64,13 +65,17 @@ import Filters from '@/components/project/partials/Filters.vue'
 import ErrorMessage from '@/components/misc/Error.vue'
 
 import {useSavedFilter} from '@/composables/useSavedFilter'
+import {success} from '@/message'
 
 const props = defineProps<{
 	projectId: number,
 }>()
 
+const {t} = useI18n({useScope: 'global'})
+const router = useRouter()
+
 const {
-	saveFilterWithValidation,
+	saveFilter,
 	filter,
 	filters,
 	isLoading,
@@ -79,26 +84,11 @@ const {
 	validateTitleField,
 } = useSavedFilter(() => props.projectId)
 
-const isSubmitting = ref(false)
-
-const loadingModel = computed({
-	get: () => isSubmitting.value || isLoading.value,
-	set(value: boolean) {
-		isSubmitting.value = value
-	},
-})
-
-async function handleSave() {
-	if (isSubmitting.value) {
-		return
-	}
-
-	isSubmitting.value = true
-
-	try {
-		await saveFilterWithValidation()
-	} finally {
-		isSubmitting.value = false
+async function save() {
+	const saved = await saveFilter()
+	if (saved) {
+		success({message: t('filters.edit.success')})
+		router.back()
 	}
 }
 </script>

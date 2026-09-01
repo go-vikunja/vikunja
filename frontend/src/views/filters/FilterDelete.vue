@@ -1,7 +1,7 @@
 <template>
 	<Modal
 		@close="$router.back()"
-		@submit="deleteFilter()"
+		@submit="remove()"
 	>
 		<template #header>
 			<span>{{ $t('filters.delete.header') }}</span>
@@ -14,11 +14,23 @@
 </template>
 
 <script setup lang="ts">
-import {useSavedFilter} from '@/composables/useSavedFilter'
+import {useI18n} from 'vue-i18n'
+import {useRouter} from 'vue-router'
+
+import {getSavedFilterIdFromProjectId} from '@/client/queries/projects'
+import {deleteSavedFilter} from '@/client/queries/savedFilters'
+import {success} from '@/message'
 
 const props = defineProps<{
 	projectId: number,
 }>()
 
-const {deleteFilter} = useSavedFilter(() => props.projectId)
+const {t} = useI18n({useScope: 'global'})
+const router = useRouter()
+
+async function remove() {
+	await deleteSavedFilter(getSavedFilterIdFromProjectId(props.projectId))
+	success({message: t('filters.delete.success')})
+	await router.push({name: 'projects.index'})
+}
 </script>
