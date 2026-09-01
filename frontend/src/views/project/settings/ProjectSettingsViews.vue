@@ -58,7 +58,37 @@ const viewToEdit = ref<ProjectView | null>(null)
 const isMutating = ref(false)
 const isLoading = computed(() => query.isPending.value || isMutating.value)
 
+type MutationScope = {
+	projectId: number
+	routeGeneration: number
+}
+
+let routeGeneration = 0
+let activeMutations = 0
+
+function beginMutation(): MutationScope {
+	activeMutations++
+	isMutating.value = true
+	return {projectId: props.projectId, routeGeneration}
+}
+
+function isCurrentScope(scope: MutationScope): boolean {
+	return scope.routeGeneration === routeGeneration
+}
+
+function finishMutation(scope: MutationScope) {
+	if (!isCurrentScope(scope)) {
+		return
+	}
+
+	activeMutations--
+	isMutating.value = activeMutations > 0
+}
+
 watch(() => props.projectId, () => {
+	routeGeneration++
+	activeMutations = 0
+	isMutating.value = false
 	showCreateForm.value = false
 	newView.value = createNewView()
 	viewIdToDelete.value = null
@@ -78,20 +108,25 @@ async function createView() {
 		return
 	}
 
+	const scope = beginMutation()
 	try {
-		isMutating.value = true
 		newView.value.bucket_configuration_mode = newView.value.view_kind === 'kanban'
 			? newView.value.bucket_configuration_mode
 			: 'none'
 
-		await createProjectView({projectId: props.projectId, view: newView.value})
+		await createProjectView({projectId: scope.projectId, view: newView.value})
+		if (!isCurrentScope(scope)) {
+			return
+		}
 		success({message: t('project.views.createSuccess')})
 		showCreateForm.value = false
 		newView.value = createNewView()
 	} catch (e) {
-		error(e)
+		if (isCurrentScope(scope)) {
+			error(e)
+		}
 	} finally {
-		isMutating.value = false
+		finishMutation(scope)
 	}
 }
 
@@ -100,12 +135,15 @@ async function deleteView(viewId: number | null) {
 		return
 	}
 
-	isMutating.value = true
+	const scope = beginMutation()
 	try {
-		await deleteProjectView({projectId: props.projectId, viewId})
+		await deleteProjectView({projectId: scope.projectId, viewId})
+		if (!isCurrentScope(scope)) {
+			return
+		}
 		showDeleteModal.value = false
 	} finally {
-		isMutating.value = false
+		finishMutation(scope)
 	}
 }
 
@@ -117,17 +155,20 @@ async function saveView(view: ProjectView) {
 	if (updated.view_kind !== 'kanban') {
 		updated.bucket_configuration_mode = 'none'
 	}
-	isMutating.value = true
+	const scope = beginMutation()
 	try {
 		await updateProjectView({
-			projectId: props.projectId,
+			projectId: scope.projectId,
 			viewId: view.id,
 			view: updated,
 		})
+		if (!isCurrentScope(scope)) {
+			return
+		}
 		viewToEdit.value = null
 		success({message: t('project.views.updateSuccess')})
 	} finally {
-		isMutating.value = false
+		finishMutation(scope)
 	}
 }
 
@@ -143,16 +184,19 @@ async function saveViewPosition(e: {newIndex: number}) {
 		viewBefore?.position,
 		viewAfter?.position,
 	)
-	isMutating.value = true
+	const scope = beginMutation()
 	try {
 		await updateProjectView({
-			projectId: props.projectId,
+			projectId: scope.projectId,
 			viewId: view.id,
 			view: createProjectViewUpdate({...view, position}),
 		})
+		if (!isCurrentScope(scope)) {
+			return
+		}
 		success({message: t('project.views.updateSuccess')})
 	} finally {
-		isMutating.value = false
+		finishMutation(scope)
 	}
 }
 </script>
