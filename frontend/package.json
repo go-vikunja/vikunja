@@ -137,7 +137,7 @@
     "eslint": "10.9.1",
     "eslint-plugin-depend": "1.5.0",
     "eslint-plugin-vue": "10.10.0",
-    "happy-dom": "20.11.12",
+    "happy-dom": "20.11.15",
     "histoire": "1.0.0-beta.1",
     "otplib": "13.5.0",
     "postcss": "8.5.26",
