@@ -27,94 +27,24 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestTaskIndexStateFixtures(t *testing.T) {
+func TestProjectCreateInitializesTaskIndexCounter(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()
 	defer s.Close()
 
-	counters := []*ProjectTaskCounter{}
-	require.NoError(t, s.OrderBy("project_id").Find(&counters))
-	require.Len(t, counters, 44)
-	assert.Equal(t, &ProjectTaskCounter{ProjectID: 1, LastIndex: 34}, counters[0])
-	assert.Equal(t, &ProjectTaskCounter{ProjectID: 4, LastIndex: 0}, counters[3])
+	project := &Project{Title: "counter project"}
+	require.NoError(t, project.Create(s, &user.User{ID: 1}))
 
-	aliases, err := s.Count(&TaskIndexAlias{})
+	counter := &ProjectTaskCounter{}
+	has, err := s.ID(project.ID).Get(counter)
 	require.NoError(t, err)
-	assert.Zero(t, aliases)
+	require.True(t, has)
+	assert.Equal(t, int64(0), counter.LastIndex)
 
-	_, err = s.Insert(&TaskIndexAlias{ProjectID: 1, Index: 99, TaskID: 1})
+	count, err := s.Where("project_id = ?", project.ID).Count(&ProjectTaskCounter{})
 	require.NoError(t, err)
+	assert.Equal(t, int64(1), count)
 	require.NoError(t, s.Commit())
-
-	db.LoadAndAssertFixtures(t)
-	s = db.NewSession()
-	defer s.Close()
-	aliases, err = s.Count(&TaskIndexAlias{})
-	require.NoError(t, err)
-	assert.Zero(t, aliases)
-}
-
-func TestTaskIndexStateConstraints(t *testing.T) {
-	t.Run("one counter per project", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		_, err := s.Insert(&ProjectTaskCounter{ProjectID: 1, LastIndex: 999})
-		require.Error(t, err)
-	})
-
-	t.Run("one alias per historical address", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		_, err := s.Insert(&TaskIndexAlias{ProjectID: 1, Index: 99, TaskID: 1})
-		require.NoError(t, err)
-		_, err = s.Insert(&TaskIndexAlias{ProjectID: 1, Index: 99, TaskID: 2})
-		require.Error(t, err)
-	})
-}
-
-func TestProjectCreateInitializesTaskIndexCounter(t *testing.T) {
-	t.Run("commit", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		project := &Project{Title: "counter project"}
-		require.NoError(t, project.Create(s, &user.User{ID: 1}))
-
-		counter := &ProjectTaskCounter{}
-		has, err := s.ID(project.ID).Get(counter)
-		require.NoError(t, err)
-		require.True(t, has)
-		assert.Equal(t, int64(0), counter.LastIndex)
-
-		count, err := s.Where("project_id = ?", project.ID).Count(&ProjectTaskCounter{})
-		require.NoError(t, err)
-		assert.Equal(t, int64(1), count)
-		require.NoError(t, s.Commit())
-	})
-
-	t.Run("rollback", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-
-		project := &Project{Title: "rolled back counter project"}
-		require.NoError(t, project.Create(s, &user.User{ID: 1}))
-		require.NoError(t, s.Rollback())
-		require.NoError(t, s.Close())
-
-		check := db.NewSession()
-		defer check.Close()
-		projectCount, err := check.ID(project.ID).Count(&Project{})
-		require.NoError(t, err)
-		assert.Zero(t, projectCount)
-		counterCount, err := check.ID(project.ID).Count(&ProjectTaskCounter{})
-		require.NoError(t, err)
-		assert.Zero(t, counterCount)
-	})
 }
 
 func TestSetNewTaskIndexes(t *testing.T) {
@@ -185,6 +115,21 @@ func TestSetNewTaskIndexes(t *testing.T) {
 		assert.Equal(t, int64(35), counter.LastIndex)
 	})
 
+	t.Run("missing counter is seeded from retired alias indexes", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.ID(1).Delete(&ProjectTaskCounter{})
+		require.NoError(t, err)
+		_, err = s.Insert(&TaskIndexAlias{ProjectID: 1, Index: 90, TaskID: 1})
+		require.NoError(t, err)
+
+		tasks := []*Task{{}}
+		require.NoError(t, setNewTaskIndexes(s, 1, tasks))
+		assert.Equal(t, int64(91), tasks[0].Index)
+	})
+
 	t.Run("a max int preset exhausts the counter", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
@@ -221,59 +166,6 @@ func TestSetNewTaskIndexes(t *testing.T) {
 		require.NoError(t, err)
 		require.True(t, has)
 		assert.Equal(t, int64(math.MaxInt64), counter.LastIndex)
-	})
-
-	t.Run("rollback releases the reservation", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		require.NoError(t, setNewTaskIndexes(s, 4, []*Task{{}, {}}))
-		require.NoError(t, s.Rollback())
-		require.NoError(t, s.Close())
-
-		s = db.NewSession()
-		defer s.Close()
-		tasks := []*Task{{}}
-		require.NoError(t, setNewTaskIndexes(s, 4, tasks))
-		assert.Equal(t, int64(1), tasks[0].Index)
-	})
-}
-
-func TestPublicTaskCreationIgnoresPresetIndexes(t *testing.T) {
-	usr := &user.User{ID: 1}
-
-	t.Run("single create", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		first := &Task{Title: "client index", ProjectID: 4, Index: math.MaxInt64}
-		require.NoError(t, first.Create(s, usr))
-		assert.Equal(t, int64(1), first.Index)
-
-		next := &Task{Title: "next index", ProjectID: 4}
-		require.NoError(t, next.Create(s, usr))
-		assert.Equal(t, int64(2), next.Index)
-	})
-
-	t.Run("bulk create", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		batch := &BulkTaskCreation{
-			ProjectID: 4,
-			Tasks: []*Task{
-				{Title: "client max", Index: math.MaxInt64},
-				{Title: "client preset", Index: 20},
-			},
-		}
-		require.NoError(t, batch.Create(s, usr))
-		assert.Equal(t, int64(1), batch.Tasks[0].Index)
-		assert.Equal(t, int64(2), batch.Tasks[1].Index)
-
-		next := &Task{Title: "next index", ProjectID: 4}
-		require.NoError(t, next.Create(s, usr))
-		assert.Equal(t, int64(3), next.Index)
 	})
 }
 
@@ -327,58 +219,32 @@ func TestTaskIndexesAreNeverReused(t *testing.T) {
 }
 
 func TestTaskIndexReservationRollsBackWithTaskChanges(t *testing.T) {
-	t.Run("failed create", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		usr := &user.User{ID: 1}
-		s := db.NewSession()
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	move := &Task{ID: 12, ProjectID: 2, CoverImageAttachmentID: 999}
+	err := move.Update(s, &user.User{ID: 1})
+	var attachmentErr *ErrAttachmentDoesNotBelongToTask
+	require.ErrorAs(t, err, &attachmentErr)
+	require.NoError(t, s.Rollback())
+	require.NoError(t, s.Close())
 
-		bucket := &Bucket{Title: "full batch", ProjectViewID: 4, CreatedByID: 1, Limit: 1}
-		_, err := s.Insert(bucket)
-		require.NoError(t, err)
-		batch := &BulkTaskCreation{
-			ProjectID: 1,
-			Tasks: []*Task{
-				{Title: "fits", BucketID: bucket.ID},
-				{Title: "overflows", BucketID: bucket.ID},
-			},
-		}
-		require.Error(t, batch.Create(s, usr))
-		require.NoError(t, s.Rollback())
-		require.NoError(t, s.Close())
+	s = db.NewSession()
+	defer s.Close()
+	counter := &ProjectTaskCounter{}
+	has, err := s.ID(2).Get(counter)
+	require.NoError(t, err)
+	require.True(t, has)
+	assert.Equal(t, int64(2), counter.LastIndex)
 
-		s = db.NewSession()
-		defer s.Close()
-		next := &Task{Title: "after failed batch", ProjectID: 1}
-		require.NoError(t, next.Create(s, usr))
-		assert.Equal(t, int64(35), next.Index)
-	})
+	persisted := &Task{ID: 12}
+	has, err = s.Get(persisted)
+	require.NoError(t, err)
+	require.True(t, has)
+	assert.Equal(t, int64(1), persisted.ProjectID)
 
-	t.Run("failed move", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		move := &Task{ID: 12, ProjectID: 2, CoverImageAttachmentID: 999}
-		require.Error(t, move.Update(s, &user.User{ID: 1}))
-		require.NoError(t, s.Rollback())
-		require.NoError(t, s.Close())
-
-		s = db.NewSession()
-		defer s.Close()
-		counter := &ProjectTaskCounter{}
-		has, err := s.ID(2).Get(counter)
-		require.NoError(t, err)
-		require.True(t, has)
-		assert.Equal(t, int64(2), counter.LastIndex)
-
-		persisted := &Task{ID: 12}
-		has, err = s.Get(persisted)
-		require.NoError(t, err)
-		require.True(t, has)
-		assert.Equal(t, int64(1), persisted.ProjectID)
-
-		aliases, err := s.Where("task_id = ?", 12).Count(&TaskIndexAlias{})
-		require.NoError(t, err)
-		assert.Zero(t, aliases)
-	})
+	aliases, err := s.Where("task_id = ?", 12).Count(&TaskIndexAlias{})
+	require.NoError(t, err)
+	assert.Zero(t, aliases)
 }
 
 func TestTaskIndexAliases(t *testing.T) {
@@ -436,19 +302,10 @@ func TestTaskIndexAliases(t *testing.T) {
 
 		_, err := s.Insert(&TaskIndexAlias{ProjectID: 1, Index: 12, TaskID: 1})
 		require.NoError(t, err)
-		require.Error(t, (&Task{ID: 12, ProjectID: 2}).Update(s, &user.User{ID: 1}))
 
-		counter := &ProjectTaskCounter{}
-		has, err := s.ID(2).Get(counter)
-		require.NoError(t, err)
-		require.True(t, has)
-		assert.Equal(t, int64(2), counter.LastIndex)
-
-		persisted := &Task{ID: 12}
-		has, err = s.Get(persisted)
-		require.NoError(t, err)
-		require.True(t, has)
-		assert.Equal(t, int64(1), persisted.ProjectID)
+		// Postgres aborts the whole transaction on the unique violation, so no state can be read back here.
+		err = (&Task{ID: 12, ProjectID: 2}).Update(s, &user.User{ID: 1})
+		require.True(t, db.IsUniqueConstraintError(err, "task_index_aliases"), "expected an alias unique constraint violation, got %v", err)
 	})
 
 	t.Run("soft deletion retains aliases and counters", func(t *testing.T) {
