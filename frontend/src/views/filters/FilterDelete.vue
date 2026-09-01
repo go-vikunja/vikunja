@@ -14,6 +14,7 @@
 </template>
 
 <script setup lang="ts">
+import {useMounted} from '@vueuse/core'
 import {useI18n} from 'vue-i18n'
 import {useRouter} from 'vue-router'
 
@@ -27,9 +28,13 @@ const props = defineProps<{
 
 const {t} = useI18n({useScope: 'global'})
 const router = useRouter()
+const isMounted = useMounted()
 
 async function remove() {
 	await deleteSavedFilter(getSavedFilterIdFromProjectId(props.projectId))
+	if (!isMounted.value) {
+		return
+	}
 	success({message: t('filters.delete.success')})
 	await router.push({name: 'projects.index'})
 }

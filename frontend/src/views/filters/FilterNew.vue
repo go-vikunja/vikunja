@@ -58,6 +58,7 @@
 </template>
 
 <script setup lang="ts">
+import {useMounted} from '@vueuse/core'
 import {useRouter} from 'vue-router'
 
 import Editor from '@/components/input/AsyncEditor'
@@ -68,6 +69,7 @@ import {getProjectIdFromSavedFilterId} from '@/client/queries/projects'
 import {useSavedFilter} from '@/composables/useSavedFilter'
 
 const router = useRouter()
+const isMounted = useMounted()
 
 const {
 	filter,
@@ -80,6 +82,9 @@ const {
 
 async function create() {
 	const created = await createFilter()
+	if (!isMounted.value) {
+		return
+	}
 	if (created) {
 		await router.push({
 			name: 'project.index',
