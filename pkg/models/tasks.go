@@ -897,7 +897,8 @@ func setNewTaskIndexes(s *xorm.Session, projectID int64, tasks []*Task) error {
 	used := make(map[int64]bool, len(tasks))
 	highest := lastIndex
 	for _, t := range tasks {
-		if t.Index <= previous || used[t.Index] {
+		// Bounding imported presets keeps the counter far away from int64 overflow.
+		if t.Index <= previous || t.Index > math.MaxInt32 || used[t.Index] {
 			t.Index = 0
 			continue
 		}

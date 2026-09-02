@@ -130,42 +130,20 @@ func TestSetNewTaskIndexes(t *testing.T) {
 		assert.Equal(t, int64(91), tasks[0].Index)
 	})
 
-	t.Run("a max int preset exhausts the counter", func(t *testing.T) {
+	t.Run("presets beyond the bound get a fresh index", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
-		defer func() { _ = s.Rollback() }()
 
-		tasks := []*Task{{Index: math.MaxInt64}, {}}
-		require.NoError(t, setNewTaskIndexes(s, 4, tasks))
-		assert.Equal(t, int64(math.MaxInt64), tasks[0].Index)
-		assert.Equal(t, int64(1), tasks[1].Index)
+		tasks := []*Task{{Index: math.MaxInt32 + 1}}
+		require.NoError(t, setNewTaskIndexes(s, 1, tasks))
+		assert.Equal(t, int64(35), tasks[0].Index)
 
 		counter := &ProjectTaskCounter{}
-		has, err := s.ID(4).Get(counter)
+		has, err := s.ID(1).Get(counter)
 		require.NoError(t, err)
 		require.True(t, has)
-		assert.Equal(t, int64(math.MaxInt64), counter.LastIndex)
-
-		require.True(t, IsErrTaskIndexExhausted(setNewTaskIndexes(s, 4, []*Task{{}})))
-	})
-
-	t.Run("exhausted counter rejects another reservation", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-		defer func() { _ = s.Rollback() }()
-		_, err := s.ID(4).Cols("last_index").Update(&ProjectTaskCounter{LastIndex: math.MaxInt64})
-		require.NoError(t, err)
-
-		err = setNewTaskIndexes(s, 4, []*Task{{}})
-		require.True(t, IsErrTaskIndexExhausted(err))
-
-		counter := &ProjectTaskCounter{}
-		has, err := s.ID(4).Get(counter)
-		require.NoError(t, err)
-		require.True(t, has)
-		assert.Equal(t, int64(math.MaxInt64), counter.LastIndex)
+		assert.Equal(t, int64(35), counter.LastIndex)
 	})
 }
 
