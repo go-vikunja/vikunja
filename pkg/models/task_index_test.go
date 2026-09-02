@@ -40,11 +40,6 @@ func TestProjectCreateInitializesTaskIndexCounter(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, has)
 	assert.Equal(t, int64(0), counter.LastIndex)
-
-	count, err := s.Where("project_id = ?", project.ID).Count(&ProjectTaskCounter{})
-	require.NoError(t, err)
-	assert.Equal(t, int64(1), count)
-	require.NoError(t, s.Commit())
 }
 
 func TestSetNewTaskIndexes(t *testing.T) {

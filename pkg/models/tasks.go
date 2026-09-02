@@ -933,7 +933,6 @@ func setNewTaskIndexes(s *xorm.Session, projectID int64, tasks []*Task) error {
 
 	if highest > lastIndex {
 		_, err = s.ID(projectID).
-			Where("last_index < ?", highest).
 			Cols("last_index").
 			Update(&ProjectTaskCounter{LastIndex: highest})
 	}
@@ -960,21 +959,19 @@ func (t *Task) Create(s *xorm.Session, a web.Auth) (err error) {
 }
 
 func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, setBucket bool) (err error) {
-	err = createTasks(s, t.ProjectID, []*Task{t}, a, updateAssignees, setBucket, false)
-	// Single-create callers expect the raw error type, not the batch wrapper.
-	var berr ErrInvalidTaskInBulkCreation
-	if errors.As(err, &berr) {
-		return berr.Err
-	}
-	return err
+	return unwrapBulkCreateError(createTasks(s, t.ProjectID, []*Task{t}, a, updateAssignees, setBucket, false))
 }
 
 // CreateTasksForImport preserves preset indexes across the whole imported batch.
 func CreateTasksForImport(s *xorm.Session, projectID int64, tasks []*Task, a web.Auth) error {
-	err := createTasks(s, projectID, tasks, a, true, true, true)
-	var batchErr ErrInvalidTaskInBulkCreation
-	if errors.As(err, &batchErr) {
-		return batchErr.Err
+	return unwrapBulkCreateError(createTasks(s, projectID, tasks, a, true, true, true))
+}
+
+// unwrapBulkCreateError returns the raw error type callers of a single logical create expect, not the batch wrapper.
+func unwrapBulkCreateError(err error) error {
+	var berr ErrInvalidTaskInBulkCreation
+	if errors.As(err, &berr) {
+		return berr.Err
 	}
 	return err
 }
