@@ -86,7 +86,7 @@ func DoReadOne(ctx context.Context, obj CObject, a web.Auth) (maxPermission int,
 		_ = s.Rollback()
 		events.CleanupPending(s)
 		log.Warningf("Tried to read while not having the permissions for it (User: %v)", a.GetID())
-		return 0, ErrGenericForbidden{Message: "You don't have the permission to see this"}
+		return 0, ErrReadForbidden()
 	}
 
 	if err := obj.ReadOne(s, a); err != nil {

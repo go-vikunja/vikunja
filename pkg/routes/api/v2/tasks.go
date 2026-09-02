@@ -207,7 +207,7 @@ func tasksReadByIndex(ctx context.Context, in *struct {
 		return nil, translateDomainError(err)
 	}
 	if !canReadProject {
-		return nil, errReadForbidden()
+		return nil, errReadForbidden(a)
 	}
 
 	taskID, err := models.GetTaskIDByIndexAlias(s, projectID, in.Index)
@@ -221,7 +221,7 @@ func tasksReadByIndex(ctx context.Context, in *struct {
 		return nil, translateDomainError(err)
 	}
 	if !canRead {
-		return nil, errReadForbidden()
+		return nil, errReadForbidden(a)
 	}
 
 	location := &url.URL{

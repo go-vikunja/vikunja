@@ -88,9 +88,10 @@ func translateDomainError(err error) error {
 	return err
 }
 
-// Same 403 body handler.DoReadOne produces, so hand-rolled read checks match the CRUD path.
-func errReadForbidden() error {
-	return translateDomainError(handler.ErrGenericForbidden{Message: "You don't have the permission to see this"})
+// Same 403 body and denial log handler.DoReadOne produces, so hand-rolled read checks match the CRUD path.
+func errReadForbidden(a web.Auth) error {
+	log.Warningf("Tried to read while not having the permissions for it (User: %v)", a.GetID())
+	return translateDomainError(handler.ErrReadForbidden())
 }
 
 // invalidFieldDetails turns ValidationHTTPError's invalid_fields into RFC 9457
