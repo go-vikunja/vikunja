@@ -17,10 +17,12 @@
 package db
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -48,6 +50,8 @@ var (
 	// and can be used for full text search.
 	paradedbInstalled bool
 )
+
+var postgresConnectionCredentials = regexp.MustCompile(`(?i)(postgres(?:ql)?://)[^@\s"]+@`)
 
 // DatabasePathMemory is the database.path value selecting an ephemeral database.
 const DatabasePathMemory = "memory"
@@ -98,7 +102,11 @@ func CreateDBEngine() (engine *xorm.Engine, err error) {
 	case "postgres":
 		engine, err = initPostgresEngine()
 		if err != nil {
-			return
+			return nil, sanitizePostgresConnectionError(
+				err,
+				config.DatabaseUser.GetString(),
+				config.DatabasePassword.GetString(),
+			)
 		}
 	case "sqlite":
 		// Otherwise use sqlite
@@ -123,6 +131,13 @@ func CreateDBEngine() (engine *xorm.Engine, err error) {
 	// xorm connects lazily, so this is where an unreachable database first surfaces. Without it
 	// the first real query reports it instead, which reads as a schema or extension bug (#3287).
 	if err = engine.Ping(); err != nil {
+		if config.DatabaseType.GetString() == "postgres" {
+			err = sanitizePostgresConnectionError(
+				err,
+				config.DatabaseUser.GetString(),
+				config.DatabasePassword.GetString(),
+			)
+		}
 		return nil, err
 	}
 
@@ -176,6 +191,27 @@ func parsePostgreSQLHostPort(info string) (string, string) {
 		host = info
 	}
 	return host, port
+}
+
+func sanitizePostgresConnectionError(err error, user, password string) error {
+	if err == nil {
+		return nil
+	}
+
+	message := err.Error()
+	if user != "" || password != "" {
+		userInfoCandidates := []string{
+			user + ":" + password + "@",
+			url.PathEscape(user) + ":" + url.PathEscape(password) + "@",
+			url.QueryEscape(user) + ":" + url.QueryEscape(password) + "@",
+		}
+		for _, userInfo := range userInfoCandidates {
+			message = strings.ReplaceAll(message, userInfo, "<redacted>@")
+		}
+	}
+	message = postgresConnectionCredentials.ReplaceAllString(message, `${1}<redacted>@`)
+
+	return errors.New(message)
 }
 
 // Copied and adopted from https://github.com/go-gitea/gitea/blob/f337c32e868381c6d2d948221aca0c59f8420c13/modules/setting/database.go#L176-L186
