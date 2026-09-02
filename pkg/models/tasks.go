@@ -1284,8 +1284,7 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 //nolint:gocyclo
 func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (err error) {
 
-	// The row lock serializes concurrent updates of the same task: without it two
-	// movers both read the pre-move project and the loser records a stale alias.
+	// Row lock: without it two concurrent movers both read the pre-move project and one records a stale alias.
 	ot, err := GetTaskByIDSimple(lockingSession(s), t.ID)
 	if err != nil {
 		return

@@ -54,8 +54,7 @@ func (e ErrGenericForbidden) HTTPError() web.HTTPError {
 	return web.HTTPError{HTTPCode: http.StatusForbidden, Message: msg}
 }
 
-// ErrReadForbidden is the denial DoReadOne returns; shared so hand-rolled
-// read checks (e.g. v2's by-index redirect) produce an identical body.
+// Shared with hand-rolled read checks (v2 by-index redirect) so denials have one body.
 func ErrReadForbidden() ErrGenericForbidden {
 	return ErrGenericForbidden{Message: "You don't have the permission to see this"}
 }
