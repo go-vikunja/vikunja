@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
@@ -39,6 +40,7 @@ import (
 	"github.com/jinzhu/copier"
 	"xorm.io/builder"
 	"xorm.io/xorm"
+	"xorm.io/xorm/schemas"
 )
 
 type TaskRepeatMode int
@@ -375,6 +377,14 @@ func getTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, opts 
 	}
 
 	return tasks, resultCount, totalItems, err
+}
+
+// lockingSession adds a row lock to the next read. xorm rejects FOR UPDATE on SQLite, which serializes writers anyway.
+func lockingSession(s *xorm.Session) *xorm.Session {
+	if dbType := db.Type(); dbType == schemas.MYSQL || dbType == schemas.POSTGRES {
+		return s.ForUpdate()
+	}
+	return s
 }
 
 // GetTaskByIDSimple returns a raw task without extra data by the task ID
@@ -1274,8 +1284,9 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 //nolint:gocyclo
 func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (err error) {
 
-	// Check if the task exists and get the old values
-	ot, err := GetTaskByIDSimple(s, t.ID)
+	// The row lock serializes concurrent updates of the same task: without it two
+	// movers both read the pre-move project and the loser records a stale alias.
+	ot, err := GetTaskByIDSimple(lockingSession(s), t.ID)
 	if err != nil {
 		return
 	}
@@ -1384,11 +1395,20 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 
 	// If the task is being moved between projects, make sure to move the bucket + index as well
 	if t.ProjectID != 0 && ot.ProjectID != t.ProjectID {
-		_, err = s.Insert(&TaskIndexAlias{
-			ProjectID: ot.ProjectID,
-			Index:     ot.Index,
-			TaskID:    ot.ID,
-		})
+		// Another task may already hold this retired address; the latest holder wins.
+		alias := &TaskIndexAlias{ProjectID: ot.ProjectID, Index: ot.Index}
+		has, err := s.Get(alias)
+		if err != nil {
+			return err
+		}
+		switch {
+		case !has:
+			_, err = s.Insert(&TaskIndexAlias{ProjectID: ot.ProjectID, Index: ot.Index, TaskID: ot.ID})
+		case alias.TaskID != ot.ID:
+			_, err = s.Where("project_id = ? AND `index` = ?", ot.ProjectID, ot.Index).
+				Cols("task_id").
+				Update(&TaskIndexAlias{TaskID: ot.ID})
+		}
 		if err != nil {
 			return err
 		}

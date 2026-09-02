@@ -273,7 +273,7 @@ func TestTaskIndexAliases(t *testing.T) {
 		assert.Equal(t, &TaskIndexAlias{ProjectID: 2, Index: 3, TaskID: 12}, aliases[1])
 	})
 
-	t.Run("alias conflict aborts the move", func(t *testing.T) {
+	t.Run("alias records the latest holder", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
@@ -281,9 +281,13 @@ func TestTaskIndexAliases(t *testing.T) {
 		_, err := s.Insert(&TaskIndexAlias{ProjectID: 1, Index: 12, TaskID: 1})
 		require.NoError(t, err)
 
-		// Postgres aborts the whole transaction on the unique violation, so no state can be read back here.
-		err = (&Task{ID: 12, ProjectID: 2}).Update(s, &user.User{ID: 1})
-		require.True(t, db.IsUniqueConstraintError(err, "task_index_aliases"), "expected an alias unique constraint violation, got %v", err)
+		require.NoError(t, (&Task{ID: 12, ProjectID: 2}).Update(s, &user.User{ID: 1}))
+
+		alias := &TaskIndexAlias{}
+		has, err := s.Where("project_id = ? AND `index` = ?", 1, 12).Get(alias)
+		require.NoError(t, err)
+		require.True(t, has)
+		assert.Equal(t, int64(12), alias.TaskID)
 	})
 
 	t.Run("soft deletion retains aliases and counters", func(t *testing.T) {
