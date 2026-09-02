@@ -17,6 +17,7 @@
 package db
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -39,4 +40,25 @@ func TestGetPostgreSQLConnectionString(t *testing.T) {
 		connStr := getPostgreSQLConnectionString("/var/run/postgresql", "vikunja", "secret", "vikunja", "public", "disable", "", "", "")
 		assert.Equal(t, "postgres://vikunja:secret@:5432/vikunja?sslmode=disable&sslcert=&sslkey=&sslrootcert=&host=/var/run/postgresql&search_path=%22public%22", connStr)
 	})
+}
+
+func TestSanitizePostgresConnectionError(t *testing.T) {
+	err := errors.New(`parse "postgres://vikunja:secret@invalid host/vikunja": invalid IP-literal`)
+
+	sanitized := sanitizePostgresConnectionError(err, "vikunja", "secret")
+
+	assert.NotContains(t, sanitized.Error(), "vikunja:secret")
+	assert.NotContains(t, sanitized.Error(), "secret")
+	assert.Contains(t, sanitized.Error(), "postgres://<redacted>@")
+	assert.Contains(t, sanitized.Error(), "invalid IP-literal")
+}
+
+func TestSanitizePostgresConnectionErrorWithShortPassword(t *testing.T) {
+	err := errors.New(`parse "postgres://postgres:x@[object Object]:5432/railway": invalid IP-literal`)
+
+	sanitized := sanitizePostgresConnectionError(err, "postgres", "x")
+
+	assert.NotContains(t, sanitized.Error(), "postgres:x@")
+	assert.Contains(t, sanitized.Error(), "postgres://<redacted>@")
+	assert.Contains(t, sanitized.Error(), "invalid IP-literal")
 }
