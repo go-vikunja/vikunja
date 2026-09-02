@@ -1038,8 +1038,6 @@ ul[data-type='taskList'] {
 	padding: 0;
 	margin-inline-start: 0;
 
-	// Only the item's own content, never the nested list inside it: text-decoration propagates
-	// to descendants and can't be undone by a child, so a nested item would look checked too.
 	li[data-checked='true'] > div > :not(ul, ol) {
 		color: var(--grey-500);
 		text-decoration: line-through;
