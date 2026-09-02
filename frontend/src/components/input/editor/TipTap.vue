@@ -1038,7 +1038,7 @@ ul[data-type='taskList'] {
 	padding: 0;
 	margin-inline-start: 0;
 
-	li[data-checked='true'] {
+	li[data-checked='true'] > div > :not(ul, ol) {
 		color: var(--grey-500);
 		text-decoration: line-through;
 	}
