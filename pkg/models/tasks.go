@@ -20,6 +20,7 @@ import (
 	"errors"
 	"math"
 	"regexp"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -1117,8 +1118,10 @@ func createTasks(s *xorm.Session, projectID int64, tasks []*Task, a web.Auth, up
 		}
 	}
 
-	if len(taskBuckets) > 0 {
-		_, err = s.Insert(&taskBuckets)
+	// Keep statements well below the parameter limits of all supported databases.
+	const taskBucketBatchSize = 100
+	for chunk := range slices.Chunk(taskBuckets, taskBucketBatchSize) {
+		_, err = s.Insert(chunk)
 		if err != nil {
 			return
 		}
