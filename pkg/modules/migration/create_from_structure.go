@@ -448,21 +448,18 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 
 	seedMissingTaskPositions(tasks)
 
-	tasksByOldID := make(map[int64]*models.Task, len(tasks))
 	type initialTask struct {
 		task     *models.Task
 		comments []*models.TaskComment
-		oldID    int64
 		bucketID int64
 	}
 	initialTasks := make([]initialTask, 0, len(tasks))
-	// Only related-task references are deduplicated by old id; the first queued struct wins.
+	// Duplicate old ids resolve to the first queued struct.
 	canonicalByOldID := make(map[int64]*models.Task, len(tasks))
 	queue := func(task *models.Task, comments []*models.TaskComment) {
 		initialTasks = append(initialTasks, initialTask{
 			task:     task,
 			comments: comments,
-			oldID:    task.ID,
 			bucketID: task.BucketID,
 		})
 		if task.ID != 0 {
@@ -479,8 +476,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 	}
 	for i := 0; i < len(initialTasks); i++ {
 		for kind, relatedTasks := range initialTasks[i].task.RelatedTasks {
-			// Reusing the backing array is safe, we never write past the read position.
-			kept := relatedTasks[:0]
+			kept := make([]*models.Task, 0, len(relatedTasks))
 			for _, related := range relatedTasks {
 				if related == nil {
 					continue
@@ -510,14 +506,6 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 	err = models.CreateTasksForImport(s, project.ID, tasksToCreate, user)
 	if err != nil {
 		return err
-	}
-	for _, state := range initialTasks {
-		if state.oldID == 0 {
-			continue
-		}
-		if _, exists := tasksByOldID[state.oldID]; !exists {
-			tasksByOldID[state.oldID] = state.task
-		}
 	}
 
 	for _, state := range initialTasks {
@@ -697,17 +685,17 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		newPositions := []*models.TaskPosition{}
 		positionTaskIDs := make([]int64, 0, len(project.Positions))
 		for _, pos := range project.Positions {
-			_, hasTask := tasksByOldID[pos.TaskID]
+			_, hasTask := canonicalByOldID[pos.TaskID]
 			_, hasView := viewsByOldIDs[pos.ProjectViewID]
 			if !hasTask || !hasView {
 				continue
 			}
 			newPositions = append(newPositions, &models.TaskPosition{
-				TaskID:        tasksByOldID[pos.TaskID].ID,
+				TaskID:        canonicalByOldID[pos.TaskID].ID,
 				ProjectViewID: viewsByOldIDs[pos.ProjectViewID].ID,
 				Position:      pos.Position,
 			})
-			positionTaskIDs = append(positionTaskIDs, tasksByOldID[pos.TaskID].ID)
+			positionTaskIDs = append(positionTaskIDs, canonicalByOldID[pos.TaskID].ID)
 		}
 
 		if len(newPositions) > 0 {
@@ -724,17 +712,17 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		newTaskBuckets := make([]*models.TaskBucket, 0, len(project.TaskBuckets))
 		bucketTaskIDs := make([]int64, 0, len(project.TaskBuckets))
 		for _, tb := range project.TaskBuckets {
-			_, hasTask := tasksByOldID[tb.TaskID]
+			_, hasTask := canonicalByOldID[tb.TaskID]
 			_, hasBucket := bucketsByOldID[tb.BucketID]
 			if !hasTask || !hasBucket {
 				continue
 			}
 			newTaskBuckets = append(newTaskBuckets, &models.TaskBucket{
-				TaskID:        tasksByOldID[tb.TaskID].ID,
+				TaskID:        canonicalByOldID[tb.TaskID].ID,
 				BucketID:      bucketsByOldID[tb.BucketID].ID,
 				ProjectViewID: bucketsByOldID[tb.BucketID].ProjectViewID,
 			})
-			bucketTaskIDs = append(bucketTaskIDs, tasksByOldID[tb.TaskID].ID)
+			bucketTaskIDs = append(bucketTaskIDs, canonicalByOldID[tb.TaskID].ID)
 		}
 
 		if len(newTaskBuckets) > 0 {
