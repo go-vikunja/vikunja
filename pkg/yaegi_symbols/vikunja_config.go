@@ -141,7 +141,6 @@ func init() {
 		"OutgoingRequestsTimeoutSeconds":             reflect.ValueOf(config.OutgoingRequestsTimeoutSeconds),
 		"PluginsDir":                                 reflect.ValueOf(config.PluginsDir),
 		"PluginsEnabled":                             reflect.ValueOf(config.PluginsEnabled),
-		"PluginsLoader":                              reflect.ValueOf(config.PluginsLoader),
 		"RateLimitBasicAuthLimit":                    reflect.ValueOf(config.RateLimitBasicAuthLimit),
 		"RateLimitEnabled":                           reflect.ValueOf(config.RateLimitEnabled),
 		"RateLimitKind":                              reflect.ValueOf(config.RateLimitKind),
