@@ -19,7 +19,6 @@ package webtests
 import (
 	"encoding/json"
 	"fmt"
-	"math"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -173,18 +172,20 @@ func TestHumaTask_Create(t *testing.T) {
 		assert.NotContains(t, rec.Body.String(), `"project_id":7`)
 	})
 	t.Run("Read-only index is ignored", func(t *testing.T) {
+		// Reload so project 1's counter (fixture: 34) is deterministic despite earlier subtests advancing it.
+		require.NoError(t, db.LoadFixtures())
+
 		rec := create("1", `{"title":"client index","index":9223372036854775807}`)
 		require.Equal(t, http.StatusCreated, rec.Code, "body: %s", rec.Body.String())
 		first := &models.Task{}
 		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), first))
-		assert.Positive(t, first.Index)
-		assert.NotEqual(t, int64(math.MaxInt64), first.Index)
+		assert.Equal(t, int64(35), first.Index)
 
 		rec = create("1", `{"title":"next index"}`)
 		require.Equal(t, http.StatusCreated, rec.Code, "body: %s", rec.Body.String())
 		next := &models.Task{}
 		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), next))
-		assert.Equal(t, first.Index+1, next.Index)
+		assert.Equal(t, int64(36), next.Index)
 	})
 	t.Run("Nonexisting project", func(t *testing.T) {
 		rec := create("9999", `{"title":"x"}`)
