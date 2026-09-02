@@ -17,15 +17,15 @@
 					:project-id="projectId"
 					@update:modelValue="loadTasks()"
 				/>
-				<button
+				<XButton
 					v-if="hasTasksWithSubtasks"
+					variant="secondary"
+					icon="chevron-down"
 					class="collapse-all-btn"
 					:class="{ 'is-collapsed': allSubtasksCollapsed }"
 					:title="allSubtasksCollapsed ? $t('task.expandAllSubtasks') : $t('task.collapseAllSubtasks')"
 					@click="toggleAllSubtasks"
-				>
-					<Icon icon="chevron-down" />
-				</button>
+				/>
 			</div>
 		</template>
 
@@ -386,31 +386,12 @@ onBeforeUnmount(() => {
 }
 
 .collapse-all-btn {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	inline-size: 32px;
-	block-size: 32px;
-	border: 1px solid var(--grey-300);
-	background: var(--white);
-	color: var(--grey-500);
-	cursor: pointer;
-	border-radius: $radius;
-	transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
-
 	:deep(svg) {
 		transition: transform 0.2s ease;
 	}
 
-	&:hover {
-		color: var(--grey-700);
-		background: var(--grey-100);
-		border-color: var(--grey-400);
-	}
-
 	&.is-collapsed {
 		color: var(--primary);
-		border-color: var(--primary);
 
 		:deep(svg) {
 			transform: rotate(-90deg);
