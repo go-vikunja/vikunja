@@ -627,6 +627,7 @@
 					"endDate": "Das Enddatum der Aufgabe",
 					"doneAt": "Datum und Uhrzeit, an dem die Aufgabe als erledigt markiert wurde",
 					"assignees": "Die der Aufgabe Zugewiesenen",
+					"createdBy": "Der:die Benutzer:in, der die Aufgabe erstellt hat (abgeglichen mit dem Nutzernamen)",
 					"labels": "Die der Aufgabe zugeordneten Labels",
 					"project": "Das Projekt, zu dem die Aufgabe gehört (nur verfügbar für gespeicherte Filter, nicht auf Projektebene)",
 					"reminders": "Die Erinnerungen einer Aufgabe als Datumsfeld, gibt alle Aufgaben mit mindestens einer Erinnerung zurück, die dem Filter entspricht",
@@ -657,6 +658,7 @@
 					"dueDatePast": "Findet Aufgaben mit einem Fälligkeitsdatum in der Vergangenheit",
 					"undoneHighPriority": "Findet Aufgaben, die nicht erledigt sind und Priorität Level mindestens 3 haben",
 					"assigneesIn": "Findet Aufgaben, die entweder \"user1\" oder \"user2\" zugewiesen sind",
+					"createdByEqual": "Findet Aufgaben, die von \"user1\" erstellt wurden",
 					"priorityOneOrTwoPastDue": "Findet Aufgaben mit Priorität Level 1 oder 2 und einem Fälligkeitsdatum in der Vergangenheit"
 				}
 			}
