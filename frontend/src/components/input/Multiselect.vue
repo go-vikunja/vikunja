@@ -678,7 +678,7 @@ function focus() {
 	> span:first-child {
 		overflow: hidden;
 		min-inline-size: 0;
-		flex: 1;
+		flex: 1 1 auto;
 	}
 
 	&:focus,
@@ -712,6 +712,12 @@ function focus() {
 
 	&.is-always-visible {
 		color: var(--grey-500);
+	}
+}
+
+@container (inline-size < 250px) {
+	.hint-text {
+		display: none;
 	}
 }
 

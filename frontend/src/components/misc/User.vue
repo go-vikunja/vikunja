@@ -71,6 +71,7 @@ watch(() => [props.user, props.avatarSize], loadAvatar, { immediate: true })
 .avatar-wrapper {
 	position: relative;
 	display: inline-flex;
+	flex-shrink: 0;
 	margin-inline-end: .5rem;
 }
 
