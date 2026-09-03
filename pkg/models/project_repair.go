@@ -29,8 +29,7 @@ type RepairOrphanedProjectsResult struct {
 }
 
 // RepairOrphanedProjects finds projects whose parent_project_id references a
-// project that no longer exists and sets their parent_project_id to 0,
-// making them top-level projects.
+// project that no longer exists and makes them top-level projects.
 // If dryRun is true, it reports what would be fixed without making changes.
 func RepairOrphanedProjects(s *xorm.Session, dryRun bool) (*RepairOrphanedProjectsResult, error) {
 	result := &RepairOrphanedProjectsResult{}
@@ -59,7 +58,8 @@ func RepairOrphanedProjects(s *xorm.Session, dryRun bool) (*RepairOrphanedProjec
 			p.ID, p.Title, p.parentID())
 		_, err = s.Where("id = ?", p.ID).
 			Cols("parent_project_id").
-			Update(&Project{ParentProjectID: Ptr(int64(0))})
+			Nullable("parent_project_id").
+			Update(&Project{ParentProjectID: noParentProjectID()})
 		if err != nil {
 			return result, err
 		}

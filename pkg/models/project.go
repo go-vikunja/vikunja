@@ -135,8 +135,8 @@ func noParentProjectID() *int64 {
 	return Ptr(int64(0))
 }
 
-// AfterLoad normalizes a NULL parent_project_id — the column is nullable and rows
-// predating it were never backfilled.
+// AfterLoad normalizes a NULL parent_project_id — top-level projects are stored as
+// NULL so the index on the column only covers real children.
 func (p *Project) AfterLoad() {
 	if p.ParentProjectID == nil {
 		p.ParentProjectID = noParentProjectID()
@@ -957,13 +957,13 @@ func CreateProject(s *xorm.Session, project *Project, auth web.Auth, createBackl
 
 	project.HexColor = utils.NormalizeHex(project.HexColor)
 
-	// Persist top-level projects with an explicit 0 (not NULL) so the stored
-	// value and the serialized parent_project_id stay a plain number.
 	if project.ParentProjectID == nil {
-		project.ParentProjectID = Ptr(int64(0))
+		project.ParentProjectID = noParentProjectID()
 	}
 
-	_, err = s.Insert(project)
+	// Nullable maps the 0 sentinel to a stored NULL, keeping the index on
+	// parent_project_id to real children; the struct keeps the plain 0 the API returns.
+	_, err = s.Nullable("parent_project_id").Insert(project)
 	if err != nil {
 		return
 	}
@@ -981,7 +981,7 @@ func CreateProject(s *xorm.Session, project *Project, auth web.Auth, createBackl
 	}
 
 	project.Position = calculateDefaultPosition(project.ID, project.Position)
-	_, err = s.Where("id = ?", project.ID).Update(project)
+	_, err = s.Where("id = ?", project.ID).Nullable("parent_project_id").Update(project)
 	if err != nil {
 		return
 	}
@@ -1193,6 +1193,7 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 	_, err = s.
 		ID(project.ID).
 		Cols(colsToUpdate...).
+		Nullable("parent_project_id").
 		Update(project)
 	if err != nil {
 		return err

@@ -53,7 +53,7 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 				"id":                project.ID,
 				"title":             project.Title,
 				"description":       project.Description,
-				"parent_project_id": 0,
+				"parent_project_id": nil,
 			}, false)
 			db.AssertExists(t, "project_views", map[string]interface{}{
 				"project_id": project.ID,
@@ -531,7 +531,7 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 			require.NoError(t, err)
 			require.NoError(t, s.Commit())
 
-			db.AssertExists(t, "projects", map[string]interface{}{"id": 40, "parent_project_id": 0, "is_archived": true}, false)
+			db.AssertExists(t, "projects", map[string]interface{}{"id": 40, "parent_project_id": nil, "is_archived": true}, false)
 		})
 		t.Run("unarchive child under archived parent is rejected", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
@@ -589,7 +589,7 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 			require.NoError(t, err)
 			require.NoError(t, s.Commit())
 
-			db.AssertExists(t, "projects", map[string]interface{}{"id": 21, "is_archived": false, "parent_project_id": 0}, false)
+			db.AssertExists(t, "projects", map[string]interface{}{"id": 21, "is_archived": false, "parent_project_id": nil}, false)
 		})
 		t.Run("unarchive child and move under unarchived parent", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
