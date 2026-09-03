@@ -7,7 +7,7 @@
 		:primary-disabled="Boolean(loadError)"
 		:tertiary="project.max_permission === PERMISSIONS.ADMIN ? $t('misc.delete') : undefined"
 		@primary="save"
-		@tertiary="$router.push({ name: 'project.settings.delete', params: { id: projectId } })"
+		@tertiary="$router.push({ name: 'project.settings.delete', params: { projectId } })"
 	>
 		<ErrorMessage v-if="loadError" />
 		<template v-else>
