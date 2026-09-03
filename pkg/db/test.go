@@ -91,7 +91,7 @@ func AssertExists(t *testing.T, table string, values map[string]interface{}, cus
 		sql = sql[:len(sql)-5]
 		exists, err = x.SQL(sql).Get(&v)
 	} else {
-		exists, err = x.Table(table).Where(values).Get(&v)
+		exists, err = x.Table(table).Where(condFromValues(values)).Get(&v)
 	}
 	require.NoError(t, err, "Failed to assert entries exist in db")
 	if !exists {
@@ -106,10 +106,25 @@ func AssertExists(t *testing.T, table string, values map[string]interface{}, cus
 	}
 }
 
+// A nil value asserts the column is NULL — builder.Eq would render col = NULL, which never matches.
+func condFromValues(values map[string]interface{}) builder.Cond {
+	cond := builder.NewCond()
+	for col, val := range values {
+		// builder does not quote identifiers, so reserved words like "limit" need it here.
+		quoted := x.Quote(col)
+		if val == nil {
+			cond = cond.And(builder.IsNull{quoted})
+			continue
+		}
+		cond = cond.And(builder.Eq{quoted: val})
+	}
+	return cond
+}
+
 // AssertMissing checks and asserts the nonexistence of certain entries in the db
 func AssertMissing(t *testing.T, table string, values map[string]interface{}) {
 	all := []map[string]interface{}{}
-	err := x.Table(table).Where(values).Find(&all)
+	err := x.Table(table).Where(condFromValues(values)).Find(&all)
 	require.NoErrorf(t, err, "Failed to assert entries don't exist in db, error was: %s", err)
 
 	if len(all) > 0 {
