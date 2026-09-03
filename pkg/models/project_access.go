@@ -46,6 +46,8 @@ func (pa *projectAccess) permission(projectID int64) (Permission, bool) {
 // can raise an inherited permission, never lower it. Binds the user id three times.
 // tree uses UNION, not UNION ALL: deduplicating (id, permission) terminates on a
 // parent_project_id cycle and caps the row count at three per project.
+// The recursive step's join implies parent_project_id IS NOT NULL, which is why root
+// projects store NULL: the partial index then covers real children only.
 const projectAccessCTE = `
 WITH RECURSIVE grants (project_id, permission) AS (
     SELECT project_id, MAX(permission)
