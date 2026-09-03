@@ -675,9 +675,6 @@ function focus() {
 	box-sizing: border-box;
 	position: relative;
 
-	// flex-basis must stay `auto`: with a `0` basis flexbox gives this item no
-	// share of negative free space, so a narrow row collapses it to zero width
-	// and the .hint-text sibling claims every pixel (#3709).
 	> span:first-child {
 		overflow: hidden;
 		min-inline-size: 0;
@@ -718,8 +715,6 @@ function focus() {
 	}
 }
 
-// The hint only becomes visible on hover, so in a cramped multiselect it is an
-// invisible column stealing the width the option label needs (#3709).
 @container (inline-size < 250px) {
 	.hint-text {
 		display: none;
