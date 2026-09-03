@@ -71,8 +71,6 @@ watch(() => [props.user, props.avatarSize], loadAvatar, { immediate: true })
 .avatar-wrapper {
 	position: relative;
 	display: inline-flex;
-	// Bulma's `img { max-width: 100% }` reset means a shrunk wrapper drags the
-	// avatar down with it, all the way to zero in a cramped flex row (#3709).
 	flex-shrink: 0;
 	margin-inline-end: .5rem;
 }
