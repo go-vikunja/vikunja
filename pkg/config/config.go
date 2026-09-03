@@ -120,7 +120,6 @@ const (
 	DatabaseSslRootCert           Key = `database.sslrootcert`
 	DatabaseTLS                   Key = `database.tls`
 	DatabaseSchema                Key = `database.schema`
-	DatabaseQueryExecMode         Key = `database.queryexecmode`
 
 	MailerEnabled       Key = `mailer.enabled`
 	MailerHost          Key = `mailer.host`
@@ -427,7 +426,6 @@ func initDefaultConfig() {
 	DatabaseSslRootCert.setDefault("")
 	DatabaseTLS.setDefault("false")
 	DatabaseSchema.setDefault("public")
-	DatabaseQueryExecMode.setDefault("cache_statement")
 
 	// Mailer
 	MailerEnabled.setDefault(false)

@@ -215,7 +215,7 @@ func sanitizePostgresConnectionError(err error, user, password string) error {
 }
 
 // Copied and adopted from https://github.com/go-gitea/gitea/blob/f337c32e868381c6d2d948221aca0c59f8420c13/modules/setting/database.go#L176-L186
-func getPostgreSQLConnectionString(dbHost, dbUser, dbPasswd, dbName, dbSchema, dbSslMode, dbSslCert, dbSslKey, dbSslRootCert, queryExecMode string) (connStr string) {
+func getPostgreSQLConnectionString(dbHost, dbUser, dbPasswd, dbName, dbSchema, dbSslMode, dbSslCert, dbSslKey, dbSslRootCert string) (connStr string) {
 	dbParam := "?"
 	if strings.Contains(dbName, dbParam) {
 		dbParam = "&"
@@ -236,9 +236,6 @@ func getPostgreSQLConnectionString(dbHost, dbUser, dbPasswd, dbName, dbSchema, d
 			searchPath += ",public"
 		}
 		connStr += "&search_path=" + url.QueryEscape(searchPath)
-	}
-	if queryExecMode != "" {
-		connStr += "&default_query_exec_mode=" + url.QueryEscape(queryExecMode)
 	}
 	return connStr
 }
@@ -262,7 +259,6 @@ func initPostgresEngine() (engine *xorm.Engine, err error) {
 		config.DatabaseSslCert.GetString(),
 		config.DatabaseSslKey.GetString(),
 		config.DatabaseSslRootCert.GetString(),
-		config.DatabaseQueryExecMode.GetString(),
 	)
 
 	engine, err = xorm.NewEngine("pgx", connStr)
