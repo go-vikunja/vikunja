@@ -224,6 +224,18 @@ func NewLinkShareJWTAuthtoken(share *models.LinkSharing) (token string, err erro
 	return t.SignedString([]byte(config.ServiceSecret.GetString()))
 }
 
+// HasAuthInContext reports whether the request carries credentials at all.
+// Unauthenticated routes (login, token refresh, /info, websocket) pass through the
+// same middleware stack, so middleware uses this to skip auth-dependent work
+// instead of treating a missing token as an error worth logging.
+func HasAuthInContext(c *echo.Context) bool {
+	if c.Get("api_token") != nil {
+		return true
+	}
+	_, is := c.Get("user").(*jwt.Token)
+	return is
+}
+
 // GetAuthFromClaims returns a web.Auth object from jwt claims
 func GetAuthFromClaims(c *echo.Context) (a web.Auth, err error) {
 	// check if we have a token in context and use it if that's the case

@@ -59,11 +59,11 @@ func setupMetricsMiddleware(a *echo.Group) {
 
 	a.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c *echo.Context) error {
-
-			// Update currently active users
-			if err := updateActiveUsersFromContext(c); err != nil {
-				log.Error(err)
-				return next(c)
+			// Unauthenticated routes share this middleware and have no user to count.
+			if auth2.HasAuthInContext(c) {
+				if err := updateActiveUsersFromContext(c); err != nil {
+					log.Error(err)
+				}
 			}
 			return next(c)
 		}
