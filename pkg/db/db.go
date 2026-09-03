@@ -39,8 +39,8 @@ import (
 	"xorm.io/xorm/schemas"
 
 	_ "github.com/go-sql-driver/mysql" // Because.
-	"github.com/lib/pq"
-	_ "github.com/mattn/go-sqlite3" // Because.
+	_ "github.com/jackc/pgx/v5/stdlib" // Because.
+	_ "github.com/mattn/go-sqlite3"    // Because.
 )
 
 var (
@@ -215,7 +215,7 @@ func sanitizePostgresConnectionError(err error, user, password string) error {
 }
 
 // Copied and adopted from https://github.com/go-gitea/gitea/blob/f337c32e868381c6d2d948221aca0c59f8420c13/modules/setting/database.go#L176-L186
-func getPostgreSQLConnectionString(dbHost, dbUser, dbPasswd, dbName, dbSchema, dbSslMode, dbSslCert, dbSslKey, dbSslRootCert string) (connStr string) {
+func getPostgreSQLConnectionString(dbHost, dbUser, dbPasswd, dbName, dbSchema, dbSslMode, dbSslCert, dbSslKey, dbSslRootCert, queryExecMode string) (connStr string) {
 	dbParam := "?"
 	if strings.Contains(dbName, dbParam) {
 		dbParam = "&"
@@ -231,13 +231,24 @@ func getPostgreSQLConnectionString(dbHost, dbUser, dbPasswd, dbName, dbSchema, d
 	// Pin search_path so raw SQL resolves to the same schema as xorm-built statements (#3118).
 	// Quoting preserves case; public stays so extension operators (e.g. ParadeDB's |||) keep resolving.
 	if dbSchema != "" {
-		searchPath := pq.QuoteIdentifier(dbSchema)
+		searchPath := quoteIdentifier(dbSchema)
 		if dbSchema != "public" {
 			searchPath += ",public"
 		}
 		connStr += "&search_path=" + url.QueryEscape(searchPath)
 	}
+	if queryExecMode != "" {
+		connStr += "&default_query_exec_mode=" + url.QueryEscape(queryExecMode)
+	}
 	return connStr
+}
+
+// Copied from github.com/lib/pq so that pq is not needed just for this.
+func quoteIdentifier(name string) string {
+	if end := strings.IndexRune(name, 0); end > -1 {
+		name = name[:end]
+	}
+	return `"` + strings.ReplaceAll(name, `"`, `""`) + `"`
 }
 
 func initPostgresEngine() (engine *xorm.Engine, err error) {
@@ -251,9 +262,10 @@ func initPostgresEngine() (engine *xorm.Engine, err error) {
 		config.DatabaseSslCert.GetString(),
 		config.DatabaseSslKey.GetString(),
 		config.DatabaseSslRootCert.GetString(),
+		config.DatabaseQueryExecMode.GetString(),
 	)
 
-	engine, err = xorm.NewEngine("postgres", connStr)
+	engine, err = xorm.NewEngine("pgx", connStr)
 	if err != nil {
 		return
 	}

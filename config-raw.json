@@ -264,6 +264,11 @@
                     "comment": "Enable SSL/TLS for mysql connections. Options: false, true, skip-verify, preferred"
                 },
                 {
+                    "key": "queryexecmode",
+                    "default_value": "cache_statement",
+                    "comment": "How queries are sent to PostgreSQL. Only used with postgres. `cache_statement` reuses named prepared statements per connection so PostgreSQL does not re-plan every query. Set this to `exec` if you connect through a connection pooler in transaction pooling mode which does not support named prepared statements (PgBouncer older than 1.21). Other valid values are `cache_describe`, `describe_exec` and `simple_protocol`."
+                },
+                {
                     "key": "schema",
                     "default_value": "public",
                     "comment": "The PostgreSQL schema to use. Only used with postgres. If you have an existing Vikunja installation where the tables were created in a non-public schema (e.g. via the database user's search_path), you must set this to match that schema name. Vikunja pins the connection's search_path to this schema so that all statements resolve to it."
