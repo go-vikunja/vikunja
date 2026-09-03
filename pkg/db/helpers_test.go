@@ -44,7 +44,7 @@ func TestMultiFieldSearchSingleField(t *testing.T) {
 	require.NoError(t, err)
 
 	if isParadeDB() {
-		assert.Equal(t, "title ||| ?::pdb.fuzzy(1, t)", w.String())
+		assert.Equal(t, "title ||| ?::text::pdb.fuzzy(1, t)", w.String())
 		assert.Equal(t, []interface{}{"landing"}, w.Args())
 	} else {
 		assert.Contains(t, w.String(), "title")
@@ -65,7 +65,7 @@ func TestMultiFieldSearchMultiField(t *testing.T) {
 	require.NoError(t, err)
 
 	if isParadeDB() {
-		assert.Equal(t, "(title ||| ?::pdb.fuzzy(1, t)) OR (description ||| ?::pdb.fuzzy(1, t))", w.String())
+		assert.Equal(t, "(title ||| ?::text::pdb.fuzzy(1, t)) OR (description ||| ?::text::pdb.fuzzy(1, t))", w.String())
 		assert.Equal(t, []interface{}{"landing", "landing"}, w.Args())
 	} else {
 		assert.Contains(t, w.String(), "title")
@@ -87,7 +87,7 @@ func TestMultiFieldSearchWithTableAlias(t *testing.T) {
 	require.NoError(t, err)
 
 	if isParadeDB() {
-		assert.Equal(t, "tasks.title ||| ?::pdb.fuzzy(1, t)", w.String())
+		assert.Equal(t, "tasks.title ||| ?::text::pdb.fuzzy(1, t)", w.String())
 		assert.Equal(t, []interface{}{"test"}, w.Args())
 	} else {
 		assert.Contains(t, w.String(), "tasks.title")
@@ -108,7 +108,7 @@ func TestMultiFieldSearchMultiFieldWithTableAlias(t *testing.T) {
 	require.NoError(t, err)
 
 	if isParadeDB() {
-		assert.Equal(t, "(tasks.title ||| ?::pdb.fuzzy(1, t)) OR (tasks.description ||| ?::pdb.fuzzy(1, t))", w.String())
+		assert.Equal(t, "(tasks.title ||| ?::text::pdb.fuzzy(1, t)) OR (tasks.description ||| ?::text::pdb.fuzzy(1, t))", w.String())
 		assert.Equal(t, []interface{}{"test", "test"}, w.Args())
 	} else {
 		assert.Contains(t, w.String(), "tasks.title")
