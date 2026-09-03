@@ -7,7 +7,7 @@
 		:primary-disabled="Boolean(loadError) || loadingModel"
 		:tertiary="$t('misc.delete')"
 		@primary="save"
-		@tertiary="$router.push({ name: 'filter.settings.delete', params: { id: projectId } })"
+		@tertiary="$router.push({ name: 'filter.settings.delete', params: { projectId } })"
 	>
 		<ErrorMessage v-if="loadError" />
 		<form
