@@ -185,7 +185,7 @@ func TestFileStorageIntegration(t *testing.T) {
 		nonExistentFile := &File{ID: 999999}
 		err := nonExistentFile.LoadFileByID()
 		require.Error(t, err, "Loading non-existent file should error")
-		assert.True(t, os.IsNotExist(err), "Error should indicate file does not exist")
+		assert.True(t, IsErrFileDoesNotExist(err), "Error should be ErrFileDoesNotExist")
 
 		// Try to load metadata for non-existent file
 		s := db.NewSession()
