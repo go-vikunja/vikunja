@@ -21,6 +21,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"sync"
@@ -34,6 +36,7 @@ import (
 	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/user"
 
+	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"xorm.io/xorm"
@@ -713,4 +716,47 @@ func TestAuditUserDataExportRequested(t *testing.T) {
 	assert.Equal(t, audit.UserActor(42), entry.Actor)
 	assert.Equal(t, audit.UserTarget(42), entry.Target)
 	assert.Equal(t, audit.OutcomeSuccess, entry.Outcome)
+}
+
+func TestWebhookDeliveryListenerSkipsErrorReporting(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer ts.Close()
+
+	// httptest binds to loopback, which the SSRF-safe client blocks by default.
+	previousAllowNonRoutable := config.OutgoingRequestsAllowNonRoutableIPs.GetBool()
+	config.OutgoingRequestsAllowNonRoutableIPs.Set(true)
+	previousClient := webhookClient
+	webhookClient = nil
+	t.Cleanup(func() {
+		config.OutgoingRequestsAllowNonRoutableIPs.Set(previousAllowNonRoutable)
+		webhookClient = previousClient
+	})
+
+	s := db.NewSession()
+	webhook := &Webhook{
+		TargetURL:   ts.URL,
+		Events:      []string{"task.updated"},
+		ProjectID:   1,
+		CreatedByID: 1,
+	}
+	_, err := s.Insert(webhook)
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+	_ = s.Close()
+
+	payload, err := json.Marshal(&WebhookDeliveryEvent{
+		WebhookID: webhook.ID,
+		Payload:   &WebhookPayload{EventName: "task.updated"},
+	})
+	require.NoError(t, err)
+
+	msg := message.NewMessage("test", payload)
+	err = (&WebhookDeliveryListener{}).Handle(msg)
+
+	require.Error(t, err)
+	assert.Equal(t, "true", msg.Metadata.Get(events.MetadataSkipErrorReporting))
 }

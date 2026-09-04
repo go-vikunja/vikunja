@@ -20,6 +20,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -90,4 +91,19 @@ func TestDispatchPendingNoEvents(t *testing.T) {
 
 	// Verify no events were dispatched
 	assert.Equal(t, 0, CountDispatchedEvents("test.event"))
+}
+
+func TestShouldReportPoisonedMessage(t *testing.T) {
+	t.Run("no metadata", func(t *testing.T) {
+		assert.True(t, shouldReportPoisonedMessage(message.Metadata{}))
+	})
+	t.Run("unrelated metadata", func(t *testing.T) {
+		assert.True(t, shouldReportPoisonedMessage(message.Metadata{"reason_poisoned": "boom"}))
+	})
+	t.Run("flag set", func(t *testing.T) {
+		assert.False(t, shouldReportPoisonedMessage(message.Metadata{MetadataSkipErrorReporting: "true"}))
+	})
+	t.Run("flag set to something else", func(t *testing.T) {
+		assert.True(t, shouldReportPoisonedMessage(message.Metadata{MetadataSkipErrorReporting: "false"}))
+	})
 }
