@@ -40,7 +40,7 @@ export default async function setupSentry(app: App, router: Router) {
 
 
 		beforeSend(event, hint) {
-			if (shouldDropEvent(hint.originalException)) {
+			if (shouldDropEvent(hint.originalException, event)) {
 				return null
 			}
 

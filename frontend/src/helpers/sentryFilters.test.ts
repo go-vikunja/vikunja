@@ -3,21 +3,25 @@ import {AxiosError} from 'axios'
 
 import {shouldDropEvent} from './sentryFilters'
 
+// Object.assign instead of `new Error(msg, {cause})`: the vitest tsconfig
+// targets a lib without the two-argument Error constructor.
+function errorWithCause(message: string, cause: unknown): Error {
+	return Object.assign(new Error(message), {cause})
+}
+
 describe('shouldDropEvent', () => {
 	it('drops a plain AxiosError', () => {
 		expect(shouldDropEvent(new AxiosError('Request failed'))).toBe(true)
 	})
 
 	it('drops an error wrapping an AxiosError as cause', () => {
-		const wrapped = new Error('Error renewing token: ', {cause: new AxiosError('Request failed')})
-
-		expect(shouldDropEvent(wrapped)).toBe(true)
+		expect(shouldDropEvent(errorWithCause('Error renewing token: ', new AxiosError('Request failed')))).toBe(true)
 	})
 
 	it('drops an error with an AxiosError two levels deep', () => {
-		const inner = new Error('inner', {cause: new AxiosError('Request failed')})
+		const inner = errorWithCause('inner', new AxiosError('Request failed'))
 
-		expect(shouldDropEvent(new Error('outer', {cause: inner}))).toBe(true)
+		expect(shouldDropEvent(errorWithCause('outer', inner))).toBe(true)
 	})
 
 	it('drops an error-like object with code and message', () => {
@@ -29,7 +33,7 @@ describe('shouldDropEvent', () => {
 	})
 
 	it('keeps a plain error wrapping another plain error', () => {
-		expect(shouldDropEvent(new Error('outer', {cause: new Error('inner')}))).toBe(false)
+		expect(shouldDropEvent(errorWithCause('outer', new Error('inner')))).toBe(false)
 	})
 
 	it('keeps undefined', () => {
@@ -38,9 +42,34 @@ describe('shouldDropEvent', () => {
 
 	it('does not loop on a cause cycle', () => {
 		const a = new Error('a')
-		const b = new Error('b', {cause: a})
-		a.cause = b
+		const b = errorWithCause('b', a)
+		Object.assign(a, {cause: b})
 
 		expect(shouldDropEvent(a)).toBe(false)
+	})
+})
+
+describe('shouldDropEvent with chunk load errors', () => {
+	const messages = [
+		'Failed to fetch dynamically imported module: https://try.vikunja.io/assets/ProjectList-abc123.js',
+		'error loading dynamically imported module: https://try.vikunja.io/assets/ProjectList-abc123.js',
+		'Importing a module script failed.',
+		'Unable to preload CSS for /assets/ProjectList-abc123.css',
+	]
+
+	it.each(messages)('drops the exception %s', message => {
+		expect(shouldDropEvent(new Error(message))).toBe(true)
+	})
+
+	it.each(messages)('drops the event message %s', message => {
+		expect(shouldDropEvent(undefined, {message})).toBe(true)
+	})
+
+	it.each(messages)('drops the event exception value %s', message => {
+		expect(shouldDropEvent(undefined, {exception: {values: [{value: message}]}})).toBe(true)
+	})
+
+	it('keeps an unrelated event message', () => {
+		expect(shouldDropEvent(undefined, {message: 'something actually broke'})).toBe(false)
 	})
 })
