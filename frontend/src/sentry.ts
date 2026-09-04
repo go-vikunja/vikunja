@@ -1,6 +1,6 @@
 import type {App} from 'vue'
 import type {Router} from 'vue-router'
-import {AxiosError} from 'axios'
+import {shouldDropEvent} from './helpers/sentryFilters'
 import {VERSION} from './version.json'
 
 export default async function setupSentry(app: App, router: Router) {
@@ -40,10 +40,7 @@ export default async function setupSentry(app: App, router: Router) {
 
 
 		beforeSend(event, hint) {
-
-			if ((typeof hint.originalException?.code !== 'undefined' && 
-				typeof hint.originalException?.message !== 'undefined')
-			|| hint.originalException instanceof AxiosError) {
+			if (shouldDropEvent(hint.originalException)) {
 				return null
 			}
 
