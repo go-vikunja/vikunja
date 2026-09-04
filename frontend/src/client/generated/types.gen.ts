@@ -2231,6 +2231,7 @@ export type TaskCollection = {
      * If true, the result also includes tasks whose filtered field is null.
      */
     filter_include_nulls?: boolean;
+    include_subprojects?: boolean;
     /**
      * The order for each sort_by field, either asc or desc. Defaults to asc.
      */
@@ -7369,6 +7370,10 @@ export type ProjectTasksListData = {
          */
         filter_include_nulls?: boolean;
         /**
+         * If true, also returns tasks from all descendant subprojects the user can access. Ignored outside a concrete project, in kanban views and for link shares. A sort by position is ignored while this is set, as positions are scoped to a single view.
+         */
+        include_subprojects?: boolean;
+        /**
          * Fields to sort by (e.g. done, priority). Repeatable; pair positionally with order_by. The special value relevance sorts by search relevance (most relevant first, requires s; ignored when the database cannot score the query).
          */
         sort_by?: Array<string> | null;
@@ -8119,6 +8124,10 @@ export type ProjectViewBucketsTasksListData = {
          */
         filter_include_nulls?: boolean;
         /**
+         * If true, also returns tasks from all descendant subprojects the user can access. Ignored outside a concrete project, in kanban views and for link shares. A sort by position is ignored while this is set, as positions are scoped to a single view.
+         */
+        include_subprojects?: boolean;
+        /**
          * Fields to sort by (e.g. done, priority). Repeatable; pair positionally with order_by. The special value relevance sorts by search relevance (most relevant first, requires s; ignored when the database cannot score the query).
          */
         sort_by?: Array<string> | null;
@@ -8280,6 +8289,10 @@ export type ProjectViewTasksListData = {
          * If true, also include tasks whose filtered field is null.
          */
         filter_include_nulls?: boolean;
+        /**
+         * If true, also returns tasks from all descendant subprojects the user can access. Ignored outside a concrete project, in kanban views and for link shares. A sort by position is ignored while this is set, as positions are scoped to a single view.
+         */
+        include_subprojects?: boolean;
         /**
          * Fields to sort by (e.g. done, priority). Repeatable; pair positionally with order_by. The special value relevance sorts by search relevance (most relevant first, requires s; ignored when the database cannot score the query).
          */
@@ -8621,6 +8634,10 @@ export type TasksListData = {
          * If true, also include tasks whose filtered field is null.
          */
         filter_include_nulls?: boolean;
+        /**
+         * If true, also returns tasks from all descendant subprojects the user can access. Ignored outside a concrete project, in kanban views and for link shares. A sort by position is ignored while this is set, as positions are scoped to a single view.
+         */
+        include_subprojects?: boolean;
         /**
          * Fields to sort by (e.g. done, priority). Repeatable; pair positionally with order_by. The special value relevance sorts by search relevance (most relevant first, requires s; ignored when the database cannot score the query).
          */
