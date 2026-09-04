@@ -3,6 +3,16 @@ import {createPinia, setActivePinia} from 'pinia'
 import {nextTick, ref} from 'vue'
 import {Editor} from '@tiptap/core'
 import {createEditorExtensions, type EditorExtensionDeps} from './editorExtensions'
+import {clearAttachmentBlobCache} from '@/helpers/attachments'
+
+const {getBlobUrl} = vi.hoisted(() => ({getBlobUrl: vi.fn(async () => 'blob:real-attachment')}))
+
+vi.mock('@/services/attachment', async importOriginal => ({
+	...await importOriginal<typeof import('@/services/attachment')>(),
+	default: class {
+		getBlobUrl = getBlobUrl
+	},
+}))
 
 const API_URL = 'http://localhost:3456/api/v1'
 window.API_URL = API_URL
@@ -24,8 +34,6 @@ function createEditor(content: string) {
 		getEditor: () => editor,
 		uploadCallback: undefined,
 		uploadAndInsertFiles: () => {},
-		loadedAttachments: ref({}),
-		attachmentService: {getBlobUrl: vi.fn(async () => 'blob:real-attachment')} as never,
 	}
 
 	editor = new Editor({
@@ -45,6 +53,8 @@ async function settle() {
 
 beforeEach(() => {
 	setActivePinia(createPinia())
+	clearAttachmentBlobCache()
+	getBlobUrl.mockClear()
 })
 
 afterEach(() => {
@@ -95,7 +105,7 @@ describe('CustomImage attachment id', () => {
 		expect(real.src).toBe('blob:real-attachment')
 	})
 
-	it('resolves the blob url independently for two editors with the same attachment', async () => {
+	it('fetches the attachment once for two editors showing the same image', async () => {
 		const stored = `<p><img src="#" data-src="${ATTACHMENT_URL}" id="tiptap-image-5-9"></p>`
 		const first = createEditor(stored)
 		const second = createEditor(stored)
@@ -103,6 +113,7 @@ describe('CustomImage attachment id', () => {
 
 		expect(first.editor.view.dom.querySelector('img')!.src).toBe('blob:real-attachment')
 		expect(second.editor.view.dom.querySelector('img')!.src).toBe('blob:real-attachment')
+		expect(getBlobUrl).toHaveBeenCalledTimes(1)
 	})
 
 	it('round trips the rendered html', async () => {

@@ -31,10 +31,9 @@ import {common, createLowlight} from 'lowlight'
 import type {UploadCallback} from './types'
 import type {ITask} from '@/modelTypes/ITask'
 import type {IAttachment} from '@/modelTypes/IAttachment'
-import AttachmentModel from '@/models/attachment'
-import type AttachmentService from '@/services/attachment'
+import {fetchAttachmentBlobUrl} from '@/helpers/attachments'
 
-type CacheKey = `${ITask['id']}-${IAttachment['id']}`
+type ImageNodeKey = `${ITask['id']}-${IAttachment['id']}`
 
 export interface EditorExtensionDeps {
 	t: (key: string) => string
@@ -46,8 +45,6 @@ export interface EditorExtensionDeps {
 	getEditor: () => Editor | undefined
 	uploadCallback: MaybeRefOrGetter<UploadCallback | undefined>
 	uploadAndInsertFiles: (files: File[] | FileList) => void
-	loadedAttachments: Ref<Record<string, string>>
-	attachmentService: AttachmentService
 }
 
 const CustomTableCell = TableCell.extend({
@@ -97,12 +94,7 @@ export function createEditorExtensions(deps: EditorExtensionDeps): Extensions {
 		getEditor,
 		uploadCallback,
 		uploadAndInsertFiles,
-		loadedAttachments,
-		attachmentService,
 	} = deps
-
-	// ProseMirror can call renderHTML twice per node on mount
-	const inFlightBlobFetches = new Map<CacheKey, Promise<string>>()
 
 	const CustomImage = Image.extend({
 		addAttributes() {
@@ -134,8 +126,8 @@ export function createEditorExtensions(deps: EditorExtensionDeps): Extensions {
 				const parts = imageUrl.slice(window.API_URL.length + 1).split('/')
 				const taskId = Number(parts[1])
 				const attachmentId = Number(parts[3])
-				const cacheKey: CacheKey = `${taskId}-${attachmentId}`
-				const id = 'tiptap-image-' + cacheKey
+				const nodeKey: ImageNodeKey = `${taskId}-${attachmentId}`
+				const id = 'tiptap-image-' + nodeKey
 
 				nextTick(async () => {
 
@@ -147,28 +139,11 @@ export function createEditorExtensions(deps: EditorExtensionDeps): Extensions {
 
 					if (!img || !(img instanceof HTMLImageElement)) return
 
-					if (typeof loadedAttachments.value[cacheKey] === 'undefined') {
-						let fetchPromise = inFlightBlobFetches.get(cacheKey)
-
-						if (!fetchPromise) {
-							const attachment = new AttachmentModel({taskId: taskId, id: attachmentId})
-							fetchPromise = attachmentService.getBlobUrl(attachment) as Promise<string>
-							inFlightBlobFetches.set(cacheKey, fetchPromise)
-						}
-
-						try {
-							loadedAttachments.value[cacheKey] = await fetchPromise
-						} catch {
-							return
-						} finally {
-							// clear on failure too, else the rejected promise rethrows forever
-							if (inFlightBlobFetches.get(cacheKey) === fetchPromise) {
-								inFlightBlobFetches.delete(cacheKey)
-							}
-						}
+					try {
+						img.src = await fetchAttachmentBlobUrl({taskId, id: attachmentId})
+					} catch {
+						// leave the placeholder src in place
 					}
-
-					img.src = loadedAttachments.value[cacheKey] as string
 				})
 
 				return ['img', mergeAttributes(this.options.HTMLAttributes, {

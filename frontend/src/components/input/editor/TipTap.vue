@@ -204,7 +204,6 @@ import MentionUser from './mention/MentionUser.vue'
 import ImageLightbox from '@/components/misc/ImageLightbox.vue'
 
 import type {BottomAction, UploadCallback} from './types'
-import AttachmentService from '@/services/attachment'
 import BaseButton from '@/components/base/BaseButton.vue'
 import XButton from '@/components/input/Button.vue'
 
@@ -253,9 +252,6 @@ const defaultSetContentOptions: SetContentOptions = {
 	},
 }
 
-const loadedAttachments = ref<Record<string, string>>({})
-const attachmentService = new AttachmentService()
-
 type Mode = 'edit' | 'preview'
 
 const internalMode = ref<Mode>('preview')
@@ -297,8 +293,6 @@ const extensions: Extensions = createEditorExtensions({
 	getEditor: () => editor.value,
 	uploadCallback: () => props.uploadCallback,
 	uploadAndInsertFiles,
-	loadedAttachments,
-	attachmentService,
 })
 
 // Add mention extension if enabled
