@@ -17,6 +17,7 @@
 package migration
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -25,6 +26,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"xorm.io/xorm"
+	"xorm.io/xorm/schemas"
 )
 
 type tasksStub20260903120000 struct {
@@ -47,7 +49,13 @@ func tasksIndexNames20260903120000(t *testing.T, x *xorm.Engine) []string {
 		}
 		names := make([]string, 0, len(table.Indexes))
 		for _, index := range table.Indexes {
-			names = append(names, index.XName(table.Name))
+			// DBMetas strips the IDX_/UQE_ prefix it recognizes and flags those as
+			// regular; XName puts it back. Names it does not recognize come through whole.
+			name := index.Name
+			if index.IsRegular {
+				name = index.XName(table.Name)
+			}
+			names = append(names, strings.ToLower(name))
 		}
 		return names
 	}
@@ -65,14 +73,45 @@ func TestSwapTasksDueDateIndex20260903120000(t *testing.T) {
 	})
 	require.NoError(t, x.DropTables(tables...))
 	require.NoError(t, x.Sync2(tables...))
-	require.Contains(t, tasksIndexNames20260903120000(t, x), "IDX_tasks_done_due_date")
+	require.Contains(t, tasksIndexNames20260903120000(t, x), "idx_tasks_done_due_date")
 
 	require.NoError(t, swapTasksDueDateIndex20260903120000(x))
 
 	names := tasksIndexNames20260903120000(t, x)
-	assert.Contains(t, names, "IDX_tasks_project_done_due_date")
-	assert.NotContains(t, names, "IDX_tasks_done_due_date")
+	assert.Contains(t, names, "idx_tasks_project_done_due_date")
+	assert.NotContains(t, names, "idx_tasks_done_due_date")
 
 	// Installs that already lost the old index must not abort the migration.
 	require.NoError(t, swapTasksDueDateIndex20260903120000(x))
+}
+
+// v2.6.0 created the index through an unquoted CREATE INDEX, which postgres stores
+// lowercased — a spelling xorm never produces and IF EXISTS on the mixed-case name
+// therefore never matches.
+func TestSwapTasksDueDateIndexDropsUnquotedIndex20260903120000(t *testing.T) {
+	x, err := db.CreateTestEngine()
+	require.NoError(t, err)
+
+	tables := []interface{}{tasksStub20260903120000{}}
+	t.Cleanup(func() {
+		require.NoError(t, x.DropTables(tables...))
+	})
+	require.NoError(t, x.DropTables(tables...))
+	require.NoError(t, x.Sync2(tables...))
+
+	dropSQL := "DROP INDEX " + x.Dialect().Quoter().Quote("IDX_tasks_done_due_date")
+	if x.Dialect().URI().DBType == schemas.MYSQL {
+		dropSQL += " ON tasks"
+	}
+	_, err = x.Exec(dropSQL)
+	require.NoError(t, err)
+	_, err = x.Exec("CREATE INDEX IDX_tasks_done_due_date ON tasks (done, due_date)")
+	require.NoError(t, err)
+	require.Contains(t, tasksIndexNames20260903120000(t, x), "idx_tasks_done_due_date")
+
+	require.NoError(t, swapTasksDueDateIndex20260903120000(x))
+
+	names := tasksIndexNames20260903120000(t, x)
+	assert.Contains(t, names, "idx_tasks_project_done_due_date")
+	assert.NotContains(t, names, "idx_tasks_done_due_date")
 }
