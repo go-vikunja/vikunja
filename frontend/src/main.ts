@@ -54,8 +54,10 @@ import Modal from '@/components/misc/Modal.vue'
 import Card from '@/components/misc/Card.vue'
 
 import {setupKeyboardModality} from '@/helpers/keyboardModality'
+import {handleChunkLoadErrors} from '@/helpers/handleChunkLoadErrors'
 
 setupKeyboardModality()
+handleChunkLoadErrors()
 
 // We're loading the language before creating the app so that it won't fail to load when the user's 
 // language file is not yet loaded.
