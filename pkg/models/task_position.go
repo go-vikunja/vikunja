@@ -285,15 +285,9 @@ func lockProjectViewsForPositionUpdate(s *xorm.Session, projectIDs ...int64) (vi
 // updateTaskPosition is the internal function that performs the task position update logic
 // without dispatching events. This is used by moveTaskToDoneBuckets to avoid duplicate events.
 func updateTaskPosition(s *xorm.Session, a web.Auth, tp *TaskPosition) (err error) {
-	if tp.Position < MinPositionSpacing {
-		// The recalculation below will need the view lock anyway. Taking it
-		// before the upsert keeps the lock order consistent with concurrent
-		// recalculations (view lock first, then position rows), avoiding a
-		// lock-order deadlock.
-		err = lockPositionsForViewUpdate(s, tp.ProjectViewID)
-		if err != nil {
-			return err
-		}
+	err = lockPositionsForViewUpdate(s, tp.ProjectViewID)
+	if err != nil {
+		return err
 	}
 
 	err = upsertTaskPosition(s, tp)
