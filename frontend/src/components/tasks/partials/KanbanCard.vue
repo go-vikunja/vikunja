@@ -138,7 +138,8 @@ import {getHexColor, getTaskIdentifier} from '@/models/task'
 import type {ITask} from '@/modelTypes/ITask'
 import type {IProject} from '@/modelTypes/IProject'
 import {SUPPORTED_IMAGE_SUFFIX} from '@/models/attachment'
-import AttachmentService, {PREVIEW_SIZE} from '@/services/attachment'
+import {PREVIEW_SIZE} from '@/services/attachment'
+import {fetchAttachmentBlobUrl} from '@/helpers/attachments'
 
 import {formatDateLong, formatDisplayDate, formatISO} from '@/helpers/time/formatDate'
 import {colorIsDark} from '@/helpers/color/colorIsDark'
@@ -233,8 +234,7 @@ async function maybeDownloadCoverImage() {
 		return
 	}
 
-	const attachmentService = new AttachmentService()
-	coverImageBlobUrl.value = await attachmentService.getBlobUrl(attachment, PREVIEW_SIZE.LG)
+	coverImageBlobUrl.value = await fetchAttachmentBlobUrl(attachment, PREVIEW_SIZE.LG)
 }
 
 watch(
