@@ -29,6 +29,17 @@
 			>
 				{{ $t('filters.attributes.includeNulls') }}
 			</FancyCheckbox>
+			<FancyCheckbox
+				v-if="showIncludeSubprojectsToggle"
+				v-tooltip="includeSubprojectsFromView
+					? $t('project.views.includeSubprojectsFromView')
+					: $t('project.views.includeSubprojectsHint')"
+				:model-value="includeSubprojects"
+				:disabled="includeSubprojectsFromView"
+				@update:modelValue="(value: boolean) => emit('update:includeSubprojects', value)"
+			>
+				{{ $t('project.views.includeSubprojects') }}
+			</FancyCheckbox>
 		</div>
 
 		<FilterInputDocs />
@@ -40,7 +51,7 @@
 			<XButton
 				variant="secondary"
 				class="mie-2"
-				:disabled="filterQuery === ''"
+				:disabled="!hasActiveFilters"
 				@click.prevent.stop="clearFiltersAndEmit"
 			>
 				{{ $t('filters.clear') }}
@@ -76,16 +87,23 @@ const props = withDefaults(defineProps<{
 	changeImmediately?: boolean,
 	filterFromView?: string,
 	showClose?: boolean,
+	showIncludeSubprojectsToggle?: boolean,
+	includeSubprojects?: boolean,
+	includeSubprojectsFromView?: boolean,
 }>(), {
 	hasTitle: false,
 	hasFooter: true,
 	changeImmediately: false,
 	filterFromView: undefined,
 	showClose: false,
+	showIncludeSubprojectsToggle: false,
+	includeSubprojects: false,
+	includeSubprojectsFromView: false,
 })
 
 const emit = defineEmits<{
 	'update:modelValue': [value: TaskFilterParams],
+	'update:includeSubprojects': [value: boolean],
 	'showResults': [],
 	'close': [],
 }>()
@@ -116,6 +134,12 @@ watch(
 		filterQuery.value = filter || s
 	},
 )
+
+const hasActiveFilters = computed(() => {
+	// A flag coming from the view is not something clearing the filters can undo.
+	const subprojectsToggled = props.includeSubprojects && !props.includeSubprojectsFromView
+	return filterQuery.value !== '' || params.value.filter_include_nulls || subprojectsToggled
+})
 
 const {getLabelByExactTitle} = useLabels()
 const projectStore = useProjectStore()
@@ -186,6 +210,11 @@ function changeAndEmitButton() {
 
 function clearFiltersAndEmit() {
 	filterQuery.value = ''
+	params.value.filter_include_nulls = false
+	if (!props.includeSubprojectsFromView) {
+		params.value.include_subprojects = false
+		emit('update:includeSubprojects', false)
+	}
 	changeAndEmitButton()
 }
 

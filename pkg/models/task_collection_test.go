@@ -657,11 +657,12 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	}
 
 	type fields struct {
-		ProjectID     int64
-		ProjectViewID int64
-		Projects      []*Project
-		SortBy        []string // Is a string, since this is the place where a query string comes from the user
-		OrderBy       []string
+		ProjectID          int64
+		ProjectViewID      int64
+		IncludeSubprojects bool
+		Projects           []*Project
+		SortBy             []string // Is a string, since this is the place where a query string comes from the user
+		OrderBy            []string
 
 		FilterIncludeNulls bool
 		Filter             string
@@ -1657,6 +1658,81 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			want:    []*Task{},
 			wantErr: false,
 		},
+		{
+			name: "project tasks only by default",
+			fields: fields{
+				ProjectID: 32,
+			},
+			args: args{
+				a: &user.User{ID: 1},
+			},
+			want: []*Task{
+				task21,
+			},
+			wantErr: false,
+		},
+		{
+			name: "project tasks including subprojects",
+			fields: fields{
+				ProjectID:          32,
+				IncludeSubprojects: true,
+				SortBy:             []string{"id"},
+				OrderBy:            []string{"asc"},
+			},
+			args: args{
+				a: &user.User{ID: 1},
+			},
+			want: []*Task{
+				task21,
+				task24,
+			},
+			wantErr: false,
+		},
+		{
+			name: "project tasks including subprojects recursively",
+			fields: fields{
+				ProjectID:          12,
+				IncludeSubprojects: true,
+				SortBy:             []string{"id"},
+				OrderBy:            []string{"asc"},
+			},
+			args: args{
+				a: &user.User{ID: 1},
+			},
+			want: []*Task{
+				task39,
+			},
+			wantErr: false,
+		},
+		{
+			// User 14 cannot access project 32 itself, so the whole request is denied.
+			name: "project tasks including subprojects without access to the requested project",
+			fields: fields{
+				ProjectID:          32,
+				IncludeSubprojects: true,
+			},
+			args: args{
+				a: &user.User{ID: 14},
+			},
+			wantErr: true,
+		},
+		{
+			// Inclusion only walks down, so the parent's task21 must not appear.
+			name: "subproject tasks including subprojects do not leak the parent project's tasks",
+			fields: fields{
+				ProjectID:          15,
+				IncludeSubprojects: true,
+				SortBy:             []string{"id"},
+				OrderBy:            []string{"asc"},
+			},
+			args: args{
+				a: &user.User{ID: 1},
+			},
+			want: []*Task{
+				task24,
+			},
+			wantErr: false,
+		},
 		// TODO filter parent project?
 		{
 			name: "filter by index",
@@ -1785,6 +1861,26 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			},
 		},
 		{
+			name: "saved filter with sort order and include subprojects",
+			fields: fields{
+				ProjectID:          -2,
+				IncludeSubprojects: true,
+				SortBy:             []string{"title", "id"},
+				OrderBy:            []string{"desc", "asc"},
+			},
+			args: args{
+				a: &user.User{ID: 1},
+			},
+			want: []*Task{
+				task9,
+				task8,
+				task7,
+				task6,
+				task5,
+				task28,
+			},
+		},
+		{
 			name: "saved filter with sort order asc",
 			fields: fields{
 				ProjectID: -2,
@@ -1874,10 +1970,11 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			defer s.Close()
 
 			lt := &TaskCollection{
-				ProjectID:     tt.fields.ProjectID,
-				ProjectViewID: tt.fields.ProjectViewID,
-				SortBy:        tt.fields.SortBy,
-				OrderBy:       tt.fields.OrderBy,
+				ProjectID:          tt.fields.ProjectID,
+				ProjectViewID:      tt.fields.ProjectViewID,
+				IncludeSubprojects: tt.fields.IncludeSubprojects,
+				SortBy:             tt.fields.SortBy,
+				OrderBy:            tt.fields.OrderBy,
 
 				FilterIncludeNulls: tt.fields.FilterIncludeNulls,
 
@@ -2561,4 +2658,78 @@ func TestTaskCollection_DateFilterTimezoneBoundary(t *testing.T) {
 		}
 	}
 	assert.Truef(t, found, "task due %s (one hour before local midnight) should match", task.DueDate)
+}
+
+// Read permissions are inherited downwards, so only an archived descendant drops out.
+func TestTaskCollection_ReadAll_IncludeSubprojectsPartialAccess(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	// Project 22 is archived and owned by user 1, project 21 is its archived child.
+	u := &user.User{ID: 1}
+	c := &TaskCollection{
+		ProjectID:          22,
+		IncludeSubprojects: true,
+	}
+
+	res, _, _, err := c.ReadAll(s, u, "", 0, 50)
+	require.NoError(t, err, "an unreachable subproject must not fail the whole request")
+
+	tasks, ok := res.([]*Task)
+	require.True(t, ok)
+
+	returnedIDs := make([]int64, 0, len(tasks))
+	for _, task := range tasks {
+		returnedIDs = append(returnedIDs, task.ID)
+	}
+
+	assert.Contains(t, returnedIDs, int64(36), "tasks of the requested project are returned")
+	assert.NotContains(t, returnedIDs, int64(35), "tasks of the archived subproject 21 are skipped")
+}
+
+// User 1 reaches project 32 through team 1, and project 15 only through project 32.
+func TestTaskCollection_ReadAll_IncludeSubprojectsInheritedAccess(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	u := &user.User{ID: 1}
+	c := &TaskCollection{
+		ProjectID:          32,
+		IncludeSubprojects: true,
+	}
+
+	res, _, _, err := c.ReadAll(s, u, "", 0, 50)
+	require.NoError(t, err)
+
+	tasks, ok := res.([]*Task)
+	require.True(t, ok)
+
+	returnedIDs := make([]int64, 0, len(tasks))
+	for _, task := range tasks {
+		returnedIDs = append(returnedIDs, task.ID)
+	}
+
+	assert.Contains(t, returnedIDs, int64(21), "the requested project's own tasks")
+	assert.Contains(t, returnedIDs, int64(24), "tasks from the subproject reached through the parent")
+}
+
+// A subproject's task has no bucket in this view, so the flag is dropped for kanban.
+func TestTaskCollection_ReadAll_IncludeSubprojectsIgnoredInKanban(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	u := &user.User{ID: 1}
+	c := &TaskCollection{
+		ProjectID:          32,
+		ProjectViewID:      128, // kanban view of project 32
+		IncludeSubprojects: true,
+	}
+
+	_, _, _, err := c.ReadAll(s, u, "", 0, 50)
+	require.NoError(t, err)
+
+	assert.False(t, c.IncludeSubprojects, "the flag must be cleared for a kanban view")
 }

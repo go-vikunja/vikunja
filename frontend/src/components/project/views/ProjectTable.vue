@@ -358,6 +358,7 @@ import Popup from '@/components/misc/Popup.vue'
 
 import type {SortBy} from '@/composables/useTaskList'
 import {useTaskList} from '@/composables/useTaskList'
+import {useIncludeSubprojects} from '@/composables/useIncludeSubprojects'
 import type {ITask} from '@/modelTypes/ITask'
 import type {IProject} from '@/modelTypes/IProject'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
@@ -374,6 +375,7 @@ const props = defineProps<{
 }>()
 
 const projectStore = useProjectStore()
+const currentView = computed(() => projectStore.projects[props.projectId]?.views.find(v => v.id === props.viewId))
 
 const ACTIVE_COLUMNS_DEFAULT = {
 	index: true,
@@ -401,11 +403,14 @@ const SORT_BY_DEFAULT: SortBy = {
 const activeColumns = useStorage('tableViewColumns', {...ACTIVE_COLUMNS_DEFAULT})
 const sortBy = useStorage<SortBy>('tableViewSortBy', {...SORT_BY_DEFAULT})
 
+const includeSubprojects = useIncludeSubprojects(() => currentView.value)
+
 const taskList = useTaskList(
 	() => props.projectId, 
 	() => props.viewId, 
 	sortBy.value,
 	() => ['comment_count', 'is_unread'],
+	() => includeSubprojects.value,
 )
 
 const {

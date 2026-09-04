@@ -17,10 +17,13 @@
 		<Filters
 			ref="filtersRef"
 			v-model="value"
+			v-model:include-subprojects="includeSubprojects"
 			:has-title="true"
 			class="filter-popup"
 			:change-immediately="false"
 			:filter-from-view="filterFromView"
+			:show-include-subprojects-toggle="supportsIncludeSubprojects"
+			:include-subprojects-from-view="includeSubprojectsFromView"
 			show-close
 			@close="modalOpen = false"
 			@showResults="showResults"
@@ -37,6 +40,7 @@ import {type TaskFilterParams} from '@/services/taskCollection'
 import {type IProjectView} from '@/modelTypes/IProjectView'
 import {type IProject} from '@/modelTypes/IProject'
 import {useProjectStore} from '@/stores/projects'
+import {useIncludeSubprojects} from '@/composables/useIncludeSubprojects'
 
 const props = defineProps<{
 	modelValue: TaskFilterParams,
@@ -66,7 +70,8 @@ watch(
 
 const hasFilters = computed(() => {
 	return value.value.filter !== '' ||
-		value.value.s !== ''
+		value.value.s !== '' ||
+		includeSubprojects.value
 })
 
 const modalOpen = ref(false)
@@ -88,6 +93,24 @@ function showResults() {
 	})
 	modalOpen.value = false
 }
+
+const currentView = computed(() => {
+	if (!isProjectView.value || !props.projectId) {
+		return
+	}
+
+	return projectStore.projects[props.projectId]?.views.find(v => v.id === props.viewId)
+})
+
+const isProjectView = computed(() => Boolean(props.projectId && props.projectId > 0 && props.viewId))
+
+// A subproject's task has no bucket in a kanban view, so the api ignores the flag there.
+const supportsIncludeSubprojects = computed(() => isProjectView.value && currentView.value?.viewKind !== 'kanban')
+
+const includeSubprojects = useIncludeSubprojects(() => currentView.value)
+
+// The api ors the view's own setting in, so the query param cannot turn it back off.
+const includeSubprojectsFromView = computed(() => currentView.value?.filter?.include_subprojects ?? false)
 
 const filterFromView = computed(() => {
 	if (!props.projectId || !props.viewId) {

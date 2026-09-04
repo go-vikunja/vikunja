@@ -1,5 +1,7 @@
-import type {IProjectView, ProjectViewBucketConfigurationMode, ProjectViewKind} from '@/modelTypes/IProjectView'
+import type {IProjectView, IProjectViewBucketConfiguration, ProjectViewBucketConfigurationMode, ProjectViewKind} from '@/modelTypes/IProjectView'
 import AbstractModel from '@/models/abstractModel'
+import {objectToSnakeCase} from '@/helpers/case'
+import type {IFilters} from '@/modelTypes/ISavedFilter'
 
 export default class ProjectViewModel extends AbstractModel<IProjectView> implements IProjectView {
 	id = 0
@@ -15,8 +17,7 @@ export default class ProjectViewModel extends AbstractModel<IProjectView> implem
 		s: '',
 	}
 	position = 0
-	
-	bucketConfiguration = []
+	bucketConfiguration: IProjectViewBucketConfiguration[] = []
 	bucketConfigurationMode: ProjectViewBucketConfigurationMode = 'manual'
 	defaultBucketId = 0
 	doneBucketId = 0
@@ -27,10 +28,17 @@ export default class ProjectViewModel extends AbstractModel<IProjectView> implem
 	constructor(data: Partial<IProjectView>) {
 		super()
 		this.assignData(data)
-		
+
 		if (!this.bucketConfiguration) {
 			this.bucketConfiguration = []
 		}
+
+		// assignData camelCases nested objects; filters stay snake_case, as in SavedFilterModel.
+		this.filter = objectToSnakeCase(this.filter) as IFilters
+		this.bucketConfiguration = this.bucketConfiguration.map(bc => ({
+			...bc,
+			filter: objectToSnakeCase(bc.filter) as IFilters,
+		}))
 	}
 
 	static createWithDefaultFilter(data: Partial<IProjectView> = {}): ProjectViewModel {
