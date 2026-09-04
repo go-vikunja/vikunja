@@ -66,10 +66,7 @@ func MultiFieldSearchWithBoosts(fields []string, boosts []float64, search, table
 			if tableAlias != "" {
 				fieldName = tableAlias + "." + field
 			}
-			// ?::text pins the placeholder to text at parse time. Without it
-			// PostgreSQL infers the parameter type from the cast target, and pgx
-			// then binds it as pdb.fuzzy instead of the text the ||| operator wants.
-			expr := fieldName + " ||| ?::text::pdb.fuzzy(1, t)"
+			expr := fieldName + " ||| ?::pdb.fuzzy(1, t)"
 			if i < len(boosts) && boosts[i] > 0 && boosts[i] != 1 {
 				expr += "::pdb.boost(" + strconv.FormatFloat(boosts[i], 'f', -1, 64) + ")"
 			}
