@@ -994,6 +994,7 @@
     "doneSuccess": "The task was successfully marked as done.",
     "undoneSuccess": "The task was successfully un-marked as done.",
     "readOnlyCheckbox": "You only have read access to this task and cannot mark it as done.",
+    "blockedCheckbox": "This task has incomplete blockers and cannot be marked as done.",
     "movedToProject": "The task was moved to {project}.",
     "undo": "Undo",
     "checklistTotal": "{checked} of {total} tasks",
@@ -1549,7 +1550,8 @@
     "14201": "Planka rejected the provided credentials. Check the URL and the API key or username and password.",
     "14202": "The Planka account requires an extra login step (two-factor code or accepting the terms). Log in to Planka in the browser once, or use an API key instead of username and password.",
     "14203": "A Planka URL and either an API key or username and password are required.",
-    "14204": "Could not reach a Planka API at the given URL. Check the URL and that Vikunja can reach the instance."
+    "14204": "Could not reach a Planka API at the given URL. Check the URL and that Vikunja can reach the instance.",
+    "20001": "This task is blocked by incomplete tasks: {tasks}"
   },
   "about": {
     "title": "About",
