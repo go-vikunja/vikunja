@@ -44,7 +44,7 @@ export default class AttachmentService extends AbstractService<IAttachment> {
 		return data
 	}
 
-	getBlobUrl(model: IAttachment, size?: PREVIEW_SIZE) {
+	getBlobUrl(model: Pick<IAttachment, 'id' | 'taskId'>, size?: PREVIEW_SIZE): Promise<string> {
 		let mainUrl = '/tasks/' + model.taskId + '/attachments/' + model.id
 		if (size !== undefined) {
 			mainUrl += `?preview_size=${size}`
