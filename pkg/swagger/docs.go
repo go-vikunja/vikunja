@@ -10148,7 +10148,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "project_id": {
-                    "description": "The project this task belongs to.",
+                    "description": "The project this task belongs to.\nMust precede done/due_date: xorm orders composite index columns by struct field order.",
                     "type": "integer"
                 },
                 "reactions": {
