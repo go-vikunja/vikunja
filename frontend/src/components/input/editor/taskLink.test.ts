@@ -19,8 +19,6 @@ const stubDeps: EditorExtensionDeps = {
 	getEditor: () => undefined,
 	uploadCallback: undefined,
 	uploadAndInsertFiles: () => {},
-	loadedAttachments: ref({}),
-	attachmentService: {} as never,
 }
 
 // pasteText() leaves clipboardData empty, which the markdown paste handler bails

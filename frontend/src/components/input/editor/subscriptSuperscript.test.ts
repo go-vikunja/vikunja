@@ -15,8 +15,6 @@ const stubDeps: EditorExtensionDeps = {
 	getEditor: () => undefined,
 	uploadCallback: undefined,
 	uploadAndInsertFiles: () => {},
-	loadedAttachments: ref({}),
-	attachmentService: {} as never,
 }
 
 beforeEach(() => {
