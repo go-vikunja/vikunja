@@ -21,6 +21,7 @@ import (
 	"strconv"
 	"testing"
 
+	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/user"
@@ -106,5 +107,19 @@ func TestGetAvatar(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, []byte("fake_image_data"), avatar)
 		assert.Equal(t, "image/png", mimeType)
+	})
+
+	t.Run("avatar file missing from storage", func(t *testing.T) {
+		files.InitTestFileHandler()
+
+		provider := &Provider{}
+		testUser := &user.User{
+			ID:           999999,
+			AvatarFileID: 424242,
+		}
+
+		_, _, err := provider.GetAvatar(testUser, 32)
+		require.Error(t, err)
+		assert.True(t, files.IsErrFileDoesNotExist(err))
 	})
 }
