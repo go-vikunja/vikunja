@@ -764,6 +764,16 @@ func ensureTaskPositionsForSavedFilterView(s *xorm.Session, a web.Auth, projects
 		return fmt.Errorf("could not fetch unpositioned tasks, error was '%w', sql: '%v', values: %v", err, sql, vals)
 	}
 
+	if len(tasks) == 0 {
+		return nil
+	}
+
+	// Taken only once there is something to write so plain reads don't serialize.
+	err = lockPositionsForViewUpdate(s, view.ID)
+	if err != nil {
+		return err
+	}
+
 	positions, err := calculateNewPositionsForTasks(s, a, tasks, view)
 	if err != nil {
 		return err

@@ -239,6 +239,11 @@ func (sf *SavedFilter) Update(s *xorm.Session, _ web.Auth) error {
 		return err
 	}
 
+	err = lockViewsForPositionUpdate(s, kanbanFilterViews)
+	if err != nil {
+		return err
+	}
+
 	for _, view := range kanbanFilterViews {
 		taskIDs, err := filteredTasksWithoutBucketInView(s, view.ID, sf)
 		if err != nil {
@@ -668,6 +673,8 @@ func RegisterAddTaskToFilterViewCron() {
 			view    *ProjectView
 			ownerID int64
 		}{}
+		staleTaskIDsByView := map[int64][]int64{}
+		staleViews := []*ProjectView{}
 		for _, view := range kanbanFilterViews {
 			filterID := GetSavedFilterIDFromProjectID(view.ProjectID)
 			filter := filters[filterID]
@@ -737,7 +744,26 @@ func RegisterAddTaskToFilterViewCron() {
 			}
 
 			// Remove tasks that should not be there
-			deleteStaleFilterTasks(s, logPrefix, view.ID, staleFilterTaskIDs(savedTaskBucketMap, tasks))
+			if staleIDs := staleFilterTaskIDs(savedTaskBucketMap, tasks); len(staleIDs) > 0 {
+				staleTaskIDsByView[view.ID] = staleIDs
+				staleViews = append(staleViews, view)
+			}
+		}
+
+		// The loop above reads for seconds; only lock the views actually written, right before writing them.
+		viewsToLock := staleViews
+		for _, data := range viewsToRecalc {
+			viewsToLock = append(viewsToLock, data.view)
+		}
+		if len(viewsToLock) > 0 {
+			if err := lockViewsForPositionUpdate(s, viewsToLock); err != nil {
+				log.Errorf("%sError locking kanban filter views: %s", logPrefix, err)
+				return
+			}
+		}
+
+		for viewID, staleIDs := range staleTaskIDsByView {
+			deleteStaleFilterTasks(s, logPrefix, viewID, staleIDs)
 		}
 
 		upsertRelatedTaskProperties(s, logPrefix, newTaskBuckets, newTaskPositions)

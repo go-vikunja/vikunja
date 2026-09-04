@@ -1103,6 +1103,12 @@ func updateTasksInSavedFilterViews(tasks []*Task) (err error) {
 		return err
 	}
 
+	// Locked once here: per-task locking inside the loop gives no global order.
+	err = lockViewsForPositionUpdate(s, kanbanFilterViews)
+	if err != nil {
+		return fmt.Errorf("could not lock kanban filter views: %w", err)
+	}
+
 	for _, task := range tasks {
 		err = addTaskToFilterViews(s, task, viewsByTask[task.ID], state)
 		if err != nil {
