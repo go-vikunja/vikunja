@@ -1,6 +1,9 @@
 <template>
 	<NodeViewWrapper class="mention-user">
-		<img :src="avatarUrl">
+		<img
+			:src="avatarUrl"
+			alt=""
+		>
 		<span class="mention__label">
 			{{ node.attrs.label ?? node.attrs.id }}
 		</span>
@@ -15,14 +18,13 @@ import type { IUser } from '@/modelTypes/IUser'
 
 const props = defineProps(nodeViewProps)
 
-const avatarUrl = ref('')
+const avatarUrl = ref<string>()
 
 watch(
 	() => props.node.attrs.id,
 	async () => {
 		const username = props.node.attrs.id as string
-		const url = await fetchAvatarBlobUrl({username} as IUser, 32)
-		avatarUrl.value = url as string
+		avatarUrl.value = await fetchAvatarBlobUrl({username} as IUser, 32)
 	},
 	{immediate: true},
 )

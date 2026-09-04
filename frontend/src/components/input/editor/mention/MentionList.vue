@@ -44,7 +44,7 @@ interface MentionItem extends MentionNodeAttrs {
 	id: string
 	label: string
 	username: string
-	avatarUrl: string
+	avatarUrl: string | undefined
 }
 
 export default {

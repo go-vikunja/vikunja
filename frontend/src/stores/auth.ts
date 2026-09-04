@@ -92,7 +92,7 @@ export const useAuthStore = defineStore('auth', () => {
 	const needsTotpPasscode = ref(false)
 	
 	const info = ref<IUser | null>(null)
-	const avatarUrl = ref('')
+	const avatarUrl = ref<string>()
 	const settings = ref<IUserSettings>(new UserSettingsModel())
 	
 	const currentSessionId = ref<string | null>(null)

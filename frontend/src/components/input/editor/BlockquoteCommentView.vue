@@ -78,7 +78,7 @@ const authorName = computed(() => {
 	return p ? getDisplayName(p.author) : ''
 })
 
-const avatarUrl = ref('')
+const avatarUrl = ref<string>()
 
 // Bumped on every parent change so stale avatar fetches (older parent)
 // don't overwrite a newer one if the user navigates between comments
@@ -86,7 +86,7 @@ const avatarUrl = ref('')
 let avatarFetchToken = 0
 
 watch(parent, (p) => {
-	avatarUrl.value = ''
+	avatarUrl.value = undefined
 	const token = ++avatarFetchToken
 	if (!p?.author) {
 		return
@@ -94,7 +94,7 @@ watch(parent, (p) => {
 	fetchAvatarBlobUrl(p.author, 20)
 		.then((url) => {
 			if (token === avatarFetchToken) {
-				avatarUrl.value = (url as string) ?? ''
+				avatarUrl.value = url
 			}
 		})
 		.catch(() => {

@@ -281,17 +281,21 @@ const newCommentText = ref('')
 const saved = ref<ITask['id'] | null>(null)
 const saving = ref<ITask['id'] | null>(null)
 
-const userAvatar = ref('')
+const userAvatar = ref<string>()
 const avatarCache = reactive(new Map<string, string>())
 
-function avatarFor(u: IUser, size: number) {
+function avatarFor(u: IUser, size: number): string | undefined {
 	const key = `${u.id}-${size}`
 	const cached = avatarCache.get(key)
 	if (!cached) {
-		fetchAvatarBlobUrl(u, size).then(url => avatarCache.set(key, url))
+		fetchAvatarBlobUrl(u, size).then(url => {
+			if (url) {
+				avatarCache.set(key, url)
+			}
+		})
 	}
 
-	return avatarCache.get(key) || ''
+	return cached
 }
 
 watch(() => authStore.info, async (nu) => {
