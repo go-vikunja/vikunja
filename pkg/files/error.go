@@ -39,6 +39,18 @@ func IsErrFileDoesNotExist(err error) bool {
 	return ok
 }
 
+// ErrCodeFileDoesNotExist holds the unique world-error code of this error
+const ErrCodeFileDoesNotExist = 4034
+
+// HTTPError holds the http error description
+func (err ErrFileDoesNotExist) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusNotFound,
+		Code:     ErrCodeFileDoesNotExist,
+		Message:  "The file does not exist.",
+	}
+}
+
 // ErrFileIsTooLarge defines an error where a file is larger than the configured limit
 type ErrFileIsTooLarge struct {
 	Size uint64
