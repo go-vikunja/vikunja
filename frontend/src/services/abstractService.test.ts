@@ -12,6 +12,7 @@ function serviceWithBlobResponse(blob: Blob) {
 describe('getBlobUrl', () => {
 	afterEach(() => {
 		vi.restoreAllMocks()
+		vi.unstubAllGlobals()
 	})
 
 	it('keeps the mime type of the fetched blob', async () => {
@@ -33,5 +34,15 @@ describe('getBlobUrl', () => {
 		const url = await service.getBlobUrl({taskId: 1, id: 2} as IAttachment)
 
 		expect(url).toMatch(/^data:image\/svg\+xml/)
+	})
+
+	it('falls back to a blob url for svg when FileReader is unavailable', async () => {
+		const service = serviceWithBlobResponse(new Blob(['<svg xmlns="http://www.w3.org/2000/svg"/>'], {type: 'image/svg+xml'}))
+		vi.spyOn(window.URL, 'createObjectURL').mockReturnValue('blob:mock')
+		vi.stubGlobal('FileReader', undefined)
+
+		const url = await service.getBlobUrl({taskId: 1, id: 3} as IAttachment)
+
+		expect(url).toBe('blob:mock')
 	})
 })
