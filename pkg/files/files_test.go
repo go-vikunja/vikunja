@@ -21,7 +21,7 @@ import (
 	"image"
 	"image/png"
 	"io"
-	"os"
+	"net/http"
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
@@ -180,7 +180,8 @@ func TestFile_LoadFileByID(t *testing.T) {
 		f := &File{ID: 9999}
 		err := f.LoadFileByID()
 		require.Error(t, err)
-		assert.True(t, os.IsNotExist(err))
+		assert.True(t, IsErrFileDoesNotExist(err))
+		assert.Equal(t, http.StatusNotFound, err.(ErrFileDoesNotExist).HTTPError().HTTPCode)
 	})
 }
 
