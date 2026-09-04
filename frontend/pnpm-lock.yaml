@@ -104,8 +104,8 @@ importers:
         specifier: 3.31.0
         version: 3.31.0(@floating-ui/dom@1.8.0)(@tiptap/core@3.31.0(@tiptap/pm@3.31.0))(@tiptap/pm@3.31.0)
       '@tiptap/vue-3':
-        specifier: 3.30.6
-        version: 3.30.6(@floating-ui/dom@1.8.0)(@tiptap/core@3.31.0(@tiptap/pm@3.31.0))(@tiptap/pm@3.31.0)(vue@3.5.42(typescript@6.0.3))
+        specifier: 3.31.0
+        version: 3.31.0(@floating-ui/dom@1.8.0)(@tiptap/core@3.31.0(@tiptap/pm@3.31.0))(@tiptap/pm@3.31.0)(vue@3.5.42(typescript@6.0.3))
       '@vueuse/core':
         specifier: 14.4.0
         version: 14.4.0(vue@3.5.42(typescript@6.0.3))
@@ -2725,12 +2725,12 @@ packages:
       '@tiptap/core': 3.31.0
       '@tiptap/pm': 3.31.0
 
-  '@tiptap/vue-3@3.30.6':
-    resolution: {integrity: sha512-qSHF1aMjcAKiJrTYbPLVL3bQ1xG4akaf8I/x9/swwEYvwR9OiiNHsZQ5MSwK7hay0vCYMoEsu0sN7xYA7q0o7Q==}
+  '@tiptap/vue-3@3.31.0':
+    resolution: {integrity: sha512-v/oIp43nvANe2upFMc/1JGPvMD6C7mY0JdiB7kUjFxjAnTmjVRxJY+4hJiJgoVXTiCyDaEJeEhPKLueDJfKYwg==}
     peerDependencies:
       '@floating-ui/dom': ^1.0.0
-      '@tiptap/core': 3.30.6
-      '@tiptap/pm': 3.30.6
+      '@tiptap/core': 3.31.0
+      '@tiptap/pm': 3.31.0
       vue: ^3.0.0
 
   '@tootallnate/quickjs-emscripten@0.23.0':
@@ -9657,7 +9657,7 @@ snapshots:
       '@tiptap/core': 3.31.0(@tiptap/pm@3.31.0)
       '@tiptap/pm': 3.31.0
 
-  '@tiptap/vue-3@3.30.6(@floating-ui/dom@1.8.0)(@tiptap/core@3.31.0(@tiptap/pm@3.31.0))(@tiptap/pm@3.31.0)(vue@3.5.42(typescript@6.0.3))':
+  '@tiptap/vue-3@3.31.0(@floating-ui/dom@1.8.0)(@tiptap/core@3.31.0(@tiptap/pm@3.31.0))(@tiptap/pm@3.31.0)(vue@3.5.42(typescript@6.0.3))':
     dependencies:
       '@floating-ui/dom': 1.8.0
       '@tiptap/core': 3.31.0(@tiptap/pm@3.31.0)
