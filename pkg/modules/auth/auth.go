@@ -225,9 +225,6 @@ func NewLinkShareJWTAuthtoken(share *models.LinkSharing) (token string, err erro
 }
 
 // HasAuthInContext reports whether the request carries credentials at all.
-// Unauthenticated routes (login, token refresh, /info, websocket) pass through the
-// same middleware stack, so middleware uses this to skip auth-dependent work
-// instead of treating a missing token as an error worth logging.
 func HasAuthInContext(c *echo.Context) bool {
 	if c.Get("api_token") != nil {
 		return true
