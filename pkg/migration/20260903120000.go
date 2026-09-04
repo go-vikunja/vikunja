@@ -20,31 +20,55 @@ import (
 	"fmt"
 	"strings"
 
-	"code.vikunja.io/api/pkg/db"
-
 	"src.techknowlogick.com/xormigrate"
 	"xorm.io/xorm"
 	"xorm.io/xorm/schemas"
 )
 
+// True for the "index already exists" / "no such index" errors of all three
+// dialects. xorm's CreateIndexSQL emits no IF NOT EXISTS and MySQL supports it on
+// neither statement, so re-running has to be absorbed here rather than in the SQL.
+func isIndexPresenceError20260903120000(err error) bool {
+	msg := err.Error()
+	return strings.Contains(msg, "already exists") || // postgres, sqlite
+		strings.Contains(msg, "Duplicate key name") || // mysql create
+		strings.Contains(msg, "check that") // mysql drop (1091)
+}
+
 func swapTasksDueDateIndex20260903120000(tx *xorm.Engine) error {
-	// Name must match what xorm derives from the index(project_done_due_date) tag on
-	// the Task struct, otherwise a later sync creates a second copy.
-	create := "CREATE INDEX IF NOT EXISTS IDX_tasks_project_done_due_date ON tasks (project_id, done, due_date)"
-	drop := "DROP INDEX IF EXISTS IDX_tasks_done_due_date"
-	if db.Type() == schemas.MYSQL {
-		// MySQL supports IF [NOT] EXISTS on neither statement, so both errors are tolerated below.
-		create = "CREATE INDEX IDX_tasks_project_done_due_date ON tasks (project_id, done, due_date)"
-		drop = "DROP INDEX IDX_tasks_done_due_date ON tasks"
+	// Names must match what xorm derives from the index(project_done_due_date) tag on
+	// the Task struct, otherwise a later sync creates a second copy. Postgres folds
+	// unquoted identifiers to lowercase, so every name here goes through the quoter.
+	quote := tx.Dialect().Quoter().Quote
+
+	newIndex := schemas.NewIndex("project_done_due_date", schemas.IndexType)
+	newIndex.AddColumn("project_id", "done", "due_date")
+
+	var drops []string
+	switch tx.Dialect().URI().DBType {
+	case schemas.MYSQL:
+		// Index names are case-insensitive here, so one spelling covers every install.
+		drops = []string{"DROP INDEX " + quote("IDX_tasks_done_due_date") + " ON " + quote("tasks")}
+	case schemas.POSTGRES:
+		// v2.6.0's migration created the index with an unquoted name, which postgres
+		// stored lowercased; installs that reached the index through a xorm sync
+		// instead have the mixed-case spelling. Either one has to go.
+		drops = []string{
+			"DROP INDEX IF EXISTS " + quote("IDX_tasks_done_due_date"),
+			"DROP INDEX IF EXISTS " + quote("idx_tasks_done_due_date"),
+		}
+	default:
+		drops = []string{"DROP INDEX IF EXISTS " + quote("IDX_tasks_done_due_date")}
 	}
 
-	if _, err := tx.Exec(create); err != nil && !strings.Contains(err.Error(), "Duplicate key name") {
+	if _, err := tx.Exec(tx.Dialect().CreateIndexSQL("tasks", newIndex)); err != nil && !isIndexPresenceError20260903120000(err) {
 		return fmt.Errorf("could not create index on tasks: %w", err)
 	}
 
-	// Every MySQL/MariaDB variant of the "no such index" error (1091) says "check that".
-	if _, err := tx.Exec(drop); err != nil && !strings.Contains(err.Error(), "check that") {
-		return fmt.Errorf("could not drop index IDX_tasks_done_due_date on tasks: %w", err)
+	for _, drop := range drops {
+		if _, err := tx.Exec(drop); err != nil && !isIndexPresenceError20260903120000(err) {
+			return fmt.Errorf("could not drop index IDX_tasks_done_due_date on tasks: %w", err)
+		}
 	}
 
 	return nil
