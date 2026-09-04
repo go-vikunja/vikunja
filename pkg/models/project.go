@@ -1369,6 +1369,12 @@ func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return &ErrCannotDeleteDefaultProject{ProjectID: p.ID}
 	}
 
+	// Lock first: the task loop below deletes task_positions rows before the views are dropped further down.
+	_, err = lockProjectViewsForPositionUpdate(s, p.ID)
+	if err != nil {
+		return err
+	}
+
 	// Hard-delete all tasks on that project, including soft-deleted ones —
 	// there is nothing to restore them into once the project is gone.
 	// Using the loop to make sure all related entities to all tasks are properly deleted as well.
