@@ -353,6 +353,7 @@ function handleBubbleSave() {
 				</div>
 			</div>
 		</div>
+
 		<div
 			v-if="showSaveButtons"
 			class="is-flex is-justify-content-end"
