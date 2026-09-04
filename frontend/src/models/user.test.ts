@@ -1,5 +1,5 @@
 import {describe, it, expect} from 'vitest'
-import {getDisplayName} from './user'
+import {fetchAvatarBlobUrl, getDisplayName} from './user'
 import type {IUser} from '@/modelTypes/IUser'
 
 function makeUser(overrides: Partial<IUser> = {}): IUser {
@@ -29,5 +29,11 @@ describe('getDisplayName', () => {
 	it('should fall back to username when name is empty', () => {
 		const user = makeUser({name: '', username: 'janedoe'})
 		expect(getDisplayName(user)).toBe('janedoe')
+	})
+})
+
+describe('fetchAvatarBlobUrl', () => {
+	it('should resolve to undefined for a user without a username', async () => {
+		await expect(fetchAvatarBlobUrl({} as IUser)).resolves.toBeUndefined()
 	})
 })

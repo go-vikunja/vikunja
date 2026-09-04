@@ -13,7 +13,7 @@ interface MentionItem extends MentionNodeAttrs {
 	id: string
 	label: string
 	username: string
-	avatarUrl: string
+	avatarUrl: string | undefined
 }
 
 async function searchUsersForProject(projectId: number, query: string): Promise<MentionItem[]> {
@@ -25,15 +25,12 @@ async function searchUsersForProject(projectId: number, query: string): Promise<
 
 	// Fetch avatar URLs for all users
 	const usersWithAvatars = await Promise.all(
-		users.map(async (user) => {
-			const avatarUrl = await fetchAvatarBlobUrl(user, 32)
-			return {
-				id: user.username,
-				label: getDisplayName(user),
-				username: user.username,
-				avatarUrl: avatarUrl as string,
-			}
-		}),
+		users.map(async (user) => ({
+			id: user.username,
+			label: getDisplayName(user),
+			username: user.username,
+			avatarUrl: await fetchAvatarBlobUrl(user, 32),
+		})),
 	)
 
 	return usersWithAvatars
