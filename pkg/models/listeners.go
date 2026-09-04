@@ -1226,7 +1226,14 @@ func (wdl *WebhookDeliveryListener) Handle(msg *message.Message) error {
 		return nil
 	}
 
-	return webhook.sendWebhookPayload(evt.Payload)
+	if err := webhook.sendWebhookPayload(evt.Payload); err != nil {
+		// A target that is down or rejects the payload is the user's to fix, so
+		// don't report it — but still retry and eventually poison the message.
+		msg.Metadata.Set(events.MetadataSkipErrorReporting, "true")
+		return err
+	}
+
+	return nil
 }
 
 func getIDAsInt64(id interface{}) int64 {

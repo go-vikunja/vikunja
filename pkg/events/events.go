@@ -55,8 +55,18 @@ type Event interface {
 	Name() string
 }
 
+// MetadataSkipErrorReporting marks a message whose failure is a user
+// configuration problem (an unreachable webhook target, say) rather than a bug,
+// so parking it in the poison queue must not page us. The poison middleware
+// republishes the same message, so metadata a handler sets survives.
+const MetadataSkipErrorReporting = "skip_error_reporting"
+
 type messageHandleFailedError struct {
 	Metadata message.Metadata
+}
+
+func shouldReportPoisonedMessage(meta message.Metadata) bool {
+	return meta.Get(MetadataSkipErrorReporting) != "true"
 }
 
 func (m *messageHandleFailedError) Error() string {
@@ -97,7 +107,7 @@ func InitEvents() (err error) {
 		// The payload is deliberately not logged: events can carry credentials and user data.
 		log.Errorf("Error while handling message %s, %s", msg.UUID, meta)
 
-		if config.SentryEnabled.GetBool() {
+		if config.SentryEnabled.GetBool() && shouldReportPoisonedMessage(msg.Metadata) {
 			sentry.CaptureException(&messageHandleFailedError{
 				Metadata: msg.Metadata,
 			})
