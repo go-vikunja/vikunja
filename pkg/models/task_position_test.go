@@ -760,3 +760,8 @@ func TestBulkInsertTaskPositions(t *testing.T) {
 		), 150)
 	})
 }
+
+func TestViewLockOrder(t *testing.T) {
+	ids := viewLockOrder([]*ProjectView{{ID: 4}, {ID: 1}, {ID: 4}, {ID: 2}})
+	assert.Equal(t, []int64{1, 2, 4}, ids)
+}

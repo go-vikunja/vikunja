@@ -1083,7 +1083,12 @@ func createTasks(s *xorm.Session, projectID int64, tasks []*Task, a web.Auth, up
 		return err
 	}
 
-	positions, taskBuckets, err := setTasksInBucketInViews(s, tasks, a, setBucket, taskProvidedBucket)
+	views, err := lockProjectViewsForPositionUpdate(s, projectID)
+	if err != nil {
+		return err
+	}
+
+	positions, taskBuckets, err := setTasksInBucketInViews(s, views, tasks, a, setBucket, taskProvidedBucket)
 	if err != nil {
 		return err
 	}
@@ -1161,16 +1166,12 @@ func createTasks(s *xorm.Session, projectID int64, tasks []*Task, a web.Auth, up
 	return
 }
 
-func setTasksInBucketInViews(s *xorm.Session, tasks []*Task, a web.Auth, setBucket bool, providedBuckets map[int64]*Bucket) ([]*TaskPosition, []*TaskBucket, error) {
+func setTasksInBucketInViews(s *xorm.Session, views []*ProjectView, tasks []*Task, a web.Auth, setBucket bool, providedBuckets map[int64]*Bucket) ([]*TaskPosition, []*TaskBucket, error) {
 	if len(tasks) == 0 {
 		return nil, nil, nil
 	}
 
-	views, err := getViewsForProject(s, tasks[0].ProjectID)
-	if err != nil {
-		return nil, nil, err
-	}
-
+	var err error
 	taskBuckets := []*TaskBucket{}
 
 	defaultBucketIDs := make(map[int64]int64)
