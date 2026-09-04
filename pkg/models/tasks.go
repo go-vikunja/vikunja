@@ -18,6 +18,7 @@ package models
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"regexp"
 	"sort"
@@ -1394,6 +1395,12 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 
 	views := []*ProjectView{}
 	if t.Done != ot.Done || t.ProjectID != ot.ProjectID {
+		// Locks both projects: a move rewrites task_positions in the old project too.
+		_, err = lockProjectViewsForPositionUpdate(s, ot.ProjectID, t.ProjectID)
+		if err != nil {
+			return
+		}
+
 		err = s.
 			Where("project_id = ? AND view_kind = ? AND bucket_configuration_mode = ?",
 				t.ProjectID, ProjectViewKindKanban, BucketConfigurationModeManual).
@@ -1635,6 +1642,26 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 // updateTasks updates multiple tasks with the same payload.
 // If fields is nil, it updates the default set of columns.
 func updateTasks(s *xorm.Session, a web.Auth, t *Task, ids []int64, fields []string) (tasks []*Task, err error) {
+	// Ids may span projects; per-task locking would follow caller order, not view order.
+	existing := []*Task{}
+	err = s.Table(&Task{}).Where(builder.In("id", ids)).Distinct("project_id").Find(&existing)
+	if err != nil {
+		return nil, fmt.Errorf("could not load projects of tasks to update: %w", err)
+	}
+
+	projectIDs := make([]int64, 0, len(existing)+1)
+	for _, et := range existing {
+		projectIDs = append(projectIDs, et.ProjectID)
+	}
+	if t.ProjectID != 0 {
+		projectIDs = append(projectIDs, t.ProjectID)
+	}
+
+	_, err = lockProjectViewsForPositionUpdate(s, projectIDs...)
+	if err != nil {
+		return nil, fmt.Errorf("could not lock project views for bulk task update: %w", err)
+	}
+
 	for _, id := range ids {
 		nt := clone.Clone(t)
 		nt.ID = id
@@ -2075,6 +2102,11 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 	err = fullTask.ReadOne(s, a)
 	if err != nil {
 		return err
+	}
+
+	_, err = lockProjectViewsForPositionUpdate(s, fullTask.ProjectID)
+	if err != nil {
+		return
 	}
 
 	// Bucket and position rows are removed right away because bucket counts
