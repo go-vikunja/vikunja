@@ -737,7 +737,7 @@ func RegisterAddTaskToFilterViewCron() {
 			}
 
 			// Remove tasks that should not be there
-			deleteStaleFilterTasks(s, logPrefix, savedTaskBucketMap, tasks, view.ID)
+			deleteStaleFilterTasks(s, logPrefix, view.ID, staleFilterTaskIDs(savedTaskBucketMap, tasks))
 		}
 
 		upsertRelatedTaskProperties(s, logPrefix, newTaskBuckets, newTaskPositions)
@@ -773,8 +773,7 @@ func upsertRelatedTaskProperties(s *xorm.Session, logPrefix string, newTaskBucke
 	}
 }
 
-func deleteStaleFilterTasks(s *xorm.Session, logPrefix string, savedTaskBucketMap map[int64]*TaskBucket, tasks []*Task, viewID int64) {
-	var taskIDsToDelete []int64
+func staleFilterTaskIDs(savedTaskBucketMap map[int64]*TaskBucket, tasks []*Task) (taskIDs []int64) {
 	for taskID := range savedTaskBucketMap {
 		found := false
 		for _, task := range tasks {
@@ -784,21 +783,27 @@ func deleteStaleFilterTasks(s *xorm.Session, logPrefix string, savedTaskBucketMa
 			}
 		}
 		if !found {
-			taskIDsToDelete = append(taskIDsToDelete, taskID)
+			taskIDs = append(taskIDs, taskID)
 		}
 	}
-	if len(taskIDsToDelete) > 0 {
-		_, err := s.Where(builder.Eq{"project_view_id": viewID}).
-			And(builder.In("task_id", taskIDsToDelete)).
-			Delete(&TaskBucket{})
-		if err != nil {
-			log.Errorf("%sError deleting task buckets: %s", logPrefix, err)
-		}
-		_, err = s.Where(builder.Eq{"project_view_id": viewID}).
-			And(builder.In("task_id", taskIDsToDelete)).
-			Delete(&TaskPosition{})
-		if err != nil {
-			log.Errorf("%sError deleting task positions: %s", logPrefix, err)
-		}
+	return taskIDs
+}
+
+func deleteStaleFilterTasks(s *xorm.Session, logPrefix string, viewID int64, taskIDs []int64) {
+	if len(taskIDs) == 0 {
+		return
+	}
+
+	_, err := s.Where(builder.Eq{"project_view_id": viewID}).
+		And(builder.In("task_id", taskIDs)).
+		Delete(&TaskBucket{})
+	if err != nil {
+		log.Errorf("%sError deleting task buckets: %s", logPrefix, err)
+	}
+	_, err = s.Where(builder.Eq{"project_view_id": viewID}).
+		And(builder.In("task_id", taskIDs)).
+		Delete(&TaskPosition{})
+	if err != nil {
+		log.Errorf("%sError deleting task positions: %s", logPrefix, err)
 	}
 }
