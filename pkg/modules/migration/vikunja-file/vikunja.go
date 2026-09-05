@@ -341,7 +341,7 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 	}
 
 	if dataFile == nil {
-		return fmt.Errorf("no data file provided")
+		return &migration.ErrNoDataFileInZip{}
 	}
 
 	// Preflight: bound the import before anything is read (GHSA-w7jp-mf2v-8342).

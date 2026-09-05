@@ -156,6 +156,25 @@ func (err *ErrFileIsEmpty) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrNoDataFileInZip represents a "ErrNoDataFileInZip" kind of error.
+type ErrNoDataFileInZip struct{}
+
+func (err *ErrNoDataFileInZip) Error() string {
+	return "The provided zip file does not contain a Vikunja data file"
+}
+
+// ErrCodeNoDataFileInZip holds the unique world-error code of this error
+const ErrCodeNoDataFileInZip = 14008
+
+// HTTPError holds the http error description
+func (err *ErrNoDataFileInZip) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeNoDataFileInZip,
+		Message:  "The provided zip file does not contain a Vikunja data file.",
+	}
+}
+
 // ErrCSVConfigRequired represents an error when the CSV migration endpoint
 // is called without the required configuration. The CSV migrator requires
 // a mapping configuration and must be used via /migration/csv/migrate with

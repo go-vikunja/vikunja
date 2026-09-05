@@ -19,13 +19,16 @@ package vikunjafile
 import (
 	"archive/zip"
 	"bytes"
+	"net/http"
 	"os"
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/user"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -166,5 +169,26 @@ func TestVikunjaFileMigrator_Migrate(t *testing.T) {
 		err = m.Migrate(u, f, s.Size())
 		require.Error(t, err)
 		require.ErrorContainsf(t, err, "export was created with an older version", "Invalid error message")
+	})
+	t.Run("should reject a zip without a data file", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		var zipBuf bytes.Buffer
+		zw := zip.NewWriter(&zipBuf)
+		w, err := zw.Create("VERSION")
+		require.NoError(t, err)
+		_, err = w.Write([]byte("dev"))
+		require.NoError(t, err)
+		require.NoError(t, zw.Close())
+
+		m := &FileMigrator{}
+		u := &user.User{ID: 1}
+		reader := bytes.NewReader(zipBuf.Bytes())
+
+		err = m.Migrate(u, reader, int64(reader.Len()))
+		var noDataFile *migration.ErrNoDataFileInZip
+		require.ErrorAs(t, err, &noDataFile)
+		assert.Equal(t, http.StatusBadRequest, noDataFile.HTTPError().HTTPCode)
+		assert.Equal(t, migration.ErrCodeNoDataFileInZip, noDataFile.HTTPError().Code)
 	})
 }
