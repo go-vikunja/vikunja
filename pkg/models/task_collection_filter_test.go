@@ -21,12 +21,10 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/db"
 
 	datemath "github.com/jszwedko/go-datemath"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"xorm.io/builder"
 )
 
 func TestParseFilter(t *testing.T) {
@@ -330,11 +328,7 @@ func TestParseFilter(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, result, 1)
 		date := result[0].value.(time.Time)
-		if db.GetDialect() == builder.MYSQL {
-			assert.Equal(t, 1, date.Year())
-		} else {
-			assert.Equal(t, 0, date.Year())
-		}
+		assert.Equal(t, 1, date.Year())
 	})
 	t.Run("project with parentheses", func(t *testing.T) {
 		result, err := getTaskFiltersFromFilterString("( project = 1 )", "UTC")
@@ -506,4 +500,33 @@ func TestDateFilterTimezone(t *testing.T) {
 		assert.Equal(t, time.UTC, got.Location(), "filter boundary must be in UTC, got %s", got.Location())
 		assert.Equal(t, "2026-07-15 07:00:00", got.Format("2006-01-02 15:04:05"))
 	})
+}
+
+// A date filter boundary must never be normalized to a year below 1: MySQL's
+// driver refuses to encode such a parameter ("year is not in the range
+// [1, 9999]"). Parsing the zero-date sentinel in a timezone east of Greenwich
+// underflows into year 0 on the way to UTC. Sentry API-OSS-2Q.
+func TestZeroDateFilterBoundary(t *testing.T) {
+	// Europe/Berlin is LMT (+00:53) in year 1, so midnight there is year 0 in UTC.
+	for _, filter := range []string{
+		"due_date > 0001-01-01 00:00",
+		"due_date > 0001-01-01",
+		"due_date > 0000-01-01",
+		"due_date > 0001-01-01T00:00:00Z",
+	} {
+		t.Run(filter, func(t *testing.T) {
+			filters, err := getTaskFiltersFromFilterString(filter, "Europe/Berlin")
+			require.NoError(t, err)
+			require.Len(t, filters, 1)
+
+			got, ok := filters[0].value.(time.Time)
+			require.True(t, ok)
+
+			assert.Equal(t, time.UTC, got.Location())
+			assert.GreaterOrEqual(t, got.Year(), 1, "boundary %s must not underflow year 1, got %s", filter, got)
+			// Must still sort after the unset-date sentinel so "has a due date"
+			// filters don't match tasks without one.
+			assert.False(t, got.Before(time.Time{}), "boundary %s must not predate the zero date, got %s", filter, got)
+		})
+	}
 }
