@@ -17,11 +17,60 @@
 package migration
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
 	"code.vikunja.io/api/pkg/web"
 )
+
+// upstreamErrorBodyLimit caps the response body kept in an ErrUpstreamRequestFailed: it ends up in
+// user notifications and logs.
+const upstreamErrorBodyLimit = 1024
+
+// ErrUpstreamRequestFailed is returned when the service we migrate from answered with a non-2xx status.
+type ErrUpstreamRequestFailed struct {
+	Migrator   string
+	StatusCode int
+	Body       string
+}
+
+func NewErrUpstreamRequestFailed(migrator string, statusCode int, body string) *ErrUpstreamRequestFailed {
+	if len(body) > upstreamErrorBodyLimit {
+		body = body[:upstreamErrorBodyLimit]
+	}
+	return &ErrUpstreamRequestFailed{
+		Migrator:   migrator,
+		StatusCode: statusCode,
+		Body:       body,
+	}
+}
+
+func (err *ErrUpstreamRequestFailed) Error() string {
+	if err.Body == "" {
+		return fmt.Sprintf("%s api error: status code: %d", err.Migrator, err.StatusCode)
+	}
+	return fmt.Sprintf("%s api error: status code: %d, response was: %s", err.Migrator, err.StatusCode, err.Body)
+}
+
+// IsClientError reports whether the upstream blamed the request (expired token, missing item, rate limit)
+// rather than itself.
+func (err *ErrUpstreamRequestFailed) IsClientError() bool {
+	return err.StatusCode >= 400 && err.StatusCode < 500
+}
+
+// ErrCodeUpstreamRequestFailed holds the unique world-error code of this error
+const ErrCodeUpstreamRequestFailed = 14008
+
+// HTTPError holds the http error description
+func (err *ErrUpstreamRequestFailed) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadGateway,
+		Code:     ErrCodeUpstreamRequestFailed,
+		// The upstream response body may contain anything, don't hand it back over the api.
+		Message: "The service you are migrating from returned an error.",
+	}
+}
 
 // ErrMigrationAlreadyRunning includes the migrator holding the account-wide claim.
 type ErrMigrationAlreadyRunning struct {

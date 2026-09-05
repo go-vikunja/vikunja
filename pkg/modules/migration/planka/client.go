@@ -600,7 +600,7 @@ func (c *client) get(path string, query url.Values, out any) error {
 	case status == http.StatusUnauthorized:
 		return &ErrInvalidCredentials{}
 	case status < 200 || status >= 300:
-		return fmt.Errorf("planka returned status %d for %s", status, path)
+		return fmt.Errorf("planka request for %s failed: %w", path, migration.NewErrUpstreamRequestFailed("planka", status, ""))
 	}
 	return nil
 }
