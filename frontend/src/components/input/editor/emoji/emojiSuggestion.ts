@@ -73,13 +73,17 @@ export default function emojiSuggestionSetup() {
 					editor: props.editor,
 				})
 
-				const rect = props.clientRect?.()
-				if (!rect) {
+				if (!props.clientRect) {
 					unmount()
 					return
 				}
 
-				popup = createSuggestionPopup(getPopupContainer(props.editor), component.element!, rect)
+				popup = createSuggestionPopup(
+					getPopupContainer(props.editor),
+					component.element!,
+					props.clientRect,
+					props.editor.view.dom,
+				)
 			}
 
 			return {
@@ -94,8 +98,7 @@ export default function emojiSuggestionSetup() {
 						return
 					}
 					component?.updateProps(props)
-					const rect = props.clientRect?.()
-					if (rect) popup.setReferenceRect(rect)
+					popup.reposition()
 				},
 
 				onKeyDown(props: {event: KeyboardEvent}) {
