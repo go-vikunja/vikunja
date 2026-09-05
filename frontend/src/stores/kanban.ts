@@ -189,7 +189,13 @@ export const useKanbanStore = defineStore('kanban', () => {
 		const currentTaskBucket = buckets.value[bucketIndex]
 		if (typeof currentTaskBucket === 'undefined' || currentTaskBucket.id === bucketId) {
 			return
-		}		
+		}
+		// The target bucket can belong to a kanban view other than the loaded one (the task detail
+		// view lets users move tasks between buckets of any view). Removing the task here would drop
+		// it from the board with no bucket to put it back into.
+		if (findIndexById(buckets.value, bucketId) === -1) {
+			return
+		}
 		removeTaskInBucket(task)
 		task.bucketId = bucketId
 		addTaskToBucket(task)
@@ -198,9 +204,12 @@ export const useKanbanStore = defineStore('kanban', () => {
 	function addTaskToBucket(task: ITask) {
 		const bucketIndex = findIndexById(buckets.value, task.bucketId)
 		const oldBucket = buckets.value[bucketIndex]
+		if (typeof oldBucket === 'undefined') {
+			return
+		}
 		const newBucket = {
 			...oldBucket,
-			count: (oldBucket?.count || 0) + 1,
+			count: (oldBucket.count || 0) + 1,
 			tasks: [
 				task,
 				...oldBucket.tasks,
@@ -212,6 +221,9 @@ export const useKanbanStore = defineStore('kanban', () => {
 	function addTasksToBucket(tasks: ITask[], bucketId: IBucket['id']) {
 		const bucketIndex = findIndexById(buckets.value, bucketId)
 		const oldBucket = buckets.value[bucketIndex]
+		if (typeof oldBucket === 'undefined') {
+			return
+		}
 		const newBucket = {
 			...oldBucket,
 			tasks: [
