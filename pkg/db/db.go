@@ -141,8 +141,6 @@ func CreateDBEngine() (engine *xorm.Engine, err error) {
 		return nil, err
 	}
 
-	checkParadeDB(engine)
-
 	engine.AddHook(writeInvalidationHook{})
 
 	x = engine
@@ -215,7 +213,7 @@ func sanitizePostgresConnectionError(err error, user, password string) error {
 }
 
 // Copied and adopted from https://github.com/go-gitea/gitea/blob/f337c32e868381c6d2d948221aca0c59f8420c13/modules/setting/database.go#L176-L186
-func getPostgreSQLConnectionString(dbHost, dbUser, dbPasswd, dbName, dbSchema, dbSslMode, dbSslCert, dbSslKey, dbSslRootCert string) (connStr string) {
+func getPostgreSQLConnectionString(dbHost, dbUser, dbPasswd, dbName, dbSchema, dbSslMode, dbSslCert, dbSslKey, dbSslRootCert, queryExecMode string) (connStr string) {
 	dbParam := "?"
 	if strings.Contains(dbName, dbParam) {
 		dbParam = "&"
@@ -237,6 +235,9 @@ func getPostgreSQLConnectionString(dbHost, dbUser, dbPasswd, dbName, dbSchema, d
 		}
 		connStr += "&search_path=" + url.QueryEscape(searchPath)
 	}
+	if queryExecMode != "" {
+		connStr += "&default_query_exec_mode=" + url.QueryEscape(queryExecMode)
+	}
 	return connStr
 }
 
@@ -249,6 +250,34 @@ func quoteIdentifier(name string) string {
 }
 
 func initPostgresEngine() (engine *xorm.Engine, err error) {
+	engine, err = newPostgresEngine("")
+	if err != nil {
+		return nil, err
+	}
+
+	// Ping first so an unreachable database still reports as a connection error
+	// (#3287) instead of as a failed extension lookup.
+	if err = engine.Ping(); err != nil {
+		return nil, err
+	}
+
+	checkParadeDB(engine)
+	if !paradedbInstalled {
+		return engine, nil
+	}
+
+	// ParadeDB's ||| operator needs the search term while the statement is planned,
+	// which named prepared statements do not provide; unnamed ones are planned at
+	// Bind. ParadeDB installations trade the statement cache for working search.
+	// paradedb/paradedb#5907 fixed this for === only; revisit once ||| follows.
+	if err = engine.Close(); err != nil {
+		return nil, fmt.Errorf("could not close initial database connection: %w", err)
+	}
+
+	return newPostgresEngine("exec")
+}
+
+func newPostgresEngine(queryExecMode string) (engine *xorm.Engine, err error) {
 	connStr := getPostgreSQLConnectionString(
 		config.DatabaseHost.GetString(),
 		config.DatabaseUser.GetString(),
@@ -259,6 +288,7 @@ func initPostgresEngine() (engine *xorm.Engine, err error) {
 		config.DatabaseSslCert.GetString(),
 		config.DatabaseSslKey.GetString(),
 		config.DatabaseSslRootCert.GetString(),
+		queryExecMode,
 	)
 
 	engine, err = xorm.NewEngine("pgx", connStr)
