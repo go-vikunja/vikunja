@@ -17,6 +17,8 @@
 package wekan
 
 import (
+	"bufio"
+	"bytes"
 	"encoding/base64"
 	"encoding/json"
 	"io"
@@ -333,12 +335,22 @@ func convertWekanToVikunja(board *wekanBoard) []*models.ProjectWithTasksAndBucke
 
 func parseWekanJSON(r io.Reader) (*wekanBoard, error) {
 	var board wekanBoard
-	decoder := json.NewDecoder(r)
+	decoder := json.NewDecoder(skipUTF8BOM(r))
 	err := decoder.Decode(&board)
 	if err != nil {
 		return nil, err
 	}
 	return &board, nil
+}
+
+// skipUTF8BOM drops a leading byte order mark. Editors on Windows add one when
+// re-saving an export and Go's json decoder chokes on it.
+func skipUTF8BOM(r io.Reader) io.Reader {
+	br := bufio.NewReader(r)
+	if b, err := br.Peek(3); err == nil && bytes.Equal(b, []byte{0xEF, 0xBB, 0xBF}) {
+		_, _ = br.Discard(3)
+	}
+	return br
 }
 
 // Migrator is the WeKan migration struct.

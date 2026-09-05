@@ -21,7 +21,10 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
+
+	"code.vikunja.io/api/pkg/modules/migration"
 
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
@@ -68,8 +71,7 @@ func TestHumaMigrationFile(t *testing.T) {
 	// payload is shaped per migrator to hit a *domain* rejection (4xx) rather
 	// than a raw parse error: a wekan board with no title/cards is "empty", a
 	// ticktick CSV with no data rows is "empty", and a vikunja-file that isn't
-	// a zip is rejected as such. (Syntactically-malformed input would surface a
-	// raw json/zip error that maps to 500 in both v1 and v2 alike.)
+	// a zip is rejected as such.
 	migrators := map[string][]byte{
 		"vikunja-file": []byte("not a zip archive"),
 		"ticktick":     []byte("Title,Content\n"),
@@ -125,4 +127,34 @@ func TestHumaMigrationFile_MissingFile(t *testing.T) {
 
 	rec := migrationUploadRequest(t, e, "/api/v2/migration/ticktick/migrate", buf, w.FormDataContentType(), token)
 	assert.Equal(t, http.StatusUnprocessableEntity, rec.Code, "body: %s", rec.Body.String())
+}
+
+// TestHumaMigrationFile_MalformedJSON proves a syntactically broken upload is a
+// client error, not a 500 forwarded to Sentry. See API-CLOUD-4B.
+func TestHumaMigrationFile_MalformedJSON(t *testing.T) {
+	e := setupMigrationTestEnv(t)
+	token := humaTokenFor(t, &testuser1)
+
+	for _, payload := range [][]byte{
+		[]byte(`<html>not an export</html>`),
+		[]byte(`{"title": `),
+		append([]byte{0xEF, 0xBB, 0xBF}, []byte(`{"title": `)...),
+	} {
+		body, contentType := multipartImportBody(t, "board.json", payload, nil)
+		rec := migrationUploadRequest(t, e, "/api/v2/migration/wekan/migrate", body, contentType, token)
+		assert.Equal(t, http.StatusBadRequest, rec.Code, "body: %s", rec.Body.String())
+		assert.Contains(t, rec.Body.String(), strconv.Itoa(migration.ErrCodeInvalidImportFile), "body: %s", rec.Body.String())
+	}
+}
+
+// TestHumaMigrationFile_JSONWithBOM proves an otherwise valid export is not
+// rejected just because the exporter prefixed it with a byte order mark.
+func TestHumaMigrationFile_JSONWithBOM(t *testing.T) {
+	e := setupMigrationTestEnv(t)
+	token := humaTokenFor(t, &testuser1)
+
+	payload := append([]byte{0xEF, 0xBB, 0xBF}, []byte(`{"title":"BOM board","lists":[{"_id":"l1","title":"Todo"}],"cards":[{"_id":"c1","title":"A card","listId":"l1"}]}`)...)
+	body, contentType := multipartImportBody(t, "board.json", payload, nil)
+	rec := migrationUploadRequest(t, e, "/api/v2/migration/wekan/migrate", body, contentType, token)
+	assert.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
 }

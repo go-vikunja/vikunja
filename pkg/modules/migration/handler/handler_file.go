@@ -17,6 +17,8 @@
 package handler
 
 import (
+	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 
@@ -49,10 +51,23 @@ func RunFileMigration(ms migration.FileMigrator, u *user2.User, file io.ReaderAt
 		if ferr := migration.FinishMigration(m); ferr != nil {
 			log.Errorf("[Migration] Could not release claim of migration %d for user %d after failed import: %s", m.ID, u.ID, ferr)
 		}
-		return err
+		return asImportFileError(err)
 	}
 
 	return migration.FinishMigration(m)
+}
+
+// asImportFileError maps a decode failure to a 400: a file migrator only ever
+// parses user-supplied data, so a broken document is never a server fault.
+func asImportFileError(err error) error {
+	var syntaxErr *json.SyntaxError
+	var typeErr *json.UnmarshalTypeError
+	// A truncated document surfaces as io.ErrUnexpectedEOF rather than a SyntaxError.
+	if errors.As(err, &syntaxErr) || errors.As(err, &typeErr) ||
+		errors.Is(err, io.ErrUnexpectedEOF) || errors.Is(err, io.EOF) {
+		return &migration.ErrInvalidImportFile{Err: err}
+	}
+	return err
 }
 
 // Migrate calls the migration method
