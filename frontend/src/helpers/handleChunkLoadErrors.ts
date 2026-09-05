@@ -1,3 +1,5 @@
+import {isChunkLoadError} from './sentryFilters'
+
 const LAST_RELOAD_KEY = 'chunkLoadErrorReloadedAt'
 const RELOAD_COOLDOWN = 60 * 1000
 
@@ -32,14 +34,27 @@ export function markChunkLoadErrorReload(now: number = Date.now()) {
 	}
 }
 
+function reloadForStaleChunk(event: Event) {
+	if (!canReloadForChunkLoadError()) {
+		return
+	}
+
+	event.preventDefault()
+	markChunkLoadErrorReload()
+	window.location.reload()
+}
+
 export function handleChunkLoadErrors() {
-	window.addEventListener('vite:preloadError', event => {
-		if (!canReloadForChunkLoadError()) {
+	window.addEventListener('vite:preloadError', reloadForStaleChunk)
+
+	// Dynamic imports that don't go through vite's preload helper — and the MIME
+	// type errors browsers raise when index.html is served for a gone chunk —
+	// only ever surface as a rejected promise.
+	window.addEventListener('unhandledrejection', event => {
+		if (!isChunkLoadError((event.reason as {message?: unknown} | undefined)?.message)) {
 			return
 		}
 
-		event.preventDefault()
-		markChunkLoadErrorReload()
-		window.location.reload()
+		reloadForStaleChunk(event)
 	})
 }

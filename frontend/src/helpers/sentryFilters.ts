@@ -7,11 +7,16 @@ const MAX_CAUSE_DEPTH = 10
 
 // Thrown when a user has an old index.html open and a deploy changed the asset
 // hashes. handleChunkLoadErrors() reloads the page instead.
+// The MIME variants are what browsers report when the server answers the request
+// for a gone chunk with index.html instead of a 404.
 const CHUNK_LOAD_ERROR_PATTERNS = [
 	/failed to fetch dynamically imported module/i,
 	/error loading dynamically imported module/i,
 	/importing a module script failed/i,
 	/unable to preload css/i,
+	/is not a valid javascript mime type/i,
+	/was blocked because of a disallowed mime type/i,
+	/expected a javascript(-or-wasm)? module script but the server responded with a mime type/i,
 ]
 
 type SentryEventLike = {
