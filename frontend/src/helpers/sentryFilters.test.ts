@@ -55,6 +55,9 @@ describe('shouldDropEvent with chunk load errors', () => {
 		'error loading dynamically imported module: https://try.vikunja.io/assets/ProjectList-abc123.js',
 		'Importing a module script failed.',
 		'Unable to preload CSS for /assets/ProjectList-abc123.css',
+		'\'text/html\' is not a valid JavaScript MIME type.',
+		'Loading module from “https://try.vikunja.io/assets/ProjectList-abc123.js” was blocked because of a disallowed MIME type (“text/html”).',
+		'Failed to load module script: Expected a JavaScript module script but the server responded with a MIME type of "text/html".',
 	]
 
 	it.each(messages)('drops the exception %s', message => {
@@ -71,5 +74,9 @@ describe('shouldDropEvent with chunk load errors', () => {
 
 	it('keeps an unrelated event message', () => {
 		expect(shouldDropEvent(undefined, {message: 'something actually broke'})).toBe(false)
+	})
+
+	it('keeps an unrelated mime type error', () => {
+		expect(shouldDropEvent(new Error('Refused to apply style because its MIME type is not supported'))).toBe(false)
 	})
 })
