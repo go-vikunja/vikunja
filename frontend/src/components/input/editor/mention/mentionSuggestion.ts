@@ -71,7 +71,9 @@ export default function mentionSuggestionSetup(projectId: number) {
 		},
 
 		render: () => {
-			let component: VueRenderer
+			// onExit runs without a matching onStart when the plugin view is recreated
+			// while a suggestion is already active, so this stays null until mounted.
+			let component: VueRenderer | null = null
 			let popupElement: HTMLElement | null = null
 			let cleanupFloating: (() => void) | null = null
 
@@ -176,12 +178,14 @@ export default function mentionSuggestionSetup(projectId: number) {
 				onExit() {
 					if (cleanupFloating) {
 						cleanupFloating()
+						cleanupFloating = null
 					}
 					if (popupElement) {
 						popupElement.remove()
 						popupElement = null
 					}
-					component.destroy()
+					component?.destroy()
+					component = null
 				},
 			}
 		},
