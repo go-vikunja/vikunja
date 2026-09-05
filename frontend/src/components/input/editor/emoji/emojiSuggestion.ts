@@ -1,11 +1,11 @@
 import {VueRenderer} from '@tiptap/vue-3'
-import {computePosition, flip, shift, offset, autoUpdate} from '@floating-ui/dom'
 import type {Editor, Range} from '@tiptap/core'
 import {PluginKey, type EditorState} from '@tiptap/pm/state'
 
 import EmojiList from './EmojiList.vue'
 import {loadEmojis, filterEmojis, type EmojiEntry} from './emojiData'
 import {getPopupContainer} from '../popupContainer'
+import {createSuggestionPopup, type SuggestionPopup} from '../suggestionPopup'
 
 export const EmojiSuggestionPluginKey = new PluginKey('emojiSuggestion')
 
@@ -57,62 +57,33 @@ export default function emojiSuggestionSetup() {
 
 		render: () => {
 			let component: VueRenderer
-			let popupElement: HTMLElement | null = null
-			let cleanupFloating: (() => void) | null = null
+			let popup: SuggestionPopup | null = null
 
-			const virtualReference = {
-				getBoundingClientRect: () => ({
-					width: 0, height: 0, x: 0, y: 0, top: 0, left: 0, right: 0, bottom: 0,
-				} as DOMRect),
+			const unmount = () => {
+				popup?.destroy()
+				popup = null
+				component?.destroy()
 			}
 
 			const mount = (props: SuggestionProps) => {
+				unmount()
+
 				component = new VueRenderer(EmojiList, {
 					props,
 					editor: props.editor,
 				})
-				if (!props.clientRect) return
 
-				popupElement = document.createElement('div')
-				popupElement.style.position = 'absolute'
-				popupElement.style.top = '0'
-				popupElement.style.left = '0'
-				popupElement.style.zIndex = '4700'
-				popupElement.appendChild(component.element!)
-				getPopupContainer(props.editor).appendChild(popupElement)
-
-				const rect = props.clientRect()
-				if (!rect) {
+				if (!props.clientRect) {
 					unmount()
 					return
 				}
-				virtualReference.getBoundingClientRect = () => rect
 
-				const updatePosition = () => {
-					computePosition(virtualReference, popupElement!, {
-						placement: 'bottom-start',
-						middleware: [offset(8), flip(), shift({padding: 8})],
-					}).then(({x, y}) => {
-						if (popupElement) {
-							popupElement.style.left = `${x}px`
-							popupElement.style.top = `${y}px`
-						}
-					})
-				}
-				updatePosition()
-				cleanupFloating = autoUpdate(virtualReference, popupElement, updatePosition)
-			}
-
-			const unmount = () => {
-				if (cleanupFloating) {
-					cleanupFloating()
-					cleanupFloating = null
-				}
-				if (popupElement) {
-					popupElement.remove()
-					popupElement = null
-				}
-				component?.destroy()
+				popup = createSuggestionPopup(
+					getPopupContainer(props.editor),
+					component.element!,
+					props.clientRect,
+					props.editor.view.dom,
+				)
 			}
 
 			return {
@@ -122,20 +93,18 @@ export default function emojiSuggestionSetup() {
 				},
 
 				onUpdate(props: SuggestionProps) {
-					if (!popupElement) {
+					if (!popup) {
 						if (props.items.length || props.query !== '') mount(props)
 						return
 					}
 					component?.updateProps(props)
-					if (!props.clientRect) return
-					const rect = props.clientRect()
-					if (rect) virtualReference.getBoundingClientRect = () => rect
+					popup.reposition()
 				},
 
 				onKeyDown(props: {event: KeyboardEvent}) {
 					if (props.event.key === 'Escape') {
 						if (props.event.isComposing) return false
-						if (popupElement) popupElement.style.display = 'none'
+						if (popup) popup.element.style.display = 'none'
 						return true
 					}
 					return component?.ref?.onKeyDown(props)
