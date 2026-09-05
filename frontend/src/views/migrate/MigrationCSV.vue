@@ -108,10 +108,10 @@
 						<div class="column-name">
 							<strong>{{ mapping.column_name }}</strong>
 							<span
-								v-if="detectionResult && detectionResult.preview_rows[0]"
+								v-if="previewRow"
 								class="preview-value"
 							>
-								{{ $t('migrate.csv.example') }}: {{ detectionResult.preview_rows[0][index] || '-' }}
+								{{ $t('migrate.csv.example') }}: {{ previewRow[index] || '-' }}
 							</span>
 						</div>
 						<div class="select is-fullwidth">
@@ -248,6 +248,8 @@ const previewTasks = computed(() => {
 		labels: (pt.labels || []).map((l, li) => ({id: -(li + 1), title: l})),
 	}))
 })
+
+const previewRow = computed(() => detectionResult.value?.preview_rows?.[0] ?? null)
 
 const hasValidMapping = computed(() => {
 	if (!config.value.mapping.length) return false
