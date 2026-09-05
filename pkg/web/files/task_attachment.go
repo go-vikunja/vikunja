@@ -21,6 +21,7 @@
 package files
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -53,7 +54,8 @@ func BuildUploadResult(success []*models.TaskAttachment, failures []error) *Atta
 }
 
 func toAttachmentUploadError(err error) AttachmentUploadError {
-	if httpErr, ok := err.(web.HTTPErrorProcessor); ok {
+	var httpErr web.HTTPErrorProcessor
+	if errors.As(err, &httpErr) {
 		details := httpErr.HTTPError()
 		return AttachmentUploadError{Code: details.Code, Message: details.Message}
 	}

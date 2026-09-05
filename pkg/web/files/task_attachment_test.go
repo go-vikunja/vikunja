@@ -18,6 +18,7 @@ package files
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 
 	"code.vikunja.io/api/pkg/models"
@@ -33,6 +34,14 @@ func TestBuildUploadResult(t *testing.T) {
 		if assert.Len(t, r.Errors, 1) {
 			assert.Equal(t, models.ErrCodeTaskAttachmentIsTooLarge, r.Errors[0].Code)
 			assert.NotEmpty(t, r.Errors[0].Message)
+		}
+	})
+
+	t.Run("maps a wrapped domain error to its numeric code", func(t *testing.T) {
+		err := fmt.Errorf("could not upload file: %w", models.ErrTaskAttachmentIsTooLarge{Size: 99})
+		r := BuildUploadResult(nil, []error{err})
+		if assert.Len(t, r.Errors, 1) {
+			assert.Equal(t, models.ErrCodeTaskAttachmentIsTooLarge, r.Errors[0].Code)
 		}
 	})
 
