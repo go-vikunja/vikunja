@@ -112,6 +112,7 @@ describe('shouldDropEvent with third party injections', () => {
 		'undefined is not an object (evaluating \'window.webkit.messageHandlers\')',
 		'Error invoking postMessage: Java object is gone',
 		'undefined is not an object (evaluating \'window.weixinPostMessageHandlers.weixinDispatchMessage.postMessage\')',
+		'WKWebView API client did not respond to this postMessage',
 	]
 
 	it.each(messages)('drops the exception %s', message => {
@@ -160,6 +161,10 @@ describe('shouldDropEvent with third party injections', () => {
 				}],
 			},
 		})).toBe(false)
+	})
+
+	it('keeps an unrelated client error', () => {
+		expect(shouldDropEvent(new Error('The API client did not respond in time'))).toBe(false)
 	})
 
 	it('keeps an unrelated postMessage error', () => {

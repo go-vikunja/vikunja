@@ -38,6 +38,7 @@ const THIRD_PARTY_INJECTION_PATTERNS = [
 	/window\.webkit\.messagehandlers/i,
 	/error invoking postmessage/i,
 	/weixinpostmessagehandlers/i,
+	/wkwebview api client did not respond/i,
 ]
 
 const THIRD_PARTY_URL_PATTERN = /^(?:(?:chrome|moz|safari-web|safari|ms-browser)-extension:|iabjs:)/i
