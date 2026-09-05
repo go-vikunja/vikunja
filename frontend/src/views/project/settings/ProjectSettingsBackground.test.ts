@@ -8,6 +8,7 @@ import {createRouter, createMemoryHistory} from 'vue-router'
 import ProjectSettingsBackground from '@/views/project/settings/ProjectSettingsBackground.vue'
 import {useBaseStore} from '@/stores/base'
 import {useConfigStore} from '@/stores/config'
+import {getBlobFromBlurHash} from '@/helpers/getBlobFromBlurHash'
 import type {IProject} from '@/modelTypes/IProject'
 import en from '@/i18n/lang/en.json'
 
@@ -43,6 +44,10 @@ vi.mock('@/services/project', () => ({
 		loading = false
 		removeBackground = vi.fn()
 	},
+}))
+
+vi.mock('@/helpers/getBlobFromBlurHash', () => ({
+	getBlobFromBlurHash: vi.fn(async () => null),
 }))
 
 const i18n = createI18n({legacy: false, locale: 'en', messages: {en}})
@@ -116,5 +121,21 @@ describe('ProjectSettingsBackground', () => {
 		})
 
 		expect(wrapper.text()).toContain(REMOVE_BACKGROUND_LABEL)
+	})
+
+	it('does not create an object url when the blur hash could not be decoded', async () => {
+		const {errors} = await mountPage({providers: ['unsplash']})
+
+		expect(getBlobFromBlurHash).toHaveBeenCalled()
+		expect(window.URL.createObjectURL).not.toHaveBeenCalled()
+		expect(errors).toEqual([])
+	})
+
+	it('creates an object url for a decoded blur hash', async () => {
+		vi.mocked(getBlobFromBlurHash).mockResolvedValueOnce(new Blob(['x']))
+
+		await mountPage({providers: ['unsplash']})
+
+		expect(window.URL.createObjectURL).toHaveBeenCalledOnce()
 	})
 })
