@@ -53,6 +53,8 @@ func SetupTests() {
 		"labels",
 		"link_shares",
 		"projects",
+		"project_task_counters",
+		"task_index_aliases",
 		"task_assignees",
 		"task_attachments",
 		"task_comments",

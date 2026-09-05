@@ -421,6 +421,259 @@ func TestInsertFromStructure(t *testing.T) {
 			assert.Equal(t, int64(4), count, "task %q must keep position %v in all views", title, position)
 		}
 	})
+	t.Run("preserves generated view rows for related-only tasks", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		child := &models.Task{ID: 20, Title: "Related child"}
+		structure := []*models.ProjectWithTasksAndBuckets{{
+			Project: models.Project{
+				Title: "Import project",
+				Views: []*models.ProjectView{{
+					ID:                      100,
+					Title:                   "Kanban",
+					ViewKind:                models.ProjectViewKindKanban,
+					BucketConfigurationMode: models.BucketConfigurationModeManual,
+					DefaultBucketID:         200,
+				}},
+			},
+			Tasks: []*models.TaskWithComments{{Task: models.Task{
+				ID:       10,
+				Title:    "Parent",
+				BucketID: 200,
+				RelatedTasks: map[models.RelationKind][]*models.Task{
+					models.RelationKindSubtask: {child},
+				},
+			}}},
+			Buckets: []*models.Bucket{{
+				ID:            200,
+				Title:         "Backlog",
+				ProjectViewID: 100,
+			}},
+			Positions: []*models.TaskPosition{{
+				TaskID:        10,
+				ProjectViewID: 100,
+				Position:      123,
+			}},
+			TaskBuckets: []*models.TaskBucket{{
+				TaskID:        10,
+				BucketID:      200,
+				ProjectViewID: 100,
+			}},
+		}}
+
+		require.NoError(t, InsertFromStructure(structure, u))
+
+		s := db.NewSession()
+		defer s.Close()
+
+		viewID := structure[0].Views[0].ID
+		for title, taskID := range map[string]int64{
+			"Parent":        structure[0].Tasks[0].ID,
+			"Related child": child.ID,
+		} {
+			positionCount, err := s.Where("task_id = ? AND project_view_id = ?", taskID, viewID).Count(&models.TaskPosition{})
+			require.NoError(t, err)
+			assert.Equal(t, int64(1), positionCount, "task %q needs a position", title)
+
+			bucketCount, err := s.Where("task_id = ? AND project_view_id = ?", taskID, viewID).Count(&models.TaskBucket{})
+			require.NoError(t, err)
+			assert.Equal(t, int64(1), bucketCount, "task %q needs a bucket", title)
+		}
+
+		parentPosition := &models.TaskPosition{}
+		exists, err := s.Where("task_id = ? AND project_view_id = ?", structure[0].Tasks[0].ID, viewID).Get(parentPosition)
+		require.NoError(t, err)
+		require.True(t, exists)
+		assert.InDelta(t, 123, parentPosition.Position, 0)
+
+		parentBucketCount, err := s.Where(
+			"task_id = ? AND project_view_id = ? AND bucket_id = ?",
+			structure[0].Tasks[0].ID,
+			viewID,
+			structure[0].Buckets[0].ID,
+		).Count(&models.TaskBucket{})
+		require.NoError(t, err)
+		assert.Equal(t, int64(1), parentBucketCount)
+	})
+	t.Run("preserves out-of-order indexes before assigning automatic indexes", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		structure := []*models.ProjectWithTasksAndBuckets{{
+			Project: models.Project{Title: "Import task indexes"},
+			Tasks: []*models.TaskWithComments{
+				{Task: models.Task{Title: "high index", Index: 10}},
+				{Task: models.Task{Title: "low index", Index: 5}},
+				{Task: models.Task{Title: "automatic index"}},
+			},
+		}}
+		require.NoError(t, InsertFromStructure(structure, u))
+
+		assert.Equal(t, int64(10), structure[0].Tasks[0].Index)
+		assert.Equal(t, int64(5), structure[0].Tasks[1].Index)
+		assert.Equal(t, int64(1), structure[0].Tasks[2].Index)
+
+		s := db.NewSession()
+		defer s.Close()
+		counter := &models.ProjectTaskCounter{}
+		has, err := s.ID(structure[0].ID).Get(counter)
+		require.NoError(t, err)
+		require.True(t, has)
+		assert.Equal(t, int64(10), counter.LastIndex)
+	})
+	t.Run("preserves related-only task indexes in the initial batch", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		child := &models.Task{Title: "related child", Index: 5}
+		structure := []*models.ProjectWithTasksAndBuckets{{
+			Project: models.Project{Title: "Related task indexes"},
+			Tasks: []*models.TaskWithComments{{
+				Task: models.Task{
+					Title: "parent",
+					Index: 10,
+					RelatedTasks: models.RelatedTaskMap{
+						models.RelationKindSubtask: {child},
+					},
+				},
+			}},
+		}}
+		require.NoError(t, InsertFromStructure(structure, u))
+
+		assert.Equal(t, int64(10), structure[0].Tasks[0].Index)
+		assert.Equal(t, int64(5), child.Index)
+
+		s := db.NewSession()
+		defer s.Close()
+		counter := &models.ProjectTaskCounter{}
+		has, err := s.ID(structure[0].ID).Get(counter)
+		require.NoError(t, err)
+		require.True(t, has)
+		assert.Equal(t, int64(10), counter.LastIndex)
+	})
+	t.Run("relates the right task when an old id collides with a new one", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		// Task ids are handed out consecutively, so a probe import reveals which ids the next one gets.
+		probe := []*models.ProjectWithTasksAndBuckets{{
+			Project: models.Project{Title: "Id probe"},
+			Tasks:   []*models.TaskWithComments{{Task: models.Task{Title: "probe"}}},
+		}}
+		require.NoError(t, InsertFromStructure(probe, u))
+
+		// The import below creates parent, decoy and child in that order.
+		childNewID := probe[0].Tasks[0].ID + 3
+
+		child := &models.Task{ID: 11, Title: "child"}
+		structure := []*models.ProjectWithTasksAndBuckets{{
+			Project: models.Project{Title: "Colliding task ids"},
+			Tasks: []*models.TaskWithComments{
+				{Task: models.Task{
+					ID:    10,
+					Title: "parent",
+					RelatedTasks: models.RelatedTaskMap{
+						models.RelationKindSubtask: {child},
+					},
+				}},
+				{Task: models.Task{ID: childNewID, Title: "decoy"}},
+			},
+		}}
+		require.NoError(t, InsertFromStructure(structure, u))
+
+		s := db.NewSession()
+		defer s.Close()
+
+		require.Equal(t, childNewID, child.ID, "the child needs to collide with the decoy's old id")
+
+		relation := &models.TaskRelation{}
+		exists, err := s.
+			Where("task_id = ? AND relation_kind = ?", structure[0].Tasks[0].ID, models.RelationKindSubtask).
+			Get(relation)
+		require.NoError(t, err)
+		require.True(t, exists)
+
+		other := &models.Task{}
+		exists, err = s.ID(relation.OtherTaskID).Get(other)
+		require.NoError(t, err)
+		require.True(t, exists)
+		assert.Equal(t, "child", other.Title)
+	})
+	t.Run("creates both top-level tasks when their old ids collide", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		structure := []*models.ProjectWithTasksAndBuckets{{
+			Project: models.Project{Title: "Duplicate old ids"},
+			Tasks: []*models.TaskWithComments{
+				{Task: models.Task{ID: 42, Title: "first duplicate"}},
+				{Task: models.Task{ID: 42, Title: "second duplicate"}},
+			},
+		}}
+		require.NoError(t, InsertFromStructure(structure, u))
+
+		s := db.NewSession()
+		defer s.Close()
+
+		for _, title := range []string{"first duplicate", "second duplicate"} {
+			count, err := s.Where("project_id = ? AND title = ?", structure[0].ID, title).Count(&models.Task{})
+			require.NoError(t, err)
+			assert.Equal(t, int64(1), count, "task %q must exist", title)
+		}
+	})
+	t.Run("skips related tasks without a title", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		structure := []*models.ProjectWithTasksAndBuckets{{
+			Project: models.Project{Title: "Untitled relation"},
+			Tasks: []*models.TaskWithComments{{Task: models.Task{
+				Title: "parent",
+				RelatedTasks: models.RelatedTaskMap{
+					models.RelationKindSubtask: {{ID: 11}},
+				},
+			}}},
+		}}
+		require.NoError(t, InsertFromStructure(structure, u))
+
+		s := db.NewSession()
+		defer s.Close()
+
+		taskCount, err := s.Where("project_id = ?", structure[0].ID).Count(&models.Task{})
+		require.NoError(t, err)
+		assert.Equal(t, int64(1), taskCount)
+
+		relationCount, err := s.Where("task_id = ?", structure[0].Tasks[0].ID).Count(&models.TaskRelation{})
+		require.NoError(t, err)
+		assert.Equal(t, int64(0), relationCount)
+	})
+	t.Run("resolves id-only related tasks to already queued tasks", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		structure := []*models.ProjectWithTasksAndBuckets{{
+			Project: models.Project{Title: "Id only relation"},
+			Tasks: []*models.TaskWithComments{
+				{Task: models.Task{ID: 100, Title: "parent"}},
+				{Task: models.Task{ID: 101, Title: "child", RelatedTasks: models.RelatedTaskMap{
+					models.RelationKindParenttask: {{ID: 100}},
+				}}},
+			},
+		}}
+		require.NoError(t, InsertFromStructure(structure, u))
+
+		s := db.NewSession()
+		defer s.Close()
+
+		ids := make(map[string]int64, 2)
+		for _, title := range []string{"parent", "child"} {
+			task := &models.Task{}
+			exists, err := s.Where("project_id = ? AND title = ?", structure[0].ID, title).Get(task)
+			require.NoError(t, err)
+			require.True(t, exists, title)
+			ids[title] = task.ID
+		}
+
+		relationCount, err := s.
+			Where("task_id = ? AND other_task_id = ? AND relation_kind = ?", ids["child"], ids["parent"], models.RelationKindParenttask).
+			Count(&models.TaskRelation{})
+		require.NoError(t, err)
+		assert.Equal(t, int64(1), relationCount)
+	})
 	t.Run("assignees from a foreign instance", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
