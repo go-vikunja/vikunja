@@ -79,23 +79,33 @@ func CreateHTTPErrorHandler(e *echo.Echo, enableSentry bool) echo.HTTPErrorHandl
 			}
 		}
 
+		// Steps 4 and 5 match through errors.As: domain errors are routinely wrapped
+		// with fmt.Errorf("...: %w", err) on the way up, and a direct type assertion
+		// would let those fall through to the 500 default.
+		var (
+			marshaler json.Marshaler
+			hp        web.HTTPErrorProcessor
+		)
+		switch {
 		// 3. Special case: 413 body limit → convert to ErrFileIsTooLarge
 		// Check both the code (if it was an HTTPError) and errors.Is for wrapped errors
 		// In Echo v5, body limit errors during multipart parsing may be wrapped
-		if code == http.StatusRequestEntityTooLarge || errors.Is(err, echo.ErrStatusRequestEntityTooLarge) {
+		case code == http.StatusRequestEntityTooLarge || errors.Is(err, echo.ErrStatusRequestEntityTooLarge):
 			fileErr := files.ErrFileIsTooLarge{}
 			errDetails := fileErr.HTTPError()
 			code = errDetails.HTTPCode
 			message = errDetails
-		} else if _, isMarshaler := err.(json.Marshaler); isMarshaler {
-			// 4. Check for json.Marshaler (preserves full struct like ValidationHTTPError)
-			// This allows errors with extra fields (like InvalidFields) to be serialized correctly
-			if codeGetter, hasCode := err.(httpCodeGetter); hasCode {
+
+		// 4. Check for json.Marshaler (preserves full struct like ValidationHTTPError)
+		// This allows errors with extra fields (like InvalidFields) to be serialized correctly
+		case errors.As(err, &marshaler):
+			if codeGetter, hasCode := marshaler.(httpCodeGetter); hasCode {
 				code = codeGetter.GetHTTPCode()
 			}
-			message = err // Echo will serialize via MarshalJSON
-		} else if hp, ok := err.(web.HTTPErrorProcessor); ok {
-			// 5. Standard HTTPErrorProcessor (domain errors like ErrProjectDoesNotExist)
+			message = marshaler // Echo will serialize via MarshalJSON
+
+		// 5. Standard HTTPErrorProcessor (domain errors like ErrProjectDoesNotExist)
+		case errors.As(err, &hp):
 			errDetails := hp.HTTPError()
 			code = errDetails.HTTPCode
 			message = errDetails
