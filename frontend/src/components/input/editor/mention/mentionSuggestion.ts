@@ -1,9 +1,9 @@
 import { VueRenderer } from '@tiptap/vue-3'
-import { computePosition, flip, shift, offset, autoUpdate } from '@floating-ui/dom'
 import type { Editor } from '@tiptap/core'
 
 import MentionList from './MentionList.vue'
 import { getPopupContainer } from '../popupContainer'
+import { createSuggestionPopup, type SuggestionPopup } from '../suggestionPopup'
 import ProjectUserService from '@/services/projectUsers'
 import { fetchAvatarBlobUrl, getDisplayName } from '@/models/user'
 import type { IUser } from '@/modelTypes/IUser'
@@ -74,21 +74,7 @@ export default function mentionSuggestionSetup(projectId: number) {
 			// onExit runs without a matching onStart when the plugin view is recreated
 			// while a suggestion is already active, so this stays null until mounted.
 			let component: VueRenderer | null = null
-			let popupElement: HTMLElement | null = null
-			let cleanupFloating: (() => void) | null = null
-
-			const virtualReference = {
-				getBoundingClientRect: () => ({
-					width: 0,
-					height: 0,
-					x: 0,
-					y: 0,
-					top: 0,
-					left: 0,
-					right: 0,
-					bottom: 0,
-				} as DOMRect),
-			}
+			let popup: SuggestionPopup | null = null
 
 			return {
 				onStart: (props: {
@@ -102,42 +88,12 @@ export default function mentionSuggestionSetup(projectId: number) {
 						editor: props.editor,
 					})
 
-					if (!props.clientRect) {
+					const rect = props.clientRect?.()
+					if (!rect) {
 						return
 					}
 
-					// Create popup element
-					popupElement = document.createElement('div')
-					popupElement.style.position = 'absolute'
-					popupElement.style.top = '0'
-					popupElement.style.left = '0'
-					popupElement.style.zIndex = '4700'
-					popupElement.appendChild(component.element!)
-					getPopupContainer(props.editor).appendChild(popupElement)
-					// Update virtual reference
-					const rect = props.clientRect()
-					if (rect) {
-						virtualReference.getBoundingClientRect = () => rect
-						// Set up floating positioning
-						const updatePosition = () => {
-							computePosition(virtualReference, popupElement!, {
-								placement: 'bottom-start',
-								middleware: [
-									offset(8),
-									flip(),
-									shift({ padding: 8 }),
-								],
-							}).then(({ x, y }) => {
-								if (popupElement) {
-									popupElement.style.left = `${x}px`
-									popupElement.style.top = `${y}px`
-								}
-							})
-						}
-
-						updatePosition()
-						cleanupFloating = autoUpdate(virtualReference, popupElement, updatePosition)
-					}
+					popup = createSuggestionPopup(getPopupContainer(props.editor), component.element!, rect)
 				},
 
 				onUpdate(props: {
@@ -148,14 +104,9 @@ export default function mentionSuggestionSetup(projectId: number) {
 				}) {
 					component?.updateProps(props)
 
-					if (!props.clientRect || !popupElement) {
-						return
-					}
-
-					// Update virtual reference
-					const rect = props.clientRect()
+					const rect = props.clientRect?.()
 					if (rect) {
-						virtualReference.getBoundingClientRect = () => rect
+						popup?.setReferenceRect(rect)
 					}
 				},
 
@@ -165,8 +116,8 @@ export default function mentionSuggestionSetup(projectId: number) {
 							return false
 						}
 
-						if (popupElement) {
-							popupElement.style.display = 'none'
+						if (popup) {
+							popup.element.style.display = 'none'
 						}
 
 						return true
@@ -176,14 +127,8 @@ export default function mentionSuggestionSetup(projectId: number) {
 				},
 
 				onExit() {
-					if (cleanupFloating) {
-						cleanupFloating()
-						cleanupFloating = null
-					}
-					if (popupElement) {
-						popupElement.remove()
-						popupElement = null
-					}
+					popup?.destroy()
+					popup = null
 					component?.destroy()
 					component = null
 				},
