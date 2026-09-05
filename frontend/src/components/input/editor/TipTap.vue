@@ -356,6 +356,13 @@ const editor = useEditor({
 	},
 })
 
+// useEditor destroys the editor on unmount but leaves the ref populated, so `editor.value?.`
+// still hands out a dead instance to anything resuming after an await.
+function liveEditor() {
+	const instance = editor.value
+	return instance && !instance.isDestroyed ? instance : undefined
+}
+
 watchEffect(() => editor.value?.setEditable(isEditing.value, false))
 
 watch(
@@ -373,7 +380,12 @@ watch(
 )
 
 function bubbleNow() {
-	const editorVal = editor.value!.getHTML()
+	const instance = liveEditor()
+	if (!instance) {
+		return
+	}
+
+	const editorVal = instance.getHTML()
 	if (editorVal === modelValue.value ||
 		(editorVal === '<p></p>') && modelValue.value === '') {
 		return
@@ -452,23 +464,23 @@ function uploadAndInsertFiles(files: File[] | FileList) {
 
 	props.uploadCallback(files).then(async urls => {
 		urls?.forEach(url => {
-			if (editor.value?.isEmpty) {
-				editor.value
+			if (liveEditor()?.isEmpty) {
+				liveEditor()
 					?.chain()
 					.focus()
 					.insertContent(UPLOAD_PLACEHOLDER_ELEMENT)
 					.run()
 			}
-			editor.value
+			liveEditor()
 				?.chain()
 				.focus()
 				.setImage({src: url})
 				.run()
 		})
 
-		const html = editor.value?.getHTML().replace(UPLOAD_PLACEHOLDER_ELEMENT, '') ?? ''
+		const html = liveEditor()?.getHTML().replace(UPLOAD_PLACEHOLDER_ELEMENT, '') ?? ''
 
-		editor.value?.commands.setContent(html, {
+		liveEditor()?.commands.setContent(html, {
 			...defaultSetContentOptions,
 			emitUpdate: false,
 		})
@@ -510,7 +522,7 @@ async function addImage(event: Event) {
 	const url = await inputPrompt(event.target.getBoundingClientRect(), t('input.editor.urlPlaceholder'), '', editor.value)
 
 	if (url) {
-		editor.value?.chain().focus().setImage({src: url}).run()
+		liveEditor()?.chain().focus().setImage({src: url}).run()
 		bubbleNow()
 		await promptImageAlt(url)
 	}
@@ -542,7 +554,7 @@ async function promptAndApplyImageAlt(rect: DOMRect, previous: string) {
 		return
 	}
 
-	editor.value?.chain().focus().updateAttributes('image', {alt}).run()
+	liveEditor()?.chain().focus().updateAttributes('image', {alt}).run()
 	bubbleNow()
 }
 
@@ -554,12 +566,13 @@ async function setImageAlt(event: MouseEvent) {
 
 // Cancelling leaves the image without alt text.
 async function promptImageAlt(src: string) {
-	if (!editor.value) {
+	const instance = liveEditor()
+	if (!instance) {
 		return
 	}
 
 	let pos: number | null = null
-	editor.value.state.doc.descendants((node, p) => {
+	instance.state.doc.descendants((node, p) => {
 		if (node.type.name === 'image' && (node.attrs.src === src || node.attrs['data-src'] === src)) {
 			pos = p
 		}
@@ -568,16 +581,16 @@ async function promptImageAlt(src: string) {
 		return
 	}
 
-	editor.value.chain().setNodeSelection(pos).run()
+	instance.chain().setNodeSelection(pos).run()
 	await nextTick()
 
-	const dom = editor.value.view.nodeDOM(pos) as HTMLElement | null
+	const dom = liveEditor()?.view.nodeDOM(pos) as HTMLElement | null
 	const rect = dom?.getBoundingClientRect() ?? new DOMRect()
 	await promptAndApplyImageAlt(rect, '')
 
 	// Drop the node selection the prompt relied on so the next insert appends a new
 	// image instead of replacing this one.
-	editor.value?.chain().setTextSelection(pos + 1).run()
+	liveEditor()?.chain().setTextSelection(pos + 1).run()
 }
 
 onMounted(async () => {
