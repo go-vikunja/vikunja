@@ -149,8 +149,8 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 		}
 
 		this.createdBy = new UserModel(this.createdBy)
-		this.created = new Date(this.created)
-		this.updated = new Date(this.updated)
+		this.created = parseDateOrNull(this.created)
+		this.updated = parseDateOrNull(this.updated)
 
 		this.projectId = Number(this.projectId)
 

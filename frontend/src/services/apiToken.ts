@@ -1,6 +1,7 @@
 import AbstractService from '@/services/abstractService'
 import type {IApiToken} from '@/modelTypes/IApiToken'
 import ApiTokenModel from '@/models/apiTokenModel'
+import {toISOStringOrNull} from '@/helpers/time/toISOStringOrNull'
 
 export default class ApiTokenService extends AbstractService<IApiToken> {
 	constructor() {
@@ -14,8 +15,8 @@ export default class ApiTokenService extends AbstractService<IApiToken> {
 	processModel(model: IApiToken) {
 		return {
 			...model,
-			expiresAt: new Date(model.expiresAt).toISOString(),
-			created: new Date(model.created).toISOString(),
+			expiresAt: toISOStringOrNull(model.expiresAt),
+			created: toISOStringOrNull(model.created),
 		}
 	}
 	
