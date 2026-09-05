@@ -224,6 +224,44 @@ func TestAPIToken_GetTokenFromTokenString(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, int64(1), token.ID)
 	})
+	t.Run("verified token is served from the cache until it is deleted", func(t *testing.T) {
+		s := db.NewSession()
+		defer s.Close()
+		db.LoadAndAssertFixtures(t)
+		const raw = "tk_2eef46f40ebab3304919ab2e7e39993f75f29d2e" // Token 1
+		verifiedTokens.forget(raw)
+
+		token, err := GetTokenFromTokenString(s, raw)
+		require.NoError(t, err)
+		_, cached := verifiedTokens.get(raw)
+		assert.True(t, cached)
+
+		token, err = GetTokenFromTokenString(s, raw)
+		require.NoError(t, err)
+		assert.Equal(t, int64(1), token.ID)
+
+		_, err = s.Where("id = ?", 1).Delete(&APIToken{})
+		require.NoError(t, err)
+		_, err = GetTokenFromTokenString(s, raw)
+		require.Error(t, err)
+		assert.True(t, IsErrAPITokenInvalid(err))
+		_, cached = verifiedTokens.get(raw)
+		assert.False(t, cached)
+	})
+	t.Run("stale cache entry falls back to the full lookup", func(t *testing.T) {
+		s := db.NewSession()
+		defer s.Close()
+		db.LoadAndAssertFixtures(t)
+		const raw = "tk_2eef46f40ebab3304919ab2e7e39993f75f29d2e" // Token 1
+		verifiedTokens.put(raw, &APIToken{ID: 2, TokenHash: "not the hash of token 2"})
+
+		token, err := GetTokenFromTokenString(s, raw)
+		require.NoError(t, err)
+		assert.Equal(t, int64(1), token.ID)
+		v, cached := verifiedTokens.get(raw)
+		assert.True(t, cached)
+		assert.Equal(t, int64(1), v.id)
+	})
 	t.Run("invalid token", func(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()

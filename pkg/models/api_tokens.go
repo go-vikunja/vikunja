@@ -257,6 +257,19 @@ func GetTokenFromTokenString(s *xorm.Session, token string) (apiToken *APIToken,
 		return nil, &ErrAPITokenInvalid{}
 	}
 
+	if v, has := verifiedTokens.get(token); has {
+		t := &APIToken{}
+		exists, err := s.Where("id = ?", v.id).Get(t)
+		if err != nil {
+			return nil, err
+		}
+		// The hash check guards against an id reused after the token was deleted.
+		if exists && subtle.ConstantTimeCompare([]byte(t.TokenHash), []byte(v.hash)) == 1 {
+			return t, nil
+		}
+		verifiedTokens.forget(token)
+	}
+
 	lastEight := token[len(token)-8:]
 
 	tokens := []*APIToken{}
@@ -268,6 +281,7 @@ func GetTokenFromTokenString(s *xorm.Session, token string) (apiToken *APIToken,
 	for _, t := range tokens {
 		tempHash := HashToken(token, t.TokenSalt)
 		if subtle.ConstantTimeCompare([]byte(t.TokenHash), []byte(tempHash)) == 1 {
+			verifiedTokens.put(token, t)
 			return t, nil
 		}
 	}
