@@ -215,3 +215,28 @@ func (err *ErrNotACSVFile) HTTPError() web.HTTPError {
 		Message:  "The provided file is not a valid CSV file.",
 	}
 }
+
+// ErrInvalidImportFile represents an import file which could not be parsed.
+type ErrInvalidImportFile struct {
+	Err error
+}
+
+func (err *ErrInvalidImportFile) Error() string {
+	return "The provided file could not be parsed: " + err.Err.Error()
+}
+
+func (err *ErrInvalidImportFile) Unwrap() error {
+	return err.Err
+}
+
+// ErrCodeInvalidImportFile holds the unique world-error code of this error
+const ErrCodeInvalidImportFile = 14008
+
+// HTTPError holds the http error description
+func (err *ErrInvalidImportFile) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeInvalidImportFile,
+		Message:  "The provided file could not be parsed. Please make sure it is a valid export file.",
+	}
+}

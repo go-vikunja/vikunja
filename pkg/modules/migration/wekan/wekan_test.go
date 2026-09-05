@@ -221,6 +221,13 @@ func TestParseWekanJSONInvalid(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestParseWekanJSONWithBOM(t *testing.T) {
+	raw := append([]byte{0xEF, 0xBB, 0xBF}, []byte(`{"title":"With BOM"}`)...)
+	board, err := parseWekanJSON(bytes.NewReader(raw))
+	require.NoError(t, err)
+	assert.Equal(t, "With BOM", board.Title)
+}
+
 func TestParseWekanJSONEmpty(t *testing.T) {
 	_, err := parseWekanJSON(bytes.NewReader([]byte("")))
 	require.Error(t, err)
