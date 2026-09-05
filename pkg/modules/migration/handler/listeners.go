@@ -20,12 +20,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/notifications"
+	"code.vikunja.io/api/pkg/web"
 
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/getsentry/sentry-go"
@@ -45,14 +47,22 @@ func (m *migrationFailedError) Error() string {
 	return fmt.Sprintf("migration from %s failed, original error message was: %s", m.MigratorKind, m.OriginalError.Error())
 }
 
-// shouldReportMigrationError filters out failures we cannot fix: a 4xx from the service we migrate from
-// means the user's account, token or data is the problem, not Vikunja. The user still gets notified,
-// with the upstream message instead of the "we have been notified" one.
+// shouldReportMigrationError filters out failures we cannot fix: a 4xx from the service we migrate from,
+// or a domain error that maps to a 4xx, means the user's account, token, url or data is the problem, not
+// Vikunja. The user still gets notified, with the actual message instead of the "we have been notified" one.
 func shouldReportMigrationError(err error) bool {
+	// ErrUpstreamRequestFailed maps to 502 no matter what the upstream said, so it needs its own check.
 	var upstreamErr *migration.ErrUpstreamRequestFailed
 	if errors.As(err, &upstreamErr) {
 		return !upstreamErr.IsClientError()
 	}
+
+	var httpErr web.HTTPErrorProcessor
+	if errors.As(err, &httpErr) {
+		code := httpErr.HTTPError().HTTPCode
+		return code < http.StatusBadRequest || code >= http.StatusInternalServerError
+	}
+
 	return true
 }
 

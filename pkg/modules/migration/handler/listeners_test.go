@@ -19,12 +19,28 @@ package handler
 import (
 	"errors"
 	"fmt"
+	"net/http"
 	"testing"
 
 	"code.vikunja.io/api/pkg/modules/migration"
+	"code.vikunja.io/api/pkg/modules/migration/planka"
+	"code.vikunja.io/api/pkg/web"
 
 	"github.com/stretchr/testify/assert"
 )
+
+// serverSideDomainError stands in for a domain error which maps to a 5xx: those are ours to fix.
+type serverSideDomainError struct{}
+
+func (e *serverSideDomainError) Error() string { return "something broke on our end" }
+
+func (e *serverSideDomainError) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusInternalServerError,
+		Code:     9999,
+		Message:  "something broke on our end",
+	}
+}
 
 func TestShouldReportMigrationError(t *testing.T) {
 	tests := []struct {
@@ -55,6 +71,26 @@ func TestShouldReportMigrationError(t *testing.T) {
 		{
 			name: "wrapped upstream 503",
 			err:  fmt.Errorf("could not get data: %w", migration.NewErrUpstreamRequestFailed("planka", 503, "")),
+			want: true,
+		},
+		{
+			name: "planka invalid credentials",
+			err:  &planka.ErrInvalidCredentials{},
+			want: false,
+		},
+		{
+			name: "planka no api at url",
+			err:  &planka.ErrNoPlankaAtURL{Reason: "404"},
+			want: false,
+		},
+		{
+			name: "wrapped 4xx domain error",
+			err:  fmt.Errorf("could not migrate: %w", &migration.ErrNotAZipFile{}),
+			want: false,
+		},
+		{
+			name: "5xx domain error",
+			err:  &serverSideDomainError{},
 			want: true,
 		},
 		{
