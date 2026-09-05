@@ -11,7 +11,9 @@ export function createDateFromString(dateString: string | Date) {
 		return dateString
 	}
 
-	if (dateString.includes('-')) {
+	// Safari won't parse `YYYY-MM-DD HH:mm` but does understand slashes. Full iso strings
+	// (the ones with a `T`) parse everywhere and would break when mangled.
+	if (!dateString.includes('T') && dateString.includes('-')) {
 		dateString = dateString.replace(/-/g, '/')
 	}
 
