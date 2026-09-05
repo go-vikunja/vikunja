@@ -998,6 +998,10 @@
     "undo": "Undo",
     "checklistTotal": "{checked} of {total} tasks",
     "checklistAllDone": "{total} tasks",
+    "collapseSubtasks": "Collapse subtasks",
+    "expandSubtasks": "Expand subtasks",
+    "collapseAllSubtasks": "Collapse all subtasks",
+    "expandAllSubtasks": "Expand all subtasks",
     "show": {
       "titleCurrent": "Current Tasks",
       "noDates": "Show tasks without date",
