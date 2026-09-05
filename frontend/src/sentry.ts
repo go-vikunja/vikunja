@@ -38,6 +38,16 @@ export default async function setupSentry(app: App, router: Router) {
 		replaysSessionSampleRate: 0.1,
 		replaysOnErrorSampleRate: 1.0,
 
+		// Extensions run their content scripts on our origin, so their errors end
+		// up here even though we can neither reproduce nor fix them.
+		denyUrls: [
+			/^chrome-extension:\/\//i,
+			/^moz-extension:\/\//i,
+			/^safari-web-extension:\/\//i,
+			/^safari-extension:\/\//i,
+			/^ms-browser-extension:\/\//i,
+		],
+
 
 		beforeSend(event, hint) {
 			if (shouldDropEvent(hint.originalException, event)) {

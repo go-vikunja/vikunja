@@ -80,3 +80,64 @@ describe('shouldDropEvent with chunk load errors', () => {
 		expect(shouldDropEvent(new Error('Refused to apply style because its MIME type is not supported'))).toBe(false)
 	})
 })
+
+describe('shouldDropEvent with third party injections', () => {
+	const messages = [
+		'Invalid call to runtime.sendMessage(). Tab not found.',
+		'undefined is not an object (evaluating \'window.webkit.messageHandlers\')',
+		'Error invoking postMessage: Java object is gone',
+		'undefined is not an object (evaluating \'window.weixinPostMessageHandlers.weixinDispatchMessage.postMessage\')',
+	]
+
+	it.each(messages)('drops the exception %s', message => {
+		expect(shouldDropEvent(new Error(message))).toBe(true)
+	})
+
+	it.each(messages)('drops the event exception value %s', message => {
+		expect(shouldDropEvent(undefined, {exception: {values: [{value: message}]}})).toBe(true)
+	})
+
+	const extensionUrls = [
+		'chrome-extension://abcdefghijklmnop/content.js',
+		'moz-extension://abcdefghijklmnop/content.js',
+		'safari-web-extension://ABCDEF-1234/content.js',
+		'iabjs://navigation_performance_logger_android',
+	]
+
+	it.each(extensionUrls)('drops an event thrown from %s', filename => {
+		expect(shouldDropEvent(undefined, {
+			exception: {
+				values: [{
+					value: 'boom',
+					stacktrace: {frames: [{filename: 'https://try.vikunja.io/assets/index.js'}, {filename}]},
+				}],
+			},
+		})).toBe(true)
+	})
+
+	it('keeps an event an extension only appears deeper in', () => {
+		expect(shouldDropEvent(undefined, {
+			exception: {
+				values: [{
+					value: 'boom',
+					stacktrace: {frames: [{filename: 'chrome-extension://abc/content.js'}, {filename: 'https://try.vikunja.io/assets/index.js'}]},
+				}],
+			},
+		})).toBe(false)
+	})
+
+	it('keeps an event thrown from our own code', () => {
+		expect(shouldDropEvent(undefined, {
+			exception: {
+				values: [{
+					value: 'boom',
+					stacktrace: {frames: [{filename: 'https://try.vikunja.io/assets/index.js'}]},
+				}],
+			},
+		})).toBe(false)
+	})
+
+	it('keeps an unrelated postMessage error', () => {
+		expect(shouldDropEvent(new Error('Failed to execute \'postMessage\' on \'Window\''))).toBe(false)
+	})
+})
