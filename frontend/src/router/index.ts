@@ -263,7 +263,7 @@ const router = createRouter({
 			},
 		},
 		{
-			path: '/projects/:projectId/settings/edit',
+			path: '/projects/:projectId(\\d+)/settings/edit',
 			name: 'project.settings.edit',
 			component: () => import('@/views/project/settings/ProjectSettingsEdit.vue'),
 			props: route => ({ projectId: Number(route.params.projectId as string) }),
@@ -304,7 +304,7 @@ const router = createRouter({
 			},
 		},
 		{
-			path: '/projects/:projectId/settings/delete',
+			path: '/projects/:projectId(\\d+)/settings/delete',
 			name: 'project.settings.delete',
 			component: () => import('@/views/project/settings/ProjectSettingsDelete.vue'),
 			meta: {
@@ -329,7 +329,8 @@ const router = createRouter({
 			props: route => ({ projectId: Number(route.params.projectId as string) }),
 		},
 		{
-			path: '/projects/:projectId/settings/edit',
+			// Saved-filter pseudo-projects use IDs <= -2; -1 is the Favorites pseudo-project.
+			path: '/projects/:projectId(-[2-9]\\d*|-1\\d+)/settings/edit',
 			name: 'filter.settings.edit',
 			component: () => import('@/views/filters/FilterEdit.vue'),
 			meta: {
@@ -338,7 +339,7 @@ const router = createRouter({
 			props: route => ({ projectId: Number(route.params.projectId as string) }),
 		},
 		{
-			path: '/projects/:projectId/settings/delete',
+			path: '/projects/:projectId(-[2-9]\\d*|-1\\d+)/settings/delete',
 			name: 'filter.settings.delete',
 			component: () => import('@/views/filters/FilterDelete.vue'),
 			meta: {
