@@ -149,10 +149,10 @@ const currentProject = computed<IProject>(() => {
 })
 useTitle(() => currentProject.value?.id ? getProjectTitle(currentProject.value) : '')
 
-const views = computed(() => projectStore.projects[props.projectId]?.views)
+const views = computed<IProjectView[]>(() => projectStore.projects[props.projectId]?.views ?? [])
 
 const activeViewTitle = computed(() => {
-	const activeView = views.value?.find((v: IProjectView) => v.id === props.viewId)
+	const activeView = views.value.find((v: IProjectView) => v.id === props.viewId)
 	return activeView ? getViewTitle(activeView) : ''
 })
 
