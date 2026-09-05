@@ -115,7 +115,7 @@ func (err *ErrNoDataFileInZip) Error() string {
 }
 
 // ErrCodeNoDataFileInZip holds the unique world-error code of this error
-const ErrCodeNoDataFileInZip = 14008
+const ErrCodeNoDataFileInZip = 14009
 
 // HTTPError holds the http error description
 func (err *ErrNoDataFileInZip) HTTPError() web.HTTPError {
