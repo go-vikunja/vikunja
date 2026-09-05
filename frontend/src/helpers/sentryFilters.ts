@@ -19,10 +19,27 @@ const CHUNK_LOAD_ERROR_PATTERNS = [
 	/expected a javascript(-or-wasm)? module script but the server responded with a mime type/i,
 ]
 
+// Injected into our page by browser extensions and by in-app webviews
+// (Instagram, WeChat, ...). Their scripts run on our origin but none of it is
+// our code, and we can't fix any of it.
+const THIRD_PARTY_INJECTION_PATTERNS = [
+	/runtime\.sendmessage\(\)/i,
+	/window\.webkit\.messagehandlers/i,
+	/error invoking postmessage/i,
+	/weixinpostmessagehandlers/i,
+]
+
+const THIRD_PARTY_URL_PATTERN = /^(?:(?:chrome|moz|safari-web|safari|ms-browser)-extension:|iabjs:)/i
+
 type SentryEventLike = {
 	message?: string
 	exception?: {
-		values?: {value?: string}[]
+		values?: {
+			value?: string
+			stacktrace?: {
+				frames?: {filename?: string}[]
+			}
+		}[]
 	}
 }
 
@@ -44,19 +61,38 @@ export function isChunkLoadError(message: unknown): boolean {
 		&& CHUNK_LOAD_ERROR_PATTERNS.some(pattern => pattern.test(message))
 }
 
+function isNoisyMessage(message: unknown): boolean {
+	return isChunkLoadError(message)
+		|| (typeof message === 'string' && THIRD_PARTY_INJECTION_PATTERNS.some(pattern => pattern.test(message)))
+}
+
+function hasThirdPartyTopFrame(event?: SentryEventLike): boolean {
+	return event?.exception?.values?.some(value => {
+		const frames = value?.stacktrace?.frames
+		// Sentry orders frames oldest first, so the one that threw is last.
+		const filename = frames?.[frames.length - 1]?.filename
+
+		return typeof filename === 'string' && THIRD_PARTY_URL_PATTERN.test(filename)
+	}) ?? false
+}
+
 export function shouldDropEvent(originalException: unknown, event?: SentryEventLike): boolean {
-	if (isChunkLoadError(event?.message)) {
+	if (isNoisyMessage(event?.message)) {
 		return true
 	}
 
-	if (event?.exception?.values?.some(value => isChunkLoadError(value?.value))) {
+	if (event?.exception?.values?.some(value => isNoisyMessage(value?.value))) {
+		return true
+	}
+
+	if (hasThirdPartyTopFrame(event)) {
 		return true
 	}
 
 	let current = originalException
 
 	for (let depth = 0; depth < MAX_CAUSE_DEPTH && current; depth++) {
-		if (isRequestError(current) || isChunkLoadError((current as {message?: unknown}).message)) {
+		if (isRequestError(current) || isNoisyMessage((current as {message?: unknown}).message)) {
 			return true
 		}
 
