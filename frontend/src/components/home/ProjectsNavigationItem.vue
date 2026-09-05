@@ -124,6 +124,11 @@ function handleMouseMove(e: MouseEvent) {
 		return
 	}
 
+	// Synthetic drag events carry no pointer position, and elementsFromPoint throws on NaN
+	if (!Number.isFinite(e.clientX) || !Number.isFinite(e.clientY)) {
+		return
+	}
+
 	const elementsUnderMouse = document.elementsFromPoint(e.clientX, e.clientY)
 	const isOverThisProject = elementsUnderMouse.some(el => {
 		const projectId = (el as HTMLElement).dataset?.projectId
