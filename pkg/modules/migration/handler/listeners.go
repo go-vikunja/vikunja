@@ -18,6 +18,7 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"code.vikunja.io/api/pkg/config"
@@ -42,6 +43,17 @@ type migrationFailedError struct {
 
 func (m *migrationFailedError) Error() string {
 	return fmt.Sprintf("migration from %s failed, original error message was: %s", m.MigratorKind, m.OriginalError.Error())
+}
+
+// shouldReportMigrationError filters out failures we cannot fix: a 4xx from the service we migrate from
+// means the user's account, token or data is the problem, not Vikunja. The user still gets notified,
+// with the upstream message instead of the "we have been notified" one.
+func shouldReportMigrationError(err error) bool {
+	var upstreamErr *migration.ErrUpstreamRequestFailed
+	if errors.As(err, &upstreamErr) {
+		return !upstreamErr.IsClientError()
+	}
+	return true
 }
 
 // MigrationListener  represents a listener
@@ -85,7 +97,7 @@ func (s *MigrationListener) Handle(msg *message.Message) (err error) {
 		log.Errorf("[Migration] Migration %d from %s for user %d failed. Error was: %s", migrationID, event.MigratorKind, event.User.ID, err.Error())
 
 		var nerr error
-		if config.SentryEnabled.GetBool() {
+		if config.SentryEnabled.GetBool() && shouldReportMigrationError(err) {
 			nerr = notifications.Notify(event.User, &MigrationFailedReportedNotification{
 				MigratorName: ms.Name(),
 			})
