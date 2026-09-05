@@ -15,7 +15,7 @@ const getAvailableRoutes = vi.fn(async () => ({
 		read_one: {path: '/api/v1/projects/:project', method: 'GET'},
 	},
 }))
-const create = vi.fn(async token => ({...token, id: 1, token: 'tk_test'}))
+const create = vi.fn(async (token: Record<string, unknown>) => ({...token, id: 1, token: 'tk_test'}))
 
 vi.mock('@/services/apiToken', () => ({
 	default: class {
