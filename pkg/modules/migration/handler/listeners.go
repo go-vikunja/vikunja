@@ -21,8 +21,10 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/errorreport"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/migration"
@@ -64,6 +66,20 @@ func shouldReportMigrationError(err error) bool {
 	}
 
 	return true
+}
+
+// migrationFingerprint keeps failures apart by migrator and cause: every migration error reaches
+// Sentry wrapped in the same migrationFailedError from the same call site.
+func migrationFingerprint(migratorKind string, err error) []string {
+	fingerprint := []string{"migration_failed", migratorKind}
+
+	var upstreamErr *migration.ErrUpstreamRequestFailed
+	if errors.As(err, &upstreamErr) {
+		// The upstream body is user data, the status is what we can act on.
+		return append(fingerprint, "upstream", strconv.Itoa(upstreamErr.StatusCode))
+	}
+
+	return append(fingerprint, errorreport.Fingerprint(err)...)
 }
 
 // MigrationListener  represents a listener
@@ -111,9 +127,13 @@ func (s *MigrationListener) Handle(msg *message.Message) (err error) {
 			nerr = notifications.Notify(event.User, &MigrationFailedReportedNotification{
 				MigratorName: ms.Name(),
 			})
-			sentry.CaptureException(&migrationFailedError{
+			failure := &migrationFailedError{
 				MigratorKind:  event.MigratorKind,
 				OriginalError: err,
+			}
+			sentry.WithScope(func(scope *sentry.Scope) {
+				errorreport.ApplyFingerprint(scope, err, migrationFingerprint(event.MigratorKind, err)...)
+				sentry.CaptureException(failure)
 			})
 		} else {
 			nerr = notifications.Notify(event.User, &MigrationFailedNotification{
