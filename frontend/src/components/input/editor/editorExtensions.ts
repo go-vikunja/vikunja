@@ -1,8 +1,9 @@
 import {nextTick, toValue, type MaybeRefOrGetter, type Ref} from 'vue'
 
 import StarterKit from '@tiptap/starter-kit'
-import {Extension, mergeAttributes, type Editor, type Extensions} from '@tiptap/core'
+import {createNodeFromContent, Extension, mergeAttributes, type Editor, type Extensions} from '@tiptap/core'
 import {Plugin, PluginKey} from '@tiptap/pm/state'
+import {Fragment, type Node as ProseMirrorNode} from '@tiptap/pm/model'
 import {marked} from 'marked'
 
 import Link from '@tiptap/extension-link'
@@ -68,6 +69,29 @@ const CustomTableCell = TableCell.extend({
 		}
 	},
 })
+
+// ProseMirror's html parser happily builds nodes the schema rejects: markdown like
+// "- " or a list item starting with a nested list parses to a listItem without the
+// leading paragraph it requires, which makes insertContent throw a RangeError.
+function fillRequiredContent(fragment: Fragment): Fragment {
+	const children: ProseMirrorNode[] = []
+	fragment.forEach(child => children.push(fillRequiredNodeContent(child)))
+	return Fragment.fromArray(children)
+}
+
+function fillRequiredNodeContent(node: ProseMirrorNode): ProseMirrorNode {
+	if (node.isLeaf) {
+		return node
+	}
+
+	const content = fillRequiredContent(node.content)
+	if (node.type.validContent(content)) {
+		return node.copy(content)
+	}
+
+	const missing = node.type.contentMatch.fillBefore(content, true)
+	return node.copy(missing ? missing.append(content) : content)
+}
 
 // prevent links from extending after space
 const NonInclusiveLink = Link.extend({
@@ -200,9 +224,12 @@ export function createEditorExtensions(deps: EditorExtensionDeps): Extensions {
 								return false
 							}
 
-							const html = marked.parse(text)
+							const html = marked.parse(text) as string
+							const parsed = createNodeFromContent(html, this.editor.schema, {
+								parseOptions: {preserveWhitespace: 'full', ...this.editor.options.parseOptions},
+							})
 
-							this.editor.commands.insertContent(html)
+							this.editor.commands.insertContent(fillRequiredContent(Fragment.from(parsed)))
 							return true
 						},
 					},
