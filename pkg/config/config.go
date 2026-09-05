@@ -419,7 +419,7 @@ func initDefaultConfig() {
 	DatabasePath.setDefault(ResolvePath("vikunja.db"))
 	DatabaseMaxOpenConnections.setDefault(100)
 	DatabaseMaxIdleConnections.setDefault(50)
-	DatabaseMaxConnectionLifetime.setDefault(10000)
+	DatabaseMaxConnectionLifetime.setDefault(1800000)
 	DatabaseSslMode.setDefault("disable")
 	DatabaseSslCert.setDefault("")
 	DatabaseSslKey.setDefault("")
