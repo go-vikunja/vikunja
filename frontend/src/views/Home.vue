@@ -61,13 +61,13 @@ import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {formatDateSince, formatDisplayDate} from '@/helpers/time/formatDate'
 import {useDaytimeSalutation} from '@/composables/useDaytimeSalutation'
 
-import {useProjectStore} from '@/stores/projects'
+import {useProjectNavigation} from '@/composables/useProjectNavigation'
 import {useAuthStore} from '@/stores/auth'
 
 const salutation = useDaytimeSalutation()
 
 const authStore = useAuthStore()
-const projectStore = useProjectStore()
+const projectStore = useProjectNavigation()
 const route = useRoute()
 const router = useRouter()
 

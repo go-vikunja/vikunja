@@ -3,7 +3,7 @@ import {onBeforeUnmount, onMounted, ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import DatepickerWithValues from '@/components/date/DatepickerWithValues.vue'
 import {useLabels} from '@/composables/useLabels'
-import {useProjectStore} from '@/stores/projects'
+import {useProjectNavigation} from '@/composables/useProjectNavigation'
 import {
 	transformFilterStringForApi,
 	transformFilterStringFromApi,
@@ -20,10 +20,9 @@ import {
 	filterHighlighterKey,
 } from '@/components/input/filter/highlighter.ts'
 import FilterAutocomplete from '@/components/input/filter/FilterAutocomplete'
-import type {IProject} from '@/modelTypes/IProject'
 
 const props = defineProps<{
-	projectId?: IProject['id'],
+	projectId?: number,
 	modelValue?: string,
 }>()
 
@@ -32,7 +31,7 @@ const {t} = useI18n()
 
 // Services and stores for autocomplete
 const {labels, isPending, getLabelByExactTitle, getLabelById} = useLabels()
-const projectStore = useProjectStore()
+const projectNavigation = useProjectNavigation()
 
 // Date picker functionality
 const currentOldDatepickerValue = ref('')
@@ -140,7 +139,7 @@ const processContent = (content: string) => {
 		content,
 		labelTitle => getLabelByExactTitle(labelTitle)?.id || null,
 		projectTitle => {
-			const found = projectStore.findProjectByExactname(projectTitle)
+			const found = projectNavigation.findProjectByExactname(projectTitle)
 			return found?.id || null
 		},
 	)
@@ -192,7 +191,7 @@ function setEditorContentFromModelValue(newValue: string | undefined) {
 	const content = newValue ? transformFilterStringFromApi(
 		newValue,
 		labelId => getLabelById(labelId)?.title || null,
-		projectId => projectStore.projects[projectId]?.title || null,
+		projectId => projectNavigation.projects[projectId]?.title || null,
 	) : ''
 
 	if (editor.value.getText() !== content) {

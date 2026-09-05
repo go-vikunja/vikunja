@@ -4,54 +4,61 @@
 		:title="$t('project.edit.header')"
 		primary-icon=""
 		:primary-label="$t('misc.save')"
-		:tertiary="project.maxPermission === PERMISSIONS.ADMIN ? $t('misc.delete') : undefined"
+		:primary-disabled="Boolean(loadError)"
+		:tertiary="project.max_permission === PERMISSIONS.ADMIN ? $t('misc.delete') : undefined"
 		@primary="save"
 		@tertiary="$router.push({ name: 'project.settings.delete', params: { id: projectId } })"
 	>
-		<FormField
-			id="title"
-			v-model="project.title"
-			v-focus
-			:label="$t('project.title')"
-			:disabled="isLoading"
-			:placeholder="$t('project.edit.titlePlaceholder')"
-			type="text"
-			@keyup.enter="save"
-		/>
-		<FormField :label="$t('project.parent')">
-			<ProjectSearch v-model="parentProject" />
-		</FormField>
-		<FormField :label="$t('project.edit.description')">
-			<Editor
-				id="projectdescription"
-				v-model="project.description"
-				:class="{ 'disabled': isLoading}"
+		<ErrorMessage v-if="loadError" />
+		<template v-else>
+			<FormField
+				id="title"
+				v-model="project.title"
+				v-focus
+				:label="$t('project.title')"
 				:disabled="isLoading"
-				:placeholder="$t('project.edit.descriptionPlaceholder')"
+				:placeholder="$t('project.edit.titlePlaceholder')"
+				type="text"
+				@keyup.enter="save"
 			/>
-		</FormField>
-
-		<div class="columns">
-			<div class="column">
-				<FormField
-					id="identifier"
-					v-model="project.identifier"
-					v-tooltip="$t('project.edit.identifierTooltip')"
-					:label="$t('project.edit.identifier')"
-					:disabled="isLoading"
-					:placeholder="$t('project.edit.identifierPlaceholder')"
-					type="text"
-					maxlength="10"
-					@keyup.enter="save"
+			<FormField :label="$t('project.parent')">
+				<ProjectSearch
+					:model-value="parentProject"
+					@update:modelValue="setParentProject"
 				/>
-			</div>
+			</FormField>
+			<FormField :label="$t('project.edit.description')">
+				<Editor
+					id="projectdescription"
+					v-model="project.description"
+					:class="{ 'disabled': isLoading}"
+					:disabled="isLoading"
+					:placeholder="$t('project.edit.descriptionPlaceholder')"
+				/>
+			</FormField>
 
-			<div class="column">
-				<FormField :label="$t('project.edit.color')">
-					<ColorPicker v-model="project.hexColor" />
-				</FormField>
+			<div class="columns">
+				<div class="column">
+					<FormField
+						id="identifier"
+						v-model="project.identifier"
+						v-tooltip="$t('project.edit.identifierTooltip')"
+						:label="$t('project.edit.identifier')"
+						:disabled="isLoading"
+						:placeholder="$t('project.edit.identifierPlaceholder')"
+						type="text"
+						maxlength="10"
+						@keyup.enter="save"
+					/>
+				</div>
+
+				<div class="column">
+					<FormField :label="$t('project.edit.color')">
+						<ColorPicker v-model="project.hex_color" />
+					</FormField>
+				</div>
 			</div>
-		</div>
+		</template>
 	</CreateEdit>
 </template>
 
@@ -65,30 +72,32 @@ import ColorPicker from '@/components/input/ColorPicker.vue'
 import CreateEdit from '@/components/misc/CreateEdit.vue'
 import FormField from '@/components/input/FormField.vue'
 import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
+import ErrorMessage from '@/components/misc/Error.vue'
 
-import type {IProject} from '@/modelTypes/IProject'
+import type {ProjectResponse} from '@/client/queries/projects'
 
 import {useBaseStore} from '@/stores/base'
-import {useProjectStore} from '@/stores/projects'
-import {useProject} from '@/stores/projects'
+import {useProjectNavigation} from '@/composables/useProjectNavigation'
+import {useProject} from '@/composables/useProject'
 
 import {useTitle} from '@/composables/useTitle'
 import {PERMISSIONS} from '@/constants/permissions'
 
 const props = defineProps<{
-	projectId: IProject['id'],
+	projectId: number,
 }>()
 
 defineOptions({name: 'ProjectSettingEdit'})
 
 const router = useRouter()
-const projectStore = useProjectStore()
+const projectStore = useProjectNavigation()
 
 const {t} = useI18n({useScope: 'global'})
 
-const {project, save: saveProject, isLoading} = useProject(() => props.projectId)
+const {project, save: saveProject, isLoading, error: loadError} = useProject(() => props.projectId)
 
-const parentProject = ref<IProject | null>(null)
+const parentProject = ref<ProjectResponse | null>(null)
+const parentProjectChanged = ref(false)
 const isSaving = ref(false)
 
 const loadingModel = computed({
@@ -98,16 +107,32 @@ const loadingModel = computed({
 	},
 })
 watch(
-	() => project.parentProjectId,
-	parentProjectId => {
-		if (parentProjectId) {
-			parentProject.value = projectStore.projects[parentProjectId]
+	() => [
+		props.projectId,
+		project.value.id,
+		projectStore.projects[project.value.parent_project_id],
+	] as const,
+	([projectId, loadedProjectId, parent], previous) => {
+		if (projectId !== previous?.[0] || projectId !== loadedProjectId) {
+			parentProjectChanged.value = false
+			parentProject.value = null
+		}
+		if (projectId !== loadedProjectId) {
+			return
+		}
+		if (!parentProjectChanged.value) {
+			parentProject.value = parent ?? null
 		}
 	},
 	{immediate: true},
 )
 
-useTitle(() => project?.title ? t('project.edit.title', {project: project.title}) : '')
+function setParentProject(parent: ProjectResponse | null) {
+	parentProject.value = parent
+	parentProjectChanged.value = true
+}
+
+useTitle(() => project.value.title ? t('project.edit.title', {project: project.value.title}) : '')
 
 async function save() {
 	if (isSaving.value) {
@@ -117,9 +142,11 @@ async function save() {
 	isSaving.value = true
 
 	try {
-		project.parentProjectId = parentProject.value === null ? 0 : (parentProject.value?.id ?? project.parentProjectId)
+		if (parentProjectChanged.value) {
+			project.value.parent_project_id = parentProject.value?.id ?? 0
+		}
 		await saveProject()
-		await useBaseStore().handleSetCurrentProject({project})
+		await useBaseStore().handleSetCurrentProject({project: project.value})
 		router.back()
 	} finally {
 		isSaving.value = false

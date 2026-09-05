@@ -173,7 +173,7 @@ test.describe('Team permission tiers on shared projects', () => {
 		// error and the frontend never renders the project title.
 		await login(page, apiContext, member)
 		const projectResponse = page.waitForResponse(r =>
-			r.url().endsWith('/projects/1') && r.request().method() === 'GET',
+			new URL(r.url()).pathname.endsWith('/projects/1') && r.request().method() === 'GET',
 		)
 		await page.goto('/projects/1/1')
 		const resp = await projectResponse

@@ -16,14 +16,14 @@ vi.mock('@/helpers/taskCache', async () => {
 	}
 })
 
-const baseStore = {currentProject: null as {id: number} | null}
+const baseStore = {currentProjectId: 0}
 vi.mock('@/stores/base', () => ({
 	useBaseStore: () => baseStore,
 }))
 
-const projectStore = {projects: {} as Record<number, {id: number, title: string}>}
-vi.mock('@/stores/projects', () => ({
-	useProjectStore: () => projectStore,
+const projectNavigation = {projects: {} as Record<number, {id: number, title: string}>}
+vi.mock('@/composables/useProjectNavigation', () => ({
+	useProjectNavigation: () => projectNavigation,
 }))
 
 vi.mock('@/helpers/getProjectTitle', () => ({
@@ -70,8 +70,8 @@ async function mountPill(props: Partial<{href: string}> = {}, provide: Record<sy
 describe('TaskLinkPill', () => {
 	beforeEach(() => {
 		setActivePinia(createPinia())
-		baseStore.currentProject = null
-		projectStore.projects = {}
+		baseStore.currentProjectId = 0
+		projectNavigation.projects = {}
 		fetchTaskById.mockReset()
 	})
 
@@ -107,8 +107,8 @@ describe('TaskLinkPill', () => {
 	})
 
 	it('shows the project name when the task lives in another project', async () => {
-		projectStore.projects = {2: {id: 2, title: 'Other project'}}
-		baseStore.currentProject = {id: 1}
+		projectNavigation.projects = {2: {id: 2, title: 'Other project'}}
+		baseStore.currentProjectId = 1
 		fetchTaskById.mockResolvedValue(makeTask({projectId: 2}))
 
 		const wrapper = await mountPill()
@@ -117,8 +117,8 @@ describe('TaskLinkPill', () => {
 	})
 
 	it('hides the project name when the task is in the current project', async () => {
-		projectStore.projects = {1: {id: 1, title: 'Current'}}
-		baseStore.currentProject = {id: 1}
+		projectNavigation.projects = {1: {id: 1, title: 'Current'}}
+		baseStore.currentProjectId = 1
 		fetchTaskById.mockResolvedValue(makeTask({projectId: 1}))
 
 		const wrapper = await mountPill()
@@ -127,8 +127,8 @@ describe('TaskLinkPill', () => {
 	})
 
 	it('prefers the project id provided by the surrounding view', async () => {
-		projectStore.projects = {1: {id: 1, title: 'Current'}, 2: {id: 2, title: 'Viewed'}}
-		baseStore.currentProject = {id: 1}
+		projectNavigation.projects = {1: {id: 1, title: 'Current'}, 2: {id: 2, title: 'Viewed'}}
+		baseStore.currentProjectId = 1
 		fetchTaskById.mockResolvedValue(makeTask({projectId: 2}))
 
 		const wrapper = await mountPill({}, {[taskLinkCurrentProjectIdKey as symbol]: ref(2)})

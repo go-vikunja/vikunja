@@ -32,7 +32,7 @@ test.describe('Project History', () => {
 			}, false)
 		}
 
-		const loadProjectArrayPromise = page.waitForResponse('**/api/v1/projects*')
+		const loadProjectArrayPromise = page.waitForResponse('**/api/v2/projects*')
 		await page.goto('/')
 		await loadProjectArrayPromise
 		await expect(page.locator('body')).not.toContainText('Last viewed')

@@ -30,8 +30,8 @@
 				/>
 				<div class="color-bubble-wrapper">
 					<ColorBubble
-						v-if="project.hexColor !== ''"
-						:color="project.hexColor"
+						v-if="project.hex_color !== ''"
+						:color="project.hex_color"
 						:aria-label="$t('project.color')"
 					/>
 					<span
@@ -41,7 +41,7 @@
 						<Icon icon="filter" />
 					</span>
 					<span
-						v-if="canEditOrder && project.id > 0 && project.maxPermission !== null && project.maxPermission > PERMISSIONS.READ"
+						v-if="canEditOrder && project.id > 0 && typeof project.max_permission === 'number' && project.max_permission > PERMISSIONS.READ"
 						class="icon menu-item-icon handle drag-handle"
 						@mousedown.stop
 						@click.stop.prevent
@@ -55,14 +55,14 @@
 			<BaseButton
 				v-if="canToggleFavorite"
 				class="favorite"
-				:class="{'is-favorite': project.isFavorite}"
+				:class="{'is-favorite': project.is_favorite}"
 				@click="projectStore.toggleProjectFavorite(project)"
 			>
-				<span class="is-sr-only">{{ project.isFavorite ? $t('project.unfavorite') : $t('project.favorite') }}</span>
-				<Icon :icon="project.isFavorite ? 'star' : ['far', 'star']" />
+				<span class="is-sr-only">{{ project.is_favorite ? $t('project.unfavorite') : $t('project.favorite') }}</span>
+				<Icon :icon="project.is_favorite ? 'star' : ['far', 'star']" />
 			</BaseButton>
 			<ProjectSettingsDropdown
-				v-if="project.maxPermission !== null && project.maxPermission > PERMISSIONS.READ"
+				v-if="typeof project.max_permission === 'number' && project.max_permission > PERMISSIONS.READ"
 				class="menu-list-dropdown"
 				:project="project"
 			>
@@ -92,12 +92,12 @@
 
 <script setup lang="ts">
 import {computed, ref, onUnmounted, watch} from 'vue'
-import {useProjectStore} from '@/stores/projects'
-import {useBaseStore} from '@/stores/base'
+import {useProjectNavigation} from '@/composables/useProjectNavigation'
+import {useCurrentProject} from '@/composables/useCurrentProject'
 import {useTaskStore} from '@/stores/tasks'
 import {useStorage} from '@vueuse/core'
 
-import type {IProject} from '@/modelTypes/IProject'
+import type {ProjectResponse} from '@/client/queries/projects'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import ProjectSettingsDropdown from '@/components/project/ProjectSettingsDropdown.vue'
@@ -105,10 +105,10 @@ import {getProjectTitle} from '@/helpers/getProjectTitle'
 import ColorBubble from '@/components/misc/ColorBubble.vue'
 import ProjectsNavigation from '@/components/home/ProjectsNavigation.vue'
 import {PERMISSIONS} from '@/constants/permissions'
-import {isSavedFilter} from '@/services/savedFilter'
+import {isSavedFilterProject} from '@/client/queries/projects'
 
 const props = defineProps<{
-	project: IProject,
+	project: ProjectResponse,
 	isLoading?: boolean,
 	canCollapse?: boolean,
 	canEditOrder?: boolean,
@@ -159,13 +159,12 @@ const isDropTarget = computed(() => {
 	// Highlight any valid project (not a pseudo project, has write permission)
 	// The actual drop logic will handle the case when it's the same project (no-op)
 	return props.project.id > 0
-		&& props.project.maxPermission !== null
-		&& props.project.maxPermission > PERMISSIONS.READ
+		&& typeof props.project.max_permission === 'number'
+		&& props.project.max_permission > PERMISSIONS.READ
 })
 
-const projectStore = useProjectStore()
-const baseStore = useBaseStore()
-const currentProject = computed(() => baseStore.currentProject)
+const projectStore = useProjectNavigation()
+const {currentProject} = useCurrentProject()
 
 // Persist open state across browser reloads. Using a separate ref for the state 
 // allows us to use only one entry in local storage instead of one for every project id.
@@ -182,7 +181,7 @@ const childProjectsOpen = computed({
 
 const childProjects = computed(() => {
 	return projectStore.getChildProjects(props.project.id)
-		.filter(p => !p.isArchived)
+		.filter(p => !p.is_archived)
 		.sort((a, b) => a.position - b.position)
 })
 
@@ -192,10 +191,11 @@ const canToggleFavorite = computed(() => {
 	// 2. Saved filters (id < -1) - user owns their own filters
 	if (props.project.id === -1) return false  // Favorites pseudo-project
 	if (props.project.id > 0) {
-		return props.project.maxPermission !== null && props.project.maxPermission > PERMISSIONS.READ
+		return typeof props.project.max_permission === 'number' &&
+			props.project.max_permission > PERMISSIONS.READ
 	}
 	// Saved filters (negative IDs except -1)
-	return isSavedFilter(props.project)
+	return isSavedFilterProject(props.project)
 })
 </script>
 
