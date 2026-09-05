@@ -39,6 +39,7 @@
 							<li
 								class="bucket"
 								:class="{'is-collapsed': collapsedBuckets[bucket.id]}"
+								:data-bucket-id="bucket.id"
 							>
 								<div
 									class="bucket-header"
@@ -775,16 +776,24 @@ function handleRecurringTaskCompletion() {
 }
 
 // TODO: fix type
-function updateBucketPosition(e: { newIndex: number }) {
+function updateBucketPosition(e: { item: HTMLElement }) {
 	// (2) bucket positon is changed
 	dragBucket.value = false
 
-	const bucket = buckets.value[e.newIndex]
-	const bucketBefore = buckets.value[e.newIndex - 1] ?? null
-	const bucketAfter = buckets.value[e.newIndex + 1] ?? null
+	// Sortable reports a DOM index which can point past the last bucket, for example while a
+	// deleted bucket is still leaving the transition group. The buckets are already updated here.
+	const movedBucketId = parseInt(e.item.dataset.bucketId ?? '', 10)
+	const bucketIndex = buckets.value.findIndex(b => b.id === movedBucketId)
+
+	if (bucketIndex === -1) {
+		return
+	}
+
+	const bucketBefore = buckets.value[bucketIndex - 1] ?? null
+	const bucketAfter = buckets.value[bucketIndex + 1] ?? null
 
 	kanbanStore.updateBucket({
-		id: bucket.id,
+		id: movedBucketId,
 		projectId: projectId.value,
 		position: calculateItemPosition(
 			bucketBefore !== null ? bucketBefore.position : null,
