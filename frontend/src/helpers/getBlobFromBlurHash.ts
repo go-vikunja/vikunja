@@ -1,7 +1,7 @@
 import {decode} from 'blurhash'
 
-export async function getBlobFromBlurHash(blurHash: string): Promise<Blob | null> {
-	if (blurHash === '') {
+export async function getBlobFromBlurHash(blurHash: string | undefined | null): Promise<Blob | null> {
+	if (!blurHash) {
 		return null
 	}
 
@@ -18,14 +18,5 @@ export async function getBlobFromBlurHash(blurHash: string): Promise<Blob | null
 	imageData.data.set(pixels)
 	ctx.putImageData(imageData, 0, 0)
 
-	return new Promise<Blob>((resolve, reject) => {
-		canvas.toBlob(b => {
-			if (b === null) {
-				reject(b)
-				return
-			}
-
-			resolve(b)
-		})
-	})
+	return new Promise<Blob | null>(resolve => canvas.toBlob(resolve))
 }

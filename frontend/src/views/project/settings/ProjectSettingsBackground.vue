@@ -181,6 +181,10 @@ async function searchBackgrounds(page = 1) {
 	result.forEach((background: BackgroundImageModel) => {
 		getBlobFromBlurHash(background.blurHash)
 			.then((b) => {
+				if (b === null) {
+					return
+				}
+
 				backgroundBlurHashes.value[background.id] = window.URL.createObjectURL(b)
 			})
 
