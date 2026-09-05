@@ -86,6 +86,7 @@ describe('ProjectSettingsArchive', () => {
 		await flushPromises()
 
 		expect(document.querySelector('dialog.modal-dialog')?.textContent).toContain('Un-Archive this project')
+		expect(document.title).toBe('Archive "Test" | Vikunja')
 
 		await mounted.router.push('/tasks/by/upcoming')
 		await flushPromises()
