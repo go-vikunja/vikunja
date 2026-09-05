@@ -19,6 +19,7 @@ import HardBreak from '@tiptap/extension-hard-break'
 import {TaskList} from '@tiptap/extension-list'
 import {TaskItemWithId} from './taskItemWithId'
 import {ListKeymapWithJoin} from './listKeymapWithJoin'
+import {DeleteSelectionBeforeEnter} from './deleteSelectionBeforeEnter'
 import {BlockquoteWithCommentId} from './blockquoteWithCommentId'
 import {TaskLink, LINK_HTML_ATTRIBUTES} from './taskLink'
 
@@ -223,6 +224,7 @@ export function createEditorExtensions(deps: EditorExtensionDeps): Extensions {
 			underline: false,
 		}),
 		ListKeymapWithJoin,
+		DeleteSelectionBeforeEnter,
 		BlockquoteWithCommentId,
 
 		CodeBlockLowlight.configure({
