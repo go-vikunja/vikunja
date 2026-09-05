@@ -368,11 +368,12 @@ const commands = computed<{ [key in COMMAND_TYPE]: Command }>(() => ({
 const placeholder = computed(() => selectedCmd.value?.placeholder || t('quickActions.placeholder'))
 
 const currentProject = computed(() => {
-	if (Object.keys(baseStore.currentProject).length === 0 || isSavedFilter(baseStore.currentProject)) {
+	const project = baseStore.currentProject
+	if (project === null || Object.keys(project).length === 0 || isSavedFilter(project)) {
 		return null
 	}
 
-	return baseStore.currentProject
+	return project
 })
 
 const hintText = computed(() => {
