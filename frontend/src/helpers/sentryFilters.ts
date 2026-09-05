@@ -19,6 +19,17 @@ const CHUNK_LOAD_ERROR_PATTERNS = [
 	/expected a javascript(-or-wasm)? module script but the server responded with a mime type/i,
 ]
 
+// Fallout from a chunk that never arrived, after handleChunkLoadErrors() already
+// reacted to it: vite's preload helper resolves the import with `undefined` once
+// we preventDefault() its vite:preloadError, and vue-router turns that into
+// "Couldn't resolve component" while the reload is still in flight.
+// The timeout is createAsyncComponent()'s — a network too slow to deliver the
+// chunk within a minute, which is nothing we can fix either.
+const STALE_CHUNK_FALLOUT_PATTERNS = [
+	/couldn['’]t resolve component/i,
+	/async component timed out after \d+ms/i,
+]
+
 // Injected into our page by browser extensions and by in-app webviews
 // (Instagram, WeChat, ...). Their scripts run on our origin but none of it is
 // our code, and we can't fix any of it.
@@ -63,8 +74,13 @@ export function isChunkLoadError(message: unknown): boolean {
 }
 
 function isNoisyMessage(message: unknown): boolean {
+	if (typeof message !== 'string') {
+		return false
+	}
+
 	return isChunkLoadError(message)
-		|| (typeof message === 'string' && THIRD_PARTY_INJECTION_PATTERNS.some(pattern => pattern.test(message)))
+		|| STALE_CHUNK_FALLOUT_PATTERNS.some(pattern => pattern.test(message))
+		|| THIRD_PARTY_INJECTION_PATTERNS.some(pattern => pattern.test(message))
 }
 
 function hasThirdPartyTopFrame(event?: SentryEventLike): boolean {

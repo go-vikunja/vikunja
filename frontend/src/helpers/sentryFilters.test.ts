@@ -81,6 +81,31 @@ describe('shouldDropEvent with chunk load errors', () => {
 	})
 })
 
+describe('shouldDropEvent with stale chunk fallout', () => {
+	const messages = [
+		'Couldn\'t resolve component "default" at "/tasks/:id"',
+		'Couldn\'t resolve component "default" at "/projects"',
+		'Couldn\'t resolve component "default" at "/projects". Ensure you passed a function that returns a promise.',
+		'Async component timed out after 60000ms.',
+	]
+
+	it.each(messages)('drops the exception %s', message => {
+		expect(shouldDropEvent(new Error(message))).toBe(true)
+	})
+
+	it.each(messages)('drops the event exception value %s', message => {
+		expect(shouldDropEvent(undefined, {exception: {values: [{value: message}]}})).toBe(true)
+	})
+
+	it('keeps an unrelated component error', () => {
+		expect(shouldDropEvent(new Error('Failed to mount component: template or render function not defined'))).toBe(false)
+	})
+
+	it('keeps an unrelated timeout', () => {
+		expect(shouldDropEvent(new Error('Navigation timed out after 5000ms'))).toBe(false)
+	})
+})
+
 describe('shouldDropEvent with third party injections', () => {
 	const messages = [
 		'Invalid call to runtime.sendMessage(). Tab not found.',

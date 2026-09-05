@@ -78,6 +78,13 @@ describe('handleChunkLoadErrors', () => {
 		expect(reload).not.toHaveBeenCalled()
 	})
 
+	// The reload for these already happened when we swallowed the preload error.
+	it('does not reload for the router error a swallowed preload error causes', () => {
+		rejectWith(new Error('Couldn\'t resolve component "default" at "/projects"'))
+
+		expect(reload).not.toHaveBeenCalled()
+	})
+
 	it('does not reload twice within the cooldown', () => {
 		markChunkLoadErrorReload()
 		rejectWith(new Error('Importing a module script failed.'))
