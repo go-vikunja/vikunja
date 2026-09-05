@@ -1549,6 +1549,8 @@
     "14005": "A migration from this service is already running. Please wait until it is done.",
     "14009": "The provided zip file does not contain a Vikunja data file. Make sure you upload a Vikunja export.",
     "14010": "The provided file could not be parsed. Please make sure it is a valid export file.",
+    "14011": "The provided file is not a valid zip file.",
+    "14012": "The provided file does not contain any data.",
     "14201": "Planka rejected the provided credentials. Check the URL and the API key or username and password.",
     "14202": "The Planka account requires an extra login step (two-factor code or accepting the terms). Log in to Planka in the browser once, or use an API key instead of username and password.",
     "14203": "A Planka URL and either an API key or username and password are required.",
