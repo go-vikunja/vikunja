@@ -1,9 +1,11 @@
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest'
 import {AxiosError} from 'axios'
-import type {AxiosRequestConfig} from 'axios'
+import type {AxiosInstance, AxiosRequestConfig} from 'axios'
 
 import AttachmentService from './attachment'
 import BucketService from './bucket'
+import ProjectService from './project'
+import ProjectModel from '@/models/project'
 import {removeToken, refreshToken, saveToken} from '@/helpers/auth'
 import type {IAttachment} from '@/modelTypes/IAttachment'
 import type {IBucket} from '@/modelTypes/IBucket'
@@ -84,8 +86,7 @@ describe('payload transforms on a retried request', () => {
 	// A user JWT so the 401 interceptor considers the request refreshable
 	const USER_JWT = `x.${btoa(JSON.stringify({id: 1, type: 1}))}.y`
 
-	function bucketServiceFailingOnceWith401() {
-		const service = new BucketService()
+	function failOnceWith401(service: {http: AxiosInstance}) {
 		const requests: AxiosRequestConfig[] = []
 
 		service.http.defaults.adapter = async (config) => {
@@ -97,7 +98,7 @@ describe('payload transforms on a retried request', () => {
 			return {data: {id: 111, title: 'Doing'}, status: 200, statusText: 'OK', headers: {}, config}
 		}
 
-		return {service, requests}
+		return requests
 	}
 
 	beforeEach(() => {
@@ -109,7 +110,8 @@ describe('payload transforms on a retried request', () => {
 	afterEach(() => removeToken())
 
 	it('does not transform an already serialized payload again', async () => {
-		const {service, requests} = bucketServiceFailingOnceWith401()
+		const service = new BucketService()
+		const requests = failOnceWith401(service)
 
 		await service.update({
 			id: 111,
@@ -122,5 +124,17 @@ describe('payload transforms on a retried request', () => {
 		expect(requests).toHaveLength(2)
 		expect(requests[1].data).toBe(requests[0].data)
 		expect(JSON.parse(requests[1].data as string)).toMatchObject({id: 111, project_id: 26, tasks: []})
+	})
+
+	// Creating a project crashed here: the interceptor read hexColor off the serialized payload
+	it('does not transform the payload of a retried create request again', async () => {
+		const service = new ProjectService()
+		const requests = failOnceWith401(service)
+
+		await service.create(new ProjectModel({title: 'test', hexColor: '#ffffff'}))
+
+		expect(requests).toHaveLength(2)
+		expect(requests[1].data).toBe(requests[0].data)
+		expect(JSON.parse(requests[1].data as string)).toMatchObject({title: 'test', hex_color: 'ffffff'})
 	})
 })
