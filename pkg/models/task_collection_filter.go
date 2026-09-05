@@ -26,12 +26,10 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/db"
 
 	"github.com/ganigeorgiev/fexpr"
 	"github.com/iancoleman/strcase"
 	"github.com/jszwedko/go-datemath"
-	"xorm.io/builder"
 	"xorm.io/xorm/schemas"
 )
 
@@ -63,15 +61,17 @@ type taskFilter struct {
 	join       taskFilterConcatinator
 }
 
-// adjustDateForMysql adjusts dates with year < 1 to be compatible with MySQL/MariaDB.
-// MySQL does not support dates where year < 1. We set the year to 1 and add an extra day
-// if the date is January 1st to survive xorm's timezone conversion to GMT.
-func adjustDateForMysql(t time.Time) time.Time {
-	if db.GetDialect() != builder.MYSQL || t.Year() >= 1 {
+// clampDateToDriverRange lifts boundaries with year < 1 back into year 1:
+// converting the zero-date sentinel to UTC from a timezone east of Greenwich
+// underflows into year 0, which the MySQL driver refuses to encode ("year is
+// not in the range [1, 9999]"). The extra day for January 1st keeps the
+// boundary strictly after the sentinel, so `due_date > 0001-01-01` keeps
+// meaning "has a due date".
+func clampDateToDriverRange(t time.Time) time.Time {
+	if t.Year() >= 1 {
 		return t
 	}
 	t = t.AddDate(1-t.Year(), 0, 0)
-	// Add extra day to survive timezone conversion to GMT (only needed for Jan 1st)
 	if t.Month() == 1 && t.Day() == 1 {
 		t = t.AddDate(0, 0, 1)
 	}
@@ -111,7 +111,7 @@ func parseTimeFromUserInput(timeString string, loc *time.Location) (value time.T
 	}
 	// UTC, not service timezone — see getValueForField.
 	value = value.UTC()
-	value = adjustDateForMysql(value)
+	value = clampDateToDriverRange(value)
 	return value, err
 }
 
@@ -464,7 +464,7 @@ func getValueForField(field reflect.StructField, rawValue string, loc *time.Loca
 				// the driver drops a bound parameter's offset, so a non-UTC wall clock
 				// shifts the boundary. loc still controls how the datemath rounds.
 				tt = t.Time(datemath.WithLocation(loc)).UTC()
-				tt = adjustDateForMysql(tt)
+				tt = clampDateToDriverRange(tt)
 			} else {
 				tt, err = parseTimeFromUserInput(rawValue, loc)
 			}
