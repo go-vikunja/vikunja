@@ -211,6 +211,7 @@ import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 import inputPrompt from '@/helpers/inputPrompt'
 import {setLinkInEditor} from '@/components/input/editor/setLinkInEditor'
 import {saveEditorDraft, loadEditorDraft, clearEditorDraft} from '@/helpers/editorDraftStorage'
+import {error} from '@/message'
 
 const props = withDefaults(defineProps<{
 	uploadCallback?: UploadCallback,
@@ -450,6 +451,8 @@ function uploadAndInsertFiles(files: File[] | FileList) {
 		throw new Error('Can\'t add files here')
 	}
 
+	// The server reports failed uploads (quota, disk full) in the response body,
+	// so a rejection here is a message for the user, not a bug to report.
 	props.uploadCallback(files).then(async urls => {
 		urls?.forEach(url => {
 			if (editor.value?.isEmpty) {
@@ -481,7 +484,7 @@ function uploadAndInsertFiles(files: File[] | FileList) {
 		if (urls?.length === 1) {
 			await promptImageAlt(urls[0])
 		}
-	})
+	}).catch(e => error(e))
 }
 
 function triggerImageInput(event: Event) {

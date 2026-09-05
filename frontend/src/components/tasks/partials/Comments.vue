@@ -238,7 +238,7 @@ import TaskCommentModel from '@/models/taskComment'
 import type {ITaskComment} from '@/modelTypes/ITaskComment'
 import type {ITask} from '@/modelTypes/ITask'
 
-import {uploadFile} from '@/helpers/attachments'
+import {uploadFile, uploadFilesForEditor} from '@/helpers/attachments'
 import {success} from '@/message'
 import {formatDateLong, formatDisplayDate} from '@/helpers/time/formatDate'
 import {clearEditorDraft} from '@/helpers/editorDraftStorage'
@@ -383,19 +383,11 @@ async function waitForEditorRef() {
 }
 
 
-async function attachmentUpload(files: File[] | FileList): (Promise<string[]>) {
-
-	const uploadPromises: Promise<string>[] = []
-
-	files.forEach((file: File) => {
-		const promise = new Promise<string>((resolve) => {
-			uploadFile(props.taskId, file, (uploadedFileUrl: string) => resolve(uploadedFileUrl))
-		})
-
-		uploadPromises.push(promise)
-	})
-
-	return await Promise.all(uploadPromises)
+function attachmentUpload(files: File[] | FileList): Promise<string[]> {
+	return uploadFilesForEditor(
+		(file, onSuccess) => uploadFile(props.taskId, file, onSuccess),
+		files,
+	)
 }
 
 const taskCommentService = shallowReactive(new TaskCommentService())

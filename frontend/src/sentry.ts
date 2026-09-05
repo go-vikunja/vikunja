@@ -15,7 +15,10 @@ export default async function setupSentry(app: App, router: Router) {
 		transport: Sentry.makeBrowserOfflineTransport(Sentry.makeFetchTransport),
 		integrations: [
 			Sentry.browserTracingIntegration({ router }),
-			Sentry.replayIntegration(),
+			// Without click detection there are no slow/multi click breadcrumbs, and
+			// so no rage click issues — those are impatience, not bugs, and they
+			// drown out actual errors.
+			Sentry.replayIntegration({slowClickTimeout: 0}),
 		],
 
 		// vue
@@ -37,6 +40,16 @@ export default async function setupSentry(app: App, router: Router) {
 		// plus for 100% of sessions with an error
 		replaysSessionSampleRate: 0.1,
 		replaysOnErrorSampleRate: 1.0,
+
+		// Extensions run their content scripts on our origin, so their errors end
+		// up here even though we can neither reproduce nor fix them.
+		denyUrls: [
+			/^chrome-extension:\/\//i,
+			/^moz-extension:\/\//i,
+			/^safari-web-extension:\/\//i,
+			/^safari-extension:\/\//i,
+			/^ms-browser-extension:\/\//i,
+		],
 
 
 		beforeSend(event, hint) {
