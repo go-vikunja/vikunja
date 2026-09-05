@@ -2,13 +2,22 @@ import {autoUpdate, computePosition, flip, offset, shift} from '@floating-ui/dom
 
 export interface SuggestionPopup {
 	readonly element: HTMLElement
-	setReferenceRect(rect: DOMRect): void
+	reposition(): void
 	destroy(): void
 }
 
 // autoUpdate ticks (visualViewport listeners, ResizeObserver) can land after teardown, so the popup
 // owns its subscription and drops them instead of measuring an element that is already gone.
-export function createSuggestionPopup(container: HTMLElement, content: Element, rect: DOMRect): SuggestionPopup {
+//
+// getReferenceRect must stay live rather than being snapshotted: it reads the caret decoration on
+// every tick, which is what keeps the popup glued to the text while the editor scrolls. contextElement
+// puts the editor's scroll ancestors into autoUpdate's listener set so those ticks happen at all.
+export function createSuggestionPopup(
+	container: HTMLElement,
+	content: Element,
+	getReferenceRect: () => DOMRect | null,
+	contextElement: Element,
+): SuggestionPopup {
 	const element = document.createElement('div')
 	element.style.position = 'absolute'
 	element.style.top = '0'
@@ -17,11 +26,11 @@ export function createSuggestionPopup(container: HTMLElement, content: Element, 
 	element.appendChild(content)
 	container.appendChild(element)
 
-	let referenceRect = rect
 	let destroyed = false
 
 	const reference = {
-		getBoundingClientRect: () => referenceRect,
+		getBoundingClientRect: () => getReferenceRect() ?? new DOMRect(),
+		contextElement,
 	}
 
 	function updatePosition() {
@@ -51,9 +60,7 @@ export function createSuggestionPopup(container: HTMLElement, content: Element, 
 	return {
 		element,
 
-		setReferenceRect(next: DOMRect) {
-			referenceRect = next
-		},
+		reposition: updatePosition,
 
 		destroy() {
 			if (destroyed) {
