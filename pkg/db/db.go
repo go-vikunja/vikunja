@@ -39,8 +39,8 @@ import (
 	"xorm.io/xorm/schemas"
 
 	_ "github.com/go-sql-driver/mysql" // Because.
-	"github.com/lib/pq"
-	_ "github.com/mattn/go-sqlite3" // Because.
+	_ "github.com/jackc/pgx/v5/stdlib" // Because.
+	_ "github.com/mattn/go-sqlite3"    // Because.
 )
 
 var (
@@ -141,8 +141,6 @@ func CreateDBEngine() (engine *xorm.Engine, err error) {
 		return nil, err
 	}
 
-	checkParadeDB(engine)
-
 	engine.AddHook(writeInvalidationHook{})
 
 	x = engine
@@ -215,7 +213,7 @@ func sanitizePostgresConnectionError(err error, user, password string) error {
 }
 
 // Copied and adopted from https://github.com/go-gitea/gitea/blob/f337c32e868381c6d2d948221aca0c59f8420c13/modules/setting/database.go#L176-L186
-func getPostgreSQLConnectionString(dbHost, dbUser, dbPasswd, dbName, dbSchema, dbSslMode, dbSslCert, dbSslKey, dbSslRootCert string) (connStr string) {
+func getPostgreSQLConnectionString(dbHost, dbUser, dbPasswd, dbName, dbSchema, dbSslMode, dbSslCert, dbSslKey, dbSslRootCert, queryExecMode string) (connStr string) {
 	dbParam := "?"
 	if strings.Contains(dbName, dbParam) {
 		dbParam = "&"
@@ -231,16 +229,57 @@ func getPostgreSQLConnectionString(dbHost, dbUser, dbPasswd, dbName, dbSchema, d
 	// Pin search_path so raw SQL resolves to the same schema as xorm-built statements (#3118).
 	// Quoting preserves case; public stays so extension operators (e.g. ParadeDB's |||) keep resolving.
 	if dbSchema != "" {
-		searchPath := pq.QuoteIdentifier(dbSchema)
+		searchPath := quoteIdentifier(dbSchema)
 		if dbSchema != "public" {
 			searchPath += ",public"
 		}
 		connStr += "&search_path=" + url.QueryEscape(searchPath)
 	}
+	if queryExecMode != "" {
+		connStr += "&default_query_exec_mode=" + url.QueryEscape(queryExecMode)
+	}
 	return connStr
 }
 
+// Copied from github.com/lib/pq so that pq is not needed just for this.
+func quoteIdentifier(name string) string {
+	if end := strings.IndexRune(name, 0); end > -1 {
+		name = name[:end]
+	}
+	return `"` + strings.ReplaceAll(name, `"`, `""`) + `"`
+}
+
 func initPostgresEngine() (engine *xorm.Engine, err error) {
+	engine, err = newPostgresEngine("")
+	if err != nil {
+		return nil, err
+	}
+
+	// Probing for ParadeDB needs a working connection, and doing it before the
+	// probe keeps an unreachable database reported as a connection error (#3287)
+	// rather than as a failed extension lookup.
+	if err = engine.Ping(); err != nil {
+		return nil, err
+	}
+
+	checkParadeDB(engine)
+	if !paradedbInstalled {
+		return engine, nil
+	}
+
+	// ParadeDB's ||| operator needs the search term while the statement is
+	// planned, which named prepared statements do not provide. Unnamed ones are
+	// planned at Bind with the values in hand, so ParadeDB installations give up
+	// the statement cache to keep search working. paradedb/paradedb#5907 fixed
+	// this for === only; revisit once ||| gets the same treatment.
+	if err = engine.Close(); err != nil {
+		return nil, fmt.Errorf("could not close initial database connection: %w", err)
+	}
+
+	return newPostgresEngine("exec")
+}
+
+func newPostgresEngine(queryExecMode string) (engine *xorm.Engine, err error) {
 	connStr := getPostgreSQLConnectionString(
 		config.DatabaseHost.GetString(),
 		config.DatabaseUser.GetString(),
@@ -251,9 +290,10 @@ func initPostgresEngine() (engine *xorm.Engine, err error) {
 		config.DatabaseSslCert.GetString(),
 		config.DatabaseSslKey.GetString(),
 		config.DatabaseSslRootCert.GetString(),
+		queryExecMode,
 	)
 
-	engine, err = xorm.NewEngine("postgres", connStr)
+	engine, err = xorm.NewEngine("pgx", connStr)
 	if err != nil {
 		return
 	}

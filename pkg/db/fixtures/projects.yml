@@ -196,7 +196,7 @@
   owner_id: 1
   position: 21
   parent_project_id: 22
-  is_archived: 1
+  is_archived: true
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 -
@@ -205,7 +205,7 @@
   description: Lorem Ipsum
   identifier: TEST22
   owner_id: 1
-  is_archived: 1
+  is_archived: true
   position: 22
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
@@ -345,7 +345,7 @@
   identifier: ORPH1
   owner_id: 1
   parent_project_id: 999999
-  is_archived: 1
+  is_archived: true
   position: 39
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
@@ -358,7 +358,7 @@
   identifier: TEST40
   owner_id: 1
   parent_project_id: 3
-  is_archived: 1
+  is_archived: true
   position: 40
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
