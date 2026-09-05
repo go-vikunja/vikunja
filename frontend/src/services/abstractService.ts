@@ -325,7 +325,12 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 			responseType: 'blob',
 			data,
 		})
-		
+
+		// Firefox hands back null instead of an empty blob when the response has no body
+		if (!(response.data instanceof Blob)) {
+			throw new Error(`Did not get a blob for ${url}`)
+		}
+
 		// Handle SVG blobs specially - convert to data URL for better browser compatibility.
 		// FileReader is absent in some environments (iOS Lockdown Mode, embedded webviews), fall back to a blob url there.
 		if (response.data.type === 'image/svg+xml' && typeof FileReader !== 'undefined') {

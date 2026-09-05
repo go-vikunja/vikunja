@@ -28,6 +28,14 @@ describe('getBlobUrl', () => {
 		expect(blob.size).toBeGreaterThan(0)
 	})
 
+	it('rejects when the response has no body', async () => {
+		// Firefox resolves with null instead of an empty blob for an empty response
+		const service = new AttachmentService()
+		service.http = vi.fn().mockResolvedValue({data: null}) as unknown as typeof service.http
+
+		await expect(service.getBlobUrl({taskId: 1, id: 4} as IAttachment)).rejects.toThrow(/blob/)
+	})
+
 	it('converts svg blobs to data urls', async () => {
 		const service = serviceWithBlobResponse(new Blob(['<svg xmlns="http://www.w3.org/2000/svg"/>'], {type: 'image/svg+xml'}))
 
