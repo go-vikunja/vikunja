@@ -20,7 +20,6 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
-	goplugin "plugin"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
@@ -102,7 +101,6 @@ func RegisterPluginRoutes(authenticated *echo.Group, unauthenticated *echo.Group
 }
 
 func (m *Manager) loadPlugins(paths []string) error {
-	loader := config.PluginsLoader.GetString()
 	for _, p := range paths {
 		entries, err := os.ReadDir(p)
 		if err != nil {
@@ -112,59 +110,14 @@ func (m *Manager) loadPlugins(paths []string) error {
 			return err
 		}
 		for _, e := range entries {
-			full := filepath.Join(p, e.Name())
-			switch loader {
-			case "native":
-				if filepath.Ext(e.Name()) != ".so" {
-					continue
-				}
-				if err := m.loadNativePlugin(full); err != nil {
-					log.Errorf("Failed to load native plugin %s: %s", e.Name(), err)
-				}
-			case "yaegi":
-				if !e.IsDir() {
-					continue
-				}
-				if err := m.loadYaegiPlugin(full); err != nil {
-					log.Errorf("Failed to load yaegi plugin %s: %s", e.Name(), err)
-				}
+			if !e.IsDir() {
+				continue
+			}
+			if err := m.loadYaegiPlugin(filepath.Join(p, e.Name())); err != nil {
+				log.Errorf("Failed to load yaegi plugin %s: %s", e.Name(), err)
 			}
 		}
 	}
-	return nil
-}
-
-// Deprecated: native Go plugins are fragile (require exact Go version and dependency
-// match with the host binary) and will be removed in a future version. Use yaegi instead.
-func (m *Manager) loadNativePlugin(path string) error {
-	pl, err := goplugin.Open(path)
-	if err != nil {
-		return err
-	}
-	sym, err := pl.Lookup("NewPlugin")
-	if err != nil {
-		return err
-	}
-	newPlugin, ok := sym.(func() Plugin)
-	if !ok {
-		return errors.New("invalid plugin entry point")
-	}
-	p := newPlugin()
-	m.registerPlugin(p)
-
-	if mp, ok := p.(MigrationPlugin); ok {
-		m.migrationPlugs = append(m.migrationPlugs, mp)
-		migration.AddPluginMigrations(mp.Migrations())
-	}
-
-	if arp, ok := p.(AuthenticatedRouterPlugin); ok {
-		m.authenticatedRouterPlugs = append(m.authenticatedRouterPlugs, arp)
-	}
-
-	if urp, ok := p.(UnauthenticatedRouterPlugin); ok {
-		m.unauthenticatedRouterPlugs = append(m.unauthenticatedRouterPlugs, urp)
-	}
-
 	return nil
 }
 

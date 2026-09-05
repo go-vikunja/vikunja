@@ -74,7 +74,6 @@ var (
 		"dev:tag-release":          Dev.TagRelease,
 		"test:e2e":                 Test.E2E,
 		"test:e2e-api":             Test.E2EApi,
-		"plugins:build":            Plugins.Build,
 		"lint":                     Check.Golangci,
 		"lint:fix":                 Check.GolangciFix,
 		"generate:config-yaml":     Generate.ConfigYAML,
@@ -2270,26 +2269,4 @@ func prepareTagMessage(changelog string) string {
 	}
 
 	return strings.Join(result, "\n")
-}
-
-type Plugins mg.Namespace
-
-// Build compiles a Go plugin at the provided path.
-func (Plugins) Build(ctx context.Context, pathToSourceFiles string) error {
-	mg.Deps(initVars)
-	if pathToSourceFiles == "" {
-		return fmt.Errorf("please provide a plugin path")
-	}
-
-	// Convert relative path to absolute path
-	if !strings.HasPrefix(pathToSourceFiles, "/") {
-		absPath, err := filepath.Abs(pathToSourceFiles)
-		if err != nil {
-			return fmt.Errorf("failed to resolve absolute path: %w", err)
-		}
-		pathToSourceFiles = absPath
-	}
-
-	out := filepath.Join("plugins", filepath.Base(pathToSourceFiles)+".so")
-	return runAndStreamOutput(ctx, "go", "build", "-buildmode=plugin", "-tags", Tags, "-o", out, pathToSourceFiles)
 }
