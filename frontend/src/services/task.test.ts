@@ -171,3 +171,76 @@ describe('TaskService.bulkCreate', () => {
 		expect(tasks[1]?.title).toBe('b')
 	})
 })
+
+interface ProcessedTask {
+	repeat_after: number,
+	hex_color: string,
+	reminders: unknown[],
+	related_tasks: Record<string, ProcessedTask[]>,
+}
+
+// A task as it reaches processModel: a plain object, not necessarily built by TaskModel.
+function rawTask(overrides: Record<string, unknown> = {}) {
+	return {
+		id: 1,
+		title: 'a task',
+		projectId: 1,
+		hexColor: '',
+		reminders: [],
+		repeatAfter: {type: 'days', amount: 0},
+		relatedTasks: {},
+		attachments: [],
+		...overrides,
+	} as unknown as ITask
+}
+
+function process(task: ITask): ProcessedTask {
+	return new TaskService().processModel(task) as unknown as ProcessedTask
+}
+
+describe('TaskService.processModel', () => {
+	it('converts a repeatAfter object to seconds', () => {
+		expect(process(rawTask({repeatAfter: {type: 'hours', amount: 3}})).repeat_after).toBe(3 * 3600)
+		expect(process(rawTask({repeatAfter: {type: 'days', amount: 2}})).repeat_after).toBe(2 * 86400)
+		expect(process(rawTask({repeatAfter: {type: 'weeks', amount: 1}})).repeat_after).toBe(7 * 86400)
+	})
+
+	it('sends no repeat for an amount of 0', () => {
+		expect(process(rawTask({repeatAfter: {type: 'days', amount: 0}})).repeat_after).toBe(0)
+	})
+
+	it('keeps a repeatAfter that is already in seconds', () => {
+		expect(process(rawTask({repeatAfter: 3600})).repeat_after).toBe(3600)
+	})
+
+	it('sends no repeat when repeatAfter is missing or null', () => {
+		expect(process(rawTask({repeatAfter: undefined})).repeat_after).toBe(0)
+		expect(process(rawTask({repeatAfter: null})).repeat_after).toBe(0)
+	})
+
+	it('processes a nested related task that has no repeatAfter', () => {
+		const task = rawTask({relatedTasks: {subtask: [{id: 2, title: 'sub', projectId: 1}]}})
+
+		expect(process(task).related_tasks.subtask[0].repeat_after).toBe(0)
+	})
+
+	it('processes a nested related task that has no reminders', () => {
+		const task = rawTask({relatedTasks: {subtask: [{id: 2, title: 'sub', repeatAfter: 0}]}})
+
+		expect(process(task).related_tasks.subtask[0].reminders).toEqual([])
+	})
+
+	it('processes a nested related task that has no attachments', () => {
+		const task = rawTask({relatedTasks: {subtask: [{id: 2, title: 'sub', reminders: []}]}})
+
+		expect(() => process(task)).not.toThrow()
+	})
+
+	it('processes a task that has no relatedTasks', () => {
+		expect(() => process(rawTask({relatedTasks: undefined}))).not.toThrow()
+	})
+
+	it('processes a task that has no hexColor', () => {
+		expect(process(rawTask({hexColor: undefined})).hex_color).toBe('')
+	})
+})
