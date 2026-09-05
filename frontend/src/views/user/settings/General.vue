@@ -558,7 +558,7 @@ const {
 	timezoneObject,
 } = useAvailableTimezones(settings)
 
-const isExternalUser = computed(() => !authStore.info.isLocalUser)
+const isExternalUser = computed(() => authStore.info?.isLocalUser === false)
 
 watch(
 	() => authStore.settings,
