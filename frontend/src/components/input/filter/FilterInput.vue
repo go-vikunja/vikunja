@@ -21,6 +21,7 @@ import {
 } from '@/components/input/filter/highlighter.ts'
 import FilterAutocomplete from '@/components/input/filter/FilterAutocomplete'
 import type {IProject} from '@/modelTypes/IProject'
+import {toISOStringOrNull} from '@/helpers/time/toISOStringOrNull'
 
 const props = defineProps<{
 	projectId?: IProject['id'],
@@ -229,7 +230,9 @@ function setEditorContentFromModelValue(newValue: string | undefined) {
 function updateDateInQuery(newDate: string | Date | null) {
 	if (!editor.value || !newDate) return
 
-	const dateStr = typeof newDate === 'string' ? newDate : newDate.toISOString().split('T')[0]
+	const dateStr = typeof newDate === 'string' ? newDate : toISOStringOrNull(newDate)?.split('T')[0]
+	if (!dateStr) return
+
 	const currentText = editor.value.getText()
 	const newText = currentText.replace(currentOldDatepickerValue.value, dateStr)
 	currentOldDatepickerValue.value = dateStr

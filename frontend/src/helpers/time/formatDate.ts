@@ -25,7 +25,7 @@ function toDate(date: Date | string | null | undefined): Date | null {
 	return parseDateOrNull(createDateFromString(date))
 }
 
-export const formatDate = (date: Date | string | null, f: string) => {
+export const formatDate = (date: Date | string | null | undefined, f: string) => {
 	const parsed = toDate(date)
 	if (parsed === null) {
 		return ''
@@ -44,7 +44,7 @@ export function formatDateShort(date) {
 	return formatDate(date, 'lll')
 }
 
-export const formatDateSince = (date: Date | string | null) => {
+export const formatDateSince = (date: Date | string | null | undefined) => {
 	const parsed = toDate(date)
 	if (parsed === null) {
 		return ''
@@ -78,14 +78,14 @@ export function useWeekDayFromDate() {
 	return computed(() => (date: Date) => dateIsValid(date) ? dateTimeFormatter.value.format(date) : '')
 }
 
-export function formatDisplayDate(date: Date | string | null) {
+export function formatDisplayDate(date: Date | string | null | undefined) {
 	const {store: dateDisplay} = useDateDisplay()
 	const {store: timeFormat} = useTimeFormat()
 
 	return formatDisplayDateFormat(date, dateDisplay.value, timeFormat.value)	
 }
 
-export function formatDisplayDateFormat(date: Date | string | null, format: DateDisplay, timeFormat?: TimeFormat) {
+export function formatDisplayDateFormat(date: Date | string | null | undefined, format: DateDisplay, timeFormat?: TimeFormat) {
 	const parsed = toDate(date)
 	if (parsed === null) {
 		return ''
