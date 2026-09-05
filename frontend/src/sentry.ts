@@ -15,7 +15,10 @@ export default async function setupSentry(app: App, router: Router) {
 		transport: Sentry.makeBrowserOfflineTransport(Sentry.makeFetchTransport),
 		integrations: [
 			Sentry.browserTracingIntegration({ router }),
-			Sentry.replayIntegration(),
+			// Without click detection there are no slow/multi click breadcrumbs, and
+			// so no rage click issues — those are impatience, not bugs, and they
+			// drown out actual errors.
+			Sentry.replayIntegration({slowClickTimeout: 0}),
 		],
 
 		// vue
