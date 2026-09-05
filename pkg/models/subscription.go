@@ -18,11 +18,10 @@ package models
 
 import (
 	"encoding/json"
-	"strconv"
+	"strings"
 	"time"
 
 	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/web"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -346,14 +345,25 @@ func getSubscriptionsForEntitiesAndUser(s *xorm.Session, entityType Subscription
 	}
 
 	rawSubscriptions := []*subscriptionResolved{}
-	entityIDString := utils.JoinInt64Slice(entityIDs, ", ")
+	// Placeholders, not literals: with literal ids every call is a distinct statement text,
+	// which defeats the driver's statement cache and makes Postgres plan the CTE on every call.
+	idList := strings.TrimSuffix(strings.Repeat("?, ", len(entityIDs)), ", ")
+	idArgs := make([]any, 0, len(entityIDs))
+	for _, id := range entityIDs {
+		idArgs = append(idArgs, id)
+	}
+	var args []any
+	// arguments must follow the order of the placeholders in the query text
+	add := func(vals ...any) { args = append(args, vals...) }
 
 	var sUserCond string
+	var sUserArgs []any
 	if userOnly {
 		if u == nil {
 			return nil, &ErrMustProvideUser{}
 		}
-		sUserCond = " AND s.user_id = " + strconv.FormatInt(u.ID, 10)
+		sUserCond = " AND s.user_id = ?"
+		sUserArgs = []any{u.ID}
 	}
 
 	tNotDeletedCond := " AND t.deleted_at IS NULL"
@@ -363,6 +373,10 @@ func getSubscriptionsForEntitiesAndUser(s *xorm.Session, entityType Subscription
 
 	switch entityType {
 	case SubscriptionEntityProject:
+		add(idArgs...)
+		add(SubscriptionEntityProject)
+		add(sUserArgs...)
+		add(idArgs...)
 		err = s.SQL(`
 WITH RECURSIVE project_hierarchy AS (
     -- Base case: Start with the specified projects
@@ -372,7 +386,7 @@ WITH RECURSIVE project_hierarchy AS (
         0 AS level,
         id AS original_project_id
     FROM projects
-    WHERE id IN (`+entityIDString+`)
+    WHERE id IN (`+idList+`)
 
     UNION ALL
 
@@ -426,10 +440,18 @@ FROM projects p
     FROM subscription_hierarchy
 ) sh ON p.id = sh.original_project_id AND sh.rn = 1
     LEFT JOIN users ON sh.user_id = users.id
-WHERE p.id IN (`+entityIDString+`)
-ORDER BY p.id, sh.user_id`, SubscriptionEntityProject).
+WHERE p.id IN (`+idList+`)
+ORDER BY p.id, sh.user_id`, args...).
 			Find(&rawSubscriptions)
 	case SubscriptionEntityTask:
+		add(idArgs...)
+		add(SubscriptionEntityTask)
+		add(idArgs...)
+		add(sUserArgs...)
+		add(SubscriptionEntityProject)
+		add(sUserArgs...)
+		add(SubscriptionEntityTask, SubscriptionEntityProject)
+		add(idArgs...)
 		err = s.SQL(`
 WITH RECURSIVE project_hierarchy AS (
     -- Base case: Start with the projects associated with the tasks
@@ -440,7 +462,7 @@ WITH RECURSIVE project_hierarchy AS (
         t.id AS task_id
     FROM tasks t
              JOIN projects p ON t.project_id = p.id
-    WHERE t.id IN (`+entityIDString+`)`+tNotDeletedCond+`
+    WHERE t.id IN (`+idList+`)`+tNotDeletedCond+`
 
     UNION ALL
 
@@ -467,7 +489,7 @@ subscription_hierarchy AS (
         t.id AS task_id
     FROM subscriptions s
              JOIN tasks t ON s.entity_id = t.id
-    WHERE s.entity_type = ? AND t.id IN (`+entityIDString+`)`+tNotDeletedCond+sUserCond+`
+    WHERE s.entity_type = ? AND t.id IN (`+idList+`)`+tNotDeletedCond+sUserCond+`
 
     UNION ALL
 
@@ -508,9 +530,8 @@ FROM tasks t
     FROM subscription_hierarchy
 ) sh ON t.id = sh.task_id AND sh.rn = 1
     LEFT JOIN users ON sh.user_id = users.id
-WHERE t.id IN (`+entityIDString+`)`+tNotDeletedCond+`
-ORDER BY t.id, sh.user_id`,
-			SubscriptionEntityTask, SubscriptionEntityProject, SubscriptionEntityTask, SubscriptionEntityProject).
+WHERE t.id IN (`+idList+`)`+tNotDeletedCond+`
+ORDER BY t.id, sh.user_id`, args...).
 			Find(&rawSubscriptions)
 	}
 	if err != nil {
