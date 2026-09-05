@@ -136,6 +136,7 @@ func TestHumaMigrationFile_MalformedJSON(t *testing.T) {
 	token := humaTokenFor(t, &testuser1)
 
 	for _, payload := range [][]byte{
+		[]byte(`<html>not an export</html>`),
 		[]byte(`{"title": `),
 		append([]byte{0xEF, 0xBB, 0xBF}, []byte(`{"title": `)...),
 	} {

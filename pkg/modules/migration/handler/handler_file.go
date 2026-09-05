@@ -62,7 +62,9 @@ func RunFileMigration(ms migration.FileMigrator, u *user2.User, file io.ReaderAt
 func asImportFileError(err error) error {
 	var syntaxErr *json.SyntaxError
 	var typeErr *json.UnmarshalTypeError
-	if errors.As(err, &syntaxErr) || errors.As(err, &typeErr) {
+	// A truncated document surfaces as io.ErrUnexpectedEOF rather than a SyntaxError.
+	if errors.As(err, &syntaxErr) || errors.As(err, &typeErr) ||
+		errors.Is(err, io.ErrUnexpectedEOF) || errors.Is(err, io.EOF) {
 		return &migration.ErrInvalidImportFile{Err: err}
 	}
 	return err
