@@ -235,7 +235,7 @@
                 },
                 {
                     "key": "maxconnectionlifetime",
-                    "default_value": "10000",
+                    "default_value": "1800000",
                     "comment": "The maximum lifetime of a single db connection in milliseconds."
                 },
                 {
