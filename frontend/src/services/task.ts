@@ -114,7 +114,7 @@ export default class TaskService extends AbstractService<ITask> {
 		// has to build a new object - assigning into relatedTasks would replace the
 		// related tasks of the task we were passed with their api representation.
 		model.relatedTasks = Object.fromEntries(
-			Object.entries(model.relatedTasks ?? {})
+			Object.entries<ITask[]>(model.relatedTasks ?? {})
 				.map(([relationKind, tasks]) => [relationKind, tasks.map(t => this.processModel(t))]),
 		)
 
