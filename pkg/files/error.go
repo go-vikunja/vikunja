@@ -68,7 +68,7 @@ func IsErrFileIsTooLarge(err error) bool {
 }
 
 // ErrCodeFileIsTooLarge holds the unique world-error code of this error
-const ErrCodeFileIsTooLarge = 4013
+const ErrCodeFileIsTooLarge = 4035
 
 // HTTPError holds the http error description
 func (err ErrFileIsTooLarge) HTTPError() web.HTTPError {
