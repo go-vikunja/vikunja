@@ -302,8 +302,8 @@ onMounted(loadBots)
 			</template>
 
 			<template #text>
-				<p>
-					{{ $t('user.settings.bots.delete.text1', {username: botToDelete?.username}) }}<br>
+				<p v-if="botToDelete">
+					{{ $t('user.settings.bots.delete.text1', {username: botToDelete.username}) }}<br>
 					{{ $t('user.settings.bots.delete.text2') }}
 				</p>
 			</template>
