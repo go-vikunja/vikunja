@@ -839,8 +839,11 @@ func RepairTaskPositions(s *xorm.Session, dryRun bool) (*RepairResult, error) {
 		return nil, err
 	}
 
+	slices.Sort(viewIDs)
+
 	// Process each view
-	for viewID, positions := range positionsByView {
+	for _, viewID := range viewIDs {
+		positions := positionsByView[viewID]
 		result.ViewsScanned++
 
 		// Find duplicate positions within this view's positions
@@ -861,6 +864,12 @@ func RepairTaskPositions(s *xorm.Session, dryRun bool) (*RepairResult, error) {
 
 		view, has := viewsByID[viewID]
 		if !has {
+			continue
+		}
+
+		err = lockPositionsForViewUpdate(s, viewID)
+		if err != nil {
+			result.Errors = append(result.Errors, fmt.Sprintf("view %d: locking failed: %v", viewID, err))
 			continue
 		}
 
