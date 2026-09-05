@@ -35,6 +35,7 @@ type SentryEventLike = {
 	message?: string
 	exception?: {
 		values?: {
+			type?: string
 			value?: string
 			stacktrace?: {
 				frames?: {filename?: string}[]
@@ -76,6 +77,19 @@ function hasThirdPartyTopFrame(event?: SentryEventLike): boolean {
 	}) ?? false
 }
 
+// Sentry sends an event even when it has neither a message nor an exception to
+// put in it, e.g. after a `Promise.reject()` with no value. There is nothing to
+// act on in those.
+function hasNothingToReport(event?: SentryEventLike): boolean {
+	if (!event || event.message) {
+		return false
+	}
+
+	const values = event.exception?.values
+
+	return !values?.length || values.every(value => !value?.value && !value?.type)
+}
+
 export function shouldDropEvent(originalException: unknown, event?: SentryEventLike): boolean {
 	if (isNoisyMessage(event?.message)) {
 		return true
@@ -86,6 +100,10 @@ export function shouldDropEvent(originalException: unknown, event?: SentryEventL
 	}
 
 	if (hasThirdPartyTopFrame(event)) {
+		return true
+	}
+
+	if (hasNothingToReport(event)) {
 		return true
 	}
 

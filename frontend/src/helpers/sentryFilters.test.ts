@@ -141,3 +141,25 @@ describe('shouldDropEvent with third party injections', () => {
 		expect(shouldDropEvent(new Error('Failed to execute \'postMessage\' on \'Window\''))).toBe(false)
 	})
 })
+
+describe('shouldDropEvent with empty events', () => {
+	it('drops an event without a message or exception', () => {
+		expect(shouldDropEvent(undefined, {})).toBe(true)
+	})
+
+	it('drops an event whose exception values are blank', () => {
+		expect(shouldDropEvent(undefined, {exception: {values: [{}]}})).toBe(true)
+	})
+
+	it('keeps an event with only an exception type', () => {
+		expect(shouldDropEvent(undefined, {exception: {values: [{type: 'TypeError'}]}})).toBe(false)
+	})
+
+	it('keeps an event with only a message', () => {
+		expect(shouldDropEvent(undefined, {message: 'something actually broke'})).toBe(false)
+	})
+
+	it('keeps an event when no event was passed at all', () => {
+		expect(shouldDropEvent(new Error('something actually broke'))).toBe(false)
+	})
+})
