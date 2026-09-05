@@ -40,8 +40,9 @@ func TestErrorCodesAreUnique(t *testing.T) {
 	require.True(t, ok)
 	pkgDir := filepath.Dir(filepath.Dir(thisFile))
 
+	pkgFS := os.DirFS(pkgDir)
 	codes := make(map[string][]string)
-	err := filepath.WalkDir(pkgDir, func(path string, d fs.DirEntry, err error) error {
+	err := fs.WalkDir(pkgFS, ".", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -49,7 +50,7 @@ func TestErrorCodesAreUnique(t *testing.T) {
 			return nil
 		}
 
-		content, err := os.ReadFile(path)
+		content, err := fs.ReadFile(pkgFS, path)
 		if err != nil {
 			return err
 		}
