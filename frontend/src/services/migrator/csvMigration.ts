@@ -39,7 +39,8 @@ export interface DetectionResult {
 	quote_char: string
 	date_format: string
 	suggested_mapping: ColumnMapping[]
-	preview_rows: string[][]
+	// null when the file only contains a header row
+	preview_rows: string[][] | null
 }
 
 export interface ImportConfig {
