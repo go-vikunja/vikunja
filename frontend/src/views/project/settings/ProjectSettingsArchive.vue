@@ -4,11 +4,11 @@
 		@submit="archiveProject()"
 	>
 		<template #header>
-			<span>{{ project.isArchived ? $t('project.archive.unarchive') : $t('project.archive.archive') }}</span>
+			<span>{{ project?.isArchived ? $t('project.archive.unarchive') : $t('project.archive.archive') }}</span>
 		</template>
 		
 		<template #text>
-			<p>{{ project.isArchived ? $t('project.archive.unarchiveText') : $t('project.archive.archiveText') }}</p>
+			<p>{{ project?.isArchived ? $t('project.archive.unarchiveText') : $t('project.archive.archiveText') }}</p>
 		</template>
 	</Modal>
 </template>
@@ -32,9 +32,13 @@ const router = useRouter()
 const route = useRoute()
 
 const project = computed(() => projectStore.projects[route.params.projectId])
-useTitle(() => t('project.archive.title', {project: project.value.title}))
+useTitle(() => project.value?.title ? t('project.archive.title', {project: project.value.title}) : '')
 
 async function archiveProject() {
+	if (!project.value) {
+		return
+	}
+
 	try {
 		const newProject = await projectStore.updateProject({
 			...project.value,
