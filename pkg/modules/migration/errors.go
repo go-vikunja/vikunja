@@ -240,3 +240,25 @@ func (err *ErrInvalidImportFile) HTTPError() web.HTTPError {
 		Message:  "The provided file could not be parsed. Please make sure it is a valid export file.",
 	}
 }
+
+// ErrImportFromUnsupportedVersion represents an export created by a Vikunja version we can no longer read.
+type ErrImportFromUnsupportedVersion struct {
+	DumpVersion string
+	MinVersion  string
+}
+
+func (err *ErrImportFromUnsupportedVersion) Error() string {
+	return "export was created with an older version " + err.DumpVersion + ", need at least " + err.MinVersion
+}
+
+// ErrCodeImportFromUnsupportedVersion holds the unique world-error code of this error
+const ErrCodeImportFromUnsupportedVersion = 14013
+
+// HTTPError holds the http error description
+func (err *ErrImportFromUnsupportedVersion) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeImportFromUnsupportedVersion,
+		Message:  "The export was created with a Vikunja version that is too old to import. Please create a new export with a more recent version.",
+	}
+}

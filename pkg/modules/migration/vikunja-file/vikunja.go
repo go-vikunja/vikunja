@@ -305,7 +305,7 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 	var storedFileCount int64
 	for _, f := range r.File {
 		if utils.ContainsPathTraversal(f.Name) {
-			return fmt.Errorf("unsafe path in zip archive: %q", f.Name)
+			return &migration.ErrInvalidImportFile{Err: fmt.Errorf("unsafe path in zip archive: %q", f.Name)}
 		}
 
 		if strings.HasPrefix(f.Name, "files/") {
@@ -316,10 +316,10 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 			fname := strings.TrimPrefix(f.Name, "files/")
 			id, err := strconv.ParseInt(fname, 10, 64)
 			if err != nil {
-				return fmt.Errorf("could not convert file id: %w", err)
+				return &migration.ErrInvalidImportFile{Err: fmt.Errorf("could not convert file id: %w", err)}
 			}
 			if _, exists := storedFiles[id]; exists {
-				return fmt.Errorf("duplicate file id %d", id)
+				return &migration.ErrInvalidImportFile{Err: fmt.Errorf("duplicate file id %d", id)}
 			}
 			storedFiles[id] = f
 			log.Debugf(logPrefix + "Found a blob file")
@@ -385,7 +385,7 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 	//////
 	// Check if we're able to import this dump
 	if versionFile == nil {
-		return fmt.Errorf("dump does not seem to contain a version file")
+		return &migration.ErrInvalidImportFile{Err: errors.New("dump does not seem to contain a version file")}
 	}
 	vf, err := versionFile.Open()
 	if err != nil {
@@ -404,7 +404,7 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 	} else {
 		dumpedVersion, err := version.NewVersion(bufVersion.String())
 		if err != nil {
-			return err
+			return &migration.ErrInvalidImportFile{Err: fmt.Errorf("could not parse the version of the export: %w", err)}
 		}
 		minVersion, err := version.NewVersion("0.20.1+61")
 		if err != nil {
@@ -412,7 +412,7 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 		}
 
 		if dumpedVersion.LessThan(minVersion) {
-			return fmt.Errorf("export was created with an older version, need at least %s but the export needs at least %s", dumpedVersion, minVersion)
+			return &migration.ErrImportFromUnsupportedVersion{DumpVersion: dumpedVersion.String(), MinVersion: minVersion.String()}
 		}
 	}
 
@@ -431,7 +431,7 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 
 	projects := []*models.ProjectWithTasksAndBuckets{}
 	if err := json.Unmarshal(bufData.Bytes(), &projects); err != nil {
-		return fmt.Errorf("could not read data: %w", err)
+		return &migration.ErrInvalidImportFile{Err: fmt.Errorf("could not read data: %w", err)}
 	}
 
 	provider := &lazyFileProvider{
@@ -472,7 +472,7 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 
 	filters := []*models.SavedFilter{}
 	if err := json.Unmarshal(bufFilter.Bytes(), &filters); err != nil {
-		return fmt.Errorf("could not read filter data: %w", err)
+		return &migration.ErrInvalidImportFile{Err: fmt.Errorf("could not read filter data: %w", err)}
 	}
 
 	log.Debugf(logPrefix+"Importing %d saved filters", len(filters))
@@ -516,7 +516,7 @@ func addDetailsToProject(l *models.ProjectWithTasksAndBuckets, storedFiles map[i
 		if has {
 			bgidFloat, ok := bgid.(float64)
 			if !ok {
-				return fmt.Errorf("invalid background file id type: expected number, got %T", bgid)
+				return &migration.ErrInvalidImportFile{Err: fmt.Errorf("invalid background file id type: expected number, got %T", bgid)}
 			}
 			backgroundFileID = int64(bgidFloat)
 		}
