@@ -110,12 +110,13 @@ export default class TaskService extends AbstractService<ITask> {
 
 		model.hexColor = colorFromHex(model.hexColor ?? '')
 
-		// Do the same for all related tasks
-		Object.keys(model.relatedTasks ?? {}).forEach(relationKind => {
-			model.relatedTasks[relationKind] = model.relatedTasks[relationKind].map(t => {
-				return this.processModel(t)
-			})
-		})
+		// Do the same for all related tasks. `model` is only a shallow copy, so this
+		// has to build a new object - assigning into relatedTasks would replace the
+		// related tasks of the task we were passed with their api representation.
+		model.relatedTasks = Object.fromEntries(
+			Object.entries(model.relatedTasks ?? {})
+				.map(([relationKind, tasks]) => [relationKind, tasks.map(t => this.processModel(t))]),
+		)
 
 		// Process all attachments to prevent parsing errors
 		if (model.attachments?.length > 0) {

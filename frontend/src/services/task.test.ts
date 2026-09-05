@@ -243,4 +243,25 @@ describe('TaskService.processModel', () => {
 	it('processes a task that has no hexColor', () => {
 		expect(process(rawTask({hexColor: undefined})).hex_color).toBe('')
 	})
+
+	it('leaves the related tasks of the passed model untouched', () => {
+		const subtask = rawTask({id: 2, title: 'sub', repeatAfter: {type: 'days', amount: 1}})
+		const relatedTasks = {subtask: [subtask]}
+
+		process(rawTask({relatedTasks}))
+
+		expect(relatedTasks.subtask[0]).toBe(subtask)
+		expect(subtask.repeatAfter).toEqual({type: 'days', amount: 1})
+	})
+
+	it('can process the same task twice', () => {
+		const task = rawTask({relatedTasks: {subtask: [rawTask({id: 2, repeatAfter: {type: 'days', amount: 1}})]}})
+
+		expect(process(task).related_tasks.subtask[0].repeat_after).toBe(86400)
+		expect(process(task).related_tasks.subtask[0].repeat_after).toBe(86400)
+	})
+
+	it('normalises a missing relatedTasks to an empty object', () => {
+		expect(process(rawTask({relatedTasks: undefined})).related_tasks).toEqual({})
+	})
 })
