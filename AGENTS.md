@@ -36,6 +36,7 @@ When the user tells you to prepare a worktree for a plan, invoke the `prepare-wo
 `mage -l` lists every target; `pnpm run` in `frontend/` lists the frontend scripts. The non-obvious parts:
 
 - **API tests MUST go through mage** — `mage test:web`, `mage test:feature`, or `mage test:filter <go-test-filter>`. Plain `go test` will not work.
+- `mage test:filter` runs most packages with `-short` but re-runs `pkg/webtests` without it, so a filter naming a web test actually executes it.
 - **E2E tests**: never run `pnpm test:e2e` directly — invoke the `run-e2e-tests` skill.
 - `mage generate:swagger-docs` is CI's job. Don't run it unless the user asks.
 - `pnpm dev` serves on port 4173 unless `--port` says otherwise.

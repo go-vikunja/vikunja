@@ -388,6 +388,30 @@ func Fmt(ctx context.Context) error {
 
 type Test mg.Namespace
 
+const webtestsPackage = "./pkg/webtests"
+
+// goTestPackagesExcept expands ./... minus the given package patterns.
+func goTestPackagesExcept(ctx context.Context, exclude ...string) ([]string, error) {
+	out, err := exec.CommandContext(ctx, "go", "list", "./...").Output()
+	if err != nil {
+		return nil, fmt.Errorf("failed to list go packages: %w", err)
+	}
+
+	excluded := make(map[string]bool, len(exclude))
+	for _, pattern := range exclude {
+		excluded[strings.TrimPrefix(pattern, "./")] = true
+	}
+
+	var packages []string
+	for _, pkg := range strings.Split(strings.TrimSpace(string(out)), "\n") {
+		if pkg == "" || excluded[strings.TrimPrefix(pkg, PACKAGE+"/")] {
+			continue
+		}
+		packages = append(packages, pkg)
+	}
+	return packages, nil
+}
+
 // Feature runs the feature tests
 func (Test) Feature(ctx context.Context) error {
 	mg.Deps(initVars, ensureFrontendDistExists)
@@ -410,10 +434,27 @@ func (Test) Web(ctx context.Context) error {
 	return runAndStreamOutput(ctx, "go", args...)
 }
 
+// Filter runs every test matching the given `go test -run` filter.
+//
+// Most packages run with -short, but pkg/webtests is run in a second pass without
+// it: its TestMain skips the entire package under -short, so a filter naming a web
+// test would otherwise report "ok" without having run anything. The second pass is
+// a no-op when the filter matches nothing there.
 func (Test) Filter(ctx context.Context, filter string) error {
 	mg.Deps(initVars, ensureFrontendDistExists)
+
+	packages, err := goTestPackagesExcept(ctx, webtestsPackage)
+	if err != nil {
+		return err
+	}
+
 	// We run everything sequentially and not in parallel to prevent issues with real test databases
-	return runAndStreamOutput(ctx, "go", "test", goDetectVerboseFlag(), "-p", "1", "-timeout", "45m", "-run", filter, "-short", "./...")
+	args := append([]string{"test", goDetectVerboseFlag(), "-p", "1", "-timeout", "45m", "-run", filter, "-short"}, packages...)
+	if err := runAndStreamOutput(ctx, "go", args...); err != nil {
+		return err
+	}
+
+	return runAndStreamOutput(ctx, "go", "test", goDetectVerboseFlag(), "-p", "1", "-timeout", "45m", "-run", filter, webtestsPackage)
 }
 
 func (Test) All() {
