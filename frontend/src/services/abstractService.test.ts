@@ -53,4 +53,19 @@ describe('getBlobUrl', () => {
 
 		expect(url).toBe('blob:mock')
 	})
+
+	it('falls back to a blob url for svg when reading the blob fails', async () => {
+		const service = serviceWithBlobResponse(new Blob(['<svg xmlns="http://www.w3.org/2000/svg"/>'], {type: 'image/svg+xml'}))
+		vi.spyOn(window.URL, 'createObjectURL').mockReturnValue('blob:mock')
+		vi.stubGlobal('FileReader', class {
+			onerror: (() => void) | null = null
+			readAsDataURL() {
+				this.onerror?.()
+			}
+		})
+
+		const url = await service.getBlobUrl({taskId: 1, id: 4} as IAttachment)
+
+		expect(url).toBe('blob:mock')
+	})
 })
