@@ -182,21 +182,21 @@ export default function suggestionSetup(t: TranslateFunction) {
 						editor: props.editor,
 					})
 
-					const rect = props.clientRect?.()
-					if (!rect) {
+					if (!props.clientRect) {
 						return
 					}
 
-					popup = createSuggestionPopup(getPopupContainer(props.editor), component.element!, rect)
+					popup = createSuggestionPopup(
+						getPopupContainer(props.editor),
+						component.element!,
+						props.clientRect,
+						props.editor.view.dom,
+					)
 				},
 
 				onUpdate(props: SuggestionProps) {
 					component.updateProps(props)
-
-					const rect = props.clientRect?.()
-					if (rect) {
-						popup?.setReferenceRect(rect)
-					}
+					popup?.reposition()
 				},
 
 				onKeyDown(props: SuggestionProps) {

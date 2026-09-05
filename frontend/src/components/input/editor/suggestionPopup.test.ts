@@ -2,7 +2,10 @@ import {describe, it, expect, beforeEach, vi} from 'vitest'
 
 type VirtualReference = {getBoundingClientRect: () => DOMRect}
 
-const computePosition = vi.fn((_reference: VirtualReference, _floating: HTMLElement) => Promise.resolve({x: 10, y: 20}))
+const computePosition = vi.fn((reference: VirtualReference, _floating: HTMLElement) => {
+	const {x, y} = reference.getBoundingClientRect()
+	return Promise.resolve({x, y})
+})
 const stopAutoUpdate = vi.fn()
 let autoUpdateCallback: (() => void) | null = null
 
@@ -20,17 +23,19 @@ vi.mock('@floating-ui/dom', () => ({
 
 import {createSuggestionPopup} from './suggestionPopup'
 
-const rect = () => new DOMRect(1, 2, 3, 4)
+let referenceRect: DOMRect | null = new DOMRect(10, 20, 3, 4)
 
 function create() {
 	const content = document.createElement('span')
-	return createSuggestionPopup(document.body, content, rect())
+	const contextElement = document.createElement('div')
+	return createSuggestionPopup(document.body, content, () => referenceRect, contextElement)
 }
 
 describe('createSuggestionPopup', () => {
 	beforeEach(() => {
 		document.body.innerHTML = ''
 		autoUpdateCallback = null
+		referenceRect = new DOMRect(10, 20, 3, 4)
 		computePosition.mockClear()
 		stopAutoUpdate.mockClear()
 	})
@@ -43,6 +48,35 @@ describe('createSuggestionPopup', () => {
 
 		await vi.waitFor(() => expect(popup.element.style.left).toBe('10px'))
 		expect(popup.element.style.top).toBe('20px')
+	})
+
+	it('repositions against the current reference rect', async () => {
+		const popup = create()
+		await vi.waitFor(() => expect(popup.element.style.left).toBe('10px'))
+
+		referenceRect = new DOMRect(80, 140, 3, 4)
+		popup.reposition()
+
+		await vi.waitFor(() => expect(popup.element.style.left).toBe('80px'))
+		expect(popup.element.style.top).toBe('140px')
+	})
+
+	it('reads the reference rect fresh on every autoUpdate tick', async () => {
+		const popup = create()
+		await vi.waitFor(() => expect(popup.element.style.left).toBe('10px'))
+
+		referenceRect = new DOMRect(45, 55, 3, 4)
+		autoUpdateCallback?.()
+
+		await vi.waitFor(() => expect(popup.element.style.left).toBe('45px'))
+	})
+
+	it('falls back to an empty rect when the reference is gone', () => {
+		referenceRect = null
+		create()
+
+		const reference = computePosition.mock.calls[0][0]
+		expect(reference.getBoundingClientRect().x).toBe(0)
 	})
 
 	it('removes the element and stops autoUpdate on destroy', () => {
@@ -80,16 +114,5 @@ describe('createSuggestionPopup', () => {
 		popup.destroy()
 
 		expect(stopAutoUpdate).toHaveBeenCalledTimes(1)
-	})
-
-	it('uses the latest reference rect for subsequent updates', () => {
-		const popup = create()
-		const next = new DOMRect(5, 6, 7, 8)
-
-		popup.setReferenceRect(next)
-		autoUpdateCallback?.()
-
-		const reference = computePosition.mock.calls[1][0]
-		expect(reference.getBoundingClientRect()).toBe(next)
 	})
 })
