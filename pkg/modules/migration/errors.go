@@ -126,7 +126,7 @@ func (err *ErrNotAZipFile) Error() string {
 }
 
 // ErrCodeNotAZipFile holds the unique world-error code of this error
-const ErrCodeNotAZipFile = 14001
+const ErrCodeNotAZipFile = 14011
 
 // HTTPError holds the http error description
 func (err *ErrNotAZipFile) HTTPError() web.HTTPError {
@@ -145,7 +145,7 @@ func (err *ErrFileIsEmpty) Error() string {
 }
 
 // ErrCodeFileIsEmpty holds the unique world-error code of this error
-const ErrCodeFileIsEmpty = 14002
+const ErrCodeFileIsEmpty = 14012
 
 // HTTPError holds the http error description
 func (err *ErrFileIsEmpty) HTTPError() web.HTTPError {
