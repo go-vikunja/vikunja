@@ -41,22 +41,18 @@ function getDefaultDateTo() {
 }
 
 // FIXME: use zod for this
-function ganttRouteToFilters(route: Partial<RouteLocationNormalized>): GanttFilters {
-	const ganttRoute = route
+function ganttRouteToFilters(route: Partial<RouteLocationNormalized>, projectId: IProject['id'], viewId: IProjectView['id']): GanttFilters {
 	return {
-		projectId: Number(ganttRoute.params?.projectId),
-		viewId: Number(ganttRoute.params?.viewId),
-		dateFrom: parseDateProp(ganttRoute.query?.dateFrom as DateKebab) || getDefaultDateFrom(),
-		dateTo: parseDateProp(ganttRoute.query?.dateTo as DateKebab) || getDefaultDateTo(),
-		showTasksWithoutDates: parseBooleanProp(ganttRoute.query?.showTasksWithoutDates as string) || DEFAULT_SHOW_TASKS_WITHOUT_DATES,
+		projectId,
+		viewId,
+		dateFrom: parseDateProp(route.query?.dateFrom as DateKebab) || getDefaultDateFrom(),
+		dateTo: parseDateProp(route.query?.dateTo as DateKebab) || getDefaultDateTo(),
+		showTasksWithoutDates: parseBooleanProp(route.query?.showTasksWithoutDates as string) || DEFAULT_SHOW_TASKS_WITHOUT_DATES,
 	}
 }
 
-function ganttGetDefaultFilters(route: Partial<RouteLocationNormalized>): GanttFilters {
-	return ganttRouteToFilters({params: {
-		projectId: route.params?.projectId as string,
-		viewId: route.params?.viewId as string,
-	}})
+function ganttGetDefaultFilters(projectId: IProject['id'], viewId: IProjectView['id']): GanttFilters {
+	return ganttRouteToFilters({}, projectId, viewId)
 }
 
 // FIXME: use zod for this
@@ -108,17 +104,23 @@ export type UseGanttFiltersReturn =
 	UseRouteFiltersReturn<GanttFilters> &
 	UseGanttTaskListReturn
 
-export function useGanttFilters(route: Ref<RouteLocationNormalized>, viewId: Ref<IProjectView['id']>): UseGanttFiltersReturn {
+export function useGanttFilters(
+	route: Ref<RouteLocationNormalized>,
+	projectId: Ref<IProject['id']>,
+	viewId: Ref<IProjectView['id']>,
+): UseGanttFiltersReturn {
 	const viewFiltersStore = useViewFiltersStore()
 
+	// Ids come from the props and not from the route: while the task detail modal is open, gantt
+	// renders as its backdrop and the current route is the task, without any project params.
 	const {
 		filters,
 		hasDefaultFilters,
 		setDefaultFilters,
 	} = useRouteFilters<GanttFilters>(
 		route,
-		ganttGetDefaultFilters,
-		ganttRouteToFilters,
+		() => ganttGetDefaultFilters(projectId.value, viewId.value),
+		r => ganttRouteToFilters(r, projectId.value, viewId.value),
 		ganttFiltersToRoute,
 		['project.view'],
 	)

@@ -141,6 +141,7 @@ watchEffect(() => baseStore.setCurrentProjectViewId(props.viewId))
 	/>
 	<ProjectGantt
 		v-if="currentView?.viewKind === 'gantt'"
+		:project-id="projectId"
 		:route
 		:is-loading-project="isLoadingProject"
 		:view-id
