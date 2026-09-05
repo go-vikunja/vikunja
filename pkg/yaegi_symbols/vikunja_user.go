@@ -50,7 +50,7 @@ func init() {
 		"ErrCodeNoPasswordResetToken":          reflect.ValueOf(constant.MakeFromLiteral("1008", token.INT, 0)),
 		"ErrCodeNoPendingEmail":                reflect.ValueOf(constant.MakeFromLiteral("1035", token.INT, 0)),
 		"ErrCodeNoUsernamePassword":            reflect.ValueOf(constant.MakeFromLiteral("1004", token.INT, 0)),
-		"ErrCodeOpenIDCustomScopeMalformed":    reflect.ValueOf(constant.MakeFromLiteral("1022", token.INT, 0)),
+		"ErrCodeOpenIDCustomScopeMalformed":    reflect.ValueOf(constant.MakeFromLiteral("1038", token.INT, 0)),
 		"ErrCodeTOTPAlreadyEnabled":            reflect.ValueOf(constant.MakeFromLiteral("1015", token.INT, 0)),
 		"ErrCodeTOTPNotEnabled":                reflect.ValueOf(constant.MakeFromLiteral("1016", token.INT, 0)),
 		"ErrCodeTOTPPasscodeUsed":              reflect.ValueOf(constant.MakeFromLiteral("1025", token.INT, 0)),
