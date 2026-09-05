@@ -74,7 +74,7 @@ func DownloadFileWithHeadersLimited(hc *http.Client, url string, headers http.He
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("got status %d when downloading %s", resp.StatusCode, url)
+		return nil, fmt.Errorf("could not download %s: %w", url, NewErrUpstreamRequestFailed("upstream", resp.StatusCode, ""))
 	}
 
 	buf := &bytes.Buffer{}
@@ -146,7 +146,7 @@ func DoGetWithClient(hc *http.Client, urlStr string, headers map[string]string) 
 		if resp.StatusCode >= 500 {
 			bodyBytes, _ := io.ReadAll(io.LimitReader(resp.Body, errorBodyLogLimit))
 			resp.Body.Close()
-			return fmt.Errorf("server returned status %d: %s", resp.StatusCode, string(bodyBytes))
+			return NewErrUpstreamRequestFailed("upstream", resp.StatusCode, string(bodyBytes))
 		}
 
 		return nil
@@ -190,7 +190,7 @@ func DoPostWithHeaders(urlStr string, form url.Values, headers map[string]string
 		if resp.StatusCode >= 500 {
 			bodyBytes, _ := io.ReadAll(io.LimitReader(resp.Body, errorBodyLogLimit))
 			resp.Body.Close()
-			return fmt.Errorf("server returned status %d: %s", resp.StatusCode, string(bodyBytes))
+			return NewErrUpstreamRequestFailed("upstream", resp.StatusCode, string(bodyBytes))
 		}
 
 		return nil

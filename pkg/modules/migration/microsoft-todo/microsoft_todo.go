@@ -35,7 +35,9 @@ import (
 )
 
 const apiScopes = `tasks.read tasks.read.shared`
-const apiPrefix = `https://graph.microsoft.com/v1.0/me/todo/`
+
+// var, not const, so tests can point it at a local server
+var apiPrefix = `https://graph.microsoft.com/v1.0/me/todo/`
 
 type Migration struct {
 	Code string `json:"code"`
@@ -173,7 +175,7 @@ func getMicrosoftGraphAuthToken(code string) (accessToken string, err error) {
 	if resp.StatusCode > 399 {
 		buf := &bytes.Buffer{}
 		_, _ = buf.ReadFrom(resp.Body)
-		return "", fmt.Errorf("got http status %d while trying to get token, error was %s", resp.StatusCode, buf.String())
+		return "", fmt.Errorf("could not get microsoft todo auth token: %w", migration.NewErrUpstreamRequestFailed("microsoft login", resp.StatusCode, buf.String()))
 	}
 
 	token := &apiTokenResponse{}
@@ -201,7 +203,7 @@ func makeAuthenticatedGetRequest(token, urlPart string, v interface{}) error {
 	}
 
 	if resp.StatusCode > 399 {
-		return fmt.Errorf("microsoft graph api error: status code: %d, response was: %s", resp.StatusCode, buf.String())
+		return migration.NewErrUpstreamRequestFailed("microsoft graph", resp.StatusCode, buf.String())
 	}
 
 	// If the response is an empty json array, we need to exit here, otherwise this breaks the json parser since it
