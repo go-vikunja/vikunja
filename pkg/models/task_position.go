@@ -277,6 +277,9 @@ func updateTaskPosition(s *xorm.Session, a web.Auth, tp *TaskPosition) (err erro
 
 	if len(conflicts) > 1 {
 		err = resolveTaskPositionConflicts(s, tp.ProjectViewID, conflicts)
+		if IsErrNeedsFullRecalculation(err) {
+			err = recalculateTaskPositionsForRepair(s, &ProjectView{ID: tp.ProjectViewID})
+		}
 		if err != nil {
 			return err
 		}
