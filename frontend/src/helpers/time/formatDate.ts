@@ -1,4 +1,6 @@
 import {createDateFromString} from '@/helpers/time/createDateFromString'
+import {parseDateOrNull} from '@/helpers/parseDateOrNull'
+import {toISOStringOrNull} from '@/helpers/time/toISOStringOrNull'
 import dayjs from 'dayjs'
 
 import {i18n} from '@/i18n'
@@ -11,26 +13,27 @@ import {DATE_DISPLAY, type DateDisplay} from '@/constants/dateDisplay'
 import {TIME_FORMAT, type TimeFormat} from '@/constants/timeFormat'
 import {DAYJS_LOCALE_MAPPING} from '@/i18n/useDayjsLanguageSync.ts'
 
-export function dateIsValid(date: Date | null) {
-	if (date === null) {
-		return false
-	}
-
-	return date instanceof Date && !isNaN(date)
+export function dateIsValid(date: Date | string | null | undefined): boolean {
+	return toDate(date) !== null
 }
 
-export const formatDate = (date: Date | string | null, f: string) => {
-	if (!dateIsValid(date)) {
+function toDate(date: Date | string | null | undefined): Date | null {
+	if (date === null || typeof date === 'undefined') {
+		return null
+	}
+
+	return parseDateOrNull(createDateFromString(date))
+}
+
+export const formatDate = (date: Date | string | null | undefined, f: string) => {
+	const parsed = toDate(date)
+	if (parsed === null) {
 		return ''
 	}
 
-	date = createDateFromString(date)
-	
 	const locale = DAYJS_LOCALE_MAPPING[i18n.global.locale.value.toLowerCase()] ?? 'en'
 
-	return date 
-		? dayjs(date).locale(locale).format(f) 
-		: ''
+	return dayjs(parsed).locale(locale).format(f)
 }
 
 export function formatDateLong(date) {
@@ -41,12 +44,11 @@ export function formatDateShort(date) {
 	return formatDate(date, 'lll')
 }
 
-export const formatDateSince = (date: Date | string | null) => {
-	if (!dateIsValid(date)) {
+export const formatDateSince = (date: Date | string | null | undefined) => {
+	const parsed = toDate(date)
+	if (parsed === null) {
 		return ''
 	}
-
-	date = createDateFromString(date)
 
 	const locale = DAYJS_LOCALE_MAPPING[i18n.global.locale.value.toLowerCase()] ?? 'en'
 
@@ -55,13 +57,11 @@ export const formatDateSince = (date: Date | string | null) => {
 	// don't keep showing a stale "x minutes ago".
 	const {now} = useGlobalNow()
 
-	return date
-		? dayjs(date).locale(locale).from(now.value)
-		: ''
+	return dayjs(parsed).locale(locale).from(now.value)
 }
 
-export function formatISO(date) {
-	return date ? new Date(date).toISOString() : ''
+export function formatISO(date: Date | string | null | undefined) {
+	return toISOStringOrNull(date) ?? ''
 }
 
 /**
@@ -75,22 +75,19 @@ export const useDateTimeFormatter = createSharedComposable((options?: MaybeRefOr
 export function useWeekDayFromDate() {
 	const dateTimeFormatter = useDateTimeFormatter({weekday: 'short'})
 
-	return computed(() => (date: Date) => dateTimeFormatter.value.format(date))
+	return computed(() => (date: Date) => dateIsValid(date) ? dateTimeFormatter.value.format(date) : '')
 }
 
-export function formatDisplayDate(date: Date | string | null) {
+export function formatDisplayDate(date: Date | string | null | undefined) {
 	const {store: dateDisplay} = useDateDisplay()
 	const {store: timeFormat} = useTimeFormat()
 
 	return formatDisplayDateFormat(date, dateDisplay.value, timeFormat.value)	
 }
 
-export function formatDisplayDateFormat(date: Date | string | null, format: DateDisplay, timeFormat?: TimeFormat) {
-	if (typeof date === 'string') {
-		date = createDateFromString(date)
-	}
-	
-	if (date === null || !dateIsValid(date)) {
+export function formatDisplayDateFormat(date: Date | string | null | undefined, format: DateDisplay, timeFormat?: TimeFormat) {
+	const parsed = toDate(date)
+	if (parsed === null) {
 		return ''
 	}
 
@@ -101,27 +98,27 @@ export function formatDisplayDateFormat(date: Date | string | null, format: Date
 
 	switch (format) {
 		case DATE_DISPLAY.MM_DD_YYYY:
-			return formatDate(date, `MM-DD-YYYY ${timeFormatString}`)
+			return formatDate(parsed, `MM-DD-YYYY ${timeFormatString}`)
 		case DATE_DISPLAY.DD_MM_YYYY:
-			return formatDate(date, `DD-MM-YYYY ${timeFormatString}`)
+			return formatDate(parsed, `DD-MM-YYYY ${timeFormatString}`)
 		case DATE_DISPLAY.YYYY_MM_DD:
-			return formatDate(date, `YYYY-MM-DD ${timeFormatString}`)
+			return formatDate(parsed, `YYYY-MM-DD ${timeFormatString}`)
 		case DATE_DISPLAY.MM_SLASH_DD_YYYY:
-			return formatDate(date, `MM/DD/YYYY ${timeFormatString}`)
+			return formatDate(parsed, `MM/DD/YYYY ${timeFormatString}`)
 		case DATE_DISPLAY.DD_SLASH_MM_YYYY:
-			return formatDate(date, `DD/MM/YYYY ${timeFormatString}`)
+			return formatDate(parsed, `DD/MM/YYYY ${timeFormatString}`)
 		case DATE_DISPLAY.YYYY_SLASH_MM_DD:
-			return formatDate(date, `YYYY/MM/DD ${timeFormatString}`)
+			return formatDate(parsed, `YYYY/MM/DD ${timeFormatString}`)
 		case DATE_DISPLAY.DAY_MONTH_YEAR: {
 			const hour12 = timeFormat !== TIME_FORMAT.HOURS_24
-			return new Intl.DateTimeFormat(i18n.global.locale.value, {day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: 'numeric', hour12}).format(date)
+			return new Intl.DateTimeFormat(i18n.global.locale.value, {day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: 'numeric', hour12}).format(parsed)
 		}
 		case DATE_DISPLAY.WEEKDAY_DAY_MONTH_YEAR: {
 			const hour12 = timeFormat !== TIME_FORMAT.HOURS_24
-			return new Intl.DateTimeFormat(i18n.global.locale.value, {weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: 'numeric', hour12}).format(date)
+			return new Intl.DateTimeFormat(i18n.global.locale.value, {weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: 'numeric', hour12}).format(parsed)
 		}
 		case DATE_DISPLAY.RELATIVE:
 		default:
-			return formatDateSince(date)
+			return formatDateSince(parsed)
 	}
 }

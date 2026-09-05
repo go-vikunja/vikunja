@@ -8,18 +8,11 @@ import {SECONDS_A_DAY, SECONDS_A_HOUR, SECONDS_A_WEEK} from '@/constants/date'
 import {objectToSnakeCase} from '@/helpers/case'
 import {apiV2Url, AuthenticatedHTTPFactory} from '@/helpers/fetcher'
 import {invalidateCachedTask} from '@/helpers/taskCache'
+import {toISOStringOrNull} from '@/helpers/time/toISOStringOrNull'
 import {translatedError} from '@/message'
 
 // Mirrors models.MaxTasksPerBulkCreation on the backend.
 const MAX_TASKS_PER_BULK_CREATION = 100
-
-const parseDate = date => {
-	if (date) {
-		return new Date(date).toISOString()
-	}
-
-	return null
-}
 
 export default class TaskService extends AbstractService<ITask> {
 	constructor() {
@@ -69,13 +62,13 @@ export default class TaskService extends AbstractService<ITask> {
 		model.projectId = Number(model.projectId)
 
 		// Convert dates into an iso string
-		model.dueDate = parseDate(model.dueDate)
-		model.startDate = parseDate(model.startDate)
-		model.endDate = parseDate(model.endDate)
-		model.doneAt = parseDate(model.doneAt)
-		model.deletedAt = parseDate(model.deletedAt)
-		model.created = new Date(model.created).toISOString()
-		model.updated = new Date(model.updated).toISOString()
+		model.dueDate = toISOStringOrNull(model.dueDate)
+		model.startDate = toISOStringOrNull(model.startDate)
+		model.endDate = toISOStringOrNull(model.endDate)
+		model.doneAt = toISOStringOrNull(model.doneAt)
+		model.deletedAt = toISOStringOrNull(model.deletedAt)
+		model.created = toISOStringOrNull(model.created)
+		model.updated = toISOStringOrNull(model.updated)
 
 		model.reminderDates = null
 		// remove all nulls, these would create empty reminders
@@ -83,7 +76,7 @@ export default class TaskService extends AbstractService<ITask> {
 		// Make normal timestamps from js dates
 		if (model.reminders.length > 0) {
 			model.reminders.forEach(r => {
-				r.reminder = new Date(r.reminder).toISOString()
+				r.reminder = toISOStringOrNull(r.reminder)
 			})
 		}
 
