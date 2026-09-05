@@ -230,7 +230,7 @@ func (err *ErrInvalidImportFile) Unwrap() error {
 }
 
 // ErrCodeInvalidImportFile holds the unique world-error code of this error
-const ErrCodeInvalidImportFile = 14008
+const ErrCodeInvalidImportFile = 14010
 
 // HTTPError holds the http error description
 func (err *ErrInvalidImportFile) HTTPError() web.HTTPError {
