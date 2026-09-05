@@ -173,8 +173,8 @@ function onTokenCreated(token: IApiToken) {
 			</template>
 
 			<template #text>
-				<p>
-					{{ $t('user.settings.apiTokens.delete.text1', {token: tokenToDelete?.title}) }}<br>
+				<p v-if="tokenToDelete">
+					{{ $t('user.settings.apiTokens.delete.text1', {token: tokenToDelete.title}) }}<br>
 					{{ $t('user.settings.apiTokens.delete.text2') }}
 				</p>
 			</template>

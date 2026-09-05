@@ -136,6 +136,24 @@ describe('ApiTokens settings page', () => {
 		expect(runtimeErrorMessages(errors)).toEqual([])
 	})
 
+	it('keeps the delete text out of the closing modal once the token is gone', async () => {
+		const mounted = await mountPage()
+		wrapper = mounted.wrapper
+		const {errors} = mounted
+
+		const confirmBtn = await openDeleteModalForFirstToken(wrapper)
+		confirmBtn.click()
+		await flushPromises()
+
+		// The dialog is still mounted here, in the middle of its close transition.
+		const dialog = document.querySelector('dialog.modal-dialog')
+		expect(dialog).not.toBeNull()
+		expect(dialog?.textContent).not.toContain('Are you sure you want to delete the token')
+
+		await settleCloseTransition()
+		expect(runtimeErrorMessages(errors)).toEqual([])
+	})
+
 	it('deletes only once when the confirm button is double clicked', async () => {
 		const mounted = await mountPage()
 		wrapper = mounted.wrapper
