@@ -90,4 +90,33 @@ describe('kanban store: moveTaskToBucket', () => {
 		expect(kanban.buckets[0].tasks).toEqual([])
 		expect(kanban.buckets[1].tasks).toEqual([])
 	})
+
+	it('keeps the task where it is when the target bucket is not loaded', () => {
+		const kanban = useKanbanStore()
+		kanban.setBuckets([makeBucket(1, 'To-Do'), makeBucket(2, 'Done')])
+
+		const task = makeTask(42, 1)
+		kanban.addTaskToBucket(task)
+
+		expect(() => kanban.moveTaskToBucket(task, 404)).not.toThrow()
+
+		expect(kanban.buckets[0].tasks.map(t => t.id)).toEqual([42])
+		expect(task.bucketId).toBe(1)
+	})
+})
+
+describe('kanban store: addTaskToBucket', () => {
+	beforeEach(() => {
+		setActivePinia(createPinia())
+	})
+
+	it('does nothing when the bucket is not loaded', () => {
+		const kanban = useKanbanStore()
+		kanban.setBuckets([makeBucket(1, 'To-Do')])
+
+		expect(() => kanban.addTaskToBucket(makeTask(42, 404))).not.toThrow()
+
+		expect(kanban.buckets[0].tasks).toEqual([])
+		expect(kanban.buckets).toHaveLength(1)
+	})
 })
