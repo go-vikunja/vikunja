@@ -329,10 +329,12 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 		// Handle SVG blobs specially - convert to data URL for better browser compatibility.
 		// FileReader is absent in some environments (iOS Lockdown Mode, embedded webviews), fall back to a blob url there.
 		if (response.data.type === 'image/svg+xml' && typeof FileReader !== 'undefined') {
-			return new Promise<string>((resolve, reject) => {
+			return new Promise<string>(resolve => {
 				const reader = new FileReader()
 				reader.onload = () => resolve(reader.result as string)
-				reader.onerror = reject
+				// A read failure rejects with a ProgressEvent, which carries no
+				// stack and nothing to act on — take the same fallback instead.
+				reader.onerror = () => resolve(window.URL.createObjectURL(response.data))
 				reader.readAsDataURL(response.data)
 			})
 		}
