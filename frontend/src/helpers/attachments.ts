@@ -77,6 +77,20 @@ export async function uploadFiles(
 	return uploaded
 }
 
+/**
+ * Uploads report each finished file through a callback rather than their return
+ * value, so the urls have to be collected there. The rejection still has to be
+ * forwarded, else a failed upload leaves a dangling rejected promise behind.
+ */
+export function uploadFilesForEditor(
+	upload: (file: File, onSuccess: (attachmentUrl: string) => void) => Promise<unknown>,
+	files: File[] | FileList,
+): Promise<string[]> {
+	return Promise.all(Array.from(files).map(file => new Promise<string>((resolve, reject) => {
+		upload(file, resolve).catch(reject)
+	})))
+}
+
 export function generateAttachmentUrl(taskId: number, attachmentId: number) {
 	return `${window.API_URL}/tasks/${taskId}/attachments/${attachmentId}`
 }

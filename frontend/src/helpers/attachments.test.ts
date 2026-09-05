@@ -1,6 +1,6 @@
 import {describe, it, expect, beforeEach, vi} from 'vitest'
 
-import {clearAttachmentBlobCache, fetchAttachmentBlobUrl} from './attachments'
+import {clearAttachmentBlobCache, fetchAttachmentBlobUrl, uploadFilesForEditor} from './attachments'
 import {PREVIEW_SIZE} from '@/services/attachment'
 
 const {getBlobUrl} = vi.hoisted(() => ({getBlobUrl: vi.fn()}))
@@ -85,5 +85,37 @@ describe('clearAttachmentBlobCache', () => {
 
 		expect(window.URL.revokeObjectURL).toHaveBeenCalledWith('blob:a')
 		expect(await fetchAttachmentBlobUrl(attachment)).toBe('blob:b')
+	})
+})
+
+describe('uploadFilesForEditor', () => {
+	it('collects the url of every uploaded file', async () => {
+		const upload = vi.fn((file: File, onSuccess: (url: string) => void) => {
+			onSuccess(`https://vikunja.io/${file.name}`)
+			return Promise.resolve()
+		})
+
+		const urls = await uploadFilesForEditor(upload, [new File([''], 'a.png'), new File([''], 'b.png')])
+
+		expect(urls).toEqual(['https://vikunja.io/a.png', 'https://vikunja.io/b.png'])
+	})
+
+	it('rejects when an upload fails instead of leaving the promise dangling', async () => {
+		const failed = new Error('failed to save file: no space left on device')
+
+		await expect(uploadFilesForEditor(() => Promise.reject(failed), [new File([''], 'a.png')]))
+			.rejects.toThrow(failed)
+	})
+
+	it('handles a FileList, which has no forEach', async () => {
+		const file = new File([''], 'a.png')
+		const files = {0: file, length: 1, [Symbol.iterator]: [file][Symbol.iterator].bind([file])} as unknown as FileList
+
+		const urls = await uploadFilesForEditor((f, onSuccess) => {
+			onSuccess(`https://vikunja.io/${f.name}`)
+			return Promise.resolve()
+		}, files)
+
+		expect(urls).toEqual(['https://vikunja.io/a.png'])
 	})
 })

@@ -60,6 +60,7 @@ import Editor from '@/components/input/AsyncEditor'
 
 import { clearEditorDraft } from '@/helpers/editorDraftStorage'
 import { isEditorContentEmpty } from '@/helpers/editorContentEmpty'
+import { uploadFilesForEditor } from '@/helpers/attachments'
 import type { ITask } from '@/modelTypes/ITask'
 import { useTaskStore } from '@/stores/tasks'
 
@@ -224,18 +225,8 @@ async function save() {
 	}
 }
 
-async function uploadCallback(files: File[] | FileList): Promise<string[]> {
-	const uploadPromises: Promise<string>[] = []
-
-	files.forEach((file: File) => {
-		const promise = new Promise<string>((resolve) => {
-			props.attachmentUpload(file, (uploadedFileUrl: string) => resolve(uploadedFileUrl))
-		})
-
-		uploadPromises.push(promise)
-	})
-
-	return await Promise.all(uploadPromises)
+function uploadCallback(files: File[] | FileList): Promise<string[]> {
+	return uploadFilesForEditor(props.attachmentUpload, files)
 }
 </script>
 
