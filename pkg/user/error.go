@@ -485,8 +485,8 @@ func (err *ErrOpenIDCustomScopeMalformed) Error() string {
 	return "Custom Scope malformed"
 }
 
-// ErrCodeNoOpenIDEmailProvided holds the unique world-error code of this error
-const ErrCodeOpenIDCustomScopeMalformed = 1022
+// ErrCodeOpenIDCustomScopeMalformed holds the unique world-error code of this error
+const ErrCodeOpenIDCustomScopeMalformed = 1038
 
 // HTTPError holds the http error description
 func (err *ErrOpenIDCustomScopeMalformed) HTTPError() web.HTTPError {

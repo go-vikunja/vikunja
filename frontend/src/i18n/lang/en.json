@@ -1483,6 +1483,7 @@
     "1025": "The timezone '{timezone}' is invalid. Please select a valid timezone from the list.",
     "1035": "There is no pending email change to confirm.",
     "1036": "Please wait a minute before requesting another confirmation email.",
+    "1038": "The custom scope set by the OIDC provider is malformed. Please make sure the openid provider sets the data correctly for your scope. Check especially to have set an oidcID.",
     "2001": "ID cannot be empty or 0.",
     "2002": "Some of the request data was invalid.",
     "2003": "The timezone '{timezone}' is invalid.",
