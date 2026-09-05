@@ -3,11 +3,8 @@ import {useRouter, isNavigationFailure} from 'vue-router'
 import type {LocationQueryRaw} from 'vue-router'
 import {useRouteQuery} from '@vueuse/router'
 
-import TaskCollectionService, {
-	type ExpandTaskFilterParam,
-	getDefaultTaskFilterParams,
-	type TaskFilterParams,
-} from '@/services/taskCollection'
+import TaskCollectionService, {getDefaultTaskFilterParams} from '@/services/taskCollection'
+import type {ExpandTaskFilterParam, TaskFilterParams} from '@/types/TaskFilterParams'
 import type {ITask} from '@/modelTypes/ITask'
 import {error} from '@/message'
 import {useAuthStore} from '@/stores/auth'
