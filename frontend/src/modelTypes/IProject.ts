@@ -2,7 +2,7 @@ import type {IAbstract} from './IAbstract'
 import type {ITask} from './ITask'
 import type {IUser} from './IUser'
 import type {ISubscription} from './ISubscription'
-import type {IProjectView} from '@/modelTypes/IProjectView'
+import type {ProjectView} from '@/client/generated'
 
 
 export interface IProject extends IAbstract {
@@ -20,7 +20,7 @@ export interface IProject extends IAbstract {
 	position: number
 	backgroundBlurHash: string
 	parentProjectId: number
-	views: IProjectView[]
+	views: ProjectView[]
 	
 	created: Date
 	updated: Date

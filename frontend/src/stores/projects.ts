@@ -17,7 +17,6 @@ import {useBaseStore} from '@/stores/base'
 import SavedFilterService from '@/services/savedFilter'
 import {getSavedFilterIdFromProjectId, isSavedFilter} from '@/services/savedFilter'
 import SavedFilterModel from '@/models/savedFilter'
-import type {IProjectView} from '@/modelTypes/IProjectView'
 import {PERMISSIONS} from '@/constants/permissions.ts'
 
 export const useProjectStore = defineStore('project', () => {
@@ -283,33 +282,6 @@ export const useProjectStore = defineStore('project', () => {
 		return loadedProjects
 	}
 	
-	function setProjectView(view: IProjectView) {
-		const views = [...projects.value[view.projectId].views]
-		const viewPos = views.findIndex(v => v.id === view.id)
-
-		if (viewPos !== -1) {
-			views[viewPos] = view
-		} else {
-			views.push(view)
-		}
-		views.sort((a, b) => a.position - b.position)
-		
-		setProject({
-			...projects.value[view.projectId],
-			views,
-		})
-	}
-	
-	function removeProjectView(projectId: IProject['id'], viewId: IProjectView['id']) {
-		const project = projects.value[projectId]
-		const updatedViews = project.views.filter(v => v.id !== viewId)
-	
-		setProject({
-			...project,
-			views: updatedViews,
-		})
-	}
-
 	// Add method to ensure single project loading works for link shares
 	async function loadProject(projectId: number) {
 		const project = projects.value[projectId]
@@ -356,8 +328,6 @@ export const useProjectStore = defineStore('project', () => {
 		updateProject,
 		deleteProject,
 		getAncestors,
-		setProjectView,
-		removeProjectView,
 	}
 })
 
