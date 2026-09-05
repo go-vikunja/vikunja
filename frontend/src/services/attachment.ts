@@ -4,6 +4,7 @@ import AttachmentModel from '../models/attachment'
 import type { IAttachment } from '@/modelTypes/IAttachment'
 
 import {downloadBlob} from '@/helpers/downloadBlob'
+import {toISOStringOrNull} from '@/helpers/time/toISOStringOrNull'
 
 export enum PREVIEW_SIZE {
 	SM = 'sm',
@@ -24,7 +25,7 @@ export default class AttachmentService extends AbstractService<IAttachment> {
 	processModel(model: IAttachment) {
 		return {
 			...model,
-			created: new Date(model.created).toISOString(),
+			created: toISOStringOrNull(model.created),
 		}
 	}
 
