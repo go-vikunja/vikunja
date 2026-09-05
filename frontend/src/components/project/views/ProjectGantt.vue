@@ -2,7 +2,7 @@
 	<ProjectWrapper
 		class="project-gantt"
 		:is-loading-project="isLoadingProject"
-		:project-id="filters.projectId"
+		:project-id
 		:view-id
 	>
 		<template #default>
@@ -85,6 +85,7 @@ import {useGanttFilters} from '../../../views/project/helpers/useGanttFilters'
 import {PERMISSIONS} from '@/constants/permissions'
 
 import type {DateISO} from '@/types/DateISO'
+import type {IProject} from '@/modelTypes/IProject'
 import type {ITask} from '@/modelTypes/ITask'
 import type {IProjectView} from '@/modelTypes/IProjectView'
 
@@ -92,6 +93,7 @@ type Options = Flatpickr.Options.Options
 
 const props = defineProps<{
 	isLoadingProject: boolean,
+	projectId: IProject['id']
 	route: RouteLocationNormalized
 	viewId: IProjectView['id']
 }>()
@@ -100,7 +102,7 @@ const props = defineProps<{
 const baseStore = useBaseStore()
 const canWrite = computed(() => baseStore.currentProject?.maxPermission > PERMISSIONS.READ)
 
-const {route, viewId} = toRefs(props)
+const {route, projectId, viewId} = toRefs(props)
 const {
 	filters,
 	hasDefaultFilters,
@@ -109,7 +111,7 @@ const {
 	isLoading,
 	addTask,
 	updateTask,
-} = useGanttFilters(route, viewId)
+} = useGanttFilters(route, projectId, viewId)
 
 const DEFAULT_DATE_RANGE_DAYS = 7
 
