@@ -168,7 +168,8 @@ func TestVikunjaFileMigrator_Migrate(t *testing.T) {
 
 		err = m.Migrate(u, f, s.Size())
 		require.Error(t, err)
-		require.ErrorContainsf(t, err, "export was created with an older version", "Invalid error message")
+		var unsupported *migration.ErrImportFromUnsupportedVersion
+		require.ErrorAs(t, err, &unsupported)
 	})
 	t.Run("should reject a zip without a data file", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
