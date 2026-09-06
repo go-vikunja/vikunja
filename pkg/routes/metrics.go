@@ -18,6 +18,8 @@ package routes
 
 import (
 	"crypto/subtle"
+	"net/http"
+	"net/http/pprof"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
@@ -38,18 +40,46 @@ func setupMetrics(a *echo.Group) {
 	metrics.InitMetrics()
 
 	r := a.Group("/metrics")
-
-	if config.MetricsUsername.GetString() != "" && config.MetricsPassword.GetString() != "" {
-		r.Use(middleware.BasicAuth(func(_ *echo.Context, username, password string) (bool, error) {
-			if subtle.ConstantTimeCompare([]byte(username), []byte(config.MetricsUsername.GetString())) == 1 &&
-				subtle.ConstantTimeCompare([]byte(password), []byte(config.MetricsPassword.GetString())) == 1 {
-				return true, nil
-			}
-			return false, nil
-		}))
+	if auth := metricsBasicAuth(); auth != nil {
+		r.Use(auth)
 	}
 
 	r.GET("", echo.WrapHandler(promhttp.HandlerFor(metrics.GetRegistry(), promhttp.HandlerOpts{})))
+}
+
+func metricsBasicAuth() echo.MiddlewareFunc {
+	if config.MetricsUsername.GetString() == "" || config.MetricsPassword.GetString() == "" {
+		return nil
+	}
+	return middleware.BasicAuth(func(_ *echo.Context, username, password string) (bool, error) {
+		if subtle.ConstantTimeCompare([]byte(username), []byte(config.MetricsUsername.GetString())) == 1 &&
+			subtle.ConstantTimeCompare([]byte(password), []byte(config.MetricsPassword.GetString())) == 1 {
+			return true, nil
+		}
+		return false, nil
+	})
+}
+
+// Go's profiler at its canonical path (pprof.Index derives the profile name from it), gated like the metrics
+// endpoint. Explicit handlers rather than the net/http/pprof blank import, which would register them on
+// http.DefaultServeMux unconditionally.
+func setupPprof(e *echo.Echo) {
+	if !config.MetricsEnabled.GetBool() || !config.MetricsPprof.GetBool() {
+		return
+	}
+
+	r := e.Group("/debug/pprof")
+	if auth := metricsBasicAuth(); auth != nil {
+		r.Use(auth)
+	}
+
+	r.GET("/cmdline", echo.WrapHandler(http.HandlerFunc(pprof.Cmdline)))
+	r.GET("/profile", echo.WrapHandler(http.HandlerFunc(pprof.Profile)))
+	r.GET("/symbol", echo.WrapHandler(http.HandlerFunc(pprof.Symbol)))
+	r.POST("/symbol", echo.WrapHandler(http.HandlerFunc(pprof.Symbol)))
+	r.GET("/trace", echo.WrapHandler(http.HandlerFunc(pprof.Trace)))
+	r.GET("/", echo.WrapHandler(http.HandlerFunc(pprof.Index)))
+	r.GET("/*", echo.WrapHandler(http.HandlerFunc(pprof.Index)))
 }
 
 func setupMetricsMiddleware(a *echo.Group) {
