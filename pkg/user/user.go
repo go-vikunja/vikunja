@@ -258,20 +258,25 @@ func GetUserByID(s *xorm.Session, id int64) (user *User, err error) {
 		return &User{}, ErrUserDoesNotExist{}
 	}
 
-	// getUser hands back a usable user alongside the account status errors and callers rely on that,
-	// so the error path returns what it loaded rather than the memo's zero value.
-	var fetched *User
-	u, err := db.Remember(s, userMemoKey(id), func() (*User, error) {
-		var err error
-		fetched, err = getUser(s, &User{ID: id}, false)
-		return fetched, err
+	// The memo holds the raw row, shared with GetUsersByIDs, so the status gate runs on every hit.
+	raw, err := db.Remember(s, userMemoKey(id), func() (*User, error) {
+		loaded := &User{ID: id}
+		exists, err := s.Get(loaded)
+		if err != nil {
+			return nil, err
+		}
+		if !exists {
+			return nil, ErrUserDoesNotExist{UserID: id}
+		}
+		loaded.Email = ""
+		return loaded, nil
 	})
 	if err != nil {
-		return fetched, err
+		return &User{}, err
 	}
 
-	copied := *u
-	return &copied, nil
+	u := *raw
+	return &u, finishLoadedUser(&u)
 }
 
 // GetUserByUsername gets a user from its username. This is an extra function to be able to add an extra error check.
@@ -358,19 +363,24 @@ func getUser(s *xorm.Session, user *User, withEmail bool) (userOut *User, err er
 		userOut.Email = ""
 	}
 
-	if userOut.OverdueTasksRemindersTime == "" {
-		userOut.OverdueTasksRemindersTime = "9:00"
+	return userOut, finishLoadedUser(userOut)
+}
+
+// finishLoadedUser normalizes a freshly loaded row and reports whether the account may be used.
+func finishLoadedUser(u *User) error {
+	if u.OverdueTasksRemindersTime == "" {
+		u.OverdueTasksRemindersTime = "9:00"
 	}
 
-	if userOut.Status == StatusDisabled {
-		return userOut, &ErrAccountDisabled{UserID: userOut.ID}
+	if u.Status == StatusDisabled {
+		return &ErrAccountDisabled{UserID: u.ID}
 	}
 
-	if userOut.Status == StatusAccountLocked {
-		return userOut, &ErrAccountLocked{UserID: userOut.ID}
+	if u.Status == StatusAccountLocked {
+		return &ErrAccountLocked{UserID: u.ID}
 	}
 
-	return userOut, nil
+	return nil
 }
 
 func getUserByUsernameOrEmail(s *xorm.Session, usernameOrEmail string) (u *User, err error) {
