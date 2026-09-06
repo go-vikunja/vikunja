@@ -1019,7 +1019,7 @@ func TestCheckIsArchived(t *testing.T) {
 
 const behindTheBackTitle = "behind the back"
 
-// Writes through a second session, which the memo of the caller's session cannot observe.
+// Writes through a second session; the caller must have committed, or the shared-cache lock blocks this.
 func updateTitleBehindTheBack(t *testing.T, table string, id int64) {
 	s2 := db.NewSession()
 	defer s2.Close()
@@ -1033,7 +1033,6 @@ func TestGetProjectSimpleByIDMemo(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()
 	defer s.Close()
-	// Autocommit: an open transaction would block or hide the other session's write below. Committing does not dirty the memo.
 	require.NoError(t, s.Commit())
 
 	first, err := GetProjectSimpleByID(s, 1)
@@ -1070,7 +1069,6 @@ func TestGetProjectsMapByIDsMemo(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()
 	defer s.Close()
-	// Autocommit: an open transaction would block or hide the other session's write below. Committing does not dirty the memo.
 	require.NoError(t, s.Commit())
 
 	single, err := GetProjectSimpleByID(s, 1)

@@ -937,7 +937,7 @@ func TestGetUserByID_AfterBatchLoadKeepsStatusCheck(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()
 	defer s.Close()
-	// Autocommit: an open transaction would block or hide the other session's write below. Committing does not dirty the memo.
+	// Commit so the second session's write below is visible; a commit does not dirty the memo.
 	require.NoError(t, s.Commit())
 
 	batch, err := GetUsersByIDs(s, []int64{17, 18, 1})

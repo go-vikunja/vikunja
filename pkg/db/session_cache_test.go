@@ -58,7 +58,7 @@ func TestRemember(t *testing.T) {
 	config.InitDefaultConfig()
 	engine, err := CreateTestEngine()
 	require.NoError(t, err)
-	// Sync through the engine: the DDL then runs on xorm's own session and leaves the memo of s alone.
+	// Engine-level DDL does not touch the memo of s.
 	require.NoError(t, engine.Sync(&memoTestRow{}))
 
 	s := NewSession()

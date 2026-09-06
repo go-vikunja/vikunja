@@ -1647,7 +1647,6 @@ func TestGetTaskByIDSimpleMemo(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()
 	defer s.Close()
-	// Autocommit: an open transaction would block or hide the other session's write below. Committing does not dirty the memo.
 	require.NoError(t, s.Commit())
 
 	first, err := GetTaskByIDSimple(s, 1)
