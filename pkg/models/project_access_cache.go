@@ -21,45 +21,15 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/modules/keyvalue"
 )
 
 const (
 	projectAccessCacheTTL       = 30 * time.Second
-	projectAccessCacheKeyPrefix = "project_access_"
+	projectAccessCacheKeyPrefix = "project-access-"
 )
-
-func init() {
-	db.RegisterGlobalCacheReset(invalidateAllProjectAccess)
-}
 
 func projectAccessCacheKey(userID int64) string {
 	return projectAccessCacheKeyPrefix + strconv.FormatInt(userID, 10)
-}
-
-func getCachedProjectAccess(userID int64) (map[int64]Permission, bool) {
-	if !keyvalue.Initialized() {
-		return nil, false
-	}
-
-	var permissions map[int64]Permission
-	exists, err := keyvalue.GetWithValue(projectAccessCacheKey(userID), &permissions)
-	if err != nil {
-		log.Debugf("could not read cached project access for user %d: %s", userID, err)
-		return nil, false
-	}
-	return permissions, exists
-}
-
-func cacheProjectAccess(userID int64, permissions map[int64]Permission) {
-	if !keyvalue.Initialized() {
-		return
-	}
-
-	if err := keyvalue.PutWithTTL(projectAccessCacheKey(userID), permissions, projectAccessCacheTTL); err != nil {
-		log.Debugf("could not cache project access for user %d: %s", userID, err)
-	}
 }
 
 func invalidateProjectAccess(userID int64) {
@@ -67,24 +37,11 @@ func invalidateProjectAccess(userID int64) {
 		invalidateAllProjectAccess()
 		return
 	}
-
-	if !keyvalue.Initialized() {
-		return
-	}
-
-	if err := keyvalue.Del(projectAccessCacheKey(userID)); err != nil {
-		log.Errorf("could not invalidate cached project access for user %d: %s", userID, err)
-	}
+	db.InvalidateShared(projectAccessCacheKey(userID))
 }
 
 func invalidateAllProjectAccess() {
-	if !keyvalue.Initialized() {
-		return
-	}
-
-	if err := keyvalue.DelPrefix(projectAccessCacheKeyPrefix); err != nil {
-		log.Errorf("could not invalidate cached project access: %s", err)
-	}
+	db.InvalidateSharedPrefix(projectAccessCacheKeyPrefix)
 }
 
 // Hooks. xorm calls them after commit inside a transaction, immediately otherwise.

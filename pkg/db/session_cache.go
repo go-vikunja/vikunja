@@ -22,7 +22,11 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"time"
 	"weak"
+
+	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
 
 	"xorm.io/xorm"
 	"xorm.io/xorm/contexts"
@@ -87,9 +91,8 @@ func SetSessionContext(ctx context.Context, s *xorm.Session) {
 	s.Context(ctx)
 }
 
-// SessionHasWritten reports whether s wrote anything (or is unknown to the cache): its reads may then see
-// uncommitted state that no cross-request memo may serve or be filled from.
-func SessionHasWritten(s *xorm.Session) bool {
+// A session unknown to the cache counts as written.
+func sessionHasWritten(s *xorm.Session) bool {
 	c, ok := cacheForSession(s)
 	if !ok {
 		return true
@@ -107,22 +110,15 @@ func cacheForSession(s *xorm.Session) (*sessionCache, bool) {
 	return c.(*sessionCache), true
 }
 
-var globalCacheResets []func()
-
-// RegisterGlobalCacheReset registers a process-wide memo to be dropped whenever the database is
-// replaced under it (test fixtures), where no write hook ever fires.
-func RegisterGlobalCacheReset(fn func()) {
-	globalCacheResets = append(globalCacheResets, fn)
-}
-
 // For writes that bypass xorm entirely, which writeInvalidationHook never sees.
 func invalidateAllSessionCaches() {
 	sessionCaches.Range(func(_, v any) bool {
 		v.(*sessionCache).markDirty()
 		return true
 	})
-	for _, fn := range globalCacheResets {
-		fn()
+	// Replacing the database under the shared layer (test fixtures) fires no write hook.
+	if err := keyvalue.DelPrefix(sharedCachePrefix); err != nil {
+		log.Errorf("could not drop shared cache: %s", err)
 	}
 }
 
@@ -145,6 +141,55 @@ func GetCached[T any](s *xorm.Session, key string) (value T, found bool) {
 func SetCached[T any](s *xorm.Session, key string, value T) {
 	if c, ok := cacheForSession(s); ok {
 		c.set(key, value)
+	}
+}
+
+const sharedCachePrefix = "shared-cache-"
+
+// RememberShared is GetCached/SetCached extended across sessions through the keyvalue store.
+// A session that has written bypasses the shared layer in both directions: its reads may see its own
+// uncommitted state.
+func RememberShared[T any](s *xorm.Session, key string, ttl time.Duration, fn func() (T, error)) (T, error) {
+	if v, has := GetCached[T](s, key); has {
+		return v, nil
+	}
+
+	shareable := !sessionHasWritten(s)
+	if shareable {
+		var v T
+		exists, err := keyvalue.GetWithValue(sharedCachePrefix+key, &v)
+		if err != nil {
+			log.Errorf("could not read shared cache entry %s: %s", key, err)
+		} else if exists {
+			SetCached(s, key, v)
+			return v, nil
+		}
+	}
+
+	v, err := fn()
+	if err != nil {
+		return v, err
+	}
+
+	SetCached(s, key, v)
+	if shareable {
+		if err := keyvalue.PutWithTTL(sharedCachePrefix+key, v, ttl); err != nil {
+			log.Errorf("could not write shared cache entry %s: %s", key, err)
+		}
+	}
+	return v, nil
+}
+
+// A lost invalidation means stale authorization, hence the error level.
+func InvalidateShared(key string) {
+	if err := keyvalue.Del(sharedCachePrefix + key); err != nil {
+		log.Errorf("could not invalidate shared cache entry %s: %s", key, err)
+	}
+}
+
+func InvalidateSharedPrefix(prefix string) {
+	if err := keyvalue.DelPrefix(sharedCachePrefix + prefix); err != nil {
+		log.Errorf("could not invalidate shared cache entries with prefix %s: %s", prefix, err)
 	}
 }
 

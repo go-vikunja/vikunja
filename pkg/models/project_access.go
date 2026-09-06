@@ -17,11 +17,11 @@
 package models
 
 import (
+	"fmt"
 	"sort"
 	"strconv"
 
 	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
@@ -35,6 +35,12 @@ type projectAccess struct {
 	userID      int64
 	permissions map[int64]Permission
 	sortedIDs   []int64
+}
+
+// Shared across requests through the keyvalue store: never mutated after construction.
+type projectAccessEntry struct {
+	Permissions map[int64]Permission
+	SortedIDs   []int64
 }
 
 func (pa *projectAccess) permission(projectID int64) (Permission, bool) {
@@ -87,55 +93,34 @@ type projectAccessRow struct {
 
 // Resolves the whole reachable tree in one query, memoized per session.
 func getProjectAccessForUser(s *xorm.Session, userID int64) (*projectAccess, error) {
-	cacheKey := "project-access-" + strconv.FormatInt(userID, 10)
-	if pa, has := db.GetCached[*projectAccess](s, cacheKey); has {
-		return pa, nil
-	}
-	// A session that wrote may see its own uncommitted grants: neither serve it from the shared memo nor fill it.
-	shareable := keyvalue.Initialized() && !db.SessionHasWritten(s)
-	if shareable {
-		if permissions, has := getCachedProjectAccess(userID); has {
-			pa := newProjectAccess(userID, permissions)
-			db.SetCached(s, cacheKey, pa)
-			return pa, nil
+	entry, err := db.RememberShared(s, projectAccessCacheKey(userID), projectAccessCacheTTL, func() (projectAccessEntry, error) {
+		rows := []*projectAccessRow{}
+		err := s.SQL(projectAccessQuery, userID, userID, userID).Find(&rows)
+		if err != nil {
+			return projectAccessEntry{}, err
 		}
-	}
 
-	rows := []*projectAccessRow{}
-	err := s.SQL(projectAccessQuery, userID, userID, userID).Find(&rows)
+		entry := projectAccessEntry{
+			Permissions: make(map[int64]Permission, len(rows)),
+			SortedIDs:   make([]int64, 0, len(rows)),
+		}
+		for _, r := range rows {
+			permission := Permission(r.Permission)
+			// A grant outside the enum (manual db edit, restored dump) is no grant at all.
+			if permission.isValid() != nil {
+				continue
+			}
+			entry.Permissions[r.ID] = permission
+			entry.SortedIDs = append(entry.SortedIDs, r.ID)
+		}
+		sort.Slice(entry.SortedIDs, func(i, j int) bool { return entry.SortedIDs[i] < entry.SortedIDs[j] })
+		return entry, nil
+	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not resolve project access for user %d: %w", userID, err)
 	}
 
-	permissions := make(map[int64]Permission, len(rows))
-	for _, r := range rows {
-		permission := Permission(r.Permission)
-		// A grant outside the enum (manual db edit, restored dump) is no grant at all.
-		if permission.isValid() != nil {
-			continue
-		}
-		permissions[r.ID] = permission
-	}
-
-	pa := newProjectAccess(userID, permissions)
-	db.SetCached(s, cacheKey, pa)
-	if shareable {
-		cacheProjectAccess(userID, pa.permissions)
-	}
-	return pa, nil
-}
-
-func newProjectAccess(userID int64, permissions map[int64]Permission) *projectAccess {
-	pa := &projectAccess{
-		userID:      userID,
-		permissions: permissions,
-		sortedIDs:   make([]int64, 0, len(permissions)),
-	}
-	for id := range permissions {
-		pa.sortedIDs = append(pa.sortedIDs, id)
-	}
-	sort.Slice(pa.sortedIDs, func(i, j int) bool { return pa.sortedIDs[i] < pa.sortedIDs[j] })
-	return pa
+	return &projectAccess{userID: userID, permissions: entry.Permissions, sortedIDs: entry.SortedIDs}, nil
 }
 
 // Above this many ids the inlined list bloats the statement and defeats server-side
