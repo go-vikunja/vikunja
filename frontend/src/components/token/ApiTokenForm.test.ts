@@ -1,5 +1,5 @@
 import {describe, it, expect, beforeEach, afterEach, vi} from 'vitest'
-import {mount, flushPromises, type VueWrapper} from '@vue/test-utils'
+import {mount, flushPromises, type DOMWrapper, type VueWrapper} from '@vue/test-utils'
 import {setActivePinia, createPinia} from 'pinia'
 import {createI18n} from 'vue-i18n'
 import ApiTokenForm from './ApiTokenForm.vue'
@@ -48,6 +48,13 @@ function mountForm({stubDatePicker = true} = {}) {
 		attachTo: document.body,
 	})
 	return {wrapper, errors}
+}
+
+function warningAfterCheckbox(wrapper: DOMWrapper<Element>, label: string) {
+	const checkbox = wrapper.findAll('.fancy-checkbox').find(c => c.find('.fancy-checkbox__content').text() === label)
+	expect(checkbox).toBeTruthy()
+	const next = checkbox!.element.nextElementSibling
+	return next?.tagName === 'P' ? next.textContent?.trim() : undefined
 }
 
 function setTitleFieldRef(wrapper: VueWrapper, value: unknown) {
@@ -117,6 +124,35 @@ describe('ApiTokenForm', () => {
 			expect(wrapper.find('input[readonly]').exists()).toBe(false)
 		}
 
+		expect(mounted.errors).toEqual([])
+	})
+
+	it('warns about root-equivalent admin scopes only', async () => {
+		getAvailableRoutes.mockResolvedValueOnce({
+			admin: {
+				users_list: {path: '/api/v2/admin/users', method: 'GET'},
+				users_set_admin: {path: '/api/v2/admin/users/{id}/admin', method: 'PATCH'},
+				users_set_password: {path: '/api/v2/admin/users/{id}/password', method: 'PATCH'},
+			},
+			users: {
+				users_set_admin: {path: '/api/v2/users/{id}/admin', method: 'PATCH'},
+			},
+		})
+		const mounted = mountForm()
+		wrapper = mounted.wrapper
+		await flushPromises()
+
+		const warning = i18n.global.t('user.settings.apiTokens.escalationWarning')
+		const [adminGroup, usersGroup] = wrapper.findAll('.mbe-2')
+
+		expect(adminGroup.text()).toContain('admin')
+		expect(warningAfterCheckbox(adminGroup, 'users set admin')).toBe(warning)
+		expect(warningAfterCheckbox(adminGroup, 'users set password')).toBe(warning)
+		expect(warningAfterCheckbox(adminGroup, 'users list')).toBeUndefined()
+
+		// same key outside the admin group must not warn
+		expect(usersGroup.text()).toContain('users')
+		expect(warningAfterCheckbox(usersGroup, 'users set admin')).toBeUndefined()
 		expect(mounted.errors).toEqual([])
 	})
 })
