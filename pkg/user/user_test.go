@@ -935,6 +935,7 @@ func TestGetUserByID_ActiveUser(t *testing.T) {
 
 func TestGetUserByID_AfterBatchLoadKeepsStatusCheck(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
+	t.Cleanup(func() { db.LoadAndAssertFixtures(t) })
 	s := db.NewSession()
 	defer s.Close()
 	// Commit so the second session's write below is visible; a commit does not dirty the memo.

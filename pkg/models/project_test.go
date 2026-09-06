@@ -1017,20 +1017,9 @@ func TestCheckIsArchived(t *testing.T) {
 	})
 }
 
-const behindTheBackTitle = "behind the back"
-
-// Writes through a second session; the caller must have committed, or the shared-cache lock blocks this.
-func updateTitleBehindTheBack(t *testing.T, table string, id int64) {
-	s2 := db.NewSession()
-	defer s2.Close()
-
-	_, err := s2.Table(table).Where(builder.Eq{"id": id}).Update(map[string]interface{}{"title": behindTheBackTitle})
-	require.NoError(t, err)
-	require.NoError(t, s2.Commit())
-}
-
 func TestGetProjectSimpleByIDMemo(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
+	t.Cleanup(func() { db.LoadAndAssertFixtures(t) })
 	s := db.NewSession()
 	defer s.Close()
 	require.NoError(t, s.Commit())
@@ -1051,7 +1040,7 @@ func TestGetProjectSimpleByIDMemo(t *testing.T) {
 	require.NotNil(t, childAgain.ParentProjectID)
 	assert.Equal(t, int64(27), *childAgain.ParentProjectID)
 
-	updateTitleBehindTheBack(t, "projects", 1)
+	updateTitleBehindTheBack(t, 1, &Project{Title: behindTheBackTitle})
 
 	second, err := GetProjectSimpleByID(s, 1)
 	require.NoError(t, err)
@@ -1067,6 +1056,7 @@ func TestGetProjectSimpleByIDMemo(t *testing.T) {
 
 func TestGetProjectsMapByIDsMemo(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
+	t.Cleanup(func() { db.LoadAndAssertFixtures(t) })
 	s := db.NewSession()
 	defer s.Close()
 	require.NoError(t, s.Commit())
@@ -1075,7 +1065,7 @@ func TestGetProjectsMapByIDsMemo(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "Test1", single.Title)
 
-	updateTitleBehindTheBack(t, "projects", 1)
+	updateTitleBehindTheBack(t, 1, &Project{Title: behindTheBackTitle})
 
 	projects, err := GetProjectsMapByIDs(s, []int64{1, 2})
 	require.NoError(t, err)

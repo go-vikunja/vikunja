@@ -1645,6 +1645,7 @@ func TestTaskIndexUniqueConstraint(t *testing.T) {
 
 func TestGetTaskByIDSimpleMemo(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
+	t.Cleanup(func() { db.LoadAndAssertFixtures(t) })
 	s := db.NewSession()
 	defer s.Close()
 	require.NoError(t, s.Commit())
@@ -1654,7 +1655,7 @@ func TestGetTaskByIDSimpleMemo(t *testing.T) {
 	assert.Equal(t, "task #1", first.Title)
 	first.Title = "mutated"
 
-	updateTitleBehindTheBack(t, "tasks", 1)
+	updateTitleBehindTheBack(t, 1, &Task{Title: behindTheBackTitle})
 
 	second, err := GetTaskByIDSimple(s, 1)
 	require.NoError(t, err)
