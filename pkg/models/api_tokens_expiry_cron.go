@@ -87,13 +87,19 @@ func checkForExpiringAPITokensAt(now time.Time) {
 		return
 	}
 
+	admins, err := getInstanceBotRecipients(s, owners)
+	if err != nil {
+		log.Errorf(logPrefix+"Error getting instance admins: %s", err)
+		return
+	}
+
 	for _, token := range tokens {
 		owner, exists := owners[token.OwnerID]
 		if !exists {
 			continue
 		}
 
-		for _, r := range tokenExpiryRecipients(owner, botOwners) {
+		for _, r := range tokenExpiryRecipients(owner, botOwners, admins) {
 			if err := sendTokenExpiryNotification(s, r, token, oneDay); err != nil {
 				log.Errorf(logPrefix+"Error sending notification for token %d to user %d: %s", token.ID, r.user.ID, err)
 			}
@@ -112,10 +118,18 @@ type tokenExpiryRecipient struct {
 }
 
 // Bots never receive notifications (ShouldNotify is false), so a bot token is
-// routed to a human instead. Instance bots without an owner will need their own branch here.
-func tokenExpiryRecipients(owner *user.User, botOwners map[int64]*user.User) []tokenExpiryRecipient {
+// routed to a human instead: the owner, or every reachable admin for instance bots.
+func tokenExpiryRecipients(owner *user.User, botOwners map[int64]*user.User, admins []*user.User) []tokenExpiryRecipient {
 	if !owner.IsBot() {
 		return []tokenExpiryRecipient{{user: owner}}
+	}
+
+	if owner.IsInstanceBot {
+		recipients := make([]tokenExpiryRecipient, 0, len(admins))
+		for _, admin := range admins {
+			recipients = append(recipients, tokenExpiryRecipient{user: admin, bot: owner})
+		}
+		return recipients
 	}
 
 	human, exists := botOwners[owner.BotOwnerID]
@@ -124,6 +138,15 @@ func tokenExpiryRecipients(owner *user.User, botOwners map[int64]*user.User) []t
 	}
 
 	return []tokenExpiryRecipient{{user: human, bot: owner}}
+}
+
+func getInstanceBotRecipients(s *xorm.Session, owners map[int64]*user.User) ([]*user.User, error) {
+	for _, u := range owners {
+		if u.IsInstanceBot {
+			return user.GetActiveHumanAdmins(s)
+		}
+	}
+	return nil, nil
 }
 
 func getBotOwners(s *xorm.Session, owners map[int64]*user.User) (map[int64]*user.User, error) {
