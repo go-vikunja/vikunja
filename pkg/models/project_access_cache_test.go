@@ -18,6 +18,7 @@ package models
 
 import (
 	"testing"
+	"time"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
@@ -122,9 +123,11 @@ func TestUpdateProjectLastUpdatedKeepsAccessCache(t *testing.T) {
 	require.NoError(t, updateProjectLastUpdated(s, p))
 	require.NoError(t, s.Commit())
 
-	_, cached := projectAccessCache.get(1)
+	_, cached := getCachedProjectAccess(1)
 	assert.True(t, cached)
-	after, err := GetProjectSimpleByID(db.NewSession(), 1)
+	check := db.NewSession()
+	defer check.Close()
+	after, err := GetProjectSimpleByID(check, 1)
 	require.NoError(t, err)
 	assert.True(t, after.Updated.After(before))
 }
