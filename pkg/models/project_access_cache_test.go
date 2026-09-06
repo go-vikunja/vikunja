@@ -108,3 +108,23 @@ func TestProjectAccessCache(t *testing.T) {
 		require.NoError(t, s.Rollback())
 	})
 }
+
+func TestUpdateProjectLastUpdatedKeepsAccessCache(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	resolveAccess(t, 1)
+	s := db.NewSession()
+	defer s.Close()
+	p, err := GetProjectSimpleByID(s, 1)
+	require.NoError(t, err)
+	before := p.Updated
+
+	time.Sleep(time.Second)
+	require.NoError(t, updateProjectLastUpdated(s, p))
+	require.NoError(t, s.Commit())
+
+	_, cached := projectAccessCache.get(1)
+	assert.True(t, cached)
+	after, err := GetProjectSimpleByID(db.NewSession(), 1)
+	require.NoError(t, err)
+	assert.True(t, after.Updated.After(before))
+}
