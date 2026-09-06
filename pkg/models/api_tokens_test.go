@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/assert"
@@ -229,14 +230,17 @@ func TestAPIToken_GetTokenFromTokenString(t *testing.T) {
 		defer s.Close()
 		db.LoadAndAssertFixtures(t)
 		const raw = "tk_2eef46f40ebab3304919ab2e7e39993f75f29d2e" // Token 1
-		verifiedTokens.forget(raw)
+		key := verifiedAPITokenKey(raw)
+		require.NoError(t, keyvalue.Del(key))
 
-		token, err := GetTokenFromTokenString(s, raw)
+		_, err := GetTokenFromTokenString(s, raw)
 		require.NoError(t, err)
-		_, cached := verifiedTokens.get(raw)
+		var v verifiedAPIToken
+		cached, err := keyvalue.GetWithValue(key, &v)
+		require.NoError(t, err)
 		assert.True(t, cached)
 
-		token, err = GetTokenFromTokenString(s, raw)
+		token, err := GetTokenFromTokenString(s, raw)
 		require.NoError(t, err)
 		assert.Equal(t, int64(1), token.ID)
 
@@ -245,7 +249,8 @@ func TestAPIToken_GetTokenFromTokenString(t *testing.T) {
 		_, err = GetTokenFromTokenString(s, raw)
 		require.Error(t, err)
 		assert.True(t, IsErrAPITokenInvalid(err))
-		_, cached = verifiedTokens.get(raw)
+		cached, err = keyvalue.GetWithValue(key, &v)
+		require.NoError(t, err)
 		assert.False(t, cached)
 	})
 	t.Run("stale cache entry falls back to the full lookup", func(t *testing.T) {
@@ -253,14 +258,17 @@ func TestAPIToken_GetTokenFromTokenString(t *testing.T) {
 		defer s.Close()
 		db.LoadAndAssertFixtures(t)
 		const raw = "tk_2eef46f40ebab3304919ab2e7e39993f75f29d2e" // Token 1
-		verifiedTokens.put(raw, &APIToken{ID: 2, TokenHash: "not the hash of token 2"})
+		key := verifiedAPITokenKey(raw)
+		require.NoError(t, keyvalue.PutWithTTL(key, verifiedAPIToken{ID: 2, Hash: "not the hash of token 2"}, verifiedAPITokenTTL))
 
 		token, err := GetTokenFromTokenString(s, raw)
 		require.NoError(t, err)
 		assert.Equal(t, int64(1), token.ID)
-		v, cached := verifiedTokens.get(raw)
+		var v verifiedAPIToken
+		cached, err := keyvalue.GetWithValue(key, &v)
+		require.NoError(t, err)
 		assert.True(t, cached)
-		assert.Equal(t, int64(1), v.id)
+		assert.Equal(t, int64(1), v.ID)
 	})
 	t.Run("invalid token", func(t *testing.T) {
 		s := db.NewSession()

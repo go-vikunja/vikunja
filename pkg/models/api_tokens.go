@@ -25,6 +25,7 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/web"
@@ -257,17 +258,22 @@ func GetTokenFromTokenString(s *xorm.Session, token string) (apiToken *APIToken,
 		return nil, &ErrAPITokenInvalid{}
 	}
 
-	if v, has := verifiedTokens.get(token); has {
+	cacheKey := verifiedAPITokenKey(token)
+	var v verifiedAPIToken
+	// A keyvalue error is treated as a miss so a flaky backend only costs the PBKDF2 round.
+	if exists, err := keyvalue.GetWithValue(cacheKey, &v); err == nil && exists {
 		t := &APIToken{}
-		exists, err := s.Where("id = ?", v.id).Get(t)
+		exists, err := s.Where("id = ?", v.ID).Get(t)
 		if err != nil {
 			return nil, err
 		}
 		// The hash check guards against an id reused after the token was deleted.
-		if exists && subtle.ConstantTimeCompare([]byte(t.TokenHash), []byte(v.hash)) == 1 {
+		if exists && subtle.ConstantTimeCompare([]byte(t.TokenHash), []byte(v.Hash)) == 1 {
 			return t, nil
 		}
-		verifiedTokens.forget(token)
+		if err := keyvalue.Del(cacheKey); err != nil {
+			return nil, err
+		}
 	}
 
 	lastEight := token[len(token)-8:]
@@ -281,12 +287,32 @@ func GetTokenFromTokenString(s *xorm.Session, token string) (apiToken *APIToken,
 	for _, t := range tokens {
 		tempHash := HashToken(token, t.TokenSalt)
 		if subtle.ConstantTimeCompare([]byte(t.TokenHash), []byte(tempHash)) == 1 {
-			verifiedTokens.put(token, t)
+			err = keyvalue.PutWithTTL(cacheKey, verifiedAPIToken{ID: t.ID, Hash: t.TokenHash}, verifiedAPITokenTTL)
+			if err != nil {
+				return nil, err
+			}
 			return t, nil
 		}
 	}
 
 	return nil, &ErrAPITokenInvalid{}
+}
+
+// PBKDF2 over the raw token costs ~3 ms of CPU and API clients send the same token on every
+// request. Remembering a verified token skips that; the row is still loaded by id on every
+// request, so revocation and expiry apply immediately.
+const verifiedAPITokenTTL = 10 * time.Minute
+
+// Nothing stored here can authenticate: the key is a digest of a 160-bit random token,
+// the value is the row id and the salted hash already in the database.
+type verifiedAPIToken struct {
+	ID   int64
+	Hash string
+}
+
+func verifiedAPITokenKey(token string) string {
+	digest := sha256.Sum256([]byte(token))
+	return "api_token_verified_" + hex.EncodeToString(digest[:])
 }
 
 // ValidateTokenAndGetOwner looks up a raw token string, checks it is not expired,
