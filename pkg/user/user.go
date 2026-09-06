@@ -356,7 +356,6 @@ func loadUser(s *xorm.Session, user *User, withEmail bool) (userOut *User, err e
 	return userOut, nil
 }
 
-// getUser is a small helper function to avoid having duplicated code for almost the same use case
 func getUser(s *xorm.Session, user *User, withEmail bool) (userOut *User, err error) {
 	userOut, err = loadUser(s, user, withEmail)
 	if err != nil {
