@@ -194,6 +194,7 @@ func init() {
 		"GetUserDataExportStatus":                          reflect.ValueOf(models.GetUserDataExportStatus),
 		"GetUserDirectedWebhookEvents":                     reflect.ValueOf(models.GetUserDirectedWebhookEvents),
 		"GetUserOrLinkShareUser":                           reflect.ValueOf(models.GetUserOrLinkShareUser),
+		"HashAPIToken":                                     reflect.ValueOf(models.HashAPIToken),
 		"HashSessionToken":                                 reflect.ValueOf(models.HashSessionToken),
 		"HashToken":                                        reflect.ValueOf(models.HashToken),
 		"InvalidFieldError":                                reflect.ValueOf(models.InvalidFieldError),
