@@ -18,12 +18,14 @@ package apiv2
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/entitlement"
 	"code.vikunja.io/api/pkg/events"
-	"code.vikunja.io/api/pkg/license"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/web/handler"
 
@@ -31,15 +33,45 @@ import (
 	"github.com/danielgtaylor/huma/v2/conditional"
 )
 
-// timeTrackingGate is Huma operation middleware that 404s a time-tracking op when the license
-// feature is off. It's a middleware because license state can change while the instance is running.
+// timeTrackingGate is Huma operation middleware: 404 when the instance license lacks
+// time tracking (indistinguishable from an unregistered route), 403 when the user's
+// entitlements turn it off. Runs after auth so it has a user; a middleware because
+// both can change while the instance is running.
 func timeTrackingGate(api huma.API) func(huma.Context, func(huma.Context)) {
 	return func(ctx huma.Context, next func(huma.Context)) {
-		if !license.IsFeatureEnabled(license.FeatureTimeTracking) {
-			_ = huma.WriteErr(api, ctx, http.StatusNotFound, "Not Found")
+		if err := checkTimeTracking(ctx.Context()); err != nil {
+			writeGateError(api, ctx, err)
 			return
 		}
 		next(ctx)
+	}
+}
+
+func checkTimeTracking(ctx context.Context) error {
+	if !entitlement.LicenseAllows(entitlement.FeatureTimeTracking) {
+		return entitlement.ErrFeatureNotLicensed{Feature: entitlement.FeatureTimeTracking}
+	}
+	a, err := authFromCtx(ctx)
+	if err != nil {
+		return err
+	}
+	s := db.NewSession()
+	defer s.Close()
+	return entitlement.Check(s, a, entitlement.FeatureTimeTracking)
+}
+
+// writeGateError writes a translated domain error from middleware, keeping the
+// vikunja error code huma.WriteErr would drop.
+func writeGateError(api huma.API, ctx huma.Context, err error) {
+	var se huma.StatusError
+	ok := errors.As(translateDomainError(err), &se)
+	if !ok {
+		se = huma.Error500InternalServerError("internal error", err)
+	}
+	ctx.SetHeader("Content-Type", "application/problem+json")
+	ctx.SetStatus(se.GetStatus())
+	if err := api.Marshal(ctx.BodyWriter(), "application/json", se); err != nil {
+		log.Errorf("v2: could not write gate error: %s", err)
 	}
 }
 
