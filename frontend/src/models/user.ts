@@ -1,3 +1,5 @@
+import {nextTick, reactive} from 'vue'
+
 import AbstractModel from './abstractModel'
 import UserSettingsModel from '@/models/userSettings'
 
@@ -9,9 +11,12 @@ const avatarService = new AvatarService()
 const avatarCache = new Map<string, string>()
 const pendingRequests = new Map<string, Promise<string>>()
 
+// Bumped on invalidation so components rendering that user's cached avatar refetch it.
+export const avatarCacheVersions = reactive(new Map<string, number>())
+
 // Returns undefined, never '': Vue renders src="" which the browser resolves to the page
 // URL and reports as a failed image load.
-export async function fetchAvatarBlobUrl(user: IUser, size = 50): Promise<string | undefined> {
+export async function fetchAvatarBlobUrl(user: Pick<IUser, 'username'>, size = 50): Promise<string | undefined> {
 	if (!user || !user.username) {
 		return undefined
 	}
@@ -42,13 +47,18 @@ export async function fetchAvatarBlobUrl(user: IUser, size = 50): Promise<string
 	return await requestPromise
 }
 
-export function invalidateAvatarCache(user: IUser) {
+export function invalidateAvatarCache(user: Pick<IUser, 'username'>) {
 	if (!user || !user.username) {
 		return
 	}
 
+	const staleUrls: string[] = []
 	for (const key of Array.from(avatarCache.keys())) {
 		if (key.startsWith(`${user.username}-`)) {
+			const url = avatarCache.get(key)
+			if (url) {
+				staleUrls.push(url)
+			}
 			avatarCache.delete(key)
 		}
 	}
@@ -58,6 +68,12 @@ export function invalidateAvatarCache(user: IUser) {
 			pendingRequests.delete(key)
 		}
 	}
+
+	avatarCacheVersions.set(user.username, (avatarCacheVersions.get(user.username) ?? 0) + 1)
+
+	// Only after the version bump rendered: revoking a url a live <img> still holds
+	// breaks it on the next re-decode (print, content-visibility).
+	void nextTick(() => staleUrls.forEach(url => window.URL.revokeObjectURL(url)))
 }
 
 export function getDisplayName(user: IUser) {
