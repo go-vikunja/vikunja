@@ -88,20 +88,16 @@ export const useKanbanStore = defineStore('kanban', () => {
 
 	function setBucketById(newBucket: IBucket, setTasks: boolean = true) {
 		const bucketIndex = findIndexById(buckets.value, newBucket.id)
-		const oldBucket = buckets.value[bucketIndex]
-		if (!setTasks && oldBucket) {
+		if (bucketIndex === -1) {
+			return
+		}
+
+		if (!setTasks) {
 			newBucket.tasks = [
-				...oldBucket.tasks,
+				...buckets.value[bucketIndex].tasks,
 			]
 		}
 		buckets.value[bucketIndex] = newBucket
-	}
-
-	function setBucketByIndex(
-		bucketIndex: number,
-		bucket: IBucket,
-	) {
-		buckets.value[bucketIndex] = bucket
 	}
 
 	function setTaskInBucketByIndex({
@@ -372,26 +368,31 @@ export const useKanbanStore = defineStore('kanban', () => {
 	}
 
 	async function updateBucket(updatedBucketData: Partial<IBucket>) {
+		const bucket = findById(buckets.value, updatedBucketData.id)
+		if (typeof bucket === 'undefined') {
+			return
+		}
+
 		const cancel = setModuleLoading(setIsLoading)
 
-		const bucketIndex = findIndexById(buckets.value, updatedBucketData.id)
-		const oldBucket = klona(buckets.value[bucketIndex])
-
+		const oldBucket = klona(bucket)
 		const updatedBucket = {
 			...oldBucket,
 			...updatedBucketData,
 		}
 
-		setBucketByIndex(bucketIndex, updatedBucket)
+		setBucketById(updatedBucket)
 
 		const bucketService = new BucketService()
 		try {
+			// The board can be replaced while the request is in flight, for example when navigating to
+			// another view. All writes go by id so the response never lands in another view's buckets.
 			const returnedBucket = await bucketService.update(updatedBucket)
-			setBucketByIndex(bucketIndex, returnedBucket)
+			setBucketById(returnedBucket, false)
 			return returnedBucket
 		} catch (e) {
 			// restore original state
-			setBucketByIndex(bucketIndex, oldBucket)
+			setBucketById(oldBucket)
 
 			throw e
 		} finally {
