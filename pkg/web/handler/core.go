@@ -69,7 +69,7 @@ func DoCreate(ctx context.Context, obj CObject, a web.Auth) error {
 // obj is fully populated. maxPermission is exposed via the x-max-permission
 // header in the Echo wrapper; Huma wrapper may ignore it.
 func DoReadOne(ctx context.Context, obj CObject, a web.Auth) (maxPermission int, err error) {
-	s := db.NewSession()
+	s := db.NewReadSession()
 	defer func() {
 		if cerr := s.Close(); cerr != nil {
 			log.Errorf("Could not close session: %s", cerr)
@@ -109,7 +109,7 @@ func DoReadOne(ctx context.Context, obj CObject, a web.Auth) (maxPermission int,
 // interface, the result count, and total count. Pagination header math and
 // nil-slice normalization remain the caller's responsibility.
 func DoReadAll(ctx context.Context, obj CObject, a web.Auth, search string, page, perPage int) (result any, resultCount int, total int64, err error) {
-	s := db.NewSession()
+	s := db.NewReadSession()
 	defer func() {
 		if cerr := s.Close(); cerr != nil {
 			log.Errorf("Could not close session: %s", cerr)
