@@ -108,6 +108,32 @@ func TestRememberShared(t *testing.T) {
 		assert.Equal(t, 2, calls)
 	})
 
+	t.Run("an invalidation after the session started drops the fill", func(t *testing.T) {
+		key := "remember-shared-snapshot"
+		InvalidateShared(key)
+
+		calls := 0
+		fn := func() (int, error) {
+			calls++
+			return 1, nil
+		}
+
+		s := newSession(t)
+		InvalidateShared(key)
+
+		v, err := RememberShared(s, key, time.Minute, fn)
+		require.NoError(t, err)
+		assert.Equal(t, 1, v)
+
+		_, exists, err := keyvalue.Get(sharedCachePrefix + key)
+		require.NoError(t, err)
+		assert.False(t, exists, "a session older than the invalidation must not fill")
+
+		_, err = RememberShared(newSession(t), key, time.Minute, fn)
+		require.NoError(t, err)
+		assert.Equal(t, 2, calls)
+	})
+
 	t.Run("a session that has written neither serves nor fills", func(t *testing.T) {
 		key := "remember-shared-written"
 		InvalidateShared(key)

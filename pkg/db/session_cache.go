@@ -44,6 +44,7 @@ var sessionCacheCtxKey sessionCacheCtxKeyType
 type sessionCache struct {
 	mu     sync.Mutex
 	dirty  bool
+	epoch  int64
 	values map[string]any
 }
 
@@ -66,6 +67,12 @@ func (c *sessionCache) set(key string, value any) {
 	c.values[key] = value
 }
 
+func (c *sessionCache) isDirty() bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.dirty
+}
+
 func (c *sessionCache) markDirty() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -75,7 +82,7 @@ func (c *sessionCache) markDirty() {
 
 // Sessions created any other way never memoize.
 func attachSessionCache(s *xorm.Session) {
-	c := &sessionCache{values: map[string]any{}}
+	c := &sessionCache{values: map[string]any{}, epoch: sharedCacheEpoch.Load()}
 	key := weak.Make(s)
 	sessionCaches.Store(key, c)
 	runtime.AddCleanup(s, func(k weak.Pointer[xorm.Session]) { sessionCaches.Delete(k) }, key)
@@ -90,17 +97,6 @@ func SetSessionContext(ctx context.Context, s *xorm.Session) {
 		ctx = context.WithValue(ctx, sessionCacheCtxKey, c)
 	}
 	s.Context(ctx)
-}
-
-// A session unknown to the cache counts as written.
-func sessionHasWritten(s *xorm.Session) bool {
-	c, ok := cacheForSession(s)
-	if !ok {
-		return true
-	}
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	return c.dirty
 }
 
 func cacheForSession(s *xorm.Session) (*sessionCache, bool) {
@@ -148,9 +144,9 @@ func SetCached[T any](s *xorm.Session, key string, value T) {
 
 const sharedCachePrefix = "shared-cache-"
 
-// Bumped by every invalidation so a fill whose query predates a concurrent commit is
-// dropped instead of resurrecting the old value. Only covers this process; other
-// replicas are bounded by the ttl.
+// Bumped by every invalidation so a fill whose query predates a concurrent commit is dropped
+// instead of resurrecting the old value. Pinned at session start, as the transaction snapshot
+// can predate the query. Only covers this process; other replicas are bounded by the ttl.
 var sharedCacheEpoch atomic.Int64
 
 // RememberShared is GetCached/SetCached extended across sessions through the keyvalue store.
@@ -161,8 +157,8 @@ func RememberShared[T any](s *xorm.Session, key string, ttl time.Duration, fn fu
 		return v, nil
 	}
 
-	shareable := !sessionHasWritten(s)
-	epoch := sharedCacheEpoch.Load()
+	c, ok := cacheForSession(s)
+	shareable := ok && !c.isDirty()
 	if shareable {
 		var v T
 		exists, err := keyvalue.GetWithValue(sharedCachePrefix+key, &v)
@@ -180,9 +176,15 @@ func RememberShared[T any](s *xorm.Session, key string, ttl time.Duration, fn fu
 	}
 
 	SetCached(s, key, v)
-	if shareable && sharedCacheEpoch.Load() == epoch {
+	if shareable && sharedCacheEpoch.Load() == c.epoch {
 		if err := keyvalue.PutWithTTL(sharedCachePrefix+key, v, ttl); err != nil {
 			log.Errorf("could not write shared cache entry %s: %s", key, err)
+		}
+		// An invalidation landing between the check and the put would otherwise be undone.
+		if sharedCacheEpoch.Load() != c.epoch {
+			if err := keyvalue.Del(sharedCachePrefix + key); err != nil {
+				log.Errorf("could not invalidate shared cache entry %s: %s", key, err)
+			}
 		}
 	}
 	return v, nil
