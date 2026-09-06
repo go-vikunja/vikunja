@@ -133,6 +133,14 @@ func TestHumaAPIToken(t *testing.T) {
 				user1Token, "")
 			assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
 		})
+		t.Run("owner_id - forbidden for an instance bot even as admin", func(t *testing.T) {
+			admin := promoteToAdmin(t, 1)
+			adminToken := humaTokenFor(t, admin)
+			rec := humaRequest(t, e, http.MethodPost, "/api/v2/tokens",
+				`{"title":"sneaky","owner_id":26,"permissions":{"admin":["users_list"]},"expires_at":"2099-01-01T00:00:00Z"}`,
+				adminToken, "")
+			assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
+		})
 	})
 
 	t.Run("Delete", func(t *testing.T) {
