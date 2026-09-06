@@ -1647,20 +1647,24 @@ func TestGetTaskByIDSimpleMemo(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()
 	defer s.Close()
+	// Autocommit: an open transaction would block or hide the other session's write below. Committing does not dirty the memo.
+	require.NoError(t, s.Commit())
 
 	first, err := GetTaskByIDSimple(s, 1)
 	require.NoError(t, err)
 	assert.Equal(t, "task #1", first.Title)
 	first.Title = "mutated"
 
+	updateTitleBehindTheBack(t, "tasks", 1)
+
 	second, err := GetTaskByIDSimple(s, 1)
 	require.NoError(t, err)
-	assert.Equal(t, "task #1", second.Title)
+	assert.Equal(t, "task #1", second.Title, "a re-read that reaches the db would see the other session's write")
 
-	_, err = s.ID(1).Cols("title").Update(&Task{Title: "changed"})
+	_, err = s.ID(2).Cols("title").Update(&Task{Title: "any write invalidates the memo"})
 	require.NoError(t, err)
 
 	afterWrite, err := GetTaskByIDSimple(s, 1)
 	require.NoError(t, err)
-	assert.Equal(t, "changed", afterWrite.Title)
+	assert.Equal(t, behindTheBackTitle, afterWrite.Title)
 }

@@ -1017,19 +1017,29 @@ func TestCheckIsArchived(t *testing.T) {
 	})
 }
 
+const behindTheBackTitle = "behind the back"
+
+// Writes through a second session, which the memo of the caller's session cannot observe.
+func updateTitleBehindTheBack(t *testing.T, table string, id int64) {
+	s2 := db.NewSession()
+	defer s2.Close()
+
+	_, err := s2.Table(table).Where(builder.Eq{"id": id}).Update(map[string]interface{}{"title": behindTheBackTitle})
+	require.NoError(t, err)
+	require.NoError(t, s2.Commit())
+}
+
 func TestGetProjectSimpleByIDMemo(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()
 	defer s.Close()
+	// Autocommit: an open transaction would block or hide the other session's write below. Committing does not dirty the memo.
+	require.NoError(t, s.Commit())
 
 	first, err := GetProjectSimpleByID(s, 1)
 	require.NoError(t, err)
 	assert.Equal(t, "Test1", first.Title)
 	first.Title = "mutated"
-
-	second, err := GetProjectSimpleByID(s, 1)
-	require.NoError(t, err)
-	assert.Equal(t, "Test1", second.Title)
 
 	child, err := GetProjectSimpleByID(s, 12)
 	require.NoError(t, err)
@@ -1042,27 +1052,37 @@ func TestGetProjectSimpleByIDMemo(t *testing.T) {
 	require.NotNil(t, childAgain.ParentProjectID)
 	assert.Equal(t, int64(27), *childAgain.ParentProjectID)
 
-	_, err = s.ID(1).Cols("title").Update(&Project{Title: "changed"})
+	updateTitleBehindTheBack(t, "projects", 1)
+
+	second, err := GetProjectSimpleByID(s, 1)
+	require.NoError(t, err)
+	assert.Equal(t, "Test1", second.Title, "a re-read that reaches the db would see the other session's write")
+
+	_, err = s.ID(2).Cols("title").Update(&Project{Title: "any write invalidates the memo"})
 	require.NoError(t, err)
 
 	afterWrite, err := GetProjectSimpleByID(s, 1)
 	require.NoError(t, err)
-	assert.Equal(t, "changed", afterWrite.Title)
+	assert.Equal(t, behindTheBackTitle, afterWrite.Title)
 }
 
 func TestGetProjectsMapByIDsMemo(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()
 	defer s.Close()
+	// Autocommit: an open transaction would block or hide the other session's write below. Committing does not dirty the memo.
+	require.NoError(t, s.Commit())
 
 	single, err := GetProjectSimpleByID(s, 1)
 	require.NoError(t, err)
 	assert.Equal(t, "Test1", single.Title)
 
+	updateTitleBehindTheBack(t, "projects", 1)
+
 	projects, err := GetProjectsMapByIDs(s, []int64{1, 2})
 	require.NoError(t, err)
 	require.Len(t, projects, 2)
-	assert.Equal(t, "Test1", projects[1].Title)
+	assert.Equal(t, "Test1", projects[1].Title, "id 1 is memoized, only id 2 may reach the db")
 	assert.Equal(t, "Test2", projects[2].Title)
 
 	projects[1].Title = "mutated"
@@ -1070,4 +1090,11 @@ func TestGetProjectsMapByIDsMemo(t *testing.T) {
 	again, err := GetProjectSimpleByID(s, 1)
 	require.NoError(t, err)
 	assert.Equal(t, "Test1", again.Title)
+
+	_, err = s.ID(2).Cols("title").Update(&Project{Title: "any write invalidates the memo"})
+	require.NoError(t, err)
+
+	afterWrite, err := GetProjectsMapByIDs(s, []int64{1})
+	require.NoError(t, err)
+	assert.Equal(t, behindTheBackTitle, afterWrite[1].Title)
 }
