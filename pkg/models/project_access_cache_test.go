@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/assert"
@@ -38,6 +39,18 @@ func resolveAccess(t *testing.T, userID int64) *projectAccess {
 func projectPermission(t *testing.T, userID, projectID int64) (Permission, bool) {
 	t.Helper()
 	return resolveAccess(t, userID).permission(projectID)
+}
+
+func primeAccess(t *testing.T, userID int64) {
+	t.Helper()
+	resolveAccess(t, userID)
+}
+
+func hasSharedAccess(t *testing.T, userID int64) bool {
+	t.Helper()
+	has, err := keyvalue.GetWithValue("shared-cache-"+projectAccessCacheKey(userID), &projectAccess{})
+	require.NoError(t, err)
+	return has
 }
 
 func TestProjectAccessCache(t *testing.T) {
@@ -82,7 +95,7 @@ func TestProjectAccessCache(t *testing.T) {
 
 	t.Run("a new top level project is visible to its owner", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		resolveAccess(t, 1)
+		primeAccess(t, 1)
 
 		s := db.NewSession()
 		created := &Project{Title: "a new top level project"}
@@ -97,7 +110,7 @@ func TestProjectAccessCache(t *testing.T) {
 
 	t.Run("a session that has written bypasses the cache", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		resolveAccess(t, 1)
+		primeAccess(t, 1)
 
 		s := db.NewSession()
 		created := &Project{Title: "written in this session"}
@@ -216,11 +229,11 @@ func TestProjectAccessCache(t *testing.T) {
 		require.Equal(t, PermissionRead, permission)
 
 		s := db.NewSession()
-		_, err := s.Where("id = ?", 42).
-			Cols("parent_project_id").
-			Nullable("parent_project_id").
-			Update(&Project{ParentProjectID: noParentProjectID()})
+		// User 6 owns both 41 and 42.
+		child, err := GetProjectSimpleByID(s, 42)
 		require.NoError(t, err)
+		child.ParentProjectID = noParentProjectID()
+		require.NoError(t, UpdateProject(s, child, &user.User{ID: 6}, false))
 		require.NoError(t, s.Commit())
 		s.Close()
 
@@ -268,6 +281,91 @@ func TestProjectAccessCache(t *testing.T) {
 		s.Close()
 
 		_, has = projectPermission(t, 1, 9)
+		assert.False(t, has)
+	})
+	t.Run("touching a project's timestamp keeps every entry", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		primeAccess(t, 1)
+		primeAccess(t, 2)
+
+		s := db.NewSession()
+		require.NoError(t, updateProjectLastUpdated(s, &Project{ID: 1}))
+		require.NoError(t, s.Commit())
+		s.Close()
+
+		assert.True(t, hasSharedAccess(t, 1))
+		assert.True(t, hasSharedAccess(t, 2))
+	})
+
+	t.Run("renaming a project keeps every entry", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		primeAccess(t, 1)
+		primeAccess(t, 2)
+
+		s := db.NewSession()
+		project, err := GetProjectSimpleByID(s, 1)
+		require.NoError(t, err)
+		project.Title = "renamed"
+		require.NoError(t, UpdateProject(s, project, &user.User{ID: 1}, false))
+		require.NoError(t, s.Commit())
+		s.Close()
+
+		assert.True(t, hasSharedAccess(t, 1))
+		assert.True(t, hasSharedAccess(t, 2))
+	})
+
+	t.Run("creating a top-level project drops only the owner's entry", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		primeAccess(t, 1)
+		primeAccess(t, 2)
+
+		s := db.NewSession()
+		created := &Project{Title: "x"}
+		require.NoError(t, created.Create(s, &user.User{ID: 1}))
+		require.NoError(t, s.Commit())
+		s.Close()
+
+		assert.False(t, hasSharedAccess(t, 1))
+		assert.True(t, hasSharedAccess(t, 2))
+	})
+
+	t.Run("removing a share by user id drops only that user's entry", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		primeAccess(t, 1)
+		primeAccess(t, 2)
+
+		s := db.NewSession()
+		_, err := s.Delete(&ProjectUser{ProjectID: 9, UserID: 1})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		s.Close()
+
+		assert.False(t, hasSharedAccess(t, 1))
+		assert.True(t, hasSharedAccess(t, 2))
+
+		_, has := projectPermission(t, 1, 9)
+		assert.False(t, has)
+	})
+
+	t.Run("reassigning ownership through a bare bean drops every entry", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		primeAccess(t, 1)
+		primeAccess(t, 2)
+
+		s := db.NewSession()
+		_, err := s.Where("id = ?", 1).Cols("owner_id").Update(&Project{OwnerID: 2})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		s.Close()
+
+		assert.False(t, hasSharedAccess(t, 1))
+		assert.False(t, hasSharedAccess(t, 2))
+
+		permission, has := projectPermission(t, 2, 1)
+		require.True(t, has)
+		assert.Equal(t, PermissionAdmin, permission)
+
+		_, has = projectPermission(t, 1, 1)
 		assert.False(t, has)
 	})
 }
