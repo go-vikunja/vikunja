@@ -275,6 +275,26 @@ func TestAPIToken_GetTokenFromTokenString(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, int64(3), token.ID)
 	})
+	t.Run("cache hit returns the current row, not a cached copy", func(t *testing.T) {
+		s := db.NewSession()
+		defer s.Close()
+		db.LoadAndAssertFixtures(t)
+		const raw = "tk_2eef46f40ebab3304919ab2e7e39993f75f29d2e" // Token 1
+		key := verifiedAPITokenKey(raw)
+		t.Cleanup(func() { _ = keyvalue.Del(key) })
+		require.NoError(t, keyvalue.Del(key))
+
+		_, err := GetTokenFromTokenString(s, raw)
+		require.NoError(t, err)
+
+		updated := APIPermissions{"tasks": {"read_one"}}
+		_, err = s.Where("id = ?", 1).Cols("permissions").Update(&APIToken{APIPermissions: updated})
+		require.NoError(t, err)
+
+		token, err := GetTokenFromTokenString(s, raw)
+		require.NoError(t, err)
+		assert.Equal(t, updated, token.APIPermissions)
+	})
 	t.Run("cached value copied from another token is rejected", func(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
