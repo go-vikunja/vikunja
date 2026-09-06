@@ -290,7 +290,7 @@ func GetTokenFromTokenString(s *xorm.Session, token string) (apiToken *APIToken,
 	// keyvalue errors count as a cache miss: a flaky backend should cost a PBKDF2 round, never an auth failure.
 	cached, kvErr := keyvalue.GetWithValue(cacheKey, &v)
 	if kvErr != nil {
-		log.Errorf("Could not read verified api token from keyvalue store: %s", kvErr)
+		log.Debugf("Could not read verified api token from keyvalue store: %s", kvErr)
 		cached = false
 	}
 	if cached {
@@ -305,7 +305,7 @@ func GetTokenFromTokenString(s *xorm.Session, token string) (apiToken *APIToken,
 			}
 		}
 		if err := keyvalue.Del(cacheKey); err != nil {
-			log.Errorf("Could not delete stale verified api token from keyvalue store: %s", err)
+			log.Debugf("Could not delete stale verified api token from keyvalue store: %s", err)
 		}
 	}
 
@@ -322,7 +322,7 @@ func GetTokenFromTokenString(s *xorm.Session, token string) (apiToken *APIToken,
 		if subtle.ConstantTimeCompare([]byte(t.TokenHash), []byte(tempHash)) == 1 {
 			cacheValue := verifiedAPIToken{Hash: t.TokenHash, Tag: verifiedAPITokenTag(token, t.TokenHash)}
 			if err := keyvalue.PutWithTTL(cacheKey, cacheValue, verifiedAPITokenTTL); err != nil {
-				log.Errorf("Could not store verified api token in keyvalue store: %s", err)
+				log.Debugf("Could not store verified api token in keyvalue store: %s", err)
 			}
 			return t, nil
 		}
