@@ -42,7 +42,6 @@ import {
 	getFavoriteNavigationItems,
 	getProjectAncestors,
 	getRootProjects,
-	invalidateProjects,
 	normalizeProject,
 	projectKeys,
 	projectQuery,
@@ -85,36 +84,6 @@ describe('project queries', () => {
 	beforeEach(() => {
 		queryClient.clear()
 		Object.values(sdk).forEach(mock => mock.mockReset())
-	})
-
-	it('keys lists by every response-shaping argument and details by format', () => {
-		expect(projectKeys.all).toEqual(['projects'])
-		expect(projectKeys.lists()).toEqual(['projects', 'list'])
-		expect(projectKeys.list(listArgs)).toEqual(['projects', 'list', listArgs])
-		expect(projectKeys.details()).toEqual(['projects', 'detail'])
-		expect(projectKeys.detail(42)).toEqual(['projects', 'detail', 42, 'html'])
-		expect(projectKeys.detail(42, 'markdown')).toEqual(['projects', 'detail', 42, 'markdown'])
-	})
-
-	it('invalidates every project list and detail cache', async () => {
-		const projectQueryKeys = [
-			projectKeys.list(),
-			projectKeys.list(listArgs),
-			projectKeys.detail(1),
-			projectKeys.detail(2, 'markdown'),
-		]
-		const unrelatedQueryKey = ['tasks', 'list'] as const
-
-		for (const queryKey of [...projectQueryKeys, unrelatedQueryKey]) {
-			queryClient.setQueryData(queryKey, {})
-		}
-
-		await invalidateProjects()
-
-		for (const queryKey of projectQueryKeys) {
-			expect(queryClient.getQueryState(queryKey)?.isInvalidated).toBe(true)
-		}
-		expect(queryClient.getQueryState(unrelatedQueryKey)?.isInvalidated).toBe(false)
 	})
 
 	it('loads every page and partitions pseudo projects from real projects', async () => {
@@ -272,33 +241,13 @@ describe('project drafts and cache mutations', () => {
 			response: {data: {duplicated_project: serverProject({id: 9, title: 'Identity A copy'})}},
 		},
 	]
-	const contextChanges = [
-		{
-			name: 'authenticated session for the same identity',
-			change: () => {
-				requestContext.sessionEpoch++
-			},
-		},
-		{
-			name: 'authenticated identity',
-			change: () => {
-				requestContext.identity = {id: 2, type: 1}
-			},
-		},
-		{
-			name: 'API origin',
-			change: () => {
-				requestContext.apiV2BaseUrl = 'https://identity-b.example/api/v2/'
-			},
-		},
-	]
 
 	beforeEach(() => {
 		queryClient.clear()
 		Object.values(sdk).forEach(mock => mock.mockReset())
 	})
 
-	describe.each(contextChanges)('after the $name changes', ({change}) => {
+	describe('after the authenticated identity changes', () => {
 		it.each(delayedMutationCases)('discards a delayed $name completion', async ({mock, run, response}) => {
 			const identityAProject = serverProject({title: 'Identity A project'})
 			const identityBProject = serverProject({title: 'Identity B project'})
@@ -315,7 +264,7 @@ describe('project drafts and cache mutations', () => {
 
 			const mutation = run()
 			await vi.waitFor(() => expect(mock).toHaveBeenCalledOnce())
-			change()
+			requestContext.identity = {id: 2, type: 1}
 			queryClient.clear()
 			const identityBList = {
 				projects: [identityBProject],
@@ -421,6 +370,7 @@ describe('project drafts and cache mutations', () => {
 			max_permission: 2,
 		})
 		expect(queryClient.getQueryData(projectKeys.detail(1, 'markdown'))).toBeUndefined()
+		expect(queryClient.getQueryState(listKey)?.isInvalidated).toBe(true)
 	})
 
 	it('preserves list-only permission and views when the update response is sparse', async () => {

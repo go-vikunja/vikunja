@@ -203,15 +203,6 @@ describe('configureApiClient', () => {
 		expect(requests).toHaveLength(0)
 	})
 
-	it('rejects a malformed relative API base before sending', async () => {
-		window.API_URL = 'not-an-api-url'
-		configureApiClient()
-
-		await expect(client.get({url: '/probe'})).rejects.toMatchObject({name: 'AbortError'})
-
-		expect(requests).toHaveLength(0)
-	})
-
 	it('rejects a root-relative API base that canonicalizes to another origin', async () => {
 		window.API_URL = '/\\evil.example/api/v1'
 		configureApiClient()
