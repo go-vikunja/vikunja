@@ -137,6 +137,91 @@ func TestAdmin_APIToken(t *testing.T) {
 	})
 }
 
+// Fixture 26 is the instance bot; api_tokens 10 is its users_list token.
+const instanceBotToken = "tk_instance_bot_admin_token_00000000inst0026"
+
+func TestAdmin_InstanceBotToken(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	license.SetForTests([]license.Feature{license.FeatureAdminPanel})
+	defer license.ResetForTests()
+
+	t.Run("admin scope reaches v1 and v2", func(t *testing.T) {
+		for _, path := range []string{"/api/v1/admin/users", "/api/v2/admin/users"} {
+			res := adminBearerReq(e, http.MethodGet, path, instanceBotToken, "")
+			assert.Equal(t, http.StatusOK, res.Code, "%s: %s", path, res.Body.String())
+		}
+	})
+
+	t.Run("denied outside admin", func(t *testing.T) {
+		res := adminBearerReq(e, http.MethodGet, "/api/v2/tasks", instanceBotToken, "")
+		assert.Equal(t, http.StatusUnauthorized, res.Code)
+	})
+
+	t.Run("unlisted admin scope is denied", func(t *testing.T) {
+		res := adminBearerReq(e, http.MethodPatch, "/api/v1/admin/users/2/status", instanceBotToken, `{"status":0}`)
+		assert.Equal(t, http.StatusUnauthorized, res.Code)
+	})
+
+	t.Run("listed with a bot marker", func(t *testing.T) {
+		admin := promoteToAdmin(t, 1)
+		res := adminReq(t, e, http.MethodGet, "/api/v2/admin/users?q=bot-instance-provisioner", admin, "")
+		require.Equal(t, http.StatusOK, res.Code, res.Body.String())
+		assert.Contains(t, res.Body.String(), `"is_instance_bot":true`)
+	})
+}
+
+func TestAdmin_InstanceBotToken_Unlicensed(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	license.ResetForTests()
+
+	for _, path := range []string{"/api/v1/admin/users", "/api/v2/admin/users"} {
+		res := adminBearerReq(e, http.MethodGet, path, instanceBotToken, "")
+		assert.Equal(t, http.StatusNotFound, res.Code, path)
+	}
+}
+
+func TestAdmin_InstanceBotActions(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	license.SetForTests([]license.Feature{license.FeatureAdminPanel})
+	defer license.ResetForTests()
+
+	admin := promoteToAdmin(t, 1)
+
+	t.Run("set-admin refused", func(t *testing.T) {
+		res := adminReq(t, e, http.MethodPatch, "/api/v2/admin/users/26/admin", admin, `{"is_admin":false}`)
+		assert.Equal(t, http.StatusBadRequest, res.Code, res.Body.String())
+		assert.Contains(t, res.Body.String(), `"code":14011`)
+	})
+
+	t.Run("set-password refused", func(t *testing.T) {
+		res := adminReq(t, e, http.MethodPatch, "/api/v2/admin/users/26/password", admin, `{"new_password":"averyl0ngpassword"}`)
+		assert.Equal(t, http.StatusBadRequest, res.Code, res.Body.String())
+	})
+
+	t.Run("password-reset-email refused", func(t *testing.T) {
+		config.MailerEnabled.Set(true)
+		defer config.MailerEnabled.Set(false)
+		res := adminReq(t, e, http.MethodPost, "/api/v2/admin/users/26/password-reset-email", admin, "")
+		assert.Equal(t, http.StatusBadRequest, res.Code, res.Body.String())
+	})
+
+	t.Run("status change disables the token", func(t *testing.T) {
+		res := adminReq(t, e, http.MethodPatch, "/api/v2/admin/users/26/status", admin, `{"status":2}`)
+		require.Equal(t, http.StatusOK, res.Code, res.Body.String())
+
+		res = adminBearerReq(e, http.MethodGet, "/api/v2/admin/users", instanceBotToken, "")
+		assert.Equal(t, http.StatusUnauthorized, res.Code)
+	})
+
+	t.Run("delete", func(t *testing.T) {
+		res := adminReq(t, e, http.MethodDelete, "/api/v2/admin/users/26?mode=now", admin, "")
+		assert.Equal(t, http.StatusNoContent, res.Code, res.Body.String())
+	})
+}
+
 func TestAdmin_GateUnlicensed(t *testing.T) {
 	e, err := setupTestEnv()
 	require.NoError(t, err)
