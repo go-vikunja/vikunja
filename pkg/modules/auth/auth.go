@@ -276,7 +276,7 @@ func GetAuthFromClaims(c *echo.Context) (a web.Auth, err error) {
 // and returns the token and its owner. This is the shared validation logic used
 // by both the HTTP middleware and WebSocket auth.
 func ValidateAPITokenString(tokenString string) (*models.APIToken, *user.User, error) {
-	s := db.NewSession()
+	s := db.NewReadSession()
 	defer s.Close()
 
 	token, err := models.GetTokenFromTokenString(s, tokenString)
