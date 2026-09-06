@@ -260,16 +260,7 @@ func GetUserByID(s *xorm.Session, id int64) (user *User, err error) {
 
 	// The memo holds the raw row, shared with GetUsersByIDs, so the status gate runs on every hit.
 	raw, err := db.Remember(s, userMemoKey(id), func() (*User, error) {
-		loaded := &User{ID: id}
-		exists, err := s.Get(loaded)
-		if err != nil {
-			return nil, err
-		}
-		if !exists {
-			return nil, ErrUserDoesNotExist{UserID: id}
-		}
-		loaded.Email = ""
-		return loaded, nil
+		return loadUser(s, &User{ID: id}, false)
 	})
 	if err != nil {
 		return &User{}, err
@@ -347,8 +338,7 @@ func GetUsersByCond(s *xorm.Session, cond builder.Cond) (users map[int64]*User, 
 	return
 }
 
-// getUser is a small helper function to avoid having duplicated code for almost the same use case
-func getUser(s *xorm.Session, user *User, withEmail bool) (userOut *User, err error) {
+func loadUser(s *xorm.Session, user *User, withEmail bool) (userOut *User, err error) {
 	userOut = &User{} // To prevent a panic if user is nil
 	*userOut = *user
 	exists, err := s.Get(userOut)
@@ -361,6 +351,16 @@ func getUser(s *xorm.Session, user *User, withEmail bool) (userOut *User, err er
 
 	if !withEmail {
 		userOut.Email = ""
+	}
+
+	return userOut, nil
+}
+
+// getUser is a small helper function to avoid having duplicated code for almost the same use case
+func getUser(s *xorm.Session, user *User, withEmail bool) (userOut *User, err error) {
+	userOut, err = loadUser(s, user, withEmail)
+	if err != nil {
+		return userOut, err
 	}
 
 	return userOut, finishLoadedUser(userOut)
