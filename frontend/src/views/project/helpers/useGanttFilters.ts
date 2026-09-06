@@ -9,7 +9,7 @@ import {parseBooleanProp} from '@/helpers/time/parseBooleanProp'
 import {useRouteFilters, type UseRouteFiltersReturn} from '@/composables/useRouteFilters'
 import {useGanttTaskList, type UseGanttTaskListReturn} from './useGanttTaskList'
 
-import type {TaskFilterParams} from '@/services/taskCollection'
+import type {TaskFilterParams} from '@/types/TaskFilterParams'
 
 import type {DateISO} from '@/types/DateISO'
 import type {DateKebab} from '@/types/DateKebab'

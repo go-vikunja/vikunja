@@ -10,19 +10,12 @@ import {
 	type ProjectListResult,
 } from '@/client/queries/projects'
 import {removeToken, saveToken} from '@/helpers/auth'
-import SavedFilterModel from '@/models/savedFilter'
 
-const savedFilterService = vi.hoisted(() => ({
-	get: vi.fn(),
-	update: vi.fn(),
+const savedFilterQueries = vi.hoisted(() => ({
+	patchSavedFilterFavorite: vi.fn(),
 }))
 
-vi.mock('@/services/savedFilter', () => ({
-	default: class {
-		get = savedFilterService.get
-		update = savedFilterService.update
-	},
-}))
+vi.mock('@/client/queries/savedFilters', () => savedFilterQueries)
 vi.mock('vue-router', async importOriginal => ({
 	...await importOriginal<typeof import('vue-router')>(),
 	useRouter: () => ({push: vi.fn()}),
@@ -37,10 +30,12 @@ function token(id: number): string {
 
 function deferred<T>() {
 	let resolve!: (value: T) => void
-	const promise = new Promise<T>((resolvePromise) => {
+	let reject!: (reason: unknown) => void
+	const promise = new Promise<T>((resolvePromise, rejectPromise) => {
 		resolve = resolvePromise
+		reject = rejectPromise
 	})
-	return {promise, resolve}
+	return {promise, resolve, reject}
 }
 
 function mountProjectNavigation() {
@@ -61,8 +56,7 @@ function mountProjectNavigation() {
 describe('useProjectNavigation', () => {
 	beforeEach(() => {
 		queryClient.clear()
-		savedFilterService.get.mockReset()
-		savedFilterService.update.mockReset()
+		savedFilterQueries.patchSavedFilterFavorite.mockReset()
 		removeToken()
 		window.API_URL = 'https://identity-a.example/api/v1/'
 		saveToken(token(1), false)
@@ -80,7 +74,7 @@ describe('useProjectNavigation', () => {
 		scope.stop()
 	})
 
-	it('does not update or roll back a saved filter after its session changes', async () => {
+	it('rolls back the optimistic favorite when the request fails in the same context', async () => {
 		const listKey = projectKeys.list()
 		const original = normalizeProject({id: -2, title: 'Filter', is_favorite: false})
 		queryClient.setQueryData<ProjectListResult>(listKey, {
@@ -88,13 +82,29 @@ describe('useProjectNavigation', () => {
 			favoriteProject: null,
 			savedFilterProjects: [original],
 		})
-		const get = deferred<SavedFilterModel>()
-		savedFilterService.get.mockReturnValue(get.promise)
-		savedFilterService.update.mockResolvedValue(undefined)
+		savedFilterQueries.patchSavedFilterFavorite.mockRejectedValue(new Error('Request failed'))
+		const {navigation, wrapper} = mountProjectNavigation()
+
+		await expect(navigation.toggleProjectFavorite(original)).rejects.toThrow('Request failed')
+
+		expect(queryClient.getQueryData<ProjectListResult>(listKey)?.savedFilterProjects[0].is_favorite).toBe(false)
+		wrapper.unmount()
+	})
+
+	it('rolls back the optimistic favorite only while the request context is current', async () => {
+		const listKey = projectKeys.list()
+		const original = normalizeProject({id: -2, title: 'Filter', is_favorite: false})
+		queryClient.setQueryData<ProjectListResult>(listKey, {
+			projects: [],
+			favoriteProject: null,
+			savedFilterProjects: [original],
+		})
+		const patch = deferred<never>()
+		savedFilterQueries.patchSavedFilterFavorite.mockReturnValue(patch.promise)
 		const {navigation, wrapper} = mountProjectNavigation()
 
 		const toggle = navigation.toggleProjectFavorite(original)
-		await vi.waitFor(() => expect(savedFilterService.get).toHaveBeenCalledOnce())
+		await vi.waitFor(() => expect(savedFilterQueries.patchSavedFilterFavorite).toHaveBeenCalledOnce())
 		removeToken()
 		saveToken(token(1), false)
 		queryClient.clear()
@@ -104,10 +114,9 @@ describe('useProjectNavigation', () => {
 			favoriteProject: null,
 			savedFilterProjects: [current],
 		})
-		get.resolve(new SavedFilterModel({id: 1, title: 'Filter'}))
+		patch.reject(new DOMException('Client request context changed', 'AbortError'))
 
 		await expect(toggle).rejects.toMatchObject({name: 'AbortError'})
-		expect(savedFilterService.update).not.toHaveBeenCalled()
 		expect(queryClient.getQueryData<ProjectListResult>(listKey)?.savedFilterProjects[0]).toEqual(current)
 		wrapper.unmount()
 	})
