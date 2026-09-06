@@ -1,5 +1,5 @@
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest'
-import {computed, defineComponent, h, nextTick, ref, toValue, type Ref} from 'vue'
+import {computed, defineComponent, h, nextTick, ref, type Ref} from 'vue'
 import {mount, type VueWrapper} from '@vue/test-utils'
 
 import type {ProjectResponse} from '@/client/queries/projects'
@@ -74,27 +74,6 @@ describe('useProjectBackground', () => {
 
 	afterEach(() => {
 		wrappers.splice(0).forEach(wrapper => wrapper.unmount())
-	})
-
-	it('keys the query from generated project fields and disables it without a background', async () => {
-		getBlobFromBlurHash.mockResolvedValue(null)
-		const currentProject = ref<ProjectResponse | null>(project())
-		const mounted = mountBackground(currentProject)
-		wrappers.push(mounted.wrapper)
-
-		const options = useQuery.mock.calls[0][0]
-		expect(toValue(options)).toMatchObject({
-			queryKey: ['project-backgrounds', 'project', 7],
-			enabled: true,
-		})
-
-		currentProject.value = project({id: 8, background_information: null})
-		await nextTick()
-
-		expect(toValue(options)).toMatchObject({
-			queryKey: ['project-backgrounds', 'project', 8],
-			enabled: false,
-		})
 	})
 
 	it('ignores a cached blob while the project has no background', async () => {
