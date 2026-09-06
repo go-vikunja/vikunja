@@ -141,15 +141,31 @@ func (writeInvalidationHook) AfterProcess(*contexts.ContextHook) error { return 
 // A WITH statement can modify data, so one naming a write verb counts as a write.
 var writeVerbInCTE = regexp.MustCompile(`(?i)\b(insert|update|delete|merge|replace|create|drop|alter|truncate)\b`)
 
-var leadingKeyword = regexp.MustCompile(`^[\s(]*([a-zA-Z]+)`)
+// The hook sees every statement, so the common case is a plain byte scan; only WITH needs the regexp.
+func leadingKeyword(sqlStr string) string {
+	i := 0
+	for i < len(sqlStr) {
+		switch sqlStr[i] {
+		case ' ', '\t', '\n', '\r', '\f', '\v', '(':
+			i++
+			continue
+		}
+		break
+	}
+	j := i
+	for j < len(sqlStr) && (sqlStr[j] >= 'a' && sqlStr[j] <= 'z' || sqlStr[j] >= 'A' && sqlStr[j] <= 'Z') {
+		j++
+	}
+	return sqlStr[i:j]
+}
 
 // Anything not recognizable as a pure read counts as a write.
 func isWriteStatement(sqlStr string) bool {
-	m := leadingKeyword.FindStringSubmatch(sqlStr)
-	if m == nil {
+	keyword := leadingKeyword(sqlStr)
+	if keyword == "" {
 		return true
 	}
-	switch strings.ToLower(m[1]) {
+	switch strings.ToLower(keyword) {
 	case "select", "show", "pragma", "describe", "desc",
 		"begin", "commit", "rollback", "savepoint", "release", "prepare", "deallocate":
 		return false
