@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"fmt"
 	"os"
 	"testing"
@@ -60,6 +61,7 @@ func TestMain(m *testing.M) {
 
 	// Set default config
 	config.InitDefaultConfig()
+	keyvalue.InitStorage()
 
 	i18n.Init()
 

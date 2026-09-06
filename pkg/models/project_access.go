@@ -90,6 +90,14 @@ func getProjectAccessForUser(s *xorm.Session, userID int64) (*projectAccess, err
 	if pa, has := db.GetCached[*projectAccess](s, cacheKey); has {
 		return pa, nil
 	}
+	// A session that wrote may see its own uncommitted grants: neither serve it from the shared memo nor fill it.
+	shareable := !db.SessionHasWritten(s)
+	if shareable {
+		if pa, has := projectAccessCache.get(userID); has {
+			db.SetCached(s, cacheKey, pa)
+			return pa, nil
+		}
+	}
 
 	rows := []*projectAccessRow{}
 	err := s.SQL(projectAccessQuery, userID, userID, userID).Find(&rows)
@@ -113,6 +121,9 @@ func getProjectAccessForUser(s *xorm.Session, userID int64) (*projectAccess, err
 	}
 	sort.Slice(pa.sortedIDs, func(i, j int) bool { return pa.sortedIDs[i] < pa.sortedIDs[j] })
 	db.SetCached(s, cacheKey, pa)
+	if shareable {
+		projectAccessCache.put(userID, pa)
+	}
 	return pa, nil
 }
 
