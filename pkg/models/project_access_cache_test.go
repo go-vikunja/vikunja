@@ -18,6 +18,7 @@ package models
 
 import (
 	"testing"
+	"time"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
@@ -368,4 +369,26 @@ func TestProjectAccessCache(t *testing.T) {
 		_, has = projectPermission(t, 1, 1)
 		assert.False(t, has)
 	})
+}
+
+func TestUpdateProjectLastUpdatedKeepsAccessCache(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	resolveAccess(t, 1)
+	s := db.NewSession()
+	defer s.Close()
+	p, err := GetProjectSimpleByID(s, 1)
+	require.NoError(t, err)
+	before := p.Updated
+
+	time.Sleep(time.Second)
+	require.NoError(t, updateProjectLastUpdated(s, p))
+	require.NoError(t, s.Commit())
+
+	_, cached := getCachedProjectAccess(1)
+	assert.True(t, cached)
+	check := db.NewSession()
+	defer check.Close()
+	after, err := GetProjectSimpleByID(check, 1)
+	require.NoError(t, err)
+	assert.True(t, after.Updated.After(before))
 }

@@ -1336,8 +1336,18 @@ func (p *Project) Update(s *xorm.Session, a web.Auth) (err error) {
 	return UpdateProject(s, p, a, false)
 }
 
+// Touching the timestamp through a hook-less bean keeps every task write from invalidating the
+// project access memo (the *Project bean would carry the parent and look like a re-parent).
+type projectTouch struct {
+	Updated time.Time `xorm:"updated"`
+}
+
+func (projectTouch) TableName() string {
+	return "projects"
+}
+
 func updateProjectLastUpdated(s *xorm.Session, project *Project) error {
-	_, err := s.ID(project.ID).Cols("updated").Update(project)
+	_, err := s.Where("id = ?", project.ID).Cols("updated").Update(&projectTouch{})
 	return err
 }
 
