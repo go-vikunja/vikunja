@@ -2340,6 +2340,33 @@ func (err *ErrInstanceBotScopeNotAllowed) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrInstanceBotCannotBeModified represents an error where an admin action is refused on an instance bot.
+type ErrInstanceBotCannotBeModified struct {
+	UserID int64
+}
+
+// IsErrInstanceBotCannotBeModified checks if an error is ErrInstanceBotCannotBeModified.
+func IsErrInstanceBotCannotBeModified(err error) bool {
+	_, ok := err.(*ErrInstanceBotCannotBeModified)
+	return ok
+}
+
+func (err *ErrInstanceBotCannotBeModified) Error() string {
+	return fmt.Sprintf("Instance bot %d cannot be modified this way", err.UserID)
+}
+
+// ErrCodeInstanceBotCannotBeModified holds the unique world-error code of this error
+const ErrCodeInstanceBotCannotBeModified = 14011
+
+// HTTPError holds the http error description
+func (err *ErrInstanceBotCannotBeModified) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeInstanceBotCannotBeModified,
+		Message:  "Instance bots are managed through the CLI; only their status can be changed or the bot deleted.",
+	}
+}
+
 // OIDC errors
 const ErrCodeOpenIDError = 15001
 
