@@ -5,6 +5,7 @@ import UserSettingsModel from '@/models/userSettings'
 
 import { AUTH_TYPES, type IUser, type AuthType } from '@/modelTypes/IUser'
 import type { IUserSettings } from '@/modelTypes/IUserSettings'
+import type {Entitlement, EntitlementLimit} from '@/constants/entitlements'
 import AvatarService from '@/services/avatar'
 
 const avatarService = new AvatarService()
@@ -101,6 +102,8 @@ export default class UserModel extends AbstractModel<IUser> implements IUser {
 	deletionScheduledAt: null
 	isAdmin?: boolean
 	botOwnerId = 0
+	entitlements: Partial<Record<Entitlement, number>> = {}
+	usage: Partial<Record<EntitlementLimit, number>> = {}
 
 	constructor(data: Partial<IUser> = {}) {
 		super()
@@ -110,6 +113,9 @@ export default class UserModel extends AbstractModel<IUser> implements IUser {
 		this.updated = new Date(this.updated)
 
 		this.settings = new UserSettingsModel(this.settings || {})
+		// assignData camel-cases keys; these maps are keyed by feature name (snake_case).
+		this.entitlements = data?.entitlements ?? {}
+		this.usage = data?.usage ?? {}
 	}
 
 	get isBot(): boolean {

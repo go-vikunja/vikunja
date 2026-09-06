@@ -7,7 +7,6 @@ import {objectToCamelCase} from '@/helpers/case'
 
 import type {IProvider} from '@/types/IProvider'
 import type {MIGRATORS} from '@/views/migrate/migrators'
-import type {ProFeature} from '@/constants/proFeatures'
 import {InvalidApiUrlProvidedError} from '@/helpers/checkAndSetApiUrl'
 
 export interface ConfigState {
@@ -46,7 +45,7 @@ export interface ConfigState {
 	},
 	publicTeamsEnabled: boolean,
 	allowIconChanges: boolean,
-	enabledProFeatures: string[],
+	upgradeUrl: string,
 	concurrentWrites: boolean,
 }
 
@@ -88,7 +87,7 @@ export const useConfigStore = defineStore('config', () => {
 		},
 		publicTeamsEnabled: false,
 		allowIconChanges: true,
-		enabledProFeatures: [],
+		upgradeUrl: '',
 		concurrentWrites: false,
 	})
 
@@ -105,10 +104,6 @@ export const useConfigStore = defineStore('config', () => {
 
 	function setConfig(config: ConfigState) {
 		Object.assign(state, config)
-	}
-
-	function isProFeatureEnabled(name: ProFeature): boolean {
-		return state.enabledProFeatures?.includes(name) ?? false
 	}
 
 	async function update(): Promise<boolean> {
@@ -129,7 +124,6 @@ export const useConfigStore = defineStore('config', () => {
 		migratorsEnabled,
 		apiBase,
 		setConfig,
-		isProFeatureEnabled,
 		update,
 	}
 
