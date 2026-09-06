@@ -1,5 +1,6 @@
 import {ref, type Ref} from 'vue'
 import {shallowMount} from '@vue/test-utils'
+import {QueryClient, VueQueryPlugin} from '@tanstack/vue-query'
 import {beforeEach, describe, expect, it, vi} from 'vitest'
 
 import type {Project, ProjectView} from '@/client/generated'
@@ -79,6 +80,7 @@ function mountView(projectId = 1) {
 	return shallowMount(ProjectSettingsViews, {
 		props: {projectId},
 		global: {
+			plugins: [[VueQueryPlugin, {queryClient: new QueryClient()}]],
 			mocks: {$t: (key: string) => key},
 			stubs: {
 				CreateEdit: {template: '<div><slot /></div>'},

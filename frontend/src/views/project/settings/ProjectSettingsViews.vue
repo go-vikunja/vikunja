@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import CreateEdit from '@/components/misc/CreateEdit.vue'
 import {computed, watch, ref} from 'vue'
-import {useQuery} from '@tanstack/vue-query'
+import {useMutation, useQuery} from '@tanstack/vue-query'
 import type {ProjectView} from '@/client/generated'
 import {
 	createProjectView,
@@ -55,40 +55,19 @@ const newView = ref<EditableProjectView>(createNewView())
 const viewIdToDelete = ref<number | null>(null)
 const showDeleteModal = ref(false)
 const viewToEdit = ref<ProjectView | null>(null)
-const isMutating = ref(false)
+
+const create = useMutation({mutationFn: createProjectView})
+const update = useMutation({mutationFn: updateProjectView})
+const remove = useMutation({mutationFn: deleteProjectView})
+const reorder = useMutation({mutationFn: updateProjectView})
+
+const isMutating = computed(() => create.isPending.value
+	|| update.isPending.value
+	|| remove.isPending.value
+	|| reorder.isPending.value)
 const isLoading = computed(() => query.isPending.value || isMutating.value)
 
-type MutationScope = {
-	projectId: number
-	routeGeneration: number
-}
-
-let routeGeneration = 0
-let activeMutations = 0
-
-function beginMutation(): MutationScope {
-	activeMutations++
-	isMutating.value = true
-	return {projectId: props.projectId, routeGeneration}
-}
-
-function isCurrentScope(scope: MutationScope): boolean {
-	return scope.routeGeneration === routeGeneration
-}
-
-function finishMutation(scope: MutationScope) {
-	if (!isCurrentScope(scope)) {
-		return
-	}
-
-	activeMutations--
-	isMutating.value = activeMutations > 0
-}
-
 watch(() => props.projectId, () => {
-	routeGeneration++
-	activeMutations = 0
-	isMutating.value = false
 	showCreateForm.value = false
 	newView.value = createNewView()
 	viewIdToDelete.value = null
@@ -108,25 +87,23 @@ async function createView() {
 		return
 	}
 
-	const scope = beginMutation()
+	const projectId = props.projectId
 	try {
 		newView.value.bucket_configuration_mode = newView.value.view_kind === 'kanban'
 			? newView.value.bucket_configuration_mode
 			: 'none'
 
-		await createProjectView({projectId: scope.projectId, view: newView.value})
-		if (!isCurrentScope(scope)) {
+		await create.mutateAsync({projectId, view: newView.value})
+		if (props.projectId !== projectId) {
 			return
 		}
 		success({message: t('project.views.createSuccess')})
 		showCreateForm.value = false
 		newView.value = createNewView()
 	} catch (e) {
-		if (isCurrentScope(scope)) {
+		if (props.projectId === projectId) {
 			error(e)
 		}
-	} finally {
-		finishMutation(scope)
 	}
 }
 
@@ -135,19 +112,17 @@ async function deleteView(viewId: number | null) {
 		return
 	}
 
-	const scope = beginMutation()
+	const projectId = props.projectId
 	try {
-		await deleteProjectView({projectId: scope.projectId, viewId})
-		if (!isCurrentScope(scope)) {
+		await remove.mutateAsync({projectId, viewId})
+		if (props.projectId !== projectId) {
 			return
 		}
 		showDeleteModal.value = false
 	} catch (e) {
-		if (isCurrentScope(scope)) {
+		if (props.projectId === projectId) {
 			error(e)
 		}
-	} finally {
-		finishMutation(scope)
 	}
 }
 
@@ -159,24 +134,23 @@ async function saveView(view: ProjectView) {
 	if (updated.view_kind !== 'kanban') {
 		updated.bucket_configuration_mode = 'none'
 	}
-	const scope = beginMutation()
+
+	const projectId = props.projectId
 	try {
-		await updateProjectView({
-			projectId: scope.projectId,
+		await update.mutateAsync({
+			projectId,
 			viewId: view.id,
 			view: updated,
 		})
-		if (!isCurrentScope(scope)) {
+		if (props.projectId !== projectId) {
 			return
 		}
 		viewToEdit.value = null
 		success({message: t('project.views.updateSuccess')})
 	} catch (e) {
-		if (isCurrentScope(scope)) {
+		if (props.projectId === projectId) {
 			error(e)
 		}
-	} finally {
-		finishMutation(scope)
 	}
 }
 
@@ -187,28 +161,27 @@ async function saveViewPosition(e: {newIndex: number}) {
 	}
 	const viewBefore = views.value[e.newIndex - 1]
 	const viewAfter = views.value[e.newIndex + 1]
-	
+
 	const position = calculateItemPosition(
 		viewBefore?.position,
 		viewAfter?.position,
 	)
-	const scope = beginMutation()
+
+	const projectId = props.projectId
 	try {
-		await updateProjectView({
-			projectId: scope.projectId,
+		await reorder.mutateAsync({
+			projectId,
 			viewId: view.id,
 			view: createProjectViewUpdate({...view, position}),
 		})
-		if (!isCurrentScope(scope)) {
+		if (props.projectId !== projectId) {
 			return
 		}
 		success({message: t('project.views.updateSuccess')})
 	} catch (e) {
-		if (isCurrentScope(scope)) {
+		if (props.projectId === projectId) {
 			error(e)
 		}
-	} finally {
-		finishMutation(scope)
 	}
 }
 </script>
