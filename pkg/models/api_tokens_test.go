@@ -231,6 +231,7 @@ func TestAPIToken_GetTokenFromTokenString(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		const raw = "tk_2eef46f40ebab3304919ab2e7e39993f75f29d2e" // Token 1
 		key := verifiedAPITokenKey(raw)
+		t.Cleanup(func() { _ = keyvalue.Del(key) })
 		require.NoError(t, keyvalue.Del(key))
 
 		_, err := GetTokenFromTokenString(s, raw)
@@ -259,6 +260,7 @@ func TestAPIToken_GetTokenFromTokenString(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		const raw = "tk_2eef46f40ebab3304919ab2e7e39993f75f29d2e" // Token 1
 		key := verifiedAPITokenKey(raw)
+		t.Cleanup(func() { _ = keyvalue.Del(key) })
 		require.NoError(t, keyvalue.PutWithTTL(key, verifiedAPIToken{ID: 2, Hash: "not the hash of token 2"}, verifiedAPITokenTTL))
 
 		token, err := GetTokenFromTokenString(s, raw)
