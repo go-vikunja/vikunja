@@ -38,6 +38,8 @@ func TestIsWriteStatement(t *testing.T) {
 		"CREATE INDEX foo ON bar (baz)":                                               true,
 		"EXPLAIN ANALYZE DELETE FROM tasks":                                           true,
 		"WITH moved AS (DELETE FROM a RETURNING *) INSERT INTO b SELECT * FROM moved": true,
+		"WITH t AS (SELECT update_count, deleted_at FROM tasks) SELECT * FROM t":      false,
+		"with t as (select 1) update tasks set done = true":                           true,
 		"": true,
 	}
 	for sqlStr, want := range tests {
