@@ -154,7 +154,8 @@ func (p *Project) AfterInsert() {
 }
 
 func (p *Project) AfterUpdate() {
-	// Hooks see the bean after commit, so it carries parent or owner exactly when that column is written: either means everyone, neither means nothing the grants query reads.
+	// Hooks see the bean after commit, so update beans carry parent or owner exactly when that
+	// column is written: either means everyone, neither means nothing the grants query reads.
 	if p.ParentProjectID != nil || p.OwnerID != 0 {
 		invalidateAllProjectAccess()
 	}
