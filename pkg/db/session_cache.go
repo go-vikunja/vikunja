@@ -135,20 +135,24 @@ func RememberEach[T any](s *xorm.Session, ids []int64, key func(int64) string, f
 		return map[int64]T{}, nil
 	}
 
-	c, ok := cacheForSession(s)
-	if !ok {
-		return fetch(ids)
-	}
-
-	values := make(map[int64]T, len(ids))
-	missing := make([]int64, 0, len(ids))
+	unique := make([]int64, 0, len(ids))
 	seen := make(map[int64]struct{}, len(ids))
 	for _, id := range ids {
 		if _, dup := seen[id]; dup {
 			continue
 		}
 		seen[id] = struct{}{}
+		unique = append(unique, id)
+	}
 
+	c, ok := cacheForSession(s)
+	if !ok {
+		return fetch(unique)
+	}
+
+	values := make(map[int64]T, len(unique))
+	missing := make([]int64, 0, len(unique))
+	for _, id := range unique {
 		if v, has := c.get(key(id)); has {
 			if value, is := v.(T); is {
 				values[id] = value
