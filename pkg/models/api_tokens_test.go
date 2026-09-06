@@ -226,8 +226,11 @@ func TestAPIToken_GetTokenFromTokenString(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 		db.LoadAndAssertFixtures(t)
+		const raw = "tk_2eef46f40ebab3304919ab2e7e39993f75f29d2e" // Token 1
+		key := verifiedAPITokenKey(raw)
+		t.Cleanup(func() { _ = keyvalue.Del(key) })
 
-		token, err := GetTokenFromTokenString(s, "tk_2eef46f40ebab3304919ab2e7e39993f75f29d2e") // Token 1
+		token, err := GetTokenFromTokenString(s, raw)
 
 		require.NoError(t, err)
 		assert.Equal(t, int64(1), token.ID)
@@ -296,42 +299,34 @@ func TestAPIToken_GetTokenFromTokenString(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, updated, token.APIPermissions)
 	})
-	t.Run("cached value copied from another token is rejected", func(t *testing.T) {
-		s := db.NewSession()
-		defer s.Close()
-		db.LoadAndAssertFixtures(t)
+	t.Run("tampered or stale cache entry falls back to the full lookup", func(t *testing.T) {
 		const raw = "tk_2eef46f40ebab3304919ab2e7e39993f75f29d2e" // Token 1
-		key := verifiedAPITokenKey(raw)
-		t.Cleanup(func() { _ = keyvalue.Del(key) })
-		tag := verifiedAPITokenTag("tk_some_other_token_string_of_43chars_x", token3Hash)
-		require.NoError(t, keyvalue.PutWithTTL(key, verifiedAPIToken{Hash: token3Hash, Tag: tag}, verifiedAPITokenTTL))
+		otherToken := "tk_" + strings.Repeat("0", 40)
+		for _, tc := range []struct {
+			name  string
+			entry verifiedAPIToken
+		}{
+			{"copied from another token", verifiedAPIToken{Hash: token3Hash, Tag: verifiedAPITokenTag(otherToken, token3Hash)}},
+			{"stale hash", verifiedAPIToken{Hash: "not a hash", Tag: verifiedAPITokenTag(raw, "not a hash")}},
+		} {
+			t.Run(tc.name, func(t *testing.T) {
+				s := db.NewSession()
+				defer s.Close()
+				db.LoadAndAssertFixtures(t)
+				key := verifiedAPITokenKey(raw)
+				t.Cleanup(func() { _ = keyvalue.Del(key) })
+				require.NoError(t, keyvalue.PutWithTTL(key, tc.entry, verifiedAPITokenTTL))
 
-		token, err := GetTokenFromTokenString(s, raw)
-		require.NoError(t, err)
-		assert.Equal(t, int64(1), token.ID)
-		var v verifiedAPIToken
-		cached, err := keyvalue.GetWithValue(key, &v)
-		require.NoError(t, err)
-		assert.True(t, cached)
-		assert.Equal(t, token1Hash, v.Hash)
-	})
-	t.Run("stale cache entry falls back to the full lookup", func(t *testing.T) {
-		s := db.NewSession()
-		defer s.Close()
-		db.LoadAndAssertFixtures(t)
-		const raw = "tk_2eef46f40ebab3304919ab2e7e39993f75f29d2e" // Token 1
-		key := verifiedAPITokenKey(raw)
-		t.Cleanup(func() { _ = keyvalue.Del(key) })
-		require.NoError(t, keyvalue.PutWithTTL(key, verifiedAPIToken{Hash: "not a hash", Tag: verifiedAPITokenTag(raw, "not a hash")}, verifiedAPITokenTTL))
-
-		token, err := GetTokenFromTokenString(s, raw)
-		require.NoError(t, err)
-		assert.Equal(t, int64(1), token.ID)
-		var v verifiedAPIToken
-		cached, err := keyvalue.GetWithValue(key, &v)
-		require.NoError(t, err)
-		assert.True(t, cached)
-		assert.Equal(t, token1Hash, v.Hash)
+				token, err := GetTokenFromTokenString(s, raw)
+				require.NoError(t, err)
+				assert.Equal(t, int64(1), token.ID)
+				var v verifiedAPIToken
+				cached, err := keyvalue.GetWithValue(key, &v)
+				require.NoError(t, err)
+				assert.True(t, cached)
+				assert.Equal(t, token1Hash, v.Hash)
+			})
+		}
 	})
 	t.Run("key derivation cannot forge a tag", func(t *testing.T) {
 		key := strings.TrimPrefix(verifiedAPITokenKey("A|B"), "api_token_verified_")

@@ -280,7 +280,8 @@ func verifiedAPITokenTag(token, hash string) string {
 }
 
 // Skips the ~3 ms PBKDF2 on repeat requests; the row is still loaded from the db so revocation applies immediately.
-func cachedAPIToken(s *xorm.Session, token, cacheKey string) (*APIToken, error) {
+func cachedAPIToken(s *xorm.Session, token string) (*APIToken, error) {
+	cacheKey := verifiedAPITokenKey(token)
 	var v verifiedAPIToken
 	// keyvalue errors count as a cache miss: a flaky backend should cost a PBKDF2 round, never an auth failure.
 	cached, err := keyvalue.GetWithValue(cacheKey, &v)
@@ -318,8 +319,7 @@ func GetTokenFromTokenString(s *xorm.Session, token string) (apiToken *APIToken,
 		return nil, &ErrAPITokenInvalid{}
 	}
 
-	cacheKey := verifiedAPITokenKey(token)
-	cached, err := cachedAPIToken(s, token, cacheKey)
+	cached, err := cachedAPIToken(s, token)
 	if err != nil {
 		return nil, err
 	}
@@ -339,7 +339,7 @@ func GetTokenFromTokenString(s *xorm.Session, token string) (apiToken *APIToken,
 		tempHash := HashToken(token, t.TokenSalt)
 		if subtle.ConstantTimeCompare([]byte(t.TokenHash), []byte(tempHash)) == 1 {
 			cacheValue := verifiedAPIToken{Hash: t.TokenHash, Tag: verifiedAPITokenTag(token, t.TokenHash)}
-			if err := keyvalue.PutWithTTL(cacheKey, cacheValue, verifiedAPITokenTTL); err != nil {
+			if err := keyvalue.PutWithTTL(verifiedAPITokenKey(token), cacheValue, verifiedAPITokenTTL); err != nil {
 				log.Debugf("Could not store verified api token in keyvalue store: %s", err)
 			}
 			return t, nil
