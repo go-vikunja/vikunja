@@ -161,10 +161,13 @@ func ListUsers(s *xorm.Session, search string, currentUser *User, opts *ProjectU
 		}
 	}
 
-	notSomeoneElsesBot := builder.Or(
-		builder.IsNull{"bot_owner_id"},
-		builder.Eq{"bot_owner_id": 0},
-		builder.Eq{"bot_owner_id": currentUser.ID},
+	notSomeoneElsesBot := builder.And(
+		builder.Eq{"is_instance_bot": false},
+		builder.Or(
+			builder.IsNull{"bot_owner_id"},
+			builder.Eq{"bot_owner_id": 0},
+			builder.Eq{"bot_owner_id": currentUser.ID},
+		),
 	)
 
 	// Own bots: filtered by the search string when one is provided (matched
