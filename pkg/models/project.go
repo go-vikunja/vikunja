@@ -452,6 +452,11 @@ func GetProjectSimpleByID(s *xorm.Session, projectID int64) (project *Project, e
 		return nil, ErrProjectDoesNotExist{ID: projectID}
 	}
 
+	cacheKey := "project-" + strconv.FormatInt(projectID, 10)
+	if cached, has := db.GetCached[*Project](s, cacheKey); has {
+		copied := *cached
+		return &copied, nil
+	}
 	project, exists, err := getProjectSimple(s, builder.Eq{"id": projectID})
 	if err != nil {
 		return nil, err
@@ -460,6 +465,9 @@ func GetProjectSimpleByID(s *xorm.Session, projectID int64) (project *Project, e
 		return nil, ErrProjectDoesNotExist{ID: projectID}
 	}
 
+	// Callers mutate what they get, so the memo keeps its own copy.
+	copied := *project
+	db.SetCached(s, cacheKey, &copied)
 	return
 }
 
@@ -536,13 +544,30 @@ func GetProjectsSimpleByTaskIDs(s *xorm.Session, taskIDs []int64) (ps []*Project
 // GetProjectsMapByIDs returns a map of projects from a slice with project ids
 func GetProjectsMapByIDs(s *xorm.Session, projectIDs []int64) (projects map[int64]*Project, err error) {
 	projects = make(map[int64]*Project, len(projectIDs))
-
-	if len(projectIDs) == 0 {
-		return
+	missing := make([]int64, 0, len(projectIDs))
+	for _, id := range projectIDs {
+		if cached, has := db.GetCached[*Project](s, "project-"+strconv.FormatInt(id, 10)); has {
+			copied := *cached
+			projects[id] = &copied
+			continue
+		}
+		missing = append(missing, id)
+	}
+	if len(missing) == 0 {
+		return projects, nil
 	}
 
-	err = s.In("id", projectIDs).Find(&projects)
-	return
+	loaded := map[int64]*Project{}
+	err = s.In("id", missing).Find(&loaded)
+	if err != nil {
+		return nil, err
+	}
+	for id, p := range loaded {
+		copied := *p
+		db.SetCached(s, "project-"+strconv.FormatInt(id, 10), &copied)
+		projects[id] = p
+	}
+	return projects, nil
 }
 
 func GetProjectsByIDs(s *xorm.Session, projectIDs []int64) (projects []*Project, err error) {
