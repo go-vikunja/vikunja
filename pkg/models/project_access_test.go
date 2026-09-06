@@ -89,14 +89,21 @@ func TestGetProjectAccessForUser(t *testing.T) {
 		defer other.Close()
 		shared, err := getProjectAccessForUser(other, 1)
 		require.NoError(t, err)
-		assert.Same(t, access, shared)
+		assert.Equal(t, access.permissions, shared.permissions)
+		_, has := getCachedProjectAccess(1)
+		assert.True(t, has)
 
-		projectAccessCache.invalidateUser(1)
+		invalidateProjectAccess(1)
+		_, has = getCachedProjectAccess(1)
+		assert.False(t, has)
+
 		third := db.NewSession()
 		defer third.Close()
 		fresh, err := getProjectAccessForUser(third, 1)
 		require.NoError(t, err)
-		assert.NotSame(t, access, fresh)
+		assert.Equal(t, access.permissions, fresh.permissions)
+		_, has = getCachedProjectAccess(1)
+		assert.True(t, has)
 	})
 }
 
