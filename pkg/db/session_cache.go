@@ -21,6 +21,7 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 	"weak"
 
@@ -116,6 +117,7 @@ func invalidateAllSessionCaches() {
 		return true
 	})
 	// Replacing the database under the shared layer (test fixtures) fires no write hook.
+	sharedCacheEpoch.Add(1)
 	if err := keyvalue.DelPrefix(sharedCachePrefix); err != nil {
 		log.Errorf("could not drop shared cache: %s", err)
 	}
@@ -196,12 +198,18 @@ func RememberEach[T any](s *xorm.Session, ids []int64, key func(int64) string, f
 
 const sharedCachePrefix = "shared-cache-"
 
+// Bumped by every invalidation so a fill whose query predates a concurrent commit is
+// dropped instead of resurrecting the old value. Only covers this process; other
+// replicas are bounded by the ttl.
+var sharedCacheEpoch atomic.Int64
+
 // RememberShared is Remember extended across sessions through the keyvalue store.
 // A session that has written bypasses the shared layer in both directions: its reads may see its own
 // uncommitted state.
 func RememberShared[T any](s *xorm.Session, key string, ttl time.Duration, fn func() (T, error)) (T, error) {
 	return Remember(s, key, func() (T, error) {
 		shareable := !sessionHasWritten(s)
+		epoch := sharedCacheEpoch.Load()
 		if shareable {
 			var v T
 			exists, err := keyvalue.GetWithValue(sharedCachePrefix+key, &v)
@@ -217,7 +225,7 @@ func RememberShared[T any](s *xorm.Session, key string, ttl time.Duration, fn fu
 			return v, err
 		}
 
-		if shareable {
+		if shareable && sharedCacheEpoch.Load() == epoch {
 			if err := keyvalue.PutWithTTL(sharedCachePrefix+key, v, ttl); err != nil {
 				log.Errorf("could not write shared cache entry %s: %s", key, err)
 			}
@@ -228,12 +236,14 @@ func RememberShared[T any](s *xorm.Session, key string, ttl time.Duration, fn fu
 
 // A lost invalidation means stale authorization, hence the error level.
 func InvalidateShared(key string) {
+	sharedCacheEpoch.Add(1)
 	if err := keyvalue.Del(sharedCachePrefix + key); err != nil {
 		log.Errorf("could not invalidate shared cache entry %s: %s", key, err)
 	}
 }
 
 func InvalidateSharedPrefix(prefix string) {
+	sharedCacheEpoch.Add(1)
 	if err := keyvalue.DelPrefix(sharedCachePrefix + prefix); err != nil {
 		log.Errorf("could not invalidate shared cache entries with prefix %s: %s", prefix, err)
 	}
