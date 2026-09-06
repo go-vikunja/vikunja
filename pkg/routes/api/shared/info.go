@@ -53,6 +53,7 @@ type VikunjaInfos struct {
 	DemoModeEnabled            bool              `json:"demo_mode_enabled" doc:"Whether this instance runs in demo mode (data is periodically reset)."`
 	WebhooksEnabled            bool              `json:"webhooks_enabled" doc:"Whether webhooks are enabled."`
 	PublicTeamsEnabled         bool              `json:"public_teams_enabled" doc:"Whether public teams are enabled."`
+	UpgradeURL                 string            `json:"upgrade_url" doc:"Where the frontend sends users who hit a per-user feature or usage limit. Empty when the instance has no upgrade path."`
 	AllowIconChanges           bool              `json:"allow_icon_changes" doc:"Whether users may change project icons."`
 	EnabledProFeatures         []license.Feature `json:"enabled_pro_features" doc:"The licensed pro features enabled on this instance."`
 	// ConcurrentWrites reports whether the configured database can handle concurrent writes. It is false on SQLite, where overlapping write transactions deadlock, so clients should serialize batched writes instead of firing them in parallel.
@@ -108,6 +109,7 @@ func BuildInfo() VikunjaInfos {
 		DemoModeEnabled:        config.ServiceDemoMode.GetBool(),
 		WebhooksEnabled:        config.WebhooksEnabled.GetBool(),
 		PublicTeamsEnabled:     config.ServiceEnablePublicTeams.GetBool(),
+		UpgradeURL:             config.ServiceUpgradeURL.GetString(),
 		AllowIconChanges:       config.ServiceAllowIconChanges.GetBool(),
 		ConcurrentWrites:       config.DatabaseType.GetString() != "sqlite",
 		EnabledProFeatures:     license.EnabledProFeatures(),
