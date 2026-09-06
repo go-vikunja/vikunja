@@ -193,7 +193,7 @@ func TestAdmin_InstanceBotActions(t *testing.T) {
 	t.Run("set-admin refused", func(t *testing.T) {
 		res := adminReq(t, e, http.MethodPatch, "/api/v2/admin/users/26/admin", admin, `{"is_admin":false}`)
 		assert.Equal(t, http.StatusBadRequest, res.Code, res.Body.String())
-		assert.Contains(t, res.Body.String(), `"code":14011`)
+		assert.Contains(t, res.Body.String(), `"code":14015`)
 	})
 
 	t.Run("set-password refused", func(t *testing.T) {

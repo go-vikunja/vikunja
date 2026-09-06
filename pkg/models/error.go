@@ -2328,7 +2328,7 @@ func (err *ErrInstanceBotScopeNotAllowed) Error() string {
 }
 
 // ErrCodeInstanceBotScopeNotAllowed holds the unique world-error code of this error
-const ErrCodeInstanceBotScopeNotAllowed = 14010
+const ErrCodeInstanceBotScopeNotAllowed = 14014
 
 // HTTPError holds the http error description
 func (err *ErrInstanceBotScopeNotAllowed) HTTPError() web.HTTPError {
@@ -2356,7 +2356,7 @@ func (err *ErrInstanceBotCannotBeModified) Error() string {
 }
 
 // ErrCodeInstanceBotCannotBeModified holds the unique world-error code of this error
-const ErrCodeInstanceBotCannotBeModified = 14011
+const ErrCodeInstanceBotCannotBeModified = 14015
 
 // HTTPError holds the http error description
 func (err *ErrInstanceBotCannotBeModified) HTTPError() web.HTTPError {
