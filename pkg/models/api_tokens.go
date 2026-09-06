@@ -25,6 +25,7 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
@@ -260,8 +261,13 @@ func GetTokenFromTokenString(s *xorm.Session, token string) (apiToken *APIToken,
 
 	cacheKey := verifiedAPITokenKey(token)
 	var v verifiedAPIToken
-	// A keyvalue error is treated as a miss so a flaky backend only costs the PBKDF2 round.
-	if exists, err := keyvalue.GetWithValue(cacheKey, &v); err == nil && exists {
+	// keyvalue errors count as a cache miss: a flaky backend should cost a PBKDF2 round, never an auth failure.
+	cached, err := keyvalue.GetWithValue(cacheKey, &v)
+	if err != nil {
+		log.Errorf("Could not read verified api token from keyvalue store: %s", err)
+		cached = false
+	}
+	if cached {
 		t := &APIToken{}
 		exists, err := s.Where("id = ?", v.ID).Get(t)
 		if err != nil {
@@ -272,7 +278,7 @@ func GetTokenFromTokenString(s *xorm.Session, token string) (apiToken *APIToken,
 			return t, nil
 		}
 		if err := keyvalue.Del(cacheKey); err != nil {
-			return nil, err
+			log.Errorf("Could not delete stale verified api token from keyvalue store: %s", err)
 		}
 	}
 
@@ -287,9 +293,8 @@ func GetTokenFromTokenString(s *xorm.Session, token string) (apiToken *APIToken,
 	for _, t := range tokens {
 		tempHash := HashToken(token, t.TokenSalt)
 		if subtle.ConstantTimeCompare([]byte(t.TokenHash), []byte(tempHash)) == 1 {
-			err = keyvalue.PutWithTTL(cacheKey, verifiedAPIToken{ID: t.ID, Hash: t.TokenHash}, verifiedAPITokenTTL)
-			if err != nil {
-				return nil, err
+			if err := keyvalue.PutWithTTL(cacheKey, verifiedAPIToken{ID: t.ID, Hash: t.TokenHash}, verifiedAPITokenTTL); err != nil {
+				log.Errorf("Could not store verified api token in keyvalue store: %s", err)
 			}
 			return t, nil
 		}
