@@ -253,6 +253,21 @@ func (t *APIToken) HasFeedsAccess() bool {
 	return slices.Contains(perms, "access")
 }
 
+// Skips the ~3 ms PBKDF2 on repeat requests; the row is still loaded by id so revocation applies immediately.
+const verifiedAPITokenTTL = 10 * time.Minute
+
+// The key is an HMAC under the service secret, so write access to the store is not enough to mint an entry for a chosen token.
+type verifiedAPIToken struct {
+	ID   int64
+	Hash string
+}
+
+func verifiedAPITokenKey(token string) string {
+	mac := hmac.New(sha256.New, []byte(config.ServiceSecret.GetString()))
+	mac.Write([]byte(token))
+	return "api_token_verified_" + hex.EncodeToString(mac.Sum(nil))
+}
+
 // GetTokenFromTokenString returns the full token object from the original token string.
 func GetTokenFromTokenString(s *xorm.Session, token string) (apiToken *APIToken, err error) {
 	// The slice below would panic on a short string. Real tokens are prefix + 40
@@ -303,23 +318,6 @@ func GetTokenFromTokenString(s *xorm.Session, token string) (apiToken *APIToken,
 	}
 
 	return nil, &ErrAPITokenInvalid{}
-}
-
-// PBKDF2 over the raw token costs ~3 ms of CPU and API clients send the same token on every
-// request. Remembering a verified token skips that; the row is still loaded by id on every
-// request, so revocation and expiry apply immediately.
-const verifiedAPITokenTTL = 10 * time.Minute
-
-// The key is an HMAC under the service secret, so write access to the store is not enough to mint an entry for a chosen token.
-type verifiedAPIToken struct {
-	ID   int64
-	Hash string
-}
-
-func verifiedAPITokenKey(token string) string {
-	mac := hmac.New(sha256.New, []byte(config.ServiceSecret.GetString()))
-	mac.Write([]byte(token))
-	return "api_token_verified_" + hex.EncodeToString(mac.Sum(nil))
 }
 
 // ValidateTokenAndGetOwner looks up a raw token string, checks it is not expired,
