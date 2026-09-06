@@ -20,7 +20,6 @@ import (
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/assert"
@@ -36,84 +35,239 @@ func resolveAccess(t *testing.T, userID int64) *projectAccess {
 	return pa
 }
 
-func cachedProjectAccess(t *testing.T, userID int64) (projectAccessEntry, bool) {
+func projectPermission(t *testing.T, userID, projectID int64) (Permission, bool) {
 	t.Helper()
-	var e projectAccessEntry
-	has, err := keyvalue.GetWithValue("shared-cache-"+projectAccessCacheKey(userID), &e)
-	require.NoError(t, err)
-	return e, has
+	return resolveAccess(t, userID).permission(projectID)
 }
 
 func TestProjectAccessCache(t *testing.T) {
-	t.Run("served across sessions until invalidated", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		first := resolveAccess(t, 1)
-		cached, has := cachedProjectAccess(t, 1)
-		require.True(t, has)
-		assert.Equal(t, first.permissions, cached.Permissions)
-		assert.Equal(t, first.permissions, resolveAccess(t, 1).permissions)
-
-		invalidateProjectAccess(1)
-		_, has = cachedProjectAccess(t, 1)
-		assert.False(t, has)
-	})
-	t.Run("invalidating everything drops every entry", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		resolveAccess(t, 1)
-		resolveAccess(t, 2)
-		invalidateAllProjectAccess()
-		_, has := cachedProjectAccess(t, 1)
-		assert.False(t, has)
-		_, has = cachedProjectAccess(t, 2)
-		assert.False(t, has)
-	})
 	t.Run("sharing a project with a user shows up after commit", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		// user 2 has no access to project 1 in the fixtures
-		before := resolveAccess(t, 2)
-		_, has := before.permission(1)
+		_, has := projectPermission(t, 2, 1)
 		require.False(t, has)
 
 		s := db.NewSession()
 		share := &ProjectUser{ProjectID: 1, Username: "user2", Permission: PermissionRead}
 		require.NoError(t, share.Create(s, &user.User{ID: 1}))
-		// Not visible before commit: the hook has not run and the entry is still the old one.
-		_, has = cachedProjectAccess(t, 2)
-		assert.True(t, has)
+
+		_, has = projectPermission(t, 2, 1)
+		assert.False(t, has)
+
 		require.NoError(t, s.Commit())
 		s.Close()
 
-		_, has = cachedProjectAccess(t, 2)
-		assert.False(t, has)
-		_, has = resolveAccess(t, 2).permission(1)
-		assert.True(t, has)
+		permission, has := projectPermission(t, 2, 1)
+		require.True(t, has)
+		assert.Equal(t, PermissionRead, permission)
 	})
+
 	t.Run("a new child project is visible to everyone with access to the parent", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		resolveAccess(t, 1)
+		// User 2 owns nothing and reaches project 3 through a share only.
+		permission, has := projectPermission(t, 2, 3)
+		require.True(t, has)
+		require.Equal(t, PermissionRead, permission)
+
 		s := db.NewSession()
-		parent := int64(1)
-		child := &Project{Title: "child", ParentProjectID: &parent}
-		require.NoError(t, child.Create(s, &user.User{ID: 1}))
+		parent := int64(3)
+		child := &Project{Title: "child of a shared project", ParentProjectID: &parent}
+		require.NoError(t, child.Create(s, &user.User{ID: 3}))
 		require.NoError(t, s.Commit())
 		s.Close()
-		_, has := resolveAccess(t, 1).permission(child.ID)
-		assert.True(t, has)
+
+		permission, has = projectPermission(t, 2, child.ID)
+		require.True(t, has)
+		assert.Equal(t, PermissionRead, permission)
 	})
+
+	t.Run("a new top level project is visible to its owner", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		resolveAccess(t, 1)
+
+		s := db.NewSession()
+		created := &Project{Title: "a new top level project"}
+		require.NoError(t, created.Create(s, &user.User{ID: 1}))
+		require.NoError(t, s.Commit())
+		s.Close()
+
+		permission, has := projectPermission(t, 1, created.ID)
+		require.True(t, has)
+		assert.Equal(t, PermissionAdmin, permission)
+	})
+
 	t.Run("a session that has written bypasses the cache", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		resolveAccess(t, 1)
 
 		s := db.NewSession()
-		defer s.Close()
-		created := &Project{Title: "x"}
+		created := &Project{Title: "written in this session"}
 		require.NoError(t, created.Create(s, &user.User{ID: 1}))
 
 		access, err := getProjectAccessForUser(s, 1)
 		require.NoError(t, err)
-		_, has := access.permission(created.ID)
-		assert.True(t, has)
+		permission, has := access.permission(created.ID)
+		require.True(t, has)
+		assert.Equal(t, PermissionAdmin, permission)
 
-		require.NoError(t, s.Rollback())
+		require.NoError(t, s.Commit())
+		s.Close()
+
+		permission, has = projectPermission(t, 1, created.ID)
+		require.True(t, has)
+		assert.Equal(t, PermissionAdmin, permission)
+	})
+
+	t.Run("removing a user share revokes access", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		// Project 9 is user 6's and reaches user 1 through the direct share only.
+		permission, has := projectPermission(t, 1, 9)
+		require.True(t, has)
+		require.Equal(t, PermissionRead, permission)
+
+		s := db.NewSession()
+		share := &ProjectUser{ProjectID: 9, Username: "user1"}
+		require.NoError(t, share.Delete(s, &user.User{ID: 6}))
+		require.NoError(t, s.Commit())
+		s.Close()
+
+		_, has = projectPermission(t, 1, 9)
+		assert.False(t, has)
+	})
+
+	t.Run("lowering a user share lowers the permission", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		permission, has := projectPermission(t, 1, 11)
+		require.True(t, has)
+		require.Equal(t, PermissionAdmin, permission)
+
+		s := db.NewSession()
+		share := &ProjectUser{ProjectID: 11, Username: "user1", Permission: PermissionRead}
+		require.NoError(t, share.Update(s, &user.User{ID: 6}))
+		require.NoError(t, s.Commit())
+		s.Close()
+
+		permission, has = projectPermission(t, 1, 11)
+		require.True(t, has)
+		assert.Equal(t, PermissionRead, permission)
+	})
+
+	t.Run("removing a team member revokes what only that team granted", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		// User 2 reaches project 33 through team 1 only, project 3 also directly.
+		permission, has := projectPermission(t, 2, 33)
+		require.True(t, has)
+		require.Equal(t, PermissionWrite, permission)
+
+		s := db.NewSession()
+		member := &TeamMember{TeamID: 1, Username: "user2"}
+		require.NoError(t, member.Delete(s, &user.User{ID: 1}))
+		require.NoError(t, s.Commit())
+		s.Close()
+
+		_, has = projectPermission(t, 2, 33)
+		assert.False(t, has)
+
+		permission, has = projectPermission(t, 2, 3)
+		require.True(t, has)
+		assert.Equal(t, PermissionRead, permission)
+	})
+
+	t.Run("removing a team share revokes access to the project and its children", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		// Team 16 has user 14 as its only member and read on project 41, parent of 42.
+		permission, has := projectPermission(t, 14, 42)
+		require.True(t, has)
+		require.Equal(t, PermissionRead, permission)
+
+		s := db.NewSession()
+		share := &TeamProject{TeamID: 16, ProjectID: 41}
+		require.NoError(t, share.Delete(s, &user.User{ID: 6}))
+		require.NoError(t, s.Commit())
+		s.Close()
+
+		_, has = projectPermission(t, 14, 41)
+		assert.False(t, has)
+		_, has = projectPermission(t, 14, 42)
+		assert.False(t, has)
+	})
+
+	t.Run("deleting a team revokes access", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		permission, has := projectPermission(t, 14, 42)
+		require.True(t, has)
+		require.Equal(t, PermissionRead, permission)
+
+		s := db.NewSession()
+		team := &Team{ID: 16}
+		require.NoError(t, team.Delete(s, &user.User{ID: 6}))
+		require.NoError(t, s.Commit())
+		s.Close()
+
+		_, has = projectPermission(t, 14, 41)
+		assert.False(t, has)
+		_, has = projectPermission(t, 14, 42)
+		assert.False(t, has)
+	})
+
+	t.Run("detaching a child project revokes the inherited access", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		permission, has := projectPermission(t, 14, 42)
+		require.True(t, has)
+		require.Equal(t, PermissionRead, permission)
+
+		s := db.NewSession()
+		_, err := s.Where("id = ?", 42).
+			Cols("parent_project_id").
+			Nullable("parent_project_id").
+			Update(&Project{ParentProjectID: noParentProjectID()})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		s.Close()
+
+		_, has = projectPermission(t, 14, 42)
+		assert.False(t, has)
+
+		permission, has = projectPermission(t, 14, 41)
+		require.True(t, has)
+		assert.Equal(t, PermissionRead, permission)
+	})
+
+	t.Run("transferring ownership moves the project to the new owner", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		// User 1 owns project 1 and reaches it no other way; user 2 not at all.
+		permission, has := projectPermission(t, 1, 1)
+		require.True(t, has)
+		require.Equal(t, PermissionAdmin, permission)
+		_, has = projectPermission(t, 2, 1)
+		require.False(t, has)
+
+		s := db.NewSession()
+		_, err := ReassignProjectOwner(s, &user.User{ID: 1}, 1, 2)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		s.Close()
+
+		_, has = projectPermission(t, 1, 1)
+		assert.False(t, has)
+
+		permission, has = projectPermission(t, 2, 1)
+		require.True(t, has)
+		assert.Equal(t, PermissionAdmin, permission)
+	})
+
+	t.Run("deleting a project revokes access for the users it was shared with", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		permission, has := projectPermission(t, 1, 9)
+		require.True(t, has)
+		require.Equal(t, PermissionRead, permission)
+
+		s := db.NewSession()
+		project := &Project{ID: 9, OwnerID: 6}
+		require.NoError(t, project.Delete(s, &user.User{ID: 6}))
+		require.NoError(t, s.Commit())
+		s.Close()
+
+		_, has = projectPermission(t, 1, 9)
+		assert.False(t, has)
 	})
 }
