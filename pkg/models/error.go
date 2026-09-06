@@ -2312,6 +2312,34 @@ func (err *ErrInvalidAPITokenPermission) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrInstanceBotScopeNotAllowed represents an error where an instance bot token is granted a non-admin scope.
+type ErrInstanceBotScopeNotAllowed struct {
+	Group string
+}
+
+// IsErrInstanceBotScopeNotAllowed checks if an error is ErrInstanceBotScopeNotAllowed.
+func IsErrInstanceBotScopeNotAllowed(err error) bool {
+	_, ok := err.(*ErrInstanceBotScopeNotAllowed)
+	return ok
+}
+
+func (err *ErrInstanceBotScopeNotAllowed) Error() string {
+	return fmt.Sprintf("Instance bot tokens may only carry admin scopes, got %s", err.Group)
+}
+
+// ErrCodeInstanceBotScopeNotAllowed holds the unique world-error code of this error
+const ErrCodeInstanceBotScopeNotAllowed = 14010
+
+// HTTPError holds the http error description
+func (err *ErrInstanceBotScopeNotAllowed) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode:   http.StatusBadRequest,
+		Code:       ErrCodeInstanceBotScopeNotAllowed,
+		Message:    fmt.Sprintf("Instance bot tokens may only carry admin scopes, %s is not allowed.", err.Group),
+		I18nParams: map[string]string{"group": err.Group},
+	}
+}
+
 // OIDC errors
 const ErrCodeOpenIDError = 15001
 

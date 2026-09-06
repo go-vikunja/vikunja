@@ -124,9 +124,13 @@ func registerEventsForAuditLogging() {
 		}
 	})
 	audit.RegisterEventForAudit(func(e *APITokenIssuedEvent) *audit.Entry {
+		actor := audit.UserActor(e.DoerID)
+		if e.DoerID == 0 {
+			actor = audit.CLIActor()
+		}
 		return &audit.Entry{
 			Action:   audit.ActionAPITokenIssued,
-			Actor:    audit.UserActor(e.DoerID),
+			Actor:    actor,
 			Target:   audit.APITokenTarget(e.TokenID),
 			Metadata: map[string]any{"owner_id": e.OwnerID},
 		}
