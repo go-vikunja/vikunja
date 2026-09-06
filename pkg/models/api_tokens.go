@@ -260,20 +260,23 @@ type verifiedAPIToken struct {
 	Tag  string
 }
 
-func serviceHMAC(msg string) string {
+// The domain label keeps the key and tag message spaces disjoint; the token is attacker-controlled.
+func serviceHMAC(domain, msg string) string {
 	mac := hmac.New(sha256.New, []byte(config.ServiceSecret.GetString()))
+	mac.Write([]byte(domain))
+	mac.Write([]byte{0})
 	mac.Write([]byte(msg))
 	return hex.EncodeToString(mac.Sum(nil))
 }
 
 // Deriving the key from the token hides which token an entry belongs to.
 func verifiedAPITokenKey(token string) string {
-	return "api_token_verified_" + serviceHMAC(token)
+	return "api_token_verified_" + serviceHMAC("api-token-cache-key", token)
 }
 
 // The tag binds the value to its token, so a value copied from another key is rejected.
 func verifiedAPITokenTag(token, hash string) string {
-	return serviceHMAC(token + "|" + hash)
+	return serviceHMAC("api-token-cache-tag", token+"|"+hash)
 }
 
 // Skips the ~3 ms PBKDF2 on repeat requests; the row is still loaded from the db so revocation applies immediately.

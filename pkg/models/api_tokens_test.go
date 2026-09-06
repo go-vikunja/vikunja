@@ -17,6 +17,7 @@
 package models
 
 import (
+	"strings"
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
@@ -331,6 +332,10 @@ func TestAPIToken_GetTokenFromTokenString(t *testing.T) {
 		require.NoError(t, err)
 		assert.True(t, cached)
 		assert.Equal(t, token1Hash, v.Hash)
+	})
+	t.Run("key derivation cannot forge a tag", func(t *testing.T) {
+		key := strings.TrimPrefix(verifiedAPITokenKey("A|B"), "api_token_verified_")
+		assert.NotEqual(t, verifiedAPITokenTag("A", "B"), key)
 	})
 	t.Run("invalid token", func(t *testing.T) {
 		s := db.NewSession()
