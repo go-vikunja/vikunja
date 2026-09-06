@@ -82,7 +82,7 @@ func insertLegacyOAuthScopedToken(t *testing.T) string {
 
 	s := db.NewSession()
 	defer s.Close()
-	_, err := s.Insert(token)
+	_, err := s.Nullable("token_sha256").Insert(token)
 	require.NoError(t, err)
 	require.NoError(t, s.Commit())
 

@@ -3,6 +3,7 @@
   token_salt: iC1Qbpf7H1
   token_hash: a1813a558185d99f5197d2d549e4dd91292376aa00210229d70f77b57e165f6613fd12c1f790aa6493548cb9bceff33b45b4
   token_last_eight: 75f29d2e
+  token_sha256: 29024641f2842f4b7afa2168ec25271baf80235d7a1d85b2eaf2afa343e02e5f
   permissions: '{"tasks":["read_all","update"]}'
   expires_at: 2099-01-01 00:00:00
   owner_id: 1
@@ -23,6 +24,7 @@
   token_salt: AHeetyp1aB
   token_hash: da4b9c3aa72633274c37ab3419fbfbe4c5b79310b76027ac36f85e4c5ad0c2342a1d9e1c9b72ca07ec0a66ad2ee3505539af
   token_last_eight: 0b8dcb7c
+  token_sha256: 63f8ec4439e501d9b9a8387cc63d5d31e7364f18510bde8ce082f568496d8860
   permissions: '{"tasks":["read_all","update"]}'
   expires_at: 2099-01-01 00:00:00
   owner_id: 2
@@ -33,6 +35,7 @@
   token_salt: dU7sTe3pLz
   token_hash: b33ee92606ff56201e6cdfbefab083562cb6efe9f1e187a4b1f0cf04e53d534bac52638f93be8cae1d98a5cc6fcffc500e60
   token_last_eight: 1234abcd
+  token_sha256: 74a01b08ae32c1a3421c2db6765eb1190a817a4ccb98221739b818ba8d1cd12b
   permissions: '{"tasks":["read_all"]}'
   expires_at: 2099-01-01 00:00:00
   owner_id: 17
@@ -43,6 +46,7 @@
   token_salt: xK9mPr2sNq
   token_hash: ee3fb2381e42ec87430519de0b59ce5fbe6ad7e0f0be40948ac28100167ed6f26fc6999f53958f589536d6291418c9419aef
   token_last_eight: "12345678"
+  token_sha256: c8433b8cd343b531c4d0ad6f85c2472019a8f537522bb735a6dc5a0a56b2b82c
   permissions: '{"tasks":["read_all"]}'
   expires_at: 2099-01-01 00:00:00
   owner_id: 18
@@ -53,6 +57,7 @@
   token_salt: cDvTk9sR2m
   token_hash: 41f673b144dd743df03de7fb3770766d09f0ac11619cbcca1849310bf71093b872258d5f3b5fc0308ac23910c5570e602b25
   token_last_eight: aabbccdd
+  token_sha256: 21ad2884da6e055a694a9924eeb8920bc2327bbe376583417273077b8443ca73
   permissions: '{"caldav":["access"]}'
   expires_at: 2099-01-01 00:00:00
   owner_id: 15
@@ -63,6 +68,7 @@
   token_salt: xY7mNp3qRs
   token_hash: 844f04afac4479a690b303dbc96795f83526aba0dce11f917e918699542e7ae53f869a9d6e03e147e12350bdf1a710e09cc9
   token_last_eight: 5678efab
+  token_sha256: fd88ddd3443df0e08a359b4fc1de1b5475fe42c028ca8d39319f02865fa6f7db
   permissions: '{"tasks":["read_all"]}'
   expires_at: 2099-01-01 00:00:00
   owner_id: 15
@@ -73,6 +79,7 @@
   token_salt: fEdRTk9sR2
   token_hash: c1231ac23940702dcbdf20ae4c125a904780788b091f6d6c56f94f3620a634ec00aac5288659e04174a69a60b20ea86cdfa5
   token_last_eight: feed0013
+  token_sha256: 55922ee1b1ecd2c705b6cce3ed0f77862edf408a6b51e59a5aaf541f872d096a
   permissions: '{"feeds":["access"]}'
   expires_at: 2099-01-01 00:00:00
   owner_id: 13
