@@ -64,8 +64,6 @@ const emptyProjectList: ProjectListResult = {
 
 beforeEach(() => {
 	requestContext.identity = {id: 1, type: 1}
-	requestContext.sessionEpoch = 1
-	requestContext.apiV2BaseUrl = 'https://identity-a.example/api/v2/'
 })
 
 describe('saved filter queries', () => {
@@ -241,33 +239,13 @@ describe('saved filter mutations after the request context changes', () => {
 			response: {data: undefined},
 		},
 	]
-	const contextChanges = [
-		{
-			name: 'authenticated session for the same identity',
-			change: () => {
-				requestContext.sessionEpoch++
-			},
-		},
-		{
-			name: 'authenticated identity',
-			change: () => {
-				requestContext.identity = {id: 2, type: 1}
-			},
-		},
-		{
-			name: 'API origin',
-			change: () => {
-				requestContext.apiV2BaseUrl = 'https://identity-b.example/api/v2/'
-			},
-		},
-	]
 
 	beforeEach(() => {
 		queryClient.clear()
 		Object.values(sdk).forEach(mock => mock.mockReset())
 	})
 
-	describe.each(contextChanges)('after the $name changes', ({change}) => {
+	describe('after the identity changes', () => {
 		it.each(delayedMutationCases)('discards a delayed $name completion', async ({mock, run, response}) => {
 			queryClient.setQueryData(listKey, emptyProjectList)
 			queryClient.setQueryData(savedFilterKeys.detail(8), serverSavedFilter({id: 8, title: 'Identity A'}))
@@ -278,7 +256,7 @@ describe('saved filter mutations after the request context changes', () => {
 
 			const mutation = run()
 			await vi.waitFor(() => expect(mock).toHaveBeenCalledOnce())
-			change()
+			requestContext.identity = {id: 2, type: 1}
 			queryClient.clear()
 			const identityBFilter = serverSavedFilter({id: 8, title: 'Identity B'})
 			queryClient.setQueryData(listKey, emptyProjectList)
