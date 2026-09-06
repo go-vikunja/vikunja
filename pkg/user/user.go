@@ -366,7 +366,6 @@ func getUser(s *xorm.Session, user *User, withEmail bool) (userOut *User, err er
 	return userOut, finishLoadedUser(userOut)
 }
 
-// finishLoadedUser normalizes a freshly loaded row and reports whether the account may be used.
 func finishLoadedUser(u *User) error {
 	if u.OverdueTasksRemindersTime == "" {
 		u.OverdueTasksRemindersTime = "9:00"

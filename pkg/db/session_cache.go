@@ -104,9 +104,8 @@ func invalidateAllSessionCaches() {
 }
 
 // Remember returns the value memoized under key for the lifetime of s, running fetch on a miss.
-// The memo always misses once s has written anything, so it can never outlive the data it derives
-// from. Nothing is stored when fetch fails. Reference-typed fields of a memoized value stay shared
-// with the memo, so callers that hand out pointers must copy on the way out.
+// The memo misses for good once s has written anything and stores nothing when fetch fails.
+// Reference-typed fields stay shared with the memo, so pointer-returning callers copy on the way out.
 func Remember[T any](s *xorm.Session, key string, fetch func() (T, error)) (T, error) {
 	c, ok := cacheForSession(s)
 	if !ok {
@@ -128,9 +127,8 @@ func Remember[T any](s *xorm.Session, key string, fetch func() (T, error)) (T, e
 	return value, nil
 }
 
-// RememberEach is Remember for id-keyed batch loads: memoized ids are served from the memo and
-// fetch runs once for the rest. Ids fetch does not return stay absent from both the memo and the
-// result.
+// RememberEach is Remember for id-keyed batch loads: memoized ids are served and fetch runs once
+// for the rest. Ids fetch does not return stay absent from both the memo and the result.
 func RememberEach[T any](s *xorm.Session, ids []int64, key func(int64) string, fetch func(missing []int64) (map[int64]T, error)) (map[int64]T, error) {
 	if len(ids) == 0 {
 		return map[int64]T{}, nil
