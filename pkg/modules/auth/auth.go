@@ -235,6 +235,10 @@ func HasAuthInContext(c *echo.Context) bool {
 
 // GetAuthFromClaims returns a web.Auth object from jwt claims
 func GetAuthFromClaims(c *echo.Context) (a web.Auth, err error) {
+	// The token middleware already loaded the owner; a lookup per call showed up as two extra transactions per request.
+	if u, ok := c.Get("api_user").(*user.User); ok {
+		return u, nil
+	}
 	// check if we have a token in context and use it if that's the case
 	if c.Get("api_token") != nil {
 		apiToken := c.Get("api_token").(*models.APIToken)
