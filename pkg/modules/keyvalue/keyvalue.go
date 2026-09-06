@@ -55,6 +55,11 @@ func InitStorage() {
 	}
 }
 
+// Initialized reports whether InitStorage has run; best-effort publishers skip the store otherwise.
+func Initialized() bool {
+	return store != nil
+}
+
 // Put puts a value in the storage backend
 func Put(key string, value interface{}) error {
 	return store.Put(key, value)

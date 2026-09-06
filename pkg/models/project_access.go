@@ -86,7 +86,16 @@ type projectAccessRow struct {
 
 // Resolves the whole reachable tree in one query, memoized per session.
 func getProjectAccessForUser(s *xorm.Session, userID int64) (*projectAccess, error) {
-	return db.Remember(s, "project-access-"+strconv.FormatInt(userID, 10), func() (*projectAccess, error) {
+	cacheKey := "project-access-" + strconv.FormatInt(userID, 10)
+	return db.Remember(s, cacheKey, func() (*projectAccess, error) {
+		// A session that wrote may see its own uncommitted grants: neither serve it from the shared memo nor fill it.
+		shareable := !db.SessionHasWritten(s)
+		if shareable {
+			if pa, has := projectAccessCache.get(userID); has {
+				return pa, nil
+			}
+		}
+
 		rows := []*projectAccessRow{}
 		err := s.SQL(projectAccessQuery, userID, userID, userID).Find(&rows)
 		if err != nil {
@@ -108,6 +117,9 @@ func getProjectAccessForUser(s *xorm.Session, userID int64) (*projectAccess, err
 			pa.sortedIDs = append(pa.sortedIDs, r.ID)
 		}
 		sort.Slice(pa.sortedIDs, func(i, j int) bool { return pa.sortedIDs[i] < pa.sortedIDs[j] })
+		if shareable {
+			projectAccessCache.put(userID, pa)
+		}
 		return pa, nil
 	})
 }
