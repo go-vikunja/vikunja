@@ -253,13 +253,8 @@ func (t *APIToken) HasFeedsAccess() bool {
 	return slices.Contains(perms, "access")
 }
 
-// Skips the ~3 ms PBKDF2 on repeat requests; the row is still loaded by id so revocation applies immediately.
+// Skips the ~3 ms PBKDF2 on repeat requests; the row is still loaded from the db so revocation applies immediately.
 const verifiedAPITokenTTL = 10 * time.Minute
-
-type verifiedAPIToken struct {
-	ID   int64
-	Hash string
-}
 
 // The key is an HMAC under the service secret, so write access to the store is not enough to mint an entry for a chosen token.
 func verifiedAPITokenKey(token string) string {
@@ -277,21 +272,20 @@ func GetTokenFromTokenString(s *xorm.Session, token string) (apiToken *APIToken,
 	}
 
 	cacheKey := verifiedAPITokenKey(token)
-	var v verifiedAPIToken
+	var hash string
 	// keyvalue errors count as a cache miss: a flaky backend should cost a PBKDF2 round, never an auth failure.
-	cached, err := keyvalue.GetWithValue(cacheKey, &v)
-	if err != nil {
-		log.Errorf("Could not read verified api token from keyvalue store: %s", err)
+	cached, kvErr := keyvalue.GetWithValue(cacheKey, &hash)
+	if kvErr != nil {
+		log.Errorf("Could not read verified api token from keyvalue store: %s", kvErr)
 		cached = false
 	}
 	if cached {
 		t := &APIToken{}
-		exists, err := s.Where("id = ?", v.ID).Get(t)
+		exists, err := s.Where("token_hash = ?", hash).Get(t)
 		if err != nil {
 			return nil, err
 		}
-		// The hash check guards against an id reused after the token was deleted.
-		if exists && subtle.ConstantTimeCompare([]byte(t.TokenHash), []byte(v.Hash)) == 1 {
+		if exists {
 			return t, nil
 		}
 		if err := keyvalue.Del(cacheKey); err != nil {
@@ -310,7 +304,7 @@ func GetTokenFromTokenString(s *xorm.Session, token string) (apiToken *APIToken,
 	for _, t := range tokens {
 		tempHash := HashToken(token, t.TokenSalt)
 		if subtle.ConstantTimeCompare([]byte(t.TokenHash), []byte(tempHash)) == 1 {
-			if err := keyvalue.PutWithTTL(cacheKey, verifiedAPIToken{ID: t.ID, Hash: t.TokenHash}, verifiedAPITokenTTL); err != nil {
+			if err := keyvalue.PutWithTTL(cacheKey, t.TokenHash, verifiedAPITokenTTL); err != nil {
 				log.Errorf("Could not store verified api token in keyvalue store: %s", err)
 			}
 			return t, nil

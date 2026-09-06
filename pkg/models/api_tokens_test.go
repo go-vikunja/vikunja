@@ -215,6 +215,12 @@ func TestAPIToken_HasFeedsAccess(t *testing.T) {
 }
 
 func TestAPIToken_GetTokenFromTokenString(t *testing.T) {
+	// Fixture values from pkg/db/fixtures/api_tokens.yml
+	const (
+		token1Hash = "a1813a558185d99f5197d2d549e4dd91292376aa00210229d70f77b57e165f6613fd12c1f790aa6493548cb9bceff33b45b4"
+		token2Hash = "5c4d80c58947f21295064d473937709f1159ab09085eb59e38783da6032181069ec2e1d236486533b66999f9f4ac375b45f5"
+	)
+
 	t.Run("valid token", func(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
@@ -236,10 +242,11 @@ func TestAPIToken_GetTokenFromTokenString(t *testing.T) {
 
 		_, err := GetTokenFromTokenString(s, raw)
 		require.NoError(t, err)
-		var v verifiedAPIToken
-		cached, err := keyvalue.GetWithValue(key, &v)
+		var hash string
+		cached, err := keyvalue.GetWithValue(key, &hash)
 		require.NoError(t, err)
 		assert.True(t, cached)
+		assert.Equal(t, token1Hash, hash)
 
 		token, err := GetTokenFromTokenString(s, raw)
 		require.NoError(t, err)
@@ -250,9 +257,23 @@ func TestAPIToken_GetTokenFromTokenString(t *testing.T) {
 		_, err = GetTokenFromTokenString(s, raw)
 		require.Error(t, err)
 		assert.True(t, IsErrAPITokenInvalid(err))
-		cached, err = keyvalue.GetWithValue(key, &v)
+		cached, err = keyvalue.GetWithValue(key, &hash)
 		require.NoError(t, err)
 		assert.False(t, cached)
+	})
+	t.Run("cache hit is served without pbkdf2", func(t *testing.T) {
+		s := db.NewSession()
+		defer s.Close()
+		db.LoadAndAssertFixtures(t)
+		const raw = "tk_2eef46f40ebab3304919ab2e7e39993f75f29d2e" // Token 1
+		key := verifiedAPITokenKey(raw)
+		t.Cleanup(func() { _ = keyvalue.Del(key) })
+		// Only the cache hit can return token 2 here; hashing the raw string would find token 1.
+		require.NoError(t, keyvalue.PutWithTTL(key, token2Hash, verifiedAPITokenTTL))
+
+		token, err := GetTokenFromTokenString(s, raw)
+		require.NoError(t, err)
+		assert.Equal(t, int64(2), token.ID)
 	})
 	t.Run("stale cache entry falls back to the full lookup", func(t *testing.T) {
 		s := db.NewSession()
@@ -261,16 +282,16 @@ func TestAPIToken_GetTokenFromTokenString(t *testing.T) {
 		const raw = "tk_2eef46f40ebab3304919ab2e7e39993f75f29d2e" // Token 1
 		key := verifiedAPITokenKey(raw)
 		t.Cleanup(func() { _ = keyvalue.Del(key) })
-		require.NoError(t, keyvalue.PutWithTTL(key, verifiedAPIToken{ID: 2, Hash: "not the hash of token 2"}, verifiedAPITokenTTL))
+		require.NoError(t, keyvalue.PutWithTTL(key, "not a hash", verifiedAPITokenTTL))
 
 		token, err := GetTokenFromTokenString(s, raw)
 		require.NoError(t, err)
 		assert.Equal(t, int64(1), token.ID)
-		var v verifiedAPIToken
-		cached, err := keyvalue.GetWithValue(key, &v)
+		var hash string
+		cached, err := keyvalue.GetWithValue(key, &hash)
 		require.NoError(t, err)
 		assert.True(t, cached)
-		assert.Equal(t, int64(1), v.ID)
+		assert.Equal(t, token1Hash, hash)
 	})
 	t.Run("invalid token", func(t *testing.T) {
 		s := db.NewSession()
