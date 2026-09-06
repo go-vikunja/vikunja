@@ -234,6 +234,33 @@ func isStandardCRUDRoute(routeGroupName string, routeParts []string, _ string) b
 	return false
 }
 
+// isPatchTwin reports whether existing and rd are the PUT and PATCH (either
+// order) of the same v2 path, as AutoPatch produces.
+func isPatchTwin(existing, rd *RouteDetail) bool {
+	if existing == nil || existing.Path != rd.Path || !isV2Path(rd.Path) {
+		return false
+	}
+	return (existing.Method == http.MethodPut && rd.Method == http.MethodPatch) ||
+		(existing.Method == http.MethodPatch && rd.Method == http.MethodPut)
+}
+
+// storeRoute keeps PUT authoritative over its AutoPatch PATCH twin whatever
+// order echo lists them; tokenAuthorizesRoute aliases PATCH to the stored
+// PUT. A native PATCH with no PUT twin is stored as-is.
+func storeRoute(routes APITokenRoute, key string, rd *RouteDetail, suffixOnCollision bool) {
+	existing := routes[key]
+	if isPatchTwin(existing, rd) {
+		if rd.Method == http.MethodPut {
+			routes[key] = rd
+		}
+		return
+	}
+	if existing != nil && suffixOnCollision {
+		key += "_" + strings.ToLower(rd.Method)
+	}
+	routes[key] = rd
+}
+
 // CollectRoutesForAPITokenUsage records a route for token authorisation.
 // v1 and v2 share group/permission keys derived from the prefix-stripped
 // path; v2 entries land in apiTokenRoutesV2 so the v1-only frontend UI is
@@ -262,12 +289,6 @@ func CollectRoutesForAPITokenUsage(route echo.RouteInfo, requiresJWT bool) {
 	target := apiTokenRoutes
 	if isV2Path(route.Path) {
 		target = apiTokenRoutesV2
-		// AutoPatch's synthesised PATCH and the original PUT both derive the
-		// "update" permission and would clobber each other on the map. Store
-		// only PUT; CanDoAPIRoute accepts PATCH as its alias on the same path.
-		if route.Method == http.MethodPatch {
-			return
-		}
 	}
 
 	// Check if this is a standard CRUD route using path-based heuristics
@@ -296,27 +317,12 @@ func CollectRoutesForAPITokenUsage(route echo.RouteInfo, requiresJWT bool) {
 			}
 
 			ensureAPITokenRoutesGroup(target, "other")
-
-			_, exists := target["other"][routeGroupName]
-			if exists {
-				routeGroupName += "_" + strings.ToLower(route.Method)
-			}
-			target["other"][routeGroupName] = routeDetail
+			storeRoute(target["other"], routeGroupName, routeDetail, true)
 			return
 		}
 
-		subkey := strings.Join(routeParts[1:], "_")
-
-		if _, has := target[routeParts[0]]; !has {
-			target[routeParts[0]] = make(APITokenRoute)
-		}
-
-		if _, has := target[routeParts[0]][subkey]; has {
-			subkey += "_" + strings.ToLower(route.Method)
-		}
-
-		target[routeParts[0]][subkey] = routeDetail
-
+		ensureAPITokenRoutesGroup(target, routeParts[0])
+		storeRoute(target[routeParts[0]], strings.Join(routeParts[1:], "_"), routeDetail, true)
 		return
 	}
 
@@ -336,7 +342,7 @@ func CollectRoutesForAPITokenUsage(route echo.RouteInfo, requiresJWT bool) {
 
 	method, routeDetail := getRouteDetail(route)
 	if method != "" {
-		target[routeGroupName][method] = routeDetail
+		storeRoute(target[routeGroupName], method, routeDetail, false)
 	}
 
 	// Handle task attachments specially - they use custom handlers not WebHandler
@@ -474,8 +480,7 @@ func tokenAuthorizesRoute(token *APIToken, path, method string) bool {
 					return true
 				}
 				// v2: AutoPatch mirrors every PUT as a PATCH on the same
-				// path. PATCH isn't stored (it would clobber PUT under
-				// the same "update" key), so accept it as an alias here.
+				// path; only PUT is stored (see storeRoute).
 				if isV2Path(rd.Path) && rd.Method == http.MethodPut &&
 					method == http.MethodPatch && rd.Path == path {
 					return true

@@ -117,10 +117,54 @@ func TestCollectRoutesV2(t *testing.T) {
 	assert.Equal(t, "/api/v2/labels", labels["read_all"].Path)
 	assert.Equal(t, "GET", labels["read_one"].Method)
 	assert.Equal(t, "POST", labels["create"].Method)
-	// PUT is the authoritative update verb for API tokens — PATCH is
-	// skipped during collection so it doesn't clobber PUT.
+	// PUT is the authoritative update verb for API tokens — AutoPatch's
+	// PATCH twin must not clobber it.
 	assert.Equal(t, "PUT", labels["update"].Method)
 	assert.Equal(t, "DELETE", labels["delete"].Method)
+}
+
+// TestCollectRoutesV2_Patch pins PUT as the stored update verb regardless of
+// the order echo lists the AutoPatch twin, while a native PATCH with no PUT
+// twin (as the admin routes have) is collected as-is.
+func TestCollectRoutesV2_Patch(t *testing.T) {
+	t.Run("PATCH listed before PUT still stores PUT", func(t *testing.T) {
+		apiTokenRoutes = make(map[string]APITokenRoute)
+		apiTokenRoutesV2 = make(map[string]APITokenRoute)
+
+		CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "PATCH", Path: "/api/v2/labels/:id"}, true)
+		CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "PUT", Path: "/api/v2/labels/:id"}, true)
+
+		assert.Equal(t, "PUT", apiTokenRoutesV2["labels"]["update"].Method)
+		assert.Len(t, apiTokenRoutesV2["labels"], 1)
+	})
+
+	t.Run("non-CRUD PUT twin is not suffixed", func(t *testing.T) {
+		apiTokenRoutes = make(map[string]APITokenRoute)
+		apiTokenRoutesV2 = make(map[string]APITokenRoute)
+
+		CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "PUT", Path: "/api/v2/tasks/:task/position"}, true)
+		CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "PATCH", Path: "/api/v2/tasks/:task/position"}, true)
+
+		require.Contains(t, apiTokenRoutesV2["tasks"], "position")
+		assert.Equal(t, "PUT", apiTokenRoutesV2["tasks"]["position"].Method)
+		assert.NotContains(t, apiTokenRoutesV2["tasks"], "position_patch")
+	})
+
+	t.Run("native PATCH without a PUT twin is collected", func(t *testing.T) {
+		apiTokenRoutes = make(map[string]APITokenRoute)
+		apiTokenRoutesV2 = make(map[string]APITokenRoute)
+
+		CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "PATCH", Path: "/api/v2/teams/:id/archive"}, true)
+
+		require.Contains(t, apiTokenRoutesV2, "teams")
+		require.Contains(t, apiTokenRoutesV2["teams"], "archive")
+		assert.Equal(t, "PATCH", apiTokenRoutesV2["teams"]["archive"].Method)
+
+		token := &APIToken{APIPermissions: APIPermissions{"teams": []string{"archive"}}}
+		req := httptest.NewRequest("PATCH", "/api/v2/teams/:id/archive", nil)
+		c := echo.New().NewContext(req, httptest.NewRecorder())
+		assert.True(t, CanDoAPIRoute(c, token))
+	})
 }
 
 // TestCollectRoutes_TimeEntriesV2 pins the v2-only time-entries resource to a
