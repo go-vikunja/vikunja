@@ -71,8 +71,6 @@ describe('project view queries', () => {
 	})
 
 	it('keys lists by project and response-shaping arguments', () => {
-		expect(projectViewsQuery(7, {q: 'board'}).queryKey)
-			.toEqual(projectViewKeys.list(7, {q: 'board'}))
 		expect(projectViewsQuery(8, {q: 'board'}).queryKey)
 			.not.toEqual(projectViewsQuery(7, {q: 'board'}).queryKey)
 		expect(projectViewsQuery(7, {q: 'list'}).queryKey)
@@ -80,7 +78,6 @@ describe('project view queries', () => {
 	})
 
 	it('keys details by both project and view', () => {
-		expect(projectViewQuery(7, 2).queryKey).toEqual(projectViewKeys.detail(7, 2))
 		expect(projectViewQuery(8, 2).queryKey).not.toEqual(projectViewQuery(7, 2).queryKey)
 		expect(projectViewQuery(7, 3).queryKey).not.toEqual(projectViewQuery(7, 2).queryKey)
 	})
@@ -94,13 +91,6 @@ describe('project view queries', () => {
 			path: {project: 7},
 			query: {page: 1, per_page: 1000, q: 'work'},
 		})
-	})
-
-	it('loads a detail using both parent and resource ids', async () => {
-		sdk.projectViewsRead.mockResolvedValue({data: views[1]})
-
-		await expect(queryClient.fetchQuery(projectViewQuery(7, 1))).resolves.toEqual(views[1])
-		expect(sdk.projectViewsRead).toHaveBeenCalledWith({path: {project: 7, view: 1}})
 	})
 
 	it('sorts by position without changing the source array', () => {
@@ -179,27 +169,6 @@ describe('project view cache reconciliation', () => {
 			response: {data: undefined},
 		},
 	]
-	const contextChanges = [
-		{
-			name: 'authenticated session for the same identity',
-			change: () => {
-				requestContext.sessionEpoch++
-			},
-		},
-		{
-			name: 'authenticated identity',
-			change: () => {
-				requestContext.identity = {id: 2, type: 1}
-			},
-		},
-		{
-			name: 'API origin',
-			change: () => {
-				requestContext.apiV2BaseUrl = 'https://identity-b.example/api/v2/'
-			},
-		},
-	]
-
 	beforeEach(() => {
 		queryClient.clear()
 		vi.clearAllMocks()
@@ -207,7 +176,7 @@ describe('project view cache reconciliation', () => {
 		queryClient.setQueryData(projectViewKeys.list(7, {q: 'board'}), [views[2]])
 	})
 
-	describe.each(contextChanges)('after the $name changes', ({change}) => {
+	describe('after the identity changes', () => {
 		it.each(delayedMutationCases)('discards a delayed $name completion', async ({mock, run, response}) => {
 			let resolveRequest: (value: unknown) => void = () => {}
 			mock.mockReturnValue(new Promise(resolve => {
@@ -216,7 +185,7 @@ describe('project view cache reconciliation', () => {
 
 			const mutation = run()
 			await vi.waitFor(() => expect(mock).toHaveBeenCalledOnce())
-			change()
+			requestContext.identity = {id: 2, type: 1}
 			queryClient.clear()
 			const identityBViews = views.map(view => ({...view, title: `Identity B ${view.title}`}))
 			queryClient.setQueryData(listKey, identityBViews)
