@@ -5,7 +5,9 @@ import {createI18n} from 'vue-i18n'
 import ApiTokenForm from './ApiTokenForm.vue'
 import en from '@/i18n/lang/en.json'
 
-const getAvailableRoutes = vi.fn(async () => ({
+type Routes = Record<string, Record<string, {path: string, method: string}>>
+
+const getAvailableRoutes = vi.fn(async (): Promise<Routes> => ({
 	tasks: {
 		create: {path: '/api/v1/projects/:project/tasks', method: 'PUT'},
 		read_all: {path: '/api/v1/tasks', method: 'GET'},
