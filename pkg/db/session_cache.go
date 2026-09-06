@@ -107,7 +107,7 @@ func cacheForSession(s *xorm.Session) (*sessionCache, bool) {
 	return c.(*sessionCache), true
 }
 
-// Fixture loading replaces the database under every memo without firing a write hook.
+// Bulk writes that bypass xorm (fixture loading, restore) fire no write hook.
 func invalidateAllCaches() {
 	sessionCaches.Range(func(_, v any) bool {
 		v.(*sessionCache).markDirty()
