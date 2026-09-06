@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/assert"
@@ -35,17 +36,25 @@ func resolveAccess(t *testing.T, userID int64) *projectAccess {
 	return pa
 }
 
+func cachedProjectAccess(t *testing.T, userID int64) (projectAccessEntry, bool) {
+	t.Helper()
+	var e projectAccessEntry
+	has, err := keyvalue.GetWithValue("shared-cache-"+projectAccessCacheKey(userID), &e)
+	require.NoError(t, err)
+	return e, has
+}
+
 func TestProjectAccessCache(t *testing.T) {
 	t.Run("served across sessions until invalidated", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		first := resolveAccess(t, 1)
-		cached, has := getCachedProjectAccess(1)
+		cached, has := cachedProjectAccess(t, 1)
 		require.True(t, has)
-		assert.Equal(t, first.permissions, cached)
+		assert.Equal(t, first.permissions, cached.Permissions)
 		assert.Equal(t, first.permissions, resolveAccess(t, 1).permissions)
 
 		invalidateProjectAccess(1)
-		_, has = getCachedProjectAccess(1)
+		_, has = cachedProjectAccess(t, 1)
 		assert.False(t, has)
 	})
 	t.Run("invalidating everything drops every entry", func(t *testing.T) {
@@ -53,9 +62,9 @@ func TestProjectAccessCache(t *testing.T) {
 		resolveAccess(t, 1)
 		resolveAccess(t, 2)
 		invalidateAllProjectAccess()
-		_, has := getCachedProjectAccess(1)
+		_, has := cachedProjectAccess(t, 1)
 		assert.False(t, has)
-		_, has = getCachedProjectAccess(2)
+		_, has = cachedProjectAccess(t, 2)
 		assert.False(t, has)
 	})
 	t.Run("sharing a project with a user shows up after commit", func(t *testing.T) {
@@ -69,12 +78,12 @@ func TestProjectAccessCache(t *testing.T) {
 		share := &ProjectUser{ProjectID: 1, Username: "user2", Permission: PermissionRead}
 		require.NoError(t, share.Create(s, &user.User{ID: 1}))
 		// Not visible before commit: the hook has not run and the entry is still the old one.
-		_, has = getCachedProjectAccess(2)
+		_, has = cachedProjectAccess(t, 2)
 		assert.True(t, has)
 		require.NoError(t, s.Commit())
 		s.Close()
 
-		_, has = getCachedProjectAccess(2)
+		_, has = cachedProjectAccess(t, 2)
 		assert.False(t, has)
 		_, has = resolveAccess(t, 2).permission(1)
 		assert.True(t, has)

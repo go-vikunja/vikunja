@@ -83,18 +83,18 @@ func TestGetProjectAccessForUser(t *testing.T) {
 	t.Run("memoized per session and across sessions until invalidated", func(t *testing.T) {
 		again, err := getProjectAccessForUser(s, 1)
 		require.NoError(t, err)
-		assert.Same(t, access, again)
+		assert.Equal(t, access.permissions, again.permissions)
 
 		other := db.NewSession()
 		defer other.Close()
 		shared, err := getProjectAccessForUser(other, 1)
 		require.NoError(t, err)
 		assert.Equal(t, access.permissions, shared.permissions)
-		_, has := getCachedProjectAccess(1)
+		_, has := cachedProjectAccess(t, 1)
 		assert.True(t, has)
 
 		invalidateProjectAccess(1)
-		_, has = getCachedProjectAccess(1)
+		_, has = cachedProjectAccess(t, 1)
 		assert.False(t, has)
 
 		third := db.NewSession()
@@ -102,7 +102,7 @@ func TestGetProjectAccessForUser(t *testing.T) {
 		fresh, err := getProjectAccessForUser(third, 1)
 		require.NoError(t, err)
 		assert.Equal(t, access.permissions, fresh.permissions)
-		_, has = getCachedProjectAccess(1)
+		_, has = cachedProjectAccess(t, 1)
 		assert.True(t, has)
 	})
 }

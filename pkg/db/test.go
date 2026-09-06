@@ -24,6 +24,7 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -58,6 +59,7 @@ func CreateTestEngine() (engine *xorm.Engine, err error) {
 	engine.SetLogger(logger)
 	engine.SetTZLocation(config.GetTimeZone())
 	engine.AddHook(writeInvalidationHook{})
+	keyvalue.InitStorage()
 	x = engine
 	return
 }
