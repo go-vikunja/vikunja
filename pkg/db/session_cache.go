@@ -128,7 +128,8 @@ func Remember[T any](s *xorm.Session, key string, fetch func() (T, error)) (T, e
 }
 
 // RememberEach is Remember for id-keyed batch loads: memoized ids are served and fetch runs once
-// for the rest. Ids fetch does not return stay absent from both the memo and the result.
+// for the rest, deduplicated. Ids fetch does not return stay absent from both the memo and the result.
+// Reference-typed fields stay shared with the memo, so pointer-returning callers copy on the way out.
 func RememberEach[T any](s *xorm.Session, ids []int64, key func(int64) string, fetch func(missing []int64) (map[int64]T, error)) (map[int64]T, error) {
 	if len(ids) == 0 {
 		return map[int64]T{}, nil
@@ -141,18 +142,20 @@ func RememberEach[T any](s *xorm.Session, ids []int64, key func(int64) string, f
 
 	values := make(map[int64]T, len(ids))
 	missing := make([]int64, 0, len(ids))
+	seen := make(map[int64]struct{}, len(ids))
 	for _, id := range ids {
-		v, has := c.get(key(id))
-		if !has {
-			missing = append(missing, id)
+		if _, dup := seen[id]; dup {
 			continue
 		}
-		value, is := v.(T)
-		if !is {
-			missing = append(missing, id)
-			continue
+		seen[id] = struct{}{}
+
+		if v, has := c.get(key(id)); has {
+			if value, is := v.(T); is {
+				values[id] = value
+				continue
+			}
 		}
-		values[id] = value
+		missing = append(missing, id)
 	}
 	if len(missing) == 0 {
 		return values, nil
