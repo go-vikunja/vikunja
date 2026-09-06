@@ -75,7 +75,7 @@ func adminBearerReq(e *echo.Echo, method, path, bearer, body string) *httptest.R
 }
 
 // insertAPIToken writes the row directly, bypassing Create's permission
-// validation so legacy scope keys can be seeded. Returns the cleartext token.
+// validation so unknown scope keys can be seeded. Returns the cleartext token.
 func insertAPIToken(t *testing.T, ownerID int64, perms models.APIPermissions) string {
 	t.Helper()
 
@@ -112,10 +112,10 @@ func TestAdmin_APIToken(t *testing.T) {
 		assert.Equal(t, http.StatusOK, res.Code, res.Body.String())
 	})
 
-	t.Run("legacy scope key still authorises", func(t *testing.T) {
+	t.Run("legacy scope key is denied", func(t *testing.T) {
 		tok := insertAPIToken(t, 1, models.APIPermissions{"admin": {"users_status"}})
 		res := adminBearerReq(e, http.MethodPatch, "/api/v1/admin/users/2/status", tok, `{"status":0}`)
-		assert.Equal(t, http.StatusOK, res.Code, res.Body.String())
+		assert.Equal(t, http.StatusUnauthorized, res.Code)
 	})
 
 	t.Run("other admin scope is denied", func(t *testing.T) {

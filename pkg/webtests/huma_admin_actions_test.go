@@ -640,19 +640,6 @@ func TestHumaAdminAPIToken(t *testing.T) {
 		assert.Equal(t, http.StatusOK, res.Code, res.Body.String())
 	})
 
-	t.Run("legacy scope keys still authorise", func(t *testing.T) {
-		tok := insertAPIToken(t, 1, models.APIPermissions{"admin": {"users_admin", "users", "projects_owner"}})
-
-		res := adminBearerReq(e, http.MethodPatch, "/api/v2/admin/users/2/admin", tok, `{"is_admin":false}`)
-		assert.Equal(t, http.StatusOK, res.Code, res.Body.String())
-
-		res = adminBearerReq(e, http.MethodGet, "/api/v2/admin/users", tok, "")
-		assert.Equal(t, http.StatusOK, res.Code, res.Body.String())
-
-		res = adminBearerReq(e, http.MethodPatch, "/api/v2/admin/projects/2/owner", tok, `{"owner_id":1}`)
-		assert.Equal(t, http.StatusOK, res.Code, res.Body.String())
-	})
-
 	t.Run("other admin scope is denied", func(t *testing.T) {
 		tok := insertAPIToken(t, 1, models.APIPermissions{"admin": {"users_list"}})
 		res := adminBearerReq(e, http.MethodPatch, "/api/v2/admin/users/2/admin", tok, `{"is_admin":true}`)
