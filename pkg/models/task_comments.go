@@ -76,7 +76,7 @@ func (tc *TaskComment) Create(s *xorm.Session, a web.Auth) (err error) {
 
 func (tc *TaskComment) CreateWithTimestamps(s *xorm.Session, a web.Auth) (err error) {
 	// Check if the task exists
-	task, err := GetTaskSimple(s, &Task{ID: tc.TaskID})
+	task, err := GetTaskByIDSimple(s, tc.TaskID)
 	if err != nil {
 		return err
 	}
@@ -180,7 +180,7 @@ func (tc *TaskComment) Update(s *xorm.Session, a web.Auth) error {
 		return err
 	}
 
-	task, err := GetTaskSimple(s, &Task{ID: tc.TaskID})
+	task, err := GetTaskByIDSimple(s, tc.TaskID)
 	if err != nil {
 		return err
 	}
