@@ -278,6 +278,29 @@ func TestRememberShared(t *testing.T) {
 		assert.Equal(t, 2, calls)
 	})
 
+	t.Run("a failing fill caches nothing", func(t *testing.T) {
+		key := "remember-shared-error"
+		InvalidateShared(key)
+
+		calls := 0
+		fn := func() (int, error) {
+			calls++
+			return 0, errors.New("boom")
+		}
+
+		s := newSession(t)
+		_, err := RememberShared(s, key, time.Minute, fn)
+		require.ErrorContains(t, err, "boom")
+
+		_, exists, err := keyvalue.Get(sharedCachePrefix + key)
+		require.NoError(t, err)
+		assert.False(t, exists)
+
+		_, err = RememberShared(s, key, time.Minute, fn)
+		require.ErrorContains(t, err, "boom")
+		assert.Equal(t, 2, calls, "the failed fill must not be memoized on the session")
+	})
+
 	t.Run("a session that has written neither serves nor fills", func(t *testing.T) {
 		key := "remember-shared-written"
 		InvalidateShared(key)
