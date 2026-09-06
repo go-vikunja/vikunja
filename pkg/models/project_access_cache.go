@@ -43,38 +43,3 @@ func invalidateProjectAccess(userID int64) {
 func invalidateAllProjectAccess() {
 	db.InvalidateSharedPrefix(projectAccessCacheKeyPrefix)
 }
-
-// Hooks. xorm calls them after commit inside a transaction, immediately otherwise.
-
-func (p *Project) AfterInsert() {
-	// A new child is reachable for everyone with access to the parent.
-	if p.parentID() != 0 {
-		invalidateAllProjectAccess()
-		return
-	}
-	invalidateProjectAccess(p.OwnerID)
-}
-
-func (p *Project) AfterUpdate() {
-	// The bean carries neither the previous parent nor the previous owner, so either being set means everyone.
-	// Neither set means only columns the grants query does not read were touched.
-	if p.ParentProjectID != nil || p.OwnerID != 0 {
-		invalidateAllProjectAccess()
-	}
-}
-
-func (p *Project) AfterDelete() { invalidateAllProjectAccess() }
-
-func (lu *ProjectUser) AfterInsert() { invalidateProjectAccess(lu.UserID) }
-func (lu *ProjectUser) AfterUpdate() { invalidateProjectAccess(lu.UserID) }
-func (lu *ProjectUser) AfterDelete() { invalidateProjectAccess(lu.UserID) }
-
-func (tl *TeamProject) AfterInsert() { invalidateAllProjectAccess() }
-func (tl *TeamProject) AfterUpdate() { invalidateAllProjectAccess() }
-func (tl *TeamProject) AfterDelete() { invalidateAllProjectAccess() }
-
-func (tm *TeamMember) AfterInsert() { invalidateProjectAccess(tm.UserID) }
-func (tm *TeamMember) AfterUpdate() { invalidateProjectAccess(tm.UserID) }
-func (tm *TeamMember) AfterDelete() { invalidateProjectAccess(tm.UserID) }
-
-func (t *Team) AfterDelete() { invalidateAllProjectAccess() }
