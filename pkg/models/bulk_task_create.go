@@ -53,5 +53,5 @@ func (btc *BulkTaskCreation) Create(s *xorm.Session, a web.Auth) (err error) {
 		t.Position = 0
 	}
 
-	return createTasks(s, btc.ProjectID, btc.Tasks, a, true, true)
+	return createTasks(s, btc.ProjectID, btc.Tasks, a, true, true, false)
 }

@@ -967,6 +967,10 @@ func CreateProject(s *xorm.Session, project *Project, auth web.Auth, createBackl
 	if err != nil {
 		return
 	}
+	_, err = s.Insert(&ProjectTaskCounter{ProjectID: project.ID})
+	if err != nil {
+		return
+	}
 
 	// Give the bot continued access to the project it created.
 	if doer.IsBot() {
@@ -1448,6 +1452,16 @@ func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	_, err = s.Where("project_id = ?", p.ID).Delete(&TeamProject{})
+	if err != nil {
+		return
+	}
+
+	_, err = s.Where("project_id = ?", p.ID).Delete(&TaskIndexAlias{})
+	if err != nil {
+		return
+	}
+
+	_, err = s.ID(p.ID).Delete(&ProjectTaskCounter{})
 	if err != nil {
 		return
 	}
