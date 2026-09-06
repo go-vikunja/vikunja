@@ -100,6 +100,7 @@ func init() {
 		"LogEventsLevel":                             reflect.ValueOf(config.LogEventsLevel),
 		"LogFormat":                                  reflect.ValueOf(config.LogFormat),
 		"LogHTTP":                                    reflect.ValueOf(config.LogHTTP),
+		"LogHTTPLevel":                               reflect.ValueOf(config.LogHTTPLevel),
 		"LogLevel":                                   reflect.ValueOf(config.LogLevel),
 		"LogMail":                                    reflect.ValueOf(config.LogMail),
 		"LogMailLevel":                               reflect.ValueOf(config.LogMailLevel),
