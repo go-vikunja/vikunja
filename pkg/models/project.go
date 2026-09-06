@@ -154,8 +154,7 @@ func (p *Project) AfterInsert() {
 }
 
 func (p *Project) AfterUpdate() {
-	// The bean carries neither the previous parent nor the previous owner, so either being set means everyone.
-	// Neither set means only columns the grants query does not read were touched.
+	// Hooks see the bean after commit, so it carries parent or owner exactly when that column is written: either means everyone, neither means nothing the grants query reads.
 	if p.ParentProjectID != nil || p.OwnerID != 0 {
 		invalidateAllProjectAccess()
 	}
@@ -606,7 +605,7 @@ func getAllProjectsForUser(s *xorm.Session, userID int64, opts *projectOptions) 
 	if err != nil {
 		return nil, 0, err
 	}
-	if len(access.permissions) == 0 {
+	if len(access.Permissions) == 0 {
 		return nil, 0, nil
 	}
 
