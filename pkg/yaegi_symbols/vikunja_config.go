@@ -118,6 +118,7 @@ func init() {
 		"MailerUsername":                             reflect.ValueOf(config.MailerUsername),
 		"MetricsEnabled":                             reflect.ValueOf(config.MetricsEnabled),
 		"MetricsPassword":                            reflect.ValueOf(config.MetricsPassword),
+		"MetricsPprof":                               reflect.ValueOf(config.MetricsPprof),
 		"MetricsUsername":                            reflect.ValueOf(config.MetricsUsername),
 		"MigrationClaimTimeout":                      reflect.ValueOf(config.MigrationClaimTimeout),
 		"MigrationMaxCSVRows":                        reflect.ValueOf(config.MigrationMaxCSVRows),
