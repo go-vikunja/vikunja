@@ -105,7 +105,6 @@ func Restore(table string, contents []map[string]interface{}) (err error) {
 		log.Fatalf("Could not find table definition for table %s", table)
 	}
 
-	// Deferred, not at the end: a restore that fails partway still replaced data behind the memos.
 	defer invalidateAllCaches()
 
 	for _, content := range contents {
