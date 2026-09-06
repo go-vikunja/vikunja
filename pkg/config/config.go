@@ -317,6 +317,15 @@ func (k Key) setDefault(i interface{}) {
 	viper.SetDefault(string(k), i)
 }
 
+// Per-category log levels fall back to log.level unless set explicitly.
+func applyDefaultLogLevels() {
+	for _, k := range []Key{LogDatabaseLevel, LogHTTPLevel, LogEventsLevel, LogMailLevel} {
+		if k.GetString() == "" {
+			k.Set(LogLevel.GetString())
+		}
+	}
+}
+
 // getRootpathLocation determines the default root path for Vikunja data.
 // It prefers the current working directory, which respects systemd's
 // WorkingDirectory= setting and is the most intuitive default.
@@ -452,14 +461,14 @@ func initDefaultConfig() {
 	LogLevel.setDefault("INFO")
 	LogFormat.setDefault("text")
 	LogDatabase.setDefault("off")
-	LogDatabaseLevel.setDefault("WARNING")
+	LogDatabaseLevel.setDefault("")
 	LogHTTP.setDefault("stdout")
-	LogHTTPLevel.setDefault("INFO")
+	LogHTTPLevel.setDefault("")
 	LogPath.setDefault(ResolvePath("logs"))
 	LogEvents.setDefault("off")
-	LogEventsLevel.setDefault("INFO")
+	LogEventsLevel.setDefault("")
 	LogMail.setDefault("off")
-	LogMailLevel.setDefault("INFO")
+	LogMailLevel.setDefault("")
 	// Rate Limit
 	RateLimitEnabled.setDefault(false)
 	RateLimitKind.setDefault("user")
@@ -764,6 +773,8 @@ func InitConfig() {
 	}
 
 	generateServiceSecretIfEmpty()
+
+	applyDefaultLogLevels()
 
 	if _, err := url.ParseRequestURI(AvatarGravatarBaseURL.GetString()); err != nil {
 		log.Fatalf("Could not parse gravatarbaseurl: %s", err)
