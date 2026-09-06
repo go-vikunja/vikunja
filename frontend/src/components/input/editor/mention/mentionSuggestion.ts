@@ -5,7 +5,7 @@ import MentionList from './MentionList.vue'
 import { getPopupContainer } from '../popupContainer'
 import { createSuggestionPopup, type SuggestionPopup } from '../suggestionPopup'
 import ProjectUserService from '@/services/projectUsers'
-import { fetchAvatarBlobUrl, getDisplayName } from '@/models/user'
+import { getDisplayName } from '@/models/user'
 import type { IUser } from '@/modelTypes/IUser'
 import type { MentionNodeAttrs } from '@tiptap/extension-mention'
 
@@ -13,7 +13,6 @@ interface MentionItem extends MentionNodeAttrs {
 	id: string
 	label: string
 	username: string
-	avatarUrl: string | undefined
 }
 
 async function searchUsersForProject(projectId: number, query: string): Promise<MentionItem[]> {
@@ -23,17 +22,11 @@ async function searchUsersForProject(projectId: number, query: string): Promise<
 	// @ts-expect-error - projectId is used for URL replacement but not part of IAbstract
 	const users = await projectUserService.getAll({ projectId }, { s: query }) as IUser[]
 
-	// Fetch avatar URLs for all users
-	const usersWithAvatars = await Promise.all(
-		users.map(async (user) => ({
-			id: user.username,
-			label: getDisplayName(user),
-			username: user.username,
-			avatarUrl: await fetchAvatarBlobUrl(user, 32),
-		})),
-	)
-
-	return usersWithAvatars
+	return users.map((user) => ({
+		id: user.username,
+		label: getDisplayName(user),
+		username: user.username,
+	}))
 }
 
 export default function mentionSuggestionSetup(projectId: number) {
