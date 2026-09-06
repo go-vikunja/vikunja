@@ -1016,3 +1016,73 @@ func TestCheckIsArchived(t *testing.T) {
 		require.NoError(t, err)
 	})
 }
+
+func TestGetProjectSimpleByIDMemo(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	t.Cleanup(func() { db.LoadAndAssertFixtures(t) })
+	s := db.NewSession()
+	defer s.Close()
+	require.NoError(t, s.Commit())
+
+	first, err := GetProjectSimpleByID(s, 1)
+	require.NoError(t, err)
+	assert.Equal(t, "Test1", first.Title)
+	first.Title = "mutated"
+
+	child, err := GetProjectSimpleByID(s, 12)
+	require.NoError(t, err)
+	require.NotNil(t, child.ParentProjectID)
+	assert.Equal(t, int64(27), *child.ParentProjectID)
+	*child.ParentProjectID = 999
+
+	childAgain, err := GetProjectSimpleByID(s, 12)
+	require.NoError(t, err)
+	require.NotNil(t, childAgain.ParentProjectID)
+	assert.Equal(t, int64(27), *childAgain.ParentProjectID)
+
+	updateTitleBehindTheBack(t, 1, &Project{Title: behindTheBackTitle})
+
+	second, err := GetProjectSimpleByID(s, 1)
+	require.NoError(t, err)
+	assert.Equal(t, "Test1", second.Title, "a re-read that reaches the db would see the other session's write")
+
+	_, err = s.ID(2).Cols("title").Update(&Project{Title: "any write invalidates the memo"})
+	require.NoError(t, err)
+
+	afterWrite, err := GetProjectSimpleByID(s, 1)
+	require.NoError(t, err)
+	assert.Equal(t, behindTheBackTitle, afterWrite.Title)
+}
+
+func TestGetProjectsMapByIDsMemo(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	t.Cleanup(func() { db.LoadAndAssertFixtures(t) })
+	s := db.NewSession()
+	defer s.Close()
+	require.NoError(t, s.Commit())
+
+	single, err := GetProjectSimpleByID(s, 1)
+	require.NoError(t, err)
+	assert.Equal(t, "Test1", single.Title)
+
+	updateTitleBehindTheBack(t, 1, &Project{Title: behindTheBackTitle})
+
+	projects, err := GetProjectsMapByIDs(s, []int64{1, 2})
+	require.NoError(t, err)
+	require.Len(t, projects, 2)
+	assert.Equal(t, "Test1", projects[1].Title, "id 1 is memoized, only id 2 may reach the db")
+	assert.Equal(t, "Test2", projects[2].Title)
+
+	projects[1].Title = "mutated"
+
+	again, err := GetProjectSimpleByID(s, 1)
+	require.NoError(t, err)
+	assert.Equal(t, "Test1", again.Title)
+
+	_, err = s.ID(2).Cols("title").Update(&Project{Title: "any write invalidates the memo"})
+	require.NoError(t, err)
+
+	afterWrite, err := GetProjectsMapByIDs(s, []int64{1})
+	require.NoError(t, err)
+	assert.Equal(t, behindTheBackTitle, afterWrite[1].Title)
+}

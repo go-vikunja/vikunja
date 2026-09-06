@@ -23,12 +23,27 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/i18n"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/user"
+
+	"github.com/stretchr/testify/require"
 )
+
+const behindTheBackTitle = "behind the back"
+
+// Writes through a second session; the caller must have committed, or the shared-cache lock blocks this.
+func updateTitleBehindTheBack(t *testing.T, id int64, bean any) {
+	s2 := db.NewSession()
+	defer s2.Close()
+
+	_, err := s2.ID(id).Cols("title").Update(bean)
+	require.NoError(t, err)
+	require.NoError(t, s2.Commit())
+}
 
 func setupTime() {
 	var err error
