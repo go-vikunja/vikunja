@@ -17,8 +17,10 @@
 package models
 
 import (
+	"fmt"
 	"sort"
 	"strconv"
+	"time"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
@@ -30,14 +32,15 @@ import (
 
 // projectAccess is every project a user can reach, with the effective permission.
 // Absent id = no access.
+// Shared across requests through the keyvalue store: never mutated after construction.
 type projectAccess struct {
-	userID      int64
-	permissions map[int64]Permission
-	sortedIDs   []int64
+	UserID      int64
+	Permissions map[int64]Permission
+	SortedIDs   []int64
 }
 
 func (pa *projectAccess) permission(projectID int64) (Permission, bool) {
-	p, has := pa.permissions[projectID]
+	p, has := pa.Permissions[projectID]
 	return p, has
 }
 
@@ -84,36 +87,60 @@ type projectAccessRow struct {
 	Permission int64 `xorm:"permission"`
 }
 
-// Resolves the whole reachable tree in one query, memoized per session.
+const (
+	projectAccessCacheTTL       = 30 * time.Second
+	projectAccessCacheKeyPrefix = "project-access-"
+)
+
+func projectAccessCacheKey(userID int64) string {
+	return projectAccessCacheKeyPrefix + strconv.FormatInt(userID, 10)
+}
+
+func invalidateProjectAccess(userID int64) {
+	// A bare-bean delete carries no user id.
+	if userID == 0 {
+		invalidateAllProjectAccess()
+		return
+	}
+	db.InvalidateShared(projectAccessCacheKey(userID))
+}
+
+func invalidateAllProjectAccess() {
+	db.InvalidateSharedPrefix(projectAccessCacheKeyPrefix)
+}
+
+// Resolves the whole reachable tree in one query, memoized per session and shared
+// across sessions until invalidated.
 func getProjectAccessForUser(s *xorm.Session, userID int64) (*projectAccess, error) {
-	cacheKey := "project-access-" + strconv.FormatInt(userID, 10)
-	if pa, has := db.GetCached[*projectAccess](s, cacheKey); has {
-		return pa, nil
-	}
-
-	rows := []*projectAccessRow{}
-	err := s.SQL(projectAccessQuery, userID, userID, userID).Find(&rows)
-	if err != nil {
-		return nil, err
-	}
-
-	pa := &projectAccess{
-		userID:      userID,
-		permissions: make(map[int64]Permission, len(rows)),
-		sortedIDs:   make([]int64, 0, len(rows)),
-	}
-	for _, r := range rows {
-		permission := Permission(r.Permission)
-		// A grant outside the enum (manual db edit, restored dump) is no grant at all.
-		if permission.isValid() != nil {
-			continue
+	pa, err := db.RememberShared(s, projectAccessCacheKey(userID), projectAccessCacheTTL, func() (projectAccess, error) {
+		rows := []*projectAccessRow{}
+		err := s.SQL(projectAccessQuery, userID, userID, userID).Find(&rows)
+		if err != nil {
+			return projectAccess{}, err
 		}
-		pa.permissions[r.ID] = permission
-		pa.sortedIDs = append(pa.sortedIDs, r.ID)
+
+		pa := projectAccess{
+			UserID:      userID,
+			Permissions: make(map[int64]Permission, len(rows)),
+			SortedIDs:   make([]int64, 0, len(rows)),
+		}
+		for _, r := range rows {
+			permission := Permission(r.Permission)
+			// A grant outside the enum (manual db edit, restored dump) is no grant at all.
+			if permission.isValid() != nil {
+				continue
+			}
+			pa.Permissions[r.ID] = permission
+			pa.SortedIDs = append(pa.SortedIDs, r.ID)
+		}
+		sort.Slice(pa.SortedIDs, func(i, j int) bool { return pa.SortedIDs[i] < pa.SortedIDs[j] })
+		return pa, nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("could not resolve project access for user %d: %w", userID, err)
 	}
-	sort.Slice(pa.sortedIDs, func(i, j int) bool { return pa.sortedIDs[i] < pa.sortedIDs[j] })
-	db.SetCached(s, cacheKey, pa)
-	return pa, nil
+
+	return &pa, nil
 }
 
 // Above this many ids the inlined list bloats the statement and defeats server-side
@@ -121,17 +148,17 @@ func getProjectAccessForUser(s *xorm.Session, userID int64) (*projectAccess, err
 const maxInListSize = 1000
 
 func (pa *projectAccess) cond(column string) builder.Cond {
-	if len(pa.sortedIDs) > maxInListSize {
+	if len(pa.SortedIDs) > maxInListSize {
 		return pa.condViaSubquery(column)
 	}
 	// The empty slice matters: an argument-less builder.In is dropped by Where and
 	// matches every row, while In with an empty slice renders as 0=1.
-	return builder.In(column, pa.sortedIDs)
+	return builder.In(column, pa.SortedIDs)
 }
 
 // Keeps the bind parameter count at three whatever the tree size.
 func (pa *projectAccess) condViaSubquery(column string) builder.Cond {
-	return builder.In(column, builder.Expr(projectAccessIDsQuery, pa.userID, pa.userID, pa.userID))
+	return builder.In(column, builder.Expr(projectAccessIDsQuery, pa.UserID, pa.UserID, pa.UserID))
 }
 
 // Includes projects inherited through a shared parent.

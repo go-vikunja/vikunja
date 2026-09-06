@@ -21,7 +21,12 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"sync/atomic"
+	"time"
 	"weak"
+
+	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
 
 	"xorm.io/xorm"
 	"xorm.io/xorm/contexts"
@@ -38,6 +43,7 @@ var sessionCacheCtxKey sessionCacheCtxKeyType
 type sessionCache struct {
 	mu     sync.Mutex
 	dirty  bool
+	epoch  int64
 	values map[string]any
 }
 
@@ -60,6 +66,12 @@ func (c *sessionCache) set(key string, value any) {
 	c.values[key] = value
 }
 
+func (c *sessionCache) isDirty() bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.dirty
+}
+
 func (c *sessionCache) markDirty() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -69,7 +81,7 @@ func (c *sessionCache) markDirty() {
 
 // Sessions created any other way never memoize.
 func attachSessionCache(s *xorm.Session) {
-	c := &sessionCache{values: map[string]any{}}
+	c := &sessionCache{values: map[string]any{}, epoch: sharedCacheEpoch.Load()}
 	key := weak.Make(s)
 	sessionCaches.Store(key, c)
 	runtime.AddCleanup(s, func(k weak.Pointer[xorm.Session]) { sessionCaches.Delete(k) }, key)
@@ -94,12 +106,16 @@ func cacheForSession(s *xorm.Session) (*sessionCache, bool) {
 	return c.(*sessionCache), true
 }
 
-// For writes that bypass xorm entirely, which writeInvalidationHook never sees.
-func invalidateAllSessionCaches() {
+// Bulk writes that bypass xorm (fixture loading, restore) fire no write hook.
+func invalidateAllCaches() {
 	sessionCaches.Range(func(_, v any) bool {
 		v.(*sessionCache).markDirty()
 		return true
 	})
+	sharedCacheEpoch.Add(1)
+	if err := keyvalue.DelPrefix(sharedCachePrefix); err != nil {
+		log.Errorf("could not drop shared cache: %s", err)
+	}
 }
 
 // GetCached returns a value memoized for the lifetime of s. It always misses
@@ -121,6 +137,68 @@ func GetCached[T any](s *xorm.Session, key string) (value T, found bool) {
 func SetCached[T any](s *xorm.Session, key string, value T) {
 	if c, ok := cacheForSession(s); ok {
 		c.set(key, value)
+	}
+}
+
+const sharedCachePrefix = "shared-cache-"
+
+// Bumped by every invalidation so a fill whose query predates a concurrent commit is dropped
+// instead of resurrecting the old value. Pinned at session start, as the transaction snapshot
+// can predate the query. Only covers this process; other replicas are bounded by the ttl.
+var sharedCacheEpoch atomic.Int64
+
+// RememberShared is GetCached/SetCached extended across sessions through the keyvalue store.
+// A session that has written bypasses the shared layer in both directions: its reads may see its own
+// uncommitted state.
+func RememberShared[T any](s *xorm.Session, key string, ttl time.Duration, fn func() (T, error)) (T, error) {
+	if v, has := GetCached[T](s, key); has {
+		return v, nil
+	}
+
+	c, ok := cacheForSession(s)
+	shareable := ok && !c.isDirty()
+	if shareable {
+		var v T
+		exists, err := keyvalue.GetWithValue(sharedCachePrefix+key, &v)
+		if err != nil {
+			log.Errorf("could not read shared cache entry %s: %s", key, err)
+		} else if exists {
+			SetCached(s, key, v)
+			return v, nil
+		}
+	}
+
+	v, err := fn()
+	if err != nil {
+		return v, err
+	}
+
+	SetCached(s, key, v)
+	if shareable && sharedCacheEpoch.Load() == c.epoch {
+		if err := keyvalue.PutWithTTL(sharedCachePrefix+key, v, ttl); err != nil {
+			log.Errorf("could not write shared cache entry %s: %s", key, err)
+		}
+		// An invalidation landing between the check and the put would otherwise be undone.
+		if sharedCacheEpoch.Load() != c.epoch {
+			if err := keyvalue.Del(sharedCachePrefix + key); err != nil {
+				log.Errorf("could not invalidate shared cache entry %s: %s", key, err)
+			}
+		}
+	}
+	return v, nil
+}
+
+func InvalidateShared(key string) {
+	sharedCacheEpoch.Add(1)
+	if err := keyvalue.Del(sharedCachePrefix + key); err != nil {
+		log.Errorf("could not invalidate shared cache entry %s: %s", key, err)
+	}
+}
+
+func InvalidateSharedPrefix(prefix string) {
+	sharedCacheEpoch.Add(1)
+	if err := keyvalue.DelPrefix(sharedCachePrefix + prefix); err != nil {
+		log.Errorf("could not invalidate shared cache entries with prefix %s: %s", prefix, err)
 	}
 }
 

@@ -740,7 +740,7 @@
                 {
                     "key": "type",
                     "default_value": "memory",
-                    "comment": "The type of the storage backend. Can be either \"memory\" or \"redis\". If \"redis\" is chosen it needs to be configured separately."
+                    "comment": "The type of the storage backend. Can be either \"memory\" or \"redis\". If \"redis\" is chosen it needs to be configured separately.\nWhen running more than one Vikunja instance, use \"redis\" so that caches, rate limits and permission changes are shared between instances; with \"memory\" a revoked permission can stay effective on other instances for up to 30 seconds."
                 }
             ]
         },

@@ -72,6 +72,8 @@ func (*Team) TableName() string {
 	return "teams"
 }
 
+func (t *Team) AfterDelete() { invalidateAllProjectAccess() }
+
 // TeamMember defines the relationship between a user and a team
 type TeamMember struct {
 	// The unique, numeric id of this team member relation.
@@ -96,6 +98,10 @@ type TeamMember struct {
 func (*TeamMember) TableName() string {
 	return "team_members"
 }
+
+func (tm *TeamMember) AfterInsert() { invalidateProjectAccess(tm.UserID) }
+func (tm *TeamMember) AfterUpdate() { invalidateProjectAccess(tm.UserID) }
+func (tm *TeamMember) AfterDelete() { invalidateProjectAccess(tm.UserID) }
 
 // TeamUser is the team member type
 type TeamUser struct {

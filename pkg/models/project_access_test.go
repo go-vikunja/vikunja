@@ -79,18 +79,46 @@ func TestGetProjectAccessForUser(t *testing.T) {
 		_, has := access.permission(6)
 		assert.False(t, has)
 	})
+}
 
-	t.Run("memoized per session", func(t *testing.T) {
-		again, err := getProjectAccessForUser(s, 1)
-		require.NoError(t, err)
-		assert.Same(t, access, again)
+func TestGetProjectAccessForUser_MemoizedPerSessionUntilInvalidated(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
 
-		other := db.NewSession()
-		defer other.Close()
-		fresh, err := getProjectAccessForUser(other, 1)
-		require.NoError(t, err)
-		assert.NotSame(t, access, fresh)
-	})
+	// Priming through a session that is closed again leaves the sessions below without
+	// read locks, which sqlite's shared cache would otherwise hold against the insert.
+	_, has := resolveAccess(t, 1).permission(2)
+	require.False(t, has)
+
+	memoized := db.NewSession()
+	defer memoized.Close()
+	access, err := getProjectAccessForUser(memoized, 1)
+	require.NoError(t, err)
+	_, has = access.permission(2)
+	require.False(t, has)
+
+	writer := db.NewSession()
+	_, err = writer.Insert(&ProjectUser{ProjectID: 2, UserID: 1, Permission: PermissionRead})
+	require.NoError(t, err)
+
+	uncommitted, err := getProjectAccessForUser(memoized, 1)
+	require.NoError(t, err)
+	_, has = uncommitted.permission(2)
+	assert.False(t, has)
+
+	_, has = resolveAccess(t, 1).permission(2)
+	assert.False(t, has)
+
+	require.NoError(t, writer.Commit())
+	writer.Close()
+
+	stale, err := getProjectAccessForUser(memoized, 1)
+	require.NoError(t, err)
+	_, has = stale.permission(2)
+	assert.False(t, has)
+
+	permission, has := resolveAccess(t, 1).permission(2)
+	require.True(t, has)
+	assert.Equal(t, PermissionRead, permission)
 }
 
 func TestGetProjectAccessForUser_GrantsAreGreatestOf(t *testing.T) {
@@ -187,7 +215,7 @@ func TestGetProjectAccessForUser_OutOfEnumGrantIsNoGrant(t *testing.T) {
 
 			_, has := access.permission(2)
 			assert.False(t, has)
-			assert.NotContains(t, access.sortedIDs, int64(2))
+			assert.NotContains(t, access.SortedIDs, int64(2))
 		})
 	}
 }
@@ -212,7 +240,7 @@ func TestProjectAccessCond(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("no access matches nothing", func(t *testing.T) {
-		empty := &projectAccess{userID: 1}
+		empty := &projectAccess{UserID: 1}
 		assert.Empty(t, projectIDsMatching(t, s, empty.cond("id")))
 	})
 

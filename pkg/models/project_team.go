@@ -54,6 +54,10 @@ func (*TeamProject) TableName() string {
 	return "team_projects"
 }
 
+func (tl *TeamProject) AfterInsert() { invalidateAllProjectAccess() }
+func (tl *TeamProject) AfterUpdate() { invalidateAllProjectAccess() }
+func (tl *TeamProject) AfterDelete() { invalidateAllProjectAccess() }
+
 // TeamWithPermission represents a team, combined with permissions.
 type TeamWithPermission struct {
 	Team       `xorm:"extends"`
@@ -131,7 +135,7 @@ func (tl *TeamProject) Create(s *xorm.Session, a web.Auth) (err error) {
 		Doer:    doerFromAuth(s, a),
 	})
 
-	err = updateProjectLastUpdated(s, l)
+	err = updateProjectLastUpdated(s, &Project{ID: l.ID})
 	return
 }
 

@@ -54,6 +54,10 @@ func (*ProjectUser) TableName() string {
 	return "users_projects"
 }
 
+func (lu *ProjectUser) AfterInsert() { invalidateProjectAccess(lu.UserID) }
+func (lu *ProjectUser) AfterUpdate() { invalidateProjectAccess(lu.UserID) }
+func (lu *ProjectUser) AfterDelete() { invalidateProjectAccess(lu.UserID) }
+
 // UserWithPermission represents a user in combination with the permission it can have on a project
 type UserWithPermission struct {
 	user.User  `xorm:"extends"`
@@ -121,7 +125,7 @@ func (lu *ProjectUser) Create(s *xorm.Session, a web.Auth) (err error) {
 		Doer:    doerFromAuth(s, a),
 	})
 
-	err = updateProjectLastUpdated(s, l)
+	err = updateProjectLastUpdated(s, &Project{ID: l.ID})
 	return
 }
 
