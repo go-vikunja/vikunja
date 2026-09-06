@@ -140,7 +140,7 @@ func NewEcho() *echo.Echo {
 
 	e.IPExtractor = newIPExtractor(config.ServiceIPExtractionMethod.GetString(), config.ServiceTrustedProxies.GetString())
 
-	e.Logger = log.NewEchoLogger(config.LogEnabled.GetBool(), config.LogHTTP.GetString(), config.LogFormat.GetString())
+	e.Logger = log.NewEchoLogger(config.LogEnabled.GetBool(), config.LogHTTP.GetString(), config.LogHTTPLevel.GetString(), config.LogFormat.GetString())
 
 	// First middleware in the chain so every request has an ID — reuses the
 	// X-Request-Id header from a proxy or generates one — and everything
@@ -149,7 +149,7 @@ func NewEcho() *echo.Echo {
 
 	// Logger
 	if config.LogEnabled.GetBool() && config.LogHTTP.GetString() != "off" {
-		httpLogger := log.NewHTTPLogger(config.LogEnabled.GetBool(), config.LogHTTP.GetString(), config.LogFormat.GetString())
+		httpLogger := log.NewHTTPLogger(config.LogEnabled.GetBool(), config.LogHTTP.GetString(), config.LogHTTPLevel.GetString(), config.LogFormat.GetString())
 		e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
 			LogStatus:    true,
 			LogURI:       true,
@@ -159,26 +159,18 @@ func NewEcho() *echo.Echo {
 			LogUserAgent: true,
 			HandleError:  true,
 			LogValuesFunc: func(_ *echo.Context, v middleware.RequestLoggerValues) error {
-				if v.Error == nil {
-					httpLogger.LogAttrs(context.Background(), slog.LevelInfo, "",
-						slog.String("remote_ip", v.RemoteIP),
-						slog.String("method", v.Method),
-						slog.String("uri", v.URI),
-						slog.Int("status", v.Status),
-						slog.Duration("latency", v.Latency),
-						slog.String("user_agent", v.UserAgent),
-					)
-				} else {
-					httpLogger.LogAttrs(context.Background(), slog.LevelError, "",
-						slog.String("remote_ip", v.RemoteIP),
-						slog.String("method", v.Method),
-						slog.String("uri", v.URI),
-						slog.Int("status", v.Status),
-						slog.Duration("latency", v.Latency),
-						slog.String("user_agent", v.UserAgent),
-						slog.String("err", v.Error.Error()),
-					)
+				attrs := []slog.Attr{
+					slog.String("remote_ip", v.RemoteIP),
+					slog.String("method", v.Method),
+					slog.String("uri", v.URI),
+					slog.Int("status", v.Status),
+					slog.Duration("latency", v.Latency),
+					slog.String("user_agent", v.UserAgent),
 				}
+				if v.Error != nil {
+					attrs = append(attrs, slog.String("err", v.Error.Error()))
+				}
+				httpLogger.LogAttrs(context.Background(), httpLogLevel(v.Status), "", attrs...)
 				return nil
 			},
 		}))
@@ -1066,4 +1058,17 @@ func registerCalDavRoutes(c *echo.Group) {
 	c.Any("/projects/:project", caldav.ProjectHandler)
 	c.Any("/projects/:project/", caldav.ProjectHandler)
 	c.Any("/projects/:project/:task", caldav.TaskHandler) // Mostly used for editing
+}
+
+// Level by status so log.httplevel can filter successful requests out
+// while keeping failed ones.
+func httpLogLevel(status int) slog.Level {
+	switch {
+	case status >= 500:
+		return slog.LevelError
+	case status >= 400:
+		return slog.LevelWarn
+	default:
+		return slog.LevelInfo
+	}
 }

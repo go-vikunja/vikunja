@@ -93,8 +93,8 @@ func createHandler(writer io.Writer, level slog.Level, format string) slog.Handl
 }
 
 // NewHTTPLogger creates and initializes a new HTTP logger
-func NewHTTPLogger(enabled bool, output string, format string) *slog.Logger {
-	handler := makeLogHandler(enabled, output, "http", "DEBUG", format)
+func NewHTTPLogger(enabled bool, output string, level string, format string) *slog.Logger {
+	handler := makeLogHandler(enabled, output, "http", level, format)
 
 	return slog.New(handler).With("component", "http")
 }

@@ -426,6 +426,11 @@
                     "comment": "Whether to log http requests or not. Possible values are stdout, stderr, file or off to disable http logging."
                 },
                 {
+                    "key": "httplevel",
+                    "default_value": "INFO",
+                    "comment": "The log level for http request log messages. Requests are logged at INFO, requests failing with a 4xx status at WARNING and requests failing with a 5xx status at ERROR. Possible values (case-insensitive) are CRITICAL, ERROR, WARNING, NOTICE, INFO, DEBUG."
+                },
+                {
                     "key": "events",
                     "default_value": "off",
                     "comment": "Whether or not to log events. Useful for debugging. Possible values are stdout, stderr, file or off to disable events logging."
