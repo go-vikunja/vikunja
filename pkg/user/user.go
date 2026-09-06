@@ -116,8 +116,7 @@ type User struct {
 	DefaultProjectID             int64  `xorm:"bigint null index" json:"-"`
 	// BotOwnerID is the ID of the owning (human) user if this user is a bot.
 	// A non-zero value means this user is a bot and cannot authenticate via password.
-	BotOwnerID int64 `xorm:"bigint null index" json:"bot_owner_id,omitempty" readOnly:"true" doc:"The id of the owning (human) user. Set by the server on creation; a non-zero value means this user is a bot."`
-	// IsInstanceBot marks a bot owned by the instance itself, not by a user. Only the CLI creates these.
+	BotOwnerID    int64  `xorm:"bigint null index" json:"bot_owner_id,omitempty" readOnly:"true" doc:"The id of the owning (human) user. Set by the server on creation; a non-zero value means this user is a bot."`
 	IsInstanceBot bool   `xorm:"not null default false" json:"is_instance_bot,omitempty" readOnly:"true" doc:"True for bots owned by the instance instead of a user. Created via the CLI only."`
 	WeekStart     int    `xorm:"null" json:"-"`
 	Language      string `xorm:"varchar(50) null" json:"-" valid:"language"`
