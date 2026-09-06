@@ -253,7 +253,6 @@ func (t *APIToken) HasFeedsAccess() bool {
 	return slices.Contains(perms, "access")
 }
 
-// Skips the ~3 ms PBKDF2 on repeat requests; the row is still loaded from the db so revocation applies immediately.
 const verifiedAPITokenTTL = 10 * time.Minute
 
 type verifiedAPIToken struct {
@@ -277,6 +276,37 @@ func verifiedAPITokenTag(token, hash string) string {
 	return serviceHMAC(token + "|" + hash)
 }
 
+// Skips the ~3 ms PBKDF2 on repeat requests; the row is still loaded from the db so revocation applies immediately.
+func cachedAPIToken(s *xorm.Session, token, cacheKey string) (*APIToken, error) {
+	var v verifiedAPIToken
+	// keyvalue errors count as a cache miss: a flaky backend should cost a PBKDF2 round, never an auth failure.
+	cached, err := keyvalue.GetWithValue(cacheKey, &v)
+	if err != nil {
+		log.Debugf("Could not read verified api token from keyvalue store: %s", err)
+		return nil, nil
+	}
+	if !cached {
+		return nil, nil
+	}
+
+	if hmac.Equal([]byte(v.Tag), []byte(verifiedAPITokenTag(token, v.Hash))) {
+		t := &APIToken{}
+		exists, err := s.Where("token_hash = ?", v.Hash).Get(t)
+		if err != nil {
+			return nil, err
+		}
+		if exists {
+			return t, nil
+		}
+	}
+
+	if err := keyvalue.Del(cacheKey); err != nil {
+		log.Debugf("Could not delete stale verified api token from keyvalue store: %s", err)
+	}
+
+	return nil, nil
+}
+
 // GetTokenFromTokenString returns the full token object from the original token string.
 func GetTokenFromTokenString(s *xorm.Session, token string) (apiToken *APIToken, err error) {
 	// The slice below would panic on a short string. Real tokens are prefix + 40
@@ -286,27 +316,12 @@ func GetTokenFromTokenString(s *xorm.Session, token string) (apiToken *APIToken,
 	}
 
 	cacheKey := verifiedAPITokenKey(token)
-	var v verifiedAPIToken
-	// keyvalue errors count as a cache miss: a flaky backend should cost a PBKDF2 round, never an auth failure.
-	cached, kvErr := keyvalue.GetWithValue(cacheKey, &v)
-	if kvErr != nil {
-		log.Debugf("Could not read verified api token from keyvalue store: %s", kvErr)
-		cached = false
+	cached, err := cachedAPIToken(s, token, cacheKey)
+	if err != nil {
+		return nil, err
 	}
-	if cached {
-		if hmac.Equal([]byte(v.Tag), []byte(verifiedAPITokenTag(token, v.Hash))) {
-			t := &APIToken{}
-			exists, err := s.Where("token_hash = ?", v.Hash).Get(t)
-			if err != nil {
-				return nil, err
-			}
-			if exists {
-				return t, nil
-			}
-		}
-		if err := keyvalue.Del(cacheKey); err != nil {
-			log.Debugf("Could not delete stale verified api token from keyvalue store: %s", err)
-		}
+	if cached != nil {
+		return cached, nil
 	}
 
 	lastEight := token[len(token)-8:]
