@@ -69,6 +69,7 @@ const (
 	ServiceCustomLogoURL                  Key = `service.customlogourl`
 	ServiceCustomLogoURLDark              Key = `service.customlogourldark`
 	ServiceEnablePublicTeams              Key = `service.enablepublicteams`
+	ServiceUpgradeURL                     Key = `service.upgradeurl`
 	ServiceBcryptRounds                   Key = `service.bcryptrounds`
 	ServiceEnableOpenIDTeamUserOnlySearch Key = `service.enableopenidteamusersearch`
 	ServiceIPExtractionMethod             Key = `service.ipextractionmethod`
@@ -395,6 +396,7 @@ func initDefaultConfig() {
 	ServiceMaxAvatarSize.setDefault(1024)
 	ServiceDemoMode.setDefault(false)
 	ServiceEnablePublicTeams.setDefault(false)
+	ServiceUpgradeURL.setDefault("")
 	ServiceBcryptRounds.setDefault(11)
 	ServiceEnableOpenIDTeamUserOnlySearch.setDefault(false)
 	ServiceIPExtractionMethod.setDefault("direct")

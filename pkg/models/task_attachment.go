@@ -62,6 +62,21 @@ func (*TaskAttachment) TableName() string {
 
 // NewAttachment creates a new task attachment
 func (ta *TaskAttachment) NewAttachment(s *xorm.Session, f io.ReadSeeker, realname string, realsize uint64, a web.Auth) error {
+	task, err := GetTaskByIDSimple(s, ta.TaskID)
+	if err != nil {
+		return err
+	}
+	project, err := GetProjectSimpleByID(s, task.ProjectID)
+	if err != nil {
+		return err
+	}
+	size, err := files.MeasureReaderSize(f)
+	if err != nil {
+		return err
+	}
+	if err := CheckStorageLimit(s, project.OwnerID, int64(size)); err != nil { //nolint:gosec // measured size of a file that fits in memory or on disk
+		return err
+	}
 
 	// Store the file using the existing session to avoid nested transactions
 	file, err := files.CreateWithSession(s, f, realname, realsize, a)
@@ -92,11 +107,6 @@ func (ta *TaskAttachment) NewAttachment(s *xorm.Session, f io.ReadSeeker, realna
 		if err2 := file.Delete(s); err2 != nil {
 			return err2
 		}
-		return err
-	}
-
-	task, err := GetTaskByIDSimple(s, ta.TaskID)
-	if err != nil {
 		return err
 	}
 

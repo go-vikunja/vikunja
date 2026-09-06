@@ -22,6 +22,7 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/entitlement"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/log"
@@ -268,6 +269,7 @@ func schemaBeans() []interface{} {
 	schemeBeans = append(schemeBeans, models.GetTables()...)
 	schemeBeans = append(schemeBeans, files.GetTables()...)
 	schemeBeans = append(schemeBeans, license.GetTables()...) // See the package comment in pkg/license/license.go before removing.
+	schemeBeans = append(schemeBeans, entitlement.GetTables()...)
 	schemeBeans = append(schemeBeans, migration.GetTables()...)
 	schemeBeans = append(schemeBeans, user.GetTables()...)
 	schemeBeans = append(schemeBeans, notifications.GetTables()...)

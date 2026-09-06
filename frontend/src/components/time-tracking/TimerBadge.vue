@@ -24,15 +24,15 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, onMounted, onUnmounted} from 'vue'
+import {ref, computed, onMounted, onUnmounted, watch} from 'vue'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import {useTimeTrackingStore} from '@/stores/timeTracking'
-import {useConfigStore} from '@/stores/config'
-import {PRO_FEATURE} from '@/constants/proFeatures'
+import {useAuthStore} from '@/stores/auth'
+import {ENTITLEMENT} from '@/constants/entitlements'
 
 const timeTrackingStore = useTimeTrackingStore()
-const configStore = useConfigStore()
+const authStore = useAuthStore()
 
 const now = ref(new Date())
 let interval: ReturnType<typeof setInterval> | undefined
@@ -65,11 +65,18 @@ async function stop() {
 onMounted(() => {
 	// The badge lives in the always-mounted header, so it owns the app-wide timer
 	// sync. Subscribing is harmless when the feature is off (no events are emitted);
-	// only the hydrate hits the gated endpoint, so guard that.
+	// only the hydrate hits the gated endpoint, so guard that. Entitlements arrive
+	// with /user, possibly after mount, hence the watch.
 	timeTrackingStore.subscribeToTimerEvents()
-	if (configStore.isProFeatureEnabled(PRO_FEATURE.TIME_TRACKING)) {
-		timeTrackingStore.hydrateActiveTimer()
-	}
+	watch(
+		() => authStore.hasEntitlement(ENTITLEMENT.TIME_TRACKING),
+		(enabled) => {
+			if (enabled) {
+				timeTrackingStore.hydrateActiveTimer()
+			}
+		},
+		{immediate: true},
+	)
 	interval = setInterval(() => {
 		now.value = new Date()
 	}, 1000)

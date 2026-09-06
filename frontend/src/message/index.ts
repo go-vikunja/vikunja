@@ -1,6 +1,9 @@
 import {i18n} from '@/i18n'
 import {notify} from '@kyvg/vue3-notification'
 
+import {ERROR_CODE_FEATURE_DISABLED_FOR_USER, ERROR_CODE_LIMIT_REACHED} from '@/constants/entitlements'
+import {useConfigStore} from '@/stores/config'
+
 export function getErrorText(r): string {
 	const data = r?.reason?.response?.data || r?.response?.data || r
 
@@ -37,6 +40,23 @@ export interface Action {
 	callback: () => void,
 }
 
+// Empty when the instance has no upgrade url, so self-hosted users never see a prompt.
+export function upgradeActions(): Action[] {
+	const upgradeUrl = useConfigStore().upgradeUrl
+	if (!upgradeUrl) {
+		return []
+	}
+	return [{
+		title: i18n.global.t('entitlement.upgrade'),
+		callback: () => window.open(upgradeUrl, '_blank', 'noopener'),
+	}]
+}
+
+function isEntitlementError(e): boolean {
+	const code = (e?.reason?.response?.data || e?.response?.data || e)?.code
+	return code === ERROR_CODE_LIMIT_REACHED || code === ERROR_CODE_FEATURE_DISABLED_FOR_USER
+}
+
 export function error(e, actions: Action[] = []) {
 	notify({
 		type: 'error',
@@ -44,7 +64,7 @@ export function error(e, actions: Action[] = []) {
 		text: getErrorText(e),
 		ignoreDuplicates: true,
 		data: {
-			actions: actions,
+			actions: isEntitlementError(e) ? [...actions, ...upgradeActions()] : actions,
 		},
 	})
 }

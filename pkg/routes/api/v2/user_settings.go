@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/entitlement"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/routes/api/shared"
 	"code.vikunja.io/api/pkg/user"
@@ -35,12 +36,14 @@ import (
 // computed account facts v1 returned alongside the user object.
 type userInfoBody struct {
 	user.User
-	Settings            *models.UserGeneralSettings `json:"settings" readOnly:"true" doc:"The current user's settings."`
-	DeletionScheduledAt time.Time                   `json:"deletion_scheduled_at" readOnly:"true" doc:"When the account is scheduled for deletion, if a deletion was requested."`
-	IsLocalUser         bool                        `json:"is_local_user" readOnly:"true" doc:"True if the user authenticates locally (not via LDAP or OpenID)."`
-	AuthProvider        string                      `json:"auth_provider" readOnly:"true" doc:"The name of the source the user authenticated with: 'local', 'ldap', or the configured OpenID provider name."`
-	IsAdmin             bool                        `json:"is_admin" readOnly:"true" doc:"True if the user is an instance administrator."`
-	PendingEmail        string                      `json:"pending_email,omitempty" readOnly:"true" doc:"A new email address waiting for confirmation, if the user requested a change. Empty otherwise."`
+	Settings            *models.UserGeneralSettings   `json:"settings" readOnly:"true" doc:"The current user's settings."`
+	DeletionScheduledAt time.Time                     `json:"deletion_scheduled_at" readOnly:"true" doc:"When the account is scheduled for deletion, if a deletion was requested."`
+	IsLocalUser         bool                          `json:"is_local_user" readOnly:"true" doc:"True if the user authenticates locally (not via LDAP or OpenID)."`
+	AuthProvider        string                        `json:"auth_provider" readOnly:"true" doc:"The name of the source the user authenticated with: 'local', 'ldap', or the configured OpenID provider name."`
+	IsAdmin             bool                          `json:"is_admin" readOnly:"true" doc:"True if the user is an instance administrator."`
+	PendingEmail        string                        `json:"pending_email,omitempty" readOnly:"true" doc:"A new email address waiting for confirmation, if the user requested a change. Empty otherwise."`
+	Entitlements        map[entitlement.Feature]int64 `json:"entitlements" readOnly:"true" doc:"Resolved feature access for this user (instance license combined with the user's plan). Flags (admin_panel, audit_logs, time_tracking, team_creation) are always present as 0/1. Limits (max_projects, max_storage_bytes) are present only when the user is limited."`
+	Usage               map[entitlement.Feature]int64 `json:"usage" readOnly:"true" doc:"Current usage behind each limit, keyed like entitlements: owned projects for max_projects, stored bytes for max_storage_bytes."`
 }
 
 // userAvatarProviderBody is the get/set body for the user's avatar provider.
@@ -176,6 +179,18 @@ func userShow(ctx context.Context, _ *struct{}) (*singleBody[userInfoBody], erro
 	// nolint:contextcheck // openid.GetAllProviders/Issuer (called via shared) take
 	// no context; threading one would change those signatures across both APIs.
 	info.AuthProvider, err = shared.GetAuthProviderName(u)
+	if err != nil {
+		return nil, translateDomainError(err)
+	}
+
+	// Bots report their owner's plan; link shares (negative id) have no rows and
+	// get the license-only view.
+	subject, _ := entitlement.SubjectID(u)
+	info.Entitlements, err = entitlement.ForUser(s, subject)
+	if err != nil {
+		return nil, translateDomainError(err)
+	}
+	info.Usage, err = models.EntitlementUsage(s, subject)
 	if err != nil {
 		return nil, translateDomainError(err)
 	}
