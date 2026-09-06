@@ -18,7 +18,6 @@ package db
 
 import (
 	"context"
-	"regexp"
 	"runtime"
 	"strings"
 	"sync"
@@ -161,10 +160,42 @@ func (writeInvalidationHook) BeforeProcess(c *contexts.ContextHook) (context.Con
 
 func (writeInvalidationHook) AfterProcess(*contexts.ContextHook) error { return nil }
 
-// A WITH statement can modify data, so one naming a write verb counts as a write.
-var writeVerbInCTE = regexp.MustCompile(`(?i)\b(insert|update|delete|merge|replace|create|drop|alter|truncate)\b`)
+func isWordByte(b byte) bool {
+	return b >= 'a' && b <= 'z' || b >= 'A' && b <= 'Z' || b >= '0' && b <= '9' || b == '_'
+}
 
-// The hook sees every statement, so the common case is a plain byte scan; only WITH needs the regexp.
+func isWriteVerb(word string) bool {
+	if len(word) < 4 || len(word) > 8 {
+		return false
+	}
+	switch strings.ToLower(word) {
+	case "insert", "update", "delete", "merge", "replace", "create", "drop", "alter", "truncate":
+		return true
+	}
+	return false
+}
+
+// A WITH statement can modify data, so one naming a write verb as a whole word counts as a write.
+// The CTE texts are kilobytes and every execution passes through here, so a word scan, not a regexp.
+func containsWriteVerb(sqlStr string) bool {
+	for i := 0; i < len(sqlStr); {
+		if !isWordByte(sqlStr[i]) {
+			i++
+			continue
+		}
+		j := i + 1
+		for j < len(sqlStr) && isWordByte(sqlStr[j]) {
+			j++
+		}
+		if isWriteVerb(sqlStr[i:j]) {
+			return true
+		}
+		i = j
+	}
+	return false
+}
+
+// The hook sees every statement, so it has to be a plain byte scan.
 func leadingKeyword(sqlStr string) string {
 	i := 0
 	for i < len(sqlStr) {
@@ -193,7 +224,7 @@ func isWriteStatement(sqlStr string) bool {
 		"begin", "commit", "rollback", "savepoint", "release", "prepare", "deallocate":
 		return false
 	case "with":
-		return writeVerbInCTE.MatchString(sqlStr)
+		return containsWriteVerb(sqlStr)
 	}
 	return true
 }
