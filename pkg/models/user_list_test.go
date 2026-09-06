@@ -58,7 +58,7 @@ func TestListUsers(t *testing.T) {
 
 		all, err := user.ListAllUsers(s)
 		require.NoError(t, err)
-		assert.Len(t, all, 25)
+		assert.Len(t, all, 26)
 	})
 	t.Run("no search term", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -291,6 +291,17 @@ func TestListUsers(t *testing.T) {
 		for _, u := range all {
 			assert.NotEqual(t, int64(23), u.ID, "owner A's bot must not leak to owner B")
 			assert.NotEqual(t, int64(24), u.ID, "owner B's bot must not appear when the query does not match it")
+		}
+	})
+	t.Run("instance bot never returned", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		all, err := user.ListUsers(s, "bot-instance-provisioner", &user.User{ID: 1}, nil)
+		require.NoError(t, err)
+		for _, u := range all {
+			assert.NotEqual(t, int64(26), u.ID, "the instance bot must not be discoverable")
 		}
 	})
 	t.Run("own bot returned by username match", func(t *testing.T) {

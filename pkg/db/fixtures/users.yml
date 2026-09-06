@@ -233,3 +233,14 @@
   bot_owner_id: 21
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
+# Instance-owned admin bot: no owner, is_admin so the admin gate lets it
+# through, only ever reachable via its API token (26 → api_tokens 10).
+- id: 26
+  username: 'bot-instance-provisioner'
+  name: 'Instance Provisioner'
+  issuer: local
+  bot_owner_id: 0
+  is_instance_bot: true
+  is_admin: true
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12

@@ -95,3 +95,11 @@
   owner_id: 1
   created: 2024-01-01 00:00:00
   # token in plaintext is tk_readonly_tasks_user1_00000000abcd1234
+- id: 10
+  title: 'instance bot admin token'
+  token_sha256: 56de3f0d624bfa33c6f91a5121bdb5048e430c2d6e9448ee01bdfb1e1b41396e
+  permissions: '{"admin":["users_list"]}'
+  expires_at: 2099-01-01 00:00:00
+  owner_id: 26
+  created: 2024-01-01 00:00:00
+  # token in plaintext is tk_instance_bot_admin_token_00000000inst0026
