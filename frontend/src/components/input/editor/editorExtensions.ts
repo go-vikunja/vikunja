@@ -3,7 +3,7 @@ import {nextTick, toValue, type MaybeRefOrGetter, type Ref} from 'vue'
 import StarterKit from '@tiptap/starter-kit'
 import {createNodeFromContent, Extension, mergeAttributes, type Editor, type Extensions} from '@tiptap/core'
 import {Plugin, PluginKey} from '@tiptap/pm/state'
-import {Fragment, type Node as ProseMirrorNode} from '@tiptap/pm/model'
+import {Fragment} from '@tiptap/pm/model'
 import {marked} from 'marked'
 
 import Link from '@tiptap/extension-link'
@@ -23,6 +23,7 @@ import {ListKeymapWithJoin} from './listKeymapWithJoin'
 import {DeleteSelectionBeforeEnter} from './deleteSelectionBeforeEnter'
 import {BlockquoteWithCommentId} from './blockquoteWithCommentId'
 import {TaskLink, LINK_HTML_ATTRIBUTES} from './taskLink'
+import {createClipboardParser, fillRequiredContent, repairSliceContent} from './contentRepair'
 
 import Commands from './commands'
 import suggestionSetup from './suggestion'
@@ -69,29 +70,6 @@ const CustomTableCell = TableCell.extend({
 		}
 	},
 })
-
-// ProseMirror's html parser happily builds nodes the schema rejects: markdown like
-// "- " or a list item starting with a nested list parses to a listItem without the
-// leading paragraph it requires, which makes insertContent throw a RangeError.
-function fillRequiredContent(fragment: Fragment): Fragment {
-	const children: ProseMirrorNode[] = []
-	fragment.forEach(child => children.push(fillRequiredNodeContent(child)))
-	return Fragment.fromArray(children)
-}
-
-function fillRequiredNodeContent(node: ProseMirrorNode): ProseMirrorNode {
-	if (node.isLeaf) {
-		return node
-	}
-
-	const content = fillRequiredContent(node.content)
-	if (node.type.validContent(content)) {
-		return node.copy(content)
-	}
-
-	const missing = node.type.contentMatch.fillBefore(content, true)
-	return node.copy(missing ? missing.append(content) : content)
-}
 
 // prevent links from extending after space
 const NonInclusiveLink = Link.extend({
@@ -192,6 +170,9 @@ export function createEditorExtensions(deps: EditorExtensionDeps): Extensions {
 				new Plugin({
 					key: new PluginKey('pasteHandler'),
 					props: {
+						clipboardParser: createClipboardParser(this.editor.schema),
+						transformPasted: slice => repairSliceContent(slice),
+
 						handlePaste: (view, event) => {
 
 							// Handle images pasted from clipboard
