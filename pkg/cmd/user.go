@@ -106,6 +106,9 @@ func setUserAdmin(s *xorm.Session, identifier string, value bool) error {
 	if err != nil && !user.IsErrUserStatusError(err) {
 		return err
 	}
+	if u.IsInstanceBot {
+		return &models.ErrInstanceBotCannotBeModified{UserID: u.ID}
+	}
 	if !value {
 		if err := user.GuardLastAdmin(s, u); err != nil {
 			return err

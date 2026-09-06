@@ -186,3 +186,13 @@ func TestParseBotScopes(t *testing.T) {
 	_, err = parseBotScopes("", "nope")
 	require.ErrorContains(t, err, "unknown preset")
 }
+
+func TestSetUserAdmin_RefusesInstanceBot(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	err := setUserAdmin(s, "bot-instance-provisioner", false)
+	require.Error(t, err)
+	assert.True(t, models.IsErrInstanceBotCannotBeModified(err))
+}
