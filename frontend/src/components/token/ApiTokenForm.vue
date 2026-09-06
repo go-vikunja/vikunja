@@ -237,6 +237,13 @@ function formatPermissionTitle(title: string): string {
 	return title.replaceAll('_', ' ')
 }
 
+// Root-equivalent: either lets the token take over any admin account
+const ESCALATING_ADMIN_PERMISSIONS = new Set(['users_set_password', 'users_set_admin'])
+
+function isEscalatingPermission(group: string, permission: string): boolean {
+	return group === 'admin' && ESCALATING_ADMIN_PERMISSIONS.has(permission)
+}
+
 async function createToken() {
 	newTokenTitleValid.value = newToken.value.title.trim() !== ''
 	if (!newTokenTitleValid.value) {
@@ -399,7 +406,13 @@ async function createToken() {
 					>
 						{{ formatPermissionTitle(permission) }}
 					</FancyCheckbox>
-					<br>
+					<p
+						v-if="isEscalatingPermission(group, permission)"
+						class="help is-danger mis-4"
+					>
+						{{ $t('user.settings.apiTokens.escalationWarning') }}
+					</p>
+					<br v-else>
 				</template>
 			</div>
 		</div>
