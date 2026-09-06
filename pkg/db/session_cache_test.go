@@ -18,8 +18,14 @@ package db
 
 import (
 	"testing"
+	"time"
+
+	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"xorm.io/xorm"
 )
 
 func TestIsWriteStatement(t *testing.T) {
@@ -43,4 +49,92 @@ func TestIsWriteStatement(t *testing.T) {
 	for sqlStr, want := range tests {
 		assert.Equal(t, want, isWriteStatement(sqlStr), sqlStr)
 	}
+}
+
+func TestRememberShared(t *testing.T) {
+	config.InitDefaultConfig()
+	engine, err := CreateTestEngine()
+	require.NoError(t, err)
+	require.NoError(t, engine.Sync(&dumpRestoreTest{}))
+
+	newSession := func(t *testing.T) *xorm.Session {
+		s := NewSession()
+		t.Cleanup(func() { _ = s.Close() })
+		return s
+	}
+
+	t.Run("fills and serves across sessions", func(t *testing.T) {
+		key := "remember-shared-fill"
+		InvalidateShared(key)
+
+		calls := 0
+		fn := func() (int, error) {
+			calls++
+			return 42, nil
+		}
+
+		v, err := RememberShared(newSession(t), key, time.Minute, fn)
+		require.NoError(t, err)
+		assert.Equal(t, 42, v)
+		assert.Equal(t, 1, calls)
+
+		v, err = RememberShared(newSession(t), key, time.Minute, fn)
+		require.NoError(t, err)
+		assert.Equal(t, 42, v)
+		assert.Equal(t, 1, calls)
+	})
+
+	t.Run("an invalidation during the query drops the fill", func(t *testing.T) {
+		key := "remember-shared-race"
+		InvalidateShared(key)
+
+		calls := 0
+		fn := func() (int, error) {
+			calls++
+			InvalidateShared(key)
+			return 1, nil
+		}
+
+		v, err := RememberShared(newSession(t), key, time.Minute, fn)
+		require.NoError(t, err)
+		assert.Equal(t, 1, v)
+
+		_, exists, err := keyvalue.Get(sharedCachePrefix + key)
+		require.NoError(t, err)
+		assert.False(t, exists, "the fill must not resurrect the invalidated entry")
+
+		_, err = RememberShared(newSession(t), key, time.Minute, fn)
+		require.NoError(t, err)
+		assert.Equal(t, 2, calls)
+	})
+
+	t.Run("a session that has written neither serves nor fills", func(t *testing.T) {
+		key := "remember-shared-written"
+		InvalidateShared(key)
+
+		calls := 0
+		fn := func() (int, error) {
+			calls++
+			return calls, nil
+		}
+
+		_, err := RememberShared(newSession(t), key, time.Minute, fn)
+		require.NoError(t, err)
+		require.Equal(t, 1, calls)
+
+		written := newSession(t)
+		_, err = written.Insert(&dumpRestoreTest{Title: "dirty", Created: time.Now()})
+		require.NoError(t, err)
+
+		v, err := RememberShared(written, key, time.Minute, fn)
+		require.NoError(t, err)
+		assert.Equal(t, 2, v)
+		assert.Equal(t, 2, calls)
+
+		var shared int
+		exists, err := keyvalue.GetWithValue(sharedCachePrefix+key, &shared)
+		require.NoError(t, err)
+		require.True(t, exists)
+		assert.Equal(t, 1, shared, "a written session must not overwrite the shared entry")
+	})
 }
