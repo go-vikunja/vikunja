@@ -17,6 +17,7 @@
 package models
 
 import (
+	"net/http"
 	"net/http/httptest"
 	"testing"
 
@@ -226,11 +227,9 @@ func TestGetAPITokenRoutes_ExposesV2Only(t *testing.T) {
 // inside always-available groups (tasks.time_entries) — while validation and
 // authorisation of existing tokens stay unfiltered.
 func TestGetAPITokenRoutes_LicenseFilter(t *testing.T) {
-	apiTokenRoutes = make(map[string]APITokenRoute)
-	apiTokenRoutesV2 = make(map[string]APITokenRoute)
+	resetAPITokenRoutes()
 
 	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v1/labels"}, true)
-	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v1/admin/users"}, true)
 	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v2/tasks"}, true)
 	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v2/time-entries"}, true)
 	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v2/tasks/:task_id/time-entries"}, true)
@@ -551,5 +550,69 @@ func TestCanDoAPIRoute_ExpandScopes(t *testing.T) {
 		projectsToken := &APIToken{APIPermissions: APIPermissions{"projects": []string{"read_all"}}}
 		assert.True(t, do(t, "/api/v1/projects?expand=comments", projectsToken),
 			"expand on a route which does not consume it must not require any scope")
+	})
+}
+
+// TestAdminTokenScopes covers the hand-named admin scopes: /routes lists only
+// the new names, each name authorises its v1 and v2 route, and an admin-only
+// token stays out of everything else.
+func TestAdminTokenScopes(t *testing.T) {
+	resetAPITokenRoutes()
+	license.SetForTests([]license.Feature{license.FeatureAdminPanel})
+	defer license.ResetForTests()
+
+	// Derived collection must not reintroduce the old keys.
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v1/admin/users"}, true)
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "POST", Path: "/api/v2/admin/users"}, true)
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "PATCH", Path: "/api/v2/admin/users/:id/admin"}, true)
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v2/tasks"}, true)
+
+	e := echo.New()
+	can := func(token *APIToken, method, path string) bool {
+		c := e.NewContext(httptest.NewRequest(method, path, nil), httptest.NewRecorder())
+		return CanDoAPIRoute(c, token)
+	}
+
+	t.Run("routes lists only the named scopes", func(t *testing.T) {
+		names := make([]string, 0, len(adminTokenRoutes))
+		for _, r := range adminTokenRoutes {
+			names = append(names, r.name)
+		}
+		listed := make([]string, 0, len(GetAPITokenRoutes()["admin"]))
+		for name := range GetAPITokenRoutes()["admin"] {
+			listed = append(listed, name)
+		}
+		assert.ElementsMatch(t, names, listed)
+	})
+
+	t.Run("each scope authorises its own route on both versions", func(t *testing.T) {
+		for _, r := range adminTokenRoutes {
+			token := &APIToken{APIPermissions: APIPermissions{"admin": []string{r.name}}}
+			require.NoError(t, PermissionsAreValid(token.APIPermissions))
+			assert.True(t, can(token, r.method, "/api/v2/"+r.path), "%s must authorise v2", r.name)
+			assert.Equal(t, !r.v2Only, can(token, r.method, "/api/v1/"+r.path), "%s on v1", r.name)
+			// No method confusion: GET must not unlock a PATCH on the same path and vice versa.
+			other := http.MethodGet
+			if r.method == http.MethodGet {
+				other = http.MethodPatch
+			}
+			assert.False(t, can(token, other, "/api/v2/"+r.path), "%s must not authorise %s", r.name, other)
+		}
+	})
+
+	t.Run("v1 PATCH admin routes", func(t *testing.T) {
+		token := &APIToken{APIPermissions: APIPermissions{"admin": []string{"users_set_status"}}}
+		assert.True(t, can(token, http.MethodPatch, "/api/v1/admin/users/:id/status"))
+		assert.True(t, can(token, http.MethodPatch, "/api/v2/admin/users/:id/status"))
+	})
+
+	t.Run("admin-only token is denied elsewhere", func(t *testing.T) {
+		all := make([]string, 0, len(adminTokenRoutes))
+		for _, r := range adminTokenRoutes {
+			all = append(all, r.name)
+		}
+		token := &APIToken{APIPermissions: APIPermissions{"admin": all}}
+		assert.False(t, can(token, http.MethodGet, "/api/v2/tasks"))
+		assert.False(t, can(token, http.MethodGet, "/api/v1/admin/users/:id"))
 	})
 }

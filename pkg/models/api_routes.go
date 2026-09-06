@@ -35,19 +35,45 @@ var apiTokenRoutes = map[string]APITokenRoute{}
 var apiTokenRoutesV2 = map[string]APITokenRoute{}
 
 func init() {
-	apiTokenRoutes = make(map[string]APITokenRoute)
-	apiTokenRoutesV2 = make(map[string]APITokenRoute)
-	apiTokenRoutes["caldav"] = APITokenRoute{
-		"access": &RouteDetail{
-			Path:   "/dav/*",
-			Method: "ANY",
-		},
+	resetAPITokenRoutes()
+}
+
+// Admin scopes are hand-named instead of collision-derived (users_post,
+// users_status, ...): the group is small, stable and security-sensitive.
+// CollectRoutesForAPITokenUsage skips /admin routes, so a new admin route
+// stays unreachable by token until it is listed here.
+var adminTokenRoutes = []struct {
+	name, method, path string
+	v2Only             bool
+}{
+	{name: "overview", method: http.MethodGet, path: "admin/overview"},
+	{name: "users_list", method: http.MethodGet, path: "admin/users"},
+	{name: "users_create", method: http.MethodPost, path: "admin/users"},
+	{name: "users_delete", method: http.MethodDelete, path: "admin/users/:id"},
+	{name: "users_set_status", method: http.MethodPatch, path: "admin/users/:id/status"},
+	{name: "users_set_admin", method: http.MethodPatch, path: "admin/users/:id/admin"},
+	{name: "users_set_password", method: http.MethodPatch, path: "admin/users/:id/password", v2Only: true},
+	{name: "users_send_password_reset", method: http.MethodPost, path: "admin/users/:id/password-reset-email", v2Only: true},
+	{name: "projects_list", method: http.MethodGet, path: "admin/projects"},
+	{name: "projects_set_owner", method: http.MethodPatch, path: "admin/projects/:id/owner"},
+}
+
+// resetAPITokenRoutes installs the hand-written entries; tests call it to
+// start from a clean table.
+func resetAPITokenRoutes() {
+	apiTokenRoutes = map[string]APITokenRoute{
+		"caldav": {"access": &RouteDetail{Path: "/dav/*", Method: "ANY"}},
+		"feeds":  {"access": &RouteDetail{Path: "/feeds/*", Method: http.MethodGet}},
+		"admin":  {},
 	}
-	apiTokenRoutes["feeds"] = APITokenRoute{
-		"access": &RouteDetail{
-			Path:   "/feeds/*",
-			Method: "GET",
-		},
+	apiTokenRoutesV2 = map[string]APITokenRoute{
+		"admin": {},
+	}
+	for _, r := range adminTokenRoutes {
+		if !r.v2Only {
+			apiTokenRoutes["admin"][r.name] = &RouteDetail{Path: "/api/v1/" + r.path, Method: r.method}
+		}
+		apiTokenRoutesV2["admin"][r.name] = &RouteDetail{Path: "/api/v2/" + r.path, Method: r.method}
 	}
 }
 
@@ -283,6 +309,10 @@ func CollectRoutesForAPITokenUsage(route echo.RouteInfo, requiresJWT bool) {
 		routeGroupName == "*" ||
 		routeGroupName == "oauth_authorize" ||
 		strings.HasPrefix(routeGroupName, "user_") {
+		return
+	}
+
+	if len(routeParts) > 0 && routeParts[0] == "admin" {
 		return
 	}
 

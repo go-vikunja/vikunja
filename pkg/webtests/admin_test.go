@@ -21,6 +21,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
@@ -29,6 +30,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/utils"
 
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
@@ -52,16 +54,83 @@ func promoteToAdmin(t *testing.T, userID int64) *user.User {
 }
 
 func adminReq(t *testing.T, e *echo.Echo, method, path string, u *user.User, body string) *httptest.ResponseRecorder {
-	req := httptest.NewRequest(method, path, strings.NewReader(body))
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	bearer := ""
 	if u != nil {
 		tok, err := auth.NewUserJWTAuthtoken(u, "test-session-id")
 		require.NoError(t, err)
-		req.Header.Set(echo.HeaderAuthorization, "Bearer "+tok)
+		bearer = tok
+	}
+	return adminBearerReq(e, method, path, bearer, body)
+}
+
+func adminBearerReq(e *echo.Echo, method, path, bearer, body string) *httptest.ResponseRecorder {
+	req := httptest.NewRequest(method, path, strings.NewReader(body))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	if bearer != "" {
+		req.Header.Set(echo.HeaderAuthorization, "Bearer "+bearer)
 	}
 	res := httptest.NewRecorder()
 	e.ServeHTTP(res, req)
 	return res
+}
+
+// insertAPIToken writes the row directly and returns the cleartext token.
+func insertAPIToken(t *testing.T, ownerID int64, perms models.APIPermissions) string {
+	t.Helper()
+
+	cleartext, err := utils.CryptoRandomString(40)
+	require.NoError(t, err)
+	cleartext = models.APITokenPrefix + cleartext
+	const salt = "adminsalt0"
+	token := &models.APIToken{
+		Title:          "admin scope test token",
+		TokenSalt:      salt,
+		TokenHash:      models.HashToken(cleartext, salt),
+		TokenLastEight: cleartext[len(cleartext)-8:],
+		APIPermissions: perms,
+		ExpiresAt:      time.Now().Add(24 * time.Hour),
+		OwnerID:        ownerID,
+	}
+
+	s := db.NewSession()
+	defer s.Close()
+	_, err = s.Insert(token)
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+	return cleartext
+}
+
+func TestAdmin_APIToken(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	license.SetForTests([]license.Feature{license.FeatureAdminPanel})
+	defer license.ResetForTests()
+
+	promoteToAdmin(t, 1)
+
+	t.Run("named scope reaches a PATCH route", func(t *testing.T) {
+		tok := insertAPIToken(t, 1, models.APIPermissions{"admin": {"users_set_status"}})
+		res := adminBearerReq(e, http.MethodPatch, "/api/v1/admin/users/2/status", tok, `{"status":0}`)
+		assert.Equal(t, http.StatusOK, res.Code, res.Body.String())
+	})
+
+	t.Run("other admin scope is denied", func(t *testing.T) {
+		tok := insertAPIToken(t, 1, models.APIPermissions{"admin": {"users_list"}})
+		res := adminBearerReq(e, http.MethodPatch, "/api/v1/admin/users/2/status", tok, `{"status":0}`)
+		assert.Equal(t, http.StatusUnauthorized, res.Code)
+	})
+
+	t.Run("admin-only token is denied outside admin", func(t *testing.T) {
+		tok := insertAPIToken(t, 1, models.APIPermissions{"admin": {"users_list", "users_set_status"}})
+		res := adminBearerReq(e, http.MethodGet, "/api/v1/tasks/all", tok, "")
+		assert.Equal(t, http.StatusUnauthorized, res.Code)
+	})
+
+	t.Run("non-admin owner is gated", func(t *testing.T) {
+		tok := insertAPIToken(t, 2, models.APIPermissions{"admin": {"users_set_status"}})
+		res := adminBearerReq(e, http.MethodPatch, "/api/v1/admin/users/3/status", tok, `{"status":0}`)
+		assert.Equal(t, http.StatusNotFound, res.Code)
+	})
 }
 
 func TestAdmin_GateUnlicensed(t *testing.T) {
