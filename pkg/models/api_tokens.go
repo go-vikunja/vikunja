@@ -98,7 +98,41 @@ func (t *APIToken) Create(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
+	owner := caller
+	if t.OwnerID != 0 && t.OwnerID != caller.ID {
+		owner, err = user.GetUserByID(s, t.OwnerID)
+		if err != nil {
+			return err
+		}
+		if !owner.IsBotOwnedBy(caller) {
+			return &user.ErrBotNotOwned{UserID: t.OwnerID}
+		}
+	}
+
+	return t.issue(s, owner, caller.ID)
+}
+
+// CreateInstanceBotToken mints a token for an instance bot. There is no API
+// caller, so the doer is 0 and the audit log attributes it to the CLI.
+func (t *APIToken) CreateInstanceBotToken(s *xorm.Session, bot *user.User) error {
+	if !bot.IsInstanceBot {
+		return &user.ErrBotNotOwned{UserID: bot.ID}
+	}
+	return t.issue(s, bot, 0)
+}
+
+func (t *APIToken) issue(s *xorm.Session, owner *user.User, doerID int64) error {
+	if owner.IsInstanceBot {
+		if err := validateInstanceBotPermissions(t.APIPermissions); err != nil {
+			return err
+		}
+	}
+	if err := PermissionsAreValid(t.APIPermissions); err != nil {
+		return err
+	}
+
 	t.ID = 0
+	t.OwnerID = owner.ID
 
 	token, err := utils.CryptoRandomBytes(20)
 	if err != nil {
@@ -106,22 +140,6 @@ func (t *APIToken) Create(s *xorm.Session, a web.Auth) (err error) {
 	}
 	t.Token = APITokenPrefix + hex.EncodeToString(token)
 	t.TokenSha256 = HashAPIToken(t.Token)
-
-	if t.OwnerID == 0 {
-		t.OwnerID = caller.ID
-	} else if t.OwnerID != caller.ID {
-		botUser, err := user.GetUserByID(s, t.OwnerID)
-		if err != nil {
-			return err
-		}
-		if !botUser.IsBotOwnedBy(caller) {
-			return &user.ErrBotNotOwned{UserID: t.OwnerID}
-		}
-	}
-
-	if err := PermissionsAreValid(t.APIPermissions); err != nil {
-		return err
-	}
 
 	// Legacy columns stay NULL; without Nullable xorm would insert "" and trip the unique index on token_hash.
 	_, err = s.Nullable("token_salt", "token_hash", "token_last_eight").Insert(t)
@@ -131,7 +149,7 @@ func (t *APIToken) Create(s *xorm.Session, a web.Auth) (err error) {
 
 	events.DispatchOnCommit(s, &APITokenIssuedEvent{
 		TokenID: t.ID,
-		DoerID:  caller.ID,
+		DoerID:  doerID,
 		OwnerID: t.OwnerID,
 	})
 
