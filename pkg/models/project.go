@@ -1000,7 +1000,7 @@ func CreateProject(s *xorm.Session, project *Project, auth web.Auth, createBackl
 	}
 
 	project.Position = calculateDefaultPosition(project.ID, project.Position)
-	_, err = s.Where("id = ?", project.ID).Nullable("parent_project_id").Update(project)
+	_, err = s.ID(project.ID).Cols("position").Update(&Project{Position: project.Position})
 	if err != nil {
 		return
 	}
@@ -1178,9 +1178,10 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 		"hex_color",
 		"position",
 	}
-	// Only touch parent_project_id when it was actually sent, otherwise a
-	// partial update (nil) would silently detach the project to the top level.
-	if project.ParentProjectID != nil {
+	// Only touch parent_project_id when it actually changed: nil would silently
+	// detach on a partial update, an unchanged resend would look like a reparent.
+	parentChanged := project.ParentProjectID != nil && project.parentID() != storedProject.parentID()
+	if parentChanged {
 		colsToUpdate = append(colsToUpdate, "parent_project_id")
 	}
 	if project.Description != "" {
@@ -1209,11 +1210,27 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 
 	project.HexColor = utils.NormalizeHex(project.HexColor)
 
+	// The hook reads this bean after commit; see Project.AfterUpdate.
+	toUpdate := &Project{
+		ID:                 project.ID,
+		Title:              project.Title,
+		IsArchived:         project.IsArchived,
+		Identifier:         project.Identifier,
+		HexColor:           project.HexColor,
+		Position:           project.Position,
+		Description:        project.Description,
+		BackgroundFileID:   project.BackgroundFileID,
+		BackgroundBlurHash: project.BackgroundBlurHash,
+	}
+	if parentChanged {
+		toUpdate.ParentProjectID = project.ParentProjectID
+	}
+
 	_, err = s.
 		ID(project.ID).
 		Cols(colsToUpdate...).
 		Nullable("parent_project_id").
-		Update(project)
+		Update(toUpdate)
 	if err != nil {
 		return err
 	}
