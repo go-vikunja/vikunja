@@ -21,6 +21,7 @@ import (
 	"strconv"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
@@ -90,6 +91,15 @@ func getProjectAccessForUser(s *xorm.Session, userID int64) (*projectAccess, err
 	if pa, has := db.GetCached[*projectAccess](s, cacheKey); has {
 		return pa, nil
 	}
+	// A session that wrote may see its own uncommitted grants: neither serve it from the shared memo nor fill it.
+	shareable := keyvalue.Initialized() && !db.SessionHasWritten(s)
+	if shareable {
+		if permissions, has := getCachedProjectAccess(userID); has {
+			pa := newProjectAccess(userID, permissions)
+			db.SetCached(s, cacheKey, pa)
+			return pa, nil
+		}
+	}
 
 	rows := []*projectAccessRow{}
 	err := s.SQL(projectAccessQuery, userID, userID, userID).Find(&rows)
@@ -97,23 +107,35 @@ func getProjectAccessForUser(s *xorm.Session, userID int64) (*projectAccess, err
 		return nil, err
 	}
 
-	pa := &projectAccess{
-		userID:      userID,
-		permissions: make(map[int64]Permission, len(rows)),
-		sortedIDs:   make([]int64, 0, len(rows)),
-	}
+	permissions := make(map[int64]Permission, len(rows))
 	for _, r := range rows {
 		permission := Permission(r.Permission)
 		// A grant outside the enum (manual db edit, restored dump) is no grant at all.
 		if permission.isValid() != nil {
 			continue
 		}
-		pa.permissions[r.ID] = permission
-		pa.sortedIDs = append(pa.sortedIDs, r.ID)
+		permissions[r.ID] = permission
+	}
+
+	pa := newProjectAccess(userID, permissions)
+	db.SetCached(s, cacheKey, pa)
+	if shareable {
+		cacheProjectAccess(userID, pa.permissions)
+	}
+	return pa, nil
+}
+
+func newProjectAccess(userID int64, permissions map[int64]Permission) *projectAccess {
+	pa := &projectAccess{
+		userID:      userID,
+		permissions: permissions,
+		sortedIDs:   make([]int64, 0, len(permissions)),
+	}
+	for id := range permissions {
+		pa.sortedIDs = append(pa.sortedIDs, id)
 	}
 	sort.Slice(pa.sortedIDs, func(i, j int) bool { return pa.sortedIDs[i] < pa.sortedIDs[j] })
-	db.SetCached(s, cacheKey, pa)
-	return pa, nil
+	return pa
 }
 
 // Above this many ids the inlined list bloats the statement and defeats server-side

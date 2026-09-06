@@ -597,6 +597,16 @@ func NewSession() *xorm.Session {
 	return s
 }
 
+// NewReadSession creates a session without a transaction: every statement borrows a pooled
+// connection only for its own duration instead of one connection being held for the whole
+// request. Commit and Rollback are no-ops on it, so callers written for NewSession keep working.
+// Use it for request paths that only read; a write on it commits on its own.
+func NewReadSession() *xorm.Session {
+	s := x.NewSession()
+	attachSessionCache(s)
+	return s
+}
+
 // Type returns the db type of the currently configured db
 func Type() schemas.DBType {
 	return x.Dialect().URI().DBType

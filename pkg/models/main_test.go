@@ -27,6 +27,7 @@ import (
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/i18n"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/user"
 )
 
@@ -60,6 +61,7 @@ func TestMain(m *testing.M) {
 
 	// Set default config
 	config.InitDefaultConfig()
+	keyvalue.InitStorage()
 
 	i18n.Init()
 

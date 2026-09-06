@@ -86,6 +86,18 @@ func SetSessionContext(ctx context.Context, s *xorm.Session) {
 	s.Context(ctx)
 }
 
+// SessionHasWritten reports whether s wrote anything (or is unknown to the cache): its reads may then see
+// uncommitted state that no cross-request memo may serve or be filled from.
+func SessionHasWritten(s *xorm.Session) bool {
+	c, ok := cacheForSession(s)
+	if !ok {
+		return true
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.dirty
+}
+
 func cacheForSession(s *xorm.Session) (*sessionCache, bool) {
 	c, ok := sessionCaches.Load(weak.Make(s))
 	if !ok {
@@ -94,12 +106,23 @@ func cacheForSession(s *xorm.Session) (*sessionCache, bool) {
 	return c.(*sessionCache), true
 }
 
+var globalCacheResets []func()
+
+// RegisterGlobalCacheReset registers a process-wide memo to be dropped whenever the database is
+// replaced under it (test fixtures), where no write hook ever fires.
+func RegisterGlobalCacheReset(fn func()) {
+	globalCacheResets = append(globalCacheResets, fn)
+}
+
 // For writes that bypass xorm entirely, which writeInvalidationHook never sees.
 func invalidateAllSessionCaches() {
 	sessionCaches.Range(func(_, v any) bool {
 		v.(*sessionCache).markDirty()
 		return true
 	})
+	for _, fn := range globalCacheResets {
+		fn()
+	}
 }
 
 // GetCached returns a value memoized for the lifetime of s. It always misses
