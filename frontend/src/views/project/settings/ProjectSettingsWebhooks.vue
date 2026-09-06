@@ -4,9 +4,6 @@ import {useRoute} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 import {useTitle} from '@vueuse/core'
 
-import ProjectService from '@/services/project'
-import ProjectModel from '@/models/project'
-import type {IProject} from '@/modelTypes/IProject'
 import type {IWebhook} from '@/modelTypes/IWebhook'
 
 import CreateEdit from '@/components/misc/CreateEdit.vue'
@@ -15,17 +12,18 @@ import WebhookManager from '@/components/misc/WebhookManager.vue'
 import {useBaseStore} from '@/stores/base'
 import WebhookService from '@/services/webhook'
 import {success} from '@/message'
+import {projectQuery, type ProjectResponse} from '@/client/queries/projects'
+import {queryClient} from '@/client/queryClient'
 
 defineOptions({name: 'ProjectSettingWebhooks'})
 
 const {t} = useI18n({useScope: 'global'})
 
-const project = ref<IProject>()
+const project = ref<ProjectResponse>()
 useTitle(t('project.webhooks.title'))
 
 async function loadProject(projectId: number) {
-	const projectService = new ProjectService()
-	const newProject = await projectService.get(new ProjectModel({id: projectId}))
+	const newProject = await queryClient.ensureQueryData(projectQuery(projectId))
 	await useBaseStore().handleSetCurrentProject({project: newProject})
 	project.value = newProject
 	await loadWebhooks()
@@ -45,9 +43,10 @@ const availableEvents = ref<string[]>([])
 const loading = ref(false)
 
 async function loadWebhooks() {
+	if (!project.value) return
 	loading.value = true
 	try {
-		webhooks.value = await webhookService.getAll({projectId: project.value.id})
+		webhooks.value = await webhookService.getAll({projectId: project.value.id} as IWebhook)
 		availableEvents.value = await webhookService.getAvailableEvents()
 	} finally {
 		loading.value = false
@@ -55,16 +54,18 @@ async function loadWebhooks() {
 }
 
 async function handleCreate(webhook: IWebhook) {
+	if (!project.value) return
 	webhook.projectId = project.value.id
 	const created = await webhookService.create(webhook)
 	webhooks.value.push(created)
 }
 
 async function handleDelete(webhookId: number) {
+	if (!project.value) return
 	await webhookService.delete({
 		id: webhookId,
 		projectId: project.value.id,
-	})
+	} as IWebhook)
 	success({message: t('project.webhooks.deleteSuccess')})
 	await loadWebhooks()
 }
