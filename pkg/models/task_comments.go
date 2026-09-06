@@ -180,6 +180,15 @@ func (tc *TaskComment) Update(s *xorm.Session, a web.Auth) error {
 		return err
 	}
 
+	// TaskID is optional here: only routes carrying it in the URL bind it, so fall back to the stored row.
+	if tc.TaskID == 0 {
+		saved := &TaskComment{ID: tc.ID}
+		if err := getTaskCommentSimple(s, saved); err != nil {
+			return err
+		}
+		tc.TaskID = saved.TaskID
+	}
+
 	task, err := GetTaskByIDSimple(s, tc.TaskID)
 	if err != nil {
 		return err
