@@ -17,12 +17,14 @@
 package models
 
 import (
+	"crypto/hmac"
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/hex"
 	"slices"
 	"time"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
@@ -308,16 +310,16 @@ func GetTokenFromTokenString(s *xorm.Session, token string) (apiToken *APIToken,
 // request, so revocation and expiry apply immediately.
 const verifiedAPITokenTTL = 10 * time.Minute
 
-// Nothing stored here can authenticate: the key is a digest of a 160-bit random token,
-// the value is the row id and the salted hash already in the database.
+// The key is an HMAC under the service secret, so write access to the store is not enough to mint an entry for a chosen token.
 type verifiedAPIToken struct {
 	ID   int64
 	Hash string
 }
 
 func verifiedAPITokenKey(token string) string {
-	digest := sha256.Sum256([]byte(token))
-	return "api_token_verified_" + hex.EncodeToString(digest[:])
+	mac := hmac.New(sha256.New, []byte(config.ServiceSecret.GetString()))
+	mac.Write([]byte(token))
+	return "api_token_verified_" + hex.EncodeToString(mac.Sum(nil))
 }
 
 // ValidateTokenAndGetOwner looks up a raw token string, checks it is not expired,
