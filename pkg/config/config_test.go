@@ -77,6 +77,29 @@ func TestServiceSecret(t *testing.T) {
 	})
 }
 
+func TestLogLevelDefaults(t *testing.T) {
+	t.Run("category levels inherit log.level", func(t *testing.T) {
+		initConfigFromYAML(t, "log:\n  level: WARNING\n")
+
+		assert.Equal(t, "WARNING", LogDatabaseLevel.GetString())
+		assert.Equal(t, "WARNING", LogHTTPLevel.GetString())
+		assert.Equal(t, "WARNING", LogEventsLevel.GetString())
+		assert.Equal(t, "WARNING", LogMailLevel.GetString())
+	})
+	t.Run("explicit category level wins", func(t *testing.T) {
+		initConfigFromYAML(t, "log:\n  level: WARNING\n  httplevel: DEBUG\n")
+
+		assert.Equal(t, "DEBUG", LogHTTPLevel.GetString())
+		assert.Equal(t, "WARNING", LogDatabaseLevel.GetString())
+	})
+	t.Run("category level from the environment wins", func(t *testing.T) {
+		t.Setenv("VIKUNJA_LOG_HTTPLEVEL", "ERROR")
+		initConfigFromYAML(t, "log:\n  level: WARNING\n")
+
+		assert.Equal(t, "ERROR", LogHTTPLevel.GetString())
+	})
+}
+
 func TestGetRootpathLocation(t *testing.T) {
 	// The function should return the current working directory
 	expected, err := os.Getwd()
