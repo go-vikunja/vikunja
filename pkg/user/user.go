@@ -256,7 +256,18 @@ func GetUserByID(s *xorm.Session, id int64) (user *User, err error) {
 		return &User{}, ErrUserDoesNotExist{}
 	}
 
-	return getUser(s, &User{ID: id}, false)
+	cacheKey := "user-" + strconv.FormatInt(id, 10)
+	if cached, has := db.GetCached[*User](s, cacheKey); has {
+		copied := *cached
+		return &copied, nil
+	}
+	user, err = getUser(s, &User{ID: id}, false)
+	if err != nil {
+		return user, err
+	}
+	copied := *user
+	db.SetCached(s, cacheKey, &copied)
+	return user, nil
 }
 
 // GetUserByUsername gets a user from its username. This is an extra function to be able to add an extra error check.
@@ -296,11 +307,30 @@ func GetUserWithEmail(s *xorm.Session, user *User) (userOut *User, err error) {
 
 // GetUsersByIDs returns a map of users from a slice of user ids
 func GetUsersByIDs(s *xorm.Session, userIDs []int64) (users map[int64]*User, err error) {
-	if len(userIDs) == 0 {
+	users = make(map[int64]*User, len(userIDs))
+	missing := make([]int64, 0, len(userIDs))
+	for _, id := range userIDs {
+		if cached, has := db.GetCached[*User](s, "user-"+strconv.FormatInt(id, 10)); has {
+			copied := *cached
+			users[id] = &copied
+			continue
+		}
+		missing = append(missing, id)
+	}
+	if len(missing) == 0 {
 		return users, nil
 	}
 
-	return GetUsersByCond(s, builder.In("id", userIDs))
+	loaded, err := GetUsersByCond(s, builder.In("id", missing))
+	if err != nil {
+		return nil, err
+	}
+	for id, u := range loaded {
+		copied := *u
+		db.SetCached(s, "user-"+strconv.FormatInt(id, 10), &copied)
+		users[id] = u
+	}
+	return users, nil
 }
 
 func GetUsersByCond(s *xorm.Session, cond builder.Cond) (users map[int64]*User, err error) {

@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
@@ -385,7 +386,17 @@ func GetTaskByIDSimple(s *xorm.Session, taskID int64) (task Task, err error) {
 		return Task{}, ErrTaskDoesNotExist{taskID}
 	}
 
-	return GetTaskSimple(s, &Task{ID: taskID})
+	// Permission check and read both load the task; the session memo drops itself on any write.
+	cacheKey := "task-" + strconv.FormatInt(taskID, 10)
+	if cached, has := db.GetCached[Task](s, cacheKey); has {
+		return cached, nil
+	}
+	task, err = GetTaskSimple(s, &Task{ID: taskID})
+	if err != nil {
+		return Task{}, err
+	}
+	db.SetCached(s, cacheKey, task)
+	return task, nil
 }
 
 // GetTaskByProjectAndIndex returns a task by its per-project index.
