@@ -14,6 +14,8 @@ import type {IProject} from '@/modelTypes/IProject'
 import ProjectModel from '@/models/project'
 import {success} from '@/message'
 import {useBaseStore} from '@/stores/base'
+import {useAuthStore} from '@/stores/auth'
+import {ENTITLEMENT} from '@/constants/entitlements'
 import SavedFilterService from '@/services/savedFilter'
 import {getSavedFilterIdFromProjectId, isSavedFilter} from '@/services/savedFilter'
 import SavedFilterModel from '@/models/savedFilter'
@@ -207,6 +209,7 @@ export const useProjectStore = defineStore('project', () => {
 		try {
 			const createdProject = await projectService.create(project)
 			setProject(createdProject)
+			useAuthStore().adjustUsage(ENTITLEMENT.MAX_PROJECTS, 1)
 			router.push({
 				name: 'project.index',
 				params: { projectId: createdProject.id },
@@ -254,6 +257,7 @@ export const useProjectStore = defineStore('project', () => {
 			const response = await projectService.delete(project)
 			removeProjectById(project)
 			removeProjectFromHistory({id: project.id})
+			useAuthStore().adjustUsage(ENTITLEMENT.MAX_PROJECTS, -1)
 			return response
 		} finally {
 			cancel()

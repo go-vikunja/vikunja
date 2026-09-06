@@ -5,6 +5,7 @@
 	>
 		<XButton
 			:to="{name:'teams.create'}"
+			:disabled="!canCreateTeams"
 			class="is-pulled-end"
 			icon="plus"
 		>
@@ -35,23 +36,35 @@
 			class="has-text-centered has-text-grey is-italic"
 		>
 			{{ $t('team.noTeams') }}
-			<RouterLink :to="{name: 'teams.create'}">
+			<RouterLink
+				v-if="canCreateTeams"
+				:to="{name: 'teams.create'}"
+			>
 				{{ $t('team.create.title') }}.
 			</RouterLink>
 		</p>
+		<UpgradeHint v-if="!canCreateTeams">
+			{{ $t('entitlement.teamCreationDisabled') }}
+		</UpgradeHint>
 	</div>
 </template>
 
 <script setup lang="ts">
-import {ref, shallowReactive} from 'vue'
+import {computed, ref, shallowReactive} from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import Card from '@/components/misc/Card.vue'
+import UpgradeHint from '@/components/misc/UpgradeHint.vue'
 import TeamService from '@/services/team'
 import { useTitle } from '@/composables/useTitle'
+import {useAuthStore} from '@/stores/auth'
+import {ENTITLEMENT} from '@/constants/entitlements'
 
 const { t } = useI18n({useScope: 'global'})
 useTitle(() => t('team.title'))
+
+const authStore = useAuthStore()
+const canCreateTeams = computed(() => authStore.hasEntitlement(ENTITLEMENT.TEAM_CREATION))
 
 const teams = ref([])
 const teamService = shallowReactive(new TeamService())

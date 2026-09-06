@@ -16,13 +16,15 @@ vi.mock('@/services/attachment', () => ({
 }))
 
 vi.mock('@/stores/tasks', () => ({useTaskStore: () => ({isLoading: false})}))
+vi.mock('@/stores/auth', () => ({useAuthStore: () => ({info: {id: 1}, limit: () => null, usage: () => 0, adjustUsage: vi.fn()})}))
+vi.mock('@/stores/projects', () => ({useProjectStore: () => ({projects: {}})}))
 
 vi.mock('vue-i18n', async importOriginal => ({
 	...(await importOriginal<typeof import('vue-i18n')>()),
 	useI18n: () => ({t: (key: string) => key}),
 }))
 
-vi.mock('@/message', () => ({error: vi.fn(), success: vi.fn()}))
+vi.mock('@/message', () => ({error: vi.fn(), success: vi.fn(), upgradeActions: () => []}))
 
 const attachment = {
 	id: 1,
