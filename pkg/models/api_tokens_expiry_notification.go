@@ -31,22 +31,42 @@ func init() {
 	notifications.Register(func() notifications.PersistedNotification { return &APITokenExpiringDayNotification{} })
 }
 
+// Bots never receive notifications, so an expiring bot token is sent to a human
+// (User) with Bot set to the token's owner so the mail can name it.
+func apiTokenExpiryTitle(lang, period string, token *APIToken, bot *user.User) string {
+	if bot != nil {
+		return i18n.T(lang, "notifications.api_token.expiring."+period+".bot_subject", token.Title, bot.Username)
+	}
+	return i18n.T(lang, "notifications.api_token.expiring."+period+".subject", token.Title)
+}
+
+func apiTokenExpiryMail(lang, period string, recipient *user.User, token *APIToken, bot *user.User) *notifications.Mail {
+	expires := token.ExpiresAt.Format("2006-01-02")
+	in := utils.HumanizeDuration(time.Until(token.ExpiresAt), lang)
+	mail := notifications.NewMail().Greeting(i18n.T(lang, "notifications.greeting", recipient.GetName()))
+	if bot != nil {
+		mail.Line(i18n.T(lang, "notifications.api_token.expiring."+period+".bot_message", notifications.EscapeMarkdown(token.Title), notifications.EscapeMarkdown(bot.Username), expires, in)).
+			Action(i18n.T(lang, "notifications.api_token.expiring.bot_action"), config.ServicePublicURL.GetString()+"user/settings/bots")
+	} else {
+		mail.Line(i18n.T(lang, "notifications.api_token.expiring."+period+".message", notifications.EscapeMarkdown(token.Title), expires, in)).
+			Action(i18n.T(lang, "notifications.api_token.expiring.action"), config.ServicePublicURL.GetString()+"user/settings/api-tokens")
+	}
+	return mail.Line(i18n.T(lang, "notifications.common.have_nice_day"))
+}
+
 // APITokenExpiringWeekNotification is sent 7 days before an API token expires.
 type APITokenExpiringWeekNotification struct {
 	User  *user.User `json:"user"`
 	Token *APIToken  `json:"api_token"`
+	Bot   *user.User `json:"bot,omitempty"`
 }
 
 func (n *APITokenExpiringWeekNotification) ToTitle(lang string) string {
-	return i18n.T(lang, "notifications.api_token.expiring.week.subject", n.Token.Title)
+	return apiTokenExpiryTitle(lang, "week", n.Token, n.Bot)
 }
 
 func (n *APITokenExpiringWeekNotification) ToMail(lang string) *notifications.Mail {
-	return notifications.NewMail().
-		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName())).
-		Line(i18n.T(lang, "notifications.api_token.expiring.week.message", notifications.EscapeMarkdown(n.Token.Title), n.Token.ExpiresAt.Format("2006-01-02"), utils.HumanizeDuration(time.Until(n.Token.ExpiresAt), lang))).
-		Action(i18n.T(lang, "notifications.api_token.expiring.action"), config.ServicePublicURL.GetString()+"user/settings/api-tokens").
-		Line(i18n.T(lang, "notifications.common.have_nice_day"))
+	return apiTokenExpiryMail(lang, "week", n.User, n.Token, n.Bot)
 }
 
 func (n *APITokenExpiringWeekNotification) ToDB() any {
@@ -65,18 +85,15 @@ func (n *APITokenExpiringWeekNotification) SubjectID() int64 {
 type APITokenExpiringDayNotification struct {
 	User  *user.User `json:"user"`
 	Token *APIToken  `json:"api_token"`
+	Bot   *user.User `json:"bot,omitempty"`
 }
 
 func (n *APITokenExpiringDayNotification) ToTitle(lang string) string {
-	return i18n.T(lang, "notifications.api_token.expiring.day.subject", n.Token.Title)
+	return apiTokenExpiryTitle(lang, "day", n.Token, n.Bot)
 }
 
 func (n *APITokenExpiringDayNotification) ToMail(lang string) *notifications.Mail {
-	return notifications.NewMail().
-		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName())).
-		Line(i18n.T(lang, "notifications.api_token.expiring.day.message", notifications.EscapeMarkdown(n.Token.Title), n.Token.ExpiresAt.Format("2006-01-02"), utils.HumanizeDuration(time.Until(n.Token.ExpiresAt), lang))).
-		Action(i18n.T(lang, "notifications.api_token.expiring.action"), config.ServicePublicURL.GetString()+"user/settings/api-tokens").
-		Line(i18n.T(lang, "notifications.common.have_nice_day"))
+	return apiTokenExpiryMail(lang, "day", n.User, n.Token, n.Bot)
 }
 
 func (n *APITokenExpiringDayNotification) ToDB() any {
