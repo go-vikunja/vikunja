@@ -380,23 +380,17 @@ func getTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, opts 
 	return tasks, resultCount, totalItems, err
 }
 
+func taskMemoKey(id int64) string { return "task-" + strconv.FormatInt(id, 10) }
+
 // GetTaskByIDSimple returns a raw task without extra data by the task ID
 func GetTaskByIDSimple(s *xorm.Session, taskID int64) (task Task, err error) {
 	if taskID < 1 {
 		return Task{}, ErrTaskDoesNotExist{taskID}
 	}
 
-	// Permission check and read both load the task; the session memo drops itself on any write.
-	cacheKey := "task-" + strconv.FormatInt(taskID, 10)
-	if cached, has := db.GetCached[Task](s, cacheKey); has {
-		return cached, nil
-	}
-	task, err = GetTaskSimple(s, &Task{ID: taskID})
-	if err != nil {
-		return Task{}, err
-	}
-	db.SetCached(s, cacheKey, task)
-	return task, nil
+	return db.Remember(s, taskMemoKey(taskID), func() (Task, error) {
+		return GetTaskSimple(s, &Task{ID: taskID})
+	})
 }
 
 // GetTaskByProjectAndIndex returns a task by its per-project index.

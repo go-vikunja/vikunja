@@ -249,6 +249,8 @@ type APIUserPassword struct {
 	Email string `json:"email" valid:"email,length(0|250)" maxLength:"250"`
 }
 
+func userMemoKey(id int64) string { return "user-" + strconv.FormatInt(id, 10) }
+
 // GetUserByID returns user by its ID
 func GetUserByID(s *xorm.Session, id int64) (user *User, err error) {
 	// Apparently xorm does otherwise look for all users but return only one, which leads to returning one even if the ID is 0
@@ -256,18 +258,20 @@ func GetUserByID(s *xorm.Session, id int64) (user *User, err error) {
 		return &User{}, ErrUserDoesNotExist{}
 	}
 
-	cacheKey := "user-" + strconv.FormatInt(id, 10)
-	if cached, has := db.GetCached[*User](s, cacheKey); has {
-		copied := *cached
-		return &copied, nil
-	}
-	user, err = getUser(s, &User{ID: id}, false)
+	// getUser hands back a usable user alongside the account status errors and callers rely on that,
+	// so the error path returns what it loaded rather than the memo's zero value.
+	var fetched *User
+	u, err := db.Remember(s, userMemoKey(id), func() (*User, error) {
+		var err error
+		fetched, err = getUser(s, &User{ID: id}, false)
+		return fetched, err
+	})
 	if err != nil {
-		return user, err
+		return fetched, err
 	}
-	copied := *user
-	db.SetCached(s, cacheKey, &copied)
-	return user, nil
+
+	copied := *u
+	return &copied, nil
 }
 
 // GetUserByUsername gets a user from its username. This is an extra function to be able to add an extra error check.
@@ -307,28 +311,17 @@ func GetUserWithEmail(s *xorm.Session, user *User) (userOut *User, err error) {
 
 // GetUsersByIDs returns a map of users from a slice of user ids
 func GetUsersByIDs(s *xorm.Session, userIDs []int64) (users map[int64]*User, err error) {
-	users = make(map[int64]*User, len(userIDs))
-	missing := make([]int64, 0, len(userIDs))
-	for _, id := range userIDs {
-		if cached, has := db.GetCached[*User](s, "user-"+strconv.FormatInt(id, 10)); has {
-			copied := *cached
-			users[id] = &copied
-			continue
-		}
-		missing = append(missing, id)
-	}
-	if len(missing) == 0 {
-		return users, nil
-	}
-
-	loaded, err := GetUsersByCond(s, builder.In("id", missing))
+	loaded, err := db.RememberEach(s, userIDs, userMemoKey, func(missing []int64) (map[int64]*User, error) {
+		return GetUsersByCond(s, builder.In("id", missing))
+	})
 	if err != nil {
 		return nil, err
 	}
+
+	users = make(map[int64]*User, len(loaded))
 	for id, u := range loaded {
 		copied := *u
-		db.SetCached(s, "user-"+strconv.FormatInt(id, 10), &copied)
-		users[id] = u
+		users[id] = &copied
 	}
 	return users, nil
 }

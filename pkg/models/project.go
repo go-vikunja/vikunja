@@ -446,29 +446,30 @@ func (p *Project) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 	return
 }
 
+func projectMemoKey(id int64) string { return "project-" + strconv.FormatInt(id, 10) }
+
 // GetProjectSimpleByID gets a project with only the basic items, aka no tasks or user objects. Returns an error if the project does not exist.
 func GetProjectSimpleByID(s *xorm.Session, projectID int64) (project *Project, err error) {
 	if projectID < 1 {
 		return nil, ErrProjectDoesNotExist{ID: projectID}
 	}
 
-	cacheKey := "project-" + strconv.FormatInt(projectID, 10)
-	if cached, has := db.GetCached[*Project](s, cacheKey); has {
-		copied := *cached
-		return &copied, nil
-	}
-	project, exists, err := getProjectSimple(s, builder.Eq{"id": projectID})
+	p, err := db.Remember(s, projectMemoKey(projectID), func() (*Project, error) {
+		loaded, exists, err := getProjectSimple(s, builder.Eq{"id": projectID})
+		if err != nil {
+			return nil, err
+		}
+		if !exists {
+			return nil, ErrProjectDoesNotExist{ID: projectID}
+		}
+		return loaded, nil
+	})
 	if err != nil {
 		return nil, err
 	}
-	if !exists {
-		return nil, ErrProjectDoesNotExist{ID: projectID}
-	}
 
-	// Callers mutate what they get, so the memo keeps its own copy.
-	copied := *project
-	db.SetCached(s, cacheKey, &copied)
-	return
+	copied := *p
+	return &copied, nil
 }
 
 // GetProjectSimpleByIdentifier gets a project by its textual identifier (e.g. "PROJ").
@@ -543,29 +544,19 @@ func GetProjectsSimpleByTaskIDs(s *xorm.Session, taskIDs []int64) (ps []*Project
 
 // GetProjectsMapByIDs returns a map of projects from a slice with project ids
 func GetProjectsMapByIDs(s *xorm.Session, projectIDs []int64) (projects map[int64]*Project, err error) {
-	projects = make(map[int64]*Project, len(projectIDs))
-	missing := make([]int64, 0, len(projectIDs))
-	for _, id := range projectIDs {
-		if cached, has := db.GetCached[*Project](s, "project-"+strconv.FormatInt(id, 10)); has {
-			copied := *cached
-			projects[id] = &copied
-			continue
-		}
-		missing = append(missing, id)
-	}
-	if len(missing) == 0 {
-		return projects, nil
-	}
-
-	loaded := map[int64]*Project{}
-	err = s.In("id", missing).Find(&loaded)
+	loaded, err := db.RememberEach(s, projectIDs, projectMemoKey, func(missing []int64) (map[int64]*Project, error) {
+		found := map[int64]*Project{}
+		err := s.In("id", missing).Find(&found)
+		return found, err
+	})
 	if err != nil {
 		return nil, err
 	}
+
+	projects = make(map[int64]*Project, len(loaded))
 	for id, p := range loaded {
 		copied := *p
-		db.SetCached(s, "project-"+strconv.FormatInt(id, 10), &copied)
-		projects[id] = p
+		projects[id] = &copied
 	}
 	return projects, nil
 }
