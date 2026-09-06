@@ -135,7 +135,7 @@ func (tl *TeamProject) Create(s *xorm.Session, a web.Auth) (err error) {
 		Doer:    doerFromAuth(s, a),
 	})
 
-	err = updateProjectLastUpdated(s, l)
+	err = updateProjectLastUpdated(s, &Project{ID: l.ID})
 	return
 }
 
