@@ -35,19 +35,59 @@ var apiTokenRoutes = map[string]APITokenRoute{}
 var apiTokenRoutesV2 = map[string]APITokenRoute{}
 
 func init() {
-	apiTokenRoutes = make(map[string]APITokenRoute)
-	apiTokenRoutesV2 = make(map[string]APITokenRoute)
-	apiTokenRoutes["caldav"] = APITokenRoute{
-		"access": &RouteDetail{
-			Path:   "/dav/*",
-			Method: "ANY",
-		},
+	resetAPITokenRoutes()
+}
+
+// Admin scopes are hand-named instead of collision-derived (users_post,
+// users_status, ...): the group is small, stable and security-sensitive.
+// CollectRoutesForAPITokenUsage skips /admin routes, so a new admin route
+// stays unreachable by token until it is listed here. Old keys on existing
+// tokens keep working via legacyAdminScopes.
+var adminTokenRoutes = []struct {
+	name, method, path string
+	v2Only             bool
+}{
+	{name: "overview", method: http.MethodGet, path: "admin/overview"},
+	{name: "users_list", method: http.MethodGet, path: "admin/users"},
+	{name: "users_create", method: http.MethodPost, path: "admin/users"},
+	{name: "users_delete", method: http.MethodDelete, path: "admin/users/:id"},
+	{name: "users_set_status", method: http.MethodPatch, path: "admin/users/:id/status"},
+	{name: "users_set_admin", method: http.MethodPatch, path: "admin/users/:id/admin"},
+	{name: "users_set_password", method: http.MethodPatch, path: "admin/users/:id/password", v2Only: true},
+	{name: "users_send_password_reset", method: http.MethodPost, path: "admin/users/:id/password-reset-email", v2Only: true},
+	{name: "projects_list", method: http.MethodGet, path: "admin/projects"},
+	{name: "projects_set_owner", method: http.MethodPatch, path: "admin/projects/:id/owner"},
+}
+
+// Keys on tokens issued before the named scopes; permissions are only
+// validated on create, so no migration.
+var legacyAdminScopes = map[string]string{ //nolint:gosec // scope names, not credentials
+	"users":                      "users_list",
+	"users_post":                 "users_create",
+	"users_status":               "users_set_status",
+	"users_admin":                "users_set_admin",
+	"users_password":             "users_set_password",
+	"users_password_reset_email": "users_send_password_reset",
+	"projects":                   "projects_list",
+	"projects_owner":             "projects_set_owner",
+}
+
+// resetAPITokenRoutes installs the hand-written entries; tests call it to
+// start from a clean table.
+func resetAPITokenRoutes() {
+	apiTokenRoutes = map[string]APITokenRoute{
+		"caldav": {"access": &RouteDetail{Path: "/dav/*", Method: "ANY"}},
+		"feeds":  {"access": &RouteDetail{Path: "/feeds/*", Method: http.MethodGet}},
+		"admin":  {},
 	}
-	apiTokenRoutes["feeds"] = APITokenRoute{
-		"access": &RouteDetail{
-			Path:   "/feeds/*",
-			Method: "GET",
-		},
+	apiTokenRoutesV2 = map[string]APITokenRoute{
+		"admin": {},
+	}
+	for _, r := range adminTokenRoutes {
+		if !r.v2Only {
+			apiTokenRoutes["admin"][r.name] = &RouteDetail{Path: "/api/v1/" + r.path, Method: r.method}
+		}
+		apiTokenRoutesV2["admin"][r.name] = &RouteDetail{Path: "/api/v2/" + r.path, Method: r.method}
 	}
 }
 
@@ -234,6 +274,33 @@ func isStandardCRUDRoute(routeGroupName string, routeParts []string, _ string) b
 	return false
 }
 
+// isPatchTwin reports whether existing and rd are the PUT and PATCH (either
+// order) of the same v2 path, as AutoPatch produces.
+func isPatchTwin(existing, rd *RouteDetail) bool {
+	if existing == nil || existing.Path != rd.Path || !isV2Path(rd.Path) {
+		return false
+	}
+	return (existing.Method == http.MethodPut && rd.Method == http.MethodPatch) ||
+		(existing.Method == http.MethodPatch && rd.Method == http.MethodPut)
+}
+
+// storeRoute keeps PUT authoritative over its AutoPatch PATCH twin whatever
+// order echo lists them; tokenAuthorizesRoute aliases PATCH to the stored
+// PUT. A native PATCH with no PUT twin is stored as-is.
+func storeRoute(routes APITokenRoute, key string, rd *RouteDetail, suffixOnCollision bool) {
+	existing := routes[key]
+	if isPatchTwin(existing, rd) {
+		if rd.Method == http.MethodPut {
+			routes[key] = rd
+		}
+		return
+	}
+	if existing != nil && suffixOnCollision {
+		key += "_" + strings.ToLower(rd.Method)
+	}
+	routes[key] = rd
+}
+
 // CollectRoutesForAPITokenUsage records a route for token authorisation.
 // v1 and v2 share group/permission keys derived from the prefix-stripped
 // path; v2 entries land in apiTokenRoutesV2 so the v1-only frontend UI is
@@ -259,15 +326,13 @@ func CollectRoutesForAPITokenUsage(route echo.RouteInfo, requiresJWT bool) {
 		return
 	}
 
+	if len(routeParts) > 0 && routeParts[0] == "admin" {
+		return
+	}
+
 	target := apiTokenRoutes
 	if isV2Path(route.Path) {
 		target = apiTokenRoutesV2
-		// AutoPatch's synthesised PATCH and the original PUT both derive the
-		// "update" permission and would clobber each other on the map. Store
-		// only PUT; CanDoAPIRoute accepts PATCH as its alias on the same path.
-		if route.Method == http.MethodPatch {
-			return
-		}
 	}
 
 	// Check if this is a standard CRUD route using path-based heuristics
@@ -296,27 +361,12 @@ func CollectRoutesForAPITokenUsage(route echo.RouteInfo, requiresJWT bool) {
 			}
 
 			ensureAPITokenRoutesGroup(target, "other")
-
-			_, exists := target["other"][routeGroupName]
-			if exists {
-				routeGroupName += "_" + strings.ToLower(route.Method)
-			}
-			target["other"][routeGroupName] = routeDetail
+			storeRoute(target["other"], routeGroupName, routeDetail, true)
 			return
 		}
 
-		subkey := strings.Join(routeParts[1:], "_")
-
-		if _, has := target[routeParts[0]]; !has {
-			target[routeParts[0]] = make(APITokenRoute)
-		}
-
-		if _, has := target[routeParts[0]][subkey]; has {
-			subkey += "_" + strings.ToLower(route.Method)
-		}
-
-		target[routeParts[0]][subkey] = routeDetail
-
+		ensureAPITokenRoutesGroup(target, routeParts[0])
+		storeRoute(target[routeParts[0]], strings.Join(routeParts[1:], "_"), routeDetail, true)
 		return
 	}
 
@@ -336,7 +386,7 @@ func CollectRoutesForAPITokenUsage(route echo.RouteInfo, requiresJWT bool) {
 
 	method, routeDetail := getRouteDetail(route)
 	if method != "" {
-		target[routeGroupName][method] = routeDetail
+		storeRoute(target[routeGroupName], method, routeDetail, false)
 	}
 
 	// Handle task attachments specially - they use custom handlers not WebHandler
@@ -466,6 +516,11 @@ func tokenAuthorizesRoute(token *APIToken, path, method string) bool {
 				continue
 			}
 			for _, p := range perms {
+				if group == "admin" {
+					if alias, ok := legacyAdminScopes[p]; ok {
+						p = alias
+					}
+				}
 				rd := routes[p]
 				if rd == nil {
 					continue
@@ -474,8 +529,7 @@ func tokenAuthorizesRoute(token *APIToken, path, method string) bool {
 					return true
 				}
 				// v2: AutoPatch mirrors every PUT as a PATCH on the same
-				// path. PATCH isn't stored (it would clobber PUT under
-				// the same "update" key), so accept it as an alias here.
+				// path; only PUT is stored (see storeRoute).
 				if isV2Path(rd.Path) && rd.Method == http.MethodPut &&
 					method == http.MethodPatch && rd.Path == path {
 					return true
@@ -563,6 +617,17 @@ func tokenHasPermission(token *APIToken, group, permission string) bool {
 		}
 	}
 	return false
+}
+
+// Instance bots exist only to drive the admin API; any other group would let
+// them read or write user data.
+func validateInstanceBotPermissions(permissions APIPermissions) error {
+	for key := range permissions {
+		if canonicalAPITokenGroup(key) != "admin" {
+			return &ErrInstanceBotScopeNotAllowed{Group: key}
+		}
+	}
+	return nil
 }
 
 func PermissionsAreValid(permissions APIPermissions) (err error) {

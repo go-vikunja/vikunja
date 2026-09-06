@@ -17,7 +17,9 @@
 package models
 
 import (
+	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"code.vikunja.io/api/pkg/license"
@@ -117,10 +119,54 @@ func TestCollectRoutesV2(t *testing.T) {
 	assert.Equal(t, "/api/v2/labels", labels["read_all"].Path)
 	assert.Equal(t, "GET", labels["read_one"].Method)
 	assert.Equal(t, "POST", labels["create"].Method)
-	// PUT is the authoritative update verb for API tokens — PATCH is
-	// skipped during collection so it doesn't clobber PUT.
+	// PUT is the authoritative update verb for API tokens — AutoPatch's
+	// PATCH twin must not clobber it.
 	assert.Equal(t, "PUT", labels["update"].Method)
 	assert.Equal(t, "DELETE", labels["delete"].Method)
+}
+
+// TestCollectRoutesV2_Patch pins PUT as the stored update verb regardless of
+// the order echo lists the AutoPatch twin, while a native PATCH with no PUT
+// twin (as the admin routes have) is collected as-is.
+func TestCollectRoutesV2_Patch(t *testing.T) {
+	t.Run("PATCH listed before PUT still stores PUT", func(t *testing.T) {
+		apiTokenRoutes = make(map[string]APITokenRoute)
+		apiTokenRoutesV2 = make(map[string]APITokenRoute)
+
+		CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "PATCH", Path: "/api/v2/labels/:id"}, true)
+		CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "PUT", Path: "/api/v2/labels/:id"}, true)
+
+		assert.Equal(t, "PUT", apiTokenRoutesV2["labels"]["update"].Method)
+		assert.Len(t, apiTokenRoutesV2["labels"], 1)
+	})
+
+	t.Run("non-CRUD PUT twin is not suffixed", func(t *testing.T) {
+		apiTokenRoutes = make(map[string]APITokenRoute)
+		apiTokenRoutesV2 = make(map[string]APITokenRoute)
+
+		CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "PUT", Path: "/api/v2/tasks/:task/position"}, true)
+		CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "PATCH", Path: "/api/v2/tasks/:task/position"}, true)
+
+		require.Contains(t, apiTokenRoutesV2["tasks"], "position")
+		assert.Equal(t, "PUT", apiTokenRoutesV2["tasks"]["position"].Method)
+		assert.NotContains(t, apiTokenRoutesV2["tasks"], "position_patch")
+	})
+
+	t.Run("native PATCH without a PUT twin is collected", func(t *testing.T) {
+		apiTokenRoutes = make(map[string]APITokenRoute)
+		apiTokenRoutesV2 = make(map[string]APITokenRoute)
+
+		CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "PATCH", Path: "/api/v2/teams/:id/archive"}, true)
+
+		require.Contains(t, apiTokenRoutesV2, "teams")
+		require.Contains(t, apiTokenRoutesV2["teams"], "archive")
+		assert.Equal(t, "PATCH", apiTokenRoutesV2["teams"]["archive"].Method)
+
+		token := &APIToken{APIPermissions: APIPermissions{"teams": []string{"archive"}}}
+		req := httptest.NewRequest("PATCH", "/api/v2/teams/:id/archive", nil)
+		c := echo.New().NewContext(req, httptest.NewRecorder())
+		assert.True(t, CanDoAPIRoute(c, token))
+	})
 }
 
 // TestCollectRoutes_TimeEntriesV2 pins the v2-only time-entries resource to a
@@ -182,11 +228,9 @@ func TestGetAPITokenRoutes_ExposesV2Only(t *testing.T) {
 // inside always-available groups (tasks.time_entries) — while validation and
 // authorisation of existing tokens stay unfiltered.
 func TestGetAPITokenRoutes_LicenseFilter(t *testing.T) {
-	apiTokenRoutes = make(map[string]APITokenRoute)
-	apiTokenRoutesV2 = make(map[string]APITokenRoute)
+	resetAPITokenRoutes()
 
 	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v1/labels"}, true)
-	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v1/admin/users"}, true)
 	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v2/tasks"}, true)
 	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v2/time-entries"}, true)
 	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v2/tasks/:task_id/time-entries"}, true)
@@ -219,6 +263,21 @@ func TestGetAPITokenRoutes_LicenseFilter(t *testing.T) {
 		require.Contains(t, routes, "tasks")
 		assert.Contains(t, routes["tasks"], "time_entries")
 	})
+}
+
+func TestValidateInstanceBotPermissions(t *testing.T) {
+	require.NoError(t, validateInstanceBotPermissions(APIPermissions{"admin": {"users_list", "users_create"}}))
+	require.NoError(t, validateInstanceBotPermissions(APIPermissions{}))
+
+	for _, perms := range []APIPermissions{
+		{"tasks": {"read_all"}},
+		{"admin": {"users_list"}, "tasks": {"read_all"}},
+		{"caldav": {"access"}},
+	} {
+		err := validateInstanceBotPermissions(perms)
+		require.Error(t, err, "%v", perms)
+		assert.True(t, IsErrInstanceBotScopeNotAllowed(err))
+	}
 }
 
 // TestCanDoAPIRoute_TimeEntriesHyphenLegacy proves a token stored under the old
@@ -507,5 +566,92 @@ func TestCanDoAPIRoute_ExpandScopes(t *testing.T) {
 		projectsToken := &APIToken{APIPermissions: APIPermissions{"projects": []string{"read_all"}}}
 		assert.True(t, do(t, "/api/v1/projects?expand=comments", projectsToken),
 			"expand on a route which does not consume it must not require any scope")
+	})
+}
+
+// TestAdminTokenScopes covers the hand-named admin scopes: /routes lists only
+// the new names, each name authorises its v1 and v2 route, the
+// collision-derived keys on pre-existing tokens still authorise, and an
+// admin-only token stays out of everything else.
+func TestAdminTokenScopes(t *testing.T) {
+	resetAPITokenRoutes()
+	license.SetForTests([]license.Feature{license.FeatureAdminPanel})
+	defer license.ResetForTests()
+
+	// Derived collection must not reintroduce the old keys.
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v1/admin/users"}, true)
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "POST", Path: "/api/v2/admin/users"}, true)
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "PATCH", Path: "/api/v2/admin/users/:id/admin"}, true)
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v2/tasks"}, true)
+
+	e := echo.New()
+	can := func(token *APIToken, method, path string) bool {
+		c := e.NewContext(httptest.NewRequest(method, path, nil), httptest.NewRecorder())
+		return CanDoAPIRoute(c, token)
+	}
+
+	t.Run("routes lists only the named scopes", func(t *testing.T) {
+		names := make([]string, 0, len(adminTokenRoutes))
+		for _, r := range adminTokenRoutes {
+			names = append(names, r.name)
+		}
+		listed := make([]string, 0, len(GetAPITokenRoutes()["admin"]))
+		for name := range GetAPITokenRoutes()["admin"] {
+			listed = append(listed, name)
+		}
+		assert.ElementsMatch(t, names, listed)
+	})
+
+	t.Run("each scope authorises its own route on both versions", func(t *testing.T) {
+		for _, r := range adminTokenRoutes {
+			token := &APIToken{APIPermissions: APIPermissions{"admin": []string{r.name}}}
+			require.NoError(t, PermissionsAreValid(token.APIPermissions))
+			assert.True(t, can(token, r.method, "/api/v2/"+r.path), "%s must authorise v2", r.name)
+			assert.Equal(t, !r.v2Only, can(token, r.method, "/api/v1/"+r.path), "%s on v1", r.name)
+			// No method confusion: GET must not unlock a PATCH on the same path and vice versa.
+			other := http.MethodGet
+			if r.method == http.MethodGet {
+				other = http.MethodPatch
+			}
+			assert.False(t, can(token, other, "/api/v2/"+r.path), "%s must not authorise %s", r.name, other)
+		}
+	})
+
+	t.Run("legacy keys still authorise", func(t *testing.T) {
+		byName := map[string]string{}
+		for _, r := range adminTokenRoutes {
+			byName[r.name] = r.method + " " + r.path
+		}
+		for old, current := range legacyAdminScopes {
+			parts := strings.SplitN(byName[current], " ", 2)
+			token := &APIToken{APIPermissions: APIPermissions{"admin": []string{old}}}
+			assert.True(t, can(token, parts[0], "/api/v2/"+parts[1]), "legacy %s must authorise %s", old, current)
+		}
+		// Unchanged names need no alias.
+		assert.True(t, can(&APIToken{APIPermissions: APIPermissions{"admin": []string{"users_delete"}}}, http.MethodDelete, "/api/v1/admin/users/:id"))
+		assert.True(t, can(&APIToken{APIPermissions: APIPermissions{"admin": []string{"overview"}}}, http.MethodGet, "/api/v2/admin/overview"))
+	})
+
+	t.Run("v1 PATCH admin routes", func(t *testing.T) {
+		for _, key := range []string{"users_set_status", "users_status"} {
+			token := &APIToken{APIPermissions: APIPermissions{"admin": []string{key}}}
+			assert.True(t, can(token, http.MethodPatch, "/api/v1/admin/users/:id/status"), key)
+			assert.True(t, can(token, http.MethodPatch, "/api/v2/admin/users/:id/status"), key)
+		}
+	})
+
+	t.Run("admin-only token is denied elsewhere", func(t *testing.T) {
+		all := make([]string, 0, len(adminTokenRoutes))
+		for _, r := range adminTokenRoutes {
+			all = append(all, r.name)
+		}
+		token := &APIToken{APIPermissions: APIPermissions{"admin": all}}
+		assert.False(t, can(token, http.MethodGet, "/api/v2/tasks"))
+		assert.False(t, can(token, http.MethodGet, "/api/v1/admin/users/:id"))
+	})
+
+	t.Run("legacy keys are not aliased outside the admin group", func(t *testing.T) {
+		token := &APIToken{APIPermissions: APIPermissions{"tasks": []string{"users"}}}
+		assert.False(t, can(token, http.MethodGet, "/api/v2/admin/users"))
 	})
 }

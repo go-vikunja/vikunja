@@ -22,9 +22,39 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/notifications"
+	"code.vikunja.io/api/pkg/user"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func insertExpiringToken(t *testing.T, ownerID int64, expiresAt time.Time) *APIToken {
+	s := db.NewSession()
+	defer s.Close()
+
+	token := &APIToken{
+		Title:          "Expiring token",
+		TokenSalt:      "salt",
+		TokenHash:      "hash" + expiresAt.String(),
+		TokenLastEight: "12345678",
+		APIPermissions: APIPermissions{"tasks": {"read"}},
+		ExpiresAt:      expiresAt,
+		OwnerID:        ownerID,
+	}
+	_, err := s.Insert(token)
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+	return token
+}
+
+func expiryNotificationsFor(t *testing.T, userID int64, name string, tokenID int64) []*notifications.DatabaseNotification {
+	s := db.NewSession()
+	defer s.Close()
+
+	got, err := notifications.GetNotificationsForNameAndUser(s, userID, name, tokenID)
+	require.NoError(t, err)
+	return got
+}
 
 func TestCheckForExpiringAPITokens(t *testing.T) {
 	t.Run("sends 7-day notification", func(t *testing.T) {
@@ -138,5 +168,118 @@ func TestCheckForExpiringAPITokens(t *testing.T) {
 
 		notifications.AssertNotSent(t, &APITokenExpiringWeekNotification{})
 		notifications.AssertNotSent(t, &APITokenExpiringDayNotification{})
+	})
+
+	// Bot 23 is owned by user 21, see users.yml.
+	const botID, botOwnerID = 23, 21
+
+	t.Run("bot token notifies the bot owner, not the bot", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		now := time.Now()
+		token := insertExpiringToken(t, botID, now.Add(6*24*time.Hour))
+
+		checkForExpiringAPITokensAt(now)
+
+		n := &APITokenExpiringWeekNotification{}
+		assert.Len(t, expiryNotificationsFor(t, botOwnerID, n.Name(), token.ID), 1)
+		assert.Empty(t, expiryNotificationsFor(t, botID, n.Name(), token.ID))
+	})
+
+	t.Run("bot token names the bot in the notification", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		now := time.Now()
+		token := insertExpiringToken(t, botID, now.Add(20*time.Hour))
+
+		checkForExpiringAPITokensAt(now)
+
+		n := &APITokenExpiringDayNotification{}
+		got := expiryNotificationsFor(t, botOwnerID, n.Name(), token.ID)
+		require.Len(t, got, 1)
+		payload, ok := got[0].Notification.(map[string]interface{})
+		require.True(t, ok)
+		bot, ok := payload["bot"].(map[string]interface{})
+		require.True(t, ok)
+		assert.Equal(t, "bot-owner-a-assistant", bot["username"])
+	})
+
+	t.Run("human token still notifies its own owner", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		now := time.Now()
+		token := insertExpiringToken(t, botOwnerID, now.Add(6*24*time.Hour))
+
+		checkForExpiringAPITokensAt(now)
+
+		n := &APITokenExpiringWeekNotification{}
+		got := expiryNotificationsFor(t, botOwnerID, n.Name(), token.ID)
+		require.Len(t, got, 1)
+		payload, ok := got[0].Notification.(map[string]interface{})
+		require.True(t, ok)
+		assert.NotContains(t, payload, "bot")
+	})
+
+	// Fixture 26 is the instance bot; 1 and 17 (disabled) get promoted per test.
+	const instanceBotID = 26
+
+	promote := func(t *testing.T, ids ...int64) {
+		s := db.NewSession()
+		defer s.Close()
+		for _, id := range ids {
+			_, err := s.ID(id).Cols("is_admin").Update(&user.User{IsAdmin: true})
+			require.NoError(t, err)
+		}
+		require.NoError(t, s.Commit())
+	}
+
+	t.Run("instance bot token notifies every active human admin", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		promote(t, 1, 2, 17)
+
+		now := time.Now()
+		token := insertExpiringToken(t, instanceBotID, now.Add(6*24*time.Hour))
+
+		checkForExpiringAPITokensAt(now)
+
+		n := &APITokenExpiringWeekNotification{}
+		for _, adminID := range []int64{1, 2} {
+			got := expiryNotificationsFor(t, adminID, n.Name(), token.ID)
+			require.Len(t, got, 1, "admin %d", adminID)
+			payload, ok := got[0].Notification.(map[string]interface{})
+			require.True(t, ok)
+			bot, ok := payload["bot"].(map[string]interface{})
+			require.True(t, ok)
+			assert.Equal(t, "bot-instance-provisioner", bot["username"])
+		}
+		assert.Empty(t, expiryNotificationsFor(t, 17, n.Name(), token.ID), "disabled admins cannot act on it")
+		assert.Empty(t, expiryNotificationsFor(t, instanceBotID, n.Name(), token.ID))
+	})
+
+	t.Run("instance bot token is not sent to non-admins or owned-bot owners", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		promote(t, 1)
+
+		now := time.Now()
+		token := insertExpiringToken(t, instanceBotID, now.Add(6*24*time.Hour))
+
+		checkForExpiringAPITokensAt(now)
+
+		n := &APITokenExpiringWeekNotification{}
+		assert.Len(t, expiryNotificationsFor(t, 1, n.Name(), token.ID), 1)
+		assert.Empty(t, expiryNotificationsFor(t, botOwnerID, n.Name(), token.ID))
+	})
+
+	t.Run("bot token notification is not repeated", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		now := time.Now()
+		token := insertExpiringToken(t, botID, now.Add(6*24*time.Hour))
+
+		checkForExpiringAPITokensAt(now)
+		checkForExpiringAPITokensAt(now.Add(time.Hour))
+
+		n := &APITokenExpiringWeekNotification{}
+		assert.Len(t, expiryNotificationsFor(t, botOwnerID, n.Name(), token.ID), 1)
 	})
 }

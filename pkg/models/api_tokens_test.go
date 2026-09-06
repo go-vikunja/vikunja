@@ -17,10 +17,13 @@
 package models
 
 import (
+	"context"
+	"strings"
 	"testing"
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/assert"
@@ -95,6 +98,82 @@ func TestAPIToken_Create(t *testing.T) {
 
 		err := token.Create(s, u)
 		require.NoError(t, err)
+	})
+	t.Run("instance bot as owner is rejected", func(t *testing.T) {
+		s := db.NewSession()
+		defer s.Close()
+		db.LoadAndAssertFixtures(t)
+
+		admin := &user.User{ID: 1}
+		_, err := s.ID(admin.ID).Cols("is_admin").Update(&user.User{IsAdmin: true})
+		require.NoError(t, err)
+
+		token := &APIToken{OwnerID: 26, APIPermissions: APIPermissions{"admin": {"users_list"}}}
+		err = token.Create(s, admin)
+		require.Error(t, err)
+		assert.True(t, user.IsErrBotNotOwned(err))
+	})
+}
+
+func TestAPIToken_CreateInstanceBotToken(t *testing.T) {
+	t.Run("admin scope", func(t *testing.T) {
+		s := db.NewSession()
+		defer s.Close()
+		db.LoadAndAssertFixtures(t)
+		events.ClearDispatchedEvents()
+
+		bot, err := user.GetUserByID(s, 26)
+		require.NoError(t, err)
+
+		token := &APIToken{Title: "ci", APIPermissions: APIPermissions{"admin": {"users_list"}}, ExpiresAt: time.Now().Add(time.Hour)}
+		require.NoError(t, token.CreateInstanceBotToken(s, bot))
+		require.NoError(t, s.Commit())
+		events.DispatchPending(context.Background(), s)
+
+		assert.Equal(t, int64(26), token.OwnerID)
+		assert.True(t, strings.HasPrefix(token.Token, APITokenPrefix))
+		issued := events.GetDispatchedEvents((&APITokenIssuedEvent{}).Name())
+		require.Len(t, issued, 1)
+		assert.Zero(t, issued[0].(*APITokenIssuedEvent).DoerID)
+	})
+	t.Run("non-admin scope is rejected", func(t *testing.T) {
+		s := db.NewSession()
+		defer s.Close()
+		db.LoadAndAssertFixtures(t)
+
+		bot, err := user.GetUserByID(s, 26)
+		require.NoError(t, err)
+
+		token := &APIToken{Title: "ci", APIPermissions: APIPermissions{"tasks": {"read_all"}}, ExpiresAt: time.Now().Add(time.Hour)}
+		err = token.CreateInstanceBotToken(s, bot)
+		require.Error(t, err)
+		assert.True(t, IsErrInstanceBotScopeNotAllowed(err))
+	})
+	t.Run("mixed scopes are rejected", func(t *testing.T) {
+		s := db.NewSession()
+		defer s.Close()
+		db.LoadAndAssertFixtures(t)
+
+		bot, err := user.GetUserByID(s, 26)
+		require.NoError(t, err)
+
+		token := &APIToken{Title: "ci", APIPermissions: APIPermissions{"admin": {"users_list"}, "projects": {"read_all"}}, ExpiresAt: time.Now().Add(time.Hour)}
+		err = token.CreateInstanceBotToken(s, bot)
+		require.Error(t, err)
+		assert.True(t, IsErrInstanceBotScopeNotAllowed(err))
+	})
+	t.Run("owned bot is refused", func(t *testing.T) {
+		s := db.NewSession()
+		defer s.Close()
+		db.LoadAndAssertFixtures(t)
+
+		bot, err := user.GetUserByID(s, 23)
+		require.NoError(t, err)
+
+		token := &APIToken{Title: "ci", APIPermissions: APIPermissions{"admin": {"users_list"}}, ExpiresAt: time.Now().Add(time.Hour)}
+		err = token.CreateInstanceBotToken(s, bot)
+		require.Error(t, err)
+		assert.True(t, user.IsErrBotNotOwned(err))
 	})
 }
 
