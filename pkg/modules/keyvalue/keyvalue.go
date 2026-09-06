@@ -38,7 +38,8 @@ type Storage interface {
 	DelPrefix(prefix string) error
 }
 
-var store Storage
+// Usable before InitStorage; production replaces it at startup.
+var store Storage = memory.NewStorage()
 
 // InitStorage initializes the configured storage backend
 func InitStorage() {
