@@ -145,6 +145,7 @@ const (
 	LogDatabase      Key = `log.database`
 	LogDatabaseLevel Key = `log.databaselevel`
 	LogHTTP          Key = `log.http`
+	LogHTTPLevel     Key = `log.httplevel`
 	LogPath          Key = `log.path`
 	LogEvents        Key = `log.events`
 	LogEventsLevel   Key = `log.eventslevel`
@@ -453,6 +454,7 @@ func initDefaultConfig() {
 	LogDatabase.setDefault("off")
 	LogDatabaseLevel.setDefault("WARNING")
 	LogHTTP.setDefault("stdout")
+	LogHTTPLevel.setDefault("INFO")
 	LogPath.setDefault(ResolvePath("logs"))
 	LogEvents.setDefault("off")
 	LogEventsLevel.setDefault("INFO")
