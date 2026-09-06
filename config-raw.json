@@ -230,7 +230,7 @@
                 },
                 {
                     "key": "maxidleconnections",
-                    "default_value": "50",
+                    "default_value": "100",
                     "comment": "Sets the maximum number of idle connections to the db."
                 },
                 {
