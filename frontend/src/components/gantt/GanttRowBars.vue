@@ -167,7 +167,11 @@
 				:clip-path="`url(#clip-${bar.id})`"
 				aria-hidden="true"
 			>
-				{{ bar.meta?.label || bar.id }}
+				{{ bar.meta?.label || bar.id }}<tspan
+					v-if="bar.meta?.projectTitle"
+					class="gantt-bar-project"
+					dx="6"
+				>{{ bar.meta.projectTitle }}</tspan>
 			</text>
 		</GanttBarPrimitive>
 
@@ -482,6 +486,11 @@ function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEv
 	font-size: .85rem;
 	pointer-events: none;
 	user-select: none;
+}
+
+.gantt-bar-project {
+	font-size: .9em;
+	opacity: .75;
 }
 
 .gantt-parent-bar {

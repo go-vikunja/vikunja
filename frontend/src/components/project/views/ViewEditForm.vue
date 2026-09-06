@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {onBeforeMount, ref, watch} from 'vue'
+import {computed, onBeforeMount, ref, watch} from 'vue'
 
 import type {IProjectView} from '@/modelTypes/IProjectView'
 import type {IFilters} from '@/modelTypes/ISavedFilter'
@@ -32,6 +32,16 @@ type LoadedProjectView = Omit<IProjectView, 'filter'> & {filter: IFilters}
 
 const view = ref<LoadedProjectView>()
 
+// include_subprojects is optional on IFilters, so the binding needs a boolean fallback.
+const includeSubprojects = computed({
+	get: () => view.value?.filter?.include_subprojects ?? false,
+	set: (value: boolean) => {
+		if (view.value?.filter) {
+			view.value.filter.include_subprojects = value
+		}
+	},
+})
+
 const {isPending, getLabelByExactTitle, getLabelById} = useLabels()
 const projectStore = useProjectStore()
 
@@ -40,6 +50,7 @@ const transformFilterFromApi = (filterInput?: IFilters): IFilters => {
 		sortBy?: IFilters['sort_by'],
 		orderBy?: IFilters['order_by'],
 		filterIncludeNulls?: boolean,
+		includeSubprojects?: boolean,
 	} | undefined
 	const filterString = transformFilterStringFromApi(
 		filterInput?.filter ?? '',
@@ -70,6 +81,10 @@ const transformFilterFromApi = (filterInput?: IFilters): IFilters => {
 
 	filter.filter_include_nulls = filterInput?.filter_include_nulls
 		?? camelCaseFilter?.filterIncludeNulls
+		?? false
+
+	filter.include_subprojects = filterInput?.include_subprojects
+		?? camelCaseFilter?.includeSubprojects
 		?? false
 
 	return filter
@@ -161,6 +176,7 @@ function save() {
 			filter: '',
 			filter_include_nulls: filterInput?.filter_include_nulls ?? false,
 			s: '',
+			include_subprojects: filterInput?.include_subprojects ?? false,
 		}
 		if (hasFilterQuery(filterString)) {
 			filter.filter = filterString
@@ -250,6 +266,18 @@ function handleBubbleSave() {
 
 		<div class="is-size-7 mbe-2">
 			<FilterInputDocs />
+		</div>
+
+		<div
+			v-if="view.viewKind !== 'kanban'"
+			class="field mbe-3"
+		>
+			<FancyCheckbox
+				v-model="includeSubprojects"
+				v-tooltip="$t('project.views.includeSubprojectsHint')"
+			>
+				{{ $t('project.views.includeSubprojects') }}
+			</FancyCheckbox>
 		</div>
 
 		<div class="field mbe-3">
