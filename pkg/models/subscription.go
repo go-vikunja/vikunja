@@ -345,8 +345,6 @@ func getSubscriptionsForEntitiesAndUser(s *xorm.Session, entityType Subscription
 	}
 
 	rawSubscriptions := []*subscriptionResolved{}
-	// Placeholders, not literals: with literal ids every call is a distinct statement text,
-	// which defeats the driver's statement cache and makes Postgres plan the CTE on every call.
 	idList := strings.TrimSuffix(strings.Repeat("?, ", len(entityIDs)), ", ")
 	idArgs := make([]any, 0, len(entityIDs))
 	for _, id := range entityIDs {

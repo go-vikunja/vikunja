@@ -26,6 +26,7 @@ import (
 	"github.com/getsentry/sentry-go"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/errorreport"
 	"code.vikunja.io/api/pkg/log"
 	vmetrics "code.vikunja.io/api/pkg/metrics"
 	"github.com/ThreeDotsLabs/watermill"
@@ -108,8 +109,16 @@ func InitEvents() (err error) {
 		log.Errorf("Error while handling message %s, %s", msg.UUID, meta)
 
 		if config.SentryEnabled.GetBool() && shouldReportPoisonedMessage(msg.Metadata) {
-			sentry.CaptureException(&messageHandleFailedError{
-				Metadata: msg.Metadata,
+			failure := &messageHandleFailedError{Metadata: msg.Metadata}
+			sentry.WithScope(func(scope *sentry.Scope) {
+				// The wrapper error itself says nothing about the failure, so group by the handler
+				// that choked and why.
+				errorreport.ApplyFingerprint(scope, failure,
+					"message_handle_failed",
+					msg.Metadata.Get(middleware.PoisonedHandlerKey),
+					errorreport.Normalize(msg.Metadata.Get(middleware.ReasonForPoisonedKey)),
+				)
+				sentry.CaptureException(failure)
 			})
 		}
 		return nil

@@ -292,6 +292,7 @@ func RegisterRoutes(e *echo.Echo) {
 	// API Routes
 	a := e.Group("/api/v1")
 	registerAPIRoutes(a, noAuthRateLimit, refreshRateLimit)
+	setupPprof(e)
 
 	// /api/v2 — Huma-backed API, scaffolded alongside /api/v1.
 	a2 := e.Group("/api/v2")

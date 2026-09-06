@@ -948,6 +948,11 @@
                     "key": "password",
                     "default_value": "",
                     "comment": "If set to a non-empty value the /metrics endpoint will require this as a password via basic auth in combination with the username below."
+                },
+                {
+                    "key": "pprof",
+                    "default_value": "false",
+                    "comment": "If set to true (and metrics are enabled), exposes the Go runtime profiler at `/debug/pprof/`, protected by the same basic auth as the metrics endpoint when username and password are set. Profiles reveal internals of the running process; only enable it on instances that are not reachable from the internet."
                 }
             ]
         },
