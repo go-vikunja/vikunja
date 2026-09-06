@@ -41,8 +41,8 @@
 						{{ $t('task.show.noDates') }}
 					</FancyCheckbox>
 					<FancyCheckbox
-						v-if="filters.projectId > 0 && showIncludeSubprojectsToggle"
-						v-model="filters.includeSubprojects"
+						v-if="filters.projectId > 0"
+						v-model="includeSubprojects"
 						v-tooltip="$t('project.views.includeSubprojectsHint')"
 						is-block
 					>
@@ -59,6 +59,7 @@
 				>
 					<GanttChart
 						:filters="filters"
+						:include-subprojects="includeSubprojects"
 						:tasks="tasks"
 						:is-loading="isLoading"
 						:default-task-start-date="defaultTaskStartDate"
@@ -80,7 +81,6 @@ import {computed, toRefs} from 'vue'
 import type {RouteLocationNormalized} from 'vue-router'
 
 import {useBaseStore} from '@/stores/base'
-import {useAuthStore} from '@/stores/auth'
 
 import DateRangeInput from '@/components/input/DateRangeInput.vue'
 import ProjectWrapper from '@/components/project/ProjectWrapper.vue'
@@ -90,6 +90,7 @@ import FormField from '@/components/input/FormField.vue'
 
 import GanttChart from '@/components/gantt/GanttChart.vue'
 import {useGanttFilters} from '../../../views/project/helpers/useGanttFilters'
+import {useIncludeSubprojects} from '@/composables/useIncludeSubprojects'
 import {PERMISSIONS} from '@/constants/permissions'
 
 import type {DateISO} from '@/types/DateISO'
@@ -106,11 +107,11 @@ const props = defineProps<{
 
 
 const baseStore = useBaseStore()
-const authStore = useAuthStore()
 const canWrite = computed(() => baseStore.currentProject?.maxPermission > PERMISSIONS.READ)
-const showIncludeSubprojectsToggle = computed(() => authStore.settings.frontendSettings.showIncludeSubprojectsToggle ?? false)
 
 const {route, projectId, viewId} = toRefs(props)
+const currentView = computed(() => baseStore.currentProject?.views.find(v => v.id === viewId.value))
+const includeSubprojects = useIncludeSubprojects(() => currentView.value)
 const {
 	filters,
 	hasDefaultFilters,
@@ -119,7 +120,7 @@ const {
 	isLoading,
 	addTask,
 	updateTask,
-} = useGanttFilters(route, projectId, viewId)
+} = useGanttFilters(route, projectId, viewId, includeSubprojects)
 
 const DEFAULT_DATE_RANGE_DAYS = 7
 

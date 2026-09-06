@@ -82,11 +82,31 @@ function ganttFiltersToRoute(filters: GanttFilters): RouteLocationRaw {
 	}
 }
 
-function ganttFiltersToApiParams(filters: GanttFilters): TaskFilterParams {
+const GANTT_QUERY_PARAMS = ['dateFrom', 'dateTo', 'showTasksWithoutDates']
+
+// useRouteFilters rebuilds the url from gantt filters alone; carry the rest over, in place.
+function ganttFiltersToRoutePreservingQuery(
+	filters: GanttFilters,
+	currentQuery: RouteLocationNormalized['query'],
+): RouteLocationRaw {
+	const routeLocation = ganttFiltersToRoute(filters) as {query: LocationQueryRaw}
+	const ganttQuery = routeLocation.query
+	const query: LocationQueryRaw = {...currentQuery, ...ganttQuery}
+	for (const key of GANTT_QUERY_PARAMS) {
+		if (!(key in ganttQuery)) {
+			delete query[key]
+		}
+	}
+
+	return {...routeLocation, query}
+}
+
+function ganttFiltersToApiParams(filters: GanttFilters, includeSubprojects: boolean): TaskFilterParams {
 	const dateFrom = isoToKebabDate(filters.dateFrom)
 	const dateTo = isoToKebabDate(filters.dateTo)
 
 	return {
+		include_subprojects: includeSubprojects,
 		sort_by: ['start_date', 'done', 'id'],
 		order_by: ['asc', 'asc', 'desc'],
 		filter: '(' +
@@ -108,6 +128,7 @@ export function useGanttFilters(
 	route: Ref<RouteLocationNormalized>,
 	projectId: Ref<IProject['id']>,
 	viewId: Ref<IProjectView['id']>,
+	includeSubprojects: Ref<boolean>,
 ): UseGanttFiltersReturn {
 	const viewFiltersStore = useViewFiltersStore()
 
@@ -121,7 +142,7 @@ export function useGanttFilters(
 		route,
 		() => ganttGetDefaultFilters(projectId.value, viewId.value),
 		r => ganttRouteToFilters(r, projectId.value, viewId.value),
-		ganttFiltersToRoute,
+		filters => ganttFiltersToRoutePreservingQuery(filters, route.value.query),
 		['project.view'],
 	)
 
@@ -147,7 +168,15 @@ export function useGanttFilters(
 		isLoading,
 		addTask,
 		updateTask,
-	} = useGanttTaskList<GanttFilters>(filters, ganttFiltersToApiParams, viewId)
+	} = useGanttTaskList<GanttFilters>(
+		filters,
+		currentFilters => ganttFiltersToApiParams(currentFilters, includeSubprojects.value),
+		viewId,
+	)
+
+	watch(includeSubprojects, () => {
+		loadTasks()
+	})
 
 	return {
 		filters,
