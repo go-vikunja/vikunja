@@ -10,6 +10,8 @@ const state = vi.hoisted(() => ({
 	savedParentProjectIds: [] as number[],
 }))
 
+vi.mock('@/components/input/AsyncEditor', () => ({default: defineComponent({name: 'AsyncEditor', render: () => null})}))
+
 vi.mock('@/composables/useProject', () => ({
 	useProject: () => ({
 		project: state.project,
