@@ -389,18 +389,16 @@ func initSqliteEngine() (engine *xorm.Engine, err error) {
 	}
 
 	if path == DatabasePathMemory {
-		// Use a temp file with WAL mode instead of in-memory shared cache.
-		// Shared cache (file::memory:?cache=shared) uses table-level locking
-		// where _busy_timeout is ineffective (returns SQLITE_LOCKED, not
-		// SQLITE_BUSY) and concurrent connections deadlock. A temp file with
-		// WAL mode provides proper concurrency: readers never block writers,
-		// and _busy_timeout handles write-write contention.
+		// Use a temp file instead of in-memory shared cache. Shared cache
+		// (file::memory:?cache=shared) uses table-level locking where
+		// _busy_timeout is ineffective (returns SQLITE_LOCKED, not
+		// SQLITE_BUSY) and concurrent connections deadlock.
 		tmpDir, mkErr := os.MkdirTemp("", "vikunja-*")
 		if mkErr != nil {
 			return nil, fmt.Errorf("could not create temp directory for ephemeral database: %w", mkErr)
 		}
 		dbPath := filepath.Join(tmpDir, "vikunja.db")
-		engine, err = xorm.NewEngine("sqlite3", dbPath+"?_busy_timeout=5000&_journal_mode=WAL")
+		engine, err = xorm.NewEngine("sqlite3", getSqliteConnectionString(dbPath))
 		if err != nil {
 			return
 		}
@@ -431,11 +429,18 @@ func initSqliteEngine() (engine *xorm.Engine, err error) {
 		_ = os.Remove(path) // Remove the file to not prevent the db from creating another one
 	}
 
-	// WAL mode allows concurrent readers alongside a single writer without
-	// blocking each other. busy_timeout makes concurrent writers wait (up to
-	// 5 s) instead of failing immediately with SQLITE_BUSY.
-	engine, err = xorm.NewEngine("sqlite3", path+"?_busy_timeout=5000&_journal_mode=WAL")
+	engine, err = xorm.NewEngine("sqlite3", getSqliteConnectionString(path))
 	return
+}
+
+// _txlock=immediate is what prevents "database is locked" (API-OSS-31): every
+// request reads (permission checks) before it writes, and SQLite refuses to
+// promote such a deferred transaction to a writer once another connection
+// committed in between — SQLITE_BUSY_SNAPSHOT bypasses busy_timeout because
+// retrying a stale snapshot can never succeed. WAL does not help there, taking
+// the write lock at BEGIN does, at the cost of serializing read transactions.
+func getSqliteConnectionString(path string) string {
+	return path + "?_busy_timeout=5000&_journal_mode=WAL&_txlock=immediate"
 }
 
 // existingUserDataDir returns the user data directory only when it is already there.

@@ -18,9 +18,13 @@ package db
 
 import (
 	"errors"
+	"path/filepath"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"xorm.io/xorm"
 )
 
 func TestGetPostgreSQLConnectionString(t *testing.T) {
@@ -65,4 +69,84 @@ func TestSanitizePostgresConnectionErrorWithShortPassword(t *testing.T) {
 	assert.NotContains(t, sanitized.Error(), "postgres:x@")
 	assert.Contains(t, sanitized.Error(), "postgres://<redacted>@")
 	assert.Contains(t, sanitized.Error(), "invalid IP-literal")
+}
+
+func TestGetSqliteConnectionString(t *testing.T) {
+	assert.Equal(t,
+		"/data/vikunja.db?_busy_timeout=5000&_journal_mode=WAL&_txlock=immediate",
+		getSqliteConnectionString("/data/vikunja.db"),
+	)
+}
+
+type lockTestRow struct {
+	ID       int64   `xorm:"bigint pk"`
+	Position float64 `xorm:"double not null"`
+}
+
+func (lockTestRow) TableName() string {
+	return "lock_test_rows"
+}
+
+// Every write request reads before it writes (permission checks, then the
+// update). Deferred SQLite transactions fail that promotion with "database is
+// locked" as soon as a second request commits in between (API-OSS-31).
+func TestSqliteConcurrentReadThenWrite(t *testing.T) {
+	engine, err := xorm.NewEngine("sqlite3", getSqliteConnectionString(filepath.Join(t.TempDir(), "vikunja.db")))
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		_ = engine.Close()
+	})
+
+	require.NoError(t, engine.Sync(&lockTestRow{}))
+	_, err = engine.Insert(&lockTestRow{ID: 1, Position: 1})
+	require.NoError(t, err)
+
+	const writers = 4
+	const updatesPerWriter = 25
+
+	errs := make(chan error, writers*updatesPerWriter)
+	var wg sync.WaitGroup
+	for range writers {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for range updatesPerWriter {
+				if err := incrementLockTestRow(engine); err != nil {
+					errs <- err
+				}
+			}
+		}()
+	}
+	wg.Wait()
+	close(errs)
+
+	for err := range errs {
+		require.NoError(t, err)
+	}
+
+	row := &lockTestRow{}
+	_, err = engine.ID(1).Get(row)
+	require.NoError(t, err)
+	assert.InDelta(t, float64(1+writers*updatesPerWriter), row.Position, 0.001)
+}
+
+func incrementLockTestRow(engine *xorm.Engine) error {
+	s := engine.NewSession()
+	defer s.Close()
+
+	if err := s.Begin(); err != nil {
+		return err
+	}
+
+	row := &lockTestRow{}
+	if _, err := s.ID(1).Get(row); err != nil {
+		return err
+	}
+
+	row.Position++
+	if _, err := s.ID(1).Cols("position").Update(row); err != nil {
+		return err
+	}
+
+	return s.Commit()
 }
