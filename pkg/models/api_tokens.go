@@ -241,14 +241,26 @@ func (t *APIToken) Delete(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	// Ownership is verified in CanDelete; delete by ID only.
-	_, err = s.Where("id = ?", t.ID).Delete(&APIToken{})
+	return t.revoke(s, caller.ID)
+}
+
+// RevokeInstanceBotToken deletes a token of an instance bot on behalf of the CLI (doer 0).
+func (t *APIToken) RevokeInstanceBotToken(s *xorm.Session, bot *user.User) error {
+	if !bot.IsInstanceBot || t.OwnerID != bot.ID {
+		return &user.ErrBotNotOwned{UserID: bot.ID}
+	}
+	return t.revoke(s, 0)
+}
+
+func (t *APIToken) revoke(s *xorm.Session, doerID int64) error {
+	_, err := s.Where("id = ?", t.ID).Delete(&APIToken{})
 	if err != nil {
 		return err
 	}
 
 	events.DispatchOnCommit(s, &APITokenRevokedEvent{
 		TokenID: t.ID,
-		DoerID:  caller.ID,
+		DoerID:  doerID,
 	})
 
 	return nil
