@@ -143,6 +143,26 @@ func (p *Project) AfterLoad() {
 	}
 }
 
+// xorm runs After* hooks after commit inside a transaction, immediately otherwise.
+func (p *Project) AfterInsert() {
+	// A new child is reachable for everyone with access to the parent.
+	if p.parentID() != 0 {
+		invalidateAllProjectAccess()
+		return
+	}
+	invalidateProjectAccess(p.OwnerID)
+}
+
+func (p *Project) AfterUpdate() {
+	// The bean carries neither the previous parent nor the previous owner, so either being set means everyone.
+	// Neither set means only columns the grants query does not read were touched.
+	if p.ParentProjectID != nil || p.OwnerID != 0 {
+		invalidateAllProjectAccess()
+	}
+}
+
+func (p *Project) AfterDelete() { invalidateAllProjectAccess() }
+
 // ProjectBackgroundType holds a project background type
 type ProjectBackgroundType struct {
 	Type string
