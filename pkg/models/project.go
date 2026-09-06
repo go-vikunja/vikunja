@@ -448,6 +448,16 @@ func (p *Project) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 
 func projectMemoKey(id int64) string { return "project-" + strconv.FormatInt(id, 10) }
 
+// Detaches a copy from the memo: ParentProjectID is the only DB-backed pointer field.
+func (p *Project) memoCopy() *Project {
+	copied := *p
+	if p.ParentProjectID != nil {
+		parentID := *p.ParentProjectID
+		copied.ParentProjectID = &parentID
+	}
+	return &copied
+}
+
 // GetProjectSimpleByID gets a project with only the basic items, aka no tasks or user objects. Returns an error if the project does not exist.
 func GetProjectSimpleByID(s *xorm.Session, projectID int64) (project *Project, err error) {
 	if projectID < 1 {
@@ -468,8 +478,7 @@ func GetProjectSimpleByID(s *xorm.Session, projectID int64) (project *Project, e
 		return nil, err
 	}
 
-	copied := *p
-	return &copied, nil
+	return p.memoCopy(), nil
 }
 
 // GetProjectSimpleByIdentifier gets a project by its textual identifier (e.g. "PROJ").
@@ -555,8 +564,7 @@ func GetProjectsMapByIDs(s *xorm.Session, projectIDs []int64) (projects map[int6
 
 	projects = make(map[int64]*Project, len(loaded))
 	for id, p := range loaded {
-		copied := *p
-		projects[id] = &copied
+		projects[id] = p.memoCopy()
 	}
 	return projects, nil
 }

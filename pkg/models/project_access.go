@@ -176,15 +176,9 @@ func GetAllParentProjects(s *xorm.Session, projectID int64) (map[int64]*Project,
 		return nil, err
 	}
 
-	// The memo outlives this call, so hand out a copy callers cannot corrupt.
 	out := make(map[int64]*Project, len(chain))
 	for id, p := range chain {
-		project := *p
-		if p.ParentProjectID != nil {
-			parentID := *p.ParentProjectID
-			project.ParentProjectID = &parentID
-		}
-		out[id] = &project
+		out[id] = p.memoCopy()
 	}
 	return out, nil
 }
