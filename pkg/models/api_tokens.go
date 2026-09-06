@@ -256,11 +256,25 @@ func (t *APIToken) HasFeedsAccess() bool {
 // Skips the ~3 ms PBKDF2 on repeat requests; the row is still loaded from the db so revocation applies immediately.
 const verifiedAPITokenTTL = 10 * time.Minute
 
-// The key is an HMAC under the service secret, so write access to the store is not enough to mint an entry for a chosen token.
-func verifiedAPITokenKey(token string) string {
+type verifiedAPIToken struct {
+	Hash string
+	Tag  string
+}
+
+func serviceHMAC(msg string) string {
 	mac := hmac.New(sha256.New, []byte(config.ServiceSecret.GetString()))
-	mac.Write([]byte(token))
-	return "api_token_verified_" + hex.EncodeToString(mac.Sum(nil))
+	mac.Write([]byte(msg))
+	return hex.EncodeToString(mac.Sum(nil))
+}
+
+// Deriving the key from the token hides which token an entry belongs to.
+func verifiedAPITokenKey(token string) string {
+	return "api_token_verified_" + serviceHMAC(token)
+}
+
+// The tag binds the value to its token, so a value copied from another key is rejected.
+func verifiedAPITokenTag(token, hash string) string {
+	return serviceHMAC(token + "|" + hash)
 }
 
 // GetTokenFromTokenString returns the full token object from the original token string.
@@ -272,21 +286,23 @@ func GetTokenFromTokenString(s *xorm.Session, token string) (apiToken *APIToken,
 	}
 
 	cacheKey := verifiedAPITokenKey(token)
-	var hash string
+	var v verifiedAPIToken
 	// keyvalue errors count as a cache miss: a flaky backend should cost a PBKDF2 round, never an auth failure.
-	cached, kvErr := keyvalue.GetWithValue(cacheKey, &hash)
+	cached, kvErr := keyvalue.GetWithValue(cacheKey, &v)
 	if kvErr != nil {
 		log.Errorf("Could not read verified api token from keyvalue store: %s", kvErr)
 		cached = false
 	}
 	if cached {
-		t := &APIToken{}
-		exists, err := s.Where("token_hash = ?", hash).Get(t)
-		if err != nil {
-			return nil, err
-		}
-		if exists {
-			return t, nil
+		if hmac.Equal([]byte(v.Tag), []byte(verifiedAPITokenTag(token, v.Hash))) {
+			t := &APIToken{}
+			exists, err := s.Where("token_hash = ?", v.Hash).Get(t)
+			if err != nil {
+				return nil, err
+			}
+			if exists {
+				return t, nil
+			}
 		}
 		if err := keyvalue.Del(cacheKey); err != nil {
 			log.Errorf("Could not delete stale verified api token from keyvalue store: %s", err)
@@ -304,7 +320,8 @@ func GetTokenFromTokenString(s *xorm.Session, token string) (apiToken *APIToken,
 	for _, t := range tokens {
 		tempHash := HashToken(token, t.TokenSalt)
 		if subtle.ConstantTimeCompare([]byte(t.TokenHash), []byte(tempHash)) == 1 {
-			if err := keyvalue.PutWithTTL(cacheKey, t.TokenHash, verifiedAPITokenTTL); err != nil {
+			cacheValue := verifiedAPIToken{Hash: t.TokenHash, Tag: verifiedAPITokenTag(token, t.TokenHash)}
+			if err := keyvalue.PutWithTTL(cacheKey, cacheValue, verifiedAPITokenTTL); err != nil {
 				log.Errorf("Could not store verified api token in keyvalue store: %s", err)
 			}
 			return t, nil
