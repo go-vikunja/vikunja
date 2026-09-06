@@ -1,5 +1,6 @@
 import {computed, reactive} from 'vue'
 import {useQuery} from '@tanstack/vue-query'
+import {createSharedComposable} from '@vueuse/core'
 import {useRouter} from 'vue-router'
 
 import {
@@ -37,8 +38,9 @@ import {
 import SavedFilterModel from '@/models/savedFilter'
 import SavedFilterService from '@/services/savedFilter'
 
-export function useProjectNavigation() {
-	const router = useRouter()
+// One observer and one derived list set for the dozens of consumers.
+const useSharedProjectNavigation = createSharedComposable(() => {
+	// The explicit client keeps this usable outside a Vue injection context.
 	const query = useQuery(projectsQuery(), queryClient)
 	const realProjects = computed(() => query.data.value?.projects ?? [])
 	const favoriteProject = computed(() => query.data.value?.favoriteProject ?? null)
@@ -56,6 +58,33 @@ export function useProjectNavigation() {
 		? getFavoriteNavigationItems(query.data.value)
 		: [])
 	const hasProjects = computed(() => projectsArray.value.length > 0)
+
+	return {
+		query,
+		realProjects,
+		favoriteProject,
+		savedFilterProjects,
+		projectsArray,
+		projects,
+		rootProjects,
+		favoriteProjects,
+		hasProjects,
+	}
+})
+
+export function useProjectNavigation() {
+	const router = useRouter()
+	const {
+		query,
+		realProjects,
+		favoriteProject,
+		savedFilterProjects,
+		projectsArray,
+		projects,
+		rootProjects,
+		favoriteProjects,
+		hasProjects,
+	} = useSharedProjectNavigation()
 
 	async function toggleProjectFavorite(projectId: number) {
 		if (projectId === -1) {

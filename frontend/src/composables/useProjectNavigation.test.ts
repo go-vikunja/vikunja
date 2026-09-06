@@ -111,4 +111,25 @@ describe('useProjectNavigation', () => {
 		expect(queryClient.getQueryData<ProjectListResult>(listKey)?.savedFilterProjects[0]).toEqual(current)
 		wrapper.unmount()
 	})
+
+	it('shares a single projects query observer across consumers', () => {
+		queryClient.setQueryData<ProjectListResult>(projectKeys.list(), {
+			projects: [],
+			favoriteProject: null,
+			savedFilterProjects: [],
+		})
+		const first = mountProjectNavigation()
+		const second = mountProjectNavigation()
+
+		const observersCount = () => queryClient.getQueryCache()
+			.find({queryKey: projectKeys.list()})
+			?.getObserversCount() ?? 0
+		expect(observersCount()).toBe(1)
+
+		first.wrapper.unmount()
+		expect(observersCount()).toBe(1)
+
+		second.wrapper.unmount()
+		expect(observersCount()).toBe(0)
+	})
 })
