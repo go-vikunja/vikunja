@@ -24,10 +24,6 @@ import (
 	"xorm.io/xorm"
 )
 
-func (tm *TeamMember) AfterInsert() { invalidateProjectAccess(tm.UserID) }
-func (tm *TeamMember) AfterUpdate() { invalidateProjectAccess(tm.UserID) }
-func (tm *TeamMember) AfterDelete() { invalidateProjectAccess(tm.UserID) }
-
 // Create implements the create method to assign a user to a team
 // @Summary Add a user to a team
 // @Description Add a user to a team.
