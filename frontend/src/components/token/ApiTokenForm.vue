@@ -332,12 +332,18 @@ async function createToken() {
 						</option>
 					</select>
 				</div>
-				<flat-pickr
+				<!-- flatpickr's altInput is a sibling Vue doesn't own. Without this wrapper
+				     Vue anchors the v-if placeholder on it, and flatpickr's destroy hook has
+				     already removed it by then, so the patch throws (FRONTEND-OSS-2AR). -->
+				<div
 					v-if="newTokenExpiry === 'custom'"
-					v-model="newTokenExpiryCustom"
-					class="mis-2"
-					:config="flatPickerConfig"
-				/>
+					class="control mis-2"
+				>
+					<flat-pickr
+						v-model="newTokenExpiryCustom"
+						:config="flatPickerConfig"
+					/>
+				</div>
 			</div>
 		</div>
 
