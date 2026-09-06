@@ -74,7 +74,8 @@ func adminBearerReq(e *echo.Echo, method, path, bearer, body string) *httptest.R
 	return res
 }
 
-// insertAPIToken writes the row directly and returns the cleartext token.
+// insertAPIToken writes the row directly, bypassing Create's permission
+// validation so legacy scope keys can be seeded. Returns the cleartext token.
 func insertAPIToken(t *testing.T, ownerID int64, perms models.APIPermissions) string {
 	t.Helper()
 
@@ -110,6 +111,12 @@ func TestAdmin_APIToken(t *testing.T) {
 
 	t.Run("named scope reaches a PATCH route", func(t *testing.T) {
 		tok := insertAPIToken(t, 1, models.APIPermissions{"admin": {"users_set_status"}})
+		res := adminBearerReq(e, http.MethodPatch, "/api/v1/admin/users/2/status", tok, `{"status":0}`)
+		assert.Equal(t, http.StatusOK, res.Code, res.Body.String())
+	})
+
+	t.Run("legacy scope key still authorises", func(t *testing.T) {
+		tok := insertAPIToken(t, 1, models.APIPermissions{"admin": {"users_status"}})
 		res := adminBearerReq(e, http.MethodPatch, "/api/v1/admin/users/2/status", tok, `{"status":0}`)
 		assert.Equal(t, http.StatusOK, res.Code, res.Body.String())
 	})
