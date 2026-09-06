@@ -8,11 +8,11 @@
 				:class="{ 'is-selected': index === selectedIndex }"
 				@click="selectItem(index)"
 			>
-				<img
-					:src="item.avatarUrl"
-					alt=""
+				<UserAvatar
+					:user="item"
+					:size="32"
 					class="mention-avatar"
-				>
+				/>
 				<div class="mention-info">
 					<p class="mention-name">
 						{{ item.label }}
@@ -40,14 +40,17 @@
 import type {PropType} from 'vue'
 import type {MentionNodeAttrs} from '@tiptap/extension-mention'
 
+import UserAvatar from '@/components/misc/UserAvatar.vue'
+
 interface MentionItem extends MentionNodeAttrs {
 	id: string
 	label: string
 	username: string
-	avatarUrl: string | undefined
 }
 
 export default {
+	components: {UserAvatar},
+
 	props: {
 		items: {
 			type: Array as PropType<MentionItem[]>,

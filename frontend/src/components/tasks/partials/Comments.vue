@@ -39,26 +39,22 @@
 				class="media comment"
 			>
 				<figure class="media-left is-hidden-mobile">
-					<img
-						:src="avatarFor(c.author, 48)"
-						alt=""
+					<UserAvatar
+						:user="c.author"
+						:size="48"
 						class="image is-avatar"
-						height="48"
-						width="48"
-					>
+					/>
 					<figcaption class="is-sr-only">
 						{{ $t('misc.avatarOfUser', {user: getDisplayName(c.author)}) }}
 					</figcaption>
 				</figure>
 				<div class="media-content">
 					<div class="comment-info">
-						<img
-							:src="avatarFor(c.author, 20)"
-							alt=""
+						<UserAvatar
+							:user="c.author"
+							:size="20"
 							class="image is-avatar d-print-none"
-							height="20"
-							width="20"
-						>
+						/>
 						<strong>{{ getDisplayName(c.author) }}</strong>
 						<span
 							v-tooltip="formatDateLong(c.created)"
@@ -149,13 +145,11 @@
 				:class="{'new-comment-top': commentSortOrder === 'desc'}"
 			>
 				<figure class="media-left is-hidden-mobile">
-					<img
-						:src="userAvatar"
-						alt=""
+					<UserAvatar
+						:user="authStore.info"
+						:size="48"
 						class="image is-avatar"
-						height="48"
-						width="48"
-					>
+					/>
 					<figcaption class="is-sr-only">
 						{{ $t('misc.avatarOfUser', {user: getDisplayName(authStore.info)}) }}
 					</figcaption>
@@ -231,6 +225,7 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import Editor from '@/components/input/AsyncEditor'
 import PaginationEmit from '@/components/misc/PaginationEmit.vue'
+import UserAvatar from '@/components/misc/UserAvatar.vue'
 
 import TaskCommentService from '@/services/taskComment'
 import TaskCommentModel from '@/models/taskComment'
@@ -242,8 +237,7 @@ import {uploadFile, uploadFilesForEditor} from '@/helpers/attachments'
 import {success} from '@/message'
 import {formatDateLong, formatDisplayDate} from '@/helpers/time/formatDate'
 import {clearEditorDraft} from '@/helpers/editorDraftStorage'
-import {fetchAvatarBlobUrl, getDisplayName} from '@/models/user'
-import type {IUser} from '@/modelTypes/IUser'
+import {getDisplayName} from '@/models/user'
 import {useConfigStore} from '@/stores/config'
 import {useAuthStore} from '@/stores/auth'
 import Reactions from '@/components/input/Reactions.vue'
@@ -280,30 +274,6 @@ const newCommentText = ref('')
 
 const saved = ref<ITask['id'] | null>(null)
 const saving = ref<ITask['id'] | null>(null)
-
-const userAvatar = ref<string>()
-const avatarCache = reactive(new Map<string, string>())
-
-function avatarFor(u: IUser, size: number): string | undefined {
-	const key = `${u.id}-${size}`
-	const cached = avatarCache.get(key)
-	if (!cached) {
-		fetchAvatarBlobUrl(u, size).then(url => {
-			if (url) {
-				avatarCache.set(key, url)
-			}
-		})
-	}
-
-	return cached
-}
-
-watch(() => authStore.info, async (nu) => {
-	if (!nu) {
-		return
-	}
-	userAvatar.value = await fetchAvatarBlobUrl(nu, 48)
-}, {immediate: true})
 
 const currentUserId = computed(() => authStore.info.id)
 const enabled = computed(() => configStore.taskCommentsEnabled)

@@ -75,13 +75,11 @@
 						:aria-expanded="open"
 						@click="toggleOpen"
 					>
-						<img
-							:src="authStore.avatarUrl"
-							alt=""
+						<UserAvatar
+							:user="authStore.info"
+							:size="40"
 							class="avatar"
-							width="40"
-							height="40"
-						>
+						/>
 						<span class="username">{{ authStore.userDisplayName }}</span>
 						<span
 							class="mis-1 dropdown-icon icon is-small"
@@ -146,6 +144,7 @@ import Logo from '@/components/home/Logo.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import MenuButton from '@/components/home/MenuButton.vue'
 import OpenQuickActions from '@/components/misc/OpenQuickActions.vue'
+import UserAvatar from '@/components/misc/UserAvatar.vue'
 
 import { getProjectTitle } from '@/helpers/getProjectTitle'
 import { isEditorContentEmpty } from '@/helpers/editorContentEmpty'
