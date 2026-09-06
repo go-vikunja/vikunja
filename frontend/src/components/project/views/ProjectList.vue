@@ -243,7 +243,7 @@ function handleDragStart(e: { item: HTMLElement }) {
 	}
 }
 
-async function saveTaskPosition(e: { originalEvent?: MouseEvent, to: HTMLElement, from: HTMLElement, newIndex: number }) {
+async function saveTaskPosition(e: { originalEvent?: MouseEvent, to: HTMLElement, from: HTMLElement, item: HTMLElement, newIndex: number }) {
 	drag.value = false
 
 	// Check if dropped on a sidebar project
@@ -260,21 +260,28 @@ async function saveTaskPosition(e: { originalEvent?: MouseEvent, to: HTMLElement
 		return
 	}
 
-	const task = tasks.value[e.newIndex]
-	const taskBefore = tasks.value[e.newIndex - 1] ?? null
-	const taskAfter = tasks.value[e.newIndex + 1] ?? null
+	// e.newIndex is a DOM index: it counts elements still leaving the transition group, so it can
+	// point past the last task. The list is already reordered here, so resolve the task by its id.
+	const movedTaskId = parseInt(e.item.dataset.taskId ?? '', 10)
+	const newIndex = tasks.value.findIndex(t => t.id === movedTaskId)
+
+	if (newIndex === -1) {
+		return
+	}
+
+	const taskBefore = tasks.value[newIndex - 1] ?? null
+	const taskAfter = tasks.value[newIndex + 1] ?? null
 
 	const position = calculateItemPosition(taskBefore !== null ? taskBefore.position : null, taskAfter !== null ? taskAfter.position : null)
 
 	await taskPositionService.value.update(new TaskPositionModel({
 		position,
 		projectViewId: props.viewId,
-		taskId: task.id,
+		taskId: movedTaskId,
 	}))
-	tasks.value[e.newIndex] = {
-		...task,
-		position,
-	}
+	tasks.value = tasks.value.map(t => t.id === movedTaskId
+		? {...t, position}
+		: t)
 }
 
 const taskRefs = ref<(InstanceType<typeof SingleTaskInProject> | null)[]>([])
