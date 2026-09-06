@@ -79,32 +79,46 @@ func TestGetProjectAccessForUser(t *testing.T) {
 		_, has := access.permission(6)
 		assert.False(t, has)
 	})
+}
 
-	t.Run("memoized per session and across sessions until invalidated", func(t *testing.T) {
-		again, err := getProjectAccessForUser(s, 1)
-		require.NoError(t, err)
-		assert.Equal(t, access.permissions, again.permissions)
+func TestGetProjectAccessForUser_MemoizedPerSessionUntilInvalidated(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
 
-		other := db.NewSession()
-		defer other.Close()
-		shared, err := getProjectAccessForUser(other, 1)
-		require.NoError(t, err)
-		assert.Equal(t, access.permissions, shared.permissions)
-		_, has := cachedProjectAccess(t, 1)
-		assert.True(t, has)
+	// Priming through a session that is closed again leaves the sessions below without
+	// read locks, which sqlite's shared cache would otherwise hold against the insert.
+	_, has := resolveAccess(t, 1).permission(2)
+	require.False(t, has)
 
-		invalidateProjectAccess(1)
-		_, has = cachedProjectAccess(t, 1)
-		assert.False(t, has)
+	memoized := db.NewSession()
+	defer memoized.Close()
+	access, err := getProjectAccessForUser(memoized, 1)
+	require.NoError(t, err)
+	_, has = access.permission(2)
+	require.False(t, has)
 
-		third := db.NewSession()
-		defer third.Close()
-		fresh, err := getProjectAccessForUser(third, 1)
-		require.NoError(t, err)
-		assert.Equal(t, access.permissions, fresh.permissions)
-		_, has = cachedProjectAccess(t, 1)
-		assert.True(t, has)
-	})
+	writer := db.NewSession()
+	_, err = writer.Insert(&ProjectUser{ProjectID: 2, UserID: 1, Permission: PermissionRead})
+	require.NoError(t, err)
+
+	uncommitted, err := getProjectAccessForUser(memoized, 1)
+	require.NoError(t, err)
+	_, has = uncommitted.permission(2)
+	assert.False(t, has)
+
+	_, has = resolveAccess(t, 1).permission(2)
+	assert.False(t, has)
+
+	require.NoError(t, writer.Commit())
+	writer.Close()
+
+	stale, err := getProjectAccessForUser(memoized, 1)
+	require.NoError(t, err)
+	_, has = stale.permission(2)
+	assert.False(t, has)
+
+	permission, has := resolveAccess(t, 1).permission(2)
+	require.True(t, has)
+	assert.Equal(t, PermissionRead, permission)
 }
 
 func TestGetProjectAccessForUser_GrantsAreGreatestOf(t *testing.T) {
