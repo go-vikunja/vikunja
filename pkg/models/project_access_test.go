@@ -215,7 +215,7 @@ func TestGetProjectAccessForUser_OutOfEnumGrantIsNoGrant(t *testing.T) {
 
 			_, has := access.permission(2)
 			assert.False(t, has)
-			assert.NotContains(t, access.sortedIDs, int64(2))
+			assert.NotContains(t, access.SortedIDs, int64(2))
 		})
 	}
 }
@@ -240,7 +240,7 @@ func TestProjectAccessCond(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("no access matches nothing", func(t *testing.T) {
-		empty := &projectAccess{userID: 1}
+		empty := &projectAccess{UserID: 1}
 		assert.Empty(t, projectIDsMatching(t, s, empty.cond("id")))
 	})
 
