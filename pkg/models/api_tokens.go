@@ -256,12 +256,12 @@ func (t *APIToken) HasFeedsAccess() bool {
 // Skips the ~3 ms PBKDF2 on repeat requests; the row is still loaded by id so revocation applies immediately.
 const verifiedAPITokenTTL = 10 * time.Minute
 
-// The key is an HMAC under the service secret, so write access to the store is not enough to mint an entry for a chosen token.
 type verifiedAPIToken struct {
 	ID   int64
 	Hash string
 }
 
+// The key is an HMAC under the service secret, so write access to the store is not enough to mint an entry for a chosen token.
 func verifiedAPITokenKey(token string) string {
 	mac := hmac.New(sha256.New, []byte(config.ServiceSecret.GetString()))
 	mac.Write([]byte(token))
