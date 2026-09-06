@@ -107,13 +107,12 @@ func cacheForSession(s *xorm.Session) (*sessionCache, bool) {
 	return c.(*sessionCache), true
 }
 
-// For writes that bypass xorm entirely, which writeInvalidationHook never sees.
-func invalidateAllSessionCaches() {
+// Fixture loading replaces the database under every memo without firing a write hook.
+func invalidateAllCaches() {
 	sessionCaches.Range(func(_, v any) bool {
 		v.(*sessionCache).markDirty()
 		return true
 	})
-	// Replacing the database under the shared layer (test fixtures) fires no write hook.
 	sharedCacheEpoch.Add(1)
 	if err := keyvalue.DelPrefix(sharedCachePrefix); err != nil {
 		log.Errorf("could not drop shared cache: %s", err)
@@ -190,7 +189,6 @@ func RememberShared[T any](s *xorm.Session, key string, ttl time.Duration, fn fu
 	return v, nil
 }
 
-// A lost invalidation means stale authorization, hence the error level.
 func InvalidateShared(key string) {
 	sharedCacheEpoch.Add(1)
 	if err := keyvalue.Del(sharedCachePrefix + key); err != nil {
