@@ -105,6 +105,9 @@ func Restore(table string, contents []map[string]interface{}) (err error) {
 		log.Fatalf("Could not find table definition for table %s", table)
 	}
 
+	// Deferred, not at the end: a restore that fails partway still replaced data behind the memos.
+	defer invalidateAllCaches()
+
 	for _, content := range contents {
 		for colName, value := range content {
 			col := metaForCurrentTable.GetColumn(colName)
@@ -155,6 +158,8 @@ func Restore(table string, contents []map[string]interface{}) (err error) {
 
 // RestoreAndTruncate removes all content from the table before restoring it from the contents map
 func RestoreAndTruncate(table string, contents []map[string]interface{}) (err error) {
+	defer invalidateAllCaches()
+
 	if err := validateTableName(table); err != nil {
 		return err
 	}
@@ -179,6 +184,8 @@ func RestoreAndTruncate(table string, contents []map[string]interface{}) (err er
 // TruncateAllTables deletes all data from every registered Vikunja table.
 // Used by e2e tests to ensure a clean database state before each test.
 func TruncateAllTables() error {
+	defer invalidateAllCaches()
+
 	for _, name := range RegisteredTableNames() {
 		if err := validateTableName(name); err != nil {
 			return err
