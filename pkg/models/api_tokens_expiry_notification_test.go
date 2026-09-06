@@ -82,3 +82,19 @@ func TestAPITokenExpiringDayNotification(t *testing.T) {
 		assert.Contains(t, opts.Message, "(in 23 hours")
 	})
 }
+
+func TestAPITokenExpiringNotificationForBot(t *testing.T) {
+	owner := &user.User{ID: 21, Name: "Owner A"}
+	bot := &user.User{ID: 23, Username: "bot-owner-a-assistant", BotOwnerID: 21}
+	token := &APIToken{ID: 7, Title: "Bot Token", ExpiresAt: time.Now().Add(24 * time.Hour)}
+
+	n := &APITokenExpiringDayNotification{User: owner, Token: token, Bot: bot}
+
+	assert.Contains(t, n.ToTitle("en"), "bot-owner-a-assistant")
+
+	opts, err := notifications.RenderMail(n.ToMail("en"), "en")
+	require.NoError(t, err)
+	assert.Contains(t, opts.Message, "Hi Owner A")
+	assert.Contains(t, opts.Message, "bot-owner-a-assistant")
+	assert.Contains(t, opts.Message, "user/settings/bots")
+}
