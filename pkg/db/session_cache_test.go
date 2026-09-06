@@ -17,6 +17,7 @@
 package db
 
 import (
+	"errors"
 	"strconv"
 	"testing"
 
@@ -58,8 +59,9 @@ func TestRemember(t *testing.T) {
 	config.InitDefaultConfig()
 	engine, err := CreateTestEngine()
 	require.NoError(t, err)
-	// Engine-level DDL does not touch the memo of s.
+	// DDL through the engine bypasses the session write hook.
 	require.NoError(t, engine.Sync(&memoTestRow{}))
+	t.Cleanup(func() { _ = engine.DropTables(&memoTestRow{}) })
 
 	s := NewSession()
 	defer s.Close()
@@ -126,4 +128,64 @@ func TestRememberEach(t *testing.T) {
 	assert.Equal(t, map[int64]string{4: "v4", 5: "v5"}, deduped)
 
 	assert.Equal(t, [][]int64{{1, 2}, {3}, {3}, {4, 5}}, fetched)
+}
+
+func TestRememberFetchError(t *testing.T) {
+	config.InitDefaultConfig()
+	_, err := CreateTestEngine()
+	require.NoError(t, err)
+
+	s := NewSession()
+	defer s.Close()
+
+	calls := 0
+	fetchErr := errors.New("fetch failed")
+	fetch := func() (int, error) {
+		calls++
+		return 42, fetchErr
+	}
+
+	first, err := Remember(s, "remember-error", fetch)
+	require.ErrorIs(t, err, fetchErr)
+	assert.Equal(t, 0, first)
+
+	_, err = Remember(s, "remember-error", fetch)
+	require.ErrorIs(t, err, fetchErr)
+	assert.Equal(t, 2, calls, "a failed fetch stores nothing")
+}
+
+func TestRememberWithoutMemo(t *testing.T) {
+	config.InitDefaultConfig()
+	engine, err := CreateTestEngine()
+	require.NoError(t, err)
+
+	// Only NewSession attaches a memo, so a session straight from the engine has none.
+	s := engine.NewSession()
+	defer s.Close()
+
+	calls := 0
+	fetch := func() (int, error) {
+		calls++
+		return 42, nil
+	}
+
+	_, err = Remember(s, "remember-no-memo", fetch)
+	require.NoError(t, err)
+	_, err = Remember(s, "remember-no-memo", fetch)
+	require.NoError(t, err)
+	assert.Equal(t, 2, calls)
+
+	var fetched [][]int64
+	key := func(id int64) string { return "remember-each-no-memo-" + strconv.FormatInt(id, 10) }
+	values, err := RememberEach(s, []int64{4, 4, 5}, key, func(missing []int64) (map[int64]string, error) {
+		fetched = append(fetched, append([]int64(nil), missing...))
+		loaded := map[int64]string{}
+		for _, id := range missing {
+			loaded[id] = "v" + strconv.FormatInt(id, 10)
+		}
+		return loaded, nil
+	})
+	require.NoError(t, err)
+	assert.Equal(t, map[int64]string{4: "v4", 5: "v5"}, values)
+	assert.Equal(t, [][]int64{{4, 5}}, fetched)
 }
