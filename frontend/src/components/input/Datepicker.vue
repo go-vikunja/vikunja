@@ -7,8 +7,15 @@
 			@click.stop="toggleDatePopup"
 		>
 			<i v-if="date === null && emptyLabel !== ''">{{ emptyLabel }}</i>
+			<template v-else-if="date === null">
+				{{ chooseDateLabel }}
+			</template>
+			<template v-else-if="showExactDate && isRelative">
+				<span class="datepicker__relative-date">{{ capitalizeFirstLetter(relativeDateText) }}</span>
+				<span class="datepicker__exact-date"> ({{ exactDateText }})</span>
+			</template>
 			<template v-else>
-				{{ date === null ? chooseDateLabel : formatDisplayDate(date) }}
+				{{ formatDisplayDate(date) }}
 			</template>
 		</SimpleButton>
 
@@ -42,13 +49,15 @@
 </template>
 
 <script setup lang="ts">
-import {ref, onMounted, onBeforeUnmount, toRef, watch, nextTick} from 'vue'
+import {ref, computed, onMounted, onBeforeUnmount, toRef, watch, nextTick} from 'vue'
 
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import DatepickerInline from '@/components/input/DatepickerInline.vue'
 import SimpleButton from '@/components/input/SimpleButton.vue'
 
-import {formatDisplayDate} from '@/helpers/time/formatDate'
+import {formatDisplayDate, formatDateSince, formatDate} from '@/helpers/time/formatDate'
+import {useDateDisplay} from '@/composables/useDateDisplay'
+import {DATE_DISPLAY} from '@/constants/dateDisplay'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 import {createDateFromString} from '@/helpers/time/createDateFromString'
 import {useI18n} from 'vue-i18n'
@@ -60,6 +69,7 @@ const props = withDefaults(defineProps<{
 	showShortcuts?: boolean,
 	// When the value is null, show this (italic) instead of chooseDateLabel.
 	emptyLabel?: string,
+	showExactDate?: boolean,
 }>(), {
 	chooseDateLabel: () => {
 		const {t} = useI18n({useScope: 'global'})
@@ -68,6 +78,7 @@ const props = withDefaults(defineProps<{
 	disabled: false,
 	showShortcuts: true,
 	emptyLabel: '',
+	showExactDate: false,
 })
 
 const emit = defineEmits<{
@@ -79,6 +90,17 @@ const emit = defineEmits<{
 const date = ref<Date | null>(null)
 const show = ref(false)
 const changed = ref(false)
+
+const {store: dateDisplay} = useDateDisplay()
+const isRelative = computed(() => dateDisplay.value === DATE_DISPLAY.RELATIVE)
+
+function capitalizeFirstLetter(str: string) {
+	if (!str) return ''
+	return str.charAt(0).toUpperCase() + str.slice(1)
+}
+
+const relativeDateText = computed(() => date.value ? formatDateSince(date.value) : '')
+const exactDateText = computed(() => date.value ? formatDate(date.value, 'YYYY-MM-DD') : '')
 
 onMounted(() => document.addEventListener('click', hideDatePopup))
 onBeforeUnmount(() =>document.removeEventListener('click', hideDatePopup))
@@ -172,6 +194,16 @@ function closeViaEsc() {
 .datepicker__close-button {
 	margin: 1rem;
 	inline-size: calc(100% - 2rem);
+}
+
+.datepicker__relative-date {
+	white-space: nowrap;
+}
+
+.datepicker__exact-date {
+	color: var(--text-light);
+	font-weight: normal;
+	white-space: nowrap;
 }
 
 :deep(.flatpickr-calendar) {
