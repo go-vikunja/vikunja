@@ -18,7 +18,6 @@ package models
 
 import (
 	"testing"
-	"time"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
@@ -40,33 +39,23 @@ func TestProjectAccessCache(t *testing.T) {
 	t.Run("served across sessions until invalidated", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		first := resolveAccess(t, 1)
-		cached, has := projectAccessCache.get(1)
+		cached, has := getCachedProjectAccess(1)
 		require.True(t, has)
-		assert.Same(t, first, cached)
-		assert.Same(t, first, resolveAccess(t, 1))
+		assert.Equal(t, first.permissions, cached)
+		assert.Equal(t, first.permissions, resolveAccess(t, 1).permissions)
 
-		projectAccessCache.invalidateUser(1)
-		_, has = projectAccessCache.get(1)
+		invalidateProjectAccess(1)
+		_, has = getCachedProjectAccess(1)
 		assert.False(t, has)
-		assert.NotSame(t, first, resolveAccess(t, 1))
 	})
-	t.Run("a new generation drops every entry", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		first := resolveAccess(t, 1)
-		projectAccessCache.invalidateAll()
-		_, has := projectAccessCache.get(1)
-		assert.False(t, has)
-		assert.NotSame(t, first, resolveAccess(t, 1))
-	})
-	t.Run("entries expire", func(t *testing.T) {
+	t.Run("invalidating everything drops every entry", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		resolveAccess(t, 1)
-		projectAccessCache.mu.Lock()
-		e := projectAccessCache.entries[1]
-		e.resolved = time.Now().Add(-projectAccessCacheTTL - time.Second)
-		projectAccessCache.entries[1] = e
-		projectAccessCache.mu.Unlock()
-		_, has := projectAccessCache.get(1)
+		resolveAccess(t, 2)
+		invalidateAllProjectAccess()
+		_, has := getCachedProjectAccess(1)
+		assert.False(t, has)
+		_, has = getCachedProjectAccess(2)
 		assert.False(t, has)
 	})
 	t.Run("sharing a project with a user shows up after commit", func(t *testing.T) {
@@ -80,15 +69,14 @@ func TestProjectAccessCache(t *testing.T) {
 		share := &ProjectUser{ProjectID: 1, Username: "user2", Permission: PermissionRead}
 		require.NoError(t, share.Create(s, &user.User{ID: 1}))
 		// Not visible before commit: the hook has not run and the entry is still the old one.
-		_, has = projectAccessCache.get(2)
+		_, has = getCachedProjectAccess(2)
 		assert.True(t, has)
 		require.NoError(t, s.Commit())
 		s.Close()
 
-		_, has = projectAccessCache.get(2)
+		_, has = getCachedProjectAccess(2)
 		assert.False(t, has)
-		after := resolveAccess(t, 2)
-		_, has = after.permission(1)
+		_, has = resolveAccess(t, 2).permission(1)
 		assert.True(t, has)
 	})
 	t.Run("a new child project is visible to everyone with access to the parent", func(t *testing.T) {
@@ -103,4 +91,40 @@ func TestProjectAccessCache(t *testing.T) {
 		_, has := resolveAccess(t, 1).permission(child.ID)
 		assert.True(t, has)
 	})
+	t.Run("a session that has written bypasses the cache", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		resolveAccess(t, 1)
+
+		s := db.NewSession()
+		defer s.Close()
+		created := &Project{Title: "x"}
+		require.NoError(t, created.Create(s, &user.User{ID: 1}))
+
+		access, err := getProjectAccessForUser(s, 1)
+		require.NoError(t, err)
+		_, has := access.permission(created.ID)
+		assert.True(t, has)
+
+		require.NoError(t, s.Rollback())
+	})
+}
+
+func TestUpdateProjectLastUpdatedKeepsAccessCache(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	resolveAccess(t, 1)
+	s := db.NewSession()
+	defer s.Close()
+	p, err := GetProjectSimpleByID(s, 1)
+	require.NoError(t, err)
+	before := p.Updated
+
+	time.Sleep(time.Second)
+	require.NoError(t, updateProjectLastUpdated(s, p))
+	require.NoError(t, s.Commit())
+
+	_, cached := projectAccessCache.get(1)
+	assert.True(t, cached)
+	after, err := GetProjectSimpleByID(db.NewSession(), 1)
+	require.NoError(t, err)
+	assert.True(t, after.Updated.After(before))
 }
