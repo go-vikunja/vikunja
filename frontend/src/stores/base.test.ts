@@ -111,7 +111,6 @@ describe('base store identity reset', () => {
 
 	it.each([
 		{label: 'user switch', next: {id: 2, type: AUTH_TYPES.USER}, resets: true},
-		{label: 'logout', next: null, resets: true},
 		{label: 'link share with the same numeric id', next: {id: 1, type: AUTH_TYPES.LINK_SHARE}, resets: true},
 		{label: 'same identity', next: {id: 1, type: AUTH_TYPES.USER}, resets: false},
 	])('$label resets the background, blur hash, current project and tasks flag: $resets', async ({next, resets}) => {

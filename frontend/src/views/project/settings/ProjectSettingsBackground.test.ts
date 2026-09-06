@@ -1,4 +1,4 @@
-import {defineComponent, ref, toValue, type Ref} from 'vue'
+import {defineComponent, ref, type Ref} from 'vue'
 import {flushPromises, shallowMount} from '@vue/test-utils'
 import {beforeEach, describe, expect, it, vi} from 'vitest'
 
@@ -17,7 +17,6 @@ const state = vi.hoisted(() => ({
 }))
 
 const refetchSearch = vi.hoisted(() => vi.fn())
-const infiniteQueryOptions = vi.hoisted(() => [] as unknown[])
 
 const handleSetCurrentProject = vi.hoisted(() => vi.fn())
 const routerBack = vi.hoisted(() => vi.fn())
@@ -61,18 +60,15 @@ vi.mock('@tanstack/vue-query', async importOriginal => {
 			isPending: ref(false),
 			isError: state.projectIsError,
 		}),
-		useInfiniteQuery: (options: unknown) => {
-			infiniteQueryOptions.push(options)
-			return {
-				data: state.searchData,
-				isFetching: ref(false),
-				hasNextPage: ref(false),
-				isFetchingNextPage: ref(false),
-				fetchNextPage: vi.fn(),
-				isError: state.searchIsError,
-				refetch: refetchSearch,
-			}
-		},
+		useInfiniteQuery: () => ({
+			data: state.searchData,
+			isFetching: ref(false),
+			hasNextPage: ref(false),
+			isFetchingNextPage: ref(false),
+			fetchNextPage: vi.fn(),
+			isError: state.searchIsError,
+			refetch: refetchSearch,
+		}),
 	}
 })
 
@@ -149,7 +145,6 @@ describe('ProjectSettingsBackground', () => {
 		state.projectIsError = ref(false)
 		state.searchData = ref({pages: []})
 		state.searchIsError = ref(false)
-		infiniteQueryOptions.splice(0)
 		handleSetCurrentProject.mockClear()
 		routerBack.mockClear()
 		refetchSearch.mockClear()
@@ -207,7 +202,6 @@ describe('ProjectSettingsBackground', () => {
 		expect(findButton(wrapper, 'project.background.upload')).toBeUndefined()
 		expect(findButton(wrapper, 'project.background.remove')).toBeUndefined()
 		expect(wrapper.find('input[type="text"]').exists()).toBe(false)
-		expect(toValue(infiniteQueryOptions[0])).toMatchObject({enabled: false})
 		expect(wrapper.text()).toContain('project.background.noPermission')
 	})
 

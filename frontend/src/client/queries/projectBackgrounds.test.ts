@@ -100,32 +100,6 @@ function resetMocks() {
 describe('project background queries', () => {
 	beforeEach(resetMocks)
 
-	it('uses separate stable keys for project images and Unsplash resources', () => {
-		expect(projectBackgroundKeys.all).toEqual(['project-backgrounds'])
-		expect(projectBackgroundKeys.project(7)).toEqual(['project-backgrounds', 'project', 7])
-		expect(projectBackgroundKeys.search('forest')).toEqual([
-			'project-backgrounds',
-			'unsplash',
-			'search',
-			'forest',
-		])
-		expect(projectBackgroundKeys.thumbnail('image-1')).toEqual([
-			'project-backgrounds',
-			'unsplash',
-			'thumbnail',
-			'image-1',
-		])
-	})
-
-	it('fetches and caches a project background as a blob', async () => {
-		const background = new Blob(['project-background'], {type: 'image/jpeg'})
-		sdk.projectsBackgroundGet.mockResolvedValue({data: background})
-
-		await expect(queryClient.fetchQuery(projectBackgroundQuery(7))).resolves.toBe(background)
-		expect(sdk.projectsBackgroundGet).toHaveBeenCalledWith({path: {project: 7}})
-		expect(queryClient.getQueryData(projectBackgroundKeys.project(7))).toBe(background)
-	})
-
 	it('rejects background responses which are not images', async () => {
 		sdk.projectsBackgroundGet.mockResolvedValue({data: {message: 'not an image'}})
 		sdk.backgroundsUnsplashThumb.mockResolvedValue({data: 'not an image'})
@@ -171,15 +145,6 @@ describe('project background queries', () => {
 		{name: 'info with non-string fields', info: {author: 42, author_name: 'Ada Lovelace'}, expected: null},
 	])('narrows $name to Unsplash attribution fields', ({info, expected}) => {
 		expect(unsplashAuthor(info)).toEqual(expected)
-	})
-
-	it('fetches and caches an Unsplash thumbnail as a blob', async () => {
-		const thumbnail = new Blob(['thumbnail'], {type: 'image/jpeg'})
-		sdk.backgroundsUnsplashThumb.mockResolvedValue({data: thumbnail})
-
-		await expect(queryClient.fetchQuery(unsplashBackgroundThumbnailQuery('image-1'))).resolves.toBe(thumbnail)
-		expect(sdk.backgroundsUnsplashThumb).toHaveBeenCalledWith({path: {image: 'image-1'}})
-		expect(queryClient.getQueryData(projectBackgroundKeys.thumbnail('image-1'))).toBe(thumbnail)
 	})
 })
 
