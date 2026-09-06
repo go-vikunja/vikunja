@@ -446,21 +446,39 @@ func (p *Project) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 	return
 }
 
+func projectMemoKey(id int64) string { return "project-" + strconv.FormatInt(id, 10) }
+
+// Detaches a copy from the memo: ParentProjectID is the only DB-backed pointer field.
+func (p *Project) memoCopy() *Project {
+	copied := *p
+	if p.ParentProjectID != nil {
+		parentID := *p.ParentProjectID
+		copied.ParentProjectID = &parentID
+	}
+	return &copied
+}
+
 // GetProjectSimpleByID gets a project with only the basic items, aka no tasks or user objects. Returns an error if the project does not exist.
 func GetProjectSimpleByID(s *xorm.Session, projectID int64) (project *Project, err error) {
 	if projectID < 1 {
 		return nil, ErrProjectDoesNotExist{ID: projectID}
 	}
 
-	project, exists, err := getProjectSimple(s, builder.Eq{"id": projectID})
+	p, err := db.Remember(s, projectMemoKey(projectID), func() (*Project, error) {
+		loaded, exists, err := getProjectSimple(s, builder.Eq{"id": projectID})
+		if err != nil {
+			return nil, err
+		}
+		if !exists {
+			return nil, ErrProjectDoesNotExist{ID: projectID}
+		}
+		return loaded, nil
+	})
 	if err != nil {
 		return nil, err
 	}
-	if !exists {
-		return nil, ErrProjectDoesNotExist{ID: projectID}
-	}
 
-	return
+	return p.memoCopy(), nil
 }
 
 // GetProjectSimpleByIdentifier gets a project by its textual identifier (e.g. "PROJ").
@@ -535,14 +553,20 @@ func GetProjectsSimpleByTaskIDs(s *xorm.Session, taskIDs []int64) (ps []*Project
 
 // GetProjectsMapByIDs returns a map of projects from a slice with project ids
 func GetProjectsMapByIDs(s *xorm.Session, projectIDs []int64) (projects map[int64]*Project, err error) {
-	projects = make(map[int64]*Project, len(projectIDs))
-
-	if len(projectIDs) == 0 {
-		return
+	loaded, err := db.RememberEach(s, projectIDs, projectMemoKey, func(missing []int64) (map[int64]*Project, error) {
+		found := map[int64]*Project{}
+		err := s.In("id", missing).Find(&found)
+		return found, err
+	})
+	if err != nil {
+		return nil, err
 	}
 
-	err = s.In("id", projectIDs).Find(&projects)
-	return
+	projects = make(map[int64]*Project, len(loaded))
+	for id, p := range loaded {
+		projects[id] = p.memoCopy()
+	}
+	return projects, nil
 }
 
 func GetProjectsByIDs(s *xorm.Session, projectIDs []int64) (projects []*Project, err error) {

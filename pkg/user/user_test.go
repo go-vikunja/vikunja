@@ -932,3 +932,51 @@ func TestGetUserByID_ActiveUser(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, int64(1), u.ID)
 }
+
+func TestGetUserByID_AfterBatchLoadKeepsStatusCheck(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	t.Cleanup(func() { db.LoadAndAssertFixtures(t) })
+	s := db.NewSession()
+	defer s.Close()
+	// Commit so the second session's write below is visible; a commit does not dirty the memo.
+	require.NoError(t, s.Commit())
+
+	batch, err := GetUsersByIDs(s, []int64{17, 18, 1})
+	require.NoError(t, err)
+	require.Len(t, batch, 3)
+	assert.Empty(t, batch[17].Email)
+	assert.Empty(t, batch[18].Email)
+
+	disabled, err := GetUserByID(s, 17)
+	require.True(t, IsErrAccountDisabled(err))
+	require.NotNil(t, disabled)
+	assert.Equal(t, int64(17), disabled.ID)
+	assert.Empty(t, disabled.Email)
+
+	locked, err := GetUserByID(s, 18)
+	require.True(t, IsErrAccountLocked(err))
+	require.NotNil(t, locked)
+	assert.Equal(t, int64(18), locked.ID)
+
+	s2 := db.NewSession()
+	defer s2.Close()
+	_, err = s2.ID(1).Cols("username").Update(&User{Username: "behind the back"})
+	require.NoError(t, err)
+	require.NoError(t, s2.Commit())
+
+	first, err := GetUserByID(s, 1)
+	require.NoError(t, err)
+	assert.Equal(t, "user1", first.Username, "a re-read that reaches the db would see the other session's write")
+	first.Username = "mutated"
+
+	second, err := GetUserByID(s, 1)
+	require.NoError(t, err)
+	assert.Equal(t, "user1", second.Username)
+
+	_, err = s.ID(2).Cols("name").Update(&User{Name: "any write invalidates the memo"})
+	require.NoError(t, err)
+
+	afterWrite, err := GetUserByID(s, 1)
+	require.NoError(t, err)
+	assert.Equal(t, "behind the back", afterWrite.Username)
+}

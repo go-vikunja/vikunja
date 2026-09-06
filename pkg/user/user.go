@@ -249,6 +249,8 @@ type APIUserPassword struct {
 	Email string `json:"email" valid:"email,length(0|250)" maxLength:"250"`
 }
 
+func userMemoKey(id int64) string { return "user-" + strconv.FormatInt(id, 10) }
+
 // GetUserByID returns user by its ID
 func GetUserByID(s *xorm.Session, id int64) (user *User, err error) {
 	// Apparently xorm does otherwise look for all users but return only one, which leads to returning one even if the ID is 0
@@ -256,7 +258,16 @@ func GetUserByID(s *xorm.Session, id int64) (user *User, err error) {
 		return &User{}, ErrUserDoesNotExist{}
 	}
 
-	return getUser(s, &User{ID: id}, false)
+	// The memo holds the raw row, shared with GetUsersByIDs, so the status gate runs on every hit.
+	raw, err := db.Remember(s, userMemoKey(id), func() (*User, error) {
+		return loadUser(s, &User{ID: id}, false)
+	})
+	if err != nil {
+		return &User{}, err
+	}
+
+	u := *raw
+	return &u, finishLoadedUser(&u)
 }
 
 // GetUserByUsername gets a user from its username. This is an extra function to be able to add an extra error check.
@@ -296,11 +307,19 @@ func GetUserWithEmail(s *xorm.Session, user *User) (userOut *User, err error) {
 
 // GetUsersByIDs returns a map of users from a slice of user ids
 func GetUsersByIDs(s *xorm.Session, userIDs []int64) (users map[int64]*User, err error) {
-	if len(userIDs) == 0 {
-		return users, nil
+	loaded, err := db.RememberEach(s, userIDs, userMemoKey, func(missing []int64) (map[int64]*User, error) {
+		return GetUsersByCond(s, builder.In("id", missing))
+	})
+	if err != nil {
+		return nil, err
 	}
 
-	return GetUsersByCond(s, builder.In("id", userIDs))
+	users = make(map[int64]*User, len(loaded))
+	for id, u := range loaded {
+		copied := *u
+		users[id] = &copied
+	}
+	return users, nil
 }
 
 func GetUsersByCond(s *xorm.Session, cond builder.Cond) (users map[int64]*User, err error) {
@@ -319,8 +338,7 @@ func GetUsersByCond(s *xorm.Session, cond builder.Cond) (users map[int64]*User, 
 	return
 }
 
-// getUser is a small helper function to avoid having duplicated code for almost the same use case
-func getUser(s *xorm.Session, user *User, withEmail bool) (userOut *User, err error) {
+func loadUser(s *xorm.Session, user *User, withEmail bool) (userOut *User, err error) {
 	userOut = &User{} // To prevent a panic if user is nil
 	*userOut = *user
 	exists, err := s.Get(userOut)
@@ -335,19 +353,32 @@ func getUser(s *xorm.Session, user *User, withEmail bool) (userOut *User, err er
 		userOut.Email = ""
 	}
 
-	if userOut.OverdueTasksRemindersTime == "" {
-		userOut.OverdueTasksRemindersTime = "9:00"
-	}
-
-	if userOut.Status == StatusDisabled {
-		return userOut, &ErrAccountDisabled{UserID: userOut.ID}
-	}
-
-	if userOut.Status == StatusAccountLocked {
-		return userOut, &ErrAccountLocked{UserID: userOut.ID}
-	}
-
 	return userOut, nil
+}
+
+func getUser(s *xorm.Session, user *User, withEmail bool) (userOut *User, err error) {
+	userOut, err = loadUser(s, user, withEmail)
+	if err != nil {
+		return userOut, err
+	}
+
+	return userOut, finishLoadedUser(userOut)
+}
+
+func finishLoadedUser(u *User) error {
+	if u.OverdueTasksRemindersTime == "" {
+		u.OverdueTasksRemindersTime = "9:00"
+	}
+
+	if u.Status == StatusDisabled {
+		return &ErrAccountDisabled{UserID: u.ID}
+	}
+
+	if u.Status == StatusAccountLocked {
+		return &ErrAccountLocked{UserID: u.ID}
+	}
+
+	return nil
 }
 
 func getUserByUsernameOrEmail(s *xorm.Session, usernameOrEmail string) (u *User, err error) {

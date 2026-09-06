@@ -86,34 +86,30 @@ type projectAccessRow struct {
 
 // Resolves the whole reachable tree in one query, memoized per session.
 func getProjectAccessForUser(s *xorm.Session, userID int64) (*projectAccess, error) {
-	cacheKey := "project-access-" + strconv.FormatInt(userID, 10)
-	if pa, has := db.GetCached[*projectAccess](s, cacheKey); has {
-		return pa, nil
-	}
-
-	rows := []*projectAccessRow{}
-	err := s.SQL(projectAccessQuery, userID, userID, userID).Find(&rows)
-	if err != nil {
-		return nil, err
-	}
-
-	pa := &projectAccess{
-		userID:      userID,
-		permissions: make(map[int64]Permission, len(rows)),
-		sortedIDs:   make([]int64, 0, len(rows)),
-	}
-	for _, r := range rows {
-		permission := Permission(r.Permission)
-		// A grant outside the enum (manual db edit, restored dump) is no grant at all.
-		if permission.isValid() != nil {
-			continue
+	return db.Remember(s, "project-access-"+strconv.FormatInt(userID, 10), func() (*projectAccess, error) {
+		rows := []*projectAccessRow{}
+		err := s.SQL(projectAccessQuery, userID, userID, userID).Find(&rows)
+		if err != nil {
+			return nil, err
 		}
-		pa.permissions[r.ID] = permission
-		pa.sortedIDs = append(pa.sortedIDs, r.ID)
-	}
-	sort.Slice(pa.sortedIDs, func(i, j int) bool { return pa.sortedIDs[i] < pa.sortedIDs[j] })
-	db.SetCached(s, cacheKey, pa)
-	return pa, nil
+
+		pa := &projectAccess{
+			userID:      userID,
+			permissions: make(map[int64]Permission, len(rows)),
+			sortedIDs:   make([]int64, 0, len(rows)),
+		}
+		for _, r := range rows {
+			permission := Permission(r.Permission)
+			// A grant outside the enum (manual db edit, restored dump) is no grant at all.
+			if permission.isValid() != nil {
+				continue
+			}
+			pa.permissions[r.ID] = permission
+			pa.sortedIDs = append(pa.sortedIDs, r.ID)
+		}
+		sort.Slice(pa.sortedIDs, func(i, j int) bool { return pa.sortedIDs[i] < pa.sortedIDs[j] })
+		return pa, nil
+	})
 }
 
 // Above this many ids the inlined list bloats the statement and defeats server-side
@@ -154,10 +150,8 @@ func accessibleProjectIDsCond(s *xorm.Session, a web.Auth, column string) (build
 
 // GetAllParentProjects returns the project itself and every ancestor, keyed by id.
 func GetAllParentProjects(s *xorm.Session, projectID int64) (map[int64]*Project, error) {
-	cacheKey := "parent-projects-" + strconv.FormatInt(projectID, 10)
-	chain, has := db.GetCached[map[int64]*Project](s, cacheKey)
-	if !has {
-		chain = make(map[int64]*Project)
+	chain, err := db.Remember(s, "parent-projects-"+strconv.FormatInt(projectID, 10), func() (map[int64]*Project, error) {
+		loaded := make(map[int64]*Project)
 		err := s.SQL(`WITH RECURSIVE all_projects AS (
 		    SELECT
 		        p.*
@@ -172,22 +166,19 @@ func GetAllParentProjects(s *xorm.Session, projectID int64) (map[int64]*Project,
 		        projects p
 		            INNER JOIN all_projects pc ON p.ID = pc.parent_project_id
 		)
-		SELECT DISTINCT * FROM all_projects`, projectID).Find(&chain)
+		SELECT DISTINCT * FROM all_projects`, projectID).Find(&loaded)
 		if err != nil {
 			return nil, err
 		}
-		db.SetCached(s, cacheKey, chain)
+		return loaded, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
-	// The memo outlives this call, so hand out a copy callers cannot corrupt.
 	out := make(map[int64]*Project, len(chain))
 	for id, p := range chain {
-		project := *p
-		if p.ParentProjectID != nil {
-			parentID := *p.ParentProjectID
-			project.ParentProjectID = &parentID
-		}
-		out[id] = &project
+		out[id] = p.memoCopy()
 	}
 	return out, nil
 }
