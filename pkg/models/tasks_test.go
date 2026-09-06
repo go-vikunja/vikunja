@@ -1642,3 +1642,25 @@ func TestTaskIndexUniqueConstraint(t *testing.T) {
 	})
 	require.Error(t, err, "unique constraint on (project_id, index) must reject duplicates")
 }
+
+func TestGetTaskByIDSimpleMemo(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	first, err := GetTaskByIDSimple(s, 1)
+	require.NoError(t, err)
+	assert.Equal(t, "task #1", first.Title)
+	first.Title = "mutated"
+
+	second, err := GetTaskByIDSimple(s, 1)
+	require.NoError(t, err)
+	assert.Equal(t, "task #1", second.Title)
+
+	_, err = s.ID(1).Cols("title").Update(&Task{Title: "changed"})
+	require.NoError(t, err)
+
+	afterWrite, err := GetTaskByIDSimple(s, 1)
+	require.NoError(t, err)
+	assert.Equal(t, "changed", afterWrite.Title)
+}

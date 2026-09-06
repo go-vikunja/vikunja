@@ -932,3 +932,46 @@ func TestGetUserByID_ActiveUser(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, int64(1), u.ID)
 }
+
+func TestGetUserByIDAfterBatchLoadKeepsStatusCheck(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	batch, err := GetUsersByIDs(s, []int64{17, 18})
+	require.NoError(t, err)
+	require.Len(t, batch, 2)
+	assert.Empty(t, batch[17].Email)
+	assert.Empty(t, batch[18].Email)
+
+	disabled, err := GetUserByID(s, 17)
+	require.True(t, IsErrAccountDisabled(err))
+	require.NotNil(t, disabled)
+	assert.Equal(t, int64(17), disabled.ID)
+	assert.Empty(t, disabled.Email)
+
+	locked, err := GetUserByID(s, 18)
+	require.True(t, IsErrAccountLocked(err))
+	require.NotNil(t, locked)
+	assert.Equal(t, int64(18), locked.ID)
+
+	first, err := GetUserByID(s, 1)
+	require.NoError(t, err)
+	first.Username = "mutated"
+
+	second, err := GetUserByID(s, 1)
+	require.NoError(t, err)
+	assert.Equal(t, "user1", second.Username)
+}
+
+func TestFinishLoadedUserDefaults(t *testing.T) {
+	disabled := &User{ID: 17, Status: StatusDisabled}
+	require.True(t, IsErrAccountDisabled(finishLoadedUser(disabled)))
+	assert.Equal(t, "9:00", disabled.OverdueTasksRemindersTime)
+
+	locked := &User{ID: 18, Status: StatusAccountLocked, OverdueTasksRemindersTime: "07:00"}
+	require.True(t, IsErrAccountLocked(finishLoadedUser(locked)))
+	assert.Equal(t, "07:00", locked.OverdueTasksRemindersTime)
+
+	require.NoError(t, finishLoadedUser(&User{ID: 1}))
+}

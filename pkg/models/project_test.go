@@ -1016,3 +1016,58 @@ func TestCheckIsArchived(t *testing.T) {
 		require.NoError(t, err)
 	})
 }
+
+func TestGetProjectSimpleByIDMemo(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	first, err := GetProjectSimpleByID(s, 1)
+	require.NoError(t, err)
+	assert.Equal(t, "Test1", first.Title)
+	first.Title = "mutated"
+
+	second, err := GetProjectSimpleByID(s, 1)
+	require.NoError(t, err)
+	assert.Equal(t, "Test1", second.Title)
+
+	child, err := GetProjectSimpleByID(s, 12)
+	require.NoError(t, err)
+	require.NotNil(t, child.ParentProjectID)
+	assert.Equal(t, int64(27), *child.ParentProjectID)
+	*child.ParentProjectID = 999
+
+	childAgain, err := GetProjectSimpleByID(s, 12)
+	require.NoError(t, err)
+	require.NotNil(t, childAgain.ParentProjectID)
+	assert.Equal(t, int64(27), *childAgain.ParentProjectID)
+
+	_, err = s.ID(1).Cols("title").Update(&Project{Title: "changed"})
+	require.NoError(t, err)
+
+	afterWrite, err := GetProjectSimpleByID(s, 1)
+	require.NoError(t, err)
+	assert.Equal(t, "changed", afterWrite.Title)
+}
+
+func TestGetProjectsMapByIDsMemo(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	single, err := GetProjectSimpleByID(s, 1)
+	require.NoError(t, err)
+	assert.Equal(t, "Test1", single.Title)
+
+	projects, err := GetProjectsMapByIDs(s, []int64{1, 2})
+	require.NoError(t, err)
+	require.Len(t, projects, 2)
+	assert.Equal(t, "Test1", projects[1].Title)
+	assert.Equal(t, "Test2", projects[2].Title)
+
+	projects[1].Title = "mutated"
+
+	again, err := GetProjectSimpleByID(s, 1)
+	require.NoError(t, err)
+	assert.Equal(t, "Test1", again.Title)
+}
