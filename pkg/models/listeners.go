@@ -124,13 +124,9 @@ func registerEventsForAuditLogging() {
 		}
 	})
 	audit.RegisterEventForAudit(func(e *APITokenIssuedEvent) *audit.Entry {
-		actor := audit.UserActor(e.DoerID)
-		if e.DoerID == 0 {
-			actor = audit.CLIActor()
-		}
 		return &audit.Entry{
 			Action:   audit.ActionAPITokenIssued,
-			Actor:    actor,
+			Actor:    apiTokenActor(e.DoerID),
 			Target:   audit.APITokenTarget(e.TokenID),
 			Metadata: map[string]any{"owner_id": e.OwnerID},
 		}
@@ -138,7 +134,7 @@ func registerEventsForAuditLogging() {
 	audit.RegisterEventForAudit(func(e *APITokenRevokedEvent) *audit.Entry {
 		return &audit.Entry{
 			Action: audit.ActionAPITokenRevoked,
-			Actor:  audit.UserActor(e.DoerID),
+			Actor:  apiTokenActor(e.DoerID),
 			Target: audit.APITokenTarget(e.TokenID),
 		}
 	})
@@ -1795,4 +1791,12 @@ func (s *MarkTaskUnreadOnComment) Handle(msg *message.Message) (err error) {
 	}
 
 	return sess.Commit()
+}
+
+// Instance bot tokens are minted and revoked from the CLI, where there is no doer.
+func apiTokenActor(doerID int64) audit.Actor {
+	if doerID == 0 {
+		return audit.CLIActor()
+	}
+	return audit.UserActor(doerID)
 }

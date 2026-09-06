@@ -718,6 +718,11 @@ func TestAuditUserDataExportRequested(t *testing.T) {
 	assert.Equal(t, audit.OutcomeSuccess, entry.Outcome)
 }
 
+func TestAPITokenActor(t *testing.T) {
+	assert.Equal(t, audit.UserActor(7), apiTokenActor(7))
+	assert.Equal(t, audit.CLIActor(), apiTokenActor(0))
+}
+
 func TestWebhookDeliveryListenerSkipsErrorReporting(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 
