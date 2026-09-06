@@ -48,7 +48,7 @@ func invalidateAllProjectAccess() {
 
 func (p *Project) AfterInsert() {
 	// A new child is reachable for everyone with access to the parent.
-	if p.ParentProjectID != nil {
+	if p.parentID() != 0 {
 		invalidateAllProjectAccess()
 		return
 	}
@@ -56,12 +56,11 @@ func (p *Project) AfterInsert() {
 }
 
 func (p *Project) AfterUpdate() {
-	// Only a parent change moves the subtree between access trees; a bean without a parent cannot have changed it.
-	if p.ParentProjectID != nil {
+	// The bean carries neither the previous parent nor the previous owner, so either being set means everyone.
+	// Neither set means only columns the grants query does not read were touched.
+	if p.ParentProjectID != nil || p.OwnerID != 0 {
 		invalidateAllProjectAccess()
-		return
 	}
-	invalidateProjectAccess(p.OwnerID)
 }
 
 func (p *Project) AfterDelete() { invalidateAllProjectAccess() }
