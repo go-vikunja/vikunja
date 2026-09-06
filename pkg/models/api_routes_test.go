@@ -265,6 +265,21 @@ func TestGetAPITokenRoutes_LicenseFilter(t *testing.T) {
 	})
 }
 
+func TestValidateInstanceBotPermissions(t *testing.T) {
+	require.NoError(t, validateInstanceBotPermissions(APIPermissions{"admin": {"users_list", "users_create"}}))
+	require.NoError(t, validateInstanceBotPermissions(APIPermissions{}))
+
+	for _, perms := range []APIPermissions{
+		{"tasks": {"read_all"}},
+		{"admin": {"users_list"}, "tasks": {"read_all"}},
+		{"caldav": {"access"}},
+	} {
+		err := validateInstanceBotPermissions(perms)
+		require.Error(t, err, "%v", perms)
+		assert.True(t, IsErrInstanceBotScopeNotAllowed(err))
+	}
+}
+
 // TestCanDoAPIRoute_TimeEntriesHyphenLegacy proves a token stored under the old
 // hyphenated "time-entries" key still validates and authorises — no migration.
 func TestCanDoAPIRoute_TimeEntriesHyphenLegacy(t *testing.T) {

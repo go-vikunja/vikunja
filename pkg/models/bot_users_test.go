@@ -78,6 +78,34 @@ func TestBotUser_ReadAll(t *testing.T) {
 	assert.True(t, found)
 }
 
+func TestBotUser_InstanceBotInvisible(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	admin, err := user.GetUserByID(s, 1)
+	require.NoError(t, err)
+	_, err = s.ID(admin.ID).Cols("is_admin").Update(&user.User{IsAdmin: true})
+	require.NoError(t, err)
+
+	result, _, _, err := (&BotUser{}).ReadAll(s, admin, "", 1, 50)
+	require.NoError(t, err)
+	for _, b := range result.([]*BotUser) {
+		assert.NotEqual(t, int64(26), b.ID, "instance bots have no owner and must not be listed")
+	}
+
+	view := &BotUser{User: user.User{ID: 26}}
+	canRead, _, err := view.CanRead(s, admin)
+	require.NoError(t, err)
+	assert.False(t, canRead)
+	canUpdate, err := view.CanUpdate(s, admin)
+	require.NoError(t, err)
+	assert.False(t, canUpdate)
+	canDelete, err := view.CanDelete(s, admin)
+	require.NoError(t, err)
+	assert.False(t, canDelete)
+}
+
 func TestBotUser_CanRead_NotOwned(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()

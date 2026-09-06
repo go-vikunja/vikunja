@@ -135,6 +135,20 @@ func CreateBotUser(s *xorm.Session, bot *User, owner *User) (*User, error) {
 		return nil, &ErrBotNotOwned{UserID: owner.ID}
 	}
 
+	bot.BotOwnerID = owner.ID
+	bot.IsInstanceBot = false
+	return insertBotUser(s, bot)
+}
+
+// CreateInstanceBotUser creates an admin bot owned by the instance itself. Only the CLI calls this.
+func CreateInstanceBotUser(s *xorm.Session, bot *User) (*User, error) {
+	bot.BotOwnerID = 0
+	bot.IsInstanceBot = true
+	bot.IsAdmin = true
+	return insertBotUser(s, bot)
+}
+
+func insertBotUser(s *xorm.Session, bot *User) (*User, error) {
 	// Reuse the same username format rules as regular user creation
 	if err := checkUsernameFormat(bot.Username); err != nil {
 		return nil, err
@@ -150,7 +164,6 @@ func CreateBotUser(s *xorm.Session, bot *User, owner *User) (*User, error) {
 	}
 
 	bot.ID = 0
-	bot.BotOwnerID = owner.ID
 	bot.Status = StatusActive
 	bot.Issuer = IssuerLocal
 	bot.Password = ""

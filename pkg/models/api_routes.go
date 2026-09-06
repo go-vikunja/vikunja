@@ -619,6 +619,17 @@ func tokenHasPermission(token *APIToken, group, permission string) bool {
 	return false
 }
 
+// Instance bots exist only to drive the admin API; any other group would let
+// them read or write user data.
+func validateInstanceBotPermissions(permissions APIPermissions) error {
+	for key := range permissions {
+		if canonicalAPITokenGroup(key) != "admin" {
+			return &ErrInstanceBotScopeNotAllowed{Group: key}
+		}
+	}
+	return nil
+}
+
 func PermissionsAreValid(permissions APIPermissions) (err error) {
 
 	for key, methods := range permissions {
