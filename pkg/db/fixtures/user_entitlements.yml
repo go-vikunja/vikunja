@@ -1,0 +1,26 @@
+# user16 is the restricted user: every flag off, every limit at its current
+# usage (owns project 37, no attachments). Everyone else has no rows.
+- id: 1
+  user_id: 16
+  feature: time_tracking
+  value: 0
+  created: 2018-12-01 15:13:12
+  updated: 2018-12-02 15:13:12
+- id: 2
+  user_id: 16
+  feature: team_creation
+  value: 0
+  created: 2018-12-01 15:13:12
+  updated: 2018-12-02 15:13:12
+- id: 3
+  user_id: 16
+  feature: max_projects
+  value: 1
+  created: 2018-12-01 15:13:12
+  updated: 2018-12-02 15:13:12
+- id: 4
+  user_id: 16
+  feature: max_storage_bytes
+  value: 1024
+  created: 2018-12-01 15:13:12
+  updated: 2018-12-02 15:13:12
