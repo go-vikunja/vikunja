@@ -209,6 +209,7 @@ const (
 	MetricsEnabled  Key = `metrics.enabled`
 	MetricsUsername Key = `metrics.username`
 	MetricsPassword Key = `metrics.password`
+	MetricsPprof    Key = `metrics.pprof`
 
 	DefaultSettingsAvatarProvider              Key = `defaultsettings.avatar_provider`
 	DefaultSettingsAvatarFileID                Key = `defaultsettings.avatar_file_id`
@@ -503,6 +504,7 @@ func initDefaultConfig() {
 	KeyvalueType.setDefault("memory")
 	// Metrics
 	MetricsEnabled.setDefault(false)
+	MetricsPprof.setDefault(false)
 	// Settings
 	DefaultSettingsAvatarProvider.setDefault("initials")
 	DefaultSettingsOverdueTaskRemindersEnabled.setDefault(true)

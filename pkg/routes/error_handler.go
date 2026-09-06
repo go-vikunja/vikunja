@@ -21,6 +21,7 @@ import (
 	"errors"
 	"net/http"
 
+	"code.vikunja.io/api/pkg/errorreport"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/web"
@@ -141,10 +142,14 @@ func reportToSentry(err error, c *echo.Context) {
 	if hub != nil {
 		hub.WithScope(func(scope *sentry.Scope) {
 			scope.SetContext("request", sentry.Context{"url": c.Request().URL.String()})
+			errorreport.Apply(scope, err)
 			hub.CaptureException(err)
 		})
 	} else {
-		sentry.CaptureException(err)
+		sentry.WithScope(func(scope *sentry.Scope) {
+			errorreport.Apply(scope, err)
+			sentry.CaptureException(err)
+		})
 		log.Debugf("Could not add context for sending error '%s' to sentry", err.Error())
 	}
 	log.Debugf("Error '%s' sent to sentry", err.Error())
