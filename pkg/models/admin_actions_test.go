@@ -102,6 +102,66 @@ func TestSetUserAdminFlag(t *testing.T) {
 	})
 }
 
+func TestAdminActions_InstanceBot(t *testing.T) {
+	doer := &user.User{ID: 1}
+	const botID = 26
+
+	t.Run("set-admin refused", func(t *testing.T) {
+		adminActionsSetup(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		for _, flag := range []bool{true, false} {
+			_, err := SetUserAdminFlag(s, doer, botID, flag)
+			require.Error(t, err)
+			assert.True(t, IsErrInstanceBotCannotBeModified(err))
+		}
+		events.DispatchPending(context.Background(), s)
+		assert.Zero(t, events.CountDispatchedEvents((&AdminUserAdminRevokedEvent{}).Name()))
+	})
+
+	t.Run("set-password refused", func(t *testing.T) {
+		adminActionsSetup(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := SetUserPasswordAsAdmin(s, doer, botID, "averyl0ngpassword")
+		require.Error(t, err)
+		assert.True(t, IsErrInstanceBotCannotBeModified(err))
+	})
+
+	t.Run("password-reset-email refused", func(t *testing.T) {
+		adminActionsSetup(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		require.Error(t, RequestPasswordResetAsAdmin(s, doer, botID))
+	})
+
+	t.Run("status change allowed even as the only admin", func(t *testing.T) {
+		adminActionsSetup(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		target, err := SetUserStatusAsAdmin(s, doer, botID, user.StatusDisabled)
+		require.NoError(t, err)
+		assert.Equal(t, user.StatusDisabled, target.Status)
+	})
+
+	t.Run("delete allowed even as the only admin", func(t *testing.T) {
+		adminActionsSetup(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		require.NoError(t, DeleteUserAsAdmin(s, doer, botID, "now"))
+		require.NoError(t, s.Commit())
+
+		exists, err := s.ID(botID).Exist(&user.User{})
+		require.NoError(t, err)
+		assert.False(t, exists)
+	})
+}
+
 func TestSetUserStatusAsAdmin_Events(t *testing.T) {
 	doer := &user.User{ID: 1}
 
