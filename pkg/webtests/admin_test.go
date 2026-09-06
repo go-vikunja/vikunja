@@ -82,12 +82,9 @@ func insertAPIToken(t *testing.T, ownerID int64, perms models.APIPermissions) st
 	cleartext, err := utils.CryptoRandomString(40)
 	require.NoError(t, err)
 	cleartext = models.APITokenPrefix + cleartext
-	const salt = "adminsalt0"
 	token := &models.APIToken{
 		Title:          "admin scope test token",
-		TokenSalt:      salt,
-		TokenHash:      models.HashToken(cleartext, salt),
-		TokenLastEight: cleartext[len(cleartext)-8:],
+		TokenSha256:    models.HashAPIToken(cleartext),
 		APIPermissions: perms,
 		ExpiresAt:      time.Now().Add(24 * time.Hour),
 		OwnerID:        ownerID,
@@ -95,7 +92,7 @@ func insertAPIToken(t *testing.T, ownerID int64, perms models.APIPermissions) st
 
 	s := db.NewSession()
 	defer s.Close()
-	_, err = s.Insert(token)
+	_, err = s.Nullable("token_salt", "token_hash", "token_last_eight").Insert(token)
 	require.NoError(t, err)
 	require.NoError(t, s.Commit())
 	return cleartext
