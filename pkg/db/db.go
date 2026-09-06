@@ -433,14 +433,26 @@ func initSqliteEngine() (engine *xorm.Engine, err error) {
 	return
 }
 
-// _txlock=immediate is what prevents "database is locked" (API-OSS-31): every
-// request reads (permission checks) before it writes, and SQLite refuses to
-// promote such a deferred transaction to a writer once another connection
-// committed in between — SQLITE_BUSY_SNAPSHOT bypasses busy_timeout because
-// retrying a stale snapshot can never succeed. WAL does not help there, taking
-// the write lock at BEGIN does, at the cost of serializing read transactions.
+// WAL lets readers run alongside the single writer; busy_timeout makes
+// contending writers wait instead of failing immediately with SQLITE_BUSY.
+//
+// This does not cover every case: a transaction that reads before it writes —
+// which every request does, permission checks first — cannot be promoted to a
+// writer once another connection committed in between. SQLite reports
+// SQLITE_BUSY_SNAPSHOT there and skips the busy handler, because retrying a
+// stale snapshot can never succeed, so the request fails with "database is
+// locked" (API-OSS-31).
+//
+// _txlock=immediate is the usual answer and is deliberately NOT set: it takes
+// the write lock at BEGIN, which deadlocks any code holding one session open
+// while opening another. Vikunja does that in production — GetOverview's
+// session is open while license.CurrentInfo reaches loadCachedStatus, which
+// opens its own — and db.NewSession log.Fatal's on a failed BEGIN, so the
+// deadlock would take the process down rather than fail one request. Fixing
+// this needs separate read and write sessions, not a DSN flag. It has been
+// tried and reverted twice already (26c0f71b6, 98f2893ff).
 func getSqliteConnectionString(path string) string {
-	return path + "?_busy_timeout=5000&_journal_mode=WAL&_txlock=immediate"
+	return path + "?_busy_timeout=5000&_journal_mode=WAL"
 }
 
 // existingUserDataDir returns the user data directory only when it is already there.
