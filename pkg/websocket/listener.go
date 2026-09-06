@@ -20,8 +20,8 @@ import (
 	"encoding/json"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/entitlement"
 	"code.vikunja.io/api/pkg/events"
-	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/notifications"
@@ -91,7 +91,7 @@ type TimeEntryListener struct {
 func (l *TimeEntryListener) Name() string { return "websocket.push." + l.wsEvent }
 
 func (l *TimeEntryListener) Handle(msg *message.Message) error {
-	if !license.IsFeatureEnabled(license.FeatureTimeTracking) {
+	if !entitlement.LicenseAllows(entitlement.FeatureTimeTracking) {
 		return nil
 	}
 

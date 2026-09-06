@@ -58,7 +58,7 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/license"
+	"code.vikunja.io/api/pkg/entitlement"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
@@ -436,7 +436,7 @@ const v2AdminPathPrefix = "/api/v2/admin"
 // gateV2AdminRoutes reuses v1's RequireFeature/RequireInstanceAdmin gate, both
 // of which 404 on failure.
 func gateV2AdminRoutes() echo.MiddlewareFunc {
-	feature := RequireFeature(license.FeatureAdminPanel)
+	feature := RequireFeature(entitlement.FeatureAdminPanel)
 	admin := RequireInstanceAdmin()
 	return pathScoped(
 		func(p string) bool { return strings.HasPrefix(p, v2AdminPathPrefix) },
@@ -949,7 +949,7 @@ func registerAPIRoutes(a *echo.Group, noAuthRateLimit, refreshRateLimit echo.Mid
 	a.POST("/projects/:project/views/:view/buckets/:bucket/tasks", taskBucketProvider.UpdateWeb)
 
 	admin := a.Group("/admin",
-		RequireFeature(license.FeatureAdminPanel),
+		RequireFeature(entitlement.FeatureAdminPanel),
 		RequireInstanceAdmin(),
 	)
 	adminProjectListHandler := &handler.WebHandler{
