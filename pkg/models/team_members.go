@@ -52,6 +52,11 @@ func (tm *TeamMember) Create(s *xorm.Session, a web.Auth) (err error) {
 	}
 	tm.UserID = member.ID
 
+	doer := doerFromAuth(s, a)
+	if member.IsBot() && (doer == nil || !member.IsBotOwnedBy(doer)) {
+		return &user2.ErrBotNotOwned{UserID: member.ID}
+	}
+
 	// Check if that user is already part of the team
 	exists, err := s.
 		Where("team_id = ? AND user_id = ?", tm.TeamID, tm.UserID).
@@ -72,7 +77,7 @@ func (tm *TeamMember) Create(s *xorm.Session, a web.Auth) (err error) {
 	events.DispatchOnCommit(s, &TeamMemberAddedEvent{
 		Team:   team,
 		Member: member,
-		Doer:   doerFromAuth(s, a),
+		Doer:   doer,
 	})
 	return nil
 }

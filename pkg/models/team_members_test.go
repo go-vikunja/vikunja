@@ -91,6 +91,54 @@ func TestTeamMember_Create(t *testing.T) {
 		require.Error(t, err)
 		assert.True(t, IsErrTeamDoesNotExist(err))
 	})
+	t.Run("instance bot", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		tm := &TeamMember{
+			TeamID:   1,
+			Username: "bot-instance-provisioner",
+		}
+		err := tm.Create(s, doer)
+		require.Error(t, err)
+		assert.True(t, user.IsErrBotNotOwned(err))
+	})
+	t.Run("bot owned by someone else", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		tm := &TeamMember{
+			TeamID:   1,
+			Username: "bot-owner-a-assistant",
+		}
+		err := tm.Create(s, doer)
+		require.Error(t, err)
+		assert.True(t, user.IsErrBotNotOwned(err))
+	})
+	t.Run("own bot", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		owner, err := user.GetUserByID(s, doer.ID)
+		require.NoError(t, err)
+		bot, err := user.CreateBotUser(s, &user.User{Username: "bot-teammate"}, owner)
+		require.NoError(t, err)
+
+		tm := &TeamMember{
+			TeamID:   1,
+			Username: bot.Username,
+		}
+		require.NoError(t, tm.Create(s, doer))
+		require.NoError(t, s.Commit())
+
+		db.AssertExists(t, "team_members", map[string]interface{}{
+			"team_id": 1,
+			"user_id": bot.ID,
+		}, false)
+	})
 }
 
 func TestTeamMember_Delete(t *testing.T) {
