@@ -601,10 +601,17 @@ func TestAdminTokenScopes(t *testing.T) {
 		}
 	})
 
-	t.Run("legacy keys no longer authorise", func(t *testing.T) {
-		token := &APIToken{APIPermissions: APIPermissions{"admin": []string{"users_status"}}}
-		assert.False(t, can(token, http.MethodPatch, "/api/v2/admin/users/:id/status"))
-		assert.False(t, can(token, http.MethodPatch, "/api/v1/admin/users/:id/status"))
+	t.Run("retired admin scope keys are denied", func(t *testing.T) {
+		retired := []string{"users", "users_post", "users_status", "users_admin", "users_password", "users_password_reset_email", "projects", "projects_owner"}
+		for _, old := range retired {
+			assert.NotContains(t, GetAPITokenRoutes()["admin"], old, old)
+			require.Error(t, PermissionsAreValid(APIPermissions{"admin": []string{old}}), old)
+			token := &APIToken{APIPermissions: APIPermissions{"admin": []string{old}}}
+			for _, r := range adminTokenRoutes {
+				assert.False(t, can(token, r.method, "/api/v1/"+r.path), "%s must not authorise v1 %s", old, r.name)
+				assert.False(t, can(token, r.method, "/api/v2/"+r.path), "%s must not authorise v2 %s", old, r.name)
+			}
+		}
 	})
 
 	t.Run("v1 PATCH admin routes", func(t *testing.T) {
