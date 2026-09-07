@@ -667,7 +667,7 @@ import type {IProject} from '@/modelTypes/IProject'
 
 import {PRIORITIES, type Priority} from '@/constants/priorities'
 import {PERMISSIONS} from '@/constants/permissions'
-import {PRO_FEATURE} from '@/constants/proFeatures'
+import {ENTITLEMENT} from '@/constants/entitlements'
 import {SHORTCUTS} from '@/constants/shortcuts'
 
 import BaseButton from '@/components/base/BaseButton.vue'
@@ -708,7 +708,6 @@ import {useKanbanStore} from '@/stores/kanban'
 import {useProjectStore} from '@/stores/projects'
 import {useAuthStore} from '@/stores/auth'
 import {useBaseStore} from '@/stores/base'
-import {useConfigStore} from '@/stores/config'
 
 import {useTitle} from '@/composables/useTitle'
 import {useTaskDetailShortcuts} from '@/composables/useTaskDetailShortcuts'
@@ -731,10 +730,9 @@ const {t} = useI18n({useScope: 'global'})
 
 const projectStore = useProjectStore()
 const taskStore = useTaskStore()
-const configStore = useConfigStore()
-const timeTrackingEnabled = computed(() => configStore.isProFeatureEnabled(PRO_FEATURE.TIME_TRACKING))
 const kanbanStore = useKanbanStore()
 const authStore = useAuthStore()
+const timeTrackingEnabled = computed(() => authStore.hasEntitlement(ENTITLEMENT.TIME_TRACKING))
 const baseStore = useBaseStore()
 
 const task = ref<ITask>(new TaskModel())

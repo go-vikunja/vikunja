@@ -328,14 +328,13 @@ import {useTitle} from '@/composables/useTitle'
 
 import {useProjectStore} from '@/stores/projects'
 import {useAuthStore} from '@/stores/auth'
-import {useConfigStore} from '@/stores/config'
 import type {IUserSettings} from '@/modelTypes/IUserSettings'
 import {isSavedFilter} from '@/services/savedFilter'
 import {DEFAULT_PROJECT_VIEW_SETTINGS} from '@/modelTypes/IProjectView'
 import {PRIORITIES} from '@/constants/priorities'
 import {DATE_DISPLAY} from '@/constants/dateDisplay'
 import {TIME_FORMAT} from '@/constants/timeFormat'
-import {PRO_FEATURE} from '@/constants/proFeatures'
+import {ENTITLEMENT} from '@/constants/entitlements'
 import {RELATION_KINDS} from '@/types/IRelationKind'
 import {isDesktopApp} from '@/helpers/desktopAuth'
 import ShortcutRecorder from '@/components/misc/ShortcutRecorder.vue'
@@ -420,8 +419,7 @@ const languageOptions = computed(() =>
 )
 
 const authStore = useAuthStore()
-const configStore = useConfigStore()
-const timeTrackingEnabled = computed(() => configStore.isProFeatureEnabled(PRO_FEATURE.TIME_TRACKING))
+const timeTrackingEnabled = computed(() => authStore.hasEntitlement(ENTITLEMENT.TIME_TRACKING))
 
 const settings = ref<IUserSettings>({
 	...authStore.settings,
