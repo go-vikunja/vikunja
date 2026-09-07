@@ -145,7 +145,9 @@ func TestAdminActions_InstanceBot(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		require.Error(t, RequestPasswordResetAsAdmin(s, doer, botID))
+		err := RequestPasswordResetAsAdmin(s, doer, botID)
+		require.Error(t, err)
+		assert.True(t, IsErrInvalidData(err))
 	})
 
 	t.Run("status change allowed even as the only admin", func(t *testing.T) {

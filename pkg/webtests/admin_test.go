@@ -169,6 +169,7 @@ func TestAdmin_InstanceBotActions(t *testing.T) {
 		defer config.MailerEnabled.Set(false)
 		res := adminReq(t, e, http.MethodPost, "/api/v2/admin/users/26/password-reset-email", admin, "")
 		assert.Equal(t, http.StatusBadRequest, res.Code, res.Body.String())
+		assert.Contains(t, res.Body.String(), `"code":2002`)
 	})
 
 	t.Run("status change disables the token", func(t *testing.T) {
