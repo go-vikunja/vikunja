@@ -100,9 +100,7 @@ func TestAPITokenMethodMatching(t *testing.T) {
 	}
 }
 
-// Admin routes are excluded from derived collection and hand-listed in
-// models.adminTokenRoutes; a new admin route must be added there or it is
-// unreachable by token.
+// A new admin route is unreachable by token until listed in models.adminTokenRoutes.
 func TestAPITokenAdminRoutesAllScoped(t *testing.T) {
 	e, err := setupTestEnv()
 	require.NoError(t, err)
@@ -115,8 +113,12 @@ func TestAPITokenAdminRoutesAllScoped(t *testing.T) {
 	}
 	// v1 and v2 share scope names; only the first-merged (v1) detail is
 	// advertised, so derive the v2 twin of every v1 entry too.
+	twins := make([]string, 0, len(scoped))
 	for key := range scoped {
-		scoped[strings.Replace(key, "/api/v1/", "/api/v2/", 1)] = true
+		twins = append(twins, strings.Replace(key, "/api/v1/", "/api/v2/", 1))
+	}
+	for _, key := range twins {
+		scoped[key] = true
 	}
 
 	for _, r := range e.Router().Routes() {
