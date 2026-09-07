@@ -134,6 +134,9 @@ func TestAPITokenAutoPatchRoutes(t *testing.T) {
 	e, err := setupTestEnv()
 	require.NoError(t, err)
 
+	license.SetForTests([]license.Feature{license.FeatureAdminPanel, license.FeatureTimeTracking})
+	defer license.ResetForTests()
+
 	v2Puts := map[string]bool{}
 	for _, r := range e.Router().Routes() {
 		if r.Method == http.MethodPut && strings.HasPrefix(r.Path, "/api/v2/") {
