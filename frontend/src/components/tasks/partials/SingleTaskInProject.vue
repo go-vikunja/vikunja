@@ -251,6 +251,9 @@ const emit = defineEmits<{
 	'taskUpdated': [task: ITask],
 }>()
 
+const REPEAT_MODE_JALALI_MONTH = TASK_REPEAT_MODES.REPEAT_MODE_JALALI_MONTH
+const REPEAT_MODE_JALALI_YEAR = TASK_REPEAT_MODES.REPEAT_MODE_JALALI_YEAR
+
 function getTaskById(taskId: number): ITask | undefined {
 	if (typeof props.allTasks === 'undefined' || props.allTasks.length === 0) {
 		return null
@@ -264,7 +267,7 @@ const {t} = useI18n({useScope: 'global'})
 const taskService = shallowReactive(new TaskService())
 const task = ref<ITask>(new TaskModel())
 
-const isRepeating = computed(() => task.value.repeatAfter.amount > 0 || (task.value.repeatAfter.amount === 0 && task.value.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH))
+const isRepeating = computed(() => task.value.repeatAfter.amount > 0 || (task.value.repeatAfter.amount === 0 && (task.value.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH || task.value.repeatMode === REPEAT_MODE_JALALI_MONTH || task.value.repeatMode === REPEAT_MODE_JALALI_YEAR)))
 
 watch(
 	() => props.theTask,

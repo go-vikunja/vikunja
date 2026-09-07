@@ -1137,6 +1137,8 @@
 			"mode": "حالت تکرار",
 			"monthly": "ماهانه",
 			"fromCurrentDate": "از تاریخ تکمیل",
+			"jalaliMonthly": "ماهانه جلالی",
+			"jalaliYearly": "سالانه جلالی",
 			"each": "هر",
 			"specifyAmount": "مقدار را مشخص کنید…",
 			"hours": "ساعت",

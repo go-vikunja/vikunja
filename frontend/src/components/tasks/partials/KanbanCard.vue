@@ -98,7 +98,7 @@
 					<Icon icon="align-left" />
 				</span>
 				<span
-					v-if="task.repeatAfter.amount > 0"
+					v-if="task.repeatAfter.amount > 0 || task.repeatMode === REPEAT_MODE_JALALI_MONTH || task.repeatMode === REPEAT_MODE_JALALI_YEAR"
 					class="icon"
 				>
 					<Icon icon="history" />
@@ -162,6 +162,9 @@ const emit = defineEmits<{
 	'taskCompletedRecurring': [task: ITask]
 }>()
 
+const REPEAT_MODE_JALALI_MONTH = TASK_REPEAT_MODES.REPEAT_MODE_JALALI_MONTH
+const REPEAT_MODE_JALALI_YEAR = TASK_REPEAT_MODES.REPEAT_MODE_JALALI_YEAR
+
 const router = useRouter()
 
 const loadingInternal = ref(false)
@@ -190,7 +193,7 @@ const isOverdue = computed(() => (
 ))
 
 async function toggleTaskDone(task: ITask) {
-	const isRecurringTask = task.repeatAfter.amount > 0 || task.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH
+	const isRecurringTask = task.repeatAfter.amount > 0 || task.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH || task.repeatMode === REPEAT_MODE_JALALI_MONTH || task.repeatMode === REPEAT_MODE_JALALI_YEAR
 	const wasBeingMarkedDone = !task.done
 	
 	loadingInternal.value = true

@@ -1237,6 +1237,8 @@
       "mode": "Repeat mode",
       "monthly": "Monthly",
       "fromCurrentDate": "From completion date",
+      "jalaliMonthly": "Monthly (Jalali)",
+      "jalaliYearly": "Yearly (Jalali)",
       "each": "Each",
       "specifyAmount": "Specify an amount…",
       "hours": "Hours",
