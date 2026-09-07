@@ -55,7 +55,7 @@ function warningDescribing(wrapper: DOMWrapper<Element>, label: string) {
 	const checkbox = wrapper.findAll('.fancy-checkbox').find(c => c.find('.fancy-checkbox__content').text() === label)
 	expect(checkbox).toBeTruthy()
 	const describedBy = checkbox!.find('input').attributes('aria-describedby')
-	return describedBy ? document.getElementById(describedBy)?.textContent?.trim() : undefined
+	return describedBy ? wrapper.find('#' + CSS.escape(describedBy)).text() : undefined
 }
 
 function setTitleFieldRef(wrapper: VueWrapper, value: unknown) {
@@ -152,9 +152,11 @@ describe('ApiTokenForm', () => {
 		expect(warningDescribing(adminGroup, 'users set password')).toBe(warning)
 		expect(warningDescribing(adminGroup, 'users create')).toBe(warning)
 		expect(warningDescribing(adminGroup, 'users list')).toBeUndefined()
+		expect(adminGroup.findAll('.help.is-danger')).toHaveLength(3)
 
 		expect(usersGroup.find('.has-text-weight-bold .fancy-checkbox__content').text()).toBe('users')
 		expect(warningDescribing(usersGroup, 'users set admin')).toBeUndefined()
+		expect(usersGroup.findAll('.help.is-danger')).toHaveLength(0)
 		expect(mounted.errors).toEqual([])
 	})
 })
