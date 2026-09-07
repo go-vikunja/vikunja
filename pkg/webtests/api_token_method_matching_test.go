@@ -17,6 +17,7 @@
 package webtests
 
 import (
+	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -124,4 +125,50 @@ func TestAPITokenAdminRoutesAllScoped(t *testing.T) {
 		}
 		assert.True(t, scoped[r.Method+" "+r.Path], "admin route %s %s has no token scope", r.Method, r.Path)
 	}
+}
+
+// AutoPatch's synthesised PATCH must ride on its PUT's permission instead of
+// being collected under one of its own (models.MarkAutoPatchRoute).
+func TestAPITokenAutoPatchRoutes(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+
+	v2Puts := map[string]bool{}
+	for _, r := range e.Router().Routes() {
+		if r.Method == http.MethodPut && strings.HasPrefix(r.Path, "/api/v2/") {
+			v2Puts[r.Path] = true
+		}
+	}
+	twins := 0
+	for _, r := range e.Router().Routes() {
+		if r.Method == http.MethodPatch && v2Puts[r.Path] {
+			twins++
+		}
+	}
+	require.NotZero(t, twins, "AutoPatch should have synthesised PATCH twins")
+
+	for group, perms := range models.GetAPITokenRoutes() {
+		// The hand-listed admin scopes are natively PATCH.
+		if group == "admin" {
+			continue
+		}
+		for perm, rd := range perms {
+			assert.NotEqualf(t, http.MethodPatch, rd.Method, "%s.%s is stored as PATCH", group, perm)
+			assert.Falsef(t, strings.HasSuffix(perm, "_patch"), "%s.%s got a permission of its own", group, perm)
+		}
+	}
+
+	t.Run("update authorises both verbs", func(t *testing.T) {
+		tok := insertAPIToken(t, 1, models.APIPermissions{"labels": {"update"}})
+		for _, method := range []string{http.MethodPut, http.MethodPatch} {
+			res := adminBearerReq(e, method, "/api/v2/labels/1", tok, `{"title":"updated"}`)
+			assert.NotEqualf(t, http.StatusUnauthorized, res.Code, "%s must be authorised by labels.update", method)
+		}
+	})
+
+	t.Run("read_one does not authorise PATCH", func(t *testing.T) {
+		tok := insertAPIToken(t, 1, models.APIPermissions{"labels": {"read_one"}})
+		res := adminBearerReq(e, http.MethodPatch, "/api/v2/labels/1", tok, `{"title":"updated"}`)
+		assert.Equal(t, http.StatusUnauthorized, res.Code)
+	})
 }

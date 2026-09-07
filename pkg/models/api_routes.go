@@ -72,9 +72,19 @@ var legacyAdminScopes = map[string]string{ //nolint:gosec // scope names, not cr
 	"projects_owner":             "projects_set_owner",
 }
 
+// Echo paths of the PATCH routes huma's AutoPatch synthesised from a PUT.
+var autoPatchRoutes = map[string]bool{}
+
+// MarkAutoPatchRoute marks an echo path (e.g. /api/v2/labels/:id) as
+// AutoPatch-synthesised. Call during route registration, before collection.
+func MarkAutoPatchRoute(path string) {
+	autoPatchRoutes[path] = true
+}
+
 // resetAPITokenRoutes installs the hand-written entries; tests call it to
 // start from a clean table.
 func resetAPITokenRoutes() {
+	autoPatchRoutes = map[string]bool{}
 	apiTokenRoutes = map[string]APITokenRoute{
 		"caldav": {"access": &RouteDetail{Path: "/dav/*", Method: "ANY"}},
 		"feeds":  {"access": &RouteDetail{Path: "/feeds/*", Method: http.MethodGet}},
@@ -274,29 +284,16 @@ func isStandardCRUDRoute(routeGroupName string, routeParts []string, _ string) b
 	return false
 }
 
-// isPatchTwin reports whether existing and rd are the PUT and PATCH (either
-// order) of the same v2 path, as AutoPatch produces.
-func isPatchTwin(existing, rd *RouteDetail) bool {
-	if existing == nil || existing.Path != rd.Path || !isV2Path(rd.Path) {
-		return false
-	}
-	return (existing.Method == http.MethodPut && rd.Method == http.MethodPatch) ||
-		(existing.Method == http.MethodPatch && rd.Method == http.MethodPut)
-}
-
-// storeRoute keeps PUT authoritative over its AutoPatch PATCH twin whatever
-// order echo lists them; tokenAuthorizesRoute aliases PATCH to the stored
-// PUT. A native PATCH with no PUT twin is stored as-is.
+// storeRoute suffixes a colliding key with the method, except for CRUD keys
+// (which already encode one) where a collision makes the loser unreachable.
 func storeRoute(routes APITokenRoute, key string, rd *RouteDetail, suffixOnCollision bool) {
-	existing := routes[key]
-	if isPatchTwin(existing, rd) {
-		if rd.Method == http.MethodPut {
-			routes[key] = rd
+	if existing := routes[key]; existing != nil {
+		if suffixOnCollision {
+			key += "_" + strings.ToLower(rd.Method)
+		} else if existing.Method != rd.Method {
+			log.Warningf("API token route %s %s overwrites %s %s under permission %q; the latter is no longer reachable by token",
+				rd.Method, rd.Path, existing.Method, existing.Path, key)
 		}
-		return
-	}
-	if existing != nil && suffixOnCollision {
-		key += "_" + strings.ToLower(rd.Method)
 	}
 	routes[key] = rd
 }
@@ -333,6 +330,11 @@ func CollectRoutesForAPITokenUsage(route echo.RouteInfo, requiresJWT bool) {
 	target := apiTokenRoutes
 	if isV2Path(route.Path) {
 		target = apiTokenRoutesV2
+		// The synthesised PATCH rides on its PUT's permission instead of
+		// deriving one of its own; tokenAuthorizesRoute aliases it.
+		if route.Method == http.MethodPatch && autoPatchRoutes[route.Path] {
+			return
+		}
 	}
 
 	// Check if this is a standard CRUD route using path-based heuristics
@@ -528,8 +530,8 @@ func tokenAuthorizesRoute(token *APIToken, path, method string) bool {
 				if rd.Method == method && rd.Path == path {
 					return true
 				}
-				// v2: AutoPatch mirrors every PUT as a PATCH on the same
-				// path; only PUT is stored (see storeRoute).
+				// v2: AutoPatch's synthesised PATCH is not collected
+				// (see MarkAutoPatchRoute), so accept it on the PUT.
 				if isV2Path(rd.Path) && rd.Method == http.MethodPut &&
 					method == http.MethodPatch && rd.Path == path {
 					return true

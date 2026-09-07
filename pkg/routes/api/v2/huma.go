@@ -26,6 +26,7 @@ import (
 	"strings"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/humabridge"
 	"code.vikunja.io/api/pkg/version"
 
@@ -165,17 +166,25 @@ func Register[I, O any](api huma.API, op huma.Operation, handler func(context.Co
 func EnableAutoPatch(api huma.API) {
 	autopatch.AutoPatch(api)
 
-	// AutoPatch names each synthesised PATCH after the GET operation
-	// ("Patch labels-read"), which reads poorly in the docs nav. Rewrite
-	// the summary from the sibling PUT so it reads like "Update a label
-	// (partial)". Only touch summaries AutoPatch generated (the "Patch "
-	// prefix) so a hand-registered PATCH is left alone.
+	// The "Patch " summary prefix identifies what AutoPatch generated, so a
+	// hand-registered PATCH keeps both its own token permission and its
+	// summary (AutoPatch's, named after the GET op, reads poorly in the docs).
 	for _, item := range api.OpenAPI().Paths {
 		if item == nil || item.Patch == nil || item.Put == nil {
 			continue
 		}
-		if item.Put.Summary != "" && strings.HasPrefix(item.Patch.Summary, "Patch ") {
+		if !strings.HasPrefix(item.Patch.Summary, "Patch ") {
+			continue
+		}
+		models.MarkAutoPatchRoute(echoPath(item.Patch.Path))
+		if item.Put.Summary != "" {
 			item.Patch.Summary = item.Put.Summary + " (partial)"
 		}
 	}
+}
+
+// echoPath is the echo route template a Huma operation is registered as: the
+// adapter swaps {param} for :param and the group prepends its prefix.
+func echoPath(path string) string {
+	return GroupPrefix + strings.NewReplacer("{", ":", "}", "").Replace(path)
 }
