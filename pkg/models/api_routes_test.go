@@ -554,9 +554,9 @@ func TestCanDoAPIRoute_ExpandScopes(t *testing.T) {
 }
 
 // TestAdminTokenScopes covers the hand-named admin scopes: /routes lists only
-// the new names, each name authorises its v1 and v2 route, the
-// collision-derived keys from before the rename no longer authorise, and an
-// admin-only token stays out of everything else.
+// the new names, each name authorises its v2 route and, unless v2-only, its
+// v1 route, the collision-derived keys from before the rename no longer
+// authorise, and an admin-only token stays out of everything else.
 func TestAdminTokenScopes(t *testing.T) {
 	resetAPITokenRoutes()
 	license.SetForTests([]license.Feature{license.FeatureAdminPanel})
