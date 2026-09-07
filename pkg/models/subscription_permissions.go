@@ -17,12 +17,14 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 	"xorm.io/xorm"
 )
 
 // CanCreate checks if a user can subscribe to an entity. Subscribing yourself only requires read access,
-// subscribing someone else requires write access to the entity.
+// subscribing someone else requires write access to the entity for the caller and read access for the
+// target user.
 func (sb *Subscription) CanCreate(s *xorm.Session, a web.Auth) (can bool, err error) {
 	if _, is := a.(*LinkSharing); is {
 		return false, ErrGenericForbidden{}
@@ -31,6 +33,14 @@ func (sb *Subscription) CanCreate(s *xorm.Session, a web.Auth) (can bool, err er
 	sb.EntityType = getEntityTypeFromString(sb.Entity)
 
 	subscribingSomeoneElse := sb.UserID != 0 && sb.UserID != a.GetID()
+
+	subscriber := a.(*user.User)
+	if subscribingSomeoneElse {
+		subscriber, err = user.GetUserByID(s, sb.UserID)
+		if err != nil {
+			return false, err
+		}
+	}
 
 	switch sb.EntityType {
 	case SubscriptionEntityProject:
@@ -50,8 +60,22 @@ func (sb *Subscription) CanCreate(s *xorm.Session, a web.Auth) (can bool, err er
 	default:
 		return false, &ErrUnknownSubscriptionEntityType{EntityType: sb.EntityType}
 	}
+	if err != nil || !can {
+		return
+	}
 
-	return
+	if subscribingSomeoneElse {
+		can, err = canReadSubscriptionEntity(s, sb.EntityType, sb.EntityID, subscriber)
+		if err != nil {
+			return false, err
+		}
+		if !can {
+			return false, ErrUserDoesNotHaveAccessToProject{ProjectID: sb.EntityID, UserID: sb.UserID}
+		}
+	}
+
+	sb.subscriber = subscriber
+	return true, nil
 }
 
 // CanDelete checks if a user can delete a subscription

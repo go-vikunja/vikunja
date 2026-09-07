@@ -113,6 +113,9 @@ type Subscription struct {
 
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
+
+	// subscriber is resolved and access-checked in CanCreate so Create doesn't need to re-query it.
+	subscriber *user.User
 }
 
 type SubscriptionWithUser struct {
@@ -149,31 +152,13 @@ func (sb *Subscription) TableName() string {
 // @Failure 412 {object} web.HTTPError "The subscription entity is invalid."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /subscriptions/{entity}/{entityID} [put]
-func (sb *Subscription) Create(s *xorm.Session, auth web.Auth) (err error) {
-	// Permissions method already does the validation of the entity type, so we don't need to do that here
+func (sb *Subscription) Create(s *xorm.Session, _ web.Auth) (err error) {
+	// CanCreate already validated the entity type and resolved+access-checked sb.subscriber.
 
 	sb.ID = 0
+	sb.UserID = sb.subscriber.GetID()
 
-	// subscriber defaults to the currently authenticated user; CanCreate already made sure the caller
-	// is allowed to subscribe someone else if sb.UserID is set to a different user.
-	subscriber := auth
-	if sb.UserID != 0 && sb.UserID != auth.GetID() {
-		subscriber, err = user.GetUserByID(s, sb.UserID)
-		if err != nil {
-			return err
-		}
-
-		canRead, readErr := canReadSubscriptionEntity(s, sb.EntityType, sb.EntityID, subscriber)
-		if readErr != nil {
-			return readErr
-		}
-		if !canRead {
-			return ErrUserDoesNotHaveAccessToProject{ProjectID: sb.EntityID, UserID: sb.UserID}
-		}
-	}
-	sb.UserID = subscriber.GetID()
-
-	sub, err := GetSubscriptionForUser(s, sb.EntityType, sb.EntityID, subscriber)
+	sub, err := GetSubscriptionForUser(s, sb.EntityType, sb.EntityID, sb.subscriber)
 	if err != nil {
 		return err
 	}

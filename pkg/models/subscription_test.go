@@ -258,12 +258,9 @@ func TestSubscription_CreateForOtherUser(t *testing.T) {
 		}
 
 		can, err := sb.CanCreate(s, caller)
-		require.NoError(t, err)
-		assert.True(t, can, "the caller has write access, so CanCreate passes")
-
-		err = sb.Create(s, caller)
 		require.Error(t, err)
 		assert.True(t, IsErrUserDoesNotHaveAccessToProject(err))
+		assert.False(t, can, "the caller has write access, but the target user has no access, so CanCreate rejects")
 	})
 	t.Run("caller with read-only access cannot subscribe someone else", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
