@@ -211,6 +211,68 @@ export function jalaliToInstant(date: JalaliDateTime, timeZone: string): Date | 
 	return instant.isValid() ? instant.toDate() : null
 }
 
+/**
+ * Parses Jalali text input (year-first only, e.g. 1405/06/16 or 1405-06-16
+ * 14:30) into a Gregorian instant at 00:00 - or the parsed HH:MM - in the
+ * given timezone. Returns null (never throws) for anything else, including
+ * ISO strings, datemath, garbage, out-of-window years and impossible dates.
+ */
+export function parseJalaliDateInput(
+	raw: string | null | undefined,
+	options?: {timeZone?: string | null} | string | null,
+): Date | null {
+	try {
+		if (typeof raw !== 'string') {
+			return null
+		}
+
+		const trimmed = raw.trim()
+		if (trimmed === '') {
+			return null
+		}
+
+		const normalized = normalizePersianDigits(trimmed)
+		const match = normalized.match(/^(\d{4})[/\-.](\d{1,2})[/\-.](\d{1,2})(?:\s+(\d{1,2}):(\d{2}))?$/)
+		if (match === null) {
+			return null
+		}
+
+		const year = Number(match[1])
+		const month = Number(match[2])
+		const day = Number(match[3])
+		if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) {
+			return null
+		}
+		if (year < 1300 || year > 1500) {
+			return null
+		}
+
+		let hours = 0
+		let minutes = 0
+		if (typeof match[4] !== 'undefined') {
+			hours = Number(match[4])
+			minutes = Number(match[5])
+			if (!Number.isInteger(hours) || !Number.isInteger(minutes)) {
+				return null
+			}
+			if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+				return null
+			}
+		}
+
+		if (jalaliToGregorian({year, month, day}) === null) {
+			return null
+		}
+
+		const timeZone = typeof options === 'string'
+			? options
+			: (typeof options?.timeZone === 'string' ? options.timeZone : resolveUserTimezone())
+		return jalaliToInstant({year, month, day, hours, minutes}, timeZone)
+	} catch {
+		return null
+	}
+}
+
 function toValidDate(date: Date | string | null | undefined): Date | null {
 	return parseDateOrNull(date)
 }

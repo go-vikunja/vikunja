@@ -92,6 +92,7 @@ import {useI18n} from 'vue-i18n'
 import flatPickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
 import {parseDateOrString} from '@/helpers/time/parseDateOrString'
+import {normalizePersianDigits, parseJalaliDateInput} from '@/helpers/time/jalali'
 import {toISOStringOrNull} from '@/helpers/time/toISOStringOrNull'
 
 import Popup from '@/components/misc/Popup.vue'
@@ -134,6 +135,61 @@ const flatpickrDate = ref('')
 
 const date = ref<string|Date|null>('')
 
+// Jalali text entry stays Gregorian-only on the wire: under the Jalali locale
+// a year-first Jalali date in 1300-1500 parses to a Gregorian instant, anything
+// else falls through to the existing Gregorian/datemath handling untouched.
+function extractJalaliYearCandidate(raw: string): number | null {
+	try {
+		const normalized = normalizePersianDigits(raw.trim())
+		const leading = normalized.match(/^(\d{4})/)
+		if (leading !== null) {
+			return Number(leading[1])
+		}
+		const trailing = normalized.match(/(\d{4})(?:\s+\d{1,2}:\d{2})?$/)
+		if (trailing !== null) {
+			return Number(trailing[1])
+		}
+		return null
+	} catch {
+		return null
+	}
+}
+
+function tryParseJalaliValueInput(raw: string): Date | null {
+	if (!isJalali.value) {
+		return null
+	}
+	const year = extractJalaliYearCandidate(raw)
+	if (year === null || year < 1300 || year > 1500) {
+		return null
+	}
+	return parseJalaliDateInput(raw, {timeZone: timeZone.value})
+}
+
+function parseValueSideForGrid(raw: string | null) {
+	if (typeof raw === 'string' && raw !== '') {
+		const jalali = tryParseJalaliValueInput(raw)
+		if (jalali !== null) {
+			return jalali
+		}
+	}
+	return parseDateOrString(raw, false)
+}
+
+function toEmittedValue(raw: string | Date | null): string | Date | null {
+	if (raw === '' || raw === null) {
+		return null
+	}
+	if (typeof raw !== 'string') {
+		return raw
+	}
+	const jalali = tryParseJalaliValueInput(raw)
+	if (jalali !== null) {
+		return jalali.toISOString()
+	}
+	return raw
+}
+
 watch(
 	() => props.modelValue,
 	newValue => {
@@ -141,7 +197,9 @@ watch(
 		// Only set the date back to flatpickr when it's an actual date.
 		// Otherwise flatpickr runs in an endless loop and slows down the browser.
 		const dateValueAsString = date.value instanceof Date ? toISOStringOrNull(date.value) : date.value
-		const parsed = parseDateOrString(dateValueAsString, false)
+		const parsed = typeof dateValueAsString === 'string' && dateValueAsString !== ''
+			? parseValueSideForGrid(dateValueAsString)
+			: parseDateOrString(dateValueAsString, false)
 		if (parsed instanceof Date) {
 			flatpickrDate.value = dateValueAsString ?? ''
 		}
@@ -149,7 +207,7 @@ watch(
 )
 
 function emitChanged() {
-	emit('update:modelValue', date.value === '' ? null : date.value)
+	emit('update:modelValue', toEmittedValue(date.value))
 }
 
 // Gregorian Date behind the value for the Jalali grid, read straight from
@@ -160,7 +218,7 @@ const gridModelDate = computed<Date | null>(() => {
 	if (props.modelValue instanceof Date) {
 		return props.modelValue
 	}
-	const parsed = parseDateOrString(typeof props.modelValue === 'string' ? props.modelValue : null, false)
+	const parsed = parseValueSideForGrid(typeof props.modelValue === 'string' ? props.modelValue : null)
 	return parsed instanceof Date ? parsed : null
 })
 

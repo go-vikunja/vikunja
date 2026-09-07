@@ -13,6 +13,7 @@ import {
 	jalaliWeekday,
 	JALALI_CALENDAR_LATIN_DIGITS_LOCALE,
 	normalizePersianDigits,
+	parseJalaliDateInput,
 	resolveUserTimezone,
 	toPersianDigits,
 	weekdayInTimezone,
@@ -253,6 +254,121 @@ describe('instantToJalali / jalaliToInstant', () => {
 	it('falls back instead of throwing for a bad timezone', () => {
 		expect(() => jalaliToInstant({year: 1405, month: 1, day: 1, hours: 0, minutes: 0}, 'Not/AZone')).not.toThrow()
 		expect(() => instantToJalali(new Date('2026-03-21T00:00:00Z'), 'Not/AZone')).not.toThrow()
+	})
+})
+
+describe('parseJalaliDateInput', () => {
+	it.each([
+		['1405/06/16'],
+		['1405-06-16'],
+		['1405.06.16'],
+		['1405/6/16'],
+		['  1405/06/16  '],
+	])('parses %s at midnight in Asia/Tehran', (raw) => {
+		expect(parseJalaliDateInput(raw, {timeZone: 'Asia/Tehran'})?.toISOString())
+			.toBe('2026-09-06T20:30:00.000Z')
+	})
+
+	it('parses single-digit day 1405/06/6', () => {
+		expect(parseJalaliDateInput('1405/06/6', {timeZone: 'Asia/Tehran'})?.toISOString())
+			.toBe('2026-08-27T20:30:00.000Z')
+	})
+
+	it.each([
+		['1405/06/16'],
+		['1405-06-16'],
+		['1405.06.16'],
+	])('parses %s at midnight in UTC', (raw) => {
+		expect(parseJalaliDateInput(raw, {timeZone: 'UTC'})?.toISOString())
+			.toBe('2026-09-07T00:00:00.000Z')
+	})
+
+	it('parses 1405/06/16 at midnight in America/Los_Angeles', () => {
+		expect(parseJalaliDateInput('1405/06/16', {timeZone: 'America/Los_Angeles'})?.toISOString())
+			.toBe('2026-09-07T07:00:00.000Z')
+	})
+
+	it('parses 1405/01/01 per timezone', () => {
+		expect(parseJalaliDateInput('1405/01/01', {timeZone: 'Asia/Tehran'})?.toISOString())
+			.toBe('2026-03-20T20:30:00.000Z')
+		expect(parseJalaliDateInput('1405/01/01', {timeZone: 'UTC'})?.toISOString())
+			.toBe('2026-03-21T00:00:00.000Z')
+		expect(parseJalaliDateInput('1405/01/01', {timeZone: 'America/Los_Angeles'})?.toISOString())
+			.toBe('2026-03-21T07:00:00.000Z')
+	})
+
+	it.each([
+		['۱۴۰۵/۰۶/۱۶'],
+		['١٤٠٥/٠٦/١٦'],
+		['۱۴۰۵-۰۶-۱۶'],
+	])('parses non-ASCII digits %s', (raw) => {
+		expect(parseJalaliDateInput(raw, {timeZone: 'UTC'})?.toISOString())
+			.toBe('2026-09-07T00:00:00.000Z')
+	})
+
+	it('parses Persian digits with time', () => {
+		expect(parseJalaliDateInput('۱۴۰۵/۰۶/۱۶ ۱۵:۳۰', {timeZone: 'Asia/Tehran'})?.toISOString())
+			.toBe('2026-09-07T12:00:00.000Z')
+	})
+
+	it('parses an HH:MM variant in the given timezone', () => {
+		expect(parseJalaliDateInput('1405/06/16 15:30', {timeZone: 'Asia/Tehran'})?.toISOString())
+			.toBe('2026-09-07T12:00:00.000Z')
+		expect(parseJalaliDateInput('1405/06/16 15:30', {timeZone: 'UTC'})?.toISOString())
+			.toBe('2026-09-07T15:30:00.000Z')
+		expect(parseJalaliDateInput('1405/06/16 00:00', {timeZone: 'UTC'})?.toISOString())
+			.toBe('2026-09-07T00:00:00.000Z')
+	})
+
+	it.each([
+		['month 13', '1405/13/01'],
+		['month 0', '1405/00/01'],
+		['day 32', '1405/06/32'],
+		['day 0', '1405/06/00'],
+		['Esfand 30 in common year 1404', '1404/12/30'],
+		['hour 24', '1405/06/16 24:00'],
+		['minute 60', '1405/06/16 12:60'],
+		['year 1299 below window', '1299/01/01'],
+		['year 1501 above window', '1501/01/01'],
+		['Gregorian year 2026', '2026/09/07'],
+		['Gregorian year with dashes', '2026-09-07'],
+	])('returns null for invalid %s (%s)', (_name, raw) => {
+		expect(parseJalaliDateInput(raw, {timeZone: 'Asia/Tehran'})).toBeNull()
+		expect(parseJalaliDateInput(raw, {timeZone: 'UTC'})).toBeNull()
+	})
+
+	it.each([
+		['ISO date', '2026-09-07'],
+		['ISO datetime Z', '2026-09-07T12:00:00.000Z'],
+		['ISO datetime', '2026-09-07T12:00:00Z'],
+		['ISO with slashes and time', '2026/09/07 12:00'],
+		['datemath now', 'now'],
+		['datemath week', 'now/w'],
+		['datemath range', 'now/w+1w'],
+		['day-first ambiguous', '17/06/1405'],
+		['day-first dashes', '16-06-1405'],
+		['partial date', '1405/06'],
+		['time only', '15:30'],
+	])('returns null for %s %s instead of a Gregorian reading', (_name, raw) => {
+		expect(parseJalaliDateInput(raw, {timeZone: 'Asia/Tehran'})).toBeNull()
+		expect(parseJalaliDateInput(raw, {timeZone: 'UTC'})).toBeNull()
+	})
+
+	it.each([
+		['empty string', ''],
+		['blank string', '   '],
+		['garbage', 'not a date'],
+		['garbage with digits', 'foo 123'],
+		['null', null],
+		['undefined', undefined],
+	])('returns null for %s without throwing', (_name, raw) => {
+		expect(() => parseJalaliDateInput(raw as string, {timeZone: 'UTC'})).not.toThrow()
+		expect(parseJalaliDateInput(raw as string, {timeZone: 'UTC'})).toBeNull()
+	})
+
+	it('falls back instead of throwing for a bad timezone', () => {
+		expect(() => parseJalaliDateInput('1405/06/16', {timeZone: 'Not/AZone'})).not.toThrow()
+		expect(parseJalaliDateInput('1405/06/16', {timeZone: 'Not/AZone'})).not.toBeNull()
 	})
 })
 

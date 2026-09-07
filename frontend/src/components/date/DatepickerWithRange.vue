@@ -116,6 +116,7 @@ import {useI18n} from 'vue-i18n'
 import flatPickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
 import {parseDateOrString} from '@/helpers/time/parseDateOrString'
+import {normalizePersianDigits, parseJalaliDateInput} from '@/helpers/time/jalali'
 
 import Popup from '@/components/misc/Popup.vue'
 import {DATE_RANGES} from '@/components/date/dateRanges'
@@ -160,6 +161,58 @@ const flatpickrRange = ref('')
 const from = ref('')
 const to = ref('')
 
+// Jalali text entry stays Gregorian-only on the wire: under the Jalali locale
+// a year-first Jalali date in 1300-1500 parses to a Gregorian instant, anything
+// else falls through to the existing Gregorian/datemath handling untouched.
+function extractJalaliYearCandidate(raw: string): number | null {
+	try {
+		const normalized = normalizePersianDigits(raw.trim())
+		const leading = normalized.match(/^(\d{4})/)
+		if (leading !== null) {
+			return Number(leading[1])
+		}
+		const trailing = normalized.match(/(\d{4})(?:\s+\d{1,2}:\d{2})?$/)
+		if (trailing !== null) {
+			return Number(trailing[1])
+		}
+		return null
+	} catch {
+		return null
+	}
+}
+
+function tryParseJalaliRangeInput(raw: string): Date | null {
+	if (!isJalali.value) {
+		return null
+	}
+	const year = extractJalaliYearCandidate(raw)
+	if (year === null || year < 1300 || year > 1500) {
+		return null
+	}
+	return parseJalaliDateInput(raw, {timeZone: timeZone.value})
+}
+
+function parseRangeSideForGrid(raw: string | null) {
+	if (typeof raw === 'string' && raw !== '') {
+		const jalali = tryParseJalaliRangeInput(raw)
+		if (jalali !== null) {
+			return jalali
+		}
+	}
+	return parseDateOrString(raw, false)
+}
+
+function toEmittedRangeSide(raw: string): string | null {
+	if (raw === '') {
+		return null
+	}
+	const jalali = tryParseJalaliRangeInput(raw)
+	if (jalali !== null) {
+		return jalali.toISOString()
+	}
+	return raw
+}
+
 watch(
 	() => props.modelValue,
 	newValue => {
@@ -167,8 +220,8 @@ watch(
 		to.value = typeof newValue.dateTo === 'string' ? newValue.dateTo : (newValue.dateTo?.toISOString() ?? '')
 		// Only set the date back to flatpickr when it's an actual date.
 		// Otherwise flatpickr runs in an endless loop and slows down the browser.
-		const dateFrom = parseDateOrString(from.value, false)
-		const dateTo = parseDateOrString(to.value, false)
+		const dateFrom = parseRangeSideForGrid(from.value)
+		const dateTo = parseRangeSideForGrid(to.value)
 		if (dateFrom instanceof Date && dateTo instanceof Date) {
 			flatpickrRange.value = `${from.value} to ${to.value}`
 		}
@@ -177,8 +230,8 @@ watch(
 
 function emitChanged() {
 	const args = {
-		dateFrom: from.value === '' ? null : from.value,
-		dateTo: to.value === '' ? null : to.value,
+		dateFrom: toEmittedRangeSide(from.value),
+		dateTo: toEmittedRangeSide(to.value),
 	}
 	emit('update:modelValue', args)
 }
@@ -190,10 +243,10 @@ function emitChanged() {
 const gridRangeModel = computed<Date[] | null>(() => {
 	const dateFrom = props.modelValue.dateFrom instanceof Date
 		? props.modelValue.dateFrom
-		: parseDateOrString(typeof props.modelValue.dateFrom === 'string' ? props.modelValue.dateFrom : null, false)
+		: parseRangeSideForGrid(typeof props.modelValue.dateFrom === 'string' ? props.modelValue.dateFrom : null)
 	const dateTo = props.modelValue.dateTo instanceof Date
 		? props.modelValue.dateTo
-		: parseDateOrString(typeof props.modelValue.dateTo === 'string' ? props.modelValue.dateTo : null, false)
+		: parseRangeSideForGrid(typeof props.modelValue.dateTo === 'string' ? props.modelValue.dateTo : null)
 	if (dateFrom instanceof Date && dateTo instanceof Date) {
 		return [dateFrom, dateTo]
 	}

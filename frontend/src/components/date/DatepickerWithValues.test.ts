@@ -65,3 +65,78 @@ describe('DatepickerWithValues Jalali picker', () => {
 		expect(wrapper.find('.jalali-calendar').exists()).toBe(true)
 	})
 })
+
+describe('DatepickerWithValues Jalali text input', () => {
+	beforeEach(() => {
+		setActivePinia(createPinia())
+	})
+
+	afterEach(() => {
+		globalI18n.global.locale.value = 'en'
+	})
+
+	function mountValueInput(timezone: string, locale = 'fa-IR') {
+		globalI18n.global.locale.value = locale as never
+		useAuthStore().setUserSettings({timezone} as never)
+		return mount(DatepickerWithValues, {
+			props: {modelValue: ''},
+			global: {
+				plugins: [i18n],
+				stubs: {
+					Modal: true,
+					XButton: true,
+					BaseButton: true,
+					Popup: {template: '<div><slot name="content" :is-open="true" /></div>'},
+					'flat-pickr': true,
+					DatemathHelp: true,
+				},
+			},
+		})
+	}
+
+	it.each([
+		['Asia/Tehran', '2026-09-06T20:30:00.000Z'],
+		['America/Los_Angeles', '2026-09-07T07:00:00.000Z'],
+		['UTC', '2026-09-07T00:00:00.000Z'],
+	])('parses typed Jalali in %s to Gregorian ISO (near-midnight)', async (timezone, expected) => {
+		const wrapper = mountValueInput(timezone)
+		await wrapper.find('input.input').setValue('1405/06/16')
+		await wrapper.vm.$nextTick()
+		expect(wrapper.emitted('update:modelValue')?.pop()?.[0]).toBe(expected)
+	})
+
+	it('parses Persian digits and HH:MM', async () => {
+		const wrapper = mountValueInput('Asia/Tehran')
+		await wrapper.find('input.input').setValue('۱۴۰۵/۰۶/۱۶ ۱۵:۳۰')
+		await wrapper.vm.$nextTick()
+		expect(wrapper.emitted('update:modelValue')?.pop()?.[0]).toBe('2026-09-07T12:00:00.000Z')
+	})
+
+	it('keeps typed datemath verbatim', async () => {
+		const wrapper = mountValueInput('Asia/Tehran')
+		await wrapper.find('input.input').setValue('now/w')
+		await wrapper.vm.$nextTick()
+		expect(wrapper.emitted('update:modelValue')?.pop()?.[0]).toBe('now/w')
+	})
+
+	it('keeps ISO verbatim', async () => {
+		const wrapper = mountValueInput('Asia/Tehran')
+		await wrapper.find('input.input').setValue('2026-09-07')
+		await wrapper.vm.$nextTick()
+		expect(wrapper.emitted('update:modelValue')?.pop()?.[0]).toBe('2026-09-07')
+	})
+
+	it('leaves ambiguous day-first on the Gregorian path', async () => {
+		const wrapper = mountValueInput('Asia/Tehran')
+		await wrapper.find('input.input').setValue('17/06/1405')
+		await wrapper.vm.$nextTick()
+		expect(wrapper.emitted('update:modelValue')?.pop()?.[0]).toBe('17/06/1405')
+	})
+
+	it.each([['en'], ['de']])('leaves Jalali-looking text untouched in %s', async (locale) => {
+		const wrapper = mountValueInput('Asia/Tehran', locale)
+		await wrapper.find('input.input').setValue('1405/06/16')
+		await wrapper.vm.$nextTick()
+		expect(wrapper.emitted('update:modelValue')?.pop()?.[0]).toBe('1405/06/16')
+	})
+})

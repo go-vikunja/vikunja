@@ -284,6 +284,17 @@ function setJalaliShortcutDate(dateString: string) {
 }
 
 function getWeekdayFromStringInterval(dateString: string) {
+	if (isJalali.value) {
+		const tz = timeZone.value
+		const now = new Date()
+		const nowJalali = instantToJalali(now, tz)
+		if (nowJalali !== null) {
+			const interval = calculateDayInterval(dateString, weekdayInTimezone(now, tz))
+			const target = addJalaliDays({year: nowJalali.year, month: nowJalali.month, day: nowJalali.day}, interval)
+			const instant = jalaliToInstant({...target, hours: nowJalali.hours, minutes: nowJalali.minutes}, tz)
+			return formatDate(instant ?? now, 'ddd')
+		}
+	}
 	const interval = calculateDayInterval(dateString)
 	const newDate = new Date()
 	newDate.setDate(newDate.getDate() + interval)
