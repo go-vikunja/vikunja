@@ -491,7 +491,7 @@ func CanDoAPIRoute(c *echo.Context, token *APIToken) (can bool) {
 
 func hasOwnPatch(routes APITokenRoute, path string) bool {
 	for _, rd := range routes {
-		if rd != nil && rd.Method == http.MethodPatch && rd.Path == path {
+		if rd.Method == http.MethodPatch && rd.Path == path {
 			return true
 		}
 	}
