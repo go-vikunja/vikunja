@@ -4,10 +4,9 @@ import {setActivePinia, createPinia} from 'pinia'
 import {createI18n} from 'vue-i18n'
 import ApiTokenForm from './ApiTokenForm.vue'
 import en from '@/i18n/lang/en.json'
+import type {ApiTokenRoutes} from '@/services/apiToken'
 
-type Routes = Record<string, Record<string, {path: string, method: string}>>
-
-const getAvailableRoutes = vi.fn(async (): Promise<Routes> => ({
+const getAvailableRoutes = vi.fn(async (): Promise<ApiTokenRoutes> => ({
 	tasks: {
 		create: {path: '/api/v1/projects/:project/tasks', method: 'PUT'},
 		read_all: {path: '/api/v1/tasks', method: 'GET'},
