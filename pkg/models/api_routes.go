@@ -80,8 +80,7 @@ func MarkAutoPatchRoute(path string) {
 	autoPatchRoutes[path] = true
 }
 
-// resetAPITokenRoutes installs the hand-written entries; tests call it to
-// start from a clean table.
+// resetAPITokenRoutes restores the init() baseline; tests use it to isolate cases.
 func resetAPITokenRoutes() {
 	autoPatchRoutes = map[string]bool{}
 	apiTokenRoutes = map[string]APITokenRoute{
@@ -512,17 +511,20 @@ func tokenAuthorizesRoute(token *APIToken, path, method string) bool {
 	for rawGroup, perms := range token.APIPermissions {
 		group := canonicalAPITokenGroup(rawGroup)
 		tables := []APITokenRoute{apiTokenRoutes[group], apiTokenRoutesV2[group]}
-		for _, routes := range tables {
-			if routes == nil {
-				continue
+		for _, p := range perms {
+			legacy := ""
+			if group == "admin" {
+				legacy = legacyAdminScopes[p]
 			}
-			for _, p := range perms {
-				if group == "admin" {
-					if alias, ok := legacyAdminScopes[p]; ok {
-						p = alias
-					}
+			for _, routes := range tables {
+				if routes == nil {
+					continue
 				}
 				rd := routes[p]
+				// Only a fallback: a current scope of the same name must win.
+				if rd == nil && legacy != "" {
+					rd = routes[legacy]
+				}
 				if rd == nil {
 					continue
 				}
