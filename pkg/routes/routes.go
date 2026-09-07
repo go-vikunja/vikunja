@@ -354,7 +354,7 @@ var unauthenticatedAPIPaths = map[string]bool{
 
 // collectRoutesForAPITokens collects all routes for API token permission checking.
 // In Echo v5, OnAddRouteHandler was removed, so we collect routes after registration.
-func collectRoutesForAPITokens(e *echo.Echo, autoPatched map[string]bool) {
+func collectRoutesForAPITokens(e *echo.Echo, autoPatched pathSet) {
 	routeList := e.Router().Routes()
 	log.Debugf("Collecting %d routes for API token usage", len(routeList))
 	for _, route := range routeList {
@@ -453,7 +453,7 @@ func gateV2AdminRoutes() echo.MiddlewareFunc {
 // registerAPIRoutesV2 wires the /api/v2 Echo group. Token middleware is
 // attached before any route so Huma's spec and Scalar docs share the
 // resource handlers' stack; unauthenticatedAPIPaths keeps them public.
-func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, noAuthRateLimit, refreshRateLimit echo.MiddlewareFunc) map[string]bool {
+func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, noAuthRateLimit, refreshRateLimit echo.MiddlewareFunc) pathSet {
 	a.Use(noStoreCacheControl())
 	a.Use(SetupTokenMiddleware())
 	a.Use(pathScoped(v2SessionRenewalPaths.has, refreshRateLimit))
@@ -480,7 +480,7 @@ func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, noAuthRateLimit, refreshRa
 	a.GET("/ws", ws.UpgradeHandler, noAuthRateLimit)
 
 	// Resources self-register via init(); RegisterAll runs them all + AutoPatch.
-	return apiv2.RegisterAll(api)
+	return pathSet(apiv2.RegisterAll(api))
 }
 
 func registerAPIRoutes(a *echo.Group, noAuthRateLimit, refreshRateLimit echo.MiddlewareFunc) {
