@@ -121,8 +121,7 @@ func TestCollectRoutesV2(t *testing.T) {
 	assert.Equal(t, "/api/v2/labels", labels["read_all"].Path)
 	assert.Equal(t, "GET", labels["read_one"].Method)
 	assert.Equal(t, "POST", labels["create"].Method)
-	// PUT is the authoritative update verb for API tokens — AutoPatch's
-	// synthesised PATCH is not collected at all.
+	// AutoPatch's PATCH is never collected; PUT stays the update verb.
 	assert.Equal(t, "PUT", labels["update"].Method)
 	assert.Equal(t, "DELETE", labels["delete"].Method)
 }

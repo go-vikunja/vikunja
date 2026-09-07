@@ -516,8 +516,7 @@ func (h *webHandlerTestV2) testDeleteWithUser(queryParams url.Values, urlParams 
 	return h.serve(http.MethodDelete, h.buildURL(queryParams, urlParams, true), pl)
 }
 
-// insertAPITokenRow inserts token directly, bypassing Create's permission validation.
-// nullable lists the hash columns the caller did not populate.
+// nullable: hash columns the caller left empty, so XORM writes NULL instead of "".
 func insertAPITokenRow(t *testing.T, token *models.APIToken, nullable ...string) {
 	t.Helper()
 

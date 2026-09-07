@@ -38,11 +38,8 @@ func init() {
 	resetAPITokenRoutes()
 }
 
-// Admin scopes are hand-named instead of collision-derived (users_post,
-// users_status, ...): the group is small, stable and security-sensitive.
-// CollectRoutesForAPITokenUsage skips /admin routes, so a new admin route
-// stays unreachable by token until it is listed here. Old keys on existing
-// tokens keep working via legacyAdminScopes.
+// Hand-named: small, stable, security-sensitive group. Collection skips /admin,
+// so a new admin route is unreachable by token until listed here.
 var adminTokenRoutes = []struct {
 	name, method, path string
 	v2Only             bool
@@ -71,11 +68,9 @@ var legacyAdminScopes = map[string]string{ //nolint:gosec // scope names, not cr
 	"projects_owner":             "projects_set_owner",
 }
 
-// Echo paths of the PATCH routes huma's AutoPatch synthesised from a PUT.
 var autoPatchRoutes = map[string]bool{}
 
-// MarkAutoPatchRoute marks an echo path (e.g. /api/v2/labels/:id) as
-// AutoPatch-synthesised. Call during route registration, before collection.
+// MarkAutoPatchRoute takes the echo template (/api/v2/labels/:id); call before collection.
 func MarkAutoPatchRoute(path string) {
 	autoPatchRoutes[path] = true
 }
@@ -328,8 +323,7 @@ func CollectRoutesForAPITokenUsage(route echo.RouteInfo, requiresJWT bool) {
 	target := apiTokenRoutes
 	if isV2Path(route.Path) {
 		target = apiTokenRoutesV2
-		// The synthesised PATCH rides on its PUT's permission instead of
-		// deriving one of its own; tokenAuthorizesRoute aliases it.
+		// Synthesised PATCH rides on its PUT scope; tokenAuthorizesRoute aliases it.
 		if route.Method == http.MethodPatch && autoPatchRoutes[route.Path] {
 			return
 		}
@@ -531,8 +525,7 @@ func tokenAuthorizesRoute(token *APIToken, path, method string) bool {
 				if rd.Method == method && rd.Path == path {
 					return true
 				}
-				// v2: AutoPatch's synthesised PATCH is not collected
-				// (see MarkAutoPatchRoute), so accept it on the PUT.
+				// AutoPatch's PATCH is never collected (MarkAutoPatchRoute); accept it on the PUT.
 				if isV2Path(rd.Path) && rd.Method == http.MethodPut &&
 					method == http.MethodPatch && rd.Path == path {
 					return true

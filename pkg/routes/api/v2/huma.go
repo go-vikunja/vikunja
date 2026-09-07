@@ -166,9 +166,8 @@ func Register[I, O any](api huma.API, op huma.Operation, handler func(context.Co
 func EnableAutoPatch(api huma.API) {
 	autopatch.AutoPatch(api)
 
-	// The "Patch " summary prefix identifies what AutoPatch generated, so a
-	// hand-registered PATCH keeps both its own token permission and its
-	// summary (AutoPatch's, named after the GET op, reads poorly in the docs).
+	// AutoPatch tags its PATCHes with a "Patch " summary; a hand-registered PATCH keeps
+	// its own summary and token permission. The generated summary reads poorly in the docs.
 	for _, item := range api.OpenAPI().Paths {
 		if item == nil || item.Patch == nil || item.Put == nil {
 			continue
@@ -183,8 +182,7 @@ func EnableAutoPatch(api huma.API) {
 	}
 }
 
-// echoPath is the echo route template a Huma operation is registered as: the
-// adapter swaps {param} for :param and the group prepends its prefix.
+// echoPath: the adapter swaps {param} for :param and the group prepends its prefix.
 func echoPath(path string) string {
 	return GroupPrefix + strings.NewReplacer("{", ":", "}", "").Replace(path)
 }

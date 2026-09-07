@@ -626,7 +626,6 @@ func TestHumaAdminAPIToken(t *testing.T) {
 
 	promoteToAdmin(t, 1)
 
-	// Native PATCH routes have no PUT twin, so they exercise the PATCH collection fix.
 	t.Run("named scopes reach the PATCH routes", func(t *testing.T) {
 		tok := insertAPIToken(t, 1, models.APIPermissions{"admin": {"users_set_admin", "users_set_status", "projects_set_owner"}})
 
