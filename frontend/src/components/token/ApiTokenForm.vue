@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {computed, onMounted, ref} from 'vue'
+import {computed, onMounted, ref, useId} from 'vue'
 import {useFlatpickrLanguage} from '@/helpers/useFlatpickrLanguage'
 import XButton from '@/components/input/Button.vue'
 import ApiTokenService from '@/services/apiToken'
@@ -244,6 +244,14 @@ function isEscalatingPermission(group: string, permission: string | number): boo
 	return group === 'admin' && ESCALATING_ADMIN_PERMISSIONS.has(String(permission))
 }
 
+const warningIdPrefix = useId()
+
+function escalationWarningId(group: string, permission: string | number): string | undefined {
+	return isEscalatingPermission(group, permission)
+		? `${warningIdPrefix}-${group}-${permission}`
+		: undefined
+}
+
 async function createToken() {
 	newTokenTitleValid.value = newToken.value.title.trim() !== ''
 	if (!newTokenTitleValid.value) {
@@ -402,12 +410,14 @@ async function createToken() {
 					<FancyCheckbox
 						v-model="newTokenPermissions[group][permission]"
 						class="mis-4 mie-2 is-capitalized"
+						:aria-describedby="escalationWarningId(group, permission)"
 						@update:modelValue="checked => toggleGroupPermissionsFromChild(group, checked)"
 					>
 						{{ formatPermissionTitle(permission) }}
 					</FancyCheckbox>
 					<p
 						v-if="isEscalatingPermission(group, permission)"
+						:id="escalationWarningId(group, permission)"
 						class="help is-danger mis-4"
 					>
 						{{ $t('user.settings.apiTokens.escalationWarning') }}

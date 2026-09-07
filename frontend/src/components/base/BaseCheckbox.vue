@@ -12,6 +12,7 @@
 				:checked="modelValue"
 				:disabled="disabled || undefined"
 				:aria-label="ariaLabel"
+				:aria-describedby="ariaDescribedby"
 				@change="(event) => emit('update:modelValue', (event.target as HTMLInputElement).checked)"
 			>
 			<slot />
@@ -24,9 +25,11 @@ withDefaults(defineProps<{
 	modelValue?: boolean,
 	disabled: boolean,
 	ariaLabel?: string,
+	ariaDescribedby?: string,
 }>(), {
 	modelValue: false,
 	ariaLabel: undefined,
+	ariaDescribedby: undefined,
 })
 
 const emit = defineEmits<{
