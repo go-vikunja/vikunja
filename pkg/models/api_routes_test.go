@@ -151,15 +151,6 @@ func TestCollectRoutesV2_Patch(t *testing.T) {
 		assert.Equal(t, http.MethodPut, apiTokenRoutesV2["tasks"]["position"].Method)
 		require.Contains(t, apiTokenRoutesV2["tasks"], "position_patch")
 		assert.Equal(t, http.MethodPatch, apiTokenRoutesV2["tasks"]["position_patch"].Method)
-
-		can := func(perm, method string) bool {
-			token := &APIToken{APIPermissions: APIPermissions{"tasks": []string{perm}}}
-			req := httptest.NewRequest(method, "/api/v2/tasks/:task/position", nil)
-			return CanDoAPIRoute(echo.New().NewContext(req, httptest.NewRecorder()), token)
-		}
-		assert.True(t, can("position", http.MethodPut))
-		assert.False(t, can("position", http.MethodPatch), "the PUT alias must not cover a PATCH of its own")
-		assert.True(t, can("position_patch", http.MethodPatch))
 	})
 }
 
@@ -349,6 +340,23 @@ func TestCanDoAPIRoute_V2PatchAliasesPut(t *testing.T) {
 		req := httptest.NewRequest("PATCH", "/api/v1/labels/:id", nil)
 		c := e.NewContext(req, httptest.NewRecorder())
 		assert.False(t, CanDoAPIRoute(c, v1Token))
+	})
+
+	t.Run("a path with its own PATCH is not covered by the PUT alias", func(t *testing.T) {
+		resetAPITokenRoutes()
+		t.Cleanup(resetAPITokenRoutes)
+
+		CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: http.MethodPut, Path: "/api/v2/tasks/:task/position"}, true)
+		CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: http.MethodPatch, Path: "/api/v2/tasks/:task/position"}, true)
+
+		can := func(perm, method string) bool {
+			token := &APIToken{APIPermissions: APIPermissions{"tasks": []string{perm}}}
+			req := httptest.NewRequest(method, "/api/v2/tasks/:task/position", nil)
+			return CanDoAPIRoute(echo.New().NewContext(req, httptest.NewRecorder()), token)
+		}
+		assert.True(t, can("position", http.MethodPut))
+		assert.False(t, can("position", http.MethodPatch), "the PUT alias must not cover a PATCH of its own")
+		assert.True(t, can("position_patch", http.MethodPatch))
 	})
 }
 
