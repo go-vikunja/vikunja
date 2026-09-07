@@ -2,6 +2,8 @@ export const TASK_REPEAT_MODES = {
 	'REPEAT_MODE_DEFAULT': 0,
 	'REPEAT_MODE_MONTH': 1,
 	'REPEAT_MODE_FROM_CURRENT_DATE': 2,
+	'REPEAT_MODE_JALALI_MONTH': 3,
+	'REPEAT_MODE_JALALI_YEAR': 4,
 } as const
 
-export type IRepeatMode = typeof TASK_REPEAT_MODES[keyof typeof TASK_REPEAT_MODES] 
+export type IRepeatMode = typeof TASK_REPEAT_MODES[keyof typeof TASK_REPEAT_MODES]

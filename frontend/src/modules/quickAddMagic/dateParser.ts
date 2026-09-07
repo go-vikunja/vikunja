@@ -1,6 +1,9 @@
 import {calculateDayInterval} from '@/helpers/time/calculateDayInterval'
 import {getDateWithTime} from '@/helpers/time/getDateWithTime'
 import {replaceAll} from '@/helpers/replaceAll'
+import {i18n} from '@/i18n'
+import {isJalaliLocale} from '@/helpers/time/jalali'
+import {parsePersianDate} from './dateParserFa'
 
 export interface dateParseResult {
 	newText: string,
@@ -44,7 +47,9 @@ function matchesDateExpr(text: string, dateExpr: string): boolean {
 	return text.match(new RegExp('(^| )' + dateExpr, 'gi')) !== null
 }
 
-export const parseDate = (text: string, now: Date = new Date()): dateParseResult => {
+export const parseDate = (text: string, now: Date = new Date(), locale: string = i18n.global.locale.value, timeZone?: string): dateParseResult => {
+	const faResult = isJalaliLocale(locale) ? parsePersianDate(text, now, {locale, timeZone}) : null
+	if (faResult !== null) return faResult
 	if (matchesDateExpr(text, 'today')) {
 		return addTimeToDate(text, getDateFromInterval(calculateDayInterval('today')), 'today')
 	}
