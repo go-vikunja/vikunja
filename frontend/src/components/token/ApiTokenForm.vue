@@ -12,6 +12,7 @@ import 'flatpickr/dist/flatpickr.css'
 import {useI18n} from 'vue-i18n'
 import FormField from '@/components/input/FormField.vue'
 import type {IApiToken} from '@/modelTypes/IApiToken'
+import type {ApiTokenRoutes} from '@/services/apiToken'
 import {useTimeFormat} from '@/composables/useTimeFormat'
 import {TIME_FORMAT} from '@/constants/timeFormat'
 
@@ -41,7 +42,7 @@ const flatpickrLocale = useFlatpickrLanguage()
 const now = new Date()
 now.setSeconds(0, 0)
 
-const availableRoutes = ref(null)
+const availableRoutes = ref<ApiTokenRoutes | null>(null)
 const newToken = ref<IApiToken>(new ApiTokenModel())
 const newTokenExpiry = ref<string | number>(30)
 const newTokenExpiryCustom = ref(new Date(now))
@@ -122,7 +123,7 @@ const flatPickerConfig = computed(() => ({
 onMounted(async () => {
 	const allRoutes = await service.getAvailableRoutes()
 
-	const routesAvailable = {}
+	const routesAvailable: ApiTokenRoutes = {}
 	const keys = Object.keys(allRoutes)
 	keys.sort((a, b) => (a === 'other' ? 1 : b === 'other' ? -1 : 0))
 	keys.forEach(key => {
@@ -242,8 +243,8 @@ const ESCALATING_ADMIN_PERMISSIONS = new Set(['users_set_password', 'users_set_a
 
 const warningIdPrefix = useId()
 
-function escalationWarningId(group: string, permission: string | number): string | undefined {
-	return group === 'admin' && ESCALATING_ADMIN_PERMISSIONS.has(String(permission))
+function escalationWarningId(group: string, permission: string): string | undefined {
+	return group === 'admin' && ESCALATING_ADMIN_PERMISSIONS.has(permission)
 		? `${warningIdPrefix}-${group}-${permission}`
 		: undefined
 }
