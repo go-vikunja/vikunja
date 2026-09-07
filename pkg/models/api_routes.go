@@ -489,6 +489,15 @@ func CanDoAPIRoute(c *echo.Context, token *APIToken) (can bool) {
 	return expandScopesSatisfied(c, token, path, method)
 }
 
+func hasOwnPatch(routes APITokenRoute, path string) bool {
+	for _, rd := range routes {
+		if rd != nil && rd.Method == http.MethodPatch && rd.Path == path {
+			return true
+		}
+	}
+	return false
+}
+
 func tokenAuthorizesRoute(token *APIToken, path, method string) bool {
 	for rawGroup, perms := range token.APIPermissions {
 		group := canonicalAPITokenGroup(rawGroup)
@@ -513,9 +522,11 @@ func tokenAuthorizesRoute(token *APIToken, path, method string) bool {
 				if rd.Method == method && rd.Path == path {
 					return true
 				}
-				// AutoPatch's PATCH is never collected; accept it on the PUT.
+				// AutoPatch's PATCH is never collected; accept it on the PUT unless
+				// the path has a PATCH of its own.
 				if isV2Path(rd.Path) && rd.Method == http.MethodPut &&
-					method == http.MethodPatch && rd.Path == path {
+					method == http.MethodPatch && rd.Path == path &&
+					!hasOwnPatch(routes, path) {
 					return true
 				}
 				// Two list endpoints share tasks.read_all but only one
