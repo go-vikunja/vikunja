@@ -9,6 +9,8 @@ import {MILLISECONDS_A_DAY} from '@/constants/date'
 import flatPickr from 'vue-flatpickr-component'
 import type {Hook} from 'flatpickr/dist/types/options'
 import 'flatpickr/dist/flatpickr.css'
+import JalaliCalendarGrid from '@/components/input/JalaliCalendarGrid.vue'
+import {useJalaliCalendar} from '@/composables/useJalaliCalendar'
 import {useI18n} from 'vue-i18n'
 import FormField from '@/components/input/FormField.vue'
 import type {IApiToken} from '@/modelTypes/IApiToken'
@@ -35,6 +37,7 @@ const emit = defineEmits<{
 const service = new ApiTokenService()
 const {t} = useI18n()
 const {store: timeFormat} = useTimeFormat()
+const {isJalali, timeZone} = useJalaliCalendar()
 const flatpickrLocale = useFlatpickrLanguage()
 // Zero seconds: flatpickr copies them into the native mobile input's default value where they
 // become the step base, making every minute-granularity pick a stepMismatch that blocks submit (#3175)
@@ -118,6 +121,10 @@ const flatPickerConfig = computed(() => ({
 	minDate: now,
 	onReady: labelDateInput,
 }))
+
+function onGridDate(value: Date | Date[] | null) {
+	newTokenExpiryCustom.value = Array.isArray(value) ? (value[0] ?? newTokenExpiryCustom.value) : (value ?? newTokenExpiryCustom.value)
+}
 
 onMounted(async () => {
 	const allRoutes = await service.getAvailableRoutes()
@@ -339,7 +346,17 @@ async function createToken() {
 					v-if="newTokenExpiry === 'custom'"
 					class="control mis-2"
 				>
+					<JalaliCalendarGrid
+						v-if="isJalali"
+						:model-value="newTokenExpiryCustom"
+						:time-zone="timeZone"
+						:enable-time="true"
+						:time-24hr="timeFormat === TIME_FORMAT.HOURS_24"
+						:min-date="now"
+						@update:modelValue="onGridDate"
+					/>
 					<flat-pickr
+						v-else
 						v-model="newTokenExpiryCustom"
 						:config="flatPickerConfig"
 					/>

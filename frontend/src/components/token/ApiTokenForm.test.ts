@@ -3,6 +3,8 @@ import {mount, flushPromises, type VueWrapper} from '@vue/test-utils'
 import {setActivePinia, createPinia} from 'pinia'
 import {createI18n} from 'vue-i18n'
 import ApiTokenForm from './ApiTokenForm.vue'
+import {i18n as globalI18n} from '@/i18n'
+import {useAuthStore} from '@/stores/auth'
 import en from '@/i18n/lang/en.json'
 
 const getAvailableRoutes = vi.fn(async () => ({
@@ -118,5 +120,54 @@ describe('ApiTokenForm', () => {
 		}
 
 		expect(mounted.errors).toEqual([])
+	})
+})
+
+describe('ApiTokenForm Jalali picker', () => {
+	let wrapper: VueWrapper | undefined
+
+	beforeEach(() => {
+		setActivePinia(createPinia())
+		globalI18n.global.locale.value = 'fa-IR'
+		useAuthStore().setUserSettings({timezone: 'Asia/Tehran'} as never)
+		getAvailableRoutes.mockClear()
+		create.mockClear()
+	})
+
+	afterEach(() => {
+		wrapper?.unmount()
+		wrapper = undefined
+		document.body.innerHTML = ''
+		globalI18n.global.locale.value = 'en'
+	})
+
+	it('renders the Jalali grid for custom expiry instead of flatpickr', async () => {
+		const errors: unknown[] = []
+		wrapper = mount(ApiTokenForm, {
+			global: {
+				plugins: [i18n],
+				stubs: {
+					XButton: {template: '<button v-bind="$attrs"><slot /></button>'},
+					flatPickr: true,
+				},
+				config: {
+					errorHandler(err) {
+						errors.push(err)
+					},
+				},
+			},
+			attachTo: document.body,
+		})
+		await flushPromises()
+
+		await wrapper.find('#apiTokenExpiry').setValue('custom')
+		await flushPromises()
+
+		expect(wrapper.find('.jalali-calendar').exists()).toBe(true)
+		expect(wrapper.find('flat-pickr-stub').exists()).toBe(false)
+		// Days before today are disabled by the min date.
+		const days = wrapper.findAll('.jalali-calendar__day')
+		expect(days.length).toBeGreaterThan(0)
+		expect(errors).toEqual([])
 	})
 })

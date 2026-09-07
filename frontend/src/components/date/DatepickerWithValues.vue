@@ -48,8 +48,15 @@
 							</div>
 						</label>
 						<flat-pickr
+							v-if="!isJalali"
 							v-model="flatpickrDate"
 							:config="flatPickerConfig"
+						/>
+						<JalaliCalendarGrid
+							v-else
+							:model-value="gridModelDate"
+							:time-zone="timeZone"
+							@update:modelValue="onGridDate"
 						/>
 
 						<p>
@@ -91,7 +98,9 @@ import Popup from '@/components/misc/Popup.vue'
 import {DATE_VALUES} from '@/components/date/dateRanges'
 import BaseButton from '@/components/base/BaseButton.vue'
 import DatemathHelp from '@/components/date/DatemathHelp.vue'
+import JalaliCalendarGrid from '@/components/input/JalaliCalendarGrid.vue'
 import {useFlatpickrLanguage} from '@/helpers/useFlatpickrLanguage'
+import {useJalaliCalendar} from '@/composables/useJalaliCalendar'
 
 const props = withDefaults(defineProps<{
 	modelValue: string | Date | null,
@@ -108,6 +117,7 @@ const emit = defineEmits<{
 }>()
 
 const {t} = useI18n({useScope: 'global'})
+const {isJalali, timeZone} = useJalaliCalendar()
 
 const flatPickerConfig = computed(() => ({
 	altFormat: t('date.altFormatLong'),
@@ -140,6 +150,29 @@ watch(
 
 function emitChanged() {
 	emit('update:modelValue', date.value === '' ? null : date.value)
+}
+
+// Gregorian Date behind the value for the Jalali grid, read straight from
+// props so the grid opens on the right month even before the date ref below
+// picks the value up. Datemath and empty values yield null so the grid opens
+// on today; custom picks always land back as Gregorian ISO strings.
+const gridModelDate = computed<Date | null>(() => {
+	if (props.modelValue instanceof Date) {
+		return props.modelValue
+	}
+	const parsed = parseDateOrString(typeof props.modelValue === 'string' ? props.modelValue : null, false)
+	return parsed instanceof Date ? parsed : null
+})
+
+const gridDate = computed<Date | null>({
+	get: () => gridModelDate.value,
+	set: (value) => {
+		date.value = value instanceof Date ? value.toISOString() : ''
+	},
+})
+
+function onGridDate(value: Date | Date[] | null) {
+	gridDate.value = Array.isArray(value) ? (value[0] ?? null) : value
 }
 
 watch(

@@ -842,6 +842,14 @@
       "thisWeekend": "This Weekend",
       "laterThisWeek": "Later This Week",
       "nextWeek": "Next Week",
+      "prevMonth": "Previous month",
+      "nextMonth": "Next month",
+      "prevYear": "Previous year",
+      "nextYear": "Next year",
+      "hour": "Hour",
+      "minute": "Minute",
+      "am": "AM",
+      "pm": "PM",
       "chooseDate": "Choose a date"
     },
     "editor": {

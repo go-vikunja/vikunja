@@ -65,7 +65,18 @@
 	</template>
 
 	<div class="flatpickr-container">
+		<JalaliCalendarGrid
+			v-if="isJalali"
+			:model-value="date"
+			:time-zone="timeZone"
+			:enable-time="true"
+			:time-24hr="timeFormat === TIME_FORMAT.HOURS_24"
+			:default-hour="configuredDueTime?.hours ?? null"
+			:default-minute="configuredDueTime?.minutes ?? null"
+			@update:modelValue="onGridDate"
+		/>
 		<flat-pickr
+			v-else
 			ref="flatPickrRef"
 			v-model="flatPickrDate"
 			:config="flatPickerConfig"
@@ -79,14 +90,22 @@ import flatPickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
 
 import BaseButton from '@/components/base/BaseButton.vue'
+import JalaliCalendarGrid from '@/components/input/JalaliCalendarGrid.vue'
 
 import {formatDate} from '@/helpers/time/formatDate'
 import {calculateDayInterval} from '@/helpers/time/calculateDayInterval'
 import {createDateFromString} from '@/helpers/time/createDateFromString'
-import {getDateWithTime, parseUserDefaultTime} from '@/helpers/time/getDateWithTime'
+import {getDateWithTime, getDefaultTimeParts, parseUserDefaultTime} from '@/helpers/time/getDateWithTime'
+import {
+	addJalaliDays,
+	instantToJalali,
+	jalaliToInstant,
+	weekdayInTimezone,
+} from '@/helpers/time/jalali'
 import {useAuthStore} from '@/stores/auth'
 import {useI18n} from 'vue-i18n'
 import {useFlatpickrLanguage} from '@/helpers/useFlatpickrLanguage'
+import {useJalaliCalendar} from '@/composables/useJalaliCalendar'
 import {useTimeFormat} from '@/composables/useTimeFormat'
 import {TIME_FORMAT} from '@/constants/timeFormat'
 
@@ -103,6 +122,7 @@ const emit = defineEmits<{
 
 const {t} = useI18n({useScope: 'global'})
 const {store: timeFormat} = useTimeFormat()
+const {isJalali, timeZone} = useJalaliCalendar()
 
 const date = ref<Date | null>(null)
 const changed = ref(false)
@@ -115,16 +135,17 @@ watch(
 )
 
 const flatPickrRef = ref<InstanceType<typeof flatPickr> | null>(null)
+const configuredDueTime = computed(() => parseUserDefaultTime(useAuthStore().settings.frontendSettings.defaultDueTime))
 const flatPickerConfig = computed(() => {
-	const configuredDueTime = parseUserDefaultTime(useAuthStore().settings.frontendSettings.defaultDueTime)
+	const configuredDueTimeValue = configuredDueTime.value
 
 	return {
 		altFormat: t('date.altFormatLong'),
 		altInput: true,
 		dateFormat: 'Y-m-d H:i',
-		...(configuredDueTime === null ? {} : {
-			defaultHour: configuredDueTime.hours,
-			defaultMinute: configuredDueTime.minutes,
+		...(configuredDueTimeValue === null ? {} : {
+			defaultHour: configuredDueTimeValue.hours,
+			defaultMinute: configuredDueTimeValue.minutes,
 		}),
 		enableTime: true,
 		time_24hr: timeFormat.value === TIME_FORMAT.HOURS_24,
@@ -217,11 +238,48 @@ function updateData() {
 	emit('update:modelValue', date.value)
 }
 
+function onGridDate(value: Date | Date[] | null) {
+	date.value = Array.isArray(value) ? (value[0] ?? null) : value
+	updateData()
+}
+
 function setDate(dateString: string) {
+	if (isJalali.value) {
+		setJalaliShortcutDate(dateString)
+		return
+	}
+
 	const interval = calculateDayInterval(dateString)
 	const newDate = new Date()
 	newDate.setDate(newDate.getDate() + interval)
 	date.value = getDateWithTime(newDate)
+	updateData()
+}
+
+// Shortcuts keep their existing day-offset semantics; only the "today" anchor
+// and the resulting instant move into the user's timezone so the picked date
+// round-trips with the Jalali display.
+function setJalaliShortcutDate(dateString: string) {
+	const tz = timeZone.value
+	const now = new Date()
+	const nowJalali = instantToJalali(now, tz)
+	if (nowJalali === null) {
+		return
+	}
+
+	const interval = calculateDayInterval(dateString, weekdayInTimezone(now, tz))
+	const target = addJalaliDays({year: nowJalali.year, month: nowJalali.month, day: nowJalali.day}, interval)
+	// Reinterpret the user-timezone wall clock as local fields so the existing
+	// default-time rules (configured due time or nearest hours) apply to what
+	// the user actually sees.
+	const wallClock = new Date(target.year, target.month - 1, target.day, nowJalali.hours, nowJalali.minutes)
+	const {hours, minutes} = getDefaultTimeParts(wallClock)
+	const instant = jalaliToInstant({...target, hours, minutes}, tz)
+	if (instant === null) {
+		return
+	}
+
+	date.value = instant
 	updateData()
 }
 

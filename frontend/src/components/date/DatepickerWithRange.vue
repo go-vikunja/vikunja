@@ -71,8 +71,16 @@
 							</div>
 						</label>
 						<flat-pickr
+							v-if="!isJalali"
 							v-model="flatpickrRange"
 							:config="flatPickerConfig"
+						/>
+						<JalaliCalendarGrid
+							v-else
+							:model-value="gridRangeModel"
+							mode="range"
+							:time-zone="timeZone"
+							@update:modelValue="onGridRange"
 						/>
 
 						<p>
@@ -113,7 +121,9 @@ import Popup from '@/components/misc/Popup.vue'
 import {DATE_RANGES} from '@/components/date/dateRanges'
 import BaseButton from '@/components/base/BaseButton.vue'
 import DatemathHelp from '@/components/date/DatemathHelp.vue'
+import JalaliCalendarGrid from '@/components/input/JalaliCalendarGrid.vue'
 import {useFlatpickrLanguage} from '@/helpers/useFlatpickrLanguage'
+import {useJalaliCalendar} from '@/composables/useJalaliCalendar'
 
 const props = defineProps<{
 	// null for a side that's been cleared (the Custom option) — emitted, so accepted too.
@@ -131,6 +141,7 @@ const emit = defineEmits<{
 }>()
 
 const {t} = useI18n({useScope: 'global'})
+const {isJalali, timeZone} = useJalaliCalendar()
 
 const flatPickerConfig = computed(() => ({
 	altFormat: t('date.altFormatLong'),
@@ -170,6 +181,35 @@ function emitChanged() {
 		dateTo: to.value === '' ? null : to.value,
 	}
 	emit('update:modelValue', args)
+}
+
+// Gregorian Date pair behind the from/to strings for the Jalali grid, read
+// straight from props so the grid opens on the right month on mount. Null
+// while either side is datemath or empty: presets keep working untouched and
+// the grid simply opens on today until a concrete range is picked.
+const gridRangeModel = computed<Date[] | null>(() => {
+	const dateFrom = props.modelValue.dateFrom instanceof Date
+		? props.modelValue.dateFrom
+		: parseDateOrString(typeof props.modelValue.dateFrom === 'string' ? props.modelValue.dateFrom : null, false)
+	const dateTo = props.modelValue.dateTo instanceof Date
+		? props.modelValue.dateTo
+		: parseDateOrString(typeof props.modelValue.dateTo === 'string' ? props.modelValue.dateTo : null, false)
+	if (dateFrom instanceof Date && dateTo instanceof Date) {
+		return [dateFrom, dateTo]
+	}
+	return null
+})
+
+// Custom picks always land as Gregorian ISO strings - the range layer never
+// sees Jalali text, so no new parsing is needed. Partial (single-click)
+// selections are ignored exactly like flatpickr's.
+function onGridRange(value: Date | Date[] | null) {
+	if (!Array.isArray(value) || value.length < 2) {
+		return
+	}
+	from.value = value[0].toISOString()
+	to.value = value[1].toISOString()
+	emitChanged()
 }
 
 watch(

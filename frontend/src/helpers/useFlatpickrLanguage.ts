@@ -17,7 +17,11 @@ export function useFlatpickrLanguage() {
 			language = { ...(FlatpickrLanguages?.[langPair?.[0] as key] || FlatpickrLanguages[code]) }
 		}
 		
-		language.firstDayOfWeek = authStore.settings.weekStart ?? language.firstDayOfWeek
+		// weekStart defaults to Sunday (0) when the user never picked one, which is
+		// falsy: fall back to the locale default then. This gives fa-IR Saturday
+		// while leaving every other locale on its own default. An explicit
+		// non-Sunday choice is always respected.
+		language.firstDayOfWeek = authStore.settings.weekStart || language.firstDayOfWeek
 		return language
 	})
 }
