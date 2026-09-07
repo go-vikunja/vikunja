@@ -42,7 +42,7 @@ func runBotCmd(t *testing.T, args ...string) (string, error) {
 		c.PreRun = nil
 	}
 	// Flag vars persist across Execute calls.
-	botFlagAdmin, botFlagScopes, botFlagPreset, botFlagExpires, botFlagTitle = false, "", "", botDefaultExpiry, ""
+	botFlagScopes, botFlagPreset, botFlagExpires, botFlagTitle = "", "", botDefaultExpiry, ""
 
 	out := &bytes.Buffer{}
 	rootCmd.SetOut(out)
@@ -57,7 +57,7 @@ func TestUserBotCreate(t *testing.T) {
 	t.Cleanup(license.ResetForTests)
 
 	t.Run("prints the token on the last line", func(t *testing.T) {
-		out, err := runBotCmd(t, "create", "bot-ci", "--admin", "--scopes", "admin:users_list", "--preset", "provisioning", "--expires", "90d", "--title", "ci")
+		out, err := runBotCmd(t, "create", "bot-ci", "--scopes", "admin:users_list", "--preset", "provisioning", "--expires", "90d", "--title", "ci")
 		require.NoError(t, err, out)
 
 		lines := strings.Split(strings.TrimSpace(out), "\n")
@@ -77,26 +77,21 @@ func TestUserBotCreate(t *testing.T) {
 		assert.WithinDuration(t, time.Now().AddDate(0, 0, 90), stored.ExpiresAt, time.Minute)
 	})
 
-	t.Run("without --admin", func(t *testing.T) {
-		_, err := runBotCmd(t, "create", "bot-ci", "--scopes", "admin:users_list")
-		require.ErrorContains(t, err, "--admin")
-	})
-
 	t.Run("non-admin scope", func(t *testing.T) {
-		_, err := runBotCmd(t, "create", "bot-ci", "--admin", "--scopes", "tasks:read_all")
+		_, err := runBotCmd(t, "create", "bot-ci", "--scopes", "tasks:read_all")
 		require.Error(t, err)
 		assert.True(t, models.IsErrInstanceBotScopeNotAllowed(err), err.Error())
 	})
 
 	t.Run("no scopes", func(t *testing.T) {
-		_, err := runBotCmd(t, "create", "bot-ci", "--admin")
+		_, err := runBotCmd(t, "create", "bot-ci")
 		require.ErrorContains(t, err, "at least one scope")
 	})
 
 	t.Run("license off", func(t *testing.T) {
 		license.ResetForTests()
 		defer license.SetForTests([]license.Feature{license.FeatureAdminPanel})
-		_, err := runBotCmd(t, "create", "bot-ci", "--admin", "--scopes", "admin:users_list")
+		_, err := runBotCmd(t, "create", "bot-ci", "--scopes", "admin:users_list")
 		require.ErrorContains(t, err, "license")
 	})
 }

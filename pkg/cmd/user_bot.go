@@ -39,7 +39,6 @@ import (
 )
 
 var (
-	botFlagAdmin   bool
 	botFlagScopes  string
 	botFlagPreset  string
 	botFlagExpires string
@@ -61,8 +60,6 @@ func init() {
 		c.Flags().StringVar(&botFlagExpires, "expires", botDefaultExpiry, "Token lifetime as days (90d), years (1y) or an RFC3339 timestamp.")
 		c.Flags().StringVar(&botFlagTitle, "title", "", "Title of the token.")
 	}
-	userBotCreateCmd.Flags().BoolVar(&botFlagAdmin, "admin", false, "Create an instance admin bot. Required; there is no other kind of instance bot yet.")
-
 	userBotTokenCmd.AddCommand(userBotTokenCreateCmd, userBotTokenListCmd, userBotTokenRevokeCmd)
 	userBotCmd.AddCommand(userBotCreateCmd, userBotListCmd, userBotDeleteCmd, userBotTokenCmd)
 	userCmd.AddCommand(userBotCmd)
@@ -92,9 +89,6 @@ var userBotCreateCmd = &cobra.Command{
 	Args:   cobra.ExactArgs(1),
 	PreRun: fullInit,
 	RunE: botRun(func(cmd *cobra.Command, args []string) error {
-		if !botFlagAdmin {
-			return fmt.Errorf("instance bots must be admin bots; pass --admin")
-		}
 		if err := requireAdminPanelLicense(); err != nil {
 			return err
 		}
