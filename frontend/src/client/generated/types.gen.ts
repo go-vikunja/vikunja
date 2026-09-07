@@ -115,6 +115,10 @@ export type AdminUser = {
      */
     readonly is_admin?: boolean;
     /**
+     * True for bots owned by the instance instead of a user; created via the CLI only.
+     */
+    readonly is_instance_bot?: boolean;
+    /**
      * Authentication issuer; empty or 'local' for local accounts.
      */
     readonly issuer?: string;
