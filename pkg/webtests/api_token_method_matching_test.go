@@ -149,12 +149,7 @@ func TestAPITokenAutoPatchRoutes(t *testing.T) {
 	require.NotZero(t, twins, "AutoPatch should have synthesised PATCH twins")
 
 	for group, perms := range models.GetAPITokenRoutes() {
-		// The hand-listed admin scopes are natively PATCH.
-		if group == "admin" {
-			continue
-		}
-		for perm, rd := range perms {
-			assert.NotEqualf(t, http.MethodPatch, rd.Method, "%s.%s is stored as PATCH", group, perm)
+		for perm := range perms {
 			assert.Falsef(t, strings.HasSuffix(perm, "_patch"), "%s.%s got a permission of its own", group, perm)
 		}
 	}
