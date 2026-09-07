@@ -316,6 +316,9 @@ func duplicateProjectBackground(s *xorm.Session, pd *ProjectDuplicate, doer web.
 		return err
 	}
 
+	if err := CheckStorageLimit(s, pd.Project.OwnerID, int64(len(buf))); err != nil {
+		return err
+	}
 	file, err := files.CreateWithSession(s, bytes.NewReader(buf), f.Name, f.Size, doer)
 	if err != nil {
 		return err

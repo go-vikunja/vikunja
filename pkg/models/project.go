@@ -950,6 +950,11 @@ func CreateProject(s *xorm.Session, project *Project, auth web.Auth, createBackl
 		project.Owner = doer
 	}
 
+	// Checked here rather than in CanCreate so duplicates and imports are covered too.
+	if err := checkProjectLimit(s, project.OwnerID); err != nil {
+		return err
+	}
+
 	err = checkProjectBeforeUpdateOrDelete(s, project)
 	if err != nil {
 		return

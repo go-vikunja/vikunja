@@ -291,6 +291,9 @@ func SaveBackgroundFile(s *xorm.Session, auth web.Auth, project *models.Project,
 	}
 	storedSize = int64(buf.Len())
 
+	if err := models.CheckStorageLimit(s, project.OwnerID, storedSize); err != nil {
+		return 0, err
+	}
 	f, err := files.CreateWithSession(s, bytes.NewReader(buf.Bytes()), filename, uint64(storedSize), auth)
 	if err != nil {
 		return 0, err
