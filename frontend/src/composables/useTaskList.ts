@@ -207,7 +207,8 @@ export function useTaskList(
 	watch(
 		[params, sortBy, page],
 		([, , newPage], [, , oldPage]) => {
-			if (newPage === oldPage) {
+			// A redundant page write can cancel the navigation restoring a saved sort.
+			if (newPage === oldPage && newPage !== 1) {
 				page.value = 1
 			}
 		},
