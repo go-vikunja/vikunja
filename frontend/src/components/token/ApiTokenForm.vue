@@ -244,7 +244,7 @@ const warningIdPrefix = useId()
 
 function escalationWarningId(group: string, permission: string | number): string | undefined {
 	return group === 'admin' && ESCALATING_ADMIN_PERMISSIONS.has(String(permission))
-		? `${warningIdPrefix}-${permission}`
+		? `${warningIdPrefix}-${group}-${permission}`
 		: undefined
 }
 
