@@ -34,43 +34,57 @@ func init() {
 // Keys are spelled out per period instead of built from it so
 // `mage check:translations` can find them.
 type apiTokenExpiryKeys struct {
-	subject, message, botSubject, botMessage string
+	subject, message                       string
+	botSubject, botMessage                 string
+	instanceBotSubject, instanceBotMessage string
 }
 
 var (
 	apiTokenExpiryWeekKeys = apiTokenExpiryKeys{
-		subject:    "notifications.api_token.expiring.week.subject",
-		message:    "notifications.api_token.expiring.week.message",
-		botSubject: "notifications.api_token.expiring.week.bot_subject",
-		botMessage: "notifications.api_token.expiring.week.bot_message",
+		subject:            "notifications.api_token.expiring.week.subject",
+		message:            "notifications.api_token.expiring.week.message",
+		botSubject:         "notifications.api_token.expiring.week.bot_subject",
+		botMessage:         "notifications.api_token.expiring.week.bot_message",
+		instanceBotSubject: "notifications.api_token.expiring.week.instance_bot_subject",
+		instanceBotMessage: "notifications.api_token.expiring.week.instance_bot_message",
 	}
 	apiTokenExpiryDayKeys = apiTokenExpiryKeys{
-		subject:    "notifications.api_token.expiring.day.subject",
-		message:    "notifications.api_token.expiring.day.message",
-		botSubject: "notifications.api_token.expiring.day.bot_subject",
-		botMessage: "notifications.api_token.expiring.day.bot_message",
+		subject:            "notifications.api_token.expiring.day.subject",
+		message:            "notifications.api_token.expiring.day.message",
+		botSubject:         "notifications.api_token.expiring.day.bot_subject",
+		botMessage:         "notifications.api_token.expiring.day.bot_message",
+		instanceBotSubject: "notifications.api_token.expiring.day.instance_bot_subject",
+		instanceBotMessage: "notifications.api_token.expiring.day.instance_bot_message",
 	}
 )
 
 // Bots never receive notifications, so an expiring bot token is sent to a human
 // (User) with Bot set to the token's owner so the mail can name it.
 func apiTokenExpiryTitle(lang string, keys apiTokenExpiryKeys, token *APIToken, bot *user.User) string {
-	if bot != nil {
-		return i18n.T(lang, keys.botSubject, token.Title, bot.Username)
+	if bot == nil {
+		return i18n.T(lang, keys.subject, token.Title)
 	}
-	return i18n.T(lang, keys.subject, token.Title)
+	if bot.IsInstanceBot {
+		return i18n.T(lang, keys.instanceBotSubject, token.Title, bot.Username)
+	}
+	return i18n.T(lang, keys.botSubject, token.Title, bot.Username)
 }
 
 func apiTokenExpiryMail(lang string, keys apiTokenExpiryKeys, recipient *user.User, token *APIToken, bot *user.User) *notifications.Mail {
 	expires := token.ExpiresAt.Format("2006-01-02")
 	in := utils.HumanizeDuration(time.Until(token.ExpiresAt), lang)
 	mail := notifications.NewMail().Greeting(i18n.T(lang, "notifications.greeting", recipient.GetName()))
-	if bot != nil {
-		mail.Line(i18n.T(lang, keys.botMessage, notifications.EscapeMarkdown(token.Title), notifications.EscapeMarkdown(bot.Username), expires, in)).
-			Action(i18n.T(lang, "notifications.api_token.expiring.bot_action"), config.ServicePublicURL.GetString()+"user/settings/bots")
-	} else {
+	switch {
+	case bot == nil:
 		mail.Line(i18n.T(lang, keys.message, notifications.EscapeMarkdown(token.Title), expires, in)).
 			Action(i18n.T(lang, "notifications.api_token.expiring.action"), config.ServicePublicURL.GetString()+"user/settings/api-tokens")
+	case bot.IsInstanceBot:
+		// The recipient is an admin who does not own the bot, so the bot settings page would be a dead end.
+		mail.Line(i18n.T(lang, keys.instanceBotMessage, notifications.EscapeMarkdown(token.Title), notifications.EscapeMarkdown(bot.Username), expires, in)).
+			Action(i18n.T(lang, "notifications.api_token.expiring.instance_bot_action"), config.ServicePublicURL.GetString()+"admin/users")
+	default:
+		mail.Line(i18n.T(lang, keys.botMessage, notifications.EscapeMarkdown(token.Title), notifications.EscapeMarkdown(bot.Username), expires, in)).
+			Action(i18n.T(lang, "notifications.api_token.expiring.bot_action"), config.ServicePublicURL.GetString()+"user/settings/bots")
 	}
 	return mail.Line(i18n.T(lang, "notifications.common.have_nice_day"))
 }

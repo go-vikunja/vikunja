@@ -283,3 +283,20 @@ func TestCheckForExpiringAPITokens(t *testing.T) {
 		assert.Len(t, expiryNotificationsFor(t, botOwnerID, n.Name(), token.ID), 1)
 	})
 }
+
+func TestAPITokenExpiringNotificationForInstanceBot(t *testing.T) {
+	admin := &user.User{ID: 1, Name: "Admin"}
+	bot := &user.User{ID: 26, Username: "bot-instance-provisioner", IsInstanceBot: true}
+	token := &APIToken{ID: 11, Title: "CI Token", ExpiresAt: time.Now().Add(24 * time.Hour)}
+
+	n := &APITokenExpiringDayNotification{User: admin, Token: token, Bot: bot}
+
+	assert.Contains(t, n.ToTitle("en"), "instance bot")
+	assert.Contains(t, n.ToTitle("en"), "bot-instance-provisioner")
+
+	opts, err := notifications.RenderMail(n.ToMail("en"), "en")
+	require.NoError(t, err)
+	assert.NotContains(t, opts.Message, "your bot")
+	assert.Contains(t, opts.Message, "bot-instance-provisioner")
+	assert.Contains(t, opts.Message, "admin/users")
+}
