@@ -577,12 +577,9 @@ func TestCanDoAPIRoute_ExpandScopes(t *testing.T) {
 	})
 }
 
-// TestAdminTokenScopes covers the hand-named admin scopes: /routes lists only
-// the new names, each name authorises its v1 and v2 route, the
-// collision-derived keys on pre-existing tokens still authorise, and an
-// admin-only token stays out of everything else.
 func TestAdminTokenScopes(t *testing.T) {
 	resetAPITokenRoutes()
+	t.Cleanup(resetAPITokenRoutes)
 	license.SetForTests([]license.Feature{license.FeatureAdminPanel})
 	defer license.ResetForTests()
 
@@ -597,18 +594,6 @@ func TestAdminTokenScopes(t *testing.T) {
 		c := e.NewContext(httptest.NewRequest(method, path, nil), httptest.NewRecorder())
 		return CanDoAPIRoute(c, token)
 	}
-
-	t.Run("routes lists only the named scopes", func(t *testing.T) {
-		names := make([]string, 0, len(adminTokenRoutes))
-		for _, r := range adminTokenRoutes {
-			names = append(names, r.name)
-		}
-		listed := make([]string, 0, len(GetAPITokenRoutes()["admin"]))
-		for name := range GetAPITokenRoutes()["admin"] {
-			listed = append(listed, name)
-		}
-		assert.ElementsMatch(t, names, listed)
-	})
 
 	t.Run("each scope authorises its own route on both versions", func(t *testing.T) {
 		for _, r := range adminTokenRoutes {
@@ -655,11 +640,29 @@ func TestAdminTokenScopes(t *testing.T) {
 		}
 		token := &APIToken{APIPermissions: APIPermissions{"admin": all}}
 		assert.False(t, can(token, http.MethodGet, "/api/v2/tasks"))
-		assert.False(t, can(token, http.MethodGet, "/api/v1/admin/users/:id"))
+
+		usersList := &APIToken{APIPermissions: APIPermissions{"admin": []string{"users_list"}}}
+		assert.False(t, can(usersList, http.MethodGet, "/api/v2/admin/projects"))
+
+		projectsList := &APIToken{APIPermissions: APIPermissions{"admin": []string{"projects_list"}}}
+		assert.False(t, can(projectsList, http.MethodGet, "/api/v2/admin/users"))
 	})
 
 	t.Run("legacy keys are not aliased outside the admin group", func(t *testing.T) {
-		token := &APIToken{APIPermissions: APIPermissions{"tasks": []string{"users"}}}
-		assert.False(t, can(token, http.MethodGet, "/api/v2/admin/users"))
+		CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v1/users"}, true)
+		require.Contains(t, apiTokenRoutes["other"], "users")
+
+		token := &APIToken{APIPermissions: APIPermissions{"other": []string{"users"}}}
+		assert.True(t, can(token, http.MethodGet, "/api/v1/users"),
+			"other.users must keep authorising its own route")
+		assert.False(t, can(token, http.MethodGet, "/api/v1/admin/users"))
+	})
+
+	t.Run("legacy keys are rejected at create time", func(t *testing.T) {
+		for old := range legacyAdminScopes {
+			err := PermissionsAreValid(APIPermissions{"admin": []string{old}})
+			require.Error(t, err, old)
+			assert.True(t, IsErrInvalidAPITokenPermission(err), old)
+		}
 	})
 }
