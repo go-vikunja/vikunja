@@ -153,7 +153,7 @@ func TestTaskBucket_Update(t *testing.T) {
 		err = updatedTask.ReadOne(s, u)
 		require.NoError(t, err)
 		updatedTask.Done = true
-		updateDone(oldTask, updatedTask) // updatedTask now contains the updated dates
+		updateDone(oldTask, updatedTask, nil) // updatedTask now contains the updated dates
 
 		err = tb.Update(s, u)
 		require.NoError(t, err)

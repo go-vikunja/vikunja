@@ -838,7 +838,7 @@ func TestUpdateDone(t *testing.T) {
 
 		oldTask := &Task{Done: false}
 		newTask := &Task{Done: true}
-		updateDone(oldTask, newTask)
+		updateDone(oldTask, newTask, nil)
 		assert.NotEqual(t, time.Time{}, newTask.DoneAt)
 	})
 	t.Run("unmarking a task as done", func(t *testing.T) {
@@ -848,7 +848,7 @@ func TestUpdateDone(t *testing.T) {
 
 		oldTask := &Task{Done: true}
 		newTask := &Task{Done: false}
-		updateDone(oldTask, newTask)
+		updateDone(oldTask, newTask, nil)
 		assert.Equal(t, time.Time{}, newTask.DoneAt)
 	})
 	t.Run("no interval set, default repeat mode", func(t *testing.T) {
@@ -863,7 +863,7 @@ func TestUpdateDone(t *testing.T) {
 			Done:    true,
 			DueDate: dueDate,
 		}
-		updateDone(oldTask, newTask)
+		updateDone(oldTask, newTask, nil)
 
 		assert.Equal(t, dueDate.Unix(), newTask.DueDate.Unix())
 		assert.True(t, newTask.Done)
@@ -878,7 +878,7 @@ func TestUpdateDone(t *testing.T) {
 			newTask := &Task{
 				Done: true,
 			}
-			updateDone(oldTask, newTask)
+			updateDone(oldTask, newTask, nil)
 
 			var expected = time.Unix(1550008600, 0)
 			for time.Since(expected) > 0 {
@@ -898,7 +898,7 @@ func TestUpdateDone(t *testing.T) {
 				Done:    true,
 				DueDate: time.Unix(1543626724, 0),
 			}
-			updateDone(oldTask, newTask)
+			updateDone(oldTask, newTask, nil)
 			assert.Equal(t, time.Unix(1543626724, 0), newTask.DueDate)
 			assert.False(t, newTask.Done)
 		})
@@ -918,7 +918,7 @@ func TestUpdateDone(t *testing.T) {
 			newTask := &Task{
 				Done: true,
 			}
-			updateDone(oldTask, newTask)
+			updateDone(oldTask, newTask, nil)
 
 			var expected1 = time.Unix(1550008600, 0)
 			var expected2 = time.Unix(1555008600, 0)
@@ -943,7 +943,7 @@ func TestUpdateDone(t *testing.T) {
 			newTask := &Task{
 				Done: true,
 			}
-			updateDone(oldTask, newTask)
+			updateDone(oldTask, newTask, nil)
 
 			var expected = time.Unix(1550008600, 0)
 			for time.Since(expected) > 0 {
@@ -962,7 +962,7 @@ func TestUpdateDone(t *testing.T) {
 			newTask := &Task{
 				Done: true,
 			}
-			updateDone(oldTask, newTask)
+			updateDone(oldTask, newTask, nil)
 
 			var expected = time.Unix(1550008600, 0)
 			for time.Since(expected) > 0 {
@@ -981,7 +981,7 @@ func TestUpdateDone(t *testing.T) {
 			newTask := &Task{
 				Done: true,
 			}
-			updateDone(oldTask, newTask)
+			updateDone(oldTask, newTask, nil)
 			expected := oldTask.DueDate.Add(time.Duration(oldTask.RepeatAfter) * time.Second)
 			assert.Equal(t, expected, newTask.DueDate)
 			assert.False(t, newTask.Done)
@@ -997,7 +997,7 @@ func TestUpdateDone(t *testing.T) {
 				newTask := &Task{
 					Done: true,
 				}
-				updateDone(oldTask, newTask)
+				updateDone(oldTask, newTask, nil)
 
 				// Only comparing unix timestamps because time.Time use nanoseconds which can't ever possibly have the same value
 				assert.Equal(t, time.Now().Add(time.Duration(oldTask.RepeatAfter)*time.Second).Unix(), newTask.DueDate.Unix())
@@ -1019,7 +1019,7 @@ func TestUpdateDone(t *testing.T) {
 				newTask := &Task{
 					Done: true,
 				}
-				updateDone(oldTask, newTask)
+				updateDone(oldTask, newTask, nil)
 
 				diff := oldTask.Reminders[1].Reminder.Sub(oldTask.Reminders[0].Reminder)
 
@@ -1043,7 +1043,7 @@ func TestUpdateDone(t *testing.T) {
 				newTask := &Task{
 					Done: true,
 				}
-				updateDone(oldTask, newTask)
+				updateDone(oldTask, newTask, nil)
 
 				assert.Len(t, newTask.Reminders, 2)
 				expectedFirst := time.Now().Add(time.Duration(oldTask.RepeatAfter) * time.Second)
@@ -1062,7 +1062,7 @@ func TestUpdateDone(t *testing.T) {
 				newTask := &Task{
 					Done: true,
 				}
-				updateDone(oldTask, newTask)
+				updateDone(oldTask, newTask, nil)
 
 				// Only comparing unix timestamps because time.Time use nanoseconds which can't ever possibly have the same value
 				assert.Equal(t, time.Now().Add(time.Duration(oldTask.RepeatAfter)*time.Second).Unix(), newTask.StartDate.Unix())
@@ -1078,7 +1078,7 @@ func TestUpdateDone(t *testing.T) {
 				newTask := &Task{
 					Done: true,
 				}
-				updateDone(oldTask, newTask)
+				updateDone(oldTask, newTask, nil)
 
 				// Only comparing unix timestamps because time.Time use nanoseconds which can't ever possibly have the same value
 				assert.Equal(t, time.Now().Add(time.Duration(oldTask.RepeatAfter)*time.Second).Unix(), newTask.EndDate.Unix())
@@ -1095,7 +1095,7 @@ func TestUpdateDone(t *testing.T) {
 				newTask := &Task{
 					Done: true,
 				}
-				updateDone(oldTask, newTask)
+				updateDone(oldTask, newTask, nil)
 
 				diff := oldTask.EndDate.Sub(oldTask.StartDate)
 
@@ -1117,7 +1117,7 @@ func TestUpdateDone(t *testing.T) {
 				}
 				oldDueDate := oldTask.DueDate
 
-				updateDone(oldTask, newTask)
+				updateDone(oldTask, newTask, nil)
 
 				assert.True(t, newTask.DueDate.After(oldDueDate))
 				assert.NotEqual(t, oldDueDate.Month(), newTask.DueDate.Month())
@@ -1143,7 +1143,7 @@ func TestUpdateDone(t *testing.T) {
 					oldReminders[i] = r.Reminder
 				}
 
-				updateDone(oldTask, newTask)
+				updateDone(oldTask, newTask, nil)
 
 				assert.Len(t, newTask.Reminders, len(oldReminders))
 				for i, r := range newTask.Reminders {
@@ -1163,7 +1163,7 @@ func TestUpdateDone(t *testing.T) {
 				}
 				oldStartDate := oldTask.StartDate
 
-				updateDone(oldTask, newTask)
+				updateDone(oldTask, newTask, nil)
 
 				assert.True(t, newTask.StartDate.After(oldStartDate))
 				assert.NotEqual(t, oldStartDate.Month(), newTask.StartDate.Month())
@@ -1180,7 +1180,7 @@ func TestUpdateDone(t *testing.T) {
 				}
 				oldEndDate := oldTask.EndDate
 
-				updateDone(oldTask, newTask)
+				updateDone(oldTask, newTask, nil)
 
 				assert.True(t, newTask.EndDate.After(oldEndDate))
 				assert.NotEqual(t, oldEndDate.Month(), newTask.EndDate.Month())
@@ -1200,7 +1200,7 @@ func TestUpdateDone(t *testing.T) {
 				oldEndDate := oldTask.EndDate
 				oldDiff := oldTask.EndDate.Sub(oldTask.StartDate)
 
-				updateDone(oldTask, newTask)
+				updateDone(oldTask, newTask, nil)
 
 				assert.True(t, newTask.StartDate.After(oldStartDate))
 				assert.NotEqual(t, oldStartDate.Month(), newTask.StartDate.Month())
@@ -1224,7 +1224,7 @@ func TestUpdateDone(t *testing.T) {
 				Description: checked,
 			}
 
-			updateDone(oldTask, newTask)
+			updateDone(oldTask, newTask, nil)
 
 			assert.False(t, newTask.Done)
 			assert.True(t, newTask.DueDate.After(oldTask.DueDate))
@@ -1244,7 +1244,7 @@ func TestUpdateDone(t *testing.T) {
 				Description: checked,
 			}
 
-			updateDone(oldTask, newTask)
+			updateDone(oldTask, newTask, nil)
 
 			assert.True(t, newTask.Done)
 			assert.Equal(t, checked, newTask.Description)
@@ -1329,7 +1329,7 @@ func TestUpdateDone_DoSRegression_AncientDueDate(t *testing.T) {
 	newTask := &Task{Done: true}
 
 	start := time.Now()
-	updateDone(oldTask, newTask)
+	updateDone(oldTask, newTask, nil)
 	elapsed := time.Since(start)
 
 	require.Less(t, elapsed, time.Second, "updateDone must not take seconds for ancient due dates")

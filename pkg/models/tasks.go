@@ -48,6 +48,8 @@ const (
 	TaskRepeatModeDefault TaskRepeatMode = iota
 	TaskRepeatModeMonth
 	TaskRepeatModeFromCurrentDate
+	TaskRepeatModeJalaliMonth
+	TaskRepeatModeJalaliYear
 )
 
 // MaxTaskRepeatAfterSeconds caps repeat_after at ten years. Sized to
@@ -92,8 +94,8 @@ type Task struct {
 	Reminders []*TaskReminder `xorm:"-" json:"reminders"`
 	// An amount in seconds this task repeats itself. If this is set, when marking the task as done, it will mark itself as "undone" and then increase all remindes and the due date by its amount.
 	RepeatAfter int64 `xorm:"bigint INDEX null" json:"repeat_after" valid:"range(0|9223372036854775807)" doc:"The interval in seconds this task repeats. When set, marking the task done re-opens it and bumps its reminders and due date by this amount."`
-	// Can have three possible values which will trigger when the task is marked as done: 0 = repeats after the amount specified in repeat_after, 1 = repeats all dates each months (ignoring repeat_after), 3 = repeats from the current date rather than the last set date.
-	RepeatMode TaskRepeatMode `xorm:"not null default 0" json:"repeat_mode" doc:"How the task repeats when marked done: 0 = after repeat_after seconds, 1 = monthly (ignores repeat_after), 2 = from the current date rather than the last set date."`
+	// Can have five possible values which will trigger when the task is marked as done: 0 = repeats after the amount specified in repeat_after, 1 = repeats all dates each months (ignoring repeat_after), 2 = repeats from the current date rather than the last set date, 3 = repeats each Jalali month with clamping (ignoring repeat_after), 4 = repeats each Jalali year (ignoring repeat_after).
+	RepeatMode TaskRepeatMode `xorm:"not null default 0" json:"repeat_mode" doc:"How the task repeats when marked done: 0 = after repeat_after seconds, 1 = monthly (ignores repeat_after), 2 = from the current date rather than the last set date, 3 = Jalali month with clamping ignoring repeat_after, 4 = Jalali year with clamping ignoring repeat_after."`
 	// The task priority. Can be anything you want, it is possible to sort by this later.
 	Priority int64 `xorm:"bigint null" json:"priority"`
 	// When this task starts.
@@ -215,7 +217,9 @@ func (t *Task) GetFrontendURL() string {
 
 func (t *Task) isRepeating() bool {
 	return t.RepeatAfter > 0 ||
-		t.RepeatMode == TaskRepeatModeMonth
+		t.RepeatMode == TaskRepeatModeMonth ||
+		t.RepeatMode == TaskRepeatModeJalaliMonth ||
+		t.RepeatMode == TaskRepeatModeJalaliYear
 }
 
 type taskFilterConcatinator string
@@ -1476,7 +1480,7 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 	preRepeatDescription := t.Description
 
 	// When a repeating task is marked as done, we update all deadlines and reminders and set it as undone
-	updateDoneAt := updateDone(&ot, t)
+	updateDoneAt := updateDone(&ot, t, repeatLocationForDoer(s, a))
 	if updateDoneAt {
 		colsToUpdate = append(colsToUpdate, "done_at")
 	}
@@ -1964,19 +1968,27 @@ func resetDescriptionChecklist(description string) string {
 // We make a few assumptions here:
 //  1. Everything in oldTask is the truth - we figure out if we update anything at all if oldTask.RepeatAfter has a value > 0
 //  2. Because of 1., this functions should not be used to update values other than Done in the same go
-func updateDone(oldTask *Task, newTask *Task) (updateDoneAt bool) {
+func updateDone(oldTask *Task, newTask *Task, loc *time.Location) (updateDoneAt bool) {
 	// Track if the done status changed before repeat helpers modify it
 	doneStatusChanged := oldTask.Done != newTask.Done
 
 	if !oldTask.Done && newTask.Done {
+		if loc == nil {
+			loc = config.GetTimeZone()
+		}
 		switch oldTask.RepeatMode {
 		case TaskRepeatModeMonth:
 			setTaskDatesMonthRepeat(oldTask, newTask)
+		case TaskRepeatModeJalaliMonth:
+			setTaskDatesJalaliMonthRepeat(oldTask, newTask, loc)
+		case TaskRepeatModeJalaliYear:
+			setTaskDatesJalaliYearRepeat(oldTask, newTask, loc)
 		case TaskRepeatModeFromCurrentDate:
 			setTaskDatesFromCurrentDateRepeat(oldTask, newTask)
 		case TaskRepeatModeDefault:
 			setTaskDatesDefault(oldTask, newTask)
 		}
+		// Unknown modes fall through and stay done.
 
 		// A recurring task reopens for its next occurrence, so its checklist starts fresh.
 		if oldTask.isRepeating() && !newTask.Done {
