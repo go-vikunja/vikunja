@@ -26,23 +26,25 @@ type AdminUser struct {
 	// Embedded by value: a pointer embed's method set is never empty, which
 	// breaks Huma's $schema wrapper (go#15924).
 	user.User
-	IsAdmin      bool        `json:"is_admin" readOnly:"true" doc:"Whether the user is an instance admin."`
-	Status       user.Status `json:"status" readOnly:"true" doc:"Account status (0=active, 1=email-confirmation required, 2=disabled, 3=locked)."`
-	Issuer       string      `json:"issuer" readOnly:"true" doc:"Authentication issuer; empty or 'local' for local accounts."`
-	Subject      string      `json:"subject,omitempty" readOnly:"true" doc:"External subject identifier, for non-local accounts."`
-	AuthProvider string      `json:"auth_provider,omitempty" readOnly:"true" doc:"Resolved auth provider name (e.g. 'LDAP' or an OIDC provider), empty for local accounts."`
+	IsAdmin       bool        `json:"is_admin" readOnly:"true" doc:"Whether the user is an instance admin."`
+	Status        user.Status `json:"status" readOnly:"true" doc:"Account status (0=active, 1=email-confirmation required, 2=disabled, 3=locked)."`
+	Issuer        string      `json:"issuer" readOnly:"true" doc:"Authentication issuer; empty or 'local' for local accounts."`
+	Subject       string      `json:"subject,omitempty" readOnly:"true" doc:"External subject identifier, for non-local accounts."`
+	AuthProvider  string      `json:"auth_provider,omitempty" readOnly:"true" doc:"Resolved auth provider name (e.g. 'LDAP' or an OIDC provider), empty for local accounts."`
+	IsInstanceBot bool        `json:"is_instance_bot" readOnly:"true" doc:"True for bots owned by the instance instead of a user; created via the CLI only."`
 }
 
 // NewAdminUser builds the admin-facing user view, resolving the auth-provider
 // display name from the configured OIDC providers.
 func NewAdminUser(u *user.User, providers []*openid.Provider) *AdminUser {
 	return &AdminUser{
-		User:         *u,
-		IsAdmin:      u.IsAdmin,
-		Status:       u.Status,
-		Issuer:       u.Issuer,
-		Subject:      u.Subject,
-		AuthProvider: resolveAuthProvider(u, providers),
+		User:          *u,
+		IsAdmin:       u.IsAdmin,
+		Status:        u.Status,
+		Issuer:        u.Issuer,
+		Subject:       u.Subject,
+		AuthProvider:  resolveAuthProvider(u, providers),
+		IsInstanceBot: u.IsInstanceBot,
 	}
 }
 
