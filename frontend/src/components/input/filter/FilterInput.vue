@@ -22,6 +22,10 @@ import {
 import FilterAutocomplete from '@/components/input/filter/FilterAutocomplete'
 import type {IProject} from '@/modelTypes/IProject'
 import {toISOStringOrNull} from '@/helpers/time/toISOStringOrNull'
+import {normalizePersianDigits, parseJalaliDateInput} from '@/helpers/time/jalali'
+import {resolveFaDateValue} from '@/components/date/dateRanges'
+import {useJalaliCalendar} from '@/composables/useJalaliCalendar'
+import {DATE_FIELDS, getFilterFieldRegexPattern} from '@/helpers/filters'
 
 const props = defineProps<{
 	projectId?: IProject['id'],
@@ -34,6 +38,79 @@ const {t} = useI18n()
 // Services and stores for autocomplete
 const {labels, isPending, getLabelByExactTitle, getLabelById} = useLabels()
 const projectStore = useProjectStore()
+
+const jalaliState = (() => {
+	try {
+		return useJalaliCalendar()
+	} catch {
+		return null
+	}
+})()
+const isJalali = jalaliState?.isJalali ?? {value: false}
+const jalaliTimeZone = jalaliState?.timeZone ?? {value: 'UTC'}
+
+// Jalali text entry stays Gregorian-only on the wire: try Jalali first, fall back to existing path.
+function extractJalaliYearCandidate(raw: string): number | null {
+	try {
+		const normalized = normalizePersianDigits(raw.trim())
+		const leading = normalized.match(/^(\d{4})/)
+		if (leading !== null) {
+			return Number(leading[1])
+		}
+		const trailing = normalized.match(/(\d{4})(?:\s+\d{1,2}:\d{2})?$/)
+		if (trailing !== null) {
+			return Number(trailing[1])
+		}
+		return null
+	} catch {
+		return null
+	}
+}
+
+function tryParseJalaliFilterValue(raw: string): Date | null {
+	if (!isJalali.value) {
+		return null
+	}
+	const year = extractJalaliYearCandidate(raw)
+	if (year === null || year < 1300 || year > 1500) {
+		return null
+	}
+	return parseJalaliDateInput(raw, {timeZone: jalaliTimeZone.value})
+}
+
+function convertJalaliDatesInFilter(content: string): string {
+	if (!isJalali.value) {
+		return content
+	}
+	const fields = [...DATE_FIELDS, 'due_date', 'start_date', 'end_date', 'done_at', 'created', 'updated']
+	let result = content
+	for (const field of fields) {
+		const pattern = getFilterFieldRegexPattern(field)
+		let match: RegExpExecArray | null
+		const replacements: {start: number, length: number, replacement: string}[] = []
+		while ((match = pattern.exec(result)) !== null) {
+			const [matched, fieldName, operator, _quotes, quotedContent, unquotedContent] = match
+			const keyword = (quotedContent ?? unquotedContent ?? '').trim()
+			if (keyword === '') {
+				continue
+			}
+			// Only actual Jalali dates are rewritten. Datemath keywords stay
+			// verbatim so saved filters keep evaluating dynamically; their
+			// Gregorian (Monday-start) semantics are documented in the help.
+			const jalali = tryParseJalaliFilterValue(keyword)
+			if (jalali !== null) {
+				const replacement = `${fieldName} ${operator} ${jalali.toISOString()}`
+				replacements.push({start: match.index, length: matched.length, replacement})
+			}
+		}
+		let offset = 0
+		for (const {start, length, replacement} of replacements) {
+			result = result.substring(0, start + offset) + replacement + result.substring(start + offset + length)
+			offset += replacement.length - length
+		}
+	}
+	return result
+}
 
 // Date picker functionality
 const currentOldDatepickerValue = ref('')
@@ -137,8 +214,9 @@ const editor = useEditor({
 
 // Process the editor content to output snake_cased filter
 const processContent = (content: string) => {
+	const withGregorianDates = convertJalaliDatesInFilter(content)
 	return transformFilterStringForApi(
-		content,
+		withGregorianDates,
 		labelTitle => getLabelByExactTitle(labelTitle)?.id || null,
 		projectTitle => {
 			const found = projectStore.findProjectByExactname(projectTitle)
@@ -230,7 +308,13 @@ function setEditorContentFromModelValue(newValue: string | undefined) {
 function updateDateInQuery(newDate: string | Date | null) {
 	if (!editor.value || !newDate) return
 
-	const dateStr = typeof newDate === 'string' ? newDate : toISOStringOrNull(newDate)?.split('T')[0]
+	// Popup picks stay Gregorian on the wire (ISO/datemath); Jalali is display-only.
+	let dateStr: string | undefined
+	if (typeof newDate === 'string') {
+		dateStr = isJalali.value ? resolveFaDateValue(newDate, new Date(), jalaliTimeZone.value) : newDate
+	} else {
+		dateStr = toISOStringOrNull(newDate)?.split('T')[0]
+	}
 	if (!dateStr) return
 
 	const currentText = editor.value.getText()

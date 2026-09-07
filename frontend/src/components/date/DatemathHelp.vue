@@ -6,6 +6,9 @@
 		<p>
 			{{ $t('input.datemathHelp.intro') }}
 		</p>
+		<p v-if="isJalali">
+			{{ $t('input.datemathHelp.jalaliNote') }}
+		</p>
 		<p>
 			<i18n-t
 				keypath="input.datemathHelp.expression"
@@ -125,11 +128,13 @@
 import {computed} from 'vue'
 import {useGlobalNow} from '@/composables/useGlobalNow'
 import {formatDateShort} from '@/helpers/time/formatDate'
+import {useJalaliCalendar} from '@/composables/useJalaliCalendar'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 
 const {now} = useGlobalNow()
 const exampleDate = computed(() => formatDateShort(now.value))
+const {isJalali} = useJalaliCalendar()
 </script>
 
 <style scoped lang="scss">

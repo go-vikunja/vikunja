@@ -119,7 +119,8 @@ import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import SingleTaskInProject from '@/components/tasks/partials/SingleTaskInProject.vue'
 import DatepickerWithRange from '@/components/date/DatepickerWithRange.vue'
 import XLabel from '@/components/tasks/partials/Label.vue'
-import {DATE_RANGES} from '@/components/date/dateRanges'
+import {DATE_RANGES, resolveFaDateRange, resolveFaDateValue} from '@/components/date/dateRanges'
+import {useJalaliCalendar} from '@/composables/useJalaliCalendar'
 import LlamaCool from '@/assets/llama-cool.svg?component'
 import type {ITask} from '@/modelTypes/ITask'
 import {useAuthStore} from '@/stores/auth'
@@ -157,6 +158,7 @@ const {getLabelById} = useLabels()
 const route = useRoute()
 const router = useRouter()
 const {t} = useI18n({useScope: 'global'})
+const {isJalali, timeZone} = useJalaliCalendar()
 
 const tasks = ref<ITask[]>([])
 const showNothingToDo = ref<boolean>(false)
@@ -208,6 +210,8 @@ interface dateStrings {
 }
 
 function setDate(dates: dateStrings) {
+	// URLs keep datemath verbatim so shared links stay dynamic; loadPendingTasks
+	// below resolves fa week/month/year to explicit bounds fresh on each load.
 	router.push({
 		name: route.name as string,
 		query: {
@@ -262,14 +266,32 @@ async function loadPendingTasks(from: Date|string, to: Date|string, filterId: nu
 	}
 
 	if (!showAll.value) {
+		// fa mode: week/month/year datemath is Monday/Gregorian on the backend, so send explicit ISO bounds instead
+		let effectiveFrom: Date | string = from
+		let effectiveTo: Date | string = to
+		if (isJalali.value) {
+			const nowRef = new Date()
+			if (typeof effectiveFrom === 'string' && typeof effectiveTo === 'string') {
+				const [resolvedFrom, resolvedTo] = resolveFaDateRange(effectiveFrom, effectiveTo, nowRef, timeZone.value)
+				effectiveFrom = resolvedFrom
+				effectiveTo = resolvedTo
+			} else {
+				if (typeof effectiveFrom === 'string') {
+					effectiveFrom = resolveFaDateValue(effectiveFrom, nowRef, timeZone.value)
+				}
+				if (typeof effectiveTo === 'string') {
+					effectiveTo = resolveFaDateValue(effectiveTo, nowRef, timeZone.value)
+				}
+			}
+		}
 
-		params.filter += ` && due_date < '${to instanceof Date ? to.toISOString() : to}'`
+		params.filter += ` && due_date < '${effectiveTo instanceof Date ? effectiveTo.toISOString() : effectiveTo}'`
 
 		// NOTE: Ideally we could also show tasks with a start or end date in the specified range, but the api
 		//       is not capable (yet) of combining multiple filters with 'and' and 'or'.
 
 		if (!props.showOverdue) {
-			params.filter += ` && due_date > '${from instanceof Date ? from.toISOString() : from}'`
+			params.filter += ` && due_date > '${effectiveFrom instanceof Date ? effectiveFrom.toISOString() : effectiveFrom}'`
 		}
 	}
 

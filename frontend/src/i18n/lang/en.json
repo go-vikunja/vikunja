@@ -966,6 +966,7 @@
       "learnhow": "Check out how it works",
       "title": "Date Math",
       "intro": "Specify relative dates which are resolved on the fly by Vikunja when applying the filter.",
+      "jalaliNote": "In this view, the week starts on Saturday and month means the Jalali month. The expressions themselves are still evaluated on the Gregorian calendar.",
       "expression": "Each Date Math expression starts with an anchor date, which can either be {0}, or a date string ending with {1}. This anchor date can optionally be followed by one or more maths expressions.",
       "similar": "These expressions are similar to the ones provided by {0} and {1}.",
       "add1Day": "Add one day",
