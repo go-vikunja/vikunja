@@ -30,7 +30,6 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/utils"
 
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
@@ -74,28 +73,23 @@ func adminBearerReq(e *echo.Echo, method, path, bearer, body string) *httptest.R
 	return res
 }
 
-// insertAPIToken writes the row directly, bypassing Create's permission
-// validation so unknown scope keys can be seeded. Returns the cleartext token.
 func insertAPIToken(t *testing.T, ownerID int64, perms models.APIPermissions) string {
 	t.Helper()
 
-	cleartext, err := utils.CryptoRandomString(40)
-	require.NoError(t, err)
-	cleartext = models.APITokenPrefix + cleartext
-	token := &models.APIToken{
-		Title:          "admin scope test token",
-		TokenSha256:    models.HashAPIToken(cleartext),
-		APIPermissions: perms,
-		ExpiresAt:      time.Now().Add(24 * time.Hour),
-		OwnerID:        ownerID,
-	}
-
 	s := db.NewSession()
 	defer s.Close()
-	_, err = s.Nullable("token_salt", "token_hash", "token_last_eight").Insert(token)
+
+	owner, err := user.GetUserByID(s, ownerID)
 	require.NoError(t, err)
+
+	token := &models.APIToken{
+		Title:          "admin scope test token",
+		APIPermissions: perms,
+		ExpiresAt:      time.Now().Add(24 * time.Hour),
+	}
+	require.NoError(t, token.Create(s, owner))
 	require.NoError(t, s.Commit())
-	return cleartext
+	return token.Token
 }
 
 func TestAdmin_APIToken(t *testing.T) {
