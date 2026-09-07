@@ -49,7 +49,7 @@ var (
 const botDefaultExpiry = "1y"
 
 // Scopes that let a bot escalate beyond the data it was created to manage.
-var botEscalationScopes = map[string]string{
+var botEscalationScopes = map[string]string{ //nolint:gosec // scope names, not credentials
 	"users_create":              "can create new instance admins; the create endpoint honours is_admin",
 	"users_send_password_reset": "can trigger password resets for any account",
 	"users_set_admin":           "can promote any user, including itself, to instance admin",

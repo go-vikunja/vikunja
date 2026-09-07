@@ -30,7 +30,7 @@ import (
 	"xorm.io/xorm"
 )
 
-const apiTokenExpiryLogPrefix = "[API Token Expiry Check] "
+const apiTokenExpiryLogPrefix = "[API Token Expiry Check] " //nolint:gosec // log prefix, not a credential
 
 // RegisterAPITokenExpiryCheckCron registers the cron job that checks for
 // expiring API tokens and notifies their owners.
