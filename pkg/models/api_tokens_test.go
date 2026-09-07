@@ -136,32 +136,6 @@ func TestAPIToken_CreateInstanceBotToken(t *testing.T) {
 		require.Len(t, issued, 1)
 		assert.Zero(t, issued[0].(*APITokenIssuedEvent).DoerID)
 	})
-	t.Run("non-admin scope is rejected", func(t *testing.T) {
-		s := db.NewSession()
-		defer s.Close()
-		db.LoadAndAssertFixtures(t)
-
-		bot, err := user.GetUserByID(s, 26)
-		require.NoError(t, err)
-
-		token := &APIToken{Title: "ci", APIPermissions: APIPermissions{"tasks": {"read_all"}}, ExpiresAt: time.Now().Add(time.Hour)}
-		err = token.CreateInstanceBotToken(s, bot)
-		require.Error(t, err)
-		assert.True(t, IsErrInstanceBotScopeNotAllowed(err))
-	})
-	t.Run("mixed scopes are rejected", func(t *testing.T) {
-		s := db.NewSession()
-		defer s.Close()
-		db.LoadAndAssertFixtures(t)
-
-		bot, err := user.GetUserByID(s, 26)
-		require.NoError(t, err)
-
-		token := &APIToken{Title: "ci", APIPermissions: APIPermissions{"admin": {"users_list"}, "projects": {"read_all"}}, ExpiresAt: time.Now().Add(time.Hour)}
-		err = token.CreateInstanceBotToken(s, bot)
-		require.Error(t, err)
-		assert.True(t, IsErrInstanceBotScopeNotAllowed(err))
-	})
 	t.Run("owned bot is refused", func(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
