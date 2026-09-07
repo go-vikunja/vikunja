@@ -41,8 +41,7 @@ func init() {
 // Admin scopes are hand-named instead of collision-derived (users_post,
 // users_status, ...): the group is small, stable and security-sensitive.
 // CollectRoutesForAPITokenUsage skips /admin routes, so a new admin route
-// stays unreachable by token until it is listed here. Old keys on existing
-// tokens keep working via legacyAdminScopes.
+// stays unreachable by token until it is listed here.
 var adminTokenRoutes = []struct {
 	name, method, path string
 	v2Only             bool
@@ -57,19 +56,6 @@ var adminTokenRoutes = []struct {
 	{name: "users_send_password_reset", method: http.MethodPost, path: "admin/users/:id/password-reset-email", v2Only: true},
 	{name: "projects_list", method: http.MethodGet, path: "admin/projects"},
 	{name: "projects_set_owner", method: http.MethodPatch, path: "admin/projects/:id/owner"},
-}
-
-// Keys on tokens issued before the named scopes; permissions are only
-// validated on create, so no migration.
-var legacyAdminScopes = map[string]string{ //nolint:gosec // scope names, not credentials
-	"users":                      "users_list",
-	"users_post":                 "users_create",
-	"users_status":               "users_set_status",
-	"users_admin":                "users_set_admin",
-	"users_password":             "users_set_password",
-	"users_password_reset_email": "users_send_password_reset",
-	"projects":                   "projects_list",
-	"projects_owner":             "projects_set_owner",
 }
 
 // resetAPITokenRoutes installs the hand-written entries; tests call it to
@@ -516,11 +502,6 @@ func tokenAuthorizesRoute(token *APIToken, path, method string) bool {
 				continue
 			}
 			for _, p := range perms {
-				if group == "admin" {
-					if alias, ok := legacyAdminScopes[p]; ok {
-						p = alias
-					}
-				}
 				rd := routes[p]
 				if rd == nil {
 					continue

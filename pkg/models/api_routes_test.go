@@ -19,7 +19,6 @@ package models
 import (
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
 	"code.vikunja.io/api/pkg/license"
@@ -555,9 +554,9 @@ func TestCanDoAPIRoute_ExpandScopes(t *testing.T) {
 }
 
 // TestAdminTokenScopes covers the hand-named admin scopes: /routes lists only
-// the new names, each name authorises its v1 and v2 route, the
-// collision-derived keys on pre-existing tokens still authorise, and an
-// admin-only token stays out of everything else.
+// the new names, each name authorises its v2 route and, unless v2-only, its
+// v1 route, the collision-derived keys from before the rename no longer
+// authorise, and an admin-only token stays out of everything else.
 func TestAdminTokenScopes(t *testing.T) {
 	resetAPITokenRoutes()
 	license.SetForTests([]license.Feature{license.FeatureAdminPanel})
@@ -602,26 +601,16 @@ func TestAdminTokenScopes(t *testing.T) {
 		}
 	})
 
-	t.Run("legacy keys still authorise", func(t *testing.T) {
-		byName := map[string]string{}
-		for _, r := range adminTokenRoutes {
-			byName[r.name] = r.method + " " + r.path
-		}
-		for old, current := range legacyAdminScopes {
-			parts := strings.SplitN(byName[current], " ", 2)
+	t.Run("retired admin scope keys are denied", func(t *testing.T) {
+		retired := []string{"users", "users_post", "users_status", "users_admin", "users_password", "users_password_reset_email", "projects", "projects_owner"}
+		for _, old := range retired {
+			assert.NotContains(t, GetAPITokenRoutes()["admin"], old, old)
+			require.Error(t, PermissionsAreValid(APIPermissions{"admin": []string{old}}), old)
 			token := &APIToken{APIPermissions: APIPermissions{"admin": []string{old}}}
-			assert.True(t, can(token, parts[0], "/api/v2/"+parts[1]), "legacy %s must authorise %s", old, current)
-		}
-		// Unchanged names need no alias.
-		assert.True(t, can(&APIToken{APIPermissions: APIPermissions{"admin": []string{"users_delete"}}}, http.MethodDelete, "/api/v1/admin/users/:id"))
-		assert.True(t, can(&APIToken{APIPermissions: APIPermissions{"admin": []string{"overview"}}}, http.MethodGet, "/api/v2/admin/overview"))
-	})
-
-	t.Run("v1 PATCH admin routes", func(t *testing.T) {
-		for _, key := range []string{"users_set_status", "users_status"} {
-			token := &APIToken{APIPermissions: APIPermissions{"admin": []string{key}}}
-			assert.True(t, can(token, http.MethodPatch, "/api/v1/admin/users/:id/status"), key)
-			assert.True(t, can(token, http.MethodPatch, "/api/v2/admin/users/:id/status"), key)
+			for _, r := range adminTokenRoutes {
+				assert.False(t, can(token, r.method, "/api/v1/"+r.path), "%s must not authorise v1 %s", old, r.name)
+				assert.False(t, can(token, r.method, "/api/v2/"+r.path), "%s must not authorise v2 %s", old, r.name)
+			}
 		}
 	})
 
@@ -633,10 +622,5 @@ func TestAdminTokenScopes(t *testing.T) {
 		token := &APIToken{APIPermissions: APIPermissions{"admin": all}}
 		assert.False(t, can(token, http.MethodGet, "/api/v2/tasks"))
 		assert.False(t, can(token, http.MethodGet, "/api/v1/admin/users/:id"))
-	})
-
-	t.Run("legacy keys are not aliased outside the admin group", func(t *testing.T) {
-		token := &APIToken{APIPermissions: APIPermissions{"tasks": []string{"users"}}}
-		assert.False(t, can(token, http.MethodGet, "/api/v2/admin/users"))
 	})
 }

@@ -628,7 +628,7 @@ func TestHumaAdminAPIToken(t *testing.T) {
 
 	// Native PATCH routes have no PUT twin, so they exercise the PATCH collection fix.
 	t.Run("named scopes reach the PATCH routes", func(t *testing.T) {
-		tok := insertAPIToken(t, 1, models.APIPermissions{"admin": {"users_set_admin", "users_set_status", "projects_set_owner"}})
+		tok := createAPIToken(t, 1, models.APIPermissions{"admin": {"users_set_admin", "users_set_status", "projects_set_owner"}})
 
 		res := adminBearerReq(e, http.MethodPatch, "/api/v2/admin/users/2/admin", tok, `{"is_admin":true}`)
 		assert.Equal(t, http.StatusOK, res.Code, res.Body.String())
@@ -640,27 +640,19 @@ func TestHumaAdminAPIToken(t *testing.T) {
 		assert.Equal(t, http.StatusOK, res.Code, res.Body.String())
 	})
 
-	t.Run("legacy scope keys still authorise", func(t *testing.T) {
-		tok := insertAPIToken(t, 1, models.APIPermissions{"admin": {"users_admin", "users", "projects_owner"}})
-
-		res := adminBearerReq(e, http.MethodPatch, "/api/v2/admin/users/2/admin", tok, `{"is_admin":false}`)
-		assert.Equal(t, http.StatusOK, res.Code, res.Body.String())
-
-		res = adminBearerReq(e, http.MethodGet, "/api/v2/admin/users", tok, "")
-		assert.Equal(t, http.StatusOK, res.Code, res.Body.String())
-
-		res = adminBearerReq(e, http.MethodPatch, "/api/v2/admin/projects/2/owner", tok, `{"owner_id":1}`)
-		assert.Equal(t, http.StatusOK, res.Code, res.Body.String())
-	})
-
 	t.Run("other admin scope is denied", func(t *testing.T) {
-		tok := insertAPIToken(t, 1, models.APIPermissions{"admin": {"users_list"}})
+		tok := createAPIToken(t, 1, models.APIPermissions{"admin": {"users_list"}})
 		res := adminBearerReq(e, http.MethodPatch, "/api/v2/admin/users/2/admin", tok, `{"is_admin":true}`)
 		assert.Equal(t, http.StatusUnauthorized, res.Code)
 	})
 
+	t.Run("retired scope key on stored token is denied", func(t *testing.T) {
+		res := adminBearerReq(e, http.MethodPatch, "/api/v2/admin/users/2/status", "tk_ba5eba11deadbeefcafef00d0123456789abcdef", `{"status":0}`) // fixture api_tokens id 10
+		assert.Equal(t, http.StatusUnauthorized, res.Code)
+	})
+
 	t.Run("admin-only token is denied on tasks", func(t *testing.T) {
-		tok := insertAPIToken(t, 1, models.APIPermissions{"admin": {"users_list", "users_create", "users_set_admin"}})
+		tok := createAPIToken(t, 1, models.APIPermissions{"admin": {"users_list", "users_create", "users_set_admin"}})
 		res := adminBearerReq(e, http.MethodGet, "/api/v2/tasks", tok, "")
 		assert.Equal(t, http.StatusUnauthorized, res.Code)
 	})
