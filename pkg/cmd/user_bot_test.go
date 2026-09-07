@@ -32,14 +32,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// runBotCmd executes `vikunja user bot ...` against the test DB. FullInit is
-// skipped: it would read the config and migrate a real database.
 func runBotCmd(t *testing.T, args ...string) (string, error) {
 	t.Helper()
 	db.LoadAndAssertFixtures(t)
 	return execBotCmd(t, args...)
 }
 
+// FullInit is skipped: it would read the config and migrate a real database.
 func execBotCmd(t *testing.T, args ...string) (string, error) {
 	t.Helper()
 	for _, c := range []*cobra.Command{userBotCreateCmd, userBotListCmd, userBotDeleteCmd, userBotTokenCreateCmd, userBotTokenListCmd, userBotTokenRevokeCmd} {
@@ -79,6 +78,16 @@ func TestUserBotCreate(t *testing.T) {
 		assert.Equal(t, "ci", stored.Title)
 		assert.ElementsMatch(t, []string{"users_list", "users_create", "users_set_status", "users_delete"}, stored.APIPermissions["admin"])
 		assert.WithinDuration(t, time.Now().AddDate(0, 0, 90), stored.ExpiresAt, time.Minute)
+	})
+
+	t.Run("warns about escalation scopes", func(t *testing.T) {
+		out, err := runBotCmd(t, "create", "bot-ci", "--scopes", "admin:users_set_admin")
+		require.NoError(t, err, out)
+		assert.Contains(t, out, "Warning: scope admin:users_set_admin can promote any user, including itself, to instance admin.")
+
+		out, err = runBotCmd(t, "create", "bot-ci2", "--scopes", "admin:users_list")
+		require.NoError(t, err, out)
+		assert.NotContains(t, out, "Warning: scope")
 	})
 
 	t.Run("non-admin scope", func(t *testing.T) {

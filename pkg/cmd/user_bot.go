@@ -25,10 +25,12 @@ import (
 	"strings"
 	"time"
 
+	"code.vikunja.io/api/pkg/audit"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/initialize"
 	"code.vikunja.io/api/pkg/license"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 
@@ -46,6 +48,15 @@ var (
 
 const botDefaultExpiry = "1y"
 
+// Scopes that let a bot escalate beyond the data it was created to manage.
+var botEscalationScopes = map[string]string{
+	"users_create":              "can create new instance admins; the create endpoint honours is_admin",
+	"users_send_password_reset": "can trigger password resets for any account",
+	"users_set_admin":           "can promote any user, including itself, to instance admin",
+	"users_set_password":        "can set a password on any local account",
+	"projects_set_owner":        "can reassign any project to any user",
+}
+
 func init() {
 	for _, c := range []*cobra.Command{userBotCreateCmd, userBotTokenCreateCmd} {
 		c.Flags().StringVar(&botFlagScopes, "scopes", "", "Comma-separated group:permission scopes, e.g. admin:users_list,admin:users_create,admin:users_set_status,admin:users_delete. Only admin scopes are allowed.")
@@ -57,8 +68,17 @@ func init() {
 	userCmd.AddCommand(userBotCmd)
 }
 
+// FullInit registers the listeners and starts the event router in a goroutine,
+// so a short-lived CLI process can exit before any of that has happened.
 func fullInit(_ *cobra.Command, _ []string) {
-	initialize.FullInit()
+	initialize.FullInitWithoutAsync()
+
+	models.RegisterListeners()
+	ready, err := events.InitEventsForTesting(context.Background())
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	<-ready
 }
 
 var userBotCmd = &cobra.Command{
@@ -87,6 +107,8 @@ var userBotCreateCmd = &cobra.Command{
 		if err := requireAdminPanelLicense(); err != nil {
 			return err
 		}
+
+		warnAboutEscalationScopes(cmd.ErrOrStderr(), perms)
 
 		s := db.NewSession()
 		defer s.Close()
@@ -201,6 +223,8 @@ var userBotTokenCreateCmd = &cobra.Command{
 		if bot.Status != user.StatusActive {
 			return fmt.Errorf("bot %q is disabled; enable it before creating a token", bot.Username)
 		}
+		warnAboutEscalationScopes(cmd.ErrOrStderr(), perms)
+
 		token, err := mintBotToken(s, bot, perms, expires, botFlagTitle)
 		if err != nil {
 			rollback(s)
@@ -322,6 +346,19 @@ func mintBotToken(s *xorm.Session, bot *user.User, perms models.APIPermissions, 
 	return token, nil
 }
 
+func warnAboutEscalationScopes(out io.Writer, perms models.APIPermissions) {
+	warnings := []string{}
+	for _, perm := range perms["admin"] {
+		if consequence, ok := botEscalationScopes[perm]; ok {
+			warnings = append(warnings, fmt.Sprintf("Warning: scope admin:%s %s.\n", perm, consequence))
+		}
+	}
+	sort.Strings(warnings)
+	for _, w := range warnings {
+		fmt.Fprint(out, w)
+	}
+}
+
 func rollback(s *xorm.Session) {
 	_ = s.Rollback()
 	events.CleanupPending(s)
@@ -333,6 +370,8 @@ func commitAndDispatch(s *xorm.Session) error {
 		return fmt.Errorf("could not commit: %w", err)
 	}
 	events.DispatchPending(context.Background(), s)
+	events.WaitForPendingHandlers()
+	audit.Close()
 	return nil
 }
 
@@ -382,7 +421,7 @@ func parseBotScopes(scopes string) (models.APIPermissions, error) {
 	return perms, nil
 }
 
-// parseBotExpiry accepts Nd, Ny or an RFC3339 timestamp. There is no "never".
+// No "never": a token without expiry is the failure mode this command exists to avoid.
 func parseBotExpiry(value string, now time.Time) (time.Time, error) {
 	value = strings.TrimSpace(value)
 	if value == "" {
