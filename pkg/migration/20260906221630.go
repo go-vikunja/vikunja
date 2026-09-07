@@ -36,7 +36,7 @@ func init() {
 		Migrate: func(tx *xorm.Engine) error {
 			return partialSync(tx, users20260906221630{})
 		},
-		Rollback: func(tx *xorm.Engine) error {
+		Rollback: func(_ *xorm.Engine) error {
 			return nil
 		},
 	})
