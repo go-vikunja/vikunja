@@ -30,6 +30,8 @@ import (
 	"xorm.io/xorm"
 )
 
+const apiTokenExpiryLogPrefix = "[API Token Expiry Check] "
+
 // RegisterAPITokenExpiryCheckCron registers the cron job that checks for
 // expiring API tokens and notifies their owners.
 func RegisterAPITokenExpiryCheckCron() {
@@ -44,8 +46,6 @@ func RegisterAPITokenExpiryCheckCron() {
 }
 
 func checkForExpiringAPITokensAt(now time.Time) {
-	const logPrefix = "[API Token Expiry Check] "
-
 	oneDay := now.Add(24 * time.Hour)
 	sevenDays := now.Add(7 * 24 * time.Hour)
 
@@ -60,7 +60,7 @@ func checkForExpiringAPITokensAt(now time.Time) {
 		builder.Lte{"expires_at": sevenDays},
 	).Find(&tokens)
 	if err != nil {
-		log.Errorf(logPrefix+"Error getting expiring tokens: %s", err)
+		log.Errorf(apiTokenExpiryLogPrefix+"Error getting expiring tokens: %s", err)
 		return
 	}
 
@@ -68,7 +68,7 @@ func checkForExpiringAPITokensAt(now time.Time) {
 		return
 	}
 
-	log.Debugf(logPrefix+"Found %d tokens expiring within 7 days", len(tokens))
+	log.Debugf(apiTokenExpiryLogPrefix+"Found %d tokens expiring within 7 days", len(tokens))
 
 	ownerIDs := make([]int64, 0, len(tokens))
 	for _, token := range tokens {
@@ -77,19 +77,19 @@ func checkForExpiringAPITokensAt(now time.Time) {
 
 	owners, err := user.GetUsersByIDs(s, ownerIDs)
 	if err != nil {
-		log.Errorf(logPrefix+"Error getting token owners: %s", err)
+		log.Errorf(apiTokenExpiryLogPrefix+"Error getting token owners: %s", err)
 		return
 	}
 
 	botOwners, err := getBotOwners(s, owners)
 	if err != nil {
-		log.Errorf(logPrefix+"Error getting bot owners: %s", err)
+		log.Errorf(apiTokenExpiryLogPrefix+"Error getting bot owners: %s", err)
 		return
 	}
 
-	admins, err := getInstanceBotRecipients(s, owners)
+	admins, err := user.GetActiveHumanAdmins(s)
 	if err != nil {
-		log.Errorf(logPrefix+"Error getting instance admins: %s", err)
+		log.Errorf(apiTokenExpiryLogPrefix+"Error getting instance admins: %s", err)
 		return
 	}
 
@@ -101,13 +101,13 @@ func checkForExpiringAPITokensAt(now time.Time) {
 
 		for _, r := range tokenExpiryRecipients(owner, botOwners, admins) {
 			if err := sendTokenExpiryNotification(s, r, token, oneDay); err != nil {
-				log.Errorf(logPrefix+"Error sending notification for token %d to user %d: %s", token.ID, r.user.ID, err)
+				log.Errorf(apiTokenExpiryLogPrefix+"Error sending notification for token %d to user %d: %s", token.ID, r.user.ID, err)
 			}
 		}
 	}
 
 	if err := s.Commit(); err != nil {
-		log.Errorf(logPrefix+"Error committing session: %s", err)
+		log.Errorf(apiTokenExpiryLogPrefix+"Error committing session: %s", err)
 	}
 }
 
@@ -125,6 +125,9 @@ func tokenExpiryRecipients(owner *user.User, botOwners map[int64]*user.User, adm
 	}
 
 	if owner.IsInstanceBot {
+		if len(admins) == 0 {
+			log.Warningf(apiTokenExpiryLogPrefix+"Instance bot %d has an expiring token but no active human admin exists to notify", owner.ID)
+		}
 		recipients := make([]tokenExpiryRecipient, 0, len(admins))
 		for _, admin := range admins {
 			recipients = append(recipients, tokenExpiryRecipient{user: admin, bot: owner})
@@ -140,19 +143,10 @@ func tokenExpiryRecipients(owner *user.User, botOwners map[int64]*user.User, adm
 	return []tokenExpiryRecipient{{user: human, bot: owner}}
 }
 
-func getInstanceBotRecipients(s *xorm.Session, owners map[int64]*user.User) ([]*user.User, error) {
-	for _, u := range owners {
-		if u.IsInstanceBot {
-			return user.GetActiveHumanAdmins(s)
-		}
-	}
-	return nil, nil
-}
-
 func getBotOwners(s *xorm.Session, owners map[int64]*user.User) (map[int64]*user.User, error) {
 	botOwnerIDs := []int64{}
 	for _, u := range owners {
-		if u.IsBot() {
+		if u.IsBot() && !u.IsInstanceBot {
 			botOwnerIDs = append(botOwnerIDs, u.BotOwnerID)
 		}
 	}
