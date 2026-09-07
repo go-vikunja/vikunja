@@ -276,7 +276,7 @@ var userBotTokenRevokeCmd = &cobra.Command{
 		}
 		bot, err := user.GetUserByID(s, token.OwnerID)
 		if err != nil && !user.IsErrUserStatusError(err) {
-			return err
+			return fmt.Errorf("could not load owner of token %d: %w", id, err)
 		}
 		if !bot.IsInstanceBot {
 			return fmt.Errorf("token %d does not belong to an instance bot", id)
