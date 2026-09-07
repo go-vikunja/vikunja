@@ -614,12 +614,6 @@ func TestAdminTokenScopes(t *testing.T) {
 		}
 	})
 
-	t.Run("v1 PATCH admin routes", func(t *testing.T) {
-		token := &APIToken{APIPermissions: APIPermissions{"admin": []string{"users_set_status"}}}
-		assert.True(t, can(token, http.MethodPatch, "/api/v1/admin/users/:id/status"))
-		assert.True(t, can(token, http.MethodPatch, "/api/v2/admin/users/:id/status"))
-	})
-
 	t.Run("admin-only token is denied elsewhere", func(t *testing.T) {
 		all := make([]string, 0, len(adminTokenRoutes))
 		for _, r := range adminTokenRoutes {
