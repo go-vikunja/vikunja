@@ -17,6 +17,8 @@
 package user
 
 import (
+	"code.vikunja.io/api/pkg/web"
+
 	"xorm.io/builder"
 )
 
@@ -52,4 +54,18 @@ func SameBotIdentityCond(u *User, column string) builder.Cond {
 			builder.In("bot_owner_id", root),
 		)),
 	)
+}
+
+// SubjectID returns the user whose entitlements apply to a. Bots resolve to
+// their owner so limits cannot be bypassed through bots. Link shares have no
+// subject; the second return is false.
+func SubjectID(a web.Auth) (int64, bool) {
+	u, ok := a.(*User)
+	if !ok || u == nil {
+		return 0, false
+	}
+	if u.IsBot() {
+		return u.BotOwnerID, true
+	}
+	return u.ID, true
 }

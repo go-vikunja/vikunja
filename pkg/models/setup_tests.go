@@ -19,6 +19,7 @@ package models
 import (
 	_ "code.vikunja.io/api/pkg/config" // To trigger its init() which initializes the config
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/entitlement"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/mail"
 	"code.vikunja.io/api/pkg/notifications"
@@ -36,6 +37,7 @@ func SetupTests() {
 	tables := []interface{}{}
 	tables = append(tables, GetTables()...)
 	tables = append(tables, notifications.GetTables()...)
+	tables = append(tables, entitlement.GetTables()...)
 
 	err = x.Sync2(tables...)
 	if err != nil {
@@ -80,6 +82,7 @@ func SetupTests() {
 		"totp",
 		"oauth_codes",
 		"notifications",
+		"user_entitlements",
 	)
 	if err != nil {
 		log.Fatal(err)
