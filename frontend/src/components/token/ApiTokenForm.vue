@@ -237,7 +237,7 @@ function formatPermissionTitle(title: string): string {
 	return title.replaceAll('_', ' ')
 }
 
-// Each of these lets a token obtain admin control of any account
+// users_create counts too: CreateUserAsAdmin honours is_admin
 const ESCALATING_ADMIN_PERMISSIONS = new Set(['users_set_password', 'users_set_admin', 'users_create'])
 
 function isEscalatingPermission(group: string, permission: string | number): boolean {
