@@ -160,7 +160,8 @@ func TestAdmin_InstanceBotActions(t *testing.T) {
 
 	t.Run("set-password refused", func(t *testing.T) {
 		res := adminReq(t, e, http.MethodPatch, "/api/v2/admin/users/26/password", admin, `{"new_password":"averyl0ngpassword"}`)
-		assert.Equal(t, http.StatusBadRequest, res.Code, res.Body.String())
+		assert.Equal(t, http.StatusPreconditionFailed, res.Code, res.Body.String())
+		assert.Contains(t, res.Body.String(), `"code":1031`)
 	})
 
 	t.Run("password-reset-email refused", func(t *testing.T) {

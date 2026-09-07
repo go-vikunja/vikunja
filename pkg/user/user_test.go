@@ -734,6 +734,20 @@ func TestUpdateUserPassword(t *testing.T) {
 	})
 }
 
+func TestUpdateUserPassword_RefusesBots(t *testing.T) {
+	for name, id := range map[string]int64{"owned bot": 23, "instance bot": 26} {
+		t.Run(name, func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
+			err := UpdateUserPassword(s, &User{ID: id}, "12345678")
+			require.Error(t, err)
+			assert.True(t, IsErrAccountIsBot(err))
+		})
+	}
+}
+
 func TestUserPasswordReset(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)

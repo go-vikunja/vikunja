@@ -127,7 +127,17 @@ func TestAdminActions_InstanceBot(t *testing.T) {
 
 		_, err := SetUserPasswordAsAdmin(s, doer, botID, "averyl0ngpassword")
 		require.Error(t, err)
-		assert.True(t, IsErrInstanceBotCannotBeModified(err))
+		assert.True(t, user.IsErrAccountIsBot(err))
+	})
+
+	t.Run("set-password refused for an owned bot", func(t *testing.T) {
+		adminActionsSetup(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := SetUserPasswordAsAdmin(s, doer, 23, "averyl0ngpassword")
+		require.Error(t, err)
+		assert.True(t, user.IsErrAccountIsBot(err))
 	})
 
 	t.Run("password-reset-email refused", func(t *testing.T) {

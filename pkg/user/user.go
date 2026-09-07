@@ -784,6 +784,10 @@ func UpdateUserPassword(s *xorm.Session, user *User, newPassword string) (err er
 		return err
 	}
 
+	if theUser.IsBot() {
+		return &ErrAccountIsBot{UserID: theUser.ID}
+	}
+
 	// Hash the new password and set it
 	hashed, err := HashPassword(newPassword)
 	if err != nil {

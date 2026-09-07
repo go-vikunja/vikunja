@@ -118,9 +118,6 @@ func SetUserPasswordAsAdmin(s *xorm.Session, doer *user.User, id int64, newPassw
 		return nil, err
 	}
 
-	if target.IsInstanceBot {
-		return nil, &ErrInstanceBotCannotBeModified{UserID: target.ID}
-	}
 	if !target.IsLocalUser() {
 		return nil, &user.ErrAccountIsNotLocal{UserID: target.ID}
 	}
