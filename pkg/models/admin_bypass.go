@@ -17,7 +17,7 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/license"
+	"code.vikunja.io/api/pkg/entitlement"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
@@ -29,7 +29,7 @@ import (
 // is_admin is re-read from the DB because the auth's flag is claim-derived and
 // stale until the JWT expires.
 func isInstanceAdmin(s *xorm.Session, a web.Auth) bool {
-	if !license.IsFeatureEnabled(license.FeatureAdminPanel) {
+	if !entitlement.LicenseAllows(entitlement.FeatureAdminPanel) {
 		return false
 	}
 	u, ok := a.(*user.User)
