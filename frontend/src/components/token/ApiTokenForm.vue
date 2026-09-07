@@ -237,8 +237,8 @@ function formatPermissionTitle(title: string): string {
 	return title.replaceAll('_', ' ')
 }
 
-// Root-equivalent: either lets the token take over any admin account
-const ESCALATING_ADMIN_PERMISSIONS = new Set(['users_set_password', 'users_set_admin'])
+// Each of these lets a token obtain admin control of any account
+const ESCALATING_ADMIN_PERMISSIONS = new Set(['users_set_password', 'users_set_admin', 'users_create'])
 
 function isEscalatingPermission(group: string, permission: string | number): boolean {
 	return group === 'admin' && ESCALATING_ADMIN_PERMISSIONS.has(String(permission))

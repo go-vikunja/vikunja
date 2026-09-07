@@ -132,6 +132,7 @@ describe('ApiTokenForm', () => {
 	it('warns about root-equivalent admin scopes only', async () => {
 		getAvailableRoutes.mockResolvedValueOnce({
 			admin: {
+				users_create: {path: '/api/v2/admin/users', method: 'POST'},
 				users_list: {path: '/api/v2/admin/users', method: 'GET'},
 				users_set_admin: {path: '/api/v2/admin/users/{id}/admin', method: 'PATCH'},
 				users_set_password: {path: '/api/v2/admin/users/{id}/password', method: 'PATCH'},
@@ -150,6 +151,7 @@ describe('ApiTokenForm', () => {
 		expect(adminGroup.text()).toContain('admin')
 		expect(warningAfterCheckbox(adminGroup, 'users set admin')).toBe(warning)
 		expect(warningAfterCheckbox(adminGroup, 'users set password')).toBe(warning)
+		expect(warningAfterCheckbox(adminGroup, 'users create')).toBe(warning)
 		expect(warningAfterCheckbox(adminGroup, 'users list')).toBeUndefined()
 
 		// same key outside the admin group must not warn
