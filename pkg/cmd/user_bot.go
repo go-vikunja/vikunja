@@ -40,23 +40,15 @@ import (
 
 var (
 	botFlagScopes  string
-	botFlagPreset  string
 	botFlagExpires string
 	botFlagTitle   string
 )
-
-// Presets deliberately leave out users_set_password and users_set_admin
-// (root-equivalent) and projects_list.
-var botScopePresets = map[string][]string{
-	"provisioning": {"users_list", "users_create", "users_set_status", "users_delete"},
-}
 
 const botDefaultExpiry = "1y"
 
 func init() {
 	for _, c := range []*cobra.Command{userBotCreateCmd, userBotTokenCreateCmd} {
-		c.Flags().StringVar(&botFlagScopes, "scopes", "", "Comma-separated group:permission scopes, e.g. admin:users_list,admin:users_create. Only admin scopes are allowed.")
-		c.Flags().StringVar(&botFlagPreset, "preset", "", "Scope preset to add: provisioning (users_list, users_create, users_set_status, users_delete).")
+		c.Flags().StringVar(&botFlagScopes, "scopes", "", "Comma-separated group:permission scopes, e.g. admin:users_list,admin:users_create,admin:users_set_status,admin:users_delete. Only admin scopes are allowed.")
 		c.Flags().StringVar(&botFlagExpires, "expires", botDefaultExpiry, "Token lifetime as days (90d), years (1y) or an RFC3339 timestamp.")
 		c.Flags().StringVar(&botFlagTitle, "title", "", "Title of the token.")
 	}
@@ -92,7 +84,7 @@ var userBotCreateCmd = &cobra.Command{
 		if err := requireAdminPanelLicense(); err != nil {
 			return err
 		}
-		perms, err := parseBotScopes(botFlagScopes, botFlagPreset)
+		perms, err := parseBotScopes(botFlagScopes)
 		if err != nil {
 			return err
 		}
@@ -189,7 +181,7 @@ var userBotTokenCreateCmd = &cobra.Command{
 		if err := requireAdminPanelLicense(); err != nil {
 			return err
 		}
-		perms, err := parseBotScopes(botFlagScopes, botFlagPreset)
+		perms, err := parseBotScopes(botFlagScopes)
 		if err != nil {
 			return err
 		}
@@ -347,9 +339,7 @@ func formatBotScopes(perms models.APIPermissions) string {
 	return strings.Join(scopes, ",")
 }
 
-// parseBotScopes unions --scopes (group:perm, the frontend deep-link syntax)
-// with --preset; validity beyond the admin-only rule is checked on create.
-func parseBotScopes(scopes, preset string) (models.APIPermissions, error) {
+func parseBotScopes(scopes string) (models.APIPermissions, error) {
 	perms := models.APIPermissions{}
 	add := func(group, perm string) {
 		for _, existing := range perms[group] {
@@ -375,18 +365,8 @@ func parseBotScopes(scopes, preset string) (models.APIPermissions, error) {
 		add(group, perm)
 	}
 
-	if preset != "" {
-		list, ok := botScopePresets[preset]
-		if !ok {
-			return nil, fmt.Errorf("unknown preset %q", preset)
-		}
-		for _, perm := range list {
-			add("admin", perm)
-		}
-	}
-
 	if len(perms) == 0 {
-		return nil, fmt.Errorf("at least one scope is required; pass --scopes or --preset")
+		return nil, fmt.Errorf("at least one scope is required; pass --scopes")
 	}
 	return perms, nil
 }

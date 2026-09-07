@@ -42,7 +42,7 @@ func runBotCmd(t *testing.T, args ...string) (string, error) {
 		c.PreRun = nil
 	}
 	// Flag vars persist across Execute calls.
-	botFlagScopes, botFlagPreset, botFlagExpires, botFlagTitle = "", "", botDefaultExpiry, ""
+	botFlagScopes, botFlagExpires, botFlagTitle = "", botDefaultExpiry, ""
 
 	out := &bytes.Buffer{}
 	rootCmd.SetOut(out)
@@ -57,7 +57,7 @@ func TestUserBotCreate(t *testing.T) {
 	t.Cleanup(license.ResetForTests)
 
 	t.Run("prints the token on the last line", func(t *testing.T) {
-		out, err := runBotCmd(t, "create", "bot-ci", "--scopes", "admin:users_list", "--preset", "provisioning", "--expires", "90d", "--title", "ci")
+		out, err := runBotCmd(t, "create", "bot-ci", "--scopes", "admin:users_list,admin:users_create,admin:users_set_status,admin:users_delete", "--expires", "90d", "--title", "ci")
 		require.NoError(t, err, out)
 
 		lines := strings.Split(strings.TrimSpace(out), "\n")
@@ -171,15 +171,12 @@ func TestParseBotExpiry(t *testing.T) {
 }
 
 func TestParseBotScopes(t *testing.T) {
-	perms, err := parseBotScopes("admin:users_list, admin:users_list", "provisioning")
+	perms, err := parseBotScopes("admin:users_list, admin:users_list")
 	require.NoError(t, err)
-	assert.ElementsMatch(t, []string{"users_list", "users_create", "users_set_status", "users_delete"}, perms["admin"])
+	assert.ElementsMatch(t, []string{"users_list"}, perms["admin"])
 
-	_, err = parseBotScopes("users_list", "")
+	_, err = parseBotScopes("users_list")
 	require.ErrorContains(t, err, "group:permission")
-
-	_, err = parseBotScopes("", "nope")
-	require.ErrorContains(t, err, "unknown preset")
 }
 
 func TestSetUserAdmin_RefusesInstanceBot(t *testing.T) {
