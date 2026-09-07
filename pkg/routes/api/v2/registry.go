@@ -36,14 +36,16 @@ func AddRouteRegistrar(f func(huma.API)) {
 // not guarantee a stable init order across files) and does not matter: each
 // resource registers a distinct set of routes. AutoPatch runs last — inside
 // RegisterAll, after every registrar — so it can synthesise PATCH counterparts
-// for all GET + PUT pairs.
-func RegisterAll(api huma.API) {
+// for all GET + PUT pairs. It returns the echo paths of those synthesised
+// PATCHes.
+func RegisterAll(api huma.API) map[string]bool {
 	for _, r := range routeRegistrars {
 		r(api)
 	}
-	EnableAutoPatch(api)
+	autoPatched := EnableAutoPatch(api)
 	requireMultipartBodies(api)
 	stripPatchFormatQuery(api)
+	return autoPatched
 }
 
 func requireMultipartBodies(api huma.API) {

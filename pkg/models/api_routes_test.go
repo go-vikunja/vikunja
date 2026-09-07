@@ -103,14 +103,12 @@ func TestCollectRoutesV2(t *testing.T) {
 	apiTokenRoutes = make(map[string]APITokenRoute)
 	apiTokenRoutesV2 = make(map[string]APITokenRoute)
 	t.Cleanup(resetAPITokenRoutes)
-	MarkAutoPatchRoute("/api/v2/labels/:id")
 
 	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v2/labels"}, true)
 	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v2/labels/:id"}, true)
 	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "POST", Path: "/api/v2/labels"}, true)
 	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "PUT", Path: "/api/v2/labels/:id"}, true)
 	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "DELETE", Path: "/api/v2/labels/:id"}, true)
-	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "PATCH", Path: "/api/v2/labels/:id"}, true)
 
 	// v1 map stays untouched.
 	assert.Empty(t, apiTokenRoutes, "v2 routes must not land in the v1 table")
@@ -127,44 +125,7 @@ func TestCollectRoutesV2(t *testing.T) {
 }
 
 func TestCollectRoutesV2_Patch(t *testing.T) {
-	t.Run("marked PATCH listed before its PUT stores only PUT", func(t *testing.T) {
-		resetAPITokenRoutes()
-		t.Cleanup(resetAPITokenRoutes)
-		MarkAutoPatchRoute("/api/v2/labels/:id")
-
-		CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: http.MethodPatch, Path: "/api/v2/labels/:id"}, true)
-		CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: http.MethodPut, Path: "/api/v2/labels/:id"}, true)
-
-		assert.Equal(t, http.MethodPut, apiTokenRoutesV2["labels"]["update"].Method)
-		assert.Len(t, apiTokenRoutesV2["labels"], 1)
-	})
-
-	t.Run("marked PATCH listed after its PUT stores only PUT", func(t *testing.T) {
-		resetAPITokenRoutes()
-		t.Cleanup(resetAPITokenRoutes)
-		MarkAutoPatchRoute("/api/v2/labels/:id")
-
-		CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: http.MethodPut, Path: "/api/v2/labels/:id"}, true)
-		CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: http.MethodPatch, Path: "/api/v2/labels/:id"}, true)
-
-		assert.Equal(t, http.MethodPut, apiTokenRoutesV2["labels"]["update"].Method)
-		assert.Len(t, apiTokenRoutesV2["labels"], 1)
-	})
-
-	t.Run("marked PATCH on a non-CRUD path is not suffixed", func(t *testing.T) {
-		resetAPITokenRoutes()
-		t.Cleanup(resetAPITokenRoutes)
-		MarkAutoPatchRoute("/api/v2/tasks/:task/position")
-
-		CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: http.MethodPut, Path: "/api/v2/tasks/:task/position"}, true)
-		CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: http.MethodPatch, Path: "/api/v2/tasks/:task/position"}, true)
-
-		require.Contains(t, apiTokenRoutesV2["tasks"], "position")
-		assert.Equal(t, http.MethodPut, apiTokenRoutesV2["tasks"]["position"].Method)
-		assert.NotContains(t, apiTokenRoutesV2["tasks"], "position_patch")
-	})
-
-	t.Run("unmarked PATCH without a PUT twin is collected", func(t *testing.T) {
+	t.Run("PATCH without a PUT twin is collected", func(t *testing.T) {
 		resetAPITokenRoutes()
 		t.Cleanup(resetAPITokenRoutes)
 
@@ -180,7 +141,7 @@ func TestCollectRoutesV2_Patch(t *testing.T) {
 		assert.True(t, CanDoAPIRoute(c, token))
 	})
 
-	t.Run("unmarked PATCH coexisting with a PUT gets its own permission", func(t *testing.T) {
+	t.Run("PATCH coexisting with a PUT gets its own permission", func(t *testing.T) {
 		resetAPITokenRoutes()
 		t.Cleanup(resetAPITokenRoutes)
 
@@ -340,10 +301,8 @@ func TestGetRouteDetail_V2Verbs(t *testing.T) {
 func TestCanDoAPIRoute_V2PatchAliasesPut(t *testing.T) {
 	resetAPITokenRoutes()
 	t.Cleanup(resetAPITokenRoutes)
-	MarkAutoPatchRoute("/api/v2/labels/:id")
 
 	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "PUT", Path: "/api/v2/labels/:id"}, true)
-	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "PATCH", Path: "/api/v2/labels/:id"}, true)
 
 	token := &APIToken{
 		APIPermissions: APIPermissions{"labels": []string{"update"}},

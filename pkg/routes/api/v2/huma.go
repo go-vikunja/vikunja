@@ -26,7 +26,6 @@ import (
 	"strings"
 
 	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/humabridge"
 	"code.vikunja.io/api/pkg/version"
 
@@ -162,27 +161,34 @@ func Register[I, O any](api huma.API, op huma.Operation, handler func(context.Co
 }
 
 // EnableAutoPatch synthesises a PATCH for every resource that already
-// registered GET + PUT. Must be called AFTER all Register* calls.
-func EnableAutoPatch(api huma.API) {
+// registered GET + PUT. Must be called AFTER all Register* calls. It returns
+// the echo paths of the synthesised PATCHes.
+func EnableAutoPatch(api huma.API) map[string]bool {
+	pre := map[string]bool{}
+	for p, item := range api.OpenAPI().Paths {
+		if item != nil && item.Patch == nil {
+			pre[p] = true
+		}
+	}
+
 	autopatch.AutoPatch(api)
 
-	// AutoPatch tags its PATCHes with a "Patch " summary; a hand-registered PATCH keeps
-	// its own summary and token permission. The generated summary reads poorly in the docs.
-	for _, item := range api.OpenAPI().Paths {
-		if item == nil || item.Patch == nil || item.Put == nil {
+	synthesised := map[string]bool{}
+	for p, item := range api.OpenAPI().Paths {
+		if item == nil || item.Patch == nil || !pre[p] {
 			continue
 		}
-		if !strings.HasPrefix(item.Patch.Summary, "Patch ") {
-			continue
-		}
-		models.MarkAutoPatchRoute(echoPath(item.Patch.Path))
-		if item.Put.Summary != "" {
+		synthesised[echoPath(p)] = true
+		// AutoPatch names its PATCH after the GET ("Patch labels-read"), which reads
+		// poorly in the docs nav.
+		if item.Put != nil && item.Put.Summary != "" {
 			item.Patch.Summary = item.Put.Summary + " (partial)"
 		}
 	}
+	return synthesised
 }
 
-// echoPath: the adapter swaps {param} for :param and the group prepends its prefix.
+// echoPath mirrors humaecho's Handle: {param} becomes :param under the group prefix.
 func echoPath(path string) string {
 	return GroupPrefix + strings.NewReplacer("{", ":", "}", "").Replace(path)
 }

@@ -68,16 +68,8 @@ var legacyAdminScopes = map[string]string{ //nolint:gosec // scope names, not cr
 	"projects_owner":             "projects_set_owner",
 }
 
-var autoPatchRoutes = map[string]bool{}
-
-// MarkAutoPatchRoute takes the echo template (/api/v2/labels/:id); call before collection.
-func MarkAutoPatchRoute(path string) {
-	autoPatchRoutes[path] = true
-}
-
 // resetAPITokenRoutes restores the init() baseline; tests use it to isolate cases.
 func resetAPITokenRoutes() {
-	autoPatchRoutes = map[string]bool{}
 	apiTokenRoutes = map[string]APITokenRoute{
 		"caldav": {"access": &RouteDetail{Path: "/dav/*", Method: "ANY"}},
 		"feeds":  {"access": &RouteDetail{Path: "/feeds/*", Method: http.MethodGet}},
@@ -323,10 +315,6 @@ func CollectRoutesForAPITokenUsage(route echo.RouteInfo, requiresJWT bool) {
 	target := apiTokenRoutes
 	if isV2Path(route.Path) {
 		target = apiTokenRoutesV2
-		// Synthesised PATCH rides on its PUT scope; tokenAuthorizesRoute aliases it.
-		if route.Method == http.MethodPatch && autoPatchRoutes[route.Path] {
-			return
-		}
 	}
 
 	// Check if this is a standard CRUD route using path-based heuristics
@@ -525,7 +513,7 @@ func tokenAuthorizesRoute(token *APIToken, path, method string) bool {
 				if rd.Method == method && rd.Path == path {
 					return true
 				}
-				// AutoPatch's PATCH is never collected (MarkAutoPatchRoute); accept it on the PUT.
+				// AutoPatch's PATCH is never collected; accept it on the PUT.
 				if isV2Path(rd.Path) && rd.Method == http.MethodPut &&
 					method == http.MethodPatch && rd.Path == path {
 					return true
