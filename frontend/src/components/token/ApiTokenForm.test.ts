@@ -52,11 +52,11 @@ function mountForm({stubDatePicker = true} = {}) {
 	return {wrapper, errors}
 }
 
-function warningAfterCheckbox(wrapper: DOMWrapper<Element>, label: string) {
+function warningDescribing(wrapper: DOMWrapper<Element>, label: string) {
 	const checkbox = wrapper.findAll('.fancy-checkbox').find(c => c.find('.fancy-checkbox__content').text() === label)
 	expect(checkbox).toBeTruthy()
-	const next = checkbox!.element.nextElementSibling
-	return next?.tagName === 'P' ? next.textContent?.trim() : undefined
+	const describedBy = checkbox!.find('input').attributes('aria-describedby')
+	return describedBy ? document.getElementById(describedBy)?.textContent?.trim() : undefined
 }
 
 function setTitleFieldRef(wrapper: VueWrapper, value: unknown) {
@@ -69,8 +69,8 @@ describe('ApiTokenForm', () => {
 
 	beforeEach(() => {
 		setActivePinia(createPinia())
-		getAvailableRoutes.mockClear()
-		create.mockClear()
+		getAvailableRoutes.mockReset()
+		create.mockReset()
 	})
 
 	afterEach(() => {
@@ -148,15 +148,14 @@ describe('ApiTokenForm', () => {
 		const warning = i18n.global.t('user.settings.apiTokens.escalationWarning')
 		const [adminGroup, usersGroup] = wrapper.findAll('.mbe-2')
 
-		expect(adminGroup.text()).toContain('admin')
-		expect(warningAfterCheckbox(adminGroup, 'users set admin')).toBe(warning)
-		expect(warningAfterCheckbox(adminGroup, 'users set password')).toBe(warning)
-		expect(warningAfterCheckbox(adminGroup, 'users create')).toBe(warning)
-		expect(warningAfterCheckbox(adminGroup, 'users list')).toBeUndefined()
+		expect(adminGroup.find('.has-text-weight-bold .fancy-checkbox__content').text()).toBe('admin')
+		expect(warningDescribing(adminGroup, 'users set admin')).toBe(warning)
+		expect(warningDescribing(adminGroup, 'users set password')).toBe(warning)
+		expect(warningDescribing(adminGroup, 'users create')).toBe(warning)
+		expect(warningDescribing(adminGroup, 'users list')).toBeUndefined()
 
-		// same key outside the admin group must not warn
-		expect(usersGroup.text()).toContain('users')
-		expect(warningAfterCheckbox(usersGroup, 'users set admin')).toBeUndefined()
+		expect(usersGroup.find('.has-text-weight-bold .fancy-checkbox__content').text()).toBe('users')
+		expect(warningDescribing(usersGroup, 'users set admin')).toBeUndefined()
 		expect(mounted.errors).toEqual([])
 	})
 })
