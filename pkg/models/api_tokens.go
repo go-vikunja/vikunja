@@ -99,15 +99,19 @@ func (t *APIToken) Create(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
-	owner := caller
-	if t.OwnerID != 0 && t.OwnerID != caller.ID {
-		owner, err = user.GetUserByID(s, t.OwnerID)
-		if err != nil {
-			return err
-		}
-		if !owner.IsBotOwnedBy(caller) {
-			return &user.ErrBotNotOwned{UserID: t.OwnerID}
-		}
+	ownerID := caller.ID
+	if t.OwnerID != 0 {
+		ownerID = t.OwnerID
+	}
+
+	// caller comes from JWT claims and may be missing columns issue() checks, so always read the owner row.
+	owner, err := user.GetUserByID(s, ownerID)
+	if err != nil {
+		return err
+	}
+
+	if ownerID != caller.ID && !owner.IsBotOwnedBy(caller) {
+		return &user.ErrBotNotOwned{UserID: ownerID}
 	}
 
 	return t.issue(s, owner, caller.ID)
