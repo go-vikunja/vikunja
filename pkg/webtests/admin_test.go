@@ -17,6 +17,7 @@
 package webtests
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -89,6 +90,7 @@ func createAPIToken(t *testing.T, ownerID int64, perms models.APIPermissions) st
 	}
 	require.NoError(t, token.Create(s, owner))
 	require.NoError(t, s.Commit())
+	events.DispatchPending(context.Background(), s)
 	return token.Token
 }
 
