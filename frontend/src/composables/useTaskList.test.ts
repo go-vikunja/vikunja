@@ -4,7 +4,10 @@ import {mount, flushPromises, enableAutoUnmount} from '@vue/test-utils'
 import {setActivePinia, createPinia} from 'pinia'
 import {createRouter, createMemoryHistory, RouterView, type Router} from 'vue-router'
 
-const getAll = vi.fn(async () => [])
+import type {ITask} from '@/modelTypes/ITask'
+import TaskModel from '@/models/task'
+
+const getAll = vi.fn<(...args: unknown[]) => Promise<ITask[]>>(async () => [])
 vi.mock('@/services/taskCollection', async (importOriginal) => {
 	const actual = await importOriginal<typeof import('@/services/taskCollection')>()
 	return {
@@ -131,6 +134,7 @@ describe('useTaskList restoring stored query into the url', () => {
 		const router = await mountTaskList({})
 		await flushPromises()
 
+		expect(getAll).toHaveBeenCalledTimes(1)
 		expect(router.currentRoute.value.query.sort).toBe('due_date:asc')
 		expect(lastRequestParams().sort_by).toEqual(['due_date'])
 	})
@@ -175,7 +179,7 @@ describe('useTaskList navigation and pagination', () => {
 	beforeEach(() => {
 		localStorage.clear()
 		setActivePinia(createPinia())
-		getAll.mockClear()
+		getAll.mockReset()
 	})
 
 	it.each([1, 3])('restores the sort and page %i when returning to a project', async (page) => {
@@ -185,12 +189,24 @@ describe('useTaskList navigation and pagination', () => {
 		taskList.currentPage.value = page
 		await flushPromises()
 
+		getAll.mockClear()
 		await router.push('/projects/2/21')
 		await flushPromises()
+		expect(getAll.mock.calls).toEqual([[
+			{projectId: 2, viewId: 21},
+			expect.objectContaining({sort_by: ['position'], order_by: ['asc']}),
+			1,
+		]])
 		expect(taskList.sortByParam.value).toEqual({position: 'asc'})
 
+		getAll.mockClear()
 		await router.push('/projects/1/11')
 		await flushPromises()
+		expect(getAll.mock.calls).toEqual([[
+			{projectId: 1, viewId: 11},
+			expect.objectContaining({sort_by: ['due_date'], order_by: ['asc']}),
+			page,
+		]])
 		expect(router.currentRoute.value.query.sort).toBe('due_date:asc')
 		expect(taskList.sortByParam.value).toEqual({due_date: 'asc'})
 		expect(taskList.currentPage.value).toBe(page)
@@ -205,6 +221,28 @@ describe('useTaskList navigation and pagination', () => {
 		await flushPromises()
 		expect(taskList.sortByParam.value).toEqual({title: 'desc'})
 		expect(lastRequestParams().sort_by).toEqual(['title'])
+	})
+
+	it('ignores a response from a project the user has left', async () => {
+		const {router, taskList} = await mountRoutedTaskList()
+		let resolveOld!: (tasks: ITask[]) => void
+		let resolveCurrent!: (tasks: ITask[]) => void
+		getAll.mockImplementationOnce(() => new Promise(resolve => { resolveOld = resolve }))
+		const previousLoad = taskList.loadTasks()
+
+		getAll.mockImplementationOnce(() => new Promise(resolve => { resolveCurrent = resolve }))
+		await router.push('/projects/2/21')
+		await flushPromises()
+		expect(taskList.tasks.value).toEqual([])
+
+		const currentTasks = [new TaskModel({id: 2, projectId: 2, title: 'Current project task'})]
+		resolveCurrent(currentTasks)
+		await flushPromises()
+		expect(taskList.tasks.value).toEqual(currentTasks)
+
+		resolveOld([new TaskModel({id: 1, projectId: 1, title: 'Previous project task'})])
+		await previousLoad
+		expect(taskList.tasks.value).toEqual(currentTasks)
 	})
 
 	it('resets pagination when the user changes the sort', async () => {

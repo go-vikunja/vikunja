@@ -22,7 +22,8 @@ test.describe('Sort persistence across sidebar navigation (#2753)', () => {
 		await TaskFactory.create(3, {
 			id: '{increment}',
 			project_id: projectA.id,
-			title: 'Task {increment}',
+			title: (i: number) => `Task ${i}`,
+			due_date: (i: number) => new Date(2030, 0, 4 - i).toISOString(),
 		})
 
 		const listViewA = projectA.views[0].id
@@ -31,13 +32,25 @@ test.describe('Sort persistence across sidebar navigation (#2753)', () => {
 
 		await selectSortInList(page, 'Due date (Earliest first)')
 		await expect(page).toHaveURL(/sort=due_date:asc/)
+		await expect(page.locator('.tasks .task .tasktext')).toContainText(['Task 3', 'Task 2', 'Task 1'])
 
 		await navigateViaSidebar(page, projectB.title)
 		await expect(page).toHaveURL(new RegExp(`/projects/${projectB.id}/`))
 
+		const taskRequests: URL[] = []
+		page.on('request', request => {
+			const url = new URL(request.url())
+			if (url.pathname === `/api/v1/projects/${projectA.id}/views/${listViewA}/tasks`) {
+				taskRequests.push(url)
+			}
+		})
+
 		await navigateViaSidebar(page, projectA.title)
 		await expect(page).toHaveURL(new RegExp(`/projects/${projectA.id}/`))
 		await expect(page).toHaveURL(/sort=due_date:asc/)
+		await expect(page.locator('.tasks .task .tasktext')).toContainText(['Task 3', 'Task 2', 'Task 1'])
+		expect(taskRequests).toHaveLength(1)
+		expect(taskRequests[0].searchParams.getAll('sort_by[]')).toEqual(['due_date'])
 	})
 
 	test('List view: explicit URL sort wins over stored sort', async ({authenticatedPage: page}) => {
