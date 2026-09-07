@@ -2,9 +2,12 @@
 	<CreateEdit
 		v-model:loading="loadingModel"
 		:title="title"
-		:primary-disabled="team.name === ''"
+		:primary-disabled="team.name === '' || !canCreateTeams"
 		@create="createTeam()"
 	>
+		<UpgradeHint v-if="!canCreateTeams">
+			{{ $t('entitlement.teamCreationDisabled') }}
+		</UpgradeHint>
 		<FormField
 			id="teamName"
 			v-model="team.name"
@@ -40,6 +43,7 @@ import TeamModel from '@/models/team'
 import TeamService from '@/services/team'
 
 import CreateEdit from '@/components/misc/CreateEdit.vue'
+import UpgradeHint from '@/components/misc/UpgradeHint.vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import FormField from '@/components/input/FormField.vue'
 
@@ -48,6 +52,8 @@ import {useRouter} from 'vue-router'
 import {success} from '@/message'
 
 import {useConfigStore} from '@/stores/config'
+import {useAuthStore} from '@/stores/auth'
+import {ENTITLEMENT} from '@/constants/entitlements'
 
 defineOptions({name: 'NewTeam'})
 
@@ -69,6 +75,8 @@ const loadingModel = computed({
 })
 
 const configStore = useConfigStore()
+const authStore = useAuthStore()
+const canCreateTeams = computed(() => authStore.hasEntitlement(ENTITLEMENT.TEAM_CREATION))
 
 async function createTeam() {
 	if (team.name === '') {
@@ -76,6 +84,9 @@ async function createTeam() {
 		return
 	}
 	showError.value = false
+	if (!canCreateTeams.value) {
+		return
+	}
 
 	if (isSubmitting.value) {
 		return

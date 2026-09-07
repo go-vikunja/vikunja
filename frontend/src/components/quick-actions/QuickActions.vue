@@ -139,6 +139,7 @@ import {useBaseStore} from '@/stores/base'
 import {useProjectStore} from '@/stores/projects'
 import {useTaskStore} from '@/stores/tasks'
 import {useAuthStore} from '@/stores/auth'
+import {ENTITLEMENT} from '@/constants/entitlements'
 import {useLabels} from '@/composables/useLabels'
 
 import {getHistory} from '@/modules/projectHistory'
@@ -393,11 +394,14 @@ const hintText = computed(() => {
 })
 
 const availableCmds = computed(() => {
-	return [
-		commands.value.newTask,
-		commands.value.newProject,
-		commands.value.newTeam,
-	]
+	const cmds = [commands.value.newTask]
+	if (!authStore.isAtLimit(ENTITLEMENT.MAX_PROJECTS)) {
+		cmds.push(commands.value.newProject)
+	}
+	if (authStore.hasEntitlement(ENTITLEMENT.TEAM_CREATION)) {
+		cmds.push(commands.value.newTeam)
+	}
+	return cmds
 })
 
 const parsedQuery = computed(() => parseTaskText(query.value, authStore.settings.frontendSettings.quickAddMagicMode))
