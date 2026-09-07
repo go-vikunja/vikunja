@@ -214,6 +214,8 @@ import type {GanttBarModel} from '@/composables/useGanttBar'
 import {getTextColor, LIGHT} from '@/helpers/color/getTextColor'
 import {MILLISECONDS_A_DAY} from '@/constants/date'
 import {roundToNaturalDayBoundary} from '@/helpers/time/roundToNaturalDayBoundary'
+import {formatDate} from '@/helpers/time/formatDate'
+import {useJalaliCalendar} from '@/composables/useJalaliCalendar'
 
 import GanttBarPrimitive from './primitives/GanttBarPrimitive.vue'
 
@@ -248,8 +250,16 @@ const emit = defineEmits<{
 }>()
 
 const {t} = useI18n({useScope: 'global'})
+const {isJalali} = useJalaliCalendar()
 
 const RESIZE_HANDLE_OFFSET = 3
+
+function formatBarDate(date: Date): string {
+	if (isJalali.value) {
+		return formatDate(date, 'LL')
+	}
+	return date.toLocaleDateString()
+}
 
 function addDays(dateOrValue: Date | string | number, days: number): Date {
 	const date = new Date(dateOrValue)
@@ -408,8 +418,8 @@ function getBarTextColor(bar: GanttBarModel) {
 
 function getBarAriaLabel(bar: GanttBarModel): string {
 	const task = bar.meta?.label || bar.id
-	const startDate = bar.start.toLocaleDateString()
-	const endDate = bar.end.toLocaleDateString()
+	const startDate = formatBarDate(bar.start)
+	const endDate = formatBarDate(bar.end)
 
 	let dateType: string
 	if (bar.meta?.dateType === 'startOnly') {

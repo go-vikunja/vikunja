@@ -34,13 +34,13 @@
 				class="timeunit"
 				:style="{ width: `${dayWidthPixels}px` }"
 				role="columnheader"
-				:aria-label="dateIsToday(date) 
+				:aria-label="dateIsToday(date)
 					? $t('project.gantt.dayLabelToday', {
-						date: date.toLocaleDateString(),
+						date: formatDayAria(date),
 						weekday: weekDayFromDate(date)
 					})
 					: $t('project.gantt.dayLabel', {
-						date: date.toLocaleDateString(),
+						date: formatDayAria(date),
 						weekday: weekDayFromDate(date)
 					})"
 			>
@@ -48,7 +48,7 @@
 					class="timeunit-wrapper"
 					:class="{'today': dateIsToday(date)}"
 				>
-					<span>{{ date.getDate() }}</span>
+					<span>{{ getDayNumber(date) }}</span>
 					<span class="weekday">
 						{{ weekDayFromDate(date) }}
 					</span>
@@ -61,7 +61,9 @@
 <script setup lang="ts">
 import {computed} from 'vue'
 import {useGlobalNow} from '@/composables/useGlobalNow'
-import {useWeekDayFromDate} from '@/helpers/time/formatDate'
+import {formatDate, useWeekDayFromDate} from '@/helpers/time/formatDate'
+import {formatJalaliDate, instantToJalali, toPersianDigits} from '@/helpers/time/jalali'
+import {useJalaliCalendar} from '@/composables/useJalaliCalendar'
 import dayjs from 'dayjs'
 
 const props = defineProps<{
@@ -70,14 +72,54 @@ const props = defineProps<{
 }>()
 
 const weekDayFromDate = useWeekDayFromDate()
-const { now: today } = useGlobalNow()
+const {now: today} = useGlobalNow()
+const {isJalali, timeZone} = useJalaliCalendar()
 
 const dateIsToday = computed(() => {
 	const todayStr = today.value.toDateString()
 	return (date: Date) => date.toDateString() === todayStr
 })
 
+function getDayNumber(date: Date): string | number {
+	if (isJalali.value) {
+		const day = instantToJalali(date, timeZone.value)?.day
+		return day === undefined ? date.getDate() : toPersianDigits(day)
+	}
+	return date.getDate()
+}
+
+function formatDayAria(date: Date): string {
+	if (isJalali.value) {
+		return formatDate(date, 'LL')
+	}
+	return date.toLocaleDateString()
+}
+
 const monthGroups = computed(() => {
+	if (isJalali.value) {
+		const tz = timeZone.value
+		return props.timelineData.reduce(
+			(groups, date) => {
+				const parts = instantToJalali(date, tz)
+				const key = parts ? `${parts.year}-${parts.month}` : `greg-${date.getFullYear()}-${date.getMonth()}`
+
+				const lastGroup = groups[groups.length - 1]
+				if (lastGroup?.key === key) {
+					lastGroup.width += props.dayWidthPixels
+				} else {
+					groups.push({
+						key,
+						label: formatJalaliDate(date, {timeZone: tz, month: 'long', year: 'numeric'}),
+						width: props.dayWidthPixels,
+					})
+				}
+
+				return groups
+			},
+			[] as Array<{key: string; label: string; width: number}>,
+		)
+	}
+
 	const groups = props.timelineData.reduce(
 		(groups, date) => {
 			const month = date.getMonth()

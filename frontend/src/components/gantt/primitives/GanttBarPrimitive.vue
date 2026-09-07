@@ -27,6 +27,8 @@
 import {computed, useAttrs} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useGanttBar, type GanttBarModel} from '@/composables/useGanttBar'
+import {formatDate} from '@/helpers/time/formatDate'
+import {useJalaliCalendar} from '@/composables/useJalaliCalendar'
 
 const props = withDefaults(
 	defineProps<{
@@ -45,6 +47,7 @@ const props = withDefaults(
 )
 const attrs = useAttrs()
 const {t} = useI18n({useScope: 'global'})
+const {isJalali} = useJalaliCalendar()
 
 const {
 	dragging,
@@ -63,7 +66,12 @@ const {
 const ariaMin = computed(() => props.timelineStart.valueOf())
 const ariaMax = computed(() => props.timelineEnd.valueOf())
 const ariaNow = computed(() => props.model.start.valueOf())
-const ariaValueText = computed(() => `${props.model.start.toLocaleString()} – ${props.model.end.toLocaleString()}`)
+const ariaValueText = computed(() => {
+	if (isJalali.value) {
+		return `${formatDate(props.model.start, 'LLL')} – ${formatDate(props.model.end, 'LLL')}`
+	}
+	return `${props.model.start.toLocaleString()} – ${props.model.end.toLocaleString()}`
+})
 const ariaLabel = computed(() =>
 	props.model.meta?.label
 		? t('project.gantt.taskAriaLabel', { task: props.model.meta.label })
