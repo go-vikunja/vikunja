@@ -240,15 +240,11 @@ function formatPermissionTitle(title: string): string {
 // users_create counts too: CreateUserAsAdmin honours is_admin
 const ESCALATING_ADMIN_PERMISSIONS = new Set(['users_set_password', 'users_set_admin', 'users_create'])
 
-function isEscalatingPermission(group: string, permission: string | number): boolean {
-	return group === 'admin' && ESCALATING_ADMIN_PERMISSIONS.has(String(permission))
-}
-
 const warningIdPrefix = useId()
 
 function escalationWarningId(group: string, permission: string | number): string | undefined {
-	return isEscalatingPermission(group, permission)
-		? `${warningIdPrefix}-${group}-${permission}`
+	return group === 'admin' && ESCALATING_ADMIN_PERMISSIONS.has(String(permission))
+		? `${warningIdPrefix}-${permission}`
 		: undefined
 }
 
@@ -416,7 +412,7 @@ async function createToken() {
 						{{ formatPermissionTitle(permission) }}
 					</FancyCheckbox>
 					<p
-						v-if="isEscalatingPermission(group, permission)"
+						v-if="escalationWarningId(group, permission)"
 						:id="escalationWarningId(group, permission)"
 						class="help is-danger mis-4"
 					>
