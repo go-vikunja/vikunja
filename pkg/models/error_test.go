@@ -76,6 +76,11 @@ func TestI18nParamsContract(t *testing.T) {
 			expectedCode: ErrCodeInvalidAPITokenPermission,
 		},
 		{
+			name:         "ErrInstanceBotScopeNotAllowed",
+			err:          &ErrInstanceBotScopeNotAllowed{Group: "tasks"},
+			expectedCode: ErrCodeInstanceBotScopeNotAllowed,
+		},
+		{
 			name:         "user.ErrInvalidClaimData",
 			err:          &user.ErrInvalidClaimData{Field: "f", Type: "t"},
 			expectedCode: user.ErrCodeInvalidClaimData,
