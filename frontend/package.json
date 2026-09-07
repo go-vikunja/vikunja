@@ -114,7 +114,7 @@
     "@hey-api/openapi-ts": "0.99.0",
     "@histoire/plugin-screenshot": "1.0.0-beta.1",
     "@histoire/plugin-vue": "1.0.0-beta.1",
-    "@playwright/test": "1.62.1",
+    "@playwright/test": "1.63.0",
     "@sentry/vite-plugin": "5.4.0",
     "@tailwindcss/vite": "4.3.3",
     "@tsconfig/node24": "24.0.5",
