@@ -646,6 +646,11 @@ func TestHumaAdminAPIToken(t *testing.T) {
 		assert.Equal(t, http.StatusUnauthorized, res.Code)
 	})
 
+	t.Run("retired scope key on stored token is denied", func(t *testing.T) {
+		res := adminBearerReq(e, http.MethodPatch, "/api/v2/admin/users/2/status", "tk_ba5eba11deadbeefcafef00d0123456789abcdef", `{"status":0}`) // fixture api_tokens id 10
+		assert.Equal(t, http.StatusUnauthorized, res.Code)
+	})
+
 	t.Run("admin-only token is denied on tasks", func(t *testing.T) {
 		tok := createAPIToken(t, 1, models.APIPermissions{"admin": {"users_list", "users_create", "users_set_admin"}})
 		res := adminBearerReq(e, http.MethodGet, "/api/v2/tasks", tok, "")

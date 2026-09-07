@@ -112,6 +112,11 @@ func TestAdmin_APIToken(t *testing.T) {
 		assert.Equal(t, http.StatusUnauthorized, res.Code)
 	})
 
+	t.Run("retired scope key on stored token is denied", func(t *testing.T) {
+		res := adminBearerReq(e, http.MethodPatch, "/api/v1/admin/users/2/status", "tk_ba5eba11deadbeefcafef00d0123456789abcdef", `{"status":0}`) // fixture api_tokens id 10
+		assert.Equal(t, http.StatusUnauthorized, res.Code)
+	})
+
 	t.Run("admin-only token is denied outside admin", func(t *testing.T) {
 		tok := createAPIToken(t, 1, models.APIPermissions{"admin": {"users_list", "users_set_status"}})
 		res := adminBearerReq(e, http.MethodGet, "/api/v1/tasks/all", tok, "")

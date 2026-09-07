@@ -95,3 +95,14 @@
   owner_id: 1
   created: 2024-01-01 00:00:00
   # token in plaintext is tk_readonly_tasks_user1_00000000abcd1234
+- id: 10
+  title: 'retired admin scope token'
+  token_salt: rTd9aDmScP
+  token_hash: aa8cc3d0b2baca56e7b184107ab05bf0a74061a735daba1ec6c94c83b7110b7faa5057f655fac8d9f91d0033064034950190
+  token_last_eight: 89abcdef
+  token_sha256: 045578b9307f5be474ddc3ab1f6a03b8bf04ed9494b00d47b0cdd8f37b62a028
+  permissions: '{"admin":["users_status"]}'
+  expires_at: 2099-01-01 00:00:00
+  owner_id: 3
+  created: 2024-01-01 00:00:00
+  # token in plaintext is tk_ba5eba11deadbeefcafef00d0123456789abcdef
