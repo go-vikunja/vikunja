@@ -359,9 +359,6 @@ func parseBotScopes(scopes string) (models.APIPermissions, error) {
 		if !ok || group == "" || perm == "" {
 			return nil, fmt.Errorf("invalid scope %q, expected group:permission", scope)
 		}
-		if group != "admin" {
-			return nil, &models.ErrInstanceBotScopeNotAllowed{Group: group}
-		}
 		add(group, perm)
 	}
 

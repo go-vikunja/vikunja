@@ -79,8 +79,14 @@ func TestUserBotCreate(t *testing.T) {
 
 	t.Run("non-admin scope", func(t *testing.T) {
 		_, err := runBotCmd(t, "create", "bot-ci", "--scopes", "tasks:read_all")
-		require.Error(t, err)
-		assert.True(t, models.IsErrInstanceBotScopeNotAllowed(err), err.Error())
+		var scopeErr *models.ErrInstanceBotScopeNotAllowed
+		require.ErrorAs(t, err, &scopeErr)
+
+		s := db.NewSession()
+		defer s.Close()
+		exists, err := s.Where("username = ?", "bot-ci").Exist(&user.User{})
+		require.NoError(t, err)
+		assert.False(t, exists, "the bot must not survive a rejected scope")
 	})
 
 	t.Run("no scopes", func(t *testing.T) {
