@@ -81,15 +81,15 @@ var userBotCreateCmd = &cobra.Command{
 	Args:   cobra.ExactArgs(1),
 	PreRun: fullInit,
 	RunE: botRun(func(cmd *cobra.Command, args []string) error {
-		if err := requireAdminPanelLicense(); err != nil {
-			return err
-		}
 		perms, err := parseBotScopes(botFlagScopes)
 		if err != nil {
 			return err
 		}
 		expires, err := parseBotExpiry(botFlagExpires, time.Now())
 		if err != nil {
+			return err
+		}
+		if err := requireAdminPanelLicense(); err != nil {
 			return err
 		}
 
@@ -178,15 +178,15 @@ var userBotTokenCreateCmd = &cobra.Command{
 	Args:   cobra.ExactArgs(1),
 	PreRun: fullInit,
 	RunE: botRun(func(cmd *cobra.Command, args []string) error {
-		if err := requireAdminPanelLicense(); err != nil {
-			return err
-		}
 		perms, err := parseBotScopes(botFlagScopes)
 		if err != nil {
 			return err
 		}
 		expires, err := parseBotExpiry(botFlagExpires, time.Now())
 		if err != nil {
+			return err
+		}
+		if err := requireAdminPanelLicense(); err != nil {
 			return err
 		}
 
