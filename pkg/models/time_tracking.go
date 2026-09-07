@@ -20,8 +20,8 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/entitlement"
 	"code.vikunja.io/api/pkg/events"
-	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 	"xorm.io/builder"
@@ -134,6 +134,10 @@ func StopRunningTimer(s *xorm.Session, a web.Auth) (*TimeEntry, error) {
 		return nil, ErrGenericForbidden{}
 	}
 
+	if err := entitlement.Check(s, a, entitlement.FeatureTimeTracking); err != nil {
+		return nil, err
+	}
+
 	running, err := stopRunningTimerForUser(s, a.GetID())
 	if err != nil {
 		return nil, err
@@ -159,6 +163,10 @@ func (te *TimeEntry) ReadAll(s *xorm.Session, a web.Auth, search string, page in
 	// DoReadAll skips the permission check, so it must be guarded here too.
 	if _, isShareAuth := a.(*LinkSharing); isShareAuth {
 		return []*TimeEntry{}, 0, 0, nil
+	}
+
+	if err := entitlement.Check(s, a, entitlement.FeatureTimeTracking); err != nil {
+		return nil, 0, 0, err
 	}
 
 	cond, err := readableTimeEntriesCond(s, a)
@@ -278,6 +286,10 @@ func (te *TimeEntry) stop(s *xorm.Session) (err error) {
 
 // Returns the loaded entry rather than mutating te, so Update keeps its payload.
 func (te *TimeEntry) canDoTimeEntry(s *xorm.Session, a web.Auth, fetch bool) (*TimeEntry, bool, int, error) {
+	if err := entitlement.Check(s, a, entitlement.FeatureTimeTracking); err != nil {
+		return nil, false, -1, err
+	}
+
 	entry := &TimeEntry{TaskID: te.TaskID, ProjectID: te.ProjectID}
 	if fetch {
 		var err error
@@ -359,6 +371,11 @@ func (te *TimeEntry) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 		return false, nil
 	}
 
+	// Before the authorship check so a gated user can't probe entry existence.
+	if err := entitlement.Check(s, a, entitlement.FeatureTimeTracking); err != nil {
+		return false, err
+	}
+
 	existing, err := getTimeEntryByID(s, te.ID)
 	if err != nil {
 		return false, err
@@ -404,13 +421,17 @@ func (te *TimeEntry) canModify(s *xorm.Session, a web.Auth) (bool, error) {
 // addTimeEntriesCountToTasks attaches each task's time-entry count for the
 // `time_entries_count` expand. Mirrors addCommentCountToTasks, but follows the
 // same gates as the time-entry endpoints: the count is left unset (absent) for
-// link shares or when the feature is unlicensed, so it can't leak that way.
+// link shares or when the feature is unavailable to the user, so it can't leak that way.
 func addTimeEntriesCountToTasks(s *xorm.Session, a web.Auth, taskIDs []int64, taskMap map[int64]*Task) error {
 	if _, isShare := a.(*LinkSharing); isShare {
 		return nil
 	}
-	if !license.IsFeatureEnabled(license.FeatureTimeTracking) {
+	err := entitlement.Check(s, a, entitlement.FeatureTimeTracking)
+	switch {
+	case entitlement.IsErrFeatureNotLicensed(err), entitlement.IsErrFeatureDisabledForUser(err):
 		return nil
+	case err != nil:
+		return err
 	}
 	if len(taskIDs) == 0 {
 		return nil
