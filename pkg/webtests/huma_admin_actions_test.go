@@ -628,7 +628,7 @@ func TestHumaAdminAPIToken(t *testing.T) {
 
 	// Native PATCH routes have no PUT twin, so they exercise the PATCH collection fix.
 	t.Run("named scopes reach the PATCH routes", func(t *testing.T) {
-		tok := insertAPIToken(t, 1, models.APIPermissions{"admin": {"users_set_admin", "users_set_status", "projects_set_owner"}})
+		tok := createAPIToken(t, 1, models.APIPermissions{"admin": {"users_set_admin", "users_set_status", "projects_set_owner"}})
 
 		res := adminBearerReq(e, http.MethodPatch, "/api/v2/admin/users/2/admin", tok, `{"is_admin":true}`)
 		assert.Equal(t, http.StatusOK, res.Code, res.Body.String())
@@ -641,13 +641,13 @@ func TestHumaAdminAPIToken(t *testing.T) {
 	})
 
 	t.Run("other admin scope is denied", func(t *testing.T) {
-		tok := insertAPIToken(t, 1, models.APIPermissions{"admin": {"users_list"}})
+		tok := createAPIToken(t, 1, models.APIPermissions{"admin": {"users_list"}})
 		res := adminBearerReq(e, http.MethodPatch, "/api/v2/admin/users/2/admin", tok, `{"is_admin":true}`)
 		assert.Equal(t, http.StatusUnauthorized, res.Code)
 	})
 
 	t.Run("admin-only token is denied on tasks", func(t *testing.T) {
-		tok := insertAPIToken(t, 1, models.APIPermissions{"admin": {"users_list", "users_create", "users_set_admin"}})
+		tok := createAPIToken(t, 1, models.APIPermissions{"admin": {"users_list", "users_create", "users_set_admin"}})
 		res := adminBearerReq(e, http.MethodGet, "/api/v2/tasks", tok, "")
 		assert.Equal(t, http.StatusUnauthorized, res.Code)
 	})

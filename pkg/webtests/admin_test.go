@@ -73,7 +73,7 @@ func adminBearerReq(e *echo.Echo, method, path, bearer, body string) *httptest.R
 	return res
 }
 
-func insertAPIToken(t *testing.T, ownerID int64, perms models.APIPermissions) string {
+func createAPIToken(t *testing.T, ownerID int64, perms models.APIPermissions) string {
 	t.Helper()
 
 	s := db.NewSession()
@@ -101,25 +101,25 @@ func TestAdmin_APIToken(t *testing.T) {
 	promoteToAdmin(t, 1)
 
 	t.Run("named scope reaches a PATCH route", func(t *testing.T) {
-		tok := insertAPIToken(t, 1, models.APIPermissions{"admin": {"users_set_status"}})
+		tok := createAPIToken(t, 1, models.APIPermissions{"admin": {"users_set_status"}})
 		res := adminBearerReq(e, http.MethodPatch, "/api/v1/admin/users/2/status", tok, `{"status":0}`)
 		assert.Equal(t, http.StatusOK, res.Code, res.Body.String())
 	})
 
 	t.Run("other admin scope is denied", func(t *testing.T) {
-		tok := insertAPIToken(t, 1, models.APIPermissions{"admin": {"users_list"}})
+		tok := createAPIToken(t, 1, models.APIPermissions{"admin": {"users_list"}})
 		res := adminBearerReq(e, http.MethodPatch, "/api/v1/admin/users/2/status", tok, `{"status":0}`)
 		assert.Equal(t, http.StatusUnauthorized, res.Code)
 	})
 
 	t.Run("admin-only token is denied outside admin", func(t *testing.T) {
-		tok := insertAPIToken(t, 1, models.APIPermissions{"admin": {"users_list", "users_set_status"}})
+		tok := createAPIToken(t, 1, models.APIPermissions{"admin": {"users_list", "users_set_status"}})
 		res := adminBearerReq(e, http.MethodGet, "/api/v1/tasks/all", tok, "")
 		assert.Equal(t, http.StatusUnauthorized, res.Code)
 	})
 
 	t.Run("non-admin owner is gated", func(t *testing.T) {
-		tok := insertAPIToken(t, 2, models.APIPermissions{"admin": {"users_set_status"}})
+		tok := createAPIToken(t, 2, models.APIPermissions{"admin": {"users_set_status"}})
 		res := adminBearerReq(e, http.MethodPatch, "/api/v1/admin/users/3/status", tok, `{"status":0}`)
 		assert.Equal(t, http.StatusNotFound, res.Code)
 	})
