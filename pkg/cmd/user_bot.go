@@ -93,12 +93,12 @@ var userBotCreateCmd = &cobra.Command{
 
 		bot, err := user.CreateInstanceBotUser(s, &user.User{Username: args[0]})
 		if err != nil {
-			_ = s.Rollback()
+			rollback(s)
 			return fmt.Errorf("could not create bot: %w", err)
 		}
 		token, err := mintBotToken(s, bot, perms, expires, botFlagTitle)
 		if err != nil {
-			_ = s.Rollback()
+			rollback(s)
 			return err
 		}
 		if err := commitAndDispatch(s); err != nil {
@@ -155,7 +155,7 @@ var userBotDeleteCmd = &cobra.Command{
 			return err
 		}
 		if err := models.DeleteUser(s, bot); err != nil {
-			_ = s.Rollback()
+			rollback(s)
 			return fmt.Errorf("could not delete bot: %w", err)
 		}
 		if err := commitAndDispatch(s); err != nil {
@@ -200,7 +200,7 @@ var userBotTokenCreateCmd = &cobra.Command{
 		}
 		token, err := mintBotToken(s, bot, perms, expires, botFlagTitle)
 		if err != nil {
-			_ = s.Rollback()
+			rollback(s)
 			return err
 		}
 		if err := commitAndDispatch(s); err != nil {
@@ -279,7 +279,7 @@ var userBotTokenRevokeCmd = &cobra.Command{
 			return fmt.Errorf("token %d does not belong to an instance bot", id)
 		}
 		if err := token.RevokeInstanceBotToken(s, bot); err != nil {
-			_ = s.Rollback()
+			rollback(s)
 			return fmt.Errorf("could not revoke token: %w", err)
 		}
 		if err := commitAndDispatch(s); err != nil {
@@ -319,8 +319,14 @@ func mintBotToken(s *xorm.Session, bot *user.User, perms models.APIPermissions, 
 	return token, nil
 }
 
+func rollback(s *xorm.Session) {
+	_ = s.Rollback()
+	events.CleanupPending(s)
+}
+
 func commitAndDispatch(s *xorm.Session) error {
 	if err := s.Commit(); err != nil {
+		events.CleanupPending(s)
 		return fmt.Errorf("could not commit: %w", err)
 	}
 	events.DispatchPending(context.Background(), s)
