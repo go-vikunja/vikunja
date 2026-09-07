@@ -24,6 +24,7 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
@@ -36,6 +37,7 @@ import (
 	"code.vikunja.io/api/pkg/routes"
 	"code.vikunja.io/api/pkg/routes/caldav"
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/web"
 	"code.vikunja.io/api/pkg/web/handler"
 
@@ -512,4 +514,35 @@ func (h *webHandlerTestV2) testDeleteWithUser(queryParams url.Values, urlParams 
 		pl = payload[0]
 	}
 	return h.serve(http.MethodDelete, h.buildURL(queryParams, urlParams, true), pl)
+}
+
+// insertAPITokenRow inserts token directly, bypassing Create's permission validation.
+// nullable lists the hash columns the caller did not populate.
+func insertAPITokenRow(t *testing.T, token *models.APIToken, nullable ...string) {
+	t.Helper()
+
+	s := db.NewSession()
+	defer s.Close()
+	_, err := s.Nullable(nullable...).Insert(token)
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+}
+
+// Bypasses Create's PermissionsAreValid so legacy scope keys can be seeded.
+func insertAPIToken(t *testing.T, ownerID int64, perms models.APIPermissions) string {
+	t.Helper()
+
+	cleartext, err := utils.CryptoRandomString(40)
+	require.NoError(t, err)
+	cleartext = models.APITokenPrefix + cleartext
+	token := &models.APIToken{
+		Title:          "admin scope test token",
+		TokenSha256:    models.HashAPIToken(cleartext),
+		APIPermissions: perms,
+		ExpiresAt:      time.Now().Add(24 * time.Hour),
+		OwnerID:        ownerID,
+	}
+
+	insertAPITokenRow(t, token, "token_salt", "token_hash", "token_last_eight")
+	return cleartext
 }
