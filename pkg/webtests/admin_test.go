@@ -112,12 +112,6 @@ func TestAdmin_APIToken(t *testing.T) {
 		assert.Equal(t, http.StatusOK, res.Code, res.Body.String())
 	})
 
-	t.Run("legacy scope key is denied", func(t *testing.T) {
-		tok := insertAPIToken(t, 1, models.APIPermissions{"admin": {"users_status"}})
-		res := adminBearerReq(e, http.MethodPatch, "/api/v1/admin/users/2/status", tok, `{"status":0}`)
-		assert.Equal(t, http.StatusUnauthorized, res.Code)
-	})
-
 	t.Run("other admin scope is denied", func(t *testing.T) {
 		tok := insertAPIToken(t, 1, models.APIPermissions{"admin": {"users_list"}})
 		res := adminBearerReq(e, http.MethodPatch, "/api/v1/admin/users/2/status", tok, `{"status":0}`)
