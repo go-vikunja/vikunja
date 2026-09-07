@@ -129,8 +129,7 @@ func TestAPITokenAdminRoutesAllScoped(t *testing.T) {
 	}
 }
 
-// AutoPatch's synthesised PATCH must ride on its PUT's permission instead of
-// being collected under one of its own (models.MarkAutoPatchRoute).
+// AutoPatch's PATCH must ride on its PUT scope, never get one of its own.
 func TestAPITokenAutoPatchRoutes(t *testing.T) {
 	e, err := setupTestEnv()
 	require.NoError(t, err)
@@ -163,14 +162,14 @@ func TestAPITokenAutoPatchRoutes(t *testing.T) {
 	t.Run("update authorises both verbs", func(t *testing.T) {
 		tok := insertAPIToken(t, 1, models.APIPermissions{"labels": {"update"}})
 		for _, method := range []string{http.MethodPut, http.MethodPatch} {
-			res := adminBearerReq(e, method, "/api/v2/labels/1", tok, `{"title":"updated"}`)
-			assert.NotEqualf(t, http.StatusUnauthorized, res.Code, "%s must be authorised by labels.update", method)
+			res := testingRequest(e, method, "/api/v2/labels/1", `{"title":"updated"}`, "Bearer "+tok)
+			assert.Equalf(t, http.StatusOK, res.Code, "%s must be authorised by labels.update: %s", method, res.Body.String())
 		}
 	})
 
 	t.Run("read_one does not authorise PATCH", func(t *testing.T) {
 		tok := insertAPIToken(t, 1, models.APIPermissions{"labels": {"read_one"}})
-		res := adminBearerReq(e, http.MethodPatch, "/api/v2/labels/1", tok, `{"title":"updated"}`)
+		res := testingRequest(e, http.MethodPatch, "/api/v2/labels/1", `{"title":"updated"}`, "Bearer "+tok)
 		assert.Equal(t, http.StatusUnauthorized, res.Code)
 	})
 }
