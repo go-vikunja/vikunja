@@ -172,8 +172,7 @@ func TestAPIToken_CreateInstanceBotToken(t *testing.T) {
 
 		token := &APIToken{Title: "ci", APIPermissions: APIPermissions{"admin": {"users_list"}}, ExpiresAt: time.Now().Add(time.Hour)}
 		err = token.CreateInstanceBotToken(s, bot)
-		require.Error(t, err)
-		assert.True(t, user.IsErrBotNotOwned(err))
+		require.ErrorContains(t, err, "not an instance bot")
 	})
 }
 

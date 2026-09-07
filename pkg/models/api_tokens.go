@@ -21,6 +21,7 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/hex"
+	"fmt"
 	"slices"
 	"time"
 
@@ -116,7 +117,7 @@ func (t *APIToken) Create(s *xorm.Session, a web.Auth) (err error) {
 // caller, so the doer is 0 and the audit log attributes it to the CLI.
 func (t *APIToken) CreateInstanceBotToken(s *xorm.Session, bot *user.User) error {
 	if !bot.IsInstanceBot {
-		return &user.ErrBotNotOwned{UserID: bot.ID}
+		return fmt.Errorf("user %d is not an instance bot", bot.ID)
 	}
 	return t.issue(s, bot, 0)
 }
@@ -246,8 +247,11 @@ func (t *APIToken) Delete(s *xorm.Session, a web.Auth) (err error) {
 
 // RevokeInstanceBotToken deletes a token of an instance bot on behalf of the CLI (doer 0).
 func (t *APIToken) RevokeInstanceBotToken(s *xorm.Session, bot *user.User) error {
-	if !bot.IsInstanceBot || t.OwnerID != bot.ID {
-		return &user.ErrBotNotOwned{UserID: bot.ID}
+	if !bot.IsInstanceBot {
+		return fmt.Errorf("user %d is not an instance bot", bot.ID)
+	}
+	if t.OwnerID != bot.ID {
+		return fmt.Errorf("token %d does not belong to user %d", t.ID, bot.ID)
 	}
 	return t.revoke(s, 0)
 }
