@@ -61,26 +61,21 @@ func fullInit(_ *cobra.Command, _ []string) {
 	initialize.FullInit()
 }
 
-// Errors past flag parsing are domain errors; Execute prints them, without usage.
-func botRun(fn func(cmd *cobra.Command, args []string) error) func(cmd *cobra.Command, args []string) error {
-	return func(cmd *cobra.Command, args []string) error {
-		cmd.SilenceUsage = true
-		cmd.SilenceErrors = true
-		return fn(cmd, args)
-	}
-}
-
 var userBotCmd = &cobra.Command{
 	Use:   "bot",
 	Short: "Manage instance-owned admin bots and their API tokens.",
 }
 
+// SilenceUsage/SilenceErrors: errors past flag parsing are domain errors, so
+// Execute prints them without a usage dump.
 var userBotCreateCmd = &cobra.Command{
-	Use:    "create [username]",
-	Short:  "Create an instance admin bot and print its first API token.",
-	Args:   cobra.ExactArgs(1),
-	PreRun: fullInit,
-	RunE: botRun(func(cmd *cobra.Command, args []string) error {
+	Use:           "create [username]",
+	Short:         "Create an instance admin bot and print its first API token.",
+	Args:          cobra.ExactArgs(1),
+	PreRun:        fullInit,
+	SilenceUsage:  true,
+	SilenceErrors: true,
+	RunE: func(cmd *cobra.Command, args []string) error {
 		perms, err := parseBotScopes(botFlagScopes)
 		if err != nil {
 			return err
@@ -114,15 +109,17 @@ var userBotCreateCmd = &cobra.Command{
 		fmt.Fprintf(out, "Created instance admin bot %q (ID %d).\n", bot.Username, bot.ID)
 		printBotToken(out, token)
 		return nil
-	}),
+	},
 }
 
 var userBotListCmd = &cobra.Command{
-	Use:    "list",
-	Short:  "List instance bots.",
-	Args:   cobra.NoArgs,
-	PreRun: fullInit,
-	RunE: botRun(func(cmd *cobra.Command, _ []string) error {
+	Use:           "list",
+	Short:         "List instance bots.",
+	Args:          cobra.NoArgs,
+	PreRun:        fullInit,
+	SilenceUsage:  true,
+	SilenceErrors: true,
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		s := db.NewSession()
 		defer s.Close()
 
@@ -139,15 +136,17 @@ var userBotListCmd = &cobra.Command{
 			_ = table.Append([]string{strconv.FormatInt(b.ID, 10), b.Username, b.Status.String(), b.Created.Format(time.RFC3339)})
 		}
 		return table.Render()
-	}),
+	},
 }
 
 var userBotDeleteCmd = &cobra.Command{
-	Use:    "delete [username]",
-	Short:  "Delete an instance bot and all of its tokens.",
-	Args:   cobra.ExactArgs(1),
-	PreRun: fullInit,
-	RunE: botRun(func(cmd *cobra.Command, args []string) error {
+	Use:           "delete [username]",
+	Short:         "Delete an instance bot and all of its tokens.",
+	Args:          cobra.ExactArgs(1),
+	PreRun:        fullInit,
+	SilenceUsage:  true,
+	SilenceErrors: true,
+	RunE: func(cmd *cobra.Command, args []string) error {
 		s := db.NewSession()
 		defer s.Close()
 
@@ -164,7 +163,7 @@ var userBotDeleteCmd = &cobra.Command{
 		}
 		fmt.Fprintf(cmd.OutOrStdout(), "Deleted instance bot %q.\n", bot.Username)
 		return nil
-	}),
+	},
 }
 
 var userBotTokenCmd = &cobra.Command{
@@ -173,11 +172,13 @@ var userBotTokenCmd = &cobra.Command{
 }
 
 var userBotTokenCreateCmd = &cobra.Command{
-	Use:    "create [bot-username]",
-	Short:  "Mint a new API token for an instance bot and print it.",
-	Args:   cobra.ExactArgs(1),
-	PreRun: fullInit,
-	RunE: botRun(func(cmd *cobra.Command, args []string) error {
+	Use:           "create [bot-username]",
+	Short:         "Mint a new API token for an instance bot and print it.",
+	Args:          cobra.ExactArgs(1),
+	PreRun:        fullInit,
+	SilenceUsage:  true,
+	SilenceErrors: true,
+	RunE: func(cmd *cobra.Command, args []string) error {
 		perms, err := parseBotScopes(botFlagScopes)
 		if err != nil {
 			return err
@@ -207,15 +208,17 @@ var userBotTokenCreateCmd = &cobra.Command{
 		}
 		printBotToken(cmd.OutOrStdout(), token)
 		return nil
-	}),
+	},
 }
 
 var userBotTokenListCmd = &cobra.Command{
-	Use:    "list [bot-username]",
-	Short:  "List the API tokens of an instance bot.",
-	Args:   cobra.ExactArgs(1),
-	PreRun: fullInit,
-	RunE: botRun(func(cmd *cobra.Command, args []string) error {
+	Use:           "list [bot-username]",
+	Short:         "List the API tokens of an instance bot.",
+	Args:          cobra.ExactArgs(1),
+	PreRun:        fullInit,
+	SilenceUsage:  true,
+	SilenceErrors: true,
+	RunE: func(cmd *cobra.Command, args []string) error {
 		s := db.NewSession()
 		defer s.Close()
 
@@ -242,15 +245,17 @@ var userBotTokenListCmd = &cobra.Command{
 			})
 		}
 		return table.Render()
-	}),
+	},
 }
 
 var userBotTokenRevokeCmd = &cobra.Command{
-	Use:    "revoke [token-id]",
-	Short:  "Revoke an instance bot API token.",
-	Args:   cobra.ExactArgs(1),
-	PreRun: fullInit,
-	RunE: botRun(func(cmd *cobra.Command, args []string) error {
+	Use:           "revoke [token-id]",
+	Short:         "Revoke an instance bot API token.",
+	Args:          cobra.ExactArgs(1),
+	PreRun:        fullInit,
+	SilenceUsage:  true,
+	SilenceErrors: true,
+	RunE: func(cmd *cobra.Command, args []string) error {
 		id, err := strconv.ParseInt(args[0], 10, 64)
 		if err != nil {
 			return fmt.Errorf("invalid token id %q", args[0])
@@ -282,7 +287,7 @@ var userBotTokenRevokeCmd = &cobra.Command{
 		}
 		fmt.Fprintf(cmd.OutOrStdout(), "Revoked token %d of bot %q.\n", token.ID, bot.Username)
 		return nil
-	}),
+	},
 }
 
 func requireAdminPanelLicense() error {
