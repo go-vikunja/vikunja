@@ -198,6 +198,9 @@ var userBotTokenCreateCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+		if bot.Status != user.StatusActive {
+			return fmt.Errorf("bot %q is disabled; enable it before creating a token", bot.Username)
+		}
 		token, err := mintBotToken(s, bot, perms, expires, botFlagTitle)
 		if err != nil {
 			rollback(s)

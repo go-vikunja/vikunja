@@ -37,7 +37,11 @@ import (
 func runBotCmd(t *testing.T, args ...string) (string, error) {
 	t.Helper()
 	db.LoadAndAssertFixtures(t)
+	return execBotCmd(t, args...)
+}
 
+func execBotCmd(t *testing.T, args ...string) (string, error) {
+	t.Helper()
 	for _, c := range []*cobra.Command{userBotCreateCmd, userBotListCmd, userBotDeleteCmd, userBotTokenCreateCmd, userBotTokenListCmd, userBotTokenRevokeCmd} {
 		c.PreRun = nil
 	}
@@ -111,6 +115,18 @@ func TestUserBotTokenAndLifecycle(t *testing.T) {
 		require.NoError(t, err, out)
 		lines := strings.Split(strings.TrimSpace(out), "\n")
 		assert.True(t, strings.HasPrefix(lines[len(lines)-1], models.APITokenPrefix), out)
+	})
+
+	t.Run("token create refuses a disabled bot", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		_, err := s.ID(26).Cols("status").Update(&user.User{Status: user.StatusDisabled})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		require.NoError(t, s.Close())
+
+		_, err = execBotCmd(t, "token", "create", "bot-instance-provisioner", "--scopes", "admin:users_list")
+		require.ErrorContains(t, err, "disabled")
 	})
 
 	t.Run("token create refuses owned bots", func(t *testing.T) {
