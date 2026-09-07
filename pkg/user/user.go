@@ -755,10 +755,11 @@ func GuardLastAdmin(s *xorm.Session, target *User) error {
 	return nil
 }
 
-// Instance bots carry is_admin but cannot log in, so they never count as a reachable admin.
+// Bots carry is_admin but cannot log in, so they never count as a reachable admin.
 func activeHumanAdmins(s *xorm.Session) *xorm.Session {
 	return s.Where("is_admin = ?", true).
 		And("is_instance_bot = ?", false).
+		And(builder.Or(builder.IsNull{"bot_owner_id"}, builder.Eq{"bot_owner_id": 0})).
 		And("status = ?", StatusActive).
 		And("deletion_scheduled_at IS NULL")
 }

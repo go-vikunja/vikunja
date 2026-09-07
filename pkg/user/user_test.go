@@ -190,8 +190,8 @@ func TestGetActiveHumanAdmins(t *testing.T) {
 	s := db.NewSession()
 	defer s.Close()
 
-	// 1 active, 17 disabled, 26 instance bot: only 1 may be returned.
-	for _, id := range []int64{1, 17} {
+	// 1 active, 17 disabled, 23 owned bot, 26 instance bot: only 1 may be returned.
+	for _, id := range []int64{1, 17, 23} {
 		_, err := s.ID(id).Cols("is_admin").Update(&User{IsAdmin: true})
 		require.NoError(t, err)
 	}
