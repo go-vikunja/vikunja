@@ -100,6 +100,30 @@ func TestLogLevelDefaults(t *testing.T) {
 	})
 }
 
+func TestUpgradeURL(t *testing.T) {
+	t.Run("a javascript: url is dropped", func(t *testing.T) {
+		initConfigFromYAML(t, "service:\n  upgradeurl: \"javascript:alert(1)\"\n")
+
+		assert.Empty(t, ServiceUpgradeURL.GetString())
+	})
+	t.Run("an https url survives", func(t *testing.T) {
+		initConfigFromYAML(t, "service:\n  upgradeurl: https://vikunja.io/pricing\n")
+
+		assert.Equal(t, "https://vikunja.io/pricing", ServiceUpgradeURL.GetString())
+	})
+	t.Run("a url without a scheme is dropped", func(t *testing.T) {
+		initConfigFromYAML(t, "service:\n  upgradeurl: vikunja.io/pricing\n")
+
+		assert.Empty(t, ServiceUpgradeURL.GetString())
+	})
+	t.Run("a javascript: url from the environment is dropped", func(t *testing.T) {
+		t.Setenv("VIKUNJA_SERVICE_UPGRADEURL", "javascript:alert(1)")
+		initConfigFromYAML(t, "")
+
+		assert.Empty(t, ServiceUpgradeURL.GetString())
+	})
+}
+
 func TestGetRootpathLocation(t *testing.T) {
 	// The function should return the current working directory
 	expected, err := os.Getwd()

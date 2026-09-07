@@ -69,6 +69,7 @@ const (
 	ServiceCustomLogoURL                  Key = `service.customlogourl`
 	ServiceCustomLogoURLDark              Key = `service.customlogourldark`
 	ServiceEnablePublicTeams              Key = `service.enablepublicteams`
+	ServiceUpgradeURL                     Key = `service.upgradeurl`
 	ServiceBcryptRounds                   Key = `service.bcryptrounds`
 	ServiceEnableOpenIDTeamUserOnlySearch Key = `service.enableopenidteamusersearch`
 	ServiceIPExtractionMethod             Key = `service.ipextractionmethod`
@@ -395,6 +396,7 @@ func initDefaultConfig() {
 	ServiceMaxAvatarSize.setDefault(1024)
 	ServiceDemoMode.setDefault(false)
 	ServiceEnablePublicTeams.setDefault(false)
+	ServiceUpgradeURL.setDefault("")
 	ServiceBcryptRounds.setDefault(11)
 	ServiceEnableOpenIDTeamUserOnlySearch.setDefault(false)
 	ServiceIPExtractionMethod.setDefault("direct")
@@ -808,6 +810,8 @@ func InitConfig() {
 		}
 	}
 
+	checkUpgradeURL()
+
 	if MigrationTodoistRedirectURL.GetString() == "" {
 		MigrationTodoistRedirectURL.Set(ServicePublicURL.GetString() + "migrate/todoist")
 	}
@@ -832,6 +836,20 @@ func InitConfig() {
 	err = SetMaxFileSizeMBytesFromString(FilesMaxSize.GetString())
 	if err != nil {
 		log.Fatalf("Could not parse files.maxsize: %s", err)
+	}
+}
+
+// The frontend renders this into an href; a javascript: scheme would be a script
+// sink. Only a warning: an optional cosmetic URL must not stop the server.
+func checkUpgradeURL() {
+	upgradeURL := ServiceUpgradeURL.GetString()
+	if upgradeURL == "" {
+		return
+	}
+	parsed, err := url.Parse(upgradeURL)
+	if err != nil || (parsed.Scheme != "http" && parsed.Scheme != "https") {
+		log.Warningf("service.upgradeurl must include an http:// or https:// scheme, got: %s - ignoring it", upgradeURL)
+		ServiceUpgradeURL.Set("")
 	}
 }
 
