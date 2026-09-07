@@ -304,14 +304,9 @@ function updateTasks(updatedTask: ITask) {
 	}
 }
 
-// Use watch instead of watchEffect to prevent reloading tasks when unrelated settings change.
-// watchEffect would track all reactive dependencies accessed inside loadPendingTasks,
-// which includes the entire settings object. When sidebarWidth changes, the settings
-// object is replaced, triggering the watchEffect even though filterIdUsedOnOverview
-// hasn't changed. Using watch with explicit dependencies and immediate:true gives us
-// the same behavior but only triggers when these specific values actually change.
+// Keep sidebar setting changes from reloading tasks.
 watch(
-	[() => props.dateFrom, () => props.dateTo, filterIdUsedOnOverview],
+	[() => props.dateFrom, () => props.dateTo, filterIdUsedOnOverview, () => props.showOverdue, () => props.showNulls],
 	([from, to, filterId]) => loadPendingTasks(from, to, filterId),
 	{immediate: true},
 )
