@@ -66,7 +66,6 @@ var legacyAdminScopes = map[string]string{ //nolint:gosec // scope names, not cr
 	"users_post":                 "users_create",
 	"users_status":               "users_set_status",
 	"users_admin":                "users_set_admin",
-	"users_password":             "users_set_password",
 	"users_password_reset_email": "users_send_password_reset",
 	"projects":                   "projects_list",
 	"projects_owner":             "projects_set_owner",
