@@ -161,9 +161,12 @@ func TestAPITokenAutoPatchRoutes(t *testing.T) {
 
 	t.Run("update authorises both verbs", func(t *testing.T) {
 		tok := insertAPIToken(t, 1, models.APIPermissions{"labels": {"update"}})
-		for _, method := range []string{http.MethodPut, http.MethodPatch} {
-			res := testingRequest(e, method, "/api/v2/labels/1", `{"title":"updated"}`, "Bearer "+tok)
-			assert.Equalf(t, http.StatusOK, res.Code, "%s must be authorised by labels.update: %s", method, res.Body.String())
+		for _, c := range []struct{ method, title string }{
+			{http.MethodPut, "put"},
+			{http.MethodPatch, "patch"},
+		} {
+			res := testingRequest(e, c.method, "/api/v2/labels/1", `{"title":"`+c.title+`"}`, "Bearer "+tok)
+			assert.Equalf(t, http.StatusOK, res.Code, "%s must be authorised by labels.update: %s", c.method, res.Body.String())
 		}
 	})
 
