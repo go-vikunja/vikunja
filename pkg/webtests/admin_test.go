@@ -110,18 +110,18 @@ func TestAdmin_InstanceBotToken(t *testing.T) {
 
 	t.Run("admin scope reaches v1 and v2", func(t *testing.T) {
 		for _, path := range []string{"/api/v1/admin/users", "/api/v2/admin/users"} {
-			res := adminBearerReq(e, http.MethodGet, path, instanceBotToken, "")
+			res := testingRequest(e, http.MethodGet, path, "", "Bearer "+instanceBotToken)
 			assert.Equal(t, http.StatusOK, res.Code, "%s: %s", path, res.Body.String())
 		}
 	})
 
 	t.Run("denied outside admin", func(t *testing.T) {
-		res := adminBearerReq(e, http.MethodGet, "/api/v2/tasks", instanceBotToken, "")
+		res := testingRequest(e, http.MethodGet, "/api/v2/tasks", "", "Bearer "+instanceBotToken)
 		assert.Equal(t, http.StatusUnauthorized, res.Code)
 	})
 
 	t.Run("unlisted admin scope is denied", func(t *testing.T) {
-		res := adminBearerReq(e, http.MethodPatch, "/api/v1/admin/users/2/status", instanceBotToken, `{"status":0}`)
+		res := testingRequest(e, http.MethodPatch, "/api/v1/admin/users/2/status", `{"status":0}`, "Bearer "+instanceBotToken)
 		assert.Equal(t, http.StatusUnauthorized, res.Code)
 	})
 
@@ -139,7 +139,7 @@ func TestAdmin_InstanceBotToken_Unlicensed(t *testing.T) {
 	license.ResetForTests()
 
 	for _, path := range []string{"/api/v1/admin/users", "/api/v2/admin/users"} {
-		res := adminBearerReq(e, http.MethodGet, path, instanceBotToken, "")
+		res := testingRequest(e, http.MethodGet, path, "", "Bearer "+instanceBotToken)
 		assert.Equal(t, http.StatusNotFound, res.Code, path)
 	}
 }
@@ -176,7 +176,7 @@ func TestAdmin_InstanceBotActions(t *testing.T) {
 		res := adminReq(t, e, http.MethodPatch, "/api/v2/admin/users/26/status", admin, `{"status":2}`)
 		require.Equal(t, http.StatusOK, res.Code, res.Body.String())
 
-		res = adminBearerReq(e, http.MethodGet, "/api/v2/admin/users", instanceBotToken, "")
+		res = testingRequest(e, http.MethodGet, "/api/v2/admin/users", "", "Bearer "+instanceBotToken)
 		assert.Equal(t, http.StatusUnauthorized, res.Code)
 	})
 
