@@ -100,3 +100,89 @@ func TestParseJalaliVTODORoundtrip(t *testing.T) {
 	assert.Equal(t, "jalali-uid", vTask.UID)
 	assert.False(t, vTask.DueDate.IsZero())
 }
+
+// P11: Jalali repeats stay RFC5545 Gregorian/Zulu on the wire.
+func TestParseTodosJalaliGregorianZuluWire(t *testing.T) {
+	cfg := &Config{Name: "test", ProdID: "RandomProdID which is not random"}
+	ts := time.Unix(1543626724, 0).In(config.GetTimeZone())
+	tehran, err := time.LoadLocation("Asia/Tehran")
+	require.NoError(t, err)
+	// 1405/06/16 00:00 Asia/Tehran wall-clock.
+	dueTehran := time.Date(2026, 9, 7, 0, 0, 0, 0, tehran)
+	startTehran := time.Date(2026, 9, 6, 0, 0, 0, 0, tehran)
+	require.True(t, dueTehran.In(time.UTC).Equal(time.Date(2026, 9, 6, 20, 30, 0, 0, time.UTC)))
+	require.True(t, startTehran.In(time.UTC).Equal(time.Date(2026, 9, 5, 20, 30, 0, 0, time.UTC)))
+
+	modes := []struct {
+		name string
+		mode models.TaskRepeatMode
+	}{
+		{"jalali month mode 3", models.TaskRepeatModeJalaliMonth},
+		{"jalali year mode 4", models.TaskRepeatModeJalaliYear},
+	}
+	for _, m := range modes {
+		t.Run(m.name, func(t *testing.T) {
+			out := ParseTodos(cfg, []*Todo{
+				{
+					Summary: "Jalali wire", UID: "jalali-wire", Timestamp: ts,
+					RepeatMode: m.mode, DueDate: dueTehran, Start: startTehran,
+				},
+			})
+			assert.Contains(t, out, "DUE:20260906T203000Z")
+			assert.Contains(t, out, "DTSTART:20260905T203000Z")
+			assert.NotContains(t, out, "RRULE")
+			assert.NotContains(t, out, "۱۴۰")
+		})
+	}
+
+	t.Run("absolute valarm trigger stays zulu", func(t *testing.T) {
+		out := ParseTodos(cfg, []*Todo{
+			{
+				Summary: "Jalali alarm", UID: "jalali-alarm", Timestamp: ts,
+				RepeatMode: models.TaskRepeatModeJalaliMonth, DueDate: dueTehran,
+				Alarms: []Alarm{{Time: dueTehran}},
+			},
+		})
+		assert.Contains(t, out, "TRIGGER;VALUE=DATE-TIME:20260906T203000Z")
+		assert.NotContains(t, out, "RRULE")
+	})
+}
+
+// P11: inbound VTODO preserves Gregorian instants; RRULE never parsed.
+func TestParseJalaliVTODOInboundPreservesGregorian(t *testing.T) {
+	cfg := &Config{Name: "test", ProdID: "RandomProdID which is not random"}
+	ts := time.Unix(1543626724, 0).In(config.GetTimeZone())
+	tehran, err := time.LoadLocation("Asia/Tehran")
+	require.NoError(t, err)
+	dueTehran := time.Date(2026, 9, 7, 0, 0, 0, 0, tehran)
+	startTehran := time.Date(2026, 9, 6, 0, 0, 0, 0, tehran)
+	alarmTehran := dueTehran
+
+	out := ParseTodos(cfg, []*Todo{
+		{
+			Summary: "Jalali inbound", UID: "jalali-inbound", Timestamp: ts,
+			RepeatMode: models.TaskRepeatModeJalaliMonth, DueDate: dueTehran, Start: startTehran,
+			Alarms: []Alarm{{Time: alarmTehran}},
+		},
+	})
+	vTask, _, err := ParseTaskFromVTODO(out)
+	require.NoError(t, err)
+	assert.True(t, vTask.DueDate.Equal(dueTehran))
+	assert.True(t, vTask.StartDate.Equal(startTehran))
+	require.Len(t, vTask.Reminders, 1)
+	assert.True(t, vTask.Reminders[0].Reminder.Equal(alarmTehran))
+
+	t.Run("tzid due parses to same instant", func(t *testing.T) {
+		content := "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//x//EN\nBEGIN:VTODO\nUID:tzid-uid\nDTSTAMP:20181201T011204Z\nSUMMARY:TZID\nDUE;TZID=Asia/Tehran:20260907T000000\nEND:VTODO\nEND:VCALENDAR"
+		got, _, err := ParseTaskFromVTODO(content)
+		require.NoError(t, err)
+		assert.True(t, got.DueDate.Equal(dueTehran))
+	})
+
+	t.Run("inbound rrule ignored", func(t *testing.T) {
+		content := "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//x//EN\nBEGIN:VTODO\nUID:rrule-uid\nDTSTAMP:20181201T011204Z\nSUMMARY:RRULE\nDUE:20260906T203000Z\nRRULE:FREQ=MONTHLY;BYMONTHDAY=07\nEND:VTODO\nEND:VCALENDAR"
+		got, _, err := ParseTaskFromVTODO(content)
+		require.NoError(t, err)
+		assert.True(t, got.DueDate.Equal(dueTehran))
+	})
+}
