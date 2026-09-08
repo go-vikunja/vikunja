@@ -625,7 +625,7 @@ export const migrationCsvDetect = <ThrowOnError extends boolean = true>(options:
 /**
  * Import a CSV file
  *
- * Imports the tasks from the uploaded CSV file into Vikunja using the given config. The import runs synchronously and returns once it has finished.
+ * Imports the tasks from the uploaded CSV file into Vikunja using the given config. The import runs in the background: the response only confirms it started. Poll the status endpoint for completion; the user is notified by mail when it finishes or fails.
  */
 export const migrationCsvMigrate = <ThrowOnError extends boolean = true>(options: Options<MigrationCsvMigrateData, ThrowOnError>): RequestResult<MigrationCsvMigrateResponses, MigrationCsvMigrateErrors, ThrowOnError> => (options.client ?? client).post<MigrationCsvMigrateResponses, MigrationCsvMigrateErrors, ThrowOnError>({
     ...formDataBodySerializer,
@@ -795,7 +795,7 @@ export const migrationPlankaStatus = <ThrowOnError extends boolean = true>(optio
 /**
  * Migrate from ticktick
  *
- * Imports the authenticated user's data from an uploaded export file into Vikunja. Send the file under the multipart "import" field. The import runs synchronously and returns once it has finished.
+ * Imports the authenticated user's data from an uploaded export file into Vikunja. Send the file under the multipart "import" field. The upload is validated, then the import runs in the background: the response only confirms it started. Poll the status endpoint for completion; the user is notified by mail when it finishes or fails.
  */
 export const migrationTicktickMigrate = <ThrowOnError extends boolean = true>(options: Options<MigrationTicktickMigrateData, ThrowOnError>): RequestResult<MigrationTicktickMigrateResponses, MigrationTicktickMigrateErrors, ThrowOnError> => (options.client ?? client).post<MigrationTicktickMigrateResponses, MigrationTicktickMigrateErrors, ThrowOnError>({
     ...formDataBodySerializer,
@@ -960,7 +960,7 @@ export const migrationTrelloStatus = <ThrowOnError extends boolean = true>(optio
 /**
  * Migrate from vikunja-file
  *
- * Imports the authenticated user's data from an uploaded export file into Vikunja. Send the file under the multipart "import" field. The import runs synchronously and returns once it has finished.
+ * Imports the authenticated user's data from an uploaded export file into Vikunja. Send the file under the multipart "import" field. The upload is validated, then the import runs in the background: the response only confirms it started. Poll the status endpoint for completion; the user is notified by mail when it finishes or fails.
  */
 export const migrationVikunjaFileMigrate = <ThrowOnError extends boolean = true>(options: Options<MigrationVikunjaFileMigrateData, ThrowOnError>): RequestResult<MigrationVikunjaFileMigrateResponses, MigrationVikunjaFileMigrateErrors, ThrowOnError> => (options.client ?? client).post<MigrationVikunjaFileMigrateResponses, MigrationVikunjaFileMigrateErrors, ThrowOnError>({
     ...formDataBodySerializer,
@@ -1003,7 +1003,7 @@ export const migrationVikunjaFileStatus = <ThrowOnError extends boolean = true>(
 /**
  * Migrate from wekan
  *
- * Imports the authenticated user's data from an uploaded export file into Vikunja. Send the file under the multipart "import" field. The import runs synchronously and returns once it has finished.
+ * Imports the authenticated user's data from an uploaded export file into Vikunja. Send the file under the multipart "import" field. The upload is validated, then the import runs in the background: the response only confirms it started. Poll the status endpoint for completion; the user is notified by mail when it finishes or fails.
  */
 export const migrationWekanMigrate = <ThrowOnError extends boolean = true>(options: Options<MigrationWekanMigrateData, ThrowOnError>): RequestResult<MigrationWekanMigrateResponses, MigrationWekanMigrateErrors, ThrowOnError> => (options.client ?? client).post<MigrationWekanMigrateResponses, MigrationWekanMigrateErrors, ThrowOnError>({
     ...formDataBodySerializer,
