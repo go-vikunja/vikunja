@@ -125,6 +125,39 @@ func TestHumaMigrationFile_QueuesTheImport(t *testing.T) {
 		"the queued import must keep holding the claim; body: %s", rec.Body.String())
 }
 
+// TestHumaMigrationCancel proves cancelling frees the claim a queued import took.
+func TestHumaMigrationCancel(t *testing.T) {
+	e := setupMigrationTestEnv(t)
+	token := humaTokenFor(t, &testuser1)
+
+	export, err := os.ReadFile("../modules/migration/vikunja-file/export.zip")
+	require.NoError(t, err)
+
+	t.Run("nothing running", func(t *testing.T) {
+		rec := humaRequest(t, e, http.MethodPost, "/api/v2/migration/cancel", "", token, "")
+		assert.Equal(t, http.StatusNotFound, rec.Code, "body: %s", rec.Body.String())
+	})
+
+	t.Run("frees the slot of a queued import", func(t *testing.T) {
+		body, contentType := multipartImportBody(t, "export.zip", export, nil)
+		rec := migrationUploadRequest(t, e, "/api/v2/migration/vikunja-file/migrate", body, contentType, token)
+		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+
+		rec = humaRequest(t, e, http.MethodPost, "/api/v2/migration/cancel", "", token, "")
+		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+
+		body, contentType = multipartImportBody(t, "export.zip", export, nil)
+		rec = migrationUploadRequest(t, e, "/api/v2/migration/vikunja-file/migrate", body, contentType, token)
+		assert.Equal(t, http.StatusOK, rec.Code,
+			"cancelling must free the slot for a new import; body: %s", rec.Body.String())
+	})
+
+	t.Run("unauthenticated", func(t *testing.T) {
+		rec := humaRequest(t, e, http.MethodPost, "/api/v2/migration/cancel", "", "", "")
+		assert.Equal(t, http.StatusUnauthorized, rec.Code, "body: %s", rec.Body.String())
+	})
+}
+
 // TestHumaMigrationFile_Unauthenticated proves the file migrator ops require auth.
 func TestHumaMigrationFile_Unauthenticated(t *testing.T) {
 	e := setupMigrationTestEnv(t)

@@ -40,6 +40,44 @@ type migrationStartedBody struct {
 	}
 }
 
+// RegisterMigrationCancelRoute registers the account-wide cancel action. The
+// migration claim is per account, not per migrator, so there is one route for
+// all of them rather than one per service.
+func RegisterMigrationCancelRoute(api huma.API) {
+	Register(api, huma.Operation{
+		OperationID: "migration-cancel",
+		Summary:     "Cancel the running migration",
+		Description: "Stops the migration the authenticated user currently has running and frees their migration slot, so they can start another one immediately. The running job aborts at its next step and rolls back everything it had imported. Returns 404 when nothing is running.",
+		Method:      http.MethodPost,
+		Path:        "/migration/cancel",
+		// The action stops a job rather than creating a resource, so it answers
+		// 200 with a confirmation instead of the wrapper's 201.
+		DefaultStatus: http.StatusOK,
+		Tags:          []string{"migration"},
+	}, migrationCancel)
+}
+
+func init() { AddRouteRegistrar(RegisterMigrationCancelRoute) }
+
+func migrationCancel(ctx context.Context, _ *struct{}) (*migrationStartedBody, error) {
+	a, err := authFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	u, err := user.GetFromAuth(a)
+	if err != nil {
+		return nil, translateDomainError(err)
+	}
+
+	if err := migration.Cancel(u); err != nil {
+		return nil, translateDomainError(err)
+	}
+
+	out := &migrationStartedBody{}
+	out.Body.Message = "Migration was cancelled successfully."
+	return out, nil
+}
+
 func registerMigrationStatus(api huma.API, name string, tags []string, factory func() migration.Migrator) {
 	Register(api, huma.Operation{
 		OperationID: "migration-" + name + "-status",

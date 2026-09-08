@@ -287,3 +287,43 @@ func (err *ErrImportFromUnsupportedVersion) HTTPError() web.HTTPError {
 		Message:  "The export was created with a Vikunja version that is too old to import. Please create a new export with a more recent version.",
 	}
 }
+
+// ErrMigrationCancelled reports a migration the user stopped while it ran.
+type ErrMigrationCancelled struct {
+}
+
+func (err *ErrMigrationCancelled) Error() string {
+	return "Migration was cancelled"
+}
+
+// ErrCodeMigrationCancelled holds the unique world-error code of this error
+const ErrCodeMigrationCancelled = 14014
+
+// HTTPError holds the http error description
+func (err *ErrMigrationCancelled) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusConflict,
+		Code:     ErrCodeMigrationCancelled,
+		Message:  err.Error(),
+	}
+}
+
+// ErrNoMigrationRunning reports a cancel request with nothing to cancel.
+type ErrNoMigrationRunning struct {
+}
+
+func (err *ErrNoMigrationRunning) Error() string {
+	return "No migration is currently running"
+}
+
+// ErrCodeNoMigrationRunning holds the unique world-error code of this error
+const ErrCodeNoMigrationRunning = 14015
+
+// HTTPError holds the http error description
+func (err *ErrNoMigrationRunning) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusNotFound,
+		Code:     ErrCodeNoMigrationRunning,
+		Message:  err.Error(),
+	}
+}

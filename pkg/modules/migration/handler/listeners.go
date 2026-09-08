@@ -17,6 +17,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -133,6 +134,13 @@ func reportMigrationFailure(u *user2.User, migratorKind string, ms migration.Mig
 	if m != nil {
 		migrationID = m.ID
 	}
+
+	// Cancelling already released the claim and is not a failure to report.
+	var cancelled *migration.ErrMigrationCancelled
+	if errors.As(err, &cancelled) {
+		log.Infof("[Migration] Migration %d from %s for user %d was cancelled", migrationID, migratorKind, u.ID)
+		return
+	}
 	log.Errorf("[Migration] Migration %d from %s for user %d failed. Error was: %s", migrationID, migratorKind, u.ID, err.Error())
 
 	var nerr error
@@ -192,8 +200,11 @@ func migrateInListener(ms migration.Migrator, event *MigrationRequestedEvent) (m
 		}
 	}()
 
+	ctx, done := migration.StartRun(context.Background(), m.ID)
+	defer done()
+
 	log.Infof("[Migration] Starting migration %d from %s for user %d", m.ID, event.MigratorKind, event.User.ID)
-	err = ms.Migrate(event.User)
+	err = ms.Migrate(ctx, event.User)
 	if err != nil {
 		return
 	}
@@ -284,8 +295,11 @@ func importInListener(ms migration.FileMigrator, event *FileMigrationRequestedEv
 	}
 	defer file.Close()
 
+	ctx, done := migration.StartRun(context.Background(), m.ID)
+	defer done()
+
 	log.Infof("[Migration] Starting import %d from %s for user %d", m.ID, event.MigratorKind, event.User.ID)
-	if err := ms.Migrate(event.User, file, event.UploadSize); err != nil {
+	if err := ms.Migrate(ctx, event.User, file, event.UploadSize); err != nil {
 		return m, asImportFileError(err)
 	}
 
