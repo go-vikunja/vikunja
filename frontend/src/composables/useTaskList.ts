@@ -1,4 +1,4 @@
-import {ref, shallowReactive, watch, computed, type ComputedGetter} from 'vue'
+import {ref, shallowRef, shallowReactive, watch, computed, type ComputedGetter} from 'vue'
 import {useRouter, isNavigationFailure} from 'vue-router'
 import type {LocationQueryRaw} from 'vue-router'
 import {useRouteQuery} from '@vueuse/router'
@@ -141,15 +141,8 @@ export function useTaskList(
 		},
 	})
 
-	// Mirror the URL query bits this composable owns into the store so
-	// in-project tab switches and sidebar re-visits can restore them.
-	//
-	// `ProjectList`/`ProjectTable` are reused across project switches (no
-	// `:key` on them in ProjectView.vue), so setup runs only once. We track
-	// the last viewId we synced — on every viewId transition, if the URL has
-	// none of our params and the store has an entry, restore it via
-	// `router.replace` and skip writing back the empty state we'd otherwise
-	// clobber the saved entry with.
+	const pendingQueryRestore = shallowRef<Promise<unknown>>()
+	// Sidebar links omit the query, and project views are reused across navigation.
 	let lastSyncedViewId: number | undefined
 	watch(
 		[projectViewId, sortQuery, filter, s, page],
@@ -164,12 +157,16 @@ export function useTaskList(
 			if (viewIdChanged && urlIsEmpty) {
 				const storedQuery = viewFiltersStore.getViewQuery(viewId)
 				if (Object.keys(storedQuery).length > 0) {
-					// Merge so unrelated query params on the route survive the restore.
-					// Swallow navigation failures (e.g. aborted/duplicated) so the
-					// ignored promise can't surface as an unhandled rejection.
-					router.replace({query: {...router.currentRoute.value.query, ...storedQuery}})
+					const restore = router.replace({query: {...router.currentRoute.value.query, ...storedQuery}})
+					pendingQueryRestore.value = restore
+					restore
 						.catch(failure => {
 							if (!isNavigationFailure(failure)) throw failure
+						})
+						.finally(() => {
+							if (pendingQueryRestore.value === restore) {
+								pendingQueryRestore.value = undefined
+							}
 						})
 					return
 				}
@@ -207,7 +204,8 @@ export function useTaskList(
 	watch(
 		[params, sortBy, page],
 		([, , newPage], [, , oldPage]) => {
-			if (newPage === oldPage) {
+			// A redundant page write can cancel the navigation restoring a saved sort.
+			if (newPage === oldPage && newPage !== 1) {
 				page.value = 1
 			}
 		},
@@ -236,26 +234,32 @@ export function useTaskList(
 	const totalPages = computed(() => taskCollectionService.totalPages)
 
 	const tasks = ref<ITask[]>([])
+	let requestId = 0
 	async function loadTasks(resetBeforeLoad: boolean = true) {
+		const request = ++requestId
 		if(resetBeforeLoad) {
 			tasks.value = []
 		}
 		try {
-			tasks.value = await taskCollectionService.getAll(...getAllTasksParams.value)
+			const loadedTasks = await taskCollectionService.getAll(...getAllTasksParams.value)
+			if (request === requestId) {
+				tasks.value = loadedTasks
+			}
 		} catch (e) {
 			error(e)
 		}
 		return tasks.value
 	}
 
-	// Only listen for query path changes
-	watch(() => JSON.stringify(getAllTasksParams.value), (newParams, oldParams) => {
-		if (oldParams === newParams) {
+	watch(() => pendingQueryRestore.value ? null : JSON.stringify(getAllTasksParams.value), newParams => {
+		if (newParams === null) {
+			requestId++
+			tasks.value = []
 			return
 		}
 
 		loadTasks()
-	}, { immediate: true })
+	}, {immediate: true, flush: 'post'})
 
 	return {
 		tasks,

@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 	"xorm.io/builder"
@@ -207,7 +208,10 @@ func ListUsersFromProject(s *xorm.Session, l *Project, currentUser *user.User, s
 		uids, err = getUserIDsWithProjectAccessFiltered(s, l.ID, func(teamID int64) (bool, error) {
 			t := &Team{ID: teamID}
 			canRead, _, err := t.CanRead(s, currentUser)
-			return canRead, err
+			if err != nil || canRead || !config.ServiceEnablePublicTeams.GetBool() {
+				return canRead, err
+			}
+			return s.Where(builder.Eq{"id": teamID, "is_public": true}).Exist(&Team{})
 		})
 	}
 	if err != nil {

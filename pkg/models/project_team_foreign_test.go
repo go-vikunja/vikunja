@@ -268,6 +268,69 @@ func TestListUsersFromProjectHidesUnreadableTeamMembers(t *testing.T) {
 	assert.Contains(t, names, "user3", "a project admin sees members of all attached teams")
 }
 
+func TestListUsersFromProjectPublicTeamMembers(t *testing.T) {
+	for _, tt := range []struct {
+		name      string
+		enabled   bool
+		inherited bool
+	}{
+		{name: "public teams enabled", enabled: true},
+		{name: "public teams disabled"},
+		{name: "public teams enabled on parent", enabled: true, inherited: true},
+		{name: "public teams disabled on parent", inherited: true},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			env := setupTeamVisibilityEnv(t)
+			defer env.s.Close()
+
+			previous := config.ServiceEnablePublicTeams.GetBool()
+			config.ServiceEnablePublicTeams.Set(tt.enabled)
+			t.Cleanup(func() { config.ServiceEnablePublicTeams.Set(previous) })
+
+			reader := &user.User{ID: 7}
+			ownTeam := &Team{Name: "reader team", CreatedByID: reader.ID, IsPublic: true}
+			_, err := env.s.Insert(ownTeam)
+			require.NoError(t, err)
+			_, err = env.s.Insert(&TeamMember{TeamID: ownTeam.ID, UserID: reader.ID})
+			require.NoError(t, err)
+			_, err = env.s.Insert(&TeamMember{TeamID: env.team.ID, UserID: 3})
+			require.NoError(t, err)
+			for _, team := range []*Team{ownTeam, env.publicTeam, env.team} {
+				_, err = env.s.Insert(&TeamProject{
+					TeamID: team.ID, ProjectID: env.proj.ID, Permission: PermissionWrite,
+				})
+				require.NoError(t, err)
+			}
+
+			project := env.proj
+			if tt.inherited {
+				project = &Project{Title: "child project", ParentProjectID: &env.proj.ID}
+				require.NoError(t, project.Create(env.s, env.attacker))
+			}
+			require.NoError(t, env.s.Commit())
+
+			for _, search := range []string{"", "user1"} {
+				users, canRead, err := SearchUsersForProject(env.s, project, reader, reader, search)
+				require.NoError(t, err)
+				require.True(t, canRead)
+				ids := make([]int64, 0, len(users))
+				for _, u := range users {
+					ids = append(ids, u.ID)
+				}
+				if tt.enabled {
+					assert.Contains(t, ids, env.owner.ID, "public team member must be available for search %q", search)
+				} else {
+					assert.NotContains(t, ids, env.owner.ID, "public team member must stay hidden when disabled")
+				}
+				assert.NotContains(t, ids, int64(3), "foreign private team member must stay hidden")
+				if search == "" {
+					assert.Contains(t, ids, reader.ID, "own team members must remain visible")
+				}
+			}
+		})
+	}
+}
+
 func TestTeamProjectAdminStillManagesForeignAttachedTeams(t *testing.T) {
 	env := setupTeamVisibilityEnv(t)
 	defer env.s.Close()
