@@ -1,5 +1,5 @@
 import AbstractService from '../abstractService'
-import type {MigrationStatus} from './abstractMigration'
+import {getMigrationStatus} from './abstractMigration'
 
 export interface ColumnMapping {
 	column_index: number
@@ -89,7 +89,7 @@ export default class CSVMigrationService extends AbstractService {
 	}
 
 	getStatus() {
-		return this.getM('/migration/csv/status') as unknown as Promise<MigrationStatus>
+		return getMigrationStatus(this, '/migration/csv/status')
 	}
 
 	useCreateInterceptor() {

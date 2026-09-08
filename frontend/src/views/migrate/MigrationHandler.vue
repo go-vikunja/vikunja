@@ -187,6 +187,12 @@ const {isFinished: migrationFinished, start: startPolling} = useMigrationComplet
 
 async function initMigration() {
 	if (migrator.value.isFileMigrator) {
+		const {started_at, finished_at} = await migrationFileService.getStatus()
+		const startedAt = parseDateOrNull(started_at)
+		if (startedAt !== null && parseDateOrNull(finished_at) === null) {
+			lastMigrationStartedAt.value = startedAt
+			startPolling()
+		}
 		return
 	}
 
