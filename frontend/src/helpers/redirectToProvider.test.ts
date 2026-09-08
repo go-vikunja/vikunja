@@ -89,6 +89,14 @@ describe('redirectToProvider', () => {
 		expect(params.get('state')).toBe(localStorage.getItem('state'))
 	})
 
+	it('draws state from the csprng, not Math.random', async () => {
+		const random = vi.spyOn(Math, 'random')
+
+		await authorizeRequest()
+
+		expect(random).not.toHaveBeenCalled()
+	})
+
 	it('sends a nonce and keeps it for the callback to check the id token against', async () => {
 		const params = await authorizeRequest()
 
@@ -105,9 +113,8 @@ describe('redirectToProvider', () => {
 		expect(params.get('code_challenge')).toBe(await createCodeChallenge(verifier as string))
 	})
 
-	// Served over plain http there is no crypto.subtle to hash the verifier with. Sending
-	// a challenge we cannot redeem would lock the user out, so the request goes without.
 	it('leaves pkce out of the request when the browser cannot hash the verifier', async () => {
+		localStorage.setItem('codeVerifier', 'stale-from-an-earlier-flow')
 		vi.stubGlobal('crypto', {getRandomValues: crypto.getRandomValues.bind(crypto)})
 
 		const params = await authorizeRequest()

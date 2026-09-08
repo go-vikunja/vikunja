@@ -5,8 +5,8 @@ import {
 	createCodeChallenge,
 	createCodeVerifier,
 	createNonce,
+	createState,
 } from '@/helpers/pkce'
-import {createRandomID} from '@/helpers/randomId'
 import type {IProvider} from '@/types/IProvider'
 import {parseURL} from 'ufo'
 
@@ -21,11 +21,12 @@ export function getRedirectUrlFromCurrentFrontendPath(provider: IProvider): stri
 export const redirectToProvider = async (provider: IProvider) => {
 
 	const redirectUrl = getRedirectUrlFromCurrentFrontendPath(provider)
-	const state = createRandomID(24)
+	// state is what stands between this flow and login-CSRF, so it needs the same
+	// unguessable source as the nonce – createRandomID is Math.random-backed.
+	const state = createState()
 	localStorage.setItem('state', state)
 
-	// The nonce binds the ID token to this browser session (OpenID Connect Core 1.0, §3.1.2.1).
-	// Some providers reject an authorization request without it.
+	// Nonce binds the ID token to this session (OIDC Core §3.1.2.1); some providers require it.
 	const nonce = createNonce()
 	localStorage.setItem(NONCE_STORAGE_KEY, nonce)
 
@@ -43,10 +44,7 @@ export const redirectToProvider = async (provider: IProvider) => {
 		nonce,
 	})
 
-	// PKCE (RFC 7636). Providers which do not implement it ignore both parameters (§5), so
-	// sending them is safe. The challenge needs SHA-256 from crypto.subtle though, which
-	// browsers only expose in secure contexts – over plain http we fall back to an
-	// authorization request without PKCE instead of breaking the login.
+	// Safe to always send – providers without RFC 7636 ignore unknown params (§5).
 	const codeVerifier = createCodeVerifier()
 	const codeChallenge = await createCodeChallenge(codeVerifier)
 	if (typeof codeChallenge === 'undefined') {

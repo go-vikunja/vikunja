@@ -59,7 +59,8 @@ type Callback struct {
 	CodeVerifier string `json:"code_verifier"`
 	// Nonce is the value the client put in the authorization request. When set, it must
 	// match the nonce claim of the ID token the provider returns (OpenID Connect Core
-	// 1.0, §3.1.3.7).
+	// 1.0, §3.1.3.7). A client which sends none skips the comparison — this is a
+	// best-effort check, not one Vikunja enforces.
 	Nonce string `json:"nonce"`
 }
 
@@ -630,9 +631,6 @@ func exchangeOidcTokens(cb *Callback, providerKey string) (*Provider, *oauth2.To
 
 	provider.Oauth2Config.RedirectURL = cb.RedirectURL
 
-	// Send the PKCE verifier when the client started the flow with a challenge. Clients
-	// which did not (or could not, see the frontend's pkce helper) leave it empty, and the
-	// code is exchanged the way it always was.
 	exchangeOptions := []oauth2.AuthCodeOption{}
 	if cb.CodeVerifier != "" {
 		exchangeOptions = append(exchangeOptions, oauth2.VerifierOption(cb.CodeVerifier))
@@ -681,9 +679,7 @@ func exchangeOidcTokens(cb *Callback, providerKey string) (*Provider, *oauth2.To
 		return nil, nil, nil, "", err
 	}
 
-	// A nonce only proves anything when the token is checked against the value the client
-	// generated for this one authorization request (OpenID Connect Core 1.0, §3.1.3.7).
-	// Clients which sent no nonce – anything predating this – skip the comparison.
+	// Empty Nonce (clients predating this) intentionally skips the check.
 	if cb.Nonce != "" && idToken.Nonce != cb.Nonce {
 		log.Errorf("Nonce mismatch in token for provider %s", provider.Name)
 		return nil, nil, nil, "", &models.ErrOpenIDBadRequest{Message: "Nonce does not match the authentication request"}

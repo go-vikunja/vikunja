@@ -116,12 +116,13 @@ async function authenticateWithCode() {
 		sessionStorage.removeItem(pendingTotpKey(providerKey))
 	}
 
-	// Both were stored when we sent the user to the provider. They are absent when the
-	// flow was started before this version, and the code verifier is also absent when
-	// the browser has no crypto.subtle to build a challenge with – the backend then
-	// exchanges the code without PKCE, exactly as it did before.
+	// Absent for flows started pre-upgrade, and codeVerifier also absent without
+	// crypto.subtle – the backend then exchanges without PKCE. Clear them either way:
+	// a spent verifier is single-use, and the TOTP restart path regenerates both.
 	const codeVerifier = localStorage.getItem(CODE_VERIFIER_STORAGE_KEY) ?? undefined
 	const nonce = localStorage.getItem(NONCE_STORAGE_KEY) ?? undefined
+	localStorage.removeItem(CODE_VERIFIER_STORAGE_KEY)
+	localStorage.removeItem(NONCE_STORAGE_KEY)
 
 	try {
 		await authStore.openIdAuth({
