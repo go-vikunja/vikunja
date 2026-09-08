@@ -174,6 +174,12 @@ function close() {
 	show.value = false
 }
 
+function open() {
+	if (!props.disabled) {
+		show.value = true
+	}
+}
+
 function emitClose() {
 	// Kind of dirty, but the timeout allows us to enter a time and click on "confirm" without
 	// having to click on another input field before it is actually used.
@@ -185,6 +191,10 @@ function emitClose() {
 		}
 	}, 200)
 }
+
+defineExpose({
+	open,
+})
 </script>
 
 <style lang="scss" scoped>
