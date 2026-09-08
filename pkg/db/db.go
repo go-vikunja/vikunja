@@ -604,10 +604,8 @@ func NewAutocommitSession() *xorm.Session {
 	return s
 }
 
-// NewReadSession creates a session without a transaction: every statement borrows a pooled
-// connection only for its own duration instead of one connection being held for the whole
-// request. Commit and Rollback are no-ops on it, so callers written for NewSession keep working.
-// Use it for request paths that only read; a write on it commits on its own.
+// NewReadSession creates a session without a also starting a transaction, so that
+// read only statements don't block a pool connection on statements that can be parallelized.
 func NewReadSession() *xorm.Session {
 	return NewAutocommitSession()
 }
