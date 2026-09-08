@@ -179,7 +179,11 @@
 			class="success-step"
 		>
 			<Message class="mbe-4">
-				{{ successMessage }}
+				{{
+					importFinished
+						? $t('migrate.migrationFinished', {service: 'CSV'})
+						: $t('migrate.migrationStartedWillReciveEmail', {service: 'CSV'})
+				}}
 			</Message>
 			<XButton :to="{name: 'home'}">
 				{{ $t('home.goToOverview') }}
@@ -206,7 +210,7 @@ import CSVMigrationService, {
 } from '@/services/migrator/csvMigration'
 
 import {useTitle} from '@/composables/useTitle'
-import {useProjectStore} from '@/stores/projects'
+import {useMigrationCompletion} from '@/composables/useMigrationCompletion'
 import {getErrorText} from '@/message'
 
 type Step = 'upload' | 'mapping' | 'success'
@@ -217,9 +221,10 @@ useTitle(() => t('migrate.titleService', {name: 'CSV'}))
 
 const csvService = shallowReactive(new CSVMigrationService())
 
+const {isFinished: importFinished, start: startPolling} = useMigrationCompletion(() => csvService)
+
 const step = ref<Step>('upload')
 const error = ref('')
-const successMessage = ref('')
 const isLoading = ref(false)
 const uploadInput = ref<HTMLInputElement | null>(null)
 const selectedFile = ref<File | null>(null)
@@ -353,13 +358,10 @@ async function performImport() {
 	error.value = ''
 
 	try {
-		const result = await csvService.migrate(selectedFile.value, config.value)
-		successMessage.value = result.message
-
-		// Reload projects
-		const projectStore = useProjectStore()
-		await projectStore.loadAllProjects()
-
+		// The import only gets queued, so poll the status to know when the tasks
+		// have actually landed.
+		await csvService.migrate(selectedFile.value, config.value)
+		startPolling()
 		step.value = 'success'
 	} catch (e) {
 		error.value = getErrorText(e)

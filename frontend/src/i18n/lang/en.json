@@ -701,6 +701,7 @@
     "importUpload": "To import data from {name} into Vikunja, click the button below to select a file.",
     "upload": "Upload file",
     "migrationStartedWillReciveEmail": "Vikunja will now import your lists/projects, tasks, notes, reminders and files from {service}. As this will take a while, we will send you an email once done. You can close this window now.",
+    "migrationFinished": "The import from {service} finished. Everything it created is now available in Vikunja.",
     "migrationInProgress": "A migration is currently in progress. Please wait until it is done.",
     "credentials": {
       "description": "Enter the address of your {name} instance and how Vikunja should log in. Vikunja imports all projects and boards you have access to; the credentials are only used for this import and are not stored.",

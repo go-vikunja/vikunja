@@ -1,4 +1,5 @@
 import AbstractService from '../abstractService'
+import type {MigrationStatus} from './abstractMigration'
 
 // This service builds on top of the abstract service and basically just hides away method names.
 // It enables migration services to be created with minimal overhead and even better method names.
@@ -13,7 +14,7 @@ export default class AbstractMigrationFileService extends AbstractService {
 	}
 
 	getStatus() {
-		return this.getM('/migration/' + this.serviceUrlKey + '/status')
+		return this.getM('/migration/' + this.serviceUrlKey + '/status') as unknown as Promise<MigrationStatus>
 	}
 	
 	useCreateInterceptor() {

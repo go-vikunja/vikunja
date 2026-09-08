@@ -3,7 +3,7 @@
 		<h1>{{ $t('migrate.titleService', {name: migrator.name}) }}</h1>
 		<p>{{ $t('migrate.descriptionDo') }}</p>
 
-		<template v-if="message === '' && lastMigrationStartedAt === null && !migrationJustStarted">
+		<template v-if="lastMigrationStartedAt === null && !migrationJustStarted">
 			<!-- the credentials form stays mounted while migrating so its input survives an error -->
 			<template v-if="isMigrating === false || migrator.isCredentialsMigrator">
 				<template v-if="migrator.isFileMigrator">
@@ -101,17 +101,12 @@
 			</div>
 		</div>
 		<div v-else>
-			<Message
-				v-if="migrator.isFileMigrator"
-				class="mbe-4"
-			>
-				{{ message }}
-			</Message>
-			<Message
-				v-else
-				class="mbe-4"
-			>
-				{{ $t('migrate.migrationStartedWillReciveEmail', {service: migrator.name}) }}
+			<Message class="mbe-4">
+				{{
+					migrationFinished
+						? $t('migrate.migrationFinished', {service: migrator.name})
+						: $t('migrate.migrationStartedWillReciveEmail', {service: migrator.name})
+				}}
 			</Message>
 
 			<XButton :to="{name: 'home'}">
@@ -147,7 +142,7 @@ import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 
 import {MIGRATORS, type Migrator} from './migrators'
 import {useTitle} from '@/composables/useTitle'
-import {useProjectStore} from '@/stores/projects'
+import {useMigrationCompletion} from '@/composables/useMigrationCompletion'
 import {getErrorText} from '@/message'
 
 const props = defineProps<{
@@ -164,7 +159,6 @@ const authUrl = ref('')
 const isMigrating = ref(false)
 const lastMigrationFinishedAt = ref<Date | null>(null)
 const lastMigrationStartedAt = ref<Date | null>(null)
-const message = ref('')
 const migratorAuthCode = ref('')
 const migrationJustStarted = ref(false)
 const migrationError = ref('')
@@ -186,6 +180,10 @@ const migrationService = shallowReactive(new AbstractMigrationService(migrator.v
 const migrationFileService = shallowReactive(new AbstractMigrationFileService(migrator.value.id))
 
 useTitle(() => t('migrate.titleService', {name: migrator.value.name}))
+
+const {isFinished: migrationFinished, start: startPolling} = useMigrationCompletion(
+	() => migrator.value.isFileMigrator ? migrationFileService : migrationService,
+)
 
 async function initMigration() {
 	if (migrator.value.isFileMigrator) {
@@ -236,7 +234,6 @@ async function migrate(credentialsConfig?: MigrationConfig) {
 
 	isMigrating.value = true
 	lastMigrationFinishedAt.value = null
-	message.value = ''
 	migrationError.value = ''
 
 	if (migrator.value.isFileMigrator) {
@@ -247,15 +244,15 @@ async function migrate(credentialsConfig?: MigrationConfig) {
 	}
 
 	try {
+		// Both kinds only queue the import, so the response says it started, not
+		// that it is done - poll the status to know when the data has landed.
 		if (migrator.value.isFileMigrator) {
-			const result = await migrationFileService.migrate(migrationConfig as File)
-			message.value = result.message
-			const projectStore = useProjectStore()
-			return projectStore.loadAllProjects()
+			await migrationFileService.migrate(migrationConfig as File)
+		} else {
+			await migrationService.migrate(migrationConfig as MigrationConfig)
 		}
-		
-		await migrationService.migrate(migrationConfig as MigrationConfig)
 		migrationJustStarted.value = true
+		startPolling()
 	} catch (e) {
 		migrationError.value = getErrorText(e)
 	} finally {

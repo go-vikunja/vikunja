@@ -6,6 +6,11 @@ export type MigrationConfig =
 	| { url: string, token: string }
 	| { url: string, username: string, password: string }
 
+export interface MigrationStatus {
+	started_at: string | null
+	finished_at: string | null
+}
+
 // This service builds on top of the abstract service and basically just hides away method names.
 // It enables migration services to be created with minimal overhead and even better method names.
 export default class AbstractMigrationService extends AbstractService<MigrationConfig> {
@@ -22,8 +27,10 @@ export default class AbstractMigrationService extends AbstractService<MigrationC
 		return this.getM(apiV2Url(`migration/${this.serviceUrlKey}/auth`))
 	}
 
+	// The status route answers with a migration status, not the migrator config
+	// this service is otherwise typed on.
 	getStatus() {
-		return this.getM(apiV2Url(`migration/${this.serviceUrlKey}/status`))
+		return this.getM(apiV2Url(`migration/${this.serviceUrlKey}/status`)) as unknown as Promise<MigrationStatus>
 	}
 
 	migrate(data: MigrationConfig) {
