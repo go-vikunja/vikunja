@@ -21,10 +21,13 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strconv"
 	"testing"
 
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/modules/migration"
+	migrationHandler "code.vikunja.io/api/pkg/modules/migration/handler"
 
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
@@ -98,6 +101,28 @@ func TestHumaMigrationFile(t *testing.T) {
 				"a rejected upload must map to a 4xx domain error, not a 500; body: %s", rec.Body.String())
 		})
 	}
+}
+
+// TestHumaMigrationFile_QueuesTheImport proves a valid export is accepted and
+// queued rather than imported inside the request, and that the claim it takes
+// blocks a second import until the queued one finishes.
+func TestHumaMigrationFile_QueuesTheImport(t *testing.T) {
+	e := setupMigrationTestEnv(t)
+	token := humaTokenFor(t, &testuser1)
+
+	export, err := os.ReadFile("../modules/migration/vikunja-file/export.zip")
+	require.NoError(t, err)
+
+	body, contentType := multipartImportBody(t, "export.zip", export, nil)
+	rec := migrationUploadRequest(t, e, "/api/v2/migration/vikunja-file/migrate", body, contentType, token)
+	require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+	assert.Contains(t, rec.Body.String(), `"message":"Migration was started successfully."`)
+	events.AssertDispatched(t, &migrationHandler.FileMigrationRequestedEvent{})
+
+	body, contentType = multipartImportBody(t, "export.zip", export, nil)
+	rec = migrationUploadRequest(t, e, "/api/v2/migration/vikunja-file/migrate", body, contentType, token)
+	assert.Equal(t, http.StatusPreconditionFailed, rec.Code,
+		"the queued import must keep holding the claim; body: %s", rec.Body.String())
 }
 
 // TestHumaMigrationFile_Unauthenticated proves the file migrator ops require auth.
