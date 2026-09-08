@@ -5643,6 +5643,31 @@ export type AuthLogoutResponses = {
 
 export type AuthLogoutResponse = AuthLogoutResponses[keyof AuthLogoutResponses];
 
+export type MigrationCancelData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/migration/cancel';
+};
+
+export type MigrationCancelErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type MigrationCancelError = MigrationCancelErrors[keyof MigrationCancelErrors];
+
+export type MigrationCancelResponses = {
+    /**
+     * OK
+     */
+    200: MigrationStartedBodyBody;
+};
+
+export type MigrationCancelResponse = MigrationCancelResponses[keyof MigrationCancelResponses];
+
 export type MigrationCsvDetectData = {
     body: {
         /**
