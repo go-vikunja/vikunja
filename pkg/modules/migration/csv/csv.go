@@ -19,7 +19,9 @@ package csv
 import (
 	"bytes"
 	"encoding/csv"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"sort"
 	"strconv"
@@ -27,14 +29,16 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/user"
 )
 
-// Migrator is the CSV migrator
-type Migrator struct{}
+// Migrator is the CSV migrator. The config is only set once the import runs in
+// the background - the request carries it as JSON through SetOptions.
+type Migrator struct {
+	config *ImportConfig
+}
 
 // Name returns the name of this migrator
 func (m *Migrator) Name() string {
@@ -589,25 +593,21 @@ func parseDate(value, format string) time.Time {
 // @Failure 400 {object} models.Message "Invalid CSV file or configuration"
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /migration/csv/migrate [put]
-func (m *Migrator) Migrate(_ *user.User, _ io.ReaderAt, _ int64) error {
-	return &migration.ErrCSVConfigRequired{}
+func (m *Migrator) Migrate(u *user.User, file io.ReaderAt, size int64) error {
+	if m.config == nil {
+		return &migration.ErrCSVConfigRequired{}
+	}
+	return MigrateWithConfig(u, file, size, m.config)
 }
 
-// RunMigration imports a CSV while holding the user's migration claim.
-func RunMigration(u *user.User, file io.ReaderAt, size int64, config *ImportConfig) error {
-	status, err := migration.ClaimMigration(&Migrator{}, u)
-	if err != nil {
-		return err
+// SetOptions applies the import config the request carried through the queue.
+func (m *Migrator) SetOptions(options []byte) error {
+	config := &ImportConfig{}
+	if err := json.Unmarshal(options, config); err != nil {
+		return fmt.Errorf("could not read the csv import config: %w", err)
 	}
-
-	if err := MigrateWithConfig(u, file, size, config); err != nil {
-		if ferr := migration.FinishMigration(status); ferr != nil {
-			log.Errorf("[CSV migration] Could not release claim of migration %d for user %d after failed import: %s", status.ID, u.ID, ferr)
-		}
-		return err
-	}
-
-	return migration.FinishMigration(status)
+	m.config = config
+	return nil
 }
 
 // MigrateWithConfig imports CSV data into Vikunja with the provided configuration

@@ -276,6 +276,108 @@ func (v *FileMigrator) Name() string {
 	return "vikunja-file"
 }
 
+// archive is the index of an export zip, built once its structural checks pass.
+type archive struct {
+	data        *zip.File
+	filters     *zip.File
+	version     *zip.File
+	storedFiles map[int64]*zip.File
+	maxSize     int64
+}
+
+func openArchive(file io.ReaderAt, size int64) (*zip.Reader, error) {
+	r, err := zip.NewReader(file, size)
+	if err != nil {
+		if err.Error() == "zip: not a valid zip file" {
+			return nil, &migration.ErrNotAZipFile{}
+		}
+		return nil, fmt.Errorf("could not open import file: %w", err)
+	}
+	return r, nil
+}
+
+// scanArchive indexes the entries and runs every check that does not need the
+// entry contents, so a broken export is rejected before anything is imported.
+func scanArchive(r *zip.Reader) (*archive, error) {
+	log.Debugf(logPrefix+"Importing a zip file containing %d files", len(r.File))
+
+	a := &archive{storedFiles: make(map[int64]*zip.File)}
+	var storedFileCount int64
+	for _, f := range r.File {
+		if utils.ContainsPathTraversal(f.Name) {
+			return nil, &migration.ErrInvalidImportFile{Err: fmt.Errorf("unsafe path in zip archive: %q", f.Name)}
+		}
+
+		if strings.HasPrefix(f.Name, "files/") {
+			storedFileCount++
+			if storedFileCount > config.MigrationVikunjaFileMaxFiles.GetInt64() {
+				return nil, &ErrVikunjaFileImportTooLarge{Reason: "it contains more files than migration.vikunjafile.maxfiles allows"}
+			}
+			fname := strings.TrimPrefix(f.Name, "files/")
+			id, err := strconv.ParseInt(fname, 10, 64)
+			if err != nil {
+				return nil, &migration.ErrInvalidImportFile{Err: fmt.Errorf("could not convert file id: %w", err)}
+			}
+			if _, exists := a.storedFiles[id]; exists {
+				return nil, &migration.ErrInvalidImportFile{Err: fmt.Errorf("duplicate file id %d", id)}
+			}
+			a.storedFiles[id] = f
+			log.Debugf(logPrefix + "Found a blob file")
+			continue
+		}
+		if f.Name == "data.json" {
+			a.data = f
+			log.Debugf(logPrefix + "Found a data file")
+			continue
+		}
+		if f.Name == "filters.json" {
+			a.filters = f
+			log.Debugf(logPrefix + "Found a filter file")
+		}
+		if f.Name == "VERSION" {
+			a.version = f
+			log.Debugf(logPrefix + "Found a version file")
+		}
+	}
+
+	if a.data == nil {
+		return nil, &migration.ErrNoDataFileInZip{}
+	}
+	if a.version == nil {
+		return nil, &migration.ErrInvalidImportFile{Err: errors.New("dump does not seem to contain a version file")}
+	}
+
+	// Preflight: bound the import before anything is read (GHSA-w7jp-mf2v-8342).
+	maxSize, err := vikunjaFileMaxSize()
+	if err != nil {
+		return nil, err
+	}
+	a.maxSize = maxSize
+	var totalUncompressed uint64
+	for _, f := range r.File {
+		totalUncompressed += f.UncompressedSize64
+		if totalUncompressed < f.UncompressedSize64 {
+			return nil, &ErrVikunjaFileImportTooLarge{Reason: "the sum of file sizes overflows"}
+		}
+	}
+	if totalUncompressed > uint64(maxSize) { //nolint:gosec // maxSize fits uint64 by construction
+		return nil, &ErrVikunjaFileImportTooLarge{Reason: "it decompresses to more than migration.vikunjafile.maxsize allows"}
+	}
+
+	return a, nil
+}
+
+// ValidateFile rejects an upload that is not a usable export before the import
+// is queued, so picking the wrong file still fails the request.
+func (v *FileMigrator) ValidateFile(file io.ReaderAt, size int64) error {
+	r, err := openArchive(file, size)
+	if err != nil {
+		return err
+	}
+	_, err = scanArchive(r)
+	return err
+}
+
 // Migrate takes a vikunja file export, parses it and imports everything in it into Vikunja.
 // @Summary Import all projects, tasks etc. from a Vikunja data export
 // @Description Imports all projects, tasks, notes, reminders, subtasks and files from a Vikunjda data export into Vikunja.
@@ -284,81 +386,21 @@ func (v *FileMigrator) Name() string {
 // @Produce json
 // @Security JWTKeyAuth
 // @Param import formData string true "The Vikunja export zip file."
-// @Success 200 {object} models.Message "A message telling you everything was migrated successfully."
+// @Success 200 {object} models.Message "A message telling you the migration was started."
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /migration/vikunja-file/migrate [post]
 func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) error {
-	r, err := zip.NewReader(file, size)
-	if err != nil {
-		if err.Error() == "zip: not a valid zip file" {
-			return &migration.ErrNotAZipFile{}
-		}
-		return fmt.Errorf("could not open import file: %w", err)
-	}
-
-	log.Debugf(logPrefix+"Importing a zip file containing %d files", len(r.File))
-
-	var dataFile *zip.File
-	var filterFile *zip.File
-	var versionFile *zip.File
-	storedFiles := make(map[int64]*zip.File)
-	var storedFileCount int64
-	for _, f := range r.File {
-		if utils.ContainsPathTraversal(f.Name) {
-			return &migration.ErrInvalidImportFile{Err: fmt.Errorf("unsafe path in zip archive: %q", f.Name)}
-		}
-
-		if strings.HasPrefix(f.Name, "files/") {
-			storedFileCount++
-			if storedFileCount > config.MigrationVikunjaFileMaxFiles.GetInt64() {
-				return &ErrVikunjaFileImportTooLarge{Reason: "it contains more files than migration.vikunjafile.maxfiles allows"}
-			}
-			fname := strings.TrimPrefix(f.Name, "files/")
-			id, err := strconv.ParseInt(fname, 10, 64)
-			if err != nil {
-				return &migration.ErrInvalidImportFile{Err: fmt.Errorf("could not convert file id: %w", err)}
-			}
-			if _, exists := storedFiles[id]; exists {
-				return &migration.ErrInvalidImportFile{Err: fmt.Errorf("duplicate file id %d", id)}
-			}
-			storedFiles[id] = f
-			log.Debugf(logPrefix + "Found a blob file")
-			continue
-		}
-		if f.Name == "data.json" {
-			dataFile = f
-			log.Debugf(logPrefix + "Found a data file")
-			continue
-		}
-		if f.Name == "filters.json" {
-			filterFile = f
-			log.Debugf(logPrefix + "Found a filter file")
-		}
-		if f.Name == "VERSION" {
-			versionFile = f
-			log.Debugf(logPrefix + "Found a version file")
-		}
-	}
-
-	if dataFile == nil {
-		return &migration.ErrNoDataFileInZip{}
-	}
-
-	// Preflight: bound the import before anything is read (GHSA-w7jp-mf2v-8342).
-	maxSize, err := vikunjaFileMaxSize()
+	r, err := openArchive(file, size)
 	if err != nil {
 		return err
 	}
-	var totalUncompressed uint64
-	for _, f := range r.File {
-		totalUncompressed += f.UncompressedSize64
-		if totalUncompressed < f.UncompressedSize64 {
-			return &ErrVikunjaFileImportTooLarge{Reason: "the sum of file sizes overflows"}
-		}
+
+	a, err := scanArchive(r)
+	if err != nil {
+		return err
 	}
-	if totalUncompressed > uint64(maxSize) { //nolint:gosec // maxSize fits uint64 by construction
-		return &ErrVikunjaFileImportTooLarge{Reason: "it decompresses to more than migration.vikunjafile.maxsize allows"}
-	}
+	dataFile, filterFile, versionFile, storedFiles, maxSize := a.data, a.filters, a.version, a.storedFiles, a.maxSize
+
 	maxUserStorage, err := vikunjaFileMaxUserStorage()
 	if err != nil {
 		return err
@@ -380,13 +422,8 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 
 	budget := &importBudget{remaining: maxSize}
 
-	log.Debugf(logPrefix + "")
-
 	//////
 	// Check if we're able to import this dump
-	if versionFile == nil {
-		return &migration.ErrInvalidImportFile{Err: errors.New("dump does not seem to contain a version file")}
-	}
 	vf, err := versionFile.Open()
 	if err != nil {
 		return fmt.Errorf("could not open version file: %w", err)

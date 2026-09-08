@@ -54,3 +54,25 @@ type FileMigrator interface {
 	// The user object is the user who's tasks will be migrated.
 	Migrate(user *user.User, file io.ReaderAt, size int64) error
 }
+
+// UploadedFile is the part of multipart.File the migration handlers use: random
+// access to validate the upload, then a rewind to spool it to disk.
+type UploadedFile interface {
+	io.Reader
+	io.ReaderAt
+	io.Seeker
+}
+
+// FileValidator is implemented by file migrators that can cheaply reject a
+// broken upload. Imports run in the background, so without this a user who
+// picked the wrong file gets a "started" response and a failure mail later.
+type FileValidator interface {
+	ValidateFile(file io.ReaderAt, size int64) error
+}
+
+// FileMigratorOptions is implemented by file migrators that need request
+// parameters beyond the file itself, such as the CSV importer's column mapping.
+// The options are carried to the background job as JSON.
+type FileMigratorOptions interface {
+	SetOptions(options []byte) error
+}

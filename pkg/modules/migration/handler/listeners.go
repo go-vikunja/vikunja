@@ -29,6 +29,7 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/notifications"
+	user2 "code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
 	"github.com/ThreeDotsLabs/watermill/message"
@@ -37,6 +38,11 @@ import (
 
 func RegisterListeners() {
 	events.RegisterListener((&MigrationRequestedEvent{}).Name(), &MigrationListener{})
+	events.RegisterListener((&FileMigrationRequestedEvent{}).Name(), &FileMigrationListener{})
+
+	// An instance that died mid-import left its upload behind; the queue is
+	// in-process, so no job can still be reading it.
+	migration.CleanupSpooledUploads()
 }
 
 // Only used for sentry
@@ -116,45 +122,50 @@ func (s *MigrationListener) Handle(msg *message.Message) (err error) {
 
 	m, err := migrateInListener(ms, event)
 	if err != nil {
-		migrationID := int64(0)
-		if m != nil {
-			migrationID = m.ID
-		}
-		log.Errorf("[Migration] Migration %d from %s for user %d failed. Error was: %s", migrationID, event.MigratorKind, event.User.ID, err.Error())
-
-		var nerr error
-		if config.SentryEnabled.GetBool() && shouldReportMigrationError(err) {
-			nerr = notifications.Notify(event.User, &MigrationFailedReportedNotification{
-				MigratorName: ms.Name(),
-			})
-			failure := &migrationFailedError{
-				MigratorKind:  event.MigratorKind,
-				OriginalError: err,
-			}
-			sentry.WithScope(func(scope *sentry.Scope) {
-				errorreport.ApplyFingerprint(scope, err, migrationFingerprint(event.MigratorKind, err)...)
-				sentry.CaptureException(failure)
-			})
-		} else {
-			nerr = notifications.Notify(event.User, &MigrationFailedNotification{
-				MigratorName: ms.Name(),
-				Error:        err,
-			})
-		}
-		if nerr != nil {
-			log.Errorf("[Migration] Could not sent failed migration notification for migration %d to user %d, error was: %s", migrationID, event.User.ID, err.Error())
-		}
-
-		// Still need to finish the migration, otherwise restarting will not work
-		if m != nil {
-			err = migration.FinishMigration(m)
-			if err != nil {
-				log.Errorf("[Migration] Could not finish migration %d for user %d, error was: %s", m.ID, event.User.ID, err.Error())
-			}
-		}
+		reportMigrationFailure(event.User, event.MigratorKind, ms, m, err)
 	}
 
 	return nil // We do not want the queue to restart this job as we've already handled the error.
+}
+
+// reportMigrationFailure notifies the user, reports what we can act on to
+// Sentry and releases the claim so a retry is possible.
+func reportMigrationFailure(u *user2.User, migratorKind string, ms migration.MigratorName, m *migration.Status, err error) {
+	migrationID := int64(0)
+	if m != nil {
+		migrationID = m.ID
+	}
+	log.Errorf("[Migration] Migration %d from %s for user %d failed. Error was: %s", migrationID, migratorKind, u.ID, err.Error())
+
+	var nerr error
+	if config.SentryEnabled.GetBool() && shouldReportMigrationError(err) {
+		nerr = notifications.Notify(u, &MigrationFailedReportedNotification{
+			MigratorName: ms.Name(),
+		})
+		failure := &migrationFailedError{
+			MigratorKind:  migratorKind,
+			OriginalError: err,
+		}
+		sentry.WithScope(func(scope *sentry.Scope) {
+			errorreport.ApplyFingerprint(scope, err, migrationFingerprint(migratorKind, err)...)
+			sentry.CaptureException(failure)
+		})
+	} else {
+		nerr = notifications.Notify(u, &MigrationFailedNotification{
+			MigratorName: ms.Name(),
+			Error:        err,
+		})
+	}
+	if nerr != nil {
+		log.Errorf("[Migration] Could not send failed migration notification for migration %d to user %d, error was: %s", migrationID, u.ID, nerr.Error())
+	}
+
+	// Still need to finish the migration, otherwise restarting will not work
+	if m != nil {
+		if ferr := migration.FinishMigration(m); ferr != nil {
+			log.Errorf("[Migration] Could not finish migration %d for user %d, error was: %s", m.ID, u.ID, ferr.Error())
+		}
+	}
 }
 
 func migrateInListener(ms migration.Migrator, event *MigrationRequestedEvent) (m *migration.Status, err error) {
@@ -205,4 +216,87 @@ func migrateInListener(ms migration.Migrator, event *MigrationRequestedEvent) (m
 
 	log.Debugf("[Migration] Successfully done migration %d from %s for user %d", m.ID, event.MigratorKind, event.User.ID)
 	return
+}
+
+// FileMigrationListener runs queued file imports.
+type FileMigrationListener struct {
+}
+
+// Name defines the name for the FileMigrationListener listener
+func (s *FileMigrationListener) Name() string {
+	return "migration.file.listener"
+}
+
+// Handle is executed when the event FileMigrationListener listens on is fired
+func (s *FileMigrationListener) Handle(msg *message.Message) (err error) {
+	event := &FileMigrationRequestedEvent{}
+	if err = json.Unmarshal(msg.Payload, event); err != nil {
+		return
+	}
+
+	defer migration.RemoveSpooledUpload(event.UploadName)
+
+	factory, has := registeredFileMigrators[event.MigratorKind]
+	if !has {
+		log.Errorf("[Migration] No file migrator registered for kind %s, discarding event", event.MigratorKind)
+		return nil
+	}
+	ms := factory()
+
+	m, err := importInListener(ms, event)
+	if err != nil {
+		reportMigrationFailure(event.User, event.MigratorKind, ms, m, err)
+	}
+
+	return nil // A retry would re-run a partially applied import, so the error is handled here.
+}
+
+func importInListener(ms migration.FileMigrator, event *FileMigrationRequestedEvent) (m *migration.Status, err error) {
+	m, err = migration.GetMigrationStatusByID(event.MigrationStatusID)
+	if err != nil {
+		return nil, err
+	}
+	if !m.FinishedAt.IsZero() {
+		log.Debugf("[Migration] Skipping stale file migration event for status %d of user %d", m.ID, event.User.ID)
+		return nil, nil
+	}
+
+	// Convert panics to errors so the caller releases the claim.
+	defer func() {
+		if r := recover(); r != nil {
+			log.Errorf("[Migration] Import %d from %s for user %d panicked: %v", m.ID, event.MigratorKind, event.User.ID, r)
+			err = fmt.Errorf("migration panicked: %v", r)
+		}
+	}()
+
+	if len(event.Options) > 0 {
+		o, ok := ms.(migration.FileMigratorOptions)
+		if !ok {
+			return m, fmt.Errorf("migrator %s does not accept options", event.MigratorKind)
+		}
+		if err := o.SetOptions(event.Options); err != nil {
+			return m, err
+		}
+	}
+
+	file, err := migration.OpenSpooledUpload(event.UploadName)
+	if err != nil {
+		return m, fmt.Errorf("could not open the spooled import file: %w", err)
+	}
+	defer file.Close()
+
+	log.Infof("[Migration] Starting import %d from %s for user %d", m.ID, event.MigratorKind, event.User.ID)
+	if err := ms.Migrate(event.User, file, event.UploadSize); err != nil {
+		return m, asImportFileError(err)
+	}
+
+	if err := migration.FinishMigration(m); err != nil {
+		return m, err
+	}
+
+	log.Infof("[Migration] Finished import %d from %s for user %d", m.ID, event.MigratorKind, event.User.ID)
+
+	return m, notifications.Notify(event.User, &MigrationDoneNotification{
+		MigratorName: ms.Name(),
+	})
 }

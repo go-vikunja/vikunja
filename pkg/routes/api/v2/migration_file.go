@@ -56,6 +56,8 @@ func registerFileMigrator(api huma.API, factory func() migration.FileMigrator) {
 	name := factory().Name()
 	tags := []string{"migration"}
 
+	migrationHandler.RegisterFileMigrator(factory)
+
 	Register(api, huma.Operation{
 		OperationID: "migration-" + name + "-status",
 		Summary:     "Get the migration status for " + name,
@@ -70,7 +72,7 @@ func registerFileMigrator(api huma.API, factory func() migration.FileMigrator) {
 	Register(api, withUploadLimits(huma.Operation{
 		OperationID: "migration-" + name + "-migrate",
 		Summary:     "Migrate from " + name,
-		Description: "Imports the authenticated user's data from an uploaded export file into Vikunja. Send the file under the multipart \"import\" field. The import runs synchronously and returns once it has finished.",
+		Description: "Imports the authenticated user's data from an uploaded export file into Vikunja. Send the file under the multipart \"import\" field. The upload is validated, then the import runs in the background: the response only confirms it started. Poll the status endpoint for completion; the user is notified by mail when it finishes or fails.",
 		Method:      http.MethodPost,
 		Path:        "/migration/" + name + "/migrate",
 		// POST runs an import rather than creating a REST resource, so it
@@ -112,11 +114,11 @@ func migrationFileMigrate(ctx context.Context, factory func() migration.FileMigr
 	src := in.RawBody.Data().Import
 	defer func() { _ = src.Close() }()
 
-	if err := migrationHandler.RunFileMigration(factory(), u, src, src.Size); err != nil {
+	if err := migrationHandler.StartFileMigration(factory(), u, src, src.Size, nil); err != nil {
 		return nil, translateDomainError(err)
 	}
 
 	out := &migrationStartedBody{}
-	out.Body.Message = "Everything was migrated successfully."
+	out.Body.Message = "Migration was started successfully."
 	return out, nil
 }
