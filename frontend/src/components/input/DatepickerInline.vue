@@ -8,6 +8,7 @@
 			layout="chips"
 			:active="date"
 			@select="setShortcut"
+			@confirm="emit('quickSelectConfirmed')"
 		/>
 
 		<div class="datepicker-inline__body">
@@ -16,6 +17,7 @@
 				layout="list"
 				:active="date"
 				@select="setShortcut"
+				@confirm="emit('quickSelectConfirmed')"
 			/>
 			<CalendarMonth
 				class="datepicker-inline__calendar"
@@ -61,6 +63,7 @@ const props = withDefaults(defineProps<{
 
 const emit = defineEmits<{
 	'update:modelValue': [Date | null],
+	'quickSelectConfirmed': [],
 }>()
 
 const date = ref<Date | null>(null)

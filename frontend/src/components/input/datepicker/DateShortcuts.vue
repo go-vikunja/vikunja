@@ -10,11 +10,15 @@
 			{{ $t('input.datepicker.quickSelect') }}
 		</div>
 		<BaseButton
-			v-for="shortcut in shortcuts"
+			v-for="(shortcut, index) in shortcuts"
 			:key="shortcut.key"
+			:ref="el => shortcutButtons.set(shortcut.key, el as InstanceType<typeof BaseButton> | null)"
 			class="datepicker__quick-select-date date-shortcuts__item"
 			:class="{'is-active': isSameDay(shortcut.date, active)}"
 			@click.stop="emit('select', shortcut.date)"
+			@keydown.up.prevent="focusShortcut(index - 1)"
+			@keydown.down.prevent="focusShortcut(index + 1)"
+			@keydown.enter.prevent="confirmShortcut(shortcut.date)"
 		>
 			<span class="date-shortcuts__icon">
 				<Icon :icon="shortcut.icon" />
@@ -48,6 +52,7 @@ withDefaults(defineProps<{
 
 const emit = defineEmits<{
 	select: [date: Date]
+	confirm: []
 }>()
 
 const ICONS: Record<DateShortcutKey, IconProp> = {
@@ -67,6 +72,19 @@ const shortcuts = computed(() => buildDateShortcuts().map(shortcut => ({
 	icon: ICONS[shortcut.key],
 	weekday: formatDate(shortcut.date, 'ddd'),
 })))
+const shortcutButtons = new Map<DateShortcutKey, InstanceType<typeof BaseButton> | null>()
+
+function focusShortcut(index: number) {
+	const shortcut = shortcuts.value[index]
+	if (shortcut) {
+		shortcutButtons.get(shortcut.key)?.focus()
+	}
+}
+
+function confirmShortcut(date: Date) {
+	emit('select', date)
+	emit('confirm')
+}
 </script>
 
 <style lang="scss" scoped>
