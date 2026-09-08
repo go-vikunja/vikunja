@@ -205,16 +205,14 @@ func migrateInListener(ms migration.Migrator, event *MigrationRequestedEvent) (m
 		return
 	}
 
-	err = notifications.Notify(event.User, &MigrationDoneNotification{
+	if nerr := notifications.Notify(event.User, &MigrationDoneNotification{
 		MigratorName: ms.Name(),
-	})
-	if err != nil {
-		log.Errorf("[Migration] Could not sent migration success notification for migration %d to user %d, error was: %s", m.ID, event.User.ID, err.Error())
-		return
+	}); nerr != nil {
+		log.Errorf("[Migration] Could not send migration success notification for migration %d to user %d, error was: %s", m.ID, event.User.ID, nerr.Error())
 	}
 
 	log.Infof("[Migration] Successfully done migration %d from %s for user %d", m.ID, event.MigratorKind, event.User.ID)
-	return
+	return m, nil
 }
 
 // FileMigrationListener runs queued file imports.
@@ -230,7 +228,8 @@ func (s *FileMigrationListener) Name() string {
 func (s *FileMigrationListener) Handle(msg *message.Message) (err error) {
 	event := &FileMigrationRequestedEvent{}
 	if err = json.Unmarshal(msg.Payload, event); err != nil {
-		return
+		log.Errorf("[Migration] Could not unmarshal file migration event, discarding it. Error was: %s", err.Error())
+		return nil
 	}
 
 	defer migration.RemoveSpooledUpload(event.UploadName)
@@ -238,6 +237,9 @@ func (s *FileMigrationListener) Handle(msg *message.Message) (err error) {
 	factory, has := registeredFileMigrators[event.MigratorKind]
 	if !has {
 		log.Errorf("[Migration] No file migrator registered for kind %s, discarding event", event.MigratorKind)
+		if ferr := migration.FinishMigration(&migration.Status{ID: event.MigrationStatusID}); ferr != nil {
+			log.Errorf("[Migration] Could not finish migration %d for user %d, error was: %s", event.MigrationStatusID, event.User.ID, ferr.Error())
+		}
 		return nil
 	}
 	ms := factory()
@@ -253,7 +255,10 @@ func (s *FileMigrationListener) Handle(msg *message.Message) (err error) {
 func importInListener(ms migration.FileMigrator, event *FileMigrationRequestedEvent) (m *migration.Status, err error) {
 	m, err = migration.GetMigrationStatusByID(event.MigrationStatusID)
 	if err != nil {
-		return nil, err
+		return &migration.Status{ID: event.MigrationStatusID}, fmt.Errorf("could not get migration status %d: %w", event.MigrationStatusID, err)
+	}
+	if m.UserID != event.User.ID {
+		return nil, fmt.Errorf("migration status %d does not belong to user %d", m.ID, event.User.ID)
 	}
 	if !m.FinishedAt.IsZero() {
 		log.Debugf("[Migration] Skipping stale file migration event for status %d of user %d", m.ID, event.User.ID)
@@ -274,7 +279,9 @@ func importInListener(ms migration.FileMigrator, event *FileMigrationRequestedEv
 
 	file, err := migration.OpenSpooledUpload(event.UploadName)
 	if err != nil {
-		return m, fmt.Errorf("could not open the spooled import file: %w", err)
+		// The wrapped error contains the server's file path, which must not reach the user's inbox.
+		log.Errorf("[Migration] Could not open the spooled import file for migration %d: %s", m.ID, err.Error())
+		return m, errors.New("the uploaded import file is no longer available, please upload it again")
 	}
 	defer file.Close()
 
@@ -289,7 +296,9 @@ func importInListener(ms migration.FileMigrator, event *FileMigrationRequestedEv
 
 	log.Infof("[Migration] Finished import %d from %s for user %d", m.ID, event.MigratorKind, event.User.ID)
 
-	return m, notifications.Notify(event.User, &MigrationDoneNotification{
-		MigratorName: ms.Name(),
-	})
+	if err := notifications.Notify(event.User, &MigrationDoneNotification{MigratorName: ms.Name()}); err != nil {
+		log.Errorf("[Migration] Could not send migration success notification for migration %d to user %d, error was: %s", m.ID, event.User.ID, err.Error())
+	}
+
+	return m, nil
 }
