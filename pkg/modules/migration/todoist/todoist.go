@@ -263,62 +263,144 @@ const (
 	secondsPerYear        = secondsPerDay * 365
 )
 
-var repeatUnitSeconds = map[string]int64{
-	"day":   secondsPerDay,
-	"week":  secondsPerWeek,
-	"month": secondsPerMonth,
-	"year":  secondsPerYear,
+var repeatUnitWords = map[string]int64{
+	"day":     secondsPerDay,
+	"days":    secondsPerDay,
+	"dag":     secondsPerDay,
+	"dagen":   secondsPerDay,
+	"week":    secondsPerWeek,
+	"weeks":   secondsPerWeek,
+	"weken":   secondsPerWeek,
+	"month":   secondsPerMonth,
+	"months":  secondsPerMonth,
+	"maand":   secondsPerMonth,
+	"maanden": secondsPerMonth,
+	"year":    secondsPerYear,
+	"years":   secondsPerYear,
+	"jaar":    secondsPerYear,
+	"jaren":   secondsPerYear,
+}
+
+// English and Dutch month names, full and abbreviated.
+var todoistMonthNames = map[string]struct{}{
+	"january": {}, "januari": {}, "jan": {},
+	"february": {}, "februari": {}, "feb": {},
+	"march": {}, "maart": {}, "mar": {}, "mrt": {},
+	"april": {}, "apr": {},
+	"may": {}, "mei": {},
+	"june": {}, "juni": {}, "jun": {},
+	"july": {}, "juli": {}, "jul": {},
+	"august": {}, "augustus": {}, "aug": {},
+	"september": {}, "sept": {}, "sep": {},
+	"october": {}, "oktober": {}, "oct": {}, "okt": {},
+	"november": {}, "nov": {},
+	"december": {}, "dec": {},
+}
+
+var todoistWeekdayNames = map[string]struct{}{
+	"monday": {}, "tuesday": {}, "wednesday": {}, "thursday": {}, "friday": {}, "saturday": {}, "sunday": {},
+	"maandag": {}, "dinsdag": {}, "woensdag": {}, "donderdag": {}, "vrijdag": {}, "zaterdag": {}, "zondag": {},
 }
 
 var (
-	todoistRepeatRegex     = regexp.MustCompile(`^(?:every\s+)?(?:(\d+)\s+|(other)\s+)?(day|week|month|year)s?$`)
 	todoistRepeatTimeRegex = regexp.MustCompile(`\s+(?:at|@)\s+.*$`)
+
+	// Full date anchored to a day and month name: "yearly 1st May", "elke 16e jul".
+	// The trailing token is validated against todoistMonthNames separately.
+	todoistRepeatFullDateRegex = regexp.MustCompile(`^(?:every|elke|elk|yearly|annually)\s+(\d{1,2})(?:ste|st|nd|rd|th|de|e)?\s+([a-z]+)$`)
+	// Numeric day/month date: "every 15/03".
+	todoistRepeatNumericDateRegex = regexp.MustCompile(`^(?:every|elke|elk)\s+\d{1,2}/\d{1,2}$`)
+	// Plain interval: "every 3 weeks", "elke 4 weken", "every other day". The trailing
+	// token is validated against repeatUnitWords separately.
+	todoistRepeatIntervalRegex = regexp.MustCompile(`^(?:(?:every|elke|elk)\s+)?(?:(\d+)\s+|(other)\s+)?([a-z]+)$`)
+	// Day of the month without a month name: "every 15th", "every 1st day".
+	todoistRepeatDayOfMonthRegex = regexp.MustCompile(`^(?:every|elke|elk)\s+\d{1,2}(?:ste|st|nd|rd|th|de|e)?(?:\s+(?:day|dag))?$`)
+	// Last day of the month: "elke laatste dag".
+	todoistRepeatLastDayRegex = regexp.MustCompile(`^(?:every|elke|elk)\s+(?:laatste|last)\s+(?:day|dag)$`)
+	// Weekday: "every monday", "elke maandag". The trailing token is validated against
+	// todoistWeekdayNames separately.
+	todoistRepeatWeekdayRegex = regexp.MustCompile(`^(?:every|elke|elk)\s+([a-z]+)$`)
 )
 
-// parseTodoistRepeat translates Todoist's recurrence into a repeat interval in seconds.
-// Todoist exposes recurrence only as free text (e.g. "every 3 weeks"), so we parse the
-// common, unambiguous interval phrases. Patterns we can't represent (specific weekdays,
-// days of the month, non-English strings) return 0, leaving the task non-repeating. Only
-// the cadence is kept - the due date already anchors the actual day and time.
-func parseTodoistRepeat(due *dueDate) int64 {
+// parseTodoistRepeat translates Todoist's recurrence into a repeat interval in seconds plus
+// the repeat mode to use with it. Todoist exposes recurrence only as free text in the user's
+// language (e.g. "every 3 weeks", "elke 6 maanden", "yearly 1st May"), so we parse the common
+// unambiguous English and Dutch phrases. Interval phrases map to a plain interval; weekday
+// phrases keep the weekly interval (the due date already anchors the weekday); phrases anchored
+// to a day of the month get TaskRepeatModeMonth so Vikunja preserves that day despite months
+// having different lengths. Patterns we can't represent return 0, leaving the task
+// non-repeating. Only the cadence is kept - the due date already anchors the actual day and
+// time.
+func parseTodoistRepeat(due *dueDate) (repeatAfter int64, repeatMode models.TaskRepeatMode) {
 	if due == nil || !due.IsRecurring {
-		return 0
+		return 0, models.TaskRepeatModeDefault
 	}
 
 	s := strings.ToLower(strings.TrimSpace(due.String))
 	// The time of day is already on the due date, drop it so "every day at 9am" still matches.
 	s = todoistRepeatTimeRegex.ReplaceAllString(s, "")
+	// Users make typos like "elke! 4 maand" - treat a stray "!" as whitespace.
+	s = strings.ReplaceAll(s, "!", " ")
+	s = strings.Join(strings.Fields(s), " ")
 
 	switch s {
 	case "daily":
-		return secondsPerDay
+		return secondsPerDay, models.TaskRepeatModeDefault
 	case "weekly":
-		return secondsPerWeek
+		return secondsPerWeek, models.TaskRepeatModeDefault
 	case "monthly":
-		return secondsPerMonth
+		return secondsPerMonth, models.TaskRepeatModeDefault
 	case "yearly", "annually":
-		return secondsPerYear
+		return secondsPerYear, models.TaskRepeatModeDefault
 	}
 
-	matches := todoistRepeatRegex.FindStringSubmatch(s)
-	if matches == nil {
-		log.Debugf("[Todoist Migration] Could not parse recurrence %q, leaving task non-repeating", due.String)
-		return 0
-	}
+	// Checks are ordered most specific first, so e.g. "elke 1 juni" is not read as "elke 1 <unit>"
+	// and "every 1st day" is not read as the interval "every 1 day".
 
-	interval := int64(1)
-	switch {
-	case matches[1] != "":
-		n, err := strconv.ParseInt(matches[1], 10, 64)
-		if err != nil || n < 1 {
-			return 0
+	// A full date (day plus month name) recurs yearly.
+	if matches := todoistRepeatFullDateRegex.FindStringSubmatch(s); matches != nil {
+		if _, isMonth := todoistMonthNames[matches[2]]; isMonth {
+			return secondsPerYear, models.TaskRepeatModeDefault
 		}
-		interval = n
-	case matches[2] == "other":
-		interval = 2
 	}
 
-	return interval * repeatUnitSeconds[matches[3]]
+	// A numeric day/month date recurs yearly.
+	if todoistRepeatNumericDateRegex.MatchString(s) {
+		return secondsPerYear, models.TaskRepeatModeDefault
+	}
+
+	// A plain interval phrase.
+	if matches := todoistRepeatIntervalRegex.FindStringSubmatch(s); matches != nil {
+		if seconds, isUnit := repeatUnitWords[matches[3]]; isUnit {
+			interval := int64(1)
+			switch {
+			case matches[1] != "":
+				n, err := strconv.ParseInt(matches[1], 10, 64)
+				if err != nil || n < 1 {
+					return 0, models.TaskRepeatModeDefault
+				}
+				interval = n
+			case matches[2] == "other":
+				interval = 2
+			}
+			return interval * seconds, models.TaskRepeatModeDefault
+		}
+	}
+
+	// A day of the month without a month name recurs monthly.
+	if todoistRepeatDayOfMonthRegex.MatchString(s) || todoistRepeatLastDayRegex.MatchString(s) {
+		return secondsPerMonth, models.TaskRepeatModeMonth
+	}
+
+	// A weekday recurs weekly.
+	if matches := todoistRepeatWeekdayRegex.FindStringSubmatch(s); matches != nil {
+		if _, isWeekday := todoistWeekdayNames[matches[1]]; isWeekday {
+			return secondsPerWeek, models.TaskRepeatModeDefault
+		}
+	}
+
+	log.Debugf("[Todoist Migration] Could not parse recurrence %q, leaving task non-repeating", due.String)
+	return 0, models.TaskRepeatModeDefault
 }
 
 func isDownloadableURL(rawURL string) bool {
@@ -435,7 +517,7 @@ func convertTodoistToVikunja(sync *sync, doneItems map[string]*doneItem) (fullVi
 				return nil, err
 			}
 			task.DueDate = dueDate.In(config.GetTimeZone())
-			task.RepeatAfter = parseTodoistRepeat(i.Due)
+			task.RepeatAfter, task.RepeatMode = parseTodoistRepeat(i.Due)
 		}
 
 		// Put all labels together from earlier

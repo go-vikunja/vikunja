@@ -717,44 +717,132 @@ func TestIsDownloadableURL(t *testing.T) {
 
 func TestParseTodoistRepeat(t *testing.T) {
 	tests := []struct {
-		name string
-		due  *dueDate
-		want int64
+		name     string
+		due      *dueDate
+		want     int64
+		wantMode models.TaskRepeatMode
 	}{
-		{name: "nil due", due: nil, want: 0},
-		{name: "not recurring", due: &dueDate{String: "every day", IsRecurring: false}, want: 0},
+		{name: "nil due", due: nil, want: 0, wantMode: models.TaskRepeatModeDefault},
+		{name: "not recurring", due: &dueDate{String: "every day", IsRecurring: false}, want: 0, wantMode: models.TaskRepeatModeDefault},
 
-		{name: "every day", due: &dueDate{String: "every day", IsRecurring: true}, want: secondsPerDay},
-		{name: "daily", due: &dueDate{String: "daily", IsRecurring: true}, want: secondsPerDay},
-		{name: "every other day", due: &dueDate{String: "every other day", IsRecurring: true}, want: 2 * secondsPerDay},
-		{name: "every 3 days", due: &dueDate{String: "every 3 days", IsRecurring: true}, want: 3 * secondsPerDay},
+		{name: "every day", due: &dueDate{String: "every day", IsRecurring: true}, want: secondsPerDay, wantMode: models.TaskRepeatModeDefault},
+		{name: "daily", due: &dueDate{String: "daily", IsRecurring: true}, want: secondsPerDay, wantMode: models.TaskRepeatModeDefault},
+		{name: "every other day", due: &dueDate{String: "every other day", IsRecurring: true}, want: 2 * secondsPerDay, wantMode: models.TaskRepeatModeDefault},
+		{name: "every 3 days", due: &dueDate{String: "every 3 days", IsRecurring: true}, want: 3 * secondsPerDay, wantMode: models.TaskRepeatModeDefault},
+		{name: "every 1 day", due: &dueDate{String: "every 1 day", IsRecurring: true}, want: secondsPerDay, wantMode: models.TaskRepeatModeDefault},
 
-		{name: "every week", due: &dueDate{String: "every week", IsRecurring: true}, want: secondsPerWeek},
-		{name: "weekly", due: &dueDate{String: "weekly", IsRecurring: true}, want: secondsPerWeek},
-		{name: "every other week", due: &dueDate{String: "every other week", IsRecurring: true}, want: 2 * secondsPerWeek},
-		{name: "every 2 weeks", due: &dueDate{String: "every 2 weeks", IsRecurring: true}, want: 2 * secondsPerWeek},
+		{name: "every week", due: &dueDate{String: "every week", IsRecurring: true}, want: secondsPerWeek, wantMode: models.TaskRepeatModeDefault},
+		{name: "weekly", due: &dueDate{String: "weekly", IsRecurring: true}, want: secondsPerWeek, wantMode: models.TaskRepeatModeDefault},
+		{name: "every other week", due: &dueDate{String: "every other week", IsRecurring: true}, want: 2 * secondsPerWeek, wantMode: models.TaskRepeatModeDefault},
+		{name: "every 2 weeks", due: &dueDate{String: "every 2 weeks", IsRecurring: true}, want: 2 * secondsPerWeek, wantMode: models.TaskRepeatModeDefault},
 
-		{name: "every month", due: &dueDate{String: "every month", IsRecurring: true}, want: secondsPerMonth},
-		{name: "monthly", due: &dueDate{String: "monthly", IsRecurring: true}, want: secondsPerMonth},
-		{name: "every 3 months", due: &dueDate{String: "every 3 months", IsRecurring: true}, want: 3 * secondsPerMonth},
+		{name: "every month", due: &dueDate{String: "every month", IsRecurring: true}, want: secondsPerMonth, wantMode: models.TaskRepeatModeDefault},
+		{name: "monthly", due: &dueDate{String: "monthly", IsRecurring: true}, want: secondsPerMonth, wantMode: models.TaskRepeatModeDefault},
+		{name: "every 3 months", due: &dueDate{String: "every 3 months", IsRecurring: true}, want: 3 * secondsPerMonth, wantMode: models.TaskRepeatModeDefault},
+		{name: "every 6 months", due: &dueDate{String: "every 6 months", IsRecurring: true}, want: 6 * secondsPerMonth, wantMode: models.TaskRepeatModeDefault},
+		{name: "every 1 years", due: &dueDate{String: "every 1 years", IsRecurring: true}, want: secondsPerYear, wantMode: models.TaskRepeatModeDefault},
 
-		{name: "every year", due: &dueDate{String: "every year", IsRecurring: true}, want: secondsPerYear},
-		{name: "yearly", due: &dueDate{String: "yearly", IsRecurring: true}, want: secondsPerYear},
-		{name: "annually", due: &dueDate{String: "annually", IsRecurring: true}, want: secondsPerYear},
+		{name: "every year", due: &dueDate{String: "every year", IsRecurring: true}, want: secondsPerYear, wantMode: models.TaskRepeatModeDefault},
+		{name: "yearly", due: &dueDate{String: "yearly", IsRecurring: true}, want: secondsPerYear, wantMode: models.TaskRepeatModeDefault},
+		{name: "annually", due: &dueDate{String: "annually", IsRecurring: true}, want: secondsPerYear, wantMode: models.TaskRepeatModeDefault},
 
-		{name: "case insensitive", due: &dueDate{String: "Every Day", IsRecurring: true}, want: secondsPerDay},
-		{name: "time of day stripped", due: &dueDate{String: "every day at 9am", IsRecurring: true}, want: secondsPerDay},
+		{name: "case insensitive", due: &dueDate{String: "Every Day", IsRecurring: true}, want: secondsPerDay, wantMode: models.TaskRepeatModeDefault},
+		{name: "time of day stripped", due: &dueDate{String: "every day at 9am", IsRecurring: true}, want: secondsPerDay, wantMode: models.TaskRepeatModeDefault},
 
-		// Tier 1 doesn't understand these, so the task stays non-repeating.
-		{name: "specific weekday", due: &dueDate{String: "every monday", IsRecurring: true}, want: 0},
-		{name: "day of month", due: &dueDate{String: "every 27th", IsRecurring: true}, want: 0},
-		{name: "non-english", due: &dueDate{String: "cada día", IsRecurring: true}, want: 0},
-		{name: "gibberish", due: &dueDate{String: "whenever", IsRecurring: true}, want: 0},
+		// Dutch interval forms.
+		{name: "elke dag", due: &dueDate{String: "elke dag", IsRecurring: true}, want: secondsPerDay, wantMode: models.TaskRepeatModeDefault},
+		{name: "elke week", due: &dueDate{String: "elke week", IsRecurring: true}, want: secondsPerWeek, wantMode: models.TaskRepeatModeDefault},
+		{name: "elke 4 weken", due: &dueDate{String: "elke 4 weken", IsRecurring: true}, want: 4 * secondsPerWeek, wantMode: models.TaskRepeatModeDefault},
+		{name: "elke maand", due: &dueDate{String: "elke maand", IsRecurring: true}, want: secondsPerMonth, wantMode: models.TaskRepeatModeDefault},
+		{name: "elke 3 maanden", due: &dueDate{String: "elke 3 maanden", IsRecurring: true}, want: 3 * secondsPerMonth, wantMode: models.TaskRepeatModeDefault},
+		{name: "elke 6 maanden", due: &dueDate{String: "elke 6 maanden", IsRecurring: true}, want: 6 * secondsPerMonth, wantMode: models.TaskRepeatModeDefault},
+		{name: "elke 24 maanden", due: &dueDate{String: "elke 24 maanden", IsRecurring: true}, want: 24 * secondsPerMonth, wantMode: models.TaskRepeatModeDefault},
+		{name: "elke jaar", due: &dueDate{String: "elke jaar", IsRecurring: true}, want: secondsPerYear, wantMode: models.TaskRepeatModeDefault},
+		{name: "elke 2 jaren", due: &dueDate{String: "elke 2 jaren", IsRecurring: true}, want: 2 * secondsPerYear, wantMode: models.TaskRepeatModeDefault},
+		{name: "elke! 4 maand typo", due: &dueDate{String: "elke! 4 maand", IsRecurring: true}, want: 4 * secondsPerMonth, wantMode: models.TaskRepeatModeDefault},
+
+		// A full date (day + month name) recurs yearly.
+		{name: "yearly 1 April", due: &dueDate{String: "yearly 1 April", IsRecurring: true}, want: secondsPerYear, wantMode: models.TaskRepeatModeDefault},
+		{name: "yearly 1st May", due: &dueDate{String: "yearly 1st May", IsRecurring: true}, want: secondsPerYear, wantMode: models.TaskRepeatModeDefault},
+		{name: "yearly 21st September", due: &dueDate{String: "yearly 21st September", IsRecurring: true}, want: secondsPerYear, wantMode: models.TaskRepeatModeDefault},
+		{name: "every 1 june", due: &dueDate{String: "every 1 june", IsRecurring: true}, want: secondsPerYear, wantMode: models.TaskRepeatModeDefault},
+		{name: "elke 1 juni", due: &dueDate{String: "elke 1 juni", IsRecurring: true}, want: secondsPerYear, wantMode: models.TaskRepeatModeDefault},
+		{name: "elke 1 maart", due: &dueDate{String: "elke 1 maart", IsRecurring: true}, want: secondsPerYear, wantMode: models.TaskRepeatModeDefault},
+		{name: "elke 1 oktober", due: &dueDate{String: "elke 1 oktober", IsRecurring: true}, want: secondsPerYear, wantMode: models.TaskRepeatModeDefault},
+		{name: "elke 10 jan", due: &dueDate{String: "elke 10 jan", IsRecurring: true}, want: secondsPerYear, wantMode: models.TaskRepeatModeDefault},
+		{name: "elke 15 januari", due: &dueDate{String: "elke 15 januari", IsRecurring: true}, want: secondsPerYear, wantMode: models.TaskRepeatModeDefault},
+		{name: "elke 16e jul", due: &dueDate{String: "elke 16e jul", IsRecurring: true}, want: secondsPerYear, wantMode: models.TaskRepeatModeDefault},
+
+		// A numeric day/month date recurs yearly.
+		{name: "every 15/03", due: &dueDate{String: "every 15/03", IsRecurring: true}, want: secondsPerYear, wantMode: models.TaskRepeatModeDefault},
+		{name: "every 1/11", due: &dueDate{String: "every 1/11", IsRecurring: true}, want: secondsPerYear, wantMode: models.TaskRepeatModeDefault},
+
+		// A day of the month without a month name recurs monthly, anchored via RepeatModeMonth.
+		{name: "day of month", due: &dueDate{String: "every 27th", IsRecurring: true}, want: secondsPerMonth, wantMode: models.TaskRepeatModeMonth},
+		{name: "every 15th", due: &dueDate{String: "every 15th", IsRecurring: true}, want: secondsPerMonth, wantMode: models.TaskRepeatModeMonth},
+		{name: "every 10th", due: &dueDate{String: "every 10th", IsRecurring: true}, want: secondsPerMonth, wantMode: models.TaskRepeatModeMonth},
+		{name: "every 1st day", due: &dueDate{String: "every 1st day", IsRecurring: true}, want: secondsPerMonth, wantMode: models.TaskRepeatModeMonth},
+		{name: "elke laatste dag", due: &dueDate{String: "elke laatste dag", IsRecurring: true}, want: secondsPerMonth, wantMode: models.TaskRepeatModeMonth},
+
+		// A weekday recurs weekly - the due date already anchors the weekday.
+		{name: "specific weekday", due: &dueDate{String: "every monday", IsRecurring: true}, want: secondsPerWeek, wantMode: models.TaskRepeatModeDefault},
+		{name: "dutch weekday", due: &dueDate{String: "elke maandag", IsRecurring: true}, want: secondsPerWeek, wantMode: models.TaskRepeatModeDefault},
+		{name: "dutch weekday sunday", due: &dueDate{String: "elke zondag", IsRecurring: true}, want: secondsPerWeek, wantMode: models.TaskRepeatModeDefault},
+
+		// Recurrences we can't represent (other languages, unparseable text) stay non-repeating.
+		{name: "non-english", due: &dueDate{String: "cada día", IsRecurring: true}, want: 0, wantMode: models.TaskRepeatModeDefault},
+		{name: "gibberish", due: &dueDate{String: "whenever", IsRecurring: true}, want: 0, wantMode: models.TaskRepeatModeDefault},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			assert.Equal(t, tt.want, parseTodoistRepeat(tt.due))
+			repeatAfter, repeatMode := parseTodoistRepeat(tt.due)
+			assert.Equal(t, tt.want, repeatAfter)
+			assert.Equal(t, tt.wantMode, repeatMode)
+		})
+	}
+}
+
+// The recurring due.string values of a real Todoist export (recurring_strings.json in the
+// issue, not committed). Every one of them must migrate to a repeating task - exact
+// interval and mode expectations are covered by the table test above.
+func TestParseTodoistRepeatRealExportStrings(t *testing.T) {
+	for _, s := range []string{
+		"elke 1 juni",
+		"elke 1 maart",
+		"elke 1 oktober",
+		"elke 10 jan",
+		"elke 15 januari",
+		"elke 16e jul",
+		"elke 2 jaren",
+		"elke 24 maanden",
+		"elke 3 maanden",
+		"elke 4 maanden",
+		"elke 4 weken",
+		"elke 6 maanden",
+		"elke jaar",
+		"elke laatste dag",
+		"elke maandag",
+		"elke week",
+		"elke! 4 maand",
+		"every 1 years",
+		"every 1/11",
+		"every 10th",
+		"every 15/03",
+		"every 15th",
+		"every 1st day",
+		"every 3 months",
+		"every 6 months",
+		"every month",
+		"yearly",
+		"yearly 1 April",
+		"yearly 1 July",
+		"yearly 1st May",
+		"yearly 21st September",
+	} {
+		t.Run(s, func(t *testing.T) {
+			repeatAfter, _ := parseTodoistRepeat(&dueDate{String: s, IsRecurring: true})
+			assert.NotZero(t, repeatAfter, "recurrence from the real export must not migrate as non-repeating")
 		})
 	}
 }
