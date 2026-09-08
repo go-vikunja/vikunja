@@ -266,8 +266,7 @@ async function migrate(credentialsConfig?: MigrationConfig) {
 	}
 
 	try {
-		// Both kinds only queue the import, so the response says it started, not
-		// that it is done - poll the status to know when the data has landed.
+		// The migrate response only means the import was queued, not finished.
 		if (migrator.value.isFileMigrator) {
 			await migrationFileService.migrate(migrationConfig as File)
 		} else {

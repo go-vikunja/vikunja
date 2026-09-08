@@ -127,8 +127,7 @@ func (s *MigrationListener) Handle(msg *message.Message) (err error) {
 	return nil // We do not want the queue to restart this job as we've already handled the error.
 }
 
-// reportMigrationFailure notifies the user, reports what we can act on to
-// Sentry and releases the claim so a retry is possible.
+// reportMigrationFailure releases the claim so the user can retry.
 func reportMigrationFailure(u *user2.User, migratorKind string, ms migration.MigratorName, m *migration.Status, err error) {
 	migrationID := int64(0)
 	if m != nil {

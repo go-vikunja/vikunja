@@ -97,7 +97,6 @@ func SpoolUpload(src io.Reader) (name string, size int64, err error) {
 	return filepath.Base(f.Name()), size, nil
 }
 
-// OpenSpooledUpload opens an upload previously stored by SpoolUpload.
 func OpenSpooledUpload(name string) (*os.File, error) {
 	path, err := spoolPath(name)
 	if err != nil {

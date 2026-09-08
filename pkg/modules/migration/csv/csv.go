@@ -33,7 +33,7 @@ import (
 	"code.vikunja.io/api/pkg/user"
 )
 
-// Migrator is the CSV migrator. The config is only set once the import runs in
+// The config is only set once the import runs in
 // the background - the request carries it as JSON through SetOptions.
 type Migrator struct {
 	config *ImportConfig
@@ -610,7 +610,6 @@ func (m *Migrator) ValidateFile(file io.ReaderAt, size int64) error {
 	return err
 }
 
-// SetOptions applies the import config the request carried through the queue.
 func (m *Migrator) SetOptions(options []byte) error {
 	config := &ImportConfig{}
 	if err := json.Unmarshal(options, config); err != nil {
@@ -627,7 +626,6 @@ func MigrateWithConfig(u *user.User, file io.ReaderAt, size int64, config *Impor
 		return err
 	}
 
-	// Convert rows to Vikunja structure
 	vikunjaTasks := convertToVikunja(rows, config)
 
 	return migration.InsertFromStructure(vikunjaTasks, u)

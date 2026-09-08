@@ -12,11 +12,8 @@ interface MigrationStatusSource {
 	getStatus(): Promise<MigrationStatus>
 }
 
-/**
- * Imports run in the background, so the migrate response only confirms the job
- * started. Poll the migration status until it finishes, then pull in what it
- * created so the user doesn't have to reload.
- */
+// The migrate response only confirms the job started, not that it finished.
+
 export function useMigrationCompletion(getSource: () => MigrationStatusSource) {
 	const isFinished = ref(false)
 	let timeout: ReturnType<typeof setTimeout> | undefined

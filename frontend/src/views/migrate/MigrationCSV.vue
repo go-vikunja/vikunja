@@ -374,8 +374,6 @@ async function performImport() {
 	error.value = ''
 
 	try {
-		// The import only gets queued, so poll the status to know when the tasks
-		// have actually landed.
 		await csvService.migrate(selectedFile.value, config.value)
 		startPolling()
 		step.value = 'success'

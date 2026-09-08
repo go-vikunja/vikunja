@@ -53,9 +53,6 @@ func RegisterFileMigrator(factory func() migration.FileMigrator) {
 	registeredFileMigrators[factory().Name()] = factory
 }
 
-// StartFileMigration validates the upload, claims the user's migration slot,
-// spools the file to disk and queues the import.
-//
 // It returns as soon as the job is queued: an import of a large export runs for
 // minutes, far longer than a reverse proxy will hold a request open, and a
 // client that gives up waiting cannot abort the import it started.
@@ -105,8 +102,6 @@ func StartFileMigration(ms migration.FileMigrator, u *user2.User, file io.Reader
 	return nil
 }
 
-// applyMigratorOptions hands the request's extra parameters to a migrator that
-// takes them, and rejects options aimed at one that doesn't.
 func applyMigratorOptions(ms migration.FileMigrator, options []byte) error {
 	if len(options) == 0 {
 		return nil
