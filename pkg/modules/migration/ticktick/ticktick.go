@@ -416,9 +416,17 @@ func linesToSkipBeforeHeader(file io.ReaderAt, size int64) (int, error) {
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /migration/ticktick/migrate [put]
 func (m *Migrator) Migrate(ctx context.Context, user *user.User, file io.ReaderAt, size int64) error {
+	if ctx.Err() != nil {
+		return &migration.ErrMigrationCancelled{}
+	}
+
 	allTasks, err := parseTickTickTasks(file, size)
 	if err != nil {
 		return err
+	}
+
+	if ctx.Err() != nil {
+		return &migration.ErrMigrationCancelled{}
 	}
 
 	for _, task := range allTasks {

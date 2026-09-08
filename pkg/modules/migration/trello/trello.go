@@ -241,6 +241,10 @@ func convertTrelloDataToVikunja(ctx context.Context, organizationName string, tr
 	actionMemberCache := make(map[string]*trello.Member)
 
 	for index, board := range trelloData {
+		if ctx.Err() != nil {
+			return nil, &migration.ErrMigrationCancelled{}
+		}
+
 		project := &models.ProjectWithTasksAndBuckets{
 			Project: models.Project{
 				ID:              int64(index+1) + pseudoParentID,
@@ -478,6 +482,10 @@ func (m *Migration) Migrate(ctx context.Context, u *user.User) (err error) {
 
 	organizationMap := getTrelloOrganizationsWithBoards(boards)
 	for organizationID, boards := range organizationMap {
+		if ctx.Err() != nil {
+			return &migration.ErrMigrationCancelled{}
+		}
+
 		log.Debugf("[Trello Migration] Getting organization with id %s for user %d", organizationID, u.ID)
 		orgName := organizationID
 		if organizationID != "Personal" {
@@ -489,6 +497,10 @@ func (m *Migration) Migrate(ctx context.Context, u *user.User) (err error) {
 		}
 
 		for _, board := range boards {
+			if ctx.Err() != nil {
+				return &migration.ErrMigrationCancelled{}
+			}
+
 			log.Debugf("[Trello Migration] Getting card data for board %s for user %d for organization %s", board.ID, u.ID, organizationID)
 
 			err = fillCardData(client, board)

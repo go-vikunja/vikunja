@@ -391,6 +391,10 @@ func (v *FileMigrator) ValidateFile(file io.ReaderAt, size int64) error {
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /migration/vikunja-file/migrate [post]
 func (v *FileMigrator) Migrate(ctx context.Context, user *user.User, file io.ReaderAt, size int64) error {
+	if ctx.Err() != nil {
+		return &migration.ErrMigrationCancelled{}
+	}
+
 	r, err := openArchive(file, size)
 	if err != nil {
 		return err
@@ -456,6 +460,10 @@ func (v *FileMigrator) Migrate(ctx context.Context, user *user.User, file io.Rea
 
 	//////
 	// Import the bulk of Vikunja data
+	if ctx.Err() != nil {
+		return &migration.ErrMigrationCancelled{}
+	}
+
 	df, err := dataFile.Open()
 	if err != nil {
 		return fmt.Errorf("could not open data file: %w", err)
@@ -497,6 +505,10 @@ func (v *FileMigrator) Migrate(ctx context.Context, user *user.User, file io.Rea
 
 	///////
 	// Import filters
+	if ctx.Err() != nil {
+		return &migration.ErrMigrationCancelled{}
+	}
+
 	ff, err := filterFile.Open()
 	if err != nil {
 		return fmt.Errorf("could not open filters file: %w", err)
@@ -517,6 +529,7 @@ func (v *FileMigrator) Migrate(ctx context.Context, user *user.User, file io.Rea
 
 	s := db.NewSession()
 	defer s.Close()
+	db.SetSessionContext(ctx, s)
 
 	for _, f := range filters {
 		f.ID = 0

@@ -622,9 +622,17 @@ func (m *Migrator) SetOptions(options []byte) error {
 
 // MigrateWithConfig imports CSV data into Vikunja with the provided configuration
 func MigrateWithConfig(ctx context.Context, u *user.User, file io.ReaderAt, size int64, config *ImportConfig) error {
+	if ctx.Err() != nil {
+		return &migration.ErrMigrationCancelled{}
+	}
+
 	rows, err := readImportRows(file, size, config)
 	if err != nil {
 		return err
+	}
+
+	if ctx.Err() != nil {
+		return &migration.ErrMigrationCancelled{}
 	}
 
 	vikunjaTasks := convertToVikunja(rows, config)

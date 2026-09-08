@@ -87,6 +87,13 @@ func insertFromStructureWithFileProvider(ctx context.Context, str []*models.Proj
 		return err
 	}
 
+	// Commit does not consult the session context, so a late cancel would still commit everything.
+	if ctx.Err() != nil {
+		cleanupAndRollback(s, *createdFiles)
+		events.CleanupPending(s)
+		return &ErrMigrationCancelled{}
+	}
+
 	err = s.Commit()
 	if err != nil {
 		events.CleanupPending(s)
@@ -137,9 +144,8 @@ func insertFromStructure(ctx context.Context, s *xorm.Session, str []*models.Pro
 	projectsByOldID := make(map[int64]*models.Project) // old id is the key
 	// Create all projects
 	for i, p := range str {
-		// A cancelled import stops here rather than at its next query, so the
-		// user gets ErrMigrationCancelled instead of "context canceled".
-		if err := ctx.Err(); err != nil {
+		// Stop before starting another project instead of waiting for its first query to fail.
+		if ctx.Err() != nil {
 			return &ErrMigrationCancelled{}
 		}
 

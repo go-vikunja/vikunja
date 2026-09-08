@@ -17,6 +17,7 @@
 package utils
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -41,6 +42,9 @@ func RetryWithBackoff(name string, fn func() error) error {
 			return nil
 		}
 		if errors.Is(err, ErrDoNotRetry) {
+			return err
+		}
+		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
 			return err
 		}
 

@@ -17,6 +17,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -71,6 +72,15 @@ func shouldReportMigrationError(err error) bool {
 	}
 
 	return true
+}
+
+// A cancelled run aborts at whatever query or upstream request is in flight, so its
+// error is usually a bare context.Canceled instead of the sentinel.
+func asCancellationError(ctx context.Context, err error) error {
+	if err != nil && ctx.Err() != nil {
+		return &migration.ErrMigrationCancelled{}
+	}
+	return err
 }
 
 // migrationFingerprint keeps failures apart by migrator and cause: every migration error reaches
@@ -137,7 +147,7 @@ func reportMigrationFailure(u *user2.User, migratorKind string, ms migration.Mig
 	// A cancelled migration is not a failure, but its claim is still only safe to release here,
 	// once the job has actually stopped.
 	var cancelled *migration.ErrMigrationCancelled
-	if errors.As(err, &cancelled) {
+	if errors.As(err, &cancelled) || errors.Is(err, context.Canceled) {
 		log.Infof("[Migration] Migration %d from %s for user %d was cancelled", migrationID, migratorKind, u.ID)
 	} else {
 		log.Errorf("[Migration] Migration %d from %s for user %d failed. Error was: %s", migrationID, migratorKind, u.ID, err.Error())
@@ -203,7 +213,7 @@ func migrateInListener(ms migration.Migrator, event *MigrationRequestedEvent) (m
 	defer done()
 
 	log.Infof("[Migration] Starting migration %d from %s for user %d", m.ID, event.MigratorKind, event.User.ID)
-	err = ms.Migrate(ctx, event.User)
+	err = asCancellationError(ctx, ms.Migrate(ctx, event.User))
 	if err != nil {
 		return
 	}
@@ -299,7 +309,7 @@ func importInListener(ms migration.FileMigrator, event *FileMigrationRequestedEv
 
 	log.Infof("[Migration] Starting import %d from %s for user %d", m.ID, event.MigratorKind, event.User.ID)
 	if err := ms.Migrate(ctx, event.User, file, event.UploadSize); err != nil {
-		return m, asImportFileError(err)
+		return m, asImportFileError(asCancellationError(ctx, err))
 	}
 
 	if err := migration.FinishMigration(m); err != nil {
