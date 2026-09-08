@@ -1,4 +1,11 @@
 import {getFullBaseUrl} from '@/helpers/getFullBaseUrl'
+import {
+	CODE_VERIFIER_STORAGE_KEY,
+	NONCE_STORAGE_KEY,
+	createCodeChallenge,
+	createCodeVerifier,
+	createNonce,
+} from '@/helpers/pkce'
 import {createRandomID} from '@/helpers/randomId'
 import type {IProvider} from '@/types/IProvider'
 import {parseURL} from 'ufo'
@@ -11,17 +18,46 @@ export function getRedirectUrlFromCurrentFrontendPath(provider: IProvider): stri
 	return `${url.protocol}//${url.host}${base}auth/openid/${provider.key}`
 }
 
-export const redirectToProvider = (provider: IProvider) => {
+export const redirectToProvider = async (provider: IProvider) => {
 
 	const redirectUrl = getRedirectUrlFromCurrentFrontendPath(provider)
 	const state = createRandomID(24)
 	localStorage.setItem('state', state)
 
+	// The nonce binds the ID token to this browser session (OpenID Connect Core 1.0, §3.1.2.1).
+	// Some providers reject an authorization request without it.
+	const nonce = createNonce()
+	localStorage.setItem(NONCE_STORAGE_KEY, nonce)
+
 	let scope = 'openid email profile'
 	if (provider.scope !== null){
 		scope = provider.scope
 	}
-	window.location.href = `${provider.authUrl}?client_id=${provider.clientId}&redirect_uri=${redirectUrl}&response_type=code&scope=${scope}&state=${state}`
+
+	const params = new URLSearchParams({
+		client_id: provider.clientId,
+		redirect_uri: redirectUrl,
+		response_type: 'code',
+		scope,
+		state,
+		nonce,
+	})
+
+	// PKCE (RFC 7636). Providers which do not implement it ignore both parameters (§5), so
+	// sending them is safe. The challenge needs SHA-256 from crypto.subtle though, which
+	// browsers only expose in secure contexts – over plain http we fall back to an
+	// authorization request without PKCE instead of breaking the login.
+	const codeVerifier = createCodeVerifier()
+	const codeChallenge = await createCodeChallenge(codeVerifier)
+	if (typeof codeChallenge === 'undefined') {
+		localStorage.removeItem(CODE_VERIFIER_STORAGE_KEY)
+	} else {
+		localStorage.setItem(CODE_VERIFIER_STORAGE_KEY, codeVerifier)
+		params.set('code_challenge', codeChallenge)
+		params.set('code_challenge_method', 'S256')
+	}
+
+	window.location.href = `${provider.authUrl}?${params.toString()}`
 }
 
 export const redirectToProviderOnLogout = (provider: IProvider): boolean => {

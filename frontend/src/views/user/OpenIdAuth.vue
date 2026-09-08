@@ -58,6 +58,7 @@ import {getErrorText} from '@/message'
 import Message from '@/components/misc/Message.vue'
 import FormField from '@/components/input/FormField.vue'
 import {useRedirectToLastVisited} from '@/composables/useRedirectToLastVisited'
+import {CODE_VERIFIER_STORAGE_KEY, NONCE_STORAGE_KEY} from '@/helpers/pkce'
 import {redirectToProvider} from '@/helpers/redirectToProvider'
 
 import {useAuthStore} from '@/stores/auth'
@@ -115,11 +116,20 @@ async function authenticateWithCode() {
 		sessionStorage.removeItem(pendingTotpKey(providerKey))
 	}
 
+	// Both were stored when we sent the user to the provider. They are absent when the
+	// flow was started before this version, and the code verifier is also absent when
+	// the browser has no crypto.subtle to build a challenge with – the backend then
+	// exchanges the code without PKCE, exactly as it did before.
+	const codeVerifier = localStorage.getItem(CODE_VERIFIER_STORAGE_KEY) ?? undefined
+	const nonce = localStorage.getItem(NONCE_STORAGE_KEY) ?? undefined
+
 	try {
 		await authStore.openIdAuth({
 			provider: providerKey,
 			code: route.query.code as string,
 			totpPasscode: pendingPasscode,
+			codeVerifier,
+			nonce,
 		})
 
 		redirectIfSaved()

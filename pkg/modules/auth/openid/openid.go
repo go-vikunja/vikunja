@@ -53,6 +53,14 @@ type Callback struct {
 	// Clients must restart the OIDC flow and populate this field after
 	// receiving a 412 with error code 1017. See GHSA-8jvc-mcx6-r4cg.
 	TOTPPasscode string `json:"totp_passcode"`
+	// CodeVerifier is the PKCE verifier belonging to the code_challenge the client sent
+	// with the authorization request (RFC 7636). Empty when the client did not use PKCE,
+	// in which case the code is exchanged without it.
+	CodeVerifier string `json:"code_verifier"`
+	// Nonce is the value the client put in the authorization request. When set, it must
+	// match the nonce claim of the ID token the provider returns (OpenID Connect Core
+	// 1.0, §3.1.3.7).
+	Nonce string `json:"nonce"`
 }
 
 // Provider is the structure of an OpenID Connect provider
@@ -621,8 +629,17 @@ func exchangeOidcTokens(cb *Callback, providerKey string) (*Provider, *oauth2.To
 	log.Debugf("Trying to authenticate user using provider: %s", provider.Key)
 
 	provider.Oauth2Config.RedirectURL = cb.RedirectURL
+
+	// Send the PKCE verifier when the client started the flow with a challenge. Clients
+	// which did not (or could not, see the frontend's pkce helper) leave it empty, and the
+	// code is exchanged the way it always was.
+	exchangeOptions := []oauth2.AuthCodeOption{}
+	if cb.CodeVerifier != "" {
+		exchangeOptions = append(exchangeOptions, oauth2.VerifierOption(cb.CodeVerifier))
+	}
+
 	// Parse the access & ID token
-	oauth2Token, err := provider.Oauth2Config.Exchange(context.Background(), cb.Code)
+	oauth2Token, err := provider.Oauth2Config.Exchange(context.Background(), cb.Code, exchangeOptions...)
 	if err != nil {
 		log.Debugf("Token exchange failed for provider %s using token_endpoint_auth_method %s", provider.Key, authStyleName(provider.Oauth2Config.Endpoint.AuthStyle))
 
@@ -662,6 +679,14 @@ func exchangeOidcTokens(cb *Callback, providerKey string) (*Provider, *oauth2.To
 	if err != nil {
 		log.Errorf("Error verifying token for provider %s: %v", provider.Name, err)
 		return nil, nil, nil, "", err
+	}
+
+	// A nonce only proves anything when the token is checked against the value the client
+	// generated for this one authorization request (OpenID Connect Core 1.0, §3.1.3.7).
+	// Clients which sent no nonce – anything predating this – skip the comparison.
+	if cb.Nonce != "" && idToken.Nonce != cb.Nonce {
+		log.Errorf("Nonce mismatch in token for provider %s", provider.Name)
+		return nil, nil, nil, "", &models.ErrOpenIDBadRequest{Message: "Nonce does not match the authentication request"}
 	}
 
 	return provider, oauth2Token, idToken, rawIDToken, nil

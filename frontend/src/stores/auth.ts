@@ -267,7 +267,7 @@ export const useAuthStore = defineStore('auth', () => {
 		}
 	}
 
-	async function openIdAuth({provider, code, totpPasscode}: {provider: string, code: string, totpPasscode?: string}) {
+	async function openIdAuth({provider, code, totpPasscode, codeVerifier, nonce}: {provider: string, code: string, totpPasscode?: string, codeVerifier?: string, nonce?: string}) {
 		const HTTP = HTTPFactory()
 		setIsLoading(true)
 		setLoggedInVia(null)
@@ -280,6 +280,12 @@ export const useAuthStore = defineStore('auth', () => {
 		}
 		if (totpPasscode) {
 			data.totp_passcode = totpPasscode
+		}
+		if (codeVerifier) {
+			data.code_verifier = codeVerifier
+		}
+		if (nonce) {
+			data.nonce = nonce
 		}
 
 		// Delete an eventually preexisting old token
