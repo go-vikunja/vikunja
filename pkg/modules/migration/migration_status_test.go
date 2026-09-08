@@ -87,29 +87,56 @@ func TestClaimMigrationConcurrentSameUserOnlyOneWins(t *testing.T) {
 	clearMigrationStatus(t)
 	u1 := getTestUser(t, 1)
 
-	const attempts = 10
+	winnerStatus, losses := claimConcurrently(t, u1, 10)
+
+	require.Len(t, losses, 9, "exactly one concurrent claim must win")
+	for _, err := range losses {
+		assertIsAlreadyRunning(t, err, "todoist")
+	}
+	require.NoError(t, FinishMigration(winnerStatus))
+}
+
+// A second import arriving right after the first must lose with the domain error, not
+// with whatever the driver reports while the winning claim is still being written.
+func TestClaimMigrationConcurrentAfterClaimIsAlreadyRunning(t *testing.T) {
+	clearMigrationStatus(t)
+	u1 := getTestUser(t, 1)
+
+	_, err := ClaimMigration(&testMigrator{"todoist"}, u1)
+	require.NoError(t, err)
+
+	winner, losses := claimConcurrently(t, u1, 10)
+
+	require.Nil(t, winner)
+	require.Len(t, losses, 10)
+	for _, err := range losses {
+		assertIsAlreadyRunning(t, err, "todoist")
+	}
+}
+
+func claimConcurrently(t *testing.T, u *user.User, attempts int) (winner *Status, losses []error) {
+	t.Helper()
+
 	var wg sync.WaitGroup
 	var mu sync.Mutex
-	winners := 0
-	var winnerStatus *Status
 
 	for i := 0; i < attempts; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			s, err := ClaimMigration(&testMigrator{"todoist"}, u1)
+			s, err := ClaimMigration(&testMigrator{"todoist"}, u)
 			mu.Lock()
 			defer mu.Unlock()
-			if err == nil {
-				winners++
-				winnerStatus = s
+			if err != nil {
+				losses = append(losses, err)
+				return
 			}
+			winner = s
 		}()
 	}
 	wg.Wait()
 
-	require.Equal(t, 1, winners, "exactly one concurrent claim must win")
-	require.NoError(t, FinishMigration(winnerStatus))
+	return winner, losses
 }
 
 func TestClaimMigrationReleasesAfterFinish(t *testing.T) {

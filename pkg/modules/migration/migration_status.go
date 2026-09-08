@@ -17,6 +17,7 @@
 package migration
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -43,26 +44,45 @@ func (s *Status) TableName() string {
 	return "migration_status"
 }
 
+// Two simultaneous claims can collide on a write lock before either row is visible;
+// retrying keeps that from surfacing as a raw driver error.
+const claimAttempts = 5
+
 // ClaimMigration inserts a status row holding the account's unique migration claim.
 func ClaimMigration(m MigratorName, u *user.User) (status *Status, err error) {
+	for attempt := 1; ; attempt++ {
+		status, err = claimMigration(m, u)
+
+		var running *ErrMigrationAlreadyRunning
+		if err == nil || attempt == claimAttempts || errors.As(err, &running) {
+			return status, err
+		}
+
+		time.Sleep(time.Duration(attempt) * 10 * time.Millisecond)
+	}
+}
+
+func claimMigration(m MigratorName, u *user.User) (status *Status, err error) {
 	s := db.NewSession()
 	defer s.Close()
 
 	if err = releaseStaleClaims(s, u.ID); err != nil {
-		return nil, err
+		return nil, claimConflictOr(u.ID, err)
 	}
 
-	// Refuse if a legacy row (created before claims existed) is still open.
-	legacy := &Status{}
+	// Matches both the live claim and legacy rows (created before claims existed). Reading
+	// before inserting keeps a losing request read-only so it cannot fight the running import.
+	running := &Status{}
 	has, err := s.
-		Where("finished_at IS NULL AND active_user_id IS NULL AND user_id = ?", u.ID).
+		Where("finished_at IS NULL AND user_id = ?", u.ID).
 		Desc("id").
-		Get(legacy)
+		Get(running)
 	if err != nil {
-		return nil, err
+		_ = s.Rollback()
+		return nil, claimConflictOr(u.ID, err)
 	}
 	if has {
-		return nil, &ErrMigrationAlreadyRunning{StartedAt: legacy.StartedAt, MigratorName: legacy.MigratorName}
+		return nil, &ErrMigrationAlreadyRunning{StartedAt: running.StartedAt, MigratorName: running.MigratorName}
 	}
 
 	status = &Status{
@@ -72,23 +92,40 @@ func ClaimMigration(m MigratorName, u *user.User) (status *Status, err error) {
 		ActiveUserID: &u.ID,
 	}
 	if _, err = s.Insert(status); err != nil {
-		if db.IsUniqueConstraintError(err, "active_user_id") {
-			_ = s.Rollback()
-			e := &ErrMigrationAlreadyRunning{}
-			runningSession := db.NewSession()
-			defer runningSession.Close()
-			running := &Status{}
-			if has, gerr := runningSession.Where("active_user_id = ?", u.ID).Desc("id").Get(running); gerr == nil && has {
-				e.StartedAt = running.StartedAt
-				e.MigratorName = running.MigratorName
-			}
-			return nil, e
-		}
 		_ = s.Rollback()
+		if conflict := claimConflict(u.ID); conflict != nil {
+			return nil, conflict
+		}
+		if db.IsUniqueConstraintError(err, "active_user_id") {
+			return nil, &ErrMigrationAlreadyRunning{}
+		}
 		return nil, err
 	}
 
 	return status, s.Commit()
+}
+
+// claimConflict reports the live claim of userID, if any. Re-reading is the only check that
+// holds on every driver: each spells the unique violation differently, and contention can
+// fail the insert with an unrelated error.
+func claimConflict(userID int64) *ErrMigrationAlreadyRunning {
+	s := db.NewAutocommitSession()
+	defer s.Close()
+
+	running := &Status{}
+	has, err := s.Where("active_user_id = ?", userID).Desc("id").Get(running)
+	if err != nil || !has {
+		return nil
+	}
+
+	return &ErrMigrationAlreadyRunning{StartedAt: running.StartedAt, MigratorName: running.MigratorName}
+}
+
+func claimConflictOr(userID int64, err error) error {
+	if conflict := claimConflict(userID); conflict != nil {
+		return conflict
+	}
+	return err
 }
 
 // releaseStaleClaims unblocks migrations abandoned by a dead instance.
@@ -98,8 +135,21 @@ func releaseStaleClaims(s *xorm.Session, userID int64) error {
 		return nil
 	}
 
-	_, err := s.
-		Where("active_user_id = ? AND started_at < ?", userID, time.Now().Add(-timeout)).
+	// Probing first avoids taking a write lock on every claim attempt.
+	staleBefore := time.Now().Add(-timeout)
+	has, err := s.
+		Where("active_user_id = ? AND started_at < ?", userID, staleBefore).
+		Exist(&Status{})
+	if err != nil {
+		_ = s.Rollback()
+		return err
+	}
+	if !has {
+		return nil
+	}
+
+	_, err = s.
+		Where("active_user_id = ? AND started_at < ?", userID, staleBefore).
 		Cols("finished_at", "active_user_id").
 		Update(&Status{FinishedAt: time.Now()})
 	if err != nil {
