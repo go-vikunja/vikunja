@@ -131,7 +131,7 @@
 								</div>
 								<div class="date-input">
 									<Datepicker
-										:ref="e => setFieldRef('dueDate', e)"
+										ref="dueDatePicker"
 										v-model="task.dueDate"
 										:choose-date-label="$t('task.detail.chooseDueDate')"
 										:title="$t('task.attributes.dueDate')"
@@ -187,7 +187,7 @@
 								</div>
 								<div class="date-input">
 									<Datepicker
-										:ref="e => setFieldRef('startDate', e)"
+										ref="startDatePicker"
 										v-model="task.startDate"
 										:choose-date-label="$t('task.detail.chooseStartDate')"
 										:title="$t('task.attributes.startDate')"
@@ -222,7 +222,7 @@
 								</div>
 								<div class="date-input">
 									<Datepicker
-										:ref="e => setFieldRef('endDate', e)"
+										ref="endDatePicker"
 										v-model="task.endDate"
 										:choose-date-label="$t('task.detail.chooseEndDate')"
 										:title="$t('task.attributes.endDate')"
@@ -655,7 +655,7 @@
 </template>
 
 <script lang="ts" setup>
-import {ref, reactive, shallowReactive, computed, watch, nextTick, onMounted} from 'vue'
+import {ref, reactive, shallowReactive, computed, watch, nextTick, onMounted, useTemplateRef} from 'vue'
 import {useRouter, useRoute, type RouteLocation, onBeforeRouteLeave} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 import {unrefElement, useDebounceFn, useElementSize, useIntersectionObserver, useMutationObserver} from '@vueuse/core'
@@ -1054,14 +1054,30 @@ const activeFieldElements: { [id in FieldType]: HTMLElement | null } = reactive(
 	startDate: null,
 })
 
-function setFieldRef(name, e) {
+const dueDatePicker = useTemplateRef<InstanceType<typeof Datepicker>>('dueDatePicker')
+const startDatePicker = useTemplateRef<InstanceType<typeof Datepicker>>('startDatePicker')
+const endDatePicker = useTemplateRef<InstanceType<typeof Datepicker>>('endDatePicker')
+
+function setFieldRef(name: FieldType, e) {
 	activeFieldElements[name] = unrefElement(e)
 }
 
 function setFieldActive(fieldName: keyof typeof activeFields) {
 	activeFields[fieldName] = true
 	nextTick(() => {
-		const el = activeFieldElements[fieldName]
+		let datepicker: InstanceType<typeof Datepicker> | null = null
+		switch (fieldName) {
+			case 'dueDate':
+				datepicker = dueDatePicker.value
+				break
+			case 'startDate':
+				datepicker = startDatePicker.value
+				break
+			case 'endDate':
+				datepicker = endDatePicker.value
+				break
+		}
+		const el: HTMLElement | null = datepicker?.$el ?? activeFieldElements[fieldName]
 
 		if (!el) {
 			return
@@ -1069,8 +1085,12 @@ function setFieldActive(fieldName: keyof typeof activeFields) {
 
 		el.focus()
 
-		// scroll the field to the center of the screen if not in viewport already
-		scrollIntoView(el)
+		// Finish scrolling before the datepicker sheet locks the page.
+		scrollIntoView(el, datepicker ? 'instant' : 'smooth')
+
+		// setTimeout(..., 0) is preventing the *original* click to open a field from also being
+		// detected as an outside click and immediately closing the popup.
+		setTimeout(() => datepicker?.open(), 0)
 	})
 }
 
