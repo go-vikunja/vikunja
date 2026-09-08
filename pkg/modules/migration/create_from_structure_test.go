@@ -18,6 +18,7 @@ package migration
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"image"
@@ -52,6 +53,23 @@ func (p *testFileProvider) OpenBackground(_ *models.ProjectWithTasksAndBuckets) 
 		return nil, 0, p.err
 	}
 	return p.background, 73, nil
+}
+
+// The attachment hook is the last provider callback before insertFromStructure moves
+// on to the next project, where the cancellation is noticed.
+type cancellingFileProvider struct {
+	cancel context.CancelFunc
+	opened int
+}
+
+func (p *cancellingFileProvider) OpenAttachment(_ *models.TaskAttachment) (io.ReadSeekCloser, int64, error) {
+	p.opened++
+	p.cancel()
+	return nil, 0, nil
+}
+
+func (p *cancellingFileProvider) OpenBackground(_ *models.ProjectWithTasksAndBuckets) (io.ReadSeekCloser, int64, error) {
+	return nil, 0, nil
 }
 
 type trackedReadSeekCloser struct {
@@ -510,5 +528,36 @@ func TestInsertFromStructureFileProvider(t *testing.T) {
 		}
 		_, err = files.FileStat(replacement)
 		require.NoError(t, err, "replacement blob must remain after cleanup")
+	})
+
+	t.Run("cancelling mid-import rolls every project back", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		ctx, cancel := context.WithCancel(t.Context())
+		defer cancel()
+		provider := &cancellingFileProvider{cancel: cancel}
+
+		structure := []*models.ProjectWithTasksAndBuckets{
+			{
+				Project: models.Project{Title: "Cancelled import 1"},
+				Tasks: []*models.TaskWithComments{{Task: models.Task{
+					Title:       "Task of a cancelled import",
+					Attachments: []*models.TaskAttachment{{File: &files.File{Name: "cancel-here"}}},
+				}}},
+			},
+			{Project: models.Project{Title: "Cancelled import 2"}},
+			{Project: models.Project{Title: "Cancelled import 3"}},
+		}
+
+		err := InsertFromStructureWithFileProvider(ctx, structure, u, provider)
+
+		var cancelled *ErrMigrationCancelled
+		require.ErrorAs(t, err, &cancelled)
+		require.Equal(t, 1, provider.opened, "the import must have got past the first project before it was cancelled")
+
+		for _, project := range structure {
+			db.AssertMissing(t, "projects", map[string]interface{}{"title": project.Title})
+		}
+		db.AssertMissing(t, "tasks", map[string]interface{}{"title": "Task of a cancelled import"})
 	})
 }

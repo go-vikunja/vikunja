@@ -17,6 +17,7 @@
 package migration
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -40,7 +41,7 @@ func TestCancel(t *testing.T) {
 
 		require.NoError(t, Cancel(u))
 
-		require.Error(t, ctx.Err(), "the running job must have been asked to stop")
+		require.ErrorIs(t, ctx.Err(), context.Canceled, "the running job must have been asked to stop")
 
 		// The job holds the claim until it exits, so a new import must not start yet.
 		_, err = ClaimMigration(&testMigrator{name: "vikunja-file"}, u)
@@ -87,6 +88,51 @@ func TestCancel(t *testing.T) {
 		require.NoError(t, err)
 	})
 
+	t.Run("leaves another user's migration alone", func(t *testing.T) {
+		clearMigrationStatus(t)
+		u1 := getTestUser(t, 1)
+		u2 := getTestUser(t, 2)
+
+		status1, err := ClaimMigration(&testMigrator{name: "vikunja-file"}, u1)
+		require.NoError(t, err)
+		status2, err := ClaimMigration(&testMigrator{name: "todoist"}, u2)
+		require.NoError(t, err)
+
+		ctx1, done1 := StartRun(status1.ID)
+		defer done1()
+		ctx2, done2 := StartRun(status2.ID)
+		defer done2()
+
+		require.NoError(t, Cancel(u1))
+
+		require.ErrorIs(t, ctx1.Err(), context.Canceled)
+		require.NoError(t, ctx2.Err(), "the other user's job must keep running")
+
+		_, err = ClaimMigration(&testMigrator{name: "todoist"}, u2)
+		assertIsAlreadyRunning(t, err, "todoist")
+	})
+
+	t.Run("forgets a run that already ended", func(t *testing.T) {
+		clearMigrationStatus(t)
+		u := getTestUser(t, 1)
+
+		status, err := ClaimMigration(&testMigrator{name: "vikunja-file"}, u)
+		require.NoError(t, err)
+
+		_, done := StartRun(status.ID)
+		done()
+
+		runningMigrations.Lock()
+		_, stillRegistered := runningMigrations.runs[status.ID]
+		runningMigrations.Unlock()
+		assert.False(t, stillRegistered, "done() must not leak the cancel func of a finished run")
+
+		// Nothing left to cancel here, so the still-held claim looks like another instance's.
+		err = Cancel(u)
+		var notHere *ErrMigrationNotCancellableHere
+		require.ErrorAs(t, err, &notHere)
+	})
+
 	t.Run("reports nothing to cancel", func(t *testing.T) {
 		clearMigrationStatus(t)
 
@@ -96,7 +142,6 @@ func TestCancel(t *testing.T) {
 	})
 }
 
-// A run that got redelivered must not have its cancel func removed by the first run finishing.
 func TestStartRunDoesNotClobberAConcurrentRun(t *testing.T) {
 	clearMigrationStatus(t)
 	u := &user.User{ID: 1}
@@ -111,5 +156,5 @@ func TestStartRunDoesNotClobberAConcurrentRun(t *testing.T) {
 	doneFirst()
 
 	require.NoError(t, Cancel(u))
-	require.Error(t, ctxSecond.Err(), "the second run must still be cancellable")
+	require.ErrorIs(t, ctxSecond.Err(), context.Canceled, "the second run must still be cancellable")
 }
