@@ -20,9 +20,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"net/http"
 	"net/url"
 	"regexp"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -263,74 +265,144 @@ const (
 	secondsPerYear        = secondsPerDay * 365
 )
 
-var repeatUnitWords = map[string]int64{
-	"day":     secondsPerDay,
-	"days":    secondsPerDay,
-	"dag":     secondsPerDay,
-	"dagen":   secondsPerDay,
-	"week":    secondsPerWeek,
-	"weeks":   secondsPerWeek,
-	"weken":   secondsPerWeek,
-	"month":   secondsPerMonth,
-	"months":  secondsPerMonth,
-	"maand":   secondsPerMonth,
-	"maanden": secondsPerMonth,
-	"year":    secondsPerYear,
-	"years":   secondsPerYear,
-	"jaar":    secondsPerYear,
-	"jaren":   secondsPerYear,
-}
-
-// English and Dutch month names, full and abbreviated.
-var todoistMonthNames = map[string]struct{}{
-	"january": {}, "januari": {}, "jan": {},
-	"february": {}, "februari": {}, "feb": {},
-	"march": {}, "maart": {}, "mar": {}, "mrt": {},
-	"april": {}, "apr": {},
-	"may": {}, "mei": {},
-	"june": {}, "juni": {}, "jun": {},
-	"july": {}, "juli": {}, "jul": {},
-	"august": {}, "augustus": {}, "aug": {},
-	"september": {}, "sept": {}, "sep": {},
-	"october": {}, "oktober": {}, "oct": {}, "okt": {},
-	"november": {}, "nov": {},
-	"december": {}, "dec": {},
-}
-
-var todoistWeekdayNames = map[string]struct{}{
-	"monday": {}, "tuesday": {}, "wednesday": {}, "thursday": {}, "friday": {}, "saturday": {}, "sunday": {},
-	"maandag": {}, "dinsdag": {}, "woensdag": {}, "donderdag": {}, "vrijdag": {}, "zaterdag": {}, "zondag": {},
-}
-
 var (
 	todoistRepeatTimeRegex = regexp.MustCompile(`\s+(?:at|@)\s+.*$`)
 
-	// Full date anchored to a day and month name: "yearly 1st May", "elke 16e jul".
-	// The trailing token is validated against todoistMonthNames separately.
-	todoistRepeatFullDateRegex = regexp.MustCompile(`^(?:every|elke|elk|yearly|annually)\s+(\d{1,2})(?:ste|st|nd|rd|th|de|e)?\s+([a-z]+)$`)
-	// Numeric day/month date: "every 15/03".
-	todoistRepeatNumericDateRegex = regexp.MustCompile(`^(?:every|elke|elk)\s+\d{1,2}/\d{1,2}$`)
-	// Plain interval: "every 3 weeks", "elke 4 weken", "every other day". The trailing
-	// token is validated against repeatUnitWords separately.
-	todoistRepeatIntervalRegex = regexp.MustCompile(`^(?:(?:every|elke|elk)\s+)?(?:(\d+)\s+|(other)\s+)?([a-z]+)$`)
-	// Day of the month without a month name: "every 15th", "every 1st day".
-	todoistRepeatDayOfMonthRegex = regexp.MustCompile(`^(?:every|elke|elk)\s+\d{1,2}(?:ste|st|nd|rd|th|de|e)?(?:\s+(?:day|dag))?$`)
-	// Last day of the month: "elke laatste dag".
-	todoistRepeatLastDayRegex = regexp.MustCompile(`^(?:every|elke|elk)\s+(?:laatste|last)\s+(?:day|dag)$`)
-	// Weekday: "every monday", "elke maandag". The trailing token is validated against
-	// todoistWeekdayNames separately.
-	todoistRepeatWeekdayRegex = regexp.MustCompile(`^(?:every|elke|elk)\s+([a-z]+)$`)
+	todoistRepeatNumberRegex = regexp.MustCompile(`^\d+$`)
+	// Day/month date token like "15/03".
+	todoistRepeatDayMonthRegex = regexp.MustCompile(`^\d{1,2}/\d{1,2}$`)
 )
+
+// repeatLang is the word data of one language for the language-agnostic grammar in
+// parseRepeatTokens.
+type repeatLang struct {
+	intervals  map[string]int64
+	adverbs    map[string]int64
+	everyWords []string // typos like "elke!" are normalized away before the grammar runs
+	// otherWord stays empty for languages with no single fixed form for it.
+	otherWord       string
+	lastWord        string
+	dayWord         string
+	weekdays        map[string]struct{}
+	months          map[string]struct{}
+	ordinals        string // regex alternation of ordinal suffixes: "st|nd|rd|th"; nl: "e|ste|de"
+	ordinalDayRegex *regexp.Regexp
+}
+
+// langPacks is deliberately data-only: a new language is a new data block here, with zero
+// grammar changes. Todoist plans to move its date parsing upstream into a multilingual
+// parser, so keep this table and the small parseTodoistRepeat entry point swappable for it.
+var langPacks = compileRepeatLangs(map[string]*repeatLang{
+	"en": {
+		intervals: map[string]int64{
+			"day": secondsPerDay, "days": secondsPerDay,
+			"week": secondsPerWeek, "weeks": secondsPerWeek,
+			"month": secondsPerMonth, "months": secondsPerMonth,
+			"year": secondsPerYear, "years": secondsPerYear,
+		},
+		adverbs: map[string]int64{
+			"daily":    secondsPerDay,
+			"weekly":   secondsPerWeek,
+			"monthly":  secondsPerMonth,
+			"yearly":   secondsPerYear,
+			"annually": secondsPerYear,
+		},
+		everyWords: []string{"every"},
+		otherWord:  "other",
+		lastWord:   "last",
+		dayWord:    "day",
+		weekdays: map[string]struct{}{
+			"monday": {}, "tuesday": {}, "wednesday": {}, "thursday": {},
+			"friday": {}, "saturday": {}, "sunday": {},
+		},
+		months: map[string]struct{}{
+			"january": {}, "jan": {}, "february": {}, "feb": {},
+			"march": {}, "mar": {}, "april": {}, "apr": {},
+			"may": {}, "june": {}, "jun": {}, "july": {}, "jul": {},
+			"august": {}, "aug": {}, "september": {}, "sept": {}, "sep": {},
+			"october": {}, "oct": {}, "november": {}, "nov": {},
+			"december": {}, "dec": {},
+		},
+		ordinals: "st|nd|rd|th",
+	},
+	"nl": {
+		intervals: map[string]int64{
+			"dag": secondsPerDay, "dagen": secondsPerDay,
+			"week": secondsPerWeek, "weken": secondsPerWeek,
+			"maand": secondsPerMonth, "maanden": secondsPerMonth,
+			"jaar": secondsPerYear, "jaren": secondsPerYear,
+		},
+		adverbs: map[string]int64{
+			"dagelijks":   secondsPerDay,
+			"wekelijks":   secondsPerWeek,
+			"maandelijks": secondsPerMonth,
+			"jaarlijks":   secondsPerYear,
+		},
+		everyWords: []string{"elke", "elk"},
+		// Dutch inflects "other" ("elke andere dag"), so one fixed otherWord can only
+		// ever match half of the form - leave it unset instead.
+		otherWord: "",
+		lastWord:  "laatste",
+		dayWord:   "dag",
+		weekdays: map[string]struct{}{
+			"maandag": {}, "dinsdag": {}, "woensdag": {}, "donderdag": {},
+			"vrijdag": {}, "zaterdag": {}, "zondag": {},
+		},
+		months: map[string]struct{}{
+			"januari": {}, "jan": {}, "februari": {}, "feb": {},
+			"maart": {}, "mrt": {}, "april": {}, "apr": {},
+			"mei": {}, "juni": {}, "jun": {}, "juli": {}, "jul": {},
+			"augustus": {}, "aug": {}, "september": {}, "sept": {}, "sep": {},
+			"oktober": {}, "okt": {}, "november": {}, "nov": {},
+			"december": {}, "dec": {},
+		},
+		ordinals: "e|ste|de",
+	},
+})
+
+func compileRepeatLangs(packs map[string]*repeatLang) map[string]*repeatLang {
+	for _, pack := range packs {
+		pack.ordinalDayRegex = regexp.MustCompile(`^\d{1,2}(?:` + pack.ordinals + `)?$`)
+	}
+	return packs
+}
+
+func (l *repeatLang) isEveryWord(token string) bool {
+	return slices.Contains(l.everyWords, token)
+}
+
+func (l *repeatLang) isYearlyAdverb(token string) bool {
+	return l.adverbs[token] == secondsPerYear
+}
+
+// langPacksFor returns the word packs to try for a due object's language. Recurring due
+// objects from real Todoist exports always carry a lang; when it is missing there is
+// nothing to key on and every pack is tried as a whole. Unknown languages fall back to
+// English.
+func langPacksFor(lang string) []*repeatLang {
+	if pack, ok := langPacks[lang]; ok {
+		return []*repeatLang{pack}
+	}
+	if lang != "" {
+		return []*repeatLang{langPacks["en"]}
+	}
+
+	packs := make([]*repeatLang, 0, len(langPacks))
+	for _, l := range slices.Sorted(maps.Keys(langPacks)) {
+		packs = append(packs, langPacks[l])
+	}
+	return packs
+}
 
 // parseTodoistRepeat translates Todoist's recurrence into a repeat interval in seconds plus
 // the repeat mode to use with it. Todoist exposes recurrence only as free text in the user's
-// language (e.g. "every 3 weeks", "elke 6 maanden", "yearly 1st May"), so we parse the common
-// unambiguous English and Dutch phrases. Interval phrases map to a plain interval; weekday
-// phrases keep the weekly interval (the due date already anchors the weekday); phrases anchored
-// to a day of the month get TaskRepeatModeMonth so Vikunja preserves that day despite months
-// having different lengths. Patterns we can't represent return 0, leaving the task
-// non-repeating. Only the cadence is kept - the due date already anchors the actual day and
-// time.
+// language (e.g. "every 3 weeks", "elke 6 maanden", "yearly 1st May") together with that
+// language in due.lang, so the grammar in parseRepeatTokens runs with the matching word pack
+// from langPacks. Interval phrases map to a plain interval; weekday phrases keep the weekly
+// interval (the due date already anchors the weekday); phrases anchored to a day of the month
+// get TaskRepeatModeMonth so Vikunja preserves that day despite months having different
+// lengths. Patterns we can't represent return 0, leaving the task non-repeating. Only the
+// cadence is kept - the due date already anchors the actual day and time.
 func parseTodoistRepeat(due *dueDate) (repeatAfter int64, repeatMode models.TaskRepeatMode) {
 	if due == nil || !due.IsRecurring {
 		return 0, models.TaskRepeatModeDefault
@@ -340,67 +412,94 @@ func parseTodoistRepeat(due *dueDate) (repeatAfter int64, repeatMode models.Task
 	// The time of day is already on the due date, drop it so "every day at 9am" still matches.
 	s = todoistRepeatTimeRegex.ReplaceAllString(s, "")
 	// Users make typos like "elke! 4 maand" - treat a stray "!" as whitespace.
-	s = strings.ReplaceAll(s, "!", " ")
-	s = strings.Join(strings.Fields(s), " ")
+	tokens := strings.Fields(strings.ReplaceAll(s, "!", " "))
 
-	switch s {
-	case "daily":
-		return secondsPerDay, models.TaskRepeatModeDefault
-	case "weekly":
-		return secondsPerWeek, models.TaskRepeatModeDefault
-	case "monthly":
-		return secondsPerMonth, models.TaskRepeatModeDefault
-	case "yearly", "annually":
-		return secondsPerYear, models.TaskRepeatModeDefault
-	}
-
-	// Checks are ordered most specific first, so e.g. "elke 1 juni" is not read as "elke 1 <unit>"
-	// and "every 1st day" is not read as the interval "every 1 day".
-
-	// A full date (day plus month name) recurs yearly.
-	if matches := todoistRepeatFullDateRegex.FindStringSubmatch(s); matches != nil {
-		if _, isMonth := todoistMonthNames[matches[2]]; isMonth {
-			return secondsPerYear, models.TaskRepeatModeDefault
-		}
-	}
-
-	// A numeric day/month date recurs yearly.
-	if todoistRepeatNumericDateRegex.MatchString(s) {
-		return secondsPerYear, models.TaskRepeatModeDefault
-	}
-
-	// A plain interval phrase.
-	if matches := todoistRepeatIntervalRegex.FindStringSubmatch(s); matches != nil {
-		if seconds, isUnit := repeatUnitWords[matches[3]]; isUnit {
-			interval := int64(1)
-			switch {
-			case matches[1] != "":
-				n, err := strconv.ParseInt(matches[1], 10, 64)
-				if err != nil || n < 1 {
-					return 0, models.TaskRepeatModeDefault
-				}
-				interval = n
-			case matches[2] == "other":
-				interval = 2
-			}
-			return interval * seconds, models.TaskRepeatModeDefault
-		}
-	}
-
-	// A day of the month without a month name recurs monthly.
-	if todoistRepeatDayOfMonthRegex.MatchString(s) || todoistRepeatLastDayRegex.MatchString(s) {
-		return secondsPerMonth, models.TaskRepeatModeMonth
-	}
-
-	// A weekday recurs weekly.
-	if matches := todoistRepeatWeekdayRegex.FindStringSubmatch(s); matches != nil {
-		if _, isWeekday := todoistWeekdayNames[matches[1]]; isWeekday {
-			return secondsPerWeek, models.TaskRepeatModeDefault
+	for _, pack := range langPacksFor(due.Lang) {
+		if seconds, mode, matched := parseRepeatTokens(tokens, pack); matched {
+			return seconds, mode
 		}
 	}
 
 	log.Debugf("[Todoist Migration] Could not parse recurrence %q, leaving task non-repeating", due.String)
 	return 0, models.TaskRepeatModeDefault
+}
+
+// parseRepeatTokens runs the language-agnostic recurrence grammar over the normalized tokens
+// with one language's words. It reports whether the tokens matched a form in this language,
+// so another pack can be tried when they did not.
+func parseRepeatTokens(tokens []string, lang *repeatLang) (repeatAfter int64, repeatMode models.TaskRepeatMode, matched bool) {
+	// A bare adverb like "daily" or "wekelijks".
+	if len(tokens) == 1 {
+		if seconds, isAdverb := lang.adverbs[tokens[0]]; isAdverb {
+			return seconds, models.TaskRepeatModeDefault, true
+		}
+	}
+
+	// Checks are ordered most specific first, so e.g. "elke 1 juni" is not read as "elke 1 <unit>"
+	// and "every 1st day" is not read as the interval "every 1 day".
+
+	// A full date (day plus month name) recurs yearly. Yearly adverbs ("yearly 1st May")
+	// work as prefixes next to the every-words.
+	if len(tokens) == 3 &&
+		(lang.isEveryWord(tokens[0]) || lang.isYearlyAdverb(tokens[0])) &&
+		lang.ordinalDayRegex.MatchString(tokens[1]) {
+		if _, isMonth := lang.months[tokens[2]]; isMonth {
+			return secondsPerYear, models.TaskRepeatModeDefault, true
+		}
+	}
+
+	// A numeric day/month date recurs yearly.
+	if len(tokens) == 2 && lang.isEveryWord(tokens[0]) && todoistRepeatDayMonthRegex.MatchString(tokens[1]) {
+		return secondsPerYear, models.TaskRepeatModeDefault, true
+	}
+
+	// A plain interval phrase: "every 3 weeks", "elke 4 weken", "every other day", or a
+	// bare unit word. The trailing token is validated against lang.intervals separately.
+	rest := tokens
+	if len(rest) > 0 && lang.isEveryWord(rest[0]) {
+		rest = rest[1:]
+	}
+	switch len(rest) {
+	case 1:
+		if seconds, isUnit := lang.intervals[rest[0]]; isUnit {
+			return seconds, models.TaskRepeatModeDefault, true
+		}
+	case 2:
+		if seconds, isUnit := lang.intervals[rest[1]]; isUnit {
+			if lang.otherWord != "" && rest[0] == lang.otherWord {
+				return 2 * seconds, models.TaskRepeatModeDefault, true
+			}
+			if todoistRepeatNumberRegex.MatchString(rest[0]) {
+				n, err := strconv.ParseInt(rest[0], 10, 64)
+				if err != nil || n < 1 {
+					// The interval form matched but its count is unusable, so this is a
+					// verdict rather than a reason to try other forms or packs.
+					return 0, models.TaskRepeatModeDefault, true
+				}
+				return n * seconds, models.TaskRepeatModeDefault, true
+			}
+		}
+	}
+
+	// A day of the month without a month name recurs monthly, as does the last day of the
+	// month; both are anchored via TaskRepeatModeMonth.
+	if len(tokens) >= 2 && len(tokens) <= 3 && lang.isEveryWord(tokens[0]) &&
+		lang.ordinalDayRegex.MatchString(tokens[1]) &&
+		(len(tokens) == 2 || tokens[2] == lang.dayWord) {
+		return secondsPerMonth, models.TaskRepeatModeMonth, true
+	}
+	if len(tokens) == 3 && lang.isEveryWord(tokens[0]) && tokens[1] == lang.lastWord && tokens[2] == lang.dayWord {
+		return secondsPerMonth, models.TaskRepeatModeMonth, true
+	}
+
+	// A weekday recurs weekly - the due date already anchors the weekday.
+	if len(tokens) == 2 && lang.isEveryWord(tokens[0]) {
+		if _, isWeekday := lang.weekdays[tokens[1]]; isWeekday {
+			return secondsPerWeek, models.TaskRepeatModeDefault, true
+		}
+	}
+
+	return 0, models.TaskRepeatModeDefault, false
 }
 
 func isDownloadableURL(rawURL string) bool {

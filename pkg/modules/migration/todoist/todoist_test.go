@@ -803,6 +803,24 @@ func TestParseTodoistRepeat(t *testing.T) {
 	}
 }
 
+// The word packs must really be keyed on due.lang: the same recurrence text may only
+// parse in the language Todoist says it is written in, instead of matching words from
+// every language everywhere.
+func TestParseTodoistRepeatLangKeyed(t *testing.T) {
+	repeatAfter, repeatMode := parseTodoistRepeat(&dueDate{String: "elke 3 maanden", Lang: "en", IsRecurring: true})
+	assert.Zero(t, repeatAfter)
+	assert.Equal(t, models.TaskRepeatModeDefault, repeatMode)
+
+	repeatAfter, repeatMode = parseTodoistRepeat(&dueDate{String: "elke 3 maanden", Lang: "nl", IsRecurring: true})
+	assert.Equal(t, 3*secondsPerMonth, repeatAfter)
+	assert.Equal(t, models.TaskRepeatModeDefault, repeatMode)
+
+	// An unknown language falls back to the English pack rather than trying every pack.
+	repeatAfter, repeatMode = parseTodoistRepeat(&dueDate{String: "elke 3 maanden", Lang: "de", IsRecurring: true})
+	assert.Zero(t, repeatAfter)
+	assert.Equal(t, models.TaskRepeatModeDefault, repeatMode)
+}
+
 // The recurring due.string values of a real Todoist export (recurring_strings.json in the
 // issue, not committed). Every one of them must migrate to a repeating task - exact
 // interval and mode expectations are covered by the table test above.
