@@ -22,13 +22,26 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
+
+	"code.vikunja.io/api/pkg/config"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
+func useTestSpoolDir(t *testing.T) {
+	previous := spoolBaseDir
+	spoolBaseDir = t.TempDir()
+	t.Cleanup(func() {
+		spoolBaseDir = previous
+	})
+}
+
 func TestSpoolUpload(t *testing.T) {
 	t.Run("round trip", func(t *testing.T) {
+		useTestSpoolDir(t)
+
 		name, size, err := SpoolUpload(strings.NewReader("some export"))
 		require.NoError(t, err)
 		defer RemoveSpooledUpload(name)
@@ -46,6 +59,8 @@ func TestSpoolUpload(t *testing.T) {
 	})
 
 	t.Run("remove deletes the file", func(t *testing.T) {
+		useTestSpoolDir(t)
+
 		name, _, err := SpoolUpload(strings.NewReader("gone soon"))
 		require.NoError(t, err)
 
@@ -56,6 +71,8 @@ func TestSpoolUpload(t *testing.T) {
 	})
 
 	t.Run("a name from the queue cannot escape the spool directory", func(t *testing.T) {
+		useTestSpoolDir(t)
+
 		dir, err := spoolDir()
 		require.NoError(t, err)
 		outside := filepath.Join(filepath.Dir(dir), "vikunja-spool-escape-target")
@@ -69,18 +86,42 @@ func TestSpoolUpload(t *testing.T) {
 		assert.FileExists(t, outside, "traversal must not delete a file outside the spool dir")
 	})
 
+	t.Run("a symlinked spool directory is refused", func(t *testing.T) {
+		useTestSpoolDir(t)
+
+		target := filepath.Join(spoolBaseDir, "elsewhere")
+		require.NoError(t, os.Mkdir(target, 0700))
+		require.NoError(t, os.Symlink(target, filepath.Join(spoolBaseDir, spoolDirName)))
+
+		_, err := spoolDir()
+		require.Error(t, err)
+	})
+
 	t.Run("an empty name is rejected", func(t *testing.T) {
 		_, err := OpenSpooledUpload("")
 		require.ErrorIs(t, err, errEmptySpoolName)
 	})
 
 	t.Run("cleanup removes orphaned uploads", func(t *testing.T) {
-		name, _, err := SpoolUpload(strings.NewReader("orphan"))
+		useTestSpoolDir(t)
+
+		stale, _, err := SpoolUpload(strings.NewReader("orphan"))
+		require.NoError(t, err)
+		stalePath, err := spoolPath(stale)
+		require.NoError(t, err)
+		old := time.Now().Add(-2 * config.MigrationClaimTimeout.GetDuration())
+		require.NoError(t, os.Chtimes(stalePath, old, old))
+
+		fresh, _, err := SpoolUpload(strings.NewReader("in flight"))
 		require.NoError(t, err)
 
 		CleanupSpooledUploads()
 
-		_, err = OpenSpooledUpload(name)
+		_, err = OpenSpooledUpload(stale)
 		assert.True(t, os.IsNotExist(err), "expected the orphaned upload to be cleaned up, got %v", err)
+
+		f, err := OpenSpooledUpload(fresh)
+		require.NoError(t, err, "an upload younger than the claim timeout must survive")
+		require.NoError(t, f.Close())
 	})
 }

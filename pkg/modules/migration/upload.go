@@ -22,23 +22,42 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"time"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 )
 
-// spoolDirName holds queued imports below the OS temp dir. net/http already
-// spools multipart uploads there, so this adds no new capacity requirement.
-const spoolDirName = "vikunja-imports"
+const spoolDirName = "imports"
+
+// spoolBaseDir is empty in production, where the base is derived from config.
+var spoolBaseDir = ""
 
 // errEmptySpoolName guards the zero value: filepath.Base("") is ".", which
 // would resolve to the spool directory itself.
 var errEmptySpoolName = errors.New("no spooled upload name given")
 
 func spoolDir() (string, error) {
-	dir := filepath.Join(os.TempDir(), spoolDirName)
+	base := spoolBaseDir
+	if base == "" {
+		base = config.FilesBasePath.GetString()
+	}
+
+	dir := filepath.Join(base, spoolDirName)
 	if err := os.MkdirAll(dir, 0700); err != nil {
 		return "", fmt.Errorf("could not create the import spool directory: %w", err)
 	}
+
+	// MkdirAll happily accepts a pre-existing symlink pointing anywhere, so the
+	// uploads could be redirected to a place someone else can read.
+	fi, err := os.Lstat(dir)
+	if err != nil {
+		return "", fmt.Errorf("could not check the import spool directory: %w", err)
+	}
+	if fi.Mode()&os.ModeSymlink != 0 || !fi.IsDir() {
+		return "", fmt.Errorf("the import spool directory %q is not a directory", dir)
+	}
+
 	return dir, nil
 }
 
@@ -101,8 +120,14 @@ func RemoveSpooledUpload(name string) {
 }
 
 // CleanupSpooledUploads removes uploads left behind by an instance that died
-// mid-import. The queue is in-process, so nothing can still be reading them.
+// mid-import. Only files older than the claim timeout are touched, so another
+// instance's in-flight spools survive.
 func CleanupSpooledUploads() {
+	timeout := config.MigrationClaimTimeout.GetDuration()
+	if timeout <= 0 {
+		return
+	}
+
 	dir, err := spoolDir()
 	if err != nil {
 		log.Errorf("[Migration] Could not clean up spooled imports: %s", err)
@@ -115,8 +140,17 @@ func CleanupSpooledUploads() {
 		return
 	}
 
+	cutoff := time.Now().Add(-timeout)
 	for _, entry := range entries {
 		if entry.IsDir() {
+			continue
+		}
+		info, err := entry.Info()
+		if err != nil {
+			log.Errorf("[Migration] Could not stat the spooled import file %q: %s", entry.Name(), err)
+			continue
+		}
+		if info.ModTime().After(cutoff) {
 			continue
 		}
 		if err := os.Remove(filepath.Join(dir, entry.Name())); err != nil {

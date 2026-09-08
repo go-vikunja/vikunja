@@ -40,8 +40,7 @@ func RegisterListeners() {
 	events.RegisterListener((&MigrationRequestedEvent{}).Name(), &MigrationListener{})
 	events.RegisterListener((&FileMigrationRequestedEvent{}).Name(), &FileMigrationListener{})
 
-	// An instance that died mid-import left its upload behind; the queue is
-	// in-process, so no job can still be reading it.
+	// An instance that died mid-import left its upload behind.
 	migration.CleanupSpooledUploads()
 }
 
