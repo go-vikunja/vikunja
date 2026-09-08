@@ -477,7 +477,7 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 
 	organizationMap := getTrelloOrganizationsWithBoards(trelloData)
 	for organizationID, boards := range organizationMap {
-		hierarchy, err := convertTrelloDataToVikunja(organizationID, boards, &trello.Client{}, nil)
+		hierarchy, err := convertTrelloDataToVikunja(t.Context(), organizationID, boards, &trello.Client{}, nil)
 
 		require.NoError(t, err)
 		assert.NotNil(t, hierarchy)

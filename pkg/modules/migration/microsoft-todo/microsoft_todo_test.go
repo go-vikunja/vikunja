@@ -211,7 +211,7 @@ func TestMakeAuthenticatedGetRequestUpstreamError(t *testing.T) {
 	apiPrefix = srv.URL + "/"
 	t.Cleanup(func() { apiPrefix = prevPrefix })
 
-	err := makeAuthenticatedGetRequest("token", "lists/delta", &projectsResponse{})
+	err := makeAuthenticatedGetRequest(t.Context(), "token", "lists/delta", &projectsResponse{})
 
 	var upstreamErr *migration.ErrUpstreamRequestFailed
 	require.ErrorAs(t, err, &upstreamErr)

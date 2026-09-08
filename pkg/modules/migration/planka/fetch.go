@@ -17,6 +17,7 @@
 package planka
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/url"
@@ -30,11 +31,11 @@ import (
 // maxPages stops the paged loops from spinning forever on a server that keeps returning cards.
 const maxPages = 10000
 
-func fetchAll(c *client) (*plankaData, error) {
+func fetchAll(ctx context.Context, c *client) (*plankaData, error) {
 	log.Debugf("[Planka Migration] Fetching projects")
 
 	projects := &projectsResponse{}
-	if err := c.get("/api/projects", nil, projects); err != nil {
+	if err := c.get(ctx, "/api/projects", nil, projects); err != nil {
 		return nil, err
 	}
 	data := &plankaData{
@@ -64,7 +65,7 @@ func fetchAll(c *client) (*plankaData, error) {
 		sort.SliceStable(boards, func(i, j int) bool { return boards[i].Position < boards[j].Position })
 
 		for _, b := range boards {
-			bd, err := fetchBoard(c, b.ID)
+			bd, err := fetchBoard(ctx, c, b.ID)
 			if err != nil {
 				return nil, fmt.Errorf("fetching board %s: %w", b.ID, err)
 			}
@@ -79,11 +80,11 @@ func fetchAll(c *client) (*plankaData, error) {
 	return data, nil
 }
 
-func fetchBoard(c *client, boardID string) (*plankaBoardData, error) {
+func fetchBoard(ctx context.Context, c *client, boardID string) (*plankaBoardData, error) {
 	log.Debugf("[Planka Migration] Fetching board %s", boardID)
 
 	resp := &boardResponse{}
-	if err := c.get("/api/boards/"+url.PathEscape(boardID), nil, resp); err != nil {
+	if err := c.get(ctx, "/api/boards/"+url.PathEscape(boardID), nil, resp); err != nil {
 		return nil, err
 	}
 	// Planka v1 lists have no type; v2 always sets one.
@@ -104,7 +105,7 @@ func fetchBoard(c *client, boardID string) (*plankaBoardData, error) {
 		if l.Type != listTypeArchive {
 			continue
 		}
-		if err := fetchArchivedCards(c, l.ID, bd); err != nil {
+		if err := fetchArchivedCards(ctx, c, l.ID, bd); err != nil {
 			var budgetErr *ErrImportBudgetExceeded
 			if errors.As(err, &budgetErr) {
 				return nil, err
@@ -117,7 +118,7 @@ func fetchBoard(c *client, boardID string) (*plankaBoardData, error) {
 		if card.CommentsTotal == 0 {
 			continue
 		}
-		comments, users, err := fetchComments(c, card.ID)
+		comments, users, err := fetchComments(ctx, c, card.ID)
 		if err != nil {
 			var budgetErr *ErrImportBudgetExceeded
 			if errors.As(err, &budgetErr) {
@@ -136,7 +137,7 @@ func fetchBoard(c *client, boardID string) (*plankaBoardData, error) {
 
 // fetchArchivedCards pages GET /api/lists/:id/cards (sorted listChangedAt DESC, id DESC) and merges
 // the cards and their included data into bd.
-func fetchArchivedCards(c *client, listID string, bd *plankaBoardData) error {
+func fetchArchivedCards(ctx context.Context, c *client, listID string, bd *plankaBoardData) error {
 	var (
 		beforeAt time.Time
 		beforeID string
@@ -153,7 +154,7 @@ func fetchArchivedCards(c *client, listID string, bd *plankaBoardData) error {
 		}
 
 		resp := &listCardsResponse{}
-		if err := c.get("/api/lists/"+url.PathEscape(listID)+"/cards", query, resp); err != nil {
+		if err := c.get(ctx, "/api/lists/"+url.PathEscape(listID)+"/cards", query, resp); err != nil {
 			return err
 		}
 		if len(resp.Items) == 0 {
@@ -185,7 +186,7 @@ func fetchArchivedCards(c *client, listID string, bd *plankaBoardData) error {
 }
 
 // fetchComments pages GET /api/cards/:id/comments (sorted id DESC) and returns them oldest first.
-func fetchComments(c *client, cardID string) (all []plankaComment, users []plankaUser, err error) {
+func fetchComments(ctx context.Context, c *client, cardID string) (all []plankaComment, users []plankaUser, err error) {
 	// planka sorts newest first; partial results returned with an error must be ordered as well
 	defer func() { slices.Reverse(all) }()
 
@@ -201,7 +202,7 @@ func fetchComments(c *client, cardID string) (all []plankaComment, users []plank
 		}
 
 		resp := &commentsResponse{}
-		if err := c.get("/api/cards/"+url.PathEscape(cardID)+"/comments", query, resp); err != nil {
+		if err := c.get(ctx, "/api/cards/"+url.PathEscape(cardID)+"/comments", query, resp); err != nil {
 			return all, users, err
 		}
 		if len(resp.Items) == 0 {

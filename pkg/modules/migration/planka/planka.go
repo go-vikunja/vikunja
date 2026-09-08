@@ -80,17 +80,17 @@ func (m *Migrator) connect(ctx context.Context) (*client, error) {
 }
 
 // Migrate gets all projects, boards and cards from planka for a user and puts them into vikunja.
-func (m *Migrator) Migrate(u *user.User) error {
+func (m *Migrator) Migrate(ctx context.Context, u *user.User) error {
 	log.Debugf("[Planka Migration] Starting migration for user %d", u.ID)
 
-	// the async migration is not bound by a request deadline, the client's own timeout applies
-	c, err := m.connect(context.Background())
+	c, err := m.connect(ctx)
 	if err != nil {
 		return err
 	}
-	defer c.logout(context.Background())
+	// Logging out must still happen after a cancelled import.
+	defer c.logout(context.WithoutCancel(ctx))
 
-	data, err := fetchAll(c)
+	data, err := fetchAll(ctx, c)
 	if err != nil {
 		return err
 	}
@@ -98,7 +98,7 @@ func (m *Migrator) Migrate(u *user.User) error {
 	log.Debugf("[Planka Migration] Fetched all planka data for user %d, converting", u.ID)
 
 	hierarchy, err := convertPlankaToVikunja(data, func(a *plankaAttachment) (*bytes.Buffer, error) {
-		return c.download(a.ID, a.Name)
+		return c.download(ctx, a.ID, a.Name)
 	})
 	if err != nil {
 		return err
@@ -106,7 +106,7 @@ func (m *Migrator) Migrate(u *user.User) error {
 
 	log.Debugf("[Planka Migration] Inserting %d projects for user %d", len(hierarchy), u.ID)
 
-	if err := migration.InsertFromStructure(hierarchy, u); err != nil {
+	if err := migration.InsertFromStructure(ctx, hierarchy, u); err != nil {
 		return err
 	}
 

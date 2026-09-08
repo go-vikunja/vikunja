@@ -19,6 +19,7 @@ package vikunjafile
 import (
 	"archive/zip"
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -389,7 +390,7 @@ func (v *FileMigrator) ValidateFile(file io.ReaderAt, size int64) error {
 // @Success 200 {object} models.Message "A message telling you the migration was started."
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /migration/vikunja-file/migrate [post]
-func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) error {
+func (v *FileMigrator) Migrate(ctx context.Context, user *user.User, file io.ReaderAt, size int64) error {
 	r, err := openArchive(file, size)
 	if err != nil {
 		return err
@@ -484,7 +485,7 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 		}
 	}
 
-	err = migration.InsertFromStructureWithFileProvider(projects, user, provider)
+	err = migration.InsertFromStructureWithFileProvider(ctx, projects, user, provider)
 	if err != nil {
 		return fmt.Errorf("could not insert data: %w", err)
 	}

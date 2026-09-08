@@ -153,7 +153,7 @@ func runMigrate(t *testing.T, export []byte) error {
 	m := &FileMigrator{}
 	u := &user.User{ID: 1}
 	reader := bytes.NewReader(export)
-	return m.Migrate(u, reader, int64(reader.Len()))
+	return m.Migrate(t.Context(), u, reader, int64(reader.Len()))
 }
 
 func assertTooLarge(t *testing.T, err error) {

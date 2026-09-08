@@ -41,7 +41,7 @@ func TestDoPostWithHeaders_RetriesOn500(t *testing.T) {
 	defer server.Close()
 
 	form := url.Values{"key": {"value"}}
-	resp, err := DoPostWithHeaders(server.URL, form, map[string]string{})
+	resp, err := DoPostWithHeaders(t.Context(), server.URL, form, map[string]string{})
 
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
@@ -66,7 +66,7 @@ func TestDoPostWithHeaders_GivesUpAfter3Retries(t *testing.T) {
 	defer server.Close()
 
 	form := url.Values{"key": {"value"}}
-	resp, err := DoPostWithHeaders(server.URL, form, map[string]string{})
+	resp, err := DoPostWithHeaders(t.Context(), server.URL, form, map[string]string{})
 
 	if err == nil {
 		t.Fatal("expected error after exhausted retries, got nil")
@@ -96,7 +96,7 @@ func TestDoPostWithHeaders_DoesNotRetryOn4xx(t *testing.T) {
 	defer server.Close()
 
 	form := url.Values{"key": {"value"}}
-	resp, err := DoPostWithHeaders(server.URL, form, map[string]string{})
+	resp, err := DoPostWithHeaders(t.Context(), server.URL, form, map[string]string{})
 
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)

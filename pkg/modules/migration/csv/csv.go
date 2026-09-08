@@ -18,6 +18,7 @@ package csv
 
 import (
 	"bytes"
+	"context"
 	"encoding/csv"
 	"encoding/json"
 	"errors"
@@ -592,11 +593,11 @@ func parseDate(value, format string) time.Time {
 // @Failure 400 {object} models.Message "Invalid CSV file or configuration"
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /migration/csv/migrate [put]
-func (m *Migrator) Migrate(u *user.User, file io.ReaderAt, size int64) error {
+func (m *Migrator) Migrate(ctx context.Context, u *user.User, file io.ReaderAt, size int64) error {
 	if m.config == nil {
 		return &migration.ErrCSVConfigRequired{}
 	}
-	return MigrateWithConfig(u, file, size, m.config)
+	return MigrateWithConfig(ctx, u, file, size, m.config)
 }
 
 // ValidateFile rejects an upload the import would fail on - including one over
@@ -620,7 +621,7 @@ func (m *Migrator) SetOptions(options []byte) error {
 }
 
 // MigrateWithConfig imports CSV data into Vikunja with the provided configuration
-func MigrateWithConfig(u *user.User, file io.ReaderAt, size int64, config *ImportConfig) error {
+func MigrateWithConfig(ctx context.Context, u *user.User, file io.ReaderAt, size int64, config *ImportConfig) error {
 	rows, err := readImportRows(file, size, config)
 	if err != nil {
 		return err
@@ -628,7 +629,7 @@ func MigrateWithConfig(u *user.User, file io.ReaderAt, size int64, config *Impor
 
 	vikunjaTasks := convertToVikunja(rows, config)
 
-	return migration.InsertFromStructure(vikunjaTasks, u)
+	return migration.InsertFromStructure(ctx, vikunjaTasks, u)
 }
 
 // readImportRows reads and parses an uploaded CSV into the rows to import. It

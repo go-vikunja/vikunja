@@ -17,6 +17,8 @@
 package trello
 
 import (
+	"context"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
@@ -218,7 +220,7 @@ func convertMarkdownToHTML(input string) (output string, err error) {
 
 // Converts all previously obtained data from trello into the vikunja format.
 // `trelloData` should contain all boards with their projects and cards respectively.
-func convertTrelloDataToVikunja(organizationName string, trelloData []*trello.Board, client *trello.Client, currentMember *trello.Member) (fullVikunjaHierachie []*models.ProjectWithTasksAndBuckets, err error) {
+func convertTrelloDataToVikunja(ctx context.Context, organizationName string, trelloData []*trello.Board, client *trello.Client, currentMember *trello.Member) (fullVikunjaHierachie []*models.ProjectWithTasksAndBuckets, err error) {
 
 	log.Debugf("[Trello Migration] ")
 
@@ -253,7 +255,7 @@ func convertTrelloDataToVikunja(organizationName string, trelloData []*trello.Bo
 		// We're pretty much abusing the backgroundinformation field here - not sure if this is really better than adding a new property to the project
 		if board.Prefs.BackgroundImage != "" {
 			log.Debugf("[Trello Migration] Downloading background %s for board %s", board.Prefs.BackgroundImage, board.ID)
-			buf, err := migration.DownloadFile(board.Prefs.BackgroundImage)
+			buf, err := migration.DownloadFile(ctx, board.Prefs.BackgroundImage)
 			if err != nil {
 				return nil, err
 			}
@@ -335,7 +337,7 @@ func convertTrelloDataToVikunja(organizationName string, trelloData []*trello.Bo
 						// Download file and add it as attachment
 						log.Debugf("[Trello Migration] Downloading card attachment %s", attachment.ID)
 
-						buf, err := migration.DownloadFileWithHeaders(attachment.URL, map[string][]string{
+						buf, err := migration.DownloadFileWithHeaders(ctx, attachment.URL, map[string][]string{
 							"Authorization": {`OAuth oauth_consumer_key="` + config.MigrationTrelloKey.GetString() + `", oauth_token="` + client.Token + `"`},
 						})
 						if err != nil {
@@ -371,7 +373,7 @@ func convertTrelloDataToVikunja(organizationName string, trelloData []*trello.Bo
 
 					cover := card.Cover.Scaled[len(card.Cover.Scaled)-1]
 
-					buf, err := migration.DownloadFile(cover.URL)
+					buf, err := migration.DownloadFile(ctx, cover.URL)
 					if err != nil {
 						return nil, err
 					}
@@ -460,7 +462,7 @@ func convertTrelloDataToVikunja(organizationName string, trelloData []*trello.Bo
 // @Success 200 {object} models.Message "A message telling you everything was migrated successfully."
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /migration/trello/migrate [post]
-func (m *Migration) Migrate(u *user.User) (err error) {
+func (m *Migration) Migrate(ctx context.Context, u *user.User) (err error) {
 	log.Debugf("[Trello Migration] Starting migration for user %d", u.ID)
 	log.Debugf("[Trello Migration] Getting all trello data for user %d", u.ID)
 
@@ -503,7 +505,7 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 		if err != nil {
 			return err
 		}
-		hierarchy, err := convertTrelloDataToVikunja(orgName, boards, client, currentMember)
+		hierarchy, err := convertTrelloDataToVikunja(ctx, orgName, boards, client, currentMember)
 		if err != nil {
 			return err
 		}
@@ -511,7 +513,7 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 		log.Debugf("[Trello Migration] Done migrating trello data for user %d for organization %s", u.ID, organizationID)
 		log.Debugf("[Trello Migration] Start inserting trello data for user %d for organization %s", u.ID, organizationID)
 
-		err = migration.InsertFromStructure(hierarchy, u)
+		err = migration.InsertFromStructure(ctx, hierarchy, u)
 		if err != nil {
 			return err
 		}

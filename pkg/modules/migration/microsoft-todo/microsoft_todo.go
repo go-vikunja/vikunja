@@ -156,7 +156,7 @@ func (m *Migration) Name() string {
 	return "microsoft-todo"
 }
 
-func getMicrosoftGraphAuthToken(code string) (accessToken string, err error) {
+func getMicrosoftGraphAuthToken(ctx context.Context, code string) (accessToken string, err error) {
 
 	form := url.Values{
 		"client_id":     []string{config.MigrationMicrosoftTodoClientID.GetString()},
@@ -166,7 +166,7 @@ func getMicrosoftGraphAuthToken(code string) (accessToken string, err error) {
 		"redirect_uri":  []string{config.MigrationMicrosoftTodoRedirectURL.GetString()},
 		"grant_type":    []string{"authorization_code"},
 	}
-	resp, err := migration.DoPost("https://login.microsoftonline.com/common/oauth2/v2.0/token", form)
+	resp, err := migration.DoPost(ctx, "https://login.microsoftonline.com/common/oauth2/v2.0/token", form)
 	if err != nil {
 		return
 	}
@@ -183,8 +183,8 @@ func getMicrosoftGraphAuthToken(code string) (accessToken string, err error) {
 	return token.AccessToken, err
 }
 
-func makeAuthenticatedGetRequest(token, urlPart string, v interface{}) error {
-	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, apiPrefix+urlPart, nil)
+func makeAuthenticatedGetRequest(ctx context.Context, token, urlPart string, v interface{}) error {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, apiPrefix+urlPart, nil)
 	if err != nil {
 		return err
 	}
@@ -216,12 +216,12 @@ func makeAuthenticatedGetRequest(token, urlPart string, v interface{}) error {
 	return json.Unmarshal(buf.Bytes(), v)
 }
 
-func getMicrosoftTodoData(token string) (microsoftTodoData []*project, err error) {
+func getMicrosoftTodoData(ctx context.Context, token string) (microsoftTodoData []*project, err error) {
 
 	microsoftTodoData = []*project{}
 
 	projects := &projectsResponse{}
-	err = makeAuthenticatedGetRequest(token, "lists/delta", projects)
+	err = makeAuthenticatedGetRequest(ctx, token, "lists/delta", projects)
 	if err != nil {
 		log.Errorf("[Microsoft Todo Migration] Could not get projects: %s", err)
 		return
@@ -237,7 +237,7 @@ func getMicrosoftTodoData(token string) (microsoftTodoData []*project, err error
 		for {
 			tr := &tasksResponse{}
 
-			err = makeAuthenticatedGetRequest(token, link, tr)
+			err = makeAuthenticatedGetRequest(ctx, token, link, tr)
 			if err != nil {
 				log.Errorf("[Microsoft Todo Migration] Could not get tasks for project %s: %s", project.ID, err)
 				return
@@ -389,12 +389,12 @@ func convertMicrosoftTodoData(todoData []*project) (vikunjsStructure []*models.P
 // @Success 200 {object} models.Message "A message telling you everything was migrated successfully."
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /migration/microsoft-todo/migrate [post]
-func (m *Migration) Migrate(user *user.User) (err error) {
+func (m *Migration) Migrate(ctx context.Context, user *user.User) (err error) {
 
 	log.Debugf("[Microsoft Todo Migration] Start Microsoft Todo migration for user %d", user.ID)
 	log.Debugf("[Microsoft Todo Migration] Getting Microsoft Graph api token")
 
-	token, err := getMicrosoftGraphAuthToken(m.Code)
+	token, err := getMicrosoftGraphAuthToken(ctx, m.Code)
 	if err != nil {
 		log.Debugf("[Microsoft Todo Migration] Error getting auth token: %s", err)
 		return
@@ -403,7 +403,7 @@ func (m *Migration) Migrate(user *user.User) (err error) {
 	log.Debugf("[Microsoft Todo Migration] Got Microsoft Graph api token")
 	log.Debugf("[Microsoft Todo Migration] Retrieving Microsoft Todo data")
 
-	todoData, err := getMicrosoftTodoData(token)
+	todoData, err := getMicrosoftTodoData(ctx, token)
 	if err != nil {
 		log.Debugf("[Microsoft Todo Migration] Error getting Microsoft Todo data: %s", err)
 		return
@@ -421,7 +421,7 @@ func (m *Migration) Migrate(user *user.User) (err error) {
 	log.Debugf("[Microsoft Todo Migration] Done converting Microsoft Todo data")
 	log.Debugf("[Microsoft Todo Migration] Creating new structure")
 
-	err = migration.InsertFromStructure(vikunjaStructure, user)
+	err = migration.InsertFromStructure(ctx, vikunjaStructure, user)
 	if err != nil {
 		log.Debugf("[Microsoft Todo Migration] Error while creating new structure: %s", err)
 		return

@@ -51,7 +51,7 @@ func TestFetchAll(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, c.login(t.Context(), "key", "", ""))
 
-	data, err := fetchAll(c)
+	data, err := fetchAll(t.Context(), c)
 	require.NoError(t, err)
 
 	assert.Equal(t, "1", data.CurrentUserID)
@@ -89,7 +89,7 @@ func TestFetchBoardV1Unsupported(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, c.login(t.Context(), "key", "", ""))
 
-	_, err = fetchBoard(c, "30")
+	_, err = fetchBoard(t.Context(), c, "30")
 	var errVersion *ErrUnsupportedVersion
 	require.ErrorAs(t, err, &errVersion)
 }
@@ -103,7 +103,7 @@ func TestConvertPlankaToVikunja(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, c.login(t.Context(), "key", "", ""))
 
-	data, err := fetchAll(c)
+	data, err := fetchAll(t.Context(), c)
 	require.NoError(t, err)
 
 	downloads := []string{}
@@ -277,7 +277,7 @@ func TestMigrate(t *testing.T) {
 	u := &user.User{ID: 1}
 
 	m := &Migrator{URL: srv.URL + "/api/", Token: "key"}
-	require.NoError(t, m.Migrate(u))
+	require.NoError(t, m.Migrate(t.Context(), u))
 
 	db.AssertExists(t, "projects", map[string]interface{}{"title": "Migrated from Planka", "owner_id": u.ID}, false)
 	s := db.NewSession()

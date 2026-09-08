@@ -423,13 +423,13 @@ func (c *client) downloadHeaders() http.Header {
 
 // getRaw performs an authenticated GET and decodes 2xx responses into out. It returns the status code for
 // non-5xx responses so callers can act on 401/404.
-func (c *client) getRaw(path string, query url.Values, out any) (int, error) {
+func (c *client) getRaw(ctx context.Context, path string, query url.Values, out any) (int, error) {
 	u := c.baseURL + path
 	if len(query) > 0 {
 		u += "?" + query.Encode()
 	}
 
-	resp, err := migration.DoGetWithClient(c.hc, u, c.apiHeaders())
+	resp, err := migration.DoGetWithClient(ctx, c.hc, u, c.apiHeaders())
 	if err != nil {
 		return 0, fmt.Errorf("planka request %s failed: %w", path, err)
 	}
@@ -591,8 +591,8 @@ func isBoardEntityArray(path string) bool {
 }
 
 // get performs an authenticated GET and fails on any non-2xx status.
-func (c *client) get(path string, query url.Values, out any) error {
-	status, err := c.getRaw(path, query, out)
+func (c *client) get(ctx context.Context, path string, query url.Values, out any) error {
+	status, err := c.getRaw(ctx, path, query, out)
 	if err != nil {
 		return err
 	}
@@ -609,7 +609,7 @@ func maxAttachmentSize() int64 {
 	return int64(config.GetMaxFileSizeInMBytes()) * int64(datasize.MB) //nolint:gosec // config value is small
 }
 
-func (c *client) download(attachmentID, filename string) (*bytes.Buffer, error) {
+func (c *client) download(ctx context.Context, attachmentID, filename string) (*bytes.Buffer, error) {
 	u := c.baseURL + "/attachments/" + url.PathEscape(attachmentID) + "/download/" + url.PathEscape(filename)
 
 	maxSize := maxAttachmentSize()
@@ -621,7 +621,7 @@ func (c *client) download(attachmentID, filename string) (*bytes.Buffer, error) 
 		return nil, &ErrImportBudgetExceeded{Exceeded: "attachment bytes"}
 	}
 
-	buf, err := migration.DownloadFileWithHeadersLimited(c.downloadHC, u, c.downloadHeaders(), limit)
+	buf, err := migration.DownloadFileWithHeadersLimited(ctx, c.downloadHC, u, c.downloadHeaders(), limit)
 	if err != nil {
 		// A reduced limit means the job budget, not files.maxsize, was exhausted.
 		var tooLarge files.ErrFileIsTooLarge

@@ -645,7 +645,7 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 	}
 
 	doneItems := make(map[string]*doneItem)
-	hierachie, err := convertTodoistToVikunja(testSync, doneItems)
+	hierachie, err := convertTodoistToVikunja(t.Context(), testSync, doneItems)
 	require.NoError(t, err)
 	assert.NotNil(t, hierachie)
 	if diff, equal := messagediff.PrettyDiff(hierachie, expectedHierachie); !equal {
@@ -685,7 +685,7 @@ func TestConvertTodoistToVikunjaWithBrokenAttachment(t *testing.T) {
 		},
 	}
 
-	hierachie, err := convertTodoistToVikunja(testSync, make(map[string]*doneItem))
+	hierachie, err := convertTodoistToVikunja(t.Context(), testSync, make(map[string]*doneItem))
 	require.NoError(t, err)
 	require.Len(t, hierachie, 2)
 	require.Len(t, hierachie[1].Tasks, 1)
@@ -710,7 +710,7 @@ func TestConvertTodoistToVikunjaPreservesDescriptions(t *testing.T) {
 		]
 	}`), testSync))
 
-	hierachie, err := convertTodoistToVikunja(testSync, make(map[string]*doneItem))
+	hierachie, err := convertTodoistToVikunja(t.Context(), testSync, make(map[string]*doneItem))
 	require.NoError(t, err)
 	require.Len(t, hierachie, 2)
 	require.Len(t, hierachie[1].Tasks, 3)

@@ -19,6 +19,7 @@ package wekan
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"io"
@@ -380,7 +381,7 @@ func (m *Migrator) Name() string {
 // @Success 200 {object} models.Message "A message telling you everything was migrated successfully."
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /migration/wekan/migrate [put]
-func (m *Migrator) Migrate(user *user.User, file io.ReaderAt, size int64) error {
+func (m *Migrator) Migrate(ctx context.Context, user *user.User, file io.ReaderAt, size int64) error {
 	board, err := parseWekanBoard(file, size)
 	if err != nil {
 		return err
@@ -388,7 +389,7 @@ func (m *Migrator) Migrate(user *user.User, file io.ReaderAt, size int64) error 
 
 	vikunjaData := convertWekanToVikunja(board)
 
-	return migration.InsertFromStructure(vikunjaData, user)
+	return migration.InsertFromStructure(ctx, vikunjaData, user)
 }
 
 // ValidateFile rejects an upload that isn't a usable WeKan export before the

@@ -17,6 +17,7 @@
 package handler
 
 import (
+	"context"
 	"sync/atomic"
 	"testing"
 
@@ -55,7 +56,7 @@ func (m *stubMigrator) CheckCredentials() error {
 	return nil
 }
 
-func (m *stubMigrator) Migrate(_ *user.User) error {
+func (m *stubMigrator) Migrate(_ context.Context, _ *user.User) error {
 	atomic.AddInt64(&migrateRunCount, 1)
 	if m.Panic {
 		panic("boom")

@@ -17,6 +17,7 @@
 package migration
 
 import (
+	"context"
 	"io"
 
 	"code.vikunja.io/api/pkg/user"
@@ -33,7 +34,7 @@ type Migrator interface {
 	MigratorName
 	// Migrate is the interface used to migrate a user's tasks from another platform to vikunja.
 	// The user object is the user who's tasks will be migrated.
-	Migrate(user *user.User) error
+	Migrate(ctx context.Context, user *user.User) error
 	// AuthURL returns a url for clients to authenticate against.
 	// The use case for this are Oauth flows, where the server token should remain hidden and not
 	// known to the frontend.
@@ -52,7 +53,7 @@ type FileMigrator interface {
 	MigratorName
 	// Migrate is the interface used to migrate a user's tasks, project and other things from a file to vikunja.
 	// The user object is the user who's tasks will be migrated.
-	Migrate(user *user.User, file io.ReaderAt, size int64) error
+	Migrate(ctx context.Context, user *user.User, file io.ReaderAt, size int64) error
 }
 
 // FileValidator is implemented by file migrators that can cheaply reject a

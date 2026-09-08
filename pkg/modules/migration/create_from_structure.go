@@ -51,18 +51,23 @@ type backgroundFileStorageCounter interface {
 
 // InsertFromStructure takes a fully nested Vikunja data structure and a user and then creates everything for this user
 // (Projects, tasks, etc. Even attachments and relations.)
-func InsertFromStructure(str []*models.ProjectWithTasksAndBuckets, u *user.User) (err error) {
-	return insertFromStructureWithFileProvider(str, u, nil)
+func InsertFromStructure(ctx context.Context, str []*models.ProjectWithTasksAndBuckets, u *user.User) (err error) {
+	return insertFromStructureWithFileProvider(ctx, str, u, nil)
 }
 
 // InsertFromStructureWithFileProvider imports lazily opened attachment and background bytes.
-func InsertFromStructureWithFileProvider(str []*models.ProjectWithTasksAndBuckets, u *user.User, provider FileProvider) (err error) {
-	return insertFromStructureWithFileProvider(str, u, provider)
+func InsertFromStructureWithFileProvider(ctx context.Context, str []*models.ProjectWithTasksAndBuckets, u *user.User, provider FileProvider) (err error) {
+	return insertFromStructureWithFileProvider(ctx, str, u, provider)
 }
 
-func insertFromStructureWithFileProvider(str []*models.ProjectWithTasksAndBuckets, u *user.User, provider FileProvider) (err error) {
+func insertFromStructureWithFileProvider(ctx context.Context, str []*models.ProjectWithTasksAndBuckets, u *user.User, provider FileProvider) (err error) {
 	s := db.NewSession()
 	defer s.Close()
+
+	// The session carries the context so cancelling an import aborts its next
+	// query; the whole import is one transaction, so it rolls back cleanly.
+	// SetSessionContext, not s.Context: the latter drops the session cache.
+	db.SetSessionContext(ctx, s)
 
 	// Callers may pass a user built from jwt claims; load the stored one so
 	// assignee matching sees the current email/username.
@@ -74,7 +79,7 @@ func insertFromStructureWithFileProvider(str []*models.ProjectWithTasksAndBucket
 	// Failed transactions roll back file rows, not blobs written before commit.
 	createdFiles := &[]int64{}
 
-	err = insertFromStructure(s, str, importer, provider, createdFiles)
+	err = insertFromStructure(ctx, s, str, importer, provider, createdFiles)
 	if err != nil {
 		log.Errorf("[creating structure] Error while creating structure: %s", err.Error())
 		cleanupAndRollback(s, *createdFiles)
@@ -88,7 +93,9 @@ func insertFromStructureWithFileProvider(str []*models.ProjectWithTasksAndBucket
 		return err
 	}
 
-	events.DispatchPending(context.Background(), s)
+	// Not the import's context: the data is committed, so its events must be
+	// delivered even when the import was cancelled a moment later.
+	events.DispatchPending(context.WithoutCancel(ctx), s)
 	return nil
 }
 
@@ -109,7 +116,7 @@ func cleanupCreatedFiles(fileIDs []int64) {
 	}
 }
 
-func insertFromStructure(s *xorm.Session, str []*models.ProjectWithTasksAndBuckets, user *user.User, provider FileProvider, createdFiles *[]int64) (err error) {
+func insertFromStructure(ctx context.Context, s *xorm.Session, str []*models.ProjectWithTasksAndBuckets, user *user.User, provider FileProvider, createdFiles *[]int64) (err error) {
 
 	log.Infof("[creating structure] Creating %d projects for user %d", len(str), user.ID)
 
@@ -130,6 +137,12 @@ func insertFromStructure(s *xorm.Session, str []*models.ProjectWithTasksAndBucke
 	projectsByOldID := make(map[int64]*models.Project) // old id is the key
 	// Create all projects
 	for i, p := range str {
+		// A cancelled import stops here rather than at its next query, so the
+		// user gets ErrMigrationCancelled instead of "context canceled".
+		if err := ctx.Err(); err != nil {
+			return &ErrMigrationCancelled{}
+		}
+
 		if p.ID == models.FavoritesPseudoProjectID {
 			continue
 		}

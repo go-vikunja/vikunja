@@ -181,7 +181,7 @@ func TestInsertFromStructure(t *testing.T) {
 				},
 			},
 		}
-		err := InsertFromStructure(testStructure, u)
+		err := InsertFromStructure(t.Context(), testStructure, u)
 		require.NoError(t, err)
 		db.AssertExists(t, "projects", map[string]interface{}{
 			"title":       testStructure[1].Title,
@@ -217,7 +217,7 @@ func TestInsertFromStructure(t *testing.T) {
 				},
 			},
 		}
-		require.NoError(t, InsertFromStructure(structure, u))
+		require.NoError(t, InsertFromStructure(t.Context(), structure, u))
 
 		db.AssertExists(t, "tasks", map[string]interface{}{
 			"title": "Archived task",
@@ -261,8 +261,8 @@ func TestInsertFromStructure(t *testing.T) {
 			}
 		}
 
-		require.NoError(t, InsertFromStructure(makeStructure(), u))
-		require.NoError(t, InsertFromStructure(makeStructure(), u))
+		require.NoError(t, InsertFromStructure(t.Context(), makeStructure(), u))
+		require.NoError(t, InsertFromStructure(t.Context(), makeStructure(), u))
 
 		s := db.NewSession()
 		defer s.Close()
@@ -288,7 +288,7 @@ func TestInsertFromStructure(t *testing.T) {
 				},
 			},
 		}
-		require.NoError(t, InsertFromStructure(structure, u))
+		require.NoError(t, InsertFromStructure(t.Context(), structure, u))
 
 		db.AssertExists(t, "labels", map[string]interface{}{
 			"title":         "Label #3 - other user",
@@ -306,7 +306,7 @@ func TestInsertFromStructure(t *testing.T) {
 				Task: models.Task{Title: fmt.Sprintf("Task %d", i)},
 			})
 		}
-		require.NoError(t, InsertFromStructure([]*models.ProjectWithTasksAndBuckets{{
+		require.NoError(t, InsertFromStructure(t.Context(), []*models.ProjectWithTasksAndBuckets{{
 			Project: models.Project{Title: "Import project"},
 			Tasks:   tasks,
 		}}, u))
@@ -340,7 +340,7 @@ func TestInsertFromStructure(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
 		// Old exports only flag the parent as archived.
-		require.NoError(t, InsertFromStructure([]*models.ProjectWithTasksAndBuckets{
+		require.NoError(t, InsertFromStructure(t.Context(), []*models.ProjectWithTasksAndBuckets{
 			{
 				Project: models.Project{
 					ID:         1,
@@ -399,7 +399,7 @@ func TestInsertFromStructure(t *testing.T) {
 	t.Run("keeps positions the export provides", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
-		require.NoError(t, InsertFromStructure([]*models.ProjectWithTasksAndBuckets{{
+		require.NoError(t, InsertFromStructure(t.Context(), []*models.ProjectWithTasksAndBuckets{{
 			Project: models.Project{Title: "Import project"},
 			Tasks: []*models.TaskWithComments{
 				{Task: models.Task{Title: "Second", Position: 200}},
@@ -425,7 +425,7 @@ func TestInsertFromStructure(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
 		foreignID := int64(999)
-		require.NoError(t, InsertFromStructure([]*models.ProjectWithTasksAndBuckets{{
+		require.NoError(t, InsertFromStructure(t.Context(), []*models.ProjectWithTasksAndBuckets{{
 			Project: models.Project{Title: "Import project"},
 			Tasks: []*models.TaskWithComments{
 				{Task: models.Task{Title: "email match", Assignees: []*user.User{{ID: foreignID, Username: "someone-else", Email: "USER1@example.com"}}}},
@@ -470,7 +470,7 @@ func TestInsertFromStructureFileProvider(t *testing.T) {
 		provider := &testFileProvider{err: budgetErr}
 		structure := []*models.ProjectWithTasksAndBuckets{{Project: models.Project{Title: "provider error"}}}
 
-		err := InsertFromStructureWithFileProvider(structure, u, provider)
+		err := InsertFromStructureWithFileProvider(t.Context(), structure, u, provider)
 		require.ErrorIs(t, err, budgetErr)
 		db.AssertMissing(t, "projects", map[string]interface{}{"title": "provider error"})
 	})
@@ -492,7 +492,7 @@ func TestInsertFromStructureFileProvider(t *testing.T) {
 			}}},
 		}}
 
-		err = InsertFromStructureWithFileProvider(structure, u, provider)
+		err = InsertFromStructureWithFileProvider(t.Context(), structure, u, provider)
 		require.ErrorIs(t, err, providerErr)
 		assert.True(t, background.closed, "the background reader must be closed")
 		assert.Equal(t, newBackgroundID, structure[0].Project.BackgroundFileID)
