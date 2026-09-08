@@ -234,6 +234,7 @@ func TestTaskComment_ReadOne(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, "Lorem Ipsum Dolor Sit Amet", tc.Comment)
 		assert.NotEmpty(t, tc.Author.ID)
+		assert.Empty(t, tc.Author.Email)
 	})
 	t.Run("nonexisting", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
