@@ -415,52 +415,9 @@ func linesToSkipBeforeHeader(file io.ReaderAt, size int64) (int, error) {
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /migration/ticktick/migrate [put]
 func (m *Migrator) Migrate(user *user.User, file io.ReaderAt, size int64) error {
-	// Check if file is empty
-	if size == 0 {
-		return &migration.ErrFileIsEmpty{}
-	}
-
-	fr := io.NewSectionReader(file, 0, size)
-
-	// Check if the file is a valid CSV
-	buf := make([]byte, 1024)
-	n, err := fr.Read(buf)
-	if errors.Is(err, io.EOF) || n == 0 {
-		return &migration.ErrFileIsEmpty{}
-	}
+	allTasks, err := parseTickTickTasks(file, size)
 	if err != nil {
 		return err
-	}
-
-	// Reset the reader position to start
-	_, err = fr.Seek(0, io.SeekStart)
-	if err != nil {
-		return err
-	}
-
-	// Check if the content looks like a CSV file
-	content := string(buf[:n])
-	if !isValidCSV(content) {
-		return &migration.ErrNotACSVFile{}
-	}
-
-	allTasks := []*tickTickTask{}
-	skip, err := linesToSkipBeforeHeader(file, size)
-	if err != nil {
-		return err
-	}
-	decode, err := newLineSkipDecoder(fr, skip)
-	if err != nil {
-		return err
-	}
-	err = gocsv.UnmarshalDecoder(decode, &allTasks)
-	if err != nil {
-		return err
-	}
-
-	// Also check if no tasks were found after decoding
-	if len(allTasks) == 0 {
-		return &migration.ErrFileIsEmpty{}
 	}
 
 	for _, task := range allTasks {
@@ -479,6 +436,61 @@ func (m *Migrator) Migrate(user *user.User, file io.ReaderAt, size int64) error 
 	vikunjaTasks := convertTickTickToVikunja(allTasks)
 
 	return migration.InsertFromStructure(vikunjaTasks, user)
+}
+
+// ValidateFile rejects an upload that isn't a usable TickTick export before the
+// import is queued, so the request still fails instead of a later notification.
+func (m *Migrator) ValidateFile(file io.ReaderAt, size int64) error {
+	_, err := parseTickTickTasks(file, size)
+	return err
+}
+
+func parseTickTickTasks(file io.ReaderAt, size int64) ([]*tickTickTask, error) {
+	if size == 0 {
+		return nil, &migration.ErrFileIsEmpty{}
+	}
+
+	fr := io.NewSectionReader(file, 0, size)
+
+	// Check if the file is a valid CSV
+	buf := make([]byte, 1024)
+	n, err := fr.Read(buf)
+	if errors.Is(err, io.EOF) || n == 0 {
+		return nil, &migration.ErrFileIsEmpty{}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	// Reset the reader position to start
+	if _, err = fr.Seek(0, io.SeekStart); err != nil {
+		return nil, err
+	}
+
+	if !isValidCSV(string(buf[:n])) {
+		return nil, &migration.ErrNotACSVFile{}
+	}
+
+	skip, err := linesToSkipBeforeHeader(file, size)
+	if err != nil {
+		return nil, err
+	}
+	decode, err := newLineSkipDecoder(fr, skip)
+	if err != nil {
+		return nil, err
+	}
+
+	allTasks := []*tickTickTask{}
+	if err := gocsv.UnmarshalDecoder(decode, &allTasks); err != nil {
+		return nil, err
+	}
+
+	// Also check if no tasks were found after decoding
+	if len(allTasks) == 0 {
+		return nil, &migration.ErrFileIsEmpty{}
+	}
+
+	return allTasks, nil
 }
 
 // isValidCSV performs a basic check to determine if the content looks like a CSV file

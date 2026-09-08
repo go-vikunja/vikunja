@@ -381,22 +381,36 @@ func (m *Migrator) Name() string {
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /migration/wekan/migrate [put]
 func (m *Migrator) Migrate(user *user.User, file io.ReaderAt, size int64) error {
-	if size == 0 {
-		return &migration.ErrFileIsEmpty{}
-	}
-
-	fr := io.NewSectionReader(file, 0, size)
-
-	board, err := parseWekanJSON(fr)
+	board, err := parseWekanBoard(file, size)
 	if err != nil {
 		return err
-	}
-
-	if board.Title == "" && len(board.Cards) == 0 {
-		return &migration.ErrFileIsEmpty{}
 	}
 
 	vikunjaData := convertWekanToVikunja(board)
 
 	return migration.InsertFromStructure(vikunjaData, user)
+}
+
+// ValidateFile rejects an upload that isn't a usable WeKan export before the
+// import is queued, so the request still fails instead of a later notification.
+func (m *Migrator) ValidateFile(file io.ReaderAt, size int64) error {
+	_, err := parseWekanBoard(file, size)
+	return err
+}
+
+func parseWekanBoard(file io.ReaderAt, size int64) (*wekanBoard, error) {
+	if size == 0 {
+		return nil, &migration.ErrFileIsEmpty{}
+	}
+
+	board, err := parseWekanJSON(io.NewSectionReader(file, 0, size))
+	if err != nil {
+		return nil, err
+	}
+
+	if board.Title == "" && len(board.Cards) == 0 {
+		return nil, &migration.ErrFileIsEmpty{}
+	}
+
+	return board, nil
 }

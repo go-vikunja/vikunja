@@ -600,6 +600,18 @@ func (m *Migrator) Migrate(u *user.User, file io.ReaderAt, size int64) error {
 	return MigrateWithConfig(u, file, size, m.config)
 }
 
+// ValidateFile rejects an upload that can't be a CSV import before the import is
+// queued, so the request still fails instead of a later notification.
+func (m *Migrator) ValidateFile(_ io.ReaderAt, size int64) error {
+	if size == 0 {
+		return &migration.ErrFileIsEmpty{}
+	}
+	if size > maxImportFileBytes() {
+		return &migration.ErrNotACSVFile{}
+	}
+	return nil
+}
+
 // SetOptions applies the import config the request carried through the queue.
 func (m *Migrator) SetOptions(options []byte) error {
 	config := &ImportConfig{}
