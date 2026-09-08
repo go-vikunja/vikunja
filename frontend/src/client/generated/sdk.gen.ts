@@ -601,7 +601,7 @@ export const authLogout = <ThrowOnError extends boolean = true>(options?: Option
 /**
  * Cancel the running migration
  *
- * Stops the migration the authenticated user currently has running and frees their migration slot, so they can start another one immediately. The running job aborts at its next step and rolls back everything it had imported. Returns 404 when nothing is running.
+ * Asks the migration the authenticated user currently has running to stop. The job aborts at its next cancellation point and rolls back the transaction it is in at that moment, so anything it committed before that stays imported. The migration slot is freed once the job has actually stopped, which may take a moment. Returns 404 when nothing is running, and 409 when the migration cannot be interrupted right now.
  */
 export const migrationCancel = <ThrowOnError extends boolean = true>(options?: Options<MigrationCancelData, ThrowOnError>): RequestResult<MigrationCancelResponses, MigrationCancelErrors, ThrowOnError> => (options?.client ?? client).post<MigrationCancelResponses, MigrationCancelErrors, ThrowOnError>({
     security: [{

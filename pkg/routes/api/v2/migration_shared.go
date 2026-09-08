@@ -46,7 +46,7 @@ func RegisterMigrationCancelRoute(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "migration-cancel",
 		Summary:     "Cancel the running migration",
-		Description: "Asks the migration the authenticated user currently has running to stop. The job aborts at its next cancellation point and rolls back the transaction it is in at that moment, so anything it committed before that stays imported. The migration slot is freed once the job has actually stopped, which may take a moment. Returns 404 when nothing is running and 409 when the migration is running on a different instance.",
+		Description: "Asks the migration the authenticated user currently has running to stop. The job aborts at its next cancellation point and rolls back the transaction it is in at that moment, so anything it committed before that stays imported. The migration slot is freed once the job has actually stopped, which may take a moment. Returns 404 when nothing is running, and 409 when the migration cannot be interrupted right now.",
 		Method:      http.MethodPost,
 		Path:        "/migration/cancel",
 		// Stops a job rather than creating a resource, so 200 instead of the wrapper's 201.
