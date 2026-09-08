@@ -59,7 +59,7 @@ func RegisterFileMigrator(factory func() migration.FileMigrator) {
 // It returns as soon as the job is queued: an import of a large export runs for
 // minutes, far longer than a reverse proxy will hold a request open, and a
 // client that gives up waiting cannot abort the import it started.
-func StartFileMigration(ms migration.FileMigrator, u *user2.User, file migration.UploadedFile, size int64, options []byte) error {
+func StartFileMigration(ms migration.FileMigrator, u *user2.User, file io.ReaderAt, size int64, options []byte) error {
 	// Applied here as well as in the listener so a validator can see them - the
 	// CSV row limit only means something with the config's delimiter.
 	if err := applyMigratorOptions(ms, options); err != nil {
@@ -71,9 +71,6 @@ func StartFileMigration(ms migration.FileMigrator, u *user2.User, file migration
 		if err := v.ValidateFile(file, size); err != nil {
 			return asImportFileError(err)
 		}
-		if _, err := file.Seek(0, io.SeekStart); err != nil {
-			return err
-		}
 	}
 
 	status, err := migration.ClaimMigration(ms, u)
@@ -81,10 +78,15 @@ func StartFileMigration(ms migration.FileMigrator, u *user2.User, file migration
 		return err
 	}
 
-	uploadName, uploadSize, err := migration.SpoolUpload(file)
+	uploadName, uploadSize, err := migration.SpoolUpload(io.NewSectionReader(file, 0, size))
 	if err != nil {
 		releaseClaim(status, u, "failed upload spooling")
 		return err
+	}
+	if uploadSize != size {
+		migration.RemoveSpooledUpload(uploadName)
+		releaseClaim(status, u, "short upload spooling")
+		return fmt.Errorf("spooled %d bytes of the %d byte upload", uploadSize, size)
 	}
 
 	if err := events.Dispatch(&FileMigrationRequestedEvent{
