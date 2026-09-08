@@ -194,7 +194,7 @@ func migrateInListener(ms migration.Migrator, event *MigrationRequestedEvent) (m
 		}
 	}()
 
-	log.Debugf("[Migration] Starting migration %d from %s for user %d", m.ID, event.MigratorKind, event.User.ID)
+	log.Infof("[Migration] Starting migration %d from %s for user %d", m.ID, event.MigratorKind, event.User.ID)
 	err = ms.Migrate(event.User)
 	if err != nil {
 		return
@@ -214,7 +214,7 @@ func migrateInListener(ms migration.Migrator, event *MigrationRequestedEvent) (m
 		return
 	}
 
-	log.Debugf("[Migration] Successfully done migration %d from %s for user %d", m.ID, event.MigratorKind, event.User.ID)
+	log.Infof("[Migration] Successfully done migration %d from %s for user %d", m.ID, event.MigratorKind, event.User.ID)
 	return
 }
 
