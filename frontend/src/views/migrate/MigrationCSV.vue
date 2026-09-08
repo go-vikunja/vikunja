@@ -179,6 +179,13 @@
 			class="success-step"
 		>
 			<Message
+				v-if="error"
+				variant="danger"
+				class="mbe-4"
+			>
+				{{ error }}
+			</Message>
+			<Message
 				ref="resultMessage"
 				role="status"
 				aria-live="polite"
@@ -191,9 +198,21 @@
 						: $t('migrate.migrationStartedWillReciveEmail', {service: 'CSV'})
 				}}
 			</Message>
-			<XButton :to="{name: 'home'}">
-				{{ $t('home.goToOverview') }}
-			</XButton>
+			<div class="actions">
+				<XButton :to="{name: 'home'}">
+					{{ $t('home.goToOverview') }}
+				</XButton>
+				<XButton
+					v-if="!importFinished"
+					variant="tertiary"
+					class="has-text-danger"
+					:loading="cancelService.loading"
+					:disabled="cancelService.loading || undefined"
+					@click="cancelImport"
+				>
+					{{ $t('migrate.cancelMigration') }}
+				</XButton>
+			</div>
 		</div>
 	</div>
 </template>
@@ -217,6 +236,7 @@ import CSVMigrationService, {
 
 import {useTitle} from '@/composables/useTitle'
 import {useMigrationCompletion} from '@/composables/useMigrationCompletion'
+import MigrationCancelService from '@/services/migrator/migrationCancel'
 import {getErrorText} from '@/message'
 
 type Step = 'upload' | 'mapping' | 'success'
@@ -227,7 +247,22 @@ useTitle(() => t('migrate.titleService', {name: 'CSV'}))
 
 const csvService = shallowReactive(new CSVMigrationService())
 
-const {isFinished: importFinished, start: startPolling} = useMigrationCompletion(() => csvService)
+const cancelService = shallowReactive(new MigrationCancelService())
+
+const {isFinished: importFinished, start: startPolling, stop: stopPolling} = useMigrationCompletion(() => csvService)
+
+async function cancelImport() {
+	error.value = ''
+	try {
+		await cancelService.cancel()
+	} catch (e) {
+		error.value = getErrorText(e)
+		return
+	}
+
+	stopPolling()
+	resetToUpload()
+}
 
 const step = ref<Step>('upload')
 const error = ref('')

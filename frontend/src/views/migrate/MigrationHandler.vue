@@ -76,9 +76,20 @@
 			<Message class="mbe-4">
 				{{ $t('migrate.migrationInProgress') }}
 			</Message>
-			<XButton :to="{name: 'home'}">
-				{{ $t('home.goToOverview') }}
-			</XButton>
+			<div class="migration-buttons">
+				<XButton :to="{name: 'home'}">
+					{{ $t('home.goToOverview') }}
+				</XButton>
+				<XButton
+					variant="tertiary"
+					class="has-text-danger"
+					:loading="cancelService.loading"
+					:disabled="cancelService.loading || undefined"
+					@click="cancelMigration"
+				>
+					{{ $t('migrate.cancelMigration') }}
+				</XButton>
+			</div>
 		</div>
 		<div v-else-if="lastMigrationFinishedAt">
 			<p>
@@ -102,6 +113,13 @@
 		</div>
 		<div v-else>
 			<Message
+				v-if="migrationError"
+				variant="danger"
+				class="mbe-4"
+			>
+				{{ migrationError }}
+			</Message>
+			<Message
 				ref="resultMessage"
 				role="status"
 				aria-live="polite"
@@ -115,9 +133,21 @@
 				}}
 			</Message>
 
-			<XButton :to="{name: 'home'}">
-				{{ $t('home.goToOverview') }}
-			</XButton>
+			<div class="migration-buttons">
+				<XButton :to="{name: 'home'}">
+					{{ $t('home.goToOverview') }}
+				</XButton>
+				<XButton
+					v-if="!migrationFinished"
+					variant="tertiary"
+					class="has-text-danger"
+					:loading="cancelService.loading"
+					:disabled="cancelService.loading || undefined"
+					@click="cancelMigration"
+				>
+					{{ $t('migrate.cancelMigration') }}
+				</XButton>
+			</div>
 		</div>
 	</div>
 </template>
@@ -142,6 +172,7 @@ import MigrationCredentialsForm from './MigrationCredentialsForm.vue'
 
 import AbstractMigrationService, {type MigrationConfig} from '@/services/migrator/abstractMigration'
 import AbstractMigrationFileService from '@/services/migrator/abstractMigrationFile'
+import MigrationCancelService from '@/services/migrator/migrationCancel'
 
 import {formatDateLong} from '@/helpers/time/formatDate'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
@@ -184,10 +215,11 @@ const passwordHelp = computed(() => {
 const migrationService = shallowReactive(new AbstractMigrationService(migrator.value.id))
 // eslint-disable-next-line vue/no-ref-object-reactivity-loss
 const migrationFileService = shallowReactive(new AbstractMigrationFileService(migrator.value.id))
+const cancelService = shallowReactive(new MigrationCancelService())
 
 useTitle(() => t('migrate.titleService', {name: migrator.value.name}))
 
-const {isFinished: migrationFinished, start: startPolling} = useMigrationCompletion(
+const {isFinished: migrationFinished, start: startPolling, stop: stopPolling} = useMigrationCompletion(
 	() => migrator.value.isFileMigrator ? migrationFileService : migrationService,
 )
 
@@ -279,6 +311,21 @@ async function migrate(credentialsConfig?: MigrationConfig) {
 	} finally {
 		isMigrating.value = false
 	}
+}
+
+async function cancelMigration() {
+	migrationError.value = ''
+	try {
+		await cancelService.cancel()
+	} catch (e) {
+		migrationError.value = getErrorText(e)
+		return
+	}
+
+	stopPolling()
+	migrationJustStarted.value = false
+	lastMigrationStartedAt.value = null
+	lastMigrationFinishedAt.value = null
 }
 
 // Credentials migrators have no config yet at this point, so reset the status to show the form again.
