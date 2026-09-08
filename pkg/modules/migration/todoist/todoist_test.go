@@ -17,6 +17,7 @@
 package todoist
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -690,6 +691,44 @@ func TestConvertTodoistToVikunjaWithBrokenAttachment(t *testing.T) {
 	require.Len(t, hierachie[1].Tasks, 1)
 	assert.Empty(t, hierachie[1].Tasks[0].Attachments)
 	assert.Equal(t, "Lorem Ipsum dolor sit amet", hierachie[1].Tasks[0].Description)
+}
+
+func TestConvertTodoistToVikunjaPreservesDescriptions(t *testing.T) {
+	// The Todoist v1 sync API returns a `description` field (markdown) on every
+	// item. It must become the task description, with notes appended after it.
+	testSync := &sync{}
+	require.NoError(t, json.Unmarshal([]byte(`{
+		"projects": [{"id": "396936926", "name": "Project1"}],
+		"items": [
+			{"id": "400000001", "project_id": "396936926", "content": "With description and note", "description": "The task description"},
+			{"id": "400000002", "project_id": "396936926", "content": "With description only", "description": "Only a description"},
+			{"id": "400000003", "project_id": "396936926", "content": "With note only"}
+		],
+		"notes": [
+			{"id": "101478", "item_id": "400000001", "content": "A note"},
+			{"id": "101479", "item_id": "400000003", "content": "A note"}
+		]
+	}`), testSync))
+
+	hierachie, err := convertTodoistToVikunja(testSync, make(map[string]*doneItem))
+	require.NoError(t, err)
+	require.Len(t, hierachie, 2)
+	require.Len(t, hierachie[1].Tasks, 3)
+
+	assert.Equal(t, "The task description\nA note", hierachie[1].Tasks[0].Description)
+	assert.Equal(t, "Only a description", hierachie[1].Tasks[1].Description)
+	// Regression: without a description, notes alone still become the description.
+	assert.Equal(t, "A note", hierachie[1].Tasks[2].Description)
+}
+
+func TestTodoistItemDecoding(t *testing.T) {
+	// The v1 sync API returns `description` on every item, the decoder must not
+	// silently drop it.
+	payload := `{"items": [{"id": "400000001", "content": "Task1", "description": "Some markdown description"}]}`
+	s := &sync{}
+	require.NoError(t, json.Unmarshal([]byte(payload), s))
+	require.Len(t, s.Items, 1)
+	assert.Equal(t, "Some markdown description", s.Items[0].Description)
 }
 
 func TestIsDownloadableURL(t *testing.T) {
