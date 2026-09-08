@@ -17,12 +17,16 @@
 package migration
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"sync"
+	"sync/atomic"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/user"
 
 	"xorm.io/xorm"
@@ -70,13 +74,8 @@ func claimMigration(m MigratorName, u *user.User) (status *Status, err error) {
 		return nil, claimConflictOr(u.ID, err)
 	}
 
-	// Matches both the live claim and legacy rows (created before claims existed). Reading
-	// before inserting keeps a losing request read-only so it cannot fight the running import.
-	running := &Status{}
-	has, err := s.
-		Where("finished_at IS NULL AND user_id = ?", u.ID).
-		Desc("id").
-		Get(running)
+	// Reading before inserting keeps a losing request read-only so it cannot fight the running import.
+	running, has, err := liveClaim(s, u.ID)
 	if err != nil {
 		_ = s.Rollback()
 		return nil, claimConflictOr(u.ID, err)
@@ -105,6 +104,20 @@ func claimMigration(m MigratorName, u *user.User) (status *Status, err error) {
 	return status, s.Commit()
 }
 
+// liveClaim reports the unfinished status row blocking new migrations for userID. Legacy rows
+// predate active_user_id and have it NULL, but still count as live.
+func liveClaim(s *xorm.Session, userID int64) (status *Status, has bool, err error) {
+	status = &Status{}
+	has, err = s.
+		Where("finished_at IS NULL AND user_id = ?", userID).
+		Desc("id").
+		Get(status)
+	if err != nil {
+		return nil, false, err
+	}
+	return status, has, nil
+}
+
 // claimConflict reports the live claim of userID, if any. Re-reading is the only check that
 // holds on every driver: each spells the unique violation differently, and contention can
 // fail the insert with an unrelated error.
@@ -112,8 +125,7 @@ func claimConflict(userID int64) *ErrMigrationAlreadyRunning {
 	s := db.NewAutocommitSession()
 	defer s.Close()
 
-	running := &Status{}
-	has, err := s.Where("active_user_id = ?", userID).Desc("id").Get(running)
+	running, has, err := liveClaim(s, userID)
 	if err != nil || !has {
 		return nil
 	}
@@ -204,4 +216,74 @@ func GetMigrationStatusByID(id int64) (status *Status, err error) {
 		return nil, fmt.Errorf("migration status %d not found", id)
 	}
 	return status, nil
+}
+
+// runningMigrations holds the cancel func of every migration executing in this
+// process, keyed by its status id. The queue is in-process, so a migration that
+// is still running here is always in here.
+var runningMigrations = struct {
+	sync.Mutex
+	runs map[int64]migrationRun
+}{runs: map[int64]migrationRun{}}
+
+var migrationRunToken atomic.Int64
+
+type migrationRun struct {
+	cancel context.CancelFunc
+	token  int64
+}
+
+// StartRun makes a migration cancellable for as long as it runs. The returned
+// func must be called once it ends.
+func StartRun(statusID int64) (context.Context, func()) {
+	ctx, cancel := context.WithCancel(context.Background())
+	run := migrationRun{cancel: cancel, token: migrationRunToken.Add(1)}
+
+	runningMigrations.Lock()
+	runningMigrations.runs[statusID] = run
+	runningMigrations.Unlock()
+
+	return ctx, func() {
+		runningMigrations.Lock()
+		// A redelivered event can run the same status twice, and only this run may unregister itself.
+		if current, has := runningMigrations.runs[statusID]; has && current.token == run.token {
+			delete(runningMigrations.runs, statusID)
+		}
+		runningMigrations.Unlock()
+		cancel()
+	}
+}
+
+// Cancel asks the user's running migration to stop. The job aborts at its next
+// cancellation point, rolling back only the transaction it is in at that moment,
+// and releases the claim itself as it exits.
+func Cancel(u *user.User) error {
+	s := db.NewAutocommitSession()
+	defer s.Close()
+
+	status, has, err := liveClaim(s, u.ID)
+	if err != nil {
+		return fmt.Errorf("could not look up the running migration of user %d: %w", u.ID, err)
+	}
+	if !has {
+		return &ErrNoMigrationRunning{}
+	}
+
+	runningMigrations.Lock()
+	run, isRunning := runningMigrations.runs[status.ID]
+	runningMigrations.Unlock()
+
+	if isRunning {
+		run.cancel()
+		return nil
+	}
+
+	// A claim held by another instance must not be released here: its job keeps running and
+	// a second import would duplicate the data. migration.claimtimeout covers a dead instance.
+	if status.ActiveUserID != nil {
+		return &ErrMigrationNotCancellableHere{}
+	}
+
+	log.Infof("[Migration] Migration %d of user %d holds no claim and is not running here, releasing it", status.ID, u.ID)
+	return FinishMigration(status)
 }

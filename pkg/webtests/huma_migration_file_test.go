@@ -125,7 +125,7 @@ func TestHumaMigrationFile_QueuesTheImport(t *testing.T) {
 		"the queued import must keep holding the claim; body: %s", rec.Body.String())
 }
 
-// TestHumaMigrationCancel proves cancelling frees the claim a queued import took.
+// TestHumaMigrationCancel proves the endpoint only stops what this instance is running.
 func TestHumaMigrationCancel(t *testing.T) {
 	e := setupMigrationTestEnv(t)
 	token := humaTokenFor(t, &testuser1)
@@ -138,18 +138,19 @@ func TestHumaMigrationCancel(t *testing.T) {
 		assert.Equal(t, http.StatusNotFound, rec.Code, "body: %s", rec.Body.String())
 	})
 
-	t.Run("frees the slot of a queued import", func(t *testing.T) {
+	t.Run("does not free a claim whose job is not running here", func(t *testing.T) {
 		body, contentType := multipartImportBody(t, "export.zip", export, nil)
 		rec := migrationUploadRequest(t, e, "/api/v2/migration/vikunja-file/migrate", body, contentType, token)
 		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
 
+		// The listener does not run in this env, so the claim looks like one held elsewhere.
 		rec = humaRequest(t, e, http.MethodPost, "/api/v2/migration/cancel", "", token, "")
-		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+		require.Equal(t, http.StatusConflict, rec.Code, "body: %s", rec.Body.String())
 
 		body, contentType = multipartImportBody(t, "export.zip", export, nil)
 		rec = migrationUploadRequest(t, e, "/api/v2/migration/vikunja-file/migrate", body, contentType, token)
-		assert.Equal(t, http.StatusOK, rec.Code,
-			"cancelling must free the slot for a new import; body: %s", rec.Body.String())
+		assert.Equal(t, http.StatusPreconditionFailed, rec.Code,
+			"the claim must stay with the job holding it; body: %s", rec.Body.String())
 	})
 
 	t.Run("unauthenticated", func(t *testing.T) {

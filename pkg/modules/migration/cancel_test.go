@@ -18,7 +18,9 @@ package migration
 
 import (
 	"testing"
+	"time"
 
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/assert"
@@ -26,35 +28,62 @@ import (
 )
 
 func TestCancel(t *testing.T) {
-	t.Run("stops the running job and frees the slot", func(t *testing.T) {
+	t.Run("stops the running job but leaves the claim to it", func(t *testing.T) {
 		clearMigrationStatus(t)
 		u := &user.User{ID: 1}
 
 		status, err := ClaimMigration(&testMigrator{name: "vikunja-file"}, u)
 		require.NoError(t, err)
 
-		ctx, done := StartRun(t.Context(), status.ID)
+		ctx, done := StartRun(status.ID)
 		defer done()
 
 		require.NoError(t, Cancel(u))
 
 		require.Error(t, ctx.Err(), "the running job must have been asked to stop")
 
-		// The claim is free again, so the user can start another import.
+		// The job holds the claim until it exits, so a new import must not start yet.
+		_, err = ClaimMigration(&testMigrator{name: "vikunja-file"}, u)
+		assertIsAlreadyRunning(t, err, "vikunja-file")
+
+		require.NoError(t, FinishMigration(status))
+
 		_, err = ClaimMigration(&testMigrator{name: "vikunja-file"}, u)
 		require.NoError(t, err)
 	})
 
-	t.Run("releases a claim whose job is gone", func(t *testing.T) {
+	t.Run("refuses to release a claim held by another instance", func(t *testing.T) {
 		clearMigrationStatus(t)
 		u := &user.User{ID: 1}
 
 		_, err := ClaimMigration(&testMigrator{name: "ticktick"}, u)
 		require.NoError(t, err)
 
-		require.NoError(t, Cancel(u))
+		err = Cancel(u)
+		var notHere *ErrMigrationNotCancellableHere
+		require.ErrorAs(t, err, &notHere)
 
 		_, err = ClaimMigration(&testMigrator{name: "ticktick"}, u)
+		assertIsAlreadyRunning(t, err, "ticktick")
+	})
+
+	t.Run("releases a legacy row wedging the user", func(t *testing.T) {
+		clearMigrationStatus(t)
+		u := &user.User{ID: 1}
+
+		s := db.NewSession()
+		_, err := s.Insert(&Status{
+			UserID:       u.ID,
+			MigratorName: "trello",
+			StartedAt:    time.Now(),
+		})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		require.NoError(t, s.Close())
+
+		require.NoError(t, Cancel(u))
+
+		_, err = ClaimMigration(&testMigrator{name: "trello"}, u)
 		require.NoError(t, err)
 	})
 
@@ -65,4 +94,22 @@ func TestCancel(t *testing.T) {
 		var noneRunning *ErrNoMigrationRunning
 		assert.ErrorAs(t, err, &noneRunning)
 	})
+}
+
+// A run that got redelivered must not have its cancel func removed by the first run finishing.
+func TestStartRunDoesNotClobberAConcurrentRun(t *testing.T) {
+	clearMigrationStatus(t)
+	u := &user.User{ID: 1}
+
+	status, err := ClaimMigration(&testMigrator{name: "vikunja-file"}, u)
+	require.NoError(t, err)
+
+	_, doneFirst := StartRun(status.ID)
+	ctxSecond, doneSecond := StartRun(status.ID)
+	defer doneSecond()
+
+	doneFirst()
+
+	require.NoError(t, Cancel(u))
+	require.Error(t, ctxSecond.Err(), "the second run must still be cancellable")
 }

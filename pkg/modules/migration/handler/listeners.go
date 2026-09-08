@@ -17,7 +17,6 @@
 package handler
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -135,38 +134,38 @@ func reportMigrationFailure(u *user2.User, migratorKind string, ms migration.Mig
 		migrationID = m.ID
 	}
 
-	// Cancelling already released the claim and is not a failure to report.
+	// A cancelled migration is not a failure, but its claim is still only safe to release here,
+	// once the job has actually stopped.
 	var cancelled *migration.ErrMigrationCancelled
 	if errors.As(err, &cancelled) {
 		log.Infof("[Migration] Migration %d from %s for user %d was cancelled", migrationID, migratorKind, u.ID)
-		return
-	}
-	log.Errorf("[Migration] Migration %d from %s for user %d failed. Error was: %s", migrationID, migratorKind, u.ID, err.Error())
-
-	var nerr error
-	if config.SentryEnabled.GetBool() && shouldReportMigrationError(err) {
-		nerr = notifications.Notify(u, &MigrationFailedReportedNotification{
-			MigratorName: ms.Name(),
-		})
-		failure := &migrationFailedError{
-			MigratorKind:  migratorKind,
-			OriginalError: err,
-		}
-		sentry.WithScope(func(scope *sentry.Scope) {
-			errorreport.ApplyFingerprint(scope, err, migrationFingerprint(migratorKind, err)...)
-			sentry.CaptureException(failure)
-		})
 	} else {
-		nerr = notifications.Notify(u, &MigrationFailedNotification{
-			MigratorName: ms.Name(),
-			Error:        err,
-		})
-	}
-	if nerr != nil {
-		log.Errorf("[Migration] Could not send failed migration notification for migration %d to user %d, error was: %s", migrationID, u.ID, nerr.Error())
+		log.Errorf("[Migration] Migration %d from %s for user %d failed. Error was: %s", migrationID, migratorKind, u.ID, err.Error())
+
+		var nerr error
+		if config.SentryEnabled.GetBool() && shouldReportMigrationError(err) {
+			nerr = notifications.Notify(u, &MigrationFailedReportedNotification{
+				MigratorName: ms.Name(),
+			})
+			failure := &migrationFailedError{
+				MigratorKind:  migratorKind,
+				OriginalError: err,
+			}
+			sentry.WithScope(func(scope *sentry.Scope) {
+				errorreport.ApplyFingerprint(scope, err, migrationFingerprint(migratorKind, err)...)
+				sentry.CaptureException(failure)
+			})
+		} else {
+			nerr = notifications.Notify(u, &MigrationFailedNotification{
+				MigratorName: ms.Name(),
+				Error:        err,
+			})
+		}
+		if nerr != nil {
+			log.Errorf("[Migration] Could not send failed migration notification for migration %d to user %d, error was: %s", migrationID, u.ID, nerr.Error())
+		}
 	}
 
-	// Still need to finish the migration, otherwise restarting will not work
 	if m != nil {
 		if ferr := migration.FinishMigration(m); ferr != nil {
 			log.Errorf("[Migration] Could not finish migration %d for user %d, error was: %s", m.ID, u.ID, ferr.Error())
@@ -200,7 +199,7 @@ func migrateInListener(ms migration.Migrator, event *MigrationRequestedEvent) (m
 		}
 	}()
 
-	ctx, done := migration.StartRun(context.Background(), m.ID)
+	ctx, done := migration.StartRun(m.ID)
 	defer done()
 
 	log.Infof("[Migration] Starting migration %d from %s for user %d", m.ID, event.MigratorKind, event.User.ID)
@@ -295,7 +294,7 @@ func importInListener(ms migration.FileMigrator, event *FileMigrationRequestedEv
 	}
 	defer file.Close()
 
-	ctx, done := migration.StartRun(context.Background(), m.ID)
+	ctx, done := migration.StartRun(m.ID)
 	defer done()
 
 	log.Infof("[Migration] Starting import %d from %s for user %d", m.ID, event.MigratorKind, event.User.ID)

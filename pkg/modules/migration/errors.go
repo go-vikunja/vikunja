@@ -327,3 +327,23 @@ func (err *ErrNoMigrationRunning) HTTPError() web.HTTPError {
 		Message:  err.Error(),
 	}
 }
+
+// ErrMigrationNotCancellableHere reports a cancel request for a migration that cannot be interrupted right now.
+type ErrMigrationNotCancellableHere struct {
+}
+
+func (err *ErrMigrationNotCancellableHere) Error() string {
+	return "Migration cannot be cancelled right now"
+}
+
+// ErrCodeMigrationNotCancellableHere holds the unique world-error code of this error
+const ErrCodeMigrationNotCancellableHere = 14017
+
+// HTTPError holds the http error description
+func (err *ErrMigrationNotCancellableHere) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusConflict,
+		Code:     ErrCodeMigrationNotCancellableHere,
+		Message:  "The migration cannot be cancelled right now. Please try again in a moment, or wait for it to be released automatically once it finishes or times out.",
+	}
+}
