@@ -21,7 +21,6 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"sort"
 	"strconv"
@@ -615,7 +614,7 @@ func (m *Migrator) ValidateFile(file io.ReaderAt, size int64) error {
 func (m *Migrator) SetOptions(options []byte) error {
 	config := &ImportConfig{}
 	if err := json.Unmarshal(options, config); err != nil {
-		return fmt.Errorf("could not read the csv import config: %w", err)
+		return &migration.ErrInvalidCSVImportConfig{Err: err}
 	}
 	m.config = config
 	return nil
