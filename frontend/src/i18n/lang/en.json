@@ -1558,16 +1558,16 @@
     "14202": "The Planka account requires an extra login step (two-factor code or accepting the terms). Log in to Planka in the browser once, or use an API key instead of username and password.",
     "14203": "A Planka URL and either an API key or username and password are required.",
     "14204": "Could not reach a Planka API at the given URL. Check the URL and that Vikunja can reach the instance.",
-    "20001": "This would exceed a limit of the plan.",
-    "20002": "This feature is not included in your plan."
+    "20001": "That would go over a limit of the plan.",
+    "20002": "Your plan doesn't include this feature."
   },
   "entitlement": {
     "upgrade": "Upgrade",
-    "teamCreationDisabled": "Creating teams is not included in your plan.",
+    "teamCreationDisabled": "Your plan doesn't include teams.",
     "projectsUsage": "{current} / {limit} projects used",
-    "projectLimitReached": "You have reached the maximum number of projects for your plan.",
+    "projectLimitReached": "You're at your plan's project limit.",
     "storageUsage": "{used} of {limit} storage used",
-    "storageLimitReached": "Uploading these files would exceed the storage available on your plan."
+    "storageLimitReached": "Not enough storage left on the plan for these files."
   },
   "about": {
     "title": "About",

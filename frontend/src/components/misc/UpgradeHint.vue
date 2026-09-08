@@ -1,8 +1,5 @@
 <template>
-	<Message
-		variant="warning"
-		class="upgrade-hint"
-	>
+	<p class="upgrade-hint has-text-grey is-size-7">
 		<slot />
 		<BaseButton
 			v-if="upgradeUrl"
@@ -11,14 +8,13 @@
 		>
 			{{ $t('entitlement.upgrade') }}
 		</BaseButton>
-	</Message>
+	</p>
 </template>
 
 <script setup lang="ts">
 import {computed} from 'vue'
 
 import BaseButton from '@/components/base/BaseButton.vue'
-import Message from '@/components/misc/Message.vue'
 import {useConfigStore} from '@/stores/config'
 
 const configStore = useConfigStore()
@@ -27,8 +23,7 @@ const upgradeUrl = computed(() => configStore.upgradeUrl)
 
 <style lang="scss" scoped>
 .upgrade-hint__link {
-	margin-inline-start: .5rem;
-	font-weight: bold;
+	margin-inline-start: .25rem;
 	text-decoration: underline;
 }
 </style>

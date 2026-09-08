@@ -132,8 +132,14 @@
 		>
 			{{ $t('task.attachment.upload') }}
 		</XButton>
+		<UpgradeHint
+			v-if="editEnabled && storageLimitReached"
+			class="mbe-4"
+		>
+			{{ $t('entitlement.storageLimitReached') }}
+		</UpgradeHint>
 		<p
-			v-if="editEnabled && storageLimit !== null"
+			v-else-if="editEnabled && storageLimit !== null"
 			class="has-text-grey is-size-7 mbe-4"
 		>
 			{{ $t('entitlement.storageUsage', {used: getHumanSize(storageUsage), limit: getHumanSize(storageLimit)}) }}
@@ -239,6 +245,7 @@ import User from '@/components/misc/User.vue'
 import ProgressBar from '@/components/misc/ProgressBar.vue'
 import Loading from '@/components/misc/Loading.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
+import UpgradeHint from '@/components/misc/UpgradeHint.vue'
 
 import AttachmentService from '@/services/attachment'
 import {canPreviewAudio, canPreviewImage, previewKind, type PreviewKind} from '@/models/attachment'
@@ -251,7 +258,7 @@ import {uploadFiles, generateAttachmentUrl} from '@/helpers/attachments'
 import {downloadBlob} from '@/helpers/downloadBlob'
 import {getHumanSize} from '@/helpers/getHumanSize'
 import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
-import {error, success, upgradeActions} from '@/message'
+import {error, success} from '@/message'
 import {useTaskStore} from '@/stores/tasks'
 import {useAuthStore} from '@/stores/auth'
 import {useProjectStore} from '@/stores/projects'
@@ -308,6 +315,7 @@ const chargedToCurrentUser = computed(() =>
 )
 const storageLimit = computed(() => chargedToCurrentUser.value ? authStore.limit(ENTITLEMENT.MAX_STORAGE_BYTES) : null)
 const storageUsage = computed(() => authStore.usage(ENTITLEMENT.MAX_STORAGE_BYTES))
+const storageLimitReached = computed(() => storageLimit.value !== null && storageUsage.value >= storageLimit.value)
 
 function exceedsStorageLimit(files: File[] | FileList): boolean {
 	if (storageLimit.value === null) {
@@ -460,7 +468,7 @@ function uploadNewAttachment() {
 
 async function uploadFilesToTask(files: File[] | FileList) {
 	if (exceedsStorageLimit(files)) {
-		error(new Error(t('entitlement.storageLimitReached')), upgradeActions())
+		error(new Error(t('entitlement.storageLimitReached')))
 		return
 	}
 	try {

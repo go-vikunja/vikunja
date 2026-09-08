@@ -15,6 +15,3 @@ export const ENTITLEMENT = {
 	MAX_PROJECTS: 'max_projects',
 	MAX_STORAGE_BYTES: 'max_storage_bytes',
 } as const satisfies Record<string, Entitlement>
-
-export const ERROR_CODE_LIMIT_REACHED = 20001
-export const ERROR_CODE_FEATURE_DISABLED_FOR_USER = 20002

@@ -71,7 +71,7 @@ export async function uploadFiles(
 
 	if (response.errors !== null) {
 		const messages = response.errors.map((e: {message: string}) => e.message)
-		// The code lets the toast translate the error and offer an upgrade for plan limits.
+		// The code is what getErrorText translates the message from.
 		throw Object.assign(new Error(messages.join('\n')), {code: response.errors[0]?.code})
 	}
 

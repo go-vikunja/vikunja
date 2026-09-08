@@ -24,7 +24,7 @@ vi.mock('vue-i18n', async importOriginal => ({
 	useI18n: () => ({t: (key: string) => key}),
 }))
 
-vi.mock('@/message', () => ({error: vi.fn(), success: vi.fn(), upgradeActions: () => []}))
+vi.mock('@/message', () => ({error: vi.fn(), success: vi.fn()}))
 
 const attachment = {
 	id: 1,

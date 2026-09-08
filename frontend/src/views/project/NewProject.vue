@@ -9,8 +9,8 @@
 			{{ $t('entitlement.projectLimitReached') }}
 		</UpgradeHint>
 		<p
-			v-if="projectLimit !== null"
-			class="has-text-grey"
+			v-else-if="projectLimit !== null"
+			class="has-text-grey is-size-7"
 		>
 			{{ $t('entitlement.projectsUsage', {current: projectUsage, limit: projectLimit}) }}
 		</p>
