@@ -101,7 +101,13 @@
 			</div>
 		</div>
 		<div v-else>
-			<Message class="mbe-4">
+			<Message
+				ref="resultMessage"
+				role="status"
+				aria-live="polite"
+				tabindex="-1"
+				class="mbe-4"
+			>
 				{{
 					migrationFinished
 						? $t('migrate.migrationFinished', {service: migrator.name})
@@ -127,7 +133,7 @@ export default {
 </script>
 
 <script setup lang="ts">
-import {computed, ref, shallowReactive} from 'vue'
+import {computed, nextTick, ref, shallowReactive, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import Logo from '@/assets/logo.svg?component'
@@ -234,6 +240,16 @@ async function initMigration() {
 initMigration()
 
 const uploadInput = ref<HTMLInputElement | null>(null)
+const resultMessage = ref<InstanceType<typeof Message> | null>(null)
+
+// the triggering button unmounts when the result message appears, so move focus there
+watch(migrationJustStarted, async (justStarted) => {
+	if (!justStarted) {
+		return
+	}
+	await nextTick()
+	resultMessage.value?.$el?.focus()
+})
 
 async function migrate(credentialsConfig?: MigrationConfig) {
 	let migrationConfig: MigrationConfig | File = credentialsConfig ?? {code: migratorAuthCode.value}
