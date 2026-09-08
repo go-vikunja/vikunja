@@ -569,17 +569,6 @@ func GetProjectsMapByIDs(s *xorm.Session, projectIDs []int64) (projects map[int6
 	return projects, nil
 }
 
-func GetProjectsByIDs(s *xorm.Session, projectIDs []int64) (projects []*Project, err error) {
-	projects = make([]*Project, 0, len(projectIDs))
-
-	if len(projectIDs) == 0 {
-		return
-	}
-
-	err = s.In("id", projectIDs).Find(&projects)
-	return
-}
-
 type projectOptions struct {
 	search      string
 	user        *user.User

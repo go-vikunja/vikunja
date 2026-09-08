@@ -163,7 +163,6 @@ func init() {
 		"GetProjectSimpleByTaskID":                         reflect.ValueOf(models.GetProjectSimpleByTaskID),
 		"GetProjectViewByID":                               reflect.ValueOf(models.GetProjectViewByID),
 		"GetProjectViewByIDAndProject":                     reflect.ValueOf(models.GetProjectViewByIDAndProject),
-		"GetProjectsByIDs":                                 reflect.ValueOf(models.GetProjectsByIDs),
 		"GetProjectsMapByIDs":                              reflect.ValueOf(models.GetProjectsMapByIDs),
 		"GetProjectsMapSimpleByTaskIDs":                    reflect.ValueOf(models.GetProjectsMapSimpleByTaskIDs),
 		"GetProjectsSimpleByTaskIDs":                       reflect.ValueOf(models.GetProjectsSimpleByTaskIDs),
