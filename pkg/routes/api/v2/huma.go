@@ -179,3 +179,18 @@ func EnableAutoPatch(api huma.API) {
 		}
 	}
 }
+
+// withUploadLimits fills in the request-body limits every multipart upload
+// operation needs.
+//
+// The +2 MB mirrors Echo's global BodyLimit overhead so a max-sized file isn't
+// rejected by multipart boundary/header bytes. BodyReadTimeout is disabled
+// because Huma otherwise defaults it to 5s and applies it as a socket read
+// deadline spanning the entire body, so any upload slower than that dies
+// mid-stream with an i/o timeout.
+func withUploadLimits(op huma.Operation) huma.Operation {
+	// #nosec G115 - configured value won't exceed int64 max in practice.
+	op.MaxBodyBytes = (int64(config.GetMaxFileSizeInMBytes()) + 2) * 1024 * 1024
+	op.BodyReadTimeout = -1
+	return op
+}
