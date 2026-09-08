@@ -245,13 +245,13 @@ func (tc *TaskComment) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
 		return err
 	}
 
-	// Get the author
-	author := &user.User{}
-	_, err = s.
-		Where("id = ?", tc.AuthorID).
-		Get(author)
-	tc.Author = author
-	return
+	authors, err := getUsersOrLinkSharesFromIDs(s, []int64{tc.AuthorID})
+	if err != nil {
+		return err
+	}
+
+	tc.Author = authors[tc.AuthorID]
+	return nil
 }
 
 // ReadAll returns all comments for a task
