@@ -34,7 +34,6 @@ async function openDueDateSheet(page: Page) {
 
 	const datepickerShow = page.locator('.task-view .columns.details .column').filter({hasText: 'Due Date'}).locator('.date-input .datepicker .show')
 	await expect(datepickerShow).toBeVisible()
-	await datepickerShow.click()
 
 	const panel = page.locator('.bottom-sheet__panel')
 	await expect(panel).toBeVisible()

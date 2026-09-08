@@ -19,7 +19,7 @@ import {createDefaultViews} from '../project/prepareProjects'
 import {TaskBucketFactory} from '../../factories/task_buckets'
 import {pasteFile, pasteHtmlFromClipboard} from '../../support/commands'
 import {login} from '../../support/authenticateUser'
-import type {Page} from '@playwright/test'
+import type {Locator, Page} from '@playwright/test'
 import {readFileSync} from 'fs'
 import {join, dirname} from 'path'
 import {fileURLToPath} from 'url'
@@ -641,6 +641,125 @@ test.describe('Task', () => {
 			await page.locator('.task-view .action-buttons').click()
 			await page.locator('body').press('d')
 			await expect(dueDateColumn).toBeVisible()
+
+			const popup = dueDateColumn.locator('.datepicker .datepicker-popup')
+			await expect(popup).toBeVisible()
+			await expect(popup.locator('.datepicker__quick-select-date').first()).toBeFocused()
+		})
+
+		async function openDueDatePopupWithShortcut(page: Page): Promise<Locator> {
+			await page.locator('.task-view .action-buttons').click()
+			await page.locator('body').press('d')
+
+			const column = page.locator('.task-view .columns.details .column').filter({hasText: 'Due Date'})
+			const popup = column.locator('.datepicker .datepicker-popup')
+			await expect(popup).toBeVisible()
+			await expect(popup.locator('.datepicker__quick-select-date').first()).toBeFocused()
+			return popup
+		}
+
+		test('Opens the due date popup when clicking the action button and focuses the first quick-select option', async ({authenticatedPage: page}) => {
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				done: false,
+			})
+			await page.goto(`/tasks/${tasks[0].id}`)
+			await page.waitForLoadState('networkidle')
+
+			const setDueDateButton = page.locator('.task-view .action-buttons .button').filter({hasText: 'Set Due Date'})
+			await expect(setDueDateButton).toBeVisible({timeout: 10000})
+			await setDueDateButton.click()
+
+			const popup = page.locator('.task-view .columns.details .column').filter({hasText: 'Due Date'}).locator('.datepicker .datepicker-popup')
+			await expect(popup).toBeVisible()
+			await expect(popup.locator('.datepicker__quick-select-date').first()).toBeFocused()
+		})
+
+		test('Opens the due date popup via the keyboard shortcut when the task already has a due date', async ({authenticatedPage: page}) => {
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				done: false,
+				due_date: (new Date()).toISOString(),
+			})
+			await page.goto(`/tasks/${tasks[0].id}`)
+			await page.waitForLoadState('networkidle')
+
+			await openDueDatePopupWithShortcut(page)
+		})
+
+		test('Opens the start and end date popups from the actions menu and focuses the first quick-select option', async ({authenticatedPage: page}) => {
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				done: false,
+			})
+			await page.goto(`/tasks/${tasks[0].id}`)
+			await page.waitForLoadState('networkidle')
+
+			for (const [buttonLabel, columnTitle] of [
+				['Set Start Date', 'Start Date'],
+				['Set End Date', 'End Date'],
+			] as const) {
+				const button = page.locator('.task-view .action-buttons .button').filter({hasText: buttonLabel})
+				await expect(button).toBeVisible({timeout: 10000})
+				await button.click()
+
+				const popup = page.locator('.task-view .columns.details .column').filter({hasText: columnTitle}).locator('.datepicker .datepicker-popup')
+				await expect(popup).toBeVisible()
+				await expect(popup.locator('.datepicker__quick-select-date').first()).toBeFocused()
+
+				await page.keyboard.press('Escape')
+				await expect(popup).not.toBeVisible()
+			}
+		})
+
+		test('Navigates the due date quick-select options with the arrow keys', async ({authenticatedPage: page}) => {
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				done: false,
+			})
+			await page.goto(`/tasks/${tasks[0].id}`)
+			await page.waitForLoadState('networkidle')
+
+			const popup = await openDueDatePopupWithShortcut(page)
+			const options = popup.locator('.datepicker__quick-select-date')
+			const optionCount = await options.count()
+			expect(optionCount).toBeGreaterThan(1)
+
+			for (let i = 1; i < optionCount; i++) {
+				await page.keyboard.press('ArrowDown')
+				await expect(options.nth(i)).toBeFocused()
+			}
+			await page.keyboard.press('ArrowDown')
+			await expect(options.nth(optionCount - 1)).toBeFocused()
+
+			for (let i = optionCount - 2; i >= 0; i--) {
+				await page.keyboard.press('ArrowUp')
+				await expect(options.nth(i)).toBeFocused()
+			}
+
+			await page.keyboard.press('ArrowUp')
+			await expect(options.first()).toBeFocused()
+		})
+
+		test('Saves and closes the due date popup when confirming a quick-select option with Enter', async ({authenticatedPage: page}) => {
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				done: false,
+			})
+			await page.goto(`/tasks/${tasks[0].id}`)
+			await page.waitForLoadState('networkidle')
+
+			const popup = await openDueDatePopupWithShortcut(page)
+			const column = page.locator('.task-view .columns.details .column').filter({hasText: 'Due Date'})
+			const showButton = column.locator('.datepicker .show')
+			await expect(showButton).toContainText('Click here to set a due date')
+
+			await page.keyboard.press('ArrowDown')
+			await page.keyboard.press('Enter')
+
+			await expect(popup).not.toBeVisible()
+			await expect(page.locator('.global-notification')).toContainText('Success')
+			await expect(showButton).not.toContainText('Click here to set a due date')
 		})
 
 		test('Can set a due date for a task', async ({authenticatedPage: page}) => {
@@ -654,10 +773,6 @@ test.describe('Task', () => {
 			const setDueDateButton = page.locator('.task-view .action-buttons .button').filter({hasText: 'Set Due Date'})
 			await expect(setDueDateButton).toBeVisible({timeout: 10000})
 			await setDueDateButton.click()
-
-			const datepickerShow = page.locator('.task-view .columns.details .column').filter({hasText: 'Due Date'}).locator('.date-input .datepicker .show')
-			await expect(datepickerShow).toBeVisible()
-			await datepickerShow.click()
 
 			const tomorrowButton = page.locator('.datepicker .datepicker-popup button').filter({hasText: 'Tomorrow'})
 			await expect(tomorrowButton).toBeVisible()
@@ -685,7 +800,6 @@ test.describe('Task', () => {
 
 			const datepickerShow = page.locator('.task-view .columns.details .column').filter({hasText: 'Due Date'}).locator('.date-input .datepicker .show')
 			await expect(datepickerShow).toBeVisible()
-			await datepickerShow.click()
 
 			const todayButton = page.locator('.datepicker-popup .calendar-month__day.is-today')
 			await expect(todayButton).toBeVisible()
@@ -730,7 +844,6 @@ test.describe('Task', () => {
 
 			const datepickerShow = page.locator('.task-view .columns.details .column').filter({hasText: 'Due Date'}).locator('.date-input .datepicker .show')
 			await expect(datepickerShow).toBeVisible()
-			await datepickerShow.click()
 
 			const dateButton = page.locator(`.datepicker-popup .calendar-month__day[aria-label="${today.toLocaleString('en-US', {month: 'long'})} ${today.getDate()}, ${today.getFullYear()}"]`)
 			await expect(dateButton).toBeVisible()
