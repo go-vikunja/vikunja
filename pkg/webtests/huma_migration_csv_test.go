@@ -64,16 +64,16 @@ func TestHumaMigrationCSV(t *testing.T) {
 		assert.Contains(t, rec.Body.String(), "Task 1")
 	})
 
-	t.Run("migrate imports the file", func(t *testing.T) {
+	t.Run("migrate queues the import", func(t *testing.T) {
 		body, contentType := multipartImportBody(t, "import.csv", []byte(csvTestFile), map[string]string{"config": csvTestConfig})
 		rec := migrationUploadRequest(t, e, "/api/v2/migration/csv/migrate", body, contentType, token)
 		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
-		assert.Contains(t, rec.Body.String(), `"message":"Everything was migrated successfully."`)
+		assert.Contains(t, rec.Body.String(), `"message":"Migration was started successfully."`)
 
 		rec = humaRequest(t, e, http.MethodGet, "/api/v2/migration/csv/status", "", token, "")
 		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
 		assert.NotContains(t, rec.Body.String(), `"started_at":"0001-01-01T00:00:00Z"`,
-			"after migrating, the status must carry a real started_at; body: %s", rec.Body.String())
+			"starting a migration must claim the slot with a real started_at; body: %s", rec.Body.String())
 	})
 }
 

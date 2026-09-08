@@ -19,6 +19,7 @@ package handler
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 
@@ -59,6 +60,12 @@ func RegisterFileMigrator(factory func() migration.FileMigrator) {
 // minutes, far longer than a reverse proxy will hold a request open, and a
 // client that gives up waiting cannot abort the import it started.
 func StartFileMigration(ms migration.FileMigrator, u *user2.User, file migration.UploadedFile, size int64, options []byte) error {
+	// Applied here as well as in the listener so a validator can see them - the
+	// CSV row limit only means something with the config's delimiter.
+	if err := applyMigratorOptions(ms, options); err != nil {
+		return err
+	}
+
 	// Validating before the claim means a wrong file doesn't occupy the slot.
 	if v, ok := ms.(migration.FileValidator); ok {
 		if err := v.ValidateFile(file, size); err != nil {
@@ -94,6 +101,19 @@ func StartFileMigration(ms migration.FileMigrator, u *user2.User, file migration
 	}
 
 	return nil
+}
+
+// applyMigratorOptions hands the request's extra parameters to a migrator that
+// takes them, and rejects options aimed at one that doesn't.
+func applyMigratorOptions(ms migration.FileMigrator, options []byte) error {
+	if len(options) == 0 {
+		return nil
+	}
+	o, ok := ms.(migration.FileMigratorOptions)
+	if !ok {
+		return fmt.Errorf("migrator %s does not accept options", ms.Name())
+	}
+	return o.SetOptions(options)
 }
 
 // asImportFileError maps a decode failure to a 400: a file migrator only ever

@@ -269,14 +269,8 @@ func importInListener(ms migration.FileMigrator, event *FileMigrationRequestedEv
 		}
 	}()
 
-	if len(event.Options) > 0 {
-		o, ok := ms.(migration.FileMigratorOptions)
-		if !ok {
-			return m, fmt.Errorf("migrator %s does not accept options", event.MigratorKind)
-		}
-		if err := o.SetOptions(event.Options); err != nil {
-			return m, err
-		}
+	if err := applyMigratorOptions(ms, event.Options); err != nil {
+		return m, err
 	}
 
 	file, err := migration.OpenSpooledUpload(event.UploadName)
