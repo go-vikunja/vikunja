@@ -73,6 +73,13 @@
 			</div>
 		</template>
 		<div v-else-if="!migrationJustStarted && lastMigrationStartedAt && lastMigrationFinishedAt === null">
+			<Message
+				v-if="migrationError"
+				variant="danger"
+				class="mbe-4"
+			>
+				{{ migrationError }}
+			</Message>
 			<Message class="mbe-4">
 				{{ $t('migrate.migrationInProgress') }}
 			</Message>
@@ -83,8 +90,8 @@
 				<XButton
 					variant="tertiary"
 					class="has-text-danger"
-					:loading="cancelService.loading"
-					:disabled="cancelService.loading || undefined"
+					:loading="isCancelling"
+					:disabled="isCancelling || undefined"
 					@click="cancelMigration"
 				>
 					{{ $t('migrate.cancelMigration') }}
@@ -141,8 +148,8 @@
 					v-if="!migrationFinished"
 					variant="tertiary"
 					class="has-text-danger"
-					:loading="cancelService.loading"
-					:disabled="cancelService.loading || undefined"
+					:loading="isCancelling"
+					:disabled="isCancelling || undefined"
 					@click="cancelMigration"
 				>
 					{{ $t('migrate.cancelMigration') }}
@@ -172,7 +179,8 @@ import MigrationCredentialsForm from './MigrationCredentialsForm.vue'
 
 import AbstractMigrationService, {type MigrationConfig} from '@/services/migrator/abstractMigration'
 import AbstractMigrationFileService from '@/services/migrator/abstractMigrationFile'
-import MigrationCancelService from '@/services/migrator/migrationCancel'
+
+import {migrationCancel} from '@/client/generated'
 
 import {formatDateLong} from '@/helpers/time/formatDate'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
@@ -199,6 +207,7 @@ const lastMigrationStartedAt = ref<Date | null>(null)
 const migratorAuthCode = ref('')
 const migrationJustStarted = ref(false)
 const migrationError = ref('')
+const isCancelling = ref(false)
 
 const migrator = computed<Migrator>(() => MIGRATORS[props.service])
 
@@ -215,7 +224,6 @@ const passwordHelp = computed(() => {
 const migrationService = shallowReactive(new AbstractMigrationService(migrator.value.id))
 // eslint-disable-next-line vue/no-ref-object-reactivity-loss
 const migrationFileService = shallowReactive(new AbstractMigrationFileService(migrator.value.id))
-const cancelService = shallowReactive(new MigrationCancelService())
 
 useTitle(() => t('migrate.titleService', {name: migrator.value.name}))
 
@@ -314,18 +322,20 @@ async function migrate(credentialsConfig?: MigrationConfig) {
 }
 
 async function cancelMigration() {
+	isCancelling.value = true
 	migrationError.value = ''
+
 	try {
-		await cancelService.cancel()
+		await migrationCancel()
+		stopPolling()
+		migrationJustStarted.value = false
+		lastMigrationStartedAt.value = null
+		lastMigrationFinishedAt.value = null
 	} catch (e) {
 		migrationError.value = getErrorText(e)
-		return
+	} finally {
+		isCancelling.value = false
 	}
-
-	stopPolling()
-	migrationJustStarted.value = false
-	lastMigrationStartedAt.value = null
-	lastMigrationFinishedAt.value = null
 }
 
 // Credentials migrators have no config yet at this point, so reset the status to show the form again.

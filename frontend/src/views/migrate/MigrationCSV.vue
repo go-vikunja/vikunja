@@ -206,8 +206,8 @@
 					v-if="!importFinished"
 					variant="tertiary"
 					class="has-text-danger"
-					:loading="cancelService.loading"
-					:disabled="cancelService.loading || undefined"
+					:loading="isCancelling"
+					:disabled="isCancelling || undefined"
 					@click="cancelImport"
 				>
 					{{ $t('migrate.cancelMigration') }}
@@ -236,7 +236,7 @@ import CSVMigrationService, {
 
 import {useTitle} from '@/composables/useTitle'
 import {useMigrationCompletion} from '@/composables/useMigrationCompletion'
-import MigrationCancelService from '@/services/migrator/migrationCancel'
+import {migrationCancel} from '@/client/generated'
 import {getErrorText} from '@/message'
 
 type Step = 'upload' | 'mapping' | 'success'
@@ -247,26 +247,27 @@ useTitle(() => t('migrate.titleService', {name: 'CSV'}))
 
 const csvService = shallowReactive(new CSVMigrationService())
 
-const cancelService = shallowReactive(new MigrationCancelService())
-
 const {isFinished: importFinished, start: startPolling, stop: stopPolling} = useMigrationCompletion(() => csvService)
 
 async function cancelImport() {
+	isCancelling.value = true
 	error.value = ''
+
 	try {
-		await cancelService.cancel()
+		await migrationCancel()
+		stopPolling()
+		resetToUpload()
 	} catch (e) {
 		error.value = getErrorText(e)
-		return
+	} finally {
+		isCancelling.value = false
 	}
-
-	stopPolling()
-	resetToUpload()
 }
 
 const step = ref<Step>('upload')
 const error = ref('')
 const isLoading = ref(false)
+const isCancelling = ref(false)
 const uploadInput = ref<HTMLInputElement | null>(null)
 const selectedFile = ref<File | null>(null)
 const detectionResult = ref<DetectionResult | null>(null)
@@ -539,5 +540,9 @@ function resetToUpload() {
 .success-step {
 	text-align: center;
 	padding: 2rem;
+
+	.actions {
+		justify-content: center;
+	}
 }
 </style>
