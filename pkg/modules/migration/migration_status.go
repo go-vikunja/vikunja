@@ -104,8 +104,7 @@ func claimMigration(m MigratorName, u *user.User) (status *Status, err error) {
 	return status, s.Commit()
 }
 
-// liveClaim reports the unfinished status row blocking new migrations for userID. Legacy rows
-// predate active_user_id and have it NULL, but still count as live.
+// Legacy rows predate active_user_id and have it NULL, but still block new migrations.
 func liveClaim(s *xorm.Session, userID int64) (status *Status, has bool, err error) {
 	status = &Status{}
 	has, err = s.
@@ -218,9 +217,7 @@ func GetMigrationStatusByID(id int64) (status *Status, err error) {
 	return status, nil
 }
 
-// runningMigrations holds the cancel func of every migration executing in this
-// process, keyed by its status id. The queue is in-process, so a migration that
-// is still running here is always in here.
+// The queue is in-process, so a migration that is still running is always registered here.
 var runningMigrations = struct {
 	sync.Mutex
 	runs map[int64]migrationRun
@@ -233,8 +230,6 @@ type migrationRun struct {
 	token  int64
 }
 
-// StartRun makes a migration cancellable for as long as it runs. The returned
-// func must be called once it ends.
 func StartRun(statusID int64) (context.Context, func()) {
 	ctx, cancel := context.WithCancel(context.Background())
 	run := migrationRun{cancel: cancel, token: migrationRunToken.Add(1)}
@@ -254,9 +249,8 @@ func StartRun(statusID int64) (context.Context, func()) {
 	}
 }
 
-// Cancel asks the user's running migration to stop. The job aborts at its next
-// cancellation point, rolling back only the transaction it is in at that moment,
-// and releases the claim itself as it exits.
+// The cancelled job stops at its next cancellation point, rolls back the transaction it
+// is in at that moment and releases the claim itself as it exits.
 func Cancel(u *user.User) error {
 	s := db.NewAutocommitSession()
 	defer s.Close()
