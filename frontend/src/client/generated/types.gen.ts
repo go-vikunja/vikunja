@@ -390,6 +390,8 @@ export type Callback = {
      */
     readonly $schema?: string;
     code?: string;
+    code_verifier?: string;
+    nonce?: string;
     redirect_url?: string;
     scope?: string;
     totp_passcode?: string;
@@ -3459,6 +3461,8 @@ export type BulkTaskCreationWritable = {
 
 export type CallbackWritable = {
     code?: string;
+    code_verifier?: string;
+    nonce?: string;
     redirect_url?: string;
     scope?: string;
     totp_passcode?: string;
