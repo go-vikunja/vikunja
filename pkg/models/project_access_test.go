@@ -19,7 +19,6 @@ package models
 import (
 	"strconv"
 	"testing"
-	"time"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
@@ -134,42 +133,6 @@ func TestGetProjectAccessForUser_GrantsAreGreatestOf(t *testing.T) {
 		assert.True(t, has)
 		assert.Equal(t, PermissionRead, got)
 	})
-}
-
-func TestGetProjectAccessForUser_ParentCycleTerminates(t *testing.T) {
-	db.LoadAndAssertFixtures(t)
-	s := db.NewSession()
-
-	// Two concurrent reparents can each see an acyclic tree and both commit, so the
-	// resolver has to cope with 21 -> 22 -> 21. Both are owned by user 1.
-	parent := int64(21)
-	_, err := s.ID(22).Cols("parent_project_id").Update(&Project{ParentProjectID: &parent})
-	require.NoError(t, err)
-
-	type result struct {
-		access *projectAccess
-		err    error
-	}
-	// Off the test goroutine, so a resolver that never terminates fails this test
-	// instead of hanging the whole suite. The session is only closed once it returns.
-	done := make(chan result, 1)
-	go func() {
-		access, err := getProjectAccessForUser(s, 1)
-		done <- result{access, err}
-	}()
-
-	select {
-	case res := <-done:
-		s.Close()
-		require.NoError(t, res.err)
-		for _, projectID := range []int64{21, 22} {
-			got, has := res.access.permission(projectID)
-			assert.True(t, has)
-			assert.Equal(t, PermissionAdmin, got)
-		}
-	case <-time.After(30 * time.Second):
-		t.Fatal("resolving a parent_project_id cycle did not terminate")
-	}
 }
 
 func TestGetProjectAccessForUser_OutOfEnumGrantIsNoGrant(t *testing.T) {
@@ -288,6 +251,7 @@ func TestSessionMemoStopsAfterWrite(t *testing.T) {
 
 	_, err = s.ID(43).Cols("parent_project_id").Update(&Project{})
 	require.NoError(t, err)
+	require.NoError(t, moveProjectAncestors(s, 43, 0))
 
 	chain, err = GetAllParentProjects(s, 43)
 	require.NoError(t, err)

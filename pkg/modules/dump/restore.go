@@ -40,6 +40,7 @@ import (
 	"code.vikunja.io/api/pkg/initialize"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/migration"
+	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/utils"
 	vversion "code.vikunja.io/api/pkg/version"
 
@@ -202,13 +203,9 @@ func Restore(filename string, overrideConfig bool) error {
 
 	delete(dbfiles, "migration")
 
-	err = restoreTableData(dbfiles)
-	if err != nil {
+	if err := restoreDatabaseContents(dbfiles); err != nil {
 		return err
 	}
-
-	// Run migrations again to migrate a potentially outdated dump
-	migration.Migrate(nil)
 
 	///////
 	// Restore Files
@@ -230,6 +227,28 @@ func Restore(filename string, overrideConfig bool) error {
 	log.Infof("Done restoring dump.")
 	if overrideConfig {
 		log.Infof("Restart Vikunja to make sure the new configuration file is applied.")
+	}
+
+	return nil
+}
+
+func restoreDatabaseContents(dbfiles map[string]*zip.File) error {
+	if err := restoreTableData(dbfiles); err != nil {
+		return err
+	}
+
+	// Run migrations again to migrate a potentially outdated dump
+	migration.Migrate(nil)
+
+	// Restoring recreates the schema through xormigrate's init schema path, which marks every
+	// migration as applied - the closure table backfill never runs on the restored rows.
+	s := db.NewSession()
+	defer s.Close()
+	if err := models.RebuildProjectAncestors(s); err != nil {
+		return fmt.Errorf("could not rebuild project ancestors (data is restored, run 'vikunja repair projects'): %w", err)
+	}
+	if err := s.Commit(); err != nil {
+		return fmt.Errorf("could not commit project ancestors rebuild (data is restored, run 'vikunja repair projects'): %w", err)
 	}
 
 	return nil

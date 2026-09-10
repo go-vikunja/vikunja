@@ -105,8 +105,7 @@ func TestDeleteUser(t *testing.T) {
 			Title:   "disabled user project",
 			OwnerID: 17,
 		}
-		_, err := s.Insert(project)
-		require.NoError(t, err)
+		insertTestProject(t, s, project)
 
 		task := &Task{
 			Title:       "disabled user task",
@@ -114,7 +113,7 @@ func TestDeleteUser(t *testing.T) {
 			CreatedByID: 17,
 			Index:       1,
 		}
-		_, err = s.Insert(task)
+		_, err := s.Insert(task)
 		require.NoError(t, err)
 
 		_, err = s.Insert(&TaskAttachment{

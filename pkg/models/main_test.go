@@ -31,6 +31,7 @@ import (
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/require"
+	"xorm.io/xorm"
 )
 
 const behindTheBackTitle = "behind the back"
@@ -43,6 +44,13 @@ func updateTitleBehindTheBack(t *testing.T, id int64, bean any) {
 	_, err := s2.ID(id).Cols("title").Update(bean)
 	require.NoError(t, err)
 	require.NoError(t, s2.Commit())
+}
+
+func insertTestProject(t testing.TB, s *xorm.Session, project *Project) {
+	t.Helper()
+	_, err := s.Insert(project)
+	require.NoError(t, err)
+	require.NoError(t, insertProjectAncestors(s, project.ID, project.parentID()))
 }
 
 func setupTime() {
