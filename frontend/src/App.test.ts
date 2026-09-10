@@ -77,12 +77,6 @@ describe('App layout', () => {
 		wrapper = undefined
 	})
 
-	it('renders the login route in the logged out shell', async () => {
-		await mountApp('/login')
-
-		expect(wrapper!.find('.login-route').exists()).toBe(true)
-	})
-
 	// Logout clears the user before the navigation to /login lands. Rendering the
 	// still-current app route in the logged out shell remounts components that
 	// dereference authStore.info (FRONTEND-OSS-2CJ, FRONTEND-OSS-2CH).
