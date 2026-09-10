@@ -191,5 +191,8 @@ func createExternalTeam(s *xorm.Session, teamData *Team, u *user.User, issuer, t
 }
 
 func getExternalTeamName(name, suffix string) string {
+	if suffix == "" {
+		return name
+	}
 	return name + " (" + suffix + ")"
 }
