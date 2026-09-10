@@ -1,11 +1,12 @@
 import {describe, it, expect, beforeEach, afterEach, vi} from 'vitest'
-import {mount, flushPromises, type VueWrapper} from '@vue/test-utils'
+import {mount, flushPromises, type DOMWrapper, type VueWrapper} from '@vue/test-utils'
 import {setActivePinia, createPinia} from 'pinia'
 import {createI18n} from 'vue-i18n'
 import ApiTokenForm from './ApiTokenForm.vue'
 import en from '@/i18n/lang/en.json'
+import type {ApiTokenRoutes} from '@/services/apiToken'
 
-const getAvailableRoutes = vi.fn(async () => ({
+const getAvailableRoutes = vi.fn(async (): Promise<ApiTokenRoutes> => ({
 	tasks: {
 		create: {path: '/api/v1/projects/:project/tasks', method: 'PUT'},
 		read_all: {path: '/api/v1/tasks', method: 'GET'},
@@ -50,6 +51,13 @@ function mountForm({stubDatePicker = true} = {}) {
 	return {wrapper, errors}
 }
 
+function warningDescribing(wrapper: DOMWrapper<Element>, label: string) {
+	const checkbox = wrapper.findAll('.fancy-checkbox').find(c => c.find('.fancy-checkbox__content').text() === label)
+	expect(checkbox).toBeTruthy()
+	const describedBy = checkbox!.find('input').attributes('aria-describedby')
+	return describedBy ? wrapper.find('#' + CSS.escape(describedBy)).text() : undefined
+}
+
 function setTitleFieldRef(wrapper: VueWrapper, value: unknown) {
 	const {setupState} = wrapper.vm.$ as unknown as {setupState: Record<string, unknown>}
 	setupState.apiTokenTitle = value
@@ -60,8 +68,8 @@ describe('ApiTokenForm', () => {
 
 	beforeEach(() => {
 		setActivePinia(createPinia())
-		getAvailableRoutes.mockClear()
-		create.mockClear()
+		getAvailableRoutes.mockReset()
+		create.mockReset()
 	})
 
 	afterEach(() => {
@@ -117,6 +125,38 @@ describe('ApiTokenForm', () => {
 			expect(wrapper.find('input[readonly]').exists()).toBe(false)
 		}
 
+		expect(mounted.errors).toEqual([])
+	})
+
+	it('warns about root-equivalent admin scopes only', async () => {
+		getAvailableRoutes.mockResolvedValueOnce({
+			admin: {
+				users_create: {path: '/api/v2/admin/users', method: 'POST'},
+				users_list: {path: '/api/v2/admin/users', method: 'GET'},
+				users_set_admin: {path: '/api/v2/admin/users/{id}/admin', method: 'PATCH'},
+				users_set_password: {path: '/api/v2/admin/users/{id}/password', method: 'PATCH'},
+			},
+			users: {
+				users_set_admin: {path: '/api/v2/users/{id}/admin', method: 'PATCH'},
+			},
+		})
+		const mounted = mountForm()
+		wrapper = mounted.wrapper
+		await flushPromises()
+
+		const warning = i18n.global.t('user.settings.apiTokens.escalationWarning')
+		const [adminGroup, usersGroup] = wrapper.findAll('.mbe-2')
+
+		expect(adminGroup.find('.has-text-weight-bold .fancy-checkbox__content').text()).toBe('admin')
+		expect(warningDescribing(adminGroup, 'users set admin')).toBe(warning)
+		expect(warningDescribing(adminGroup, 'users set password')).toBe(warning)
+		expect(warningDescribing(adminGroup, 'users create')).toBe(warning)
+		expect(warningDescribing(adminGroup, 'users list')).toBeUndefined()
+		expect(adminGroup.findAll('.help.is-danger')).toHaveLength(3)
+
+		expect(usersGroup.find('.has-text-weight-bold .fancy-checkbox__content').text()).toBe('users')
+		expect(warningDescribing(usersGroup, 'users set admin')).toBeUndefined()
+		expect(usersGroup.findAll('.help.is-danger')).toHaveLength(0)
 		expect(mounted.errors).toEqual([])
 	})
 })

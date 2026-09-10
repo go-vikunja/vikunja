@@ -3,6 +3,8 @@ import type {IApiToken} from '@/modelTypes/IApiToken'
 import ApiTokenModel from '@/models/apiTokenModel'
 import {toISOStringOrNull} from '@/helpers/time/toISOStringOrNull'
 
+export type ApiTokenRoutes = Record<string, Record<string, {path: string, method: string}>>
+
 export default class ApiTokenService extends AbstractService<IApiToken> {
 	constructor() {
 		super({
@@ -24,7 +26,7 @@ export default class ApiTokenService extends AbstractService<IApiToken> {
 		return new ApiTokenModel(data)
 	}
 	
-	async getAvailableRoutes() {
+	async getAvailableRoutes(): Promise<ApiTokenRoutes> {
 		const cancel = this.setLoading()
 
 		try {

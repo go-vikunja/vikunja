@@ -8,6 +8,7 @@
 		:disabled="disabled"
 		:model-value="modelValue"
 		:aria-label="ariaLabel"
+		:aria-describedby="ariaDescribedby"
 		@update:modelValue="value => emit('update:modelValue', value)"
 	>
 		<CheckboxIcon class="fancy-checkbox__icon" />
@@ -29,10 +30,12 @@ withDefaults(defineProps<{
 	disabled?: boolean,
 	isBlock?: boolean,
 	ariaLabel?: string,
+	ariaDescribedby?: string,
 }>(), {
 	disabled: false,
 	isBlock: false,
 	ariaLabel: undefined,
+	ariaDescribedby: undefined,
 })
 
 const emit = defineEmits<{
