@@ -8,6 +8,8 @@
 
 # Vikunja
 
+> This repository is an independent fork of Vikunja. See the [Fork Manifesto](MANIFESTO.md) for its personal-assistant direction, scope, and divergence history. The upstream documentation below describes the inherited project, not a guarantee of the fork's current or planned capabilities.
+
 > The task manager you actually own. 
 
 If Vikunja is useful to you, please consider [supporting the project](https://vikunja.io/support/). You can [buy a coffee](https://www.buymeacoffee.com/kolaente), [sponsor on GitHub](https://github.com/sponsors/kolaente) or buy [a sticker pack](https://vikunja.io/stickers).
