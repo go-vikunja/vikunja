@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
@@ -379,13 +380,17 @@ func getTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, opts 
 	return tasks, resultCount, totalItems, err
 }
 
+func taskMemoKey(id int64) string { return "task-" + strconv.FormatInt(id, 10) }
+
 // GetTaskByIDSimple returns a raw task without extra data by the task ID
 func GetTaskByIDSimple(s *xorm.Session, taskID int64) (task Task, err error) {
 	if taskID < 1 {
 		return Task{}, ErrTaskDoesNotExist{taskID}
 	}
 
-	return GetTaskSimple(s, &Task{ID: taskID})
+	return db.Remember(s, taskMemoKey(taskID), func() (Task, error) {
+		return GetTaskSimple(s, &Task{ID: taskID})
+	})
 }
 
 // GetTaskByProjectAndIndex returns a task by its per-project index.

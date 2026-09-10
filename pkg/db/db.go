@@ -604,6 +604,12 @@ func NewAutocommitSession() *xorm.Session {
 	return s
 }
 
+// NewReadSession creates a session without a also starting a transaction, so that
+// read only statements don't block a pool connection on statements that can be parallelized.
+func NewReadSession() *xorm.Session {
+	return NewAutocommitSession()
+}
+
 // Type returns the db type of the currently configured db
 func Type() schemas.DBType {
 	return x.Dialect().URI().DBType
