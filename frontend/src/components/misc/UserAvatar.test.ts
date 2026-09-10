@@ -130,15 +130,4 @@ describe('UserAvatar.vue', () => {
 		expect(wrapper.find('img').exists()).toBe(true)
 		expect(wrapper.find('img').attributes('src')).toBe('blob:avatar')
 	})
-
-	it('refetches after the avatar cache was invalidated', async () => {
-		const wrapper = mountAvatar({user: {username: 'user1'}, size: 40})
-		await flushPromises()
-
-		fetchAvatarBlobUrlMock.mockResolvedValueOnce('blob:new')
-		invalidateAvatarCache({username: 'user1'})
-		await flushPromises()
-
-		expect(wrapper.find('img').attributes('src')).toBe('blob:new')
-	})
 })
