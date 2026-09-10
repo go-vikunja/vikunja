@@ -28,7 +28,6 @@ import (
 	"testing"
 	"time"
 
-	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/modules/auth/oauth2server"
@@ -80,11 +79,7 @@ func insertLegacyOAuthScopedToken(t *testing.T) string {
 		OwnerID:        1,
 	}
 
-	s := db.NewSession()
-	defer s.Close()
-	_, err := s.Nullable("token_sha256").Insert(token)
-	require.NoError(t, err)
-	require.NoError(t, s.Commit())
+	insertAPITokenRow(t, token, "token_sha256")
 
 	return cleartext
 }

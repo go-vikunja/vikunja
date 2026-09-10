@@ -35,19 +35,54 @@ var apiTokenRoutes = map[string]APITokenRoute{}
 var apiTokenRoutesV2 = map[string]APITokenRoute{}
 
 func init() {
-	apiTokenRoutes = make(map[string]APITokenRoute)
-	apiTokenRoutesV2 = make(map[string]APITokenRoute)
-	apiTokenRoutes["caldav"] = APITokenRoute{
-		"access": &RouteDetail{
-			Path:   "/dav/*",
-			Method: "ANY",
-		},
+	resetAPITokenRoutes()
+}
+
+// Hand-named: small, stable, security-sensitive group. Collection skips /admin,
+// so a new admin route is unreachable by token until listed here.
+var adminTokenRoutes = []struct {
+	name, method, path string
+	v2Only             bool
+}{
+	{name: "overview", method: http.MethodGet, path: "admin/overview"},
+	{name: "users_list", method: http.MethodGet, path: "admin/users"},
+	{name: "users_create", method: http.MethodPost, path: "admin/users"},
+	{name: "users_delete", method: http.MethodDelete, path: "admin/users/:id"},
+	{name: "users_set_status", method: http.MethodPatch, path: "admin/users/:id/status"},
+	{name: "users_set_admin", method: http.MethodPatch, path: "admin/users/:id/admin"},
+	{name: "users_set_password", method: http.MethodPatch, path: "admin/users/:id/password", v2Only: true},
+	{name: "users_send_password_reset", method: http.MethodPost, path: "admin/users/:id/password-reset-email", v2Only: true},
+	{name: "projects_list", method: http.MethodGet, path: "admin/projects"},
+	{name: "projects_set_owner", method: http.MethodPatch, path: "admin/projects/:id/owner"},
+}
+
+// Keys on tokens issued before the named scopes; permissions are only
+// validated on create, so no migration.
+var legacyAdminScopes = map[string]string{ //nolint:gosec // scope names, not credentials
+	"users":                      "users_list",
+	"users_post":                 "users_create",
+	"users_status":               "users_set_status",
+	"users_admin":                "users_set_admin",
+	"users_password_reset_email": "users_send_password_reset",
+	"projects":                   "projects_list",
+	"projects_owner":             "projects_set_owner",
+}
+
+// resetAPITokenRoutes restores the init() baseline; tests use it to isolate cases.
+func resetAPITokenRoutes() {
+	apiTokenRoutes = map[string]APITokenRoute{
+		"caldav": {"access": &RouteDetail{Path: "/dav/*", Method: "ANY"}},
+		"feeds":  {"access": &RouteDetail{Path: "/feeds/*", Method: http.MethodGet}},
+		"admin":  {},
 	}
-	apiTokenRoutes["feeds"] = APITokenRoute{
-		"access": &RouteDetail{
-			Path:   "/feeds/*",
-			Method: "GET",
-		},
+	apiTokenRoutesV2 = map[string]APITokenRoute{
+		"admin": {},
+	}
+	for _, r := range adminTokenRoutes {
+		if !r.v2Only {
+			apiTokenRoutes["admin"][r.name] = &RouteDetail{Path: "/api/v1/" + r.path, Method: r.method}
+		}
+		apiTokenRoutesV2["admin"][r.name] = &RouteDetail{Path: "/api/v2/" + r.path, Method: r.method}
 	}
 }
 
@@ -234,6 +269,20 @@ func isStandardCRUDRoute(routeGroupName string, routeParts []string, _ string) b
 	return false
 }
 
+// storeRoute suffixes a colliding key with the method, except for CRUD keys
+// (which already encode one) where a collision makes the loser unreachable.
+func storeRoute(routes APITokenRoute, key string, rd *RouteDetail, suffixOnCollision bool) {
+	if existing := routes[key]; existing != nil {
+		if suffixOnCollision {
+			key += "_" + strings.ToLower(rd.Method)
+		} else if existing.Method != rd.Method {
+			log.Warningf("API token route %s %s overwrites %s %s under permission %q; the latter is no longer reachable by token",
+				rd.Method, rd.Path, existing.Method, existing.Path, key)
+		}
+	}
+	routes[key] = rd
+}
+
 // CollectRoutesForAPITokenUsage records a route for token authorisation.
 // v1 and v2 share group/permission keys derived from the prefix-stripped
 // path; v2 entries land in apiTokenRoutesV2 so the v1-only frontend UI is
@@ -259,15 +308,13 @@ func CollectRoutesForAPITokenUsage(route echo.RouteInfo, requiresJWT bool) {
 		return
 	}
 
+	if len(routeParts) > 0 && routeParts[0] == "admin" {
+		return
+	}
+
 	target := apiTokenRoutes
 	if isV2Path(route.Path) {
 		target = apiTokenRoutesV2
-		// AutoPatch's synthesised PATCH and the original PUT both derive the
-		// "update" permission and would clobber each other on the map. Store
-		// only PUT; CanDoAPIRoute accepts PATCH as its alias on the same path.
-		if route.Method == http.MethodPatch {
-			return
-		}
 	}
 
 	// Check if this is a standard CRUD route using path-based heuristics
@@ -296,27 +343,12 @@ func CollectRoutesForAPITokenUsage(route echo.RouteInfo, requiresJWT bool) {
 			}
 
 			ensureAPITokenRoutesGroup(target, "other")
-
-			_, exists := target["other"][routeGroupName]
-			if exists {
-				routeGroupName += "_" + strings.ToLower(route.Method)
-			}
-			target["other"][routeGroupName] = routeDetail
+			storeRoute(target["other"], routeGroupName, routeDetail, true)
 			return
 		}
 
-		subkey := strings.Join(routeParts[1:], "_")
-
-		if _, has := target[routeParts[0]]; !has {
-			target[routeParts[0]] = make(APITokenRoute)
-		}
-
-		if _, has := target[routeParts[0]][subkey]; has {
-			subkey += "_" + strings.ToLower(route.Method)
-		}
-
-		target[routeParts[0]][subkey] = routeDetail
-
+		ensureAPITokenRoutesGroup(target, routeParts[0])
+		storeRoute(target[routeParts[0]], strings.Join(routeParts[1:], "_"), routeDetail, true)
 		return
 	}
 
@@ -336,7 +368,7 @@ func CollectRoutesForAPITokenUsage(route echo.RouteInfo, requiresJWT bool) {
 
 	method, routeDetail := getRouteDetail(route)
 	if method != "" {
-		target[routeGroupName][method] = routeDetail
+		storeRoute(target[routeGroupName], method, routeDetail, false)
 	}
 
 	// Handle task attachments specially - they use custom handlers not WebHandler
@@ -457,27 +489,44 @@ func CanDoAPIRoute(c *echo.Context, token *APIToken) (can bool) {
 	return expandScopesSatisfied(c, token, path, method)
 }
 
+func hasOwnPatch(routes APITokenRoute, path string) bool {
+	for _, rd := range routes {
+		if rd.Method == http.MethodPatch && rd.Path == path {
+			return true
+		}
+	}
+	return false
+}
+
 func tokenAuthorizesRoute(token *APIToken, path, method string) bool {
 	for rawGroup, perms := range token.APIPermissions {
 		group := canonicalAPITokenGroup(rawGroup)
 		tables := []APITokenRoute{apiTokenRoutes[group], apiTokenRoutesV2[group]}
-		for _, routes := range tables {
-			if routes == nil {
-				continue
+		for _, p := range perms {
+			legacy := ""
+			if group == "admin" {
+				legacy = legacyAdminScopes[p]
 			}
-			for _, p := range perms {
+			for _, routes := range tables {
+				if routes == nil {
+					continue
+				}
 				rd := routes[p]
+				// Only a fallback: a current scope of the same name must win.
+				if rd == nil && legacy != "" {
+					rd = routes[legacy]
+				}
 				if rd == nil {
 					continue
 				}
 				if rd.Method == method && rd.Path == path {
 					return true
 				}
-				// v2: AutoPatch mirrors every PUT as a PATCH on the same
-				// path. PATCH isn't stored (it would clobber PUT under
-				// the same "update" key), so accept it as an alias here.
+				// AutoPatch's PATCH is never collected; accept it on the PUT unless
+				// the path has a PATCH of its own.
 				if isV2Path(rd.Path) && rd.Method == http.MethodPut &&
-					method == http.MethodPatch && rd.Path == path {
+					method == http.MethodPatch && rd.Path == path &&
+					!hasOwnPatch(routes, path) {
 					return true
 				}
 				// Two list endpoints share tasks.read_all but only one

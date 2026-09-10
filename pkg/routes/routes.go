@@ -54,6 +54,7 @@ package routes
 import (
 	"context"
 	"log/slog"
+	"net/http"
 	"strings"
 	"time"
 
@@ -290,11 +291,11 @@ func RegisterRoutes(e *echo.Echo) {
 	a2 := e.Group("/api/v2")
 	// Share the BasicAuth failure budget with CalDAV and feeds.
 	a2.Use(pathScoped(func(p string) bool { return p == "/api/v2/notifications.atom" }, basicAuthRateLimit))
-	registerAPIRoutesV2(e, a2, noAuthRateLimit, refreshRateLimit)
+	autoPatched := registerAPIRoutesV2(e, a2, noAuthRateLimit, refreshRateLimit)
 
 	// Collect routes for API token permissions
 	// In Echo v5, we collect routes after registration using e.Router().Routes()
-	collectRoutesForAPITokens(e)
+	collectRoutesForAPITokens(e, autoPatched)
 }
 
 // unauthenticatedAPIPaths contains paths that don't require JWT authentication
@@ -353,12 +354,17 @@ var unauthenticatedAPIPaths = map[string]bool{
 
 // collectRoutesForAPITokens collects all routes for API token permission checking.
 // In Echo v5, OnAddRouteHandler was removed, so we collect routes after registration.
-func collectRoutesForAPITokens(e *echo.Echo) {
+func collectRoutesForAPITokens(e *echo.Echo, autoPatched pathSet) {
 	routeList := e.Router().Routes()
 	log.Debugf("Collecting %d routes for API token usage", len(routeList))
 	for _, route := range routeList {
 		// Only process API routes
 		if !strings.HasPrefix(route.Path, "/api/v1") && !strings.HasPrefix(route.Path, "/api/v2") {
+			continue
+		}
+
+		// Synthesised PATCH rides on its PUT scope (tokenAuthorizesRoute aliases it).
+		if route.Method == http.MethodPatch && autoPatched[route.Path] {
 			continue
 		}
 
@@ -447,7 +453,7 @@ func gateV2AdminRoutes() echo.MiddlewareFunc {
 // registerAPIRoutesV2 wires the /api/v2 Echo group. Token middleware is
 // attached before any route so Huma's spec and Scalar docs share the
 // resource handlers' stack; unauthenticatedAPIPaths keeps them public.
-func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, noAuthRateLimit, refreshRateLimit echo.MiddlewareFunc) {
+func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, noAuthRateLimit, refreshRateLimit echo.MiddlewareFunc) pathSet {
 	a.Use(noStoreCacheControl())
 	a.Use(SetupTokenMiddleware())
 	a.Use(pathScoped(v2SessionRenewalPaths.has, refreshRateLimit))
@@ -474,7 +480,7 @@ func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, noAuthRateLimit, refreshRa
 	a.GET("/ws", ws.UpgradeHandler, noAuthRateLimit)
 
 	// Resources self-register via init(); RegisterAll runs them all + AutoPatch.
-	apiv2.RegisterAll(api)
+	return pathSet(apiv2.RegisterAll(api))
 }
 
 func registerAPIRoutes(a *echo.Group, noAuthRateLimit, refreshRateLimit echo.MiddlewareFunc) {

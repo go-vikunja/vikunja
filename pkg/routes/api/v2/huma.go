@@ -161,21 +161,34 @@ func Register[I, O any](api huma.API, op huma.Operation, handler func(context.Co
 }
 
 // EnableAutoPatch synthesises a PATCH for every resource that already
-// registered GET + PUT. Must be called AFTER all Register* calls.
-func EnableAutoPatch(api huma.API) {
+// registered GET + PUT. Must be called AFTER all Register* calls. It returns
+// the echo paths of the synthesised PATCHes.
+func EnableAutoPatch(api huma.API) map[string]bool {
+	pre := map[string]bool{}
+	for p, item := range api.OpenAPI().Paths {
+		if item != nil && item.Patch == nil {
+			pre[p] = true
+		}
+	}
+
 	autopatch.AutoPatch(api)
 
-	// AutoPatch names each synthesised PATCH after the GET operation
-	// ("Patch labels-read"), which reads poorly in the docs nav. Rewrite
-	// the summary from the sibling PUT so it reads like "Update a label
-	// (partial)". Only touch summaries AutoPatch generated (the "Patch "
-	// prefix) so a hand-registered PATCH is left alone.
-	for _, item := range api.OpenAPI().Paths {
-		if item == nil || item.Patch == nil || item.Put == nil {
+	synthesised := map[string]bool{}
+	for p, item := range api.OpenAPI().Paths {
+		if item == nil || item.Patch == nil || !pre[p] {
 			continue
 		}
-		if item.Put.Summary != "" && strings.HasPrefix(item.Patch.Summary, "Patch ") {
+		synthesised[echoPath(p)] = true
+		// AutoPatch names its PATCH after the GET ("Patch labels-read"), which reads
+		// poorly in the docs nav.
+		if item.Put != nil && item.Put.Summary != "" {
 			item.Patch.Summary = item.Put.Summary + " (partial)"
 		}
 	}
+	return synthesised
+}
+
+// echoPath mirrors humaecho's Handle: {param} becomes :param under the group prefix.
+func echoPath(path string) string {
+	return GroupPrefix + strings.NewReplacer("{", ":", "}", "").Replace(path)
 }

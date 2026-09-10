@@ -17,7 +17,9 @@
 package models
 
 import (
+	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"code.vikunja.io/api/pkg/license"
@@ -100,13 +102,13 @@ func TestStripAPIVersion(t *testing.T) {
 func TestCollectRoutesV2(t *testing.T) {
 	apiTokenRoutes = make(map[string]APITokenRoute)
 	apiTokenRoutesV2 = make(map[string]APITokenRoute)
+	t.Cleanup(resetAPITokenRoutes)
 
 	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v2/labels"}, true)
 	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v2/labels/:id"}, true)
 	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "POST", Path: "/api/v2/labels"}, true)
 	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "PUT", Path: "/api/v2/labels/:id"}, true)
 	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "DELETE", Path: "/api/v2/labels/:id"}, true)
-	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "PATCH", Path: "/api/v2/labels/:id"}, true)
 
 	// v1 map stays untouched.
 	assert.Empty(t, apiTokenRoutes, "v2 routes must not land in the v1 table")
@@ -117,10 +119,39 @@ func TestCollectRoutesV2(t *testing.T) {
 	assert.Equal(t, "/api/v2/labels", labels["read_all"].Path)
 	assert.Equal(t, "GET", labels["read_one"].Method)
 	assert.Equal(t, "POST", labels["create"].Method)
-	// PUT is the authoritative update verb for API tokens — PATCH is
-	// skipped during collection so it doesn't clobber PUT.
+	// AutoPatch's PATCH is never collected; PUT stays the update verb.
 	assert.Equal(t, "PUT", labels["update"].Method)
 	assert.Equal(t, "DELETE", labels["delete"].Method)
+}
+
+func TestCollectRoutesV2_Patch(t *testing.T) {
+	t.Run("PATCH without a PUT twin is collected", func(t *testing.T) {
+		resetAPITokenRoutes()
+		t.Cleanup(resetAPITokenRoutes)
+
+		CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: http.MethodPatch, Path: "/api/v2/teams/:id/archive"}, true)
+
+		require.Contains(t, apiTokenRoutesV2, "teams")
+		require.Contains(t, apiTokenRoutesV2["teams"], "archive")
+		assert.Equal(t, http.MethodPatch, apiTokenRoutesV2["teams"]["archive"].Method)
+
+		token := &APIToken{APIPermissions: APIPermissions{"teams": []string{"archive"}}}
+		req := httptest.NewRequest(http.MethodPatch, "/api/v2/teams/:id/archive", nil)
+		c := echo.New().NewContext(req, httptest.NewRecorder())
+		assert.True(t, CanDoAPIRoute(c, token))
+	})
+
+	t.Run("PATCH coexisting with a PUT gets its own permission", func(t *testing.T) {
+		resetAPITokenRoutes()
+		t.Cleanup(resetAPITokenRoutes)
+
+		CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: http.MethodPut, Path: "/api/v2/tasks/:task/position"}, true)
+		CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: http.MethodPatch, Path: "/api/v2/tasks/:task/position"}, true)
+
+		assert.Equal(t, http.MethodPut, apiTokenRoutesV2["tasks"]["position"].Method)
+		require.Contains(t, apiTokenRoutesV2["tasks"], "position_patch")
+		assert.Equal(t, http.MethodPatch, apiTokenRoutesV2["tasks"]["position_patch"].Method)
+	})
 }
 
 // TestCollectRoutes_TimeEntriesV2 pins the v2-only time-entries resource to a
@@ -182,11 +213,9 @@ func TestGetAPITokenRoutes_ExposesV2Only(t *testing.T) {
 // inside always-available groups (tasks.time_entries) — while validation and
 // authorisation of existing tokens stay unfiltered.
 func TestGetAPITokenRoutes_LicenseFilter(t *testing.T) {
-	apiTokenRoutes = make(map[string]APITokenRoute)
-	apiTokenRoutesV2 = make(map[string]APITokenRoute)
+	resetAPITokenRoutes()
 
 	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v1/labels"}, true)
-	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v1/admin/users"}, true)
 	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v2/tasks"}, true)
 	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v2/time-entries"}, true)
 	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v2/tasks/:task_id/time-entries"}, true)
@@ -270,14 +299,10 @@ func TestGetRouteDetail_V2Verbs(t *testing.T) {
 // PATCH for every PUT — the matcher accepts it as an alias so token
 // holders aren't forced to use PUT exclusively.
 func TestCanDoAPIRoute_V2PatchAliasesPut(t *testing.T) {
-	apiTokenRoutes = make(map[string]APITokenRoute)
-	apiTokenRoutesV2 = make(map[string]APITokenRoute)
-	apiTokenRoutes["caldav"] = APITokenRoute{
-		"access": &RouteDetail{Path: "/dav/*", Method: "ANY"},
-	}
+	resetAPITokenRoutes()
+	t.Cleanup(resetAPITokenRoutes)
 
 	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "PUT", Path: "/api/v2/labels/:id"}, true)
-	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "PATCH", Path: "/api/v2/labels/:id"}, true)
 
 	token := &APIToken{
 		APIPermissions: APIPermissions{"labels": []string{"update"}},
@@ -315,6 +340,23 @@ func TestCanDoAPIRoute_V2PatchAliasesPut(t *testing.T) {
 		req := httptest.NewRequest("PATCH", "/api/v1/labels/:id", nil)
 		c := e.NewContext(req, httptest.NewRecorder())
 		assert.False(t, CanDoAPIRoute(c, v1Token))
+	})
+
+	t.Run("a path with its own PATCH is not covered by the PUT alias", func(t *testing.T) {
+		resetAPITokenRoutes()
+		t.Cleanup(resetAPITokenRoutes)
+
+		CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: http.MethodPut, Path: "/api/v2/tasks/:task/position"}, true)
+		CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: http.MethodPatch, Path: "/api/v2/tasks/:task/position"}, true)
+
+		can := func(perm, method string) bool {
+			token := &APIToken{APIPermissions: APIPermissions{"tasks": []string{perm}}}
+			req := httptest.NewRequest(method, "/api/v2/tasks/:task/position", nil)
+			return CanDoAPIRoute(echo.New().NewContext(req, httptest.NewRecorder()), token)
+		}
+		assert.True(t, can("position", http.MethodPut))
+		assert.False(t, can("position", http.MethodPatch), "the PUT alias must not cover a PATCH of its own")
+		assert.True(t, can("position_patch", http.MethodPatch))
 	})
 }
 
@@ -507,5 +549,95 @@ func TestCanDoAPIRoute_ExpandScopes(t *testing.T) {
 		projectsToken := &APIToken{APIPermissions: APIPermissions{"projects": []string{"read_all"}}}
 		assert.True(t, do(t, "/api/v1/projects?expand=comments", projectsToken),
 			"expand on a route which does not consume it must not require any scope")
+	})
+}
+
+func TestAdminTokenScopes(t *testing.T) {
+	resetAPITokenRoutes()
+	t.Cleanup(resetAPITokenRoutes)
+	license.SetForTests([]license.Feature{license.FeatureAdminPanel})
+	defer license.ResetForTests()
+
+	// Derived collection must not reintroduce the old keys.
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v1/admin/users"}, true)
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "POST", Path: "/api/v2/admin/users"}, true)
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "PATCH", Path: "/api/v2/admin/users/:id/admin"}, true)
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v2/tasks"}, true)
+
+	e := echo.New()
+	can := func(token *APIToken, method, path string) bool {
+		c := e.NewContext(httptest.NewRequest(method, path, nil), httptest.NewRecorder())
+		return CanDoAPIRoute(c, token)
+	}
+
+	t.Run("each scope authorises its own route on both versions", func(t *testing.T) {
+		for _, r := range adminTokenRoutes {
+			token := &APIToken{APIPermissions: APIPermissions{"admin": []string{r.name}}}
+			require.NoError(t, PermissionsAreValid(token.APIPermissions))
+			assert.True(t, can(token, r.method, "/api/v2/"+r.path), "%s must authorise v2", r.name)
+			assert.Equal(t, !r.v2Only, can(token, r.method, "/api/v1/"+r.path), "%s on v1", r.name)
+			// No method confusion: GET must not unlock a PATCH on the same path and vice versa.
+			other := http.MethodGet
+			if r.method == http.MethodGet {
+				other = http.MethodPatch
+			}
+			assert.False(t, can(token, other, "/api/v2/"+r.path), "%s must not authorise %s", r.name, other)
+		}
+	})
+
+	t.Run("legacy keys still authorise", func(t *testing.T) {
+		byName := map[string]string{}
+		for _, r := range adminTokenRoutes {
+			byName[r.name] = r.method + " " + r.path
+		}
+		for old, current := range legacyAdminScopes {
+			parts := strings.SplitN(byName[current], " ", 2)
+			token := &APIToken{APIPermissions: APIPermissions{"admin": []string{old}}}
+			assert.True(t, can(token, parts[0], "/api/v2/"+parts[1]), "legacy %s must authorise %s", old, current)
+		}
+		// Unchanged names need no alias.
+		assert.True(t, can(&APIToken{APIPermissions: APIPermissions{"admin": []string{"users_delete"}}}, http.MethodDelete, "/api/v1/admin/users/:id"))
+		assert.True(t, can(&APIToken{APIPermissions: APIPermissions{"admin": []string{"overview"}}}, http.MethodGet, "/api/v2/admin/overview"))
+	})
+
+	t.Run("v1 PATCH admin routes", func(t *testing.T) {
+		for _, key := range []string{"users_set_status", "users_status"} {
+			token := &APIToken{APIPermissions: APIPermissions{"admin": []string{key}}}
+			assert.True(t, can(token, http.MethodPatch, "/api/v1/admin/users/:id/status"), key)
+			assert.True(t, can(token, http.MethodPatch, "/api/v2/admin/users/:id/status"), key)
+		}
+	})
+
+	t.Run("admin-only token is denied elsewhere", func(t *testing.T) {
+		all := make([]string, 0, len(adminTokenRoutes))
+		for _, r := range adminTokenRoutes {
+			all = append(all, r.name)
+		}
+		token := &APIToken{APIPermissions: APIPermissions{"admin": all}}
+		assert.False(t, can(token, http.MethodGet, "/api/v2/tasks"))
+
+		usersList := &APIToken{APIPermissions: APIPermissions{"admin": []string{"users_list"}}}
+		assert.False(t, can(usersList, http.MethodGet, "/api/v2/admin/projects"))
+
+		projectsList := &APIToken{APIPermissions: APIPermissions{"admin": []string{"projects_list"}}}
+		assert.False(t, can(projectsList, http.MethodGet, "/api/v2/admin/users"))
+	})
+
+	t.Run("legacy keys are not aliased outside the admin group", func(t *testing.T) {
+		CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v1/users"}, true)
+		require.Contains(t, apiTokenRoutes["other"], "users")
+
+		token := &APIToken{APIPermissions: APIPermissions{"other": []string{"users"}}}
+		assert.True(t, can(token, http.MethodGet, "/api/v1/users"),
+			"other.users must keep authorising its own route")
+		assert.False(t, can(token, http.MethodGet, "/api/v1/admin/users"))
+	})
+
+	t.Run("legacy keys are rejected at create time", func(t *testing.T) {
+		for old := range legacyAdminScopes {
+			err := PermissionsAreValid(APIPermissions{"admin": []string{old}})
+			require.Error(t, err, old)
+			assert.True(t, IsErrInvalidAPITokenPermission(err), old)
+		}
 	})
 }

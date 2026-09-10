@@ -19,7 +19,6 @@ package webtests
 import (
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
@@ -52,16 +51,52 @@ func promoteToAdmin(t *testing.T, userID int64) *user.User {
 }
 
 func adminReq(t *testing.T, e *echo.Echo, method, path string, u *user.User, body string) *httptest.ResponseRecorder {
-	req := httptest.NewRequest(method, path, strings.NewReader(body))
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	bearer := ""
 	if u != nil {
 		tok, err := auth.NewUserJWTAuthtoken(u, "test-session-id")
 		require.NoError(t, err)
-		req.Header.Set(echo.HeaderAuthorization, "Bearer "+tok)
+		bearer = "Bearer " + tok
 	}
-	res := httptest.NewRecorder()
-	e.ServeHTTP(res, req)
-	return res
+	return testingRequest(e, method, path, body, bearer)
+}
+
+func TestAdmin_APIToken(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	license.SetForTests([]license.Feature{license.FeatureAdminPanel})
+	defer license.ResetForTests()
+
+	promoteToAdmin(t, 1)
+
+	t.Run("named scope reaches a PATCH route", func(t *testing.T) {
+		tok := insertAPIToken(t, 1, models.APIPermissions{"admin": {"users_set_status"}})
+		res := testingRequest(e, http.MethodPatch, "/api/v1/admin/users/2/status", `{"status":0}`, "Bearer "+tok)
+		assert.Equal(t, http.StatusOK, res.Code, res.Body.String())
+	})
+
+	t.Run("legacy scope key still authorises", func(t *testing.T) {
+		tok := insertAPIToken(t, 1, models.APIPermissions{"admin": {"users_status"}})
+		res := testingRequest(e, http.MethodPatch, "/api/v1/admin/users/2/status", `{"status":0}`, "Bearer "+tok)
+		assert.Equal(t, http.StatusOK, res.Code, res.Body.String())
+	})
+
+	t.Run("other admin scope is denied", func(t *testing.T) {
+		tok := insertAPIToken(t, 1, models.APIPermissions{"admin": {"users_list"}})
+		res := testingRequest(e, http.MethodPatch, "/api/v1/admin/users/2/status", `{"status":0}`, "Bearer "+tok)
+		assert.Equal(t, http.StatusUnauthorized, res.Code)
+	})
+
+	t.Run("admin-only token is denied outside admin", func(t *testing.T) {
+		tok := insertAPIToken(t, 1, models.APIPermissions{"admin": {"users_list", "users_set_status"}})
+		res := testingRequest(e, http.MethodGet, "/api/v1/tasks/all", "", "Bearer "+tok)
+		assert.Equal(t, http.StatusUnauthorized, res.Code)
+	})
+
+	t.Run("non-admin owner is gated", func(t *testing.T) {
+		tok := insertAPIToken(t, 2, models.APIPermissions{"admin": {"users_set_status"}})
+		res := testingRequest(e, http.MethodPatch, "/api/v1/admin/users/3/status", `{"status":0}`, "Bearer "+tok)
+		assert.Equal(t, http.StatusNotFound, res.Code)
+	})
 }
 
 func TestAdmin_GateUnlicensed(t *testing.T) {
