@@ -70,46 +70,88 @@ func checkForExpiringAPITokensAt(now time.Time) {
 
 	log.Debugf(logPrefix+"Found %d tokens expiring within 7 days", len(tokens))
 
-	// Collect unique owner IDs and fetch users
 	ownerIDs := make([]int64, 0, len(tokens))
 	for _, token := range tokens {
 		ownerIDs = append(ownerIDs, token.OwnerID)
 	}
 
-	users, err := user.GetUsersByIDs(s, ownerIDs)
+	owners, err := user.GetUsersByIDs(s, ownerIDs)
 	if err != nil {
 		log.Errorf(logPrefix+"Error getting token owners: %s", err)
 		return
 	}
 
+	botOwners, err := getBotOwners(s, owners)
+	if err != nil {
+		log.Errorf(logPrefix+"Error getting bot owners: %s", err)
+		return
+	}
+
 	for _, token := range tokens {
-		u, exists := users[token.OwnerID]
+		owner, exists := owners[token.OwnerID]
 		if !exists {
 			continue
 		}
 
-		// Send only the most urgent notification: 1-day if within 24h, otherwise 7-day
-		if token.ExpiresAt.Before(oneDay) || token.ExpiresAt.Equal(oneDay) {
-			if err := sendTokenExpiryNotificationIfNew(s, u, &APITokenExpiringDayNotification{
-				User:  u,
-				Token: token,
-			}); err != nil {
-				log.Errorf(logPrefix+"Error sending 1-day notification for token %d: %s", token.ID, err)
+		for _, r := range tokenExpiryRecipients(owner, botOwners) {
+			if err := sendTokenExpiryNotification(s, r, token, oneDay); err != nil {
+				log.Errorf(logPrefix+"Error sending notification for token %d to user %d: %s", token.ID, r.user.ID, err)
 			}
-			continue
-		}
-
-		if err := sendTokenExpiryNotificationIfNew(s, u, &APITokenExpiringWeekNotification{
-			User:  u,
-			Token: token,
-		}); err != nil {
-			log.Errorf(logPrefix+"Error sending 7-day notification for token %d: %s", token.ID, err)
 		}
 	}
 
 	if err := s.Commit(); err != nil {
 		log.Errorf(logPrefix+"Error committing session: %s", err)
 	}
+}
+
+// tokenExpiryRecipient is a human to notify; bot is set when the token belongs to a bot.
+type tokenExpiryRecipient struct {
+	user *user.User
+	bot  *user.User
+}
+
+// Bots never receive notifications (ShouldNotify is false), so a bot token is
+// routed to a human instead. Instance bots without an owner will need their own branch here.
+func tokenExpiryRecipients(owner *user.User, botOwners map[int64]*user.User) []tokenExpiryRecipient {
+	if !owner.IsBot() {
+		return []tokenExpiryRecipient{{user: owner}}
+	}
+
+	human, exists := botOwners[owner.BotOwnerID]
+	if !exists {
+		return nil
+	}
+
+	return []tokenExpiryRecipient{{user: human, bot: owner}}
+}
+
+func getBotOwners(s *xorm.Session, owners map[int64]*user.User) (map[int64]*user.User, error) {
+	botOwnerIDs := []int64{}
+	for _, u := range owners {
+		if u.IsBot() {
+			botOwnerIDs = append(botOwnerIDs, u.BotOwnerID)
+		}
+	}
+
+	return user.GetUsersByIDs(s, botOwnerIDs)
+}
+
+// Sends only the most urgent notification: 1-day if within 24h, otherwise 7-day.
+func sendTokenExpiryNotification(s *xorm.Session, r tokenExpiryRecipient, token *APIToken, oneDay time.Time) error {
+	if token.ExpiresAt.Before(oneDay) || token.ExpiresAt.Equal(oneDay) {
+		return sendTokenExpiryNotificationIfNew(s, r.user, &APITokenExpiringDayNotification{
+			User:  r.user,
+			Token: token,
+			Bot:   r.bot,
+		})
+	}
+
+	return sendTokenExpiryNotificationIfNew(s, r.user, &APITokenExpiringWeekNotification{
+		User:  r.user,
+		Token: token,
+		Bot:   r.bot,
+	})
 }
 
 // sendTokenExpiryNotificationIfNew checks whether a notification with the same

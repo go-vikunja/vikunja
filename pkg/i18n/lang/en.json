@@ -144,13 +144,18 @@
             "expiring": {
                 "week": {
                     "subject": "Your API token \"%[1]s\" expires soon",
-                    "message": "Your API token \"%[1]s\" will expire on %[2]s (in %[3]s). If you still need it, please create a new token before it expires."
+                    "message": "Your API token \"%[1]s\" will expire on %[2]s (in %[3]s). If you still need it, please create a new token before it expires.",
+                    "bot_subject": "The API token \"%[1]s\" of your bot %[2]s expires soon",
+                    "bot_message": "The API token \"%[1]s\" of your bot %[2]s will expire on %[3]s (in %[4]s). If you still need it, please create a new token before it expires."
                 },
                 "day": {
                     "subject": "Your API token \"%[1]s\" expires tomorrow",
-                    "message": "Your API token \"%[1]s\" will expire on %[2]s (in %[3]s). If you still need it, please create a new token before it expires."
+                    "message": "Your API token \"%[1]s\" will expire on %[2]s (in %[3]s). If you still need it, please create a new token before it expires.",
+                    "bot_subject": "The API token \"%[1]s\" of your bot %[2]s expires tomorrow",
+                    "bot_message": "The API token \"%[1]s\" of your bot %[2]s will expire on %[3]s (in %[4]s). If you still need it, please create a new token before it expires."
                 },
-                "action": "Manage API Tokens"
+                "action": "Manage API Tokens",
+                "bot_action": "Manage Bots"
             }
         },
         "common": {
