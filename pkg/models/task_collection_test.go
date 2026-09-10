@@ -2086,8 +2086,7 @@ func TestTaskCollection_ExpandSubtasksPaginatesRoots(t *testing.T) {
 	u := &user.User{ID: 1}
 
 	project := &Project{Title: "pagination-roots", OwnerID: u.ID}
-	_, err := s.Insert(project)
-	require.NoError(t, err)
+	insertTestProject(t, s, project)
 
 	// 40 top-level tasks
 	topLevel := make([]*Task, 0, 40)
@@ -2098,7 +2097,7 @@ func TestTaskCollection_ExpandSubtasksPaginatesRoots(t *testing.T) {
 			CreatedByID: u.ID,
 			Index:       int64(i),
 		}
-		_, err = s.Insert(task)
+		_, err := s.Insert(task)
 		require.NoError(t, err)
 		topLevel = append(topLevel, task)
 	}
@@ -2112,7 +2111,7 @@ func TestTaskCollection_ExpandSubtasksPaginatesRoots(t *testing.T) {
 			CreatedByID: u.ID,
 			Index:       int64(41 + i),
 		}
-		_, err = s.Insert(sub)
+		_, err := s.Insert(sub)
 		require.NoError(t, err)
 
 		rel := &TaskRelation{
@@ -2242,8 +2241,7 @@ func setupSubtaskExpansionFixture(t *testing.T, u *user.User, title string, appl
 	defer s.Close()
 
 	project = &Project{Title: title, OwnerID: u.ID}
-	_, err := s.Insert(project)
-	require.NoError(t, err)
+	insertTestProject(t, s, project)
 
 	parent = &Task{Title: "parent", ProjectID: project.ID, CreatedByID: u.ID, Index: 1}
 	sub = &Task{Title: "sub", ProjectID: project.ID, CreatedByID: u.ID, Index: 2}
@@ -2251,7 +2249,7 @@ func setupSubtaskExpansionFixture(t *testing.T, u *user.User, title string, appl
 		apply(parent, sub)
 	}
 
-	_, err = s.Insert(parent)
+	_, err := s.Insert(parent)
 	require.NoError(t, err)
 	_, err = s.Insert(sub)
 	require.NoError(t, err)
@@ -2483,11 +2481,10 @@ func TestTaskCollection_ExpandSubtasksMultiParentCrossScope(t *testing.T) {
 	defer s.Close()
 
 	otherProject := &Project{Title: "multi-parent-out-of-scope", OwnerID: u.ID}
-	_, err := s.Insert(otherProject)
-	require.NoError(t, err)
+	insertTestProject(t, s, otherProject)
 
 	otherParent := &Task{Title: "out of scope parent", ProjectID: otherProject.ID, CreatedByID: u.ID, Index: 1}
-	_, err = s.Insert(otherParent)
+	_, err := s.Insert(otherParent)
 	require.NoError(t, err)
 
 	rel := &TaskRelation{TaskID: otherParent.ID, OtherTaskID: sub.ID, RelationKind: RelationKindSubtask}

@@ -284,11 +284,9 @@ func TestUpdateTasksInSavedFilterViews_AccessViaShareOrParent(t *testing.T) {
 			noAccessID     int64 = 2
 		)
 		parentProjectID := int64(9990)
-		_, err := s.Insert(&Project{ID: parentProjectID, Title: "ancestor parent", Identifier: "ANCPARENT", OwnerID: parentOwnerID})
-		require.NoError(t, err)
-		_, err = s.Insert(&Project{ID: childProjectID, Title: "ancestor child", Identifier: "ANCCHILD", OwnerID: childOwnerID, ParentProjectID: &parentProjectID})
-		require.NoError(t, err)
-		_, err = s.Insert(&Task{ID: taskID, Title: "child project task", ProjectID: childProjectID, Index: 1, CreatedByID: childOwnerID})
+		insertTestProject(t, s, &Project{ID: parentProjectID, Title: "ancestor parent", Identifier: "ANCPARENT", OwnerID: parentOwnerID})
+		insertTestProject(t, s, &Project{ID: childProjectID, Title: "ancestor child", Identifier: "ANCCHILD", OwnerID: childOwnerID, ParentProjectID: &parentProjectID})
+		_, err := s.Insert(&Task{ID: taskID, Title: "child project task", ProjectID: childProjectID, Index: 1, CreatedByID: childOwnerID})
 		require.NoError(t, err)
 
 		parentOwnerView, _ := createKanbanFilterView(t, s, 9999, 9999, parentOwnerID, "done = false")
@@ -589,8 +587,7 @@ func TestSubscriberNotifications_SkipUsersWithoutReadAccess(t *testing.T) {
 			OwnerID:         doerID,
 			ParentProjectID: &parentID,
 		}
-		_, err := s.Insert(child)
-		require.NoError(t, err)
+		insertTestProject(t, s, child)
 		require.NoError(t, s.Commit())
 		_ = s.Close()
 
