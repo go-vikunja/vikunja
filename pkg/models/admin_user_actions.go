@@ -50,6 +50,10 @@ func SetUserAdminFlag(s *xorm.Session, doer *user.User, id int64, isAdmin bool) 
 	if err != nil {
 		return nil, err
 	}
+	// is_admin is the whole point of an instance bot; disable or delete it instead.
+	if target.IsInstanceBot {
+		return nil, &ErrInstanceBotCannotBeModified{UserID: target.ID}
+	}
 
 	if !isAdmin {
 		if err := user.GuardLastAdmin(s, target); err != nil {

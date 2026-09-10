@@ -116,10 +116,11 @@ type User struct {
 	DefaultProjectID             int64  `xorm:"bigint null index" json:"-"`
 	// BotOwnerID is the ID of the owning (human) user if this user is a bot.
 	// A non-zero value means this user is a bot and cannot authenticate via password.
-	BotOwnerID int64  `xorm:"bigint null index" json:"bot_owner_id,omitempty" readOnly:"true" doc:"The id of the owning (human) user. Set by the server on creation; a non-zero value means this user is a bot."`
-	WeekStart  int    `xorm:"null" json:"-"`
-	Language   string `xorm:"varchar(50) null" json:"-" valid:"language"`
-	Timezone   string `xorm:"varchar(255) null" json:"-"`
+	BotOwnerID    int64  `xorm:"bigint null index" json:"bot_owner_id,omitempty" readOnly:"true" doc:"The id of the owning (human) user. Set by the server on creation; a non-zero value means this user is a bot."`
+	IsInstanceBot bool   `xorm:"not null default false" json:"-"`
+	WeekStart     int    `xorm:"null" json:"-"`
+	Language      string `xorm:"varchar(50) null" json:"-" valid:"language"`
+	Timezone      string `xorm:"varchar(255) null" json:"-"`
 
 	DeletionScheduledAt      time.Time `xorm:"datetime null" json:"-"`
 	DeletionLastReminderSent time.Time `xorm:"datetime null" json:"-"`
@@ -188,9 +189,9 @@ func (u *User) GetID() int64 {
 	return u.ID
 }
 
-// IsBot reports whether this user is a bot (owned by another user).
+// IsBot reports whether this user is a bot, owned by another user or by the instance.
 func (u *User) IsBot() bool {
-	return u.BotOwnerID > 0
+	return u.BotOwnerID > 0 || u.IsInstanceBot
 }
 
 // TableName returns the table name for users
@@ -761,7 +762,7 @@ func SetUserStatus(s *xorm.Session, user *User, status Status) (err error) {
 // GuardLastAdmin refuses demoting or deleting the last reachable admin; only active, non-deletion-scheduled admins count since the rest cannot log in.
 // SELECT ... FOR UPDATE closes the TOCTOU race between concurrent demotions on MySQL (xorm only emits it for MySQL; SQLite serializes writes, postgres relies on serializable isolation).
 func GuardLastAdmin(s *xorm.Session, target *User) error {
-	if !target.IsAdmin {
+	if !target.IsAdmin || target.IsInstanceBot {
 		return nil
 	}
 	// target is not in the counted "reachable admin" set — removing them
@@ -770,9 +771,7 @@ func GuardLastAdmin(s *xorm.Session, target *User) error {
 		return nil
 	}
 
-	session := s.Where("is_admin = ?", true).
-		And("status = ?", StatusActive).
-		And("deletion_scheduled_at IS NULL")
+	session := activeHumanAdmins(s)
 	if db.Type() == schemas.MYSQL {
 		session = session.ForUpdate()
 	}
@@ -787,6 +786,22 @@ func GuardLastAdmin(s *xorm.Session, target *User) error {
 	return nil
 }
 
+// Bots carry is_admin but cannot log in, so they never count as a reachable admin.
+func activeHumanAdmins(s *xorm.Session) *xorm.Session {
+	return s.Where("is_admin = ?", true).
+		And("is_instance_bot = ?", false).
+		And(builder.Or(builder.IsNull{"bot_owner_id"}, builder.Eq{"bot_owner_id": 0})).
+		And("status = ?", StatusActive).
+		And("deletion_scheduled_at IS NULL")
+}
+
+// GetActiveHumanAdmins returns every admin who can log in: active, not a bot, not scheduled for deletion.
+func GetActiveHumanAdmins(s *xorm.Session) ([]*User, error) {
+	admins := []*User{}
+	err := activeHumanAdmins(s).OrderBy("id").Find(&admins)
+	return admins, err
+}
+
 // UpdateUserPassword updates the password of a user
 func UpdateUserPassword(s *xorm.Session, user *User, newPassword string) (err error) {
 
@@ -798,6 +813,10 @@ func UpdateUserPassword(s *xorm.Session, user *User, newPassword string) (err er
 	theUser, err := GetUserByID(s, user.ID)
 	if err != nil && !IsErrUserStatusError(err) {
 		return err
+	}
+
+	if theUser.IsBot() {
+		return &ErrAccountIsBot{UserID: theUser.ID}
 	}
 
 	// Hash the new password and set it

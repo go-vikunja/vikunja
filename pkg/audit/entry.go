@@ -151,6 +151,7 @@ const (
 func UserActor(id int64) Actor      { return Actor{Type: "user", ID: id} }
 func LinkShareActor(id int64) Actor { return Actor{Type: "link_share", ID: id} }
 func SystemActor() Actor            { return Actor{Type: "system"} }
+func CLIActor() Actor               { return Actor{Type: "cli"} }
 
 // ActorFromDoerID maps a doer ID to an actor. Link shares are disguised as
 // users with negative IDs throughout the event payloads.

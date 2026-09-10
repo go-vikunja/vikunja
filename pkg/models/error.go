@@ -2312,6 +2312,61 @@ func (err *ErrInvalidAPITokenPermission) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrInstanceBotScopeNotAllowed represents an error where an instance bot token is granted a non-admin scope.
+type ErrInstanceBotScopeNotAllowed struct {
+	Group string
+}
+
+// IsErrInstanceBotScopeNotAllowed checks if an error is ErrInstanceBotScopeNotAllowed.
+func IsErrInstanceBotScopeNotAllowed(err error) bool {
+	_, ok := err.(*ErrInstanceBotScopeNotAllowed)
+	return ok
+}
+
+func (err *ErrInstanceBotScopeNotAllowed) Error() string {
+	return fmt.Sprintf("Instance bot tokens may only carry admin scopes, got %s", err.Group)
+}
+
+// ErrCodeInstanceBotScopeNotAllowed holds the unique world-error code of this error
+const ErrCodeInstanceBotScopeNotAllowed = 14014
+
+// HTTPError holds the http error description
+func (err *ErrInstanceBotScopeNotAllowed) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode:   http.StatusBadRequest,
+		Code:       ErrCodeInstanceBotScopeNotAllowed,
+		Message:    fmt.Sprintf("Instance bot tokens may only carry admin scopes, %s is not allowed.", err.Group),
+		I18nParams: map[string]string{"group": err.Group},
+	}
+}
+
+// ErrInstanceBotCannotBeModified represents an error where an admin action is refused on an instance bot.
+type ErrInstanceBotCannotBeModified struct {
+	UserID int64
+}
+
+// IsErrInstanceBotCannotBeModified checks if an error is ErrInstanceBotCannotBeModified.
+func IsErrInstanceBotCannotBeModified(err error) bool {
+	_, ok := err.(*ErrInstanceBotCannotBeModified)
+	return ok
+}
+
+func (err *ErrInstanceBotCannotBeModified) Error() string {
+	return fmt.Sprintf("Instance bot %d cannot be modified this way", err.UserID)
+}
+
+// ErrCodeInstanceBotCannotBeModified holds the unique world-error code of this error
+const ErrCodeInstanceBotCannotBeModified = 14015
+
+// HTTPError holds the http error description
+func (err *ErrInstanceBotCannotBeModified) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeInstanceBotCannotBeModified,
+		Message:  "Instance bots are managed through the CLI; only their status can be changed or the bot deleted.",
+	}
+}
+
 // OIDC errors
 const ErrCodeOpenIDError = 15001
 

@@ -122,6 +122,84 @@ func TestUser_IsBot(t *testing.T) {
 		u := &User{ID: 2, BotOwnerID: 1}
 		assert.True(t, u.IsBot())
 	})
+	t.Run("instance bot", func(t *testing.T) {
+		u := &User{ID: 3, IsInstanceBot: true}
+		assert.True(t, u.IsBot())
+	})
+}
+
+func TestCreateInstanceBotUser(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		bot, err := CreateInstanceBotUser(s, &User{Username: "bot-provisioner", BotOwnerID: 1, Email: "x@example.com"})
+		require.NoError(t, err)
+		assert.True(t, bot.IsBot())
+		assert.True(t, bot.IsInstanceBot)
+		assert.True(t, bot.IsAdmin)
+		assert.Zero(t, bot.BotOwnerID)
+		assert.Equal(t, StatusActive, bot.Status)
+		assert.Empty(t, bot.Email)
+		assert.Empty(t, bot.Password)
+	})
+	t.Run("missing bot- prefix", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		_, err := CreateInstanceBotUser(s, &User{Username: "provisioner"})
+		require.Error(t, err)
+		assert.True(t, IsErrBotUsernameMustHavePrefix(err))
+	})
+	t.Run("duplicate username", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		_, err := CreateInstanceBotUser(s, &User{Username: "bot-instance-provisioner"})
+		require.Error(t, err)
+		assert.True(t, IsErrUsernameExists(err))
+	})
+}
+
+func TestGuardLastAdmin_IgnoresInstanceBots(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	// Fixture 26 is the only admin; 1 becomes the only human admin.
+	admin := &User{ID: 1}
+	_, err := s.ID(admin.ID).Cols("is_admin").Update(&User{IsAdmin: true})
+	require.NoError(t, err)
+	_, err = s.Get(admin)
+	require.NoError(t, err)
+
+	err = GuardLastAdmin(s, admin)
+	require.Error(t, err)
+	assert.True(t, IsErrLastAdmin(err), "the instance bot must not count as a fallback admin")
+
+	bot := &User{ID: 26}
+	_, err = s.Get(bot)
+	require.NoError(t, err)
+	require.True(t, bot.IsInstanceBot)
+	require.NoError(t, GuardLastAdmin(s, bot), "removing the bot never endangers human admin access")
+}
+
+func TestGetActiveHumanAdmins(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	// 1 active, 17 disabled, 23 owned bot, 26 instance bot: only 1 may be returned.
+	for _, id := range []int64{1, 17, 23} {
+		_, err := s.ID(id).Cols("is_admin").Update(&User{IsAdmin: true})
+		require.NoError(t, err)
+	}
+
+	admins, err := GetActiveHumanAdmins(s)
+	require.NoError(t, err)
+	require.Len(t, admins, 1)
+	assert.Equal(t, int64(1), admins[0].ID)
 }
 
 func TestCreateUser(t *testing.T) {
@@ -654,6 +732,20 @@ func TestUpdateUserPassword(t *testing.T) {
 		require.Error(t, err)
 		assert.True(t, IsErrEmptyNewPassword(err))
 	})
+}
+
+func TestUpdateUserPassword_RefusesBots(t *testing.T) {
+	for name, id := range map[string]int64{"owned bot": 23, "instance bot": 26} {
+		t.Run(name, func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
+			err := UpdateUserPassword(s, &User{ID: id}, "12345678")
+			require.Error(t, err)
+			assert.True(t, IsErrAccountIsBot(err))
+		})
+	}
 }
 
 func TestUserPasswordReset(t *testing.T) {
