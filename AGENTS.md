@@ -71,6 +71,7 @@ You only need to run the lint for the backend when changing backend code, and th
 
 - Always test both positive and negative authorization scenarios.
 - Use test fixtures in `pkg/db/fixtures/` for consistent test data.
+- Before adding a frontend component test, check `frontend/tests/e2e/` for the same scenario and assertions. Do not add a component test when an existing E2E test already covers the behavior or can cover it with a small extension; extend the E2E test when needed. Reserve component tests for distinct cases that would be difficult to exercise reliably through E2E tests.
 
 ## Swagger API Documentation
 
