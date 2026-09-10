@@ -19,6 +19,7 @@ package doctor
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
@@ -26,6 +27,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"xorm.io/xorm/schemas"
 )
 
 func setDatabaseConfig(t *testing.T, dbType, path string) {
@@ -90,4 +92,46 @@ func TestCheckDatabase_SqlitePathIsADirectory(t *testing.T) {
 	assert.Equal(t, "Database file", group.Results[0].Name)
 	assert.False(t, group.Results[0].Passed)
 	assert.Equal(t, dbPath+" exists but is not a file", group.Results[0].Error)
+}
+
+func TestCheckParadeDB_SystemCatalogs(t *testing.T) {
+	if os.Getenv("VIKUNJA_TESTS_USE_CONFIG") != "1" {
+		t.Skip("requires a PostgreSQL test database")
+	}
+	t.Cleanup(config.ResetForTests)
+	engine, err := db.CreateTestEngine()
+	require.NoError(t, err)
+	if db.Type() != schemas.POSTGRES {
+		t.Skip("requires PostgreSQL")
+	}
+
+	originalSchema := engine.Dialect().URI().Schema
+	t.Cleanup(func() { engine.SetSchema(originalSchema) })
+	for _, schema := range []string{"public", "doctor_custom_schema"} {
+		t.Run(schema, func(t *testing.T) {
+			engine.SetSchema(schema)
+			results := checkParadeDB()
+			require.NotEmpty(t, results)
+			assert.Equal(t, "ParadeDB", results[0].Name)
+			require.True(t, results[0].Passed, results[0].Error)
+			assert.Empty(t, results[0].Error)
+
+			if !db.ParadeDBAvailable() {
+				require.Len(t, results, 1)
+				assert.Equal(t, "not installed (using substring search)", results[0].Value)
+				return
+			}
+
+			require.Len(t, results, 2)
+			assert.Regexp(t, `^pg_search \d+\.\d+\.\d+`, results[0].Value)
+			assert.Equal(t, "ParadeDB indexes", results[1].Name)
+			if results[1].Passed {
+				assert.Equal(t, "3 present", results[1].Value)
+				assert.Empty(t, results[1].Error)
+			} else {
+				assert.True(t, strings.HasPrefix(results[1].Error, "missing: idx_"), results[1].Error)
+				assert.Contains(t, results[1].Error, "(restart Vikunja to create them)")
+			}
+		})
+	}
 }

@@ -179,7 +179,7 @@ func checkParadeDB() []CheckResult {
 	defer s.Close()
 
 	var version string
-	installed, err := s.Table("pg_extension").
+	installed, err := s.Table("pg_catalog.pg_extension").
 		Where("extname = ?", "pg_search").
 		Cols("extversion").
 		Get(&version)
@@ -206,7 +206,7 @@ func checkParadeDB() []CheckResult {
 	}}
 
 	var existing []string
-	err = s.Table("pg_indexes").
+	err = s.Table("pg_catalog.pg_indexes").
 		In("indexname", paradeDBIndexes).
 		Cols("indexname").
 		Find(&existing)
