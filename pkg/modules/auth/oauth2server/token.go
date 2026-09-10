@@ -54,6 +54,17 @@ type TokenRequest struct {
 
 // HandleToken handles POST /oauth/token.
 // Supports grant_type=authorization_code and grant_type=refresh_token.
+// @Summary OAuth 2.0 token endpoint
+// @Description Exchanges an authorization code for an access token, or a refresh token for a new one. Part of the OAuth 2.0 Authorization Code flow with PKCE. Needs no authentication: the grant itself is the credential.
+// @tags auth
+// @Accept json
+// @Produce json
+// @Param grant body TokenRequest true "The token request"
+// @Success 200 {object} TokenResponse "The access token, its type, lifetime and refresh token."
+// @Failure 400 {object} web.HTTPError "Unsupported grant type, or an invalid, expired or already-used authorization code."
+// @Failure 401 {object} web.HTTPError "Invalid or expired refresh token."
+// @Failure 500 {object} models.Message "Internal server error."
+// @Router /oauth/token [post]
 func HandleToken(c *echo.Context) error {
 	var req TokenRequest
 	if err := c.Bind(&req); err != nil {

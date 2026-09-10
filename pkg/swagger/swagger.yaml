@@ -1439,6 +1439,56 @@ definitions:
           with the current timestamp.
         type: string
     type: object
+  oauth2server.AuthorizeRequest:
+    properties:
+      client_id:
+        type: string
+      code_challenge:
+        type: string
+      code_challenge_method:
+        type: string
+      redirect_uri:
+        type: string
+      response_type:
+        type: string
+      state:
+        type: string
+    type: object
+  oauth2server.AuthorizeResponse:
+    properties:
+      code:
+        type: string
+      redirect_uri:
+        type: string
+      state:
+        type: string
+    type: object
+  oauth2server.TokenRequest:
+    properties:
+      client_id:
+        type: string
+      code:
+        type: string
+      code_verifier:
+        type: string
+      grant_type:
+        type: string
+      redirect_uri:
+        type: string
+      refresh_token:
+        type: string
+    type: object
+  oauth2server.TokenResponse:
+    properties:
+      access_token:
+        type: string
+      expires_in:
+        type: integer
+      refresh_token:
+        type: string
+      token_type:
+        type: string
+    type: object
   openid.Callback:
     properties:
       code:
@@ -3380,6 +3430,82 @@ paths:
       summary: Mark a notification as (un-)read
       tags:
       - subscriptions
+  /oauth/authorize:
+    post:
+      consumes:
+      - application/json
+      description: Creates an authorization code for an OAuth 2.0 client on behalf
+        of the authenticated user. PKCE is required. API tokens cannot be used to
+        authorize a client.
+      parameters:
+      - description: The authorization request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/oauth2server.AuthorizeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The authorization code and the redirect URI to return it to.
+          schema:
+            $ref: '#/definitions/oauth2server.AuthorizeResponse'
+        "400":
+          description: response_type is not 'code', the redirect URI is invalid, or
+            the PKCE challenge is missing.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "403":
+          description: An API token was used to authorize an OAuth client.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal server error.
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: OAuth 2.0 authorize endpoint
+      tags:
+      - auth
+  /oauth/token:
+    post:
+      consumes:
+      - application/json
+      description: 'Exchanges an authorization code for an access token, or a refresh
+        token for a new one. Part of the OAuth 2.0 Authorization Code flow with PKCE.
+        Needs no authentication: the grant itself is the credential.'
+      parameters:
+      - description: The token request
+        in: body
+        name: grant
+        required: true
+        schema:
+          $ref: '#/definitions/oauth2server.TokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The access token, its type, lifetime and refresh token.
+          schema:
+            $ref: '#/definitions/oauth2server.TokenResponse'
+        "400":
+          description: Unsupported grant type, or an invalid, expired or already-used
+            authorization code.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "401":
+          description: Invalid or expired refresh token.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal server error.
+          schema:
+            $ref: '#/definitions/models.Message'
+      summary: OAuth 2.0 token endpoint
+      tags:
+      - auth
   /projects:
     get:
       consumes:
