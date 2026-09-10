@@ -21,6 +21,7 @@ import (
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/models"
 )
 
 // dependentTestingTables lists tables that reference a reset table by ID and
@@ -57,6 +58,13 @@ func ReplaceTableContents(table string, content []map[string]interface{}, trunca
 		return nil, err
 	}
 
+	// Raw row inserts bypass CreateProject, which is what keeps the closure table in step.
+	if table == "projects" {
+		if err := rebuildProjectAncestors(); err != nil {
+			return nil, err
+		}
+	}
+
 	// License state is cached at startup; re-apply so tests take effect without a restart.
 	if table == "license_status" {
 		if err := license.ReloadFromCache(); err != nil {
@@ -71,6 +79,16 @@ func ReplaceTableContents(table string, content []map[string]interface{}, trunca
 		return nil, err
 	}
 	return data, nil
+}
+
+func rebuildProjectAncestors() error {
+	s := db.NewSession()
+	defer s.Close()
+
+	if err := models.RebuildProjectAncestors(s); err != nil {
+		return err
+	}
+	return s.Commit()
 }
 
 // TruncateAllTestingTables empties every Vikunja table for the e2e testing
