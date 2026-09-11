@@ -35,6 +35,9 @@ import {toISOStringOrNull} from '@/helpers/time/toISOStringOrNull'
 import {error} from '@/message'
 import {REPEAT_TYPES} from '@/types/IRepeatAfter'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
+import {isJalaliLocale} from '@/helpers/time/jalali'
+import {i18n} from '@/i18n'
+import {getPersianRepeats} from '@/modules/quickAddMagic/dateParserFa'
 import {taskLabelsCreate, taskLabelsDelete} from '@/client/generated'
 import type {Label} from '@/client/generated'
 import {
@@ -537,6 +540,19 @@ export const useTaskStore = defineStore('task', () => {
 
 		if (parsedTask.repeats?.type === REPEAT_TYPES.Months && parsedTask.repeats?.amount === 1) {
 			task.repeatMode = TASK_REPEAT_MODES.REPEAT_MODE_MONTH
+		}
+
+		if (isJalaliLocale(i18n.global.locale.value)) {
+			const faRepeats = getPersianRepeats(cleanedTitle)
+			if (faRepeats.repeats?.type === REPEAT_TYPES.Months) {
+				task.repeatMode = TASK_REPEAT_MODES.REPEAT_MODE_JALALI_MONTH
+				task.repeatAfter = faRepeats.repeats
+				task.title = faRepeats.textWithoutMatched.trim()
+			} else if (faRepeats.repeats?.type === REPEAT_TYPES.Years) {
+				task.repeatMode = TASK_REPEAT_MODES.REPEAT_MODE_JALALI_YEAR
+				task.repeatAfter = faRepeats.repeats
+				task.title = faRepeats.textWithoutMatched.trim()
+			}
 		}
 
 		return {task, parsedLabels: parsedTask.labels}

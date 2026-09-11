@@ -10,12 +10,20 @@
 				<div class="gantt-options">
 					<FormField :label="$t('misc.dateRange')">
 						<Foo
+							v-if="!isJalali"
 							id="range"
 							ref="flatPickerEl"
 							v-model="flatPickerDateRange"
 							:config="flatPickerConfig"
 							class="input"
 							:placeholder="$t('misc.dateRange')"
+						/>
+						<JalaliCalendarGrid
+							v-else
+							:model-value="flatPickerDateRange"
+							mode="range"
+							:time-zone="timeZone"
+							@update:modelValue="onGridRange"
 						/>
 					</FormField>
 					<div
@@ -75,10 +83,12 @@ import {useBaseStore} from '@/stores/base'
 import {useFlatpickrLanguage} from '@/helpers/useFlatpickrLanguage'
 
 import Foo from '@/components/misc/flatpickr/Flatpickr.vue'
+import JalaliCalendarGrid from '@/components/input/JalaliCalendarGrid.vue'
 import ProjectWrapper from '@/components/project/ProjectWrapper.vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import TaskForm from '@/components/tasks/TaskForm.vue'
 import FormField from '@/components/input/FormField.vue'
+import {useJalaliCalendar} from '@/composables/useJalaliCalendar'
 
 import GanttChart from '@/components/gantt/GanttChart.vue'
 import {useGanttFilters} from '../../../views/project/helpers/useGanttFilters'
@@ -147,6 +157,18 @@ const flatPickerDateRange = computed<Date[]>({
 		Object.assign(filters.value, {dateFrom, dateTo})
 	},
 })
+
+const {isJalali, timeZone} = useJalaliCalendar()
+
+// Jalali grid emits Gregorian instants; partial (single-click) selections are
+// ignored exactly like flatpickr's range mode, then flow through the existing
+// ISO/kebab filter wire untouched.
+function onGridRange(value: Date | Date[] | null) {
+	if (!Array.isArray(value) || value.length < 2) {
+		return
+	}
+	flatPickerDateRange.value = value
+}
 
 const {t} = useI18n({useScope: 'global'})
 const flatPickerConfig = computed(() => ({

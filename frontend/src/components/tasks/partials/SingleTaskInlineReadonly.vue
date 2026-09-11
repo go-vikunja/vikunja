@@ -80,7 +80,7 @@
 				<Icon icon="align-left" />
 			</span>
 			<span
-				v-if="task.repeatAfter.amount > 0"
+				v-if="task.repeatAfter.amount > 0 || task.repeatMode === REPEAT_MODE_JALALI_MONTH || task.repeatMode === REPEAT_MODE_JALALI_YEAR"
 				class="project-task-icon"
 			>
 				<Icon icon="history" />
@@ -116,6 +116,7 @@ import {formatDisplayDate, formatISO, formatDateLong} from '@/helpers/time/forma
 
 import {useProjectStore} from '@/stores/projects'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
+import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 
 const props = withDefaults(defineProps<{
 	task: ITask,
@@ -123,6 +124,9 @@ const props = withDefaults(defineProps<{
 }>(), {
 	showProject: false,
 })
+
+const REPEAT_MODE_JALALI_MONTH = TASK_REPEAT_MODES.REPEAT_MODE_JALALI_MONTH
+const REPEAT_MODE_JALALI_YEAR = TASK_REPEAT_MODES.REPEAT_MODE_JALALI_YEAR
 
 const projectStore = useProjectStore()
 

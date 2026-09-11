@@ -230,7 +230,9 @@ CREATED:` + makeCalDavTimeFromTimeStamp(t.Created)
 PRIORITY:` + strconv.Itoa(mapPriorityToCaldav(t.Priority))
 		}
 
-		if t.RepeatAfter > 0 || t.RepeatMode == models.TaskRepeatModeMonth {
+		// Jalali recurrence has no RFC 5545 expression, so it omits RRULE; the task still syncs and expands server-side on completion.
+		isJalaliRepeat := t.RepeatMode == models.TaskRepeatModeJalaliMonth || t.RepeatMode == models.TaskRepeatModeJalaliYear
+		if !isJalaliRepeat && (t.RepeatAfter > 0 || t.RepeatMode == models.TaskRepeatModeMonth) {
 			if t.RepeatMode == models.TaskRepeatModeMonth {
 				caldavtodos += `
 RRULE:FREQ=MONTHLY;BYMONTHDAY=` + t.DueDate.Format("02") // Day of the month

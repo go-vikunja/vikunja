@@ -71,8 +71,16 @@
 							</div>
 						</label>
 						<flat-pickr
+							v-if="!isJalali"
 							v-model="flatpickrRange"
 							:config="flatPickerConfig"
+						/>
+						<JalaliCalendarGrid
+							v-else
+							:model-value="gridRangeModel"
+							mode="range"
+							:time-zone="timeZone"
+							@update:modelValue="onGridRange"
 						/>
 
 						<p>
@@ -108,12 +116,15 @@ import {useI18n} from 'vue-i18n'
 import flatPickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
 import {parseDateOrString} from '@/helpers/time/parseDateOrString'
+import {normalizePersianDigits, parseJalaliDateInput} from '@/helpers/time/jalali'
 
 import Popup from '@/components/misc/Popup.vue'
 import {DATE_RANGES} from '@/components/date/dateRanges'
 import BaseButton from '@/components/base/BaseButton.vue'
 import DatemathHelp from '@/components/date/DatemathHelp.vue'
+import JalaliCalendarGrid from '@/components/input/JalaliCalendarGrid.vue'
 import {useFlatpickrLanguage} from '@/helpers/useFlatpickrLanguage'
+import {useJalaliCalendar} from '@/composables/useJalaliCalendar'
 
 const props = defineProps<{
 	// null for a side that's been cleared (the Custom option) — emitted, so accepted too.
@@ -131,6 +142,7 @@ const emit = defineEmits<{
 }>()
 
 const {t} = useI18n({useScope: 'global'})
+const {isJalali, timeZone} = useJalaliCalendar()
 
 const flatPickerConfig = computed(() => ({
 	altFormat: t('date.altFormatLong'),
@@ -149,6 +161,58 @@ const flatpickrRange = ref('')
 const from = ref('')
 const to = ref('')
 
+// Jalali text entry stays Gregorian-only on the wire: under the Jalali locale
+// a year-first Jalali date in 1300-1500 parses to a Gregorian instant, anything
+// else falls through to the existing Gregorian/datemath handling untouched.
+function extractJalaliYearCandidate(raw: string): number | null {
+	try {
+		const normalized = normalizePersianDigits(raw.trim())
+		const leading = normalized.match(/^(\d{4})/)
+		if (leading !== null) {
+			return Number(leading[1])
+		}
+		const trailing = normalized.match(/(\d{4})(?:\s+\d{1,2}:\d{2})?$/)
+		if (trailing !== null) {
+			return Number(trailing[1])
+		}
+		return null
+	} catch {
+		return null
+	}
+}
+
+function tryParseJalaliRangeInput(raw: string): Date | null {
+	if (!isJalali.value) {
+		return null
+	}
+	const year = extractJalaliYearCandidate(raw)
+	if (year === null || year < 1300 || year > 1500) {
+		return null
+	}
+	return parseJalaliDateInput(raw, {timeZone: timeZone.value})
+}
+
+function parseRangeSideForGrid(raw: string | null) {
+	if (typeof raw === 'string' && raw !== '') {
+		const jalali = tryParseJalaliRangeInput(raw)
+		if (jalali !== null) {
+			return jalali
+		}
+	}
+	return parseDateOrString(raw, false)
+}
+
+function toEmittedRangeSide(raw: string): string | null {
+	if (raw === '') {
+		return null
+	}
+	const jalali = tryParseJalaliRangeInput(raw)
+	if (jalali !== null) {
+		return jalali.toISOString()
+	}
+	return raw
+}
+
 watch(
 	() => props.modelValue,
 	newValue => {
@@ -156,8 +220,8 @@ watch(
 		to.value = typeof newValue.dateTo === 'string' ? newValue.dateTo : (newValue.dateTo?.toISOString() ?? '')
 		// Only set the date back to flatpickr when it's an actual date.
 		// Otherwise flatpickr runs in an endless loop and slows down the browser.
-		const dateFrom = parseDateOrString(from.value, false)
-		const dateTo = parseDateOrString(to.value, false)
+		const dateFrom = parseRangeSideForGrid(from.value)
+		const dateTo = parseRangeSideForGrid(to.value)
 		if (dateFrom instanceof Date && dateTo instanceof Date) {
 			flatpickrRange.value = `${from.value} to ${to.value}`
 		}
@@ -166,10 +230,39 @@ watch(
 
 function emitChanged() {
 	const args = {
-		dateFrom: from.value === '' ? null : from.value,
-		dateTo: to.value === '' ? null : to.value,
+		dateFrom: toEmittedRangeSide(from.value),
+		dateTo: toEmittedRangeSide(to.value),
 	}
 	emit('update:modelValue', args)
+}
+
+// Gregorian Date pair behind the from/to strings for the Jalali grid, read
+// straight from props so the grid opens on the right month on mount. Null
+// while either side is datemath or empty: presets keep working untouched and
+// the grid simply opens on today until a concrete range is picked.
+const gridRangeModel = computed<Date[] | null>(() => {
+	const dateFrom = props.modelValue.dateFrom instanceof Date
+		? props.modelValue.dateFrom
+		: parseRangeSideForGrid(typeof props.modelValue.dateFrom === 'string' ? props.modelValue.dateFrom : null)
+	const dateTo = props.modelValue.dateTo instanceof Date
+		? props.modelValue.dateTo
+		: parseRangeSideForGrid(typeof props.modelValue.dateTo === 'string' ? props.modelValue.dateTo : null)
+	if (dateFrom instanceof Date && dateTo instanceof Date) {
+		return [dateFrom, dateTo]
+	}
+	return null
+})
+
+// Custom picks always land as Gregorian ISO strings - the range layer never
+// sees Jalali text, so no new parsing is needed. Partial (single-click)
+// selections are ignored exactly like flatpickr's.
+function onGridRange(value: Date | Date[] | null) {
+	if (!Array.isArray(value) || value.length < 2) {
+		return
+	}
+	from.value = value[0].toISOString()
+	to.value = value[1].toISOString()
+	emitChanged()
 }
 
 watch(

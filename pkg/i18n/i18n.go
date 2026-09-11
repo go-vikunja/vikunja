@@ -78,6 +78,7 @@ var availableLanguages = map[string]bool{
 	"he-IL":    true,
 	"sv-SE":    true,
 	"el-GR":    true,
+	"fa-IR":    true,
 	// IMPORTANT: Also add new languages to the frontend
 }
 

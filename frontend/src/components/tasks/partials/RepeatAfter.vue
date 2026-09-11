@@ -46,12 +46,18 @@
 						<option :value="TASK_REPEAT_MODES.REPEAT_MODE_FROM_CURRENT_DATE">
 							{{ $t('task.repeat.fromCurrentDate') }}
 						</option>
+						<option :value="REPEAT_MODE_JALALI_MONTH">
+							{{ $t('task.repeat.jalaliMonthly') }}
+						</option>
+						<option :value="REPEAT_MODE_JALALI_YEAR">
+							{{ $t('task.repeat.jalaliYearly') }}
+						</option>
 					</select>
 				</div>
 			</div>
 		</div>
 		<div
-			v-if="task.repeatMode !== TASK_REPEAT_MODES.REPEAT_MODE_MONTH"
+			v-if="task.repeatMode !== TASK_REPEAT_MODES.REPEAT_MODE_MONTH && task.repeatMode !== REPEAT_MODE_JALALI_MONTH && task.repeatMode !== REPEAT_MODE_JALALI_YEAR"
 			class="is-flex"
 		>
 			<p class="pis-4">
@@ -114,6 +120,9 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits<{
 	'update:modelValue': [value: ITask | undefined],
 }>()
+
+const REPEAT_MODE_JALALI_MONTH = TASK_REPEAT_MODES.REPEAT_MODE_JALALI_MONTH
+const REPEAT_MODE_JALALI_YEAR = TASK_REPEAT_MODES.REPEAT_MODE_JALALI_YEAR
 
 const {t} = useI18n({useScope: 'global'})
 

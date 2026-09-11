@@ -120,7 +120,9 @@ import {useI18n} from 'vue-i18n'
 import Modal from '@/components/misc/Modal.vue'
 import Card from '@/components/misc/Card.vue'
 import DatepickerWithRange from '@/components/date/DatepickerWithRange.vue'
-import {DATE_RANGES} from '@/components/date/dateRanges'
+import {DATE_RANGES, resolveFaDateValueKebab} from '@/components/date/dateRanges'
+import {formatDate} from '@/helpers/time/formatDate'
+import {useJalaliCalendar} from '@/composables/useJalaliCalendar'
 import Multiselect from '@/components/input/Multiselect.vue'
 import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
 import TimeEntryForm from '@/components/time-tracking/TimeEntryForm.vue'
@@ -145,6 +147,7 @@ const router = useRouter()
 const timeTrackingStore = useTimeTrackingStore()
 const baseStore = useBaseStore()
 const projectStore = useProjectStore()
+const {isJalali, timeZone} = useJalaliCalendar()
 
 useTitle(() => t('timeTracking.title'))
 
@@ -194,8 +197,18 @@ const rangeLabel = computed(() => {
 	if (preset) {
 		return t(`input.datepickerRange.ranges.${preset[0]}`)
 	}
-	return t('input.datepickerRange.fromto', {from: dateValue(dateFrom), to: dateValue(dateTo)})
+	return t('input.datepickerRange.fromto', {from: formatRangeSide(dateFrom), to: formatRangeSide(dateTo)})
 })
+
+function formatRangeSide(value: Date | string): string {
+	if (isJalali.value) {
+		const formatted = formatDate(value, 'LL')
+		if (formatted !== '') {
+			return formatted
+		}
+	}
+	return dateValue(value)
+}
 
 const taskService = shallowReactive(new TaskService())
 const foundTasks = ref<ITask[]>([])
@@ -229,13 +242,28 @@ function dateValue(value: Date | string): string {
 	return `${year}-${month}-${day}`
 }
 
+function effectiveDateValue(value: Date | string | null, now: Date): Date | string | null {
+	if (value === null || value instanceof Date) {
+		return value
+	}
+	if (!isJalali.value) {
+		return value
+	}
+	return resolveFaDateValueKebab(value, now, timeZone.value)
+}
+
 const filter = computed(() => {
 	const parts: string[] = []
-	if (dateRange.value.dateFrom) {
-		parts.push(`start_time > ${dateValue(dateRange.value.dateFrom)}`)
+	// fa presets resolve to explicit bounds fresh on each evaluation (correct
+	// Saturday-start weeks/Jalali months now; refreshes on interaction, not ticking).
+	const nowRef = new Date()
+	const effectiveFrom = effectiveDateValue(dateRange.value.dateFrom, nowRef)
+	const effectiveTo = effectiveDateValue(dateRange.value.dateTo, nowRef)
+	if (effectiveFrom) {
+		parts.push(`start_time > ${dateValue(effectiveFrom)}`)
 	}
-	if (dateRange.value.dateTo) {
-		parts.push(`start_time < ${dateValue(dateRange.value.dateTo)}`)
+	if (effectiveTo) {
+		parts.push(`start_time < ${dateValue(effectiveTo)}`)
 	}
 	if (selectedUser.value !== null) {
 		parts.push(`user_id = ${selectedUser.value.id}`)
@@ -250,6 +278,8 @@ const filter = computed(() => {
 })
 
 // Persist the active filter to the URL so it's shareable and survives reloads.
+// Datemath stays verbatim so shared links stay dynamic; the filter above
+// resolves fa presets fresh on each evaluation.
 const filterQuery = computed(() => {
 	const q: Record<string, string> = {}
 	if (dateRange.value.dateFrom && dateRange.value.dateFrom !== 'now/d') {

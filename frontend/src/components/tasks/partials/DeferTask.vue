@@ -31,7 +31,17 @@
 				{{ $t('task.deferDueDate.1week') }}
 			</XButton>
 		</div>
+		<JalaliCalendarGrid
+			v-if="isJalali"
+			:model-value="dueDate ?? null"
+			:time-zone="timeZone"
+			:enable-time="true"
+			:time-24hr="timeFormat === TIME_FORMAT.HOURS_24"
+			:disabled="taskService.loading"
+			@update:modelValue="onGridDate"
+		/>
 		<flat-pickr
+			v-else
 			v-model="dueDate"
 			:class="{ disabled: taskService.loading }"
 			:config="flatPickerConfig"
@@ -48,7 +58,9 @@ import flatPickr from 'vue-flatpickr-component'
 
 import TaskService from '@/services/task'
 import type {ITask} from '@/modelTypes/ITask'
+import JalaliCalendarGrid from '@/components/input/JalaliCalendarGrid.vue'
 import {useFlatpickrLanguage} from '@/helpers/useFlatpickrLanguage'
+import {useJalaliCalendar} from '@/composables/useJalaliCalendar'
 import {useTimeFormat} from '@/composables/useTimeFormat'
 import {TIME_FORMAT} from '@/constants/timeFormat'
 
@@ -62,6 +74,7 @@ const emit = defineEmits<{
 
 const {t} = useI18n({useScope: 'global'})
 const {store: timeFormat} = useTimeFormat()
+const {isJalali, timeZone} = useJalaliCalendar()
 
 const taskService = shallowReactive(new TaskService())
 const task = ref<ITask>()
@@ -110,6 +123,10 @@ const flatPickerConfig = computed(() => ({
 	inline: true,
 	locale: useFlatpickrLanguage().value,
 }))
+
+function onGridDate(value: Date | Date[] | null) {
+	dueDate.value = Array.isArray(value) ? (value[0] ?? null) : value
+}
 
 function deferDays(days: number) {
 	dueDate.value = new Date(dueDate.value)
