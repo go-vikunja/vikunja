@@ -6,7 +6,7 @@
 		:primary-label="$t('misc.save')"
 		:tertiary="$t('misc.delete')"
 		@primary="handleSave"
-		@tertiary="$router.push({ name: 'filter.settings.delete', params: { id: projectId } })"
+		@tertiary="$router.push({ name: 'filter.settings.delete', params: { projectId } })"
 	>
 		<form @submit.prevent="handleSave()">
 			<FormField

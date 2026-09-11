@@ -6,7 +6,7 @@
 		:primary-label="$t('misc.save')"
 		:tertiary="project.maxPermission === PERMISSIONS.ADMIN ? $t('misc.delete') : undefined"
 		@primary="save"
-		@tertiary="$router.push({ name: 'project.settings.delete', params: { id: projectId } })"
+		@tertiary="$router.push({ name: 'project.settings.delete', params: { projectId } })"
 	>
 		<FormField
 			id="title"
