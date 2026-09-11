@@ -644,6 +644,9 @@ test.describe('Task', () => {
 
 			const popup = dueDateColumn.locator('.datepicker .datepicker-popup')
 			await expect(popup).toBeVisible()
+			await expect(dueDateColumn.locator('.datepicker .show')).toBeFocused()
+			await expect(popup.locator('.datepicker__quick-select-date').first()).not.toBeFocused()
+			await page.keyboard.press('Tab')
 			await expect(popup.locator('.datepicker__quick-select-date').first()).toBeFocused()
 		})
 
@@ -654,6 +657,9 @@ test.describe('Task', () => {
 			const column = page.locator('.task-view .columns.details .column').filter({hasText: 'Due Date'})
 			const popup = column.locator('.datepicker .datepicker-popup')
 			await expect(popup).toBeVisible()
+			await expect(column.locator('.datepicker .show')).toBeFocused()
+			await expect(popup.locator('.datepicker__quick-select-date').first()).not.toBeFocused()
+			await page.keyboard.press('Tab')
 			await expect(popup.locator('.datepicker__quick-select-date').first()).toBeFocused()
 			return popup
 		}
@@ -703,6 +709,9 @@ test.describe('Task', () => {
 
 			await trigger.press('Enter')
 			await expect(popup).toBeVisible()
+			await expect(trigger).toBeFocused()
+			await expect(firstShortcut).not.toBeFocused()
+			await page.keyboard.press('Tab')
 			await expect(firstShortcut).toBeFocused()
 		})
 
