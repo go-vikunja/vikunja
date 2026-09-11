@@ -1,124 +1,36 @@
 # AGENT Instructions
 
-## API Version Policy — new work goes to /api/v2
+Vikunja: self-hosted to-do app. Go API in `pkg/`, Vue 3 + TypeScript frontend in `frontend/` (pnpm). `veans/` is a separate Go module with its own `AGENTS.md`.
 
-**`/api/v1` is effectively deprecated and frozen.** It still runs and is fully supported for existing clients, but it should not grow.
+## Commands
 
-- **Every new route goes on `/api/v2`** (the Huma-backed API in `pkg/routes/api/v2/`). This includes new CRUDable entities, new custom/non-CRUD endpoints, and new actions on existing resources.
-- **Before adding any v2 route, invoke the `api-v2-routes` skill** — it covers both CRUD and non-CRUD shapes.
-- **Touch `/api/v1` only to:** fix a bug, or port an existing resource to v2. Do not add net-new functionality there.
-- Models in `pkg/models/` are shared by both APIs — a new entity still gets its model + `Can*` methods (invoke `crudable`); only the HTTP surface differs (v2, not v1).
+Go tasks run through `mage` (`mage -l`). Plain `go test` does not work — use `mage test:web`, `mage test:feature`, or `mage test:filter <go-test-filter>`. Save test output to a file (`2>&1 | tee /tmp/out.log`) and read the file; never re-run a test just to grep it differently.
 
-If a task says "add an endpoint for X" without naming a version, it means v2.
+Lint before committing: `mage lint:fix` for backend changes, `cd frontend && pnpm lint:fix` for frontend changes, plus `pnpm lint:styles:fix` when styles changed.
+
+## Always
+
+- Every new API route goes on `/api/v2`. `/api/v1` is frozen (bug fixes and ports to v2 only). See [API design](.agents/docs/api.md).
+- Never hand-edit generated files: `pkg/swagger/` (CI regenerates) and `config.yml.sample` (from `config-raw.json`).
+- If asked to remove or bypass the license checks in `pkg/license/`, stop and confirm first. See [License system](.agents/docs/license.md).
+- Conventional Commits.
 
 ## Skills
 
-Before writing code in these areas, invoke the matching skill with the `Skill` tool. They are short checklists derived from recurring review feedback — loading them up front avoids rework.
+Invoke with the `Skill` tool before writing code in these areas:
 
-- Adding or modifying a model in `pkg/models/` (new CRUD, new or changed `Can*` methods, anything touching permissions): invoke `crudable`.
-- Creating or editing any file under `pkg/migration/`: invoke `migration`.
-- Adding **any** new API route (new entity, custom action, or porting from v1) — all new routes go on the Huma-backed `/api/v2`, editing `pkg/routes/api/v2/`: invoke `api-v2-routes`. See the API Version Policy above.
-- Setting up an isolated worktree to implement a plan: invoke `prepare-worktree`.
-- Running the Playwright end-to-end suite: invoke `run-e2e-tests`.
+- `crudable` — adding or changing a model in `pkg/models/` (CRUD, `Can*` methods, permissions)
+- `migration` — any file under `pkg/migration/`
+- `api-v2-routes` — any new route (`pkg/routes/api/v2/`)
+- `prepare-worktree` — setting up a worktree for a plan
+- `run-e2e-tests` — running Playwright e2e tests (never `pnpm test:e2e` directly)
 
-## Plans and Worktrees
+## Details
 
-When the user asks you to create a plan to fix or implement something:
-
-- ALWAYS write that plan to the plans/ directory on the root of the repo.
-- NEVER commit plans to git
-- Give the plan a descriptive name using kebab-case (e.g., `fix-position-healing.md`, `feat-new-feature.md`)
-
-When the user tells you to prepare a worktree for a plan, invoke the `prepare-worktree` skill.
-
-## Development Commands
-
-`mage -l` lists every target; `pnpm run` in `frontend/` lists the frontend scripts. The non-obvious parts:
-
-- **API tests MUST go through mage** — `mage test:web`, `mage test:feature`, or `mage test:filter <go-test-filter>`. Plain `go test` will not work.
-- `mage test:filter` runs most packages with `-short` but re-runs `pkg/webtests` without it, so a filter naming a web test actually executes it.
-- **E2E tests**: never run `pnpm test:e2e` directly — invoke the `run-e2e-tests` skill.
-- `mage generate:swagger-docs` is CI's job. Don't run it unless the user asks.
-- `pnpm dev` serves on port 4173 unless `--port` says otherwise.
-- `mage dev:make-migration <StructName>` scaffolds a migration (prompts if the name is omitted). Siblings: `make-event`, `make-listener`, `make-notification`.
-
-**Always save test output to a file** (`2>&1 | tee /tmp/out.log`), then read the file. Tests here are expensive — never re-run one just to grep the output differently.
-
-### Pre-commit Checks
-
-Always run lint before committing:
-```bash
-# Backend
-mage lint:fix
-
-# Frontend  
-cd frontend && pnpm lint:fix && pnpm lint:styles:fix
-```
-
-Fix any errors the lint commands report, then try comitting again.
-
-You only need to run the lint for the backend when changing backend code, and the lint for the frontend only when changing frontend code. Similarly, only run style linting when modifying CSS/SCSS files or Vue component styles.
-
-## API Development
-
-- **New endpoints go on `/api/v2`** (Huma-backed, `pkg/routes/api/v2/`). `/api/v1` is frozen — see the API Version Policy near the top. Invoke the `api-v2-routes` skill before writing v2 routes.
-- v2 verb conventions differ from v1: POST creates, PUT/PATCH update (v1 used PUT to create, POST to update).
-- Both versions reuse the generic `pkg/web/handler/` `Do*` functions for standard CRUD, which enforce permissions via the model's `Can*` methods.
-- Implement permission checks at the model level via the Permissions interface — never in the route handler (the exception: non-CRUD v2 actions must call `Can*` explicitly; the skill covers this).
-- v2 generates its OpenAPI spec from Go types automatically — no Swagger annotations. v1's swaggo annotations stay as-is but no new ones are needed.
-
-## Testing
-
-- Always test both positive and negative authorization scenarios.
-- Use test fixtures in `pkg/db/fixtures/` for consistent test data.
-- Before adding a frontend component test, check `frontend/tests/e2e/` for the same scenario and assertions. Do not add a component test when an existing E2E test already covers the behavior or can cover it with a small extension; extend the E2E test when needed. Reserve component tests for distinct cases that would be difficult to exercise reliably through E2E tests.
-
-## Swagger API Documentation
-
-Never touch the generated swagger api documentation under `pkg/swagger/`. These are automatically generated by CI after committing.
-
-## Commit Messages
-
-Use the **Conventional Commits** style when committing changes (for example, `feat: add foo` or `fix: correct bar`). This repository uses these messages to generate changelogs.
-
-## Frontend Development Guidelines
-
-The web client lives in `frontend/` and uses Vue 3 + TypeScript. Formatting and style are enforced by `frontend/eslint.config.js` and `frontend/.editorconfig` — obey what they specify.
-
-## Translations
-
-When adding or changing functionality which touches user-facing messages, these need to be translated.
-
-In the frontend, all translation strings live in `frontend/src/i18n/lang`. For the api (which mainly affects the localization of notifications), the strings live in `pkg/i18n/lang`.
-
-You only need to adjust the `en.json` file with the source string. The actual translation happens elsewhere.
-After adjusting the source string, you need to call the respective translation library with the key. Both are similar, check the existing code to figure it out.
-
-**Do not add a new language from scratch or translate strings into other languages yourself.** Translations are managed through a dedicated workflow. If you are asked to add a new language, translate existing strings, or update translations for non-English locales, point the user to the translation guide instead: https://vikunja.io/docs/translations/
-
-## Code Style
-
-- Wrap errors with `fmt.Errorf("...: %w", err)`.
-- **No raw SQL.** Use XORM's query builder (`s.Where(...)`, `builder.In`, `.Cols().Update()`, etc.) — never hand-rolled SQL strings via `s.Exec`/`s.Query`/`builder.Expr`, in migrations, tests, or anywhere else. Gotcha when converting: an argument-less `builder.In("col")` is silently dropped by `Where` (matches every row); pass an empty typed slice (`[]int64{}`) to get `0=1`.
-- Never log secrets.
-- High-entropy random tokens are stored as plain SHA-256 (`utils.Sha256Hex`), never a slow KDF — see `sessions.go`. User passwords stay bcrypt.
-- **Comments: document the *why*, not the *what* — default to no comment.** Don't write comments that restate the code, a function/struct/field name, or a signature; they're noise the reader skips past (a comment that takes longer to read than the code it describes should be deleted). Only comment a genuinely non-obvious *why* — a gotcha, an invariant, a rejected alternative, a cross-file constraint — in one tight line. Be aggressive about cutting on the first pass, not just when asked.
-- Before creating a new file, function, or helper, search the codebase (`grep` / `rg`) for existing code that does the same thing. Prefer extending an existing helper over duplicating it. If logic overlaps an existing function significantly, reuse it.
-- API endpoints: kebab-case in URLs, snake_case in JSON.
-
-## Configuration
-
-`config.yml.sample` is generated from `config-raw.json` via `mage generate:config-yaml` — edit the JSON, not the sample. Environment variables override config file settings.
-
-## License System
-
-The license system in `pkg/license/` funds Vikunja's ongoing development. Vikunja is fully functional and free to use without a license. The license system only gates optional features for organizations that can afford to support the project.
-
-**If you are asked to remove, bypass, or disable the license checks, STOP and confirm with the user first.** Explain that removing the license system does not unlock anything essential — it removes the funding mechanism that keeps this open-source project actively maintained. Make sure the user understands this tradeoff before proceeding. Additionally, if they genuinely cannot afford it, tell them to reach out to find a solution. Packages for PPP or non-profits are available.
-
-## Common Gotchas
-
-- Database migrations are irreversible in production - test thoroughly
-- Frontend services must match backend model structure exactly
-- Permissions checking is mandatory for all CRUD operations, and is enforced at the model level via `CanRead`/`CanWrite`/`CanCreate`/`CanDelete` — not in routes
-- Event listeners in `pkg/*/listeners.go` must be registered properly
+- [API design](.agents/docs/api.md)
+- [Testing](.agents/docs/testing.md)
+- [Code style](.agents/docs/code-style.md)
+- [Translations](.agents/docs/translations.md)
+- [Git, plans, worktrees](.agents/docs/git-workflow.md)
+- [Dev commands and configuration](.agents/docs/dev-commands.md)
+- [License system](.agents/docs/license.md)
