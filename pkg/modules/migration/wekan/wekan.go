@@ -391,13 +391,6 @@ func (m *Migrator) Migrate(user *user.User, file io.ReaderAt, size int64) error 
 	return migration.InsertFromStructure(vikunjaData, user)
 }
 
-// ValidateFile rejects an upload that isn't a usable WeKan export before the
-// import is queued, so the request still fails instead of a later notification.
-func (m *Migrator) ValidateFile(file io.ReaderAt, size int64) error {
-	_, err := parseWekanBoard(file, size)
-	return err
-}
-
 func parseWekanBoard(file io.ReaderAt, size int64) (*wekanBoard, error) {
 	if size == 0 {
 		return nil, &migration.ErrFileIsEmpty{}

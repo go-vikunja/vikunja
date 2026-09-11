@@ -438,13 +438,6 @@ func (m *Migrator) Migrate(user *user.User, file io.ReaderAt, size int64) error 
 	return migration.InsertFromStructure(vikunjaTasks, user)
 }
 
-// ValidateFile rejects an upload that isn't a usable TickTick export before the
-// import is queued, so the request still fails instead of a later notification.
-func (m *Migrator) ValidateFile(file io.ReaderAt, size int64) error {
-	_, err := parseTickTickTasks(file, size)
-	return err
-}
-
 func parseTickTickTasks(file io.ReaderAt, size int64) ([]*tickTickTask, error) {
 	if size == 0 {
 		return nil, &migration.ErrFileIsEmpty{}

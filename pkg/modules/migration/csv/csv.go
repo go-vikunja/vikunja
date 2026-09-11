@@ -599,17 +599,6 @@ func (m *Migrator) Migrate(u *user.User, file io.ReaderAt, size int64) error {
 	return MigrateWithConfig(u, file, size, m.config)
 }
 
-// ValidateFile rejects an upload the import would fail on - including one over
-// migration.maxcsvrows - before the import is queued, so the request still
-// fails instead of a later notification.
-func (m *Migrator) ValidateFile(file io.ReaderAt, size int64) error {
-	if m.config == nil {
-		return &migration.ErrCSVConfigRequired{}
-	}
-	_, err := readImportRows(file, size, m.config)
-	return err
-}
-
 func (m *Migrator) SetOptions(options []byte) error {
 	config := &ImportConfig{}
 	if err := json.Unmarshal(options, config); err != nil {
@@ -631,9 +620,6 @@ func MigrateWithConfig(u *user.User, file io.ReaderAt, size int64, config *Impor
 	return migration.InsertFromStructure(vikunjaTasks, u)
 }
 
-// readImportRows reads and parses an uploaded CSV into the rows to import. It
-// carries every rejection reason (empty, not a CSV, over the row limit), so
-// running it is enough to know whether an import can succeed.
 func readImportRows(file io.ReaderAt, size int64, config *ImportConfig) ([][]string, error) {
 	if size == 0 {
 		return nil, &migration.ErrFileIsEmpty{}
