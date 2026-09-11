@@ -86,9 +86,14 @@
 
 				<Popup
 					v-if="+new Date(task.dueDate) > 0"
+					placement="bottom-start"
+					:anchor="dueDateTriggerEl"
+					sheet-on-mobile
+					:sheet-title="$t('task.deferDueDate.title')"
 				>
 					<template #trigger="{toggle, isOpen}">
 						<BaseButton
+							ref="dueDateTrigger"
 							v-tooltip="formatDateLong(task.dueDate)"
 							class="dueDate"
 							@click.prevent.stop="toggle()"
@@ -106,7 +111,6 @@
 						<DeferTask
 							v-if="isOpen"
 							v-model="task"
-							@update:modelValue="deferTaskUpdate"
 						/>
 					</template>
 				</Popup>
@@ -383,6 +387,8 @@ async function toggleFavorite() {
 }
 
 const taskRoot = ref<HTMLElement | null>(null)
+const dueDateTrigger = ref<InstanceType<typeof BaseButton> | null>(null)
+const dueDateTriggerEl = computed<HTMLElement | null>(() => dueDateTrigger.value?.$el ?? null)
 const taskLinkRef = ref<HTMLElement | null>(null)
 
 function hasTextSelected() {
