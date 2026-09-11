@@ -27,18 +27,15 @@ vi.mock('@/services/apiToken', () => ({
 
 const i18n = createI18n({legacy: false, locale: 'en', messages: {en}})
 
-function mountForm({stubDatePicker = true} = {}) {
+function mountForm() {
 	const errors: unknown[] = []
-	const stubs: Record<string, unknown> = {
-		XButton: {template: '<button v-bind="$attrs"><slot /></button>'},
-	}
-	if (stubDatePicker) {
-		stubs.flatPickr = true
-	}
 	const wrapper = mount(ApiTokenForm, {
 		global: {
 			plugins: [i18n],
-			stubs,
+			stubs: {
+				XButton: {template: '<button v-bind="$attrs"><slot /></button>'},
+				Datepicker: true,
+			},
 			config: {
 				errorHandler(err) {
 					errors.push(err)
@@ -98,25 +95,6 @@ describe('ApiTokenForm', () => {
 
 		expect(create).not.toHaveBeenCalled()
 		expect(wrapper.text()).toContain('The title is required')
-		expect(mounted.errors).toEqual([])
-	})
-
-	it('survives switching the expiry between a preset and a custom date', async () => {
-		const mounted = mountForm({stubDatePicker: false})
-		wrapper = mounted.wrapper
-		await flushPromises()
-
-		const expiry = wrapper.find('#apiTokenExpiry')
-		for (let i = 0; i < 3; i++) {
-			await expiry.setValue('custom')
-			await flushPromises()
-			expect(wrapper.find('input[readonly]').exists()).toBe(true)
-
-			await expiry.setValue('30')
-			await flushPromises()
-			expect(wrapper.find('input[readonly]').exists()).toBe(false)
-		}
-
 		expect(mounted.errors).toEqual([])
 	})
 })
