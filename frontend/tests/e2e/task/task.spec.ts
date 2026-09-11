@@ -687,7 +687,7 @@ test.describe('Task', () => {
 			await expect(datepickerShow).toBeVisible()
 			await datepickerShow.click()
 
-			const todayButton = page.locator('.datepicker-popup .flatpickr-innerContainer .flatpickr-days .flatpickr-day.today')
+			const todayButton = page.locator('.datepicker-popup .calendar-month__day.is-today')
 			await expect(todayButton).toBeVisible()
 			await todayButton.click()
 
@@ -732,7 +732,7 @@ test.describe('Task', () => {
 			await expect(datepickerShow).toBeVisible()
 			await datepickerShow.click()
 
-			const dateButton = page.locator(`.datepicker-popup .flatpickr-innerContainer .flatpickr-days [aria-label="${today.toLocaleString('en-US', {month: 'long'})} ${today.getDate()}, ${today.getFullYear()}"]`)
+			const dateButton = page.locator(`.datepicker-popup .calendar-month__day[aria-label="${today.toLocaleString('en-US', {month: 'long'})} ${today.getDate()}, ${today.getFullYear()}"]`)
 			await expect(dateButton).toBeVisible()
 			await dateButton.click()
 
@@ -908,8 +908,7 @@ test.describe('Task', () => {
 			await page.locator('.task-view .columns.details .column button').filter({hasText: 'Add a reminder'}).click()
 
 			const openPopup = page.locator('.reminder-options-popup.is-open')
-			// Wait for the flatpickr calendar to appear
-			await expect(openPopup.locator('.flatpickr-innerContainer')).toBeVisible()
+			await expect(openPopup.locator('.calendar-month')).toBeVisible()
 
 			// Track whether any task save request fires
 			let saveRequestFired = false
@@ -921,7 +920,7 @@ test.describe('Task', () => {
 			})
 
 			// Click a day in the calendar
-			await openPopup.locator('.flatpickr-innerContainer .flatpickr-days .flatpickr-day:not(.flatpickr-disabled)').first().click()
+			await openPopup.locator('.calendar-month__day:not(:disabled)').first().click()
 
 			// Wait a moment to ensure no request fires
 			await page.waitForTimeout(1000)
@@ -953,7 +952,7 @@ test.describe('Task', () => {
 
 			const openPopup = page.locator('.reminder-options-popup.is-open')
 			// When no due date, the absolute date form should show directly
-			await expect(openPopup.locator('.flatpickr-innerContainer')).toBeVisible()
+			await expect(openPopup.locator('.calendar-month')).toBeVisible()
 
 			// The Confirm button must be visible
 			await expect(openPopup.locator('button').filter({hasText: 'Confirm'})).toBeVisible()
