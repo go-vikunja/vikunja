@@ -59,7 +59,7 @@
 import {computed, ref, watch} from 'vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import {useRoute} from 'vue-router'
-import type {TaskFilterParams} from '@/services/taskCollection'
+import type {TaskFilterParams} from '@/types/TaskFilterParams'
 import {useLabels} from '@/composables/useLabels'
 import {useProjectNavigation} from '@/composables/useProjectNavigation'
 import {

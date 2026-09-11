@@ -5,7 +5,8 @@ import {klona} from 'klona/lite'
 import {findById, findIndexById} from '@/helpers/utils'
 
 import BucketService from '@/services/bucket'
-import TaskCollectionService, {type TaskFilterParams} from '@/services/taskCollection'
+import TaskCollectionService from '@/services/taskCollection'
+import type {TaskFilterParams} from '@/types/TaskFilterParams'
 
 import {setModuleLoading} from '@/stores/helper'
 

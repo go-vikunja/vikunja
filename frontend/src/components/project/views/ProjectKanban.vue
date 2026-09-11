@@ -8,7 +8,7 @@
 		<template #header>
 			<div class="filter-container">
 				<FilterPopup
-					v-if="!isSavedFilter(project)"
+					v-if="!isSavedFilterProject(project)"
 					v-model="params"
 					:view-id="viewId"
 					:project-id="projectId"
@@ -293,6 +293,7 @@
 
 <script setup lang="ts">
 import {computed, nextTick, ref, watch, toRef} from 'vue'
+import {useQuery} from '@tanstack/vue-query'
 import {useRouter} from 'vue-router'
 import {useRouteQuery} from '@vueuse/router'
 import {useI18n} from 'vue-i18n'
@@ -322,11 +323,12 @@ import {
 } from '@/helpers/saveCollapsedBucketState'
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 
-import {isSavedFilter, useSavedFilter} from '@/services/savedFilter'
+import {getSavedFilterIdFromProjectId, isSavedFilterProject} from '@/client/queries/projects'
+import {savedFilterQuery} from '@/client/queries/savedFilters'
 import {useCurrentProject} from '@/composables/useCurrentProject'
 import {useTaskDragToProject} from '@/composables/useTaskDragToProject'
 import {success} from '@/message'
-import type {TaskFilterParams} from '@/services/taskCollection'
+import type {TaskFilterParams} from '@/types/TaskFilterParams'
 import type {ProjectView} from '@/client/generated'
 import TaskPositionService from '@/services/taskPosition'
 import TaskPositionModel from '@/models/taskPosition'
@@ -365,8 +367,7 @@ const {handleTaskDropToProject} = useTaskDragToProject()
 const taskPositionService = ref(new TaskPositionService())
 const taskBucketService = ref(new TaskBucketService())
 
-// Saved filter composable for accessing filter data
-const savedFilter = useSavedFilter(() => isSavedFilter({id: projectId.value}) ? projectId.value : undefined).filter
+const savedFilter = useQuery(computed(() => savedFilterQuery(getSavedFilterIdFromProjectId(projectId.value)))).data
 
 const taskContainerRefs = ref<{ [id: IBucket['id']]: HTMLElement }>({})
 const bucketLimitInputRef = ref<HTMLInputElement | null>(null)
@@ -761,13 +762,14 @@ function updateBuckets(value: IBucket[]) {
 
 function handleRecurringTaskCompletion() {
 	// Only reload if we're in a saved filter and the filter contains date fields
-	if (!isSavedFilter(project.value)) {
+	if (!isSavedFilterProject(project.value)) {
 		return
 	}
 
-	const filterContainsDateFields = savedFilter.value?.filters?.filter?.includes('due_date') ||
-		savedFilter.value?.filters?.filter?.includes('start_date') ||
-		savedFilter.value?.filters?.filter?.includes('end_date')
+	const savedFilterQueryString = savedFilter.value?.filters.filter ?? ''
+	const filterContainsDateFields = savedFilterQueryString.includes('due_date') ||
+		savedFilterQueryString.includes('start_date') ||
+		savedFilterQueryString.includes('end_date')
 		
 	if (filterContainsDateFields) {
 		// Reload the kanban board to refresh tasks that now match/don't match the filter
