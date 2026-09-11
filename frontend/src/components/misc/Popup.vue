@@ -5,13 +5,34 @@
 		:toggle="toggle"
 		:close="close"
 	/>
+	<Modal
+		v-if="asSheet && openValue"
+		variant="sheet"
+		:title="sheetTitle"
+		@close="close"
+	>
+		<template
+			v-if="$slots['header-action']"
+			#header-action
+		>
+			<slot name="header-action" />
+		</template>
+		<slot
+			name="content"
+			:is-open="openValue"
+			:toggle="toggle"
+			:close="close"
+		/>
+	</Modal>
 	<div
+		v-else-if="!asSheet"
 		ref="popup"
 		class="popup"
 		:class="{
 			'is-open': openValue,
-			'has-overflow': hasOverflow && openValue
+			'has-overflow': hasOverflow && openValue,
 		}"
+		:style="floatingStyle"
 		:inert="!openValue"
 		@focusin="rememberFocusEntered"
 	>
@@ -25,17 +46,30 @@
 </template>
 
 <script setup lang="ts">
-import {ref, watch, watchEffect} from 'vue'
+import {computed, onScopeDispose, ref, watch, watchEffect} from 'vue'
 import {onClickOutside, onKeyStroke} from '@vueuse/core'
+import {autoUpdate, computePosition, flip, offset, shift, type Placement} from '@floating-ui/dom'
+
+import Modal from '@/components/misc/Modal.vue'
+import {useIsMobile} from '@/composables/useIsMobile'
 
 const props = withDefaults(defineProps<{
 	hasOverflow?: boolean
 	open?: boolean
 	ignoreClickClasses?: string[]
+	// Anchors the popup to `anchor` with floating-ui (flips and shifts to stay on screen). Without it, consumers position via CSS.
+	placement?: Placement
+	anchor?: HTMLElement | null
+	sheetOnMobile?: boolean
+	sheetTitle?: string
 }>(), {
 	hasOverflow: false,
 	open: false,
 	ignoreClickClasses: () => [],
+	placement: undefined,
+	anchor: null,
+	sheetOnMobile: false,
+	sheetTitle: '',
 })
 
 const emit = defineEmits<{
@@ -53,6 +87,7 @@ defineSlots<{
 		toggle: () => boolean,
 		close: () => void
 	}): void
+	'header-action'(): void
 }>()
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
@@ -84,6 +119,54 @@ function toggle() {
 }
 
 const popup = ref<HTMLElement | null>(null)
+
+const isMobile = useIsMobile()
+const asSheet = computed(() => props.sheetOnMobile && isMobile.value)
+
+const floatingStyle = ref<Record<string, string>>({})
+// 4rem app header ($navbar-height) plus a small margin.
+const VIEWPORT_PADDING = {top: 72, right: 8, bottom: 8, left: 8}
+let scrolledIntoView = false
+
+async function updatePosition() {
+	if (!props.anchor || !popup.value || !props.placement) {
+		return
+	}
+	const {x, y} = await computePosition(props.anchor, popup.value, {
+		placement: props.placement,
+		strategy: 'absolute',
+		// Top padding keeps a flipped popup out from under the fixed app header. When neither side fits
+		// (short window, tall popup) stay on the requested side and scroll it into view instead of
+		// letting bestFit push it above the viewport.
+		middleware: [
+			offset(4),
+			flip({padding: VIEWPORT_PADDING, fallbackStrategy: 'initialPlacement'}),
+			shift({padding: VIEWPORT_PADDING}),
+		],
+	})
+	floatingStyle.value = {left: `${x}px`, top: `${y}px`}
+	if (!scrolledIntoView) {
+		scrolledIntoView = true
+		popup.value.scrollIntoView({block: 'nearest', inline: 'nearest'})
+	}
+}
+
+let stopAutoUpdate: (() => void) | null = null
+watch([openValue, asSheet, () => props.anchor], ([open, sheet, anchor]) => {
+	stopAutoUpdate?.()
+	stopAutoUpdate = null
+	scrolledIntoView = false
+	if (!open || sheet || !props.placement || !anchor || !popup.value) {
+		floatingStyle.value = {}
+		return
+	}
+	stopAutoUpdate = autoUpdate(anchor, popup.value, updatePosition)
+}, {flush: 'post'})
+
+onScopeDispose(() => {
+	stopAutoUpdate?.()
+	stopAutoUpdate = null
+})
 
 let lastFocused: HTMLElement | null = null
 let focusEnteredPopup = false
@@ -125,8 +208,8 @@ onClickOutside(popup, (event) => {
 })
 
 onKeyStroke('Escape', event => {
-	// defaultPrevented means an inner control (flatpickr, Multiselect, …) already consumed this Escape.
-	if (!openValue.value || event.defaultPrevented) {
+	// defaultPrevented means an inner control (Multiselect, …) already consumed this Escape.
+	if (asSheet.value || !openValue.value || event.defaultPrevented) {
 		return
 	}
 
