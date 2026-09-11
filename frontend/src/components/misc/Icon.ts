@@ -49,6 +49,7 @@ import {
 	faKeyboard,
 	faLayerGroup,
 	faList,
+	faTableCellsLarge,
 	faListOl,
 	faLock,
 	faMinus,
@@ -163,6 +164,7 @@ library.add(faImage)
 library.add(faKeyboard)
 library.add(faLayerGroup)
 library.add(faList)
+library.add(faTableCellsLarge)
 library.add(faListOl)
 library.add(faLock)
 library.add(faMinus)

@@ -218,7 +218,8 @@ test.describe('Project View Kanban', () => {
 		await expect(page.locator('.kanban .bucket .tasks .task').filter({hasText: task.title})).toBeVisible()
 		await page.locator('.kanban .bucket .tasks .task').filter({hasText: task.title}).click()
 
-		await page.locator('.task-view .action-buttons .button', {timeout: 3000}).filter({hasText: /^Move$/}).click()
+		await page.locator('[data-cy="taskDetail.moreActions"]').click()
+		await page.locator('.task-view .task-actions-menu .dropdown-item').filter({hasText: 'Move'}).click()
 		const multiselectInput = page.locator('.task-view .content.details .field .multiselect.control .input-wrapper input')
 		await expect(multiselectInput).toBeVisible({timeout: 5000})
 		await multiselectInput.click()
@@ -248,8 +249,8 @@ test.describe('Project View Kanban', () => {
 
 		await expect(page.locator('.kanban .bucket .tasks .task').filter({hasText: task.title})).toBeVisible()
 		await page.locator('.kanban .bucket .tasks .task').filter({hasText: task.title}).click()
-		await expect(page.locator('.task-view .action-buttons .button').filter({hasText: 'Delete'})).toBeVisible()
-		await page.locator('.task-view .action-buttons .button').filter({hasText: 'Delete'}).click()
+		await page.locator('[data-cy="taskDetail.moreActions"]').click()
+		await page.locator('.task-view .task-actions-menu .dropdown-item').filter({hasText: 'Delete'}).click()
 		await expect(page.locator('dialog[open] .modal-content .modal-header')).toContainText('Delete this task')
 		await page.locator('dialog[open] .modal-content .actions .button').filter({hasText: 'Do it!'}).click()
 
