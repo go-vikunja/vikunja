@@ -55,6 +55,7 @@ test.describe('Mobile bottom sheet', () => {
 
 		const panel = await openDueDateSheet(page)
 		await expect(panel.locator('.datepicker-popup .calendar-month')).toBeVisible()
+		await expect(panel.locator('.datepicker__quick-select-date').first()).not.toBeFocused()
 
 		await panel.locator(`.calendar-month__day[data-date="${tomorrow}"]`).click()
 

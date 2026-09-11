@@ -658,7 +658,7 @@ test.describe('Task', () => {
 			return popup
 		}
 
-		test('Opens the due date popup when clicking the action button and focuses the first quick-select option', async ({authenticatedPage: page}) => {
+		test('Tabs into the due date quick-select options after clicking the action button', async ({authenticatedPage: page}) => {
 			const tasks = await TaskFactory.create(1, {
 				id: 1,
 				done: false,
@@ -672,7 +672,38 @@ test.describe('Task', () => {
 
 			const popup = page.locator('.task-view .columns.details .column').filter({hasText: 'Due Date'}).locator('.datepicker .datepicker-popup')
 			await expect(popup).toBeVisible()
+			await expect(popup.locator('.datepicker__quick-select-date').first()).not.toBeFocused()
+			await expect(page.locator('.task-view .columns.details .column').filter({hasText: 'Due Date'}).locator('.datepicker .show')).toBeFocused()
+			await page.keyboard.press('Tab')
 			await expect(popup.locator('.datepicker__quick-select-date').first()).toBeFocused()
+		})
+
+		test('Keeps focus on the datepicker trigger after clicking until Tab is pressed', async ({authenticatedPage: page}) => {
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				done: false,
+				due_date: (new Date()).toISOString(),
+			})
+			await page.goto(`/tasks/${tasks[0].id}`)
+			await page.waitForLoadState('networkidle')
+
+			const column = page.locator('.task-view .columns.details .column').filter({hasText: 'Due Date'})
+			const trigger = column.locator('.datepicker .show')
+			const popup = column.locator('.datepicker-popup')
+			const firstShortcut = popup.locator('.datepicker__quick-select-date').first()
+			await trigger.click()
+			await expect(popup).toBeVisible()
+			await expect(trigger).toBeFocused()
+			await expect(firstShortcut).not.toBeFocused()
+
+			await page.keyboard.press('Tab')
+			await expect(firstShortcut).toBeFocused()
+			await page.keyboard.press('Escape')
+			await expect(popup).not.toBeVisible()
+
+			await trigger.press('Enter')
+			await expect(popup).toBeVisible()
+			await expect(firstShortcut).toBeFocused()
 		})
 
 		test('Opens the due date popup via the keyboard shortcut when the task already has a due date', async ({authenticatedPage: page}) => {
@@ -687,7 +718,7 @@ test.describe('Task', () => {
 			await openDueDatePopupWithShortcut(page)
 		})
 
-		test('Opens the start and end date popups from the actions menu and focuses the first quick-select option', async ({authenticatedPage: page}) => {
+		test('Tabs into the start and end date quick-select options after clicking the actions', async ({authenticatedPage: page}) => {
 			const tasks = await TaskFactory.create(1, {
 				id: 1,
 				done: false,
@@ -705,6 +736,8 @@ test.describe('Task', () => {
 
 				const popup = page.locator('.task-view .columns.details .column').filter({hasText: columnTitle}).locator('.datepicker .datepicker-popup')
 				await expect(popup).toBeVisible()
+				await expect(popup.locator('.datepicker__quick-select-date').first()).not.toBeFocused()
+				await page.keyboard.press('Tab')
 				await expect(popup.locator('.datepicker__quick-select-date').first()).toBeFocused()
 
 				await page.keyboard.press('Escape')
