@@ -1,283 +1,132 @@
 <template>
-	<template v-if="showShortcuts">
-		<BaseButton
-			v-if="(new Date()).getHours() < 21"
-			class="datepicker__quick-select-date"
-			@click.stop="setDate('today')"
-		>
-			<span class="icon"><Icon :icon="['far', 'calendar-alt']" /></span>
-			<span class="text">
-				<span>{{ $t('input.datepicker.today') }}</span>
-				<span class="weekday">{{ getWeekdayFromStringInterval('today') }}</span>
-			</span>
-		</BaseButton>
-		<BaseButton
-			class="datepicker__quick-select-date"
-			@click.stop="setDate('tomorrow')"
-		>
-			<span class="icon"><Icon :icon="['far', 'sun']" /></span>
-			<span class="text">
-				<span>{{ $t('input.datepicker.tomorrow') }}</span>
-				<span class="weekday">{{ getWeekdayFromStringInterval('tomorrow') }}</span>
-			</span>
-		</BaseButton>
-		<BaseButton
-			class="datepicker__quick-select-date"
-			@click.stop="setDate('nextMonday')"
-		>
-			<span class="icon"><Icon icon="coffee" /></span>
-			<span class="text">
-				<span>{{ $t('input.datepicker.nextMonday') }}</span>
-				<span class="weekday">{{ getWeekdayFromStringInterval('nextMonday') }}</span>
-			</span>
-		</BaseButton>
-		<BaseButton
-			v-if="!((new Date()).getDay() === 0 && (new Date()).getHours() >= 21)"
-			class="datepicker__quick-select-date"
-			@click.stop="setDate('thisWeekend')"
-		>
-			<span class="icon"><Icon icon="cocktail" /></span>
-			<span class="text">
-				<span>{{ $t('input.datepicker.thisWeekend') }}</span>
-				<span class="weekday">{{ getWeekdayFromStringInterval('thisWeekend') }}</span>
-			</span>
-		</BaseButton>
-		<BaseButton
-			class="datepicker__quick-select-date"
-			@click.stop="setDate('laterThisWeek')"
-		>
-			<span class="icon"><Icon icon="chess-knight" /></span>
-			<span class="text">
-				<span>{{ $t('input.datepicker.laterThisWeek') }}</span>
-				<span class="weekday">{{ getWeekdayFromStringInterval('laterThisWeek') }}</span>
-			</span>
-		</BaseButton>
-		<BaseButton
-			class="datepicker__quick-select-date"
-			@click.stop="setDate('nextWeek')"
-		>
-			<span class="icon"><Icon icon="forward" /></span>
-			<span class="text">
-				<span>{{ $t('input.datepicker.nextWeek') }}</span>
-				<span class="weekday">{{ getWeekdayFromStringInterval('nextWeek') }}</span>
-			</span>
-		</BaseButton>
-	</template>
+	<div
+		class="datepicker-inline"
+		:class="`datepicker-inline--${shortcutsLayout}`"
+	>
+		<DateShortcuts
+			v-if="showShortcuts && shortcutsLayout === 'chips'"
+			layout="chips"
+			:active="date"
+			@select="setShortcut"
+		/>
 
-	<div class="flatpickr-container">
-		<flat-pickr
-			ref="flatPickrRef"
-			v-model="flatPickrDate"
-			:config="flatPickerConfig"
+		<div class="datepicker-inline__body">
+			<DateShortcuts
+				v-if="showShortcuts && shortcutsLayout === 'sidebar'"
+				layout="list"
+				:active="date"
+				@select="setShortcut"
+			/>
+			<CalendarMonth
+				class="datepicker-inline__calendar"
+				:selected="date"
+				:min-date="minDate"
+				:large="large"
+				@pick="setDay"
+			/>
+		</div>
+
+		<TimeControl
+			:hours="date?.getHours() ?? defaultTime.hours"
+			:minutes="date?.getMinutes() ?? defaultTime.minutes"
+			@update="setTime"
 		/>
 	</div>
 </template>
 
 <script lang="ts" setup>
-import {computed, onBeforeUnmount, onMounted, ref, toRef, watch} from 'vue'
-import flatPickr from 'vue-flatpickr-component'
-import 'flatpickr/dist/flatpickr.css'
+import {computed, ref, toRef, watch} from 'vue'
 
-import BaseButton from '@/components/base/BaseButton.vue'
+import CalendarMonth from '@/components/input/datepicker/CalendarMonth.vue'
+import DateShortcuts from '@/components/input/datepicker/DateShortcuts.vue'
+import TimeControl from '@/components/input/datepicker/TimeControl.vue'
 
-import {formatDate} from '@/helpers/time/formatDate'
-import {calculateDayInterval} from '@/helpers/time/calculateDayInterval'
 import {createDateFromString} from '@/helpers/time/createDateFromString'
 import {getDateWithTime, parseUserDefaultTime} from '@/helpers/time/getDateWithTime'
 import {useAuthStore} from '@/stores/auth'
-import {useI18n} from 'vue-i18n'
-import {useFlatpickrLanguage} from '@/helpers/useFlatpickrLanguage'
-import {useTimeFormat} from '@/composables/useTimeFormat'
-import {TIME_FORMAT} from '@/constants/timeFormat'
 
 const props = withDefaults(defineProps<{
 	modelValue: Date | null | string
 	showShortcuts?: boolean
+	// Chips fit narrow containers (mobile sheet, reminder popup); the sidebar needs the full popup width.
+	shortcutsLayout?: 'sidebar' | 'chips'
+	minDate?: Date | null
+	large?: boolean
 }>(), {
 	showShortcuts: true,
+	shortcutsLayout: 'sidebar',
+	minDate: null,
+	large: false,
 })
 
 const emit = defineEmits<{
 	'update:modelValue': [Date | null],
 }>()
 
-const {t} = useI18n({useScope: 'global'})
-const {store: timeFormat} = useTimeFormat()
-
 const date = ref<Date | null>(null)
-const changed = ref(false)
 
-const modelValue = toRef(props, 'modelValue')
 watch(
-	modelValue,
-	setDateValue,
+	toRef(props, 'modelValue'),
+	(value) => {
+		date.value = value === null || value === '' ? null : createDateFromString(value)
+	},
 	{immediate: true},
 )
 
-const flatPickrRef = ref<InstanceType<typeof flatPickr> | null>(null)
-const flatPickerConfig = computed(() => {
-	const configuredDueTime = parseUserDefaultTime(useAuthStore().settings.frontendSettings.defaultDueTime)
+const authStore = useAuthStore()
+// Noon when the user has no default due time configured.
+const defaultTime = computed(() => parseUserDefaultTime(authStore.settings.frontendSettings.defaultDueTime) ?? {hours: 12, minutes: 0})
 
-	return {
-		altFormat: t('date.altFormatLong'),
-		altInput: true,
-		dateFormat: 'Y-m-d H:i',
-		...(configuredDueTime === null ? {} : {
-			defaultHour: configuredDueTime.hours,
-			defaultMinute: configuredDueTime.minutes,
-		}),
-		enableTime: true,
-		time_24hr: timeFormat.value === TIME_FORMAT.HOURS_24,
-		inline: true,
-		locale: useFlatpickrLanguage().value,
-	}
-})
-
-function formatDateToFlatpickrString(date: Date): string {
-	const year = date.getFullYear()
-	const month = (date.getMonth() + 1).toString().padStart(2, '0')
-	const day = date.getDate().toString().padStart(2, '0')
-	const hours = date.getHours().toString().padStart(2, '0')
-	const minutes = date.getMinutes().toString().padStart(2, '0')
-	
-	return `${year}-${month}-${day} ${hours}:${minutes}`
+function update(value: Date | null) {
+	// The calendar only compares days, so a picked day can still carry a time before minDate.
+	const clamped = value !== null && props.minDate && value < props.minDate
+		? new Date(props.minDate)
+		: value
+	date.value = clamped
+	emit('update:modelValue', clamped)
 }
 
-// Since flatpickr dates are strings, we need to convert them to native date objects.
-// To make that work, we need a separate variable since flatpickr does not have a change event.
-const flatPickrDate = computed({
-	set(newValue: string | Date | null) {
-		if (newValue === null) {
-			date.value = null
-			return
-		}
-
-		if (date.value && formatDateToFlatpickrString(date.value) === newValue) {
-			return
-		}
-		date.value = createDateFromString(newValue)
-		updateData()
-	},
-	get() {
-		if (!date.value) {
-			return ''
-		}
-		
-		return formatDateToFlatpickrString(date.value)
-	},
-})
-
-onMounted(() => {
-	const inputs = flatPickrRef.value?.$el.parentNode.querySelectorAll('.numInputWrapper > input.numInput')
-	inputs?.forEach((i: Element) => {
-		i.addEventListener('input', handleFlatpickrInput)
-	})
-})
-
-onBeforeUnmount(() => {
-	const inputs = flatPickrRef.value?.$el.parentNode.querySelectorAll('.numInputWrapper > input.numInput')
-	inputs?.forEach((i: Element) => {
-		i.removeEventListener('input', handleFlatpickrInput)
-	})
-})
-
-// Flatpickr only returns a change event when the value in the input it's referring to changes.
-// That means it will usually only trigger when the focus is moved out of the input field.
-// This is fine most of the time. However, since we're displaying flatpickr in a popup,
-// the whole html dom instance might get destroyed, before the change event had a
-// chance to fire. In that case, it would not update the date value. To fix
-// this, we're now listening on every change and bubble them up as soon
-// as they happen.
-function handleFlatpickrInput(e: Event) {
-	const newDate = new Date(date?.value || 'now')
-	const target = e.target as HTMLInputElement
-	if (target.classList.contains('flatpickr-minute')) {
-		newDate.setMinutes(Number(target.value))
+function withCurrentTime(day: Date, fallback: Date): Date {
+	const result = new Date(day)
+	if (date.value) {
+		result.setHours(date.value.getHours(), date.value.getMinutes(), 0, 0)
+		return result
 	}
-	if (target.classList.contains('flatpickr-hour')) {
-		newDate.setHours(Number(target.value))
-	}
-	if (target.classList.contains('cur-year')) {
-		newDate.setFullYear(Number(target.value))
-	}
-	flatPickrDate.value = newDate
+	return fallback
 }
 
-
-function setDateValue(dateString: string | Date | null) {
-	if (dateString === null) {
-		date.value = null
-		return
-	}
-	date.value = createDateFromString(dateString)
+function setDay(day: Date) {
+	const fallback = new Date(day)
+	fallback.setHours(defaultTime.value.hours, defaultTime.value.minutes, 0, 0)
+	update(withCurrentTime(day, fallback))
 }
 
-function updateData() {
-	changed.value = true
-	emit('update:modelValue', date.value)
+// Shortcuts pick the next sensible hour ("later today"), unlike a plain calendar click.
+function setShortcut(day: Date) {
+	update(withCurrentTime(day, getDateWithTime(day)))
 }
 
-function setDate(dateString: string) {
-	const interval = calculateDayInterval(dateString)
-	const newDate = new Date()
-	newDate.setDate(newDate.getDate() + interval)
-	date.value = getDateWithTime(newDate)
-	updateData()
-}
-
-function getWeekdayFromStringInterval(dateString: string) {
-	const interval = calculateDayInterval(dateString)
-	const newDate = new Date()
-	newDate.setDate(newDate.getDate() + interval)
-	return formatDate(newDate, 'ddd')
+function setTime({hours, minutes}: {hours: number, minutes: number}) {
+	const result = new Date(date.value ?? new Date())
+	result.setHours(hours, minutes, 0, 0)
+	update(result)
 }
 </script>
 
 <style lang="scss" scoped>
-.datepicker__quick-select-date {
+.datepicker-inline {
 	display: flex;
-	align-items: center;
-	padding: 0 .5rem;
+	flex-direction: column;
 	inline-size: 100%;
-	block-size: 2.25rem;
-	color: var(--text);
-	transition: all $transition;
-
-	&:first-child {
-		border-radius: $radius $radius 0 0;
-	}
-
-	&:hover {
-		background: var(--grey-100);
-	}
-
-	.text {
-		inline-size: 100%;
-		font-size: .85rem;
-		display: flex;
-		justify-content: space-between;
-		padding-inline-end: .25rem;
-
-		.weekday {
-			color: var(--text-light);
-			text-transform: capitalize;
-		}
-	}
-
-	.icon {
-		inline-size: 2rem;
-		text-align: center;
-	}
 }
 
-.flatpickr-container {
-	:deep(.flatpickr-calendar) {
-		margin: 0 auto 8px;
-		box-shadow: none;
-	}
+.datepicker-inline__body {
+	display: flex;
+}
 
-	:deep(.input) {
-		border: none;
-	}
+.datepicker-inline__calendar {
+	flex: 1;
+	min-inline-size: 0;
+	padding: .75rem 1rem 1rem;
 }
 </style>
