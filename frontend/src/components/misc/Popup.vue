@@ -55,7 +55,7 @@ import {useIsMobile} from '@/composables/useIsMobile'
 const props = withDefaults(defineProps<{
 	hasOverflow?: boolean
 	open?: boolean
-	// Anchors the popup to `anchor` with floating-ui (flips and shifts to stay on screen). Without it, consumers position via CSS.
+	// Anchors the popup to `anchor` with floating-ui (flips and shifts to stay on screen).
 	placement?: Placement
 	anchor?: HTMLElement | null
 	sheetOnMobile?: boolean
