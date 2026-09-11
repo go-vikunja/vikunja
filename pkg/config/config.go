@@ -499,7 +499,7 @@ func initDefaultConfig() {
 	MigrationTodoistEnable.setDefault(false)
 	MigrationTrelloEnable.setDefault(false)
 	MigrationMicrosoftTodoEnable.setDefault(false)
-	MigrationClaimTimeout.setDefault("24h")
+	MigrationClaimTimeout.setDefault("5m")
 	MigrationMaxCSVRows.setDefault(100000)
 	MigrationVikunjaFileMaxSize.setDefault("256MB")
 	MigrationVikunjaFileMaxFiles.setDefault(10000)

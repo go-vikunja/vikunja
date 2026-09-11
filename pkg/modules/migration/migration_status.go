@@ -19,10 +19,12 @@ package migration
 import (
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/user"
 
 	"xorm.io/xorm"
@@ -35,6 +37,8 @@ type Status struct {
 	MigratorName string    `xorm:"varchar(255)" json:"migrator_name" readOnly:"true" doc:"The name of the migrator this status belongs to, e.g. \"todoist\"."`
 	StartedAt    time.Time `xorm:"not null" json:"started_at" readOnly:"true" doc:"When the last migration started. Zero value if the user never migrated from this service."`
 	FinishedAt   time.Time `xorm:"null" json:"finished_at" readOnly:"true" doc:"When the last migration finished. Zero value while a migration is still running or was never run."`
+	// NULL until the running job's first beat, and for rows predating the heartbeat.
+	HeartbeatAt *time.Time `xorm:"null" json:"-"`
 	// ActiveUserID's unique index serializes migrations per account; finished rows use NULL.
 	ActiveUserID *int64 `xorm:"bigint null unique" json:"-"`
 }
@@ -128,17 +132,21 @@ func claimConflictOr(userID int64, err error) error {
 	return err
 }
 
-// releaseStaleClaims unblocks migrations abandoned by a dead instance.
+// releaseStaleClaims unblocks migrations abandoned by a dead instance. A live job keeps
+// beating, so only started_at is left to judge rows killed before their first beat.
 func releaseStaleClaims(s *xorm.Session, userID int64) error {
 	timeout := config.MigrationClaimTimeout.GetDuration()
 	if timeout <= 0 {
 		return nil
 	}
 
+	// xorm writes times in the engine's timezone but binds query args as-is, so on SQLite the
+	// two are compared as strings of different zones unless the bound value is converted too.
+	staleBefore := time.Now().Add(-timeout).In(config.GetTimeZone())
+
 	// Probing first avoids taking a write lock on every claim attempt.
-	staleBefore := time.Now().Add(-timeout)
 	has, err := s.
-		Where("active_user_id = ? AND started_at < ?", userID, staleBefore).
+		Where("active_user_id = ? AND COALESCE(heartbeat_at, started_at) < ?", userID, staleBefore).
 		Exist(&Status{})
 	if err != nil {
 		_ = s.Rollback()
@@ -149,7 +157,7 @@ func releaseStaleClaims(s *xorm.Session, userID int64) error {
 	}
 
 	_, err = s.
-		Where("active_user_id = ? AND started_at < ?", userID, staleBefore).
+		Where("active_user_id = ? AND COALESCE(heartbeat_at, started_at) < ?", userID, staleBefore).
 		Cols("finished_at", "active_user_id").
 		Update(&Status{FinishedAt: time.Now()})
 	if err != nil {
@@ -204,4 +212,62 @@ func GetMigrationStatusByID(id int64) (status *Status, err error) {
 		return nil, fmt.Errorf("migration status %d not found", id)
 	}
 	return status, nil
+}
+
+// The beat rate follows the claim timeout instead of a second config key: the floor keeps a
+// tiny timeout from hammering the database, the ceiling keeps beats useful when one is in hours.
+const (
+	minHeartbeatInterval = time.Second
+	maxHeartbeatInterval = 30 * time.Second
+)
+
+func heartbeatInterval(timeout time.Duration) time.Duration {
+	return min(max(timeout/10, minHeartbeatInterval), maxHeartbeatInterval)
+}
+
+// StartRun keeps the claim of statusID alive until the returned stop is called. stop blocks
+// until the beating goroutine is gone, so it cannot outlive the migration it belongs to.
+func StartRun(statusID int64) (stop func()) {
+	timeout := config.MigrationClaimTimeout.GetDuration()
+	// Stale claims are never released, so there is nothing to prove being alive to.
+	if timeout <= 0 {
+		return func() {}
+	}
+
+	done := make(chan struct{})
+	stopped := make(chan struct{})
+
+	go func() {
+		defer close(stopped)
+		ticker := time.NewTicker(heartbeatInterval(timeout))
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-done:
+				return
+			case <-ticker.C:
+				if err := beat(statusID); err != nil {
+					log.Errorf("[Migration] Could not record the heartbeat of migration %d: %s", statusID, err.Error())
+				}
+			}
+		}
+	}()
+
+	return sync.OnceFunc(func() {
+		close(done)
+		<-stopped
+	})
+}
+
+func beat(statusID int64) error {
+	s := db.NewAutocommitSession()
+	defer s.Close()
+
+	now := time.Now()
+	if _, err := s.Where("id = ?", statusID).Cols("heartbeat_at").Update(&Status{HeartbeatAt: &now}); err != nil {
+		return fmt.Errorf("could not update heartbeat_at of migration %d: %w", statusID, err)
+	}
+
+	return nil
 }

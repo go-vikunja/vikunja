@@ -192,6 +192,9 @@ func migrateInListener(ms migration.Migrator, event *MigrationRequestedEvent) (m
 		}
 	}()
 
+	stopHeartbeat := migration.StartRun(m.ID)
+	defer stopHeartbeat()
+
 	log.Infof("[Migration] Starting migration %d from %s for user %d", m.ID, event.MigratorKind, event.User.ID)
 	err = ms.Migrate(event.User)
 	if err != nil {
@@ -283,6 +286,9 @@ func importInListener(ms migration.FileMigrator, event *FileMigrationRequestedEv
 		return m, errors.New("the uploaded import file is no longer available, please upload it again")
 	}
 	defer file.Close()
+
+	stopHeartbeat := migration.StartRun(m.ID)
+	defer stopHeartbeat()
 
 	log.Infof("[Migration] Starting import %d from %s for user %d", m.ID, event.MigratorKind, event.User.ID)
 	if err := ms.Migrate(event.User, file, event.UploadSize); err != nil {
