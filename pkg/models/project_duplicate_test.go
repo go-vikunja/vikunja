@@ -73,6 +73,42 @@ func TestProjectDuplicate(t *testing.T) {
 
 		assertShareCount(t, s, l.Project.ID, 2, 1, 1)
 	})
+
+	t.Run("preserves out-of-order task indexes", func(t *testing.T) {
+		files.InitTestFileFixtures(t)
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.Insert(
+			&Task{Title: "high index", ProjectID: 4, Index: 10, CreatedByID: 3, UID: "duplicate-high-index"},
+			&Task{Title: "low index", ProjectID: 4, Index: 5, CreatedByID: 3, UID: "duplicate-low-index"},
+		)
+		require.NoError(t, err)
+		_, err = s.ID(4).Cols("last_index").Update(&ProjectTaskCounter{LastIndex: 10})
+		require.NoError(t, err)
+
+		usr := &user.User{ID: 3}
+		duplicate := &ProjectDuplicate{ProjectID: 4}
+		can, err := duplicate.CanCreate(s, usr)
+		require.NoError(t, err)
+		require.True(t, can)
+		require.NoError(t, duplicate.Create(s, usr))
+
+		for title, index := range map[string]int64{"high index": 10, "low index": 5} {
+			task := &Task{}
+			has, err := s.Where("project_id = ? AND title = ?", duplicate.Project.ID, title).Get(task)
+			require.NoError(t, err)
+			require.True(t, has)
+			assert.Equal(t, index, task.Index)
+		}
+
+		counter := &ProjectTaskCounter{}
+		has, err := s.ID(duplicate.Project.ID).Get(counter)
+		require.NoError(t, err)
+		require.True(t, has)
+		assert.Equal(t, int64(10), counter.LastIndex)
+	})
 }
 
 func assertShareCount(t *testing.T, s *xorm.Session, projectID, users, teams, links int64) {
