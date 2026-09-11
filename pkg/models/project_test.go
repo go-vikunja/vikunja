@@ -648,6 +648,33 @@ func TestProject_Delete(t *testing.T) {
 		db.AssertMissing(t, "tasks", map[string]interface{}{
 			"project_id": 1,
 		})
+		db.AssertMissing(t, "project_task_counters", map[string]interface{}{
+			"project_id": 1,
+		})
+	})
+	t.Run("removes aliases owned by or targeting the project", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.Insert(
+			&TaskIndexAlias{ProjectID: 1, Index: 99, TaskID: 13},
+			&TaskIndexAlias{ProjectID: 2, Index: 99, TaskID: 1},
+			&TaskIndexAlias{ProjectID: 2, Index: 98, TaskID: 13},
+		)
+		require.NoError(t, err)
+
+		require.NoError(t, (&Project{ID: 1}).Delete(s, &user.User{ID: 1}))
+		require.NoError(t, s.Commit())
+
+		db.AssertMissing(t, "project_task_counters", map[string]interface{}{"project_id": 1})
+		db.AssertMissing(t, "task_index_aliases", map[string]interface{}{"project_id": 1})
+		db.AssertMissing(t, "task_index_aliases", map[string]interface{}{"task_id": 1})
+		db.AssertExists(t, "task_index_aliases", map[string]interface{}{
+			"project_id": 2,
+			"index":      98,
+			"task_id":    13,
+		}, false)
 	})
 	t.Run("with background", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
