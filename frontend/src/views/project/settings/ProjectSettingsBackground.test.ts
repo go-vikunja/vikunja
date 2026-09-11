@@ -6,7 +6,7 @@ import {createI18n} from 'vue-i18n'
 import {createRouter, createMemoryHistory} from 'vue-router'
 
 import ProjectSettingsBackground from '@/views/project/settings/ProjectSettingsBackground.vue'
-import {useBaseStore} from '@/stores/base'
+import {useProjectStore} from '@/stores/projects'
 import {useConfigStore} from '@/stores/config'
 import {getBlobFromBlurHash} from '@/helpers/getBlobFromBlurHash'
 import type {IProject} from '@/modelTypes/IProject'
@@ -76,7 +76,9 @@ async function mountPage({
 	const Host = defineComponent({
 		setup() {
 			useConfigStore().enabledBackgroundProviders = providers
-			useBaseStore().setCurrentProject(project)
+			if (project) {
+				useProjectStore().setProject(project)
+			}
 			return () => h(ProjectSettingsBackground)
 		},
 	})

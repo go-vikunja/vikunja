@@ -1,12 +1,23 @@
-import {describe, it, expect, beforeEach, afterEach} from 'vitest'
+import {describe, it, expect, beforeEach, afterEach, vi} from 'vitest'
 import {mount, flushPromises, type VueWrapper} from '@vue/test-utils'
 import {setActivePinia, createPinia} from 'pinia'
 import {createI18n} from 'vue-i18n'
 import {createRouter, createMemoryHistory} from 'vue-router'
 
+import type {ProjectResponse} from '@/client/queries/projects'
+
+const {projects} = vi.hoisted(() => ({projects: {} as Record<number, ProjectResponse>}))
+
+vi.mock('@/composables/useProjectNavigation', () => ({
+	useProjectNavigation: () => ({
+		projects,
+		updateProject: vi.fn(),
+		loadAllProjects: vi.fn(),
+	}),
+}))
+
 import ProjectSettingsArchive from '@/views/project/settings/ProjectSettingsArchive.vue'
 import Modal from '@/components/misc/Modal.vue'
-import {useProjectStore} from '@/stores/projects'
 import testid from '@/directives/testid'
 import enMessages from '@/i18n/lang/en.json'
 
@@ -60,6 +71,7 @@ describe('ProjectSettingsArchive', () => {
 	beforeEach(() => {
 		setActivePinia(createPinia())
 		document.body.innerHTML = ''
+		Object.keys(projects).forEach(id => delete projects[Number(id)])
 	})
 
 	afterEach(() => {
@@ -68,7 +80,7 @@ describe('ProjectSettingsArchive', () => {
 		document.body.innerHTML = ''
 	})
 
-	it('renders without the project being in the store', async () => {
+	it('renders without the project being loaded', async () => {
 		const mounted = await mountModal('/projects/42/settings/archive')
 		wrapper = mounted.wrapper
 
@@ -79,11 +91,9 @@ describe('ProjectSettingsArchive', () => {
 	// Re-rendering with the projectId gone used to throw, which leaves Vue with a
 	// half-patched subTree and breaks every later navigation (FRONTEND-OSS-2DJ).
 	it('does not throw when the route changes away while still mounted', async () => {
+		projects[42] = {id: 42, title: 'Test', is_archived: true} as ProjectResponse
 		const mounted = await mountModal('/projects/42/settings/archive')
 		wrapper = mounted.wrapper
-		const projectStore = useProjectStore()
-		projectStore.setProject({id: 42, title: 'Test', isArchived: true} as never)
-		await flushPromises()
 
 		expect(document.querySelector('dialog.modal-dialog')?.textContent).toContain('Un-Archive this project')
 		expect(document.title).toBe('Archive "Test" | Vikunja')

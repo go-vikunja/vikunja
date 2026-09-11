@@ -1,7 +1,6 @@
 import type {IAbstract} from './IAbstract'
 import type {IUser} from './IUser'
 import type {ITask} from './ITask'
-import type {IProjectView} from '@/modelTypes/IProjectView'
 
 export interface IBucket extends IAbstract {
 	id: number
@@ -11,7 +10,7 @@ export interface IBucket extends IAbstract {
 	tasks: ITask[]
 	position: number
 	count: number
-	projectViewId: IProjectView['id']
+	projectViewId: number
 	
 	createdBy: IUser
 	created: Date

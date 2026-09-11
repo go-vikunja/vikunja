@@ -1,7 +1,6 @@
 import {describe, expect, it} from 'vitest'
 
 import BucketModel from './bucket'
-import ProjectModel from './project'
 import TaskModel from './task'
 import TaskDuplicateModel from './taskDuplicateModel'
 
@@ -29,7 +28,6 @@ describe('TaskModel labels', () => {
 
 	it.each([
 		['bucket', () => new BucketModel({tasks: [{labels: [generatedLabel]}], created_by: {}} as never).tasks[0]],
-		['project', () => new ProjectModel({tasks: [{labels: [generatedLabel]}], owner: {}, views: []} as never).tasks[0]],
 		['duplicate', () => new TaskDuplicateModel({duplicated_task: {labels: [generatedLabel]}} as never).duplicatedTask],
 	])('restores generated casing after %s model conversion', (_, createTask) => {
 		const task = createTask()

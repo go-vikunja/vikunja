@@ -212,7 +212,7 @@ import QuickAddMagic from '@/components/tasks/partials/QuickAddMagic.vue'
 
 import {error, success} from '@/message'
 import {useTaskStore} from '@/stores/tasks'
-import {useProjectStore} from '@/stores/projects'
+import {useProjectNavigation} from '@/composables/useProjectNavigation'
 import {useAuthStore} from '@/stores/auth'
 import {playPopSound} from '@/helpers/playPop'
 
@@ -228,7 +228,7 @@ const props = withDefaults(defineProps<{
 })
 
 const taskStore = useTaskStore()
-const projectStore = useProjectStore()
+const projectNavigation = useProjectNavigation()
 const authStore = useAuthStore()
 const route = useRoute()
 const {t} = useI18n({useScope: 'global'})
@@ -271,7 +271,7 @@ async function findTasks(newQuery: string) {
 function mapRelatedTasks(tasks: ITask[]) {
 	return tasks.map(task => {
 		// by doing this here once we can save a lot of duplicate calls in the template
-		const project = projectStore.projects[task.projectId]
+		const project = projectNavigation.projects[task.projectId]
 
 		return {
 			...task,

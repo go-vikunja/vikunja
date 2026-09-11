@@ -3,7 +3,6 @@ import {PRIORITIES, type Priority} from '@/constants/priorities'
 import type {ITask} from '@/modelTypes/ITask'
 import type {IUser} from '@/modelTypes/IUser'
 import type {IAttachment} from '@/modelTypes/IAttachment'
-import type {IProject} from '@/modelTypes/IProject'
 import type {ISubscription} from '@/modelTypes/ISubscription'
 import type {IBucket} from '@/modelTypes/IBucket'
 
@@ -95,7 +94,7 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 	created: Date = null
 	updated: Date = null
 
-	projectId: IProject['id'] = 0
+	projectId = 0
 	bucketId: IBucket['id'] = 0
 	buckets: IBucket[] = []
 

@@ -35,8 +35,11 @@ vi.mock('@/stores/projects', () => ({
 	}),
 }))
 
-vi.mock('@/stores/base', () => ({
-	useBaseStore: () => ({currentProject: {id: 1, maxPermission: 2}}),
+vi.mock('@/composables/useCurrentProject', () => ({
+	useCurrentProject: () => ({
+		currentProject: {value: {id: 1, max_permission: 2}},
+		isPending: {value: false},
+	}),
 }))
 
 vi.mock('@/stores/tasks', () => ({

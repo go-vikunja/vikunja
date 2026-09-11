@@ -1,11 +1,9 @@
-import {ref, computed, readonly} from 'vue'
+import {computed, onScopeDispose, readonly, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {defineStore, acceptHMRUpdate} from 'pinia'
 
 import {getBlobFromBlurHash} from '@/helpers/getBlobFromBlurHash'
 
-import ProjectModel from '@/models/project'
-import ProjectService from '@/services/project'
 import {checkAndSetApiUrl, ERROR_NO_API_URL, InvalidApiUrlProvidedError, NoApiUrlProvidedError} from '@/helpers/checkAndSetApiUrl'
 import {isDesktopApp} from '@/helpers/desktopAuth'
 
@@ -13,13 +11,27 @@ import {useMenuActive} from '@/composables/useMenuActive'
 
 import {useAuthStore} from '@/stores/auth'
 import router from '@/router'
+import type {ProjectResponse} from '@/client/queries/projects'
+import ProjectService from '@/services/project'
 import type {IProject} from '@/modelTypes/IProject'
-import type {Permission} from '@/constants/permissions'
-import type {IProjectView} from '@/modelTypes/IProjectView'
+
+type CurrentProjectInput = ProjectResponse | IProject
+
+function getBackgroundInformation(project: CurrentProjectInput) {
+	return 'background_information' in project
+		? project.background_information
+		: (project as IProject).backgroundInformation
+}
+
+function getBackgroundBlurHash(project: CurrentProjectInput) {
+	return 'background_blur_hash' in project
+		? project.background_blur_hash ?? ''
+		: (project as IProject).backgroundBlurHash
+}
 
 export const useBaseStore = defineStore('base', () => {
 	const authStore = useAuthStore()
-	
+
 	const {t} = useI18n()
 
 	const ready = ref(false)
@@ -27,11 +39,8 @@ export const useBaseStore = defineStore('base', () => {
 	const loading = computed(() => !ready.value && error.value === '')
 
 	// This is used to highlight the current project in menu for all project related views
-	const currentProject = ref<IProject | null>(new ProjectModel({
-		id: 0,
-		isArchived: false,
-	}))
-	const currentProjectViewId = ref<IProjectView['id'] | undefined>(undefined)
+	const currentProjectId = ref(0)
+	const currentProjectViewId = ref<number | undefined>(undefined)
 	const background = ref('')
 	const blurHash = ref('')
 
@@ -41,33 +50,16 @@ export const useBaseStore = defineStore('base', () => {
 	const logoVisible = ref(true)
 	const updateAvailable = ref(false)
 
-	function setCurrentProject(newCurrentProject: IProject | null, currentViewId?: IProjectView['id']) {
-		// Server updates don't return the permission. Therefore, the permission is reset after updating the project which is
-		// confusing because all the buttons will disappear in that case. To prevent this, we're keeping the permission
-		// when updating the project in global state.
-		let maxPermission: Permission | null = newCurrentProject?.maxPermission || null
-		if (
-			typeof currentProject.value?.maxPermission !== 'undefined' &&
-			newCurrentProject !== null &&
-			(
-				typeof newCurrentProject.maxPermission === 'undefined' ||
-				newCurrentProject.maxPermission === null
-			)
-		) {
-			maxPermission = currentProject.value.maxPermission
+	function setCurrentProject(newCurrentProject: CurrentProjectInput | null, currentViewId?: number) {
+		if (currentProjectId.value !== (newCurrentProject?.id ?? 0)) {
+			setBackground('')
+			setBlurHash('')
 		}
-		if (newCurrentProject === null) {
-			currentProject.value = null
-			return
-		}
-		currentProject.value = {
-			...newCurrentProject,
-			maxPermission,
-		}
+		currentProjectId.value = newCurrentProject?.id ?? 0
 		setCurrentProjectViewId(currentViewId)
 	}
-	
-	function setCurrentProjectViewId(viewId?: IProjectView['id']) {
+
+	function setCurrentProjectViewId(viewId?: number) {
 		currentProjectViewId.value = viewId
 	}
 
@@ -84,10 +76,16 @@ export const useBaseStore = defineStore('base', () => {
 	}
 
 	function setBackground(newBackground: string) {
+		if (background.value && background.value !== newBackground) {
+			window.URL.revokeObjectURL(background.value)
+		}
 		background.value = newBackground
 	}
 
 	function setBlurHash(newBlurHash: string) {
+		if (blurHash.value && blurHash.value !== newBlurHash) {
+			window.URL.revokeObjectURL(blurHash.value)
+		}
 		blurHash.value = newBlurHash
 	}
 
@@ -100,28 +98,36 @@ export const useBaseStore = defineStore('base', () => {
 	}
 
 	async function handleSetCurrentProject(
-		{project, forceUpdate = false, currentProjectViewId = undefined}: {project: IProject | null, forceUpdate?: boolean, currentProjectViewId?: IProjectView['id']},
+		{project, forceUpdate = false, currentProjectViewId: viewId = undefined}: {
+			project: CurrentProjectInput | null
+			forceUpdate?: boolean
+			currentProjectViewId?: number
+		},
 	) {
-		if (project === null || typeof project === 'undefined') {
+		if (!project) {
 			setCurrentProject(null)
-			setBackground('')
-			setBlurHash('')
 			return
 		}
+		const previousProjectId = currentProjectId.value
+		setCurrentProject(project, viewId)
 
-		// The forceUpdate parameter is used only when updating a project background directly because in that case 
-		// the current project stays the same, but we want to show the new background right away.
-		if (project.id !== currentProject.value?.id || forceUpdate) {
-			if (project.backgroundInformation) {
+		if (project.id !== previousProjectId || forceUpdate) {
+			const backgroundInformation = getBackgroundInformation(project)
+			if (backgroundInformation) {
 				try {
-					const blurHash = await getBlobFromBlurHash(project.backgroundBlurHash)
-					if (blurHash) {
-						setBlurHash(window.URL.createObjectURL(blurHash))
+					const preview = await getBlobFromBlurHash(getBackgroundBlurHash(project))
+					if (currentProjectId.value !== project.id) {
+						return
 					}
-
+					setBlurHash(preview ? window.URL.createObjectURL(preview) : '')
 					const projectService = new ProjectService()
-					const background = await projectService.background(project)
-					setBackground(background)
+					const image = await projectService.background({
+						id: project.id,
+						backgroundInformation,
+					})
+					if (currentProjectId.value === project.id) {
+						setBackground(image)
+					}
 				} catch (e) {
 					console.error('Error getting background image for project', project.id, e)
 				}
@@ -129,18 +135,16 @@ export const useBaseStore = defineStore('base', () => {
 		}
 
 		if (
-			typeof project.backgroundInformation === 'undefined' ||
-			project.backgroundInformation === null
+			typeof getBackgroundInformation(project) === 'undefined' ||
+			getBackgroundInformation(project) === null
 		) {
 			setBackground('')
 			setBlurHash('')
 		}
-
-		setCurrentProject(project, currentProjectViewId)
 	}
 
-	async function handleSetCurrentProjectIfNotSet(project: IProject) {
-		if (currentProject.value?.id !== project.id) {
+	async function handleSetCurrentProjectIfNotSet(project: CurrentProjectInput) {
+		if (currentProjectId.value !== project.id) {
 			await handleSetCurrentProject({project})
 		}
 	}
@@ -192,6 +196,11 @@ export const useBaseStore = defineStore('base', () => {
 		ready.value = true
 	})
 
+	onScopeDispose(() => {
+		setBackground('')
+		setBlurHash('')
+	})
+
 	return {
 		error: readonly(error),
 		loading: readonly(loading),
@@ -199,7 +208,7 @@ export const useBaseStore = defineStore('base', () => {
 		loadApp,
 		appReady,
 
-		currentProject: readonly(currentProject),
+		currentProjectId: readonly(currentProjectId),
 		currentProjectViewId: readonly(currentProjectViewId),
 		background: readonly(background),
 		blurHash: readonly(blurHash),

@@ -158,7 +158,7 @@ const configStore = useConfigStore()
 
 const unsplashBackgroundEnabled = computed(() => configStore.enabledBackgroundProviders.includes('unsplash'))
 const uploadBackgroundEnabled = computed(() => configStore.enabledBackgroundProviders.includes('upload'))
-const currentProject = computed(() => baseStore.currentProject)
+const currentProject = computed(() => projectStore.projects[Number(route.params.projectId)])
 const hasBackground = computed(() => Boolean(currentProject.value?.backgroundInformation))
 
 // Show the default collection of backgrounds
@@ -226,7 +226,7 @@ async function uploadBackground() {
 }
 
 async function removeBackground() {
-	if (currentProject.value === null) {
+	if (!currentProject.value) {
 		return
 	}
 

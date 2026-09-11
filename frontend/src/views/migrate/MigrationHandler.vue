@@ -147,7 +147,7 @@ import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 
 import {MIGRATORS, type Migrator} from './migrators'
 import {useTitle} from '@/composables/useTitle'
-import {useProjectStore} from '@/stores/projects'
+import {refreshProjects} from '@/client/queries/projects'
 import {getErrorText} from '@/message'
 
 const props = defineProps<{
@@ -250,8 +250,7 @@ async function migrate(credentialsConfig?: MigrationConfig) {
 		if (migrator.value.isFileMigrator) {
 			const result = await migrationFileService.migrate(migrationConfig as File)
 			message.value = result.message
-			const projectStore = useProjectStore()
-			return projectStore.loadAllProjects()
+			return refreshProjects()
 		}
 		
 		await migrationService.migrate(migrationConfig as MigrationConfig)

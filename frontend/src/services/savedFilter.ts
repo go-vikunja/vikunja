@@ -3,7 +3,13 @@ import {useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 import {useDebounceFn} from '@vueuse/core'
 
-import type {IProject} from '@/modelTypes/IProject'
+import type {Project} from '@/client/generated'
+import {
+	getSavedFilterIdFromProjectId,
+	isSavedFilterProject,
+	normalizeProject,
+	refreshProjects,
+} from '@/client/queries/projects'
 import type {ISavedFilter} from '@/modelTypes/ISavedFilter'
 
 import AbstractService from '@/services/abstractService'
@@ -11,10 +17,8 @@ import AbstractService from '@/services/abstractService'
 import SavedFilterModel from '@/models/savedFilter'
 
 import {useBaseStore} from '@/stores/base'
-import {useProjectStore} from '@/stores/projects'
 
 import {success} from '@/message'
-import ProjectModel from '@/models/project'
 
 /**
 * Calculates the corresponding project id to this saved filter.
@@ -28,17 +32,10 @@ function getProjectId(savedFilter: ISavedFilter) {
 	return projectId
 }
 
-export function getSavedFilterIdFromProjectId(projectId: IProject['id']) {
-	let filterId = projectId * -1 - 1
-	// FilterIds from projectIds are always positive
-	if (filterId < 0) {
-		filterId = 0
-	}
-	return filterId
-}
+export {getSavedFilterIdFromProjectId}
 
-export function isSavedFilter(project: IProject | undefined | null) {
-	return getSavedFilterIdFromProjectId(project?.id || 0) > 0
+export function isSavedFilter(project: Pick<Project, 'id'> | undefined | null) {
+	return isSavedFilterProject(project)
 }
 
 export default class SavedFilterService extends AbstractService<ISavedFilter> {
@@ -56,10 +53,9 @@ export default class SavedFilterService extends AbstractService<ISavedFilter> {
 	}
 }
 
-export function useSavedFilter(projectId?: MaybeRefOrGetter<IProject['id']>) {
+export function useSavedFilter(projectId?: MaybeRefOrGetter<number>) {
 	const router = useRouter()
 	const {t} = useI18n({useScope:'global'})
-	const projectStore = useProjectStore()
 
 	const filterService = shallowReactive(new SavedFilterService())
 
@@ -86,25 +82,26 @@ export function useSavedFilter(projectId?: MaybeRefOrGetter<IProject['id']>) {
 
 	async function createFilter() {
 		filter.value = await filterService.create(filter.value)
-		await projectStore.loadAllProjects()
+		await refreshProjects()
 		router.push({name: 'project.index', params: {projectId: getProjectId(filter.value)}})
 	}
 
 	async function saveFilter() {
 		const response = await filterService.update(filter.value)
-		await projectStore.loadAllProjects()
+		const projects = await refreshProjects()
 		success({message: t('filters.edit.success')})
 		filter.value = response
-		await useBaseStore().setCurrentProject(new ProjectModel({
-			id: getProjectId(filter.value),
-			title: filter.value.title,
-		}))
+		const projectId = getProjectId(filter.value)
+		useBaseStore().setCurrentProject(
+			projects.savedFilterProjects.find(project => project.id === projectId) ??
+				normalizeProject({id: projectId, title: filter.value.title}),
+		)
 		router.back()
 	}
 
 	async function deleteFilter() {	
 		await filterService.delete(filter.value)
-		await projectStore.loadAllProjects()
+		await refreshProjects()
 		success({message: t('filters.delete.success')})
 		router.push({name: 'projects.index'})
 	}

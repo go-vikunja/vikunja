@@ -14,11 +14,10 @@
 </template>
 
 <script setup lang="ts">
-import type {IProject} from '@/modelTypes/IProject'
 import {useSavedFilter} from '@/services/savedFilter'
 
 const props = defineProps<{
-	projectId: IProject['id'],
+	projectId: number,
 }>()
 
 const {deleteFilter} = useSavedFilter(() => props.projectId)

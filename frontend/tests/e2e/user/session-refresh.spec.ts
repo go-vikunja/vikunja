@@ -90,7 +90,7 @@ test.describe('Session refresh and retry interceptor', () => {
 		})
 
 		// Return 401 with a non-JWT error code for all project GETs.
-		await page.route(/\/api\/v1\/projects(\?|$)/, async (route) => {
+		await page.route(/\/api\/v2\/projects(\?|$)/, async (route) => {
 			if (route.request().method() === 'GET') {
 				projectsFailed = true
 				await route.fulfill({

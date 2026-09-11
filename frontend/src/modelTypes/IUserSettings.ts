@@ -1,10 +1,9 @@
 import type {IAbstract} from './IAbstract'
-import type {IProject} from './IProject'
 import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
 import type {PrefixMode} from '@/modules/quickAddMagic'
 import type {BasicColorSchema} from '@vueuse/core'
 import type {SupportedLocale} from '@/i18n'
-import type {DefaultProjectViewKind} from '@/modelTypes/IProjectView'
+import type {DefaultProjectViewKind} from '@/constants/projectView'
 import type {Priority} from '@/constants/priorities'
 import type {DateDisplay} from '@/constants/dateDisplay'
 import type {TimeFormat} from '@/constants/timeFormat'
@@ -15,7 +14,7 @@ export interface IFrontendSettings {
 	quickAddMagicMode: PrefixMode
 	colorSchema: BasicColorSchema
 	allowIconChanges: boolean
-	filterIdUsedOnOverview: IProject['id'] | null
+	filterIdUsedOnOverview: number | null
 	defaultView?: DefaultProjectViewKind
 	minimumPriority?: Priority
 	dateDisplay: DateDisplay
@@ -48,7 +47,7 @@ export interface IUserSettings extends IAbstract {
 	discoverableByEmail: boolean
 	overdueTasksRemindersEnabled: boolean
 	overdueTasksRemindersTime: undefined | string | Date
-	defaultProjectId: undefined | IProject['id']
+	defaultProjectId: number | undefined
 	weekStart: 0 | 1 | 2 | 3 | 4 | 5 | 6
 	timezone: string
 	language: SupportedLocale | null

@@ -13,9 +13,14 @@ vi.mock('vue-i18n', () => ({
 	createI18n: () => ({global: {t: (key: string) => key}}),
 }))
 
-vi.mock('@/stores/base', () => ({
-	useBaseStore: () => ({setHasTasks: vi.fn()}),
-}))
+vi.mock('@/stores/base', async () => {
+	const {reactive, ref} = await import('vue')
+	const baseStore = reactive({
+		currentProjectId: ref(0),
+		setHasTasks: vi.fn(),
+	})
+	return {useBaseStore: () => baseStore}
+})
 
 const labelQueries = vi.hoisted(() => ({
 	ensureLabels: vi.fn(),
@@ -36,6 +41,8 @@ vi.mock('@/client/generated', () => labelSdk)
 
 import {buildDefaultRemindersForQuickAdd, useTaskStore} from './tasks'
 import {useKanbanStore} from './kanban'
+import {queryClient} from '@/client/queryClient'
+import {projectKeys, type ProjectListResult} from '@/client/queries/projects'
 import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
 import type {IBucket} from '@/modelTypes/IBucket'
@@ -46,6 +53,14 @@ const aDefault: ITaskReminder = {
 	relativePeriod: -3600,
 	relativeTo: REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE,
 } as ITaskReminder
+
+beforeEach(() => {
+	queryClient.setQueryData<ProjectListResult>(projectKeys.list(), {
+		projects: [],
+		favoriteProject: null,
+		savedFilterProjects: [],
+	})
+})
 
 describe('buildDefaultRemindersForQuickAdd', () => {
 	it('returns empty array when due date is null', () => {

@@ -132,9 +132,9 @@ import UserService from '@/services/user'
 import {useTitle} from '@/composables/useTitle'
 import {useTimeTrackingStore} from '@/stores/timeTracking'
 import {useBaseStore} from '@/stores/base'
-import {useProjectStore} from '@/stores/projects'
+import {useProjectNavigation} from '@/composables/useProjectNavigation'
 
-import type {IProject} from '@/modelTypes/IProject'
+import type {ProjectResponse} from '@/client/queries/projects'
 import type {ITask} from '@/modelTypes/ITask'
 import type {IUser} from '@/modelTypes/IUser'
 import type {ITimeEntry} from '@/modelTypes/ITimeEntry'
@@ -144,7 +144,7 @@ const route = useRoute()
 const router = useRouter()
 const timeTrackingStore = useTimeTrackingStore()
 const baseStore = useBaseStore()
-const projectStore = useProjectStore()
+const projectNavigation = useProjectNavigation()
 
 useTitle(() => t('timeTracking.title'))
 
@@ -169,7 +169,7 @@ const dateRange = ref<{dateFrom: Date | string | null, dateTo: Date | string | n
 	dateFrom: 'now/d',
 	dateTo: 'now/d+1d',
 })
-const selectedProject = ref<IProject | null>(null)
+const selectedProject = ref<ProjectResponse | null>(null)
 const selectedTask = ref<ITask | null>(null)
 const selectedUser = ref<IUser | null>(null)
 const filterModalOpen = ref(false)
@@ -285,8 +285,8 @@ async function restoreFromQuery() {
 	// already carries the full filter — and the modal shows the real names.
 	await Promise.all([
 		typeof q.project === 'string'
-			? projectStore.loadProject(Number(q.project))
-				.then(p => { selectedProject.value = p as IProject })
+			? projectNavigation.loadProject(Number(q.project))
+				.then(p => { selectedProject.value = p })
 				.catch(() => { /* project gone — drop the filter */ })
 			: Promise.resolve(),
 		typeof q.task === 'string'

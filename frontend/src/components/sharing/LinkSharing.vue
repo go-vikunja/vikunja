@@ -203,7 +203,6 @@ import FormField from '@/components/input/FormField.vue'
 import LinkShareModel from '@/models/linkShare'
 
 import type {ILinkShare} from '@/modelTypes/ILinkShare'
-import type {IProject} from '@/modelTypes/IProject'
 
 import LinkShareService from '@/services/linkShare'
 
@@ -211,11 +210,10 @@ import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
 import {success} from '@/message'
 import {getDisplayName} from '@/models/user'
 import {useConfigStore} from '@/stores/config'
-import {useProjectStore} from '@/stores/projects'
-import type {IProjectView} from '@/modelTypes/IProjectView'
+import {useProjectNavigation} from '@/composables/useProjectNavigation'
 
 const props = withDefaults(defineProps<{
-	projectId?: IProject['id'],
+	projectId?: number,
 }>(), {
 	projectId: 0,
 })
@@ -231,9 +229,9 @@ const showDeleteModal = ref(false)
 const linkIdToDelete = ref(0)
 const showNewForm = ref(false)
 
-const projectStore = useProjectStore()
+const projectNavigation = useProjectNavigation()
 
-const availableViews = computed<IProjectView[]>(() => projectStore.projects[props.projectId]?.views || [])
+const availableViews = computed(() => projectNavigation.projects[props.projectId]?.views || [])
 const copy = useCopyToClipboard()
 watch(
 	() => props.projectId,
@@ -244,7 +242,7 @@ watch(
 const configStore = useConfigStore()
 const frontendUrl = computed(() => configStore.frontendUrl)
 
-async function load(projectId: IProject['id']) {
+async function load(projectId: number) {
 	// If projectId == 0 the project on the calling component wasn't already loaded, so we just bail out here
 	if (projectId === 0) {
 		return
@@ -253,18 +251,19 @@ async function load(projectId: IProject['id']) {
 	linkShares.value = await linkShareService.getAll({projectId})
 }
 
-type SelectedViewMapper = Record<IProject['id'], IProjectView['id']>
+type SelectedViewMapper = Record<number, number>
 
 const selectedViews = ref<SelectedViewMapper>({})
 
-watch(() => ([linkShares.value, availableViews.value]), ([newLinkShares, newProjectViews]) => {
-	if (!newLinkShares?.length || !newProjectViews?.length) {
+watch(() => [linkShares.value, availableViews.value] as const, ([newLinkShares, newProjectViews]) => {
+	const firstViewId = newProjectViews[0]?.id
+	if (!newLinkShares.length || typeof firstViewId === 'undefined') {
 		selectedViews.value = {}
 		return
 	}
 
 	newLinkShares.forEach((linkShare) => {
-		selectedViews.value[linkShare.id] = newProjectViews.length > 0 ? newProjectViews[0].id : null
+		selectedViews.value[linkShare.id] = firstViewId
 	})
 }, {
 	immediate:true,
@@ -272,7 +271,7 @@ watch(() => ([linkShares.value, availableViews.value]), ([newLinkShares, newProj
 })
 
 
-async function add(projectId: IProject['id']) {
+async function add(projectId: number) {
 	const newLinkShare = new LinkShareModel({
 		permission: selectedPermission.value,
 		projectId,
@@ -288,7 +287,7 @@ async function add(projectId: IProject['id']) {
 	await load(projectId)
 }
 
-async function remove(projectId: IProject['id']) {
+async function remove(projectId: number) {
 	try {
 		await linkShareService.delete(new LinkShareModel({
 			id: linkIdToDelete.value,
@@ -301,7 +300,7 @@ async function remove(projectId: IProject['id']) {
 	}
 }
 
-function getShareLink(hash: string, viewId: IProjectView['id']|null) {
+function getShareLink(hash: string, viewId: number | null) {
 	return frontendUrl.value + 'share/' + hash + '/auth' + (viewId ? '?view=' + viewId : '')
 }
 

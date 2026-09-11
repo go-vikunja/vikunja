@@ -38,11 +38,11 @@ import {useI18n} from 'vue-i18n'
 import {useRoute, useRouter} from 'vue-router'
 import {success} from '@/message'
 import Loading from '@/components/misc/Loading.vue'
-import {useProjectStore} from '@/stores/projects'
+import {useProjectNavigation} from '@/composables/useProjectNavigation'
 import TaskService from '@/services/task'
 
 const {t} = useI18n({useScope: 'global'})
-const projectStore = useProjectStore()
+const projectStore = useProjectNavigation()
 const route = useRoute()
 const router = useRouter()
 

@@ -11,7 +11,6 @@ import TaskModel from '@/models/task'
 import {error, success} from '@/message'
 import {useAuthStore} from '@/stores/auth'
 import {useTaskStore} from '@/stores/tasks'
-import type {IProjectView} from '@/modelTypes/IProjectView'
 
 export interface UseGanttTaskListReturn {
 	tasks: Ref<Map<ITask['id'], ITask>>
@@ -25,7 +24,7 @@ export interface UseGanttTaskListReturn {
 export function useGanttTaskList<F extends Filters>(
 	filters: Ref<F>,
 	filterToApiParams: (filters: F) => TaskFilterParams,
-	viewId: Ref<IProjectView['id']>,
+	viewId: Ref<number>,
 	loadAll: boolean = true,
 ) : UseGanttTaskListReturn {
 	const taskCollectionService = shallowReactive(new TaskCollectionService())

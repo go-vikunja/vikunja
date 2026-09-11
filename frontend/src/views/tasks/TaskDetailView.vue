@@ -34,7 +34,7 @@
 				class="subtitle"
 			>
 				<template
-					v-for="p in projectStore.getAncestors(project)"
+					v-for="p in projectNavigation.getAncestors(project)"
 					:key="p.id"
 				>
 					<a
@@ -652,7 +652,7 @@
 </template>
 
 <script lang="ts" setup>
-import {ref, reactive, shallowReactive, computed, watch, nextTick, onMounted} from 'vue'
+import {ref, reactive, shallowReactive, computed, watch, nextTick, onMounted, type ComponentPublicInstance} from 'vue'
 import {useRouter, useRoute, type RouteLocation, onBeforeRouteLeave} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 import {unrefElement, useDebounceFn, useElementSize, useIntersectionObserver, useMutationObserver} from '@vueuse/core'
@@ -663,7 +663,7 @@ import TaskModel from '@/models/task'
 
 import type {ITask} from '@/modelTypes/ITask'
 import type {IAttachment} from '@/modelTypes/IAttachment'
-import type {IProject} from '@/modelTypes/IProject'
+import type {ProjectResponse} from '@/client/queries/projects'
 
 import {PRIORITIES, type Priority} from '@/constants/priorities'
 import {PERMISSIONS} from '@/constants/permissions'
@@ -705,7 +705,7 @@ import {playPopSound} from '@/helpers/playPop'
 
 import {useTaskStore} from '@/stores/tasks'
 import {useKanbanStore} from '@/stores/kanban'
-import {useProjectStore} from '@/stores/projects'
+import {useProjectNavigation} from '@/composables/useProjectNavigation'
 import {useAuthStore} from '@/stores/auth'
 import {useBaseStore} from '@/stores/base'
 import {useConfigStore} from '@/stores/config'
@@ -729,7 +729,7 @@ const router = useRouter()
 const route = useRoute()
 const {t} = useI18n({useScope: 'global'})
 
-const projectStore = useProjectStore()
+const projectNavigation = useProjectNavigation()
 const taskStore = useTaskStore()
 const configStore = useConfigStore()
 const timeTrackingEnabled = computed(() => configStore.isProFeatureEnabled(PRO_FEATURE.TIME_TRACKING))
@@ -768,7 +768,7 @@ const lastProject = computed(() => {
 
 	const id = parseInt(projectMatch[1])
 
-	return projectStore.projects[id] ?? null
+	return projectNavigation.projects[id] ?? null
 })
 
 const lastProjectOrTaskProject = computed(() => lastProject.value ?? project.value)
@@ -811,7 +811,7 @@ const taskColor = ref<ITask['hexColor']>('')
 // Used to avoid flashing of empty elements if the task content is not yet loaded.
 const visible = ref(false)
 
-const project = computed(() => projectStore.projects[task.value.projectId])
+const project = computed(() => projectNavigation.projects[task.value.projectId])
 
 const projectRoute = computed(() => ({
 	name: 'project.index',
@@ -1049,10 +1049,12 @@ const activeFieldElements: { [id in FieldType]: HTMLElement | null } = reactive(
 	reminders: null,
 	repeatAfter: null,
 	startDate: null,
+	timeTracking: null,
 })
 
-function setFieldRef(name, e) {
-	activeFieldElements[name] = unrefElement(e)
+function setFieldRef(name: FieldType, e: Element | ComponentPublicInstance | null) {
+	const element = e instanceof Element ? e : e?.$el
+	activeFieldElements[name] = element instanceof HTMLElement ? element : null
 }
 
 function setFieldActive(fieldName: keyof typeof activeFields) {
@@ -1150,7 +1152,7 @@ async function toggleTaskDone() {
 	)
 }
 
-async function changeProject(project: IProject | null) {
+async function changeProject(project: ProjectResponse | null) {
 	if (project === null) {
 		return
 	}

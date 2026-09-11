@@ -46,10 +46,10 @@ import ProjectCardGrid from '@/components/project/partials/ProjectCardGrid.vue'
 import {useTitle} from '@/composables/useTitle'
 import {useStorage} from '@vueuse/core'
 
-import {useProjectStore} from '@/stores/projects'
+import {useProjectNavigation} from '@/composables/useProjectNavigation'
 
 const {t} = useI18n()
-const projectStore = useProjectStore()
+const projectStore = useProjectNavigation()
 
 useTitle(() => t('project.title'))
 const showArchived = useStorage('showArchived', false)
@@ -58,7 +58,7 @@ const loading = computed(() => projectStore.isLoading)
 const projects = computed(() => {
 	return showArchived.value
 		? projectStore.projectsArray
-		: projectStore.projectsArray.filter(({isArchived}) => !isArchived)
+		: projectStore.projectsArray.filter(({is_archived}) => !is_archived)
 })
 </script>
 

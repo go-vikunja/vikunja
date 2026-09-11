@@ -1,9 +1,9 @@
 import {ref, toValue, watch, type MaybeRefOrGetter} from 'vue'
 import ProjectService from '@/services/project'
-import type {IProject} from '@/modelTypes/IProject'
+import type {ProjectResponse} from '@/client/queries/projects'
 import {getBlobFromBlurHash} from '@/helpers/getBlobFromBlurHash'
 
-export function useProjectBackground(project: MaybeRefOrGetter<IProject | null>) {
+export function useProjectBackground(project: MaybeRefOrGetter<ProjectResponse | null>) {
 	const background = ref<string | null>(null)
 	const backgroundLoading = ref(false)
 	const blurHashUrl = ref('')
@@ -11,13 +11,13 @@ export function useProjectBackground(project: MaybeRefOrGetter<IProject | null>)
 	watch(
 		() => [
 			toValue(project)?.id ?? null,
-			toValue(project)?.backgroundBlurHash ?? null,
-		] as [IProject['id'] | null, IProject['backgroundBlurHash'] | null],
+			toValue(project)?.background_blur_hash ?? null,
+		] as [number | null, string | null],
 		async ([projectId, blurHash], oldValue) => {
 			const projectValue = toValue(project)
 			if (
 				projectValue === null ||
-				!projectValue.backgroundInformation ||
+				!projectValue.background_information ||
 				backgroundLoading.value
 			) {
 				return
@@ -40,7 +40,10 @@ export function useProjectBackground(project: MaybeRefOrGetter<IProject | null>)
 				})
 
 				const projectService = new ProjectService()
-				const backgroundPromise = projectService.background(projectValue).then((result) => {
+				const backgroundPromise = projectService.background({
+					id: projectValue.id,
+					backgroundInformation: projectValue.background_information,
+				}).then((result) => {
 					background.value = result
 				})
 				await Promise.all([blurHashPromise, backgroundPromise])
