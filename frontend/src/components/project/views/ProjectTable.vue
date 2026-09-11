@@ -7,9 +7,13 @@
 	>
 		<template #header>
 			<div class="filter-container">
-				<Popup>
+				<Popup
+					placement="bottom-start"
+					:anchor="columnsTriggerEl"
+				>
 					<template #trigger="{toggle}">
 						<XButton
+							ref="columnsTrigger"
 							icon="th"
 							variant="secondary"
 							class="mie-2"
@@ -338,7 +342,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, type Ref, watch} from 'vue'
+import {computed, ref, type ComponentPublicInstance, type Ref, watch} from 'vue'
 
 import {useStorage} from '@vueuse/core'
 
@@ -374,6 +378,9 @@ const props = defineProps<{
 }>()
 
 const projectStore = useProjectStore()
+
+const columnsTrigger = ref<ComponentPublicInstance | null>(null)
+const columnsTriggerEl = computed<HTMLElement | null>(() => (columnsTrigger.value?.$el as HTMLElement) ?? null)
 
 const ACTIVE_COLUMNS_DEFAULT = {
 	index: true,
@@ -504,17 +511,10 @@ const taskDetailRoutes = computed(() => Object.fromEntries(
 		flex-direction: column;
 	}
 
-	&.is-open {
-		margin: 2rem 0 1rem;
-	}
 }
 
 .link-share-view .card {
 	border: none;
 	box-shadow: none;
-}
-
-.filter-container :deep(.popup) {
-	inset-block-start: 7rem;
 }
 </style>
