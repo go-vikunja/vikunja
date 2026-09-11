@@ -1,73 +1,118 @@
 <template>
 	<div class="datepicker">
-		<SimpleButton
-			ref="triggerButton"
-			class="show"
-			:disabled="disabled || undefined"
-			@click.stop="toggleDatePopup"
+		<Popup
+			v-model:open="show"
+			placement="bottom-start"
+			:anchor="triggerEl"
+			sheet-on-mobile
+			:sheet-title="dialogTitle"
 		>
-			<i v-if="date === null && emptyLabel !== ''">{{ emptyLabel }}</i>
-			<template v-else>
-				{{ date === null ? chooseDateLabel : formatDisplayDate(date) }}
-			</template>
-		</SimpleButton>
-
-		<CustomTransition name="fade">
-			<div
-				v-if="show"
-				ref="datepickerPopup"
-				class="datepicker-popup"
-				role="dialog"
-				:aria-label="chooseDateLabel"
-				tabindex="-1"
-				@keydown.esc.stop="closeViaEsc"
-			>
-				<DatepickerInline
-					v-model="date"
-					:show-shortcuts="showShortcuts"
-					@update:modelValue="updateData"
-				/>
-
-				<XButton
-					v-cy="'closeDatepicker'"
-					class="datepicker__close-button"
-					:shadow="false"
-					@click="close"
+			<template #trigger="{toggle}">
+				<SimpleButton
+					ref="triggerButton"
+					v-tooltip="date ? formatDateLong(date) : undefined"
+					class="show"
+					:disabled="disabled || undefined"
+					@click.stop="toggle()"
 				>
-					{{ $t('misc.confirm') }}
-				</XButton>
-			</div>
-		</CustomTransition>
+					<i v-if="date === null && emptyLabel !== ''">{{ emptyLabel }}</i>
+					<template v-else>
+						{{ date === null ? chooseDateLabel : formatDisplayDate(date) }}
+					</template>
+				</SimpleButton>
+			</template>
+			<template #header-action>
+				<BaseButton
+					class="datepicker-popup__clear"
+					@click.stop="clear"
+				>
+					{{ $t('input.datepicker.clear') }}
+				</BaseButton>
+			</template>
+			<template #content="{isOpen}">
+				<div
+					v-if="isOpen"
+					ref="datepickerPopup"
+					class="datepicker-popup"
+					:class="{'datepicker-popup--no-shortcuts': !showShortcuts}"
+					:role="isMobile ? undefined : 'dialog'"
+					:aria-label="isMobile ? undefined : dialogTitle"
+					tabindex="-1"
+				>
+					<DatepickerInline
+						v-model="date"
+						:show-shortcuts="showShortcuts"
+						:shortcuts-layout="isMobile ? 'chips' : 'sidebar'"
+						:large="isMobile"
+						:min-date="minDate"
+						@update:modelValue="updateData"
+					/>
+
+					<div class="datepicker-popup__footer">
+						<div class="datepicker-popup__summary">
+							<Icon
+								:icon="['far', 'calendar-check']"
+								class="datepicker-popup__summary-icon"
+							/>
+							<span>{{ date === null ? $t('input.datepicker.noDate') : formatDate(date, summaryFormat) }}</span>
+						</div>
+						<XButton
+							v-if="!isMobile"
+							variant="secondary"
+							:shadow="false"
+							@click.stop="clear"
+						>
+							{{ $t('input.datepicker.clear') }}
+						</XButton>
+						<XButton
+							v-cy="'closeDatepicker'"
+							class="datepicker__close-button"
+							:shadow="false"
+							@click.stop="close"
+						>
+							{{ $t('misc.confirm') }}
+						</XButton>
+					</div>
+				</div>
+			</template>
+		</Popup>
 	</div>
 </template>
 
 <script setup lang="ts">
-import {ref, onMounted, onBeforeUnmount, toRef, watch, nextTick} from 'vue'
+import {computed, ref, toRef, watch, nextTick} from 'vue'
+import {useI18n} from 'vue-i18n'
 
-import CustomTransition from '@/components/misc/CustomTransition.vue'
+import BaseButton from '@/components/base/BaseButton.vue'
+import Popup from '@/components/misc/Popup.vue'
 import DatepickerInline from '@/components/input/DatepickerInline.vue'
 import SimpleButton from '@/components/input/SimpleButton.vue'
 
-import {formatDisplayDate} from '@/helpers/time/formatDate'
-import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
+import {formatDate, formatDateLong, formatDisplayDate} from '@/helpers/time/formatDate'
 import {createDateFromString} from '@/helpers/time/createDateFromString'
-import {useI18n} from 'vue-i18n'
+import {useTimeFormat} from '@/composables/useTimeFormat'
+import {TIME_FORMAT} from '@/constants/timeFormat'
+import {useIsMobile} from '@/composables/useIsMobile'
 
 const props = withDefaults(defineProps<{
 	modelValue: Date | null | string,
 	chooseDateLabel?: string,
+	title?: string,
 	disabled?: boolean,
 	showShortcuts?: boolean,
 	// When the value is null, show this (italic) instead of chooseDateLabel.
 	emptyLabel?: string,
+	minDate?: Date | null,
 }>(), {
 	chooseDateLabel: () => {
 		const {t} = useI18n({useScope: 'global'})
 		return t('input.datepicker.chooseDate')
 	},
+	title: '',
 	disabled: false,
 	showShortcuts: true,
 	emptyLabel: '',
+	minDate: null,
 })
 
 const emit = defineEmits<{
@@ -76,12 +121,16 @@ const emit = defineEmits<{
 	'closeOnChange': [value: boolean],
 }>()
 
+const isMobile = useIsMobile()
+
+const dialogTitle = computed(() => props.title || props.chooseDateLabel)
+
+const {store: timeFormat} = useTimeFormat()
+const summaryFormat = computed(() => timeFormat.value === TIME_FORMAT.HOURS_24 ? 'ddd, ll HH:mm' : 'ddd, ll hh:mm A')
+
 const date = ref<Date | null>(null)
 const show = ref(false)
 const changed = ref(false)
-
-onMounted(() => document.addEventListener('click', hideDatePopup))
-onBeforeUnmount(() =>document.removeEventListener('click', hideDatePopup))
 
 const modelValue = toRef(props, 'modelValue')
 watch(
@@ -103,37 +152,32 @@ function updateData() {
 	emit('update:modelValue', date.value ?? null)
 }
 
-function toggleDatePopup() {
-	if (props.disabled) {
-		return
-	}
-
-	show.value = !show.value
+function clear() {
+	date.value = null
+	updateData()
 }
 
 const datepickerPopup = ref<HTMLElement | null>(null)
 const triggerButton = ref<InstanceType<typeof SimpleButton> | null>(null)
+const triggerEl = computed<HTMLElement | null>(() => triggerButton.value?.$el ?? null)
 
-// nextTick: the popup only exists once the v-if transition renders it.
 watch(show, async (isOpen) => {
 	if (!isOpen) {
+		emitClose()
 		return
 	}
 	await nextTick()
 	datepickerPopup.value?.focus()
 })
 
-function hideDatePopup(e: MouseEvent) {
-	if (show.value && datepickerPopup.value) {
-		closeWhenClickedOutside(e, datepickerPopup.value, close)
-	}
+function close() {
+	show.value = false
 }
 
-function close() {
+function emitClose() {
 	// Kind of dirty, but the timeout allows us to enter a time and click on "confirm" without
 	// having to click on another input field before it is actually used.
 	setTimeout(() => {
-		show.value = false
 		emit('close', changed.value)
 		if (changed.value) {
 			changed.value = false
@@ -141,41 +185,80 @@ function close() {
 		}
 	}, 200)
 }
-
-function closeViaEsc() {
-	// close() defers unmount by 200ms; focus would otherwise drop to <body>.
-	triggerButton.value?.focus()
-	close()
-}
 </script>
 
 <style lang="scss" scoped>
-.datepicker {
-	input.input {
-		display: none;
+.datepicker-popup {
+	position: relative;
+	background: var(--white);
+	border: 1px solid var(--grey-200);
+	border-radius: $radius-large;
+	box-shadow: var(--shadow-md);
+	overflow: hidden;
+	inline-size: 548px;
+	max-inline-size: calc(100vw - 2rem);
+
+	&--no-shortcuts {
+		inline-size: 380px;
+	}
+
+	.bottom-sheet & {
+		inline-size: 100%;
+		max-inline-size: none;
+		border: 0;
+		border-radius: 0;
+		box-shadow: none;
 	}
 }
 
-.datepicker-popup {
-	position: absolute;
-	z-index: 99;
-	inline-size: 320px;
-	background: var(--white);
-	border-radius: $radius;
-	box-shadow: $shadow;
+.datepicker-popup__clear {
+	color: var(--primary);
+	font-family: $family-sans-serif;
+	font-weight: 700;
+	font-size: .85rem;
+	text-transform: uppercase;
+	letter-spacing: .04em;
+}
 
-	@media screen and (max-width: ($tablet)) {
-		inline-size: calc(100vw - 5rem);
+.datepicker-popup__footer {
+	display: flex;
+	align-items: center;
+	gap: .75rem;
+	padding: .75rem 1rem;
+	border-block-start: 1px solid var(--grey-200);
+	background: var(--grey-50);
+
+	.bottom-sheet & {
+		flex-direction: column;
+		align-items: stretch;
+		gap: .5rem;
+		padding-block-end: 1rem;
+		background: var(--white);
 	}
+}
+
+.datepicker-popup__summary {
+	display: flex;
+	align-items: center;
+	gap: .5rem;
+	flex: 1;
+	min-inline-size: 0;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	font-size: .85rem;
+	font-weight: 600;
+	color: var(--grey-700);
+	font-variant-numeric: tabular-nums;
+}
+
+.datepicker-popup__summary-icon {
+	color: var(--primary);
 }
 
 .datepicker__close-button {
-	margin: 1rem;
-	inline-size: calc(100% - 2rem);
-}
-
-:deep(.flatpickr-calendar) {
-	margin: 0 auto 8px;
-	box-shadow: none;
+	.bottom-sheet & {
+		min-block-size: 44px;
+	}
 }
 </style>

@@ -282,6 +282,7 @@
         "90d": "90 Days",
         "permissionExplanation": "Permissions allow you to scope what an api token is allowed to do.",
         "titleRequired": "The title is required",
+        "expiryInvalid": "Please pick an expiry date in the future.",
         "permissionRequired": "Please select at least one permission from the list.",
         "expired": "This token has expired {ago}.",
         "tokenCreatedSuccess": "Here is your new api token: {token}",
@@ -842,7 +843,25 @@
       "thisWeekend": "This Weekend",
       "laterThisWeek": "Later This Week",
       "nextWeek": "Next Week",
-      "chooseDate": "Choose a date"
+      "nextWeekend": "Next Weekend",
+      "endOfMonth": "End of Month",
+      "inAMonth": "In a Month",
+      "chooseDate": "Choose a date",
+      "quickSelect": "Quick select",
+      "clear": "Clear",
+      "noDate": "No date set",
+      "previousMonth": "Previous month",
+      "nextMonth": "Next month",
+      "time": {
+        "hours": "Hours",
+        "minutes": "Minutes",
+        "hourUp": "One hour later",
+        "hourDown": "One hour earlier",
+        "minuteUp": "Five minutes later",
+        "minuteDown": "Five minutes earlier"
+      },
+      "month": "Month",
+      "year": "Year"
     },
     "editor": {
       "edit": "Edit",
@@ -914,7 +933,6 @@
       "from": "From",
       "fromto": "{from} to {to}",
       "date": "Date",
-      "openCalendar": "Open calendar",
       "ranges": {
         "today": "Today",
         "tomorrow": "Tomorrow",
@@ -1443,10 +1461,6 @@
       "newProject": "New project",
       "newTeam": "New team"
     }
-  },
-  "date": {
-    "altFormatLong": "j M Y, H:i",
-    "altFormatShort": "j M Y"
   },
   "reaction": {
     "reactedWith": "{user} reacted with {value}",
