@@ -13,7 +13,13 @@
 - kebab-case URLs, snake_case JSON.
 - Standard CRUD in both versions goes through the `pkg/web/handler/` `Do*` functions, which call the model's `Can*` methods.
 - Permissions live in the model (`CanRead`/`CanWrite`/`CanCreate`/`CanDelete`), never in CRUD handlers. One exception: non-CRUD v2 actions have no `Do*` wrapper, so the handler must load the entity and call `Can*` itself. The `api-v2-routes` skill shows the shape.
-- Frontend models and services (`frontend/src/models`, `frontend/src/modelTypes`, `frontend/src/services`) must mirror the backend JSON shape exactly.
+
+## Frontend clients
+
+- Always consume new API routes through the generated functions and types in `frontend/src/client/generated`. Use their snake_case fields directly.
+- `frontend/src/models`, `frontend/src/modelTypes`, and `frontend/src/services` are the legacy v1 architecture. They are being migrated gradually and will be removed. Do not add models, interfaces, or service wrappers there for new routes; existing code can remain until migrated.
+- After adding or changing a v2 route or schema, run `mage generate:frontend-client` and commit the generated output. Never hand-edit it. `mage check:frontend-client` verifies it is current and generation is repeatable.
+- Reuse the shared client configuration in `frontend/src/client/http.ts`. Put shared query/cache behavior in `frontend/src/client/queries/` when needed; do not duplicate the generated transport layer.
 
 ## OpenAPI
 
