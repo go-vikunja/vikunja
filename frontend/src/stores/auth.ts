@@ -117,12 +117,12 @@ export const useAuthStore = defineStore('auth', () => {
 	
 	const isLinkShareAuth = computed(() => info.value?.type === AUTH_TYPES.LINK_SHARE)
 
+	const identityKey = computed(() => `${info.value?.id ?? ''}:${info.value?.type ?? ''}`)
+
 	// Identity-bound caches survive same-user object replacements.
-	watch(() => [info.value?.id ?? null, info.value?.type ?? null] as const, ([id, type], [prevId, prevType]) => {
-		if (id !== prevId || type !== prevType) {
-			clearTaskCache()
-			queryClient.clear()
-		}
+	watch(identityKey, () => {
+		clearTaskCache()
+		queryClient.clear()
 	}, {flush: 'sync'})
 
 	function setIsLoading(newIsLoading: boolean) {
@@ -614,6 +614,7 @@ export const useAuthStore = defineStore('auth', () => {
 		authLinkShare,
 		userDisplayName,
 		isLinkShareAuth,
+		identityKey,
 
 		isLoading: readonly(isLoading),
 		setIsLoading,
