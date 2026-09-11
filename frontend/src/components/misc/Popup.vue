@@ -31,7 +31,6 @@
 		class="popup"
 		:class="{
 			'is-open': openValue,
-			'has-overflow': hasOverflow && openValue,
 		}"
 		:style="floatingStyle"
 		@toggle="onToggle"
@@ -53,7 +52,6 @@ import Modal from '@/components/misc/Modal.vue'
 import {useIsMobile} from '@/composables/useIsMobile'
 
 const props = withDefaults(defineProps<{
-	hasOverflow?: boolean
 	open?: boolean
 	// Anchors the popup to `anchor` with floating-ui (flips and shifts to stay on screen).
 	placement?: Placement
@@ -61,7 +59,6 @@ const props = withDefaults(defineProps<{
 	sheetOnMobile?: boolean
 	sheetTitle?: string
 }>(), {
-	hasOverflow: false,
 	open: false,
 	placement: undefined,
 	anchor: null,
