@@ -252,3 +252,102 @@ describe('Modal.vue — accessible name derivation', () => {
 		wrapper.unmount()
 	})
 })
+
+describe('Modal.vue — focus restoration', () => {
+	it('restores focus to the trigger when the modal is unmounted without a close transition', async () => {
+		const trigger = document.createElement('button')
+		document.body.append(trigger)
+		trigger.focus()
+
+		const wrapper = mount(Modal, {
+			...globalMocks,
+			attachTo: document.body,
+			props: {enabled: true},
+			slots: {default: '<p class="test-body">hi</p>'},
+		})
+		await flushPromises()
+		await nextTick()
+
+		const dialog = document.querySelector('dialog.modal-dialog') as HTMLDialogElement
+		expect(dialog.hasAttribute('open')).toBe(true)
+
+		// The browser moves focus into the top layer when the dialog opens and
+		// makes everything outside it inert; happy-dom does neither, so emulate
+		// both — without that, a focus() issued before dialog.close() would
+		// wrongly appear to work here.
+		const realFocus = HTMLElement.prototype.focus
+		trigger.blur()
+		const focusSpy = vi.spyOn(HTMLElement.prototype, 'focus')
+			.mockImplementation(function (this: HTMLElement, options?: FocusOptions) {
+				const topLayer = document.querySelector('dialog[open]')
+				if (topLayer && !topLayer.contains(this)) return
+				realFocus.call(this, options)
+			})
+
+		// v-if teardown (Popup's sheet): no closeDialog(), straight to unmount.
+		wrapper.unmount()
+		focusSpy.mockRestore()
+
+		expect(document.activeElement).toBe(trigger)
+	})
+})
+
+describe('Modal.vue — nested body scroll lock', () => {
+	it('keeps the page locked while an outer modal is still open', async () => {
+		const outer = mount(Modal, {
+			...globalMocks,
+			attachTo: document.body,
+			props: {enabled: true},
+			slots: {default: '<p class="outer-body">outer</p>'},
+		})
+		const inner = mount(Modal, {
+			...globalMocks,
+			attachTo: document.body,
+			props: {enabled: true},
+			slots: {default: '<p class="inner-body">inner</p>'},
+		})
+		await flushPromises()
+		await nextTick()
+
+		expect(document.body.style.overflow).toBe('hidden')
+
+		await inner.setProps({enabled: false})
+		await new Promise(resolve => setTimeout(resolve, 200))
+		await flushPromises()
+
+		expect(document.body.style.overflow).toBe('hidden')
+
+		await outer.setProps({enabled: false})
+		await new Promise(resolve => setTimeout(resolve, 200))
+		await flushPromises()
+
+		expect(document.body.style.overflow).toBe('')
+
+		inner.unmount()
+		outer.unmount()
+		expect(document.body.style.overflow).toBe('')
+	})
+
+	it('keeps the page locked when an inner modal is unmounted instead of closed', async () => {
+		const outer = mount(Modal, {
+			...globalMocks,
+			attachTo: document.body,
+			props: {enabled: true},
+			slots: {default: '<p class="outer-body">outer</p>'},
+		})
+		const inner = mount(Modal, {
+			...globalMocks,
+			attachTo: document.body,
+			props: {enabled: true},
+			slots: {default: '<p class="inner-body">inner</p>'},
+		})
+		await flushPromises()
+		await nextTick()
+
+		inner.unmount()
+		expect(document.body.style.overflow).toBe('hidden')
+
+		outer.unmount()
+		expect(document.body.style.overflow).toBe('')
+	})
+})

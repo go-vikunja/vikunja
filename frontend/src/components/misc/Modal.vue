@@ -6,9 +6,10 @@
 			class="modal-dialog"
 			:class="[
 				{ 'has-overflow': overflow },
-				variant,
+				isSheet ? 'bottom-sheet' : variant,
 			]"
 			:aria-labelledby="headerLabelId"
+			:aria-label="sheetLabel"
 			v-bind="attrs"
 			@cancel.prevent="$emit('close')"
 		>
@@ -16,53 +17,76 @@
 				class="modal-container"
 				@mousedown.self.prevent.stop="$emit('close')"
 			>
-				<BaseButton
-					:aria-label="$t('misc.closeDialog')"
-					class="close d-print-none"
-					@click="$emit('close')"
-				>
-					<Icon icon="times" />
-				</BaseButton>
 				<div
-					class="modal-content"
-					:class="{
-						'has-overflow': overflow,
-						'is-wide': wide
-					}"
+					v-if="isSheet"
+					class="bottom-sheet__panel"
 				>
-					<slot>
-						<div
-							:id="headerId"
-							class="modal-header"
-						>
-							<slot name="header" />
-						</div>
-						<div class="content">
-							<slot name="text" />
-						</div>
-						<div class="actions">
-							<XButton
-								variant="tertiary"
-								class="has-text-danger"
-								@click="$emit('close')"
-							>
-								{{ $t('misc.cancel') }}
-							</XButton>
-							<XButton
-								v-cy="'modalPrimary'"
-								variant="primary"
-								:shadow="false"
-								@click="$emit('submit')"
-							>
-								{{ $t('misc.doit') }}
-							</XButton>
-						</div>
-					</slot>
+					<div class="bottom-sheet__handle" />
+					<div
+						v-if="title || $slots['header-action']"
+						class="bottom-sheet__header"
+					>
+						<span class="bottom-sheet__title">{{ title }}</span>
+						<slot name="header-action" />
+					</div>
+					<div class="bottom-sheet__body">
+						<slot />
+					</div>
 				</div>
+				<template v-else>
+					<BaseButton
+						:aria-label="$t('misc.closeDialog')"
+						class="close d-print-none"
+						@click="$emit('close')"
+					>
+						<Icon icon="times" />
+					</BaseButton>
+					<div
+						class="modal-content"
+						:class="{
+							'has-overflow': overflow,
+							'is-wide': wide
+						}"
+					>
+						<slot>
+							<div
+								:id="headerId"
+								class="modal-header"
+							>
+								<slot name="header" />
+							</div>
+							<div class="content">
+								<slot name="text" />
+							</div>
+							<div class="actions">
+								<XButton
+									variant="tertiary"
+									class="has-text-danger"
+									@click="$emit('close')"
+								>
+									{{ $t('misc.cancel') }}
+								</XButton>
+								<XButton
+									v-cy="'modalPrimary'"
+									variant="primary"
+									:shadow="false"
+									@click="$emit('submit')"
+								>
+									{{ $t('misc.doit') }}
+								</XButton>
+							</div>
+						</slot>
+					</div>
+				</template>
 			</div>
 		</dialog>
 	</Teleport>
 </template>
+
+<script lang="ts">
+// Nested modals share one body scroll lock, so closing the inner one must not unlock the page.
+let openModalCount = 0
+</script>
 
 <script lang="ts" setup>
 import BaseButton from '@/components/base/BaseButton.vue'
@@ -72,12 +96,14 @@ const props = withDefaults(defineProps<{
 	enabled?: boolean,
 	overflow?: boolean,
 	wide?: boolean,
-	variant?: 'default' | 'hint-modal' | 'scrolling' | 'top' | 'fullscreen',
+	variant?: 'default' | 'hint-modal' | 'scrolling' | 'top' | 'fullscreen' | 'sheet',
+	title?: string,
 }>(), {
 	enabled: true,
 	overflow: false,
 	wide: false,
 	variant: 'default',
+	title: '',
 })
 
 defineEmits(['close', 'submit'])
@@ -96,10 +122,29 @@ const headerId = useId()
 const headerLabelId = computed(() =>
 	!attrs['aria-label'] && !slots.default && slots.header ? headerId : undefined,
 )
+const isSheet = computed(() => props.variant === 'sheet')
+const sheetLabel = computed(() => (isSheet.value && props.title) || undefined)
 const dialogRef = ref<HTMLDialogElement | null>(null)
 const previouslyFocused = ref<Element | null>(null)
 const showDialog = ref(false)
 let closeTimer: ReturnType<typeof setTimeout> | null = null
+let holdsScrollLock = false
+
+function lockBodyScroll() {
+	if (holdsScrollLock) return
+	holdsScrollLock = true
+	openModalCount++
+	document.body.style.overflow = 'hidden'
+}
+
+function releaseBodyScroll() {
+	if (!holdsScrollLock) return
+	holdsScrollLock = false
+	openModalCount--
+	if (openModalCount === 0) {
+		document.body.style.overflow = ''
+	}
+}
 
 function openDialog() {
 	if (closeTimer) {
@@ -108,7 +153,7 @@ function openDialog() {
 	}
 	previouslyFocused.value = document.activeElement
 	showDialog.value = true
-	document.body.style.overflow = 'hidden'
+	lockBodyScroll()
 	// If we're re-opening while the previous close transition is still in
 	// flight the <dialog> is still mounted and [open], so the dialogRef
 	// watcher below won't re-fire. Clear the data-closing flag here so the
@@ -124,13 +169,14 @@ function openDialog() {
 }
 
 function closeDialog() {
+	releaseBodyScroll()
+
 	const dialog = dialogRef.value
 	if (!dialog) return
 
 	// Trigger the fade-out while the dialog is still [open] so the opacity
 	// transition plays in browsers that don't support allow-discrete (Firefox).
 	dialog.dataset.closing = ''
-	document.body.style.overflow = ''
 
 	closeTimer = setTimeout(() => {
 		delete dialog.dataset.closing
@@ -200,15 +246,27 @@ onMounted(() => {
 	window.addEventListener('afterprint', handleAfterPrint)
 })
 
+// Callers which render the modal behind a v-if (e.g. Popup's sheet) unmount it
+// without ever running closeDialog(), so focus restoration has to happen here too.
 onBeforeUnmount(() => {
 	if (closeTimer) {
 		clearTimeout(closeTimer)
 		closeTimer = null
 	}
-	document.body.style.overflow = ''
-	if (previouslyFocused.value instanceof HTMLElement) {
-		previouslyFocused.value.focus()
+	releaseBodyScroll()
+
+	const dialog = dialogRef.value
+	// Leave the top layer first: while the dialog is [open] everything outside
+	// it is inert and focus() silently does nothing.
+	dialog?.close()
+	const toFocus = previouslyFocused.value
+	const active = document.activeElement
+	const focusIsLost = !active || active === document.body || Boolean(dialog?.contains(active))
+	if (focusIsLost && toFocus instanceof HTMLElement && toFocus.isConnected) {
+		toFocus.focus()
 	}
+	previouslyFocused.value = null
+
 	window.removeEventListener('beforeprint', handleBeforePrint)
 	window.removeEventListener('afterprint', handleAfterPrint)
 })
@@ -404,6 +462,69 @@ $modal-width: 1024px;
 	}
 }
 
+// No scrim element: the dialog itself paints it, so the container's mousedown-outside is the scrim tap.
+.bottom-sheet {
+	background: hsla(0, 0%, 4%, .4);
+
+	.modal-container {
+		display: flex;
+		flex-direction: column;
+		justify-content: flex-end;
+		// html owns the page scroll, so body overflow alone does not lock it — contain the chain instead.
+		overflow: hidden;
+		overscroll-behavior: contain;
+		padding: 0;
+	}
+}
+
+.bottom-sheet__panel {
+	display: flex;
+	flex-direction: column;
+	inline-size: 100%;
+	overflow-x: hidden;
+	max-block-size: 92dvh;
+	background: var(--white);
+	color: var(--text);
+	border-radius: 18px 18px 0 0;
+	box-shadow: 0 -8px 30px hsla(var(--grey-500-hsl), .18);
+	padding-block-end: env(safe-area-inset-bottom);
+}
+
+.bottom-sheet__handle {
+	inline-size: 2.5rem;
+	block-size: 5px;
+	margin: .5rem auto 0;
+	border-radius: $radius-rounded;
+	background: var(--grey-200);
+	flex-shrink: 0;
+}
+
+.bottom-sheet__header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: .5rem 1rem .75rem;
+	flex-shrink: 0;
+}
+
+.bottom-sheet__title {
+	font-family: $vikunja-font;
+	font-weight: 700;
+	font-size: 1.15rem;
+	color: var(--grey-900);
+}
+
+.bottom-sheet__body {
+	min-block-size: 0;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+
+	// The mobile :deep(.card) rule below stretches every card to viewport height; a card inside the sheet must not be.
+	:deep(.card) {
+		min-block-size: 0 !important;
+	}
+}
+
 .close {
 	$close-button-padding: 26px;
 	position: fixed;
@@ -523,7 +644,7 @@ $modal-width: 1024px;
 }
 
 @media print, screen and (max-width: $tablet) {
-  body:has(dialog[open].modal-dialog) #app {
+  body:has(dialog[open].modal-dialog:not(.bottom-sheet)) #app {
 	display: none;
   }
 }
