@@ -13,7 +13,7 @@
 					v-tooltip="date ? formatDateLong(date) : undefined"
 					class="show"
 					:disabled="disabled || undefined"
-					@click.stop="toggleFromTrigger($event, toggle)"
+					@click.stop="toggle()"
 				>
 					<i v-if="date === null && emptyLabel !== ''">{{ emptyLabel }}</i>
 					<template v-else>
@@ -32,7 +32,6 @@
 			<template #content="{isOpen}">
 				<div
 					v-if="isOpen"
-					ref="datepickerPopup"
 					class="datepicker-popup"
 					:class="{'datepicker-popup--no-shortcuts': !showShortcuts}"
 					:role="isMobile ? undefined : 'dialog'"
@@ -158,15 +157,8 @@ function clear() {
 	updateData()
 }
 
-const datepickerPopup = ref<HTMLElement | null>(null)
 const triggerButton = ref<InstanceType<typeof SimpleButton> | null>(null)
 const triggerEl = computed<HTMLElement | null>(() => triggerButton.value?.$el ?? null)
-let focusOnOpen = false
-
-function toggleFromTrigger(event: MouseEvent, toggle: () => boolean) {
-	focusOnOpen = event.detail === 0
-	toggle()
-}
 
 watch(show, async (isOpen) => {
 	if (!isOpen) {
@@ -174,17 +166,8 @@ watch(show, async (isOpen) => {
 		return
 	}
 	await nextTick()
-	if (!focusOnOpen) {
-		if (!isMobile.value) {
-			triggerButton.value?.focus()
-		}
-		return
-	}
-	const firstShortcutEl = datepickerPopup.value?.querySelector<HTMLElement>('.datepicker__quick-select-date')
-	if (firstShortcutEl) {
-		firstShortcutEl.focus({ focusVisible: true })
-	} else {
-		datepickerPopup.value?.focus({ focusVisible: true })
+	if (!isMobile.value) {
+		triggerButton.value?.focus()
 	}
 })
 
@@ -192,9 +175,8 @@ function close() {
 	show.value = false
 }
 
-function open(event?: MouseEvent) {
+function open() {
 	if (!props.disabled) {
-		focusOnOpen = !event || event.detail === 0
 		show.value = true
 	}
 }
