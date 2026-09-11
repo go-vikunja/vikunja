@@ -335,6 +335,13 @@ func registerEventsForAuditLogging() {
 	})
 
 	// Admin actions
+	audit.RegisterEventForAudit(func(e *AdminInviteLinkCreatedEvent) *audit.Entry {
+		return &audit.Entry{Action: audit.ActionAdminInviteLinkCreated, Actor: auditActorFromUser(e.Doer), Target: audit.Target{Type: "user_invite_link", ID: e.Link.ID}}
+	})
+	audit.RegisterEventForAudit(func(e *AdminInviteLinkDeletedEvent) *audit.Entry {
+		return &audit.Entry{Action: audit.ActionAdminInviteLinkDeleted, Actor: auditActorFromUser(e.Doer), Target: audit.Target{Type: "user_invite_link", ID: e.Link.ID}}
+	})
+
 	audit.RegisterEventForAudit(func(e *AdminUserCreatedEvent) *audit.Entry {
 		return &audit.Entry{
 			Action: audit.ActionAdminUserCreated,

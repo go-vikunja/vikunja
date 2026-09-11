@@ -17,6 +17,7 @@
 package models
 
 import (
+	"fmt"
 	"sort"
 	"time"
 
@@ -360,6 +361,10 @@ func (t *Team) Delete(s *xorm.Session, a web.Auth) (err error) {
 	_, err = s.Where("team_id = ?", t.ID).Delete(&TeamProject{})
 	if err != nil {
 		return
+	}
+
+	if _, err := s.Where("team_id = ?", t.ID).Delete(&UserInviteLinkTeam{}); err != nil {
+		return fmt.Errorf("delete team invite links: %w", err)
 	}
 
 	events.DispatchOnCommit(s, &TeamDeletedEvent{

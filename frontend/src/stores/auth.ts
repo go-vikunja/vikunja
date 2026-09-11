@@ -6,6 +6,9 @@ import {getBrowserLanguage, i18n, setLanguage} from '@/i18n'
 import {objectToSnakeCase} from '@/helpers/case'
 import UserModel, {getDisplayName, invalidateAvatarCache} from '@/models/user'
 import AvatarService from '@/services/avatar'
+import type {RegisterUserRequestWritable} from '@/client/generated'
+import {registerViaInviteLink} from '@/client/inviteLink'
+import {parseValidationErrors} from '@/helpers/parseValidationErrors'
 import UserSettingsService from '@/services/userSettings'
 import {getToken, refreshToken, removeToken, saveToken} from '@/helpers/auth'
 import {clearTaskCache} from '@/helpers/taskCache'
@@ -238,7 +241,7 @@ export const useAuthStore = defineStore('auth', () => {
 	 * Registers a new user and logs them in.
 	 * Not sure if this is the right place to put the logic in, maybe a separate js component would be better suited. 
 	 */
-	async function register(credentials, language: string|null = null) {
+	async function register(credentials, language: string|null = null, viaInvite = false) {
 		const HTTP = HTTPFactory()
 		setIsLoading(true)
 		
@@ -247,24 +250,33 @@ export const useAuthStore = defineStore('auth', () => {
 		}
 		
 		try {
-			await HTTP.post('register', {
-				...credentials,
-				language,
-			})
+			if (viaInvite) {
+				await registerViaInviteLink({...credentials, language})
+			} else {
+				await HTTP.post('register', {...credentials, language})
+			}
 			return await login(credentials)
 		} catch (e) {
-			if (e.response?.data?.code === 2002 && e.response?.data?.invalid_fields[0]?.startsWith('language:')) {
-				return register(credentials, 'en')
+			const problem = e.response?.data ?? e
+			if (problem.code === 2002 && parseValidationErrors(problem).language) {
+				return register(credentials, 'en', viaInvite)
 			}
 
-			if (e.response?.data?.message) {
-				throw e.response.data
+			if (problem.detail) {
+				throw {...problem, message: problem.detail}
+			}
+			if (problem.message) {
+				throw problem
 			}
 
 			throw e
 		} finally {
 			setIsLoading(false)
 		}
+	}
+
+	function registerWithInvite(credentials: RegisterUserRequestWritable) {
+		return register(credentials, null, true)
 	}
 
 	async function openIdAuth({provider, code, totpPasscode}: {provider: string, code: string, totpPasscode?: string}) {
@@ -631,6 +643,7 @@ export const useAuthStore = defineStore('auth', () => {
 
 		login,
 		register,
+		registerWithInvite,
 		openIdAuth,
 		handleDesktopOAuthTokens,
 		linkShareAuth,

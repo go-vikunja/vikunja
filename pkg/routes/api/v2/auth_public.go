@@ -21,6 +21,9 @@ import (
 	"net/http"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/routes/api/shared"
 	"code.vikunja.io/api/pkg/user"
 
@@ -32,7 +35,11 @@ import (
 // listed in unauthenticatedAPIPaths so the token middleware lets it through.
 var publicSecurity = []map[string][]string{}
 
-// registerUserBody is the response wrapper for the registration endpoint.
+type registerUserRequest struct {
+	shared.UserRegister
+	InviteToken *string `json:"invite_token,omitempty" doc:"Invitation token. Allows registration when public signup is disabled and joins the invited teams."`
+}
+
 type registerUserBody struct {
 	Body *user.User
 }
@@ -78,20 +85,15 @@ func RegisterPublicAuthRoutes(api huma.API) {
 func registerLocalAuthRoutes(api huma.API) {
 	authTags := []string{"auth"}
 
-	// Registration is its own static-config gate on top of local auth: when it
-	// is disabled the route simply isn't registered (a request then 404s as an
-	// unknown route), rather than registering it and rejecting per request.
-	if config.ServiceEnableRegistration.GetBool() {
-		Register(api, huma.Operation{
-			OperationID: "auth-register",
-			Summary:     "Register",
-			Description: "Creates a new local user account.",
-			Method:      http.MethodPost,
-			Path:        "/register",
-			Tags:        authTags,
-			Security:    publicSecurity,
-		}, authRegister)
-	}
+	Register(api, huma.Operation{
+		OperationID: "auth-register",
+		Summary:     "Register",
+		Description: "Creates a local account. An invite_token allows signup when public registration is disabled and joins the invited teams atomically.",
+		Method:      http.MethodPost,
+		Path:        "/register",
+		Tags:        authTags,
+		Security:    publicSecurity,
+	}, authRegister)
 
 	Register(api, huma.Operation{
 		OperationID:   "auth-password-token",
@@ -127,8 +129,25 @@ func registerLocalAuthRoutes(api huma.API) {
 	}, authConfirmEmail)
 }
 
-func authRegister(ctx context.Context, in *struct{ Body shared.UserRegister }) (*registerUserBody, error) {
-	newUser, err := shared.RegisterUser(ctx, &in.Body)
+func authRegister(ctx context.Context, in *struct{ Body registerUserRequest }) (*registerUserBody, error) {
+	if in.Body.InviteToken != nil {
+		s := db.NewSession()
+		defer s.Close()
+		defer events.CleanupPending(s)
+		created, err := models.RegisterUserViaInviteLink(s, *in.Body.InviteToken, &user.User{Username: in.Body.Username, Password: in.Body.Password, Email: in.Body.Email, Language: in.Body.Language})
+		if err != nil {
+			_ = s.Rollback()
+			return nil, translateDomainError(err)
+		}
+		if err := shared.CommitRegistration(ctx, s); err != nil {
+			return nil, translateDomainError(err)
+		}
+		return &registerUserBody{Body: created}, nil
+	}
+	if !config.ServiceEnableRegistration.GetBool() {
+		return nil, huma.Error404NotFound("Not Found")
+	}
+	newUser, err := shared.RegisterUser(ctx, &in.Body.UserRegister)
 	if err != nil {
 		return nil, translateDomainError(err)
 	}

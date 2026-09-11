@@ -65,9 +65,16 @@ func RegisterUser(ctx context.Context, in *UserRegister) (*user.User, error) {
 		return nil, err
 	}
 
+	if err := CommitRegistration(ctx, s); err != nil {
+		return nil, err
+	}
+	return newUser, nil
+}
+
+func CommitRegistration(ctx context.Context, s *xorm.Session) error {
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return nil, err
+		return err
 	}
 
 	events.DispatchPending(ctx, s)
@@ -80,7 +87,7 @@ func RegisterUser(ctx context.Context, in *UserRegister) (*user.User, error) {
 		}
 	}
 
-	return newUser, nil
+	return nil
 }
 
 // AuthenticateUserCredentials verifies a login against local (and, if configured,
