@@ -281,6 +281,7 @@ function getServeConfig(env: Record<string, string>) {
 		...buildConfig,
 		server: {
 			...buildConfig.server,
+			allowedHosts: true,
 			...(env.DEV_PROXY && { proxy: {
 				[proxyPath]: {
 					target: env.DEV_PROXY,
