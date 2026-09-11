@@ -171,6 +171,22 @@ func TestHumaTask_Create(t *testing.T) {
 		assert.Contains(t, rec.Body.String(), `"project_id":1`)
 		assert.NotContains(t, rec.Body.String(), `"project_id":7`)
 	})
+	t.Run("Read-only index is ignored", func(t *testing.T) {
+		// Reload so project 1's counter (fixture: 34) is deterministic despite earlier subtests advancing it.
+		require.NoError(t, db.LoadFixtures())
+
+		rec := create("1", `{"title":"client index","index":9223372036854775807}`)
+		require.Equal(t, http.StatusCreated, rec.Code, "body: %s", rec.Body.String())
+		first := &models.Task{}
+		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), first))
+		assert.Equal(t, int64(35), first.Index)
+
+		rec = create("1", `{"title":"next index"}`)
+		require.Equal(t, http.StatusCreated, rec.Code, "body: %s", rec.Body.String())
+		next := &models.Task{}
+		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), next))
+		assert.Equal(t, int64(36), next.Index)
+	})
 	t.Run("Nonexisting project", func(t *testing.T) {
 		rec := create("9999", `{"title":"x"}`)
 		assert.Equal(t, http.StatusNotFound, rec.Code, "body: %s", rec.Body.String())
@@ -238,6 +254,137 @@ func TestHumaTask_ReadByIndex(t *testing.T) {
 		rec := get("2", "1")
 		assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
 	})
+}
+
+func TestHumaTask_ReadByIndexAliases(t *testing.T) {
+	h := webHandlerTestV2{user: &testuser1, t: t}
+	require.NoError(t, h.ensureEnv())
+	token := humaTokenFor(t, &testuser1)
+
+	s := db.NewSession()
+	_, err := s.Insert(
+		&models.TaskIndexAlias{ProjectID: 3, Index: 90, TaskID: 1},
+		&models.TaskIndexAlias{ProjectID: 3, Index: 91, TaskID: 2},
+		&models.TaskIndexAlias{ProjectID: 3, Index: 92, TaskID: 34},
+		&models.TaskIndexAlias{ProjectID: 3, Index: 93, TaskID: 1},
+		&models.TaskIndexAlias{ProjectID: 3, Index: 94, TaskID: 12},
+		&models.TaskIndexAlias{ProjectID: 3, Index: 95, TaskID: 99999},
+		&models.TaskIndexAlias{ProjectID: 4, Index: 90, TaskID: 1},
+		&models.TaskIndexAlias{ProjectID: 1, Index: 1, TaskID: 13},
+		&models.TaskIndexAlias{ProjectID: 2, Index: 1, TaskID: 1},
+	)
+	require.NoError(t, err)
+	require.NoError(t, (&models.Task{ID: 2}).Delete(s, &testuser1))
+	moved := &models.Task{ID: 12, ProjectID: 7}
+	require.NoError(t, moved.Update(s, &testuser1))
+	require.Equal(t, int64(2), moved.Index)
+	require.NoError(t, s.Commit())
+	require.NoError(t, s.Close())
+
+	get := func(path string) *httptest.ResponseRecorder {
+		return humaRequest(t, h.e, http.MethodGet, path, "", token, "")
+	}
+
+	t.Run("redirect preserves the raw query", func(t *testing.T) {
+		rec := get("/api/v2/projects/3/tasks/by-index/90?expand=comments&expand=reactions&format=markdown")
+		require.Equal(t, http.StatusTemporaryRedirect, rec.Code, "body: %s", rec.Body.String())
+		assert.Equal(t, "/api/v2/projects/1/tasks/by-index/1?expand=comments&expand=reactions&format=markdown", rec.Header().Get("Location"))
+		assert.Equal(t, "no-store", rec.Header().Get("Cache-Control"))
+	})
+
+	t.Run("multiple aliases redirect directly to the current address", func(t *testing.T) {
+		for _, index := range []string{"90", "93"} {
+			rec := get("/api/v2/projects/3/tasks/by-index/" + index)
+			require.Equal(t, http.StatusTemporaryRedirect, rec.Code)
+			assert.Equal(t, "/api/v2/projects/1/tasks/by-index/1", rec.Header().Get("Location"))
+		}
+	})
+
+	t.Run("a later move changes the redirect destination", func(t *testing.T) {
+		rec := get("/api/v2/projects/3/tasks/by-index/94")
+		require.Equal(t, http.StatusTemporaryRedirect, rec.Code)
+		assert.Equal(t, "/api/v2/projects/7/tasks/by-index/2", rec.Header().Get("Location"))
+
+		s := db.NewSession()
+		movedAgain := &models.Task{ID: 12, ProjectID: 1}
+		require.NoError(t, movedAgain.Update(s, &testuser1))
+		require.Equal(t, int64(35), movedAgain.Index)
+		require.NoError(t, s.Commit())
+		require.NoError(t, s.Close())
+
+		rec = get("/api/v2/projects/3/tasks/by-index/94")
+		require.Equal(t, http.StatusTemporaryRedirect, rec.Code)
+		assert.Equal(t, "/api/v2/projects/1/tasks/by-index/35", rec.Header().Get("Location"))
+	})
+
+	t.Run("current task wins over an inconsistent alias", func(t *testing.T) {
+		rec := get("/api/v2/projects/1/tasks/by-index/1")
+		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+		assert.Contains(t, rec.Body.String(), `"id":1`)
+		assert.Empty(t, rec.Header().Get("Location"))
+	})
+
+	t.Run("direct permission errors do not fall back", func(t *testing.T) {
+		rec := get("/api/v2/projects/2/tasks/by-index/1")
+		assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
+		assert.Empty(t, rec.Header().Get("Location"))
+	})
+
+	t.Run("unauthorized alias target is forbidden without a location", func(t *testing.T) {
+		rec := get("/api/v2/projects/3/tasks/by-index/92")
+		assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
+		assert.Empty(t, rec.Header().Get("Location"))
+	})
+
+	t.Run("alias in an unreadable source project is forbidden without a location", func(t *testing.T) {
+		rec := get("/api/v2/projects/4/tasks/by-index/90")
+		assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
+		assert.Empty(t, rec.Header().Get("Location"))
+	})
+
+	t.Run("missing aliases and targets return not found", func(t *testing.T) {
+		for _, index := range []string{"91", "95", "999"} {
+			rec := get("/api/v2/projects/3/tasks/by-index/" + index)
+			assert.Equal(t, http.StatusNotFound, rec.Code, "index %s body: %s", index, rec.Body.String())
+			assert.Empty(t, rec.Header().Get("Location"))
+		}
+	})
+}
+
+func TestHumaTask_ReadByIndexOpenAPI(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+
+	rec := humaRequest(t, e, http.MethodGet, "/api/v2/openapi.json", "", "", "")
+	require.Equal(t, http.StatusOK, rec.Code)
+
+	var spec map[string]any
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &spec))
+	paths, ok := spec["paths"].(map[string]any)
+	require.True(t, ok)
+	path, ok := paths["/projects/{project}/tasks/by-index/{index}"].(map[string]any)
+	require.True(t, ok)
+	operation, ok := path["get"].(map[string]any)
+	require.True(t, ok)
+	responses, ok := operation["responses"].(map[string]any)
+	require.True(t, ok)
+	assert.Contains(t, responses, "200")
+	redirect, ok := responses["307"].(map[string]any)
+	require.True(t, ok)
+	headers, ok := redirect["headers"].(map[string]any)
+	require.True(t, ok)
+	assert.Contains(t, headers, "Location")
+	assert.Contains(t, headers, "Cache-Control")
+
+	defaultError, ok := responses["default"].(map[string]any)
+	require.True(t, ok)
+	content, ok := defaultError["content"].(map[string]any)
+	require.True(t, ok)
+	problem, ok := content["application/problem+json"].(map[string]any)
+	require.True(t, ok)
+	schema, ok := problem["schema"].(map[string]any)
+	require.True(t, ok)
+	assert.Equal(t, "#/components/schemas/VikunjaErrorModel", schema["$ref"])
 }
 
 // TestHumaTask_Expand asserts the expand query param populates the extra,
