@@ -19,17 +19,17 @@ test.describe('Project View Gantt', () => {
 		await page.waitForLoadState('networkidle')
 
 		// Open the date range picker
-		const dateInput = page.locator('.project-gantt .gantt-options .field .control input.input.form-control')
+		const dateInput = page.locator('.project-gantt .gantt-options .date-range-input__trigger')
 		await expect(dateInput).toBeVisible()
 		await dateInput.click()
 
 		// Wait for the calendar to be visible and open
-		const calendar = page.locator('.flatpickr-calendar.open')
+		const calendar = page.locator('.project-gantt .date-range-input .popup.is-open')
 		await expect(calendar).toBeVisible({timeout: 10000})
 
 		// Verify the first weekday in the calendar is Monday
-		const firstWeekday = calendar.locator('.flatpickr-weekday').first()
-		await expect(firstWeekday).toHaveText(/Mon/i)
+		const firstWeekday = calendar.locator('.calendar-month__weekday').first()
+		await expect(firstWeekday).toHaveText(/^Mo/i)
 	})
 
 	test('Hides tasks with no dates', async ({authenticatedPage: page}) => {
@@ -126,9 +126,9 @@ test.describe('Project View Gantt', () => {
 
 		await page.goto('/projects/1/2')
 
-		await page.locator('.project-gantt .gantt-options .field .control input.input.form-control').click()
-		await page.locator('.flatpickr-calendar .flatpickr-innerContainer .dayContainer .flatpickr-day').first().click()
-		await page.locator('.flatpickr-calendar .flatpickr-innerContainer .dayContainer .flatpickr-day').last().click()
+		await page.locator('.project-gantt .gantt-options .date-range-input__trigger').click()
+		await page.locator('.project-gantt .date-range-input .calendar-month__day').first().click()
+		await page.locator('.project-gantt .date-range-input .calendar-month__day').last().click()
 
 		await expect(page).toHaveURL(/dateFrom=2022-09-25/)
 		await expect(page).toHaveURL(/dateTo=2022-11-05/)
@@ -142,7 +142,7 @@ test.describe('Project View Gantt', () => {
 		await expect(page.locator('.gantt-timeline-months')).toContainText('September 2022')
 		await expect(page.locator('.gantt-timeline-months')).toContainText('October 2022')
 		await expect(page.locator('.gantt-timeline-months')).toContainText('November 2022')
-		await expect(page.locator('.project-gantt .gantt-options .field .control input.input.form-control')).toHaveValue('25 Sep 2022 to 5 Nov 2022')
+		await expect(page.locator('.project-gantt .gantt-options .date-range-input__trigger')).toHaveText('Sep 25, 2022 – Nov 5, 2022')
 	})
 
 	test('Should open a task when double clicked on it', async ({authenticatedPage: page}) => {
