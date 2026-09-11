@@ -134,6 +134,7 @@
 										:ref="e => setFieldRef('dueDate', e)"
 										v-model="task.dueDate"
 										:choose-date-label="$t('task.detail.chooseDueDate')"
+										:title="$t('task.attributes.dueDate')"
 										:disabled="taskService.loading || !canWrite"
 										@closeOnChange="saveTask()"
 									/>
@@ -189,6 +190,7 @@
 										:ref="e => setFieldRef('startDate', e)"
 										v-model="task.startDate"
 										:choose-date-label="$t('task.detail.chooseStartDate')"
+										:title="$t('task.attributes.startDate')"
 										:disabled="taskService.loading || !canWrite"
 										@closeOnChange="saveTask()"
 									/>
@@ -223,6 +225,7 @@
 										:ref="e => setFieldRef('endDate', e)"
 										v-model="task.endDate"
 										:choose-date-label="$t('task.detail.chooseEndDate')"
+										:title="$t('task.attributes.endDate')"
 										:disabled="taskService.loading || !canWrite"
 										@closeOnChange="saveTask()"
 									/>
