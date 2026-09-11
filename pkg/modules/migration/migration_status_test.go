@@ -211,6 +211,7 @@ func TestClaimMigrationTakesOverStaleClaim(t *testing.T) {
 	assert.Nil(t, fetched.HeartbeatAt, "the fallback to started_at only applies to rows that never beat")
 	assert.False(t, fetched.FinishedAt.IsZero())
 	assert.Nil(t, fetched.ActiveUserID)
+	assert.Equal(t, InterruptedMessage, fetched.ErrorMessage)
 }
 
 func TestClaimMigrationRecentClaimIsNotTakenOver(t *testing.T) {

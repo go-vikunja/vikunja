@@ -37,11 +37,19 @@ type Status struct {
 	MigratorName string    `xorm:"varchar(255)" json:"migrator_name" readOnly:"true" doc:"The name of the migrator this status belongs to, e.g. \"todoist\"."`
 	StartedAt    time.Time `xorm:"not null" json:"started_at" readOnly:"true" doc:"When the last migration started. Zero value if the user never migrated from this service."`
 	FinishedAt   time.Time `xorm:"null" json:"finished_at" readOnly:"true" doc:"When the last migration finished. Zero value while a migration is still running or was never run."`
+	ErrorMessage string    `xorm:"text null" json:"error_message" readOnly:"true" doc:"Why the last migration failed. Empty when it succeeded, is still running or was never run."`
 	// NULL until the running job's first beat, and for rows predating the heartbeat.
 	HeartbeatAt *time.Time `xorm:"null" json:"-"`
 	// ActiveUserID's unique index serializes migrations per account; finished rows use NULL.
 	ActiveUserID *int64 `xorm:"bigint null unique" json:"-"`
 }
+
+// GenericFailureMessage matches what MigrationFailedReportedNotification tells the user, so a
+// failure we reported to ourselves never hands them the underlying error.
+const GenericFailureMessage = "The migration failed. We have been notified about the error and are working on a fix."
+
+// InterruptedMessage is stored when a claim is reclaimed from an instance that died mid-migration.
+const InterruptedMessage = "The migration was interrupted before it could finish, please start it again."
 
 // TableName holds the table name for the migration status table
 func (s *Status) TableName() string {
@@ -158,8 +166,8 @@ func releaseStaleClaims(s *xorm.Session, userID int64) error {
 
 	_, err = s.
 		Where("active_user_id = ? AND COALESCE(heartbeat_at, started_at) < ?", userID, staleBefore).
-		Cols("finished_at", "active_user_id").
-		Update(&Status{FinishedAt: time.Now()})
+		Cols("finished_at", "active_user_id", "error_message").
+		Update(&Status{FinishedAt: time.Now(), ErrorMessage: InterruptedMessage})
 	if err != nil {
 		_ = s.Rollback()
 		return err
@@ -167,16 +175,31 @@ func releaseStaleClaims(s *xorm.Session, userID int64) error {
 	return nil
 }
 
-// FinishMigration records completion and releases the user's claim.
-func FinishMigration(status *Status) (err error) {
+// FinishMigration records a successful migration and releases the user's claim.
+func FinishMigration(status *Status) error {
+	return finishMigration(status, "")
+}
+
+// FailMigration records a failed migration and releases the user's claim. The message is shown
+// to the user, so callers must pass one the user may see - never a wrapped internal error.
+func FailMigration(status *Status, userSafeMessage string) error {
+	if userSafeMessage == "" {
+		userSafeMessage = GenericFailureMessage
+	}
+	return finishMigration(status, userSafeMessage)
+}
+
+func finishMigration(status *Status, errorMessage string) (err error) {
 	s := db.NewSession()
 	defer s.Close()
 
 	status.FinishedAt = time.Now()
 	status.ActiveUserID = nil
+	status.ErrorMessage = errorMessage
 
-	// Cols is required: a plain Update skips nil pointers, so the claim would never be released.
-	_, err = s.Where("id = ?", status.ID).Cols("finished_at", "active_user_id").Update(status)
+	// Cols is required: a plain Update skips nil pointers and empty strings, so neither the claim
+	// nor a previous attempt's error message would ever be cleared.
+	_, err = s.Where("id = ?", status.ID).Cols("finished_at", "active_user_id", "error_message").Update(status)
 	if err != nil {
 		_ = s.Rollback()
 		return

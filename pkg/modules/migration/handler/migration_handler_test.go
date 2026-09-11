@@ -132,6 +132,10 @@ func TestStartMigrationCredentialFailureReleasesClaim(t *testing.T) {
 	require.EqualError(t, err, "bad credentials")
 	assert.Empty(t, events.GetDispatchedEvents((&MigrationRequestedEvent{}).Name()), "no event must be dispatched on credential failure")
 
+	failed, err := migration.GetMigrationStatus(&stubMigrator{NameValue: "stub"}, u)
+	require.NoError(t, err)
+	assert.Equal(t, credentialFailureMessage, failed.ErrorMessage)
+
 	require.NoError(t, StartMigration(&stubMigrator{NameValue: "stub"}, u))
 }
 
@@ -145,6 +149,10 @@ func TestStartMigrationDispatchFailureReleasesClaim(t *testing.T) {
 
 	err := StartMigration(&stubMigrator{NameValue: "stub"}, u)
 	require.Error(t, err)
+
+	failed, err := migration.GetMigrationStatus(&stubMigrator{NameValue: "stub"}, u)
+	require.NoError(t, err)
+	assert.Equal(t, queueFailureMessage, failed.ErrorMessage)
 
 	_, err = migration.ClaimMigration(&stubMigrator{NameValue: "stub"}, u)
 	require.NoError(t, err)
@@ -196,6 +204,7 @@ func TestMigrationListenerPanicReleasesClaim(t *testing.T) {
 	require.NoError(t, err)
 	assert.False(t, fetched.FinishedAt.IsZero())
 	assert.Nil(t, fetched.ActiveUserID)
+	assert.Equal(t, "migration panicked: boom", fetched.ErrorMessage)
 
 	_, err = migration.ClaimMigration(&stubMigrator{NameValue: "panic-stub"}, u)
 	require.NoError(t, err)

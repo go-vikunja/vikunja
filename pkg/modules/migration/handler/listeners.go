@@ -135,8 +135,13 @@ func reportMigrationFailure(u *user2.User, migratorKind string, ms migration.Mig
 	}
 	log.Errorf("[Migration] Migration %d from %s for user %d failed. Error was: %s", migrationID, migratorKind, u.ID, err.Error())
 
+	// One condition for both, so the status never shows an error the failure mail wouldn't have.
+	reportedToUs := config.SentryEnabled.GetBool() && shouldReportMigrationError(err)
+	userMessage := err.Error()
+
 	var nerr error
-	if config.SentryEnabled.GetBool() && shouldReportMigrationError(err) {
+	if reportedToUs {
+		userMessage = migration.GenericFailureMessage
 		nerr = notifications.Notify(u, &MigrationFailedReportedNotification{
 			MigratorName: ms.Name(),
 		})
@@ -160,7 +165,7 @@ func reportMigrationFailure(u *user2.User, migratorKind string, ms migration.Mig
 
 	// Still need to finish the migration, otherwise restarting will not work
 	if m != nil {
-		if ferr := migration.FinishMigration(m); ferr != nil {
+		if ferr := migration.FailMigration(m, userMessage); ferr != nil {
 			log.Errorf("[Migration] Could not finish migration %d for user %d, error was: %s", m.ID, u.ID, ferr.Error())
 		}
 	}
@@ -239,7 +244,7 @@ func (s *FileMigrationListener) Handle(msg *message.Message) (err error) {
 	factory, has := registeredFileMigrators[event.MigratorKind]
 	if !has {
 		log.Errorf("[Migration] No file migrator registered for kind %s, discarding event", event.MigratorKind)
-		if ferr := migration.FinishMigration(&migration.Status{ID: event.MigrationStatusID}); ferr != nil {
+		if ferr := migration.FailMigration(&migration.Status{ID: event.MigrationStatusID}, migration.GenericFailureMessage); ferr != nil {
 			log.Errorf("[Migration] Could not finish migration %d for user %d, error was: %s", event.MigrationStatusID, event.User.ID, ferr.Error())
 		}
 		return nil

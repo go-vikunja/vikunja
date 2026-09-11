@@ -77,12 +77,12 @@ func StartFileMigration(ms migration.FileMigrator, u *user2.User, file io.Reader
 
 	uploadName, uploadSize, err := migration.SpoolUpload(io.NewSectionReader(file, 0, size))
 	if err != nil {
-		releaseClaim(status, u, "failed upload spooling")
+		failClaim(status, u, "failed upload spooling", uploadFailureMessage)
 		return err
 	}
 	if uploadSize != size {
 		migration.RemoveSpooledUpload(uploadName)
-		releaseClaim(status, u, "short upload spooling")
+		failClaim(status, u, "short upload spooling", uploadFailureMessage)
 		return fmt.Errorf("spooled %d bytes of the %d byte upload", uploadSize, size)
 	}
 
@@ -95,7 +95,7 @@ func StartFileMigration(ms migration.FileMigrator, u *user2.User, file io.Reader
 		Options:           options,
 	}); err != nil {
 		migration.RemoveSpooledUpload(uploadName)
-		releaseClaim(status, u, "failed event dispatch")
+		failClaim(status, u, "failed event dispatch", queueFailureMessage)
 		return err
 	}
 

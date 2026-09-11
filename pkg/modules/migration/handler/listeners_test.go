@@ -17,6 +17,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -186,6 +187,20 @@ func assertClaimReleased(t *testing.T, statusID int64) {
 	assert.Nil(t, status.ActiveUserID)
 }
 
+func assertMigrationOutcome(t *testing.T, statusID int64, wantErrorMessage string) {
+	t.Helper()
+	status, err := migration.GetMigrationStatusByID(statusID)
+	require.NoError(t, err)
+	assert.Equal(t, wantErrorMessage, status.ErrorMessage)
+}
+
+func enableSentry(t *testing.T) {
+	t.Helper()
+	previous := config.SentryEnabled.GetBool()
+	config.SentryEnabled.Set(true)
+	t.Cleanup(func() { config.SentryEnabled.Set(previous) })
+}
+
 func TestFileMigrationListenerImportsSpooledUpload(t *testing.T) {
 	clearMigrationStatus(t)
 	useTestSpoolDir(t)
@@ -226,6 +241,7 @@ func TestFileMigrationListenerImportsSpooledUpload(t *testing.T) {
 
 	notifications.AssertSent(t, &MigrationDoneNotification{})
 	assertClaimReleased(t, status.ID)
+	assertMigrationOutcome(t, status.ID, "")
 	assertSpoolRemoved(t, uploadName)
 }
 
@@ -254,6 +270,7 @@ func TestFileMigrationListenerFailedImportReleasesClaim(t *testing.T) {
 	assert.Equal(t, "some export", string(state.content))
 	notifications.AssertSent(t, &MigrationFailedNotification{})
 	assertClaimReleased(t, status.ID)
+	assertMigrationOutcome(t, status.ID, "import broke")
 	assertSpoolRemoved(t, uploadName)
 }
 
@@ -280,6 +297,7 @@ func TestFileMigrationListenerAppliesOptions(t *testing.T) {
 	assert.JSONEq(t, `{"delimiter":";"}`, string(state.options))
 	assert.Equal(t, 1, state.runs)
 	assertClaimReleased(t, status.ID)
+	assertMigrationOutcome(t, status.ID, "")
 }
 
 func TestFileMigrationListenerUnregisteredKindReleasesClaim(t *testing.T) {
@@ -301,6 +319,7 @@ func TestFileMigrationListenerUnregisteredKindReleasesClaim(t *testing.T) {
 	}, &FileMigrationListener{})
 
 	assertClaimReleased(t, status.ID)
+	assertMigrationOutcome(t, status.ID, migration.GenericFailureMessage)
 	assertSpoolRemoved(t, uploadName)
 }
 
@@ -375,4 +394,83 @@ func TestFileMigrationListenerForeignStatusIsNotImported(t *testing.T) {
 	require.NotNil(t, after.ActiveUserID)
 	assert.Equal(t, owner.ID, *after.ActiveUserID)
 	assertSpoolRemoved(t, uploadName)
+}
+
+func TestFileMigrationListenerReportedFailureStoresGenericMessage(t *testing.T) {
+	clearMigrationStatus(t)
+	useTestSpoolDir(t)
+	enableSentry(t)
+	notifications.Fake()
+	t.Cleanup(notifications.Unfake)
+
+	// The failure a prior review found in a user's inbox: the spool path must not reach them.
+	leaky := &os.PathError{Op: "open", Path: "/var/lib/vikunja/files/migration-spool-4711", Err: os.ErrNotExist}
+	registerStubFileMigrator("reported-file-stub", leaky)
+	u := getTestUser(t)
+	uploadName, uploadSize := spoolTestUpload(t, strings.NewReader("some export"))
+
+	status, err := migration.ClaimMigration(&stubFileMigrator{name: "reported-file-stub"}, u)
+	require.NoError(t, err)
+
+	events.TestListener(t, &FileMigrationRequestedEvent{
+		User:              u,
+		MigratorKind:      "reported-file-stub",
+		MigrationStatusID: status.ID,
+		UploadName:        uploadName,
+		UploadSize:        uploadSize,
+	}, &FileMigrationListener{})
+
+	notifications.AssertSent(t, &MigrationFailedReportedNotification{})
+	assertClaimReleased(t, status.ID)
+	assertMigrationOutcome(t, status.ID, migration.GenericFailureMessage)
+
+	stored, err := migration.GetMigrationStatusByID(status.ID)
+	require.NoError(t, err)
+	assert.NotContains(t, stored.ErrorMessage, "/var/lib/vikunja")
+	assertSpoolRemoved(t, uploadName)
+}
+
+func TestFileMigrationListenerUserFacingStatusDistinguishesOutcomes(t *testing.T) {
+	clearMigrationStatus(t)
+	useTestSpoolDir(t)
+	notifications.Fake()
+	t.Cleanup(notifications.Unfake)
+
+	registerStubFileMigrator("outcome-ok-stub", nil)
+	registerStubFileMigrator("outcome-failed-stub", errors.New("the import file is missing a VERSION entry"))
+	u := getTestUser(t)
+
+	runImport := func(t *testing.T, kind string) {
+		t.Helper()
+		uploadName, uploadSize := spoolTestUpload(t, strings.NewReader("some export"))
+		status, err := migration.ClaimMigration(&stubFileMigrator{name: kind}, u)
+		require.NoError(t, err)
+		events.TestListener(t, &FileMigrationRequestedEvent{
+			User:              u,
+			MigratorKind:      kind,
+			MigrationStatusID: status.ID,
+			UploadName:        uploadName,
+			UploadSize:        uploadSize,
+		}, &FileMigrationListener{})
+	}
+
+	runImport(t, "outcome-ok-stub")
+	runImport(t, "outcome-failed-stub")
+
+	// What the status endpoint hands the client.
+	succeeded, err := migration.GetMigrationStatus(&stubFileMigrator{name: "outcome-ok-stub"}, u)
+	require.NoError(t, err)
+	assert.False(t, succeeded.FinishedAt.IsZero())
+	assert.Empty(t, succeeded.ErrorMessage)
+
+	failed, err := migration.GetMigrationStatus(&stubFileMigrator{name: "outcome-failed-stub"}, u)
+	require.NoError(t, err)
+	assert.False(t, failed.FinishedAt.IsZero())
+	assert.Equal(t, "the import file is missing a VERSION entry", failed.ErrorMessage)
+
+	body, err := json.Marshal(failed)
+	require.NoError(t, err)
+	var wire map[string]interface{}
+	require.NoError(t, json.Unmarshal(body, &wire))
+	assert.Equal(t, "the import file is missing a VERSION entry", wire["error_message"])
 }
