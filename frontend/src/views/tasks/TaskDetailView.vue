@@ -1088,9 +1088,7 @@ function setFieldActive(fieldName: keyof typeof activeFields) {
 		// Finish scrolling before the datepicker sheet locks the page.
 		scrollIntoView(el, datepicker ? 'instant' : 'smooth')
 
-		// setTimeout(..., 0) is preventing the *original* click to open a field from also being
-		// detected as an outside click and immediately closing the popup.
-		setTimeout(() => datepicker?.open(), 0)
+		datepicker?.open()
 	})
 }
 

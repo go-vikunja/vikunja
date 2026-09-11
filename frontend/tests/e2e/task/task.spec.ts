@@ -804,6 +804,62 @@ test.describe('Task', () => {
 			await expect(showButton).not.toContainText('Click here to set a due date')
 		})
 
+		test('Saves a typed due date time immediately when confirming', async ({authenticatedPage: page}) => {
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				done: false,
+				due_date: new Date().toISOString(),
+			})
+			await page.goto(`/tasks/${tasks[0].id}`)
+			await page.waitForLoadState('networkidle')
+			const popup = await openDueDatePopupWithShortcut(page)
+
+			await page.clock.install()
+			await page.clock.pauseAt(new Date(Date.now() + 1000))
+			await popup.getByRole('textbox', {name: 'Hours', exact: true}).fill('09')
+			await popup.getByRole('textbox', {name: 'Minutes', exact: true}).fill('37')
+
+			const [response] = await Promise.all([
+				page.waitForResponse(r => r.url().endsWith(`/tasks/${tasks[0].id}`) && r.request().method() === 'POST', {timeout: 5000}),
+				popup.getByRole('button', {name: 'Confirm', exact: true}).click(),
+			])
+			expect(response.ok()).toBeTruthy()
+			const saved = await response.json()
+			const time = await page.evaluate(value => {
+				const date = new Date(value)
+				return {hours: date.getHours() % 12, minutes: date.getMinutes()}
+			}, saved.due_date)
+			expect(time).toEqual({hours: 9, minutes: 37})
+			await expect(popup).not.toBeVisible()
+
+			await page.clock.resume()
+			await page.reload()
+			const reopened = await openDueDatePopupWithShortcut(page)
+			await expect(reopened.getByRole('textbox', {name: 'Minutes', exact: true})).toHaveValue('37')
+		})
+
+		test('Can reopen the due date popup after confirming or dismissing it', async ({authenticatedPage: page}) => {
+			const tasks = await TaskFactory.create(1, {id: 1, done: false})
+			await page.goto(`/tasks/${tasks[0].id}`)
+			await page.waitForLoadState('networkidle')
+
+			const popup = await openDueDatePopupWithShortcut(page)
+			await popup.getByRole('button', {name: 'Tomorrow', exact: false}).click()
+			await popup.getByRole('button', {name: 'Confirm', exact: true}).click()
+			await expect(popup).not.toBeVisible()
+
+			const trigger = page.locator('.task-view .columns.details .column').filter({hasText: 'Due Date'}).locator('.datepicker .show')
+			await trigger.click()
+			await expect(popup).toBeVisible()
+			await expect(trigger).toBeFocused()
+			await page.keyboard.press('Tab')
+			await expect(popup.locator('.datepicker__quick-select-date').first()).toBeFocused()
+			await page.keyboard.press('Escape')
+			await expect(popup).not.toBeVisible()
+
+			await openDueDatePopupWithShortcut(page)
+		})
+
 		test('Can set a due date for a task', async ({authenticatedPage: page}) => {
 			const tasks = await TaskFactory.create(1, {
 				id: 1,
