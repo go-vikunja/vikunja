@@ -624,8 +624,7 @@ defineExpose({
 	background-color: var(--white);
 	box-shadow: var(--shadow-lg);
 	color: var(--text);
-	inset-block-start: unset;
-	
+
 	&.is-open {
 		padding: 1rem;
 		border: 1px solid var(--grey-200);

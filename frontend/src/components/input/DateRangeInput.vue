@@ -89,7 +89,6 @@ const {rangeStart, rangeEnd, pickDay} = useRangePick(
 }
 
 :deep(.popup) {
-	z-index: 10;
 	border-radius: $radius;
 	border: 1px solid var(--grey-200);
 	background-color: var(--white);
