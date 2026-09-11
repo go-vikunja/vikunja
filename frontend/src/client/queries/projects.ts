@@ -392,6 +392,13 @@ export function updateProjectNavigationItemInCache(
 	)
 }
 
+export async function cancelProjectQueries(projectId: number): Promise<void> {
+	await Promise.all([
+		queryClient.cancelQueries({queryKey: projectKeys.lists()}),
+		queryClient.cancelQueries({queryKey: projectKeys.detailRoot(projectId)}),
+	])
+}
+
 export async function createProject(
 	project: ProjectWritable,
 	format: 'html' | 'markdown' = 'html',
