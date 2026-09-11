@@ -76,7 +76,7 @@ export function invalidateAvatarCache(user: Pick<IUser, 'username'>) {
 	void nextTick(() => staleUrls.forEach(url => window.URL.revokeObjectURL(url)))
 }
 
-export function getDisplayName(user: IUser) {
+export function getDisplayName(user: Pick<IUser, 'name' | 'username'>) {
 	if (user.name !== '') {
 		return user.name
 	}

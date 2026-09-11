@@ -35,7 +35,7 @@ import {getDisplayName} from '@/models/user'
 import type {IUser} from '@/modelTypes/IUser'
 
 const props = withDefaults(defineProps<{
-	user: IUser,
+	user: Pick<IUser, 'name' | 'username'> & {botOwnerId?: number},
 	showUsername?: boolean,
 	avatarSize?: number,
 	isInline?: boolean,
@@ -48,7 +48,7 @@ const props = withDefaults(defineProps<{
 const {t} = useI18n({useScope: 'global'})
 
 const displayName = computed(() => getDisplayName(props.user))
-const isBot = computed(() => ((props.user as IUser & {botOwnerId?: number}).botOwnerId ?? 0) > 0)
+const isBot = computed(() => (props.user.botOwnerId ?? 0) > 0)
 </script>
 
 <style lang="scss" scoped>
