@@ -27,14 +27,14 @@
 	<div
 		v-else-if="!asSheet"
 		ref="popup"
+		popover="auto"
 		class="popup"
 		:class="{
 			'is-open': openValue,
 			'has-overflow': hasOverflow && openValue,
 		}"
 		:style="floatingStyle"
-		:inert="!openValue"
-		@focusin="rememberFocusEntered"
+		@toggle="onToggle"
 	>
 		<slot
 			name="content"
@@ -47,8 +47,7 @@
 
 <script setup lang="ts">
 import {computed, onScopeDispose, ref, watch, watchEffect} from 'vue'
-import {onClickOutside, onKeyStroke} from '@vueuse/core'
-import {autoUpdate, computePosition, flip, offset, shift, type Placement} from '@floating-ui/dom'
+import {autoUpdate, computePosition, flip, offset, shift, size, type Placement} from '@floating-ui/dom'
 
 import Modal from '@/components/misc/Modal.vue'
 import {useIsMobile} from '@/composables/useIsMobile'
@@ -56,7 +55,6 @@ import {useIsMobile} from '@/composables/useIsMobile'
 const props = withDefaults(defineProps<{
 	hasOverflow?: boolean
 	open?: boolean
-	ignoreClickClasses?: string[]
 	// Anchors the popup to `anchor` with floating-ui (flips and shifts to stay on screen). Without it, consumers position via CSS.
 	placement?: Placement
 	anchor?: HTMLElement | null
@@ -65,7 +63,6 @@ const props = withDefaults(defineProps<{
 }>(), {
 	hasOverflow: false,
 	open: false,
-	ignoreClickClasses: () => [],
 	placement: undefined,
 	anchor: null,
 	sheetOnMobile: false,
@@ -104,13 +101,13 @@ function close() {
 	emit('update:open', false)
 }
 
-// onClickOutside listens in the capture phase, so a trigger's `@click.stop` cannot keep it from
-// closing first — without this guard the trigger's own toggle() reopens what the same click closed.
-let closedByClickOutside = false
+// A light dismiss closes the popup on pointerup, so a trigger click that is still to come would
+// reopen what the same interaction closed.
+let closedByLightDismiss = false
 
 function toggle() {
-	if (closedByClickOutside) {
-		closedByClickOutside = false
+	if (closedByLightDismiss) {
+		closedByLightDismiss = false
 		return false
 	}
 	openValue.value = !openValue.value
@@ -123,39 +120,86 @@ const popup = ref<HTMLElement | null>(null)
 const isMobile = useIsMobile()
 const asSheet = computed(() => props.sheetOnMobile && isMobile.value)
 
+let popoverShown = false
+
+function onToggle(event: Event) {
+	const newState = (event as ToggleEvent).newState
+	popoverShown = newState === 'open'
+
+	if (newState === 'open' || !openValue.value) {
+		return
+	}
+
+	// Outside click or Escape: the browser closed the popover, so mirror it into our state.
+	closedByLightDismiss = true
+	setTimeout(() => {
+		closedByLightDismiss = false
+	})
+	close()
+}
+
+// An effect, not a watch on openValue: a light dismiss followed by a reopen in the same tick leaves
+// openValue unchanged, and only reconciling against the popover's real state shows it again.
+watchEffect(() => {
+	const el = popup.value
+	if (!el) {
+		// Switching to the mobile sheet unmounts the box; a remounted one is never showing.
+		popoverShown = false
+		return
+	}
+
+	if (openValue.value && !asSheet.value) {
+		if (!popoverShown) {
+			el.showPopover()
+			popoverShown = true
+		}
+		return
+	}
+
+	if (popoverShown) {
+		el.hidePopover()
+		popoverShown = false
+	}
+}, {flush: 'post'})
+
 const floatingStyle = ref<Record<string, string>>({})
 // 4rem app header ($navbar-height) plus a small margin.
 const VIEWPORT_PADDING = {top: 72, right: 8, bottom: 8, left: 8}
-let scrolledIntoView = false
 
 async function updatePosition() {
 	if (!props.anchor || !popup.value || !props.placement) {
 		return
 	}
+	let availableBlockSize = 0
 	const {x, y} = await computePosition(props.anchor, popup.value, {
 		placement: props.placement,
-		strategy: 'absolute',
+		strategy: 'fixed',
 		// Top padding keeps a flipped popup out from under the fixed app header. When neither side fits
-		// (short window, tall popup) stay on the requested side and scroll it into view instead of
-		// letting bestFit push it above the viewport.
+		// (short window, tall popup) stay on the requested side and let size() cap the popup to what is
+		// left, so it scrolls inside itself instead of overflowing the viewport.
 		middleware: [
 			offset(4),
 			flip({padding: VIEWPORT_PADDING, fallbackStrategy: 'initialPlacement'}),
 			shift({padding: VIEWPORT_PADDING}),
+			size({
+				padding: VIEWPORT_PADDING,
+				apply: ({availableHeight}) => {
+					availableBlockSize = availableHeight
+				},
+			}),
 		],
 	})
-	floatingStyle.value = {left: `${x}px`, top: `${y}px`}
-	if (!scrolledIntoView) {
-		scrolledIntoView = true
-		popup.value.scrollIntoView({block: 'nearest', inline: 'nearest'})
+	floatingStyle.value = {
+		left: `${x}px`,
+		top: `${y}px`,
+		maxBlockSize: `${Math.max(availableBlockSize, 0)}px`,
 	}
 }
 
 let stopAutoUpdate: (() => void) | null = null
-watch([openValue, asSheet, () => props.anchor], ([open, sheet, anchor]) => {
+watch([openValue, asSheet, () => props.anchor, popup], ([open, sheet, anchor]) => {
 	stopAutoUpdate?.()
 	stopAutoUpdate = null
-	scrolledIntoView = false
 	if (!open || sheet || !props.placement || !anchor || !popup.value) {
 		floatingStyle.value = {}
 		return
@@ -167,79 +211,30 @@ onScopeDispose(() => {
 	stopAutoUpdate?.()
 	stopAutoUpdate = null
 })
-
-let lastFocused: HTMLElement | null = null
-let focusEnteredPopup = false
-
-function rememberFocusEntered() {
-	focusEnteredPopup = true
-}
-
-// Pre-flush so focus is restored before `inert` blurs it to <body>; immediate so a popup mounted open still records its trigger.
-watch(openValue, open => {
-	if (open) {
-		lastFocused = document.activeElement as HTMLElement | null
-		return
-	}
-
-	// An outside click blurs to <body> at mousedown, before onClickOutside fires, so <body> still means nothing else took focus.
-	const active = document.activeElement
-	if (focusEnteredPopup && lastFocused?.isConnected && (popup.value?.contains(active) || active === document.body)) {
-		lastFocused.focus()
-	}
-	lastFocused = null
-	focusEnteredPopup = false
-}, {immediate: true})
-
-onClickOutside(popup, (event) => {
-	const target = event.target as HTMLElement
-	// Check if the click target has any of the ignored classes
-	if (target?.classList && props.ignoreClickClasses.some(className => target.classList.contains(className))) {
-		return
-	}
-	if (!openValue.value) {
-		return
-	}
-	closedByClickOutside = true
-	setTimeout(() => {
-		closedByClickOutside = false
-	})
-	close()
-})
-
-onKeyStroke('Escape', event => {
-	// defaultPrevented means an inner control (Multiselect, …) already consumed this Escape.
-	if (asSheet.value || !openValue.value || event.defaultPrevented) {
-		return
-	}
-
-	// Scope to the popup owning focus — lastFocused is the trigger, which keeps focus after opening.
-	const target = event.target as Node | null
-	if (!target || (!popup.value?.contains(target) && target !== lastFocused)) {
-		return
-	}
-
-	// Cancels the close request of a wrapping native <dialog> so only the popup closes.
-	event.preventDefault()
-	close()
-})
 </script>
 
 <style scoped lang="scss">
-.popup {
-	transition: opacity $transition;
+// :where() keeps the popover reset at zero specificity so consumers can still style :deep(.popup).
+:where(.popup) {
+	position: fixed;
+	inset: unset;
+	margin: 0;
+	border: 0;
+	padding: 0;
+	background: transparent;
+	color: inherit;
+	overflow-y: auto;
 	opacity: 0;
-	visibility: hidden;
-	block-size: 0;
-	overflow: hidden;
-	position: absolute;
-	inset-block-start: 1rem;
-	z-index: 100;
+	// Fade in only: the closing fade would need display/overlay allow-discrete, which paints badly
+	// in Chromium (see Modal.vue).
+	transition: opacity $transition;
 
-	&.is-open {
+	&:popover-open {
 		opacity: 1;
-		visibility: visible;
-		block-size: auto;
+
+		@starting-style {
+			opacity: 0;
+		}
 	}
 }
 </style>
