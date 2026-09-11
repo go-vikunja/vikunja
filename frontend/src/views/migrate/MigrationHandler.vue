@@ -103,16 +103,21 @@
 		<div v-else>
 			<Message
 				ref="resultMessage"
+				:variant="migrationFailureReason ? 'danger' : 'info'"
 				role="status"
 				aria-live="polite"
 				tabindex="-1"
 				class="mbe-4"
 			>
-				{{
-					migrationFinished
-						? $t('migrate.migrationFinished', {service: migrator.name})
-						: $t('migrate.migrationStartedWillReciveEmail', {service: migrator.name})
-				}}
+				<template v-if="migrationFailureReason">
+					{{ $t('migrate.migrationFailed', {service: migrator.name, reason: migrationFailureReason}) }}
+				</template>
+				<template v-else-if="migrationFinished">
+					{{ $t('migrate.migrationFinished', {service: migrator.name}) }}
+				</template>
+				<template v-else>
+					{{ $t('migrate.migrationStartedWillReciveEmail', {service: migrator.name}) }}
+				</template>
 			</Message>
 
 			<XButton :to="{name: 'home'}">
@@ -187,7 +192,11 @@ const migrationFileService = shallowReactive(new AbstractMigrationFileService(mi
 
 useTitle(() => t('migrate.titleService', {name: migrator.value.name}))
 
-const {isFinished: migrationFinished, start: startPolling} = useMigrationCompletion(
+const {
+	isFinished: migrationFinished,
+	errorMessage: migrationFailureReason,
+	start: startPolling,
+} = useMigrationCompletion(
 	() => migrator.value.isFileMigrator ? migrationFileService : migrationService,
 )
 

@@ -1854,6 +1854,10 @@ export type Status = {
      */
     readonly $schema?: string;
     /**
+     * Why the last migration failed. Empty when it succeeded, is still running or was never run.
+     */
+    readonly error_message?: string;
+    /**
      * When the last migration finished. Zero value while a migration is still running or was never run.
      */
     readonly finished_at?: string;

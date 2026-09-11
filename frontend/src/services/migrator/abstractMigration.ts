@@ -9,6 +9,7 @@ export type MigrationConfig =
 export interface MigrationStatus {
 	started_at: string | null
 	finished_at: string | null
+	error_message: string
 }
 
 interface MigrationStatusEndpoint {

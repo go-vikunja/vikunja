@@ -16,6 +16,7 @@ interface MigrationStatusSource {
 
 export function useMigrationCompletion(getSource: () => MigrationStatusSource) {
 	const isFinished = ref(false)
+	const errorMessage = ref('')
 	let timeout: ReturnType<typeof setTimeout> | undefined
 	let generation = 0
 	let deadline = 0
@@ -31,7 +32,7 @@ export function useMigrationCompletion(getSource: () => MigrationStatusSource) {
 		const myGeneration = generation
 
 		try {
-			const {finished_at} = await getSource().getStatus()
+			const {finished_at, error_message} = await getSource().getStatus()
 			if (myGeneration !== generation) {
 				return
 			}
@@ -39,7 +40,10 @@ export function useMigrationCompletion(getSource: () => MigrationStatusSource) {
 
 			if (parseDateOrNull(finished_at) !== null) {
 				isFinished.value = true
-				await useProjectStore().loadAllProjects()
+				errorMessage.value = error_message ?? ''
+				if (errorMessage.value === '') {
+					await useProjectStore().loadAllProjects()
+				}
 				return
 			}
 		} catch {
@@ -60,6 +64,7 @@ export function useMigrationCompletion(getSource: () => MigrationStatusSource) {
 	function start() {
 		stop()
 		isFinished.value = false
+		errorMessage.value = ''
 		failures = 0
 		deadline = Date.now() + POLL_DEADLINE
 		timeout = setTimeout(poll, POLL_INTERVAL)
@@ -67,5 +72,5 @@ export function useMigrationCompletion(getSource: () => MigrationStatusSource) {
 
 	onScopeDispose(stop)
 
-	return {isFinished, start, stop}
+	return {isFinished, errorMessage, start, stop}
 }

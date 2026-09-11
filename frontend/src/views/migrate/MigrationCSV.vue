@@ -180,16 +180,21 @@
 		>
 			<Message
 				ref="resultMessage"
+				:variant="importFailureReason ? 'danger' : 'info'"
 				role="status"
 				aria-live="polite"
 				tabindex="-1"
 				class="mbe-4"
 			>
-				{{
-					importFinished
-						? $t('migrate.migrationFinished', {service: 'CSV'})
-						: $t('migrate.migrationStartedWillReciveEmail', {service: 'CSV'})
-				}}
+				<template v-if="importFailureReason">
+					{{ $t('migrate.migrationFailed', {service: 'CSV', reason: importFailureReason}) }}
+				</template>
+				<template v-else-if="importFinished">
+					{{ $t('migrate.migrationFinished', {service: 'CSV'}) }}
+				</template>
+				<template v-else>
+					{{ $t('migrate.migrationStartedWillReciveEmail', {service: 'CSV'}) }}
+				</template>
 			</Message>
 			<XButton :to="{name: 'home'}">
 				{{ $t('home.goToOverview') }}
@@ -227,7 +232,11 @@ useTitle(() => t('migrate.titleService', {name: 'CSV'}))
 
 const csvService = shallowReactive(new CSVMigrationService())
 
-const {isFinished: importFinished, start: startPolling} = useMigrationCompletion(() => csvService)
+const {
+	isFinished: importFinished,
+	errorMessage: importFailureReason,
+	start: startPolling,
+} = useMigrationCompletion(() => csvService)
 
 const step = ref<Step>('upload')
 const error = ref('')
