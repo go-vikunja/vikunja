@@ -182,15 +182,11 @@ function open() {
 }
 
 function emitClose() {
-	// Kind of dirty, but the timeout allows us to enter a time and click on "confirm" without
-	// having to click on another input field before it is actually used.
-	setTimeout(() => {
-		emit('close', changed.value)
-		if (changed.value) {
-			changed.value = false
-			emit('closeOnChange', changed.value)
-		}
-	}, 200)
+	emit('close', changed.value)
+	if (changed.value) {
+		changed.value = false
+		emit('closeOnChange', changed.value)
+	}
 }
 
 defineExpose({
