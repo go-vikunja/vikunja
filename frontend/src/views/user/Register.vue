@@ -1,5 +1,30 @@
 <template>
-	<div v-if="configStore.auth.local.registrationEnabled">
+	<template v-if="isInvite && inviteState.status !== 'ready'">
+		<Message v-if="inviteState.status === 'loading'">
+			{{ $t('misc.loading') }}
+		</Message>
+		<template v-else>
+			<Message
+				variant="danger"
+				class="mbe-4"
+			>
+				{{ $t(inviteState.status === 'invalid' ? 'user.auth.inviteInvalid' : 'user.auth.inviteLoadFailed') }}
+			</Message>
+			<RouterLink
+				:to="{name: 'user.login'}"
+				class="inline-link"
+			>
+				{{ $t('user.auth.login') }}
+			</RouterLink>
+		</template>
+	</template>
+	<div v-else-if="isInvite || configStore.auth.local.registrationEnabled">
+		<Message
+			v-if="isInvite && inviteState.status === 'ready' && inviteState.link.teams?.length"
+			class="mbe-4"
+		>
+			{{ $t('user.auth.inviteTeams', {teams: inviteState.link.teams.map(team => team.name).join(', ')}) }}
+		</Message>
 		<Message
 			v-if="errorMessage !== ''"
 			variant="danger"
@@ -107,10 +132,12 @@
 
 <script setup lang="ts">
 import {useDebounceFn} from '@vueuse/core'
-import {computed, onBeforeMount, reactive, ref, toRaw} from 'vue'
+import {computed, onBeforeMount, onUnmounted, reactive, ref, toRaw} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import router from '@/router'
+import type {PublicInviteLink} from '@/client/generated'
+import {hasInviteLink, checkInviteLink, onInviteLinkChange} from '@/client/inviteLink'
 import Message from '@/components/misc/Message.vue'
 import {isEmail} from '@/helpers/isEmail'
 import Password from '@/components/input/Password.vue'
@@ -121,6 +148,31 @@ import {useRedirectToLastVisited} from '@/composables/useRedirectToLastVisited'
 import {useAuthStore} from '@/stores/auth'
 import {useConfigStore} from '@/stores/config'
 import {validatePassword} from '@/helpers/validatePasswort'
+
+const isInvite = ref(hasInviteLink())
+type InviteState = {status: 'loading' | 'invalid' | 'error'} | {status: 'ready', link: PublicInviteLink}
+const inviteState = ref<InviteState>({status: 'loading'})
+let inviteCheck = 0
+async function loadInvite() {
+	isInvite.value = hasInviteLink()
+	if (!isInvite.value) return
+	const check = ++inviteCheck
+	inviteState.value = {status: 'loading'}
+	try {
+		const {data: link} = await checkInviteLink()
+		if (check !== inviteCheck) return
+		inviteState.value = {status: 'ready', link}
+	} catch (e) {
+		if (check !== inviteCheck) return
+		inviteState.value = {status: e instanceof Object && 'status' in e && e.status === 404 ? 'invalid' : 'error'}
+	}
+}
+onBeforeMount(loadInvite)
+const unsubscribeInvite = onInviteLinkChange(loadInvite)
+onUnmounted(() => {
+	inviteCheck++
+	unsubscribeInvite()
+})
 
 const {t} = useI18n()
 const authStore = useAuthStore()
@@ -225,7 +277,7 @@ function handleEmailKeyup() {
 function isApiValidationError(error: unknown): error is ValidationError {
 	return error !== null &&
 		typeof error === 'object' &&
-		'invalid_fields' in error
+		('invalid_fields' in error || 'errors' in error)
 }
 
 async function submit() {
@@ -233,14 +285,22 @@ async function submit() {
 	serverValidationErrors.value = {}
 	validatePasswordInitially.value = true
 
-	if (!everythingValid.value) {
+	if (!everythingValid.value || (isInvite.value && inviteState.value.status !== 'ready')) {
 		return
 	}
 
 	try {
-		await authStore.register(toRaw(credentials))
+		if (isInvite.value) {
+			await authStore.registerWithInvite(toRaw(credentials))
+		} else {
+			await authStore.register(toRaw(credentials))
+		}
 		redirectIfSaved()
 	} catch (e: unknown) {
+		if (isInvite.value && e instanceof Object && 'code' in e && e.code === 2005) {
+			inviteState.value = {status: 'invalid'}
+			return
+		}
 		// 1012 = email not confirmed: registration itself succeeded
 		if (e instanceof Object && 'code' in e && e.code === 1012) {
 			confirmEmailMessage.value = t('user.auth.registrationConfirmEmail')

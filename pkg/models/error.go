@@ -219,6 +219,38 @@ func (err ErrInvalidModel) HTTPError() web.HTTPError {
 	}
 }
 
+type ErrInviteLinkInvalid struct{}
+
+func (err ErrInviteLinkInvalid) Error() string { return "This invite link is invalid or expired." }
+
+const ErrCodeInviteLinkInvalid = 2005
+
+func (err ErrInviteLinkInvalid) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusNotFound, Code: ErrCodeInviteLinkInvalid, Message: err.Error()}
+}
+
+type ErrInviteLinkDoesNotExist struct{}
+
+func (err ErrInviteLinkDoesNotExist) Error() string { return "This invite link does not exist." }
+
+const ErrCodeInviteLinkDoesNotExist = 2006
+
+func (err ErrInviteLinkDoesNotExist) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusNotFound, Code: ErrCodeInviteLinkDoesNotExist, Message: err.Error()}
+}
+
+type ErrInviteLinkExternalTeam struct{}
+
+func (err ErrInviteLinkExternalTeam) Error() string {
+	return "Externally managed teams cannot be attached to an invite link."
+}
+
+const ErrCodeInviteLinkExternalTeam = 2007
+
+func (err ErrInviteLinkExternalTeam) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeInviteLinkExternalTeam, Message: err.Error()}
+}
+
 // ===========
 // Project errors
 // ===========

@@ -68,6 +68,8 @@ func SetupTests() {
 		"teams",
 		"users",
 		"user_tokens",
+		"user_invite_links",
+		"user_invite_link_teams",
 		"users_projects",
 		"buckets",
 		"saved_filters",

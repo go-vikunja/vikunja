@@ -2,9 +2,11 @@
 
 import {test, expect} from '../../support/fixtures'
 import {UserFactory} from '../../factories/user'
+import {setupApiUrl} from '../../support/authenticateUser'
 
 test.describe('Registration', () => {
-	test.beforeEach(async ({page, apiContext}) => {
+	test.beforeEach(async ({page}) => {
+		await setupApiUrl(page)
 		await UserFactory.create(1, {
 			username: 'test',
 		})

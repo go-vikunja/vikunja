@@ -99,8 +99,7 @@ func TestHumaAuthPublic(t *testing.T) {
 	})
 }
 
-// TestHumaRegisterDisabled proves the registration endpoint 404s when
-// registration is disabled, mirroring v1.
+// Public registration remains unavailable without an invitation.
 func TestHumaRegisterDisabled(t *testing.T) {
 	config.ServiceEnableRegistration.Set(false)
 	defer config.ServiceEnableRegistration.Set(true)

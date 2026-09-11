@@ -358,18 +358,17 @@ func CollectRoutesForAPITokenUsage(route echo.RouteInfo, requiresJWT bool) {
 
 }
 
-// licenseFeatureForRoute maps a route path to the license feature whose
-// request-time gate 404s it. Gated routes are always registered (the gates
-// react to license changes at runtime), so this must stay in sync with
-// timeTrackingGate and gateV2AdminRoutes in pkg/routes.
-func licenseFeatureForRoute(path string) (license.Feature, bool) {
+// Keep discovery in sync with the request-time license gates.
+func licenseFeaturesForRoute(path string) []license.Feature {
 	switch {
+	case strings.HasPrefix(path, "/api/v2/admin/invite-links"), path == "/api/v2/admin/teams":
+		return []license.Feature{license.FeatureAdminPanel, license.FeatureUserInvites}
 	case strings.HasPrefix(path, "/api/v1/admin/"), strings.HasPrefix(path, "/api/v2/admin/"):
-		return license.FeatureAdminPanel, true
+		return []license.Feature{license.FeatureAdminPanel}
 	case strings.Contains(path, "/time-entries"):
-		return license.FeatureTimeTracking, true
+		return []license.Feature{license.FeatureTimeTracking}
 	}
-	return license.FeatureUnknown, false
+	return nil
 }
 
 // GetAPITokenRoutes exposes the registered scoped-token routes for the /routes
@@ -385,7 +384,7 @@ func GetAPITokenRoutes() map[string]APITokenRoute {
 	merged := make(map[string]APITokenRoute, len(apiTokenRoutes))
 	featureEnabled := make(map[license.Feature]bool)
 	add := func(group, perm string, rd *RouteDetail) {
-		if feature, gated := licenseFeatureForRoute(rd.Path); gated {
+		for _, feature := range licenseFeaturesForRoute(rd.Path) {
 			enabled, checked := featureEnabled[feature]
 			if !checked {
 				enabled = license.IsFeatureEnabled(feature)

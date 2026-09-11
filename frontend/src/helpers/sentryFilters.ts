@@ -136,3 +136,14 @@ export function shouldDropEvent(originalException: unknown, event?: SentryEventL
 
 	return false
 }
+
+
+export function stripNavigationFragment<T>(span: T): T {
+	if (!span || typeof span !== 'object' || !('op' in span) || typeof span.op !== 'string' ||
+		!('description' in span) || typeof span.description !== 'string' ||
+		!(span.op.startsWith('browser.') || span.op.startsWith('navigation.'))) {
+		return span
+	}
+	// Navigation timings retain the initial fragment after history.replaceState.
+	return {...span, description: span.description.split('#')[0]}
+}

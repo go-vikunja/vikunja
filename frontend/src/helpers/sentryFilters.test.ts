@@ -1,7 +1,7 @@
 import {describe, it, expect} from 'vitest'
 import {AxiosError} from 'axios'
 
-import {shouldDropEvent} from './sentryFilters'
+import {shouldDropEvent, stripNavigationFragment} from './sentryFilters'
 
 // Object.assign instead of `new Error(msg, {cause})`: the vitest tsconfig
 // targets a lib without the two-argument Error constructor.
@@ -191,5 +191,18 @@ describe('shouldDropEvent with empty events', () => {
 
 	it('keeps an event when no event was passed at all', () => {
 		expect(shouldDropEvent(new Error('something actually broke'))).toBe(false)
+	})
+})
+
+
+describe('stripNavigationFragment', () => {
+	it.each(['browser.request', 'browser.domContentLoadedEvent', 'navigation.navigate', 'navigation.reload', 'navigation.back_forward'])('removes the original fragment from %s while preserving timing data', op => {
+		const span = {op, description: 'https://example.com/register?lang=en#invite-link=secret', startTimestamp: 1, endTimestamp: 2}
+		expect(stripNavigationFragment(span)).toEqual({...span, description: 'https://example.com/register?lang=en'})
+		expect(span.description).toContain('#invite-link=secret')
+	})
+
+	it.each([null, undefined, {op: 'navigation.navigate'}, {op: 'resource.script', description: 'https://example.com/app.js#hash'}])('preserves other recording data: %j', span => {
+		expect(stripNavigationFragment(span)).toBe(span)
 	})
 })

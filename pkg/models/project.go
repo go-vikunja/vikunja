@@ -1048,8 +1048,8 @@ func CreateNewProjectForUser(s *xorm.Session, u *user.User) (err error) {
 }
 
 // RegisterUser creates a user plus their default inbox project; shared by /register and the admin create-user route.
-func RegisterUser(s *xorm.Session, u *user.User) (*user.User, error) {
-	newUser, err := user.CreateUser(s, u)
+func RegisterUser(s *xorm.Session, u *user.User, options ...user.CreateUserOptions) (*user.User, error) {
+	newUser, err := user.CreateUser(s, u, options...)
 	if err != nil {
 		return nil, err
 	}

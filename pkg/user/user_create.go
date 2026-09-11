@@ -22,6 +22,7 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/notifications"
 	"golang.org/x/crypto/bcrypt"
 	"xorm.io/xorm"
@@ -32,8 +33,12 @@ const (
 	IssuerLDAP  = `ldap`
 )
 
+type CreateUserOptions struct {
+	SkipEmailConfirm bool
+}
+
 // CreateUser creates a new user and inserts it into the database
-func CreateUser(s *xorm.Session, user *User) (newUser *User, err error) {
+func CreateUser(s *xorm.Session, user *User, options ...CreateUserOptions) (newUser *User, err error) {
 
 	if user.Issuer == "" {
 		user.Issuer = IssuerLocal
@@ -93,7 +98,7 @@ func CreateUser(s *xorm.Session, user *User) (newUser *User, err error) {
 	})
 
 	// Don't send a mail if no mailer is configured
-	if !config.MailerEnabled.GetBool() || user.Issuer != IssuerLocal {
+	if !config.MailerEnabled.GetBool() || user.Issuer != IssuerLocal || (len(options) > 0 && options[0].SkipEmailConfirm) {
 		return newUserOut, err
 	}
 
@@ -103,7 +108,15 @@ func CreateUser(s *xorm.Session, user *User) (newUser *User, err error) {
 		return nil, err
 	}
 
+	confirmationUser := *user
+	confirmation := &EmailConfirmNotification{User: &confirmationUser, IsNew: true, ConfirmToken: token.ClearTextToken}
 	_, err = s.
+		After(func(_ any) {
+			// XORM runs this after commit, before the CLI can stop the mail daemon.
+			if notifyErr := notifications.Notify(&confirmationUser, confirmation); notifyErr != nil {
+				log.Errorf("Failed to queue email confirmation for user %d: %v", confirmationUser.ID, notifyErr)
+			}
+		}).
 		Where("id = ?", user.ID).
 		Cols("email", "status").
 		Update(user)
@@ -111,13 +124,6 @@ func CreateUser(s *xorm.Session, user *User) (newUser *User, err error) {
 		return
 	}
 
-	n := &EmailConfirmNotification{
-		User:         user,
-		IsNew:        true,
-		ConfirmToken: token.ClearTextToken,
-	}
-
-	err = notifications.Notify(user, n, s)
 	// Callers passing a stale status to UpdateUser would silently reactivate the account.
 	newUserOut.Status = StatusEmailConfirmationRequired
 	return newUserOut, err
