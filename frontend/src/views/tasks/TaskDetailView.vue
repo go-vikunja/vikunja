@@ -568,21 +568,21 @@
 							v-shortcut="SHORTCUTS.taskDetail.dueDate"
 							variant="secondary"
 							icon="calendar"
-							@click="setFieldActive('dueDate')"
+							@click="setFieldActive('dueDate', $event)"
 						>
 							{{ $t('task.detail.actions.dueDate') }}
 						</XButton>
 						<XButton
 							variant="secondary"
 							icon="play"
-							@click="setFieldActive('startDate')"
+							@click="setFieldActive('startDate', $event)"
 						>
 							{{ $t('task.detail.actions.startDate') }}
 						</XButton>
 						<XButton
 							variant="secondary"
 							icon="stop"
-							@click="setFieldActive('endDate')"
+							@click="setFieldActive('endDate', $event)"
 						>
 							{{ $t('task.detail.actions.endDate') }}
 						</XButton>
@@ -1062,7 +1062,7 @@ function setFieldRef(name: FieldType, e) {
 	activeFieldElements[name] = unrefElement(e)
 }
 
-function setFieldActive(fieldName: keyof typeof activeFields) {
+function setFieldActive(fieldName: keyof typeof activeFields, event?: MouseEvent) {
 	activeFields[fieldName] = true
 	nextTick(() => {
 		let datepicker: InstanceType<typeof Datepicker> | null = null
@@ -1090,7 +1090,7 @@ function setFieldActive(fieldName: keyof typeof activeFields) {
 
 		// setTimeout(..., 0) is preventing the *original* click to open a field from also being
 		// detected as an outside click and immediately closing the popup.
-		setTimeout(() => datepicker?.open(), 0)
+		setTimeout(() => datepicker?.open(event), 0)
 	})
 }
 
