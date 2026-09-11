@@ -615,6 +615,7 @@
     "query": {
       "label": "Filter query",
       "placeholder": "Type a search or filter query…",
+      "you": "You ({'@'}me)",
       "help": {
         "intro": "To filter tasks, you can use a query syntax similar to SQL. The available fields for filtering include:",
         "link": "How does this work?",
@@ -659,6 +660,7 @@
           "dueDatePast": "Matches tasks with a due date in the past",
           "undoneHighPriority": "Matches undone tasks with priority level 3 or higher",
           "assigneesIn": "Matches tasks assigned to either \"user1\" or \"user2\"",
+          "assigneesInMe": "Matches tasks assigned to the current user",
           "createdByEqual": "Matches tasks created by \"user1\"",
           "priorityOneOrTwoPastDue": "Matches tasks with priority level 1 or 2 and a due date in the past"
         }
