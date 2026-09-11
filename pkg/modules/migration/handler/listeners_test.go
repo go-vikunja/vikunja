@@ -457,7 +457,6 @@ func TestFileMigrationListenerUserFacingStatusDistinguishesOutcomes(t *testing.T
 	runImport(t, "outcome-ok-stub")
 	runImport(t, "outcome-failed-stub")
 
-	// What the status endpoint hands the client.
 	succeeded, err := migration.GetMigrationStatus(&stubFileMigrator{name: "outcome-ok-stub"}, u)
 	require.NoError(t, err)
 	assert.False(t, succeeded.FinishedAt.IsZero())
