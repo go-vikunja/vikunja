@@ -1,7 +1,6 @@
 <template>
 	<DatepickerShell
 		:open="open"
-		:ignore-click-classes="ignoreClickClasses"
 		:anchor="anchor"
 		:sheet-title="$t('input.datepickerRange.date')"
 		:selections="selections"
@@ -38,11 +37,9 @@ import {DATE_VALUES} from '@/components/date/dateRanges'
 const props = withDefaults(defineProps<{
 	modelValue: string | Date | null,
 	open?: boolean
-	ignoreClickClasses?: string[]
 	anchor?: HTMLElement | null
 }>(), {
 	open: false,
-	ignoreClickClasses: () => [],
 	anchor: null,
 })
 

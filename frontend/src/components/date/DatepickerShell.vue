@@ -5,7 +5,6 @@
 	>
 		<Popup
 			:open="open"
-			:ignore-click-classes="ignoreClickClasses"
 			placement="bottom-start"
 			:anchor="anchor ?? container"
 			sheet-on-mobile
@@ -80,11 +79,9 @@ withDefaults(defineProps<{
 	selections: DatepickerSelection[]
 	sheetTitle: string
 	open?: boolean
-	ignoreClickClasses?: string[]
 	anchor?: HTMLElement | null
 }>(), {
 	open: false,
-	ignoreClickClasses: () => [],
 	anchor: null,
 })
 
@@ -109,7 +106,6 @@ const showHowItWorks = ref(false)
 }
 
 :deep(.popup) {
-	z-index: 10;
 	border-radius: $radius;
 	border: 1px solid var(--grey-200);
 	background-color: var(--white);

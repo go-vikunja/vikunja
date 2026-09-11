@@ -75,7 +75,12 @@ const DateClickHandler = Extension.create({
 							currentDatepickerValue.value = dateValue
 							currentDatepickerPos.value = position
 							datePickerAnchor.value = target
-							datePickerPopupOpen.value = true
+							// This click light-dismissed an open picker on pointerup, but its toggle
+							// event only lands after us — reopen once that has settled.
+							datePickerPopupOpen.value = false
+							setTimeout(() => {
+								datePickerPopupOpen.value = true
+							})
 
 							return true
 						}
@@ -287,7 +292,6 @@ defineExpose({
 			v-model:open="datePickerPopupOpen"
 			class="filter-datepicker"
 			:anchor="datePickerAnchor"
-			:ignore-click-classes="['date-value']"
 			@update:modelValue="updateDateInQuery"
 		/>
 	</div>
