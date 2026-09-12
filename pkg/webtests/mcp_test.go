@@ -67,11 +67,13 @@ func readMCPJSON(t *testing.T, body string) map[string]any {
 }
 
 type mcpClient struct {
-	t         *testing.T
-	e         *echo.Echo
-	token     string
-	sessionID string
-	nextID    int
+	t *testing.T
+	e *echo.Echo
+	// authorizations replaces the single bearer header built from token.
+	authorizations []string
+	token          string
+	sessionID      string
+	nextID         int
 }
 
 func newMCPClient(t *testing.T, token string) *mcpClient {
@@ -99,13 +101,21 @@ func newMCPClientOn(t *testing.T, e *echo.Echo, token string) *mcpClient {
 func (c *mcpClient) post(body string) *httptest.ResponseRecorder {
 	c.t.Helper()
 	req := mcpRequest(http.MethodPost, body)
-	req.Header.Set(echo.HeaderAuthorization, "Bearer "+c.token)
+	for _, a := range c.authValues() {
+		req.Header.Add(echo.HeaderAuthorization, a)
+	}
 	if c.sessionID != "" {
 		req.Header.Set("Mcp-Session-Id", c.sessionID)
 	}
 	rec := httptest.NewRecorder()
 	c.e.ServeHTTP(rec, req)
 	return rec
+}
+func (c *mcpClient) authValues() []string {
+	if len(c.authorizations) > 0 {
+		return c.authorizations
+	}
+	return []string{"Bearer " + c.token}
 }
 func (c *mcpClient) rpc(method string, params any) map[string]any {
 	c.t.Helper()
