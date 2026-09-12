@@ -118,16 +118,30 @@ func TestMCP_Tools_CommentLifecycle(t *testing.T) {
 	}), &comment)
 	assert.Equal(t, "edited", comment["comment"])
 }
+func assigneeIDs(t *testing.T, c *mcpClient) []int64 {
+	t.Helper()
+	var assignees []struct {
+		ID int64 `json:"id"`
+	}
+	readAllItems(t, c.callTool("task_assignees_list", map[string]any{"projecttask": 1}), &assignees)
+	ids := make([]int64, 0, len(assignees))
+	for _, a := range assignees {
+		ids = append(ids, a.ID)
+	}
+	return ids
+}
 func TestMCP_Tools_AssigneeAddRemove(t *testing.T) {
 	c := newMCPClient(t, mcpFullToken)
 	require.NotContains(t, c.callTool("task_assignees_create", map[string]any{
 		"projecttask": 1,
 		"user_id":     1,
 	}), "isError")
+	assert.Contains(t, assigneeIDs(t, c), int64(1))
 	require.NotContains(t, c.callTool("task_assignees_delete", map[string]any{
 		"projecttask": 1,
 		"user":        1,
 	}), "isError")
+	assert.NotContains(t, assigneeIDs(t, c), int64(1))
 }
 func TestMCP_Tools_UsersSearchStripsEmail(t *testing.T) {
 	c := newMCPClient(t, mcpFullToken)
