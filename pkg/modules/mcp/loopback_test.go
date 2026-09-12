@@ -119,10 +119,18 @@ func TestCallTool_UnknownTool(t *testing.T) {
 func TestCallTool_ClientAddress(t *testing.T) {
 	ctx := withTestCaller(t)
 	caller := CallerFromContext(ctx)
-	caller.Header.Set("X-Forwarded-For", "203.0.113.9")
+	caller.Host = "vikunja.example.com"
+	caller.Header.Add("X-Forwarded-For", "203.0.113.9")
+	caller.Header.Add("X-Forwarded-For", "198.51.100.4")
+	caller.Header.Set("X-Request-Id", "req-1")
 	tl, _ := findTool("things_read")
 	req, err := tl.newRequest(ctx, caller, map[string]json.RawMessage{"id": json.RawMessage(`1`)})
 	require.NoError(t, err)
 	assert.Equal(t, caller.RemoteAddr, req.RemoteAddr)
-	assert.Equal(t, "203.0.113.9", req.Header.Get("X-Forwarded-For"))
+	assert.Equal(t, "vikunja.example.com", req.Host)
+	assert.Equal(t, []string{
+		"203.0.113.9",
+		"198.51.100.4",
+	}, req.Header.Values("X-Forwarded-For"))
+	assert.Equal(t, "req-1", req.Header.Get("X-Request-Id"))
 }
