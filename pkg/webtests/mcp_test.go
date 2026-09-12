@@ -120,18 +120,35 @@ func (c *mcpClient) callTool(name string, args map[string]any) map[string]any {
 	require.True(c.t, ok, "missing result for %s: %v", name, resp)
 	return result
 }
-func (c *mcpClient) toolNames() map[string]bool {
+func (c *mcpClient) listTools() []map[string]any {
 	c.t.Helper()
 	resp := c.rpc("tools/list", map[string]any{})
 	result, ok := resp["result"].(map[string]any)
 	require.True(c.t, ok, "%v", resp)
 	tools, ok := result["tools"].([]any)
 	require.True(c.t, ok, "%v", resp)
-	names := map[string]bool{}
+	out := make([]map[string]any, 0, len(tools))
 	for _, raw := range tools {
-		names[raw.(map[string]any)["name"].(string)] = true
+		out = append(out, raw.(map[string]any))
+	}
+	return out
+}
+func (c *mcpClient) toolNames() map[string]bool {
+	c.t.Helper()
+	names := map[string]bool{}
+	for _, tool := range c.listTools() {
+		names[tool["name"].(string)] = true
 	}
 	return names
+}
+func (c *mcpClient) toolDescription(name string) string {
+	c.t.Helper()
+	for _, tool := range c.listTools() {
+		if tool["name"].(string) == name {
+			return tool["description"].(string)
+		}
+	}
+	return ""
 }
 func TestMCP_AnonymousRejected(t *testing.T) {
 	e, err := setupTestEnv()
@@ -172,13 +189,8 @@ func TestMCP_Initialize(t *testing.T) {
 	assert.Equal(t, "vikunja", result["serverInfo"].(map[string]any)["name"])
 }
 func TestMCP_ToolsListMatchesScopes(t *testing.T) {
+	assert.Empty(t, newMCPClient(t, mcpOnlyToken).toolNames())
 	assert.Equal(t, map[string]bool{
-		"find_action": true,
-		"do_action":   true,
-	}, newMCPClient(t, mcpOnlyToken).toolNames())
-	assert.Equal(t, map[string]bool{
-		"find_action":   true,
-		"do_action":     true,
 		"projects_read": true,
 		"projects_list": true,
 	}, newMCPClient(t, mcpProjectsReadToken).toolNames())
@@ -225,15 +237,12 @@ func TestMCP_SessionIDDoesNotCarryIdentity(t *testing.T) {
 		sessionID: full.sessionID,
 		nextID:    50,
 	}
-	assert.Equal(t, map[string]bool{
-		"find_action": true,
-		"do_action":   true,
-	}, weak.toolNames())
-	result := weak.callTool("do_action", map[string]any{
-		"action":    "projects_read",
+	assert.Empty(t, weak.toolNames())
+	resp := weak.rpc("tools/call", map[string]any{
+		"name":      "projects_read",
 		"arguments": map[string]any{"id": 1},
 	})
-	assert.Equal(t, true, result["isError"])
+	assert.Contains(t, resp, "error")
 }
 func pingBatch(n int) string {
 	msgs := make([]string, n)

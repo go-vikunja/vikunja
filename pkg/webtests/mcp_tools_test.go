@@ -124,11 +124,15 @@ func TestMCP_Tools_ForbiddenIsError(t *testing.T) {
 	assert.Contains(t, toolResultText(t, res), "403")
 }
 func TestMCP_Tools_ScopeDeniedIsError(t *testing.T) {
-	c := newMCPClient(t, mcpProjectsReadToken)
-	// Unlisted typed tools are reached through do_action, which checks scopes per call.
+	c := newMCPClient(t, mcpFullToken)
+	// do_action checks scopes per call, so actions outside the token's scopes still fail.
 	res := c.callTool("do_action", map[string]any{
-		"action":    "projects_create",
-		"arguments": map[string]any{"title": "nope"},
+		"action": "project_views_update",
+		"arguments": map[string]any{
+			"project": 1,
+			"view":    1,
+			"title":   "nope",
+		},
 	})
 	assert.Equal(t, true, res["isError"])
 	assert.Contains(t, toolResultText(t, res), "not authorized")

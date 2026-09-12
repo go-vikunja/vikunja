@@ -53,7 +53,7 @@ func TestCatalogTools_Protocol(t *testing.T) {
 		Name:    "test",
 		Version: "1",
 	}, nil)
-	installCatalogTools(srv)
+	installCatalogTools(srv, nil)
 	clientTransport, serverTransport := sdk.NewInMemoryTransports()
 	ss, err := srv.Connect(ctx, serverTransport, nil)
 	require.NoError(t, err)
