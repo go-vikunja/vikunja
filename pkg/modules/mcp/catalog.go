@@ -112,7 +112,7 @@ func catalogAreas(token *models.APIToken) []string {
 func catalogActions(token *models.APIToken, action, resource string) []actionInfo {
 	out := []actionInfo{}
 	for _, t := range snapshotTools() {
-		if t.tier != TierCatalog || !t.authorized(token) {
+		if t.typed || !t.authorized(token) {
 			continue
 		}
 		if action != "" && t.name != action {

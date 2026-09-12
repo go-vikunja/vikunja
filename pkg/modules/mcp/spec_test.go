@@ -175,7 +175,7 @@ func TestInit_BuildsToolIndex(t *testing.T) {
 	assert.Equal(t, "/things/:id", update.echoPath)
 	assert.Contains(t, update.description, "Only fields present")
 	read, _ := findTool("things_read")
-	assert.Equal(t, TierCatalog, read.tier)
+	assert.False(t, read.typed)
 	_, denied := findTool("tokens_create")
 	assert.False(t, denied)
 }

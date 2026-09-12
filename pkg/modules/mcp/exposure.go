@@ -22,13 +22,6 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 )
 
-type Tier uint8
-
-const (
-	TierTyped Tier = iota
-	TierCatalog
-)
-
 func toolNameFor(operationID string) string { return strings.ReplaceAll(operationID, "-", "_") }
 
 var typedTools = map[string]bool{
@@ -83,21 +76,18 @@ var deniedOperationPrefixes = []string{
 	"task-attachments-download",
 }
 
-func exposure(operationID string, op *huma.Operation) (Tier, bool) {
+func exposure(operationID string, op *huma.Operation) (typed bool, ok bool) {
 	for _, p := range deniedOperationPrefixes {
 		if strings.HasPrefix(operationID, p) {
-			return 0, false
+			return false, false
 		}
 	}
 	if op.RequestBody != nil {
 		if _, schema := bodyMedia(op); schema == nil {
-			return 0, false
+			return false, false
 		}
 	}
-	if typedTools[toolNameFor(operationID)] {
-		return TierTyped, true
-	}
-	return TierCatalog, true
+	return typedTools[toolNameFor(operationID)], true
 }
 func bodyMedia(op *huma.Operation) (contentType string, schema *huma.Schema) {
 	if op.RequestBody == nil {

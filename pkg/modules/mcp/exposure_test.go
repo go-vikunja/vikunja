@@ -26,16 +26,16 @@ import (
 
 func TestExposure(t *testing.T) {
 	for _, tc := range []struct {
-		id   string
-		tier Tier
+		id    string
+		typed bool
 	}{
 		{
 			"tasks-create",
-			TierTyped,
+			true,
 		},
 		{
 			"task-labels-create",
-			TierCatalog,
+			false,
 		},
 	} {
 		op := &huma.Operation{
@@ -49,9 +49,9 @@ func TestExposure(t *testing.T) {
 				},
 			},
 		}
-		tier, ok := exposure(tc.id, op)
+		typed, ok := exposure(tc.id, op)
 		assert.True(t, ok)
-		assert.Equal(t, tc.tier, tier)
+		assert.Equal(t, tc.typed, typed)
 	}
 	for _, id := range []string{
 		"tokens-create",
@@ -88,10 +88,10 @@ func TestExposure(t *testing.T) {
 				},
 			},
 		}
-		tier, ok := exposure("tasks-update", op)
+		typed, ok := exposure("tasks-update", op)
 		assert.Equal(t, ct == "application/merge-patch+json", ok)
 		if ok {
-			assert.Equal(t, TierTyped, tier)
+			assert.True(t, typed)
 		}
 	}
 }

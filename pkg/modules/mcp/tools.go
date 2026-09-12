@@ -32,7 +32,7 @@ type tool struct {
 	name        string
 	op          *huma.Operation
 	echoPath    string
-	tier        Tier
+	typed       bool
 	spec        *toolSpec
 	contentType string
 	description string
@@ -102,7 +102,7 @@ func buildTools(oapi *huma.OpenAPI, groupPrefix string) (map[string]*tool, []*to
 			continue
 		}
 		for _, c := range candidates(item) {
-			tier, ok := exposure(c.id, c.op)
+			typed, ok := exposure(c.id, c.op)
 			if !ok {
 				continue
 			}
@@ -119,7 +119,7 @@ func buildTools(oapi *huma.OpenAPI, groupPrefix string) (map[string]*tool, []*to
 				name:        name,
 				op:          c.op,
 				echoPath:    groupPrefix + echoPath(c.op.Path),
-				tier:        tier,
+				typed:       typed,
 				spec:        spec,
 				contentType: ct,
 				description: describe(c.op),

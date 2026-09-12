@@ -77,7 +77,7 @@ func tokenFrom(ec *echo.Context) *models.APIToken {
 
 func addToolsAuthorizedBy(srv *mcp.Server, token *models.APIToken) {
 	for _, t := range snapshotTools() {
-		if t.tier != TierTyped || !t.authorized(token) {
+		if !t.typed || !t.authorized(token) {
 			continue
 		}
 		srv.AddTool(&mcp.Tool{
