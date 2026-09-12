@@ -111,19 +111,19 @@ func rawToolHandler(name string) mcp.ToolHandler {
 	}
 }
 
-// Built on first use because the CORS config is not loaded at package init.
 var streamableHandler = sync.OnceValue(newStreamableHandler)
+
+// Built on first use because the CORS config is not loaded at package init.
+var originProtection = sync.OnceValue(newCrossOriginProtection)
 
 // Stateless builds a server per request, so tools/list is filtered by the caller's token; localhost protection would reject deployments behind a loopback reverse proxy.
 func newStreamableHandler() http.Handler {
-	srv := mcp.NewStreamableHTTPHandler(newServerForRequest, &mcp.StreamableHTTPOptions{
+	return mcp.NewStreamableHTTPHandler(newServerForRequest, &mcp.StreamableHTTPOptions{
 		Stateless:                  true,
 		DisableLocalhostProtection: true,
 	})
-	return newCrossOriginProtection().Handler(srv)
 }
 
-// MCP is not a browser transport: an Origin a browser would not send to itself is rejected before the token is looked at.
 func newCrossOriginProtection() *http.CrossOriginProtection {
 	protection := http.NewCrossOriginProtection()
 	if !config.CorsEnable.GetBool() {
@@ -139,6 +139,11 @@ func newCrossOriginProtection() *http.CrossOriginProtection {
 
 // handler rejects JWTs, which bypass API-token route scopes.
 func handler(c *echo.Context) error {
+	req := c.Request()
+	// MCP is not a browser transport: an Origin a browser would not send to itself is rejected before the token is looked at.
+	if err := originProtection().Check(req); err != nil {
+		return echo.NewHTTPError(http.StatusForbidden, err.Error())
+	}
 	tokenAny := c.Get("api_token")
 	if tokenAny == nil {
 		return echo.NewHTTPError(http.StatusUnauthorized, "MCP requires an API token")
@@ -151,7 +156,6 @@ func handler(c *echo.Context) error {
 	if !token.HasMCPAccess() {
 		return echo.NewHTTPError(http.StatusForbidden, "token does not have mcp:access scope")
 	}
-	req := c.Request()
 	if proceed, err := limitRequestBody(c, req); !proceed {
 		return err
 	}
