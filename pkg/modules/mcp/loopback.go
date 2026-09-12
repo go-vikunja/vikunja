@@ -45,13 +45,16 @@ func callTool(ctx context.Context, name string, rawArgs json.RawMessage) (any, e
 	if !ok {
 		return nil, fmt.Errorf("%w: %s", ErrToolNotFound, name)
 	}
-	if !t.authorized(TokenFromContext(ctx)) {
-		return nil, fmt.Errorf("%w: %s", ErrScopeDenied, name)
-	}
-	caller := CallerFromContext(ctx)
-	if caller == nil {
+	// Read the caller before dispatching: the loopback request re-enters the group
+	// middleware, which stashes its own echo context.
+	ec := echoContextFrom(ctx)
+	if ec == nil {
 		return nil, ErrNoCaller
 	}
+	if !t.authorized(tokenFrom(ec)) {
+		return nil, fmt.Errorf("%w: %s", ErrScopeDenied, name)
+	}
+	caller := ec.Request()
 	args, err := decodeArgs(t.spec, rawArgs)
 	if err != nil {
 		return nil, fmt.Errorf("mcp: invalid arguments for %s: %w", name, err)

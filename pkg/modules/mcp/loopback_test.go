@@ -24,6 +24,9 @@ import (
 	"testing"
 
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/humabridge"
+
+	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -37,7 +40,9 @@ func withTestCaller(t *testing.T) context.Context {
 	caller := httptest.NewRequest(http.MethodPost, "/api/v2/mcp", nil)
 	caller.Header.Set("Authorization", "Bearer tk_test")
 	caller.RemoteAddr = "203.0.113.9:4242"
-	return WithCaller(WithToken(context.Background(), &models.APIToken{ID: 1}), caller)
+	ec := echo.New().NewContext(caller, httptest.NewRecorder())
+	ec.Set("api_token", &models.APIToken{ID: 1})
+	return context.WithValue(context.Background(), humabridge.EchoContextKey, ec)
 }
 func echoResult(t *testing.T, res any) map[string]any {
 	t.Helper()
@@ -117,7 +122,7 @@ func TestCallTool_UnknownTool(t *testing.T) {
 }
 func TestCallTool_ClientAddress(t *testing.T) {
 	ctx := withTestCaller(t)
-	caller := CallerFromContext(ctx)
+	caller := echoContextFrom(ctx).Request()
 	caller.Host = "vikunja.example.com"
 	caller.Header.Add("X-Forwarded-For", "203.0.113.9")
 	caller.Header.Add("X-Forwarded-For", "198.51.100.4")

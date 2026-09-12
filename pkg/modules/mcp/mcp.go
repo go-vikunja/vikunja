@@ -30,6 +30,7 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/humabridge"
 	"code.vikunja.io/api/pkg/version"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -58,8 +59,20 @@ func newServerForRequest(req *http.Request) *mcp.Server {
 		Name:    "vikunja",
 		Version: version.Version,
 	}, nil)
-	addToolsAuthorizedBy(srv, TokenFromContext(req.Context()))
+	addToolsAuthorizedBy(srv, tokenFrom(echoContextFrom(req.Context())))
 	return srv
+}
+
+func echoContextFrom(ctx context.Context) *echo.Context {
+	ec, _ := ctx.Value(humabridge.EchoContextKey).(*echo.Context)
+	return ec
+}
+func tokenFrom(ec *echo.Context) *models.APIToken {
+	if ec == nil {
+		return nil
+	}
+	token, _ := ec.Get("api_token").(*models.APIToken)
+	return token
 }
 
 func addToolsAuthorizedBy(srv *mcp.Server, token *models.APIToken) {
@@ -146,8 +159,7 @@ func Handler(c *echo.Context) error {
 	if proceed, err := limitRequestBody(c, req); !proceed {
 		return err
 	}
-	ctx := WithCaller(WithToken(req.Context(), token), req)
-	http.StripPrefix(RoutePrefix, streamableHandler()).ServeHTTP(c.Response(), req.WithContext(ctx))
+	http.StripPrefix(RoutePrefix, streamableHandler()).ServeHTTP(c.Response(), req)
 	return nil
 }
 

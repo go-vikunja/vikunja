@@ -144,7 +144,7 @@ func findActionHandler(ctx context.Context, req *mcp.CallToolRequest) (*mcp.Call
 		//nolint:nilerr // Domain errors use MCP tool results.
 		return invalidArgsResult(toolFindAction, err), nil
 	}
-	result := map[string]any{"actions": catalogActions(TokenFromContext(ctx), args.Action, args.Resource)}
+	result := map[string]any{"actions": catalogActions(tokenFrom(echoContextFrom(ctx)), args.Action, args.Resource)}
 	body, err := json.Marshal(result)
 	if err != nil {
 		return nil, fmt.Errorf("mcp: marshal find_action result: %w", err)
