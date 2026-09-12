@@ -89,6 +89,10 @@ func TestBuildToolSpec_Patch(t *testing.T) {
 	assert.Equal(t, []string{"id"}, spec.schema.Required)
 	assert.Contains(t, spec.schema.Properties, "title")
 	assert.NotContains(t, spec.schema.Properties, "owner")
+	assert.ElementsMatch(t, []string{
+		"string",
+		"null",
+	}, spec.schema.Properties["title"].Types)
 	reminders := spec.schema.Properties["reminders"]
 	require.NotNil(t, reminders)
 	require.NotNil(t, reminders.Items)

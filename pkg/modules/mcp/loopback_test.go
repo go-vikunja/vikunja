@@ -70,6 +70,16 @@ func TestCallTool_NullParamIsOmitted(t *testing.T) {
 	q := echoResult(t, res)["query"].(map[string]any)
 	assert.Equal(t, "x", q["q"])
 	assert.Empty(t, q["expand"])
+	res, err = callTool(withTestCaller(t), "things_list", json.RawMessage(`{"q":null}`))
+	require.NoError(t, err)
+	assert.Empty(t, echoResult(t, res)["query"].(map[string]any)["q"])
+}
+func TestCallTool_NullBodyFieldClearsIt(t *testing.T) {
+	res, err := callTool(withTestCaller(t), "things_update", json.RawMessage(`{"id":7,"description":null}`))
+	require.NoError(t, err)
+	body := echoResult(t, res)["body"].(map[string]any)
+	assert.Equal(t, "stored", body["title"])
+	assert.Empty(t, body["description"])
 }
 func TestCallTool_CreateSendsJSONBody(t *testing.T) {
 	res, err := callTool(withTestCaller(t), "things_create", json.RawMessage(`{"title":"hi","done":true}`))

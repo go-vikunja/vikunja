@@ -77,6 +77,25 @@ func TestMCP_Tools_UnchangedUpdateIsNotAnError(t *testing.T) {
 	require.NotContains(t, second, "isError", toolResultText(t, second))
 	assert.Contains(t, toolResultText(t, second), `"unchanged":true`)
 }
+func TestMCP_Tools_NullClearsAndUnsets(t *testing.T) {
+	c := newMCPClient(t, mcpFullToken)
+	var task map[string]any
+	toolResultJSON(t, c.callTool("tasks_create", map[string]any{
+		"project":  1,
+		"title":    "mcp due",
+		"due_date": "2030-01-01T12:00:00Z",
+	}), &task)
+	id := int64(task["id"].(float64))
+	cleared := c.callTool("tasks_update", map[string]any{
+		"projecttask": id,
+		"due_date":    nil,
+	})
+	require.NotContains(t, cleared, "isError", toolResultText(t, cleared))
+	toolResultJSON(t, c.callTool("tasks_read", map[string]any{"projecttask": id}), &task)
+	assert.NotContains(t, task["due_date"], "2030")
+	listed := c.callTool("tasks_list", map[string]any{"filter": nil})
+	assert.NotContains(t, listed, "isError", toolResultText(t, listed))
+}
 func TestMCP_Tools_ListEnvelopeAndFilter(t *testing.T) {
 	c := newMCPClient(t, mcpFullToken)
 	var env map[string]any

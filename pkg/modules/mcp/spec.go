@@ -83,6 +83,9 @@ func buildToolSpec(oapi *huma.OpenAPI, op *huma.Operation) (*toolSpec, error) {
 			if err != nil {
 				return nil, fmt.Errorf("mcp: %s: body property %s: %w", op.OperationID, name, err)
 			}
+			if op.Method == http.MethodPatch {
+				ps = allowNull(ps)
+			}
 			props[name] = ps
 		}
 		if op.Method != http.MethodPatch {
@@ -137,6 +140,30 @@ func boundToPathParams(oapi *huma.OpenAPI, body *huma.Schema, params map[string]
 		}
 	})
 	return out
+}
+
+// Merge-patch clears a field by sending null; the shape read from the PUT does not allow it.
+func allowNull(s *jsonschema.Schema) *jsonschema.Schema {
+	switch {
+	case s.Type == "null" || slices.Contains(s.Types, "null"):
+		return s
+	case s.Type != "":
+		s.Types = []string{
+			s.Type,
+			"null",
+		}
+		s.Type = ""
+	case len(s.Types) > 0:
+		s.Types = append(s.Types, "null")
+	case len(s.AnyOf) > 0:
+		s.AnyOf = append(s.AnyOf, &jsonschema.Schema{Type: "null"})
+	case len(s.OneOf) > 0:
+		s.OneOf = append(s.OneOf, &jsonschema.Schema{Type: "null"})
+	}
+	if len(s.Enum) > 0 {
+		s.Enum = append(s.Enum, nil)
+	}
+	return s
 }
 
 // AutoPatch's PATCH body drops refs and nullability, collapsing nested schemas to {}; read the shape from the PUT instead.

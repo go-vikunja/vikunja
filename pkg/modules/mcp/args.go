@@ -28,14 +28,21 @@ func decodeArgs(spec *toolSpec, raw json.RawMessage) (map[string]json.RawMessage
 			return nil, errors.New("arguments must be a JSON object")
 		}
 	}
-	if err := spec.resolved.Validate(instance); err != nil {
-		return nil, err
-	}
 	args := map[string]json.RawMessage{}
 	if len(raw) > 0 {
 		if err := json.Unmarshal(raw, &args); err != nil {
 			return nil, errors.New("arguments must be a JSON object")
 		}
+	}
+	// A null parameter means unset, which the parameter schema itself does not allow.
+	for name, v := range instance {
+		if v == nil && spec.params[name] != nil {
+			delete(instance, name)
+			delete(args, name)
+		}
+	}
+	if err := spec.resolved.Validate(instance); err != nil {
+		return nil, err
 	}
 	return args, nil
 }
