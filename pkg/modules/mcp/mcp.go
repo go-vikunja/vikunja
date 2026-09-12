@@ -120,29 +120,34 @@ func Handler(c *echo.Context) error {
 		return echo.NewHTTPError(http.StatusForbidden, "token does not have mcp:access scope")
 	}
 	req := c.Request()
-	if err := limitRequestBody(c, req); err != nil {
+	if proceed, err := limitRequestBody(c, req); !proceed {
 		return err
 	}
 	ctx := WithCaller(WithToken(req.Context(), token), req)
 	http.StripPrefix(RoutePrefix, streamableHandler).ServeHTTP(c.Response(), req.WithContext(ctx))
 	return nil
 }
-func limitRequestBody(c *echo.Context, req *http.Request) error {
+
+// The 413 is written instead of returned because error_handler.go rewrites every
+// returned 413 into the generic "file is too large" error.
+func limitRequestBody(c *echo.Context, req *http.Request) (proceed bool, err error) {
 	req.Body = http.MaxBytesReader(c.Response(), req.Body, maxRequestBytes)
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		var tooLarge *http.MaxBytesError
 		if errors.As(err, &tooLarge) {
-			return echo.NewHTTPError(http.StatusRequestEntityTooLarge, fmt.Sprintf("MCP request body must not exceed %d bytes", maxRequestBytes))
+			return false, c.JSON(http.StatusRequestEntityTooLarge, map[string]string{
+				"message": fmt.Sprintf("MCP request body must not exceed %d bytes", maxRequestBytes),
+			})
 		}
-		return echo.NewHTTPError(http.StatusBadRequest, "could not read request body")
+		return false, echo.NewHTTPError(http.StatusBadRequest, "could not read request body")
 	}
 	if count, isBatch := countBatchMessages(body); isBatch && count > maxMessagesPerRequest {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("MCP requests are limited to %d batched messages", maxMessagesPerRequest))
+		return false, echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("MCP requests are limited to %d batched messages", maxMessagesPerRequest))
 	}
 	req.Body = io.NopCloser(bytes.NewReader(body))
 	req.ContentLength = int64(len(body))
-	return nil
+	return true, nil
 }
 func countBatchMessages(body []byte) (count int, isBatch bool) {
 	dec := json.NewDecoder(bytes.NewReader(body))
