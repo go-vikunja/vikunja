@@ -158,6 +158,7 @@ func init() {
 		"AccountDeletedNotification":                        reflect.ValueOf((*user.AccountDeletedNotification)(nil)),
 		"AccountDeletionConfirmNotification":                reflect.ValueOf((*user.AccountDeletionConfirmNotification)(nil)),
 		"AccountDeletionNotification":                       reflect.ValueOf((*user.AccountDeletionNotification)(nil)),
+		"CreateUserOptions":                                 reflect.ValueOf((*user.CreateUserOptions)(nil)),
 		"CreatedEvent":                                      reflect.ValueOf((*user.CreatedEvent)(nil)),
 		"EmailChangeRequestedNotification":                  reflect.ValueOf((*user.EmailChangeRequestedNotification)(nil)),
 		"EmailConfirm":                                      reflect.ValueOf((*user.EmailConfirm)(nil)),
