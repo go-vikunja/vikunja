@@ -22,6 +22,8 @@ import (
 	"net/http"
 	"testing"
 
+	"code.vikunja.io/api/pkg/models"
+
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/humatest"
 	"github.com/stretchr/testify/assert"
@@ -130,4 +132,14 @@ func TestBuildToolSpec_RecursiveSchemaIsSelfContained(t *testing.T) {
 	after, err := json.Marshal(api.OpenAPI())
 	require.NoError(t, err)
 	assert.JSONEq(t, string(before), string(after))
+}
+
+func TestBuildToolSpec_TaskCreationRequiresTitle(t *testing.T) {
+	cfg := huma.DefaultConfig("test", "1")
+	cfg.FieldsOptionalByDefault = true
+	_, api := humatest.New(t, cfg)
+	huma.Register(api, huma.Operation{OperationID: "tasks-create", Method: http.MethodPost, Path: "/tasks"},
+		func(_ context.Context, _ *struct{ Body models.Task }) (*struct{}, error) { return nil, nil })
+	spec := specFor(t, api, http.MethodPost, "/tasks")
+	assert.Equal(t, []string{"title"}, spec.schema.Required)
 }

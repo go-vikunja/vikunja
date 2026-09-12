@@ -83,6 +83,10 @@ func buildToolSpec(oapi *huma.OpenAPI, op *huma.Operation) (*toolSpec, error) {
 		}
 		if op.Method == http.MethodPost {
 			required = append(required, requiredByValidTag(oapi, op)...)
+			// Task creation requires a title in model logic, outside valid tags.
+			if op.OperationID == "tasks-create" {
+				required = append(required, "title")
+			}
 		}
 	}
 	required = slices.DeleteFunc(required, func(name string) bool { return props[name] == nil })
