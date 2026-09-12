@@ -30,20 +30,12 @@ import (
 
 const spoolDirName = "imports"
 
-// spoolBaseDir is empty in production, where the base is derived from config.
-var spoolBaseDir = ""
-
 // errEmptySpoolName guards the zero value: filepath.Base("") is ".", which
 // would resolve to the spool directory itself.
 var errEmptySpoolName = errors.New("no spooled upload name given")
 
 func spoolDir() (string, error) {
-	base := spoolBaseDir
-	if base == "" {
-		base = config.FilesBasePath.GetString()
-	}
-
-	dir := filepath.Join(base, spoolDirName)
+	dir := filepath.Join(config.FilesBasePath.GetString(), spoolDirName)
 	if err := os.MkdirAll(dir, 0700); err != nil {
 		return "", fmt.Errorf("could not create the import spool directory: %w", err)
 	}

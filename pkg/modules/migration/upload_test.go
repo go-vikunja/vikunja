@@ -30,12 +30,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func useTestSpoolDir(t *testing.T) {
-	previous := spoolBaseDir
-	spoolBaseDir = t.TempDir()
-	t.Cleanup(func() {
-		spoolBaseDir = previous
-	})
+func useTestSpoolDir(t *testing.T) string {
+	t.Helper()
+	previous := config.FilesBasePath.GetString()
+	dir := t.TempDir()
+	config.FilesBasePath.Set(dir)
+	t.Cleanup(func() { config.FilesBasePath.Set(previous) })
+	return dir
 }
 
 func TestSpoolUpload(t *testing.T) {
@@ -87,11 +88,11 @@ func TestSpoolUpload(t *testing.T) {
 	})
 
 	t.Run("a symlinked spool directory is refused", func(t *testing.T) {
-		useTestSpoolDir(t)
+		base := useTestSpoolDir(t)
 
-		target := filepath.Join(spoolBaseDir, "elsewhere")
+		target := filepath.Join(base, "elsewhere")
 		require.NoError(t, os.Mkdir(target, 0700))
-		require.NoError(t, os.Symlink(target, filepath.Join(spoolBaseDir, spoolDirName)))
+		require.NoError(t, os.Symlink(target, filepath.Join(base, spoolDirName)))
 
 		_, err := spoolDir()
 		require.Error(t, err)
