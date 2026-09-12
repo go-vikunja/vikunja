@@ -12,3 +12,5 @@
 
 - E2E: invoke the `run-e2e-tests` skill (`mage test:e2e`). Never run `pnpm test:e2e` directly.
 - Before adding a component test, check `frontend/tests/e2e/` for the same scenario. If an e2e test covers it, or can with a small extension, extend the e2e test instead. Component tests are for cases that are hard to exercise reliably end to end.
+- Unit tests: `pnpm vitest run <file>` in `frontend/`. Mock the generated client with `vi.mock('@/client/generated', () => sdk)` and `@/message` when the code toasts.
+- Typecheck with `pnpm typecheck` (project references) and read the log. It has well over a thousand pre-existing errors; compare the count for your files before and after. Do not use `vue-tsc -p tsconfig.app.json`: it reports a spurious TS2589 on `i18n.global.t` that the project build does not.

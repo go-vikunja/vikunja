@@ -21,6 +21,29 @@
 - After adding or changing a v2 route or schema, run `mage generate:frontend-client` and commit the generated output. Never hand-edit it. `mage check:frontend-client` verifies it is current and generation is repeatable.
 - Reuse the shared client configuration in `frontend/src/client/http.ts`. Put shared query/cache behavior in `frontend/src/client/queries/` when needed; do not duplicate the generated transport layer.
 
+### Query cache (TanStack Query)
+
+`frontend/src/client/queries/labels.ts` plus `frontend/src/composables/useLabels.ts` is the reference implementation. Pattern follows the TanStack docs and TkDodo's "Effective React Query Keys" / "Mastering Mutations": one key factory, option factories, one thin hook per operation.
+
+Layering, per feature `foo`:
+
+- `client/queries/foo.ts`: `fooKeys` factory, `foosQuery()` via `queryOptions()`, `createFooMutationOptions()` etc. via `mutationOptions()`, thin hooks `useCreateFooMutation()` = `useMutation(createFooMutationOptions())`, imperative readers `ensureFoos()` / `refreshFoos()`, and pure lookup helpers over `Foo[]`.
+- `composables/useFoos.ts`: read side only. `useQuery(foosQuery())`, `data ?? []`, `isPending`, lookup helpers bound to the reactive list. Do not put mutations in here; a create-only view must not subscribe to the list.
+- Components read through `useFoos()` and write through `useCreateFooMutation()` etc. They never touch `queryClient`.
+- Outside components (Pinia setup stores, router, plain modules) `use*` hooks have no inject context. Read via `ensureFoos()` / `refreshFoos()`; write via `useMutation(createFooMutationOptions(), queryClient)` in the store setup.
+
+Rules:
+
+- `mutationFn` shapes input, calls the generated client, returns the narrowed entity. No separate `createFoo` wrapper unless something else calls it. The client is configured with `throwOnError: true`, so failures throw; don't add `error` checks.
+- All cache writes (`setQueryData`, `invalidateQueries`, `cancelQueries`) live in mutation option callbacks. Use the `client` passed in the callback context, not the `queryClient` singleton. Never write to the cache from a plain exported function, a store action, or a socket handler.
+- Updaters must bail when the cached value is `undefined` (`current ? ... : current`, or `current?.map(...)`), so a query nobody mounted is never materialized.
+- Every mutation invalidates the affected list key in `onSettled`. A targeted `setQueryData` in `onSuccess` alone is not enough: a refetch started during the request would overwrite it.
+- `cancelQueries` only as part of a full optimistic flow: `onMutate` cancels, snapshots and writes; `onError` restores the snapshot (only if one existed); `onSettled` invalidates. Never as a standalone guard around a request.
+- `setQueryData` matches keys exactly; `invalidateQueries` matches by prefix. Pass the exact key of a live query to `setQueryData`, and add `exact: true` to `invalidateQueries` when a prefix would also hit detail keys.
+- Only add keys the app has queries for. A `detail(id)` key without a detail query just creates orphan cache entries; list writes go to the list key with the id in the updater, not in the key.
+- Toasts for the mutation outcome go in the option callbacks; UI actions like redirects stay in the component around `mutateAsync`.
+- Test mutation options through the real lifecycle: `queryClient.getMutationCache().build(queryClient, options).execute(vars)`. To observe an optimistic write, assert inside the mocked request before throwing. Assert on our cache writes only; don't re-test TanStack's refetch or cancellation behaviour.
+
 ## OpenAPI
 
 - v2 generates its spec from Go types. No annotations.
