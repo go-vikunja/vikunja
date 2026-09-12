@@ -33,6 +33,7 @@ import (
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/humabridge"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/labstack/echo/v5"
@@ -50,7 +51,7 @@ func callTool(ctx context.Context, name string, rawArgs json.RawMessage) (any, e
 		return nil, fmt.Errorf("%w: %s", errToolNotFound, name)
 	}
 	// Read the caller before dispatching: the loopback re-enters the group middleware, which stashes its own echo context.
-	ec := echoContextFrom(ctx)
+	ec := humabridge.EchoContextFrom(ctx)
 	if ec == nil {
 		return nil, errNoCaller
 	}

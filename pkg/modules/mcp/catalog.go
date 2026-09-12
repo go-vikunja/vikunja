@@ -25,6 +25,7 @@ import (
 	"strings"
 
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/humabridge"
 	"github.com/google/jsonschema-go/jsonschema"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
@@ -139,7 +140,7 @@ func findActionHandler(ctx context.Context, req *mcp.CallToolRequest) (*mcp.Call
 		//nolint:nilerr // Domain errors use MCP tool results.
 		return invalidArgsResult(toolFindAction, err), nil
 	}
-	result := map[string]any{"actions": catalogActions(tokenFrom(echoContextFrom(ctx)), args.Action, args.Resource)}
+	result := map[string]any{"actions": catalogActions(tokenFrom(humabridge.EchoContextFrom(ctx)), args.Action, args.Resource)}
 	body, err := json.Marshal(result)
 	if err != nil {
 		return nil, fmt.Errorf("mcp: marshal find_action result: %w", err)

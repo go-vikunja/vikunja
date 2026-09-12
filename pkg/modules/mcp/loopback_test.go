@@ -131,7 +131,7 @@ func TestCallTool_UnknownTool(t *testing.T) {
 }
 func TestCallTool_ClientAddress(t *testing.T) {
 	ctx := withTestCaller(t)
-	caller := echoContextFrom(ctx).Request()
+	caller := humabridge.EchoContextFrom(ctx).Request()
 	caller.Host = "vikunja.example.com"
 	caller.Header.Add("X-Forwarded-For", "203.0.113.9")
 	caller.Header.Add("X-Forwarded-For", "198.51.100.4")
@@ -139,7 +139,7 @@ func TestCallTool_ClientAddress(t *testing.T) {
 	caller.Header.Set("Accept-Language", "de")
 	caller.Header.Set("X-Forwarded-Proto", "https")
 	tl, _ := findTool("things_read")
-	req, err := tl.newRequest(ctx, echoContextFrom(ctx), map[string]json.RawMessage{"id": json.RawMessage(`1`)})
+	req, err := tl.newRequest(ctx, humabridge.EchoContextFrom(ctx), map[string]json.RawMessage{"id": json.RawMessage(`1`)})
 	require.NoError(t, err)
 	assert.Equal(t, caller.RemoteAddr, req.RemoteAddr)
 	assert.Equal(t, "vikunja.example.com", req.Host)
@@ -154,7 +154,7 @@ func TestCallTool_ClientAddress(t *testing.T) {
 }
 func TestCallTool_UsesTheResponseRequestID(t *testing.T) {
 	ctx := withTestCaller(t)
-	ec := echoContextFrom(ctx)
+	ec := humabridge.EchoContextFrom(ctx)
 	ec.Response().Header().Set(echo.HeaderXRequestID, "generated-1")
 	ec.Request().Header.Set(echo.HeaderXRequestID, "from-client")
 	tl, _ := findTool("things_read")
@@ -164,11 +164,11 @@ func TestCallTool_UsesTheResponseRequestID(t *testing.T) {
 }
 func TestCallTool_KeepsTheForwardedHost(t *testing.T) {
 	ctx := withTestCaller(t)
-	caller := echoContextFrom(ctx).Request()
+	caller := humabridge.EchoContextFrom(ctx).Request()
 	caller.Host = "internal:3456"
 	caller.Header.Set("X-Forwarded-Host", "vikunja.example.com")
 	tl, _ := findTool("things_read")
-	req, err := tl.newRequest(ctx, echoContextFrom(ctx), map[string]json.RawMessage{"id": json.RawMessage(`1`)})
+	req, err := tl.newRequest(ctx, humabridge.EchoContextFrom(ctx), map[string]json.RawMessage{"id": json.RawMessage(`1`)})
 	require.NoError(t, err)
 	assert.Equal(t, "vikunja.example.com", req.Header.Get("X-Forwarded-Host"))
 }

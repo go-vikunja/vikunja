@@ -62,13 +62,10 @@ func newServerForRequest(req *http.Request) *mcp.Server {
 		Name:    "vikunja",
 		Version: version.Version,
 	}, nil)
-	addToolsAuthorizedBy(srv, tokenFrom(echoContextFrom(req.Context())))
+	addToolsAuthorizedBy(srv, tokenFrom(humabridge.EchoContextFrom(req.Context())))
 	return srv
 }
 
-func echoContextFrom(ctx context.Context) *echo.Context {
-	return humabridge.EchoContextFrom(ctx)
-}
 func tokenFrom(ec *echo.Context) *models.APIToken {
 	if ec == nil {
 		return nil
