@@ -175,12 +175,14 @@ definitions:
     - 1
     - 2
     - 3
+    - 4
     type: integer
     x-enum-varnames:
     - FeatureUnknown
     - FeatureAdminPanel
     - FeatureTimeTracking
     - FeatureAuditLogs
+    - FeatureUserInvites
   license.Info:
     properties:
       expires_at:
