@@ -238,7 +238,7 @@ func TestMCP_Tools_ExpandRequiresScopeOnLoopback(t *testing.T) {
 		"expand":      []string{"reactions"},
 	})
 	assert.Equal(t, true, denied["isError"])
-	assert.Contains(t, toolResultText(t, denied), "401")
+	assert.Equal(t, "401 Unauthorized: the API token lacks a scope required by this call (check route and expand scopes)", toolResultText(t, denied))
 }
 func TestMCP_Tools_ProjectAndLabelLifecycle(t *testing.T) {
 	for _, resource := range []string{
@@ -302,5 +302,5 @@ func TestMCP_Tools_LoopbackUsesTheAuthorisedToken(t *testing.T) {
 		"expand":      []string{"reactions"},
 	})
 	assert.Equal(t, true, denied["isError"])
-	assert.Contains(t, toolResultText(t, denied), "401")
+	assert.Equal(t, "401 Unauthorized: the API token lacks a scope required by this call (check route and expand scopes)", toolResultText(t, denied))
 }
