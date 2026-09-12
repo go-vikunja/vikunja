@@ -29,6 +29,7 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/humabridge"
+	apiv2 "code.vikunja.io/api/pkg/routes/api/v2"
 	"code.vikunja.io/api/pkg/version"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -38,7 +39,7 @@ import (
 
 const (
 	routeSuffix = "/mcp"
-	RoutePrefix = "/api/v2" + routeSuffix
+	RoutePrefix = apiv2.GroupPrefix + routeSuffix
 )
 
 const (
