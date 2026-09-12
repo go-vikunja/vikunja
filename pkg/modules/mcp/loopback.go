@@ -243,11 +243,17 @@ func parseResponse(rec *httptest.ResponseRecorder) (any, error) {
 
 const maxErrorTextRunes = 2000
 
+const scopeHint = "the API token lacks a scope required by this call (check route and expand scopes)"
+
 func errorText(rec *httptest.ResponseRecorder) string {
+	text := truncateRunes(problemText(rec), maxErrorTextRunes)
 	// The transport already authenticated the token, so a loopback 401 is a missing scope.
 	if rec.Code == http.StatusUnauthorized {
-		return "401 Unauthorized: the API token lacks a scope required by this call (check route and expand scopes)"
+		text += " — " + scopeHint
 	}
+	return text
+}
+func problemText(rec *httptest.ResponseRecorder) string {
 	var problem struct {
 		Title  string `json:"title"`
 		Detail string `json:"detail"`
@@ -258,7 +264,7 @@ func errorText(rec *httptest.ResponseRecorder) string {
 	}
 	body := rec.Body.Bytes()
 	if err := json.Unmarshal(body, &problem); err != nil || problem.Title == "" {
-		return truncateRunes(fmt.Sprintf("%d: %s", rec.Code, strings.TrimSpace(string(body))), maxErrorTextRunes)
+		return fmt.Sprintf("%d: %s", rec.Code, strings.TrimSpace(string(body)))
 	}
 	var b strings.Builder
 	fmt.Fprintf(&b, "%d %s", rec.Code, problem.Title)
@@ -279,7 +285,7 @@ func errorText(rec *httptest.ResponseRecorder) string {
 			b.WriteString(")")
 		}
 	}
-	return truncateRunes(b.String(), maxErrorTextRunes)
+	return b.String()
 }
 func truncateRunes(s string, limit int) string {
 	if len(s) <= limit {
