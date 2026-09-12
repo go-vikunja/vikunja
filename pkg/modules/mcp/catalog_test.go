@@ -53,7 +53,13 @@ func TestCatalogTools_RejectsUnknownArguments(t *testing.T) {
 		Name:    "test",
 		Version: "1",
 	}, nil)
-	installCatalogTools(srv, nil)
+	var catalog []*tool
+	for _, tl := range snapshotTools() {
+		if !tl.typed {
+			catalog = append(catalog, tl)
+		}
+	}
+	installCatalogTools(srv, catalog)
 	clientTransport, serverTransport := sdk.NewInMemoryTransports()
 	ss, err := srv.Connect(ctx, serverTransport, nil)
 	require.NoError(t, err)

@@ -76,8 +76,13 @@ func tokenFrom(ec *echo.Context) *models.APIToken {
 }
 
 func addToolsAuthorizedBy(srv *mcp.Server, token *models.APIToken) {
+	var catalog []*tool
 	for _, t := range snapshotTools() {
-		if !t.typed || !t.authorized(token) {
+		switch {
+		case !t.authorized(token):
+			continue
+		case !t.typed:
+			catalog = append(catalog, t)
 			continue
 		}
 		srv.AddTool(&mcp.Tool{
@@ -86,7 +91,7 @@ func addToolsAuthorizedBy(srv *mcp.Server, token *models.APIToken) {
 			InputSchema: t.spec.schema,
 		}, rawToolHandler(t.name))
 	}
-	installCatalogTools(srv, token)
+	installCatalogTools(srv, catalog)
 }
 
 func rawToolHandler(name string) mcp.ToolHandler {
