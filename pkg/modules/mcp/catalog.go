@@ -48,8 +48,14 @@ type doActionArgs struct {
 
 var findActionSpec = mustResolveSpec(toolFindAction, &jsonschema.Schema{
 	Type: "object", Properties: map[string]*jsonschema.Schema{
-		"action":   {Type: "string", Description: "Return the full input schema for this action (e.g. task_labels_create)."},
-		"resource": {Type: "string", Description: "Return full schemas for actions under this prefix (e.g. task_labels, project_views, teams)."},
+		"action": {
+			Type:        "string",
+			Description: "Return the full input schema for this action (e.g. task_labels_create).",
+		},
+		"resource": {
+			Type:        "string",
+			Description: "Return full schemas for actions under this prefix (e.g. task_labels, project_views, teams).",
+		},
 	}, AdditionalProperties: falseSchema(),
 })
 var doActionSpec = mustResolveSpec(toolDoAction, &jsonschema.Schema{
