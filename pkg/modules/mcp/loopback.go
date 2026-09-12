@@ -78,6 +78,8 @@ func (t *tool) newRequest(ctx context.Context, caller *http.Request, args map[st
 		switch {
 		case !isParam:
 			body[name] = raw
+		// A null body field clears it through merge-patch; a null parameter is simply unset.
+		case isJSONNull(raw):
 		case p.In == "path":
 			v, err := scalarString(raw)
 			if err != nil {
@@ -141,6 +143,9 @@ func apiTokenAuthorization(caller *http.Request) string {
 		}
 	}
 	return ""
+}
+func isJSONNull(raw json.RawMessage) bool {
+	return bytes.Equal(bytes.TrimSpace(raw), []byte("null"))
 }
 func scalarString(raw json.RawMessage) (string, error) {
 	dec := json.NewDecoder(bytes.NewReader(raw))

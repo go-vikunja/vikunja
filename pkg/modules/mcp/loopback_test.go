@@ -59,6 +59,13 @@ func TestCallTool_ListForwardsAuthAndFormat(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "markdown", echoResult(t, res)["query"].(map[string]any)["format"])
 }
+func TestCallTool_NullParamIsOmitted(t *testing.T) {
+	res, err := callTool(withTestCaller(t), "things_list", json.RawMessage(`{"q":"x","expand":null}`))
+	require.NoError(t, err)
+	q := echoResult(t, res)["query"].(map[string]any)
+	assert.Equal(t, "x", q["q"])
+	assert.Empty(t, q["expand"])
+}
 func TestCallTool_CreateSendsJSONBody(t *testing.T) {
 	res, err := callTool(withTestCaller(t), "things_create", json.RawMessage(`{"title":"hi","done":true}`))
 	require.NoError(t, err)
