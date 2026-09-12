@@ -26,6 +26,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"slices"
 	"strings"
 
 	"code.vikunja.io/api/pkg/models"
@@ -119,15 +120,19 @@ func (t *tool) newRequest(ctx context.Context, caller *http.Request, args map[st
 	if reader != nil {
 		req.Header.Set("Content-Type", t.contentType)
 	}
-	// Preserve the client identity used by the rate limiter and access logs.
+	// Keep the public origin so generated links and the rate limiter see the real client.
+	req.Host = caller.Host
+	req.TLS = caller.TLS
 	for _, h := range []string{
 		"X-Forwarded-For",
+		"X-Forwarded-Proto",
 		"X-Real-Ip",
+		"X-Request-Id",
 		"Accept-Language",
 		"User-Agent",
 	} {
-		if v := caller.Header.Get(h); v != "" {
-			req.Header.Set(h, v)
+		if vs := caller.Header.Values(h); len(vs) > 0 {
+			req.Header[http.CanonicalHeaderKey(h)] = slices.Clone(vs)
 		}
 	}
 	req.RemoteAddr = caller.RemoteAddr
