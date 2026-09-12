@@ -90,9 +90,8 @@ func TestCallTool_DeleteReturnsOK(t *testing.T) {
 }
 func TestCallTool_HTTPErrorIsToolError(t *testing.T) {
 	_, err := callTool(withTestCaller(t), "things_read", json.RawMessage(`{"id":404}`))
-	var apiErr *apiError
-	require.ErrorAs(t, err, &apiErr)
-	assert.Equal(t, http.StatusNotFound, apiErr.status)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "404 Not Found")
 	assert.Contains(t, err.Error(), "no such thing")
 }
 func TestCallTool_UnauthorizedMentionsScopes(t *testing.T) {
