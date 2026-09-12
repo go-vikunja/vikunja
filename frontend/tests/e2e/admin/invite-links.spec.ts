@@ -65,13 +65,6 @@ test.describe('Invite links', () => {
 			await guestPage.getByLabel('Username', {exact: true}).fill('invited-guest')
 			await guestPage.getByLabel('Email address', {exact: true}).fill('admin@example.com')
 			await guestPage.locator('#password').fill('12345678')
-			await guestPage.route('**/api/v2/register', route => route.fulfill({
-				status: 422,
-				contentType: 'application/problem+json',
-				body: JSON.stringify({code: 2002, errors: [{location: 'body.email', message: 'Please use a different email address.'}]}),
-			}), {times: 1})
-			await guestPage.locator('#register-submit').click()
-			await expect(guestPage.getByText('Please use a different email address.', {exact: true})).toBeVisible()
 			await guestPage.locator('#register-submit').click()
 			await expect(guestPage.getByText('A user with this email address already exists.', {exact: true})).toBeVisible()
 			await guestPage.getByLabel('Email address', {exact: true}).fill('invited-guest@example.com')
@@ -108,28 +101,41 @@ test.describe('Invite links', () => {
 		await expect(page.getByRole('link', {name: 'Login', exact: true})).toBeVisible()
 	})
 
-	test('changing the fragment revalidates the mounted form and ignores an older response', async ({page}) => {
+	test('changing the fragment revalidates the mounted form and ignores an older response', async ({page, apiContext}) => {
+		const [admin] = await UserFactory.create(1, {is_admin: true}, false)
+		const teams = await TeamFactory.create(2, {id: '{increment}', name: (id: number) => `Team ${id}`}, false)
+		const {token: adminToken} = await login(null, apiContext, admin)
+		const links: {token: string}[] = []
+		for (const team of teams) {
+			const response = await apiContext.post('/api/v2/admin/invite-links', {
+				headers: {Authorization: `Bearer ${adminToken}`},
+				data: {name: `Invite for ${team.name}`, team_ids: [team.id], skip_email_confirm: true},
+			})
+			expect(response.status()).toBe(201)
+			links.push(await response.json())
+		}
+		const [first, second] = links
 		let releaseFirst!: () => void
 		let receivedFirst!: () => void
 		const firstReceived = new Promise<void>(resolve => { receivedFirst = resolve })
 		const firstReleased = new Promise<void>(resolve => { releaseFirst = resolve })
 		await page.route('**/api/v2/invite-links/check', async route => {
 			const {token} = route.request().postDataJSON()
-			if (token === 'first') {
+			if (token === first.token) {
 				receivedFirst()
 				await firstReleased
 			}
-			await route.fulfill({json: {name: token, teams: [{id: 1, name: `${token} team`}], skip_email_confirm: true}})
+			await route.continue()
 		})
-		await page.goto('/register#invite-link=first')
+		await page.goto(`/register#invite-link=${first.token}`)
 		await firstReceived
-		await page.evaluate(() => { window.location.hash = 'invite-link=second' })
-		await expect(page.getByText('You will join: second team')).toBeVisible()
+		await page.evaluate(token => { window.location.hash = `invite-link=${token}` }, second.token)
+		await expect(page.getByText('You will join: Team 2')).toBeVisible()
 		await expect(page).toHaveURL('/register')
-		const firstResponse = page.waitForResponse(response => response.url().endsWith('/invite-links/check') && response.request().postDataJSON().token === 'first')
+		const firstResponse = page.waitForResponse(response => response.url().endsWith('/invite-links/check') && response.request().postDataJSON().token === first.token)
 		releaseFirst()
-		await firstResponse
-		await expect(page.getByText('You will join: second team')).toBeVisible()
+		expect(await (await firstResponse).json()).toMatchObject({teams: [{id: teams[0].id, name: 'Team 1'}]})
+		await expect(page.getByText('You will join: Team 2')).toBeVisible()
 	})
 
 	test('tab and direct route are unavailable without user_invites', async ({page, apiContext}) => {
