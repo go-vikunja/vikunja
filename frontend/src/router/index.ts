@@ -117,6 +117,11 @@ const router = createRouter({
 					},
 				},
 				{
+					path: '/user/settings/mcp',
+					name: 'user.settings.mcp',
+					component: () => import('@/views/user/settings/Mcp.vue'),
+				},
+				{
 					path: '/user/settings/data-export',
 					name: 'user.settings.data-export',
 					component: () => import('@/views/user/settings/DataExport.vue'),
