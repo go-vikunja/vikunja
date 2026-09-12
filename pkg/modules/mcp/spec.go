@@ -78,7 +78,7 @@ func buildToolSpec(oapi *huma.OpenAPI, op *huma.Operation) (*toolSpec, error) {
 			}
 			props[name] = ps
 		}
-		if op.Method != http.MethodPut && op.Method != http.MethodPatch {
+		if op.Method != http.MethodPatch {
 			required = append(required, body.Required...)
 		}
 		if op.Method == http.MethodPost {
