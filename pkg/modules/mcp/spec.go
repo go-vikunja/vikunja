@@ -66,7 +66,7 @@ func buildToolSpec(oapi *huma.OpenAPI, op *huma.Operation) (*toolSpec, error) {
 		body = inlineRefs(oapi, body, 0)
 		hasBody = true
 		for name, prop := range body.Properties {
-			if prop.ReadOnly {
+			if prop.ReadOnly || suppliedByPathParam(params, name) {
 				continue
 			}
 			if _, clash := props[name]; clash {
@@ -107,6 +107,16 @@ func buildToolSpec(oapi *huma.OpenAPI, op *huma.Operation) (*toolSpec, error) {
 		params:   params,
 		hasBody:  hasBody,
 	}, nil
+}
+
+// Handlers take the id from the path and ignore the body field.
+func suppliedByPathParam(params map[string]*huma.Param, bodyProp string) bool {
+	base, found := strings.CutSuffix(bodyProp, "_id")
+	if !found {
+		return false
+	}
+	p, ok := params[base]
+	return ok && p.In == "path"
 }
 
 // AutoPatch derives its PATCH body from the PUT body but drops refs and nullability,
