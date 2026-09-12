@@ -147,4 +147,15 @@ func TestCallTool_ClientAddress(t *testing.T) {
 		"198.51.100.4",
 	}, req.Header.Values("X-Forwarded-For"))
 	assert.Equal(t, "req-1", req.Header.Get("X-Request-Id"))
+	assert.Equal(t, "vikunja.example.com", req.Header.Get("X-Forwarded-Host"))
+}
+func TestCallTool_KeepsTheForwardedHost(t *testing.T) {
+	ctx := withTestCaller(t)
+	caller := echoContextFrom(ctx).Request()
+	caller.Host = "internal:3456"
+	caller.Header.Set("X-Forwarded-Host", "vikunja.example.com")
+	tl, _ := findTool("things_read")
+	req, err := tl.newRequest(ctx, caller, map[string]json.RawMessage{"id": json.RawMessage(`1`)})
+	require.NoError(t, err)
+	assert.Equal(t, "vikunja.example.com", req.Header.Get("X-Forwarded-Host"))
 }

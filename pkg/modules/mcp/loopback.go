@@ -120,6 +120,12 @@ func (t *tool) newRequest(ctx context.Context, caller *http.Request, args map[st
 	// Keep the public origin so generated links and the rate limiter see the real client.
 	req.Host = caller.Host
 	req.TLS = caller.TLS
+	// AutoPatch's inner request carries a path-only URL, so huma falls back to this header for the schema host.
+	if forwardedHost := caller.Header.Get("X-Forwarded-Host"); forwardedHost != "" {
+		req.Header.Set("X-Forwarded-Host", forwardedHost)
+	} else {
+		req.Header.Set("X-Forwarded-Host", caller.Host)
+	}
 	for _, h := range []string{
 		"X-Forwarded-For",
 		"X-Forwarded-Proto",
