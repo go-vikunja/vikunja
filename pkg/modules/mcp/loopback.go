@@ -148,10 +148,8 @@ func (t *tool) newRequest(ctx context.Context, ec *echo.Context, args map[string
 	}
 	for _, h := range []string{
 		"X-Forwarded-For",
-		"X-Forwarded-Proto",
 		"X-Real-Ip",
 		"X-Request-Id",
-		"Accept-Language",
 		"User-Agent",
 	} {
 		if vs := caller.Header.Values(h); len(vs) > 0 {

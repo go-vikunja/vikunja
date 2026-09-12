@@ -136,6 +136,8 @@ func TestCallTool_ClientAddress(t *testing.T) {
 	caller.Header.Add("X-Forwarded-For", "203.0.113.9")
 	caller.Header.Add("X-Forwarded-For", "198.51.100.4")
 	caller.Header.Set("X-Request-Id", "req-1")
+	caller.Header.Set("Accept-Language", "de")
+	caller.Header.Set("X-Forwarded-Proto", "https")
 	tl, _ := findTool("things_read")
 	req, err := tl.newRequest(ctx, echoContextFrom(ctx), map[string]json.RawMessage{"id": json.RawMessage(`1`)})
 	require.NoError(t, err)
@@ -147,6 +149,8 @@ func TestCallTool_ClientAddress(t *testing.T) {
 	}, req.Header.Values("X-Forwarded-For"))
 	assert.Equal(t, "req-1", req.Header.Get("X-Request-Id"))
 	assert.Equal(t, "vikunja.example.com", req.Header.Get("X-Forwarded-Host"))
+	assert.Empty(t, req.Header.Get("Accept-Language"))
+	assert.Empty(t, req.Header.Get("X-Forwarded-Proto"))
 }
 func TestCallTool_UsesTheResponseRequestID(t *testing.T) {
 	ctx := withTestCaller(t)
