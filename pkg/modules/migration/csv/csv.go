@@ -610,41 +610,30 @@ func (m *Migrator) SetOptions(options []byte) error {
 
 // MigrateWithConfig imports CSV data into Vikunja with the provided configuration
 func MigrateWithConfig(u *user.User, file io.ReaderAt, size int64, config *ImportConfig) error {
-	rows, err := readImportRows(file, size, config)
-	if err != nil {
-		return err
-	}
-
-	vikunjaTasks := convertToVikunja(rows, config)
-
-	return migration.InsertFromStructure(vikunjaTasks, u)
-}
-
-func readImportRows(file io.ReaderAt, size int64, config *ImportConfig) ([][]string, error) {
 	if size == 0 {
-		return nil, &migration.ErrFileIsEmpty{}
+		return &migration.ErrFileIsEmpty{}
 	}
 	if size > maxImportFileBytes() {
-		return nil, &migration.ErrNotACSVFile{}
+		return &migration.ErrNotACSVFile{}
 	}
 
 	data := make([]byte, size)
 	_, err := file.ReadAt(data, 0)
 	if err != nil && !errors.Is(err, io.EOF) {
-		return nil, err
+		return err
 	}
 
 	_, rows, err := parseCSV(data, config.Delimiter)
 	if err != nil {
 		var emptyErr *migration.ErrFileIsEmpty
 		if errors.As(err, &emptyErr) {
-			return nil, err
+			return err
 		}
 		var limitErr *migration.ErrImportRowLimitExceeded
 		if errors.As(err, &limitErr) {
-			return nil, err
+			return err
 		}
-		return nil, &migration.ErrNotACSVFile{}
+		return &migration.ErrNotACSVFile{}
 	}
 
 	// Skip rows if configured
@@ -657,10 +646,12 @@ func readImportRows(file io.ReaderAt, size int64, config *ImportConfig) ([][]str
 	}
 
 	if len(rows) == 0 {
-		return nil, &migration.ErrFileIsEmpty{}
+		return &migration.ErrFileIsEmpty{}
 	}
 
-	return rows, nil
+	vikunjaTasks := convertToVikunja(rows, config)
+
+	return migration.InsertFromStructure(vikunjaTasks, u)
 }
 
 // hasProjectMapping returns true if any column is mapped to the project attribute
