@@ -1,4 +1,5 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest'
+import type {MutationOptions} from '@tanstack/vue-query'
 
 import {queryClient} from '@/client/queryClient'
 
@@ -10,10 +11,11 @@ const sdk = vi.hoisted(() => ({
 }))
 
 vi.mock('@/client/generated', () => sdk)
+vi.mock('@/message', () => ({success: vi.fn()}))
 
 import {
-	createLabel,
-	deleteLabel,
+	createLabelMutationOptions,
+	deleteLabelMutationOptions,
 	ensureLabels,
 	filterLabelsByQuery,
 	getLabelByExactTitle,
@@ -24,7 +26,7 @@ import {
 	labelsQuery,
 	refreshLabels,
 	sortLabelsAlphabetically,
-	updateLabel,
+	updateLabelMutationOptions,
 } from './labels'
 
 import type {Label} from '@/client/generated'
@@ -109,90 +111,88 @@ describe('label derivations', () => {
 	})
 })
 
+function runMutation<TData, TVariables, TContext>(
+	options: MutationOptions<TData, Error, TVariables, TContext>,
+	variables: TVariables,
+): Promise<TData> {
+	return queryClient.getMutationCache().build(queryClient, options).execute(variables)
+}
+
+function cachedLabels(): Label[] {
+	return queryClient.getQueryData<Label[]>(labelKeys.all) ?? []
+}
+
 describe('label cache mutations', () => {
 	beforeEach(() => {
 		queryClient.clear()
-		sdk.labelsList.mockReset()
 		sdk.labelsCreate.mockReset()
 		sdk.labelsUpdate.mockReset()
 		sdk.labelsDelete.mockReset()
 		queryClient.setQueryData(labelKeys.all, labels)
 	})
 
-	it('adds a created label to the cache', async () => {
+	it('adds a created label to the cache and invalidates the list', async () => {
 		const created = {id: 4, title: 'Created'}
 		sdk.labelsCreate.mockResolvedValue({data: created})
+		const invalidate = vi.spyOn(queryClient, 'invalidateQueries')
 
-		await expect(createLabel({title: 'Created'})).resolves.toEqual(created)
-		expect(queryClient.getQueryData<Label[]>(labelKeys.all)).toContainEqual(created)
+		await expect(runMutation(createLabelMutationOptions(), {title: 'Created'})).resolves.toEqual(created)
+
+		expect(cachedLabels()).toContainEqual(created)
+		expect(invalidate).toHaveBeenCalledWith({queryKey: labelKeys.all})
 	})
 
-	it('keeps a created label when an older list request finishes later', async () => {
-		let resolveList: (value: unknown) => void = () => {}
-		sdk.labelsList.mockReturnValue(new Promise(resolve => {
-			resolveList = resolve
-		}))
-		const list = queryClient.fetchQuery({...labelsQuery(), staleTime: 0})
-		const listSettled = list.catch(() => undefined)
-		expect(sdk.labelsList).toHaveBeenCalledOnce()
-		const created = {id: 4, title: 'Created'}
-		sdk.labelsCreate.mockResolvedValue({data: created})
+	it('does not materialize a label list nobody loaded', async () => {
+		queryClient.clear()
+		sdk.labelsCreate.mockResolvedValue({data: {id: 4, title: 'Created'}})
 
-		await createLabel({title: 'Created'})
-		resolveList({data: {items: labels, total_pages: 1}})
-		await listSettled
+		await runMutation(createLabelMutationOptions(), {title: 'Created'})
 
-		expect(queryClient.getQueryData<Label[]>(labelKeys.all)).toContainEqual(created)
+		expect(queryClient.getQueryData(labelKeys.all)).toBeUndefined()
 	})
 
 	it('replaces an updated label in the cache', async () => {
 		const updated = {...labels[1], title: 'Updated'}
 		sdk.labelsUpdate.mockResolvedValue({data: updated})
 
-		await expect(updateLabel({id: 1, title: 'Updated'})).resolves.toEqual(updated)
-		expect(getLabelById(queryClient.getQueryData<Label[]>(labelKeys.all) ?? [], 1)).toEqual(updated)
+		await runMutation(updateLabelMutationOptions(), {id: 1, title: 'Updated'})
+
+		expect(getLabelById(cachedLabels(), 1)).toEqual(updated)
 	})
 
-	it('keeps an updated label when an older list request finishes later', async () => {
-		let resolveList: (value: unknown) => void = () => {}
-		sdk.labelsList.mockReturnValue(new Promise(resolve => {
-			resolveList = resolve
-		}))
-		const list = queryClient.fetchQuery({...labelsQuery(), staleTime: 0})
-		const listSettled = list.catch(() => undefined)
-		expect(sdk.labelsList).toHaveBeenCalledOnce()
-		const updated = {...labels[1], title: 'Updated'}
-		sdk.labelsUpdate.mockResolvedValue({data: updated})
+	it('applies an update optimistically and rolls back on failure', async () => {
+		sdk.labelsUpdate.mockImplementation(async () => {
+			expect(getLabelById(cachedLabels(), 1)?.title).toBe('Updated')
+			throw new Error('nope')
+		})
 
-		await updateLabel({id: 1, title: 'Updated'})
-		resolveList({data: {items: labels, total_pages: 1}})
-		await listSettled
+		await expect(runMutation(updateLabelMutationOptions(), {id: 1, title: 'Updated'})).rejects.toThrow('nope')
 
-		expect(getLabelById(queryClient.getQueryData<Label[]>(labelKeys.all) ?? [], 1)).toEqual(updated)
+		expect(getLabelById(cachedLabels(), 1)).toEqual(labels[1])
 	})
 
-	it('removes a deleted label from the cache', async () => {
-		sdk.labelsDelete.mockResolvedValue({data: undefined})
-
-		await deleteLabel(labels[1])
-
-		expect(getLabelById(queryClient.getQueryData<Label[]>(labelKeys.all) ?? [], 1)).toBeUndefined()
+	it('refuses to delete a label without an id', async () => {
+		await expect(runMutation(deleteLabelMutationOptions(), {title: 'no id'})).rejects.toThrow()
+		expect(sdk.labelsDelete).not.toHaveBeenCalled()
 	})
 
-	it('keeps a label deleted when an older list request finishes later', async () => {
-		let resolveList: (value: unknown) => void = () => {}
-		sdk.labelsList.mockReturnValue(new Promise(resolve => {
-			resolveList = resolve
-		}))
-		const list = queryClient.fetchQuery({...labelsQuery(), staleTime: 0})
-		const listSettled = list.catch(() => undefined)
-		expect(sdk.labelsList).toHaveBeenCalledOnce()
-		sdk.labelsDelete.mockResolvedValue({data: undefined})
+	it('removes a label optimistically and restores it on failure', async () => {
+		sdk.labelsDelete.mockImplementation(async () => {
+			expect(getLabelById(cachedLabels(), 1)).toBeUndefined()
+			throw new Error('nope')
+		})
 
-		await deleteLabel(labels[1])
-		resolveList({data: {items: labels, total_pages: 1}})
-		await listSettled
+		await expect(runMutation(deleteLabelMutationOptions(), labels[1])).rejects.toThrow('nope')
 
-		expect(getLabelById(queryClient.getQueryData<Label[]>(labelKeys.all) ?? [], 1)).toBeUndefined()
+		expect(cachedLabels()).toEqual(labels)
+	})
+
+	it('does not restore a list that was never loaded', async () => {
+		queryClient.clear()
+		sdk.labelsDelete.mockRejectedValue(new Error('nope'))
+
+		await runMutation(deleteLabelMutationOptions(), labels[1]).catch(() => undefined)
+
+		expect(queryClient.getQueryData(labelKeys.all)).toBeUndefined()
 	})
 })
