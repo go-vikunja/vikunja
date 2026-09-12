@@ -213,3 +213,26 @@ func TestMCP_NonLoopbackHostAccepted(t *testing.T) {
 	e.ServeHTTP(rec, req)
 	require.Equal(t, http.StatusOK, rec.Code, "%s", rec.Body.String())
 }
+
+func toolResultText(t *testing.T, result map[string]any) string {
+	t.Helper()
+	content, ok := result["content"].([]any)
+	require.True(t, ok, "%v", result)
+	require.NotEmpty(t, content)
+	text, ok := content[0].(map[string]any)["text"].(string)
+	require.True(t, ok)
+	return text
+}
+func toolResultJSON(t *testing.T, result map[string]any, dest any) {
+	t.Helper()
+	require.NotContains(t, result, "isError", "tool errored: %s", toolResultText(t, result))
+	require.NoError(t, json.Unmarshal([]byte(toolResultText(t, result)), dest))
+}
+func readAllItems(t *testing.T, result map[string]any, dest any) {
+	t.Helper()
+	var env struct {
+		Items json.RawMessage `json:"items"`
+	}
+	toolResultJSON(t, result, &env)
+	require.NoError(t, json.Unmarshal(env.Items, dest))
+}
