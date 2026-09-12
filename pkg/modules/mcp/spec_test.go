@@ -88,6 +88,11 @@ func TestBuildToolSpec_Patch(t *testing.T) {
 	assert.Equal(t, []string{"id"}, spec.schema.Required)
 	assert.Contains(t, spec.schema.Properties, "title")
 	assert.NotContains(t, spec.schema.Properties, "owner")
+	reminders := spec.schema.Properties["reminders"]
+	require.NotNil(t, reminders)
+	require.NotNil(t, reminders.Items)
+	assert.Equal(t, "object", reminders.Items.Type)
+	assert.Contains(t, reminders.Items.Properties, "at")
 }
 func TestBuildToolSpec_PutKeepsRequiredBodyFields(t *testing.T) {
 	cfg := huma.DefaultConfig("test", "1")

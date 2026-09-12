@@ -62,7 +62,7 @@ func buildToolSpec(oapi *huma.OpenAPI, op *huma.Operation) (*toolSpec, error) {
 		}
 	}
 	hasBody := false
-	if _, body := bodyMedia(op); body != nil {
+	if _, body := bodyMedia(bodySchemaOp(oapi, op)); body != nil {
 		body = inlineRefs(oapi, body, 0)
 		hasBody = true
 		for name, prop := range body.Properties {
@@ -107,6 +107,19 @@ func buildToolSpec(oapi *huma.OpenAPI, op *huma.Operation) (*toolSpec, error) {
 		params:   params,
 		hasBody:  hasBody,
 	}, nil
+}
+
+// AutoPatch derives its PATCH body from the PUT body but drops refs and nullability,
+// which collapses nested schemas to {}. Read the shape from the PUT instead.
+func bodySchemaOp(oapi *huma.OpenAPI, op *huma.Operation) *huma.Operation {
+	if op.Method != http.MethodPatch {
+		return op
+	}
+	item := oapi.Paths[op.Path]
+	if item == nil || item.Put == nil {
+		return op
+	}
+	return item.Put
 }
 func inlineRefs(oapi *huma.OpenAPI, s *huma.Schema, depth int) *huma.Schema {
 	if s == nil {
