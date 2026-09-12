@@ -65,6 +65,18 @@ func TestMCP_Tools_TaskLifecycle(t *testing.T) {
 	assert.Equal(t, true, gone["isError"])
 	assert.Contains(t, toolResultText(t, gone), "404")
 }
+func TestMCP_Tools_UnchangedUpdateIsNotAnError(t *testing.T) {
+	c := newMCPClient(t, mcpFullToken)
+	args := map[string]any{
+		"projecttask": 1,
+		"title":       "same title",
+	}
+	first := c.callTool("tasks_update", args)
+	require.NotContains(t, first, "isError", toolResultText(t, first))
+	second := c.callTool("tasks_update", args)
+	require.NotContains(t, second, "isError", toolResultText(t, second))
+	assert.Contains(t, toolResultText(t, second), `"unchanged":true`)
+}
 func TestMCP_Tools_ListEnvelopeAndFilter(t *testing.T) {
 	c := newMCPClient(t, mcpFullToken)
 	var env map[string]any
