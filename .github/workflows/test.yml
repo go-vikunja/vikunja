@@ -526,6 +526,8 @@ jobs:
         image: ghcr.io/go-vikunja/dex-testing:main@sha256:d401c06a9f8fd36ece446a07499b827232af7f21eb36872a76c9eac4d0c77bab
         ports:
           - 5556:5556
+      mailpit:
+        image: axllent/mailpit:v1.31.1@sha256:98b916bd3c8d61f7633a52d3ea2f58d00620cb01ca57ab59edde68c347a95365
     container:
       image: mcr.microsoft.com/playwright:v1.63.0-jammy@sha256:167d0506cfbe3c294fb214b2d11737326eeee028aa611fa1ba538e5057675847
       options: --user 1001
@@ -554,11 +556,26 @@ jobs:
           pnpm run preview:vikunja &
           pnpm run preview &
 
+          MAILER_API_ROOT=$(mktemp -d)
+          mkdir -p "$MAILER_API_ROOT/files"
+          VIKUNJA_SERVICE_INTERFACE=127.0.0.1:3457 \
+          VIKUNJA_SERVICE_PUBLICURL=http://127.0.0.1:4173/ \
+          VIKUNJA_SERVICE_ROOTPATH="$MAILER_API_ROOT" \
+          VIKUNJA_FILES_BASEPATH="$MAILER_API_ROOT/files" \
+          VIKUNJA_AUTH_OPENID_ENABLED=0 \
+          VIKUNJA_MAILER_ENABLED=1 \
+          VIKUNJA_MAILER_HOST=mailpit \
+          VIKUNJA_MAILER_PORT=1025 \
+          VIKUNJA_MAILER_FORCESSL=0 \
+          pnpm run preview:vikunja > /tmp/vikunja-mailer.log 2>&1 &
+
           # Wait for services to be ready (using GET method)
-          pnpx wait-on http-get://127.0.0.1:4173 http-get://127.0.0.1:3456/api/v1/info --timeout 60000
+          pnpx wait-on http-get://127.0.0.1:4173 http-get://127.0.0.1:3456/api/v1/info http-get://127.0.0.1:3457/api/v1/info http-get://mailpit:8025/readyz --timeout 60000
 
           pnpm run test:e2e --shard=${{ matrix.shard }}/${{ matrix.total-shards }}
         env:
+          MAILER_API_URL: http://127.0.0.1:3457/api/v1
+          MAILPIT_URL: http://mailpit:8025
           PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS: 1
           TEST_SECRET: averyLongSecretToSe33dtheDB
           VIKUNJA_SERVICE_TESTINGTOKEN: averyLongSecretToSe33dtheDB
@@ -567,6 +584,7 @@ jobs:
           VIKUNJA_SERVICE_PUBLICURL: http://127.0.0.1:3456
           VIKUNJA_DATABASE_PATH: memory
           VIKUNJA_DATABASE_TYPE: sqlite
+          VIKUNJA_MAILER_ENABLED: 0
           VIKUNJA_RATELIMIT_NOAUTHLIMIT: 1000
           VIKUNJA_AUTH_OPENID_ENABLED: 1
           VIKUNJA_AUTH_OPENID_PROVIDERS_DEX_NAME: Dex
@@ -585,5 +603,7 @@ jobs:
         if: always()
         with:
           name: playwright-test-results-${{ matrix.shard }}
-          path: frontend/test-results/
+          path: |
+            frontend/test-results/
+            /tmp/vikunja-mailer.log
           retention-days: 30
