@@ -21,6 +21,7 @@ const labelQueries = vi.hoisted(() => ({
 	ensureLabels: vi.fn(),
 	refreshLabels: vi.fn(),
 	createLabel: vi.fn(),
+	createLabelMutationOptions: () => ({mutationFn: labelQueries.createLabel}),
 	getLabelByExactTitle: vi.fn((labels: Array<{title?: string}>, title: string) =>
 		labels.find(label => label.title?.toLowerCase() === title.toLowerCase()),
 	),
