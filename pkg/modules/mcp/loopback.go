@@ -29,6 +29,9 @@ import (
 	"slices"
 	"strings"
 
+	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -51,7 +54,8 @@ func callTool(ctx context.Context, name string, rawArgs json.RawMessage) (any, e
 	if ec == nil {
 		return nil, errNoCaller
 	}
-	if !t.authorized(tokenFrom(ec)) {
+	token := tokenFrom(ec)
+	if !t.authorized(token) {
 		return nil, fmt.Errorf("%w: %s", errScopeDenied, name)
 	}
 	args, err := decodeArgs(t.spec, rawArgs)
@@ -64,7 +68,22 @@ func callTool(ctx context.Context, name string, rawArgs json.RawMessage) (any, e
 	}
 	rec := httptest.NewRecorder()
 	currentAPI().Adapter().ServeHTTP(rec, req)
+	recordTokenUsage(ctx, token)
 	return parseResponse(rec)
+}
+
+// The loopback runs as an internal dispatch, for which the auth middleware skips the usage event.
+func recordTokenUsage(ctx context.Context, token *models.APIToken) {
+	if token == nil || !config.AuditEnabled.GetBool() {
+		return
+	}
+	err := events.DispatchWithContext(ctx, &models.APITokenUsedEvent{
+		TokenID: token.ID,
+		OwnerID: token.OwnerID,
+	})
+	if err != nil {
+		log.Errorf("[mcp] could not dispatch api token used event: %s", err)
+	}
 }
 func (t *tool) newRequest(ctx context.Context, ec *echo.Context, args map[string]json.RawMessage) (*http.Request, error) {
 	caller := ec.Request()

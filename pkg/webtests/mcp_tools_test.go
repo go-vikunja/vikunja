@@ -23,7 +23,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/user"
 
@@ -95,6 +98,19 @@ func TestMCP_Tools_NullClearsAndUnsets(t *testing.T) {
 	assert.NotContains(t, task["due_date"], "2030")
 	listed := c.callTool("tasks_list", map[string]any{"filter": nil})
 	assert.NotContains(t, listed, "isError", toolResultText(t, listed))
+}
+func TestMCP_Tools_RecordsTokenUsagePerCall(t *testing.T) {
+	config.AuditEnabled.Set(true)
+	t.Cleanup(func() { config.AuditEnabled.Set(false) })
+	c := newMCPClient(t, mcpFullToken)
+	events.ClearDispatchedEvents()
+	rec := c.post(fmt.Sprintf(`[%s,%s]`,
+		`{"jsonrpc":"2.0","id":200,"method":"tools/call","params":{"name":"projects_read","arguments":{"id":1}}}`,
+		`{"jsonrpc":"2.0","id":201,"method":"tools/call","params":{"name":"projects_read","arguments":{"id":2}}}`,
+	))
+	require.Equal(t, http.StatusOK, rec.Code, "%s", rec.Body.String())
+	// One usage for the MCP request itself plus one per tool call.
+	assert.Equal(t, 3, events.CountDispatchedEvents((&models.APITokenUsedEvent{}).Name()))
 }
 func TestMCP_Tools_ListEnvelopeAndFilter(t *testing.T) {
 	c := newMCPClient(t, mcpFullToken)
