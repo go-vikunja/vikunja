@@ -185,6 +185,13 @@ func queryValues(p *huma.Param, raw json.RawMessage) ([]string, error) {
 	return []string{strings.Join(parts, ",")}, nil
 }
 func parseResponse(rec *httptest.ResponseRecorder) (any, error) {
+	// AutoPatch answers a patch that changes nothing with an empty 304.
+	if rec.Code == http.StatusNotModified {
+		return map[string]any{
+			"ok":        true,
+			"unchanged": true,
+		}, nil
+	}
 	if rec.Code >= 300 {
 		return nil, &apiError{
 			status: rec.Code,
