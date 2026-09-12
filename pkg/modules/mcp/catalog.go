@@ -20,6 +20,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"maps"
+	"slices"
 	"strings"
 
 	"code.vikunja.io/api/pkg/models"
@@ -76,10 +78,14 @@ var doActionSpec = mustResolveSpec(toolDoAction, &jsonschema.Schema{
 	AdditionalProperties: falseSchema(),
 })
 
-func installCatalogTools(srv *mcp.Server) {
+func installCatalogTools(srv *mcp.Server, token *models.APIToken) {
+	areas := catalogAreas(token)
+	if len(areas) == 0 {
+		return
+	}
 	srv.AddTool(&mcp.Tool{
 		Name:        toolFindAction,
-		Description: "Discover additional Vikunja actions: project sharing with users or teams, task labels and relations (subtasks), teams and members, project views, saved filters, time entries and more. Returns actions your token authorizes; pass action or resource for full input schemas. Invoke them with do_action.",
+		Description: "Discover additional Vikunja actions for: " + strings.Join(areas, ", ") + ". Returns only actions your token authorizes; pass action or resource for full input schemas. Invoke them with do_action.",
 		InputSchema: findActionSpec.schema,
 	}, findActionHandler)
 	srv.AddTool(&mcp.Tool{
@@ -87,6 +93,21 @@ func installCatalogTools(srv *mcp.Server) {
 		Description: "Invoke an action discovered via find_action. Arguments must match its input_schema.",
 		InputSchema: doActionSpec.schema,
 	}, doActionHandler)
+}
+func catalogAreas(token *models.APIToken) []string {
+	areas := map[string]bool{}
+	for _, a := range catalogActions(token, "", "") {
+		t, ok := findTool(a.Name)
+		if !ok || len(t.op.Tags) == 0 {
+			area, _, _ := strings.Cut(a.Name, "_")
+			areas[area] = true
+			continue
+		}
+		for _, tag := range t.op.Tags {
+			areas[tag] = true
+		}
+	}
+	return slices.Sorted(maps.Keys(areas))
 }
 func catalogActions(token *models.APIToken, action, resource string) []actionInfo {
 	out := []actionInfo{}

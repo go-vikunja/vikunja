@@ -1071,8 +1071,8 @@ var frontendI18nCallReDouble = regexp.MustCompile(`(?:\$t|\$tc|\bt|\btc|\bi18n\.
 // considered used.
 var frontendI18nTemplateLiteralRe = regexp.MustCompile("(?:\\$t|\\$tc|\\bt|\\btc|\\bi18n\\.(?:global\\.)?t)\\(\\s*`([^`$]*)\\$\\{")
 
-// frontendI18nKeypathRe matches Vue template <i18n-t keypath="key.name"> usage.
-var frontendI18nKeypathRe = regexp.MustCompile(`keypath\s*=\s*"([^"]+)"`)
+// Only unbound keypath attributes contain literal keys; :keypath contains JavaScript.
+var frontendI18nKeypathRe = regexp.MustCompile(`(?:^|\s)keypath\s*=\s*"([^"]+)"`)
 
 // walkFrontendForTranslationKeys scans .vue/.ts/.js files under rootDir and
 // extracts translation key references, dynamic-key prefixes, and a set of

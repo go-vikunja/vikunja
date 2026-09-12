@@ -26,7 +26,10 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"slices"
 	"strings"
+
+	"code.vikunja.io/api/pkg/models"
 
 	"github.com/danielgtaylor/huma/v2"
 )
@@ -37,12 +40,6 @@ var (
 	ErrNoCaller     = errors.New("mcp: no caller request in context")
 )
 
-type apiError struct {
-	status int
-	text   string
-}
-
-func (e *apiError) Error() string { return e.text }
 func callTool(ctx context.Context, name string, rawArgs json.RawMessage) (any, error) {
 	t, ok := findTool(name)
 	if !ok {
@@ -76,6 +73,8 @@ func (t *tool) newRequest(ctx context.Context, caller *http.Request, args map[st
 		switch {
 		case !isParam:
 			body[name] = raw
+		// A null body field clears it through merge-patch; a null parameter is simply unset.
+		case isJSONNull(raw):
 		case p.In == "path":
 			v, err := scalarString(raw)
 			if err != nil {
@@ -91,9 +90,6 @@ func (t *tool) newRequest(ctx context.Context, caller *http.Request, args map[st
 				query.Add(name, v)
 			}
 		}
-	}
-	if p, ok := t.spec.params["format"]; ok && p.In == "query" && !query.Has("format") {
-		query.Set("format", "markdown")
 	}
 	var reader io.Reader
 	if t.spec.hasBody {
@@ -111,24 +107,44 @@ func (t *tool) newRequest(ctx context.Context, caller *http.Request, args map[st
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Authorization", caller.Header.Get("Authorization"))
+	if auth := apiTokenAuthorization(caller); auth != "" {
+		req.Header.Set("Authorization", auth)
+	}
 	req.Header.Set("Accept", "application/json")
 	if reader != nil {
 		req.Header.Set("Content-Type", t.contentType)
 	}
-	// Preserve the client identity used by the rate limiter and access logs.
+	// Keep the public origin so generated links and the rate limiter see the real client.
+	req.Host = caller.Host
+	req.TLS = caller.TLS
 	for _, h := range []string{
 		"X-Forwarded-For",
+		"X-Forwarded-Proto",
 		"X-Real-Ip",
+		"X-Request-Id",
 		"Accept-Language",
 		"User-Agent",
 	} {
-		if v := caller.Header.Get(h); v != "" {
-			req.Header.Set(h, v)
+		if vs := caller.Header.Values(h); len(vs) > 0 {
+			req.Header[http.CanonicalHeaderKey(h)] = slices.Clone(vs)
 		}
 	}
 	req.RemoteAddr = caller.RemoteAddr
 	return req, nil
+}
+
+// The transport authorised one of possibly several Authorization values; the
+// loopback must not authenticate as a different one.
+func apiTokenAuthorization(caller *http.Request) string {
+	for _, v := range caller.Header.Values("Authorization") {
+		if strings.HasPrefix(v, "Bearer "+models.APITokenPrefix) {
+			return v
+		}
+	}
+	return ""
+}
+func isJSONNull(raw json.RawMessage) bool {
+	return bytes.Equal(bytes.TrimSpace(raw), []byte("null"))
 }
 func scalarString(raw json.RawMessage) (string, error) {
 	dec := json.NewDecoder(bytes.NewReader(raw))
@@ -173,11 +189,15 @@ func queryValues(p *huma.Param, raw json.RawMessage) ([]string, error) {
 	return []string{strings.Join(parts, ",")}, nil
 }
 func parseResponse(rec *httptest.ResponseRecorder) (any, error) {
+	// AutoPatch answers a patch that changes nothing with an empty 304.
+	if rec.Code == http.StatusNotModified {
+		return map[string]any{
+			"ok":        true,
+			"unchanged": true,
+		}, nil
+	}
 	if rec.Code >= 300 {
-		return nil, &apiError{
-			status: rec.Code,
-			text:   errorText(rec),
-		}
+		return nil, errors.New(errorText(rec))
 	}
 	if rec.Body.Len() == 0 {
 		return map[string]any{"ok": true}, nil
@@ -194,6 +214,10 @@ func parseResponse(rec *httptest.ResponseRecorder) (any, error) {
 const maxErrorTextRunes = 2000
 
 func errorText(rec *httptest.ResponseRecorder) string {
+	// The transport already authenticated the token, so a loopback 401 is a missing scope.
+	if rec.Code == http.StatusUnauthorized {
+		return "401 Unauthorized: the API token lacks a scope required by this call (check route and expand scopes)"
+	}
 	var problem struct {
 		Title  string `json:"title"`
 		Detail string `json:"detail"`

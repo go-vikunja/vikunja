@@ -319,6 +319,56 @@
         },
         "deleteSuccess": "Session revoked successfully. It may take up to 10 minutes for the session to fully expire.",
         "noOtherSessions": "No other active sessions."
+      },
+      "mcp": {
+        "title": "MCP",
+        "intro": "Connect an AI assistant to your tasks, projects, and labels with the Model Context Protocol (MCP).",
+        "more": "More information about MCP in Vikunja",
+        "endpoint": "MCP endpoint",
+        "tokens": "MCP tokens",
+        "manageTokens": "Manage all API tokens",
+        "created": "Your MCP token is ready. Choose your client below to connect it.",
+        "client": "Which client do you use?",
+        "chooseClient": "Choose a client",
+        "clientHelp": "{client} setup guide",
+        "typedPreset": "Typed tools read + write",
+        "clients": {
+          "claudeCode": {
+            "title": "Claude Code",
+            "command": "Run this command in a terminal: {value}",
+            "verify": "Start a Claude Code session and run /mcp to check the connection."
+          },
+          "codex": {
+            "title": "Codex",
+            "environment": "Set the token in your shell environment: {value}",
+            "command": "Add the MCP server: {value}",
+            "config": "Alternatively, add this to ~/.codex/config.toml after setting the environment variable: {value}",
+            "note": "Start Codex from the shell where you set VIKUNJA_MCP_TOKEN. Set it again in each new shell, or store it securely in your shell environment."
+          },
+          "claudeDesktop": {
+            "title": "Claude Desktop / claude.ai",
+            "open": "Open Customize → Connectors → Add custom connector. On Team or Enterprise, an owner adds it under Organization settings → Connectors.",
+            "url": "Name the connector Vikunja and enter this URL: {value}",
+            "auth": "Set Authentication to No sign-in.",
+            "header": "Under Request headers, choose authorization and paste this full value, including Bearer and the space, then add the connector: {value}",
+            "beta": "Request headers are in beta for a limited set of organizations. If this section is missing, connecting Vikunja is not available for your account yet."
+          },
+          "mistral": {
+            "title": "Mistral Vibe",
+            "open": "In the sidebar on the left open Context → Connectors → Add Connector → Add Custom Connector.",
+            "url": "Name the connector Vikunja, enter this URL, and select Connect: {value}",
+            "token": "Choose HTTP Bearer authentication and paste this token: {value}"
+          },
+          "chatgpt": {
+            "title": "ChatGPT",
+            "unavailable": "ChatGPT requires OAuth to connect to Vikunja. MCP OAuth is not supported yet, so this token cannot be used in ChatGPT."
+          },
+          "other": {
+            "title": "Other",
+            "url": "Use streamable HTTP transport with this endpoint: {value}",
+            "header": "Send this authorization header with every request: {value}"
+          }
+        }
       }
     },
     "deletion": {

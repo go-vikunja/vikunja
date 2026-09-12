@@ -27,9 +27,10 @@ vi.mock('@/services/apiToken', () => ({
 
 const i18n = createI18n({legacy: false, locale: 'en', messages: {en}})
 
-function mountForm() {
+function mountForm(props = {}) {
 	const errors: unknown[] = []
 	const wrapper = mount(ApiTokenForm, {
+		props,
 		global: {
 			plugins: [i18n],
 			stubs: {
@@ -97,4 +98,46 @@ describe('ApiTokenForm', () => {
 		expect(wrapper.text()).toContain('The title is required')
 		expect(mounted.errors).toEqual([])
 	})
+	it('uses supplied routes and presets and retains locked scopes through group toggles', async () => {
+		const mounted = mountForm({
+			initialTitle: 'MCP',
+			routes: {
+				mcp: {access: {path: '/api/v2/mcp', method: 'ANY'}},
+				tasks: {read_all: {path: '/api/v2/tasks', method: 'GET'}, create: {path: '/api/v2/projects/:project/tasks', method: 'POST'}},
+			},
+			presets: [{id: 'readOnly', groups: {'*': ['read_all']}}],
+			lockedScopes: {mcp: ['access']},
+		})
+		wrapper = mounted.wrapper
+		await flushPromises()
+		expect(getAvailableRoutes).not.toHaveBeenCalled()
+		const buttons = wrapper.findAll('.preset-buttons button')
+		expect(buttons).toHaveLength(1)
+		await buttons[0].trigger('click')
+		const locked = wrapper.findAll('input[type="checkbox"]:disabled')
+		expect(locked).toHaveLength(2)
+		for (const checkbox of locked) expect((checkbox.element as HTMLInputElement).checked).toBe(true)
+		await wrapper.find('form').trigger('submit')
+		await flushPromises()
+		expect(create).toHaveBeenCalledWith(expect.objectContaining({permissions: {mcp: ['access'], tasks: ['read_all']}}))
+		expect(mounted.errors).toEqual([])
+	})
+
+	it('keeps a locked permission when deselecting its partially locked group', async () => {
+		const mounted = mountForm({
+			initialTitle: 'MCP',
+			routes: {tasks: {read_all: {path: '/api/v2/tasks', method: 'GET'}, create: {path: '/api/v2/projects/:project/tasks', method: 'POST'}}},
+			presets: [{id: 'fullAccess', groups: {'*': '*'}}],
+			lockedScopes: {tasks: ['read_all']},
+		})
+		wrapper = mounted.wrapper
+		await flushPromises()
+		await wrapper.get('.preset-buttons button').trigger('click')
+		await wrapper.findAll('input[type="checkbox"]')[0].setValue(false)
+		await wrapper.find('form').trigger('submit')
+		await flushPromises()
+		expect(create).toHaveBeenCalledWith(expect.objectContaining({permissions: {tasks: ['read_all']}}))
+		expect(mounted.errors).toEqual([])
+	})
+
 })

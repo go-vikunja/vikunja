@@ -41,7 +41,13 @@ func TestExposure(t *testing.T) {
 		op := &huma.Operation{
 			OperationID: tc.id,
 			Method:      http.MethodPost,
-			RequestBody: &huma.RequestBody{Content: map[string]*huma.MediaType{"application/json": {Schema: &huma.Schema{Type: "object"}}}},
+			RequestBody: &huma.RequestBody{
+				Content: map[string]*huma.MediaType{
+					"application/json": {
+						Schema: &huma.Schema{Type: "object"},
+					},
+				},
+			},
 		}
 		tier, ok := exposure(tc.id, op)
 		assert.True(t, ok)
@@ -49,6 +55,7 @@ func TestExposure(t *testing.T) {
 	}
 	for _, id := range []string{
 		"tokens-create",
+		"mcp-info",
 		"token-test",
 		"auth-login",
 		"user-show",
@@ -73,8 +80,14 @@ func TestExposure(t *testing.T) {
 		"application/merge-patch+json",
 	} {
 		op := &huma.Operation{
-			Method:      http.MethodPatch,
-			RequestBody: &huma.RequestBody{Content: map[string]*huma.MediaType{ct: {Schema: &huma.Schema{Type: "object"}}}},
+			Method: http.MethodPatch,
+			RequestBody: &huma.RequestBody{
+				Content: map[string]*huma.MediaType{
+					ct: {
+						Schema: &huma.Schema{Type: "object"},
+					},
+				},
+			},
 		}
 		tier, ok := exposure("tasks-update", op)
 		assert.Equal(t, ct == "application/merge-patch+json", ok)
@@ -82,8 +95,4 @@ func TestExposure(t *testing.T) {
 			assert.Equal(t, TierTyped, tier)
 		}
 	}
-}
-
-func TestToolNameFor(t *testing.T) {
-	assert.Equal(t, "task_comments_create", toolNameFor("task-comments-create"))
 }

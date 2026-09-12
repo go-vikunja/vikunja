@@ -410,6 +410,26 @@ export type ColumnMapping = {
     column_name?: string;
 };
 
+export type ConnectionSettings = {
+    /**
+     * A URL to the JSON Schema for this object.
+     */
+    readonly $schema?: string;
+    /**
+     * Absolute URL of the streamable HTTP endpoint.
+     */
+    endpoint?: string;
+    presets?: TokenPresets;
+    /**
+     * Token permissions usable by exposed MCP tools, including mcp.access.
+     */
+    routes?: {
+        [key: string]: {
+            [key: string]: RouteDetail;
+        };
+    };
+};
+
 export type CreateUserBody = {
     /**
      * A URL to the JSON Schema for this object.
@@ -2732,6 +2752,27 @@ export type Token = {
     readonly token?: string;
 };
 
+export type TokenPresets = {
+    /**
+     * Wildcard granting all advertised permissions.
+     */
+    full?: {
+        [key: string]: string;
+    };
+    /**
+     * Wildcard permissions expanded against routes.
+     */
+    read_only?: {
+        [key: string]: Array<string> | null;
+    };
+    /**
+     * Exact permissions used by the first-class tools.
+     */
+    typed?: {
+        [key: string]: Array<string> | null;
+    };
+};
+
 export type TokenRequest = {
     /**
      * A URL to the JSON Schema for this object.
@@ -3462,6 +3503,22 @@ export type CallbackWritable = {
     redirect_url?: string;
     scope?: string;
     totp_passcode?: string;
+};
+
+export type ConnectionSettingsWritable = {
+    /**
+     * Absolute URL of the streamable HTTP endpoint.
+     */
+    endpoint?: string;
+    presets?: TokenPresets;
+    /**
+     * Token permissions usable by exposed MCP tools, including mcp.access.
+     */
+    routes?: {
+        [key: string]: {
+            [key: string]: RouteDetail;
+        };
+    };
 };
 
 export type CreateUserBodyWritable = {
@@ -5642,6 +5699,31 @@ export type AuthLogoutResponses = {
 };
 
 export type AuthLogoutResponse = AuthLogoutResponses[keyof AuthLogoutResponses];
+
+export type McpInfoData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/mcp/info';
+};
+
+export type McpInfoErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type McpInfoError = McpInfoErrors[keyof McpInfoErrors];
+
+export type McpInfoResponses = {
+    /**
+     * OK
+     */
+    200: ConnectionSettings;
+};
+
+export type McpInfoResponse = McpInfoResponses[keyof McpInfoResponses];
 
 export type MigrationCsvDetectData = {
     body: {

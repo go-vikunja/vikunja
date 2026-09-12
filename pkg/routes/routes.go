@@ -478,14 +478,7 @@ func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, noAuthRateLimit, refreshRa
 
 	// Resources self-register via init(); RegisterAll runs them all + AutoPatch.
 	apiv2.RegisterAll(api)
-	// MCP reads the completed spec, including AutoPatch operations.
-	mcpmodule.Init(api, apiV2Prefix)
-	mcpPath, ok := strings.CutPrefix(mcpmodule.RoutePrefix, apiV2Prefix)
-	if !ok {
-		panic("mcp: RoutePrefix is not under " + apiV2Prefix)
-	}
-	a.Any(mcpPath, mcpmodule.Handler)
-	a.Any(mcpPath+"/*", mcpmodule.Handler)
+	mcpmodule.Register(api, a, apiV2Prefix)
 }
 
 func registerAPIRoutes(a *echo.Group, noAuthRateLimit, refreshRateLimit echo.MiddlewareFunc) {

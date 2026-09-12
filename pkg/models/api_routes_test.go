@@ -17,6 +17,7 @@
 package models
 
 import (
+	"net/http"
 	"net/http/httptest"
 	"testing"
 
@@ -514,6 +515,7 @@ func TestAPITokenRoutes_MCPAccessRegistered(t *testing.T) {
 	require.True(t, has)
 	require.NotNil(t, detail)
 	assert.Equal(t, "/api/v2/mcp", detail.Path)
+	assert.Equal(t, http.MethodPost, detail.Method)
 }
 
 func TestPermissionsAreValid_MCPAccess(t *testing.T) {

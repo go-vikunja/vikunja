@@ -45,7 +45,7 @@ func echoResult(t *testing.T, res any) map[string]any {
 	require.True(t, ok, "%T", res)
 	return m
 }
-func TestCallTool_ListForwardsAuthAndDefaultsMarkdown(t *testing.T) {
+func TestCallTool_ListForwardsAuthAndFormat(t *testing.T) {
 	ctx := withTestCaller(t)
 	res, err := callTool(ctx, "things_list", json.RawMessage(`{"q":"x","expand":["a","b"]}`))
 	require.NoError(t, err)
@@ -53,11 +53,18 @@ func TestCallTool_ListForwardsAuthAndDefaultsMarkdown(t *testing.T) {
 	assert.Equal(t, "Bearer tk_test", m["auth"])
 	q := m["query"].(map[string]any)
 	assert.Equal(t, "x", q["q"])
-	assert.Equal(t, "markdown", q["format"])
+	assert.Empty(t, q["format"])
 	assert.Equal(t, "a|b", q["expand"])
-	res, err = callTool(ctx, "things_list", json.RawMessage(`{"format":"html"}`))
+	res, err = callTool(ctx, "things_list", json.RawMessage(`{"format":"markdown"}`))
 	require.NoError(t, err)
-	assert.Equal(t, "html", echoResult(t, res)["query"].(map[string]any)["format"])
+	assert.Equal(t, "markdown", echoResult(t, res)["query"].(map[string]any)["format"])
+}
+func TestCallTool_NullParamIsOmitted(t *testing.T) {
+	res, err := callTool(withTestCaller(t), "things_list", json.RawMessage(`{"q":"x","expand":null}`))
+	require.NoError(t, err)
+	q := echoResult(t, res)["query"].(map[string]any)
+	assert.Equal(t, "x", q["q"])
+	assert.Empty(t, q["expand"])
 }
 func TestCallTool_CreateSendsJSONBody(t *testing.T) {
 	res, err := callTool(withTestCaller(t), "things_create", json.RawMessage(`{"title":"hi","done":true}`))
@@ -83,10 +90,15 @@ func TestCallTool_DeleteReturnsOK(t *testing.T) {
 }
 func TestCallTool_HTTPErrorIsToolError(t *testing.T) {
 	_, err := callTool(withTestCaller(t), "things_read", json.RawMessage(`{"id":404}`))
-	var apiErr *apiError
-	require.ErrorAs(t, err, &apiErr)
-	assert.Equal(t, http.StatusNotFound, apiErr.status)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "404 Not Found")
 	assert.Contains(t, err.Error(), "no such thing")
+}
+func TestCallTool_UnauthorizedMentionsScopes(t *testing.T) {
+	_, err := callTool(withTestCaller(t), "things_read", json.RawMessage(`{"id":401}`))
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "401 Unauthorized")
+	assert.Contains(t, err.Error(), "scope")
 }
 func TestCallTool_UnknownArgumentRejectedBeforeDispatch(t *testing.T) {
 	_, err := callTool(withTestCaller(t), "things_read", json.RawMessage(`{"id":1,"bogus":1}`))
@@ -106,10 +118,18 @@ func TestCallTool_UnknownTool(t *testing.T) {
 func TestCallTool_ClientAddress(t *testing.T) {
 	ctx := withTestCaller(t)
 	caller := CallerFromContext(ctx)
-	caller.Header.Set("X-Forwarded-For", "203.0.113.9")
+	caller.Host = "vikunja.example.com"
+	caller.Header.Add("X-Forwarded-For", "203.0.113.9")
+	caller.Header.Add("X-Forwarded-For", "198.51.100.4")
+	caller.Header.Set("X-Request-Id", "req-1")
 	tl, _ := findTool("things_read")
 	req, err := tl.newRequest(ctx, caller, map[string]json.RawMessage{"id": json.RawMessage(`1`)})
 	require.NoError(t, err)
 	assert.Equal(t, caller.RemoteAddr, req.RemoteAddr)
-	assert.Equal(t, "203.0.113.9", req.Header.Get("X-Forwarded-For"))
+	assert.Equal(t, "vikunja.example.com", req.Host)
+	assert.Equal(t, []string{
+		"203.0.113.9",
+		"198.51.100.4",
+	}, req.Header.Values("X-Forwarded-For"))
+	assert.Equal(t, "req-1", req.Header.Get("X-Request-Id"))
 }

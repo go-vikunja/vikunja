@@ -19,40 +19,114 @@ package mcp
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"sync"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/version"
+
+	"github.com/danielgtaylor/huma/v2"
 	"github.com/labstack/echo/v5"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-const RoutePrefix = "/api/v2/mcp"
+const (
+	routeSuffix = "/mcp"
+	RoutePrefix = "/api/v2" + routeSuffix
+)
+
 const (
 	maxRequestBytes       = 4 << 20
 	maxMessagesPerRequest = 20
 )
 
-func newServer(req *http.Request) *mcp.Server {
+// Register must follow apiv2.RegisterAll so tools pick up the AutoPatch operations.
+func Register(api huma.API, group *echo.Group, groupPrefix string) {
+	Init(api, groupPrefix)
+	group.POST(routeSuffix, Handler)
+}
+
+func newServerForRequest(req *http.Request) *mcp.Server {
 	srv := mcp.NewServer(&mcp.Implementation{
 		Name:    "vikunja",
 		Version: version.Version,
 	}, nil)
-	installTools(srv, TokenFromContext(req.Context()))
+	addToolsAuthorizedBy(srv, TokenFromContext(req.Context()))
 	return srv
 }
 
-// Stateless prevents session IDs from carrying identity across requests.
-// Localhost protection would reject deployments behind a loopback reverse proxy.
-var streamableHandler = mcp.NewStreamableHTTPHandler(newServer, &mcp.StreamableHTTPOptions{
-	Stateless:                  true,
-	DisableLocalhostProtection: true,
-})
+func addToolsAuthorizedBy(srv *mcp.Server, token *models.APIToken) {
+	for _, t := range snapshotTools() {
+		if t.tier != TierTyped || !t.authorized(token) {
+			continue
+		}
+		srv.AddTool(&mcp.Tool{
+			Name:        t.name,
+			Description: t.description,
+			InputSchema: t.spec.schema,
+		}, rawToolHandler(t.name))
+	}
+	installCatalogTools(srv, token)
+}
+
+func rawToolHandler(name string) mcp.ToolHandler {
+	return func(ctx context.Context, req *mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		result, err := callTool(ctx, name, req.Params.Arguments)
+		if err != nil {
+			//nolint:nilerr // Domain errors use MCP tool results.
+			return &mcp.CallToolResult{
+				IsError: true,
+				Content: []mcp.Content{&mcp.TextContent{Text: err.Error()}},
+			}, nil
+		}
+		body, err := json.Marshal(result)
+		if err != nil {
+			return nil, fmt.Errorf("mcp: marshal %s result: %w", name, err)
+		}
+		res := &mcp.CallToolResult{Content: []mcp.Content{&mcp.TextContent{Text: string(body)}}}
+		if _, isObject := result.(map[string]any); isObject {
+			res.StructuredContent = result
+		}
+		return res, nil
+	}
+}
+
+// Built on first use because the CORS config is not loaded at package init.
+var streamableHandler = sync.OnceValue(newStreamableHandler)
+
+// The SDK calls newServerForRequest on every request in stateless mode, so tools/list
+// is already filtered by the caller's token. Stateless also prevents session IDs from
+// carrying identity across requests; localhost protection would reject deployments
+// behind a loopback reverse proxy.
+func newStreamableHandler() http.Handler {
+	srv := mcp.NewStreamableHTTPHandler(newServerForRequest, &mcp.StreamableHTTPOptions{
+		Stateless:                  true,
+		DisableLocalhostProtection: true,
+	})
+	return crossOriginProtection().Handler(srv)
+}
+
+// MCP is not a browser transport, so anything that carries an Origin a browser would
+// not send to itself is rejected even before the Authorization header is looked at.
+func crossOriginProtection() *http.CrossOriginProtection {
+	protection := http.NewCrossOriginProtection()
+	if !config.CorsEnable.GetBool() {
+		return protection
+	}
+	for _, origin := range config.CorsOrigins.GetStringSlice() {
+		if err := protection.AddTrustedOrigin(origin); err != nil {
+			log.Debugf("[mcp] not trusting cors origin %q: %s", origin, err)
+		}
+	}
+	return protection
+}
 
 // Handler rejects JWTs, which bypass API-token route scopes.
 func Handler(c *echo.Context) error {
@@ -69,32 +143,34 @@ func Handler(c *echo.Context) error {
 		return echo.NewHTTPError(http.StatusForbidden, "token does not have mcp:access scope")
 	}
 	req := c.Request()
-	if err := limitRequestBody(c, req); err != nil {
+	if proceed, err := limitRequestBody(c, req); !proceed {
 		return err
 	}
 	ctx := WithCaller(WithToken(req.Context(), token), req)
-	http.StripPrefix(RoutePrefix, streamableHandler).ServeHTTP(c.Response(), req.WithContext(ctx))
+	http.StripPrefix(RoutePrefix, streamableHandler()).ServeHTTP(c.Response(), req.WithContext(ctx))
 	return nil
 }
-func limitRequestBody(c *echo.Context, req *http.Request) error {
-	if req.Method != http.MethodPost {
-		return nil
-	}
+
+// The 413 is written instead of returned because error_handler.go rewrites every
+// returned 413 into the generic "file is too large" error.
+func limitRequestBody(c *echo.Context, req *http.Request) (proceed bool, err error) {
 	req.Body = http.MaxBytesReader(c.Response(), req.Body, maxRequestBytes)
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		var tooLarge *http.MaxBytesError
 		if errors.As(err, &tooLarge) {
-			return echo.NewHTTPError(http.StatusRequestEntityTooLarge, fmt.Sprintf("MCP request body must not exceed %d bytes", maxRequestBytes))
+			return false, c.JSON(http.StatusRequestEntityTooLarge, map[string]string{
+				"message": fmt.Sprintf("MCP request body must not exceed %d bytes", maxRequestBytes),
+			})
 		}
-		return echo.NewHTTPError(http.StatusBadRequest, "could not read request body")
+		return false, echo.NewHTTPError(http.StatusBadRequest, "could not read request body")
 	}
 	if count, isBatch := countBatchMessages(body); isBatch && count > maxMessagesPerRequest {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("MCP requests are limited to %d batched messages", maxMessagesPerRequest))
+		return false, echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("MCP requests are limited to %d batched messages", maxMessagesPerRequest))
 	}
 	req.Body = io.NopCloser(bytes.NewReader(body))
 	req.ContentLength = int64(len(body))
-	return nil
+	return true, nil
 }
 func countBatchMessages(body []byte) (count int, isBatch bool) {
 	dec := json.NewDecoder(bytes.NewReader(body))

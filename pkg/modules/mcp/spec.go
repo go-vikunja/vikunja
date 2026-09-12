@@ -40,6 +40,8 @@ func falseSchema() *jsonschema.Schema { return &jsonschema.Schema{Not: &jsonsche
 
 const maxInlineDepth = 8
 
+const formatParamDescription = "Rich-text format for description fields: html (default) or markdown. Updates always exchange HTML."
+
 func buildToolSpec(oapi *huma.OpenAPI, op *huma.Operation) (*toolSpec, error) {
 	props := map[string]*jsonschema.Schema{}
 	params := map[string]*huma.Param{}
@@ -55,6 +57,10 @@ func buildToolSpec(oapi *huma.OpenAPI, op *huma.Operation) (*toolSpec, error) {
 		if ps.Description == "" {
 			ps.Description = p.Description
 		}
+		// The API description this parameter refers to is not reachable over MCP.
+		if p.In == "query" && p.Name == "format" {
+			ps.Description = formatParamDescription
+		}
 		props[p.Name] = ps
 		params[p.Name] = p
 		if p.Required {
@@ -62,11 +68,11 @@ func buildToolSpec(oapi *huma.OpenAPI, op *huma.Operation) (*toolSpec, error) {
 		}
 	}
 	hasBody := false
-	if _, body := bodyMedia(op); body != nil {
+	if _, body := bodyMedia(bodySchemaOp(oapi, op)); body != nil {
 		body = inlineRefs(oapi, body, 0)
 		hasBody = true
 		for name, prop := range body.Properties {
-			if prop.ReadOnly {
+			if prop.ReadOnly || suppliedByPathParam(params, name) {
 				continue
 			}
 			if _, clash := props[name]; clash {
@@ -78,7 +84,7 @@ func buildToolSpec(oapi *huma.OpenAPI, op *huma.Operation) (*toolSpec, error) {
 			}
 			props[name] = ps
 		}
-		if op.Method != http.MethodPut && op.Method != http.MethodPatch {
+		if op.Method != http.MethodPatch {
 			required = append(required, body.Required...)
 		}
 		if op.Method == http.MethodPost {
@@ -107,6 +113,29 @@ func buildToolSpec(oapi *huma.OpenAPI, op *huma.Operation) (*toolSpec, error) {
 		params:   params,
 		hasBody:  hasBody,
 	}, nil
+}
+
+// Handlers take the id from the path and ignore the body field.
+func suppliedByPathParam(params map[string]*huma.Param, bodyProp string) bool {
+	base, found := strings.CutSuffix(bodyProp, "_id")
+	if !found {
+		return false
+	}
+	p, ok := params[base]
+	return ok && p.In == "path"
+}
+
+// AutoPatch derives its PATCH body from the PUT body but drops refs and nullability,
+// which collapses nested schemas to {}. Read the shape from the PUT instead.
+func bodySchemaOp(oapi *huma.OpenAPI, op *huma.Operation) *huma.Operation {
+	if op.Method != http.MethodPatch {
+		return op
+	}
+	item := oapi.Paths[op.Path]
+	if item == nil || item.Put == nil {
+		return op
+	}
+	return item.Put
 }
 func inlineRefs(oapi *huma.OpenAPI, s *huma.Schema, depth int) *huma.Schema {
 	if s == nil {

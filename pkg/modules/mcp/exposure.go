@@ -61,6 +61,7 @@ var typedTools = map[string]bool{
 // Exclude credentials, account management, outbound requests, public shares, and file transfers.
 var deniedOperationPrefixes = []string{
 	"admin-",
+	"mcp-",
 	"auth-",
 	"oauth-",
 	"token-",

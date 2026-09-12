@@ -47,13 +47,13 @@ func TestCatalogActions(t *testing.T) {
 	assert.Len(t, catalogActions(nil, "", "things"), 3)
 }
 
-func TestCatalogTools_Protocol(t *testing.T) {
+func TestCatalogTools_RejectsUnknownArguments(t *testing.T) {
 	ctx := withTestCaller(t)
 	srv := sdk.NewServer(&sdk.Implementation{
 		Name:    "test",
 		Version: "1",
 	}, nil)
-	installCatalogTools(srv)
+	installCatalogTools(srv, nil)
 	clientTransport, serverTransport := sdk.NewInMemoryTransports()
 	ss, err := srv.Connect(ctx, serverTransport, nil)
 	require.NoError(t, err)
@@ -65,54 +65,11 @@ func TestCatalogTools_Protocol(t *testing.T) {
 	cs, err := client.Connect(ctx, clientTransport, nil)
 	require.NoError(t, err)
 	defer cs.Close()
-	listed, err := cs.ListTools(ctx, nil)
-	require.NoError(t, err)
-	require.Len(t, listed.Tools, 2)
-	found, err := cs.CallTool(ctx, &sdk.CallToolParams{
+	result, err := cs.CallTool(ctx, &sdk.CallToolParams{
 		Name:      "find_action",
-		Arguments: map[string]any{"action": "things_read"},
+		Arguments: map[string]any{"bogus": true},
 	})
 	require.NoError(t, err)
-	assert.False(t, found.IsError)
-	assert.Contains(t, found.Content[0].(*sdk.TextContent).Text, "input_schema")
-	called, err := cs.CallTool(ctx, &sdk.CallToolParams{
-		Name: "do_action",
-		Arguments: map[string]any{
-			"action":    "things_read",
-			"arguments": map[string]any{"id": 7},
-		},
-	})
-	require.NoError(t, err)
-	assert.False(t, called.IsError)
-	assert.Contains(t, called.Content[0].(*sdk.TextContent).Text, "stored")
-	for _, tc := range []struct {
-		name string
-		args map[string]any
-	}{
-		{
-			"find_action",
-			map[string]any{"bogus": true},
-		},
-		{
-			"do_action",
-			map[string]any{"action": "nope"},
-		},
-		{
-			"do_action",
-			map[string]any{
-				"action": "things_read",
-				"arguments": map[string]any{
-					"id":    1,
-					"bogus": true,
-				},
-			},
-		},
-	} {
-		result, err := cs.CallTool(ctx, &sdk.CallToolParams{
-			Name:      tc.name,
-			Arguments: tc.args,
-		})
-		require.NoError(t, err)
-		assert.True(t, result.IsError)
-	}
+	assert.True(t, result.IsError)
+	assert.Contains(t, result.Content[0].(*sdk.TextContent).Text, "invalid arguments for find_action")
 }

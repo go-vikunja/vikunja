@@ -17,8 +17,17 @@
 package webtests
 
 import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/modules/auth"
+	"code.vikunja.io/api/pkg/user"
+
+	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -55,6 +64,18 @@ func TestMCP_Tools_TaskLifecycle(t *testing.T) {
 	gone := c.callTool("tasks_read", map[string]any{"projecttask": id})
 	assert.Equal(t, true, gone["isError"])
 	assert.Contains(t, toolResultText(t, gone), "404")
+}
+func TestMCP_Tools_UnchangedUpdateIsNotAnError(t *testing.T) {
+	c := newMCPClient(t, mcpFullToken)
+	args := map[string]any{
+		"projecttask": 1,
+		"title":       "same title",
+	}
+	first := c.callTool("tasks_update", args)
+	require.NotContains(t, first, "isError", toolResultText(t, first))
+	second := c.callTool("tasks_update", args)
+	require.NotContains(t, second, "isError", toolResultText(t, second))
+	assert.Contains(t, toolResultText(t, second), `"unchanged":true`)
 }
 func TestMCP_Tools_ListEnvelopeAndFilter(t *testing.T) {
 	c := newMCPClient(t, mcpFullToken)
@@ -97,16 +118,30 @@ func TestMCP_Tools_CommentLifecycle(t *testing.T) {
 	}), &comment)
 	assert.Equal(t, "edited", comment["comment"])
 }
+func assigneeIDs(t *testing.T, c *mcpClient) []int64 {
+	t.Helper()
+	var assignees []struct {
+		ID int64 `json:"id"`
+	}
+	readAllItems(t, c.callTool("task_assignees_list", map[string]any{"projecttask": 1}), &assignees)
+	ids := make([]int64, 0, len(assignees))
+	for _, a := range assignees {
+		ids = append(ids, a.ID)
+	}
+	return ids
+}
 func TestMCP_Tools_AssigneeAddRemove(t *testing.T) {
 	c := newMCPClient(t, mcpFullToken)
 	require.NotContains(t, c.callTool("task_assignees_create", map[string]any{
 		"projecttask": 1,
 		"user_id":     1,
 	}), "isError")
+	assert.Contains(t, assigneeIDs(t, c), int64(1))
 	require.NotContains(t, c.callTool("task_assignees_delete", map[string]any{
 		"projecttask": 1,
 		"user":        1,
 	}), "isError")
+	assert.NotContains(t, assigneeIDs(t, c), int64(1))
 }
 func TestMCP_Tools_UsersSearchStripsEmail(t *testing.T) {
 	c := newMCPClient(t, mcpFullToken)
@@ -124,11 +159,15 @@ func TestMCP_Tools_ForbiddenIsError(t *testing.T) {
 	assert.Contains(t, toolResultText(t, res), "403")
 }
 func TestMCP_Tools_ScopeDeniedIsError(t *testing.T) {
-	c := newMCPClient(t, mcpProjectsReadToken)
-	// Unlisted typed tools are reached through do_action, which checks scopes per call.
+	c := newMCPClient(t, mcpFullToken)
+	// do_action checks scopes per call, so actions outside the token's scopes still fail.
 	res := c.callTool("do_action", map[string]any{
-		"action":    "projects_create",
-		"arguments": map[string]any{"title": "nope"},
+		"action": "project_views_update",
+		"arguments": map[string]any{
+			"project": 1,
+			"view":    1,
+			"title":   "nope",
+		},
 	})
 	assert.Equal(t, true, res["isError"])
 	assert.Contains(t, toolResultText(t, res), "not authorized")
@@ -169,6 +208,7 @@ func TestMCP_Tools_CreateSchemaMarksRequired(t *testing.T) {
 		props := schema["properties"].(map[string]any)
 		assert.NotContains(t, props, "created_by")
 		assert.NotContains(t, props, "id")
+		assert.NotContains(t, props, "project_id")
 		assert.Contains(t, props, "due_date")
 		return
 	}
@@ -224,4 +264,43 @@ func TestMCP_Tools_ProjectAndLabelLifecycle(t *testing.T) {
 			require.NotContains(t, c.callTool(resource+"_delete", map[string]any{"id": id}), "isError")
 		})
 	}
+}
+
+func callToolWithAuth(t *testing.T, c *mcpClient, authorizations []string, name string, args map[string]any) map[string]any {
+	t.Helper()
+	params, err := json.Marshal(map[string]any{
+		"name":      name,
+		"arguments": args,
+	})
+	require.NoError(t, err)
+	req := mcpRequest(http.MethodPost, fmt.Sprintf(`{"jsonrpc":"2.0","id":99,"method":"tools/call","params":%s}`, params))
+	for _, a := range authorizations {
+		req.Header.Add(echo.HeaderAuthorization, a)
+	}
+	req.Header.Set("Mcp-Session-Id", c.sessionID)
+	rec := httptest.NewRecorder()
+	c.e.ServeHTTP(rec, req)
+	require.Equal(t, http.StatusOK, rec.Code, "%s", rec.Body.String())
+	resp := readMCPJSON(t, rec.Body.String())
+	result, ok := resp["result"].(map[string]any)
+	require.True(t, ok, "%v", resp)
+	return result
+}
+func TestMCP_Tools_LoopbackUsesTheAuthorisedToken(t *testing.T) {
+	c := newMCPClient(t, mcpFullToken)
+	s := db.NewSession()
+	defer s.Close()
+	u, err := user.GetUserByID(s, 1)
+	require.NoError(t, err)
+	jwt, err := auth.NewUserJWTAuthtoken(u, "test-session-id")
+	require.NoError(t, err)
+	denied := callToolWithAuth(t, c, []string{
+		"Bearer " + jwt,
+		"Bearer " + mcpFullToken,
+	}, "tasks_read", map[string]any{
+		"projecttask": 1,
+		"expand":      []string{"reactions"},
+	})
+	assert.Equal(t, true, denied["isError"])
+	assert.Contains(t, toolResultText(t, denied), "401")
 }
