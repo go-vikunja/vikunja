@@ -20,6 +20,11 @@
 package mcp
 
 import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
 	"net/http"
 
 	"code.vikunja.io/api/pkg/log"
@@ -33,6 +38,13 @@ import (
 
 // RoutePrefix is shared with the routes package so the mount point and the token middleware's exemption can't drift apart.
 const RoutePrefix = "/api/v2/mcp"
+
+const (
+	// Descriptions and comments can be long; dbtext caps a single field at 1 MiB.
+	maxRequestBytes = 4 << 20
+	// A JSON-RPC batch is one POST, hence one rate-limiter hit, no matter how many tool calls it carries.
+	maxMessagesPerRequest = 20
+)
 
 func newServer(req *http.Request) *mcp.Server {
 	srv := mcp.NewServer(&mcp.Implementation{
@@ -78,10 +90,65 @@ func Handler(c *echo.Context) error {
 	}
 
 	req := c.Request()
+	if err := limitRequestBody(c, req); err != nil {
+		return err
+	}
+
 	ctx := WithUser(req.Context(), u)
 	ctx = WithToken(ctx, token)
 	req = req.WithContext(ctx)
 
 	http.StripPrefix(RoutePrefix, streamableHandler).ServeHTTP(c.Response(), req)
 	return nil
+}
+
+// limitRequestBody buffers the POST body so a batch can be counted before the
+// SDK executes it, then hands the same bytes back to the SDK.
+func limitRequestBody(c *echo.Context, req *http.Request) error {
+	if req.Method != http.MethodPost {
+		return nil
+	}
+
+	req.Body = http.MaxBytesReader(c.Response(), req.Body, maxRequestBytes)
+	body, err := io.ReadAll(req.Body)
+	if err != nil {
+		var tooLarge *http.MaxBytesError
+		if errors.As(err, &tooLarge) {
+			return echo.NewHTTPError(http.StatusRequestEntityTooLarge, fmt.Sprintf("MCP request body must not exceed %d bytes", maxRequestBytes))
+		}
+		log.Debugf("[mcp] could not read request body: %v", err)
+		return echo.NewHTTPError(http.StatusBadRequest, "could not read request body")
+	}
+
+	if count, isBatch := countBatchMessages(body); isBatch && count > maxMessagesPerRequest {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("MCP requests are limited to %d batched messages", maxMessagesPerRequest))
+	}
+
+	req.Body = io.NopCloser(bytes.NewReader(body))
+	req.ContentLength = int64(len(body))
+	return nil
+}
+
+// countBatchMessages walks the top level only; a batch of large tool calls must not be unmarshalled just to be counted.
+// Anything that isn't a well-formed array is left for the SDK to reject.
+func countBatchMessages(body []byte) (count int, isBatch bool) {
+	dec := json.NewDecoder(bytes.NewReader(body))
+	tok, err := dec.Token()
+	if err != nil {
+		return 0, false
+	}
+	if delim, ok := tok.(json.Delim); !ok || delim != '[' {
+		return 0, false
+	}
+	for dec.More() {
+		count++
+		if count > maxMessagesPerRequest {
+			return count, true
+		}
+		var msg json.RawMessage
+		if err := dec.Decode(&msg); err != nil {
+			return 0, false
+		}
+	}
+	return count, true
 }

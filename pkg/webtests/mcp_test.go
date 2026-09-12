@@ -114,18 +114,23 @@ func (c *mcpClient) notifyInitialized() {
 	require.Less(c.t, rec.Code, 400, "notifications/initialized: %s", rec.Body.String())
 }
 
+func (c *mcpClient) post(body string) *httptest.ResponseRecorder {
+	c.t.Helper()
+	req := mcpRequest(http.MethodPost, body)
+	req.Header.Set(echo.HeaderAuthorization, "Bearer "+c.token)
+	req.Header.Set("Mcp-Session-Id", c.sessionID)
+	rec := httptest.NewRecorder()
+	c.e.ServeHTTP(rec, req)
+	return rec
+}
+
 // Each call uses a fresh request id so the SDK doesn't confuse responses.
 func (c *mcpClient) rpc(method string, params any) map[string]any {
 	c.t.Helper()
 	c.nextID++
 	paramsJSON, err := json.Marshal(params)
 	require.NoError(c.t, err)
-	body := fmt.Sprintf(`{"jsonrpc":"2.0","id":%d,"method":%q,"params":%s}`, c.nextID, method, paramsJSON)
-	req := mcpRequest(http.MethodPost, body)
-	req.Header.Set(echo.HeaderAuthorization, "Bearer "+c.token)
-	req.Header.Set("Mcp-Session-Id", c.sessionID)
-	rec := httptest.NewRecorder()
-	c.e.ServeHTTP(rec, req)
+	rec := c.post(fmt.Sprintf(`{"jsonrpc":"2.0","id":%d,"method":%q,"params":%s}`, c.nextID, method, paramsJSON))
 	require.Equal(c.t, http.StatusOK, rec.Code, "rpc %s body: %s", method, rec.Body.String())
 	return readMCPJSON(c.t, rec.Body.String())
 }
@@ -331,6 +336,43 @@ func TestMCP_SessionIDDoesNotCarryIdentity(t *testing.T) {
 	names := toolNamesFromList(t, readMCPJSON(t, listRec.Body.String()))
 	assert.Equal(t, map[string]bool{"find_action": true, "do_action": true}, names,
 		"mcp-only token must only see the catalog meta-tools, got %v", names)
+}
+
+// pingBatch builds a JSON-RPC batch of n ping messages.
+func pingBatch(n int) string {
+	msgs := make([]string, n)
+	for i := range msgs {
+		msgs[i] = fmt.Sprintf(`{"jsonrpc":"2.0","id":%d,"method":"ping","params":{}}`, i+100)
+	}
+	return "[" + strings.Join(msgs, ",") + "]"
+}
+
+func TestMCP_OversizedBatchRejected(t *testing.T) {
+	// One POST is one rate-limiter hit, so a batch must not smuggle in unbounded tool calls.
+	c := newMCPClient(t, mcpOnlyToken)
+
+	rec := c.post(pingBatch(21))
+
+	require.Equal(t, http.StatusBadRequest, rec.Code, "body: %s", rec.Body.String())
+	assert.Contains(t, rec.Body.String(), "20")
+}
+
+func TestMCP_BatchWithinLimitAccepted(t *testing.T) {
+	c := newMCPClient(t, mcpOnlyToken)
+
+	rec := c.post(pingBatch(3))
+
+	// The SDK answers a batch that carries requests with a single 200 response.
+	assert.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+}
+
+func TestMCP_OversizedBodyRejected(t *testing.T) {
+	c := newMCPClient(t, mcpOnlyToken)
+
+	// A single message, so the batch counter never sees it — the byte cap is what stops it.
+	rec := c.post(fmt.Sprintf(`{"jsonrpc":"2.0","id":1,"method":"ping","params":{"pad":%q}}`, strings.Repeat("a", 5<<20)))
+
+	assert.Equal(t, http.StatusRequestEntityTooLarge, rec.Code, "body: %s", rec.Body.String())
 }
 
 func TestMCP_NonLoopbackHostAccepted(t *testing.T) {
