@@ -118,6 +118,13 @@ func TestBuildToolSpec_PutKeepsRequiredBodyFields(t *testing.T) {
 		"position",
 	}, spec.schema.Required)
 }
+
+type widgetBody struct {
+	ThingID  int64  `json:"thing_id" param:"thing"`
+	Username string `json:"username" param:"user"`
+	Title    string `json:"title"`
+}
+
 func TestBuildToolSpec_DropsBodyFieldSuppliedByPath(t *testing.T) {
 	cfg := huma.DefaultConfig("test", "1")
 	cfg.FieldsOptionalByDefault = true
@@ -125,20 +132,50 @@ func TestBuildToolSpec_DropsBodyFieldSuppliedByPath(t *testing.T) {
 	huma.Register(api, huma.Operation{
 		OperationID: "widgets-create",
 		Method:      http.MethodPost,
-		Path:        "/things/{thing}/widgets",
+		Path:        "/things/{thing}/widgets/{user}",
 	}, func(_ context.Context, _ *struct {
-		Thing int64 `path:"thing"`
-		Body  struct {
-			ThingID int64  `json:"thing_id"`
-			Title   string `json:"title"`
-		}
+		Thing int64  `path:"thing"`
+		User  string `path:"user"`
+		Body  widgetBody
 	}) (*struct{}, error) {
 		return nil, nil
 	})
-	spec, err := buildToolSpec(api.OpenAPI(), api.OpenAPI().Paths["/things/{thing}/widgets"].Post)
+	spec, err := buildToolSpec(api.OpenAPI(), api.OpenAPI().Paths["/things/{thing}/widgets/{user}"].Post)
 	require.NoError(t, err)
 	assert.NotContains(t, spec.schema.Properties, "thing_id")
+	assert.NotContains(t, spec.schema.Properties, "username")
 	assert.Contains(t, spec.schema.Properties, "title")
+}
+func TestBuildToolSpec_KeepsBodyFieldNotInThePath(t *testing.T) {
+	cfg := huma.DefaultConfig("test", "1")
+	cfg.FieldsOptionalByDefault = true
+	_, api := humatest.New(t, cfg)
+	huma.Register(api, huma.Operation{
+		OperationID: "tasks-create",
+		Method:      http.MethodPost,
+		Path:        "/projects/{project}/tasks",
+	}, func(_ context.Context, _ *struct {
+		Project int64 `path:"project"`
+		Body    models.Task
+	}) (*struct{}, error) {
+		return nil, nil
+	})
+	huma.Register(api, huma.Operation{
+		OperationID: "tasks-update",
+		Method:      http.MethodPut,
+		Path:        "/tasks/{projecttask}",
+	}, func(_ context.Context, _ *struct {
+		Projecttask int64 `path:"projecttask"`
+		Body        models.Task
+	}) (*struct{}, error) {
+		return nil, nil
+	})
+	create, err := buildToolSpec(api.OpenAPI(), api.OpenAPI().Paths["/projects/{project}/tasks"].Post)
+	require.NoError(t, err)
+	assert.NotContains(t, create.schema.Properties, "project_id")
+	update, err := buildToolSpec(api.OpenAPI(), api.OpenAPI().Paths["/tasks/{projecttask}"].Put)
+	require.NoError(t, err)
+	assert.Contains(t, update.schema.Properties, "project_id")
 }
 func TestBuildToolSpec_ParamBodyCollision(t *testing.T) {
 	_, api := humatest.New(t)

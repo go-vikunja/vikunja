@@ -69,10 +69,11 @@ func buildToolSpec(oapi *huma.OpenAPI, op *huma.Operation) (*toolSpec, error) {
 	}
 	hasBody := false
 	if _, body := bodyMedia(bodySchemaOp(oapi, op)); body != nil {
+		fromPath := boundToPathParams(oapi, body, params)
 		body = inlineRefs(oapi, body, 0)
 		hasBody = true
 		for name, prop := range body.Properties {
-			if prop.ReadOnly || suppliedByPathParam(params, name) {
+			if prop.ReadOnly || fromPath[name] {
 				continue
 			}
 			if _, clash := props[name]; clash {
@@ -115,14 +116,27 @@ func buildToolSpec(oapi *huma.OpenAPI, op *huma.Operation) (*toolSpec, error) {
 	}, nil
 }
 
-// Handlers take the id from the path and ignore the body field.
-func suppliedByPathParam(params map[string]*huma.Param, bodyProp string) bool {
-	base, found := strings.CutSuffix(bodyProp, "_id")
-	if !found {
-		return false
+// Handlers bind these from the path and ignore the body value.
+func boundToPathParams(oapi *huma.OpenAPI, body *huma.Schema, params map[string]*huma.Param) map[string]bool {
+	out := map[string]bool{}
+	if body.Ref == "" {
+		return out
 	}
-	p, ok := params[base]
-	return ok && p.In == "path"
+	t := oapi.Components.Schemas.TypeFromRef(body.Ref)
+	if t == nil {
+		return out
+	}
+	walkFields(t, func(f reflect.StructField) {
+		p, ok := params[f.Tag.Get("param")]
+		if !ok || p.In != "path" {
+			return
+		}
+		name, _, _ := strings.Cut(f.Tag.Get("json"), ",")
+		if name != "" && name != "-" {
+			out[name] = true
+		}
+	})
+	return out
 }
 
 // AutoPatch's PATCH body drops refs and nullability, collapsing nested schemas to {}; read the shape from the PUT instead.
