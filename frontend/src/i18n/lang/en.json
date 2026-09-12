@@ -353,7 +353,7 @@
             "beta": "Request headers are in beta for a limited set of organizations. If this section is missing, connecting Vikunja is not available for your account yet."
           },
           "mistral": {
-            "title": "Mistral Le Chat",
+            "title": "Mistral Vibe",
             "open": "Open Connectors → Add Connector → Custom MCP Connector.",
             "url": "Name the connector Vikunja, enter this URL, and select Connect: {value}",
             "token": "Choose HTTP Bearer authentication and paste this token: {value}"
