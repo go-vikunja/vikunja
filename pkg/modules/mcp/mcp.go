@@ -25,7 +25,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sync"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/version"
@@ -96,14 +98,35 @@ func rawToolHandler(name string) mcp.ToolHandler {
 	}
 }
 
+// Built on first use because the CORS config is not loaded at package init.
+var streamableHandler = sync.OnceValue(newStreamableHandler)
+
 // The SDK calls newServerForRequest on every request in stateless mode, so tools/list
 // is already filtered by the caller's token. Stateless also prevents session IDs from
 // carrying identity across requests; localhost protection would reject deployments
 // behind a loopback reverse proxy.
-var streamableHandler = mcp.NewStreamableHTTPHandler(newServerForRequest, &mcp.StreamableHTTPOptions{
-	Stateless:                  true,
-	DisableLocalhostProtection: true,
-})
+func newStreamableHandler() http.Handler {
+	srv := mcp.NewStreamableHTTPHandler(newServerForRequest, &mcp.StreamableHTTPOptions{
+		Stateless:                  true,
+		DisableLocalhostProtection: true,
+	})
+	return crossOriginProtection().Handler(srv)
+}
+
+// MCP is not a browser transport, so anything that carries an Origin a browser would
+// not send to itself is rejected even before the Authorization header is looked at.
+func crossOriginProtection() *http.CrossOriginProtection {
+	protection := http.NewCrossOriginProtection()
+	if !config.CorsEnable.GetBool() {
+		return protection
+	}
+	for _, origin := range config.CorsOrigins.GetStringSlice() {
+		if err := protection.AddTrustedOrigin(origin); err != nil {
+			log.Debugf("[mcp] not trusting cors origin %q: %s", origin, err)
+		}
+	}
+	return protection
+}
 
 // Handler rejects JWTs, which bypass API-token route scopes.
 func Handler(c *echo.Context) error {
@@ -124,7 +147,7 @@ func Handler(c *echo.Context) error {
 		return err
 	}
 	ctx := WithCaller(WithToken(req.Context(), token), req)
-	http.StripPrefix(RoutePrefix, streamableHandler).ServeHTTP(c.Response(), req.WithContext(ctx))
+	http.StripPrefix(RoutePrefix, streamableHandler()).ServeHTTP(c.Response(), req.WithContext(ctx))
 	return nil
 }
 
