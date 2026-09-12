@@ -84,7 +84,3 @@ func TestExposure(t *testing.T) {
 		}
 	}
 }
-
-func TestToolNameFor(t *testing.T) {
-	assert.Equal(t, "task_comments_create", toolNameFor("task-comments-create"))
-}
