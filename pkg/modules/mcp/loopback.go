@@ -94,9 +94,6 @@ func (t *tool) newRequest(ctx context.Context, caller *http.Request, args map[st
 			}
 		}
 	}
-	if p, ok := t.spec.params["format"]; ok && p.In == "query" && !query.Has("format") {
-		query.Set("format", "markdown")
-	}
 	var reader io.Reader
 	if t.spec.hasBody {
 		b, err := json.Marshal(body)
