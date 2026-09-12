@@ -89,6 +89,29 @@ func TestBuildToolSpec_Patch(t *testing.T) {
 	assert.Contains(t, spec.schema.Properties, "title")
 	assert.NotContains(t, spec.schema.Properties, "owner")
 }
+func TestBuildToolSpec_PutKeepsRequiredBodyFields(t *testing.T) {
+	cfg := huma.DefaultConfig("test", "1")
+	cfg.FieldsOptionalByDefault = true
+	_, api := humatest.New(t, cfg)
+	huma.Register(api, huma.Operation{
+		OperationID: "thing-position-update",
+		Method:      http.MethodPut,
+		Path:        "/things/{id}/position",
+	}, func(_ context.Context, _ *struct {
+		ID   int64 `path:"id"`
+		Body struct {
+			Position float64 `json:"position" required:"true"`
+		}
+	}) (*struct{}, error) {
+		return nil, nil
+	})
+	spec, err := buildToolSpec(api.OpenAPI(), api.OpenAPI().Paths["/things/{id}/position"].Put)
+	require.NoError(t, err)
+	assert.Equal(t, []string{
+		"id",
+		"position",
+	}, spec.schema.Required)
+}
 func TestBuildToolSpec_ParamBodyCollision(t *testing.T) {
 	_, api := humatest.New(t)
 	huma.Register(api, huma.Operation{
