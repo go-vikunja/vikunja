@@ -651,8 +651,9 @@ test.describe('Task', () => {
 		})
 
 		async function openDueDatePopupWithShortcut(page: Page): Promise<Locator> {
-			await page.locator('.task-view .action-buttons').click()
-			await page.locator('body').press('d')
+			const action = page.getByRole('button', {name: 'Set Due Date', exact: true})
+			await expect(action).toBeVisible()
+			await action.press('d')
 
 			const column = page.locator('.task-view .columns.details .column').filter({hasText: 'Due Date'})
 			const popup = column.locator('.datepicker .datepicker-popup')
