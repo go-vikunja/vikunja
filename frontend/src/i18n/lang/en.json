@@ -330,6 +330,7 @@
         "created": "Your MCP token is ready. Choose your client below to connect it.",
         "client": "Which client do you use?",
         "chooseClient": "Choose a client",
+        "clientHelp": "{client} setup guide",
         "typedPreset": "Typed tools read + write",
         "clients": {
           "claudeCode": {

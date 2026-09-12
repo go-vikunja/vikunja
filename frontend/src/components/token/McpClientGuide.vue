@@ -4,13 +4,14 @@ import {useLocalStorage} from '@vueuse/core'
 import {useI18n} from 'vue-i18n'
 import XButton from '@/components/input/Button.vue'
 import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
-import {MCP_DOCS} from '@/urls'
+import {MCP_CLIENT_HELP} from '@/urls'
 
 const props = defineProps<{endpoint: string, token: string}>()
 const {t} = useI18n({useScope: 'global'})
 const copy = useCopyToClipboard()
 const client = useLocalStorage('mcp-client', '')
-const clients = ['claudeCode', 'codex', 'claudeDesktop', 'mistral', 'chatgpt', 'other'] as const
+const clients = Object.keys(MCP_CLIENT_HELP)
+const helpUrl = computed(() => MCP_CLIENT_HELP[client.value])
 
 function shellQuote(value: string) {
 	return `'${value.replaceAll('\'', '\'\\\'\'')}'`
@@ -77,11 +78,6 @@ const steps = computed(() => instructions.value[client.value] ?? [])
 		</div>
 		<template v-if="client === 'chatgpt'">
 			<p>{{ t('user.settings.mcp.clients.chatgpt.unavailable') }}</p>
-			<a
-				:href="MCP_DOCS"
-				target="_blank"
-				rel="noreferrer"
-			>{{ t('user.settings.mcp.more') }}</a>
 		</template>
 		<ol
 			v-else-if="steps.length"
@@ -114,6 +110,13 @@ const steps = computed(() => instructions.value[client.value] ?? [])
 				</i18n-t>
 			</li>
 		</ol>
+		<p v-if="helpUrl">
+			<a
+				:href="helpUrl"
+				target="_blank"
+				rel="noreferrer"
+			>{{ client === 'other' ? t('user.settings.mcp.more') : t('user.settings.mcp.clientHelp', {client: t(`user.settings.mcp.clients.${client}.title`)}) }}</a>
+		</p>
 	</div>
 </template>
 

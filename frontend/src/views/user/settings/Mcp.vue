@@ -15,7 +15,7 @@ import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
 import {useTitle} from '@/composables/useTitle'
 import {formatDateSince, formatDisplayDate} from '@/helpers/time/formatDate'
 import {error} from '@/message'
-import {MCP_DOCS} from '@/urls'
+import {MCP_HELP} from '@/urls'
 
 defineOptions({name: 'McpSettings'})
 
@@ -109,7 +109,7 @@ async function deleteToken() {
 		<p>
 			{{ t('user.settings.mcp.intro') }}
 			<a
-				:href="MCP_DOCS"
+				:href="MCP_HELP"
 				target="_blank"
 				rel="noreferrer"
 			>{{ t('user.settings.mcp.more') }}</a>

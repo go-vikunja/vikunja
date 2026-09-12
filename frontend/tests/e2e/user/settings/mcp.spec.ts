@@ -4,6 +4,7 @@ import {gotoUserSettings} from '../../../support/userSettings'
 test('creates a scoped MCP token and shows connection instructions once', async ({authenticatedPage: page}) => {
 	await gotoUserSettings(page, 'mcp')
 	await expect(page.locator('.card-header-title')).toBeVisible()
+	await expect(page.getByRole('link', {name: 'More information about MCP in Vikunja'})).toHaveAttribute('href', 'https://vikunja.io/help/mcp/')
 	await expect(page.getByLabel('Which client do you use?')).toHaveCount(0)
 	const endpoint = await page.getByLabel('MCP endpoint').inputValue()
 	await page.getByRole('button', {name: 'Create a token'}).click()
@@ -21,6 +22,18 @@ test('creates a scoped MCP token and shows connection instructions once', async 
 	await expect(page.locator('pre')).toContainText(token.token)
 	await expect(page.locator('pre')).toContainText(endpoint)
 	await expect(page.locator('pre')).toContainText('claude mcp add --transport http')
+	for (const [client, name, url] of [
+		['claudeCode', 'Claude Code', 'https://code.claude.com/docs/en/mcp'],
+		['codex', 'Codex', 'https://learn.chatgpt.com/docs/extend/mcp?surface=cli'],
+		['claudeDesktop', 'Claude Desktop / claude.ai', 'https://claude.com/docs/connectors/custom/remote-mcp'],
+		['mistral', 'Mistral Vibe', 'https://docs.mistral.ai/vibe/work/connectors/mcp-connectors'],
+		['chatgpt', 'ChatGPT', 'https://developers.openai.com/api/docs/guides/developer-mode'],
+	]) {
+		await page.getByLabel('Which client do you use?').selectOption(client)
+		await expect(page.getByRole('link', {name: `${name} setup guide`, exact: true})).toHaveAttribute('href', url)
+	}
+	await page.getByLabel('Which client do you use?').selectOption('mistral')
+	await expect(page.locator('.mcp-steps')).toContainText('Context → Connectors → Add Connector → Add Custom Connector')
 	await page.getByRole('button', {name: 'Done', exact: true}).click()
 	await expect(page.getByLabel('Which client do you use?')).toHaveCount(0)
 	await expect(page.locator('tbody')).toContainText('MCP')
