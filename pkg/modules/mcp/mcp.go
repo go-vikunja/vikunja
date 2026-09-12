@@ -50,8 +50,8 @@ const (
 
 // Register must follow apiv2.RegisterAll so tools pick up the AutoPatch operations.
 func Register(api huma.API, group *echo.Group, groupPrefix string) {
-	Init(api, groupPrefix)
-	group.POST(routeSuffix, Handler)
+	initTools(api, groupPrefix)
+	group.POST(routeSuffix, handler)
 }
 
 func newServerForRequest(req *http.Request) *mcp.Server {
@@ -120,11 +120,11 @@ func newStreamableHandler() http.Handler {
 		Stateless:                  true,
 		DisableLocalhostProtection: true,
 	})
-	return crossOriginProtection().Handler(srv)
+	return newCrossOriginProtection().Handler(srv)
 }
 
 // MCP is not a browser transport: an Origin a browser would not send to itself is rejected before the token is looked at.
-func crossOriginProtection() *http.CrossOriginProtection {
+func newCrossOriginProtection() *http.CrossOriginProtection {
 	protection := http.NewCrossOriginProtection()
 	if !config.CorsEnable.GetBool() {
 		return protection
@@ -137,8 +137,8 @@ func crossOriginProtection() *http.CrossOriginProtection {
 	return protection
 }
 
-// Handler rejects JWTs, which bypass API-token route scopes.
-func Handler(c *echo.Context) error {
+// handler rejects JWTs, which bypass API-token route scopes.
+func handler(c *echo.Context) error {
 	tokenAny := c.Get("api_token")
 	if tokenAny == nil {
 		return echo.NewHTTPError(http.StatusUnauthorized, "MCP requires an API token")

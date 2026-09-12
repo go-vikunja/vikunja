@@ -156,7 +156,7 @@ func TestBuildToolSpec_ParamBodyCollision(t *testing.T) {
 	require.Error(t, err)
 }
 func TestInit_BuildsToolIndex(t *testing.T) {
-	Init(newTestAPI(t), "")
+	initTools(newTestAPI(t), "")
 	var names []string
 	for _, tl := range snapshotTools() {
 		names = append(names, tl.name)
@@ -180,7 +180,7 @@ func TestInit_BuildsToolIndex(t *testing.T) {
 	assert.False(t, denied)
 }
 func TestInit_PrefixesEchoPath(t *testing.T) {
-	Init(newTestAPI(t), "/api/v2")
+	initTools(newTestAPI(t), "/api/v2")
 	read, _ := findTool("things_read")
 	assert.Equal(t, "/api/v2/things/:id", read.echoPath)
 }

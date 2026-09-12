@@ -45,7 +45,7 @@ var (
 	toolOrder []*tool
 )
 
-func Init(api huma.API, groupPrefix string) {
+func initTools(api huma.API, groupPrefix string) {
 	index, order, err := buildTools(api.OpenAPI(), groupPrefix)
 	if err != nil {
 		panic(err)

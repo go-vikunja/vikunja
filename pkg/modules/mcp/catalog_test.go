@@ -26,7 +26,7 @@ import (
 )
 
 func TestCatalogActions(t *testing.T) {
-	Init(newTestAPI(t), "")
+	initTools(newTestAPI(t), "")
 	prev := routeAuthorizer
 	routeAuthorizer = func(_ *models.APIToken, path, _ string) bool { return path == "/things/:id" }
 	t.Cleanup(func() { routeAuthorizer = prev })

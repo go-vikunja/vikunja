@@ -33,7 +33,7 @@ import (
 
 func withTestCaller(t *testing.T) context.Context {
 	t.Helper()
-	Init(newTestAPI(t), "")
+	initTools(newTestAPI(t), "")
 	prev := routeAuthorizer
 	routeAuthorizer = func(*models.APIToken, string, string) bool { return true }
 	t.Cleanup(func() { routeAuthorizer = prev })
