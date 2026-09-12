@@ -254,4 +254,106 @@ test.describe('Project View List', () => {
 		// Only one task should be visible (the searchable one)
 		await expect(page.locator('.tasks .task')).toHaveCount(1)
 	})
+
+	async function createParentWithSubtasks() {
+		const projects = await createProjects(1)
+
+		await TaskFactory.create(1, {id: 1, title: 'Parent Task', project_id: projects[0].id}, false)
+		await TaskFactory.create(1, {id: 2, title: 'Subtask One', project_id: projects[0].id}, false)
+		await TaskFactory.create(1, {id: 3, title: 'Subtask Two', project_id: projects[0].id}, false)
+		await TaskFactory.create(1, {id: 4, title: 'Task Without Subtasks', project_id: projects[0].id}, false)
+
+		let relationId = 0
+		for (const subtaskId of [2, 3]) {
+			await TaskRelationFactory.create(1, {
+				id: ++relationId,
+				task_id: 1,
+				other_task_id: subtaskId,
+				relation_kind: 'subtask',
+			}, false)
+			await TaskRelationFactory.create(1, {
+				id: ++relationId,
+				task_id: subtaskId,
+				other_task_id: 1,
+				relation_kind: 'parenttask',
+			}, false)
+		}
+
+		return projects[0]
+	}
+
+	test('Should collapse and expand the subtasks of a single task', async ({authenticatedPage: page}) => {
+		const project = await createParentWithSubtasks()
+		await page.goto(`/projects/${project.id}/${project.views[0].id}`)
+
+		await expect(page.locator('.subtask-nested')).toHaveCount(2)
+
+		// only the parent task has a toggle
+		const toggle = page.locator('.single-task .collapse-toggle:not(.collapse-toggle-left)')
+		await expect(toggle).toHaveCount(1)
+		await expect(toggle).toHaveAttribute('aria-label', 'Collapse subtasks')
+
+		await toggle.click()
+		await expect(page.locator('.subtask-nested')).toHaveCount(0)
+		await expect(toggle).toHaveAttribute('aria-label', 'Expand subtasks')
+
+		await toggle.click()
+		await expect(page.locator('.subtask-nested')).toHaveCount(2)
+	})
+
+	test('Should collapse all subtasks and stay in sync with a task expanded on its own', async ({authenticatedPage: page}) => {
+		const project = await createParentWithSubtasks()
+		await page.goto(`/projects/${project.id}/${project.views[0].id}`)
+
+		await expect(page.locator('.subtask-nested')).toHaveCount(2)
+
+		const collapseAll = page.locator('.collapse-all-btn')
+		await collapseAll.click()
+		await expect(page.locator('.subtask-nested')).toHaveCount(0)
+		await expect(collapseAll).toHaveAttribute('title', 'Expand all subtasks')
+
+		// expanding a single task means not everything is collapsed anymore, so the
+		// button collapses again instead of expanding
+		await page.locator('.single-task .collapse-toggle:not(.collapse-toggle-left)').click()
+		await expect(page.locator('.subtask-nested')).toHaveCount(2)
+		await expect(collapseAll).toHaveAttribute('title', 'Collapse all subtasks')
+
+		await collapseAll.click()
+		await expect(page.locator('.subtask-nested')).toHaveCount(0)
+	})
+
+	test('Should persist the collapsed state over a reload', async ({authenticatedPage: page}) => {
+		const project = await createParentWithSubtasks()
+		await page.goto(`/projects/${project.id}/${project.views[0].id}`)
+
+		await page.locator('.single-task .collapse-toggle:not(.collapse-toggle-left)').click()
+		await expect(page.locator('.subtask-nested')).toHaveCount(0)
+
+		await page.reload()
+
+		await expect(page.locator('.tasks')).toContainText('Parent Task')
+		await expect(page.locator('.subtask-nested')).toHaveCount(0)
+	})
+
+	test('Should not show the collapse all button without any subtasks', async ({authenticatedPage: page}) => {
+		const projects = await createProjects(1)
+		await TaskFactory.create(1, {id: 1, title: 'Task Without Subtasks', project_id: projects[0].id}, false)
+
+		await page.goto(`/projects/${projects[0].id}/${projects[0].views[0].id}`)
+
+		await expect(page.locator('.tasks')).toContainText('Task Without Subtasks')
+		await expect(page.locator('.collapse-all-btn')).toHaveCount(0)
+	})
+
+	test('Should only show the right hand collapse toggle on narrow screens', async ({authenticatedPage: page}) => {
+		const project = await createParentWithSubtasks()
+
+		await page.setViewportSize({width: 1280, height: 900})
+		await page.goto(`/projects/${project.id}/${project.views[0].id}`)
+		await expect(page.locator('.collapse-toggle-left')).toBeVisible()
+
+		await page.setViewportSize({width: 375, height: 812})
+		await expect(page.locator('.collapse-toggle-left')).toBeHidden()
+		await expect(page.locator('.single-task .collapse-toggle:not(.collapse-toggle-left)')).toBeVisible()
+	})
 })
