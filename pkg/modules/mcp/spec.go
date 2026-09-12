@@ -40,6 +40,8 @@ func falseSchema() *jsonschema.Schema { return &jsonschema.Schema{Not: &jsonsche
 
 const maxInlineDepth = 8
 
+const formatParamDescription = "Rich-text format for description fields: html (default) or markdown. Updates always exchange HTML."
+
 func buildToolSpec(oapi *huma.OpenAPI, op *huma.Operation) (*toolSpec, error) {
 	props := map[string]*jsonschema.Schema{}
 	params := map[string]*huma.Param{}
@@ -54,6 +56,10 @@ func buildToolSpec(oapi *huma.OpenAPI, op *huma.Operation) (*toolSpec, error) {
 		}
 		if ps.Description == "" {
 			ps.Description = p.Description
+		}
+		// The API description this parameter refers to is not reachable over MCP.
+		if p.In == "query" && p.Name == "format" {
+			ps.Description = formatParamDescription
 		}
 		props[p.Name] = ps
 		params[p.Name] = p

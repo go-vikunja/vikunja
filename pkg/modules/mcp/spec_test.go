@@ -80,6 +80,7 @@ func TestBuildToolSpec_ListParams(t *testing.T) {
 		"null",
 	}, spec.schema.Properties["expand"].Types)
 	assert.NotContains(t, spec.schema.Properties, "Authorization")
+	assert.Equal(t, formatParamDescription, spec.schema.Properties["format"].Description)
 	assert.False(t, spec.hasBody)
 }
 func TestBuildToolSpec_Patch(t *testing.T) {
