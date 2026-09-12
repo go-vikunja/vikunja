@@ -249,7 +249,7 @@ func errorText(rec *httptest.ResponseRecorder) string {
 	if rec.Code != http.StatusUnauthorized {
 		return truncateRunes(text, maxErrorTextRunes)
 	}
-	// The transport already authenticated the token, so a loopback 401 is a missing scope; the raw JWT middleware envelope would claim an invalid token instead.
+	// The transport already authenticated the token, so a loopback 401 is a missing scope, not a bad token.
 	if !isProblem {
 		text = "401 Unauthorized"
 	}

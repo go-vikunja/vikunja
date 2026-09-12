@@ -41,8 +41,7 @@ type echoContextKey struct{}
 // handler's context.Context.
 var EchoContextKey = echoContextKey{}
 
-// EchoContextFrom returns nil when ctx did not come through the humabridge
-// group middleware.
+// EchoContextFrom returns nil when ctx did not come through the humabridge group middleware.
 func EchoContextFrom(ctx context.Context) *echo.Context {
 	ec, _ := ctx.Value(EchoContextKey).(*echo.Context)
 	return ec

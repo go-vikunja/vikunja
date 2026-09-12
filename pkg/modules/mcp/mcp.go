@@ -48,7 +48,7 @@ const (
 )
 
 // Register must follow apiv2.RegisterAll so tools pick up the AutoPatch operations.
-// allowOrigin (nil trusts none) covers what the stdlib check can't: it rejects the wildcard ports Vikunja's CORS origins carry.
+// allowOrigin (nil trusts none) admits the wildcard-port origins Vikunja's CORS config allows and the stdlib check does not.
 func Register(api huma.API, group *echo.Group, groupPrefix string, allowOrigin func(origin string) bool) {
 	initTools(api, groupPrefix)
 	streamableHandler = newStreamableHandler()
@@ -132,7 +132,7 @@ func newStreamableHandler() http.Handler {
 // handler rejects JWTs, which bypass API-token route scopes.
 func handler(c *echo.Context) error {
 	req := c.Request()
-	// MCP is not a browser transport: an Origin a browser would not send to itself is rejected before the token is looked at.
+	// MCP is not a browser transport, so a cross-origin browser request is rejected before the token is read.
 	if err := originProtection.Check(req); err != nil && !originIsTrustedByCORS(req) {
 		return echo.NewHTTPError(http.StatusForbidden, err.Error())
 	}
