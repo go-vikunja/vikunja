@@ -49,6 +49,7 @@ func TestExposure(t *testing.T) {
 	}
 	for _, id := range []string{
 		"tokens-create",
+		"mcp-info",
 		"token-test",
 		"auth-login",
 		"user-show",
