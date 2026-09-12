@@ -77,9 +77,6 @@ func Handler(c *echo.Context) error {
 	return nil
 }
 func limitRequestBody(c *echo.Context, req *http.Request) error {
-	if req.Method != http.MethodPost {
-		return nil
-	}
 	req.Body = http.MaxBytesReader(c.Response(), req.Body, maxRequestBytes)
 	body, err := io.ReadAll(req.Body)
 	if err != nil {

@@ -84,7 +84,7 @@ func shouldSkipRouteCheck(c *echo.Context) bool {
 	}
 
 	// MCP checks its transport scope inline; loopback routes still get checked here.
-	if c.Path() == mcp.RoutePrefix || strings.HasPrefix(c.Path(), mcp.RoutePrefix+"/") {
+	if c.Path() == mcp.RoutePrefix {
 		return true
 	}
 
