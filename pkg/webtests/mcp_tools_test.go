@@ -17,8 +17,17 @@
 package webtests
 
 import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/modules/auth"
+	"code.vikunja.io/api/pkg/user"
+
+	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -228,4 +237,43 @@ func TestMCP_Tools_ProjectAndLabelLifecycle(t *testing.T) {
 			require.NotContains(t, c.callTool(resource+"_delete", map[string]any{"id": id}), "isError")
 		})
 	}
+}
+
+func callToolWithAuth(t *testing.T, c *mcpClient, authorizations []string, name string, args map[string]any) map[string]any {
+	t.Helper()
+	params, err := json.Marshal(map[string]any{
+		"name":      name,
+		"arguments": args,
+	})
+	require.NoError(t, err)
+	req := mcpRequest(http.MethodPost, fmt.Sprintf(`{"jsonrpc":"2.0","id":99,"method":"tools/call","params":%s}`, params))
+	for _, a := range authorizations {
+		req.Header.Add(echo.HeaderAuthorization, a)
+	}
+	req.Header.Set("Mcp-Session-Id", c.sessionID)
+	rec := httptest.NewRecorder()
+	c.e.ServeHTTP(rec, req)
+	require.Equal(t, http.StatusOK, rec.Code, "%s", rec.Body.String())
+	resp := readMCPJSON(t, rec.Body.String())
+	result, ok := resp["result"].(map[string]any)
+	require.True(t, ok, "%v", resp)
+	return result
+}
+func TestMCP_Tools_LoopbackUsesTheAuthorisedToken(t *testing.T) {
+	c := newMCPClient(t, mcpFullToken)
+	s := db.NewSession()
+	defer s.Close()
+	u, err := user.GetUserByID(s, 1)
+	require.NoError(t, err)
+	jwt, err := auth.NewUserJWTAuthtoken(u, "test-session-id")
+	require.NoError(t, err)
+	denied := callToolWithAuth(t, c, []string{
+		"Bearer " + jwt,
+		"Bearer " + mcpFullToken,
+	}, "tasks_read", map[string]any{
+		"projecttask": 1,
+		"expand":      []string{"reactions"},
+	})
+	assert.Equal(t, true, denied["isError"])
+	assert.Contains(t, toolResultText(t, denied), "401")
 }
