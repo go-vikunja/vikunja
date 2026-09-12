@@ -76,6 +76,10 @@ func newMCPClient(t *testing.T, token string) *mcpClient {
 	t.Helper()
 	e, err := setupTestEnv()
 	require.NoError(t, err)
+	return newMCPClientOn(t, e, token)
+}
+func newMCPClientOn(t *testing.T, e *echo.Echo, token string) *mcpClient {
+	t.Helper()
 	c := &mcpClient{
 		t:      t,
 		e:      e,
