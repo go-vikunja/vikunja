@@ -175,24 +175,28 @@ func migrateInListener(ms migration.Migrator, event *MigrationRequestedEvent) (m
 	if event.MigrationStatusID == 0 {
 		// Events queued before claim support must acquire one during an upgrade.
 		m, err = migration.ClaimMigration(ms, event.User)
-		if err != nil {
-			return
-		}
 	} else {
 		m, err = migration.GetMigrationStatusByID(event.MigrationStatusID)
-		if err != nil {
-			return
-		}
-		if !m.FinishedAt.IsZero() {
-			log.Debugf("[Migration] Skipping stale migration event for status %d of user %d", m.ID, event.User.ID)
-			return
-		}
+	}
+	if err != nil {
+		return
+	}
+
+	return m, runMigration(event.User, ms, m, event.MigratorKind, "migration", func() error {
+		return ms.Migrate(event.User)
+	})
+}
+
+func runMigration(u *user2.User, ms migration.MigratorName, m *migration.Status, migratorKind, label string, run func() error) (err error) {
+	if !m.FinishedAt.IsZero() {
+		log.Debugf("[Migration] Skipping stale %s event for status %d of user %d", label, m.ID, u.ID)
+		return nil
 	}
 
 	// Convert panics to errors so the caller releases the claim.
 	defer func() {
 		if r := recover(); r != nil {
-			log.Errorf("[Migration] Migration %d from %s for user %d panicked: %v", m.ID, event.MigratorKind, event.User.ID, r)
+			log.Errorf("[Migration] %s %d from %s for user %d panicked: %v", label, m.ID, migratorKind, u.ID, r)
 			err = fmt.Errorf("migration panicked: %v", r)
 		}
 	}()
@@ -200,26 +204,22 @@ func migrateInListener(ms migration.Migrator, event *MigrationRequestedEvent) (m
 	stopHeartbeat := migration.StartRun(m.ID)
 	defer stopHeartbeat()
 
-	log.Infof("[Migration] Starting migration %d from %s for user %d", m.ID, event.MigratorKind, event.User.ID)
-	err = ms.Migrate(event.User)
-	if err != nil {
+	log.Infof("[Migration] Starting %s %d from %s for user %d", label, m.ID, migratorKind, u.ID)
+	if err = run(); err != nil {
 		return
 	}
 
-	err = migration.FinishMigration(m)
-	if err != nil {
-		log.Errorf("[Migration] Could not finish migration %d for user %d, error was: %s", m.ID, event.User.ID, err.Error())
+	if err = migration.FinishMigration(m); err != nil {
+		log.Errorf("[Migration] Could not finish %s %d for user %d, error was: %s", label, m.ID, u.ID, err.Error())
 		return
 	}
 
-	if nerr := notifications.Notify(event.User, &MigrationDoneNotification{
-		MigratorName: ms.Name(),
-	}); nerr != nil {
-		log.Errorf("[Migration] Could not send migration success notification for migration %d to user %d, error was: %s", m.ID, event.User.ID, nerr.Error())
+	if nerr := notifications.Notify(u, &MigrationDoneNotification{MigratorName: ms.Name()}); nerr != nil {
+		log.Errorf("[Migration] Could not send migration success notification for migration %d to user %d, error was: %s", m.ID, u.ID, nerr.Error())
 	}
 
-	log.Infof("[Migration] Successfully done migration %d from %s for user %d", m.ID, event.MigratorKind, event.User.ID)
-	return m, nil
+	log.Infof("[Migration] Finished %s %d from %s for user %d", label, m.ID, migratorKind, u.ID)
+	return nil
 }
 
 // FileMigrationListener runs queued file imports.
@@ -264,51 +264,24 @@ func importInListener(ms migration.FileMigrator, event *FileMigrationRequestedEv
 	if err != nil {
 		return &migration.Status{ID: event.MigrationStatusID}, fmt.Errorf("could not get migration status %d: %w", event.MigrationStatusID, err)
 	}
+	// A nil status keeps the caller from releasing a claim which belongs to someone else.
 	if m.UserID != event.User.ID {
 		return nil, fmt.Errorf("migration status %d does not belong to user %d", m.ID, event.User.ID)
 	}
-	if !m.FinishedAt.IsZero() {
-		log.Debugf("[Migration] Skipping stale file migration event for status %d of user %d", m.ID, event.User.ID)
-		return nil, nil
-	}
 
-	// Convert panics to errors so the caller releases the claim.
-	defer func() {
-		if r := recover(); r != nil {
-			log.Errorf("[Migration] Import %d from %s for user %d panicked: %v", m.ID, event.MigratorKind, event.User.ID, r)
-			err = fmt.Errorf("migration panicked: %v", r)
+	return m, runMigration(event.User, ms, m, event.MigratorKind, "import", func() error {
+		if err := applyMigratorOptions(ms, event.Options); err != nil {
+			return err
 		}
-	}()
 
-	if err := applyMigratorOptions(ms, event.Options); err != nil {
-		return m, err
-	}
+		file, err := migration.OpenSpooledUpload(event.UploadName)
+		if err != nil {
+			// The wrapped error contains the server's file path, which must not reach the user's inbox.
+			log.Errorf("[Migration] Could not open the spooled import file for migration %d: %s", m.ID, err.Error())
+			return errors.New("the uploaded import file is no longer available, please upload it again")
+		}
+		defer file.Close()
 
-	file, err := migration.OpenSpooledUpload(event.UploadName)
-	if err != nil {
-		// The wrapped error contains the server's file path, which must not reach the user's inbox.
-		log.Errorf("[Migration] Could not open the spooled import file for migration %d: %s", m.ID, err.Error())
-		return m, errors.New("the uploaded import file is no longer available, please upload it again")
-	}
-	defer file.Close()
-
-	stopHeartbeat := migration.StartRun(m.ID)
-	defer stopHeartbeat()
-
-	log.Infof("[Migration] Starting import %d from %s for user %d", m.ID, event.MigratorKind, event.User.ID)
-	if err := ms.Migrate(event.User, file, event.UploadSize); err != nil {
-		return m, asImportFileError(err)
-	}
-
-	if err := migration.FinishMigration(m); err != nil {
-		return m, err
-	}
-
-	log.Infof("[Migration] Finished import %d from %s for user %d", m.ID, event.MigratorKind, event.User.ID)
-
-	if err := notifications.Notify(event.User, &MigrationDoneNotification{MigratorName: ms.Name()}); err != nil {
-		log.Errorf("[Migration] Could not send migration success notification for migration %d to user %d, error was: %s", m.ID, event.User.ID, err.Error())
-	}
-
-	return m, nil
+		return asImportFileError(ms.Migrate(event.User, file, event.UploadSize))
+	})
 }
