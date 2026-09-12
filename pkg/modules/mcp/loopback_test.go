@@ -45,7 +45,7 @@ func echoResult(t *testing.T, res any) map[string]any {
 	require.True(t, ok, "%T", res)
 	return m
 }
-func TestCallTool_ListForwardsAuthAndDefaultsMarkdown(t *testing.T) {
+func TestCallTool_ListForwardsAuthAndFormat(t *testing.T) {
 	ctx := withTestCaller(t)
 	res, err := callTool(ctx, "things_list", json.RawMessage(`{"q":"x","expand":["a","b"]}`))
 	require.NoError(t, err)
@@ -53,11 +53,11 @@ func TestCallTool_ListForwardsAuthAndDefaultsMarkdown(t *testing.T) {
 	assert.Equal(t, "Bearer tk_test", m["auth"])
 	q := m["query"].(map[string]any)
 	assert.Equal(t, "x", q["q"])
-	assert.Equal(t, "markdown", q["format"])
+	assert.Empty(t, q["format"])
 	assert.Equal(t, "a|b", q["expand"])
-	res, err = callTool(ctx, "things_list", json.RawMessage(`{"format":"html"}`))
+	res, err = callTool(ctx, "things_list", json.RawMessage(`{"format":"markdown"}`))
 	require.NoError(t, err)
-	assert.Equal(t, "html", echoResult(t, res)["query"].(map[string]any)["format"])
+	assert.Equal(t, "markdown", echoResult(t, res)["query"].(map[string]any)["format"])
 }
 func TestCallTool_CreateSendsJSONBody(t *testing.T) {
 	res, err := callTool(withTestCaller(t), "things_create", json.RawMessage(`{"title":"hi","done":true}`))
