@@ -19,6 +19,7 @@ package mcp
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -50,18 +51,56 @@ func Register(api huma.API, group *echo.Group, groupPrefix string) {
 	group.POST(routeSuffix, Handler)
 }
 
-func newServer(req *http.Request) *mcp.Server {
+func newServerForRequest(req *http.Request) *mcp.Server {
 	srv := mcp.NewServer(&mcp.Implementation{
 		Name:    "vikunja",
 		Version: version.Version,
 	}, nil)
-	installTools(srv, TokenFromContext(req.Context()))
+	addToolsAuthorizedBy(srv, TokenFromContext(req.Context()))
 	return srv
 }
 
-// Stateless prevents session IDs from carrying identity across requests.
-// Localhost protection would reject deployments behind a loopback reverse proxy.
-var streamableHandler = mcp.NewStreamableHTTPHandler(newServer, &mcp.StreamableHTTPOptions{
+func addToolsAuthorizedBy(srv *mcp.Server, token *models.APIToken) {
+	for _, t := range snapshotTools() {
+		if t.tier != TierTyped || !t.authorized(token) {
+			continue
+		}
+		srv.AddTool(&mcp.Tool{
+			Name:        t.name,
+			Description: t.description,
+			InputSchema: t.spec.schema,
+		}, rawToolHandler(t.name))
+	}
+	installCatalogTools(srv)
+}
+
+func rawToolHandler(name string) mcp.ToolHandler {
+	return func(ctx context.Context, req *mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		result, err := callTool(ctx, name, req.Params.Arguments)
+		if err != nil {
+			//nolint:nilerr // Domain errors use MCP tool results.
+			return &mcp.CallToolResult{
+				IsError: true,
+				Content: []mcp.Content{&mcp.TextContent{Text: err.Error()}},
+			}, nil
+		}
+		body, err := json.Marshal(result)
+		if err != nil {
+			return nil, fmt.Errorf("mcp: marshal %s result: %w", name, err)
+		}
+		res := &mcp.CallToolResult{Content: []mcp.Content{&mcp.TextContent{Text: string(body)}}}
+		if _, isObject := result.(map[string]any); isObject {
+			res.StructuredContent = result
+		}
+		return res, nil
+	}
+}
+
+// The SDK calls newServerForRequest on every request in stateless mode, so tools/list
+// is already filtered by the caller's token. Stateless also prevents session IDs from
+// carrying identity across requests; localhost protection would reject deployments
+// behind a loopback reverse proxy.
+var streamableHandler = mcp.NewStreamableHTTPHandler(newServerForRequest, &mcp.StreamableHTTPOptions{
 	Stateless:                  true,
 	DisableLocalhostProtection: true,
 })
