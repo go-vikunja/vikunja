@@ -1,5 +1,6 @@
 import {computed, ref} from 'vue'
 import {acceptHMRUpdate, defineStore} from 'pinia'
+import {useMutation} from '@tanstack/vue-query'
 import router from '@/router'
 
 import TaskService from '@/services/task'
@@ -38,11 +39,12 @@ import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 import {taskLabelsCreate, taskLabelsDelete} from '@/client/generated'
 import type {Label} from '@/client/generated'
 import {
-	createLabel,
+	createLabelMutationOptions,
 	ensureLabels,
 	getLabelByExactTitle,
 	refreshLabels,
 } from '@/client/queries/labels'
+import {queryClient} from '@/client/queryClient'
 
 interface MatchedAssignee extends IUser {
 	match: string,
@@ -138,6 +140,8 @@ export const useTaskStore = defineStore('task', () => {
 	const kanbanStore = useKanbanStore()
 	const projectStore = useProjectStore()
 	const authStore = useAuthStore()
+	// Explicit client: store setup may run outside a component, where inject() is unavailable.
+	const createLabelMutation = useMutation(createLabelMutationOptions(), queryClient)
 	const configStore = useConfigStore()
 
 	const tasks = ref<{ [id: ITask['id']]: ITask }>({}) // TODO: or is this ITask[]
@@ -405,7 +409,7 @@ export const useTaskStore = defineStore('task', () => {
 			let label = validateLabel(availableLabels, labelTitle)
 			if (typeof label === 'undefined') {
 				try {
-					label = await createLabel({
+					label = await createLabelMutation.mutateAsync({
 						title: labelTitle,
 						hex_color: getRandomColorHex(),
 					})
