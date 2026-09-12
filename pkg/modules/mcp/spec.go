@@ -125,8 +125,7 @@ func suppliedByPathParam(params map[string]*huma.Param, bodyProp string) bool {
 	return ok && p.In == "path"
 }
 
-// AutoPatch derives its PATCH body from the PUT body but drops refs and nullability,
-// which collapses nested schemas to {}. Read the shape from the PUT instead.
+// AutoPatch's PATCH body drops refs and nullability, collapsing nested schemas to {}; read the shape from the PUT instead.
 func bodySchemaOp(oapi *huma.OpenAPI, op *huma.Operation) *huma.Operation {
 	if op.Method != http.MethodPatch {
 		return op

@@ -114,10 +114,7 @@ func rawToolHandler(name string) mcp.ToolHandler {
 // Built on first use because the CORS config is not loaded at package init.
 var streamableHandler = sync.OnceValue(newStreamableHandler)
 
-// The SDK calls newServerForRequest on every request in stateless mode, so tools/list
-// is already filtered by the caller's token. Stateless also prevents session IDs from
-// carrying identity across requests; localhost protection would reject deployments
-// behind a loopback reverse proxy.
+// Stateless builds a server per request, so tools/list is filtered by the caller's token; localhost protection would reject deployments behind a loopback reverse proxy.
 func newStreamableHandler() http.Handler {
 	srv := mcp.NewStreamableHTTPHandler(newServerForRequest, &mcp.StreamableHTTPOptions{
 		Stateless:                  true,
@@ -126,8 +123,7 @@ func newStreamableHandler() http.Handler {
 	return crossOriginProtection().Handler(srv)
 }
 
-// MCP is not a browser transport, so anything that carries an Origin a browser would
-// not send to itself is rejected even before the Authorization header is looked at.
+// MCP is not a browser transport: an Origin a browser would not send to itself is rejected before the token is looked at.
 func crossOriginProtection() *http.CrossOriginProtection {
 	protection := http.NewCrossOriginProtection()
 	if !config.CorsEnable.GetBool() {
@@ -163,8 +159,7 @@ func Handler(c *echo.Context) error {
 	return nil
 }
 
-// The 413 is written instead of returned because error_handler.go rewrites every
-// returned 413 into the generic "file is too large" error.
+// Written instead of returned: error_handler.go rewrites a returned 413 into the generic "file is too large" error.
 func limitRequestBody(c *echo.Context, req *http.Request) (proceed bool, err error) {
 	req.Body = http.MaxBytesReader(c.Response(), req.Body, maxRequestBytes)
 	body, err := io.ReadAll(req.Body)

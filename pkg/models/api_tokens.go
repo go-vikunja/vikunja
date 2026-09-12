@@ -236,7 +236,6 @@ func (t *APIToken) Delete(s *xorm.Session, a web.Auth) (err error) {
 	return nil
 }
 
-// HasPermission accepts the same canonical group names as CanDoAPIRoute.
 func (t *APIToken) HasPermission(group, permission string) bool {
 	if t == nil {
 		return false

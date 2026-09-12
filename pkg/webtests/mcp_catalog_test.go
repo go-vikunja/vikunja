@@ -119,8 +119,7 @@ func TestMCP_Catalog_DoActionCannotEscalate(t *testing.T) {
 	assert.Contains(t, toolResultText(t, res), "bogus")
 }
 
-// newAllScopesMCPClient grants every scope the /routes endpoint offers, so the
-// tool lists it sees are the complete ones.
+// Grants every scope the /routes endpoint offers, so the tool lists it sees are the complete ones.
 func newAllScopesMCPClient(t *testing.T) *mcpClient {
 	t.Helper()
 	e, err := setupTestEnv()

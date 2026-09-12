@@ -45,8 +45,7 @@ func callTool(ctx context.Context, name string, rawArgs json.RawMessage) (any, e
 	if !ok {
 		return nil, fmt.Errorf("%w: %s", errToolNotFound, name)
 	}
-	// Read the caller before dispatching: the loopback request re-enters the group
-	// middleware, which stashes its own echo context.
+	// Read the caller before dispatching: the loopback re-enters the group middleware, which stashes its own echo context.
 	ec := echoContextFrom(ctx)
 	if ec == nil {
 		return nil, errNoCaller
@@ -136,8 +135,7 @@ func (t *tool) newRequest(ctx context.Context, caller *http.Request, args map[st
 	return req, nil
 }
 
-// The transport authorised one of possibly several Authorization values; the
-// loopback must not authenticate as a different one.
+// The transport authorised one of possibly several Authorization values; the loopback must not authenticate as a different one.
 func apiTokenAuthorization(caller *http.Request) string {
 	for _, v := range caller.Header.Values("Authorization") {
 		if strings.HasPrefix(v, "Bearer "+models.APITokenPrefix) {
