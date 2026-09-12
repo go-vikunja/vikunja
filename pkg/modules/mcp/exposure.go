@@ -51,7 +51,7 @@ var typedTools = map[string]bool{
 	"users_search":          true,
 }
 
-// Exclude credentials, account management, outbound requests, public shares, and file transfers.
+// Exclude credentials, account management, outbound requests, public shares, and attachment downloads; uploads drop out with the other multipart bodies, while attachment metadata and deletion stay behind the attachments scope.
 var deniedOperationPrefixes = []string{
 	"admin-",
 	"auth-",
