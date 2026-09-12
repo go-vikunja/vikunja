@@ -35,24 +35,24 @@ import (
 )
 
 var (
-	ErrToolNotFound = errors.New("mcp: tool not found")
-	ErrScopeDenied  = errors.New("mcp: tool not authorized for this token")
-	ErrNoCaller     = errors.New("mcp: no caller request in context")
+	errToolNotFound = errors.New("mcp: tool not found")
+	errScopeDenied  = errors.New("mcp: tool not authorized for this token")
+	errNoCaller     = errors.New("mcp: no caller request in context")
 )
 
 func callTool(ctx context.Context, name string, rawArgs json.RawMessage) (any, error) {
 	t, ok := findTool(name)
 	if !ok {
-		return nil, fmt.Errorf("%w: %s", ErrToolNotFound, name)
+		return nil, fmt.Errorf("%w: %s", errToolNotFound, name)
 	}
 	// Read the caller before dispatching: the loopback request re-enters the group
 	// middleware, which stashes its own echo context.
 	ec := echoContextFrom(ctx)
 	if ec == nil {
-		return nil, ErrNoCaller
+		return nil, errNoCaller
 	}
 	if !t.authorized(tokenFrom(ec)) {
-		return nil, fmt.Errorf("%w: %s", ErrScopeDenied, name)
+		return nil, fmt.Errorf("%w: %s", errScopeDenied, name)
 	}
 	caller := ec.Request()
 	args, err := decodeArgs(t.spec, rawArgs)

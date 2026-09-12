@@ -114,11 +114,11 @@ func TestCallTool_ScopeDenied(t *testing.T) {
 	ctx := withTestCaller(t)
 	routeAuthorizer = func(*models.APIToken, string, string) bool { return false }
 	_, err := callTool(ctx, "things_read", json.RawMessage(`{"id":1}`))
-	require.ErrorIs(t, err, ErrScopeDenied)
+	require.ErrorIs(t, err, errScopeDenied)
 }
 func TestCallTool_UnknownTool(t *testing.T) {
 	_, err := callTool(withTestCaller(t), "nope", nil)
-	require.ErrorIs(t, err, ErrToolNotFound)
+	require.ErrorIs(t, err, errToolNotFound)
 }
 func TestCallTool_ClientAddress(t *testing.T) {
 	ctx := withTestCaller(t)
