@@ -51,7 +51,7 @@ func TestSchema_TaskCreate(t *testing.T) {
 		assert.Contains(t, props, want)
 	}
 	// …server-controlled / relation fields are not.
-	for _, banned := range []string{"id", "created", "updated", "created_by", "assignees", "labels", "attachments", "identifier", "related_tasks", "reactions"} {
+	for _, banned := range []string{"id", "index", "created", "updated", "created_by", "assignees", "labels", "attachments", "identifier", "related_tasks", "reactions"} {
 		assert.NotContains(t, props, banned)
 	}
 	// Title (minLength) and project_id (URL-bound in REST) are required.
@@ -99,6 +99,29 @@ func TestSchema_ReadOneAndDeleteIdentifyByID(t *testing.T) {
 		spec := specFor(t, "labels", op)
 		assert.Equal(t, []string{"id"}, spec.schema.Required, op.Permission())
 		assert.Len(t, spec.schema.Properties, 1, op.Permission())
+	}
+}
+
+// Task.Index carries a param tag alongside readOnly, but the server assigns it.
+func TestSchema_TaskIndexIsNeverWritable(t *testing.T) {
+	registerAllResources(t)
+
+	for _, op := range []Op{OpCreate, OpUpdate, OpReadAll} {
+		assert.NotContains(t, specFor(t, "tasks", op).schema.Properties, "index", op.Permission())
+	}
+}
+
+// TaskRelation.TaskID is readOnly + param, so tasks_relations opts it in through IdentityFields.
+func TestSchema_TaskRelationsNeedBothTasksAndKind(t *testing.T) {
+	registerAllResources(t)
+
+	want := []string{"other_task_id", "relation_kind", "task_id"}
+	for _, op := range []Op{OpCreate, OpDelete} {
+		spec := specFor(t, "tasks_relations", op)
+		assert.Equal(t, want, spec.schema.Required, op.Permission())
+		for _, prop := range want {
+			assert.Contains(t, spec.schema.Properties, prop, op.Permission())
+		}
 	}
 }
 

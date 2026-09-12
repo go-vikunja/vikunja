@@ -19,6 +19,8 @@ package mcp
 // Tool input schemas are reflected from the same struct tags the Huma-backed
 // /api/v2 reads. MCP has no URL, so `param:`-bound fields become plain JSON
 // properties — hidden `json:"-"` ones under their snake_cased Go field name.
+// `readOnly:"true"` still means server-assigned and stays out of every schema;
+// a resource opts a readOnly parent id back in through IdentityFields.
 
 import (
 	"fmt"
@@ -125,8 +127,8 @@ func buildOpSpec(modelType reflect.Type, op Op, r *Resource) (*opSpec, error) {
 				required = append(required, hidden)
 			}
 
-		// readOnly with a param tag means REST reads it from the URL, not the body — MCP keeps it as an argument.
-		case !hasJSON, f.Tag.Get("readOnly") == "true" && param == "", excluded(name):
+		// A readOnly field is server-assigned. IdentityFields is the only way back in, for parent ids REST reads from the URL.
+		case !hasJSON, f.Tag.Get("readOnly") == "true" && !identity(name), excluded(name):
 			continue
 
 		default:
@@ -267,7 +269,7 @@ func writableInclusion(op Op, f reflect.StructField, name, param string, hasExpo
 			return true, false
 		}
 		// REST scopes the listing by this field from the URL path; without it the listing runs against id 0.
-		if param != "" && f.Tag.Get("readOnly") == "true" {
+		if identity && param != "" && f.Tag.Get("readOnly") == "true" {
 			return true, !slices.Contains(r.OptionalFields, name)
 		}
 	}

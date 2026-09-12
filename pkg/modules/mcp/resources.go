@@ -65,8 +65,8 @@ func allResources() []Resource {
 				OpReadAll: func() handler.CObject { return &models.TaskCollection{} },
 			},
 			Ops: OpCreate | OpReadOne | OpReadAll | OpUpdate | OpDelete,
-			// "s" duplicates the reserved search arg, view-scoped listing is polymorphic and stays REST-only, index is server-assigned.
-			Exclude: []string{"s", "project_view_id", "index"},
+			// "s" duplicates the reserved search arg, view-scoped listing is polymorphic and stays REST-only.
+			Exclude: []string{"s", "project_view_id"},
 			// Omitting project_id lists tasks across every project the caller can see.
 			OptionalFields: []string{"project_id"},
 		},
@@ -114,6 +114,8 @@ func allResources() []Resource {
 			Model:       func() handler.CObject { return &models.TaskRelation{} },
 			Ops:         OpCreate | OpDelete,
 			Tier:        TierCatalog,
+			// task_id is readOnly because REST binds it from the URL; MCP has no URL and needs it to address the relation.
+			IdentityFields: []string{"task_id"},
 		},
 		{
 			Name:           "teams_members",
