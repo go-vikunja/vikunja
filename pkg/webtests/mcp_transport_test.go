@@ -17,6 +17,7 @@
 package webtests
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -46,6 +47,13 @@ func TestMCP_GetNotAllowed(t *testing.T) {
 func TestMCP_DeleteNotAllowed(t *testing.T) {
 	rec := serveMCP(t, mcpRequest(http.MethodDelete, ""))
 	assert.Equal(t, http.StatusMethodNotAllowed, rec.Code, "%s", rec.Body.String())
+}
+
+func TestMCP_OversizedBodyKeepsMCPMessage(t *testing.T) {
+	c := newMCPClient(t, mcpOnlyToken)
+	rec := c.post(fmt.Sprintf(`{"jsonrpc":"2.0","id":1,"method":"ping","params":{"pad":%q}}`, strings.Repeat("a", 4<<20)))
+	require.Equal(t, http.StatusRequestEntityTooLarge, rec.Code)
+	assert.Contains(t, rec.Body.String(), "MCP request body")
 }
 
 func TestMCP_SubPathNotFound(t *testing.T) {
