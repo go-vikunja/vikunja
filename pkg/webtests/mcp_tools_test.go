@@ -194,6 +194,7 @@ func TestMCP_Tools_CreateSchemaMarksRequired(t *testing.T) {
 		props := schema["properties"].(map[string]any)
 		assert.NotContains(t, props, "created_by")
 		assert.NotContains(t, props, "id")
+		assert.NotContains(t, props, "project_id")
 		assert.Contains(t, props, "due_date")
 		return
 	}

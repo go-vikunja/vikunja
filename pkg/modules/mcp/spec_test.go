@@ -117,6 +117,28 @@ func TestBuildToolSpec_PutKeepsRequiredBodyFields(t *testing.T) {
 		"position",
 	}, spec.schema.Required)
 }
+func TestBuildToolSpec_DropsBodyFieldSuppliedByPath(t *testing.T) {
+	cfg := huma.DefaultConfig("test", "1")
+	cfg.FieldsOptionalByDefault = true
+	_, api := humatest.New(t, cfg)
+	huma.Register(api, huma.Operation{
+		OperationID: "widgets-create",
+		Method:      http.MethodPost,
+		Path:        "/things/{thing}/widgets",
+	}, func(_ context.Context, _ *struct {
+		Thing int64 `path:"thing"`
+		Body  struct {
+			ThingID int64  `json:"thing_id"`
+			Title   string `json:"title"`
+		}
+	}) (*struct{}, error) {
+		return nil, nil
+	})
+	spec, err := buildToolSpec(api.OpenAPI(), api.OpenAPI().Paths["/things/{thing}/widgets"].Post)
+	require.NoError(t, err)
+	assert.NotContains(t, spec.schema.Properties, "thing_id")
+	assert.Contains(t, spec.schema.Properties, "title")
+}
 func TestBuildToolSpec_ParamBodyCollision(t *testing.T) {
 	_, api := humatest.New(t)
 	huma.Register(api, huma.Operation{
