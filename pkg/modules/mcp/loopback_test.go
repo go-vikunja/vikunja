@@ -95,6 +95,12 @@ func TestCallTool_HTTPErrorIsToolError(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, apiErr.status)
 	assert.Contains(t, err.Error(), "no such thing")
 }
+func TestCallTool_UnauthorizedMentionsScopes(t *testing.T) {
+	_, err := callTool(withTestCaller(t), "things_read", json.RawMessage(`{"id":401}`))
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "401 Unauthorized")
+	assert.Contains(t, err.Error(), "scope")
+}
 func TestCallTool_UnknownArgumentRejectedBeforeDispatch(t *testing.T) {
 	_, err := callTool(withTestCaller(t), "things_read", json.RawMessage(`{"id":1,"bogus":1}`))
 	require.Error(t, err)
