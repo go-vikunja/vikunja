@@ -138,7 +138,7 @@ func TestCallTool_ClientAddress(t *testing.T) {
 	caller.Header.Add("X-Forwarded-For", "198.51.100.4")
 	caller.Header.Set("X-Request-Id", "req-1")
 	tl, _ := findTool("things_read")
-	req, err := tl.newRequest(ctx, caller, map[string]json.RawMessage{"id": json.RawMessage(`1`)})
+	req, err := tl.newRequest(ctx, echoContextFrom(ctx), map[string]json.RawMessage{"id": json.RawMessage(`1`)})
 	require.NoError(t, err)
 	assert.Equal(t, caller.RemoteAddr, req.RemoteAddr)
 	assert.Equal(t, "vikunja.example.com", req.Host)
@@ -149,13 +149,23 @@ func TestCallTool_ClientAddress(t *testing.T) {
 	assert.Equal(t, "req-1", req.Header.Get("X-Request-Id"))
 	assert.Equal(t, "vikunja.example.com", req.Header.Get("X-Forwarded-Host"))
 }
+func TestCallTool_UsesTheResponseRequestID(t *testing.T) {
+	ctx := withTestCaller(t)
+	ec := echoContextFrom(ctx)
+	ec.Response().Header().Set(echo.HeaderXRequestID, "generated-1")
+	ec.Request().Header.Set(echo.HeaderXRequestID, "from-client")
+	tl, _ := findTool("things_read")
+	req, err := tl.newRequest(ctx, ec, map[string]json.RawMessage{"id": json.RawMessage(`1`)})
+	require.NoError(t, err)
+	assert.Equal(t, "generated-1", req.Header.Get(echo.HeaderXRequestID))
+}
 func TestCallTool_KeepsTheForwardedHost(t *testing.T) {
 	ctx := withTestCaller(t)
 	caller := echoContextFrom(ctx).Request()
 	caller.Host = "internal:3456"
 	caller.Header.Set("X-Forwarded-Host", "vikunja.example.com")
 	tl, _ := findTool("things_read")
-	req, err := tl.newRequest(ctx, caller, map[string]json.RawMessage{"id": json.RawMessage(`1`)})
+	req, err := tl.newRequest(ctx, echoContextFrom(ctx), map[string]json.RawMessage{"id": json.RawMessage(`1`)})
 	require.NoError(t, err)
 	assert.Equal(t, "vikunja.example.com", req.Header.Get("X-Forwarded-Host"))
 }

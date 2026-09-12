@@ -32,6 +32,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 
 	"github.com/danielgtaylor/huma/v2"
+	"github.com/labstack/echo/v5"
 )
 
 var (
@@ -53,12 +54,11 @@ func callTool(ctx context.Context, name string, rawArgs json.RawMessage) (any, e
 	if !t.authorized(tokenFrom(ec)) {
 		return nil, fmt.Errorf("%w: %s", errScopeDenied, name)
 	}
-	caller := ec.Request()
 	args, err := decodeArgs(t.spec, rawArgs)
 	if err != nil {
 		return nil, fmt.Errorf("mcp: invalid arguments for %s: %w", name, err)
 	}
-	req, err := t.newRequest(ctx, caller, args)
+	req, err := t.newRequest(ctx, ec, args)
 	if err != nil {
 		return nil, fmt.Errorf("mcp: invalid arguments for %s: %w", name, err)
 	}
@@ -66,7 +66,8 @@ func callTool(ctx context.Context, name string, rawArgs json.RawMessage) (any, e
 	currentAPI().Adapter().ServeHTTP(rec, req)
 	return parseResponse(rec)
 }
-func (t *tool) newRequest(ctx context.Context, caller *http.Request, args map[string]json.RawMessage) (*http.Request, error) {
+func (t *tool) newRequest(ctx context.Context, ec *echo.Context, args map[string]json.RawMessage) (*http.Request, error) {
+	caller := ec.Request()
 	path := t.op.Path
 	query := url.Values{}
 	body := map[string]json.RawMessage{}
@@ -138,8 +139,19 @@ func (t *tool) newRequest(ctx context.Context, caller *http.Request, args map[st
 			req.Header[http.CanonicalHeaderKey(h)] = slices.Clone(vs)
 		}
 	}
+	if id := requestID(ec); id != "" {
+		req.Header.Set(echo.HeaderXRequestID, id)
+	}
 	req.RemoteAddr = caller.RemoteAddr
 	return req, nil
+}
+
+// echo's RequestID middleware writes the id it generated to the response only.
+func requestID(ec *echo.Context) string {
+	if id := ec.Response().Header().Get(echo.HeaderXRequestID); id != "" {
+		return id
+	}
+	return ec.Request().Header.Get(echo.HeaderXRequestID)
 }
 
 func isJSONNull(raw json.RawMessage) bool {
