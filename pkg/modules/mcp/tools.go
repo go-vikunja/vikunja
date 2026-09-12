@@ -122,7 +122,7 @@ func buildTools(oapi *huma.OpenAPI, groupPrefix string) (map[string]*tool, []*to
 				typed:       typed,
 				spec:        spec,
 				contentType: ct,
-				description: describe(c.op),
+				description: describe(oapi, c.op),
 			}
 		}
 	}
@@ -134,10 +134,13 @@ func buildTools(oapi *huma.OpenAPI, groupPrefix string) (map[string]*tool, []*to
 	return index, order, nil
 }
 func echoPath(path string) string { return strings.NewReplacer("{", ":", "}", "").Replace(path) }
-func describe(op *huma.Operation) string {
-	s := op.Summary
-	if op.Description != "" {
-		s += ". " + op.Description
+
+// AutoPatch's PATCH prose is boilerplate about JSON Patch, which MCP callers cannot use; read it from the PUT instead.
+func describe(oapi *huma.OpenAPI, op *huma.Operation) string {
+	src := bodySchemaOp(oapi, op)
+	s := src.Summary
+	if src.Description != "" {
+		s += ". " + src.Description
 	}
 	if op.Method == http.MethodPatch {
 		s += " Only fields present in the arguments are changed. Rich-text fields are exchanged as HTML here."

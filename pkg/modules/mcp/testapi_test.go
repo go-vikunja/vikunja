@@ -121,6 +121,8 @@ func newTestAPI(t *testing.T) huma.API {
 		OperationID: "things-update",
 		Method:      http.MethodPut,
 		Path:        "/things/{id}",
+		Summary:     "Update a thing",
+		Description: "Moving a thing needs write access to the target.",
 	}, func(_ context.Context, in *struct {
 		ID   int64 `path:"id"`
 		Body testThing

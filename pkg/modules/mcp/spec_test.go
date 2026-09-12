@@ -179,6 +179,13 @@ func TestInit_BuildsToolIndex(t *testing.T) {
 	_, denied := findTool("tokens_create")
 	assert.False(t, denied)
 }
+func TestInit_UpdateDescriptionComesFromThePut(t *testing.T) {
+	initTools(newTestAPI(t), "")
+	update, ok := findTool("things_update")
+	require.True(t, ok)
+	assert.Equal(t, "Update a thing. Moving a thing needs write access to the target. Only fields present in the arguments are changed. Rich-text fields are exchanged as HTML here.", update.description)
+	assert.NotContains(t, update.description, "JSON Patch")
+}
 func TestInit_PrefixesEchoPath(t *testing.T) {
 	initTools(newTestAPI(t), "/api/v2")
 	read, _ := findTool("things_read")
