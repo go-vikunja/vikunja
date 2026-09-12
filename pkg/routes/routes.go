@@ -122,6 +122,14 @@ func matchCORSOrigin(origin string, allowedOrigins []string) (string, bool, erro
 	return "", false, nil
 }
 
+func corsOriginAllowed(origin string) bool {
+	if !config.CorsEnable.GetBool() {
+		return false
+	}
+	_, ok, err := matchCORSOrigin(origin, config.CorsOrigins.GetStringSlice())
+	return ok && err == nil
+}
+
 // NewEcho registers a new Echo instance
 func NewEcho() *echo.Echo {
 	// Configure Echo with a router that unescapes path parameters.
@@ -478,7 +486,7 @@ func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, noAuthRateLimit, refreshRa
 
 	// Resources self-register via init(); RegisterAll runs them all + AutoPatch.
 	apiv2.RegisterAll(api)
-	mcpmodule.Register(api, a, apiV2Prefix)
+	mcpmodule.Register(api, a, apiV2Prefix, corsOriginAllowed)
 }
 
 func registerAPIRoutes(a *echo.Group, noAuthRateLimit, refreshRateLimit echo.MiddlewareFunc) {

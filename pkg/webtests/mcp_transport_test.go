@@ -23,6 +23,9 @@ import (
 	"strings"
 	"testing"
 
+	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/routes"
+
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -64,6 +67,37 @@ func TestMCP_CrossOriginRejected(t *testing.T) {
 
 	rec = serveMCP(t, mcpRequest(http.MethodPost, initializeBody))
 	assert.Equal(t, http.StatusOK, rec.Code, "%s", rec.Body.String())
+}
+
+func TestMCP_WildcardCORSOriginAllowed(t *testing.T) {
+	_, err := setupTestEnv()
+	require.NoError(t, err)
+
+	prevEnable, prevOrigins := config.CorsEnable.GetBool(), config.CorsOrigins.GetStringSlice()
+	config.CorsEnable.Set(true)
+	config.CorsOrigins.Set([]string{"http://localhost:*"})
+	t.Cleanup(func() {
+		config.CorsEnable.Set(prevEnable)
+		config.CorsOrigins.Set(prevOrigins)
+	})
+
+	e := routes.NewEcho()
+	routes.RegisterRoutes(e)
+
+	serve := func(origin string) *httptest.ResponseRecorder {
+		req := mcpRequest(http.MethodPost, initializeBody)
+		req.Header.Set(echo.HeaderAuthorization, "Bearer "+mcpOnlyToken)
+		req.Header.Set("Origin", origin)
+		rec := httptest.NewRecorder()
+		e.ServeHTTP(rec, req)
+		return rec
+	}
+
+	rec := serve("http://localhost:5173")
+	assert.Equal(t, http.StatusOK, rec.Code, "%s", rec.Body.String())
+
+	rec = serve("https://evil.example")
+	assert.Equal(t, http.StatusForbidden, rec.Code, "%s", rec.Body.String())
 }
 
 func TestMCP_SubPathNotFound(t *testing.T) {

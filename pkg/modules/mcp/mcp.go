@@ -25,9 +25,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"sync"
 
-	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/humabridge"
@@ -49,8 +47,12 @@ const (
 )
 
 // Register must follow apiv2.RegisterAll so tools pick up the AutoPatch operations.
-func Register(api huma.API, group *echo.Group, groupPrefix string) {
+// allowOrigin (nil trusts none) covers browser origins the stdlib check can't: it rejects the wildcard ports Vikunja's CORS origins use.
+func Register(api huma.API, group *echo.Group, groupPrefix string, allowOrigin func(origin string) bool) {
 	initTools(api, groupPrefix)
+	streamableHandler = newStreamableHandler()
+	originProtection = http.NewCrossOriginProtection()
+	allowCORSOrigin = allowOrigin
 	group.POST(routeSuffix, handler)
 }
 
@@ -116,10 +118,11 @@ func rawToolHandler(name string) mcp.ToolHandler {
 	}
 }
 
-var streamableHandler = sync.OnceValue(newStreamableHandler)
-
-// Built on first use because the CORS config is not loaded at package init.
-var originProtection = sync.OnceValue(newCrossOriginProtection)
+var (
+	streamableHandler http.Handler
+	originProtection  *http.CrossOriginProtection
+	allowCORSOrigin   func(origin string) bool
+)
 
 // Stateless builds a server per request, so tools/list is filtered by the caller's token; localhost protection would reject deployments behind a loopback reverse proxy.
 func newStreamableHandler() http.Handler {
@@ -129,24 +132,11 @@ func newStreamableHandler() http.Handler {
 	})
 }
 
-func newCrossOriginProtection() *http.CrossOriginProtection {
-	protection := http.NewCrossOriginProtection()
-	if !config.CorsEnable.GetBool() {
-		return protection
-	}
-	for _, origin := range config.CorsOrigins.GetStringSlice() {
-		if err := protection.AddTrustedOrigin(origin); err != nil {
-			log.Debugf("[mcp] not trusting cors origin %q: %s", origin, err)
-		}
-	}
-	return protection
-}
-
 // handler rejects JWTs, which bypass API-token route scopes.
 func handler(c *echo.Context) error {
 	req := c.Request()
 	// MCP is not a browser transport: an Origin a browser would not send to itself is rejected before the token is looked at.
-	if err := originProtection().Check(req); err != nil {
+	if err := originProtection.Check(req); err != nil && !originIsTrustedByCORS(req) {
 		return echo.NewHTTPError(http.StatusForbidden, err.Error())
 	}
 	tokenAny := c.Get("api_token")
@@ -164,8 +154,13 @@ func handler(c *echo.Context) error {
 	if proceed, err := limitRequestBody(c, req); !proceed {
 		return err
 	}
-	http.StripPrefix(RoutePrefix, streamableHandler()).ServeHTTP(c.Response(), req)
+	http.StripPrefix(RoutePrefix, streamableHandler).ServeHTTP(c.Response(), req)
 	return nil
+}
+
+func originIsTrustedByCORS(req *http.Request) bool {
+	origin := req.Header.Get("Origin")
+	return origin != "" && allowCORSOrigin != nil && allowCORSOrigin(origin)
 }
 
 // Written instead of returned: error_handler.go rewrites a returned 413 into the generic "file is too large" error.
