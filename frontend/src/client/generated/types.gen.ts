@@ -41,6 +41,32 @@ export type ApiToken = {
     readonly token?: string;
 };
 
+export type AdminUsersEntitlementsReplaceRequest = {
+    /**
+     * A URL to the JSON Schema for this object.
+     */
+    readonly $schema?: string;
+    /**
+     * The complete set of rows for this user, keyed by feature name. Flags take 0/1, limits take the maximum.
+     */
+    entitlements: {
+        [key: string]: number;
+    };
+};
+
+export type AdminEntitlementsBodyBody = {
+    /**
+     * A URL to the JSON Schema for this object.
+     */
+    readonly $schema?: string;
+    /**
+     * Raw per-user rows keyed by feature name. Flags are 0/1, limits are the maximum. A missing feature means no restriction.
+     */
+    entitlements?: {
+        [key: string]: number;
+    };
+};
+
 export type AdminIsAdminPatchBody = {
     /**
      * A URL to the JSON Schema for this object.
@@ -3015,6 +3041,12 @@ export type UserInfoBody = {
      */
     email?: string;
     /**
+     * Resolved feature access for this user (instance license combined with the user's plan). Flags (admin_panel, audit_logs, time_tracking, team_creation) are always present as 0/1. Limits (max_projects, max_storage_bytes) are present only when the user is limited.
+     */
+    readonly entitlements?: {
+        [key: string]: number;
+    };
+    /**
      * The unique, numeric id of this user.
      */
     readonly id?: number;
@@ -3042,6 +3074,12 @@ export type UserInfoBody = {
      * A timestamp when this user was last updated. You cannot change this value.
      */
     readonly updated?: string;
+    /**
+     * Current usage behind each limit, keyed like entitlements: owned projects for max_projects, stored bytes for max_storage_bytes.
+     */
+    readonly usage?: {
+        [key: string]: number;
+    };
     /**
      * The username of the user. Is always unique. For bot users it must start with the 'bot-' prefix.
      */
@@ -3220,6 +3258,10 @@ export type VikunjaInfos = {
      */
     totp_enabled?: boolean;
     /**
+     * Where the frontend sends users who hit a per-user feature or usage limit. Empty when the instance has no upgrade path.
+     */
+    upgrade_url?: string;
+    /**
      * Whether users may delete their own account.
      */
     user_deletion_enabled?: boolean;
@@ -3291,6 +3333,24 @@ export type ApiTokenWritable = {
      * A human-readable name for this token.
      */
     title?: string;
+};
+
+export type AdminUsersEntitlementsReplaceRequestWritable = {
+    /**
+     * The complete set of rows for this user, keyed by feature name. Flags take 0/1, limits take the maximum.
+     */
+    entitlements: {
+        [key: string]: number;
+    };
+};
+
+export type AdminEntitlementsBodyBodyWritable = {
+    /**
+     * Raw per-user rows keyed by feature name. Flags are 0/1, limits are the maximum. A missing feature means no restriction.
+     */
+    entitlements?: {
+        [key: string]: number;
+    };
 };
 
 export type AdminIsAdminPatchBodyWritable = {
@@ -4660,6 +4720,10 @@ export type VikunjaInfosWritable = {
      */
     totp_enabled?: boolean;
     /**
+     * Where the frontend sends users who hit a per-user feature or usage limit. Empty when the instance has no upgrade path.
+     */
+    upgrade_url?: string;
+    /**
      * Whether users may delete their own account.
      */
     user_deletion_enabled?: boolean;
@@ -4916,6 +4980,96 @@ export type AdminUsersPatchAdminResponses = {
 };
 
 export type AdminUsersPatchAdminResponse = AdminUsersPatchAdminResponses[keyof AdminUsersPatchAdminResponses];
+
+export type AdminUsersEntitlementsReadData = {
+    body?: never;
+    path: {
+        /**
+         * The numeric ID of the user.
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/admin/users/{id}/entitlements';
+};
+
+export type AdminUsersEntitlementsReadErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type AdminUsersEntitlementsReadError = AdminUsersEntitlementsReadErrors[keyof AdminUsersEntitlementsReadErrors];
+
+export type AdminUsersEntitlementsReadResponses = {
+    /**
+     * OK
+     */
+    200: AdminEntitlementsBodyBody;
+};
+
+export type AdminUsersEntitlementsReadResponse = AdminUsersEntitlementsReadResponses[keyof AdminUsersEntitlementsReadResponses];
+
+export type PatchAdminUsersEntitlementsReadData = {
+    body: Array<JsonPatchOp> | null;
+    path: {
+        /**
+         * The numeric ID of the user.
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/admin/users/{id}/entitlements';
+};
+
+export type PatchAdminUsersEntitlementsReadErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type PatchAdminUsersEntitlementsReadError = PatchAdminUsersEntitlementsReadErrors[keyof PatchAdminUsersEntitlementsReadErrors];
+
+export type PatchAdminUsersEntitlementsReadResponses = {
+    /**
+     * OK
+     */
+    200: AdminEntitlementsBodyBody;
+};
+
+export type PatchAdminUsersEntitlementsReadResponse = PatchAdminUsersEntitlementsReadResponses[keyof PatchAdminUsersEntitlementsReadResponses];
+
+export type AdminUsersEntitlementsReplaceData = {
+    body: AdminUsersEntitlementsReplaceRequestWritable;
+    path: {
+        /**
+         * The numeric ID of the user.
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/admin/users/{id}/entitlements';
+};
+
+export type AdminUsersEntitlementsReplaceErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type AdminUsersEntitlementsReplaceError = AdminUsersEntitlementsReplaceErrors[keyof AdminUsersEntitlementsReplaceErrors];
+
+export type AdminUsersEntitlementsReplaceResponses = {
+    /**
+     * OK
+     */
+    200: AdminEntitlementsBodyBody;
+};
+
+export type AdminUsersEntitlementsReplaceResponse = AdminUsersEntitlementsReplaceResponses[keyof AdminUsersEntitlementsReplaceResponses];
 
 export type AdminUsersSetPasswordData = {
     body: AdminSetPasswordBodyWritable;

@@ -40,6 +40,9 @@ func timePtr(t time.Time) *time.Time { return &t }
 // Entries: 1 = user1 on task 1, 2 = user1 on project 1, 3 = user3 on project 3.
 
 func TestTimeEntry_CanRead(t *testing.T) {
+	license.SetForTests([]license.Feature{license.FeatureTimeTracking})
+	defer license.ResetForTests()
+
 	tests := []struct {
 		name    string
 		entryID int64
@@ -74,6 +77,9 @@ func TestTimeEntry_CanRead(t *testing.T) {
 }
 
 func TestTimeEntry_CanCreate(t *testing.T) {
+	license.SetForTests([]license.Feature{license.FeatureTimeTracking})
+	defer license.ResetForTests()
+
 	tests := []struct {
 		name    string
 		entry   *TimeEntry
@@ -110,6 +116,9 @@ func TestTimeEntry_CanCreate(t *testing.T) {
 // Entry 3 is authored by user3; user1 can read project 3 but is not the author,
 // so it can read but not modify.
 func TestTimeEntry_CanModify(t *testing.T) {
+	license.SetForTests([]license.Feature{license.FeatureTimeTracking})
+	defer license.ResetForTests()
+
 	tests := []struct {
 		name    string
 		entryID int64
@@ -142,6 +151,9 @@ func TestTimeEntry_CanModify(t *testing.T) {
 // Guards the data leak: ReadAll must return only entries on tasks/projects the
 // caller can read, since DoReadAll runs no permission check.
 func TestTimeEntry_ReadAll(t *testing.T) {
+	license.SetForTests([]license.Feature{license.FeatureTimeTracking})
+	defer license.ResetForTests()
+
 	tests := []struct {
 		name    string
 		auth    web.Auth
@@ -177,6 +189,9 @@ func TestTimeEntry_ReadAll(t *testing.T) {
 // Filtering reuses the task filter grammar. user1 can read entries 1,2,4
 // (project 1) and 3 (project 3, shared) — the filter only narrows that set.
 func TestTimeEntry_ReadAll_Filter(t *testing.T) {
+	license.SetForTests([]license.Feature{license.FeatureTimeTracking})
+	defer license.ResetForTests()
+
 	tests := []struct {
 		name    string
 		filter  string
@@ -222,6 +237,9 @@ func TestTimeEntry_ReadAll_Filter(t *testing.T) {
 // Search matches the entry comment. Comments: 1="Time entry on task 1",
 // 2/3 contain "Standalone", 4="Running timer".
 func TestTimeEntry_ReadAll_Search(t *testing.T) {
+	license.SetForTests([]license.Feature{license.FeatureTimeTracking})
+	defer license.ResetForTests()
+
 	tests := []struct {
 		name    string
 		search  string
@@ -253,6 +271,9 @@ func TestTimeEntry_ReadAll_Search(t *testing.T) {
 }
 
 func TestTimeEntry_Create(t *testing.T) {
+	license.SetForTests([]license.Feature{license.FeatureTimeTracking})
+	defer license.ResetForTests()
+
 	t.Run("manual entry keeps its start time and is owned by the caller", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
@@ -331,6 +352,9 @@ func TestTimeEntry_Create(t *testing.T) {
 // A running timer (no end) must round-trip as a NULL end_time: found by the
 // null filter and serialized as JSON null, never the 0001-01-01 zero sentinel.
 func TestTimeEntry_RunningTimerEndTimeIsNull(t *testing.T) {
+	license.SetForTests([]license.Feature{license.FeatureTimeTracking})
+	defer license.ResetForTests()
+
 	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()
 	defer s.Close()
@@ -361,6 +385,9 @@ func TestTimeEntry_RunningTimerEndTimeIsNull(t *testing.T) {
 
 // Regression guard: the permission check must not clobber the update payload.
 func TestTimeEntry_Update(t *testing.T) {
+	license.SetForTests([]license.Feature{license.FeatureTimeTracking})
+	defer license.ResetForTests()
+
 	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()
 	defer s.Close()
@@ -388,6 +415,9 @@ func TestTimeEntry_Update(t *testing.T) {
 }
 
 func TestTimeEntry_UpdateReassignsContainer(t *testing.T) {
+	license.SetForTests([]license.Feature{license.FeatureTimeTracking})
+	defer license.ResetForTests()
+
 	validTimes := func(te *TimeEntry) {
 		te.StartTime = time.Date(2020, 1, 1, 9, 0, 0, 0, time.UTC)
 		te.EndTime = timePtr(time.Date(2020, 1, 1, 10, 0, 0, 0, time.UTC))
@@ -452,6 +482,9 @@ func TestTimeEntry_UpdateReassignsContainer(t *testing.T) {
 }
 
 func TestTimeEntry_UpdateReopenGuard(t *testing.T) {
+	license.SetForTests([]license.Feature{license.FeatureTimeTracking})
+	defer license.ResetForTests()
+
 	a := &user.User{ID: 1}
 	someStart := time.Date(2020, 1, 1, 9, 0, 0, 0, time.UTC)
 
@@ -486,6 +519,9 @@ func TestTimeEntry_UpdateReopenGuard(t *testing.T) {
 }
 
 func TestTimeEntry_RejectsInvertedInterval(t *testing.T) {
+	license.SetForTests([]license.Feature{license.FeatureTimeTracking})
+	defer license.ResetForTests()
+
 	a := &user.User{ID: 1}
 	start := time.Date(2020, 1, 1, 10, 0, 0, 0, time.UTC)
 	before := time.Date(2020, 1, 1, 9, 0, 0, 0, time.UTC)
@@ -537,6 +573,9 @@ func TestTimeEntry_RejectsInvertedInterval(t *testing.T) {
 }
 
 func TestTimeEntry_StopRunningTimer(t *testing.T) {
+	license.SetForTests([]license.Feature{license.FeatureTimeTracking})
+	defer license.ResetForTests()
+
 	t.Run("stops the caller's running timer and returns it", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
@@ -584,6 +623,9 @@ func TestTimeEntry_StopRunningTimer(t *testing.T) {
 }
 
 func TestTimeEntry_Events(t *testing.T) {
+	license.SetForTests([]license.Feature{license.FeatureTimeTracking})
+	defer license.ResetForTests()
+
 	u := &user.User{ID: 1}
 	someStart := time.Date(2020, 1, 1, 9, 0, 0, 0, time.UTC)
 	someEnd := timePtr(time.Date(2020, 1, 1, 10, 0, 0, 0, time.UTC))
@@ -672,6 +714,9 @@ func TestTimeEntry_Events(t *testing.T) {
 }
 
 func TestTimeEntry_Delete(t *testing.T) {
+	license.SetForTests([]license.Feature{license.FeatureTimeTracking})
+	defer license.ResetForTests()
+
 	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()
 	defer s.Close()

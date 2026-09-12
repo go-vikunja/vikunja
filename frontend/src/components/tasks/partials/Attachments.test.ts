@@ -16,6 +16,8 @@ vi.mock('@/services/attachment', () => ({
 }))
 
 vi.mock('@/stores/tasks', () => ({useTaskStore: () => ({isLoading: false})}))
+vi.mock('@/stores/auth', () => ({useAuthStore: () => ({info: {id: 1}, limit: () => null, usage: () => 0, refreshUserInfo: vi.fn()})}))
+vi.mock('@/stores/projects', () => ({useProjectStore: () => ({projects: {}})}))
 
 vi.mock('vue-i18n', async importOriginal => ({
 	...(await importOriginal<typeof import('vue-i18n')>()),

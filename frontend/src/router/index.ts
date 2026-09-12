@@ -8,13 +8,12 @@ import {getNextWeekDate} from '@/helpers/time/getNextWeekDate'
 import {LINK_SHARE_HASH_PREFIX} from '@/constants/linkShareHash'
 import {REDIRECT_HASH_PREFIX} from '@/constants/redirectHash'
 import {AUTH_ROUTE_NAMES} from '@/constants/authRouteNames'
-import {PRO_FEATURE} from '@/constants/proFeatures'
+import {ENTITLEMENT} from '@/constants/entitlements'
 import {i18n} from '@/i18n'
 import {error, success} from '@/message'
 
 import {useAuthStore} from '@/stores/auth'
 import {useBaseStore} from '@/stores/base'
-import {useConfigStore} from '@/stores/config'
 
 import Login from '@/views/user/Login.vue'
 import Register from '@/views/user/Register.vue'
@@ -578,18 +577,19 @@ router.beforeEach(async (to, from) => {
 
 	await authStore.checkAuth()
 
-	if (to.meta?.requiresAdminPanel) {
-		// Await config/auth hydration so the license check doesn't race the empty default
-		// on direct /admin navigation. appReady resolves without waiting on router.isReady(),
-		// so awaiting it here doesn't deadlock the initial navigation.
-		const baseStore = useBaseStore()
-		await baseStore.appReady
-		const configStore = useConfigStore()
-		const featureOn = configStore.isProFeatureEnabled(PRO_FEATURE.ADMIN_PANEL)
-		// isAdmin comes from /user, not the JWT; force-fetch in case checkAuth() was debounced.
-		if (authStore.info?.isAdmin === undefined) {
+	// isAdmin and entitlements come from /user, not the JWT; force-fetch in case
+	// checkAuth() was debounced. appReady resolves without waiting on
+	// router.isReady(), so awaiting it here doesn't deadlock the initial navigation.
+	const ensureUserInfo = async () => {
+		await useBaseStore().appReady
+		if (authStore.authUser && !authStore.entitlementsLoaded) {
 			await authStore.refreshUserInfo()
 		}
+	}
+
+	if (to.meta?.requiresAdminPanel) {
+		await ensureUserInfo()
+		const featureOn = authStore.hasEntitlement(ENTITLEMENT.ADMIN_PANEL)
 		const isAdmin = authStore.info?.isAdmin === true
 		if (!featureOn || !isAdmin) {
 			return {name: 'not-found'}
@@ -597,10 +597,8 @@ router.beforeEach(async (to, from) => {
 	}
 
 	if (to.meta?.requiresTimeTracking) {
-		const baseStore = useBaseStore()
-		await baseStore.appReady
-		const configStore = useConfigStore()
-		if (!configStore.isProFeatureEnabled(PRO_FEATURE.TIME_TRACKING)) {
+		await ensureUserInfo()
+		if (!authStore.hasEntitlement(ENTITLEMENT.TIME_TRACKING)) {
 			return {name: 'not-found'}
 		}
 	}

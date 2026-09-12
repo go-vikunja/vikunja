@@ -20,7 +20,7 @@ import (
 	"net/http"
 	"strings"
 
-	"code.vikunja.io/api/pkg/license"
+	"code.vikunja.io/api/pkg/entitlement"
 	"code.vikunja.io/api/pkg/log"
 
 	"github.com/labstack/echo/v5"
@@ -362,14 +362,14 @@ func CollectRoutesForAPITokenUsage(route echo.RouteInfo, requiresJWT bool) {
 // request-time gate 404s it. Gated routes are always registered (the gates
 // react to license changes at runtime), so this must stay in sync with
 // timeTrackingGate and gateV2AdminRoutes in pkg/routes.
-func licenseFeatureForRoute(path string) (license.Feature, bool) {
+func licenseFeatureForRoute(path string) (entitlement.Feature, bool) {
 	switch {
 	case strings.HasPrefix(path, "/api/v1/admin/"), strings.HasPrefix(path, "/api/v2/admin/"):
-		return license.FeatureAdminPanel, true
+		return entitlement.FeatureAdminPanel, true
 	case strings.Contains(path, "/time-entries"):
-		return license.FeatureTimeTracking, true
+		return entitlement.FeatureTimeTracking, true
 	}
-	return license.FeatureUnknown, false
+	return "", false
 }
 
 // GetAPITokenRoutes exposes the registered scoped-token routes for the /routes
@@ -383,12 +383,12 @@ func licenseFeatureForRoute(path string) (license.Feature, bool) {
 // keep validating across a license lapse; the request-time gates make them inert.
 func GetAPITokenRoutes() map[string]APITokenRoute {
 	merged := make(map[string]APITokenRoute, len(apiTokenRoutes))
-	featureEnabled := make(map[license.Feature]bool)
+	featureEnabled := make(map[entitlement.Feature]bool)
 	add := func(group, perm string, rd *RouteDetail) {
 		if feature, gated := licenseFeatureForRoute(rd.Path); gated {
 			enabled, checked := featureEnabled[feature]
 			if !checked {
-				enabled = license.IsFeatureEnabled(feature)
+				enabled = entitlement.LicenseAllows(feature)
 				featureEnabled[feature] = enabled
 			}
 			if !enabled {

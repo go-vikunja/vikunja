@@ -21,6 +21,7 @@ import (
 
 	"code.vikunja.io/api/pkg/cron"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/entitlement"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
@@ -169,6 +170,7 @@ func DeleteUser(s *xorm.Session, u *user.User) (err error) {
 		{"user_id", &Reaction{}},
 		{"user_id", &Favorite{}},
 		{"owner_id", &APIToken{}},
+		{"user_id", &entitlement.UserEntitlement{}},
 	}
 
 	for _, entity := range relatedEntities {

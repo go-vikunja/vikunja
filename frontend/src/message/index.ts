@@ -44,7 +44,7 @@ export function error(e, actions: Action[] = []) {
 		text: getErrorText(e),
 		ignoreDuplicates: true,
 		data: {
-			actions: actions,
+			actions,
 		},
 	})
 }

@@ -1,5 +1,6 @@
 import type {IAbstract} from './IAbstract'
 import type {IUserSettings} from './IUserSettings'
+import type {Entitlement, EntitlementLimit} from '@/constants/entitlements'
 
 export const AUTH_TYPES = {
 	'UNKNOWN': 0,
@@ -26,4 +27,6 @@ export interface IUser extends IAbstract {
 	deletionScheduledAt: string | Date | null
 	isAdmin?: boolean
 	botOwnerId?: number
+	entitlements: Partial<Record<Entitlement, number>>
+	usage: Partial<Record<EntitlementLimit, number>>
 }

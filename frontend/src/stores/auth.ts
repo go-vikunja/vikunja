@@ -1,7 +1,7 @@
 import {computed, readonly, ref, watch} from 'vue'
 import {acceptHMRUpdate, defineStore} from 'pinia'
 
-import {AuthenticatedHTTPFactory, HTTPFactory} from '@/helpers/fetcher'
+import {AuthenticatedHTTPFactory, HTTPFactory, apiV2Url} from '@/helpers/fetcher'
 import {getBrowserLanguage, i18n, setLanguage} from '@/i18n'
 import {objectToSnakeCase} from '@/helpers/case'
 import UserModel, {getDisplayName, invalidateAvatarCache} from '@/models/user'
@@ -28,6 +28,7 @@ import {DATE_DISPLAY} from '@/constants/dateDisplay'
 import {TIME_FORMAT} from '@/constants/timeFormat'
 import {RELATION_KIND} from '@/types/IRelationKind'
 import type {IProvider} from '@/types/IProvider'
+import type {EntitlementFlag, EntitlementLimit} from '@/constants/entitlements'
 import {queryClient} from '@/client/queryClient'
 
 // Set on explicit logout so the login page won't immediately bounce the user
@@ -116,6 +117,28 @@ export const useAuthStore = defineStore('auth', () => {
 	const userDisplayName = computed(() => info.value ? getDisplayName(info.value) : undefined)
 	
 	const isLinkShareAuth = computed(() => info.value?.type === AUTH_TYPES.LINK_SHARE)
+
+	// The JWT-derived user has no entitlements; they arrive with /user. The
+	// server always sends every flag, so an empty map means "not loaded yet".
+	const entitlementsLoaded = computed(() => Object.keys(info.value?.entitlements ?? {}).length > 0)
+
+	function hasEntitlement(feature: EntitlementFlag): boolean {
+		return (info.value?.entitlements?.[feature] ?? 0) !== 0
+	}
+
+	// null = unlimited
+	function limit(feature: EntitlementLimit): number | null {
+		return info.value?.entitlements?.[feature] ?? null
+	}
+
+	function usage(feature: EntitlementLimit): number {
+		return info.value?.usage?.[feature] ?? 0
+	}
+
+	function isAtLimit(feature: EntitlementLimit): boolean {
+		const max = limit(feature)
+		return max !== null && usage(feature) >= max
+	}
 
 	// Identity-bound caches survive same-user object replacements.
 	watch(() => [info.value?.id ?? null, info.value?.type ?? null] as const, ([id, type], [prevId, prevType]) => {
@@ -432,7 +455,7 @@ export const useAuthStore = defineStore('auth', () => {
 
 		const HTTP = AuthenticatedHTTPFactory()
 		try {
-			const response = await HTTP.get('user')
+			const response = await HTTP.get(apiV2Url('user'))
 			const newUser = new UserModel({
 				...response.data,
 				...(info.value?.type && {type: info.value?.type}),
@@ -466,6 +489,11 @@ export const useAuthStore = defineStore('auth', () => {
 			// eslint-disable-next-line preserve-caught-error
 			throw new Error('Error while refreshing user info:', {cause})
 		}
+	}
+
+	// Fire-and-forget: a failed usage refresh must not reject into a caller that cannot handle it.
+	function refreshUsage() {
+		return refreshUserInfo().catch(() => {})
 	}
 
 	/**
@@ -615,6 +643,12 @@ export const useAuthStore = defineStore('auth', () => {
 		userDisplayName,
 		isLinkShareAuth,
 
+		entitlementsLoaded,
+		hasEntitlement,
+		limit,
+		usage,
+		isAtLimit,
+
 		isLoading: readonly(isLoading),
 		setIsLoading,
 
@@ -636,6 +670,7 @@ export const useAuthStore = defineStore('auth', () => {
 		linkShareAuth,
 		checkAuth,
 		refreshUserInfo,
+		refreshUsage,
 		verifyEmail,
 		saveUserSettings,
 		renewToken,

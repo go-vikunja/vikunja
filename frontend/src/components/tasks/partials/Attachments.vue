@@ -132,6 +132,18 @@
 		>
 			{{ $t('task.attachment.upload') }}
 		</XButton>
+		<UpgradeHint
+			v-if="editEnabled && storageLimitReached"
+			class="mbe-4"
+		>
+			{{ $t('entitlement.storageLimitReached') }}
+		</UpgradeHint>
+		<p
+			v-else-if="editEnabled && storageLimit !== null"
+			class="has-text-grey is-size-7 mbe-4"
+		>
+			{{ $t('entitlement.storageUsage', {used: getHumanSize(storageUsage), limit: getHumanSize(storageLimit)}) }}
+		</p>
 
 		<!-- Dropzone -->
 		<Teleport :to="dropzoneTeleportTarget">
@@ -233,6 +245,7 @@ import User from '@/components/misc/User.vue'
 import ProgressBar from '@/components/misc/ProgressBar.vue'
 import Loading from '@/components/misc/Loading.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
+import UpgradeHint from '@/components/misc/UpgradeHint.vue'
 
 import AttachmentService from '@/services/attachment'
 import {canPreviewAudio, canPreviewImage, previewKind, type PreviewKind} from '@/models/attachment'
@@ -247,6 +260,9 @@ import {getHumanSize} from '@/helpers/getHumanSize'
 import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
 import {error, success} from '@/message'
 import {useTaskStore} from '@/stores/tasks'
+import {useAuthStore} from '@/stores/auth'
+import {useProjectStore} from '@/stores/projects'
+import {ENTITLEMENT} from '@/constants/entitlements'
 import {useI18n} from 'vue-i18n'
 import FilePreview from '@/components/tasks/partials/FilePreview.vue'
 import ImageLightbox from '@/components/misc/ImageLightbox.vue'
@@ -288,7 +304,26 @@ function eventTargetsEditor(event: Event | null | undefined): boolean {
 }
 
 const taskStore = useTaskStore()
+const authStore = useAuthStore()
+const projectStore = useProjectStore()
 const {t} = useI18n({useScope: 'global'})
+
+// Storage is charged to the project owner, so the current user's limit only
+// applies to their own projects. Other owners' limits surface as server errors.
+const chargedToCurrentUser = computed(() =>
+	projectStore.projects[props.task.projectId]?.owner?.id === authStore.info?.id,
+)
+const storageLimit = computed(() => chargedToCurrentUser.value ? authStore.limit(ENTITLEMENT.MAX_STORAGE_BYTES) : null)
+const storageUsage = computed(() => authStore.usage(ENTITLEMENT.MAX_STORAGE_BYTES))
+const storageLimitReached = computed(() => storageLimit.value !== null && storageUsage.value >= storageLimit.value)
+
+function exceedsStorageLimit(files: File[] | FileList): boolean {
+	if (storageLimit.value === null) {
+		return false
+	}
+	const incoming = Array.from(files).reduce((sum, file) => sum + file.size, 0)
+	return storageUsage.value + incoming > storageLimit.value
+}
 
 const attachmentService = shallowReactive(new AttachmentService())
 
@@ -432,10 +467,17 @@ function uploadNewAttachment() {
 }
 
 async function uploadFilesToTask(files: File[] | FileList) {
+	if (exceedsStorageLimit(files)) {
+		error(new Error(t('entitlement.storageLimitReached')))
+		return
+	}
 	try {
 		const uploaded = await uploadFiles(attachmentService, props.task.id, files)
 		if (uploaded.length > 0) {
 			emit('update:attachments', [...attachments.value, ...uploaded])
+			if (storageLimit.value !== null) {
+				void authStore.refreshUsage()
+			}
 		}
 	} catch (e) {
 		error(e)
@@ -457,6 +499,9 @@ async function deleteAttachment() {
 		const r = await attachmentService.delete(attachmentToDelete.value)
 		const updated = attachments.value.filter(a => a.id !== attachmentToDelete.value!.id)
 		emit('update:attachments', updated)
+		if (storageLimit.value !== null) {
+			void authStore.refreshUsage()
+		}
 		success(r)
 		setAttachmentToDelete(null)
 	} catch (e) {

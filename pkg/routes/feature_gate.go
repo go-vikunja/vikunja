@@ -17,15 +17,19 @@
 package routes
 
 import (
-	"code.vikunja.io/api/pkg/license"
+	"code.vikunja.io/api/pkg/entitlement"
 	"github.com/labstack/echo/v5"
 )
 
 // RequireFeature serves 404 so gated routes are indistinguishable from unregistered ones.
-func RequireFeature(f license.Feature) echo.MiddlewareFunc {
+func RequireFeature(f entitlement.Feature) echo.MiddlewareFunc {
+	// Per-user features need a 403 from the model layer, which this cannot give.
+	if !entitlement.InstanceWide(f) {
+		panic("RequireFeature only gates instance-wide features, got " + string(f))
+	}
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c *echo.Context) error {
-			if !license.IsFeatureEnabled(f) {
+			if !entitlement.LicenseAllows(f) {
 				return echo.ErrNotFound
 			}
 			return next(c)

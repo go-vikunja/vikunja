@@ -22,8 +22,8 @@ import (
 	"net/http"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/entitlement"
 	"code.vikunja.io/api/pkg/events"
-	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/web/handler"
 
@@ -31,11 +31,10 @@ import (
 	"github.com/danielgtaylor/huma/v2/conditional"
 )
 
-// timeTrackingGate is Huma operation middleware that 404s a time-tracking op when the license
-// feature is off. It's a middleware because license state can change while the instance is running.
+// timeTrackingGate 404s the unlicensed instance; the per-user 403 comes from the model layer.
 func timeTrackingGate(api huma.API) func(huma.Context, func(huma.Context)) {
 	return func(ctx huma.Context, next func(huma.Context)) {
-		if !license.IsFeatureEnabled(license.FeatureTimeTracking) {
+		if !entitlement.LicenseAllows(entitlement.FeatureTimeTracking) {
 			_ = huma.WriteErr(api, ctx, http.StatusNotFound, "Not Found")
 			return
 		}

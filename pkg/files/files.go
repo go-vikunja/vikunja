@@ -130,10 +130,10 @@ func CreateWithMime(f io.ReadSeeker, realname string, realsize uint64, a web.Aut
 	return file, s.Commit()
 }
 
-// measureReaderSize returns the byte length of r and leaves r seeked to
+// MeasureReaderSize returns the byte length of r and leaves r seeked to
 // 0, so the size we check matches what storage backends will write
 // (they also Seek(0, io.SeekStart) before reading).
-func measureReaderSize(r io.ReadSeeker) (uint64, error) {
+func MeasureReaderSize(r io.ReadSeeker) (uint64, error) {
 	if _, err := r.Seek(0, io.SeekStart); err != nil {
 		return 0, err
 	}
@@ -154,7 +154,7 @@ func CreateWithMimeAndSession(s *xorm.Session, f io.ReadSeeker, realname string,
 	// Authoritative size comes from the reader, not the caller: the
 	// migration import path accepts attacker-controlled metadata
 	// (GHSA-qh78-rvg3-cv54) and several other callers pass stale values.
-	measured, mErr := measureReaderSize(f)
+	measured, mErr := MeasureReaderSize(f)
 	if mErr != nil {
 		return nil, fmt.Errorf("failed to measure file size: %w", mErr)
 	}
