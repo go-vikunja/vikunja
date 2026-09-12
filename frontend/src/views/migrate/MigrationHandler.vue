@@ -3,7 +3,7 @@
 		<h1>{{ $t('migrate.titleService', {name: migrator.name}) }}</h1>
 		<p>{{ $t('migrate.descriptionDo') }}</p>
 
-		<template v-if="lastMigrationStartedAt === null && !migrationJustStarted">
+		<template v-if="!migrationRunning && previousMigrationFinishedAt === null">
 			<!-- the credentials form stays mounted while migrating so its input survives an error -->
 			<template v-if="isMigrating === false || migrator.isCredentialsMigrator">
 				<template v-if="migrator.isFileMigrator">
@@ -72,18 +72,10 @@
 				<p>{{ $t('migrate.inProgress') }}</p>
 			</div>
 		</template>
-		<div v-else-if="!migrationJustStarted && lastMigrationStartedAt && lastMigrationFinishedAt === null">
-			<Message class="mbe-4">
-				{{ $t('migrate.migrationInProgress') }}
-			</Message>
-			<XButton :to="{name: 'home'}">
-				{{ $t('home.goToOverview') }}
-			</XButton>
-		</div>
-		<div v-else-if="lastMigrationFinishedAt">
+		<div v-else-if="previousMigrationFinishedAt">
 			<p>
 				{{
-					$t('migrate.alreadyMigrated1', {name: migrator.name, date: formatDateLong(lastMigrationFinishedAt)})
+					$t('migrate.alreadyMigrated1', {name: migrator.name, date: formatDateLong(previousMigrationFinishedAt)})
 				}}<br>
 				{{ $t('migrate.alreadyMigrated2') }}
 			</p>
@@ -168,10 +160,9 @@ const {t, te} = useI18n({useScope: 'global'})
 const progressDotsCount = ref(PROGRESS_DOTS_COUNT)
 const authUrl = ref('')
 const isMigrating = ref(false)
-const lastMigrationFinishedAt = ref<Date | null>(null)
-const lastMigrationStartedAt = ref<Date | null>(null)
+const previousMigrationFinishedAt = ref<Date | null>(null)
+const migrationRunning = ref(false)
 const migratorAuthCode = ref('')
-const migrationJustStarted = ref(false)
 const migrationError = ref('')
 
 const migrator = computed<Migrator>(() => MIGRATORS[props.service])
@@ -192,26 +183,16 @@ const migrationFileService = shallowReactive(new AbstractMigrationFileService(mi
 
 useTitle(() => t('migrate.titleService', {name: migrator.value.name}))
 
+const statusSource = () => migrator.value.isFileMigrator ? migrationFileService : migrationService
+
 const {
 	isFinished: migrationFinished,
 	errorMessage: migrationFailureReason,
 	start: startPolling,
-} = useMigrationCompletion(
-	() => migrator.value.isFileMigrator ? migrationFileService : migrationService,
-)
+} = useMigrationCompletion(statusSource)
 
 async function initMigration() {
-	if (migrator.value.isFileMigrator) {
-		const {started_at, finished_at} = await migrationFileService.getStatus()
-		const startedAt = parseDateOrNull(started_at)
-		if (startedAt !== null && parseDateOrNull(finished_at) === null) {
-			lastMigrationStartedAt.value = startedAt
-			startPolling()
-		}
-		return
-	}
-
-	if (!migrator.value.isCredentialsMigrator) {
+	if (!migrator.value.isFileMigrator && !migrator.value.isCredentialsMigrator) {
 		authUrl.value = await migrationService.getAuthUrl().then(({url}) => url)
 
 		const TOKEN_HASH_PREFIX = '#token='
@@ -224,22 +205,24 @@ async function initMigration() {
 		}
 	}
 
-	const {started_at, finished_at} = await migrationService.getStatus()
-	if (started_at) {
-		lastMigrationStartedAt.value = parseDateOrNull(started_at)
-	}
-	if (finished_at) {
-		lastMigrationFinishedAt.value = parseDateOrNull(finished_at)
-		if (lastMigrationFinishedAt.value) {
-			return
-		}
-	}
-	
-	if (lastMigrationStartedAt.value && lastMigrationFinishedAt.value === null) {
+	const {started_at, finished_at} = await statusSource().getStatus()
+	const finishedAt = parseDateOrNull(finished_at)
+
+	if (parseDateOrNull(started_at) !== null && finishedAt === null) {
+		migrationRunning.value = true
+		startPolling()
 		return
 	}
 
-	if (migrator.value.isCredentialsMigrator) {
+	if (finishedAt !== null) {
+		// A file migrator re-imports by uploading another file, so it needs the upload form, not a confirm prompt.
+		if (!migrator.value.isFileMigrator) {
+			previousMigrationFinishedAt.value = finishedAt
+		}
+		return
+	}
+
+	if (migrator.value.isFileMigrator || migrator.value.isCredentialsMigrator) {
 		return
 	}
 
@@ -252,8 +235,8 @@ const uploadInput = ref<HTMLInputElement | null>(null)
 const resultMessage = ref<InstanceType<typeof Message> | null>(null)
 
 // the triggering button unmounts when the result message appears, so move focus there
-watch(migrationJustStarted, async (justStarted) => {
-	if (!justStarted) {
+watch(migrationRunning, async (running) => {
+	if (!running) {
 		return
 	}
 	await nextTick()
@@ -264,7 +247,7 @@ async function migrate(credentialsConfig?: MigrationConfig) {
 	let migrationConfig: MigrationConfig | File = credentialsConfig ?? {code: migratorAuthCode.value}
 
 	isMigrating.value = true
-	lastMigrationFinishedAt.value = null
+	previousMigrationFinishedAt.value = null
 	migrationError.value = ''
 
 	if (migrator.value.isFileMigrator) {
@@ -281,7 +264,7 @@ async function migrate(credentialsConfig?: MigrationConfig) {
 		} else {
 			await migrationService.migrate(migrationConfig as MigrationConfig)
 		}
-		migrationJustStarted.value = true
+		migrationRunning.value = true
 		startPolling()
 	} catch (e) {
 		migrationError.value = getErrorText(e)
@@ -296,8 +279,7 @@ function confirmMigrateAgain() {
 		return migrate()
 	}
 
-	lastMigrationStartedAt.value = null
-	lastMigrationFinishedAt.value = null
+	previousMigrationFinishedAt.value = null
 }
 </script>
 
