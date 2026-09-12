@@ -23,6 +23,8 @@ import (
 	"strings"
 	"sync"
 
+	"code.vikunja.io/api/pkg/models"
+
 	"github.com/danielgtaylor/huma/v2"
 )
 
@@ -37,6 +39,7 @@ type tool struct {
 }
 
 var (
+	toolsAPI  huma.API
 	toolsMu   sync.RWMutex
 	toolIndex map[string]*tool
 	toolOrder []*tool
@@ -50,6 +53,7 @@ func Init(api huma.API, groupPrefix string) {
 	}
 	toolsMu.Lock()
 	defer toolsMu.Unlock()
+	toolsAPI = api
 	toolIndex = index
 	toolOrder = order
 }
@@ -131,3 +135,10 @@ func snapshotTools() []*tool {
 	copy(out, toolOrder)
 	return out
 }
+
+var routeAuthorizer = (*models.APIToken).CanUseRoute
+
+func (t *tool) authorized(token *models.APIToken) bool {
+	return routeAuthorizer(token, t.echoPath, t.op.Method)
+}
+func currentAPI() huma.API { toolsMu.RLock(); defer toolsMu.RUnlock(); return toolsAPI }
