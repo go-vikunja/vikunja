@@ -132,7 +132,7 @@ jobs:
 
       - name: Classify with AI
         id: classify
-        uses: appleboy/LLM-action@21f5d57f6c135694e2d4b5f8578f712861c4fa0d # main
+        uses: appleboy/LLM-action@13d0c026619885c4d2b97eb822c2d6960060effd # main
         with:
           api_key: ${{ secrets.LLM_API_KEY }}
           model: 'gpt-5.6-luna'
