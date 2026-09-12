@@ -73,7 +73,7 @@ func addToolsAuthorizedBy(srv *mcp.Server, token *models.APIToken) {
 			InputSchema: t.spec.schema,
 		}, rawToolHandler(t.name))
 	}
-	installCatalogTools(srv)
+	installCatalogTools(srv, token)
 }
 
 func rawToolHandler(name string) mcp.ToolHandler {

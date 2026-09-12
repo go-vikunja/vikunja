@@ -46,7 +46,12 @@ func TestMCP_Catalog_FindActionFollowsScopes(t *testing.T) {
 	} {
 		assert.NotContains(t, names, name)
 	}
-	assert.Empty(t, findActions(t, newMCPClient(t, mcpOnlyToken), map[string]any{}))
+	assert.NotContains(t, newMCPClient(t, mcpOnlyToken).toolNames(), "find_action")
+}
+func TestMCP_Catalog_FindActionDescriptionListsAuthorizedAreas(t *testing.T) {
+	desc := newMCPClient(t, mcpFullToken).toolDescription("find_action")
+	assert.Contains(t, desc, "project_views")
+	assert.NotContains(t, desc, "teams")
 }
 func TestMCP_Catalog_FindActionReturnsSchemas(t *testing.T) {
 	c := newMCPClient(t, mcpFullToken)
