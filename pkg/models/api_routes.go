@@ -46,7 +46,7 @@ func init() {
 	apiTokenRoutesV2["mcp"] = APITokenRoute{
 		"access": &RouteDetail{
 			Path:   "/api/v2/mcp",
-			Method: "ANY",
+			Method: http.MethodPost,
 		},
 	}
 	apiTokenRoutes["feeds"] = APITokenRoute{
@@ -262,7 +262,6 @@ func CollectRoutesForAPITokenUsage(route echo.RouteInfo, requiresJWT bool) {
 		routeGroupName == "*" ||
 		routeGroupName == "oauth_authorize" ||
 		routeGroupName == "mcp" ||
-		strings.HasPrefix(routeGroupName, "mcp_") ||
 		strings.HasPrefix(routeGroupName, "user_") {
 		return
 	}

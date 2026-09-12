@@ -484,8 +484,7 @@ func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, noAuthRateLimit, refreshRa
 	if !ok {
 		panic("mcp: RoutePrefix is not under " + apiV2Prefix)
 	}
-	a.Any(mcpPath, mcpmodule.Handler)
-	a.Any(mcpPath+"/*", mcpmodule.Handler)
+	a.POST(mcpPath, mcpmodule.Handler)
 }
 
 func registerAPIRoutes(a *echo.Group, noAuthRateLimit, refreshRateLimit echo.MiddlewareFunc) {
