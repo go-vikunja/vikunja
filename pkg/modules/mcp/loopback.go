@@ -28,6 +28,8 @@ import (
 	"net/url"
 	"strings"
 
+	"code.vikunja.io/api/pkg/models"
+
 	"github.com/danielgtaylor/huma/v2"
 )
 
@@ -111,7 +113,9 @@ func (t *tool) newRequest(ctx context.Context, caller *http.Request, args map[st
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Authorization", caller.Header.Get("Authorization"))
+	if auth := apiTokenAuthorization(caller); auth != "" {
+		req.Header.Set("Authorization", auth)
+	}
 	req.Header.Set("Accept", "application/json")
 	if reader != nil {
 		req.Header.Set("Content-Type", t.contentType)
@@ -129,6 +133,17 @@ func (t *tool) newRequest(ctx context.Context, caller *http.Request, args map[st
 	}
 	req.RemoteAddr = caller.RemoteAddr
 	return req, nil
+}
+
+// The transport authorised one of possibly several Authorization values; the
+// loopback must not authenticate as a different one.
+func apiTokenAuthorization(caller *http.Request) string {
+	for _, v := range caller.Header.Values("Authorization") {
+		if strings.HasPrefix(v, "Bearer "+models.APITokenPrefix) {
+			return v
+		}
+	}
+	return ""
 }
 func scalarString(raw json.RawMessage) (string, error) {
 	dec := json.NewDecoder(bytes.NewReader(raw))
