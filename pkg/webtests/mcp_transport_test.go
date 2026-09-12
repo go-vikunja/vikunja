@@ -56,6 +56,16 @@ func TestMCP_OversizedBodyKeepsMCPMessage(t *testing.T) {
 	assert.Contains(t, rec.Body.String(), "MCP request body")
 }
 
+func TestMCP_CrossOriginRejected(t *testing.T) {
+	req := mcpRequest(http.MethodPost, initializeBody)
+	req.Header.Set("Origin", "https://evil.example")
+	rec := serveMCP(t, req)
+	assert.Equal(t, http.StatusForbidden, rec.Code, "%s", rec.Body.String())
+
+	rec = serveMCP(t, mcpRequest(http.MethodPost, initializeBody))
+	assert.Equal(t, http.StatusOK, rec.Code, "%s", rec.Body.String())
+}
+
 func TestMCP_SubPathNotFound(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/api/v2/mcp/anything", strings.NewReader(initializeBody))
 	req.Header.Set("Content-Type", "application/json")
