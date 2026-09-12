@@ -491,7 +491,7 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 
 		// If no user exists, create one with the preferred username if it is not already taken
 		uu := &user.User{
-			Username:           strings.ReplaceAll(cl.PreferredUsername, " ", "-"),
+			Username:           strings.TrimLeft(strings.ReplaceAll(cl.PreferredUsername, " ", "-"), "@"),
 			Email:              cl.Email,
 			Name:               cl.Name,
 			Status:             user.StatusActive,

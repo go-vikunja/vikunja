@@ -66,6 +66,16 @@ func TestCreateBotUser(t *testing.T) {
 		require.Error(t, err)
 		assert.True(t, IsErrUsernameMustNotContainSpaces(err))
 	})
+	t.Run("username with at prefix", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		owner, err := GetUserByID(s, 1)
+		require.NoError(t, err)
+		_, err = CreateBotUser(s, &User{Username: "@bot-name"}, owner)
+		require.Error(t, err)
+		assert.True(t, IsErrUsernameMustNotStartWithAt(err))
+	})
 	t.Run("missing bot- prefix", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
@@ -244,6 +254,19 @@ func TestCreateUser(t *testing.T) {
 		})
 		require.Error(t, err)
 		assert.True(t, IsErrUsernameMustNotContainSpaces(err))
+	})
+	t.Run("username starting with at", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := CreateUser(s, &User{
+			Username: "@testuser",
+			Password: "12345",
+			Email:    "user1@example.com",
+		})
+		require.Error(t, err)
+		assert.True(t, IsErrUsernameMustNotStartWithAt(err))
 	})
 	t.Run("reserved link-share username", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -437,6 +460,14 @@ func TestCheckUserCredentials(t *testing.T) {
 		_, err := CheckUserCredentials(context.Background(), s, &Login{Username: "user18", Password: "12345678"})
 		require.Error(t, err)
 		assert.True(t, IsErrAccountLocked(err))
+	})
+	t.Run("login with at prefix fallback", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := CheckUserCredentials(context.Background(), s, &Login{Username: "@user1", Password: "12345678"})
+		require.NoError(t, err)
 	})
 }
 

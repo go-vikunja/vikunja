@@ -24,6 +24,7 @@ import (
 	"net/mail"
 	"reflect"
 	"strconv"
+	"strings"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
@@ -389,6 +390,18 @@ func getUserByUsernameOrEmail(s *xorm.Session, usernameOrEmail string) (u *User,
 	if err != nil {
 		return nil, err
 	}
+
+	// Try a user lookup as <USER> if given @<USER>
+	if !exists && strings.HasPrefix(usernameOrEmail, "@") {
+		trimmed := strings.TrimPrefix(usernameOrEmail, "@")
+		exists, err = s.
+			Where("username = ? OR email = ?", trimmed, trimmed).
+			Get(u)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	if !exists {
 		return nil, ErrUserDoesNotExist{}
 	}

@@ -187,6 +187,12 @@ func checkUsernameFormat(username string) error {
 		}
 	}
 
+	if strings.HasPrefix(username, "@") {
+		return &ErrUsernameMustNotStartWithAt{
+			Username: username,
+		}
+	}
+
 	// Check if username matches the reserved link-share pattern
 	linkSharePattern := regexp.MustCompile(`^link-share-\d+$`)
 	if linkSharePattern.MatchString(username) {

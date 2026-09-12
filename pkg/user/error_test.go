@@ -43,3 +43,10 @@ func TestErrBotUsernameMustHavePrefix(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, err.HTTPError().HTTPCode)
 	assert.Equal(t, 1034, err.HTTPError().Code)
 }
+
+func TestErrUsernameMustNotStartWithAt(t *testing.T) {
+	err := &ErrUsernameMustNotStartWithAt{Username: "@user"}
+	assert.True(t, IsErrUsernameMustNotStartWithAt(err))
+	assert.Equal(t, http.StatusBadRequest, err.HTTPError().HTTPCode)
+	assert.Equal(t, 1039, err.HTTPError().Code)
+}
