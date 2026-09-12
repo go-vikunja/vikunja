@@ -354,7 +354,7 @@
           },
           "mistral": {
             "title": "Mistral Vibe",
-            "open": "Open Connectors → Add Connector → Custom MCP Connector.",
+            "open": "In the sidebar on the left open Context → Connectors → Add Connector → Add Custom Connector.",
             "url": "Name the connector Vikunja, enter this URL, and select Connect: {value}",
             "token": "Choose HTTP Bearer authentication and paste this token: {value}"
           },
