@@ -17,35 +17,28 @@
 package mcp
 
 import (
+	"context"
 	"encoding/json"
-	"errors"
+	"fmt"
+
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-func decodeArgs(spec *toolSpec, raw json.RawMessage) (map[string]json.RawMessage, error) {
-	instance := map[string]any{}
-	if len(raw) > 0 {
-		if err := json.Unmarshal(raw, &instance); err != nil || instance == nil {
-			return nil, errors.New("arguments must be a JSON object")
+func rawToolHandler(name string) mcp.ToolHandler {
+	return func(ctx context.Context, req *mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		result, err := callTool(ctx, name, req.Params.Arguments)
+		if err != nil {
+			//nolint:nilerr // Domain errors use MCP tool results.
+			return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: err.Error()}}}, nil
 		}
-	}
-	if err := spec.resolved.Validate(instance); err != nil {
-		return nil, err
-	}
-	args := map[string]json.RawMessage{}
-	if len(raw) > 0 {
-		if err := json.Unmarshal(raw, &args); err != nil {
-			return nil, errors.New("arguments must be a JSON object")
+		body, err := json.Marshal(result)
+		if err != nil {
+			return nil, fmt.Errorf("mcp: marshal %s result: %w", name, err)
 		}
+		res := &mcp.CallToolResult{Content: []mcp.Content{&mcp.TextContent{Text: string(body)}}}
+		if _, isObject := result.(map[string]any); isObject {
+			res.StructuredContent = result
+		}
+		return res, nil
 	}
-	return args, nil
-}
-
-func decodeToolArgs(spec *toolSpec, raw json.RawMessage, dst any) error {
-	if _, err := decodeArgs(spec, raw); err != nil {
-		return err
-	}
-	if len(raw) == 0 {
-		return nil
-	}
-	return json.Unmarshal(raw, dst)
 }

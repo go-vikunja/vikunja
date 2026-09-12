@@ -187,3 +187,11 @@ func walkFields(t reflect.Type, visit func(reflect.StructField)) {
 		}
 	}
 }
+
+func mustResolveSpec(name string, schema *jsonschema.Schema) *toolSpec {
+	resolved, err := schema.Resolve(nil)
+	if err != nil {
+		panic(fmt.Sprintf("mcp: resolve %s schema: %v", name, err))
+	}
+	return &toolSpec{schema: schema, resolved: resolved}
+}
