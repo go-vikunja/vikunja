@@ -41,6 +41,12 @@ type echoContextKey struct{}
 // handler's context.Context.
 var EchoContextKey = echoContextKey{}
 
+// EchoContextFrom returns nil when ctx did not come through the humabridge group middleware.
+func EchoContextFrom(ctx context.Context) *echo.Context {
+	ec, _ := ctx.Value(EchoContextKey).(*echo.Context)
+	return ec
+}
+
 type internalDispatchKey struct{}
 
 // InternalDispatchRoute returns the echo route template of the client request
@@ -71,7 +77,7 @@ type groupPrefixAdapter struct {
 func (a *groupPrefixAdapter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	route := ""
-	if c, ok := ctx.Value(EchoContextKey).(*echo.Context); ok {
+	if c := EchoContextFrom(ctx); c != nil {
 		route = c.Path()
 	}
 	// Always write the key: an inherited marker from an outer dispatch would

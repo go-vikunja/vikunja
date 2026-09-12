@@ -24,6 +24,7 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/humabridge"
 	"code.vikunja.io/api/pkg/web/handler"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -228,7 +229,7 @@ func tasksReadByIndex(ctx context.Context, in *struct {
 		Path: GroupPrefix + "/projects/" + strconv.FormatInt(task.ProjectID, 10) +
 			"/tasks/by-index/" + strconv.FormatInt(task.Index, 10),
 	}
-	if ec := echoContextFromCtx(ctx); ec != nil {
+	if ec := humabridge.EchoContextFrom(ctx); ec != nil {
 		location.RawQuery = (*ec).Request().URL.RawQuery
 	}
 	locationValue := location.String()
