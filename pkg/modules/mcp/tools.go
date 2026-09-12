@@ -45,7 +45,6 @@ var (
 	toolOrder []*tool
 )
 
-// Init must follow RegisterAll so updates can dispatch through AutoPatch.
 func Init(api huma.API, groupPrefix string) {
 	index, order, err := buildTools(api.OpenAPI(), groupPrefix)
 	if err != nil {

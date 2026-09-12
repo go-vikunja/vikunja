@@ -28,15 +28,27 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/version"
+
+	"github.com/danielgtaylor/huma/v2"
 	"github.com/labstack/echo/v5"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-const RoutePrefix = "/api/v2/mcp"
+const (
+	routeSuffix = "/mcp"
+	RoutePrefix = "/api/v2" + routeSuffix
+)
+
 const (
 	maxRequestBytes       = 4 << 20
 	maxMessagesPerRequest = 20
 )
+
+// Register must follow apiv2.RegisterAll so tools pick up the AutoPatch operations.
+func Register(api huma.API, group *echo.Group, groupPrefix string) {
+	Init(api, groupPrefix)
+	group.POST(routeSuffix, Handler)
+}
 
 func newServer(req *http.Request) *mcp.Server {
 	srv := mcp.NewServer(&mcp.Implementation{
