@@ -1159,10 +1159,6 @@
 			"newTeam": "Nuovo gruppo"
 		}
 	},
-	"date": {
-		"altFormatLong": "j M Y, H:i",
-		"altFormatShort": "j M Y"
-	},
 	"reaction": {
 		"reactedWith": "{user} ha reagito con {value}",
 		"reactedWithAnd": "{users} e {lastUser} hanno reagito con {value}",

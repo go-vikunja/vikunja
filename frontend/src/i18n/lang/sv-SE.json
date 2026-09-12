@@ -1162,10 +1162,6 @@
 			"newTeam": "Nytt team"
 		}
 	},
-	"date": {
-		"altFormatLong": "j M Y, H:i",
-		"altFormatShort": "j M Y"
-	},
 	"reaction": {
 		"reactedWith": "{user} reagerade med {value}",
 		"reactedWithAnd": "{users} och {lastUser} reagerade med {value}",

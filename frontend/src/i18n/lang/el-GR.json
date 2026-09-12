@@ -914,7 +914,6 @@
 			"from": "Από",
 			"fromto": "{from} προς {to}",
 			"date": "Ημερομηνία",
-			"openCalendar": "Άνοιγμα ημερολογίου",
 			"ranges": {
 				"today": "Σήμερα",
 				"tomorrow": "Αύριο",
@@ -1443,10 +1442,6 @@
 			"newProject": "Νέο έργο",
 			"newTeam": "Νέα ομάδα"
 		}
-	},
-	"date": {
-		"altFormatLong": "j M Y, H:i",
-		"altFormatShort": "j M Y"
 	},
 	"reaction": {
 		"reactedWith": "Ο/Η {user} αντέδρασε με {value}",

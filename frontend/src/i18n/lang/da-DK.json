@@ -601,9 +601,6 @@
 			"newTeam": "Nyt hold"
 		}
 	},
-	"date": {
-		"altFormatShort": "j M Y"
-	},
 	"error": {
 		"1001": "Der findes allerede en bruger med dette brugernavn.",
 		"1002": "En bruger med denne emailadresse findes allerede.",

@@ -1062,10 +1062,6 @@
 			"newTeam": "Nauja komanda"
 		}
 	},
-	"date": {
-		"altFormatLong": "d F Y, H:i",
-		"altFormatShort": "d M Y"
-	},
 	"reaction": {
 		"reactedWith": "{user} sureagavo su {value}",
 		"reactedWithAnd": "{users} ir {lastUser} sureagavo {value}",

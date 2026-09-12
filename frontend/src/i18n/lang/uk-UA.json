@@ -879,7 +879,6 @@
 			"from": "Від",
 			"fromto": "{from} до {to}",
 			"date": "День",
-			"openCalendar": "Відкрити календар",
 			"ranges": {
 				"today": "Сьогодні",
 				"tomorrow": "Завтра",
@@ -1394,10 +1393,6 @@
 			"newProject": "Новий проєкт",
 			"newTeam": "Нова спільнота"
 		}
-	},
-	"date": {
-		"altFormatLong": "j M Y, H:i",
-		"altFormatShort": "j M Y"
 	},
 	"reaction": {
 		"reactedWith": "{user} відреагував(ла) {value}",

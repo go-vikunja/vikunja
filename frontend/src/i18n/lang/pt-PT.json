@@ -1159,10 +1159,6 @@
 			"newTeam": "Nova equipa"
 		}
 	},
-	"date": {
-		"altFormatLong": "j M Y, H:i",
-		"altFormatShort": "j M Y"
-	},
 	"reaction": {
 		"reactedWith": "{user} reagiu com {value}",
 		"reactedWithAnd": "{users} e {lastUser} reagiram com {value}",

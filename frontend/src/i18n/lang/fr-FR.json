@@ -1122,10 +1122,6 @@
 			"newTeam": "Nouvelle équipe"
 		}
 	},
-	"date": {
-		"altFormatLong": "j M Y, H:i",
-		"altFormatShort": "j M Y"
-	},
 	"reaction": {
 		"reactedWith": "{user} a réagi avec {value}",
 		"reactedWithAnd": "{users} et {lastUser} ont réagi avec {value}",

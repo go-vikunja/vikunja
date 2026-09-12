@@ -1340,10 +1340,6 @@
 			"newTeam": "تیم جدید"
 		}
 	},
-	"date": {
-		"altFormatLong": "j M Y, H:i",
-		"altFormatShort": "j M Y"
-	},
 	"reaction": {
 		"reactedWith": "{user} با {value} واکنش نشان داد",
 		"reactedWithAnd": "{users} و {lastUser} با {value} واکنش نشان دادند",

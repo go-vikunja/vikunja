@@ -1154,10 +1154,6 @@
 			"newTeam": "Yeni takım"
 		}
 	},
-	"date": {
-		"altFormatLong": "j M Y, H:i",
-		"altFormatShort": "j M Y"
-	},
 	"reaction": {
 		"reactedWith": "{user}, {value} ile tepki verdi",
 		"reactedWithAnd": "{users} ve {lastUser}, {value} ile tepki verdi",

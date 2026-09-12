@@ -1055,10 +1055,6 @@
 			"newTeam": "Nova ekipa"
 		}
 	},
-	"date": {
-		"altFormatLong": "j M Y, H:i",
-		"altFormatShort": "j M Y"
-	},
 	"reaction": {
 		"reactedWith": "{user} se je odzval z {value}",
 		"reactedWithAnd": "{users} in {lastUser} sta reagirala z {value}",

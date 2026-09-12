@@ -1103,10 +1103,6 @@
 			"newTeam": "新建团队"
 		}
 	},
-	"date": {
-		"altFormatLong": "Y.m.d H:i",
-		"altFormatShort": "j M Y"
-	},
 	"reaction": {
 		"reactedWith": "{user} {value} 反应",
 		"reactedWithAnd": "{users} 和{lastUser} 的{value} 反应",

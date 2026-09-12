@@ -1193,10 +1193,6 @@
 			"newTeam": "Nový tým"
 		}
 	},
-	"date": {
-		"altFormatLong": "j M Y, H:i",
-		"altFormatShort": "j M Y"
-	},
 	"reaction": {
 		"reactedWith": "{user} zareagoval s {value}",
 		"reactedWithAnd": "{users} a {lastUser} zareagovali s {value}",

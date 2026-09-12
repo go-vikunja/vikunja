@@ -1051,10 +1051,6 @@
 			"newTeam": "Нов екип"
 		}
 	},
-	"date": {
-		"altFormatLong": "j M Y, H:i",
-		"altFormatShort": "j M Y"
-	},
 	"reaction": {
 		"reactedWith": "{user} реагира с {value}",
 		"reactedWithAnd": "{users} и {lastUser} реагираха с {value}",

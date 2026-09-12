@@ -914,7 +914,6 @@
 			"from": "Von",
 			"fromto": "{from} bis {to}",
 			"date": "Datum",
-			"openCalendar": "Kalender öffnen",
 			"ranges": {
 				"today": "Heute",
 				"tomorrow": "Morgen",
@@ -1443,10 +1442,6 @@
 			"newProject": "Neues Projekt",
 			"newTeam": "Neus Team"
 		}
-	},
-	"date": {
-		"altFormatLong": "j M Y, H:i",
-		"altFormatShort": "j M Y"
 	},
 	"reaction": {
 		"reactedWith": "{user} hat mit {value} reagiert",

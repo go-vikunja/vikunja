@@ -1060,10 +1060,6 @@
 			"newTeam": "Team mới"
 		}
 	},
-	"date": {
-		"altFormatLong": "j M Y, H:i",
-		"altFormatShort": "j M Y"
-	},
 	"reaction": {
 		"reactedWith": "{user} đã tương tác với {value}",
 		"reactedWithAnd": "{users} và {lastUser} đã tương tác với {value}",

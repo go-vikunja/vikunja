@@ -1065,10 +1065,6 @@
 			"newTeam": "팀 만들기"
 		}
 	},
-	"date": {
-		"altFormatLong": "j M Y, H:i",
-		"altFormatShort": "j M Y"
-	},
 	"reaction": {
 		"reactedWith": "{user}님이 {value}로 반응했습니다",
 		"reactedWithAnd": "{users}와 {lastUser}님이 {value}로 반응했습니다",
