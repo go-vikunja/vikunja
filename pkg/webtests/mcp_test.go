@@ -27,7 +27,9 @@ import (
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
+	"code.vikunja.io/api/pkg/modules/mcp"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
@@ -153,6 +155,11 @@ func (c *mcpClient) toolDescription(name string) string {
 		}
 	}
 	return ""
+}
+
+// models cannot import mcp, so the token route path is pinned from here.
+func TestMCP_TokenRouteMatchesRoutePrefix(t *testing.T) {
+	assert.Equal(t, mcp.RoutePrefix, models.GetAPITokenRoutes()["mcp"]["access"].Path)
 }
 func TestMCP_AnonymousRejected(t *testing.T) {
 	e, err := setupTestEnv()
