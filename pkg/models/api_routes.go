@@ -43,6 +43,9 @@ func init() {
 			Method: "ANY",
 		},
 	}
+	apiTokenRoutesV2["mcp"] = APITokenRoute{
+		"access": &RouteDetail{Path: "/api/v2/mcp", Method: "ANY"},
+	}
 	apiTokenRoutes["feeds"] = APITokenRoute{
 		"access": &RouteDetail{
 			Path:   "/feeds/*",
@@ -255,6 +258,8 @@ func CollectRoutesForAPITokenUsage(route echo.RouteInfo, requiresJWT bool) {
 		routeGroupName == "tokens" ||
 		routeGroupName == "*" ||
 		routeGroupName == "oauth_authorize" ||
+		routeGroupName == "mcp" ||
+		strings.HasPrefix(routeGroupName, "mcp_") ||
 		strings.HasPrefix(routeGroupName, "user_") {
 		return
 	}
@@ -455,6 +460,11 @@ func CanDoAPIRoute(c *echo.Context, token *APIToken) (can bool) {
 	}
 
 	return expandScopesSatisfied(c, token, path, method)
+}
+
+// CanUseRoute checks route scopes; query-dependent expand scopes stay in CanDoAPIRoute.
+func (t *APIToken) CanUseRoute(path, method string) bool {
+	return t != nil && tokenAuthorizesRoute(t, path, method)
 }
 
 func tokenAuthorizesRoute(token *APIToken, path, method string) bool {

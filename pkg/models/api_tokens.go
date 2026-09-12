@@ -236,23 +236,25 @@ func (t *APIToken) Delete(s *xorm.Session, a web.Auth) (err error) {
 	return nil
 }
 
-// HasCaldavAccess checks whether the token has the caldav access permission.
-func (t *APIToken) HasCaldavAccess() bool {
-	perms, has := t.APIPermissions["caldav"]
-	if !has {
+// HasPermission accepts the same canonical group names as CanDoAPIRoute.
+func (t *APIToken) HasPermission(group, permission string) bool {
+	if t == nil {
 		return false
 	}
-	return slices.Contains(perms, "access")
+	group = canonicalAPITokenGroup(group)
+	for storedGroup, perms := range t.APIPermissions {
+		if canonicalAPITokenGroup(storedGroup) == group && slices.Contains(perms, permission) {
+			return true
+		}
+	}
+	return false
 }
 
-// HasFeedsAccess checks whether the token has the feeds access permission.
-func (t *APIToken) HasFeedsAccess() bool {
-	perms, has := t.APIPermissions["feeds"]
-	if !has {
-		return false
-	}
-	return slices.Contains(perms, "access")
-}
+func (t *APIToken) HasCaldavAccess() bool { return t.HasPermission("caldav", "access") }
+func (t *APIToken) HasFeedsAccess() bool  { return t.HasPermission("feeds", "access") }
+
+// MCP's transport scope is checked in its handler, independently of the HTTP method.
+func (t *APIToken) HasMCPAccess() bool { return t.HasPermission("mcp", "access") }
 
 // GetTokenFromTokenString returns the full token object from the original token string,
 // backfilling token_sha256 when the token was only found via the legacy pbkdf2 path.

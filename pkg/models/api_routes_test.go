@@ -509,3 +509,33 @@ func TestCanDoAPIRoute_ExpandScopes(t *testing.T) {
 			"expand on a route which does not consume it must not require any scope")
 	})
 }
+
+func TestAPITokenRoutes_MCPAccessRegistered(t *testing.T) {
+	group, has := GetAPITokenRoutes()["mcp"]
+	require.True(t, has)
+	detail, has := group["access"]
+	require.True(t, has)
+	require.NotNil(t, detail)
+	assert.Equal(t, "/api/v2/mcp", detail.Path)
+}
+
+func TestPermissionsAreValid_MCPAccess(t *testing.T) {
+	require.NoError(t, PermissionsAreValid(APIPermissions{"mcp": {"access"}}))
+}
+
+func TestAPIToken_CanUseRoute(t *testing.T) {
+	prev := apiTokenRoutesV2["tasks"]
+	apiTokenRoutesV2["tasks"] = APITokenRoute{
+		"read_one": &RouteDetail{Path: "/api/v2/tasks/:projecttask", Method: "GET"},
+		"update":   &RouteDetail{Path: "/api/v2/tasks/:projecttask", Method: "PUT"},
+	}
+	t.Cleanup(func() { apiTokenRoutesV2["tasks"] = prev })
+	token := &APIToken{APIPermissions: APIPermissions{"tasks": {"read_one", "update"}}}
+	for _, method := range []string{"GET", "PUT", "PATCH"} {
+		assert.True(t, token.CanUseRoute("/api/v2/tasks/:projecttask", method))
+	}
+	assert.False(t, token.CanUseRoute("/api/v2/tasks/:projecttask", "DELETE"))
+	assert.False(t, token.CanUseRoute("/api/v2/tasks", "GET"))
+	var nilToken *APIToken
+	assert.False(t, nilToken.CanUseRoute("/api/v2/tasks/:projecttask", "GET"))
+}
