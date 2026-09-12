@@ -3,9 +3,9 @@ import {computed, onMounted, ref, shallowReactive} from 'vue'
 import {useNow} from '@vueuse/core'
 import {useI18n} from 'vue-i18n'
 import ApiTokenService from '@/services/apiToken'
-import {getMcpInfo} from '@/services/mcp'
+import {mcpInfo, type ConnectionSettings} from '@/client/generated'
 import type {IApiToken} from '@/modelTypes/IApiToken'
-import type {IMcpInfo, ApiTokenPreset} from '@/modelTypes/IApiTokenSettings'
+import type {ApiTokenPreset, ApiTokenPresetGroups} from '@/modelTypes/IApiTokenSettings'
 import ApiTokenForm from '@/components/token/ApiTokenForm.vue'
 import McpClientGuide from '@/components/token/McpClientGuide.vue'
 import XButton from '@/components/input/Button.vue'
@@ -22,7 +22,8 @@ defineOptions({name: 'McpSettings'})
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => `${t('user.settings.mcp.title')} - ${t('user.settings.title')}`)
 const service = shallowReactive(new ApiTokenService())
-const info = ref<IMcpInfo>()
+const info = ref<ConnectionSettings>()
+const endpoint = computed(() => info.value?.endpoint ?? '')
 const tokens = ref<IApiToken[]>([])
 const loading = ref(true)
 const loadFailed = ref(false)
@@ -33,13 +34,20 @@ const showDeleteModal = ref(false)
 const copy = useCopyToClipboard()
 const now = useNow({interval: 60_000})
 
+function presetGroups(groups: Record<string, string | string[] | null> = {}): ApiTokenPresetGroups {
+	return Object.fromEntries(Object.entries(groups).map(([group, permissions]) => [
+		group,
+		permissions === '*' ? '*' : Array.isArray(permissions) ? permissions : [],
+	]))
+}
+
 const presets = computed<ApiTokenPreset[]>(() => info.value ? [
-	{id: 'readOnly', groups: info.value.presets.read_only},
-	{id: 'typed', groups: info.value.presets.typed, label: t('user.settings.mcp.typedPreset')},
-	{id: 'fullAccess', groups: info.value.presets.full},
+	{id: 'readOnly', groups: presetGroups(info.value.presets?.read_only)},
+	{id: 'typed', groups: presetGroups(info.value.presets?.typed), label: t('user.settings.mcp.typedPreset')},
+	{id: 'fullAccess', groups: presetGroups(info.value.presets?.full)},
 ] : [])
-const initialScopes = computed(() => Object.entries(info.value?.presets.typed ?? {})
-	.flatMap(([group, permissions]) => permissions === '*' ? [] : permissions.map(permission => `${group}:${permission}`))
+const initialScopes = computed(() => Object.entries(info.value?.presets?.typed ?? {})
+	.flatMap(([group, permissions]) => (permissions ?? []).map(permission => `${group}:${permission}`))
 	.join(','))
 
 async function refreshTokens() {
@@ -54,8 +62,8 @@ async function load() {
 	loading.value = true
 	loadFailed.value = false
 	try {
-		const [result] = await Promise.all([getMcpInfo(), refreshTokens()])
-		info.value = result
+		const [result] = await Promise.all([mcpInfo(), refreshTokens()])
+		info.value = result.data
 	} catch (e) {
 		loadFailed.value = true
 		error(e)
@@ -119,7 +127,7 @@ async function deleteToken() {
 			>{{ t('user.settings.mcp.endpoint') }}</label>
 			<FormField
 				id="mcp-endpoint"
-				:model-value="info.endpoint"
+				:model-value="endpoint"
 				readonly
 			>
 				<template #addon>
@@ -127,7 +135,7 @@ async function deleteToken() {
 						:shadow="false"
 						icon="paste"
 						:aria-label="t('misc.copy')"
-						@click="copy(info.endpoint)"
+						@click="copy(endpoint)"
 					/>
 				</template>
 			</FormField>
@@ -140,7 +148,7 @@ async function deleteToken() {
 					{{ t('user.settings.apiTokens.tokenCreatedNotSeeAgain') }}
 				</Message>
 				<McpClientGuide
-					:endpoint="info.endpoint"
+					:endpoint="endpoint"
 					:token="newToken"
 				/>
 				<XButton
@@ -205,7 +213,7 @@ async function deleteToken() {
 				</p>
 				<ApiTokenForm
 					v-if="showCreateForm"
-					:routes="info.routes"
+					:routes="info.routes ?? {}"
 					:presets="presets"
 					:locked-scopes="{mcp: ['access']}"
 					:initial-title="t('user.settings.mcp.title')"
