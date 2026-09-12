@@ -494,6 +494,7 @@ func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, noAuthRateLimit, refreshRa
 		panic(err)
 	}
 	m.Register(a)
+	apiv2.RegisterMCPInfo(api, m.ConnectionInfo)
 }
 
 func registerAPIRoutes(a *echo.Group, noAuthRateLimit, refreshRateLimit echo.MiddlewareFunc) {
