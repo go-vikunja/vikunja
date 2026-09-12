@@ -88,14 +88,17 @@ func TestCatalogTools_Protocol(t *testing.T) {
 	for _, tc := range []struct {
 		name string
 		args map[string]any
+		want string
 	}{
 		{
 			"find_action",
 			map[string]any{"bogus": true},
+			"invalid arguments for find_action",
 		},
 		{
 			"do_action",
 			map[string]any{"action": "nope"},
+			"tool not found: nope",
 		},
 		{
 			"do_action",
@@ -106,6 +109,7 @@ func TestCatalogTools_Protocol(t *testing.T) {
 					"bogus": true,
 				},
 			},
+			"invalid arguments for things_read",
 		},
 	} {
 		result, err := cs.CallTool(ctx, &sdk.CallToolParams{
@@ -114,5 +118,6 @@ func TestCatalogTools_Protocol(t *testing.T) {
 		})
 		require.NoError(t, err)
 		assert.True(t, result.IsError)
+		assert.Contains(t, result.Content[0].(*sdk.TextContent).Text, tc.want)
 	}
 }
