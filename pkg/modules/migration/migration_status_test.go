@@ -87,29 +87,56 @@ func TestClaimMigrationConcurrentSameUserOnlyOneWins(t *testing.T) {
 	clearMigrationStatus(t)
 	u1 := getTestUser(t, 1)
 
-	const attempts = 10
+	winnerStatus, losses := claimConcurrently(t, u1, 10)
+
+	require.Len(t, losses, 9, "exactly one concurrent claim must win")
+	for _, err := range losses {
+		assertIsAlreadyRunning(t, err, "todoist")
+	}
+	require.NoError(t, FinishMigration(winnerStatus))
+}
+
+// A second import arriving right after the first must lose with the domain error, not
+// with whatever the driver reports while the winning claim is still being written.
+func TestClaimMigrationConcurrentAfterClaimIsAlreadyRunning(t *testing.T) {
+	clearMigrationStatus(t)
+	u1 := getTestUser(t, 1)
+
+	_, err := ClaimMigration(&testMigrator{"todoist"}, u1)
+	require.NoError(t, err)
+
+	winner, losses := claimConcurrently(t, u1, 10)
+
+	require.Nil(t, winner)
+	require.Len(t, losses, 10)
+	for _, err := range losses {
+		assertIsAlreadyRunning(t, err, "todoist")
+	}
+}
+
+func claimConcurrently(t *testing.T, u *user.User, attempts int) (winner *Status, losses []error) {
+	t.Helper()
+
 	var wg sync.WaitGroup
 	var mu sync.Mutex
-	winners := 0
-	var winnerStatus *Status
 
 	for i := 0; i < attempts; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			s, err := ClaimMigration(&testMigrator{"todoist"}, u1)
+			s, err := ClaimMigration(&testMigrator{"todoist"}, u)
 			mu.Lock()
 			defer mu.Unlock()
-			if err == nil {
-				winners++
-				winnerStatus = s
+			if err != nil {
+				losses = append(losses, err)
+				return
 			}
+			winner = s
 		}()
 	}
 	wg.Wait()
 
-	require.Equal(t, 1, winners, "exactly one concurrent claim must win")
-	require.NoError(t, FinishMigration(winnerStatus))
+	return winner, losses
 }
 
 func TestClaimMigrationReleasesAfterFinish(t *testing.T) {
@@ -159,7 +186,7 @@ func TestClaimMigrationTakesOverStaleClaim(t *testing.T) {
 	u1 := getTestUser(t, 1)
 
 	config.MigrationClaimTimeout.Set("24h")
-	t.Cleanup(func() { config.MigrationClaimTimeout.Set("24h") })
+	t.Cleanup(func() { config.MigrationClaimTimeout.Set("5m") })
 
 	status, err := ClaimMigration(&testMigrator{"todoist"}, u1)
 	require.NoError(t, err)
@@ -181,8 +208,10 @@ func TestClaimMigrationTakesOverStaleClaim(t *testing.T) {
 
 	fetched, err := GetMigrationStatusByID(status.ID)
 	require.NoError(t, err)
+	assert.Nil(t, fetched.HeartbeatAt, "the fallback to started_at only applies to rows that never beat")
 	assert.False(t, fetched.FinishedAt.IsZero())
 	assert.Nil(t, fetched.ActiveUserID)
+	assert.Equal(t, InterruptedMessage, fetched.ErrorMessage)
 }
 
 func TestClaimMigrationRecentClaimIsNotTakenOver(t *testing.T) {
@@ -190,7 +219,7 @@ func TestClaimMigrationRecentClaimIsNotTakenOver(t *testing.T) {
 	u1 := getTestUser(t, 1)
 
 	config.MigrationClaimTimeout.Set("24h")
-	t.Cleanup(func() { config.MigrationClaimTimeout.Set("24h") })
+	t.Cleanup(func() { config.MigrationClaimTimeout.Set("5m") })
 
 	status, err := ClaimMigration(&testMigrator{"todoist"}, u1)
 	require.NoError(t, err)
@@ -204,4 +233,131 @@ func TestClaimMigrationRecentClaimIsNotTakenOver(t *testing.T) {
 
 	_, err = ClaimMigration(&testMigrator{"csv"}, u1)
 	assertIsAlreadyRunning(t, err, "todoist")
+}
+
+func setClaimTimestamps(t *testing.T, statusID int64, startedAt time.Time, heartbeatAt *time.Time) {
+	t.Helper()
+	s := db.NewSession()
+	defer s.Close()
+	_, err := s.Where("id = ?", statusID).
+		Cols("started_at", "heartbeat_at").
+		Update(&Status{StartedAt: startedAt, HeartbeatAt: heartbeatAt})
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+}
+
+// The regression this feature exists to prevent: a big import runs longer than the timeout
+// and must keep its slot instead of being run a second time in parallel.
+func TestClaimMigrationRecentHeartbeatKeepsLongRunningClaim(t *testing.T) {
+	clearMigrationStatus(t)
+	u1 := getTestUser(t, 1)
+
+	config.MigrationClaimTimeout.Set("1h")
+	t.Cleanup(func() { config.MigrationClaimTimeout.Set("5m") })
+
+	status, err := ClaimMigration(&testMigrator{"todoist"}, u1)
+	require.NoError(t, err)
+
+	beatAt := time.Now()
+	setClaimTimestamps(t, status.ID, time.Now().Add(-24*time.Hour), &beatAt)
+
+	_, err = ClaimMigration(&testMigrator{"csv"}, u1)
+	assertIsAlreadyRunning(t, err, "todoist")
+
+	fetched, err := GetMigrationStatusByID(status.ID)
+	require.NoError(t, err)
+	assert.True(t, fetched.FinishedAt.IsZero())
+	require.NotNil(t, fetched.ActiveUserID)
+	assert.Equal(t, u1.ID, *fetched.ActiveUserID)
+}
+
+func TestClaimMigrationTakesOverStaleHeartbeat(t *testing.T) {
+	clearMigrationStatus(t)
+	u1 := getTestUser(t, 1)
+
+	config.MigrationClaimTimeout.Set("1h")
+	t.Cleanup(func() { config.MigrationClaimTimeout.Set("5m") })
+
+	status, err := ClaimMigration(&testMigrator{"todoist"}, u1)
+	require.NoError(t, err)
+
+	// started_at alone would keep this claim; only the dead heartbeat releases it.
+	beatAt := time.Now().Add(-2 * time.Hour)
+	setClaimTimestamps(t, status.ID, time.Now(), &beatAt)
+
+	newStatus, err := ClaimMigration(&testMigrator{"csv"}, u1)
+	require.NoError(t, err)
+	assert.Equal(t, "csv", newStatus.MigratorName)
+
+	fetched, err := GetMigrationStatusByID(status.ID)
+	require.NoError(t, err)
+	assert.False(t, fetched.FinishedAt.IsZero())
+	assert.Nil(t, fetched.ActiveUserID)
+}
+
+func TestHeartbeatInterval(t *testing.T) {
+	assert.Equal(t, 30*time.Second, heartbeatInterval(24*time.Hour))
+	assert.Equal(t, 30*time.Second, heartbeatInterval(5*time.Minute))
+	assert.Equal(t, 6*time.Second, heartbeatInterval(time.Minute))
+	assert.Equal(t, time.Second, heartbeatInterval(2*time.Second))
+	assert.Equal(t, time.Second, heartbeatInterval(time.Millisecond))
+}
+
+func TestStartRunStopEndsTheHeartbeat(t *testing.T) {
+	clearMigrationStatus(t)
+	u1 := getTestUser(t, 1)
+
+	config.MigrationClaimTimeout.Set("10s")
+	t.Cleanup(func() { config.MigrationClaimTimeout.Set("5m") })
+
+	status, err := ClaimMigration(&testMigrator{"todoist"}, u1)
+	require.NoError(t, err)
+	require.Nil(t, status.HeartbeatAt)
+
+	stop := StartRun(status.ID)
+	t.Cleanup(stop)
+
+	var lastBeat time.Time
+	require.Eventually(t, func() bool {
+		fetched, err := GetMigrationStatusByID(status.ID)
+		require.NoError(t, err)
+		if fetched.HeartbeatAt == nil {
+			return false
+		}
+		lastBeat = *fetched.HeartbeatAt
+		return true
+	}, 5*time.Second, 100*time.Millisecond, "the running migration never recorded a heartbeat")
+
+	stop()
+	afterStop, err := GetMigrationStatusByID(status.ID)
+	require.NoError(t, err)
+	require.NotNil(t, afterStop.HeartbeatAt)
+
+	time.Sleep(3 * heartbeatInterval(10*time.Second))
+
+	settled, err := GetMigrationStatusByID(status.ID)
+	require.NoError(t, err)
+	require.NotNil(t, settled.HeartbeatAt)
+	assert.Equal(t, afterStop.HeartbeatAt.UnixNano(), settled.HeartbeatAt.UnixNano(), "stop() must end the ticker")
+	assert.GreaterOrEqual(t, afterStop.HeartbeatAt.UnixNano(), lastBeat.UnixNano())
+}
+
+// Without stale release there is nothing to prove being alive to, so no beat is written.
+func TestStartRunDoesNotBeatWithoutStaleRelease(t *testing.T) {
+	clearMigrationStatus(t)
+	u1 := getTestUser(t, 1)
+
+	config.MigrationClaimTimeout.Set("0")
+	t.Cleanup(func() { config.MigrationClaimTimeout.Set("5m") })
+
+	status, err := ClaimMigration(&testMigrator{"todoist"}, u1)
+	require.NoError(t, err)
+
+	stop := StartRun(status.ID)
+	time.Sleep(2 * minHeartbeatInterval)
+	stop()
+
+	fetched, err := GetMigrationStatusByID(status.ID)
+	require.NoError(t, err)
+	assert.Nil(t, fetched.HeartbeatAt)
 }

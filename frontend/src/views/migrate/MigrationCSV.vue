@@ -178,8 +178,23 @@
 			v-else-if="step === 'success'"
 			class="success-step"
 		>
-			<Message class="mbe-4">
-				{{ successMessage }}
+			<Message
+				ref="resultMessage"
+				:variant="importFailureReason ? 'danger' : 'info'"
+				role="status"
+				aria-live="polite"
+				tabindex="-1"
+				class="mbe-4"
+			>
+				<template v-if="importFailureReason">
+					{{ $t('migrate.migrationFailed', {service: 'CSV', reason: importFailureReason}) }}
+				</template>
+				<template v-else-if="importFinished">
+					{{ $t('migrate.migrationFinished', {service: 'CSV'}) }}
+				</template>
+				<template v-else>
+					{{ $t('migrate.migrationStartedWillReciveEmail', {service: 'CSV'}) }}
+				</template>
 			</Message>
 			<XButton :to="{name: 'home'}">
 				{{ $t('home.goToOverview') }}
@@ -189,7 +204,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref, shallowReactive} from 'vue'
+import {computed, nextTick, ref, shallowReactive, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import Message from '@/components/misc/Message.vue'
@@ -206,7 +221,7 @@ import CSVMigrationService, {
 } from '@/services/migrator/csvMigration'
 
 import {useTitle} from '@/composables/useTitle'
-import {useProjectStore} from '@/stores/projects'
+import {useMigrationCompletion} from '@/composables/useMigrationCompletion'
 import {getErrorText} from '@/message'
 
 type Step = 'upload' | 'mapping' | 'success'
@@ -217,14 +232,29 @@ useTitle(() => t('migrate.titleService', {name: 'CSV'}))
 
 const csvService = shallowReactive(new CSVMigrationService())
 
+const {
+	isFinished: importFinished,
+	errorMessage: importFailureReason,
+	start: startPolling,
+} = useMigrationCompletion(() => csvService)
+
 const step = ref<Step>('upload')
 const error = ref('')
-const successMessage = ref('')
 const isLoading = ref(false)
 const uploadInput = ref<HTMLInputElement | null>(null)
 const selectedFile = ref<File | null>(null)
 const detectionResult = ref<DetectionResult | null>(null)
 const previewResult = ref<PreviewResult | null>(null)
+const resultMessage = ref<InstanceType<typeof Message> | null>(null)
+
+// the triggering button unmounts when the step switches, so move focus to the result message
+watch(step, async (newStep) => {
+	if (newStep !== 'success') {
+		return
+	}
+	await nextTick()
+	resultMessage.value?.$el?.focus()
+})
 
 const config = ref<ImportConfig>({
 	delimiter: ',',
@@ -353,13 +383,8 @@ async function performImport() {
 	error.value = ''
 
 	try {
-		const result = await csvService.migrate(selectedFile.value, config.value)
-		successMessage.value = result.message
-
-		// Reload projects
-		const projectStore = useProjectStore()
-		await projectStore.loadAllProjects()
-
+		await csvService.migrate(selectedFile.value, config.value)
+		startPolling()
 		step.value = 'success'
 	} catch (e) {
 		error.value = getErrorText(e)

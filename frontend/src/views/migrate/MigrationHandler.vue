@@ -3,7 +3,7 @@
 		<h1>{{ $t('migrate.titleService', {name: migrator.name}) }}</h1>
 		<p>{{ $t('migrate.descriptionDo') }}</p>
 
-		<template v-if="message === '' && lastMigrationStartedAt === null && !migrationJustStarted">
+		<template v-if="!migrationRunning && previousMigrationFinishedAt === null">
 			<!-- the credentials form stays mounted while migrating so its input survives an error -->
 			<template v-if="isMigrating === false || migrator.isCredentialsMigrator">
 				<template v-if="migrator.isFileMigrator">
@@ -72,18 +72,10 @@
 				<p>{{ $t('migrate.inProgress') }}</p>
 			</div>
 		</template>
-		<div v-else-if="!migrationJustStarted && lastMigrationStartedAt && lastMigrationFinishedAt === null">
-			<Message class="mbe-4">
-				{{ $t('migrate.migrationInProgress') }}
-			</Message>
-			<XButton :to="{name: 'home'}">
-				{{ $t('home.goToOverview') }}
-			</XButton>
-		</div>
-		<div v-else-if="lastMigrationFinishedAt">
+		<div v-else-if="previousMigrationFinishedAt">
 			<p>
 				{{
-					$t('migrate.alreadyMigrated1', {name: migrator.name, date: formatDateLong(lastMigrationFinishedAt)})
+					$t('migrate.alreadyMigrated1', {name: migrator.name, date: formatDateLong(previousMigrationFinishedAt)})
 				}}<br>
 				{{ $t('migrate.alreadyMigrated2') }}
 			</p>
@@ -102,16 +94,22 @@
 		</div>
 		<div v-else>
 			<Message
-				v-if="migrator.isFileMigrator"
+				ref="resultMessage"
+				:variant="migrationFailureReason ? 'danger' : 'info'"
+				role="status"
+				aria-live="polite"
+				tabindex="-1"
 				class="mbe-4"
 			>
-				{{ message }}
-			</Message>
-			<Message
-				v-else
-				class="mbe-4"
-			>
-				{{ $t('migrate.migrationStartedWillReciveEmail', {service: migrator.name}) }}
+				<template v-if="migrationFailureReason">
+					{{ $t('migrate.migrationFailed', {service: migrator.name, reason: migrationFailureReason}) }}
+				</template>
+				<template v-else-if="migrationFinished">
+					{{ $t('migrate.migrationFinished', {service: migrator.name}) }}
+				</template>
+				<template v-else>
+					{{ $t('migrate.migrationStartedWillReciveEmail', {service: migrator.name}) }}
+				</template>
 			</Message>
 
 			<XButton :to="{name: 'home'}">
@@ -132,7 +130,7 @@ export default {
 </script>
 
 <script setup lang="ts">
-import {computed, ref, shallowReactive} from 'vue'
+import {computed, nextTick, ref, shallowReactive, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import Logo from '@/assets/logo.svg?component'
@@ -147,7 +145,7 @@ import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 
 import {MIGRATORS, type Migrator} from './migrators'
 import {useTitle} from '@/composables/useTitle'
-import {useProjectStore} from '@/stores/projects'
+import {useMigrationCompletion} from '@/composables/useMigrationCompletion'
 import {getErrorText} from '@/message'
 
 const props = defineProps<{
@@ -162,11 +160,9 @@ const {t, te} = useI18n({useScope: 'global'})
 const progressDotsCount = ref(PROGRESS_DOTS_COUNT)
 const authUrl = ref('')
 const isMigrating = ref(false)
-const lastMigrationFinishedAt = ref<Date | null>(null)
-const lastMigrationStartedAt = ref<Date | null>(null)
-const message = ref('')
+const previousMigrationFinishedAt = ref<Date | null>(null)
+const migrationRunning = ref(false)
 const migratorAuthCode = ref('')
-const migrationJustStarted = ref(false)
 const migrationError = ref('')
 
 const migrator = computed<Migrator>(() => MIGRATORS[props.service])
@@ -187,12 +183,16 @@ const migrationFileService = shallowReactive(new AbstractMigrationFileService(mi
 
 useTitle(() => t('migrate.titleService', {name: migrator.value.name}))
 
-async function initMigration() {
-	if (migrator.value.isFileMigrator) {
-		return
-	}
+const statusSource = () => migrator.value.isFileMigrator ? migrationFileService : migrationService
 
-	if (!migrator.value.isCredentialsMigrator) {
+const {
+	isFinished: migrationFinished,
+	errorMessage: migrationFailureReason,
+	start: startPolling,
+} = useMigrationCompletion(statusSource)
+
+async function initMigration() {
+	if (!migrator.value.isFileMigrator && !migrator.value.isCredentialsMigrator) {
 		authUrl.value = await migrationService.getAuthUrl().then(({url}) => url)
 
 		const TOKEN_HASH_PREFIX = '#token='
@@ -205,22 +205,24 @@ async function initMigration() {
 		}
 	}
 
-	const {started_at, finished_at} = await migrationService.getStatus()
-	if (started_at) {
-		lastMigrationStartedAt.value = parseDateOrNull(started_at)
-	}
-	if (finished_at) {
-		lastMigrationFinishedAt.value = parseDateOrNull(finished_at)
-		if (lastMigrationFinishedAt.value) {
-			return
-		}
-	}
-	
-	if (lastMigrationStartedAt.value && lastMigrationFinishedAt.value === null) {
+	const {started_at, finished_at} = await statusSource().getStatus()
+	const finishedAt = parseDateOrNull(finished_at)
+
+	if (parseDateOrNull(started_at) !== null && finishedAt === null) {
+		migrationRunning.value = true
+		startPolling()
 		return
 	}
 
-	if (migrator.value.isCredentialsMigrator) {
+	if (finishedAt !== null) {
+		// A file migrator re-imports by uploading another file, so it needs the upload form, not a confirm prompt.
+		if (!migrator.value.isFileMigrator) {
+			previousMigrationFinishedAt.value = finishedAt
+		}
+		return
+	}
+
+	if (migrator.value.isFileMigrator || migrator.value.isCredentialsMigrator) {
 		return
 	}
 
@@ -230,13 +232,22 @@ async function initMigration() {
 initMigration()
 
 const uploadInput = ref<HTMLInputElement | null>(null)
+const resultMessage = ref<InstanceType<typeof Message> | null>(null)
+
+// the triggering button unmounts when the result message appears, so move focus there
+watch(migrationRunning, async (running) => {
+	if (!running) {
+		return
+	}
+	await nextTick()
+	resultMessage.value?.$el?.focus()
+})
 
 async function migrate(credentialsConfig?: MigrationConfig) {
 	let migrationConfig: MigrationConfig | File = credentialsConfig ?? {code: migratorAuthCode.value}
 
 	isMigrating.value = true
-	lastMigrationFinishedAt.value = null
-	message.value = ''
+	previousMigrationFinishedAt.value = null
 	migrationError.value = ''
 
 	if (migrator.value.isFileMigrator) {
@@ -247,15 +258,14 @@ async function migrate(credentialsConfig?: MigrationConfig) {
 	}
 
 	try {
+		// The migrate response only means the import was queued, not finished.
 		if (migrator.value.isFileMigrator) {
-			const result = await migrationFileService.migrate(migrationConfig as File)
-			message.value = result.message
-			const projectStore = useProjectStore()
-			return projectStore.loadAllProjects()
+			await migrationFileService.migrate(migrationConfig as File)
+		} else {
+			await migrationService.migrate(migrationConfig as MigrationConfig)
 		}
-		
-		await migrationService.migrate(migrationConfig as MigrationConfig)
-		migrationJustStarted.value = true
+		migrationRunning.value = true
+		startPolling()
 	} catch (e) {
 		migrationError.value = getErrorText(e)
 	} finally {
@@ -269,8 +279,7 @@ function confirmMigrateAgain() {
 		return migrate()
 	}
 
-	lastMigrationStartedAt.value = null
-	lastMigrationFinishedAt.value = null
+	previousMigrationFinishedAt.value = null
 }
 </script>
 
