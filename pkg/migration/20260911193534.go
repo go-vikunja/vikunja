@@ -26,13 +26,7 @@ import (
 
 // Rows written before this migration keep a NULL heartbeat and fall back to started_at.
 type migrationStatusHeartbeat20260911193534 struct {
-	ID           int64      `xorm:"bigint autoincr not null unique pk"`
-	UserID       int64      `xorm:"bigint not null"`
-	MigratorName string     `xorm:"varchar(255)"`
-	StartedAt    time.Time  `xorm:"not null"`
-	FinishedAt   time.Time  `xorm:"null"`
-	HeartbeatAt  *time.Time `xorm:"null"`
-	ActiveUserID *int64     `xorm:"bigint null unique"`
+	HeartbeatAt *time.Time `xorm:"null"`
 }
 
 func (migrationStatusHeartbeat20260911193534) TableName() string {

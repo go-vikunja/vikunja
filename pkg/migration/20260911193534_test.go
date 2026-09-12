@@ -38,6 +38,21 @@ func (migrationStatusBefore20260911193534) TableName() string {
 	return "migration_status"
 }
 
+// The migration struct only declares the added column, so reads need the full row.
+type migrationStatusHeartbeatRow20260911193534 struct {
+	ID           int64      `xorm:"bigint autoincr not null unique pk"`
+	UserID       int64      `xorm:"bigint not null"`
+	MigratorName string     `xorm:"varchar(255)"`
+	StartedAt    time.Time  `xorm:"not null"`
+	FinishedAt   time.Time  `xorm:"null"`
+	HeartbeatAt  *time.Time `xorm:"null"`
+	ActiveUserID *int64     `xorm:"bigint null unique"`
+}
+
+func (migrationStatusHeartbeatRow20260911193534) TableName() string {
+	return "migration_status"
+}
+
 func TestAddMigrationStatusHeartbeat20260911193534(t *testing.T) {
 	x, err := db.CreateTestEngine()
 	require.NoError(t, err)
@@ -77,7 +92,7 @@ func TestAddMigrationStatusHeartbeat20260911193534(t *testing.T) {
 		require.Equal(t, index.Cols, preserved.Cols)
 	}
 
-	got := &migrationStatusHeartbeat20260911193534{}
+	got := &migrationStatusHeartbeatRow20260911193534{}
 	found, err := x.ID(existing.ID).Get(got)
 	require.NoError(t, err)
 	require.True(t, found)
@@ -88,7 +103,7 @@ func TestAddMigrationStatusHeartbeat20260911193534(t *testing.T) {
 	require.Nil(t, got.HeartbeatAt, "existing claims must fall back to started_at")
 
 	beatAt := time.Now().Truncate(time.Second)
-	_, err = x.ID(existing.ID).Cols("heartbeat_at").Update(&migrationStatusHeartbeat20260911193534{HeartbeatAt: &beatAt})
+	_, err = x.ID(existing.ID).Cols("heartbeat_at").Update(&migrationStatusHeartbeatRow20260911193534{HeartbeatAt: &beatAt})
 	require.NoError(t, err)
 
 	found, err = x.ID(existing.ID).Get(got)

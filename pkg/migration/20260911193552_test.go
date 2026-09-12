@@ -25,6 +25,21 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// The migration struct only declares the added column, so reads need the full row.
+type migrationStatusErrorRow20260911193552 struct {
+	ID           int64     `xorm:"bigint autoincr not null unique pk"`
+	UserID       int64     `xorm:"bigint not null"`
+	MigratorName string    `xorm:"varchar(255)"`
+	StartedAt    time.Time `xorm:"not null"`
+	FinishedAt   time.Time `xorm:"null"`
+	ActiveUserID *int64    `xorm:"bigint null unique"`
+	ErrorMessage string    `xorm:"text null"`
+}
+
+func (migrationStatusErrorRow20260911193552) TableName() string {
+	return "migration_status"
+}
+
 func TestAddMigrationStatusError20260911193552(t *testing.T) {
 	x, err := db.CreateTestEngine()
 	require.NoError(t, err)
@@ -63,7 +78,7 @@ func TestAddMigrationStatusError20260911193552(t *testing.T) {
 		require.Equal(t, index.Cols, preserved.Cols)
 	}
 
-	got := &migrationStatusError20260911193552{}
+	got := &migrationStatusErrorRow20260911193552{}
 	found, err := x.ID(1).Get(got)
 	require.NoError(t, err)
 	require.True(t, found)
@@ -73,7 +88,7 @@ func TestAddMigrationStatusError20260911193552(t *testing.T) {
 	require.Empty(t, got.ErrorMessage, "rows migrated from before the column must not read as failed")
 
 	activeUserID := int64(7)
-	_, err = x.Insert(&migrationStatusError20260911193552{
+	_, err = x.Insert(&migrationStatusErrorRow20260911193552{
 		ID:           2,
 		UserID:       activeUserID,
 		MigratorName: "trello",
@@ -81,7 +96,7 @@ func TestAddMigrationStatusError20260911193552(t *testing.T) {
 		ActiveUserID: &activeUserID,
 	})
 	require.NoError(t, err)
-	_, err = x.Insert(&migrationStatusError20260911193552{
+	_, err = x.Insert(&migrationStatusErrorRow20260911193552{
 		ID:           3,
 		UserID:       activeUserID,
 		MigratorName: "csv",

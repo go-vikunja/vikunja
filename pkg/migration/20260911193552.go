@@ -18,20 +18,13 @@ package migration
 
 import (
 	"fmt"
-	"time"
 
 	"src.techknowlogick.com/xormigrate"
 	"xorm.io/xorm"
 )
 
 type migrationStatusError20260911193552 struct {
-	ID           int64     `xorm:"bigint autoincr not null unique pk"`
-	UserID       int64     `xorm:"bigint not null"`
-	MigratorName string    `xorm:"varchar(255)"`
-	StartedAt    time.Time `xorm:"not null"`
-	FinishedAt   time.Time `xorm:"null"`
-	ActiveUserID *int64    `xorm:"bigint null unique"`
-	ErrorMessage string    `xorm:"text null"`
+	ErrorMessage string `xorm:"text null"`
 }
 
 func (migrationStatusError20260911193552) TableName() string {
