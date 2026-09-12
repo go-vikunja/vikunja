@@ -21,6 +21,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"code.vikunja.io/api/pkg/models"
+
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -41,4 +43,14 @@ func rawToolHandler(name string) mcp.ToolHandler {
 		}
 		return res, nil
 	}
+}
+
+func installTools(srv *mcp.Server, token *models.APIToken) {
+	for _, t := range snapshotTools() {
+		if t.tier != TierTyped || !t.authorized(token) {
+			continue
+		}
+		srv.AddTool(&mcp.Tool{Name: t.name, Description: t.description, InputSchema: t.spec.schema}, rawToolHandler(t.name))
+	}
+	installCatalogTools(srv)
 }

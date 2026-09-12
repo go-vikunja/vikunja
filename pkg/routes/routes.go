@@ -68,6 +68,7 @@ import (
 	backgroundHandler "code.vikunja.io/api/pkg/modules/background/handler"
 	"code.vikunja.io/api/pkg/modules/background/unsplash"
 	"code.vikunja.io/api/pkg/modules/background/upload"
+	mcpmodule "code.vikunja.io/api/pkg/modules/mcp"
 	"code.vikunja.io/api/pkg/modules/migration"
 	csvmigrator "code.vikunja.io/api/pkg/modules/migration/csv"
 	migrationHandler "code.vikunja.io/api/pkg/modules/migration/handler"
@@ -287,7 +288,7 @@ func RegisterRoutes(e *echo.Echo) {
 	setupPprof(e)
 
 	// /api/v2 — Huma-backed API, scaffolded alongside /api/v1.
-	a2 := e.Group("/api/v2")
+	a2 := e.Group(apiV2Prefix)
 	// Share the BasicAuth failure budget with CalDAV and feeds.
 	a2.Use(pathScoped(func(p string) bool { return p == "/api/v2/notifications.atom" }, basicAuthRateLimit))
 	registerAPIRoutesV2(e, a2, noAuthRateLimit, refreshRateLimit)
@@ -447,6 +448,8 @@ func gateV2AdminRoutes() echo.MiddlewareFunc {
 // registerAPIRoutesV2 wires the /api/v2 Echo group. Token middleware is
 // attached before any route so Huma's spec and Scalar docs share the
 // resource handlers' stack; unauthenticatedAPIPaths keeps them public.
+const apiV2Prefix = "/api/v2"
+
 func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, noAuthRateLimit, refreshRateLimit echo.MiddlewareFunc) {
 	a.Use(noStoreCacheControl())
 	a.Use(SetupTokenMiddleware())
@@ -475,6 +478,14 @@ func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, noAuthRateLimit, refreshRa
 
 	// Resources self-register via init(); RegisterAll runs them all + AutoPatch.
 	apiv2.RegisterAll(api)
+	// MCP reads the completed spec, including AutoPatch operations.
+	mcpmodule.Init(api, apiV2Prefix)
+	mcpPath, ok := strings.CutPrefix(mcpmodule.RoutePrefix, apiV2Prefix)
+	if !ok {
+		panic("mcp: RoutePrefix is not under " + apiV2Prefix)
+	}
+	a.Any(mcpPath, mcpmodule.Handler)
+	a.Any(mcpPath+"/*", mcpmodule.Handler)
 }
 
 func registerAPIRoutes(a *echo.Group, noAuthRateLimit, refreshRateLimit echo.MiddlewareFunc) {
