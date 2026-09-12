@@ -26,6 +26,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/modules/humabridge"
+	"code.vikunja.io/api/pkg/modules/mcp"
 	"code.vikunja.io/api/pkg/web"
 
 	echojwt "github.com/labstack/echo-jwt/v5"
@@ -79,6 +80,11 @@ func SetupTokenMiddleware() echo.MiddlewareFunc {
 // resolves to the very route that PATCH was authorised against.
 func shouldSkipRouteCheck(c *echo.Context) bool {
 	if c.Path() == "/api/v1/token/test" || c.Path() == "/api/v2/token/test" {
+		return true
+	}
+
+	// MCP checks its transport scope inline; loopback routes still get checked here.
+	if c.Path() == mcp.RoutePrefix || strings.HasPrefix(c.Path(), mcp.RoutePrefix+"/") {
 		return true
 	}
 

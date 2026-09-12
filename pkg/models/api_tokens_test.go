@@ -41,12 +41,15 @@ func TestAPIToken_ReadAll(t *testing.T) {
 	require.NoError(t, err)
 	tokens, is := result.([]*APIToken)
 	assert.Truef(t, is, "tokens are not of type []*APIToken")
-	assert.Len(t, tokens, 3)
+	assert.Len(t, tokens, 6)
 	assert.Len(t, tokens, count)
-	assert.Equal(t, int64(3), total)
+	assert.Equal(t, int64(6), total)
 	assert.Equal(t, int64(1), tokens[0].ID)
 	assert.Equal(t, int64(2), tokens[1].ID)
 	assert.Equal(t, int64(9), tokens[2].ID)
+	assert.Equal(t, int64(10), tokens[3].ID)
+	assert.Equal(t, int64(11), tokens[4].ID)
+	assert.Equal(t, int64(12), tokens[5].ID)
 }
 
 func TestAPIToken_CanDelete(t *testing.T) {
@@ -353,4 +356,21 @@ func TestAPIToken_GetTokenFromTokenString(t *testing.T) {
 			s.Close()
 		}
 	})
+}
+
+func TestAPIToken_HasPermission(t *testing.T) {
+	var nilToken *APIToken
+	assert.False(t, nilToken.HasPermission("tasks", "read_all"))
+	assert.False(t, (&APIToken{}).HasPermission("tasks", "read_all"))
+	token := &APIToken{
+		APIPermissions: APIPermissions{
+			"time-entries": {"read_all"},
+			"mcp":          {"access"},
+		},
+	}
+	assert.True(t, token.HasPermission("time_entries", "read_all"))
+	assert.True(t, token.HasPermission("time-entries", "read_all"))
+	assert.False(t, token.HasPermission("time_entries", "create"))
+	assert.True(t, token.HasMCPAccess())
+	assert.False(t, (&APIToken{APIPermissions: APIPermissions{"mcp": {"read_all"}}}).HasMCPAccess())
 }
