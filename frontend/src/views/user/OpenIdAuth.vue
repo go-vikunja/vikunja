@@ -58,6 +58,7 @@ import {getErrorText} from '@/message'
 import Message from '@/components/misc/Message.vue'
 import FormField from '@/components/input/FormField.vue'
 import {useRedirectToLastVisited} from '@/composables/useRedirectToLastVisited'
+import {CODE_VERIFIER_STORAGE_KEY, NONCE_STORAGE_KEY} from '@/helpers/pkce'
 import {redirectToProvider} from '@/helpers/redirectToProvider'
 
 import {useAuthStore} from '@/stores/auth'
@@ -115,11 +116,21 @@ async function authenticateWithCode() {
 		sessionStorage.removeItem(pendingTotpKey(providerKey))
 	}
 
+	// Absent for flows started pre-upgrade, and codeVerifier also absent without
+	// crypto.subtle – the backend then exchanges without PKCE. Clear them either way:
+	// a spent verifier is single-use, and the TOTP restart path regenerates both.
+	const codeVerifier = localStorage.getItem(CODE_VERIFIER_STORAGE_KEY) ?? undefined
+	const nonce = localStorage.getItem(NONCE_STORAGE_KEY) ?? undefined
+	localStorage.removeItem(CODE_VERIFIER_STORAGE_KEY)
+	localStorage.removeItem(NONCE_STORAGE_KEY)
+
 	try {
 		await authStore.openIdAuth({
 			provider: providerKey,
 			code: route.query.code as string,
 			totpPasscode: pendingPasscode,
+			codeVerifier,
+			nonce,
 		})
 
 		redirectIfSaved()

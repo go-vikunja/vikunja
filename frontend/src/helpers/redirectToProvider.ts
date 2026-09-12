@@ -1,5 +1,12 @@
 import {getFullBaseUrl} from '@/helpers/getFullBaseUrl'
-import {createRandomID} from '@/helpers/randomId'
+import {
+	CODE_VERIFIER_STORAGE_KEY,
+	NONCE_STORAGE_KEY,
+	createCodeChallenge,
+	createCodeVerifier,
+	createNonce,
+	createState,
+} from '@/helpers/pkce'
 import type {IProvider} from '@/types/IProvider'
 import {parseURL} from 'ufo'
 
@@ -11,17 +18,44 @@ export function getRedirectUrlFromCurrentFrontendPath(provider: IProvider): stri
 	return `${url.protocol}//${url.host}${base}auth/openid/${provider.key}`
 }
 
-export const redirectToProvider = (provider: IProvider) => {
+export const redirectToProvider = async (provider: IProvider) => {
 
 	const redirectUrl = getRedirectUrlFromCurrentFrontendPath(provider)
-	const state = createRandomID(24)
+	// state is what stands between this flow and login-CSRF, so it needs the same
+	// unguessable source as the nonce – createRandomID is Math.random-backed.
+	const state = createState()
 	localStorage.setItem('state', state)
+
+	// Nonce binds the ID token to this session (OIDC Core §3.1.2.1); some providers require it.
+	const nonce = createNonce()
+	localStorage.setItem(NONCE_STORAGE_KEY, nonce)
 
 	let scope = 'openid email profile'
 	if (provider.scope !== null){
 		scope = provider.scope
 	}
-	window.location.href = `${provider.authUrl}?client_id=${provider.clientId}&redirect_uri=${redirectUrl}&response_type=code&scope=${scope}&state=${state}`
+
+	const params = new URLSearchParams({
+		client_id: provider.clientId,
+		redirect_uri: redirectUrl,
+		response_type: 'code',
+		scope,
+		state,
+		nonce,
+	})
+
+	// Safe to always send – providers without RFC 7636 ignore unknown params (§5).
+	const codeVerifier = createCodeVerifier()
+	const codeChallenge = await createCodeChallenge(codeVerifier)
+	if (typeof codeChallenge === 'undefined') {
+		localStorage.removeItem(CODE_VERIFIER_STORAGE_KEY)
+	} else {
+		localStorage.setItem(CODE_VERIFIER_STORAGE_KEY, codeVerifier)
+		params.set('code_challenge', codeChallenge)
+		params.set('code_challenge_method', 'S256')
+	}
+
+	window.location.href = `${provider.authUrl}?${params.toString()}`
 }
 
 export const redirectToProviderOnLogout = (provider: IProvider): boolean => {
