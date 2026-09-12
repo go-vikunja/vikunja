@@ -40,12 +40,6 @@ var (
 	ErrNoCaller     = errors.New("mcp: no caller request in context")
 )
 
-type apiError struct {
-	status int
-	text   string
-}
-
-func (e *apiError) Error() string { return e.text }
 func callTool(ctx context.Context, name string, rawArgs json.RawMessage) (any, error) {
 	t, ok := findTool(name)
 	if !ok {
@@ -203,10 +197,7 @@ func parseResponse(rec *httptest.ResponseRecorder) (any, error) {
 		}, nil
 	}
 	if rec.Code >= 300 {
-		return nil, &apiError{
-			status: rec.Code,
-			text:   errorText(rec),
-		}
+		return nil, errors.New(errorText(rec))
 	}
 	if rec.Body.Len() == 0 {
 		return map[string]any{"ok": true}, nil
