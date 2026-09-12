@@ -44,7 +44,10 @@ func init() {
 		},
 	}
 	apiTokenRoutesV2["mcp"] = APITokenRoute{
-		"access": &RouteDetail{Path: "/api/v2/mcp", Method: "ANY"},
+		"access": &RouteDetail{
+			Path:   "/api/v2/mcp",
+			Method: "ANY",
+		},
 	}
 	apiTokenRoutes["feeds"] = APITokenRoute{
 		"access": &RouteDetail{

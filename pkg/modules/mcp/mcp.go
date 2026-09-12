@@ -39,14 +39,20 @@ const (
 )
 
 func newServer(req *http.Request) *mcp.Server {
-	srv := mcp.NewServer(&mcp.Implementation{Name: "vikunja", Version: version.Version}, nil)
+	srv := mcp.NewServer(&mcp.Implementation{
+		Name:    "vikunja",
+		Version: version.Version,
+	}, nil)
 	installTools(srv, TokenFromContext(req.Context()))
 	return srv
 }
 
 // Stateless prevents session IDs from carrying identity across requests.
 // Localhost protection would reject deployments behind a loopback reverse proxy.
-var streamableHandler = mcp.NewStreamableHTTPHandler(newServer, &mcp.StreamableHTTPOptions{Stateless: true, DisableLocalhostProtection: true})
+var streamableHandler = mcp.NewStreamableHTTPHandler(newServer, &mcp.StreamableHTTPOptions{
+	Stateless:                  true,
+	DisableLocalhostProtection: true,
+})
 
 // Handler rejects JWTs, which bypass API-token route scopes.
 func Handler(c *echo.Context) error {

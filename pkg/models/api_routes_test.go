@@ -523,12 +523,29 @@ func TestPermissionsAreValid_MCPAccess(t *testing.T) {
 func TestAPIToken_CanUseRoute(t *testing.T) {
 	prev := apiTokenRoutesV2["tasks"]
 	apiTokenRoutesV2["tasks"] = APITokenRoute{
-		"read_one": &RouteDetail{Path: "/api/v2/tasks/:projecttask", Method: "GET"},
-		"update":   &RouteDetail{Path: "/api/v2/tasks/:projecttask", Method: "PUT"},
+		"read_one": &RouteDetail{
+			Path:   "/api/v2/tasks/:projecttask",
+			Method: "GET",
+		},
+		"update": &RouteDetail{
+			Path:   "/api/v2/tasks/:projecttask",
+			Method: "PUT",
+		},
 	}
 	t.Cleanup(func() { apiTokenRoutesV2["tasks"] = prev })
-	token := &APIToken{APIPermissions: APIPermissions{"tasks": {"read_one", "update"}}}
-	for _, method := range []string{"GET", "PUT", "PATCH"} {
+	token := &APIToken{
+		APIPermissions: APIPermissions{
+			"tasks": {
+				"read_one",
+				"update",
+			},
+		},
+	}
+	for _, method := range []string{
+		"GET",
+		"PUT",
+		"PATCH",
+	} {
 		assert.True(t, token.CanUseRoute("/api/v2/tasks/:projecttask", method))
 	}
 	assert.False(t, token.CanUseRoute("/api/v2/tasks/:projecttask", "DELETE"))

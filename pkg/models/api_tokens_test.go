@@ -362,7 +362,12 @@ func TestAPIToken_HasPermission(t *testing.T) {
 	var nilToken *APIToken
 	assert.False(t, nilToken.HasPermission("tasks", "read_all"))
 	assert.False(t, (&APIToken{}).HasPermission("tasks", "read_all"))
-	token := &APIToken{APIPermissions: APIPermissions{"time-entries": {"read_all"}, "mcp": {"access"}}}
+	token := &APIToken{
+		APIPermissions: APIPermissions{
+			"time-entries": {"read_all"},
+			"mcp":          {"access"},
+		},
+	}
 	assert.True(t, token.HasPermission("time_entries", "read_all"))
 	assert.True(t, token.HasPermission("time-entries", "read_all"))
 	assert.False(t, token.HasPermission("time_entries", "create"))

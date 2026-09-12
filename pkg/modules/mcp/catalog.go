@@ -47,7 +47,8 @@ type doActionArgs struct {
 }
 
 var findActionSpec = mustResolveSpec(toolFindAction, &jsonschema.Schema{
-	Type: "object", Properties: map[string]*jsonschema.Schema{
+	Type: "object",
+	Properties: map[string]*jsonschema.Schema{
 		"action": {
 			Type:        "string",
 			Description: "Return the full input schema for this action (e.g. task_labels_create).",
@@ -56,18 +57,36 @@ var findActionSpec = mustResolveSpec(toolFindAction, &jsonschema.Schema{
 			Type:        "string",
 			Description: "Return full schemas for actions under this prefix (e.g. task_labels, project_views, teams).",
 		},
-	}, AdditionalProperties: falseSchema(),
+	},
+	AdditionalProperties: falseSchema(),
 })
 var doActionSpec = mustResolveSpec(toolDoAction, &jsonschema.Schema{
-	Type: "object", Properties: map[string]*jsonschema.Schema{
-		"action":    {Type: "string", Description: "The action returned by find_action (e.g. task_labels_create)."},
-		"arguments": {Type: "object", Description: "Arguments matching the action's input_schema from find_action."},
-	}, Required: []string{"action"}, AdditionalProperties: falseSchema(),
+	Type: "object",
+	Properties: map[string]*jsonschema.Schema{
+		"action": {
+			Type:        "string",
+			Description: "The action returned by find_action (e.g. task_labels_create).",
+		},
+		"arguments": {
+			Type:        "object",
+			Description: "Arguments matching the action's input_schema from find_action.",
+		},
+	},
+	Required:             []string{"action"},
+	AdditionalProperties: falseSchema(),
 })
 
 func installCatalogTools(srv *mcp.Server) {
-	srv.AddTool(&mcp.Tool{Name: toolFindAction, Description: "Discover additional Vikunja actions: project sharing with users or teams, task labels and relations (subtasks), teams and members, project views, saved filters, time entries and more. Returns actions your token authorizes; pass action or resource for full input schemas. Invoke them with do_action.", InputSchema: findActionSpec.schema}, findActionHandler)
-	srv.AddTool(&mcp.Tool{Name: toolDoAction, Description: "Invoke an action discovered via find_action. Arguments must match its input_schema.", InputSchema: doActionSpec.schema}, doActionHandler)
+	srv.AddTool(&mcp.Tool{
+		Name:        toolFindAction,
+		Description: "Discover additional Vikunja actions: project sharing with users or teams, task labels and relations (subtasks), teams and members, project views, saved filters, time entries and more. Returns actions your token authorizes; pass action or resource for full input schemas. Invoke them with do_action.",
+		InputSchema: findActionSpec.schema,
+	}, findActionHandler)
+	srv.AddTool(&mcp.Tool{
+		Name:        toolDoAction,
+		Description: "Invoke an action discovered via find_action. Arguments must match its input_schema.",
+		InputSchema: doActionSpec.schema,
+	}, doActionHandler)
 }
 func catalogActions(token *models.APIToken, action, resource string) []actionInfo {
 	out := []actionInfo{}
@@ -81,7 +100,10 @@ func catalogActions(token *models.APIToken, action, resource string) []actionInf
 		if resource != "" && !strings.HasPrefix(t.name, resource+"_") {
 			continue
 		}
-		info := actionInfo{Name: t.name, Description: t.description}
+		info := actionInfo{
+			Name:        t.name,
+			Description: t.description,
+		}
 		if action != "" || resource != "" {
 			info.InputSchema = t.spec.schema
 		}
@@ -90,7 +112,10 @@ func catalogActions(token *models.APIToken, action, resource string) []actionInf
 	return out
 }
 func invalidArgsResult(name string, err error) *mcp.CallToolResult {
-	return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: fmt.Sprintf("mcp: invalid arguments for %s: %v", name, err)}}}
+	return &mcp.CallToolResult{
+		IsError: true,
+		Content: []mcp.Content{&mcp.TextContent{Text: fmt.Sprintf("mcp: invalid arguments for %s: %v", name, err)}},
+	}
 }
 func findActionHandler(ctx context.Context, req *mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	var args findActionArgs
@@ -103,7 +128,10 @@ func findActionHandler(ctx context.Context, req *mcp.CallToolRequest) (*mcp.Call
 	if err != nil {
 		return nil, fmt.Errorf("mcp: marshal find_action result: %w", err)
 	}
-	return &mcp.CallToolResult{Content: []mcp.Content{&mcp.TextContent{Text: string(body)}}, StructuredContent: result}, nil
+	return &mcp.CallToolResult{
+		Content:           []mcp.Content{&mcp.TextContent{Text: string(body)}},
+		StructuredContent: result,
+	}, nil
 }
 func doActionHandler(ctx context.Context, req *mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	var args doActionArgs
@@ -111,5 +139,10 @@ func doActionHandler(ctx context.Context, req *mcp.CallToolRequest) (*mcp.CallTo
 		//nolint:nilerr // Domain errors use MCP tool results.
 		return invalidArgsResult(toolDoAction, err), nil
 	}
-	return rawToolHandler(args.Action)(ctx, &mcp.CallToolRequest{Params: &mcp.CallToolParamsRaw{Name: args.Action, Arguments: args.Arguments}})
+	return rawToolHandler(args.Action)(ctx, &mcp.CallToolRequest{
+		Params: &mcp.CallToolParamsRaw{
+			Name:      args.Action,
+			Arguments: args.Arguments,
+		},
+	})
 }

@@ -36,7 +36,11 @@ func TestCatalogActions(t *testing.T) {
 		names = append(names, a.Name)
 		assert.Nil(t, a.InputSchema)
 	}
-	assert.ElementsMatch(t, []string{"things_read", "things_update", "things_delete"}, names)
+	assert.ElementsMatch(t, []string{
+		"things_read",
+		"things_update",
+		"things_delete",
+	}, names)
 	one := catalogActions(nil, "things_read", "")
 	require.Len(t, one, 1)
 	assert.NotNil(t, one[0].InputSchema)
@@ -45,24 +49,39 @@ func TestCatalogActions(t *testing.T) {
 
 func TestCatalogTools_Protocol(t *testing.T) {
 	ctx := withTestCaller(t)
-	srv := sdk.NewServer(&sdk.Implementation{Name: "test", Version: "1"}, nil)
+	srv := sdk.NewServer(&sdk.Implementation{
+		Name:    "test",
+		Version: "1",
+	}, nil)
 	installCatalogTools(srv)
 	clientTransport, serverTransport := sdk.NewInMemoryTransports()
 	ss, err := srv.Connect(ctx, serverTransport, nil)
 	require.NoError(t, err)
 	defer ss.Close()
-	client := sdk.NewClient(&sdk.Implementation{Name: "test-client", Version: "1"}, nil)
+	client := sdk.NewClient(&sdk.Implementation{
+		Name:    "test-client",
+		Version: "1",
+	}, nil)
 	cs, err := client.Connect(ctx, clientTransport, nil)
 	require.NoError(t, err)
 	defer cs.Close()
 	listed, err := cs.ListTools(ctx, nil)
 	require.NoError(t, err)
 	require.Len(t, listed.Tools, 2)
-	found, err := cs.CallTool(ctx, &sdk.CallToolParams{Name: "find_action", Arguments: map[string]any{"action": "things_read"}})
+	found, err := cs.CallTool(ctx, &sdk.CallToolParams{
+		Name:      "find_action",
+		Arguments: map[string]any{"action": "things_read"},
+	})
 	require.NoError(t, err)
 	assert.False(t, found.IsError)
 	assert.Contains(t, found.Content[0].(*sdk.TextContent).Text, "input_schema")
-	called, err := cs.CallTool(ctx, &sdk.CallToolParams{Name: "do_action", Arguments: map[string]any{"action": "things_read", "arguments": map[string]any{"id": 7}}})
+	called, err := cs.CallTool(ctx, &sdk.CallToolParams{
+		Name: "do_action",
+		Arguments: map[string]any{
+			"action":    "things_read",
+			"arguments": map[string]any{"id": 7},
+		},
+	})
 	require.NoError(t, err)
 	assert.False(t, called.IsError)
 	assert.Contains(t, called.Content[0].(*sdk.TextContent).Text, "stored")
@@ -70,11 +89,29 @@ func TestCatalogTools_Protocol(t *testing.T) {
 		name string
 		args map[string]any
 	}{
-		{"find_action", map[string]any{"bogus": true}},
-		{"do_action", map[string]any{"action": "nope"}},
-		{"do_action", map[string]any{"action": "things_read", "arguments": map[string]any{"id": 1, "bogus": true}}},
+		{
+			"find_action",
+			map[string]any{"bogus": true},
+		},
+		{
+			"do_action",
+			map[string]any{"action": "nope"},
+		},
+		{
+			"do_action",
+			map[string]any{
+				"action": "things_read",
+				"arguments": map[string]any{
+					"id":    1,
+					"bogus": true,
+				},
+			},
+		},
 	} {
-		result, err := cs.CallTool(ctx, &sdk.CallToolParams{Name: tc.name, Arguments: tc.args})
+		result, err := cs.CallTool(ctx, &sdk.CallToolParams{
+			Name:      tc.name,
+			Arguments: tc.args,
+		})
 		require.NoError(t, err)
 		assert.True(t, result.IsError)
 	}

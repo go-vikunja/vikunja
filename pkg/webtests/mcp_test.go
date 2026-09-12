@@ -76,7 +76,12 @@ func newMCPClient(t *testing.T, token string) *mcpClient {
 	t.Helper()
 	e, err := setupTestEnv()
 	require.NoError(t, err)
-	c := &mcpClient{t: t, e: e, token: token, nextID: 1}
+	c := &mcpClient{
+		t:      t,
+		e:      e,
+		token:  token,
+		nextID: 1,
+	}
 	rec := c.post(initializeBody)
 	require.Equal(t, http.StatusOK, rec.Code, "initialize: %s", rec.Body.String())
 	c.sessionID = rec.Header().Get("Mcp-Session-Id")
@@ -107,7 +112,10 @@ func (c *mcpClient) rpc(method string, params any) map[string]any {
 }
 func (c *mcpClient) callTool(name string, args map[string]any) map[string]any {
 	c.t.Helper()
-	resp := c.rpc("tools/call", map[string]any{"name": name, "arguments": args})
+	resp := c.rpc("tools/call", map[string]any{
+		"name":      name,
+		"arguments": args,
+	})
 	result, ok := resp["result"].(map[string]any)
 	require.True(c.t, ok, "missing result for %s: %v", name, resp)
 	return result
@@ -164,10 +172,45 @@ func TestMCP_Initialize(t *testing.T) {
 	assert.Equal(t, "vikunja", result["serverInfo"].(map[string]any)["name"])
 }
 func TestMCP_ToolsListMatchesScopes(t *testing.T) {
-	assert.Equal(t, map[string]bool{"find_action": true, "do_action": true}, newMCPClient(t, mcpOnlyToken).toolNames())
-	assert.Equal(t, map[string]bool{"find_action": true, "do_action": true, "projects_read": true, "projects_list": true}, newMCPClient(t, mcpProjectsReadToken).toolNames())
+	assert.Equal(t, map[string]bool{
+		"find_action": true,
+		"do_action":   true,
+	}, newMCPClient(t, mcpOnlyToken).toolNames())
+	assert.Equal(t, map[string]bool{
+		"find_action":   true,
+		"do_action":     true,
+		"projects_read": true,
+		"projects_list": true,
+	}, newMCPClient(t, mcpProjectsReadToken).toolNames())
 	full := newMCPClient(t, mcpFullToken).toolNames()
-	for _, name := range []string{"projects_list", "projects_read", "projects_create", "projects_update", "projects_delete", "tasks_list", "tasks_read", "tasks_create", "tasks_update", "tasks_delete", "labels_list", "labels_read", "labels_create", "labels_update", "labels_delete", "task_comments_list", "task_comments_read", "task_comments_create", "task_comments_update", "task_comments_delete", "task_assignees_list", "task_assignees_create", "task_assignees_delete", "users_search", "find_action", "do_action"} {
+	for _, name := range []string{
+		"projects_list",
+		"projects_read",
+		"projects_create",
+		"projects_update",
+		"projects_delete",
+		"tasks_list",
+		"tasks_read",
+		"tasks_create",
+		"tasks_update",
+		"tasks_delete",
+		"labels_list",
+		"labels_read",
+		"labels_create",
+		"labels_update",
+		"labels_delete",
+		"task_comments_list",
+		"task_comments_read",
+		"task_comments_create",
+		"task_comments_update",
+		"task_comments_delete",
+		"task_assignees_list",
+		"task_assignees_create",
+		"task_assignees_delete",
+		"users_search",
+		"find_action",
+		"do_action",
+	} {
 		assert.True(t, full[name], "missing %s", name)
 	}
 	assert.Len(t, full, 26)
@@ -175,9 +218,21 @@ func TestMCP_ToolsListMatchesScopes(t *testing.T) {
 }
 func TestMCP_SessionIDDoesNotCarryIdentity(t *testing.T) {
 	full := newMCPClient(t, mcpFullToken)
-	weak := &mcpClient{t: t, e: full.e, token: mcpOnlyToken, sessionID: full.sessionID, nextID: 50}
-	assert.Equal(t, map[string]bool{"find_action": true, "do_action": true}, weak.toolNames())
-	result := weak.callTool("do_action", map[string]any{"action": "projects_read", "arguments": map[string]any{"id": 1}})
+	weak := &mcpClient{
+		t:         t,
+		e:         full.e,
+		token:     mcpOnlyToken,
+		sessionID: full.sessionID,
+		nextID:    50,
+	}
+	assert.Equal(t, map[string]bool{
+		"find_action": true,
+		"do_action":   true,
+	}, weak.toolNames())
+	result := weak.callTool("do_action", map[string]any{
+		"action":    "projects_read",
+		"arguments": map[string]any{"id": 1},
+	})
 	assert.Equal(t, true, result["isError"])
 }
 func pingBatch(n int) string {

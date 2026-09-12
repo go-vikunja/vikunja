@@ -29,19 +29,53 @@ func TestExposure(t *testing.T) {
 		id   string
 		tier Tier
 	}{
-		{"tasks-create", TierTyped}, {"task-labels-create", TierCatalog},
+		{
+			"tasks-create",
+			TierTyped,
+		},
+		{
+			"task-labels-create",
+			TierCatalog,
+		},
 	} {
-		op := &huma.Operation{OperationID: tc.id, Method: http.MethodPost, RequestBody: &huma.RequestBody{Content: map[string]*huma.MediaType{"application/json": {Schema: &huma.Schema{Type: "object"}}}}}
+		op := &huma.Operation{
+			OperationID: tc.id,
+			Method:      http.MethodPost,
+			RequestBody: &huma.RequestBody{Content: map[string]*huma.MediaType{"application/json": {Schema: &huma.Schema{Type: "object"}}}},
+		}
 		tier, ok := exposure(tc.id, op)
 		assert.True(t, ok)
 		assert.Equal(t, tc.tier, tier)
 	}
-	for _, id := range []string{"tokens-create", "token-test", "auth-login", "user-show", "webhooks-list", "shares-read", "migration-csv-migrate", "task-attachments-download", "admin-users-list", "bots-create", "health", "info", "notifications-atom-feed"} {
-		_, ok := exposure(id, &huma.Operation{OperationID: id, Method: http.MethodGet})
+	for _, id := range []string{
+		"tokens-create",
+		"token-test",
+		"auth-login",
+		"user-show",
+		"webhooks-list",
+		"shares-read",
+		"migration-csv-migrate",
+		"task-attachments-download",
+		"admin-users-list",
+		"bots-create",
+		"health",
+		"info",
+		"notifications-atom-feed",
+	} {
+		_, ok := exposure(id, &huma.Operation{
+			OperationID: id,
+			Method:      http.MethodGet,
+		})
 		assert.False(t, ok, id)
 	}
-	for _, ct := range []string{"multipart/form-data", "application/merge-patch+json"} {
-		op := &huma.Operation{Method: http.MethodPatch, RequestBody: &huma.RequestBody{Content: map[string]*huma.MediaType{ct: {Schema: &huma.Schema{Type: "object"}}}}}
+	for _, ct := range []string{
+		"multipart/form-data",
+		"application/merge-patch+json",
+	} {
+		op := &huma.Operation{
+			Method:      http.MethodPatch,
+			RequestBody: &huma.RequestBody{Content: map[string]*huma.MediaType{ct: {Schema: &huma.Schema{Type: "object"}}}},
+		}
 		tier, ok := exposure("tasks-update", op)
 		assert.Equal(t, ct == "application/merge-patch+json", ok)
 		if ok {

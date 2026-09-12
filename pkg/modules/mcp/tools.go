@@ -65,18 +65,34 @@ type candidate struct {
 
 func candidates(item *huma.PathItem) []candidate {
 	var out []candidate
-	for _, op := range []*huma.Operation{item.Get, item.Post, item.Delete} {
+	for _, op := range []*huma.Operation{
+		item.Get,
+		item.Post,
+		item.Delete,
+	} {
 		if op != nil {
-			out = append(out, candidate{id: op.OperationID, op: op})
+			out = append(out, candidate{
+				id: op.OperationID,
+				op: op,
+			})
 		}
 	}
 	switch {
 	case item.Put != nil && item.Patch != nil:
-		out = append(out, candidate{id: item.Put.OperationID, op: item.Patch})
+		out = append(out, candidate{
+			id: item.Put.OperationID,
+			op: item.Patch,
+		})
 	case item.Put != nil:
-		out = append(out, candidate{id: item.Put.OperationID, op: item.Put})
+		out = append(out, candidate{
+			id: item.Put.OperationID,
+			op: item.Put,
+		})
 	case item.Patch != nil:
-		out = append(out, candidate{id: item.Patch.OperationID, op: item.Patch})
+		out = append(out, candidate{
+			id: item.Patch.OperationID,
+			op: item.Patch,
+		})
 	}
 	return out
 }
@@ -100,7 +116,15 @@ func buildTools(oapi *huma.OpenAPI, groupPrefix string) (map[string]*tool, []*to
 				return nil, nil, err
 			}
 			ct, _ := bodyMedia(c.op)
-			index[name] = &tool{name: name, op: c.op, echoPath: groupPrefix + echoPath(c.op.Path), tier: tier, spec: spec, contentType: ct, description: describe(c.op)}
+			index[name] = &tool{
+				name:        name,
+				op:          c.op,
+				echoPath:    groupPrefix + echoPath(c.op.Path),
+				tier:        tier,
+				spec:        spec,
+				contentType: ct,
+				description: describe(c.op),
+			}
 		}
 	}
 	order := make([]*tool, 0, len(index))

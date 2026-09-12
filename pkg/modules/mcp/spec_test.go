@@ -51,13 +51,20 @@ func specFor(t *testing.T, api huma.API, method, path string) *toolSpec {
 func TestBuildToolSpec_Create(t *testing.T) {
 	spec := specFor(t, newTestAPI(t), http.MethodPost, "/things")
 	props := spec.schema.Properties
-	for _, name := range []string{"title", "description", "reminders"} {
+	for _, name := range []string{
+		"title",
+		"description",
+		"reminders",
+	} {
 		assert.Contains(t, props, name)
 	}
 	assert.NotContains(t, props, "id")
 	assert.NotContains(t, props, "owner")
 	assert.Equal(t, []string{"title"}, spec.schema.Required)
-	assert.ElementsMatch(t, []string{"array", "null"}, props["reminders"].Types)
+	assert.ElementsMatch(t, []string{
+		"array",
+		"null",
+	}, props["reminders"].Types)
 	require.NotNil(t, props["reminders"].Items)
 	assert.Equal(t, "object", props["reminders"].Items.Type)
 	assert.Contains(t, props["reminders"].Items.Properties, "at")
@@ -68,7 +75,10 @@ func TestBuildToolSpec_Create(t *testing.T) {
 func TestBuildToolSpec_ListParams(t *testing.T) {
 	spec := specFor(t, newTestAPI(t), http.MethodGet, "/things")
 	assert.Equal(t, "query", spec.params["q"].In)
-	assert.ElementsMatch(t, []string{"array", "null"}, spec.schema.Properties["expand"].Types)
+	assert.ElementsMatch(t, []string{
+		"array",
+		"null",
+	}, spec.schema.Properties["expand"].Types)
 	assert.NotContains(t, spec.schema.Properties, "Authorization")
 	assert.False(t, spec.hasBody)
 }
@@ -81,7 +91,11 @@ func TestBuildToolSpec_Patch(t *testing.T) {
 }
 func TestBuildToolSpec_ParamBodyCollision(t *testing.T) {
 	_, api := humatest.New(t)
-	huma.Register(api, huma.Operation{OperationID: "clash", Method: http.MethodPost, Path: "/clash/{title}"}, func(_ context.Context, _ *struct {
+	huma.Register(api, huma.Operation{
+		OperationID: "clash",
+		Method:      http.MethodPost,
+		Path:        "/clash/{title}",
+	}, func(_ context.Context, _ *struct {
 		Title string `path:"title"`
 		Body  testThing
 	}) (*struct{}, error) {
@@ -96,7 +110,13 @@ func TestInit_BuildsToolIndex(t *testing.T) {
 	for _, tl := range snapshotTools() {
 		names = append(names, tl.name)
 	}
-	assert.ElementsMatch(t, []string{"things_list", "things_read", "things_create", "things_update", "things_delete"}, names)
+	assert.ElementsMatch(t, []string{
+		"things_list",
+		"things_read",
+		"things_create",
+		"things_update",
+		"things_delete",
+	}, names)
 	update, ok := findTool("things_update")
 	require.True(t, ok)
 	assert.Equal(t, http.MethodPatch, update.op.Method)
@@ -121,7 +141,11 @@ type recursiveInput struct {
 
 func TestBuildToolSpec_RecursiveSchemaIsSelfContained(t *testing.T) {
 	_, api := humatest.New(t)
-	huma.Register(api, huma.Operation{OperationID: "recursive-create", Method: http.MethodPost, Path: "/recursive"},
+	huma.Register(api, huma.Operation{
+		OperationID: "recursive-create",
+		Method:      http.MethodPost,
+		Path:        "/recursive",
+	},
 		func(_ context.Context, _ *struct{ Body recursiveInput }) (*struct{}, error) { return nil, nil })
 	before, err := json.Marshal(api.OpenAPI())
 	require.NoError(t, err)
@@ -138,7 +162,11 @@ func TestBuildToolSpec_TaskCreationRequiresTitle(t *testing.T) {
 	cfg := huma.DefaultConfig("test", "1")
 	cfg.FieldsOptionalByDefault = true
 	_, api := humatest.New(t, cfg)
-	huma.Register(api, huma.Operation{OperationID: "tasks-create", Method: http.MethodPost, Path: "/tasks"},
+	huma.Register(api, huma.Operation{
+		OperationID: "tasks-create",
+		Method:      http.MethodPost,
+		Path:        "/tasks",
+	},
 		func(_ context.Context, _ *struct{ Body models.Task }) (*struct{}, error) { return nil, nil })
 	spec := specFor(t, api, http.MethodPost, "/tasks")
 	assert.Equal(t, []string{"title"}, spec.schema.Required)

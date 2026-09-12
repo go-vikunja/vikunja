@@ -31,7 +31,10 @@ func rawToolHandler(name string) mcp.ToolHandler {
 		result, err := callTool(ctx, name, req.Params.Arguments)
 		if err != nil {
 			//nolint:nilerr // Domain errors use MCP tool results.
-			return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: err.Error()}}}, nil
+			return &mcp.CallToolResult{
+				IsError: true,
+				Content: []mcp.Content{&mcp.TextContent{Text: err.Error()}},
+			}, nil
 		}
 		body, err := json.Marshal(result)
 		if err != nil {
@@ -50,7 +53,11 @@ func installTools(srv *mcp.Server, token *models.APIToken) {
 		if t.tier != TierTyped || !t.authorized(token) {
 			continue
 		}
-		srv.AddTool(&mcp.Tool{Name: t.name, Description: t.description, InputSchema: t.spec.schema}, rawToolHandler(t.name))
+		srv.AddTool(&mcp.Tool{
+			Name:        t.name,
+			Description: t.description,
+			InputSchema: t.spec.schema,
+		}, rawToolHandler(t.name))
 	}
 	installCatalogTools(srv)
 }

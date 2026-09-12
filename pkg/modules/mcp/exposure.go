@@ -103,7 +103,10 @@ func bodyMedia(op *huma.Operation) (contentType string, schema *huma.Schema) {
 	if op.RequestBody == nil {
 		return "", nil
 	}
-	for _, ct := range []string{"application/json", "application/merge-patch+json"} {
+	for _, ct := range []string{
+		"application/json",
+		"application/merge-patch+json",
+	} {
 		if m := op.RequestBody.Content[ct]; m != nil && m.Schema != nil {
 			return ct, m.Schema
 		}

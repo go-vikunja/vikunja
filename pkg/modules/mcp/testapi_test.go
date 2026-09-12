@@ -60,7 +60,12 @@ func newTestAPI(t *testing.T) huma.API {
 	cfg := huma.DefaultConfig("test", "1")
 	cfg.FieldsOptionalByDefault = true
 	_, api := humatest.New(t, cfg)
-	huma.Register(api, huma.Operation{OperationID: "things-list", Method: http.MethodGet, Path: "/things", Summary: "List things"},
+	huma.Register(api, huma.Operation{
+		OperationID: "things-list",
+		Method:      http.MethodGet,
+		Path:        "/things",
+		Summary:     "List things",
+	},
 		func(_ context.Context, in *struct {
 			Q      string   `query:"q"`
 			Page   int      `query:"page" default:"1" minimum:"1"`
@@ -70,18 +75,37 @@ func newTestAPI(t *testing.T) huma.API {
 		}) (*echoBody, error) {
 			out := &echoBody{}
 			out.Body.Method, out.Body.Path, out.Body.Auth = http.MethodGet, "/things", in.Auth
-			out.Body.Query = map[string]string{"q": in.Q, "format": in.Format, "expand": strings.Join(in.Expand, "|")}
+			out.Body.Query = map[string]string{
+				"q":      in.Q,
+				"format": in.Format,
+				"expand": strings.Join(in.Expand, "|"),
+			}
 			return out, nil
 		})
-	huma.Register(api, huma.Operation{OperationID: "things-read", Method: http.MethodGet, Path: "/things/{id}"}, func(_ context.Context, in *struct {
+	huma.Register(api, huma.Operation{
+		OperationID: "things-read",
+		Method:      http.MethodGet,
+		Path:        "/things/{id}",
+	}, func(_ context.Context, in *struct {
 		ID int64 `path:"id"`
 	}) (*testThingBody, error) {
 		if in.ID == 404 {
 			return nil, huma.Error404NotFound("no such thing")
 		}
-		return &testThingBody{Body: &testThing{ID: in.ID, Title: "stored", Description: "keep me", Owner: &testOwner{ID: 1}}}, nil
+		return &testThingBody{
+			Body: &testThing{
+				ID:          in.ID,
+				Title:       "stored",
+				Description: "keep me",
+				Owner:       &testOwner{ID: 1},
+			},
+		}, nil
 	})
-	huma.Register(api, huma.Operation{OperationID: "things-create", Method: http.MethodPost, Path: "/things"}, func(_ context.Context, in *struct {
+	huma.Register(api, huma.Operation{
+		OperationID: "things-create",
+		Method:      http.MethodPost,
+		Path:        "/things",
+	}, func(_ context.Context, in *struct {
 		Body testThing
 		CT   string `header:"Content-Type"`
 	}) (*echoBody, error) {
@@ -90,7 +114,11 @@ func newTestAPI(t *testing.T) huma.API {
 		out.Body.Body = &in.Body
 		return out, nil
 	})
-	huma.Register(api, huma.Operation{OperationID: "things-update", Method: http.MethodPut, Path: "/things/{id}"}, func(_ context.Context, in *struct {
+	huma.Register(api, huma.Operation{
+		OperationID: "things-update",
+		Method:      http.MethodPut,
+		Path:        "/things/{id}",
+	}, func(_ context.Context, in *struct {
 		ID   int64 `path:"id"`
 		Body testThing
 		CT   string `header:"Content-Type"`
@@ -100,13 +128,25 @@ func newTestAPI(t *testing.T) huma.API {
 		out.Body.Body = &in.Body
 		return out, nil
 	})
-	huma.Register(api, huma.Operation{OperationID: "things-delete", Method: http.MethodDelete, Path: "/things/{id}"}, func(_ context.Context, _ *struct {
+	huma.Register(api, huma.Operation{
+		OperationID: "things-delete",
+		Method:      http.MethodDelete,
+		Path:        "/things/{id}",
+	}, func(_ context.Context, _ *struct {
 		ID int64 `path:"id"`
 	}) (*struct{}, error) {
 		return nil, nil
 	})
-	huma.Register(api, huma.Operation{OperationID: "tokens-create", Method: http.MethodPost, Path: "/tokens"}, func(_ context.Context, _ *struct{ Body testThing }) (*testThingBody, error) { return nil, nil })
-	huma.Register(api, huma.Operation{OperationID: "things-upload", Method: http.MethodPost, Path: "/things/{id}/file"}, func(_ context.Context, _ *struct {
+	huma.Register(api, huma.Operation{
+		OperationID: "tokens-create",
+		Method:      http.MethodPost,
+		Path:        "/tokens",
+	}, func(_ context.Context, _ *struct{ Body testThing }) (*testThingBody, error) { return nil, nil })
+	huma.Register(api, huma.Operation{
+		OperationID: "things-upload",
+		Method:      http.MethodPost,
+		Path:        "/things/{id}/file",
+	}, func(_ context.Context, _ *struct {
 		ID      int64 `path:"id"`
 		RawBody huma.MultipartFormFiles[struct{}]
 	}) (*struct{}, error) {

@@ -39,7 +39,11 @@ func TestMCP_Catalog_FindActionFollowsScopes(t *testing.T) {
 	}
 	assert.Contains(t, names, "task_labels_create")
 	assert.Contains(t, names, "project_views_list")
-	for _, name := range []string{"teams_members_add", "tasks_create", "tokens_create"} {
+	for _, name := range []string{
+		"teams_members_add",
+		"tasks_create",
+		"tokens_create",
+	} {
 		assert.NotContains(t, names, name)
 	}
 	assert.Empty(t, findActions(t, newMCPClient(t, mcpOnlyToken), map[string]any{}))
@@ -57,21 +61,49 @@ func TestMCP_Catalog_FindActionReturnsSchemas(t *testing.T) {
 }
 func TestMCP_Catalog_DoActionRoundTrip(t *testing.T) {
 	c := newMCPClient(t, mcpFullToken)
-	res := c.callTool("do_action", map[string]any{"action": "task_labels_create", "arguments": map[string]any{"projecttask": 1, "label_id": 7}})
+	res := c.callTool("do_action", map[string]any{
+		"action": "task_labels_create",
+		"arguments": map[string]any{
+			"projecttask": 1,
+			"label_id":    7,
+		},
+	})
 	require.NotContains(t, res, "isError", toolResultText(t, res))
 	var env map[string]any
-	toolResultJSON(t, c.callTool("do_action", map[string]any{"action": "task_labels_list", "arguments": map[string]any{"projecttask": 1}}), &env)
+	toolResultJSON(t, c.callTool("do_action", map[string]any{
+		"action":    "task_labels_list",
+		"arguments": map[string]any{"projecttask": 1},
+	}), &env)
 	assert.NotEmpty(t, env["items"])
-	res = c.callTool("do_action", map[string]any{"action": "task_labels_delete", "arguments": map[string]any{"projecttask": 1, "label": 7}})
+	res = c.callTool("do_action", map[string]any{
+		"action": "task_labels_delete",
+		"arguments": map[string]any{
+			"projecttask": 1,
+			"label":       7,
+		},
+	})
 	require.NotContains(t, res, "isError", toolResultText(t, res))
 }
 func TestMCP_Catalog_DoActionCannotEscalate(t *testing.T) {
 	c := newMCPClient(t, mcpFullToken)
-	for _, action := range []string{"teams_members_add", "tokens_create", "nope"} {
-		res := c.callTool("do_action", map[string]any{"action": action, "arguments": map[string]any{}})
+	for _, action := range []string{
+		"teams_members_add",
+		"tokens_create",
+		"nope",
+	} {
+		res := c.callTool("do_action", map[string]any{
+			"action":    action,
+			"arguments": map[string]any{},
+		})
 		assert.Equal(t, true, res["isError"], action)
 	}
-	res := c.callTool("do_action", map[string]any{"action": "task_labels_create", "arguments": map[string]any{"projecttask": 1, "bogus": 1}})
+	res := c.callTool("do_action", map[string]any{
+		"action": "task_labels_create",
+		"arguments": map[string]any{
+			"projecttask": 1,
+			"bogus":       1,
+		},
+	})
 	assert.Equal(t, true, res["isError"])
 	assert.Contains(t, toolResultText(t, res), "bogus")
 }

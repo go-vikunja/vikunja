@@ -91,12 +91,22 @@ func buildToolSpec(oapi *huma.OpenAPI, op *huma.Operation) (*toolSpec, error) {
 	}
 	required = slices.DeleteFunc(required, func(name string) bool { return props[name] == nil })
 	sort.Strings(required)
-	schema := &jsonschema.Schema{Type: "object", Properties: props, Required: slices.Compact(required), AdditionalProperties: falseSchema()}
+	schema := &jsonschema.Schema{
+		Type:                 "object",
+		Properties:           props,
+		Required:             slices.Compact(required),
+		AdditionalProperties: falseSchema(),
+	}
 	resolved, err := schema.Resolve(nil)
 	if err != nil {
 		return nil, fmt.Errorf("mcp: resolve schema for %s: %w", op.OperationID, err)
 	}
-	return &toolSpec{schema: schema, resolved: resolved, params: params, hasBody: hasBody}, nil
+	return &toolSpec{
+		schema:   schema,
+		resolved: resolved,
+		params:   params,
+		hasBody:  hasBody,
+	}, nil
 }
 func inlineRefs(oapi *huma.OpenAPI, s *huma.Schema, depth int) *huma.Schema {
 	if s == nil {
@@ -127,7 +137,11 @@ func inlineRefs(oapi *huma.OpenAPI, s *huma.Schema, depth int) *huma.Schema {
 	if ap, ok := s.AdditionalProperties.(*huma.Schema); ok {
 		s.AdditionalProperties = inlineRefs(oapi, ap, depth+1)
 	}
-	for _, list := range []*[]*huma.Schema{&s.AnyOf, &s.OneOf, &s.AllOf} {
+	for _, list := range []*[]*huma.Schema{
+		&s.AnyOf,
+		&s.OneOf,
+		&s.AllOf,
+	} {
 		if *list == nil {
 			continue
 		}
@@ -197,5 +211,8 @@ func mustResolveSpec(name string, schema *jsonschema.Schema) *toolSpec {
 	if err != nil {
 		panic(fmt.Sprintf("mcp: resolve %s schema: %v", name, err))
 	}
-	return &toolSpec{schema: schema, resolved: resolved}
+	return &toolSpec{
+		schema:   schema,
+		resolved: resolved,
+	}
 }

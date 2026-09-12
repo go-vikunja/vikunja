@@ -117,7 +117,12 @@ func (t *tool) newRequest(ctx context.Context, caller *http.Request, args map[st
 		req.Header.Set("Content-Type", t.contentType)
 	}
 	// Preserve the client identity used by the rate limiter and access logs.
-	for _, h := range []string{"X-Forwarded-For", "X-Real-Ip", "Accept-Language", "User-Agent"} {
+	for _, h := range []string{
+		"X-Forwarded-For",
+		"X-Real-Ip",
+		"Accept-Language",
+		"User-Agent",
+	} {
 		if v := caller.Header.Get(h); v != "" {
 			req.Header.Set(h, v)
 		}
@@ -169,7 +174,10 @@ func queryValues(p *huma.Param, raw json.RawMessage) ([]string, error) {
 }
 func parseResponse(rec *httptest.ResponseRecorder) (any, error) {
 	if rec.Code >= 300 {
-		return nil, &apiError{status: rec.Code, text: errorText(rec)}
+		return nil, &apiError{
+			status: rec.Code,
+			text:   errorText(rec),
+		}
 	}
 	if rec.Body.Len() == 0 {
 		return map[string]any{"ok": true}, nil
