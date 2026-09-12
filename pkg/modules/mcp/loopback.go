@@ -109,7 +109,8 @@ func (t *tool) newRequest(ctx context.Context, caller *http.Request, args map[st
 	if err != nil {
 		return nil, err
 	}
-	if auth := apiTokenAuthorization(caller); auth != "" {
+	// The transport authorised one of possibly several Authorization values; the loopback must not authenticate as a different one.
+	if auth, ok := models.APITokenAuthorization(caller.Header); ok {
 		req.Header.Set("Authorization", auth)
 	}
 	req.Header.Set("Accept", "application/json")
@@ -135,15 +136,6 @@ func (t *tool) newRequest(ctx context.Context, caller *http.Request, args map[st
 	return req, nil
 }
 
-// The transport authorised one of possibly several Authorization values; the loopback must not authenticate as a different one.
-func apiTokenAuthorization(caller *http.Request) string {
-	for _, v := range caller.Header.Values("Authorization") {
-		if strings.HasPrefix(v, "Bearer "+models.APITokenPrefix) {
-			return v
-		}
-	}
-	return ""
-}
 func isJSONNull(raw json.RawMessage) bool {
 	return bytes.Equal(bytes.TrimSpace(raw), []byte("null"))
 }

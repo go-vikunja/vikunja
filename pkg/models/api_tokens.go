@@ -21,7 +21,9 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/hex"
+	"net/http"
 	"slices"
+	"strings"
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
@@ -68,6 +70,16 @@ type APIToken struct {
 }
 
 const APITokenPrefix = `tk_`
+
+// APITokenAuthorization returns the first Authorization value carrying an API token.
+func APITokenAuthorization(h http.Header) (string, bool) {
+	for _, v := range h.Values("Authorization") {
+		if strings.HasPrefix(v, "Bearer "+APITokenPrefix) {
+			return v, true
+		}
+	}
+	return "", false
+}
 
 func (*APIToken) TableName() string {
 	return "api_tokens"

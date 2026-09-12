@@ -48,19 +48,12 @@ func SetupTokenMiddleware() echo.MiddlewareFunc {
 				return true
 			}
 
-			authHeader := c.Request().Header.Values("Authorization")
-			if len(authHeader) == 0 {
-				return false // let the jwt middleware handle invalid headers
+			authHeader, ok := models.APITokenAuthorization(c.Request().Header)
+			if !ok {
+				return false // let the jwt middleware handle other or invalid headers
 			}
 
-			for _, s := range authHeader {
-				if strings.HasPrefix(s, "Bearer "+models.APITokenPrefix) {
-					err := checkAPITokenAndPutItInContext(s, c, shouldSkipRouteCheck(c))
-					return err == nil
-				}
-			}
-
-			return false
+			return checkAPITokenAndPutItInContext(authHeader, c, shouldSkipRouteCheck(c)) == nil
 		},
 		ErrorHandler: func(c *echo.Context, err error) error {
 			if err != nil {
