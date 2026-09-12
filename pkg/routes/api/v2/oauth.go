@@ -21,6 +21,7 @@ import (
 	"net/http"
 
 	"code.vikunja.io/api/pkg/modules/auth/oauth2server"
+	"code.vikunja.io/api/pkg/modules/humabridge"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -82,7 +83,7 @@ func oauthToken(ctx context.Context, in *struct {
 }
 
 func oauthAuthorize(ctx context.Context, in *struct{ Body oauth2server.AuthorizeRequest }) (*oauthAuthorizeBody, error) {
-	if ec := echoContextFromCtx(ctx); ec != nil && (*ec).Get("api_token") != nil {
+	if ec := humabridge.EchoContextFrom(ctx); ec != nil && (*ec).Get("api_token") != nil {
 		return nil, huma.Error403Forbidden("API tokens cannot be used to authorize OAuth clients")
 	}
 
@@ -107,7 +108,7 @@ func oauthAuthorize(ctx context.Context, in *struct{ Body oauth2server.Authorize
 // session they create, mirroring v1. Both fall back to "" when the context is
 // unavailable.
 func requestClientInfo(ctx context.Context) (deviceInfo, ipAddress string) {
-	ec := echoContextFromCtx(ctx)
+	ec := humabridge.EchoContextFrom(ctx)
 	if ec == nil {
 		return "", ""
 	}

@@ -48,7 +48,7 @@ const (
 )
 
 // Register must follow apiv2.RegisterAll so tools pick up the AutoPatch operations.
-// allowOrigin (nil trusts none) covers browser origins the stdlib check can't: it rejects the wildcard ports Vikunja's CORS origins use.
+// allowOrigin (nil trusts none) covers what the stdlib check can't: it rejects the wildcard ports Vikunja's CORS origins carry.
 func Register(api huma.API, group *echo.Group, groupPrefix string, allowOrigin func(origin string) bool) {
 	initTools(api, groupPrefix)
 	streamableHandler = newStreamableHandler()
@@ -67,8 +67,7 @@ func newServerForRequest(req *http.Request) *mcp.Server {
 }
 
 func echoContextFrom(ctx context.Context) *echo.Context {
-	ec, _ := ctx.Value(humabridge.EchoContextKey).(*echo.Context)
-	return ec
+	return humabridge.EchoContextFrom(ctx)
 }
 func tokenFrom(ec *echo.Context) *models.APIToken {
 	if ec == nil {
