@@ -49,6 +49,8 @@ func NewCanonicalAPI() (huma.API, error) {
 	e := echo.New()
 	api := NewAPI(e, e.Group(GroupPrefix))
 	RegisterAll(api)
+	// The live handler is wired to the MCP module in routes.go; the document only needs the schema.
+	RegisterMCPInfo(api, func() ConnectionSettings { return ConnectionSettings{} })
 	document := api.OpenAPI()
 	document.Servers = []*huma.Server{{URL: GroupPrefix}}
 
