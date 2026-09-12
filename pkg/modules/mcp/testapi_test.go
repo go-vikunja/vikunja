@@ -92,6 +92,9 @@ func newTestAPI(t *testing.T) huma.API {
 		if in.ID == 404 {
 			return nil, huma.Error404NotFound("no such thing")
 		}
+		if in.ID == 401 {
+			return nil, huma.Error401Unauthorized("Unauthorized")
+		}
 		return &testThingBody{
 			Body: &testThing{
 				ID:          in.ID,

@@ -218,6 +218,10 @@ func parseResponse(rec *httptest.ResponseRecorder) (any, error) {
 const maxErrorTextRunes = 2000
 
 func errorText(rec *httptest.ResponseRecorder) string {
+	// The transport already authenticated the token, so a loopback 401 is a missing scope.
+	if rec.Code == http.StatusUnauthorized {
+		return "401 Unauthorized: the API token lacks a scope required by this call (check route and expand scopes)"
+	}
 	var problem struct {
 		Title  string `json:"title"`
 		Detail string `json:"detail"`
