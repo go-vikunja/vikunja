@@ -1449,6 +1449,13 @@ h2 .button {
 	}
 }
 
+// keep the title clear of the modal's fixed close button
+.is-modal .heading {
+	@media screen and (min-width: $tablet) and (max-width: $desktop) {
+		padding-inline-end: 3.5rem;
+	}
+}
+
 .is-modal .action-buttons {
 	// we need same top margin for the modal close button 
 	@media screen and (min-width: $tablet) {
