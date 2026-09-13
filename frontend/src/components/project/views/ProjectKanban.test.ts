@@ -1,6 +1,7 @@
 import {shallowMount} from '@vue/test-utils'
 import {describe, expect, it, vi, beforeEach} from 'vitest'
 import draggable from 'zhyswan-vuedraggable'
+import {QueryClient, VueQueryPlugin} from '@tanstack/vue-query'
 
 const updateBucket = vi.fn()
 
@@ -78,6 +79,7 @@ function mountKanban() {
 			viewId: 10,
 		},
 		global: {
+			plugins: [[VueQueryPlugin, {queryClient: new QueryClient()}]],
 			mocks: {$t: (key: string) => key},
 			stubs: {
 				ProjectWrapper: {template: '<div><slot name="default"/></div>'},

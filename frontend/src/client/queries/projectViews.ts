@@ -1,10 +1,9 @@
-import {queryOptions} from '@tanstack/vue-query'
+import {mutationOptions, queryOptions, useMutation, type QueryClient} from '@tanstack/vue-query'
 
 import {
 	projectViewsCreate,
 	projectViewsDelete,
 	projectViewsList,
-	projectViewsRead,
 	projectViewsUpdate,
 } from '@/client/generated'
 import type {
@@ -13,8 +12,10 @@ import type {
 	ProjectViewWritable,
 } from '@/client/generated'
 import {queryClient} from '@/client/queryClient'
-import {assertClientRequestContext, captureClientRequestContext} from '@/client/requestContext'
-import {cancelProjectQueries, updateProjectInCache} from './projects'
+import {assertClientRequestContext, captureClientRequestContext, isClientRequestContextCurrent} from '@/client/requestContext'
+import {mapProjectNavigationItem, projectKeys, type ProjectListResult, type ProjectResponse} from './projects'
+import {i18n} from '@/i18n'
+import {error, success} from '@/message'
 
 type ProjectViewListArgs = Pick<NonNullable<ProjectViewsListData['query']>, 'q'>
 
@@ -44,11 +45,6 @@ export const projectViewKeys = {
 	list: (projectId: number, args: ProjectViewListArgs = {}) => [
 		...projectViewKeys.lists(projectId),
 		args,
-	] as const,
-	details: (projectId: number) => [...projectViewKeys.all, 'detail', projectId] as const,
-	detail: (projectId: number, viewId: number) => [
-		...projectViewKeys.details(projectId),
-		viewId,
 	] as const,
 }
 
@@ -99,14 +95,8 @@ export function projectViewsQuery(projectId: number, args: ProjectViewListArgs =
 	})
 }
 
-export function projectViewQuery(projectId: number, viewId: number) {
-	return queryOptions({
-		queryKey: projectViewKeys.detail(projectId, viewId),
-		queryFn: async () => {
-			const {data} = await projectViewsRead({path: {project: projectId, view: viewId}})
-			return data
-		},
-	})
+export function refreshProjectViews(projectId: number, args: ProjectViewListArgs = {}) {
+	return queryClient.fetchQuery({...projectViewsQuery(projectId, args), staleTime: 0})
 }
 
 function replaceView(views: readonly ProjectView[] | null | undefined, view: ProjectView): ProjectView[] {
@@ -116,79 +106,170 @@ function replaceView(views: readonly ProjectView[] | null | undefined, view: Pro
 	])
 }
 
-function setProjectViewInCache(projectId: number, view: ProjectView) {
-	queryClient.setQueryData<ProjectView[]>(
+function setProjectViewInCache(client: QueryClient, projectId: number, view: ProjectView) {
+	client.setQueryData<ProjectView[]>(
 		projectViewKeys.list(projectId),
 		current => current ? replaceView(current, view) : current,
 	)
-	if (typeof view.id !== 'undefined') {
-		queryClient.setQueryData(projectViewKeys.detail(projectId, view.id), view)
-	}
-	updateProjectInCache(projectId, project => ({
-		...project,
-		views: replaceView(project.views, view),
-	}))
+	updateEmbeddedViews(client, projectId, views => replaceView(views, view))
 }
 
-export async function createProjectView({projectId, view}: CreateProjectViewInput): Promise<ProjectView> {
-	const context = captureClientRequestContext()
-	await Promise.all([
-		queryClient.cancelQueries({queryKey: projectViewKeys.lists(projectId)}),
-		cancelProjectQueries(projectId),
-	])
-	assertClientRequestContext(context)
-	const {data} = await projectViewsCreate({path: {project: projectId}, body: view})
-	assertClientRequestContext(context)
-	setProjectViewInCache(projectId, data)
-	await queryClient.invalidateQueries({queryKey: projectViewKeys.lists(projectId)})
-	assertClientRequestContext(context)
-	return data
-}
-
-export async function updateProjectView({
-	projectId,
-	viewId,
-	view,
-}: UpdateProjectViewInput): Promise<ProjectView> {
-	const context = captureClientRequestContext()
-	await Promise.all([
-		queryClient.cancelQueries({queryKey: projectViewKeys.lists(projectId)}),
-		queryClient.cancelQueries({queryKey: projectViewKeys.detail(projectId, viewId)}),
-		cancelProjectQueries(projectId),
-	])
-	assertClientRequestContext(context)
-	const {data} = await projectViewsUpdate({
-		path: {project: projectId, view: viewId},
-		body: view,
-	})
-	assertClientRequestContext(context)
-	setProjectViewInCache(projectId, data)
-	await queryClient.invalidateQueries({queryKey: projectViewKeys.lists(projectId)})
-	assertClientRequestContext(context)
-	return data
-}
-
-export async function deleteProjectView({projectId, viewId}: DeleteProjectViewInput): Promise<void> {
-	const context = captureClientRequestContext()
-	await Promise.all([
-		queryClient.cancelQueries({queryKey: projectViewKeys.lists(projectId)}),
-		queryClient.cancelQueries({queryKey: projectViewKeys.detail(projectId, viewId)}),
-		cancelProjectQueries(projectId),
-	])
-	assertClientRequestContext(context)
-	await projectViewsDelete({path: {project: projectId, view: viewId}})
-	assertClientRequestContext(context)
-	queryClient.setQueryData<ProjectView[]>(
-		projectViewKeys.list(projectId),
-		current => current
-			? sortProjectViewsByPosition(current.filter(view => view.id !== viewId))
-			: current,
+function updateEmbeddedViews(client: QueryClient, projectId: number, update: (views: ProjectView[]) => ProjectView[]) {
+	const updateProject = (project: ProjectResponse) => ({...project, views: update(project.views)})
+	client.setQueriesData<ProjectListResult>({queryKey: projectKeys.lists()}, current =>
+		current ? mapProjectNavigationItem(current, projectId, updateProject) : current,
 	)
-	queryClient.removeQueries({queryKey: projectViewKeys.detail(projectId, viewId)})
-	updateProjectInCache(projectId, project => ({
-		...project,
-		views: sortProjectViewsByPosition((project.views ?? []).filter(view => view.id !== viewId)),
-	}))
-	await queryClient.invalidateQueries({queryKey: projectViewKeys.lists(projectId)})
-	assertClientRequestContext(context)
+	client.setQueriesData<ProjectResponse>({queryKey: projectKeys.detailRoot(projectId)}, current =>
+		current ? updateProject(current) : current,
+	)
+}
+
+async function snapshotProjectViews(client: QueryClient, projectId: number) {
+	const request = captureClientRequestContext()
+	await Promise.all([
+		client.cancelQueries({queryKey: projectViewKeys.lists(projectId)}),
+		client.cancelQueries({queryKey: projectKeys.lists()}),
+		client.cancelQueries({queryKey: projectKeys.detailRoot(projectId)}),
+	])
+	assertClientRequestContext(request)
+	return {
+		request,
+		previous: [
+			...client.getQueriesData<ProjectView[]>({queryKey: projectViewKeys.lists(projectId)}),
+			...client.getQueriesData<ProjectListResult>({queryKey: projectKeys.lists()}),
+			...client.getQueriesData<ProjectResponse>({queryKey: projectKeys.detailRoot(projectId)}),
+		],
+	}
+}
+
+type ViewSnapshot = Awaited<ReturnType<typeof snapshotProjectViews>>
+type ShouldNotify = (input: {projectId: number}) => boolean
+
+function restoreProjectViews(client: QueryClient, snapshot: ViewSnapshot | undefined) {
+	if (!snapshot || !isClientRequestContextCurrent(snapshot.request)) {
+		return
+	}
+	for (const [key, previous] of snapshot.previous) {
+		if (previous) {
+			client.setQueryData(key, previous)
+		}
+	}
+}
+
+function settledProjectViews() {
+	return async (
+		_data: unknown,
+		_error: unknown,
+		{projectId}: {projectId: number},
+		context: {request: ReturnType<typeof captureClientRequestContext>} | undefined,
+		{client}: {client: QueryClient},
+	) => {
+		if (context && isClientRequestContextCurrent(context.request)) {
+			await Promise.all([
+				client.invalidateQueries({queryKey: projectViewKeys.lists(projectId)}),
+				client.invalidateQueries({queryKey: projectKeys.lists()}),
+				client.invalidateQueries({queryKey: projectKeys.detailRoot(projectId)}),
+			])
+			assertClientRequestContext(context.request)
+		}
+	}
+}
+
+export function createProjectViewMutationOptions(shouldNotify: ShouldNotify = () => true) {
+	return mutationOptions({
+		onMutate: () => ({request: captureClientRequestContext()}),
+		mutationFn: async ({projectId, view}: CreateProjectViewInput) => {
+			const request = captureClientRequestContext()
+			const {data} = await projectViewsCreate({path: {project: projectId}, body: view})
+			assertClientRequestContext(request)
+			return data
+		},
+		onSuccess: (created, input, context, {client}) => {
+			assertClientRequestContext(context.request)
+			setProjectViewInCache(client, input.projectId, created)
+			if (shouldNotify(input)) {
+				success({message: i18n.global.t('project.views.createSuccess')})
+			}
+		},
+		onError: (cause, input, context) => {
+			if (context && isClientRequestContextCurrent(context.request) && shouldNotify(input)) {
+				error(cause)
+			}
+		},
+		onSettled: settledProjectViews(),
+	})
+}
+
+export function updateProjectViewMutationOptions(successMessage?: string, shouldNotify: ShouldNotify = () => true) {
+	return mutationOptions({
+		mutationFn: async ({projectId, viewId, view}: UpdateProjectViewInput) => {
+			const request = captureClientRequestContext()
+			const {data} = await projectViewsUpdate({path: {project: projectId, view: viewId}, body: view})
+			assertClientRequestContext(request)
+			return data
+		},
+		onMutate: async ({projectId, viewId, view}, {client}) => {
+			const snapshot = await snapshotProjectViews(client, projectId)
+			const update = (views: ProjectView[]) => sortProjectViewsByPosition(views.map(existing =>
+				existing.id === viewId ? {...existing, ...view} : existing,
+			))
+			client.setQueriesData<ProjectView[]>({queryKey: projectViewKeys.lists(projectId)}, current =>
+				current ? update(current) : current,
+			)
+			updateEmbeddedViews(client, projectId, update)
+			return snapshot
+		},
+		onError: (cause, input, context, {client}) => {
+			restoreProjectViews(client, context)
+			if (context && isClientRequestContextCurrent(context.request) && shouldNotify(input)) {
+				error(cause)
+			}
+		},
+		onSuccess: (updated, input, context, {client}) => {
+			assertClientRequestContext(context.request)
+			setProjectViewInCache(client, input.projectId, updated)
+			if (shouldNotify(input)) {
+				success({message: successMessage ?? i18n.global.t('project.views.updateSuccess')})
+			}
+		},
+		onSettled: settledProjectViews(),
+	})
+}
+
+export function deleteProjectViewMutationOptions(shouldNotify: ShouldNotify = () => true) {
+	return mutationOptions({
+		mutationFn: async ({projectId, viewId}: DeleteProjectViewInput) => {
+			const request = captureClientRequestContext()
+			await projectViewsDelete({path: {project: projectId, view: viewId}})
+			assertClientRequestContext(request)
+		},
+		onMutate: async ({projectId, viewId}, {client}) => {
+			const snapshot = await snapshotProjectViews(client, projectId)
+			const remove = (views: ProjectView[]) => sortProjectViewsByPosition(views.filter(view => view.id !== viewId))
+			client.setQueriesData<ProjectView[]>({queryKey: projectViewKeys.lists(projectId)}, current =>
+				current ? remove(current) : current,
+			)
+			updateEmbeddedViews(client, projectId, remove)
+			return snapshot
+		},
+		onError: (cause, input, context, {client}) => {
+			restoreProjectViews(client, context)
+			if (context && isClientRequestContextCurrent(context.request) && shouldNotify(input)) {
+				error(cause)
+			}
+		},
+		onSettled: settledProjectViews(),
+	})
+}
+
+export function useCreateProjectViewMutation(shouldNotify?: ShouldNotify) {
+	return useMutation(createProjectViewMutationOptions(shouldNotify))
+}
+
+export function useUpdateProjectViewMutation(successMessage?: string, shouldNotify?: ShouldNotify) {
+	return useMutation(updateProjectViewMutationOptions(successMessage, shouldNotify))
+}
+
+export function useDeleteProjectViewMutation(shouldNotify?: ShouldNotify) {
+	return useMutation(deleteProjectViewMutationOptions(shouldNotify))
 }

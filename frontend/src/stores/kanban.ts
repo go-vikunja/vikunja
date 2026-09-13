@@ -14,8 +14,8 @@ import type {IBucket} from '@/modelTypes/IBucket'
 import {useAuthStore} from '@/stores/auth'
 import type {ProjectView} from '@/client/generated'
 import {useBaseStore} from '@/stores/base'
-import {useCurrentProject} from '@/composables/useCurrentProject'
-import {ensureProjects, refreshProject, refreshProjects} from '@/client/queries/projects'
+import {ensureProjects, getCachedProject, refreshProject, refreshProjects} from '@/client/queries/projects'
+import {refreshProjectViews} from '@/client/queries/projectViews'
 
 const TASKS_PER_BUCKET = 25
 
@@ -39,7 +39,6 @@ function getTaskIndicesById(buckets: IBucket[], taskId: ITask['id']) {
 export const useKanbanStore = defineStore('kanban', () => {
 	const authStore = useAuthStore()
 	const baseStore = useBaseStore()
-	const {currentProject} = useCurrentProject()
 
 	const buckets = ref<IBucket[]>([])
 	const projectId = ref(0)
@@ -162,7 +161,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 		if (bucketIndex === null) return
 		const currentTaskBucket = buckets.value[bucketIndex]
 		
-		const currentView = currentProject.value?.views.find(view => view.id === baseStore.currentProjectViewId)
+		const currentView = getCachedProject(baseStore.currentProjectId)?.views.find(view => view.id === baseStore.currentProjectViewId)
 		if(typeof currentView === 'undefined') return
 		const doneBucketId = currentView.done_bucket_id ?? 0
 		
@@ -353,7 +352,11 @@ export const useKanbanStore = defineStore('kanban', () => {
 			removeBucket(bucket)
 
 			if (view && (view.default_bucket_id === bucket.id || view.done_bucket_id === bucket.id)) {
-				await Promise.all([refreshProject(bucket.projectId), refreshProjects()])
+				await Promise.all([
+					refreshProject(bucket.projectId),
+					refreshProjects(),
+					refreshProjectViews(bucket.projectId),
+				])
 			}
 
 			// We reload all buckets because tasks are being moved from the deleted bucket

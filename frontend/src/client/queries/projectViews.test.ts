@@ -1,19 +1,16 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest'
+import {QueryClient, type MutationOptions} from '@tanstack/vue-query'
 
 import {queryClient} from '@/client/queryClient'
-import type {Project, ProjectView} from '@/client/generated'
+import type {ProjectView} from '@/client/generated'
+import {normalizeProject, projectKeys, type ProjectListResult, type ProjectResponse} from './projects'
+import {error, success} from '@/message'
 
 const sdk = vi.hoisted(() => ({
 	projectViewsList: vi.fn(),
-	projectViewsRead: vi.fn(),
 	projectViewsCreate: vi.fn(),
 	projectViewsUpdate: vi.fn(),
 	projectViewsDelete: vi.fn(),
-}))
-
-const projectCache = vi.hoisted(() => ({
-	cancelProjectQueries: vi.fn(),
-	updateProjectInCache: vi.fn(),
 }))
 
 const requestContext = vi.hoisted(() => ({
@@ -23,7 +20,7 @@ const requestContext = vi.hoisted(() => ({
 }))
 
 vi.mock('@/client/generated', () => sdk)
-vi.mock('./projects', () => projectCache)
+vi.mock('@/message', () => ({error: vi.fn(), success: vi.fn()}))
 vi.mock('@/helpers/auth', () => ({
 	getAuthSessionEpoch: () => requestContext.sessionEpoch,
 	getToken: () => null,
@@ -34,16 +31,30 @@ vi.mock('@/helpers/fetcher', () => ({
 }))
 
 import {
-	createProjectView,
+	createProjectViewMutationOptions,
 	createProjectViewDraft,
 	createProjectViewUpdate,
-	deleteProjectView,
+	deleteProjectViewMutationOptions,
 	projectViewKeys,
-	projectViewQuery,
 	projectViewsQuery,
 	sortProjectViewsByPosition,
-	updateProjectView,
+	updateProjectViewMutationOptions,
+	type CreateProjectViewInput,
+	type UpdateProjectViewInput,
+	type DeleteProjectViewInput,
 } from './projectViews'
+
+function execute<TData, TVariables, TContext>(
+	options: MutationOptions<TData, Error, TVariables, TContext>,
+	variables: TVariables,
+	client = queryClient,
+) {
+	return client.getMutationCache().build(client, options).execute(variables)
+}
+
+const createProjectView = (input: CreateProjectViewInput) => execute(createProjectViewMutationOptions(), input)
+const updateProjectView = (input: UpdateProjectViewInput) => execute(updateProjectViewMutationOptions(), input)
+const deleteProjectView = (input: DeleteProjectViewInput) => execute(deleteProjectViewMutationOptions(), input)
 
 const views: ProjectView[] = [
 	{id: 3, project_id: 7, title: 'Table', view_kind: 'table', position: 30},
@@ -51,11 +62,8 @@ const views: ProjectView[] = [
 	{id: 2, project_id: 7, title: 'Board', view_kind: 'kanban', position: 20},
 ]
 
-function applyProjectUpdate(project: Project): Project {
-	const calls = projectCache.updateProjectInCache.mock.calls
-	const updater = calls[calls.length - 1]?.[1]
-	expect(updater).toEqual(expect.any(Function))
-	return updater(project)
+function embeddedViews(client = queryClient) {
+	return client.getQueryData<ProjectListResult>(projectKeys.list())?.projects[0].views
 }
 
 beforeEach(() => {
@@ -75,11 +83,6 @@ describe('project view queries', () => {
 			.not.toEqual(projectViewsQuery(7, {q: 'board'}).queryKey)
 		expect(projectViewsQuery(7, {q: 'list'}).queryKey)
 			.not.toEqual(projectViewsQuery(7, {q: 'board'}).queryKey)
-	})
-
-	it('keys details by both project and view', () => {
-		expect(projectViewQuery(8, 2).queryKey).not.toEqual(projectViewQuery(7, 2).queryKey)
-		expect(projectViewQuery(7, 3).queryKey).not.toEqual(projectViewQuery(7, 2).queryKey)
 	})
 
 	it('loads the non-paginated view response exactly once', async () => {
@@ -174,6 +177,12 @@ describe('project view cache reconciliation', () => {
 		vi.clearAllMocks()
 		queryClient.setQueryData(listKey, views)
 		queryClient.setQueryData(projectViewKeys.list(7, {q: 'board'}), [views[2]])
+		queryClient.setQueryData<ProjectListResult>(projectKeys.list(), {
+			projects: [normalizeProject({id: 7, title: 'Project', max_permission: 2, views})],
+			favoriteProject: null,
+			savedFilterProjects: [],
+		})
+		queryClient.setQueryData(projectKeys.detail(7), normalizeProject({id: 7, title: 'Project', views}))
 	})
 
 	describe('after the identity changes', () => {
@@ -189,15 +198,15 @@ describe('project view cache reconciliation', () => {
 			queryClient.clear()
 			const identityBViews = views.map(view => ({...view, title: `Identity B ${view.title}`}))
 			queryClient.setQueryData(listKey, identityBViews)
-			queryClient.setQueryData(projectViewKeys.detail(7, 2), identityBViews[2])
+			queryClient.setQueryData(projectKeys.detail(7), normalizeProject({id: 7, views: identityBViews}))
 			resolveRequest(response)
 
 			await expect(mutation).rejects.toMatchObject({name: 'AbortError'})
 			expect(queryClient.getQueryData(listKey)).toEqual(identityBViews)
-			expect(queryClient.getQueryData(projectViewKeys.detail(7, 2))).toEqual(identityBViews[2])
-			expect(queryClient.getQueryData(projectViewKeys.detail(7, 4))).toBeUndefined()
+			expect(queryClient.getQueryData<ProjectResponse>(projectKeys.detail(7))?.views).toEqual(sortProjectViewsByPosition(identityBViews))
 			expect(queryClient.getQueryState(listKey)?.isInvalidated).toBe(false)
-			expect(projectCache.updateProjectInCache).not.toHaveBeenCalled()
+			expect(success).not.toHaveBeenCalled()
+			expect(error).not.toHaveBeenCalled()
 		})
 	})
 
@@ -225,11 +234,10 @@ describe('project view cache reconciliation', () => {
 		expect(queryClient.getQueryData<ProjectView[]>(projectViewKeys.list(7, {q: 'board'}))?.map(view => view.id))
 			.toEqual([2])
 		expect(queryClient.getQueryState(projectViewKeys.list(7, {q: 'board'}))?.isInvalidated).toBe(true)
-		expect(queryClient.getQueryData(projectViewKeys.detail(7, 4))).toEqual(created)
-		expect(projectCache.cancelProjectQueries).toHaveBeenCalledWith(7)
-		expect(projectCache.updateProjectInCache).toHaveBeenCalledWith(7, expect.any(Function))
-		expect(applyProjectUpdate({id: 7, views} as Project).views?.map(view => view.id))
+		expect(embeddedViews()?.map(view => view.id))
 			.toEqual([1, 4, 2, 3])
+		expect(queryClient.getQueryData<ProjectResponse>(projectKeys.detail(7))?.views).toEqual(embeddedViews())
+		expect(queryClient.getQueryCache().findAll({queryKey: ['project-views', 'detail']})).toEqual([])
 	})
 
 	it('replaces an updated view in view and nested project caches', async () => {
@@ -251,15 +259,12 @@ describe('project view cache reconciliation', () => {
 		expect(queryClient.getQueryData<ProjectView[]>(projectViewKeys.list(7, {q: 'board'}))?.map(view => view.id))
 			.toEqual([2])
 		expect(queryClient.getQueryState(projectViewKeys.list(7, {q: 'board'}))?.isInvalidated).toBe(true)
-		expect(queryClient.getQueryData(projectViewKeys.detail(7, 2))).toEqual(updated)
-		expect(projectCache.cancelProjectQueries).toHaveBeenCalledWith(7)
-		expect(projectCache.updateProjectInCache).toHaveBeenCalledWith(7, expect.any(Function))
-		expect(applyProjectUpdate({id: 7, views} as Project).views?.map(view => view.id))
+		expect(embeddedViews()?.map(view => view.id))
 			.toEqual([2, 1, 3])
+		expect(queryClient.getQueryData<ProjectResponse>(projectKeys.detail(7))?.views).toEqual(embeddedViews())
 	})
 
 	it('removes a deleted view from view and nested project caches', async () => {
-		queryClient.setQueryData(projectViewKeys.detail(7, 2), views[2])
 		sdk.projectViewsDelete.mockResolvedValue({data: undefined})
 
 		await deleteProjectView({projectId: 7, viewId: 2})
@@ -268,12 +273,98 @@ describe('project view cache reconciliation', () => {
 		expect(queryClient.getQueryData<ProjectView[]>(projectViewKeys.list(7, {}))?.map(view => view.id))
 			.toEqual([1, 3])
 		expect(queryClient.getQueryData<ProjectView[]>(projectViewKeys.list(7, {q: 'board'}))?.map(view => view.id))
-			.toEqual([2])
+			.toEqual([])
 		expect(queryClient.getQueryState(projectViewKeys.list(7, {q: 'board'}))?.isInvalidated).toBe(true)
-		expect(queryClient.getQueryData(projectViewKeys.detail(7, 2))).toBeUndefined()
-		expect(projectCache.cancelProjectQueries).toHaveBeenCalledWith(7)
-		expect(projectCache.updateProjectInCache).toHaveBeenCalledWith(7, expect.any(Function))
-		expect(applyProjectUpdate({id: 7, views} as Project).views?.map(view => view.id))
+		expect(embeddedViews()?.map(view => view.id))
 			.toEqual([1, 3])
+		expect(queryClient.getQueryData<ProjectResponse>(projectKeys.detail(7))?.views).toEqual(embeddedViews())
+	})
+
+	it.each(['update', 'delete'] as const)('rolls back an optimistic %s in views and embedded project views', async operation => {
+		const originalProjects = queryClient.getQueryData(projectKeys.list())
+		const originalDetail = queryClient.getQueryData(projectKeys.detail(7))
+		const failure = new Error('Request failed')
+		const mock = operation === 'update' ? sdk.projectViewsUpdate : sdk.projectViewsDelete
+		mock.mockImplementation(async () => {
+			const expected = operation === 'update'
+				? expect.arrayContaining([expect.objectContaining({id: 2, default_bucket_id: 42, done_bucket_id: 43})])
+				: expect.not.arrayContaining([expect.objectContaining({id: 2})])
+			expect(queryClient.getQueryData(listKey)).toEqual(expected)
+			expect(embeddedViews()).toEqual(expected)
+			expect(queryClient.getQueryData<ProjectResponse>(projectKeys.detail(7))?.views).toEqual(expected)
+			throw failure
+		})
+
+		const mutation = operation === 'update'
+			? updateProjectView({projectId: 7, viewId: 2, view: {default_bucket_id: 42, done_bucket_id: 43}})
+			: deleteProjectView({projectId: 7, viewId: 2})
+		await expect(mutation).rejects.toBe(failure)
+
+		expect(queryClient.getQueryData(listKey)).toEqual(views)
+		expect(queryClient.getQueryData(projectViewKeys.list(7, {q: 'board'}))).toEqual([views[2]])
+		expect(queryClient.getQueryData(projectKeys.list())).toEqual(originalProjects)
+		expect(queryClient.getQueryData(projectKeys.detail(7))).toEqual(originalDetail)
+		expect(queryClient.getQueryState(listKey)?.isInvalidated).toBe(true)
+		expect(queryClient.getQueryState(projectKeys.list())?.isInvalidated).toBe(true)
+		expect(queryClient.getQueryState(projectKeys.detail(7))?.isInvalidated).toBe(true)
+	})
+
+	it.each(delayedMutationCases)('does not materialize unmounted caches on $name', async ({mock, run, response}) => {
+		queryClient.clear()
+		mock.mockResolvedValue(response)
+
+		await run()
+
+		expect(queryClient.getQueryCache().getAll()).toEqual([])
+	})
+
+	it('writes through the executing client and preserves project metadata and bucket settings', async () => {
+		const client = new QueryClient()
+		const project = normalizeProject({id: 7, title: 'Board project', max_permission: 2, views})
+		client.setQueryData<ProjectListResult>(projectKeys.list(), {
+			projects: [project], favoriteProject: null, savedFilterProjects: [],
+		})
+		client.setQueryData(projectKeys.detail(7, 'markdown'), {...project, description: '**raw**'})
+		client.setQueryData(listKey, views)
+		const updated = {...views[2], default_bucket_id: 42, done_bucket_id: 43}
+		sdk.projectViewsUpdate.mockResolvedValue({data: updated})
+
+		await execute(updateProjectViewMutationOptions('Bucket updated'), {
+			projectId: 7, viewId: 2, view: createProjectViewUpdate(updated),
+		}, client)
+
+		expect(embeddedViews(client)?.find(view => view.id === 2)).toEqual(updated)
+		expect(client.getQueryData<ProjectListResult>(projectKeys.list())?.projects[0])
+			.toMatchObject({title: 'Board project', max_permission: 2})
+		expect(client.getQueryData<ProjectResponse>(projectKeys.detail(7, 'markdown')))
+			.toMatchObject({description: '**raw**', views: expect.arrayContaining([updated])})
+		expect(embeddedViews()).toEqual(sortProjectViewsByPosition(views))
+		expect(success).toHaveBeenCalledWith({message: 'Bucket updated'})
+		client.clear()
+	})
+
+	it('suppresses notifications for a project the caller has left', async () => {
+		sdk.projectViewsCreate.mockResolvedValue({data: {...views[0], id: 4}})
+		await execute(createProjectViewMutationOptions(() => false), {projectId: 7, view: {title: 'New'}})
+		sdk.projectViewsUpdate.mockRejectedValue(new Error('Failed'))
+		await expect(execute(updateProjectViewMutationOptions(undefined, () => false), {
+			projectId: 7, viewId: 2, view: {title: 'Edit'},
+		})).rejects.toThrow('Failed')
+
+		expect(success).not.toHaveBeenCalled()
+		expect(error).not.toHaveBeenCalled()
+	})
+
+	it('rejects completion if the session changes during settlement', async () => {
+		sdk.projectViewsCreate.mockResolvedValue({data: {...views[0], id: 4}})
+		const invalidate = vi.spyOn(queryClient, 'invalidateQueries').mockImplementation(async () => {
+			requestContext.sessionEpoch++
+		})
+		try {
+			await expect(createProjectView({projectId: 7, view: {title: 'New'}}))
+				.rejects.toMatchObject({name: 'AbortError'})
+		} finally {
+			invalidate.mockRestore()
+		}
 	})
 })

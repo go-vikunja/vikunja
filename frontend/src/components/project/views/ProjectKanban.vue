@@ -331,7 +331,7 @@ import type {ProjectView} from '@/client/generated'
 import TaskPositionService from '@/services/taskPosition'
 import TaskPositionModel from '@/models/taskPosition'
 import {i18n} from '@/i18n'
-import {createProjectViewUpdate, updateProjectView} from '@/client/queries/projectViews'
+import {createProjectViewUpdate, useUpdateProjectViewMutation} from '@/client/queries/projectViews'
 import TaskBucketService from '@/services/taskBucket'
 import TaskBucketModel from '@/models/taskBucket'
 
@@ -355,6 +355,9 @@ const DRAG_OPTIONS = {
 const MIN_SCROLL_HEIGHT_PERCENT = 0.25
 
 const {t} = useI18n({useScope: 'global'})
+const isCurrentProject = ({projectId: id}: {projectId: number}) => projectId.value === id
+const updateDefaultBucket = useUpdateProjectViewMutation(t('project.kanban.defaultBucketSavedSuccess'), isCurrentProject)
+const updateDoneBucket = useUpdateProjectViewMutation(t('project.kanban.doneBucketSavedSuccess'), isCurrentProject)
 
 const kanbanStore = useKanbanStore()
 const taskStore = useTaskStore()
@@ -868,13 +871,11 @@ async function toggleDefaultBucket(bucket: IBucket) {
 		? 0
 		: bucket.id
 
-	await updateProjectView({
+	await updateDefaultBucket.mutateAsync({
 		projectId: projectId.value,
 		viewId: currentView.id,
 		view: createProjectViewUpdate({...currentView, default_bucket_id: defaultBucketId}),
-	})
-
-	success({message: t('project.kanban.defaultBucketSavedSuccess')})
+	}).catch(() => undefined)
 }
 
 async function toggleDoneBucket(bucket: IBucket) {
@@ -886,13 +887,11 @@ async function toggleDoneBucket(bucket: IBucket) {
 		? 0
 		: bucket.id
 	
-	await updateProjectView({
+	await updateDoneBucket.mutateAsync({
 		projectId: projectId.value,
 		viewId: currentView.id,
 		view: createProjectViewUpdate({...currentView, done_bucket_id: doneBucketId}),
-	})
-	
-	success({message: t('project.kanban.doneBucketSavedSuccess')})
+	}).catch(() => undefined)
 }
 
 function collapseBucket(bucket: IBucket) {
