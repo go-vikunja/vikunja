@@ -38,14 +38,6 @@
 		>
 			{{ task.title.trim() }}
 		</h1>
-		<BaseButton
-			v-if="hasClose"
-			:aria-label="$t('task.detail.closeTaskDetail')"
-			class="close d-print-none"
-			@click="$emit('close')"
-		>
-			<Icon icon="times" />
-		</BaseButton>
 		<CustomTransition name="fade">
 			<span
 				v-if="loading && saving"
@@ -225,22 +217,11 @@ async function cancel(element: HTMLInputElement) {
 	inline-size: .75rem;
 }
 
+// Modal renders its own fixed close button from $tablet up
 .close {
-	font-size: 2rem;
-	margin-inline-start: 0.5rem;
-	line-height: 1;
-
-	@media screen and (max-width: $tablet) {
-		display: none;
-	}
-	
-	@media screen and (min-width: #{$desktop + 1px}) {
-		display: none;
-	}
-}
-
-.task-properties .close {
 	display: none;
+	font-size: 2rem;
+	line-height: 1;
 	position: absolute;
 	inset-inline-end: 1.25rem;
 	inset-block-start: 1.1rem;
