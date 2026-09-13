@@ -12,8 +12,7 @@ import WebhookManager from '@/components/misc/WebhookManager.vue'
 import {useBaseStore} from '@/stores/base'
 import WebhookService from '@/services/webhook'
 import {success} from '@/message'
-import {projectQuery, type ProjectResponse} from '@/client/queries/projects'
-import {queryClient} from '@/client/queryClient'
+import {ensureProject, type ProjectResponse} from '@/client/queries/projects'
 
 defineOptions({name: 'ProjectSettingWebhooks'})
 
@@ -23,7 +22,7 @@ const project = ref<ProjectResponse>()
 useTitle(t('project.webhooks.title'))
 
 async function loadProject(projectId: number) {
-	const newProject = await queryClient.ensureQueryData(projectQuery(projectId))
+	const newProject = await ensureProject(projectId)
 	await useBaseStore().handleSetCurrentProject({project: newProject})
 	project.value = newProject
 	await loadWebhooks()
