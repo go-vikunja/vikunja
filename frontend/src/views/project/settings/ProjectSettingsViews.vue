@@ -1,40 +1,36 @@
 <script setup lang="ts">
 import CreateEdit from '@/components/misc/CreateEdit.vue'
 import {computed, watch, ref} from 'vue'
-import {useMutation, useQuery} from '@tanstack/vue-query'
 import type {ProjectView} from '@/client/generated'
 import {
-	createProjectView,
 	createProjectViewDraft,
 	createProjectViewUpdate,
-	deleteProjectView,
-	projectViewsQuery,
-	updateProjectView,
+	useCreateProjectViewMutation,
+	useDeleteProjectViewMutation,
+	useUpdateProjectViewMutation,
 	type ProjectViewDraft,
 } from '@/client/queries/projectViews'
 import ViewEditForm from '@/components/project/views/ViewEditForm.vue'
 import XButton from '@/components/input/Button.vue'
-import {error, success} from '@/message'
-import {useI18n} from 'vue-i18n'
 import {PERMISSIONS} from '@/constants/permissions'
 import Message from '@/components/misc/Message.vue'
 import draggable from 'zhyswan-vuedraggable'
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 import {useProject} from '@/composables/useProject'
+import {useProjectViews} from '@/composables/useProjectViews'
 import ErrorMessage from '@/components/misc/Error.vue'
 
 const props = defineProps<{
 	projectId: number
 }>()
 
-const {t} = useI18n()
-const query = useQuery(computed(() => projectViewsQuery(props.projectId)))
+const query = useProjectViews(() => props.projectId)
 const {project, error: projectError} = useProject(() => props.projectId)
 const loadError = computed(() => projectError.value ?? query.error.value)
 
 const views = ref<ProjectView[]>([])
 watch(
-	query.data,
+	query.views,
 	allViews => {
 		views.value = [...(allViews ?? [])]
 	},
@@ -56,10 +52,11 @@ const viewIdToDelete = ref<number | null>(null)
 const showDeleteModal = ref(false)
 const viewToEdit = ref<ProjectView | null>(null)
 
-const create = useMutation({mutationFn: createProjectView})
-const update = useMutation({mutationFn: updateProjectView})
-const remove = useMutation({mutationFn: deleteProjectView})
-const reorder = useMutation({mutationFn: updateProjectView})
+const isCurrentProject = ({projectId}: {projectId: number}) => props.projectId === projectId
+const create = useCreateProjectViewMutation(isCurrentProject)
+const update = useUpdateProjectViewMutation(undefined, isCurrentProject)
+const remove = useDeleteProjectViewMutation(isCurrentProject)
+const reorder = useUpdateProjectViewMutation(undefined, isCurrentProject)
 
 const isMutating = computed(() => create.isPending.value
 	|| update.isPending.value
@@ -97,13 +94,10 @@ async function createView() {
 		if (props.projectId !== projectId) {
 			return
 		}
-		success({message: t('project.views.createSuccess')})
 		showCreateForm.value = false
 		newView.value = createNewView()
-	} catch (e) {
-		if (props.projectId === projectId) {
-			error(e)
-		}
+	} catch {
+		// Mutation callbacks report errors for the current project.
 	}
 }
 
@@ -119,10 +113,8 @@ async function deleteView(viewId: number | null) {
 			return
 		}
 		showDeleteModal.value = false
-	} catch (e) {
-		if (props.projectId === projectId) {
-			error(e)
-		}
+	} catch {
+		// Keep the delete dialog open when the request fails.
 	}
 }
 
@@ -146,11 +138,8 @@ async function saveView(view: ProjectView) {
 			return
 		}
 		viewToEdit.value = null
-		success({message: t('project.views.updateSuccess')})
-	} catch (e) {
-		if (props.projectId === projectId) {
-			error(e)
-		}
+	} catch {
+		// Keep the edit form open when the request fails.
 	}
 }
 
@@ -174,14 +163,8 @@ async function saveViewPosition(e: {newIndex: number}) {
 			viewId: view.id,
 			view: createProjectViewUpdate({...view, position}),
 		})
-		if (props.projectId !== projectId) {
-			return
-		}
-		success({message: t('project.views.updateSuccess')})
-	} catch (e) {
-		if (props.projectId === projectId) {
-			error(e)
-		}
+	} catch {
+		// Mutation callbacks report errors for the current project.
 	}
 }
 </script>

@@ -10,6 +10,12 @@ const state = vi.hoisted(() => ({
 	project: undefined as Ref<Project> | undefined,
 }))
 
+const transport = vi.hoisted(() => ({
+	createProjectView: vi.fn(),
+	deleteProjectView: vi.fn(),
+	updateProjectView: vi.fn(),
+}))
+
 vi.mock('@tanstack/vue-query', async importOriginal => {
 	const {ref} = await import('vue')
 	return {
@@ -32,11 +38,11 @@ vi.mock('@/composables/useProject', async () => {
 	}
 })
 
-vi.mock('@/client/queries/projectViews', async importOriginal => ({
-	...await importOriginal<typeof import('@/client/queries/projectViews')>(),
-	createProjectView: vi.fn(),
-	deleteProjectView: vi.fn(),
-	updateProjectView: vi.fn(),
+vi.mock('@/client/generated', async importOriginal => ({
+	...await importOriginal<typeof import('@/client/generated')>(),
+	projectViewsCreate: async (input: unknown) => ({data: await transport.createProjectView(input)}),
+	projectViewsDelete: (input: unknown) => transport.deleteProjectView(input),
+	projectViewsUpdate: async (input: unknown) => ({data: await transport.updateProjectView(input)}),
 }))
 
 vi.mock('@/message', () => ({error: vi.fn(), success: vi.fn()}))
@@ -46,12 +52,9 @@ vi.mock('vue-i18n', async importOriginal => ({
 }))
 
 import ProjectSettingsViews from './ProjectSettingsViews.vue'
-import {
-	createProjectView,
-	deleteProjectView,
-	updateProjectView,
-} from '@/client/queries/projectViews'
 import {error, success} from '@/message'
+
+const {createProjectView, deleteProjectView, updateProjectView} = transport
 
 type ProjectSettingsViewsVm = {
 	showCreateForm: boolean
