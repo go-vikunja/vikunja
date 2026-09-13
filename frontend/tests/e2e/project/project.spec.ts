@@ -1,3 +1,4 @@
+import {readFile} from 'node:fs/promises'
 import {test, expect} from '../../support/fixtures'
 import {TaskFactory} from '../../factories/task'
 import {ProjectFactory} from '../../factories/project'
@@ -128,7 +129,11 @@ test.describe('Projects', () => {
 			new URL(response.url()).pathname.endsWith(`/projects/${project.id}/backgrounds/upload`) &&
 			response.request().method() === 'PUT',
 		)
-		await page.locator('.project-background-setting input[type="file"]').setInputFiles('tests/fixtures/image-blue.png')
+		await page.locator('.project-background-setting input[type="file"]').setInputFiles({
+			name: 'image-blue.png',
+			mimeType: 'image/png',
+			buffer: await readFile('tests/fixtures/image-blue.png'),
+		})
 		expect((await upload).ok()).toBe(true)
 		await expect(background).toHaveClass(/is-visible/)
 		await expect(background).toHaveCSS('background-image', /url\(/)
