@@ -39,8 +39,7 @@ import userTeam from '@/components/sharing/UserTeam.vue'
 
 import {useBaseStore} from '@/stores/base'
 import {useConfigStore} from '@/stores/config'
-import {projectQuery, type ProjectResponse} from '@/client/queries/projects'
-import {queryClient} from '@/client/queryClient'
+import {ensureProject, type ProjectResponse} from '@/client/queries/projects'
 
 defineOptions({name: 'ProjectSettingShare'})
 
@@ -59,7 +58,7 @@ const linkSharingEnabled = computed(() => configStore.linkSharingEnabled)
 const userIsAdmin = computed(() => project.value?.max_permission === PERMISSIONS.ADMIN)
 
 async function loadProject(projectId: number) {
-	const newProject = await queryClient.ensureQueryData(projectQuery(projectId))
+	const newProject = await ensureProject(projectId)
 	await useBaseStore().handleSetCurrentProject({project: newProject})
 	project.value = newProject
 }

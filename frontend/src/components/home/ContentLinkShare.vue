@@ -63,8 +63,7 @@ import {useBaseStore} from '@/stores/base'
 import {useProjectStore} from '@/stores/projects'
 import {useAuthStore} from '@/stores/auth'
 import {useCurrentProject} from '@/composables/useCurrentProject'
-import {queryClient} from '@/client/queryClient'
-import {projectQuery} from '@/client/queries/projects'
+import {ensureProject} from '@/client/queries/projects'
 
 import Logo from '@/components/home/Logo.vue'
 import PoweredByLink from './PoweredByLink.vue'
@@ -97,7 +96,7 @@ async function ensureProjectLoaded() {
 		// Load project if not already loaded
 		const projectId = Number(route.params.projectId)
 		if (!currentProject.value || currentProject.value.id !== projectId) {
-			await queryClient.ensureQueryData(projectQuery(projectId))
+			await ensureProject(projectId)
 		}
 	} catch (e) {
 		console.error('Failed to load project for link share:', e)
