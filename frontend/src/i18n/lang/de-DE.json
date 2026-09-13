@@ -282,6 +282,7 @@
 				"90d": "90 Tage",
 				"permissionExplanation": "Mit Berechtigungen kannst du einschränken, was ein API-Token tun darf.",
 				"titleRequired": "Titel ist erforderlich",
+				"expiryInvalid": "Bitte wähle ein Ablaufdatum in der Zukunft aus.",
 				"permissionRequired": "Bitte wähle mindestens eine Berechtigung aus der Liste.",
 				"expired": "Dieses Token ist {ago} abgelaufen.",
 				"tokenCreatedSuccess": "Hier ist dein neues API Token: {token}",
@@ -842,7 +843,25 @@
 			"thisWeekend": "Dieses Wochenende",
 			"laterThisWeek": "Später in dieser Woche",
 			"nextWeek": "Nächste Woche",
-			"chooseDate": "Wähle ein Datum"
+			"nextWeekend": "Nächstes Wochenende",
+			"endOfMonth": "Ende des Monats",
+			"inAMonth": "In einem Monat",
+			"chooseDate": "Wähle ein Datum",
+			"quickSelect": "Schnellauswahl",
+			"clear": "Zurücksetzen",
+			"noDate": "Kein Datum ausgewählt",
+			"previousMonth": "Vorheriger Monat",
+			"nextMonth": "Nächster Monat",
+			"time": {
+				"hours": "Stunden",
+				"minutes": "Minuten",
+				"hourUp": "Eine Stunde später",
+				"hourDown": "Eine Stunde früher",
+				"minuteUp": "Fünf Minuten später",
+				"minuteDown": "Fünf Minuten früher"
+			},
+			"month": "Monat",
+			"year": "Jahr"
 		},
 		"editor": {
 			"edit": "Bearbeiten",
