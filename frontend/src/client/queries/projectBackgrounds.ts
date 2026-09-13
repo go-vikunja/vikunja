@@ -1,4 +1,4 @@
-import {infiniteQueryOptions, queryOptions, useMutation} from '@tanstack/vue-query'
+import {infiniteQueryOptions, mutationOptions, queryOptions, useMutation, type QueryClient} from '@tanstack/vue-query'
 
 import {
 	backgroundsUnsplashSearch,
@@ -10,9 +10,11 @@ import {
 } from '@/client/generated'
 import type {Image, Project} from '@/client/generated'
 import {queryClient} from '@/client/queryClient'
-import {cancelProjectQueries, getCachedProject, projectQuery, updateProjectInCache} from '@/client/queries/projects'
-import type {ProjectResponse} from '@/client/queries/projects'
-import {assertClientRequestContext, captureClientRequestContext} from '@/client/requestContext'
+import {mapProjectNavigationItem, projectKeys} from '@/client/queries/projects'
+import type {ProjectListResult, ProjectResponse} from '@/client/queries/projects'
+import {assertClientRequestContext, captureClientRequestContext, isClientRequestContextCurrent} from '@/client/requestContext'
+import {i18n} from '@/i18n'
+import {error, success} from '@/message'
 
 export const projectBackgroundKeys = {
 	all: ['project-backgrounds'] as const,
@@ -53,6 +55,10 @@ export function projectBackgroundQuery(projectId: number) {
 	})
 }
 
+export function refreshProjectBackground(projectId: number) {
+	return queryClient.fetchQuery({...projectBackgroundQuery(projectId), staleTime: 0})
+}
+
 export function unsplashBackgroundSearchQuery(query: string) {
 	return infiniteQueryOptions({
 		queryKey: projectBackgroundKeys.search(query),
@@ -79,35 +85,8 @@ export function unsplashBackgroundThumbnailQuery(imageId: string) {
 }
 
 type BackgroundFields = Required<Pick<Project, 'background_information' | 'background_blur_hash'>>
-
-// Wire responses are sparse (delete returns only an id), so hand back the merged cache entry.
-async function mutateProjectBackground(
-	projectId: number,
-	request: () => Promise<Project>,
-): Promise<ProjectResponse> {
-	const context = captureClientRequestContext()
-	await Promise.all([
-		queryClient.cancelQueries({queryKey: projectBackgroundKeys.project(projectId)}),
-		cancelProjectQueries(projectId),
-	])
-	assertClientRequestContext(context)
-
-	const data = await request()
-	assertClientRequestContext(context)
-
-	const background = backgroundFromResponse(data)
-	updateProjectInCache(projectId, current => ({...current, ...background}))
-	if (background.background_information === null) {
-		queryClient.removeQueries({queryKey: projectBackgroundKeys.project(projectId)})
-	} else {
-		await queryClient.invalidateQueries({queryKey: projectBackgroundKeys.project(projectId)})
-	}
-
-	const merged = getCachedProject(projectId) ?? await queryClient.fetchQuery(projectQuery(projectId))
-	assertClientRequestContext(context)
-
-	return merged
-}
+type ShouldNotify = (projectId: number) => boolean
+type BackgroundMutationContext = {request: ReturnType<typeof captureClientRequestContext>}
 
 function backgroundFromResponse(project: Project): BackgroundFields {
 	return {
@@ -116,62 +95,114 @@ function backgroundFromResponse(project: Project): BackgroundFields {
 	}
 }
 
-export function setUnsplashProjectBackground({
-	projectId,
-	imageId,
-}: {
-	projectId: number
-	imageId: string
-}): Promise<ProjectResponse> {
-	return mutateProjectBackground(
-		projectId,
-		async () => {
+function backgroundMutationCallbacks<TInput>(
+	projectIdFromInput: (input: TInput) => number,
+	shouldNotify: ShouldNotify,
+	successMessage: () => string,
+) {
+	return {
+		onMutate: () => ({request: captureClientRequestContext()}),
+		onSuccess: (background: BackgroundFields, input: TInput, context: BackgroundMutationContext, {client}: {client: QueryClient}) => {
+			assertClientRequestContext(context.request)
+			const projectId = projectIdFromInput(input)
+			const update = (project: ProjectResponse) => ({...project, ...background})
+			client.setQueriesData<ProjectListResult>({queryKey: projectKeys.lists()}, current =>
+				current ? mapProjectNavigationItem(current, projectId, update) : current,
+			)
+			client.setQueriesData<ProjectResponse>({queryKey: projectKeys.detailRoot(projectId)}, current =>
+				current ? update(current) : current,
+			)
+			if (shouldNotify(projectId)) {
+				success({message: successMessage()})
+			}
+		},
+		onError: (cause: Error, input: TInput, context: BackgroundMutationContext | undefined) => {
+			if (context && isClientRequestContextCurrent(context.request) && shouldNotify(projectIdFromInput(input))) {
+				error(cause)
+			}
+		},
+		onSettled: async (
+			_data: unknown,
+			_error: unknown,
+			input: TInput,
+			context: BackgroundMutationContext | undefined,
+			{client}: {client: QueryClient},
+		) => {
+			if (context && isClientRequestContextCurrent(context.request)) {
+				const projectId = projectIdFromInput(input)
+				await Promise.all([
+					client.invalidateQueries({queryKey: projectKeys.lists()}),
+					client.invalidateQueries({queryKey: projectKeys.detailRoot(projectId)}),
+					client.invalidateQueries({queryKey: projectBackgroundKeys.project(projectId), exact: true}),
+				])
+				assertClientRequestContext(context.request)
+			}
+		},
+	}
+}
+
+export function setUnsplashProjectBackgroundMutationOptions(shouldNotify: ShouldNotify = () => true) {
+	return mutationOptions({
+		...backgroundMutationCallbacks(
+			(input: {projectId: number; imageId: string}) => input.projectId,
+			shouldNotify,
+			() => i18n.global.t('project.background.success'),
+		),
+		mutationFn: async ({projectId, imageId}: {projectId: number; imageId: string}) => {
+			const request = captureClientRequestContext()
 			const {data} = await projectsBackgroundUnsplashSet({
 				path: {project: projectId},
 				body: {id: imageId},
 			})
-			return data
+			assertClientRequestContext(request)
+			return backgroundFromResponse(data)
 		},
-	)
+	})
 }
 
-export function uploadProjectBackground({
-	projectId,
-	file,
-}: {
-	projectId: number
-	file: Blob | File
-}): Promise<ProjectResponse> {
-	return mutateProjectBackground(
-		projectId,
-		async () => {
+export function uploadProjectBackgroundMutationOptions(shouldNotify: ShouldNotify = () => true) {
+	return mutationOptions({
+		...backgroundMutationCallbacks(
+			(input: {projectId: number; file: Blob | File}) => input.projectId,
+			shouldNotify,
+			() => i18n.global.t('project.background.success'),
+		),
+		mutationFn: async ({projectId, file}: {projectId: number; file: Blob | File}) => {
+			const request = captureClientRequestContext()
 			const {data} = await projectsBackgroundUpload({
 				path: {project: projectId},
 				body: {background: file},
 			})
-			return data
+			assertClientRequestContext(request)
+			return backgroundFromResponse(data)
 		},
-	)
+	})
 }
 
-export function deleteProjectBackground(projectId: number): Promise<ProjectResponse> {
-	return mutateProjectBackground(
-		projectId,
-		async () => {
+export function deleteProjectBackgroundMutationOptions(shouldNotify: ShouldNotify = () => true) {
+	return mutationOptions({
+		...backgroundMutationCallbacks(
+			(projectId: number) => projectId,
+			shouldNotify,
+			() => i18n.global.t('project.background.removeSuccess'),
+		),
+		mutationFn: async (projectId: number) => {
+			const request = captureClientRequestContext()
 			const {data} = await projectsBackgroundDelete({path: {project: projectId}})
-			return data
+			assertClientRequestContext(request)
+			return backgroundFromResponse(data)
 		},
-	)
+	})
 }
 
-export function useSetUnsplashProjectBackgroundMutation() {
-	return useMutation({mutationFn: setUnsplashProjectBackground})
+export function useSetUnsplashProjectBackgroundMutation(shouldNotify?: ShouldNotify) {
+	return useMutation(setUnsplashProjectBackgroundMutationOptions(shouldNotify))
 }
 
-export function useUploadProjectBackgroundMutation() {
-	return useMutation({mutationFn: uploadProjectBackground})
+export function useUploadProjectBackgroundMutation(shouldNotify?: ShouldNotify) {
+	return useMutation(uploadProjectBackgroundMutationOptions(shouldNotify))
 }
 
-export function useDeleteProjectBackgroundMutation() {
-	return useMutation({mutationFn: deleteProjectBackground})
+export function useDeleteProjectBackgroundMutation(shouldNotify?: ShouldNotify) {
+	return useMutation(deleteProjectBackgroundMutationOptions(shouldNotify))
 }

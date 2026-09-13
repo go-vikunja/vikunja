@@ -1,6 +1,10 @@
 import {defineComponent, ref, type Ref} from 'vue'
 import {flushPromises, shallowMount} from '@vue/test-utils'
 import {beforeEach, describe, expect, it, vi} from 'vitest'
+import {VueQueryPlugin} from '@tanstack/vue-query'
+import {queryClient} from '@/client/queryClient'
+import {projectKeys} from '@/client/queries/projects'
+import * as projectQueries from '@/client/queries/projects'
 
 import type {Image} from '@/client/generated'
 import type {ProjectResponse} from '@/client/queries/projects'
@@ -27,28 +31,14 @@ const backgrounds = vi.hoisted(() => ({
 	uploadProjectBackground: vi.fn(),
 }))
 
-vi.mock('@/client/queries/projectBackgrounds', async () => {
-	const {ref} = await import('vue')
-	return {
-		...backgrounds,
-		projectBackgroundQuery: (projectId: number) => ({queryKey: ['project-backgrounds', 'project', projectId]}),
-		unsplashBackgroundSearchQuery: (query: string) => ({queryKey: ['project-backgrounds', 'unsplash', 'search', query]}),
-		unsplashBackgroundThumbnailQuery: (imageId: string) => ({queryKey: ['project-backgrounds', 'unsplash', 'thumbnail', imageId]}),
-		unsplashAuthor: () => null,
-		useDeleteProjectBackgroundMutation: () => ({
-			isPending: ref(false),
-			mutateAsync: backgrounds.deleteProjectBackground,
-		}),
-		useSetUnsplashProjectBackgroundMutation: () => ({
-			isPending: ref(false),
-			mutateAsync: backgrounds.setUnsplashProjectBackground,
-		}),
-		useUploadProjectBackgroundMutation: () => ({
-			isPending: ref(false),
-			mutateAsync: backgrounds.uploadProjectBackground,
-		}),
-	}
-})
+vi.mock('@/client/generated', async importOriginal => ({
+	...await importOriginal<typeof import('@/client/generated')>(),
+	projectsBackgroundDelete: async ({path}: {path: {project: number}}) => ({
+		data: await backgrounds.deleteProjectBackground(path.project),
+	}),
+	projectsBackgroundUnsplashSet: async (input: unknown) => ({data: await backgrounds.setUnsplashProjectBackground(input)}),
+	projectsBackgroundUpload: async (input: unknown) => ({data: await backgrounds.uploadProjectBackground(input)}),
+}))
 
 vi.mock('@tanstack/vue-query', async importOriginal => {
 	const {ref} = await import('vue')
@@ -121,6 +111,7 @@ function project(overrides: Partial<ProjectResponse> = {}) {
 function mountView() {
 	return shallowMount(ProjectSettingsBackground, {
 		global: {
+			plugins: [[VueQueryPlugin, {queryClient}]],
 			stubs: {BaseButton: BaseButtonStub, CreateEdit: CreateEditStub, XButton: XButtonStub},
 			mocks: {$t: (key: string) => key, $router: {back: routerBack}},
 			directives: {focus: () => {}, tooltip: () => {}},
@@ -139,6 +130,9 @@ async function clickRemove(wrapper: ReturnType<typeof mountView>) {
 
 describe('ProjectSettingsBackground', () => {
 	beforeEach(() => {
+		vi.restoreAllMocks()
+		queryClient.clear()
+		queryClient.setQueryData(projectKeys.detail(7), project())
 		state.currentProjectId = 7
 		state.routeParams!.projectId = '7'
 		state.project = ref(project())
@@ -156,7 +150,7 @@ describe('ProjectSettingsBackground', () => {
 
 	it('applies the removed background to the base store and navigates back', async () => {
 		const updated = project({background_information: null, background_blur_hash: ''})
-		backgrounds.deleteProjectBackground.mockResolvedValue(updated)
+		backgrounds.deleteProjectBackground.mockResolvedValue({id: 7})
 		const wrapper = mountView()
 
 		await clickRemove(wrapper)
@@ -192,6 +186,20 @@ describe('ProjectSettingsBackground', () => {
 		expect(backgrounds.deleteProjectBackground).toHaveBeenCalledWith(7)
 		expect(handleSetCurrentProject).not.toHaveBeenCalled()
 		expect(success).not.toHaveBeenCalled()
+		expect(routerBack).not.toHaveBeenCalled()
+	})
+
+	it('does not apply a background after the route changes during the project read', async () => {
+		backgrounds.deleteProjectBackground.mockResolvedValue({id: 7})
+		vi.spyOn(projectQueries, 'ensureProject').mockImplementationOnce(async () => {
+			state.routeParams!.projectId = '99'
+			return project({background_information: null, background_blur_hash: ''})
+		})
+		const wrapper = mountView()
+
+		await clickRemove(wrapper)
+
+		expect(handleSetCurrentProject).not.toHaveBeenCalled()
 		expect(routerBack).not.toHaveBeenCalled()
 	})
 
