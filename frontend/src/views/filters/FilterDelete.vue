@@ -18,20 +18,17 @@
 
 <script setup lang="ts">
 import {computed, onUnmounted, ref} from 'vue'
-import {useI18n} from 'vue-i18n'
 import {useRouter} from 'vue-router'
 
 import ErrorMessage from '@/components/misc/Error.vue'
 
 import {getSavedFilterIdFromProjectId} from '@/client/queries/projects'
-import {deleteSavedFilter} from '@/client/queries/savedFilters'
-import {success} from '@/message'
+import {useDeleteSavedFilterMutation} from '@/client/queries/savedFilters'
 
 const props = defineProps<{
 	projectId: number,
 }>()
 
-const {t} = useI18n({useScope: 'global'})
 const router = useRouter()
 
 const filterId = computed(() => getSavedFilterIdFromProjectId(props.projectId))
@@ -41,6 +38,7 @@ const alive = ref(true)
 onUnmounted(() => {
 	alive.value = false
 })
+const deleteMutation = useDeleteSavedFilterMutation(id => alive.value && filterId.value === id)
 
 async function remove() {
 	const id = props.projectId
@@ -48,12 +46,15 @@ async function remove() {
 		return
 	}
 
-	await deleteSavedFilter(filterId.value)
+	try {
+		await deleteMutation.mutateAsync(filterId.value)
+	} catch {
+		return
+	}
 	// The route param can change on this same instance, so a stale delete must not navigate.
 	if (!alive.value || props.projectId !== id) {
 		return
 	}
-	success({message: t('filters.delete.success')})
 	await router.push({name: 'projects.index'})
 }
 </script>

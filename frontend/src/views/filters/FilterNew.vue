@@ -66,7 +66,8 @@ import FormField from '@/components/input/FormField.vue'
 import Filters from '@/components/project/partials/Filters.vue'
 
 import {getProjectIdFromSavedFilterId} from '@/client/queries/projects'
-import {useSavedFilter} from '@/composables/useSavedFilter'
+import {useSavedFilterDraft} from '@/composables/useSavedFilter'
+import {useCreateSavedFilterMutation} from '@/client/queries/savedFilters'
 
 const router = useRouter()
 
@@ -78,14 +79,22 @@ onUnmounted(() => {
 
 const {
 	filter,
-	submit,
-	isLoading,
+	validate,
 	titleValid,
 	markTitleTouched,
-} = useSavedFilter()
+} = useSavedFilterDraft()
+const createMutation = useCreateSavedFilterMutation(() => alive.value)
+const isLoading = createMutation.isPending
 
 async function create() {
-	const created = await submit()
+	if (isLoading.value) {
+		return
+	}
+	const payload = validate()
+	if (!payload) {
+		return
+	}
+	const created = await createMutation.mutateAsync(payload).catch(() => undefined)
 	if (!alive.value) {
 		return
 	}

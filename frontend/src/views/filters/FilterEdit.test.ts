@@ -1,12 +1,15 @@
 import {defineComponent, ref} from 'vue'
 import {flushPromises, mount, shallowMount} from '@vue/test-utils'
 import {beforeEach, describe, expect, it, vi} from 'vitest'
+import {VueQueryPlugin} from '@tanstack/vue-query'
 
 import XButton from '@/components/input/Button.vue'
 import {newSavedFilterDraft, type SavedFilterResponse} from '@/client/queries/savedFilters'
+import {i18n} from '@/i18n'
 
 const savedFilter = vi.hoisted(() => ({
-	submit: vi.fn(),
+	validate: vi.fn(),
+	update: vi.fn(),
 }))
 const router = vi.hoisted(() => ({back: vi.fn(), push: vi.fn()}))
 const messages = vi.hoisted(() => ({success: vi.fn(), error: vi.fn()}))
@@ -18,8 +21,12 @@ vi.mock('@/composables/useSavedFilter', () => ({
 		error: ref(null),
 		titleValid: ref(true),
 		markTitleTouched: vi.fn(),
-		submit: savedFilter.submit,
+		validate: savedFilter.validate,
 	}),
+}))
+vi.mock('@/client/generated', async importOriginal => ({
+	...await importOriginal<typeof import('@/client/generated')>(),
+	filtersUpdate: async (input: unknown) => ({data: await savedFilter.update(input)}),
 }))
 vi.mock('@/message', () => messages)
 vi.mock('vue-router', async importOriginal => ({
@@ -47,6 +54,7 @@ function filterResponse(id: number): SavedFilterResponse {
 }
 
 const globalOptions = {
+	plugins: [VueQueryPlugin],
 	mocks: {$t: (key: string) => key, $router: router},
 	directives: {focus: () => {}, tooltip: () => {}},
 }
@@ -55,13 +63,14 @@ import FilterEdit from './FilterEdit.vue'
 
 describe('FilterEdit', () => {
 	beforeEach(() => {
-		savedFilter.submit.mockReset()
+		savedFilter.validate.mockReset().mockReturnValue({...newSavedFilterDraft(), title: 'Filter'})
+		savedFilter.update.mockReset()
 		router.back.mockReset()
 		messages.success.mockReset()
 	})
 
 	it('releases the submit button when saving early-returns', async () => {
-		savedFilter.submit.mockResolvedValue(undefined)
+		savedFilter.validate.mockReturnValue(undefined)
 		const wrapper = mount(FilterEdit, {
 			props: {projectId: -2},
 			global: {
@@ -76,7 +85,8 @@ describe('FilterEdit', () => {
 		await primary.get('button').trigger('click')
 		await flushPromises()
 
-		expect(savedFilter.submit).toHaveBeenCalledOnce()
+		expect(savedFilter.validate).toHaveBeenCalledOnce()
+		expect(savedFilter.update).not.toHaveBeenCalled()
 		expect(primary.get('button').attributes('disabled')).toBeUndefined()
 		expect(primary.classes()).not.toContain('is-loading')
 		wrapper.unmount()
@@ -84,13 +94,14 @@ describe('FilterEdit', () => {
 
 	it('does not report success when the route switched to another filter mid-save', async () => {
 		const save = deferred<SavedFilterResponse>()
-		savedFilter.submit.mockReturnValue(save.promise)
+		savedFilter.update.mockReturnValue(save.promise)
 		const wrapper = shallowMount(FilterEdit, {
 			props: {projectId: -2},
 			global: {...globalOptions, stubs: {CreateEdit: SlotStub, FormField: SlotStub}},
 		})
 
 		const saving = (wrapper.vm as unknown as {save: () => Promise<void>}).save()
+		await vi.waitFor(() => expect(savedFilter.update).toHaveBeenCalledOnce())
 		await wrapper.setProps({projectId: -3})
 		save.resolve(filterResponse(1))
 		await saving
@@ -101,7 +112,7 @@ describe('FilterEdit', () => {
 	})
 
 	it('reports success and navigates back after saving', async () => {
-		savedFilter.submit.mockResolvedValue(filterResponse(1))
+		savedFilter.update.mockResolvedValue(filterResponse(1))
 		const wrapper = shallowMount(FilterEdit, {
 			props: {projectId: -2},
 			global: {...globalOptions, stubs: {CreateEdit: SlotStub, FormField: SlotStub}},
@@ -109,7 +120,7 @@ describe('FilterEdit', () => {
 
 		await (wrapper.vm as unknown as {save: () => Promise<void>}).save()
 
-		expect(messages.success).toHaveBeenCalledWith({message: 'filters.edit.success'})
+		expect(messages.success).toHaveBeenCalledWith({message: i18n.global.t('filters.edit.success')})
 		expect(router.back).toHaveBeenCalledOnce()
 		wrapper.unmount()
 	})

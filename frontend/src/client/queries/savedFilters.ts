@@ -1,4 +1,4 @@
-import {queryOptions} from '@tanstack/vue-query'
+import {mutationOptions, queryOptions, useMutation, type QueryClient} from '@tanstack/vue-query'
 
 import {
 	filtersCreate,
@@ -12,14 +12,15 @@ import type {
 	SavedFilterWritable,
 	TaskCollection,
 } from '@/client/generated'
-import {queryClient} from '@/client/queryClient'
-import {assertClientRequestContext, captureClientRequestContext} from '@/client/requestContext'
+import {assertClientRequestContext, captureClientRequestContext, isClientRequestContextCurrent} from '@/client/requestContext'
 import type {ClientRequestContext} from '@/client/requestContext'
 import {removeProjectFromHistory} from '@/modules/projectHistory'
+import {i18n} from '@/i18n'
+import {error, success} from '@/message'
 import type {EditableTaskCollection} from '@/types/EditableTaskCollection'
 import type {TaskFilterParams} from '@/types/TaskFilterParams'
 
-import {getProjectIdFromSavedFilterId, projectKeys} from './projects'
+import {getProjectIdFromSavedFilterId, mapProjectNavigationItem, projectKeys, type ProjectListResult, type ProjectResponse} from './projects'
 
 // The literal unions keep the shared Filters.vue v-model typed.
 type SavedFilterFilters = EditableTaskCollection & Pick<TaskFilterParams, 'sort_by' | 'order_by'>
@@ -104,66 +105,213 @@ export function savedFilterQuery(id: number, format: 'html' | 'markdown' = 'html
 	})
 }
 
-async function invalidateProjectNavigation(context: ClientRequestContext): Promise<void> {
-	await queryClient.invalidateQueries({queryKey: projectKeys.lists()})
-	assertClientRequestContext(context)
-}
-
-export async function createSavedFilter(filter: SavedFilterWritable): Promise<SavedFilterResponse> {
-	const context = captureClientRequestContext()
-	const {data} = await filtersCreate({body: filter})
-	assertClientRequestContext(context)
-	const created = normalizeSavedFilter(data)
-	queryClient.setQueryData(savedFilterKeys.detail(created.id), created)
-	await invalidateProjectNavigation(context)
-	return created
-}
-
-export async function updateSavedFilter({id, ...filter}: UpdateSavedFilterInput): Promise<SavedFilterResponse> {
-	const context = captureClientRequestContext()
-	await queryClient.cancelQueries({queryKey: savedFilterKeys.detailRoot(id)})
-	assertClientRequestContext(context)
-	const {data} = await filtersUpdate({path: {filter: id}, body: filter})
-	assertClientRequestContext(context)
-	const updated = normalizeSavedFilter(data)
-	queryClient.setQueryData(savedFilterKeys.detail(id), updated)
-	await queryClient.invalidateQueries({queryKey: savedFilterKeys.detail(id, 'markdown')})
-	await invalidateProjectNavigation(context)
-	return updated
-}
-
-export async function patchSavedFilterFavorite(
-	id: number,
-	isFavorite: boolean,
-): Promise<SavedFilterResponse> {
-	const context = captureClientRequestContext()
-	await queryClient.cancelQueries({queryKey: savedFilterKeys.detailRoot(id)})
-	assertClientRequestContext(context)
-	const {data} = await patchFiltersRead({
-		path: {filter: id},
-		body: [{op: 'replace', path: '/is_favorite', value: isFavorite}],
-	})
-	assertClientRequestContext(context)
-	const updated = normalizeSavedFilter(data)
-	queryClient.setQueriesData<SavedFilterResponse>(
-		{queryKey: savedFilterKeys.detailRoot(id)},
-		current => current
-			? {...current, is_favorite: updated.is_favorite}
-			: current,
-	)
-	await invalidateProjectNavigation(context)
-	return updated
-}
-
-export async function deleteSavedFilter(id: number): Promise<void> {
-	const context = captureClientRequestContext()
-	await queryClient.cancelQueries({queryKey: savedFilterKeys.detailRoot(id)})
-	assertClientRequestContext(context)
-	await filtersDelete({path: {filter: id}})
-	assertClientRequestContext(context)
+async function snapshotSavedFilter(client: QueryClient, id: number) {
+	const request = captureClientRequestContext()
 	const projectId = getProjectIdFromSavedFilterId(id)
-	queryClient.removeQueries({queryKey: projectKeys.detailRoot(projectId)})
-	removeProjectFromHistory({id: projectId})
-	queryClient.removeQueries({queryKey: savedFilterKeys.detailRoot(id)})
-	await invalidateProjectNavigation(context)
+	await Promise.all([
+		client.cancelQueries({queryKey: savedFilterKeys.detailRoot(id)}),
+		client.cancelQueries({queryKey: projectKeys.lists()}),
+		client.cancelQueries({queryKey: projectKeys.detailRoot(projectId)}),
+	])
+	assertClientRequestContext(request)
+	return {
+		request,
+		previous: [
+			...client.getQueriesData<SavedFilterResponse>({queryKey: savedFilterKeys.detailRoot(id)}),
+			...client.getQueriesData<ProjectListResult>({queryKey: projectKeys.lists()}),
+			...client.getQueriesData<ProjectResponse>({queryKey: projectKeys.detailRoot(projectId)}),
+		],
+	}
+}
+
+type SavedFilterSnapshot = Awaited<ReturnType<typeof snapshotSavedFilter>>
+type UpdateNotify = (input: UpdateSavedFilterInput) => boolean
+type DeleteNotify = (id: number) => boolean
+
+function restoreSavedFilter(client: QueryClient, snapshot: SavedFilterSnapshot | undefined) {
+	if (!snapshot || !isClientRequestContextCurrent(snapshot.request)) {
+		return
+	}
+	for (const [key, previous] of snapshot.previous) {
+		if (previous) {
+			client.setQueryData(key, previous)
+		}
+	}
+}
+
+function updateNavigation(
+	client: QueryClient,
+	id: number,
+	fields: Partial<Pick<ProjectResponse, 'title' | 'is_favorite'>>,
+) {
+	const projectId = getProjectIdFromSavedFilterId(id)
+	client.setQueriesData<ProjectListResult>({queryKey: projectKeys.lists()}, current =>
+		current ? mapProjectNavigationItem(current, projectId, project => ({...project, ...fields})) : current,
+	)
+	client.setQueriesData<ProjectResponse>({queryKey: projectKeys.detailRoot(projectId)}, current =>
+		current ? {...current, ...fields} : current,
+	)
+}
+
+async function settleSavedFilter(
+	client: QueryClient,
+	context: {request: ClientRequestContext} | undefined,
+	id?: number,
+) {
+	if (!context || !isClientRequestContextCurrent(context.request)) {
+		return
+	}
+	await Promise.all([
+		client.invalidateQueries({queryKey: projectKeys.lists()}),
+		...(id === undefined ? [] : [
+			client.invalidateQueries({queryKey: savedFilterKeys.detailRoot(id)}),
+			client.invalidateQueries({queryKey: projectKeys.detailRoot(getProjectIdFromSavedFilterId(id))}),
+		]),
+	])
+	assertClientRequestContext(context.request)
+}
+
+export function createSavedFilterMutationOptions(shouldNotify: () => boolean = () => true) {
+	return mutationOptions({
+		onMutate: () => ({request: captureClientRequestContext()}),
+		mutationFn: async (filter: SavedFilterWritable) => {
+			const request = captureClientRequestContext()
+			const {data} = await filtersCreate({body: filter})
+			assertClientRequestContext(request)
+			return normalizeSavedFilter(data)
+		},
+		onError: (cause, _filter, context) => {
+			if (context && isClientRequestContextCurrent(context.request) && shouldNotify()) {
+				error(cause)
+			}
+		},
+		onSettled: (_data, _error, _filter, context, {client}) => settleSavedFilter(client, context),
+	})
+}
+
+export function updateSavedFilterMutationOptions(shouldNotify: UpdateNotify = () => true) {
+	return mutationOptions({
+		mutationFn: async ({id, ...filter}: UpdateSavedFilterInput) => {
+			const request = captureClientRequestContext()
+			const {data} = await filtersUpdate({path: {filter: id}, body: filter})
+			assertClientRequestContext(request)
+			return normalizeSavedFilter(data)
+		},
+		onMutate: async ({id, ...filter}, {client}) => {
+			const snapshot = await snapshotSavedFilter(client, id)
+			const {description: _description, ...fields} = filter
+			client.setQueriesData<SavedFilterResponse>({queryKey: savedFilterKeys.detailRoot(id)}, current =>
+				current ? {...current, ...fields} : current,
+			)
+			client.setQueryData<SavedFilterResponse>(savedFilterKeys.detail(id), current =>
+				current ? {...current, ...filter} : current,
+			)
+			updateNavigation(client, id, {title: filter.title, is_favorite: filter.is_favorite})
+			return snapshot
+		},
+		onError: (cause, input, context, {client}) => {
+			restoreSavedFilter(client, context)
+			if (context && isClientRequestContextCurrent(context.request) && shouldNotify(input)) {
+				error(cause)
+			}
+		},
+		onSuccess: (updated, input, context, {client}) => {
+			assertClientRequestContext(context.request)
+			client.setQueryData<SavedFilterResponse>(savedFilterKeys.detail(input.id), current =>
+				current ? updated : current,
+			)
+			updateNavigation(client, input.id, {title: updated.title, is_favorite: updated.is_favorite})
+			if (shouldNotify(input)) {
+				success({message: i18n.global.t('filters.edit.success')})
+			}
+		},
+		onSettled: (_data, _error, {id}, context, {client}) => settleSavedFilter(client, context, id),
+	})
+}
+
+export function patchSavedFilterFavoriteMutationOptions() {
+	return mutationOptions({
+		mutationFn: async ({id, isFavorite}: {id: number; isFavorite: boolean}) => {
+			const request = captureClientRequestContext()
+			const {data} = await patchFiltersRead({
+				path: {filter: id},
+				body: [{op: 'replace', path: '/is_favorite', value: isFavorite}],
+			})
+			assertClientRequestContext(request)
+			return normalizeSavedFilter(data)
+		},
+		onMutate: async ({id, isFavorite}, {client}) => {
+			const snapshot = await snapshotSavedFilter(client, id)
+			client.setQueriesData<SavedFilterResponse>({queryKey: savedFilterKeys.detailRoot(id)}, current =>
+				current ? {...current, is_favorite: isFavorite} : current,
+			)
+			updateNavigation(client, id, {is_favorite: isFavorite})
+			return snapshot
+		},
+		onError: (cause, _input, context, {client}) => {
+			restoreSavedFilter(client, context)
+			if (context && isClientRequestContextCurrent(context.request)) {
+				error(cause)
+			}
+		},
+		onSuccess: (updated, {id}, context, {client}) => {
+			assertClientRequestContext(context.request)
+			client.setQueriesData<SavedFilterResponse>({queryKey: savedFilterKeys.detailRoot(id)}, current =>
+				current ? {...current, is_favorite: updated.is_favorite} : current,
+			)
+			updateNavigation(client, id, {is_favorite: updated.is_favorite})
+		},
+		onSettled: (_data, _error, {id}, context, {client}) => settleSavedFilter(client, context, id),
+	})
+}
+
+export function deleteSavedFilterMutationOptions(shouldNotify: DeleteNotify = () => true) {
+	return mutationOptions({
+		mutationFn: async (id: number) => {
+			const request = captureClientRequestContext()
+			await filtersDelete({path: {filter: id}})
+			assertClientRequestContext(request)
+		},
+		onMutate: async (id, {client}) => {
+			const snapshot = await snapshotSavedFilter(client, id)
+			const projectId = getProjectIdFromSavedFilterId(id)
+			client.setQueriesData<ProjectListResult>({queryKey: projectKeys.lists()}, current =>
+				current ? {...current, savedFilterProjects: current.savedFilterProjects.filter(project => project.id !== projectId)} : current,
+			)
+			return snapshot
+		},
+		onError: (cause, id, context, {client}) => {
+			restoreSavedFilter(client, context)
+			if (context && isClientRequestContextCurrent(context.request) && shouldNotify(id)) {
+				error(cause)
+			}
+		},
+		onSuccess: (_data, id, context, {client}) => {
+			assertClientRequestContext(context.request)
+			const projectId = getProjectIdFromSavedFilterId(id)
+			client.removeQueries({queryKey: savedFilterKeys.detailRoot(id)})
+			client.removeQueries({queryKey: projectKeys.detailRoot(projectId)})
+			removeProjectFromHistory({id: projectId})
+			if (shouldNotify(id)) {
+				success({message: i18n.global.t('filters.delete.success')})
+			}
+		},
+		onSettled: (_data, _error, id, context, {client}) => settleSavedFilter(client, context, id),
+	})
+}
+
+export function useCreateSavedFilterMutation(shouldNotify?: () => boolean) {
+	return useMutation(createSavedFilterMutationOptions(shouldNotify))
+}
+
+export function useUpdateSavedFilterMutation(shouldNotify?: UpdateNotify) {
+	return useMutation(updateSavedFilterMutationOptions(shouldNotify))
+}
+
+export function usePatchSavedFilterFavoriteMutation() {
+	return useMutation(patchSavedFilterFavoriteMutationOptions())
+}
+
+export function useDeleteSavedFilterMutation(shouldNotify?: DeleteNotify) {
+	return useMutation(deleteSavedFilterMutationOptions(shouldNotify))
 }
