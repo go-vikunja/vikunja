@@ -41,7 +41,7 @@ import type {SortableEvent} from 'sortablejs'
 import ProjectsNavigationItem from '@/components/home/ProjectsNavigationItem.vue'
 
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
-import type {ProjectResponse} from '@/client/queries/projects'
+import {useUpdateProjectMutation, type ProjectResponse} from '@/client/queries/projects'
 
 import {useProjectNavigation} from '@/composables/useProjectNavigation'
 
@@ -57,6 +57,7 @@ const emit = defineEmits<{
 const drag = ref(false)
 
 const projectStore = useProjectNavigation()
+const updateMutation = useUpdateProjectMutation()
 
 // Vue draggable will modify the projects list as it changes their position which will not work on a prop.
 // Hence, we'll clone the prop and work on the clone.
@@ -101,8 +102,7 @@ async function saveProjectPosition(e: SortableEvent) {
 	)
 
 	try {
-		// create a copy of the project in order to not violate pinia manipulation
-		await projectStore.updateProject({
+		await updateMutation.mutateAsync({
 			...project,
 			position,
 			parent_project_id: parentProjectId,

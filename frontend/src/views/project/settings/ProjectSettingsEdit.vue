@@ -75,6 +75,7 @@ import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
 import ErrorMessage from '@/components/misc/Error.vue'
 
 import type {ProjectResponse} from '@/client/queries/projects'
+import {useUpdateProjectMutation} from '@/client/queries/projects'
 
 import {useBaseStore} from '@/stores/base'
 import {useProjectNavigation} from '@/composables/useProjectNavigation'
@@ -94,7 +95,8 @@ const projectStore = useProjectNavigation()
 
 const {t} = useI18n({useScope: 'global'})
 
-const {project, save: saveProject, isLoading, error: loadError} = useProject(() => props.projectId)
+const {project, isLoaded, isLoading, error: loadError} = useProject(() => props.projectId)
+const updateProject = useUpdateProjectMutation('html', t('project.edit.success'))
 
 const parentProject = ref<ProjectResponse | null>(null)
 const parentProjectChanged = ref(false)
@@ -135,7 +137,7 @@ function setParentProject(parent: ProjectResponse | null) {
 useTitle(() => project.value.title ? t('project.edit.title', {project: project.value.title}) : '')
 
 async function save() {
-	if (isSaving.value) {
+	if (isSaving.value || !isLoaded.value) {
 		return
 	}
 
@@ -145,7 +147,7 @@ async function save() {
 		if (parentProjectChanged.value) {
 			project.value.parent_project_id = parentProject.value?.id ?? 0
 		}
-		await saveProject()
+		await updateProject.mutateAsync(project.value)
 		await useBaseStore().handleSetCurrentProject({project: project.value})
 		router.back()
 	} finally {

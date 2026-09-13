@@ -12,11 +12,23 @@ const state = vi.hoisted(() => ({
 
 vi.mock('@/components/input/AsyncEditor', () => ({default: defineComponent({name: 'AsyncEditor', render: () => null})}))
 
+vi.mock('@/client/queries/projects', async importOriginal => ({
+	...await importOriginal<typeof import('@/client/queries/projects')>(),
+	useUpdateProjectMutation: () => ({
+		isPending: ref(false),
+		mutateAsync: vi.fn(async (project: ProjectResponse) => {
+			state.savedParentProjectIds.push(project.parent_project_id)
+			return project
+		}),
+	}),
+}))
+
 vi.mock('@/composables/useProject', () => ({
 	useProject: () => ({
 		project: state.project,
 		isLoading: ref(false),
-		save: vi.fn(() => state.savedParentProjectIds.push(state.project!.value.parent_project_id)),
+		isLoaded: ref(true),
+		error: ref(null),
 	}),
 }))
 

@@ -33,22 +33,24 @@
 <script setup lang="ts">
 import {ref, reactive, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
+import {useRouter} from 'vue-router'
 
 import CreateEdit from '@/components/misc/CreateEdit.vue'
 import ColorPicker from '@/components/input/ColorPicker.vue'
 import FormField from '@/components/input/FormField.vue'
 
-import {success} from '@/message'
 import {useTitle} from '@/composables/useTitle'
 import {useProjectNavigation} from '@/composables/useProjectNavigation'
 import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
-import {createProjectDraft, type ProjectResponse} from '@/client/queries/projects'
+import {createProjectDraft, useCreateProjectMutation, type ProjectResponse} from '@/client/queries/projects'
 
 const props = defineProps<{
 	parentProjectId?: number,
 }>()
 
 const {t} = useI18n({useScope: 'global'})
+const router = useRouter()
+const createMutation = useCreateProjectMutation()
 
 useTitle(() => t('project.create.header'))
 
@@ -82,8 +84,8 @@ async function createProject() {
 	}
 
 	try {
-		await projectStore.createProject(project)
-		success({message: t('project.create.createdSuccess')})
+		const created = await createMutation.mutateAsync(project)
+		await router.push({name: 'project.index', params: {projectId: created.id}})
 	} finally {
 		isSubmitting.value = false
 	}

@@ -3,6 +3,7 @@ import {mount, flushPromises, type VueWrapper} from '@vue/test-utils'
 import {setActivePinia, createPinia} from 'pinia'
 import {createI18n} from 'vue-i18n'
 import {createRouter, createMemoryHistory} from 'vue-router'
+import {QueryClient, VueQueryPlugin} from '@tanstack/vue-query'
 
 import type {ProjectResponse} from '@/client/queries/projects'
 
@@ -11,8 +12,6 @@ const {projects} = vi.hoisted(() => ({projects: {} as Record<number, ProjectResp
 vi.mock('@/composables/useProjectNavigation', () => ({
 	useProjectNavigation: () => ({
 		projects,
-		updateProject: vi.fn(),
-		loadAllProjects: vi.fn(),
 	}),
 }))
 
@@ -41,7 +40,7 @@ async function mountModal(path: string) {
 
 	const wrapper = mount(ProjectSettingsArchive, {
 		global: {
-			plugins: [i18n, router],
+			plugins: [i18n, router, [VueQueryPlugin, {queryClient: new QueryClient()}]],
 			components: {Modal},
 			directives: {cy: testid},
 			stubs: {

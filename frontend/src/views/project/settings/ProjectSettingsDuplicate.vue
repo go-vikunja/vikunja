@@ -23,7 +23,7 @@
 
 <script setup lang="ts">
 import {computed, ref, watch} from 'vue'
-import {useRoute} from 'vue-router'
+import {useRoute, useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 
 import CreateEdit from '@/components/misc/CreateEdit.vue'
@@ -31,19 +31,21 @@ import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import ErrorMessage from '@/components/misc/Error.vue'
 
-import {success} from '@/message'
 import {useTitle} from '@/composables/useTitle'
 import {useProject} from '@/composables/useProject'
 import {useProjectNavigation} from '@/composables/useProjectNavigation'
 import type {ProjectResponse} from '@/client/queries/projects'
+import {useDuplicateProjectMutation} from '@/client/queries/projects'
 
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => t('project.duplicate.title'))
 
 const route = useRoute()
+const router = useRouter()
 const projectStore = useProjectNavigation()
 
-const {project, isLoading, duplicateProject, error: loadError} = useProject(route.params.projectId)
+const {project, isLoading, isLoaded, error: loadError} = useProject(() => Number(route.params.projectId))
+const duplicateProject = useDuplicateProjectMutation()
 
 const parentProject = ref<ProjectResponse | null>(null)
 const duplicateShares = ref(true)
@@ -62,11 +64,18 @@ watch(
 )
 
 async function duplicate() {
+	if (isDuplicating.value || !isLoaded.value) {
+		return
+	}
 	isDuplicating.value = true
 
 	try {
-		await duplicateProject(parentProject.value?.id ?? 0, duplicateShares.value)
-		success({message: t('project.duplicate.success')})
+		const duplicated = await duplicateProject.mutateAsync({
+			projectId: project.value.id,
+			parentProjectId: parentProject.value?.id ?? 0,
+			duplicateShares: duplicateShares.value,
+		})
+		await router.push({name: 'project.index', params: {projectId: duplicated.id}})
 	} finally {
 		isDuplicating.value = false
 	}

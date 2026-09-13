@@ -152,6 +152,7 @@ import type {TaskFilterParams} from '@/services/taskCollection'
 import {
 	createProjectDraft,
 	isSavedFilterProject,
+	useCreateProjectMutation,
 	type ProjectResponse,
 } from '@/client/queries/projects'
 
@@ -160,6 +161,7 @@ const router = useRouter()
 
 const baseStore = useBaseStore()
 const projectNavigation = useProjectNavigation()
+const createProjectMutation = useCreateProjectMutation()
 const {currentProject: selectedProject} = useCurrentProject()
 const {filterLabelsByQuery, getLabelsByExactTitles} = useLabels()
 const taskStore = useTaskStore()
@@ -670,11 +672,11 @@ async function newTask() {
 
 async function newProject() {
 	const parentProjectId = currentProject.value?.id ?? 0
-	await projectNavigation.createProject(createProjectDraft({
+	const created = await createProjectMutation.mutateAsync(createProjectDraft({
 		title: query.value,
 		parent_project_id: Math.max(parentProjectId, 0),
 	}))
-	success({message: t('project.create.createdSuccess')})
+	await router.push({name: 'project.index', params: {projectId: created.id}})
 }
 
 async function newTeam() {

@@ -327,6 +327,7 @@ import {useCurrentProject} from '@/composables/useCurrentProject'
 import {useTaskDragToProject} from '@/composables/useTaskDragToProject'
 import {success} from '@/message'
 import {useProjectStore} from '@/stores/projects'
+import {refreshProject, refreshProjects} from '@/client/queries/projects'
 import type {TaskFilterParams} from '@/services/taskCollection'
 import type {IProjectView} from '@/modelTypes/IProjectView'
 import TaskPositionService from '@/services/taskPosition'
@@ -881,6 +882,7 @@ async function toggleDefaultBucket(bucket: IBucket) {
 	}
 
 	projectStore.setProject(updatedProject)
+	await Promise.all([refreshProject(projectIdWithFallback.value), refreshProjects()])
 
 	success({message: t('project.kanban.defaultBucketSavedSuccess')})
 }
@@ -903,6 +905,7 @@ async function toggleDoneBucket(bucket: IBucket) {
 	}
 	
 	projectStore.setProject(updatedProject)
+	await Promise.all([refreshProject(projectIdWithFallback.value), refreshProjects()])
 	
 	success({message: t('project.kanban.doneBucketSavedSuccess')})
 }

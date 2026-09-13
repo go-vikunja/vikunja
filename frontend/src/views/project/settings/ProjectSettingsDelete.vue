@@ -36,13 +36,14 @@ import {computed, ref, watchEffect} from 'vue'
 import {useTitle} from '@/composables/useTitle'
 import {useI18n} from 'vue-i18n'
 import {useRoute, useRouter} from 'vue-router'
-import {success} from '@/message'
+import {useDeleteProjectMutation} from '@/client/queries/projects'
 import Loading from '@/components/misc/Loading.vue'
 import {useProjectNavigation} from '@/composables/useProjectNavigation'
 import TaskService from '@/services/task'
 
 const {t} = useI18n({useScope: 'global'})
 const projectStore = useProjectNavigation()
+const deleteMutation = useDeleteProjectMutation()
 const route = useRoute()
 const router = useRouter()
 
@@ -88,8 +89,7 @@ async function deleteProject() {
 		return
 	}
 
-	await projectStore.deleteProject(project.value)
-	success({message: t('project.delete.success')})
+	await deleteMutation.mutateAsync(project.value.id)
 	router.push({name: 'home'})
 }
 </script>

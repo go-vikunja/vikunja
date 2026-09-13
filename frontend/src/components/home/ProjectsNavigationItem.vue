@@ -56,7 +56,7 @@
 				v-if="canToggleFavorite"
 				class="favorite"
 				:class="{'is-favorite': project.is_favorite}"
-				@click="projectStore.toggleProjectFavorite(project)"
+				@click="toggleProjectFavorite"
 			>
 				<span class="is-sr-only">{{ project.is_favorite ? $t('project.unfavorite') : $t('project.favorite') }}</span>
 				<Icon :icon="project.is_favorite ? 'star' : ['far', 'star']" />
@@ -105,7 +105,12 @@ import {getProjectTitle} from '@/helpers/getProjectTitle'
 import ColorBubble from '@/components/misc/ColorBubble.vue'
 import ProjectsNavigation from '@/components/home/ProjectsNavigation.vue'
 import {PERMISSIONS} from '@/constants/permissions'
-import {isSavedFilterProject} from '@/client/queries/projects'
+import {
+	getSavedFilterIdFromProjectId,
+	isSavedFilterProject,
+	useLegacySavedFilterFavoriteMutation,
+	usePatchProjectFavoriteMutation,
+} from '@/client/queries/projects'
 
 const props = defineProps<{
 	project: ProjectResponse,
@@ -169,6 +174,8 @@ const isDropTarget = computed(() => {
 })
 
 const projectStore = useProjectNavigation()
+const projectFavoriteMutation = usePatchProjectFavoriteMutation()
+const savedFilterFavoriteMutation = useLegacySavedFilterFavoriteMutation()
 const {currentProject} = useCurrentProject()
 
 // Persist open state across browser reloads. Using a separate ref for the state 
@@ -202,6 +209,23 @@ const canToggleFavorite = computed(() => {
 	// Saved filters (negative IDs except -1)
 	return isSavedFilterProject(props.project)
 })
+
+async function toggleProjectFavorite() {
+	const project = props.project
+	if (!canToggleFavorite.value || project.is_archived) {
+		return
+	}
+
+	const isFavorite = !project.is_favorite
+	if (isSavedFilterProject(project)) {
+		await savedFilterFavoriteMutation.mutateAsync({
+			id: getSavedFilterIdFromProjectId(project.id),
+			isFavorite,
+		})
+		return
+	}
+	await projectFavoriteMutation.mutateAsync({id: project.id, isFavorite})
+}
 </script>
 
 <style lang="scss" scoped>
