@@ -9,11 +9,20 @@ const state = vi.hoisted(() => ({
 	projects: undefined as Record<number, ProjectResponse> | undefined,
 }))
 
+vi.mock('@/client/queries/projects', async importOriginal => ({
+	...await importOriginal<typeof import('@/client/queries/projects')>(),
+	useDuplicateProjectMutation: () => ({
+		isPending: ref(false),
+		mutateAsync: vi.fn(),
+	}),
+}))
+
 vi.mock('@/composables/useProject', () => ({
 	useProject: () => ({
 		project: state.project,
 		isLoading: ref(false),
-		duplicateProject: vi.fn(),
+		isLoaded: ref(true),
+		error: ref(null),
 	}),
 }))
 
@@ -23,7 +32,10 @@ vi.mock('@/composables/useProjectNavigation', () => ({
 
 vi.mock('@/composables/useTitle', () => ({useTitle: vi.fn()}))
 vi.mock('@/message', () => ({success: vi.fn()}))
-vi.mock('vue-router', () => ({useRoute: () => ({params: {projectId: '101'}})}))
+vi.mock('vue-router', () => ({
+	useRoute: () => ({params: {projectId: '101'}}),
+	useRouter: () => ({push: vi.fn()}),
+}))
 vi.mock('vue-i18n', async importOriginal => ({
 	...await importOriginal<typeof import('vue-i18n')>(),
 	useI18n: () => ({t: (key: string) => key}),

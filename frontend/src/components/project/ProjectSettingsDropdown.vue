@@ -138,7 +138,7 @@ import SubscriptionModel from '@/models/subscription'
 
 import {isSavedFilterProject} from '@/client/queries/projects'
 import {useConfigStore} from '@/stores/config'
-import {useProjectNavigation} from '@/composables/useProjectNavigation'
+import {refreshProjects} from '@/client/queries/projects'
 import {useAuthStore} from '@/stores/auth'
 import {PERMISSIONS} from '@/constants/permissions'
 
@@ -149,7 +149,6 @@ const props = withDefaults(defineProps<{
 	forceAllActions: false,
 })
 
-const projectStore = useProjectNavigation()
 const subscription = ref<ISubscription | null>(null)
 watchEffect(() => {
 	const value = props.project.subscription
@@ -168,7 +167,7 @@ const backgroundsEnabled = computed(() => configStore.enabledBackgroundProviders
 
 async function setSubscriptionInStore(sub: ISubscription | null) {
 	subscription.value = sub
-	await projectStore.invalidateProjects()
+	await refreshProjects()
 }
 
 const authStore = useAuthStore()

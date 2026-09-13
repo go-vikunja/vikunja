@@ -2,13 +2,13 @@ import {shallowMount} from '@vue/test-utils'
 import {defineComponent, h, nextTick} from 'vue'
 import {beforeEach, describe, expect, it, vi} from 'vitest'
 
-const projectNavigation = vi.hoisted(() => ({
-	invalidateProjects: vi.fn(() => Promise.resolve()),
-	setProject: vi.fn(),
+const projectQueries = vi.hoisted(() => ({
+	refreshProjects: vi.fn(() => Promise.resolve()),
 }))
 
-vi.mock('@/composables/useProjectNavigation', () => ({
-	useProjectNavigation: () => projectNavigation,
+vi.mock('@/client/queries/projects', async importOriginal => ({
+	...await importOriginal<typeof import('@/client/queries/projects')>(),
+	...projectQueries,
 }))
 
 vi.mock('@/stores/auth', () => ({
@@ -44,11 +44,10 @@ import UserModel from '@/models/user'
 
 describe('ProjectSettingsDropdown subscriptions', () => {
 	beforeEach(() => {
-		projectNavigation.invalidateProjects.mockClear()
-		projectNavigation.setProject.mockClear()
+		projectQueries.refreshProjects.mockClear()
 	})
 
-	it('updates local state and invalidates project caches after a subscription change', async () => {
+	it('updates local state and refreshes projects after a subscription change', async () => {
 		const wrapper = shallowMount(ProjectSettingsDropdown, {
 			props: {
 				project: {id: 1, title: 'Project'},
@@ -79,7 +78,6 @@ describe('ProjectSettingsDropdown subscriptions', () => {
 		await nextTick()
 
 		expect(subscriptionComponent.props('modelValue')).toEqual(subscription)
-		expect(projectNavigation.invalidateProjects).toHaveBeenCalledOnce()
-		expect(projectNavigation.setProject).not.toHaveBeenCalled()
+		expect(projectQueries.refreshProjects).toHaveBeenCalledOnce()
 	})
 })

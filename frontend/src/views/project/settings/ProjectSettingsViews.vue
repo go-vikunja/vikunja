@@ -15,6 +15,7 @@ import ProjectModel from '@/models/project'
 import Message from '@/components/misc/Message.vue'
 import draggable from 'zhyswan-vuedraggable'
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
+import {refreshProject, refreshProjects} from '@/client/queries/projects'
 
 const props = defineProps<{
 	projectId: number
@@ -74,6 +75,7 @@ async function createView() {
 		success({message: t('project.views.createSuccess')})
 		showCreateForm.value = false
 		projectStore.setProjectView(result)
+		await Promise.all([refreshProject(props.projectId), refreshProjects()])
 		newView.value = new ProjectViewModel({})
 	} catch (e) {
 		error(e)
@@ -91,6 +93,7 @@ async function deleteView(viewId: number) {
 	}))
 
 	projectStore.removeProjectView(props.projectId, viewId)
+	await Promise.all([refreshProject(props.projectId), refreshProjects()])
 
 	showDeleteModal.value = false
 }
@@ -101,6 +104,7 @@ async function saveView(view: IProjectView) {
 	}
 	const result = await projectViewService.update(view)
 	projectStore.setProjectView(result)
+	await Promise.all([refreshProject(props.projectId), refreshProjects()])
 	viewToEdit.value = null
 	success({message: t('project.views.updateSuccess')})
 }
@@ -119,6 +123,7 @@ async function saveViewPosition(e) {
 		position,
 	})
 	projectStore.setProjectView(result)
+	await Promise.all([refreshProject(props.projectId), refreshProjects()])
 	success({message: t('project.views.updateSuccess')})
 }
 </script>

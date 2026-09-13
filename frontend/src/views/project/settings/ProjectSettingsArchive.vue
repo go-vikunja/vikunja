@@ -18,7 +18,7 @@ import {computed} from 'vue'
 import {useRouter, useRoute} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 
-import {success} from '@/message'
+import {useUpdateProjectMutation} from '@/client/queries/projects'
 import {useTitle} from '@/composables/useTitle'
 
 import {useBaseStore} from '@/stores/base'
@@ -28,6 +28,7 @@ defineOptions({name: 'ProjectSettingArchive'})
 
 const {t} = useI18n({useScope: 'global'})
 const projectStore = useProjectNavigation()
+const updateMutation = useUpdateProjectMutation('html', t('project.archive.success'))
 const router = useRouter()
 const route = useRoute()
 
@@ -40,13 +41,11 @@ async function archiveProject() {
 	}
 
 	try {
-		const newProject = await projectStore.updateProject({
+		const newProject = await updateMutation.mutateAsync({
 			...project.value,
 			is_archived: !project.value.is_archived,
 		})
 		useBaseStore().setCurrentProject(newProject)
-		success({message: t('project.archive.success')})
-		await projectStore.loadAllProjects()
 	} finally {
 		router.back()
 	}

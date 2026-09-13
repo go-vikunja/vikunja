@@ -129,6 +129,7 @@ import {useTitle} from '@/composables/useTitle'
 
 import CreateEdit from '@/components/misc/CreateEdit.vue'
 import {success} from '@/message'
+import {refreshProject, refreshProjects} from '@/client/queries/projects'
 
 defineOptions({name: 'ProjectSettingBackground'})
 
@@ -205,8 +206,9 @@ async function setBackground(backgroundId: string) {
 		id: backgroundId,
 		projectId: route.params.projectId,
 	})
-	await baseStore.handleSetCurrentProject({project, forceUpdate: true})
 	projectStore.setProject(project)
+	const [updatedProject] = await Promise.all([refreshProject(Number(route.params.projectId)), refreshProjects()])
+	await baseStore.handleSetCurrentProject({project: updatedProject, forceUpdate: true})
 	success({message: t('project.background.success')})
 }
 
@@ -220,8 +222,9 @@ async function uploadBackground() {
 		route.params.projectId,
 		backgroundUploadInput.value?.files[0],
 	)
-	await baseStore.handleSetCurrentProject({project, forceUpdate: true})
 	projectStore.setProject(project)
+	const [updatedProject] = await Promise.all([refreshProject(Number(route.params.projectId)), refreshProjects()])
+	await baseStore.handleSetCurrentProject({project: updatedProject, forceUpdate: true})
 	success({message: t('project.background.success')})
 }
 
@@ -231,8 +234,9 @@ async function removeBackground() {
 	}
 
 	const project = await projectService.value.removeBackground(currentProject.value)
-	await baseStore.handleSetCurrentProject({project, forceUpdate: true})
 	projectStore.setProject(project)
+	const [updatedProject] = await Promise.all([refreshProject(Number(route.params.projectId)), refreshProjects()])
+	await baseStore.handleSetCurrentProject({project: updatedProject, forceUpdate: true})
 	success({message: t('project.background.removeSuccess')})
 	router.back()
 }

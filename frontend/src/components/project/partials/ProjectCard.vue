@@ -46,7 +46,7 @@
 			class="favorite"
 			:aria-label="project.is_favorite ? $t('project.unfavorite') : $t('project.favorite')"
 			:class="{'is-favorite': project.is_favorite}"
-			@click.prevent.stop="projectNavigation.toggleProjectFavorite(project)"
+			@click.prevent.stop="toggleProjectFavorite"
 		>
 			<Icon :icon="project.is_favorite ? 'star' : ['far', 'star']" />
 		</BaseButton>
@@ -55,12 +55,11 @@
 
 <script lang="ts" setup>
 import {computed} from 'vue'
-import type {ProjectResponse} from '@/client/queries/projects'
+import {usePatchProjectFavoriteMutation, type ProjectResponse} from '@/client/queries/projects'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 
 import {useProjectBackground} from '@/composables/useProjectBackground'
-import {useProjectNavigation} from '@/composables/useProjectNavigation'
 import {getProjectTitle} from '@/helpers/getProjectTitle'
 
 const props = defineProps<{
@@ -69,7 +68,14 @@ const props = defineProps<{
 
 const {background, blurHashUrl} = useProjectBackground(() => props.project)
 
-const projectNavigation = useProjectNavigation()
+const favoriteMutation = usePatchProjectFavoriteMutation()
+
+async function toggleProjectFavorite() {
+	if (props.project.id <= 0 || props.project.is_archived) {
+		return
+	}
+	await favoriteMutation.mutateAsync({id: props.project.id, isFavorite: !props.project.is_favorite})
+}
 
 const textOnlyDescription = computed(() => {
 	return props.project.description ? props.project.description.replace(/<[^>]*>/g, '') : ''

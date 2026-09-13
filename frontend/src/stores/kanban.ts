@@ -14,8 +14,8 @@ import type {IBucket} from '@/modelTypes/IBucket'
 import {useAuthStore} from '@/stores/auth'
 import type {ProjectView} from '@/client/generated'
 import {useBaseStore} from '@/stores/base'
-import {useProjectNavigation} from '@/composables/useProjectNavigation'
 import {useCurrentProject} from '@/composables/useCurrentProject'
+import {ensureProjects, getProjectById, refreshProject, refreshProjects} from '@/client/queries/projects'
 
 const TASKS_PER_BUCKET = 25
 
@@ -39,7 +39,6 @@ function getTaskIndicesById(buckets: IBucket[], taskId: ITask['id']) {
 export const useKanbanStore = defineStore('kanban', () => {
 	const authStore = useAuthStore()
 	const baseStore = useBaseStore()
-	const projectNavigation = useProjectNavigation()
 	const {currentProject} = useCurrentProject()
 
 	const buckets = ref<IBucket[]>([])
@@ -348,17 +347,13 @@ export const useKanbanStore = defineStore('kanban', () => {
 
 		const bucketService = new BucketService()
 		try {
+			const {projects} = await ensureProjects()
+			const view = getProjectById(projects, bucket.projectId)?.views.find(v => v.id === bucket.projectViewId)
 			const response = await bucketService.delete(bucket)
 			removeBucket(bucket)
 
-			// Mirrors Bucket.Delete on the server, which zeroes these when they pointed at the deleted bucket.
-			const view = projectNavigation.projects[bucket.projectId]?.views?.find(v => v.id === bucket.projectViewId)
 			if (view && (view.default_bucket_id === bucket.id || view.done_bucket_id === bucket.id)) {
-				projectNavigation.setProjectView({
-					...view,
-					default_bucket_id: view.default_bucket_id === bucket.id ? 0 : view.default_bucket_id,
-					done_bucket_id: view.done_bucket_id === bucket.id ? 0 : view.done_bucket_id,
-				})
+				await Promise.all([refreshProject(bucket.projectId), refreshProjects()])
 			}
 
 			// We reload all buckets because tasks are being moved from the deleted bucket
