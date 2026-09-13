@@ -1,7 +1,8 @@
+import {QueryClient, type MutationOptions} from '@tanstack/vue-query'
 import {beforeEach, describe, expect, it, vi} from 'vitest'
 
 import type {ProjectListResult} from './projects'
-import {projectKeys} from './projects'
+import {normalizeProject, projectKeys} from './projects'
 import type {SavedFilterDraft, SavedFilterResponse} from './savedFilters'
 import {queryClient} from '@/client/queryClient'
 
@@ -19,6 +20,7 @@ const requestContext = vi.hoisted(() => ({
 	apiV2BaseUrl: 'https://identity-a.example/api/v2/',
 }))
 
+vi.mock('@/message', () => ({success: vi.fn(), error: vi.fn()}))
 vi.mock('@/client/generated', () => sdk)
 vi.mock('@/helpers/auth', () => ({
 	getAuthSessionEpoch: () => requestContext.sessionEpoch,
@@ -30,14 +32,30 @@ vi.mock('@/helpers/fetcher', () => ({
 }))
 
 import {
-	createSavedFilter,
-	deleteSavedFilter,
+	createSavedFilterMutationOptions,
+	deleteSavedFilterMutationOptions,
 	newSavedFilterDraft,
-	patchSavedFilterFavorite,
+	patchSavedFilterFavoriteMutationOptions,
 	savedFilterKeys,
 	savedFilterQuery,
-	updateSavedFilter,
+	updateSavedFilterMutationOptions,
 } from './savedFilters'
+
+function execute<TData, TVariables, TContext>(
+	options: MutationOptions<TData, Error, TVariables, TContext>,
+	variables: TVariables,
+	client = queryClient,
+) {
+	return client.getMutationCache().build(client, options).execute(variables)
+}
+
+const createSavedFilter = (input: Parameters<NonNullable<ReturnType<typeof createSavedFilterMutationOptions>['mutationFn']>>[0]) =>
+	execute(createSavedFilterMutationOptions(), input)
+const updateSavedFilter = (input: Parameters<NonNullable<ReturnType<typeof updateSavedFilterMutationOptions>['mutationFn']>>[0]) =>
+	execute(updateSavedFilterMutationOptions(), input)
+const deleteSavedFilter = (id: number) => execute(deleteSavedFilterMutationOptions(), id)
+const patchSavedFilterFavorite = (id: number, isFavorite: boolean) =>
+	execute(patchSavedFilterFavoriteMutationOptions(), {id, isFavorite})
 
 function serverSavedFilter(overrides: Partial<SavedFilterResponse> = {}): SavedFilterResponse {
 	return {
@@ -64,12 +82,27 @@ const emptyProjectList: ProjectListResult = {
 
 beforeEach(() => {
 	requestContext.identity = {id: 1, type: 1}
+	requestContext.sessionEpoch = 1
+	requestContext.apiV2BaseUrl = 'https://identity-a.example/api/v2/'
 })
 
 describe('saved filter queries', () => {
 	beforeEach(() => {
 		queryClient.clear()
 		Object.values(sdk).forEach(mock => mock.mockReset())
+	})
+
+	it('uses the lifecycle client for saved-filter navigation updates', async () => {
+		const client = new QueryClient()
+		client.setQueryData(projectKeys.list(), {
+			...emptyProjectList,
+			savedFilterProjects: [normalizeProject({id: -9, title: 'Before'})],
+		})
+		sdk.patchFiltersRead.mockResolvedValue({data: serverSavedFilter({id: 8, is_favorite: true})})
+		await execute(patchSavedFilterFavoriteMutationOptions(), {id: 8, isFavorite: true}, client)
+		expect(client.getQueryData<ProjectListResult>(projectKeys.list())?.savedFilterProjects[0].is_favorite).toBe(true)
+		expect(queryClient.getQueryData(projectKeys.list())).toBeUndefined()
+		client.clear()
 	})
 
 	it('reads a saved filter without inventing creation defaults', async () => {
@@ -113,7 +146,7 @@ describe('saved filter queries', () => {
 		})
 	})
 
-	it('creates a saved filter, caches its detail, and invalidates project navigation', async () => {
+	it('creates a saved filter without seeding an absent detail and invalidates project navigation', async () => {
 		const listKey = projectKeys.list()
 		queryClient.setQueryData(listKey, emptyProjectList)
 		const created = serverSavedFilter({id: 8, title: 'Created'})
@@ -122,7 +155,7 @@ describe('saved filter queries', () => {
 		await expect(createSavedFilter({title: 'Created'})).resolves.toEqual(created)
 
 		expect(sdk.filtersCreate).toHaveBeenCalledWith({body: {title: 'Created'}})
-		expect(queryClient.getQueryData(savedFilterKeys.detail(8))).toEqual(created)
+		expect(queryClient.getQueryData(savedFilterKeys.detail(8))).toBeUndefined()
 		expect(queryClient.getQueryState(listKey)?.isInvalidated).toBe(true)
 	})
 
@@ -163,7 +196,7 @@ describe('saved filter queries', () => {
 			body: writable,
 		})
 		expect(queryClient.getQueryData<SavedFilterResponse>(savedFilterKeys.detail(8))?.title).toBe('After')
-		expect(queryClient.getQueryState(savedFilterKeys.detail(8))?.isInvalidated).toBe(false)
+		expect(queryClient.getQueryState(savedFilterKeys.detail(8))?.isInvalidated).toBe(true)
 		expect(queryClient.getQueryState(savedFilterKeys.detail(8, 'markdown'))?.isInvalidated).toBe(true)
 		expect(queryClient.getQueryState(listKey)?.isInvalidated).toBe(true)
 	})
@@ -245,7 +278,51 @@ describe('saved filter mutations after the request context changes', () => {
 		Object.values(sdk).forEach(mock => mock.mockReset())
 	})
 
-	describe('after the identity changes', () => {
+	it.each(delayedMutationCases)('does not materialize an absent cache during $name', async ({mock, run, response}) => {
+		mock.mockResolvedValue(response)
+		await run()
+		expect(queryClient.getQueryCache().getAll()).toEqual([])
+	})
+
+	it.each(['update', 'favorite', 'delete'])('rolls back an optimistic %s in the same session', async operation => {
+		const selected = delayedMutationCases.find(test => test.name === operation)!
+		const previous = serverSavedFilter({id: 8, title: 'Before', description: '<p>HTML</p>'})
+		const markdown = {...previous, description: '**Markdown**'}
+		const pseudo = normalizeProject({id: -9, title: 'Before', description: '<p>HTML</p>'})
+		const list = {...emptyProjectList, savedFilterProjects: [pseudo]}
+		queryClient.setQueryData(listKey, list)
+		queryClient.setQueryData(savedFilterKeys.detail(8), previous)
+		queryClient.setQueryData(savedFilterKeys.detail(8, 'markdown'), markdown)
+		queryClient.setQueryData(projectKeys.detail(-9), pseudo)
+		const failure = new Error('Request failed')
+		selected.mock.mockImplementation(async () => {
+			const current = queryClient.getQueryData<ProjectListResult>(listKey)!
+			if (operation === 'delete') {
+				expect(current.savedFilterProjects).toEqual([])
+			} else if (operation === 'favorite') {
+				expect(current.savedFilterProjects[0].is_favorite).toBe(true)
+				expect(queryClient.getQueryData<SavedFilterResponse>(savedFilterKeys.detail(8, 'markdown'))?.is_favorite).toBe(true)
+			} else {
+				expect(current.savedFilterProjects[0].title).toBe('Identity A update')
+				expect(queryClient.getQueryData<SavedFilterResponse>(savedFilterKeys.detail(8, 'markdown'))?.description).toBe('**Markdown**')
+			}
+			throw failure
+		})
+
+		await expect(selected.run()).rejects.toThrow(failure)
+
+		expect(queryClient.getQueryData(listKey)).toEqual(list)
+		expect(queryClient.getQueryData(savedFilterKeys.detail(8))).toEqual(previous)
+		expect(queryClient.getQueryData(savedFilterKeys.detail(8, 'markdown'))).toEqual(markdown)
+		expect(queryClient.getQueryData(projectKeys.detail(-9))).toEqual(pseudo)
+		expect(queryClient.getQueryState(listKey)?.isInvalidated).toBe(true)
+	})
+
+	describe.each([
+		['identity', () => { requestContext.identity = {id: 2, type: 1} }],
+		['session', () => { requestContext.sessionEpoch++ }],
+		['API URL', () => { requestContext.apiV2BaseUrl = 'https://identity-b.example/api/v2/' }],
+	] as const)('after the %s changes', (_name, switchContext) => {
 		it.each(delayedMutationCases)('discards a delayed $name completion', async ({mock, run, response}) => {
 			queryClient.setQueryData(listKey, emptyProjectList)
 			queryClient.setQueryData(savedFilterKeys.detail(8), serverSavedFilter({id: 8, title: 'Identity A'}))
@@ -256,15 +333,17 @@ describe('saved filter mutations after the request context changes', () => {
 
 			const mutation = run()
 			await vi.waitFor(() => expect(mock).toHaveBeenCalledOnce())
-			requestContext.identity = {id: 2, type: 1}
+			switchContext()
 			queryClient.clear()
 			const identityBFilter = serverSavedFilter({id: 8, title: 'Identity B'})
-			queryClient.setQueryData(listKey, emptyProjectList)
+			const nextList = {...emptyProjectList, savedFilterProjects: [normalizeProject({id: -9, title: 'New session filter'})]}
+			queryClient.setQueryData(listKey, nextList)
 			queryClient.setQueryData(savedFilterKeys.detail(8), identityBFilter)
 			resolveRequest(response)
 
 			await expect(mutation).rejects.toMatchObject({name: 'AbortError'})
 			expect(queryClient.getQueryData(savedFilterKeys.detail(8))).toEqual(identityBFilter)
+			expect(queryClient.getQueryData(listKey)).toEqual(nextList)
 			expect(queryClient.getQueryState(listKey)?.isInvalidated).toBe(false)
 		})
 	})

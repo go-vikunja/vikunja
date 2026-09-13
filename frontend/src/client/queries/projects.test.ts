@@ -24,14 +24,6 @@ const requestContext = vi.hoisted(() => ({
 	apiV2BaseUrl: 'https://identity-a.example/api/v2/',
 }))
 
-const legacyFilter = vi.hoisted(() => ({get: vi.fn(), update: vi.fn()}))
-vi.mock('@/services/savedFilter', () => ({default: class {
-	get = legacyFilter.get
-	update = legacyFilter.update
-}}))
-vi.mock('@/models/savedFilter', () => ({default: class {
-	constructor(data: object) { Object.assign(this, data) }
-}}))
 vi.mock('@/message', () => ({success: vi.fn()}))
 vi.mock('@/client/generated', () => sdk)
 vi.mock('@/helpers/auth', () => ({
@@ -60,7 +52,6 @@ import {
 	projectsQuery,
 	setProjectSubscriptionMutationOptions,
 	updateProjectMutationOptions,
-	legacySavedFilterFavoriteMutationOptions,
 } from './projects'
 
 function execute<TData, TVariables, TContext>(
@@ -338,28 +329,6 @@ describe('project drafts and cache mutations', () => {
 		expect(client.getQueryData<ProjectListResult>(listKey)?.projects[0].id).toBe(5)
 		expect(queryClient.getQueryData(listKey)).toBeUndefined()
 		client.clear()
-	})
-
-	it('aborts a legacy filter favorite before PUT when its GET outlives the session', async () => {
-		legacyFilter.get.mockReset()
-		legacyFilter.update.mockReset()
-		let resolveGet: (value: unknown) => void = () => {}
-		legacyFilter.get.mockReturnValue(new Promise(resolve => { resolveGet = resolve }))
-		const before = {projects: [], favoriteProject: null, savedFilterProjects: [serverProject({id: -2})]}
-		queryClient.setQueryData(listKey, before)
-		const mutation = execute(legacySavedFilterFavoriteMutationOptions(), {id: 1, isFavorite: true})
-		await vi.waitFor(() => expect(legacyFilter.get).toHaveBeenCalledOnce())
-		expect(queryClient.getQueryData<ProjectListResult>(listKey)?.savedFilterProjects[0].is_favorite).toBe(true)
-		requestContext.sessionEpoch++
-		queryClient.clear()
-		const after = {...before, savedFilterProjects: [serverProject({id: -2, title: 'Other session'})]}
-		queryClient.setQueryData(listKey, after)
-		resolveGet({id: 1, isFavorite: false})
-
-		await expect(mutation).rejects.toMatchObject({name: 'AbortError'})
-		expect(legacyFilter.update).not.toHaveBeenCalled()
-		expect(queryClient.getQueryData(listKey)).toEqual(after)
-		expect(queryClient.getQueryState(listKey)?.isInvalidated).toBe(false)
 	})
 
 	it('creates a generated-type draft with stable UI defaults', () => {

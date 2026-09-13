@@ -55,8 +55,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, onUnmounted, ref} from 'vue'
-import {useI18n} from 'vue-i18n'
+import {computed, nextTick, onUnmounted, ref} from 'vue'
 import {useRouter} from 'vue-router'
 
 import Editor from '@/components/input/AsyncEditor'
@@ -66,13 +65,13 @@ import Filters from '@/components/project/partials/Filters.vue'
 import ErrorMessage from '@/components/misc/Error.vue'
 
 import {useSavedFilter} from '@/composables/useSavedFilter'
-import {success} from '@/message'
+import {getSavedFilterIdFromProjectId} from '@/client/queries/projects'
+import {useUpdateSavedFilterMutation} from '@/client/queries/savedFilters'
 
 const props = defineProps<{
 	projectId: number,
 }>()
 
-const {t} = useI18n({useScope: 'global'})
 const router = useRouter()
 
 // useMounted() never resets on unmount.
@@ -82,13 +81,16 @@ onUnmounted(() => {
 })
 
 const {
-	submit,
+	validate,
 	filter,
 	isLoading,
 	error: loadError,
 	titleValid,
 	markTitleTouched,
 } = useSavedFilter(() => props.projectId)
+const updateMutation = useUpdateSavedFilterMutation(({id}) =>
+	alive.value && getSavedFilterIdFromProjectId(props.projectId) === id,
+)
 
 // CreateEdit latches loading on click; the prop must toggle back on early return.
 const isSubmitting = ref(false)
@@ -109,7 +111,12 @@ async function save() {
 	isSubmitting.value = true
 	let saved
 	try {
-		saved = await submit()
+		const payload = validate()
+		if (!payload) {
+			await nextTick()
+			return
+		}
+		saved = await updateMutation.mutateAsync({id: filter.value.id, ...payload}).catch(() => undefined)
 	} finally {
 		isSubmitting.value = false
 	}
@@ -118,7 +125,6 @@ async function save() {
 		return
 	}
 	if (saved) {
-		success({message: t('filters.edit.success')})
 		router.back()
 	}
 }

@@ -4,7 +4,6 @@ import {beforeEach, describe, expect, it, vi} from 'vitest'
 
 const useQuery = vi.hoisted(() => vi.fn())
 const queryLayer = vi.hoisted(() => ({
-	createSavedFilter: vi.fn(),
 	newSavedFilterDraft: vi.fn(() => ({
 		title: '',
 		description: '',
@@ -17,9 +16,7 @@ const queryLayer = vi.hoisted(() => ({
 		},
 		is_favorite: false,
 	})),
-	deleteSavedFilter: vi.fn(),
 	savedFilterQuery: vi.fn((id: number) => ({queryKey: ['saved-filters', 'detail', id]})),
-	updateSavedFilter: vi.fn(),
 }))
 const projectsLayer = vi.hoisted(() => ({
 	getProjectIdFromSavedFilterId: vi.fn((id: number) => id > 0 ? -id - 1 : 0),
@@ -33,7 +30,7 @@ vi.mock('@tanstack/vue-query', async importOriginal => ({
 vi.mock('@/client/queries/savedFilters', () => queryLayer)
 vi.mock('@/client/queries/projects', () => projectsLayer)
 
-import {useSavedFilter} from './useSavedFilter'
+import {useSavedFilter, useSavedFilterDraft} from './useSavedFilter'
 
 function savedFilterResponse(id: number, title: string) {
 	return {
@@ -45,7 +42,7 @@ function savedFilterResponse(id: number, title: string) {
 	}
 }
 
-function mountSavedFilter(projectId?: MaybeRefOrGetter<number | undefined>) {
+function mountSavedFilter(projectId: MaybeRefOrGetter<number>) {
 	let state: ReturnType<typeof useSavedFilter> | undefined
 	const component = defineComponent({
 		setup() {
@@ -66,8 +63,6 @@ describe('useSavedFilter', () => {
 			error: ref(null),
 		})
 		queryLayer.savedFilterQuery.mockClear()
-		queryLayer.createSavedFilter.mockReset()
-		queryLayer.updateSavedFilter.mockReset()
 	})
 
 	it('seeds cached data immediately and does not overwrite an edited draft later', async () => {
@@ -81,6 +76,7 @@ describe('useSavedFilter', () => {
 		const {wrapper, state} = mountSavedFilter(-2)
 		expect(state.value.filter.value.title).toBe('Cached')
 		expect(state.value.isLoading.value).toBe(false)
+		expect(state.value.isLoaded.value).toBe(true)
 
 		state.value.filter.value.title = 'Local edit'
 		data.value = {...data.value, title: 'Background refresh'}
@@ -100,6 +96,7 @@ describe('useSavedFilter', () => {
 		const {wrapper, state} = mountSavedFilter(-43)
 		expect(state.value.filter.value.id).toBe(0)
 		expect(state.value.filter.value.title).toBe('')
+		expect(state.value.isLoaded.value).toBe(false)
 		wrapper.unmount()
 	})
 
@@ -122,12 +119,14 @@ describe('useSavedFilter', () => {
 
 		expect(state.value.isLoading.value).toBe(false)
 		expect(state.value.error.value).toBe(error.value)
+		expect(state.value.isLoaded.value).toBe(false)
 
 		data.value = savedFilterResponse(1, 'Recovered')
 		error.value = null
 		await nextTick()
 
 		expect(state.value.filter.value.title).toBe('Recovered')
+		expect(state.value.isLoaded.value).toBe(true)
 		wrapper.unmount()
 	})
 
@@ -158,76 +157,75 @@ describe('useSavedFilter', () => {
 		wrapper.unmount()
 	})
 
-	it('creates a filter from the draft and stores a clone of the response', async () => {
-		const created = savedFilterResponse(7, 'New')
-		queryLayer.createSavedFilter.mockResolvedValue(created)
+	it('validates a new local draft without subscribing to a query', () => {
+		const draft = useSavedFilterDraft()
+		draft.filter.value.title = 'New'
 
-		const {wrapper, state} = mountSavedFilter()
-		state.value.filter.value.title = 'New'
+		const result = draft.validate()
 
-		const result = await state.value.submit()
-
-		expect(result).toBe(created)
-		expect(queryLayer.createSavedFilter).toHaveBeenCalledWith({
+		expect(useQuery).not.toHaveBeenCalled()
+		expect(result).toEqual({
 			title: 'New',
 			description: '',
 			filters: queryLayer.newSavedFilterDraft().filters,
 			is_favorite: false,
 		})
 
-		state.value.filter.value.filters.sort_by.push('title')
-		expect(created.filters.sort_by).toEqual(['done', 'id'])
-		wrapper.unmount()
+		draft.filter.value.filters.sort_by.push('title')
+		expect(result?.filters.sort_by).toEqual(['done', 'id'])
 	})
 
-	it('updates the seeded draft and re-seeds it from the response', async () => {
+	it('returns a writable copy without mutating the cached filter', () => {
+		const cached = savedFilterResponse(1, 'Loaded')
 		useQuery.mockReturnValue({
-			data: ref(savedFilterResponse(1, 'Loaded')),
+			data: ref(cached),
 			isPending: ref(false),
 			error: ref(null),
 		})
-		const updated = savedFilterResponse(1, 'Renamed')
-		queryLayer.updateSavedFilter.mockResolvedValue(updated)
-
 		const {wrapper, state} = mountSavedFilter(-2)
 		state.value.filter.value.title = 'Renamed'
 
-		const result = await state.value.submit()
+		const result = state.value.validate()
 
-		expect(result).toBe(updated)
-		expect(queryLayer.createSavedFilter).not.toHaveBeenCalled()
-		expect(queryLayer.updateSavedFilter).toHaveBeenCalledWith({
-			id: 1,
+		expect(result).toEqual({
 			title: 'Renamed',
 			description: '',
 			filters: queryLayer.newSavedFilterDraft().filters,
 			is_favorite: false,
 		})
-		expect(state.value.filter.value).toEqual(updated)
-		expect(state.value.filter.value).not.toBe(updated)
-		expect(state.value.filter.value.filters).not.toBe(updated.filters)
+		state.value.filter.value.filters.sort_by.push('title')
+		state.value.filter.value.filters.order_by.push('asc')
+		expect(cached.title).toBe('Loaded')
+		expect(cached.filters.sort_by).toEqual(['done', 'id'])
+		expect(cached.filters.order_by).toEqual(['asc', 'desc'])
+		expect(result?.filters.sort_by).toEqual(['done', 'id'])
 		wrapper.unmount()
 	})
 
-	it('does not create a filter when submitting an unloaded draft for an existing one', async () => {
+	it('does not validate an unloaded draft for an existing filter', () => {
 		const {wrapper, state} = mountSavedFilter(-2)
 		state.value.filter.value.title = 'Loaded'
 
-		expect(await state.value.submit()).toBeUndefined()
-		expect(queryLayer.createSavedFilter).not.toHaveBeenCalled()
-		expect(queryLayer.updateSavedFilter).not.toHaveBeenCalled()
+		expect(state.value.validate()).toBeUndefined()
+		expect(state.value.isLoaded.value).toBe(false)
 		wrapper.unmount()
 	})
 
 	it('only reports an invalid title once the field was touched', () => {
-		const {wrapper, state} = mountSavedFilter()
-		expect(state.value.titleValid.value).toBe(true)
+		const draft = useSavedFilterDraft()
+		expect(draft.titleValid.value).toBe(true)
 
-		state.value.markTitleTouched()
-		expect(state.value.titleValid.value).toBe(false)
+		draft.markTitleTouched()
+		expect(draft.titleValid.value).toBe(false)
 
-		state.value.filter.value.title = 'Some title'
-		expect(state.value.titleValid.value).toBe(true)
-		wrapper.unmount()
+		draft.filter.value.title = 'Some title'
+		expect(draft.titleValid.value).toBe(true)
+	})
+
+	it('validates the title on submit without returning an empty-title payload', () => {
+		const draft = useSavedFilterDraft()
+
+		expect(draft.validate()).toBeUndefined()
+		expect(draft.titleValid.value).toBe(false)
 	})
 })
