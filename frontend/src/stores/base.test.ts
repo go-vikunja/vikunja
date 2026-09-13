@@ -3,6 +3,7 @@ import {beforeEach, describe, expect, it, vi} from 'vitest'
 
 import {AUTH_TYPES} from '@/modelTypes/IUser'
 import type {ProjectResponse} from '@/client/queries/projects'
+import {refreshProjectBackground} from '@/client/queries/projectBackgrounds'
 
 const auth = vi.hoisted(() => ({
 	token: null as string | null,
@@ -70,7 +71,7 @@ vi.mock('@/helpers/getBlobFromBlurHash', () => ({
 }))
 
 vi.mock('@/client/queries/projectBackgrounds', () => ({
-	projectBackgroundQuery: vi.fn(),
+	refreshProjectBackground: vi.fn(),
 }))
 
 vi.mock('@/composables/useMenuActive', async () => {
@@ -107,6 +108,19 @@ describe('base store identity reset', () => {
 		auth.token = null
 		auth.post.mockReset()
 		window.URL.revokeObjectURL = vi.fn()
+	})
+
+	it('displays the background loaded through the shared reader', async () => {
+		const store = useBaseStore()
+		await store.appReady
+		vi.mocked(refreshProjectBackground).mockResolvedValue(new Blob(['image']))
+		window.URL.createObjectURL = vi.fn().mockReturnValue('blob:new-background')
+
+		await store.handleSetCurrentProject({
+			project: {...project(42), background_information: {id: 8}},
+		})
+
+		expect(store.background).toBe('blob:new-background')
 	})
 
 	it.each([

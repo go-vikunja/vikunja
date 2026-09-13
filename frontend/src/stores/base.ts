@@ -12,8 +12,7 @@ import {useMenuActive} from '@/composables/useMenuActive'
 import {useAuthStore} from '@/stores/auth'
 import router from '@/router'
 import type {ProjectResponse} from '@/client/queries/projects'
-import {projectBackgroundQuery} from '@/client/queries/projectBackgrounds'
-import {queryClient} from '@/client/queryClient'
+import {refreshProjectBackground} from '@/client/queries/projectBackgrounds'
 
 export const useBaseStore = defineStore('base', () => {
 	const authStore = useAuthStore()
@@ -113,7 +112,7 @@ export const useBaseStore = defineStore('base', () => {
 						return
 					}
 					setBlurHash(preview ? window.URL.createObjectURL(preview) : '')
-					const image = await queryClient.fetchQuery(projectBackgroundQuery(project.id))
+					const image = await refreshProjectBackground(project.id)
 					if (currentProjectId.value === project.id) {
 						setBackground(window.URL.createObjectURL(image))
 					}
