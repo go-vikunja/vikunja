@@ -1524,4 +1524,11 @@ h2 .button {
 	inset-block-end: .75rem;
 	inset-inline-end: 1rem;
 }
+
+// the task card spans the full width here, so the modal's white close button sits on it instead of the scrim
+@media screen and (min-width: $tablet) and (max-width: $desktop) {
+	.modal-dialog:has(.task-view-container.is-modal) .modal-container > .close {
+		color: var(--text);
+	}
+}
 </style>
