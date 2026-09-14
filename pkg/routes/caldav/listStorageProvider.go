@@ -60,16 +60,6 @@ type VikunjaCaldavProjectStorage struct {
 	user        *user2.User
 	isPrincipal bool
 	isEntry     bool // Entry level handling should only return a link to the principal url
-
-	servedHomeSet bool
-}
-
-func (vcls *VikunjaCaldavProjectStorage) homeSetResources(path string) []data.Resource {
-	vcls.servedHomeSet = true
-	return []data.Resource{data.NewResource(path, &VikunjaProjectResourceAdapter{
-		isPrincipal:  true,
-		isCollection: true,
-	})}
 }
 
 // GetResources returns either all projects, links to the principal, or only one project, depending on the request
@@ -88,12 +78,20 @@ func (vcls *VikunjaCaldavProjectStorage) GetResources(rpath string, withChildren
 	// and not /dav/projects. I'm not sure if thats a bug in the client or in caldav-go.
 
 	if vcls.isEntry {
-		return vcls.homeSetResources(withTrailingSlash(rpath)), nil
+		r := data.NewResource(withTrailingSlash(rpath), &VikunjaProjectResourceAdapter{
+			isPrincipal:  true,
+			isCollection: true,
+		})
+		return []data.Resource{r}, nil
 	}
 
 	// If the request wants the principal url, we'll return that and nothing else
 	if vcls.isPrincipal {
-		return vcls.homeSetResources(ProjectHomeSetPath), nil
+		r := data.NewResource(ProjectHomeSetPath, &VikunjaProjectResourceAdapter{
+			isPrincipal:  true,
+			isCollection: true,
+		})
+		return []data.Resource{r}, nil
 	}
 
 	// If vcls.project.ID is != 0, this means the user is doing a PROPFIND request to /projects/:project
@@ -147,7 +145,11 @@ func (vcls *VikunjaCaldavProjectStorage) GetResources(rpath string, withChildren
 	projects := theprojects.([]*models.Project)
 
 	if !withChildren {
-		return vcls.homeSetResources(withTrailingSlash(rpath)), nil
+		r := data.NewResource(withTrailingSlash(rpath), &VikunjaProjectResourceAdapter{
+			isPrincipal:  true,
+			isCollection: true,
+		})
+		return []data.Resource{r}, nil
 	}
 
 	var resources []data.Resource
@@ -1073,6 +1075,11 @@ type VikunjaProjectResourceAdapter struct {
 func (vlra *VikunjaProjectResourceAdapter) IsCollection() bool {
 	// If the discovery does not work, setting this to true makes it work again.
 	return vlra.isCollection
+}
+
+// IsCalendar is false for the home sets, which only contain the project calendars.
+func (vlra *VikunjaProjectResourceAdapter) IsCalendar() bool {
+	return !vlra.isPrincipal
 }
 
 // CalculateEtag returns the etag of a resource
