@@ -30,7 +30,7 @@ import (
 const (
 	// "markdown" converts rich-text fields on read and write; anything else keeps HTML.
 	richTextFormatQuery  = "format"
-	richTextFormatHeader = "X-Vikunja-Format"
+	RichTextFormatHeader = "X-Vikunja-Format"
 	markdownFormat       = "markdown"
 )
 
@@ -44,7 +44,7 @@ func requestWantsMarkdown(ctx context.Context) bool {
 		return false
 	}
 	return ec.QueryParam(richTextFormatQuery) == markdownFormat ||
-		ec.Request().Header.Get(richTextFormatHeader) == markdownFormat
+		ec.Request().Header.Get(RichTextFormatHeader) == markdownFormat
 }
 
 // richTextFormatAPIDescription documents the cross-cutting markdown behavior at
