@@ -35,8 +35,24 @@ import (
 	"github.com/labstack/echo/v5"
 	"github.com/samedi/caldav-go"
 	"github.com/samedi/caldav-go/data"
+	"github.com/samedi/caldav-go/handlers"
+	"github.com/samedi/caldav-go/ixml"
 	"github.com/samedi/caldav-go/lib"
 )
+
+// caldav-go marks every collection as a calendar. Home sets only contain calendars,
+// and Apple Calendar fails trying to sync them as one.
+var (
+	calendarResourceType = ixml.Tag(ixml.COLLECTION_TG, "") + ixml.Tag(ixml.CALENDAR_TG, "")
+	homeSetResourceType  = ixml.Tag(ixml.COLLECTION_TG, "")
+)
+
+func writeResponse(c *echo.Context, response *handlers.Response, storage *VikunjaCaldavProjectStorage) {
+	if storage.servedHomeSet {
+		response.Body = strings.ReplaceAll(response.Body, calendarResourceType, homeSetResourceType)
+	}
+	response.Write(c.Response())
+}
 
 func getBasicAuthUserFromContext(c *echo.Context) (*user.User, error) {
 	u, is := c.Get("userBasicAuth").(*user.User)
@@ -145,7 +161,7 @@ func ProjectHandler(c *echo.Context) error {
 	}
 
 	response := caldav.HandleRequestWithConfig(c.Request(), caldavConfig(storage, ProjectHomeSetPath))
-	response.Write(c.Response())
+	writeResponse(c, response, storage)
 	return nil
 }
 
@@ -243,7 +259,7 @@ func PrincipalHandler(c *echo.Context) error {
 	log.Debugf("[CALDAV] Request Headers: %v\n", c.Request().Header)
 
 	response := caldav.HandleRequestWithConfig(c.Request(), caldavConfig(storage, principalPathForUser(u.Username)))
-	response.Write(c.Response())
+	writeResponse(c, response, storage)
 	return nil
 }
 
@@ -268,7 +284,7 @@ func EntryHandler(c *echo.Context) error {
 	log.Debugf("[CALDAV] Request Headers: %v\n", c.Request().Header)
 
 	response := caldav.HandleRequestWithConfig(c.Request(), caldavConfig(storage, principalPathForUser(u.Username)))
-	response.Write(c.Response())
+	writeResponse(c, response, storage)
 	return nil
 }
 
