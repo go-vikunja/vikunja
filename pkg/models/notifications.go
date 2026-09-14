@@ -408,15 +408,18 @@ func (n *UndoneTaskOverdueNotification) ThreadID() string {
 // UndoneTasksOverdueNotification represents a UndoneTasksOverdueNotification notification
 type UndoneTasksOverdueNotification struct {
 	User     *user.User
-	Tasks    map[int64]*Task
+	Assigned map[int64]*Task
+	Followed map[int64]*Task
 	Projects map[int64]*Project
 }
 
-// ToMail returns the mail notification for UndoneTasksOverdueNotification
-func (n *UndoneTasksOverdueNotification) ToMail(lang string) *notifications.Mail {
+func (n *UndoneTasksOverdueNotification) overdueSection(lang, heading string, tasks map[int64]*Task) string {
+	if len(tasks) == 0 {
+		return ""
+	}
 
-	sortedTasks := make([]*Task, 0, len(n.Tasks))
-	for _, task := range n.Tasks {
+	sortedTasks := make([]*Task, 0, len(tasks))
+	for _, task := range tasks {
 		sortedTasks = append(sortedTasks, task)
 	}
 
@@ -424,18 +427,33 @@ func (n *UndoneTasksOverdueNotification) ToMail(lang string) *notifications.Mail
 		return sortedTasks[i].DueDate.Before(sortedTasks[j].DueDate)
 	})
 
-	overdueLine := ""
+	section := "**" + i18n.T(lang, heading) + "**\n"
 	for _, task := range sortedTasks {
 		until := time.Until(task.DueDate).Round(1*time.Hour) * -1
-		overdueLine += `* [` + notifications.EscapeMarkdown(task.Title) + `](` + config.ServicePublicURL.GetString() + "tasks/" + strconv.FormatInt(task.ID, 10) + `) (` + notifications.EscapeMarkdown(n.Projects[task.ProjectID].Title) + `), ` + i18n.T(lang, "notifications.task.overdue.overdue", getOverdueSinceString(until, n.User.Language)) + "\n"
+		section += `* [` + notifications.EscapeMarkdown(task.Title) + `](` + config.ServicePublicURL.GetString() + "tasks/" + strconv.FormatInt(task.ID, 10) + `) (` + notifications.EscapeMarkdown(n.Projects[task.ProjectID].Title) + `), ` + i18n.T(lang, "notifications.task.overdue.overdue", getOverdueSinceString(until, n.User.Language)) + "\n"
 	}
 
-	return notifications.NewMail().
+	return section
+}
+
+// ToMail returns the mail notification for UndoneTasksOverdueNotification
+func (n *UndoneTasksOverdueNotification) ToMail(lang string) *notifications.Mail {
+	mail := notifications.NewMail().
 		IncludeLinkToSettings(lang).
 		Subject(i18n.T(lang, "notifications.task.overdue.multiple_subject")).
 		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName())).
-		Line(i18n.T(lang, "notifications.task.overdue.multiple_message")).
-		Line(overdueLine).
+		Line(i18n.T(lang, "notifications.task.overdue.multiple_message"))
+
+	for _, section := range []string{
+		n.overdueSection(lang, "notifications.task.overdue.assigned_heading", n.Assigned),
+		n.overdueSection(lang, "notifications.task.overdue.followed_heading", n.Followed),
+	} {
+		if section != "" {
+			mail.Line(section)
+		}
+	}
+
+	return mail.
 		Action(i18n.T(lang, "notifications.common.actions.open_vikunja"), config.ServicePublicURL.GetString()).
 		Line(i18n.T(lang, "notifications.common.have_nice_day"))
 }

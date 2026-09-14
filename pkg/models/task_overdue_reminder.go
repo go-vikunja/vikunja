@@ -90,14 +90,20 @@ func getUndoneOverdueTasks(s *xorm.Session, now time.Time, cond builder.Cond) (u
 		wasTimeForReminder := overdueMailTime.Before(nextMinute)
 		taskIsOverdueInUserTimezone := overdueMailTime.After(t.Task.DueDate.In(tz))
 		if isTimeForReminder && wasTimeForReminder && taskIsOverdueInUserTimezone {
-			_, exists := uts[t.User.ID]
+			ut, exists := uts[t.User.ID]
 			if !exists {
-				uts[t.User.ID] = &userWithTasks{
-					user:  t.User,
-					tasks: make(map[int64]*Task),
+				ut = &userWithTasks{
+					user:     t.User,
+					assigned: make(map[int64]*Task),
+					followed: make(map[int64]*Task),
 				}
+				uts[t.User.ID] = ut
 			}
-			uts[t.User.ID].tasks[t.Task.ID] = t.Task
+			if t.IsAssignee {
+				ut.assigned[t.Task.ID] = t.Task
+			} else {
+				ut.followed[t.Task.ID] = t.Task
+			}
 		}
 	}
 
@@ -105,8 +111,13 @@ func getUndoneOverdueTasks(s *xorm.Session, now time.Time, cond builder.Cond) (u
 }
 
 type userWithTasks struct {
-	user  *user.User
-	tasks map[int64]*Task
+	user     *user.User
+	assigned map[int64]*Task
+	followed map[int64]*Task
+}
+
+func (ut *userWithTasks) allTasks() []*Task {
+	return append(mapToSlice(ut.assigned), mapToSlice(ut.followed)...)
 }
 
 // RegisterOverdueReminderCron registers a function which checks once a day for tasks that are overdue and not done.
@@ -147,7 +158,7 @@ func RegisterOverdueReminderCron() {
 
 		taskIDs := []int64{}
 		for _, ut := range uts {
-			for _, t := range ut.tasks {
+			for _, t := range ut.allTasks() {
 				taskIDs = append(taskIDs, t.ID)
 			}
 		}
@@ -159,20 +170,21 @@ func RegisterOverdueReminderCron() {
 		}
 
 		for _, ut := range uts {
+			tasks := ut.allTasks()
+
 			if emailEnabled && ut.user.OverdueTasksRemindersEnabled {
 				var n notifications.Notification = &UndoneTasksOverdueNotification{
 					User:     ut.user,
-					Tasks:    ut.tasks,
+					Assigned: ut.assigned,
+					Followed: ut.followed,
 					Projects: projects,
 				}
 
-				if len(ut.tasks) == 1 {
-					for _, t := range ut.tasks {
-						n = &UndoneTaskOverdueNotification{
-							User:    ut.user,
-							Task:    t,
-							Project: projects[t.ProjectID],
-						}
+				if len(tasks) == 1 {
+					n = &UndoneTaskOverdueNotification{
+						User:    ut.user,
+						Task:    tasks[0],
+						Project: projects[tasks[0].ProjectID],
 					}
 				}
 
@@ -186,7 +198,7 @@ func RegisterOverdueReminderCron() {
 			// Dispatch webhook events
 			if webhookEnabled {
 				// Per-task events
-				for _, t := range ut.tasks {
+				for _, t := range tasks {
 					err = events.Dispatch(&TaskOverdueEvent{
 						Task:    t,
 						User:    ut.user,
@@ -199,7 +211,7 @@ func RegisterOverdueReminderCron() {
 
 				// Batch event
 				err = events.Dispatch(&TasksOverdueEvent{
-					Tasks:    mapToSlice(ut.tasks),
+					Tasks:    tasks,
 					User:     ut.user,
 					Projects: projects,
 				})
@@ -208,7 +220,7 @@ func RegisterOverdueReminderCron() {
 				}
 			}
 
-			log.Debugf("[Undone Overdue Tasks Reminder] Sent reminder for %d tasks to user %d", len(ut.tasks), ut.user.ID)
+			log.Debugf("[Undone Overdue Tasks Reminder] Sent reminder for %d tasks to user %d", len(tasks), ut.user.ID)
 		}
 
 		if err := s.Commit(); err != nil {

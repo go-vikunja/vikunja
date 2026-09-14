@@ -106,7 +106,7 @@ func TestUndoneTasksOverdueNotification_TitleIsMarkdownEscaped(t *testing.T) {
 	maliciousTitle := "bad](https://evil.com) [click here"
 	n := &UndoneTasksOverdueNotification{
 		User: &user.User{ID: 1, Name: "alice", Username: "alice"},
-		Tasks: map[int64]*Task{
+		Assigned: map[int64]*Task{
 			42: {ID: 42, Title: maliciousTitle, ProjectID: 7, DueDate: time.Now().Add(-1 * time.Hour)},
 		},
 		Projects: map[int64]*Project{
@@ -140,6 +140,63 @@ func TestUndoneTasksOverdueNotification_TitleIsMarkdownEscaped(t *testing.T) {
 	// (goldmark will render the backslash escapes as the original characters).
 	assert.Contains(t, opts.HTMLMessage, "bad](https://evil.com) [click here",
 		"malicious title must render as literal text")
+}
+
+func TestUndoneTasksOverdueNotification_Sections(t *testing.T) {
+	originalPublicURL := config.ServicePublicURL.GetString()
+	t.Cleanup(func() { config.ServicePublicURL.Set(originalPublicURL) })
+	config.ServicePublicURL.Set("https://vikunja.example.com/")
+
+	projects := map[int64]*Project{7: {ID: 7, Title: "My Project"}}
+	assigned := map[int64]*Task{
+		1: {ID: 1, Title: "Assigned task", ProjectID: 7, DueDate: time.Now().Add(-1 * time.Hour)},
+	}
+	followed := map[int64]*Task{
+		2: {ID: 2, Title: "Followed task", ProjectID: 7, DueDate: time.Now().Add(-2 * time.Hour)},
+	}
+
+	render := func(t *testing.T, n *UndoneTasksOverdueNotification) string {
+		opts, err := notifications.RenderMail(n.ToMail("en"), "en")
+		require.NoError(t, err)
+		return opts.HTMLMessage
+	}
+
+	t.Run("both sections", func(t *testing.T) {
+		html := render(t, &UndoneTasksOverdueNotification{
+			User:     &user.User{ID: 1, Name: "alice", Username: "alice"},
+			Assigned: assigned,
+			Followed: followed,
+			Projects: projects,
+		})
+
+		assert.Contains(t, html, "<strong>Assigned to you</strong>")
+		assert.Contains(t, html, "<strong>Tasks you follow</strong>")
+		assert.Contains(t, html, "https://vikunja.example.com/tasks/1")
+		assert.Contains(t, html, "https://vikunja.example.com/tasks/2")
+		assert.Less(t, strings.Index(html, "Assigned to you"), strings.Index(html, "Tasks you follow"))
+	})
+
+	t.Run("assigned only", func(t *testing.T) {
+		html := render(t, &UndoneTasksOverdueNotification{
+			User:     &user.User{ID: 1, Name: "alice", Username: "alice"},
+			Assigned: assigned,
+			Projects: projects,
+		})
+
+		assert.Contains(t, html, "<strong>Assigned to you</strong>")
+		assert.NotContains(t, html, "Tasks you follow")
+	})
+
+	t.Run("followed only", func(t *testing.T) {
+		html := render(t, &UndoneTasksOverdueNotification{
+			User:     &user.User{ID: 1, Name: "alice", Username: "alice"},
+			Followed: followed,
+			Projects: projects,
+		})
+
+		assert.NotContains(t, html, "Assigned to you")
+		assert.Contains(t, html, "<strong>Tasks you follow</strong>")
+	})
 }
 
 func TestTaskCommentNotification_ToTitle(t *testing.T) {
