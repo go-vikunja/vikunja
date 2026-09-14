@@ -156,6 +156,7 @@ Otherwise the same rules apply: register with the `Register` wrapper, pull auth 
 - **Security schemes** — `JWTKeyAuth` + `APITokenAuth` are declared globally in `NewAPI`. For a public endpoint, set `Security: []map[string][]string{}` on that operation and add its path to `unauthenticatedAPIPaths` in `routes.go`.
 - **Error shape** — `translateDomainError` maps any `web.HTTPErrorProcessor` (e.g. `ErrFooDoesNotExist`) onto Huma's status error, producing RFC 9457 `application/problem+json`. Errors without HTTP semantics become 500.
 - **OpenAPI spec / Scalar docs / `$schema` URLs** — handled in `huma.go`. Leave `Servers` alone (the relative entry must stay at index 0).
+- **MCP exposure** — new v2 operations are not exposed over MCP unless you add their operation ID to the allow-list in `pkg/modules/mcp/exposure.go`, as either a typed tool or a catalog action (`find_action`/`do_action`).
 
 ## Anti-patterns (these get flagged)
 
