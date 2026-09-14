@@ -21,7 +21,6 @@ import (
 	"strings"
 
 	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
@@ -47,19 +46,12 @@ func SetupTokenMiddleware() echo.MiddlewareFunc {
 				return true
 			}
 
-			authHeader := c.Request().Header.Values("Authorization")
-			if len(authHeader) == 0 {
-				return false // let the jwt middleware handle invalid headers
+			authHeader, ok := models.APITokenAuthorization(c.Request().Header)
+			if !ok {
+				return false // let the jwt middleware handle other or invalid headers
 			}
 
-			for _, s := range authHeader {
-				if strings.HasPrefix(s, "Bearer "+models.APITokenPrefix) {
-					err := checkAPITokenAndPutItInContext(s, c, shouldSkipRouteCheck(c))
-					return err == nil
-				}
-			}
-
-			return false
+			return checkAPITokenAndPutItInContext(authHeader, c, shouldSkipRouteCheck(c)) == nil
 		},
 		ErrorHandler: func(c *echo.Context, err error) error {
 			if err != nil {
@@ -107,17 +99,10 @@ func checkAPITokenAndPutItInContext(tokenHeaderValue string, c *echo.Context, sk
 	c.Set("api_token", token)
 	c.Set("api_user", u)
 
-	if config.AuditEnabled.GetBool() {
-		// Only the audit listener consumes this, and autopatch's internal legs are
-		// not requests the client made.
-		if _, internalDispatch := humabridge.InternalDispatchRoute(c.Request().Context()); !internalDispatch {
-			err = events.DispatchWithContext(c.Request().Context(), &models.APITokenUsedEvent{
-				TokenID: token.ID,
-				OwnerID: token.OwnerID,
-			})
-			if err != nil {
-				log.Errorf("Could not dispatch api token used event: %s", err)
-			}
+	// Autopatch's internal legs are not requests the client made.
+	if _, internalDispatch := humabridge.InternalDispatchRoute(c.Request().Context()); !internalDispatch {
+		if err := models.RecordAPITokenUse(c.Request().Context(), token); err != nil {
+			log.Errorf("Could not dispatch api token used event: %s", err)
 		}
 	}
 
