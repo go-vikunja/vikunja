@@ -21,8 +21,9 @@ export function getErrorText(r): string {
 	// v2 errors are RFC 9457 problem+json, which carries `detail` instead of `message`.
 	let message = data?.message || data?.detail || r.message
 	
-	if (typeof r.cause?.message !== 'undefined') {
-		message += ' ' + r.cause.message
+	const causeMessage = r.cause?.response?.data?.message ?? r.cause?.message
+	if (typeof causeMessage !== 'undefined') {
+		message += ' ' + causeMessage
 	}
 
 	return message
