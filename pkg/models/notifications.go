@@ -438,7 +438,7 @@ func (n *UndoneTasksOverdueNotification) overdueSection(lang, heading string, ta
 
 // ToMail returns the mail notification for UndoneTasksOverdueNotification
 func (n *UndoneTasksOverdueNotification) ToMail(lang string) *notifications.Mail {
-	mail := notifications.NewMail().
+	m := notifications.NewMail().
 		IncludeLinkToSettings(lang).
 		Subject(i18n.T(lang, "notifications.task.overdue.multiple_subject")).
 		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName())).
@@ -449,11 +449,11 @@ func (n *UndoneTasksOverdueNotification) ToMail(lang string) *notifications.Mail
 		n.overdueSection(lang, "notifications.task.overdue.followed_heading", n.Followed),
 	} {
 		if section != "" {
-			mail.Line(section)
+			m.Line(section)
 		}
 	}
 
-	return mail.
+	return m.
 		Action(i18n.T(lang, "notifications.common.actions.open_vikunja"), config.ServicePublicURL.GetString()).
 		Line(i18n.T(lang, "notifications.common.have_nice_day"))
 }
