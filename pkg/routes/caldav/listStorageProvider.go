@@ -60,6 +60,16 @@ type VikunjaCaldavProjectStorage struct {
 	user        *user2.User
 	isPrincipal bool
 	isEntry     bool // Entry level handling should only return a link to the principal url
+
+	servedHomeSet bool
+}
+
+func (vcls *VikunjaCaldavProjectStorage) homeSetResources(path string) []data.Resource {
+	vcls.servedHomeSet = true
+	return []data.Resource{data.NewResource(path, &VikunjaProjectResourceAdapter{
+		isPrincipal:  true,
+		isCollection: true,
+	})}
 }
 
 // GetResources returns either all projects, links to the principal, or only one project, depending on the request
@@ -78,20 +88,12 @@ func (vcls *VikunjaCaldavProjectStorage) GetResources(rpath string, withChildren
 	// and not /dav/projects. I'm not sure if thats a bug in the client or in caldav-go.
 
 	if vcls.isEntry {
-		r := data.NewResource(withTrailingSlash(rpath), &VikunjaProjectResourceAdapter{
-			isPrincipal:  true,
-			isCollection: true,
-		})
-		return []data.Resource{r}, nil
+		return vcls.homeSetResources(withTrailingSlash(rpath)), nil
 	}
 
 	// If the request wants the principal url, we'll return that and nothing else
 	if vcls.isPrincipal {
-		r := data.NewResource(ProjectHomeSetPath, &VikunjaProjectResourceAdapter{
-			isPrincipal:  true,
-			isCollection: true,
-		})
-		return []data.Resource{r}, nil
+		return vcls.homeSetResources(ProjectHomeSetPath), nil
 	}
 
 	// If vcls.project.ID is != 0, this means the user is doing a PROPFIND request to /projects/:project
@@ -145,11 +147,7 @@ func (vcls *VikunjaCaldavProjectStorage) GetResources(rpath string, withChildren
 	projects := theprojects.([]*models.Project)
 
 	if !withChildren {
-		r := data.NewResource(withTrailingSlash(rpath), &VikunjaProjectResourceAdapter{
-			isPrincipal:  true,
-			isCollection: true,
-		})
-		return []data.Resource{r}, nil
+		return vcls.homeSetResources(withTrailingSlash(rpath)), nil
 	}
 
 	var resources []data.Resource
