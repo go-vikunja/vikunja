@@ -58,6 +58,17 @@ describe('getErrorText', () => {
 		expect(text).toBe('some backend message')
 	})
 
+	it('appends the server message of a request error given as cause', () => {
+		const text = getErrorText(Object.assign(new Error('Error while refreshing user info:'), {
+			cause: {
+				message: 'Request failed with status code 500',
+				response: {data: {message: 'Internal server error'}},
+			},
+		}))
+
+		expect(text).toBe('Error while refreshing user info: Internal server error')
+	})
+
 	it('reads a direct problem response', () => {
 		const text = getErrorText({
 			code: 99999,
