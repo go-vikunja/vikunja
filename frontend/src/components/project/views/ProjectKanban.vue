@@ -164,56 +164,6 @@
 									@start="handleTaskDragStart"
 									@end="updateTaskPosition"
 								>
-									<template #footer>
-										<li
-											v-if="canCreateTasks"
-											class="bucket-footer"
-										>
-											<div
-												v-if="showNewTaskInput === bucket.id"
-												class="field"
-											>
-												<div
-													class="control"
-													:class="{'is-loading': loading || taskLoading}"
-												>
-													<input
-														v-model="newTaskText"
-														v-focus.always
-														class="input"
-														:disabled="loading || taskLoading || undefined"
-														:placeholder="$t('project.kanban.addTaskPlaceholder')"
-														type="text"
-														@focusout="toggleShowNewTaskInput(bucket.id)"
-														@focusin="() => newTaskInputFocused = true"
-														@keyup.enter="addTaskToBucket(bucket.id)"
-														@keyup.esc="toggleShowNewTaskInput(bucket.id)"
-													>
-												</div>
-												<p
-													v-if="newTaskError[bucket.id] && newTaskText === ''"
-													class="help is-danger"
-												>
-													{{ $t('project.create.addTitleRequired') }}
-												</p>
-											</div>
-											<XButton
-												v-else
-												v-tooltip="bucket.limit > 0 && bucket.count >= bucket.limit ? $t('project.kanban.bucketLimitReached') : ''"
-												class="is-fullwidth has-text-centered"
-												:shadow="false"
-												icon="plus"
-												variant="secondary"
-												:disabled="bucket.limit > 0 && bucket.count >= bucket.limit"
-												@click="toggleShowNewTaskInput(bucket.id)"
-											>
-												{{
-													bucket.tasks.length === 0 ? $t('project.kanban.addTask') : $t('project.kanban.addAnotherTask')
-												}}
-											</XButton>
-										</li>
-									</template>
-
 									<template #item="{element: task}">
 										<li
 											class="task-item"
@@ -236,6 +186,53 @@
 										</li>
 									</template>
 								</draggable>
+								<div
+									v-if="canCreateTasks"
+									class="bucket-footer"
+								>
+									<div
+										v-if="showNewTaskInput === bucket.id"
+										class="field"
+									>
+										<div
+											class="control"
+											:class="{'is-loading': loading || taskLoading}"
+										>
+											<input
+												v-model="newTaskText"
+												v-focus.always
+												class="input"
+												:disabled="loading || taskLoading || undefined"
+												:placeholder="$t('project.kanban.addTaskPlaceholder')"
+												type="text"
+												@focusout="toggleShowNewTaskInput(bucket.id)"
+												@focusin="() => newTaskInputFocused = true"
+												@keyup.enter="addTaskToBucket(bucket.id)"
+												@keyup.esc="toggleShowNewTaskInput(bucket.id)"
+											>
+										</div>
+										<p
+											v-if="newTaskError[bucket.id] && newTaskText === ''"
+											class="help is-danger"
+										>
+											{{ $t('project.create.addTitleRequired') }}
+										</p>
+									</div>
+									<XButton
+										v-else
+										v-tooltip="bucket.limit > 0 && bucket.count >= bucket.limit ? $t('project.kanban.bucketLimitReached') : ''"
+										class="is-fullwidth has-text-centered"
+										:shadow="false"
+										icon="plus"
+										variant="secondary"
+										:disabled="bucket.limit > 0 && bucket.count >= bucket.limit"
+										@click="toggleShowNewTaskInput(bucket.id)"
+									>
+										{{
+											bucket.tasks.length === 0 ? $t('project.kanban.addTask') : $t('project.kanban.addAnotherTask')
+										}}
+									</XButton>
+								</div>
 							</li>
 						</template>
 					</draggable>
@@ -568,8 +565,8 @@ async function updateTaskPosition(e) {
 
 	const newBucket = buckets.value[bucketIndex]
 
-	// e.newIndex is a DOM index: it counts the footer slot and elements still leaving the
-	// transition group, so it can point past the last task. The bucket is already updated here.
+	// e.newIndex is a DOM index: it counts elements still leaving the transition group,
+	// so it can point past the last task. The bucket is already updated here.
 	const movedTaskId = parseInt(e.item.dataset.taskId, 10)
 	const newTaskIndex = newBucket.tasks.findIndex(t => t.id === movedTaskId)
 
@@ -999,8 +996,9 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		}
 
 		.tasks {
+			flex: 1 1 auto;
+			min-block-size: 0;
 			overflow: hidden auto;
-			block-size: 100%;
 			list-style: none;
 		}
 
@@ -1100,15 +1098,8 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 	}
 
 	.bucket-footer {
-		position: sticky;
-		inset-block-end: 0;
-		z-index: 2;
-		block-size: min-content;
 		padding: .5rem;
 		background-color: var(--grey-100);
-		border-end-start-radius: $radius;
-		border-end-end-radius: $radius;
-		transform: none;
 
 		.button {
 			background-color: transparent;
