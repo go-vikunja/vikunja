@@ -1,3 +1,4 @@
+import type {Locator, Page} from '@playwright/test'
 import {test, expect} from '../../support/fixtures'
 import {BucketFactory} from '../../factories/bucket'
 import {ProjectFactory} from '../../factories/project'
@@ -6,6 +7,17 @@ import {ProjectViewFactory} from '../../factories/project_view'
 import {TaskBucketFactory} from '../../factories/task_buckets'
 import {createTasksWithPriorities, createTasksWithSearch} from '../../support/filterTestHelpers'
 import {updateUserSettings} from '../../support/updateUserSettings'
+
+// Task lists only grow into a full-height drop area once a drag started, so an empty
+// bucket's list has no size before the first move and locator.dragTo() would wait forever.
+async function dragTaskToBucket(page: Page, task: Locator, bucketTasks: Locator) {
+	await task.hover()
+	await page.mouse.down()
+	await task.hover({position: {x: 10, y: 10}})
+	await expect(page.locator('.kanban')).toHaveClass(/is-dragging-task/)
+	await bucketTasks.hover()
+	await page.mouse.up()
+}
 
 async function createSingleTaskInBucket(count = 1, attrs = {}) {
 	const projects = await ProjectFactory.create(1)
@@ -138,7 +150,7 @@ test.describe('Project View Kanban', () => {
 
 		const sourceTask = page.locator('.kanban .bucket .tasks .task').filter({hasText: tasks[0].title}).first()
 		const targetBucket = page.locator('.kanban .bucket:nth-child(2) .tasks')
-		await sourceTask.dragTo(targetBucket)
+		await dragTaskToBucket(page, sourceTask, targetBucket)
 
 		await expect(page.locator('.kanban .bucket:nth-child(2) .tasks')).toContainText(tasks[0].title)
 		await expect(page.locator('.kanban .bucket:nth-child(1) .tasks')).not.toContainText(tasks[0].title)
@@ -179,7 +191,7 @@ test.describe('Project View Kanban', () => {
 
 		const sourceTask = page.locator('.kanban .bucket .tasks .task').filter({hasText: tasks[0].title}).first()
 		const doneBucket = page.locator('.kanban .bucket:nth-child(2) .tasks')
-		await sourceTask.dragTo(doneBucket)
+		await dragTaskToBucket(page, sourceTask, doneBucket)
 
 		// After the drop, the backend's recurrence redirect must be honored in the UI:
 		// the card appears back in the first (default/backlog) bucket with no refresh.
