@@ -95,3 +95,30 @@
   owner_id: 1
   created: 2024-01-01 00:00:00
   # token in plaintext is tk_readonly_tasks_user1_00000000abcd1234
+
+- id: 10
+  title: 'mcp access token 10 for user 1'
+  token_sha256: becba72e57dfde236254272d1417396ff2215847d5fb2f76e372f8053fa02e58
+  permissions: '{"mcp":["access"]}'
+  expires_at: 2099-01-01 00:00:00
+  owner_id: 1
+  created: 2024-01-01 00:00:00
+  # token in plaintext is tk_mcp_access_token_test_0000000000mcp0001
+
+- id: 11
+  title: 'mcp access token 11 for user 1'
+  token_sha256: c4927dbf22e2c7ce4c61f4fd70e2b37f4a535df137f2164ed9da03e5191ff7f2
+  permissions: '{"mcp":["access"],"projects":["read_one","read_all"]}'
+  expires_at: 2099-01-01 00:00:00
+  owner_id: 1
+  created: 2024-01-01 00:00:00
+  # token in plaintext is tk_mcp_mixed_scope_token_test_00mcpmixed02
+
+- id: 12
+  title: 'mcp access token 12 for user 1'
+  token_sha256: 712e7aa42fe545bebdee529f9dff91f103b5a37ec1b864a4d88eacf52103139d
+  permissions: '{"mcp":["access"],"projects":["create","read_one","read_all","update","delete","users_search"],"tasks":["create","read_one","read_all","update","delete"],"labels":["create","read_one","read_all","update","delete"],"tasks_comments":["create","read_one","read_all","update","delete"],"tasks_assignees":["create","read_all","delete"],"tasks_labels":["create","read_all","delete"],"other":["users"],"projects_views":["read_all"]}'
+  expires_at: 2099-01-01 00:00:00
+  owner_id: 1
+  created: 2024-01-01 00:00:00
+  # token in plaintext is tk_mcp_full_projects_token_test_0fullp003
