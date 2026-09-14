@@ -253,6 +253,33 @@ func TestRecreateMissingIndexesSkipsWhenNameCollidesOnAnyDialect20260720120000(t
 	require.NoError(t, recreateMissingIndexes20260720120000(x))
 }
 
+// Upgrades from before v2.5.0 run this migration before 20260829190000, which
+// removes the duplicate subscriptions the model's unique index trips over (#3882).
+func TestRecreateMissingIndexesLeavesSubscriptionUniqueToLaterMigration20260720120000(t *testing.T) {
+	x, err := db.CreateTestEngine()
+	require.NoError(t, err)
+
+	tables := []any{subscriptionsStub20260829190000{}}
+	t.Cleanup(func() {
+		require.NoError(t, x.DropTables(tables...))
+	})
+	require.NoError(t, x.DropTables(tables...))
+	require.NoError(t, x.Sync2(tables...))
+
+	_, err = x.Insert(
+		&subscriptionsStub20260829190000{ID: 1, EntityType: 3, EntityID: 10, UserID: 1},
+		&subscriptionsStub20260829190000{ID: 2, EntityType: 3, EntityID: 10, UserID: 1},
+	)
+	require.NoError(t, err)
+
+	require.NoError(t, recreateMissingIndexes20260720120000(x))
+	require.NoError(t, addUniqueSubscriptionIndex20260829190000(x))
+
+	count, err := x.Count(&subscriptionsStub20260829190000{})
+	require.NoError(t, err)
+	require.Equal(t, int64(1), count)
+}
+
 func TestSQLiteIndexesReportsNonUniqueIndex20260720120000(t *testing.T) {
 	x := sqliteTestEngine20260720120000(t)
 	table := "scratch_nonunique20260720120000"
