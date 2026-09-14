@@ -3,6 +3,10 @@ import type {Router} from 'vue-router'
 import {shouldDropEvent, stripNavigationFragment} from './helpers/sentryFilters'
 import {VERSION} from './version.json'
 
+function withoutFragment(url: string) {
+	return url.split('#')[0]
+}
+
 export default async function setupSentry(app: App, router: Router) {
 	const Sentry = await import('@sentry/vue')
 
@@ -75,10 +79,8 @@ export default async function setupSentry(app: App, router: Router) {
 			const target = event.target
 
 			if (target instanceof HTMLImageElement) {
-				// An empty or placeholder src resolves to the page URL and fires an error event
-				// without ever requesting anything, so there's no failed load to report.
-				const src = target.getAttribute('src')
-				if (!src || src === '#') return
+				// An empty, blank or fragment-only src resolves to the page itself, which is never an image.
+				if (!target.src || withoutFragment(target.src) === withoutFragment(document.URL)) return
 
 				Sentry.captureMessage(
 					`Failed to load image: ${target.src}`,
