@@ -318,11 +318,23 @@ func TestGetTaskUsersForTasksIsAssignee(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		// Task 2: user 1 is subscriber (subscriptions id: 1)
-		taskUsers, err := getTaskUsersForTasks(s, []int64{2}, nil)
+		task := &Task{
+			Title:       "Subscribed only",
+			CreatedByID: 1,
+			ProjectID:   1,
+		}
+		err := task.Create(s, &user.User{ID: 1})
 		require.NoError(t, err)
 
-		tu := findTaskUser(taskUsers, 2, 1)
+		_, err = s.Insert(&ProjectUser{UserID: 2, ProjectID: 1, Permission: PermissionRead})
+		require.NoError(t, err)
+		_, err = s.Insert(&Subscription{EntityType: SubscriptionEntityTask, EntityID: task.ID, UserID: 2})
+		require.NoError(t, err)
+
+		taskUsers, err := getTaskUsersForTasks(s, []int64{task.ID}, nil)
+		require.NoError(t, err)
+
+		tu := findTaskUser(taskUsers, task.ID, 2)
 		require.NotNil(t, tu)
 		assert.False(t, tu.IsAssignee)
 	})
