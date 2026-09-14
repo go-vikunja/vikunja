@@ -502,7 +502,7 @@ var expandScopeRoutes = map[string]bool{
 	"/api/v1/projects/:project/views/:view/tasks":         true,
 	"/api/v1/projects/:project/views/:view/buckets":       true,
 	"/api/v2/tasks":                                       true,
-	"/api/v2/tasks/:projecttask":                          true,
+	"/api/v2/tasks/:task":                                 true,
 	"/api/v2/projects/:project/tasks":                     true,
 	"/api/v2/projects/:project/tasks/by-index/:index":     true,
 	"/api/v2/projects/:project/views/:view/tasks":         true,
@@ -591,4 +591,14 @@ func PermissionsAreValid(permissions APIPermissions) (err error) {
 	}
 
 	return nil
+}
+
+// ExpandScopeRoutes exposes the keys so pkg/webtests can assert they still match
+// registered echo routes; pkg/models cannot import pkg/routes to check itself.
+func ExpandScopeRoutes() []string {
+	paths := make([]string, 0, len(expandScopeRoutes))
+	for path := range expandScopeRoutes {
+		paths = append(paths, path)
+	}
+	return paths
 }

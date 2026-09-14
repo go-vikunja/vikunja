@@ -171,7 +171,7 @@ describe('task label operations', () => {
 		await taskStore.addLabel({taskId: 7, label: {id: 4, title: 'label'}})
 
 		expect(labelSdk.taskLabelsCreate).toHaveBeenCalledWith({
-			path: {projecttask: 7},
+			path: {task: 7},
 			body: {label_id: 4},
 		})
 		expect(kanbanStore.buckets[0].tasks[0].labels).toEqual([{id: 4, title: 'label'}])
@@ -189,7 +189,7 @@ describe('task label operations', () => {
 		await taskStore.removeLabel({taskId: 7, label: {id: 4, title: 'label'}})
 
 		expect(labelSdk.taskLabelsDelete).toHaveBeenCalledWith({
-			path: {projecttask: 7, label: 4},
+			path: {task: 7, label: 4},
 		})
 		expect(kanbanStore.buckets[0].tasks[0].labels).toEqual([])
 	})

@@ -8689,13 +8689,53 @@ export type TasksBulkUpdateResponses = {
 
 export type TasksBulkUpdateResponse = TasksBulkUpdateResponses[keyof TasksBulkUpdateResponses];
 
+export type TaskTimeEntriesListData = {
+    body?: never;
+    path: {
+        task_id: number;
+    };
+    query?: {
+        /**
+         * 1-based page number.
+         */
+        page?: number;
+        /**
+         * Items per page (max 1000).
+         */
+        per_page?: number;
+        /**
+         * Search query; filters the list to items matching this string.
+         */
+        q?: string;
+    };
+    url: '/tasks/{task_id}/time-entries';
+};
+
+export type TaskTimeEntriesListErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type TaskTimeEntriesListError = TaskTimeEntriesListErrors[keyof TaskTimeEntriesListErrors];
+
+export type TaskTimeEntriesListResponses = {
+    /**
+     * OK
+     */
+    200: PaginatedTimeEntry;
+};
+
+export type TaskTimeEntriesListResponse = TaskTimeEntriesListResponses[keyof TaskTimeEntriesListResponses];
+
 export type TasksDeleteData = {
     body?: never;
     path: {
-        projecttask: number;
+        task: number;
     };
     query?: never;
-    url: '/tasks/{projecttask}';
+    url: '/tasks/{task}';
 };
 
 export type TasksDeleteErrors = {
@@ -8740,7 +8780,7 @@ export type TasksReadData = {
         /**
          * The numeric id of the task.
          */
-        projecttask: number;
+        task: number;
     };
     query?: {
         /**
@@ -8752,7 +8792,7 @@ export type TasksReadData = {
          */
         format?: 'html' | 'markdown';
     };
-    url: '/tasks/{projecttask}';
+    url: '/tasks/{task}';
 };
 
 export type TasksReadErrors = {
@@ -8776,10 +8816,10 @@ export type TasksReadResponse = TasksReadResponses[keyof TasksReadResponses];
 export type PatchTasksReadData = {
     body: Array<JsonPatchOp> | null;
     path: {
-        projecttask: number;
+        task: number;
     };
     query?: never;
-    url: '/tasks/{projecttask}';
+    url: '/tasks/{task}';
 };
 
 export type PatchTasksReadErrors = {
@@ -8803,7 +8843,7 @@ export type PatchTasksReadResponse = PatchTasksReadResponses[keyof PatchTasksRea
 export type TasksUpdateData = {
     body: TaskReadOneBodyWritable;
     path: {
-        projecttask: number;
+        task: number;
     };
     query?: {
         /**
@@ -8811,7 +8851,7 @@ export type TasksUpdateData = {
          */
         format?: 'html' | 'markdown';
     };
-    url: '/tasks/{projecttask}';
+    url: '/tasks/{task}';
 };
 
 export type TasksUpdateErrors = {
@@ -8835,7 +8875,7 @@ export type TasksUpdateResponse = TasksUpdateResponses[keyof TasksUpdateResponse
 export type TaskAssigneesListData = {
     body?: never;
     path: {
-        projecttask: number;
+        task: number;
     };
     query?: {
         /**
@@ -8851,7 +8891,7 @@ export type TaskAssigneesListData = {
          */
         q?: string;
     };
-    url: '/tasks/{projecttask}/assignees';
+    url: '/tasks/{task}/assignees';
 };
 
 export type TaskAssigneesListErrors = {
@@ -8875,10 +8915,10 @@ export type TaskAssigneesListResponse = TaskAssigneesListResponses[keyof TaskAss
 export type TaskAssigneesCreateData = {
     body: TaskAssgineeWritable;
     path: {
-        projecttask: number;
+        task: number;
     };
     query?: never;
-    url: '/tasks/{projecttask}/assignees';
+    url: '/tasks/{task}/assignees';
 };
 
 export type TaskAssigneesCreateErrors = {
@@ -8902,10 +8942,10 @@ export type TaskAssigneesCreateResponse = TaskAssigneesCreateResponses[keyof Tas
 export type TaskAssigneesBulkData = {
     body: BulkAssigneesWritable;
     path: {
-        projecttask: number;
+        task: number;
     };
     query?: never;
-    url: '/tasks/{projecttask}/assignees/bulk';
+    url: '/tasks/{task}/assignees/bulk';
 };
 
 export type TaskAssigneesBulkErrors = {
@@ -8929,11 +8969,11 @@ export type TaskAssigneesBulkResponse = TaskAssigneesBulkResponses[keyof TaskAss
 export type TaskAssigneesDeleteData = {
     body?: never;
     path: {
-        projecttask: number;
+        task: number;
         user: number;
     };
     query?: never;
-    url: '/tasks/{projecttask}/assignees/{user}';
+    url: '/tasks/{task}/assignees/{user}';
 };
 
 export type TaskAssigneesDeleteErrors = {
@@ -8953,231 +8993,6 @@ export type TaskAssigneesDeleteResponses = {
 };
 
 export type TaskAssigneesDeleteResponse = TaskAssigneesDeleteResponses[keyof TaskAssigneesDeleteResponses];
-
-export type TasksDuplicateData = {
-    body?: never;
-    path: {
-        /**
-         * The numeric id of the task to duplicate.
-         */
-        projecttask: number;
-    };
-    query?: never;
-    url: '/tasks/{projecttask}/duplicate';
-};
-
-export type TasksDuplicateErrors = {
-    /**
-     * Error
-     */
-    default: VikunjaErrorModel;
-};
-
-export type TasksDuplicateError = TasksDuplicateErrors[keyof TasksDuplicateErrors];
-
-export type TasksDuplicateResponses = {
-    /**
-     * Created
-     */
-    201: TaskDuplicate;
-};
-
-export type TasksDuplicateResponse = TasksDuplicateResponses[keyof TasksDuplicateResponses];
-
-export type TaskLabelsListData = {
-    body?: never;
-    path: {
-        projecttask: number;
-    };
-    query?: {
-        /**
-         * 1-based page number.
-         */
-        page?: number;
-        /**
-         * Items per page (max 1000).
-         */
-        per_page?: number;
-        /**
-         * Search query; filters the list to items matching this string.
-         */
-        q?: string;
-    };
-    url: '/tasks/{projecttask}/labels';
-};
-
-export type TaskLabelsListErrors = {
-    /**
-     * Error
-     */
-    default: VikunjaErrorModel;
-};
-
-export type TaskLabelsListError = TaskLabelsListErrors[keyof TaskLabelsListErrors];
-
-export type TaskLabelsListResponses = {
-    /**
-     * OK
-     */
-    200: PaginatedLabelWithTaskId;
-};
-
-export type TaskLabelsListResponse = TaskLabelsListResponses[keyof TaskLabelsListResponses];
-
-export type TaskLabelsCreateData = {
-    body: LabelTaskWritable;
-    path: {
-        projecttask: number;
-    };
-    query?: never;
-    url: '/tasks/{projecttask}/labels';
-};
-
-export type TaskLabelsCreateErrors = {
-    /**
-     * Error
-     */
-    default: VikunjaErrorModel;
-};
-
-export type TaskLabelsCreateError = TaskLabelsCreateErrors[keyof TaskLabelsCreateErrors];
-
-export type TaskLabelsCreateResponses = {
-    /**
-     * Created
-     */
-    201: LabelTask;
-};
-
-export type TaskLabelsCreateResponse = TaskLabelsCreateResponses[keyof TaskLabelsCreateResponses];
-
-export type TaskLabelsBulkReplaceData = {
-    body: LabelTaskBulkWritable;
-    path: {
-        /**
-         * The numeric id of the task whose labels to replace.
-         */
-        projecttask: number;
-    };
-    query?: never;
-    url: '/tasks/{projecttask}/labels/bulk';
-};
-
-export type TaskLabelsBulkReplaceErrors = {
-    /**
-     * Error
-     */
-    default: VikunjaErrorModel;
-};
-
-export type TaskLabelsBulkReplaceError = TaskLabelsBulkReplaceErrors[keyof TaskLabelsBulkReplaceErrors];
-
-export type TaskLabelsBulkReplaceResponses = {
-    /**
-     * OK
-     */
-    200: LabelTaskBulk;
-};
-
-export type TaskLabelsBulkReplaceResponse = TaskLabelsBulkReplaceResponses[keyof TaskLabelsBulkReplaceResponses];
-
-export type TaskLabelsDeleteData = {
-    body?: never;
-    path: {
-        projecttask: number;
-        label: number;
-    };
-    query?: never;
-    url: '/tasks/{projecttask}/labels/{label}';
-};
-
-export type TaskLabelsDeleteErrors = {
-    /**
-     * Error
-     */
-    default: VikunjaErrorModel;
-};
-
-export type TaskLabelsDeleteError = TaskLabelsDeleteErrors[keyof TaskLabelsDeleteErrors];
-
-export type TaskLabelsDeleteResponses = {
-    /**
-     * No Content
-     */
-    204: void;
-};
-
-export type TaskLabelsDeleteResponse = TaskLabelsDeleteResponses[keyof TaskLabelsDeleteResponses];
-
-export type TasksMarkReadData = {
-    body?: never;
-    path: {
-        /**
-         * The numeric id of the task to mark as read.
-         */
-        projecttask: number;
-    };
-    query?: never;
-    url: '/tasks/{projecttask}/read';
-};
-
-export type TasksMarkReadErrors = {
-    /**
-     * Error
-     */
-    default: VikunjaErrorModel;
-};
-
-export type TasksMarkReadError = TasksMarkReadErrors[keyof TasksMarkReadErrors];
-
-export type TasksMarkReadResponses = {
-    /**
-     * OK
-     */
-    200: TaskReadBodyBody;
-};
-
-export type TasksMarkReadResponse = TasksMarkReadResponses[keyof TasksMarkReadResponses];
-
-export type TaskTimeEntriesListData = {
-    body?: never;
-    path: {
-        task_id: number;
-    };
-    query?: {
-        /**
-         * 1-based page number.
-         */
-        page?: number;
-        /**
-         * Items per page (max 1000).
-         */
-        per_page?: number;
-        /**
-         * Search query; filters the list to items matching this string.
-         */
-        q?: string;
-    };
-    url: '/tasks/{task_id}/time-entries';
-};
-
-export type TaskTimeEntriesListErrors = {
-    /**
-     * Error
-     */
-    default: VikunjaErrorModel;
-};
-
-export type TaskTimeEntriesListError = TaskTimeEntriesListErrors[keyof TaskTimeEntriesListErrors];
-
-export type TaskTimeEntriesListResponses = {
-    /**
-     * OK
-     */
-    200: PaginatedTimeEntry;
-};
-
-export type TaskTimeEntriesListResponse = TaskTimeEntriesListResponses[keyof TaskTimeEntriesListResponses];
 
 export type TaskAttachmentsListData = {
     body?: never;
@@ -9547,6 +9362,161 @@ export type TaskCommentsUpdateResponses = {
 
 export type TaskCommentsUpdateResponse = TaskCommentsUpdateResponses[keyof TaskCommentsUpdateResponses];
 
+export type TasksDuplicateData = {
+    body?: never;
+    path: {
+        /**
+         * The numeric id of the task to duplicate.
+         */
+        task: number;
+    };
+    query?: never;
+    url: '/tasks/{task}/duplicate';
+};
+
+export type TasksDuplicateErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type TasksDuplicateError = TasksDuplicateErrors[keyof TasksDuplicateErrors];
+
+export type TasksDuplicateResponses = {
+    /**
+     * Created
+     */
+    201: TaskDuplicate;
+};
+
+export type TasksDuplicateResponse = TasksDuplicateResponses[keyof TasksDuplicateResponses];
+
+export type TaskLabelsListData = {
+    body?: never;
+    path: {
+        task: number;
+    };
+    query?: {
+        /**
+         * 1-based page number.
+         */
+        page?: number;
+        /**
+         * Items per page (max 1000).
+         */
+        per_page?: number;
+        /**
+         * Search query; filters the list to items matching this string.
+         */
+        q?: string;
+    };
+    url: '/tasks/{task}/labels';
+};
+
+export type TaskLabelsListErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type TaskLabelsListError = TaskLabelsListErrors[keyof TaskLabelsListErrors];
+
+export type TaskLabelsListResponses = {
+    /**
+     * OK
+     */
+    200: PaginatedLabelWithTaskId;
+};
+
+export type TaskLabelsListResponse = TaskLabelsListResponses[keyof TaskLabelsListResponses];
+
+export type TaskLabelsCreateData = {
+    body: LabelTaskWritable;
+    path: {
+        task: number;
+    };
+    query?: never;
+    url: '/tasks/{task}/labels';
+};
+
+export type TaskLabelsCreateErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type TaskLabelsCreateError = TaskLabelsCreateErrors[keyof TaskLabelsCreateErrors];
+
+export type TaskLabelsCreateResponses = {
+    /**
+     * Created
+     */
+    201: LabelTask;
+};
+
+export type TaskLabelsCreateResponse = TaskLabelsCreateResponses[keyof TaskLabelsCreateResponses];
+
+export type TaskLabelsBulkReplaceData = {
+    body: LabelTaskBulkWritable;
+    path: {
+        /**
+         * The numeric id of the task whose labels to replace.
+         */
+        task: number;
+    };
+    query?: never;
+    url: '/tasks/{task}/labels/bulk';
+};
+
+export type TaskLabelsBulkReplaceErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type TaskLabelsBulkReplaceError = TaskLabelsBulkReplaceErrors[keyof TaskLabelsBulkReplaceErrors];
+
+export type TaskLabelsBulkReplaceResponses = {
+    /**
+     * OK
+     */
+    200: LabelTaskBulk;
+};
+
+export type TaskLabelsBulkReplaceResponse = TaskLabelsBulkReplaceResponses[keyof TaskLabelsBulkReplaceResponses];
+
+export type TaskLabelsDeleteData = {
+    body?: never;
+    path: {
+        task: number;
+        label: number;
+    };
+    query?: never;
+    url: '/tasks/{task}/labels/{label}';
+};
+
+export type TaskLabelsDeleteErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type TaskLabelsDeleteError = TaskLabelsDeleteErrors[keyof TaskLabelsDeleteErrors];
+
+export type TaskLabelsDeleteResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type TaskLabelsDeleteResponse = TaskLabelsDeleteResponses[keyof TaskLabelsDeleteResponses];
+
 export type TasksPositionUpdateData = {
     body: TaskPositionWritable;
     path: {
@@ -9576,6 +9546,36 @@ export type TasksPositionUpdateResponses = {
 };
 
 export type TasksPositionUpdateResponse = TasksPositionUpdateResponses[keyof TasksPositionUpdateResponses];
+
+export type TasksMarkReadData = {
+    body?: never;
+    path: {
+        /**
+         * The numeric id of the task to mark as read.
+         */
+        task: number;
+    };
+    query?: never;
+    url: '/tasks/{task}/read';
+};
+
+export type TasksMarkReadErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type TasksMarkReadError = TasksMarkReadErrors[keyof TasksMarkReadErrors];
+
+export type TasksMarkReadResponses = {
+    /**
+     * OK
+     */
+    200: TaskReadBodyBody;
+};
+
+export type TasksMarkReadResponse = TasksMarkReadResponses[keyof TasksMarkReadResponses];
 
 export type TasksRelationsCreateData = {
     body: TaskRelationWritable;

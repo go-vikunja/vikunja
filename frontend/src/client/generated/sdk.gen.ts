@@ -2353,6 +2353,25 @@ export const tasksBulkUpdate = <ThrowOnError extends boolean = true>(options: Op
 });
 
 /**
+ * List a task's time entries
+ *
+ * Returns the time entries logged against the given task, across all users, paginated. Scoped to what you can read: an inaccessible or unknown task yields an empty list, not an error.
+ */
+export const taskTimeEntriesList = <ThrowOnError extends boolean = true>(options: Options<TaskTimeEntriesListData, ThrowOnError>): RequestResult<TaskTimeEntriesListResponses, TaskTimeEntriesListErrors, ThrowOnError> => (options.client ?? client).get<TaskTimeEntriesListResponses, TaskTimeEntriesListErrors, ThrowOnError>({
+    security: [{
+            key: 'JWTKeyAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }, {
+            key: 'APITokenAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }],
+    url: '/tasks/{task_id}/time-entries',
+    ...options
+});
+
+/**
  * Delete a task
  *
  * Deletes a task. Requires write access to its project.
@@ -2367,7 +2386,7 @@ export const tasksDelete = <ThrowOnError extends boolean = true>(options: Option
             scheme: 'bearer',
             type: 'http'
         }],
-    url: '/tasks/{projecttask}',
+    url: '/tasks/{task}',
     ...options
 });
 
@@ -2386,7 +2405,7 @@ export const tasksRead = <ThrowOnError extends boolean = true>(options: Options<
             scheme: 'bearer',
             type: 'http'
         }],
-    url: '/tasks/{projecttask}',
+    url: '/tasks/{task}',
     ...options
 });
 
@@ -2405,7 +2424,7 @@ export const patchTasksRead = <ThrowOnError extends boolean = true>(options: Opt
             scheme: 'bearer',
             type: 'http'
         }],
-    url: '/tasks/{projecttask}',
+    url: '/tasks/{task}',
     ...options,
     headers: {
         'Content-Type': 'application/json-patch+json',
@@ -2428,7 +2447,7 @@ export const tasksUpdate = <ThrowOnError extends boolean = true>(options: Option
             scheme: 'bearer',
             type: 'http'
         }],
-    url: '/tasks/{projecttask}',
+    url: '/tasks/{task}',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -2451,7 +2470,7 @@ export const taskAssigneesList = <ThrowOnError extends boolean = true>(options: 
             scheme: 'bearer',
             type: 'http'
         }],
-    url: '/tasks/{projecttask}/assignees',
+    url: '/tasks/{task}/assignees',
     ...options
 });
 
@@ -2470,7 +2489,7 @@ export const taskAssigneesCreate = <ThrowOnError extends boolean = true>(options
             scheme: 'bearer',
             type: 'http'
         }],
-    url: '/tasks/{projecttask}/assignees',
+    url: '/tasks/{task}/assignees',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -2493,7 +2512,7 @@ export const taskAssigneesBulk = <ThrowOnError extends boolean = true>(options: 
             scheme: 'bearer',
             type: 'http'
         }],
-    url: '/tasks/{projecttask}/assignees/bulk',
+    url: '/tasks/{task}/assignees/bulk',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -2516,148 +2535,7 @@ export const taskAssigneesDelete = <ThrowOnError extends boolean = true>(options
             scheme: 'bearer',
             type: 'http'
         }],
-    url: '/tasks/{projecttask}/assignees/{user}',
-    ...options
-});
-
-/**
- * Duplicate a task
- *
- * Copies a task — including its labels, assignees, attachments and reminders — into the same project, and records a "copied from" relation back to the original. The authenticated user needs read access to the source task and write access to its project. Returns the newly created duplicate.
- */
-export const tasksDuplicate = <ThrowOnError extends boolean = true>(options: Options<TasksDuplicateData, ThrowOnError>): RequestResult<TasksDuplicateResponses, TasksDuplicateErrors, ThrowOnError> => (options.client ?? client).post<TasksDuplicateResponses, TasksDuplicateErrors, ThrowOnError>({
-    security: [{
-            key: 'JWTKeyAuth',
-            scheme: 'bearer',
-            type: 'http'
-        }, {
-            key: 'APITokenAuth',
-            scheme: 'bearer',
-            type: 'http'
-        }],
-    url: '/tasks/{projecttask}/duplicate',
-    ...options
-});
-
-/**
- * List the labels on a task
- *
- * Returns the labels attached to the given task, paginated. Requires read access to the task.
- */
-export const taskLabelsList = <ThrowOnError extends boolean = true>(options: Options<TaskLabelsListData, ThrowOnError>): RequestResult<TaskLabelsListResponses, TaskLabelsListErrors, ThrowOnError> => (options.client ?? client).get<TaskLabelsListResponses, TaskLabelsListErrors, ThrowOnError>({
-    security: [{
-            key: 'JWTKeyAuth',
-            scheme: 'bearer',
-            type: 'http'
-        }, {
-            key: 'APITokenAuth',
-            scheme: 'bearer',
-            type: 'http'
-        }],
-    url: '/tasks/{projecttask}/labels',
-    ...options
-});
-
-/**
- * Add a label to a task
- *
- * Attaches an existing label to the given task. Requires write access to the task and access to the label. Fails if the label is already on the task.
- */
-export const taskLabelsCreate = <ThrowOnError extends boolean = true>(options: Options<TaskLabelsCreateData, ThrowOnError>): RequestResult<TaskLabelsCreateResponses, TaskLabelsCreateErrors, ThrowOnError> => (options.client ?? client).post<TaskLabelsCreateResponses, TaskLabelsCreateErrors, ThrowOnError>({
-    security: [{
-            key: 'JWTKeyAuth',
-            scheme: 'bearer',
-            type: 'http'
-        }, {
-            key: 'APITokenAuth',
-            scheme: 'bearer',
-            type: 'http'
-        }],
-    url: '/tasks/{projecttask}/labels',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-    }
-});
-
-/**
- * Replace all labels on a task
- *
- * Sets the task's labels to exactly the provided list: labels not in the list are removed, missing ones are added, unchanged ones are left alone. Requires write access to the task, and you must be able to see every label you attach. Returns the resulting label set.
- */
-export const taskLabelsBulkReplace = <ThrowOnError extends boolean = true>(options: Options<TaskLabelsBulkReplaceData, ThrowOnError>): RequestResult<TaskLabelsBulkReplaceResponses, TaskLabelsBulkReplaceErrors, ThrowOnError> => (options.client ?? client).put<TaskLabelsBulkReplaceResponses, TaskLabelsBulkReplaceErrors, ThrowOnError>({
-    security: [{
-            key: 'JWTKeyAuth',
-            scheme: 'bearer',
-            type: 'http'
-        }, {
-            key: 'APITokenAuth',
-            scheme: 'bearer',
-            type: 'http'
-        }],
-    url: '/tasks/{projecttask}/labels/bulk',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-    }
-});
-
-/**
- * Remove a label from a task
- *
- * Detaches a label from the given task. Requires write access to the task.
- */
-export const taskLabelsDelete = <ThrowOnError extends boolean = true>(options: Options<TaskLabelsDeleteData, ThrowOnError>): RequestResult<TaskLabelsDeleteResponses, TaskLabelsDeleteErrors, ThrowOnError> => (options.client ?? client).delete<TaskLabelsDeleteResponses, TaskLabelsDeleteErrors, ThrowOnError>({
-    security: [{
-            key: 'JWTKeyAuth',
-            scheme: 'bearer',
-            type: 'http'
-        }, {
-            key: 'APITokenAuth',
-            scheme: 'bearer',
-            type: 'http'
-        }],
-    url: '/tasks/{projecttask}/labels/{label}',
-    ...options
-});
-
-/**
- * Mark a task as read
- *
- * Clears the authenticated user's unread status for a task, dismissing the unread indicator raised by mentions and other task notifications. Idempotent: marking an already-read or inaccessible task succeeds as a no-op.
- */
-export const tasksMarkRead = <ThrowOnError extends boolean = true>(options: Options<TasksMarkReadData, ThrowOnError>): RequestResult<TasksMarkReadResponses, TasksMarkReadErrors, ThrowOnError> => (options.client ?? client).put<TasksMarkReadResponses, TasksMarkReadErrors, ThrowOnError>({
-    security: [{
-            key: 'JWTKeyAuth',
-            scheme: 'bearer',
-            type: 'http'
-        }, {
-            key: 'APITokenAuth',
-            scheme: 'bearer',
-            type: 'http'
-        }],
-    url: '/tasks/{projecttask}/read',
-    ...options
-});
-
-/**
- * List a task's time entries
- *
- * Returns the time entries logged against the given task, across all users, paginated. Scoped to what you can read: an inaccessible or unknown task yields an empty list, not an error.
- */
-export const taskTimeEntriesList = <ThrowOnError extends boolean = true>(options: Options<TaskTimeEntriesListData, ThrowOnError>): RequestResult<TaskTimeEntriesListResponses, TaskTimeEntriesListErrors, ThrowOnError> => (options.client ?? client).get<TaskTimeEntriesListResponses, TaskTimeEntriesListErrors, ThrowOnError>({
-    security: [{
-            key: 'JWTKeyAuth',
-            scheme: 'bearer',
-            type: 'http'
-        }, {
-            key: 'APITokenAuth',
-            scheme: 'bearer',
-            type: 'http'
-        }],
-    url: '/tasks/{task_id}/time-entries',
+    url: '/tasks/{task}/assignees/{user}',
     ...options
 });
 
@@ -2869,6 +2747,109 @@ export const taskCommentsUpdate = <ThrowOnError extends boolean = true>(options:
 });
 
 /**
+ * Duplicate a task
+ *
+ * Copies a task — including its labels, assignees, attachments and reminders — into the same project, and records a "copied from" relation back to the original. The authenticated user needs read access to the source task and write access to its project. Returns the newly created duplicate.
+ */
+export const tasksDuplicate = <ThrowOnError extends boolean = true>(options: Options<TasksDuplicateData, ThrowOnError>): RequestResult<TasksDuplicateResponses, TasksDuplicateErrors, ThrowOnError> => (options.client ?? client).post<TasksDuplicateResponses, TasksDuplicateErrors, ThrowOnError>({
+    security: [{
+            key: 'JWTKeyAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }, {
+            key: 'APITokenAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }],
+    url: '/tasks/{task}/duplicate',
+    ...options
+});
+
+/**
+ * List the labels on a task
+ *
+ * Returns the labels attached to the given task, paginated. Requires read access to the task.
+ */
+export const taskLabelsList = <ThrowOnError extends boolean = true>(options: Options<TaskLabelsListData, ThrowOnError>): RequestResult<TaskLabelsListResponses, TaskLabelsListErrors, ThrowOnError> => (options.client ?? client).get<TaskLabelsListResponses, TaskLabelsListErrors, ThrowOnError>({
+    security: [{
+            key: 'JWTKeyAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }, {
+            key: 'APITokenAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }],
+    url: '/tasks/{task}/labels',
+    ...options
+});
+
+/**
+ * Add a label to a task
+ *
+ * Attaches an existing label to the given task. Requires write access to the task and access to the label. Fails if the label is already on the task.
+ */
+export const taskLabelsCreate = <ThrowOnError extends boolean = true>(options: Options<TaskLabelsCreateData, ThrowOnError>): RequestResult<TaskLabelsCreateResponses, TaskLabelsCreateErrors, ThrowOnError> => (options.client ?? client).post<TaskLabelsCreateResponses, TaskLabelsCreateErrors, ThrowOnError>({
+    security: [{
+            key: 'JWTKeyAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }, {
+            key: 'APITokenAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }],
+    url: '/tasks/{task}/labels',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Replace all labels on a task
+ *
+ * Sets the task's labels to exactly the provided list: labels not in the list are removed, missing ones are added, unchanged ones are left alone. Requires write access to the task, and you must be able to see every label you attach. Returns the resulting label set.
+ */
+export const taskLabelsBulkReplace = <ThrowOnError extends boolean = true>(options: Options<TaskLabelsBulkReplaceData, ThrowOnError>): RequestResult<TaskLabelsBulkReplaceResponses, TaskLabelsBulkReplaceErrors, ThrowOnError> => (options.client ?? client).put<TaskLabelsBulkReplaceResponses, TaskLabelsBulkReplaceErrors, ThrowOnError>({
+    security: [{
+            key: 'JWTKeyAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }, {
+            key: 'APITokenAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }],
+    url: '/tasks/{task}/labels/bulk',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Remove a label from a task
+ *
+ * Detaches a label from the given task. Requires write access to the task.
+ */
+export const taskLabelsDelete = <ThrowOnError extends boolean = true>(options: Options<TaskLabelsDeleteData, ThrowOnError>): RequestResult<TaskLabelsDeleteResponses, TaskLabelsDeleteErrors, ThrowOnError> => (options.client ?? client).delete<TaskLabelsDeleteResponses, TaskLabelsDeleteErrors, ThrowOnError>({
+    security: [{
+            key: 'JWTKeyAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }, {
+            key: 'APITokenAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }],
+    url: '/tasks/{task}/labels/{label}',
+    ...options
+});
+
+/**
  * Set a task's position in a view
  *
  * Sets where a task sorts within one of its project's views. The position is per view, so this only affects the view named by project_view_id. Requires write access to the task. Positions below the minimum spacing make the server recalculate every position in the view, so the returned value may differ from the one sent.
@@ -2889,6 +2870,25 @@ export const tasksPositionUpdate = <ThrowOnError extends boolean = true>(options
         'Content-Type': 'application/json',
         ...options.headers
     }
+});
+
+/**
+ * Mark a task as read
+ *
+ * Clears the authenticated user's unread status for a task, dismissing the unread indicator raised by mentions and other task notifications. Idempotent: marking an already-read or inaccessible task succeeds as a no-op.
+ */
+export const tasksMarkRead = <ThrowOnError extends boolean = true>(options: Options<TasksMarkReadData, ThrowOnError>): RequestResult<TasksMarkReadResponses, TasksMarkReadErrors, ThrowOnError> => (options.client ?? client).put<TasksMarkReadResponses, TasksMarkReadErrors, ThrowOnError>({
+    security: [{
+            key: 'JWTKeyAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }, {
+            key: 'APITokenAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }],
+    url: '/tasks/{task}/read',
+    ...options
 });
 
 /**

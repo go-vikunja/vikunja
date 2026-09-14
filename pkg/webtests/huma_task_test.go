@@ -47,13 +47,13 @@ func TestHumaTask(t *testing.T) {
 	testHandler := webHandlerTestV2{
 		user:     &testuser1,
 		basePath: "/api/v2/tasks",
-		idParam:  "projecttask",
+		idParam:  "task",
 		t:        t,
 	}
 
 	t.Run("ReadOne", func(t *testing.T) {
 		t.Run("Normal", func(t *testing.T) {
-			rec, err := testHandler.testReadOneWithUser(nil, map[string]string{"projecttask": "1"})
+			rec, err := testHandler.testReadOneWithUser(nil, map[string]string{"task": "1"})
 			require.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `"id":1`)
 			assert.Contains(t, rec.Body.String(), `"title":"task #1"`)
@@ -61,7 +61,7 @@ func TestHumaTask(t *testing.T) {
 			assert.NotEmpty(t, rec.Result().Header.Get("ETag"))
 		})
 		t.Run("Nonexisting", func(t *testing.T) {
-			_, err := testHandler.testReadOneWithUser(nil, map[string]string{"projecttask": "99999"})
+			_, err := testHandler.testReadOneWithUser(nil, map[string]string{"task": "99999"})
 			require.Error(t, err)
 			// CanRead resolves the task before the project check, so a missing
 			// task surfaces as 404, not the 403 the label read uses.
@@ -69,7 +69,7 @@ func TestHumaTask(t *testing.T) {
 		})
 		t.Run("Forbidden - private project", func(t *testing.T) {
 			// Task #34 lives in project 20, private to user13.
-			_, err := testHandler.testReadOneWithUser(nil, map[string]string{"projecttask": "34"})
+			_, err := testHandler.testReadOneWithUser(nil, map[string]string{"task": "34"})
 			require.Error(t, err)
 			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
 		})
@@ -80,28 +80,28 @@ func TestHumaTask(t *testing.T) {
 	// (unlike v1's webHandlerTest, which reloads fixtures per request).
 	t.Run("Update", func(t *testing.T) {
 		t.Run("Normal", func(t *testing.T) {
-			rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "3"}, `{"title":"Lorem Ipsum"}`)
+			rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"task": "3"}, `{"title":"Lorem Ipsum"}`)
 			require.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `"title":"Lorem Ipsum"`)
 			assert.NotContains(t, rec.Body.String(), `"title":"task #3 high prio"`)
 		})
 		t.Run("Move to another project", func(t *testing.T) {
-			rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "4"}, `{"project_id":7}`)
+			rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"task": "4"}, `{"project_id":7}`)
 			require.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `"project_id":7`)
 		})
 		t.Run("Nonexisting", func(t *testing.T) {
-			_, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "99999"}, `{"title":"x"}`)
+			_, err := testHandler.testUpdateWithUser(nil, map[string]string{"task": "99999"}, `{"title":"x"}`)
 			require.Error(t, err)
 			assert.Equal(t, http.StatusNotFound, getHTTPErrorCode(err))
 		})
 		t.Run("Forbidden - read-only share", func(t *testing.T) {
-			_, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "14"}, `{"title":"x"}`)
+			_, err := testHandler.testUpdateWithUser(nil, map[string]string{"task": "14"}, `{"title":"x"}`)
 			require.Error(t, err)
 			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
 		})
 		t.Run("Forbidden - move into a project the user can't write", func(t *testing.T) {
-			_, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "5"}, `{"project_id":20}`)
+			_, err := testHandler.testUpdateWithUser(nil, map[string]string{"task": "5"}, `{"project_id":20}`)
 			require.Error(t, err)
 			assertHandlerErrorCode(t, err, models.ErrorCodeGenericForbidden)
 		})
@@ -109,13 +109,13 @@ func TestHumaTask(t *testing.T) {
 
 	t.Run("Delete", func(t *testing.T) {
 		t.Run("Normal", func(t *testing.T) {
-			rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"projecttask": "2"})
+			rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"task": "2"})
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusNoContent, rec.Code)
 			assert.Empty(t, rec.Body.String())
 
 			// The task is soft-deleted: gone through the API, still in the db
-			_, err = testHandler.testReadOneWithUser(nil, map[string]string{"projecttask": "2"})
+			_, err = testHandler.testReadOneWithUser(nil, map[string]string{"task": "2"})
 			require.Error(t, err)
 			assert.Equal(t, http.StatusNotFound, getHTTPErrorCode(err))
 
@@ -132,17 +132,17 @@ func TestHumaTask(t *testing.T) {
 			db.AssertCount(t, "tasks", builder.And(builder.Eq{"id": 2}, builder.NotNull{"deleted_at"}), 1)
 		})
 		t.Run("Nonexisting", func(t *testing.T) {
-			_, err := testHandler.testDeleteWithUser(nil, map[string]string{"projecttask": "99999"})
+			_, err := testHandler.testDeleteWithUser(nil, map[string]string{"task": "99999"})
 			require.Error(t, err)
 			assert.Equal(t, http.StatusNotFound, getHTTPErrorCode(err))
 		})
 		t.Run("Forbidden - read-only share", func(t *testing.T) {
-			_, err := testHandler.testDeleteWithUser(nil, map[string]string{"projecttask": "14"})
+			_, err := testHandler.testDeleteWithUser(nil, map[string]string{"task": "14"})
 			require.Error(t, err)
 			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
 		})
 		t.Run("Shared via team write", func(t *testing.T) {
-			rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"projecttask": "16"})
+			rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"task": "16"})
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusNoContent, rec.Code)
 		})
