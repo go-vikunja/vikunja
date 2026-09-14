@@ -25,7 +25,6 @@ import (
 	"code.vikunja.io/api/pkg/richtext"
 
 	"github.com/danielgtaylor/huma/v2"
-	"github.com/labstack/echo/v5"
 )
 
 const (
@@ -40,8 +39,8 @@ const (
 // read here so this also catches the X-Vikunja-Format header — the only channel
 // that survives AutoPatch's PATCH re-dispatch (it strips the query).
 func requestWantsMarkdown(ctx context.Context) bool {
-	ec, ok := ctx.Value(humabridge.EchoContextKey).(*echo.Context)
-	if !ok {
+	ec := humabridge.EchoContextFrom(ctx)
+	if ec == nil {
 		return false
 	}
 	return ec.QueryParam(richTextFormatQuery) == markdownFormat ||
