@@ -20,7 +20,7 @@
 		<template #default>
 			<div class="kanban-view">
 				<div
-					:class="{ 'is-loading': loading && !oneTaskUpdating}"
+					:class="{ 'is-loading': loading && !oneTaskUpdating, 'is-dragging-task': drag}"
 					class="kanban kanban-bucket-container loader-container"
 				>
 					<draggable
@@ -996,7 +996,8 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		}
 
 		.tasks {
-			flex: 1 1 auto;
+			// Only grow while dragging so the whole column is a drop target, otherwise the footer gets pushed down
+			flex: 0 1 auto;
 			min-block-size: 0;
 			overflow: hidden auto;
 			list-style: none;
@@ -1062,6 +1063,10 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 				display: none;
 			}
 		}
+	}
+
+	&.is-dragging-task .bucket .tasks {
+		flex-grow: 1;
 	}
 
 	.bucket-header {
