@@ -83,7 +83,7 @@ func TestHumaRichText_FormatDocumented(t *testing.T) {
 	// Query param on the ops where it works (GET/POST/PUT), per entity.
 	assert.True(t, hasParam("/labels/{id}", "get", "format", "query"), "labels read must document ?format")
 	assert.True(t, hasParam("/labels", "post", "format", "query"), "labels create must document ?format")
-	assert.True(t, hasParam("/tasks/{projecttask}", "put", "format", "query"), "tasks update must document ?format")
+	assert.True(t, hasParam("/tasks/{task}", "put", "format", "query"), "tasks update must document ?format")
 
 	// PATCH must NOT advertise ?format — AutoPatch strips the query at runtime, so
 	// it would be a trap (markdown stored as HTML). Stripped by stripPatchFormatQuery.

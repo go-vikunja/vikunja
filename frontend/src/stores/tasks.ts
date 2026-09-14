@@ -107,7 +107,7 @@ async function addLabelToTask(task: ITask, label: Label) {
 	}
 
 	const {data} = await taskLabelsCreate({
-		path: {projecttask: task.id},
+		path: {task: task.id},
 		body: {label_id: label.id},
 	})
 	task.labels.push(label)
@@ -321,7 +321,7 @@ export const useTaskStore = defineStore('task', () => {
 		}
 
 		const {data} = await taskLabelsCreate({
-			path: {projecttask: taskId},
+			path: {task: taskId},
 			body: {label_id: label.id},
 		})
 		const t = kanbanStore.getTaskById(taskId)
@@ -356,7 +356,7 @@ export const useTaskStore = defineStore('task', () => {
 		}
 
 		const {data} = await taskLabelsDelete({
-			path: {projecttask: taskId, label: label.id},
+			path: {task: taskId, label: label.id},
 		})
 		const t = kanbanStore.getTaskById(taskId)
 		if (t.task === null) {

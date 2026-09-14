@@ -39,7 +39,7 @@ func RegisterTaskDuplicateRoutes(api huma.API) {
 		Summary:     "Duplicate a task",
 		Description: "Copies a task — including its labels, assignees, attachments and reminders — into the same project, and records a \"copied from\" relation back to the original. The authenticated user needs read access to the source task and write access to its project. Returns the newly created duplicate.",
 		Method:      http.MethodPost,
-		Path:        "/tasks/{projecttask}/duplicate",
+		Path:        "/tasks/{task}/duplicate",
 		Tags:        tags,
 	}, tasksDuplicate)
 }
@@ -47,7 +47,7 @@ func RegisterTaskDuplicateRoutes(api huma.API) {
 func init() { AddRouteRegistrar(RegisterTaskDuplicateRoutes) }
 
 func tasksDuplicate(ctx context.Context, in *struct {
-	TaskID int64 `path:"projecttask" doc:"The numeric id of the task to duplicate."`
+	TaskID int64 `path:"task" doc:"The numeric id of the task to duplicate."`
 }) (*singleBody[models.TaskDuplicate], error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {

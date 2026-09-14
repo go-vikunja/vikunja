@@ -28,7 +28,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestTaskDuplicateV2 covers POST /tasks/{projecttask}/duplicate. It drives the
+// TestTaskDuplicateV2 covers POST /tasks/{task}/duplicate. It drives the
 // Echo+Huma stack directly (humaRequest/humaTokenFor) because webHandlerTestV2's
 // buildURL only models base[/{id}] paths, not action sub-paths.
 func TestTaskDuplicateV2(t *testing.T) {
