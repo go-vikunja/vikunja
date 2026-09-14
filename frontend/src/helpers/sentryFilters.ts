@@ -107,6 +107,15 @@ function hasNothingToReport(event?: SentryEventLike): boolean {
 	return !values?.length || values.every(value => !value?.value && !value?.type)
 }
 
+// `Promise.reject({})`: Sentry still fills in a type and value, so
+// hasNothingToReport() doesn't catch it.
+function isEmptyObject(e: unknown): boolean {
+	return typeof e === 'object'
+		&& e !== null
+		&& Object.getPrototypeOf(e) === Object.prototype
+		&& Object.keys(e).length === 0
+}
+
 export function shouldDropEvent(originalException: unknown, event?: SentryEventLike): boolean {
 	if (isNoisyMessage(event?.message)) {
 		return true
@@ -120,7 +129,7 @@ export function shouldDropEvent(originalException: unknown, event?: SentryEventL
 		return true
 	}
 
-	if (hasNothingToReport(event)) {
+	if (hasNothingToReport(event) || isEmptyObject(originalException)) {
 		return true
 	}
 
