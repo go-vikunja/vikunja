@@ -105,7 +105,10 @@
 			"registrationDisabled": "Registrierung ist deaktiviert.",
 			"passwordResetTokenMissing": "Das Passwort-Reset-Token fehlt.",
 			"registrationFailed": "Bei der Registrierung ist ein Fehler aufgetreten. Bitte prüfe deine Eingabe und versuche es erneut.",
-			"registrationConfirmEmail": "Dein Account wurde erfolgreich erstellt! Bitte überprüfe deinen Posteingang und klicke auf den Link in der Bestätigungs-E-Mail, bevor du dich anmeldest."
+			"registrationConfirmEmail": "Dein Account wurde erfolgreich erstellt! Bitte überprüfe deinen Posteingang und klicke auf den Link in der Bestätigungs-E-Mail, bevor du dich anmeldest.",
+			"inviteInvalid": "Dieser Einladungslink ist ungültig oder abgelaufen.",
+			"inviteLoadFailed": "Diese Einladung konnte nicht geladen werden. Bitte versuche es noch einmal.",
+			"inviteTeams": "Du wirst {teams} beitreten"
 		},
 		"settings": {
 			"bots": {
@@ -1498,6 +1501,9 @@
 		"2001": "Die ID kann nicht leer oder 0 sein.",
 		"2002": "Ein Teil der Anfragedaten ist ungültig.",
 		"2003": "Die Zeitzone '{timezone}' ist ungültig.",
+		"2005": "Dieser Einladungslink ist ungültig oder abgelaufen.",
+		"2006": "Dieser Einladungslink existiert nicht.",
+		"2007": "Extern verwaltete Teams können nicht mit einem Einladungslink verknüpft werden.",
 		"3001": "Das Projekt ist nicht vorhanden.",
 		"3004": "Um das zu machen, benötigst du eine Leseberechtigung für dieses Projekt.",
 		"3005": "Der Projekttitel darf nicht leer sein.",
@@ -1679,6 +1685,28 @@
 			"reassignTitle": "{title} erneut zuweisen",
 			"reassignedSuccess": "Projekteigentümer:in neu zugewiesen.",
 			"newOwnerLabel": "Neu:e Eigentümer:in"
+		},
+		"inviteLinks": {
+			"title": "Einladungslinks",
+			"create": "Einladungslink erstellen",
+			"name": "Linkname",
+			"teams": "Teams, denen beigetreten werden soll",
+			"maxUses": "Maximale Nutzung",
+			"unlimited": "Unbegrenzt",
+			"uses": "Nutzungen",
+			"expiresAt": "Läuft ab am",
+			"neverExpires": "Läuft nie ab",
+			"createdBy": "Erstellt von",
+			"skipEmailConfirm": "E-Mail-Bestätigung überspringen",
+			"shownOnce": "Dieser Link wird nur einmal angezeigt. Kopiere ihn, bevor du dieses Fenster schließt.",
+			"url": "Einladungslink",
+			"copy": "Link kopieren",
+			"copied": "Link kopiert",
+			"delete": "Einladungslink löschen",
+			"deleteConfirm": "„{name}“ löschen? Dann kann sich niemand mehr über diesen Link registrieren. Bestehende Accounts bleiben aktiv.",
+			"deleted": "Einladungslink gelöscht.",
+			"empty": "Noch keine Einladungslinks. Erstelle einen Link, um jemanden in diese Instanz einzuladen.",
+			"futureExpiry": "Wähle ein Ablaufdatum, das in der Zukunft liegt."
 		}
 	}
 }
