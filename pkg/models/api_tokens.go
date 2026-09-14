@@ -21,9 +21,12 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/hex"
+	"net/http"
 	"slices"
+	"strings"
 	"time"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
@@ -68,6 +71,27 @@ type APIToken struct {
 }
 
 const APITokenPrefix = `tk_`
+
+// APITokenAuthorization returns the first Authorization value carrying an API token.
+func APITokenAuthorization(h http.Header) (string, bool) {
+	for _, v := range h.Values("Authorization") {
+		if strings.HasPrefix(v, "Bearer "+APITokenPrefix) {
+			return v, true
+		}
+	}
+	return "", false
+}
+
+// RecordAPITokenUse dispatches the audit event for a request this token authenticated.
+func RecordAPITokenUse(ctx context.Context, token *APIToken) error {
+	if token == nil || !config.AuditEnabled.GetBool() {
+		return nil
+	}
+	return events.DispatchWithContext(ctx, &APITokenUsedEvent{
+		TokenID: token.ID,
+		OwnerID: token.OwnerID,
+	})
+}
 
 func (*APIToken) TableName() string {
 	return "api_tokens"
