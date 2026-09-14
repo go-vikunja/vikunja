@@ -202,6 +202,73 @@ describe('Multiselect.vue — focus after selecting', () => {
 	})
 })
 
+describe('Multiselect.vue — multiple value stays an array', () => {
+	beforeEach(() => {
+		vi.useFakeTimers()
+	})
+
+	afterEach(() => {
+		vi.useRealTimers()
+		document.body.innerHTML = ''
+	})
+
+	function lastModelValue(wrapper: VueWrapper) {
+		const events = wrapper.emitted('update:modelValue') ?? []
+		return events[events.length - 1]?.[0]
+	}
+
+	// FRONTEND-OSS-2KA: the parent creates the item asynchronously, so a result can be clicked before modelValue syncs back.
+	it('selects an option while a created item is still pending in the parent', async () => {
+		const wrapper = mountMultiselect({creatable: true, searchResults: [{title: 'Alpha'}]})
+		const input = wrapper.find('input[role="combobox"]')
+		await input.setValue('New')
+		await input.trigger('keyup')
+		vi.advanceTimersByTime(300)
+		await nextTick()
+
+		await wrapper.find('.is-create-option').trigger('click')
+		expect(wrapper.emitted('create')).toEqual([['New']])
+
+		// A real keystroke's keydown clears the keyup guard set by refocusing after create.
+		await input.setValue('a')
+		await input.trigger('keydown', {key: 'a'})
+		await input.trigger('keyup', {key: 'a'})
+		vi.advanceTimersByTime(300)
+		await nextTick()
+		await wrapper.find('[role="option"]').trigger('click')
+
+		expect(wrapper.emitted('select')).toEqual([[{title: 'Alpha'}]])
+		expect(lastModelValue(wrapper)).toEqual([{title: 'Alpha'}])
+
+		wrapper.unmount()
+	})
+
+	it('selects two options in a row before modelValue syncs back', async () => {
+		const wrapper = mountMultiselect()
+		await openResults(wrapper)
+
+		const [alpha, beta] = wrapper.findAll('[role="option"]').map(o => o.element)
+		alpha.dispatchEvent(new MouseEvent('click', {bubbles: true, cancelable: true}))
+		beta.dispatchEvent(new MouseEvent('click', {bubbles: true, cancelable: true}))
+		await nextTick()
+
+		expect(wrapper.emitted('select')).toHaveLength(2)
+		expect(lastModelValue(wrapper)).toEqual([{title: 'Alpha'}, {title: 'Beta'}])
+
+		wrapper.unmount()
+	})
+
+	it('treats a null modelValue as no selection', async () => {
+		const wrapper = mountMultiselect({modelValue: null})
+		await openResults(wrapper)
+		await wrapper.find('[role="option"]').trigger('click')
+
+		expect(lastModelValue(wrapper)).toEqual([{title: 'Alpha'}])
+
+		wrapper.unmount()
+	})
+})
+
 describe('Multiselect.vue — creation-disabled hint', () => {
 	beforeEach(() => {
 		vi.useFakeTimers()
