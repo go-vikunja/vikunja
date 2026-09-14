@@ -63,8 +63,9 @@ func (TaskReminder) TableName() string {
 }
 
 type taskUser struct {
-	Task *Task      `xorm:"extends"`
-	User *user.User `xorm:"extends"`
+	Task       *Task      `xorm:"extends"`
+	User       *user.User `xorm:"extends"`
+	IsAssignee bool
 }
 
 const dbTimeFormat = `2006-01-02 15:04:05`
@@ -95,8 +96,9 @@ func getTaskUsersForTasks(s *xorm.Session, taskIDs []int64, cond builder.Cond) (
 	// user_id -> project_id -> has read access
 	userPermissionOnProject := make(map[int64]map[int64]bool)
 
+	// First hit per (task, user) wins, so assignees must be appended first.
 	seen := make(map[int64]map[int64]struct{})
-	appendUser := func(taskID int64, u *user.User) (err error) {
+	appendUser := func(taskID int64, u *user.User, isAssignee bool) (err error) {
 		if u == nil {
 			return
 		}
@@ -138,7 +140,7 @@ func getTaskUsersForTasks(s *xorm.Session, taskIDs []int64, cond builder.Cond) (
 			return
 		}
 
-		taskUsers = append(taskUsers, &taskUser{Task: task, User: u})
+		taskUsers = append(taskUsers, &taskUser{Task: task, User: u, IsAssignee: isAssignee})
 
 		return
 	}
@@ -155,23 +157,6 @@ func getTaskUsersForTasks(s *xorm.Session, taskIDs []int64, cond builder.Cond) (
 	}
 	if cond != nil {
 		conditions = append(conditions, cond)
-	}
-
-	creators := []*userWithTask{}
-	err = s.Table("tasks").
-		Select("DISTINCT tasks.id AS task_id, users.id, users.name, users.username, users.email, users.email_reminders_enabled, users.overdue_tasks_reminders_enabled, users.overdue_tasks_reminders_time, users.language, users.timezone, users.created, users.updated").
-		Join("INNER", "users", "tasks.created_by_id = users.id").
-		Where(builder.And(conditions...)).
-		Find(&creators)
-	if err != nil {
-		return
-	}
-
-	for _, creator := range creators {
-		err = appendUser(creator.TaskID, &creator.User)
-		if err != nil {
-			return
-		}
 	}
 
 	assigneeConds := []builder.Cond{
@@ -192,7 +177,24 @@ func getTaskUsersForTasks(s *xorm.Session, taskIDs []int64, cond builder.Cond) (
 	}
 
 	for i := range assignees {
-		err = appendUser(assignees[i].TaskID, &assignees[i].User)
+		err = appendUser(assignees[i].TaskID, &assignees[i].User, true)
+		if err != nil {
+			return
+		}
+	}
+
+	creators := []*userWithTask{}
+	err = s.Table("tasks").
+		Select("DISTINCT tasks.id AS task_id, users.id, users.name, users.username, users.email, users.email_reminders_enabled, users.overdue_tasks_reminders_enabled, users.overdue_tasks_reminders_time, users.language, users.timezone, users.created, users.updated").
+		Join("INNER", "users", "tasks.created_by_id = users.id").
+		Where(builder.And(conditions...)).
+		Find(&creators)
+	if err != nil {
+		return
+	}
+
+	for _, creator := range creators {
+		err = appendUser(creator.TaskID, &creator.User, false)
 		if err != nil {
 			return
 		}
@@ -232,7 +234,7 @@ func getTaskUsersForTasks(s *xorm.Session, taskIDs []int64, cond builder.Cond) (
 			if !has {
 				continue
 			}
-			err = appendUser(taskID, u)
+			err = appendUser(taskID, u, false)
 			if err != nil {
 				return
 			}
