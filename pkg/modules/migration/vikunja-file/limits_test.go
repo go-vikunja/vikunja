@@ -33,6 +33,7 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/files"
+	"code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/assert"
@@ -256,6 +257,22 @@ func TestVikunjaFileLimits(t *testing.T) {
 		err := runMigrate(t, buildExportZip(t, []byte("hello")))
 		require.NoError(t, err)
 		db.AssertExists(t, "files", map[string]interface{}{"name": "blob.bin", "size": 5}, false)
+	})
+
+	t.Run("a queued import upload does not consume the storage quota", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		quota := existingStorage(t) + int64(len("hello"))
+		setLimits(t, "256MB", fmt.Sprintf("%dB", quota), 10000)
+
+		u := &user.User{ID: 1}
+		status, err := migration.ClaimMigration(&FileMigrator{}, u)
+		require.NoError(t, err)
+		t.Cleanup(func() { _ = migration.FinishMigration(status) })
+		upload := bytes.Repeat([]byte("u"), 4096)
+		require.NoError(t, migration.StoreImportUpload(status, u, bytes.NewReader(upload), int64(len(upload))))
+
+		export := bytes.NewReader(buildExportZip(t, []byte("hello")))
+		require.NoError(t, (&FileMigrator{}).Migrate(u, export, int64(export.Len())))
 	})
 
 	t.Run("actual file bytes enforce the storage quota", func(t *testing.T) {

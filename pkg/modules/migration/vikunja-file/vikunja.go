@@ -42,6 +42,7 @@ import (
 
 	"github.com/c2h5oh/datasize"
 	"github.com/hashicorp/go-version"
+	"xorm.io/builder"
 )
 
 const logPrefix = "[Vikunja File Import] "
@@ -411,6 +412,8 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 		Table("files").
 		Select("COALESCE(SUM(size), 0)").
 		Where("created_by_id = ?", user.ID).
+		// Uploads waiting for their import job are not the user's data, including this import's own.
+		And(builder.NotIn("id", builder.Select("upload_file_id").From((&migration.Status{}).TableName()).Where(builder.NotNull{"upload_file_id"}))).
 		Get(&existingStorage)
 	_ = qs.Close()
 	if err != nil {
