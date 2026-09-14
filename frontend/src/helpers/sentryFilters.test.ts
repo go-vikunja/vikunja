@@ -192,6 +192,28 @@ describe('shouldDropEvent with empty events', () => {
 	it('keeps an event when no event was passed at all', () => {
 		expect(shouldDropEvent(new Error('something actually broke'))).toBe(false)
 	})
+
+	it('drops a promise rejected with an empty object', () => {
+		expect(shouldDropEvent({}, {
+			exception: {
+				values: [{
+					type: 'UnhandledRejection',
+					value: 'Object captured as promise rejection with keys: [object has no keys]',
+				}],
+			},
+		})).toBe(true)
+	})
+
+	it('keeps a promise rejected with an object that has keys', () => {
+		expect(shouldDropEvent({reason: 'boom'}, {
+			exception: {
+				values: [{
+					type: 'UnhandledRejection',
+					value: 'Object captured as promise rejection with keys: reason',
+				}],
+			},
+		})).toBe(false)
+	})
 })
 
 
