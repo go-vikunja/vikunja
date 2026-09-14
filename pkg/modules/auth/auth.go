@@ -478,8 +478,8 @@ func SessionIDFromContext(c *echo.Context) string {
 // humabridge group middleware stashes the *echo.Context under EchoContextKey
 // first.
 func GetAuthFromContext(ctx context.Context) (web.Auth, error) {
-	ec, ok := ctx.Value(humabridge.EchoContextKey).(*echo.Context)
-	if !ok {
+	ec := humabridge.EchoContextFrom(ctx)
+	if ec == nil {
 		return nil, fmt.Errorf("no echo.Context on request context; are you calling GetAuthFromContext from a Huma handler mounted via humabridge?")
 	}
 	return GetAuthFromClaims(ec)
