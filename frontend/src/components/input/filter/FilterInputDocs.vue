@@ -63,6 +63,7 @@ const showDocs = ref(false)
 				{{ $t('filters.query.help.examples.undoneHighPriority') }}
 			</li>
 			<li><code>assignees in user1, user2</code>: {{ $t('filters.query.help.examples.assigneesIn') }}</li>
+			<li><code>assignees in @me</code>: {{ $t('filters.query.help.examples.assigneesInMe') }}</li>
 			<li><code>createdBy = user1</code>: {{ $t('filters.query.help.examples.createdByEqual') }}</li>
 			<li>
 				<code>(priority = 1 || priority = 2) &amp;&amp; dueDate &lt;= now</code>:

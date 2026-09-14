@@ -22,6 +22,7 @@ import ProjectUserService from '@/services/projectUsers'
 import type { IUser } from '@/modelTypes/IUser'
 import type { IProject } from '@/modelTypes/IProject'
 import type { Label } from '@/client/generated'
+import {i18n} from '@/i18n'
 
 export interface FilterAutocompleteOptions {
 	projectId?: number
@@ -238,6 +239,15 @@ export default Extension.create<FilterAutocompleteOptions>({
 									userSuggestions = await projectUserService.getAll({projectId: this.options.projectId}, {s: autocompleteContext.search}) as SuggestionItem[]
 								} else {
 									userSuggestions = await userService.getAll({} as IUser, {s: autocompleteContext.search}) as SuggestionItem[]
+								}
+								if (autocompleteContext.search === '' || '@me'.startsWith(autocompleteContext.search.toLowerCase())) {
+									const meMacro = {
+										id: 0,
+										username: '@me',
+										title: '@me',
+										name: i18n.global.t('filters.query.you'),
+									} as unknown as SuggestionItem
+									userSuggestions = [meMacro, ...userSuggestions]
 								}
 								// Show suggestions even with empty search, but limit if we have many
 								if (autocompleteContext.search === '' && userSuggestions.length > 10) {
