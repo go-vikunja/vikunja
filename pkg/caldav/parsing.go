@@ -546,9 +546,13 @@ func caldavTimeToTimestamp(ianaProperty ics.IANAProperty) time.Time {
 	}
 
 	format := DateFormat
+	loc := config.GetTimeZone()
 
-	if strings.HasSuffix(tstring, "Z") {
+	// A trailing Z is UTC per RFC 5545 and cannot be combined with a TZID.
+	isUTC := strings.HasSuffix(tstring, "Z")
+	if isUTC {
 		format = `20060102T150405Z`
+		loc = time.UTC
 	}
 
 	if len(tstring) == 8 {
@@ -558,15 +562,15 @@ func caldavTimeToTimestamp(ianaProperty ics.IANAProperty) time.Time {
 	var t time.Time
 	var err error
 	tzParameter := ianaProperty.ICalParameters["TZID"]
-	if len(tzParameter) > 0 {
-		loc, locErr := time.LoadLocation(tzParameter[0])
+	if len(tzParameter) > 0 && !isUTC {
+		tzLoc, locErr := time.LoadLocation(tzParameter[0])
 		if locErr != nil {
 			log.Warningf("Error while parsing caldav timezone %s: %s", tzParameter[0], locErr)
 		} else {
-			t, err = time.ParseInLocation(format, tstring, loc)
+			t, err = time.ParseInLocation(format, tstring, tzLoc)
 		}
 	} else {
-		t, err = time.ParseInLocation(format, tstring, config.GetTimeZone())
+		t, err = time.ParseInLocation(format, tstring, loc)
 	}
 
 	if err != nil {
