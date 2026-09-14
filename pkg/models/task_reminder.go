@@ -161,6 +161,7 @@ func getTaskUsersForTasks(s *xorm.Session, taskIDs []int64, cond builder.Cond) (
 
 	assigneeConds := []builder.Cond{
 		builder.In("task_assignees.task_id", taskIDs),
+		builder.Eq{"users.status": user.StatusActive},
 	}
 	if cond != nil {
 		assigneeConds = append(assigneeConds, cond)
