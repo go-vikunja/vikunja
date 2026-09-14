@@ -103,7 +103,9 @@
                 "subject": "Task \"%[1]s\" (%[2]s) is overdue",
                 "message": "This is a friendly reminder of the task \"%[1]s\" (%[2]s) which is overdue %[3]s and not yet done.",
                 "multiple_subject": "Your overdue tasks",
-                "multiple_message": "You have the following overdue tasks:",
+                "multiple_message": "You have overdue tasks:",
+                "assigned_heading": "Assigned to you",
+                "followed_heading": "Tasks you follow",
                 "overdue_since": "since %[1]s",
                 "overdue_now": "now",
                 "overdue": "overdue %[1]s"
