@@ -2,6 +2,7 @@
 
 ## Go
 
+- Write struct literals with multiple fields and slice/map literals with multiple entries across multiple lines, one field or entry per line, with trailing commas. Apply this to nested literals and tests too; do not pack fields or entries together just because `gofmt` permits it.
 - Wrap errors: `fmt.Errorf("...: %w", err)`.
 - No raw SQL anywhere, migrations and tests included. Use XORM's builder (`s.Where(...)`, `builder.In`, `.Cols().Update()`), never hand-built strings via `s.Exec`, `s.Query`, or `builder.Expr`.
   Gotcha: an argument-less `builder.In("col")` is silently dropped by `Where` and matches every row. Pass an empty typed slice (`[]int64{}`) to get `0=1`.
