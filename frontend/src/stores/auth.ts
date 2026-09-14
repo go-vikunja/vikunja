@@ -466,17 +466,9 @@ export const useAuthStore = defineStore('auth', () => {
 				return
 			}
 			
-			const cause = {e}
-			
-			if (typeof e?.response?.data?.message !== 'undefined') {
-				cause.message = e.response.data.message
-			}
-			
 			console.error('Error refreshing user info:', e)
 
-			// cause keeps the {e, message} shape that message/index.ts reads as cause.message
-			// eslint-disable-next-line preserve-caught-error
-			throw new Error('Error while refreshing user info:', {cause})
+			throw new Error('Error while refreshing user info:', {cause: e})
 		}
 	}
 
