@@ -65,6 +65,9 @@ func recreateMissingIndexes20260720120000(tx *xorm.Engine) error {
 			if indexCoveringColsExists20260720120000(dbSchema.indexesByTable[modelTable.Name], index) {
 				continue
 			}
+			if createdByLaterMigration20260720120000[index.XName(modelTable.Name)] {
+				continue
+			}
 			// Creating it would fail with "index already exists" and abort startup —
 			// the very failure mode this migration exists to prevent.
 			if indexName := index.XName(modelTable.Name); dbSchema.usedNames[strings.ToLower(indexName)] {
@@ -84,6 +87,13 @@ func recreateMissingIndexes20260720120000(tx *xorm.Engine) error {
 		}
 	}
 	return nil
+}
+
+// Model indexes a later migration creates after preparing the data for them.
+// Upgrades from before v2.5.0 run this migration first, so creating them here
+// fails on data the later migration would have fixed (#3882).
+var createdByLaterMigration20260720120000 = map[string]bool{
+	"UQE_subscriptions_entity_user": true, // 20260829190000 removes duplicates first
 }
 
 type dbSchema20260720120000Result struct {
