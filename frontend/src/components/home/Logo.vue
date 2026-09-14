@@ -43,7 +43,7 @@ const CustomLogo = computed(() => {
 			class="logo"
 		/>
 		<img
-			v-show="CustomLogo"
+			v-else
 			:src="CustomLogo"
 			alt="Vikunja"
 			class="logo"
