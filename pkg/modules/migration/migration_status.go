@@ -40,7 +40,8 @@ type Status struct {
 	ErrorKind    ErrorKind `xorm:"varchar(50) null" json:"error_kind" readOnly:"true" doc:"Why the last migration failed, as a key the client translates: \"reported\", \"interrupted\", \"credentials\", \"queue\", \"upload\" or \"detail\". Empty when it succeeded, is still running or was never run."`
 	ErrorMessage string    `xorm:"text null" json:"error_message" readOnly:"true" doc:"The failure detail, only set when error_kind is \"detail\": the migration failed on the user's own data and this is the error itself, in English."`
 	// NULL until the running job's first beat, and for rows predating the heartbeat.
-	HeartbeatAt *time.Time `xorm:"null" json:"-"`
+	HeartbeatAt  *time.Time `xorm:"null" json:"-"`
+	UploadFileID *int64     `xorm:"bigint null" json:"-"`
 	// ActiveUserID's unique index serializes migrations per account; finished rows use NULL.
 	ActiveUserID *int64 `xorm:"bigint null unique" json:"-"`
 }

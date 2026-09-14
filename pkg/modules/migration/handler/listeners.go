@@ -236,7 +236,7 @@ func (s *FileMigrationListener) Handle(msg *message.Message) (err error) {
 		return nil
 	}
 
-	defer migration.RemoveSpooledUpload(event.UploadName)
+	defer migration.RemoveImportUpload(event.MigrationStatusID, event.User.ID)
 
 	factory, has := registeredFileMigrators[event.MigratorKind]
 	if !has {
@@ -271,14 +271,14 @@ func importInListener(ms migration.FileMigrator, event *FileMigrationRequestedEv
 			return err
 		}
 
-		file, err := migration.OpenSpooledUpload(event.UploadName)
+		file, size, closeFile, err := migration.OpenImportUpload(m)
 		if err != nil {
 			// The wrapped error contains the server's file path, which must not reach the user's inbox.
-			log.Errorf("[Migration] Could not open the spooled import file for migration %d: %s", m.ID, err.Error())
+			log.Errorf("[Migration] Could not open the stored import file for migration %d: %s", m.ID, err.Error())
 			return errors.New("the uploaded import file is no longer available, please upload it again")
 		}
-		defer file.Close()
+		defer closeFile()
 
-		return asImportFileError(ms.Migrate(event.User, file, event.UploadSize))
+		return asImportFileError(ms.Migrate(event.User, file, size))
 	})
 }
