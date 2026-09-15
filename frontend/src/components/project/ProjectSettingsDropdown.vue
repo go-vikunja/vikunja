@@ -96,7 +96,7 @@
 				:entity-id="project.id"
 				:model-value="subscription"
 				type="dropdown"
-				@update:modelValue="setSubscriptionInStore"
+				@toggle="subscribed => subscriptionMutation.mutateAsync({projectId: project.id, subscribed})"
 			/>
 			<DropdownItem
 				:to="{ name: 'project.settings.webhooks', params: { projectId: project.id } }"
@@ -126,7 +126,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref, watchEffect} from 'vue'
+import {computed} from 'vue'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import Dropdown from '@/components/misc/Dropdown.vue'
@@ -134,11 +134,10 @@ import DropdownItem from '@/components/misc/DropdownItem.vue'
 import Subscription from '@/components/misc/Subscription.vue'
 import type {Project} from '@/client/generated'
 import type {ISubscription} from '@/modelTypes/ISubscription'
-import SubscriptionModel from '@/models/subscription'
+import {subscriptionFromApi} from '@/models/subscription'
 
-import {isSavedFilterProject} from '@/client/queries/projects'
+import {isSavedFilterProject, useSetProjectSubscriptionMutation} from '@/client/queries/projects'
 import {useConfigStore} from '@/stores/config'
-import {refreshProjects} from '@/client/queries/projects'
 import {useAuthStore} from '@/stores/auth'
 import {PERMISSIONS} from '@/constants/permissions'
 
@@ -149,26 +148,14 @@ const props = withDefaults(defineProps<{
 	forceAllActions: false,
 })
 
-const subscription = ref<ISubscription | null>(null)
-watchEffect(() => {
+const subscriptionMutation = useSetProjectSubscriptionMutation()
+const subscription = computed<ISubscription | null>(() => {
 	const value = props.project.subscription
-	subscription.value = value
-		? new SubscriptionModel({
-			id: value.id,
-			entity: value.entity,
-			entityId: value.entity_id,
-			created: value.created ? new Date(value.created) : undefined,
-		})
-		: null
+	return value ? subscriptionFromApi(value) : null
 })
 
 const configStore = useConfigStore()
 const backgroundsEnabled = computed(() => configStore.enabledBackgroundProviders?.length > 0)
-
-async function setSubscriptionInStore(sub: ISubscription | null) {
-	subscription.value = sub
-	await refreshProjects()
-}
 
 const authStore = useAuthStore()
 const isDefaultProject = computed(() => props.project?.id === authStore.settings.defaultProjectId)

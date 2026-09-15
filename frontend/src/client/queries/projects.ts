@@ -9,6 +9,8 @@ import {
 	projectsRead,
 	projectsUpdate,
 	patchProjectsRead,
+	subscriptionsCreate,
+	subscriptionsDelete,
 } from '@/client/generated'
 import type {
 	Project,
@@ -408,6 +410,49 @@ export function patchProjectFavoriteMutationOptions() {
 	})
 }
 
+export function setProjectSubscriptionMutationOptions() {
+	return mutationOptions({
+		onMutate: () => ({request: captureClientRequestContext()}),
+		mutationFn: async ({projectId, subscribed}: {projectId: number; subscribed: boolean}) => {
+			const request = captureClientRequestContext()
+			const path = {entity: 'project', entityID: projectId} as const
+			if (!subscribed) {
+				await subscriptionsDelete({path})
+				assertClientRequestContext(request)
+				return undefined
+			}
+			const {data} = await subscriptionsCreate({path})
+			assertClientRequestContext(request)
+			return data
+		},
+		onSuccess: (subscription, {projectId, subscribed}, context, {client}) => {
+			assertClientRequestContext(context.request)
+			client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
+				current ? mapProjectNavigationItem(current, projectId, project => ({...project, subscription})) : current,
+			)
+			client.setQueryData<ProjectResponse>(projectKeys.detail(projectId), current =>
+				current ? {...current, subscription} : current,
+			)
+			success({message: i18n.global.t(subscribed
+				? 'task.subscription.subscribeSuccessProject'
+				: 'task.subscription.unsubscribeSuccessProject')})
+		},
+		// Refetching the list reloads every page, so it is only marked stale; sub projects
+		// inherit the subscription and pick it up on the next list load.
+		onSettled: async (_data, _error, {projectId}, context, {client}) => {
+			if (context && isClientRequestContextCurrent(context.request)) {
+				const list = client.getQueryData<ProjectListResult>(projectKeys.list())
+				const ids = list ? descendantIds(list.projects, projectId) : [projectId]
+				await Promise.all([
+					client.invalidateQueries({queryKey: projectKeys.list(), refetchType: 'none'}),
+					...ids.map(id => client.invalidateQueries({queryKey: projectKeys.detail(id)})),
+				])
+				assertClientRequestContext(context.request)
+			}
+		},
+	})
+}
+
 function descendantIds(projects: readonly ProjectResponse[], projectId: number): number[] {
 	const children = projects.filter(project => project.parent_project_id === projectId)
 	return [projectId, ...children.flatMap(project => descendantIds(projects, project.id))]
@@ -529,6 +574,10 @@ export function useUpdateProjectMutation(successMessage?: string) {
 
 export function usePatchProjectFavoriteMutation() {
 	return useMutation(patchProjectFavoriteMutationOptions())
+}
+
+export function useSetProjectSubscriptionMutation() {
+	return useMutation(setProjectSubscriptionMutationOptions())
 }
 
 export function useDeleteProjectMutation() {

@@ -1,14 +1,14 @@
 import {shallowMount} from '@vue/test-utils'
-import {defineComponent, h, nextTick} from 'vue'
+import {defineComponent, h} from 'vue'
 import {beforeEach, describe, expect, it, vi} from 'vitest'
 
-const projectQueries = vi.hoisted(() => ({
-	refreshProjects: vi.fn(() => Promise.resolve()),
+const subscriptionMutation = vi.hoisted(() => ({
+	mutateAsync: vi.fn(() => Promise.resolve(null)),
 }))
 
 vi.mock('@/client/queries/projects', async importOriginal => ({
 	...await importOriginal<typeof import('@/client/queries/projects')>(),
-	...projectQueries,
+	useSetProjectSubscriptionMutation: () => subscriptionMutation,
 }))
 
 vi.mock('@/stores/auth', () => ({
@@ -34,50 +34,53 @@ const SubscriptionStub = defineComponent({
 	props: {
 		modelValue: {type: Object, default: null},
 	},
-	emits: ['update:modelValue'],
+	emits: ['toggle'],
 	template: '<div />',
 })
 
 import ProjectSettingsDropdown from './ProjectSettingsDropdown.vue'
-import type {ISubscription} from '@/modelTypes/ISubscription'
-import UserModel from '@/models/user'
+
+function mountDropdown(project: InstanceType<typeof ProjectSettingsDropdown>['$props']['project']) {
+	return shallowMount(ProjectSettingsDropdown, {
+		props: {project},
+		global: {
+			stubs: {
+				BaseButton: true,
+				Dropdown: DropdownStub,
+				DropdownItem: true,
+				Icon: true,
+				Subscription: SubscriptionStub,
+			},
+			directives: {tooltip: () => {}},
+			mocks: {$t: (key: string) => key},
+		},
+	})
+}
 
 describe('ProjectSettingsDropdown subscriptions', () => {
 	beforeEach(() => {
-		projectQueries.refreshProjects.mockClear()
+		subscriptionMutation.mutateAsync.mockClear()
 	})
 
-	it('updates local state and refreshes projects after a subscription change', async () => {
-		const wrapper = shallowMount(ProjectSettingsDropdown, {
-			props: {
-				project: {id: 1, title: 'Project'},
-			},
-			global: {
-				stubs: {
-					BaseButton: true,
-					Dropdown: DropdownStub,
-					DropdownItem: true,
-					Icon: true,
-					Subscription: SubscriptionStub,
-				},
-				directives: {tooltip: () => {}},
-				mocks: {$t: (key: string) => key},
-			},
+	it('derives the subscription from the cached project', () => {
+		const wrapper = mountDropdown({
+			id: 1,
+			title: 'Project',
+			subscription: {id: 7, entity: 'project', entity_id: 1},
 		})
-		const subscription: ISubscription = {
+
+		expect(wrapper.findComponent(SubscriptionStub).props('modelValue')).toMatchObject({
 			id: 7,
 			entity: 'project',
 			entityId: 1,
-			user: new UserModel({id: 1, username: 'test', name: 'Test User'}),
-			created: new Date('2026-09-01T00:00:00Z'),
-			maxPermission: null,
-		}
-		const subscriptionComponent = wrapper.findComponent(SubscriptionStub)
+		})
+	})
 
-		subscriptionComponent.vm.$emit('update:modelValue', subscription)
-		await nextTick()
+	it('toggles the subscription through the project mutation', () => {
+		const wrapper = mountDropdown({id: 1, title: 'Project'})
 
-		expect(subscriptionComponent.props('modelValue')).toEqual(subscription)
-		expect(projectQueries.refreshProjects).toHaveBeenCalledOnce()
+		wrapper.findComponent(SubscriptionStub).vm.$emit('toggle', true)
+
+		expect(subscriptionMutation.mutateAsync).toHaveBeenCalledWith({projectId: 1, subscribed: true})
 	})
 })
