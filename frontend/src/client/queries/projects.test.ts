@@ -14,6 +14,8 @@ const sdk = vi.hoisted(() => ({
 	projectsDelete: vi.fn(),
 	projectsDuplicate: vi.fn(),
 	patchProjectsRead: vi.fn(),
+	subscriptionsCreate: vi.fn(),
+	subscriptionsDelete: vi.fn(),
 }))
 
 const requestContext = vi.hoisted(() => ({
@@ -52,6 +54,7 @@ import {
 	projectQuery,
 	patchProjectFavoriteMutationOptions,
 	projectsQuery,
+	setProjectSubscriptionMutationOptions,
 	updateProjectMutationOptions,
 	legacySavedFilterFavoriteMutationOptions,
 } from './projects'
@@ -205,6 +208,12 @@ describe('project drafts and cache mutations', () => {
 			mock: sdk.patchProjectsRead,
 			run: () => patchProjectFavorite(1, true),
 			response: {data: serverProject({is_favorite: true})},
+		},
+		{
+			name: 'subscribe',
+			mock: sdk.subscriptionsCreate,
+			run: () => execute(setProjectSubscriptionMutationOptions(), {projectId: 1, subscribed: true}),
+			response: {data: {id: 7, entity: 'project', entity_id: 1}},
 		},
 		{
 			name: 'delete',
@@ -482,5 +491,32 @@ describe('project drafts and cache mutations', () => {
 		expect(duplicate).toMatchObject({id: 9, max_permission: 2})
 		expect(queryClient.getQueryData<{projects: Project[]}>(listKey)?.projects).toContainEqual(duplicate)
 		expect(queryClient.getQueryData(projectKeys.detail(9))).toBeUndefined()
+	})
+
+	it('patches the subscription into the cached project and marks sub projects stale without refetching the list', async () => {
+		const cached = serverProject({id: 1})
+		const child = serverProject({id: 2, parent_project_id: 1})
+		queryClient.setQueryData(listKey, {projects: [cached, child], favoriteProject: null, savedFilterProjects: []})
+		queryClient.setQueryData(projectKeys.detail(1), cached)
+		queryClient.setQueryData(projectKeys.detail(2), child)
+		const subscription = {id: 7, entity: 'project', entity_id: 1} as const
+		sdk.subscriptionsCreate.mockResolvedValue({data: subscription})
+
+		await execute(setProjectSubscriptionMutationOptions(), {projectId: 1, subscribed: true})
+
+		expect(sdk.subscriptionsCreate).toHaveBeenCalledWith({path: {entity: 'project', entityID: 1}})
+		expect(queryClient.getQueryData<ProjectListResult>(listKey)?.projects[0].subscription).toEqual(subscription)
+		expect(queryClient.getQueryData<ProjectResponse>(projectKeys.detail(1))?.subscription).toEqual(subscription)
+		expect(queryClient.getQueryState(listKey)?.isInvalidated).toBe(true)
+		expect(queryClient.getQueryState(projectKeys.detail(1))?.isInvalidated).toBe(true)
+		expect(queryClient.getQueryState(projectKeys.detail(2))?.isInvalidated).toBe(true)
+		expect(sdk.projectsList).not.toHaveBeenCalled()
+
+		sdk.subscriptionsDelete.mockResolvedValue({data: undefined})
+		await execute(setProjectSubscriptionMutationOptions(), {projectId: 1, subscribed: false})
+
+		expect(sdk.subscriptionsDelete).toHaveBeenCalledWith({path: {entity: 'project', entityID: 1}})
+		expect(queryClient.getQueryData<ProjectListResult>(listKey)?.projects[0].subscription).toBeUndefined()
+		expect(queryClient.getQueryData<ProjectResponse>(projectKeys.detail(1))?.subscription).toBeUndefined()
 	})
 })

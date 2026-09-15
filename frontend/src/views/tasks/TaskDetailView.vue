@@ -461,7 +461,7 @@
 							entity="task"
 							:entity-id="task.id"
 							:model-value="task.subscription"
-							@update:modelValue="sub => task.subscription = sub"
+							@toggle="toggleSubscription"
 						/>
 						<XButton
 							v-shortcut="SHORTCUTS.taskDetail.favorite"
@@ -718,6 +718,8 @@ import {useTaskDetailShortcuts} from '@/composables/useTaskDetailShortcuts'
 
 import {success} from '@/message'
 import type {Action as MessageAction} from '@/message'
+import {subscriptionsCreate, subscriptionsDelete} from '@/client/generated'
+import {subscriptionFromApi} from '@/models/subscription'
 
 const props = defineProps<{
 	taskId: ITask['id'],
@@ -1183,6 +1185,19 @@ async function changeProject(project: ProjectResponse | null) {
 		projectId: project.id,
 	})
 	baseStore.setCurrentProject(project)
+}
+
+async function toggleSubscription(subscribed: boolean) {
+	const path = {entity: 'task', entityID: task.value.id} as const
+	if (subscribed) {
+		const {data} = await subscriptionsCreate({path})
+		task.value.subscription = subscriptionFromApi(data)
+		success({message: t('task.subscription.subscribeSuccessTask')})
+		return
+	}
+	await subscriptionsDelete({path})
+	task.value.subscription = null
+	success({message: t('task.subscription.unsubscribeSuccessTask')})
 }
 
 async function toggleFavorite() {
