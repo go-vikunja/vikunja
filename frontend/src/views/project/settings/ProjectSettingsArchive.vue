@@ -28,7 +28,7 @@ defineOptions({name: 'ProjectSettingArchive'})
 
 const {t} = useI18n({useScope: 'global'})
 const projectStore = useProjectNavigation()
-const updateMutation = useUpdateProjectMutation('html', t('project.archive.success'))
+const updateMutation = useUpdateProjectMutation(t('project.archive.success'))
 const router = useRouter()
 const route = useRoute()
 

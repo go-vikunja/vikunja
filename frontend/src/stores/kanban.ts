@@ -15,7 +15,7 @@ import {useAuthStore} from '@/stores/auth'
 import type {ProjectView} from '@/client/generated'
 import {useBaseStore} from '@/stores/base'
 import {useCurrentProject} from '@/composables/useCurrentProject'
-import {ensureProjects, getProjectById, refreshProject, refreshProjects} from '@/client/queries/projects'
+import {ensureProjects, refreshProject, refreshProjects} from '@/client/queries/projects'
 
 const TASKS_PER_BUCKET = 25
 
@@ -348,7 +348,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 		const bucketService = new BucketService()
 		try {
 			const {projects} = await ensureProjects()
-			const view = getProjectById(projects, bucket.projectId)?.views.find(v => v.id === bucket.projectViewId)
+			const view = projects.find(project => project.id === bucket.projectId)?.views.find(v => v.id === bucket.projectViewId)
 			const response = await bucketService.delete(bucket)
 			removeBucket(bucket)
 
