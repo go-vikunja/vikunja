@@ -68,17 +68,14 @@ func RegisterTaskAttachmentRoutes(api huma.API) {
 		Tags:        tags,
 	}, taskAttachmentsList)
 
-	Register(api, huma.Operation{
+	Register(api, withUploadLimits(huma.Operation{
 		OperationID: "task-attachments-upload",
 		Summary:     "Upload task attachments",
 		Description: "Uploads one or more files as attachments to a task via multipart/form-data under the \"files\" field. Requires write access to the task. Each file is processed independently: a file that fails (for example, exceeding the configured size limit) is reported in the errors list while the others still succeed, so the request returns 201 even on a partial upload. The max size per file is the server's configured file size limit.",
 		Method:      http.MethodPost,
 		Path:        "/tasks/{task}/attachments",
 		Tags:        tags,
-		// +2 MB mirrors Echo's global BodyLimit overhead so a max-sized file isn't rejected by multipart boundary/header bytes.
-		// #nosec G115 - configured value won't exceed int64 max in practice.
-		MaxBodyBytes: (int64(config.GetMaxFileSizeInMBytes()) + 2) * 1024 * 1024,
-	}, taskAttachmentsUpload)
+	}), taskAttachmentsUpload)
 
 	Register(api, huma.Operation{
 		OperationID: "task-attachments-download",
