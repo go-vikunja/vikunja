@@ -81,12 +81,6 @@ const deleteProject = (id: number) => execute(deleteProjectMutationOptions(), id
 const duplicateProject = (input: Parameters<NonNullable<ReturnType<typeof duplicateProjectMutationOptions>['mutationFn']>>[0]) =>
 	execute(duplicateProjectMutationOptions(), input)
 
-const listArgs = {
-	is_archived: true,
-	expand: 'permissions',
-	q: 'roadmap',
-} as const
-
 function serverProject(overrides: Partial<ProjectResponse> = {}): ProjectResponse {
 	return {
 		id: 1,
@@ -138,16 +132,16 @@ describe('project queries', () => {
 				},
 			})
 
-		const result = await queryClient.fetchQuery(projectsQuery(listArgs))
+		const result = await queryClient.fetchQuery(projectsQuery())
 
 		expect(result.projects.map(project => project.id)).toEqual([1, 2])
 		expect(result.favoriteProject?.id).toBe(-1)
 		expect(result.savedFilterProjects.map(project => project.id)).toEqual([-2, -3])
 		expect(sdk.projectsList).toHaveBeenNthCalledWith(1, {
-			query: {...listArgs, page: 1, per_page: 1000},
+			query: {is_archived: true, expand: 'permissions', page: 1, per_page: 1000},
 		})
 		expect(sdk.projectsList).toHaveBeenNthCalledWith(2, {
-			query: {...listArgs, page: 2, per_page: 1000},
+			query: {is_archived: true, expand: 'permissions', page: 2, per_page: 1000},
 		})
 	})
 
@@ -156,7 +150,7 @@ describe('project queries', () => {
 			data: {items: [{id: 1, title: 'Minimal'}], total_pages: 1},
 		})
 
-		const result = await queryClient.fetchQuery(projectsQuery({is_archived: true}))
+		const result = await queryClient.fetchQuery(projectsQuery())
 
 		expect(result.projects[0]).toMatchObject({
 			id: 1,
@@ -237,7 +231,7 @@ describe('project hierarchy and navigation derivations', () => {
 })
 
 describe('project drafts and cache mutations', () => {
-	const listKey = projectKeys.list({is_archived: true, expand: 'permissions'})
+	const listKey = projectKeys.list()
 	const delayedMutationCases = [
 		{
 			name: 'create',

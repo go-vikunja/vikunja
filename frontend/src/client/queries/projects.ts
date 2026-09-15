@@ -12,7 +12,6 @@ import {
 } from '@/client/generated'
 import type {
 	Project,
-	ProjectsListData,
 	ProjectView,
 	ProjectWritable,
 } from '@/client/generated'
@@ -23,8 +22,6 @@ import {colorFromHex} from '@/helpers/color/colorFromHex'
 import {removeProjectFromHistory} from '@/modules/projectHistory'
 import {i18n} from '@/i18n'
 import {success} from '@/message'
-
-export type ProjectListArgs = Omit<NonNullable<ProjectsListData['query']>, 'page' | 'per_page'>
 
 export type ProjectResponse = Omit<Project,
 	'id' |
@@ -75,15 +72,9 @@ export type DuplicateProjectInput = {
 	duplicateShares?: boolean
 }
 
-export const defaultProjectListArgs = {
-	is_archived: true,
-	expand: 'permissions',
-} as const satisfies ProjectListArgs
-
 export const projectKeys = {
 	all: ['projects'] as const,
-	lists: () => ['projects', 'list'] as const,
-	list: (args: ProjectListArgs = defaultProjectListArgs) => ['projects', 'list', args] as const,
+	list: () => ['projects', 'list'] as const,
 	details: () => ['projects', 'detail'] as const,
 	detail: (id: number) => ['projects', 'detail', id] as const,
 }
@@ -160,13 +151,13 @@ function partitionProjects(projects: Project[]): ProjectListResult {
 	return result
 }
 
-async function fetchProjects(args: ProjectListArgs): Promise<ProjectListResult> {
+async function fetchProjects(): Promise<ProjectListResult> {
 	const projects: Project[] = []
 	let page = 1
 
 	while (true) {
 		const {data} = await projectsList({
-			query: {...args, page, per_page: 1000},
+			query: {is_archived: true, expand: 'permissions', page, per_page: 1000},
 		})
 		projects.push(...(data.items ?? []))
 		if (page >= (data.total_pages ?? 1)) {
@@ -178,10 +169,10 @@ async function fetchProjects(args: ProjectListArgs): Promise<ProjectListResult> 
 	return partitionProjects(projects)
 }
 
-export function projectsQuery(args: ProjectListArgs = defaultProjectListArgs) {
+export function projectsQuery() {
 	return queryOptions({
-		queryKey: projectKeys.list(args),
-		queryFn: () => fetchProjects(args),
+		queryKey: projectKeys.list(),
+		queryFn: fetchProjects,
 		staleTime: 5 * 60 * 1000,
 	})
 }
@@ -197,12 +188,12 @@ export function projectQuery(id: number) {
 	})
 }
 
-export function ensureProjects(args: ProjectListArgs = defaultProjectListArgs): Promise<ProjectListResult> {
-	return queryClient.ensureQueryData(projectsQuery(args))
+export function ensureProjects(): Promise<ProjectListResult> {
+	return queryClient.ensureQueryData(projectsQuery())
 }
 
-export function refreshProjects(args: ProjectListArgs = defaultProjectListArgs): Promise<ProjectListResult> {
-	return queryClient.fetchQuery({...projectsQuery(args), staleTime: 0})
+export function refreshProjects(): Promise<ProjectListResult> {
+	return queryClient.fetchQuery({...projectsQuery(), staleTime: 0})
 }
 
 export function ensureProject(id: number): Promise<ProjectResponse> {
@@ -355,13 +346,13 @@ function mergeProjectMetadata(previous: ProjectResponse, updated: ProjectRespons
 async function snapshotProjects(client: QueryClient, id?: number) {
 	const request = captureClientRequestContext()
 	await Promise.all([
-		client.cancelQueries({queryKey: projectKeys.lists()}),
+		client.cancelQueries({queryKey: projectKeys.list()}),
 		...(id === undefined ? [] : [client.cancelQueries({queryKey: projectKeys.detail(id)})]),
 	])
 	assertClientRequestContext(request)
 	return {
 		request,
-		lists: client.getQueriesData<ProjectListResult>({queryKey: projectKeys.lists()}),
+		list: client.getQueryData<ProjectListResult>(projectKeys.list()),
 		detail: id === undefined ? undefined : client.getQueryData<ProjectResponse>(projectKeys.detail(id)),
 	}
 }
@@ -372,10 +363,8 @@ function restoreProjects(client: QueryClient, snapshot: ProjectSnapshot | undefi
 	if (!snapshot || !isClientRequestContextCurrent(snapshot.request)) {
 		return
 	}
-	for (const [key, previous] of snapshot.lists) {
-		if (previous) {
-			client.setQueryData(key, previous)
-		}
+	if (snapshot.list) {
+		client.setQueryData(projectKeys.list(), snapshot.list)
 	}
 	if (snapshot.detail) {
 		client.setQueryData(projectKeys.detail(snapshot.detail.id), snapshot.detail)
@@ -400,7 +389,7 @@ export function createProjectMutationOptions() {
 		},
 		onSettled: async (_data, _error, _input, context, {client}) => {
 			if (context && isClientRequestContextCurrent(context.request)) {
-				await client.invalidateQueries({queryKey: projectKeys.lists()})
+				await client.invalidateQueries({queryKey: projectKeys.list()})
 				assertClientRequestContext(context.request)
 			}
 		},
@@ -420,7 +409,7 @@ export function updateProjectMutationOptions(successMessage?: string) {
 		},
 		onMutate: async ({id, ...project}, {client}) => {
 			const snapshot = await snapshotProjects(client, id)
-			client.setQueriesData<ProjectListResult>({queryKey: projectKeys.lists()}, current =>
+			client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
 				current ? mapProjectNavigationItem(current, id, existing => normalizeProject({...existing, ...project})) : current,
 			)
 			client.setQueryData<ProjectResponse>(projectKeys.detail(id), current =>
@@ -446,7 +435,7 @@ export function updateProjectMutationOptions(successMessage?: string) {
 		onSettled: async (_data, _error, {id}, context, {client}) => {
 			if (context && isClientRequestContextCurrent(context.request)) {
 				await Promise.all([
-					client.invalidateQueries({queryKey: projectKeys.lists()}),
+					client.invalidateQueries({queryKey: projectKeys.list()}),
 					client.invalidateQueries({queryKey: projectKeys.detail(id)}),
 				])
 				assertClientRequestContext(context.request)
@@ -468,7 +457,7 @@ export function patchProjectFavoriteMutationOptions() {
 		},
 		onMutate: async ({id, isFavorite}, {client}) => {
 			const snapshot = await snapshotProjects(client, id)
-			client.setQueriesData<ProjectListResult>({queryKey: projectKeys.lists()}, current =>
+			client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
 				current ? mapProjectNavigationItem(current, id, project => ({...project, is_favorite: isFavorite})) : current,
 			)
 			client.setQueryData<ProjectResponse>(projectKeys.detail(id), current =>
@@ -479,7 +468,7 @@ export function patchProjectFavoriteMutationOptions() {
 		onError: (_error, _input, context, {client}) => restoreProjects(client, context),
 		onSuccess: (updated, {id}, context, {client}) => {
 			assertClientRequestContext(context.request)
-			client.setQueriesData<ProjectListResult>({queryKey: projectKeys.lists()}, current =>
+			client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
 				current ? mapProjectNavigationItem(current, id, project => ({...project, is_favorite: updated.is_favorite})) : current,
 			)
 			client.setQueryData<ProjectResponse>(projectKeys.detail(id), current =>
@@ -489,7 +478,7 @@ export function patchProjectFavoriteMutationOptions() {
 		onSettled: async (_data, _error, {id}, context, {client}) => {
 			if (context && isClientRequestContextCurrent(context.request)) {
 				await Promise.all([
-					client.invalidateQueries({queryKey: projectKeys.lists()}),
+					client.invalidateQueries({queryKey: projectKeys.list()}),
 					client.invalidateQueries({queryKey: projectKeys.detail(id)}),
 				])
 				assertClientRequestContext(context.request)
@@ -512,13 +501,8 @@ export function deleteProjectMutationOptions() {
 		},
 		onMutate: async (id, {client}) => {
 			const snapshot = await snapshotProjects(client)
-			const ids = new Set([id])
-			snapshot.lists.forEach(([, result]) => {
-				if (result) {
-					descendantIds(result.projects, id).forEach(child => ids.add(child))
-				}
-			})
-			client.setQueriesData<ProjectListResult>({queryKey: projectKeys.lists()}, current =>
+			const ids = new Set(snapshot.list ? descendantIds(snapshot.list.projects, id) : [id])
+			client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
 				current ? {...current, projects: current.projects.filter(project => !ids.has(project.id))} : current,
 			)
 			return {...snapshot, ids}
@@ -532,7 +516,7 @@ export function deleteProjectMutationOptions() {
 		},
 		onSettled: async (_data, _error, _input, context, {client}) => {
 			if (context && isClientRequestContextCurrent(context.request)) {
-				await client.invalidateQueries({queryKey: projectKeys.lists()})
+				await client.invalidateQueries({queryKey: projectKeys.list()})
 				assertClientRequestContext(context.request)
 			}
 		},
@@ -567,7 +551,7 @@ export function duplicateProjectMutationOptions() {
 		},
 		onSettled: async (_data, _error, _input, context, {client}) => {
 			if (context && isClientRequestContextCurrent(context.request)) {
-				await client.invalidateQueries({queryKey: projectKeys.lists()})
+				await client.invalidateQueries({queryKey: projectKeys.list()})
 				assertClientRequestContext(context.request)
 			}
 		},
@@ -593,7 +577,7 @@ export function legacySavedFilterFavoriteMutationOptions() {
 		},
 		onMutate: async ({id, isFavorite}, {client}) => {
 			const snapshot = await snapshotProjects(client)
-			client.setQueriesData<ProjectListResult>({queryKey: projectKeys.lists()}, current =>
+			client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
 				current ? mapProjectNavigationItem(current, -id - 1, project => ({...project, is_favorite: isFavorite})) : current,
 			)
 			return snapshot
@@ -601,13 +585,13 @@ export function legacySavedFilterFavoriteMutationOptions() {
 		onError: (_error, _input, context, {client}) => restoreProjects(client, context),
 		onSuccess: (updated, {id}, context, {client}) => {
 			assertClientRequestContext(context.request)
-			client.setQueriesData<ProjectListResult>({queryKey: projectKeys.lists()}, current =>
+			client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
 				current ? mapProjectNavigationItem(current, -id - 1, project => ({...project, is_favorite: updated.isFavorite})) : current,
 			)
 		},
 		onSettled: async (_data, _error, _input, context, {client}) => {
 			if (context && isClientRequestContextCurrent(context.request)) {
-				await client.invalidateQueries({queryKey: projectKeys.lists()})
+				await client.invalidateQueries({queryKey: projectKeys.list()})
 				assertClientRequestContext(context.request)
 			}
 		},
