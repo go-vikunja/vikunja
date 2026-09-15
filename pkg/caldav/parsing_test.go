@@ -1092,3 +1092,94 @@ func TestCaldavTimeToTimestamp_NoTZID(t *testing.T) {
 		t.Fatalf("caldavTimeToTimestamp() = %v, want %v", got, want)
 	}
 }
+
+func TestCaldavTimeToTimestamp_NonUTCServerTimezone(t *testing.T) {
+	config.InitDefaultConfig()
+	orig := config.ServiceTimeZone.GetString()
+	config.ServiceTimeZone.Set("Europe/Berlin")
+	defer config.ServiceTimeZone.Set(orig)
+
+	berlin, err := time.LoadLocation("Europe/Berlin")
+	if err != nil {
+		t.Fatal(err)
+	}
+	newYork, err := time.LoadLocation("America/New_York")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tests := []struct {
+		name   string
+		value  string
+		params map[string][]string
+		want   time.Time
+	}{
+		{
+			name:  "UTC",
+			value: "20260914T050000Z",
+			want:  time.Date(2026, 9, 14, 5, 0, 0, 0, time.UTC),
+		},
+		{
+			name:  "floating",
+			value: "20260914T050000",
+			want:  time.Date(2026, 9, 14, 5, 0, 0, 0, berlin),
+		},
+		{
+			name:   "TZID",
+			value:  "20260914T050000",
+			params: map[string][]string{"TZID": {"America/New_York"}},
+			want:   time.Date(2026, 9, 14, 5, 0, 0, 0, newYork),
+		},
+		{
+			name:   "UTC with TZID",
+			value:  "20260914T050000Z",
+			params: map[string][]string{"TZID": {"America/New_York"}},
+			want:   time.Date(2026, 9, 14, 5, 0, 0, 0, time.UTC),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			prop := ics.IANAProperty{BaseProperty: ics.BaseProperty{Value: tt.value, ICalParameters: tt.params}}
+			got := caldavTimeToTimestamp(prop)
+			if !got.Equal(tt.want) || got.Location().String() != "Europe/Berlin" {
+				t.Fatalf("caldavTimeToTimestamp() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestParseTaskFromVTODO_UTCAlarmNonUTCServerTimezone(t *testing.T) {
+	config.InitDefaultConfig()
+	orig := config.ServiceTimeZone.GetString()
+	config.ServiceTimeZone.Set("Europe/Berlin")
+	defer config.ServiceTimeZone.Set(orig)
+
+	task, _, err := ParseTaskFromVTODO(`BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+UID:randomuid
+SUMMARY:Test
+DUE;TZID=Europe/Berlin:20260914T070000
+BEGIN:VALARM
+TRIGGER;VALUE=DATE-TIME:20260914T050000Z
+ACTION:DISPLAY
+DESCRIPTION:Test
+END:VALARM
+END:VTODO
+END:VCALENDAR`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	want := time.Date(2026, 9, 14, 5, 0, 0, 0, time.UTC)
+	if !task.DueDate.Equal(want) {
+		t.Errorf("DueDate = %v, want %v", task.DueDate, want)
+	}
+	if len(task.Reminders) != 1 {
+		t.Fatalf("got %d reminders, want 1", len(task.Reminders))
+	}
+	if !task.Reminders[0].Reminder.Equal(want) {
+		t.Errorf("Reminder = %v, want %v", task.Reminders[0].Reminder, want)
+	}
+}
