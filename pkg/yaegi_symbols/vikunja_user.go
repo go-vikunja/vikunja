@@ -31,7 +31,7 @@ func init() {
 		"ErrCodeAccountDisabled":               reflect.ValueOf(constant.MakeFromLiteral("1020", token.INT, 0)),
 		"ErrCodeAccountIsBot":                  reflect.ValueOf(constant.MakeFromLiteral("1031", token.INT, 0)),
 		"ErrCodeAccountIsNotLocal":             reflect.ValueOf(constant.MakeFromLiteral("1021", token.INT, 0)),
-		"ErrCodeAccountLocked":                 reflect.ValueOf(constant.MakeFromLiteral("1026", token.INT, 0)),
+		"ErrCodeAccountLocked":                 reflect.ValueOf(constant.MakeFromLiteral("1040", token.INT, 0)),
 		"ErrCodeBotNotOwned":                   reflect.ValueOf(constant.MakeFromLiteral("1033", token.INT, 0)),
 		"ErrCodeBotUsernameMustHavePrefix":     reflect.ValueOf(constant.MakeFromLiteral("1034", token.INT, 0)),
 		"ErrCodeCouldNotGetUserID":             reflect.ValueOf(constant.MakeFromLiteral("1006", token.INT, 0)),
