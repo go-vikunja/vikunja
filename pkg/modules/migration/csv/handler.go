@@ -178,11 +178,6 @@ func (c *MigratorWeb) Migrate(ctx *echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "No configuration provided")
 	}
 
-	var config ImportConfig
-	if err := json.Unmarshal([]byte(configStr), &config); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid configuration: "+err.Error())
-	}
-
 	src, err := file.Open()
 	if err != nil {
 		return err

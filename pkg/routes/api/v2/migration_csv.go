@@ -167,15 +167,10 @@ func csvMigrate(ctx context.Context, in *csvImportInput) (*migrationStartedBody,
 		return nil, translateDomainError(err)
 	}
 
-	rawConfig := in.RawBody.Data().Config
-	if _, err := parseCSVImportConfig(rawConfig); err != nil {
-		return nil, err
-	}
-
 	src := in.RawBody.Data().Import
 	defer func() { _ = src.Close() }()
 
-	if err := migrationHandler.StartFileMigration(&csv.Migrator{}, u, src, src.Size, []byte(rawConfig)); err != nil {
+	if err := migrationHandler.StartFileMigration(&csv.Migrator{}, u, src, src.Size, []byte(in.RawBody.Data().Config)); err != nil {
 		return nil, translateDomainError(err)
 	}
 
