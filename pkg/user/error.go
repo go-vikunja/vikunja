@@ -953,3 +953,32 @@ func (err ErrNoPendingEmail) HTTPError() web.HTTPError {
 		Message:  "There is no pending email change to confirm.",
 	}
 }
+
+// ErrUsernameMustNotStartWithAt represents a username starting with `@`.
+type ErrUsernameMustNotStartWithAt struct {
+	Username string
+}
+
+func IsErrUsernameMustNotStartWithAt(err error) bool {
+	_, ok := err.(*ErrUsernameMustNotStartWithAt)
+	if !ok {
+		_, ok = err.(ErrUsernameMustNotStartWithAt)
+	}
+	return ok
+}
+
+func (err ErrUsernameMustNotStartWithAt) Error() string {
+	return "username must not start with @"
+}
+
+// ErrCodeUsernameMustNotStartWithAt holds the unique world-error code of this error
+const ErrCodeUsernameMustNotStartWithAt = 1039
+
+// HTTPError holds the http error description
+func (err ErrUsernameMustNotStartWithAt) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeUsernameMustNotStartWithAt,
+		Message:  "The username must not start with @.",
+	}
+}

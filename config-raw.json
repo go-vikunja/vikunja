@@ -887,7 +887,7 @@
                         {
                             "key": "groupsyncenabled",
                             "default_value": "false",
-                            "comment": "If enabled, Vikunja will automagically add users to teams in Vikunja matching `groupsyncfilter`. The teams will be automatically created and kept in sync by Vikunja."
+                            "comment": "If enabled, Vikunja will automagically add users to teams in Vikunja matching `groupsyncfilter`. The teams will be automatically created and kept in sync by Vikunja. Group members are matched against the user's DN, username, external subject ID, or username without leading '@'."
                         },
                         {
                             "key": "groupsyncfilter",
@@ -912,7 +912,7 @@
                                 {
                                     "key": "username",
                                     "default_value": "uid",
-                                    "comment": "The LDAP attribute used to set the username in Vikunja."
+                                    "comment": "The LDAP attribute used to set the username in Vikunja. Spaces are replaced with dashes (-), and leading '@' characters are removed since usernames cannot start with '@'."
                                 },
                                 {
                                     "key": "email",

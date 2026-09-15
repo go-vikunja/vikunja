@@ -126,7 +126,7 @@ import FormField from '@/components/input/FormField.vue'
 import FormCheckbox from '@/components/input/FormCheckbox.vue'
 import DesktopLogin from '@/views/user/DesktopLogin.vue'
 
-import {getErrorText} from '@/message'
+import {getErrorText, warning} from '@/message'
 import {getAutoRedirectProvider, redirectToProvider} from '@/helpers/redirectToProvider'
 import {useRedirectToLastVisited} from '@/composables/useRedirectToLastVisited'
 import {isDesktopApp} from '@/helpers/desktopAuth'
@@ -236,6 +236,20 @@ async function submit() {
 	try {
 		await authStore.login(credentials)
 		authStore.setNeedsTotpPasscode(false)
+
+		if (credentials.username?.startsWith('@')) {
+			const enteredClean = credentials.username.replace(/^@+/, '')
+			const actualUsername = authStore.info?.username
+			if (actualUsername === enteredClean) {
+				warning({
+					message: t('user.auth.atUsernameDeprecatedSimple', {username: actualUsername}),
+				})
+			} else {
+				warning({
+					message: t('user.auth.atUsernameDeprecatedExternal', {username: actualUsername}),
+				})
+			}
+		}
 
 		redirectIfSaved()
 	} catch (e) {
