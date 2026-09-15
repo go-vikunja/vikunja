@@ -197,6 +197,31 @@ func (err *ErrCSVConfigRequired) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrInvalidCSVImportConfig represents a CSV import config which could not be parsed.
+type ErrInvalidCSVImportConfig struct {
+	Err error
+}
+
+func (err *ErrInvalidCSVImportConfig) Error() string {
+	return "The csv import config could not be parsed: " + err.Err.Error()
+}
+
+func (err *ErrInvalidCSVImportConfig) Unwrap() error {
+	return err.Err
+}
+
+// ErrCodeInvalidCSVImportConfig holds the unique world-error code of this error
+const ErrCodeInvalidCSVImportConfig = 14016
+
+// HTTPError holds the http error description
+func (err *ErrInvalidCSVImportConfig) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeInvalidCSVImportConfig,
+		Message:  "The import configuration could not be parsed. Please make sure it is a valid JSON object.",
+	}
+}
+
 // ErrNotACSVFile represents a "ErrNotACSVFile" kind of error.
 type ErrNotACSVFile struct{}
 
