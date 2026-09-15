@@ -15,18 +15,18 @@ vi.mock('vue-router', async importOriginal => ({
 	useRouter: () => ({push: vi.fn()}),
 }))
 
-import {useProjectNavigation} from './useProjectNavigation'
+import {useProjects} from './useProjects'
 
 function token(id: number): string {
 	const payload = btoa(JSON.stringify({id, type: 1}))
 	return `header.${payload}.signature`
 }
 
-function mountProjectNavigation() {
-	let navigation!: ReturnType<typeof useProjectNavigation>
+function mountProjectList() {
+	let projectList!: ReturnType<typeof useProjects>
 	const wrapper = mount(defineComponent({
 		setup() {
-			navigation = useProjectNavigation()
+			projectList = useProjects()
 			return () => h('div')
 		},
 	}), {
@@ -34,10 +34,10 @@ function mountProjectNavigation() {
 			plugins: [[VueQueryPlugin, {queryClient}]],
 		},
 	})
-	return {navigation, wrapper}
+	return {projectList, wrapper}
 }
 
-function navigationWith(list: Partial<ProjectListResult>) {
+function projectListWith(list: Partial<ProjectListResult>) {
 	queryClient.setQueryData<ProjectListResult>(projectKeys.list(), {
 		projects: [],
 		favoriteProject: null,
@@ -46,10 +46,10 @@ function navigationWith(list: Partial<ProjectListResult>) {
 	})
 	const scope = effectScope()
 	onTestFinished(() => scope.stop())
-	return scope.run(() => useProjectNavigation())!
+	return scope.run(() => useProjects())!
 }
 
-describe('useProjectNavigation', () => {
+describe('useProjects', () => {
 	beforeEach(() => {
 		queryClient.clear()
 		removeToken()
@@ -65,7 +65,7 @@ describe('useProjectNavigation', () => {
 		})
 		const scope = effectScope()
 
-		expect(() => scope.run(() => useProjectNavigation())).not.toThrow()
+		expect(() => scope.run(() => useProjects())).not.toThrow()
 		scope.stop()
 	})
 
@@ -75,8 +75,8 @@ describe('useProjectNavigation', () => {
 			favoriteProject: null,
 			savedFilterProjects: [],
 		})
-		const first = mountProjectNavigation()
-		const second = mountProjectNavigation()
+		const first = mountProjectList()
+		const second = mountProjectList()
 
 		const observersCount = () => queryClient.getQueryCache()
 			.find({queryKey: projectKeys.list()})
@@ -99,19 +99,19 @@ describe('useProjectNavigation', () => {
 			normalizeProject({id: 5, title: 'Grandchild', parent_project_id: 2, position: 50}),
 			normalizeProject({id: 6, title: 'Sibling', parent_project_id: 1, position: 100}),
 		]
-		const navigation = navigationWith({projects})
+		const projectList = projectListWith({projects})
 
-		expect(navigation.notArchivedRootProjects.map(project => project.id)).toEqual([3, 1])
-		expect(navigation.getChildProjects(1).map(project => project.id)).toEqual([6, 2])
-		expect(navigation.getAncestors(projects[4]).map(project => project.id)).toEqual([1, 2, 5])
-		expect(navigation.getAncestors(projects[2]).map(project => project.id)).toEqual([3])
-		expect(navigation.getEffectiveParentProjectId(projects[2], 0)).toBe(99)
-		expect(navigation.getEffectiveParentProjectId(projects[2], 1)).toBe(1)
-		expect(navigation.getEffectiveParentProjectId(projects[1], 0)).toBe(0)
+		expect(projectList.notArchivedRootProjects.map(project => project.id)).toEqual([3, 1])
+		expect(projectList.getChildProjects(1).map(project => project.id)).toEqual([6, 2])
+		expect(projectList.getAncestors(projects[4]).map(project => project.id)).toEqual([1, 2, 5])
+		expect(projectList.getAncestors(projects[2]).map(project => project.id)).toEqual([3])
+		expect(projectList.getEffectiveParentProjectId(projects[2], 0)).toBe(99)
+		expect(projectList.getEffectiveParentProjectId(projects[2], 1)).toBe(1)
+		expect(projectList.getEffectiveParentProjectId(projects[1], 0)).toBe(0)
 	})
 
 	it('searches projects and saved filters case-insensitively', () => {
-		const navigation = navigationWith({
+		const projectList = projectListWith({
 			projects: [
 				normalizeProject({id: 1, title: 'Root'}),
 				normalizeProject({id: 2, title: 'Child', description: 'nested work'}),
@@ -120,16 +120,16 @@ describe('useProjectNavigation', () => {
 			savedFilterProjects: [normalizeProject({id: -2, title: 'Nested filter'})],
 		})
 
-		expect(navigation.searchProject('NEST').map(project => project.id)).toEqual([2])
-		expect(navigation.searchProject('archived')).toEqual([])
-		expect(navigation.searchProject('archived', true).map(project => project.id)).toEqual([4])
-		expect(navigation.searchProject('')).toEqual([])
-		expect(navigation.searchSavedFilter('nest').map(project => project.id)).toEqual([-2])
-		expect(navigation.searchProjectAndFilter('nest').map(project => project.id)).toEqual([2, -2])
+		expect(projectList.searchProject('NEST').map(project => project.id)).toEqual([2])
+		expect(projectList.searchProject('archived')).toEqual([])
+		expect(projectList.searchProject('archived', true).map(project => project.id)).toEqual([4])
+		expect(projectList.searchProject('')).toEqual([])
+		expect(projectList.searchSavedFilter('nest').map(project => project.id)).toEqual([-2])
+		expect(projectList.searchProjectAndFilter('nest').map(project => project.id)).toEqual([2, -2])
 	})
 
-	it('combines favorite pseudo, project, and saved-filter navigation items', () => {
-		const navigation = navigationWith({
+	it('combines favorite pseudo, project, and saved-filter projectList items', () => {
+		const projectList = projectListWith({
 			projects: [
 				normalizeProject({id: 1, title: 'Favorite project', is_favorite: true, position: 100}),
 				normalizeProject({id: 2, title: 'Archived favorite', is_favorite: true, is_archived: true, position: 200}),
@@ -141,6 +141,6 @@ describe('useProjectNavigation', () => {
 			],
 		})
 
-		expect(navigation.favoriteProjects.map(project => project.id)).toEqual([-1, -2, 1])
+		expect(projectList.favoriteProjects.map(project => project.id)).toEqual([-1, -2, 1])
 	})
 })

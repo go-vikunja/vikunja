@@ -42,7 +42,7 @@ function search(projects: readonly ProjectResponse[], value: string, includeArch
 }
 
 // One observer and one derived list set for the dozens of consumers.
-const useSharedProjectNavigation = createSharedComposable(() => {
+const useSharedProjects = createSharedComposable(() => {
 	// The explicit client keeps this usable outside a Vue injection context.
 	const query = useQuery(projectsQuery(), queryClient)
 	const realProjects = computed(() => query.data.value?.projects ?? [])
@@ -79,7 +79,7 @@ const useSharedProjectNavigation = createSharedComposable(() => {
 	}
 })
 
-export function useProjectNavigation() {
+export function useProjects() {
 	const {
 		query,
 		realProjects,
@@ -90,7 +90,7 @@ export function useProjectNavigation() {
 		rootProjects,
 		favoriteProjects,
 		hasProjects,
-	} = useSharedProjectNavigation()
+	} = useSharedProjects()
 
 	const state = reactive({
 		projects,
