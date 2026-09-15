@@ -4,8 +4,8 @@ import type {AxiosInstance, AxiosRequestConfig} from 'axios'
 
 import AttachmentService from './attachment'
 import BucketService from './bucket'
-import ProjectService from './project'
-import ProjectModel from '@/models/project'
+import TaskService from './task'
+import TaskModel from '@/models/task'
 import {removeToken, refreshToken, saveToken} from '@/helpers/auth'
 import type {IAttachment} from '@/modelTypes/IAttachment'
 import type {IBucket} from '@/modelTypes/IBucket'
@@ -126,15 +126,24 @@ describe('payload transforms on a retried request', () => {
 		expect(JSON.parse(requests[1].data as string)).toMatchObject({id: 111, project_id: 26, tasks: []})
 	})
 
-	// Creating a project crashed here: the interceptor read hexColor off the serialized payload
 	it('does not transform the payload of a retried create request again', async () => {
-		const service = new ProjectService()
+		const service = new TaskService()
 		const requests = failOnceWith401(service)
 
-		await service.create(new ProjectModel({title: 'test', hexColor: '#ffffff'}))
+		await service.create(new TaskModel({
+			projectId: 26,
+			title: 'test',
+			hexColor: '#ffffff',
+			dueDate: new Date('2026-09-13T12:00:00Z'),
+		}))
 
 		expect(requests).toHaveLength(2)
 		expect(requests[1].data).toBe(requests[0].data)
-		expect(JSON.parse(requests[1].data as string)).toMatchObject({title: 'test', hex_color: 'ffffff'})
+		expect(JSON.parse(requests[1].data as string)).toMatchObject({
+			project_id: 26,
+			title: 'test',
+			hex_color: 'ffffff',
+			due_date: '2026-09-13T12:00:00.000Z',
+		})
 	})
 })

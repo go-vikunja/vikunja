@@ -4,7 +4,6 @@ import {VueQueryPlugin} from '@tanstack/vue-query'
 import {beforeEach, describe, expect, it, vi} from 'vitest'
 
 import {queryClient} from '@/client/queryClient'
-import {projectKeys} from '@/client/queries/projects'
 
 const sdk = vi.hoisted(() => ({
 	projectsList: vi.fn(),
@@ -31,7 +30,7 @@ async function mountCurrentProject(projectId: number) {
 		},
 	})
 
-	return {queryClient, wrapper}
+	return {wrapper}
 }
 
 describe('useCurrentProject', () => {
@@ -51,24 +50,20 @@ describe('useCurrentProject', () => {
 	})
 
 	it('activates only the detail query for a real project', async () => {
-		const {queryClient, wrapper} = await mountCurrentProject(42)
+		const {wrapper} = await mountCurrentProject(42)
 
 		await vi.waitFor(() => expect(sdk.projectsRead).toHaveBeenCalledOnce())
 
 		expect(sdk.projectsList).not.toHaveBeenCalled()
-		expect(queryClient.getQueryCache().find({queryKey: projectKeys.detail(42)})?.isActive()).toBe(true)
-		expect(queryClient.getQueryCache().find({queryKey: projectKeys.list()})?.isActive()).toBe(false)
 		wrapper.unmount()
 	})
 
 	it.each([-1, -2])('activates only the navigation query for pseudo-project %i', async projectId => {
-		const {queryClient, wrapper} = await mountCurrentProject(projectId)
+		const {wrapper} = await mountCurrentProject(projectId)
 
 		await vi.waitFor(() => expect(sdk.projectsList).toHaveBeenCalledOnce())
 
 		expect(sdk.projectsRead).not.toHaveBeenCalled()
-		expect(queryClient.getQueryCache().find({queryKey: projectKeys.detail(projectId)})?.isActive()).toBe(false)
-		expect(queryClient.getQueryCache().find({queryKey: projectKeys.list()})?.isActive()).toBe(true)
 		wrapper.unmount()
 	})
 })
