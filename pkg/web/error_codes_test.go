@@ -30,7 +30,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var errCodeConstRegex = regexp.MustCompile(`\bErrCode(\w+)\s*=\s*(\d+)\b`)
+var errCodeConstRegex = regexp.MustCompile(`\b(Err(?:or)?Code\w+)\s*=\s*(\d+)\b`)
 
 // TestErrorCodesAreUnique guards the world-error code space, which is flat across all packages:
 // clients (and the frontend translations) map a code to a message without knowing which package
@@ -56,7 +56,7 @@ func TestErrorCodesAreUnique(t *testing.T) {
 		}
 
 		for _, match := range errCodeConstRegex.FindAllStringSubmatch(string(content), -1) {
-			codes[match[2]] = append(codes[match[2]], "ErrCode"+match[1])
+			codes[match[2]] = append(codes[match[2]], match[1])
 		}
 		return nil
 	})
