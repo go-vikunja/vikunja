@@ -111,7 +111,7 @@ func cleanupCreatedFiles(fileIDs []int64) {
 
 func insertFromStructure(s *xorm.Session, str []*models.ProjectWithTasksAndBuckets, user *user.User, provider FileProvider, createdFiles *[]int64) (err error) {
 
-	log.Debugf("[creating structure] Creating %d projects", len(str))
+	log.Infof("[creating structure] Creating %d projects for user %d", len(str), user.ID)
 
 	// Seed the dedup map with the user's existing labels so re-imports
 	// reuse them instead of creating duplicates (see issue #2742).
@@ -194,7 +194,7 @@ func insertFromStructure(s *xorm.Session, str []*models.ProjectWithTasksAndBucke
 		}
 	}
 
-	log.Debugf("[creating structure] Done inserting new task structure")
+	log.Infof("[creating structure] Done inserting new task structure")
 
 	return nil
 }
