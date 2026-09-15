@@ -11,13 +11,15 @@
 		@search="findProjects"
 	>
 		<template #searchResult="{option}">
-			<span
-				v-if="projectAncestors(option).length > 1"
-				class="has-text-grey"
-			>
-				{{ projectAncestors(option).slice(0, -1).map(p => getProjectTitle(p)).join(' &gt; ') }} &gt;
-			</span>
-			{{ projectOptionTitle(option) }}
+			<template v-if="typeof option !== 'string'">
+				<span
+					v-if="projectList.getAncestors(option).length > 1"
+					class="has-text-grey"
+				>
+					{{ projectList.getAncestors(option).slice(0, -1).map(p => getProjectTitle(p)).join(' &gt; ') }} &gt;
+				</span>
+				{{ getProjectTitle(option) }}
+			</template>
 		</template>
 	</Multiselect>
 </template>
@@ -57,22 +59,6 @@ watch(
 )
 
 const projectList = useProjects()
-
-function projectAncestors(option: unknown): ProjectResponse[] {
-	if (typeof option !== 'object' || option === null || !('id' in option)) {
-		return []
-	}
-
-	return projectList.getAncestors(option as ProjectResponse)
-}
-
-function projectOptionTitle(option: unknown): string {
-	if (typeof option !== 'object' || option === null || !('id' in option) || !('title' in option)) {
-		return String(option ?? '')
-	}
-
-	return getProjectTitle(option as ProjectResponse)
-}
 
 const foundProjects = ref<ProjectResponse[]>([])
 function findProjects(query: string) {
