@@ -48,7 +48,7 @@ import {parseTaskIdFromUrl} from '@/helpers/parseTaskIdFromUrl'
 import {fetchTaskById} from '@/helpers/fetchTaskById'
 import {taskCacheVersion, taskCacheIdentityVersion} from '@/helpers/taskCache'
 import {useBaseStore} from '@/stores/base'
-import {useProjectStore} from '@/stores/projects'
+import {useProjectNavigation} from '@/composables/useProjectNavigation'
 import TaskGlanceTooltip from '@/components/tasks/partials/TaskGlanceTooltip.vue'
 
 import {taskLinkCurrentProjectIdKey} from './taskLinkContext'
@@ -68,10 +68,10 @@ const emit = defineEmits<{
 }>()
 
 const baseStore = useBaseStore()
-const projectStore = useProjectStore()
+const projectNavigation = useProjectNavigation()
 const providedProjectId = inject(taskLinkCurrentProjectIdKey, null)
 
-const currentProjectId = computed(() => providedProjectId?.value ?? (baseStore.currentProject?.id || undefined))
+const currentProjectId = computed(() => providedProjectId?.value ?? (baseStore.currentProjectId || undefined))
 
 const state = ref<PillState>({status: 'loading'})
 
@@ -120,7 +120,7 @@ const projectPrefix = computed(() => {
 	if (currentProjectId.value === projectId) {
 		return ''
 	}
-	const project = projectStore.projects[projectId]
+	const project = projectNavigation.projects[projectId]
 	return project ? getProjectTitle(project) : ''
 })
 

@@ -31,7 +31,7 @@
 					class="has-overflow"
 				>
 					<AddTask
-						v-if="!project?.isArchived && canWrite"
+						v-if="!project?.is_archived && canWrite"
 						ref="addTaskRef"
 						class="list-view__add-task d-print-none"
 						@tasksAdded="updateTaskList"
@@ -114,6 +114,7 @@ import SortPopup from '@/components/project/partials/SortPopup.vue'
 
 import {useTaskList} from '@/composables/useTaskList'
 import {useTaskDragToProject} from '@/composables/useTaskDragToProject'
+import {useCurrentProject} from '@/composables/useCurrentProject'
 import {shouldShowTaskInListView} from '@/composables/useTaskListFiltering'
 import {PERMISSIONS as Permissions} from '@/constants/permissions'
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
@@ -123,15 +124,13 @@ import {isSavedFilter, useSavedFilter} from '@/services/savedFilter'
 import {useBaseStore} from '@/stores/base'
 import {useTaskStore} from '@/stores/tasks'
 
-import type {IProject} from '@/modelTypes/IProject'
-import type {IProjectView} from '@/modelTypes/IProjectView'
 import TaskPositionService from '@/services/taskPosition'
 import TaskPositionModel from '@/models/taskPosition'
 
 const props = defineProps<{
-        isLoadingProject: boolean,
-        projectId: IProject['id'],
-        viewId: IProjectView['id'],
+	isLoadingProject: boolean,
+	projectId: number,
+	viewId: number,
 }>()
 
 const projectId = toRef(props, 'projectId')
@@ -177,10 +176,12 @@ const isPositionSorting = computed(() => 'position' in sortByParam.value)
 const baseStore = useBaseStore()
 const taskStore = useTaskStore()
 const {handleTaskDropToProject} = useTaskDragToProject()
-const project = computed(() => baseStore.currentProject)
+const {currentProject: project} = useCurrentProject()
 
 const canWrite = computed(() => {
-	return project.value?.maxPermission > Permissions.READ && project.value?.id > 0
+	return typeof project.value?.max_permission === 'number' &&
+		project.value.max_permission > Permissions.READ &&
+		project.value.id > 0
 })
 
 const isPseudoProject = computed(() => (project.value && isSavedFilter(project.value)) || project.value?.id === -1)

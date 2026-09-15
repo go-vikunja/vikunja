@@ -136,7 +136,7 @@ export const useProjectStore = defineStore('project', () => {
 
 		// FIXME: This should be a watcher, but using a watcher instead will sometimes crash browser processes.
 		// Reverted from 31b7c1f217532bf388ba95a03f469508bee46f6a
-		if (baseStore.currentProject?.id === project.id) {
+		if (baseStore.currentProjectId === project.id) {
 			baseStore.setCurrentProject(project)
 		}
 	}

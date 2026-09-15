@@ -49,7 +49,6 @@ import {LINK_SHARE_HASH_PREFIX} from '@/constants/linkShareHash'
 import {useBaseStore} from '@/stores/base'
 import {useAuthStore} from '@/stores/auth'
 import {useRedirectToLastVisited} from '@/composables/useRedirectToLastVisited'
-import type {IProject} from '@/modelTypes/IProject.ts'
 
 const {t} = useI18n({useScope: 'global'})
 useTitle(t('sharing.authenticating'))
@@ -68,7 +67,7 @@ function useAuth() {
 
 	const authLinkShare = computed(() => authStore.authLinkShare)
 
-	function redirectToProject(projectId: IProject['id']) {
+	function redirectToProject(projectId: number) {
 		const hash = LINK_SHARE_HASH_PREFIX + route.params.share
 
 		const viewId =

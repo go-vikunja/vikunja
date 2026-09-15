@@ -34,9 +34,13 @@ vi.mock('@/composables/useTaskDragToProject', () => ({
 }))
 
 vi.mock('@/stores/base', () => ({
-	useBaseStore: () => ({
-		currentProject: {id: 1, maxPermission: 2},
-		setHasTasks: vi.fn(),
+	useBaseStore: () => ({setHasTasks: vi.fn()}),
+}))
+
+vi.mock('@/composables/useCurrentProject', () => ({
+	useCurrentProject: () => ({
+		currentProject: {value: {id: 1, max_permission: 2}},
+		isPending: {value: false},
 	}),
 }))
 
