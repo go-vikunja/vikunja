@@ -207,8 +207,28 @@ definitions:
       code:
         type: string
     type: object
+  migration.ErrorKind:
+    enum:
+    - reported
+    - interrupted
+    - credentials
+    - queue
+    - upload
+    - detail
+    type: string
+    x-enum-varnames:
+    - ErrorKindReported
+    - ErrorKindInterrupted
+    - ErrorKindCredentials
+    - ErrorKindQueue
+    - ErrorKindUpload
+    - ErrorKindDetail
   migration.Status:
     properties:
+      error_kind:
+        $ref: '#/definitions/migration.ErrorKind'
+      error_message:
+        type: string
       finished_at:
         type: string
       id:
@@ -3231,7 +3251,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: A message telling you everything was migrated successfully.
+          description: A message telling you the migration was started.
           schema:
             $ref: '#/definitions/models.Message'
         "500":
