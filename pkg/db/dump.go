@@ -114,6 +114,14 @@ func Restore(table string, contents []map[string]interface{}) (err error) {
 				continue
 			}
 
+			// SQLite and MySQL dump bools as 0/1, which pgx refuses to bind to a bool column.
+			if col.SQLType.IsBool() {
+				if num, is := value.(float64); is {
+					content[colName] = num != 0
+				}
+				continue
+			}
+
 			strVal, is := value.(string)
 			if !is || !col.SQLType.IsTime() {
 				continue
