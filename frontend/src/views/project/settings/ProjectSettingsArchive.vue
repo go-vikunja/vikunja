@@ -4,11 +4,11 @@
 		@submit="archiveProject()"
 	>
 		<template #header>
-			<span>{{ project?.isArchived ? $t('project.archive.unarchive') : $t('project.archive.archive') }}</span>
+			<span>{{ project?.is_archived ? $t('project.archive.unarchive') : $t('project.archive.archive') }}</span>
 		</template>
 		
 		<template #text>
-			<p>{{ project?.isArchived ? $t('project.archive.unarchiveText') : $t('project.archive.archiveText') }}</p>
+			<p>{{ project?.is_archived ? $t('project.archive.unarchiveText') : $t('project.archive.archiveText') }}</p>
 		</template>
 	</Modal>
 </template>
@@ -18,16 +18,17 @@ import {computed} from 'vue'
 import {useRouter, useRoute} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 
-import {success} from '@/message'
+import {useUpdateProjectMutation} from '@/client/queries/projects'
 import {useTitle} from '@/composables/useTitle'
 
 import {useBaseStore} from '@/stores/base'
-import {useProjectStore} from '@/stores/projects'
+import {useProjectNavigation} from '@/composables/useProjectNavigation'
 
 defineOptions({name: 'ProjectSettingArchive'})
 
 const {t} = useI18n({useScope: 'global'})
-const projectStore = useProjectStore()
+const projectStore = useProjectNavigation()
+const updateMutation = useUpdateProjectMutation(t('project.archive.success'))
 const router = useRouter()
 const route = useRoute()
 
@@ -40,13 +41,11 @@ async function archiveProject() {
 	}
 
 	try {
-		const newProject = await projectStore.updateProject({
+		const newProject = await updateMutation.mutateAsync({
 			...project.value,
-			isArchived: !project.value.isArchived,
+			is_archived: !project.value.is_archived,
 		})
 		useBaseStore().setCurrentProject(newProject)
-		success({message: t('project.archive.success')})
-		await projectStore.loadAllProjects()
 	} finally {
 		router.back()
 	}

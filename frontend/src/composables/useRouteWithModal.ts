@@ -1,14 +1,14 @@
 import {computed, defineAsyncComponent, h, shallowRef, type VNode, watchEffect} from 'vue'
 import {useRoute, useRouter, type RouteLocationNormalizedGeneric} from 'vue-router'
 import {useBaseStore} from '@/stores/base'
-import {useProjectStore} from '@/stores/projects'
+import {useProjectNavigation} from '@/composables/useProjectNavigation'
 
 export function useRouteWithModal() {
 	const router = useRouter()
 	const route = useRoute()
 	const backdropView = computed(() => route.fullPath ? window.history.state?.backdropView : undefined)
 	const baseStore = useBaseStore()
-	const projectStore = useProjectStore()
+	const projectNavigation = useProjectNavigation()
 
 	const routeWithModal = computed(() => {
 		return backdropView.value
@@ -69,22 +69,22 @@ export function useRouteWithModal() {
 		const match = historyState.value?.back
 			? routeMatch.exec(historyState.value.back)
 			: null
-		if (match !== null && baseStore.currentProject && baseStore.currentProject.id !== 0) {
-			let viewId: string | number = match[1]
+		if (match !== null && baseStore.currentProjectId !== 0) {
+			let viewId: string | number | undefined = match[1]
 
 			if (!viewId) {
-				const project = projectStore.projects[baseStore.currentProject.id]
+				const project = projectNavigation.projects[baseStore.currentProjectId]
 				viewId = project?.views?.[0]?.id
 			}
 
 			// Only navigate if we have a valid project and view
-			if (baseStore.currentProject.id && viewId) {
+			if (viewId) {
 				// Preserve query parameters (e.g., date range) from the backdrop view
 				const backdropRoute = historyState.value?.backdropView && router.resolve(historyState.value.backdropView)
 				const newRoute = {
 					name: 'project.view',
 					params: {
-						projectId: baseStore.currentProject.id,
+						projectId: baseStore.currentProjectId,
 						viewId,
 					},
 					query: backdropRoute?.query || {},
@@ -109,10 +109,10 @@ export function useRouteWithModal() {
 		}
 
 		// Fallback to current project or home
-		if (baseStore.currentProject && baseStore.currentProject.id !== 0) {
+		if (baseStore.currentProjectId !== 0) {
 			router.push({
 				name: 'project.index',
-				params: { projectId: baseStore.currentProject.id },
+				params: {projectId: baseStore.currentProjectId},
 			})
 		} else {
 			router.push({ name: 'home' })
