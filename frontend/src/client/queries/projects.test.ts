@@ -47,7 +47,6 @@ import {
 	deleteProjectMutationOptions,
 	duplicateProjectMutationOptions,
 	findProjectByExactTitle,
-	findProjectByIdentifier,
 	normalizeProject,
 	projectKeys,
 	projectQuery,
@@ -176,15 +175,13 @@ describe('project queries', () => {
 
 describe('project lookups', () => {
 	const projects = [
-		serverProject({id: 1, title: 'Root', identifier: 'ROOT'}),
+		serverProject({id: 1, title: 'Root'}),
 		serverProject({id: 2, title: 'Child'}),
 	]
 
-	it('finds projects by title or identifier case-insensitively', () => {
+	it('finds projects by exact title case-insensitively', () => {
 		expect(findProjectByExactTitle(projects, 'root')?.id).toBe(1)
-		expect(findProjectByIdentifier(projects, 'root')?.id).toBe(1)
 		expect(findProjectByExactTitle(projects, 'missing')).toBeNull()
-		expect(findProjectByIdentifier(projects, 'missing')).toBeNull()
 	})
 })
 

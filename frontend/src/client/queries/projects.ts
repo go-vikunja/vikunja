@@ -209,13 +209,6 @@ export function findProjectByExactTitle(
 	return projects.find(project => project.title.toLowerCase() === title.toLowerCase()) ?? null
 }
 
-export function findProjectByIdentifier(
-	projects: readonly ProjectResponse[],
-	identifier: string,
-): ProjectResponse | null {
-	return projects.find(project => project.identifier.toLowerCase() === identifier.toLowerCase()) ?? null
-}
-
 export function getSavedFilterIdFromProjectId(projectId: number): number {
 	return Math.max(0, projectId * -1 - 1)
 }

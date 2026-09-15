@@ -5,9 +5,7 @@ import {createSharedComposable} from '@vueuse/core'
 import {
 	ensureProject,
 	findProjectByExactTitle,
-	findProjectByIdentifier,
 	projectsQuery,
-	refreshProjects,
 } from '@/client/queries/projects'
 import type {ProjectResponse} from '@/client/queries/projects'
 import {queryClient} from '@/client/queryClient'
@@ -111,14 +109,12 @@ export function useProjectNavigation() {
 				? project.parent_project_id
 				: parentProjectIdFromDom,
 		findProjectByExactname: (title: string) => findProjectByExactTitle(realProjects.value, title),
-		findProjectByIdentifier: (identifier: string) => findProjectByIdentifier(realProjects.value, identifier),
 		searchProject: (value: string, includeArchived = false) =>
 			search(realProjects.value, value, includeArchived),
 		searchSavedFilter: (value: string, includeArchived = false) =>
 			search(savedFilterProjects.value, value, includeArchived),
 		searchProjectAndFilter: (value: string, includeArchived = false) =>
 			search(projectsArray.value, value, includeArchived),
-		loadAllProjects: refreshProjects,
 		loadProject: ensureProject,
 	})
 
