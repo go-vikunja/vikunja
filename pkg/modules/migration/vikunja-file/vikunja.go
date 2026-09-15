@@ -367,6 +367,17 @@ func scanArchive(r *zip.Reader) (*archive, error) {
 	return a, nil
 }
 
+// ValidateFile rejects an upload that is not a usable export before the import
+// is queued, so picking the wrong file still fails the request.
+func (v *FileMigrator) ValidateFile(file io.ReaderAt, size int64) error {
+	r, err := openArchive(file, size)
+	if err != nil {
+		return err
+	}
+	_, err = scanArchive(r)
+	return err
+}
+
 // Migrate takes a vikunja file export, parses it and imports everything in it into Vikunja.
 // @Summary Import all projects, tasks etc. from a Vikunja data export
 // @Description Imports all projects, tasks, notes, reminders, subtasks and files from a Vikunjda data export into Vikunja.
@@ -375,7 +386,7 @@ func scanArchive(r *zip.Reader) (*archive, error) {
 // @Produce json
 // @Security JWTKeyAuth
 // @Param import formData string true "The Vikunja export zip file."
-// @Success 200 {object} models.Message "A message telling you everything was migrated successfully."
+// @Success 200 {object} models.Message "A message telling you the migration was started."
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /migration/vikunja-file/migrate [post]
 func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) error {

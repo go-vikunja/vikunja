@@ -33,3 +33,19 @@ type MigrationRequestedEvent struct {
 func (t *MigrationRequestedEvent) Name() string {
 	return "migration.requested"
 }
+
+// FileMigrationRequestedEvent queues an uploaded import. Only the spool file's
+// name travels with it, the bytes stay on disk.
+type FileMigrationRequestedEvent struct {
+	User              *user.User `json:"user"`
+	MigratorKind      string     `json:"migrator_kind"`
+	MigrationStatusID int64      `json:"migration_status_id"`
+	UploadName        string     `json:"upload_name"`
+	UploadSize        int64      `json:"upload_size"`
+	Options           []byte     `json:"options,omitempty"`
+}
+
+// Name defines the name for FileMigrationRequestedEvent
+func (t *FileMigrationRequestedEvent) Name() string {
+	return "migration.file.requested"
+}
