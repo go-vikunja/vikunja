@@ -84,7 +84,6 @@ const duplicateProject = (input: Parameters<NonNullable<ReturnType<typeof duplic
 const listArgs = {
 	is_archived: true,
 	expand: 'permissions',
-	format: 'markdown',
 	q: 'roadmap',
 } as const
 
@@ -363,20 +362,6 @@ describe('project drafts and cache mutations', () => {
 		client.clear()
 	})
 
-	it('keeps Markdown mutation descriptions out of HTML lists and details', async () => {
-		const html = serverProject({description: '<p>before</p>'})
-		queryClient.setQueryData(listKey, {projects: [html], favoriteProject: null, savedFilterProjects: []})
-		queryClient.setQueryData(projectKeys.detail(1), html)
-		queryClient.setQueryData(projectKeys.detail(1, 'markdown'), {...html, description: 'before'})
-		sdk.projectsUpdate.mockResolvedValue({data: {...html, description: '**after**'}})
-
-		await execute(updateProjectMutationOptions('markdown'), {...html, description: '**after**'})
-
-		expect(queryClient.getQueryData<ProjectListResult>(listKey)?.projects[0].description).toBe('<p>before</p>')
-		expect(queryClient.getQueryData<ProjectResponse>(projectKeys.detail(1))?.description).toBe('<p>before</p>')
-		expect(queryClient.getQueryData<ProjectResponse>(projectKeys.detail(1, 'markdown'))?.description).toBe('**after**')
-	})
-
 	it('aborts a legacy filter favorite before PUT when its GET outlives the session', async () => {
 		legacyFilter.get.mockReset()
 		legacyFilter.update.mockReset()
@@ -424,7 +409,6 @@ describe('project drafts and cache mutations', () => {
 
 		expect(sdk.projectsCreate).toHaveBeenCalledWith({
 			body: {title: 'Created', hex_color: 'abcdef'},
-			query: {format: 'html'},
 		})
 		expect(sdk.projectsRead).not.toHaveBeenCalled()
 		expect(queryClient.getQueryData<{projects: Project[]}>(listKey)?.projects).toContainEqual(normalizedCreated)
@@ -432,12 +416,10 @@ describe('project drafts and cache mutations', () => {
 		expect(queryClient.getQueryState(listKey)?.isInvalidated).toBe(true)
 	})
 
-	it('updates the selected response format and preserves read-only permission state', async () => {
+	it('updates list and detail caches and preserves read-only permission state', async () => {
 		const cached = serverProject({id: 1, title: 'Before', max_permission: 2})
-		const markdown = serverProject({id: 1, title: 'Before', description: 'markdown', max_permission: 2})
 		queryClient.setQueryData(listKey, {projects: [cached], favoriteProject: null, savedFilterProjects: []})
 		queryClient.setQueryData(projectKeys.detail(1), cached)
-		queryClient.setQueryData(projectKeys.detail(1, 'markdown'), markdown)
 		sdk.projectsUpdate.mockResolvedValue({
 			data: serverProject({id: 1, title: 'After', max_permission: null}),
 		})
@@ -456,7 +438,6 @@ describe('project drafts and cache mutations', () => {
 				parent_project_id: 0,
 				position: 0,
 			},
-			query: {format: 'html'},
 		})
 		expect(queryClient.getQueryData<Project>(projectKeys.detail(1))).toMatchObject({
 			title: 'After',
@@ -466,8 +447,7 @@ describe('project drafts and cache mutations', () => {
 			title: 'After',
 			max_permission: 2,
 		})
-		expect(queryClient.getQueryData<Project>(projectKeys.detail(1, 'markdown'))?.description).toBe('markdown')
-		expect(queryClient.getQueryState(projectKeys.detail(1, 'markdown'))?.isInvalidated).toBe(true)
+		expect(queryClient.getQueryState(projectKeys.detail(1))?.isInvalidated).toBe(true)
 		expect(queryClient.getQueryState(listKey)?.isInvalidated).toBe(true)
 	})
 
