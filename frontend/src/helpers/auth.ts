@@ -75,6 +75,10 @@ let inFlightRefresh: Promise<void> | null = null
 // refresh that resolves after a logout can't undo it.
 let authEpoch = 0
 
+export function getAuthSessionEpoch(): number {
+	return authEpoch
+}
+
 /**
  * Refreshes an auth token while ensuring it is updated everywhere.
  * The refresh token is sent automatically as an HttpOnly cookie.

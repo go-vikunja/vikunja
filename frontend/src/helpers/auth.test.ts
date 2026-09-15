@@ -1,6 +1,13 @@
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest'
 
-import {getToken, getTokenIdentity, getTokenType, refreshToken, removeToken} from './auth'
+import {
+	getAuthSessionEpoch,
+	getToken,
+	getTokenIdentity,
+	getTokenType,
+	refreshToken,
+	removeToken,
+} from './auth'
 
 let resolvePost: ((value: unknown) => void) | null = null
 
@@ -52,6 +59,16 @@ describe('getTokenIdentity', () => {
 
 		expect(getTokenIdentity(`header.${payload}.signature`)).toBeNull()
 		expect(getTokenIdentity(null)).toBeNull()
+	})
+})
+
+describe('getAuthSessionEpoch', () => {
+	it('advances when tokens are removed', () => {
+		const before = getAuthSessionEpoch()
+
+		removeToken()
+
+		expect(getAuthSessionEpoch()).toBe(before + 1)
 	})
 })
 
