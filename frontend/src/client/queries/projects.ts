@@ -202,6 +202,11 @@ export function refreshProject(id: number): Promise<ProjectResponse> {
 	return queryClient.fetchQuery({...projectQuery(id), staleTime: 0})
 }
 
+export function getCachedProject(id: number): ProjectResponse | undefined {
+	return queryClient.getQueryData<ProjectResponse>(projectKeys.detail(id))
+		?? queryClient.getQueryData<ProjectListResult>(projectKeys.list())?.projects.find(project => project.id === id)
+}
+
 export function findProjectByExactTitle(
 	projects: readonly ProjectResponse[],
 	title: string,

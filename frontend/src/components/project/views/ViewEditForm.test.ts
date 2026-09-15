@@ -22,8 +22,8 @@ vi.mock('@/composables/useLabels', async () => {
 	}
 })
 
-vi.mock('@/stores/projects', () => ({
-	useProjectStore: () => ({
+vi.mock('@/composables/useProjectNavigation', () => ({
+	useProjectNavigation: () => ({
 		projects: {},
 		findProjectByExactname: () => null,
 	}),
@@ -42,21 +42,20 @@ const FilterInputStub = defineComponent({
 })
 
 import ViewEditForm from './ViewEditForm.vue'
-import ProjectViewModel from '@/models/projectView'
-import type {IProjectView} from '@/modelTypes/IProjectView'
+import type {ProjectView} from '@/client/generated'
 
-function mountForm(modelValue: IProjectView = {
+function mountForm(modelValue: ProjectView = {
 	id: 1,
-	projectId: 1,
+	project_id: 1,
 	title: 'List',
-	viewKind: 'kanban',
-	bucketConfigurationMode: 'filter',
+	view_kind: 'kanban',
+	bucket_configuration_mode: 'filter',
 	filter: {filter: 'labels = 1', filter_include_nulls: false},
-	bucketConfiguration: [{
+	bucket_configuration: [{
 		title: 'Bucket',
 		filter: {filter: 'labels = 1', filter_include_nulls: false},
 	}],
-} as IProjectView) {
+}) {
 	return shallowMount(ViewEditForm, {
 		props: {
 			modelValue,
@@ -69,7 +68,7 @@ function mountForm(modelValue: IProjectView = {
 	})
 }
 
-describe('ViewEditForm label loading', () => {
+describe('ViewEditForm', () => {
 	beforeEach(() => {
 		labelState.labels!.value = []
 		labelState.isPending!.value = true
@@ -101,7 +100,7 @@ describe('ViewEditForm label loading', () => {
 	})
 
 	it('preserves model sorting when saving', async () => {
-		const modelValue = new ProjectViewModel({
+		const modelValue: ProjectView = {
 			id: 1,
 			project_id: 1,
 			title: 'List',
@@ -124,19 +123,47 @@ describe('ViewEditForm label loading', () => {
 					s: '',
 				},
 			}],
-		} as never)
+		}
 		const wrapper = mountForm(modelValue)
 
 		await wrapper.find('form').trigger('submit')
 
-		const saved = wrapper.emitted('update:modelValue')?.at(-1)?.[0] as IProjectView
+		const emitted = wrapper.emitted('update:modelValue')
+		const saved = emitted?.[emitted.length - 1]?.[0] as ProjectView
 		expect(saved.filter).toMatchObject({
 			sort_by: ['done', 'id'],
 			order_by: ['asc', 'desc'],
 		})
-		expect(saved.bucketConfiguration[0].filter).toMatchObject({
+		expect(saved.bucket_configuration?.[0].filter).toMatchObject({
 			sort_by: ['position'],
 			order_by: ['desc'],
 		})
+	})
+
+	it('does not save while focus moves to another control in the form', async () => {
+		const wrapper = mountForm({
+			id: 1,
+			project_id: 1,
+			title: 'Board',
+			view_kind: 'kanban',
+			bucket_configuration_mode: 'manual',
+		})
+		const manualMode = wrapper.find<HTMLInputElement>('input[value="manual"]')
+		const filterMode = wrapper.find<HTMLInputElement>('input[value="filter"]')
+
+		await manualMode.trigger('focusout', {relatedTarget: filterMode.element})
+
+		expect(wrapper.emitted('update:modelValue')).toBeUndefined()
+		await filterMode.trigger('click')
+		expect(filterMode.element.checked).toBe(true)
+		expect(wrapper.emitted('update:modelValue')).toBeUndefined()
+	})
+
+	it('saves when focus leaves the form without explicit save buttons', async () => {
+		const wrapper = mountForm()
+
+		await wrapper.find('form').trigger('focusout', {relatedTarget: document.body})
+
+		expect(wrapper.emitted('update:modelValue')).toHaveLength(1)
 	})
 })
