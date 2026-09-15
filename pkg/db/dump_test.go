@@ -74,6 +74,7 @@ type dumpRestoreTest struct {
 	Title   string    `xorm:"varchar(250)"`
 	Created time.Time `xorm:"not null"`
 	Updated time.Time `xorm:""`
+	Done    bool      `xorm:"bool default false"`
 }
 
 func TestRestore(t *testing.T) {
@@ -117,6 +118,27 @@ func TestRestore(t *testing.T) {
 		require.NoError(t, err)
 		require.True(t, has)
 		assert.Equal(t, "test2", row.Title)
+	})
+
+	t.Run("numeric bool values from a sqlite dump", func(t *testing.T) {
+		// json.Unmarshal decodes numbers as float64
+		err := RestoreAndTruncate("dump_restore_test", []map[string]interface{}{
+			{"id": int64(4), "created": "2026-03-27 11:27:01", "done": float64(1)},
+			{"id": int64(5), "created": "2026-03-27 11:27:01", "done": float64(0)},
+		})
+		require.NoError(t, err)
+
+		done := &dumpRestoreTest{ID: 4}
+		has, err := engine.Get(done)
+		require.NoError(t, err)
+		require.True(t, has)
+		assert.True(t, done.Done)
+
+		notDone := &dumpRestoreTest{ID: 5}
+		has, err = engine.Get(notDone)
+		require.NoError(t, err)
+		require.True(t, has)
+		assert.False(t, notDone.Done)
 	})
 
 	t.Run("invalid time value", func(t *testing.T) {
