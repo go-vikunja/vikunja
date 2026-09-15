@@ -340,6 +340,10 @@ func convertFieldValue(fieldName string, value interface{}, isFloat bool) (inter
 			// If it's a CorruptInputError, treat the string as raw data
 			decoded = []byte(v)
 		}
+		// SQLite accepts empty strings in json columns, Postgres and MySQL don't.
+		if strings.TrimSpace(string(decoded)) == "" {
+			return nil, nil
+		}
 		return string(decoded), nil
 	default:
 		return nil, fmt.Errorf("expected string for JSON field '%s', got %T", fieldName, v)
