@@ -53,7 +53,7 @@ func init() {
 		"ErrCodeOpenIDCustomScopeMalformed":    reflect.ValueOf(constant.MakeFromLiteral("1038", token.INT, 0)),
 		"ErrCodeTOTPAlreadyEnabled":            reflect.ValueOf(constant.MakeFromLiteral("1015", token.INT, 0)),
 		"ErrCodeTOTPNotEnabled":                reflect.ValueOf(constant.MakeFromLiteral("1016", token.INT, 0)),
-		"ErrCodeTOTPPasscodeUsed":              reflect.ValueOf(constant.MakeFromLiteral("1025", token.INT, 0)),
+		"ErrCodeTOTPPasscodeUsed":              reflect.ValueOf(constant.MakeFromLiteral("1039", token.INT, 0)),
 		"ErrCodeTOTPQrCodeNotAvailable":        reflect.ValueOf(constant.MakeFromLiteral("1037", token.INT, 0)),
 		"ErrCodeUserDoesNotExist":              reflect.ValueOf(constant.MakeFromLiteral("1005", token.INT, 0)),
 		"ErrCodeUsernameMustNotContainSpaces":  reflect.ValueOf(constant.MakeFromLiteral("1022", token.INT, 0)),

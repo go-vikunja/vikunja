@@ -407,7 +407,7 @@ func (err ErrTOTPPasscodeUsed) Error() string {
 }
 
 // ErrCodeTOTPPasscodeUsed holds the unique world-error code of this error
-const ErrCodeTOTPPasscodeUsed = 1025
+const ErrCodeTOTPPasscodeUsed = 1039
 
 // HTTPError holds the http error description
 func (err ErrTOTPPasscodeUsed) HTTPError() web.HTTPError {
