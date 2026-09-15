@@ -110,11 +110,10 @@ describe('saved filter queries', () => {
 			data: {id: 42, title: 'Upcoming', filters: {sort_by: null, order_by: null}},
 		})
 
-		const result = await queryClient.fetchQuery(savedFilterQuery(42, 'markdown'))
+		const result = await queryClient.fetchQuery(savedFilterQuery(42))
 
 		expect(sdk.filtersRead).toHaveBeenCalledWith({
 			path: {filter: 42},
-			query: {format: 'markdown'},
 		})
 		expect(result).toEqual({
 			id: 42,
@@ -159,18 +158,13 @@ describe('saved filter queries', () => {
 		expect(queryClient.getQueryState(listKey)?.isInvalidated).toBe(true)
 	})
 
-	it('updates the detail cache, invalidates the other format and project navigation', async () => {
+	it('updates and invalidates the detail cache and project navigation', async () => {
 		const listKey = projectKeys.list()
 		queryClient.setQueryData(listKey, emptyProjectList)
 		queryClient.setQueryData(savedFilterKeys.detail(8), serverSavedFilter({
 			id: 8,
 			title: 'Before',
 			description: '<p>HTML</p>',
-		}))
-		queryClient.setQueryData(savedFilterKeys.detail(8, 'markdown'), serverSavedFilter({
-			id: 8,
-			title: 'Before',
-			description: 'Markdown',
 		}))
 		sdk.filtersUpdate.mockResolvedValue({data: serverSavedFilter({id: 8, title: 'After'})})
 
@@ -197,17 +191,14 @@ describe('saved filter queries', () => {
 		})
 		expect(queryClient.getQueryData<SavedFilterResponse>(savedFilterKeys.detail(8))?.title).toBe('After')
 		expect(queryClient.getQueryState(savedFilterKeys.detail(8))?.isInvalidated).toBe(true)
-		expect(queryClient.getQueryState(savedFilterKeys.detail(8, 'markdown'))?.isInvalidated).toBe(true)
 		expect(queryClient.getQueryState(listKey)?.isInvalidated).toBe(true)
 	})
 
-	it('patches only the favorite field in every cached format', async () => {
+	it('patches only the favorite field', async () => {
 		const listKey = projectKeys.list()
 		queryClient.setQueryData(listKey, emptyProjectList)
 		const html = serverSavedFilter({id: 8, description: '<p>HTML</p>'})
-		const markdown = serverSavedFilter({id: 8, description: 'Markdown'})
 		queryClient.setQueryData(savedFilterKeys.detail(8), html)
-		queryClient.setQueryData(savedFilterKeys.detail(8, 'markdown'), markdown)
 		sdk.patchFiltersRead.mockResolvedValue({data: {...html, is_favorite: true}})
 
 		await patchSavedFilterFavorite(8, true)
@@ -220,26 +211,21 @@ describe('saved filter queries', () => {
 			description: '<p>HTML</p>',
 			is_favorite: true,
 		})
-		expect(queryClient.getQueryData<SavedFilterResponse>(savedFilterKeys.detail(8, 'markdown'))).toMatchObject({
-			description: 'Markdown',
-			is_favorite: true,
-		})
 		expect(queryClient.getQueryState(listKey)?.isInvalidated).toBe(true)
 	})
 
-	it('deletes every cached detail format, the pseudo-project and invalidates project navigation', async () => {
+	it('deletes the cached detail and pseudo-project and invalidates project navigation', async () => {
 		const listKey = projectKeys.list()
 		queryClient.setQueryData(listKey, emptyProjectList)
 		queryClient.setQueryData(savedFilterKeys.detail(8), serverSavedFilter({id: 8}))
-		queryClient.setQueryData(savedFilterKeys.detail(8, 'markdown'), serverSavedFilter({id: 8}))
 		queryClient.setQueryData(projectKeys.detail(-9), {id: -9, title: 'Filter'})
 		sdk.filtersDelete.mockResolvedValue({data: undefined})
 
 		await deleteSavedFilter(8)
 
 		expect(sdk.filtersDelete).toHaveBeenCalledWith({path: {filter: 8}})
-		expect(queryClient.getQueriesData({queryKey: savedFilterKeys.detailRoot(8)})).toEqual([])
-		expect(queryClient.getQueriesData({queryKey: projectKeys.detailRoot(-9)})).toEqual([])
+		expect(queryClient.getQueryData(savedFilterKeys.detail(8))).toBeUndefined()
+		expect(queryClient.getQueryData(projectKeys.detail(-9))).toBeUndefined()
 		expect(queryClient.getQueryState(listKey)?.isInvalidated).toBe(true)
 	})
 })
@@ -287,12 +273,10 @@ describe('saved filter mutations after the request context changes', () => {
 	it.each(['update', 'favorite', 'delete'])('rolls back an optimistic %s in the same session', async operation => {
 		const selected = delayedMutationCases.find(test => test.name === operation)!
 		const previous = serverSavedFilter({id: 8, title: 'Before', description: '<p>HTML</p>'})
-		const markdown = {...previous, description: '**Markdown**'}
 		const pseudo = normalizeProject({id: -9, title: 'Before', description: '<p>HTML</p>'})
 		const list = {...emptyProjectList, savedFilterProjects: [pseudo]}
 		queryClient.setQueryData(listKey, list)
 		queryClient.setQueryData(savedFilterKeys.detail(8), previous)
-		queryClient.setQueryData(savedFilterKeys.detail(8, 'markdown'), markdown)
 		queryClient.setQueryData(projectKeys.detail(-9), pseudo)
 		const failure = new Error('Request failed')
 		selected.mock.mockImplementation(async () => {
@@ -301,10 +285,8 @@ describe('saved filter mutations after the request context changes', () => {
 				expect(current.savedFilterProjects).toEqual([])
 			} else if (operation === 'favorite') {
 				expect(current.savedFilterProjects[0].is_favorite).toBe(true)
-				expect(queryClient.getQueryData<SavedFilterResponse>(savedFilterKeys.detail(8, 'markdown'))?.is_favorite).toBe(true)
 			} else {
 				expect(current.savedFilterProjects[0].title).toBe('Identity A update')
-				expect(queryClient.getQueryData<SavedFilterResponse>(savedFilterKeys.detail(8, 'markdown'))?.description).toBe('**Markdown**')
 			}
 			throw failure
 		})
@@ -313,7 +295,6 @@ describe('saved filter mutations after the request context changes', () => {
 
 		expect(queryClient.getQueryData(listKey)).toEqual(list)
 		expect(queryClient.getQueryData(savedFilterKeys.detail(8))).toEqual(previous)
-		expect(queryClient.getQueryData(savedFilterKeys.detail(8, 'markdown'))).toEqual(markdown)
 		expect(queryClient.getQueryData(projectKeys.detail(-9))).toEqual(pseudo)
 		expect(queryClient.getQueryState(listKey)?.isInvalidated).toBe(true)
 	})

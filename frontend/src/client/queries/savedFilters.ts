@@ -46,11 +46,7 @@ export type SavedFilterDraft = Required<Omit<SavedFilterWritable, 'filters'>> & 
 export type UpdateSavedFilterInput = SavedFilterDraft & {id: number}
 
 export const savedFilterKeys = {
-	detailRoot: (id: number) => ['saved-filters', 'detail', id] as const,
-	detail: (id: number, format: 'html' | 'markdown' = 'html') => [
-		...savedFilterKeys.detailRoot(id),
-		format,
-	] as const,
+	detail: (id: number) => ['saved-filters', 'detail', id] as const,
 }
 
 export function newSavedFilterDraft(): SavedFilterDraft {
@@ -94,11 +90,11 @@ function normalizeSavedFilter(filter: SavedFilterReadBody): SavedFilterResponse 
 	}
 }
 
-export function savedFilterQuery(id: number, format: 'html' | 'markdown' = 'html') {
+export function savedFilterQuery(id: number) {
 	return queryOptions({
-		queryKey: savedFilterKeys.detail(id, format),
+		queryKey: savedFilterKeys.detail(id),
 		queryFn: async () => {
-			const {data} = await filtersRead({path: {filter: id}, query: {format}})
+			const {data} = await filtersRead({path: {filter: id}})
 			return normalizeSavedFilter(data)
 		},
 		enabled: id > 0,
@@ -109,17 +105,17 @@ async function snapshotSavedFilter(client: QueryClient, id: number) {
 	const request = captureClientRequestContext()
 	const projectId = getProjectIdFromSavedFilterId(id)
 	await Promise.all([
-		client.cancelQueries({queryKey: savedFilterKeys.detailRoot(id)}),
-		client.cancelQueries({queryKey: projectKeys.lists()}),
-		client.cancelQueries({queryKey: projectKeys.detailRoot(projectId)}),
+		client.cancelQueries({queryKey: savedFilterKeys.detail(id)}),
+		client.cancelQueries({queryKey: projectKeys.list()}),
+		client.cancelQueries({queryKey: projectKeys.detail(projectId)}),
 	])
 	assertClientRequestContext(request)
 	return {
 		request,
 		previous: [
-			...client.getQueriesData<SavedFilterResponse>({queryKey: savedFilterKeys.detailRoot(id)}),
-			...client.getQueriesData<ProjectListResult>({queryKey: projectKeys.lists()}),
-			...client.getQueriesData<ProjectResponse>({queryKey: projectKeys.detailRoot(projectId)}),
+			...client.getQueriesData<SavedFilterResponse>({queryKey: savedFilterKeys.detail(id)}),
+			...client.getQueriesData<ProjectListResult>({queryKey: projectKeys.list()}),
+			...client.getQueriesData<ProjectResponse>({queryKey: projectKeys.detail(projectId)}),
 		],
 	}
 }
@@ -145,10 +141,10 @@ function updateNavigation(
 	fields: Partial<Pick<ProjectResponse, 'title' | 'is_favorite'>>,
 ) {
 	const projectId = getProjectIdFromSavedFilterId(id)
-	client.setQueriesData<ProjectListResult>({queryKey: projectKeys.lists()}, current =>
+	client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
 		current ? mapProjectNavigationItem(current, projectId, project => ({...project, ...fields})) : current,
 	)
-	client.setQueriesData<ProjectResponse>({queryKey: projectKeys.detailRoot(projectId)}, current =>
+	client.setQueryData<ProjectResponse>(projectKeys.detail(projectId), current =>
 		current ? {...current, ...fields} : current,
 	)
 }
@@ -162,10 +158,10 @@ async function settleSavedFilter(
 		return
 	}
 	await Promise.all([
-		client.invalidateQueries({queryKey: projectKeys.lists()}),
+		client.invalidateQueries({queryKey: projectKeys.list()}),
 		...(id === undefined ? [] : [
-			client.invalidateQueries({queryKey: savedFilterKeys.detailRoot(id)}),
-			client.invalidateQueries({queryKey: projectKeys.detailRoot(getProjectIdFromSavedFilterId(id))}),
+			client.invalidateQueries({queryKey: savedFilterKeys.detail(id)}),
+			client.invalidateQueries({queryKey: projectKeys.detail(getProjectIdFromSavedFilterId(id))}),
 		]),
 	])
 	assertClientRequestContext(context.request)
@@ -199,10 +195,6 @@ export function updateSavedFilterMutationOptions(shouldNotify: UpdateNotify = ()
 		},
 		onMutate: async ({id, ...filter}, {client}) => {
 			const snapshot = await snapshotSavedFilter(client, id)
-			const {description: _description, ...fields} = filter
-			client.setQueriesData<SavedFilterResponse>({queryKey: savedFilterKeys.detailRoot(id)}, current =>
-				current ? {...current, ...fields} : current,
-			)
 			client.setQueryData<SavedFilterResponse>(savedFilterKeys.detail(id), current =>
 				current ? {...current, ...filter} : current,
 			)
@@ -242,7 +234,7 @@ export function patchSavedFilterFavoriteMutationOptions() {
 		},
 		onMutate: async ({id, isFavorite}, {client}) => {
 			const snapshot = await snapshotSavedFilter(client, id)
-			client.setQueriesData<SavedFilterResponse>({queryKey: savedFilterKeys.detailRoot(id)}, current =>
+			client.setQueryData<SavedFilterResponse>(savedFilterKeys.detail(id), current =>
 				current ? {...current, is_favorite: isFavorite} : current,
 			)
 			updateNavigation(client, id, {is_favorite: isFavorite})
@@ -256,7 +248,7 @@ export function patchSavedFilterFavoriteMutationOptions() {
 		},
 		onSuccess: (updated, {id}, context, {client}) => {
 			assertClientRequestContext(context.request)
-			client.setQueriesData<SavedFilterResponse>({queryKey: savedFilterKeys.detailRoot(id)}, current =>
+			client.setQueryData<SavedFilterResponse>(savedFilterKeys.detail(id), current =>
 				current ? {...current, is_favorite: updated.is_favorite} : current,
 			)
 			updateNavigation(client, id, {is_favorite: updated.is_favorite})
@@ -275,7 +267,7 @@ export function deleteSavedFilterMutationOptions(shouldNotify: DeleteNotify = ()
 		onMutate: async (id, {client}) => {
 			const snapshot = await snapshotSavedFilter(client, id)
 			const projectId = getProjectIdFromSavedFilterId(id)
-			client.setQueriesData<ProjectListResult>({queryKey: projectKeys.lists()}, current =>
+			client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
 				current ? {...current, savedFilterProjects: current.savedFilterProjects.filter(project => project.id !== projectId)} : current,
 			)
 			return snapshot
@@ -289,8 +281,8 @@ export function deleteSavedFilterMutationOptions(shouldNotify: DeleteNotify = ()
 		onSuccess: (_data, id, context, {client}) => {
 			assertClientRequestContext(context.request)
 			const projectId = getProjectIdFromSavedFilterId(id)
-			client.removeQueries({queryKey: savedFilterKeys.detailRoot(id)})
-			client.removeQueries({queryKey: projectKeys.detailRoot(projectId)})
+			client.removeQueries({queryKey: savedFilterKeys.detail(id)})
+			client.removeQueries({queryKey: projectKeys.detail(projectId)})
 			removeProjectFromHistory({id: projectId})
 			if (shouldNotify(id)) {
 				success({message: i18n.global.t('filters.delete.success')})
