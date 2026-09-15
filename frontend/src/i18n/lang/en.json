@@ -749,6 +749,15 @@
     "importUpload": "To import data from {name} into Vikunja, click the button below to select a file.",
     "upload": "Upload file",
     "migrationStartedWillReciveEmail": "Vikunja will now import your lists/projects, tasks, notes, reminders and files from {service}. As this will take a while, we will send you an email once done. You can close this window now.",
+    "migrationFinished": "The import from {service} has finished. Everything it imported is now available in your projects.",
+    "migrationFailed": "The import from {service} failed: {reason}",
+    "failure": {
+      "reported": "The import from {service} failed. We have been notified about the error and are working on a fix.",
+      "interrupted": "The import from {service} was interrupted before it could finish. Please start it again.",
+      "credentials": "The credentials for {service} could not be verified. Please connect it again.",
+      "queue": "The import from {service} could not be queued. Please start it again.",
+      "upload": "The file you uploaded could not be stored. Please upload it again."
+    },
     "migrationInProgress": "A migration is currently in progress. Please wait until it is done.",
     "credentials": {
       "description": "Enter the address of your {name} instance and how Vikunja should log in. Vikunja imports all projects and boards you have access to; the credentials are only used for this import and are not stored.",
@@ -1618,6 +1627,7 @@
     "14011": "The provided file is not a valid zip file.",
     "14012": "The provided file does not contain any data.",
     "14013": "The export was created with a Vikunja version that is too old to import. Please create a new export with a more recent version.",
+    "14016": "The import configuration could not be parsed. Please make sure it is a valid JSON object.",
     "14201": "Planka rejected the provided credentials. Check the URL and the API key or username and password.",
     "14202": "The Planka account requires an extra login step (two-factor code or accepting the terms). Log in to Planka in the browser once, or use an API key instead of username and password.",
     "14203": "A Planka URL and either an API key or username and password are required.",
