@@ -649,7 +649,6 @@ func MigrateWithConfig(u *user.User, file io.ReaderAt, size int64, config *Impor
 		return &migration.ErrFileIsEmpty{}
 	}
 
-	// Convert rows to Vikunja structure
 	vikunjaTasks := convertToVikunja(rows, config)
 
 	return migration.InsertFromStructure(vikunjaTasks, u)
