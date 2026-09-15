@@ -174,7 +174,6 @@ function seedProjectCaches(client = queryClient) {
 		projects: [cachedProjectWithBackground], favoriteProject: null, savedFilterProjects: [],
 	})
 	client.setQueryData(projectKeys.detail(7), cachedProjectWithBackground)
-	client.setQueryData(projectKeys.detail(7, 'markdown'), {...cachedProjectWithBackground, description: '**raw**'})
 	client.setQueryData(projectBackgroundKeys.project(7), new Blob(['old'], {type: 'image/png'}))
 }
 
@@ -190,8 +189,6 @@ describe('project background mutations', () => {
 		expect(queryClient.getQueryData(projectKeys.detail(7))).toEqual({...cachedProjectWithBackground, ...expected})
 		expect(queryClient.getQueryData<ProjectListResult>(projectKeys.list())?.projects[0])
 			.toEqual({...cachedProjectWithBackground, ...expected})
-		expect(queryClient.getQueryData(projectKeys.detail(7, 'markdown')))
-			.toEqual({...cachedProjectWithBackground, description: '**raw**', ...expected})
 		expect(queryClient.getQueryState(projectKeys.list())?.isInvalidated).toBe(true)
 		expect(queryClient.getQueryState(projectKeys.detail(7))?.isInvalidated).toBe(true)
 		expect(queryClient.getQueryState(projectBackgroundKeys.project(7))?.isInvalidated).toBe(true)

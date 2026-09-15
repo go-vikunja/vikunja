@@ -106,10 +106,10 @@ function backgroundMutationCallbacks<TInput>(
 			assertClientRequestContext(context.request)
 			const projectId = projectIdFromInput(input)
 			const update = (project: ProjectResponse) => ({...project, ...background})
-			client.setQueriesData<ProjectListResult>({queryKey: projectKeys.lists()}, current =>
+			client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
 				current ? mapProjectNavigationItem(current, projectId, update) : current,
 			)
-			client.setQueriesData<ProjectResponse>({queryKey: projectKeys.detailRoot(projectId)}, current =>
+			client.setQueryData<ProjectResponse>(projectKeys.detail(projectId), current =>
 				current ? update(current) : current,
 			)
 			if (shouldNotify(projectId)) {
@@ -131,8 +131,8 @@ function backgroundMutationCallbacks<TInput>(
 			if (context && isClientRequestContextCurrent(context.request)) {
 				const projectId = projectIdFromInput(input)
 				await Promise.all([
-					client.invalidateQueries({queryKey: projectKeys.lists()}),
-					client.invalidateQueries({queryKey: projectKeys.detailRoot(projectId)}),
+					client.invalidateQueries({queryKey: projectKeys.list()}),
+					client.invalidateQueries({queryKey: projectKeys.detail(projectId)}),
 					client.invalidateQueries({queryKey: projectBackgroundKeys.project(projectId), exact: true}),
 				])
 				assertClientRequestContext(context.request)
