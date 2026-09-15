@@ -148,7 +148,7 @@ import {success} from '@/message'
 import type {ITeam} from '@/modelTypes/ITeam'
 import type {ITask} from '@/modelTypes/ITask'
 import type {IAbstract} from '@/modelTypes/IAbstract'
-import type {TaskFilterParams} from '@/services/taskCollection'
+import type {TaskFilterParams} from '@/types/TaskFilterParams'
 import {
 	createProjectDraft,
 	isSavedFilterProject,

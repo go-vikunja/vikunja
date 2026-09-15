@@ -22,14 +22,6 @@ const requestContext = vi.hoisted(() => ({
 	apiV2BaseUrl: 'https://identity-a.example/api/v2/',
 }))
 
-const legacyFilter = vi.hoisted(() => ({get: vi.fn(), update: vi.fn()}))
-vi.mock('@/services/savedFilter', () => ({default: class {
-	get = legacyFilter.get
-	update = legacyFilter.update
-}}))
-vi.mock('@/models/savedFilter', () => ({default: class {
-	constructor(data: object) { Object.assign(this, data) }
-}}))
 vi.mock('@/message', () => ({success: vi.fn()}))
 vi.mock('@/client/generated', () => sdk)
 vi.mock('@/helpers/auth', () => ({
@@ -48,13 +40,15 @@ import {
 	duplicateProjectMutationOptions,
 	findProjectByExactTitle,
 	getCachedProject,
+	getProjectIdFromSavedFilterId,
+	getSavedFilterIdFromProjectId,
+	isSavedFilterProject,
 	normalizeProject,
 	projectKeys,
 	projectQuery,
 	patchProjectFavoriteMutationOptions,
 	projectsQuery,
 	updateProjectMutationOptions,
-	legacySavedFilterFavoriteMutationOptions,
 } from './projects'
 
 function execute<TData, TVariables, TContext>(
@@ -328,28 +322,6 @@ describe('project drafts and cache mutations', () => {
 		client.clear()
 	})
 
-	it('aborts a legacy filter favorite before PUT when its GET outlives the session', async () => {
-		legacyFilter.get.mockReset()
-		legacyFilter.update.mockReset()
-		let resolveGet: (value: unknown) => void = () => {}
-		legacyFilter.get.mockReturnValue(new Promise(resolve => { resolveGet = resolve }))
-		const before = {projects: [], favoriteProject: null, savedFilterProjects: [serverProject({id: -2})]}
-		queryClient.setQueryData(listKey, before)
-		const mutation = execute(legacySavedFilterFavoriteMutationOptions(), {id: 1, isFavorite: true})
-		await vi.waitFor(() => expect(legacyFilter.get).toHaveBeenCalledOnce())
-		expect(queryClient.getQueryData<ProjectListResult>(listKey)?.savedFilterProjects[0].is_favorite).toBe(true)
-		requestContext.sessionEpoch++
-		queryClient.clear()
-		const after = {...before, savedFilterProjects: [serverProject({id: -2, title: 'Other session'})]}
-		queryClient.setQueryData(listKey, after)
-		resolveGet({id: 1, isFavorite: false})
-
-		await expect(mutation).rejects.toMatchObject({name: 'AbortError'})
-		expect(legacyFilter.update).not.toHaveBeenCalled()
-		expect(queryClient.getQueryData(listKey)).toEqual(after)
-		expect(queryClient.getQueryState(listKey)?.isInvalidated).toBe(false)
-	})
-
 	it('creates a generated-type draft with stable UI defaults', () => {
 		expect(createProjectDraft()).toEqual({
 			title: '',
@@ -499,5 +471,25 @@ describe('project drafts and cache mutations', () => {
 		expect(duplicate).toMatchObject({id: 9, max_permission: 2})
 		expect(queryClient.getQueryData<{projects: Project[]}>(listKey)?.projects).toContainEqual(duplicate)
 		expect(queryClient.getQueryData(projectKeys.detail(9))).toBeUndefined()
+	})
+})
+
+describe('saved filter project ids', () => {
+	it('maps saved filters to negative pseudo-project ids and back', () => {
+		expect(getProjectIdFromSavedFilterId(1)).toBe(-2)
+		expect(getProjectIdFromSavedFilterId(42)).toBe(-43)
+		expect(getProjectIdFromSavedFilterId(0)).toBe(0)
+		expect(getProjectIdFromSavedFilterId(-1)).toBe(0)
+		expect(getSavedFilterIdFromProjectId(-2)).toBe(1)
+		expect(getSavedFilterIdFromProjectId(-43)).toBe(42)
+		expect(getSavedFilterIdFromProjectId(-1)).toBe(0)
+		expect(getSavedFilterIdFromProjectId(1)).toBe(0)
+	})
+
+	it('recognizes only saved-filter pseudo-projects', () => {
+		expect(isSavedFilterProject({id: -2})).toBe(true)
+		expect(isSavedFilterProject({id: -1})).toBe(false)
+		expect(isSavedFilterProject({id: 1})).toBe(false)
+		expect(isSavedFilterProject(null)).toBe(false)
 	})
 })

@@ -48,11 +48,6 @@ vi.mock('@/stores/tasks', () => ({
 	useTaskStore: () => ({setDraggedTask: vi.fn()}),
 }))
 
-vi.mock('@/services/savedFilter', () => ({
-	isSavedFilter: () => false,
-	useSavedFilter: () => ({filter: ref(null)}),
-}))
-
 vi.mock('vue-i18n', async importOriginal => ({
 	...await importOriginal<typeof import('vue-i18n')>(),
 	useI18n: () => ({t: (key: string) => key}),

@@ -33,7 +33,7 @@ import {computed, ref, watch, nextTick} from 'vue'
 
 import Filters from '@/components/project/partials/Filters.vue'
 
-import {type TaskFilterParams} from '@/services/taskCollection'
+import type {TaskFilterParams} from '@/types/TaskFilterParams'
 import {useProjectNavigation} from '@/composables/useProjectNavigation'
 
 const props = defineProps<{

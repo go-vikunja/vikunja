@@ -108,9 +108,9 @@ import {PERMISSIONS} from '@/constants/permissions'
 import {
 	getSavedFilterIdFromProjectId,
 	isSavedFilterProject,
-	useLegacySavedFilterFavoriteMutation,
 	usePatchProjectFavoriteMutation,
 } from '@/client/queries/projects'
+import {usePatchSavedFilterFavoriteMutation} from '@/client/queries/savedFilters'
 
 const props = defineProps<{
 	project: ProjectResponse,
@@ -175,7 +175,7 @@ const isDropTarget = computed(() => {
 
 const projectStore = useProjectNavigation()
 const projectFavoriteMutation = usePatchProjectFavoriteMutation()
-const savedFilterFavoriteMutation = useLegacySavedFilterFavoriteMutation()
+const savedFilterFavoriteMutation = usePatchSavedFilterFavoriteMutation()
 const {currentProject} = useCurrentProject()
 
 // Persist open state across browser reloads. Using a separate ref for the state 

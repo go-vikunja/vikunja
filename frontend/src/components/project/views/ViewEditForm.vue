@@ -2,12 +2,12 @@
 import {onBeforeMount, ref, watch} from 'vue'
 
 import type {ProjectView, ProjectViewWritable, TaskCollection} from '@/client/generated'
+import type {EditableTaskCollection} from '@/types/EditableTaskCollection'
 import {
 	createProjectViewDraft,
 	createProjectViewUpdate,
 	type ProjectViewDraft,
 } from '@/client/queries/projectViews'
-import type {IFilters} from '@/modelTypes/ISavedFilter'
 
 import {hasFilterQuery, transformFilterStringForApi, transformFilterStringFromApi} from '@/helpers/filters'
 import {useLabels} from '@/composables/useLabels'
@@ -36,23 +36,23 @@ const emit = defineEmits<{
 type ProjectViewFormValue = ProjectViewWritable & Pick<ProjectView, 'id' | 'project_id'>
 type LoadedProjectView = Omit<ProjectViewDraft, 'filter' | 'bucket_configuration'> &
 	Pick<ProjectView, 'id' | 'project_id'> & {
-		filter: IFilters
-		bucket_configuration: Array<{title: string, filter: IFilters}>
+		filter: EditableTaskCollection
+		bucket_configuration: Array<{title: string, filter: EditableTaskCollection}>
 	}
 
 const {isPending, getLabelByExactTitle, getLabelById} = useLabels()
 const projectNavigation = useProjectNavigation()
 
-const transformFilterFromApi = (filterInput?: TaskCollection): IFilters => {
+const transformFilterFromApi = (filterInput?: TaskCollection): EditableTaskCollection => {
 	const filterString = transformFilterStringFromApi(
 		filterInput?.filter ?? '',
 		labelId => getLabelById(labelId)?.title || null,
 		projectId => projectNavigation.projects[projectId]?.title || null,
 	)
 
-	const filter: IFilters = {
-		sort_by: (filterInput?.sort_by ?? []) as IFilters['sort_by'],
-		order_by: (filterInput?.order_by ?? []) as IFilters['order_by'],
+	const filter: EditableTaskCollection = {
+		sort_by: filterInput?.sort_by ?? [],
+		order_by: filterInput?.order_by ?? [],
 		filter: '',
 		filter_include_nulls: false,
 		s: '',
@@ -151,7 +151,7 @@ function save() {
 		return
 	}
 
-	const transformFilterForApi = (filterInput?: IFilters): IFilters => {
+	const transformFilterForApi = (filterInput?: EditableTaskCollection): EditableTaskCollection => {
 		const filterString = transformFilterStringForApi(
 			filterInput?.filter || '',
 			labelTitle => getLabelByExactTitle(labelTitle)?.id || null,
@@ -160,7 +160,7 @@ function save() {
 				return found?.id || null
 			},
 		)
-		const filter: IFilters = {
+		const filter: EditableTaskCollection = {
 			sort_by: filterInput?.sort_by ?? [],
 			order_by: filterInput?.order_by ?? [],
 			filter: '',
