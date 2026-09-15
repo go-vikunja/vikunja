@@ -8,6 +8,7 @@ export interface IFilters {
 	filter: string,
 	filter_include_nulls: boolean,
 	s: string,
+	include_subprojects?: boolean,
 }
 
 export interface ISavedFilter extends IAbstract {

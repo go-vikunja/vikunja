@@ -102,6 +102,7 @@ import type {ITask, ITaskPartialWithId} from '@/modelTypes/ITask'
 import type {DateISO} from '@/types/DateISO'
 import type {GanttFilters} from '@/views/project/helpers/useGanttFilters'
 import type {GanttBarModel, GanttBarDateType} from '@/composables/useGanttBar'
+import {useProjectStore} from '@/stores/projects'
 
 import GanttChartBody from '@/components/gantt/GanttChartBody.vue'
 import GanttRow from '@/components/gantt/GanttRow.vue'
@@ -114,13 +115,16 @@ import Loading from '@/components/misc/Loading.vue'
 import {MILLISECONDS_A_DAY} from '@/constants/date'
 import {roundToNaturalDayBoundary} from '@/helpers/time/roundToNaturalDayBoundary'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
 	isLoading: boolean,
 	filters: GanttFilters,
+	includeSubprojects?: boolean,
 	tasks: Map<ITask['id'], ITask>,
 	defaultTaskStartDate: DateISO
 	defaultTaskEndDate: DateISO
-}>()
+}>(), {
+	includeSubprojects: false,
+})
 
 const emit = defineEmits<{
   (e: 'update:task', task: ITaskPartialWithId): void
@@ -131,6 +135,7 @@ const dayWidthPixels = ref(0)
 let resizeObserver: ResizeObserver | undefined
 
 const {tasks, filters} = toRefs(props)
+const projectStore = useProjectStore()
 
 const dayjsLanguageLoading = useDayjsLanguageSync(dayjs)
 const ganttContainer = ref<HTMLElement | null>(null)
@@ -245,6 +250,19 @@ function getRoundedDate(value: string | Date | undefined, fallback: Date | strin
 	return roundToNaturalDayBoundary(value ? new Date(value) : new Date(fallback), isStart)
 }
 
+function getTaskProjectTitle(task: ITask): string | undefined {
+	if (!props.includeSubprojects) {
+		return undefined
+	}
+
+	const isProjectContext = filters.value.projectId > 0
+	if (isProjectContext && task.projectId === filters.value.projectId) {
+		return undefined
+	}
+
+	return projectStore.projects[task.projectId]?.title
+}
+
 function transformTaskToGanttBar(node: GanttTaskTreeNode): GanttBarModel {
 	const t = node.task
 	const DEFAULT_SPAN_DAYS = 7
@@ -287,6 +305,7 @@ function transformTaskToGanttBar(node: GanttTaskTreeNode): GanttBarModel {
 		end: endDate,
 		meta: {
 			label: t.title,
+			projectTitle: getTaskProjectTitle(t),
 			task: t,
 			color: taskColor,
 			hasActualDates: Boolean(t.startDate && (t.endDate || t.dueDate)),

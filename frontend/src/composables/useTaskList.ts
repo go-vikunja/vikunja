@@ -108,6 +108,7 @@ export function useTaskList(
 	projectViewIdGetter: ComputedGetter<IProjectView['id']>,
 	sortByDefault: SortBy = SORT_BY_DEFAULT,
 	expandGetter: ComputedGetter<ExpandTaskFilterParam> = () => 'subtasks',
+	includeSubprojectsGetter: ComputedGetter<boolean> = () => false,
 ) {
 	
 	const projectId = computed(() => projectIdGetter())
@@ -121,6 +122,7 @@ export function useTaskList(
 	const page = useRouteQuery('page', '1', { transform: Number })
 	const filter = useRouteQuery('filter')
 	const s = useRouteQuery('s')
+	const includeSubprojects = computed(() => includeSubprojectsGetter())
 
 	watch(filter, v => { params.value.filter = v ?? '' }, { immediate: true })
 	watch(s, v => { params.value.s = v ?? '' }, { immediate: true })
@@ -202,7 +204,7 @@ export function useTaskList(
 	})
 
 	watch(
-		[params, sortBy, page],
+		[params, sortBy, page, includeSubprojects],
 		([, , newPage], [, , oldPage]) => {
 			// A redundant page write can cancel the navigation restoring a saved sort.
 			if (newPage === oldPage && newPage !== 1) {
@@ -222,6 +224,7 @@ export function useTaskList(
 			},
 			{
 				...allParams.value,
+				...(includeSubprojects.value ? {include_subprojects: true} : {}),
 				filter_timezone: authStore.settings.timezone,
 				expand: expandGetter(),
 			},
@@ -269,5 +272,6 @@ export function useTaskList(
 		loadTasks,
 		params,
 		sortByParam: sortBy,
+		includeSubprojects,
 	}
 }
