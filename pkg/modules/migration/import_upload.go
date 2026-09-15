@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"time"
 
@@ -44,6 +45,9 @@ func StoreImportUpload(status *Status, u *user.User, src io.ReaderAt, size int64
 	stored, err := files.CreateWithMimeAndSession(s, io.NewSectionReader(src, 0, size), status.MigratorName+"-import", 0, u, "application/octet-stream", false)
 	if err != nil {
 		_ = s.Rollback()
+		if stored != nil && stored.ID != 0 {
+			removeOrphanedBlob(stored.ID)
+		}
 		return fmt.Errorf("could not store the import upload: %w", err)
 	}
 
@@ -62,7 +66,7 @@ func StoreImportUpload(status *Status, u *user.User, src io.ReaderAt, size int64
 
 // A rolled-back file row leaves its blob behind, since storage writes happen before commit.
 func removeOrphanedBlob(fileID int64) {
-	if err := files.DeleteBlob(fileID); err != nil {
+	if err := files.DeleteBlob(fileID); err != nil && !errors.Is(err, fs.ErrNotExist) {
 		log.Errorf("[Migration] Could not remove the blob of rolled back import upload %d: %s", fileID, err)
 	}
 }
