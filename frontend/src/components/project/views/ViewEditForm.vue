@@ -11,7 +11,7 @@ import type {IFilters} from '@/modelTypes/ISavedFilter'
 
 import {hasFilterQuery, transformFilterStringForApi, transformFilterStringFromApi} from '@/helpers/filters'
 import {useLabels} from '@/composables/useLabels'
-import {useProjectNavigation} from '@/composables/useProjectNavigation'
+import {useProjects} from '@/composables/useProjects'
 
 import XButton from '@/components/input/Button.vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
@@ -41,13 +41,13 @@ type LoadedProjectView = Omit<ProjectViewDraft, 'filter' | 'bucket_configuration
 	}
 
 const {isPending, getLabelByExactTitle, getLabelById} = useLabels()
-const projectNavigation = useProjectNavigation()
+const projectList = useProjects()
 
 const transformFilterFromApi = (filterInput?: TaskCollection): IFilters => {
 	const filterString = transformFilterStringFromApi(
 		filterInput?.filter ?? '',
 		labelId => getLabelById(labelId)?.title || null,
-		projectId => projectNavigation.projects[projectId]?.title || null,
+		projectId => projectList.projects[projectId]?.title || null,
 	)
 
 	const filter: IFilters = {
@@ -156,7 +156,7 @@ function save() {
 			filterInput?.filter || '',
 			labelTitle => getLabelByExactTitle(labelTitle)?.id || null,
 			projectTitle => {
-				const found = projectNavigation.findProjectByExactname(projectTitle)
+				const found = projectList.findProjectByExactname(projectTitle)
 				return found?.id || null
 			},
 		)
