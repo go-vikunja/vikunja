@@ -202,51 +202,6 @@ export function refreshProject(id: number): Promise<ProjectResponse> {
 	return queryClient.fetchQuery({...projectQuery(id), staleTime: 0})
 }
 
-export function getProjectById(projects: readonly ProjectResponse[], id: number): ProjectResponse | undefined {
-	return projects.find(project => project.id === id)
-}
-
-export function isOrphanedProject(projects: readonly ProjectResponse[], project: ProjectResponse): boolean {
-	return project.parent_project_id !== 0 && !getProjectById(projects, project.parent_project_id)
-}
-
-export function getRootProjects(projects: readonly ProjectResponse[]): ProjectResponse[] {
-	return sortProjects(projects.filter(project =>
-		!project.is_archived && (project.parent_project_id === 0 || isOrphanedProject(projects, project)),
-	))
-}
-
-export function getChildProjects(projects: readonly ProjectResponse[], id: number): ProjectResponse[] {
-	return sortProjects(projects.filter(project => project.parent_project_id === id))
-}
-
-export function getProjectAncestors(
-	projects: readonly ProjectResponse[],
-	project: ProjectResponse | undefined,
-): ProjectResponse[] {
-	if (!project) {
-		return []
-	}
-
-	if (project.parent_project_id === 0) {
-		return [project]
-	}
-
-	const parent = getProjectById(projects, project.parent_project_id)
-	return [...getProjectAncestors(projects, parent), project]
-}
-
-export function getEffectiveParentProjectId(
-	projects: readonly ProjectResponse[],
-	project: ProjectResponse,
-	parentProjectIdFromDom: number,
-): number {
-	if (parentProjectIdFromDom === 0 && isOrphanedProject(projects, project)) {
-		return project.parent_project_id
-	}
-	return parentProjectIdFromDom
-}
-
 export function findProjectByExactTitle(
 	projects: readonly ProjectResponse[],
 	title: string,
@@ -259,31 +214,6 @@ export function findProjectByIdentifier(
 	identifier: string,
 ): ProjectResponse | null {
 	return projects.find(project => project.identifier.toLowerCase() === identifier.toLowerCase()) ?? null
-}
-
-export function searchProjects(
-	projects: readonly ProjectResponse[],
-	query: string,
-	includeArchived = false,
-): ProjectResponse[] {
-	if (query === '') {
-		return []
-	}
-
-	const normalizedQuery = query.toLowerCase()
-	return projects.filter(project =>
-		project.is_archived === includeArchived &&
-		(project.title.toLowerCase().includes(normalizedQuery) ||
-			project.description.toLowerCase().includes(normalizedQuery)),
-	)
-}
-
-export function getFavoriteNavigationItems(result: ProjectListResult): ProjectResponse[] {
-	return [
-		...(result.favoriteProject ? [result.favoriteProject] : []),
-		...result.savedFilterProjects.filter(project => !project.is_archived && project.is_favorite),
-		...sortProjects(result.projects.filter(project => !project.is_archived && project.is_favorite)),
-	]
 }
 
 export function getSavedFilterIdFromProjectId(projectId: number): number {

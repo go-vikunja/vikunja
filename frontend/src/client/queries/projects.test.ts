@@ -48,17 +48,11 @@ import {
 	duplicateProjectMutationOptions,
 	findProjectByExactTitle,
 	findProjectByIdentifier,
-	getChildProjects,
-	getEffectiveParentProjectId,
-	getFavoriteNavigationItems,
-	getProjectAncestors,
-	getRootProjects,
 	normalizeProject,
 	projectKeys,
 	projectQuery,
 	patchProjectFavoriteMutationOptions,
 	projectsQuery,
-	searchProjects,
 	updateProjectMutationOptions,
 	legacySavedFilterFavoriteMutationOptions,
 } from './projects'
@@ -180,53 +174,17 @@ describe('project queries', () => {
 
 })
 
-describe('project hierarchy and navigation derivations', () => {
+describe('project lookups', () => {
 	const projects = [
-		serverProject({id: 1, title: 'Root', identifier: 'ROOT', position: 200}),
-		serverProject({id: 2, title: 'Child', description: 'nested work', parent_project_id: 1, position: 300}),
-		serverProject({id: 3, title: 'Orphan', parent_project_id: 99, position: 100}),
-		serverProject({id: 4, title: 'Archived', is_archived: true, position: 400}),
+		serverProject({id: 1, title: 'Root', identifier: 'ROOT'}),
+		serverProject({id: 2, title: 'Child'}),
 	]
 
-	it('derives roots, children, ancestors, and effective drag parents', () => {
-		const grandchild = serverProject({id: 5, title: 'Grandchild', parent_project_id: 2, position: 50})
-		const sibling = serverProject({id: 6, title: 'Sibling', parent_project_id: 1, position: 100})
-		const tree = [...projects, grandchild, sibling]
-
-		expect(getRootProjects(projects).map(project => project.id)).toEqual([3, 1])
-		expect(getChildProjects(tree, 1).map(project => project.id)).toEqual([6, 2])
-		expect(getProjectAncestors(tree, grandchild).map(project => project.id)).toEqual([1, 2, 5])
-		expect(getProjectAncestors(tree, projects[2]).map(project => project.id)).toEqual([3])
-		expect(getEffectiveParentProjectId(projects, projects[2], 0)).toBe(99)
-		expect(getEffectiveParentProjectId(projects, projects[2], 1)).toBe(1)
-		expect(getEffectiveParentProjectId(projects, projects[1], 0)).toBe(0)
-	})
-
-	it('looks up and searches projects case-insensitively', () => {
+	it('finds projects by title or identifier case-insensitively', () => {
 		expect(findProjectByExactTitle(projects, 'root')?.id).toBe(1)
 		expect(findProjectByIdentifier(projects, 'root')?.id).toBe(1)
 		expect(findProjectByExactTitle(projects, 'missing')).toBeNull()
 		expect(findProjectByIdentifier(projects, 'missing')).toBeNull()
-		expect(searchProjects(projects, 'NEST').map(project => project.id)).toEqual([2])
-		expect(searchProjects(projects, 'archived')).toEqual([])
-		expect(searchProjects(projects, 'archived', true).map(project => project.id)).toEqual([4])
-		expect(searchProjects(projects, '')).toEqual([])
-	})
-
-	it('combines favorite pseudo, project, and saved-filter navigation items', () => {
-		const list: ProjectListResult = {
-			projects: [
-				serverProject({id: 1, title: 'Favorite project', is_favorite: true, position: 100}),
-				serverProject({id: 2, title: 'Archived favorite', is_favorite: true, is_archived: true, position: 200}),
-			],
-			favoriteProject: serverProject({id: -1, title: 'Favorites', is_favorite: true, position: -1}),
-			savedFilterProjects: [
-				serverProject({id: -2, title: 'Favorite filter', is_favorite: true}),
-				serverProject({id: -3, title: 'Other filter'}),
-			],
-		}
-
-		expect(getFavoriteNavigationItems(list).map(project => project.id)).toEqual([-1, -2, 1])
 	})
 })
 
