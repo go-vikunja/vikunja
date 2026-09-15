@@ -250,6 +250,8 @@ func RegisterRoutes(e *echo.Echo) {
 	f.Use(middleware.BasicAuth(feeds.BasicAuth))
 	f.GET("/notifications.atom", feeds.NotificationsAtomFeed)
 
+	e.GET("/.well-known/change-password", ChangePasswordRedirect)
+
 	// healthcheck
 	e.GET("/health", HealthcheckHandler)
 
