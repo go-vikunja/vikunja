@@ -149,7 +149,7 @@ function partitionProjects(projects: Project[]): ProjectListResult {
 	return result
 }
 
-async function fetchProjects(): Promise<ProjectListResult> {
+async function fetchAllProjects(): Promise<ProjectListResult> {
 	const projects: Project[] = []
 	let page = 1
 
@@ -170,7 +170,7 @@ async function fetchProjects(): Promise<ProjectListResult> {
 export function projectsQuery() {
 	return queryOptions({
 		queryKey: projectKeys.list(),
-		queryFn: fetchProjects,
+		queryFn: fetchAllProjects,
 		staleTime: 5 * 60 * 1000,
 	})
 }
