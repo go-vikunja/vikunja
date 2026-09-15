@@ -23,7 +23,7 @@ import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelative
 
 import {setModuleLoading} from '@/stores/helper'
 import {useConfigStore} from '@/stores/config'
-import {ensureProjects, findProjectByExactTitle, findProjectByIdentifier, refreshProjects} from '@/client/queries/projects'
+import {ensureProjects, findProjectByExactTitle, refreshProjects} from '@/client/queries/projects'
 import {useKanbanStore} from '@/stores/kanban'
 import {useBaseStore} from '@/stores/base'
 import ProjectUserService from '@/services/projectUsers'
@@ -449,7 +449,7 @@ export const useTaskStore = defineStore('task', () => {
 			let project = findProjectByExactTitle(projects, projectName)
 			
 			if (project === null) {
-				project = findProjectByIdentifier(projects, projectName)
+				project = projects.find(p => p.identifier.toLowerCase() === projectName.toLowerCase()) ?? null
 			}
 			
 			foundProjectId = project === null ? null : project.id

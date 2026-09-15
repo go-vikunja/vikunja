@@ -96,7 +96,7 @@ const projectStore = useProjectNavigation()
 const {t} = useI18n({useScope: 'global'})
 
 const {project, isLoaded, isLoading, error: loadError} = useProject(() => props.projectId)
-const updateProject = useUpdateProjectMutation('html', t('project.edit.success'))
+const updateProject = useUpdateProjectMutation(t('project.edit.success'))
 
 const parentProject = ref<ProjectResponse | null>(null)
 const parentProjectChanged = ref(false)
