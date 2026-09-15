@@ -30,6 +30,7 @@ Layering, per feature `foo`:
 - `client/queries/foo.ts`: `fooKeys` factory, `foosQuery()` via `queryOptions()`, `createFooMutationOptions()` etc. via `mutationOptions()`, thin hooks `useCreateFooMutation()` = `useMutation(createFooMutationOptions())`, imperative readers `ensureFoos()` / `refreshFoos()`, and pure lookup helpers over `Foo[]`.
 - `composables/useFoos.ts`: read side only. `useQuery(foosQuery())`, `data ?? []`, `isPending`, lookup helpers bound to the reactive list. Do not put mutations in here; a create-only view must not subscribe to the list.
 - Components read through `useFoos()` and write through `useCreateFooMutation()` etc. They never touch `queryClient`.
+- `*MutationOptions()` are exported for tests and for the outside-component case below. Components and composables must not pass them to `useMutation` themselves; use the matching `use*Mutation()` hook.
 - Outside components (Pinia setup stores, router, plain modules) `use*` hooks have no inject context. Read via `ensureFoos()` / `refreshFoos()`; write via `useMutation(createFooMutationOptions(), queryClient)` in the store setup.
 
 Rules:
