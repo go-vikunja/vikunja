@@ -68,9 +68,14 @@ func (m *stubMigrator) Migrate(_ *user.User) error {
 
 func getTestUser(t *testing.T) *user.User {
 	t.Helper()
+	return getTestUserByID(t, 1)
+}
+
+func getTestUserByID(t *testing.T, id int64) *user.User {
+	t.Helper()
 	s := db.NewSession()
 	defer s.Close()
-	u, err := user.GetUserByID(s, 1)
+	u, err := user.GetUserByID(s, id)
 	require.NoError(t, err)
 	return u
 }

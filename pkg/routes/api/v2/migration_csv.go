@@ -23,6 +23,7 @@ import (
 
 	"code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/modules/migration/csv"
+	migrationHandler "code.vikunja.io/api/pkg/modules/migration/handler"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -58,6 +59,8 @@ type csvPreviewBody struct {
 func RegisterMigrationCSVRoutes(api huma.API) {
 	tags := []string{"migration"}
 
+	migrationHandler.RegisterFileMigrator(func() migration.FileMigrator { return &csv.Migrator{} })
+
 	Register(api, huma.Operation{
 		OperationID: "migration-csv-status",
 		Summary:     "Get the CSV migration status",
@@ -90,7 +93,7 @@ func RegisterMigrationCSVRoutes(api huma.API) {
 	Register(api, withUploadLimits(huma.Operation{
 		OperationID: "migration-csv-migrate",
 		Summary:     "Import a CSV file",
-		Description: "Imports the tasks from the uploaded CSV file into Vikunja using the given config. The import runs synchronously and returns once it has finished.",
+		Description: "Imports the tasks from the uploaded CSV file into Vikunja using the given config. The import runs in the background: the response only confirms it started. Poll the status endpoint for completion; the user is notified by mail when it finishes or fails.",
 		Method:      http.MethodPost,
 		Path:        "/migration/csv/migrate",
 		// POST runs an import rather than creating a REST resource, so it
@@ -164,20 +167,20 @@ func csvMigrate(ctx context.Context, in *csvImportInput) (*migrationStartedBody,
 		return nil, translateDomainError(err)
 	}
 
-	cfg, err := parseCSVImportConfig(in.RawBody.Data().Config)
-	if err != nil {
+	rawConfig := in.RawBody.Data().Config
+	if _, err := parseCSVImportConfig(rawConfig); err != nil {
 		return nil, err
 	}
 
 	src := in.RawBody.Data().Import
 	defer func() { _ = src.Close() }()
 
-	if err := csv.RunMigration(u, src, src.Size, cfg); err != nil {
+	if err := migrationHandler.StartFileMigration(&csv.Migrator{}, u, src, src.Size, []byte(rawConfig)); err != nil {
 		return nil, translateDomainError(err)
 	}
 
 	out := &migrationStartedBody{}
-	out.Body.Message = "Everything was migrated successfully."
+	out.Body.Message = "Migration was started successfully."
 	return out, nil
 }
 
