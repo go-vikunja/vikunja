@@ -29,8 +29,5 @@ export function useCurrentProject() {
 				project => project.id === currentProjectId.value,
 			) ?? null
 		}),
-		isPending: computed(() => currentProjectId.value > 0
-			? detailQuery.isPending.value
-			: navigationQuery.isPending.value),
 	}
 }

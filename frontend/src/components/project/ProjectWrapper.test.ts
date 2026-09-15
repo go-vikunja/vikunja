@@ -8,7 +8,7 @@ const {currentProject} = vi.hoisted(() => ({
 }))
 
 vi.mock('@/composables/useCurrentProject', () => ({
-	useCurrentProject: () => ({currentProject, isPending: {value: false}}),
+	useCurrentProject: () => ({currentProject}),
 }))
 
 vi.mock('@/stores/viewFilters', () => ({
