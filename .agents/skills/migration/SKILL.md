@@ -11,7 +11,7 @@ Migrations are **irreversible in production**. Vikunja supports MySQL, PostgreSQ
 ## Before writing
 
 1. Generate the skeleton: `mage dev:make-migration <StructName>`.
-2. The migration struct must mirror the model in `pkg/models/` exactly (field names, types, xorm tags).
+2. Declare **only the columns the migration adds or changes** — `partialSync` keeps everything you leave out, so restating the rest of the table is churn plus a second copy to keep in sync. `20260405194817.go` declares one field. The fields you *do* declare must match the model in `pkg/models/` exactly (name, type, xorm tags).
 3. Use `time.Time` for time columns. Never use `string`, `varchar`, or `text` for times.
 4. For renames or type changes, verify the conversion is safe on all three DBs:
    - MySQL will silently coerce `VARCHAR` → `BIGINT` during `ALTER`. Don't rely on that — migrate data explicitly.
@@ -20,7 +20,9 @@ Migrations are **irreversible in production**. Vikunja supports MySQL, PostgreSQ
 
 ## Syncing structs — never plain `tx.Sync` on an existing table
 
-xorm's `Sync` drops **every index and unique constraint the synced struct doesn't declare**. Partial-struct migrations (the usual "add a column" pattern) therefore silently wipe all other indexes on the table — this destroyed the `users` and `tasks` indexes of every upgraded install in v2.4.0 (issue #3244). On pgloader-converted Postgres DBs it even aborts the migration with 2BP01 because the PK index has a name xorm doesn't recognize (`idx_<oid>_primary`) and tries to drop.
+xorm's `Sync` drops **every index and unique constraint the synced struct doesn't declare**. Since an add-a-column migration declares only that column, plain `tx.Sync` silently wipes every other index on the table — this destroyed the `users` and `tasks` indexes of every upgraded install in v2.4.0 (issue #3244). On pgloader-converted Postgres DBs it even aborts the migration with 2BP01 because the PK index has a name xorm doesn't recognize (`idx_<oid>_primary`) and tries to drop.
+
+The fix is `partialSync`, not a bigger struct: keep the struct to the new columns and let `partialSync` preserve the rest.
 
 ```go
 // WRONG — drops every index on users the struct doesn't declare
@@ -62,6 +64,8 @@ If the migration touches user-supplied paths, filenames, or import blobs (restor
 ## Testing
 
 - Migrations can have dedicated `_test.go` files next to them using `db.CreateTestEngine()` (see `pkg/migration/20260720120000_test.go`); run with `mage test:filter <TestName>`. Otherwise, the model's feature tests must pass against the new schema — run `mage test:feature` (uses SQLite by default).
+- Assert that no column or index was dropped, the unique ones especially — that is the v2.4.0 regression above, and it is cheap to pin. `20260830162731_test.go` shows it.
+- A test that reads migrated rows back declares its own full-row struct; the migration's struct only has the new columns. Same file.
 - If you suspect DB-specific behavior, flag it in the PR description so reviewers know to verify against MySQL/PostgreSQL.
 
 ## Related
