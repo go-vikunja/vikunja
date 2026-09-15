@@ -194,7 +194,6 @@ const childProjectsOpen = computed({
 const childProjects = computed(() => {
 	return projectList.getChildProjects(props.project.id)
 		.filter(p => !p.is_archived)
-		.sort((a, b) => a.position - b.position)
 })
 
 const canToggleFavorite = computed(() => {
