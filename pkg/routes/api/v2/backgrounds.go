@@ -79,7 +79,7 @@ func RegisterBackgroundRoutes(api huma.API) {
 	}, backgroundGet)
 
 	if config.BackgroundsUploadEnabled.GetBool() {
-		Register(api, huma.Operation{
+		Register(api, withUploadLimits(huma.Operation{
 			OperationID: "projects-background-upload",
 			Summary:     "Upload a project background",
 			Description: "Uploads an image via multipart/form-data under the \"background\" field and sets it as the project's background. Requires write access to the project. The image is resized server-side and stored as JPEG; it replaces any previous background (idempotent replace, hence PUT). Returns the updated project.",
@@ -88,10 +88,7 @@ func RegisterBackgroundRoutes(api huma.API) {
 			// Return the updated project with 200, the natural code for an idempotent PUT.
 			DefaultStatus: http.StatusOK,
 			Tags:          tags,
-			// +2 MB mirrors Echo's global BodyLimit overhead so a max-sized file isn't rejected by multipart boundary/header bytes.
-			// #nosec G115 - configured value won't exceed int64 max in practice.
-			MaxBodyBytes: (int64(config.GetMaxFileSizeInMBytes()) + 2) * 1024 * 1024,
-		}, backgroundUpload)
+		}), backgroundUpload)
 	}
 
 	if config.BackgroundsUnsplashEnabled.GetBool() {

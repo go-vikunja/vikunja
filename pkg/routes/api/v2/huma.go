@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/modules/humabridge"
@@ -178,4 +179,19 @@ func EnableAutoPatch(api huma.API) {
 			item.Patch.Summary = item.Put.Summary + " (partial)"
 		}
 	}
+}
+
+// withUploadLimits fills in the request-body limits every multipart upload
+// operation needs.
+//
+// The +2 MB mirrors Echo's global BodyLimit overhead so a max-sized file isn't
+// rejected by multipart boundary/header bytes. BodyReadTimeout is relaxed to a
+// finite bound because Huma's 5s default is a socket read deadline spanning the
+// entire body, which any real upload blows through - but a negative value would
+// clear the deadline outright and let a client trickle a body forever.
+func withUploadLimits(op huma.Operation) huma.Operation {
+	// #nosec G115 - configured value won't exceed int64 max in practice.
+	op.MaxBodyBytes = (int64(config.GetMaxFileSizeInMBytes()) + 2) * 1024 * 1024
+	op.BodyReadTimeout = 15 * time.Minute
+	return op
 }

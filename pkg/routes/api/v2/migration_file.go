@@ -20,7 +20,6 @@ import (
 	"context"
 	"net/http"
 
-	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/modules/migration"
 	migrationHandler "code.vikunja.io/api/pkg/modules/migration/handler"
 	"code.vikunja.io/api/pkg/modules/migration/ticktick"
@@ -68,7 +67,7 @@ func registerFileMigrator(api huma.API, factory func() migration.FileMigrator) {
 		return migrationFileStatus(ctx, factory)
 	})
 
-	Register(api, huma.Operation{
+	Register(api, withUploadLimits(huma.Operation{
 		OperationID: "migration-" + name + "-migrate",
 		Summary:     "Migrate from " + name,
 		Description: "Imports the authenticated user's data from an uploaded export file into Vikunja. Send the file under the multipart \"import\" field. The import runs synchronously and returns once it has finished.",
@@ -78,10 +77,7 @@ func registerFileMigrator(api huma.API, factory func() migration.FileMigrator) {
 		// returns 200 with a confirmation, not the wrapper's 201.
 		DefaultStatus: http.StatusOK,
 		Tags:          tags,
-		// +2 MB mirrors Echo's global BodyLimit overhead so a max-sized file isn't rejected by multipart boundary/header bytes.
-		// #nosec G115 - configured value won't exceed int64 max in practice.
-		MaxBodyBytes: (int64(config.GetMaxFileSizeInMBytes()) + 2) * 1024 * 1024,
-	}, func(ctx context.Context, in *fileMigrateInput) (*migrationStartedBody, error) {
+	}), func(ctx context.Context, in *fileMigrateInput) (*migrationStartedBody, error) {
 		return migrationFileMigrate(ctx, factory, in)
 	})
 }

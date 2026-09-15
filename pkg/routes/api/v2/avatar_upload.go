@@ -21,7 +21,6 @@ import (
 	"errors"
 	"net/http"
 
-	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/avatar"
@@ -44,18 +43,15 @@ type avatarUploadBody struct {
 func RegisterAvatarUploadRoutes(api huma.API) {
 	tags := []string{"user"}
 
-	Register(api, huma.Operation{
-		OperationID: "user-avatar-upload",
-		Summary:     "Upload your avatar",
-		Description: "Uploads an image as the authenticated user's avatar and switches their avatar provider to \"upload\". The image is validated to be an image, resized server-side, and stored as PNG. Replaces any previously uploaded avatar (idempotent replace, hence PUT).",
-		Method:      http.MethodPut,
-		Path:        "/user/settings/avatar",
-		Tags:        tags,
-		// +2 MB mirrors Echo's global BodyLimit overhead so a max-sized file isn't rejected by multipart boundary/header bytes.
-		// #nosec G115 - configured value won't exceed int64 max in practice.
-		MaxBodyBytes:  (int64(config.GetMaxFileSizeInMBytes()) + 2) * 1024 * 1024,
+	Register(api, withUploadLimits(huma.Operation{
+		OperationID:   "user-avatar-upload",
+		Summary:       "Upload your avatar",
+		Description:   "Uploads an image as the authenticated user's avatar and switches their avatar provider to \"upload\". The image is validated to be an image, resized server-side, and stored as PNG. Replaces any previously uploaded avatar (idempotent replace, hence PUT).",
+		Method:        http.MethodPut,
+		Path:          "/user/settings/avatar",
+		Tags:          tags,
 		DefaultStatus: http.StatusOK,
-	}, avatarUpload)
+	}), avatarUpload)
 }
 
 func init() { AddRouteRegistrar(RegisterAvatarUploadRoutes) }
