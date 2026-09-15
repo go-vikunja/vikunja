@@ -142,7 +142,7 @@ func (s *MigrationListener) Handle(msg *message.Message) (err error) {
 			})
 		}
 		if nerr != nil {
-			log.Errorf("[Migration] Could not sent failed migration notification for migration %d to user %d, error was: %s", migrationID, event.User.ID, err.Error())
+			log.Errorf("[Migration] Could not send failed migration notification for migration %d to user %d, error was: %s", migrationID, event.User.ID, nerr.Error())
 		}
 
 		// Still need to finish the migration, otherwise restarting will not work
@@ -198,14 +198,10 @@ func migrateInListener(ms migration.Migrator, event *MigrationRequestedEvent) (m
 		return
 	}
 
-	err = notifications.Notify(event.User, &MigrationDoneNotification{
-		MigratorName: ms.Name(),
-	})
-	if err != nil {
-		log.Errorf("[Migration] Could not sent migration success notification for migration %d to user %d, error was: %s", m.ID, event.User.ID, err.Error())
-		return
+	if nerr := notifications.Notify(event.User, &MigrationDoneNotification{MigratorName: ms.Name()}); nerr != nil {
+		log.Errorf("[Migration] Could not send migration success notification for migration %d to user %d, error was: %s", m.ID, event.User.ID, nerr.Error())
 	}
 
 	log.Infof("[Migration] Finished migration %d from %s for user %d", m.ID, event.MigratorKind, event.User.ID)
-	return
+	return m, nil
 }
