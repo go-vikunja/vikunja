@@ -12,6 +12,7 @@ import (
 func init() {
 	Symbols["code.vikunja.io/api/pkg/models/models"] = map[string]reflect.Value{
 		// function, constant and variable definitions
+		"APITokenAuthorization":                            reflect.ValueOf(models.APITokenAuthorization),
 		"APITokenPrefix":                                   reflect.ValueOf(constant.MakeFromLiteral("\"tk_\"", token.STRING, 0)),
 		"BucketConfigurationModeFilter":                    reflect.ValueOf(models.BucketConfigurationModeFilter),
 		"BucketConfigurationModeManual":                    reflect.ValueOf(models.BucketConfigurationModeManual),
@@ -141,6 +142,7 @@ func init() {
 		"ErrCodeUserHasNoAccessToLabel":                    reflect.ValueOf(constant.MakeFromLiteral("8003", token.INT, 0)),
 		"ErrCodeUserIsMemberOfTeam":                        reflect.ValueOf(constant.MakeFromLiteral("6005", token.INT, 0)),
 		"ErrorCodeGenericForbidden":                        reflect.ValueOf(constant.MakeFromLiteral("1", token.INT, 0)),
+		"ExpandScopeRoutes":                                reflect.ValueOf(models.ExpandScopeRoutes),
 		"ExportUserData":                                   reflect.ValueOf(models.ExportUserData),
 		"FavoriteKindProject":                              reflect.ValueOf(models.FavoriteKindProject),
 		"FavoriteKindTask":                                 reflect.ValueOf(models.FavoriteKindTask),
@@ -339,6 +341,7 @@ func init() {
 		"ReassignProjectOwner":                             reflect.ValueOf(models.ReassignProjectOwner),
 		"RebuildProjectAncestors":                          reflect.ValueOf(models.RebuildProjectAncestors),
 		"RecalculateTaskPositions":                         reflect.ValueOf(models.RecalculateTaskPositions),
+		"RecordAPITokenUse":                                reflect.ValueOf(models.RecordAPITokenUse),
 		"RegisterAPITokenExpiryCheckCron":                  reflect.ValueOf(models.RegisterAPITokenExpiryCheckCron),
 		"RegisterAddTaskToFilterViewCron":                  reflect.ValueOf(models.RegisterAddTaskToFilterViewCron),
 		"RegisterEventForWebhook":                          reflect.ValueOf(models.RegisterEventForWebhook),
