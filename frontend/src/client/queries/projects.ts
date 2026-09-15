@@ -425,7 +425,6 @@ export function setProjectSubscriptionMutationOptions() {
 			assertClientRequestContext(request)
 			return data
 		},
-		// Patch only this project: invalidating the list would refetch every page for one field.
 		onSuccess: (subscription, {projectId, subscribed}, context, {client}) => {
 			assertClientRequestContext(context.request)
 			client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
@@ -437,6 +436,19 @@ export function setProjectSubscriptionMutationOptions() {
 			success({message: i18n.global.t(subscribed
 				? 'task.subscription.subscribeSuccessProject'
 				: 'task.subscription.unsubscribeSuccessProject')})
+		},
+		// Refetching the list reloads every page, so it is only marked stale; sub projects
+		// inherit the subscription and pick it up on the next list load.
+		onSettled: async (_data, _error, {projectId}, context, {client}) => {
+			if (context && isClientRequestContextCurrent(context.request)) {
+				const list = client.getQueryData<ProjectListResult>(projectKeys.list())
+				const ids = list ? descendantIds(list.projects, projectId) : [projectId]
+				await Promise.all([
+					client.invalidateQueries({queryKey: projectKeys.list(), refetchType: 'none'}),
+					...ids.map(id => client.invalidateQueries({queryKey: projectKeys.detail(id)})),
+				])
+				assertClientRequestContext(context.request)
+			}
 		},
 	})
 }
