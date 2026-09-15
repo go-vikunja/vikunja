@@ -589,8 +589,8 @@
                 },
                 {
                     "key": "claimtimeout",
-                    "default_value": "24h",
-                    "comment": "How long a running migration's claim on the user's migration slot is trusted before another import for the same user may take it over. Only relevant when the instance crashed mid-import (normally the claim is released on success and failure). Real migrations can run longer than this; a takeover only happens after the timeout expires."
+                    "default_value": "5m",
+                    "comment": "How long a migration's claim on the user's migration slot may go without a heartbeat before another import for the same user may take it over. A running migration refreshes its heartbeat continuously, so a long-running import keeps its claim no matter how long it takes; a takeover only happens when the instance running it died mid-import (normally the claim is released on success and failure)."
                 },
                 {
                     "key": "todoist",

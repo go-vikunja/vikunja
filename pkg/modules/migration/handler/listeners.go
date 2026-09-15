@@ -183,6 +183,9 @@ func migrateInListener(ms migration.Migrator, event *MigrationRequestedEvent) (m
 		}
 	}()
 
+	stopHeartbeat := migration.StartRun(m.ID)
+	defer stopHeartbeat()
+
 	log.Debugf("[Migration] Starting migration %d from %s for user %d", m.ID, event.MigratorKind, event.User.ID)
 	err = ms.Migrate(event.User)
 	if err != nil {
