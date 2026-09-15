@@ -29,6 +29,7 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/notifications"
+	user2 "code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
 	"github.com/ThreeDotsLabs/watermill/message"
@@ -116,45 +117,54 @@ func (s *MigrationListener) Handle(msg *message.Message) (err error) {
 
 	m, err := migrateInListener(ms, event)
 	if err != nil {
-		migrationID := int64(0)
-		if m != nil {
-			migrationID = m.ID
-		}
-		log.Errorf("[Migration] Migration %d from %s for user %d failed. Error was: %s", migrationID, event.MigratorKind, event.User.ID, err.Error())
-
-		var nerr error
-		if config.SentryEnabled.GetBool() && shouldReportMigrationError(err) {
-			nerr = notifications.Notify(event.User, &MigrationFailedReportedNotification{
-				MigratorName: ms.Name(),
-			})
-			failure := &migrationFailedError{
-				MigratorKind:  event.MigratorKind,
-				OriginalError: err,
-			}
-			sentry.WithScope(func(scope *sentry.Scope) {
-				errorreport.ApplyFingerprint(scope, err, migrationFingerprint(event.MigratorKind, err)...)
-				sentry.CaptureException(failure)
-			})
-		} else {
-			nerr = notifications.Notify(event.User, &MigrationFailedNotification{
-				MigratorName: ms.Name(),
-				Error:        err,
-			})
-		}
-		if nerr != nil {
-			log.Errorf("[Migration] Could not send failed migration notification for migration %d to user %d, error was: %s", migrationID, event.User.ID, nerr.Error())
-		}
-
-		// Still need to finish the migration, otherwise restarting will not work
-		if m != nil {
-			err = migration.FinishMigration(m)
-			if err != nil {
-				log.Errorf("[Migration] Could not finish migration %d for user %d, error was: %s", m.ID, event.User.ID, err.Error())
-			}
-		}
+		reportMigrationFailure(event.User, event.MigratorKind, ms, m, err)
 	}
 
 	return nil // We do not want the queue to restart this job as we've already handled the error.
+}
+
+// reportMigrationFailure releases the claim so the user can retry.
+func reportMigrationFailure(u *user2.User, migratorKind string, ms migration.MigratorName, m *migration.Status, err error) {
+	migrationID := int64(0)
+	if m != nil {
+		migrationID = m.ID
+	}
+	log.Errorf("[Migration] Migration %d from %s for user %d failed. Error was: %s", migrationID, migratorKind, u.ID, err.Error())
+
+	// One condition for both, so the status never shows an error the failure mail wouldn't have.
+	reportedToUs := config.SentryEnabled.GetBool() && shouldReportMigrationError(err)
+	failStatus := func() error { return migration.FailMigrationWithDetail(m, err.Error()) }
+
+	var nerr error
+	if reportedToUs {
+		failStatus = func() error { return migration.FailMigration(m, migration.ErrorKindReported) }
+		nerr = notifications.Notify(u, &MigrationFailedReportedNotification{
+			MigratorName: ms.Name(),
+		})
+		failure := &migrationFailedError{
+			MigratorKind:  migratorKind,
+			OriginalError: err,
+		}
+		sentry.WithScope(func(scope *sentry.Scope) {
+			errorreport.ApplyFingerprint(scope, err, migrationFingerprint(migratorKind, err)...)
+			sentry.CaptureException(failure)
+		})
+	} else {
+		nerr = notifications.Notify(u, &MigrationFailedNotification{
+			MigratorName: ms.Name(),
+			Error:        err,
+		})
+	}
+	if nerr != nil {
+		log.Errorf("[Migration] Could not send failed migration notification for migration %d to user %d, error was: %s", migrationID, u.ID, nerr.Error())
+	}
+
+	// Still need to finish the migration, otherwise restarting will not work
+	if m != nil {
+		if ferr := failStatus(); ferr != nil {
+			log.Errorf("[Migration] Could not finish migration %d for user %d, error was: %s", m.ID, u.ID, ferr.Error())
+		}
+	}
 }
 
 func migrateInListener(ms migration.Migrator, event *MigrationRequestedEvent) (m *migration.Status, err error) {

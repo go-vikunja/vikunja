@@ -72,7 +72,7 @@ func StartMigration(ms migration.Migrator, u *user2.User) error {
 
 	if cc, ok := ms.(migration.CredentialsChecker); ok {
 		if err := cc.CheckCredentials(); err != nil {
-			releaseClaim(status, u, "failed credential check")
+			failClaim(status, u, "failed credential check", migration.ErrorKindCredentials)
 			return err
 		}
 	}
@@ -83,16 +83,17 @@ func StartMigration(ms migration.Migrator, u *user2.User) error {
 		User:              u,
 		MigrationStatusID: status.ID,
 	}); err != nil {
-		releaseClaim(status, u, "failed event dispatch")
+		failClaim(status, u, "failed event dispatch", migration.ErrorKindQueue)
 		return err
 	}
 
 	return nil
 }
 
-func releaseClaim(status *migration.Status, u *user2.User, reason string) {
-	if ferr := migration.FinishMigration(status); ferr != nil {
-		log.Errorf("[Migration] Could not release claim of migration %d for user %d after %s: %s", status.ID, u.ID, reason, ferr)
+// failClaim releases the claim of a migration that never got going; logReason only reaches our log.
+func failClaim(status *migration.Status, u *user2.User, logReason string, kind migration.ErrorKind) {
+	if ferr := migration.FailMigration(status, kind); ferr != nil {
+		log.Errorf("[Migration] Could not release claim of migration %d for user %d after %s: %s", status.ID, u.ID, logReason, ferr)
 	}
 }
 

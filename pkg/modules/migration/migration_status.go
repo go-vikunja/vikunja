@@ -37,11 +37,26 @@ type Status struct {
 	MigratorName string    `xorm:"varchar(255)" json:"migrator_name" readOnly:"true" doc:"The name of the migrator this status belongs to, e.g. \"todoist\"."`
 	StartedAt    time.Time `xorm:"not null" json:"started_at" readOnly:"true" doc:"When the last migration started. Zero value if the user never migrated from this service."`
 	FinishedAt   time.Time `xorm:"null" json:"finished_at" readOnly:"true" doc:"When the last migration finished. Zero value while a migration is still running or was never run."`
+	ErrorKind    ErrorKind `xorm:"varchar(50) null" json:"error_kind" readOnly:"true" doc:"Why the last migration failed, as a key the client translates: \"reported\", \"interrupted\", \"credentials\", \"queue\", \"upload\" or \"detail\". Empty when it succeeded, is still running or was never run."`
+	ErrorMessage string    `xorm:"text null" json:"error_message" readOnly:"true" doc:"The failure detail, only set when error_kind is \"detail\": the migration failed on the user's own data and this is the error itself, in English."`
 	// NULL until the running job's first beat, and for rows predating the heartbeat.
 	HeartbeatAt *time.Time `xorm:"null" json:"-"`
 	// ActiveUserID's unique index serializes migrations per account; finished rows use NULL.
 	ActiveUserID *int64 `xorm:"bigint null unique" json:"-"`
 }
+
+// ErrorKind is a failure reason the client renders in the user's language. A cause we can only
+// describe in prose is stored as ErrorKindDetail plus the error itself.
+type ErrorKind string
+
+const (
+	ErrorKindReported    ErrorKind = "reported"
+	ErrorKindInterrupted ErrorKind = "interrupted"
+	ErrorKindCredentials ErrorKind = "credentials"
+	ErrorKindQueue       ErrorKind = "queue"
+	ErrorKindUpload      ErrorKind = "upload"
+	ErrorKindDetail      ErrorKind = "detail"
+)
 
 // TableName holds the table name for the migration status table
 func (s *Status) TableName() string {
@@ -158,8 +173,8 @@ func releaseStaleClaims(s *xorm.Session, userID int64) error {
 
 	_, err = s.
 		Where("active_user_id = ? AND COALESCE(heartbeat_at, started_at) < ?", userID, staleBefore).
-		Cols("finished_at", "active_user_id").
-		Update(&Status{FinishedAt: time.Now()})
+		Cols("finished_at", "active_user_id", "error_kind", "error_message").
+		Update(&Status{FinishedAt: time.Now(), ErrorKind: ErrorKindInterrupted})
 	if err != nil {
 		_ = s.Rollback()
 		return err
@@ -167,16 +182,38 @@ func releaseStaleClaims(s *xorm.Session, userID int64) error {
 	return nil
 }
 
-// FinishMigration records completion and releases the user's claim.
-func FinishMigration(status *Status) (err error) {
+// FinishMigration records a successful migration and releases the user's claim.
+func FinishMigration(status *Status) error {
+	return finishMigration(status, "", "")
+}
+
+// FailMigration records a failed migration and releases the user's claim.
+func FailMigration(status *Status, kind ErrorKind) error {
+	// An empty kind would read as success.
+	if kind == "" {
+		kind = ErrorKindReported
+	}
+	return finishMigration(status, kind, "")
+}
+
+// FailMigrationWithDetail records a failure caused by the user's own data, where detail is the
+// error itself: untranslatable, the same text the failure mail sends.
+func FailMigrationWithDetail(status *Status, detail string) error {
+	return finishMigration(status, ErrorKindDetail, detail)
+}
+
+func finishMigration(status *Status, kind ErrorKind, detail string) (err error) {
 	s := db.NewSession()
 	defer s.Close()
 
 	status.FinishedAt = time.Now()
 	status.ActiveUserID = nil
+	status.ErrorKind = kind
+	status.ErrorMessage = detail
 
-	// Cols is required: a plain Update skips nil pointers, so the claim would never be released.
-	_, err = s.Where("id = ?", status.ID).Cols("finished_at", "active_user_id").Update(status)
+	// Cols is required: a plain Update skips nil pointers and empty strings, so neither the claim
+	// nor a previous attempt's error would ever be cleared.
+	_, err = s.Where("id = ?", status.ID).Cols("finished_at", "active_user_id", "error_kind", "error_message").Update(status)
 	if err != nil {
 		_ = s.Rollback()
 		return
