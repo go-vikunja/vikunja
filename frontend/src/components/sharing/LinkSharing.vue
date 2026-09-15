@@ -210,7 +210,7 @@ import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
 import {success} from '@/message'
 import {getDisplayName} from '@/models/user'
 import {useConfigStore} from '@/stores/config'
-import {useProjectNavigation} from '@/composables/useProjectNavigation'
+import {useProjects} from '@/composables/useProjects'
 
 const props = withDefaults(defineProps<{
 	projectId?: number,
@@ -229,9 +229,9 @@ const showDeleteModal = ref(false)
 const linkIdToDelete = ref(0)
 const showNewForm = ref(false)
 
-const projectNavigation = useProjectNavigation()
+const projectList = useProjects()
 
-const availableViews = computed(() => projectNavigation.projects[props.projectId]?.views || [])
+const availableViews = computed(() => projectList.projects[props.projectId]?.views || [])
 const copy = useCopyToClipboard()
 watch(
 	() => props.projectId,

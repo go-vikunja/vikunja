@@ -22,17 +22,17 @@ import {useUpdateProjectMutation} from '@/client/queries/projects'
 import {useTitle} from '@/composables/useTitle'
 
 import {useBaseStore} from '@/stores/base'
-import {useProjectNavigation} from '@/composables/useProjectNavigation'
+import {useProjects} from '@/composables/useProjects'
 
 defineOptions({name: 'ProjectSettingArchive'})
 
 const {t} = useI18n({useScope: 'global'})
-const projectStore = useProjectNavigation()
+const projectList = useProjects()
 const updateMutation = useUpdateProjectMutation(t('project.archive.success'))
 const router = useRouter()
 const route = useRoute()
 
-const project = computed(() => projectStore.projects[route.params.projectId])
+const project = computed(() => projectList.projects[route.params.projectId])
 useTitle(() => project.value?.title ? t('project.archive.title', {project: project.value.title}) : '')
 
 async function archiveProject() {

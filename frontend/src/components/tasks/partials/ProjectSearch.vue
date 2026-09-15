@@ -26,7 +26,7 @@
 import {reactive, ref, watch} from 'vue'
 
 import {normalizeProject, type ProjectResponse} from '@/client/queries/projects'
-import {useProjectNavigation} from '@/composables/useProjectNavigation'
+import {useProjects} from '@/composables/useProjects'
 import {getProjectTitle} from '@/helpers/getProjectTitle'
 
 import Multiselect from '@/components/input/Multiselect.vue'
@@ -56,14 +56,14 @@ watch(
 	},
 )
 
-const projectNavigation = useProjectNavigation()
+const projectList = useProjects()
 
 function projectAncestors(option: unknown): ProjectResponse[] {
 	if (typeof option !== 'object' || option === null || !('id' in option)) {
 		return []
 	}
 
-	return projectNavigation.getAncestors(option as ProjectResponse)
+	return projectList.getAncestors(option as ProjectResponse)
 }
 
 function projectOptionTitle(option: unknown): string {
@@ -81,12 +81,12 @@ function findProjects(query: string) {
 	}
 	
 	if (props.savedFiltersOnly) {
-		const found = projectNavigation.searchSavedFilter(query)
+		const found = projectList.searchSavedFilter(query)
 		foundProjects.value = found.filter(props.filter)
 		return
 	}
 	
-	const found = projectNavigation.searchProject(query)
+	const found = projectList.searchProject(query)
 	foundProjects.value = found.filter(props.filter)
 }
 

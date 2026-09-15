@@ -34,7 +34,7 @@ import {computed, ref, watch, nextTick} from 'vue'
 import Filters from '@/components/project/partials/Filters.vue'
 
 import {type TaskFilterParams} from '@/services/taskCollection'
-import {useProjectNavigation} from '@/composables/useProjectNavigation'
+import {useProjects} from '@/composables/useProjects'
 
 const props = defineProps<{
 	modelValue: TaskFilterParams,
@@ -46,7 +46,7 @@ const emit = defineEmits<{
 	'update:modelValue': [value: TaskFilterParams]
 }>()
 
-const projectNavigation = useProjectNavigation()
+const projectList = useProjects()
 
 const value = ref<TaskFilterParams>({})
 const filtersRef = ref()
@@ -92,7 +92,7 @@ const filterFromView = computed(() => {
 		return
 	}
 	
-	const project = projectNavigation.projects[props.projectId]
+	const project = projectList.projects[props.projectId]
 	if (!project) {
 		return
 	}

@@ -2,7 +2,7 @@ import {useI18n} from 'vue-i18n'
 
 import type {ITask} from '@/modelTypes/ITask'
 import {useTaskStore} from '@/stores/tasks'
-import {useProjectNavigation} from '@/composables/useProjectNavigation'
+import {useProjects} from '@/composables/useProjects'
 import {success, error} from '@/message'
 
 /**
@@ -58,7 +58,7 @@ export interface TaskDragToProjectResult {
 export function useTaskDragToProject() {
 	const {t} = useI18n({useScope: 'global'})
 	const taskStore = useTaskStore()
-	const projectNavigation = useProjectNavigation()
+	const projectList = useProjects()
 
 	/**
 	 * Attempts to move a dragged task to a project at the given mouse position.
@@ -88,7 +88,7 @@ export function useTaskDragToProject() {
 			return {moved: false, targetProjectId}
 		}
 
-		const targetProject = projectNavigation.projects[targetProjectId]
+		const targetProject = projectList.projects[targetProjectId]
 
 		try {
 			await taskStore.update({

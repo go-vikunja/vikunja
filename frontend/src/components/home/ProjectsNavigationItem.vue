@@ -92,7 +92,7 @@
 
 <script setup lang="ts">
 import {computed, ref, onUnmounted, watch} from 'vue'
-import {useProjectNavigation} from '@/composables/useProjectNavigation'
+import {useProjects} from '@/composables/useProjects'
 import {useCurrentProject} from '@/composables/useCurrentProject'
 import {useTaskStore} from '@/stores/tasks'
 import {useStorage} from '@vueuse/core'
@@ -173,7 +173,7 @@ const isDropTarget = computed(() => {
 		&& props.project.max_permission > PERMISSIONS.READ
 })
 
-const projectStore = useProjectNavigation()
+const projectList = useProjects()
 const projectFavoriteMutation = usePatchProjectFavoriteMutation()
 const savedFilterFavoriteMutation = useLegacySavedFilterFavoriteMutation()
 const {currentProject} = useCurrentProject()
@@ -192,7 +192,7 @@ const childProjectsOpen = computed({
 })
 
 const childProjects = computed(() => {
-	return projectStore.getChildProjects(props.project.id)
+	return projectList.getChildProjects(props.project.id)
 		.filter(p => !p.is_archived)
 		.sort((a, b) => a.position - b.position)
 })

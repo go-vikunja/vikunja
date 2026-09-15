@@ -34,7 +34,7 @@
 				class="subtitle"
 			>
 				<template
-					v-for="p in projectNavigation.getAncestors(project)"
+					v-for="p in projectList.getAncestors(project)"
 					:key="p.id"
 				>
 					<a
@@ -708,7 +708,7 @@ import {playPopSound} from '@/helpers/playPop'
 
 import {useTaskStore} from '@/stores/tasks'
 import {useKanbanStore} from '@/stores/kanban'
-import {useProjectNavigation} from '@/composables/useProjectNavigation'
+import {useProjects} from '@/composables/useProjects'
 import {useAuthStore} from '@/stores/auth'
 import {useBaseStore} from '@/stores/base'
 import {useConfigStore} from '@/stores/config'
@@ -732,7 +732,7 @@ const router = useRouter()
 const route = useRoute()
 const {t} = useI18n({useScope: 'global'})
 
-const projectNavigation = useProjectNavigation()
+const projectList = useProjects()
 const taskStore = useTaskStore()
 const configStore = useConfigStore()
 const timeTrackingEnabled = computed(() => configStore.isProFeatureEnabled(PRO_FEATURE.TIME_TRACKING))
@@ -771,7 +771,7 @@ const lastProject = computed(() => {
 
 	const id = parseInt(projectMatch[1])
 
-	return projectNavigation.projects[id] ?? null
+	return projectList.projects[id] ?? null
 })
 
 const lastProjectOrTaskProject = computed(() => lastProject.value ?? project.value)
@@ -814,7 +814,7 @@ const taskColor = ref<ITask['hexColor']>('')
 // Used to avoid flashing of empty elements if the task content is not yet loaded.
 const visible = ref(false)
 
-const project = computed(() => projectNavigation.projects[task.value.projectId])
+const project = computed(() => projectList.projects[task.value.projectId])
 
 const projectRoute = computed(() => ({
 	name: 'project.index',

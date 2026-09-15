@@ -36,7 +36,7 @@
 			/>
 		</div>
 		<ShowTasks
-			v-if="projectStore.hasProjects"
+			v-if="projectList.hasProjects"
 			:key="showTasksKey"
 			:label-ids="labelIds"
 			class="show-tasks"
@@ -61,13 +61,13 @@ import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {formatDateSince, formatDisplayDate} from '@/helpers/time/formatDate'
 import {useDaytimeSalutation} from '@/composables/useDaytimeSalutation'
 
-import {useProjectNavigation} from '@/composables/useProjectNavigation'
+import {useProjects} from '@/composables/useProjects'
 import {useAuthStore} from '@/stores/auth'
 
 const salutation = useDaytimeSalutation()
 
 const authStore = useAuthStore()
-const projectStore = useProjectNavigation()
+const projectList = useProjects()
 const route = useRoute()
 const router = useRouter()
 
@@ -78,7 +78,7 @@ const projectHistory = computed(() => {
 	}
 	
 	return getHistory()
-		.map(l => projectStore.projects[l.id])
+		.map(l => projectList.projects[l.id])
 		.filter(l => Boolean(l))
 })
 

@@ -135,7 +135,7 @@ import XLabel from '@/components/tasks/partials/Label.vue'
 import SingleTaskInlineReadonly from '@/components/tasks/partials/SingleTaskInlineReadonly.vue'
 
 import {useBaseStore} from '@/stores/base'
-import {useProjectNavigation} from '@/composables/useProjectNavigation'
+import {useProjects} from '@/composables/useProjects'
 import {useCurrentProject} from '@/composables/useCurrentProject'
 import {useTaskStore} from '@/stores/tasks'
 import {useAuthStore} from '@/stores/auth'
@@ -160,7 +160,7 @@ const {t} = useI18n({useScope: 'global'})
 const router = useRouter()
 
 const baseStore = useBaseStore()
-const projectNavigation = useProjectNavigation()
+const projectList = useProjects()
 const createProjectMutation = useCreateProjectMutation()
 const {currentProject: selectedProject} = useCurrentProject()
 const {filterLabelsByQuery, getLabelsByExactTitles} = useLabels()
@@ -253,7 +253,7 @@ const foundProjects = computed(() => {
 	const {project, text, labels, assignees} = parsedQuery.value
 
 	if (project !== null) {
-		return projectNavigation.searchProjectAndFilter(project ?? text)
+		return projectList.searchProjectAndFilter(project ?? text)
 			.filter(p => Boolean(p))
 	}
 
@@ -263,11 +263,11 @@ const foundProjects = computed(() => {
 
 	if (text === '') {
 		const history = getHistory()
-		return history.map((p) => projectNavigation.projects[p.id])
+		return history.map((p) => projectList.projects[p.id])
 			.filter(p => Boolean(p))
 	}
 
-	return projectNavigation.searchProjectAndFilter(project ?? text)
+	return projectList.searchProjectAndFilter(project ?? text)
 		.filter(p => Boolean(p))
 })
 
@@ -339,7 +339,7 @@ function isDone(item: unknown): boolean {
 
 const loading = computed(() =>
 	taskService.loading ||
-	projectNavigation.isLoading ||
+	projectList.isLoading ||
 	teamService.loading,
 )
 
@@ -469,7 +469,7 @@ function searchTasks() {
 	let filter = ''
 
 	if (projectName !== null) {
-		const project = projectNavigation.findProjectByExactname(projectName)
+		const project = projectList.findProjectByExactname(projectName)
 		if (project !== null) {
 			filter += ' project = ' + project.id
 		}

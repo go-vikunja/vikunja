@@ -9,8 +9,8 @@ import type {ProjectResponse} from '@/client/queries/projects'
 
 const {projects} = vi.hoisted(() => ({projects: {} as Record<number, ProjectResponse>}))
 
-vi.mock('@/composables/useProjectNavigation', () => ({
-	useProjectNavigation: () => ({
+vi.mock('@/composables/useProjects', () => ({
+	useProjects: () => ({
 		projects,
 	}),
 }))

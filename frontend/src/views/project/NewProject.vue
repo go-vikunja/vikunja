@@ -19,7 +19,7 @@
 			@keyup.esc="$router.back()"
 		/>
 		<FormField
-			v-if="projectStore.hasProjects"
+			v-if="projectList.hasProjects"
 			:label="$t('project.parent')"
 		>
 			<ProjectSearch v-model="parentProject" />
@@ -40,7 +40,7 @@ import ColorPicker from '@/components/input/ColorPicker.vue'
 import FormField from '@/components/input/FormField.vue'
 
 import {useTitle} from '@/composables/useTitle'
-import {useProjectNavigation} from '@/composables/useProjectNavigation'
+import {useProjects} from '@/composables/useProjects'
 import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
 import {createProjectDraft, useCreateProjectMutation, type ProjectResponse} from '@/client/queries/projects'
 
@@ -56,13 +56,13 @@ useTitle(() => t('project.create.header'))
 
 const showError = ref(false)
 const project = reactive(createProjectDraft())
-const projectStore = useProjectNavigation()
+const projectList = useProjects()
 const parentProject = ref<ProjectResponse | null>(null)
 const isSubmitting = ref(false)
 
 watch(
 	() => props.parentProjectId,
-	() => parentProject.value = projectStore.projects[props.parentProjectId],
+	() => parentProject.value = projectList.projects[props.parentProjectId],
 	{immediate: true},
 )
 

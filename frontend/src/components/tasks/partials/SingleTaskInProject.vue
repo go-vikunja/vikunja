@@ -226,7 +226,7 @@ import TaskService from '@/services/task'
 import {formatDisplayDate, formatISO, formatDateLong} from '@/helpers/time/formatDate'
 import {success} from '@/message'
 
-import {useProjectNavigation} from '@/composables/useProjectNavigation'
+import {useProjects} from '@/composables/useProjects'
 import {useCurrentProject} from '@/composables/useCurrentProject'
 import {useTaskStore} from '@/stores/tasks'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
@@ -281,10 +281,10 @@ watch(
 	},
 )
 
-const projectNavigation = useProjectNavigation()
+const projectList = useProjects()
 const taskStore = useTaskStore()
 
-const project = computed(() => projectNavigation.projects[task.value.projectId])
+const project = computed(() => projectList.projects[task.value.projectId])
 const projectColor = computed(() => project.value?.hex_color ?? '')
 
 const showProjectSeparately = computed(() => !props.showProject && currentProject.value?.id !== task.value.projectId && project.value)

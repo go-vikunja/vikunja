@@ -43,7 +43,7 @@ import ProjectsNavigationItem from '@/components/home/ProjectsNavigationItem.vue
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 import {useUpdateProjectMutation, type ProjectResponse} from '@/client/queries/projects'
 
-import {useProjectNavigation} from '@/composables/useProjectNavigation'
+import {useProjects} from '@/composables/useProjects'
 
 const props = defineProps<{
 	modelValue?: ProjectResponse[],
@@ -56,7 +56,7 @@ const emit = defineEmits<{
 
 const drag = ref(false)
 
-const projectStore = useProjectNavigation()
+const projectList = useProjects()
 const updateMutation = useUpdateProjectMutation()
 
 // Vue draggable will modify the projects list as it changes their position which will not work on a prop.
@@ -86,12 +86,12 @@ async function saveProjectPosition(e: SortableEvent) {
 	if (!projectIdStr) return
 
 	const projectId = parseInt(projectIdStr)
-	const project = projectStore.projects[projectId]
+	const project = projectList.projects[projectId]
 	if (!project) return
 
 	const parentNode = e.to.parentNode as HTMLElement | null
 	const parentProjectIdFromDom = parentNode?.dataset?.projectId ? parseInt(parentNode.dataset.projectId) : 0
-	const parentProjectId = projectStore.getEffectiveParentProjectId(project, parentProjectIdFromDom)
+	const parentProjectId = projectList.getEffectiveParentProjectId(project, parentProjectIdFromDom)
 	const projectBefore = projectsActive[newIndex - 1] ?? null
 	const projectAfter = projectsActive[newIndex + 1] ?? null
 	projectUpdating.value[project.id] = true

@@ -45,7 +45,7 @@ import type {IBucket} from '@/modelTypes/IBucket'
 
 import {PROJECT_VIEW_KINDS} from '@/constants/projectView'
 
-import {useProjectNavigation} from '@/composables/useProjectNavigation'
+import {useProjects} from '@/composables/useProjects'
 import {useKanbanStore} from '@/stores/kanban'
 import {useBaseStore} from '@/stores/base'
 
@@ -70,11 +70,11 @@ const emit = defineEmits<{
 
 const {t} = useI18n({useScope: 'global'})
 
-const projectNavigation = useProjectNavigation()
+const projectList = useProjects()
 const kanbanStore = useKanbanStore()
 const baseStore = useBaseStore()
 
-const project = computed(() => projectNavigation.projects[props.task.projectId])
+const project = computed(() => projectList.projects[props.task.projectId])
 
 // If the project has exactly one manual kanban view, always use it.
 // If there are multiple, only show the selector when the active view is one of them.

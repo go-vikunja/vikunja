@@ -1,14 +1,14 @@
 import {computed, defineAsyncComponent, h, shallowRef, type VNode, watchEffect} from 'vue'
 import {useRoute, useRouter, type RouteLocationNormalizedGeneric} from 'vue-router'
 import {useBaseStore} from '@/stores/base'
-import {useProjectNavigation} from '@/composables/useProjectNavigation'
+import {useProjects} from '@/composables/useProjects'
 
 export function useRouteWithModal() {
 	const router = useRouter()
 	const route = useRoute()
 	const backdropView = computed(() => route.fullPath ? window.history.state?.backdropView : undefined)
 	const baseStore = useBaseStore()
-	const projectNavigation = useProjectNavigation()
+	const projectList = useProjects()
 
 	const routeWithModal = computed(() => {
 		return backdropView.value
@@ -73,7 +73,7 @@ export function useRouteWithModal() {
 			let viewId: string | number | undefined = match[1]
 
 			if (!viewId) {
-				const project = projectNavigation.projects[baseStore.currentProjectId]
+				const project = projectList.projects[baseStore.currentProjectId]
 				viewId = project?.views?.[0]?.id
 			}
 

@@ -38,18 +38,18 @@ import {useI18n} from 'vue-i18n'
 import {useRoute, useRouter} from 'vue-router'
 import {useDeleteProjectMutation} from '@/client/queries/projects'
 import Loading from '@/components/misc/Loading.vue'
-import {useProjectNavigation} from '@/composables/useProjectNavigation'
+import {useProjects} from '@/composables/useProjects'
 import TaskService from '@/services/task'
 
 const {t} = useI18n({useScope: 'global'})
-const projectStore = useProjectNavigation()
+const projectList = useProjects()
 const deleteMutation = useDeleteProjectMutation()
 const route = useRoute()
 const router = useRouter()
 
 const totalTasks = ref<number | null>(null)
 
-const project = computed(() => projectStore.projects[route.params.projectId])
+const project = computed(() => projectList.projects[route.params.projectId])
 const projectIdsToDelete = ref<number[]>([])
 
 watchEffect(
@@ -58,7 +58,7 @@ watchEffect(
 			return
 		}
 
-		projectIdsToDelete.value = projectStore
+		projectIdsToDelete.value = projectList
 			.getChildProjects(parseInt(route.params.projectId))
 			.map(p => p.id)
 

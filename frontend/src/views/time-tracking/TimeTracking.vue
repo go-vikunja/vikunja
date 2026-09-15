@@ -132,7 +132,7 @@ import UserService from '@/services/user'
 import {useTitle} from '@/composables/useTitle'
 import {useTimeTrackingStore} from '@/stores/timeTracking'
 import {useBaseStore} from '@/stores/base'
-import {useProjectNavigation} from '@/composables/useProjectNavigation'
+import {useProjects} from '@/composables/useProjects'
 
 import type {ProjectResponse} from '@/client/queries/projects'
 import type {ITask} from '@/modelTypes/ITask'
@@ -144,7 +144,7 @@ const route = useRoute()
 const router = useRouter()
 const timeTrackingStore = useTimeTrackingStore()
 const baseStore = useBaseStore()
-const projectNavigation = useProjectNavigation()
+const projectList = useProjects()
 
 useTitle(() => t('timeTracking.title'))
 
@@ -285,7 +285,7 @@ async function restoreFromQuery() {
 	// already carries the full filter — and the modal shows the real names.
 	await Promise.all([
 		typeof q.project === 'string'
-			? projectNavigation.loadProject(Number(q.project))
+			? projectList.loadProject(Number(q.project))
 				.then(p => { selectedProject.value = p })
 				.catch(() => { /* project gone — drop the filter */ })
 			: Promise.resolve(),

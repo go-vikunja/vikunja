@@ -48,7 +48,7 @@ import {parseTaskIdFromUrl} from '@/helpers/parseTaskIdFromUrl'
 import {fetchTaskById} from '@/helpers/fetchTaskById'
 import {taskCacheVersion, taskCacheIdentityVersion} from '@/helpers/taskCache'
 import {useBaseStore} from '@/stores/base'
-import {useProjectNavigation} from '@/composables/useProjectNavigation'
+import {useProjects} from '@/composables/useProjects'
 import TaskGlanceTooltip from '@/components/tasks/partials/TaskGlanceTooltip.vue'
 
 import {taskLinkCurrentProjectIdKey} from './taskLinkContext'
@@ -68,7 +68,7 @@ const emit = defineEmits<{
 }>()
 
 const baseStore = useBaseStore()
-const projectNavigation = useProjectNavigation()
+const projectList = useProjects()
 const providedProjectId = inject(taskLinkCurrentProjectIdKey, null)
 
 const currentProjectId = computed(() => providedProjectId?.value ?? (baseStore.currentProjectId || undefined))
@@ -120,7 +120,7 @@ const projectPrefix = computed(() => {
 	if (currentProjectId.value === projectId) {
 		return ''
 	}
-	const project = projectNavigation.projects[projectId]
+	const project = projectList.projects[projectId]
 	return project ? getProjectTitle(project) : ''
 })
 

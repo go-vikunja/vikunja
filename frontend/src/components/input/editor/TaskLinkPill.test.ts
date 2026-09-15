@@ -21,9 +21,9 @@ vi.mock('@/stores/base', () => ({
 	useBaseStore: () => baseStore,
 }))
 
-const projectNavigation = {projects: {} as Record<number, {id: number, title: string}>}
-vi.mock('@/composables/useProjectNavigation', () => ({
-	useProjectNavigation: () => projectNavigation,
+const projectList = {projects: {} as Record<number, {id: number, title: string}>}
+vi.mock('@/composables/useProjects', () => ({
+	useProjects: () => projectList,
 }))
 
 vi.mock('@/helpers/getProjectTitle', () => ({
@@ -71,7 +71,7 @@ describe('TaskLinkPill', () => {
 	beforeEach(() => {
 		setActivePinia(createPinia())
 		baseStore.currentProjectId = 0
-		projectNavigation.projects = {}
+		projectList.projects = {}
 		fetchTaskById.mockReset()
 	})
 
@@ -107,7 +107,7 @@ describe('TaskLinkPill', () => {
 	})
 
 	it('shows the project name when the task lives in another project', async () => {
-		projectNavigation.projects = {2: {id: 2, title: 'Other project'}}
+		projectList.projects = {2: {id: 2, title: 'Other project'}}
 		baseStore.currentProjectId = 1
 		fetchTaskById.mockResolvedValue(makeTask({projectId: 2}))
 
@@ -117,7 +117,7 @@ describe('TaskLinkPill', () => {
 	})
 
 	it('hides the project name when the task is in the current project', async () => {
-		projectNavigation.projects = {1: {id: 1, title: 'Current'}}
+		projectList.projects = {1: {id: 1, title: 'Current'}}
 		baseStore.currentProjectId = 1
 		fetchTaskById.mockResolvedValue(makeTask({projectId: 1}))
 
@@ -127,7 +127,7 @@ describe('TaskLinkPill', () => {
 	})
 
 	it('prefers the project id provided by the surrounding view', async () => {
-		projectNavigation.projects = {1: {id: 1, title: 'Current'}, 2: {id: 2, title: 'Viewed'}}
+		projectList.projects = {1: {id: 1, title: 'Current'}, 2: {id: 2, title: 'Viewed'}}
 		baseStore.currentProjectId = 1
 		fetchTaskById.mockResolvedValue(makeTask({projectId: 2}))
 

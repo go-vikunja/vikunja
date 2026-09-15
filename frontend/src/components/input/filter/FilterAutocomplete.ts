@@ -16,7 +16,7 @@ import {
 } from '@/helpers/filters'
 
 import {useLabels} from '@/composables/useLabels'
-import {useProjectNavigation} from '@/composables/useProjectNavigation'
+import {useProjects} from '@/composables/useProjects'
 import UserService from '@/services/user'
 import ProjectUserService from '@/services/projectUsers'
 import type { IUser } from '@/modelTypes/IUser'
@@ -104,7 +104,7 @@ export default Extension.create<FilterAutocompleteOptions>({
 
 	addProseMirrorPlugins() {
 		const {filterLabelsByQuery} = useLabels()
-		const projectNavigation = useProjectNavigation()
+		const projectList = useProjects()
 		const userService = new UserService()
 		const projectUserService = new ProjectUserService()
 
@@ -253,7 +253,7 @@ export default Extension.create<FilterAutocompleteOptions>({
 				}
 
 				if (fieldType === 'projects' && !this.options.projectId) {
-					return projectNavigation.searchProject(autocompleteContext.search) as SuggestionItem[]
+					return projectList.searchProject(autocompleteContext.search) as SuggestionItem[]
 				}
 			} catch (error) {
 				console.error('Error fetching suggestions:', error)

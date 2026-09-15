@@ -116,7 +116,7 @@ import {ref, computed, watch} from 'vue'
 import Card from '@/components/misc/Card.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
-import {useProjectNavigation} from '@/composables/useProjectNavigation'
+import {useProjects} from '@/composables/useProjects'
 import {useAuthStore} from '@/stores/auth'
 import {fetchTaskById} from '@/helpers/fetchTaskById'
 import {getProjectTitle} from '@/helpers/getProjectTitle'
@@ -147,7 +147,7 @@ const emit = defineEmits<{
 	edit: [entry: ITimeEntry]
 }>()
 
-const projectNavigation = useProjectNavigation()
+const projectList = useProjects()
 const {store: timeFormat} = useTimeFormat()
 
 // Only the author can update/delete (enforced server-side); shared lists include
@@ -177,8 +177,8 @@ function entrySeconds(entry: ITimeEntry): number {
 const rows = computed(() => props.entries.map(entry => {
 	const task = entry.taskId > 0 ? tasks.value[entry.taskId] : undefined
 	const projectId = task?.projectId ?? (entry.projectId > 0 ? entry.projectId : 0)
-	const project = projectId > 0 ? projectNavigation.projects[projectId] : undefined
-	const ancestors = project ? projectNavigation.getAncestors(project) : []
+	const project = projectId > 0 ? projectList.projects[projectId] : undefined
+	const ancestors = project ? projectList.getAncestors(project) : []
 
 	return {
 		entry,

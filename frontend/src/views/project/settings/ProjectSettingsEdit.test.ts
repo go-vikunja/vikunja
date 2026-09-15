@@ -32,8 +32,8 @@ vi.mock('@/composables/useProject', () => ({
 	}),
 }))
 
-vi.mock('@/composables/useProjectNavigation', () => ({
-	useProjectNavigation: () => ({projects: state.projects}),
+vi.mock('@/composables/useProjects', () => ({
+	useProjects: () => ({projects: state.projects}),
 }))
 
 vi.mock('@/stores/base', () => ({

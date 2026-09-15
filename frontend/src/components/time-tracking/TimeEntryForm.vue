@@ -125,7 +125,7 @@ import TaskModel from '@/models/task'
 import {smartFillStart} from '@/helpers/time/smartFillStart'
 import {useTimeTrackingStore} from '@/stores/timeTracking'
 import {useAuthStore} from '@/stores/auth'
-import {useProjectNavigation} from '@/composables/useProjectNavigation'
+import {useProjects} from '@/composables/useProjects'
 
 import type {ProjectResponse} from '@/client/queries/projects'
 import type {ITask} from '@/modelTypes/ITask'
@@ -151,7 +151,7 @@ const emit = defineEmits<{
 
 const timeTrackingStore = useTimeTrackingStore()
 const authStore = useAuthStore()
-const projectNavigation = useProjectNavigation()
+const projectList = useProjects()
 
 const isEditing = computed(() => props.entry != null)
 
@@ -261,7 +261,7 @@ watch(() => props.entry, async entry => {
 		}
 	} else if (entry.projectId > 0) {
 		selectedTask.value = null
-		selectedProject.value = projectNavigation.projects[entry.projectId] ?? null
+		selectedProject.value = projectList.projects[entry.projectId] ?? null
 	}
 }, {immediate: true})
 

@@ -257,10 +257,10 @@
 									</td>
 									<td v-if="activeColumns.project">
 										<RouterLink
-											v-if="projectStore.projects[t.projectId]"
+											v-if="projectList.projects[t.projectId]"
 											:to="{ name: 'project.index', params: { projectId: t.projectId } }"
 										>
-											{{ projectStore.projects[t.projectId].title }}
+											{{ projectList.projects[t.projectId].title }}
 										</RouterLink>
 									</td>
 									<td v-if="activeColumns.title">
@@ -367,7 +367,7 @@ import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 import {getTaskIdentifier} from '@/models/task'
 import { camelCase } from 'change-case'
 import {isSavedFilter} from '@/services/savedFilter'
-import {useProjectNavigation} from '@/composables/useProjectNavigation'
+import {useProjects} from '@/composables/useProjects'
 
 const props = defineProps<{
 	isLoadingProject: boolean,
@@ -375,7 +375,7 @@ const props = defineProps<{
 	viewId: number,
 }>()
 
-const projectStore = useProjectNavigation()
+const projectList = useProjects()
 
 const columnsTrigger = ref<ComponentPublicInstance | null>(null)
 const columnsTriggerEl = computed<HTMLElement | null>(() => (columnsTrigger.value?.$el as HTMLElement) ?? null)

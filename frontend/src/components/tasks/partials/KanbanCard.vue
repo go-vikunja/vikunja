@@ -146,7 +146,7 @@ import {useTaskStore} from '@/stores/tasks'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 import {playPopSound} from '@/helpers/playPop'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
-import {useProjectNavigation} from '@/composables/useProjectNavigation'
+import {useProjects} from '@/composables/useProjects'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 
 const props = withDefaults(defineProps<{
@@ -167,14 +167,14 @@ const loadingInternal = ref(false)
 
 const color = computed(() => getHexColor(props.task.hexColor))
 
-const projectNavigation = useProjectNavigation()
+const projectList = useProjects()
 
 const projectTitle = computed(() => {
 	if (props.projectId === props.task.projectId) {
 		return
 	}
 	
-	const project = projectNavigation.projects[props.task.projectId]
+	const project = projectList.projects[props.task.projectId]
 	return project?.title
 })
 

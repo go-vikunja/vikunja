@@ -114,7 +114,7 @@ import ColorBubble from '@/components/misc/ColorBubble.vue'
 
 import {formatDisplayDate, formatISO, formatDateLong} from '@/helpers/time/formatDate'
 
-import {useProjectNavigation} from '@/composables/useProjectNavigation'
+import {useProjects} from '@/composables/useProjects'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 
 const props = withDefaults(defineProps<{
@@ -124,9 +124,9 @@ const props = withDefaults(defineProps<{
 	showProject: false,
 })
 
-const projectNavigation = useProjectNavigation()
+const projectList = useProjects()
 
-const project = computed(() => projectNavigation.projects[props.task.projectId])
+const project = computed(() => projectList.projects[props.task.projectId])
 </script>
 
 <style lang="scss" scoped>

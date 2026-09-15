@@ -33,7 +33,7 @@ import ErrorMessage from '@/components/misc/Error.vue'
 
 import {useTitle} from '@/composables/useTitle'
 import {useProject} from '@/composables/useProject'
-import {useProjectNavigation} from '@/composables/useProjectNavigation'
+import {useProjects} from '@/composables/useProjects'
 import type {ProjectResponse} from '@/client/queries/projects'
 import {useDuplicateProjectMutation} from '@/client/queries/projects'
 
@@ -42,7 +42,7 @@ useTitle(() => t('project.duplicate.title'))
 
 const route = useRoute()
 const router = useRouter()
-const projectStore = useProjectNavigation()
+const projectList = useProjects()
 
 const {project, isLoading, isLoaded, error: loadError} = useProject(() => Number(route.params.projectId))
 const duplicateProject = useDuplicateProjectMutation()
@@ -58,7 +58,7 @@ const loadingModel = computed({
 	},
 })
 watch(
-	() => projectStore.projects[project.value.parent_project_id],
+	() => projectList.projects[project.value.parent_project_id],
 	parent => parentProject.value = parent ?? null,
 	{immediate: true},
 )

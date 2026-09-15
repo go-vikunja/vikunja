@@ -86,7 +86,7 @@
 		</nav>
 
 		<Loading
-			v-if="projectStore.isLoading"
+			v-if="projectList.isLoading"
 			variant="small"
 		/>
 		<template v-else>
@@ -149,23 +149,23 @@ import Logo from '@/components/home/Logo.vue'
 import Loading from '@/components/misc/Loading.vue'
 
 import {useBaseStore} from '@/stores/base'
-import {useProjectNavigation} from '@/composables/useProjectNavigation'
+import {useProjects} from '@/composables/useProjects'
 import {useConfigStore} from '@/stores/config'
 import {PRO_FEATURE} from '@/constants/proFeatures'
 import ProjectsNavigation from '@/components/home/ProjectsNavigation.vue'
 import {useSidebarResize} from '@/composables/useSidebarResize'
 
 const baseStore = useBaseStore()
-const projectStore = useProjectNavigation()
+const projectList = useProjects()
 const configStore = useConfigStore()
 
 const timeTrackingEnabled = computed(() => configStore.isProFeatureEnabled(PRO_FEATURE.TIME_TRACKING))
 
 const {sidebarWidth, isResizing, startResize, isMobile} = useSidebarResize()
 
-const projects = computed(() => projectStore.notArchivedRootProjects)
-const favoriteProjects = computed(() => projectStore.favoriteProjects)
-const savedFilterProjects = computed(() => projectStore.savedFilterProjects)
+const projects = computed(() => projectList.notArchivedRootProjects)
+const favoriteProjects = computed(() => projectList.favoriteProjects)
+const savedFilterProjects = computed(() => projectList.savedFilterProjects)
 </script>
 
 <style lang="scss" scoped>

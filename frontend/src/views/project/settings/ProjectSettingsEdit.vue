@@ -78,7 +78,7 @@ import type {ProjectResponse} from '@/client/queries/projects'
 import {useUpdateProjectMutation} from '@/client/queries/projects'
 
 import {useBaseStore} from '@/stores/base'
-import {useProjectNavigation} from '@/composables/useProjectNavigation'
+import {useProjects} from '@/composables/useProjects'
 import {useProject} from '@/composables/useProject'
 
 import {useTitle} from '@/composables/useTitle'
@@ -91,7 +91,7 @@ const props = defineProps<{
 defineOptions({name: 'ProjectSettingEdit'})
 
 const router = useRouter()
-const projectStore = useProjectNavigation()
+const projectList = useProjects()
 
 const {t} = useI18n({useScope: 'global'})
 
@@ -112,7 +112,7 @@ watch(
 	() => [
 		props.projectId,
 		project.value.id,
-		projectStore.projects[project.value.parent_project_id],
+		projectList.projects[project.value.parent_project_id],
 	] as const,
 	([projectId, loadedProjectId, parent], previous) => {
 		if (projectId !== previous?.[0] || projectId !== loadedProjectId) {

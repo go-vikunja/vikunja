@@ -61,7 +61,7 @@ import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import {useRoute} from 'vue-router'
 import type {TaskFilterParams} from '@/services/taskCollection'
 import {useLabels} from '@/composables/useLabels'
-import {useProjectNavigation} from '@/composables/useProjectNavigation'
+import {useProjects} from '@/composables/useProjects'
 import {
 	hasFilterQuery,
 	transformFilterStringForApi,
@@ -118,7 +118,7 @@ watch(
 )
 
 const {getLabelByExactTitle} = useLabels()
-const projectNavigation = useProjectNavigation()
+const projectList = useProjects()
 
 const filterInputRef = ref()
 
@@ -154,7 +154,7 @@ function change(event: 'blur' | 'modelValue' | 'always') {
 		filterQuery.value,
 		labelTitle => getLabelByExactTitle(labelTitle)?.id || null,
 		projectTitle => {
-			const found = projectNavigation.findProjectByExactname(projectTitle)
+			const found = projectList.findProjectByExactname(projectTitle)
 			return found?.id || null
 		},
 	)
