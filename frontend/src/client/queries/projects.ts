@@ -53,7 +53,7 @@ export type ProjectListResult = {
 	savedFilterProjects: ProjectResponse[]
 }
 
-export type ProjectDraft = Required<Pick<ProjectWritable,
+type ProjectDraft = Required<Pick<ProjectWritable,
 	'title' |
 	'description' |
 	'hex_color' |
@@ -64,18 +64,16 @@ export type ProjectDraft = Required<Pick<ProjectWritable,
 	'position'
 >>
 
-export type UpdateProjectInput = ProjectDraft & {id: number}
+type UpdateProjectInput = ProjectDraft & {id: number}
 
-export type DuplicateProjectInput = {
+type DuplicateProjectInput = {
 	projectId: number
 	parentProjectId?: number
 	duplicateShares?: boolean
 }
 
 export const projectKeys = {
-	all: ['projects'] as const,
 	list: () => ['projects', 'list'] as const,
-	details: () => ['projects', 'detail'] as const,
 	detail: (id: number) => ['projects', 'detail', id] as const,
 }
 
@@ -311,7 +309,7 @@ function projectBody(project: ProjectWritable): ProjectWritable {
 	}
 }
 
-export function replaceProjectInList(
+function replaceProjectInList(
 	current: ProjectListResult,
 	project: ProjectResponse,
 ): ProjectListResult {
