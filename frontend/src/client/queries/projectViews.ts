@@ -116,10 +116,10 @@ function setProjectViewInCache(client: QueryClient, projectId: number, view: Pro
 
 function updateEmbeddedViews(client: QueryClient, projectId: number, update: (views: ProjectView[]) => ProjectView[]) {
 	const updateProject = (project: ProjectResponse) => ({...project, views: update(project.views)})
-	client.setQueriesData<ProjectListResult>({queryKey: projectKeys.lists()}, current =>
+	client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
 		current ? mapProjectNavigationItem(current, projectId, updateProject) : current,
 	)
-	client.setQueriesData<ProjectResponse>({queryKey: projectKeys.detailRoot(projectId)}, current =>
+	client.setQueryData<ProjectResponse>(projectKeys.detail(projectId), current =>
 		current ? updateProject(current) : current,
 	)
 }
@@ -128,16 +128,16 @@ async function snapshotProjectViews(client: QueryClient, projectId: number) {
 	const request = captureClientRequestContext()
 	await Promise.all([
 		client.cancelQueries({queryKey: projectViewKeys.lists(projectId)}),
-		client.cancelQueries({queryKey: projectKeys.lists()}),
-		client.cancelQueries({queryKey: projectKeys.detailRoot(projectId)}),
+		client.cancelQueries({queryKey: projectKeys.list()}),
+		client.cancelQueries({queryKey: projectKeys.detail(projectId)}),
 	])
 	assertClientRequestContext(request)
 	return {
 		request,
 		previous: [
 			...client.getQueriesData<ProjectView[]>({queryKey: projectViewKeys.lists(projectId)}),
-			...client.getQueriesData<ProjectListResult>({queryKey: projectKeys.lists()}),
-			...client.getQueriesData<ProjectResponse>({queryKey: projectKeys.detailRoot(projectId)}),
+			...client.getQueriesData<ProjectListResult>({queryKey: projectKeys.list()}),
+			...client.getQueriesData<ProjectResponse>({queryKey: projectKeys.detail(projectId)}),
 		],
 	}
 }
@@ -167,8 +167,8 @@ function settledProjectViews() {
 		if (context && isClientRequestContextCurrent(context.request)) {
 			await Promise.all([
 				client.invalidateQueries({queryKey: projectViewKeys.lists(projectId)}),
-				client.invalidateQueries({queryKey: projectKeys.lists()}),
-				client.invalidateQueries({queryKey: projectKeys.detailRoot(projectId)}),
+				client.invalidateQueries({queryKey: projectKeys.list()}),
+				client.invalidateQueries({queryKey: projectKeys.detail(projectId)}),
 			])
 			assertClientRequestContext(context.request)
 		}

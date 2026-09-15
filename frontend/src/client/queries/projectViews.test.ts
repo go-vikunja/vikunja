@@ -324,7 +324,7 @@ describe('project view cache reconciliation', () => {
 		client.setQueryData<ProjectListResult>(projectKeys.list(), {
 			projects: [project], favoriteProject: null, savedFilterProjects: [],
 		})
-		client.setQueryData(projectKeys.detail(7, 'markdown'), {...project, description: '**raw**'})
+		client.setQueryData(projectKeys.detail(7), project)
 		client.setQueryData(listKey, views)
 		const updated = {...views[2], default_bucket_id: 42, done_bucket_id: 43}
 		sdk.projectViewsUpdate.mockResolvedValue({data: updated})
@@ -336,8 +336,8 @@ describe('project view cache reconciliation', () => {
 		expect(embeddedViews(client)?.find(view => view.id === 2)).toEqual(updated)
 		expect(client.getQueryData<ProjectListResult>(projectKeys.list())?.projects[0])
 			.toMatchObject({title: 'Board project', max_permission: 2})
-		expect(client.getQueryData<ProjectResponse>(projectKeys.detail(7, 'markdown')))
-			.toMatchObject({description: '**raw**', views: expect.arrayContaining([updated])})
+		expect(client.getQueryData<ProjectResponse>(projectKeys.detail(7)))
+			.toMatchObject({title: 'Board project', views: expect.arrayContaining([updated])})
 		expect(embeddedViews()).toEqual(sortProjectViewsByPosition(views))
 		expect(success).toHaveBeenCalledWith({message: 'Bucket updated'})
 		client.clear()
