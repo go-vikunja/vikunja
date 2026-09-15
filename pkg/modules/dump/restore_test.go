@@ -125,10 +125,16 @@ func TestConvertFieldValue(t *testing.T) {
 	})
 
 	t.Run("Edge cases", func(t *testing.T) {
-		t.Run("should handle empty string for JSON field", func(t *testing.T) {
-			result, err := convertFieldValue("permissions", "", false)
+		t.Run("should return nil for empty string JSON field", func(t *testing.T) {
+			result, err := convertFieldValue("filter", "", false)
 			require.NoError(t, err)
-			assert.Empty(t, result)
+			assert.Nil(t, result)
+		})
+
+		t.Run("should return nil for whitespace-only JSON field", func(t *testing.T) {
+			result, err := convertFieldValue("filter", "  ", false)
+			require.NoError(t, err)
+			assert.Nil(t, result)
 		})
 
 		t.Run("should handle empty string for float field", func(t *testing.T) {
