@@ -99,7 +99,6 @@
 				"subject": "Taak \"%[1]s\" (%[2]s) is te laat",
 				"message": "Dit is een vriendelijke herinnering aan taak \"%[1]s\" (%[2]s) die te laat is %[3]s en nog niet voltooid.",
 				"multiple_subject": "Je achterstallige taken",
-				"multiple_message": "Je hebt de volgende achterstallige taken:",
 				"overdue_since": "sinds %[1]s",
 				"overdue_now": "nu",
 				"overdue": "te laat %[1]s"

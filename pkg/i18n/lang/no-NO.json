@@ -83,7 +83,6 @@
 			"overdue": {
 				"subject": "Oppgave \"%[1]s\" (%[2]s) er forfalt",
 				"multiple_subject": "Dine forfalte oppgaver",
-				"multiple_message": "Du har følgende forfalte oppgaver:",
 				"overdue_since": "siden %[1]s",
 				"overdue_now": "nå"
 			}
