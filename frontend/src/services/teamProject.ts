@@ -1,7 +1,7 @@
 import AbstractService from './abstractService'
 import TeamProjectModel from '@/models/teamProject'
 import type {ITeamProject} from '@/modelTypes/ITeamProject'
-import TeamModel from '@/models/team'
+import type {TeamWithPermission} from '@/client/generated'
 
 export default class TeamProjectService extends AbstractService<ITeamProject> {
 	constructor() {
@@ -18,6 +18,6 @@ export default class TeamProjectService extends AbstractService<ITeamProject> {
 	}
 
 	modelGetAllFactory(data) {
-		return new TeamModel(data)
+		return data as TeamWithPermission
 	}
 }

@@ -3,7 +3,8 @@ import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import UserModel, {getDisplayName} from '@/models/user'
 import TaskModel from '@/models/task'
 import TaskCommentModel from '@/models/taskComment'
-import TeamModel from '@/models/team'
+import type {Team} from '@/client/generated'
+import {objectToSnakeCase} from '@/helpers/case'
 
 import {NOTIFICATION_NAMES, type INotification} from '@/modelTypes/INotification'
 import type {IUser} from '@/modelTypes/IUser'
@@ -15,11 +16,7 @@ type NotificationData = {
 	assignee: UserModel
 	project: Extract<INotification['notification'], {project: unknown}>['project']
 	member: UserModel
-	team: TeamModel
-}
-
-type RawNotificationData = Omit<NotificationData, 'team'> & {
-	team: ConstructorParameters<typeof TeamModel>[0]
+	team: Team
 }
 
 function asNotificationPayload(data: Partial<NotificationData>): INotification['notification'] {
@@ -38,7 +35,7 @@ export default class NotificationModel extends AbstractModel<INotification> impl
 	constructor(data: Partial<INotification>) {
 		super()
 		this.assignData(data)
-		const notification = this.notification as unknown as RawNotificationData
+		const notification = this.notification as unknown as NotificationData
 
 		switch (this.name) {
 			case NOTIFICATION_NAMES.TASK_COMMENT:
@@ -78,7 +75,7 @@ export default class NotificationModel extends AbstractModel<INotification> impl
 				this.notification = asNotificationPayload({
 					doer: new UserModel(notification.doer),
 					member: new UserModel(notification.member),
-					team: new TeamModel(notification.team),
+					team: objectToSnakeCase(notification.team) as Team,
 				})
 				break
 			case NOTIFICATION_NAMES.TASK_REMINDER:
