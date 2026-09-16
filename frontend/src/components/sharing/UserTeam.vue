@@ -23,19 +23,23 @@
 								v-if="shareType === 'user'"
 								:avatar-size="24"
 								:show-username="true"
-								:user="result"
+								:user="typeof result === 'string' ? {username: result} : result"
 							/>
 							<span 
 								v-else
 								class="search-result"
 							>
-								{{ result.name }}
+								{{ typeof result === 'string' ? result : result.name }}
 							</span>
 						</template>
 					</Multiselect>
 				</p>
 				<p class="control">
-					<XButton @click="add()">
+					<XButton
+						:class="{'is-loading': isMutating}"
+						:aria-disabled="!sharable || isMutating || undefined"
+						@click="add()"
+					>
 						{{ $t('project.share.share') }}
 					</XButton>
 				</p>
@@ -55,7 +59,7 @@
 						<template v-if="shareType === 'user'">
 							<td>{{ getDisplayName(s) }}</td>
 							<td>
-								<template v-if="s.id === userInfo.id">
+								<template v-if="s.id === userInfo?.id">
 									<b class="is-success">{{ $t('project.share.userTeam.you') }}</b>
 								</template>
 							</td>
@@ -99,6 +103,7 @@
 							<div class="select">
 								<select
 									v-model="selectedPermission[s.id]"
+									:aria-disabled="isMutating || undefined"
 									class="mie-2"
 									:aria-label="$t('project.share.userTeam.permissionFor', {sharable: shareType === 'user' ? getDisplayName(s) : s.name})"
 									@change="toggleType(s)"
@@ -129,8 +134,7 @@
 								:aria-label="$t('project.share.userTeam.remove', {type: shareTypeName})"
 								@click="
 									() => {
-										sharable = s
-										showDeleteModal = true
+										shareToDelete = s
 									}
 								"
 							/>
@@ -145,8 +149,8 @@
 		</Nothing>
 
 		<Modal
-			:enabled="showDeleteModal"
-			@close="showDeleteModal = false"
+			:enabled="shareToDelete !== null"
+			@close="shareToDelete = null"
 			@submit="deleteSharable()"
 		>
 			<template #header>
@@ -163,203 +167,122 @@
 
 
 <script setup lang="ts">
-import {ref, reactive, computed, shallowReactive} from 'vue'
+import {ref, computed, watch} from 'vue'
+import {useQuery} from '@tanstack/vue-query'
 import {useI18n} from 'vue-i18n'
-
-import UserProjectService from '@/services/userProject'
-import UserProjectModel from '@/models/userProject'
-import type {ProjectUser as IUserProject} from '@/client/generated'
-
-import {useUserSearch} from '@/composables/useUserSearch'
-import { getDisplayName } from '@/models/user'
-import type {User as IUser} from '@/client/generated'
-
-import TeamProjectService from '@/services/teamProject'
-import TeamProjectModel from '@/models/teamProject'
-import type {TeamProject as ITeamProject} from '@/client/generated'
-
+import type {UserWithPermission, TeamWithPermission} from '@/client/generated'
+import {projectUserSharesQuery, projectTeamSharesQuery, normalizeSharePermission, useCreateProjectUserShareMutation, useUpdateProjectUserShareMutation, useDeleteProjectUserShareMutation, useCreateProjectTeamShareMutation, useUpdateProjectTeamShareMutation, useDeleteProjectTeamShareMutation} from '@/client/queries/projectShares'
 import {useTeams} from '@/composables/useTeams'
-
-
-import {PERMISSIONS} from '@/constants/permissions'
+import {useUserSearch} from '@/composables/useUserSearch'
+import {getDisplayName} from '@/models/user'
+import {PERMISSIONS, type Permission} from '@/constants/permissions'
 import Multiselect from '@/components/input/Multiselect.vue'
 import Nothing from '@/components/misc/Nothing.vue'
-import {success} from '@/message'
 import {useAuthStore} from '@/stores/auth'
 import {useConfigStore} from '@/stores/config'
 import User from '@/components/misc/User.vue'
 
-// FIXME: I think this whole thing can now only manage user/team sharing for projects? Maybe remove a little generalization?
-
 const props = withDefaults(defineProps<{
-	type?: 'project',
 	shareType: 'user' | 'team',
 	id: number,
-	userIsAdmin?: boolean
-}>(), {
-	type: 'project',
-	userIsAdmin: false,
-})
-
+	userIsAdmin?: boolean,
+}>(), {userIsAdmin: false})
 defineOptions({name: 'UserTeamShare'})
 
 const {t} = useI18n({useScope: 'global'})
-
-// This user service is a userProjectService, depending on the type we are using
-let stuffService: UserProjectService | TeamProjectService
-let stuffModel: IUserProject | ITeamProject
+const authStore = useAuthStore()
 const configStore = useConfigStore()
+const userInfo = computed(() => authStore.info)
+type Share = UserWithPermission | TeamWithPermission
+type IdentifiedShare = Share & Required<Pick<Share, 'id'>>
+const usersQuery = useQuery(computed(() => ({...projectUserSharesQuery(props.id), enabled: props.id > 0 && props.shareType === 'user'})))
+const teamsQuery = useQuery(computed(() => ({...projectTeamSharesQuery(props.id), enabled: props.id > 0 && props.shareType === 'team'})))
+const sharables = computed(() => (props.shareType === 'user' ? usersQuery.data.value ?? [] : teamsQuery.data.value ?? []).filter((item): item is IdentifiedShare => typeof item.id === 'number'))
 const searchQuery = ref('')
 const {teams: teamResults, isFetching: teamSearchLoading} = useTeams({search: searchQuery, includePublic: () => configStore.publicTeamsEnabled, enabled: () => props.shareType === 'team' && searchQuery.value !== ''})
 const {users: userResults, isFetching: userSearchLoading} = useUserSearch(() => props.shareType === 'user' ? searchQuery.value : '')
 const searchLoading = computed(() => teamSearchLoading.value || userSearchLoading.value)
-const sharable = ref<IUser>({})
-
-const searchLabel = ref('')
-const selectedPermission = ref({})
-
-
-// This holds either teams or users who this namepace or project is shared with
-const sharables = ref([])
-const showDeleteModal = ref(false)
-
-const authStore = useAuthStore()
-const userInfo = computed(() => authStore.info)
-
-function createShareTypeNameComputed(count: number) {
-	return computed(() => {
-		if (props.shareType === 'user') {
-			return t('project.share.userTeam.typeUser', count)
-		}
-
-		if (props.shareType === 'team') {
-			return t('project.share.userTeam.typeTeam', count)
-		}
-
-		return ''
-	})
-}
-
-const shareTypeNames = createShareTypeNameComputed(2)
-const shareTypeName = createShareTypeNameComputed(1)
-
-const sharableName = computed(() => {
-	if (props.type === 'project') {
-		return t('project.list.title')
-	}
-
-	return ''
+const found = computed(() => (props.shareType === 'team' ? teamResults.value : userResults.value).filter(item => (props.shareType !== 'user' || item.id !== userInfo.value?.id) && !sharables.value.some(shared => shared.id === item.id)))
+const searchLabel = computed(() => props.shareType === 'user' ? 'username' : 'name')
+const shareTypeName = computed(() => t(props.shareType === 'user' ? 'project.share.userTeam.typeUser' : 'project.share.userTeam.typeTeam', 1))
+const shareTypeNames = computed(() => t(props.shareType === 'user' ? 'project.share.userTeam.typeUser' : 'project.share.userTeam.typeTeam', 2))
+const sharableName = computed(() => t('project.list.title'))
+const sharable = ref<Share | null>(null)
+const selectedPermission = ref<Record<number, Permission>>({})
+const shareToDelete = ref<IdentifiedShare | null>(null)
+watch(sharables, shares => {
+	selectedPermission.value = Object.fromEntries(shares.map(share => [share.id, normalizeSharePermission(share.permission)]))
+}, {immediate: true})
+watch(() => [props.id, props.shareType], () => {
+	sharable.value = null
+	searchQuery.value = ''
+	shareToDelete.value = null
 })
 
-if (props.shareType === 'user') {
-	sharable.value = {}
-	searchLabel.value = 'username'
+const createUser = useCreateProjectUserShareMutation()
+const updateUser = useUpdateProjectUserShareMutation()
+const deleteUser = useDeleteProjectUserShareMutation()
+const createTeam = useCreateProjectTeamShareMutation()
+const updateTeam = useUpdateProjectTeamShareMutation()
+const deleteTeam = useDeleteProjectTeamShareMutation()
+const isMutating = computed(() => createUser.isPending.value || updateUser.isPending.value || deleteUser.isPending.value || createTeam.isPending.value || updateTeam.isPending.value || deleteTeam.isPending.value)
 
-	if (props.type === 'project') {
-		stuffService = shallowReactive(new UserProjectService())
-		stuffModel = reactive(new UserProjectModel({projectId: props.id}))
+async function add() {
+	const selected = sharable.value
+	const projectId = props.id
+	if (!selected || isMutating.value) return
+	try {
+		if (props.shareType === 'user' && 'username' in selected && selected.username) {
+			await createUser.mutateAsync({projectId, username: selected.username})
+		} else if (props.shareType === 'team' && selected.id !== undefined) {
+			await createTeam.mutateAsync({projectId, teamId: selected.id})
+		} else return
+	} catch {
+		return
+	}
+	if (props.id === projectId && sharable.value === selected) {
+		sharable.value = null
+		searchQuery.value = ''
+	}
+}
+
+function resetSelectedPermission(shareId: number) {
+	selectedPermission.value[shareId] = normalizeSharePermission(sharables.value.find(item => item.id === shareId)?.permission)
+}
+
+function toggleType(share: IdentifiedShare) {
+	const projectId = props.id
+	const reset = () => {
+		if (props.id === projectId) resetSelectedPermission(share.id)
+	}
+	if (isMutating.value) {
+		reset()
+		return
+	}
+	const permission = normalizeSharePermission(selectedPermission.value[share.id])
+	if (props.shareType === 'user' && 'username' in share && share.username) {
+		updateUser.mutate({projectId, username: share.username, permission}, {onSettled: reset})
+	} else if (props.shareType === 'team') {
+		updateTeam.mutate({projectId, teamId: share.id, permission}, {onSettled: reset})
 	} else {
-		throw new Error('Unknown type: ' + props.type)
+		reset()
 	}
-} else if (props.shareType === 'team') {
-	sharable.value = {}
-	searchLabel.value = 'name'
-
-	if (props.type === 'project') {
-		stuffService = shallowReactive(new TeamProjectService())
-		stuffModel = reactive(new TeamProjectModel({projectId: props.id}))
-	} else {
-		throw new Error('Unknown type: ' + props.type)
-	}
-} else {
-	throw new Error('Unkown share type')
 }
 
-load()
-
-async function load() {
-	sharables.value = await stuffService.getAll(stuffModel)
-	sharables.value.forEach(({id, permission}) =>
-		selectedPermission.value[id] = permission,
-	)
-}
-
-async function deleteSharable() {
-	if (props.shareType === 'user') {
-		stuffModel.username = sharable.value.username
+function deleteSharable() {
+	const selected = shareToDelete.value
+	const projectId = props.id
+	if (!selected || isMutating.value) return
+	const close = () => {
+		if (shareToDelete.value === selected) shareToDelete.value = null
+	}
+	if (props.shareType === 'user' && 'username' in selected && selected.username) {
+		deleteUser.mutate({projectId, username: selected.username}, {onSettled: close})
 	} else if (props.shareType === 'team') {
-		stuffModel.team_id = sharable.value.id
+		deleteTeam.mutate({projectId, teamId: selected.id}, {onSettled: close})
 	}
-
-	await stuffService.delete(stuffModel)
-	showDeleteModal.value = false
-	const idx = sharables.value.findIndex(s =>
-		(props.shareType === 'user' && s.username === stuffModel.username) ||
-		(props.shareType === 'team' && s.id === stuffModel.team_id),
-	)
-	if (idx !== -1) {
-		sharables.value.splice(idx, 1)
-	}
-	success({
-		message: t('project.share.userTeam.removeSuccess', {
-			type: shareTypeName.value,
-			sharable: sharableName.value,
-		}),
-	})
 }
 
-async function add(admin) {
-	if (admin === null) {
-		admin = false
-	}
-	stuffModel.permission = PERMISSIONS.READ
-	if (admin) {
-		stuffModel.permission = PERMISSIONS.ADMIN
-	}
-
-	if (props.shareType === 'user') {
-		stuffModel.username = sharable.value.username
-	} else if (props.shareType === 'team') {
-		stuffModel.team_id = sharable.value.id
-	}
-
-	await stuffService.create(stuffModel)
-	success({message: t('project.share.userTeam.addedSuccess', {type: shareTypeName.value})})
-	await load()
-}
-
-async function toggleType(sharable) {
-	if (
-		selectedPermission.value[sharable.id] !== PERMISSIONS.ADMIN &&
-		selectedPermission.value[sharable.id] !== PERMISSIONS.READ &&
-		selectedPermission.value[sharable.id] !== PERMISSIONS.READ_WRITE
-	) {
-		selectedPermission.value[sharable.id] = PERMISSIONS.READ
-	}
-	stuffModel.permission = selectedPermission.value[sharable.id]
-
-	if (props.shareType === 'user') {
-		stuffModel.username = sharable.username
-	} else if (props.shareType === 'team') {
-		stuffModel.team_id = sharable.id
-	}
-
-	const r = await stuffService.update(stuffModel)
-	for (const sharableEntry of sharables.value) {
-		if (
-			(sharableEntry.username ===
-				stuffModel.username &&
-				props.shareType === 'user') ||
-			(sharableEntry.id === stuffModel.team_id &&
-				props.shareType === 'team')
-		) {
-			sharableEntry.permission = r.permission
-		}
-	}
-	success({message: t('project.share.userTeam.updatedSuccess', {type: shareTypeName.value})})
-}
-
-const found = computed(() => (props.shareType === 'team' ? teamResults.value : userResults.value).filter(item => (props.shareType !== 'user' || item.id !== authStore.info?.id) && !sharables.value.some(shared => shared.id === item.id)))
 function find(query: string) {
 	searchQuery.value = query
 }

@@ -1,6 +1,6 @@
 import {queryOptions, useMutation, type QueryClient} from '@tanstack/vue-query'
 import {projectUsersList, projectUsersCreate, projectUsersUpdate, projectUsersDelete, projectTeamsList, projectTeamsCreate, projectTeamsUpdate, projectTeamsDelete} from '@/client/generated'
-import type {UserWithPermission, TeamWithPermission, ProjectUserWritable} from '@/client/generated'
+import type {UserWithPermission, TeamWithPermission} from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
 import {fetchAllPages} from './fetchAllPages'
 import {projectKeys} from './projects'
@@ -33,8 +33,8 @@ function shareSuccess(kind: 'users' | 'teams', action: 'addedSuccess' | 'updated
 	})
 }
 
-type UserShareInput = {projectId: number} & Required<Pick<ProjectUserWritable, 'username'>> & Pick<ProjectUserWritable, 'permission'>
-type TeamShareInput = {projectId: number, teamId: number} & Pick<ProjectUserWritable, 'permission'>
+type UserShareInput = {projectId: number, username: string}
+type TeamShareInput = {projectId: number, teamId: number}
 
 export function projectUserSharesQuery(projectId: number) {
 	return queryOptions({
@@ -54,7 +54,7 @@ export const useCreateProjectUserShareMutation = () => useMutation(createProject
 
 export function updateProjectUserShareMutationOptions() {
 	return contextMutationOptions({
-		mutationFn: async ({projectId, username, permission}: UserShareInput) => (await projectUsersUpdate({path: {project: projectId, user: username}, body: {username: username, permission: normalizeSharePermission(permission)}})).data,
+		mutationFn: async ({projectId, username, permission}: UserShareInput & {permission: Permission}) => (await projectUsersUpdate({path: {project: projectId, user: username}, body: {username, permission}})).data,
 		onSuccess: (updated, {projectId, username}, client) => {
 			client.setQueryData<UserWithPermission[]>(projectShareKeys.users(projectId), current => current?.map(item => item.username === username ? {...item, permission: updated.permission} : item))
 		},
@@ -94,7 +94,7 @@ export const useCreateProjectTeamShareMutation = () => useMutation(createProject
 
 export function updateProjectTeamShareMutationOptions() {
 	return contextMutationOptions({
-		mutationFn: async ({projectId, teamId, permission}: TeamShareInput) => (await projectTeamsUpdate({path: {project: projectId, team: teamId}, body: {team_id: teamId, permission: normalizeSharePermission(permission)}})).data,
+		mutationFn: async ({projectId, teamId, permission}: TeamShareInput & {permission: Permission}) => (await projectTeamsUpdate({path: {project: projectId, team: teamId}, body: {team_id: teamId, permission}})).data,
 		onSuccess: (updated, {projectId, teamId}, client) => {
 			client.setQueryData<TeamWithPermission[]>(projectShareKeys.teams(projectId), current => current?.map(item => item.id === teamId ? {...item, permission: updated.permission} : item))
 		},
