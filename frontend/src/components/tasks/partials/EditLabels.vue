@@ -33,17 +33,15 @@
 		</template>
 		<template #searchResult="{option}">
 			<span
-				v-if="typeof option === 'string'"
-				class="tag search-result"
-			>
-				<span>{{ option }}</span>
-			</span>
-			<span
-				v-else
 				:style="getLabelStyles(option)"
 				class="tag search-result"
 			>
 				<span>{{ option.title }}</span>
+			</span>
+		</template>
+		<template #createOption="{query: newLabelTitle}">
+			<span class="tag search-result">
+				<span>{{ newLabelTitle }}</span>
 			</span>
 		</template>
 	</Multiselect>
