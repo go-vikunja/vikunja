@@ -17,8 +17,7 @@ import {
 
 import {useLabels} from '@/composables/useLabels'
 import {useProjects} from '@/composables/useProjects'
-import UserService from '@/services/user'
-import ProjectUserService from '@/services/projectUsers'
+import {searchProjectUsers, searchUsers} from '@/client/queries/userSearch'
 import type {User as IUser} from '@/client/generated'
 import type { Label } from '@/client/generated'
 import type {ProjectResponse} from '@/client/queries/projects'
@@ -105,8 +104,6 @@ export default Extension.create<FilterAutocompleteOptions>({
 	addProseMirrorPlugins() {
 		const {filterLabelsByQuery} = useLabels()
 		const projectList = useProjects()
-		const userService = new UserService()
-		const projectUserService = new ProjectUserService()
 
 		let popupElement: HTMLElement | null = null
 		let component: VueRenderer | null = null
@@ -234,10 +231,9 @@ export default Extension.create<FilterAutocompleteOptions>({
 							let userSuggestions: SuggestionItem[]
 							try {
 								if (this.options.projectId) {
-									// @ts-expect-error - projectId is used for URL replacement but not part of IAbstract
-									userSuggestions = await projectUserService.getAll({projectId: this.options.projectId}, {s: autocompleteContext.search}) as SuggestionItem[]
+									userSuggestions = await searchProjectUsers(this.options.projectId, autocompleteContext.search) as SuggestionItem[]
 								} else {
-									userSuggestions = await userService.getAll({} as IUser, {s: autocompleteContext.search}) as SuggestionItem[]
+									userSuggestions = await searchUsers(autocompleteContext.search) as SuggestionItem[]
 								}
 								// Show suggestions even with empty search, but limit if we have many
 								if (autocompleteContext.search === '' && userSuggestions.length > 10) {

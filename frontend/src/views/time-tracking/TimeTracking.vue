@@ -97,13 +97,13 @@
 					<Multiselect
 						v-model="selectedUser"
 						:placeholder="$t('timeTracking.browse.userSearch')"
-						:loading="userService.loading"
+						:loading="usersLoading"
 						:search-results="foundUsers"
 						label="username"
 						@search="findUsers"
 					>
 						<template #searchResult="{option}">
-							{{ option.username }}
+							{{ typeof option === 'string' ? option : option.username }}
 						</template>
 					</Multiselect>
 				</div>
@@ -128,7 +128,8 @@ import TimeEntryList from '@/components/time-tracking/TimeEntryList.vue'
 
 import TaskService from '@/services/task'
 import TaskModel from '@/models/task'
-import UserService from '@/services/user'
+import {searchUsers} from '@/client/queries/userSearch'
+import {useUserSearch} from '@/composables/useUserSearch'
 import {useTitle} from '@/composables/useTitle'
 import {useTimeTrackingStore} from '@/stores/timeTracking'
 import {useBaseStore} from '@/stores/base'
@@ -207,14 +208,10 @@ async function findTasks(query: string) {
 	foundTasks.value = await taskService.getAll({}, {s: query, sort_by: 'done'}) as ITask[]
 }
 
-const userService = shallowReactive(new UserService())
-const foundUsers = ref<IUser[]>([])
-async function findUsers(query: string) {
-	if (query === '') {
-		foundUsers.value = []
-		return
-	}
-	foundUsers.value = await userService.getAll({}, {s: query}) as IUser[]
+const userSearch = ref('')
+const {users: foundUsers, isFetching: usersLoading} = useUserSearch(userSearch)
+function findUsers(query: string) {
+	userSearch.value = query
 }
 
 // Datemath preset strings (now/M) pass through unchanged; a custom Date becomes
@@ -265,7 +262,7 @@ const filterQuery = computed(() => {
 		q.task = String(selectedTask.value.id)
 	}
 	if (selectedUser.value !== null) {
-		q.user = selectedUser.value.username
+		q.user = selectedUser.value.username ?? ''
 	}
 	return q
 })
@@ -295,9 +292,9 @@ async function restoreFromQuery() {
 				.catch(() => { /* task gone — drop the filter */ })
 			: Promise.resolve(),
 		typeof q.user === 'string'
-			? userService.getAll({}, {s: q.user})
+			? searchUsers(q.user)
 				.then(users => {
-					selectedUser.value = (users as IUser[]).find(u => u.username === q.user) ?? null
+					selectedUser.value = users.find(u => u.username === q.user) ?? null
 				})
 				.catch(() => { /* user not found — drop the filter */ })
 			: Promise.resolve(),
