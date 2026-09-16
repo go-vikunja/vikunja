@@ -3,8 +3,7 @@ import {SavedFilterFactory} from '../../factories/saved_filter'
 import {ProjectFactory} from '../../factories/project'
 import type {Page} from '@playwright/test'
 
-// Saved filter id 1 shows up as pseudo-project -2. The settings routes share their
-// path with the project ones and are only reachable by name, so go through the menu.
+// Saved filter id 1 shows up as pseudo-project -2.
 async function openFilterSettings(page: Page, item: RegExp) {
 	await page.goto('/projects/-2')
 	await expect(page.locator('.project-title')).toContainText('My Test Filter')
@@ -52,5 +51,20 @@ test.describe('Saved Filter Settings', () => {
 
 		await expect(page).toHaveURL(/\/projects$/)
 		await expect(page.locator('.list-menu .navigation-item').filter({hasText: 'My Test Filter'})).toHaveCount(0)
+	})
+
+	test('Opens the filter edit modal when loading its URL directly', async ({authenticatedPage: page}) => {
+		await page.goto('/projects/-2/settings/edit')
+
+		await expect(page.getByText('Edit This Saved Filter')).toBeVisible()
+		await expect(page.locator('#Title')).toHaveValue('My Test Filter')
+		await expect(page.getByText('Edit This Project')).toHaveCount(0)
+	})
+
+	test('Opens the filter delete modal when loading its URL directly', async ({authenticatedPage: page}) => {
+		await page.goto('/projects/-2/settings/delete')
+
+		await expect(page.getByText('Delete this saved filter', {exact: true})).toBeVisible()
+		await expect(page.getByText('Delete this project', {exact: true})).toHaveCount(0)
 	})
 })
