@@ -168,7 +168,7 @@ import {useI18n} from 'vue-i18n'
 
 import UserProjectService from '@/services/userProject'
 import UserProjectModel from '@/models/userProject'
-import type {IUserProject} from '@/modelTypes/IUserProject'
+import type {ProjectUser as IUserProject} from '@/client/generated'
 
 import {useUserSearch} from '@/composables/useUserSearch'
 import { getDisplayName } from '@/models/user'
@@ -176,7 +176,7 @@ import type {User as IUser} from '@/client/generated'
 
 import TeamProjectService from '@/services/teamProject'
 import TeamProjectModel from '@/models/teamProject'
-import type { ITeamProject } from '@/modelTypes/ITeamProject'
+import type {TeamProject as ITeamProject} from '@/client/generated'
 
 import {useTeams} from '@/composables/useTeams'
 
@@ -288,14 +288,14 @@ async function deleteSharable() {
 	if (props.shareType === 'user') {
 		stuffModel.username = sharable.value.username
 	} else if (props.shareType === 'team') {
-		stuffModel.teamId = sharable.value.id
+		stuffModel.team_id = sharable.value.id
 	}
 
 	await stuffService.delete(stuffModel)
 	showDeleteModal.value = false
 	const idx = sharables.value.findIndex(s =>
 		(props.shareType === 'user' && s.username === stuffModel.username) ||
-		(props.shareType === 'team' && s.id === stuffModel.teamId),
+		(props.shareType === 'team' && s.id === stuffModel.team_id),
 	)
 	if (idx !== -1) {
 		sharables.value.splice(idx, 1)
@@ -320,7 +320,7 @@ async function add(admin) {
 	if (props.shareType === 'user') {
 		stuffModel.username = sharable.value.username
 	} else if (props.shareType === 'team') {
-		stuffModel.teamId = sharable.value.id
+		stuffModel.team_id = sharable.value.id
 	}
 
 	await stuffService.create(stuffModel)
@@ -341,7 +341,7 @@ async function toggleType(sharable) {
 	if (props.shareType === 'user') {
 		stuffModel.username = sharable.username
 	} else if (props.shareType === 'team') {
-		stuffModel.teamId = sharable.id
+		stuffModel.team_id = sharable.id
 	}
 
 	const r = await stuffService.update(stuffModel)
@@ -350,7 +350,7 @@ async function toggleType(sharable) {
 			(sharableEntry.username ===
 				stuffModel.username &&
 				props.shareType === 'user') ||
-			(sharableEntry.id === stuffModel.teamId &&
+			(sharableEntry.id === stuffModel.team_id &&
 				props.shareType === 'team')
 		) {
 			sharableEntry.permission = r.permission
