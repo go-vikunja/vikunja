@@ -103,6 +103,9 @@
 				"subject": "Aufgabe „%[1]s“ (%[2]s) ist überfällig",
 				"message": "Dies ist eine freundliche Erinnerung an die Aufgabe „%[1]s“ (%[2]s), die %[3]s überfällig und noch nicht erledigt ist.",
 				"multiple_subject": "Deine überfälligen Aufgaben",
+				"multiple_message": "Deine überfälligen Aufgaben:",
+				"assigned_heading": "Dir zugewiesen",
+				"followed_heading": "Aufgaben, die du verfolgst",
 				"overdue_since": "seit %[1]s",
 				"overdue_now": "jetzt",
 				"overdue": "überfällig %[1]s"
