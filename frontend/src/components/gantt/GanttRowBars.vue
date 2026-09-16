@@ -55,6 +55,7 @@
 			<!-- Main bar (regular task) -->
 			<rect
 				v-if="!bar.meta?.isParent"
+				v-tooltip="getBarTooltip(bar)"
 				:x="getBarX(bar)"
 				:y="4"
 				:width="getBarWidth(bar)"
@@ -75,6 +76,7 @@
 			<!-- Parent summary bar (full height with diamond endpoints) -->
 			<g
 				v-if="bar.meta?.isParent"
+				v-tooltip="getBarTooltip(bar)"
 				class="gantt-bar gantt-parent-bar"
 				role="button"
 				:aria-label="getBarAriaLabel(bar)"
@@ -250,6 +252,29 @@ const emit = defineEmits<{
 const {t} = useI18n({useScope: 'global'})
 
 const RESIZE_HANDLE_OFFSET = 3
+const LABEL_PADDING = 8
+
+let measureCtx: CanvasRenderingContext2D | null | undefined
+function measureLabel(text: string): number {
+	if (measureCtx === undefined) {
+		measureCtx = document.createElement('canvas').getContext('2d')
+		if (measureCtx) {
+			const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16
+			// Must match .gantt-bar-text font-size
+			measureCtx.font = `${rootFontSize * 0.85}px ${getComputedStyle(document.body).fontFamily}`
+		}
+	}
+	return measureCtx ? measureCtx.measureText(text).width : text.length * 8
+}
+
+// Tooltip only for bars too narrow to show their full label
+function getBarTooltip(bar: GanttBarModel): string | undefined {
+	const label = bar.meta?.label || bar.id
+	if (measureLabel(label) + LABEL_PADDING * 2 <= getBarWidth.value(bar)) {
+		return undefined
+	}
+	return label
+}
 
 function addDays(dateOrValue: Date | string | number, days: number): Date {
 	const date = new Date(dateOrValue)
