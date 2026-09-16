@@ -1,10 +1,10 @@
-<script setup lang="ts">
+<script setup lang="ts" generic="T extends IUser">
 import type {User as IUser} from '@/client/generated'
 import BaseButton from '@/components/base/BaseButton.vue'
 import User from '@/components/misc/User.vue'
 
 withDefaults(defineProps<{
-	assignees: IUser[],
+	assignees: T[],
 	disabled?: boolean,
 	avatarSize?: number,
 	inline?: boolean,
@@ -17,7 +17,7 @@ withDefaults(defineProps<{
 })
 
 defineEmits<{
-	remove: [user: IUser],
+	remove: [user: T],
 }>()
 </script>
 

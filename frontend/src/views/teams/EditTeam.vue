@@ -79,7 +79,7 @@
 					<div class="control is-expanded">
 						<Multiselect
 							v-model="newMember"
-							:loading="userService.loading"
+							:loading="usersLoading"
 							:placeholder="$t('team.edit.search')"
 							:search-results="foundUsers"
 							label="username"
@@ -88,7 +88,7 @@
 							<template #searchResult="{option: user}">
 								<User
 									:avatar-size="24"
-									:user="user"
+									:user="typeof user === 'string' ? {username: user} : user"
 									class="m-0"
 								/>
 							</template>
@@ -248,7 +248,7 @@ import User from '@/components/misc/User.vue'
 import {getDisplayName} from '@/models/user'
 import TeamService from '@/services/team'
 import TeamMemberService from '@/services/teamMember'
-import UserService from '@/services/user'
+import {useUserSearch} from '@/composables/useUserSearch'
 
 import {PERMISSIONS as Permissions} from '@/constants/permissions'
 
@@ -284,13 +284,14 @@ const sortedMembers = computed(() => {
 
 const teamService = ref<TeamService>(new TeamService())
 const teamMemberService = ref<TeamMemberService>(new TeamMemberService())
-const userService = ref<UserService>(new UserService())
+const userSearch = ref('')
+const {users: userResults, isFetching: usersLoading} = useUserSearch(userSearch)
 
 const team = ref<ITeam>()
 const teamId = computed(() => Number(route.params.id))
 const memberToDelete = ref<ITeamMember>()
-const newMember = ref<IUser>()
-const foundUsers = ref<IUser[]>()
+const newMember = ref<IUser | null>(null)
+const foundUsers = computed(() => userResults.value.filter(u => u.id !== userInfo.value?.id))
 
 const showDeleteModal = ref(false)
 const showUserDeleteModal = ref(false)
@@ -340,7 +341,7 @@ async function deleteMember() {
 
 async function addUser() {
 	showMustSelectUserError.value = false
-	if(!newMember.value) {
+	if(!newMember.value?.username) {
 		showMustSelectUserError.value = true
 		return
 	}
@@ -371,14 +372,8 @@ async function toggleUserType(member: ITeamMember) {
 	})
 }
 
-async function findUser(query: string) {
-	if (query === '') {
-		foundUsers.value = []
-		return
-	}
-
-	const users = await userService.value.getAll({}, {s: query})
-	foundUsers.value = users.filter((u: IUser) => u.id !== userInfo.value.id)
+function findUser(query: string) {
+	userSearch.value = query
 }
 
 async function leave() {

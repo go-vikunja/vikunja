@@ -3,7 +3,7 @@
 		v-model="assignees"
 		class="edit-assignees"
 		:class="{'has-assignees': assignees.length > 0}"
-		:loading="projectUserService.loading"
+		:loading="usersLoading"
 		:placeholder="$t('task.assignee.placeholder')"
 		:multiple="true"
 		:search-results="foundUsers"
@@ -27,27 +27,26 @@
 			<User
 				:avatar-size="24"
 				:show-username="true"
-				:user="user"
+				:user="typeof user === 'string' ? {username: user} : user"
 			/>
 		</template>
 	</Multiselect>
 </template>
 
 <script setup lang="ts">
-import {ref, shallowReactive, watch, nextTick} from 'vue'
+import {ref, computed, watch, nextTick} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import User from '@/components/misc/User.vue'
 import Multiselect from '@/components/input/Multiselect.vue'
 
-import {includesById} from '@/helpers/utils'
-import ProjectUserService from '@/services/projectUsers'
+import {useProjectUserSearch} from '@/composables/useUserSearch'
 import {success} from '@/message'
 import {useAuthStore} from '@/stores/auth'
 import {useTaskStore} from '@/stores/tasks'
 
 import type {User as IUser} from '@/client/generated'
-import {getDisplayName} from '@/models/user'
+import {getDisplayName, type UserWithId} from '@/models/user'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 
 const props = withDefaults(defineProps<{
@@ -67,23 +66,20 @@ const authStore = useAuthStore()
 const taskStore = useTaskStore()
 const {t} = useI18n({useScope: 'global'})
 
-const projectUserService = shallowReactive(new ProjectUserService())
-const foundUsers = ref<IUser[]>([])
-const assignees = ref<IUser[]>([])
+const userSearch = ref('')
+const searchEnabled = ref(false)
+const {users: userResults, isFetching: usersLoading} = useProjectUserSearch(() => props.projectId, userSearch, searchEnabled)
+const assignees = ref<UserWithId[]>([])
 let isAdding = false
 
-let hasPreloaded = false
-
 function preloadUsers() {
-	if (hasPreloaded) return
-	hasPreloaded = true
-	findUser()
+	searchEnabled.value = true
 }
 
 watch(
 	() => props.modelValue,
 	(value) => {
-		assignees.value = value
+		assignees.value = withIds(value ?? [])
 	},
 	{
 		immediate: true,
@@ -91,7 +87,7 @@ watch(
 	},
 )
 
-async function addAssignee(user: IUser) {
+async function addAssignee(user: UserWithId) {
 	if (isAdding) {
 		return
 	}
@@ -107,36 +103,32 @@ async function addAssignee(user: IUser) {
 	}
 }
 
-async function removeAssignee(user: IUser) {
+async function removeAssignee(user: UserWithId) {
 	await taskStore.removeAssignee({user: user, taskId: props.taskId})
 
-	// Remove the assignee from the project
-	const idx = assignees.value.findIndex(a => a.id === user.id)
-	if (idx !== -1) {
-		assignees.value.splice(idx, 1)
-	}
+	assignees.value = assignees.value.filter(a => a.id !== user.id)
+	emit('update:modelValue', assignees.value)
 	success({message: t('task.assignee.unassignSuccess')})
 }
 
-async function findUser(query = '') {
-	const response = await projectUserService.getAll({projectId: props.projectId}, {s: query}) as IUser[]
-
-	const currentUserId = authStore.info?.id
-
-	// Filter the results to not include users who are already assigned
-	foundUsers.value = response
-		.filter(({id}) => !includesById(assignees.value, id))
-		.map(u => {
-			// Users may not have a display name set, so we fall back on the username in that case
-			u.name = getDisplayName(u)
-			return u
-		})
-		.sort((a, b) => {
-			if (a.id === currentUserId) return -1
-			if (b.id === currentUserId) return 1
-			return a.name.localeCompare(b.name)
-		})
+function findUser(query = '') {
+	userSearch.value = query
+	searchEnabled.value = true
 }
+
+function withIds(users: IUser[]): UserWithId[] {
+	return users.flatMap(user => user.id === undefined ? [] : [{...user, id: user.id}])
+}
+
+const foundUsers = computed(() => withIds(userResults.value)
+	.filter(({id}) => !assignees.value.some(assignee => assignee.id === id))
+	.map(user => ({...user, name: getDisplayName(user)}))
+	.sort((a, b) => {
+		if (a.id === authStore.info?.id) return -1
+		if (b.id === authStore.info?.id) return 1
+		return a.name.localeCompare(b.name)
+	}),
+)
 </script>
 
 <style lang="scss">

@@ -4,9 +4,8 @@ import type { Editor } from '@tiptap/core'
 import MentionList from './MentionList.vue'
 import { getPopupContainer } from '../popupContainer'
 import { createSuggestionPopup, type SuggestionPopup } from '../suggestionPopup'
-import ProjectUserService from '@/services/projectUsers'
+import {searchProjectUsers} from '@/client/queries/userSearch'
 import { getDisplayName } from '@/models/user'
-import type {User as IUser} from '@/client/generated'
 import type { MentionNodeAttrs } from '@tiptap/extension-mention'
 
 interface MentionItem extends MentionNodeAttrs {
@@ -16,17 +15,13 @@ interface MentionItem extends MentionNodeAttrs {
 }
 
 async function searchUsersForProject(projectId: number, query: string): Promise<MentionItem[]> {
-	const projectUserService = new ProjectUserService()
+	const users = await searchProjectUsers(projectId, query)
 
-	// Use server-side search with the 's' parameter
-	// @ts-expect-error - projectId is used for URL replacement but not part of IAbstract
-	const users = await projectUserService.getAll({ projectId }, { s: query }) as IUser[]
-
-	return users.map((user) => ({
+	return users.flatMap(user => user.username ? [{
 		id: user.username,
 		label: getDisplayName(user),
 		username: user.username,
-	}))
+	}] : [])
 }
 
 export default function mentionSuggestionSetup(projectId: number) {

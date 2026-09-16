@@ -163,15 +163,15 @@
 
 
 <script setup lang="ts">
-import {ref, reactive, computed, shallowReactive, type Ref} from 'vue'
+import {ref, reactive, computed, shallowReactive} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import UserProjectService from '@/services/userProject'
 import UserProjectModel from '@/models/userProject'
 import type {IUserProject} from '@/modelTypes/IUserProject'
 
-import UserService from '@/services/user'
-import UserModel, { getDisplayName } from '@/models/user'
+import {searchUsers} from '@/client/queries/userSearch'
+import { getDisplayName } from '@/models/user'
 import type {User as IUser} from '@/client/generated'
 
 import TeamProjectService from '@/services/teamProject'
@@ -179,7 +179,6 @@ import TeamProjectModel from '@/models/teamProject'
 import type { ITeamProject } from '@/modelTypes/ITeamProject'
 
 import TeamService from '@/services/team'
-import TeamModel from '@/models/team'
 import type {ITeam} from '@/modelTypes/ITeam'
 
 
@@ -210,8 +209,8 @@ const {t} = useI18n({useScope: 'global'})
 // This user service is a userProjectService, depending on the type we are using
 let stuffService: UserProjectService | TeamProjectService
 let stuffModel: IUserProject | ITeamProject
-let searchService: UserService | TeamService
-let sharable: Ref<IUser | ITeam>
+const searchService = shallowReactive(new TeamService())
+const sharable = ref<IUser>({})
 
 const searchLabel = ref('')
 const selectedPermission = ref({})
@@ -251,8 +250,7 @@ const sharableName = computed(() => {
 })
 
 if (props.shareType === 'user') {
-	searchService = shallowReactive(new UserService())
-	sharable = ref(new UserModel())
+	sharable.value = {}
 	searchLabel.value = 'username'
 
 	if (props.type === 'project') {
@@ -262,8 +260,7 @@ if (props.shareType === 'user') {
 		throw new Error('Unknown type: ' + props.type)
 	}
 } else if (props.shareType === 'team') {
-	searchService = new TeamService()
-	sharable = ref(new TeamModel())
+	sharable.value = {}
 	searchLabel.value = 'name'
 
 	if (props.type === 'project') {
@@ -360,7 +357,7 @@ async function toggleType(sharable) {
 	success({message: t('project.share.userTeam.updatedSuccess', {type: shareTypeName.value})})
 }
 
-const found = ref([])
+const found = ref<(IUser | ITeam)[]>([])
 
 const currentUserId = computed(() => authStore.info.id)
 async function find(query: string) {
@@ -372,7 +369,7 @@ async function find(query: string) {
 	// Include public teams here if we are sharing with teams and its enabled in the config
 	const results = props.shareType === 'team' && configStore.publicTeamsEnabled
 		? await searchService.getAll({}, {s: query, includePublic: true})
-		: await searchService.getAll({}, {s: query})
+		: props.shareType === 'user' ? await searchUsers(query) : await searchService.getAll({}, {s: query})
 
 	found.value = results
 		.filter(m => {

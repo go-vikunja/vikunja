@@ -17,6 +17,7 @@ import TaskReminderModel from '@/models/taskReminder'
 import type {ITask} from '@/modelTypes/ITask'
 import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
 import type {User as IUser} from '@/client/generated'
+import type {UserWithId} from '@/models/user'
 import type {IAttachment} from '@/modelTypes/IAttachment'
 
 import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
@@ -26,7 +27,7 @@ import {useConfigStore} from '@/stores/config'
 import {ensureProjects, findProjectByExactTitle, refreshProjects} from '@/client/queries/projects'
 import {useKanbanStore} from '@/stores/kanban'
 import {useBaseStore} from '@/stores/base'
-import ProjectUserService from '@/services/projectUsers'
+import {searchProjectUsers} from '@/client/queries/userSearch'
 import {useAuthStore} from '@/stores/auth'
 import TaskCollectionService, {type TaskFilterParams} from '@/services/taskCollection'
 import {getRandomColorHex} from '@/helpers/color/randomColor'
@@ -80,7 +81,7 @@ function findPropertyByValue(object, key, value, fuzzy = false) {
 // Check if the user exists in the search results
 function validateUser(
 	users: IUser[],
-	query: IUser['username'] | IUser['name'] | IUser['email'],
+	query: string,
 ) {
 	if (users.length === 1) {
 		return (
@@ -120,9 +121,8 @@ async function findAssignees(parsedTaskAssignees: string[], projectId: number): 
 		return []
 	}
 
-	const userService = new ProjectUserService()
 	const assignees = parsedTaskAssignees.map(async a => {
-		const users = (await userService.getAll({projectId}, {s: a}))
+		const users = (await searchProjectUsers(projectId, a))
 			.map(u => ({
 				...u,
 				match: a,
@@ -240,7 +240,7 @@ export const useTaskStore = defineStore('task', () => {
 		user,
 		taskId,
 	}: {
-		user: IUser,
+		user: UserWithId,
 		taskId: ITask['id']
 	}) {
 		const cancel = setModuleLoading(setIsLoading)
@@ -281,7 +281,7 @@ export const useTaskStore = defineStore('task', () => {
 		user,
 		taskId,
 	}: {
-		user: IUser,
+		user: UserWithId,
 		taskId: ITask['id']
 	}) {
 		const taskAssigneeService = new TaskAssigneeService()

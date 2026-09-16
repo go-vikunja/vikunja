@@ -536,6 +536,51 @@ test.describe('Task', () => {
 			await expect(page.locator('.task-view .column.assignees .multiselect .input-wrapper span.assignee')).not.toBeVisible()
 		})
 
+		test('Keeps a removed assignee unassigned after saving another field', async ({authenticatedPage: page, apiContext, userToken}) => {
+			const [removed, kept] = await UserFactory.create(2, {
+				id: (i: number) => 100 + i,
+			}, false)
+			const [project] = await ProjectFactory.create(1)
+			const [task] = await TaskFactory.create(1, {
+				id: 1,
+				project_id: project.id,
+			})
+			await UserProjectFactory.create(2, {
+				project_id: project.id,
+				user_id: (i: number) => 100 + i,
+			})
+			await TaskAssigneeFactory.create(2, {
+				task_id: task.id,
+				user_id: (i: number) => 100 + i,
+			})
+
+			await page.goto(`/tasks/${task.id}`)
+
+			const assignees = page.locator('.task-view .column.assignees .multiselect .input-wrapper span.assignee')
+			await expect(assignees).toHaveCount(2)
+			await page.getByRole('button', {name: `Remove ${removed.username} as assignee`}).click()
+			await expect(page.locator('.global-notification')).toContainText('Success')
+			await expect(assignees).toHaveCount(1)
+
+			const saved = page.waitForResponse(r =>
+				r.url().includes(`/tasks/${task.id}`) && r.request().method() === 'POST',
+			)
+			await page.locator('.task-view .action-buttons .button').filter({hasText: 'Set Priority'}).click()
+			await page.locator('.task-view .columns.details .column').filter({hasText: 'Priority'}).locator('.select select').selectOption('Urgent')
+			await saved
+
+			const resp = await apiContext.get(`tasks/${task.id}`, {
+				headers: {Authorization: `Bearer ${userToken}`},
+			})
+			expect(resp.ok()).toBe(true)
+			const {assignees: apiAssignees} = await resp.json()
+			expect(apiAssignees.map((a: User) => a.id)).toEqual([kept.id])
+
+			await page.reload()
+			await expect(assignees).toHaveCount(1)
+			await expect(assignees).toContainText(kept.username)
+		})
+
 		test('Can add a new label to a task', async ({authenticatedPage: page}) => {
 			const tasks = await TaskFactory.create(1, {
 				id: 1,
