@@ -48,7 +48,7 @@
 						<td>
 							<User
 								v-if="link.created_by"
-								:user="{name: link.created_by.name ?? '', username: link.created_by.username ?? '', botOwnerId: link.created_by.bot_owner_id}"
+								:user="link.created_by"
 								:avatar-size="24"
 							/>
 							<template v-else>

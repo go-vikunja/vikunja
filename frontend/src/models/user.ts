@@ -1,4 +1,5 @@
 import {nextTick, reactive} from 'vue'
+import type {User} from '@/client/generated'
 
 import AbstractModel from './abstractModel'
 import UserSettingsModel from '@/models/userSettings'
@@ -16,7 +17,7 @@ export const avatarCacheVersions = reactive(new Map<string, number>())
 
 // Returns undefined, never '': Vue renders src="" which the browser resolves to the page
 // URL and reports as a failed image load.
-export async function fetchAvatarBlobUrl(user: Pick<IUser, 'username'>, size = 50): Promise<string | undefined> {
+export async function fetchAvatarBlobUrl(user: Pick<User, 'username'>, size = 50): Promise<string | undefined> {
 	if (!user || !user.username) {
 		return undefined
 	}
@@ -76,12 +77,8 @@ export function invalidateAvatarCache(user: Pick<IUser, 'username'>) {
 	void nextTick(() => staleUrls.forEach(url => window.URL.revokeObjectURL(url)))
 }
 
-export function getDisplayName(user: Pick<IUser, 'name' | 'username'>) {
-	if (user.name !== '') {
-		return user.name
-	}
-
-	return user.username
+export function getDisplayName(user: Pick<User, 'name' | 'username'> | null | undefined) {
+	return user?.name || user?.username || ''
 }
 
 export default class UserModel extends AbstractModel<IUser> implements IUser {

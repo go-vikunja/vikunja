@@ -101,6 +101,7 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 	constructor(data: Partial<ITask> = {}) {
 		super()
 		const labels = (data.labels ?? []).map(label => objectToSnakeCase(label) as Label)
+		const assignees = (data.assignees ?? []).map(user => objectToSnakeCase(user) as User)
 		this.assignData(data)
 
 		this.id = Number(this.id)
@@ -110,10 +111,7 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 
 		this.labels = labels.sort((a, b) => (a.title ?? '').localeCompare(b.title ?? ''))
 
-		// Parse the assignees into user models
-		this.assignees = this.assignees.map(a => {
-			return new UserModel(a)
-		})
+		this.assignees = assignees
 
 		this.dueDate = parseDateOrNull(this.dueDate)
 		this.startDate = parseDateOrNull(this.startDate)
