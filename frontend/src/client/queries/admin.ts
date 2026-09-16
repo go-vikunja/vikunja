@@ -1,4 +1,4 @@
-import {queryOptions, useMutation, type QueryClient} from '@tanstack/vue-query'
+import {keepPreviousData, queryOptions, useMutation, type QueryClient} from '@tanstack/vue-query'
 import {
 	adminOverview,
 	adminUsersList,
@@ -16,6 +16,7 @@ import {
 	adminTeamsList,
 } from '@/client/generated'
 import type {
+	AdminProjectsListData,
 	AdminUser,
 	PaginatedAdminUser,
 	CreateUserBodyWritable,
@@ -31,6 +32,7 @@ import {accountKeys, type UserInfoResponse} from './account'
 import {i18n} from '@/i18n'
 
 export type DeleteUserMode = 'now' | 'scheduled'
+export type AdminProjectsQuery = NonNullable<AdminProjectsListData['query']>
 
 export const adminKeys = {
 	all: ['admin'] as const,
@@ -40,7 +42,7 @@ export const adminKeys = {
 	userSearches: ['admin', 'userSearch'] as const,
 	userSearch: (q: string) => [...adminKeys.userSearches, q] as const,
 	projects: ['admin', 'projects'] as const,
-	projectsPage: (page: number) => ['admin', 'projects', page] as const,
+	projectsPage: (query: AdminProjectsQuery) => ['admin', 'projects', query] as const,
 	invites: ['admin', 'invites'] as const,
 	invitesPage: (page: number) => ['admin', 'invites', page] as const,
 	teams: (q: string) => ['admin', 'teams', q] as const,
@@ -70,10 +72,11 @@ export function adminUserSearchQuery(q: string) {
 	})
 }
 
-export function adminProjectsQuery(page: number) {
+export function adminProjectsQuery(query: AdminProjectsQuery) {
 	return queryOptions({
-		queryKey: adminKeys.projectsPage(page),
-		queryFn: async ({signal}) => (await adminProjectsList({query: {page}, signal})).data,
+		queryKey: adminKeys.projectsPage(query),
+		queryFn: async ({signal}) => (await adminProjectsList({query, signal})).data,
+		placeholderData: keepPreviousData,
 	})
 }
 
