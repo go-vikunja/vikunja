@@ -175,19 +175,37 @@ func TestSavedFilter_Update(t *testing.T) {
 }
 
 func TestSavedFilter_Delete(t *testing.T) {
-	db.LoadAndAssertFixtures(t)
-	s := db.NewSession()
-	defer s.Close()
+	t.Run("by id", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
 
-	sf := &SavedFilter{
-		ID: 1,
-	}
-	err := sf.Delete(s, &user.User{ID: 1})
-	require.NoError(t, err)
-	err = s.Commit()
-	require.NoError(t, err)
-	db.AssertMissing(t, "saved_filters", map[string]interface{}{
-		"id": 1,
+		sf := &SavedFilter{
+			ID: 1,
+		}
+		err := sf.Delete(s, &user.User{ID: 1})
+		require.NoError(t, err)
+		err = s.Commit()
+		require.NoError(t, err)
+		db.AssertMissing(t, "saved_filters", map[string]interface{}{
+			"id": 1,
+		})
+	})
+	// The handlers run CanDelete first, which loads every field into the struct.
+	t.Run("after the permission check loaded the filter", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		sf := &SavedFilter{ID: 1}
+		can, err := sf.CanDelete(s, &user.User{ID: 1})
+		require.NoError(t, err)
+		require.True(t, can)
+		require.NoError(t, sf.Delete(s, &user.User{ID: 1}))
+		require.NoError(t, s.Commit())
+		db.AssertMissing(t, "saved_filters", map[string]interface{}{
+			"id": 1,
+		})
 	})
 }
 

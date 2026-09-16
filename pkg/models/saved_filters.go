@@ -285,9 +285,11 @@ func (sf *SavedFilter) Update(s *xorm.Session, _ web.Auth) error {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /filters/{id} [delete]
 func (sf *SavedFilter) Delete(s *xorm.Session, _ web.Auth) error {
+	// The permission check loads the whole filter into sf; xorm would turn every
+	// loaded field into a condition, and a re-serialized filters JSON never matches.
 	_, err := s.
 		Where("id = ?", sf.ID).
-		Delete(sf)
+		Delete(&SavedFilter{})
 	return err
 }
 
