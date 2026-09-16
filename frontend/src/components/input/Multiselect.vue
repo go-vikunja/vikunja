@@ -130,8 +130,8 @@
 							class="create-icon"
 						/>
 						<slot
-							name="searchResult"
-							:option="query"
+							name="createOption"
+							:query="query"
 						>
 							<span class="search-result">
 								{{ query }}
@@ -157,7 +157,7 @@
 </template>
 
 <script setup lang="ts" generic="T extends Record<string, unknown>">
-import {computed, onBeforeUnmount, onMounted, ref, toRefs, useId, watch, type ComponentPublicInstance} from 'vue'
+import {computed, onBeforeUnmount, onMounted, ref, toRefs, useId, watch, type ComponentPublicInstance, type Ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
@@ -246,6 +246,13 @@ const emit = defineEmits<{
 	'remove': [value: T],
 }>()
 
+defineSlots<{
+	items?(props: {items: T[], remove: (item: T) => void}): unknown
+	tag?(props: {item: T}): unknown
+	searchResult?(props: {option: T}): unknown
+	createOption?(props: {query: string}): unknown
+}>()
+
 const listboxId = useId()
 
 const accessibleName = computed(() => props.ariaLabel || props.placeholder || undefined)
@@ -259,14 +266,14 @@ function elementInResults(elem: string | T, label: string, query: string): boole
 	return elem === query
 }
 
-const query = ref<string | T>('')
+const query = ref('')
 const searchTimeout = ref<ReturnType<typeof setTimeout> | null>(null)
 const localLoading = ref(false)
 const showSearchResults = ref(false)
 
 // Split by `multiple` so the multiple value can never hold a single item or the query text.
-const selectedItems = ref<T[]>([])
-const selectedItem = ref<T | null>(null)
+const selectedItems = ref([]) as Ref<T[]>
+const selectedItem = ref(null) as Ref<T | null>
 
 onMounted(() => document.addEventListener('click', hideSearchResultsHandler))
 onBeforeUnmount(() => document.removeEventListener('click', hideSearchResultsHandler))
@@ -302,7 +309,7 @@ const searchResultsVisible = computed(() => {
 })
 
 const queryHasExactMatch = computed(() => {
-	const hasResult = filteredSearchResults.value.some((elem: T) => elementInResults(elem, props.label, query.value as string))
+	const hasResult = filteredSearchResults.value.some((elem: T) => elementInResults(elem, props.label, query.value))
 	const hasQueryAlreadyAdded = props.multiple && selectedItems.value.some((elem: T) => elementInResults(elem, props.label, query.value))
 
 	return hasResult || hasQueryAlreadyAdded
@@ -520,7 +527,7 @@ function createOrSelectOnEnter() {
 
 	if (!creatableAvailable.value) {
 		// Check if there's an exact match for our search term
-		const exactMatch = filteredSearchResults.value.find((elem: T) => elementInResults(elem, props.label, query.value as string))
+		const exactMatch = filteredSearchResults.value.find((elem: T) => elementInResults(elem, props.label, query.value))
 		if (exactMatch) {
 			select(exactMatch)
 		}
