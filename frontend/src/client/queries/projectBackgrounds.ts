@@ -177,11 +177,11 @@ export function uploadProjectBackgroundMutationOptions(shouldNotify: ShouldNotif
 export function deleteProjectBackgroundMutationOptions(shouldNotify: ShouldNotify = () => true) {
 	return mutationOptions({
 		...backgroundMutationCallbacks(
-			(projectId: number) => projectId,
+			(input: {projectId: number}) => input.projectId,
 			shouldNotify,
 			() => i18n.global.t('project.background.removeSuccess'),
 		),
-		mutationFn: async (projectId: number) => {
+		mutationFn: async ({projectId}: {projectId: number}) => {
 			const request = captureClientRequestContext()
 			const {data} = await projectsBackgroundDelete({path: {project: projectId}})
 			assertClientRequestContext(request)
