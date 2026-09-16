@@ -18,12 +18,7 @@ vi.mock('@/services/task', () => ({
 	},
 }))
 
-vi.mock('@/services/team', () => ({
-	default: class {
-		loading = false
-		getAll = vi.fn(async () => [])
-	},
-}))
+vi.mock('@/client/generated', () => ({teamsList: vi.fn(async () => ({data: {items: []}}))}))
 
 const i18n = createI18n({legacy: false, locale: 'en', messages: {en}})
 
