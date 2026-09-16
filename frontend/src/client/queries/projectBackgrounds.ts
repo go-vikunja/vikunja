@@ -1,4 +1,4 @@
-import {infiniteQueryOptions, keepPreviousData, mutationOptions, queryOptions, useMutation, type QueryClient} from '@tanstack/vue-query'
+import {infiniteQueryOptions, keepPreviousData, queryOptions, useMutation, type QueryClient} from '@tanstack/vue-query'
 
 import {
 	backgroundsUnsplashSearch,
@@ -9,11 +9,11 @@ import {
 	projectsBackgroundUpload,
 } from '@/client/generated'
 import type {Image, Project} from '@/client/generated'
+import {contextMutationOptions} from '@/client/queries/contextMutation'
 import {mapProjectNavigationItem, projectKeys} from '@/client/queries/projects'
 import type {ProjectListResult, ProjectResponse} from '@/client/queries/projects'
 import {assertClientRequestContext, captureClientRequestContext, isClientRequestContextCurrent} from '@/client/requestContext'
 import {i18n} from '@/i18n'
-import {error, success} from '@/message'
 
 export const projectBackgroundKeys = {
 	all: ['project-backgrounds'] as const,
@@ -136,58 +136,60 @@ function backgroundMutationCallbacks<TInput>(
 	}
 }
 
-export function setUnsplashProjectBackgroundMutationOptions(shouldNotify: ShouldNotify = () => true) {
-	return mutationOptions({
-		...backgroundMutationCallbacks(
-			(input: {projectId: number; imageId: string}) => input.projectId,
-			shouldNotify,
-			() => i18n.global.t('project.background.success'),
-		),
-		mutationFn: async ({projectId, imageId}: {projectId: number; imageId: string}) => {
-			const request = captureClientRequestContext()
-			const {data} = await projectsBackgroundUnsplashSet({
-				path: {project: projectId},
-				body: {id: imageId},
-			})
-			assertClientRequestContext(request)
-			return backgroundFromResponse(data)
+function backgroundMutationOptions<TInput extends {projectId: number}>(
+	mutationFn: (input: TInput) => Promise<Project>,
+	shouldNotify: ShouldNotify,
+	successMessage: () => string,
+) {
+	return contextMutationOptions({
+		mutationFn: async (input: TInput) => backgroundFromResponse(await mutationFn(input)),
+		onSuccess: (background, {projectId}, client) => {
+			const update = (project: ProjectResponse) => ({...project, ...background})
+			client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
+				current ? mapProjectNavigationItem(current, projectId, update) : current,
+			)
+			client.setQueryData<ProjectResponse>(projectKeys.detail(projectId), current =>
+				current ? update(current) : current,
+			)
 		},
+		onSettled: ({projectId}, client) => Promise.all([
+			client.invalidateQueries({queryKey: projectKeys.list()}),
+			client.invalidateQueries({queryKey: projectKeys.detail(projectId)}),
+			client.invalidateQueries({queryKey: projectBackgroundKeys.project(projectId), exact: true}),
+		]),
+		successMessage: (_background, {projectId}) => shouldNotify(projectId) ? successMessage() : undefined,
+		toastError: ({projectId}) => shouldNotify(projectId),
 	})
+}
+
+export function setUnsplashProjectBackgroundMutationOptions(shouldNotify: ShouldNotify = () => true) {
+	return backgroundMutationOptions(
+		async ({projectId, imageId}: {projectId: number; imageId: string}) => (await projectsBackgroundUnsplashSet({
+			path: {project: projectId},
+			body: {id: imageId},
+		})).data,
+		shouldNotify,
+		() => i18n.global.t('project.background.success'),
+	)
 }
 
 export function uploadProjectBackgroundMutationOptions(shouldNotify: ShouldNotify = () => true) {
-	return mutationOptions({
-		...backgroundMutationCallbacks(
-			(input: {projectId: number; file: Blob | File}) => input.projectId,
-			shouldNotify,
-			() => i18n.global.t('project.background.success'),
-		),
-		mutationFn: async ({projectId, file}: {projectId: number; file: Blob | File}) => {
-			const request = captureClientRequestContext()
-			const {data} = await projectsBackgroundUpload({
-				path: {project: projectId},
-				body: {background: file},
-			})
-			assertClientRequestContext(request)
-			return backgroundFromResponse(data)
-		},
-	})
+	return backgroundMutationOptions(
+		async ({projectId, file}: {projectId: number; file: Blob | File}) => (await projectsBackgroundUpload({
+			path: {project: projectId},
+			body: {background: file},
+		})).data,
+		shouldNotify,
+		() => i18n.global.t('project.background.success'),
+	)
 }
 
 export function deleteProjectBackgroundMutationOptions(shouldNotify: ShouldNotify = () => true) {
-	return mutationOptions({
-		...backgroundMutationCallbacks(
-			(input: {projectId: number}) => input.projectId,
-			shouldNotify,
-			() => i18n.global.t('project.background.removeSuccess'),
-		),
-		mutationFn: async ({projectId}: {projectId: number}) => {
-			const request = captureClientRequestContext()
-			const {data} = await projectsBackgroundDelete({path: {project: projectId}})
-			assertClientRequestContext(request)
-			return backgroundFromResponse(data)
-		},
-	})
+	return backgroundMutationOptions(
+		async ({projectId}: {projectId: number}) => (await projectsBackgroundDelete({path: {project: projectId}})).data,
+		shouldNotify,
+		() => i18n.global.t('project.background.removeSuccess'),
+	)
 }
 
 export function useSetUnsplashProjectBackgroundMutation(shouldNotify?: ShouldNotify) {
