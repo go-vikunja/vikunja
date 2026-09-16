@@ -1,4 +1,4 @@
-import {mutationOptions, queryOptions, useMutation, type QueryClient} from '@tanstack/vue-query'
+import {queryOptions, useMutation, type QueryClient} from '@tanstack/vue-query'
 
 import {
 	filtersCreate,
@@ -16,9 +16,9 @@ import {assertClientRequestContext, captureClientRequestContext, isClientRequest
 import type {ClientRequestContext} from '@/client/requestContext'
 import {removeProjectFromHistory} from '@/modules/projectHistory'
 import {i18n} from '@/i18n'
-import {error, success} from '@/message'
 import type {EditableTaskCollection} from '@/types/EditableTaskCollection'
 
+import {contextMutationOptions} from './contextMutation'
 import {getProjectIdFromSavedFilterId, mapProjectNavigationItem, projectKeys, type ProjectListResult, type ProjectResponse} from './projects'
 
 export type SavedFilterResponse = Omit<SavedFilterReadBody,
@@ -163,128 +163,109 @@ async function settleSavedFilter(
 	assertClientRequestContext(context.request)
 }
 
+function invalidateSavedFilter(client: QueryClient, id?: number) {
+	return Promise.all([
+		client.invalidateQueries({queryKey: projectKeys.list()}),
+		...(id === undefined ? [] : [
+			client.invalidateQueries({queryKey: savedFilterKeys.detail(id)}),
+			client.invalidateQueries({queryKey: projectKeys.detail(getProjectIdFromSavedFilterId(id))}),
+		]),
+	])
+}
+
+function savedFilterQueryKeys(id: number) {
+	return [savedFilterKeys.detail(id), projectKeys.list(), projectKeys.detail(getProjectIdFromSavedFilterId(id))]
+}
+
 export function createSavedFilterMutationOptions(shouldNotify: () => boolean = () => true) {
-	return mutationOptions({
-		onMutate: () => ({request: captureClientRequestContext()}),
+	return contextMutationOptions({
 		mutationFn: async (filter: SavedFilterWritable) => {
-			const request = captureClientRequestContext()
 			const {data} = await filtersCreate({body: filter})
-			assertClientRequestContext(request)
 			return normalizeSavedFilter(data)
 		},
-		onError: (cause, _filter, context) => {
-			if (context && isClientRequestContextCurrent(context.request) && shouldNotify()) {
-				error(cause)
-			}
-		},
-		onSettled: (_data, _error, _filter, context, {client}) => settleSavedFilter(client, context),
+		onSettled: (_filter, client) => invalidateSavedFilter(client),
+		toastError: () => shouldNotify(),
 	})
 }
 
 export function updateSavedFilterMutationOptions(shouldNotify: UpdateNotify = () => true) {
-	return mutationOptions({
+	return contextMutationOptions({
 		mutationFn: async ({id, ...filter}: UpdateSavedFilterInput) => {
-			const request = captureClientRequestContext()
 			const {data} = await filtersUpdate({path: {filter: id}, body: filter})
-			assertClientRequestContext(request)
 			return normalizeSavedFilter(data)
 		},
-		onMutate: async ({id, ...filter}, {client}) => {
-			const snapshot = await snapshotSavedFilter(client, id)
-			client.setQueryData<SavedFilterResponse>(savedFilterKeys.detail(id), current =>
-				current ? {...current, ...filter} : current,
-			)
-			updateNavigation(client, id, {title: filter.title, is_favorite: filter.is_favorite})
-			return snapshot
+		optimistic: {
+			queryKeys: ({id}) => savedFilterQueryKeys(id),
+			update: ({id, ...filter}, client) => {
+				client.setQueryData<SavedFilterResponse>(savedFilterKeys.detail(id), current =>
+					current ? {...current, ...filter} : current,
+				)
+				updateNavigation(client, id, {title: filter.title, is_favorite: filter.is_favorite})
+			},
 		},
-		onError: (cause, input, context, {client}) => {
-			restoreSavedFilter(client, context)
-			if (context && isClientRequestContextCurrent(context.request) && shouldNotify(input)) {
-				error(cause)
-			}
-		},
-		onSuccess: (updated, input, context, {client}) => {
-			assertClientRequestContext(context.request)
+		onSuccess: (updated, input, client) => {
 			client.setQueryData<SavedFilterResponse>(savedFilterKeys.detail(input.id), current =>
 				current ? updated : current,
 			)
 			updateNavigation(client, input.id, {title: updated.title, is_favorite: updated.is_favorite})
-			if (shouldNotify(input)) {
-				success({message: i18n.global.t('filters.edit.success')})
-			}
 		},
-		onSettled: (_data, _error, {id}, context, {client}) => settleSavedFilter(client, context, id),
+		onSettled: ({id}, client) => invalidateSavedFilter(client, id),
+		successMessage: (_updated, input) => shouldNotify(input) ? i18n.global.t('filters.edit.success') : undefined,
+		toastError: shouldNotify,
 	})
 }
 
 export function patchSavedFilterFavoriteMutationOptions() {
-	return mutationOptions({
+	return contextMutationOptions({
 		mutationFn: async ({id, isFavorite}: {id: number; isFavorite: boolean}) => {
-			const request = captureClientRequestContext()
 			const {data} = await patchFiltersRead({
 				path: {filter: id},
 				body: [{op: 'replace', path: '/is_favorite', value: isFavorite}],
 			})
-			assertClientRequestContext(request)
 			return normalizeSavedFilter(data)
 		},
-		onMutate: async ({id, isFavorite}, {client}) => {
-			const snapshot = await snapshotSavedFilter(client, id)
-			client.setQueryData<SavedFilterResponse>(savedFilterKeys.detail(id), current =>
-				current ? {...current, is_favorite: isFavorite} : current,
-			)
-			updateNavigation(client, id, {is_favorite: isFavorite})
-			return snapshot
+		optimistic: {
+			queryKeys: ({id}) => savedFilterQueryKeys(id),
+			update: ({id, isFavorite}, client) => {
+				client.setQueryData<SavedFilterResponse>(savedFilterKeys.detail(id), current =>
+					current ? {...current, is_favorite: isFavorite} : current,
+				)
+				updateNavigation(client, id, {is_favorite: isFavorite})
+			},
 		},
-		onError: (cause, _input, context, {client}) => {
-			restoreSavedFilter(client, context)
-			if (context && isClientRequestContextCurrent(context.request)) {
-				error(cause)
-			}
-		},
-		onSuccess: (updated, {id}, context, {client}) => {
-			assertClientRequestContext(context.request)
+		onSuccess: (updated, {id}, client) => {
 			client.setQueryData<SavedFilterResponse>(savedFilterKeys.detail(id), current =>
 				current ? {...current, is_favorite: updated.is_favorite} : current,
 			)
 			updateNavigation(client, id, {is_favorite: updated.is_favorite})
 		},
-		onSettled: (_data, _error, {id}, context, {client}) => settleSavedFilter(client, context, id),
+		onSettled: ({id}, client) => invalidateSavedFilter(client, id),
 	})
 }
 
 export function deleteSavedFilterMutationOptions(shouldNotify: DeleteNotify = () => true) {
-	return mutationOptions({
+	return contextMutationOptions({
 		mutationFn: async (id: number) => {
-			const request = captureClientRequestContext()
 			await filtersDelete({path: {filter: id}})
-			assertClientRequestContext(request)
 		},
-		onMutate: async (id, {client}) => {
-			const snapshot = await snapshotSavedFilter(client, id)
-			const projectId = getProjectIdFromSavedFilterId(id)
-			client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
-				current ? {...current, savedFilterProjects: current.savedFilterProjects.filter(project => project.id !== projectId)} : current,
-			)
-			return snapshot
+		optimistic: {
+			queryKeys: savedFilterQueryKeys,
+			update: (id, client) => {
+				const projectId = getProjectIdFromSavedFilterId(id)
+				client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
+					current ? {...current, savedFilterProjects: current.savedFilterProjects.filter(project => project.id !== projectId)} : current,
+				)
+			},
 		},
-		onError: (cause, id, context, {client}) => {
-			restoreSavedFilter(client, context)
-			if (context && isClientRequestContextCurrent(context.request) && shouldNotify(id)) {
-				error(cause)
-			}
-		},
-		onSuccess: (_data, id, context, {client}) => {
-			assertClientRequestContext(context.request)
+		onSuccess: (_data, id, client) => {
 			const projectId = getProjectIdFromSavedFilterId(id)
 			client.removeQueries({queryKey: savedFilterKeys.detail(id)})
 			client.removeQueries({queryKey: projectKeys.detail(projectId)})
 			removeProjectFromHistory({id: projectId})
-			if (shouldNotify(id)) {
-				success({message: i18n.global.t('filters.delete.success')})
-			}
 		},
-		onSettled: (_data, _error, id, context, {client}) => settleSavedFilter(client, context, id),
+		onSettled: (id, client) => invalidateSavedFilter(client, id),
+		successMessage: (_data, id) => shouldNotify(id) ? i18n.global.t('filters.delete.success') : undefined,
+		toastError: shouldNotify,
 	})
 }
 
