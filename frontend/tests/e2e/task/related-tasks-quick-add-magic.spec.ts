@@ -50,6 +50,9 @@ test.describe('Related tasks quick add magic', () => {
 		await page.goto(`/tasks/${parent.id}`)
 		const input = await openRelatedTasksForm(page)
 		await input.fill('Important work !4')
+		const createOption = relationSearchResults(page).and(page.locator('.is-create-option'))
+		await expect(createOption.locator('.search-result')).toHaveText('Important work !4')
+		await expect(createOption.locator('.hint-text')).toHaveText('Add this as related task')
 		await input.press('Enter')
 
 		const relatedTaskLink = page.locator('.task-relations .related-tasks .task a').filter({hasText: 'Important work'})
