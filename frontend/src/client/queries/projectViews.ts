@@ -1,4 +1,4 @@
-import {mutationOptions, useMutation, type QueryClient} from '@tanstack/vue-query'
+import {useMutation, type QueryClient} from '@tanstack/vue-query'
 
 import {
 	projectViewsCreate,
@@ -10,9 +10,9 @@ import type {
 	ProjectViewWritable,
 } from '@/client/generated'
 import {assertClientRequestContext, captureClientRequestContext, isClientRequestContextCurrent} from '@/client/requestContext'
+import {contextMutationOptions} from './contextMutation'
 import {mapProjectNavigationItem, projectKeys, type ProjectListResult, type ProjectResponse} from './projects'
 import {i18n} from '@/i18n'
-import {error, success} from '@/message'
 
 export type ProjectViewDraft = Required<Omit<ProjectViewWritable, 'bucket_configuration'>> & {
 	bucket_configuration: NonNullable<ProjectViewWritable['bucket_configuration']>
@@ -132,82 +132,65 @@ function settledProjectViews() {
 	}
 }
 
+function invalidateProjectViews(client: QueryClient, projectId: number) {
+	return Promise.all([
+		// Refetching the list reloads every page for one project's views, so it is only marked stale.
+		client.invalidateQueries({queryKey: projectKeys.list(), refetchType: 'none'}),
+		client.invalidateQueries({queryKey: projectKeys.detail(projectId)}),
+	])
+}
+
 export function createProjectViewMutationOptions(shouldNotify: ShouldNotify = () => true) {
-	return mutationOptions({
-		onMutate: () => ({request: captureClientRequestContext()}),
+	return contextMutationOptions({
 		mutationFn: async ({projectId, view}: CreateProjectViewInput) => {
-			const request = captureClientRequestContext()
 			const {data} = await projectViewsCreate({path: {project: projectId}, body: view})
-			assertClientRequestContext(request)
 			return data
 		},
-		onSuccess: (created, input, context, {client}) => {
-			assertClientRequestContext(context.request)
+		onSuccess: (created, input, client) => {
 			updateProjectViews(client, input.projectId, views => replaceView(views, created))
-			if (shouldNotify(input)) {
-				success({message: i18n.global.t('project.views.createSuccess')})
-			}
 		},
-		onError: (cause, input, context) => {
-			if (context && isClientRequestContextCurrent(context.request) && shouldNotify(input)) {
-				error(cause)
-			}
-		},
-		onSettled: settledProjectViews(),
+		onSettled: ({projectId}, client) => invalidateProjectViews(client, projectId),
+		successMessage: (_created, input) => shouldNotify(input) ? i18n.global.t('project.views.createSuccess') : undefined,
+		toastError: shouldNotify,
 	})
 }
 
 export function updateProjectViewMutationOptions(successMessage?: string, shouldNotify: ShouldNotify = () => true) {
-	return mutationOptions({
+	return contextMutationOptions({
 		mutationFn: async ({projectId, viewId, view}: UpdateProjectViewInput) => {
-			const request = captureClientRequestContext()
 			const {data} = await projectViewsUpdate({path: {project: projectId, view: viewId}, body: view})
-			assertClientRequestContext(request)
 			return data
 		},
-		onMutate: async ({projectId, viewId, view}, {client}) => {
-			const snapshot = await snapshotProjectViews(client, projectId)
-			updateProjectViews(client, projectId, views => sortProjectViewsByPosition(views.map(existing =>
-				existing.id === viewId ? {...existing, ...view} : existing,
-			)))
-			return snapshot
+		optimistic: {
+			queryKeys: ({projectId}) => [projectKeys.list(), projectKeys.detail(projectId)],
+			update: ({projectId, viewId, view}, client) => {
+				updateProjectViews(client, projectId, views => sortProjectViewsByPosition(views.map(existing =>
+					existing.id === viewId ? {...existing, ...view} : existing,
+				)))
+			},
 		},
-		onError: (cause, input, context, {client}) => {
-			restoreProjectViews(client, context)
-			if (context && isClientRequestContextCurrent(context.request) && shouldNotify(input)) {
-				error(cause)
-			}
-		},
-		onSuccess: (updated, input, context, {client}) => {
-			assertClientRequestContext(context.request)
+		onSuccess: (updated, input, client) => {
 			updateProjectViews(client, input.projectId, views => replaceView(views, updated))
-			if (shouldNotify(input)) {
-				success({message: successMessage ?? i18n.global.t('project.views.updateSuccess')})
-			}
 		},
-		onSettled: settledProjectViews(),
+		onSettled: ({projectId}, client) => invalidateProjectViews(client, projectId),
+		successMessage: (_updated, input) => shouldNotify(input) ? successMessage ?? i18n.global.t('project.views.updateSuccess') : undefined,
+		toastError: shouldNotify,
 	})
 }
 
 export function deleteProjectViewMutationOptions(shouldNotify: ShouldNotify = () => true) {
-	return mutationOptions({
+	return contextMutationOptions({
 		mutationFn: async ({projectId, viewId}: DeleteProjectViewInput) => {
-			const request = captureClientRequestContext()
 			await projectViewsDelete({path: {project: projectId, view: viewId}})
-			assertClientRequestContext(request)
 		},
-		onMutate: async ({projectId, viewId}, {client}) => {
-			const snapshot = await snapshotProjectViews(client, projectId)
-			updateProjectViews(client, projectId, views => views.filter(view => view.id !== viewId))
-			return snapshot
+		optimistic: {
+			queryKeys: ({projectId}) => [projectKeys.list(), projectKeys.detail(projectId)],
+			update: ({projectId, viewId}, client) => {
+				updateProjectViews(client, projectId, views => views.filter(view => view.id !== viewId))
+			},
 		},
-		onError: (cause, input, context, {client}) => {
-			restoreProjectViews(client, context)
-			if (context && isClientRequestContextCurrent(context.request) && shouldNotify(input)) {
-				error(cause)
-			}
-		},
-		onSettled: settledProjectViews(),
+		onSettled: ({projectId}, client) => invalidateProjectViews(client, projectId),
+		toastError: shouldNotify,
 	})
 }
 
