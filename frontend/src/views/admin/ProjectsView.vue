@@ -1,6 +1,41 @@
 <template>
 	<Card>
 		<div class="admin-projects">
+			<div class="admin-projects__toolbar">
+				<div class="admin-projects__search">
+					<FormInput
+						v-model="searchTerm"
+						type="text"
+						:placeholder="$t('admin.projects.searchPlaceholder')"
+						:aria-label="$t('admin.projects.searchPlaceholder')"
+						@input="onSearch"
+					/>
+				</div>
+				<Multiselect
+					v-model="ownerFilter"
+					class="admin-projects__owner-filter"
+					:loading="userSearchLoading"
+					:placeholder="$t('admin.projects.filterByOwner')"
+					:aria-label="$t('admin.projects.filterByOwner')"
+					:search-results="userResults"
+					label="username"
+					@search="searchUsers"
+				>
+					<template #searchResult="{option}">
+						<User
+							v-if="typeof option !== 'string'"
+							:avatar-size="24"
+							:show-username="true"
+							:user="option"
+						/>
+					</template>
+				</Multiselect>
+				<FormCheckbox
+					v-model="excludeInboxes"
+					:label="$t('admin.projects.hideInboxes')"
+				/>
+			</div>
+
 			<p v-if="loading">
 				{{ $t('misc.loading') }}
 			</p>
@@ -8,11 +43,46 @@
 				<table class="table has-actions is-striped is-hoverable is-fullwidth">
 					<thead>
 						<tr>
-							<th>{{ $t('misc.id') }}</th>
-							<th>{{ $t('project.title') }}</th>
-							<th>{{ $t('admin.projects.ownerLabel') }}</th>
-							<th>{{ $t('task.attributes.created') }}</th>
-							<th>{{ $t('task.attributes.updated') }}</th>
+							<th :aria-sort="ariaSort(sortBy.id)">
+								{{ $t('misc.id') }}
+								<Sort
+									:order="sortBy.id"
+									:label="$t('misc.id')"
+									@click="sort('id', $event)"
+								/>
+							</th>
+							<th :aria-sort="ariaSort(sortBy.title)">
+								{{ $t('project.title') }}
+								<Sort
+									:order="sortBy.title"
+									:label="$t('project.title')"
+									@click="sort('title', $event)"
+								/>
+							</th>
+							<th :aria-sort="ariaSort(sortBy.owner)">
+								{{ $t('admin.projects.ownerLabel') }}
+								<Sort
+									:order="sortBy.owner"
+									:label="$t('admin.projects.ownerLabel')"
+									@click="sort('owner', $event)"
+								/>
+							</th>
+							<th :aria-sort="ariaSort(sortBy.created)">
+								{{ $t('task.attributes.created') }}
+								<Sort
+									:order="sortBy.created"
+									:label="$t('task.attributes.created')"
+									@click="sort('created', $event)"
+								/>
+							</th>
+							<th :aria-sort="ariaSort(sortBy.updated)">
+								{{ $t('task.attributes.updated') }}
+								<Sort
+									:order="sortBy.updated"
+									:label="$t('task.attributes.updated')"
+									@click="sort('updated', $event)"
+								/>
+							</th>
 							<th>{{ $t('navigation.settings') }}</th>
 						</tr>
 					</thead>
@@ -106,7 +176,8 @@
 </template>
 
 <script setup lang="ts">
-import {ref, onMounted} from 'vue'
+import {ref, onMounted, watch} from 'vue'
+import {useDebounceFn} from '@vueuse/core'
 import {
 	adminProjectsList,
 	adminProjectsPatchOwner,
@@ -121,6 +192,9 @@ import PaginationEmit from '@/components/misc/PaginationEmit.vue'
 import XButton from '@/components/input/Button.vue'
 import FormField from '@/components/input/FormField.vue'
 import Multiselect from '@/components/input/Multiselect.vue'
+import FormInput from '@/components/input/FormInput.vue'
+import FormCheckbox from '@/components/input/FormCheckbox.vue'
+import Sort from '@/components/tasks/partials/Sort.vue'
 import User from '@/components/misc/User.vue'
 import ProjectSettingsDropdown from '@/components/project/ProjectSettingsDropdown.vue'
 import DropdownItem from '@/components/misc/DropdownItem.vue'
@@ -133,11 +207,18 @@ const {t} = useI18n({useScope: 'global'})
 const adminUserService = new AdminUserService()
 
 type AdminProject = Project & Required<Pick<Project, 'id'>>
+type SortField = 'id' | 'title' | 'owner' | 'created' | 'updated'
+type SortOrder = 'asc' | 'desc'
 
 const projects = ref<AdminProject[]>([])
 const loading = ref(false)
 const currentPage = ref(1)
 const totalPages = ref(1)
+
+const searchTerm = ref('')
+const ownerFilter = ref<IAdminUser | null>(null)
+const excludeInboxes = ref(false)
+const sortBy = ref<Partial<Record<SortField, SortOrder>>>({id: 'desc'})
 
 const reassignTarget = ref<AdminProject | null>(null)
 const userResults = ref<IAdminUser[]>([])
@@ -147,7 +228,15 @@ const selectedUser = ref<IAdminUser | null>(null)
 async function load() {
 	loading.value = true
 	try {
-		const {data} = await adminProjectsList({query: {page: currentPage.value}})
+		const sortFields = Object.keys(sortBy.value) as SortField[]
+		const {data} = await adminProjectsList({query: {
+			page: currentPage.value,
+			q: searchTerm.value || undefined,
+			owner_id: ownerFilter.value?.id,
+			exclude_inboxes: excludeInboxes.value || undefined,
+			sort_by: sortFields,
+			order_by: sortFields.map(field => sortBy.value[field] as SortOrder),
+		}})
 		projects.value = (data.items ?? []).filter((project): project is AdminProject => project.id !== undefined)
 		totalPages.value = data.total_pages ?? 1
 	} catch (e) {
@@ -159,6 +248,49 @@ async function load() {
 
 function goToPage(page: number) {
 	currentPage.value = page
+	load()
+}
+
+function reload() {
+	// Reset to page 1 so a narrower filter doesn't strand the UI on an empty page.
+	currentPage.value = 1
+	load()
+}
+
+const onSearch = useDebounceFn(reload, 300)
+
+watch([ownerFilter, excludeInboxes], reload)
+
+function ariaSort(order: SortOrder | undefined): 'ascending' | 'descending' | undefined {
+	if (order === 'asc') {
+		return 'ascending'
+	}
+	if (order === 'desc') {
+		return 'descending'
+	}
+	return undefined
+}
+
+// Allow sorting by multiple columns only when ctrl is pressed
+function sort(field: SortField, event?: MouseEvent) {
+	const ctrlPressed = event?.ctrlKey || event?.metaKey
+
+	const currentOrder = sortBy.value[field]
+	let newOrder: SortOrder | undefined
+	if (currentOrder === undefined) {
+		newOrder = 'desc'
+	} else if (currentOrder === 'desc') {
+		newOrder = 'asc'
+	}
+
+	const next = ctrlPressed ? {...sortBy.value} : {}
+	if (newOrder) {
+		next[field] = newOrder
+	} else {
+		delete next[field]
+	}
+	sortBy.value = next
+
 	load()
 }
 
@@ -205,6 +337,22 @@ onMounted(load)
 </script>
 
 <style lang="scss" scoped>
+.admin-projects__toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem;
+	margin-block-end: 1rem;
+}
+
+.admin-projects__search {
+	flex: 1 1 15rem;
+}
+
+.admin-projects__owner-filter {
+	flex: 0 1 15rem;
+}
+
 // `.table.has-actions` sets overflow: hidden which clips the dropdown menu.
 .admin-projects :deep(.table.has-actions) {
 	overflow: visible;

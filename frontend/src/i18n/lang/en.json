@@ -1746,7 +1746,10 @@
       "reassignOwner": "Reassign owner",
       "reassignTitle": "Reassign {title}",
       "reassignedSuccess": "Project owner reassigned.",
-      "newOwnerLabel": "New owner"
+      "newOwnerLabel": "New owner",
+      "searchPlaceholder": "Search projects…",
+      "filterByOwner": "Filter by owner",
+      "hideInboxes": "Hide inbox projects"
     },
     "inviteLinks": {
       "title": "Invite links",
