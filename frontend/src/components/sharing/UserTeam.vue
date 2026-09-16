@@ -179,7 +179,7 @@ import TeamProjectModel from '@/models/teamProject'
 import type { ITeamProject } from '@/modelTypes/ITeamProject'
 
 import TeamService from '@/services/team'
-import type {ITeam} from '@/modelTypes/ITeam'
+import type {TeamReadBody as ITeam} from '@/client/generated'
 
 
 import {PERMISSIONS} from '@/constants/permissions'

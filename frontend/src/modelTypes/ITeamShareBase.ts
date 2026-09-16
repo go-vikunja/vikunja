@@ -1,5 +1,5 @@
 import type {IAbstract} from './IAbstract'
-import type {ITeam} from './ITeam'
+import type {Team as ITeam} from '@/client/generated'
 import type {Permission} from '@/constants/permissions'
 
 export interface ITeamShareBase extends IAbstract {

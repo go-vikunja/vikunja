@@ -2,7 +2,7 @@ import AbstractModel from './abstractModel'
 
 import {PERMISSIONS, type Permission} from '@/constants/permissions'
 import type {ITeamShareBase} from '@/modelTypes/ITeamShareBase'
-import type {ITeam} from '@/modelTypes/ITeam'
+import type {TeamReadBody as ITeam} from '@/client/generated'
 
 /**
  * This class is a base class for common team sharing model.

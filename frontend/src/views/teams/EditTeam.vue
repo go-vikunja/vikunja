@@ -25,7 +25,7 @@
 					:label="$t('team.attributes.isPublic')"
 				>
 					<FancyCheckbox
-						v-model="team.isPublic"
+						v-model="team.is_public"
 						:disabled="teamMemberService.loading || undefined"
 						:class="{ 'disabled': teamService.loading }"
 					>
@@ -171,7 +171,7 @@
 		</Card>
 
 		<XButton
-			v-if="team && !team.externalId"
+			v-if="team && !team.external_id"
 			class="is-fullwidth is-danger"
 			@click="showLeaveModal = true"
 		>
@@ -257,9 +257,9 @@ import {success} from '@/message'
 import {useAuthStore} from '@/stores/auth'
 import {useConfigStore} from '@/stores/config'
 
-import type {ITeam} from '@/modelTypes/ITeam'
+import type {TeamReadBody as ITeam} from '@/client/generated'
 import type {User as IUser} from '@/client/generated'
-import type {ITeamMember} from '@/modelTypes/ITeamMember'
+import type {TeamUser as ITeamMember} from '@/client/generated'
 
 const authStore = useAuthStore()
 const configStore = useConfigStore()
@@ -270,8 +270,8 @@ const {t} = useI18n({useScope: 'global'})
 const userIsAdmin = computed(() => {
 	return (
 		team.value &&
-		team.value.maxPermission &&
-		team.value.maxPermission > Permissions.READ
+		team.value.max_permission &&
+		team.value.max_permission > Permissions.READ
 	)
 })
 const userInfo = computed(() => authStore.info)

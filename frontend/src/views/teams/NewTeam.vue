@@ -22,7 +22,7 @@
 			:label="$t('team.attributes.isPublic')"
 		>
 			<FancyCheckbox
-				v-model="team.isPublic"
+				v-model="team.is_public"
 				:class="{ 'disabled': teamService.loading }"
 				:disabled="teamService.loading"
 			>
