@@ -26,7 +26,8 @@
 
 
 <script lang="ts" setup>
-import {ref, computed, watchEffect} from 'vue'
+import {computed, watchEffect} from 'vue'
+import {useQuery} from '@tanstack/vue-query'
 import {useRoute} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 import {useTitle} from '@vueuse/core'
@@ -39,13 +40,15 @@ import userTeam from '@/components/sharing/UserTeam.vue'
 
 import {useBaseStore} from '@/stores/base'
 import {useConfigStore} from '@/stores/config'
-import {ensureProject, type ProjectResponse} from '@/client/queries/projects'
+import {projectQuery} from '@/client/queries/projects'
 
 defineOptions({name: 'ProjectSettingShare'})
 
 const {t} = useI18n({useScope: 'global'})
 
-const project = ref<ProjectResponse>()
+const route = useRoute()
+const projectId = computed(() => Number(route.params.projectId))
+const {data: project} = useQuery(computed(() => ({...projectQuery(projectId.value), enabled: projectId.value > 0})))
 const title = computed(() => project.value?.title
 	? t('project.share.title', {project: project.value.title})
 	: '',
@@ -57,16 +60,8 @@ const configStore = useConfigStore()
 const linkSharingEnabled = computed(() => configStore.linkSharingEnabled)
 const userIsAdmin = computed(() => project.value?.max_permission === PERMISSIONS.ADMIN)
 
-async function loadProject(projectId: number) {
-	const newProject = await ensureProject(projectId)
-	useBaseStore().setCurrentProject(newProject)
-	project.value = newProject
-}
-
-const route = useRoute()
-const projectId = computed(() => route.params.projectId !== undefined
-	? parseInt(route.params.projectId as string)
-	: undefined,
-)
-watchEffect(() => projectId.value !== undefined && loadProject(projectId.value))
+const baseStore = useBaseStore()
+watchEffect(() => {
+	if (project.value) baseStore.setCurrentProject(project.value)
+})
 </script>
