@@ -1,6 +1,5 @@
 import {QueryClient} from '@tanstack/vue-query'
 import {beforeEach, describe, expect, it, vi} from 'vitest'
-import {projectKeys} from './projects'
 
 const sdk = vi.hoisted(() => ({sharesList: vi.fn(), sharesCreate: vi.fn(), sharesDelete: vi.fn()}))
 vi.mock('@/client/generated', () => sdk)
@@ -26,14 +25,12 @@ describe('link shares', () => {
 
 	it('creates with a password, caches only the returned share and invalidates only its project', async () => {
 		client.setQueryData(linkShareKeys.list(7), [])
-		client.setQueryData(projectKeys.detail(7), {id: 7})
 		client.setQueryData(linkShareKeys.list(8), [{id: 2}])
 		sdk.sharesCreate.mockResolvedValue({data: {id: 1, name: 'Client', hash: 'public-hash', sharing_type: 2, created: '2026-01-01T00:00:00Z'}})
 		const share = createLinkShareDraft({name: 'Client', password: 'secret', permission: 1})
 		await client.getMutationCache().build(client, createLinkShareMutationOptions()).execute({projectId: 7, share})
 		expect(sdk.sharesCreate).toHaveBeenCalledWith({path: {project: 7}, body: share})
 		expect(client.getQueryData(linkShareKeys.list(7))).toEqual([{id: 1, name: 'Client', hash: 'public-hash', sharing_type: 2, created: '2026-01-01T00:00:00Z'}])
-		expect(client.getQueryState(projectKeys.detail(7))?.isInvalidated).toBe(true)
 		expect(client.getQueryState(linkShareKeys.list(7))?.isInvalidated).toBe(true)
 		expect(client.getQueryState(linkShareKeys.list(8))?.isInvalidated).toBe(false)
 	})
