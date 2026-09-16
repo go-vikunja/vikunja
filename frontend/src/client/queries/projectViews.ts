@@ -9,7 +9,6 @@ import type {
 	ProjectView,
 	ProjectViewWritable,
 } from '@/client/generated'
-import {assertClientRequestContext, captureClientRequestContext, isClientRequestContextCurrent} from '@/client/requestContext'
 import {contextMutationOptions} from './contextMutation'
 import {mapProjectNavigationItem, projectKeys, type ProjectListResult, type ProjectResponse} from './projects'
 import {i18n} from '@/i18n'
@@ -83,54 +82,7 @@ function updateProjectViews(client: QueryClient, projectId: number, update: (vie
 	)
 }
 
-async function snapshotProjectViews(client: QueryClient, projectId: number) {
-	const request = captureClientRequestContext()
-	await Promise.all([
-		client.cancelQueries({queryKey: projectKeys.list()}),
-		client.cancelQueries({queryKey: projectKeys.detail(projectId)}),
-	])
-	assertClientRequestContext(request)
-	return {
-		request,
-		previous: [
-			...client.getQueriesData<ProjectListResult>({queryKey: projectKeys.list()}),
-			...client.getQueriesData<ProjectResponse>({queryKey: projectKeys.detail(projectId)}),
-		],
-	}
-}
-
-type ViewSnapshot = Awaited<ReturnType<typeof snapshotProjectViews>>
 type ShouldNotify = (input: {projectId: number}) => boolean
-
-function restoreProjectViews(client: QueryClient, snapshot: ViewSnapshot | undefined) {
-	if (!snapshot || !isClientRequestContextCurrent(snapshot.request)) {
-		return
-	}
-	for (const [key, previous] of snapshot.previous) {
-		if (previous) {
-			client.setQueryData(key, previous)
-		}
-	}
-}
-
-function settledProjectViews() {
-	return async (
-		_data: unknown,
-		_error: unknown,
-		{projectId}: {projectId: number},
-		context: {request: ReturnType<typeof captureClientRequestContext>} | undefined,
-		{client}: {client: QueryClient},
-	) => {
-		if (context && isClientRequestContextCurrent(context.request)) {
-			await Promise.all([
-				// Refetching the list reloads every page for one project's views, so it is only marked stale.
-				client.invalidateQueries({queryKey: projectKeys.list(), refetchType: 'none'}),
-				client.invalidateQueries({queryKey: projectKeys.detail(projectId)}),
-			])
-			assertClientRequestContext(context.request)
-		}
-	}
-}
 
 function invalidateProjectViews(client: QueryClient, projectId: number) {
 	return Promise.all([
