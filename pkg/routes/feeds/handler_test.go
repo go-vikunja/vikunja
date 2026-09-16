@@ -17,6 +17,7 @@
 package feeds
 
 import (
+	"encoding/json"
 	"encoding/xml"
 	"net/http"
 	"net/http/httptest"
@@ -24,6 +25,8 @@ import (
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/labstack/echo/v5"
@@ -56,6 +59,31 @@ func TestNotificationsAtomFeed(t *testing.T) {
 		}
 		require.NoError(t, xml.Unmarshal(rec.Body.Bytes(), &doc))
 		assert.Contains(t, doc.Title, "User 1", "feed title should include the user's name")
+	})
+
+	t.Run("renders task assigned notification", func(t *testing.T) {
+		s := db.NewSession()
+		defer s.Close()
+
+		u := &user.User{ID: 1, Name: "User 1", Username: "user1", Language: "en"}
+		n := &models.TaskAssignedNotification{
+			Doer:     &user.User{ID: 2, Username: "user2"},
+			Task:     &models.Task{ID: 1, Title: "Assigned task"},
+			Assignee: u,
+			Target:   u,
+		}
+		content, err := json.Marshal(n)
+		require.NoError(t, err)
+		_, err = s.Insert(&notifications.DatabaseNotification{
+			NotifiableID: u.ID,
+			Name:         n.Name(),
+			Notification: json.RawMessage(content),
+		})
+		require.NoError(t, err)
+
+		atom, err := BuildNotificationsAtomFeed(s, u)
+		require.NoError(t, err)
+		assert.Contains(t, atom, "You have been assigned to &#34;Assigned task&#34;")
 	})
 
 	t.Run("returns 401 when context has no authenticated user", func(t *testing.T) {
