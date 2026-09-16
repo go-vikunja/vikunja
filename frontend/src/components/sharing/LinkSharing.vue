@@ -100,7 +100,7 @@
 										keypath="project.share.links.sharedBy"
 										scope="global"
 									>
-										<strong>{{ getDisplayName(s.sharedBy) }}</strong>
+										<strong>{{ getDisplayName(s.shared_by) }}</strong>
 									</i18n-t>
 								</p>
 
@@ -202,7 +202,7 @@ import {PERMISSIONS} from '@/constants/permissions'
 import FormField from '@/components/input/FormField.vue'
 import LinkShareModel from '@/models/linkShare'
 
-import type {ILinkShare} from '@/modelTypes/ILinkShare'
+import type {LinkSharing as ILinkShare} from '@/client/generated'
 
 import LinkShareService from '@/services/linkShare'
 
