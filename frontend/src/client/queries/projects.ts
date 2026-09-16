@@ -1,5 +1,4 @@
 import {queryOptions, useMutation} from '@tanstack/vue-query'
-import type {QueryClient} from '@tanstack/vue-query'
 
 import {
 	projectsCreate,
@@ -18,7 +17,6 @@ import type {
 	ProjectWritable,
 } from '@/client/generated'
 import {queryClient} from '@/client/queryClient'
-import {assertClientRequestContext, captureClientRequestContext, isClientRequestContextCurrent} from '@/client/requestContext'
 import {PERMISSIONS} from '@/constants/permissions'
 import {colorFromHex} from '@/helpers/color/colorFromHex'
 import {removeProjectFromHistory} from '@/modules/projectHistory'
@@ -284,34 +282,6 @@ function mergeProjectMetadata(previous: ProjectResponse, updated: ProjectRespons
 		...updated,
 		max_permission: updated.max_permission ?? previous.max_permission,
 		views: updated.views.length ? updated.views : previous.views,
-	}
-}
-
-async function snapshotProjects(client: QueryClient, id?: number) {
-	const request = captureClientRequestContext()
-	await Promise.all([
-		client.cancelQueries({queryKey: projectKeys.list()}),
-		...(id === undefined ? [] : [client.cancelQueries({queryKey: projectKeys.detail(id)})]),
-	])
-	assertClientRequestContext(request)
-	return {
-		request,
-		list: client.getQueryData<ProjectListResult>(projectKeys.list()),
-		detail: id === undefined ? undefined : client.getQueryData<ProjectResponse>(projectKeys.detail(id)),
-	}
-}
-
-type ProjectSnapshot = Awaited<ReturnType<typeof snapshotProjects>>
-
-function restoreProjects(client: QueryClient, snapshot: ProjectSnapshot | undefined) {
-	if (!snapshot || !isClientRequestContextCurrent(snapshot.request)) {
-		return
-	}
-	if (snapshot.list) {
-		client.setQueryData(projectKeys.list(), snapshot.list)
-	}
-	if (snapshot.detail) {
-		client.setQueryData(projectKeys.detail(snapshot.detail.id), snapshot.detail)
 	}
 }
 

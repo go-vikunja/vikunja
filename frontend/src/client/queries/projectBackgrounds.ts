@@ -1,4 +1,4 @@
-import {infiniteQueryOptions, keepPreviousData, queryOptions, useMutation, type QueryClient} from '@tanstack/vue-query'
+import {infiniteQueryOptions, keepPreviousData, queryOptions, useMutation} from '@tanstack/vue-query'
 
 import {
 	backgroundsUnsplashSearch,
@@ -12,7 +12,6 @@ import type {Image, Project} from '@/client/generated'
 import {contextMutationOptions} from '@/client/queries/contextMutation'
 import {mapProjectNavigationItem, projectKeys} from '@/client/queries/projects'
 import type {ProjectListResult, ProjectResponse} from '@/client/queries/projects'
-import {assertClientRequestContext, captureClientRequestContext, isClientRequestContextCurrent} from '@/client/requestContext'
 import {i18n} from '@/i18n'
 
 export const projectBackgroundKeys = {
@@ -82,57 +81,11 @@ export function unsplashBackgroundThumbnailQuery(imageId: string) {
 
 type BackgroundFields = Required<Pick<Project, 'background_information' | 'background_blur_hash'>>
 type ShouldNotify = (projectId: number) => boolean
-type BackgroundMutationContext = {request: ReturnType<typeof captureClientRequestContext>}
 
 function backgroundFromResponse(project: Project): BackgroundFields {
 	return {
 		background_information: project.background_information ?? null,
 		background_blur_hash: project.background_blur_hash ?? '',
-	}
-}
-
-function backgroundMutationCallbacks<TInput>(
-	projectIdFromInput: (input: TInput) => number,
-	shouldNotify: ShouldNotify,
-	successMessage: () => string,
-) {
-	return {
-		onMutate: () => ({request: captureClientRequestContext()}),
-		onSuccess: (background: BackgroundFields, input: TInput, context: BackgroundMutationContext, {client}: {client: QueryClient}) => {
-			assertClientRequestContext(context.request)
-			const projectId = projectIdFromInput(input)
-			const update = (project: ProjectResponse) => ({...project, ...background})
-			client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
-				current ? mapProjectNavigationItem(current, projectId, update) : current,
-			)
-			client.setQueryData<ProjectResponse>(projectKeys.detail(projectId), current =>
-				current ? update(current) : current,
-			)
-			if (shouldNotify(projectId)) {
-				success({message: successMessage()})
-			}
-		},
-		onError: (cause: Error, input: TInput, context: BackgroundMutationContext | undefined) => {
-			if (context && isClientRequestContextCurrent(context.request) && shouldNotify(projectIdFromInput(input))) {
-				error(cause)
-			}
-		},
-		onSettled: async (
-			_data: unknown,
-			_error: unknown,
-			input: TInput,
-			context: BackgroundMutationContext | undefined,
-			{client}: {client: QueryClient},
-		) => {
-			if (context && isClientRequestContextCurrent(context.request)) {
-				const projectId = projectIdFromInput(input)
-				await Promise.all([
-					client.invalidateQueries({queryKey: projectKeys.list()}),
-					client.invalidateQueries({queryKey: projectKeys.detail(projectId)}),
-					client.invalidateQueries({queryKey: projectBackgroundKeys.project(projectId), exact: true}),
-				])
-			}
-		},
 	}
 }
 

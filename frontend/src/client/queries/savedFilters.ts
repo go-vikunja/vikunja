@@ -12,8 +12,6 @@ import type {
 	SavedFilterWritable,
 	TaskCollection,
 } from '@/client/generated'
-import {assertClientRequestContext, captureClientRequestContext, isClientRequestContextCurrent} from '@/client/requestContext'
-import type {ClientRequestContext} from '@/client/requestContext'
 import {removeProjectFromHistory} from '@/modules/projectHistory'
 import {i18n} from '@/i18n'
 import type {EditableTaskCollection} from '@/types/EditableTaskCollection'
@@ -97,39 +95,8 @@ export function savedFilterQuery(id: number) {
 	})
 }
 
-async function snapshotSavedFilter(client: QueryClient, id: number) {
-	const request = captureClientRequestContext()
-	const projectId = getProjectIdFromSavedFilterId(id)
-	await Promise.all([
-		client.cancelQueries({queryKey: savedFilterKeys.detail(id)}),
-		client.cancelQueries({queryKey: projectKeys.list()}),
-		client.cancelQueries({queryKey: projectKeys.detail(projectId)}),
-	])
-	assertClientRequestContext(request)
-	return {
-		request,
-		previous: [
-			...client.getQueriesData<SavedFilterResponse>({queryKey: savedFilterKeys.detail(id)}),
-			...client.getQueriesData<ProjectListResult>({queryKey: projectKeys.list()}),
-			...client.getQueriesData<ProjectResponse>({queryKey: projectKeys.detail(projectId)}),
-		],
-	}
-}
-
-type SavedFilterSnapshot = Awaited<ReturnType<typeof snapshotSavedFilter>>
 type UpdateNotify = (input: UpdateSavedFilterInput) => boolean
 type DeleteNotify = (id: number) => boolean
-
-function restoreSavedFilter(client: QueryClient, snapshot: SavedFilterSnapshot | undefined) {
-	if (!snapshot || !isClientRequestContextCurrent(snapshot.request)) {
-		return
-	}
-	for (const [key, previous] of snapshot.previous) {
-		if (previous) {
-			client.setQueryData(key, previous)
-		}
-	}
-}
 
 function updateNavigation(
 	client: QueryClient,
@@ -143,24 +110,6 @@ function updateNavigation(
 	client.setQueryData<ProjectResponse>(projectKeys.detail(projectId), current =>
 		current ? {...current, ...fields} : current,
 	)
-}
-
-async function settleSavedFilter(
-	client: QueryClient,
-	context: {request: ClientRequestContext} | undefined,
-	id?: number,
-) {
-	if (!context || !isClientRequestContextCurrent(context.request)) {
-		return
-	}
-	await Promise.all([
-		client.invalidateQueries({queryKey: projectKeys.list()}),
-		...(id === undefined ? [] : [
-			client.invalidateQueries({queryKey: savedFilterKeys.detail(id)}),
-			client.invalidateQueries({queryKey: projectKeys.detail(getProjectIdFromSavedFilterId(id))}),
-		]),
-	])
-	assertClientRequestContext(context.request)
 }
 
 function invalidateSavedFilter(client: QueryClient, id?: number) {
