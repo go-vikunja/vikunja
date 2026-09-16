@@ -291,6 +291,29 @@ test.describe('Time tracking', () => {
 			await expect(page).toHaveURL(/[?&]project=1\b/)
 		})
 
+		test('filters by user, reflected in the url', async ({authenticatedPage: page, currentUser}) => {
+			const [other] = await UserFactory.create(1, {id: currentUser.id + 100}, false)
+			const [shared] = await ProjectFactory.create(1, {id: 1, title: 'Shared', owner_id: other.id}, false)
+			await UserProjectFactory.create(1, {project_id: shared.id, user_id: currentUser.id, permission: 0}, false)
+			await TimeEntryFactory.create(1, {id: 10, project_id: shared.id, user_id: other.id, comment: 'theirs'}, false)
+			await TimeEntryFactory.create(1, {id: 11, project_id: shared.id, user_id: currentUser.id, comment: 'mine'}, false)
+
+			await page.goto('/time-tracking')
+			const entries = page.locator('[data-cy="timeEntry"]')
+			await expect(entries).toHaveCount(2)
+
+			await page.locator('[data-cy="openTimeTrackingFilters"]').click()
+			const dialog = page.locator('dialog[open]')
+			const userInput = dialog.getByPlaceholder('Search for a user…')
+			await userInput.click()
+			await userInput.pressSequentially(other.username, {delay: 10})
+			const result = dialog.locator('.search-result-button').filter({hasText: other.username}).first()
+			await expect(result).toBeVisible({timeout: 5000})
+			await result.click()
+
+			await expect(page).toHaveURL(new RegExp(`[?&]user=${other.username}\\b`))
+		})
+
 		test('clearing the date range does not crash the page', async ({authenticatedPage: page}) => {
 			await page.goto('/time-tracking')
 			// The default range surfaces as "Today" in the toolbar label.

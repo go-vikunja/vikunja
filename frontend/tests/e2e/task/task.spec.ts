@@ -441,6 +441,7 @@ test.describe('Task', () => {
 			await multiselectInput.pressSequentially(projects[1].title.substring(0, 10), {delay: 20})
 			// Wait for the search results to appear (there's a 200ms debounce in the multiselect)
 			await expect(page.locator('.task-view .content.details .field .multiselect.control .search-results')).toBeVisible({timeout: 5000})
+			await expect(page.locator('.task-view .content.details .field .multiselect.control .search-results').locator('> *').first()).toContainText(projects[1].title)
 			await page.locator('.task-view .content.details .field .multiselect.control .search-results').locator('> *').first().click()
 
 			await expect(page.locator('.task-view nav.subtitle')).toContainText(projects[1].title)
@@ -494,8 +495,11 @@ test.describe('Task', () => {
 			await input.click()
 			await input.pressSequentially(userToAssign.username.substring(0, 10), {delay: 20})
 			// Wait for search results (200ms debounce + API request time)
+			await expect(page.locator('.task-view .column.assignees .multiselect .search-results')).toBeVisible({timeout: 5000})
 			// Focus preloads every project member, so pick the matching result rather than the first.
-			await page.locator('.task-view .column.assignees .multiselect .search-result-button').filter({hasText: userToAssign.username}).click()
+			const result = page.locator('.task-view .column.assignees .multiselect .search-result-button').filter({hasText: userToAssign.username})
+			await expect(result).toBeVisible()
+			await result.click()
 
 			await expect(page.locator('.global-notification')).toContainText('Success')
 			const assignees = page.locator('.task-view .column.assignees .multiselect .input-wrapper span.assignee')
@@ -593,11 +597,40 @@ test.describe('Task', () => {
 			await expect(page.locator('.task-view .action-buttons .button').filter({hasText: 'Add Labels'})).toBeVisible()
 			await page.locator('.task-view .action-buttons .button').filter({hasText: 'Add Labels'}).click()
 			await page.locator('.task-view .details.labels-list .multiselect input').fill(newLabelText)
+			const createOption = page.locator('.task-view .details.labels-list .multiselect .search-results .is-create-option')
+			await expect(createOption).toHaveRole('option')
+			await expect(createOption.locator('span.tag.search-result')).toHaveText(newLabelText)
+			await expect(createOption.locator('.hint-text')).toHaveText('Add this as new label')
 			await page.locator('.task-view .details.labels-list .multiselect .search-results').locator('> *').first().click()
 
 			await expect(page.locator('.global-notification')).toContainText('Success')
 			await expect(page.locator('.task-view .details.labels-list .multiselect .input-wrapper span.tag')).toBeVisible()
 			await expect(page.locator('.task-view .details.labels-list .multiselect .input-wrapper span.tag')).toContainText(newLabelText)
+		})
+
+		test('Can create a new label with the keyboard', async ({authenticatedPage: page}) => {
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				project_id: 1,
+			})
+			const newLabelText = 'keyboard label'
+
+			await page.goto(`/tasks/${tasks[0].id}`)
+
+			await page.locator('.task-view .action-buttons .button').filter({hasText: 'Add Labels'}).click()
+			const labelInput = page.locator('.task-view .details.labels-list .multiselect input')
+			await labelInput.fill(newLabelText)
+			const createOption = page.locator('.task-view .details.labels-list .multiselect .search-results .is-create-option')
+			await expect(createOption).toContainText(newLabelText)
+
+			await labelInput.press('ArrowDown')
+			await expect(createOption).toBeFocused()
+			await page.keyboard.press('Enter')
+
+			await expect(page.locator('.global-notification')).toContainText('Success')
+			await expect(page.locator('.task-view .details.labels-list .multiselect .input-wrapper span.tag')).toHaveCount(1)
+			await expect(page.locator('.task-view .details.labels-list .multiselect .input-wrapper span.tag')).toContainText(newLabelText)
+			await expect(labelInput).toBeFocused()
 		})
 
 		test('Can add an existing label to a task', async ({authenticatedPage: page}) => {

@@ -126,6 +126,7 @@ test.describe('Team', () => {
 
 		// Wait for search results to appear (there's a 200ms debounce in the multiselect)
 		await expect(multiselect.locator('.search-results')).toBeVisible({timeout: 5000})
+		await expect(multiselect.locator('.search-results').locator('> *').first()).toContainText(users[1].username)
 		await multiselect.locator('.search-results').locator('> *').first().click()
 		await page.locator('input#teamtext').fill('Unsaved team name')
 		await teamMembersCard.locator('.card-content .button').filter({hasText: 'Add to team'}).click()

@@ -16,6 +16,7 @@ for (const kind of ['user', 'team'] as const) {
 		await page.goto('/projects/1/settings/share')
 		const section = page.getByRole('heading', {name: `Shared with these ${kind}s`, exact: true}).locator('..')
 		await section.getByRole('combobox', {name: `Search for a ${kind} to share this project with`}).pressSequentially(name, {delay: 10})
+		await expect(section.locator('.search-results').getByRole('option').first()).toContainText(name)
 		await section.locator('.search-results').getByRole('option').first().click()
 		await section.getByRole('button', {name: 'Share', exact: true}).click()
 		const row = section.getByRole('row').filter({hasText: name})
