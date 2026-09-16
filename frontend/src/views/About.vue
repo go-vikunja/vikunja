@@ -18,6 +18,9 @@
 					<p>{{ $t('about.frontendVersion', {version: frontendVersion}) }}</p>
 					<p>{{ $t('about.apiVersion', {version: apiVersion}) }}</p>
 				</template>
+				<p v-if="proActive">
+					{{ $t('about.proActive') }}
+				</p>
 			</div>
 			<template #footer>
 				<XButton
@@ -41,4 +44,5 @@ import {useConfigStore} from '@/stores/config'
 const configStore = useConfigStore()
 const apiVersion = computed(() => configStore.version)
 const versionsEqual = computed(() => apiVersion.value === frontendVersion)
+const proActive = computed(() => configStore.enabledProFeatures.length > 0)
 </script>

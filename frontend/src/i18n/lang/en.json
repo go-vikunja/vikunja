@@ -1644,7 +1644,8 @@
     "title": "About",
     "version": "Version: {version}",
     "frontendVersion": "Frontend version: {version}",
-    "apiVersion": "API version: {version}"
+    "apiVersion": "API version: {version}",
+    "proActive": "Pro active"
   },
   "timeTracking": {
     "title": "Time tracking",
