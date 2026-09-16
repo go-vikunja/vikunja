@@ -16,7 +16,7 @@ import TaskReminderModel from '@/models/taskReminder'
 
 import type {ITask} from '@/modelTypes/ITask'
 import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
-import type {IUser} from '@/modelTypes/IUser'
+import type {User as IUser} from '@/client/generated'
 import type {IAttachment} from '@/modelTypes/IAttachment'
 
 import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'

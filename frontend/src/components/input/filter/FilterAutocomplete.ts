@@ -19,7 +19,7 @@ import {useLabels} from '@/composables/useLabels'
 import {useProjects} from '@/composables/useProjects'
 import UserService from '@/services/user'
 import ProjectUserService from '@/services/projectUsers'
-import type { IUser } from '@/modelTypes/IUser'
+import type {User as IUser} from '@/client/generated'
 import type { Label } from '@/client/generated'
 import type {ProjectResponse} from '@/client/queries/projects'
 

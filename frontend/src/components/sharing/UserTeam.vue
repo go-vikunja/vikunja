@@ -172,7 +172,7 @@ import type {IUserProject} from '@/modelTypes/IUserProject'
 
 import UserService from '@/services/user'
 import UserModel, { getDisplayName } from '@/models/user'
-import type {IUser} from '@/modelTypes/IUser'
+import type {User as IUser} from '@/client/generated'
 
 import TeamProjectService from '@/services/teamProject'
 import TeamProjectModel from '@/models/teamProject'

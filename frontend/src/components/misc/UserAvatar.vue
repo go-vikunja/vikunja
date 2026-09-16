@@ -18,7 +18,7 @@
 import {ref, watch} from 'vue'
 
 import {avatarCacheVersions, fetchAvatarBlobUrl} from '@/models/user'
-import type {IUser} from '@/modelTypes/IUser'
+import type {User as IUser} from '@/client/generated'
 
 const props = withDefaults(defineProps<{
 	user?: Pick<IUser, 'username'> | null,

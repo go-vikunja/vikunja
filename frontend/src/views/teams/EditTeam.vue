@@ -258,7 +258,7 @@ import {useAuthStore} from '@/stores/auth'
 import {useConfigStore} from '@/stores/config'
 
 import type {ITeam} from '@/modelTypes/ITeam'
-import type {IUser} from '@/modelTypes/IUser'
+import type {User as IUser} from '@/client/generated'
 import type {ITeamMember} from '@/modelTypes/ITeamMember'
 
 const authStore = useAuthStore()

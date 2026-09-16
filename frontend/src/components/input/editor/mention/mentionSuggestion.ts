@@ -6,7 +6,7 @@ import { getPopupContainer } from '../popupContainer'
 import { createSuggestionPopup, type SuggestionPopup } from '../suggestionPopup'
 import ProjectUserService from '@/services/projectUsers'
 import { getDisplayName } from '@/models/user'
-import type { IUser } from '@/modelTypes/IUser'
+import type {User as IUser} from '@/client/generated'
 import type { MentionNodeAttrs } from '@tiptap/extension-mention'
 
 interface MentionItem extends MentionNodeAttrs {

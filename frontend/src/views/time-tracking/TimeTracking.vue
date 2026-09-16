@@ -136,7 +136,7 @@ import {useProjects} from '@/composables/useProjects'
 
 import type {ProjectResponse} from '@/client/queries/projects'
 import type {ITask} from '@/modelTypes/ITask'
-import type {IUser} from '@/modelTypes/IUser'
+import type {User as IUser} from '@/client/generated'
 import type {ITimeEntry} from '@/modelTypes/ITimeEntry'
 
 const {t} = useI18n()

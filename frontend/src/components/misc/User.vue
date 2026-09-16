@@ -32,7 +32,7 @@ import {useI18n} from 'vue-i18n'
 
 import UserAvatar from '@/components/misc/UserAvatar.vue'
 import {getDisplayName} from '@/models/user'
-import type {IUser} from '@/modelTypes/IUser'
+import type {User as IUser} from '@/client/generated'
 
 const props = withDefaults(defineProps<{
 	user: Pick<IUser, 'name' | 'username'> & {botOwnerId?: number},
