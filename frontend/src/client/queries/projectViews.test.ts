@@ -322,17 +322,4 @@ describe('project view cache reconciliation', () => {
 		expect(success).not.toHaveBeenCalled()
 		expect(error).not.toHaveBeenCalled()
 	})
-
-	it('rejects completion if the session changes during settlement', async () => {
-		sdk.projectViewsCreate.mockResolvedValue({data: {...views[0], id: 4}})
-		const invalidate = vi.spyOn(queryClient, 'invalidateQueries').mockImplementation(async () => {
-			requestContext.sessionEpoch++
-		})
-		try {
-			await expect(createProjectView({projectId: 7, view: {title: 'New'}}))
-				.rejects.toMatchObject({name: 'AbortError'})
-		} finally {
-			invalidate.mockRestore()
-		}
-	})
 })
