@@ -163,7 +163,7 @@ const mutations = [
 	{
 		name: 'delete',
 		mock: sdk.projectsBackgroundDelete,
-		run: () => execute(deleteProjectBackgroundMutationOptions(), 7),
+		run: () => execute(deleteProjectBackgroundMutationOptions(), {projectId: 7}),
 		response: {id: 7},
 		expected: {background_information: null, background_blur_hash: ''},
 	},
@@ -204,7 +204,7 @@ describe('project background mutations', () => {
 
 		await execute(setUnsplashProjectBackgroundMutationOptions(), {projectId: 7, imageId: 'image-1'})
 		await execute(uploadProjectBackgroundMutationOptions(), {projectId: 7, file})
-		await execute(deleteProjectBackgroundMutationOptions(), 7)
+		await execute(deleteProjectBackgroundMutationOptions(), {projectId: 7})
 
 		expect(sdk.projectsBackgroundUnsplashSet).toHaveBeenCalledWith({path: {project: 7}, body: {id: 'image-1'}})
 		expect(sdk.projectsBackgroundUpload).toHaveBeenCalledWith({path: {project: 7}, body: {background: file}})

@@ -203,7 +203,7 @@ async function uploadBackground() {
 
 async function removeBackground() {
 	const id = projectId.value
-	const updated = await deleteBackgroundMutation.mutateAsync(id).catch(() => undefined)
+	const updated = await deleteBackgroundMutation.mutateAsync({projectId: id}).catch(() => undefined)
 	if (updated && isCurrentProject(id)) {
 		router.back()
 	}
