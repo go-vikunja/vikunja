@@ -50,7 +50,7 @@ func RegisterAdminProjectRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "admin-projects-list",
 		Summary:     "List all projects (admin)",
-		Description: "Returns every project on the instance, including archived ones and projects the caller does not own. Restricted to instance admins on a licensed instance; unlicensed or non-admin callers get a 404, making the endpoint indistinguishable from one that is not registered.",
+		Description: "Returns every project on the instance, including archived ones and projects the caller does not own. q matches title, description and identifier (or a comma-separated list of IDs). Restricted to instance admins on a licensed instance; unlicensed or non-admin callers get a 404, making the endpoint indistinguishable from one that is not registered.",
 		Method:      http.MethodGet,
 		Path:        "/admin/projects",
 		Tags:        tags,
@@ -68,12 +68,24 @@ func RegisterAdminProjectRoutes(api huma.API) {
 
 func init() { AddRouteRegistrar(RegisterAdminProjectRoutes) }
 
-func adminProjectsList(ctx context.Context, in *ListParams) (*adminProjectListBody, error) {
+func adminProjectsList(ctx context.Context, in *struct {
+	ListParams
+	OwnerID        int64    `query:"owner_id" minimum:"0" doc:"Only return projects owned by this user."`
+	ExcludeInboxes bool     `query:"exclude_inboxes" doc:"Hide projects that are some user's default (inbox) project."`
+	SortBy         []string `query:"sort_by,explode" enum:"id,title,owner,created,updated" doc:"Fields to sort by. Repeatable; pair positionally with order_by. owner sorts by the owner's username. Defaults to id descending."`
+	OrderBy        []string `query:"order_by,explode" enum:"asc,desc" doc:"Sort order per sort_by field. Repeatable; defaults to asc."`
+}) (*adminProjectListBody, error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
 		return nil, err
 	}
-	result, _, total, err := handler.DoReadAll(ctx, &models.AdminProjectList{}, a, in.Q, in.Page, in.PerPage)
+	list := &models.AdminProjectList{
+		FilterOwnerID:  in.OwnerID,
+		ExcludeInboxes: in.ExcludeInboxes,
+		SortBy:         in.SortBy,
+		OrderBy:        in.OrderBy,
+	}
+	result, _, total, err := handler.DoReadAll(ctx, list, a, in.Q, in.Page, in.PerPage)
 	if err != nil {
 		return nil, translateDomainError(err)
 	}
