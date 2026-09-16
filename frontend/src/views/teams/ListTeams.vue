@@ -1,7 +1,7 @@
 <template>
 	<div
 		class="content loader-container is-max-width-desktop"
-		:class="{ 'is-loading': teamService.loading}"
+		:class="{ 'is-loading': isFetching}"
 	>
 		<XButton
 			:to="{name:'teams.create'}"
@@ -31,7 +31,7 @@
 			</ul>
 		</Card>
 		<p
-			v-else-if="!teamService.loading"
+			v-else-if="!isFetching"
 			class="has-text-centered has-text-grey is-italic"
 		>
 			{{ $t('team.noTeams') }}
@@ -43,21 +43,16 @@
 </template>
 
 <script setup lang="ts">
-import {ref, shallowReactive} from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import Card from '@/components/misc/Card.vue'
-import TeamService from '@/services/team'
+import {useTeams} from '@/composables/useTeams'
 import { useTitle } from '@/composables/useTitle'
 
 const { t } = useI18n({useScope: 'global'})
 useTitle(() => t('team.title'))
 
-const teams = ref([])
-const teamService = shallowReactive(new TeamService())
-teamService.getAll().then((result) => {
-	teams.value = result
-})
+const {teams, isFetching} = useTeams()
 </script>
 
 <style lang="scss" scoped>

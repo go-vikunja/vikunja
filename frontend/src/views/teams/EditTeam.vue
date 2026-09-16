@@ -1,69 +1,17 @@
 <template>
 	<div
 		class="loader-container is-max-width-desktop"
-		:class="{ 'is-loading': teamService.loading }"
+		:class="{ 'is-loading': teamLoading }"
 	>
-		<Card
-			v-if="userIsAdmin && !team.oidcId"
-			class="is-fullwidth"
-			:title="title"
-		>
-			<form @submit.prevent="save()">
-				<FormField
-					id="teamtext"
-					v-model="team.name"
-					v-focus
-					:label="$t('team.attributes.name')"
-					:disabled="teamMemberService.loading"
-					:loading="teamMemberService.loading"
-					:placeholder="$t('team.attributes.namePlaceholder')"
-					type="text"
-					:error="showErrorTeamnameRequired && team.name === '' ? $t('team.attributes.nameRequired') : null"
-				/>
-				<FormField
-					v-if="configStore.publicTeamsEnabled"
-					:label="$t('team.attributes.isPublic')"
-				>
-					<FancyCheckbox
-						v-model="team.is_public"
-						:disabled="teamMemberService.loading || undefined"
-						:class="{ 'disabled': teamService.loading }"
-					>
-						{{ $t('team.attributes.isPublicDescription') }}
-					</FancyCheckbox>
-				</FormField>
-				<FormField :label="$t('team.attributes.description')">
-					<Editor
-						id="teamdescription"
-						v-model="team.description"
-						:class="{ disabled: teamService.loading }"
-						:disabled="teamService.loading"
-						:placeholder="$t('team.attributes.descriptionPlaceholder')"
-					/>
-				</FormField>
-
-				<div class="field has-addons mbs-4">
-					<div class="control is-fullwidth">
-						<XButton
-							:loading="teamService.loading"
-							class="is-fullwidth"
-							type="submit"
-						>
-							{{ $t('misc.save') }}
-						</XButton>
-					</div>
-					<div class="control">
-						<XButton
-							:loading="teamService.loading"
-							danger
-							icon="trash-alt"
-							:aria-label="$t('team.edit.delete.header')"
-							@click="showDeleteModal = true"
-						/>
-					</div>
-				</div>
-			</form>
-		</Card>
+		<EditTeamForm
+			v-if="team && userIsAdmin && !team.external_id"
+			:key="team.id"
+			:team="team"
+			:loading="teamLoading"
+			:members-loading="membersLoading"
+			@save="save"
+			@delete="showDeleteModal = true"
+		/>
 
 		<Card
 			class="is-fullwidth has-overflow"
@@ -71,7 +19,7 @@
 			:padding="false"
 		>
 			<form
-				v-if="userIsAdmin && !team.oidcId"
+				v-if="userIsAdmin && !team?.external_id"
 				class="p-4"
 				@submit.prevent="addUser"
 			>
@@ -125,7 +73,7 @@
 								/>
 							</td>
 							<td>
-								<template v-if="m.id === userInfo.id">
+								<template v-if="m.id === userInfo?.id">
 									<b class="is-success">You</b>
 								</template>
 							</td>
@@ -148,16 +96,16 @@
 								class="actions"
 							>
 								<XButton
-									v-if="m.id !== userInfo.id"
-									:loading="teamMemberService.loading"
+									v-if="m.id !== userInfo?.id"
+									:loading="membersLoading"
 									class="mie-2"
 									@click="() => toggleUserType(m)"
 								>
 									{{ m.admin ? $t('team.edit.makeMember') : $t('team.edit.makeAdmin') }}
 								</XButton>
 								<XButton
-									v-if="m.id !== userInfo.id"
-									:loading="teamMemberService.loading"
+									v-if="m.id !== userInfo?.id"
+									:loading="membersLoading"
 									danger
 									icon="trash-alt"
 									:aria-label="$t('team.edit.deleteUser.header')"
@@ -238,138 +186,87 @@
 import {computed, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useRoute, useRouter} from 'vue-router'
-
-import Editor from '@/components/input/AsyncEditor'
-import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
-import FormField from '@/components/input/FormField.vue'
 import Multiselect from '@/components/input/Multiselect.vue'
 import User from '@/components/misc/User.vue'
-
+import EditTeamForm from '@/components/teams/EditTeamForm.vue'
 import {getDisplayName} from '@/models/user'
-import TeamService from '@/services/team'
-import TeamMemberService from '@/services/teamMember'
+import {useUpdateTeamMutation, useDeleteTeamMutation, useAddTeamMemberMutation, useRemoveTeamMemberMutation, useLeaveTeamMutation, useToggleTeamMemberAdminMutation} from '@/client/queries/teams'
+import {useTeam} from '@/composables/useTeams'
 import {useUserSearch} from '@/composables/useUserSearch'
-
-import {PERMISSIONS as Permissions} from '@/constants/permissions'
-
+import {PERMISSIONS} from '@/constants/permissions'
 import {useTitle} from '@/composables/useTitle'
-import {success} from '@/message'
 import {useAuthStore} from '@/stores/auth'
-import {useConfigStore} from '@/stores/config'
-
-import type {TeamReadBody as ITeam} from '@/client/generated'
-import type {User as IUser} from '@/client/generated'
-import type {TeamUser as ITeamMember} from '@/client/generated'
+import type {User as ApiUser, TeamUser, TeamWritable} from '@/client/generated'
 
 const authStore = useAuthStore()
-const configStore = useConfigStore()
 const route = useRoute()
 const router = useRouter()
 const {t} = useI18n({useScope: 'global'})
+const teamId = computed(() => Number(route.params.id))
+const {data: team, isFetching} = useTeam(teamId)
 
-const userIsAdmin = computed(() => {
-	return (
-		team.value &&
-		team.value.max_permission &&
-		team.value.max_permission > Permissions.READ
-	)
-})
+const userIsAdmin = computed(() => (team.value?.max_permission ?? PERMISSIONS.READ) === PERMISSIONS.ADMIN)
 const userInfo = computed(() => authStore.info)
-
-const sortedMembers = computed(() => {
-	return [...(team.value?.members ?? [])].sort((a, b) =>
-		getDisplayName(a).localeCompare(getDisplayName(b), undefined, {sensitivity: 'base'}),
-	)
-})
-
-const teamService = ref<TeamService>(new TeamService())
-const teamMemberService = ref<TeamMemberService>(new TeamMemberService())
+const sortedMembers = computed(() => [...(team.value?.members ?? [])].sort((a, b) => getDisplayName(a).localeCompare(getDisplayName(b), undefined, {sensitivity: 'base'})))
+const updateMutation = useUpdateTeamMutation()
+const deleteMutation = useDeleteTeamMutation()
+const addMemberMutation = useAddTeamMemberMutation()
+const removeMemberMutation = useRemoveTeamMemberMutation()
+const leaveMutation = useLeaveTeamMutation()
+const toggleAdminMutation = useToggleTeamMemberAdminMutation()
+const teamLoading = computed(() => isFetching.value || updateMutation.isPending.value || deleteMutation.isPending.value)
+const membersLoading = computed(() => addMemberMutation.isPending.value || removeMemberMutation.isPending.value || toggleAdminMutation.isPending.value)
 const userSearch = ref('')
 const {users: userResults, isFetching: usersLoading} = useUserSearch(userSearch)
-
-const team = ref<ITeam>()
-const teamId = computed(() => Number(route.params.id))
-const memberToDelete = ref<ITeamMember>()
-const newMember = ref<IUser | null>(null)
-const foundUsers = computed(() => userResults.value.filter(u => u.id !== userInfo.value?.id))
-
+const foundUsers = computed(() => userResults.value.filter(u => u.id !== userInfo.value?.id && !team.value?.members?.some(member => member.id === u.id)))
+const memberToDelete = ref<TeamUser>()
+const newMember = ref<ApiUser | null>(null)
 const showDeleteModal = ref(false)
 const showUserDeleteModal = ref(false)
 const showLeaveModal = ref(false)
-const showErrorTeamnameRequired = ref(false)
 const showMustSelectUserError = ref(false)
+const title = computed(() => t('team.edit.title', {team: team.value?.name ?? ''}))
+useTitle(title)
 
-const title = ref('')
-
-loadTeam()
-
-async function loadTeam() {
-	team.value = await teamService.value.get({id: teamId.value})
-	title.value = t('team.edit.title', {team: team.value?.name})
-	useTitle(() => title.value)
-}
-
-async function save() {
-	if (team.value?.name === '') {
-		showErrorTeamnameRequired.value = true
-		return
-	}
-	showErrorTeamnameRequired.value = false
-
-	team.value = await teamService.value.update(team.value)
-	success({message: t('team.edit.success')})
+function save(draft: Required<TeamWritable>) {
+	updateMutation.mutate({id: teamId.value, team: draft})
 }
 
 async function deleteTeam() {
-	await teamService.value.delete(team.value)
-	success({message: t('team.edit.delete.success')})
-	router.push({name: 'teams.index'})
+	try {
+		await deleteMutation.mutateAsync(teamId.value)
+	} catch {
+		return
+	} finally {
+		showDeleteModal.value = false
+	}
+	await router.push({name: 'teams.index'})
 }
 
-async function deleteMember() {
-	try {
-		await teamMemberService.value.delete({
-			teamId: teamId.value,
-			username: memberToDelete.value.username,
-		})
-		success({message: t('team.edit.deleteUser.success')})
-		await loadTeam()
-	} finally {
-		showUserDeleteModal.value = false
-	}
+function deleteMember() {
+	if (!memberToDelete.value?.username) return
+	removeMemberMutation.mutate({teamId: teamId.value, username: memberToDelete.value.username}, {
+		onSettled: () => {
+			showUserDeleteModal.value = false
+		},
+	})
 }
 
 async function addUser() {
-	showMustSelectUserError.value = false
-	if(!newMember.value?.username) {
-		showMustSelectUserError.value = true
+	showMustSelectUserError.value = !newMember.value?.username
+	if (!newMember.value?.username) return
+	try {
+		await addMemberMutation.mutateAsync({teamId: teamId.value, username: newMember.value.username})
+	} catch {
 		return
 	}
-	await teamMemberService.value.create({
-		teamId: teamId.value,
-		username: newMember.value.username,
-	})
 	newMember.value = null
-	await loadTeam()
-	success({message: t('team.edit.userAddedSuccess')})
+	userSearch.value = ''
 }
 
-async function toggleUserType(member: ITeamMember) {
-	// FIXME: direct manipulation
-	member.admin = !member.admin
-	member.teamId = teamId.value
-	const r = await teamMemberService.value.update(member)
-	for (const tm of team.value.members) {
-		if (tm.id === member.id) {
-			tm.admin = r.admin
-			break
-		}
-	}
-	success({
-		message: member.admin ?
-			t('team.edit.madeAdmin') :
-			t('team.edit.madeMember'),
-	})
+function toggleUserType(member: TeamUser) {
+	if (!member.username) return
+	toggleAdminMutation.mutate({teamId: teamId.value, username: member.username})
 }
 
 function findUser(query: string) {
@@ -377,16 +274,15 @@ function findUser(query: string) {
 }
 
 async function leave() {
+	if (!userInfo.value?.username) return
 	try {
-		await teamMemberService.value.delete({
-			teamId: teamId.value,
-			username: userInfo.value.username,
-		})
-		success({message: t('team.edit.leave.success')})
-		await router.push({name: 'home'})
+		await leaveMutation.mutateAsync({teamId: teamId.value, username: userInfo.value.username})
+	} catch {
+		return
 	} finally {
-		showUserDeleteModal.value = false
+		showLeaveModal.value = false
 	}
+	await router.push({name: 'home'})
 }
 </script>
 

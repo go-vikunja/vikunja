@@ -10,8 +10,8 @@
 			v-model="team.name"
 			v-focus
 			:label="$t('team.attributes.name')"
-			:disabled="teamService.loading"
-			:loading="teamService.loading"
+			:disabled="createTeamMutation.isPending.value"
+			:loading="createTeamMutation.isPending.value"
 			:placeholder="$t('team.attributes.namePlaceholder')"
 			type="text"
 			:error="showError && team.name === '' ? $t('team.attributes.nameRequired') : null"
@@ -23,8 +23,8 @@
 		>
 			<FancyCheckbox
 				v-model="team.is_public"
-				:class="{ 'disabled': teamService.loading }"
-				:disabled="teamService.loading"
+				:class="{ 'disabled': createTeamMutation.isPending.value }"
+				:disabled="createTeamMutation.isPending.value"
 			>
 				{{ $t('team.attributes.isPublicDescription') }}
 			</FancyCheckbox>
@@ -33,11 +33,10 @@
 </template>
 
 <script setup lang="ts">
-import {computed, reactive, ref, shallowReactive} from 'vue'
+import {computed, reactive, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 
-import TeamModel from '@/models/team'
-import TeamService from '@/services/team'
+import {createTeamDraft, useCreateTeamMutation} from '@/client/queries/teams'
 
 import CreateEdit from '@/components/misc/CreateEdit.vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
@@ -45,7 +44,6 @@ import FormField from '@/components/input/FormField.vue'
 
 import {useTitle} from '@/composables/useTitle'
 import {useRouter} from 'vue-router'
-import {success} from '@/message'
 
 import {useConfigStore} from '@/stores/config'
 
@@ -56,13 +54,13 @@ const title = computed(() => t('team.create.title'))
 useTitle(title)
 const router = useRouter()
 
-const teamService = shallowReactive(new TeamService())
-const team = reactive(new TeamModel())
+const createTeamMutation = useCreateTeamMutation()
+const team = reactive(createTeamDraft())
 const showError = ref(false)
 const isSubmitting = ref(false)
 
 const loadingModel = computed({
-	get: () => isSubmitting.value || teamService.loading,
+	get: () => isSubmitting.value || createTeamMutation.isPending.value,
 	set(value: boolean) {
 		isSubmitting.value = value
 	},
@@ -83,15 +81,17 @@ async function createTeam() {
 
 	isSubmitting.value = true
 
+	let response
 	try {
-		const response = await teamService.create(team)
-		router.push({
-			name: 'teams.edit',
-			params: { id: response.id },
-		})
-		success({message: t('team.create.success') })
+		response = await createTeamMutation.mutateAsync(team)
+	} catch {
+		return
 	} finally {
 		isSubmitting.value = false
 	}
+	router.push({
+		name: 'teams.edit',
+		params: { id: response.id },
+	})
 }
 </script>
