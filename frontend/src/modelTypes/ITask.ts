@@ -14,7 +14,7 @@ import type {PartialWithId} from '@/types/PartialWithId'
 import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
 import type {IReactionPerEntity} from '@/modelTypes/IReaction'
 import type {ITaskComment} from '@/modelTypes/ITaskComment.ts'
-import type {Label} from '@/client/generated'
+import type {Label, User} from '@/client/generated'
 
 export interface ITask extends IAbstract {
 	id: number
@@ -25,7 +25,7 @@ export interface ITask extends IAbstract {
 	deletedAt: Date | null
 	priority: Priority
 	labels: Label[]
-	assignees: IUser[]
+	assignees: User[]
 
 	dueDate: Date | null
 	startDate: Date | null

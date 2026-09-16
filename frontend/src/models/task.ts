@@ -9,7 +9,7 @@ import type {IBucket} from '@/modelTypes/IBucket'
 import type {IRepeatAfter} from '@/types/IRepeatAfter'
 import type {IRelationKind} from '@/types/IRelationKind'
 import {TASK_REPEAT_MODES, type IRepeatMode} from '@/types/IRepeatMode'
-import type {Label} from '@/client/generated'
+import type {Label, User} from '@/client/generated'
 
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {secondsToPeriod} from '@/helpers/time/period'
@@ -65,7 +65,7 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 	deletedAt: Date | null = null
 	priority: Priority = PRIORITIES.UNSET
 	labels: Label[] = []
-	assignees: IUser[] = []
+	assignees: User[] = []
 
 	dueDate: Date | null = 0
 	startDate: Date | null = 0
