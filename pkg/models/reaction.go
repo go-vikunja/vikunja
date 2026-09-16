@@ -152,7 +152,13 @@ func getReactionsForEntityIDs(s *xorm.Session, entityKind ReactionKind, entityID
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /{kind}/{id}/reactions/delete [post]
 func (r *Reaction) Delete(s *xorm.Session, a web.Auth) (err error) {
-	r.UserID = a.GetID()
+	// Reactions belong to a user; a link share (or any non-user) must not act as one
+	// via a colliding GetID() (GHSA-vvcv-vpph-h844, consistency hardening).
+	u, err := user.GetFromAuth(a)
+	if err != nil {
+		return err
+	}
+	r.UserID = u.ID
 
 	_, err = s.Where("user_id = ? AND entity_id = ? AND entity_kind = ? AND value = ?", r.UserID, r.EntityID, r.EntityKind, r.Value).
 		Delete(&Reaction{})
@@ -169,12 +175,16 @@ func (r *Reaction) Delete(s *xorm.Session, a web.Auth) (err error) {
 // @Param id path int true "Entity ID"
 // @Param kind path int true "The kind of the entity. Can be either `tasks` or `comments` for task comments"
 // @Param project body models.Reaction true "The reaction you want to add to the entity."
-// @Success 200 {object} models.Reaction "The created reaction"
+// @Success 201 {object} models.Reaction "The created reaction"
 // @Failure 403 {object} web.HTTPError "The user does not have access to the entity"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /{kind}/{id}/reactions [put]
 func (r *Reaction) Create(s *xorm.Session, a web.Auth) (err error) {
-	r.UserID = a.GetID()
+	u, err := user.GetFromAuth(a)
+	if err != nil {
+		return err
+	}
+	r.UserID = u.ID
 
 	exists, err := s.Where("user_id = ? AND entity_id = ? AND entity_kind = ? AND value = ?", r.UserID, r.EntityID, r.EntityKind, r.Value).
 		Exist(&Reaction{})

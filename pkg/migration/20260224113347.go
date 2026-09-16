@@ -43,7 +43,7 @@ func init() {
 		ID:          "20260224113347",
 		Description: "Add sessions table",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync(Session20260224113347{})
+			return tx.Sync(Session20260224113347{}) //nolint:forbidigo // brand-new table, nothing to drop
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return tx.DropTables(Session20260224113347{})

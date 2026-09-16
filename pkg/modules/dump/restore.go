@@ -20,6 +20,7 @@ import (
 	"archive/zip"
 	"bufio"
 	"bytes"
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -39,6 +40,7 @@ import (
 	"code.vikunja.io/api/pkg/initialize"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/migration"
+	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/utils"
 	vversion "code.vikunja.io/api/pkg/version"
 
@@ -91,6 +93,11 @@ func Restore(filename string, overrideConfig bool) error {
 			return fmt.Errorf("unsafe path in zip archive: %q", file.Name)
 		}
 
+		// Manually repacked dumps contain directory entries, our own dumps don't
+		if file.FileInfo().IsDir() {
+			continue
+		}
+
 		if strings.HasPrefix(file.Name, "config") {
 			configFile = file
 			continue
@@ -127,7 +134,7 @@ func Restore(filename string, overrideConfig bool) error {
 	///////
 	// Restore the config file
 	if overrideConfig {
-		err = restoreConfig(configFile, dotEnvFile)
+		err = restoreConfig(configFile, dotEnvFile, cr)
 		if err != nil {
 			return err
 		}
@@ -140,7 +147,7 @@ func Restore(filename string, overrideConfig bool) error {
 	// Init the configFile again since the restored configuration is most likely different from the one before
 	initialize.LightInit()
 	initialize.InitEngines()
-	err = files.InitFileHandler()
+	err = files.InitFileHandler(context.Background())
 	if err != nil {
 		return fmt.Errorf("could not init file handler: %w", err)
 	}
@@ -196,13 +203,9 @@ func Restore(filename string, overrideConfig bool) error {
 
 	delete(dbfiles, "migration")
 
-	err = restoreTableData(dbfiles)
-	if err != nil {
+	if err := restoreDatabaseContents(dbfiles); err != nil {
 		return err
 	}
-
-	// Run migrations again to migrate a potentially outdated dump
-	migration.Migrate(nil)
 
 	///////
 	// Restore Files
@@ -224,6 +227,28 @@ func Restore(filename string, overrideConfig bool) error {
 	log.Infof("Done restoring dump.")
 	if overrideConfig {
 		log.Infof("Restart Vikunja to make sure the new configuration file is applied.")
+	}
+
+	return nil
+}
+
+func restoreDatabaseContents(dbfiles map[string]*zip.File) error {
+	if err := restoreTableData(dbfiles); err != nil {
+		return err
+	}
+
+	// Run migrations again to migrate a potentially outdated dump
+	migration.Migrate(nil)
+
+	// Restoring recreates the schema through xormigrate's init schema path, which marks every
+	// migration as applied - the closure table backfill never runs on the restored rows.
+	s := db.NewSession()
+	defer s.Close()
+	if err := models.RebuildProjectAncestors(s); err != nil {
+		return fmt.Errorf("could not rebuild project ancestors (data is restored, run 'vikunja repair projects'): %w", err)
+	}
+	if err := s.Commit(); err != nil {
+		return fmt.Errorf("could not commit project ancestors rebuild (data is restored, run 'vikunja repair projects'): %w", err)
 	}
 
 	return nil
@@ -314,6 +339,10 @@ func convertFieldValue(fieldName string, value interface{}, isFloat bool) (inter
 			}
 			// If it's a CorruptInputError, treat the string as raw data
 			decoded = []byte(v)
+		}
+		// SQLite accepts empty strings in json columns, Postgres and MySQL don't.
+		if strings.TrimSpace(string(decoded)) == "" {
+			return nil, nil
 		}
 		return string(decoded), nil
 	default:
@@ -431,7 +460,7 @@ func unmarshalFileToJSON(file *zip.File) (contents []map[string]interface{}, err
 	return
 }
 
-func restoreConfig(configFile, dotEnvFile *zip.File) error {
+func restoreConfig(configFile, dotEnvFile *zip.File, stdin *bufio.Reader) error {
 	if configFile != nil {
 		if configFile.UncompressedSize64 > maxConfigSize {
 			return fmt.Errorf("config file too large, is %d, max size is %d", configFile.UncompressedSize64, maxConfigSize)
@@ -461,7 +490,7 @@ func restoreConfig(configFile, dotEnvFile *zip.File) error {
 
 		log.Infof("The config file has been restored to '%s'.", sanitizedName)
 		log.Infof("You can now make changes to it, hit enter when you're done.")
-		if _, err := bufio.NewReader(os.Stdin).ReadString('\n'); err != nil {
+		if _, err := stdin.ReadString('\n'); err != nil {
 			return fmt.Errorf("could not read from stdin: %w", err)
 		}
 
@@ -485,7 +514,7 @@ func restoreConfig(configFile, dotEnvFile *zip.File) error {
 		log.Warningf("Please make sure the following settings are properly configured in your instance:\n%s", buf.String())
 		log.Warning("Make sure your current config matches the following env variables, confirm by pressing enter when done.")
 		log.Warning("If your config does not match, you'll have to make the changes and restart the restoring process afterwards.")
-		if _, err := bufio.NewReader(os.Stdin).ReadString('\n'); err != nil {
+		if _, err := stdin.ReadString('\n'); err != nil {
 			return fmt.Errorf("could not read from stdin: %w", err)
 		}
 	}

@@ -1,7 +1,11 @@
 import type {App} from 'vue'
 import type {Router} from 'vue-router'
-import {AxiosError} from 'axios'
+import {shouldDropEvent, stripNavigationFragment} from './helpers/sentryFilters'
 import {VERSION} from './version.json'
+
+function withoutFragment(url: string) {
+	return url.split('#')[0]
+}
 
 export default async function setupSentry(app: App, router: Router) {
 	const Sentry = await import('@sentry/vue')
@@ -15,11 +19,19 @@ export default async function setupSentry(app: App, router: Router) {
 		transport: Sentry.makeBrowserOfflineTransport(Sentry.makeFetchTransport),
 		integrations: [
 			Sentry.browserTracingIntegration({ router }),
-			Sentry.replayIntegration(),
+			// Without click detection there are no slow/multi click breadcrumbs, and
+			// so no rage click issues — those are impatience, not bugs, and they
+			// drown out actual errors.
+			Sentry.replayIntegration({
+				slowClickTimeout: 0,
+				beforeAddRecordingEvent(event) {
+					if (event.type === 5 && event.data.tag === 'performanceSpan') {
+						event.data.payload = stripNavigationFragment(event.data.payload)
+					}
+					return event
+				},
+			}),
 		],
-
-		// vue
-		trackComponents: true,
 
 		// Set tracesSampleRate to 1.0 to capture 100%
 		// of transactions for tracing.
@@ -38,12 +50,20 @@ export default async function setupSentry(app: App, router: Router) {
 		replaysSessionSampleRate: 0.1,
 		replaysOnErrorSampleRate: 1.0,
 
+		// Extensions run their content scripts on our origin, so their errors end
+		// up here even though we can neither reproduce nor fix them.
+		denyUrls: [
+			/^chrome-extension:\/\//i,
+			/^moz-extension:\/\//i,
+			/^safari-web-extension:\/\//i,
+			/^safari-extension:\/\//i,
+			/^ms-browser-extension:\/\//i,
+		],
 
+
+		beforeSendSpan: stripNavigationFragment,
 		beforeSend(event, hint) {
-
-			if ((typeof hint.originalException?.code !== 'undefined' && 
-				typeof hint.originalException?.message !== 'undefined')
-			|| hint.originalException instanceof AxiosError) {
+			if (shouldDropEvent(hint.originalException, event)) {
 				return null
 			}
 
@@ -56,16 +76,19 @@ export default async function setupSentry(app: App, router: Router) {
 	document.body.addEventListener(
 		'error',
 		(event) => {
-			if (!event.target) return
-	
-			if (event.target.tagName === 'IMG') {
+			const target = event.target
+
+			if (target instanceof HTMLImageElement) {
+				// An empty, blank or fragment-only src resolves to the page itself, which is never an image.
+				if (!target.src || withoutFragment(target.src) === withoutFragment(document.URL)) return
+
 				Sentry.captureMessage(
-					`Failed to load image: ${event.target.src}`,
+					`Failed to load image: ${target.src}`,
 					'warning',
 				)
-			} else if (event.target.tagName === 'LINK') {
+			} else if (target instanceof HTMLLinkElement) {
 				Sentry.captureMessage(
-					`Failed to load css: ${event.target.href}`,
+					`Failed to load css: ${target.href}`,
 					'warning',
 				)
 			}

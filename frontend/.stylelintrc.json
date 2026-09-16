@@ -26,6 +26,7 @@
 					"use",
 					"forward",
 					"import",
+					"include",
 					"each"
 				]
 			}

@@ -47,6 +47,7 @@ export interface ConfigState {
 	publicTeamsEnabled: boolean,
 	allowIconChanges: boolean,
 	enabledProFeatures: string[],
+	concurrentWrites: boolean,
 }
 
 export const useConfigStore = defineStore('config', () => {
@@ -88,6 +89,7 @@ export const useConfigStore = defineStore('config', () => {
 		publicTeamsEnabled: false,
 		allowIconChanges: true,
 		enabledProFeatures: [],
+		concurrentWrites: false,
 	})
 
 	const migratorsEnabled = computed(() => state.availableMigrators?.length > 0)

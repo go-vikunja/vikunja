@@ -1,8 +1,7 @@
 import {ref, computed, onMounted, onUnmounted, watch} from 'vue'
-import {useMediaQuery} from '@vueuse/core'
 import {useAuthStore} from '@/stores/auth'
 
-const BULMA_MOBILE_BREAKPOINT = 768
+import {useIsMobile} from '@/composables/useIsMobile'
 const DEFAULT_SIDEBAR_WIDTH = 300
 const MIN_SIDEBAR_WIDTH = 200
 const MAX_SIDEBAR_WIDTH = 500
@@ -41,7 +40,7 @@ function setupWatcher(authStore: ReturnType<typeof useAuthStore>) {
 
 export function useSidebarResize() {
 	const authStore = useAuthStore()
-	const isMobile = useMediaQuery(`(max-width: ${BULMA_MOBILE_BREAKPOINT}px)`)
+	const isMobile = useIsMobile()
 
 	// Initialize width from settings only once
 	onMounted(() => {

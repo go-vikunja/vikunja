@@ -17,6 +17,8 @@
 package doctor
 
 import (
+	"path/filepath"
+
 	"code.vikunja.io/api/pkg/config"
 
 	"github.com/spf13/viper"
@@ -26,6 +28,7 @@ import (
 func CheckConfig() CheckGroup {
 	results := []CheckResult{
 		checkConfigFile(),
+		checkRootPath(),
 		checkPublicURL(),
 		checkJWTSecret(),
 	}
@@ -51,10 +54,25 @@ func checkConfigFile() CheckResult {
 		}
 	}
 
+	absPath, err := filepath.Abs(configFile)
+	if err != nil {
+		absPath = configFile
+	}
+
 	return CheckResult{
 		Name:   "Config file",
 		Passed: true,
-		Value:  configFile,
+		Value:  absPath,
+	}
+}
+
+// checkRootPath surfaces service.rootpath because every relative config path
+// resolves against it, and it defaults to the working directory.
+func checkRootPath() CheckResult {
+	return CheckResult{
+		Name:   "Root path",
+		Passed: true,
+		Value:  config.ServiceRootpath.GetString(),
 	}
 }
 

@@ -40,7 +40,7 @@ func (c *Client) Routes(ctx context.Context) (map[string]RouteGroup, error) {
 // PermissionsForBot picks a curated subset of route groups the veans bot
 // needs and projects the available actions of each. Groups not present on
 // the server are silently dropped, so the resulting permission map is
-// always valid for PUT /tokens regardless of Vikunja version.
+// always valid for POST /tokens regardless of Vikunja version.
 //
 // The action names reflect Vikunja's actual route map (see GET /routes):
 // bucket CRUD and the bucket-task move endpoint live under the `projects`
@@ -56,10 +56,16 @@ func PermissionsForBot(routes map[string]RouteGroup) map[string][]string {
 		},
 		// Project access: read project metadata, manage buckets & move
 		// tasks between them. tasks_by-index resolves #NN / PROJ-NN.
+		// The bucket-task MOVE (PUT .../buckets/:bucket/tasks) and the
+		// buckets-with-tasks LIST (GET .../buckets/tasks) collide on subkey
+		// `views_buckets_tasks`; which one gets the bare key vs the
+		// `_put`-suffixed key depends on unspecified route-init order, so we
+		// request BOTH and let the runtime intersection drop whichever the
+		// server didn't register.
 		"projects": {
 			"read_one", "read_all", "tasks_by-index",
 			"views_buckets", "views_buckets_put", "views_buckets_post",
-			"views_buckets_delete", "views_buckets_tasks",
+			"views_buckets_delete", "views_buckets_tasks", "views_buckets_tasks_put",
 		},
 		"projects_views":  {"read_one", "read_all"},
 		"labels":          {"read_one", "read_all", "create", "update", "delete"},

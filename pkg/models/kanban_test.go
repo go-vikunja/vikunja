@@ -271,3 +271,75 @@ func TestBucket_Update(t *testing.T) {
 		testAndAssertBucketUpdate(t, b, s)
 	})
 }
+
+func TestBucket_CanCreate(t *testing.T) {
+	t.Run("archived through parent", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		b := &Bucket{ProjectID: 21, ProjectViewID: 84}
+		_, err := b.CanCreate(s, &user.User{ID: 1})
+		assert.True(t, IsErrProjectIsArchived(err))
+	})
+	t.Run("archived individually", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		b := &Bucket{ProjectID: 22, ProjectViewID: 88}
+		_, err := b.CanCreate(s, &user.User{ID: 1})
+		assert.True(t, IsErrProjectIsArchived(err))
+	})
+	t.Run("not archived", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		b := &Bucket{ProjectID: 1, ProjectViewID: 4}
+		can, err := b.CanCreate(s, &user.User{ID: 1})
+		require.NoError(t, err)
+		assert.True(t, can)
+	})
+	t.Run("no permission", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		b := &Bucket{ProjectID: 1, ProjectViewID: 4}
+		can, err := b.CanCreate(s, &user.User{ID: 2})
+		require.NoError(t, err)
+		assert.False(t, can)
+	})
+}
+
+func TestBucket_CanUpdate(t *testing.T) {
+	t.Run("archived through parent", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		b := &Bucket{ID: 19, ProjectID: 21}
+		_, err := b.CanUpdate(s, &user.User{ID: 1})
+		assert.True(t, IsErrProjectIsArchived(err))
+	})
+	t.Run("archived individually", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		b := &Bucket{ID: 20, ProjectID: 22}
+		_, err := b.CanUpdate(s, &user.User{ID: 1})
+		assert.True(t, IsErrProjectIsArchived(err))
+	})
+	t.Run("not archived", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		b := &Bucket{ID: 1, ProjectID: 1}
+		can, err := b.CanUpdate(s, &user.User{ID: 1})
+		require.NoError(t, err)
+		assert.True(t, can)
+	})
+}

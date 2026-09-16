@@ -18,6 +18,7 @@ package models
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -175,9 +176,10 @@ const ErrCodeInvalidTimezone = 2003
 // HTTPError holds the http error description
 func (err ErrInvalidTimezone) HTTPError() web.HTTPError {
 	return web.HTTPError{
-		HTTPCode: http.StatusBadRequest,
-		Code:     ErrCodeInvalidTimezone,
-		Message:  fmt.Sprintf("The timezone '%s' is invalid", err.Name),
+		HTTPCode:   http.StatusBadRequest,
+		Code:       ErrCodeInvalidTimezone,
+		Message:    fmt.Sprintf("The timezone '%s' is invalid", err.Name),
+		I18nParams: map[string]string{"timezone": err.Name},
 	}
 }
 
@@ -215,6 +217,38 @@ func (err ErrInvalidModel) HTTPError() web.HTTPError {
 		Code:     ErrCodeInvalidModel,
 		Message:  err.Error(),
 	}
+}
+
+type ErrInviteLinkInvalid struct{}
+
+func (err ErrInviteLinkInvalid) Error() string { return "This invite link is invalid or expired." }
+
+const ErrCodeInviteLinkInvalid = 2005
+
+func (err ErrInviteLinkInvalid) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusNotFound, Code: ErrCodeInviteLinkInvalid, Message: err.Error()}
+}
+
+type ErrInviteLinkDoesNotExist struct{}
+
+func (err ErrInviteLinkDoesNotExist) Error() string { return "This invite link does not exist." }
+
+const ErrCodeInviteLinkDoesNotExist = 2006
+
+func (err ErrInviteLinkDoesNotExist) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusNotFound, Code: ErrCodeInviteLinkDoesNotExist, Message: err.Error()}
+}
+
+type ErrInviteLinkExternalTeam struct{}
+
+func (err ErrInviteLinkExternalTeam) Error() string {
+	return "Externally managed teams cannot be attached to an invite link."
+}
+
+const ErrCodeInviteLinkExternalTeam = 2007
+
+func (err ErrInviteLinkExternalTeam) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeInviteLinkExternalTeam, Message: err.Error()}
 }
 
 // ===========
@@ -535,6 +569,58 @@ func (err *ErrProjectViewDoesNotExist) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrProjectHasNoBackground represents an error where a project has no background set.
+type ErrProjectHasNoBackground struct {
+	ProjectID int64
+}
+
+// IsErrProjectHasNoBackground checks if an error is ErrProjectHasNoBackground.
+func IsErrProjectHasNoBackground(err error) bool {
+	_, ok := err.(*ErrProjectHasNoBackground)
+	return ok
+}
+
+func (err *ErrProjectHasNoBackground) Error() string {
+	return fmt.Sprintf("Project has no background [ProjectID: %d]", err.ProjectID)
+}
+
+// ErrCodeProjectHasNoBackground holds the unique world-error code of this error
+const ErrCodeProjectHasNoBackground = 3015
+
+// HTTPError holds the http error description
+func (err *ErrProjectHasNoBackground) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusNotFound,
+		Code:     ErrCodeProjectHasNoBackground,
+		// Message kept verbatim from v1's inline handler error so the wire body is unchanged.
+		Message: "Project background not found",
+	}
+}
+
+// ErrParentProjectIsArchived represents an error, where a project's parent is archived
+type ErrParentProjectIsArchived struct {
+	ProjectID       int64
+	ParentProjectID int64
+}
+
+// IsErrParentProjectIsArchived checks if an error is a parent project is archived error.
+func IsErrParentProjectIsArchived(err error) bool {
+	_, ok := err.(ErrParentProjectIsArchived)
+	return ok
+}
+
+func (err ErrParentProjectIsArchived) Error() string {
+	return fmt.Sprintf("Parent project is archived [ProjectID: %d, ParentProjectID: %d]", err.ProjectID, err.ParentProjectID)
+}
+
+// ErrCodeParentProjectIsArchived holds the unique world-error code of this error
+const ErrCodeParentProjectIsArchived = 3016
+
+// HTTPError holds the http error description
+func (err ErrParentProjectIsArchived) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusPreconditionFailed, Code: ErrCodeParentProjectIsArchived, Message: "The parent project is archived. Un-archive the parent project first."}
+}
+
 // ==============
 // Task errors
 // ==============
@@ -585,6 +671,73 @@ func (err ErrInvalidTaskRepeatInterval) HTTPError() web.HTTPError {
 		HTTPCode: http.StatusBadRequest,
 		Code:     ErrCodeInvalidTaskRepeatInterval,
 		Message:  fmt.Sprintf("The task repeat interval must be between 0 and %d seconds (10 years).", MaxTaskRepeatAfterSeconds),
+	}
+}
+
+// ErrInvalidBulkTaskCreationCount represents an error where a bulk task creation request has no tasks or more than the maximum.
+type ErrInvalidBulkTaskCreationCount struct {
+	Count int
+}
+
+// IsErrInvalidBulkTaskCreationCount checks if an error is ErrInvalidBulkTaskCreationCount.
+func IsErrInvalidBulkTaskCreationCount(err error) bool {
+	_, ok := err.(ErrInvalidBulkTaskCreationCount)
+	return ok
+}
+
+func (err ErrInvalidBulkTaskCreationCount) Error() string {
+	return fmt.Sprintf("Invalid bulk task creation count. [Count: %d]", err.Count)
+}
+
+// ErrCodeInvalidBulkTaskCreationCount holds the unique world-error code of this error.
+const ErrCodeInvalidBulkTaskCreationCount = 4030
+
+// HTTPError holds the http error description.
+func (err ErrInvalidBulkTaskCreationCount) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeInvalidBulkTaskCreationCount,
+		Message:  fmt.Sprintf("A bulk task creation must contain between 1 and %d tasks, got %d.", MaxTasksPerBulkCreation, err.Count),
+	}
+}
+
+// ErrInvalidTaskInBulkCreation represents an error where one task of a bulk creation batch failed validation, identified by its payload index.
+type ErrInvalidTaskInBulkCreation struct {
+	Index int
+	Err   error
+}
+
+// IsErrInvalidTaskInBulkCreation checks if an error is ErrInvalidTaskInBulkCreation.
+func IsErrInvalidTaskInBulkCreation(err error) bool {
+	_, ok := err.(ErrInvalidTaskInBulkCreation)
+	return ok
+}
+
+func (err ErrInvalidTaskInBulkCreation) Error() string {
+	return fmt.Sprintf("Invalid task in bulk creation. [Index: %d, Error: %v]", err.Index, err.Err)
+}
+
+func (err ErrInvalidTaskInBulkCreation) Unwrap() error {
+	return err.Err
+}
+
+// ErrCodeInvalidTaskInBulkCreation holds the unique world-error code of this error.
+const ErrCodeInvalidTaskInBulkCreation = 4031
+
+// HTTPError holds the http error description.
+func (err ErrInvalidTaskInBulkCreation) HTTPError() web.HTTPError {
+	message := "invalid task"
+	switch e := err.Err.(type) {
+	case web.HTTPErrorProcessor:
+		message = e.HTTPError().Message
+	case ValidationHTTPError:
+		// ValidationHTTPError shadows HTTPErrorProcessor via its embedded field, so it's handled separately.
+		message = strings.Join(e.InvalidFields, ", ")
+	}
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeInvalidTaskInBulkCreation,
+		Message:  fmt.Sprintf("The task at index %d is invalid: %s", err.Index, message),
 	}
 }
 
@@ -1189,10 +1342,10 @@ type ErrInvalidFilterExpression struct {
 	ExpressionError error
 }
 
-// IsErrInvalidFilterExpression checks if an error is ErrInvalidFilterExpression.
+// Parse paths return pointer errors.
 func IsErrInvalidFilterExpression(err error) bool {
-	_, ok := err.(ErrInvalidFilterExpression)
-	return ok
+	var e *ErrInvalidFilterExpression
+	return errors.As(err, &e)
 }
 
 func (err ErrInvalidFilterExpression) Error() string {
@@ -1208,6 +1361,33 @@ func (err ErrInvalidFilterExpression) HTTPError() web.HTTPError {
 		HTTPCode: http.StatusBadRequest,
 		Code:     ErrCodeInvalidFilterExpression,
 		Message:  fmt.Sprintf("The filter expression '%s' is invalid: %v", err.Expression, err.ExpressionError),
+	}
+}
+
+// ErrFilterTooComplex omits the attacker-controlled expression (GHSA-xxc3-xpmc-vmvr).
+type ErrFilterTooComplex struct {
+	Reason string
+}
+
+// IsErrFilterTooComplex checks if an error is a ErrFilterTooComplex.
+func IsErrFilterTooComplex(err error) bool {
+	var e *ErrFilterTooComplex
+	return errors.As(err, &e)
+}
+
+func (err *ErrFilterTooComplex) Error() string {
+	return "The filter expression is too complex: " + err.Reason
+}
+
+// ErrCodeFilterTooComplex holds the unique world-error code of this error
+const ErrCodeFilterTooComplex = 4033
+
+// HTTPError holds the http error description
+func (err *ErrFilterTooComplex) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeFilterTooComplex,
+		Message:  "The filter expression is too complex: " + err.Reason,
 	}
 }
 
@@ -2157,9 +2337,10 @@ const ErrCodeInvalidAPITokenPermission = 14002
 // HTTPError holds the http error description
 func (err *ErrInvalidAPITokenPermission) HTTPError() web.HTTPError {
 	return web.HTTPError{
-		HTTPCode: http.StatusBadRequest,
-		Code:     ErrCodeInvalidAPITokenPermission,
-		Message:  fmt.Sprintf("The permission %s of group %s is invalid.", err.Permission, err.Group),
+		HTTPCode:   http.StatusBadRequest,
+		Code:       ErrCodeInvalidAPITokenPermission,
+		Message:    fmt.Sprintf("The permission %s of group %s is invalid.", err.Permission, err.Group),
+		I18nParams: map[string]string{"permission": err.Permission, "group": err.Group},
 	}
 }
 
@@ -2217,6 +2398,84 @@ func (err *ErrSessionNotFound) HTTPError() web.HTTPError {
 		HTTPCode: http.StatusNotFound,
 		Code:     ErrCodeSessionNotFound,
 		Message:  "The session does not exist.",
+	}
+}
+
+// ErrInvalidRefreshToken represents an error where a refresh token does not
+// match any session.
+type ErrInvalidRefreshToken struct{}
+
+// IsErrInvalidRefreshToken checks if an error is ErrInvalidRefreshToken.
+func IsErrInvalidRefreshToken(err error) bool {
+	_, ok := err.(*ErrInvalidRefreshToken)
+	return ok
+}
+
+func (err *ErrInvalidRefreshToken) Error() string {
+	return "Invalid refresh token"
+}
+
+// ErrCodeInvalidRefreshToken holds the unique world-error code of this error
+const ErrCodeInvalidRefreshToken = 16002
+
+// HTTPError holds the http error description
+func (err *ErrInvalidRefreshToken) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusUnauthorized,
+		Code:     ErrCodeInvalidRefreshToken,
+		Message:  "Invalid or expired refresh token.",
+	}
+}
+
+// ErrSessionExpired represents an error where a session was not used within its
+// maximum lifetime and has been removed.
+type ErrSessionExpired struct{}
+
+// IsErrSessionExpired checks if an error is ErrSessionExpired.
+func IsErrSessionExpired(err error) bool {
+	_, ok := err.(*ErrSessionExpired)
+	return ok
+}
+
+func (err *ErrSessionExpired) Error() string {
+	return "Session expired"
+}
+
+// ErrCodeSessionExpired holds the unique world-error code of this error
+const ErrCodeSessionExpired = 16003
+
+// HTTPError holds the http error description
+func (err *ErrSessionExpired) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusUnauthorized,
+		Code:     ErrCodeSessionExpired,
+		Message:  "Session expired.",
+	}
+}
+
+// ErrRefreshTokenAlreadyUsed represents an error where a refresh token was
+// already rotated away, either by a replay or by a concurrent refresh.
+type ErrRefreshTokenAlreadyUsed struct{}
+
+// IsErrRefreshTokenAlreadyUsed checks if an error is ErrRefreshTokenAlreadyUsed.
+func IsErrRefreshTokenAlreadyUsed(err error) bool {
+	_, ok := err.(*ErrRefreshTokenAlreadyUsed)
+	return ok
+}
+
+func (err *ErrRefreshTokenAlreadyUsed) Error() string {
+	return "Refresh token already used"
+}
+
+// ErrCodeRefreshTokenAlreadyUsed holds the unique world-error code of this error
+const ErrCodeRefreshTokenAlreadyUsed = 16004
+
+// HTTPError holds the http error description
+func (err *ErrRefreshTokenAlreadyUsed) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusUnauthorized,
+		Code:     ErrCodeRefreshTokenAlreadyUsed,
+		Message:  "Refresh token already used.",
 	}
 }
 
@@ -2594,5 +2853,34 @@ func (err ErrTimeEntryEndBeforeStart) HTTPError() web.HTTPError {
 		HTTPCode: http.StatusBadRequest,
 		Code:     ErrCodeTimeEntryEndBeforeStart,
 		Message:  "A time entry's end time cannot be before its start time.",
+	}
+}
+
+// =================
+// User export errors
+// =================
+
+// ErrUserDataExportDoesNotExist represents an error where a user has no ready data export to download.
+type ErrUserDataExportDoesNotExist struct{}
+
+// IsErrUserDataExportDoesNotExist checks if an error is ErrUserDataExportDoesNotExist.
+func IsErrUserDataExportDoesNotExist(err error) bool {
+	_, ok := err.(ErrUserDataExportDoesNotExist)
+	return ok
+}
+
+func (err ErrUserDataExportDoesNotExist) Error() string {
+	return "No user data export found"
+}
+
+// ErrCodeUserDataExportDoesNotExist holds the unique world-error code of this error
+const ErrCodeUserDataExportDoesNotExist = 19001
+
+// HTTPError holds the http error description
+func (err ErrUserDataExportDoesNotExist) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusNotFound,
+		Code:     ErrCodeUserDataExportDoesNotExist,
+		Message:  "No user data export found.",
 	}
 }

@@ -318,6 +318,48 @@ func TestTaskRelation_Delete(t *testing.T) {
 	})
 }
 
+func TestTaskRelation_CanDelete(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	u1 := &user.User{ID: 1}
+	u2 := &user.User{ID: 2}
+
+	sharedProject := &Project{Title: "CanDelete shared project"}
+	require.NoError(t, sharedProject.Create(s, u1))
+	_, err := s.Insert(&ProjectUser{UserID: u2.ID, ProjectID: sharedProject.ID, Permission: PermissionWrite})
+	require.NoError(t, err)
+
+	baseTask := &Task{Title: "CanDelete base", ProjectID: sharedProject.ID}
+	require.NoError(t, baseTask.Create(s, u1))
+
+	privateProject := &Project{Title: "CanDelete private project"}
+	require.NoError(t, privateProject.Create(s, u1))
+	otherTask := &Task{Title: "CanDelete other", ProjectID: privateProject.ID}
+	require.NoError(t, otherTask.Create(s, u1))
+
+	rel := &TaskRelation{
+		TaskID:       baseTask.ID,
+		OtherTaskID:  otherTask.ID,
+		RelationKind: RelationKindSubtask,
+	}
+	require.NoError(t, rel.Create(s, u1))
+	require.NoError(t, s.Commit())
+
+	t.Run("writer without access to the other task", func(t *testing.T) {
+		can, err := rel.CanDelete(s, u2)
+		require.NoError(t, err)
+		require.False(t, can, "deleting a relation to a task the caller cannot read must be denied")
+	})
+
+	t.Run("writer with access to both tasks", func(t *testing.T) {
+		can, err := rel.CanDelete(s, u1)
+		require.NoError(t, err)
+		require.True(t, can)
+	})
+}
+
 func TestTaskRelation_CanCreate(t *testing.T) {
 	t.Run("Normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)

@@ -1,39 +1,45 @@
 import TaskService from '@/services/task'
-import LabelTaskService from '@/services/labelTask'
 import TaskAssigneeService from '@/services/taskAssignee'
 import TaskDuplicateService from '@/services/taskDuplicateService'
-import SubscriptionService from '@/services/subscription'
 import TaskRelationService from '@/services/taskRelation'
 
-import LabelTaskModel from '@/models/labelTask'
 import TaskAssigneeModel from '@/models/taskAssignee'
 import TaskDuplicateModel from '@/models/taskDuplicateModel'
-import SubscriptionModel from '@/models/subscription'
 import TaskRelationModel from '@/models/taskRelation'
 
+import {taskLabelsCreate, taskLabelsDelete, subscriptionsCreate, subscriptionsDelete} from '@/client/generated'
+import type {Label} from '@/client/generated'
+import type {ProjectResponse} from '@/client/queries/projects'
 import type {ITask} from '@/modelTypes/ITask'
-import type {ILabel} from '@/modelTypes/ILabel'
 import type {IUser} from '@/modelTypes/IUser'
-import type {IProject} from '@/modelTypes/IProject'
 import type {IRelationKind} from '@/types/IRelationKind'
 
 function sleep(ms: number) {
 	return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-function isIgnorableDuplicateError(error: unknown): boolean {
+function extractErrorStatus(error: unknown): number | undefined {
 	const maybeError = error as {
-		response?: {
-			status?: number,
-			data?: {
-				message?: string,
-			},
-		},
-		message?: string,
+		response?: {status?: number},
+		status?: number,
 	}
 
-	const status = maybeError.response?.status
-	const message = maybeError.response?.data?.message ?? maybeError.message ?? ''
+	return maybeError.response?.status ?? maybeError.status
+}
+
+function extractErrorMessage(error: unknown): string {
+	const maybeError = error as {
+		response?: {data?: {message?: string}},
+		message?: string,
+		detail?: string,
+	}
+
+	return maybeError.response?.data?.message ?? maybeError.message ?? maybeError.detail ?? ''
+}
+
+function isIgnorableDuplicateError(error: unknown): boolean {
+	const status = extractErrorStatus(error)
+	const message = extractErrorMessage(error)
 
 	return status === 409 ||
 		status === 412 ||
@@ -42,26 +48,13 @@ function isIgnorableDuplicateError(error: unknown): boolean {
 }
 
 function isDatabaseLockedError(error: unknown): boolean {
-	const maybeError = error as {
-		response?: {
-			data?: {
-				message?: string,
-			},
-		},
-		message?: string,
-	}
-
-	const message = maybeError.response?.data?.message ?? maybeError.message ?? ''
-
-	return message.toLowerCase().includes('database is locked')
+	return extractErrorMessage(error).toLowerCase().includes('database is locked')
 }
 
 export default class TaskBulkService {
 	taskService = new TaskService()
-	labelTaskService = new LabelTaskService()
 	taskAssigneeService = new TaskAssigneeService()
 	taskDuplicateService = new TaskDuplicateService()
-	subscriptionService = new SubscriptionService()
 	taskRelationService = new TaskRelationService()
 
 	loading = false
@@ -146,7 +139,7 @@ export default class TaskBulkService {
 		})
 	}
 
-	async moveTasks(tasks: ITask[], project: IProject): Promise<ITask[]> {
+	async moveTasks(tasks: ITask[], project: ProjectResponse): Promise<ITask[]> {
 		return this.updateTasks(tasks, {
 			projectId: project.id,
 		})
@@ -174,10 +167,7 @@ export default class TaskBulkService {
 		try {
 			await this.runSequential(
 				tasks.filter(task => task.subscription === null),
-				task => this.subscriptionService.create(new SubscriptionModel({
-					entity: 'task',
-					entityId: task.id,
-				})),
+				task => subscriptionsCreate({path: {entity: 'task', entityID: task.id}}),
 				{
 					ignoreDuplicates: true,
 				},
@@ -193,10 +183,7 @@ export default class TaskBulkService {
 		try {
 			await this.runSequential(
 				tasks.filter(task => task.subscription !== null),
-				task => this.subscriptionService.delete(new SubscriptionModel({
-					entity: 'task',
-					entityId: task.id,
-				})),
+				task => subscriptionsDelete({path: {entity: 'task', entityID: task.id}}),
 				{
 					ignoreDuplicates: true,
 				},
@@ -298,7 +285,7 @@ export default class TaskBulkService {
 		}
 	}
 
-	async addLabels(tasks: ITask[], labels: ILabel[]) {
+	async addLabels(tasks: ITask[], labels: Label[]) {
 		this.loading = true
 
 		try {
@@ -309,10 +296,7 @@ export default class TaskBulkService {
 
 				await this.runSequential(
 					labelsToAdd,
-					label => this.labelTaskService.create(new LabelTaskModel({
-						taskId: task.id,
-						labelId: label.id,
-					})),
+					label => taskLabelsCreate({path: {task: task.id}, body: {label_id: label.id!}}),
 					{
 						ignoreDuplicates: true,
 					},
@@ -323,7 +307,7 @@ export default class TaskBulkService {
 		}
 	}
 
-	async removeLabels(tasks: ITask[], labels: ILabel[]) {
+	async removeLabels(tasks: ITask[], labels: Label[]) {
 		this.loading = true
 
 		try {
@@ -334,10 +318,7 @@ export default class TaskBulkService {
 
 				await this.runSequential(
 					labelsToRemove,
-					label => this.labelTaskService.delete(new LabelTaskModel({
-						taskId: task.id,
-						labelId: label.id,
-					})),
+					label => taskLabelsDelete({path: {task: task.id, label: label.id!}}),
 					{
 						ignoreDuplicates: true,
 					},
@@ -348,7 +329,7 @@ export default class TaskBulkService {
 		}
 	}
 
-	async replaceLabels(tasks: ITask[], labels: ILabel[]) {
+	async replaceLabels(tasks: ITask[], labels: Label[]) {
 		this.loading = true
 
 		try {
@@ -365,10 +346,7 @@ export default class TaskBulkService {
 
 				await this.runSequential(
 					labelsToRemove,
-					label => this.labelTaskService.delete(new LabelTaskModel({
-						taskId: task.id,
-						labelId: label.id,
-					})),
+					label => taskLabelsDelete({path: {task: task.id, label: label.id!}}),
 					{
 						ignoreDuplicates: true,
 					},
@@ -376,10 +354,7 @@ export default class TaskBulkService {
 
 				await this.runSequential(
 					labelsToAdd,
-					label => this.labelTaskService.create(new LabelTaskModel({
-						taskId: task.id,
-						labelId: label.id,
-					})),
+					label => taskLabelsCreate({path: {task: task.id}, body: {label_id: label.id!}}),
 					{
 						ignoreDuplicates: true,
 					},

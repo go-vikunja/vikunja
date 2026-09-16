@@ -1,9 +1,10 @@
 <template>
 	<BaseButton
-		v-shortcut="'Mod+KeyE'"
+		v-shortcut="SHORTCUTS.toggleMenu"
 		class="menu-show-button"
 		:title="$t('keyboardShortcuts.toggleMenu')"
 		:aria-label="menuActive ? $t('misc.hideMenu') : $t('misc.showMenu')"
+		:aria-expanded="menuActive"
 		@click="baseStore.toggleMenu()"
 		@shortkey="() => baseStore.toggleMenu()"
 	/>
@@ -11,6 +12,8 @@
 
 <script setup lang="ts">
 import {computed} from 'vue'
+
+import {SHORTCUTS} from '@/constants/shortcuts'
 import {useBaseStore} from '@/stores/base'
 
 import BaseButton from '@/components/base/BaseButton.vue'

@@ -1,13 +1,13 @@
 import AbstractModel from '@/models/abstractModel'
-import type {IApiToken} from '@/modelTypes/IApiToken'
+import type {IApiToken, IApiPermission} from '@/modelTypes/IApiToken'
 
 export default class ApiTokenModel extends AbstractModel<IApiToken> {
 	id = 0
 	title = ''
 	token = ''
-	permissions = null
-	expiresAt: Date = null
-	created: Date = null
+	permissions: IApiPermission = {}
+	expiresAt: Date = new Date(0)
+	created: Date = new Date(0)
 	ownerId = 0
 	
 	constructor(data: Partial<IApiToken> = {}) {
@@ -17,6 +17,5 @@ export default class ApiTokenModel extends AbstractModel<IApiToken> {
 		
 		this.expiresAt = new Date(this.expiresAt)
 		this.created = new Date(this.created)
-		this.updated = new Date(this.updated)
 	}
 }

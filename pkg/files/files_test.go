@@ -21,7 +21,7 @@ import (
 	"image"
 	"image/png"
 	"io"
-	"os"
+	"net/http"
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
@@ -48,8 +48,10 @@ func TestCreate(t *testing.T) {
 		require.NoError(t, err)
 
 		// Check the file was created correctly
+		s := db.NewSession()
+		defer s.Close()
 		file := &File{ID: createdFile.ID}
-		err = file.LoadFileMetaByID()
+		err = file.LoadFileMetaByID(s)
 		require.NoError(t, err)
 		assert.Equal(t, int64(1), file.CreatedByID)
 		assert.Equal(t, "testfile", file.Name)
@@ -178,7 +180,8 @@ func TestFile_LoadFileByID(t *testing.T) {
 		f := &File{ID: 9999}
 		err := f.LoadFileByID()
 		require.Error(t, err)
-		assert.True(t, os.IsNotExist(err))
+		assert.True(t, IsErrFileDoesNotExist(err))
+		assert.Equal(t, http.StatusNotFound, err.(ErrFileDoesNotExist).HTTPError().HTTPCode)
 	})
 }
 
@@ -209,15 +212,19 @@ func TestFileSave_UsesStorage(t *testing.T) {
 func TestFile_LoadFileMetaByID(t *testing.T) {
 	t.Run("Normal", func(t *testing.T) {
 		initFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
 		f := &File{ID: 1}
-		err := f.LoadFileMetaByID()
+		err := f.LoadFileMetaByID(s)
 		require.NoError(t, err)
 		assert.Equal(t, "test", f.Name)
 	})
 	t.Run("Nonexisting", func(t *testing.T) {
 		initFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
 		f := &File{ID: 9999}
-		err := f.LoadFileMetaByID()
+		err := f.LoadFileMetaByID(s)
 		require.Error(t, err)
 		assert.True(t, IsErrFileDoesNotExist(err))
 	})

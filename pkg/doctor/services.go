@@ -31,27 +31,24 @@ import (
 	"code.vikunja.io/api/pkg/red"
 )
 
-// CheckOptionalServices returns check groups for all enabled optional services.
-func CheckOptionalServices() []CheckGroup {
-	var groups []CheckGroup
-
+// CheckOptionalServices runs the checks for all enabled optional services, passing
+// each group to emit as it completes.
+func CheckOptionalServices(emit func(CheckGroup)) {
 	if config.RedisEnabled.GetBool() {
-		groups = append(groups, checkRedis())
+		emit(checkRedis())
 	}
 
 	if config.MailerEnabled.GetBool() {
-		groups = append(groups, checkMailer())
+		emit(checkMailer())
 	}
 
 	if config.AuthLdapEnabled.GetBool() {
-		groups = append(groups, checkLDAP())
+		emit(checkLDAP())
 	}
 
 	if config.AuthOpenIDEnabled.GetBool() {
-		groups = append(groups, checkOpenID())
+		emit(checkOpenID())
 	}
-
-	return groups
 }
 
 func checkRedis() CheckGroup {

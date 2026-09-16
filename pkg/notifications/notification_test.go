@@ -120,9 +120,10 @@ func (n *titlerRegisteredNotification) ToMail(_ string) *Mail   { return NewMail
 func (n *titlerRegisteredNotification) ToDB() interface{}       { return n }
 func (n *titlerRegisteredNotification) Name() string            { return "test.registry.titler" }
 func (n *titlerRegisteredNotification) ToTitle(_ string) string { return n.Title }
+func (n *titlerRegisteredNotification) ProjectID() int64        { return 0 }
 
 func TestRegistry(t *testing.T) {
-	Register(func() Notification { return &titlerRegisteredNotification{} })
+	Register(func() PersistedNotification { return &titlerRegisteredNotification{} })
 
 	t.Run("known name returns fresh instance", func(t *testing.T) {
 		n, ok := Lookup("test.registry.titler")
@@ -146,6 +147,7 @@ func TestNotify(t *testing.T) {
 		require.NoError(t, err)
 		require.NoError(t, s.Commit())
 		s.Close()
+		mail.ResetSent()
 
 		tn := &testNotification{
 			Test:       "somethingsomething",
@@ -174,6 +176,40 @@ func TestNotify(t *testing.T) {
 		}
 
 		db.AssertExists(t, "notifications", vals, true)
+
+		sent := mail.LastSent()
+		require.NotNil(t, sent)
+		assert.Equal(t, "Test Notification", sent.Subject)
+	})
+
+	t.Run("mail queued only after the session commits", func(t *testing.T) {
+		mail.ResetSent()
+		tn := &testNotification{Test: "deferred", OtherValue: 1}
+		tnf := &testNotifiable{ShouldSendNotification: true, Language: "en"}
+
+		s := db.NewSession()
+		defer s.Close()
+
+		require.NoError(t, Notify(tnf, tn, s))
+		assert.Nil(t, mail.LastSent(), "mail must not be queued before the transaction commits")
+
+		require.NoError(t, s.Commit())
+		sent := mail.LastSent()
+		require.NotNil(t, sent)
+		assert.Equal(t, "Test Notification", sent.Subject)
+	})
+
+	t.Run("no mail when the session rolls back", func(t *testing.T) {
+		mail.ResetSent()
+		tn := &testNotification{Test: "rolledback", OtherValue: 2}
+		tnf := &testNotifiable{ShouldSendNotification: true, Language: "en"}
+
+		s := db.NewSession()
+		defer s.Close()
+
+		require.NoError(t, Notify(tnf, tn, s))
+		require.NoError(t, s.Rollback())
+		assert.Nil(t, mail.LastSent())
 	})
 	t.Run("subject fallback uses ToTitle when ToMail omits Subject", func(t *testing.T) {
 		mail.ResetSent()

@@ -25,6 +25,10 @@ export const ASSIGNEE_FIELDS = [
 	'assignees',
 ]
 
+export const CREATED_BY_FIELDS = [
+	'createdBy',
+]
+
 export const LABEL_FIELDS = [
 	'labels',
 ]
@@ -36,12 +40,14 @@ export const PROJECT_FIELDS = [
 export const AUTOCOMPLETE_FIELDS = [
 	...LABEL_FIELDS,
 	...ASSIGNEE_FIELDS,
+	...CREATED_BY_FIELDS,
 	...PROJECT_FIELDS,
 ]
 
 export const AVAILABLE_FILTER_FIELDS = [
 	...DATE_FIELDS,
 	...ASSIGNEE_FIELDS,
+	...CREATED_BY_FIELDS,
 	...LABEL_FIELDS,
 	...PROJECT_FIELDS,
 	'done',
@@ -125,8 +131,6 @@ export function transformFilterStringForApi(
 					keywords = keyword.trim().split(',').map(k => trimQuotes(k))
 				}
 
-				let replaced = keyword
-
 				const transformedKeywords: string[] = []
 				keywords.forEach(k => {
 					let id = resolver(k)
@@ -142,11 +146,9 @@ export function transformFilterStringForApi(
 				})
 				
 				// Join the transformed keywords back together
-				if (isMultiValueOperator(operator)) {
-					replaced = transformedKeywords.join(', ')
-				} else {
-					replaced = transformedKeywords[0] || keyword
-				}
+				let replaced = isMultiValueOperator(operator)
+					? transformedKeywords.join(', ')
+					: transformedKeywords[0] || keyword
 
 				replaced = replaced.replaceAll('"', '').replaceAll('\'', '')
 

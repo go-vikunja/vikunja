@@ -47,7 +47,7 @@ func init() {
 		ID:          "20200515195546",
 		Description: "Change namespace name to title",
 		Migrate: func(tx *xorm.Engine) error {
-			err := tx.Sync2(namespace20200515195546{})
+			err := partialSync(tx, namespace20200515195546{})
 			if err != nil {
 				return err
 			}
@@ -66,7 +66,7 @@ func init() {
 				}
 			}
 
-			err = tx.Sync2(namespace20200515195547{})
+			err = partialSync(tx, namespace20200515195547{})
 			if err != nil {
 				return err
 			}

@@ -116,10 +116,9 @@ import {ref, computed, watch} from 'vue'
 import Card from '@/components/misc/Card.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
-import TaskService from '@/services/task'
-import TaskModel from '@/models/task'
-import {useProjectStore} from '@/stores/projects'
+import {useProjects} from '@/composables/useProjects'
 import {useAuthStore} from '@/stores/auth'
+import {fetchTaskById} from '@/helpers/fetchTaskById'
 import {getProjectTitle} from '@/helpers/getProjectTitle'
 import {formatDate} from '@/helpers/time/formatDate'
 import {useTimeFormat} from '@/composables/useTimeFormat'
@@ -127,7 +126,6 @@ import {TIME_FORMAT} from '@/constants/timeFormat'
 
 import type {ITimeEntry} from '@/modelTypes/ITimeEntry'
 import type {ITask} from '@/modelTypes/ITask'
-import type {IProject} from '@/modelTypes/IProject'
 
 const props = withDefaults(defineProps<{
 	entries: ITimeEntry[]
@@ -149,7 +147,7 @@ const emit = defineEmits<{
 	edit: [entry: ITimeEntry]
 }>()
 
-const projectStore = useProjectStore()
+const projectList = useProjects()
 const {store: timeFormat} = useTimeFormat()
 
 // Only the author can update/delete (enforced server-side); shared lists include
@@ -157,27 +155,18 @@ const {store: timeFormat} = useTimeFormat()
 const authStore = useAuthStore()
 const currentUserId = computed(() => authStore.info?.id)
 
-// Task entries carry only a task id; resolve the full task lazily (for its
-// title, identifier, and parent project) and cache it.
-const taskService = new TaskService()
+// Entries carry only a task id; the full task (title, identifier, parent project) is resolved lazily.
 const tasks = ref<Record<number, ITask>>({})
-const inFlight = new Set<number>()
-async function ensureTask(taskId: number) {
-	if (taskId === 0 || tasks.value[taskId] !== undefined || inFlight.has(taskId)) {
-		return
-	}
-	inFlight.add(taskId)
-	try {
-		tasks.value[taskId] = await taskService.get(new TaskModel({id: taskId}))
-	} catch {
-		// Leave unresolved — the row falls back to #<id>.
-	} finally {
-		inFlight.delete(taskId)
-	}
-}
 
 watch(() => props.entries, entries => {
-	entries.forEach(entry => ensureTask(entry.taskId))
+	entries.forEach(({taskId}) => {
+		if (taskId === 0) {
+			return
+		}
+		fetchTaskById(taskId).then(task => {
+			tasks.value[taskId] = task
+		}).catch(() => {})
+	})
 }, {immediate: true})
 
 function entrySeconds(entry: ITimeEntry): number {
@@ -188,8 +177,8 @@ function entrySeconds(entry: ITimeEntry): number {
 const rows = computed(() => props.entries.map(entry => {
 	const task = entry.taskId > 0 ? tasks.value[entry.taskId] : undefined
 	const projectId = task?.projectId ?? (entry.projectId > 0 ? entry.projectId : 0)
-	const project = projectId > 0 ? projectStore.projects[projectId] as IProject | undefined : undefined
-	const ancestors = project ? projectStore.getAncestors(project) : []
+	const project = projectId > 0 ? projectList.projects[projectId] : undefined
+	const ancestors = project ? projectList.getAncestors(project) : []
 
 	return {
 		entry,

@@ -34,7 +34,7 @@ func init() {
 		ID:          "20200322214624",
 		Description: "Add hex color property to list",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(list20200322214624{})
+			return partialSync(tx, list20200322214624{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return tx.DropTables(list20200322214624{})

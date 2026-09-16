@@ -87,7 +87,10 @@ func RegisterLabelRoutes(api huma.API) {
 
 func init() { AddRouteRegistrar(RegisterLabelRoutes) }
 
-func labelsList(ctx context.Context, in *ListParams) (*labelListBody, error) {
+func labelsList(ctx context.Context, in *struct {
+	ListParams
+	Format string `query:"format" enum:"html,markdown" doc:"How rich-text fields are exchanged. See the API description."`
+}) (*labelListBody, error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
 		return nil, err
@@ -100,6 +103,9 @@ func labelsList(ctx context.Context, in *ListParams) (*labelListBody, error) {
 	if !ok {
 		return nil, fmt.Errorf("labels.ReadAll returned unexpected type %T (expected []*models.LabelWithTaskID)", result)
 	}
+	for _, l := range items {
+		convertToMarkdown(ctx, &l.Description)
+	}
 	return &labelListBody{Body: NewPaginated(items, total, in.Page, in.PerPage)}, nil
 }
 
@@ -109,7 +115,8 @@ type labelReadBody struct {
 }
 
 func labelsRead(ctx context.Context, in *struct {
-	ID int64 `path:"id"`
+	ID     int64  `path:"id"`
+	Format string `query:"format" enum:"html,markdown" doc:"How rich-text fields are exchanged. See the API description."`
 	conditional.Params
 }) (*singleReadBody[labelReadBody], error) {
 	a, err := authFromCtx(ctx)
@@ -122,26 +129,33 @@ func labelsRead(ctx context.Context, in *struct {
 		return nil, translateDomainError(err)
 	}
 	body := &labelReadBody{Label: *label, MaxPermission: models.Permission(maxPermission)}
+	convertToMarkdown(ctx, &body.Description)
 	return conditionalReadResponse(&in.Params, body, label.Updated, maxPermission)
 }
 
 func labelsCreate(ctx context.Context, in *struct {
-	Body models.Label
+	Format string `query:"format" enum:"html,markdown" doc:"How rich-text fields are exchanged. See the API description."`
+	Body   models.Label
 }) (*singleBody[models.Label], error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
 		return nil, err
 	}
+	if err := convertToHTML(ctx, &in.Body.Description); err != nil {
+		return nil, translateDomainError(err)
+	}
 	if err := handler.DoCreate(ctx, &in.Body, a); err != nil {
 		return nil, translateDomainError(err)
 	}
+	convertToMarkdown(ctx, &in.Body.Description)
 	return &singleBody[models.Label]{Body: &in.Body}, nil
 }
 
 // Body matches the read shape so AutoPatch's GET→PUT echo of max_permission validates.
 func labelsUpdate(ctx context.Context, in *struct {
-	ID   int64 `path:"id"`
-	Body labelReadBody
+	ID     int64  `path:"id"`
+	Format string `query:"format" enum:"html,markdown" doc:"How rich-text fields are exchanged. See the API description."`
+	Body   labelReadBody
 }) (*singleBody[models.Label], error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
@@ -149,9 +163,13 @@ func labelsUpdate(ctx context.Context, in *struct {
 	}
 	label := &in.Body.Label
 	label.ID = in.ID // URL wins over body
+	if err := convertToHTML(ctx, &label.Description); err != nil {
+		return nil, translateDomainError(err)
+	}
 	if err := handler.DoUpdate(ctx, label, a); err != nil {
 		return nil, translateDomainError(err)
 	}
+	convertToMarkdown(ctx, &label.Description)
 	return &singleBody[models.Label]{Body: label}, nil
 }
 

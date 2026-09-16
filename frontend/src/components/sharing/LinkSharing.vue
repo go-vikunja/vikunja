@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<p class="has-text-weight-bold">
+		<h3 class="has-text-weight-bold share-heading">
 			{{ $t('project.share.links.title') }}
 			<span
 				v-tooltip="$t('project.share.links.explanation')"
@@ -8,7 +8,7 @@
 			>
 				{{ $t('project.share.links.what') }}
 			</span>
-		</p>
+		</h3>
 
 		<div class="sharables-project">
 			<XButton
@@ -58,6 +58,7 @@
 					:label="$t('project.share.links.password')"
 					type="password"
 					:placeholder="$t('user.auth.passwordPlaceholder')"
+					autocomplete="new-password"
 				/>
 				<XButton
 					icon="plus"
@@ -144,7 +145,10 @@
 							</td>
 							<td v-if="availableViews.length > 0">
 								<div class="select">
-									<select v-model="selectedViews[s.id]">
+									<select
+										v-model="selectedViews[s.id]"
+										:aria-label="$t('project.share.links.view')"
+									>
 										<option
 											v-for="(view) in availableViews"
 											:key="view.id"
@@ -159,6 +163,7 @@
 								<XButton
 									danger
 									icon="trash-alt"
+									:aria-label="$t('project.share.links.remove')"
 									@click="
 										() => {
 											linkIdToDelete = s.id
@@ -198,7 +203,6 @@ import FormField from '@/components/input/FormField.vue'
 import LinkShareModel from '@/models/linkShare'
 
 import type {ILinkShare} from '@/modelTypes/ILinkShare'
-import type {IProject} from '@/modelTypes/IProject'
 
 import LinkShareService from '@/services/linkShare'
 
@@ -206,11 +210,10 @@ import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
 import {success} from '@/message'
 import {getDisplayName} from '@/models/user'
 import {useConfigStore} from '@/stores/config'
-import {useProjectStore} from '@/stores/projects'
-import type {IProjectView} from '@/modelTypes/IProjectView'
+import {useProjects} from '@/composables/useProjects'
 
 const props = withDefaults(defineProps<{
-	projectId?: IProject['id'],
+	projectId?: number,
 }>(), {
 	projectId: 0,
 })
@@ -226,9 +229,9 @@ const showDeleteModal = ref(false)
 const linkIdToDelete = ref(0)
 const showNewForm = ref(false)
 
-const projectStore = useProjectStore()
+const projectList = useProjects()
 
-const availableViews = computed<IProjectView[]>(() => projectStore.projects[props.projectId]?.views || [])
+const availableViews = computed(() => projectList.projects[props.projectId]?.views || [])
 const copy = useCopyToClipboard()
 watch(
 	() => props.projectId,
@@ -239,7 +242,7 @@ watch(
 const configStore = useConfigStore()
 const frontendUrl = computed(() => configStore.frontendUrl)
 
-async function load(projectId: IProject['id']) {
+async function load(projectId: number) {
 	// If projectId == 0 the project on the calling component wasn't already loaded, so we just bail out here
 	if (projectId === 0) {
 		return
@@ -248,18 +251,19 @@ async function load(projectId: IProject['id']) {
 	linkShares.value = await linkShareService.getAll({projectId})
 }
 
-type SelectedViewMapper = Record<IProject['id'], IProjectView['id']>
+type SelectedViewMapper = Record<number, number>
 
 const selectedViews = ref<SelectedViewMapper>({})
 
-watch(() => ([linkShares.value, availableViews.value]), ([newLinkShares, newProjectViews]) => {
-	if (!newLinkShares?.length || !newProjectViews?.length) {
+watch(() => [linkShares.value, availableViews.value] as const, ([newLinkShares, newProjectViews]) => {
+	const firstViewId = newProjectViews[0]?.id
+	if (!newLinkShares.length || typeof firstViewId === 'undefined') {
 		selectedViews.value = {}
 		return
 	}
 
 	newLinkShares.forEach((linkShare) => {
-		selectedViews.value[linkShare.id] = newProjectViews.length > 0 ? newProjectViews[0].id : null
+		selectedViews.value[linkShare.id] = firstViewId
 	})
 }, {
 	immediate:true,
@@ -267,7 +271,7 @@ watch(() => ([linkShares.value, availableViews.value]), ([newLinkShares, newProj
 })
 
 
-async function add(projectId: IProject['id']) {
+async function add(projectId: number) {
 	const newLinkShare = new LinkShareModel({
 		permission: selectedPermission.value,
 		projectId,
@@ -283,7 +287,7 @@ async function add(projectId: IProject['id']) {
 	await load(projectId)
 }
 
-async function remove(projectId: IProject['id']) {
+async function remove(projectId: number) {
 	try {
 		await linkShareService.delete(new LinkShareModel({
 			id: linkIdToDelete.value,
@@ -296,7 +300,7 @@ async function remove(projectId: IProject['id']) {
 	}
 }
 
-function getShareLink(hash: string, viewId: IProjectView['id']|null) {
+function getShareLink(hash: string, viewId: number | null) {
 	return frontendUrl.value + 'share/' + hash + '/auth' + (viewId ? '?view=' + viewId : '')
 }
 

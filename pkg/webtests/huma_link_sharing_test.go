@@ -19,31 +19,34 @@ package webtests
 import (
 	"net/http"
 	"net/url"
+	"strconv"
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-// TestHumaLinkSharing ports the v1 link-sharing management coverage to
-// /api/v2: create (with the full project-permission matrix), list, read and
-// delete. There is no update operation. It re-proves the permission matrix
-// independently because the v1 routes and their tests will be removed.
-//
-// Managing shares requires write/admin access to the parent project:
-//   - creating an admin share needs project admin; a read/write share needs
-//     write access,
-//   - listing shares needs project admin,
-//   - deleting a share needs write access.
-//
-// testuser1 owns projects 1/2/3 (admin) and is a member of projects 9 (read),
-// 10 (write) and 11 (admin); project 20 is not shared with them at all.
+func insertTestShare(t *testing.T, id, projectID int64) {
+	t.Helper()
+	s := db.NewSession()
+	defer s.Close()
+	_, err := s.Insert(&models.LinkSharing{
+		ID:          id,
+		Hash:        "ghsa-qfwc-" + strconv.FormatInt(id, 10),
+		ProjectID:   projectID,
+		Permission:  models.PermissionRead,
+		SharingType: models.SharingTypeWithoutPassword,
+		SharedByID:  6,
+	})
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+}
+
 func TestHumaLinkSharing(t *testing.T) {
-	// ServiceEnableLinkSharing defaults to true, but the routes only register
-	// when it is on — make the precondition explicit for this suite.
 	config.ServiceEnableLinkSharing.Set(true)
 
 	onProject := func(projectID string) *webHandlerTestV2 {
@@ -54,7 +57,6 @@ func TestHumaLinkSharing(t *testing.T) {
 			t:        t,
 		}
 	}
-	// One shared Echo instance (and its single fixture load) across the suite.
 	base := onProject("1")
 	require.NoError(t, base.ensureEnv())
 	onProjectAs := func(projectID string) *webHandlerTestV2 {
@@ -64,7 +66,6 @@ func TestHumaLinkSharing(t *testing.T) {
 	}
 
 	t.Run("Create", func(t *testing.T) {
-		// Forbidden: project 20 is not shared with testuser1 at all.
 		t.Run("Forbidden", func(t *testing.T) {
 			for _, perm := range []string{"0", "1", "2"} {
 				_, err := onProjectAs("20").testCreateWithUser(nil, nil, `{"permission":`+perm+`}`)
@@ -72,7 +73,6 @@ func TestHumaLinkSharing(t *testing.T) {
 				assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
 			}
 		})
-		// Read-only access (project 9): every share kind is forbidden.
 		t.Run("Read only access", func(t *testing.T) {
 			for _, perm := range []string{"0", "1", "2"} {
 				_, err := onProjectAs("9").testCreateWithUser(nil, nil, `{"permission":`+perm+`}`)
@@ -80,7 +80,6 @@ func TestHumaLinkSharing(t *testing.T) {
 				assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
 			}
 		})
-		// Write access (project 10): read & write shares allowed, admin forbidden.
 		t.Run("Write access", func(t *testing.T) {
 			t.Run("read only", func(t *testing.T) {
 				rec, err := onProjectAs("10").testCreateWithUser(nil, nil, `{"permission":0}`)
@@ -100,7 +99,6 @@ func TestHumaLinkSharing(t *testing.T) {
 				assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
 			})
 		})
-		// Admin access (project 11): every share kind allowed.
 		t.Run("Admin access", func(t *testing.T) {
 			for _, perm := range []string{"0", "1", "2"} {
 				rec, err := onProjectAs("11").testCreateWithUser(nil, nil, `{"permission":`+perm+`}`)
@@ -128,12 +126,10 @@ func TestHumaLinkSharing(t *testing.T) {
 
 	t.Run("ReadAll", func(t *testing.T) {
 		t.Run("Normal", func(t *testing.T) {
-			// Project 1 is owned by testuser1 (admin) and has shares 1 and 4.
 			rec, err := onProjectAs("1").testReadAllWithUser(nil, nil)
 			require.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `"hash":"test"`)
 			assert.Contains(t, rec.Body.String(), `"hash":"testWithPassword"`)
-			// Passwords must never leak through the list.
 			assert.NotContains(t, rec.Body.String(), `$2a$`)
 		})
 		t.Run("Search", func(t *testing.T) {
@@ -143,13 +139,11 @@ func TestHumaLinkSharing(t *testing.T) {
 			assert.NotContains(t, rec.Body.String(), `"hash":"test"`)
 		})
 		t.Run("Forbidden read-only", func(t *testing.T) {
-			// project 9: testuser1 only has read access, not admin.
 			_, err := onProjectAs("9").testReadAllWithUser(nil, nil)
 			require.Error(t, err)
 			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
 		})
 		t.Run("Forbidden write", func(t *testing.T) {
-			// project 10: testuser1 has write access but not admin.
 			_, err := onProjectAs("10").testReadAllWithUser(nil, nil)
 			require.Error(t, err)
 			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
@@ -158,9 +152,6 @@ func TestHumaLinkSharing(t *testing.T) {
 
 	t.Run("ReadOne", func(t *testing.T) {
 		t.Run("Normal", func(t *testing.T) {
-			// share 1 belongs to project 1, owned by testuser1. CanRead resolves
-			// the parent project from the path's {project}, so the by-id read
-			// succeeds and surfaces the caller's max_permission.
 			rec, err := onProjectAs("1").testReadOneWithUser(nil, map[string]string{"share": "1"})
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusOK, rec.Code)
@@ -169,8 +160,6 @@ func TestHumaLinkSharing(t *testing.T) {
 			assert.NotEmpty(t, rec.Result().Header.Get("ETag"))
 		})
 		t.Run("Password is never serialized", func(t *testing.T) {
-			// share 4 is a password-protected share on project 1; the bcrypt hash
-			// must never appear in the response (password is write-only).
 			rec, err := onProjectAs("1").testReadOneWithUser(nil, map[string]string{"share": "4"})
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusOK, rec.Code)
@@ -184,20 +173,28 @@ func TestHumaLinkSharing(t *testing.T) {
 			assertHandlerErrorCode(t, err, models.ErrCodeProjectShareDoesNotExist)
 		})
 		t.Run("Share from another project (no IDOR)", func(t *testing.T) {
-			// share 2 belongs to project 2. Reading it under project 1 — which
-			// testuser1 can read — must 404: ReadOne scopes by id AND project_id,
-			// so the share from the other project is never leaked even though the
-			// caller has access to the project in the path.
 			_, err := onProjectAs("1").testReadOneWithUser(nil, map[string]string{"share": "2"})
 			require.Error(t, err)
 			assert.Equal(t, http.StatusNotFound, getHTTPErrorCode(err))
 			assertHandlerErrorCode(t, err, models.ErrCodeProjectShareDoesNotExist)
 		})
 		t.Run("Forbidden non-member", func(t *testing.T) {
-			// user2 is not a member of project 1, so reading its share 1 is denied.
 			h := onProjectAs("1")
 			h.user = &testuser2
 			_, err := h.testReadOneWithUser(nil, map[string]string{"share": "1"})
+			require.Error(t, err)
+			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
+		})
+		t.Run("Forbidden read-only member", func(t *testing.T) {
+			// A by-ID read discloses the access-bearing hash (GHSA-qfwc-vx6f-3g6g).
+			insertTestShare(t, 5, 9)
+			_, err := onProjectAs("9").testReadOneWithUser(nil, map[string]string{"share": "5"})
+			require.Error(t, err)
+			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
+		})
+		t.Run("Forbidden write member", func(t *testing.T) {
+			insertTestShare(t, 6, 10)
+			_, err := onProjectAs("10").testReadOneWithUser(nil, map[string]string{"share": "6"})
 			require.Error(t, err)
 			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
 		})
@@ -205,15 +202,12 @@ func TestHumaLinkSharing(t *testing.T) {
 
 	t.Run("Delete", func(t *testing.T) {
 		t.Run("Nonexisting is idempotent", func(t *testing.T) {
-			// Deletion is gated on project write access, not on the share
-			// existing: deleting a missing share by an authorized user is a
-			// no-op that still returns 204 (same as v1).
+			// Authorized deletion is idempotent.
 			rec, err := onProjectAs("1").testDeleteWithUser(nil, map[string]string{"share": "9999999"})
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusNoContent, rec.Code)
 		})
 		t.Run("Forbidden read-only", func(t *testing.T) {
-			// share 1 is on project 1; user 2 is not even a member.
 			h := onProjectAs("1")
 			h.user = &testuser2
 			_, err := h.testDeleteWithUser(nil, map[string]string{"share": "1"})

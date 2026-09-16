@@ -35,7 +35,7 @@ func init() {
 		ID:          "20251118125156",
 		Description: "",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync(TaskUnreadStatus20251118125156{})
+			return tx.Sync(TaskUnreadStatus20251118125156{}) //nolint:forbidigo // brand-new table, nothing to drop
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return tx.DropTables(TaskUnreadStatus20251118125156{})

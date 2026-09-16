@@ -25,9 +25,11 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/initialize"
 	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/mail"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 
@@ -188,6 +190,12 @@ func getUserFromArg(s *xorm.Session, arg string) *user.User {
 var userCmd = &cobra.Command{
 	Use:   "user",
 	Short: "Manage users locally through the cli.",
+	// Mail sending is async via the queue; without draining it the process would
+	// exit before notification mails (password reset, deletion request, email
+	// confirmation) reach the SMTP server.
+	PersistentPostRun: func(_ *cobra.Command, _ []string) {
+		mail.StopMailDaemon()
+	},
 }
 
 var userListCmd = &cobra.Command{
@@ -258,9 +266,10 @@ var userCreateCmd = &cobra.Command{
 	PreRun: func(_ *cobra.Command, _ []string) {
 		initialize.FullInit()
 	},
-	Run: func(_ *cobra.Command, _ []string) {
+	Run: func(cmd *cobra.Command, _ []string) {
 		s := db.NewSession()
 		defer s.Close()
+		defer events.CleanupPending(s)
 
 		u := &user.User{
 			Username: userFlagUsername,
@@ -287,6 +296,8 @@ var userCreateCmd = &cobra.Command{
 		if err := s.Commit(); err != nil {
 			log.Fatalf("Error saving everything: %s", err)
 		}
+
+		events.DispatchPending(cmd.Context(), s)
 
 		fmt.Printf("\nUser was created successfully.\n")
 	},

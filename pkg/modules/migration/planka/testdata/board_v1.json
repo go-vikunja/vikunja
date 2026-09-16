@@ -1,0 +1,4 @@
+{
+  "item": {"id": "30", "position": 65536, "name": "Old Board", "projectId": "300"},
+  "included": {"boardMemberships": [], "labels": [], "lists": [{"id": "1300", "position": 65536, "name": "Legacy", "boardId": "30"}], "cards": [], "cardMemberships": [], "cardLabels": [], "tasks": [], "users": [], "projects": [], "attachments": []}
+}

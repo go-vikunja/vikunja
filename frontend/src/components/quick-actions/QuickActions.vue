@@ -2,6 +2,8 @@
 	<Modal
 		:enabled="active"
 		:overflow="isNewTaskCommand"
+		variant="top"
+		:aria-label="$t('quickActions.title')"
 		@close="closeQuickActions"
 	>
 		<div
@@ -53,6 +55,14 @@
 			</div>
 
 			<div
+				class="is-sr-only"
+				role="status"
+				aria-live="polite"
+			>
+				{{ resultAnnouncement }}
+			</div>
+
+			<div
 				v-if="selectedCmd === null"
 				class="results"
 			>
@@ -70,7 +80,7 @@
 							:key="key"
 							:ref="(el: Element | ComponentPublicInstance | null) => setResultRefs(el, k, key)"
 							class="result-item-button"
-							:class="{'is-strikethrough': (i as DoAction<ITask>)?.done}"
+							:class="{'is-strikethrough': isDone(i)}"
 							@keydown.up.prevent="select(k, key - 1)"
 							@keydown.down.prevent="select(k, key + 1)"
 							@click.prevent.stop="doAction(r.type, i)"
@@ -85,6 +95,10 @@
 									:task="i"
 									:show-project="true"
 								/>
+								<span
+									v-if="isDone(i)"
+									class="is-sr-only"
+								>{{ $t('task.attributes.done') }}</span>
 							</template>
 							<template v-else>
 								<span
@@ -95,6 +109,7 @@
 								</span>
 								{{ i.title }}
 							</template>
+							<span class="is-sr-only">{{ r.typeLabel }}</span>
 						</BaseButton>
 					</div>
 				</div>
@@ -113,7 +128,6 @@ import TaskService from '@/services/task'
 import TeamService from '@/services/team'
 
 import TeamModel from '@/models/team'
-import ProjectModel from '@/models/project'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import QuickAddMagic from '@/components/tasks/partials/QuickAddMagic.vue'
@@ -121,10 +135,11 @@ import XLabel from '@/components/tasks/partials/Label.vue'
 import SingleTaskInlineReadonly from '@/components/tasks/partials/SingleTaskInlineReadonly.vue'
 
 import {useBaseStore} from '@/stores/base'
-import {useProjectStore} from '@/stores/projects'
-import {useLabelStore} from '@/stores/labels'
+import {useProjects} from '@/composables/useProjects'
+import {useCurrentProject} from '@/composables/useCurrentProject'
 import {useTaskStore} from '@/stores/tasks'
 import {useAuthStore} from '@/stores/auth'
+import {useLabels} from '@/composables/useLabels'
 
 import {getHistory} from '@/modules/projectHistory'
 import {parseTaskText, PREFIXES, PrefixMode} from '@/modules/quickAddMagic'
@@ -132,16 +147,23 @@ import {success} from '@/message'
 
 import type {ITeam} from '@/modelTypes/ITeam'
 import type {ITask} from '@/modelTypes/ITask'
-import type {IProject} from '@/modelTypes/IProject'
 import type {IAbstract} from '@/modelTypes/IAbstract'
-import {isSavedFilter} from '@/services/savedFilter'
+import type {TaskFilterParams} from '@/services/taskCollection'
+import {
+	createProjectDraft,
+	isSavedFilterProject,
+	useCreateProjectMutation,
+	type ProjectResponse,
+} from '@/client/queries/projects'
 
 const {t} = useI18n({useScope: 'global'})
 const router = useRouter()
 
 const baseStore = useBaseStore()
-const projectStore = useProjectStore()
-const labelStore = useLabelStore()
+const projectList = useProjects()
+const createProjectMutation = useCreateProjectMutation()
+const {currentProject: selectedProject} = useCurrentProject()
+const {filterLabelsByQuery, getLabelsByExactTitles} = useLabels()
 const taskStore = useTaskStore()
 const authStore = useAuthStore()
 
@@ -231,7 +253,7 @@ const foundProjects = computed(() => {
 	const {project, text, labels, assignees} = parsedQuery.value
 
 	if (project !== null) {
-		return projectStore.searchProjectAndFilter(project ?? text)
+		return projectList.searchProjectAndFilter(project ?? text)
 			.filter(p => Boolean(p))
 	}
 
@@ -241,11 +263,11 @@ const foundProjects = computed(() => {
 
 	if (text === '') {
 		const history = getHistory()
-		return history.map((p) => projectStore.projects[p.id])
+		return history.map((p) => projectList.projects[p.id])
 			.filter(p => Boolean(p))
 	}
 
-	return projectStore.searchProjectAndFilter(project ?? text)
+	return projectList.searchProjectAndFilter(project ?? text)
 		.filter(p => Boolean(p))
 })
 
@@ -256,10 +278,10 @@ const foundLabels = computed(() => {
 	}
 
 	if (labels.length > 0) {
-		return labelStore.filterLabelsByQuery([], labels[0])
+		return filterLabelsByQuery([], labels[0])
 	}
 
-	return labelStore.filterLabelsByQuery([], text)
+	return filterLabelsByQuery([], text)
 })
 
 // FIXME: use fuzzysearch
@@ -270,6 +292,8 @@ const foundCommands = computed(() => availableCmds.value.filter((a) =>
 interface Result {
 	type: ACTION_TYPE
 	title: string
+	// singular, unlike the plural group heading in `title`: it is announced per item
+	typeLabel: string
 	items: DoAction<IAbstract>
 }
 
@@ -278,34 +302,44 @@ const results = computed<Result[]>(() => {
 		{
 			type: ACTION_TYPE.CMD,
 			title: t('quickActions.commands'),
+			typeLabel: t('quickActions.resultTypes.command'),
 			items: foundCommands.value,
 		},
 		{
 			type: ACTION_TYPE.PROJECT,
 			title: t('quickActions.projects'),
+			typeLabel: t('quickActions.resultTypes.project'),
 			items: foundProjects.value,
 		},
 		{
 			type: ACTION_TYPE.TASK,
 			title: t('quickActions.tasks'),
+			typeLabel: t('quickActions.resultTypes.task'),
 			items: foundTasks.value,
 		},
 		{
 			type: ACTION_TYPE.LABELS,
 			title: t('quickActions.labels'),
+			typeLabel: t('quickActions.resultTypes.label'),
 			items: foundLabels.value,
 		},
 		{
 			type: ACTION_TYPE.TEAM,
 			title: t('quickActions.teams'),
+			typeLabel: t('quickActions.resultTypes.team'),
 			items: foundTeams.value,
 		},
 	].filter((i) => i.items.length > 0)
 })
 
+// `unknown` because Result.items isn't typed as an array, so v-for widens each item to its property union
+function isDone(item: unknown): boolean {
+	return Boolean((item as ITask | undefined)?.done)
+}
+
 const loading = computed(() =>
 	taskService.loading ||
-	projectStore.isLoading ||
+	projectList.isLoading ||
 	teamService.loading,
 )
 
@@ -340,11 +374,11 @@ const commands = computed<{ [key in COMMAND_TYPE]: Command }>(() => ({
 const placeholder = computed(() => selectedCmd.value?.placeholder || t('quickActions.placeholder'))
 
 const currentProject = computed(() => {
-	if (Object.keys(baseStore.currentProject).length === 0 || isSavedFilter(baseStore.currentProject)) {
+	if (!selectedProject.value || isSavedFilterProject(selectedProject.value)) {
 		return null
 	}
 
-	return baseStore.currentProject
+	return selectedProject.value
 })
 
 const hintText = computed(() => {
@@ -435,23 +469,26 @@ function searchTasks() {
 	let filter = ''
 
 	if (projectName !== null) {
-		const project = projectStore.findProjectByExactname(projectName)
-		console.log({project})
+		const project = projectList.findProjectByExactname(projectName)
 		if (project !== null) {
 			filter += ' project = ' + project.id
 		}
 	}
 
 	if (labels.length > 0) {
-		const labelIds = labelStore.getLabelsByExactTitles(labels).map((l) => l.id)
+		const labelIds = getLabelsByExactTitles(labels)
+			.map(label => label.id)
+			.filter((id): id is number => typeof id === 'number')
 		if (labelIds.length > 0) {
 			filter += 'labels in ' + labelIds.join(', ')
 		}
 	}
 
-	const params = {
+	const params: Partial<TaskFilterParams> = {
 		s: text,
-		sort_by: 'done',
+		// undone tasks first, most relevant first within each group (relevance is
+		// only honored on backends that can score the search, see the API docs)
+		sort_by: ['done', 'relevance'],
 		filter,
 	}
 
@@ -534,7 +571,7 @@ async function doAction(type: ACTION_TYPE, item: DoAction) {
 			if (!isQuickAddMode) {
 				await router.push({
 					name: 'project.index',
-					params: {projectId: (item as DoAction<IProject>).id},
+					params: {projectId: (item as DoAction<ProjectResponse>).id},
 				})
 			}
 			break
@@ -635,11 +672,11 @@ async function newTask() {
 
 async function newProject() {
 	const parentProjectId = currentProject.value?.id ?? 0
-	await projectStore.createProject(new ProjectModel({
+	const created = await createProjectMutation.mutateAsync(createProjectDraft({
 		title: query.value,
-		parentProjectId: Math.max(parentProjectId, 0),
+		parent_project_id: Math.max(parentProjectId, 0),
 	}))
-	success({message: t('project.create.createdSuccess')})
+	await router.push({name: 'project.index', params: {projectId: created.id}})
 }
 
 async function newTeam() {
@@ -700,18 +737,47 @@ function reset() {
 	query.value = ''
 	selectedCmd.value = null
 }
+
+const resultCount = computed(() => results.value.reduce((total, group) => total + group.items.length, 0))
+
+// Announce the result count to assistive technology, debounced so it doesn't
+// fire on every keystroke while the user is still typing.
+const resultAnnouncement = ref('')
+let announceTimeout: ReturnType<typeof setTimeout> | null = null
+watch(resultCount, count => {
+	if (!active.value || selectedCmd.value !== null) {
+		return
+	}
+	if (announceTimeout !== null) {
+		clearTimeout(announceTimeout)
+	}
+	announceTimeout = setTimeout(() => {
+		resultAnnouncement.value = t('quickActions.results', count)
+	}, 300)
+})
+watch(active, isActive => {
+	if (!isActive) {
+		resultAnnouncement.value = ''
+	}
+})
+onBeforeUnmount(() => {
+	if (announceTimeout !== null) {
+		clearTimeout(announceTimeout)
+	}
+})
 </script>
 
 <style lang="scss" scoped>
 .quick-actions {
+	// global Bulma .card styles are gone (ported into Card.vue, scoped),
+	// so this bare .card div needs its own card visuals
+	background-color: var(--white);
+	border-radius: $radius;
+	border: 1px solid var(--card-border-color);
+	box-shadow: var(--shadow-sm);
+	color: var(--text);
 	overflow: hidden;
 	justify-content: flex-start !important;
-
-	// FIXME: changed position should be an option of the modal
-	:deep(.modal-content) {
-		inset-block-start: 3rem;
-		transform: translate(-50%, 0);
-	}
 
 	&.is-quick-add-mode {
 		padding: 0;

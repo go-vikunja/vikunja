@@ -34,7 +34,7 @@ func init() {
 		ID:          "20200614113230",
 		Description: "Add repeat after current flag to task",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(task20200614113230{})
+			return partialSync(tx, task20200614113230{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil

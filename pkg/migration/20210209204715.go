@@ -40,7 +40,7 @@ func init() {
 		ID:          "20210209204715",
 		Description: "",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(subscriptions20210209204715{})
+			return tx.Sync2(subscriptions20210209204715{}) //nolint:forbidigo // brand-new table, nothing to drop
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil

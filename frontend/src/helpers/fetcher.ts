@@ -1,6 +1,6 @@
 import axios from 'axios'
 import type {AxiosRequestConfig} from 'axios'
-import {getToken, refreshToken} from '@/helpers/auth'
+import {getToken, getTokenType, refreshToken} from '@/helpers/auth'
 import {AUTH_TYPES} from '@/modelTypes/IUser'
 
 /**
@@ -9,6 +9,19 @@ import {AUTH_TYPES} from '@/modelTypes/IUser'
 export function getApiBaseUrl(): string {
 	const url = window.API_URL
 	return url?.endsWith('/') ? url : url + '/'
+}
+
+export function getApiV2BaseUrl(): string {
+	return getApiBaseUrl().replace(/\/api\/v1\/$/, '/api/v2/')
+}
+
+/**
+ * Returns an absolute URL for an /api/v2 path. The shared axios instances pin
+ * baseURL to /api/v1; v2 callers hand axios absolute URLs to bypass that —
+ * to be folded into the service layer once the frontend moves fully onto v2.
+ */
+export function apiV2Url(path: string): string {
+	return new URL(getApiV2BaseUrl() + path, window.location.origin).toString()
 }
 
 export function HTTPFactory() {
@@ -38,7 +51,13 @@ async function doRefresh(): Promise<string | null> {
 	try {
 		await refreshToken(true)
 		return getToken()
-	} catch (_e) {
+	} catch (e) {
+		// A 429 means the refresh endpoint is already rate-limited; retrying
+		// would just send another request into the same exhausted window.
+		if ((e as {cause?: {response?: {status?: number}}})?.cause?.response?.status === 429) {
+			console.warn('[Vikunja] Token refresh rate-limited, not retrying')
+			return null
+		}
 		// Single retry after a short delay for transient failures (network
 		// blip, server restart). If this also fails, give up.
 		try {
@@ -55,29 +74,11 @@ async function doRefresh(): Promise<string | null> {
 	}
 }
 
-/**
- * Returns the `type` claim from a JWT without verifying the signature.
- * Returns null if the token is missing or malformed.
- */
-function getTokenType(token: string | null): number | null {
-	if (!token) return null
-	try {
-		const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
-		const payload = JSON.parse(atob(base64))
-		return typeof payload.type === 'number' ? payload.type : null
-	} catch {
-		return null
-	}
-}
-
 export function AuthenticatedHTTPFactory() {
 	const instance = HTTPFactory()
 
 	instance.interceptors.request.use((config) => {
-		config.headers = {
-			...config.headers,
-			'Content-Type': 'application/json',
-		}
+		config.headers['Content-Type'] = 'application/json'
 
 		// Set the default auth header if we have a token
 		const token = getToken()

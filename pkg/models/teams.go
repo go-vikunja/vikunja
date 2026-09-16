@@ -17,6 +17,7 @@
 package models
 
 import (
+	"fmt"
 	"sort"
 	"time"
 
@@ -151,7 +152,7 @@ func addMoreInfoToTeams(s *xorm.Session, teams []*Team) (err error) {
 	}
 
 	// Get all owners and team members
-	users := make(map[int64]*TeamUser)
+	users := []*TeamUser{}
 	err = s.
 		Select("*").
 		Table("users").
@@ -169,17 +170,19 @@ func addMoreInfoToTeams(s *xorm.Session, teams []*Team) (err error) {
 	if err != nil {
 		return
 	}
+	usersByID := make(map[int64]*TeamUser)
 	for _, u := range users {
 		if _, exists := teamMap[u.TeamID]; !exists {
 			continue
 		}
 		u.Email = ""
 		teamMap[u.TeamID].Members = append(teamMap[u.TeamID].Members, u)
+		usersByID[u.ID] = u
 	}
 
 	// We need to do this in a second loop as owners might not be the last ones in the project
 	for _, team := range teamMap {
-		if teamUser, has := users[team.CreatedByID]; has {
+		if teamUser, has := usersByID[team.CreatedByID]; has {
 			team.CreatedBy = &teamUser.User
 		}
 		sort.Slice(team.Members, func(i, j int) bool {
@@ -222,7 +225,7 @@ func (t *Team) CreateNewTeam(s *xorm.Session, a web.Auth, firstUserShouldBeAdmin
 
 	events.DispatchOnCommit(s, &TeamCreatedEvent{
 		Team: t,
-		Doer: a,
+		Doer: doer,
 	})
 	return nil
 }
@@ -360,9 +363,13 @@ func (t *Team) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return
 	}
 
+	if _, err := s.Where("team_id = ?", t.ID).Delete(&UserInviteLinkTeam{}); err != nil {
+		return fmt.Errorf("delete team invite links: %w", err)
+	}
+
 	events.DispatchOnCommit(s, &TeamDeletedEvent{
 		Team: t,
-		Doer: a,
+		Doer: doerFromAuth(s, a),
 	})
 	return nil
 }

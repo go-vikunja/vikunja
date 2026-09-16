@@ -1,11 +1,11 @@
 import { VueRenderer } from '@tiptap/vue-3'
-import { computePosition, flip, shift, offset, autoUpdate } from '@floating-ui/dom'
 import type { Editor } from '@tiptap/core'
 
 import MentionList from './MentionList.vue'
 import { getPopupContainer } from '../popupContainer'
+import { createSuggestionPopup, type SuggestionPopup } from '../suggestionPopup'
 import ProjectUserService from '@/services/projectUsers'
-import { fetchAvatarBlobUrl, getDisplayName } from '@/models/user'
+import { getDisplayName } from '@/models/user'
 import type { IUser } from '@/modelTypes/IUser'
 import type { MentionNodeAttrs } from '@tiptap/extension-mention'
 
@@ -13,7 +13,6 @@ interface MentionItem extends MentionNodeAttrs {
 	id: string
 	label: string
 	username: string
-	avatarUrl: string
 }
 
 async function searchUsersForProject(projectId: number, query: string): Promise<MentionItem[]> {
@@ -23,20 +22,11 @@ async function searchUsersForProject(projectId: number, query: string): Promise<
 	// @ts-expect-error - projectId is used for URL replacement but not part of IAbstract
 	const users = await projectUserService.getAll({ projectId }, { s: query }) as IUser[]
 
-	// Fetch avatar URLs for all users
-	const usersWithAvatars = await Promise.all(
-		users.map(async (user) => {
-			const avatarUrl = await fetchAvatarBlobUrl(user, 32)
-			return {
-				id: user.username,
-				label: getDisplayName(user),
-				username: user.username,
-				avatarUrl: avatarUrl as string,
-			}
-		}),
-	)
-
-	return usersWithAvatars
+	return users.map((user) => ({
+		id: user.username,
+		label: getDisplayName(user),
+		username: user.username,
+	}))
 }
 
 export default function mentionSuggestionSetup(projectId: number) {
@@ -74,22 +64,10 @@ export default function mentionSuggestionSetup(projectId: number) {
 		},
 
 		render: () => {
-			let component: VueRenderer
-			let popupElement: HTMLElement | null = null
-			let cleanupFloating: (() => void) | null = null
-
-			const virtualReference = {
-				getBoundingClientRect: () => ({
-					width: 0,
-					height: 0,
-					x: 0,
-					y: 0,
-					top: 0,
-					left: 0,
-					right: 0,
-					bottom: 0,
-				} as DOMRect),
-			}
+			// onExit runs without a matching onStart when the plugin view is recreated
+			// while a suggestion is already active, so this stays null until mounted.
+			let component: VueRenderer | null = null
+			let popup: SuggestionPopup | null = null
 
 			return {
 				onStart: (props: {
@@ -107,38 +85,12 @@ export default function mentionSuggestionSetup(projectId: number) {
 						return
 					}
 
-					// Create popup element
-					popupElement = document.createElement('div')
-					popupElement.style.position = 'absolute'
-					popupElement.style.top = '0'
-					popupElement.style.left = '0'
-					popupElement.style.zIndex = '4700'
-					popupElement.appendChild(component.element!)
-					getPopupContainer(props.editor).appendChild(popupElement)
-					// Update virtual reference
-					const rect = props.clientRect()
-					if (rect) {
-						virtualReference.getBoundingClientRect = () => rect
-						// Set up floating positioning
-						const updatePosition = () => {
-							computePosition(virtualReference, popupElement!, {
-								placement: 'bottom-start',
-								middleware: [
-									offset(8),
-									flip(),
-									shift({ padding: 8 }),
-								],
-							}).then(({ x, y }) => {
-								if (popupElement) {
-									popupElement.style.left = `${x}px`
-									popupElement.style.top = `${y}px`
-								}
-							})
-						}
-
-						updatePosition()
-						cleanupFloating = autoUpdate(virtualReference, popupElement, updatePosition)
-					}
+					popup = createSuggestionPopup(
+						getPopupContainer(props.editor),
+						component.element!,
+						props.clientRect,
+						props.editor.view.dom,
+					)
 				},
 
 				onUpdate(props: {
@@ -148,16 +100,7 @@ export default function mentionSuggestionSetup(projectId: number) {
 					command: (item: MentionItem) => void
 				}) {
 					component?.updateProps(props)
-
-					if (!props.clientRect || !popupElement) {
-						return
-					}
-
-					// Update virtual reference
-					const rect = props.clientRect()
-					if (rect) {
-						virtualReference.getBoundingClientRect = () => rect
-					}
+					popup?.reposition()
 				},
 
 				onKeyDown(props: { event: KeyboardEvent }) {
@@ -166,8 +109,8 @@ export default function mentionSuggestionSetup(projectId: number) {
 							return false
 						}
 
-						if (popupElement) {
-							popupElement.style.display = 'none'
+						if (popup) {
+							popup.element.style.display = 'none'
 						}
 
 						return true
@@ -177,14 +120,10 @@ export default function mentionSuggestionSetup(projectId: number) {
 				},
 
 				onExit() {
-					if (cleanupFloating) {
-						cleanupFloating()
-					}
-					if (popupElement) {
-						popupElement.remove()
-						popupElement = null
-					}
-					component.destroy()
+					popup?.destroy()
+					popup = null
+					component?.destroy()
+					component = null
 				},
 			}
 		},

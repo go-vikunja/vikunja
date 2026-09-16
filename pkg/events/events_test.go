@@ -17,8 +17,10 @@
 package events
 
 import (
+	"context"
 	"testing"
 
+	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -40,7 +42,7 @@ func TestDispatchOnCommit(t *testing.T) {
 	assert.Equal(t, 0, CountDispatchedEvents("test.event"))
 
 	// Simulate post-commit dispatch
-	DispatchPending(key)
+	DispatchPending(context.Background(), key)
 
 	// Now it should be dispatched
 	assert.Equal(t, 1, CountDispatchedEvents("test.event"))
@@ -57,7 +59,7 @@ func TestDispatchOnCommitMultipleEvents(t *testing.T) {
 
 	assert.Equal(t, 0, CountDispatchedEvents("test.event"))
 
-	DispatchPending(key)
+	DispatchPending(context.Background(), key)
 
 	assert.Equal(t, 3, CountDispatchedEvents("test.event"))
 }
@@ -74,7 +76,7 @@ func TestCleanupPending(t *testing.T) {
 	CleanupPending(key)
 
 	// Dispatching after cleanup should be a no-op
-	DispatchPending(key)
+	DispatchPending(context.Background(), key)
 
 	assert.Equal(t, 0, CountDispatchedEvents("test.event"))
 }
@@ -85,8 +87,23 @@ func TestDispatchPendingNoEvents(t *testing.T) {
 	key := new(int)
 
 	// Should be a no-op
-	DispatchPending(key)
+	DispatchPending(context.Background(), key)
 
 	// Verify no events were dispatched
 	assert.Equal(t, 0, CountDispatchedEvents("test.event"))
+}
+
+func TestShouldReportPoisonedMessage(t *testing.T) {
+	t.Run("no metadata", func(t *testing.T) {
+		assert.True(t, shouldReportPoisonedMessage(message.Metadata{}))
+	})
+	t.Run("unrelated metadata", func(t *testing.T) {
+		assert.True(t, shouldReportPoisonedMessage(message.Metadata{"reason_poisoned": "boom"}))
+	})
+	t.Run("flag set", func(t *testing.T) {
+		assert.False(t, shouldReportPoisonedMessage(message.Metadata{MetadataSkipErrorReporting: "true"}))
+	})
+	t.Run("flag set to something else", func(t *testing.T) {
+		assert.True(t, shouldReportPoisonedMessage(message.Metadata{MetadataSkipErrorReporting: "false"}))
+	})
 }

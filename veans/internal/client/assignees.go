@@ -23,5 +23,5 @@ import (
 
 // AddAssignee assigns a user (typically the bot) to a task.
 func (c *Client) AddAssignee(ctx context.Context, taskID, userID int64) error {
-	return c.Do(ctx, "PUT", fmt.Sprintf("/tasks/%d/assignees", taskID), nil, &TaskAssignee{UserID: userID}, nil)
+	return c.Do(ctx, "POST", fmt.Sprintf("/tasks/%d/assignees", taskID), nil, &TaskAssignee{UserID: userID}, nil)
 }

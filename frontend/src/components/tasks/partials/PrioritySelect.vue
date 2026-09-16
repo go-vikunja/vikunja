@@ -3,6 +3,7 @@
 		<select
 			v-model="priority"
 			:disabled="disabled || undefined"
+			:aria-label="$t('task.attributes.priority')"
 		>
 			<option :value="PRIORITIES.UNSET">
 				{{ $t('task.priority.unset') }}

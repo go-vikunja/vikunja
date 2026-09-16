@@ -20,7 +20,6 @@ import (
 	"errors"
 
 	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/web"
 
 	"xorm.io/xorm"
@@ -29,8 +28,8 @@ import (
 // CanWrite return whether the user can write on that project or not
 func (p *Project) CanWrite(s *xorm.Session, a web.Auth) (bool, error) {
 
-	// The favorite project can't be edited
-	if p.ID == FavoritesPseudoProject.ID {
+	// Favorites and saved filters aggregate tasks from real projects, they have no row of their own to write to.
+	if p.ID < 1 {
 		return false, nil
 	}
 
@@ -68,60 +67,146 @@ func (p *Project) CanWrite(s *xorm.Session, a web.Auth) (bool, error) {
 		return canWrite, errIsArchived
 	}
 
-	canWrite, _, err = originalProject.checkPermission(s, u, PermissionWrite, PermissionAdmin)
+	canWrite, err = originalProject.checkPermission(s, u, PermissionWrite, PermissionAdmin)
 	if err != nil {
 		return false, err
 	}
 	return canWrite, errIsArchived
 }
 
-// CanRead checks if a user has read access to a project
-func (p *Project) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
+// projectReadPermission holds the read access of one auth subject for one project.
+// project is nil for pseudo projects without a row of their own, so callers know not to overwrite theirs.
+type projectReadPermission struct {
+	canRead       bool
+	maxPermission int
+	project       *Project
+}
+
+// checkReadPermissionsForProjects resolves read access of a single auth subject for many projects at
+// once. Unless it returns an error, the result has an entry for every requested id.
+func checkReadPermissionsForProjects(s *xorm.Session, a web.Auth, projectIDs []int64) (map[int64]*projectReadPermission, error) {
+	permissions := make(map[int64]*projectReadPermission, len(projectIDs))
+
+	if len(projectIDs) == 0 {
+		return permissions, nil
+	}
+
+	// Resolve pseudo ids before the instance admin branch below: they have no row to look up.
+	projectIDsWithRow := make([]int64, 0, len(projectIDs))
+	for _, projectID := range projectIDs {
+		switch {
+		case projectID == FavoritesPseudoProject.ID:
+			owner, err := user.GetFromAuth(a)
+			if err != nil {
+				return nil, err
+			}
+
+			favorites := FavoritesPseudoProject
+			favorites.Owner = owner
+			permissions[projectID] = &projectReadPermission{
+				canRead:       true,
+				maxPermission: int(PermissionRead),
+				project:       &favorites,
+			}
+		case GetSavedFilterIDFromProjectID(projectID) > 0:
+			sf := &SavedFilter{ID: GetSavedFilterIDFromProjectID(projectID)}
+			canRead, maxPermission, err := sf.CanRead(s, a)
+			if err != nil {
+				return nil, err
+			}
+
+			permissions[projectID] = &projectReadPermission{
+				canRead:       canRead,
+				maxPermission: maxPermission,
+			}
+		default:
+			projectIDsWithRow = append(projectIDsWithRow, projectID)
+		}
+	}
+
+	if len(projectIDsWithRow) == 0 {
+		return permissions, nil
+	}
+
+	projects, err := requireProjectsByIDs(s, projectIDsWithRow)
+	if err != nil {
+		return nil, err
+	}
 
 	if isInstanceAdmin(s, a) {
-		originalProject, err := GetProjectSimpleByID(s, p.ID)
-		if err != nil {
-			return false, 0, err
+		for _, projectID := range projectIDsWithRow {
+			permissions[projectID] = &projectReadPermission{
+				canRead:       true,
+				maxPermission: int(PermissionAdmin),
+				project:       projects[projectID],
+			}
 		}
-		*p = *originalProject
-		return true, int(PermissionAdmin), nil
+		return permissions, nil
 	}
 
-	// The favorite project needs a special treatment
-	if p.ID == FavoritesPseudoProject.ID {
-		owner, err := user.GetFromAuth(a)
-		if err != nil {
-			return false, 0, err
+	if shareAuth, is := a.(*LinkSharing); is {
+		for _, projectID := range projectIDsWithRow {
+			permissions[projectID] = &projectReadPermission{
+				canRead: projectID == shareAuth.ProjectID &&
+					(shareAuth.Permission == PermissionRead || shareAuth.Permission == PermissionWrite || shareAuth.Permission == PermissionAdmin),
+				maxPermission: int(shareAuth.Permission),
+				project:       projects[projectID],
+			}
 		}
-
-		*p = FavoritesPseudoProject
-		p.Owner = owner
-		return true, int(PermissionRead), nil
+		return permissions, nil
 	}
 
-	// Saved Filter Projects need a special case
-	if GetSavedFilterIDFromProjectID(p.ID) > 0 {
-		sf := &SavedFilter{ID: GetSavedFilterIDFromProjectID(p.ID)}
-		return sf.CanRead(s, a)
+	projectPermissions, err := checkPermissionsForProjects(s, &user.User{ID: a.GetID()}, projectIDsWithRow)
+	if err != nil {
+		return nil, err
 	}
 
-	// Check if the user is either owner or can read
-	var err error
-	originalProject, err := GetProjectSimpleByID(s, p.ID)
+	for _, projectID := range projectIDsWithRow {
+		permission := &projectReadPermission{project: projects[projectID]}
+		if pp, has := projectPermissions[projectID]; has {
+			permission.canRead = true
+			permission.maxPermission = int(pp)
+		}
+		permissions[projectID] = permission
+	}
+
+	return permissions, nil
+}
+
+// requireProjectsByIDs loads all given projects, failing with the same error GetProjectSimpleByID
+// gives for the first id without a row.
+func requireProjectsByIDs(s *xorm.Session, projectIDs []int64) (map[int64]*Project, error) {
+	projects, err := GetProjectsMapByIDs(s, projectIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, projectID := range projectIDs {
+		if _, has := projects[projectID]; !has {
+			return nil, ErrProjectDoesNotExist{ID: projectID}
+		}
+	}
+
+	return projects, nil
+}
+
+// CanRead checks if a user has read access to a project
+func (p *Project) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
+	permissions, err := checkReadPermissionsForProjects(s, a, []int64{p.ID})
 	if err != nil {
 		return false, 0, err
 	}
 
-	*p = *originalProject
-
-	// Check if we're dealing with a share auth
-	shareAuth, ok := a.(*LinkSharing)
-	if ok {
-		return p.ID == shareAuth.ProjectID &&
-			(shareAuth.Permission == PermissionRead || shareAuth.Permission == PermissionWrite || shareAuth.Permission == PermissionAdmin), int(shareAuth.Permission), nil
+	permission, has := permissions[p.ID]
+	if !has {
+		return false, 0, nil
 	}
 
-	return p.checkPermission(s, &user.User{ID: a.GetID()}, PermissionRead, PermissionWrite, PermissionAdmin)
+	if permission.project != nil {
+		*p = *permission.project
+	}
+
+	return permission.canRead, permission.maxPermission, nil
 }
 
 // CanUpdate checks if the user can update a project
@@ -131,10 +216,7 @@ func (p *Project) CanUpdate(s *xorm.Session, a web.Auth) (canUpdate bool, err er
 		return false, nil
 	}
 
-	if isInstanceAdmin(s, a) {
-		return true, nil
-	}
-
+	// Ahead of the admin bypass: a filter's pseudo project is the filter, and only its owner may update it.
 	fid := GetSavedFilterIDFromProjectID(p.ID)
 	if fid > 0 {
 		sf, err := GetSavedFilterSimpleByID(s, fid)
@@ -143,6 +225,10 @@ func (p *Project) CanUpdate(s *xorm.Session, a web.Auth) (canUpdate bool, err er
 		}
 
 		return sf.CanUpdate(s, a)
+	}
+
+	if isInstanceAdmin(s, a) {
+		return true, nil
 	}
 
 	// Get the project
@@ -159,8 +245,10 @@ func (p *Project) CanUpdate(s *xorm.Session, a web.Auth) (canUpdate bool, err er
 	// permission-check-only callers (buckets, webhooks, task ops) that
 	// pass stub &Project{ID: ...} values with ParentProjectID=0 and never
 	// commit a reparent, which would spuriously trip the gate.
-	if p.ParentProjectID != 0 && p.ParentProjectID != ol.ParentProjectID {
-		newProject := &Project{ID: p.ParentProjectID}
+	// Only a real new parent (> 0) needs a write check here; detach-to-root
+	// (explicit 0) is gated for Admin in UpdateProject instead.
+	if p.ParentProjectID != nil && *p.ParentProjectID > 0 && *p.ParentProjectID != ol.parentID() {
+		newProject := &Project{ID: *p.ParentProjectID}
 		can, err := newProject.CanWrite(s, a)
 		if err != nil {
 			return false, err
@@ -171,7 +259,8 @@ func (p *Project) CanUpdate(s *xorm.Session, a web.Auth) (canUpdate bool, err er
 	}
 
 	canUpdate, err = p.CanWrite(s, a)
-	// If the project is archived and the user tries to un-archive it, let the request through
+	// Un-archiving an archived project is allowed here; whether its parent
+	// still is archived is checked in UpdateProject.
 	archivedErr := ErrProjectIsArchived{}
 	is := errors.As(err, &archivedErr)
 	if is && !p.IsArchived && archivedErr.ProjectID == p.ID {
@@ -182,9 +271,7 @@ func (p *Project) CanUpdate(s *xorm.Session, a web.Auth) (canUpdate bool, err er
 
 // CanDelete checks if the user can delete a project
 func (p *Project) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
-	if isInstanceAdmin(s, a) {
-		return true, nil
-	}
+	// IsAdmin covers the instance admin bypass, but only after denying pseudo projects.
 	return p.IsAdmin(s, a)
 }
 
@@ -193,8 +280,8 @@ func (p *Project) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 	if isInstanceAdmin(s, a) {
 		return true, nil
 	}
-	if p.ParentProjectID != 0 {
-		parent := &Project{ID: p.ParentProjectID}
+	if pid := p.parentID(); pid > 0 {
+		parent := &Project{ID: pid}
 		return parent.CanWrite(s, a)
 	}
 	// Check if we're dealing with a share auth
@@ -207,8 +294,8 @@ func (p *Project) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 
 // IsAdmin returns whether the user has admin permissions on the project or not
 func (p *Project) IsAdmin(s *xorm.Session, a web.Auth) (bool, error) {
-	// The favorite project can't be edited
-	if p.ID == FavoritesPseudoProject.ID {
+	// Pseudo projects have no ACL of their own, so nobody is their admin.
+	if IsPseudoProjectID(p.ID) {
 		return false, nil
 	}
 
@@ -235,7 +322,7 @@ func (p *Project) IsAdmin(s *xorm.Session, a web.Auth) (bool, error) {
 	if originalProject.isOwner(u) {
 		return true, nil
 	}
-	is, _, err := originalProject.checkPermission(s, u, PermissionAdmin)
+	is, err := originalProject.checkPermission(s, u, PermissionAdmin)
 	return is, err
 }
 
@@ -245,101 +332,41 @@ func (p *Project) isOwner(u *user.User) bool {
 }
 
 // Checks n different permissions for any given user
-func (p *Project) checkPermission(s *xorm.Session, u *user.User, permissions ...Permission) (bool, int, error) {
+func (p *Project) checkPermission(s *xorm.Session, u *user.User, permissions ...Permission) (bool, error) {
 	projectPermissions, err := checkPermissionsForProjects(s, u, []int64{p.ID})
 	if err != nil {
-		return false, 0, err
+		return false, err
 	}
 	permission, has := projectPermissions[p.ID]
 	if !has {
-		return false, 0, nil
+		return false, nil
 	}
 
 	for _, r := range permissions {
-		if r == permission.MaxPermission {
-			return true, int(permission.MaxPermission), nil
+		if r == permission {
+			return true, nil
 		}
 	}
 
-	return false, 0, nil
+	return false, nil
 }
 
-type projectPermission struct {
-	ID            int64 `xorm:"pk autoincr"`
-	MaxPermission Permission
-}
-
-func checkPermissionsForProjects(s *xorm.Session, u *user.User, projectIDs []int64) (projectPermissionMap map[int64]*projectPermission, err error) {
-	projectPermissionMap = make(map[int64]*projectPermission)
-
+// checkPermissionsForProjects returns the effective permission of the user on each of
+// the given projects. Projects the user cannot access are absent from the result.
+func checkPermissionsForProjects(s *xorm.Session, u *user.User, projectIDs []int64) (map[int64]Permission, error) {
+	permissions := make(map[int64]Permission, len(projectIDs))
 	if len(projectIDs) < 1 {
-		return
+		return permissions, nil
 	}
 
-	args := []interface{}{
-		u.ID,
-		u.ID,
-		u.ID,
-		u.ID,
-		u.ID,
-		u.ID,
+	access, err := getProjectAccessForUser(s, u.ID)
+	if err != nil {
+		return nil, err
 	}
-
-	err = s.SQL(`
-WITH RECURSIVE
-    project_hierarchy AS (
-        -- Base case: Start with the specified projects
-        SELECT id,
-               parent_project_id,
-               0  AS level,
-               id AS original_project_id
-        FROM projects
-        WHERE id IN (`+utils.JoinInt64Slice(projectIDs, ", ")+`)
-
-        UNION ALL
-
-        -- Recursive case: Traverse up the hierarchy
-        SELECT p.id,
-               p.parent_project_id,
-               ph.level + 1,
-               ph.original_project_id
-        FROM projects p
-                 INNER JOIN project_hierarchy ph ON p.id = ph.parent_project_id),
-
-    -- Calculate max team permission for each project/user combination
-    max_team_permissions AS (
-        SELECT tl.project_id,
-               MAX(tl.permission) AS max_team_permission
-        FROM team_projects tl
-                 INNER JOIN team_members tm ON tm.team_id = tl.team_id AND tm.user_id = ?
-        GROUP BY tl.project_id
-    ),
-
-    project_permissions AS (SELECT ph.id,
-                                   ph.original_project_id,
-                                   CASE
-                                       WHEN p.owner_id = ? THEN 2
-                                       WHEN COALESCE(ul.permission, 0) > COALESCE(mtp.max_team_permission, 0) THEN ul.permission
-                                       ELSE COALESCE(mtp.max_team_permission, 0)
-                                       END AS project_permission,
-            CASE
-                WHEN p.owner_id = ? THEN 1  -- Direct project ownership
-                ELSE ph.level + 1  -- Derived from parent project
-            END AS priority
-                            FROM project_hierarchy ph
-                                LEFT JOIN projects p
-                            ON ph.id = p.id
-                                LEFT JOIN users_projects ul ON ul.project_id = ph.id AND ul.user_id = ?
-                                LEFT JOIN max_team_permissions mtp ON mtp.project_id = ph.id
-                            WHERE p.owner_id = ? OR ul.user_id = ? OR mtp.max_team_permission IS NOT NULL)
-
-SELECT ph.original_project_id AS id,
-       COALESCE(MAX(pp.project_permission), -1) AS max_permission
-FROM project_hierarchy ph
-         LEFT JOIN (SELECT *,
-                           ROW_NUMBER() OVER (PARTITION BY original_project_id ORDER BY priority) AS rn
-                    FROM project_permissions) pp ON ph.id = pp.id AND pp.rn = 1
-GROUP BY ph.original_project_id`, args...).
-		Find(&projectPermissionMap)
-	return
+	for _, id := range projectIDs {
+		if p, has := access.permission(id); has {
+			permissions[id] = p
+		}
+	}
+	return permissions, nil
 }

@@ -28,12 +28,20 @@ import (
 	"io"
 	"net/http"
 	"time"
+
+	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/modules/imageutils"
 )
 
 // CropAvatarTo1x1 crops the avatar image to a 1:1 aspect ratio, centered on the image
 func CropAvatarTo1x1(imageData []byte) ([]byte, error) {
 	if len(imageData) == 0 {
 		return nil, errors.New("empty image data")
+	}
+
+	// Reject hostile identity-provider dimensions before decoding (GHSA-4vh2-39rq-rq8j).
+	if _, err := imageutils.ValidateReader(bytes.NewReader(imageData)); err != nil {
+		return nil, err
 	}
 
 	// Decode the image
@@ -111,5 +119,16 @@ func DownloadImage(url string) ([]byte, error) {
 		return nil, fmt.Errorf("failed to download image, status code: %d", resp.StatusCode)
 	}
 
-	return io.ReadAll(resp.Body)
+	// Bound the remote stream before buffering it.
+	// #nosec G115 - the configured size is far below int64 max.
+	maxBytes := int64(config.GetMaxFileSizeInMBytes()) * 1024 * 1024
+	data, err := io.ReadAll(io.LimitReader(resp.Body, maxBytes+1))
+	if err != nil {
+		return nil, fmt.Errorf("failed to download image: %w", err)
+	}
+	if int64(len(data)) > maxBytes {
+		return nil, fmt.Errorf("downloaded image exceeds the maximum file size of %d bytes", maxBytes)
+	}
+
+	return data, nil
 }

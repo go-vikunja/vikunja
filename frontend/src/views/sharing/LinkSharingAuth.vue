@@ -12,6 +12,8 @@
 				v-model="password"
 				v-focus
 				type="password"
+				autocomplete="off"
+				:label="$t('user.auth.password')"
 				:placeholder="$t('user.auth.passwordPlaceholder')"
 				@keyup.enter.prevent="authenticate()"
 			/>
@@ -22,15 +24,14 @@
 			>
 				{{ $t('user.auth.login') }}
 			</XButton>
-
-			<Message
-				v-if="errorMessage !== ''"
-				variant="danger"
-				class="mbs-4"
-			>
-				{{ errorMessage }}
-			</Message>
 		</Card>
+		<Message
+			v-if="errorMessage !== ''"
+			variant="danger"
+			class="mbs-4"
+		>
+			{{ errorMessage }}
+		</Message>
 	</div>
 </template>
 
@@ -48,7 +49,6 @@ import {LINK_SHARE_HASH_PREFIX} from '@/constants/linkShareHash'
 import {useBaseStore} from '@/stores/base'
 import {useAuthStore} from '@/stores/auth'
 import {useRedirectToLastVisited} from '@/composables/useRedirectToLastVisited'
-import type {IProject} from '@/modelTypes/IProject.ts'
 
 const {t} = useI18n({useScope: 'global'})
 useTitle(t('sharing.authenticating'))
@@ -67,7 +67,7 @@ function useAuth() {
 
 	const authLinkShare = computed(() => authStore.authLinkShare)
 
-	function redirectToProject(projectId: IProject['id']) {
+	function redirectToProject(projectId: number) {
 		const hash = LINK_SHARE_HASH_PREFIX + route.params.share
 
 		const viewId =
@@ -102,7 +102,6 @@ function useAuth() {
 	}
 
 	async function authenticate() {
-		authenticateWithPassword.value = false
 		errorMessage.value = ''
 
 		if (authLinkShare.value) {
@@ -145,8 +144,8 @@ function useAuth() {
 				return
 			}
 			
-			// Log unexpected errors for debugging
-			console.error('Link share authentication error:', e)
+			// Never log the error object itself: AxiosError.config.data holds the plaintext share password.
+			console.error('Link share authentication error:', e?.response?.status, e?.response?.data?.code)
 
 			// TODO: Put this logic in a global errorMessage handler method which checks all auth codes
 			let err = t('sharing.error')
@@ -155,6 +154,7 @@ function useAuth() {
 			}
 			if (e?.response?.data?.code === 13002) {
 				err = t('sharing.invalidPassword')
+				authenticateWithPassword.value = true
 			}
 			errorMessage.value = err
 		} finally {

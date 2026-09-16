@@ -17,17 +17,15 @@
 package trello
 
 import (
-	"bytes"
-
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
+	"code.vikunja.io/api/pkg/richtext"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/adlio/trello"
-	"github.com/yuin/goldmark"
 )
 
 // Migration represents the trello migration struct
@@ -214,13 +212,8 @@ func fillCardData(client *trello.Client, board *trello.Board) (err error) {
 }
 
 func convertMarkdownToHTML(input string) (output string, err error) {
-	var buf bytes.Buffer
-	err = goldmark.Convert([]byte(input), &buf)
-	if err != nil {
-		return
-	}
 	//#nosec - we are not responsible to escape this as we don't know the context where it is used
-	return buf.String(), nil
+	return richtext.CommonMarkToHTML([]byte(input))
 }
 
 // Converts all previously obtained data from trello into the vikunja format.
@@ -249,7 +242,7 @@ func convertTrelloDataToVikunja(organizationName string, trelloData []*trello.Bo
 		project := &models.ProjectWithTasksAndBuckets{
 			Project: models.Project{
 				ID:              int64(index+1) + pseudoParentID,
-				ParentProjectID: pseudoParentID,
+				ParentProjectID: &pseudoParentID,
 				Title:           board.Name,
 				Description:     board.Desc,
 				IsArchived:      board.Closed,

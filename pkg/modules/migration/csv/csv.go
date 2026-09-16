@@ -19,6 +19,7 @@ package csv
 import (
 	"bytes"
 	"encoding/csv"
+	"encoding/json"
 	"errors"
 	"io"
 	"sort"
@@ -32,8 +33,11 @@ import (
 	"code.vikunja.io/api/pkg/user"
 )
 
-// Migrator is the CSV migrator
-type Migrator struct{}
+// The config is only set once the import runs in
+// the background - the request carries it as JSON through SetOptions.
+type Migrator struct {
+	config *ImportConfig
+}
 
 // Name returns the name of this migrator
 func (m *Migrator) Name() string {
@@ -107,28 +111,28 @@ var AllTaskAttributes = []TaskAttribute{
 
 // ColumnMapping represents a mapping from a CSV column to a task attribute
 type ColumnMapping struct {
-	ColumnIndex int           `json:"column_index"`
-	ColumnName  string        `json:"column_name"`
-	Attribute   TaskAttribute `json:"attribute"`
+	ColumnIndex int           `json:"column_index" doc:"The zero-based index of the CSV column this mapping applies to."`
+	ColumnName  string        `json:"column_name" doc:"The header name of the CSV column, for display."`
+	Attribute   TaskAttribute `json:"attribute" enum:"title,description,due_date,start_date,end_date,done,priority,labels,project,reminder,ignore" doc:"The task attribute the column maps to. Use \"ignore\" to drop the column."`
 }
 
 // DetectionResult contains the auto-detected CSV structure
 type DetectionResult struct {
-	Columns          []string        `json:"columns"`
-	Delimiter        string          `json:"delimiter"`
-	QuoteChar        string          `json:"quote_char"`
-	DateFormat       string          `json:"date_format"`
-	SuggestedMapping []ColumnMapping `json:"suggested_mapping"`
-	PreviewRows      [][]string      `json:"preview_rows"`
+	Columns          []string        `json:"columns" doc:"The detected column header names, in order."`
+	Delimiter        string          `json:"delimiter" doc:"The detected field delimiter (one of \",\", \";\", tab, \"|\")."`
+	QuoteChar        string          `json:"quote_char" doc:"The detected quote character."`
+	DateFormat       string          `json:"date_format" doc:"The detected Go reference date layout used to parse date columns."`
+	SuggestedMapping []ColumnMapping `json:"suggested_mapping" doc:"A best-guess column-to-attribute mapping; the client may edit it before previewing or migrating."`
+	PreviewRows      [][]string      `json:"preview_rows" doc:"The first few raw rows of the file, for the client to render a preview."`
 }
 
 // ImportConfig contains the configuration for CSV import
 type ImportConfig struct {
-	Delimiter  string          `json:"delimiter"`
-	QuoteChar  string          `json:"quote_char"`
-	DateFormat string          `json:"date_format"`
-	SkipRows   int             `json:"skip_rows"`
-	Mapping    []ColumnMapping `json:"mapping"`
+	Delimiter  string          `json:"delimiter" doc:"The field delimiter to parse with. Defaults to comma when empty."`
+	QuoteChar  string          `json:"quote_char" doc:"The quote character to parse with."`
+	DateFormat string          `json:"date_format" doc:"The Go reference date layout used to parse date columns."`
+	SkipRows   int             `json:"skip_rows" doc:"Number of leading rows to skip (e.g. a header row) before importing."`
+	Mapping    []ColumnMapping `json:"mapping" doc:"The column-to-attribute mappings that drive the import."`
 }
 
 // PreviewTask represents a task preview before import
@@ -146,8 +150,8 @@ type PreviewTask struct {
 
 // PreviewResult contains preview data before import
 type PreviewResult struct {
-	Tasks     []PreviewTask `json:"tasks"`
-	TotalRows int           `json:"total_rows"`
+	Tasks     []PreviewTask `json:"tasks" doc:"The first few tasks that would be imported with the given config."`
+	TotalRows int           `json:"total_rows" doc:"The total number of data rows in the file."`
 }
 
 // stripBOM removes the UTF-8 BOM from the beginning of a reader
@@ -278,8 +282,8 @@ func suggestMapping(columns []string) []ColumnMapping {
 	return mappings
 }
 
-// parseCSV parses CSV data with the given configuration
-func parseCSV(data []byte, delimiter string) ([]string, [][]string, error) {
+// One lookahead record detects migration.maxcsvrows overflow without retaining it (GHSA-pqf9-h8g4-8gmh).
+func parseCSV(data []byte, delimiter string) (headers []string, dataRows [][]string, err error) {
 	data = stripBOM(data)
 
 	// Go's csv.Reader only supports double-quote as the quote character.
@@ -295,28 +299,52 @@ func parseCSV(data []byte, delimiter string) ([]string, [][]string, error) {
 	reader.LazyQuotes = true
 	reader.TrimLeadingSpace = true
 
-	records, err := reader.ReadAll()
+	headers, err = reader.Read()
 	if err != nil {
+		if errors.Is(err, io.EOF) {
+			return nil, nil, &migration.ErrFileIsEmpty{}
+		}
 		return nil, nil, err
 	}
 
-	if len(records) == 0 {
-		return nil, nil, &migration.ErrFileIsEmpty{}
+	maxRows := config.MigrationMaxCSVRows.GetInt64()
+	if maxRows <= 0 {
+		maxRows = 100000
 	}
-
-	headers := records[0]
-	var dataRows [][]string
-	if len(records) > 1 {
-		dataRows = records[1:]
+	for int64(len(dataRows)) < maxRows {
+		record, readErr := reader.Read()
+		if readErr != nil {
+			if errors.Is(readErr, io.EOF) {
+				break
+			}
+			return nil, nil, readErr
+		}
+		dataRows = append(dataRows, record)
+	}
+	if _, readErr := reader.Read(); readErr == nil {
+		return nil, nil, &migration.ErrImportRowLimitExceeded{MaxRows: maxRows}
+	} else if !errors.Is(readErr, io.EOF) {
+		return nil, nil, readErr
 	}
 
 	return headers, dataRows, nil
+}
+
+// maxImportFileBytes caps the buffer allocated to read an uploaded CSV file
+// into memory. It mirrors the server's configured upload size limit so a
+// bogus or corrupted size value can't force an unbounded allocation.
+func maxImportFileBytes() int64 {
+	// #nosec G115 -- configured value won't exceed int64 max in practice.
+	return int64(config.GetMaxFileSizeInMBytes()) * 1024 * 1024
 }
 
 // DetectCSVStructure analyzes a CSV file and returns detection results
 func DetectCSVStructure(file io.ReaderAt, size int64) (*DetectionResult, error) {
 	if size == 0 {
 		return nil, &migration.ErrFileIsEmpty{}
+	}
+	if size > maxImportFileBytes() {
+		return nil, &migration.ErrNotACSVFile{}
 	}
 
 	// Read the entire file
@@ -335,6 +363,10 @@ func DetectCSVStructure(file io.ReaderAt, size int64) (*DetectionResult, error) 
 	if err != nil {
 		var emptyErr *migration.ErrFileIsEmpty
 		if errors.As(err, &emptyErr) {
+			return nil, err
+		}
+		var limitErr *migration.ErrImportRowLimitExceeded
+		if errors.As(err, &limitErr) {
 			return nil, err
 		}
 		return nil, &migration.ErrNotACSVFile{}
@@ -381,6 +413,9 @@ func PreviewImport(file io.ReaderAt, size int64, config *ImportConfig) (*Preview
 	if size == 0 {
 		return nil, &migration.ErrFileIsEmpty{}
 	}
+	if size > maxImportFileBytes() {
+		return nil, &migration.ErrNotACSVFile{}
+	}
 
 	data := make([]byte, size)
 	_, err := file.ReadAt(data, 0)
@@ -392,6 +427,10 @@ func PreviewImport(file io.ReaderAt, size int64, config *ImportConfig) (*Preview
 	if err != nil {
 		var emptyErr *migration.ErrFileIsEmpty
 		if errors.As(err, &emptyErr) {
+			return nil, err
+		}
+		var limitErr *migration.ErrImportRowLimitExceeded
+		if errors.As(err, &limitErr) {
 			return nil, err
 		}
 		return nil, &migration.ErrNotACSVFile{}
@@ -553,14 +592,29 @@ func parseDate(value, format string) time.Time {
 // @Failure 400 {object} models.Message "Invalid CSV file or configuration"
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /migration/csv/migrate [put]
-func (m *Migrator) Migrate(_ *user.User, _ io.ReaderAt, _ int64) error {
-	return &migration.ErrCSVConfigRequired{}
+func (m *Migrator) Migrate(u *user.User, file io.ReaderAt, size int64) error {
+	if m.config == nil {
+		return &migration.ErrCSVConfigRequired{}
+	}
+	return MigrateWithConfig(u, file, size, m.config)
+}
+
+func (m *Migrator) SetOptions(options []byte) error {
+	config := &ImportConfig{}
+	if err := json.Unmarshal(options, config); err != nil {
+		return &migration.ErrInvalidCSVImportConfig{Err: err}
+	}
+	m.config = config
+	return nil
 }
 
 // MigrateWithConfig imports CSV data into Vikunja with the provided configuration
 func MigrateWithConfig(u *user.User, file io.ReaderAt, size int64, config *ImportConfig) error {
 	if size == 0 {
 		return &migration.ErrFileIsEmpty{}
+	}
+	if size > maxImportFileBytes() {
+		return &migration.ErrNotACSVFile{}
 	}
 
 	data := make([]byte, size)
@@ -573,6 +627,10 @@ func MigrateWithConfig(u *user.User, file io.ReaderAt, size int64, config *Impor
 	if err != nil {
 		var emptyErr *migration.ErrFileIsEmpty
 		if errors.As(err, &emptyErr) {
+			return err
+		}
+		var limitErr *migration.ErrImportRowLimitExceeded
+		if errors.As(err, &limitErr) {
 			return err
 		}
 		return &migration.ErrNotACSVFile{}
@@ -591,7 +649,6 @@ func MigrateWithConfig(u *user.User, file io.ReaderAt, size int64, config *Impor
 		return &migration.ErrFileIsEmpty{}
 	}
 
-	// Convert rows to Vikunja structure
 	vikunjaTasks := convertToVikunja(rows, config)
 
 	return migration.InsertFromStructure(vikunjaTasks, u)
@@ -648,7 +705,7 @@ func convertToVikunja(rows [][]string, config *ImportConfig) []*models.ProjectWi
 			projects[projectName] = &models.ProjectWithTasksAndBuckets{
 				Project: models.Project{
 					ID:              int64(len(projects)+2) + pseudoParentID,
-					ParentProjectID: pseudoParentID,
+					ParentProjectID: &pseudoParentID,
 					Title:           projectName,
 				},
 			}

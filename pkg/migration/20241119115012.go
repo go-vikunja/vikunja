@@ -61,7 +61,7 @@ func init() {
 				return
 			}
 
-			err = tx.Sync(projectView20241119115012New{})
+			err = partialSync(tx, projectView20241119115012New{})
 			if err != nil {
 				return
 			}

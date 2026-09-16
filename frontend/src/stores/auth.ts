@@ -1,13 +1,17 @@
-import {computed, readonly, ref} from 'vue'
+import {computed, readonly, ref, watch} from 'vue'
 import {acceptHMRUpdate, defineStore} from 'pinia'
 
 import {AuthenticatedHTTPFactory, HTTPFactory} from '@/helpers/fetcher'
 import {getBrowserLanguage, i18n, setLanguage} from '@/i18n'
 import {objectToSnakeCase} from '@/helpers/case'
-import UserModel, {getDisplayName, fetchAvatarBlobUrl, invalidateAvatarCache} from '@/models/user'
+import UserModel, {getDisplayName, invalidateAvatarCache} from '@/models/user'
 import AvatarService from '@/services/avatar'
+import type {RegisterUserRequestWritable} from '@/client/generated'
+import {registerViaInviteLink} from '@/client/inviteLink'
+import {parseValidationErrors} from '@/helpers/parseValidationErrors'
 import UserSettingsService from '@/services/userSettings'
 import {getToken, refreshToken, removeToken, saveToken} from '@/helpers/auth'
+import {clearTaskCache} from '@/helpers/taskCache'
 import {useWebSocket} from '@/composables/useWebSocket'
 import {setModuleLoading} from '@/stores/helper'
 import {success, error} from '@/message'
@@ -27,6 +31,12 @@ import {DATE_DISPLAY} from '@/constants/dateDisplay'
 import {TIME_FORMAT} from '@/constants/timeFormat'
 import {RELATION_KIND} from '@/types/IRelationKind'
 import type {IProvider} from '@/types/IProvider'
+import {queryClient} from '@/client/queryClient'
+
+// Set on explicit logout so the login page won't immediately bounce the user
+// back to the OIDC provider. Lives in sessionStorage so it survives the
+// round-trip to the IdP within the tab and isn't wiped by localStorage.clear().
+export const JUST_LOGGED_OUT_KEY = 'justLoggedOut'
 
 function redirectToSpecifiedProvider() {
 
@@ -55,6 +65,17 @@ function redirectToSpecifiedProvider() {
 	}
 }
 
+// A race-loser's refresh fails but the rotated cookie is already valid, so a
+// second attempt succeeds — recovering what would otherwise be a spurious
+// logout. Exactly one retry: a genuinely dead session still logs out, no loop.
+async function refreshTokenWithRetry(persist: boolean): Promise<void> {
+	try {
+		await refreshToken(persist)
+	} catch {
+		await refreshToken(persist)
+	}
+}
+
 function getLoggedInVia(): string | null {
 	return localStorage.getItem('loggedInViaProvider')
 }
@@ -74,7 +95,6 @@ export const useAuthStore = defineStore('auth', () => {
 	const needsTotpPasscode = ref(false)
 	
 	const info = ref<IUser | null>(null)
-	const avatarUrl = ref('')
 	const settings = ref<IUserSettings>(new UserSettingsModel())
 	
 	const currentSessionId = ref<string | null>(null)
@@ -100,6 +120,14 @@ export const useAuthStore = defineStore('auth', () => {
 	
 	const isLinkShareAuth = computed(() => info.value?.type === AUTH_TYPES.LINK_SHARE)
 
+	const identityKey = computed(() => `${info.value?.id ?? ''}:${info.value?.type ?? ''}`)
+
+	// Identity-bound caches survive same-user object replacements.
+	watch(identityKey, () => {
+		clearTaskCache()
+		queryClient.clear()
+	}, {flush: 'sync'})
+
 	function setIsLoading(newIsLoading: boolean) {
 		isLoading.value = newIsLoading 
 	}
@@ -109,9 +137,13 @@ export const useAuthStore = defineStore('auth', () => {
 	}
 
 	function setUser(newUser: IUser | null, saveSettings = true) {
+		// checkAuth() calls this on every navigation; only drop the avatar cache on an actual account change.
+		const userChanged = info.value?.username !== newUser?.username
 		info.value = newUser
 		if (newUser !== null && !isLinkShareAuth.value) {
-			reloadAvatar()
+			if (userChanged) {
+				invalidateAvatar()
+			}
 
 			if (saveSettings && newUser.settings) {
 				loadSettings(newUser.settings)
@@ -144,6 +176,7 @@ export const useAuthStore = defineStore('auth', () => {
 				sidebarWidth: null,
 				commentSortOrder: 'asc',
 				desktopQuickEntryShortcut: 'CmdOrCtrl+Shift+A',
+				defaultDueTime: undefined,
 				...newSettings.frontendSettings,
 			},
 		})
@@ -163,12 +196,11 @@ export const useAuthStore = defineStore('auth', () => {
 		needsTotpPasscode.value = newNeedsTotpPasscode
 	}
 
-	async function reloadAvatar() {
+	function invalidateAvatar() {
 		if (!info.value || !info.value.username) {
 			return
 		}
 		invalidateAvatarCache(info.value)
-		avatarUrl.value = await fetchAvatarBlobUrl(info.value, 40)
 	}
 
 	function updateLastUserRefresh() {
@@ -209,7 +241,7 @@ export const useAuthStore = defineStore('auth', () => {
 	 * Registers a new user and logs them in.
 	 * Not sure if this is the right place to put the logic in, maybe a separate js component would be better suited. 
 	 */
-	async function register(credentials, language: string|null = null) {
+	async function register(credentials, language: string|null = null, viaInvite = false) {
 		const HTTP = HTTPFactory()
 		setIsLoading(true)
 		
@@ -218,24 +250,33 @@ export const useAuthStore = defineStore('auth', () => {
 		}
 		
 		try {
-			await HTTP.post('register', {
-				...credentials,
-				language,
-			})
-			return login(credentials)
-		} catch (e) {
-			if (e.response?.data?.code === 2002 && e.response?.data?.invalid_fields[0]?.startsWith('language:')) {
-				return register(credentials, 'en')
+			if (viaInvite) {
+				await registerViaInviteLink({...credentials, language})
+			} else {
+				await HTTP.post('register', {...credentials, language})
 			}
-			
-			if (e.response?.data?.message) {
-				throw e.response.data
+			return await login(credentials)
+		} catch (e) {
+			const problem = e.response?.data ?? e
+			if (problem.code === 2002 && parseValidationErrors(problem).language) {
+				return register(credentials, 'en', viaInvite)
+			}
+
+			if (problem.detail) {
+				throw {...problem, message: problem.detail}
+			}
+			if (problem.message) {
+				throw problem
 			}
 
 			throw e
 		} finally {
 			setIsLoading(false)
 		}
+	}
+
+	function registerWithInvite(credentials: RegisterUserRequestWritable) {
+		return register(credentials, null, true)
 	}
 
 	async function openIdAuth({provider, code, totpPasscode}: {provider: string, code: string, totpPasscode?: string}) {
@@ -352,7 +393,7 @@ export const useAuthStore = defineStore('auth', () => {
 					// refresh before giving up. This lets users who reopen the app
 					// after the short JWT TTL seamlessly resume their session.
 					try {
-						await refreshToken(true)
+						await refreshTokenWithRetry(true)
 						const freshJwt = getToken()
 						if (freshJwt) {
 							const b64 = freshJwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
@@ -425,30 +466,23 @@ export const useAuthStore = defineStore('auth', () => {
 				return
 			}
 			
-			const cause = {e}
-			
-			if (typeof e?.response?.data?.message !== 'undefined') {
-				cause.message = e.response.data.message
-			}
-			
 			console.error('Error refreshing user info:', e)
-			
-			throw new Error('Error while refreshing user info:', {cause})
+
+			throw new Error('Error while refreshing user info:', {cause: e})
 		}
 	}
 
 	/**
 	 * Try to verify the email
 	 */
-	async function verifyEmail(): Promise<boolean> {
-		const emailVerifyToken = localStorage.getItem('emailConfirmToken')
-		if (emailVerifyToken) {
+	async function verifyEmail(token = localStorage.getItem('emailConfirmToken')): Promise<boolean> {
+		if (token) {
 			const stopLoading = setModuleLoading(setIsLoading)
 			try {
-				await HTTPFactory().post('user/confirm', {token: emailVerifyToken})
+				await HTTPFactory().post('user/confirm', {token})
 				return true
 			} catch(e) {
-				throw new Error(e.response.data.message)
+				throw new Error(e.response.data.message, {cause: e})
 			} finally {
 				localStorage.removeItem('emailConfirmToken')
 				stopLoading()
@@ -483,7 +517,7 @@ export const useAuthStore = defineStore('auth', () => {
 			if (oldName !== undefined && oldName !== settingsUpdate.name) {
 				const {avatarProvider} = await (new AvatarService()).get({})
 				if (avatarProvider === 'initials') {
-					await reloadAvatar()
+					invalidateAvatar()
 				}
 			}
 			if (showMessage) {
@@ -512,7 +546,7 @@ export const useAuthStore = defineStore('auth', () => {
 				saveToken(response.data.token, false)
 			} else {
 				// User sessions renew via the refresh-token cookie.
-				await refreshToken(true)
+				await refreshTokenWithRetry(true)
 			}
 			await checkAuth()
 		} catch (e) {
@@ -533,25 +567,40 @@ export const useAuthStore = defineStore('auth', () => {
 
 		// Revoke the server session so the refresh token can't be reused.
 		// Best-effort: if the network call fails, still clean up locally.
+		let oidcLogoutUrl = ''
 		try {
 			const HTTP = AuthenticatedHTTPFactory()
-			await HTTP.post('user/logout')
+			const {data} = await HTTP.post('user/logout')
+			oidcLogoutUrl = data?.oidc_logout_url ?? ''
 		} catch (_e) {
 			// Ignore — session will expire naturally
 		}
 
 		removeToken()
 		const loggedInVia = getLoggedInVia()
-		window.localStorage.clear() // Clear all settings and history we might have saved in local storage.
 		lastUserInfoRefresh.value = null
+		setAuthenticated(false)
+		setUser(null)
+		window.localStorage.clear() // Clear all settings and history we might have saved in local storage.
+
+		sessionStorage.setItem(JUST_LOGGED_OUT_KEY, 'true')
+
+		// Redirect to the OIDC provider to end its session too. Prefer the
+		// server-built RP-Initiated Logout URL, falling back to the static one.
+		// These full-page redirects return the user to the login page, so we
+		// must not router.push there first — that would consume
+		// JUST_LOGGED_OUT_KEY before the round-trip lands.
+		if (oidcLogoutUrl) {
+			window.location.href = oidcLogoutUrl
+			return
+		}
+		const fullProvider: IProvider|undefined = configStore.auth.openidConnect.providers?.find((p: IProvider) => p.key === loggedInVia)
+		if (fullProvider && redirectToProviderOnLogout(fullProvider)) {
+			return
+		}
+
 		await router.push({name: 'user.login'})
 		await checkAuth()
-
-		// if configured, redirect to OIDC Provider on logout
-		const fullProvider: IProvider|undefined = configStore.auth.openidConnect.providers?.find((p: IProvider) => p.key === loggedInVia)
-		if (fullProvider) {
-			redirectToProviderOnLogout(fullProvider)
-		}
 	}
 
 	return {
@@ -560,7 +609,6 @@ export const useAuthStore = defineStore('auth', () => {
 		needsTotpPasscode: readonly(needsTotpPasscode),
 
 		info: readonly(info),
-		avatarUrl: readonly(avatarUrl),
 		settings: readonly(settings),
 
 		currentSessionId: readonly(currentSessionId),
@@ -570,6 +618,7 @@ export const useAuthStore = defineStore('auth', () => {
 		authLinkShare,
 		userDisplayName,
 		isLinkShareAuth,
+		identityKey,
 
 		isLoading: readonly(isLoading),
 		setIsLoading,
@@ -582,11 +631,12 @@ export const useAuthStore = defineStore('auth', () => {
 		setAuthenticated,
 		setNeedsTotpPasscode,
 
-		reloadAvatar,
+		invalidateAvatar,
 		updateLastUserRefresh,
 
 		login,
 		register,
+		registerWithInvite,
 		openIdAuth,
 		handleDesktopOAuthTokens,
 		linkShareAuth,

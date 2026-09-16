@@ -31,6 +31,7 @@ import (
 	"image"
 	"io"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 
@@ -42,7 +43,9 @@ import (
 	"code.vikunja.io/api/pkg/modules/background"
 	"code.vikunja.io/api/pkg/modules/background/unsplash"
 	"code.vikunja.io/api/pkg/modules/background/upload"
+	"code.vikunja.io/api/pkg/modules/imageutils"
 	"code.vikunja.io/api/pkg/web"
+	webfiles "code.vikunja.io/api/pkg/web/files"
 
 	"github.com/bbrks/go-blurhash"
 	"github.com/gabriel-vasile/mimetype"
@@ -116,7 +119,7 @@ func (bp *BackgroundProvider) setBackgroundPreparations(s *xorm.Session, c *echo
 
 	// Check if the user has the permission to change the project background
 	project = &models.Project{ID: projectID}
-	can, err := project.CanUpdate(s, auth)
+	can, err := project.CanWrite(s, auth)
 	if err != nil {
 		return
 	}
@@ -174,6 +177,11 @@ func CreateBlurHash(srcf io.Reader) (hash string, err error) {
 		return "", err
 	}
 
+	return CreateBlurHashFromImage(src)
+}
+
+// CreateBlurHashFromImage avoids decoding uploads twice.
+func CreateBlurHashFromImage(src image.Image) (hash string, err error) {
 	dst := image.NewRGBA(image.Rect(0, 0, 32, 32))
 	draw.NearestNeighbor.Scale(dst, dst.Rect, src, src.Bounds(), draw.Over, nil)
 
@@ -204,44 +212,17 @@ func (bp *BackgroundProvider) UploadBackground(c *echo.Context) error {
 	}
 	defer srcf.Close()
 
-	// Validate we're dealing with an image
-	mime, err := mimetype.DetectReader(srcf)
-	if err != nil {
+	if err := ValidateAndSaveBackgroundUpload(s, auth, project, srcf, file.Filename, uint64(file.Size)); err != nil {
 		_ = s.Rollback()
-		return err
-	}
-	if !strings.HasPrefix(mime.String(), "image") {
-		_ = s.Rollback()
-		return c.JSON(http.StatusBadRequest, models.Message{Message: "Uploaded file is no image."})
-	}
-	supported := false
-	for _, m := range allowedImageMimes {
-		if mime.Is(m) {
-			supported = true
-			break
+		if IsErrFileIsNoImage(err) {
+			return c.JSON(http.StatusBadRequest, models.Message{Message: "Uploaded file is no image."})
 		}
-	}
-	if !supported {
-		_ = s.Rollback()
-		return c.JSON(http.StatusBadRequest, models.Message{Message: "Unsupported image format. Allowed: " + strings.Join(allowedImageMimes, ",")})
-	}
-
-	err = SaveBackgroundFile(s, auth, project, srcf, file.Filename, uint64(file.Size))
-	if err != nil {
-		_ = s.Rollback()
 		if files.IsErrFileIsTooLarge(err) {
 			return echo.ErrBadRequest
 		}
 		if IsErrFileUnsupportedImageFormat(err) {
 			return c.JSON(http.StatusBadRequest, models.Message{Message: "Unsupported image format. Allowed: " + strings.Join(allowedImageMimes, ",")})
 		}
-
-		return err
-	}
-
-	err = project.ReadOne(s, auth)
-	if err != nil {
-		_ = s.Rollback()
 		return err
 	}
 
@@ -253,52 +234,81 @@ func (bp *BackgroundProvider) UploadBackground(c *echo.Context) error {
 	return c.JSON(http.StatusOK, project)
 }
 
-func SaveBackgroundFile(s *xorm.Session, auth web.Auth, project *models.Project, srcf io.ReadSeeker, filename string, filesize uint64) (err error) {
+// ValidateAndSaveBackgroundUpload is shared by the v1 and v2 upload handlers.
+func ValidateAndSaveBackgroundUpload(s *xorm.Session, auth web.Auth, project *models.Project, srcf io.ReadSeeker, filename string, _ uint64) error {
+	mime, err := mimetype.DetectReader(srcf)
+	if err != nil {
+		return err
+	}
+	if !strings.HasPrefix(mime.String(), "image") {
+		return ErrFileIsNoImage{Mime: mime.String()}
+	}
+	supported := false
+	for _, m := range allowedImageMimes {
+		if mime.Is(m) {
+			supported = true
+			break
+		}
+	}
+	if !supported {
+		return ErrFileUnsupportedImageFormat{Mime: mime.String()}
+	}
+
+	// SaveBackgroundFile rewinds after DetectReader.
+	if _, err := SaveBackgroundFile(s, auth, project, srcf, filename); err != nil {
+		return err
+	}
+
+	return project.ReadOne(s, auth)
+}
+
+func SaveBackgroundFile(s *xorm.Session, auth web.Auth, project *models.Project, srcf io.ReadSeeker, filename string) (storedSize int64, err error) {
 	mime, _ := mimetype.DetectReader(srcf)
+	_, _ = srcf.Seek(0, io.SeekStart)
+
+	// Reject hostile dimensions before decoding (GHSA-4vh2-39rq-rq8j).
+	if _, err := imageutils.ValidateReader(srcf); err != nil {
+		if !imageutils.IsErrImageTooLarge(err) && strings.Contains(err.Error(), "unknown format") {
+			return 0, ErrFileUnsupportedImageFormat{Mime: mime.String()}
+		}
+		return 0, err
+	}
 	_, _ = srcf.Seek(0, io.SeekStart)
 	src, err := imaging.Decode(srcf)
 	if err != nil {
 		if strings.Contains(err.Error(), "unknown format") {
-			return ErrFileUnsupportedImageFormat{Mime: mime.String()}
+			return 0, ErrFileUnsupportedImageFormat{Mime: mime.String()}
 		}
-		return err
-	}
-
-	_, _ = srcf.Seek(0, io.SeekStart)
-	imgConfig, _, err := image.DecodeConfig(srcf)
-	if err != nil {
-		return err
-	}
-
-	height := imgConfig.Height
-	if imgConfig.Height > background.MaxBackgroundImageHeight {
-		height = background.MaxBackgroundImageHeight
+		return 0, err
 	}
 
 	buf := bytes.Buffer{}
-	dst := imaging.Resize(src, 0, height, imaging.Lanczos)
+	// Fit bounds both dimensions without upscaling.
+	dst := imaging.Fit(src, background.MaxBackgroundImageHeight, background.MaxBackgroundImageHeight, imaging.Lanczos)
 	err = imaging.Encode(&buf, dst, imaging.JPEG, imaging.JPEGQuality(80))
 	if err != nil {
-		return err
+		return 0, err
+	}
+	storedSize = int64(buf.Len())
+
+	f, err := files.CreateWithSession(s, bytes.NewReader(buf.Bytes()), filename, uint64(storedSize), auth)
+	if err != nil {
+		return 0, err
 	}
 
-	f, err := files.CreateWithSession(s, bytes.NewReader(buf.Bytes()), filename, filesize, auth)
+	project.BackgroundBlurHash, err = CreateBlurHashFromImage(src)
 	if err != nil {
-		return err
-	}
-
-	// Generate a blurHash
-	_, _ = srcf.Seek(0, io.SeekStart)
-	project.BackgroundBlurHash, err = CreateBlurHash(srcf)
-	if err != nil {
-		return err
+		return 0, err
 	}
 
 	// Save it
 	p := upload.Provider{}
 	img := &background.Image{ID: strconv.FormatInt(f.ID, 10)}
-	err = p.Set(s, img, project, auth)
-	return err
+	if err = p.Set(s, img, project, auth); err != nil {
+		return 0, err
+	}
+	project.BackgroundFileID = f.ID
+	return storedSize, nil
 }
 
 func checkProjectBackgroundRights(s *xorm.Session, c *echo.Context) (project *models.Project, auth web.Auth, err error) {
@@ -340,7 +350,7 @@ func checkProjectBackgroundWritePermissions(s *xorm.Session, c *echo.Context) (p
 	}
 
 	project = &models.Project{ID: projectID}
-	can, err := project.CanUpdate(s, auth)
+	can, err := project.CanWrite(s, auth)
 	if err != nil {
 		_ = s.Rollback()
 		return nil, auth, err
@@ -377,54 +387,47 @@ func GetProjectBackground(c *echo.Context) error {
 		return err
 	}
 
-	if project.BackgroundFileID == 0 {
-		_ = s.Rollback()
-		return echo.NewHTTPError(http.StatusNotFound, "Project background not found")
-	}
-
-	// Get the file
-	bgFile := &files.File{
-		ID: project.BackgroundFileID,
-	}
-	if err := bgFile.LoadFileByID(); err != nil {
-		_ = s.Rollback()
-		return err
-	}
-	stat, err := files.FileStat(bgFile)
+	bgFile, stat, err := LoadProjectBackgroundForDownload(s, project)
 	if err != nil {
 		_ = s.Rollback()
+		if models.IsErrProjectHasNoBackground(err) {
+			return echo.NewHTTPError(http.StatusNotFound, "Project background not found")
+		}
 		return err
 	}
-
-	// Unsplash requires pingbacks as per their api usage guidelines.
-	// To do this in a privacy-preserving manner, we do the ping from inside of Vikunja to not expose any user details.
-	// FIXME: This should use an event once we have events
-	unsplash.Pingback(s, bgFile)
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
 		return err
 	}
 
-	// Override the global no-store directive so browsers can cache background images.
-	// no-cache allows caching but requires revalidation via If-Modified-Since.
-	c.Response().Header().Set("Cache-Control", "no-cache")
+	webfiles.WriteProjectBackground(c.Response(), c.Request(), bgFile, stat)
+	return nil
+}
 
-	// Set Last-Modified header if we have the file stat, so clients can decide whether to use cached files
-	if stat != nil {
-		modTime := stat.ModTime().UTC()
-		c.Response().Header().Set(echo.HeaderLastModified, modTime.Format(http.TimeFormat))
-
-		// Check If-Modified-Since and return 304 if the file hasn't changed
-		if ifModSince := c.Request().Header.Get("If-Modified-Since"); ifModSince != "" {
-			if t, err := http.ParseTime(ifModSince); err == nil && !modTime.After(t) {
-				return c.NoContent(http.StatusNotModified)
-			}
-		}
+// LoadProjectBackgroundForDownload opens the project's background file (bytes ready to
+// read) and stats it for the modtime the download uses for caching. It also fires the
+// Unsplash pingback side effect, required by Unsplash's API guidelines and done
+// server-side so no user details are exposed. Returns ErrProjectHasNoBackground when the
+// project has none; the caller owns committing the session and closing bgFile.File.
+func LoadProjectBackgroundForDownload(s *xorm.Session, project *models.Project) (bgFile *files.File, stat os.FileInfo, err error) {
+	if project.BackgroundFileID == 0 {
+		return nil, nil, &models.ErrProjectHasNoBackground{ProjectID: project.ID}
 	}
 
-	// Serve the file
-	return c.Stream(http.StatusOK, "image/jpg", bgFile.File)
+	bgFile = &files.File{ID: project.BackgroundFileID}
+	if err := bgFile.LoadFileByID(); err != nil {
+		return nil, nil, err
+	}
+	stat, err = files.FileStat(bgFile)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// FIXME: This should use an event once we have events
+	unsplash.Pingback(s, bgFile)
+
+	return bgFile, stat, nil
 }
 
 // RemoveProjectBackground removes a project background, no matter the background provider

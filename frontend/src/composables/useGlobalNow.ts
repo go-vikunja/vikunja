@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { getCurrentInstance, ref } from 'vue'
 import { createGlobalState, useIntervalFn } from '@vueuse/core'
 import { onBeforeRouteUpdate } from 'vue-router'
 
@@ -18,10 +18,14 @@ export const useGlobalNow = createGlobalState(() => {
 
 	useIntervalFn(update, GLOBAL_NOW_INTERVAL, { immediate: true })
 
-	// ensure the now value is refreshed when the route changes
-	onBeforeRouteUpdate(() => {
-		update()
-	})
+	// Now that this state can be initialised from a plain helper (formatDateSince), the
+	// first caller is not guaranteed to be a component — guard the route hook accordingly.
+	if (getCurrentInstance()) {
+		// ensure the now value is refreshed when the route changes
+		onBeforeRouteUpdate(() => {
+			update()
+		})
+	}
 
 	return {
 		now,

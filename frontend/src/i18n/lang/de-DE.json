@@ -66,7 +66,7 @@
 			"email": "E-Mail-Adresse",
 			"emailPlaceholder": "z.B. frederic{'@'}vikunja.io",
 			"password": "Passwort",
-			"passwordPlaceholder": "z.B. •••••••••••",
+			"passwordPlaceholder": "Dein Passwort",
 			"forgotPassword": "Passwort vergessen?",
 			"resetPassword": "Setze dein Passwort zurück",
 			"resetPasswordAction": "Sende mir einen Link zum Zurücksetzen des Passworts",
@@ -104,7 +104,11 @@
 			"remember": "Angemeldet bleiben",
 			"registrationDisabled": "Registrierung ist deaktiviert.",
 			"passwordResetTokenMissing": "Das Passwort-Reset-Token fehlt.",
-			"registrationFailed": "Bei der Registrierung ist ein Fehler aufgetreten. Bitte prüfe deine Eingabe und versuche es erneut."
+			"registrationFailed": "Bei der Registrierung ist ein Fehler aufgetreten. Bitte prüfe deine Eingabe und versuche es erneut.",
+			"registrationConfirmEmail": "Dein Account wurde erfolgreich erstellt! Bitte überprüfe deinen Posteingang und klicke auf den Link in der Bestätigungs-E-Mail, bevor du dich anmeldest.",
+			"inviteInvalid": "Dieser Einladungslink ist ungültig oder abgelaufen.",
+			"inviteLoadFailed": "Diese Einladung konnte nicht geladen werden. Bitte versuche es noch einmal.",
+			"inviteTeams": "Du wirst {teams} beitreten"
 		},
 		"settings": {
 			"bots": {
@@ -128,7 +132,14 @@
 			"passwordUpdateSuccess": "Das Passwort wurde erfolgreich aktualisiert.",
 			"updateEmailTitle": "Aktualisiere deine E-Mail-Adresse",
 			"updateEmailNew": "Neue E-Mail-Adresse",
-			"updateEmailSuccess": "Deine E-Mail-Adresse wurde erfolgreich aktualisiert. Wir haben dir einen Link zur Bestätigung geschickt.",
+			"updateEmailSuccess": "Deine E-Mail-Adresse wurde erfolgreich geändert.",
+			"updateEmailPending": "Deine neue E-Mail-Adresse {email} wartet auf Bestätigung. Bis Du auf den dort gesendeten Link klickst, bleibt deine aktuelle Adresse aktiv.",
+			"updateEmailPendingSuccess": "Wir haben einen Bestätigungslink an deine neue Adresse gesendet. Deine aktuelle Adresse bleibt aktiv, bis du ihn bestätigst.",
+			"updateEmailResend": "Bestätigungs-E-Mail erneut senden",
+			"updateEmailResendSuccess": "Wir haben dir einen neuen Bestätigungslink geschickt.",
+			"updateEmailCancel": "Änderung abbrechen",
+			"updateEmailCancelSuccess": "Die Änderung der E-Mail-Adresse wurde storniert.",
+			"updateEmailConfirmed": "Deine neue E-Mail-Adresse wurde bestätigt.",
 			"general": {
 				"title": "Allgemeine Einstellungen",
 				"name": "Mein Name",
@@ -172,6 +183,8 @@
 					"yyyy/mm/dd": "JJJJ/MM/TT"
 				},
 				"timeFormat": "Zeitformat",
+				"defaultDueTime": "Standard-Fälligkeitsuhrzeit",
+				"defaultDueTimeDescription": "Wird als Standardzeit verwendet, wenn ein Fälligkeitsdatum für eine Aufgabe festgelegt wird, ohne eine Uhrzeit anzugeben, einschließlich der Auswahl im Datumswähler sowie Quick Add Magic.",
 				"timeTrackingDefaultStart": "Startzeit für die Zeiterfassung",
 				"timeFormatOptions": {
 					"12h": "12 Stunden (AM/PM)",
@@ -190,7 +203,8 @@
 			"desktop": {
 				"quickEntryShortcut": "Quick Entry Tastenkombination",
 				"shortcutRecorderPlaceholder": "Klicken, um Tastenkombination zu setzen",
-				"shortcutRecorderRecording": "Tastenkombination eingeben…"
+				"shortcutRecorderRecording": "Tastenkombination eingeben…",
+				"shortcutRecorderClear": "Tastenkürzel löschen"
 			},
 			"totp": {
 				"title": "Zwei-Faktor-Authentifizierung",
@@ -271,6 +285,7 @@
 				"90d": "90 Tage",
 				"permissionExplanation": "Mit Berechtigungen kannst du einschränken, was ein API-Token tun darf.",
 				"titleRequired": "Titel ist erforderlich",
+				"expiryInvalid": "Bitte wähle ein Ablaufdatum in der Zukunft aus.",
 				"permissionRequired": "Bitte wähle mindestens eine Berechtigung aus der Liste.",
 				"expired": "Dieses Token ist {ago} abgelaufen.",
 				"tokenCreatedSuccess": "Hier ist dein neues API Token: {token}",
@@ -349,6 +364,7 @@
 		"shared": "Geteilte Projekte",
 		"noDescriptionAvailable": "Keine Projektbeschreibung verfügbar.",
 		"inboxTitle": "Eingang",
+		"myOpenTasksFilterTitle": "Meine offenen Aufgaben",
 		"favorite": "Dieses Projekt als Favorit markieren",
 		"unfavorite": "Dieses Projekt von Favoriten entfernen",
 		"openSettingsMenu": "Projekteinstellungen öffnen",
@@ -393,6 +409,7 @@
 			"title": "Dupliziere dieses Projekt",
 			"label": "Duplizieren",
 			"text": "Wähle ein übergeordnetes Projekt aus, welches das duplizierte Projekt enthalten soll:",
+			"shares": "Freigaben kopieren (Benutzer:innen, Teams und Linkfreigaben)",
 			"success": "Das Projekt wurde erfolgreich dupliziert."
 		},
 		"edit": {
@@ -435,11 +452,14 @@
 				"shared": "Geteilt mit diesen {type}",
 				"you": "Du",
 				"notShared": "Noch nicht mit einem {type} geteilt.",
+				"remove": "Dieses {type} entfernen",
 				"removeHeader": "Einen {type} von {sharable} entfernen",
 				"removeText": "Diesen {sharable} von {type} entfernen? Dies kann nicht rückgängig gemacht werden!",
 				"removeSuccess": "{sharable} wurde erfolgreich von {type} entfernt.",
 				"addedSuccess": "{type} wurde erfolgreich hinzugefügt.",
-				"updatedSuccess": "{type} wurde erfolgreich hinzugefügt."
+				"updatedSuccess": "{type} wurde erfolgreich hinzugefügt.",
+				"search": "Suche nach einem {type} um dieses Projekt zu teilen",
+				"permissionFor": "Berechtigung für {sharable}"
 			},
 			"permission": {
 				"title": "Berechtigung",
@@ -494,7 +514,8 @@
 		},
 		"table": {
 			"title": "Tabelle",
-			"columns": "Spalten"
+			"columns": "Spalten",
+			"sortBy": "Sortieren nach {column}"
 		},
 		"kanban": {
 			"title": "Kanban",
@@ -558,6 +579,7 @@
 			"createSuccess": "Die Ansicht wurde erfolgreich erstellt.",
 			"titleRequired": "Bitte gib einen Titel ein.",
 			"delete": "Diese Ansicht löschen",
+			"edit": "Diese Ansicht bearbeiten",
 			"deleteText": "Bist du sicher, dass du diese Ansicht entfernen möchtest? Es wird nicht mehr möglich sein, sie zu verwenden, um Aufgaben in diesem Projekt anzuzeigen. Diese Aktion löscht keine Aufgaben. Dies kann nicht rückgängig gemacht werden!",
 			"deleteSuccess": "Diese Ansicht wurde erfolgreich gelöscht.",
 			"onlyAdminsCanEdit": "Nur Projektadministrator:innen können Ansichten bearbeiten.",
@@ -594,6 +616,7 @@
 			"success": "Filter gespeichert."
 		},
 		"query": {
+			"label": "Filter-Abfrage",
 			"placeholder": "Gib eine Suche oder Filterabfrage ein…",
 			"help": {
 				"intro": "Um Aufgaben zu filtern, kannst du eine SQL-ähnliche Abfragesyntax verwenden. Du kannst die folgenden Felder in deinem Filter verwenden:",
@@ -608,6 +631,7 @@
 					"endDate": "Das Enddatum der Aufgabe",
 					"doneAt": "Datum und Uhrzeit, an dem die Aufgabe als erledigt markiert wurde",
 					"assignees": "Die der Aufgabe Zugewiesenen",
+					"createdBy": "Der:die Benutzer:in, der die Aufgabe erstellt hat (abgeglichen mit dem Nutzernamen)",
 					"labels": "Die der Aufgabe zugeordneten Labels",
 					"project": "Das Projekt, zu dem die Aufgabe gehört (nur verfügbar für gespeicherte Filter, nicht auf Projektebene)",
 					"reminders": "Die Erinnerungen einer Aufgabe als Datumsfeld, gibt alle Aufgaben mit mindestens einer Erinnerung zurück, die dem Filter entspricht",
@@ -638,6 +662,7 @@
 					"dueDatePast": "Findet Aufgaben mit einem Fälligkeitsdatum in der Vergangenheit",
 					"undoneHighPriority": "Findet Aufgaben, die nicht erledigt sind und Priorität Level mindestens 3 haben",
 					"assigneesIn": "Findet Aufgaben, die entweder \"user1\" oder \"user2\" zugewiesen sind",
+					"createdByEqual": "Findet Aufgaben, die von \"user1\" erstellt wurden",
 					"priorityOneOrTwoPastDue": "Findet Aufgaben mit Priorität Level 1 oder 2 und einem Fälligkeitsdatum in der Vergangenheit"
 				}
 			}
@@ -681,6 +706,19 @@
 		"upload": "Datei hochladen",
 		"migrationStartedWillReciveEmail": "Vikunja wird nun deine Listen/Projekte, Aufgaben, Notizen, Erinnerungen und Dateien von {service} importieren. Da dies eine Weile dauern wird, senden wir dir eine E-Mail, sobald der Import abgeschlossen ist. Du kannst dieses Fenster jetzt schließen.",
 		"migrationInProgress": "Ein Import wird gerade durchgeführt. Bitte warte, bis dieser abgeschlossen ist.",
+		"credentials": {
+			"description": "Gib die Adresse deiner {name}-Instanz ein und lege fest, wie Vikunja sich anmelden soll. Vikunja importiert alle Projekte und Boards, auf die du Zugriff hast; die Anmeldedaten werden nur für diesen Import verwendet und nicht gespeichert.",
+			"url": "{name}-URL",
+			"authMethod": "Anmelden mit",
+			"apiKey": "API-Schlüssel",
+			"apiKeyRequired": "Bitte gib einen API-Schlüssel ein.",
+			"authPassword": "Anmeldename und Passwort",
+			"start": "Import starten"
+		},
+		"planka": {
+			"apiKeyHelp": "Ein API-Schlüssel muss für dein Konto von einem Planka-Administrator erstellt werden. Das Token aus dem Browser zu kopieren funktioniert nicht.",
+			"passwordHelp": "Funktioniert nur für lokale Planka-Konten ohne Zwei-Faktor-Authentifizierung, die sich mindestens einmal bei Planka angemeldet haben. Konten mit Single Sign-On benötigen einen API-Schlüssel."
+		},
 		"csv": {
 			"description": "Importiere Aufgaben aus einer CSV-Datei mit eigener Spaltenzuordnung.",
 			"uploadDescription": "Wähle eine CSV-Datei, um sie zu importieren. Die Datei sollte Aufgabendaten mit Kopfzeilen in der ersten Zeile enthalten.",
@@ -745,7 +783,10 @@
 		"imprint": "Impressum",
 		"privacy": "Datenschutzerklärung",
 		"closeSidebar": "Seitenleiste schließen",
-		"home": "Vikunja Startseite"
+		"home": "Vikunja Startseite",
+		"toggleChildProjects": "Unterprojekte ein-/ausschalten",
+		"main": "Hauptnavigation",
+		"savedFilters": "Gespeicherte Filter"
 	},
 	"misc": {
 		"loading": "Wird geladen…",
@@ -780,6 +821,14 @@
 		"avatarOfUser": "{user}'s Profilbild",
 		"closeBanner": "Banner schließen",
 		"closeDialog": "Dialog schließen",
+		"imagePreview": "Bildvorschau",
+		"zoomIn": "Heranzoomen",
+		"zoomOut": "Herauszoomen",
+		"resetZoom": "Zoom zurücksetzen",
+		"imageLoadFailed": "Bild konnte nicht geladen werden",
+		"videoPreview": "Videovorschau",
+		"pdfPreview": "PDF-Vorschau",
+		"videoLoadFailed": "Dieses Video kann in deinem Browser nicht abgespielt werden.",
 		"closeQuickActions": "Schnellaktionen schließen",
 		"skipToContent": "Überspringen und zum Hauptinhalt gehen",
 		"sortBy": "Sortieren nach",
@@ -797,10 +846,29 @@
 			"thisWeekend": "Dieses Wochenende",
 			"laterThisWeek": "Später in dieser Woche",
 			"nextWeek": "Nächste Woche",
-			"chooseDate": "Wähle ein Datum"
+			"nextWeekend": "Nächstes Wochenende",
+			"endOfMonth": "Ende des Monats",
+			"inAMonth": "In einem Monat",
+			"chooseDate": "Wähle ein Datum",
+			"quickSelect": "Schnellauswahl",
+			"clear": "Zurücksetzen",
+			"noDate": "Kein Datum ausgewählt",
+			"previousMonth": "Vorheriger Monat",
+			"nextMonth": "Nächster Monat",
+			"time": {
+				"hours": "Stunden",
+				"minutes": "Minuten",
+				"hourUp": "Eine Stunde später",
+				"hourDown": "Eine Stunde früher",
+				"minuteUp": "Fünf Minuten später",
+				"minuteDown": "Fünf Minuten früher"
+			},
+			"month": "Monat",
+			"year": "Jahr"
 		},
 		"editor": {
 			"edit": "Bearbeiten",
+			"label": "Rich-Text-Editor",
 			"heading1": "Überschrift 1",
 			"heading1Tooltip": "Große Überschrift.",
 			"heading2": "Überschrift 2",
@@ -820,8 +888,12 @@
 			"orderedList": "Geordnete Liste",
 			"orderedListTooltip": "Erstelle eine Liste mit Nummerierung.",
 			"link": "Link",
+			"urlPlaceholder": "URL",
 			"image": "Bild",
 			"imageTooltip": "Lade ein Bild von deinem PC hoch.",
+			"altText": "Alternativer Text",
+			"altTextPlaceholder": "Beschreibe dieses Bild",
+			"toolbarLabel": "Textformatierung",
 			"horizontalRule": "Horizontaler Strich",
 			"horizontalRuleTooltip": "Teile einen Bereich.",
 			"text": "Text",
@@ -855,7 +927,9 @@
 		},
 		"multiselect": {
 			"createPlaceholder": "Erstellen",
-			"selectPlaceholder": "Klicken oder Enter drücken zum Auswählen"
+			"selectPlaceholder": "Klicken oder Enter drücken zum Auswählen",
+			"removeItem": "Dieses Element entfernen",
+			"clear": "Auswahl leeren"
 		},
 		"datepickerRange": {
 			"to": "Bis",
@@ -935,7 +1009,9 @@
 	"task": {
 		"new": "Aufgabe erstellen",
 		"createSuccess": "Die Aufgabe wurde erfolgreich erstellt.",
+		"bulkCreateUnexpectedResponse": "Der Server gab eine unerwartete Anzahl von erstellten Aufgaben zurück.",
 		"addReminder": "Eine Erinnerung hinzufügen…",
+		"removeReminder": "Diese Erinnerung entfernen",
 		"doneSuccess": "Die Aufgabe wurde erfolgreich als erledigt markiert.",
 		"undoneSuccess": "Die Aufgabe wurde erfolgreich als nicht-erledigt markiert.",
 		"readOnlyCheckbox": "Du hast nur Lesezugriff auf diese Aufgabe und kannst sie nicht als erledigt markieren.",
@@ -958,16 +1034,23 @@
 			"chooseDueDate": "Klicke hier, um ein Fälligkeitsdatum zu setzen",
 			"chooseStartDate": "Klicke hier, um ein Startdatum zu setzen",
 			"chooseEndDate": "Klicke hier, um ein Enddatum zu setzen",
+			"removeDueDate": "Fälligkeitsdatum entfernen",
+			"removeStartDate": "Startdatum entfernen",
+			"removeEndDate": "Enddatum entfernen",
+			"removeRepeat": "Wiederholungsintervall entfernen",
+			"removeAssignee": "{user} als Zugewiesenen entfernen",
 			"move": "Aufgabe in ein anderes Projekt verschieben",
 			"done": "Als erledigt markieren!",
 			"undone": "Als nicht erledigt markieren",
 			"created": "Erstellt {0} von {1}",
 			"updated": "Aktualisiert {0}",
 			"doneAt": "Erledigt {0}",
+			"titleRequired": "Der Aufgabentitel darf nicht leer sein.",
 			"updateSuccess": "Die Aufgabe wurde erfolgreich gespeichert.",
 			"deleteSuccess": "Die Aufgabe wurde erfolgreich gelöscht.",
 			"duplicateSuccess": "Die Aufgabe wurde erfolgreich dupliziert.",
 			"noBucket": "Keine Spalte",
+			"bucketSelectLabel": "Kanban bucket: {bucket}",
 			"bucketChangedSuccess": "Die Spalte der Aufgabe wurde erfolgreich geändert.",
 			"belongsToProject": "Diese Aufgabe gehört zum Projekt „{project}“",
 			"back": "Zurück zum Projekt",
@@ -1023,13 +1106,15 @@
 			"repeat": "Wiederholen",
 			"comment": "{count} Kommentar | {count} Kommentare",
 			"commentCount": "Anzahl der Kommentare",
+			"attachment": "{count} Anhang | {count} Anhänge",
 			"startDate": "Anfangsdatum",
 			"title": "Titel",
 			"updated": "Aktualisiert",
 			"doneAt": "Erledigt am"
 		},
 		"subscription": {
-			"subscribedTaskThroughParentProject": "Du kannst hier nicht de-abonnieren, da du diese Aufgabe über ihr Projekt abonniert hast.",
+			"subscribedTaskThroughProject": "Du hast diese Aufgabe über das zugehörige Projekt abonniert. Wenn du das Abonnement hier beendest, erhältst du nur für diese Aufgabe keine Benachrichtigungen mehr.",
+			"subscribedProjectThroughParentProject": "Du hast dieses Projekt über ein übergeordnetes Projekt abonniert. Wenn du dich hier abmeldest, erhältst du keine Benachrichtigungen mehr für dieses Projekt und alles darin.",
 			"subscribedProject": "Du hast dieses Projekt abonniert und erhältst Benachrichtigungen über Änderungen.",
 			"notSubscribedProject": "Du hast dieses Projekt nicht abonniert und erhältst keine Benachrichtigungen über Änderungen.",
 			"subscribedTask": "Du hast diese Aufgabe abonniert und erhältst Benachrichtigungen über Änderungen.",
@@ -1054,7 +1139,10 @@
 			"setAsCover": "Als Titelbild setzen",
 			"unsetAsCover": "Titelbild entfernen",
 			"successfullyChangedCoverImage": "Das Titelbild wurde erfolgreich geändert.",
-			"usedAsCover": "Titelbild"
+			"usedAsCover": "Titelbild",
+			"play": "Abspielen",
+			"playFile": "{file} abspielen",
+			"audioError": "Diese Audiodatei konnte nicht abgespielt werden."
 		},
 		"comment": {
 			"title": "Kommentare",
@@ -1095,9 +1183,12 @@
 		"label": {
 			"placeholder": "Beginne zu schreiben, um ein Label hinzuzufügen…",
 			"createPlaceholder": "Dies als neues Label hinzufügen",
+			"linkShareCannotCreate": "Neue Labels können nicht mit einem Link Share erstellt werden. Es können nur Labels hinzugefügt werden, die in diesem Projekt bereits verwendet werden.",
+			"removeLabel": "Label {label} entfernen",
 			"addSuccess": "Das Label wurde erfolgreich hinzugefügt.",
 			"removeSuccess": "Das Label wurde erfolgreich entfernt.",
 			"addCreateSuccess": "Das Label wurde erfolgreich erstellt und hinzugefügt.",
+			"createFailed": "Diese Labels konnten nicht erstellt werden und wurden nicht hinzugefügt: {labels}",
 			"delete": {
 				"header": "Dieses Label löschen",
 				"text1": "Bist du sicher, dass du dieses Label löschen möchtest?",
@@ -1142,6 +1233,9 @@
 			"after": "{amount} {unit} nach {type}",
 			"beforeShort": "vor",
 			"afterShort": "nach",
+			"periodUnit": "Zeiteinheit",
+			"periodDirection": "Davor oder danach",
+			"periodRelativeTo": "Relativ zu",
 			"onDueDate": "Zum Fälligkeitsdatum",
 			"onStartDate": "Zum Startdatum",
 			"onEndDate": "Zum Enddatum",
@@ -1338,9 +1432,12 @@
 		"explainer": "Benachrichtigungen werden hier angezeigt, wenn Aktionen für Projekte oder Aufgaben, die du abonniert hast, ausgeführt werden.",
 		"markAllRead": "Alle Benachrichtigungen als gelesen markieren",
 		"markAllReadSuccess": "Alle Benachrichtigungen erfolgreich als gelesen markiert.",
-		"subscribeFeed": "Benachrichtigungen über Atom-Feed abonnieren"
+		"subscribeFeed": "Benachrichtigungen über Atom-Feed abonnieren",
+		"clearAll": "Benachrichtigungen leeren",
+		"clearAllSuccess": "Alle Benachrichtigungen wurden geleert."
 	},
 	"quickActions": {
+		"title": "Suchen und Quick Actions",
 		"notLoggedIn": "Bitte melde dich zuerst im Hauptfenster von Vikunja an.",
 		"commands": "Befehle",
 		"placeholder": "Gib einen Befehl oder eine Suche ein …",
@@ -1354,15 +1451,19 @@
 		"newTeam": "Gib den Namen des neuen Teams ein …",
 		"createTask": "Eine Aufgabe im aktuellen Projekt erstellen ({title})",
 		"createProject": "Projekt erstellen",
+		"results": "keine Ergebnisse | {count} Ergebnis | {count} Ergebnisse",
+		"resultTypes": {
+			"command": "Aktion",
+			"task": "Aufgabe",
+			"project": "Projekt",
+			"team": "Team",
+			"label": "Label"
+		},
 		"cmds": {
 			"newTask": "Neue Aufgabe",
 			"newProject": "Neues Projekt",
 			"newTeam": "Neues Team"
 		}
-	},
-	"date": {
-		"altFormatLong": "j M Y, H:i",
-		"altFormatShort": "j M Y"
 	},
 	"reaction": {
 		"reactedWith": "{user} hat mit {value} reagiert",
@@ -1394,15 +1495,22 @@
 		"1023": "Du kannst das nicht als Linkfreigabe tun.",
 		"1024": "Ungültige Claim-Daten für das Feld {field} des Typs {type}.",
 		"1025": "Die Zeitzone '{timezone}' ist ungültig. Bitte wähle eine gültige Zeitzone aus der Liste.",
+		"1035": "Es gibt keine ausstehende E-Mail-Änderung, die bestätigt werden muss.",
+		"1036": "Bitte warte eine Minute, bevor du eine weitere Bestätigungs-E-Mail anforderst.",
+		"1038": "Der vom OIDC-Anbieter festgelegte benutzerdefinierte Scope ist falsch. Bitte stelle sicher, dass der OpenID-Anbieter die Daten für deinen Scope korrekt setzt. Prüfe insbesondere, ob eine oidcID festgelegt wurde.",
 		"2001": "Die ID kann nicht leer oder 0 sein.",
 		"2002": "Ein Teil der Anfragedaten ist ungültig.",
 		"2003": "Die Zeitzone '{timezone}' ist ungültig.",
+		"2005": "Dieser Einladungslink ist ungültig oder abgelaufen.",
+		"2006": "Dieser Einladungslink existiert nicht.",
+		"2007": "Extern verwaltete Teams können nicht mit einem Einladungslink verknüpft werden.",
 		"3001": "Das Projekt ist nicht vorhanden.",
 		"3004": "Um das zu machen, benötigst du eine Leseberechtigung für dieses Projekt.",
 		"3005": "Der Projekttitel darf nicht leer sein.",
 		"3006": "Diese Linkfreigabe existiert nicht.",
 		"3007": "Ein Projekt mit diesem Bezeichner existiert bereits.",
 		"3008": "Dieses Projekt ist archiviert und kann deshalb nur gelesen werden. Dies gilt auch für alle Aufgaben, die mit diesem Projekt verbunden sind.",
+		"3016": "Das übergeordnete Projekt ist archiviert. Un-Archiviere es erst.",
 		"4001": "Der Titel darf nicht leer sein.",
 		"4002": "Diese Aufgabe existiert nicht.",
 		"4003": "Alle Massenbearbeitungen an Aufgaben müssen zum selben Projekt gehören.",
@@ -1426,6 +1534,8 @@
 		"4021": "Diese:r Benutzer:in ist bereits der Aufgabe zugewiesen.",
 		"4022": "Bitte gib an, auf welches Datum sich die Erinnerung bezieht.",
 		"4023": "Kann keinen Aufgabenbeziehungszyklus erstellen.",
+		"4034": "Die Datei existiert nicht.",
+		"4035": "Die hochgeladene Datei überschreitet die maximal konfigurierte Dateigröße.",
 		"6001": "Der Teamname kann nicht leer sein.",
 		"6002": "Das Team existiert nicht.",
 		"6004": "Das Team hat bereits Zugriff auf dieses Projekt.",
@@ -1455,6 +1565,16 @@
 		"13003": "Das Token für diese Linkfreigabe ist ungültig.",
 		"14001": "Das API-Token ist ungültig.",
 		"14002": "Die Berechtigung {permission} der Gruppe {group} ist ungültig.",
+		"14005": "Eine Migration von diesem Dienst läuft bereits. Bitte warte, bis sie fertig ist.",
+		"14009": "Die angegebene Zip-Datei enthält keine Vikunja-Datendatei. Stelle sicher, dass du einen Vikunja-Export hochlädst.",
+		"14010": "Die bereitgestellte Datei konnte nicht geparst werden. Bitte stelle sicher, dass es sich um eine gültige Exportdatei handelt.",
+		"14011": "Die angegebene Datei ist keine gültige Zip-Datei.",
+		"14012": "Die angegebene Datei enthält keine Daten.",
+		"14013": "Der Export wurde mit einer Vikunja-Version erstellt, die zu alt für den Import ist. Bitte erstelle einen neuen Export mit einer aktuelleren Version.",
+		"14201": "Planka hat die angegebenen Anmeldedaten abgelehnt. Überprüfe die URL und den API-Schlüssel oder den Benutzernamen und das Passwort.",
+		"14202": "Das Planka-Konto erfordert einen zusätzlichen Anmeldeschritt (Zwei-Faktor-Code oder das Akzeptieren der Nutzungsbedingungen). Melde dich einmal im Browser bei Planka an oder verwende stattdessen einen API-Schlüssel anstelle von Benutzername und Passwort.",
+		"14203": "Eine Planka-URL und entweder ein API-Schlüssel oder Benutzername und Passwort sind erforderlich.",
+		"14204": "Die Planka-API konnte unter der angegebenen URL nicht erreicht werden. Prüfe die URL und ob Vikunja die Instanz erreichen kann.",
 		"error": "Fehler",
 		"success": "Erfolgreich",
 		"0001": "Das darfst du nicht tun."
@@ -1543,6 +1663,11 @@
 			"skipEmailConfirm": "E-Mail-Bestätigung überspringen",
 			"createSubmit": "Account erstellen",
 			"saveButton": "Änderungen speichern",
+			"newPasswordLabel": "Neues Passwort",
+			"setPassword": "Passwort festlegen",
+			"setPasswordSuccess": "Das Passwort von {username} wurde geändert.",
+			"sendResetEmail": "E-Mail zum Zurücksetzen des Passworts senden",
+			"sendResetEmailSuccess": "Eine E-Mail zum Zurücksetzen des Passworts wurde an {username} gesendet.",
 			"createdSuccess": "Account {username} erstellt.",
 			"updatedSuccess": "Account {username} aktualisiert.",
 			"deletedSuccess": "Account {username} gelöscht.",
@@ -1560,6 +1685,28 @@
 			"reassignTitle": "{title} erneut zuweisen",
 			"reassignedSuccess": "Projekteigentümer:in neu zugewiesen.",
 			"newOwnerLabel": "Neu:e Eigentümer:in"
+		},
+		"inviteLinks": {
+			"title": "Einladungslinks",
+			"create": "Einladungslink erstellen",
+			"name": "Linkname",
+			"teams": "Teams, denen beigetreten werden soll",
+			"maxUses": "Maximale Nutzung",
+			"unlimited": "Unbegrenzt",
+			"uses": "Nutzungen",
+			"expiresAt": "Läuft ab am",
+			"neverExpires": "Läuft nie ab",
+			"createdBy": "Erstellt von",
+			"skipEmailConfirm": "E-Mail-Bestätigung überspringen",
+			"shownOnce": "Dieser Link wird nur einmal angezeigt. Kopiere ihn, bevor du dieses Fenster schließt.",
+			"url": "Einladungslink",
+			"copy": "Link kopieren",
+			"copied": "Link kopiert",
+			"delete": "Einladungslink löschen",
+			"deleteConfirm": "„{name}“ löschen? Dann kann sich niemand mehr über diesen Link registrieren. Bestehende Accounts bleiben aktiv.",
+			"deleted": "Einladungslink gelöscht.",
+			"empty": "Noch keine Einladungslinks. Erstelle einen Link, um jemanden in diese Instanz einzuladen.",
+			"futureExpiry": "Wähle ein Ablaufdatum, das in der Zukunft liegt."
 		}
 	}
 }

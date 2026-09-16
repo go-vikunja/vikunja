@@ -29,7 +29,6 @@ styles/
 │   ├── form.scss           Field / control / button add-on tweaks
 │   ├── scrollbars.scss     Custom scrollbar colors
 │   ├── link-share.scss     Tweaks for the public link-share layout
-│   ├── flatpickr.scss      Overrides to make flatpickr use our custom properties
 │   ├── loading.scss        .loader-container / .is-loading spinner styling
 │   ├── background.scss     Optional project background image layer
 │   ├── content.scss        .content overrides (Bulma's rich-text container)

@@ -25,6 +25,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"xorm.io/xorm"
 )
 
 func TestProjectDuplicate(t *testing.T) {
@@ -38,6 +39,90 @@ func TestProjectDuplicate(t *testing.T) {
 		// (non-Unsplash) background would fail with an internal server error
 		testProjectDuplicate(t, 35, 6)
 	})
+
+	t.Run("shares are not copied by default", func(t *testing.T) {
+		files.InitTestFileFixtures(t)
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Project 3 has user, team and link shares
+		u := &user.User{ID: 3}
+		l := &ProjectDuplicate{ProjectID: 3}
+		can, err := l.CanCreate(s, u)
+		require.NoError(t, err)
+		assert.True(t, can)
+		require.NoError(t, l.Create(s, u))
+
+		assertShareCount(t, s, l.Project.ID, 0, 0, 0)
+	})
+
+	t.Run("shares are copied when duplicate_shares is set", func(t *testing.T) {
+		files.InitTestFileFixtures(t)
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Project 3 has 2 user shares, 1 team share and 1 link share
+		u := &user.User{ID: 3}
+		l := &ProjectDuplicate{ProjectID: 3, DuplicateShares: true}
+		can, err := l.CanCreate(s, u)
+		require.NoError(t, err)
+		assert.True(t, can)
+		require.NoError(t, l.Create(s, u))
+
+		assertShareCount(t, s, l.Project.ID, 2, 1, 1)
+	})
+
+	t.Run("preserves out-of-order task indexes", func(t *testing.T) {
+		files.InitTestFileFixtures(t)
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.Insert(
+			&Task{Title: "high index", ProjectID: 4, Index: 10, CreatedByID: 3, UID: "duplicate-high-index"},
+			&Task{Title: "low index", ProjectID: 4, Index: 5, CreatedByID: 3, UID: "duplicate-low-index"},
+		)
+		require.NoError(t, err)
+		_, err = s.ID(4).Cols("last_index").Update(&ProjectTaskCounter{LastIndex: 10})
+		require.NoError(t, err)
+
+		usr := &user.User{ID: 3}
+		duplicate := &ProjectDuplicate{ProjectID: 4}
+		can, err := duplicate.CanCreate(s, usr)
+		require.NoError(t, err)
+		require.True(t, can)
+		require.NoError(t, duplicate.Create(s, usr))
+
+		for title, index := range map[string]int64{"high index": 10, "low index": 5} {
+			task := &Task{}
+			has, err := s.Where("project_id = ? AND title = ?", duplicate.Project.ID, title).Get(task)
+			require.NoError(t, err)
+			require.True(t, has)
+			assert.Equal(t, index, task.Index)
+		}
+
+		counter := &ProjectTaskCounter{}
+		has, err := s.ID(duplicate.Project.ID).Get(counter)
+		require.NoError(t, err)
+		require.True(t, has)
+		assert.Equal(t, int64(10), counter.LastIndex)
+	})
+}
+
+func assertShareCount(t *testing.T, s *xorm.Session, projectID, users, teams, links int64) {
+	userCount, err := s.Where("project_id = ?", projectID).Count(&ProjectUser{})
+	require.NoError(t, err)
+	assert.Equal(t, users, userCount, "unexpected number of user shares")
+
+	teamCount, err := s.Where("project_id = ?", projectID).Count(&TeamProject{})
+	require.NoError(t, err)
+	assert.Equal(t, teams, teamCount, "unexpected number of team shares")
+
+	linkCount, err := s.Where("project_id = ?", projectID).Count(&LinkSharing{})
+	require.NoError(t, err)
+	assert.Equal(t, links, linkCount, "unexpected number of link shares")
 }
 
 func testProjectDuplicate(t *testing.T, projectID int64, userID int64) {
@@ -51,7 +136,8 @@ func testProjectDuplicate(t *testing.T, projectID int64, userID int64) {
 	}
 
 	l := &ProjectDuplicate{
-		ProjectID: projectID,
+		ProjectID:       projectID,
+		DuplicateShares: true,
 	}
 	can, err := l.CanCreate(s, u)
 	require.NoError(t, err)

@@ -70,6 +70,9 @@ func InitFixtures(tablenames ...string) (err error) {
 
 // LoadFixtures load fixtures for a test database
 func LoadFixtures() error {
+	// Deferred, not at the end: a load that fails partway still truncated tables.
+	defer invalidateAllSessionCaches()
+
 	err := fixtures.Load()
 	if err != nil {
 		return err

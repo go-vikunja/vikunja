@@ -37,14 +37,14 @@ func newAPICmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "api <METHOD> <PATH>",
 		Short: "Raw REST passthrough — escape hatch for endpoints veans doesn't wrap",
-		Long: `Sends a request to /api/v1<PATH> as the bot. Use this when curated
+		Long: `Sends a request to /api/v2<PATH> as the bot. Use this when curated
 commands don't shape the data the way you need. The response body is
 written to stdout verbatim.
 
 Examples:
   veans api GET /projects
   veans api GET /tasks/123
-  veans api POST /tasks/123 --data '{"description":"updated"}'
+  veans api POST /tasks/123/comments --data '{"comment":"<p>note</p>"}'
   veans api GET /tasks --query expand=reactions --query per_page=100`,
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {

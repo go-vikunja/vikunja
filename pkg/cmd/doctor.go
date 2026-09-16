@@ -53,9 +53,11 @@ Exit codes:
 		config.InitConfig()
 	},
 	Run: func(_ *cobra.Command, _ []string) {
-		results := doctor.Run()
+		doctor.PrintHeader(os.Stdout)
 
-		doctor.PrintResults(os.Stdout, results)
+		results := doctor.Run(func(group doctor.CheckGroup) {
+			doctor.PrintGroup(os.Stdout, group)
+		})
 
 		failed := doctor.CountFailed(results)
 		if failed > 0 {

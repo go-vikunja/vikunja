@@ -22,6 +22,33 @@ import (
 	"xorm.io/xorm"
 )
 
+// doerFromAuth resolves the authenticated principal into a full user for event payloads. The JWT
+// only carries id + username, so without a re-fetch notifications and emails render the
+// auto-generated username instead of the display name (#2720). Status errors (disabled/locked) are
+// swallowed because their user is still populated and some flows act on behalf of such accounts
+// (e.g. user deletion deletes that user's tasks); the partial principal is used as a last resort.
+func doerFromAuth(s *xorm.Session, a web.Auth) *user.User {
+	if a == nil {
+		return nil
+	}
+
+	doer, err := GetUserOrLinkShareUser(s, a)
+	if err != nil && !user.IsErrUserStatusError(err) {
+		doer = nil
+	}
+	if doer != nil && doer.ID != 0 {
+		return doer
+	}
+
+	if u, is := a.(*user.User); is {
+		return u
+	}
+	if share, is := a.(*LinkSharing); is {
+		return share.toUser()
+	}
+	return &user.User{ID: a.GetID()}
+}
+
 // GetUserOrLinkShareUser returns either a user or a link share disguised as a user.
 func GetUserOrLinkShareUser(s *xorm.Session, a web.Auth) (uu *user.User, err error) {
 	if u, is := a.(*user.User); is {

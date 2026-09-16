@@ -51,7 +51,7 @@
                 {
                     "key": "rootpath",
                     "default_value": "\u003crootpath\u003e",
-                    "comment": "The base path on the file system where Vikunja stores its data (database, files, logs, plugins).\nDefaults to the current working directory. When running as a systemd service, this respects the WorkingDirectory= setting.\nVikunja will also look in this path for a config file, so you could provide only this variable to point to a folder\nwith a config file which will then be used."
+                    "comment": "The base path on the file system where Vikunja stores its data (database, files, logs, plugins).\nDefaults to the current working directory. When running as a systemd service, this respects the WorkingDirectory= setting.\nVikunja will also look in this path for a config file, so you could provide only this variable to point to a folder\nwith a config file which will then be used.\nWhen a config file is pinned with the `--config` flag, this search is skipped and rootpath defaults to the directory containing that config file.\nA relative rootpath set in a pinned config file is resolved against that same directory."
                 },
                 {
                     "key": "maxitemsperpage",
@@ -156,12 +156,12 @@
                 {
                     "key": "ipextractionmethod",
                     "default_value": "direct",
-                    "comment": "Method for extracting client IP addresses. 'direct' (default) uses the TCP remote address and ignores forwarding headers — use this when Vikunja faces the internet directly. 'xff' extracts from the X-Forwarded-For header — use this behind proxies like nginx, Traefik, or cloud load balancers. 'realip' extracts from the X-Real-IP header. When using 'xff' or 'realip', configure 'service.trustedproxies' with your proxy CIDR ranges."
+                    "comment": "Method for extracting client IP addresses. 'direct' (default) uses the TCP remote address and ignores forwarding headers — use this when Vikunja faces the internet directly. 'xff' extracts from the X-Forwarded-For header — use this behind proxies like nginx, Traefik, or cloud load balancers. 'realip' extracts from the X-Real-IP header, but only honours it when the header value itself falls into a trusted range (loopback, private networks or 'service.trustedproxies') — it does not check who sent the header, so it cannot report public client IPs. Prefer 'xff' behind a reverse proxy. When using 'xff' or 'realip', configure 'service.trustedproxies' with your proxy CIDR ranges."
                 },
                 {
                     "key": "trustedproxies",
                     "default_value": "",
-                    "comment": "Comma-separated list of CIDR ranges for trusted reverse proxies. Only used when service.ipextractionmethod is 'xff' or 'realip'. X-Forwarded-For / X-Real-IP headers are only trusted from these addresses. Example: '127.0.0.1/32,::1/128,10.0.0.0/8,172.16.0.0/12'"
+                    "comment": "Comma-separated list of CIDR ranges for trusted reverse proxies. Only used when service.ipextractionmethod is 'xff' or 'realip'. With 'xff', X-Forwarded-For is only trusted when the request comes from one of these addresses; with 'realip', the X-Real-IP value itself must be within these ranges. Example: '127.0.0.1/32,::1/128,10.0.0.0/8,172.16.0.0/12'"
                 }
             ]
         },
@@ -221,7 +221,7 @@
                 {
                     "key": "path",
                     "default_value": "./vikunja.db",
-                    "comment": "When using sqlite, this is the path where to store the database file. Can be an absolute path or relative path. \u003cbr/\u003e\nRelative paths are resolved as follows: \u003cbr/\u003e\n- If `service.rootpath` is explicitly configured (differs from the binary location), the database path is resolved relative to that directory. \u003cbr/\u003e\n- Otherwise, relative paths are resolved to a platform-specific user data directory to prevent database files from being created in system directories (like `C:\\Windows\\System32` on Windows when running as a service): \u003cbr/\u003e\n  - **Windows**: `%LOCALAPPDATA%\\Vikunja` (e.g., `C:\\Users\\username\\AppData\\Local\\Vikunja`) \u003cbr/\u003e\n  - **macOS**: `~/Library/Application Support/Vikunja` \u003cbr/\u003e\n  - **Linux**: `$XDG_DATA_HOME/vikunja` or `~/.local/share/vikunja` \u003cbr/\u003e\n**Recommendation**: Use an absolute path for production deployments, especially when running Vikunja as a Windows service, to have full control over the database location."
+                    "comment": "When using sqlite, this is the path where to store the database file. Can be an absolute path or relative path. \u003cbr/\u003e\nRelative paths are resolved as follows: \u003cbr/\u003e\n- If the config file was pinned with the `--config` flag and this value is not set explicitly, the default is resolved against the anchored rootpath, which is the directory of that config file. \u003cbr/\u003e\n- If `service.rootpath` is explicitly configured (differs from the binary location), the database path is resolved relative to that directory. \u003cbr/\u003e\n- Otherwise, relative paths are resolved to a platform-specific user data directory to prevent database files from being created in system directories (like `C:\\Windows\\System32` on Windows when running as a service): \u003cbr/\u003e\n  - **Windows**: `%LOCALAPPDATA%\\Vikunja` (e.g., `C:\\Users\\username\\AppData\\Local\\Vikunja`) \u003cbr/\u003e\n  - **macOS**: `~/Library/Application Support/Vikunja` \u003cbr/\u003e\n  - **Linux**: `$XDG_DATA_HOME/vikunja` or `~/.local/share/vikunja` \u003cbr/\u003e\n**Recommendation**: Use an absolute path for production deployments, especially when running Vikunja as a Windows service, to have full control over the database location."
                 },
                 {
                     "key": "maxopenconnections",
@@ -235,7 +235,7 @@
                 },
                 {
                     "key": "maxconnectionlifetime",
-                    "default_value": "10000",
+                    "default_value": "1800000",
                     "comment": "The maximum lifetime of a single db connection in milliseconds."
                 },
                 {
@@ -266,7 +266,7 @@
                 {
                     "key": "schema",
                     "default_value": "public",
-                    "comment": "The PostgreSQL schema to use. Only used with postgres. If you have an existing Vikunja installation where the tables were created in a non-public schema (e.g. via the database user's search_path), you must set this to match that schema name."
+                    "comment": "The PostgreSQL schema to use. Only used with postgres. If you have an existing Vikunja installation where the tables were created in a non-public schema (e.g. via the database user's search_path), you must set this to match that schema name. Vikunja pins the connection's search_path to this schema so that all statements resolve to it."
                 }
             ]
         },
@@ -417,13 +417,18 @@
                 },
                 {
                     "key": "databaselevel",
-                    "default_value": "WARNING",
-                    "comment": "The log level for database log messages. Possible values (case-insensitive) are CRITICAL, ERROR, WARNING, NOTICE, INFO, DEBUG."
+                    "default_value": "",
+                    "comment": "The log level for database log messages. Possible values (case-insensitive) are CRITICAL, ERROR, WARNING, NOTICE, INFO, DEBUG. Defaults to the value of `log.level`."
                 },
                 {
                     "key": "http",
                     "default_value": "stdout",
                     "comment": "Whether to log http requests or not. Possible values are stdout, stderr, file or off to disable http logging."
+                },
+                {
+                    "key": "httplevel",
+                    "default_value": "",
+                    "comment": "The log level for http request log messages. Requests are logged at INFO, requests failing with a 4xx status at WARNING and requests failing with a 5xx status at ERROR. Possible values (case-insensitive) are CRITICAL, ERROR, WARNING, NOTICE, INFO, DEBUG. Defaults to the value of `log.level`."
                 },
                 {
                     "key": "events",
@@ -432,8 +437,8 @@
                 },
                 {
                     "key": "eventslevel",
-                    "default_value": "info",
-                    "comment": "The log level for event log messages. Possible values (case-insensitive) are ERROR, INFO, DEBUG."
+                    "default_value": "",
+                    "comment": "The log level for event log messages. Possible values (case-insensitive) are ERROR, INFO, DEBUG. Defaults to the value of `log.level`."
                 },
                 {
                     "key": "mail",
@@ -442,8 +447,8 @@
                 },
                 {
                     "key": "maillevel",
-                    "default_value": "info",
-                    "comment": "The log level for mail log messages. Possible values (case-insensitive) are ERROR, WARNING, INFO, DEBUG."
+                    "default_value": "",
+                    "comment": "The log level for mail log messages. Possible values (case-insensitive) are ERROR, WARNING, INFO, DEBUG. Defaults to the value of `log.level`."
                 }
             ]
         },
@@ -479,6 +484,16 @@
                     "key": "noauthlimit",
                     "default_value": "10",
                     "comment": "The number of requests a user can make from the same IP to all unauthenticated routes (login, register,\npassword confirmation, email verification, password reset request) per minute. This limit cannot be disabled.\nYou should only change this if you know what you're doing."
+                },
+                {
+                    "key": "tokenrefreshlimit",
+                    "default_value": "60",
+                    "comment": "The number of requests a user can make from the same IP to the session renewal routes\n(token refresh and the OAuth token endpoint) per minute. These are kept separate from\n\"noauthlimit\" because every logged-in client renews its access token periodically, which\nwould otherwise use up the budget reserved for login attempts. This limit cannot be disabled."
+                },
+                {
+                    "key": "basicauthlimit",
+                    "default_value": "10",
+                    "comment": "The number of failed HTTP BasicAuth attempts (CalDAV, feeds) a client can make from the same IP per minute before further attempts are rejected with 429. Only failures count, so successful regular syncs are never limited. This limit is separate from \"noauthlimit\" so CalDAV clients cannot starve the login budget."
                 }
             ]
         },
@@ -547,6 +562,36 @@
             "key": "migration",
             "comment": "To use any of the available migrators, you usually need to configure credentials for the appropriate service and enable it. Find instructions below on how to do this for the provided migrators.",
             "children": [
+                {
+                    "key": "maxcsvrows",
+                    "default_value": "100000",
+                    "comment": "The maximum number of data rows parsed from one CSV import, including generic CSV and TickTick backup files."
+                },
+                {
+                    "key": "vikunjafile",
+                    "children": [
+                        {
+                            "key": "maxsize",
+                            "default_value": "256MB",
+                            "comment": "The maximum total size of decompressed content a Vikunja export file may contain. Exports whose declared uncompressed size exceeds this are rejected before anything is read."
+                        },
+                        {
+                            "key": "maxfiles",
+                            "default_value": "10000",
+                            "comment": "The maximum number of files a single Vikunja export may contain."
+                        },
+                        {
+                            "key": "maxuserstorage",
+                            "default_value": "1GB",
+                            "comment": "How much file storage a single user may use through Vikunja export imports. Existing storage plus the planned import size must stay below this."
+                        }
+                    ]
+                },
+                {
+                    "key": "claimtimeout",
+                    "default_value": "5m",
+                    "comment": "How long a migration's claim on the user's migration slot may go without a heartbeat before another import for the same user may take it over. A running migration refreshes its heartbeat continuously, so a long-running import keeps its claim no matter how long it takes; a takeover only happens when the instance running it died mid-import (normally the claim is released on success and failure)."
+                },
                 {
                     "key": "todoist",
                     "children": [
@@ -850,6 +895,11 @@
                             "comment": "The filter to search for group objects in the ldap directory. Only used when `groupsyncenabled` is set to `true`."
                         },
                         {
+                            "key": "groupsyncuseserviceaccount",
+                            "default_value": "false",
+                            "comment": "If true, Vikunja re-binds as the service account (binddn/bindpassword) before searching for groups during group sync. Enable this when the authenticating user does not have sufficient rights to enumerate group membership in the directory."
+                        },
+                        {
                             "key": "avatarsyncattribute",
                             "default_value": "",
                             "comment": "The LDAP attribute where an image, decoded as raw bytes, can be found. If provided, Vikunja will use the value as avatar."
@@ -903,6 +953,11 @@
                     "key": "password",
                     "default_value": "",
                     "comment": "If set to a non-empty value the /metrics endpoint will require this as a password via basic auth in combination with the username below."
+                },
+                {
+                    "key": "pprof",
+                    "default_value": "false",
+                    "comment": "If set to true (and metrics are enabled), exposes the Go runtime profiler at `/debug/pprof/`, protected by the same basic auth as the metrics endpoint when username and password are set. Profiles reveal internals of the running process; only enable it on instances that are not reachable from the internet."
                 }
             ]
         },
@@ -998,6 +1053,37 @@
             ]
         },
         {
+            "key": "audit",
+            "comment": "Audit logging writes structured JSONL records of authentication, authorization and data lifecycle events. Requires the licensed `audit_logs` feature — with `audit.enabled: true` but no active license, listeners are registered but nothing is written until a license with the feature becomes active.",
+            "children": [
+                {
+                    "key": "enabled",
+                    "default_value": "false",
+                    "comment": "Whether to enable audit logging."
+                },
+                {
+                    "key": "logfile",
+                    "default_value": "",
+                    "comment": "The file audit log entries are written to, one JSON object per line. If empty, defaults to `audit.log` in the configured log path."
+                },
+                {
+                    "key": "rotation",
+                    "children": [
+                        {
+                            "key": "maxsizemb",
+                            "default_value": "100",
+                            "comment": "Rotate the audit log file once it exceeds this size in megabytes. Set to 0 to disable size-based rotation."
+                        },
+                        {
+                            "key": "maxage",
+                            "default_value": "30",
+                            "comment": "Delete rotated audit log files older than this many days. This only applies to the local rotated files, it is not a retention policy. Set to 0 to keep rotated files forever."
+                        }
+                    ]
+                }
+            ]
+        },
+        {
             "key": "outgoingrequests",
             "children": [
                 {
@@ -1023,7 +1109,7 @@
                 {
                     "key": "enabled",
                     "default_value": "false",
-                    "comment": "If set to true, Vikunja will automatically request a TLS certificate from Let's Encrypt and use it to serve Vikunja over TLS. By enabling this option, you agree to Let's Encrypt's TOS.\nYou must configure a `service.publicurl` with a valid TLD where Vikunja is reachable to make this work. Furthermore, it is reccomened to set `service.interface` to `:443` if you're using this."
+                    "comment": "If set to true, Vikunja will automatically request a TLS certificate from Let's Encrypt and use it to serve Vikunja over TLS. By enabling this option, you agree to Let's Encrypt's TOS.\nYou must configure a `service.publicurl` with a valid TLD where Vikunja is reachable to make this work. Furthermore, it is recommended to set `service.interface` to `:443` if you're using this."
                 },
                 {
                     "key": "email",

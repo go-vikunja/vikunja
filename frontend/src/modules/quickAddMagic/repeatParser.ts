@@ -11,7 +11,7 @@ export const getRepeats = (text: string): repeatParsedResult => {
 		}
 	}
 
-	let amount = 1
+	let amount: number
 	switch (results[5] ? results[5].trim() : undefined) {
 		case 'one':
 			amount = 1

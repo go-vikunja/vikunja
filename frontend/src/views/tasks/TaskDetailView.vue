@@ -34,19 +34,19 @@
 				class="subtitle"
 			>
 				<template
-					v-for="p in projectStore.getAncestors(project)"
+					v-for="p in projectList.getAncestors(project)"
 					:key="p.id"
 				>
 					<a
 						v-if="router.options.history.state?.back?.includes('/projects/'+p.id+'/') || false"
-						v-shortcut="p.id === project?.id ? 'KeyU' : ''"
+						v-shortcut="p.id === project?.id ? SHORTCUTS.taskDetail.openProject : ''"
 						@click="router.back()"
 					>
 						{{ getProjectTitle(p) }}
 					</a>
 					<RouterLink
 						v-else
-						v-shortcut="p.id === project?.id ? 'KeyU' : ''"
+						v-shortcut="p.id === project?.id ? SHORTCUTS.taskDetail.openProject : ''"
 						:to="{ name: 'project.index', params: { projectId: p.id } }"
 					>
 						{{ getProjectTitle(p) }}
@@ -131,15 +131,17 @@
 								</div>
 								<div class="date-input">
 									<Datepicker
-										:ref="e => setFieldRef('dueDate', e)"
+										ref="dueDatePicker"
 										v-model="task.dueDate"
 										:choose-date-label="$t('task.detail.chooseDueDate')"
+										:title="$t('task.attributes.dueDate')"
 										:disabled="taskService.loading || !canWrite"
 										@closeOnChange="saveTask()"
 									/>
 									<BaseButton
 										v-if="task.dueDate && canWrite"
 										class="remove"
+										:aria-label="$t('task.detail.removeDueDate')"
 										@click="() => {task.dueDate = null;saveTask()}"
 									>
 										<span class="icon is-small">
@@ -185,15 +187,17 @@
 								</div>
 								<div class="date-input">
 									<Datepicker
-										:ref="e => setFieldRef('startDate', e)"
+										ref="startDatePicker"
 										v-model="task.startDate"
 										:choose-date-label="$t('task.detail.chooseStartDate')"
+										:title="$t('task.attributes.startDate')"
 										:disabled="taskService.loading || !canWrite"
 										@closeOnChange="saveTask()"
 									/>
 									<BaseButton
 										v-if="task.startDate && canWrite"
 										class="remove"
+										:aria-label="$t('task.detail.removeStartDate')"
 										@click="() => {task.startDate = null;saveTask()}"
 									>
 										<span class="icon is-small">
@@ -218,15 +222,17 @@
 								</div>
 								<div class="date-input">
 									<Datepicker
-										:ref="e => setFieldRef('endDate', e)"
+										ref="endDatePicker"
 										v-model="task.endDate"
 										:choose-date-label="$t('task.detail.chooseEndDate')"
+										:title="$t('task.attributes.endDate')"
 										:disabled="taskService.loading || !canWrite"
 										@closeOnChange="saveTask()"
 									/>
 									<BaseButton
 										v-if="task.endDate && canWrite"
 										class="remove"
+										:aria-label="$t('task.detail.removeEndDate')"
 										@click="() => {task.endDate = null;saveTask()}"
 									>
 										<span class="icon is-small">
@@ -275,6 +281,7 @@
 									<BaseButton
 										v-if="canWrite"
 										class="remove"
+										:aria-label="$t('task.detail.removeRepeat')"
 										@click="removeRepeatAfter"
 									>
 										<span class="icon is-small">
@@ -330,6 +337,7 @@
 							:disabled="!canWrite"
 							:task-id="taskId"
 							:creatable="!authStore.isLinkShareAuth"
+							:creation-disabled-message="authStore.isLinkShareAuth ? $t('task.label.linkShareCannotCreate') : ''"
 						/>
 					</div>
 
@@ -380,12 +388,12 @@
 						v-if="activeFields.relatedTasks"
 						class="content details mbe-0"
 					>
-						<h3>
+						<h2 class="task-section-title">
 							<span class="icon is-grey">
 								<Icon icon="sitemap" />
 							</span>
 							{{ $t('task.attributes.relatedTasks') }}
-						</h3>
+						</h2>
 						<RelatedTasks
 							:ref="e => setFieldRef('relatedTasks', e)"
 							:edit-enabled="canWrite"
@@ -401,12 +409,12 @@
 						v-if="activeFields.moveProject"
 						class="content details"
 					>
-						<h3>
+						<h2 class="task-section-title">
 							<span class="icon is-grey">
 								<Icon icon="list" />
 							</span>
 							{{ $t('task.detail.move') }}
-						</h3>
+						</h2>
 						<div class="field has-addons">
 							<div class="control is-expanded">
 								<ProjectSearch
@@ -440,7 +448,7 @@
 				>
 					<template v-if="canWrite">
 						<XButton
-							v-shortcut="'KeyT'"
+							v-shortcut="SHORTCUTS.taskDetail.done"
 							:class="{'is-pending': !task.done}"
 							class="button--mark-done"
 							icon="check-double"
@@ -453,10 +461,10 @@
 							entity="task"
 							:entity-id="task.id"
 							:model-value="task.subscription"
-							@update:modelValue="sub => task.subscription = sub"
+							@toggle="toggleSubscription"
 						/>
 						<XButton
-							v-shortcut="'KeyS'"
+							v-shortcut="SHORTCUTS.taskDetail.favorite"
 							variant="secondary"
 							:icon="task.isFavorite ? 'star' : ['far', 'star']"
 							@click="toggleFavorite"
@@ -469,7 +477,7 @@
 						<span class="action-heading">{{ $t('task.detail.organization') }}</span>
 						
 						<XButton
-							v-shortcut="'KeyL'"
+							v-shortcut="SHORTCUTS.taskDetail.labels"
 							variant="secondary"
 							icon="tags"
 							@click="setFieldActive('labels')"
@@ -477,7 +485,7 @@
 							{{ $t('task.detail.actions.label') }}
 						</XButton>
 						<XButton
-							v-shortcut="'KeyP'"
+							v-shortcut="SHORTCUTS.taskDetail.priority"
 							variant="secondary"
 							icon="exclamation-circle"
 							@click="setFieldActive('priority')"
@@ -492,7 +500,7 @@
 							{{ $t('task.detail.actions.percentDone') }}
 						</XButton>
 						<XButton
-							v-shortcut="'KeyC'"
+							v-shortcut="SHORTCUTS.taskDetail.color"
 							variant="secondary"
 							icon="fill-drip"
 							:icon-color="color"
@@ -504,7 +512,7 @@
 						<span class="action-heading">{{ $t('task.detail.management') }}</span>
 
 						<XButton
-							v-shortcut="'KeyA'"
+							v-shortcut="SHORTCUTS.taskDetail.assignees"
 							v-cy="'taskDetail.assign'"
 							variant="secondary"
 							icon="users"
@@ -513,7 +521,7 @@
 							{{ $t('task.detail.actions.assign') }}
 						</XButton>
 						<XButton
-							v-shortcut="'KeyF'"
+							v-shortcut="SHORTCUTS.taskDetail.attachments"
 							variant="secondary"
 							icon="paperclip"
 							@click="openAttachments()"
@@ -521,7 +529,7 @@
 							{{ $t('task.detail.actions.attachments') }}
 						</XButton>
 						<XButton
-							v-shortcut="'KeyR'"
+							v-shortcut="SHORTCUTS.taskDetail.relatedTasks"
 							variant="secondary"
 							icon="sitemap"
 							@click="setRelatedTasksActive()"
@@ -529,7 +537,7 @@
 							{{ $t('task.detail.actions.relatedTasks') }}
 						</XButton>
 						<XButton
-							v-shortcut="'KeyM'"
+							v-shortcut="SHORTCUTS.taskDetail.moveProject"
 							variant="secondary"
 							icon="list"
 							@click="setFieldActive('moveProject')"
@@ -557,7 +565,7 @@
 						</XButton>
 
 						<XButton
-							v-shortcut="'KeyD'"
+							v-shortcut="SHORTCUTS.taskDetail.dueDate"
 							variant="secondary"
 							icon="calendar"
 							@click="setFieldActive('dueDate')"
@@ -579,7 +587,7 @@
 							{{ $t('task.detail.actions.endDate') }}
 						</XButton>
 						<XButton
-							v-shortcut="reminderShortcut"
+							v-shortcut="SHORTCUTS.taskDetail.reminder"
 							variant="secondary"
 							:icon="['far', 'clock']"
 							@click="setFieldActive('reminders')"
@@ -594,7 +602,7 @@
 							{{ $t('task.detail.actions.repeatAfter') }}
 						</XButton>
 						<XButton
-							v-shortcut="deleteShortcut"
+							v-shortcut="SHORTCUTS.taskDetail.delete"
 							icon="trash-alt"
 							:shadow="false"
 							class="is-danger is-outlined has-no-border"
@@ -647,7 +655,7 @@
 </template>
 
 <script lang="ts" setup>
-import {ref, reactive, shallowReactive, computed, watch, nextTick, onMounted} from 'vue'
+import {ref, reactive, shallowReactive, computed, watch, nextTick, onMounted, useTemplateRef, type ComponentPublicInstance} from 'vue'
 import {useRouter, useRoute, type RouteLocation, onBeforeRouteLeave} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 import {unrefElement, useDebounceFn, useElementSize, useIntersectionObserver, useMutationObserver} from '@vueuse/core'
@@ -658,11 +666,12 @@ import TaskModel from '@/models/task'
 
 import type {ITask} from '@/modelTypes/ITask'
 import type {IAttachment} from '@/modelTypes/IAttachment'
-import type {IProject} from '@/modelTypes/IProject'
+import type {ProjectResponse} from '@/client/queries/projects'
 
 import {PRIORITIES, type Priority} from '@/constants/priorities'
 import {PERMISSIONS} from '@/constants/permissions'
 import {PRO_FEATURE} from '@/constants/proFeatures'
+import {SHORTCUTS} from '@/constants/shortcuts'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 
@@ -692,7 +701,6 @@ import Reactions from '@/components/input/Reactions.vue'
 
 import {uploadFile} from '@/helpers/attachments'
 import {getProjectTitle} from '@/helpers/getProjectTitle'
-import {isAppleDevice} from '@/helpers/isAppleDevice'
 import {scrollIntoView} from '@/helpers/scrollIntoView'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
@@ -700,7 +708,7 @@ import {playPopSound} from '@/helpers/playPop'
 
 import {useTaskStore} from '@/stores/tasks'
 import {useKanbanStore} from '@/stores/kanban'
-import {useProjectStore} from '@/stores/projects'
+import {useProjects} from '@/composables/useProjects'
 import {useAuthStore} from '@/stores/auth'
 import {useBaseStore} from '@/stores/base'
 import {useConfigStore} from '@/stores/config'
@@ -710,6 +718,8 @@ import {useTaskDetailShortcuts} from '@/composables/useTaskDetailShortcuts'
 
 import {success} from '@/message'
 import type {Action as MessageAction} from '@/message'
+import {subscriptionsCreate, subscriptionsDelete} from '@/client/generated'
+import {subscriptionFromApi} from '@/models/subscription'
 
 const props = defineProps<{
 	taskId: ITask['id'],
@@ -724,7 +734,7 @@ const router = useRouter()
 const route = useRoute()
 const {t} = useI18n({useScope: 'global'})
 
-const projectStore = useProjectStore()
+const projectList = useProjects()
 const taskStore = useTaskStore()
 const configStore = useConfigStore()
 const timeTrackingEnabled = computed(() => configStore.isProFeatureEnabled(PRO_FEATURE.TIME_TRACKING))
@@ -763,17 +773,10 @@ const lastProject = computed(() => {
 
 	const id = parseInt(projectMatch[1])
 
-	return projectStore.projects[id] ?? null
+	return projectList.projects[id] ?? null
 })
 
 const lastProjectOrTaskProject = computed(() => lastProject.value ?? project.value)
-
-// Use Shift+R on macOS (Alt+R produces special characters depending on keyboard layout)
-// Use Alt+r on other platforms
-const reminderShortcut = computed(() => isAppleDevice() ? 'Shift+KeyR' : 'Alt+KeyR')
-
-// Match native OS conventions for "delete the selected item"
-const deleteShortcut = isAppleDevice() ? 'Backspace' : 'Delete'
 
 onBeforeRouteLeave(async () => {
 	if (taskNotFound.value) {
@@ -798,7 +801,7 @@ onBeforeRouteLeave(async () => {
 	}
 
 	if (lastProjectOrTaskProject.value) {
-		await baseStore.handleSetCurrentProjectIfNotSet(lastProjectOrTaskProject.value)
+		baseStore.setCurrentProjectIfNotSet(lastProjectOrTaskProject.value)
 	}
 })
 
@@ -813,7 +816,7 @@ const taskColor = ref<ITask['hexColor']>('')
 // Used to avoid flashing of empty elements if the task content is not yet loaded.
 const visible = ref(false)
 
-const project = computed(() => projectStore.projects[task.value.projectId])
+const project = computed(() => projectList.projects[task.value.projectId])
 
 const projectRoute = computed(() => ({
 	name: 'project.index',
@@ -963,10 +966,12 @@ watch(
 			}
 
 			if (lastProject.value) {
-				await baseStore.handleSetCurrentProjectIfNotSet(lastProject.value)
+				baseStore.setCurrentProjectIfNotSet(lastProject.value)
 			}
 		} catch (e) {
-			if (e?.response?.status === 404) {
+			// 403 means the task exists but is not visible to us; treat it like
+			// a 404 so we route away instead of rendering an empty task shell.
+			if (e?.response?.status === 404 || e?.response?.status === 403) {
 				taskNotFound.value = true
 				router.replace({name: 'not-found'})
 				return
@@ -1049,16 +1054,34 @@ const activeFieldElements: { [id in FieldType]: HTMLElement | null } = reactive(
 	reminders: null,
 	repeatAfter: null,
 	startDate: null,
+	timeTracking: null,
 })
 
-function setFieldRef(name, e) {
-	activeFieldElements[name] = unrefElement(e)
+const dueDatePicker = useTemplateRef<InstanceType<typeof Datepicker>>('dueDatePicker')
+const startDatePicker = useTemplateRef<InstanceType<typeof Datepicker>>('startDatePicker')
+const endDatePicker = useTemplateRef<InstanceType<typeof Datepicker>>('endDatePicker')
+
+function setFieldRef(name: FieldType, e: Element | ComponentPublicInstance | null) {
+	const element = e instanceof Element ? e : e?.$el
+	activeFieldElements[name] = element instanceof HTMLElement ? element : null
 }
 
 function setFieldActive(fieldName: keyof typeof activeFields) {
 	activeFields[fieldName] = true
 	nextTick(() => {
-		const el = activeFieldElements[fieldName]
+		let datepicker: InstanceType<typeof Datepicker> | null = null
+		switch (fieldName) {
+			case 'dueDate':
+				datepicker = dueDatePicker.value
+				break
+			case 'startDate':
+				datepicker = startDatePicker.value
+				break
+			case 'endDate':
+				datepicker = endDatePicker.value
+				break
+		}
+		const el: HTMLElement | null = datepicker?.$el ?? activeFieldElements[fieldName]
 
 		if (!el) {
 			return
@@ -1066,8 +1089,10 @@ function setFieldActive(fieldName: keyof typeof activeFields) {
 
 		el.focus()
 
-		// scroll the field to the center of the screen if not in viewport already
-		scrollIntoView(el)
+		// Finish scrolling before the datepicker sheet locks the page.
+		scrollIntoView(el, datepicker ? 'instant' : 'smooth')
+
+		datepicker?.open()
 	})
 }
 
@@ -1150,7 +1175,7 @@ async function toggleTaskDone() {
 	)
 }
 
-async function changeProject(project: IProject | null) {
+async function changeProject(project: ProjectResponse | null) {
 	if (project === null) {
 		return
 	}
@@ -1160,6 +1185,19 @@ async function changeProject(project: IProject | null) {
 		projectId: project.id,
 	})
 	baseStore.setCurrentProject(project)
+}
+
+async function toggleSubscription(subscribed: boolean) {
+	const path = {entity: 'task', entityID: task.value.id} as const
+	if (subscribed) {
+		const {data} = await subscriptionsCreate({path})
+		task.value.subscription = subscriptionFromApi(data)
+		success({message: t('task.subscription.subscribeSuccessTask')})
+		return
+	}
+	await subscriptionsDelete({path})
+	task.value.subscription = null
+	success({message: t('task.subscription.unsubscribeSuccessTask')})
 }
 
 async function toggleFavorite() {
@@ -1269,7 +1307,7 @@ function setRelatedTasksActive() {
 	}
 }
 
-h3 .button {
+h2 .button {
 	vertical-align: middle;
 }
 
@@ -1414,16 +1452,24 @@ h3 .button {
 			background-color: transparent;
 			box-shadow: none;
 
+			// bright brand green with fixed dark text passes contrast in both themes
 			&.is-pending {
-				color: var(--success);
+				background-color: var(--success);
+				color: hsl(215, 27.9%, 16.9%);
 
 				&:hover,
 				&:focus {
-					background-color: var(--success);
-					color: #ffffff;
+					filter: brightness(1.05);
 				}
 			}
 		}
+	}
+}
+
+// keep the title clear of the modal's fixed close button
+.is-modal .heading {
+	@media screen and (min-width: $tablet) and (max-width: $desktop) {
+		padding-inline-end: 3.5rem;
 	}
 }
 
@@ -1494,5 +1540,12 @@ h3 .button {
 .modal-content .scroll-to-comments-button {
 	inset-block-end: .75rem;
 	inset-inline-end: 1rem;
+}
+
+// the task card spans the full width here, so the modal's white close button sits on it instead of the scrim
+@media screen and (min-width: $tablet) and (max-width: $desktop) {
+	.modal-dialog:has(.task-view-container.is-modal) .modal-container > .close {
+		color: var(--text);
+	}
 }
 </style>

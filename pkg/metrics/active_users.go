@@ -17,7 +17,8 @@
 package metrics
 
 import (
-	"sync"
+	"strconv"
+	"strings"
 	"time"
 
 	"code.vikunja.io/api/pkg/log"
@@ -28,118 +29,45 @@ import (
 )
 
 const secondsUntilInactive = 30
-const activeUsersKey = `active_users`
-const activeLinkSharesKey = `active_link_shares`
+const activeUsersKeyPrefix = `active_users:`
+const activeLinkSharesKeyPrefix = `active_link_shares:`
 
-// ActiveAuthenticable defines an active user or link share
-type ActiveAuthenticable struct {
-	ID       int64
-	LastSeen time.Time
-}
-
-type activeUsersMap map[int64]*ActiveAuthenticable
-
-type ActiveUsers struct {
-	users activeUsersMap
-	mutex *sync.Mutex
-}
-
-var activeUsers *ActiveUsers
-
-type activeLinkSharesMap map[int64]*ActiveAuthenticable
-
-type ActiveLinkShares struct {
-	shares activeLinkSharesMap
-	mutex  *sync.Mutex
-}
-
-var activeLinkShares *ActiveLinkShares
-
-func init() {
-	activeUsers = &ActiveUsers{
-		users: make(map[int64]*ActiveAuthenticable),
-		mutex: &sync.Mutex{},
+func registerActiveMetric(name, help, prefix string) {
+	// pre-prefix key from older versions, never read again
+	legacyKey := strings.TrimSuffix(prefix, ":")
+	if err := keyvalue.Del(legacyKey); err != nil {
+		log.Errorf("Could not remove legacy key %s: %s", legacyKey, err)
 	}
-	activeLinkShares = &ActiveLinkShares{
-		shares: make(map[int64]*ActiveAuthenticable),
-		mutex:  &sync.Mutex{},
-	}
-}
 
-func setupActiveUsersMetric() {
 	err := registry.Register(promauto.NewGaugeFunc(prometheus.GaugeOpts{
-		Name: "vikunja_active_users",
-		Help: "The number of users active within the last 30 seconds",
+		Name: name,
+		Help: help,
 	}, func() float64 {
-		allActiveUsers := activeUsersMap{}
-		_, err := keyvalue.GetWithValue(activeUsersKey, &allActiveUsers)
-		if err != nil {
-			log.Error(err.Error())
-			return 0
-		}
-		if allActiveUsers == nil {
-			return 0
-		}
-		count := 0
-		for _, u := range allActiveUsers {
-			if time.Since(u.LastSeen) < secondsUntilInactive*time.Second {
-				count++
-			}
-		}
-		return float64(count)
+		return float64(countActive(prefix))
 	}))
 	if err != nil {
-		log.Criticalf("Could not register metrics for currently active shares: %s", err)
+		log.Criticalf("Could not register metrics for %s: %s", name, err)
 	}
 }
 
-func setupActiveLinkSharesMetric() {
-	err := registry.Register(promauto.NewGaugeFunc(prometheus.GaugeOpts{
-		Name: "vikunja_active_link_shares",
-		Help: "The number of link shares active within the last 30 seconds. Similar to vikunja_active_users.",
-	}, func() float64 {
-		allActiveLinkShares := activeLinkSharesMap{}
-		_, err := keyvalue.GetWithValue(activeLinkSharesKey, &allActiveLinkShares)
-		if err != nil {
-			log.Error(err.Error())
-			return 0
-		}
-		if allActiveLinkShares == nil {
-			return 0
-		}
-		count := 0
-		for _, u := range allActiveLinkShares {
-			if time.Since(u.LastSeen) < secondsUntilInactive*time.Second {
-				count++
-			}
-		}
-		return float64(count)
-	}))
+func countActive(prefix string) int {
+	keys, err := keyvalue.ListKeys(prefix)
 	if err != nil {
-		log.Criticalf("Could not register metrics for currently active link shares: %s", err)
+		log.Errorf("Could not list keys with prefix %s: %s", prefix, err)
+		return 0
 	}
+
+	return len(keys)
 }
 
-// SetUserActive sets a user as active and pushes it to keyvalue
-func SetUserActive(a web.Auth) (err error) {
-	activeUsers.mutex.Lock()
-	defer activeUsers.mutex.Unlock()
-	activeUsers.users[a.GetID()] = &ActiveAuthenticable{
-		ID:       a.GetID(),
-		LastSeen: time.Now(),
-	}
-
-	return keyvalue.Put(activeUsersKey, activeUsers.users)
+func setActive(prefix string, a web.Auth) error {
+	return keyvalue.PutWithTTL(prefix+strconv.FormatInt(a.GetID(), 10), true, secondsUntilInactive*time.Second)
 }
 
-// SetLinkShareActive sets a user as active and pushes it to keyvalue
-func SetLinkShareActive(a web.Auth) (err error) {
-	activeLinkShares.mutex.Lock()
-	defer activeLinkShares.mutex.Unlock()
-	activeLinkShares.shares[a.GetID()] = &ActiveAuthenticable{
-		ID:       a.GetID(),
-		LastSeen: time.Now(),
-	}
+func SetUserActive(a web.Auth) error {
+	return setActive(activeUsersKeyPrefix, a)
+}
 
-	return keyvalue.Put(activeLinkSharesKey, activeLinkShares.shares)
+func SetLinkShareActive(a web.Auth) error {
+	return setActive(activeLinkSharesKeyPrefix, a)
 }

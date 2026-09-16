@@ -16,7 +16,10 @@
 
 package client
 
-import "testing"
+import (
+	"slices"
+	"testing"
+)
 
 func TestPermissionsForBot_DropsUnknownGroups(t *testing.T) {
 	// Server only exposes a subset of what we ask for.
@@ -59,5 +62,44 @@ func TestPermissionsForBot_EmptyWhenServerIsEmpty(t *testing.T) {
 	got := PermissionsForBot(map[string]RouteGroup{})
 	if len(got) != 0 {
 		t.Fatalf("expected empty map, got %v", got)
+	}
+}
+
+// TestPermissionsForBot_ProjectsBucketScopes pins the project-group scopes the
+// bot needs for the v2 kanban-bucket calls: list/create/update/delete buckets
+// plus the bucket-task MOVE. The MOVE and the buckets-with-tasks LIST collide
+// on the `views_buckets_tasks` subkey and the bare-vs-_put assignment depends
+// on unspecified route-init order, so the bot must request BOTH keys; the
+// runtime intersection keeps whichever the server actually exposes.
+func TestPermissionsForBot_ProjectsBucketScopes(t *testing.T) {
+	// A server that registered the move under the bare key and the list under
+	// the _put key (one of the two possible orderings).
+	server := map[string]RouteGroup{
+		"projects": {
+			"read_one":                {},
+			"read_all":                {},
+			"tasks_by-index":          {},
+			"views_buckets":           {}, // list buckets
+			"views_buckets_post":      {}, // create bucket
+			"views_buckets_put":       {}, // update bucket
+			"views_buckets_delete":    {}, // delete bucket
+			"views_buckets_tasks":     {}, // bucket-task move OR buckets-with-tasks list
+			"views_buckets_tasks_put": {}, // the other of the colliding pair
+		},
+	}
+	got := PermissionsForBot(server)
+	projects, ok := got["projects"]
+	if !ok {
+		t.Fatalf("expected projects group in result")
+	}
+	want := []string{
+		"read_one", "read_all", "tasks_by-index",
+		"views_buckets", "views_buckets_post", "views_buckets_put",
+		"views_buckets_delete", "views_buckets_tasks", "views_buckets_tasks_put",
+	}
+	for _, w := range want {
+		if !slices.Contains(projects, w) {
+			t.Errorf("projects scope %q missing from bot grant; got %v", w, projects)
+		}
 	}
 }

@@ -1,29 +1,32 @@
 <script setup lang="ts">
-import {computed, onMounted, ref} from 'vue'
-import {useFlatpickrLanguage} from '@/helpers/useFlatpickrLanguage'
+import {computed, onMounted, ref, watch} from 'vue'
+import {useNow} from '@vueuse/core'
 import XButton from '@/components/input/Button.vue'
 import ApiTokenService from '@/services/apiToken'
 import ApiTokenModel from '@/models/apiTokenModel'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import {MILLISECONDS_A_DAY} from '@/constants/date'
-import flatPickr from 'vue-flatpickr-component'
-import 'flatpickr/dist/flatpickr.css'
-import {useI18n} from 'vue-i18n'
+import Datepicker from '@/components/input/Datepicker.vue'
 import FormField from '@/components/input/FormField.vue'
-import type {IApiToken} from '@/modelTypes/IApiToken'
-import {useTimeFormat} from '@/composables/useTimeFormat'
-import {TIME_FORMAT} from '@/constants/timeFormat'
+import type {IApiToken, IApiPermission} from '@/modelTypes/IApiToken'
+import type {ApiTokenRoutes, ApiTokenPreset} from '@/modelTypes/IApiTokenSettings'
 
 const props = withDefaults(defineProps<{
 	ownerId?: number,
 	loading?: boolean,
 	initialTitle?: string,
 	initialScopes?: string,
+	routes?: ApiTokenRoutes,
+	presets?: ApiTokenPreset[],
+	lockedScopes?: IApiPermission,
 }>(), {
 	ownerId: 0,
 	loading: false,
 	initialTitle: '',
 	initialScopes: '',
+	routes: undefined,
+	presets: undefined,
+	lockedScopes: () => ({}),
 })
 
 const emit = defineEmits<{
@@ -32,26 +35,32 @@ const emit = defineEmits<{
 }>()
 
 const service = new ApiTokenService()
-const {t} = useI18n()
-const {store: timeFormat} = useTimeFormat()
-const now = new Date()
+const now = useNow({interval: 60_000})
 
-const availableRoutes = ref(null)
+const DEFAULT_EXPIRY_DAYS = 30
+
+function expiryDateIn(days: number) {
+	return new Date(Date.now() + days * MILLISECONDS_A_DAY)
+}
+
+const availableRoutes = ref<ApiTokenRoutes>({})
 const newToken = ref<IApiToken>(new ApiTokenModel())
-const newTokenExpiry = ref<string | number>(30)
-const newTokenExpiryCustom = ref(new Date())
-const newTokenPermissions = ref({})
-const newTokenPermissionsGroup = ref({})
+const newTokenExpiry = ref<string | number>(DEFAULT_EXPIRY_DAYS)
+const newTokenExpiryCustom = ref<Date | null>(expiryDateIn(DEFAULT_EXPIRY_DAYS))
+
+watch(newTokenExpiry, (value, oldValue) => {
+	if (value === 'custom' && !isNaN(Number(oldValue))) {
+		newTokenExpiryCustom.value = expiryDateIn(Number(oldValue))
+	}
+})
+const newTokenPermissions = ref<Record<string, Record<string, boolean>>>({})
+const newTokenPermissionsGroup = ref<Record<string, boolean>>({})
 const newTokenTitleValid = ref(true)
+const newTokenExpiryValid = ref(true)
 const newTokenPermissionValid = ref(true)
 const apiTokenTitle = ref()
 
-interface TokenPreset {
-	id: string
-	groups: Record<string, string[] | '*'>
-}
-
-const presets: TokenPreset[] = [
+const defaultPresets: ApiTokenPreset[] = [
 	{
 		id: 'readOnly',
 		groups: {
@@ -96,20 +105,12 @@ const presets: TokenPreset[] = [
 	},
 ]
 
-const flatPickerConfig = computed(() => ({
-	altFormat: t('date.altFormatLong'),
-	altInput: true,
-	dateFormat: 'Y-m-d H:i',
-	enableTime: true,
-	time_24hr: timeFormat.value === TIME_FORMAT.HOURS_24,
-	locale: useFlatpickrLanguage().value,
-	minDate: now,
-}))
+const presets = computed(() => props.presets ?? defaultPresets)
 
 onMounted(async () => {
-	const allRoutes = await service.getAvailableRoutes()
+	const allRoutes: ApiTokenRoutes = props.routes ?? await service.getAvailableRoutes()
 
-	const routesAvailable = {}
+	const routesAvailable: ApiTokenRoutes = {}
 	const keys = Object.keys(allRoutes)
 	keys.sort((a, b) => (a === 'other' ? 1 : b === 'other' ? -1 : 0))
 	keys.forEach(key => {
@@ -158,12 +159,21 @@ function resetPermissions() {
 		newTokenPermissions.value[group] = {}
 		newTokenPermissionsGroup.value[group] = false
 		Object.keys(routes).forEach(r => {
-			newTokenPermissions.value[group][r] = false
+			newTokenPermissions.value[group][r] = isLocked(group, r)
 		})
+		toggleGroupPermissionsFromChild(group, true)
 	})
 }
 
-function applyPreset(preset: TokenPreset) {
+function isLocked(group: string, permission: string) {
+	return props.lockedScopes[group]?.includes(permission) ?? false
+}
+
+function isGroupLocked(group: string) {
+	return Object.keys(availableRoutes.value[group]).every(permission => isLocked(group, permission))
+}
+
+function applyPreset(preset: ApiTokenPreset) {
 	resetPermissions()
 
 	for (const [groupKey, permissions] of Object.entries(preset.groups)) {
@@ -194,7 +204,7 @@ function applyPermissionsToGroup(group: string, permissions: string[] | '*') {
 function selectPermissionGroup(group: string, checked: boolean) {
 	Object.entries(availableRoutes.value[group]).forEach(entry => {
 		const [key] = entry
-		newTokenPermissions.value[group][key] = checked
+		newTokenPermissions.value[group][key] = checked || isLocked(group, key)
 	})
 	if (checked) {
 		newTokenPermissionValid.value = true
@@ -221,13 +231,13 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 }
 
 function formatPermissionTitle(title: string): string {
-	return title.replaceAll('_', ' ')
+	return title.replace(/_/g, ' ')
 }
 
 async function createToken() {
 	newTokenTitleValid.value = newToken.value.title.trim() !== ''
 	if (!newTokenTitleValid.value) {
-		apiTokenTitle.value.focus()
+		apiTokenTitle.value?.focus()
 		return
 	}
 
@@ -236,8 +246,7 @@ async function createToken() {
 	newToken.value.permissions = {}
 	Object.entries(newTokenPermissions.value).forEach(([key, ps]) => {
 		const all = Object.entries(ps)
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
-			.filter(([_, v]) => v)
+			.filter(([permission, selected]) => selected || isLocked(key, permission))
 			.map(p => p[0])
 		if (all.length > 0) {
 			newToken.value.permissions[key] = all
@@ -252,9 +261,15 @@ async function createToken() {
 
 	const expiry = Number(newTokenExpiry.value)
 	if (!isNaN(expiry)) {
-		newToken.value.expiresAt = new Date((+new Date()) + expiry * MILLISECONDS_A_DAY)
+		newToken.value.expiresAt = expiryDateIn(expiry)
 	} else {
-		newToken.value.expiresAt = new Date(newTokenExpiryCustom.value)
+		const customExpiry = newTokenExpiryCustom.value === null ? null : new Date(newTokenExpiryCustom.value)
+		if (customExpiry === null || isNaN(customExpiry.getTime()) || customExpiry <= new Date()) {
+			newTokenExpiryValid.value = false
+			return
+		}
+		newTokenExpiryValid.value = true
+		newToken.value.expiresAt = customExpiry
 	}
 
 	if (props.ownerId > 0) {
@@ -262,12 +277,16 @@ async function createToken() {
 	}
 
 	const token = await service.create(newToken.value)
-	emit('created', token)
 
+	// Reset before emitting: parents hide the form in their `created` handler, so
+	// anything after the emit would write to a component that's already unmounting.
 	newToken.value = new ApiTokenModel()
-	newTokenExpiry.value = 30
-	newTokenExpiryCustom.value = new Date()
+	newTokenExpiry.value = DEFAULT_EXPIRY_DAYS
+	newTokenExpiryCustom.value = expiryDateIn(DEFAULT_EXPIRY_DAYS)
+	newTokenExpiryValid.value = true
 	resetPermissions()
+
+	emit('created', token)
 }
 </script>
 
@@ -284,7 +303,6 @@ async function createToken() {
 			:placeholder="$t('user.settings.apiTokens.attributes.titlePlaceholder')"
 			:error="newTokenTitleValid ? null : $t('user.settings.apiTokens.titleRequired')"
 			@keyup="() => newTokenTitleValid = newToken.title !== ''"
-			@focusout="() => newTokenTitleValid = newToken.title !== ''"
 		/>
 
 		<!-- Expiry -->
@@ -316,13 +334,25 @@ async function createToken() {
 						</option>
 					</select>
 				</div>
-				<flat-pickr
+				<div
 					v-if="newTokenExpiry === 'custom'"
-					v-model="newTokenExpiryCustom"
-					class="mis-2"
-					:config="flatPickerConfig"
-				/>
+					class="control mis-2"
+				>
+					<Datepicker
+						v-model="newTokenExpiryCustom"
+						:choose-date-label="$t('user.settings.apiTokens.attributes.expiresAt')"
+						:show-shortcuts="false"
+						:min-date="now"
+						@update:modelValue="newTokenExpiryValid = true"
+					/>
+				</div>
 			</div>
+			<p
+				v-if="!newTokenExpiryValid"
+				class="help is-danger"
+			>
+				{{ $t('user.settings.apiTokens.expiryInvalid') }}
+			</p>
 		</div>
 
 		<!-- Permissions -->
@@ -344,21 +374,22 @@ async function createToken() {
 						type="button"
 						@click="applyPreset(preset)"
 					>
-						{{ $t(`user.settings.apiTokens.presets.${preset.id}`) }}
+						{{ preset.label ?? $t(`user.settings.apiTokens.presets.${preset.id}`) }}
 					</XButton>
 				</div>
 			</div>
 
 			<div
-				v-for="(routes, group) in availableRoutes"
+				v-for="(groupRoutes, group) in availableRoutes"
 				:key="group"
 				class="mbe-2"
 			>
 				<template
-					v-if="Object.keys(routes).length >= 1"
+					v-if="Object.keys(groupRoutes).length >= 1"
 				>
 					<FancyCheckbox
 						v-model="newTokenPermissionsGroup[group]"
+						:disabled="isGroupLocked(group)"
 						class="mie-2 is-capitalized has-text-weight-bold"
 						@update:modelValue="checked => selectPermissionGroup(group, checked)"
 					>
@@ -367,11 +398,12 @@ async function createToken() {
 					<br>
 				</template>
 				<template
-					v-for="(paths, permission) in routes"
+					v-for="(paths, permission) in groupRoutes"
 					:key="group+'-'+permission"
 				>
 					<FancyCheckbox
 						v-model="newTokenPermissions[group][permission]"
+						:disabled="isLocked(group, permission)"
 						class="mis-4 mie-2 is-capitalized"
 						@update:modelValue="checked => toggleGroupPermissionsFromChild(group, checked)"
 					>

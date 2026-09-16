@@ -1,5 +1,6 @@
 import {test, expect} from '../../support/fixtures'
 import {ProjectFactory} from '../../factories/project'
+import {WebhookFactory} from '../../factories/webhook'
 
 test.describe('Project webhooks', () => {
 	test.beforeEach(async ({currentUser}) => {
@@ -47,5 +48,25 @@ test.describe('Project webhooks', () => {
 		await deleted
 
 		await expect(row).toHaveCount(0)
+	})
+
+	test('does not overflow the table with a long target URL', async ({authenticatedPage: page, currentUser}) => {
+		const longUrl = 'https://discord.com/api/webhooks/1234567890123456789/' +
+			'aVeryLongDiscordWebhookTokenWithoutAnyBreakOpportunitiesAtAllWhatsoever1234567890'
+		await WebhookFactory.create(1, {
+			project_id: 1,
+			target_url: longUrl,
+			created_by_id: currentUser.id,
+		})
+
+		await page.goto('/projects/1/settings/webhooks')
+		await page.waitForLoadState('networkidle')
+
+		const table = page.locator('table.table')
+		await expect(table).toContainText('discord.com')
+
+		// The table grows past its container instead of wrapping when the URL cell can't break
+		const overflow = await table.evaluate(el => el.getBoundingClientRect().width - el.parentElement!.clientWidth)
+		expect(overflow).toBeLessThanOrEqual(1)
 	})
 })

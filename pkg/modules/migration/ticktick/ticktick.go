@@ -27,6 +27,7 @@ import (
 	"strings"
 	"time"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/user"
@@ -137,6 +138,14 @@ func (date *tickTickTime) UnmarshalCSV(csv string) (err error) {
 	return err
 }
 
+type placeState int
+
+const (
+	unvisited placeState = iota
+	visiting
+	donePlacing
+)
+
 // sortParentsBeforeChildren reorders tasks so that every parent task
 // appears before any of its children. Tasks without a parent come first.
 // The relative order of siblings / unrelated tasks is preserved.
@@ -146,25 +155,28 @@ func sortParentsBeforeChildren(tasks []*tickTickTask) []*tickTickTask {
 		tasksByID[t.TaskID] = t
 	}
 
-	// placed is keyed by the task itself rather than by TaskID: malformed
+	// state is keyed by the task itself rather than by TaskID: malformed
 	// exports can collapse several taskIds to 0 (see tickTickNumber), and
 	// keying by ID would treat every zero-ID task after the first as already
 	// placed and silently drop it.
-	placed := make(map[*tickTickTask]bool, len(tasks))
+	state := make(map[*tickTickTask]placeState, len(tasks))
 	result := make([]*tickTickTask, 0, len(tasks))
 
 	var place func(t *tickTickTask)
 	place = func(t *tickTickTask) {
-		if placed[t] {
+		if state[t] != unvisited {
 			return
 		}
+		// Must be marked before recursing: a parentId cycle would otherwise
+		// recurse until the stack overflows, which kills the whole process.
+		state[t] = visiting
 		// If this task has a parent that we know about, place the parent first.
 		if t.ParentID != 0 {
 			if parent, ok := tasksByID[t.ParentID]; ok {
 				place(parent)
 			}
 		}
-		placed[t] = true
+		state[t] = donePlacing
 		result = append(result, t)
 	}
 
@@ -199,7 +211,7 @@ func convertTickTickToVikunja(tasks []*tickTickTask) (result []*models.ProjectWi
 			projects[t.ProjectName] = &models.ProjectWithTasksAndBuckets{
 				Project: models.Project{
 					ID:              int64(index+1) + pseudoParentID,
-					ParentProjectID: pseudoParentID,
+					ParentProjectID: &pseudoParentID,
 					Title:           t.ProjectName,
 				},
 			}
@@ -302,44 +314,72 @@ func newLineSkipDecoder(r io.Reader, linesToSkip int) (gocsv.SimpleDecoder, erro
 	// Strip BOM if present - this must be done consistently with linesToSkipBeforeHeader
 	r = stripBOM(r)
 
-	// Read all content into memory so we can work with it
-	// This is acceptable since CSV imports are typically not huge files
-	allBytes, err := io.ReadAll(r)
-	if err != nil {
-		return nil, err
-	}
-
-	// Skip the metadata lines before the CSV header by finding newlines
-	// linesToSkipBeforeHeader counts raw text lines (newlines), not CSV records,
-	// because even metadata can have multiline quoted fields.
-	// We manually search for newlines (no buffer size limits like bufio.Scanner)
-	bytesSkipped := 0
+	// Metadata may contain quoted newlines, so skip raw lines without buffering the file.
+	br := bufio.NewReader(r)
 	linesFound := 0
-	for i := 0; i < len(allBytes) && linesFound < linesToSkip; i++ {
-		if allBytes[i] == '\n' {
-			linesFound++
-			if linesFound == linesToSkip {
-				// Position is right after the Nth newline
-				bytesSkipped = i + 1
-				break
+	for linesFound < linesToSkip {
+		if _, err := br.ReadBytes('\n'); err != nil {
+			if errors.Is(err, io.EOF) {
+				return nil, io.ErrUnexpectedEOF
 			}
+			return nil, err
 		}
+		linesFound++
 	}
 
-	if linesFound < linesToSkip {
-		return nil, io.ErrUnexpectedEOF
-	}
-
-	// Now create a CSV reader starting from after the skipped lines
 	// The CSV reader will properly handle any multiline quoted fields in the actual data
-	remainingContent := allBytes[bytesSkipped:]
-	reader := csv.NewReader(bytes.NewReader(remainingContent))
+	reader := csv.NewReader(br)
 
 	// Allow variable field counts and be lenient with parsing
 	reader.FieldsPerRecord = -1
 	reader.LazyQuotes = true
 	reader.TrimLeadingSpace = true
-	return gocsv.NewSimpleDecoderFromCSVReader(reader), nil
+	return boundedSimpleDecoder{inner: gocsv.NewSimpleDecoderFromCSVReader(reader)}, nil
+}
+
+// boundedSimpleDecoder replaces gocsv's unbounded ReadAll path (GHSA-pqf9-h8g4-8gmh).
+type boundedSimpleDecoder struct {
+	inner   gocsv.SimpleDecoder
+	maxRows int64
+}
+
+func (d boundedSimpleDecoder) limit() int64 {
+	if d.maxRows > 0 {
+		return d.maxRows
+	}
+	if maxRows := config.MigrationMaxCSVRows.GetInt64(); maxRows > 0 {
+		return maxRows
+	}
+	return 100000
+}
+
+func (d boundedSimpleDecoder) GetCSVRows() ([][]string, error) {
+	// GetCSVRows includes the header row, which does not count against the limit.
+	rows := make([][]string, 0)
+	for int64(len(rows)) < d.limit()+1 {
+		record, err := d.inner.GetCSVRow()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				return rows, nil
+			}
+			return nil, err
+		}
+		rows = append(rows, record)
+	}
+	if _, err := d.inner.GetCSVRow(); err == nil {
+		return nil, &migration.ErrImportRowLimitExceeded{MaxRows: d.limit()}
+	} else if !errors.Is(err, io.EOF) {
+		return nil, err
+	}
+	return rows, nil
+}
+
+func (d boundedSimpleDecoder) GetCSVRow() ([]string, error) {
+	record, err := d.inner.GetCSVRow()
+	if err != nil {
+		return nil, err
+	}
+	return record, nil
 }
 
 func linesToSkipBeforeHeader(file io.ReaderAt, size int64) (int, error) {
@@ -375,7 +415,6 @@ func linesToSkipBeforeHeader(file io.ReaderAt, size int64) (int, error) {
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /migration/ticktick/migrate [put]
 func (m *Migrator) Migrate(user *user.User, file io.ReaderAt, size int64) error {
-	// Check if file is empty
 	if size == 0 {
 		return &migration.ErrFileIsEmpty{}
 	}
@@ -393,18 +432,14 @@ func (m *Migrator) Migrate(user *user.User, file io.ReaderAt, size int64) error 
 	}
 
 	// Reset the reader position to start
-	_, err = fr.Seek(0, io.SeekStart)
-	if err != nil {
+	if _, err = fr.Seek(0, io.SeekStart); err != nil {
 		return err
 	}
 
-	// Check if the content looks like a CSV file
-	content := string(buf[:n])
-	if !isValidCSV(content) {
+	if !isValidCSV(string(buf[:n])) {
 		return &migration.ErrNotACSVFile{}
 	}
 
-	allTasks := []*tickTickTask{}
 	skip, err := linesToSkipBeforeHeader(file, size)
 	if err != nil {
 		return err
@@ -413,8 +448,9 @@ func (m *Migrator) Migrate(user *user.User, file io.ReaderAt, size int64) error 
 	if err != nil {
 		return err
 	}
-	err = gocsv.UnmarshalDecoder(decode, &allTasks)
-	if err != nil {
+
+	allTasks := []*tickTickTask{}
+	if err := gocsv.UnmarshalDecoder(decode, &allTasks); err != nil {
 		return err
 	}
 

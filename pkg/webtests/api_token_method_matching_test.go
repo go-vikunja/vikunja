@@ -21,6 +21,7 @@ import (
 	"strings"
 	"testing"
 
+	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/models"
 
 	"github.com/stretchr/testify/assert"
@@ -36,6 +37,11 @@ import (
 func TestAPITokenMethodMatching(t *testing.T) {
 	e, err := setupTestEnv()
 	require.NoError(t, err)
+
+	// GetAPITokenRoutes is license-filtered; enable the gated features so the
+	// guard keeps covering admin and time_entries scopes.
+	license.SetForTests([]license.Feature{license.FeatureAdminPanel, license.FeatureTimeTracking})
+	defer license.ResetForTests()
 
 	type apiRoute struct{ Method, Path string }
 	var allRoutes []apiRoute

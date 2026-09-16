@@ -3,19 +3,22 @@
 package yaegi_symbols
 
 import (
-	"reflect"
-
 	"code.vikunja.io/api/pkg/db"
+	"go/constant"
+	"go/token"
+	"reflect"
 )
 
 func init() {
 	Symbols["code.vikunja.io/api/pkg/db/db"] = map[string]reflect.Value{
+		// function, constant and variable definitions
 		"AssertCount":                    reflect.ValueOf(db.AssertCount),
 		"AssertExists":                   reflect.ValueOf(db.AssertExists),
 		"AssertMissing":                  reflect.ValueOf(db.AssertMissing),
 		"CreateDBEngine":                 reflect.ValueOf(db.CreateDBEngine),
 		"CreateParadeDBIndexes":          reflect.ValueOf(db.CreateParadeDBIndexes),
 		"CreateTestEngine":               reflect.ValueOf(db.CreateTestEngine),
+		"DatabasePathMemory":             reflect.ValueOf(constant.MakeFromLiteral("\"memory\"", token.STRING, 0)),
 		"Dump":                           reflect.ValueOf(db.Dump),
 		"GetDialect":                     reflect.ValueOf(db.GetDialect),
 		"ILIKE":                          reflect.ValueOf(db.ILIKE),
@@ -26,12 +29,24 @@ func init() {
 		"LoadAndAssertFixtures":          reflect.ValueOf(db.LoadAndAssertFixtures),
 		"LoadFixtures":                   reflect.ValueOf(db.LoadFixtures),
 		"MultiFieldSearch":               reflect.ValueOf(db.MultiFieldSearch),
+		"MultiFieldSearchWithBoosts":     reflect.ValueOf(db.MultiFieldSearchWithBoosts),
 		"MultiFieldSearchWithTableAlias": reflect.ValueOf(db.MultiFieldSearchWithTableAlias),
+		"NewAutocommitSession":           reflect.ValueOf(db.NewAutocommitSession),
+		"NewReadSession":                 reflect.ValueOf(db.NewReadSession),
 		"NewSession":                     reflect.ValueOf(db.NewSession),
 		"ParadeDBAvailable":              reflect.ValueOf(db.ParadeDBAvailable),
+		"RegisterConnectionPoolMetrics":  reflect.ValueOf(db.RegisterConnectionPoolMetrics),
+		"RegisterTables":                 reflect.ValueOf(db.RegisterTables),
+		"RegisteredTableNames":           reflect.ValueOf(db.RegisteredTableNames),
+		"ResolvedDatabasePath":           reflect.ValueOf(db.ResolvedDatabasePath),
 		"Restore":                        reflect.ValueOf(db.Restore),
 		"RestoreAndTruncate":             reflect.ValueOf(db.RestoreAndTruncate),
+		"SetSessionContext":              reflect.ValueOf(db.SetSessionContext),
+		"TruncateAllTables":              reflect.ValueOf(db.TruncateAllTables),
 		"Type":                           reflect.ValueOf(db.Type),
 		"WipeEverything":                 reflect.ValueOf(db.WipeEverything),
+
+		// type definitions
+		"DatabasePathConfig": reflect.ValueOf((*db.DatabasePathConfig)(nil)),
 	}
 }

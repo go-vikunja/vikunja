@@ -41,7 +41,7 @@ func init() {
 				return err
 			}
 
-			return tx.Sync2(linkShares20210411113105{})
+			return partialSync(tx, linkShares20210411113105{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil

@@ -35,6 +35,13 @@
   }
 }
 
+// :focus-visible matches mouse focus on text fields, so the ring is keyboard-gated via
+// the .user-is-tabbing class instead; the class also raises specificity over the :focus reset above.
+.user-is-tabbing .input:focus,
+.user-is-tabbing .textarea:focus {
+  @include focus-ring;
+}
+
 .select:after {
   margin-block-start: -0.575rem;
 }

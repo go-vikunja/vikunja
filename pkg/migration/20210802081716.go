@@ -37,7 +37,7 @@ func init() {
 		ID:          "20210802081716",
 		Description: "Add account deletion schedule timestamps",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(users20210802081716{})
+			return partialSync(tx, users20210802081716{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil

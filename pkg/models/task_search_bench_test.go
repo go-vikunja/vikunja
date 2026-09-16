@@ -57,9 +57,7 @@ func createBenchmarkData(b *testing.B, needle string) *user.User {
 
 	for i := range numberOfProjects {
 		p := &Project{Title: fmt.Sprintf("Project %d", i), OwnerID: u.ID}
-		if _, err := s.Insert(p); err != nil {
-			b.Fatalf("insert project: %v", err)
-		}
+		insertTestProject(b, s, p)
 
 		for j := range numberOfTasks {
 			title := f.Lorem().Sentence(6)

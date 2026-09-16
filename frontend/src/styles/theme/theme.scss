@@ -9,14 +9,14 @@
   outline: none;
 }
 
-a, button {
+a, button, input[type='checkbox'], input[type='radio'], select, [tabindex], [contenteditable='true'] {
   &:focus-visible {
-    box-shadow: 0 0 0 2px hsla(var(--primary-hsl), 0.5);
+    @include focus-ring;
   }
 
   @supports not selector(:focus-visible) {
     &:focus {
-      box-shadow: 0 0 0 2px hsla(var(--primary-hsl), 0.5);
+      @include focus-ring;
     }
   }
 }
@@ -108,8 +108,12 @@ button.table {
   text-decoration: line-through;
 }
 
-.is-touch .handle {
-	opacity: 1 !important;
+// Pointer type, not touch-event support: a touchscreen desktop has both touch events
+// and hover, and there this would pin the handle over what it replaces on hover.
+@media (pointer: coarse) {
+  .handle {
+    opacity: 1 !important;
+  }
 }
 
 .dragging-disabled .handle {

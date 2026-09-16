@@ -32,6 +32,7 @@ import (
 	"code.vikunja.io/api/pkg/modules/avatar/marble"
 	"code.vikunja.io/api/pkg/modules/avatar/openid"
 	"code.vikunja.io/api/pkg/modules/avatar/upload"
+	"code.vikunja.io/api/pkg/modules/imageutils"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/gabriel-vasile/mimetype"
@@ -152,9 +153,14 @@ func StoreUploadedAvatar(s *xorm.Session, u *user.User, src io.ReadSeeker) error
 	// which only has the decoders registered process-wide by the imaging package
 	// (png, jpeg, gif, tiff, bmp). image.DecodeConfig uses those same decoders, so
 	// validating here rejects undecodable images with a 400 instead of failing
-	// deeper in storage with a 500.
-	if _, _, err := image.DecodeConfig(src); err != nil {
+	// deeper in storage with a 500. The same config also carries the dimensions,
+	// so a decompression bomb is rejected here too (GHSA-4vh2-39rq-rq8j).
+	cfg, _, err := image.DecodeConfig(src)
+	if err != nil {
 		return ErrNotAnImage
+	}
+	if err := imageutils.ValidateConfig(cfg); err != nil {
+		return err
 	}
 	if _, err := src.Seek(0, io.SeekStart); err != nil {
 		return err

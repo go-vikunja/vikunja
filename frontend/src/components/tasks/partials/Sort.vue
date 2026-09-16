@@ -1,5 +1,5 @@
 <template>
-	<BaseButton>
+	<BaseButton :aria-label="label ? $t('project.table.sortBy', {column: label}) : $t('project.list.sort')">
 		<Icon
 			v-if="order === 'asc'"
 			icon="sort-up"
@@ -24,8 +24,10 @@ import BaseButton from '@/components/base/BaseButton.vue'
 
 withDefaults(defineProps<{
 	order?: 'asc' | 'desc' | 'none'
+	label?: string
 }>(), {
 	order: 'none',
+	label: undefined,
 })
 </script>
 

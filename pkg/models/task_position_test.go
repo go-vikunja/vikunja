@@ -23,6 +23,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"xorm.io/builder"
 )
 
 func TestFindPositionConflicts(t *testing.T) {
@@ -314,6 +315,52 @@ func TestUpdateTaskPositionWithConflictResolution(t *testing.T) {
 
 		assert.NotEqual(t, pos1.Position, pos2.Position)
 	})
+
+	t.Run("falls back to full recalculation when neighbours are too close", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.Where("project_view_id = ?", 93).Delete(&TaskPosition{})
+		require.NoError(t, err)
+
+		// The gap between the neighbours of the target position only leaves
+		// 0.01/3 for two conflicting tasks, less than MinPositionSpacing.
+		conflictPosition := 100.005
+		_, err = s.Insert(&TaskPosition{TaskID: 900, ProjectViewID: 93, Position: 100})
+		require.NoError(t, err)
+		_, err = s.Insert(&TaskPosition{TaskID: 901, ProjectViewID: 93, Position: conflictPosition})
+		require.NoError(t, err)
+		_, err = s.Insert(&TaskPosition{TaskID: 902, ProjectViewID: 93, Position: 100.01})
+		require.NoError(t, err)
+
+		tp := &TaskPosition{
+			TaskID:        903,
+			ProjectViewID: 93,
+			Position:      conflictPosition,
+		}
+
+		err = updateTaskPosition(s, nil, tp)
+		require.NoError(t, err)
+
+		var positions []*TaskPosition
+		err = s.Where("project_view_id = ?", 93).OrderBy("position ASC").Find(&positions)
+		require.NoError(t, err)
+		require.Len(t, positions, 4)
+
+		for i := 1; i < len(positions); i++ {
+			assert.Greater(t, positions[i].Position, positions[i-1].Position,
+				"position of task %d should be greater than the one of task %d",
+				positions[i].TaskID, positions[i-1].TaskID)
+			assert.GreaterOrEqual(t, positions[i].Position-positions[i-1].Position, MinPositionSpacing)
+		}
+
+		updated := &TaskPosition{}
+		_, err = s.Where("task_id = ? AND project_view_id = ?", 903, 93).Get(updated)
+		require.NoError(t, err)
+		assert.InDelta(t, updated.Position, tp.Position, 0, "the returned position should be refreshed")
+		assert.Greater(t, tp.Position, 1000.0, "positions should have been spread over the full range")
+	})
 }
 
 func TestRepairTaskPositions(t *testing.T) {
@@ -592,4 +639,129 @@ func TestResolvePositionConflictsAfterInsertFallsBackToRecalculation(t *testing.
 		assert.False(t, seen[p.Position], "duplicate position found: %f for task %d", p.Position, p.TaskID)
 		seen[p.Position] = true
 	}
+}
+
+func TestUpsertTaskPosition(t *testing.T) {
+	t.Run("inserts a new row", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		err := upsertTaskPosition(s, &TaskPosition{TaskID: 100, ProjectViewID: 1, Position: 42})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		db.AssertExists(t, "task_positions", map[string]interface{}{
+			"task_id":         100,
+			"project_view_id": 1,
+			"position":        42,
+		}, false)
+	})
+
+	t.Run("updates an existing row instead of failing on the unique index", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.Insert(&TaskPosition{TaskID: 100, ProjectViewID: 1, Position: 42})
+		require.NoError(t, err)
+
+		err = upsertTaskPosition(s, &TaskPosition{TaskID: 100, ProjectViewID: 1, Position: 555})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		db.AssertExists(t, "task_positions", map[string]interface{}{
+			"task_id":         100,
+			"project_view_id": 1,
+			"position":        555,
+		}, false)
+		db.AssertCount(t, "task_positions", builder.Eq{"task_id": 100, "project_view_id": 1}, 1)
+	})
+}
+
+func TestBulkInsertTaskPositions(t *testing.T) {
+	t.Run("skips rows which already exist", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.Insert(&TaskPosition{TaskID: 100, ProjectViewID: 1, Position: 50})
+		require.NoError(t, err)
+
+		err = bulkInsertTaskPositions(s, []*TaskPosition{
+			{TaskID: 100, ProjectViewID: 1, Position: 60},
+			{TaskID: 101, ProjectViewID: 1, Position: 70},
+		}, false)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		// The existing row must not be overwritten.
+		db.AssertExists(t, "task_positions", map[string]interface{}{
+			"task_id":         100,
+			"project_view_id": 1,
+			"position":        50,
+		}, false)
+		db.AssertExists(t, "task_positions", map[string]interface{}{
+			"task_id":         101,
+			"project_view_id": 1,
+			"position":        70,
+		}, false)
+	})
+
+	t.Run("overwrites rows which already exist", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.Insert(&TaskPosition{TaskID: 100, ProjectViewID: 1, Position: 50})
+		require.NoError(t, err)
+
+		err = bulkInsertTaskPositions(s, []*TaskPosition{
+			{TaskID: 100, ProjectViewID: 1, Position: 60},
+			{TaskID: 101, ProjectViewID: 1, Position: 70},
+		}, true)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		db.AssertExists(t, "task_positions", map[string]interface{}{
+			"task_id":         100,
+			"project_view_id": 1,
+			"position":        60,
+		}, false)
+		db.AssertCount(t, "task_positions", builder.Eq{"task_id": 100, "project_view_id": 1}, 1)
+		db.AssertExists(t, "task_positions", map[string]interface{}{
+			"task_id":         101,
+			"project_view_id": 1,
+			"position":        70,
+		}, false)
+	})
+
+	t.Run("inserts more rows than a single batch", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		positions := make([]*TaskPosition, 0, 150)
+		for i := 0; i < 150; i++ {
+			positions = append(positions, &TaskPosition{
+				TaskID:        int64(10000 + i),
+				ProjectViewID: 1,
+				Position:      float64(i + 1),
+			})
+		}
+
+		err := bulkInsertTaskPositions(s, positions, false)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		db.AssertCount(t, "task_positions", builder.And(
+			builder.Eq{"project_view_id": 1},
+			builder.Gte{"task_id": 10000},
+		), 150)
+	})
+}
+
+func TestViewLockOrder(t *testing.T) {
+	ids := viewLockOrder([]*ProjectView{{ID: 4}, {ID: 1}, {ID: 4}, {ID: 2}})
+	assert.Equal(t, []int64{1, 2, 4}, ids)
 }

@@ -17,6 +17,7 @@
 package models
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
 	"time"
@@ -596,7 +597,7 @@ func TestTimeEntry_Events(t *testing.T) {
 		te := &TimeEntry{TaskID: 1, StartTime: someStart, EndTime: someEnd}
 		require.NoError(t, te.Create(s, u))
 		require.NoError(t, s.Commit())
-		events.DispatchPending(s)
+		events.DispatchPending(context.Background(), s)
 		events.AssertDispatched(t, &TimeEntryCreatedEvent{})
 	})
 
@@ -612,7 +613,7 @@ func TestTimeEntry_Events(t *testing.T) {
 		require.True(t, can)
 		require.NoError(t, te.Update(s, u))
 		require.NoError(t, s.Commit())
-		events.DispatchPending(s)
+		events.DispatchPending(context.Background(), s)
 		events.AssertDispatched(t, &TimeEntryUpdatedEvent{})
 	})
 
@@ -624,7 +625,7 @@ func TestTimeEntry_Events(t *testing.T) {
 
 		require.NoError(t, (&TimeEntry{ID: 1}).Delete(s, u))
 		require.NoError(t, s.Commit())
-		events.DispatchPending(s)
+		events.DispatchPending(context.Background(), s)
 		events.AssertDispatched(t, &TimeEntryDeletedEvent{})
 	})
 
@@ -637,7 +638,7 @@ func TestTimeEntry_Events(t *testing.T) {
 		// entry 4 is user1's running timer; a new running timer auto-stops it
 		require.NoError(t, (&TimeEntry{TaskID: 1}).Create(s, u))
 		require.NoError(t, s.Commit())
-		events.DispatchPending(s)
+		events.DispatchPending(context.Background(), s)
 		events.AssertDispatched(t, &TimeEntryCreatedEvent{})
 		events.AssertDispatched(t, &TimeEntryUpdatedEvent{})
 	})
@@ -651,7 +652,7 @@ func TestTimeEntry_Events(t *testing.T) {
 		te := &TimeEntry{TaskID: 1, StartTime: someStart, EndTime: someEnd}
 		require.NoError(t, te.Create(s, u))
 		require.NoError(t, s.Commit())
-		events.DispatchPending(s)
+		events.DispatchPending(context.Background(), s)
 		assert.Equal(t, 1, events.CountDispatchedEvents((&TimeEntryCreatedEvent{}).Name()))
 		assert.Equal(t, 0, events.CountDispatchedEvents((&TimeEntryUpdatedEvent{}).Name()), "a completed manual entry must not auto-stop")
 	})
@@ -665,7 +666,7 @@ func TestTimeEntry_Events(t *testing.T) {
 		_, err := StopRunningTimer(s, u)
 		require.NoError(t, err)
 		require.NoError(t, s.Commit())
-		events.DispatchPending(s)
+		events.DispatchPending(context.Background(), s)
 		events.AssertDispatched(t, &TimeEntryUpdatedEvent{})
 	})
 }

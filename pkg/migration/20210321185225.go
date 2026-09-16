@@ -34,7 +34,7 @@ func init() {
 		ID:          "20210321185225",
 		Description: "Add is done bucket to buckets",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(buckets20210321185225{})
+			return partialSync(tx, buckets20210321185225{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil

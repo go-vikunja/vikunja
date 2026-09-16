@@ -20,6 +20,7 @@ import (
 	"os"
 	"testing"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 )
 
@@ -27,6 +28,10 @@ import (
 func TestMain(m *testing.M) {
 	// Initialize logger for tests
 	log.InitLogger()
+
+	config.InitDefaultConfig()
+	// Allow non-routable IPs in tests so httptest.NewServer (127.0.0.1) works
+	config.OutgoingRequestsAllowNonRoutableIPs.Set("true")
 
 	os.Exit(m.Run())
 }

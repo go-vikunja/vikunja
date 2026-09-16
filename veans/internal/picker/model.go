@@ -20,9 +20,9 @@ import (
 	"fmt"
 	"strings"
 
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"code.vikunja.io/veans/internal/client"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 )
 
 const maxVisibleRows = 12
@@ -127,7 +127,7 @@ func (m *model) ensureVisible() {
 func (m *model) Init() tea.Cmd { return nil }
 
 func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	key, ok := msg.(tea.KeyMsg)
+	key, ok := msg.(tea.KeyPressMsg)
 	if !ok {
 		return m, nil
 	}
@@ -154,22 +154,16 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.recompute()
 		}
 	default:
-		// Treat printable runes and space as query input.
-		if key.Type == tea.KeyRunes || key.Type == tea.KeySpace {
-			runes := key.Runes
-			// KeySpace is not guaranteed to populate key.Runes; substitute a
-			// literal space so multi-word fuzzy queries still work.
-			if key.Type == tea.KeySpace && len(runes) == 0 {
-				runes = []rune{' '}
-			}
-			m.query += string(runes)
+		// v2 sets key.Text for printable characters only, space included, so no separate KeySpace branch is needed.
+		if key.Text != "" {
+			m.query += key.Text
 			m.recompute()
 		}
 	}
 	return m, nil
 }
 
-func (m *model) View() string {
+func (m *model) View() tea.View {
 	var b strings.Builder
 	fmt.Fprintf(&b, "> %s\n", m.query)
 
@@ -180,7 +174,7 @@ func (m *model) View() string {
 	}
 
 	fmt.Fprintf(&b, "%d/%d  ↑↓ move  ⏎ pick  esc cancel\n", m.cursor+1, len(m.rows))
-	return b.String()
+	return tea.NewView(b.String())
 }
 
 func (m *model) renderRow(i int) string {

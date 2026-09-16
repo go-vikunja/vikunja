@@ -40,10 +40,31 @@ type Migrator interface {
 	AuthURL() string
 }
 
+// CredentialsChecker is implemented by migrators that authenticate with credentials passed in the
+// migrate request (instead of an OAuth code). The handlers call it before queueing the migration
+// so bad credentials fail the request instead of a background job.
+type CredentialsChecker interface {
+	CheckCredentials() error
+}
+
 // FileMigrator handles importing Vikunja data from a file. The implementation of it determines the format.
 type FileMigrator interface {
 	MigratorName
 	// Migrate is the interface used to migrate a user's tasks, project and other things from a file to vikunja.
 	// The user object is the user who's tasks will be migrated.
 	Migrate(user *user.User, file io.ReaderAt, size int64) error
+}
+
+// FileValidator is implemented by file migrators that can cheaply reject a
+// broken upload. Imports run in the background, so without this a user who
+// picked the wrong file gets a "started" response and a failure mail later.
+type FileValidator interface {
+	ValidateFile(file io.ReaderAt, size int64) error
+}
+
+// FileMigratorOptions is implemented by file migrators that need request
+// parameters beyond the file itself, such as the CSV importer's column mapping.
+// The options are carried to the background job as JSON.
+type FileMigratorOptions interface {
+	SetOptions(options []byte) error
 }

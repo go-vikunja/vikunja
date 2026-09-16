@@ -4,9 +4,9 @@
 		ref="commentsRef"
 		class="content details comments-container"
 	>
-		<h3
+		<h2
 			v-if="canWrite || comments.length > 0"
-			class="comments-heading"
+			class="comments-heading task-section-title"
 			:class="{'d-print-none': comments.length === 0}"
 		>
 			<span>
@@ -23,7 +23,7 @@
 				<Icon :icon="commentSortOrder === 'asc' ? 'arrow-down-short-wide' : 'arrow-up-short-wide'" />
 				{{ commentSortOrder === 'asc' ? $t('task.comment.sortOldestFirst') : $t('task.comment.sortNewestFirst') }}
 			</BaseButton>
-		</h3>
+		</h2>
 		<div class="comments">
 			<span
 				v-if="taskCommentService.loading && saving === null && !creating"
@@ -39,26 +39,22 @@
 				class="media comment"
 			>
 				<figure class="media-left is-hidden-mobile">
-					<img
-						:src="avatarFor(c.author, 48)"
-						alt=""
+					<UserAvatar
+						:user="c.author"
+						:size="48"
 						class="image is-avatar"
-						height="48"
-						width="48"
-					>
+					/>
 					<figcaption class="is-sr-only">
 						{{ $t('misc.avatarOfUser', {user: getDisplayName(c.author)}) }}
 					</figcaption>
 				</figure>
 				<div class="media-content">
 					<div class="comment-info">
-						<img
-							:src="avatarFor(c.author, 20)"
-							alt=""
+						<UserAvatar
+							:user="c.author"
+							:size="20"
 							class="image is-avatar d-print-none"
-							height="20"
-							width="20"
-						>
+						/>
 						<strong>{{ getDisplayName(c.author) }}</strong>
 						<span
 							v-tooltip="formatDateLong(c.created)"
@@ -113,7 +109,7 @@
 						:show-save="true"
 						:enable-discard-shortcut="true"
 						:enable-mentions="true"
-						:mention-project-id="projectId"
+						:project-id="projectId"
 						initial-mode="preview"
 						@update:modelValue="
 							() => {
@@ -146,15 +142,14 @@
 			<div
 				v-if="canWrite"
 				class="media comment d-print-none"
+				:class="{'new-comment-top': commentSortOrder === 'desc'}"
 			>
 				<figure class="media-left is-hidden-mobile">
-					<img
-						:src="userAvatar"
-						alt=""
+					<UserAvatar
+						:user="authStore.info"
+						:size="48"
 						class="image is-avatar"
-						height="48"
-						width="48"
-					>
+					/>
 					<figcaption class="is-sr-only">
 						{{ $t('misc.avatarOfUser', {user: getDisplayName(authStore.info)}) }}
 					</figcaption>
@@ -183,7 +178,7 @@
 								:upload-callback="attachmentUpload"
 								:placeholder="$t('task.comment.placeholder')"
 								:enable-mentions="true"
-								:mention-project-id="projectId"
+								:project-id="projectId"
 								:storage-key="commentStorageKey"
 								@save="addComment()"
 							/>
@@ -230,6 +225,7 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import Editor from '@/components/input/AsyncEditor'
 import PaginationEmit from '@/components/misc/PaginationEmit.vue'
+import UserAvatar from '@/components/misc/UserAvatar.vue'
 
 import TaskCommentService from '@/services/taskComment'
 import TaskCommentModel from '@/models/taskComment'
@@ -237,12 +233,11 @@ import TaskCommentModel from '@/models/taskComment'
 import type {ITaskComment} from '@/modelTypes/ITaskComment'
 import type {ITask} from '@/modelTypes/ITask'
 
-import {uploadFile} from '@/helpers/attachments'
+import {uploadFile, uploadFilesForEditor} from '@/helpers/attachments'
 import {success} from '@/message'
 import {formatDateLong, formatDisplayDate} from '@/helpers/time/formatDate'
 import {clearEditorDraft} from '@/helpers/editorDraftStorage'
-import {fetchAvatarBlobUrl, getDisplayName} from '@/models/user'
-import type {IUser} from '@/modelTypes/IUser'
+import {getDisplayName} from '@/models/user'
 import {useConfigStore} from '@/stores/config'
 import {useAuthStore} from '@/stores/auth'
 import Reactions from '@/components/input/Reactions.vue'
@@ -279,26 +274,6 @@ const newCommentText = ref('')
 
 const saved = ref<ITask['id'] | null>(null)
 const saving = ref<ITask['id'] | null>(null)
-
-const userAvatar = ref('')
-const avatarCache = reactive(new Map<string, string>())
-
-function avatarFor(u: IUser, size: number) {
-	const key = `${u.id}-${size}`
-	const cached = avatarCache.get(key)
-	if (!cached) {
-		fetchAvatarBlobUrl(u, size).then(url => avatarCache.set(key, url))
-	}
-
-	return avatarCache.get(key) || ''
-}
-
-watch(() => authStore.info, async (nu) => {
-	if (!nu) {
-		return
-	}
-	userAvatar.value = await fetchAvatarBlobUrl(nu, 48)
-}, {immediate: true})
 
 const currentUserId = computed(() => authStore.info.id)
 const enabled = computed(() => configStore.taskCommentsEnabled)
@@ -378,19 +353,11 @@ async function waitForEditorRef() {
 }
 
 
-async function attachmentUpload(files: File[] | FileList): (Promise<string[]>) {
-
-	const uploadPromises: Promise<string>[] = []
-
-	files.forEach((file: File) => {
-		const promise = new Promise<string>((resolve) => {
-			uploadFile(props.taskId, file, (uploadedFileUrl: string) => resolve(uploadedFileUrl))
-		})
-
-		uploadPromises.push(promise)
-	})
-
-	return await Promise.all(uploadPromises)
+function attachmentUpload(files: File[] | FileList): Promise<string[]> {
+	return uploadFilesForEditor(
+		(file, onSuccess) => uploadFile(props.taskId, file, onSuccess),
+		files,
+	)
 }
 
 const taskCommentService = shallowReactive(new TaskCommentService())
@@ -654,6 +621,15 @@ function getCommentUrl(commentId: string) {
 	&:hover {
 		color: var(--grey-700);
 	}
+}
+
+.comments {
+	display: flex;
+	flex-direction: column;
+}
+
+.new-comment-top {
+	order: -1;
 }
 
 .comments-container {

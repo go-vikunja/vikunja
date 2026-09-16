@@ -19,9 +19,13 @@ package webtests
 import (
 	"net/http"
 	"testing"
+	"time"
 
+	"code.vikunja.io/api/pkg/db"
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
+	"code.vikunja.io/api/pkg/user"
 
+	"github.com/pquerna/otp/totp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -52,5 +56,36 @@ func TestUserTOTPLocalUser(t *testing.T) {
 		assert.Equal(t, http.StatusOK, rec.Code)
 		assert.Contains(t, rec.Body.String(), `"secret"`)
 		assert.Contains(t, rec.Body.String(), `"enabled":false`)
+	})
+}
+
+// Guards enabled provisioning secrets (GHSA-88f6-4rjv-x774).
+func TestUserTOTPSecretHiddenWhenEnabled(t *testing.T) {
+	t.Run("Get TOTP settings hides secret and url once enabled", func(t *testing.T) {
+		rec, err := newTestRequestWithUser(t, http.MethodGet, apiv1.UserTOTP, &testuser10, "", nil, nil)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Contains(t, rec.Body.String(), `"enabled":true`)
+		assert.NotContains(t, rec.Body.String(), `JBSWY3DPEHPK3PXP`, "the secret must not be disclosed once enabled")
+		assert.NotContains(t, rec.Body.String(), `otpauth://`, "the url must not be disclosed once enabled")
+	})
+
+	t.Run("Get TOTP qrcode is refused once enabled", func(t *testing.T) {
+		_, err := newTestRequestWithUser(t, http.MethodGet, apiv1.UserTOTPQrCode, &testuser10, "", nil, nil)
+		require.Error(t, err)
+		assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
+	})
+
+	t.Run("Enabled TOTP login validation still works with the full secret", func(t *testing.T) {
+		// The login flow needs the secret even though it is no longer exposed.
+		passcode, err := totp.GenerateCode("JBSWY3DPEHPK3PXP", time.Now())
+		require.NoError(t, err)
+		s := db.NewSession()
+		defer s.Close()
+		tt, err := user.GetTOTPForUser(s, &user.User{ID: 10})
+		require.NoError(t, err)
+		assert.Equal(t, "JBSWY3DPEHPK3PXP", tt.Secret, "GetTOTPForUser must keep returning the full object")
+		_, err = user.ValidateTOTPPasscode(s, &user.TOTPPasscode{User: &user.User{ID: 10}, Passcode: passcode})
+		require.NoError(t, err)
 	})
 }

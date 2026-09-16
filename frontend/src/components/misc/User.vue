@@ -5,14 +5,13 @@
 		:style="{'--avatar-size': `${avatarSize}px`}"
 	>
 		<span class="avatar-wrapper">
-			<img
+			<UserAvatar
 				v-tooltip="displayName"
-				:height="avatarSize"
-				:src="avatarSrc"
-				:width="avatarSize"
-				:alt="'Avatar of ' + displayName"
+				:user="user"
+				:size="avatarSize"
+				:alt="showUsername ? '' : t('misc.avatarOfUser', {user: displayName})"
 				class="avatar"
-			>
+			/>
 			<span
 				v-if="isBot"
 				v-tooltip="t('user.settings.bots.badge')"
@@ -28,14 +27,15 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, ref, watch} from 'vue'
+import {computed} from 'vue'
 import {useI18n} from 'vue-i18n'
 
-import {fetchAvatarBlobUrl, getDisplayName} from '@/models/user'
+import UserAvatar from '@/components/misc/UserAvatar.vue'
+import {getDisplayName} from '@/models/user'
 import type {IUser} from '@/modelTypes/IUser'
 
 const props = withDefaults(defineProps<{
-	user: IUser,
+	user: Pick<IUser, 'name' | 'username'> & {botOwnerId?: number},
 	showUsername?: boolean,
 	avatarSize?: number,
 	isInline?: boolean,
@@ -48,14 +48,7 @@ const props = withDefaults(defineProps<{
 const {t} = useI18n({useScope: 'global'})
 
 const displayName = computed(() => getDisplayName(props.user))
-const isBot = computed(() => ((props.user as IUser & {botOwnerId?: number}).botOwnerId ?? 0) > 0)
-const avatarSrc = ref('')
-
-async function loadAvatar() {
-	avatarSrc.value = await fetchAvatarBlobUrl(props.user, props.avatarSize)
-}
-
-watch(() => [props.user, props.avatarSize], loadAvatar, { immediate: true })
+const isBot = computed(() => (props.user.botOwnerId ?? 0) > 0)
 </script>
 
 <style lang="scss" scoped>
@@ -71,6 +64,7 @@ watch(() => [props.user, props.avatarSize], loadAvatar, { immediate: true })
 .avatar-wrapper {
 	position: relative;
 	display: inline-flex;
+	flex-shrink: 0;
 	margin-inline-end: .5rem;
 }
 

@@ -1,0 +1,209 @@
+// Vikunja is a to-do list application to facilitate your life.
+// Copyright 2018-present Vikunja and contributors. All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+package models
+
+import (
+	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/notifications"
+	"code.vikunja.io/api/pkg/user"
+
+	"xorm.io/xorm"
+)
+
+// loadAdminTargetUser fetches a user by ID for the admin actions, returning
+// ErrUserDoesNotExist for an invalid ID or a missing row.
+func loadAdminTargetUser(s *xorm.Session, id int64) (*user.User, error) {
+	if id < 1 {
+		return nil, user.ErrUserDoesNotExist{UserID: id}
+	}
+	target := &user.User{ID: id}
+	has, err := s.Get(target)
+	if err != nil {
+		return nil, err
+	}
+	if !has {
+		return nil, user.ErrUserDoesNotExist{UserID: id}
+	}
+	return target, nil
+}
+
+// SetUserAdminFlag sets a user's instance-admin flag. Demoting the last
+// reachable admin is refused via GuardLastAdmin. It does not commit; the caller
+// owns the transaction.
+func SetUserAdminFlag(s *xorm.Session, doer *user.User, id int64, isAdmin bool) (*user.User, error) {
+	target, err := loadAdminTargetUser(s, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if !isAdmin {
+		if err := user.GuardLastAdmin(s, target); err != nil {
+			return nil, err
+		}
+	}
+
+	target.IsAdmin = isAdmin
+	if _, err := s.ID(target.ID).Cols("is_admin").Update(target); err != nil {
+		return nil, err
+	}
+
+	if isAdmin {
+		events.DispatchOnCommit(s, &AdminUserAdminGrantedEvent{User: target, Doer: doer})
+	} else {
+		events.DispatchOnCommit(s, &AdminUserAdminRevokedEvent{User: target, Doer: doer})
+	}
+	return target, nil
+}
+
+// SetUserStatusAsAdmin sets a user's account status. Moving the last reachable
+// admin out of Active is refused via GuardLastAdmin (any non-Active status
+// blocks login, so it is equivalent to demotion). It does not commit; the caller
+// owns the transaction.
+func SetUserStatusAsAdmin(s *xorm.Session, doer *user.User, id int64, status user.Status) (*user.User, error) {
+	target, err := loadAdminTargetUser(s, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if target.IsAdmin && status != user.StatusActive {
+		if err := user.GuardLastAdmin(s, target); err != nil {
+			return nil, err
+		}
+	}
+
+	oldStatus := target.Status
+	if err := user.SetUserStatus(s, target, status); err != nil {
+		return nil, err
+	}
+	// Reflect the change on the returned struct; GetUserByID refuses disabled accounts.
+	target.Status = status
+
+	events.DispatchOnCommit(s, &AdminUserStatusChangedEvent{
+		User:      target,
+		Doer:      doer,
+		OldStatus: oldStatus,
+		NewStatus: status,
+	})
+	return target, nil
+}
+
+// SetUserPasswordAsAdmin sets a new password for a local account and
+// invalidates all of the user's sessions, mirroring the self-service flows.
+// Non-local accounts are refused explicitly: unlike self-service, no
+// old-password verification runs here to catch them. It does not commit; the
+// caller owns the transaction.
+func SetUserPasswordAsAdmin(s *xorm.Session, doer *user.User, id int64, newPassword string) (*user.User, error) {
+	target, err := loadAdminTargetUser(s, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if !target.IsLocalUser() {
+		return nil, &user.ErrAccountIsNotLocal{UserID: target.ID}
+	}
+
+	if err := setUserPasswordAndInvalidateSessions(s, target, newPassword); err != nil {
+		return nil, err
+	}
+
+	if config.MailerEnabled.GetBool() {
+		if err := notifications.Notify(target, &user.PasswordChangedNotification{User: target}, s); err != nil {
+			return nil, err
+		}
+	}
+
+	events.DispatchOnCommit(s, &AdminUserPasswordSetEvent{User: target, Doer: doer})
+	return target, nil
+}
+
+// RequestPasswordResetAsAdmin triggers the self-service password-reset email
+// for a local account. The caller must ensure the mailer is enabled —
+// RequestUserPasswordResetToken silently skips the email otherwise. It does
+// not commit; the caller owns the transaction.
+func RequestPasswordResetAsAdmin(s *xorm.Session, doer *user.User, id int64) error {
+	target, err := loadAdminTargetUser(s, id)
+	if err != nil {
+		return err
+	}
+
+	if !target.IsLocalUser() {
+		return &user.ErrAccountIsNotLocal{UserID: target.ID}
+	}
+
+	// notifications.Notify silently drops emails for accounts ShouldNotify
+	// refuses (bots, disabled or locked accounts); surface that instead of
+	// reporting a sent email.
+	if target.IsBot() {
+		return ErrInvalidData{Message: "bot accounts cannot receive password-reset emails"}
+	}
+	if _, err := user.GetUserByID(s, id); err != nil {
+		return err
+	}
+
+	if err := user.RequestUserPasswordResetToken(s, target); err != nil {
+		return err
+	}
+
+	events.DispatchOnCommit(s, &AdminUserPasswordResetSentEvent{User: target, Doer: doer})
+	return nil
+}
+
+// DeleteUserAsAdmin removes a user. mode "now" deletes immediately; any other
+// value triggers the email-confirmation self-deletion flow. Deleting the last
+// reachable admin is refused via GuardLastAdmin. It does not commit; the caller
+// owns the transaction.
+func DeleteUserAsAdmin(s *xorm.Session, doer *user.User, id int64, mode string) error {
+	target, err := loadAdminTargetUser(s, id)
+	if err != nil {
+		return err
+	}
+
+	if err := user.GuardLastAdmin(s, target); err != nil {
+		return err
+	}
+
+	if mode == "now" {
+		err = DeleteUser(s, target)
+	} else {
+		err = user.RequestDeletion(s, target)
+	}
+	if err != nil {
+		return err
+	}
+
+	events.DispatchOnCommit(s, &AdminUserDeletedEvent{User: target, Doer: doer, Mode: mode})
+	return nil
+}
+
+// ListUsersAsAdmin queues an audit event because results include email addresses.
+func ListUsersAsAdmin(s *xorm.Session, doer *user.User, search string, page, perPage int) ([]*user.User, int64, error) {
+	events.DispatchOnCommit(s, &AdminUsersListedEvent{Doer: doer})
+
+	query := s.Limit(perPage, (page-1)*perPage).OrderBy("id ASC")
+	if search != "" {
+		q := "%" + search + "%"
+		query = query.Where("username LIKE ? OR email LIKE ?", q, q)
+	}
+
+	var users []*user.User
+	total, err := query.FindAndCount(&users)
+	if err != nil {
+		return nil, 0, err
+	}
+	return users, total, nil
+}

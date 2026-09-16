@@ -2,8 +2,8 @@
 import {onBeforeUnmount, onMounted, ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import DatepickerWithValues from '@/components/date/DatepickerWithValues.vue'
-import {useLabelStore} from '@/stores/labels'
-import {useProjectStore} from '@/stores/projects'
+import {useLabels} from '@/composables/useLabels'
+import {useProjects} from '@/composables/useProjects'
 import {
 	transformFilterStringForApi,
 	transformFilterStringFromApi,
@@ -15,12 +15,15 @@ import {Extension} from '@tiptap/core'
 import StarterKit from '@tiptap/starter-kit'
 import {Placeholder} from '@tiptap/extensions'
 import {Plugin, PluginKey} from '@tiptap/pm/state'
-import {filterHighlighter} from '@/components/input/filter/highlighter.ts'
+import {
+	createFilterHighlighter,
+	filterHighlighterKey,
+} from '@/components/input/filter/highlighter.ts'
 import FilterAutocomplete from '@/components/input/filter/FilterAutocomplete'
-import type {IProject} from '@/modelTypes/IProject'
+import {toISOStringOrNull} from '@/helpers/time/toISOStringOrNull'
 
 const props = defineProps<{
-	projectId?: IProject['id'],
+	projectId?: number,
 	modelValue?: string,
 }>()
 
@@ -28,14 +31,15 @@ const emit = defineEmits(['update:modelValue'])
 const {t} = useI18n()
 
 // Services and stores for autocomplete
-const labelStore = useLabelStore()
-const projectStore = useProjectStore()
+const {labels, isPending, getLabelByExactTitle, getLabelById} = useLabels()
+const projectList = useProjects()
 
 // Date picker functionality
 const currentOldDatepickerValue = ref('')
 const currentDatepickerValue = ref('')
 const currentDatepickerPos = ref(0)
 const datePickerPopupOpen = ref(false)
+const datePickerAnchor = ref<HTMLElement | null>(null)
 
 // Create a custom extension for filter syntax highlighting
 const FilterHighlighter = Extension.create({
@@ -43,7 +47,7 @@ const FilterHighlighter = Extension.create({
 
 	addProseMirrorPlugins() {
 		return [
-			filterHighlighter,
+			createFilterHighlighter(() => labels.value),
 		]
 	},
 })
@@ -69,7 +73,13 @@ const DateClickHandler = Extension.create({
 							currentOldDatepickerValue.value = dateValue
 							currentDatepickerValue.value = dateValue
 							currentDatepickerPos.value = position
-							datePickerPopupOpen.value = true
+							datePickerAnchor.value = target
+							// This click light-dismissed an open picker on pointerup, but its toggle
+							// event only lands after us — reopen once that has settled.
+							datePickerPopupOpen.value = false
+							setTimeout(() => {
+								datePickerPopupOpen.value = true
+							})
 
 							return true
 						}
@@ -83,6 +93,12 @@ const DateClickHandler = Extension.create({
 
 // Initialize TipTap editor
 const editor = useEditor({
+	editorProps: {
+		attributes: {
+			role: 'textbox',
+			'aria-label': t('filters.query.label'),
+		},
+	},
 	extensions: [
 		StarterKit.configure({
 			history: false, // We'll handle history ourselves
@@ -129,15 +145,18 @@ const editor = useEditor({
 const processContent = (content: string) => {
 	return transformFilterStringForApi(
 		content,
-		labelTitle => labelStore.getLabelByExactTitle(labelTitle)?.id || null,
+		labelTitle => getLabelByExactTitle(labelTitle)?.id || null,
 		projectTitle => {
-			const found = projectStore.findProjectByExactname(projectTitle)
+			const found = projectList.findProjectByExactname(projectTitle)
 			return found?.id || null
 		},
 	)
 }
 
 let lastEmittedValue: string | undefined
+let pendingEditorContent: string | undefined
+let pendingModelValue: string | undefined
+let waitingForLabels = false
 
 // Watch for changes to the model value from external sources.
 // Skip when the change originated from the editor itself (onUpdate emit)
@@ -157,13 +176,30 @@ watch(
 
 onMounted(() => setEditorContentFromModelValue(props.modelValue))
 
+watch(isPending, pending => {
+	if (pending || !waitingForLabels || editor.value?.getText() !== pendingEditorContent) {
+		return
+	}
+
+	waitingForLabels = false
+	setEditorContentFromModelValue(pendingModelValue)
+})
+
+watch(labels, () => {
+	if (!editor.value) {
+		return
+	}
+
+	editor.value.view.dispatch(editor.value.state.tr.setMeta(filterHighlighterKey, true))
+})
+
 function setEditorContentFromModelValue(newValue: string | undefined) {
 	if (!editor.value) return
 
 	const content = newValue ? transformFilterStringFromApi(
 		newValue,
-		labelId => labelStore.getLabelById(labelId)?.title || null,
-		projectId => projectStore.projects[projectId]?.title || null,
+		labelId => getLabelById(labelId)?.title || null,
+		projectId => projectList.projects[projectId]?.title || null,
 	) : ''
 
 	if (editor.value.getText() !== content) {
@@ -189,12 +225,20 @@ function setEditorContentFromModelValue(newValue: string | undefined) {
 		const safePosition = Math.min(currentPosition, maxPosition)
 		editor.value.commands.setTextSelection(safePosition)
 	}
+
+	if (isPending.value) {
+		pendingEditorContent = content
+		pendingModelValue = newValue
+		waitingForLabels = true
+	}
 }
 
 function updateDateInQuery(newDate: string | Date | null) {
 	if (!editor.value || !newDate) return
 
-	const dateStr = typeof newDate === 'string' ? newDate : newDate.toISOString().split('T')[0]
+	const dateStr = typeof newDate === 'string' ? newDate : toISOStringOrNull(newDate)?.split('T')[0]
+	if (!dateStr) return
+
 	const currentText = editor.value.getText()
 	const newText = currentText.replace(currentOldDatepickerValue.value, dateStr)
 	currentOldDatepickerValue.value = dateStr
@@ -246,7 +290,7 @@ defineExpose({
 			v-model="currentDatepickerValue"
 			v-model:open="datePickerPopupOpen"
 			class="filter-datepicker"
-			:ignore-click-classes="['date-value']"
+			:anchor="datePickerAnchor"
 			@update:modelValue="updateDateInQuery"
 		/>
 	</div>

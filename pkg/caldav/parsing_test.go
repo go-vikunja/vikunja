@@ -46,6 +46,7 @@ func TestParseTaskFromVTODO(t *testing.T) {
 		name      string
 		args      args
 		wantVTask *models.Task
+		wantProps ParsedVTODOProperties
 		wantErr   bool
 	}{
 		{
@@ -70,6 +71,7 @@ END:VCALENDAR`,
 				Description: "Lorem Ipsum",
 				Updated:     time.Unix(1543626724, 0).In(config.GetTimeZone()),
 			},
+			wantProps: ParsedVTODOProperties{Title: true, Description: true},
 		},
 		{
 			name: "With priority",
@@ -95,6 +97,7 @@ END:VCALENDAR`,
 				Priority:    1,
 				Updated:     time.Unix(1543626724, 0).In(config.GetTimeZone()),
 			},
+			wantProps: ParsedVTODOProperties{Title: true, Description: true, Priority: true},
 		},
 		{
 			name: "With categories",
@@ -127,6 +130,30 @@ END:VCALENDAR`,
 				},
 				Updated: time.Unix(1543626724, 0).In(config.GetTimeZone()),
 			},
+			wantProps: ParsedVTODOProperties{Title: true, Description: true},
+		},
+		{
+			name: "With empty categories (explicit clear, not omission)",
+			args: args{content: `BEGIN:VCALENDAR
+VERSION:2.0
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+UID:randomuid
+DTSTAMP:20181201T011204
+SUMMARY:Todo #1
+CATEGORIES:
+END:VTODO
+END:VCALENDAR`,
+			},
+			wantVTask: &models.Task{
+				Title:   "Todo #1",
+				UID:     "randomuid",
+				Labels:  []*models.Label{},
+				Updated: time.Unix(1543626724, 0).In(config.GetTimeZone()),
+			},
+			wantProps: ParsedVTODOProperties{Title: true},
 		},
 		{
 			name: "With alarm (time trigger)",
@@ -158,6 +185,7 @@ END:VCALENDAR`,
 				},
 				Updated: time.Unix(1543626724, 0).In(config.GetTimeZone()),
 			},
+			wantProps: ParsedVTODOProperties{Title: true, Description: true},
 		},
 		{
 			name: "With alarm (relative trigger)",
@@ -226,6 +254,177 @@ END:VCALENDAR`,
 				},
 				Updated: time.Unix(1543626724, 0).In(config.GetTimeZone()),
 			},
+			wantProps: ParsedVTODOProperties{Title: true, Description: true, DueDate: true, StartDate: true},
+		},
+		{
+			name: "With DTEND",
+			args: args{content: `BEGIN:VCALENDAR
+VERSION:2.0
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+UID:randomuid
+DTSTAMP:20181201T011204
+SUMMARY:Todo #1
+DTSTART:20230228T170000Z
+DTEND:20230301T170000Z
+END:VTODO
+END:VCALENDAR`,
+			},
+			wantVTask: &models.Task{
+				Title:     "Todo #1",
+				UID:       "randomuid",
+				StartDate: time.Date(2023, 2, 28, 17, 0, 0, 0, config.GetTimeZone()),
+				EndDate:   time.Date(2023, 3, 1, 17, 0, 0, 0, config.GetTimeZone()),
+				Updated:   time.Unix(1543626724, 0).In(config.GetTimeZone()),
+			},
+			wantProps: ParsedVTODOProperties{Title: true, StartDate: true, EndDate: true},
+		},
+		{
+			name: "With alarm (RELATED=END, DUE and DTEND both present)",
+			args: args{content: `BEGIN:VCALENDAR
+VERSION:2.0
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+UID:randomuid
+DTSTAMP:20181201T011204
+SUMMARY:Todo #1
+DTSTART:20230228T170000Z
+DTEND:20230301T170000Z
+DUE:20230304T150000Z
+BEGIN:VALARM
+TRIGGER;RELATED=END:-PT1H
+ACTION:DISPLAY
+END:VALARM
+END:VTODO
+END:VCALENDAR`,
+			},
+			wantVTask: &models.Task{
+				Title:     "Todo #1",
+				UID:       "randomuid",
+				StartDate: time.Date(2023, 2, 28, 17, 0, 0, 0, config.GetTimeZone()),
+				EndDate:   time.Date(2023, 3, 1, 17, 0, 0, 0, config.GetTimeZone()),
+				DueDate:   time.Date(2023, 3, 4, 15, 0, 0, 0, config.GetTimeZone()),
+				Reminders: []*models.TaskReminder{
+					{
+						RelativeTo:     models.ReminderRelationDueDate,
+						RelativePeriod: -3600,
+					},
+				},
+				Updated: time.Unix(1543626724, 0).In(config.GetTimeZone()),
+			},
+			wantProps: ParsedVTODOProperties{Title: true, StartDate: true, EndDate: true, DueDate: true},
+		},
+		{
+			name: "With alarm (RELATED=END, DTEND but no DUE)",
+			args: args{content: `BEGIN:VCALENDAR
+VERSION:2.0
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+UID:randomuid
+DTSTAMP:20181201T011204
+SUMMARY:Todo #1
+DTSTART:20230228T170000Z
+DTEND:20230301T170000Z
+BEGIN:VALARM
+TRIGGER;RELATED=END:-PT1H
+ACTION:DISPLAY
+END:VALARM
+END:VTODO
+END:VCALENDAR`,
+			},
+			wantVTask: &models.Task{
+				Title:     "Todo #1",
+				UID:       "randomuid",
+				StartDate: time.Date(2023, 2, 28, 17, 0, 0, 0, config.GetTimeZone()),
+				EndDate:   time.Date(2023, 3, 1, 17, 0, 0, 0, config.GetTimeZone()),
+				Reminders: []*models.TaskReminder{
+					{
+						RelativeTo:     models.ReminderRelationEndDate,
+						RelativePeriod: -3600,
+					},
+				},
+				Updated: time.Unix(1543626724, 0).In(config.GetTimeZone()),
+			},
+			wantProps: ParsedVTODOProperties{Title: true, StartDate: true, EndDate: true},
+		},
+		{
+			name: "With DTSTART+DURATION (RFC 5545 duration, not Go's time.ParseDuration)",
+			args: args{content: `BEGIN:VCALENDAR
+VERSION:2.0
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+UID:randomuid
+DTSTAMP:20181201T011204
+SUMMARY:Todo #1
+DTSTART:20230228T170000Z
+DURATION:PT120H0M0S
+END:VTODO
+END:VCALENDAR`,
+			},
+			wantVTask: &models.Task{
+				Title:     "Todo #1",
+				UID:       "randomuid",
+				StartDate: time.Date(2023, 2, 28, 17, 0, 0, 0, config.GetTimeZone()),
+				EndDate:   time.Date(2023, 2, 28, 17, 0, 0, 0, config.GetTimeZone()).Add(120 * time.Hour),
+				Updated:   time.Unix(1543626724, 0).In(config.GetTimeZone()),
+			},
+			wantProps: ParsedVTODOProperties{Title: true, StartDate: true, EndDate: true},
+		},
+		{
+			name: "With DTSTART+DURATION:PT0S (zero duration must not overwrite end_date)",
+			args: args{content: `BEGIN:VCALENDAR
+VERSION:2.0
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+UID:randomuid
+DTSTAMP:20181201T011204
+SUMMARY:Todo #1
+DTSTART:20230228T170000Z
+DURATION:PT0S
+END:VTODO
+END:VCALENDAR`,
+			},
+			wantVTask: &models.Task{
+				Title:     "Todo #1",
+				UID:       "randomuid",
+				StartDate: time.Date(2023, 2, 28, 17, 0, 0, 0, config.GetTimeZone()),
+				Updated:   time.Unix(1543626724, 0).In(config.GetTimeZone()),
+			},
+			wantProps: ParsedVTODOProperties{Title: true, StartDate: true},
+		},
+		{
+			name: "With unparseable DTEND (must not wipe end_date)",
+			args: args{content: `BEGIN:VCALENDAR
+VERSION:2.0
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+UID:randomuid
+DTSTAMP:20181201T011204
+SUMMARY:Todo #1
+DTSTART:20230228T170000Z
+DTEND:garbage
+END:VTODO
+END:VCALENDAR`,
+			},
+			wantVTask: &models.Task{
+				Title:     "Todo #1",
+				UID:       "randomuid",
+				StartDate: time.Date(2023, 2, 28, 17, 0, 0, 0, config.GetTimeZone()),
+				Updated:   time.Unix(1543626724, 0).In(config.GetTimeZone()),
+			},
+			wantProps: ParsedVTODOProperties{Title: true, StartDate: true},
 		},
 		{
 			name: "With parent",
@@ -257,6 +456,7 @@ END:VCALENDAR`,
 					},
 				},
 			},
+			wantProps: ParsedVTODOProperties{Title: true, Description: true},
 		},
 		{
 			name: "With subtask",
@@ -288,6 +488,56 @@ END:VCALENDAR`,
 					},
 				},
 			},
+			wantProps: ParsedVTODOProperties{Title: true, Description: true},
+		},
+		{
+			name: "With COMPLETED but no STATUS (RFC 5545: COMPLETED alone marks done)",
+			args: args{content: `BEGIN:VCALENDAR
+VERSION:2.0
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+UID:randomuid
+DTSTAMP:20181201T011204
+SUMMARY:Todo #1
+COMPLETED:20230301T150000Z
+END:VTODO
+END:VCALENDAR`,
+			},
+			wantVTask: &models.Task{
+				Title:   "Todo #1",
+				UID:     "randomuid",
+				Done:    true,
+				DoneAt:  time.Date(2023, 3, 1, 15, 0, 0, 0, config.GetTimeZone()),
+				Updated: time.Unix(1543626724, 0).In(config.GetTimeZone()),
+			},
+			wantProps: ParsedVTODOProperties{Title: true, Done: true},
+		},
+		{
+			name: "With STATUS:NEEDS-ACTION and COMPLETED (STATUS wins over COMPLETED)",
+			args: args{content: `BEGIN:VCALENDAR
+VERSION:2.0
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+UID:randomuid
+DTSTAMP:20181201T011204
+SUMMARY:Todo #1
+STATUS:NEEDS-ACTION
+COMPLETED:20230301T150000Z
+END:VTODO
+END:VCALENDAR`,
+			},
+			wantVTask: &models.Task{
+				Title:   "Todo #1",
+				UID:     "randomuid",
+				Done:    false,
+				DoneAt:  time.Date(2023, 3, 1, 15, 0, 0, 0, config.GetTimeZone()),
+				Updated: time.Unix(1543626724, 0).In(config.GetTimeZone()),
+			},
+			wantProps: ParsedVTODOProperties{Title: true, Done: true},
 		},
 		{
 			name: "example task from tasks.org app",
@@ -358,6 +608,7 @@ END:VCALENDAR`,
 					},
 				},
 			},
+			wantProps: ParsedVTODOProperties{Title: true, Priority: true, DueDate: true, StartDate: true},
 		},
 		{
 			name: "with apple hex color",
@@ -374,6 +625,7 @@ END:VCALENDAR`,
 			wantVTask: &models.Task{
 				HexColor: "affffe",
 			},
+			wantProps: ParsedVTODOProperties{Color: true},
 		},
 		{
 			name: "with apple css color",
@@ -390,6 +642,7 @@ END:VCALENDAR`,
 			wantVTask: &models.Task{
 				HexColor: "7b68ee",
 			},
+			wantProps: ParsedVTODOProperties{Color: true},
 		},
 		{
 			name: "with outlook hex color",
@@ -406,6 +659,7 @@ END:VCALENDAR`,
 			wantVTask: &models.Task{
 				HexColor: "affffe",
 			},
+			wantProps: ParsedVTODOProperties{Color: true},
 		},
 		{
 			name: "with outlook css color",
@@ -422,6 +676,7 @@ END:VCALENDAR`,
 			wantVTask: &models.Task{
 				HexColor: "7b68ee",
 			},
+			wantProps: ParsedVTODOProperties{Color: true},
 		},
 		{
 			name: "with funambol hex color",
@@ -438,6 +693,7 @@ END:VCALENDAR`,
 			wantVTask: &models.Task{
 				HexColor: "affffe",
 			},
+			wantProps: ParsedVTODOProperties{Color: true},
 		},
 		{
 			name: "with funambol css color",
@@ -454,6 +710,7 @@ END:VCALENDAR`,
 			wantVTask: &models.Task{
 				HexColor: "7b68ee",
 			},
+			wantProps: ParsedVTODOProperties{Color: true},
 		},
 		{
 			name: "with hex color",
@@ -470,6 +727,7 @@ END:VCALENDAR`,
 			wantVTask: &models.Task{
 				HexColor: "affffe",
 			},
+			wantProps: ParsedVTODOProperties{Color: true},
 		},
 		{
 			name: "with css color",
@@ -486,17 +744,77 @@ END:VCALENDAR`,
 			wantVTask: &models.Task{
 				HexColor: "7b68ee",
 			},
+			wantProps: ParsedVTODOProperties{Color: true},
+		},
+		{
+			name: "with empty color clears it",
+			args: args{content: `BEGIN:VCALENDAR
+VERSION:2.0
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+COLOR:
+END:VTODO
+END:VCALENDAR`,
+			},
+			wantVTask: &models.Task{
+				HexColor: "",
+			},
+			wantProps: ParsedVTODOProperties{Color: true},
+		},
+		{
+			name: "with unrecognized color name (must not wipe hex_color)",
+			args: args{content: `BEGIN:VCALENDAR
+VERSION:2.0
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+COLOR:notacolorname
+END:VTODO
+END:VCALENDAR`,
+			},
+			wantVTask: &models.Task{
+				HexColor: "",
+			},
+			wantProps: ParsedVTODOProperties{},
+		},
+		{
+			name: "With unparseable DUE (must not wipe due_date)",
+			args: args{content: `BEGIN:VCALENDAR
+VERSION:2.0
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+UID:randomuid
+DTSTAMP:20181201T011204
+SUMMARY:Todo #1
+DUE:garbage
+END:VTODO
+END:VCALENDAR`,
+			},
+			wantVTask: &models.Task{
+				Title:   "Todo #1",
+				UID:     "randomuid",
+				Updated: time.Unix(1543626724, 0).In(config.GetTimeZone()),
+			},
+			wantProps: ParsedVTODOProperties{Title: true},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := ParseTaskFromVTODO(tt.args.content)
+			got, gotProps, err := ParseTaskFromVTODO(tt.args.content)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ParseTaskFromVTODO() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if diff, equal := messagediff.PrettyDiff(got, tt.wantVTask); !equal {
 				t.Errorf("ParseTaskFromVTODO()\n gotVTask = %v\n want %v\n diff = %s", got, tt.wantVTask, diff)
+			}
+			if diff, equal := messagediff.PrettyDiff(gotProps, tt.wantProps); !equal {
+				t.Errorf("ParseTaskFromVTODO()\n gotProps = %v\n want %v\n diff = %s", gotProps, tt.wantProps, diff)
 			}
 		})
 	}
@@ -532,6 +850,7 @@ func TestGetCaldavTodosForTasks(t *testing.T) {
 							StartDate:   time.Unix(1543626723, 0).In(config.GetTimeZone()),
 							EndDate:     time.Unix(1543626724, 0).In(config.GetTimeZone()),
 							Updated:     time.Unix(1543626725, 0).In(config.GetTimeZone()),
+							Done:        true,
 							DoneAt:      time.Unix(1543626726, 0).In(config.GetTimeZone()),
 							RepeatAfter: 86400,
 							Labels: []*models.Label{
@@ -588,6 +907,46 @@ TRIGGER;RELATED=END:-PT1H0M0S
 ACTION:DISPLAY
 DESCRIPTION:Task 1
 END:VALARM
+END:VTODO
+END:VCALENDAR`,
+		},
+		{
+			name: "Reopened repeating task with DoneAt set is not completed",
+			args: args{
+				list: &models.ProjectWithTasksAndBuckets{
+					Project: models.Project{
+						Title: "List title",
+					},
+				},
+				tasks: []*models.TaskWithComments{
+					{
+						Task: models.Task{
+							Title:       "Task 1",
+							UID:         "randomuid",
+							Done:        false,
+							DoneAt:      time.Unix(1543626726, 0).In(config.GetTimeZone()),
+							Created:     time.Unix(1543626721, 0).In(config.GetTimeZone()),
+							Updated:     time.Unix(1543626725, 0).In(config.GetTimeZone()),
+							DueDate:     time.Unix(1543626722, 0).In(config.GetTimeZone()),
+							RepeatAfter: 86400,
+						},
+					},
+				},
+			},
+			wantCaldav: `BEGIN:VCALENDAR
+VERSION:2.0
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:List title
+PRODID:-//Vikunja Todo App//EN
+BEGIN:VTODO
+UID:randomuid
+DTSTAMP:20181201T011205Z
+SUMMARY:Task 1
+STATUS:NEEDS-ACTION
+DUE:20181201T011202Z
+CREATED:20181201T011201Z
+RRULE:FREQ=DAILY;INTERVAL=1
+LAST-MODIFIED:20181201T011205Z
 END:VTODO
 END:VCALENDAR`,
 		},
@@ -682,6 +1041,7 @@ UID:randomuid_parent
 DTSTAMP:20181201T011205Z
 SUMMARY:Parent Task
 DESCRIPTION:A parent task
+STATUS:NEEDS-ACTION
 CREATED:20181201T011201Z
 PRIORITY:3
 LAST-MODIFIED:20181201T011205Z
@@ -693,6 +1053,7 @@ UID:randomuid_child_1
 DTSTAMP:20181201T011204Z
 SUMMARY:Subtask 1
 DESCRIPTION:The first child task
+STATUS:NEEDS-ACTION
 CREATED:20181201T011204Z
 LAST-MODIFIED:20181201T011204Z
 RELATED-TO;RELTYPE=PARENT:randomuid_parent
@@ -702,6 +1063,7 @@ UID:randomuid_child_2
 DTSTAMP:20181201T011204Z
 SUMMARY:Subtask 2
 DESCRIPTION:The second child task
+STATUS:NEEDS-ACTION
 CREATED:20181201T011204Z
 LAST-MODIFIED:20181201T011204Z
 RELATED-TO;RELTYPE=PARENT:randomuid_parent
@@ -728,5 +1090,96 @@ func TestCaldavTimeToTimestamp_NoTZID(t *testing.T) {
 
 	if !got.Equal(want) || got.Location().String() != config.GetTimeZone().String() {
 		t.Fatalf("caldavTimeToTimestamp() = %v, want %v", got, want)
+	}
+}
+
+func TestCaldavTimeToTimestamp_NonUTCServerTimezone(t *testing.T) {
+	config.InitDefaultConfig()
+	orig := config.ServiceTimeZone.GetString()
+	config.ServiceTimeZone.Set("Europe/Berlin")
+	defer config.ServiceTimeZone.Set(orig)
+
+	berlin, err := time.LoadLocation("Europe/Berlin")
+	if err != nil {
+		t.Fatal(err)
+	}
+	newYork, err := time.LoadLocation("America/New_York")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tests := []struct {
+		name   string
+		value  string
+		params map[string][]string
+		want   time.Time
+	}{
+		{
+			name:  "UTC",
+			value: "20260914T050000Z",
+			want:  time.Date(2026, 9, 14, 5, 0, 0, 0, time.UTC),
+		},
+		{
+			name:  "floating",
+			value: "20260914T050000",
+			want:  time.Date(2026, 9, 14, 5, 0, 0, 0, berlin),
+		},
+		{
+			name:   "TZID",
+			value:  "20260914T050000",
+			params: map[string][]string{"TZID": {"America/New_York"}},
+			want:   time.Date(2026, 9, 14, 5, 0, 0, 0, newYork),
+		},
+		{
+			name:   "UTC with TZID",
+			value:  "20260914T050000Z",
+			params: map[string][]string{"TZID": {"America/New_York"}},
+			want:   time.Date(2026, 9, 14, 5, 0, 0, 0, time.UTC),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			prop := ics.IANAProperty{BaseProperty: ics.BaseProperty{Value: tt.value, ICalParameters: tt.params}}
+			got := caldavTimeToTimestamp(prop)
+			if !got.Equal(tt.want) || got.Location().String() != "Europe/Berlin" {
+				t.Fatalf("caldavTimeToTimestamp() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestParseTaskFromVTODO_UTCAlarmNonUTCServerTimezone(t *testing.T) {
+	config.InitDefaultConfig()
+	orig := config.ServiceTimeZone.GetString()
+	config.ServiceTimeZone.Set("Europe/Berlin")
+	defer config.ServiceTimeZone.Set(orig)
+
+	task, _, err := ParseTaskFromVTODO(`BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+UID:randomuid
+SUMMARY:Test
+DUE;TZID=Europe/Berlin:20260914T070000
+BEGIN:VALARM
+TRIGGER;VALUE=DATE-TIME:20260914T050000Z
+ACTION:DISPLAY
+DESCRIPTION:Test
+END:VALARM
+END:VTODO
+END:VCALENDAR`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	want := time.Date(2026, 9, 14, 5, 0, 0, 0, time.UTC)
+	if !task.DueDate.Equal(want) {
+		t.Errorf("DueDate = %v, want %v", task.DueDate, want)
+	}
+	if len(task.Reminders) != 1 {
+		t.Fatalf("got %d reminders, want 1", len(task.Reminders))
+	}
+	if !task.Reminders[0].Reminder.Equal(want) {
+		t.Errorf("Reminder = %v, want %v", task.Reminders[0].Reminder, want)
 	}
 }

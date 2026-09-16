@@ -44,7 +44,7 @@ func RegisterTaskAssigneeRoutes(api huma.API) {
 		Summary:     "List the assignees of a task",
 		Description: "Returns the users assigned to the given task, paginated. Requires read access to the task. Pass q to filter assignees by username.",
 		Method:      http.MethodGet,
-		Path:        "/tasks/{projecttask}/assignees",
+		Path:        "/tasks/{task}/assignees",
 		Tags:        tags,
 	}, taskAssigneesList)
 
@@ -53,7 +53,7 @@ func RegisterTaskAssigneeRoutes(api huma.API) {
 		Summary:     "Assign a user to a task",
 		Description: "Assigns a user to the given task. The parent task is taken from the URL; the assignee is named by user_id in the body. The assignee must have access to the task's project, and the caller needs write access to the task.",
 		Method:      http.MethodPost,
-		Path:        "/tasks/{projecttask}/assignees",
+		Path:        "/tasks/{task}/assignees",
 		Tags:        tags,
 	}, taskAssigneesCreate)
 
@@ -62,7 +62,7 @@ func RegisterTaskAssigneeRoutes(api huma.API) {
 		Summary:     "Remove an assignee from a task",
 		Description: "Un-assigns a user from the given task, identified by their user id in the path. Requires write access to the task.",
 		Method:      http.MethodDelete,
-		Path:        "/tasks/{projecttask}/assignees/{user}",
+		Path:        "/tasks/{task}/assignees/{user}",
 		Tags:        tags,
 	}, taskAssigneesDelete)
 }
@@ -70,7 +70,7 @@ func RegisterTaskAssigneeRoutes(api huma.API) {
 func init() { AddRouteRegistrar(RegisterTaskAssigneeRoutes) }
 
 func taskAssigneesList(ctx context.Context, in *struct {
-	TaskID int64 `path:"projecttask"`
+	TaskID int64 `path:"task"`
 	ListParams
 }) (*taskAssigneeListBody, error) {
 	a, err := authFromCtx(ctx)
@@ -89,7 +89,7 @@ func taskAssigneesList(ctx context.Context, in *struct {
 }
 
 func taskAssigneesCreate(ctx context.Context, in *struct {
-	TaskID int64 `path:"projecttask"`
+	TaskID int64 `path:"task"`
 	Body   models.TaskAssginee
 }) (*singleBody[models.TaskAssginee], error) {
 	a, err := authFromCtx(ctx)
@@ -104,7 +104,7 @@ func taskAssigneesCreate(ctx context.Context, in *struct {
 }
 
 func taskAssigneesDelete(ctx context.Context, in *struct {
-	TaskID int64 `path:"projecttask"`
+	TaskID int64 `path:"task"`
 	UserID int64 `path:"user"`
 }) (*emptyBody, error) {
 	a, err := authFromCtx(ctx)

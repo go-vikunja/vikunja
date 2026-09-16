@@ -1,11 +1,25 @@
 <template>
-	<BaseButton class="simple-button">
+	<BaseButton
+		ref="baseButton"
+		class="simple-button"
+	>
 		<slot />
 	</BaseButton>
 </template>
 
 <script lang="ts" setup>
+import {ref} from 'vue'
 import BaseButton from '@/components/base/BaseButton.vue'
+
+const baseButton = ref<InstanceType<typeof BaseButton> | null>(null)
+
+function focus() {
+	baseButton.value?.focus()
+}
+
+defineExpose({
+	focus,
+})
 </script>
 
 <style lang="scss" scoped>

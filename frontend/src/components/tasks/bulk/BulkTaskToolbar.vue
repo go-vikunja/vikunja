@@ -21,8 +21,9 @@ import ProjectUserService from '@/services/projectUsers'
 import TaskService from '@/services/task'
 import {useBulkTaskSelection} from '@/stores/bulkTaskSelection'
 import {useAuthStore} from '@/stores/auth'
-import {useProjectStore} from '@/stores/projects'
-import {useLabelStore} from '@/stores/labels'
+import {useProjects} from '@/composables/useProjects'
+import {useLabels} from '@/composables/useLabels'
+import {useCreateLabelMutation} from '@/client/queries/labels'
 import {useLabelStyles} from '@/composables/useLabelStyles'
 import {includesById} from '@/helpers/utils'
 import {getDisplayName} from '@/models/user'
@@ -31,10 +32,9 @@ import {success} from '@/message'
 import {getRandomColorHex} from '@/helpers/color/randomColor'
 
 import TaskModel from '@/models/task'
-import LabelModel from '@/models/label'
+import type {ProjectResponse} from '@/client/queries/projects'
+import type {Label} from '@/client/generated'
 import type {ITask} from '@/modelTypes/ITask'
-import type {IProject} from '@/modelTypes/IProject'
-import type {ILabel} from '@/modelTypes/ILabel'
 import type {IUser} from '@/modelTypes/IUser'
 import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
 import {RELATION_KINDS, type IRelationKind} from '@/types/IRelationKind'
@@ -42,7 +42,7 @@ import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 
 const props = defineProps<{
 	tasks: ITask[],
-	projectId: IProject['id'],
+	projectId: ProjectResponse['id'],
 }>()
 
 const emit = defineEmits<{
@@ -68,8 +68,9 @@ type BulkListMode = 'add' | 'remove' | 'replace'
 
 const selection = useBulkTaskSelection()
 const authStore = useAuthStore()
-const projectStore = useProjectStore()
-const labelStore = useLabelStore()
+const projectList = useProjects()
+const {filterLabelsByQuery, isPending: labelsPending, getLabelByExactTitle} = useLabels()
+const createLabelMutation = useCreateLabelMutation()
 const {getLabelStyles} = useLabelStyles()
 const {t} = useI18n({useScope: 'global'})
 
@@ -81,7 +82,7 @@ const activeModal = ref<BulkModal>(null)
 
 const labelMode = ref<BulkListMode>('add')
 const labelQuery = ref('')
-const bulkLabels = ref<ILabel[]>([])
+const bulkLabels = ref<Label[]>([])
 
 const assigneeMode = ref<BulkListMode>('add')
 const bulkAssignees = ref<IUser[]>([])
@@ -91,7 +92,7 @@ const bulkColor = ref('#1973ff')
 const bulkDueDate = ref<Date | null>(null)
 const bulkStartDate = ref<Date | null>(null)
 const bulkEndDate = ref<Date | null>(null)
-const bulkProject = ref<IProject | null>(null)
+const bulkProject = ref<ProjectResponse | null>(null)
 const bulkReminders = ref<ITaskReminder[]>([])
 const bulkRepeatTask = ref<ITask>(createEmptyRepeatTask())
 
@@ -119,14 +120,14 @@ const allSelectedAreSubscribed = computed(() =>
 )
 
 const foundLabels = computed(() =>
-	labelStore.filterLabelsByQuery(bulkLabels.value, labelQuery.value),
+	filterLabelsByQuery(bulkLabels.value, labelQuery.value),
 )
 
 const mappedFoundRelationTasks = computed(() =>
 	foundRelationTasks.value.map(task => ({
 		...task,
-		differentProject: task.projectId !== props.projectId && projectStore.projects[task.projectId]
-			? getProjectTitle(projectStore.projects[task.projectId])
+		differentProject: task.projectId !== props.projectId && projectList.projects[task.projectId]
+			? getProjectTitle(projectList.projects[task.projectId])
 			: null,
 	})),
 )
@@ -286,7 +287,7 @@ async function applyMove() {
 	}
 
 	await runAndRefresh(() =>
-		taskBulkService.moveTasks(getSafeSelectedTasks(), bulkProject.value as IProject),
+		taskBulkService.moveTasks(getSafeSelectedTasks(), bulkProject.value as ProjectResponse),
 	)
 }
 
@@ -398,13 +399,13 @@ function findLabel(query: string) {
 	labelQuery.value = query
 }
 
-function selectLabel(label: ILabel) {
-	if (!includesById(bulkLabels.value, label.id)) {
+function selectLabel(label: Label) {
+	if (!bulkLabels.value.some(({id}) => id === label.id)) {
 		bulkLabels.value.push(label)
 	}
 }
 
-function removeLabel(label: ILabel) {
+function removeLabel(label: Label) {
 	const index = bulkLabels.value.findIndex(({id}) => id === label.id)
 
 	if (index !== -1) {
@@ -419,19 +420,17 @@ async function createAndSelectLabel(title: string) {
 		return
 	}
 
-	const existing = Object.values(labelStore.labels).find(label =>
-		label.title.toLowerCase() === trimmedTitle.toLowerCase(),
-	)
+	const existing = getLabelByExactTitle(trimmedTitle)
 
 	if (existing) {
 		selectLabel(existing)
 		return
 	}
 
-	const newLabel = await labelStore.createLabel(new LabelModel({
+	const newLabel = await createLabelMutation.mutateAsync({
 		title: trimmedTitle,
-		hexColor: getRandomColorHex(),
-	}))
+		hex_color: getRandomColorHex(),
+	})
 
 	selectLabel(newLabel)
 }
@@ -774,7 +773,7 @@ async function findRelationTasks(query: string) {
 
 				<Multiselect
 					v-model="bulkLabels"
-					:loading="labelStore.isLoading"
+					:loading="labelsPending || createLabelMutation.isPending.value"
 					:placeholder="$t('task.label.placeholder')"
 					:multiple="true"
 					:search-results="foundLabels"

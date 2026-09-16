@@ -1,4 +1,6 @@
-import {ref, shallowReactive, watch, computed, type ComputedGetter} from 'vue'
+import {ref, shallowRef, shallowReactive, watch, computed, type ComputedGetter} from 'vue'
+import {useRouter, isNavigationFailure} from 'vue-router'
+import type {LocationQueryRaw} from 'vue-router'
 import {useRouteQuery} from '@vueuse/router'
 
 import TaskCollectionService, {
@@ -8,9 +10,8 @@ import TaskCollectionService, {
 } from '@/services/taskCollection'
 import type {ITask} from '@/modelTypes/ITask'
 import {error} from '@/message'
-import type {IProject} from '@/modelTypes/IProject'
 import {useAuthStore} from '@/stores/auth'
-import type {IProjectView} from '@/modelTypes/IProjectView'
+import {useViewFiltersStore} from '@/stores/viewFilters'
 
 export type Order = 'asc' | 'desc' | 'none'
 
@@ -59,6 +60,22 @@ const SORT_BY_DEFAULT: SortBy = {
 	id: 'desc',
 }
 
+interface TaskListQueryState {
+	sort: string | undefined
+	filter: string | undefined
+	s: string | undefined
+	page: number
+}
+
+export function buildStoredQuery(state: TaskListQueryState): LocationQueryRaw {
+	const query: LocationQueryRaw = {}
+	if (state.sort) query.sort = state.sort
+	if (state.filter) query.filter = state.filter
+	if (state.s) query.s = state.s
+	if (state.page > 1) query.page = String(state.page)
+	return query
+}
+
 // This makes sure an id sort order is always sorted last.
 // When tasks would be sorted first by id and then by whatever else was specified, the id sort takes
 // precedence over everything else, making any other sort columns pretty useless.
@@ -85,14 +102,17 @@ function formatSortOrder(sortBy, params) {
  * This mixin provides a base set of methods and properties to get tasks.
  */
 export function useTaskList(
-	projectIdGetter: ComputedGetter<IProject['id']>,
-	projectViewIdGetter: ComputedGetter<IProjectView['id']>,
+	projectIdGetter: ComputedGetter<number>,
+	projectViewIdGetter: ComputedGetter<number>,
 	sortByDefault: SortBy = SORT_BY_DEFAULT,
 	expandGetter: ComputedGetter<ExpandTaskFilterParam> = () => 'subtasks',
 ) {
 	
 	const projectId = computed(() => projectIdGetter())
 	const projectViewId = computed(() => projectViewIdGetter())
+
+	const router = useRouter()
+	const viewFiltersStore = useViewFiltersStore()
 
 	const params = ref<TaskFilterParams>({...getDefaultTaskFilterParams()})
 
@@ -119,8 +139,62 @@ export function useTaskList(
 		},
 	})
 
+	const pendingQueryRestore = shallowRef<Promise<unknown>>()
+	// Sidebar links omit the query, and project views are reused across navigation.
+	let lastSyncedViewId: number | undefined
+	watch(
+		[projectViewId, sortQuery, filter, s, page],
+		([viewId, sortValue, filterValue, sValue, pageValue]) => {
+			const viewIdChanged = viewId !== lastSyncedViewId
+			lastSyncedViewId = viewId
+
+			// An invalid `?page=` becomes NaN via `transform: Number`; treat it as
+			// the default so it neither blocks restoration nor wipes stored state.
+			const currentPage = Number.isInteger(pageValue) ? pageValue : 1
+			const urlIsEmpty = !sortValue && !filterValue && !sValue && currentPage === 1
+			if (viewIdChanged && urlIsEmpty) {
+				const storedQuery = viewFiltersStore.getViewQuery(viewId)
+				if (Object.keys(storedQuery).length > 0) {
+					const restore = router.replace({query: {...router.currentRoute.value.query, ...storedQuery}})
+					pendingQueryRestore.value = restore
+					restore
+						.catch(failure => {
+							if (!isNavigationFailure(failure)) throw failure
+						})
+						.finally(() => {
+							if (pendingQueryRestore.value === restore) {
+								pendingQueryRestore.value = undefined
+							}
+						})
+					return
+				}
+			}
+
+			const query = buildStoredQuery({
+				sort: sortValue as string | undefined,
+				filter: filterValue as string | undefined,
+				s: sValue as string | undefined,
+				page: currentPage,
+			})
+			if (Object.keys(query).length > 0) {
+				viewFiltersStore.setViewQuery(viewId, query)
+			} else {
+				viewFiltersStore.clearViewQuery(viewId)
+			}
+		},
+		{immediate: true},
+	)
+
 	const allParams = computed(() => {
 		const loadParams = {...params.value}
+
+		// Relevance ranking only engages when no sort is sent, so omit the default
+		// sort while searching and let an explicit user sort still take precedence.
+		if (loadParams.s && !sortQuery.value) {
+			loadParams.sort_by = []
+			loadParams.order_by = []
+			return loadParams
+		}
 
 		return formatSortOrder(sortBy.value, loadParams)
 	})
@@ -128,7 +202,8 @@ export function useTaskList(
 	watch(
 		[params, sortBy, page],
 		([, , newPage], [, , oldPage]) => {
-			if (newPage === oldPage) {
+			// A redundant page write can cancel the navigation restoring a saved sort.
+			if (newPage === oldPage && newPage !== 1) {
 				page.value = 1
 			}
 		},
@@ -157,26 +232,32 @@ export function useTaskList(
 	const totalPages = computed(() => taskCollectionService.totalPages)
 
 	const tasks = ref<ITask[]>([])
+	let requestId = 0
 	async function loadTasks(resetBeforeLoad: boolean = true) {
+		const request = ++requestId
 		if(resetBeforeLoad) {
 			tasks.value = []
 		}
 		try {
-			tasks.value = await taskCollectionService.getAll(...getAllTasksParams.value)
+			const loadedTasks = await taskCollectionService.getAll(...getAllTasksParams.value)
+			if (request === requestId) {
+				tasks.value = loadedTasks
+			}
 		} catch (e) {
 			error(e)
 		}
 		return tasks.value
 	}
 
-	// Only listen for query path changes
-	watch(() => JSON.stringify(getAllTasksParams.value), (newParams, oldParams) => {
-		if (oldParams === newParams) {
+	watch(() => pendingQueryRestore.value ? null : JSON.stringify(getAllTasksParams.value), newParams => {
+		if (newParams === null) {
+			requestId++
+			tasks.value = []
 			return
 		}
 
 		loadTasks()
-	}, { immediate: true })
+	}, {immediate: true, flush: 'post'})
 
 	return {
 		tasks,

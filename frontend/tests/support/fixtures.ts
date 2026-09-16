@@ -31,6 +31,10 @@ export const test = base.extend<{
 	},
 
 	authenticatedPage: async ({page, apiContext, currentUser}, use) => {
+		await page.context().grantPermissions(['clipboard-read', 'clipboard-write'], {
+			origin: process.env.BASE_URL || 'http://127.0.0.1:4173',
+		})
+
 		const {token} = await login(page, apiContext, currentUser)
 		await use(page)
 		// Navigate away to stop all frontend requests (notification polling, token

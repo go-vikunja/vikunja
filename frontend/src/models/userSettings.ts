@@ -3,7 +3,7 @@ import AbstractModel from './abstractModel'
 import type {IFrontendSettings, IUserSettings} from '@/modelTypes/IUserSettings'
 import {getBrowserLanguage} from '@/i18n'
 import {PrefixMode} from '@/modules/quickAddMagic'
-import {DEFAULT_PROJECT_VIEW_SETTINGS} from '@/modelTypes/IProjectView'
+import {DEFAULT_PROJECT_VIEW_SETTINGS} from '@/constants/projectView'
 import {PRIORITIES} from '@/constants/priorities'
 import {DATE_DISPLAY} from '@/constants/dateDisplay'
 import {TIME_FORMAT} from '@/constants/timeFormat'
@@ -38,11 +38,18 @@ export default class UserSettingsModel extends AbstractModel<IUserSettings> impl
 		commentSortOrder: 'asc',
 		desktopQuickEntryShortcut: 'CmdOrCtrl+Shift+A',
 		quickAddDefaultReminders: [],
+		defaultDueTime: undefined,
 	}
 	extraSettingsLinks = {}
 
 	constructor(data: Partial<IUserSettings> = {}) {
 		super()
 		this.assignData(data)
+
+		// The api returns an empty string when no language was ever set, and assignData
+		// only falls back to defaults for null/undefined.
+		if (!this.language) {
+			this.language = getBrowserLanguage()
+		}
 	}
 }

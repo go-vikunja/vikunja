@@ -17,10 +17,13 @@
 package microsofttodo
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/migration"
 
 	"github.com/d4l3k/messagediff"
 	"github.com/stretchr/testify/assert"
@@ -114,7 +117,7 @@ func TestConverting(t *testing.T) {
 		{
 			Project: models.Project{
 				ID:              2,
-				ParentProjectID: 1,
+				ParentProjectID: models.Ptr(int64(1)),
 				Title:           "Project 1",
 			},
 			Tasks: []*models.TaskWithComments{
@@ -172,7 +175,7 @@ func TestConverting(t *testing.T) {
 			Project: models.Project{
 				Title:           "Project 2",
 				ID:              3,
-				ParentProjectID: 1,
+				ParentProjectID: models.Ptr(int64(1)),
 			},
 			Tasks: []*models.TaskWithComments{
 				{
@@ -195,4 +198,23 @@ func TestConverting(t *testing.T) {
 	if diff, equal := messagediff.PrettyDiff(hierachie, expectedHierachie); !equal {
 		t.Errorf("converted microsoft todo data = %v, want %v, diff: %v", hierachie, expectedHierachie, diff)
 	}
+}
+
+func TestMakeAuthenticatedGetRequestUpstreamError(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		_, _ = w.Write([]byte(`{"error":{"code":"itemNotFound","innerError":{"code":"MailboxNotEnabledForRESTAPI"}}}`))
+	}))
+	t.Cleanup(srv.Close)
+
+	prevPrefix := apiPrefix
+	apiPrefix = srv.URL + "/"
+	t.Cleanup(func() { apiPrefix = prevPrefix })
+
+	err := makeAuthenticatedGetRequest("token", "lists/delta", &projectsResponse{})
+
+	var upstreamErr *migration.ErrUpstreamRequestFailed
+	require.ErrorAs(t, err, &upstreamErr)
+	assert.Equal(t, http.StatusNotFound, upstreamErr.StatusCode)
+	assert.Contains(t, upstreamErr.Body, "MailboxNotEnabledForRESTAPI")
 }

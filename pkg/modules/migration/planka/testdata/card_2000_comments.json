@@ -1,0 +1,7 @@
+{
+  "items": [
+    {"id": "6001", "text": "Reply from me", "cardId": "2000", "userId": "1", "createdAt": "2024-01-04T00:00:00.000Z"},
+    {"id": "6000", "text": "Hello from *someone else*", "cardId": "2000", "userId": "2", "createdAt": "2024-01-03T00:00:00.000Z"}
+  ],
+  "included": {"users": [{"id": "2", "name": "Other Person", "username": "other"}]}
+}

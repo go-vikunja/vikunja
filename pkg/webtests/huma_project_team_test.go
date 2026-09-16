@@ -76,10 +76,10 @@ func TestProjectTeam(t *testing.T) {
 			assert.Equal(t, int64(1), env.Total)
 			assert.Equal(t, int64(1), env.Items[0].ID)
 		})
-		// project 19: q "TEAM9" matches exactly team 9 of its three shares.
+		// project 19: q "TEAM8" matches exactly team 8 of its three shares.
 		t.Run("Search", func(t *testing.T) {
 			h := webHandlerTestV2{user: &testuser1, basePath: "/api/v2/projects/19/teams", idParam: "team", t: t, e: owned.e}
-			rec, err := h.testReadAllWithUser(url.Values{"q": []string{"TEAM9"}}, nil)
+			rec, err := h.testReadAllWithUser(url.Values{"q": []string{"TEAM8"}}, nil)
 			require.NoError(t, err)
 			var env struct {
 				Items []struct {
@@ -88,7 +88,7 @@ func TestProjectTeam(t *testing.T) {
 			}
 			require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &env))
 			require.Len(t, env.Items, 1)
-			assert.Equal(t, int64(9), env.Items[0].ID)
+			assert.Equal(t, int64(8), env.Items[0].ID)
 		})
 		t.Run("Read-only share can list", func(t *testing.T) {
 			_, err := readShared.testReadAllWithUser(nil, nil)

@@ -9,17 +9,15 @@ import {parseBooleanProp} from '@/helpers/time/parseBooleanProp'
 import {useRouteFilters, type UseRouteFiltersReturn} from '@/composables/useRouteFilters'
 import {useGanttTaskList, type UseGanttTaskListReturn} from './useGanttTaskList'
 
-import type {IProject} from '@/modelTypes/IProject'
 import type {TaskFilterParams} from '@/services/taskCollection'
 
 import type {DateISO} from '@/types/DateISO'
 import type {DateKebab} from '@/types/DateKebab'
-import type {IProjectView} from '@/modelTypes/IProjectView'
 
 // convenient internal filter object
 export interface GanttFilters {
-	projectId: IProject['id']
-	viewId: IProjectView['id'],
+	projectId: number
+	viewId: number,
 	dateFrom: DateISO
 	dateTo: DateISO
 	showTasksWithoutDates: boolean
@@ -41,22 +39,18 @@ function getDefaultDateTo() {
 }
 
 // FIXME: use zod for this
-function ganttRouteToFilters(route: Partial<RouteLocationNormalized>): GanttFilters {
-	const ganttRoute = route
+function ganttRouteToFilters(route: Partial<RouteLocationNormalized>, projectId: number, viewId: number): GanttFilters {
 	return {
-		projectId: Number(ganttRoute.params?.projectId),
-		viewId: Number(ganttRoute.params?.viewId),
-		dateFrom: parseDateProp(ganttRoute.query?.dateFrom as DateKebab) || getDefaultDateFrom(),
-		dateTo: parseDateProp(ganttRoute.query?.dateTo as DateKebab) || getDefaultDateTo(),
-		showTasksWithoutDates: parseBooleanProp(ganttRoute.query?.showTasksWithoutDates as string) || DEFAULT_SHOW_TASKS_WITHOUT_DATES,
+		projectId,
+		viewId,
+		dateFrom: parseDateProp(route.query?.dateFrom as DateKebab) || getDefaultDateFrom(),
+		dateTo: parseDateProp(route.query?.dateTo as DateKebab) || getDefaultDateTo(),
+		showTasksWithoutDates: parseBooleanProp(route.query?.showTasksWithoutDates as string) || DEFAULT_SHOW_TASKS_WITHOUT_DATES,
 	}
 }
 
-function ganttGetDefaultFilters(route: Partial<RouteLocationNormalized>): GanttFilters {
-	return ganttRouteToFilters({params: {
-		projectId: route.params?.projectId as string,
-		viewId: route.params?.viewId as string,
-	}})
+function ganttGetDefaultFilters(projectId: number, viewId: number): GanttFilters {
+	return ganttRouteToFilters({}, projectId, viewId)
 }
 
 // FIXME: use zod for this
@@ -108,17 +102,23 @@ export type UseGanttFiltersReturn =
 	UseRouteFiltersReturn<GanttFilters> &
 	UseGanttTaskListReturn
 
-export function useGanttFilters(route: Ref<RouteLocationNormalized>, viewId: Ref<IProjectView['id']>): UseGanttFiltersReturn {
+export function useGanttFilters(
+	route: Ref<RouteLocationNormalized>,
+	projectId: Ref<number>,
+	viewId: Ref<number>,
+): UseGanttFiltersReturn {
 	const viewFiltersStore = useViewFiltersStore()
 
+	// Ids come from the props and not from the route: while the task detail modal is open, gantt
+	// renders as its backdrop and the current route is the task, without any project params.
 	const {
 		filters,
 		hasDefaultFilters,
 		setDefaultFilters,
 	} = useRouteFilters<GanttFilters>(
 		route,
-		ganttGetDefaultFilters,
-		ganttRouteToFilters,
+		() => ganttGetDefaultFilters(projectId.value, viewId.value),
+		r => ganttRouteToFilters(r, projectId.value, viewId.value),
 		ganttFiltersToRoute,
 		['project.view'],
 	)

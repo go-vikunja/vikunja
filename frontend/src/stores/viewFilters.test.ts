@@ -1,4 +1,5 @@
 import {describe, it, expect, beforeEach} from 'vitest'
+import {nextTick} from 'vue'
 import {setActivePinia, createPinia} from 'pinia'
 import {useViewFiltersStore} from './viewFilters'
 
@@ -37,5 +38,29 @@ describe('viewFilters store', () => {
 		store.setViewQuery(18, {dateFrom: '2026-02-01', dateTo: '2026-02-28'})
 
 		expect(store.getViewQuery(18)).toEqual({dateFrom: '2026-02-01', dateTo: '2026-02-28'})
+	})
+})
+
+describe('viewFilters store persistence', () => {
+	beforeEach(() => {
+		localStorage.clear()
+		setActivePinia(createPinia())
+	})
+
+	it('should restore stored params from localStorage', () => {
+		localStorage.setItem('viewFilters', JSON.stringify({18: {sort: 'due_date:asc'}}))
+
+		const store = useViewFiltersStore()
+
+		expect(store.getViewQuery(18)).toEqual({sort: 'due_date:asc'})
+	})
+
+	it('should write params to localStorage', async () => {
+		const store = useViewFiltersStore()
+
+		store.setViewQuery(18, {sort: 'due_date:asc'})
+		await nextTick()
+
+		expect(JSON.parse(localStorage.getItem('viewFilters') ?? '{}')).toEqual({18: {sort: 'due_date:asc'}})
 	})
 })

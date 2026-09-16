@@ -110,7 +110,7 @@ func TestTaskAttachmentUploadSize(t *testing.T) {
 
 			// If we expect an error, verify the error response includes code and message
 			if tt.expectedStatus == http.StatusRequestEntityTooLarge {
-				assert.Contains(t, rec.Body.String(), "4013") // Error code
+				assert.Contains(t, rec.Body.String(), "4035") // Error code
 				assert.Contains(t, rec.Body.String(), "uploaded file exceeds")
 			}
 		})

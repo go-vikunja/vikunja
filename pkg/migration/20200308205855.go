@@ -34,7 +34,7 @@ func init() {
 		ID:          "20200308205855",
 		Description: "Add is archived flag to lists",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(list20200308205855{})
+			return partialSync(tx, list20200308205855{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return tx.DropTables(list20200308205855{})

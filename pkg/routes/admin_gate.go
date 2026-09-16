@@ -18,6 +18,9 @@ package routes
 
 import (
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/models"
 	auth2 "code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/user"
 
@@ -42,7 +45,22 @@ func RequireInstanceAdmin() echo.MiddlewareFunc {
 			s := db.NewSession()
 			fresh, err := user.GetUserByID(s, u.ID)
 			_ = s.Close()
-			if err != nil || !fresh.IsAdmin {
+			if err != nil {
+				return echo.ErrNotFound
+			}
+			if !fresh.IsAdmin {
+				// Privilege-probing signal for the audit log. Only dispatched
+				// for a confirmed non-admin — the other refusals (no claims,
+				// link share, failed user read) can't be attributed to a
+				// verified account and would write misleading entries.
+				dispatchErr := events.DispatchWithContext(c.Request().Context(), &models.AdminAccessDeniedEvent{
+					Doer:   u,
+					Method: c.Request().Method,
+					Path:   c.Request().URL.Path,
+				})
+				if dispatchErr != nil {
+					log.Errorf("Could not dispatch admin access denied event: %s", dispatchErr)
+				}
 				return echo.ErrNotFound
 			}
 			return next(c)

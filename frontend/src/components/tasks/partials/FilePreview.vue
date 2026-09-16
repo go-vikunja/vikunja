@@ -17,6 +17,28 @@
 		/>
 	</div>
 
+	<!-- Audio icon -->
+	<div
+		v-else-if="isAudio"
+		class="icon-wrapper"
+	>
+		<Icon
+			size="6x"
+			icon="volume-high"
+		/>
+	</div>
+
+	<!-- Video icon -->
+	<div
+		v-else-if="isVideo"
+		class="icon-wrapper"
+	>
+		<Icon
+			size="6x"
+			icon="play"
+		/>
+	</div>
+
 	<!-- Fallback -->
 	<div
 		v-else
@@ -30,22 +52,35 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref, shallowReactive, watchEffect} from 'vue'
-import AttachmentService, {PREVIEW_SIZE} from '@/services/attachment'
+import {computed, ref, watchEffect} from 'vue'
+import {PREVIEW_SIZE} from '@/services/attachment'
+import {fetchAttachmentBlobUrl} from '@/helpers/attachments'
 import type {IAttachment} from '@/modelTypes/IAttachment'
-import {canPreviewImage, canPreviewPdf} from '@/models/attachment'
+import {canPreviewAudio, canPreviewImage, canPreviewPdf, canPreviewVideo} from '@/models/attachment'
 
 const props = defineProps<{
 	modelValue?: IAttachment
 }>()
 
-const attachmentService = shallowReactive(new AttachmentService())
 const blobUrl = ref<string | undefined>(undefined)
 const isPdf = computed(() => props.modelValue && canPreviewPdf(props.modelValue))
+const isAudio = computed(() => props.modelValue && canPreviewAudio(props.modelValue))
+const isVideo = computed(() => props.modelValue && canPreviewVideo(props.modelValue))
 
 watchEffect(async () => {
-	if (props.modelValue && canPreviewImage(props.modelValue)) {
-		blobUrl.value = await attachmentService.getBlobUrl(props.modelValue, PREVIEW_SIZE.MD)
+	const attachment = props.modelValue
+	if (!attachment || !canPreviewImage(attachment)) {
+		return
+	}
+
+	try {
+		const url = await fetchAttachmentBlobUrl(attachment, PREVIEW_SIZE.MD)
+		// a newer attachment may have won the race while this one was in flight
+		if (props.modelValue === attachment) {
+			blobUrl.value = url
+		}
+	} catch {
+		// fall back to the generic file icon
 	}
 })
 </script>

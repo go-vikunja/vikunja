@@ -68,7 +68,7 @@ func init() {
 		ID:          "20240313230538",
 		Description: "Add project views table",
 		Migrate: func(tx *xorm.Engine) error {
-			err := tx.Sync2(projectView20240313230538{})
+			err := tx.Sync2(projectView20240313230538{}) //nolint:forbidigo // brand-new table, nothing to drop
 			if err != nil {
 				return err
 			}

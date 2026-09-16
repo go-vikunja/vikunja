@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/user"
 
 	"xorm.io/builder"
 
@@ -40,6 +41,7 @@ func TestReminderGetTasksInTheNextMinute(t *testing.T) {
 		require.NoError(t, err)
 		assert.Len(t, notifications, 1)
 		assert.Equal(t, int64(27), notifications[0].Task.ID)
+		assert.Equal(t, "TEST1-18", notifications[0].Task.Identifier)
 	})
 	t.Run("Found No Tasks", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -270,5 +272,106 @@ func TestGetTaskUsersForTasks(t *testing.T) {
 			}
 		}
 		assert.False(t, hasUser2, "user without project access should not be included for any task")
+	})
+}
+
+func TestGetTaskUsersForTasksIsAssignee(t *testing.T) {
+	findTaskUser := func(taskUsers []*taskUser, taskID, userID int64) *taskUser {
+		for _, tu := range taskUsers {
+			if tu.Task.ID == taskID && tu.User.ID == userID {
+				return tu
+			}
+		}
+		return nil
+	}
+
+	t.Run("assignee", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Task 30: user 1 is creator and assignee
+		taskUsers, err := getTaskUsersForTasks(s, []int64{30}, nil)
+		require.NoError(t, err)
+
+		tu := findTaskUser(taskUsers, 30, 1)
+		require.NotNil(t, tu)
+		assert.True(t, tu.IsAssignee)
+	})
+
+	t.Run("creator", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Task 1: user 1 is creator only
+		taskUsers, err := getTaskUsersForTasks(s, []int64{1}, nil)
+		require.NoError(t, err)
+
+		tu := findTaskUser(taskUsers, 1, 1)
+		require.NotNil(t, tu)
+		assert.False(t, tu.IsAssignee)
+	})
+
+	t.Run("subscriber", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		task := &Task{
+			Title:       "Subscribed only",
+			CreatedByID: 1,
+			ProjectID:   1,
+		}
+		err := task.Create(s, &user.User{ID: 1})
+		require.NoError(t, err)
+
+		_, err = s.Insert(&ProjectUser{UserID: 2, ProjectID: 1, Permission: PermissionRead})
+		require.NoError(t, err)
+		_, err = s.Insert(&Subscription{EntityType: SubscriptionEntityTask, EntityID: task.ID, UserID: 2})
+		require.NoError(t, err)
+
+		taskUsers, err := getTaskUsersForTasks(s, []int64{task.ID}, nil)
+		require.NoError(t, err)
+
+		tu := findTaskUser(taskUsers, task.ID, 2)
+		require.NotNil(t, tu)
+		assert.False(t, tu.IsAssignee)
+	})
+
+	t.Run("assigned and subscribed", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		task := &Task{
+			Title:       "Assigned and subscribed",
+			CreatedByID: 1,
+			ProjectID:   1,
+		}
+		err := task.Create(s, &user.User{ID: 1})
+		require.NoError(t, err)
+
+		_, err = s.Insert(&ProjectUser{UserID: 2, ProjectID: 1, Permission: PermissionRead})
+		require.NoError(t, err)
+		_, err = s.Insert(&TaskAssginee{TaskID: task.ID, UserID: 2})
+		require.NoError(t, err)
+		_, err = s.Insert(&Subscription{EntityType: SubscriptionEntityTask, EntityID: task.ID, UserID: 2})
+		require.NoError(t, err)
+
+		taskUsers, err := getTaskUsersForTasks(s, []int64{task.ID}, nil)
+		require.NoError(t, err)
+
+		count := 0
+		for _, tu := range taskUsers {
+			if tu.Task.ID == task.ID && tu.User.ID == 2 {
+				count++
+			}
+		}
+		assert.Equal(t, 1, count, "user should appear once per task")
+
+		tu := findTaskUser(taskUsers, task.ID, 2)
+		require.NotNil(t, tu)
+		assert.True(t, tu.IsAssignee)
 	})
 }

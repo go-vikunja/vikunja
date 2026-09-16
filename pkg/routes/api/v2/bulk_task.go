@@ -47,15 +47,24 @@ func RegisterBulkTaskRoutes(api huma.API) {
 func init() { AddRouteRegistrar(RegisterBulkTaskRoutes) }
 
 func tasksBulkUpdate(ctx context.Context, in *struct {
-	Body models.BulkTask
+	Format string `query:"format" enum:"html,markdown" doc:"How rich-text fields are exchanged. See the API description."`
+	Body   models.BulkTask
 }) (*singleBody[models.BulkTask], error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
 		return nil, err
 	}
 	bt := &in.Body
+	if bt.Values != nil {
+		if err := convertToHTML(ctx, &bt.Values.Description); err != nil {
+			return nil, translateDomainError(err)
+		}
+	}
 	if err := handler.DoUpdate(ctx, bt, a); err != nil {
 		return nil, translateDomainError(err)
 	}
+	// Echo values + updated tasks back in the requested format (values.description
+	// was converted to HTML above for persistence).
+	convertTasksToMarkdown(ctx, append([]*models.Task{bt.Values}, bt.Tasks...)...)
 	return &singleBody[models.BulkTask]{Body: bt}, nil
 }

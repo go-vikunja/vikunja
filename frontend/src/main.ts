@@ -1,9 +1,13 @@
+import './client/inviteLink'
 import {createApp} from 'vue'
+import {VueQueryPlugin} from '@tanstack/vue-query'
 
 import pinia from './pinia'
 import router from './router'
 import App from './App.vue'
 import {error, success} from './message'
+import {configureApiClient} from './client/http'
+import {queryClient} from './client/queryClient'
 
 // Notifications
 import Notifications from '@kyvg/vue3-notification'
@@ -35,6 +39,8 @@ if (window.API_URL.endsWith('/')) {
 	window.API_URL = window.API_URL.slice(0, -1)
 }
 
+configureApiClient()
+
 // directives
 import focus from '@/directives/focus'
 import tooltip from '@/directives/tooltip'
@@ -47,6 +53,12 @@ import FontAwesomeIcon from '@/components/misc/Icon'
 import Button from '@/components/input/Button.vue'
 import Modal from '@/components/misc/Modal.vue'
 import Card from '@/components/misc/Card.vue'
+
+import {setupKeyboardModality} from '@/helpers/keyboardModality'
+import {handleChunkLoadErrors} from '@/helpers/handleChunkLoadErrors'
+
+setupKeyboardModality()
+handleChunkLoadErrors()
 
 // We're loading the language before creating the app so that it won't fail to load when the user's 
 // language file is not yet loaded.
@@ -63,6 +75,7 @@ setLanguage(browserLanguage).then(() => {
 	}
 
 	app.use(Notifications)
+	app.use(VueQueryPlugin, {queryClient})
 
 	app.directive('focus', focus)
 	app.directive('tooltip', tooltip)

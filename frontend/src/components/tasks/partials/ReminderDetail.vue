@@ -1,8 +1,15 @@
 <template>
 	<div>
-		<Popup @update:open="showFormSwitch = null">
+		<Popup
+			placement="bottom-start"
+			:anchor="triggerEl"
+			sheet-on-mobile
+			:sheet-title="$t('task.attributes.reminders')"
+			@update:open="showFormSwitch = null"
+		>
 			<template #trigger="{toggle}">
 				<SimpleButton
+					ref="trigger"
 					v-tooltip="reminder.reminder && reminder.relativeTo !== null ? formatDisplayDate(reminder.reminder) : null"
 					@click.prevent.stop="toggle()"
 				>
@@ -54,6 +61,8 @@
 					<DatepickerInline
 						v-else-if="activeForm === 'absolute'"
 						v-model="reminderDate"
+						shortcuts-layout="chips"
+						:large="isMobile"
 					/>
 
 					<XButton
@@ -76,6 +85,8 @@ import {computed, ref, watch} from 'vue'
 import {SECONDS_A_DAY, SECONDS_A_HOUR} from '@/constants/date'
 import {type IReminderPeriodRelativeTo, REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 import {useI18n} from 'vue-i18n'
+
+import {useIsMobile} from '@/composables/useIsMobile'
 
 import {type PeriodUnit, secondsToPeriod} from '@/helpers/time/period'
 import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
@@ -107,6 +118,9 @@ const emit = defineEmits<{
 
 const {t} = useI18n({useScope: 'global'})
 
+const trigger = ref<InstanceType<typeof SimpleButton> | null>(null)
+const triggerEl = computed<HTMLElement | null>(() => trigger.value?.$el ?? null)
+
 const reminder = ref<ITaskReminder>(new TaskReminderModel())
 
 const presets = computed(() => [
@@ -119,6 +133,7 @@ const presets = computed(() => [
 ] as ITaskReminder[])
 const reminderDate = ref<Date | null>(null)
 
+const isMobile = useIsMobile()
 const showFormSwitch = ref<null | 'relative' | 'absolute'>(null)
 
 const activeForm = computed(() => {
@@ -276,16 +291,22 @@ function translateUnit(amount: number, unit: PeriodUnit): string {
 	align-items: flex-start;
 }
 
-:deep(.popup) {
-	inset-block-start: unset;
-}
-
 .reminder-options-popup {
 	inline-size: 310px;
 	z-index: 99;
 
-	@media screen and (max-width: ($tablet)) {
-		inline-size: calc(100vw - 5rem);
+	.bottom-sheet & {
+		inline-size: 100%;
+		border: 0;
+		box-shadow: none;
+		border-radius: 0;
+		padding-block-end: .5rem;
+
+		.option-button {
+			inline-size: 100%;
+			padding: .75rem 1rem;
+			font-size: 1rem;
+		}
 	}
 
 	.option-button {

@@ -23,6 +23,9 @@ import (
 	"strings"
 	"sync/atomic"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDoPostWithHeaders_RetriesOn500(t *testing.T) {
@@ -105,4 +108,27 @@ func TestDoPostWithHeaders_DoesNotRetryOn4xx(t *testing.T) {
 	if attempts.Load() != 1 {
 		t.Errorf("expected 1 attempt (no retries on 4xx), got %d", attempts.Load())
 	}
+}
+
+func TestDecodeJSONLimited(t *testing.T) {
+	type payload struct {
+		A string `json:"a"`
+	}
+
+	t.Run("fits", func(t *testing.T) {
+		out := &payload{}
+		require.NoError(t, DecodeJSONLimited(strings.NewReader(`{"a":"x"}`), out, 64))
+		assert.Equal(t, "x", out.A)
+	})
+	t.Run("exactly at the limit", func(t *testing.T) {
+		body := `{"a":"x"}`
+		require.NoError(t, DecodeJSONLimited(strings.NewReader(body), &payload{}, int64(len(body))))
+	})
+	t.Run("one byte over the limit", func(t *testing.T) {
+		body := `{"a":"x"}`
+		require.ErrorIs(t, DecodeJSONLimited(strings.NewReader(body), &payload{}, int64(len(body)-1)), ErrResponseTooLarge)
+	})
+	t.Run("truncated", func(t *testing.T) {
+		require.ErrorIs(t, DecodeJSONLimited(strings.NewReader(`{"a":"xxxxxxxxxx"}`), &payload{}, 4), ErrResponseTooLarge)
+	})
 }

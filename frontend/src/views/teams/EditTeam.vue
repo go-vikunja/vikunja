@@ -57,6 +57,7 @@
 							:loading="teamService.loading"
 							danger
 							icon="trash-alt"
+							:aria-label="$t('team.edit.delete.header')"
 							@click="showDeleteModal = true"
 						/>
 					</div>
@@ -159,6 +160,7 @@
 									:loading="teamMemberService.loading"
 									danger
 									icon="trash-alt"
+									:aria-label="$t('team.edit.deleteUser.header')"
 									@click="() => {memberToDelete = m; showUserDeleteModal = true}"
 								/>
 							</td>

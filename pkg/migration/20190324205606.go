@@ -38,7 +38,7 @@ func init() {
 			return dropTableColum(tx, "tasks", "reminders_unix")
 		},
 		Rollback: func(tx *xorm.Engine) error {
-			return tx.Sync2(tasksReminderDateMigration20190324205606{})
+			return partialSync(tx, tasksReminderDateMigration20190324205606{})
 		},
 	})
 }

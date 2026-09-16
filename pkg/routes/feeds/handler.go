@@ -25,29 +25,33 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/i18n"
+	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/gorilla/feeds"
 	"github.com/labstack/echo/v5"
+	"xorm.io/xorm"
 )
 
 const feedItemLimit = 50
 
-// NotificationsAtomFeed serves the authenticated user's notifications as an
-// Atom feed. Notifications are not marked as read by being fetched here.
-func NotificationsAtomFeed(c *echo.Context) error {
-	u, ok := c.Get("userBasicAuth").(*user.User)
-	if !ok {
-		return echo.NewHTTPError(http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
+// AtomContentType is the content type of the notifications Atom feed. Shared so
+// the v1 echo handler and the v2 Huma op set the same header.
+const AtomContentType = "application/atom+xml; charset=utf-8"
+
+// BuildNotificationsAtomFeed renders the user's latest notifications as Atom XML
+// against an existing session. Notifications are not marked as read by being
+// fetched here. Shared by the v1 echo handler and the v2 Huma op.
+func BuildNotificationsAtomFeed(s *xorm.Session, u *user.User) (string, error) {
+	filter, err := models.NotificationProjectFilter(s, u)
+	if err != nil {
+		return "", err
 	}
 
-	s := db.NewSession()
-	defer s.Close()
-
-	rows, _, _, err := notifications.GetNotificationsForUser(s, u.ID, feedItemLimit, 0)
+	rows, _, _, err := notifications.GetNotificationsForUser(s, u.ID, filter, feedItemLimit, 0)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	publicURL := config.ServicePublicURL.GetString()
@@ -72,6 +76,11 @@ func NotificationsAtomFeed(c *echo.Context) error {
 			continue
 		}
 
+		// Target is not persisted, but every row here was sent to u.
+		if assigned, is := typed.(*models.TaskAssignedNotification); is {
+			assigned.Target = u
+		}
+
 		titler, ok := typed.(notifications.Titler)
 		if !ok {
 			continue
@@ -85,11 +94,25 @@ func NotificationsAtomFeed(c *echo.Context) error {
 		})
 	}
 
-	atom, err := feed.ToAtom()
+	return feed.ToAtom()
+}
+
+// NotificationsAtomFeed serves the authenticated user's notifications as an
+// Atom feed. Notifications are not marked as read by being fetched here.
+func NotificationsAtomFeed(c *echo.Context) error {
+	u, ok := c.Get("userBasicAuth").(*user.User)
+	if !ok {
+		return echo.NewHTTPError(http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
+	}
+
+	s := db.NewSession()
+	defer s.Close()
+
+	atom, err := BuildNotificationsAtomFeed(s, u)
 	if err != nil {
 		return err
 	}
 
-	c.Response().Header().Set(echo.HeaderContentType, "application/atom+xml; charset=utf-8")
+	c.Response().Header().Set(echo.HeaderContentType, AtomContentType)
 	return c.String(http.StatusOK, atom)
 }

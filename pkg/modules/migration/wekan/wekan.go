@@ -17,6 +17,7 @@
 package wekan
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
@@ -28,9 +29,8 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
+	"code.vikunja.io/api/pkg/richtext"
 	"code.vikunja.io/api/pkg/user"
-
-	"github.com/yuin/goldmark"
 )
 
 // wekanBoard represents the top-level WeKan board JSON export.
@@ -138,12 +138,7 @@ var wekanColorMap = map[string]string{
 }
 
 func convertMarkdownToHTML(input string) (string, error) {
-	var buf bytes.Buffer
-	err := goldmark.Convert([]byte(input), &buf)
-	if err != nil {
-		return "", err
-	}
-	return buf.String(), nil
+	return richtext.CommonMarkToHTML([]byte(input))
 }
 
 func convertWekanToVikunja(board *wekanBoard) []*models.ProjectWithTasksAndBuckets {
@@ -340,12 +335,22 @@ func convertWekanToVikunja(board *wekanBoard) []*models.ProjectWithTasksAndBucke
 
 func parseWekanJSON(r io.Reader) (*wekanBoard, error) {
 	var board wekanBoard
-	decoder := json.NewDecoder(r)
+	decoder := json.NewDecoder(skipUTF8BOM(r))
 	err := decoder.Decode(&board)
 	if err != nil {
 		return nil, err
 	}
 	return &board, nil
+}
+
+// skipUTF8BOM drops a leading byte order mark. Editors on Windows add one when
+// re-saving an export and Go's json decoder chokes on it.
+func skipUTF8BOM(r io.Reader) io.Reader {
+	br := bufio.NewReader(r)
+	if b, err := br.Peek(3); err == nil && bytes.Equal(b, []byte{0xEF, 0xBB, 0xBF}) {
+		_, _ = br.Discard(3)
+	}
+	return br
 }
 
 // Migrator is the WeKan migration struct.
@@ -380,9 +385,7 @@ func (m *Migrator) Migrate(user *user.User, file io.ReaderAt, size int64) error 
 		return &migration.ErrFileIsEmpty{}
 	}
 
-	fr := io.NewSectionReader(file, 0, size)
-
-	board, err := parseWekanJSON(fr)
+	board, err := parseWekanJSON(io.NewSectionReader(file, 0, size))
 	if err != nil {
 		return err
 	}

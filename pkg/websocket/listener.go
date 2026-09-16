@@ -25,6 +25,7 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/notifications"
+	"code.vikunja.io/api/pkg/user"
 
 	"github.com/ThreeDotsLabs/watermill/message"
 )
@@ -62,6 +63,15 @@ func (n *NotificationListener) Handle(msg *message.Message) error {
 	}
 	if dbNotification == nil {
 		log.Warningf("WebSocket: notification %d not found, skipping push", event.NotificationID)
+		return nil
+	}
+
+	canRead, err := models.CanReadNotification(s, &user.User{ID: event.UserID}, dbNotification)
+	if err != nil {
+		log.Errorf("WebSocket: failed to check access for notification %d: %v", event.NotificationID, err)
+		return nil
+	}
+	if !canRead {
 		return nil
 	}
 

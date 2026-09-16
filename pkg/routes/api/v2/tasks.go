@@ -18,10 +18,13 @@ package apiv2
 
 import (
 	"context"
+	"net/http"
+	"net/url"
 	"strconv"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/humabridge"
 	"code.vikunja.io/api/pkg/web/handler"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -61,17 +64,33 @@ func RegisterTaskRoutes(api huma.API) {
 		Summary:     "Get a task",
 		Description: "Returns a single task by its numeric id. Sends an ETag; pass it as If-None-Match on a later read to get a 304 Not Modified. " + expandDoc,
 		Method:      "GET",
-		Path:        "/tasks/{projecttask}",
+		Path:        "/tasks/{task}",
 		Tags:        tags,
 	}, tasksRead)
 
 	Register(api, huma.Operation{
 		OperationID: "tasks-read-by-index",
 		Summary:     "Get a task by its project index",
-		Description: "Returns a single task addressed by its per-project index. The {project} segment accepts either a numeric project id or a textual project identifier (e.g. \"PROJ\"); a value made solely of digits is always treated as an id. " + expandDoc,
+		Description: "Returns a single task addressed by its per-project index. Historical addresses redirect. The {project} segment accepts either a numeric project id or a textual project identifier (e.g. \"PROJ\"); a value made solely of digits is always treated as an id. " + expandDoc,
 		Method:      "GET",
 		Path:        "/projects/{project}/tasks/by-index/{index}",
 		Tags:        tags,
+		Responses: map[string]*huma.Response{
+			"default": defaultErrorResponse(api),
+			"307": {
+				Description: "Historical address; Location holds the task's current one.",
+				Headers: map[string]*huma.Param{
+					"Location": {
+						Description: "Current v2 by-index address, query string preserved.",
+						Schema:      &huma.Schema{Type: huma.TypeString, Format: "uri-reference"},
+					},
+					"Cache-Control": {
+						Description: "no-store",
+						Schema:      &huma.Schema{Type: huma.TypeString},
+					},
+				},
+			},
+		},
 	}, tasksReadByIndex)
 
 	Register(api, huma.Operation{
@@ -88,7 +107,7 @@ func RegisterTaskRoutes(api huma.API) {
 		Summary:     "Update a task",
 		Description: "Replaces all of a task's fields; requires write access. Setting project_id to a different project moves the task and also requires write access to the target project. Use PATCH for a partial update.",
 		Method:      "PUT",
-		Path:        "/tasks/{projecttask}",
+		Path:        "/tasks/{task}",
 		Tags:        tags,
 	}, tasksUpdate)
 
@@ -97,7 +116,7 @@ func RegisterTaskRoutes(api huma.API) {
 		Summary:     "Delete a task",
 		Description: "Deletes a task. Requires write access to its project.",
 		Method:      "DELETE",
-		Path:        "/tasks/{projecttask}",
+		Path:        "/tasks/{task}",
 		Tags:        tags,
 	}, tasksDelete)
 }
@@ -110,8 +129,9 @@ type taskReadOneBody struct {
 }
 
 func tasksRead(ctx context.Context, in *struct {
-	ID     int64    `path:"projecttask" doc:"The numeric id of the task."`
+	ID     int64    `path:"task" doc:"The numeric id of the task."`
 	Expand []string `query:"expand,explode" enum:"subtasks,buckets,reactions,comments,comment_count,time_entries_count,is_unread" doc:"Embed extra data per task. Repeatable."`
+	Format string   `query:"format" enum:"html,markdown" doc:"How rich-text fields are exchanged. See the API description."`
 	conditional.Params
 }) (*singleReadBody[taskReadOneBody], error) {
 	a, err := authFromCtx(ctx)
@@ -128,15 +148,25 @@ func tasksRead(ctx context.Context, in *struct {
 		return nil, translateDomainError(err)
 	}
 	body := &taskReadOneBody{Task: *task, MaxPermission: models.Permission(maxPermission)}
+	convertTasksToMarkdown(ctx, &body.Task)
 	return conditionalReadResponse(&in.Params, body, task.Updated, maxPermission)
+}
+
+type taskReadByIndexResponse struct {
+	Status       int
+	ETag         string  `header:"ETag"`
+	Location     *string `header:"Location" hidden:"true"`
+	CacheControl *string `header:"Cache-Control" hidden:"true"`
+	Body         *taskReadOneBody
 }
 
 func tasksReadByIndex(ctx context.Context, in *struct {
 	Project string   `path:"project" doc:"A numeric project id or a textual project identifier (e.g. \"PROJ\")."`
 	Index   int64    `path:"index" doc:"The per-project task index."`
 	Expand  []string `query:"expand,explode" enum:"subtasks,buckets,reactions,comments,comment_count,time_entries_count,is_unread" doc:"Embed extra data per task. Repeatable."`
+	Format  string   `query:"format" enum:"html,markdown" doc:"How rich-text fields are exchanged. See the API description."`
 	conditional.Params
-}) (*singleReadBody[taskReadOneBody], error) {
+}) (*taskReadByIndexResponse, error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
 		return nil, err
@@ -150,19 +180,70 @@ func tasksReadByIndex(ctx context.Context, in *struct {
 		return nil, err
 	}
 
-	// ID 0 + ProjectID + Index makes the model resolve the id from the
-	// (project, index) pair in both CanRead and ReadOne.
 	task := &models.Task{ProjectID: projectID, Index: in.Index, Expand: expand}
 	maxPermission, err := handler.DoReadOne(ctx, task, a)
+	if err == nil {
+		body := &taskReadOneBody{Task: *task, MaxPermission: models.Permission(maxPermission)}
+		convertTasksToMarkdown(ctx, &body.Task)
+		response, err := conditionalReadResponse(&in.Params, body, task.Updated, maxPermission)
+		if err != nil {
+			return nil, err
+		}
+		return &taskReadByIndexResponse{
+			Status: http.StatusOK,
+			ETag:   response.ETag,
+			Body:   response.Body,
+		}, nil
+	}
+	if !models.IsErrTaskDoesNotExist(err) {
+		return nil, translateDomainError(err)
+	}
+
+	s := db.NewSession()
+	defer s.Close()
+
+	// Otherwise 307/403 vs 404 lets callers probe retired indexes of projects they cannot read.
+	canReadProject, _, err := (&models.Project{ID: projectID}).CanRead(s, a)
 	if err != nil {
 		return nil, translateDomainError(err)
 	}
-	body := &taskReadOneBody{Task: *task, MaxPermission: models.Permission(maxPermission)}
-	return conditionalReadResponse(&in.Params, body, task.Updated, maxPermission)
+	if !canReadProject {
+		return nil, errReadForbidden(a)
+	}
+
+	taskID, err := models.GetTaskIDByIndexAlias(s, projectID, in.Index)
+	if err != nil {
+		return nil, translateDomainError(err)
+	}
+
+	task = &models.Task{ID: taskID}
+	canRead, _, err := task.CanRead(s, a)
+	if err != nil {
+		return nil, translateDomainError(err)
+	}
+	if !canRead {
+		return nil, errReadForbidden(a)
+	}
+
+	location := &url.URL{
+		Path: GroupPrefix + "/projects/" + strconv.FormatInt(task.ProjectID, 10) +
+			"/tasks/by-index/" + strconv.FormatInt(task.Index, 10),
+	}
+	if ec := humabridge.EchoContextFrom(ctx); ec != nil {
+		location.RawQuery = (*ec).Request().URL.RawQuery
+	}
+	locationValue := location.String()
+	cacheControl := "no-store"
+	return &taskReadByIndexResponse{
+		Status:       http.StatusTemporaryRedirect,
+		Location:     &locationValue,
+		CacheControl: &cacheControl,
+	}, nil
 }
 
 func tasksCreate(ctx context.Context, in *struct {
-	Project int64 `path:"project" doc:"The numeric id of the project to create the task in."`
+	Project int64  `path:"project" doc:"The numeric id of the project to create the task in."`
+	Format  string `query:"format" enum:"html,markdown" doc:"How rich-text fields are exchanged. See the API description."`
 	Body    models.Task
 }) (*singleBody[models.Task], error) {
 	a, err := authFromCtx(ctx)
@@ -171,16 +252,21 @@ func tasksCreate(ctx context.Context, in *struct {
 	}
 	task := &in.Body
 	task.ProjectID = in.Project // URL wins over body
+	if err := convertToHTML(ctx, &task.Description); err != nil {
+		return nil, translateDomainError(err)
+	}
 	if err := handler.DoCreate(ctx, task, a); err != nil {
 		return nil, translateDomainError(err)
 	}
+	convertTasksToMarkdown(ctx, task)
 	return &singleBody[models.Task]{Body: task}, nil
 }
 
 // Body matches the read shape so AutoPatch's GET→PUT echo of max_permission validates.
 func tasksUpdate(ctx context.Context, in *struct {
-	ID   int64 `path:"projecttask"`
-	Body taskReadOneBody
+	ID     int64  `path:"task"`
+	Format string `query:"format" enum:"html,markdown" doc:"How rich-text fields are exchanged. See the API description."`
+	Body   taskReadOneBody
 }) (*singleBody[models.Task], error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
@@ -188,14 +274,18 @@ func tasksUpdate(ctx context.Context, in *struct {
 	}
 	task := &in.Body.Task
 	task.ID = in.ID // URL wins over body
+	if err := convertToHTML(ctx, &task.Description); err != nil {
+		return nil, translateDomainError(err)
+	}
 	if err := handler.DoUpdate(ctx, task, a); err != nil {
 		return nil, translateDomainError(err)
 	}
+	convertTasksToMarkdown(ctx, task)
 	return &singleBody[models.Task]{Body: task}, nil
 }
 
 func tasksDelete(ctx context.Context, in *struct {
-	ID int64 `path:"projecttask"`
+	ID int64 `path:"task"`
 }) (*emptyBody, error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {

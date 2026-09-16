@@ -54,7 +54,6 @@ package routes
 import (
 	"context"
 	"log/slog"
-	"net"
 	"strings"
 	"time"
 
@@ -62,12 +61,14 @@ import (
 	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/modules/auth/oauth2server"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
 	"code.vikunja.io/api/pkg/modules/background"
 	backgroundHandler "code.vikunja.io/api/pkg/modules/background/handler"
 	"code.vikunja.io/api/pkg/modules/background/unsplash"
 	"code.vikunja.io/api/pkg/modules/background/upload"
+	mcpmodule "code.vikunja.io/api/pkg/modules/mcp"
 	"code.vikunja.io/api/pkg/modules/migration"
 	csvmigrator "code.vikunja.io/api/pkg/modules/migration/csv"
 	migrationHandler "code.vikunja.io/api/pkg/modules/migration/handler"
@@ -91,7 +92,6 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
-	"github.com/ulule/limiter/v3"
 )
 
 // matchCORSOrigin checks if an origin matches any of the allowed origin patterns.
@@ -122,6 +122,14 @@ func matchCORSOrigin(origin string, allowedOrigins []string) (string, bool, erro
 	return "", false, nil
 }
 
+func corsOriginAllowed(origin string) bool {
+	if !config.CorsEnable.GetBool() {
+		return false
+	}
+	_, ok, err := matchCORSOrigin(origin, config.CorsOrigins.GetStringSlice())
+	return ok && err == nil
+}
+
 // NewEcho registers a new Echo instance
 func NewEcho() *echo.Echo {
 	// Configure Echo with a router that unescapes path parameters.
@@ -133,31 +141,24 @@ func NewEcho() *echo.Echo {
 		Router: echo.NewRouter(echo.RouterConfig{
 			UnescapePathParamValues: true,
 		}),
+		// Since echo v5.3.0 groups implicitly register 404 routes when middleware
+		// is added. Our route setup creates multiple groups with the same prefix
+		// (e.g. rate-limit subgroups of /api/v1), which would panic as duplicates.
+		NoGroupAutoRegister404Routes: true,
 	})
 
-	// Configure IP extraction to prevent rate limit bypass via spoofed headers.
-	// Echo's default RealIP() trusts X-Forwarded-For and X-Real-IP unconditionally,
-	// which allows attackers to bypass IP-based rate limits.
-	// See: https://echo.labstack.com/docs/ip-address
-	switch config.ServiceIPExtractionMethod.GetString() {
-	case "xff":
-		trustOptions := parseTrustedProxies(config.ServiceTrustedProxies.GetString())
-		e.IPExtractor = echo.ExtractIPFromXFFHeader(trustOptions...)
-		log.Debugf("IP extraction: X-Forwarded-For with %d trusted proxy ranges", len(trustOptions))
-	case "realip":
-		trustOptions := parseTrustedProxies(config.ServiceTrustedProxies.GetString())
-		e.IPExtractor = echo.ExtractIPFromRealIPHeader(trustOptions...)
-		log.Debugf("IP extraction: X-Real-IP with %d trusted proxy ranges", len(trustOptions))
-	default:
-		e.IPExtractor = echo.ExtractIPDirect()
-		log.Debugf("IP extraction: direct (TCP remote address)")
-	}
+	e.IPExtractor = newIPExtractor(config.ServiceIPExtractionMethod.GetString(), config.ServiceTrustedProxies.GetString())
 
-	e.Logger = log.NewEchoLogger(config.LogEnabled.GetBool(), config.LogHTTP.GetString(), config.LogFormat.GetString())
+	e.Logger = log.NewEchoLogger(config.LogEnabled.GetBool(), config.LogHTTP.GetString(), config.LogHTTPLevel.GetString(), config.LogFormat.GetString())
+
+	// First middleware in the chain so every request has an ID — reuses the
+	// X-Request-Id header from a proxy or generates one — and everything
+	// downstream (logging, audit) sees the same value.
+	e.Use(middleware.RequestID())
 
 	// Logger
 	if config.LogEnabled.GetBool() && config.LogHTTP.GetString() != "off" {
-		httpLogger := log.NewHTTPLogger(config.LogEnabled.GetBool(), config.LogHTTP.GetString(), config.LogFormat.GetString())
+		httpLogger := log.NewHTTPLogger(config.LogEnabled.GetBool(), config.LogHTTP.GetString(), config.LogHTTPLevel.GetString(), config.LogFormat.GetString())
 		e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
 			LogStatus:    true,
 			LogURI:       true,
@@ -167,26 +168,18 @@ func NewEcho() *echo.Echo {
 			LogUserAgent: true,
 			HandleError:  true,
 			LogValuesFunc: func(_ *echo.Context, v middleware.RequestLoggerValues) error {
-				if v.Error == nil {
-					httpLogger.LogAttrs(context.Background(), slog.LevelInfo, "",
-						slog.String("remote_ip", v.RemoteIP),
-						slog.String("method", v.Method),
-						slog.String("uri", v.URI),
-						slog.Int("status", v.Status),
-						slog.Duration("latency", v.Latency),
-						slog.String("user_agent", v.UserAgent),
-					)
-				} else {
-					httpLogger.LogAttrs(context.Background(), slog.LevelError, "",
-						slog.String("remote_ip", v.RemoteIP),
-						slog.String("method", v.Method),
-						slog.String("uri", v.URI),
-						slog.Int("status", v.Status),
-						slog.Duration("latency", v.Latency),
-						slog.String("user_agent", v.UserAgent),
-						slog.String("err", v.Error.Error()),
-					)
+				attrs := []slog.Attr{
+					slog.String("remote_ip", v.RemoteIP),
+					slog.String("method", v.Method),
+					slog.String("uri", v.URI),
+					slog.Int("status", v.Status),
+					slog.Duration("latency", v.Latency),
+					slog.String("user_agent", v.UserAgent),
 				}
+				if v.Error != nil {
+					attrs = append(attrs, slog.String("err", v.Error.Error()))
+				}
+				httpLogger.LogAttrs(context.Background(), httpLogLevel(v.Status), "", attrs...)
 				return nil
 			},
 		}))
@@ -198,6 +191,10 @@ func NewEcho() *echo.Echo {
 	// Normalize PHP-style `foo[]=...` query params to `foo=...` before any
 	// handler binds them. Runs globally so both /api/v1 and /api/v2 benefit.
 	e.Use(vmiddleware.NormalizeArrayParams())
+
+	if config.AuditEnabled.GetBool() {
+		e.Use(vmiddleware.RequestMeta())
+	}
 
 	setupSentry(e)
 
@@ -214,27 +211,6 @@ func NewEcho() *echo.Echo {
 	e.HTTPErrorHandler = CreateHTTPErrorHandler(e, config.SentryEnabled.GetBool())
 
 	return e
-}
-
-func parseTrustedProxies(proxies string) []echo.TrustOption {
-	if proxies == "" {
-		return nil
-	}
-
-	var options []echo.TrustOption
-	for _, cidr := range strings.Split(proxies, ",") {
-		cidr = strings.TrimSpace(cidr)
-		if cidr == "" {
-			continue
-		}
-		_, ipNet, err := net.ParseCIDR(cidr)
-		if err != nil {
-			log.Warningf("Invalid trusted proxy CIDR %q: %v", cidr, err)
-			continue
-		}
-		options = append(options, echo.TrustIPRange(ipNet))
-	}
-	return options
 }
 
 func setupSentry(e *echo.Echo) {
@@ -259,20 +235,31 @@ func setupSentry(e *echo.Echo) {
 // RegisterRoutes registers all routes for the application
 func RegisterRoutes(e *echo.Echo) {
 
+	// One instance keeps every BasicAuth route on the same failure budget.
+	noAuthRateLimit := unauthRateLimit()
+	refreshRateLimit := tokenRefreshRateLimit()
+	basicAuthRateLimit := basicAuthRateLimit()
+
 	if config.ServiceEnableCaldav.GetBool() {
 		// Caldav routes
 		wkg := e.Group("/.well-known")
+		// Reserve the failure budget before bcrypt runs.
+		wkg.Use(basicAuthRateLimit)
 		wkg.Use(middleware.BasicAuth(caldav.BasicAuth))
 		wkg.Any("/caldav", caldav.PrincipalHandler)
 		wkg.Any("/caldav/", caldav.PrincipalHandler)
 		c := e.Group("/dav")
+		c.Use(basicAuthRateLimit)
 		registerCalDavRoutes(c)
 	}
 
 	// Feeds routes (Atom feed for user notifications)
 	f := e.Group("/feeds")
+	f.Use(basicAuthRateLimit)
 	f.Use(middleware.BasicAuth(feeds.BasicAuth))
 	f.GET("/notifications.atom", feeds.NotificationsAtomFeed)
+
+	e.GET("/.well-known/change-password", ChangePasswordRedirect)
 
 	// healthcheck
 	e.GET("/health", HealthcheckHandler)
@@ -307,11 +294,14 @@ func RegisterRoutes(e *echo.Echo) {
 
 	// API Routes
 	a := e.Group("/api/v1")
-	registerAPIRoutes(a)
+	registerAPIRoutes(a, noAuthRateLimit, refreshRateLimit)
+	setupPprof(e)
 
 	// /api/v2 — Huma-backed API, scaffolded alongside /api/v1.
-	a2 := e.Group("/api/v2")
-	registerAPIRoutesV2(e, a2)
+	a2 := e.Group(apiv2.GroupPrefix)
+	// Share the BasicAuth failure budget with CalDAV and feeds.
+	a2.Use(pathScoped(func(p string) bool { return p == "/api/v2/notifications.atom" }, basicAuthRateLimit))
+	registerAPIRoutesV2(e, a2, noAuthRateLimit, refreshRateLimit)
 
 	// Collect routes for API token permissions
 	// In Echo v5, we collect routes after registration using e.Router().Routes()
@@ -325,7 +315,7 @@ var unauthenticatedAPIPaths = map[string]bool{
 	"/api/v1/user/password/reset":            true,
 	"/api/v1/user/confirm":                   true,
 	"/api/v1/login":                          true,
-	"/api/v1/user/token/refresh":             true,
+	auth.RefreshTokenPathV1:                  true,
 	"/api/v1/auth/openid/:provider/callback": true,
 	"/api/v1/test/:table":                    true,
 	"/api/v1/info":                           true,
@@ -343,6 +333,34 @@ var unauthenticatedAPIPaths = map[string]bool{
 	"/api/v2/docs":                      true,
 	"/api/v2/docs/scalar.standalone.js": true,
 	"/api/v2/schemas/:schema":           true,
+	"/api/v2/info":                      true,
+
+	"/api/v2/register":                       true,
+	"/api/v2/invite-links/check":             true,
+	"/api/v2/user/password/token":            true,
+	"/api/v2/user/password/reset":            true,
+	"/api/v2/user/confirm":                   true,
+	"/api/v2/shares/:share/auth":             true,
+	"/api/v2/oauth/token":                    true,
+	"/api/v2/login":                          true,
+	auth.RefreshTokenPathV2:                  true,
+	"/api/v2/auth/openid/:provider/callback": true,
+
+	// Testing endpoints authenticate with the testing token via a custom
+	// Authorization header, not a JWT; mounted only when that token is set.
+	"/api/v2/test/all":    true,
+	"/api/v2/test/:table": true,
+
+	// Public infra healthcheck (a Huma op that opts out of the global auth).
+	"/api/v2/health": true,
+
+	// Atom feed (a Huma op) authenticates itself with HTTP Basic auth (a
+	// feeds-scoped API token), like its /feeds counterpart, not a JWT.
+	"/api/v2/notifications.atom": true,
+
+	// WebSocket upgrade (a raw echo route — OpenAPI can't model WebSockets);
+	// it authenticates via its first message, so the upgrade needs no JWT.
+	"/api/v2/ws": true,
 }
 
 // collectRoutesForAPITokens collects all routes for API token permission checking.
@@ -376,31 +394,80 @@ func noStoreCacheControl() echo.MiddlewareFunc {
 	}
 }
 
-const v2AdminPathPrefix = "/api/v2/admin"
-
-// gateV2AdminRoutes reuses v1's RequireFeature/RequireInstanceAdmin gate (both
-// 404-on-failure) as path-scoped middleware: splitting v2 into a gated Echo
-// sub-group would split the Huma API and drop admin ops from the OpenAPI spec.
-func gateV2AdminRoutes() echo.MiddlewareFunc {
-	feature := RequireFeature(license.FeatureAdminPanel)
-	admin := RequireInstanceAdmin()
+// match receives the matched echo route template, not the request URL.
+// v2 can't use an Echo sub-group here: that would split the Huma API and drop
+// the scoped ops from the OpenAPI spec.
+func pathScoped(match func(string) bool, mw echo.MiddlewareFunc) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		gated := feature(admin(next))
+		scoped := mw(next)
 		return func(c *echo.Context) error {
-			if strings.HasPrefix(c.Request().URL.Path, v2AdminPathPrefix) {
-				return gated(c)
+			if match(c.Path()) {
+				return scoped(c)
 			}
 			return next(c)
 		}
 	}
 }
 
+type pathSet map[string]bool
+
+func (s pathSet) has(p string) bool { return s[p] }
+
+// Panics on a path that isn't JWT-exempt: such an entry is a typo, and a typo
+// here silently means no rate limit at all.
+func unauthenticatedPathSet(paths ...string) pathSet {
+	s := make(pathSet, len(paths))
+	for _, p := range paths {
+		if !unauthenticatedAPIPaths[p] {
+			panic("rate limited path " + p + " is not in unauthenticatedAPIPaths")
+		}
+		s[p] = true
+	}
+	return s
+}
+
+// The v2 counterparts of v1's unauthenticated route group - credential
+// endpoints only, never the docs/info/health ones.
+var v2CredentialPaths = unauthenticatedPathSet(
+	"/api/v2/invite-links/check",
+	"/api/v2/register",
+	"/api/v2/user/password/token",
+	"/api/v2/user/password/reset",
+	"/api/v2/user/confirm",
+	"/api/v2/login",
+	"/api/v2/auth/openid/:provider/callback",
+	"/api/v2/shares/:share/auth",
+)
+
+var v2SessionRenewalPaths = unauthenticatedPathSet(
+	auth.RefreshTokenPathV2,
+	"/api/v2/oauth/token",
+)
+
+const v2AdminPathPrefix = "/api/v2/admin"
+
+// gateV2AdminRoutes reuses v1's RequireFeature/RequireInstanceAdmin gate, both
+// of which 404 on failure.
+func gateV2AdminRoutes() echo.MiddlewareFunc {
+	feature := RequireFeature(license.FeatureAdminPanel)
+	admin := RequireInstanceAdmin()
+	invites := pathScoped(func(p string) bool {
+		return p == v2AdminPathPrefix+"/teams" || p == v2AdminPathPrefix+"/invite-links" || strings.HasPrefix(p, v2AdminPathPrefix+"/invite-links/")
+	}, RequireFeature(license.FeatureUserInvites))
+	return pathScoped(
+		func(p string) bool { return strings.HasPrefix(p, v2AdminPathPrefix) },
+		func(next echo.HandlerFunc) echo.HandlerFunc { return feature(admin(invites(next))) },
+	)
+}
+
 // registerAPIRoutesV2 wires the /api/v2 Echo group. Token middleware is
 // attached before any route so Huma's spec and Scalar docs share the
 // resource handlers' stack; unauthenticatedAPIPaths keeps them public.
-func registerAPIRoutesV2(e *echo.Echo, a *echo.Group) {
+func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, noAuthRateLimit, refreshRateLimit echo.MiddlewareFunc) {
 	a.Use(noStoreCacheControl())
 	a.Use(SetupTokenMiddleware())
+	a.Use(pathScoped(v2SessionRenewalPaths.has, refreshRateLimit))
+	a.Use(pathScoped(v2CredentialPaths.has, noAuthRateLimit))
 	// Match the authenticated v1 group: rate limiting and route metrics
 	// apply to v2 resource endpoints too.
 	setupRateLimit(a, config.RateLimitKind.GetString())
@@ -415,11 +482,24 @@ func registerAPIRoutesV2(e *echo.Echo, a *echo.Group) {
 	a.GET("/docs", apiv2.ScalarUI)
 	a.GET("/docs/scalar.standalone.js", apiv2.ScalarJS)
 
+	// WebSockets can't be modeled in OpenAPI and Huma has no WS support, so the
+	// upgrade endpoint stays a raw echo route (outside the Huma spec). It
+	// authenticates via its first message, so unauthenticatedAPIPaths exempts it
+	// from the group's JWT middleware. Health and the Atom feed are Huma ops and
+	// self-register via init()/RegisterAll.
+	a.GET("/ws", ws.UpgradeHandler, noAuthRateLimit)
+
 	// Resources self-register via init(); RegisterAll runs them all + AutoPatch.
 	apiv2.RegisterAll(api)
+	m, err := mcpmodule.New(api, corsOriginAllowed)
+	if err != nil {
+		panic(err)
+	}
+	m.Register(a)
+	apiv2.RegisterMCPInfo(api, m.ConnectionInfo)
 }
 
-func registerAPIRoutes(a *echo.Group) {
+func registerAPIRoutes(a *echo.Group, noAuthRateLimit, refreshRateLimit echo.MiddlewareFunc) {
 
 	// Prevent browsers from caching API responses. Without an explicit
 	// Cache-Control header browsers may heuristically cache JSON responses
@@ -438,19 +518,14 @@ func registerAPIRoutes(a *echo.Group) {
 	n.GET("/docs/redoc.standalone.js", apiv1.RedocJS)
 
 	// WebSocket (auth happens after upgrade via first message)
-	n.GET("/ws", ws.UpgradeHandler)
+	n.GET("/ws", ws.UpgradeHandler, noAuthRateLimit)
 
 	// Prometheus endpoint
 	setupMetrics(n)
 
 	// Separate route for unauthenticated routes to enable rate limits for it
 	ur := a.Group("")
-	rate := limiter.Rate{
-		Period: 60 * time.Second,
-		Limit:  config.RateLimitNoAuthRoutesLimit.GetInt64(),
-	}
-	rateLimiter := createRateLimiter(rate)
-	ur.Use(RateLimit(rateLimiter, "ip"))
+	ur.Use(noAuthRateLimit)
 
 	if config.AuthLocalEnabled.GetBool() {
 		ur.POST("/register", apiv1.RegisterUser)
@@ -463,17 +538,20 @@ func registerAPIRoutes(a *echo.Group) {
 		ur.POST("/login", apiv1.Login)
 	}
 
-	// Refresh token endpoint — unauthenticated because it uses the refresh
-	// token cookie instead of a JWT bearer token.
-	ur.POST("/user/token/refresh", apiv1.RefreshToken)
-
 	if config.AuthOpenIDEnabled.GetBool() {
 		ur.POST("/auth/openid/:provider/callback", openid.HandleCallback)
 	}
 
+	tr := a.Group("")
+	tr.Use(refreshRateLimit)
+
+	// Refresh token endpoint — unauthenticated because it uses the refresh
+	// token cookie instead of a JWT bearer token.
+	tr.POST("/user/token/refresh", apiv1.RefreshToken)
+
 	// OAuth 2.0 token endpoint — unauthenticated because it validates
 	// credentials (authorization code or refresh token) itself.
-	ur.POST("/oauth/token", oauth2server.HandleToken)
+	tr.POST("/oauth/token", oauth2server.HandleToken)
 
 	// Testing
 	if config.ServiceTestingtoken.GetString() != "" {
@@ -807,6 +885,7 @@ func registerAPIRoutes(a *echo.Group) {
 	a.GET("/notifications", notificationHandler.ReadAllWeb)
 	a.POST("/notifications/:notificationid", notificationHandler.UpdateWeb)
 	a.POST("/notifications", apiv1.MarkAllNotificationsAsRead)
+	a.DELETE("/notifications", notificationHandler.DeleteWeb)
 
 	// Migrations
 	m := a.Group("/migration")
@@ -1001,4 +1080,17 @@ func registerCalDavRoutes(c *echo.Group) {
 	c.Any("/projects/:project", caldav.ProjectHandler)
 	c.Any("/projects/:project/", caldav.ProjectHandler)
 	c.Any("/projects/:project/:task", caldav.TaskHandler) // Mostly used for editing
+}
+
+// Level by status so log.httplevel can filter successful requests out
+// while keeping failed ones.
+func httpLogLevel(status int) slog.Level {
+	switch {
+	case status >= 500:
+		return slog.LevelError
+	case status >= 400:
+		return slog.LevelWarn
+	default:
+		return slog.LevelInfo
+	}
 }

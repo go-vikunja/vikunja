@@ -17,13 +17,19 @@
 package models
 
 import (
+	"context"
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/hex"
+	"net/http"
 	"slices"
+	"strings"
 	"time"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/web"
@@ -42,10 +48,12 @@ type APIToken struct {
 	// A human-readable name for this token
 	Title string `xorm:"not null" json:"title" valid:"required" minLength:"1" doc:"A human-readable name for this token."`
 	// The actual api key. Only visible after creation.
-	Token          string `xorm:"-" json:"token,omitempty" readOnly:"true" doc:"The cleartext api key. Returned only once, in the response to creating the token; never readable again."`
-	TokenSalt      string `xorm:"not null" json:"-"`
-	TokenHash      string `xorm:"not null unique" json:"-"`
-	TokenLastEight string `xorm:"not null index varchar(8)" json:"-"`
+	Token string `xorm:"-" json:"token,omitempty" readOnly:"true" doc:"The cleartext api key. Returned only once, in the response to creating the token; never readable again."`
+	// Legacy PBKDF2 columns, only populated on tokens created before TokenSha256 existed.
+	TokenSalt      string `xorm:"null" json:"-"`
+	TokenHash      string `xorm:"null unique" json:"-"`
+	TokenLastEight string `xorm:"null index varchar(8)" json:"-"`
+	TokenSha256    string `xorm:"varchar(64) null unique" json:"-"`
 	// The permissions this token has. Possible values are available via the /routes endpoint and consist of the keys of the list from that endpoint. For example, if the token should be able to read all tasks as well as update existing tasks, you should add `{"tasks":["read_all","update"]}`.
 	APIPermissions APIPermissions `xorm:"json not null permissions" json:"permissions" valid:"required" doc:"The permissions this token has. Possible values are available via the /routes endpoint and consist of the keys of the list from that endpoint. For example, if the token should be able to read all tasks as well as update existing tasks, you should add {\"tasks\":[\"read_all\",\"update\"]}."`
 	// The date when this key expires.
@@ -63,6 +71,27 @@ type APIToken struct {
 }
 
 const APITokenPrefix = `tk_`
+
+// APITokenAuthorization returns the first Authorization value carrying an API token.
+func APITokenAuthorization(h http.Header) (string, bool) {
+	for _, v := range h.Values("Authorization") {
+		if strings.HasPrefix(v, "Bearer "+APITokenPrefix) {
+			return v, true
+		}
+	}
+	return "", false
+}
+
+// RecordAPITokenUse dispatches the audit event for a request this token authenticated.
+func RecordAPITokenUse(ctx context.Context, token *APIToken) error {
+	if token == nil || !config.AuditEnabled.GetBool() {
+		return nil
+	}
+	return events.DispatchWithContext(ctx, &APITokenUsedEvent{
+		TokenID: token.ID,
+		OwnerID: token.OwnerID,
+	})
+}
 
 func (*APIToken) TableName() string {
 	return "api_tokens"
@@ -83,35 +112,33 @@ func GetAPITokenByID(s *xorm.Session, id int64) (token *APIToken, err error) {
 // @Produce json
 // @Security JWTKeyAuth
 // @Param token body models.APIToken true "The token object with required fields"
-// @Success 200 {object} models.APIToken "The created token."
+// @Success 201 {object} models.APIToken "The created token."
 // @Failure 400 {object} web.HTTPError "Invalid token object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tokens [put]
 func (t *APIToken) Create(s *xorm.Session, a web.Auth) (err error) {
-	t.ID = 0
-
-	salt, err := utils.CryptoRandomString(10)
+	caller, err := user.GetFromAuth(a)
 	if err != nil {
 		return err
 	}
+
+	t.ID = 0
+
 	token, err := utils.CryptoRandomBytes(20)
 	if err != nil {
 		return err
 	}
-	t.TokenSalt = salt
 	t.Token = APITokenPrefix + hex.EncodeToString(token)
-	t.TokenHash = HashToken(t.Token, t.TokenSalt)
-	t.TokenLastEight = t.Token[len(t.Token)-8:]
+	t.TokenSha256 = HashAPIToken(t.Token)
 
 	if t.OwnerID == 0 {
-		t.OwnerID = a.GetID()
-	} else if t.OwnerID != a.GetID() {
-		// If OwnerID is set to someone else, verify it's a bot owned by the caller.
+		t.OwnerID = caller.ID
+	} else if t.OwnerID != caller.ID {
 		botUser, err := user.GetUserByID(s, t.OwnerID)
 		if err != nil {
 			return err
 		}
-		if !botUser.IsBot() || botUser.BotOwnerID != a.GetID() {
+		if !botUser.IsBotOwnedBy(caller) {
 			return &user.ErrBotNotOwned{UserID: t.OwnerID}
 		}
 	}
@@ -120,13 +147,30 @@ func (t *APIToken) Create(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
-	_, err = s.Insert(t)
-	return err
+	// Legacy columns stay NULL; without Nullable xorm would insert "" and trip the unique index on token_hash.
+	_, err = s.Nullable("token_salt", "token_hash", "token_last_eight").Insert(t)
+	if err != nil {
+		return err
+	}
+
+	events.DispatchOnCommit(s, &APITokenIssuedEvent{
+		TokenID: t.ID,
+		DoerID:  caller.ID,
+		OwnerID: t.OwnerID,
+	})
+
+	return nil
 }
 
+// HashToken is the legacy PBKDF2 hash, only kept to verify tokens created before token_sha256 existed.
 func HashToken(token, salt string) string {
 	tempHash := pbkdf2.Key([]byte(token), []byte(salt), 10000, 50, sha256.New)
 	return hex.EncodeToString(tempHash)
+}
+
+// HashAPIToken uses plain SHA-256, same rationale as HashSessionToken: 160-bit random tokens gain nothing from a slow KDF.
+func HashAPIToken(token string) string {
+	return utils.Sha256Hex(token)
 }
 
 // ReadAll returns all api tokens the current user has created
@@ -144,16 +188,20 @@ func HashToken(token, salt string) string {
 // @Router /tokens [get]
 func (t *APIToken) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 
+	caller, err := user.GetFromAuth(a)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
 	tokens := []*APIToken{}
 
-	ownerID := a.GetID()
-	if t.OwnerID != 0 && t.OwnerID != a.GetID() {
-		// If filtering by a different owner, verify it's a bot owned by the caller.
+	ownerID := caller.ID
+	if t.OwnerID != 0 && t.OwnerID != caller.ID {
 		botUser, lookupErr := user.GetUserByID(s, t.OwnerID)
 		if lookupErr != nil {
 			return nil, 0, 0, lookupErr
 		}
-		if !botUser.IsBot() || botUser.BotOwnerID != a.GetID() {
+		if !botUser.IsBotOwnedBy(caller) {
 			return nil, 0, 0, &user.ErrBotNotOwned{UserID: t.OwnerID}
 		}
 		ownerID = t.OwnerID
@@ -192,36 +240,84 @@ func (t *APIToken) ReadAll(s *xorm.Session, a web.Auth, search string, page int,
 // @Failure 404 {object} web.HTTPError "The token does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tokens/{tokenID} [delete]
-func (t *APIToken) Delete(s *xorm.Session, _ web.Auth) (err error) {
+func (t *APIToken) Delete(s *xorm.Session, a web.Auth) (err error) {
+	caller, err := user.GetFromAuth(a)
+	if err != nil {
+		return err
+	}
+
 	// Ownership is verified in CanDelete; delete by ID only.
 	_, err = s.Where("id = ?", t.ID).Delete(&APIToken{})
-	return err
+	if err != nil {
+		return err
+	}
+
+	events.DispatchOnCommit(s, &APITokenRevokedEvent{
+		TokenID: t.ID,
+		DoerID:  caller.ID,
+	})
+
+	return nil
 }
 
-// HasCaldavAccess checks whether the token has the caldav access permission.
-func (t *APIToken) HasCaldavAccess() bool {
-	perms, has := t.APIPermissions["caldav"]
-	if !has {
+func (t *APIToken) HasPermission(group, permission string) bool {
+	if t == nil {
 		return false
 	}
-	return slices.Contains(perms, "access")
-}
-
-// HasFeedsAccess checks whether the token has the feeds access permission.
-func (t *APIToken) HasFeedsAccess() bool {
-	perms, has := t.APIPermissions["feeds"]
-	if !has {
-		return false
+	group = canonicalAPITokenGroup(group)
+	for storedGroup, perms := range t.APIPermissions {
+		if canonicalAPITokenGroup(storedGroup) == group && slices.Contains(perms, permission) {
+			return true
+		}
 	}
-	return slices.Contains(perms, "access")
+	return false
 }
 
-// GetTokenFromTokenString returns the full token object from the original token string.
+func (t *APIToken) HasCaldavAccess() bool { return t.HasPermission("caldav", "access") }
+func (t *APIToken) HasFeedsAccess() bool  { return t.HasPermission("feeds", "access") }
+
+// MCP's transport scope is checked in its handler, independently of the HTTP method.
+func (t *APIToken) HasMCPAccess() bool { return t.HasPermission("mcp", "access") }
+
+// GetTokenFromTokenString returns the full token object from the original token string,
+// backfilling token_sha256 when the token was only found via the legacy pbkdf2 path.
 func GetTokenFromTokenString(s *xorm.Session, token string) (apiToken *APIToken, err error) {
+	// The slice below would panic on a short string. Real tokens are prefix + 40
+	// hex chars, so anything shorter is invalid by construction.
+	if len(token) < len(APITokenPrefix)+8 {
+		return nil, &ErrAPITokenInvalid{}
+	}
+
+	hash := HashAPIToken(token)
+
+	apiToken = &APIToken{}
+	found, err := s.Where(builder.Eq{"token_sha256": hash}).Get(apiToken)
+	if err != nil {
+		return nil, err
+	}
+	if found {
+		return apiToken, nil
+	}
+
+	apiToken, err = getLegacyTokenFromTokenString(s, token)
+	if err != nil {
+		return nil, err
+	}
+
+	apiToken.TokenSha256 = hash
+	backfillTokenSha256(apiToken.ID, hash)
+
+	return apiToken, nil
+}
+
+func getLegacyTokenFromTokenString(s *xorm.Session, token string) (*APIToken, error) {
 	lastEight := token[len(token)-8:]
 
 	tokens := []*APIToken{}
-	err = s.Where("token_last_eight = ?", lastEight).Find(&tokens)
+	err := s.Where(builder.And(
+		builder.Eq{"token_last_eight": lastEight},
+		builder.IsNull{"token_sha256"},
+	)).Find(&tokens)
 	if err != nil {
 		return nil, err
 	}
@@ -234,6 +330,20 @@ func GetTokenFromTokenString(s *xorm.Session, token string) (apiToken *APIToken,
 	}
 
 	return nil, &ErrAPITokenInvalid{}
+}
+
+// Own autocommit session because callers roll theirs back; the timeout keeps a starved pool from blocking auth.
+func backfillTokenSha256(id int64, hash string) {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	s := db.NewAutocommitSession()
+	defer s.Close()
+	db.SetSessionContext(ctx, s)
+
+	if _, err := s.ID(id).Cols("token_sha256").Update(&APIToken{TokenSha256: hash}); err != nil {
+		log.Warningf("Could not backfill token_sha256 for api token %d: %s", id, err)
+	}
 }
 
 // ValidateTokenAndGetOwner looks up a raw token string, checks it is not expired,

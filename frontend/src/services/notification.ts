@@ -1,12 +1,14 @@
 import AbstractService from '@/services/abstractService'
 import NotificationModel from '@/models/notification'
 import type {INotification} from '@/modelTypes/INotification'
+import {toISOStringOrNull} from '@/helpers/time/toISOStringOrNull'
 
 export default class NotificationService extends AbstractService<INotification> {
 	constructor() {
 		super({
 			getAll: '/notifications',
 			update: '/notifications/{id}',
+			delete: '/notifications',
 		})
 	}
 
@@ -21,8 +23,8 @@ export default class NotificationService extends AbstractService<INotification> 
 
 		return {
 			...model,
-			created: new Date(model.created).toISOString(),
-			readAt: new Date(model.readAt).toISOString(),
+			created: toISOStringOrNull(model.created),
+			readAt: toISOStringOrNull(model.readAt),
 		}
 	}
 	

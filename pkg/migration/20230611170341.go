@@ -34,7 +34,7 @@ func init() {
 		ID:          "20230611170341",
 		Description: "",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(users20230611170341{})
+			return partialSync(tx, users20230611170341{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil

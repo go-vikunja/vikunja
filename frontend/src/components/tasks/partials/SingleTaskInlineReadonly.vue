@@ -68,6 +68,8 @@
 			<span
 				v-if="task.attachments.length > 0"
 				class="project-task-icon"
+				role="img"
+				:aria-label="$t('task.attributes.attachment', task.attachments.length)"
 			>
 				<Icon icon="paperclip" />
 			</span>
@@ -112,7 +114,7 @@ import ColorBubble from '@/components/misc/ColorBubble.vue'
 
 import {formatDisplayDate, formatISO, formatDateLong} from '@/helpers/time/formatDate'
 
-import {useProjectStore} from '@/stores/projects'
+import {useProjects} from '@/composables/useProjects'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 
 const props = withDefaults(defineProps<{
@@ -122,9 +124,9 @@ const props = withDefaults(defineProps<{
 	showProject: false,
 })
 
-const projectStore = useProjectStore()
+const projectList = useProjects()
 
-const project = computed(() => projectStore.projects[props.task.projectId])
+const project = computed(() => projectList.projects[props.task.projectId])
 </script>
 
 <style lang="scss" scoped>
@@ -154,7 +156,7 @@ const project = computed(() => projectStore.projects[props.task.projectId])
 	}
 
 	&[data-is-overdue] .dueDate {
-		color: var(--danger);
+		color: var(--danger-text);
 	}
 
 	.task-project {

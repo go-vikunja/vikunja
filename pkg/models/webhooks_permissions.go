@@ -22,6 +22,10 @@ import (
 )
 
 func (w *Webhook) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
+	if _, is := a.(*LinkSharing); is {
+		return false, 0, nil
+	}
+
 	// User-level webhook: user owns it
 	if w.UserID > 0 {
 		return w.UserID == a.GetID(), int(PermissionRead), nil
@@ -71,5 +75,5 @@ func (w *Webhook) canDoWebhook(s *xorm.Session, a web.Auth) (bool, error) {
 
 	// Project-level webhook: delegate to project
 	p := &Project{ID: w.ProjectID}
-	return p.CanUpdate(s, a)
+	return p.CanWrite(s, a)
 }

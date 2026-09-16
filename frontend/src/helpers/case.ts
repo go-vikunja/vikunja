@@ -17,8 +17,12 @@ export function objectToCamelCase(object: Record<string, any>) {
 		parsedObject[camelCase(m)] = object[m]
 
 		// Recursive processing
-		// Prevent processing for some cases
-		if (object[m] === null) {
+		// Prevent processing for some cases. Dates have no own enumerable keys, so recursing
+		// into them would replace them with `{}` - which becomes an invalid Date downstream.
+		if (
+			object[m] === null ||
+			(object[m] instanceof Date)
+		) {
 			continue
 		}
 

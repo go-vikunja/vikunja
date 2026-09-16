@@ -1,14 +1,6 @@
 <template>
-	<RouterLink
-		v-if="to !== undefined"
-		:to="to"
-		:disabled="disabled || undefined"
-		:class="[`pagination-${variant}`, {'is-current': isCurrent}]"
-	>
-		<slot />
-	</RouterLink>
 	<BaseButton
-		v-else
+		:to="to"
 		:disabled="disabled"
 		:class="[`pagination-${variant}`, {'is-current': isCurrent}]"
 		@click="emit('click')"
@@ -71,6 +63,7 @@ const emit = defineEmits<{
 	}
 
 	&[disabled],
+	&[aria-disabled='true'],
 	fieldset[disabled] & {
 		cursor: not-allowed;
 	}
@@ -92,7 +85,8 @@ const emit = defineEmits<{
 		box-shadow: inset 0 1px 2px rgba($scheme-invert, 0.2);
 	}
 
-	&[disabled] {
+	&[disabled],
+	&[aria-disabled='true'] {
 		background-color: var(--border);
 		border-color: var(--border);
 		box-shadow: none;
@@ -106,7 +100,7 @@ const emit = defineEmits<{
 	padding-inline: 0.75em;
 	white-space: nowrap;
 
-	&:not(:disabled):hover {
+	&:not([disabled], [aria-disabled='true']):hover {
 		background: $scheme-main;
 		cursor: pointer;
 	}

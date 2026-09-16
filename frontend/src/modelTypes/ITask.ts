@@ -2,10 +2,8 @@ import type {Priority} from '@/constants/priorities'
 
 import type {IAbstract} from './IAbstract'
 import type {IUser} from './IUser'
-import type {ILabel} from './ILabel'
 import type {IAttachment} from './IAttachment'
 import type {ISubscription} from './ISubscription'
-import type {IProject} from './IProject'
 import type {IBucket} from './IBucket'
 
 import type {IRelationKind} from '@/types/IRelationKind'
@@ -16,6 +14,7 @@ import type {PartialWithId} from '@/types/PartialWithId'
 import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
 import type {IReactionPerEntity} from '@/modelTypes/IReaction'
 import type {ITaskComment} from '@/modelTypes/ITaskComment.ts'
+import type {Label} from '@/client/generated'
 
 export interface ITask extends IAbstract {
 	id: number
@@ -23,8 +22,9 @@ export interface ITask extends IAbstract {
 	description: string
 	done: boolean
 	doneAt: Date | null
+	deletedAt: Date | null
 	priority: Priority
-	labels: ILabel[]
+	labels: Label[]
 	assignees: IUser[]
 
 	dueDate: Date | null
@@ -57,7 +57,7 @@ export interface ITask extends IAbstract {
 	created: Date
 	updated: Date
 
-	projectId: IProject['id'] // Meta, only used when creating a new task
+	projectId: number // Meta, only used when creating a new task
 	bucketId: IBucket['id']
 	buckets: IBucket[]
 }

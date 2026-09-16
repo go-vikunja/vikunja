@@ -17,7 +17,10 @@
 package caldavtests
 
 import (
+	"net/http"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // TestBugs contains tests that reproduce specific bugs reported by users.
@@ -44,8 +47,22 @@ func TestBugs(t *testing.T) {
 	//     assert.Equal(t, 201, rec.Code)
 	// })
 
-	t.Run("placeholder_no_bugs_yet", func(t *testing.T) {
-		// Remove this placeholder once real bug tests are added
-		t.Skip("No bug reproductions added yet")
+	// A client that still holds the href from before the task moved to another
+	// project completes it there. The stale collection must not gain a copy.
+	t.Run("GitHub_Issue_3482_completed_task_duplicated_into_stale_collection", func(t *testing.T) {
+		e := setupTestEnv(t)
+
+		const uid = "issue-3482"
+		created := caldavPUT(t, e, "/dav/projects/36/"+uid+".ics", NewVTodo(uid, "Task G").Build())
+		assert.Equal(t, http.StatusCreated, created.Code)
+
+		stale := caldavPUT(t, e, "/dav/projects/38/"+uid+".ics", NewVTodo(uid, "Task G").Status("COMPLETED").Build())
+		assert.Equal(t, http.StatusNotFound, stale.Code)
+
+		assert.Equal(t, http.StatusNotFound, caldavGET(t, e, "/dav/projects/38/"+uid+".ics").Code)
+		assert.Equal(t, http.StatusOK, caldavGET(t, e, "/dav/projects/36/"+uid+".ics").Code)
+
+		report := caldavREPORT(t, e, "/dav/projects/38/", ReportCalendarQuery)
+		assert.NotContains(t, report.Body.String(), uid)
 	})
 }

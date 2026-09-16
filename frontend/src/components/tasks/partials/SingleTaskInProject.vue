@@ -35,7 +35,7 @@
 				:class="{ 'done': task.done, 'show-project': showProject && project}"
 				class="tasktext"
 			>
-				<span class="is-inline-flex is-align-items-center">
+				<span>
 					<RouterLink
 						v-if="showProject && typeof project !== 'undefined'"
 						v-tooltip="$t('task.detail.belongsToProject', {project: project.title})"
@@ -64,7 +64,6 @@
 							ref="taskLinkRef"
 							:to="taskDetailRoute"
 							class="task-link"
-							tabindex="-1"
 						>
 							{{ task.title }}
 						</RouterLink>
@@ -87,9 +86,14 @@
 
 				<Popup
 					v-if="+new Date(task.dueDate) > 0"
+					placement="bottom-start"
+					:anchor="dueDateTriggerEl"
+					sheet-on-mobile
+					:sheet-title="$t('task.deferDueDate.title')"
 				>
 					<template #trigger="{toggle, isOpen}">
 						<BaseButton
+							ref="dueDateTrigger"
 							v-tooltip="formatDateLong(task.dueDate)"
 							class="dueDate"
 							@click.prevent.stop="toggle()"
@@ -107,7 +111,6 @@
 						<DeferTask
 							v-if="isOpen"
 							v-model="task"
-							@update:modelValue="deferTaskUpdate"
 						/>
 					</template>
 				</Popup>
@@ -116,6 +119,8 @@
 					<span
 						v-if="task.attachments.length > 0"
 						class="project-task-icon"
+						role="img"
+						:aria-label="$t('task.attributes.attachment', task.attachments.length)"
 					>
 						<Icon icon="paperclip" />
 					</span>
@@ -221,8 +226,8 @@ import TaskService from '@/services/task'
 import {formatDisplayDate, formatISO, formatDateLong} from '@/helpers/time/formatDate'
 import {success} from '@/message'
 
-import {useProjectStore} from '@/stores/projects'
-import {useBaseStore} from '@/stores/base'
+import {useProjects} from '@/composables/useProjects'
+import {useCurrentProject} from '@/composables/useCurrentProject'
 import {useTaskStore} from '@/stores/tasks'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 import {useIntervalFn} from '@vueuse/core'
@@ -276,21 +281,15 @@ watch(
 	},
 )
 
-const baseStore = useBaseStore()
-const projectStore = useProjectStore()
+const projectList = useProjects()
 const taskStore = useTaskStore()
 
-const project = computed(() => projectStore.projects[task.value.projectId])
-const projectColor = computed(() => project.value ? project.value?.hexColor : '')
+const project = computed(() => projectList.projects[task.value.projectId])
+const projectColor = computed(() => project.value?.hex_color ?? '')
 
 const showProjectSeparately = computed(() => !props.showProject && currentProject.value?.id !== task.value.projectId && project.value)
 
-const currentProject = computed(() => {
-	return typeof baseStore.currentProject === 'undefined' ? {
-		id: 0,
-		title: '',
-	} : baseStore.currentProject
-})
+const {currentProject} = useCurrentProject()
 
 const taskDetailRoute = computed(() => ({
 	name: 'task.detail',
@@ -326,9 +325,17 @@ const isOverdue = computed(() => (
 let oldTask
 
 async function markAsDone(checked: boolean, wasReverted: boolean = false) {
-	const updateFunc = async () => {
-		oldTask = {...task.value}
-		const newTask = await taskStore.update(task.value)
+	oldTask = {...task.value}
+
+	// Fire the request immediately and with the intended done value snapshotted, so a re-render or
+	// teardown during the animation delay can neither drop the save nor make it send a stale state.
+	const updatePromise = taskStore.update({
+		...task.value,
+		done: checked,
+	})
+
+	const finish = async () => {
+		const newTask = await updatePromise
 		task.value = newTask
 
 		updateDueDate()
@@ -354,9 +361,9 @@ async function markAsDone(checked: boolean, wasReverted: boolean = false) {
 	}
 
 	if (checked) {
-		setTimeout(updateFunc, 300) // Delay it to show the animation when marking a task as done
+		setTimeout(finish, 300) // Delay only the follow-up to show the animation when marking a task as done
 	} else {
-		await updateFunc() // Don't delay it when un-marking it as it doesn't have an animation the other way around
+		await finish() // Don't delay it when un-marking it as it doesn't have an animation the other way around
 	}
 }
 
@@ -374,6 +381,8 @@ async function toggleFavorite() {
 }
 
 const taskRoot = ref<HTMLElement | null>(null)
+const dueDateTrigger = ref<InstanceType<typeof BaseButton> | null>(null)
+const dueDateTriggerEl = computed<HTMLElement | null>(() => dueDateTrigger.value?.$el ?? null)
 const taskLinkRef = ref<HTMLElement | null>(null)
 
 function hasTextSelected() {
@@ -461,7 +470,7 @@ defineExpose({
 	}
 
 	&[data-is-overdue] .dueDate {
-		color: var(--danger);
+		color: var(--danger-text);
 	}
 
 	.task-project {
@@ -469,6 +478,13 @@ defineExpose({
 		color: var(--grey-400);
 		font-size: .9rem;
 		white-space: nowrap;
+	}
+
+	.tasktext :deep(.color-bubble),
+	.tasktext :deep(.avatar-wrapper),
+	.tasktext :deep(.labels .tag) {
+		vertical-align: middle;
+		transform: translateY(-2px);
 	}
 
 	.avatar {
@@ -602,8 +618,7 @@ defineExpose({
 	background-color: var(--white);
 	box-shadow: var(--shadow-lg);
 	color: var(--text);
-	inset-block-start: unset;
-	
+
 	&.is-open {
 		padding: 1rem;
 		border: 1px solid var(--grey-200);

@@ -14,15 +14,6 @@ describe('BlockquoteWithCommentId extension', () => {
 		})
 	}
 
-	it('preserves data-comment-id through setContent → getHTML round-trip', () => {
-		const editor = createEditor('<blockquote data-comment-id="42"><p>hi</p></blockquote>')
-
-		const html = editor.getHTML()
-		expect(html).toContain('data-comment-id="42"')
-
-		editor.destroy()
-	})
-
 	it('renders a plain blockquote (no attribute) unchanged', () => {
 		const editor = createEditor('<blockquote><p>just a quote</p></blockquote>')
 

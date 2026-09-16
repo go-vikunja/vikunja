@@ -81,7 +81,7 @@ func init() {
 		ID:          "20230903143017",
 		Description: "Move done bucket state to project + add default bucket setting",
 		Migrate: func(tx *xorm.Engine) (err error) {
-			err = tx.Sync2(projects20230903143017{})
+			err = partialSync(tx, projects20230903143017{})
 			if err != nil {
 				return
 			}

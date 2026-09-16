@@ -34,7 +34,7 @@ func init() {
 		ID:          "20210603174608",
 		Description: "Add week start user setting",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(users20210603174608{})
+			return partialSync(tx, users20210603174608{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil

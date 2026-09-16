@@ -146,8 +146,12 @@ func StopRunningTimer(s *xorm.Session, a web.Auth) (*TimeEntry, error) {
 
 // readableTimeEntriesCond restricts a query to entries the auth can read: a
 // standalone entry on an accessible project, or one on a task in such a project.
-func readableTimeEntriesCond(a web.Auth) builder.Cond {
-	return entriesForProjectCond(accessibleProjectIDsSubquery(a, "project_id"))
+func readableTimeEntriesCond(s *xorm.Session, a web.Auth) (builder.Cond, error) {
+	accessible, err := accessibleProjectIDsCond(s, a, "project_id")
+	if err != nil {
+		return nil, err
+	}
+	return entriesForProjectCond(accessible), nil
 }
 
 func (te *TimeEntry) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result any, resultCount int, numberOfTotalItems int64, err error) {
@@ -157,7 +161,10 @@ func (te *TimeEntry) ReadAll(s *xorm.Session, a web.Auth, search string, page in
 		return []*TimeEntry{}, 0, 0, nil
 	}
 
-	cond := readableTimeEntriesCond(a)
+	cond, err := readableTimeEntriesCond(s, a)
+	if err != nil {
+		return nil, 0, 0, err
+	}
 	if te.TaskID > 0 {
 		cond = cond.And(builder.Eq{"task_id": te.TaskID})
 	}

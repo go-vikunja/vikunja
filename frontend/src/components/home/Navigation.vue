@@ -4,7 +4,10 @@
 		class="menu-container"
 		:style="{'--sidebar-width': sidebarWidth}"
 	>
-		<nav class="menu top-menu">
+		<nav
+			class="menu top-menu"
+			:aria-label="$t('navigation.main')"
+		>
 			<RouterLink
 				:to="{name: 'home'}"
 				class="logo"
@@ -18,7 +21,7 @@
 			<menu class="menu-list other-menu-items">
 				<li>
 					<RouterLink
-						v-shortcut="'KeyG KeyO'"
+						v-shortcut="SHORTCUTS.navigation.overview"
 						:to="{ name: 'home'}"
 					>
 						<span class="menu-item-icon icon">
@@ -29,7 +32,7 @@
 				</li>
 				<li>
 					<RouterLink
-						v-shortcut="'KeyG KeyU'"
+						v-shortcut="SHORTCUTS.navigation.upcoming"
 						:to="{ name: 'tasks.range'}"
 					>
 						<span class="menu-item-icon icon">
@@ -40,7 +43,7 @@
 				</li>
 				<li>
 					<RouterLink
-						v-shortcut="'KeyG KeyP'"
+						v-shortcut="SHORTCUTS.navigation.projects"
 						:to="{ name: 'projects.index'}"
 					>
 						<span class="menu-item-icon icon">
@@ -51,7 +54,7 @@
 				</li>
 				<li>
 					<RouterLink
-						v-shortcut="'KeyG KeyA'"
+						v-shortcut="SHORTCUTS.navigation.labels"
 						:to="{ name: 'labels.index'}"
 					>
 						<span class="menu-item-icon icon">
@@ -62,7 +65,7 @@
 				</li>
 				<li>
 					<RouterLink
-						v-shortcut="'KeyG KeyM'"
+						v-shortcut="SHORTCUTS.navigation.teams"
 						:to="{ name: 'teams.index'}"
 					>
 						<span class="menu-item-icon icon">
@@ -83,13 +86,14 @@
 		</nav>
 
 		<Loading
-			v-if="projectStore.isLoading"
+			v-if="projectList.isLoading"
 			variant="small"
 		/>
 		<template v-else>
 			<nav
 				v-if="favoriteProjects.length"
 				class="menu"
+				:aria-label="$t('project.pseudo.favorites.title')"
 			>
 				<ProjectsNavigation
 					:model-value="favoriteProjects"
@@ -101,6 +105,7 @@
 			<nav
 				v-if="savedFilterProjects.length"
 				class="menu"
+				:aria-label="$t('navigation.savedFilters')"
 			>
 				<ProjectsNavigation
 					:model-value="savedFilterProjects"
@@ -109,7 +114,10 @@
 				/>
 			</nav>
 
-			<nav class="menu">
+			<nav
+				class="menu"
+				:aria-label="$t('project.projects')"
+			>
 				<ProjectsNavigation
 					:model-value="projects"
 					:can-edit-order="true"
@@ -135,30 +143,29 @@
 <script setup lang="ts">
 import {computed} from 'vue'
 
+import {SHORTCUTS} from '@/constants/shortcuts'
 import PoweredByLink from '@/components/home/PoweredByLink.vue'
 import Logo from '@/components/home/Logo.vue'
 import Loading from '@/components/misc/Loading.vue'
 
 import {useBaseStore} from '@/stores/base'
-import {useProjectStore} from '@/stores/projects'
+import {useProjects} from '@/composables/useProjects'
 import {useConfigStore} from '@/stores/config'
 import {PRO_FEATURE} from '@/constants/proFeatures'
 import ProjectsNavigation from '@/components/home/ProjectsNavigation.vue'
-import type {IProject} from '@/modelTypes/IProject'
 import {useSidebarResize} from '@/composables/useSidebarResize'
 
 const baseStore = useBaseStore()
-const projectStore = useProjectStore()
+const projectList = useProjects()
 const configStore = useConfigStore()
 
 const timeTrackingEnabled = computed(() => configStore.isProFeatureEnabled(PRO_FEATURE.TIME_TRACKING))
 
 const {sidebarWidth, isResizing, startResize, isMobile} = useSidebarResize()
 
-// Cast readonly arrays to mutable type - the arrays are not actually mutated by the component
-const projects = computed(() => projectStore.notArchivedRootProjects as IProject[])
-const favoriteProjects = computed(() => projectStore.favoriteProjects as IProject[])
-const savedFilterProjects = computed(() => projectStore.savedFilterProjects as IProject[])
+const projects = computed(() => projectList.notArchivedRootProjects)
+const favoriteProjects = computed(() => projectList.favoriteProjects)
+const savedFilterProjects = computed(() => projectList.savedFilterProjects)
 </script>
 
 <style lang="scss" scoped>

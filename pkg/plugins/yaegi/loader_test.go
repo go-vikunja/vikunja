@@ -17,6 +17,7 @@
 package yaegi
 
 import (
+	"go/build"
 	"os"
 	"path/filepath"
 	"testing"
@@ -67,4 +68,15 @@ func TestLoadPluginFull(t *testing.T) {
 		t.Fatal("UnauthRouter is nil — typed factory NewUnauthenticatedRouterPlugin not found")
 	}
 	t.Logf("UnauthRouter type: %T, name: %s", loaded.UnauthRouter, loaded.UnauthRouter.Name())
+}
+
+// Without the //go:build ignore constraint, `go build ./...` fails to link the example plugin.
+func TestExamplePluginIsExcludedFromModuleBuild(t *testing.T) {
+	match, err := build.Default.MatchFile(examplePluginDir, "main.go")
+	if err != nil {
+		t.Fatalf("MatchFile failed: %v", err)
+	}
+	if match {
+		t.Error("example plugin main.go is part of the module build, expected it to be excluded via //go:build ignore")
+	}
 }

@@ -39,7 +39,7 @@ func init() {
 		ID:          "20210207192805",
 		Description: "Add notifications table",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(notifications20210207192805{})
+			return tx.Sync2(notifications20210207192805{}) //nolint:forbidigo // brand-new table, nothing to drop
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil

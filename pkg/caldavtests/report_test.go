@@ -123,6 +123,24 @@ func TestReportCalendarQuery(t *testing.T) {
 		assert.Len(t, ms.Responses, 2,
 			"Project 38 should have 2 tasks")
 	})
+
+	// Percent signs used to be corrupted with Go fmt verb artifacts like
+	// %!s(MISSING), but only in REPORT responses (#3230).
+	t.Run("calendar-query preserves percent signs in task data", func(t *testing.T) {
+		e := setupTestEnv(t)
+
+		vtodo := NewVTodo("percent-uid", "Test %s and %d verbs, 100% done").Build()
+		rec := caldavPUT(t, e, "/dav/projects/36/percent-uid.ics", vtodo)
+		assertResponseStatus(t, rec, 201)
+
+		rec = caldavREPORT(t, e, "/dav/projects/36", ReportCalendarQuery)
+		assertResponseStatus(t, rec, 207)
+
+		body := rec.Body.String()
+		assert.Contains(t, body, `Test %s and %d verbs\, 100% done`)
+		assert.NotContains(t, body, "(MISSING)")
+		assert.NotContains(t, body, "(NOVERB)")
+	})
 }
 
 func TestReportCalendarMultiget(t *testing.T) {

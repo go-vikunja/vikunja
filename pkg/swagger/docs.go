@@ -42,7 +42,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/admin.Overview"
+                            "$ref": "#/definitions/models.Overview"
                         }
                     },
                     "404": {
@@ -207,7 +207,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/admin.User"
+                                "$ref": "#/definitions/shared.AdminUser"
                             }
                         }
                     },
@@ -243,7 +243,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/admin.CreateUserBody"
+                            "$ref": "#/definitions/models.CreateUserBody"
                         }
                     }
                 ],
@@ -251,7 +251,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/admin.User"
+                            "$ref": "#/definitions/shared.AdminUser"
                         }
                     },
                     "400": {
@@ -352,7 +352,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/admin.User"
+                            "$ref": "#/definitions/shared.AdminUser"
                         }
                     },
                     "400": {
@@ -410,7 +410,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/admin.User"
+                            "$ref": "#/definitions/shared.AdminUser"
                         }
                     },
                     "400": {
@@ -836,7 +836,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/v1.vikunjaInfos"
+                            "$ref": "#/definitions/shared.VikunjaInfos"
                         }
                     }
                 }
@@ -1792,7 +1792,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "A message telling you everything was migrated successfully.",
+                        "description": "A message telling you the migration was started.",
                         "schema": {
                             "$ref": "#/definitions/models.Message"
                         }
@@ -1918,7 +1918,7 @@ const docTemplate = `{
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Returns an array with all notifications for the current user.",
+                "description": "Returns an array with all notifications for the current user. Notifications about a project the current user can no longer read are omitted; the filtering happens in the query, so paging and the ` + "`" + `x-pagination-*` + "`" + ` headers all describe the visible notifications only.",
                 "consumes": [
                     "application/json"
                 ],
@@ -1992,6 +1992,44 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Deletes every notification belonging to the authenticated user. Only the caller's own notifications are affected.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "subscriptions"
+                ],
+                "summary": "Delete all notifications of the current user",
+                "responses": {
+                    "200": {
+                        "description": "All notifications deleted.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "403": {
+                        "description": "Link shares cannot have notifications.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
             }
         },
         "/notifications/{id}": {
@@ -2042,6 +2080,115 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/oauth/authorize": {
+            "post": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Creates an authorization code for an OAuth 2.0 client on behalf of the authenticated user. PKCE is required. API tokens cannot be used to authorize a client.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "OAuth 2.0 authorize endpoint",
+                "parameters": [
+                    {
+                        "description": "The authorization request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/oauth2server.AuthorizeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The authorization code and the redirect URI to return it to.",
+                        "schema": {
+                            "$ref": "#/definitions/oauth2server.AuthorizeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "response_type is not 'code', the redirect URI is invalid, or the PKCE challenge is missing.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "An API token was used to authorize an OAuth client.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/oauth/token": {
+            "post": {
+                "description": "Exchanges an authorization code for an access token, or a refresh token for a new one. Part of the OAuth 2.0 Authorization Code flow with PKCE. Needs no authentication: the grant itself is the credential.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "OAuth 2.0 token endpoint",
+                "parameters": [
+                    {
+                        "description": "The token request",
+                        "name": "grant",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/oauth2server.TokenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The access token, its type, lifetime and refresh token.",
+                        "schema": {
+                            "$ref": "#/definitions/oauth2server.TokenResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Unsupported grant type, or an invalid, expired or already-used authorization code.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or expired refresh token.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error.",
                         "schema": {
                             "$ref": "#/definitions/models.Message"
                         }
@@ -3073,7 +3220,7 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "The created bucket object.",
                         "schema": {
                             "$ref": "#/definitions/models.Bucket"
@@ -3153,7 +3300,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with ` + "`" + `order_by` + "`" + `. Possible values to sort by are ` + "`" + `id` + "`" + `, ` + "`" + `title` + "`" + `, ` + "`" + `description` + "`" + `, ` + "`" + `done` + "`" + `, ` + "`" + `done_at` + "`" + `, ` + "`" + `due_date` + "`" + `, ` + "`" + `created_by_id` + "`" + `, ` + "`" + `project_id` + "`" + `, ` + "`" + `repeat_after` + "`" + `, ` + "`" + `priority` + "`" + `, ` + "`" + `start_date` + "`" + `, ` + "`" + `end_date` + "`" + `, ` + "`" + `hex_color` + "`" + `, ` + "`" + `percent_done` + "`" + `, ` + "`" + `uid` + "`" + `, ` + "`" + `created` + "`" + `, ` + "`" + `updated` + "`" + `. Default is ` + "`" + `id` + "`" + `.",
+                        "description": "The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with ` + "`" + `order_by` + "`" + `. Possible values to sort by are ` + "`" + `id` + "`" + `, ` + "`" + `title` + "`" + `, ` + "`" + `description` + "`" + `, ` + "`" + `done` + "`" + `, ` + "`" + `done_at` + "`" + `, ` + "`" + `due_date` + "`" + `, ` + "`" + `created_by_id` + "`" + `, ` + "`" + `project_id` + "`" + `, ` + "`" + `repeat_after` + "`" + `, ` + "`" + `priority` + "`" + `, ` + "`" + `start_date` + "`" + `, ` + "`" + `end_date` + "`" + `, ` + "`" + `hex_color` + "`" + `, ` + "`" + `percent_done` + "`" + `, ` + "`" + `uid` + "`" + `, ` + "`" + `created` + "`" + `, ` + "`" + `updated` + "`" + `, ` + "`" + `relevance` + "`" + `. ` + "`" + `relevance` + "`" + ` sorts by search relevance (most relevant first, requires ` + "`" + `s` + "`" + `; ignored when the database cannot score the query). Default is ` + "`" + `id` + "`" + `.",
                         "name": "sort_by",
                         "in": "query"
                     },
@@ -3300,7 +3447,7 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "The created webhook target.",
                         "schema": {
                             "$ref": "#/definitions/models.Webhook"
@@ -3438,7 +3585,7 @@ const docTemplate = `{
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Copies the project, tasks, files, kanban data, assignees, comments, attachments, labels, relations, backgrounds, user/team permissions and link shares from one project to a new one. The user needs read access in the project and write access in the parent of the new project.",
+                "description": "Copies the project, tasks, files, kanban data, assignees, comments, attachments, labels, relations and backgrounds from one project to a new one. User/team permissions and link shares are only copied when duplicate_shares is set to true. The user needs read access in the project and write access in the parent of the new project.",
                 "consumes": [
                     "application/json"
                 ],
@@ -4299,7 +4446,7 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "The created project view",
                         "schema": {
                             "$ref": "#/definitions/models.ProjectView"
@@ -4759,7 +4906,7 @@ const docTemplate = `{
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Unsubscribes the current user to an entity.",
+                "description": "Unsubscribes the current user to an entity. If the subscription is inherited from a parent project, an opt-out is stored for this entity instead.",
                 "consumes": [
                     "application/json"
                 ],
@@ -4853,7 +5000,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with ` + "`" + `order_by` + "`" + `. Possible values to sort by are ` + "`" + `id` + "`" + `, ` + "`" + `title` + "`" + `, ` + "`" + `description` + "`" + `, ` + "`" + `done` + "`" + `, ` + "`" + `done_at` + "`" + `, ` + "`" + `due_date` + "`" + `, ` + "`" + `created_by_id` + "`" + `, ` + "`" + `project_id` + "`" + `, ` + "`" + `repeat_after` + "`" + `, ` + "`" + `priority` + "`" + `, ` + "`" + `start_date` + "`" + `, ` + "`" + `end_date` + "`" + `, ` + "`" + `hex_color` + "`" + `, ` + "`" + `percent_done` + "`" + `, ` + "`" + `uid` + "`" + `, ` + "`" + `created` + "`" + `, ` + "`" + `updated` + "`" + `. Default is ` + "`" + `id` + "`" + `.",
+                        "description": "The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with ` + "`" + `order_by` + "`" + `. Possible values to sort by are ` + "`" + `id` + "`" + `, ` + "`" + `title` + "`" + `, ` + "`" + `description` + "`" + `, ` + "`" + `done` + "`" + `, ` + "`" + `done_at` + "`" + `, ` + "`" + `due_date` + "`" + `, ` + "`" + `created_by_id` + "`" + `, ` + "`" + `project_id` + "`" + `, ` + "`" + `repeat_after` + "`" + `, ` + "`" + `priority` + "`" + `, ` + "`" + `start_date` + "`" + `, ` + "`" + `end_date` + "`" + `, ` + "`" + `hex_color` + "`" + `, ` + "`" + `percent_done` + "`" + `, ` + "`" + `uid` + "`" + `, ` + "`" + `created` + "`" + `, ` + "`" + `updated` + "`" + `, ` + "`" + `relevance` + "`" + `. ` + "`" + `relevance` + "`" + ` sorts by search relevance (most relevant first, requires ` + "`" + `s` + "`" + `; ignored when the database cannot score the query). Default is ` + "`" + `id` + "`" + `.",
                         "name": "sort_by",
                         "in": "query"
                     },
@@ -7030,7 +7177,7 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "The created token.",
                         "schema": {
                             "$ref": "#/definitions/models.APIToken"
@@ -7342,7 +7489,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/v1.UserExportStatus"
+                            "$ref": "#/definitions/models.UserExportStatus"
                         }
                     }
                 }
@@ -7456,7 +7603,7 @@ const docTemplate = `{
         },
         "/user/logout": {
             "post": {
-                "description": "Destroys the current session and clears the refresh token cookie.",
+                "description": "Destroys the current session and clears the refresh token cookie. For OpenID Connect sessions the response includes an ` + "`" + `oidc_logout_url` + "`" + ` the client should redirect to so the provider session is ended too.",
                 "produces": [
                     "application/json"
                 ],
@@ -7468,7 +7615,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Successfully logged out.",
                         "schema": {
-                            "$ref": "#/definitions/models.Message"
+                            "$ref": "#/definitions/v1.LogoutResponse"
                         }
                     }
                 }
@@ -8749,7 +8896,7 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "The created reaction",
                         "schema": {
                             "$ref": "#/definitions/models.Reaction"
@@ -8884,44 +9031,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "admin.CreateUserBody": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "description": "The user's email address",
-                    "type": "string",
-                    "maxLength": 250
-                },
-                "is_admin": {
-                    "description": "Mark the new user as an instance admin.",
-                    "type": "boolean"
-                },
-                "language": {
-                    "description": "The language of the new user. Must be a valid IETF BCP 47 language code and exist in Vikunja.",
-                    "type": "string"
-                },
-                "name": {
-                    "description": "The full name of the new user. Optional.",
-                    "type": "string"
-                },
-                "password": {
-                    "description": "The user's password in clear text. Only used when registering the user. The maximum limi is 72 bytes, which may be less than 72 characters. This is due to the limit in the bcrypt hashing algorithm used to store passwords in Vikunja.",
-                    "type": "string",
-                    "maxLength": 72,
-                    "minLength": 8
-                },
-                "skip_email_confirm": {
-                    "description": "Activate the new user immediately without email confirmation.",
-                    "type": "boolean"
-                },
-                "username": {
-                    "description": "The user's username. Cannot contain anything that looks like an url or whitespaces.",
-                    "type": "string",
-                    "maxLength": 250,
-                    "minLength": 3
-                }
-            }
-        },
         "admin.IsAdminPatch": {
             "type": "object",
             "properties": {
@@ -8931,47 +9040,10 @@ const docTemplate = `{
                 }
             }
         },
-        "admin.Overview": {
-            "type": "object",
-            "properties": {
-                "license": {
-                    "$ref": "#/definitions/license.Info"
-                },
-                "projects": {
-                    "type": "integer"
-                },
-                "shares": {
-                    "$ref": "#/definitions/admin.ShareCounts"
-                },
-                "tasks": {
-                    "type": "integer"
-                },
-                "teams": {
-                    "type": "integer"
-                },
-                "users": {
-                    "type": "integer"
-                }
-            }
-        },
         "admin.OwnerPatch": {
             "type": "object",
             "properties": {
                 "owner_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "admin.ShareCounts": {
-            "type": "object",
-            "properties": {
-                "link_shares": {
-                    "type": "integer"
-                },
-                "team_shares": {
-                    "type": "integer"
-                },
-                "user_shares": {
                     "type": "integer"
                 }
             }
@@ -8986,57 +9058,6 @@ const docTemplate = `{
                             "$ref": "#/definitions/user.Status"
                         }
                     ]
-                }
-            }
-        },
-        "admin.User": {
-            "type": "object",
-            "properties": {
-                "auth_provider": {
-                    "type": "string"
-                },
-                "bot_owner_id": {
-                    "description": "BotOwnerID is the ID of the owning (human) user if this user is a bot.\nA non-zero value means this user is a bot and cannot authenticate via password.",
-                    "type": "integer"
-                },
-                "created": {
-                    "description": "A timestamp when this task was created. You cannot change this value.",
-                    "type": "string"
-                },
-                "email": {
-                    "description": "The user's email address.",
-                    "type": "string",
-                    "maxLength": 250
-                },
-                "id": {
-                    "description": "The unique, numeric id of this user.",
-                    "type": "integer"
-                },
-                "is_admin": {
-                    "type": "boolean"
-                },
-                "issuer": {
-                    "type": "string"
-                },
-                "name": {
-                    "description": "The full name of the user.",
-                    "type": "string"
-                },
-                "status": {
-                    "$ref": "#/definitions/user.Status"
-                },
-                "subject": {
-                    "type": "string"
-                },
-                "updated": {
-                    "description": "A timestamp when this task was last updated. You cannot change this value.",
-                    "type": "string"
-                },
-                "username": {
-                    "description": "The username of the user. Is always unique.",
-                    "type": "string",
-                    "maxLength": 250,
-                    "minLength": 1
                 }
             }
         },
@@ -9262,13 +9283,15 @@ const docTemplate = `{
                 0,
                 1,
                 2,
-                3
+                3,
+                4
             ],
             "x-enum-varnames": [
                 "FeatureUnknown",
                 "FeatureAdminPanel",
                 "FeatureTimeTracking",
-                "FeatureAuditLogs"
+                "FeatureAuditLogs",
+                "FeatureUserInvites"
             ]
         },
         "license.Info": {
@@ -9308,9 +9331,34 @@ const docTemplate = `{
                 }
             }
         },
+        "migration.ErrorKind": {
+            "type": "string",
+            "enum": [
+                "reported",
+                "interrupted",
+                "credentials",
+                "queue",
+                "upload",
+                "detail"
+            ],
+            "x-enum-varnames": [
+                "ErrorKindReported",
+                "ErrorKindInterrupted",
+                "ErrorKindCredentials",
+                "ErrorKindQueue",
+                "ErrorKindUpload",
+                "ErrorKindDetail"
+            ]
+        },
         "migration.Status": {
             "type": "object",
             "properties": {
+                "error_kind": {
+                    "$ref": "#/definitions/migration.ErrorKind"
+                },
+                "error_message": {
+                    "type": "string"
+                },
                 "finished_at": {
                     "type": "string"
                 },
@@ -9467,6 +9515,44 @@ const docTemplate = `{
                 },
                 "values": {
                     "$ref": "#/definitions/models.Task"
+                }
+            }
+        },
+        "models.CreateUserBody": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "description": "The user's email address",
+                    "type": "string",
+                    "maxLength": 250
+                },
+                "is_admin": {
+                    "description": "Mark the new user as an instance admin.",
+                    "type": "boolean"
+                },
+                "language": {
+                    "description": "The language of the new user. Must be a valid IETF BCP 47 language code and exist in Vikunja.",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "The full name of the new user. Optional.",
+                    "type": "string"
+                },
+                "password": {
+                    "description": "The user's password in clear text. Only used when registering the user. The maximum limi is 72 bytes, which may be less than 72 characters. This is due to the limit in the bcrypt hashing algorithm used to store passwords in Vikunja.",
+                    "type": "string",
+                    "maxLength": 72,
+                    "minLength": 8
+                },
+                "skip_email_confirm": {
+                    "description": "Activate the new user immediately without email confirmation.",
+                    "type": "boolean"
+                },
+                "username": {
+                    "description": "The user's username. Cannot contain anything that looks like an url or whitespaces.",
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 3
                 }
             }
         },
@@ -9629,6 +9715,29 @@ const docTemplate = `{
                 }
             }
         },
+        "models.Overview": {
+            "type": "object",
+            "properties": {
+                "license": {
+                    "$ref": "#/definitions/license.Info"
+                },
+                "projects": {
+                    "type": "integer"
+                },
+                "shares": {
+                    "$ref": "#/definitions/models.ShareCounts"
+                },
+                "tasks": {
+                    "type": "integer"
+                },
+                "teams": {
+                    "type": "integer"
+                },
+                "users": {
+                    "type": "integer"
+                }
+            }
+        },
         "models.Permission": {
             "type": "integer",
             "enum": [
@@ -9730,6 +9839,10 @@ const docTemplate = `{
         "models.ProjectDuplicate": {
             "type": "object",
             "properties": {
+                "duplicate_shares": {
+                    "description": "Whether to copy the project's shares to the duplicate",
+                    "type": "boolean"
+                },
                 "duplicated_project": {
                     "description": "The copied project",
                     "allOf": [
@@ -10001,6 +10114,20 @@ const docTemplate = `{
                 }
             }
         },
+        "models.ShareCounts": {
+            "type": "object",
+            "properties": {
+                "link_shares": {
+                    "type": "integer"
+                },
+                "team_shares": {
+                    "type": "integer"
+                },
+                "user_shares": {
+                    "type": "integer"
+                }
+            }
+        },
         "models.SharingType": {
             "type": "integer",
             "enum": [
@@ -10089,6 +10216,10 @@ const docTemplate = `{
                         }
                     ]
                 },
+                "deleted_at": {
+                    "description": "A timestamp when this task was deleted. Soft-deleted tasks are kept for 30 days before they are removed permanently.\nomitzero keeps the field out of the JSON of regular tasks — it only ever appears on soft-deleted ones (the later trash listing).",
+                    "type": "string"
+                },
                 "description": {
                     "description": "The task description.",
                     "type": "string"
@@ -10153,7 +10284,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "project_id": {
-                    "description": "The project this task belongs to.",
+                    "description": "The project this task belongs to.\nMust precede done/due_date: xorm orders composite index columns by struct field order.",
                     "type": "integer"
                 },
                 "reactions": {
@@ -10630,6 +10761,23 @@ const docTemplate = `{
                 }
             }
         },
+        "models.UserExportStatus": {
+            "type": "object",
+            "properties": {
+                "created": {
+                    "type": "string"
+                },
+                "expires": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "size": {
+                    "type": "integer"
+                }
+            }
+        },
         "models.UserGeneralSettings": {
             "type": "object",
             "properties": {
@@ -10791,6 +10939,83 @@ const docTemplate = `{
                 }
             }
         },
+        "oauth2server.AuthorizeRequest": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "string"
+                },
+                "code_challenge": {
+                    "type": "string"
+                },
+                "code_challenge_method": {
+                    "type": "string"
+                },
+                "redirect_uri": {
+                    "type": "string"
+                },
+                "response_type": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                }
+            }
+        },
+        "oauth2server.AuthorizeResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "redirect_uri": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                }
+            }
+        },
+        "oauth2server.TokenRequest": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "code_verifier": {
+                    "type": "string"
+                },
+                "grant_type": {
+                    "type": "string"
+                },
+                "redirect_uri": {
+                    "type": "string"
+                },
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "oauth2server.TokenResponse": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string"
+                },
+                "expires_in": {
+                    "type": "integer"
+                },
+                "refresh_token": {
+                    "type": "string"
+                },
+                "token_type": {
+                    "type": "string"
+                }
+            }
+        },
         "openid.Callback": {
             "type": "object",
             "properties": {
@@ -10806,6 +11031,196 @@ const docTemplate = `{
                 "totp_passcode": {
                     "description": "TOTPPasscode is required when the resolved user has TOTP enabled.\nClients must restart the OIDC flow and populate this field after\nreceiving a 412 with error code 1017. See GHSA-8jvc-mcx6-r4cg.",
                     "type": "string"
+                }
+            }
+        },
+        "shared.AdminUser": {
+            "type": "object",
+            "properties": {
+                "auth_provider": {
+                    "type": "string"
+                },
+                "bot_owner_id": {
+                    "description": "BotOwnerID is the ID of the owning (human) user if this user is a bot.\nA non-zero value means this user is a bot and cannot authenticate via password.",
+                    "type": "integer"
+                },
+                "created": {
+                    "description": "A timestamp when this task was created. You cannot change this value.",
+                    "type": "string"
+                },
+                "email": {
+                    "description": "The user's email address.",
+                    "type": "string",
+                    "maxLength": 250
+                },
+                "id": {
+                    "description": "The unique, numeric id of this user.",
+                    "type": "integer"
+                },
+                "is_admin": {
+                    "type": "boolean"
+                },
+                "issuer": {
+                    "type": "string"
+                },
+                "name": {
+                    "description": "The full name of the user.",
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/user.Status"
+                },
+                "subject": {
+                    "type": "string"
+                },
+                "updated": {
+                    "description": "A timestamp when this task was last updated. You cannot change this value.",
+                    "type": "string"
+                },
+                "username": {
+                    "description": "The username of the user. Is always unique.",
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 1
+                }
+            }
+        },
+        "shared.AuthInfo": {
+            "type": "object",
+            "properties": {
+                "ldap": {
+                    "$ref": "#/definitions/shared.LdapAuthInfo"
+                },
+                "local": {
+                    "$ref": "#/definitions/shared.LocalAuthInfo"
+                },
+                "openid_connect": {
+                    "$ref": "#/definitions/shared.OpenIDAuthInfo"
+                }
+            }
+        },
+        "shared.LdapAuthInfo": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "shared.LegalInfo": {
+            "type": "object",
+            "properties": {
+                "imprint_url": {
+                    "type": "string"
+                },
+                "privacy_policy_url": {
+                    "type": "string"
+                }
+            }
+        },
+        "shared.LocalAuthInfo": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "registration_enabled": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "shared.OpenIDAuthInfo": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "providers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/code_vikunja_io_api_pkg_modules_auth_openid.Provider"
+                    }
+                }
+            }
+        },
+        "shared.VikunjaInfos": {
+            "type": "object",
+            "properties": {
+                "allow_icon_changes": {
+                    "type": "boolean"
+                },
+                "auth": {
+                    "$ref": "#/definitions/shared.AuthInfo"
+                },
+                "available_migrators": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "caldav_enabled": {
+                    "type": "boolean"
+                },
+                "concurrent_writes": {
+                    "description": "ConcurrentWrites reports whether the configured database can handle concurrent writes. It is false on SQLite, where overlapping write transactions deadlock, so clients should serialize batched writes instead of firing them in parallel.",
+                    "type": "boolean"
+                },
+                "demo_mode_enabled": {
+                    "type": "boolean"
+                },
+                "email_reminders_enabled": {
+                    "type": "boolean"
+                },
+                "enabled_background_providers": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "enabled_pro_features": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/license.Feature"
+                    }
+                },
+                "frontend_url": {
+                    "type": "string"
+                },
+                "legal": {
+                    "$ref": "#/definitions/shared.LegalInfo"
+                },
+                "link_sharing_enabled": {
+                    "type": "boolean"
+                },
+                "max_file_size": {
+                    "type": "string"
+                },
+                "max_items_per_page": {
+                    "type": "integer"
+                },
+                "motd": {
+                    "type": "string"
+                },
+                "public_teams_enabled": {
+                    "type": "boolean"
+                },
+                "task_attachments_enabled": {
+                    "type": "boolean"
+                },
+                "task_comments_enabled": {
+                    "type": "boolean"
+                },
+                "totp_enabled": {
+                    "type": "boolean"
+                },
+                "user_deletion_enabled": {
+                    "type": "boolean"
+                },
+                "version": {
+                    "type": "string"
+                },
+                "webhooks_enabled": {
+                    "type": "boolean"
                 }
             }
         },
@@ -10989,6 +11404,18 @@ const docTemplate = `{
                 }
             }
         },
+        "v1.LogoutResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "oidc_logout_url": {
+                    "description": "RP-Initiated Logout URL the frontend redirects to. Empty for non-OIDC sessions.",
+                    "type": "string"
+                }
+            }
+        },
         "v1.UserAvatarProvider": {
             "type": "object",
             "properties": {
@@ -11003,23 +11430,6 @@ const docTemplate = `{
             "properties": {
                 "token": {
                     "type": "string"
-                }
-            }
-        },
-        "v1.UserExportStatus": {
-            "type": "object",
-            "properties": {
-                "created": {
-                    "type": "string"
-                },
-                "expires": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "size": {
-                    "type": "integer"
                 }
             }
         },
@@ -11106,6 +11516,9 @@ const docTemplate = `{
                     "description": "The full name of the user.",
                     "type": "string"
                 },
+                "pending_email": {
+                    "type": "string"
+                },
                 "settings": {
                     "$ref": "#/definitions/models.UserGeneralSettings"
                 },
@@ -11121,146 +11534,18 @@ const docTemplate = `{
                 }
             }
         },
-        "v1.authInfo": {
-            "type": "object",
-            "properties": {
-                "ldap": {
-                    "$ref": "#/definitions/v1.ldapAuthInfo"
-                },
-                "local": {
-                    "$ref": "#/definitions/v1.localAuthInfo"
-                },
-                "openid_connect": {
-                    "$ref": "#/definitions/v1.openIDAuthInfo"
-                }
-            }
-        },
-        "v1.ldapAuthInfo": {
-            "type": "object",
-            "properties": {
-                "enabled": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "v1.legalInfo": {
-            "type": "object",
-            "properties": {
-                "imprint_url": {
-                    "type": "string"
-                },
-                "privacy_policy_url": {
-                    "type": "string"
-                }
-            }
-        },
-        "v1.localAuthInfo": {
-            "type": "object",
-            "properties": {
-                "enabled": {
-                    "type": "boolean"
-                },
-                "registration_enabled": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "v1.openIDAuthInfo": {
-            "type": "object",
-            "properties": {
-                "enabled": {
-                    "type": "boolean"
-                },
-                "providers": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/code_vikunja_io_api_pkg_modules_auth_openid.Provider"
-                    }
-                }
-            }
-        },
-        "v1.vikunjaInfos": {
-            "type": "object",
-            "properties": {
-                "allow_icon_changes": {
-                    "type": "boolean"
-                },
-                "auth": {
-                    "$ref": "#/definitions/v1.authInfo"
-                },
-                "available_migrators": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "caldav_enabled": {
-                    "type": "boolean"
-                },
-                "demo_mode_enabled": {
-                    "type": "boolean"
-                },
-                "email_reminders_enabled": {
-                    "type": "boolean"
-                },
-                "enabled_background_providers": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "enabled_pro_features": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/license.Feature"
-                    }
-                },
-                "frontend_url": {
-                    "type": "string"
-                },
-                "legal": {
-                    "$ref": "#/definitions/v1.legalInfo"
-                },
-                "link_sharing_enabled": {
-                    "type": "boolean"
-                },
-                "max_file_size": {
-                    "type": "string"
-                },
-                "max_items_per_page": {
-                    "type": "integer"
-                },
-                "motd": {
-                    "type": "string"
-                },
-                "public_teams_enabled": {
-                    "type": "boolean"
-                },
-                "task_attachments_enabled": {
-                    "type": "boolean"
-                },
-                "task_comments_enabled": {
-                    "type": "boolean"
-                },
-                "totp_enabled": {
-                    "type": "boolean"
-                },
-                "user_deletion_enabled": {
-                    "type": "boolean"
-                },
-                "version": {
-                    "type": "string"
-                },
-                "webhooks_enabled": {
-                    "type": "boolean"
-                }
-            }
-        },
         "web.HTTPError": {
             "type": "object",
             "properties": {
                 "code": {
                     "type": "integer"
+                },
+                "i18n_params": {
+                    "description": "I18nParams carries Message's dynamic values, keyed by the client's translation placeholder names, so clients can localise the error.",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
                 },
                 "message": {
                     "type": "string"

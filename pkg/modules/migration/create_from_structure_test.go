@@ -17,7 +17,16 @@
 package migration
 
 import (
+	"bytes"
+	"errors"
+	"fmt"
+	"image"
+	"image/color"
+	"image/png"
+	"io"
+	"io/fs"
 	"testing"
+	"time"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/files"
@@ -26,7 +35,43 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"xorm.io/xorm/schemas"
 )
+
+type testFileProvider struct {
+	background io.ReadSeekCloser
+	err        error
+}
+
+func (p *testFileProvider) OpenAttachment(_ *models.TaskAttachment) (io.ReadSeekCloser, int64, error) {
+	return nil, 0, p.err
+}
+
+func (p *testFileProvider) OpenBackground(_ *models.ProjectWithTasksAndBuckets) (io.ReadSeekCloser, int64, error) {
+	if p.err != nil && p.background == nil {
+		return nil, 0, p.err
+	}
+	return p.background, 73, nil
+}
+
+type trackedReadSeekCloser struct {
+	*bytes.Reader
+	closed bool
+}
+
+func (r *trackedReadSeekCloser) Close() error {
+	r.closed = true
+	return nil
+}
+
+func testBackground(t *testing.T) []byte {
+	t.Helper()
+	var buf bytes.Buffer
+	img := image.NewRGBA(image.Rect(0, 0, 1, 1))
+	img.Set(0, 0, color.RGBA{R: 1, G: 2, B: 3, A: 255})
+	require.NoError(t, png.Encode(&buf, img))
+	return buf.Bytes()
+}
 
 func TestInsertFromStructure(t *testing.T) {
 	u := &user.User{
@@ -53,7 +98,7 @@ func TestInsertFromStructure(t *testing.T) {
 				Project: models.Project{
 					Title:           "Testproject1",
 					Description:     "Something",
-					ParentProjectID: 1,
+					ParentProjectID: models.Ptr(int64(1)),
 				},
 				Buckets: []*models.Bucket{
 					{
@@ -155,6 +200,46 @@ func TestInsertFromStructure(t *testing.T) {
 		assert.NotEqual(t, 0, testStructure[1].Tasks[0].BucketID) // Should get the default bucket
 		assert.NotEqual(t, 0, testStructure[1].Tasks[6].BucketID) // Should get the default bucket
 	})
+	t.Run("done tasks stay done when placed in an imported bucket", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		doneAt := time.Date(2024, 1, 2, 3, 4, 5, 0, time.UTC)
+		structure := []*models.ProjectWithTasksAndBuckets{
+			{
+				Project: models.Project{Title: "Done bucket import"},
+				Buckets: []*models.Bucket{
+					{ID: 1, Title: "Archive"},
+				},
+				Tasks: []*models.TaskWithComments{
+					{Task: models.Task{Title: "Archived task", Done: true, BucketID: 1}},
+					{Task: models.Task{Title: "Open task", Done: false, BucketID: 1}},
+					{Task: models.Task{Title: "Task done earlier", Done: true, DoneAt: doneAt, BucketID: 1}},
+				},
+			},
+		}
+		require.NoError(t, InsertFromStructure(structure, u))
+
+		db.AssertExists(t, "tasks", map[string]interface{}{
+			"title": "Archived task",
+			"done":  true,
+		}, false)
+		db.AssertExists(t, "tasks", map[string]interface{}{
+			"title": "Open task",
+			"done":  false,
+		}, false)
+		db.AssertExists(t, "task_buckets", map[string]interface{}{
+			"task_id":   structure[0].Tasks[0].ID,
+			"bucket_id": structure[0].Buckets[0].ID,
+		}, false)
+
+		s := db.NewSession()
+		defer s.Close()
+		task := &models.Task{}
+		found, err := s.ID(structure[0].Tasks[2].ID).Get(task)
+		require.NoError(t, err)
+		require.True(t, found)
+		assert.WithinDuration(t, doneAt, task.DoneAt, time.Second, "an explicit done_at is kept")
+	})
 	t.Run("reuses existing labels across imports", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
@@ -209,5 +294,474 @@ func TestInsertFromStructure(t *testing.T) {
 			"title":         "Label #3 - other user",
 			"created_by_id": u.ID,
 		}, false)
+	})
+	t.Run("seeds positions when the export has none", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		const taskCount = 100
+
+		tasks := make([]*models.TaskWithComments, 0, taskCount)
+		for i := range taskCount {
+			tasks = append(tasks, &models.TaskWithComments{
+				Task: models.Task{Title: fmt.Sprintf("Task %d", i)},
+			})
+		}
+		require.NoError(t, InsertFromStructure([]*models.ProjectWithTasksAndBuckets{{
+			Project: models.Project{Title: "Import project"},
+			Tasks:   tasks,
+		}}, u))
+
+		s := db.NewSession()
+		defer s.Close()
+
+		project := &models.Project{}
+		exists, err := s.Where("title = ?", "Import project").Get(project)
+		require.NoError(t, err)
+		require.True(t, exists)
+
+		positions := []*models.TaskPosition{}
+		require.NoError(t, s.
+			Join("INNER", "tasks", "tasks.id = task_positions.task_id").
+			Where("tasks.project_id = ?", project.ID).
+			OrderBy("task_positions.project_view_id, tasks.id").
+			Find(&positions))
+		require.Len(t, positions, taskCount*4, "every task needs a position in all four default views")
+
+		// Halving the lowest position for every task collapses positions towards zero and
+		// reverses the import order, and recalculates the whole view on the way (#3297).
+		for i, p := range positions {
+			assert.GreaterOrEqualf(t, p.Position, models.MinPositionSpacing, "position %d of view %d collapsed", i, p.ProjectViewID)
+			if i > 0 && positions[i-1].ProjectViewID == p.ProjectViewID {
+				assert.Greaterf(t, p.Position, positions[i-1].Position, "tasks must keep their import order in view %d", p.ProjectViewID)
+			}
+		}
+	})
+	t.Run("archives children of an archived project", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		// Old exports only flag the parent as archived.
+		require.NoError(t, InsertFromStructure([]*models.ProjectWithTasksAndBuckets{
+			{
+				Project: models.Project{
+					ID:         1,
+					Title:      "Archived parent",
+					IsArchived: true,
+				},
+			},
+			{
+				Project: models.Project{
+					ID:              2,
+					Title:           "Unflagged child",
+					ParentProjectID: models.Ptr(int64(1)),
+				},
+			},
+			{
+				Project: models.Project{
+					ID:              3,
+					Title:           "Unflagged grandchild",
+					ParentProjectID: models.Ptr(int64(2)),
+				},
+			},
+			{
+				Project: models.Project{
+					ID:    4,
+					Title: "Unarchived sibling root",
+				},
+			},
+			{
+				Project: models.Project{
+					ID:              5,
+					Title:           "Unarchived sibling's child",
+					ParentProjectID: models.Ptr(int64(4)),
+				},
+			},
+		}, u))
+
+		s := db.NewSession()
+		defer s.Close()
+
+		for _, title := range []string{"Archived parent", "Unflagged child", "Unflagged grandchild"} {
+			project := &models.Project{}
+			exists, err := s.Where("title = ?", title).Get(project)
+			require.NoError(t, err)
+			require.True(t, exists)
+			assert.True(t, project.IsArchived)
+		}
+
+		for _, title := range []string{"Unarchived sibling root", "Unarchived sibling's child"} {
+			project := &models.Project{}
+			exists, err := s.Where("title = ?", title).Get(project)
+			require.NoError(t, err)
+			require.True(t, exists)
+			assert.False(t, project.IsArchived)
+		}
+	})
+	t.Run("keeps positions the export provides", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		require.NoError(t, InsertFromStructure([]*models.ProjectWithTasksAndBuckets{{
+			Project: models.Project{Title: "Import project"},
+			Tasks: []*models.TaskWithComments{
+				{Task: models.Task{Title: "Second", Position: 200}},
+				{Task: models.Task{Title: "First", Position: 100}},
+			},
+		}}, u))
+
+		s := db.NewSession()
+		defer s.Close()
+
+		for title, position := range map[string]float64{"First": 100, "Second": 200} {
+			task := &models.Task{}
+			exists, err := s.Where("title = ?", title).Get(task)
+			require.NoError(t, err)
+			require.True(t, exists)
+
+			count, err := s.Where("task_id = ? AND position = ?", task.ID, position).Count(&models.TaskPosition{})
+			require.NoError(t, err)
+			assert.Equal(t, int64(4), count, "task %q must keep position %v in all views", title, position)
+		}
+	})
+	t.Run("preserves generated view rows for related-only tasks", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		child := &models.Task{ID: 20, Title: "Related child"}
+		structure := []*models.ProjectWithTasksAndBuckets{{
+			Project: models.Project{
+				Title: "Import project",
+				Views: []*models.ProjectView{{
+					ID:                      100,
+					Title:                   "Kanban",
+					ViewKind:                models.ProjectViewKindKanban,
+					BucketConfigurationMode: models.BucketConfigurationModeManual,
+					DefaultBucketID:         200,
+				}},
+			},
+			Tasks: []*models.TaskWithComments{{Task: models.Task{
+				ID:       10,
+				Title:    "Parent",
+				BucketID: 200,
+				RelatedTasks: map[models.RelationKind][]*models.Task{
+					models.RelationKindSubtask: {child},
+				},
+			}}},
+			Buckets: []*models.Bucket{{
+				ID:            200,
+				Title:         "Backlog",
+				ProjectViewID: 100,
+			}},
+			Positions: []*models.TaskPosition{{
+				TaskID:        10,
+				ProjectViewID: 100,
+				Position:      123,
+			}},
+			TaskBuckets: []*models.TaskBucket{{
+				TaskID:        10,
+				BucketID:      200,
+				ProjectViewID: 100,
+			}},
+		}}
+
+		require.NoError(t, InsertFromStructure(structure, u))
+
+		s := db.NewSession()
+		defer s.Close()
+
+		viewID := structure[0].Views[0].ID
+		for title, taskID := range map[string]int64{
+			"Parent":        structure[0].Tasks[0].ID,
+			"Related child": child.ID,
+		} {
+			positionCount, err := s.Where("task_id = ? AND project_view_id = ?", taskID, viewID).Count(&models.TaskPosition{})
+			require.NoError(t, err)
+			assert.Equal(t, int64(1), positionCount, "task %q needs a position", title)
+
+			bucketCount, err := s.Where("task_id = ? AND project_view_id = ?", taskID, viewID).Count(&models.TaskBucket{})
+			require.NoError(t, err)
+			assert.Equal(t, int64(1), bucketCount, "task %q needs a bucket", title)
+		}
+
+		parentPosition := &models.TaskPosition{}
+		exists, err := s.Where("task_id = ? AND project_view_id = ?", structure[0].Tasks[0].ID, viewID).Get(parentPosition)
+		require.NoError(t, err)
+		require.True(t, exists)
+		assert.InDelta(t, 123, parentPosition.Position, 0)
+
+		parentBucketCount, err := s.Where(
+			"task_id = ? AND project_view_id = ? AND bucket_id = ?",
+			structure[0].Tasks[0].ID,
+			viewID,
+			structure[0].Buckets[0].ID,
+		).Count(&models.TaskBucket{})
+		require.NoError(t, err)
+		assert.Equal(t, int64(1), parentBucketCount)
+	})
+	t.Run("preserves out-of-order indexes before assigning automatic indexes", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		structure := []*models.ProjectWithTasksAndBuckets{{
+			Project: models.Project{Title: "Import task indexes"},
+			Tasks: []*models.TaskWithComments{
+				{Task: models.Task{Title: "high index", Index: 10}},
+				{Task: models.Task{Title: "low index", Index: 5}},
+				{Task: models.Task{Title: "automatic index"}},
+			},
+		}}
+		require.NoError(t, InsertFromStructure(structure, u))
+
+		assert.Equal(t, int64(10), structure[0].Tasks[0].Index)
+		assert.Equal(t, int64(5), structure[0].Tasks[1].Index)
+		assert.Equal(t, int64(1), structure[0].Tasks[2].Index)
+
+		s := db.NewSession()
+		defer s.Close()
+		counter := &models.ProjectTaskCounter{}
+		has, err := s.ID(structure[0].ID).Get(counter)
+		require.NoError(t, err)
+		require.True(t, has)
+		assert.Equal(t, int64(10), counter.LastIndex)
+	})
+	t.Run("preserves related-only task indexes in the initial batch", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		child := &models.Task{Title: "related child", Index: 5}
+		structure := []*models.ProjectWithTasksAndBuckets{{
+			Project: models.Project{Title: "Related task indexes"},
+			Tasks: []*models.TaskWithComments{{
+				Task: models.Task{
+					Title: "parent",
+					Index: 10,
+					RelatedTasks: models.RelatedTaskMap{
+						models.RelationKindSubtask: {child},
+					},
+				},
+			}},
+		}}
+		require.NoError(t, InsertFromStructure(structure, u))
+
+		assert.Equal(t, int64(10), structure[0].Tasks[0].Index)
+		assert.Equal(t, int64(5), child.Index)
+
+		s := db.NewSession()
+		defer s.Close()
+		counter := &models.ProjectTaskCounter{}
+		has, err := s.ID(structure[0].ID).Get(counter)
+		require.NoError(t, err)
+		require.True(t, has)
+		assert.Equal(t, int64(10), counter.LastIndex)
+	})
+	t.Run("relates the right task when an old id collides with a new one", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		// Task ids are handed out consecutively, so a probe import reveals which ids the next one gets.
+		probe := []*models.ProjectWithTasksAndBuckets{{
+			Project: models.Project{Title: "Id probe"},
+			Tasks:   []*models.TaskWithComments{{Task: models.Task{Title: "probe"}}},
+		}}
+		require.NoError(t, InsertFromStructure(probe, u))
+
+		// The import below creates parent, decoy and child in that order.
+		childNewID := probe[0].Tasks[0].ID + 3
+
+		child := &models.Task{ID: 11, Title: "child"}
+		structure := []*models.ProjectWithTasksAndBuckets{{
+			Project: models.Project{Title: "Colliding task ids"},
+			Tasks: []*models.TaskWithComments{
+				{Task: models.Task{
+					ID:    10,
+					Title: "parent",
+					RelatedTasks: models.RelatedTaskMap{
+						models.RelationKindSubtask: {child},
+					},
+				}},
+				{Task: models.Task{ID: childNewID, Title: "decoy"}},
+			},
+		}}
+		require.NoError(t, InsertFromStructure(structure, u))
+
+		s := db.NewSession()
+		defer s.Close()
+
+		require.Equal(t, childNewID, child.ID, "the child needs to collide with the decoy's old id")
+
+		relation := &models.TaskRelation{}
+		exists, err := s.
+			Where("task_id = ? AND relation_kind = ?", structure[0].Tasks[0].ID, models.RelationKindSubtask).
+			Get(relation)
+		require.NoError(t, err)
+		require.True(t, exists)
+
+		other := &models.Task{}
+		exists, err = s.ID(relation.OtherTaskID).Get(other)
+		require.NoError(t, err)
+		require.True(t, exists)
+		assert.Equal(t, "child", other.Title)
+	})
+	t.Run("creates both top-level tasks when their old ids collide", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		structure := []*models.ProjectWithTasksAndBuckets{{
+			Project: models.Project{Title: "Duplicate old ids"},
+			Tasks: []*models.TaskWithComments{
+				{Task: models.Task{ID: 42, Title: "first duplicate"}},
+				{Task: models.Task{ID: 42, Title: "second duplicate"}},
+			},
+		}}
+		require.NoError(t, InsertFromStructure(structure, u))
+
+		s := db.NewSession()
+		defer s.Close()
+
+		for _, title := range []string{"first duplicate", "second duplicate"} {
+			count, err := s.Where("project_id = ? AND title = ?", structure[0].ID, title).Count(&models.Task{})
+			require.NoError(t, err)
+			assert.Equal(t, int64(1), count, "task %q must exist", title)
+		}
+	})
+	t.Run("skips related tasks without a title", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		structure := []*models.ProjectWithTasksAndBuckets{{
+			Project: models.Project{Title: "Untitled relation"},
+			Tasks: []*models.TaskWithComments{{Task: models.Task{
+				Title: "parent",
+				RelatedTasks: models.RelatedTaskMap{
+					models.RelationKindSubtask: {{ID: 11}},
+				},
+			}}},
+		}}
+		require.NoError(t, InsertFromStructure(structure, u))
+
+		s := db.NewSession()
+		defer s.Close()
+
+		taskCount, err := s.Where("project_id = ?", structure[0].ID).Count(&models.Task{})
+		require.NoError(t, err)
+		assert.Equal(t, int64(1), taskCount)
+
+		relationCount, err := s.Where("task_id = ?", structure[0].Tasks[0].ID).Count(&models.TaskRelation{})
+		require.NoError(t, err)
+		assert.Equal(t, int64(0), relationCount)
+	})
+	t.Run("resolves id-only related tasks to already queued tasks", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		structure := []*models.ProjectWithTasksAndBuckets{{
+			Project: models.Project{Title: "Id only relation"},
+			Tasks: []*models.TaskWithComments{
+				{Task: models.Task{ID: 100, Title: "parent"}},
+				{Task: models.Task{ID: 101, Title: "child", RelatedTasks: models.RelatedTaskMap{
+					models.RelationKindParenttask: {{ID: 100}},
+				}}},
+			},
+		}}
+		require.NoError(t, InsertFromStructure(structure, u))
+
+		s := db.NewSession()
+		defer s.Close()
+
+		ids := make(map[string]int64, 2)
+		for _, title := range []string{"parent", "child"} {
+			task := &models.Task{}
+			exists, err := s.Where("project_id = ? AND title = ?", structure[0].ID, title).Get(task)
+			require.NoError(t, err)
+			require.True(t, exists, title)
+			ids[title] = task.ID
+		}
+
+		relationCount, err := s.
+			Where("task_id = ? AND other_task_id = ? AND relation_kind = ?", ids["child"], ids["parent"], models.RelationKindParenttask).
+			Count(&models.TaskRelation{})
+		require.NoError(t, err)
+		assert.Equal(t, int64(1), relationCount)
+	})
+	t.Run("assignees from a foreign instance", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		foreignID := int64(999)
+		require.NoError(t, InsertFromStructure([]*models.ProjectWithTasksAndBuckets{{
+			Project: models.Project{Title: "Import project"},
+			Tasks: []*models.TaskWithComments{
+				{Task: models.Task{Title: "email match", Assignees: []*user.User{{ID: foreignID, Username: "someone-else", Email: "USER1@example.com"}}}},
+				{Task: models.Task{Title: "username match", Assignees: []*user.User{{ID: foreignID, Username: "user1"}}}},
+				{Task: models.Task{Title: "no match", Assignees: []*user.User{{ID: 2, Username: "other", Email: "other@example.com"}}}},
+				{Task: models.Task{
+					Title: "related",
+					RelatedTasks: map[models.RelationKind][]*models.Task{
+						models.RelationKindSubtask: {{Title: "related match", Assignees: []*user.User{{ID: foreignID, Username: "user1"}}}},
+					},
+				}},
+			},
+		}}, u))
+
+		s := db.NewSession()
+		defer s.Close()
+
+		for title, wantAssignee := range map[string]bool{"email match": true, "username match": true, "related match": true, "no match": false} {
+			task := &models.Task{}
+			exists, err := s.Where("title = ?", title).Get(task)
+			require.NoError(t, err)
+			require.True(t, exists, title)
+
+			assignees := []*models.TaskAssginee{}
+			require.NoError(t, s.Where("task_id = ?", task.ID).Find(&assignees))
+			if wantAssignee {
+				require.Len(t, assignees, 1, title)
+				assert.Equal(t, u.ID, assignees[0].UserID, title)
+			} else {
+				assert.Empty(t, assignees, title)
+			}
+		}
+	})
+}
+
+func TestInsertFromStructureFileProvider(t *testing.T) {
+	u := &user.User{ID: 1}
+
+	t.Run("propagates background provider errors", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		budgetErr := errors.New("storage budget exceeded")
+		provider := &testFileProvider{err: budgetErr}
+		structure := []*models.ProjectWithTasksAndBuckets{{Project: models.Project{Title: "provider error"}}}
+
+		err := InsertFromStructureWithFileProvider(structure, u, provider)
+		require.ErrorIs(t, err, budgetErr)
+		db.AssertMissing(t, "projects", map[string]interface{}{"title": "provider error"})
+	})
+
+	t.Run("rollback preserves colliding blobs and removes the new background", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		unrelated, err := files.Create(bytes.NewReader([]byte("unrelated")), "unrelated", 9, u)
+		require.NoError(t, err)
+		newBackgroundID := unrelated.ID + 1
+		background := &trackedReadSeekCloser{Reader: bytes.NewReader(testBackground(t))}
+		providerErr := errors.New("stop after background")
+		provider := &testFileProvider{background: background, err: providerErr}
+		structure := []*models.ProjectWithTasksAndBuckets{{
+			Project: models.Project{Title: "background rollback", BackgroundFileID: unrelated.ID},
+			Tasks: []*models.TaskWithComments{{Task: models.Task{
+				Title:       "task",
+				Attachments: []*models.TaskAttachment{{File: &files.File{Name: "stop"}}},
+			}}},
+		}}
+
+		err = InsertFromStructureWithFileProvider(structure, u, provider)
+		require.ErrorIs(t, err, providerErr)
+		assert.True(t, background.closed, "the background reader must be closed")
+		assert.Equal(t, newBackgroundID, structure[0].Project.BackgroundFileID)
+
+		_, err = files.FileStat(unrelated)
+		require.NoError(t, err, "rollback must preserve an unrelated colliding blob")
+		_, err = files.FileStat(&files.File{ID: newBackgroundID})
+		require.Error(t, err, "rollback must remove the newly created background blob")
+		require.ErrorIs(t, err, fs.ErrNotExist)
+
+		replacement, err := files.Create(bytes.NewReader([]byte("replacement")), "replacement", 11, u)
+		require.NoError(t, err)
+		if db.Type() == schemas.SQLITE {
+			assert.Equal(t, newBackgroundID, replacement.ID, "SQLite reuses the rolled-back id")
+		}
+		_, err = files.FileStat(replacement)
+		require.NoError(t, err, "replacement blob must remain after cleanup")
 	})
 }

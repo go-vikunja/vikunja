@@ -10,11 +10,11 @@ import TaskCollectionService, {type TaskFilterParams} from '@/services/taskColle
 import {setModuleLoading} from '@/stores/helper'
 
 import type {ITask} from '@/modelTypes/ITask'
-import type {IProject} from '@/modelTypes/IProject'
 import type {IBucket} from '@/modelTypes/IBucket'
 import {useAuthStore} from '@/stores/auth'
-import type {IProjectView} from '@/modelTypes/IProjectView'
+import type {ProjectView} from '@/client/generated'
 import {useBaseStore} from '@/stores/base'
+import {ensureProjects, getCachedProject, refreshProject, refreshProjects} from '@/client/queries/projects'
 
 const TASKS_PER_BUCKET = 25
 
@@ -40,7 +40,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 	const baseStore = useBaseStore()
 
 	const buckets = ref<IBucket[]>([])
-	const projectId = ref<IProject['id']>(0)
+	const projectId = ref(0)
 	const bucketLoading = ref<{ [id: IBucket['id']]: boolean }>({})
 	const taskPagesPerBucket = ref<{ [id: IBucket['id']]: number }>({})
 	const allTasksLoadedForBucket = ref<{ [id: IBucket['id']]: boolean }>({})
@@ -63,7 +63,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 		isLoading.value = newIsLoading
 	}
 
-	function setProjectId(newProjectId: IProject['id']) {
+	function setProjectId(newProjectId: number) {
 		projectId.value = Number(newProjectId)
 	}
 
@@ -86,20 +86,16 @@ export const useKanbanStore = defineStore('kanban', () => {
 
 	function setBucketById(newBucket: IBucket, setTasks: boolean = true) {
 		const bucketIndex = findIndexById(buckets.value, newBucket.id)
-		const oldBucket = buckets.value[bucketIndex]
-		if (!setTasks && oldBucket) {
+		if (bucketIndex === -1) {
+			return
+		}
+
+		if (!setTasks) {
 			newBucket.tasks = [
-				...oldBucket.tasks,
+				...buckets.value[bucketIndex].tasks,
 			]
 		}
 		buckets.value[bucketIndex] = newBucket
-	}
-
-	function setBucketByIndex(
-		bucketIndex: number,
-		bucket: IBucket,
-	) {
-		buckets.value[bucketIndex] = bucket
 	}
 
 	function setTaskInBucketByIndex({
@@ -147,9 +143,9 @@ export const useKanbanStore = defineStore('kanban', () => {
 	}
 	
 	// This function is an exact clone of the logic in the api
-	function getDefaultBucketId(view: IProjectView): IBucket['id'] {
-		if (view.defaultBucketId) {
-			return view.defaultBucketId
+	function getDefaultBucketId(view: ProjectView): IBucket['id'] {
+		if (view.default_bucket_id) {
+			return view.default_bucket_id
 		}
 		
 		return buckets.value[0]?.id
@@ -164,16 +160,17 @@ export const useKanbanStore = defineStore('kanban', () => {
 		if (bucketIndex === null) return
 		const currentTaskBucket = buckets.value[bucketIndex]
 		
-		const currentView: IProjectView | undefined = baseStore.currentProject?.views?.find(v => v.id === baseStore.currentProjectViewId)
+		const currentView = getCachedProject(baseStore.currentProjectId)?.views.find(view => view.id === baseStore.currentProjectViewId)
 		if(typeof currentView === 'undefined') return
+		const doneBucketId = currentView.done_bucket_id ?? 0
 		
 		// If the task is done, make sure it is in the done bucket
-		if (task.done && currentView.doneBucketId !== 0 && currentTaskBucket.id !== currentView.doneBucketId) {
-			moveTaskToBucket(task, currentView.doneBucketId)
+		if (task.done && doneBucketId !== 0 && currentTaskBucket.id !== doneBucketId) {
+			moveTaskToBucket(task, doneBucketId)
 		}
 
 		// If the task is not done but was in the done bucket before, move it to the default bucket
-		if(!task.done && currentView.doneBucketId !== 0 && currentTaskBucket.id === currentView.doneBucketId) {
+		if(!task.done && doneBucketId !== 0 && currentTaskBucket.id === doneBucketId) {
 			const defaultBucketId = getDefaultBucketId(currentView)
 			moveTaskToBucket(task, defaultBucketId)
 		}
@@ -187,7 +184,13 @@ export const useKanbanStore = defineStore('kanban', () => {
 		const currentTaskBucket = buckets.value[bucketIndex]
 		if (typeof currentTaskBucket === 'undefined' || currentTaskBucket.id === bucketId) {
 			return
-		}		
+		}
+		// The target bucket can belong to a kanban view other than the loaded one (the task detail
+		// view lets users move tasks between buckets of any view). Removing the task here would drop
+		// it from the board with no bucket to put it back into.
+		if (findIndexById(buckets.value, bucketId) === -1) {
+			return
+		}
 		removeTaskInBucket(task)
 		task.bucketId = bucketId
 		addTaskToBucket(task)
@@ -196,9 +199,12 @@ export const useKanbanStore = defineStore('kanban', () => {
 	function addTaskToBucket(task: ITask) {
 		const bucketIndex = findIndexById(buckets.value, task.bucketId)
 		const oldBucket = buckets.value[bucketIndex]
+		if (typeof oldBucket === 'undefined') {
+			return
+		}
 		const newBucket = {
 			...oldBucket,
-			count: (oldBucket?.count || 0) + 1,
+			count: (oldBucket.count || 0) + 1,
 			tasks: [
 				task,
 				...oldBucket.tasks,
@@ -210,6 +216,9 @@ export const useKanbanStore = defineStore('kanban', () => {
 	function addTasksToBucket(tasks: ITask[], bucketId: IBucket['id']) {
 		const bucketIndex = findIndexById(buckets.value, bucketId)
 		const oldBucket = buckets.value[bucketIndex]
+		if (typeof oldBucket === 'undefined') {
+			return
+		}
 		const newBucket = {
 			...oldBucket,
 			tasks: [
@@ -252,7 +261,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 		allTasksLoadedForBucket.value[bucketId] = true
 	}
 
-	async function loadBucketsForProject(projectId: IProject['id'], viewId: IProjectView['id'], params) {
+	async function loadBucketsForProject(projectId: number, viewId: number, params) {
 		const cancel = setModuleLoading(setIsLoading)
 
 		// Clear everything to prevent having old buckets in the project if loading the buckets from this project takes a few moments
@@ -274,8 +283,8 @@ export const useKanbanStore = defineStore('kanban', () => {
 	}
 
 	async function loadNextTasksForBucket(
-		projectId: IProject['id'],
-		viewId: IProjectView['id'],
+		projectId: number,
+		viewId: number,
 		ps: TaskFilterParams,
 		bucketId: IBucket['id'],
 	) {
@@ -336,8 +345,15 @@ export const useKanbanStore = defineStore('kanban', () => {
 
 		const bucketService = new BucketService()
 		try {
+			const {projects} = await ensureProjects()
+			const view = projects.find(project => project.id === bucket.projectId)?.views.find(v => v.id === bucket.projectViewId)
 			const response = await bucketService.delete(bucket)
 			removeBucket(bucket)
+
+			if (view && (view.default_bucket_id === bucket.id || view.done_bucket_id === bucket.id)) {
+				await Promise.all([refreshProject(bucket.projectId), refreshProjects()])
+			}
+
 			// We reload all buckets because tasks are being moved from the deleted bucket
 			loadBucketsForProject(bucket.projectId, bucket.projectViewId, params)
 			return response
@@ -347,26 +363,31 @@ export const useKanbanStore = defineStore('kanban', () => {
 	}
 
 	async function updateBucket(updatedBucketData: Partial<IBucket>) {
+		const bucket = findById(buckets.value, updatedBucketData.id)
+		if (typeof bucket === 'undefined') {
+			return
+		}
+
 		const cancel = setModuleLoading(setIsLoading)
 
-		const bucketIndex = findIndexById(buckets.value, updatedBucketData.id)
-		const oldBucket = klona(buckets.value[bucketIndex])
-
+		const oldBucket = klona(bucket)
 		const updatedBucket = {
 			...oldBucket,
 			...updatedBucketData,
 		}
 
-		setBucketByIndex(bucketIndex, updatedBucket)
+		setBucketById(updatedBucket)
 
 		const bucketService = new BucketService()
 		try {
+			// The board can be replaced while the request is in flight, for example when navigating to
+			// another view. All writes go by id so the response never lands in another view's buckets.
 			const returnedBucket = await bucketService.update(updatedBucket)
-			setBucketByIndex(bucketIndex, returnedBucket)
+			setBucketById(returnedBucket, false)
 			return returnedBucket
 		} catch (e) {
 			// restore original state
-			setBucketByIndex(bucketIndex, oldBucket)
+			setBucketById(oldBucket)
 
 			throw e
 		} finally {

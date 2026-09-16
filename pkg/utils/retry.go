@@ -17,10 +17,14 @@
 package utils
 
 import (
+	"errors"
 	"time"
 
 	"code.vikunja.io/api/pkg/log"
 )
+
+// ErrDoNotRetry marks an error as permanent: RetryWithBackoff returns it after the first attempt.
+var ErrDoNotRetry = errors.New("permanent error, not retrying")
 
 // RetryWithBackoff executes the given function up to 3 times with exponential backoff.
 // Delays between retries are 1s, 2s, 4s (total max wait: 7s).
@@ -35,6 +39,9 @@ func RetryWithBackoff(name string, fn func() error) error {
 		err = fn()
 		if err == nil {
 			return nil
+		}
+		if errors.Is(err, ErrDoNotRetry) {
+			return err
 		}
 
 		if attempt < maxRetries {

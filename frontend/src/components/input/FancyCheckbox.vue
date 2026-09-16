@@ -75,6 +75,18 @@ const emit = defineEmits<{
 .fancy-checkbox input:checked + .fancy-checkbox__icon {
 	--stroke-color: var(--primary);
 }
+
+.fancy-checkbox input:focus-visible + .fancy-checkbox__icon {
+	border-radius: 4px;
+	@include focus-ring;
+}
+
+@supports not selector(:focus-visible) {
+	.fancy-checkbox input:focus + .fancy-checkbox__icon {
+		border-radius: 4px;
+		@include focus-ring;
+	}
+}
 </style>
 
 <style lang="scss">

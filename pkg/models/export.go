@@ -19,10 +19,8 @@ package models
 import (
 	"archive/zip"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
-	"io/fs"
 	"os"
 	"time"
 
@@ -239,6 +237,7 @@ func exportProjectsAndTasks(s *xorm.Session, u *user.User, wr *zip.Writer) (task
 	err = s.
 		Join("LEFT", "tasks", "tasks.id = task_comments.task_id").
 		In("tasks.project_id", projectIDs).
+		And("tasks.deleted_at IS NULL").
 		Find(&comments)
 	if err != nil {
 		return
@@ -342,8 +341,7 @@ func exportTaskAttachments(s *xorm.Session, wr *zip.Writer, taskIDs []int64) (er
 	for _, ta := range tas {
 		err = ta.File.LoadFileByID()
 		if err != nil {
-			var pathError *fs.PathError
-			if errors.As(err, &pathError) {
+			if files.IsErrFileDoesNotExist(err) {
 				continue
 			}
 			return err
@@ -391,8 +389,7 @@ func exportProjectBackgrounds(s *xorm.Session, u *user.User, wr *zip.Writer) (er
 		}
 		err = bgFile.LoadFileByID()
 		if err != nil {
-			var pathError *fs.PathError
-			if errors.As(err, &pathError) {
+			if files.IsErrFileDoesNotExist(err) {
 				continue
 			}
 			return err
@@ -402,6 +399,68 @@ func exportProjectBackgrounds(s *xorm.Session, u *user.User, wr *zip.Writer) (er
 	}
 
 	return utils.WriteFilesToZip(backgroundFiles, wr)
+}
+
+// GetUserDataExportFile loads the export's metadata; OpenUserDataExportFile reads the contents.
+func GetUserDataExportFile(s *xorm.Session, u *user.User) (*files.File, error) {
+	if u.ExportFileID == 0 {
+		return nil, ErrUserDataExportDoesNotExist{}
+	}
+
+	exportFile := &files.File{ID: u.ExportFileID}
+	if err := exportFile.LoadFileMetaByID(s); err != nil {
+		if files.IsErrFileDoesNotExist(err) {
+			return nil, ErrUserDataExportDoesNotExist{}
+		}
+		return nil, err
+	}
+
+	return exportFile, nil
+}
+
+// OpenUserDataExportFile hits object storage, so callers must commit their db
+// session first; the caller must close the reader.
+func OpenUserDataExportFile(exportFile *files.File) error {
+	if err := exportFile.LoadFileByID(); err != nil {
+		if files.IsErrFileDoesNotExist(err) {
+			return ErrUserDataExportDoesNotExist{}
+		}
+		return err
+	}
+	return nil
+}
+
+// GetUserDataExportStatus returns metadata about the user's current data export, or
+// nil when none exists. The expiry mirrors the cleanup cron's 7-day retention.
+func GetUserDataExportStatus(s *xorm.Session, u *user.User) (*UserExportStatus, error) {
+	if u.ExportFileID == 0 {
+		return nil, nil
+	}
+
+	exportFile := &files.File{ID: u.ExportFileID}
+	if err := exportFile.LoadFileMetaByID(s); err != nil {
+		// A missing meta row means there is no export — mirror the download path
+		// (404 there) instead of surfacing a 500.
+		if files.IsErrFileDoesNotExist(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &UserExportStatus{
+		ID:      exportFile.ID,
+		Size:    exportFile.Size,
+		Created: exportFile.Created,
+		Expires: exportFile.Created.Add(7 * 24 * time.Hour),
+	}, nil
+}
+
+// UserExportStatus is the metadata returned for a user's current data export.
+type UserExportStatus struct {
+	ID      int64     `json:"id" readOnly:"true" doc:"The id of the export file."`
+	Size    uint64    `json:"size" readOnly:"true" doc:"The size of the export file in bytes."`
+	Created time.Time `json:"created" readOnly:"true" doc:"When the export was created."`
+	Expires time.Time `json:"expires" readOnly:"true" doc:"When the export will be automatically deleted (7 days after creation)."`
 }
 
 func RegisterOldExportCleanupCron() {

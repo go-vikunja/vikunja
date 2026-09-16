@@ -1,4 +1,5 @@
 import AbstractService from '../abstractService'
+import {getMigrationStatus} from './abstractMigration'
 
 export interface ColumnMapping {
 	column_index: number
@@ -39,7 +40,8 @@ export interface DetectionResult {
 	quote_char: string
 	date_format: string
 	suggested_mapping: ColumnMapping[]
-	preview_rows: string[][]
+	// null when the file only contains a header row
+	preview_rows: string[][] | null
 }
 
 export interface ImportConfig {
@@ -67,11 +69,6 @@ export interface PreviewResult {
 	total_rows: number
 }
 
-export interface MigrationStatus {
-	started_at: string | null
-	finished_at: string | null
-}
-
 export const SUPPORTED_DELIMITERS = [',', ';', '\t', '|'] as const
 
 export const SUPPORTED_DATE_FORMATS = [
@@ -91,8 +88,8 @@ export default class CSVMigrationService extends AbstractService {
 		super({})
 	}
 
-	getStatus(): Promise<MigrationStatus> {
-		return this.getM('/migration/csv/status')
+	getStatus() {
+		return getMigrationStatus(this, '/migration/csv/status')
 	}
 
 	useCreateInterceptor() {

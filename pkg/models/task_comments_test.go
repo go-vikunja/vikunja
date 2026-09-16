@@ -17,6 +17,7 @@
 package models
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -45,7 +46,7 @@ func TestTaskComment_Create(t *testing.T) {
 		assert.Equal(t, int64(1), tc.Author.ID)
 		err = s.Commit()
 		require.NoError(t, err)
-		events.DispatchPending(s)
+		events.DispatchPending(context.Background(), s)
 		events.AssertDispatched(t, &TaskCommentCreatedEvent{})
 
 		db.AssertExists(t, "task_comments", map[string]interface{}{
@@ -233,6 +234,7 @@ func TestTaskComment_ReadOne(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, "Lorem Ipsum Dolor Sit Amet", tc.Comment)
 		assert.NotEmpty(t, tc.Author.ID)
+		assert.Empty(t, tc.Author.Email)
 	})
 	t.Run("nonexisting", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)

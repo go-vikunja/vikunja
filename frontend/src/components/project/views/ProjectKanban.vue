@@ -8,7 +8,7 @@
 		<template #header>
 			<div class="filter-container">
 				<FilterPopup
-					v-if="!isSavedFilter(project)"
+					v-if="!isSavedFilterProject(project)"
 					v-model="params"
 					:view-id="viewId"
 					:project-id="projectId"
@@ -36,16 +36,17 @@
 						@start="() => dragBucket = true"
 					>
 						<template #item="{element: bucket, index: bucketIndex }">
-							<div
+							<li
 								class="bucket"
 								:class="{'is-collapsed': collapsedBuckets[bucket.id]}"
+								:data-bucket-id="bucket.id"
 							>
 								<div
 									class="bucket-header"
 									@click="() => unCollapseBucket(bucket)"
 								>
 									<span
-										v-if="bucket.id !== 0 && view?.doneBucketId === bucket.id"
+										v-if="bucket.id !== 0 && view?.done_bucket_id === bucket.id"
 										v-tooltip="$t('project.kanban.doneBucketHint')"
 										class="icon is-small has-text-success mie-2"
 										@click.stop="() => collapseBucket(bucket)"
@@ -97,6 +98,7 @@
 											<div class="control">
 												<XButton
 													v-cy="'setBucketLimit'"
+													:aria-label="$t('misc.save')"
 													:disabled="bucket.limit < 0"
 													:icon="['far', 'save']"
 													:shadow="false"
@@ -114,7 +116,7 @@
 										</DropdownItem>
 										<DropdownItem
 											v-tooltip="$t('project.kanban.doneBucketHintExtended')"
-											:icon-class="{'has-text-success': bucket.id === view?.doneBucketId}"
+											:icon-class="{'has-text-success': bucket.id === view?.done_bucket_id}"
 											icon="check-double"
 											@click.stop="toggleDoneBucket(bucket)"
 										>
@@ -122,7 +124,7 @@
 										</DropdownItem>
 										<DropdownItem
 											v-tooltip="$t('project.kanban.defaultBucketHint')"
-											:icon-class="{'has-text-primary': bucket.id === view?.defaultBucketId}"
+											:icon-class="{'has-text-primary': bucket.id === view?.default_bucket_id}"
 											icon="th"
 											@click.stop="toggleDefaultBucket(bucket)"
 										>
@@ -163,7 +165,7 @@
 									@end="updateTaskPosition"
 								>
 									<template #footer>
-										<div
+										<li
 											v-if="canCreateTasks"
 											class="bucket-footer"
 										>
@@ -209,11 +211,11 @@
 													bucket.tasks.length === 0 ? $t('project.kanban.addTask') : $t('project.kanban.addAnotherTask')
 												}}
 											</XButton>
-										</div>
+										</li>
 									</template>
 
 									<template #item="{element: task}">
-										<div
+										<li
 											class="task-item"
 											:data-task-id="task.id"
 										>
@@ -231,10 +233,10 @@
 												:project-id="projectId"
 												@taskCompletedRecurring="handleRecurringTaskCompletion"
 											/>
-										</div>
+										</li>
 									</template>
 								</draggable>
-							</div>
+							</li>
 						</template>
 					</draggable>
 
@@ -291,6 +293,7 @@
 
 <script setup lang="ts">
 import {computed, nextTick, ref, watch, toRef} from 'vue'
+import {useQuery} from '@tanstack/vue-query'
 import {useRouter} from 'vue-router'
 import {useRouteQuery} from '@vueuse/router'
 import {useI18n} from 'vue-i18n'
@@ -303,7 +306,6 @@ import BucketModel from '@/models/bucket'
 import type {IBucket} from '@/modelTypes/IBucket'
 import type {ITask} from '@/modelTypes/ITask'
 
-import {useBaseStore} from '@/stores/base'
 import {useTaskStore} from '@/stores/tasks'
 import {useKanbanStore} from '@/stores/kanban'
 import {useAuthStore} from '@/stores/auth'
@@ -321,24 +323,24 @@ import {
 } from '@/helpers/saveCollapsedBucketState'
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 
-import {isSavedFilter, useSavedFilter} from '@/services/savedFilter'
+import {getSavedFilterIdFromProjectId, isSavedFilterProject} from '@/client/queries/projects'
+import {savedFilterQuery} from '@/client/queries/savedFilters'
+import {useCurrentProject} from '@/composables/useCurrentProject'
 import {useTaskDragToProject} from '@/composables/useTaskDragToProject'
 import {success} from '@/message'
-import {useProjectStore} from '@/stores/projects'
 import type {TaskFilterParams} from '@/services/taskCollection'
-import type {IProjectView} from '@/modelTypes/IProjectView'
+import type {ProjectView} from '@/client/generated'
 import TaskPositionService from '@/services/taskPosition'
 import TaskPositionModel from '@/models/taskPosition'
 import {i18n} from '@/i18n'
-import ProjectViewService from '@/services/projectViews'
-import ProjectViewModel from '@/models/projectView'
+import {createProjectViewUpdate, useUpdateProjectViewMutation} from '@/client/queries/projectViews'
 import TaskBucketService from '@/services/taskBucket'
 import TaskBucketModel from '@/models/taskBucket'
 
 const props = defineProps<{
 	isLoadingProject: boolean,
 	projectId: number,
-	viewId: IProjectView['id'],
+	viewId: number,
 }>()
 
 const projectId = toRef(props, 'projectId')
@@ -355,11 +357,12 @@ const DRAG_OPTIONS = {
 const MIN_SCROLL_HEIGHT_PERCENT = 0.25
 
 const {t} = useI18n({useScope: 'global'})
+const isCurrentProject = ({projectId: id}: {projectId: number}) => projectId.value === id
+const updateDefaultBucket = useUpdateProjectViewMutation(t('project.kanban.defaultBucketSavedSuccess'), isCurrentProject)
+const updateDoneBucket = useUpdateProjectViewMutation(t('project.kanban.doneBucketSavedSuccess'), isCurrentProject)
 
-const baseStore = useBaseStore()
 const kanbanStore = useKanbanStore()
 const taskStore = useTaskStore()
-const projectStore = useProjectStore()
 const authStore = useAuthStore()
 
 const alwaysShowBucketTaskCount = computed(() => authStore.settings.frontendSettings.alwaysShowBucketTaskCount)
@@ -367,8 +370,7 @@ const {handleTaskDropToProject} = useTaskDragToProject()
 const taskPositionService = ref(new TaskPositionService())
 const taskBucketService = ref(new TaskBucketService())
 
-// Saved filter composable for accessing filter data
-const savedFilter = useSavedFilter(() => isSavedFilter({id: projectId.value}) ? projectId.value : undefined).filter
+const savedFilter = useQuery(computed(() => savedFilterQuery(getSavedFilterIdFromProjectId(projectId.value)))).data
 
 const taskContainerRefs = ref<{ [id: IBucket['id']]: HTMLElement }>({})
 const bucketLimitInputRef = ref<HTMLInputElement | null>(null)
@@ -443,9 +445,13 @@ const bucketDraggableComponentData = computed(() => ({
 		{'dragging-disabled': !canWrite.value},
 	],
 }))
-const project = computed(() => projectId.value ? projectStore.projects[projectId.value] : null)
-const view = computed(() => project.value?.views.find(v => v.id === props.viewId) as IProjectView || null)
-const canWrite = computed(() => baseStore.currentProject?.maxPermission > Permissions.READ && view.value.bucketConfigurationMode === 'manual')
+const {currentProject: project} = useCurrentProject()
+const view = computed(() => project.value?.views.find(view => view.id === props.viewId) as ProjectView || null)
+const canWrite = computed(() =>
+	typeof project.value?.max_permission === 'number' &&
+	project.value.max_permission > Permissions.READ &&
+	view.value?.bucket_configuration_mode === 'manual',
+)
 const canCreateTasks = computed(() => canWrite.value && projectId.value > 0)
 
 const isTouchDevice = ref(false)
@@ -566,18 +572,14 @@ async function updateTaskPosition(e) {
 
 	const newBucket = buckets.value[bucketIndex]
 
-	// HACK:
-	// this is a hacky workaround for a known problem of vue.draggable.next when using the footer slot
-	// the problem: https://github.com/SortableJS/vue.draggable.next/issues/108
-	// This hack doesn't remove the problem that the ghost item is still displayed below the footer
-	// It just makes releasing the item possible.
+	// e.newIndex is a DOM index: it counts the footer slot and elements still leaving the
+	// transition group, so it can point past the last task. The bucket is already updated here.
+	const movedTaskId = parseInt(e.item.dataset.taskId, 10)
+	const newTaskIndex = newBucket.tasks.findIndex(t => t.id === movedTaskId)
 
-	// The newIndex of the event doesn't count in the elements of the footer slot.
-	// This is why in case the length of the tasks is identical with the newIndex
-	// we have to remove 1 to get the correct index.
-	const newTaskIndex = newBucket.tasks.length === e.newIndex
-		? e.newIndex - 1
-		: e.newIndex
+	if (newTaskIndex === -1) {
+		return
+	}
 
 	const task = newBucket.tasks[newTaskIndex]
 	const oldBucket = buckets.value.find(b => b.id === sourceBucket.value)
@@ -763,13 +765,14 @@ function updateBuckets(value: IBucket[]) {
 
 function handleRecurringTaskCompletion() {
 	// Only reload if we're in a saved filter and the filter contains date fields
-	if (!isSavedFilter(project.value)) {
+	if (!isSavedFilterProject(project.value)) {
 		return
 	}
 
-	const filterContainsDateFields = savedFilter.value?.filters?.filter?.includes('due_date') ||
-		savedFilter.value?.filters?.filter?.includes('start_date') ||
-		savedFilter.value?.filters?.filter?.includes('end_date')
+	const savedFilterQueryString = savedFilter.value?.filters.filter ?? ''
+	const filterContainsDateFields = savedFilterQueryString.includes('due_date') ||
+		savedFilterQueryString.includes('start_date') ||
+		savedFilterQueryString.includes('end_date')
 		
 	if (filterContainsDateFields) {
 		// Reload the kanban board to refresh tasks that now match/don't match the filter
@@ -778,16 +781,24 @@ function handleRecurringTaskCompletion() {
 }
 
 // TODO: fix type
-function updateBucketPosition(e: { newIndex: number }) {
+function updateBucketPosition(e: { item: HTMLElement }) {
 	// (2) bucket positon is changed
 	dragBucket.value = false
 
-	const bucket = buckets.value[e.newIndex]
-	const bucketBefore = buckets.value[e.newIndex - 1] ?? null
-	const bucketAfter = buckets.value[e.newIndex + 1] ?? null
+	// Sortable reports a DOM index which can point past the last bucket, for example while a
+	// deleted bucket is still leaving the transition group. The buckets are already updated here.
+	const movedBucketId = parseInt(e.item.dataset.bucketId ?? '', 10)
+	const bucketIndex = buckets.value.findIndex(b => b.id === movedBucketId)
+
+	if (bucketIndex === -1) {
+		return
+	}
+
+	const bucketBefore = buckets.value[bucketIndex - 1] ?? null
+	const bucketAfter = buckets.value[bucketIndex + 1] ?? null
 
 	kanbanStore.updateBucket({
-		id: bucket.id,
+		id: movedBucketId,
 		projectId: projectId.value,
 		position: calculateItemPosition(
 			bucketBefore !== null ? bucketBefore.position : null,
@@ -853,48 +864,36 @@ function handleTaskDragStart(e) {
 	dragstart(bucket)
 }
 
-async function toggleDefaultBucket(bucket: IBucket) {
-	const defaultBucketId = view.value?.defaultBucketId === bucket.id
+function toggleDefaultBucket(bucket: IBucket) {
+	const currentView = view.value
+	if (!currentView?.id) {
+		return
+	}
+	const defaultBucketId = currentView.default_bucket_id === bucket.id
 		? 0
 		: bucket.id
 
-	const projectViewService = new ProjectViewService()
-	const updatedView = await projectViewService.update(new ProjectViewModel({
-		...view.value,
-		defaultBucketId,
-	}))
-
-	const views = project.value.views.map(v => v.id === view.value?.id ? updatedView : v)
-	const updatedProject = {
-		...project.value,
-		views,
-	}
-
-	projectStore.setProject(updatedProject)
-
-	success({message: t('project.kanban.defaultBucketSavedSuccess')})
+	updateDefaultBucket.mutate({
+		projectId: projectId.value,
+		viewId: currentView.id,
+		view: createProjectViewUpdate({...currentView, default_bucket_id: defaultBucketId}),
+	})
 }
 
-async function toggleDoneBucket(bucket: IBucket) {
-	const doneBucketId = view.value?.doneBucketId === bucket.id
+function toggleDoneBucket(bucket: IBucket) {
+	const currentView = view.value
+	if (!currentView?.id) {
+		return
+	}
+	const doneBucketId = currentView.done_bucket_id === bucket.id
 		? 0
 		: bucket.id
-	
-	const projectViewService = new ProjectViewService()
-	const updatedView = await projectViewService.update(new ProjectViewModel({
-		...view.value,
-		doneBucketId,
-	}))
 
-	const views = project.value.views.map(v => v.id === view.value?.id ? updatedView : v)
-	const updatedProject = {
-		...project.value,
-		views,
-	}
-	
-	projectStore.setProject(updatedProject)
-	
-	success({message: t('project.kanban.doneBucketSavedSuccess')})
+	updateDoneBucket.mutate({
+		projectId: projectId.value,
+		viewId: currentView.id,
+		view: createProjectViewUpdate({...currentView, done_bucket_id: doneBucketId}),
+	})
 }
 
 function collapseBucket(bucket: IBucket) {
@@ -953,6 +952,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 
 	&-bucket-container {
 		display: flex;
+		list-style: none;
 	}
 
 	.ghost {
@@ -994,6 +994,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		.tasks {
 			overflow: hidden auto;
 			block-size: 100%;
+			list-style: none;
 		}
 
 		.task-item {
@@ -1075,7 +1076,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 			font-weight: bold;
 
 			&.is-max {
-				color: var(--danger);
+				color: var(--danger-text);
 			}
 		}
 
@@ -1101,6 +1102,8 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		border-end-start-radius: $radius;
 		border-end-end-radius: $radius;
 		transform: none;
+		// At fractional device pixel ratios the scroll clip ends below the sticky footer, showing a sliver of tasks
+		box-shadow: 0 1px 0 var(--grey-100);
 
 		.button {
 			background-color: transparent;

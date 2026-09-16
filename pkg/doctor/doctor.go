@@ -17,17 +17,22 @@
 // Package doctor provides diagnostic checks for Vikunja installations.
 package doctor
 
-// Run executes all diagnostic checks and returns the results.
-func Run() []CheckGroup {
-	groups := []CheckGroup{
-		CheckSystem(),
-		CheckConfig(),
-		CheckDatabase(),
-		CheckFiles(),
+// Run executes all diagnostic checks in order and returns the results. Each group is
+// passed to emit as soon as it completes, so a slow check does not withhold the
+// groups before it.
+func Run(emit func(CheckGroup)) []CheckGroup {
+	var groups []CheckGroup
+	collect := func(group CheckGroup) {
+		groups = append(groups, group)
+		emit(group)
 	}
 
-	// Add optional service checks
-	groups = append(groups, CheckOptionalServices()...)
+	collect(CheckSystem())
+	collect(CheckConfig())
+	collect(CheckDatabase())
+	collect(CheckFiles())
+
+	CheckOptionalServices(collect)
 
 	return groups
 }

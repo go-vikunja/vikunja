@@ -20,11 +20,11 @@ export function parseSubtasksViaIndention(taskTitles: string, prefixMode: Prefix
 	let titles = taskTitles
 		.split(/[\r\n]+/)
 		.filter(t => t.replace(/\s/g, '').length > 0) // Remove titles which are empty or only contain spaces / tabs
-	
+
 	if (titles.length == 0) {
 		return []
 	}
-	
+
 	const spaceOnFirstLine = /^(\t| )+/
 	const spaces = spaceOnFirstLine.exec(titles[0])
 	if (spaces !== null) {
@@ -62,7 +62,7 @@ export function parseSubtasksViaIndention(taskTitles: string, prefixMode: Prefix
 		if (matchedSpaces > 0) {
 			// Go up the tree to find the first task with less indention than the current one
 			let pi = 1
-			let parentSpaces = 0
+			let parentSpaces: number
 			do {
 				task.parent = cleanupTitle(titles[index - pi])
 				pi++

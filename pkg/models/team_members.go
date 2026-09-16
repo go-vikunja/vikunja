@@ -69,11 +69,10 @@ func (tm *TeamMember) Create(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
-	doer, _ := user2.GetFromAuth(a)
 	events.DispatchOnCommit(s, &TeamMemberAddedEvent{
 		Team:   team,
 		Member: member,
-		Doer:   doer,
+		Doer:   doerFromAuth(s, a),
 	})
 	return nil
 }

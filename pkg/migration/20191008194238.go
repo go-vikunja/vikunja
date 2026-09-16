@@ -39,7 +39,7 @@ func init() {
 		ID:          "20191008194238",
 		Description: "Added files table",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(file20191008194238{})
+			return tx.Sync2(file20191008194238{}) //nolint:forbidigo // brand-new table, nothing to drop
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return tx.DropTables(file20191008194238{})

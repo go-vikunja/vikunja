@@ -34,6 +34,8 @@ type ProjectDuplicate struct {
 	ProjectID int64 `json:"-" param:"projectid"`
 	// The target parent project
 	ParentProjectID int64 `json:"parent_project_id,omitempty" doc:"The id of the project under which the duplicate should be created. Omit or 0 to place the copy at the top level; you need write access to the parent."`
+	// Whether to copy the project's shares to the duplicate
+	DuplicateShares bool `json:"duplicate_shares,omitempty" doc:"Whether to copy the project's user, team and link shares to the duplicate. Defaults to false."`
 
 	// The copied project
 	Project *Project `json:"duplicated_project,omitempty" readOnly:"true" doc:"The newly created duplicate project, populated by the server in the response."`
@@ -55,14 +57,15 @@ func (pd *ProjectDuplicate) CanCreate(s *xorm.Session, a web.Auth) (canCreate bo
 		return canRead, err
 	}
 
-	// Parent project exists + user has write access to is (-> can create new projects)
+	// Placing the copy under a parent requires write access to that parent.
+	// CanWrite hydrates the project, unlike CanCreate on the bare struct.
 	parent := &Project{ID: pd.ParentProjectID}
-	return parent.CanCreate(s, a)
+	return parent.CanWrite(s, a)
 }
 
 // Create duplicates a project
 // @Summary Duplicate an existing project
-// @Description Copies the project, tasks, files, kanban data, assignees, comments, attachments, labels, relations, backgrounds, user/team permissions and link shares from one project to a new one. The user needs read access in the project and write access in the parent of the new project.
+// @Description Copies the project, tasks, files, kanban data, assignees, comments, attachments, labels, relations and backgrounds from one project to a new one. User/team permissions and link shares are only copied when duplicate_shares is set to true. The user needs read access in the project and write access in the parent of the new project.
 // @tags project
 // @Accept json
 // @Produce json
@@ -82,7 +85,7 @@ func (pd *ProjectDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 
 	pd.Project.ID = 0
 	pd.Project.Identifier = "" // Reset the identifier to trigger regenerating a new one
-	pd.Project.ParentProjectID = pd.ParentProjectID
+	pd.Project.ParentProjectID = &pd.ParentProjectID
 	// Set the owner to the current user
 	pd.Project.OwnerID = doer.GetID()
 	pd.Project.Title += " - duplicate"
@@ -117,56 +120,58 @@ func (pd *ProjectDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 		return
 	}
 
-	// Permissions / Shares
-	// To keep it simple(r) we will only copy permissions which are directly used with the project, not the parent
-	users := []*ProjectUser{}
-	err = s.Where("project_id = ?", pd.ProjectID).Find(&users)
-	if err != nil {
-		return
-	}
-	for _, u := range users {
-		u.ID = 0
-		u.ProjectID = pd.Project.ID
-		if _, err := s.Insert(u); err != nil {
-			return err
-		}
-	}
-
-	log.Debugf("Duplicated user shares from project %d into %d", pd.ProjectID, pd.Project.ID)
-
-	teams := []*TeamProject{}
-	err = s.Where("project_id = ?", pd.ProjectID).Find(&teams)
-	if err != nil {
-		return
-	}
-	for _, t := range teams {
-		t.ID = 0
-		t.ProjectID = pd.Project.ID
-		if _, err := s.Insert(t); err != nil {
-			return err
-		}
-	}
-
-	// Generate new link shares if any are available
-	linkShares := []*LinkSharing{}
-	err = s.Where("project_id = ?", pd.ProjectID).Find(&linkShares)
-	if err != nil {
-		return
-	}
-	for _, share := range linkShares {
-		share.ID = 0
-		share.ProjectID = pd.Project.ID
-		hash, err := utils.CryptoRandomString(40)
+	if pd.DuplicateShares {
+		// Permissions / Shares
+		// To keep it simple(r) we will only copy permissions which are directly used with the project, not the parent
+		users := []*ProjectUser{}
+		err = s.Where("project_id = ?", pd.ProjectID).Find(&users)
 		if err != nil {
-			return err
+			return
 		}
-		share.Hash = hash
-		if _, err := s.Insert(share); err != nil {
-			return err
+		for _, u := range users {
+			u.ID = 0
+			u.ProjectID = pd.Project.ID
+			if _, err := s.Insert(u); err != nil {
+				return err
+			}
 		}
-	}
 
-	log.Debugf("Duplicated all link shares from project %d into %d", pd.ProjectID, pd.Project.ID)
+		log.Debugf("Duplicated user shares from project %d into %d", pd.ProjectID, pd.Project.ID)
+
+		teams := []*TeamProject{}
+		err = s.Where("project_id = ?", pd.ProjectID).Find(&teams)
+		if err != nil {
+			return
+		}
+		for _, t := range teams {
+			t.ID = 0
+			t.ProjectID = pd.Project.ID
+			if _, err := s.Insert(t); err != nil {
+				return err
+			}
+		}
+
+		// Generate new link shares if any are available
+		linkShares := []*LinkSharing{}
+		err = s.Where("project_id = ?", pd.ProjectID).Find(&linkShares)
+		if err != nil {
+			return
+		}
+		for _, share := range linkShares {
+			share.ID = 0
+			share.ProjectID = pd.Project.ID
+			hash, err := utils.CryptoRandomString(40)
+			if err != nil {
+				return err
+			}
+			share.Hash = hash
+			if _, err := s.Insert(share); err != nil {
+				return err
+			}
+		}
+
+		log.Debugf("Duplicated all link shares from project %d into %d", pd.ProjectID, pd.Project.ID)
+	}
 
 	err = pd.Project.ReadOne(s, doer)
 	return
@@ -182,9 +187,15 @@ func duplicateViews(s *xorm.Session, pd *ProjectDuplicate, doer web.Auth, taskMa
 
 	oldViewIDs := []int64{}
 	viewMap := make(map[int64]int64)
+	// createProjectView discards both bucket ids, they are remapped below once
+	// the duplicated buckets exist.
+	oldDefaultBucketIDs := make(map[int64]int64, len(views))
+	oldDoneBucketIDs := make(map[int64]int64, len(views))
 	for _, view := range views {
 		oldID := view.ID
 		oldViewIDs = append(oldViewIDs, oldID)
+		oldDefaultBucketIDs[oldID] = view.DefaultBucketID
+		oldDoneBucketIDs[oldID] = view.DoneBucketID
 
 		view.ID = 0
 		view.ProjectID = pd.Project.ID
@@ -224,13 +235,9 @@ func duplicateViews(s *xorm.Session, pd *ProjectDuplicate, doer web.Auth, taskMa
 		bucketMap[oldBucketID] = b.ID
 	}
 
-	for _, view := range views {
-		if view.DefaultBucketID != 0 {
-			view.DefaultBucketID = bucketMap[view.DefaultBucketID]
-		}
-		if view.DoneBucketID != 0 {
-			view.DoneBucketID = bucketMap[view.DoneBucketID]
-		}
+	for oldViewID, view := range views {
+		view.DefaultBucketID = bucketMap[oldDefaultBucketIDs[oldViewID]]
+		view.DoneBucketID = bucketMap[oldDoneBucketIDs[oldViewID]]
 
 		if view.DefaultBucketID != 0 || view.DoneBucketID != 0 {
 			err = view.Update(s, doer)
@@ -291,7 +298,7 @@ func duplicateProjectBackground(s *xorm.Session, pd *ProjectDuplicate, doer web.
 	log.Debugf("Duplicating background %d from project %d into %d", pd.Project.BackgroundFileID, pd.ProjectID, pd.Project.ID)
 
 	f := &files.File{ID: pd.Project.BackgroundFileID}
-	err = f.LoadFileMetaByID()
+	err = f.LoadFileMetaByID(s)
 	if err != nil && files.IsErrFileDoesNotExist(err) {
 		pd.Project.BackgroundFileID = 0
 		return nil
@@ -350,19 +357,20 @@ func duplicateTasks(s *xorm.Session, doer web.Auth, ld *ProjectDuplicate) (newTa
 	// This map contains the old task id as key and the new duplicated task id as value.
 	// It is used to map old task items to new ones.
 	newTaskIDs = make(map[int64]int64, len(tasks))
-	// Create + update all tasks (includes reminders)
 	oldTaskIDs := make([]int64, 0, len(tasks))
 	for _, t := range tasks {
-		oldID := t.ID
+		oldTaskIDs = append(oldTaskIDs, t.ID)
 		t.ID = 0
 		t.ProjectID = ld.Project.ID
 		t.UID = ""
-		err = createTask(s, t, doer, false, false)
-		if err != nil {
-			return nil, err
-		}
-		newTaskIDs[oldID] = t.ID
-		oldTaskIDs = append(oldTaskIDs, oldID)
+	}
+
+	err = createTasks(s, ld.Project.ID, tasks, doer, false, false, true)
+	if err != nil {
+		return nil, err
+	}
+	for i, t := range tasks {
+		newTaskIDs[oldTaskIDs[i]] = t.ID
 	}
 
 	log.Debugf("Duplicated all tasks from project %d into %d", ld.ProjectID, ld.Project.ID)
@@ -385,7 +393,7 @@ func duplicateTasks(s *xorm.Session, doer web.Auth, ld *ProjectDuplicate) (newTa
 			continue
 		}
 		attachment.File = &files.File{ID: attachment.FileID}
-		if err := attachment.File.LoadFileMetaByID(); err != nil {
+		if err := attachment.File.LoadFileMetaByID(s); err != nil {
 			if files.IsErrFileDoesNotExist(err) {
 				log.Debugf("Not duplicating attachment %d (file %d) because it does not exist from project %d into %d", oldAttachmentID, attachment.FileID, ld.ProjectID, ld.Project.ID)
 				continue

@@ -114,7 +114,7 @@ const passwordInput = ref()
 async function deleteAccount() {
 	if (isLocalUser.value && password.value === '') {
 		errPasswordRequired.value = true
-		passwordInput.value.focus()
+		passwordInput.value?.focus()
 		return
 	}
 
@@ -126,7 +126,7 @@ async function deleteAccount() {
 async function cancelDeletion() {
 	if (isLocalUser.value && password.value === '') {
 		errPasswordRequired.value = true
-		passwordInput.value.focus()
+		passwordInput.value?.focus()
 		return
 	}
 

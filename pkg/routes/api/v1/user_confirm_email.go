@@ -19,9 +19,8 @@ package v1
 import (
 	"net/http"
 
-	"code.vikunja.io/api/pkg/db"
-
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/routes/api/shared"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/labstack/echo/v5"
 )
@@ -44,17 +43,7 @@ func UserConfirmEmail(c *echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "No token provided.").Wrap(err)
 	}
 
-	s := db.NewSession()
-	defer s.Close()
-
-	err := user.ConfirmEmail(s, &emailConfirm)
-	if err != nil {
-		_ = s.Rollback()
-		return err
-	}
-
-	if err := s.Commit(); err != nil {
-		_ = s.Rollback()
+	if err := shared.ConfirmEmail(&emailConfirm); err != nil {
 		return err
 	}
 

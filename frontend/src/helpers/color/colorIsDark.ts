@@ -16,11 +16,13 @@ export function colorIsDark(color: string | undefined) {
 	const g = (rgb >> 8) & 0xff  // extract green
 	const b = (rgb >> 0) & 0xff  // extract blue
 
-	// this is a quick and dirty implementation of the WCAG 3.0 APCA color contrast formula
-	// see: https://gist.github.com/Myndex/e1025706436736166561d339fd667493#andys-shortcut-to-luminance--lightness
-	const Ys = Math.pow(r/255.0,2.2) * 0.2126 +
-		Math.pow(g/255.0,2.2) * 0.7152 +
-		Math.pow(b/255.0,2.2) * 0.0722
+	const toLinear = (c: number) => {
+		const v = c / 255
+		return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)
+	}
+	const luminance = 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b)
 
-	return Math.pow(Ys,0.678) >= 0.5
+	// sqrt(1.05 * 0.05) - 0.05: the luminance where contrast against #000 equals contrast against #fff,
+	// guaranteeing >= 4.58:1 for whichever of black/white gets picked
+	return luminance > 0.1791
 }

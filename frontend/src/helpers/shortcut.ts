@@ -72,6 +72,82 @@ export function eventToShortcutString(event: KeyboardEvent): string {
 	return parts.join('+')
 }
 
+export interface ShortcutDisplay {
+	keys: string[]
+	combination?: 'then'
+}
+
+function modifierToDisplayKey(modifier: string): string {
+	switch (modifier) {
+		case 'Control':
+			return 'ctrl'
+		case 'Meta':
+			return '⌘'
+		case 'Alt':
+			return 'alt'
+		case 'Shift':
+			return 'shift'
+		case 'Mod':
+			return isAppleDevice() ? '⌘' : 'ctrl'
+		default:
+			return modifier.toLowerCase()
+	}
+}
+
+function codeToDisplayKey(code: string): string {
+	if (/^Key[A-Z]$/.test(code)) {
+		return code.slice(3).toLowerCase()
+	}
+
+	switch (code) {
+		case 'Slash':
+			return '/'
+		case 'Period':
+			return '.'
+		case 'Backspace':
+			return 'backspace'
+		case 'Delete':
+			return 'delete'
+		case 'Enter':
+			return 'enter'
+		case 'ArrowLeft':
+			return '←'
+		case 'ArrowRight':
+			return '→'
+		case 'ArrowUp':
+			return '↑'
+		case 'ArrowDown':
+			return '↓'
+		default:
+			return code.toLowerCase()
+	}
+}
+
+function bindingStepToDisplayKeys(step: string): string[] {
+	const parts = step.split('+')
+	const code = parts.pop() || ''
+
+	return [
+		...parts.map(modifierToDisplayKey),
+		codeToDisplayKey(code),
+	]
+}
+
+export function shortcutBindingToDisplay(binding: string): ShortcutDisplay {
+	const steps = binding.split(' ')
+
+	if (steps.length > 1) {
+		return {
+			keys: steps.flatMap(bindingStepToDisplayKeys),
+			combination: 'then',
+		}
+	}
+
+	return {
+		keys: bindingStepToDisplayKeys(binding),
+	}
+}
+
 // --- Form field detection ---
 
 export function isFormField(target: EventTarget | null): boolean {

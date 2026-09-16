@@ -92,8 +92,10 @@ func InitMetrics() {
 	registerPromMetric(FilesCountKey, "The total number of files on this instance")
 	registerPromMetric(AttachmentsCountKey, "The total number of attachments on this instance")
 
-	setupActiveUsersMetric()
-	setupActiveLinkSharesMetric()
+	registerActiveMetric("vikunja_active_users", "The number of users active within the last 30 seconds", activeUsersKeyPrefix)
+	registerActiveMetric("vikunja_active_link_shares", "The number of link shares active within the last 30 seconds. Similar to vikunja_active_users.", activeLinkSharesKeyPrefix)
+
+	db.RegisterConnectionPoolMetrics(registry)
 }
 
 // GetCount returns the current count for the given metric key. The value is counted
@@ -115,7 +117,13 @@ func countFromDatabase(key string) (int64, error) {
 	s := db.NewSession()
 	defer s.Close()
 
-	return s.Table(table).Count()
+	query := s.Table(table)
+	if key == TaskCountKey {
+		// Exclude soft-deleted tasks; no bean here, so the xorm deleted tag doesn't apply
+		query = query.Where("deleted_at IS NULL")
+	}
+
+	return query.Count()
 }
 
 // InvalidateCount drops the cached count for a key so the next read recomputes it from

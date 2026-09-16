@@ -23,9 +23,9 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
-	"xorm.io/xorm"
 
 	"github.com/labstack/echo/v5"
+	"xorm.io/xorm"
 )
 
 func checkAPIToken(s *xorm.Session, username, token string) (*user.User, error) {
@@ -50,35 +50,48 @@ func checkAPIToken(s *xorm.Session, username, token string) (*user.User, error) 
 	return u, nil
 }
 
-// BasicAuth authenticates feed requests. Only API tokens are accepted —
-// password and LDAP credentials are rejected outright because feed URLs are
-// commonly exported, shared, or cached by feed readers.
-func BasicAuth(c *echo.Context, username, password string) (bool, error) {
+// AuthenticateFeedToken validates feed credentials against an existing session.
+// Only API tokens are accepted — password and LDAP credentials are rejected
+// outright because feed URLs are commonly exported, shared, or cached by feed
+// readers. It returns the authenticated user, or nil for any rejection so
+// callers can treat "invalid" and "unknown" identically.
+func AuthenticateFeedToken(s *xorm.Session, username, password string) (*user.User, error) {
 	if !strings.HasPrefix(password, models.APITokenPrefix) {
-		return false, nil
+		return nil, nil
 	}
 	// GetTokenFromTokenString slices password[len-8:] without a length check,
 	// so a stray "tk_" or other short prefix-only string would panic before
 	// the credentials could be rejected. Real tokens are far longer than
 	// prefix+8, so anything shorter is invalid by construction.
 	if len(password) < len(models.APITokenPrefix)+8 {
-		return false, nil
+		return nil, nil
 	}
-
-	s := db.NewSession()
-	defer s.Close()
 
 	u, err := checkAPIToken(s, username, password)
 	if err != nil {
 		log.Errorf("Error during API token auth for feeds: %v", err)
-		return false, nil
+		return nil, nil
 	}
 	if u == nil {
-		return false, nil
+		return nil, nil
 	}
 	if u.IsBot() {
 		log.Warningf("Feed auth rejected for bot user %d", u.ID)
-		return false, nil
+		return nil, nil
+	}
+
+	return u, nil
+}
+
+// BasicAuth authenticates feed requests for echo's BasicAuth middleware. The
+// validation logic is shared with the v2 handler via AuthenticateFeedToken.
+func BasicAuth(c *echo.Context, username, password string) (bool, error) {
+	s := db.NewSession()
+	defer s.Close()
+
+	u, err := AuthenticateFeedToken(s, username, password)
+	if err != nil || u == nil {
+		return false, err
 	}
 
 	c.Set("userBasicAuth", u)

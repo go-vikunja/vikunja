@@ -18,6 +18,7 @@ package notifications
 
 import (
 	"encoding/json"
+	"slices"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
@@ -52,7 +53,33 @@ type Titler interface {
 	ToTitle(lang string) string
 }
 
-var registry = map[string]func() Notification{}
+// ProjectID reports the project a notification is about, 0 if it is
+// account-scoped, ProjectIDUnresolved if it is about a project it cannot name.
+type ProjectID interface {
+	ProjectID() int64
+}
+
+// PersistedNotification is stored and read back, so it must declare its project.
+type PersistedNotification interface {
+	Notification
+	ProjectID
+}
+
+// ProjectIDUnresolved marks a project-scoped notification whose project could
+// not be determined. 0 would make the row account-scoped and hand its payload
+// back unchecked.
+const ProjectIDUnresolved int64 = -1
+
+// ProjectIDOf returns the project a notification is about. Unregistered types
+// need not implement ProjectID and count as account-scoped.
+func ProjectIDOf(n Notification) int64 {
+	if p, is := n.(ProjectID); is {
+		return p.ProjectID()
+	}
+	return 0
+}
+
+var registry = map[string]func() PersistedNotification{}
 
 // Register makes a notification type discoverable by name. It should be
 // called from init() in the package that defines the type. Only notifications
@@ -60,7 +87,7 @@ var registry = map[string]func() Notification{}
 // notifications are re-hydrated from JSON (e.g. by the feed handler).
 // The name is derived from the notification's own Name() method, so it stays
 // in one place.
-func Register(factory func() Notification) {
+func Register(factory func() PersistedNotification) {
 	registry[factory().Name()] = factory
 }
 
@@ -73,6 +100,16 @@ func Lookup(name string) (Notification, bool) {
 		return nil, false
 	}
 	return f(), true
+}
+
+// RegisteredNames returns every registered notification name, sorted.
+func RegisteredNames() []string {
+	names := make([]string, 0, len(registry))
+	for name := range registry {
+		names = append(names, name)
+	}
+	slices.Sort(names)
+	return names
 }
 
 // Notifiable is an entity which can be notified. Usually a user.
@@ -90,6 +127,9 @@ type Notifiable interface {
 
 // Notify notifies a notifiable of a notification.
 // An optional xorm session can be passed to reuse an existing transaction for the DB notification.
+// For persisted notifications the mail is queued from DatabaseNotification.AfterInsert,
+// i.e. only once the row is committed, so a rolled-back transaction (and its
+// event-handler retry) cannot duplicate mails (#2971).
 func Notify(notifiable Notifiable, notification Notification, sessions ...*xorm.Session) (err error) {
 	if isUnderTest {
 		sentTestNotifications = append(sentTestNotifications, notification)
@@ -102,17 +142,17 @@ func Notify(notifiable Notifiable, notification Notification, sessions ...*xorm.
 		return err
 	}
 
-	err = notifyMail(notifiable, notification)
-	if err != nil {
-		return
-	}
-
 	var s *xorm.Session
 	if len(sessions) > 0 && sessions[0] != nil {
 		s = sessions[0]
 	}
 
-	return notifyDB(notifiable, notification, s)
+	mailDeferred, err := notifyDB(notifiable, notification, s)
+	if err != nil || mailDeferred {
+		return err
+	}
+
+	return notifyMail(notifiable, notification)
 }
 
 func notifyMail(notifiable Notifiable, notification Notification) error {
@@ -140,31 +180,38 @@ func notifyMail(notifiable Notifiable, notification Notification) error {
 	return SendMail(mail, notifiable.Lang())
 }
 
-func notifyDB(notifiable Notifiable, notification Notification, existingSession *xorm.Session) (err error) {
+// notifyDB inserts the notification row if the notification has a DB
+// representation. mailDeferred reports that the mail will be queued from
+// AfterInsert once the (possibly caller-owned) transaction commits, so the
+// caller must not send it.
+func notifyDB(notifiable Notifiable, notification Notification, existingSession *xorm.Session) (mailDeferred bool, err error) {
 
 	dbContent := notification.ToDB()
 	if dbContent == nil {
-		return nil
+		return false, nil
 	}
 
 	content, err := json.Marshal(dbContent)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	dbNotification := &DatabaseNotification{
 		NotifiableID: notifiable.RouteForDB(),
 		Notification: json.RawMessage(content),
 		Name:         notification.Name(),
+		notification: notification,
+		notifiable:   notifiable,
 	}
 
 	if subject, is := notification.(SubjectID); is {
 		dbNotification.SubjectID = subject.SubjectID()
 	}
+	dbNotification.ProjectID = ProjectIDOf(notification)
 
 	if existingSession != nil {
 		_, err = existingSession.Insert(dbNotification)
-		return err
+		return err == nil, err
 	}
 
 	s := db.NewSession()
@@ -173,8 +220,8 @@ func notifyDB(notifiable Notifiable, notification Notification, existingSession 
 	_, err = s.Insert(dbNotification)
 	if err != nil {
 		_ = s.Rollback()
-		return err
+		return false, err
 	}
 
-	return s.Commit()
+	return true, s.Commit()
 }

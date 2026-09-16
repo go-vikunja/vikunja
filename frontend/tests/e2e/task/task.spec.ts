@@ -17,9 +17,9 @@ import {TaskAttachmentFactory} from '../../factories/task_attachments'
 import {TaskReminderFactory} from '../../factories/task_reminders'
 import {createDefaultViews} from '../project/prepareProjects'
 import {TaskBucketFactory} from '../../factories/task_buckets'
-import {pasteFile} from '../../support/commands'
+import {pasteFile, pasteHtmlFromClipboard} from '../../support/commands'
 import {login} from '../../support/authenticateUser'
-import type {Page} from '@playwright/test'
+import type {Locator, Page} from '@playwright/test'
 import {readFileSync} from 'fs'
 import {join, dirname} from 'path'
 import {fileURLToPath} from 'url'
@@ -70,7 +70,7 @@ async function addLabelToTaskAndVerify(page: Page, labelTitle: string) {
 	await expect(page.locator('.task-view .details.labels-list .multiselect .input-wrapper span.tag')).toContainText(labelTitle)
 }
 
-async function uploadAttachmentAndVerify(page: Page, taskId: number) {
+async function uploadAttachmentAndVerify(page: Page, taskId: number, file = 'tests/fixtures/image.jpg') {
 	const uploadAttachmentPromise = page.waitForResponse(response =>
 		response.url().includes(`/tasks/${taskId}/attachments`) && response.request().method() === 'PUT',
 	)
@@ -80,10 +80,10 @@ async function uploadAttachmentAndVerify(page: Page, taskId: number) {
 	const fileChooserPromise = page.waitForEvent('filechooser')
 	await page.locator('.task-view .action-buttons .button').filter({hasText: 'Add Attachments'}).click()
 	const fileChooser = await fileChooserPromise
-	await fileChooser.setFiles('tests/fixtures/image.jpg')
+	await fileChooser.setFiles(file)
 	await uploadAttachmentPromise
 
-	await expect(page.locator('.attachments .attachments .files button.attachment')).toBeVisible()
+	await expect(page.locator('.attachments .attachments .files .attachment')).toBeVisible()
 }
 
 test.describe('Task', () => {
@@ -352,7 +352,7 @@ test.describe('Task', () => {
 			await expect(saveButton).toBeVisible()
 			await saveButton.click()
 
-			await expect(page.locator('.task-view .details.content.description h3 span.is-small.has-text-success')).toContainText('Saved!')
+			await expect(page.locator('.task-view .details.content.description h2 span.is-small.has-text-success')).toContainText('Saved!')
 		})
 
 		test('autosaves the description when leaving the task view', async ({authenticatedPage: page}) => {
@@ -555,6 +555,27 @@ test.describe('Task', () => {
 			await addLabelToTaskAndVerify(page, labels[0].title)
 		})
 
+		test('Keeps the focus in the label input after selecting a label with the keyboard', async ({authenticatedPage: page}) => {
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				project_id: 1,
+			})
+			const labels = await LabelFactory.create(1)
+
+			await page.goto(`/tasks/${tasks[0].id}`)
+
+			await page.locator('.task-view .action-buttons .button').filter({hasText: 'Add Labels'}).click()
+			const labelInput = page.locator('.task-view .details.labels-list .multiselect input')
+			await labelInput.fill(labels[0].title)
+			await page.locator('.task-view .details.labels-list .multiselect .search-results').waitFor({state: 'visible'})
+
+			await labelInput.press('ArrowDown')
+			await page.keyboard.press('Enter')
+
+			await expect(page.locator('.task-view .details.labels-list .multiselect .input-wrapper span.tag')).toContainText(labels[0].title)
+			await expect(labelInput).toBeFocused()
+		})
+
 		test('Can add a label to a task and it shows up on the kanban board afterwards', async ({authenticatedPage: page}) => {
 			const tasks = await TaskFactory.create(1, {
 				id: 1,
@@ -607,7 +628,44 @@ test.describe('Task', () => {
 			await expect(labelWrapper).not.toContainText(labels[0].title)
 		})
 
-		test('Can set a due date for a task', async ({authenticatedPage: page}) => {
+		test('Can open due date with keyboard shortcut in task detail', async ({authenticatedPage: page}) => {
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				done: false,
+			})
+			await page.goto(`/tasks/${tasks[0].id}`)
+			await page.waitForLoadState('networkidle')
+
+			const dueDateColumn = page.locator('.task-view .columns.details .column').filter({hasText: 'Due Date'})
+			await expect(dueDateColumn).not.toBeVisible()
+			await page.locator('.task-view .action-buttons').click()
+			await page.locator('body').press('d')
+			await expect(dueDateColumn).toBeVisible()
+
+			const popup = dueDateColumn.locator('.datepicker .datepicker-popup')
+			await expect(popup).toBeVisible()
+			await expect(dueDateColumn.locator('.datepicker .show')).toBeFocused()
+			await expect(popup.locator('.datepicker__quick-select-date').first()).not.toBeFocused()
+			await page.keyboard.press('Tab')
+			await expect(popup.locator('.datepicker__quick-select-date').first()).toBeFocused()
+		})
+
+		async function openDueDatePopupWithShortcut(page: Page): Promise<Locator> {
+			const action = page.getByRole('button', {name: 'Set Due Date', exact: true})
+			await expect(action).toBeVisible()
+			await action.press('d')
+
+			const column = page.locator('.task-view .columns.details .column').filter({hasText: 'Due Date'})
+			const popup = column.locator('.datepicker .datepicker-popup')
+			await expect(popup).toBeVisible()
+			await expect(column.locator('.datepicker .show')).toBeFocused()
+			await expect(popup.locator('.datepicker__quick-select-date').first()).not.toBeFocused()
+			await page.keyboard.press('Tab')
+			await expect(popup.locator('.datepicker__quick-select-date').first()).toBeFocused()
+			return popup
+		}
+
+		test('Tabs into the due date quick-select options after clicking the action button', async ({authenticatedPage: page}) => {
 			const tasks = await TaskFactory.create(1, {
 				id: 1,
 				done: false,
@@ -619,9 +677,201 @@ test.describe('Task', () => {
 			await expect(setDueDateButton).toBeVisible({timeout: 10000})
 			await setDueDateButton.click()
 
-			const datepickerShow = page.locator('.task-view .columns.details .column').filter({hasText: 'Due Date'}).locator('.date-input .datepicker .show')
-			await expect(datepickerShow).toBeVisible()
-			await datepickerShow.click()
+			const popup = page.locator('.task-view .columns.details .column').filter({hasText: 'Due Date'}).locator('.datepicker .datepicker-popup')
+			await expect(popup).toBeVisible()
+			await expect(popup.locator('.datepicker__quick-select-date').first()).not.toBeFocused()
+			await expect(page.locator('.task-view .columns.details .column').filter({hasText: 'Due Date'}).locator('.datepicker .show')).toBeFocused()
+			await page.keyboard.press('Tab')
+			await expect(popup.locator('.datepicker__quick-select-date').first()).toBeFocused()
+		})
+
+		test('Keeps focus on the datepicker trigger after clicking until Tab is pressed', async ({authenticatedPage: page}) => {
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				done: false,
+				due_date: (new Date()).toISOString(),
+			})
+			await page.goto(`/tasks/${tasks[0].id}`)
+			await page.waitForLoadState('networkidle')
+
+			const column = page.locator('.task-view .columns.details .column').filter({hasText: 'Due Date'})
+			const trigger = column.locator('.datepicker .show')
+			const popup = column.locator('.datepicker-popup')
+			const firstShortcut = popup.locator('.datepicker__quick-select-date').first()
+			await trigger.click()
+			await expect(popup).toBeVisible()
+			await expect(trigger).toBeFocused()
+			await expect(firstShortcut).not.toBeFocused()
+
+			await page.keyboard.press('Tab')
+			await expect(firstShortcut).toBeFocused()
+			await page.keyboard.press('Escape')
+			await expect(popup).not.toBeVisible()
+
+			await trigger.press('Enter')
+			await expect(popup).toBeVisible()
+			await expect(trigger).toBeFocused()
+			await expect(firstShortcut).not.toBeFocused()
+			await page.keyboard.press('Tab')
+			await expect(firstShortcut).toBeFocused()
+		})
+
+		test('Opens the due date popup via the keyboard shortcut when the task already has a due date', async ({authenticatedPage: page}) => {
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				done: false,
+				due_date: (new Date()).toISOString(),
+			})
+			await page.goto(`/tasks/${tasks[0].id}`)
+			await page.waitForLoadState('networkidle')
+
+			await openDueDatePopupWithShortcut(page)
+		})
+
+		test('Tabs into the start and end date quick-select options after clicking the actions', async ({authenticatedPage: page}) => {
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				done: false,
+			})
+			await page.goto(`/tasks/${tasks[0].id}`)
+			await page.waitForLoadState('networkidle')
+
+			for (const [buttonLabel, columnTitle] of [
+				['Set Start Date', 'Start Date'],
+				['Set End Date', 'End Date'],
+			] as const) {
+				const button = page.locator('.task-view .action-buttons .button').filter({hasText: buttonLabel})
+				await expect(button).toBeVisible({timeout: 10000})
+				await button.click()
+
+				const popup = page.locator('.task-view .columns.details .column').filter({hasText: columnTitle}).locator('.datepicker .datepicker-popup')
+				await expect(popup).toBeVisible()
+				await expect(popup.locator('.datepicker__quick-select-date').first()).not.toBeFocused()
+				await page.keyboard.press('Tab')
+				await expect(popup.locator('.datepicker__quick-select-date').first()).toBeFocused()
+
+				await page.keyboard.press('Escape')
+				await expect(popup).not.toBeVisible()
+			}
+		})
+
+		test('Navigates the due date quick-select options with the arrow keys', async ({authenticatedPage: page}) => {
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				done: false,
+			})
+			await page.goto(`/tasks/${tasks[0].id}`)
+			await page.waitForLoadState('networkidle')
+
+			const popup = await openDueDatePopupWithShortcut(page)
+			const options = popup.locator('.datepicker__quick-select-date')
+			const optionCount = await options.count()
+			expect(optionCount).toBeGreaterThan(1)
+
+			for (let i = 1; i < optionCount; i++) {
+				await page.keyboard.press('ArrowDown')
+				await expect(options.nth(i)).toBeFocused()
+			}
+			await page.keyboard.press('ArrowDown')
+			await expect(options.nth(optionCount - 1)).toBeFocused()
+
+			for (let i = optionCount - 2; i >= 0; i--) {
+				await page.keyboard.press('ArrowUp')
+				await expect(options.nth(i)).toBeFocused()
+			}
+
+			await page.keyboard.press('ArrowUp')
+			await expect(options.first()).toBeFocused()
+		})
+
+		test('Saves and closes the due date popup when confirming a quick-select option with Enter', async ({authenticatedPage: page}) => {
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				done: false,
+			})
+			await page.goto(`/tasks/${tasks[0].id}`)
+			await page.waitForLoadState('networkidle')
+
+			const popup = await openDueDatePopupWithShortcut(page)
+			const column = page.locator('.task-view .columns.details .column').filter({hasText: 'Due Date'})
+			const showButton = column.locator('.datepicker .show')
+			await expect(showButton).toContainText('Click here to set a due date')
+
+			await page.keyboard.press('ArrowDown')
+			await page.keyboard.press('Enter')
+
+			await expect(popup).not.toBeVisible()
+			await expect(page.locator('.global-notification')).toContainText('Success')
+			await expect(showButton).not.toContainText('Click here to set a due date')
+		})
+
+		test('Saves a typed due date time immediately when confirming', async ({authenticatedPage: page}) => {
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				done: false,
+				due_date: new Date().toISOString(),
+			})
+			await page.goto(`/tasks/${tasks[0].id}`)
+			await page.waitForLoadState('networkidle')
+			const popup = await openDueDatePopupWithShortcut(page)
+
+			await page.clock.install()
+			await page.clock.pauseAt(new Date(Date.now() + 1000))
+			await popup.getByRole('textbox', {name: 'Hours', exact: true}).fill('09')
+			await popup.getByRole('textbox', {name: 'Minutes', exact: true}).fill('37')
+
+			const [response] = await Promise.all([
+				page.waitForResponse(r => r.url().endsWith(`/tasks/${tasks[0].id}`) && r.request().method() === 'POST', {timeout: 5000}),
+				popup.getByRole('button', {name: 'Confirm', exact: true}).click(),
+			])
+			expect(response.ok()).toBeTruthy()
+			const saved = await response.json()
+			const time = await page.evaluate(value => {
+				const date = new Date(value)
+				return {hours: date.getHours() % 12, minutes: date.getMinutes()}
+			}, saved.due_date)
+			expect(time).toEqual({hours: 9, minutes: 37})
+			await expect(popup).not.toBeVisible()
+
+			await page.clock.resume()
+			await page.reload()
+			const reopened = await openDueDatePopupWithShortcut(page)
+			await expect(reopened.getByRole('textbox', {name: 'Minutes', exact: true})).toHaveValue('37')
+		})
+
+		test('Can reopen the due date popup after confirming or dismissing it', async ({authenticatedPage: page}) => {
+			const tasks = await TaskFactory.create(1, {id: 1, done: false})
+			await page.goto(`/tasks/${tasks[0].id}`)
+			await page.waitForLoadState('networkidle')
+
+			const popup = await openDueDatePopupWithShortcut(page)
+			await popup.getByRole('button', {name: 'Tomorrow', exact: false}).click()
+			await popup.getByRole('button', {name: 'Confirm', exact: true}).click()
+			await expect(popup).not.toBeVisible()
+
+			const trigger = page.locator('.task-view .columns.details .column').filter({hasText: 'Due Date'}).locator('.datepicker .show')
+			await trigger.click()
+			await expect(popup).toBeVisible()
+			await expect(trigger).toBeFocused()
+			await page.keyboard.press('Tab')
+			await expect(popup.locator('.datepicker__quick-select-date').first()).toBeFocused()
+			await page.keyboard.press('Escape')
+			await expect(popup).not.toBeVisible()
+
+			await openDueDatePopupWithShortcut(page)
+		})
+
+		test('Can set a due date for a task', async ({authenticatedPage: page}) => {
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				done: false,
+			})
+			await page.goto(`/tasks/${tasks[0].id}`)
+			await page.waitForLoadState('networkidle')
+
+			const setDueDateButton = page.locator('.task-view .action-buttons .button').filter({hasText: 'Set Due Date'})
+			await expect(setDueDateButton).toBeVisible({timeout: 10000})
+			await setDueDateButton.click()
 
 			const tomorrowButton = page.locator('.datepicker .datepicker-popup button').filter({hasText: 'Tomorrow'})
 			await expect(tomorrowButton).toBeVisible()
@@ -649,9 +899,8 @@ test.describe('Task', () => {
 
 			const datepickerShow = page.locator('.task-view .columns.details .column').filter({hasText: 'Due Date'}).locator('.date-input .datepicker .show')
 			await expect(datepickerShow).toBeVisible()
-			await datepickerShow.click()
 
-			const todayButton = page.locator('.datepicker-popup .flatpickr-innerContainer .flatpickr-days .flatpickr-day.today')
+			const todayButton = page.locator('.datepicker-popup .calendar-month__day.is-today')
 			await expect(todayButton).toBeVisible()
 			await todayButton.click()
 
@@ -694,9 +943,8 @@ test.describe('Task', () => {
 
 			const datepickerShow = page.locator('.task-view .columns.details .column').filter({hasText: 'Due Date'}).locator('.date-input .datepicker .show')
 			await expect(datepickerShow).toBeVisible()
-			await datepickerShow.click()
 
-			const dateButton = page.locator(`.datepicker-popup .flatpickr-innerContainer .flatpickr-days [aria-label="${today.toLocaleString('en-US', {month: 'long'})} ${today.getDate()}, ${today.getFullYear()}"]`)
+			const dateButton = page.locator(`.datepicker-popup .calendar-month__day[aria-label="${today.toLocaleString('en-US', {month: 'long'})} ${today.getDate()}, ${today.getFullYear()}"]`)
 			await expect(dateButton).toBeVisible()
 			await dateButton.click()
 
@@ -724,11 +972,35 @@ test.describe('Task', () => {
 			await pasteFile(editor, 'image.jpg', 'image/jpeg')
 
 			await uploadAttachmentPromise
-			await expect(page.locator('.attachments .attachments .files button.attachment')).toBeVisible()
+
+			// A freshly inserted image now prompts for alt text.
+			const altInput = page.locator('input.input[placeholder="Describe this image"]')
+			await expect(altInput).toBeVisible()
+			await altInput.fill('Pasted screenshot')
+			await altInput.press('Enter')
+
+			await expect(page.locator('.attachments .attachments .files .attachment')).toBeVisible()
 			const img = page.locator('.task-view .details.content.description .tiptap__editor .tiptap.ProseMirror img')
 			await expect(img).toBeVisible()
+			await expect(img).toHaveAttribute('alt', 'Pasted screenshot')
 			const naturalWidth = await img.evaluate((el: HTMLImageElement) => el.naturalWidth)
 			expect(naturalWidth).toBeGreaterThan(0)
+		})
+
+		test('Preserves subscript and superscript when pasting rich text into the description editor', async ({authenticatedPage: page}) => {
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+			}) as Task[]
+			await page.goto(`/tasks/${tasks[0].id}`)
+
+			const editor = page.locator('.task-view .details.content.description .tiptap__editor .tiptap.ProseMirror')
+			await expect(editor).toBeVisible({timeout: 30_000})
+
+			await pasteHtmlFromClipboard(page, editor, '<p>H<sub>2</sub>O and x<sup>2</sup></p>', 'H₂O and x²')
+
+			await expect(editor.locator('sub')).toHaveText('2')
+			await expect(editor.locator('sup')).toHaveText('2')
+			await expect(editor).toContainText('H2O and x2')
 		})
 
 		test('Can set a reminder', async ({authenticatedPage: page}) => {
@@ -848,8 +1120,7 @@ test.describe('Task', () => {
 			await page.locator('.task-view .columns.details .column button').filter({hasText: 'Add a reminder'}).click()
 
 			const openPopup = page.locator('.reminder-options-popup.is-open')
-			// Wait for the flatpickr calendar to appear
-			await expect(openPopup.locator('.flatpickr-innerContainer')).toBeVisible()
+			await expect(openPopup.locator('.calendar-month')).toBeVisible()
 
 			// Track whether any task save request fires
 			let saveRequestFired = false
@@ -861,7 +1132,7 @@ test.describe('Task', () => {
 			})
 
 			// Click a day in the calendar
-			await openPopup.locator('.flatpickr-innerContainer .flatpickr-days .flatpickr-day:not(.flatpickr-disabled)').first().click()
+			await openPopup.locator('.calendar-month__day:not(:disabled)').first().click()
 
 			// Wait a moment to ensure no request fires
 			await page.waitForTimeout(1000)
@@ -893,7 +1164,7 @@ test.describe('Task', () => {
 
 			const openPopup = page.locator('.reminder-options-popup.is-open')
 			// When no due date, the absolute date form should show directly
-			await expect(openPopup.locator('.flatpickr-innerContainer')).toBeVisible()
+			await expect(openPopup.locator('.calendar-month')).toBeVisible()
 
 			// The Confirm button must be visible
 			await expect(openPopup.locator('button').filter({hasText: 'Confirm'})).toBeVisible()
@@ -960,6 +1231,32 @@ test.describe('Task', () => {
 			await expect(page.locator('.bucket .task .footer .icon svg.fa-paperclip')).toBeVisible()
 		})
 
+		test('Opens a PDF attachment in a preview modal', async ({authenticatedPage: page}) => {
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				project_id: projects[0].id,
+			})
+			await page.goto(`/tasks/${tasks[0].id}`)
+
+			await uploadAttachmentAndVerify(page, tasks[0].id, 'tests/fixtures/test.pdf')
+
+			await page.locator('.attachments .attachments .files .attachment .filename').click()
+
+			const iframe = page.locator('iframe.pdf-preview-iframe')
+			await expect(iframe).toBeVisible()
+			const src = await iframe.getAttribute('src') ?? ''
+			expect(src).toMatch(/^blob:/)
+
+			// An untyped blob url downloads instead of rendering in the iframe,
+			// so the blob must keep the application/pdf mime type.
+			const blob = await page.evaluate(async (blobUrl: string) => {
+				const b = await fetch(blobUrl).then(r => r.blob())
+				return {type: b.type, size: b.size}
+			}, src)
+			expect(blob.type).toBe('application/pdf')
+			expect(blob.size).toBeGreaterThan(0)
+		})
+
 		test('Can delete an attachment', async ({authenticatedPage: page}) => {
 			const tasks = await TaskFactory.create(1, {
 				id: 1,
@@ -973,7 +1270,7 @@ test.describe('Task', () => {
 			// (download, copy URL, delete) inside the attachment row. Attachments.vue
 			// requests `trash-alt` but FontAwesome renders it as `trash-can`.
 			const deleteButton = page.locator(
-				'.attachments .attachments .files button.attachment .attachment-info-meta-button:has(svg[data-icon="trash-can"])',
+				'.attachments .attachments .files .attachment .attachment-info-meta-button:has(svg[data-icon="trash-can"])',
 			).first()
 			await expect(deleteButton).toBeVisible()
 
@@ -986,7 +1283,7 @@ test.describe('Task', () => {
 			await page.locator('dialog[open] .modal-content .actions .button').filter({hasText: 'Do it!'}).click()
 			await deleted
 
-			await expect(page.locator('.attachments .attachments .files button.attachment')).toHaveCount(0)
+			await expect(page.locator('.attachments .attachments .files .attachment')).toHaveCount(0)
 		})
 
 		test('read-only shared user cannot delete attachments', async ({authenticatedPage: page, apiContext, currentUser}) => {
@@ -1039,12 +1336,12 @@ test.describe('Task', () => {
 			await page.goto(`/tasks/${sharedTask.id}`)
 
 			// The attachment must be visible to the reader.
-			await expect(page.locator('.attachments .attachments .files button.attachment')).toBeVisible()
+			await expect(page.locator('.attachments .attachments .files .attachment')).toBeVisible()
 
 			// The delete control renders only when editEnabled is true
 			// (see Attachments.vue). A read-only viewer should not see it.
 			await expect(page.locator(
-				'.attachments .attachments .files button.attachment .attachment-info-meta-button:has(svg[data-icon="trash-can"])',
+				'.attachments .attachments .files .attachment .attachment-info-meta-button:has(svg[data-icon="trash-can"])',
 			)).toHaveCount(0)
 		})
 
@@ -1075,7 +1372,7 @@ test.describe('Task', () => {
 			await expect(page.locator('.task-view .checklist-summary')).toContainText('1 of 5 tasks')
 			await page.locator('.tiptap__editor ul > li input[type=checkbox]').nth(2).click()
 
-			await expect(page.locator('.task-view .details.content.description h3 span.is-small.has-text-success')).toContainText('Saved!')
+			await expect(page.locator('.task-view .details.content.description h2 span.is-small.has-text-success')).toContainText('Saved!')
 			await expect(page.locator('.tiptap__editor ul > li input[type=checkbox]').nth(2)).toBeChecked()
 			await expect(page.locator('.tiptap__editor input[type=checkbox]')).toHaveCount(5)
 			await expect(page.locator('.task-view .checklist-summary')).toContainText('2 of 5 tasks')
@@ -1099,7 +1396,7 @@ test.describe('Task', () => {
 			await expect(page.locator('.task-view .checklist-summary')).toContainText('0 of 2 tasks')
 			await page.locator('.tiptap__editor ul > li input[type=checkbox]').first().click()
 
-			await expect(page.locator('.task-view .details.content.description h3 span.is-small.has-text-success')).toContainText('Saved!')
+			await expect(page.locator('.task-view .details.content.description h2 span.is-small.has-text-success')).toContainText('Saved!')
 
 			await expect(page.locator('.task-view .checklist-summary')).toContainText('1 of 2 tasks')
 
@@ -1146,7 +1443,7 @@ test.describe('Task', () => {
 			// Toggle only the second checkbox
 			await page.locator('.tiptap__editor ul > li input[type=checkbox]').nth(1).click()
 
-			await expect(page.locator('.task-view .details.content.description h3 span.is-small.has-text-success')).toContainText('Saved!')
+			await expect(page.locator('.task-view .details.content.description h2 span.is-small.has-text-success')).toContainText('Saved!')
 			await expect(page.locator('.task-view .checklist-summary')).toContainText('1 of 3 tasks')
 
 			// Verify only the second checkbox is checked, not the others
@@ -1423,6 +1720,9 @@ Everything looks good!
 			const bubbleMenu = page.locator('.editor-bubble__wrapper')
 			await expect(bubbleMenu).toBeVisible({timeout: 5000})
 			const linkButton = bubbleMenu.locator('button').nth(5)
+			// capture position before click: opening the prompt takes focus away from the editor, hiding the bubble menu
+			const linkButtonBox = await linkButton.boundingBox()
+			expect(linkButtonBox).not.toBeNull()
 			await linkButton.click()
 
 			// Verify URL input popup appears
@@ -1431,9 +1731,7 @@ Everything looks good!
 
 			// Verify input is positioned near the toolbar button (not at top/bottom of viewport)
 			const urlInputBox = await urlInput.boundingBox()
-			const linkButtonBox = await linkButton.boundingBox()
 			expect(urlInputBox).not.toBeNull()
-			expect(linkButtonBox).not.toBeNull()
 
 			// URL input should be near the link button (within 200px vertically)
 			const verticalDistance = Math.abs(urlInputBox!.y - linkButtonBox!.y)
@@ -1469,6 +1767,9 @@ Everything looks good!
 			const bubbleMenu = page.locator('.editor-bubble__wrapper')
 			await expect(bubbleMenu).toBeVisible({timeout: 5000})
 			const linkButton = bubbleMenu.locator('button').nth(5)
+			// capture position before click: opening the prompt takes focus away from the editor, hiding the bubble menu
+			const linkButtonBox = await linkButton.boundingBox()
+			expect(linkButtonBox).not.toBeNull()
 			await linkButton.click()
 
 			// Verify URL input popup appears and is positioned correctly (not off-screen)
@@ -1477,9 +1778,7 @@ Everything looks good!
 
 			// Verify input is positioned near the toolbar button
 			const urlInputBox = await urlInput.boundingBox()
-			const linkButtonBox = await linkButton.boundingBox()
 			expect(urlInputBox).not.toBeNull()
-			expect(linkButtonBox).not.toBeNull()
 
 			// URL input should be near the link button even after scroll
 			const verticalDistance = Math.abs(urlInputBox!.y - linkButtonBox!.y)
@@ -1514,6 +1813,9 @@ Everything looks good!
 			const bubbleMenu = page.locator('.editor-bubble__wrapper')
 			await expect(bubbleMenu).toBeVisible({timeout: 5000})
 			const linkButton = bubbleMenu.locator('button').nth(5)
+			// capture position before click: opening the prompt takes focus away from the editor, hiding the bubble menu
+			const linkButtonBox = await linkButton.boundingBox()
+			expect(linkButtonBox).not.toBeNull()
 			await linkButton.click()
 
 			// Verify URL input is visible
@@ -1537,10 +1839,8 @@ Everything looks good!
 			const positionChanged = Math.abs(afterScrollBox!.y - initialBox!.y) > 50
 			expect(positionChanged).toBe(true)
 
-			// Verify input is still near the link button after scroll
-			const linkButtonBox = await linkButton.boundingBox()
-			expect(linkButtonBox).not.toBeNull()
-			const verticalDistance = Math.abs(afterScrollBox!.y - linkButtonBox!.y)
+			// Verify input followed its anchor: the content scrolled up by 300px, so the anchor did too
+			const verticalDistance = Math.abs(afterScrollBox!.y - (linkButtonBox!.y - 300))
 			expect(verticalDistance).toBeLessThan(200)
 		})
 	})

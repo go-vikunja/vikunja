@@ -34,7 +34,7 @@ func init() {
 		ID:          "20201218220204",
 		Description: "Add email reminder setting to user",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(users20201218220204{})
+			return partialSync(tx, users20201218220204{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil

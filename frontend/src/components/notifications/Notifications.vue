@@ -7,6 +7,7 @@
 		>
 			<BaseButton
 				class="trigger-button"
+				:aria-expanded="showNotifications"
 				@click.stop="showNotifications = !showNotifications"
 			>
 				<span class="is-sr-only">{{ $t('notification.title') }}</span>
@@ -26,15 +27,26 @@
 			>
 				<div class="head">
 					<span>{{ $t('notification.title') }}</span>
-					<BaseButton
-						v-tooltip="$t('notification.subscribeFeed')"
-						class="feed-link"
-						:to="{name: 'user.settings.feeds'}"
-						@click="showNotifications = false"
-					>
-						<span class="is-sr-only">{{ $t('notification.subscribeFeed') }}</span>
-						<Icon icon="rss" />
-					</BaseButton>
+					<div class="actions">
+						<BaseButton
+							v-if="notifications.length > 0"
+							v-tooltip="$t('notification.clearAll')"
+							class="action-link"
+							:aria-label="$t('notification.clearAll')"
+							@click="clearAll"
+						>
+							<Icon icon="check-double" />
+						</BaseButton>
+						<BaseButton
+							v-tooltip="$t('notification.subscribeFeed')"
+							class="action-link"
+							:to="{name: 'user.settings.feeds'}"
+							@click="showNotifications = false"
+						>
+							<span class="is-sr-only">{{ $t('notification.subscribeFeed') }}</span>
+							<Icon icon="rss" />
+						</BaseButton>
+					</div>
 				</div>
 				<div
 					v-for="(n, index) in notifications"
@@ -74,7 +86,7 @@
 				<XButton
 					v-if="notifications.length > 0 && unreadNotifications > 0"
 					variant="tertiary"
-					class="mbs-2 is-fullwidth" 
+					class="mbs-2 is-fullwidth"
 					@click="markAllRead"
 				>
 					{{ $t('notification.markAllRead') }}
@@ -95,7 +107,7 @@
 
 <script lang="ts" setup>
 import {computed, onMounted, onUnmounted, ref, watch} from 'vue'
-import {useRouter, isNavigationFailure, NavigationFailureType, RouteLocationRaw} from 'vue-router'
+import {useRouter, isNavigationFailure, NavigationFailureType, type RouteLocationRaw} from 'vue-router'
 
 import NotificationService from '@/services/notification'
 import NotificationModel from '@/models/notification'
@@ -118,9 +130,9 @@ const authStore = useAuthStore()
 const router = useRouter()
 const {t} = useI18n()
 
-const allNotifications = ref<INotification[]>([])
+const allNotifications = ref<NotificationModel[]>([])
 const showNotifications = ref(false)
-const popup = ref(null)
+const popup = ref<HTMLElement | null>(null)
 
 const unreadNotifications = computed(() => {
 	return notifications.value.filter(n => n.readAt === null).length
@@ -193,11 +205,11 @@ function stopPollingFallback() {
 
 async function loadNotifications() {
 	const notificationService = new NotificationService()
-	allNotifications.value = await notificationService.getAll()
+	allNotifications.value = await notificationService.getAll() as NotificationModel[]
 }
 
-function hidePopup(e) {
-	if (showNotifications.value) {
+function hidePopup(e: MouseEvent) {
+	if (showNotifications.value && popup.value !== null) {
 		closeWhenClickedOutside(e, popup.value, () => showNotifications.value = false)
 	}
 }
@@ -208,6 +220,7 @@ function getNotificationRoute(n: INotification): RouteLocationRaw | null {
 		case names.TASK_ASSIGNED:
 		case names.TASK_REMINDER:
 		case names.TASK_MENTIONED:
+		case names.TASK_CREATED:
 			return {name: 'task.detail', params: {id: (n.notification as {task: {id: number}}).task.id}}
 		case names.PROJECT_CREATED:
 			return {name: 'task.index', params: {projectId: (n.notification as {project: {id: number}}).project.id}}
@@ -246,8 +259,15 @@ async function markAllRead() {
 	const notificationService = new NotificationService()
 	await notificationService.markAllRead()
 	success({message: t('notification.markAllReadSuccess')})
-	
+
 	notifications.value.forEach(n => n.readAt = new Date())
+}
+
+async function clearAll() {
+	const notificationService = new NotificationService()
+	await notificationService.delete(new NotificationModel({}))
+	success({message: t('notification.clearAllSuccess')})
+	allNotifications.value = []
 }
 </script>
 
@@ -299,7 +319,13 @@ async function markAllRead() {
 			align-items: center;
 			justify-content: space-between;
 
-			.feed-link {
+			.actions {
+				display: flex;
+				align-items: center;
+				gap: .5rem;
+			}
+
+			.action-link {
 				color: var(--grey-500);
 				transition: color $transition;
 

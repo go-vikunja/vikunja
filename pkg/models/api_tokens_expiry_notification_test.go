@@ -20,9 +20,11 @@ import (
 	"testing"
 	"time"
 
+	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAPITokenExpiringWeekNotification(t *testing.T) {
@@ -46,6 +48,10 @@ func TestAPITokenExpiringWeekNotification(t *testing.T) {
 	t.Run("ToMail", func(t *testing.T) {
 		mail := n.ToMail("en")
 		assert.NotNil(t, mail)
+
+		opts, err := notifications.RenderMail(mail, "en")
+		require.NoError(t, err)
+		assert.Contains(t, opts.Message, "(in 6 days")
 	})
 }
 
@@ -70,5 +76,9 @@ func TestAPITokenExpiringDayNotification(t *testing.T) {
 	t.Run("ToMail", func(t *testing.T) {
 		mail := n.ToMail("en")
 		assert.NotNil(t, mail)
+
+		opts, err := notifications.RenderMail(mail, "en")
+		require.NoError(t, err)
+		assert.Contains(t, opts.Message, "(in 23 hours")
 	})
 }

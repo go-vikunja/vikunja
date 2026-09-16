@@ -143,6 +143,7 @@ test.describe('Team permission tiers on shared projects', () => {
 		const [owner, member] = await UserFactory.create(2)
 		await createProjects(1)
 		const [team] = await TeamFactory.create(1, {id: 1, name: 'Shared Team', created_by_id: owner.id}, false)
+		await TeamMemberFactory.create(1, {team_id: team.id, user_id: owner.id, admin: true}, false)
 		await TeamMemberFactory.create(1, {team_id: team.id, user_id: member.id, admin: false}, false)
 		await TeamProjectFactory.create(1, {team_id: team.id, project_id: 1, permission: 1}, false)
 
@@ -172,7 +173,7 @@ test.describe('Team permission tiers on shared projects', () => {
 		// error and the frontend never renders the project title.
 		await login(page, apiContext, member)
 		const projectResponse = page.waitForResponse(r =>
-			r.url().endsWith('/projects/1') && r.request().method() === 'GET',
+			new URL(r.url()).pathname.endsWith('/projects/1') && r.request().method() === 'GET',
 		)
 		await page.goto('/projects/1/1')
 		const resp = await projectResponse

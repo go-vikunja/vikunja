@@ -346,6 +346,25 @@ func (err ErrTOTPNotEnabled) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrTOTPQrCodeNotAvailable represents a "TOTPQrCodeNotAvailable" kind of error.
+type ErrTOTPQrCodeNotAvailable struct{}
+
+func (err ErrTOTPQrCodeNotAvailable) Error() string {
+	return "The totp qrcode is not available because totp is already enabled for this user"
+}
+
+// ErrCodeTOTPQrCodeNotAvailable holds the unique world-error code of this error
+const ErrCodeTOTPQrCodeNotAvailable = 1037
+
+// HTTPError holds the http error description
+func (err ErrTOTPQrCodeNotAvailable) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusForbidden,
+		Code:     ErrCodeTOTPQrCodeNotAvailable,
+		Message:  "The totp qrcode is not available because totp is already enabled for this user.",
+	}
+}
+
 // ErrInvalidTOTPPasscode represents a "InvalidTOTPPasscode" kind of error.
 type ErrInvalidTOTPPasscode struct {
 	Passcode string
@@ -388,7 +407,7 @@ func (err ErrTOTPPasscodeUsed) Error() string {
 }
 
 // ErrCodeTOTPPasscodeUsed holds the unique world-error code of this error
-const ErrCodeTOTPPasscodeUsed = 1025
+const ErrCodeTOTPPasscodeUsed = 1039
 
 // HTTPError holds the http error description
 func (err ErrTOTPPasscodeUsed) HTTPError() web.HTTPError {
@@ -466,8 +485,8 @@ func (err *ErrOpenIDCustomScopeMalformed) Error() string {
 	return "Custom Scope malformed"
 }
 
-// ErrCodeNoOpenIDEmailProvided holds the unique world-error code of this error
-const ErrCodeOpenIDCustomScopeMalformed = 1022
+// ErrCodeOpenIDCustomScopeMalformed holds the unique world-error code of this error
+const ErrCodeOpenIDCustomScopeMalformed = 1038
 
 // HTTPError holds the http error description
 func (err *ErrOpenIDCustomScopeMalformed) HTTPError() web.HTTPError {
@@ -521,7 +540,7 @@ func (err *ErrAccountLocked) Error() string {
 }
 
 // ErrCodeAccountLocked holds the unique world-error code of this error
-const ErrCodeAccountLocked = 1026
+const ErrCodeAccountLocked = 1040
 
 // HTTPError holds the http error description
 func (err *ErrAccountLocked) HTTPError() web.HTTPError {
@@ -633,9 +652,10 @@ const ErrCodeInvalidClaimData = 1024
 // HTTPError holds the http error description
 func (err *ErrInvalidClaimData) HTTPError() web.HTTPError {
 	return web.HTTPError{
-		HTTPCode: http.StatusBadRequest,
-		Code:     ErrCodeInvalidClaimData,
-		Message:  fmt.Sprintf("Invalid claim data for field %s of type %s", err.Field, err.Type),
+		HTTPCode:   http.StatusBadRequest,
+		Code:       ErrCodeInvalidClaimData,
+		Message:    fmt.Sprintf("Invalid claim data for field %s of type %s", err.Field, err.Type),
+		I18nParams: map[string]string{"field": err.Field, "type": err.Type},
 	}
 }
 
@@ -660,7 +680,12 @@ const ErrorCodeInvalidTimezone = 1025
 
 // HTTPError holds the http error description
 func (err ErrInvalidTimezone) HTTPError() web.HTTPError {
-	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrorCodeInvalidTimezone, Message: fmt.Sprintf("The timezone '%s' is invalid. Please select a valid timezone from the list.", err.Name)}
+	return web.HTTPError{
+		HTTPCode:   http.StatusBadRequest,
+		Code:       ErrorCodeInvalidTimezone,
+		Message:    fmt.Sprintf("The timezone '%s' is invalid. Please select a valid timezone from the list.", err.Name),
+		I18nParams: map[string]string{"timezone": err.Name},
+	}
 }
 
 // ErrUsernameReserved represents a "UsernameReserved" kind of error.
@@ -871,5 +896,60 @@ func (err *ErrBotUsernameMustHavePrefix) HTTPError() web.HTTPError {
 		HTTPCode: http.StatusBadRequest,
 		Code:     ErrCodeBotUsernameMustHavePrefix,
 		Message:  "Bot usernames must start with the 'bot-' prefix.",
+	}
+}
+
+// ErrEmailConfirmationCooldown represents an error where a user requested another
+// confirmation mail too quickly.
+type ErrEmailConfirmationCooldown struct {
+	UserID int64
+}
+
+// IsErrEmailConfirmationCooldown checks if an error is a ErrEmailConfirmationCooldown.
+func IsErrEmailConfirmationCooldown(err error) bool {
+	_, ok := err.(ErrEmailConfirmationCooldown)
+	return ok
+}
+
+func (err ErrEmailConfirmationCooldown) Error() string {
+	return fmt.Sprintf("Confirmation email requested again too soon [UserID: %d]", err.UserID)
+}
+
+// ErrCodeEmailConfirmationCooldown holds the unique world-error code of this error
+const ErrCodeEmailConfirmationCooldown = 1036
+
+// HTTPError holds the http error description
+func (err ErrEmailConfirmationCooldown) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusTooManyRequests,
+		Code:     ErrCodeEmailConfirmationCooldown,
+		Message:  "Please wait a minute before requesting another confirmation email.",
+	}
+}
+
+// ErrNoPendingEmail represents an error where a user has no pending email change.
+type ErrNoPendingEmail struct {
+	UserID int64
+}
+
+// IsErrNoPendingEmail checks if an error is a ErrNoPendingEmail.
+func IsErrNoPendingEmail(err error) bool {
+	_, ok := err.(ErrNoPendingEmail)
+	return ok
+}
+
+func (err ErrNoPendingEmail) Error() string {
+	return fmt.Sprintf("User has no pending email change [UserID: %d]", err.UserID)
+}
+
+// ErrCodeNoPendingEmail holds the unique world-error code of this error
+const ErrCodeNoPendingEmail = 1035
+
+// HTTPError holds the http error description
+func (err ErrNoPendingEmail) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeNoPendingEmail,
+		Message:  "There is no pending email change to confirm.",
 	}
 }

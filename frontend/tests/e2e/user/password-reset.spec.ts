@@ -41,7 +41,7 @@ test.describe('Password Reset', () => {
 		await page.locator('input[id=password]').fill(newPassword)
 		await page.locator('button').filter({hasText: 'Reset your password'}).click()
 
-		await expect(page.locator('.message')).toContainText('Invalid token')
+		await expect(page.locator('.message')).toContainText('Invalid password reset token.')
 	})
 
 	test('Should redirect to login if no token is present in query param when visiting /password-reset directly', async ({page, apiContext}) => {

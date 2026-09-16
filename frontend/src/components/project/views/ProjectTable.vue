@@ -7,9 +7,13 @@
 	>
 		<template #header>
 			<div class="filter-container">
-				<Popup>
+				<Popup
+					placement="bottom-start"
+					:anchor="columnsTriggerEl"
+				>
 					<template #trigger="{toggle}">
 						<XButton
+							ref="columnsTrigger"
 							icon="th"
 							variant="secondary"
 							class="mie-2"
@@ -75,7 +79,7 @@
 					</template>
 				</Popup>
 				<FilterPopup
-					v-if="!isSavedFilter({id: projectId})"
+					v-if="!isSavedFilterProject({id: projectId})"
 					v-model="params"
 					:view-id="viewId"
 					:project-id="projectId"
@@ -114,34 +118,50 @@
 										>
 									</th>
 
-									<th v-if="activeColumns.index">
+									<th
+										v-if="activeColumns.index"
+										:aria-sort="ariaSort(sortBy.index)"
+									>
 										#
 										<Sort
 											:order="sortBy.index"
+											label="#"
 											@click="sort('index', $event)"
 										/>
 									</th>
-									<th v-if="activeColumns.done">
+									<th
+										v-if="activeColumns.done"
+										:aria-sort="ariaSort(sortBy.done)"
+									>
 										{{ $t('task.attributes.done') }}
 										<Sort
 											:order="sortBy.done"
+											:label="$t('task.attributes.done')"
 											@click="sort('done', $event)"
 										/>
 									</th>
 									<th v-if="activeColumns.project">
 										{{ $t('task.attributes.project') }}
 									</th>
-									<th v-if="activeColumns.title">
+									<th
+										v-if="activeColumns.title"
+										:aria-sort="ariaSort(sortBy.title)"
+									>
 										{{ $t('task.attributes.title') }}
 										<Sort
 											:order="sortBy.title"
+											:label="$t('task.attributes.title')"
 											@click="sort('title', $event)"
 										/>
 									</th>
-									<th v-if="activeColumns.priority">
+									<th
+										v-if="activeColumns.priority"
+										:aria-sort="ariaSort(sortBy.priority)"
+									>
 										{{ $t('task.attributes.priority') }}
 										<Sort
 											:order="sortBy.priority"
+											:label="$t('task.attributes.priority')"
 											@click="sort('priority', $event)"
 										/>
 									</th>
@@ -151,55 +171,83 @@
 									<th v-if="activeColumns.assignees">
 										{{ $t('task.attributes.assignees') }}
 									</th>
-									<th v-if="activeColumns.dueDate">
+									<th
+										v-if="activeColumns.dueDate"
+										:aria-sort="ariaSort(sortBy.due_date)"
+									>
 										{{ $t('task.attributes.dueDate') }}
 										<Sort
 											:order="sortBy.due_date"
+											:label="$t('task.attributes.dueDate')"
 											@click="sort('due_date', $event)"
 										/>
 									</th>
 									<th v-if="activeColumns.commentCount">
 										{{ $t('task.attributes.commentCount') }}
 									</th>
-									<th v-if="activeColumns.startDate">
+									<th
+										v-if="activeColumns.startDate"
+										:aria-sort="ariaSort(sortBy.start_date)"
+									>
 										{{ $t('task.attributes.startDate') }}
 										<Sort
 											:order="sortBy.start_date"
+											:label="$t('task.attributes.startDate')"
 											@click="sort('start_date', $event)"
 										/>
 									</th>
-									<th v-if="activeColumns.endDate">
+									<th
+										v-if="activeColumns.endDate"
+										:aria-sort="ariaSort(sortBy.end_date)"
+									>
 										{{ $t('task.attributes.endDate') }}
 										<Sort
 											:order="sortBy.end_date"
+											:label="$t('task.attributes.endDate')"
 											@click="sort('end_date', $event)"
 										/>
 									</th>
-									<th v-if="activeColumns.percentDone">
+									<th
+										v-if="activeColumns.percentDone"
+										:aria-sort="ariaSort(sortBy.percent_done)"
+									>
 										{{ $t('task.attributes.percentDone') }}
 										<Sort
 											:order="sortBy.percent_done"
+											:label="$t('task.attributes.percentDone')"
 											@click="sort('percent_done', $event)"
 										/>
 									</th>
-									<th v-if="activeColumns.doneAt">
+									<th
+										v-if="activeColumns.doneAt"
+										:aria-sort="ariaSort(sortBy.done_at)"
+									>
 										{{ $t('task.attributes.doneAt') }}
 										<Sort
 											:order="sortBy.done_at"
+											:label="$t('task.attributes.doneAt')"
 											@click="sort('done_at', $event)"
 										/>
 									</th>
-									<th v-if="activeColumns.created">
+									<th
+										v-if="activeColumns.created"
+										:aria-sort="ariaSort(sortBy.created)"
+									>
 										{{ $t('task.attributes.created') }}
 										<Sort
 											:order="sortBy.created"
+											:label="$t('task.attributes.created')"
 											@click="sort('created', $event)"
 										/>
 									</th>
-									<th v-if="activeColumns.updated">
+									<th
+										v-if="activeColumns.updated"
+										:aria-sort="ariaSort(sortBy.updated)"
+									>
 										{{ $t('task.attributes.updated') }}
 										<Sort
 											:order="sortBy.updated"
+											:label="$t('task.attributes.updated')"
 											@click="sort('updated', $event)"
 										/>
 									</th>
@@ -225,12 +273,7 @@
 
 									<td v-if="activeColumns.index">
 										<RouterLink :to="taskDetailRoutes[t.id]">
-											<template v-if="t.identifier === ''">
-												#{{ t.index }}
-											</template>
-											<template v-else>
-												{{ t.identifier }}
-											</template>
+											{{ getTaskIdentifier(t) }}
 										</RouterLink>
 									</td>
 									<td v-if="activeColumns.done">
@@ -241,10 +284,10 @@
 									</td>
 									<td v-if="activeColumns.project">
 										<RouterLink
-											v-if="projectStore.projects[t.projectId]"
+											v-if="projectList.projects[t.projectId]"
 											:to="{ name: 'project.index', params: { projectId: t.projectId } }"
 										>
-											{{ projectStore.projects[t.projectId].title }}
+											{{ projectList.projects[t.projectId].title }}
 										</RouterLink>
 									</td>
 									<td v-if="activeColumns.title">
@@ -326,7 +369,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, type Ref, watch} from 'vue'
+import {computed, ref, type ComponentPublicInstance, type Ref, watch} from 'vue'
 
 import {useStorage} from '@vueuse/core'
 
@@ -349,21 +392,23 @@ import {useBulkTaskSelection} from '@/stores/bulkTaskSelection'
 import type {SortBy} from '@/composables/useTaskList'
 import {useTaskList} from '@/composables/useTaskList'
 import type {ITask} from '@/modelTypes/ITask'
-import type {IProject} from '@/modelTypes/IProject'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
-import type {IProjectView} from '@/modelTypes/IProjectView'
-import {camelCase} from 'change-case'
-import {isSavedFilter} from '@/services/savedFilter'
-import {useProjectStore} from '@/stores/projects'
+import {getTaskIdentifier} from '@/models/task'
+import { camelCase } from 'change-case'
+import {isSavedFilterProject} from '@/client/queries/projects'
+import {useProjects} from '@/composables/useProjects'
 
 const props = defineProps<{
 	isLoadingProject: boolean,
-	projectId: IProject['id'],
-	viewId: IProjectView['id'],
+	projectId: number,
+	viewId: number,
 }>()
 
-const projectStore = useProjectStore()
+const projectList = useProjects()
 const bulkSelection = useBulkTaskSelection()
+
+const columnsTrigger = ref<ComponentPublicInstance | null>(null)
+const columnsTriggerEl = computed<HTMLElement | null>(() => (columnsTrigger.value?.$el as HTMLElement) ?? null)
 
 const ACTIVE_COLUMNS_DEFAULT = {
 	index: true,
@@ -412,6 +457,16 @@ watch(
 	() => setActiveColumnsSortParam(),
 	{deep: true},
 )
+
+function ariaSort(order: 'asc' | 'desc' | 'none' | undefined): 'ascending' | 'descending' | undefined {
+	if (order === 'asc') {
+		return 'ascending'
+	}
+	if (order === 'desc') {
+		return 'descending'
+	}
+	return undefined
+}
 
 // Allow sorting by multiple columns only when ctrl is pressed
 function sort(property: keyof SortBy, event?: MouseEvent) {
@@ -530,9 +585,6 @@ const taskDetailRoutes = computed(() => Object.fromEntries(
 		flex-direction: column;
 	}
 
-	&.is-open {
-		margin: 2rem 0 1rem;
-	}
 }
 
 .link-share-view .card {

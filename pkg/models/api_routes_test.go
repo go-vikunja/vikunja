@@ -17,17 +17,27 @@
 package models
 
 import (
+	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"code.vikunja.io/api/pkg/license"
 
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestCanDoAPIRoute_BulkLabelTask(t *testing.T) {
-	// Reset apiTokenRoutes to isolate this test
+func resetAPITokenRoutes(t *testing.T) {
+	t.Helper()
+	previous, previousV2 := apiTokenRoutes, apiTokenRoutesV2
+	t.Cleanup(func() { apiTokenRoutes, apiTokenRoutesV2 = previous, previousV2 })
 	apiTokenRoutes = make(map[string]APITokenRoute)
+	apiTokenRoutesV2 = make(map[string]APITokenRoute)
+}
+
+func TestCanDoAPIRoute_BulkLabelTask(t *testing.T) {
+	resetAPITokenRoutes(t)
 
 	// Register the standard CRUD routes for tasks_labels first
 	CollectRoutesForAPITokenUsage(echo.RouteInfo{
@@ -96,8 +106,7 @@ func TestStripAPIVersion(t *testing.T) {
 // would use. This is what lets a token scoped on `labels.read_one` authorise
 // both /api/v1/labels/{id} and /api/v2/labels/{id}.
 func TestCollectRoutesV2(t *testing.T) {
-	apiTokenRoutes = make(map[string]APITokenRoute)
-	apiTokenRoutesV2 = make(map[string]APITokenRoute)
+	resetAPITokenRoutes(t)
 
 	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v2/labels"}, true)
 	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v2/labels/:id"}, true)
@@ -121,12 +130,11 @@ func TestCollectRoutesV2(t *testing.T) {
 	assert.Equal(t, "DELETE", labels["delete"].Method)
 }
 
-// TestCollectRoutes_TimeEntriesV2 verifies the v2-only time-entries resource
-// lands under a clean "time-entries" group rather than the "other" catch-all,
-// so its scopes read sensibly for token clients.
+// TestCollectRoutes_TimeEntriesV2 pins the v2-only time-entries resource to a
+// snake_case "time_entries" group (not the "other" catch-all, not a hyphenated
+// key the frontend's snake_case transform would mangle on save).
 func TestCollectRoutes_TimeEntriesV2(t *testing.T) {
-	apiTokenRoutes = make(map[string]APITokenRoute)
-	apiTokenRoutesV2 = make(map[string]APITokenRoute)
+	resetAPITokenRoutes(t)
 
 	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v2/time-entries"}, true)
 	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v2/time-entries/:id"}, true)
@@ -137,8 +145,11 @@ func TestCollectRoutes_TimeEntriesV2(t *testing.T) {
 	_, isOther := apiTokenRoutesV2["other"]
 	assert.False(t, isOther, "time-entries CRUD must not fall into the 'other' bucket")
 
-	te, has := apiTokenRoutesV2["time-entries"]
-	require.True(t, has, "time-entries group should exist in the v2 table")
+	_, hyphenated := apiTokenRoutesV2["time-entries"]
+	assert.False(t, hyphenated, "group key must be canonicalised to snake_case")
+
+	te, has := apiTokenRoutesV2["time_entries"]
+	require.True(t, has, "time_entries group should exist in the v2 table")
 	assert.Equal(t, "GET", te["read_all"].Method)
 	assert.Equal(t, "/api/v2/time-entries", te["read_all"].Path)
 	assert.Equal(t, "GET", te["read_one"].Method)
@@ -148,11 +159,12 @@ func TestCollectRoutes_TimeEntriesV2(t *testing.T) {
 }
 
 // TestGetAPITokenRoutes_ExposesV2Only verifies the /routes payload merges
-// v2-only groups (time-entries has no v1 counterpart) so token clients can
+// v2-only groups (time_entries has no v1 counterpart) so token clients can
 // discover and grant them, without mutating the v1 table itself.
 func TestGetAPITokenRoutes_ExposesV2Only(t *testing.T) {
-	apiTokenRoutes = make(map[string]APITokenRoute)
-	apiTokenRoutesV2 = make(map[string]APITokenRoute)
+	resetAPITokenRoutes(t)
+	license.SetForTests([]license.Feature{license.FeatureTimeTracking})
+	defer license.ResetForTests()
 
 	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v1/labels"}, true)
 	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v2/time-entries"}, true)
@@ -162,12 +174,75 @@ func TestGetAPITokenRoutes_ExposesV2Only(t *testing.T) {
 	_, hasLabels := routes["labels"]
 	assert.True(t, hasLabels, "v1 groups stay exposed")
 
-	te, hasTE := routes["time-entries"]
-	require.True(t, hasTE, "v2-only time-entries must be exposed via /routes")
+	te, hasTE := routes["time_entries"]
+	require.True(t, hasTE, "v2-only time_entries must be exposed via /routes")
 	assert.Equal(t, "GET", te["read_all"].Method)
 
-	_, v1HasTE := apiTokenRoutes["time-entries"]
+	_, v1HasTE := apiTokenRoutes["time_entries"]
 	assert.False(t, v1HasTE, "the merge must not mutate the v1 table")
+}
+
+// TestGetAPITokenRoutes_LicenseFilter verifies the /routes payload omits
+// routes whose license feature is off — including licensed permissions nested
+// inside always-available groups (tasks.time_entries) — while validation and
+// authorisation of existing tokens stay unfiltered.
+func TestGetAPITokenRoutes_LicenseFilter(t *testing.T) {
+	resetAPITokenRoutes(t)
+
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v1/labels"}, true)
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v1/admin/users"}, true)
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v2/tasks"}, true)
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v2/time-entries"}, true)
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v2/tasks/:task_id/time-entries"}, true)
+
+	t.Run("unlicensed", func(t *testing.T) {
+		license.ResetForTests()
+		routes := GetAPITokenRoutes()
+
+		assert.Contains(t, routes, "labels")
+		assert.NotContains(t, routes, "admin")
+		assert.NotContains(t, routes, "time_entries")
+		require.Contains(t, routes, "tasks")
+		assert.Contains(t, routes["tasks"], "read_all")
+		assert.NotContains(t, routes["tasks"], "time_entries")
+
+		// Existing tokens with gated scopes must keep validating — the
+		// request-time gates already make them inert.
+		perms := APIPermissions{"time_entries": []string{"read_all"}}
+		assert.NoError(t, PermissionsAreValid(perms))
+	})
+
+	t.Run("licensed", func(t *testing.T) {
+		license.SetForTests([]license.Feature{license.FeatureTimeTracking, license.FeatureAdminPanel})
+		defer license.ResetForTests()
+		routes := GetAPITokenRoutes()
+
+		assert.Contains(t, routes, "admin")
+		require.Contains(t, routes, "time_entries")
+		assert.Contains(t, routes["time_entries"], "read_all")
+		require.Contains(t, routes, "tasks")
+		assert.Contains(t, routes["tasks"], "time_entries")
+	})
+}
+
+// TestCanDoAPIRoute_TimeEntriesHyphenLegacy proves a token stored under the old
+// hyphenated "time-entries" key still validates and authorises — no migration.
+func TestCanDoAPIRoute_TimeEntriesHyphenLegacy(t *testing.T) {
+	resetAPITokenRoutes(t)
+
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v2/time-entries"}, true)
+
+	for _, key := range []string{"time_entries", "time-entries"} {
+		t.Run(key, func(t *testing.T) {
+			perms := APIPermissions{key: []string{"read_all"}}
+			require.NoError(t, PermissionsAreValid(perms), "%s must validate", key)
+
+			token := &APIToken{APIPermissions: perms}
+			req := httptest.NewRequest("GET", "/api/v2/time-entries", nil)
+			c := echo.New().NewContext(req, httptest.NewRecorder())
+			assert.True(t, CanDoAPIRoute(c, token), "%s must authorise", key)
+		})
+	}
 }
 
 // TestGetRouteDetail_V2Verbs verifies the v2 verb mapping: POST→create,
@@ -198,8 +273,7 @@ func TestGetRouteDetail_V2Verbs(t *testing.T) {
 // PATCH for every PUT — the matcher accepts it as an alias so token
 // holders aren't forced to use PUT exclusively.
 func TestCanDoAPIRoute_V2PatchAliasesPut(t *testing.T) {
-	apiTokenRoutes = make(map[string]APITokenRoute)
-	apiTokenRoutesV2 = make(map[string]APITokenRoute)
+	resetAPITokenRoutes(t)
 	apiTokenRoutes["caldav"] = APITokenRoute{
 		"access": &RouteDetail{Path: "/dav/*", Method: "ANY"},
 	}
@@ -246,6 +320,238 @@ func TestCanDoAPIRoute_V2PatchAliasesPut(t *testing.T) {
 	})
 }
 
+// TestCanDoAPIRoute_V2TasksReadAll verifies that tasks.read_all authorises
+// both the global /api/v2/tasks and project-scoped /api/v2/projects/:project/tasks
+// endpoints. Both normalise to tasks.read_all via getRouteGroupName, but only
+// one RouteDetail survives in the map — the special case in CanDoAPIRoute must
+// accept either path.
+func TestCanDoAPIRoute_V2TasksReadAll(t *testing.T) {
+	resetAPITokenRoutes(t)
+	apiTokenRoutes["caldav"] = APITokenRoute{
+		"access": &RouteDetail{Path: "/dav/*", Method: "ANY"},
+	}
+
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v2/tasks"}, true)
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v2/projects/:project/tasks"}, true)
+
+	token := &APIToken{
+		APIPermissions: APIPermissions{"tasks": []string{"read_all"}},
+	}
+
+	e := echo.New()
+
+	t.Run("global /api/v2/tasks", func(t *testing.T) {
+		req := httptest.NewRequest("GET", "/api/v2/tasks", nil)
+		c := e.NewContext(req, httptest.NewRecorder())
+		assert.True(t, CanDoAPIRoute(c, token))
+	})
+
+	t.Run("project-scoped /api/v2/projects/:project/tasks", func(t *testing.T) {
+		req := httptest.NewRequest("GET", "/api/v2/projects/:project/tasks", nil)
+		c := e.NewContext(req, httptest.NewRecorder())
+		assert.True(t, CanDoAPIRoute(c, token))
+	})
+}
+
+// TestCollectRoutes_V2TasksBulkCreate pins the bulk create route to tasks.create_bulk instead of projects.tasks_bulk.
+func TestCollectRoutes_V2TasksBulkCreate(t *testing.T) {
+	resetAPITokenRoutes(t)
+
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{
+		Method: "POST",
+		Path:   "/api/v2/projects/:project/tasks/bulk",
+	}, true)
+
+	tasks, has := apiTokenRoutesV2["tasks"]
+	require.True(t, has, "tasks route group should exist")
+
+	bulkRoute, has := tasks["create_bulk"]
+	require.True(t, has, "create_bulk should exist in tasks routes")
+	assert.Equal(t, "/api/v2/projects/:project/tasks/bulk", bulkRoute.Path)
+	assert.Equal(t, "POST", bulkRoute.Method)
+
+	_, underProjects := apiTokenRoutesV2["projects"]
+	assert.False(t, underProjects, "bulk task create must not file under projects")
+}
+
+// TestCanDoAPIRoute_V2TasksBulkCreate verifies that tasks.create_bulk, not tasks.create, authorises the bulk create route.
+func TestCanDoAPIRoute_V2TasksBulkCreate(t *testing.T) {
+	resetAPITokenRoutes(t)
+
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{
+		Method: "POST",
+		Path:   "/api/v2/projects/:project/tasks/bulk",
+	}, true)
+
+	e := echo.New()
+
+	t.Run("create_bulk permission is allowed", func(t *testing.T) {
+		token := &APIToken{
+			APIPermissions: APIPermissions{"tasks": []string{"create_bulk"}},
+		}
+		req := httptest.NewRequest("POST", "/api/v2/projects/:project/tasks/bulk", nil)
+		c := e.NewContext(req, httptest.NewRecorder())
+		assert.True(t, CanDoAPIRoute(c, token))
+	})
+
+	t.Run("create permission alone is rejected", func(t *testing.T) {
+		token := &APIToken{
+			APIPermissions: APIPermissions{"tasks": []string{"create"}},
+		}
+		req := httptest.NewRequest("POST", "/api/v2/projects/:project/tasks/bulk", nil)
+		c := e.NewContext(req, httptest.NewRecorder())
+		assert.False(t, CanDoAPIRoute(c, token))
+	})
+}
+
 // End-to-end CanDoAPIRoute coverage for /api/v2 is provided by the Label
 // integration test in pkg/webtests/huma_label_test.go (see the token-auth
 // scenarios in that file) which exercises the full auth pipeline.
+
+// Guards cross-group expansions (GHSA-9rg3-v78m-26q8).
+func TestCanDoAPIRoute_ExpandScopes(t *testing.T) {
+	resetAPITokenRoutes(t)
+
+	for _, r := range []echo.RouteInfo{
+		{Method: "GET", Path: "/api/v1/tasks"},
+		{Method: "GET", Path: "/api/v1/tasks/:projecttask"},
+		{Method: "GET", Path: "/api/v1/projects/:project/tasks"},
+		{Method: "GET", Path: "/api/v1/projects/:project/tasks/by-index/:index"},
+		{Method: "GET", Path: "/api/v1/projects/:project/views/:view/tasks"},
+		{Method: "GET", Path: "/api/v1/projects/:project/views/:view/buckets"},
+		{Method: "GET", Path: "/api/v2/tasks"},
+		{Method: "GET", Path: "/api/v2/tasks/:task"},
+		{Method: "GET", Path: "/api/v2/projects/:project/tasks"},
+		{Method: "GET", Path: "/api/v2/projects/:project/tasks/by-index/:index"},
+		{Method: "GET", Path: "/api/v2/projects/:project/views/:view/tasks"},
+		{Method: "GET", Path: "/api/v2/projects/:project/views/:view/buckets/tasks"},
+	} {
+		CollectRoutesForAPITokenUsage(r, true)
+	}
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v1/tasks/:task/comments"}, true)
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v1/:entitykind/:entityid/reactions"}, true)
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v1/time-entries"}, true)
+
+	e := echo.New()
+	do := func(_ *testing.T, url string, token *APIToken) bool {
+		req := httptest.NewRequest("GET", url, nil)
+		c := e.NewContext(req, httptest.NewRecorder())
+		return CanDoAPIRoute(c, token)
+	}
+
+	basePerms := APIPermissions{
+		"tasks":                []string{"read_all", "read_one"},
+		"projects":             []string{"tasks_by_index", "views_buckets", "views_buckets_tasks"},
+		"projects_views_tasks": []string{"read_all"},
+	}
+	tasksOnly := &APIToken{APIPermissions: basePerms}
+	withScopesPerms := APIPermissions{
+		"tasks_comments": []string{"read_all"},
+		"reactions":      []string{"read_all"},
+		"time_entries":   []string{"read_all"},
+	}
+	for k, v := range basePerms {
+		withScopesPerms[k] = v
+	}
+	withScopes := &APIToken{APIPermissions: withScopesPerms}
+
+	t.Run("each expand value requires its own scope", func(t *testing.T) {
+		for _, expand := range []string{"comments", "comment_count", "reactions", "time_entries_count"} {
+			assert.False(t, do(t, "/api/v1/tasks?expand="+expand, tasksOnly),
+				"a tasks-only token must not expand %s", expand)
+			assert.False(t, do(t, "/api/v2/tasks?expand="+expand, tasksOnly),
+				"a tasks-only token must not expand %s", expand)
+			assert.True(t, do(t, "/api/v1/tasks?expand="+expand, withScopes),
+				"a token with the expansion scope may expand %s", expand)
+			assert.True(t, do(t, "/api/v2/tasks?expand="+expand, withScopes))
+		}
+	})
+
+	t.Run("repeated and comma-mixed expand params", func(t *testing.T) {
+		assert.False(t, do(t, "/api/v1/tasks?expand=subtasks&expand=comments", tasksOnly))
+		assert.True(t, do(t, "/api/v1/tasks?expand=subtasks&expand=comments", withScopes))
+		assert.False(t, do(t, "/api/v2/tasks?expand=buckets,reactions", tasksOnly))
+		assert.True(t, do(t, "/api/v2/tasks?expand=buckets,reactions", withScopes))
+	})
+
+	t.Run("unprotected expansions stay available to a tasks-only token", func(t *testing.T) {
+		for _, expand := range []string{"subtasks", "buckets", "is_unread"} {
+			assert.True(t, do(t, "/api/v1/tasks?expand="+expand, tasksOnly))
+		}
+		assert.True(t, do(t, "/api/v1/tasks?expand=subtasks&expand=buckets&expand=is_unread", tasksOnly))
+		assert.True(t, do(t, "/api/v1/tasks", tasksOnly), "no expand at all must stay allowed")
+	})
+
+	t.Run("protected route shapes", func(t *testing.T) {
+		for _, path := range []string{
+			"/api/v1/tasks/:projecttask",
+			"/api/v1/projects/:project/tasks",
+			"/api/v1/projects/:project/tasks/by-index/:index",
+			"/api/v1/projects/:project/views/:view/tasks",
+			"/api/v1/projects/:project/views/:view/buckets",
+			"/api/v2/tasks/:task",
+			"/api/v2/projects/:project/tasks",
+			"/api/v2/projects/:project/tasks/by-index/:index",
+			"/api/v2/projects/:project/views/:view/tasks",
+			"/api/v2/projects/:project/views/:view/buckets/tasks",
+		} {
+			assert.False(t, do(t, path+"?expand=comments", tasksOnly), "%s must require the comment scope", path)
+			assert.True(t, do(t, path+"?expand=comments", withScopes), "%s must allow the expansion with the scope", path)
+		}
+	})
+
+	t.Run("expand is ignored on unrelated routes", func(t *testing.T) {
+		CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v1/projects"}, true)
+		projectsToken := &APIToken{APIPermissions: APIPermissions{"projects": []string{"read_all"}}}
+		assert.True(t, do(t, "/api/v1/projects?expand=comments", projectsToken),
+			"expand on a route which does not consume it must not require any scope")
+	})
+}
+
+func TestAPITokenRoutes_MCPAccessRegistered(t *testing.T) {
+	group, has := GetAPITokenRoutes()["mcp"]
+	require.True(t, has)
+	detail, has := group["access"]
+	require.True(t, has)
+	require.NotNil(t, detail)
+	assert.Equal(t, "/api/v2/mcp", detail.Path)
+	assert.Equal(t, http.MethodPost, detail.Method)
+}
+
+func TestPermissionsAreValid_MCPAccess(t *testing.T) {
+	require.NoError(t, PermissionsAreValid(APIPermissions{"mcp": {"access"}}))
+}
+
+func TestAPIToken_CanUseRoute(t *testing.T) {
+	prev := apiTokenRoutesV2["tasks"]
+	apiTokenRoutesV2["tasks"] = APITokenRoute{
+		"read_one": &RouteDetail{
+			Path:   "/api/v2/tasks/:projecttask",
+			Method: "GET",
+		},
+		"update": &RouteDetail{
+			Path:   "/api/v2/tasks/:projecttask",
+			Method: "PUT",
+		},
+	}
+	t.Cleanup(func() { apiTokenRoutesV2["tasks"] = prev })
+	token := &APIToken{
+		APIPermissions: APIPermissions{
+			"tasks": {
+				"read_one",
+				"update",
+			},
+		},
+	}
+	for _, method := range []string{
+		"GET",
+		"PUT",
+		"PATCH",
+	} {
+		assert.True(t, token.CanUseRoute("/api/v2/tasks/:projecttask", method))
+	}
+	assert.False(t, token.CanUseRoute("/api/v2/tasks/:projecttask", "DELETE"))
+	assert.False(t, token.CanUseRoute("/api/v2/tasks", "GET"))
+	var nilToken *APIToken
+	assert.False(t, nilToken.CanUseRoute("/api/v2/tasks/:projecttask", "GET"))
+}

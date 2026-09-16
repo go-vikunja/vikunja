@@ -86,4 +86,17 @@ func TestTaskDuplicate(t *testing.T) {
 		require.NoError(t, err)
 		assert.False(t, can)
 	})
+
+	t.Run("archived project", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Task 35 lives in project 21 which is archived through its parent project 22
+		td := &TaskDuplicate{
+			TaskID: 35,
+		}
+		_, err := td.CanCreate(s, &user.User{ID: 1})
+		assert.True(t, IsErrProjectIsArchived(err))
+	})
 }

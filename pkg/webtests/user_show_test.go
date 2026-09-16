@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"testing"
 
+	"code.vikunja.io/api/pkg/config"
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 
 	"github.com/stretchr/testify/assert"
@@ -34,4 +35,29 @@ func TestUserShow(t *testing.T) {
 		assert.Contains(t, rec.Body.String(), `"username":"user1"`)
 		assert.NotContains(t, rec.Body.String(), `"email":""`)
 	})
+}
+
+func TestUserShowPendingEmail(t *testing.T) {
+	// One env for the whole test: setupTestEnv reloads the fixtures, which would
+	// undo the pending email change between the two requests.
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+
+	config.MailerEnabled.Set(true)
+	defer config.MailerEnabled.Set(false)
+
+	show := func() string {
+		c, rec := createRequest(e, http.MethodGet, "", nil, nil)
+		addUserTokenToContext(t, &testuser1, c)
+		require.NoError(t, apiv1.UserShow(c))
+		return rec.Body.String()
+	}
+
+	assert.NotContains(t, show(), "pending_email")
+
+	c, _ := createRequest(e, http.MethodPost, `{"new_email":"pending@example.com","password":"12345678"}`, nil, nil)
+	addUserTokenToContext(t, &testuser1, c)
+	require.NoError(t, apiv1.UpdateUserEmail(c))
+
+	assert.Contains(t, show(), `"pending_email":"pending@example.com"`)
 }

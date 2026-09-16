@@ -20,6 +20,7 @@ import (
 	"net/http"
 
 	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
 	user2 "code.vikunja.io/api/pkg/user"
@@ -39,7 +40,7 @@ type MigrationWeb struct {
 
 // AuthURL is returned to the user when requesting the auth url
 type AuthURL struct {
-	URL string `json:"url"`
+	URL string `json:"url" readOnly:"true" doc:"The OAuth authorization url the client should redirect the user to. After authorizing, the obtained code is passed back to the migrate endpoint."`
 }
 
 // RegisterMigrator registers all routes for migration
@@ -48,13 +49,52 @@ func (mw *MigrationWeb) RegisterMigrator(g *echo.Group) {
 	g.GET("/"+ms.Name()+"/auth", mw.AuthURL)
 	g.GET("/"+ms.Name()+"/status", mw.Status)
 	g.POST("/"+ms.Name()+"/migrate", mw.Migrate)
-	registeredMigrators[ms.Name()] = mw
+	RegisterMigratorForEvents(mw.MigrationStruct)
+}
+
+// RegisterMigratorForEvents makes a migrator known to the migration listener without exposing v1 routes.
+func RegisterMigratorForEvents(factory func() migration.Migrator) {
+	registeredMigrators[factory().Name()] = &MigrationWeb{MigrationStruct: factory}
 }
 
 // AuthURL is the web handler to get the auth url
 func (mw *MigrationWeb) AuthURL(c *echo.Context) error {
 	ms := mw.MigrationStruct()
 	return c.JSON(http.StatusOK, &AuthURL{URL: ms.AuthURL()})
+}
+
+// StartMigration validates credentials and dispatches a migration while holding its claim.
+func StartMigration(ms migration.Migrator, u *user2.User) error {
+	status, err := migration.ClaimMigration(ms, u)
+	if err != nil {
+		return err
+	}
+
+	if cc, ok := ms.(migration.CredentialsChecker); ok {
+		if err := cc.CheckCredentials(); err != nil {
+			failClaim(status, u, "failed credential check", migration.ErrorKindCredentials)
+			return err
+		}
+	}
+
+	if err := events.Dispatch(&MigrationRequestedEvent{
+		Migrator:          ms,
+		MigratorKind:      ms.Name(),
+		User:              u,
+		MigrationStatusID: status.ID,
+	}); err != nil {
+		failClaim(status, u, "failed event dispatch", migration.ErrorKindQueue)
+		return err
+	}
+
+	return nil
+}
+
+// failClaim releases the claim of a migration that never got going; logReason only reaches our log.
+func failClaim(status *migration.Status, u *user2.User, logReason string, kind migration.ErrorKind) {
+	if ferr := migration.FailMigration(status, kind); ferr != nil {
+		log.Errorf("[Migration] Could not release claim of migration %d for user %d after %s: %s", status.ID, u.ID, logReason, ferr)
+	}
 }
 
 // Migrate calls the migration method
@@ -67,30 +107,13 @@ func (mw *MigrationWeb) Migrate(c *echo.Context) error {
 		return err
 	}
 
-	stats, err := migration.GetMigrationStatus(ms, user)
-	if err != nil {
-		return err
-	}
-
-	if !stats.StartedAt.IsZero() && stats.FinishedAt.IsZero() {
-		return c.JSON(http.StatusPreconditionFailed, map[string]string{
-			"message":       "Migration already running",
-			"running_since": stats.StartedAt.String(),
-		})
-	}
-
 	// Bind user request stuff
 	err = c.Bind(ms)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "No or invalid model provided: "+err.Error()).Wrap(err)
 	}
 
-	err = events.Dispatch(&MigrationRequestedEvent{
-		Migrator:     ms,
-		MigratorKind: ms.Name(),
-		User:         user,
-	})
-	if err != nil {
+	if err := StartMigration(ms, user); err != nil {
 		return err
 	}
 

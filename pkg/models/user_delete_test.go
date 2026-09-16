@@ -32,6 +32,7 @@ func TestDeleteUser(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 		notifications.Fake()
+		t.Cleanup(notifications.Unfake)
 
 		u := &user.User{ID: 6}
 		err := DeleteUser(s, u)
@@ -52,6 +53,7 @@ func TestDeleteUser(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 		notifications.Fake()
+		t.Cleanup(notifications.Unfake)
 
 		u := &user.User{ID: 4}
 		err := DeleteUser(s, u)
@@ -64,6 +66,7 @@ func TestDeleteUser(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 		notifications.Fake()
+		t.Cleanup(notifications.Unfake)
 
 		u := &user.User{ID: 16}
 		err := DeleteUser(s, u)
@@ -78,6 +81,7 @@ func TestDeleteUser(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 		notifications.Fake()
+		t.Cleanup(notifications.Unfake)
 
 		u := &user.User{ID: 17}
 		err := DeleteUser(s, u)
@@ -95,13 +99,13 @@ func TestDeleteUser(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 		notifications.Fake()
+		t.Cleanup(notifications.Unfake)
 
 		project := &Project{
 			Title:   "disabled user project",
 			OwnerID: 17,
 		}
-		_, err := s.Insert(project)
-		require.NoError(t, err)
+		insertTestProject(t, s, project)
 
 		task := &Task{
 			Title:       "disabled user task",
@@ -109,7 +113,7 @@ func TestDeleteUser(t *testing.T) {
 			CreatedByID: 17,
 			Index:       1,
 		}
-		_, err = s.Insert(task)
+		_, err := s.Insert(task)
 		require.NoError(t, err)
 
 		_, err = s.Insert(&TaskAttachment{
@@ -131,6 +135,7 @@ func TestDeleteUser(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 		notifications.Fake()
+		t.Cleanup(notifications.Unfake)
 
 		task := &Task{
 			Title:       "user cleanup",

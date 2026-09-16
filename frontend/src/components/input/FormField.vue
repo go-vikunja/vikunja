@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {computed, useSlots, useId, ref} from 'vue'
+import {computed, useSlots, useId, ref, useAttrs} from 'vue'
 
 interface Props {
 	modelValue?: string | number
@@ -36,6 +36,8 @@ const generatedId = useId()
 
 const inputId = computed(() => props.id ?? generatedId)
 const errorId = computed(() => props.error ? `${inputId.value}-error` : undefined)
+const attrs = useAttrs()
+const describedBy = computed(() => [attrs['aria-describedby'], errorId.value].filter(Boolean).join(' ') || undefined)
 const hasAddon = computed(() => !!slots.addon)
 
 const fieldClasses = computed(() => [
@@ -94,7 +96,7 @@ defineExpose({
 						:class="inputClasses"
 						:disabled="disabled || undefined"
 						:aria-invalid="error ? true : undefined"
-						:aria-describedby="errorId"
+						:aria-describedby="describedBy"
 						@input="handleInput"
 					>
 				</slot>
@@ -126,7 +128,7 @@ defineExpose({
 						:class="inputClasses"
 						:disabled="disabled || undefined"
 						:aria-invalid="error ? true : undefined"
-						:aria-describedby="errorId"
+						:aria-describedby="describedBy"
 						@input="handleInput"
 					>
 				</slot>

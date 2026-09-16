@@ -18,11 +18,19 @@ package migration
 
 import (
 	"bytes"
+	"context"
+	"errors"
+	"io"
+	"io/fs"
+	"math"
+	"strings"
+	"time"
 
 	"xorm.io/xorm"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/background/handler"
@@ -30,16 +38,46 @@ import (
 	"code.vikunja.io/api/pkg/utils"
 )
 
+// FileProvider opens attachment and background bytes lazily.
+// Readers must be seekable; the second return value is their size in bytes.
+type FileProvider interface {
+	OpenAttachment(attachment *models.TaskAttachment) (io.ReadSeekCloser, int64, error)
+	OpenBackground(project *models.ProjectWithTasksAndBuckets) (io.ReadSeekCloser, int64, error)
+}
+
+type backgroundFileStorageCounter interface {
+	CountBackgroundFile(size int64) error
+}
+
 // InsertFromStructure takes a fully nested Vikunja data structure and a user and then creates everything for this user
 // (Projects, tasks, etc. Even attachments and relations.)
-func InsertFromStructure(str []*models.ProjectWithTasksAndBuckets, user *user.User) (err error) {
+func InsertFromStructure(str []*models.ProjectWithTasksAndBuckets, u *user.User) (err error) {
+	return insertFromStructureWithFileProvider(str, u, nil)
+}
+
+// InsertFromStructureWithFileProvider imports lazily opened attachment and background bytes.
+func InsertFromStructureWithFileProvider(str []*models.ProjectWithTasksAndBuckets, u *user.User, provider FileProvider) (err error) {
+	return insertFromStructureWithFileProvider(str, u, provider)
+}
+
+func insertFromStructureWithFileProvider(str []*models.ProjectWithTasksAndBuckets, u *user.User, provider FileProvider) (err error) {
 	s := db.NewSession()
 	defer s.Close()
 
-	err = insertFromStructure(s, str, user)
+	// Callers may pass a user built from jwt claims; load the stored one so
+	// assignee matching sees the current email/username.
+	importer, err := user.GetUserWithEmail(s, &user.User{ID: u.ID})
+	if err != nil {
+		return err
+	}
+
+	// Failed transactions roll back file rows, not blobs written before commit.
+	createdFiles := &[]int64{}
+
+	err = insertFromStructure(s, str, importer, provider, createdFiles)
 	if err != nil {
 		log.Errorf("[creating structure] Error while creating structure: %s", err.Error())
-		_ = s.Rollback()
+		cleanupAndRollback(s, *createdFiles)
 		events.CleanupPending(s)
 		return err
 	}
@@ -50,13 +88,30 @@ func InsertFromStructure(str []*models.ProjectWithTasksAndBuckets, user *user.Us
 		return err
 	}
 
-	events.DispatchPending(s)
+	events.DispatchPending(context.Background(), s)
 	return nil
 }
 
-func insertFromStructure(s *xorm.Session, str []*models.ProjectWithTasksAndBuckets, user *user.User) (err error) {
+func cleanupAndRollback(s *xorm.Session, fileIDs []int64) {
+	cleanupCreatedFiles(fileIDs)
+	_ = s.Rollback()
+}
 
-	log.Debugf("[creating structure] Creating %d projects", len(str))
+// Delete blobs before rollback releases their reusable database IDs.
+func cleanupCreatedFiles(fileIDs []int64) {
+	for _, id := range fileIDs {
+		if err := files.DeleteBlob(id); err != nil {
+			if errors.Is(err, fs.ErrNotExist) {
+				continue
+			}
+			log.Errorf("[creating structure] Could not clean up file %d of a failed import: %s", id, err)
+		}
+	}
+}
+
+func insertFromStructure(s *xorm.Session, str []*models.ProjectWithTasksAndBuckets, user *user.User, provider FileProvider, createdFiles *[]int64) (err error) {
+
+	log.Infof("[creating structure] Creating %d projects for user %d", len(str), user.ID)
 
 	// Seed the dedup map with the user's existing labels so re-imports
 	// reuse them instead of creating duplicates (see issue #2742).
@@ -81,9 +136,9 @@ func insertFromStructure(s *xorm.Session, str []*models.ProjectWithTasksAndBucke
 
 		oldID := p.ID
 
-		if p.ParentProjectID != 0 {
-			childRelations[p.ParentProjectID] = append(childRelations[p.ParentProjectID], oldID)
-			p.ParentProjectID = 0
+		if p.ParentProjectID != nil && *p.ParentProjectID != 0 {
+			childRelations[*p.ParentProjectID] = append(childRelations[*p.ParentProjectID], oldID)
+			p.ParentProjectID = nil
 		}
 
 		p.ID = 0
@@ -92,7 +147,7 @@ func insertFromStructure(s *xorm.Session, str []*models.ProjectWithTasksAndBucke
 			view.ProjectID = 0
 		}
 
-		err = createProject(s, p, &archivedProjects, labels, user)
+		err = createProject(s, p, &archivedProjects, labels, user, provider, createdFiles)
 		if err != nil {
 			return err
 		}
@@ -113,7 +168,7 @@ func insertFromStructure(s *xorm.Session, str []*models.ProjectWithTasksAndBucke
 				continue
 			}
 
-			child.ParentProjectID = parent.ID
+			child.ParentProjectID = models.Ptr(parent.ID)
 			err = child.Update(s, user)
 			if err != nil {
 				return err
@@ -131,13 +186,38 @@ func insertFromStructure(s *xorm.Session, str []*models.ProjectWithTasksAndBucke
 		}
 	}
 
-	log.Debugf("[creating structure] Done inserting new task structure")
+	// Exports written before archiving cascaded carry unflagged children under archived parents.
+	for _, projectID := range archivedProjects {
+		err = models.SetArchiveStateForProjectDescendants(s, projectID, true)
+		if err != nil {
+			return err
+		}
+	}
+
+	log.Infof("[creating structure] Done inserting new task structure")
 
 	return nil
 }
 
-func createProject(s *xorm.Session, project *models.ProjectWithTasksAndBuckets, archivedProjectIDs *[]int64, labels map[string]*models.Label, user *user.User) (err error) {
-	err = createProjectWithEverything(s, project, archivedProjectIDs, labels, user)
+// seedMissingTaskPositions numbers the tasks of an export that carries no order
+// information at all. A task without a position is inserted in front of the lowest one
+// by halving it, which hits the minimum spacing every few dozen inserts and then
+// recalculates every position in the view - O(n²) for a large import (#3297).
+// Seeding also keeps the order the export was written in.
+func seedMissingTaskPositions(tasks []*models.TaskWithComments) {
+	for _, t := range tasks {
+		if t.Position != 0 {
+			return
+		}
+	}
+
+	for i, t := range tasks {
+		t.Position = float64(i+1) * math.Pow(2, 16)
+	}
+}
+
+func createProject(s *xorm.Session, project *models.ProjectWithTasksAndBuckets, archivedProjectIDs *[]int64, labels map[string]*models.Label, user *user.User, provider FileProvider, createdFiles *[]int64) (err error) {
+	err = createProjectWithEverything(s, project, archivedProjectIDs, labels, user, provider, createdFiles)
 	if err != nil {
 		return err
 	}
@@ -147,7 +227,7 @@ func createProject(s *xorm.Session, project *models.ProjectWithTasksAndBuckets, 
 	return
 }
 
-func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTasksAndBuckets, archivedProjects *[]int64, labels map[string]*models.Label, user *user.User) (err error) {
+func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTasksAndBuckets, archivedProjects *[]int64, labels map[string]*models.Label, user *user.User, provider FileProvider, createdFiles *[]int64) (err error) {
 	// The tasks and bucket slices are going to be reset during the creation of the project, so we rescue it here
 	// to be able to still loop over them aftere the project was created.
 	tasks := project.Tasks
@@ -164,6 +244,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 	}
 
 	project.ID = 0
+	project.Project.BackgroundFileID = 0
 	err = models.CreateProject(s, &project.Project, user, false, false)
 	if err != nil && models.IsErrProjectIdentifierIsNotUnique(err) {
 		project.Identifier = ""
@@ -186,12 +267,40 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 
 		log.Debugf("[creating structure] Creating a background file for project %d", project.ID)
 
-		err = handler.SaveBackgroundFile(s, user, &project.Project, backgroundFile, "", uint64(backgroundFile.Len()))
+		_, err = handler.SaveBackgroundFile(s, user, &project.Project, backgroundFile, "")
 		if err != nil {
 			log.Errorf("[creating structure] Could not create background for project %d, error was %v", project.ID, err)
+		} else {
+			*createdFiles = append(*createdFiles, project.Project.BackgroundFileID)
 		}
 
 		log.Debugf("[creating structure] Created a background file for project %d", project.ID)
+	} else if provider != nil {
+		backgroundFile, _, perr := provider.OpenBackground(project)
+		if perr != nil {
+			return perr
+		}
+		if backgroundFile != nil {
+			log.Debugf("[creating structure] Creating a background file for project %d", project.ID)
+
+			var storedSize int64
+			storedSize, err = handler.SaveBackgroundFile(s, user, &project.Project, backgroundFile, "")
+			closeErr := backgroundFile.Close()
+			if err != nil {
+				return err
+			}
+			*createdFiles = append(*createdFiles, project.Project.BackgroundFileID)
+			if counter, ok := provider.(backgroundFileStorageCounter); ok {
+				if err = counter.CountBackgroundFile(storedSize); err != nil {
+					return err
+				}
+			}
+			if closeErr != nil {
+				return closeErr
+			}
+
+			log.Debugf("[creating structure] Created a background file for project %d", project.ID)
+		}
 	}
 
 	// Create all buckets
@@ -215,6 +324,14 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 
 		bucketsByOldID[oldID] = bucket
 		log.Debugf("[creating structure] Created bucket %d, old ID was %d", bucket.ID, oldID)
+	}
+
+	// project_view_id is intentionally not writable through Bucket.Update
+	// (blocks cross-tenant relocation, GHSA-569v). The importer legitimately
+	// remaps buckets onto same-project views, so persist that column directly.
+	persistBucketView := func(b *models.Bucket) error {
+		_, err := s.Where("id = ?", b.ID).Cols("project_view_id").Update(b)
+		return err
 	}
 
 	// Create all views, create default views if we don't have any
@@ -259,7 +376,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 			}
 
 			bucket.ProjectViewID = newView.ID
-			err = bucket.Update(s, user)
+			err = persistBucketView(bucket)
 			if err != nil {
 				return
 			}
@@ -278,7 +395,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 			if view.ViewKind == models.ProjectViewKindKanban {
 				for _, b := range bucketsByOldID {
 					b.ProjectViewID = view.ID
-					err = b.Update(s, user)
+					err = persistBucketView(b)
 					if err != nil {
 						return
 					}
@@ -290,6 +407,10 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 	}
 
 	log.Debugf("[creating structure] Creating %d tasks", len(tasks))
+
+	// Moving a done task into an imported bucket flips it back to open (it left the view's done bucket); restore after the loop in bulk.
+	now := time.Now()
+	taskIDsByDoneAt := make(map[time.Time][]int64)
 
 	setBucketOrDefault := func(task *models.Task) (err error) {
 		var bucketID = task.BucketID
@@ -307,6 +428,13 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 				log.Debugf("[creating structure] Error while updating task bucket %d for task %d: %s", bucketID, task.ID, err.Error())
 				return
 			}
+			if task.Done {
+				doneAt := task.DoneAt
+				if doneAt.IsZero() {
+					doneAt = now
+				}
+				taskIDsByDoneAt[doneAt] = append(taskIDsByDoneAt[doneAt], task.ID)
+			}
 		} else if bucketID > 0 {
 			log.Debugf("[creating structure] No bucket created for original bucket id %d", task.BucketID)
 			bucketID = 0
@@ -318,29 +446,76 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		return
 	}
 
-	tasksByOldID := make(map[int64]*models.TaskWithComments, len(tasks))
-	newTaskIDs := []int64{}
-	// Create all tasks
-	for i, t := range tasks {
-		oldid := t.ID
-		t.ProjectID = project.ID
-		originalBucketID := t.BucketID
-		t.BucketID = 0
-		err = t.Create(s, user)
-		if err != nil && models.IsErrTaskCannotBeEmpty(err) {
+	seedMissingTaskPositions(tasks)
+
+	type initialTask struct {
+		task     *models.Task
+		comments []*models.TaskComment
+		bucketID int64
+	}
+	initialTasks := make([]initialTask, 0, len(tasks))
+	// Duplicate old ids resolve to the first queued struct.
+	canonicalByOldID := make(map[int64]*models.Task, len(tasks))
+	queue := func(task *models.Task, comments []*models.TaskComment) {
+		initialTasks = append(initialTasks, initialTask{
+			task:     task,
+			comments: comments,
+			bucketID: task.BucketID,
+		})
+		if task.ID != 0 {
+			if _, exists := canonicalByOldID[task.ID]; !exists {
+				canonicalByOldID[task.ID] = task
+			}
+		}
+	}
+	for _, t := range tasks {
+		if t == nil || t.Title == "" {
 			continue
 		}
+		queue(&t.Task, t.Comments)
+	}
+	for i := 0; i < len(initialTasks); i++ {
+		for kind, relatedTasks := range initialTasks[i].task.RelatedTasks {
+			kept := make([]*models.Task, 0, len(relatedTasks))
+			for _, related := range relatedTasks {
+				if related == nil {
+					continue
+				}
+				// Id-only references (TickTick parents) must resolve before the title check.
+				if canonical, exists := canonicalByOldID[related.ID]; exists {
+					kept = append(kept, canonical)
+					continue
+				}
+				if related.Title == "" {
+					continue
+				}
+				queue(related, nil)
+				kept = append(kept, related)
+			}
+			initialTasks[i].task.RelatedTasks[kind] = kept
+		}
+	}
 
-		t.BucketID = originalBucketID
+	tasksToCreate := make([]*models.Task, 0, len(initialTasks))
+	for _, state := range initialTasks {
+		state.task.ProjectID = project.ID
+		state.task.BucketID = 0
+		state.task.Assignees = remapAssignees(state.task.Assignees, user)
+		tasksToCreate = append(tasksToCreate, state.task)
+	}
+	err = models.CreateTasksForImport(s, project.ID, tasksToCreate, user)
+	if err != nil {
+		return err
+	}
 
-		err = setBucketOrDefault(&tasks[i].Task)
+	for _, state := range initialTasks {
+		t := state.task
+		t.BucketID = state.bucketID
+
+		err = setBucketOrDefault(t)
 		if err != nil {
 			return
 		}
-
-		newTaskIDs = append(newTaskIDs, t.ID)
-
-		tasksByOldID[oldid] = t
 
 		log.Debugf("[creating structure] Created task %d", t.ID)
 		if len(t.RelatedTasks) > 0 {
@@ -355,37 +530,10 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 			}
 
 			for _, rt := range tasks {
-				// First create the related tasks if they do not exist
-				if _, exists := tasksByOldID[rt.ID]; !exists || rt.ID == 0 {
-					oldid := rt.ID
-					rt.ProjectID = t.ProjectID
-					originalBucketID := rt.BucketID
-					rt.BucketID = 0
-
-					err = rt.Create(s, user)
-					if err != nil {
-						log.Debugf("[creating structure] Error while creating related task %d: %s", rt.ID, err.Error())
-						return
-					}
-
-					rt.BucketID = originalBucketID
-
-					err = setBucketOrDefault(rt)
-					if err != nil {
-						return
-					}
-					tasksByOldID[oldid] = &models.TaskWithComments{Task: *rt}
-					log.Debugf("[creating structure] Created related task %d", rt.ID)
-				}
-
-				// Then create the relation
 				taskRel := &models.TaskRelation{
 					TaskID:       t.ID,
 					OtherTaskID:  rt.ID,
 					RelationKind: kind,
-				}
-				if ttt, exists := tasksByOldID[rt.ID]; exists {
-					taskRel.OtherTaskID = ttt.ID
 				}
 
 				// Add this check to prevent self-relations
@@ -409,6 +557,14 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 			log.Debugf("[creating structure] Creating %d attachments", len(t.Attachments))
 		}
 		for _, a := range t.Attachments {
+			if provider != nil {
+				err = createAttachmentFromProvider(s, t, a, user, provider, createdFiles)
+				if err != nil {
+					return
+				}
+				continue
+			}
+
 			// Check if we have a file to create
 			if len(a.File.FileContent) > 0 {
 				oldID := a.ID
@@ -426,6 +582,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 					}
 					return
 				}
+				*createdFiles = append(*createdFiles, a.File.ID)
 				log.Debugf("[creating structure] Created new attachment %d", a.ID)
 
 				if t.CoverImageAttachmentID == oldID {
@@ -471,7 +628,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		}
 
 		// Comments
-		for _, comment := range t.Comments {
+		for _, comment := range state.comments {
 			comment.TaskID = t.ID
 			comment.ID = 0
 			err = comment.CreateWithTimestamps(s, user)
@@ -479,6 +636,13 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 				return
 			}
 			log.Debugf("[creating structure] Created new comment %d", comment.ID)
+		}
+	}
+
+	for doneAt, taskIDs := range taskIDsByDoneAt {
+		_, err = s.In("id", taskIDs).Cols("done", "done_at").Update(&models.Task{Done: true, DoneAt: doneAt})
+		if err != nil {
+			return
 		}
 	}
 
@@ -519,21 +683,23 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 
 	if len(viewsByOldIDs) > 0 {
 		newPositions := []*models.TaskPosition{}
+		positionTaskIDs := make([]int64, 0, len(project.Positions))
 		for _, pos := range project.Positions {
-			_, hasTask := tasksByOldID[pos.TaskID]
+			_, hasTask := canonicalByOldID[pos.TaskID]
 			_, hasView := viewsByOldIDs[pos.ProjectViewID]
 			if !hasTask || !hasView {
 				continue
 			}
 			newPositions = append(newPositions, &models.TaskPosition{
-				TaskID:        tasksByOldID[pos.TaskID].ID,
+				TaskID:        canonicalByOldID[pos.TaskID].ID,
 				ProjectViewID: viewsByOldIDs[pos.ProjectViewID].ID,
 				Position:      pos.Position,
 			})
+			positionTaskIDs = append(positionTaskIDs, canonicalByOldID[pos.TaskID].ID)
 		}
 
 		if len(newPositions) > 0 {
-			_, err = s.In("task_id", newTaskIDs).Delete(&models.TaskPosition{})
+			_, err = s.In("task_id", positionTaskIDs).Delete(&models.TaskPosition{})
 			if err != nil {
 				return
 			}
@@ -544,21 +710,23 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		}
 
 		newTaskBuckets := make([]*models.TaskBucket, 0, len(project.TaskBuckets))
+		bucketTaskIDs := make([]int64, 0, len(project.TaskBuckets))
 		for _, tb := range project.TaskBuckets {
-			_, hasTask := tasksByOldID[tb.TaskID]
+			_, hasTask := canonicalByOldID[tb.TaskID]
 			_, hasBucket := bucketsByOldID[tb.BucketID]
 			if !hasTask || !hasBucket {
 				continue
 			}
 			newTaskBuckets = append(newTaskBuckets, &models.TaskBucket{
-				TaskID:        tasksByOldID[tb.TaskID].ID,
+				TaskID:        canonicalByOldID[tb.TaskID].ID,
 				BucketID:      bucketsByOldID[tb.BucketID].ID,
 				ProjectViewID: bucketsByOldID[tb.BucketID].ProjectViewID,
 			})
+			bucketTaskIDs = append(bucketTaskIDs, canonicalByOldID[tb.TaskID].ID)
 		}
 
 		if len(newTaskBuckets) > 0 {
-			_, err = s.In("task_id", newTaskIDs).Delete(&models.TaskBucket{})
+			_, err = s.In("task_id", bucketTaskIDs).Delete(&models.TaskBucket{})
 			if err != nil {
 				return
 			}
@@ -572,5 +740,64 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 	project.Tasks = tasks
 	project.Buckets = originalBuckets
 
+	return nil
+}
+
+// Oversized provider files retain the preloaded path's skip behavior.
+func createAttachmentFromProvider(s *xorm.Session, t *models.Task, a *models.TaskAttachment, user *user.User, provider FileProvider, createdFiles *[]int64) (err error) {
+	oldID := a.ID
+
+	content, size, err := provider.OpenAttachment(a)
+	if err != nil {
+		if files.IsErrFileIsTooLarge(err) {
+			log.Warningf("[creating structure] Attachment %s is too large, skipping: %v", a.File.Name, err)
+			return nil
+		}
+		return err
+	}
+	if content == nil {
+		return nil
+	}
+	defer func() {
+		_ = content.Close()
+	}()
+
+	a.ID = 0
+	a.TaskID = t.ID
+	// Import metadata can forge a smaller size than the stream (GHSA-qh78-rvg3-cv54).
+	a.File.Size = uint64(size) //nolint:gosec // size is bounded by the import budget
+	err = a.NewAttachment(s, content, a.File.Name, uint64(size), user)
+	if err != nil {
+		if models.IsErrTaskAttachmentIsTooLarge(err) {
+			log.Warningf("[creating structure] Attachment %s is too large (%d bytes), skipping: %v", a.File.Name, size, err)
+			return nil
+		}
+		return err
+	}
+	*createdFiles = append(*createdFiles, a.File.ID)
+	log.Debugf("[creating structure] Created new attachment %d", a.ID)
+
+	if t.CoverImageAttachmentID == oldID {
+		t.CoverImageAttachmentID = a.ID
+		err = t.Update(s, user)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// Foreign assignee IDs are invalid; only the importer can be matched by email or username.
+func remapAssignees(assignees []*user.User, importer *user.User) []*user.User {
+	for _, a := range assignees {
+		if a == nil {
+			continue
+		}
+		emailMatch := a.Email != "" && importer.Email != "" && strings.EqualFold(a.Email, importer.Email)
+		usernameMatch := a.Username != "" && strings.EqualFold(a.Username, importer.Username)
+		if emailMatch || usernameMatch {
+			return []*user.User{importer}
+		}
+	}
 	return nil
 }

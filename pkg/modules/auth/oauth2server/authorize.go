@@ -26,8 +26,8 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
-// authorizeRequest represents the JSON body for the authorize endpoint.
-type authorizeRequest struct {
+// AuthorizeRequest represents the body for the authorize endpoint.
+type AuthorizeRequest struct {
 	ResponseType        string `json:"response_type"`
 	ClientID            string `json:"client_id"`
 	RedirectURI         string `json:"redirect_uri"`
@@ -46,25 +46,26 @@ type AuthorizeResponse struct {
 // HandleAuthorize handles POST /oauth/authorize.
 // It validates the OAuth parameters, creates an authorization code, and
 // returns it as JSON. Authentication is handled by the token middleware.
+// @Summary OAuth 2.0 authorize endpoint
+// @Description Creates an authorization code for an OAuth 2.0 client on behalf of the authenticated user. PKCE is required. API tokens cannot be used to authorize a client.
+// @tags auth
+// @Accept json
+// @Produce json
+// @Security JWTKeyAuth
+// @Param request body AuthorizeRequest true "The authorization request"
+// @Success 200 {object} AuthorizeResponse "The authorization code and the redirect URI to return it to."
+// @Failure 400 {object} web.HTTPError "response_type is not 'code', the redirect URI is invalid, or the PKCE challenge is missing."
+// @Failure 403 {object} models.Message "An API token was used to authorize an OAuth client."
+// @Failure 500 {object} models.Message "Internal server error."
+// @Router /oauth/authorize [post]
 func HandleAuthorize(c *echo.Context) error {
-	var req authorizeRequest
+	if c.Get("api_token") != nil {
+		return echo.NewHTTPError(http.StatusForbidden, "API tokens cannot be used to authorize OAuth clients")
+	}
+
+	var req AuthorizeRequest
 	if err := c.Bind(&req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request body")
-	}
-
-	// Validate response_type
-	if req.ResponseType != "code" {
-		return echo.NewHTTPError(http.StatusBadRequest, "response_type must be 'code'")
-	}
-
-	// Validate redirect_uri
-	if !ValidateRedirectURI(req.RedirectURI) {
-		return &models.ErrOAuthInvalidRedirectURI{}
-	}
-
-	// Validate PKCE (required)
-	if req.CodeChallenge == "" || req.CodeChallengeMethod != "S256" {
-		return &models.ErrOAuthMissingPKCE{}
 	}
 
 	// Get the authenticated user from the middleware
@@ -73,28 +74,55 @@ func HandleAuthorize(c *echo.Context) error {
 		return err
 	}
 
+	resp, err := Authorize(&req, u.ID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, resp)
+}
+
+// Authorize validates the OAuth authorization parameters for the given
+// authenticated user and creates a single-use authorization code, independent
+// of the HTTP layer. Callers own request binding and resolving the user.
+func Authorize(req *AuthorizeRequest, userID int64) (*AuthorizeResponse, error) {
+	// Validate response_type
+	if req.ResponseType != "code" {
+		return nil, echo.NewHTTPError(http.StatusBadRequest, "response_type must be 'code'")
+	}
+
+	// Validate redirect_uri
+	if !ValidateRedirectURI(req.RedirectURI) {
+		return nil, &models.ErrOAuthInvalidRedirectURI{}
+	}
+
+	// Validate PKCE (required)
+	if req.CodeChallenge == "" || req.CodeChallengeMethod != "S256" {
+		return nil, &models.ErrOAuthMissingPKCE{}
+	}
+
 	s := db.NewSession()
 	defer s.Close()
 
-	fullUser, err := user.GetUserByID(s, u.ID)
+	fullUser, err := user.GetUserByID(s, userID)
 	if err != nil {
 		_ = s.Rollback()
-		return err
+		return nil, err
 	}
 
 	code, err := models.CreateOAuthCode(s, fullUser.ID, req.ClientID, req.RedirectURI, req.CodeChallenge, req.CodeChallengeMethod)
 	if err != nil {
 		_ = s.Rollback()
-		return err
+		return nil, err
 	}
 
 	if err := s.Commit(); err != nil {
-		return err
+		return nil, err
 	}
 
-	return c.JSON(http.StatusOK, AuthorizeResponse{
+	return &AuthorizeResponse{
 		Code:        code,
 		RedirectURI: req.RedirectURI,
 		State:       req.State,
-	})
+	}, nil
 }

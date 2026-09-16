@@ -35,7 +35,7 @@ func init() {
 		ID:          "20210413131057",
 		Description: "Add repeat mode column to tasks",
 		Migrate: func(tx *xorm.Engine) error {
-			err := tx.Sync2(tasks20210413131057{})
+			err := partialSync(tx, tasks20210413131057{})
 			if err != nil {
 				return err
 			}

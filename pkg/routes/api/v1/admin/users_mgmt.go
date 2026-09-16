@@ -21,9 +21,12 @@ import (
 	"strconv"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
+	"code.vikunja.io/api/pkg/routes/api/shared"
 	"code.vikunja.io/api/pkg/user"
+
 	"github.com/labstack/echo/v5"
 )
 
@@ -41,7 +44,7 @@ type StatusPatch struct {
 // @Security JWTKeyAuth
 // @Param id path int true "User ID"
 // @Param body body admin.StatusPatch true "Status"
-// @Success 200 {object} admin.User
+// @Success 200 {object} shared.AdminUser
 // @Failure 400 {object} web.HTTPError
 // @Failure 404 {object} web.HTTPError
 // @Router /admin/users/{id}/status [patch]
@@ -62,41 +65,31 @@ func PatchStatus(c *echo.Context) error {
 		return models.ErrInvalidData{Message: "invalid status"}
 	}
 
-	s := db.NewSession()
-	defer s.Close()
-
-	target := &user.User{ID: id}
-	has, err := s.Get(target)
+	doer, err := user.GetCurrentUser(c)
 	if err != nil {
 		return err
 	}
-	if !has {
-		return user.ErrUserDoesNotExist{UserID: id}
-	}
 
-	// Any non-Active status blocks login, so moving an admin out of Active is equivalent to demotion.
-	if target.IsAdmin && newStatus != user.StatusActive {
-		if err := user.GuardLastAdmin(s, target); err != nil {
-			_ = s.Rollback()
-			return err
-		}
-	}
+	s := db.NewSession()
+	defer s.Close()
 
-	if err := user.SetUserStatus(s, target, newStatus); err != nil {
+	target, err := models.SetUserStatusAsAdmin(s, doer, id, newStatus)
+	if err != nil {
 		_ = s.Rollback()
+		events.CleanupPending(s)
 		return err
 	}
 	if err := s.Commit(); err != nil {
+		events.CleanupPending(s)
 		return err
 	}
+	events.DispatchPending(c.Request().Context(), s)
 
-	// Refresh locally since GetUserByID refuses disabled accounts.
-	target.Status = newStatus
 	providers, err := openid.GetAllProviders()
 	if err != nil {
 		return err
 	}
-	return c.JSON(http.StatusOK, newAdminUser(target, providers))
+	return c.JSON(http.StatusOK, shared.NewAdminUser(target, providers))
 }
 
 // DeleteUser removes a user either immediately or through the self-deletion flow.
@@ -125,37 +118,23 @@ func DeleteUser(c *echo.Context) error {
 		return models.ErrInvalidData{Message: "invalid mode, expected 'now' or 'scheduled'"}
 	}
 
-	s := db.NewSession()
-	defer s.Close()
-
-	target := &user.User{ID: id}
-	has, err := s.Get(target)
+	doer, err := user.GetCurrentUser(c)
 	if err != nil {
 		return err
 	}
-	if !has {
-		return user.ErrUserDoesNotExist{UserID: id}
-	}
 
-	if err := user.GuardLastAdmin(s, target); err != nil {
+	s := db.NewSession()
+	defer s.Close()
+
+	if err := models.DeleteUserAsAdmin(s, doer, id, mode); err != nil {
 		_ = s.Rollback()
+		events.CleanupPending(s)
 		return err
 	}
-
-	if mode == "now" {
-		if err := models.DeleteUser(s, target); err != nil {
-			_ = s.Rollback()
-			return err
-		}
-	} else {
-		if err := user.RequestDeletion(s, target); err != nil {
-			_ = s.Rollback()
-			return err
-		}
-	}
-
 	if err := s.Commit(); err != nil {
+		events.CleanupPending(s)
 		return err
 	}
+	events.DispatchPending(c.Request().Context(), s)
 	return c.NoContent(http.StatusNoContent)
 }

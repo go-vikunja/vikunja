@@ -21,8 +21,9 @@ withDefaults(defineProps<{
 
 <style lang="scss" scoped>
 .is-done {
+  // bright brand green with fixed dark text passes contrast in both themes
   background: var(--success);
-  color: var(--white);
+  color: hsl(215, 27.9%, 16.9%);
   padding: .5rem;
   font-weight: bold;
   line-height: 1;

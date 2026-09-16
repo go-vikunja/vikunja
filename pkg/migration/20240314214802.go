@@ -48,7 +48,7 @@ func init() {
 		ID:          "20240314214802",
 		Description: "make task position separate",
 		Migrate: func(tx *xorm.Engine) error {
-			err := tx.Sync2(taskPositions20240314214802{})
+			err := tx.Sync2(taskPositions20240314214802{}) //nolint:forbidigo // brand-new table, nothing to drop
 			if err != nil {
 				return err
 			}

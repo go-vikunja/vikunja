@@ -86,7 +86,6 @@
 				"subject": "任務「%[1]s」(%[2]s) 已逾期",
 				"message": "任務「%[1]s」(%[2]s) 提醒：該任務已逾期 %[3]s，尚未完成。",
 				"multiple_subject": "您的逾期任務",
-				"multiple_message": "您有以下逾期任務：",
 				"overdue_since": "自 %[1]s 起",
 				"overdue_now": "現在",
 				"overdue": "逾期 %[1]s"

@@ -1,0 +1,87 @@
+name: Sync auto-merge label
+
+on:
+  pull_request_target:
+    types: [auto_merge_enabled, auto_merge_disabled, closed]
+  schedule:
+    - cron: '7 * * * *'
+  workflow_dispatch:
+
+env:
+  AUTOMERGE_LABEL: auto-merge
+  GH_REPO: ${{ github.repository }}
+
+jobs:
+  # Event-driven sync for a single PR. Never checks out PR head code.
+  sync:
+    if: github.event_name == 'pull_request_target'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Add label when auto-merge is enabled
+        if: github.event.action == 'auto_merge_enabled'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr edit ${{ github.event.pull_request.number }} --add-label "$AUTOMERGE_LABEL"
+
+      - name: Remove label when auto-merge is disabled or PR closed
+        if: github.event.action == 'auto_merge_disabled' || github.event.action == 'closed'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # gh errors when removing a label the PR doesn't have — tolerate that.
+        run: gh pr edit ${{ github.event.pull_request.number }} --remove-label "$AUTOMERGE_LABEL" || true
+
+  # Hourly reconciliation: backfills old PRs and catches implicit auto-merge
+  # disables (e.g. unauthorized push to the head branch) that fire no event.
+  reconcile:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Reconcile labels with auto-merge state
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          AUTOMERGE_LABEL: ${{ env.AUTOMERGE_LABEL }}
+        with:
+          script: |
+            const label = process.env.AUTOMERGE_LABEL;
+            const query = `
+              query($owner: String!, $repo: String!, $cursor: String) {
+                repository(owner: $owner, name: $repo) {
+                  pullRequests(first: 100, after: $cursor, states: OPEN) {
+                    pageInfo { hasNextPage endCursor }
+                    nodes {
+                      number
+                      autoMergeRequest { enabledAt }
+                      labels(first: 100) { nodes { name } }
+                    }
+                  }
+                }
+              }`;
+
+            let cursor = null;
+            do {
+              const res = await github.graphql(query, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                cursor,
+              });
+              const page = res.repository.pullRequests;
+              for (const pr of page.nodes) {
+                const hasAutomerge = pr.autoMergeRequest !== null;
+                const hasLabel = pr.labels.nodes.some(l => l.name === label);
+                if (hasAutomerge === hasLabel) continue;
+                await github.rest.issues[hasAutomerge ? 'addLabels' : 'removeLabel']({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pr.number,
+                  ...(hasAutomerge ? { labels: [label] } : { name: label }),
+                });
+                core.info(`PR #${pr.number}: ${hasAutomerge ? 'added' : 'removed'} label "${label}"`);
+              }
+              cursor = page.pageInfo.hasNextPage ? page.pageInfo.endCursor : null;
+            } while (cursor);

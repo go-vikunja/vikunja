@@ -24,11 +24,11 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
-	"code.vikunja.io/api/pkg/modules/humaecho5"
 	webfiles "code.vikunja.io/api/pkg/web/files"
 	"code.vikunja.io/api/pkg/web/handler"
 
 	"github.com/danielgtaylor/huma/v2"
+	"github.com/danielgtaylor/huma/v2/adapters/humaecho"
 )
 
 // models.TaskAttachment.ReadAll returns []*models.TaskAttachment.
@@ -68,17 +68,14 @@ func RegisterTaskAttachmentRoutes(api huma.API) {
 		Tags:        tags,
 	}, taskAttachmentsList)
 
-	Register(api, huma.Operation{
+	Register(api, withUploadLimits(huma.Operation{
 		OperationID: "task-attachments-upload",
 		Summary:     "Upload task attachments",
 		Description: "Uploads one or more files as attachments to a task via multipart/form-data under the \"files\" field. Requires write access to the task. Each file is processed independently: a file that fails (for example, exceeding the configured size limit) is reported in the errors list while the others still succeed, so the request returns 201 even on a partial upload. The max size per file is the server's configured file size limit.",
 		Method:      http.MethodPost,
 		Path:        "/tasks/{task}/attachments",
 		Tags:        tags,
-		// +2 MB mirrors Echo's global BodyLimit overhead so a max-sized file isn't rejected by multipart boundary/header bytes.
-		// #nosec G115 - configured value won't exceed int64 max in practice.
-		MaxBodyBytes: (int64(config.GetMaxFileSizeInMBytes()) + 2) * 1024 * 1024,
-	}, taskAttachmentsUpload)
+	}), taskAttachmentsUpload)
 
 	Register(api, huma.Operation{
 		OperationID: "task-attachments-download",
@@ -164,9 +161,8 @@ func taskAttachmentsUpload(ctx context.Context, in *taskAttachmentUploadInput) (
 	return &taskAttachmentUploadBody{Body: webfiles.BuildUploadResult(success, failures)}, nil
 }
 
-// taskAttachmentsDownload owns auth, the session and the permission check; there is
-// no handler.Do* for a file body. It loads the attachment, then streams the bytes
-// from the StreamResponse callback (no buffering — attachments can be large).
+// taskAttachmentsDownload exists because no handler.Do* fits a file body; bytes
+// stream from the StreamResponse callback without buffering — attachments can be large.
 func taskAttachmentsDownload(ctx context.Context, in *struct {
 	TaskID       int64  `path:"task" doc:"The id of the task the attachment belongs to."`
 	AttachmentID int64  `path:"attachment" doc:"The id of the attachment to download."`
@@ -177,25 +173,15 @@ func taskAttachmentsDownload(ctx context.Context, in *struct {
 		return nil, err
 	}
 
-	s := db.NewSession()
-	defer s.Close()
-
 	previewSize := models.GetPreviewSizeFromString(in.PreviewSize)
-	ta, preview, err := models.LoadTaskAttachmentForDownload(s, a, in.TaskID, in.AttachmentID, previewSize)
+	ta, preview, err := models.GetTaskAttachmentForDownload(a, in.TaskID, in.AttachmentID, previewSize)
 	if err != nil {
-		_ = s.Rollback()
 		return nil, translateDomainError(err)
 	}
 
-	// The file reader comes from object storage, not the DB session, so it stays
-	// valid after the commit; the StreamResponse callback runs after this returns.
-	if err := s.Commit(); err != nil {
-		_ = s.Rollback()
-		return nil, translateDomainError(err)
-	}
-
+	// Reader is independent of the session; stays valid for the StreamResponse callback.
 	return &huma.StreamResponse{Body: func(hctx huma.Context) {
-		c := humaecho5.Unwrap(hctx)
+		c := humaecho.Unwrap(hctx)
 		webfiles.WriteAttachmentDownload((*c).Response(), (*c).Request(), ta, preview)
 	}}, nil
 }

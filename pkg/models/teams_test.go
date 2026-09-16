@@ -203,6 +203,43 @@ func TestTeam_ReadAll(t *testing.T) {
 	})
 }
 
+func TestTeamListPreservesMembersForSharedUsers(t *testing.T) {
+	t.Run("team list", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		teams, _, _, err := (&Team{}).ReadAll(s, &user.User{ID: 1}, "", 1, 50)
+		require.NoError(t, err)
+
+		membersByTeamID := make(map[int64]int)
+		for _, team := range teams.([]*Team) {
+			membersByTeamID[team.ID] = len(team.Members)
+		}
+		assert.Equal(t, 2, membersByTeamID[1])
+		assert.Equal(t, 1, membersByTeamID[2])
+	})
+
+	t.Run("project team list", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.Insert(&TeamProject{TeamID: 2, ProjectID: 3, Permission: PermissionRead})
+		require.NoError(t, err)
+
+		teams, _, _, err := (&TeamProject{ProjectID: 3}).ReadAll(s, &user.User{ID: 1}, "", 1, 50)
+		require.NoError(t, err)
+
+		membersByTeamID := make(map[int64]int)
+		for _, team := range teams.([]*TeamWithPermission) {
+			membersByTeamID[team.ID] = len(team.Members)
+		}
+		assert.Equal(t, 2, membersByTeamID[1])
+		assert.Equal(t, 1, membersByTeamID[2])
+	})
+}
+
 func TestTeam_Update(t *testing.T) {
 	u := &user.User{ID: 1}
 

@@ -11,6 +11,7 @@
 		:enabled="modalOpen"
 		:overflow="true"
 		variant="hint-modal"
+		:aria-label="$t('filters.title')"
 		@close="() => modalOpen = false"
 	>
 		<Filters
@@ -33,21 +34,19 @@ import {computed, ref, watch, nextTick} from 'vue'
 import Filters from '@/components/project/partials/Filters.vue'
 
 import {type TaskFilterParams} from '@/services/taskCollection'
-import {type IProjectView} from '@/modelTypes/IProjectView'
-import {type IProject} from '@/modelTypes/IProject'
-import {useProjectStore} from '@/stores/projects'
+import {useProjects} from '@/composables/useProjects'
 
 const props = defineProps<{
 	modelValue: TaskFilterParams,
-	projectId?: IProject['id'],
-	viewId?: IProjectView['id'],
+	projectId?: number,
+	viewId?: number,
 }>()
 
 const emit = defineEmits<{
 	'update:modelValue': [value: TaskFilterParams]
 }>()
 
-const projectStore = useProjectStore()
+const projectList = useProjects()
 
 const value = ref<TaskFilterParams>({})
 const filtersRef = ref()
@@ -93,7 +92,7 @@ const filterFromView = computed(() => {
 		return
 	}
 	
-	const project = projectStore.projects[props.projectId]
+	const project = projectList.projects[props.projectId]
 	if (!project) {
 		return
 	}

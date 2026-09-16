@@ -25,3 +25,13 @@
   last_active: 2099-01-01 00:00:00
   created: 2024-01-03 00:00:00
   # refresh token in plaintext: testtoken_session3
+# Expired session; owned by user 2 so user 1's session-count assertions still hold.
+- id: "550e8400-e29b-41d4-a716-446655440004"
+  user_id: 2
+  token_hash: "f663cc927315c49e479bb417127dec236f447b5512b5f3433801a0c47502a3b3"
+  device_info: "Stale Browser"
+  ip_address: "172.16.0.2"
+  is_long_session: false
+  last_active: 2020-01-01 00:00:00
+  created: 2020-01-01 00:00:00
+  # refresh token in plaintext: testtoken_session_expired

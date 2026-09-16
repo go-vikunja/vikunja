@@ -1,11 +1,8 @@
-import {ref, computed, readonly} from 'vue'
+import {computed, readonly, ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {defineStore, acceptHMRUpdate} from 'pinia'
+import {useQuery} from '@tanstack/vue-query'
 
-import {getBlobFromBlurHash} from '@/helpers/getBlobFromBlurHash'
-
-import ProjectModel from '@/models/project'
-import ProjectService from '@/services/project'
 import {checkAndSetApiUrl, ERROR_NO_API_URL, InvalidApiUrlProvidedError, NoApiUrlProvidedError} from '@/helpers/checkAndSetApiUrl'
 import {isDesktopApp} from '@/helpers/desktopAuth'
 
@@ -13,13 +10,13 @@ import {useMenuActive} from '@/composables/useMenuActive'
 
 import {useAuthStore} from '@/stores/auth'
 import router from '@/router'
-import type {IProject} from '@/modelTypes/IProject'
-import type {Permission} from '@/constants/permissions'
-import type {IProjectView} from '@/modelTypes/IProjectView'
+import {queryClient} from '@/client/queryClient'
+import {projectQuery, type ProjectResponse} from '@/client/queries/projects'
+import {useProjectBackground} from '@/composables/useProjectBackground'
 
 export const useBaseStore = defineStore('base', () => {
 	const authStore = useAuthStore()
-	
+
 	const {t} = useI18n()
 
 	const ready = ref(false)
@@ -27,13 +24,18 @@ export const useBaseStore = defineStore('base', () => {
 	const loading = computed(() => !ready.value && error.value === '')
 
 	// This is used to highlight the current project in menu for all project related views
-	const currentProject = ref<IProject | null>(new ProjectModel({
-		id: 0,
-		isArchived: false,
-	}))
-	const currentProjectViewId = ref<IProjectView['id'] | undefined>(undefined)
-	const background = ref('')
-	const blurHash = ref('')
+	const currentProjectId = ref(0)
+	const currentProjectViewId = ref<number | undefined>(undefined)
+
+	// Pseudo projects (favorites, saved filters) have no detail endpoint and no background.
+	const currentProjectQuery = useQuery(computed(() => ({
+		...projectQuery(currentProjectId.value),
+		enabled: currentProjectId.value > 0,
+	})), queryClient)
+	const currentProject = computed(() => currentProjectQuery.data.value ?? null)
+	const {background: backgroundUrl, blurHashUrl} = useProjectBackground(currentProject)
+	const background = computed(() => backgroundUrl.value ?? '')
+	const blurHash = computed(() => blurHashUrl.value ?? '')
 
 	const hasTasks = ref(false)
 	const keyboardShortcutsActive = ref(false)
@@ -41,33 +43,19 @@ export const useBaseStore = defineStore('base', () => {
 	const logoVisible = ref(true)
 	const updateAvailable = ref(false)
 
-	function setCurrentProject(newCurrentProject: IProject | null, currentViewId?: IProjectView['id']) {
-		// Server updates don't return the permission. Therefore, the permission is reset after updating the project which is
-		// confusing because all the buttons will disappear in that case. To prevent this, we're keeping the permission
-		// when updating the project in global state.
-		let maxPermission: Permission | null = newCurrentProject?.maxPermission || null
-		if (
-			typeof currentProject.value?.maxPermission !== 'undefined' &&
-			newCurrentProject !== null &&
-			(
-				typeof newCurrentProject.maxPermission === 'undefined' ||
-				newCurrentProject.maxPermission === null
-			)
-		) {
-			maxPermission = currentProject.value.maxPermission
-		}
-		if (newCurrentProject === null) {
-			currentProject.value = null
-			return
-		}
-		currentProject.value = {
-			...newCurrentProject,
-			maxPermission,
-		}
-		setCurrentProjectViewId(currentViewId)
+	function setCurrentProject(project: Pick<ProjectResponse, 'id'> | null, viewId?: number) {
+		currentProjectId.value = project?.id ?? 0
+		setCurrentProjectViewId(viewId)
 	}
-	
-	function setCurrentProjectViewId(viewId?: IProjectView['id']) {
+
+	// A task opened over its kanban board must keep that board's view id.
+	function setCurrentProjectIfNotSet(project: Pick<ProjectResponse, 'id'>) {
+		if (currentProjectId.value !== project.id) {
+			setCurrentProject(project)
+		}
+	}
+
+	function setCurrentProjectViewId(viewId?: number) {
 		currentProjectViewId.value = viewId
 	}
 
@@ -83,13 +71,11 @@ export const useBaseStore = defineStore('base', () => {
 		quickActionsActive.value = value
 	}
 
-	function setBackground(newBackground: string) {
-		background.value = newBackground
-	}
-
-	function setBlurHash(newBlurHash: string) {
-		blurHash.value = newBlurHash
-	}
+	// SPA logout keeps this store alive, so reset on identity change.
+	watch(() => authStore.identityKey, () => {
+		setCurrentProject(null)
+		setHasTasks(false)
+	}, {flush: 'sync'})
 
 	function setLogoVisible(visible: boolean) {
 		logoVisible.value = visible
@@ -97,52 +83,6 @@ export const useBaseStore = defineStore('base', () => {
 	
 	function setUpdateAvailable(value: boolean) {
 		updateAvailable.value = value
-	}
-
-	async function handleSetCurrentProject(
-		{project, forceUpdate = false, currentProjectViewId = undefined}: {project: IProject | null, forceUpdate?: boolean, currentProjectViewId?: IProjectView['id']},
-	) {
-		if (project === null || typeof project === 'undefined') {
-			setCurrentProject(null)
-			setBackground('')
-			setBlurHash('')
-			return
-		}
-
-		// The forceUpdate parameter is used only when updating a project background directly because in that case 
-		// the current project stays the same, but we want to show the new background right away.
-		if (project.id !== currentProject.value?.id || forceUpdate) {
-			if (project.backgroundInformation) {
-				try {
-					const blurHash = await getBlobFromBlurHash(project.backgroundBlurHash)
-					if (blurHash) {
-						setBlurHash(window.URL.createObjectURL(blurHash))
-					}
-
-					const projectService = new ProjectService()
-					const background = await projectService.background(project)
-					setBackground(background)
-				} catch (e) {
-					console.error('Error getting background image for project', project.id, e)
-				}
-			}
-		}
-
-		if (
-			typeof project.backgroundInformation === 'undefined' ||
-			project.backgroundInformation === null
-		) {
-			setBackground('')
-			setBlurHash('')
-		}
-
-		setCurrentProject(project, currentProjectViewId)
-	}
-
-	async function handleSetCurrentProjectIfNotSet(project: IProject) {
-		if (currentProject.value?.id !== project.id) {
-			await handleSetCurrentProject({project})
-		}
 	}
 
 	async function hydrateConfig() {
@@ -199,7 +139,7 @@ export const useBaseStore = defineStore('base', () => {
 		loadApp,
 		appReady,
 
-		currentProject: readonly(currentProject),
+		currentProjectId: readonly(currentProjectId),
 		currentProjectViewId: readonly(currentProjectViewId),
 		background: readonly(background),
 		blurHash: readonly(blurHash),
@@ -210,17 +150,13 @@ export const useBaseStore = defineStore('base', () => {
 		updateAvailable: readonly(updateAvailable),
 
 		setCurrentProject,
+		setCurrentProjectIfNotSet,
 		setCurrentProjectViewId,
 		setHasTasks,
 		setKeyboardShortcutsActive,
 		setQuickActionsActive,
-		setBackground,
-		setBlurHash,
 		setLogoVisible,
 		setUpdateAvailable,
-
-		handleSetCurrentProject,
-		handleSetCurrentProjectIfNotSet,
 
 		...useMenuActive(),
 	}

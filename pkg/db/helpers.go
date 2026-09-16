@@ -17,6 +17,7 @@
 package db
 
 import (
+	"strconv"
 	"strings"
 
 	"xorm.io/builder"
@@ -51,6 +52,13 @@ func MultiFieldSearch(fields []string, search string) builder.Cond {
 // with support for table aliases. When tableAlias is provided, it will be used to prefix field names
 // for non-ParadeDB queries and the id field for ParadeDB queries.
 func MultiFieldSearchWithTableAlias(fields []string, search, tableAlias string) builder.Cond {
+	return MultiFieldSearchWithBoosts(fields, nil, search, tableAlias)
+}
+
+// MultiFieldSearchWithBoosts is MultiFieldSearchWithTableAlias with a relevance boost
+// factor per field, matched by position (0 or 1 means no boost). Boosts only affect
+// ParadeDB scoring; the substring fallback has no notion of relevance.
+func MultiFieldSearchWithBoosts(fields []string, boosts []float64, search, tableAlias string) builder.Cond {
 	if Type() == schemas.POSTGRES && paradedbInstalled {
 		conditions := make([]builder.Cond, len(fields))
 		for i, field := range fields {
@@ -58,7 +66,11 @@ func MultiFieldSearchWithTableAlias(fields []string, search, tableAlias string) 
 			if tableAlias != "" {
 				fieldName = tableAlias + "." + field
 			}
-			conditions[i] = builder.Expr(fieldName+" ||| ?::pdb.fuzzy(1, t)", search)
+			expr := fieldName + " ||| ?::pdb.fuzzy(1, t)"
+			if i < len(boosts) && boosts[i] > 0 && boosts[i] != 1 {
+				expr += "::pdb.boost(" + strconv.FormatFloat(boosts[i], 'f', -1, 64) + ")"
+			}
+			conditions[i] = builder.Expr(expr, search)
 		}
 		if len(conditions) == 1 {
 			return conditions[0]

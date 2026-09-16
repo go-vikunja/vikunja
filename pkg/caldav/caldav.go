@@ -21,7 +21,9 @@ import (
 	"strings"
 	"time"
 
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/richtext"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 )
@@ -51,6 +53,7 @@ type Todo struct {
 	// Optional
 	Summary     string
 	Description string
+	Done        bool
 	Completed   time.Time
 	Organizer   *user.User
 	Priority    int64 // 0-9, 1 is highest
@@ -117,12 +120,14 @@ COLOR:` + color
 }
 
 func formatDuration(duration time.Duration) string {
-	seconds := duration.Seconds() - duration.Minutes()*60
-	minutes := duration.Minutes() - duration.Hours()*60
+	seconds := int64(duration.Seconds())
+	hours := seconds / 3600
+	minutes := (seconds % 3600) / 60
+	seconds %= 60
 
-	return strconv.FormatFloat(duration.Hours(), 'f', 0, 64) + `H` +
-		strconv.FormatFloat(minutes, 'f', 0, 64) + `M` +
-		strconv.FormatFloat(seconds, 'f', 0, 64) + `S`
+	return strconv.FormatInt(hours, 10) + `H` +
+		strconv.FormatInt(minutes, 10) + `M` +
+		strconv.FormatInt(seconds, 10) + `S`
 }
 
 func getRruleFromInterval(interval int64) (freq string, newInterval int64) {
@@ -179,13 +184,31 @@ DURATION:PT` + formatDuration(t.Duration)
 DTEND:` + makeCalDavTimeFromTimeStamp(t.End)
 		}
 		if t.Description != "" {
-			caldavtodos += `
-DESCRIPTION:` + escapeICalText(t.Description)
+			// CalDAV clients show plain text, so emit markdown. On the near-impossible
+			// conversion error, log it and keep the stored value (GetContent can't
+			// return an error) rather than drop the description.
+			description, err := richtext.HTMLToMarkdown(t.Description)
+			if err != nil {
+				log.Errorf("[CALDAV] Failed to convert description to markdown for task %q: %v", t.UID, err)
+				description = t.Description
+			}
+			if description != "" {
+				caldavtodos += `
+DESCRIPTION:` + escapeICalText(description)
+			}
 		}
-		if t.Completed.Unix() > 0 {
+		// Keyed on Done, not Completed: a reopened repeating task keeps its done_at, and reporting
+		// it as completed makes clients echo it back as done, rescheduling it on every sync.
+		if t.Done {
+			if t.Completed.Unix() > 0 {
+				caldavtodos += `
+COMPLETED:` + makeCalDavTimeFromTimeStamp(t.Completed)
+			}
 			caldavtodos += `
-COMPLETED:` + makeCalDavTimeFromTimeStamp(t.Completed) + `
 STATUS:COMPLETED`
+		} else {
+			caldavtodos += `
+STATUS:NEEDS-ACTION`
 		}
 		if t.Organizer != nil {
 			caldavtodos += `

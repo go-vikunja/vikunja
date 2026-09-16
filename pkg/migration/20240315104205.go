@@ -49,7 +49,7 @@ func init() {
 		ID:          "20240315104205",
 		Description: "Move done and default bucket id to views",
 		Migrate: func(tx *xorm.Engine) (err error) {
-			err = tx.Sync(projectView20240315104205{})
+			err = partialSync(tx, projectView20240315104205{})
 			if err != nil {
 				return
 			}

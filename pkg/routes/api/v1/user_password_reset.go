@@ -19,9 +19,8 @@ package v1
 import (
 	"net/http"
 
-	"code.vikunja.io/api/pkg/db"
-
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/routes/api/shared"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/labstack/echo/v5"
 )
@@ -49,22 +48,7 @@ func UserResetPassword(c *echo.Context) error {
 		return err
 	}
 
-	s := db.NewSession()
-	defer s.Close()
-
-	userID, err := user.ResetPassword(s, &pwReset)
-	if err != nil {
-		_ = s.Rollback()
-		return err
-	}
-
-	if err := models.DeleteAllUserSessions(s, userID); err != nil {
-		_ = s.Rollback()
-		return err
-	}
-
-	if err := s.Commit(); err != nil {
-		_ = s.Rollback()
+	if err := shared.ResetPassword(&pwReset); err != nil {
 		return err
 	}
 
@@ -93,17 +77,7 @@ func UserRequestResetPasswordToken(c *echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error()).Wrap(err)
 	}
 
-	s := db.NewSession()
-	defer s.Close()
-
-	err := user.RequestUserPasswordResetTokenByEmail(s, &pwTokenReset)
-	if err != nil {
-		_ = s.Rollback()
-		return err
-	}
-
-	if err := s.Commit(); err != nil {
-		_ = s.Rollback()
+	if err := shared.RequestPasswordResetToken(&pwTokenReset); err != nil {
 		return err
 	}
 

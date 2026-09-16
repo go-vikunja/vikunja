@@ -102,7 +102,7 @@ onMounted(async () => {
 async function requestDataExport() {
 	if (password.value === '' && isLocalUser.value) {
 		errPasswordRequired.value = true
-		passwordInput.value.focus()
+		passwordInput.value?.focus()
 		return
 	}
 

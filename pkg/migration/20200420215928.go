@@ -37,7 +37,7 @@ func init() {
 		ID:          "20200420215928",
 		Description: "Add position property to task",
 		Migrate: func(tx *xorm.Engine) error {
-			err := tx.Sync2(task20200420215928{})
+			err := partialSync(tx, task20200420215928{})
 			if err != nil {
 				return err
 			}

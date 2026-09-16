@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"os"
 
+	"code.vikunja.io/api/pkg/config"
+
 	"github.com/spf13/cobra"
 )
 
@@ -37,6 +39,19 @@ Vikunja is a self-hosted To-Do list application with a web app and mobile apps f
 Find out more at vikunja.io.`,
 	PreRun: webCmd.PreRun,
 	Run:    webCmd.Run,
+}
+
+var configFlag string
+
+func init() {
+	rootCmd.PersistentFlags().StringVar(&configFlag, "config", "", "Path to the config file to use. Bypasses the default search path.")
+
+	// Not PersistentPreRun: subcommands define their own, which shadows root's.
+	cobra.OnInitialize(func() {
+		if configFlag != "" {
+			config.SetConfigFile(configFlag)
+		}
+	})
 }
 
 // Execute starts the application

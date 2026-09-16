@@ -46,9 +46,36 @@ this file is veans-specific.
 
 ## Vikunja wire-format gotchas
 
-Most failures surface when crossing the JSON boundary. The list below is
-what's bitten me; if a new endpoint behaves oddly, suspect one of these:
+veans targets the Huma-backed **`/api/v2`** exclusively (`apiBasePath` in
+`internal/client/client.go`). v1 is frozen, and the kanban-bucket CRUD veans
+relies on only exists on v2. Most failures surface when crossing the JSON
+boundary. The list below is what's bitten me; if a new endpoint behaves
+oddly, suspect one of these:
 
+- **Lists come wrapped in the standard envelope.** Every v2 list returns
+  `{"items":[...],"total":N,"page":N,"per_page":N,"total_pages":N}`, not a
+  bare array, and there is no `x-pagination-total-pages` header anymore.
+  Decode with the generic `Paginated[T]` helper. **Most lists are
+  server-paginated** — their model's `ReadAll` applies a 50-item page limit:
+  tasks, projects, labels, comments and bots. Page through those with
+  `doListAll` until `page >= total_pages`; returning only page 1 silently
+  truncates (>50 comments on a task is realistic). **Buckets and project
+  views are the exception**: their `ReadAll` takes `_ int, _ int` and returns
+  every row in one page, so fetch them with a single `doList` and unwrap
+  `.items` — paging those would re-fetch the full set and duplicate it.
+  Single-object responses (create/update/read of one entity) stay UNWRAPPED.
+- **v2 flips the create/update verbs.** Creates are **POST** (v1 used PUT):
+  projects, labels, tokens, bot users, project shares, task create,
+  comments, relations, assignees, label-attach, bucket create. Task update
+  is **PATCH** (see below). The bucket-task move is **PUT**.
+- **Task update is `PATCH /tasks/{id}` with `application/merge-patch+json`**
+  (`client.DoMerge` → `UpdateTask(*TaskPatch)`). Only the fields present in
+  the body are written; absent fields are left intact. Build the body from
+  `TaskPatch` (pointer fields, omitempty) — never a whole `client.Task`,
+  whose no-omitempty `done`/`title` would clobber those columns on every
+  call (this was issue #2962).
+- **List search is `q`**, not v1's `s` (`ListParams.Q`). Task-list
+  `filter`/`expand`/`page`/`per_page` keep their names.
 - **`ProjectView.view_kind` and `bucket_configuration_mode` are
   strings**, not ints. The parent enums (`ProjectViewKind`,
   `BucketConfigurationModeKind`) have custom `MarshalJSON` that emits
@@ -58,11 +85,12 @@ what's bitten me; if a new endpoint behaves oddly, suspect one of these:
   `xorm:"-"` on it — the actual bucket lives in a separate
   `task_buckets` table. Fetch with `?expand=buckets` and use
   `task.CurrentBucketID(viewID)` to read it.
-- **`POST /tasks/{id}` does NOT move tasks between buckets.** The
-  task↔bucket relation is row-shaped; use `client.MoveTaskToBucket()`
-  which hits `POST /projects/{p}/views/{v}/buckets/{b}/tasks`. The
-  Update path on the server only auto-moves on `done` flips.
-- **Bot user creation is `PUT /user/bots`**, not `/bots` — the routes
+- **Task updates do NOT move tasks between buckets.** The task↔bucket
+  relation is row-shaped; use `client.MoveTaskToBucket()` which hits
+  **`PUT /projects/{p}/views/{v}/buckets/{b}/tasks`** with a `{"task_id":N}`
+  body (project/view/bucket all come from the URL). The Update path on the
+  server only auto-moves on `done` flips.
+- **Bot user creation is `POST /user/bots`**, not `/bots` — the routes
   are registered under the `/user` subgroup. Same prefix for
   `GET /user/bots`.
 - **`APIToken.expires_at` is required.** The struct field has
@@ -88,6 +116,16 @@ what's bitten me; if a new endpoint behaves oddly, suspect one of these:
   - `/projects/:project/views/:view/buckets/:bucket/tasks` →
     group `projects`, action `views_buckets_tasks`
   - `/tasks/:task/comments` → group `tasks_comments`, action `create`
+- v1 and v2 deliberately share `(group, permission)` keys:
+  `pkg/models/api_routes.go` normalizes the inverted verbs (v2 POST-create
+  and v1 PUT-create both → `create`; v2 PUT/PATCH-update and v1 POST-update
+  both → `update`), and `CanDoAPIRoute` consults both route tables, treating
+  PATCH as an alias for the stored PUT. So `PermissionsForBot`'s scope map
+  authorizes the v2 calls unchanged, including the PATCH task update.
+- The bucket-task MOVE (`PUT …/buckets/:bucket/tasks`) and the
+  buckets-with-tasks LIST (`GET …/buckets/tasks`) collide on subkey
+  `views_buckets_tasks`; which one gets the bare key vs `views_buckets_tasks_put`
+  depends on unspecified route-init order, so the bot requests **both**.
 - `client.PermissionsForBot()` calls `GET /routes` at runtime and
   grants only the intersection of what we want and what the server
   exposes. **Don't hard-code permission group names** — they drift
@@ -96,9 +134,9 @@ what's bitten me; if a new endpoint behaves oddly, suspect one of these:
 
 ## Bot ownership and token minting
 
-- Creating a bot via `PUT /user/bots` automatically sets the bot's
+- Creating a bot via `POST /user/bots` automatically sets the bot's
   `bot_owner_id` to the calling user. Only the owner can mint tokens
-  for the bot via `PUT /tokens` with `owner_id=<bot_id>`. The init
+  for the bot via `POST /tokens` with `owner_id=<bot_id>`. The init
   flow does these as a single human-JWT-authenticated batch.
 - Bots have no password and **cannot** authenticate via `POST /login`.
   After init, `veans login` re-authenticates as the human (not the
@@ -115,9 +153,11 @@ what's bitten me; if a new endpoint behaves oddly, suspect one of these:
   browser, and captures the callback. The `Shutdown` defer uses
   `context.WithoutCancel(ctx)` so cancellation at the outer scope
   still drains the loopback server cleanly.
-- Token exchange is **JSON only**. Form-encoded POSTs to `/oauth/token`
-  fail; the standard `golang.org/x/oauth2` client speaks form encoding,
-  which is why we have a hand-rolled `client.ExchangeOAuthCode`.
+- Token exchange goes out as **JSON**. v2's `/oauth/token` accepts both JSON
+  and form-encoded bodies (Huma picks the decoder off the `Content-Type`
+  header), but the standard `golang.org/x/oauth2` client hard-codes form
+  encoding and its own response shape, so we keep the hand-rolled
+  `client.ExchangeOAuthCode` that speaks JSON.
 
 ## Credential store
 

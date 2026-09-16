@@ -86,11 +86,17 @@ func (g *Provider) GetAvatar(user *user.User, size int64) ([]byte, string, error
 		}
 
 		log.Debugf("Gravatar for user %d with size %d not cached, requesting from gravatar...", user.ID, size)
-		req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, config.AvatarGravatarBaseURL.GetString()+"/avatar/"+utils.Md5String(strings.ToLower(user.Email))+"?s="+sizeString+"&d=mp", nil)
+
+		// Keep the old 5s bound: the client's configured timeout defaults to 30s, which would
+		// stall the user-facing avatar request this runs inside.
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, config.AvatarGravatarBaseURL.GetString()+"/avatar/"+utils.Md5String(strings.ToLower(user.Email))+"?s="+sizeString+"&d=mp", nil)
 		if err != nil {
 			return nil, err
 		}
-		resp, err := (&http.Client{Timeout: 5 * time.Second}).Do(req) // #nosec G704 -- URL is from config (AvatarGravatarBaseURL)
+		resp, err := utils.NewSSRFSafeHTTPClient().Do(req) //nolint:gosec // SSRF protection is handled by the SSRF-safe client
 		if err != nil {
 			return nil, err
 		}

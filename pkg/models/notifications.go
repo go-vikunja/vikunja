@@ -33,13 +33,14 @@ import (
 )
 
 func init() {
-	notifications.Register(func() notifications.Notification { return &ReminderDueNotification{} })
-	notifications.Register(func() notifications.Notification { return &TaskCommentNotification{} })
-	notifications.Register(func() notifications.Notification { return &TaskAssignedNotification{} })
-	notifications.Register(func() notifications.Notification { return &TaskDeletedNotification{} })
-	notifications.Register(func() notifications.Notification { return &ProjectCreatedNotification{} })
-	notifications.Register(func() notifications.Notification { return &TeamMemberAddedNotification{} })
-	notifications.Register(func() notifications.Notification { return &UserMentionedInTaskNotification{} })
+	notifications.Register(func() notifications.PersistedNotification { return &ReminderDueNotification{} })
+	notifications.Register(func() notifications.PersistedNotification { return &TaskCommentNotification{} })
+	notifications.Register(func() notifications.PersistedNotification { return &TaskAssignedNotification{} })
+	notifications.Register(func() notifications.PersistedNotification { return &TaskDeletedNotification{} })
+	notifications.Register(func() notifications.PersistedNotification { return &TaskCreatedNotification{} })
+	notifications.Register(func() notifications.PersistedNotification { return &ProjectCreatedNotification{} })
+	notifications.Register(func() notifications.PersistedNotification { return &TeamMemberAddedNotification{} })
+	notifications.Register(func() notifications.PersistedNotification { return &UserMentionedInTaskNotification{} })
 }
 
 // getDoerAvatarDataURI returns the avatar data URI for a user, for use in email headers.
@@ -267,6 +268,42 @@ func (n *TaskDeletedNotification) ThreadID() string {
 	return getThreadID(n.Task.ID)
 }
 
+// TaskCreatedNotification represents a TaskCreatedNotification notification
+type TaskCreatedNotification struct {
+	Doer    *user.User `json:"doer"`
+	Task    *Task      `json:"task"`
+	Project *Project   `json:"project"`
+}
+
+// ToTitle returns the translated one-line title for TaskCreatedNotification
+func (n *TaskCreatedNotification) ToTitle(lang string) string {
+	return i18n.T(lang, "notifications.task.created.subject", n.Task.Title, n.Task.GetFullIdentifier())
+}
+
+// ToMail returns the mail notification for TaskCreatedNotification
+func (n *TaskCreatedNotification) ToMail(lang string) *notifications.Mail {
+	return notifications.NewMail().
+		From(n.Doer.GetNameAndFromEmail()).
+		Line(i18n.T(lang, "notifications.task.created.message", notifications.EscapeMarkdown(n.Doer.GetName()), notifications.EscapeMarkdown(n.Task.Title), notifications.EscapeMarkdown(n.Task.GetFullIdentifier()))).
+		Action(i18n.T(lang, "notifications.common.actions.open_task"), n.Task.GetFrontendURL()).
+		IncludeLinkToSettings(lang)
+}
+
+// ToDB returns the TaskCreatedNotification notification in a format which can be saved in the db
+func (n *TaskCreatedNotification) ToDB() interface{} {
+	return n
+}
+
+// Name returns the name of the notification
+func (n *TaskCreatedNotification) Name() string {
+	return "task.created"
+}
+
+// ThreadID returns the thread ID for email threading
+func (n *TaskCreatedNotification) ThreadID() string {
+	return getThreadID(n.Task.ID)
+}
+
 // ProjectCreatedNotification represents a ProjectCreatedNotification notification
 type ProjectCreatedNotification struct {
 	Doer    *user.User `json:"doer"`
@@ -371,15 +408,18 @@ func (n *UndoneTaskOverdueNotification) ThreadID() string {
 // UndoneTasksOverdueNotification represents a UndoneTasksOverdueNotification notification
 type UndoneTasksOverdueNotification struct {
 	User     *user.User
-	Tasks    map[int64]*Task
+	Assigned map[int64]*Task
+	Followed map[int64]*Task
 	Projects map[int64]*Project
 }
 
-// ToMail returns the mail notification for UndoneTasksOverdueNotification
-func (n *UndoneTasksOverdueNotification) ToMail(lang string) *notifications.Mail {
+func (n *UndoneTasksOverdueNotification) overdueSection(lang, heading string, tasks map[int64]*Task) string {
+	if len(tasks) == 0 {
+		return ""
+	}
 
-	sortedTasks := make([]*Task, 0, len(n.Tasks))
-	for _, task := range n.Tasks {
+	sortedTasks := make([]*Task, 0, len(tasks))
+	for _, task := range tasks {
 		sortedTasks = append(sortedTasks, task)
 	}
 
@@ -387,18 +427,33 @@ func (n *UndoneTasksOverdueNotification) ToMail(lang string) *notifications.Mail
 		return sortedTasks[i].DueDate.Before(sortedTasks[j].DueDate)
 	})
 
-	overdueLine := ""
+	section := "**" + i18n.T(lang, heading) + "**\n"
 	for _, task := range sortedTasks {
 		until := time.Until(task.DueDate).Round(1*time.Hour) * -1
-		overdueLine += `* [` + notifications.EscapeMarkdown(task.Title) + `](` + config.ServicePublicURL.GetString() + "tasks/" + strconv.FormatInt(task.ID, 10) + `) (` + notifications.EscapeMarkdown(n.Projects[task.ProjectID].Title) + `), ` + i18n.T(lang, "notifications.task.overdue.overdue", getOverdueSinceString(until, n.User.Language)) + "\n"
+		section += `* [` + notifications.EscapeMarkdown(task.Title) + `](` + config.ServicePublicURL.GetString() + "tasks/" + strconv.FormatInt(task.ID, 10) + `) (` + notifications.EscapeMarkdown(n.Projects[task.ProjectID].Title) + `), ` + i18n.T(lang, "notifications.task.overdue.overdue", getOverdueSinceString(until, n.User.Language)) + "\n"
 	}
 
-	return notifications.NewMail().
+	return section
+}
+
+// ToMail returns the mail notification for UndoneTasksOverdueNotification
+func (n *UndoneTasksOverdueNotification) ToMail(lang string) *notifications.Mail {
+	m := notifications.NewMail().
 		IncludeLinkToSettings(lang).
 		Subject(i18n.T(lang, "notifications.task.overdue.multiple_subject")).
 		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName())).
-		Line(i18n.T(lang, "notifications.task.overdue.multiple_message")).
-		Line(overdueLine).
+		Line(i18n.T(lang, "notifications.task.overdue.multiple_message"))
+
+	for _, section := range []string{
+		n.overdueSection(lang, "notifications.task.overdue.assigned_heading", n.Assigned),
+		n.overdueSection(lang, "notifications.task.overdue.followed_heading", n.Followed),
+	} {
+		if section != "" {
+			m.Line(section)
+		}
+	}
+
+	return m.
 		Action(i18n.T(lang, "notifications.common.actions.open_vikunja"), config.ServicePublicURL.GetString()).
 		Line(i18n.T(lang, "notifications.common.have_nice_day"))
 }

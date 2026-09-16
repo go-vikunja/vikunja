@@ -77,7 +77,8 @@ type savedFilterReadBody struct {
 }
 
 func savedFiltersRead(ctx context.Context, in *struct {
-	ID int64 `path:"filter"`
+	ID     int64  `path:"filter"`
+	Format string `query:"format" enum:"html,markdown" doc:"How rich-text fields are exchanged. See the API description."`
 	conditional.Params
 }) (*singleReadBody[savedFilterReadBody], error) {
 	a, err := authFromCtx(ctx)
@@ -90,26 +91,33 @@ func savedFiltersRead(ctx context.Context, in *struct {
 		return nil, translateDomainError(err)
 	}
 	body := &savedFilterReadBody{SavedFilter: *filter, MaxPermission: models.Permission(maxPermission)}
+	convertToMarkdown(ctx, &body.Description)
 	return conditionalReadResponse(&in.Params, body, filter.Updated, maxPermission)
 }
 
 func savedFiltersCreate(ctx context.Context, in *struct {
-	Body models.SavedFilter
+	Format string `query:"format" enum:"html,markdown" doc:"How rich-text fields are exchanged. See the API description."`
+	Body   models.SavedFilter
 }) (*singleBody[models.SavedFilter], error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
 		return nil, err
 	}
+	if err := convertToHTML(ctx, &in.Body.Description); err != nil {
+		return nil, translateDomainError(err)
+	}
 	if err := handler.DoCreate(ctx, &in.Body, a); err != nil {
 		return nil, translateDomainError(err)
 	}
+	convertToMarkdown(ctx, &in.Body.Description)
 	return &singleBody[models.SavedFilter]{Body: &in.Body}, nil
 }
 
 // Body matches the read shape so AutoPatch's GET→PUT echo of max_permission validates.
 func savedFiltersUpdate(ctx context.Context, in *struct {
-	ID   int64 `path:"filter"`
-	Body savedFilterReadBody
+	ID     int64  `path:"filter"`
+	Format string `query:"format" enum:"html,markdown" doc:"How rich-text fields are exchanged. See the API description."`
+	Body   savedFilterReadBody
 }) (*singleBody[models.SavedFilter], error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
@@ -117,9 +125,13 @@ func savedFiltersUpdate(ctx context.Context, in *struct {
 	}
 	filter := &in.Body.SavedFilter
 	filter.ID = in.ID // URL wins over body
+	if err := convertToHTML(ctx, &filter.Description); err != nil {
+		return nil, translateDomainError(err)
+	}
 	if err := handler.DoUpdate(ctx, filter, a); err != nil {
 		return nil, translateDomainError(err)
 	}
+	convertToMarkdown(ctx, &filter.Description)
 	return &singleBody[models.SavedFilter]{Body: filter}, nil
 }
 

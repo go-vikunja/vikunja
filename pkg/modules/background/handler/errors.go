@@ -40,3 +40,22 @@ func IsErrFileUnsupportedImageFormat(err error) bool {
 	ok := errors.As(err, &errFileUnsupportedImageFormat)
 	return ok
 }
+
+// ErrFileIsNoImage is returned when an uploaded background does not sniff as an
+// image at all (its detected mime type does not start with "image"). It is
+// distinct from ErrFileUnsupportedImageFormat, which is a recognized image type
+// the imaging library can't decode.
+type ErrFileIsNoImage struct {
+	Mime string
+}
+
+// Error is the error implementation of ErrFileIsNoImage
+func (err ErrFileIsNoImage) Error() string {
+	return fmt.Sprintf("uploaded file is not an image [Mime: %s]", err.Mime)
+}
+
+// IsErrFileIsNoImage checks if an error is ErrFileIsNoImage
+func IsErrFileIsNoImage(err error) bool {
+	var errFileIsNoImage ErrFileIsNoImage
+	return errors.As(err, &errFileIsNoImage)
+}

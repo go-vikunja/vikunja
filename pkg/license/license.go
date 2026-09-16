@@ -67,6 +67,7 @@ const (
 	FeatureAdminPanel
 	FeatureTimeTracking
 	FeatureAuditLogs
+	FeatureUserInvites
 )
 
 var (
@@ -74,11 +75,13 @@ var (
 		FeatureAdminPanel:   "admin_panel",
 		FeatureTimeTracking: "time_tracking",
 		FeatureAuditLogs:    "audit_logs",
+		FeatureUserInvites:  "user_invites",
 	}
 	stringToFeature = map[string]Feature{
 		"admin_panel":   FeatureAdminPanel,
 		"time_tracking": FeatureTimeTracking,
 		"audit_logs":    FeatureAuditLogs,
+		"user_invites":  FeatureUserInvites,
 	}
 )
 

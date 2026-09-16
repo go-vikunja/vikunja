@@ -1,59 +1,27 @@
-import {ref, toValue, watch, type MaybeRefOrGetter} from 'vue'
-import ProjectService from '@/services/project'
-import type {IProject} from '@/modelTypes/IProject'
-import {getBlobFromBlurHash} from '@/helpers/getBlobFromBlurHash'
+import {computed, toValue, type MaybeRefOrGetter} from 'vue'
+import {useQuery} from '@tanstack/vue-query'
+import {useObjectUrl} from '@vueuse/core'
 
-export function useProjectBackground(project: MaybeRefOrGetter<IProject | null>) {
-	const background = ref<string | null>(null)
-	const backgroundLoading = ref(false)
-	const blurHashUrl = ref('')
+import {queryClient} from '@/client/queryClient'
+import type {ProjectResponse} from '@/client/queries/projects'
+import {projectBackgroundQuery} from '@/client/queries/projectBackgrounds'
+import {useBlurHashUrl} from '@/composables/useBlurHashUrl'
 
-	watch(
-		() => [
-			toValue(project)?.id ?? null,
-			toValue(project)?.backgroundBlurHash ?? null,
-		] as [IProject['id'] | null, IProject['backgroundBlurHash'] | null],
-		async ([projectId, blurHash], oldValue) => {
-			const projectValue = toValue(project)
-			if (
-				projectValue === null ||
-				!projectValue.backgroundInformation ||
-				backgroundLoading.value
-			) {
-				return
-			}
+export function useProjectBackground(project: MaybeRefOrGetter<ProjectResponse | null>) {
+	const projectId = computed(() => toValue(project)?.id ?? 0)
+	const hasBackground = computed(() => Boolean(toValue(project)?.background_information))
+	const blurHash = computed(() => toValue(project)?.background_blur_hash ?? '')
+	const query = useQuery(computed(() => ({
+		...projectBackgroundQuery(projectId.value),
+		enabled: hasBackground.value,
+	})), queryClient)
 
-			const [oldProjectId, oldBlurHash] = oldValue || []
-			if (
-				oldValue !== undefined &&
-				projectId === oldProjectId && blurHash === oldBlurHash
-			) {
-				// project hasn't changed
-				return
-			}
-
-			backgroundLoading.value = true
-
-			try {
-				const blurHashPromise = getBlobFromBlurHash(blurHash).then((blurHash) => {
-					blurHashUrl.value = blurHash ? window.URL.createObjectURL(blurHash) : ''
-				})
-
-				const projectService = new ProjectService()
-				const backgroundPromise = projectService.background(projectValue).then((result) => {
-					background.value = result
-				})
-				await Promise.all([blurHashPromise, backgroundPromise])
-			} finally {
-				backgroundLoading.value = false
-			}
-		},
-		{immediate: true},
-	)
+	// Disabled queries keep serving cached data, so gate on hasBackground.
+	const background = useObjectUrl(computed(() => hasBackground.value ? query.data.value : undefined))
+	const blurHashUrl = useBlurHashUrl(computed(() => hasBackground.value ? blurHash.value : ''))
 
 	return {
 		background,
 		blurHashUrl,
-		backgroundLoading,
 	}
 }

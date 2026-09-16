@@ -34,7 +34,7 @@ func init() {
 		ID:          "20190430111111",
 		Description: "Add task color",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(listTask20190430111111{})
+			return partialSync(tx, listTask20190430111111{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return dropTableColum(tx, "tasks", "hex_color")

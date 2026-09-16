@@ -38,12 +38,22 @@ func (share *LinkSharing) CanRead(s *xorm.Session, a web.Auth) (bool, int, error
 		if err != nil {
 			return false, 0, err
 		}
-	} else {
-		var err error
-		project, err = GetProjectByShareHash(s, share.Hash)
+
+		// A by-ID read discloses the access-bearing hash (GHSA-qfwc-vx6f-3g6g).
+		isAdmin, err := project.IsAdmin(s, a)
 		if err != nil {
 			return false, 0, err
 		}
+		if !isAdmin {
+			return false, 0, nil
+		}
+		return true, 2, nil
+	}
+
+	var err error
+	project, err = GetProjectByShareHash(s, share.Hash)
+	if err != nil {
+		return false, 0, err
 	}
 	return project.CanRead(s, a)
 }

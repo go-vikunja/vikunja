@@ -6,6 +6,12 @@ import AbstractModel from '@/models/abstractModel'
 import type {IAbstract} from '@/modelTypes/IAbstract'
 import type {Permission} from '@/constants/permissions'
 
+declare module 'axios' {
+	interface AxiosRequestConfig {
+		payloadTransformed?: boolean
+	}
+}
+
 interface Paths {
 	create : string
 	get : string
@@ -74,6 +80,14 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 
 		// Set the interceptors to process every request
 		this.http.interceptors.request.use((config) => {
+			// A retried request (see the 401 handler in AuthenticatedHTTPFactory)
+			// re-enters the interceptor chain with config.data already serialized to
+			// JSON by axios, so the payload transforms must only ever run once.
+			if (config.payloadTransformed) {
+				return config
+			}
+			config.payloadTransformed = true
+
 			switch (config.method) {
 				case 'post':
 					if (this.useUpdateInterceptor()) {
@@ -318,25 +332,35 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 		}
 	}
 
-	async getBlobUrl(url : string, method : Method = 'GET', data = {}) {
+	async getBlobUrl(url : string, method : Method = 'GET', data = {}): Promise<string> {
 		const response = await this.http({
 			url,
 			method,
 			responseType: 'blob',
 			data,
 		})
-		
-		// Handle SVG blobs specially - convert to data URL for better browser compatibility
-		if (response.data.type === 'image/svg+xml') {
-			return new Promise((resolve, reject) => {
+
+		// Firefox hands back null instead of an empty blob when the response has no body
+		if (!(response.data instanceof Blob)) {
+			throw new Error(`Did not get a blob for ${url}`)
+		}
+
+		// Handle SVG blobs specially - convert to data URL for better browser compatibility.
+		// FileReader is absent in some environments (iOS Lockdown Mode, embedded webviews), fall back to a blob url there.
+		if (response.data.type === 'image/svg+xml' && typeof FileReader !== 'undefined') {
+			return new Promise<string>(resolve => {
 				const reader = new FileReader()
 				reader.onload = () => resolve(reader.result as string)
-				reader.onerror = reject
+				// A read failure rejects with a ProgressEvent, which carries no
+				// stack and nothing to act on — take the same fallback instead.
+				reader.onerror = () => resolve(window.URL.createObjectURL(response.data))
 				reader.readAsDataURL(response.data)
 			})
 		}
 		
-		return window.URL.createObjectURL(new Blob([response.data]))
+		// Keep the blob as-is: re-wrapping via new Blob([...]) drops the mime type,
+		// and an untyped blob url in an iframe downloads instead of opening the PDF viewer.
+		return window.URL.createObjectURL(response.data)
 	}
 
 	/**

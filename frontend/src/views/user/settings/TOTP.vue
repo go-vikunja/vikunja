@@ -4,7 +4,7 @@
 		:title="$t('user.settings.totp.title')"
 	>
 		<XButton
-			v-if="!totpEnrolled && totp.secret === ''"
+			v-if="!totp.enabled && totp.secret === ''"
 			:loading="totpService.loading"
 			@click="totpEnroll()"
 		>
@@ -40,7 +40,7 @@
 				{{ $t('misc.confirm') }}
 			</XButton>
 		</template>
-		<template v-else-if="totp.secret !== '' && totp.enabled">
+		<template v-else-if="totp.enabled">
 			<p>
 				{{ $t('user.settings.totp.setupSuccess') }}
 			</p>
@@ -104,7 +104,6 @@ useTitle(() => `${t('user.settings.totp.title')} - ${t('user.settings.title')}`)
 const totpService = shallowReactive(new TotpService())
 const totp = ref<ITotp>(new TotpModel())
 const totpQR = ref('')
-const totpEnrolled = ref(false)
 const totpConfirmPasscode = ref('')
 const totpDisableForm = ref(false)
 const totpDisablePassword = ref('')
@@ -122,12 +121,15 @@ async function totpStatus() {
 	}
 	try {
 		totp.value = await totpService.get({})
-		totpSetQrCode()
+		// Enabled responses omit the secret, so only request a QR code during enrollment.
+		if (!totp.value.enabled) {
+			totpSetQrCode()
+		}
 	} catch(e: unknown) {
 		// Error code 1016 means totp is not enabled, we don't need an error in that case.
 		const err = e as {response?: {data?: {code?: number}}}
 		if (err.response?.data?.code === 1016) {
-			totpEnrolled.value = false
+			totp.value = new TotpModel()
 			return
 		}
 
@@ -142,7 +144,6 @@ async function totpSetQrCode() {
 
 async function totpEnroll() {
 	totp.value = await totpService.enroll()
-	totpEnrolled.value = true
 	totpSetQrCode()
 }
 
@@ -154,7 +155,6 @@ async function totpConfirm() {
 
 async function totpDisable() {
 	await totpService.disable({password: totpDisablePassword.value})
-	totpEnrolled.value = false
 	totp.value = new TotpModel()
 	success({message: t('user.settings.totp.disableSuccess')})
 }

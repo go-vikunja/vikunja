@@ -102,14 +102,18 @@ type initialCollection struct {
 var emptySearchResult *initialCollection
 
 func doGet(url string, result ...interface{}) (err error) {
-	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, unsplashAPIURL+url, nil)
+	// Keep the old 10s bound: the client's configured timeout defaults to 30s, which would
+	// stall the settings page this is fetched for.
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, unsplashAPIURL+url, nil)
 	if err != nil {
 		return
 	}
 
 	req.Header.Add("Authorization", "Client-ID "+config.BackgroundsUnsplashAccessToken.GetString())
-	hc := http.Client{Timeout: 10 * time.Second}
-	resp, err := hc.Do(req) // #nosec G704 -- URL is constructed from hardcoded Unsplash API base
+	resp, err := utils.NewSSRFSafeHTTPClient().Do(req) //nolint:gosec // SSRF protection is handled by the SSRF-safe client
 	if err != nil {
 		return
 	}

@@ -87,3 +87,57 @@ func TestLocalStorage_MkdirAll(t *testing.T) {
 	require.NoError(t, err)
 	assert.True(t, info.IsDir())
 }
+
+func TestLocalStorage_Ensure(t *testing.T) {
+	t.Run("creates a missing base path", func(t *testing.T) {
+		basePath := filepath.Join(t.TempDir(), "nested", "files")
+		s := newLocalStorage(basePath)
+
+		require.NoError(t, s.Ensure())
+
+		info, err := os.Stat(basePath)
+		require.NoError(t, err)
+		assert.True(t, info.IsDir())
+	})
+
+	t.Run("is idempotent for an existing base path", func(t *testing.T) {
+		s := newLocalStorage(t.TempDir())
+
+		require.NoError(t, s.Ensure())
+		require.NoError(t, s.Ensure())
+	})
+
+	t.Run("leaves a base path that is a file to ValidateBasePath", func(t *testing.T) {
+		basePath := filepath.Join(t.TempDir(), "files")
+		require.NoError(t, os.WriteFile(basePath, []byte("not a directory"), 0600))
+		s := newLocalStorage(basePath)
+
+		require.NoError(t, s.Ensure())
+	})
+}
+
+func TestLocalStorage_ValidateBasePath(t *testing.T) {
+	t.Run("accepts an existing directory", func(t *testing.T) {
+		s := newLocalStorage(t.TempDir())
+
+		require.NoError(t, s.ValidateBasePath())
+	})
+
+	t.Run("rejects a missing base path without creating it", func(t *testing.T) {
+		basePath := filepath.Join(t.TempDir(), "files")
+		s := newLocalStorage(basePath)
+
+		require.ErrorContains(t, s.ValidateBasePath(), "failed to access file storage directory")
+
+		_, err := os.Stat(basePath)
+		require.ErrorIs(t, err, os.ErrNotExist)
+	})
+
+	t.Run("rejects a base path that is a regular file", func(t *testing.T) {
+		basePath := filepath.Join(t.TempDir(), "files")
+		require.NoError(t, os.WriteFile(basePath, []byte("not a directory"), 0600))
+		s := newLocalStorage(basePath)
+
+		require.ErrorContains(t, s.ValidateBasePath(), "file storage path exists but is not a directory")
+	})
+}

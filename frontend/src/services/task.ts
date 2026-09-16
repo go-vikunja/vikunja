@@ -2,19 +2,42 @@ import AbstractService from './abstractService'
 import TaskModel from '@/models/task'
 import type {ITask} from '@/modelTypes/ITask'
 import AttachmentService from './attachment'
-import LabelService from './label'
 
 import {colorFromHex} from '@/helpers/color/colorFromHex'
 import {SECONDS_A_DAY, SECONDS_A_HOUR, SECONDS_A_WEEK} from '@/constants/date'
 import {objectToSnakeCase} from '@/helpers/case'
-import {AuthenticatedHTTPFactory} from '@/helpers/fetcher'
+import {apiV2Url, AuthenticatedHTTPFactory} from '@/helpers/fetcher'
+import {invalidateCachedTask} from '@/helpers/taskCache'
+import {toISOStringOrNull} from '@/helpers/time/toISOStringOrNull'
+import {translatedError} from '@/message'
 
-const parseDate = date => {
-	if (date) {
-		return new Date(date).toISOString()
+// Mirrors models.MaxTasksPerBulkCreation on the backend.
+const MAX_TASKS_PER_BULK_CREATION = 100
+
+/**
+ * Tasks reaching processModel did not necessarily go through the TaskModel
+ * constructor - related tasks nested in a task are plain api objects - so
+ * repeatAfter is either the parsed object, raw seconds, or missing entirely.
+ */
+function repeatAfterToSeconds(repeatAfter: ITask['repeatAfter'] | undefined): number {
+	if (typeof repeatAfter === 'number') {
+		return repeatAfter
 	}
 
-	return null
+	if (!repeatAfter?.amount) {
+		return 0
+	}
+
+	switch (repeatAfter.type) {
+		case 'hours':
+			return repeatAfter.amount * SECONDS_A_HOUR
+		case 'days':
+			return repeatAfter.amount * SECONDS_A_DAY
+		case 'weeks':
+			return repeatAfter.amount * SECONDS_A_WEEK
+		default:
+			return 0
+	}
 }
 
 export default class TaskService extends AbstractService<ITask> {
@@ -44,6 +67,18 @@ export default class TaskService extends AbstractService<ITask> {
 		return false
 	}
 
+	async update(model: ITask) {
+		const updated = await super.update(model)
+		invalidateCachedTask(model.id)
+		return updated
+	}
+
+	async delete(model: ITask) {
+		const response = await super.delete(model)
+		invalidateCachedTask(model.id)
+		return response
+	}
+
 	processModel(updatedModel) {
 		const model = {...updatedModel}
 
@@ -53,61 +88,42 @@ export default class TaskService extends AbstractService<ITask> {
 		model.projectId = Number(model.projectId)
 
 		// Convert dates into an iso string
-		model.dueDate = parseDate(model.dueDate)
-		model.startDate = parseDate(model.startDate)
-		model.endDate = parseDate(model.endDate)
-		model.doneAt = parseDate(model.doneAt)
-		model.created = new Date(model.created).toISOString()
-		model.updated = new Date(model.updated).toISOString()
+		model.dueDate = toISOStringOrNull(model.dueDate)
+		model.startDate = toISOStringOrNull(model.startDate)
+		model.endDate = toISOStringOrNull(model.endDate)
+		model.doneAt = toISOStringOrNull(model.doneAt)
+		model.deletedAt = toISOStringOrNull(model.deletedAt)
+		model.created = toISOStringOrNull(model.created)
+		model.updated = toISOStringOrNull(model.updated)
 
 		model.reminderDates = null
 		// remove all nulls, these would create empty reminders
-		model.reminders = model.reminders.filter(r => r !== null)
+		model.reminders = (model.reminders ?? []).filter(r => r !== null)
 		// Make normal timestamps from js dates
 		if (model.reminders.length > 0) {
 			model.reminders.forEach(r => {
-				r.reminder = new Date(r.reminder).toISOString()
+				r.reminder = toISOStringOrNull(r.reminder)
 			})
 		}
 
-		// Make the repeating amount to seconds
-		let repeatAfterSeconds = 0
-		if (model.repeatAfter !== null && (model.repeatAfter.amount !== null || model.repeatAfter.amount !== 0)) {
-			switch (model.repeatAfter.type) {
-				case 'hours':
-					repeatAfterSeconds = model.repeatAfter.amount * SECONDS_A_HOUR
-					break
-				case 'days':
-					repeatAfterSeconds = model.repeatAfter.amount * SECONDS_A_DAY
-					break
-				case 'weeks':
-					repeatAfterSeconds = model.repeatAfter.amount * SECONDS_A_WEEK
-					break
-			}
-		}
-		model.repeatAfter = repeatAfterSeconds
+		model.repeatAfter = repeatAfterToSeconds(model.repeatAfter)
 
-		model.hexColor = colorFromHex(model.hexColor)
+		model.hexColor = colorFromHex(model.hexColor ?? '')
 
-		// Do the same for all related tasks
-		Object.keys(model.relatedTasks).forEach(relationKind => {
-			model.relatedTasks[relationKind] = model.relatedTasks[relationKind].map(t => {
-				return this.processModel(t)
-			})
-		})
+		// Do the same for all related tasks. `model` is only a shallow copy, so this
+		// has to build a new object - assigning into relatedTasks would replace the
+		// related tasks of the task we were passed with their api representation.
+		model.relatedTasks = Object.fromEntries(
+			Object.entries<ITask[]>(model.relatedTasks ?? {})
+				.map(([relationKind, tasks]) => [relationKind, tasks.map(t => this.processModel(t))]),
+		)
 
 		// Process all attachments to prevent parsing errors
-		if (model.attachments.length > 0) {
+		if (model.attachments?.length > 0) {
 			const attachmentService = new AttachmentService()
 			model.attachments.map(a => {
 				return attachmentService.processModel(a)
 			})
-		}
-
-		// Preprocess all labels
-		if (model.labels.length > 0) {
-			const labelService = new LabelService()
-			model.labels = model.labels.map(l => labelService.processModel(l))
 		}
 
 		const transformed = objectToSnakeCase(model)
@@ -121,6 +137,102 @@ export default class TaskService extends AbstractService<ITask> {
 		return transformed as ITask
 	}
 
+	// The v2 endpoint validates strictly against the task schema and rejects the
+	// frontend-only properties (max_permission, reminder_dates, …) processModel
+	// adds, hence the allowlist.
+	private toBulkCreatePayload(task: ITask) {
+		// processModel lies about its return type — it returns the snake_cased
+		// wire format, not an ITask.
+		const processed = this.processModel(task) as unknown as {
+			assignees: {id: number, username: string}[],
+			reminders: {reminder: string | null, relative_period: number, relative_to: string | null}[],
+		} & Record<string, unknown>
+		return {
+			title: processed.title,
+			description: processed.description,
+			done: processed.done,
+			due_date: processed.due_date,
+			start_date: processed.start_date,
+			end_date: processed.end_date,
+			priority: processed.priority,
+			hex_color: processed.hex_color,
+			percent_done: processed.percent_done,
+			repeat_after: processed.repeat_after,
+			repeat_mode: processed.repeat_mode,
+			is_favorite: processed.is_favorite,
+			bucket_id: processed.bucket_id,
+			assignees: processed.assignees.map(a => ({
+				id: a.id,
+				username: a.username,
+			})),
+			reminders: processed.reminders.map(r => ({
+				reminder: r.reminder,
+				relative_period: r.relative_period,
+				relative_to: r.relative_to,
+			})),
+		}
+	}
+
+	// Returns tasks aligned 1:1 with the input (null = not created). Grouped per
+	// project because the endpoint takes the project from the URL.
+	async bulkCreate(tasks: ITask[]): Promise<{tasks: (ITask | null)[], error: unknown | null}> {
+		const cancel = this.setLoading()
+
+		try {
+			const groups = new Map<ITask['projectId'], number[]>()
+			tasks.forEach((task, index) => {
+				const group = groups.get(task.projectId)
+				if (group) {
+					group.push(index)
+				} else {
+					groups.set(task.projectId, [index])
+				}
+			})
+
+			const created: (ITask | null)[] = new Array(tasks.length).fill(null)
+			let error: unknown | null = null
+			// Sequential throughout: the server assigns task indexes at insert time,
+			// and concurrent bulk writes fail under write contention (SQLite).
+			for (const [projectId, indexes] of groups) {
+				const batches: number[][] = []
+				for (let i = 0; i < indexes.length; i += MAX_TASKS_PER_BULK_CREATION) {
+					batches.push(indexes.slice(i, i + MAX_TASKS_PER_BULK_CREATION))
+				}
+
+				// Last chunk first: the server puts each batch on top in every view, so
+				// posting in reverse leaves the earliest input lines topmost. Tradeoff:
+				// per-project index numbers then run backwards across batches.
+				for (const batch of batches.reverse()) {
+					try {
+						// Fresh http instance: the shared one's interceptors would run
+						// processModel on the {tasks} wrapper.
+						const {data} = await AuthenticatedHTTPFactory().post(
+							apiV2Url(`projects/${Number(projectId)}/tasks/bulk`),
+							{tasks: batch.map(index => this.toBulkCreatePayload(tasks[index]))},
+						)
+						if (!Array.isArray(data?.tasks) || data.tasks.length !== batch.length) {
+							throw translatedError('task.bulkCreateUnexpectedResponse')
+						}
+						// The response is in payload order. Don't match by title — quick
+						// add magic cleans titles and duplicates would collide.
+						data.tasks.forEach((t: Partial<ITask>, batchIndex: number) => {
+							created[batch[batchIndex]] = this.modelCreateFactory(t)
+						})
+					} catch (e) {
+						// Keep what other batches created so the caller can retry only
+						// the missing tasks instead of duplicating everything.
+						error ??= e
+						break
+					}
+				}
+			}
+
+			return {tasks: created, error}
+		} finally {
+			cancel()
+		}
+	}
+
 	async markTaskAsRead(taskId: ITask['id']): Promise<void> {
 		const cancel = this.setLoading()
 	
@@ -131,4 +243,3 @@ export default class TaskService extends AbstractService<ITask> {
 		}
 	}
 }
-

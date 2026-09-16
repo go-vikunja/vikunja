@@ -17,10 +17,14 @@
 package webtests
 
 import (
+	"encoding/json"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/health"
+	"code.vikunja.io/api/pkg/modules/auth/openid"
 	"code.vikunja.io/api/pkg/routes"
 
 	"github.com/stretchr/testify/assert"
@@ -39,4 +43,67 @@ func TestHealthcheck(t *testing.T) {
 		require.NoError(t, err)
 		assert.Contains(t, rec.Body.String(), "OK")
 	})
+}
+
+func TestHealthcheckV2OpenIDProviders(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+
+	var server *httptest.Server
+	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
+			"issuer":                 server.URL,
+			"authorization_endpoint": server.URL + "/auth",
+			"token_endpoint":         server.URL + "/token",
+			"jwks_uri":               server.URL + "/jwks",
+		})
+	}))
+	defer server.Close()
+
+	config.AuthOpenIDEnabled.Set(true)
+	config.AuthOpenIDProviders.Set(map[string]interface{}{
+		"up": map[string]interface{}{
+			"name":         "Up Provider",
+			"authurl":      server.URL,
+			"clientid":     "client1",
+			"clientsecret": "secret1",
+		},
+		"down": map[string]interface{}{
+			"name":         "Down Provider",
+			"authurl":      "http://127.0.0.1:1",
+			"clientid":     "client2",
+			"clientsecret": "secret2",
+		},
+	})
+	openid.CleanupSavedOpenIDProviders()
+	defer func() {
+		config.AuthOpenIDEnabled.Set(false)
+		config.AuthOpenIDProviders.Set(nil)
+		openid.CleanupSavedOpenIDProviders()
+	}()
+
+	// The endpoint serves cached state only, so initialize the provider list
+	// first, like startup (or the availability cron) would.
+	_, err = openid.GetAllProviders()
+	require.NoError(t, err)
+
+	rec := humaRequest(t, e, http.MethodGet, "/api/v2/health", "", "", "")
+	require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+
+	var body struct {
+		Status          string `json:"status"`
+		OpenIDProviders []struct {
+			Key       string `json:"key"`
+			Available bool   `json:"available"`
+		} `json:"openid_providers"`
+	}
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &body))
+
+	assert.Equal(t, "degraded", body.Status)
+	require.Len(t, body.OpenIDProviders, 2)
+	assert.Equal(t, "down", body.OpenIDProviders[0].Key)
+	assert.False(t, body.OpenIDProviders[0].Available)
+	assert.Equal(t, "up", body.OpenIDProviders[1].Key)
+	assert.True(t, body.OpenIDProviders[1].Available)
 }
