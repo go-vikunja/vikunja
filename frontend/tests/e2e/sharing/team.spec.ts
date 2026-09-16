@@ -95,12 +95,37 @@ test.describe('Team', () => {
 		await multiselect.locator('.search-results').locator('> *').first().click()
 		await teamMembersCard.locator('.card-content .button').filter({hasText: 'Add to team'}).click()
 
-		await expect(page.locator('table.table td').filter({hasText: 'Admin'})).toBeVisible()
+		await expect(page.locator('table.table td.type').filter({hasText: 'Admin'})).toBeVisible()
 		// Find the row containing the new member's username
 		const newMemberRow = page.locator('table.table tr').filter({hasText: users[1].username})
 		await expect(newMemberRow).toBeVisible()
 		await expect(newMemberRow).toContainText('Member')
 		await expect(page.locator('.global-notification')).toContainText('Success')
+	})
+
+	test('Clears member search results when the search input is cleared', async ({authenticatedPage: page}) => {
+		await TeamMemberFactory.create(1, {
+			team_id: 1,
+			admin: true,
+		})
+		await TeamFactory.create(1, {
+			id: 1,
+		})
+		const [user] = await UserFactory.create(1, {id: 100}, false)
+
+		await page.goto('/teams/1/edit')
+		const multiselect = page.locator('.card').filter({hasText: 'Team Members'}).locator('.card-content .multiselect')
+		const input = multiselect.locator('.input-wrapper input')
+
+		await input.click()
+		await input.pressSequentially(user.username, {delay: 10})
+		await expect(multiselect.locator('.search-result-button').filter({hasText: user.username})).toBeVisible({timeout: 5000})
+
+		// Backspace fires the keyup the multiselect searches on; fill('') would not.
+		await input.press('ControlOrMeta+a')
+		await input.press('Backspace')
+		await expect(input).toHaveValue('')
+		await expect(multiselect.locator('.search-results')).toHaveCount(0)
 	})
 })
 

@@ -305,6 +305,24 @@ test.describe('Time tracking', () => {
 			await expect(page.locator('.time-tracking__range')).toHaveText('Select a range')
 			await expect(page.locator('[data-cy="addTimeEntry"]')).toBeVisible()
 		})
+
+		test('clears user filter search results when the search input is cleared', async ({authenticatedPage: page, currentUser}) => {
+			const [other] = await UserFactory.create(1, {id: currentUser.id + 100}, false)
+
+			await page.goto('/time-tracking')
+			await page.locator('[data-cy="openTimeTrackingFilters"]').click()
+			const userMultiselect = page.locator('dialog[open] .field').filter({has: page.locator('label', {hasText: /^User$/})}).locator('.multiselect')
+			const input = userMultiselect.locator('input')
+
+			await input.click()
+			await input.pressSequentially(other.username, {delay: 10})
+			await expect(userMultiselect.locator('.search-result-button').filter({hasText: other.username})).toBeVisible({timeout: 5000})
+
+			await input.press('ControlOrMeta+a')
+			await input.press('Backspace')
+			await expect(input).toHaveValue('')
+			await expect(userMultiselect.locator('.search-results')).toHaveCount(0)
+		})
 	})
 
 	test.describe('without the feature licensed', () => {

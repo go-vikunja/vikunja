@@ -463,7 +463,7 @@ test.describe('Task', () => {
 			await expect(page).toHaveURL(new RegExp(`/projects/${tasks[0].project_id}/`))
 		})
 
-		test('Can add an assignee to a task', async ({authenticatedPage: page}) => {
+		test('Can add an assignee to a task', async ({authenticatedPage: page, apiContext, userToken}) => {
 			// Create users with IDs starting at 100 to avoid conflict with logged-in user (ID 1)
 			// Don't truncate to preserve the authenticated user from the fixture
 			const users = await UserFactory.create(5, {
@@ -494,11 +494,23 @@ test.describe('Task', () => {
 			await input.click()
 			await input.pressSequentially(userToAssign.username.substring(0, 10), {delay: 20})
 			// Wait for search results (200ms debounce + API request time)
-			await expect(page.locator('.task-view .column.assignees .multiselect .search-results')).toBeVisible({timeout: 5000})
-			await page.locator('.task-view .column.assignees .multiselect .search-results').locator('> *').first().click()
+			// Focus preloads every project member, so pick the matching result rather than the first.
+			await page.locator('.task-view .column.assignees .multiselect .search-result-button').filter({hasText: userToAssign.username}).click()
 
 			await expect(page.locator('.global-notification')).toContainText('Success')
-			await expect(page.locator('.task-view .column.assignees .multiselect .input-wrapper span.assignee')).toBeVisible()
+			const assignees = page.locator('.task-view .column.assignees .multiselect .input-wrapper span.assignee')
+			await expect(assignees).toBeVisible()
+
+			await page.reload()
+			await expect(assignees).toHaveCount(1)
+			await expect(page.getByRole('button', {name: `Remove ${userToAssign.username} as assignee`})).toBeVisible()
+
+			const resp = await apiContext.get(`tasks/${tasks[0].id}`, {
+				headers: {Authorization: `Bearer ${userToken}`},
+			})
+			expect(resp.ok()).toBe(true)
+			const {assignees: apiAssignees} = await resp.json()
+			expect(apiAssignees.map((a: User) => a.id)).toEqual([userToAssign.id])
 		})
 
 		test('Can remove an assignee from a task', async ({authenticatedPage: page}) => {
