@@ -4,15 +4,13 @@
 		:has-primary-action="false"
 	>
 		<template v-if="project">
-			<userTeam
-				:id="project.id"
+			<UserSharing
+				:project-id="project.id"
 				:user-is-admin="userIsAdmin"
-				share-type="user"
 			/>
-			<userTeam
-				:id="project.id"
+			<TeamSharing
+				:project-id="project.id"
 				:user-is-admin="userIsAdmin"
-				share-type="team"
 			/>
 		</template>
 
@@ -36,7 +34,8 @@ import {PERMISSIONS} from '@/constants/permissions'
 
 import CreateEdit from '@/components/misc/CreateEdit.vue'
 import LinkSharing from '@/components/sharing/LinkSharing.vue'
-import userTeam from '@/components/sharing/UserTeam.vue'
+import TeamSharing from '@/components/sharing/TeamSharing.vue'
+import UserSharing from '@/components/sharing/UserSharing.vue'
 
 import {useBaseStore} from '@/stores/base'
 import {useConfigStore} from '@/stores/config'
