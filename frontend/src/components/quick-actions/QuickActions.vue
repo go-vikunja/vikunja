@@ -145,7 +145,7 @@ import {getHistory} from '@/modules/projectHistory'
 import {parseTaskText, PREFIXES, PrefixMode} from '@/modules/quickAddMagic'
 import {success} from '@/message'
 
-import type {ITeam} from '@/modelTypes/ITeam'
+import type {TeamReadBody as ITeam} from '@/client/generated'
 import type {ITask} from '@/modelTypes/ITask'
 import type {IAbstract} from '@/modelTypes/IAbstract'
 import type {TaskFilterParams} from '@/services/taskCollection'

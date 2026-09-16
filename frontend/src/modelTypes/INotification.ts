@@ -2,7 +2,7 @@ import type {IAbstract} from './IAbstract'
 import type {IUser} from './IUser'
 import type {ITask} from './ITask'
 import type {ITaskComment} from './ITaskComment'
-import type {ITeam} from './ITeam'
+import type {Team as ITeam} from '@/client/generated'
 import type {Project} from '@/client/generated'
 
 export const NOTIFICATION_NAMES = {
