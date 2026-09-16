@@ -1,4 +1,4 @@
-import {mutationOptions, queryOptions, useMutation} from '@tanstack/vue-query'
+import {queryOptions, useMutation} from '@tanstack/vue-query'
 import type {QueryClient} from '@tanstack/vue-query'
 
 import {
@@ -23,7 +23,8 @@ import {PERMISSIONS} from '@/constants/permissions'
 import {colorFromHex} from '@/helpers/color/colorFromHex'
 import {removeProjectFromHistory} from '@/modules/projectHistory'
 import {i18n} from '@/i18n'
-import {success} from '@/message'
+
+import {contextMutationOptions} from './contextMutation'
 
 export type ProjectResponse = Omit<Project,
 	'id' |
@@ -314,55 +315,47 @@ function restoreProjects(client: QueryClient, snapshot: ProjectSnapshot | undefi
 	}
 }
 
+// Project callers let failures reach the global Vue error handler, which toasts them.
+const toastError = () => false
+
 export function createProjectMutationOptions() {
-	return mutationOptions({
-		onMutate: () => ({request: captureClientRequestContext()}),
+	return contextMutationOptions({
 		mutationFn: async (project: ProjectWritable) => {
-			const request = captureClientRequestContext()
 			const {data} = await projectsCreate({body: projectBody(project)})
-			assertClientRequestContext(request)
 			return normalizeProject(data)
 		},
-		onSuccess: (created, _input, context, {client}) => {
-			assertClientRequestContext(context.request)
+		onSuccess: (created, _input, client) => {
 			client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
 				current ? replaceProjectInList(current, created) : current,
 			)
-			success({message: i18n.global.t('project.create.createdSuccess')})
 		},
-		onSettled: async (_data, _error, _input, context, {client}) => {
-			if (context && isClientRequestContextCurrent(context.request)) {
-				await client.invalidateQueries({queryKey: projectKeys.list()})
-				assertClientRequestContext(context.request)
-			}
-		},
+		onSettled: (_input, client) => client.invalidateQueries({queryKey: projectKeys.list()}),
+		successMessage: () => i18n.global.t('project.create.createdSuccess'),
+		toastError,
 	})
 }
 
 export function updateProjectMutationOptions(successMessage?: string) {
-	return mutationOptions({
+	return contextMutationOptions({
 		mutationFn: async ({id, ...project}: UpdateProjectInput) => {
-			const request = captureClientRequestContext()
 			const {data} = await projectsUpdate({
 				path: {id},
 				body: projectBody(project),
 			})
-			assertClientRequestContext(request)
 			return normalizeProject({...project, ...data})
 		},
-		onMutate: async ({id, ...project}, {client}) => {
-			const snapshot = await snapshotProjects(client, id)
-			client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
-				current ? mapProjectNavigationItem(current, id, existing => normalizeProject({...existing, ...project})) : current,
-			)
-			client.setQueryData<ProjectResponse>(projectKeys.detail(id), current =>
-				current ? normalizeProject({...current, ...project}) : current,
-			)
-			return snapshot
+		optimistic: {
+			queryKeys: ({id}) => [projectKeys.list(), projectKeys.detail(id)],
+			update: ({id, ...project}, client) => {
+				client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
+					current ? mapProjectNavigationItem(current, id, existing => normalizeProject({...existing, ...project})) : current,
+				)
+				client.setQueryData<ProjectResponse>(projectKeys.detail(id), current =>
+					current ? normalizeProject({...current, ...project}) : current,
+				)
+			},
 		},
-		onError: (_error, _input, context, {client}) => restoreProjects(client, context),
-		onSuccess: (updated, _input, context, {client}) => {
-			assertClientRequestContext(context.request)
+		onSuccess: (updated, _input, client) => {
 			client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
 				current ? mapProjectNavigationItem(current, updated.id, previous =>
 					mergeProjectMetadata(previous, updated),
@@ -371,46 +364,37 @@ export function updateProjectMutationOptions(successMessage?: string) {
 			client.setQueryData<ProjectResponse>(projectKeys.detail(updated.id), current =>
 				current ? mergeProjectMetadata(current, updated) : current,
 			)
-			if (successMessage) {
-				success({message: successMessage})
-			}
 		},
-		onSettled: async (_data, _error, {id}, context, {client}) => {
-			if (context && isClientRequestContextCurrent(context.request)) {
-				await Promise.all([
-					client.invalidateQueries({queryKey: projectKeys.list()}),
-					client.invalidateQueries({queryKey: projectKeys.detail(id)}),
-				])
-				assertClientRequestContext(context.request)
-			}
-		},
+		onSettled: ({id}, client) => Promise.all([
+			client.invalidateQueries({queryKey: projectKeys.list()}),
+			client.invalidateQueries({queryKey: projectKeys.detail(id)}),
+		]),
+		successMessage: () => successMessage,
+		toastError,
 	})
 }
 
 export function patchProjectFavoriteMutationOptions() {
-	return mutationOptions({
+	return contextMutationOptions({
 		mutationFn: async ({id, isFavorite}: {id: number; isFavorite: boolean}) => {
-			const request = captureClientRequestContext()
 			const {data} = await patchProjectsRead({
 				path: {id},
 				body: [{op: 'replace', path: '/is_favorite', value: isFavorite}],
 			})
-			assertClientRequestContext(request)
 			return normalizeProject(data)
 		},
-		onMutate: async ({id, isFavorite}, {client}) => {
-			const snapshot = await snapshotProjects(client, id)
-			client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
-				current ? mapProjectNavigationItem(current, id, project => ({...project, is_favorite: isFavorite})) : current,
-			)
-			client.setQueryData<ProjectResponse>(projectKeys.detail(id), current =>
-				current ? {...current, is_favorite: isFavorite} : current,
-			)
-			return snapshot
+		optimistic: {
+			queryKeys: ({id}) => [projectKeys.list(), projectKeys.detail(id)],
+			update: ({id, isFavorite}, client) => {
+				client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
+					current ? mapProjectNavigationItem(current, id, project => ({...project, is_favorite: isFavorite})) : current,
+				)
+				client.setQueryData<ProjectResponse>(projectKeys.detail(id), current =>
+					current ? {...current, is_favorite: isFavorite} : current,
+				)
+			},
 		},
-		onError: (_error, _input, context, {client}) => restoreProjects(client, context),
-		onSuccess: (updated, {id}, context, {client}) => {
-			assertClientRequestContext(context.request)
+		onSuccess: (updated, {id}, client) => {
 			client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
 				current ? mapProjectNavigationItem(current, id, project => ({...project, is_favorite: updated.is_favorite})) : current,
 			)
@@ -418,58 +402,47 @@ export function patchProjectFavoriteMutationOptions() {
 				current ? {...current, is_favorite: updated.is_favorite} : current,
 			)
 		},
-		onSettled: async (_data, _error, {id}, context, {client}) => {
-			if (context && isClientRequestContextCurrent(context.request)) {
-				await Promise.all([
-					client.invalidateQueries({queryKey: projectKeys.list()}),
-					client.invalidateQueries({queryKey: projectKeys.detail(id)}),
-				])
-				assertClientRequestContext(context.request)
-			}
-		},
+		onSettled: ({id}, client) => Promise.all([
+			client.invalidateQueries({queryKey: projectKeys.list()}),
+			client.invalidateQueries({queryKey: projectKeys.detail(id)}),
+		]),
+		toastError,
 	})
 }
 
 export function setProjectSubscriptionMutationOptions() {
-	return mutationOptions({
-		onMutate: () => ({request: captureClientRequestContext()}),
+	return contextMutationOptions({
 		mutationFn: async ({projectId, subscribed}: {projectId: number; subscribed: boolean}) => {
-			const request = captureClientRequestContext()
 			const path = {entity: 'project', entityID: projectId} as const
 			if (!subscribed) {
 				await subscriptionsDelete({path})
-				assertClientRequestContext(request)
 				return undefined
 			}
 			const {data} = await subscriptionsCreate({path})
-			assertClientRequestContext(request)
 			return data
 		},
-		onSuccess: (subscription, {projectId, subscribed}, context, {client}) => {
-			assertClientRequestContext(context.request)
+		onSuccess: (subscription, {projectId}, client) => {
 			client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
 				current ? mapProjectNavigationItem(current, projectId, project => ({...project, subscription})) : current,
 			)
 			client.setQueryData<ProjectResponse>(projectKeys.detail(projectId), current =>
 				current ? {...current, subscription} : current,
 			)
-			success({message: i18n.global.t(subscribed
-				? 'task.subscription.subscribeSuccessProject'
-				: 'task.subscription.unsubscribeSuccessProject')})
 		},
 		// Refetching the list reloads every page, so it is only marked stale; sub projects
 		// inherit the subscription and pick it up on the next list load.
-		onSettled: async (_data, _error, {projectId}, context, {client}) => {
-			if (context && isClientRequestContextCurrent(context.request)) {
-				const list = client.getQueryData<ProjectListResult>(projectKeys.list())
-				const ids = list ? descendantIds(list.projects, projectId) : [projectId]
-				await Promise.all([
-					client.invalidateQueries({queryKey: projectKeys.list(), refetchType: 'none'}),
-					...ids.map(id => client.invalidateQueries({queryKey: projectKeys.detail(id)})),
-				])
-				assertClientRequestContext(context.request)
-			}
+		onSettled: ({projectId}, client) => {
+			const list = client.getQueryData<ProjectListResult>(projectKeys.list())
+			const ids = list ? descendantIds(list.projects, projectId) : [projectId]
+			return Promise.all([
+				client.invalidateQueries({queryKey: projectKeys.list(), refetchType: 'none'}),
+				...ids.map(id => client.invalidateQueries({queryKey: projectKeys.detail(id)})),
+			])
 		},
+		successMessage: (_subscription, {subscribed}) => i18n.global.t(subscribed
+			? 'task.subscription.subscribeSuccessProject'
+			: 'task.subscription.unsubscribeSuccessProject'),
+		toastError,
 	})
 }
 
@@ -479,68 +452,55 @@ function descendantIds(projects: readonly ProjectResponse[], projectId: number):
 }
 
 export function deleteProjectMutationOptions() {
-	return mutationOptions({
+	return contextMutationOptions({
 		mutationFn: async (id: number) => {
-			const request = captureClientRequestContext()
 			await projectsDelete({path: {id}})
-			assertClientRequestContext(request)
 		},
-		onMutate: async (id, {client}) => {
-			const snapshot = await snapshotProjects(client)
-			const ids = new Set(snapshot.list ? descendantIds(snapshot.list.projects, id) : [id])
-			client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
-				current ? {...current, projects: current.projects.filter(project => !ids.has(project.id))} : current,
-			)
-			return {...snapshot, ids}
+		optimistic: {
+			queryKeys: () => [projectKeys.list()],
+			update: (id, client) => {
+				const list = client.getQueryData<ProjectListResult>(projectKeys.list())
+				const ids = new Set(list ? descendantIds(list.projects, id) : [id])
+				client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
+					current ? {...current, projects: current.projects.filter(project => !ids.has(project.id))} : current,
+				)
+				return ids
+			},
 		},
-		onError: (_error, _input, context, {client}) => restoreProjects(client, context),
-		onSuccess: (_data, id, context, {client}) => {
-			assertClientRequestContext(context.request)
-			context.ids.forEach(projectId => client.removeQueries({queryKey: projectKeys.detail(projectId)}))
+		onSuccess: (_data, id, client, ids) => {
+			ids.forEach(projectId => client.removeQueries({queryKey: projectKeys.detail(projectId)}))
 			removeProjectFromHistory({id})
-			success({message: i18n.global.t('project.delete.success')})
 		},
-		onSettled: async (_data, _error, _input, context, {client}) => {
-			if (context && isClientRequestContextCurrent(context.request)) {
-				await client.invalidateQueries({queryKey: projectKeys.list()})
-				assertClientRequestContext(context.request)
-			}
-		},
+		onSettled: (_input, client) => client.invalidateQueries({queryKey: projectKeys.list()}),
+		successMessage: () => i18n.global.t('project.delete.success'),
+		toastError,
 	})
 }
 
 export function duplicateProjectMutationOptions() {
-	return mutationOptions({
-		onMutate: () => ({request: captureClientRequestContext()}),
+	return contextMutationOptions({
 		mutationFn: async ({
 			projectId,
 			parentProjectId = 0,
 			duplicateShares = false,
 		}: DuplicateProjectInput) => {
-			const request = captureClientRequestContext()
 			const {data} = await projectsDuplicate({
 				path: {projectid: projectId},
 				body: {parent_project_id: parentProjectId, duplicate_shares: duplicateShares},
 			})
-			assertClientRequestContext(request)
 			if (!data.duplicated_project) {
 				throw new Error('Project duplicate response is missing the duplicated project')
 			}
 			return normalizeProject({...data.duplicated_project, max_permission: PERMISSIONS.ADMIN})
 		},
-		onSuccess: (duplicate, _input, context, {client}) => {
-			assertClientRequestContext(context.request)
+		onSuccess: (duplicate, _input, client) => {
 			client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
 				current ? replaceProjectInList(current, duplicate) : current,
 			)
-			success({message: i18n.global.t('project.duplicate.success')})
 		},
-		onSettled: async (_data, _error, _input, context, {client}) => {
-			if (context && isClientRequestContextCurrent(context.request)) {
-				await client.invalidateQueries({queryKey: projectKeys.list()})
-				assertClientRequestContext(context.request)
-			}
-		},
+		onSettled: (_input, client) => client.invalidateQueries({queryKey: projectKeys.list()}),
+		successMessage: () => i18n.global.t('project.duplicate.success'),
+		toastError,
 	})
 }
 
