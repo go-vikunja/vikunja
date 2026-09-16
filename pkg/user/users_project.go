@@ -88,13 +88,11 @@ func ListUsers(s *xorm.Session, search string, currentUser *User, opts *ProjectU
 				continue
 			}
 
-			var usernameCond builder.Cond = builder.Eq{"username": queryPart}
-			if db.Type() == schemas.POSTGRES {
-				usernameCond = builder.Expr("username ILIKE ?", queryPart)
+			if queryPart == "" {
+				continue
 			}
-			if db.Type() == schemas.SQLITE {
-				usernameCond = builder.Expr("username = ? COLLATE NOCASE", queryPart)
-			}
+
+			usernameCond := usernamePrefixCond(queryPart)
 
 			conds = append(conds,
 				usernameCond,
@@ -212,6 +210,26 @@ outer:
 		u.Email = ""
 	}
 	return
+}
+
+func usernamePrefixCond(queryPart string) builder.Cond {
+	prefix := escapeLikeMetacharacters(queryPart) + "%"
+
+	switch db.Type() {
+	case schemas.POSTGRES:
+		return builder.Expr("username ILIKE ? ESCAPE '\\'", prefix)
+	case schemas.SQLITE:
+		return builder.Expr("username LIKE ? ESCAPE '\\' COLLATE NOCASE", prefix)
+	default:
+		return builder.Expr("username LIKE ? ESCAPE '\\'", prefix)
+	}
+}
+
+func escapeLikeMetacharacters(s string) string {
+	s = strings.ReplaceAll(s, `\`, `\\`)
+	s = strings.ReplaceAll(s, `%`, `\%`)
+	s = strings.ReplaceAll(s, `_`, `\_`)
+	return s
 }
 
 // ListAllUsers returns all users

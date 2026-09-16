@@ -17,6 +17,7 @@
 package models
 
 import (
+	"strings"
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
@@ -150,12 +151,24 @@ func TestListUsers(t *testing.T) {
 			"username": "user7",
 		}, false)
 	})
-	t.Run("not discoverable by partial username", func(t *testing.T) {
+	t.Run("discoverable by username prefix", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
 
-		all, err := user.ListUsers(s, "user", user1, nil)
+		all, err := user.ListUsers(s, "user1", user1, nil)
+		require.NoError(t, err)
+		require.Len(t, all, 10)
+		for _, u := range all {
+			assert.True(t, strings.HasPrefix(strings.ToLower(u.Username), "user1"), u.Username)
+		}
+	})
+	t.Run("not discoverable by username substring", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		all, err := user.ListUsers(s, "er7", user1, nil)
 		require.NoError(t, err)
 		assert.Empty(t, all)
 		db.AssertExists(t, "users", map[string]interface{}{
