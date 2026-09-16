@@ -125,9 +125,10 @@ import {useI18n} from 'vue-i18n'
 import {useRouter} from 'vue-router'
 
 import TaskService from '@/services/task'
-import TeamService from '@/services/team'
-
-import TeamModel from '@/models/team'
+import {useQueries} from '@tanstack/vue-query'
+import {teamsQuery, useCreateTeamMutation} from '@/client/queries/teams'
+import type {Team as ITeam} from '@/client/generated'
+import {refDebounced} from '@vueuse/core'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import QuickAddMagic from '@/components/tasks/partials/QuickAddMagic.vue'
@@ -145,7 +146,6 @@ import {getHistory} from '@/modules/projectHistory'
 import {parseTaskText, PREFIXES, PrefixMode} from '@/modules/quickAddMagic'
 import {success} from '@/message'
 
-import type {TeamReadBody as ITeam} from '@/client/generated'
 import type {ITask} from '@/modelTypes/ITask'
 import type {IAbstract} from '@/modelTypes/IAbstract'
 import type {TaskFilterParams} from '@/services/taskCollection'
@@ -198,8 +198,7 @@ const selectedCmd = ref<Command | null>(null)
 const foundTasks = ref<DoAction<ITask>[]>([])
 const taskService = shallowReactive(new TaskService())
 
-const foundTeams = ref<ITeam[]>([])
-const teamService = shallowReactive(new TeamService())
+const createTeamMutation = useCreateTeamMutation()
 
 const active = computed(() => baseStore.quickActionsActive)
 
@@ -340,7 +339,7 @@ function isDone(item: unknown): boolean {
 const loading = computed(() =>
 	taskService.loading ||
 	projectList.isLoading ||
-	teamService.loading,
+	teamSearchLoading.value || createTeamMutation.isPending.value,
 )
 
 interface Command {
@@ -501,39 +500,17 @@ function searchTasks() {
 	}, 150)
 }
 
-const teamSearchTimeout = ref<ReturnType<typeof setTimeout> | null>(null)
-
-function searchTeams() {
-	if (
-		searchMode.value !== SEARCH_MODE.ALL &&
-		searchMode.value !== SEARCH_MODE.TEAMS
-	) {
-		foundTeams.value = []
-		return
-	}
-	if (query.value === '' || selectedCmd.value !== null) {
-		return
-	}
-	if (teamSearchTimeout.value !== null) {
-		clearTimeout(teamSearchTimeout.value)
-		teamSearchTimeout.value = null
-	}
-	const {assignees} = parsedQuery.value
-	teamSearchTimeout.value = setTimeout(async () => {
-		const teamSearchPromises = assignees.map((t) =>
-			teamService.getAll({}, {s: t}),
-		)
-		const teamsResult = await Promise.all(teamSearchPromises)
-		foundTeams.value = teamsResult.flat().map((team) => {
-			team.title = team.name
-			return team
-		})
-	}, 150)
-}
+const teamSearches = refDebounced(computed(() => parsedQuery.value.assignees), 150)
+const teamQueries = useQueries({
+	queries: computed(() => active.value && query.value !== '' && selectedCmd.value === null &&
+		(searchMode.value === SEARCH_MODE.ALL || searchMode.value === SEARCH_MODE.TEAMS)
+		? teamSearches.value.map(search => teamsQuery(search)) : []),
+})
+const foundTeams = computed(() => teamQueries.value.flatMap(result => result.data ?? []).map(team => ({...team, title: team.name ?? ''})))
+const teamSearchLoading = computed(() => teamQueries.value.some(result => result.isFetching))
 
 function search() {
 	searchTasks()
-	searchTeams()
 }
 
 const searchInput = ref<HTMLElement | null>(null)
@@ -680,13 +657,16 @@ async function newProject() {
 }
 
 async function newTeam() {
-	const newTeam = new TeamModel({name: query.value})
-	const team = await teamService.create(newTeam)
+	let team
+	try {
+		team = await createTeamMutation.mutateAsync({name: query.value})
+	} catch {
+		return
+	}
 	await router.push({
 		name: 'teams.edit',
 		params: {id: team.id},
 	})
-	success({message: t('team.create.success')})
 }
 
 type BaseButtonInstance = InstanceType<typeof BaseButton>
@@ -709,7 +689,7 @@ function select(parentIndex: number, index: number) {
 		parentIndex--
 		index = results.value[parentIndex].items.length - 1
 	}
-	let elems = resultRefs.value[parentIndex][index]
+	let elems: BaseButtonInstance | null | undefined = resultRefs.value[parentIndex][index]
 	if (results.value[parentIndex].items.length === index) {
 		elems = resultRefs.value[parentIndex + 1] ? resultRefs.value[parentIndex + 1][0] : undefined
 	}

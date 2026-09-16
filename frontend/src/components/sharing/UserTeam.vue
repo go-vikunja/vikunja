@@ -7,11 +7,11 @@
 			<div class="field has-addons">
 				<p
 					class="control is-expanded"
-					:class="{ 'is-loading': searchService.loading }"
+					:class="{ 'is-loading': searchLoading }"
 				>
 					<Multiselect
 						v-model="sharable"
-						:loading="searchService.loading"
+						:loading="searchLoading"
 						:placeholder="$t('misc.searchPlaceholder')"
 						:aria-label="$t('project.share.userTeam.search', {type: shareTypeName})"
 						:search-results="found"
@@ -170,7 +170,7 @@ import UserProjectService from '@/services/userProject'
 import UserProjectModel from '@/models/userProject'
 import type {IUserProject} from '@/modelTypes/IUserProject'
 
-import {searchUsers} from '@/client/queries/userSearch'
+import {useUserSearch} from '@/composables/useUserSearch'
 import { getDisplayName } from '@/models/user'
 import type {User as IUser} from '@/client/generated'
 
@@ -178,8 +178,7 @@ import TeamProjectService from '@/services/teamProject'
 import TeamProjectModel from '@/models/teamProject'
 import type { ITeamProject } from '@/modelTypes/ITeamProject'
 
-import TeamService from '@/services/team'
-import type {TeamReadBody as ITeam} from '@/client/generated'
+import {useTeams} from '@/composables/useTeams'
 
 
 import {PERMISSIONS} from '@/constants/permissions'
@@ -209,7 +208,11 @@ const {t} = useI18n({useScope: 'global'})
 // This user service is a userProjectService, depending on the type we are using
 let stuffService: UserProjectService | TeamProjectService
 let stuffModel: IUserProject | ITeamProject
-const searchService = shallowReactive(new TeamService())
+const configStore = useConfigStore()
+const searchQuery = ref('')
+const {teams: teamResults, isFetching: teamSearchLoading} = useTeams({search: searchQuery, includePublic: () => configStore.publicTeamsEnabled, enabled: () => props.shareType === 'team' && searchQuery.value !== ''})
+const {users: userResults, isFetching: userSearchLoading} = useUserSearch(() => props.shareType === 'user' ? searchQuery.value : '')
+const searchLoading = computed(() => teamSearchLoading.value || userSearchLoading.value)
 const sharable = ref<IUser>({})
 
 const searchLabel = ref('')
@@ -221,7 +224,6 @@ const sharables = ref([])
 const showDeleteModal = ref(false)
 
 const authStore = useAuthStore()
-const configStore = useConfigStore()
 const userInfo = computed(() => authStore.info)
 
 function createShareTypeNameComputed(count: number) {
@@ -357,27 +359,8 @@ async function toggleType(sharable) {
 	success({message: t('project.share.userTeam.updatedSuccess', {type: shareTypeName.value})})
 }
 
-const found = ref<(IUser | ITeam)[]>([])
-
-const currentUserId = computed(() => authStore.info.id)
-async function find(query: string) {
-	if (query === '') {
-		found.value = []
-		return
-	}
-
-	// Include public teams here if we are sharing with teams and its enabled in the config
-	const results = props.shareType === 'team' && configStore.publicTeamsEnabled
-		? await searchService.getAll({}, {s: query, includePublic: true})
-		: props.shareType === 'user' ? await searchUsers(query) : await searchService.getAll({}, {s: query})
-
-	found.value = results
-		.filter(m => {
-			if(props.shareType === 'user' && m.id === currentUserId.value) {
-				return false
-			}
-			
-			return typeof sharables.value.find(s => s.id === m.id) === 'undefined'
-		})
+const found = computed(() => (props.shareType === 'team' ? teamResults.value : userResults.value).filter(item => (props.shareType !== 'user' || item.id !== authStore.info?.id) && !sharables.value.some(shared => shared.id === item.id)))
+function find(query: string) {
+	searchQuery.value = query
 }
 </script>
