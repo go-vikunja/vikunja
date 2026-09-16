@@ -29,6 +29,57 @@ async function prepareLinkShare() {
 }
 
 test.describe('Link shares', () => {
+	test('creates named password shares, preserves view selections and deletes a share', async ({authenticatedPage: page, browser, baseURL}) => {
+		const [project] = await createProjects(1)
+		await page.goto(`/projects/${project.id}/settings/share`)
+		const panel = page.locator('.sharables-project')
+		await panel.getByRole('button', {name: 'Create a link share'}).click()
+		await panel.locator('#linkShareName').fill('Client link')
+		await panel.locator('#linkSharePassword').fill('client-password')
+		const createdResponse = page.waitForResponse(response => new URL(response.url()).pathname === `/api/v2/projects/${project.id}/shares` && response.request().method() === 'POST')
+		await panel.getByRole('button', {name: 'Share', exact: true}).click()
+		const created = await (await createdResponse).json()
+		expect(created.sharing_type).toBe(2)
+		expect(created.password ?? '').toBe('')
+		const row = panel.getByRole('row').filter({hasText: 'Client link'})
+		await expect(row).toBeVisible()
+		await row.getByRole('combobox').selectOption('2')
+		await expect(row.locator('input[readonly]')).toHaveValue(new RegExp(`/share/${created.hash}/auth\\?view=2$`))
+		await panel.getByRole('button', {name: 'Create a link share'}).click()
+		await panel.locator('#linkShareName').fill('Second link')
+		await panel.getByRole('button', {name: 'Share', exact: true}).click()
+		await expect(panel.getByRole('row').filter({hasText: 'Second link'})).toBeVisible()
+		await expect(row.getByRole('combobox')).toHaveValue('2')
+		const shareUrl = new URL(await row.locator('input[readonly]').inputValue())
+		expect(shareUrl.pathname + shareUrl.search).toBe(`/share/${created.hash}/auth?view=2`)
+
+		const guest = await browser.newContext({baseURL})
+		try {
+			const guestPage = await guest.newPage()
+			await setupApiUrl(guestPage)
+			await guestPage.goto(shareUrl.pathname + shareUrl.search)
+			const passwordInput = guestPage.locator('input#linkSharePassword')
+			await passwordInput.fill('wrong-password')
+			const rejected = guestPage.waitForResponse(r => r.url().includes(`/shares/${created.hash}/auth`) && r.request().method() === 'POST')
+			await guestPage.locator('.button').filter({hasText: 'Login'}).click()
+			expect((await rejected).status()).toBeGreaterThanOrEqual(400)
+			await expect(guestPage).toHaveURL(new RegExp(`/share/${created.hash}/auth`))
+			await passwordInput.fill('client-password')
+			await guestPage.locator('.button').filter({hasText: 'Login'}).click()
+			await expect(guestPage.locator('h1.title')).toContainText(project.title)
+			await expect(guestPage).toHaveURL(`/projects/${project.id}/2#share-auth-token=${created.hash}`)
+		} finally {
+			await guest.close()
+		}
+
+		await page.reload()
+		await expect(row).toBeVisible()
+		await row.getByRole('button', {name: 'Remove a link share'}).click()
+		await page.locator('dialog[open]').getByRole('button', {name: 'Do it!'}).click()
+		await expect(row).toHaveCount(0)
+		await expect(panel.getByRole('row').filter({hasText: 'Second link'})).toBeVisible()
+	})
+
 	// The anonymous link share tests below don't use the `authenticatedPage`
 	// fixture (which wires up the API URL via `login()`), so they'd otherwise
 	// hit the default `window.API_URL = '/api/v1'` relative path baked into
