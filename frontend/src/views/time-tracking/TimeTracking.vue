@@ -307,7 +307,7 @@ async function restoreFromQuery() {
 onMounted(async () => {
 	// Standalone page: drop any stale project so the app header shows this
 	// page's title instead of the last visited project.
-	baseStore.handleSetCurrentProject({project: null})
+	baseStore.setCurrentProject(null)
 	await restoreFromQuery()
 	ready.value = true
 	// One request with the fully-restored filter — no flicker through partial filters.

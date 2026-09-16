@@ -133,7 +133,7 @@ watch(() => route.name as string, (routeName) => {
 			routeName.startsWith('user.settings')
 		)
 	) {
-		baseStore.handleSetCurrentProject({project: null})
+		baseStore.setCurrentProject(null)
 	}
 })
 

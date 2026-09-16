@@ -801,7 +801,7 @@ onBeforeRouteLeave(async () => {
 	}
 
 	if (lastProjectOrTaskProject.value) {
-		await baseStore.handleSetCurrentProjectIfNotSet(lastProjectOrTaskProject.value)
+		baseStore.setCurrentProjectIfNotSet(lastProjectOrTaskProject.value)
 	}
 })
 
@@ -966,7 +966,7 @@ watch(
 			}
 
 			if (lastProject.value) {
-				await baseStore.handleSetCurrentProjectIfNotSet(lastProject.value)
+				baseStore.setCurrentProjectIfNotSet(lastProject.value)
 			}
 		} catch (e) {
 			// 403 means the task exists but is not visible to us; treat it like

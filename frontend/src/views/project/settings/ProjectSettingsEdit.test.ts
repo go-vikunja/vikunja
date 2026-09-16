@@ -37,7 +37,7 @@ vi.mock('@/composables/useProjects', () => ({
 }))
 
 vi.mock('@/stores/base', () => ({
-	useBaseStore: () => ({handleSetCurrentProject: vi.fn()}),
+	useBaseStore: () => ({setCurrentProject: vi.fn()}),
 }))
 
 vi.mock('@/composables/useTitle', () => ({useTitle: vi.fn()}))

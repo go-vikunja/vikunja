@@ -9,7 +9,6 @@ import {
 	projectsBackgroundUpload,
 } from '@/client/generated'
 import type {Image, Project} from '@/client/generated'
-import {queryClient} from '@/client/queryClient'
 import {mapProjectNavigationItem, projectKeys} from '@/client/queries/projects'
 import type {ProjectListResult, ProjectResponse} from '@/client/queries/projects'
 import {assertClientRequestContext, captureClientRequestContext, isClientRequestContextCurrent} from '@/client/requestContext'
@@ -53,10 +52,6 @@ export function projectBackgroundQuery(projectId: number) {
 			return asBackgroundBlob(data)
 		},
 	})
-}
-
-export function refreshProjectBackground(projectId: number) {
-	return queryClient.fetchQuery({...projectBackgroundQuery(projectId), staleTime: 0})
 }
 
 export function unsplashBackgroundSearchQuery(query: string) {

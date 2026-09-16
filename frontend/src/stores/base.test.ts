@@ -2,12 +2,22 @@ import {createPinia, setActivePinia} from 'pinia'
 import {beforeEach, describe, expect, it, vi} from 'vitest'
 
 import {AUTH_TYPES} from '@/modelTypes/IUser'
-import type {ProjectResponse} from '@/client/queries/projects'
-import {refreshProjectBackground} from '@/client/queries/projectBackgrounds'
+import {queryClient} from '@/client/queryClient'
+import {projectKeys, type ProjectResponse} from '@/client/queries/projects'
 
 const auth = vi.hoisted(() => ({
 	token: null as string | null,
 	post: vi.fn(),
+}))
+
+const sdk = vi.hoisted(() => ({
+	projectsBackgroundGet: vi.fn(),
+	projectsRead: vi.fn(),
+}))
+
+vi.mock('@/client/generated', async (importOriginal) => ({
+	...await importOriginal<typeof import('@/client/generated')>(),
+	...sdk,
 }))
 
 vi.mock('@/helpers/auth', () => ({
@@ -70,10 +80,6 @@ vi.mock('@/helpers/getBlobFromBlurHash', () => ({
 	getBlobFromBlurHash: vi.fn(),
 }))
 
-vi.mock('@/client/queries/projectBackgrounds', () => ({
-	refreshProjectBackground: vi.fn(),
-}))
-
 vi.mock('@/composables/useMenuActive', async () => {
 	const {ref} = await import('vue')
 	return {
@@ -102,61 +108,86 @@ function project(id: number): ProjectResponse {
 	} as unknown as ProjectResponse
 }
 
+function seedProjectWithBackground(id: number) {
+	queryClient.setQueryData(projectKeys.detail(id), {
+		...project(id),
+		background_information: {id: 8},
+		background_blur_hash: '',
+	})
+	sdk.projectsBackgroundGet.mockResolvedValue({data: new Blob(['image'])})
+	window.URL.createObjectURL = vi.fn().mockReturnValue('blob:new-background')
+}
+
 describe('base store identity reset', () => {
 	beforeEach(() => {
 		setActivePinia(createPinia())
 		auth.token = null
 		auth.post.mockReset()
+		queryClient.clear()
+		Object.values(sdk).forEach(mock => mock.mockReset())
 		window.URL.revokeObjectURL = vi.fn()
 	})
 
-	it('displays the background loaded through the shared reader', async () => {
+	it('displays the cached background of the current project', async () => {
 		const store = useBaseStore()
 		await store.appReady
-		vi.mocked(refreshProjectBackground).mockResolvedValue(new Blob(['image']))
-		window.URL.createObjectURL = vi.fn().mockReturnValue('blob:new-background')
+		seedProjectWithBackground(42)
 
-		await store.handleSetCurrentProject({
-			project: {...project(42), background_information: {id: 8}},
-		})
+		store.setCurrentProject(project(42))
 
-		expect(store.background).toBe('blob:new-background')
+		await vi.waitFor(() => expect(store.background).toBe('blob:new-background'))
+		expect(sdk.projectsBackgroundGet).toHaveBeenCalledWith({path: {project: 42}})
+		expect(sdk.projectsRead).not.toHaveBeenCalled()
+
+		store.setCurrentProject(null)
+
+		await vi.waitFor(() => expect(store.background).toBe(''))
+	})
+
+	it('keeps the current view id when the project is already current', async () => {
+		const store = useBaseStore()
+		await store.appReady
+
+		store.setCurrentProject(project(42), 5)
+		store.setCurrentProjectIfNotSet(project(42))
+
+		expect(store.currentProjectViewId).toBe(5)
+
+		store.setCurrentProjectIfNotSet(project(43))
+
+		expect(store.currentProjectId).toBe(43)
+		expect(store.currentProjectViewId).toBeUndefined()
 	})
 
 	it.each([
 		{label: 'user switch', next: {id: 2, type: AUTH_TYPES.USER}, resets: true},
 		{label: 'link share with the same numeric id', next: {id: 1, type: AUTH_TYPES.LINK_SHARE}, resets: true},
 		{label: 'same identity', next: {id: 1, type: AUTH_TYPES.USER}, resets: false},
-	])('$label resets the background, blur hash, current project and tasks flag: $resets', async ({next, resets}) => {
+	])('$label resets the background, current project and tasks flag: $resets', async ({next, resets}) => {
 		const authStore = useAuthStore()
 		const baseStore = useBaseStore()
 		await baseStore.appReady
 
 		authStore.setUser({id: 1, type: AUTH_TYPES.USER} as never, false)
+		seedProjectWithBackground(42)
 
 		baseStore.setCurrentProject(project(42))
-		baseStore.setBackground('blob:old-background')
-		baseStore.setBlurHash('blob:old-blur')
 		baseStore.setHasTasks(true)
 
 		expect(baseStore.currentProjectId).toBe(42)
+		await vi.waitFor(() => expect(baseStore.background).toBe('blob:new-background'))
 
 		authStore.setUser(next as never, false)
 
 		if (!resets) {
-			expect(baseStore.background).toBe('blob:old-background')
-			expect(baseStore.blurHash).toBe('blob:old-blur')
+			expect(baseStore.background).toBe('blob:new-background')
 			expect(baseStore.currentProjectId).toBe(42)
 			expect(baseStore.hasTasks).toBe(true)
-			expect(window.URL.revokeObjectURL).not.toHaveBeenCalled()
 			return
 		}
 
-		expect(baseStore.background).toBe('')
-		expect(baseStore.blurHash).toBe('')
 		expect(baseStore.currentProjectId).toBe(0)
 		expect(baseStore.hasTasks).toBe(false)
-		expect(window.URL.revokeObjectURL).toHaveBeenCalledWith('blob:old-background')
-		expect(window.URL.revokeObjectURL).toHaveBeenCalledWith('blob:old-blur')
+		await vi.waitFor(() => expect(baseStore.background).toBe(''))
 	})
 })
