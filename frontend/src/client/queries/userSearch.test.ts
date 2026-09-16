@@ -119,4 +119,18 @@ describe('useProjectUserSearch', () => {
 		await flushPromises()
 		expect(users.value).toEqual([])
 	})
+
+	it('does not show the previous project\'s users while the new project is loading', async () => {
+		const sam = {id: 1, username: 'sam'}
+		sdk.projectsUsersSearch.mockResolvedValueOnce({data: {items: [sam]}})
+		const projectId = ref(7)
+		const {users} = withQueryClient(() => useProjectUserSearch(projectId, '', true))
+		await flushPromises()
+		expect(users.value).toEqual([sam])
+
+		sdk.projectsUsersSearch.mockReturnValueOnce(new Promise(() => {}))
+		projectId.value = 8
+		await flushPromises()
+		expect(users.value).toEqual([])
+	})
 })
