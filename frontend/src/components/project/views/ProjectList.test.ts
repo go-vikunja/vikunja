@@ -27,6 +27,10 @@ vi.mock('@/composables/useTaskList', () => ({
 	}),
 }))
 
+vi.mock('@/composables/useIncludeSubprojects', () => ({
+	useIncludeSubprojects: () => ref(false),
+}))
+
 vi.mock('@/composables/useTaskDragToProject', () => ({
 	useTaskDragToProject: () => ({
 		handleTaskDropToProject: async () => ({moved: false, targetProjectId: null}),
