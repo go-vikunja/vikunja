@@ -10,7 +10,7 @@ vi.mock('@/message', () => ({success: vi.fn(), error: vi.fn()}))
 vi.mock('@/helpers/auth', () => ({getAuthSessionEpoch: () => session.epoch, getToken: () => null, getTokenIdentity: () => null}))
 vi.mock('@/helpers/fetcher', () => ({getApiV2BaseUrl: () => '/api/v2/'}))
 
-import {teamKeys, teamsQuery, updateTeamMutationOptions, deleteTeamMutationOptions, addTeamMemberMutationOptions, removeTeamMemberMutationOptions, toggleTeamMemberAdminMutationOptions} from './teams'
+import {teamKeys, teamsQuery, updateTeamMutationOptions, deleteTeamMutationOptions, addTeamMemberMutationOptions, removeTeamMemberMutationOptions, leaveTeamMutationOptions, toggleTeamMemberAdminMutationOptions} from './teams'
 
 let client: QueryClient
 beforeEach(() => {
@@ -20,10 +20,10 @@ beforeEach(() => {
 })
 
 describe('teams', () => {
-	it('passes list filters and loads every page', async () => {
-		sdk.teamsList.mockResolvedValueOnce({data: {items: [{id: 1}], total_pages: 2}}).mockResolvedValueOnce({data: {items: [{id: 2}], total_pages: 2}})
-		expect(await client.fetchQuery(teamsQuery('ops', true))).toEqual([{id: 1}, {id: 2}])
-		expect(sdk.teamsList).toHaveBeenLastCalledWith({query: {q: 'ops', include_public: true, page: 2, per_page: 1000}, signal: expect.any(AbortSignal)})
+	it('passes list filters to the page request', async () => {
+		sdk.teamsList.mockResolvedValue({data: {items: [{id: 1}], total_pages: 1}})
+		expect(await client.fetchQuery(teamsQuery('ops', true))).toEqual([{id: 1}])
+		expect(sdk.teamsList).toHaveBeenCalledWith({query: {q: 'ops', include_public: true, page: 1, per_page: 1000}, signal: expect.any(AbortSignal)})
 	})
 
 	it('updates mounted team caches without dropping read permissions', async () => {
@@ -53,6 +53,17 @@ describe('teams', () => {
 		sdk.teamsMembersRemove.mockResolvedValue({})
 		await client.getMutationCache().build(client, removeTeamMemberMutationOptions()).execute({teamId: 1, username: 'sam'})
 		expect(client.getQueryData<TeamReadBody>(teamKeys.detail(1))?.members).toEqual([])
+	})
+
+	it('drops the left team detail instead of refetching it', async () => {
+		client.setQueryData(teamKeys.list(), [{id: 1}])
+		client.setQueryData(teamKeys.detail(1), {id: 1, members: [{username: 'sam'}]})
+		sdk.teamsMembersRemove.mockResolvedValue({})
+		await client.getMutationCache().build(client, leaveTeamMutationOptions()).execute({teamId: 1, username: 'sam'})
+		expect(sdk.teamsMembersRemove).toHaveBeenCalledWith({path: {team: 1, user: 'sam'}})
+		expect(client.getQueryState(teamKeys.detail(1))).toBeUndefined()
+		expect(client.getQueryState(teamKeys.list())?.isInvalidated).toBe(true)
+		expect(sdk.teamsRead).not.toHaveBeenCalled()
 	})
 
 	it('invalidates the parent after adding a member without inventing a user', async () => {

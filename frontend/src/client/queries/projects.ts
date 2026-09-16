@@ -75,6 +75,7 @@ type DuplicateProjectInput = {
 }
 
 export const projectKeys = {
+	all: ['projects'] as const,
 	list: () => ['projects', 'list'] as const,
 	detail: (id: number) => ['projects', 'detail', id] as const,
 }
