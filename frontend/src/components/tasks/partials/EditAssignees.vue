@@ -27,7 +27,7 @@
 			<User
 				:avatar-size="24"
 				:show-username="true"
-				:user="typeof user === 'string' ? {username: user} : user"
+				:user="user"
 			/>
 		</template>
 	</Multiselect>

@@ -76,7 +76,6 @@
 						>
 							<template #searchResult="{option}">
 								<User
-									v-if="typeof option !== 'string'"
 									:avatar-size="24"
 									:show-username="true"
 									:user="option"

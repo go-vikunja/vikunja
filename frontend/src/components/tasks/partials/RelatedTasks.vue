@@ -52,8 +52,7 @@
 						@create="createAndRelateTask"
 					>
 						<template #searchResult="{option: task}">
-							<span 
-								v-if="typeof task !== 'string'"
+							<span
 								class="search-result"
 								:class="{'is-strikethrough': task.done}"
 							>
@@ -70,12 +69,6 @@
 								</span>
 								<span class="task-identifier">{{ getTaskIdentifier(task) }}</span>
 								{{ task.title }}
-							</span>
-							<span
-								v-else
-								class="search-result"
-							>
-								{{ task }}
 							</span>
 						</template>
 					</Multiselect>

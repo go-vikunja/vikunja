@@ -23,13 +23,13 @@
 								v-if="shareType === 'user'"
 								:avatar-size="24"
 								:show-username="true"
-								:user="typeof result === 'string' ? {username: result} : result"
+								:user="result"
 							/>
 							<span 
 								v-else
 								class="search-result"
 							>
-								{{ typeof result === 'string' ? result : result.name }}
+								{{ result.name }}
 							</span>
 						</template>
 					</Multiselect>
