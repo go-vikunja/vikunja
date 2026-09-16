@@ -76,6 +76,11 @@ func BuildNotificationsAtomFeed(s *xorm.Session, u *user.User) (string, error) {
 			continue
 		}
 
+		// Target is not persisted, but every row here was sent to u.
+		if assigned, is := typed.(*models.TaskAssignedNotification); is {
+			assigned.Target = u
+		}
+
 		titler, ok := typed.(notifications.Titler)
 		if !ok {
 			continue
