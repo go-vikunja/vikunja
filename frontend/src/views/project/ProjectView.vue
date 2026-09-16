@@ -39,14 +39,11 @@ watch(
 	() => [currentProject.value, props.viewId] as const,
 	([newCurrentProject, newViewId]) => {
 		if (!newCurrentProject) {
-			baseStore.handleSetCurrentProject({project: null})
+			baseStore.setCurrentProject(null)
 			return
 		}
 		
-		baseStore.handleSetCurrentProject({
-			project: newCurrentProject,
-			currentProjectViewId: newViewId,
-		})
+		baseStore.setCurrentProject(newCurrentProject, newViewId)
 	}, {
 		deep: true,
 		immediate: true,

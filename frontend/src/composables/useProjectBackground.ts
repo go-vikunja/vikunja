@@ -2,6 +2,7 @@ import {computed, toValue, type MaybeRefOrGetter} from 'vue'
 import {useQuery} from '@tanstack/vue-query'
 import {useObjectUrl} from '@vueuse/core'
 
+import {queryClient} from '@/client/queryClient'
 import type {ProjectResponse} from '@/client/queries/projects'
 import {projectBackgroundQuery} from '@/client/queries/projectBackgrounds'
 import {useBlurHashUrl} from '@/composables/useBlurHashUrl'
@@ -13,7 +14,7 @@ export function useProjectBackground(project: MaybeRefOrGetter<ProjectResponse |
 	const query = useQuery(computed(() => ({
 		...projectBackgroundQuery(projectId.value),
 		enabled: hasBackground.value,
-	})))
+	})), queryClient)
 
 	// Disabled queries keep serving cached data, so gate on hasBackground.
 	const background = useObjectUrl(computed(() => hasBackground.value ? query.data.value : undefined))

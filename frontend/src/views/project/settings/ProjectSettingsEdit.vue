@@ -148,7 +148,7 @@ async function save() {
 			project.value.parent_project_id = parentProject.value?.id ?? 0
 		}
 		await updateProject.mutateAsync(project.value)
-		await useBaseStore().handleSetCurrentProject({project: project.value})
+		useBaseStore().setCurrentProject(project.value)
 		router.back()
 	} finally {
 		isSaving.value = false

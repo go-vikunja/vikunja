@@ -23,7 +23,7 @@ useTitle(t('project.webhooks.title'))
 
 async function loadProject(projectId: number) {
 	const newProject = await ensureProject(projectId)
-	await useBaseStore().handleSetCurrentProject({project: newProject})
+	useBaseStore().setCurrentProject(newProject)
 	project.value = newProject
 	await loadWebhooks()
 }

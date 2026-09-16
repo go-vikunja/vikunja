@@ -4,7 +4,6 @@ import {beforeEach, describe, expect, it, vi} from 'vitest'
 import {VueQueryPlugin} from '@tanstack/vue-query'
 import {queryClient} from '@/client/queryClient'
 import {projectKeys} from '@/client/queries/projects'
-import * as projectQueries from '@/client/queries/projects'
 
 import type {Image} from '@/client/generated'
 import type {ProjectResponse} from '@/client/queries/projects'
@@ -12,7 +11,6 @@ import type {ProjectResponse} from '@/client/queries/projects'
 type SearchData = {pages: Image[][]}
 
 const state = vi.hoisted(() => ({
-	currentProjectId: 0,
 	routeParams: undefined as {projectId: string} | undefined,
 	project: undefined as Ref<ProjectResponse | undefined> | undefined,
 	projectIsError: undefined as Ref<boolean> | undefined,
@@ -22,7 +20,6 @@ const state = vi.hoisted(() => ({
 
 const refetchSearch = vi.hoisted(() => vi.fn())
 
-const handleSetCurrentProject = vi.hoisted(() => vi.fn())
 const routerBack = vi.hoisted(() => vi.fn())
 const success = vi.hoisted(() => vi.fn())
 const backgrounds = vi.hoisted(() => ({
@@ -61,15 +58,6 @@ vi.mock('@tanstack/vue-query', async importOriginal => {
 		}),
 	}
 })
-
-vi.mock('@/stores/base', () => ({
-	useBaseStore: () => ({
-		get currentProjectId() {
-			return state.currentProjectId
-		},
-		handleSetCurrentProject,
-	}),
-}))
 
 vi.mock('@/stores/config', () => ({
 	useConfigStore: () => ({enabledBackgroundProviders: ['unsplash', 'upload']}),
@@ -133,13 +121,11 @@ describe('ProjectSettingsBackground', () => {
 		vi.restoreAllMocks()
 		queryClient.clear()
 		queryClient.setQueryData(projectKeys.detail(7), project())
-		state.currentProjectId = 7
 		state.routeParams!.projectId = '7'
 		state.project = ref(project())
 		state.projectIsError = ref(false)
 		state.searchData = ref({pages: []})
 		state.searchIsError = ref(false)
-		handleSetCurrentProject.mockClear()
 		routerBack.mockClear()
 		refetchSearch.mockClear()
 		success.mockClear()
@@ -148,28 +134,15 @@ describe('ProjectSettingsBackground', () => {
 		backgrounds.uploadProjectBackground.mockReset()
 	})
 
-	it('applies the removed background to the base store and navigates back', async () => {
-		const updated = project({background_information: null, background_blur_hash: ''})
+	it('clears the cached background and navigates back after removing it', async () => {
 		backgrounds.deleteProjectBackground.mockResolvedValue({id: 7})
 		const wrapper = mountView()
 
 		await clickRemove(wrapper)
 
 		expect(backgrounds.deleteProjectBackground).toHaveBeenCalledWith(7)
-		expect(handleSetCurrentProject).toHaveBeenCalledWith({project: updated, forceUpdate: true})
-		expect(success).toHaveBeenCalled()
-		expect(routerBack).toHaveBeenCalled()
-	})
-
-	it('still reports success when another project is currently displayed', async () => {
-		state.currentProjectId = 99
-		backgrounds.deleteProjectBackground.mockResolvedValue(project({background_information: null}))
-		const wrapper = mountView()
-
-		await clickRemove(wrapper)
-
-		expect(backgrounds.deleteProjectBackground).toHaveBeenCalledWith(7)
-		expect(handleSetCurrentProject).not.toHaveBeenCalled()
+		expect(queryClient.getQueryData<ProjectResponse>(projectKeys.detail(7)))
+			.toMatchObject({background_information: null, background_blur_hash: ''})
 		expect(success).toHaveBeenCalled()
 		expect(routerBack).toHaveBeenCalled()
 	})
@@ -184,22 +157,7 @@ describe('ProjectSettingsBackground', () => {
 		await clickRemove(wrapper)
 
 		expect(backgrounds.deleteProjectBackground).toHaveBeenCalledWith(7)
-		expect(handleSetCurrentProject).not.toHaveBeenCalled()
 		expect(success).not.toHaveBeenCalled()
-		expect(routerBack).not.toHaveBeenCalled()
-	})
-
-	it('does not apply a background after the route changes during the project read', async () => {
-		backgrounds.deleteProjectBackground.mockResolvedValue({id: 7})
-		vi.spyOn(projectQueries, 'ensureProject').mockImplementationOnce(async () => {
-			state.routeParams!.projectId = '99'
-			return project({background_information: null, background_blur_hash: ''})
-		})
-		const wrapper = mountView()
-
-		await clickRemove(wrapper)
-
-		expect(handleSetCurrentProject).not.toHaveBeenCalled()
 		expect(routerBack).not.toHaveBeenCalled()
 	})
 

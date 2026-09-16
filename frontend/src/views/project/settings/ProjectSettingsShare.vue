@@ -59,7 +59,7 @@ const userIsAdmin = computed(() => project.value?.max_permission === PERMISSIONS
 
 async function loadProject(projectId: number) {
 	const newProject = await ensureProject(projectId)
-	await useBaseStore().handleSetCurrentProject({project: newProject})
+	useBaseStore().setCurrentProject(newProject)
 	project.value = newProject
 }
 

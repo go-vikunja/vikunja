@@ -1,8 +1,7 @@
-import {computed, onScopeDispose, readonly, ref, watch} from 'vue'
+import {computed, readonly, ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {defineStore, acceptHMRUpdate} from 'pinia'
-
-import {getBlobFromBlurHash} from '@/helpers/getBlobFromBlurHash'
+import {useQuery} from '@tanstack/vue-query'
 
 import {checkAndSetApiUrl, ERROR_NO_API_URL, InvalidApiUrlProvidedError, NoApiUrlProvidedError} from '@/helpers/checkAndSetApiUrl'
 import {isDesktopApp} from '@/helpers/desktopAuth'
@@ -11,8 +10,9 @@ import {useMenuActive} from '@/composables/useMenuActive'
 
 import {useAuthStore} from '@/stores/auth'
 import router from '@/router'
-import type {ProjectResponse} from '@/client/queries/projects'
-import {refreshProjectBackground} from '@/client/queries/projectBackgrounds'
+import {queryClient} from '@/client/queryClient'
+import {projectQuery, type ProjectResponse} from '@/client/queries/projects'
+import {useProjectBackground} from '@/composables/useProjectBackground'
 
 export const useBaseStore = defineStore('base', () => {
 	const authStore = useAuthStore()
@@ -26,8 +26,16 @@ export const useBaseStore = defineStore('base', () => {
 	// This is used to highlight the current project in menu for all project related views
 	const currentProjectId = ref(0)
 	const currentProjectViewId = ref<number | undefined>(undefined)
-	const background = ref('')
-	const blurHash = ref('')
+
+	// Pseudo projects (favorites, saved filters) have no detail endpoint and no background.
+	const currentProjectQuery = useQuery(computed(() => ({
+		...projectQuery(currentProjectId.value),
+		enabled: currentProjectId.value > 0,
+	})), queryClient)
+	const currentProject = computed(() => currentProjectQuery.data.value ?? null)
+	const {background: backgroundUrl, blurHashUrl} = useProjectBackground(currentProject)
+	const background = computed(() => backgroundUrl.value ?? '')
+	const blurHash = computed(() => blurHashUrl.value ?? '')
 
 	const hasTasks = ref(false)
 	const keyboardShortcutsActive = ref(false)
@@ -35,13 +43,16 @@ export const useBaseStore = defineStore('base', () => {
 	const logoVisible = ref(true)
 	const updateAvailable = ref(false)
 
-	function setCurrentProject(newCurrentProject: ProjectResponse | null, currentViewId?: number) {
-		if (currentProjectId.value !== (newCurrentProject?.id ?? 0)) {
-			setBackground('')
-			setBlurHash('')
+	function setCurrentProject(project: Pick<ProjectResponse, 'id'> | null, viewId?: number) {
+		currentProjectId.value = project?.id ?? 0
+		setCurrentProjectViewId(viewId)
+	}
+
+	// A task opened over its kanban board must keep that board's view id.
+	function setCurrentProjectIfNotSet(project: Pick<ProjectResponse, 'id'>) {
+		if (currentProjectId.value !== project.id) {
+			setCurrentProject(project)
 		}
-		currentProjectId.value = newCurrentProject?.id ?? 0
-		setCurrentProjectViewId(currentViewId)
 	}
 
 	function setCurrentProjectViewId(viewId?: number) {
@@ -60,24 +71,8 @@ export const useBaseStore = defineStore('base', () => {
 		quickActionsActive.value = value
 	}
 
-	function setBackground(newBackground: string) {
-		if (background.value && background.value !== newBackground) {
-			window.URL.revokeObjectURL(background.value)
-		}
-		background.value = newBackground
-	}
-
-	function setBlurHash(newBlurHash: string) {
-		if (blurHash.value && blurHash.value !== newBlurHash) {
-			window.URL.revokeObjectURL(blurHash.value)
-		}
-		blurHash.value = newBlurHash
-	}
-
 	// SPA logout keeps this store alive, so reset on identity change.
 	watch(() => authStore.identityKey, () => {
-		setBackground('')
-		setBlurHash('')
 		setCurrentProject(null)
 		setHasTasks(false)
 	}, {flush: 'sync'})
@@ -88,53 +83,6 @@ export const useBaseStore = defineStore('base', () => {
 	
 	function setUpdateAvailable(value: boolean) {
 		updateAvailable.value = value
-	}
-
-	async function handleSetCurrentProject(
-		{project, forceUpdate = false, currentProjectViewId: viewId = undefined}: {
-			project: ProjectResponse | null
-			forceUpdate?: boolean
-			currentProjectViewId?: number
-		},
-	) {
-		if (!project) {
-			setCurrentProject(null)
-			return
-		}
-		const previousProjectId = currentProjectId.value
-		setCurrentProject(project, viewId)
-
-		if (project.id !== previousProjectId || forceUpdate) {
-			if (project.background_information) {
-				try {
-					const preview = await getBlobFromBlurHash(project.background_blur_hash ?? '')
-					if (currentProjectId.value !== project.id) {
-						return
-					}
-					setBlurHash(preview ? window.URL.createObjectURL(preview) : '')
-					const image = await refreshProjectBackground(project.id)
-					if (currentProjectId.value === project.id) {
-						setBackground(window.URL.createObjectURL(image))
-					}
-				} catch (e) {
-					console.error('Error getting background image for project', project.id, e)
-				}
-			}
-		}
-
-		if (
-			typeof project.background_information === 'undefined' ||
-			project.background_information === null
-		) {
-			setBackground('')
-			setBlurHash('')
-		}
-	}
-
-	async function handleSetCurrentProjectIfNotSet(project: ProjectResponse) {
-		if (currentProjectId.value !== project.id) {
-			await handleSetCurrentProject({project})
-		}
 	}
 
 	async function hydrateConfig() {
@@ -184,11 +132,6 @@ export const useBaseStore = defineStore('base', () => {
 		ready.value = true
 	})
 
-	onScopeDispose(() => {
-		setBackground('')
-		setBlurHash('')
-	})
-
 	return {
 		error: readonly(error),
 		loading: readonly(loading),
@@ -207,17 +150,13 @@ export const useBaseStore = defineStore('base', () => {
 		updateAvailable: readonly(updateAvailable),
 
 		setCurrentProject,
+		setCurrentProjectIfNotSet,
 		setCurrentProjectViewId,
 		setHasTasks,
 		setKeyboardShortcutsActive,
 		setQuickActionsActive,
-		setBackground,
-		setBlurHash,
 		setLogoVisible,
 		setUpdateAvailable,
-
-		handleSetCurrentProject,
-		handleSetCurrentProjectIfNotSet,
 
 		...useMenuActive(),
 	}
