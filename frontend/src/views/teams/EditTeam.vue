@@ -36,7 +36,7 @@
 							<template #searchResult="{option: user}">
 								<User
 									:avatar-size="24"
-									:user="typeof user === 'string' ? {username: user} : user"
+									:user="user"
 									class="m-0"
 								/>
 							</template>

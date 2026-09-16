@@ -103,7 +103,7 @@
 						@search="findUsers"
 					>
 						<template #searchResult="{option}">
-							{{ typeof option === 'string' ? option : option.username }}
+							{{ option.username }}
 						</template>
 					</Multiselect>
 				</div>
