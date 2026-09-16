@@ -1,6 +1,6 @@
 import {queryOptions, useMutation, type QueryClient} from '@tanstack/vue-query'
 import {sharesCreate, sharesDelete, sharesList} from '@/client/generated'
-import type {LinkSharing, LinkSharingWritable, ProjectView} from '@/client/generated'
+import type {LinkSharing, LinkSharingWritable} from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
 import {fetchAllPages} from './fetchAllPages'
 import {normalizeSharePermission} from './projectShares'
@@ -53,14 +53,3 @@ export function deleteLinkShareMutationOptions() {
 
 export const useCreateLinkShareMutation = () => useMutation(createLinkShareMutationOptions())
 export const useDeleteLinkShareMutation = () => useMutation(deleteLinkShareMutationOptions())
-
-export function buildShareLink(frontendUrl: string, hash: string, viewId: number | null) {
-	return `${frontendUrl}share/${hash}/auth${viewId ? `?view=${viewId}` : ''}`
-}
-
-export function reconcileShareViews(shares: Pick<LinkSharing, 'id'>[], views: Pick<ProjectView, 'id'>[], selected: Record<number, number>): Record<number, number> {
-	const viewIds = views.flatMap(view => view.id === undefined ? [] : [view.id])
-	const firstView = viewIds[0]
-	if (firstView === undefined) return {}
-	return Object.fromEntries(shares.flatMap(share => share.id === undefined ? [] : [[share.id, viewIds.includes(selected[share.id]) ? selected[share.id] : firstView]]))
-}

@@ -7,7 +7,7 @@ vi.mock('@/message', () => ({success: vi.fn(), error: vi.fn()}))
 vi.mock('@/helpers/fetcher', () => ({getApiV2BaseUrl: () => '/api/v2/'}))
 vi.mock('@/helpers/auth', () => ({getAuthSessionEpoch: () => 1, getToken: () => null, getTokenIdentity: () => null}))
 
-import {linkShareKeys, linkSharesQuery, createLinkShareDraft, createLinkShareMutationOptions, deleteLinkShareMutationOptions, buildShareLink, reconcileShareViews} from './linkShares'
+import {linkShareKeys, linkSharesQuery, createLinkShareDraft, createLinkShareMutationOptions, deleteLinkShareMutationOptions} from './linkShares'
 
 let client: QueryClient
 beforeEach(() => {
@@ -43,15 +43,7 @@ describe('link shares', () => {
 		expect(client.getQueryData(linkShareKeys.list(7))).toEqual([{id: 2}])
 	})
 
-	it('provides draft defaults and view-specific share URLs', () => {
+	it('provides draft defaults', () => {
 		expect(createLinkShareDraft()).toEqual({name: '', password: '', permission: 0})
-		expect(buildShareLink('https://example.test/', 'hash', 2)).toBe('https://example.test/share/hash/auth?view=2')
-		expect(buildShareLink('https://example.test/', 'hash', null)).toBe('https://example.test/share/hash/auth')
-	})
-
-	it('preserves valid view selections through refetch and discards removed shares', () => {
-		expect(reconcileShareViews([{id: 1}, {id: 2}, {}], [{id: 10}, {id: 20}], {1: 20, 3: 10})).toEqual({1: 20, 2: 10})
-		expect(reconcileShareViews([{id: 1}], [{id: 10}], {1: 20})).toEqual({1: 10})
-		expect(reconcileShareViews([{id: 1}], [], {1: 20})).toEqual({})
 	})
 })
