@@ -31,6 +31,11 @@ function makeUser(overrides: Partial<IUser> = {}): IUser {
 }
 
 describe('getDisplayName', () => {
+	it('falls back when generated optional fields are absent', () => {
+		expect(getDisplayName({username: 'sam'})).toBe('sam')
+		expect(getDisplayName({})).toBe('')
+	})
+
 	it('should return the name when set', () => {
 		const user = makeUser({name: 'Jane Doe'})
 		expect(getDisplayName(user)).toBe('Jane Doe')

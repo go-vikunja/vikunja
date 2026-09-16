@@ -45,3 +45,10 @@ describe('TaskModel labels', () => {
 		expectGeneratedLabel(task.relatedTasks.subtask![0].labels[0])
 	})
 })
+
+describe('TaskModel generated assignees', () => {
+	it('keeps wire casing and string timestamps', () => {
+		const user = {id: 2, username: 'sam', bot_owner_id: 1, created: '2026-01-01T00:00:00Z'}
+		expect(new TaskModel({assignees: [user]}).assignees[0]).toEqual(user)
+	})
+})
