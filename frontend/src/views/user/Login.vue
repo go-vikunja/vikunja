@@ -242,11 +242,11 @@ async function submit() {
 			const actualUsername = authStore.info?.username
 			if (actualUsername === enteredClean) {
 				warning({
-					message: t('user.auth.atUsernameDeprecatedSimple', {username: actualUsername}),
+					message: t('user.auth.atUsernameNotAllowedSimple', {username: actualUsername}),
 				})
 			} else {
 				warning({
-					message: t('user.auth.atUsernameDeprecatedExternal', {username: actualUsername}),
+					message: t('user.auth.atUsernameNotAllowedExternal', {username: actualUsername}),
 				})
 			}
 		}
