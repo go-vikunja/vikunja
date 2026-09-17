@@ -4,7 +4,6 @@ import type {ITask} from '@/modelTypes/ITask'
 import AttachmentService from './attachment'
 
 import {colorFromHex} from '@/helpers/color/colorFromHex'
-import {SECONDS_A_DAY, SECONDS_A_HOUR, SECONDS_A_WEEK} from '@/constants/date'
 import {objectToSnakeCase} from '@/helpers/case'
 import {apiV2Url, AuthenticatedHTTPFactory} from '@/helpers/fetcher'
 import {invalidateCachedTask} from '@/helpers/taskCache'
@@ -14,31 +13,7 @@ import {translatedError} from '@/message'
 // Mirrors models.MaxTasksPerBulkCreation on the backend.
 const MAX_TASKS_PER_BULK_CREATION = 100
 
-/**
- * Tasks reaching processModel did not necessarily go through the TaskModel
- * constructor - related tasks nested in a task are plain api objects - so
- * repeatAfter is either the parsed object, raw seconds, or missing entirely.
- */
-function repeatAfterToSeconds(repeatAfter: ITask['repeatAfter'] | undefined): number {
-	if (typeof repeatAfter === 'number') {
-		return repeatAfter
-	}
-
-	if (!repeatAfter?.amount) {
-		return 0
-	}
-
-	switch (repeatAfter.type) {
-		case 'hours':
-			return repeatAfter.amount * SECONDS_A_HOUR
-		case 'days':
-			return repeatAfter.amount * SECONDS_A_DAY
-		case 'weeks':
-			return repeatAfter.amount * SECONDS_A_WEEK
-		default:
-			return 0
-	}
-}
+import {repeatAfterToSeconds} from '@/helpers/task'
 
 export default class TaskService extends AbstractService<ITask> {
 	constructor() {

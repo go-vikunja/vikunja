@@ -12,7 +12,6 @@ import {TASK_REPEAT_MODES, type IRepeatMode} from '@/types/IRepeatMode'
 import type {Label, User} from '@/client/generated'
 
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
-import {secondsToPeriod} from '@/helpers/time/period'
 import {objectToSnakeCase} from '@/helpers/case'
 
 import AbstractModel from './abstractModel'
@@ -23,38 +22,8 @@ import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
 import TaskReminderModel from '@/models/taskReminder'
 import TaskCommentModel from '@/models/taskComment.ts'
 
-export function	getHexColor(hexColor: string): string | undefined {
-	if (hexColor === '' || hexColor === '#') {
-		return undefined
-	}
-
-	return hexColor
-}
-
-/**
- * Parses `repeatAfterSeconds` into a usable js object.
- */
-export function parseRepeatAfter(repeatAfterSeconds: number): IRepeatAfter {
-	
-	const period = secondsToPeriod(repeatAfterSeconds)
-	
-	return {
-		type: period.unit,
-		amount: period.amount,
-	}
-}
-
-export function getTaskIdentifier(task: ITask | null | undefined): string {
-	if (task === null || typeof task === 'undefined') {
-		return ''
-	}
-	
-	if (task.identifier === '') {
-		return `#${task.index}`
-	}
-
-	return task.identifier
-}
+import {getHexColor, getTaskIdentifier, parseRepeatAfter} from '@/helpers/task'
+export {getHexColor, getTaskIdentifier, parseRepeatAfter} from '@/helpers/task'
 
 export default class TaskModel extends AbstractModel<ITask> implements ITask {
 	id = 0
