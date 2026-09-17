@@ -99,6 +99,12 @@ describe('contextMutationOptions optimistic updates', () => {
 		expect(onSuccess).toHaveBeenCalledWith('done', 1, client, 'snapshot')
 	})
 
+	it('builds the fenced query keys from the mutation client', async () => {
+		const queryKeys = vi.fn(() => [listKey])
+		await execute({mutationFn: async () => 'done', optimistic: {queryKeys, update: vi.fn()}})
+		expect(queryKeys).toHaveBeenCalledWith(1, client)
+	})
+
 	it('rolls back cached queries after a failure in the same context', async () => {
 		const cause = new Error('denied')
 		const onSettled = vi.fn(async () => {})
