@@ -1,9 +1,9 @@
-import {shallowMount} from '@vue/test-utils'
+import {shallowMount, flushPromises} from '@vue/test-utils'
 import {describe, expect, it, vi, beforeEach} from 'vitest'
 import draggable from 'zhyswan-vuedraggable'
 import {QueryClient, VueQueryPlugin} from '@tanstack/vue-query'
 
-const updateBucket = vi.fn()
+const {updateBucket, loadBoard} = vi.hoisted(() => ({updateBucket: vi.fn(), loadBoard: vi.fn()}))
 
 const buckets = [
 	{id: 1, title: 'First', position: 100, tasks: [], count: 0, limit: 0},
@@ -11,18 +11,11 @@ const buckets = [
 	{id: 3, title: 'Third', position: 300, tasks: [], count: 0, limit: 0},
 ]
 
-vi.mock('@/stores/kanban', () => ({
-	useKanbanStore: () => ({
-		buckets,
-		isLoading: false,
-		updateBucket,
-		getBucketById: (id: number) => buckets.find(b => b.id === id),
-		setBucketById: vi.fn(),
-		loadBucketsForProject: vi.fn(),
-		loadNextTasksForBucket: vi.fn(),
-	}),
+vi.mock('@/client/generated', async importOriginal => ({...await importOriginal<object>(),
+ projectViewBucketsTasksList: loadBoard,
+ bucketsUpdate: updateBucket,
 }))
-
+vi.mock('@/message', () => ({error: vi.fn(), success: vi.fn()}))
 vi.mock('@/composables/useCurrentProject', () => ({
 	useCurrentProject: () => ({
 		currentProject: {
@@ -43,8 +36,8 @@ vi.mock('@/composables/useTaskDragToProject', () => ({
 	}),
 }))
 
-vi.mock('@/stores/tasks', () => ({
-	useTaskStore: () => ({isLoading: false, setDraggedTask: vi.fn()}),
+vi.mock('@/composables/useTaskActions', () => ({
+	useTaskActions: () => ({isLoading: false, setDraggedTask: vi.fn()}),
 }))
 
 vi.mock('@/stores/auth', () => ({
@@ -74,8 +67,8 @@ vi.mock('vue-i18n', async importOriginal => ({
 
 import ProjectKanban from './ProjectKanban.vue'
 
-function mountKanban() {
-	return shallowMount(ProjectKanban, {
+async function mountKanban() {
+	const wrapper = shallowMount(ProjectKanban, {
 		props: {
 			isLoadingProject: false,
 			projectId: 1,
@@ -89,6 +82,9 @@ function mountKanban() {
 			},
 		},
 	})
+
+ await flushPromises()
+ return wrapper
 }
 
 function dragEndEvent(bucketId: string) {
@@ -99,21 +95,27 @@ function dragEndEvent(bucketId: string) {
 }
 
 describe('ProjectKanban', () => {
-	beforeEach(() => updateBucket.mockClear())
+	beforeEach(() => {
+		updateBucket.mockClear()
+		updateBucket.mockResolvedValue({data: {id: 2, position: 200}})
+		loadBoard.mockClear()
+		loadBoard.mockResolvedValue({data: {items: buckets}})
+	})
 
-	it('saves the position of the dropped bucket', () => {
-		const wrapper = mountKanban()
+	it('saves the position of the dropped bucket', async () => {
+		const wrapper = await mountKanban()
 
 		wrapper.findComponent(draggable).vm.$emit('end', dragEndEvent('2'))
+ await flushPromises()
 
 		expect(updateBucket).toHaveBeenCalledWith(expect.objectContaining({
-			id: 2,
-			position: 200,
+			path: {project: 1, view: 10, bucket: 2},
+			body: expect.objectContaining({position: 200}),
 		}))
 	})
 
-	it('does nothing when the dropped bucket is gone', () => {
-		const wrapper = mountKanban()
+	it('does nothing when the dropped bucket is gone', async () => {
+		const wrapper = await mountKanban()
 
 		wrapper.findComponent(draggable).vm.$emit('end', dragEndEvent('42'))
 

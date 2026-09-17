@@ -1,6 +1,6 @@
 import {describe, it, expect, vi, afterEach} from 'vitest'
 import {nextTick} from 'vue'
-import {mount, type VueWrapper} from '@vue/test-utils'
+import {mount, flushPromises, type VueWrapper} from '@vue/test-utils'
 import Attachments from './Attachments.vue'
 import Modal from '@/components/misc/Modal.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
@@ -12,10 +12,11 @@ vi.mock('@/services/attachment', () => ({
 	default: class {
 		loading = false
 		uploadProgress = 0
+ getAll = async () => [attachment]
 	},
 }))
 
-vi.mock('@/stores/tasks', () => ({useTaskStore: () => ({isLoading: false})}))
+vi.mock('@/composables/useTaskActions', () => ({useTaskActions: () => ({isLoading: false})}))
 
 vi.mock('vue-i18n', async importOriginal => ({
 	...(await importOriginal<typeof import('vue-i18n')>()),
@@ -72,6 +73,7 @@ afterEach(() => {
 describe('Attachments delete modal', () => {
 	it('does not render the attachment name after the modal was closed', async () => {
 		const wrapper = mountAttachments()
+ await flushPromises()
 
 		await wrapper.find('.attachment-actions [aria-label="task.attachment.deleteTooltip"]').trigger('click')
 		await nextTick()

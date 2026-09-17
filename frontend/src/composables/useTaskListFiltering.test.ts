@@ -7,19 +7,19 @@ describe('shouldShowTaskInListView', () => {
 		const parentTask: Partial<ITask> = {
 			id: 1,
 			title: 'Parent Task',
-			projectId: 100,
+			project_id: 100,
 			related_tasks: {},
 		}
 
 		const subtask: Partial<ITask> = {
 			id: 2,
 			title: 'Subtask',
-			projectId: 100,
+			project_id: 100,
 			related_tasks: {
 				parenttask: [{
 					id: 1,
 					title: 'Parent Task',
-					projectId: 100,
+					project_id: 100,
 				} as ITask],
 			},
 		}
@@ -34,18 +34,18 @@ describe('shouldShowTaskInListView', () => {
 		const parentTask: Partial<ITask> = {
 			id: 1,
 			title: 'Parent Task in Project A',
-			projectId: 100,
+			project_id: 100,
 		}
 
 		const subtask: Partial<ITask> = {
 			id: 2,
 			title: 'Subtask in Project B',
-			projectId: 200,
+			project_id: 200,
 			related_tasks: {
 				parenttask: [{
 					id: 1,
 					title: 'Parent Task in Project A',
-					projectId: 100,
+					project_id: 100,
 				} as ITask],
 			},
 		}
@@ -60,7 +60,7 @@ describe('shouldShowTaskInListView', () => {
 		const task: Partial<ITask> = {
 			id: 1,
 			title: 'Regular Task',
-			projectId: 100,
+			project_id: 100,
 			related_tasks: {},
 		}
 
@@ -73,7 +73,7 @@ describe('shouldShowTaskInListView', () => {
 		const task: Partial<ITask> = {
 			id: 1,
 			title: 'Regular Task',
-			projectId: 100,
+			project_id: 100,
 		}
 
 		const allTasks = [task] as ITask[]
@@ -85,7 +85,7 @@ describe('shouldShowTaskInListView', () => {
 		const task: Partial<ITask> = {
 			id: 1,
 			title: 'Regular Task',
-			projectId: 100,
+			project_id: 100,
 			related_tasks: {
 				parenttask: [],
 			},
@@ -100,25 +100,25 @@ describe('shouldShowTaskInListView', () => {
 		const grandparent: Partial<ITask> = {
 			id: 1,
 			title: 'Grandparent',
-			projectId: 100,
+			project_id: 100,
 			related_tasks: {},
 		}
 
 		const parent: Partial<ITask> = {
 			id: 2,
 			title: 'Parent',
-			projectId: 100,
+			project_id: 100,
 			related_tasks: {
-				parenttask: [{id: 1, title: 'Grandparent', projectId: 100} as ITask],
+				parenttask: [{id: 1, title: 'Grandparent', project_id: 100} as ITask],
 			},
 		}
 
 		const child: Partial<ITask> = {
 			id: 3,
 			title: 'Child',
-			projectId: 100,
+			project_id: 100,
 			related_tasks: {
-				parenttask: [{id: 2, title: 'Parent', projectId: 100} as ITask],
+				parenttask: [{id: 2, title: 'Parent', project_id: 100} as ITask],
 			},
 		}
 
@@ -133,11 +133,11 @@ describe('shouldShowTaskInListView', () => {
 		const subtask: Partial<ITask> = {
 			id: 3,
 			title: 'Subtask with multiple parents',
-			projectId: 300,
+			project_id: 300,
 			related_tasks: {
 				parenttask: [
-					{id: 1, title: 'Parent 1', projectId: 100} as ITask,
-					{id: 2, title: 'Parent 2', projectId: 200} as ITask,
+					{id: 1, title: 'Parent 1', project_id: 100} as ITask,
+					{id: 2, title: 'Parent 2', project_id: 200} as ITask,
 				],
 			},
 		}
@@ -152,23 +152,23 @@ describe('shouldShowTaskInListView', () => {
 		const parent1: Partial<ITask> = {
 			id: 1,
 			title: 'Parent 1',
-			projectId: 100,
+			project_id: 100,
 		}
 
 		const parent2: Partial<ITask> = {
 			id: 2,
 			title: 'Parent 2',
-			projectId: 100,
+			project_id: 100,
 		}
 
 		const subtask: Partial<ITask> = {
 			id: 3,
 			title: 'Subtask with multiple parents',
-			projectId: 100,
+			project_id: 100,
 			related_tasks: {
 				parenttask: [
-					{id: 1, title: 'Parent 1', projectId: 100} as ITask,
-					{id: 2, title: 'Parent 2', projectId: 100} as ITask,
+					{id: 1, title: 'Parent 1', project_id: 100} as ITask,
+					{id: 2, title: 'Parent 2', project_id: 100} as ITask,
 				],
 			},
 		}
@@ -182,7 +182,7 @@ describe('shouldShowTaskInListView', () => {
 		const parentTask: Partial<ITask> = {
 			id: 1,
 			title: 'Parent Task matching the filter',
-			projectId: 100,
+			project_id: 100,
 			related_tasks: {},
 		}
 
@@ -190,12 +190,12 @@ describe('shouldShowTaskInListView', () => {
 		const subtask: Partial<ITask> = {
 			id: 2,
 			title: 'Subtask not matching the filter',
-			projectId: 100,
+			project_id: 100,
 			related_tasks: {
 				parenttask: [{
 					id: 1,
 					title: 'Parent Task matching the filter',
-					projectId: 100,
+					project_id: 100,
 				} as ITask],
 			},
 		}
@@ -210,12 +210,12 @@ describe('shouldShowTaskInListView', () => {
 		const subtask: Partial<ITask> = {
 			id: 2,
 			title: 'Subtask matching filter',
-			projectId: 100,
+			project_id: 100,
 			related_tasks: {
 				parenttask: [{
 					id: 1,
 					title: 'Parent Task',
-					projectId: 100,
+					project_id: 100,
 				} as ITask],
 			},
 		}
