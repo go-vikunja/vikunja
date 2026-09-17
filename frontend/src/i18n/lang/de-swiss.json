@@ -322,6 +322,50 @@
 				},
 				"deleteSuccess": "Sitzung erfolgreich widerrufen. Es kann bis zu 10 Minuten dauern, bis die Sitzung vollständig abläuft.",
 				"noOtherSessions": "Keine anderen aktiven Sitzungen."
+			},
+			"mcp": {
+				"intro": "Verbinde einen KI-Assistenten mit deinen Aufgaben, Projekten und Labels über das Model Context Protocol (MCP).",
+				"more": "Weitere Informationen zu MCP in Vikunja",
+				"endpoint": "MCP-Endpunkt",
+				"tokens": "MCP-Tokens",
+				"manageTokens": "Alle API-Tokens verwalten",
+				"created": "Dein MCP-Token ist bereit. Wähle unten deinen Client aus, um ihn zu verbinden.",
+				"client": "Welchen Client benutzt du?",
+				"chooseClient": "Client auswählen",
+				"clientHelp": "{client}-Einrichtungsanleitung",
+				"typedPreset": "Allgemeine Tools lesen + schreiben",
+				"clients": {
+					"claudeCode": {
+						"command": "Führe diesen Befehl in einem Terminal aus: {value}",
+						"verify": "Starte eine Claude-Code-Session und führe /mcp aus, um die Verbindung zu überprüfen."
+					},
+					"codex": {
+						"environment": "Setze das Token in deiner Shell-Umgebung: {value}",
+						"command": "Füge den MCP-Server hinzu: {value}",
+						"config": "Alternativ kannst du {value} in die Umgebungsvariable in ~/.codex/config.toml einfügen.",
+						"note": "Starte Codex in der Shell, in der du VIKUNJA_MCP_TOKEN gesetzt hast. Setze es in jeder neuen Shell erneut oder speichere es sicher in deiner Shell-Umgebung."
+					},
+					"claudeDesktop": {
+						"open": "Öffne „Anpassen“ → „Connectors“ → „Benutzerdefinierten Connector hinzufügen“. Bei Team oder Enterprise fügt ein Owner ihn unter „Organisationseinstellungen“ → „Connectors“ hinzu.",
+						"url": "Benenne den Connector \"Vikunja\" und gib diese URL ein: {value}",
+						"auth": "Setze die Authentifizierung auf „Keine Anmeldung“.",
+						"header": "Wähle unter Request Headers „authorization“ aus und füge diesen vollständigen Wert ein, einschließlich Bearer und des Leerzeichens, und füge dann den Connector hinzu: {value}",
+						"beta": "Anfrage-Header sind für einen begrenzten Kreis von Organisationen in der Beta. Wenn dieser Abschnitt fehlt, kannst du Vikunja noch nicht mit Claude verbinden."
+					},
+					"mistral": {
+						"open": "Öffne in der Seitenleiste links Kontext → Konnektoren → Connector hinzufügen → Benutzerdefinierten Connector hinzufügen.",
+						"url": "Benenne den Connector „Vikunja“, gib diese URL ein und wähle „Connect“: {value}",
+						"token": "Wähle die HTTP-Bearer-Authentifizierung aus und füge dieses Token ein: {value}"
+					},
+					"chatgpt": {
+						"unavailable": "ChatGPT benötigt OAuth, um eine Verbindung zu Vikunja herzustellen. MCP OAuth wird noch nicht unterstützt, daher kann dieses Token nicht in ChatGPT verwendet werden."
+					},
+					"other": {
+						"title": "Andere",
+						"url": "Verwende einen streamfähigen HTTP-Transport mit diesem Endpunkt: {value}",
+						"header": "Sende diesen Authorization-Header mit jeder Anfrage: {value}"
+					}
+				}
 			}
 		},
 		"deletion": {
@@ -705,6 +749,15 @@
 		"importUpload": "Um Daten von {name} in Vikunja zu importieren, klicke auf die Schaltfläche unten, um eine Datei auszuwählen.",
 		"upload": "Datei hochladen",
 		"migrationStartedWillReciveEmail": "Vikunja wird nun deine Listen/Projekte, Aufgaben, Notizen, Erinnerungen und Dateien von {service} importieren. Da dies eine Weile dauern wird, senden wir dir eine E-Mail, sobald der Import abgeschlossen ist. Du kannst dieses Fenster jetzt schließen.",
+		"migrationFinished": "Der Import von {service} ist abgeschlossen. Alles, was importiert wurde, ist jetzt in deinen Projekten verfügbar.",
+		"migrationFailed": "Der Import von {service} ist fehlgeschlagen: {reason}",
+		"failure": {
+			"reported": "Der Import von {service} ist fehlgeschlagen. Wir wurden über den Fehler benachrichtigt und arbeiten an einer Behebung.",
+			"interrupted": "Der Import von {service} wurde unterbrochen, bevor er abgeschlossen werden konnte. Bitte versuche es erneut.",
+			"credentials": "Die Anmeldedaten für {service} konnten nicht überprüft werden. Bitte verbinde es erneut.",
+			"queue": "Der Import aus {service} konnte nicht in die Warteschlange eingereiht werden. Bitte starte ihn erneut.",
+			"upload": "Die hochgeladene Datei konnte nicht gespeichert werden. Bitte lade sie erneut hoch."
+		},
 		"migrationInProgress": "Ein Import wird gerade durchgeführt. Bitte warte, bis dieser abgeschlossen ist.",
 		"credentials": {
 			"description": "Gib die Adresse deiner {name}-Instanz ein und lege fest, wie Vikunja sich anmelden soll. Vikunja importiert alle Projekte und Boards, auf die du Zugriff hast; die Anmeldedaten werden nur für diesen Import verwendet und nicht gespeichert.",
@@ -1498,6 +1551,8 @@
 		"1035": "Es gibt keine ausstehende E-Mail-Änderung, die bestätigt werden muss.",
 		"1036": "Bitte warte eine Minute, bevor du eine weitere Bestätigungs-E-Mail anforderst.",
 		"1038": "Der vom OIDC-Anbieter festgelegte benutzerdefinierte Scope ist falsch. Bitte stelle sicher, dass der OpenID-Anbieter die Daten für deinen Scope korrekt setzt. Prüfe insbesondere, ob eine oidcID festgelegt wurde.",
+		"1039": "Dieser TOTP-Zugangscode wurde bereits verwendet. Bitte warte auf das nächste Passwort.",
+		"1040": "Dieses Konto ist aufgrund zu vieler fehlgeschlagener Anmeldeversuche gesperrt. Du kannst dein Passwort zurücksetzen, um es zu entsperren.",
 		"2001": "ID chann nid leer oder 0 sii.",
 		"2002": "Ebbis vo de Ahfragedate isch ungültig.",
 		"2003": "Die Zeitzone '{timezone}' ist ungültig.",
@@ -1571,6 +1626,7 @@
 		"14011": "Die angegebene Datei ist keine gültige Zip-Datei.",
 		"14012": "Die angegebene Datei enthält keine Daten.",
 		"14013": "Der Export wurde mit einer Vikunja-Version erstellt, die zu alt für den Import ist. Bitte erstelle einen neuen Export mit einer aktuelleren Version.",
+		"14016": "Die Importkonfiguration konnte nicht geparst werden. Bitte stellen Sie sicher, dass es sich um ein gültiges JSON-Objekt handelt.",
 		"14201": "Planka hat die angegebenen Anmeldedaten abgelehnt. Überprüfe die URL und den API-Schlüssel oder den Benutzernamen und das Passwort.",
 		"14202": "Das Planka-Konto erfordert einen zusätzlichen Anmeldeschritt (Zwei-Faktor-Code oder das Akzeptieren der Nutzungsbedingungen). Melde dich einmal im Browser bei Planka an oder verwende stattdessen einen API-Schlüssel anstelle von Benutzername und Passwort.",
 		"14203": "Eine Planka-URL und entweder ein API-Schlüssel oder Benutzername und Passwort sind erforderlich.",
