@@ -9,10 +9,10 @@
 				scope="global"
 			>
 				<span>{{ formatDisplayDate(task.created) }}</span>
-				{{ getDisplayName(task.createdBy) }}
+				{{ getDisplayName(task.created_by) }}
 			</i18n-t>
 		</time>
-		<template v-if="+new Date(task.created) !== +new Date(task.updated)">
+		<template v-if="+new Date(task.created ?? 0) !== +new Date(task.updated ?? 0)">
 			<br>
 			<time
 				v-tooltip="updatedFormatted"

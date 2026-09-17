@@ -102,7 +102,7 @@ import {error} from '@/message'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 import type {IRepeatAfter} from '@/types/IRepeatAfter'
 import type {Task as ITask} from '@/client/generated'
-import {createTaskDraft} from '@/helpers/task'
+import {createTaskDraft, parseRepeatAfter, repeatAfterToSeconds} from '@/helpers/task'
 
 const props = withDefaults(defineProps<{
 	modelValue: ITask | undefined,
@@ -126,9 +126,9 @@ const repeatAfter = reactive({
 watch(
 	() => props.modelValue,
 	(value: ITask) => {
-		task.value = value
+		task.value = {...value}
 		if (typeof value.repeat_after !== 'undefined') {
-			Object.assign(repeatAfter, value.repeat_after)
+			Object.assign(repeatAfter, parseRepeatAfter(value.repeat_after))
 		}
 	},
 	{
@@ -150,7 +150,7 @@ function updateData() {
 		return
 	}
 
-	Object.assign(task.value.repeat_after, repeatAfter)
+	task.value.repeat_after = repeatAfterToSeconds(repeatAfter as IRepeatAfter)
 	emit('update:modelValue', task.value)
 }
 

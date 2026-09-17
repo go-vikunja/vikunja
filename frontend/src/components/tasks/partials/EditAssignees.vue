@@ -43,7 +43,7 @@ import Multiselect from '@/components/input/Multiselect.vue'
 import {useProjectUserSearch} from '@/composables/useUserSearch'
 import {success} from '@/message'
 import {useAuthStore} from '@/stores/auth'
-import {useTaskStore} from '@/stores/tasks'
+import {useTaskActions} from '@/composables/useTaskActions'
 
 import type {User as IUser} from '@/client/generated'
 import {getDisplayName, type UserWithId} from '@/models/user'
@@ -63,7 +63,7 @@ const emit = defineEmits<{
 }>()
 
 const authStore = useAuthStore()
-const taskStore = useTaskStore()
+const taskStore = useTaskActions()
 const {t} = useI18n({useScope: 'global'})
 
 const userSearch = ref('')

@@ -32,6 +32,11 @@ export function assertClientRequestContext(context: ClientRequestContext): void 
 	}
 }
 
+// Fence aborts are internal: readers drop them instead of reporting them to the user.
+export function isRequestContextAbort(cause: unknown): boolean {
+	return (cause as {name?: string} | null)?.name === 'AbortError'
+}
+
 function canonicalApiBaseUrl(apiBaseUrl: unknown): string {
 	if (typeof apiBaseUrl !== 'string') {
 		throw new DOMException('Invalid client API URL', 'AbortError')
@@ -52,7 +57,7 @@ function canonicalApiBaseUrl(apiBaseUrl: unknown): string {
 		}
 		return normalized.toString()
 	} catch (error) {
-		if (error instanceof DOMException && error.name === 'AbortError') {
+		if (isRequestContextAbort(error)) {
 			throw error
 		}
 		throw new DOMException('Invalid client API URL', 'AbortError')

@@ -41,7 +41,7 @@ const props = defineProps<{
 	task: ITask
 }>()
 
-const checklist = computed(() => getChecklistStatistics(props.task.description))
+const checklist = computed(() => getChecklistStatistics((props.task.description ?? '')))
 
 const checklistCircleDone = computed(() => {
 	const r = 5

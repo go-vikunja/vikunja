@@ -5,7 +5,7 @@
 	>
 		<div
 			ref="taskRoot"
-			:class="{'is-loading': taskService.loading}"
+			:class="{'is-loading': taskStore.isLoading}"
 			class="task loader-container single-task"
 			tabindex="-1"
 			:data-is-overdue="isOverdue || undefined"
@@ -17,7 +17,7 @@
 				class="is-inline-flex is-align-items-center"
 			>
 				<FancyCheckbox
-					v-model="task.done"
+					:model-value="task.done ?? false"
 					:disabled="isArchived || disabled || !canMarkAsDone"
 					:aria-label="$t('task.detail.markAsDone', {task: task.title})"
 					@update:modelValue="markAsDone"
@@ -54,7 +54,7 @@
 					/>
 	
 					<PriorityLabel
-						:priority="task.priority"
+						:priority="task.priority ?? 0"
 						:done="task.done"
 						class="pis-2 mie-1"
 					/>
@@ -71,14 +71,14 @@
 				</span>
 
 				<Labels
-					v-if="task.labels.length > 0"
+					v-if="(task.labels?.length ?? 0) > 0"
 					class="labels mis-2 mie-1"
-					:labels="task.labels"
+					:labels="task.labels ?? []"
 				/>
 
 				<AssigneeList
-					v-if="task.assignees.length > 0"
-					:assignees="task.assignees"
+					v-if="(task.assignees?.length ?? 0) > 0"
+					:assignees="task.assignees ?? []"
 					:avatar-size="25"
 					class="mis-1"
 					:inline="true"
@@ -110,22 +110,22 @@
 					<template #content="{isOpen}">
 						<DeferTask
 							v-if="isOpen"
-							v-model="task"
+							:model-value="task"
 						/>
 					</template>
 				</Popup>
 
 				<span>
 					<span
-						v-if="task.attachments.length > 0"
+						v-if="(task.attachments?.length ?? 0) > 0"
 						class="project-task-icon"
 						role="img"
-						:aria-label="$t('task.attributes.attachment', task.attachments.length)"
+						:aria-label="$t('task.attributes.attachment', (task.attachments?.length ?? 0))"
 					>
 						<Icon icon="paperclip" />
 					</span>
 					<span
-						v-if="!isEditorContentEmpty(task.description)"
+						v-if="!isEditorContentEmpty((task.description ?? ''))"
 						class="project-task-icon is-mirrored-rtl"
 					>
 						<Icon icon="align-left" />
@@ -146,8 +146,8 @@
 			</div>
 
 			<ProgressBar
-				v-if="task.percent_done > 0"
-				:value="task.percent_done * 100"
+				v-if="(task.percent_done ?? 0) > 0"
+				:value="(task.percent_done ?? 0) * 100"
 				is-small
 			/>
 
@@ -172,7 +172,9 @@
 				class="favorite"
 				@click.stop="toggleFavorite"
 			>
-				<span class="is-sr-only">{{ task.is_favorite ? $t('task.detail.actions.unfavorite') : $t('task.detail.actions.favorite') }}</span>
+				<span class="is-sr-only">{{
+					task.is_favorite ? $t('task.detail.actions.unfavorite') : $t('task.detail.actions.favorite')
+				}}</span>
 				<Icon
 					v-if="task.is_favorite"
 					icon="star"
@@ -189,7 +191,7 @@
 				<template v-if="getTaskById(subtask.id)">
 					<single-task-in-project
 						:key="subtask.id"
-						:the-task="getTaskById(subtask.id)"
+						:the-task="getTaskById(subtask.id)!"
 						:disabled="disabled"
 						:can-mark-as-done="canMarkAsDone"
 						:all-tasks="allTasks"
@@ -202,10 +204,10 @@
 </template>
 
 <script setup lang="ts">
-import {ref, watch, shallowReactive, onMounted, computed} from 'vue'
+import {ref, watch, onMounted, computed} from 'vue'
 import {useI18n} from 'vue-i18n'
 
-import {createTaskDraft, getHexColor} from '@/helpers/task'
+import {getHexColor} from '@/helpers/task'
 import type {Task as ITask} from '@/client/generated'
 
 import PriorityLabel from '@/components/tasks/partials/PriorityLabel.vue'
@@ -221,14 +223,13 @@ import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import ColorBubble from '@/components/misc/ColorBubble.vue'
 import Popup from '@/components/misc/Popup.vue'
 
-import TaskService from '@/services/task'
 
 import {formatDisplayDate, formatISO, formatDateLong} from '@/helpers/time/formatDate'
 import {success} from '@/message'
 
 import {useProjects} from '@/composables/useProjects'
 import {useCurrentProject} from '@/composables/useCurrentProject'
-import {useTaskStore} from '@/stores/tasks'
+import {useTaskActions} from '@/composables/useTaskActions'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 import {useIntervalFn} from '@vueuse/core'
 import {playPopSound} from '@/helpers/playPop'
@@ -255,9 +256,9 @@ const emit = defineEmits<{
 	'taskUpdated': [task: ITask],
 }>()
 
-function getTaskById(taskId: number): ITask | undefined {
+function getTaskById(taskId: number | undefined): ITask | undefined {
 	if (typeof props.allTasks === 'undefined' || props.allTasks.length === 0) {
-		return null
+		return undefined
 	}
 
 	return props.allTasks.find(t => t.id === taskId)
@@ -265,29 +266,19 @@ function getTaskById(taskId: number): ITask | undefined {
 
 const {t} = useI18n({useScope: 'global'})
 
-const taskService = shallowReactive(new TaskService())
-const task = ref<ITask>(createTaskDraft())
+const task = computed(() => props.theTask)
 
-const isRepeating = computed(() => task.value.repeat_after.amount > 0 || (task.value.repeat_after.amount === 0 && task.value.repeat_mode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH))
-
-watch(
-	() => props.theTask,
-	newVal => {
-		task.value = newVal
-	},
-	{
-		immediate: true,
-		deep: true,
-	},
-)
+const isRepeating = computed(() => (task.value.repeat_after ?? 0) > 0 || ((task.value.repeat_after ?? 0) === 0 && task.value.repeat_mode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH))
 
 const projectList = useProjects()
-const taskStore = useTaskStore()
+const taskStore = useTaskActions(true)
 
-const project = computed(() => projectList.projects[task.value.project_id])
+const project = computed(() => projectList.projects[task.value.project_id ?? 0])
 const projectColor = computed(() => project.value?.hex_color ?? '')
 
-const showProjectSeparately = computed(() => !props.showProject && currentProject.value?.id !== task.value.project_id && project.value)
+const showProjectSeparately = computed(() => !props.showProject
+	&& currentProject.value?.id !== task.value.project_id
+	&& project.value)
 
 const {currentProject} = useCurrentProject()
 
@@ -318,25 +309,25 @@ const {now} = useGlobalNow()
 const isOverdue = computed(() => (
 	!task.value.done &&
 	task.value.due_date !== null &&
-	task.value.due_date.getTime() > 0 &&
-	task.value.due_date.getTime() <= now.value.getTime()
+	new Date(task.value.due_date ?? 0).getTime() > 0 &&
+	new Date(task.value.due_date ?? 0).getTime() <= now.value.getTime()
 ))
 
-let oldTask
+let oldTask: ITask
 
 async function markAsDone(checked: boolean, wasReverted: boolean = false) {
-	oldTask = {...task.value}
+	if (!wasReverted) oldTask = {...task.value}
 
 	// Fire the request immediately and with the intended done value snapshotted, so a re-render or
 	// teardown during the animation delay can neither drop the save nor make it send a stale state.
 	const updatePromise = taskStore.update({
-		...task.value,
+		...(wasReverted && isRepeating.value ? oldTask : task.value),
 		done: checked,
-	})
+	}).catch(() => undefined)
 
 	const finish = async () => {
 		const newTask = await updatePromise
-		task.value = newTask
+		if (!newTask) return
 
 		updateDueDate()
 
@@ -368,16 +359,12 @@ async function markAsDone(checked: boolean, wasReverted: boolean = false) {
 }
 
 function undoDone(checked: boolean) {
-	if (isRepeating.value) {
-		task.value = {...oldTask}
-	}
-	task.value.done = !task.value.done
 	markAsDone(!checked, true)
 }
 
 async function toggleFavorite() {
-	task.value = await taskStore.toggleFavorite(task.value)
-	emit('taskUpdated', task.value)
+	const updated = await taskStore.toggleFavorite(task.value)
+	emit('taskUpdated', updated)
 }
 
 const taskRoot = ref<HTMLElement | null>(null)
@@ -455,7 +442,7 @@ defineExpose({
 
 	}
 
-	.due_date {
+	.dueDate {
 		display: inline-block;
 		margin-inline-start: 5px;
 
@@ -469,7 +456,7 @@ defineExpose({
 		}
 	}
 
-	&[data-is-overdue] .due_date {
+	&[data-is-overdue] .dueDate {
 		color: var(--danger-text);
 	}
 

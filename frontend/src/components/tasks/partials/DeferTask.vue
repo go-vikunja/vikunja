@@ -1,6 +1,6 @@
 <template>
 	<div
-		:class="{ 'is-loading': taskService.loading }"
+		:class="{ 'is-loading': update.isPending.value }"
 		class="defer-task loading-container"
 		@click.stop
 		@mousedown.stop
@@ -40,12 +40,13 @@
 </template>
 
 <script setup lang="ts">
-import {ref, shallowReactive, watch, onBeforeUnmount} from 'vue'
+import {parseDateOrNull} from '@/helpers/parseDateOrNull'
+import {ref, watch, onBeforeUnmount} from 'vue'
 import {useDebounceFn} from '@vueuse/core'
 
 import DatepickerInline from '@/components/input/DatepickerInline.vue'
 
-import TaskService from '@/services/task'
+import {useUpdateTaskMutation} from '@/client/queries/taskMutations'
 import type {Task as ITask} from '@/client/generated'
 
 const props = defineProps<{
@@ -56,7 +57,7 @@ const emit = defineEmits<{
 	'update:modelValue': [value: ITask]
 }>()
 
-const taskService = shallowReactive(new TaskService())
+const update = useUpdateTaskMutation()
 const task = ref<ITask>()
 
 // We're saving the due date separately to prevent null errors in very short periods where the task is null.
@@ -67,8 +68,8 @@ watch(
 	() => props.modelValue,
 	(value) => {
 		task.value = { ...value }
-		dueDate.value = value.due_date
-		lastValue.value = value.due_date
+		dueDate.value = parseDateOrNull(value.due_date)
+		lastValue.value = dueDate.value
 	},
 	{immediate: true},
 )
@@ -98,11 +99,12 @@ async function updateDueDate() {
 		return
 	}
 
-	const newTask = await taskService.update({
+	const newTask = await update.mutateAsync({
 		...task.value,
-		due_date: new Date(dueDate.value),
+		id: task.value!.id!,
+		due_date: new Date(dueDate.value).toISOString(),
 	})
-	lastValue.value = newTask.due_date
+	lastValue.value = parseDateOrNull(newTask.due_date)
 	task.value = newTask
 	emit('update:modelValue', newTask)
 }

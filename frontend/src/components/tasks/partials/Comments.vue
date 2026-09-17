@@ -248,7 +248,7 @@ const props = withDefaults(defineProps<{
 	taskId: number,
 	projectId: number,
 	canWrite?: boolean
-	initialComments: ITaskComment[]
+	initialComments?: ITaskComment[]
 }>(), {
 	canWrite: true,
 })
@@ -362,7 +362,7 @@ function attachmentUpload(files: File[] | FileList): Promise<string[]> {
 
 const taskCommentService = shallowReactive(new TaskCommentService())
 
-async function loadComments(taskId: ITask['id']) {
+async function loadComments(taskId: number) {
 	if (!enabled.value) {
 		return
 	}

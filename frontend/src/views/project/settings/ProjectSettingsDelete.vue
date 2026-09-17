@@ -13,7 +13,7 @@
 			</p>
 
 			<p
-				v-if="totalTasks !== null"
+				v-if="tasksLoaded"
 				class="has-text-weight-bold"
 			>
 				{{ deleteNotice }}
@@ -39,7 +39,7 @@ import {useRoute, useRouter} from 'vue-router'
 import {useDeleteProjectMutation} from '@/client/queries/projects'
 import Loading from '@/components/misc/Loading.vue'
 import {useProjects} from '@/composables/useProjects'
-import TaskService from '@/services/task'
+import {useTasks} from '@/composables/useTasks'
 
 const {t} = useI18n({useScope: 'global'})
 const projectList = useProjects()
@@ -47,7 +47,7 @@ const deleteMutation = useDeleteProjectMutation()
 const route = useRoute()
 const router = useRouter()
 
-const totalTasks = ref<number | null>(null)
+
 
 const project = computed(() => projectList.projects[route.params.projectId])
 const projectIdsToDelete = ref<number[]>([])
@@ -64,11 +64,16 @@ watchEffect(
 
 		projectIdsToDelete.value.push(parseInt(route.params.projectId))
 
-		const taskService = new TaskService()
-		await taskService.getAll({}, {filter: `project in ${projectIdsToDelete.value.join(',')}`})
-		totalTasks.value = taskService.totalPages * taskService.resultCount
+
 	},
 )
+
+const taskQuery = useTasks(
+	() => ({params: {filter: `project in ${projectIdsToDelete.value.join(',')}`, per_page: 1}}),
+	{enabled: () => projectIdsToDelete.value.length > 0},
+)
+const totalTasks = taskQuery.total
+const tasksLoaded = taskQuery.isSuccess
 
 useTitle(() => t('project.delete.title', {project: project?.value?.title}))
 

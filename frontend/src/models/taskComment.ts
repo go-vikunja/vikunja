@@ -2,7 +2,7 @@ import AbstractModel from './abstractModel'
 import UserModel from './user'
 
 import type {ITaskComment} from '@/modelTypes/ITaskComment'
-import type {ITask} from '@/modelTypes/ITask'
+import type {Task as ITask} from '@/client/generated'
 import type {IUser} from '@/modelTypes/IUser'
 
 export default class TaskCommentModel extends AbstractModel<ITaskComment> implements ITaskComment {

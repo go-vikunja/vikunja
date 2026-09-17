@@ -2,8 +2,8 @@
 	<div
 		class="task loader-container draggable"
 		:class="{
-			'is-loading': loadingInternal || loading,
-			'draggable': !(loadingInternal || loading),
+			'is-loading': loadingInternal,
+			'draggable': !loadingInternal,
 			'has-light-text': !colorIsDark(color),
 			'has-custom-background-color': color ?? undefined,
 		}"
@@ -38,7 +38,7 @@
 					</span>
 				</span>
 				<span
-					v-if="task.due_date > 0"
+					v-if="new Date(task.due_date ?? 0).getTime() > 0"
 					v-tooltip="formatDateLong(task.due_date)"
 					class="due-date"
 				>
@@ -98,7 +98,7 @@
 					<Icon icon="align-left" />
 				</span>
 				<span
-					v-if="task.repeat_after.amount > 0"
+					v-if="task.repeat_after > 0"
 					class="icon"
 				>
 					<Icon icon="history" />
@@ -136,32 +136,31 @@ import CommentCount from './CommentCount.vue'
 
 import {getHexColor, getTaskIdentifier} from '@/helpers/task'
 import type {Task as ITask} from '@/client/generated'
+import type {TaskResponse} from '@/client/queries/tasks'
 import {SUPPORTED_IMAGE_SUFFIX} from '@/models/attachment'
 import {PREVIEW_SIZE} from '@/services/attachment'
 import {fetchAttachmentBlobUrl} from '@/helpers/attachments'
 
 import {formatDateLong, formatDisplayDate, formatISO} from '@/helpers/time/formatDate'
 import {colorIsDark} from '@/helpers/color/colorIsDark'
-import {useTaskStore} from '@/stores/tasks'
+import {useTaskActions} from '@/composables/useTaskActions'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 import {playPopSound} from '@/helpers/playPop'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 import {useProjects} from '@/composables/useProjects'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 
-const props = withDefaults(defineProps<{
-	task: ITask,
+const props = defineProps<{
+	task: TaskResponse,
 	projectId: number,
-	loading?: boolean,
-}>(), {
-	loading: false,
-})
+}>()
 
 const emit = defineEmits<{
 	'taskCompletedRecurring': [task: ITask]
 }>()
 
 const router = useRouter()
+const taskActions = useTaskActions()
 
 const loadingInternal = ref(false)
 
@@ -184,17 +183,17 @@ const {now} = useGlobalNow()
 const isOverdue = computed(() => (
 	!props.task.done &&
 	props.task.due_date !== null &&
-	props.task.due_date.getTime() > 0 &&
-	props.task.due_date.getTime() <= now.value.getTime()
+	new Date(props.task.due_date ?? 0).getTime() > 0 &&
+	new Date(props.task.due_date ?? 0).getTime() <= now.value.getTime()
 ))
 
-async function toggleTaskDone(task: ITask) {
-	const isRecurringTask = task.repeat_after.amount > 0 || task.repeat_mode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH
+async function toggleTaskDone(task: TaskResponse) {
+	const isRecurringTask = task.repeat_after > 0 || task.repeat_mode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH
 	const wasBeingMarkedDone = !task.done
 	
 	loadingInternal.value = true
 	try {
-		const updatedTask = await useTaskStore().update({
+		const updatedTask = await taskActions.update({
 			...task,
 			done: !task.done,
 		})
@@ -229,11 +228,11 @@ async function maybeDownloadCoverImage() {
 	}
 
 	const attachment = props.task.attachments.find(a => a.id === props.task.cover_image_attachment_id)
-	if (!attachment || !SUPPORTED_IMAGE_SUFFIX.some((suffix) => attachment.file.name.toLowerCase().endsWith(suffix))) {
+	if (!attachment || !SUPPORTED_IMAGE_SUFFIX.some((suffix) => (attachment.file?.name ?? '').toLowerCase().endsWith(suffix))) {
 		return
 	}
 
-	coverImageBlobUrl.value = await fetchAttachmentBlobUrl(attachment, PREVIEW_SIZE.LG)
+	coverImageBlobUrl.value = await fetchAttachmentBlobUrl({id: attachment.id!, taskId: props.task.id}, PREVIEW_SIZE.LG)
 }
 
 watch(

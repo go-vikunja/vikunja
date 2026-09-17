@@ -27,7 +27,7 @@
 						</div>
 						<div class="task-glance-indicators">
 							<span
-								v-if="task.attachments.length > 0"
+								v-if="(task.attachments?.length ?? 0) > 0"
 								class="task-glance-icon"
 							>
 								<Icon icon="paperclip" />
@@ -52,13 +52,13 @@
 					/>
 
 					<Labels
-						v-if="task.labels.length > 0"
-						:labels="task.labels"
+						v-if="(task.labels?.length ?? 0) > 0"
+						:labels="task.labels ?? []"
 						class="task-glance-labels"
 					/>
 
 					<div
-						v-if="task.due_date"
+						v-if="parseDateOrNull(task.due_date)"
 						class="task-glance-due"
 					>
 						<Icon icon="calendar" />
@@ -72,7 +72,7 @@
 								scope="global"
 							>
 								<span>{{ formatDisplayDate(task.created) }}</span>
-								{{ getDisplayName(task.createdBy) }}
+								{{ getDisplayName(task.created_by) }}
 							</i18n-t>
 						</div>
 					</div>
@@ -83,6 +83,7 @@
 </template>
 
 <script setup lang="ts">
+import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {ref, computed, onUnmounted, nextTick, useId} from 'vue'
 import {computePosition, flip, offset, shift} from '@floating-ui/dom'
 import {useMediaQuery} from '@vueuse/core'
@@ -121,11 +122,11 @@ let describedElement: HTMLElement | null = null
 const taskIdentifier = computed(() => getTaskIdentifier(props.task))
 
 const descriptionPreview = computed(() => {
-	if (isEditorContentEmpty(props.task.description)) {
+	if (isEditorContentEmpty((props.task.description ?? ''))) {
 		return ''
 	}
 
-	const doc = new DOMParser().parseFromString(props.task.description, 'text/html')
+	const doc = new DOMParser().parseFromString(props.task.description ?? '', 'text/html')
 	const plainText = doc.body.textContent || ''
 
 	const trimmedText = plainText.trim()

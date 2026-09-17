@@ -36,7 +36,7 @@
 			@keydown.enter.prevent.stop="!$event.isComposing && ($event.target as HTMLInputElement).blur()"
 			@keydown.esc.prevent.stop="!$event.isComposing && cancel($event.target as HTMLInputElement)"
 		>
-			{{ task.title.trim() }}
+			{{ (task.title ?? '').trim() }}
 		</h1>
 		<CustomTransition name="fade">
 			<span
@@ -72,7 +72,7 @@ import ColorBubble from '@/components/misc/ColorBubble.vue'
 import Done from '@/components/misc/Done.vue'
 
 import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
-import {useTaskStore} from '@/stores/tasks'
+import {useTaskActions} from '@/composables/useTaskActions'
 
 import type {Task as ITask} from '@/client/generated'
 import {getHexColor, getTaskIdentifier} from '@/helpers/task'
@@ -99,7 +99,7 @@ async function copyUrl() {
 	await copy(absoluteURL)
 }
 
-const taskStore = useTaskStore()
+const taskStore = useTaskActions()
 const loading = computed(() => taskStore.isLoading)
 
 const textIdentifier = computed(() => getTaskIdentifier(props.task))
@@ -136,7 +136,7 @@ watch(() => props.task.id, () => {
 
 function handleTitleInput(event: Event) {
 	const target = event.target as HTMLInputElement
-	titleHasChanges.value = target.textContent !== props.task.title
+	titleHasChanges.value = target.textContent !== (props.task.title ?? '')
 }
 
 async function save(element: HTMLElement) {
@@ -144,7 +144,7 @@ async function save(element: HTMLElement) {
 
 	// An empty title would be discarded by the api, so revert and tell the user instead of failing silently.
 	if (title.trim() === '') {
-		element.textContent = props.task.title
+		element.textContent = props.task.title ?? ''
 		titleHasChanges.value = false
 		error({message: t('task.detail.titleRequired')})
 		return
@@ -174,7 +174,7 @@ async function save(element: HTMLElement) {
 }
 
 async function cancel(element: HTMLInputElement) {
-	element.textContent = props.task.title
+	element.textContent = props.task.title ?? ''
 	titleHasChanges.value = false
 	element.blur()
 }

@@ -1,14 +1,16 @@
-import {ref, shallowRef, shallowReactive, watch, computed, type ComputedGetter} from 'vue'
+import {ref, shallowRef, watch, computed, type ComputedGetter} from 'vue'
 import {useRouter, isNavigationFailure} from 'vue-router'
 import type {LocationQueryRaw} from 'vue-router'
 import {useRouteQuery} from '@vueuse/router'
 
-import TaskCollectionService, {
-	type ExpandTaskFilterParam,
+import {
 	getDefaultTaskFilterParams,
+	normalizePageNumber,
+	type TaskExpansion,
 	type TaskFilterParams,
-} from '@/services/taskCollection'
-import type {Task as ITask} from '@/client/generated'
+} from '@/client/queries/tasks'
+import {isRequestContextAbort} from '@/client/requestContext'
+import {useTasks} from '@/composables/useTasks'
 import {error} from '@/message'
 import {useAuthStore} from '@/stores/auth'
 import {useViewFiltersStore} from '@/stores/viewFilters'
@@ -105,7 +107,7 @@ export function useTaskList(
 	projectIdGetter: ComputedGetter<number>,
 	projectViewIdGetter: ComputedGetter<number>,
 	sortByDefault: SortBy = SORT_BY_DEFAULT,
-	expandGetter: ComputedGetter<ExpandTaskFilterParam> = () => 'subtasks',
+	expandGetter: ComputedGetter<TaskExpansion> = () => ['subtasks'],
 ) {
 	
 	const projectId = computed(() => projectIdGetter())
@@ -116,15 +118,15 @@ export function useTaskList(
 
 	const params = ref<TaskFilterParams>({...getDefaultTaskFilterParams()})
 
-	const page = useRouteQuery('page', '1', { transform: Number })
+	const page = useRouteQuery('page', '1', { transform: normalizePageNumber })
 	const filter = useRouteQuery('filter')
 	const s = useRouteQuery('s')
 
-	watch(filter, v => { params.value.filter = v ?? '' }, { immediate: true })
-	watch(s, v => { params.value.s = v ?? '' }, { immediate: true })
+	watch(filter, v => { params.value.filter = String(v ?? '') }, { immediate: true })
+	watch(s, v => { params.value.q = String(v ?? '') }, { immediate: true })
 
 	watch(() => params.value.filter, v => { filter.value = v || undefined })
-	watch(() => params.value.s, v => { s.value = v || undefined })
+	watch(() => params.value.q, v => { s.value = v || undefined })
 
 	const sortQuery = useRouteQuery('sort')
 
@@ -141,17 +143,14 @@ export function useTaskList(
 
 	const pendingQueryRestore = shallowRef<Promise<unknown>>()
 	// Sidebar links omit the query, and project views are reused across navigation.
-	let lastSyncedViewId: number | undefined
+	const syncedViewId = shallowRef<number>()
 	watch(
 		[projectViewId, sortQuery, filter, s, page],
 		([viewId, sortValue, filterValue, sValue, pageValue]) => {
-			const viewIdChanged = viewId !== lastSyncedViewId
-			lastSyncedViewId = viewId
+			const viewIdChanged = viewId !== syncedViewId.value
+			syncedViewId.value = viewId
 
-			// An invalid `?page=` becomes NaN via `transform: Number`; treat it as
-			// the default so it neither blocks restoration nor wipes stored state.
-			const currentPage = Number.isInteger(pageValue) ? pageValue : 1
-			const urlIsEmpty = !sortValue && !filterValue && !sValue && currentPage === 1
+			const urlIsEmpty = !sortValue && !filterValue && !sValue && pageValue === 1
 			if (viewIdChanged && urlIsEmpty) {
 				const storedQuery = viewFiltersStore.getViewQuery(viewId)
 				if (Object.keys(storedQuery).length > 0) {
@@ -174,7 +173,7 @@ export function useTaskList(
 				sort: sortValue as string | undefined,
 				filter: filterValue as string | undefined,
 				s: sValue as string | undefined,
-				page: currentPage,
+				page: pageValue,
 			})
 			if (Object.keys(query).length > 0) {
 				viewFiltersStore.setViewQuery(viewId, query)
@@ -190,7 +189,7 @@ export function useTaskList(
 
 		// Relevance ranking only engages when no sort is sent, so omit the default
 		// sort while searching and let an explicit user sort still take precedence.
-		if (loadParams.s && !sortQuery.value) {
+		if (loadParams.q && !sortQuery.value) {
 			loadParams.sort_by = []
 			loadParams.order_by = []
 			return loadParams
@@ -212,52 +211,31 @@ export function useTaskList(
 	
 	const authStore = useAuthStore()
 	
-	const getAllTasksParams = computed(() => {
-		return [
-			{
-				projectId: projectId.value,
-				viewId: projectViewId.value,
-			},
-			{
-				...allParams.value,
-				filter_timezone: authStore.settings.timezone,
-				expand: expandGetter(),
-			},
-			page.value,
-		]
+	const scope = computed(() => ({
+		project: projectId.value,
+		view: projectViewId.value,
+		params: {
+			...allParams.value,
+			filter_timezone: authStore.settings.timezone,
+			expand: expandGetter(),
+		},
+	}))
+	const query = useTasks(scope, {
+		page,
+		// Scope updates before the restore decision is made; hold the fetch until then.
+		enabled: () => !pendingQueryRestore.value && projectViewId.value === syncedViewId.value,
+	})
+	const loading = query.isFetching
+	const {tasks, totalPages} = query
+
+	watch(query.error, cause => {
+		if (cause && !isRequestContextAbort(cause)) error(cause)
 	})
 
-	const taskCollectionService = shallowReactive(new TaskCollectionService())
-	const loading = computed(() => taskCollectionService.loading)
-	const totalPages = computed(() => taskCollectionService.totalPages)
-
-	const tasks = ref<ITask[]>([])
-	let requestId = 0
-	async function loadTasks(resetBeforeLoad: boolean = true) {
-		const request = ++requestId
-		if(resetBeforeLoad) {
-			tasks.value = []
-		}
-		try {
-			const loadedTasks = await taskCollectionService.getAll(...getAllTasksParams.value)
-			if (request === requestId) {
-				tasks.value = loadedTasks
-			}
-		} catch (e) {
-			error(e)
-		}
+	async function loadTasks() {
+		await query.refetch()
 		return tasks.value
 	}
-
-	watch(() => pendingQueryRestore.value ? null : JSON.stringify(getAllTasksParams.value), newParams => {
-		if (newParams === null) {
-			requestId++
-			tasks.value = []
-			return
-		}
-
-		loadTasks()
-	}, {immediate: true, flush: 'post'})
 
 	return {
 		tasks,

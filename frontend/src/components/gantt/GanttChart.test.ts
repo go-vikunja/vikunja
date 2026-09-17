@@ -7,7 +7,7 @@ import GanttChart from './GanttChart.vue'
 import GanttTimelineHeader from './GanttTimelineHeader.vue'
 import en from '@/i18n/lang/en.json'
 import {i18n as globalI18n} from '@/i18n'
-import type {Task as ITask} from '@/client/generated'
+import type {TaskResponse} from '@/client/queries/tasks'
 import type {GanttFilters} from '@/views/project/helpers/useGanttFilters'
 
 const i18n = createI18n({legacy: false, locale: 'en', messages: {en}})
@@ -30,7 +30,7 @@ function mountChart(isLoading: boolean) {
 		props: {
 			isLoading,
 			filters: FILTERS,
-			tasks: new Map<number, ITask>(),
+			tasks: new Map<number, TaskResponse>(),
 			defaultTaskStartDate: FILTERS.dateFrom,
 			defaultTaskEndDate: FILTERS.dateTo,
 		},

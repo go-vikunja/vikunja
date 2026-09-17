@@ -39,14 +39,13 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, inject, ref, watch} from 'vue'
+import {computed, inject} from 'vue'
 
-import type {Task as ITask} from '@/client/generated'
+import type {TaskResponse} from '@/client/queries/tasks'
 import {getTaskIdentifier} from '@/helpers/task'
 import {getProjectTitle} from '@/helpers/getProjectTitle'
 import {parseTaskIdFromUrl} from '@/helpers/parseTaskIdFromUrl'
-import {fetchTaskById} from '@/helpers/fetchTaskById'
-import {taskCacheVersion, taskCacheIdentityVersion} from '@/helpers/taskCache'
+import {useTask} from '@/composables/useTask'
 import {useBaseStore} from '@/stores/base'
 import {useProjects} from '@/composables/useProjects'
 import TaskGlanceTooltip from '@/components/tasks/partials/TaskGlanceTooltip.vue'
@@ -55,7 +54,7 @@ import {taskLinkCurrentProjectIdKey} from './taskLinkContext'
 
 type PillState =
 	| {status: 'loading'}
-	| {status: 'loaded', task: ITask}
+	| {status: 'loaded', task: TaskResponse}
 	| {status: 'error'}
 	| {status: 'invalid'}
 
@@ -64,7 +63,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-	open: [task: ITask]
+	open: [task: TaskResponse]
 }>()
 
 const baseStore = useBaseStore()
@@ -73,50 +72,19 @@ const providedProjectId = inject(taskLinkCurrentProjectIdKey, null)
 
 const currentProjectId = computed(() => providedProjectId?.value ?? (baseStore.currentProjectId || undefined))
 
-const state = ref<PillState>({status: 'loading'})
-
 const taskId = computed(() => parseTaskIdFromUrl(props.href))
-
-// A different identity must never keep the previous one's task on screen. No refetch here:
-// logout and link share auth navigate away; a remount or invalidation fetches again.
-watch(taskCacheIdentityVersion, () => {
-	if (state.value.status === 'loaded') {
-		state.value = {status: 'loading'}
-	}
+const query = useTask(() => taskId.value ?? 0)
+const state = computed<PillState>(() => {
+	if (taskId.value === null) return {status: 'invalid'}
+	if (query.data.value) return {status: 'loaded', task: query.data.value}
+	return {status: query.isError.value ? 'error' : 'loading'}
 })
-
-watch([taskId, taskCacheVersion], async ([id], previous) => {
-	if (id === null) {
-		state.value = {status: 'invalid'}
-		return
-	}
-	const cacheVersion = taskCacheVersion.value
-	const identityVersion = taskCacheIdentityVersion.value
-	// Keep the current pill (stale task or fallback link) across a refetch of the same id.
-	if (id !== previous?.[0]) {
-		state.value = {status: 'loading'}
-	}
-	const superseded = () => taskId.value !== id
-		|| cacheVersion !== taskCacheVersion.value
-		|| identityVersion !== taskCacheIdentityVersion.value
-	try {
-		const task = await fetchTaskById(id)
-		if (superseded() || (state.value.status === 'loaded' && state.value.task === task)) {
-			return
-		}
-		state.value = {status: 'loaded', task}
-	} catch {
-		if (!superseded() && state.value.status !== 'loaded') {
-			state.value = {status: 'error'}
-		}
-	}
-}, {immediate: true})
 
 const projectPrefix = computed(() => {
 	if (state.value.status !== 'loaded') {
 		return ''
 	}
-	const {projectId} = state.value.task
+	const projectId = state.value.task.project_id
 	if (currentProjectId.value === projectId) {
 		return ''
 	}

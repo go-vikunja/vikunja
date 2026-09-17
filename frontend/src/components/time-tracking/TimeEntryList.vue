@@ -125,7 +125,7 @@ import {useTimeFormat} from '@/composables/useTimeFormat'
 import {TIME_FORMAT} from '@/constants/timeFormat'
 
 import type {ITimeEntry} from '@/modelTypes/ITimeEntry'
-import type {Task as ITask} from '@/client/generated'
+import type {TaskResponse} from '@/client/queries/tasks'
 
 const props = withDefaults(defineProps<{
 	entries: ITimeEntry[]
@@ -156,7 +156,7 @@ const authStore = useAuthStore()
 const currentUserId = computed(() => authStore.info?.id)
 
 // Entries carry only a task id; the full task (title, identifier, parent project) is resolved lazily.
-const tasks = ref<Record<number, ITask>>({})
+const tasks = ref<Record<number, TaskResponse>>({})
 
 watch(() => props.entries, entries => {
 	entries.forEach(({taskId}) => {
@@ -176,7 +176,7 @@ function entrySeconds(entry: ITimeEntry): number {
 
 const rows = computed(() => props.entries.map(entry => {
 	const task = entry.taskId > 0 ? tasks.value[entry.taskId] : undefined
-	const projectId = task?.projectId ?? (entry.projectId > 0 ? entry.projectId : 0)
+	const projectId = task?.project_id ?? (entry.projectId > 0 ? entry.projectId : 0)
 	const project = projectId > 0 ? projectList.projects[projectId] : undefined
 	const ancestors = project ? projectList.getAncestors(project) : []
 

@@ -58,6 +58,8 @@
 </template>
 
 <script setup lang="ts">
+import {assertClientRequestContext, captureClientRequestContext} from '@/client/requestContext'
+import {useCreateTaskRelationMutation} from '@/client/queries/taskMutations'
 import {computed, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useElementHover} from '@vueuse/core'
@@ -69,15 +71,13 @@ import type {Task as ITask} from '@/client/generated'
 import Expandable from '@/components/base/Expandable.vue'
 import QuickAddMagic from '@/components/tasks/partials/QuickAddMagic.vue'
 import {parseSubtasksViaIndention, type TaskWithParent} from '@/helpers/parseSubtasksViaIndention'
-import TaskRelationService from '@/services/taskRelation'
-import TaskRelationModel from '@/models/taskRelation'
 import {getLabelsFromPrefix} from '@/modules/quickAddMagic'
 import {runWrites} from '@/helpers/runWrites'
 import {error} from '@/message'
 
 import {useAuthStore} from '@/stores/auth'
 import {useConfigStore} from '@/stores/config'
-import {useTaskStore} from '@/stores/tasks'
+import {reportSkippedLabels, useTaskActions} from '@/composables/useTaskActions'
 
 import {useAutoHeightTextarea} from '@/composables/useAutoHeightTextarea'
 
@@ -93,7 +93,8 @@ const {textarea: newTaskInput} = useAutoHeightTextarea(newTaskTitle)
 const {t} = useI18n({useScope: 'global'})
 const authStore = useAuthStore()
 const configStore = useConfigStore()
-const taskStore = useTaskStore()
+const taskStore = useTaskActions()
+const createRelationMutation = useCreateTaskRelationMutation()
 const router = useRouter()
 
 // enable only if we don't have a modal
@@ -128,6 +129,7 @@ async function addTask() {
 		return
 	}
 
+	const context = captureClientRequestContext()
 	const taskTitleBackup = newTaskTitle.value
 	// Keyed by the title the task had before quick add magic parsed it. A Map,
 	// because a user-entered `__proto__` would corrupt plain-object lookups.
@@ -139,14 +141,11 @@ async function addTask() {
 	// check if a new label was created before (because everything happens async).
 	const allLabels = tasksToCreate.map(({title}) => getLabelsFromPrefix(title, authStore.settings.frontendSettings.quickAddMagicMode) ?? [])
 	const requestedLabels = [...new Set(allLabels.flat())]
-	const resolvedLabels = await taskStore.ensureLabelsExist(requestedLabels)
+	const {skipped} = await taskStore.ensureLabelsExist(requestedLabels, context)
+	assertClientRequestContext(context)
 
 	// Skipped labels (e.g. link shares may not create them) don't block task creation; just tell the user.
-	const resolvedTitles = new Set(resolvedLabels.map(l => (l.title ?? '').toLowerCase()))
-	const failedLabels = requestedLabels.filter(title => !resolvedTitles.has(title.toLowerCase()))
-	if (failedLabels.length > 0) {
-		error({message: t('task.label.createFailed', {labels: failedLabels.join(', ')})})
-	}
+	reportSkippedLabels(skipped)
 
 	let currentProjectId = authStore.settings.defaultProjectId
 	if (typeof router.currentRoute.value.params.projectId !== 'undefined') {
@@ -160,7 +159,7 @@ async function addTask() {
 			.filter(({title}) => title !== '')
 			.map(async ({title, project}) => ({
 				title,
-				projectId: (project !== null
+				project_id: (project !== null
 					? await taskStore.findProjectId({project, projectId: 0})
 					: currentProjectId) || authStore.settings.defaultProjectId || 0,
 			})))
@@ -176,6 +175,7 @@ async function addTask() {
 		// into a single map entry.
 		const allCreated: ITask[] = []
 
+		assertClientRequestContext(context)
 		const bulk = await taskStore.createNewTasksBulk(entries)
 		entries.forEach(({title}, index) => {
 			const task = bulk.tasks[index]
@@ -186,7 +186,6 @@ async function addTask() {
 			allCreated.push(task)
 		})
 
-		const taskRelationService = new TaskRelationService()
 		const allParentTasks = tasksToCreate.filter(t => t.parent !== null).map(t => t.parent)
 		const createRelation = async (t: TaskWithParent) => {
 			const createdTask = createdTasks.get(t.title)
@@ -204,32 +203,11 @@ async function addTask() {
 				return
 			}
 
-			const rel = await taskRelationService.create(new TaskRelationModel({
-				taskId: createdTask.id,
-				otherTaskId: createdParentTask.id,
-				relationKind: RELATION_KIND.PARENTTASK,
-			}))
-			
-			if (typeof createdTask.related_tasks === 'undefined') {
-				createdTask.related_tasks = {}
-			}
-			if (typeof createdTask.related_tasks[RELATION_KIND.PARENTTASK] === 'undefined') {
-				createdTask.related_tasks[RELATION_KIND.PARENTTASK] = []
-			}
-			createdTask.related_tasks[RELATION_KIND.PARENTTASK].push({
-				...createdParentTask,
-				related_tasks: {}, // To avoid endless references
-			})
-
-			if (typeof createdParentTask.related_tasks === 'undefined') {
-				createdParentTask.related_tasks = {}
-			}
-			if (typeof createdParentTask.related_tasks[RELATION_KIND.SUBTASK] === 'undefined') {
-				createdParentTask.related_tasks[RELATION_KIND.SUBTASK] = []
-			}
-			createdParentTask.related_tasks[RELATION_KIND.SUBTASK].push({
-				...createdTask,
-				related_tasks: {}, // To avoid endless references
+			assertClientRequestContext(context)
+			const rel = await createRelationMutation.mutateAsync({
+				taskId: createdTask.id!,
+				other_task_id: createdParentTask.id,
+				relation_kind: RELATION_KIND.PARENTTASK,
 			})
 
 			return rel
@@ -243,6 +221,7 @@ async function addTask() {
 			error(e)
 		}
 
+		assertClientRequestContext(context)
 		if (allCreated.length > 0) {
 			emit('tasksAdded', allCreated)
 		}

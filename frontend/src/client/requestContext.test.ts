@@ -5,6 +5,7 @@ import {
 	assertClientRequestContext,
 	captureClientRequestContext,
 	isClientRequestContextCurrent,
+	isRequestContextAbort,
 } from './requestContext'
 
 function token(id: number, type = 1): string {
@@ -60,5 +61,21 @@ describe('client request context', () => {
 		window.API_URL = 'https://identity-b.example/api/v1/'
 
 		expectStaleContext(context)
+	})
+
+	it('recognizes its own abort and nothing else', () => {
+		const context = captureClientRequestContext()
+		saveToken(token(2), false)
+
+		expect(() => assertClientRequestContext(context)).toThrow(expect.objectContaining({name: 'AbortError'}))
+		try {
+			assertClientRequestContext(context)
+		} catch (cause) {
+			expect(isRequestContextAbort(cause)).toBe(true)
+		}
+		expect(isRequestContextAbort({status: 404})).toBe(false)
+		expect(isRequestContextAbort(new Error('Server is on fire'))).toBe(false)
+		expect(isRequestContextAbort(null)).toBe(false)
+		expect(isRequestContextAbort(undefined)).toBe(false)
 	})
 })

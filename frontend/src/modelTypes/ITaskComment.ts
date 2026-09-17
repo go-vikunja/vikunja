@@ -1,6 +1,6 @@
 import type {IAbstract} from './IAbstract'
 import type {IUser} from './IUser'
-import type {ITask} from './ITask'
+import type {Task as ITask} from '@/client/generated'
 import type {IReactionPerEntity} from '@/modelTypes/IReaction'
 
 export interface ITaskComment extends IAbstract {

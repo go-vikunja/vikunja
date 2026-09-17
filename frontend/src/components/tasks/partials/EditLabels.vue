@@ -57,7 +57,7 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import Multiselect from '@/components/input/Multiselect.vue'
 import type {Label} from '@/client/generated'
 import {useCreateLabelMutation} from '@/client/queries/labels'
-import {useTaskStore} from '@/stores/tasks'
+import {useTaskActions} from '@/composables/useTaskActions'
 import {getRandomColorHex} from '@/helpers/color/randomColor'
 import {useLabelStyles} from '@/composables/useLabelStyles'
 import {useLabels} from '@/composables/useLabels'
@@ -95,7 +95,7 @@ watch(
 	},
 )
 
-const taskStore = useTaskStore()
+const taskStore = useTaskActions()
 const {filterLabelsByQuery, isPending} = useLabels()
 const createLabelMutation = useCreateLabelMutation()
 const {getLabelStyles} = useLabelStyles()
@@ -113,8 +113,8 @@ async function addLabel(label: Label, showNotification = true) {
 		return
 	}
 
-	await taskStore.addLabel({label, taskId: props.taskId})
-	emit('update:modelValue', labels.value)
+	await taskStore.addLabel({label: {...label, id: label.id!}, taskId: props.taskId})
+	labels.value = Array.from(new Map(labels.value.map(label => [label.id, label])).values())
 	if (showNotification) {
 		success({message: t('task.label.addSuccess')})
 	}
@@ -122,7 +122,7 @@ async function addLabel(label: Label, showNotification = true) {
 
 async function removeLabel(label: Label) {
 	if (props.taskId !== 0) {
-		await taskStore.removeLabel({label, taskId: props.taskId})
+		await taskStore.removeLabel({label: {...label, id: label.id!}, taskId: props.taskId})
 	}
 
 	const idx = labels.value.findIndex(l => l.id === label.id)
@@ -143,7 +143,6 @@ async function createAndAddLabel(title: string) {
 		hex_color: getRandomColorHex(),
 	})
 	await addLabel(newLabel, false)
-	labels.value.push(newLabel)
 	success({message: t('task.label.addCreateSuccess')})
 }
 </script>

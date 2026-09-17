@@ -1,19 +1,20 @@
 import {describe, expect, it} from 'vitest'
 import {buildRelationArrows, type GanttBarPosition} from './ganttRelationArrows'
 import type {Task as ITask} from '@/client/generated'
+import {normalizeTask, type TaskResponse} from '@/client/queries/tasks'
 
-function makeTask(id: number, overrides: Partial<ITask> = {}): ITask {
-	return {
+function makeTask(id: number, overrides: Partial<ITask> = {}): TaskResponse {
+	return normalizeTask({
 		id,
 		title: `Task ${id}`,
 		related_tasks: {},
 		...overrides,
-	} as ITask
+	})
 }
 
 describe('buildRelationArrows', () => {
 	it('returns empty array when no dependency relations exist', () => {
-		const tasks = new Map<number, ITask>([
+		const tasks = new Map<number, TaskResponse>([
 			[1, makeTask(1)],
 			[2, makeTask(2)],
 		])
@@ -27,7 +28,7 @@ describe('buildRelationArrows', () => {
 	})
 
 	it('creates arrow for blocking relation', () => {
-		const tasks = new Map<number, ITask>([
+		const tasks = new Map<number, TaskResponse>([
 			[1, makeTask(1, {related_tasks: {blocking: [makeTask(2)]}})],
 			[2, makeTask(2, {related_tasks: {blocked: [makeTask(1)]}})],
 		])
@@ -48,7 +49,7 @@ describe('buildRelationArrows', () => {
 	})
 
 	it('creates arrow for precedes relation', () => {
-		const tasks = new Map<number, ITask>([
+		const tasks = new Map<number, TaskResponse>([
 			[1, makeTask(1, {related_tasks: {precedes: [makeTask(2)]}})],
 			[2, makeTask(2, {related_tasks: {follows: [makeTask(1)]}})],
 		])
@@ -65,7 +66,7 @@ describe('buildRelationArrows', () => {
 	})
 
 	it('skips arrows when target task is not visible', () => {
-		const tasks = new Map<number, ITask>([
+		const tasks = new Map<number, TaskResponse>([
 			[1, makeTask(1, {related_tasks: {blocking: [makeTask(99)]}})],
 		])
 		const positions = new Map<number, GanttBarPosition>([
@@ -77,7 +78,7 @@ describe('buildRelationArrows', () => {
 	})
 
 	it('re-routes arrows to parent when child is collapsed', () => {
-		const tasks = new Map<number, ITask>([
+		const tasks = new Map<number, TaskResponse>([
 			[1, makeTask(1, {related_tasks: {blocking: [makeTask(3)]}})],
 			[2, makeTask(2)], // parent of task 3
 			[3, makeTask(3, {related_tasks: {blocked: [makeTask(1)]}})],
@@ -99,7 +100,7 @@ describe('buildRelationArrows', () => {
 	})
 
 	it('deduplicates bidirectional relations', () => {
-		const tasks = new Map<number, ITask>([
+		const tasks = new Map<number, TaskResponse>([
 			[1, makeTask(1, {related_tasks: {blocking: [makeTask(2)]}})],
 			[2, makeTask(2, {related_tasks: {blocked: [makeTask(1)]}})],
 		])

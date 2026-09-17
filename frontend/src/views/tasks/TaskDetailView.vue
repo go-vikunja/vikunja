@@ -3,7 +3,7 @@
 		ref="taskViewContainer"
 		class="loader-container task-view-container"
 		:class="{
-			'is-loading': taskService.loading || !visible,
+			'is-loading': taskLoading || taskStore.isLoading || !visible,
 			'is-modal': isModal,
 		}"
 	>
@@ -25,7 +25,6 @@
 				:task="task"
 				:can-write="canWrite"
 				:has-close="isModal"
-				@update:task="Object.assign(task, $event)"
 				@close="$emit('close')"
 			/>
 			<nav
@@ -59,7 +58,6 @@
 				<BucketSelect
 					:task="task"
 					:can-write="canWrite"
-					@update:task="Object.assign(task, $event)"
 				/>
 			</nav>
 
@@ -91,7 +89,7 @@
 							/>
 							<AssigneeList
 								v-else
-								:assignees="task.assignees"
+								:assignees="task.assignees ?? []"
 								class="mbs-2"
 							/>
 						</div>
@@ -121,7 +119,7 @@
 							appear
 						>
 							<div
-								v-if="activeFields.due_date"
+								v-if="activeFields.dueDate"
 								class="column"
 							>
 								<!-- Due Date -->
@@ -132,17 +130,17 @@
 								<div class="date-input">
 									<Datepicker
 										ref="dueDatePicker"
-										v-model="task.due_date"
+										v-model="dueDateInput"
 										:choose-date-label="$t('task.detail.chooseDueDate')"
 										:title="$t('task.attributes.dueDate')"
-										:disabled="taskService.loading || !canWrite"
+										:disabled="taskLoading || taskStore.isLoading || !canWrite"
 										@closeOnChange="saveTask()"
 									/>
 									<BaseButton
 										v-if="task.due_date && canWrite"
 										class="remove"
 										:aria-label="$t('task.detail.removeDueDate')"
-										@click="() => {task.due_date = null;saveTask()}"
+										@click="() => {task.due_date = '';saveTask()}"
 									>
 										<span class="icon is-small">
 											<Icon icon="times" />
@@ -156,7 +154,7 @@
 							appear
 						>
 							<div
-								v-if="activeFields.percent_done"
+								v-if="activeFields.percentDone"
 								class="column"
 							>
 								<!-- Progress -->
@@ -177,7 +175,7 @@
 							appear
 						>
 							<div
-								v-if="activeFields.start_date"
+								v-if="activeFields.startDate"
 								class="column"
 							>
 								<!-- Start Date -->
@@ -188,17 +186,17 @@
 								<div class="date-input">
 									<Datepicker
 										ref="startDatePicker"
-										v-model="task.start_date"
+										v-model="startDateInput"
 										:choose-date-label="$t('task.detail.chooseStartDate')"
 										:title="$t('task.attributes.startDate')"
-										:disabled="taskService.loading || !canWrite"
+										:disabled="taskLoading || taskStore.isLoading || !canWrite"
 										@closeOnChange="saveTask()"
 									/>
 									<BaseButton
 										v-if="task.start_date && canWrite"
 										class="remove"
 										:aria-label="$t('task.detail.removeStartDate')"
-										@click="() => {task.start_date = null;saveTask()}"
+										@click="() => {task.start_date = '';saveTask()}"
 									>
 										<span class="icon is-small">
 											<Icon icon="times" />
@@ -212,7 +210,7 @@
 							appear
 						>
 							<div
-								v-if="activeFields.end_date"
+								v-if="activeFields.endDate"
 								class="column"
 							>
 								<!-- End Date -->
@@ -223,17 +221,17 @@
 								<div class="date-input">
 									<Datepicker
 										ref="endDatePicker"
-										v-model="task.end_date"
+										v-model="endDateInput"
 										:choose-date-label="$t('task.detail.chooseEndDate')"
 										:title="$t('task.attributes.endDate')"
-										:disabled="taskService.loading || !canWrite"
+										:disabled="taskLoading || taskStore.isLoading || !canWrite"
 										@closeOnChange="saveTask()"
 									/>
 									<BaseButton
 										v-if="task.end_date && canWrite"
 										class="remove"
 										:aria-label="$t('task.detail.removeEndDate')"
-										@click="() => {task.end_date = null;saveTask()}"
+										@click="() => {task.end_date = '';saveTask()}"
 									>
 										<span class="icon is-small">
 											<Icon icon="times" />
@@ -269,7 +267,7 @@
 							appear
 						>
 							<div
-								v-if="activeFields.repeat_after"
+								v-if="activeFields.repeatAfter"
 								class="column"
 							>
 								<!-- Repeat after -->
@@ -291,9 +289,9 @@
 								</div>
 								<RepeatAfter
 									:ref="e => setFieldRef('repeatAfter', e)"
-									v-model="task"
+									:model-value="task"
 									:disabled="!canWrite"
-									@update:modelValue="saveTask()"
+									@update:modelValue="saveTask($event)"
 								/>
 							</div>
 						</CustomTransition>
@@ -347,17 +345,17 @@
 							:model-value="task"
 							:can-write="canWrite"
 							:attachment-upload="attachmentUpload"
-							@update:modelValue="Object.assign(task, $event)"
 						/>
 					</div>
 					
 					<!-- Reactions -->
 					<Reactions
-						v-model="task.reactions" 
+						:model-value="task.reactions"
 						entity-kind="tasks"
 						:entity-id="task.id"
 						class="details d-print-none"
 						:disabled="!canWrite"
+						@update:modelValue="setReactions"
 					/>
 
 					<!-- Attachments -->
@@ -369,7 +367,6 @@
 							:ref="e => { setFieldRef('attachments', e); attachmentsRef = e as any }"
 							:edit-enabled="canWrite"
 							:task="task"
-							@taskChanged="({coverImageAttachmentId}) => task.cover_image_attachment_id = coverImageAttachmentId"
 							@update:attachments="onAttachmentsUpdated"
 						/>
 					</div>
@@ -385,7 +382,7 @@
 
 					<!-- Related Tasks -->
 					<div
-						v-if="activeFields.related_tasks"
+						v-if="activeFields.relatedTasks"
 						class="content details mbe-0"
 					>
 						<h2 class="task-section-title">
@@ -431,7 +428,6 @@
 						:can-write="canWrite"
 						:task-id="taskId"
 						:project-id="task.project_id"
-						:initial-comments="task.comments"
 					/>
 
 					<!-- Marker element for scroll-to-bottom button visibility -->
@@ -460,7 +456,7 @@
 						<TaskSubscription
 							entity="task"
 							:entity-id="task.id"
-							:model-value="task.subscription"
+							:model-value="task.subscription ? subscriptionFromApi(task.subscription) : null"
 							@toggle="toggleSubscription"
 						/>
 						<XButton
@@ -529,7 +525,7 @@
 							{{ $t('task.detail.actions.attachments') }}
 						</XButton>
 						<XButton
-							v-shortcut="SHORTCUTS.taskDetail.related_tasks"
+							v-shortcut="SHORTCUTS.taskDetail.relatedTasks"
 							variant="secondary"
 							icon="sitemap"
 							@click="setRelatedTasksActive()"
@@ -565,7 +561,7 @@
 						</XButton>
 
 						<XButton
-							v-shortcut="SHORTCUTS.taskDetail.due_date"
+							v-shortcut="SHORTCUTS.taskDetail.dueDate"
 							variant="secondary"
 							icon="calendar"
 							@click="setFieldActive('dueDate')"
@@ -655,17 +651,18 @@
 </template>
 
 <script lang="ts" setup>
-import {ref, reactive, shallowReactive, computed, watch, nextTick, onMounted, useTemplateRef, type ComponentPublicInstance} from 'vue'
+import {parseDateOrNull} from '@/helpers/parseDateOrNull'
+import {ref, reactive, computed, watch, nextTick, onMounted, useTemplateRef, type ComponentPublicInstance} from 'vue'
 import {useRouter, useRoute, type RouteLocation, onBeforeRouteLeave} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 import {unrefElement, useDebounceFn, useElementSize, useIntersectionObserver, useMutationObserver} from '@vueuse/core'
 import {klona} from 'klona/lite'
 
-import TaskService from '@/services/task'
-import {createTaskDraft} from '@/helpers/task'
+import {useTask} from '@/composables/useTask'
+import {getHexColor} from '@/helpers/task'
+import {createTaskDraft, mergeTask} from '@/helpers/task'
 
 import type {Task as ITask} from '@/client/generated'
-import type {IAttachment} from '@/modelTypes/IAttachment'
 import type {ProjectResponse} from '@/client/queries/projects'
 
 import {PRIORITIES, type Priority} from '@/constants/priorities'
@@ -676,6 +673,8 @@ import {SHORTCUTS} from '@/constants/shortcuts'
 import BaseButton from '@/components/base/BaseButton.vue'
 
 // partials
+import {useQueryClient} from '@tanstack/vue-query'
+import {replaceTaskEverywhere} from '@/client/queries/taskCache'
 import Attachments from '@/components/tasks/partials/Attachments.vue'
 import TaskTimeTracking from '@/components/time-tracking/TaskTimeTracking.vue'
 import ChecklistSummary from '@/components/tasks/partials/ChecklistSummary.vue'
@@ -705,9 +704,9 @@ import {scrollIntoView} from '@/helpers/scrollIntoView'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 import {playPopSound} from '@/helpers/playPop'
+import {taskLoadErrorAction} from './taskDetailError'
 
-import {useTaskStore} from '@/stores/tasks'
-import {useKanbanStore} from '@/stores/kanban'
+import {useTaskActions} from '@/composables/useTaskActions'
 import {useProjects} from '@/composables/useProjects'
 import {useAuthStore} from '@/stores/auth'
 import {useBaseStore} from '@/stores/base'
@@ -716,13 +715,13 @@ import {useConfigStore} from '@/stores/config'
 import {useTitle} from '@/composables/useTitle'
 import {useTaskDetailShortcuts} from '@/composables/useTaskDetailShortcuts'
 
-import {success} from '@/message'
+import {error, success} from '@/message'
 import type {Action as MessageAction} from '@/message'
 import {subscriptionsCreate, subscriptionsDelete} from '@/client/generated'
 import {subscriptionFromApi} from '@/models/subscription'
 
 const props = defineProps<{
-	taskId: ITask['id'],
+	taskId: number,
 	backdropView?: RouteLocation['fullPath'],
 }>()
 
@@ -735,23 +734,54 @@ const route = useRoute()
 const {t} = useI18n({useScope: 'global'})
 
 const projectList = useProjects()
-const taskStore = useTaskStore()
+const taskStore = useTaskActions()
 const configStore = useConfigStore()
 const timeTrackingEnabled = computed(() => configStore.isProFeatureEnabled(PRO_FEATURE.TIME_TRACKING))
-const kanbanStore = useKanbanStore()
 const authStore = useAuthStore()
 const baseStore = useBaseStore()
 
+const queryClient = useQueryClient()
+const taskQuery = useTask(() => props.taskId ?? 0, () => ['reactions', 'is_unread', 'buckets', ...(timeTrackingEnabled.value ? ['time_entries_count' as const] : [])])
 const task = ref<ITask>(createTaskDraft())
+
+// Only fields edited here stay local; the rest follows the cache.
+function followServerFields(loaded: ITask) {
+	const {priority, percent_done, due_date, start_date, end_date, reminders, repeat_after, repeat_mode} = task.value
+	task.value = {...createTaskDraft(klona(loaded)), priority, percent_done, due_date, start_date, end_date, reminders, repeat_after, repeat_mode}
+}
+
+function seedTask(loaded: ITask) {
+	task.value = createTaskDraft(klona(loaded))
+	taskColor.value = task.value.hex_color ?? ''
+}
+
+const dueDateInput = computed({
+	get: () => parseDateOrNull(task.value.due_date),
+	set: (date: Date | string | null) => {
+		task.value.due_date = parseDateOrNull(date)?.toISOString() ?? ''
+	},
+})
+const startDateInput = computed({
+	get: () => parseDateOrNull(task.value.start_date),
+	set: (date: Date | string | null) => {
+		task.value.start_date = parseDateOrNull(date)?.toISOString() ?? ''
+	},
+})
+const endDateInput = computed({
+	get: () => parseDateOrNull(task.value.end_date),
+	set: (date: Date | string | null) => {
+		task.value.end_date = parseDateOrNull(date)?.toISOString() ?? ''
+	},
+})
 const hasAttachments = computed(() => (task.value.attachments?.length ?? 0) > 0)
 const remindersDefaultRelativeTo = computed(() => {
-	if (task.value.due_date) {
+	if (parseDateOrNull(task.value.due_date)) {
 		return REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE
 	}
-	if (task.value.start_date) {
+	if (parseDateOrNull(task.value.start_date)) {
 		return REMINDER_PERIOD_RELATIVE_TO_TYPES.STARTDATE
 	}
-	if (task.value.end_date) {
+	if (parseDateOrNull(task.value.end_date)) {
 		return REMINDER_PERIOD_RELATIVE_TO_TYPES.ENDDATE
 	}
 	return null
@@ -789,7 +819,7 @@ onBeforeRouteLeave(async () => {
 				stop()
 				resolve()
 			}, 5000) // 5 second timeout
-			
+
 			const stop = watch(lastProjectOrTaskProject, (p) => {
 				if (p) {
 					clearTimeout(timeout)
@@ -811,12 +841,12 @@ onBeforeRouteLeave(async () => {
 // updated, changed, updated and so on.
 // To prevent this, we put the task color property in a separate value which is set to the task color
 // when it is saved and loaded.
-const taskColor = ref<ITask['hex_color']>('')
+const taskColor = ref('')
 
 // Used to avoid flashing of empty elements if the task content is not yet loaded.
 const visible = ref(false)
 
-const project = computed(() => projectList.projects[task.value.project_id])
+const project = computed(() => projectList.projects[task.value.project_id ?? 0])
 
 const projectRoute = computed(() => ({
 	name: 'project.index',
@@ -825,34 +855,30 @@ const projectRoute = computed(() => ({
 }))
 
 const canWrite = computed(() => (
-	task.value.maxPermission !== null &&
-	task.value.maxPermission > PERMISSIONS.READ
+	(taskQuery.task.value?.max_permission ?? 0) > PERMISSIONS.READ
 ))
 
-const color = computed(() => {
-	const color = task.value.getHexColor
-		? task.value.getHexColor()
-		: undefined
-
-	return color
-})
+const color = computed(() => getHexColor(task.value.hex_color))
 
 const isModal = computed(() => Boolean(props.backdropView))
 
 async function attachmentUpload(file: File, onSuccess?: (url: string) => void) {
 	const uploaded = await uploadFile(props.taskId, file, onSuccess)
 	if (uploaded.length > 0) {
-		onAttachmentsUpdated([...task.value.attachments, ...uploaded])
+		onAttachmentsUpdated()
+		await attachmentsRef.value?.reloadAttachments()
 	}
 	return uploaded
 }
 
-function onAttachmentsUpdated(attachments: IAttachment[]) {
-	task.value.attachments = attachments
-	kanbanStore.setTaskInBucket({
-		...task.value,
-		attachments,
-	})
+function setReactions(reactions: ITask['reactions']) {
+	task.value = {...task.value, reactions}
+	taskQuery.refetch()
+}
+
+async function onAttachmentsUpdated() {
+	const result = await taskQuery.refetch()
+	if (result.data) replaceTaskEverywhere(queryClient, result.data)
 }
 
 const heading = ref<HTMLElement | null>(null)
@@ -939,53 +965,8 @@ onMounted(async () => {
 	updateScrollable()
 })
 
-const taskService = shallowReactive(new TaskService())
+const taskLoading = taskQuery.isFetching
 
-// load task
-watch(
-	() => props.taskId,
-	async (id) => {
-		if (id === undefined) {
-			return
-		}
-
-		try {
-			const expand = ['reactions', 'comments', 'is_unread', 'buckets']
-			if (timeTrackingEnabled.value) {
-				// Only request the (server-computed) count when the feature is on.
-				expand.push('time_entries_count')
-			}
-			const loaded = await taskService.get({id}, {expand})
-			Object.assign(task.value, loaded)
-			taskColor.value = task.value.hex_color
-			setActiveFields()
-
-			if (task.value.is_unread) {
-				await taskStore.markTaskAsRead(task.value.id)
-				task.value.is_unread = false
-			}
-
-			if (lastProject.value) {
-				baseStore.setCurrentProjectIfNotSet(lastProject.value)
-			}
-		} catch (e) {
-			// 403 means the task exists but is not visible to us; treat it like
-			// a 404 so we route away instead of rendering an empty task shell.
-			if (e?.response?.status === 404 || e?.response?.status === 403) {
-				taskNotFound.value = true
-				router.replace({name: 'not-found'})
-				return
-			}
-
-			throw e
-		} finally {
-			await nextTick()
-			scrollToHeading()
-			resolveScrollContainer()
-			updateScrollable()
-			visible.value = true
-		}
-	}, {immediate: true})
 
 type FieldType =
 	| 'assignees'
@@ -1007,53 +988,79 @@ const activeFields: { [type in FieldType]: boolean } = reactive({
 	assignees: false,
 	attachments: false,
 	color: false,
-	due_date: false,
-	end_date: false,
+	dueDate: false,
+	endDate: false,
 	labels: false,
 	moveProject: false,
-	percent_done: false,
+	percentDone: false,
 	priority: false,
-	related_tasks: false,
+	relatedTasks: false,
 	reminders: false,
-	repeat_after: false,
-	start_date: false,
+	repeatAfter: false,
+	startDate: false,
 	timeTracking: false,
 })
 
 function setActiveFields() {
-	// FIXME: are these lines necessary?
-	// task.start_date = task.start_date || null
-	// task.end_date = task.end_date || null
-
 	// Set all active fields based on values in the model
-	activeFields.assignees = task.value.assignees.length > 0
-	activeFields.attachments = task.value.attachments.length > 0
+	activeFields.assignees = (task.value.assignees?.length ?? 0) > 0
+	activeFields.attachments = (task.value.attachments?.length ?? 0) > 0
 	activeFields.timeTracking = (task.value.time_entries_count ?? 0) > 0
-	activeFields.due_date = task.value.due_date !== null
-	activeFields.end_date = task.value.end_date !== null
-	activeFields.labels = task.value.labels.length > 0
-	activeFields.percent_done = task.value.percent_done > 0
+	activeFields.dueDate = Boolean(parseDateOrNull(task.value.due_date))
+	activeFields.endDate = Boolean(parseDateOrNull(task.value.end_date))
+	activeFields.labels = (task.value.labels?.length ?? 0) > 0
+	activeFields.percentDone = (task.value.percent_done ?? 0) > 0
 	activeFields.priority = task.value.priority !== PRIORITIES.UNSET
-	activeFields.related_tasks = Object.keys(task.value.related_tasks).length > 0
-	activeFields.reminders = task.value.reminders.length > 0
-	activeFields.repeat_after = task.value.repeat_after?.amount > 0 || task.value.repeat_mode !== TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
-	activeFields.start_date = task.value.start_date !== null
+	activeFields.relatedTasks = Object.keys(task.value.related_tasks ?? {}).length > 0
+	activeFields.reminders = (task.value.reminders?.length ?? 0) > 0
+	activeFields.repeatAfter = (task.value.repeat_after ?? 0) > 0
+		|| task.value.repeat_mode !== TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
+	activeFields.startDate = Boolean(parseDateOrNull(task.value.start_date))
 }
+
+watch(taskQuery.task, async (loaded, previous) => {
+	if (!loaded) return
+	if (loaded.id !== previous?.id) {
+		seedTask(loaded)
+		setActiveFields()
+	} else {
+		followServerFields(loaded)
+	}
+	if (loaded.is_unread) taskStore.markTaskAsRead(loaded.id).catch(() => {})
+	if (lastProject.value) baseStore.setCurrentProjectIfNotSet(lastProject.value)
+	await nextTick()
+	if (loaded.id !== previous?.id) scrollToHeading()
+	resolveScrollContainer()
+	updateScrollable()
+	visible.value = true
+}, {immediate: true})
+watch(taskQuery.error, cause => {
+	if (!cause) return
+	const action = taskLoadErrorAction(cause)
+	if (action === 'ignore') return
+	if (action === 'notFound') {
+		taskNotFound.value = true
+		router.replace({name: 'not-found'})
+		return
+	}
+	error(cause)
+	visible.value = true
+})
 
 const activeFieldElements: { [id in FieldType]: HTMLElement | null } = reactive({
 	assignees: null,
 	attachments: null,
 	color: null,
-	due_date: null,
-	end_date: null,
+	dueDate: null,
+	endDate: null,
 	labels: null,
 	moveProject: null,
-	percent_done: null,
+	percentDone: null,
 	priority: null,
-	related_tasks: null,
+	relatedTasks: null,
 	reminders: null,
-	repeat_after: null,
-	start_date: null,
+	repeatAfter: null,
+	startDate: null,
 	timeTracking: null,
 })
 
@@ -1124,15 +1131,14 @@ async function saveTask(
 	// If no end date is being set, but a start date and due date,
 	// use the due date as the end date
 	if (
-		currentTask.end_date === null &&
-		currentTask.start_date !== null &&
-		currentTask.due_date !== null
+		!parseDateOrNull(currentTask.end_date) &&
+		Boolean(parseDateOrNull(currentTask.start_date)) &&
+		Boolean(parseDateOrNull(currentTask.due_date))
 	) {
 		currentTask.end_date = currentTask.due_date
 	}
 
-	const updatedTask = await taskStore.update(currentTask) // TODO: markraw ?
-	Object.assign(task.value, updatedTask)
+	seedTask(mergeTask(task.value, await taskStore.update(currentTask)))
 	setActiveFields()
 
 	let actions: MessageAction[] = []
@@ -1179,34 +1185,32 @@ async function changeProject(project: ProjectResponse | null) {
 	if (project === null) {
 		return
 	}
-	kanbanStore.removeTaskInBucket(task.value)
 	await saveTask({
 		...task.value,
-		projectId: project.id,
+		project_id: project.id,
 	})
 	baseStore.setCurrentProject(project)
 }
 
 async function toggleSubscription(subscribed: boolean) {
-	const path = {entity: 'task', entityID: task.value.id} as const
+	const path = {entity: 'task', entityID: task.value.id!} as const
 	if (subscribed) {
-		const {data} = await subscriptionsCreate({path})
-		task.value.subscription = subscriptionFromApi(data)
+		await subscriptionsCreate({path})
+		await taskQuery.refetch()
 		success({message: t('task.subscription.subscribeSuccessTask')})
 		return
 	}
 	await subscriptionsDelete({path})
-	task.value.subscription = null
+	await taskQuery.refetch()
 	success({message: t('task.subscription.unsubscribeSuccessTask')})
 }
 
 async function toggleFavorite() {
-	const newTask = await taskStore.toggleFavorite(task.value)
-	Object.assign(task.value, newTask)
+	await taskStore.toggleFavorite(task.value)
 }
 
 async function duplicateCurrentTask() {
-	const duplicatedTask = await taskStore.duplicateTask(task.value.id)
+	const duplicatedTask = await taskStore.duplicateTask(task.value.id!)
 	if (duplicatedTask) {
 		success({message: t('task.detail.duplicateSuccess')})
 		router.push({
@@ -1228,14 +1232,14 @@ async function setPriority(priority: Priority) {
 async function setPercentDone(percentDone: number) {
 	const newTask: ITask = {
 		...task.value,
-		percentDone,
+		percent_done: percentDone,
 	}
 
 	return saveTask(newTask)
 }
 
 async function removeRepeatAfter() {
-	task.value.repeat_after.amount = 0
+	task.value.repeat_after = 0
 	task.value.repeat_mode = TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
 	await saveTask()
 }
