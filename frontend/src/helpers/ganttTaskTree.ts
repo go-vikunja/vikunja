@@ -1,4 +1,4 @@
-import type {ITask} from '@/modelTypes/ITask'
+import type {Task as ITask} from '@/client/generated'
 
 const MAX_INDENT_LEVEL = 4
 
@@ -22,7 +22,7 @@ export function buildGanttTaskTree(tasks: Map<number, ITask>): GanttTaskTreeNode
 	const hasParentInView = new Set<number>()
 
 	for (const [taskId, task] of tasks) {
-		const subtasks = task.relatedTasks?.subtask ?? []
+		const subtasks = task.related_tasks?.subtask ?? []
 		const childIds = subtasks
 			.map(s => s.id)
 			.filter(id => tasks.has(id))
@@ -31,7 +31,7 @@ export function buildGanttTaskTree(tasks: Map<number, ITask>): GanttTaskTreeNode
 			childrenMap.set(taskId, childIds)
 		}
 
-		const parents = task.relatedTasks?.parenttask ?? []
+		const parents = task.related_tasks?.parenttask ?? []
 		for (const parent of parents) {
 			if (tasks.has(parent.id)) {
 				hasParentInView.add(taskId)
@@ -67,7 +67,7 @@ export function buildGanttTaskTree(tasks: Map<number, ITask>): GanttTaskTreeNode
 		let derivedEndDate: Date | null = null
 		let hasDerivedDates = false
 
-		if (isParent && !task.startDate && !task.endDate && !task.dueDate) {
+		if (isParent && !task.start_date && !task.end_date && !task.due_date) {
 			const dates = collectChildDates(childIds, tasks, childrenMap)
 			derivedStartDate = dates.minStart
 			derivedEndDate = dates.maxEnd
@@ -124,9 +124,9 @@ function collectChildDates(
 		const child = tasks.get(childId)
 		if (!child) continue
 
-		const start = child.startDate ? new Date(child.startDate) : null
-		const end = child.endDate || child.dueDate
-			? new Date((child.endDate || child.dueDate) as Date)
+		const start = child.start_date ? new Date(child.start_date) : null
+		const end = child.end_date || child.due_date
+			? new Date((child.end_date || child.due_date) as Date)
 			: null
 
 		if (start && (!minStart || start < minStart)) {

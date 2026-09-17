@@ -1,6 +1,6 @@
 import {describe, it, expect, beforeEach} from 'vitest'
 
-import type {ITask} from '@/modelTypes/ITask'
+import type {Task as ITask} from '@/client/generated'
 import {
 	clearTaskCache,
 	deleteCachedTask,

@@ -8,7 +8,7 @@ import TaskCollectionService, {
 	getDefaultTaskFilterParams,
 	type TaskFilterParams,
 } from '@/services/taskCollection'
-import type {ITask} from '@/modelTypes/ITask'
+import type {Task as ITask} from '@/client/generated'
 import {error} from '@/message'
 import {useAuthStore} from '@/stores/auth'
 import {useViewFiltersStore} from '@/stores/viewFilters'

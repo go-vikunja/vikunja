@@ -64,7 +64,7 @@ import {useElementHover} from '@vueuse/core'
 import {useRouter} from 'vue-router'
 
 import {RELATION_KIND} from '@/types/IRelationKind'
-import type {ITask} from '@/modelTypes/ITask'
+import type {Task as ITask} from '@/client/generated'
 
 import Expandable from '@/components/base/Expandable.vue'
 import QuickAddMagic from '@/components/tasks/partials/QuickAddMagic.vue'
@@ -210,26 +210,26 @@ async function addTask() {
 				relationKind: RELATION_KIND.PARENTTASK,
 			}))
 			
-			if (typeof createdTask.relatedTasks === 'undefined') {
-				createdTask.relatedTasks = {}
+			if (typeof createdTask.related_tasks === 'undefined') {
+				createdTask.related_tasks = {}
 			}
-			if (typeof createdTask.relatedTasks[RELATION_KIND.PARENTTASK] === 'undefined') {
-				createdTask.relatedTasks[RELATION_KIND.PARENTTASK] = []
+			if (typeof createdTask.related_tasks[RELATION_KIND.PARENTTASK] === 'undefined') {
+				createdTask.related_tasks[RELATION_KIND.PARENTTASK] = []
 			}
-			createdTask.relatedTasks[RELATION_KIND.PARENTTASK].push({
+			createdTask.related_tasks[RELATION_KIND.PARENTTASK].push({
 				...createdParentTask,
-				relatedTasks: {}, // To avoid endless references
+				related_tasks: {}, // To avoid endless references
 			})
 
-			if (typeof createdParentTask.relatedTasks === 'undefined') {
-				createdParentTask.relatedTasks = {}
+			if (typeof createdParentTask.related_tasks === 'undefined') {
+				createdParentTask.related_tasks = {}
 			}
-			if (typeof createdParentTask.relatedTasks[RELATION_KIND.SUBTASK] === 'undefined') {
-				createdParentTask.relatedTasks[RELATION_KIND.SUBTASK] = []
+			if (typeof createdParentTask.related_tasks[RELATION_KIND.SUBTASK] === 'undefined') {
+				createdParentTask.related_tasks[RELATION_KIND.SUBTASK] = []
 			}
-			createdParentTask.relatedTasks[RELATION_KIND.SUBTASK].push({
+			createdParentTask.related_tasks[RELATION_KIND.SUBTASK].push({
 				...createdTask,
-				relatedTasks: {}, // To avoid endless references
+				related_tasks: {}, // To avoid endless references
 			})
 
 			return rel

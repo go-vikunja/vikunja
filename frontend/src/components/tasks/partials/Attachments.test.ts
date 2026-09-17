@@ -6,7 +6,7 @@ import Modal from '@/components/misc/Modal.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import XButton from '@/components/input/Button.vue'
 import type {IAttachment} from '@/modelTypes/IAttachment'
-import type {ITask} from '@/modelTypes/ITask'
+import type {Task as ITask} from '@/client/generated'
 
 vi.mock('@/services/attachment', () => ({
 	default: class {

@@ -44,8 +44,8 @@
 import {ref, computed, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 
-import type {ITask} from '@/modelTypes/ITask'
-import type {IBucket} from '@/modelTypes/IBucket'
+import type {Task as ITask} from '@/client/generated'
+import type {Bucket as IBucket} from '@/client/generated'
 
 import {PROJECT_VIEW_KINDS} from '@/constants/projectView'
 
@@ -78,7 +78,7 @@ const projectList = useProjects()
 const kanbanStore = useKanbanStore()
 const baseStore = useBaseStore()
 
-const project = computed(() => projectList.projects[props.task.projectId])
+const project = computed(() => projectList.projects[props.task.project_id])
 
 // If the project has exactly one manual kanban view, always use it.
 // If there are multiple, only show the selector when the active view is one of them.
@@ -117,7 +117,7 @@ watch(
 		const bucketService = new BucketService()
 		try {
 			buckets.value = await bucketService.getAll({
-				projectId: props.task.projectId,
+				projectId: props.task.project_id,
 				projectViewId: view.id,
 			} as IBucket)
 		} catch (e) {
@@ -148,7 +148,7 @@ async function changeBucket(bucket: IBucket) {
 		taskId: props.task.id,
 		bucketId: bucket.id,
 		projectViewId: kanbanView.value.id,
-		projectId: props.task.projectId,
+		projectId: props.task.project_id,
 	}))
 
 	const updatedBuckets = (props.task.buckets || []).map(b => {
@@ -170,7 +170,7 @@ async function changeBucket(bucket: IBucket) {
 	const updatedTask = {
 		...props.task,
 		done: updatedTaskBucket.task?.done ?? props.task.done,
-		doneAt: updatedTaskBucket.task?.doneAt ?? props.task.doneAt,
+		done_at: updatedTaskBucket.task?.done_at ?? props.task.done_at,
 		buckets: updatedBuckets,
 		bucketId: bucket.id,
 	}

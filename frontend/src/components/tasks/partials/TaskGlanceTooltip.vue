@@ -58,11 +58,11 @@
 					/>
 
 					<div
-						v-if="task.dueDate"
+						v-if="task.due_date"
 						class="task-glance-due"
 					>
 						<Icon icon="calendar" />
-						<span>{{ $t('task.detail.due', {at: formatDisplayDate(task.dueDate)}) }}</span>
+						<span>{{ $t('task.detail.due', {at: formatDisplayDate(task.due_date)}) }}</span>
 					</div>
 
 					<div class="task-glance-meta">
@@ -87,8 +87,8 @@ import {ref, computed, onUnmounted, nextTick, useId} from 'vue'
 import {computePosition, flip, offset, shift} from '@floating-ui/dom'
 import {useMediaQuery} from '@vueuse/core'
 
-import type {ITask} from '@/modelTypes/ITask'
-import {getTaskIdentifier} from '@/models/task'
+import type {Task as ITask} from '@/client/generated'
+import {getTaskIdentifier} from '@/helpers/task'
 import {formatDisplayDate} from '@/helpers/time/formatDate'
 import {getDisplayName} from '@/models/user'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'

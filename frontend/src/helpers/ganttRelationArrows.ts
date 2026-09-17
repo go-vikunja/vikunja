@@ -1,4 +1,4 @@
-import type {ITask} from '@/modelTypes/ITask'
+import type {Task as ITask} from '@/client/generated'
 
 export interface GanttBarPosition {
 	x: number       // left edge x position
@@ -39,7 +39,7 @@ export function buildRelationArrows(
 		const sourceKinds = ['blocking', 'precedes'] as const
 
 		for (const kind of sourceKinds) {
-			const relatedTasks = task.relatedTasks?.[kind] ?? []
+			const relatedTasks = task.related_tasks?.[kind] ?? []
 
 			for (const related of relatedTasks) {
 				let fromId = taskId

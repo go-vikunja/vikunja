@@ -121,14 +121,14 @@ import Datepicker from '@/components/input/Datepicker.vue'
 import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
 
 import TaskService from '@/services/task'
-import TaskModel from '@/models/task'
+import {createTaskDraft} from '@/helpers/task'
 import {smartFillStart} from '@/helpers/time/smartFillStart'
 import {useTimeTrackingStore} from '@/stores/timeTracking'
 import {useAuthStore} from '@/stores/auth'
 import {useProjects} from '@/composables/useProjects'
 
 import type {ProjectResponse} from '@/client/queries/projects'
-import type {ITask} from '@/modelTypes/ITask'
+import type {Task as ITask} from '@/client/generated'
 import type {ITimeEntry} from '@/modelTypes/ITimeEntry'
 
 const props = withDefaults(defineProps<{
@@ -186,7 +186,7 @@ async function findTasks(query: string) {
 	const result = await taskService.getAll({}, {s: query, sort_by: 'done'}) as ITask[]
 	foundTasks.value = selectedProject.value === null
 		? result
-		: result.filter(task => task.projectId === selectedProject.value?.id)
+		: result.filter(task => task.project_id === selectedProject.value?.id)
 }
 
 const canSubmit = computed(() =>
@@ -255,7 +255,7 @@ watch(() => props.entry, async entry => {
 	if (entry.taskId > 0) {
 		selectedProject.value = null
 		try {
-			selectedTask.value = await taskService.get(new TaskModel({id: entry.taskId})) as ITask
+			selectedTask.value = await taskService.get(createTaskDraft({id: entry.taskId})) as ITask
 		} catch {
 			selectedTask.value = null
 		}

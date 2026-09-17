@@ -3,7 +3,7 @@ import {describe, expect, it, vi, beforeEach} from 'vitest'
 import {nextTick, ref} from 'vue'
 import draggable from 'zhyswan-vuedraggable'
 
-import type {ITask} from '@/modelTypes/ITask'
+import type {Task as ITask} from '@/client/generated'
 
 const {updatePosition} = vi.hoisted(() => ({updatePosition: vi.fn()}))
 

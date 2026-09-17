@@ -1,6 +1,6 @@
 import {useI18n} from 'vue-i18n'
 
-import type {ITask} from '@/modelTypes/ITask'
+import type {Task as ITask} from '@/client/generated'
 import {useTaskStore} from '@/stores/tasks'
 import {useProjects} from '@/composables/useProjects'
 import {success, error} from '@/message'
@@ -83,7 +83,7 @@ export function useTaskDragToProject() {
 		const mouseY = e.originalEvent.clientY
 		const targetProjectId = findProjectIdAtPosition(mouseX, mouseY)
 
-		if (!targetProjectId || targetProjectId <= 0 || targetProjectId === draggedTask.projectId) {
+		if (!targetProjectId || targetProjectId <= 0 || targetProjectId === draggedTask.project_id) {
 			taskStore.setDraggedTask(null)
 			return {moved: false, targetProjectId}
 		}

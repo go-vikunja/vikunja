@@ -1,16 +1,16 @@
 import {describe, expect, it} from 'vitest'
 import {buildGanttTaskTree} from './ganttTaskTree'
-import type {ITask} from '@/modelTypes/ITask'
+import type {Task as ITask} from '@/client/generated'
 
 function makeTask(id: number, overrides: Partial<ITask> = {}): ITask {
 	return {
 		id,
 		title: `Task ${id}`,
-		startDate: new Date('2026-03-01'),
-		endDate: new Date('2026-03-10'),
-		dueDate: null,
+		start_date: new Date('2026-03-01'),
+		end_date: new Date('2026-03-10'),
+		due_date: null,
 		done: false,
-		relatedTasks: {},
+		related_tasks: {},
 		...overrides,
 	} as ITask
 }
@@ -34,13 +34,13 @@ describe('buildGanttTaskTree', () => {
 
 	it('nests subtasks under parents in depth-first order', () => {
 		const child1 = makeTask(2, {
-			relatedTasks: {parenttask: [makeTask(1)]},
+			related_tasks: {parenttask: [makeTask(1)]},
 		})
 		const child2 = makeTask(3, {
-			relatedTasks: {parenttask: [makeTask(1)]},
+			related_tasks: {parenttask: [makeTask(1)]},
 		})
 		const parent = makeTask(1, {
-			relatedTasks: {subtask: [makeTask(2), makeTask(3)]},
+			related_tasks: {subtask: [makeTask(2), makeTask(3)]},
 		})
 
 		const tasks = new Map<number, ITask>([
@@ -64,16 +64,16 @@ describe('buildGanttTaskTree', () => {
 
 	it('handles multi-level nesting', () => {
 		const grandchild = makeTask(3, {
-			relatedTasks: {parenttask: [makeTask(2)]},
+			related_tasks: {parenttask: [makeTask(2)]},
 		})
 		const child = makeTask(2, {
-			relatedTasks: {
+			related_tasks: {
 				parenttask: [makeTask(1)],
 				subtask: [makeTask(3)],
 			},
 		})
 		const parent = makeTask(1, {
-			relatedTasks: {subtask: [makeTask(2)]},
+			related_tasks: {subtask: [makeTask(2)]},
 		})
 
 		const tasks = new Map<number, ITask>([
@@ -95,7 +95,7 @@ describe('buildGanttTaskTree', () => {
 		// Build a chain: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 		const tasks = new Map<number, ITask>()
 		for (let i = 1; i <= 6; i++) {
-			const relatedTasks: ITask['relatedTasks'] = {}
+			const relatedTasks: ITask['related_tasks'] = {}
 			if (i > 1) relatedTasks.parenttask = [makeTask(i - 1)]
 			if (i < 6) relatedTasks.subtask = [makeTask(i + 1)]
 			tasks.set(i, makeTask(i, {relatedTasks}))
@@ -109,20 +109,20 @@ describe('buildGanttTaskTree', () => {
 
 	it('calculates derived dates for dateless parents from children', () => {
 		const child1 = makeTask(2, {
-			startDate: new Date('2026-03-05'),
-			endDate: new Date('2026-03-10'),
-			relatedTasks: {parenttask: [makeTask(1)]},
+			start_date: new Date('2026-03-05'),
+			end_date: new Date('2026-03-10'),
+			related_tasks: {parenttask: [makeTask(1)]},
 		})
 		const child2 = makeTask(3, {
-			startDate: new Date('2026-03-01'),
-			endDate: new Date('2026-03-15'),
-			relatedTasks: {parenttask: [makeTask(1)]},
+			start_date: new Date('2026-03-01'),
+			end_date: new Date('2026-03-15'),
+			related_tasks: {parenttask: [makeTask(1)]},
 		})
 		const parent = makeTask(1, {
-			startDate: null,
-			endDate: null,
-			dueDate: null,
-			relatedTasks: {subtask: [makeTask(2), makeTask(3)]},
+			start_date: null,
+			end_date: null,
+			due_date: null,
+			related_tasks: {subtask: [makeTask(2), makeTask(3)]},
 		})
 
 		const tasks = new Map<number, ITask>([

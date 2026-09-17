@@ -1,21 +1,21 @@
 <template>
 	<div
 		class="task"
-		:data-is-overdue="task.dueDate <= new Date() && !task.done || undefined"
+		:data-is-overdue="task.due_date <= new Date() && !task.done || undefined"
 	>
 		<span>
 			<span
 				v-if="showProject && typeof project !== 'undefined'"
 				v-tooltip="$t('task.detail.belongsToProject', {project: project.title})"
 				class="task-project"
-				:class="{'mie-2': task.hexColor !== ''}"
+				:class="{'mie-2': task.hex_color !== ''}"
 			>
 				{{ project.title }}
 			</span>
 
 			<ColorBubble
-				v-if="task.hexColor !== ''"
-				:color="getHexColor(task.hexColor)"
+				v-if="task.hex_color !== ''"
+				:color="getHexColor(task.hex_color)"
 				class="mie-1"
 			/>
 
@@ -26,11 +26,11 @@
 
 			<!-- Show any parent tasks to make it clear this task is a sub task of something -->
 			<span
-				v-if="typeof task.relatedTasks?.parenttask !== 'undefined'"
+				v-if="typeof task.related_tasks?.parenttask !== 'undefined'"
 				class="parent-tasks"
 			>
-				<template v-for="(pt, i) in task.relatedTasks.parenttask">
-					{{ pt.title }}<template v-if="(i + 1) < task.relatedTasks.parenttask.length">,&nbsp;</template>
+				<template v-for="(pt, i) in task.related_tasks.parenttask">
+					{{ pt.title }}<template v-if="(i + 1) < task.related_tasks.parenttask.length">,&nbsp;</template>
 				</template>
 				&rsaquo;
 			</span>
@@ -52,15 +52,15 @@
 		/>
 
 		<span
-			v-if="+new Date(task.dueDate) > 0"
-			v-tooltip="formatDateLong(task.dueDate)"
+			v-if="+new Date(task.due_date) > 0"
+			v-tooltip="formatDateLong(task.due_date)"
 			class="dueDate"
 		>
 			<time
-				:datetime="formatISO(task.dueDate)"
+				:datetime="formatISO(task.due_date)"
 				class="is-italic"
 			>
-				– {{ $t('task.detail.due', {at: formatDisplayDate(task.dueDate)}) }}
+				– {{ $t('task.detail.due', {at: formatDisplayDate(task.due_date)}) }}
 			</time>
 		</span>
 
@@ -80,7 +80,7 @@
 				<Icon icon="align-left" />
 			</span>
 			<span
-				v-if="task.repeatAfter.amount > 0"
+				v-if="task.repeat_after.amount > 0"
 				class="project-task-icon"
 			>
 				<Icon icon="history" />
@@ -90,12 +90,12 @@
 		<ChecklistSummary :task="task" />
 
 		<progress
-			v-if="task.percentDone > 0"
+			v-if="task.percent_done > 0"
 			class="progress is-small"
-			:value="task.percentDone * 100"
+			:value="task.percent_done * 100"
 			max="100"
 		>
-			{{ task.percentDone * 100 }}%
+			{{ task.percent_done * 100 }}%
 		</progress>
 	</div>
 </template>
@@ -103,8 +103,8 @@
 <script setup lang="ts">
 import {computed} from 'vue'
 
-import {getHexColor} from '@/models/task'
-import type {ITask} from '@/modelTypes/ITask'
+import {getHexColor} from '@/helpers/task'
+import type {Task as ITask} from '@/client/generated'
 
 import PriorityLabel from '@/components/tasks/partials/PriorityLabel.vue'
 import Labels from '@/components/tasks/partials/Labels.vue'
@@ -126,7 +126,7 @@ const props = withDefaults(defineProps<{
 
 const projectList = useProjects()
 
-const project = computed(() => projectList.projects[props.task.projectId])
+const project = computed(() => projectList.projects[props.task.project_id])
 </script>
 
 <style lang="scss" scoped>
@@ -150,12 +150,12 @@ const project = computed(() => projectList.projects[props.task.projectId])
 
 	//flex: 1 0 50%;
 
-	.dueDate {
+	.due_date {
 		display: inline-block;
 		margin-inline-start: 5px;
 	}
 
-	&[data-is-overdue] .dueDate {
+	&[data-is-overdue] .due_date {
 		color: var(--danger-text);
 	}
 

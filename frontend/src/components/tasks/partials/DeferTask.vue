@@ -46,7 +46,7 @@ import {useDebounceFn} from '@vueuse/core'
 import DatepickerInline from '@/components/input/DatepickerInline.vue'
 
 import TaskService from '@/services/task'
-import type {ITask} from '@/modelTypes/ITask'
+import type {Task as ITask} from '@/client/generated'
 
 const props = defineProps<{
 	modelValue: ITask,
@@ -67,8 +67,8 @@ watch(
 	() => props.modelValue,
 	(value) => {
 		task.value = { ...value }
-		dueDate.value = value.dueDate
-		lastValue.value = value.dueDate
+		dueDate.value = value.due_date
+		lastValue.value = value.due_date
 	},
 	{immediate: true},
 )
@@ -100,9 +100,9 @@ async function updateDueDate() {
 
 	const newTask = await taskService.update({
 		...task.value,
-		dueDate: new Date(dueDate.value),
+		due_date: new Date(dueDate.value),
 	})
-	lastValue.value = newTask.dueDate
+	lastValue.value = newTask.due_date
 	task.value = newTask
 	emit('update:modelValue', newTask)
 }

@@ -89,7 +89,7 @@ import {useI18n} from 'vue-i18n'
 import {useIsMobile} from '@/composables/useIsMobile'
 
 import {type PeriodUnit, secondsToPeriod} from '@/helpers/time/period'
-import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
+import type {TaskReminder as ITaskReminder} from '@/client/generated'
 import {formatDisplayDate} from '@/helpers/time/formatDate'
 
 import DatepickerInline from '@/components/input/DatepickerInline.vue'

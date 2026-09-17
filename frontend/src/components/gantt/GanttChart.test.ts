@@ -7,7 +7,7 @@ import GanttChart from './GanttChart.vue'
 import GanttTimelineHeader from './GanttTimelineHeader.vue'
 import en from '@/i18n/lang/en.json'
 import {i18n as globalI18n} from '@/i18n'
-import type {ITask} from '@/modelTypes/ITask'
+import type {Task as ITask} from '@/client/generated'
 import type {GanttFilters} from '@/views/project/helpers/useGanttFilters'
 
 const i18n = createI18n({legacy: false, locale: 'en', messages: {en}})

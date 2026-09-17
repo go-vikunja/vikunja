@@ -57,7 +57,7 @@
 								:class="{'is-strikethrough': task.done}"
 							>
 								<span
-									v-if="task.projectId !== projectId"
+									v-if="task.project_id !== projectId"
 									class="different-project"
 								>
 									<span
@@ -129,7 +129,7 @@
 							:class="{ 'is-strikethrough': task.done}"
 						>
 							<span
-								v-if="task.projectId !== projectId"
+								v-if="task.project_id !== projectId"
 								class="different-project"
 							>
 								<span
@@ -189,8 +189,8 @@ import {useI18n} from 'vue-i18n'
 import {useRoute} from 'vue-router'
 
 import TaskService from '@/services/task'
-import TaskModel, {getTaskIdentifier} from '@/models/task'
-import type {ITask} from '@/modelTypes/ITask'
+import {createTaskDraft, getTaskIdentifier} from '@/helpers/task'
+import type {Task as ITask} from '@/client/generated'
 import type {ITaskRelation} from '@/modelTypes/ITaskRelation'
 import {RELATION_KINDS, type IRelationKind} from '@/types/IRelationKind'
 
@@ -211,7 +211,7 @@ import {playPopSound} from '@/helpers/playPop'
 
 const props = withDefaults(defineProps<{
 	taskId: number,
-	initialRelatedTasks?: ITask['relatedTasks'],
+	initialRelatedTasks?: ITask['related_tasks'],
 	showNoRelationsNotice?: boolean,
 	projectId: number,
 	editEnabled: boolean,
@@ -230,11 +230,11 @@ type TaskRelation = {kind: IRelationKind, task: ITask}
 
 const taskService = shallowReactive(new TaskService())
 
-const relatedTasks = ref<ITask['relatedTasks']>({})
+const relatedTasks = ref<ITask['related_tasks']>({})
 
 const newTaskRelation: TaskRelation = reactive({
 	kind: authStore.settings.frontendSettings.defaultTaskRelationType as IRelationKind,
-	task: new TaskModel(),
+	task: createTaskDraft(),
 })
 
 watch(
@@ -264,13 +264,13 @@ async function findTasks(newQuery: string) {
 function mapRelatedTasks(tasks: ITask[]) {
 	return tasks.map(task => {
 		// by doing this here once we can save a lot of duplicate calls in the template
-		const project = projectList.projects[task.projectId]
+		const project = projectList.projects[task.project_id]
 
 		return {
 			...task,
 			differentProject:
 				(project &&
-					task.projectId !== props.projectId &&
+					task.project_id !== props.projectId &&
 					project?.title) || null,
 		}
 	})
@@ -338,7 +338,7 @@ async function addTaskRelation() {
 		...(relatedTasks.value[newTaskRelation.kind] || []),
 		newTaskRelation.task,
 	]
-	newTaskRelation.task = new TaskModel()
+	newTaskRelation.task = createTaskDraft()
 	newTaskRelation.kind = authStore.settings.frontendSettings.defaultTaskRelationType as IRelationKind
 	saved.value = true
 	showNewRelationForm.value = false

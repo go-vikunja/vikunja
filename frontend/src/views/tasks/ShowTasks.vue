@@ -93,7 +93,7 @@
 					<SingleTaskInProject
 						:show-project="true"
 						:the-task="task"
-						:can-mark-as-done="(projectList.projects[task.projectId]?.max_permission ?? 0) > PERMISSIONS.READ"
+						:can-mark-as-done="(projectList.projects[task.project_id]?.max_permission ?? 0) > PERMISSIONS.READ"
 						@taskUpdated="updateTasks"
 					/>
 				</li>
@@ -124,7 +124,7 @@ import DatepickerWithRange from '@/components/date/DatepickerWithRange.vue'
 import XLabel from '@/components/tasks/partials/Label.vue'
 import {DATE_RANGES} from '@/components/date/dateRanges'
 import LlamaCool from '@/assets/llama-cool.svg?component'
-import type {ITask} from '@/modelTypes/ITask'
+import type {Task as ITask} from '@/client/generated'
 import {useAuthStore} from '@/stores/auth'
 import {useTaskStore} from '@/stores/tasks'
 import {useProjects} from '@/composables/useProjects'

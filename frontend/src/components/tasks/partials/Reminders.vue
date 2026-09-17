@@ -37,7 +37,7 @@
 <script setup lang="ts">
 import {ref, watch} from 'vue'
 
-import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
+import type {TaskReminder as ITaskReminder} from '@/client/generated'
 import type {IReminderPeriodRelativeTo} from '@/types/IReminderPeriodRelativeTo'
 
 import BaseButton from '@/components/base/BaseButton.vue'

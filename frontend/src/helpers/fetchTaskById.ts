@@ -1,5 +1,5 @@
-import type {ITask} from '@/modelTypes/ITask'
-import TaskModel from '@/models/task'
+import type {Task as ITask} from '@/client/generated'
+import {createTaskDraft} from '@/helpers/task'
 import TaskService from '@/services/task'
 import {deleteCachedTask, getCachedTask, setCachedTask} from '@/helpers/taskCache'
 
@@ -15,7 +15,7 @@ export function fetchTaskById(id: number): Promise<ITask> {
 		return cached
 	}
 
-	const task: Promise<ITask> = new TaskService().get(new TaskModel({id}))
+	const task: Promise<ITask> = new TaskService().get(createTaskDraft({id}))
 	task.catch(e => {
 		if (!isPermanentError(e)) {
 			deleteCachedTask(id, task)

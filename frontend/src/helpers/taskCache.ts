@@ -1,6 +1,6 @@
 import {shallowRef} from 'vue'
 
-import type {ITask} from '@/modelTypes/ITask'
+import type {Task as ITask} from '@/client/generated'
 
 const cache = new Map<number, Promise<ITask>>()
 

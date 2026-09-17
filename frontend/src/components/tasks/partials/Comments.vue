@@ -231,7 +231,7 @@ import TaskCommentService from '@/services/taskComment'
 import TaskCommentModel from '@/models/taskComment'
 
 import type {ITaskComment} from '@/modelTypes/ITaskComment'
-import type {ITask} from '@/modelTypes/ITask'
+import type {Task as ITask} from '@/client/generated'
 
 import {uploadFile, uploadFilesForEditor} from '@/helpers/attachments'
 import {success} from '@/message'

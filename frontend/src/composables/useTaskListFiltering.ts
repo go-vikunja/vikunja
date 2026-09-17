@@ -1,4 +1,4 @@
-import type {ITask} from '@/modelTypes/ITask'
+import type {Task as ITask} from '@/client/generated'
 
 /**
  * Determines if a task should be displayed in the List view.
@@ -16,13 +16,13 @@ export function shouldShowTaskInListView(
 	allTasksInView: ITask[],
 ): boolean {
 	// If task has no parent, always show it
-	const parentTasksCount = task.relatedTasks?.parenttask?.length ?? 0
+	const parentTasksCount = task.related_tasks?.parenttask?.length ?? 0
 	if (parentTasksCount === 0) {
 		return true
 	}
 
 	// Task has parent(s) - only hide if parent is in the same view
-	const parentTasks = task.relatedTasks?.parenttask ?? []
+	const parentTasks = task.related_tasks?.parenttask ?? []
 	const parentIds = parentTasks.map(p => p.id)
 	const hasParentInView = allTasksInView.some(t => parentIds.includes(t.id))
 

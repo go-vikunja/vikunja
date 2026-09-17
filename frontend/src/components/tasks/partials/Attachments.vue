@@ -54,7 +54,7 @@
 						<span class="filename">
 							{{ a.file.name }}
 							<span
-								v-if="task.coverImageAttachmentId === a.id"
+								v-if="task.cover_image_attachment_id === a.id"
 								class="is-task-cover"
 							>
 								{{ $t('task.attachment.usedAsCover') }}
@@ -105,16 +105,16 @@
 						</BaseButton>
 						<BaseButton
 							v-if="editEnabled && canPreviewImage(a)"
-							v-tooltip="task.coverImageAttachmentId === a.id
+							v-tooltip="task.cover_image_attachment_id === a.id
 								? $t('task.attachment.unsetAsCover')
 								: $t('task.attachment.setAsCover')"
-							:aria-label="task.coverImageAttachmentId === a.id
+							:aria-label="task.cover_image_attachment_id === a.id
 								? $t('task.attachment.unsetAsCover')
 								: $t('task.attachment.setAsCover')"
 							class="attachment-info-meta-button"
-							@click.prevent.stop="setCoverImage(task.coverImageAttachmentId === a.id ? null : a)"
+							@click.prevent.stop="setCoverImage(task.cover_image_attachment_id === a.id ? null : a)"
 						>
-							<Icon :icon="task.coverImageAttachmentId === a.id ? 'eye-slash' : 'eye'" />
+							<Icon :icon="task.cover_image_attachment_id === a.id ? 'eye-slash' : 'eye'" />
 						</BaseButton>
 					</p>
 				</div>
@@ -238,7 +238,7 @@ import AttachmentService from '@/services/attachment'
 import {canPreviewAudio, canPreviewImage, previewKind, type PreviewKind} from '@/models/attachment'
 import {getDisplayName} from '@/models/user'
 import type {IAttachment} from '@/modelTypes/IAttachment'
-import type {ITask} from '@/modelTypes/ITask'
+import type {Task as ITask} from '@/client/generated'
 
 import {formatDateLong} from '@/helpers/time/formatDate'
 import {uploadFiles, generateAttachmentUrl} from '@/helpers/attachments'

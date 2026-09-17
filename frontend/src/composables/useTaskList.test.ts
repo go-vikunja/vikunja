@@ -4,8 +4,8 @@ import {mount, flushPromises, enableAutoUnmount} from '@vue/test-utils'
 import {setActivePinia, createPinia} from 'pinia'
 import {createRouter, createMemoryHistory, RouterView, type Router} from 'vue-router'
 
-import type {ITask} from '@/modelTypes/ITask'
-import TaskModel from '@/models/task'
+import type {Task as ITask} from '@/client/generated'
+import {createTaskDraft} from '@/helpers/task'
 
 const getAll = vi.fn<(...args: unknown[]) => Promise<ITask[]>>(async () => [])
 vi.mock('@/services/taskCollection', async (importOriginal) => {
@@ -235,12 +235,12 @@ describe('useTaskList navigation and pagination', () => {
 		await flushPromises()
 		expect(taskList.tasks.value).toEqual([])
 
-		const currentTasks = [new TaskModel({id: 2, projectId: 2, title: 'Current project task'})]
+		const currentTasks = [createTaskDraft({id: 2, projectId: 2, title: 'Current project task'})]
 		resolveCurrent(currentTasks)
 		await flushPromises()
 		expect(taskList.tasks.value).toEqual(currentTasks)
 
-		resolveOld([new TaskModel({id: 1, projectId: 1, title: 'Previous project task'})])
+		resolveOld([createTaskDraft({id: 1, projectId: 1, title: 'Previous project task'})])
 		await previousLoad
 		expect(taskList.tasks.value).toEqual(currentTasks)
 	})

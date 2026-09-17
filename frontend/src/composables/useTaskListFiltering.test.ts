@@ -1,6 +1,6 @@
 import {describe, it, expect} from 'vitest'
 import {shouldShowTaskInListView} from './useTaskListFiltering'
-import type {ITask} from '@/modelTypes/ITask'
+import type {Task as ITask} from '@/client/generated'
 
 describe('shouldShowTaskInListView', () => {
 	it('should hide subtasks when parent is in the same project', () => {
@@ -8,14 +8,14 @@ describe('shouldShowTaskInListView', () => {
 			id: 1,
 			title: 'Parent Task',
 			projectId: 100,
-			relatedTasks: {},
+			related_tasks: {},
 		}
 
 		const subtask: Partial<ITask> = {
 			id: 2,
 			title: 'Subtask',
 			projectId: 100,
-			relatedTasks: {
+			related_tasks: {
 				parenttask: [{
 					id: 1,
 					title: 'Parent Task',
@@ -41,7 +41,7 @@ describe('shouldShowTaskInListView', () => {
 			id: 2,
 			title: 'Subtask in Project B',
 			projectId: 200,
-			relatedTasks: {
+			related_tasks: {
 				parenttask: [{
 					id: 1,
 					title: 'Parent Task in Project A',
@@ -61,7 +61,7 @@ describe('shouldShowTaskInListView', () => {
 			id: 1,
 			title: 'Regular Task',
 			projectId: 100,
-			relatedTasks: {},
+			related_tasks: {},
 		}
 
 		const allTasks = [task] as ITask[]
@@ -86,7 +86,7 @@ describe('shouldShowTaskInListView', () => {
 			id: 1,
 			title: 'Regular Task',
 			projectId: 100,
-			relatedTasks: {
+			related_tasks: {
 				parenttask: [],
 			},
 		}
@@ -101,14 +101,14 @@ describe('shouldShowTaskInListView', () => {
 			id: 1,
 			title: 'Grandparent',
 			projectId: 100,
-			relatedTasks: {},
+			related_tasks: {},
 		}
 
 		const parent: Partial<ITask> = {
 			id: 2,
 			title: 'Parent',
 			projectId: 100,
-			relatedTasks: {
+			related_tasks: {
 				parenttask: [{id: 1, title: 'Grandparent', projectId: 100} as ITask],
 			},
 		}
@@ -117,7 +117,7 @@ describe('shouldShowTaskInListView', () => {
 			id: 3,
 			title: 'Child',
 			projectId: 100,
-			relatedTasks: {
+			related_tasks: {
 				parenttask: [{id: 2, title: 'Parent', projectId: 100} as ITask],
 			},
 		}
@@ -134,7 +134,7 @@ describe('shouldShowTaskInListView', () => {
 			id: 3,
 			title: 'Subtask with multiple parents',
 			projectId: 300,
-			relatedTasks: {
+			related_tasks: {
 				parenttask: [
 					{id: 1, title: 'Parent 1', projectId: 100} as ITask,
 					{id: 2, title: 'Parent 2', projectId: 200} as ITask,
@@ -165,7 +165,7 @@ describe('shouldShowTaskInListView', () => {
 			id: 3,
 			title: 'Subtask with multiple parents',
 			projectId: 100,
-			relatedTasks: {
+			related_tasks: {
 				parenttask: [
 					{id: 1, title: 'Parent 1', projectId: 100} as ITask,
 					{id: 2, title: 'Parent 2', projectId: 100} as ITask,
@@ -183,7 +183,7 @@ describe('shouldShowTaskInListView', () => {
 			id: 1,
 			title: 'Parent Task matching the filter',
 			projectId: 100,
-			relatedTasks: {},
+			related_tasks: {},
 		}
 
 		// Returned by the api as an expanded subtask of the parent, not as a filter match
@@ -191,7 +191,7 @@ describe('shouldShowTaskInListView', () => {
 			id: 2,
 			title: 'Subtask not matching the filter',
 			projectId: 100,
-			relatedTasks: {
+			related_tasks: {
 				parenttask: [{
 					id: 1,
 					title: 'Parent Task matching the filter',
@@ -211,7 +211,7 @@ describe('shouldShowTaskInListView', () => {
 			id: 2,
 			title: 'Subtask matching filter',
 			projectId: 100,
-			relatedTasks: {
+			related_tasks: {
 				parenttask: [{
 					id: 1,
 					title: 'Parent Task',

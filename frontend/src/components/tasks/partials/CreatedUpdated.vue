@@ -30,7 +30,7 @@
 			<br>
 			<time
 				v-tooltip="doneFormatted"
-				:datetime="formatISO(task.doneAt)"
+				:datetime="formatISO(task.done_at)"
 			>
 				<i18n-t
 					keypath="task.detail.doneAt"
@@ -45,7 +45,7 @@
 
 <script lang="ts" setup>
 import {computed} from 'vue'
-import type {ITask} from '@/modelTypes/ITask'
+import type {Task as ITask} from '@/client/generated'
 import {formatISO, formatDateLong, formatDisplayDate} from '@/helpers/time/formatDate'
 import {getDisplayName} from '@/models/user'
 
@@ -56,8 +56,8 @@ const props = defineProps<{
 // Computed properties to show the actual date every time it gets updated
 const updatedSince = computed(() => formatDisplayDate(props.task.updated))
 const updatedFormatted = computed(() => formatDateLong(props.task.updated))
-const doneSince = computed(() => formatDisplayDate(props.task.doneAt))
-const doneFormatted = computed(() => formatDateLong(props.task.doneAt))
+const doneSince = computed(() => formatDisplayDate(props.task.done_at))
+const doneFormatted = computed(() => formatDateLong(props.task.done_at))
 </script>
 
 <style lang="scss" scoped>
