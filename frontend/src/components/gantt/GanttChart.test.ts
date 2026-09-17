@@ -30,7 +30,7 @@ function mountChart(isLoading: boolean) {
 		props: {
 			isLoading,
 			filters: FILTERS,
-			tasks: new Map<ITask['id'], ITask>(),
+			tasks: new Map<number, ITask>(),
 			defaultTaskStartDate: FILTERS.dateFrom,
 			defaultTaskEndDate: FILTERS.dateTo,
 		},

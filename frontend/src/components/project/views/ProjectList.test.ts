@@ -1,32 +1,20 @@
 import {shallowMount, flushPromises} from '@vue/test-utils'
 import {describe, expect, it, vi, beforeEach} from 'vitest'
-import {nextTick, ref} from 'vue'
+import {QueryClient, VueQueryPlugin} from '@tanstack/vue-query'
+import {createRouter, createMemoryHistory} from 'vue-router'
+import {createPinia} from 'pinia'
 import draggable from 'zhyswan-vuedraggable'
 
 import type {Task as ITask} from '@/client/generated'
 
 const {updatePosition} = vi.hoisted(() => ({updatePosition: vi.fn()}))
 
-const allTasks = ref<ITask[]>([])
-
-vi.mock('@/services/taskPosition', () => ({
-	default: class {
-		update = updatePosition
-	},
+vi.mock('@/client/generated', async importOriginal => ({...await importOriginal<object>(),
+ tasksPositionUpdate: updatePosition,
+ projectViewTasksList: vi.fn(async () => ({data: {items: [makeTask(1, 100), makeTask(2, 200), makeTask(3, 300)], page: 1, total_pages: 1}})),
 }))
-
-vi.mock('@/composables/useTaskList', () => ({
-	useTaskList: () => ({
-		tasks: allTasks,
-		loading: ref(false),
-		totalPages: ref(1),
-		currentPage: ref(1),
-		loadTasks: vi.fn(),
-		params: ref({}),
-		sortByParam: ref({position: 'asc'}),
-	}),
-}))
-
+vi.mock('@/stores/auth', () => ({useAuthStore: () => ({settings: {timezone: 'UTC'}})}))
+vi.mock('@/message', () => ({error: vi.fn()}))
 vi.mock('@/composables/useTaskDragToProject', () => ({
 	useTaskDragToProject: () => ({
 		handleTaskDropToProject: async () => ({moved: false, targetProjectId: null}),
@@ -44,8 +32,8 @@ vi.mock('@/composables/useCurrentProject', () => ({
 	}),
 }))
 
-vi.mock('@/stores/tasks', () => ({
-	useTaskStore: () => ({setDraggedTask: vi.fn()}),
+vi.mock('@/composables/useTaskActions', () => ({
+	useTaskActions: () => ({setDraggedTask: vi.fn()}),
 }))
 
 vi.mock('vue-i18n', async importOriginal => ({
@@ -60,13 +48,16 @@ function makeTask(id: number, position: number): ITask {
 }
 
 async function mountList() {
-	const wrapper = shallowMount(ProjectList, {
+	const router = createRouter({history: createMemoryHistory(), routes: [{path: '/', component: {render: () => null}}]})
+ await router.push('/')
+ const wrapper = shallowMount(ProjectList, {
 		props: {
 			isLoadingProject: false,
 			projectId: 1,
 			viewId: 10,
 		},
 		global: {
+ plugins: [router, createPinia(), [VueQueryPlugin, {queryClient: new QueryClient({defaultOptions: {queries: {retry: false}}})}]],
 			mocks: {$t: (key: string) => key},
 			stubs: {
 				ProjectWrapper: {template: '<div><slot name="default"/></div>'},
@@ -74,8 +65,7 @@ async function mountList() {
 		},
 	})
 
-	allTasks.value = [makeTask(1, 100), makeTask(2, 200), makeTask(3, 300)]
-	await nextTick()
+	await flushPromises()
 
 	return wrapper
 }
@@ -89,9 +79,8 @@ function dragEndEvent(taskId: string, newIndex: number) {
 
 describe('ProjectList', () => {
 	beforeEach(() => {
-		allTasks.value = []
 		updatePosition.mockReset()
-		updatePosition.mockResolvedValue(undefined)
+		updatePosition.mockResolvedValue({data: {position: 200}})
 	})
 
 	it('saves the position of the dropped task', async () => {
@@ -102,8 +91,8 @@ describe('ProjectList', () => {
 		await flushPromises()
 
 		expect(updatePosition).toHaveBeenCalledWith(expect.objectContaining({
-			taskId: 2,
-			position: 200,
+			path: {task: 2},
+			body: {position: 200, project_view_id: 10},
 		}))
 	})
 

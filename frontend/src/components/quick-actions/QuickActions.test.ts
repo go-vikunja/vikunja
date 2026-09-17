@@ -11,14 +11,7 @@ import {useBaseStore} from '@/stores/base'
 import {normalizeProject, type ProjectResponse} from '@/client/queries/projects'
 import en from '@/i18n/lang/en.json'
 
-vi.mock('@/services/task', () => ({
-	default: class {
-		loading = false
-		getAll = vi.fn(async () => [])
-	},
-}))
-
-vi.mock('@/client/generated', () => ({teamsList: vi.fn(async () => ({data: {items: []}}))}))
+vi.mock('@/client/generated', async importOriginal => ({...await importOriginal<object>(), teamsList: vi.fn(async () => ({data: {items: []}})), tasksList: vi.fn(async () => ({data: {items: []}}))}))
 
 const i18n = createI18n({legacy: false, locale: 'en', messages: {en}})
 
