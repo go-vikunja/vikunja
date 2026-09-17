@@ -3,7 +3,7 @@
 		ref="taskViewContainer"
 		class="loader-container task-view-container"
 		:class="{
-			'is-loading': taskLoading || taskStore.isLoading || !visible,
+			'is-loading': taskLoading || taskMutating || !visible,
 			'is-modal': isModal,
 		}"
 	>
@@ -133,7 +133,7 @@
 										v-model="dueDateInput"
 										:choose-date-label="$t('task.detail.chooseDueDate')"
 										:title="$t('task.attributes.dueDate')"
-										:disabled="taskLoading || taskStore.isLoading || !canWrite"
+										:disabled="taskLoading || taskMutating || !canWrite"
 										@closeOnChange="saveTask()"
 									/>
 									<BaseButton
@@ -189,7 +189,7 @@
 										v-model="startDateInput"
 										:choose-date-label="$t('task.detail.chooseStartDate')"
 										:title="$t('task.attributes.startDate')"
-										:disabled="taskLoading || taskStore.isLoading || !canWrite"
+										:disabled="taskLoading || taskMutating || !canWrite"
 										@closeOnChange="saveTask()"
 									/>
 									<BaseButton
@@ -224,7 +224,7 @@
 										v-model="endDateInput"
 										:choose-date-label="$t('task.detail.chooseEndDate')"
 										:title="$t('task.attributes.endDate')"
-										:disabled="taskLoading || taskStore.isLoading || !canWrite"
+										:disabled="taskLoading || taskMutating || !canWrite"
 										@closeOnChange="saveTask()"
 									/>
 									<BaseButton
@@ -706,7 +706,13 @@ import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelative
 import {playPopSound} from '@/helpers/playPop'
 import {taskLoadErrorAction} from './taskDetailError'
 
-import {useTaskActions} from '@/composables/useTaskActions'
+import {
+	useUpdateTaskMutation,
+	useDeleteTaskMutation,
+	useFavoriteTaskMutation,
+	useDuplicateTaskMutation,
+	useMarkTaskReadMutation,
+} from '@/client/queries/taskMutations'
 import {useProjects} from '@/composables/useProjects'
 import {useAuthStore} from '@/stores/auth'
 import {useBaseStore} from '@/stores/base'
@@ -734,20 +740,49 @@ const route = useRoute()
 const {t} = useI18n({useScope: 'global'})
 
 const projectList = useProjects()
-const taskStore = useTaskActions()
+const updateTask = useUpdateTaskMutation()
+const deleteTaskMutation = useDeleteTaskMutation()
+const favoriteTask = useFavoriteTaskMutation()
+const duplicateTask = useDuplicateTaskMutation()
+const markTaskRead = useMarkTaskReadMutation()
+const taskMutating = computed(() => [
+	updateTask,
+	deleteTaskMutation,
+	favoriteTask,
+	duplicateTask,
+	markTaskRead,
+].some(mutation => mutation.isPending.value))
 const configStore = useConfigStore()
 const timeTrackingEnabled = computed(() => configStore.isProFeatureEnabled(PRO_FEATURE.TIME_TRACKING))
 const authStore = useAuthStore()
 const baseStore = useBaseStore()
 
 const queryClient = useQueryClient()
-const taskQuery = useTask(() => props.taskId ?? 0, () => ['reactions', 'is_unread', 'buckets', ...(timeTrackingEnabled.value ? ['time_entries_count' as const] : [])])
+const taskQuery = useTask(
+	() => props.taskId ?? 0,
+	() => [
+		'reactions',
+		'is_unread',
+		'buckets',
+		...(timeTrackingEnabled.value ? ['time_entries_count' as const] : []),
+	],
+)
 const task = ref<ITask>(createTaskDraft())
 
 // Only fields edited here stay local; the rest follows the cache.
 function followServerFields(loaded: ITask) {
 	const {priority, percent_done, due_date, start_date, end_date, reminders, repeat_after, repeat_mode} = task.value
-	task.value = {...createTaskDraft(klona(loaded)), priority, percent_done, due_date, start_date, end_date, reminders, repeat_after, repeat_mode}
+	task.value = {
+		...createTaskDraft(klona(loaded)),
+		priority,
+		percent_done,
+		due_date,
+		start_date,
+		end_date,
+		reminders,
+		repeat_after,
+		repeat_mode,
+	}
 }
 
 function seedTask(loaded: ITask) {
@@ -1026,7 +1061,7 @@ watch(taskQuery.task, async (loaded, previous) => {
 	} else {
 		followServerFields(loaded)
 	}
-	if (loaded.is_unread) taskStore.markTaskAsRead(loaded.id).catch(() => {})
+	if (loaded.is_unread) markTaskRead.mutateAsync(loaded.id).catch(() => {})
 	if (lastProject.value) baseStore.setCurrentProjectIfNotSet(lastProject.value)
 	await nextTick()
 	if (loaded.id !== previous?.id) scrollToHeading()
@@ -1138,7 +1173,7 @@ async function saveTask(
 		currentTask.end_date = currentTask.due_date
 	}
 
-	seedTask(mergeTask(task.value, await taskStore.update(currentTask)))
+	seedTask(mergeTask(task.value, await updateTask.mutateAsync({...currentTask, id: currentTask.id!})))
 	setActiveFields()
 
 	let actions: MessageAction[] = []
@@ -1160,7 +1195,7 @@ useTaskDetailShortcuts({
 const showDeleteModal = ref(false)
 
 async function deleteTask() {
-	await taskStore.delete(task.value)
+	await deleteTaskMutation.mutateAsync(task.value.id!)
 	success({message: t('task.detail.deleteSuccess')})
 	router.push({name: 'project.index', params: {projectId: task.value.project_id}})
 }
@@ -1206,11 +1241,11 @@ async function toggleSubscription(subscribed: boolean) {
 }
 
 async function toggleFavorite() {
-	await taskStore.toggleFavorite(task.value)
+	await favoriteTask.mutateAsync({...task.value, id: task.value.id!})
 }
 
 async function duplicateCurrentTask() {
-	const duplicatedTask = await taskStore.duplicateTask(task.value.id!)
+	const duplicatedTask = await duplicateTask.mutateAsync(task.value.id!)
 	if (duplicatedTask) {
 		success({message: t('task.detail.duplicateSuccess')})
 		router.push({

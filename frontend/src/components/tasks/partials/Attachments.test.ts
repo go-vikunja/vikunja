@@ -1,12 +1,18 @@
 import {describe, it, expect, vi, afterEach} from 'vitest'
 import {nextTick} from 'vue'
 import {mount, flushPromises, type VueWrapper} from '@vue/test-utils'
-import Attachments from './Attachments.vue'
+import {QueryClient, VueQueryPlugin} from '@tanstack/vue-query'
 import Modal from '@/components/misc/Modal.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import XButton from '@/components/input/Button.vue'
 import type {IAttachment} from '@/modelTypes/IAttachment'
 import type {Task as ITask} from '@/client/generated'
+
+const sdk = vi.hoisted(() => ({
+	patchTasksRead: vi.fn(),
+}))
+
+vi.mock('@/client/generated', () => sdk)
 
 vi.mock('@/services/attachment', () => ({
 	default: class {
@@ -16,14 +22,14 @@ vi.mock('@/services/attachment', () => ({
 	},
 }))
 
-vi.mock('@/composables/useTaskActions', () => ({useTaskActions: () => ({isLoading: false})}))
-
 vi.mock('vue-i18n', async importOriginal => ({
 	...(await importOriginal<typeof import('vue-i18n')>()),
 	useI18n: () => ({t: (key: string) => key}),
 }))
 
 vi.mock('@/message', () => ({error: vi.fn(), success: vi.fn()}))
+
+import Attachments from './Attachments.vue'
 
 const attachment = {
 	id: 1,
@@ -43,6 +49,7 @@ function mountAttachments() {
 		attachTo: document.body,
 		props: {task},
 		global: {
+			plugins: [[VueQueryPlugin, {queryClient: new QueryClient({defaultOptions: {queries: {retry: false}}})}]],
 			components: {XButton, BaseButton, Modal},
 			stubs: {
 				Icon: true,

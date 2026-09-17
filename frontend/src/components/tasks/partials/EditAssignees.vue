@@ -43,7 +43,7 @@ import Multiselect from '@/components/input/Multiselect.vue'
 import {useProjectUserSearch} from '@/composables/useUserSearch'
 import {success} from '@/message'
 import {useAuthStore} from '@/stores/auth'
-import {useTaskActions} from '@/composables/useTaskActions'
+import {useAddTaskAssigneeMutation, useRemoveTaskAssigneeMutation} from '@/client/queries/taskMutations'
 
 import type {User as IUser} from '@/client/generated'
 import {getDisplayName, type UserWithId} from '@/models/user'
@@ -63,7 +63,8 @@ const emit = defineEmits<{
 }>()
 
 const authStore = useAuthStore()
-const taskStore = useTaskActions()
+const addAssigneeMutation = useAddTaskAssigneeMutation()
+const removeAssigneeMutation = useRemoveTaskAssigneeMutation()
 const {t} = useI18n({useScope: 'global'})
 
 const userSearch = ref('')
@@ -95,7 +96,7 @@ async function addAssignee(user: UserWithId) {
 	try {
 		nextTick(() => isAdding = true)
 
-		await taskStore.addAssignee({user: user, taskId: props.taskId})
+		await addAssigneeMutation.mutateAsync({user: user, taskId: props.taskId})
 		emit('update:modelValue', assignees.value)
 		success({message: t('task.assignee.assignSuccess')})
 	} finally {
@@ -104,7 +105,7 @@ async function addAssignee(user: UserWithId) {
 }
 
 async function removeAssignee(user: UserWithId) {
-	await taskStore.removeAssignee({user: user, taskId: props.taskId})
+	await removeAssigneeMutation.mutateAsync({user: user, taskId: props.taskId})
 
 	assignees.value = assignees.value.filter(a => a.id !== user.id)
 	emit('update:modelValue', assignees.value)
