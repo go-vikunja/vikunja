@@ -37,10 +37,16 @@ test.describe('Sort persistence across sidebar navigation (#2753)', () => {
 		await navigateViaSidebar(page, projectB.title)
 		await expect(page).toHaveURL(new RegExp(`/projects/${projectB.id}/`))
 
+		// The query cache lives in memory and would serve the return navigation without
+		// any request; reloading empties it while the stored sort (localStorage) survives.
+		await page.reload()
+		await expect(page).toHaveURL(new RegExp(`/projects/${projectB.id}/`))
+
 		const taskRequests: URL[] = []
 		page.on('request', request => {
 			const url = new URL(request.url())
-			if (url.pathname === `/api/v1/projects/${projectA.id}/views/${listViewA}/tasks`) {
+			// Version-agnostic so a stray legacy v1 read still counts as a duplicate.
+			if (url.pathname.endsWith(`/projects/${projectA.id}/views/${listViewA}/tasks`)) {
 				taskRequests.push(url)
 			}
 		})
@@ -50,7 +56,8 @@ test.describe('Sort persistence across sidebar navigation (#2753)', () => {
 		await expect(page).toHaveURL(/sort=due_date:asc/)
 		await expect(page.locator('.tasks .task .tasktext')).toContainText(['Task 3', 'Task 2', 'Task 1'])
 		expect(taskRequests).toHaveLength(1)
-		expect(taskRequests[0].searchParams.getAll('sort_by[]')).toEqual(['due_date'])
+		expect(taskRequests[0].pathname).toContain('/api/v2/')
+		expect(taskRequests[0].searchParams.getAll('sort_by')).toEqual(['due_date'])
 	})
 
 	test('List view: explicit URL sort wins over stored sort', async ({authenticatedPage: page}) => {
