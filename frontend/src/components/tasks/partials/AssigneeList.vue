@@ -111,6 +111,8 @@ defineEmits<{
 	font-size: .75rem;
 	inline-size: 18px;
 	block-size: 18px;
-	z-index: 100;
+	// Only needs to beat the overlapping sibling avatars, so keep it low enough
+	// for popups like the bucket dropdown (z-index 20) to paint above it.
+	z-index: 1;
 }
 </style>
