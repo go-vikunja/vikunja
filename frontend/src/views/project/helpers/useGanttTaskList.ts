@@ -7,7 +7,7 @@ import type {ITask, ITaskPartialWithId} from '@/modelTypes/ITask'
 import TaskCollectionService, {type TaskFilterParams} from '@/services/taskCollection'
 import TaskService from '@/services/task'
 
-import TaskModel from '@/models/task'
+import {createTaskDraft} from '@/helpers/task'
 import {error, success} from '@/message'
 import {useAuthStore} from '@/stores/auth'
 import {useTaskStore} from '@/stores/tasks'
@@ -82,7 +82,7 @@ export function useGanttTaskList<F extends Filters>(
 	)
 
 	async function addTask(task: Partial<ITask>) {
-		const newTask = await taskService.create(new TaskModel({...task}))
+		const newTask = await taskService.create(createTaskDraft({...task}))
 		tasks.value.set(newTask.id, newTask)
 
 		return newTask

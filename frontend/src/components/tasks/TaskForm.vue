@@ -26,7 +26,7 @@
 
 <script setup lang="ts">
 import {nextTick, ref} from 'vue'
-import type {ITask} from '@/modelTypes/ITask'
+import type {Task as ITask} from '@/client/generated'
 
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 

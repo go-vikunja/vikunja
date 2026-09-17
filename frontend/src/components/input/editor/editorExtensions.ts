@@ -32,7 +32,7 @@ import {EmojiExtension} from './emoji/emojiExtension'
 import {common, createLowlight} from 'lowlight'
 
 import type {UploadCallback} from './types'
-import type {ITask} from '@/modelTypes/ITask'
+import type {Task as ITask} from '@/client/generated'
 import type {IAttachment} from '@/modelTypes/IAttachment'
 import {fetchAttachmentBlobUrl} from '@/helpers/attachments'
 

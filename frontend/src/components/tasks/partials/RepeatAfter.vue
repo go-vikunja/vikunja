@@ -34,7 +34,7 @@
 				<div class="select">
 					<select
 						id="repeatMode"
-						v-model="task.repeatMode"
+						v-model="task.repeat_mode"
 						@change="updateData"
 					>
 						<option :value="TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT">
@@ -51,7 +51,7 @@
 			</div>
 		</div>
 		<div
-			v-if="task.repeatMode !== TASK_REPEAT_MODES.REPEAT_MODE_MONTH"
+			v-if="task.repeat_mode !== TASK_REPEAT_MODES.REPEAT_MODE_MONTH"
 			class="is-flex"
 		>
 			<p class="pis-4">
@@ -101,8 +101,8 @@ import {error} from '@/message'
 
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 import type {IRepeatAfter} from '@/types/IRepeatAfter'
-import type {ITask} from '@/modelTypes/ITask'
-import TaskModel from '@/models/task'
+import type {Task as ITask} from '@/client/generated'
+import {createTaskDraft} from '@/helpers/task'
 
 const props = withDefaults(defineProps<{
 	modelValue: ITask | undefined,
@@ -117,7 +117,7 @@ const emit = defineEmits<{
 
 const {t} = useI18n({useScope: 'global'})
 
-const task = ref<ITask>(new TaskModel())
+const task = ref<ITask>(createTaskDraft())
 const repeatAfter = reactive({
 	amount: 0,
 	type: '',
@@ -127,8 +127,8 @@ watch(
 	() => props.modelValue,
 	(value: ITask) => {
 		task.value = value
-		if (typeof value.repeatAfter !== 'undefined') {
-			Object.assign(repeatAfter, value.repeatAfter)
+		if (typeof value.repeat_after !== 'undefined') {
+			Object.assign(repeatAfter, value.repeat_after)
 		}
 	},
 	{
@@ -139,18 +139,18 @@ watch(
 
 function updateData() {
 	if (!task.value || 
-		(task.value.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT && repeatAfter.amount === 0) ||
-		(task.value.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_FROM_CURRENT_DATE && repeatAfter.amount === 0)
+		(task.value.repeat_mode === TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT && repeatAfter.amount === 0) ||
+		(task.value.repeat_mode === TASK_REPEAT_MODES.REPEAT_MODE_FROM_CURRENT_DATE && repeatAfter.amount === 0)
 	) {
 		return
 	}
 
-	if (task.value.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT && repeatAfter.amount < 0) {
+	if (task.value.repeat_mode === TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT && repeatAfter.amount < 0) {
 		error({message: t('task.repeat.invalidAmount')})
 		return
 	}
 
-	Object.assign(task.value.repeatAfter, repeatAfter)
+	Object.assign(task.value.repeat_after, repeatAfter)
 	emit('update:modelValue', task.value)
 }
 

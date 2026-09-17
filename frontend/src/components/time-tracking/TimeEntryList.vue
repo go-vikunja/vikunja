@@ -125,7 +125,7 @@ import {useTimeFormat} from '@/composables/useTimeFormat'
 import {TIME_FORMAT} from '@/constants/timeFormat'
 
 import type {ITimeEntry} from '@/modelTypes/ITimeEntry'
-import type {ITask} from '@/modelTypes/ITask'
+import type {Task as ITask} from '@/client/generated'
 
 const props = withDefaults(defineProps<{
 	entries: ITimeEntry[]

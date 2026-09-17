@@ -209,7 +209,7 @@ import {useI18n} from 'vue-i18n'
 
 import Message from '@/components/misc/Message.vue'
 import SingleTaskInProject from '@/components/tasks/partials/SingleTaskInProject.vue'
-import TaskModel from '@/models/task'
+import {createTaskDraft} from '@/helpers/task'
 
 import CSVMigrationService, {
 	type DetectionResult,
@@ -262,14 +262,14 @@ const config = ref<ImportConfig>({
 
 const previewTasks = computed(() => {
 	if (!previewResult.value) return []
-	return previewResult.value.tasks.map((pt, i) => new TaskModel({
+	return previewResult.value.tasks.map((pt, i) => createTaskDraft({
 		id: -(i + 1),
 		title: pt.title || t('migrate.csv.untitled'),
 		description: pt.description || '',
 		done: pt.done,
-		dueDate: pt.due_date || null,
-		startDate: pt.start_date || null,
-		endDate: pt.end_date || null,
+		due_date: pt.due_date || null,
+		start_date: pt.start_date || null,
+		end_date: pt.end_date || null,
 		priority: pt.priority,
 		labels: (pt.labels || []).map((l, li) => ({id: -(li + 1), title: l})),
 	}))
@@ -288,9 +288,9 @@ function getAttributeLabel(attribute: string): string {
 	const attributeMap: Record<string, string> = {
 		title: 'task.attributes.title',
 		description: 'task.attributes.description',
-		due_date: 'task.attributes.dueDate',
-		start_date: 'task.attributes.startDate',
-		end_date: 'task.attributes.endDate',
+		due_date: 'task.attributes.due_date',
+		start_date: 'task.attributes.start_date',
+		end_date: 'task.attributes.end_date',
 		done: 'task.attributes.done',
 		priority: 'task.attributes.priority',
 		labels: 'task.attributes.labels',

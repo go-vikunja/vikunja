@@ -127,7 +127,7 @@ import TimeEntryForm from '@/components/time-tracking/TimeEntryForm.vue'
 import TimeEntryList from '@/components/time-tracking/TimeEntryList.vue'
 
 import TaskService from '@/services/task'
-import TaskModel from '@/models/task'
+import {createTaskDraft} from '@/helpers/task'
 import {searchUsers} from '@/client/queries/userSearch'
 import {useUserSearch} from '@/composables/useUserSearch'
 import {useTitle} from '@/composables/useTitle'
@@ -136,7 +136,7 @@ import {useBaseStore} from '@/stores/base'
 import {useProjects} from '@/composables/useProjects'
 
 import type {ProjectResponse} from '@/client/queries/projects'
-import type {ITask} from '@/modelTypes/ITask'
+import type {Task as ITask} from '@/client/generated'
 import type {User as IUser} from '@/client/generated'
 import type {ITimeEntry} from '@/modelTypes/ITimeEntry'
 
@@ -287,7 +287,7 @@ async function restoreFromQuery() {
 				.catch(() => { /* project gone — drop the filter */ })
 			: Promise.resolve(),
 		typeof q.task === 'string'
-			? taskService.get(new TaskModel({id: Number(q.task)}))
+			? taskService.get(createTaskDraft({id: Number(q.task)}))
 				.then(t => { selectedTask.value = t as ITask })
 				.catch(() => { /* task gone — drop the filter */ })
 			: Promise.resolve(),

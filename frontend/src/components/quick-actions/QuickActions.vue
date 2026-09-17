@@ -146,7 +146,7 @@ import {getHistory} from '@/modules/projectHistory'
 import {parseTaskText, PREFIXES, PrefixMode} from '@/modules/quickAddMagic'
 import {success} from '@/message'
 
-import type {ITask} from '@/modelTypes/ITask'
+import type {Task as ITask} from '@/client/generated'
 import type {IAbstract} from '@/modelTypes/IAbstract'
 import type {TaskFilterParams} from '@/services/taskCollection'
 import {

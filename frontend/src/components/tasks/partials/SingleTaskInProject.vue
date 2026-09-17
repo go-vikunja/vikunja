@@ -1,7 +1,7 @@
 <template>
 	<div
 		:data-task-id="task.id"
-		:data-project-id="task.projectId"
+		:data-project-id="task.project_id"
 	>
 		<div
 			ref="taskRoot"
@@ -26,7 +26,7 @@
 			</span>
 
 			<ColorBubble
-				v-if="!showProjectSeparately && projectColor !== '' && currentProject?.id !== task.projectId"
+				v-if="!showProjectSeparately && projectColor !== '' && currentProject?.id !== task.project_id"
 				:color="projectColor"
 				class="mie-1"
 			/>
@@ -39,17 +39,17 @@
 					<RouterLink
 						v-if="showProject && typeof project !== 'undefined'"
 						v-tooltip="$t('task.detail.belongsToProject', {project: project.title})"
-						:to="{ name: 'project.index', params: { projectId: task.projectId } }"
+						:to="{ name: 'project.index', params: { projectId: task.project_id } }"
 						class="task-project mie-1"
-						:class="{'mie-2': task.hexColor !== ''}"
+						:class="{'mie-2': task.hex_color !== ''}"
 						@click.stop
 					>
 						{{ project.title }}
 					</RouterLink>
 
 					<ColorBubble
-						v-if="task.hexColor !== ''"
-						:color="getHexColor(task.hexColor)"
+						v-if="task.hex_color !== ''"
+						:color="getHexColor(task.hex_color)"
 						class="mie-1"
 					/>
 	
@@ -85,7 +85,7 @@
 				/>
 
 				<Popup
-					v-if="+new Date(task.dueDate) > 0"
+					v-if="+new Date(task.due_date) > 0"
 					placement="bottom-start"
 					:anchor="dueDateTriggerEl"
 					sheet-on-mobile
@@ -94,12 +94,12 @@
 					<template #trigger="{toggle, isOpen}">
 						<BaseButton
 							ref="dueDateTrigger"
-							v-tooltip="formatDateLong(task.dueDate)"
+							v-tooltip="formatDateLong(task.due_date)"
 							class="dueDate"
 							@click.prevent.stop="toggle()"
 						>	
 							<time
-								:datetime="formatISO(task.dueDate)"
+								:datetime="formatISO(task.due_date)"
 								class="is-italic"
 								:aria-expanded="isOpen ? 'true' : 'false'"
 							>
@@ -146,13 +146,13 @@
 			</div>
 
 			<ProgressBar
-				v-if="task.percentDone > 0"
-				:value="task.percentDone * 100"
+				v-if="task.percent_done > 0"
+				:value="task.percent_done * 100"
 				is-small
 			/>
 
 			<ColorBubble
-				v-if="showProjectSeparately && projectColor !== '' && currentProject?.id !== task.projectId"
+				v-if="showProjectSeparately && projectColor !== '' && currentProject?.id !== task.project_id"
 				:color="projectColor"
 				class="mie-1"
 			/>
@@ -160,7 +160,7 @@
 			<RouterLink
 				v-if="showProjectSeparately"
 				v-tooltip="$t('task.detail.belongsToProject', {project: project.title})"
-				:to="{ name: 'project.index', params: { projectId: task.projectId } }"
+				:to="{ name: 'project.index', params: { projectId: task.project_id } }"
 				class="task-project"
 				@click.stop
 			>
@@ -168,13 +168,13 @@
 			</RouterLink>
 
 			<BaseButton
-				:class="{'is-favorite': task.isFavorite}"
+				:class="{'is-favorite': task.is_favorite}"
 				class="favorite"
 				@click.stop="toggleFavorite"
 			>
-				<span class="is-sr-only">{{ task.isFavorite ? $t('task.detail.actions.unfavorite') : $t('task.detail.actions.favorite') }}</span>
+				<span class="is-sr-only">{{ task.is_favorite ? $t('task.detail.actions.unfavorite') : $t('task.detail.actions.favorite') }}</span>
 				<Icon
-					v-if="task.isFavorite"
+					v-if="task.is_favorite"
 					icon="star"
 				/>
 				<Icon
@@ -184,8 +184,8 @@
 			</BaseButton>
 			<slot />
 		</div>
-		<template v-if="typeof task.relatedTasks?.subtask !== 'undefined'">
-			<template v-for="subtask in task.relatedTasks.subtask">
+		<template v-if="typeof task.related_tasks?.subtask !== 'undefined'">
+			<template v-for="subtask in task.related_tasks.subtask">
 				<template v-if="getTaskById(subtask.id)">
 					<single-task-in-project
 						:key="subtask.id"
@@ -205,8 +205,8 @@
 import {ref, watch, shallowReactive, onMounted, computed} from 'vue'
 import {useI18n} from 'vue-i18n'
 
-import TaskModel, {getHexColor} from '@/models/task'
-import type {ITask} from '@/modelTypes/ITask'
+import {createTaskDraft, getHexColor} from '@/helpers/task'
+import type {Task as ITask} from '@/client/generated'
 
 import PriorityLabel from '@/components/tasks/partials/PriorityLabel.vue'
 import Labels from '@/components/tasks/partials/Labels.vue'
@@ -266,9 +266,9 @@ function getTaskById(taskId: number): ITask | undefined {
 const {t} = useI18n({useScope: 'global'})
 
 const taskService = shallowReactive(new TaskService())
-const task = ref<ITask>(new TaskModel())
+const task = ref<ITask>(createTaskDraft())
 
-const isRepeating = computed(() => task.value.repeatAfter.amount > 0 || (task.value.repeatAfter.amount === 0 && task.value.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH))
+const isRepeating = computed(() => task.value.repeat_after.amount > 0 || (task.value.repeat_after.amount === 0 && task.value.repeat_mode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH))
 
 watch(
 	() => props.theTask,
@@ -284,10 +284,10 @@ watch(
 const projectList = useProjects()
 const taskStore = useTaskStore()
 
-const project = computed(() => projectList.projects[task.value.projectId])
+const project = computed(() => projectList.projects[task.value.project_id])
 const projectColor = computed(() => project.value?.hex_color ?? '')
 
-const showProjectSeparately = computed(() => !props.showProject && currentProject.value?.id !== task.value.projectId && project.value)
+const showProjectSeparately = computed(() => !props.showProject && currentProject.value?.id !== task.value.project_id && project.value)
 
 const {currentProject} = useCurrentProject()
 
@@ -299,11 +299,11 @@ const taskDetailRoute = computed(() => ({
 }))
 
 function updateDueDate() {
-	if (!task.value.dueDate) {
+	if (!task.value.due_date) {
 		return
 	}
 
-	dueDateFormatted.value = formatDisplayDate(task.value.dueDate)
+	dueDateFormatted.value = formatDisplayDate(task.value.due_date)
 }
 
 const dueDateFormatted = ref('')
@@ -312,14 +312,14 @@ useIntervalFn(updateDueDate, 60_000, {
 })
 onMounted(updateDueDate)
 
-watch(() => task.value.dueDate, updateDueDate)
+watch(() => task.value.due_date, updateDueDate)
 
 const {now} = useGlobalNow()
 const isOverdue = computed(() => (
 	!task.value.done &&
-	task.value.dueDate !== null &&
-	task.value.dueDate.getTime() > 0 &&
-	task.value.dueDate.getTime() <= now.value.getTime()
+	task.value.due_date !== null &&
+	task.value.due_date.getTime() > 0 &&
+	task.value.due_date.getTime() <= now.value.getTime()
 ))
 
 let oldTask
@@ -455,7 +455,7 @@ defineExpose({
 
 	}
 
-	.dueDate {
+	.due_date {
 		display: inline-block;
 		margin-inline-start: 5px;
 
@@ -469,7 +469,7 @@ defineExpose({
 		}
 	}
 
-	&[data-is-overdue] .dueDate {
+	&[data-is-overdue] .due_date {
 		color: var(--danger-text);
 	}
 

@@ -41,8 +41,8 @@
 <script lang="ts" setup>
 import {computed, inject, ref, watch} from 'vue'
 
-import type {ITask} from '@/modelTypes/ITask'
-import {getTaskIdentifier} from '@/models/task'
+import type {Task as ITask} from '@/client/generated'
+import {getTaskIdentifier} from '@/helpers/task'
 import {getProjectTitle} from '@/helpers/getProjectTitle'
 import {parseTaskIdFromUrl} from '@/helpers/parseTaskIdFromUrl'
 import {fetchTaskById} from '@/helpers/fetchTaskById'

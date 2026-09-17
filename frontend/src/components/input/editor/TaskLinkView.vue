@@ -15,7 +15,7 @@
 import {nodeViewProps, NodeViewWrapper} from '@tiptap/vue-3'
 import {useRoute, useRouter} from 'vue-router'
 
-import type {ITask} from '@/modelTypes/ITask'
+import type {Task as ITask} from '@/client/generated'
 import TaskLinkPill from './TaskLinkPill.vue'
 
 const props = defineProps(nodeViewProps)

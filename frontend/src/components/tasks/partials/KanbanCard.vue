@@ -9,7 +9,7 @@
 		}"
 		:style="{'background-color': color ?? undefined}"
 		:data-task-id="task.id"
-		:data-project-id="task.projectId"
+		:data-project-id="task.project_id"
 		:data-is-overdue="isOverdue || undefined"
 		@click.exact="openTaskDetail()"
 		@click.ctrl="() => toggleTaskDone(task)"
@@ -38,15 +38,15 @@
 					</span>
 				</span>
 				<span
-					v-if="task.dueDate > 0"
-					v-tooltip="formatDateLong(task.dueDate)"
+					v-if="task.due_date > 0"
+					v-tooltip="formatDateLong(task.due_date)"
 					class="due-date"
 				>
 					<span class="icon">
 						<Icon :icon="['far', 'calendar-alt']" />
 					</span>
-					<time :datetime="formatISO(task.dueDate)">
-						{{ formatDisplayDate(task.dueDate) }}
+					<time :datetime="formatISO(task.due_date)">
+						{{ formatDisplayDate(task.due_date) }}
 					</time>
 				</span>
 			</div>
@@ -72,9 +72,9 @@
 			</span>
 
 			<ProgressBar
-				v-if="task.percentDone > 0"
+				v-if="task.percent_done > 0"
 				class="task-progress"
-				:value="task.percentDone * 100"
+				:value="task.percent_done * 100"
 			/>
 			<div class="footer">
 				<Labels :labels="task.labels" />
@@ -98,7 +98,7 @@
 					<Icon icon="align-left" />
 				</span>
 				<span
-					v-if="task.repeatAfter.amount > 0"
+					v-if="task.repeat_after.amount > 0"
 					class="icon"
 				>
 					<Icon icon="history" />
@@ -134,8 +134,8 @@ import Labels from '@/components/tasks/partials/Labels.vue'
 import ChecklistSummary from './ChecklistSummary.vue'
 import CommentCount from './CommentCount.vue'
 
-import {getHexColor, getTaskIdentifier} from '@/models/task'
-import type {ITask} from '@/modelTypes/ITask'
+import {getHexColor, getTaskIdentifier} from '@/helpers/task'
+import type {Task as ITask} from '@/client/generated'
 import {SUPPORTED_IMAGE_SUFFIX} from '@/models/attachment'
 import {PREVIEW_SIZE} from '@/services/attachment'
 import {fetchAttachmentBlobUrl} from '@/helpers/attachments'
@@ -165,16 +165,16 @@ const router = useRouter()
 
 const loadingInternal = ref(false)
 
-const color = computed(() => getHexColor(props.task.hexColor))
+const color = computed(() => getHexColor(props.task.hex_color))
 
 const projectList = useProjects()
 
 const projectTitle = computed(() => {
-	if (props.projectId === props.task.projectId) {
+	if (props.projectId === props.task.project_id) {
 		return
 	}
 	
-	const project = projectList.projects[props.task.projectId]
+	const project = projectList.projects[props.task.project_id]
 	return project?.title
 })
 
@@ -183,13 +183,13 @@ const showTaskPosition = computed(() => window.DEBUG_TASK_POSITION)
 const {now} = useGlobalNow()
 const isOverdue = computed(() => (
 	!props.task.done &&
-	props.task.dueDate !== null &&
-	props.task.dueDate.getTime() > 0 &&
-	props.task.dueDate.getTime() <= now.value.getTime()
+	props.task.due_date !== null &&
+	props.task.due_date.getTime() > 0 &&
+	props.task.due_date.getTime() <= now.value.getTime()
 ))
 
 async function toggleTaskDone(task: ITask) {
-	const isRecurringTask = task.repeatAfter.amount > 0 || task.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH
+	const isRecurringTask = task.repeat_after.amount > 0 || task.repeat_mode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH
 	const wasBeingMarkedDone = !task.done
 	
 	loadingInternal.value = true
@@ -223,12 +223,12 @@ function openTaskDetail() {
 const coverImageBlobUrl = ref<string | null>(null)
 
 async function maybeDownloadCoverImage() {
-	if (!props.task.coverImageAttachmentId) {
+	if (!props.task.cover_image_attachment_id) {
 		coverImageBlobUrl.value = null
 		return
 	}
 
-	const attachment = props.task.attachments.find(a => a.id === props.task.coverImageAttachmentId)
+	const attachment = props.task.attachments.find(a => a.id === props.task.cover_image_attachment_id)
 	if (!attachment || !SUPPORTED_IMAGE_SUFFIX.some((suffix) => attachment.file.name.toLowerCase().endsWith(suffix))) {
 		return
 	}
@@ -237,7 +237,7 @@ async function maybeDownloadCoverImage() {
 }
 
 watch(
-	() => props.task.coverImageAttachmentId,
+	() => props.task.cover_image_attachment_id,
 	maybeDownloadCoverImage,
 	{immediate: true},
 )

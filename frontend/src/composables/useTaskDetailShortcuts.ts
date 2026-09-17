@@ -1,8 +1,8 @@
 import {ref, onMounted, onBeforeUnmount} from 'vue'
 import {eventToShortcutString} from '@/helpers/shortcut'
 
-import {getTaskIdentifier} from '@/models/task'
-import type {ITask} from '@/modelTypes/ITask'
+import {getTaskIdentifier} from '@/helpers/task'
+import type {Task as ITask} from '@/client/generated'
 
 interface UseTaskDetailShortcutsOptions {
 	task: () => ITask

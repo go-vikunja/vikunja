@@ -76,7 +76,7 @@ import {periodToSeconds, type PeriodUnit, secondsToPeriod} from '@/helpers/time/
 
 import TaskReminderModel from '@/models/taskReminder'
 
-import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
+import type {TaskReminder as ITaskReminder} from '@/client/generated'
 import {type IReminderPeriodRelativeTo, REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 
 const props = withDefaults(defineProps<{

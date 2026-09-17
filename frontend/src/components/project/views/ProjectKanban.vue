@@ -303,8 +303,8 @@ import {klona} from 'klona/lite'
 import {PERMISSIONS as Permissions} from '@/constants/permissions'
 import BucketModel from '@/models/bucket'
 
-import type {IBucket} from '@/modelTypes/IBucket'
-import type {ITask} from '@/modelTypes/ITask'
+import type {Bucket as IBucket} from '@/client/generated'
+import type {Task as ITask} from '@/client/generated'
 
 import {useTaskStore} from '@/stores/tasks'
 import {useKanbanStore} from '@/stores/kanban'
@@ -588,7 +588,7 @@ async function updateTaskPosition(e) {
 	taskUpdating.value[task.id] = true
 
 	const newTask = klona(task) // cloning the task to avoid pinia store manipulation
-	newTask.bucketId = newBucket.id
+	newTask.bucket_id = newBucket.id
 	const position = calculateItemPosition(
 		taskBefore !== null ? taskBefore.position : null,
 		taskAfter !== null ? taskAfter.position : null,
@@ -622,15 +622,15 @@ async function updateTaskPosition(e) {
 		if(bucketHasChanged) {
 			const updatedTaskBucket = await taskBucketService.value.update(new TaskBucketModel({
 				taskId: newTask.id,
-				bucketId: newTask.bucketId,
+				bucketId: newTask.bucket_id,
 				projectViewId: props.viewId,
 				projectId: projectIdWithFallback.value,
 			}))
 			Object.assign(newTask, updatedTaskBucket.task)
-			if (updatedTaskBucket.bucketId !== newTask.bucketId) {
-				kanbanStore.moveTaskToBucket(newTask, updatedTaskBucket.bucketId)
+			if (updatedTaskBucket.bucket_id !== newTask.bucket_id) {
+				kanbanStore.moveTaskToBucket(newTask, updatedTaskBucket.bucket_id)
 			}
-			newTask.bucketId = updatedTaskBucket.bucketId
+			newTask.bucket_id = updatedTaskBucket.bucket_id
 			if (updatedTaskBucket.bucket) {
 				kanbanStore.setBucketById(updatedTaskBucket.bucket, false)
 			}
@@ -641,7 +641,7 @@ async function updateTaskPosition(e) {
 		if (newTaskIndex === 0 && taskAfter !== null && taskAfter.position === 0) {
 			const taskAfterAfter = newBucket.tasks[newTaskIndex + 2] ?? null
 			const newTaskAfter = klona(taskAfter) // cloning the task to avoid pinia store manipulation
-			newTaskAfter.bucketId = newBucket.id
+			newTaskAfter.bucket_id = newBucket.id
 			newTaskAfter.position = calculateItemPosition(
 				0,
 				taskAfterAfter !== null ? taskAfterAfter.position : null,

@@ -86,7 +86,7 @@
 								v-if="canWrite"
 								:ref="e => setFieldRef('assignees', e)"
 								v-model="task.assignees"
-								:project-id="task.projectId"
+								:project-id="task.project_id"
 								:task-id="task.id"
 							/>
 							<AssigneeList
@@ -121,7 +121,7 @@
 							appear
 						>
 							<div
-								v-if="activeFields.dueDate"
+								v-if="activeFields.due_date"
 								class="column"
 							>
 								<!-- Due Date -->
@@ -132,17 +132,17 @@
 								<div class="date-input">
 									<Datepicker
 										ref="dueDatePicker"
-										v-model="task.dueDate"
+										v-model="task.due_date"
 										:choose-date-label="$t('task.detail.chooseDueDate')"
 										:title="$t('task.attributes.dueDate')"
 										:disabled="taskService.loading || !canWrite"
 										@closeOnChange="saveTask()"
 									/>
 									<BaseButton
-										v-if="task.dueDate && canWrite"
+										v-if="task.due_date && canWrite"
 										class="remove"
 										:aria-label="$t('task.detail.removeDueDate')"
-										@click="() => {task.dueDate = null;saveTask()}"
+										@click="() => {task.due_date = null;saveTask()}"
 									>
 										<span class="icon is-small">
 											<Icon icon="times" />
@@ -156,7 +156,7 @@
 							appear
 						>
 							<div
-								v-if="activeFields.percentDone"
+								v-if="activeFields.percent_done"
 								class="column"
 							>
 								<!-- Progress -->
@@ -166,7 +166,7 @@
 								</div>
 								<PercentDoneSelect
 									:ref="e => setFieldRef('percentDone', e)"
-									v-model="task.percentDone"
+									v-model="task.percent_done"
 									:disabled="!canWrite"
 									@update:modelValue="setPercentDone"
 								/>
@@ -177,7 +177,7 @@
 							appear
 						>
 							<div
-								v-if="activeFields.startDate"
+								v-if="activeFields.start_date"
 								class="column"
 							>
 								<!-- Start Date -->
@@ -188,17 +188,17 @@
 								<div class="date-input">
 									<Datepicker
 										ref="startDatePicker"
-										v-model="task.startDate"
+										v-model="task.start_date"
 										:choose-date-label="$t('task.detail.chooseStartDate')"
 										:title="$t('task.attributes.startDate')"
 										:disabled="taskService.loading || !canWrite"
 										@closeOnChange="saveTask()"
 									/>
 									<BaseButton
-										v-if="task.startDate && canWrite"
+										v-if="task.start_date && canWrite"
 										class="remove"
 										:aria-label="$t('task.detail.removeStartDate')"
-										@click="() => {task.startDate = null;saveTask()}"
+										@click="() => {task.start_date = null;saveTask()}"
 									>
 										<span class="icon is-small">
 											<Icon icon="times" />
@@ -212,7 +212,7 @@
 							appear
 						>
 							<div
-								v-if="activeFields.endDate"
+								v-if="activeFields.end_date"
 								class="column"
 							>
 								<!-- End Date -->
@@ -223,17 +223,17 @@
 								<div class="date-input">
 									<Datepicker
 										ref="endDatePicker"
-										v-model="task.endDate"
+										v-model="task.end_date"
 										:choose-date-label="$t('task.detail.chooseEndDate')"
 										:title="$t('task.attributes.endDate')"
 										:disabled="taskService.loading || !canWrite"
 										@closeOnChange="saveTask()"
 									/>
 									<BaseButton
-										v-if="task.endDate && canWrite"
+										v-if="task.end_date && canWrite"
 										class="remove"
 										:aria-label="$t('task.detail.removeEndDate')"
-										@click="() => {task.endDate = null;saveTask()}"
+										@click="() => {task.end_date = null;saveTask()}"
 									>
 										<span class="icon is-small">
 											<Icon icon="times" />
@@ -269,7 +269,7 @@
 							appear
 						>
 							<div
-								v-if="activeFields.repeatAfter"
+								v-if="activeFields.repeat_after"
 								class="column"
 							>
 								<!-- Repeat after -->
@@ -369,7 +369,7 @@
 							:ref="e => { setFieldRef('attachments', e); attachmentsRef = e as any }"
 							:edit-enabled="canWrite"
 							:task="task"
-							@taskChanged="({coverImageAttachmentId}) => task.coverImageAttachmentId = coverImageAttachmentId"
+							@taskChanged="({coverImageAttachmentId}) => task.cover_image_attachment_id = coverImageAttachmentId"
 							@update:attachments="onAttachmentsUpdated"
 						/>
 					</div>
@@ -385,7 +385,7 @@
 
 					<!-- Related Tasks -->
 					<div
-						v-if="activeFields.relatedTasks"
+						v-if="activeFields.related_tasks"
 						class="content details mbe-0"
 					>
 						<h2 class="task-section-title">
@@ -397,8 +397,8 @@
 						<RelatedTasks
 							:ref="e => setFieldRef('relatedTasks', e)"
 							:edit-enabled="canWrite"
-							:initial-related-tasks="task.relatedTasks"
-							:project-id="task.projectId"
+							:initial-related-tasks="task.related_tasks"
+							:project-id="task.project_id"
 							:show-no-relations-notice="true"
 							:task-id="taskId"
 						/>
@@ -419,7 +419,7 @@
 							<div class="control is-expanded">
 								<ProjectSearch
 									:ref="e => setFieldRef('moveProject', e)"
-									:filter="project => project.id !== task.projectId"
+									:filter="project => project.id !== task.project_id"
 									@update:modelValue="changeProject"
 								/>
 							</div>
@@ -430,7 +430,7 @@
 					<Comments
 						:can-write="canWrite"
 						:task-id="taskId"
-						:project-id="task.projectId"
+						:project-id="task.project_id"
 						:initial-comments="task.comments"
 					/>
 
@@ -466,11 +466,11 @@
 						<XButton
 							v-shortcut="SHORTCUTS.taskDetail.favorite"
 							variant="secondary"
-							:icon="task.isFavorite ? 'star' : ['far', 'star']"
+							:icon="task.is_favorite ? 'star' : ['far', 'star']"
 							@click="toggleFavorite"
 						>
 							{{
-								task.isFavorite ? $t('task.detail.actions.unfavorite') : $t('task.detail.actions.favorite')
+								task.is_favorite ? $t('task.detail.actions.unfavorite') : $t('task.detail.actions.favorite')
 							}}
 						</XButton>
 						
@@ -529,7 +529,7 @@
 							{{ $t('task.detail.actions.attachments') }}
 						</XButton>
 						<XButton
-							v-shortcut="SHORTCUTS.taskDetail.relatedTasks"
+							v-shortcut="SHORTCUTS.taskDetail.related_tasks"
 							variant="secondary"
 							icon="sitemap"
 							@click="setRelatedTasksActive()"
@@ -565,7 +565,7 @@
 						</XButton>
 
 						<XButton
-							v-shortcut="SHORTCUTS.taskDetail.dueDate"
+							v-shortcut="SHORTCUTS.taskDetail.due_date"
 							variant="secondary"
 							icon="calendar"
 							@click="setFieldActive('dueDate')"
@@ -662,9 +662,9 @@ import {unrefElement, useDebounceFn, useElementSize, useIntersectionObserver, us
 import {klona} from 'klona/lite'
 
 import TaskService from '@/services/task'
-import TaskModel from '@/models/task'
+import {createTaskDraft} from '@/helpers/task'
 
-import type {ITask} from '@/modelTypes/ITask'
+import type {Task as ITask} from '@/client/generated'
 import type {IAttachment} from '@/modelTypes/IAttachment'
 import type {ProjectResponse} from '@/client/queries/projects'
 
@@ -742,16 +742,16 @@ const kanbanStore = useKanbanStore()
 const authStore = useAuthStore()
 const baseStore = useBaseStore()
 
-const task = ref<ITask>(new TaskModel())
+const task = ref<ITask>(createTaskDraft())
 const hasAttachments = computed(() => (task.value.attachments?.length ?? 0) > 0)
 const remindersDefaultRelativeTo = computed(() => {
-	if (task.value.dueDate) {
+	if (task.value.due_date) {
 		return REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE
 	}
-	if (task.value.startDate) {
+	if (task.value.start_date) {
 		return REMINDER_PERIOD_RELATIVE_TO_TYPES.STARTDATE
 	}
-	if (task.value.endDate) {
+	if (task.value.end_date) {
 		return REMINDER_PERIOD_RELATIVE_TO_TYPES.ENDDATE
 	}
 	return null
@@ -811,16 +811,16 @@ onBeforeRouteLeave(async () => {
 // updated, changed, updated and so on.
 // To prevent this, we put the task color property in a separate value which is set to the task color
 // when it is saved and loaded.
-const taskColor = ref<ITask['hexColor']>('')
+const taskColor = ref<ITask['hex_color']>('')
 
 // Used to avoid flashing of empty elements if the task content is not yet loaded.
 const visible = ref(false)
 
-const project = computed(() => projectList.projects[task.value.projectId])
+const project = computed(() => projectList.projects[task.value.project_id])
 
 const projectRoute = computed(() => ({
 	name: 'project.index',
-	params: {projectId: task.value.projectId},
+	params: {projectId: task.value.project_id},
 	hash: route.hash,
 }))
 
@@ -957,12 +957,12 @@ watch(
 			}
 			const loaded = await taskService.get({id}, {expand})
 			Object.assign(task.value, loaded)
-			taskColor.value = task.value.hexColor
+			taskColor.value = task.value.hex_color
 			setActiveFields()
 
-			if (task.value.isUnread) {
+			if (task.value.is_unread) {
 				await taskStore.markTaskAsRead(task.value.id)
-				task.value.isUnread = false
+				task.value.is_unread = false
 			}
 
 			if (lastProject.value) {
@@ -1007,53 +1007,53 @@ const activeFields: { [type in FieldType]: boolean } = reactive({
 	assignees: false,
 	attachments: false,
 	color: false,
-	dueDate: false,
-	endDate: false,
+	due_date: false,
+	end_date: false,
 	labels: false,
 	moveProject: false,
-	percentDone: false,
+	percent_done: false,
 	priority: false,
-	relatedTasks: false,
+	related_tasks: false,
 	reminders: false,
-	repeatAfter: false,
-	startDate: false,
+	repeat_after: false,
+	start_date: false,
 	timeTracking: false,
 })
 
 function setActiveFields() {
 	// FIXME: are these lines necessary?
-	// task.startDate = task.startDate || null
-	// task.endDate = task.endDate || null
+	// task.start_date = task.start_date || null
+	// task.end_date = task.end_date || null
 
 	// Set all active fields based on values in the model
 	activeFields.assignees = task.value.assignees.length > 0
 	activeFields.attachments = task.value.attachments.length > 0
-	activeFields.timeTracking = (task.value.timeEntriesCount ?? 0) > 0
-	activeFields.dueDate = task.value.dueDate !== null
-	activeFields.endDate = task.value.endDate !== null
+	activeFields.timeTracking = (task.value.time_entries_count ?? 0) > 0
+	activeFields.due_date = task.value.due_date !== null
+	activeFields.end_date = task.value.end_date !== null
 	activeFields.labels = task.value.labels.length > 0
-	activeFields.percentDone = task.value.percentDone > 0
+	activeFields.percent_done = task.value.percent_done > 0
 	activeFields.priority = task.value.priority !== PRIORITIES.UNSET
-	activeFields.relatedTasks = Object.keys(task.value.relatedTasks).length > 0
+	activeFields.related_tasks = Object.keys(task.value.related_tasks).length > 0
 	activeFields.reminders = task.value.reminders.length > 0
-	activeFields.repeatAfter = task.value.repeatAfter?.amount > 0 || task.value.repeatMode !== TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
-	activeFields.startDate = task.value.startDate !== null
+	activeFields.repeat_after = task.value.repeat_after?.amount > 0 || task.value.repeat_mode !== TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
+	activeFields.start_date = task.value.start_date !== null
 }
 
 const activeFieldElements: { [id in FieldType]: HTMLElement | null } = reactive({
 	assignees: null,
 	attachments: null,
 	color: null,
-	dueDate: null,
-	endDate: null,
+	due_date: null,
+	end_date: null,
 	labels: null,
 	moveProject: null,
-	percentDone: null,
+	percent_done: null,
 	priority: null,
-	relatedTasks: null,
+	related_tasks: null,
 	reminders: null,
-	repeatAfter: null,
-	startDate: null,
+	repeat_after: null,
+	start_date: null,
 	timeTracking: null,
 })
 
@@ -1119,16 +1119,16 @@ async function saveTask(
 		return
 	}
 
-	currentTask.hexColor = taskColor.value
+	currentTask.hex_color = taskColor.value
 
 	// If no end date is being set, but a start date and due date,
 	// use the due date as the end date
 	if (
-		currentTask.endDate === null &&
-		currentTask.startDate !== null &&
-		currentTask.dueDate !== null
+		currentTask.end_date === null &&
+		currentTask.start_date !== null &&
+		currentTask.due_date !== null
 	) {
-		currentTask.endDate = currentTask.dueDate
+		currentTask.end_date = currentTask.due_date
 	}
 
 	const updatedTask = await taskStore.update(currentTask) // TODO: markraw ?
@@ -1156,7 +1156,7 @@ const showDeleteModal = ref(false)
 async function deleteTask() {
 	await taskStore.delete(task.value)
 	success({message: t('task.detail.deleteSuccess')})
-	router.push({name: 'project.index', params: {projectId: task.value.projectId}})
+	router.push({name: 'project.index', params: {projectId: task.value.project_id}})
 }
 
 async function toggleTaskDone() {
@@ -1235,8 +1235,8 @@ async function setPercentDone(percentDone: number) {
 }
 
 async function removeRepeatAfter() {
-	task.value.repeatAfter.amount = 0
-	task.value.repeatMode = TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
+	task.value.repeat_after.amount = 0
+	task.value.repeat_mode = TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
 	await saveTask()
 }
 
