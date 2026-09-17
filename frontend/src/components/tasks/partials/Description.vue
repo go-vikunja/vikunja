@@ -62,7 +62,7 @@ import { clearEditorDraft } from '@/helpers/editorDraftStorage'
 import { isEditorContentEmpty } from '@/helpers/editorContentEmpty'
 import { uploadFilesForEditor } from '@/helpers/attachments'
 import type {Task as ITask} from '@/client/generated'
-import { useTaskActions } from '@/composables/useTaskActions'
+import {useUpdateTaskMutation} from '@/client/queries/taskMutations'
 
 export type AttachmentUploadFunction = (file: File, onSuccess: (attachmentUrl: string) => void) => Promise<string>
 
@@ -91,7 +91,7 @@ watch(
 const saved = ref(false)
 const saving = ref(false)
 
-const taskStore = useTaskActions()
+const updateTask = useUpdateTaskMutation()
 
 const {t} = useI18n({useScope: 'global'})
 
@@ -207,8 +207,9 @@ async function save() {
 	saving.value = true
 
 	try {
-		const updated = await taskStore.update({
+		const updated = await updateTask.mutateAsync({
 			...props.modelValue,
+			id: props.modelValue.id!,
 			description: description.value,
 		})
 		emit('update:modelValue', updated)

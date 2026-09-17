@@ -57,7 +57,7 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import Multiselect from '@/components/input/Multiselect.vue'
 import type {Label} from '@/client/generated'
 import {useCreateLabelMutation} from '@/client/queries/labels'
-import {useTaskActions} from '@/composables/useTaskActions'
+import {useAddTaskLabelMutation, useRemoveTaskLabelMutation} from '@/client/queries/taskMutations'
 import {getRandomColorHex} from '@/helpers/color/randomColor'
 import {useLabelStyles} from '@/composables/useLabelStyles'
 import {useLabels} from '@/composables/useLabels'
@@ -95,13 +95,17 @@ watch(
 	},
 )
 
-const taskStore = useTaskActions()
+const addLabelMutation = useAddTaskLabelMutation()
+const removeLabelMutation = useRemoveTaskLabelMutation()
 const {filterLabelsByQuery, isPending} = useLabels()
 const createLabelMutation = useCreateLabelMutation()
 const {getLabelStyles} = useLabelStyles()
 
 const foundLabels = computed(() => filterLabelsByQuery(labels.value, query.value))
-const loading = computed(() => isPending.value || createLabelMutation.isPending.value || taskStore.isLoading)
+const loading = computed(() => isPending.value
+	|| createLabelMutation.isPending.value
+	|| addLabelMutation.isPending.value
+	|| removeLabelMutation.isPending.value)
 
 function findLabel(newQuery: string) {
 	query.value = newQuery
@@ -113,7 +117,7 @@ async function addLabel(label: Label, showNotification = true) {
 		return
 	}
 
-	await taskStore.addLabel({label: {...label, id: label.id!}, taskId: props.taskId})
+	await addLabelMutation.mutateAsync({label: {...label, id: label.id!}, taskId: props.taskId})
 	labels.value = Array.from(new Map(labels.value.map(label => [label.id, label])).values())
 	if (showNotification) {
 		success({message: t('task.label.addSuccess')})
@@ -122,7 +126,7 @@ async function addLabel(label: Label, showNotification = true) {
 
 async function removeLabel(label: Label) {
 	if (props.taskId !== 0) {
-		await taskStore.removeLabel({label: {...label, id: label.id!}, taskId: props.taskId})
+		await removeLabelMutation.mutateAsync({label: {...label, id: label.id!}, taskId: props.taskId})
 	}
 
 	const idx = labels.value.findIndex(l => l.id === label.id)

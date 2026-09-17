@@ -247,7 +247,7 @@ import {downloadBlob} from '@/helpers/downloadBlob'
 import {getHumanSize} from '@/helpers/getHumanSize'
 import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
 import {error, success} from '@/message'
-import {useTaskActions} from '@/composables/useTaskActions'
+import {useUpdateTaskMutation} from '@/client/queries/taskMutations'
 import {useI18n} from 'vue-i18n'
 import FilePreview from '@/components/tasks/partials/FilePreview.vue'
 import ImageLightbox from '@/components/misc/ImageLightbox.vue'
@@ -287,7 +287,7 @@ function eventTargetsEditor(event: Event | null | undefined): boolean {
 	return false
 }
 
-const taskStore = useTaskActions()
+const updateTask = useUpdateTaskMutation()
 const {t} = useI18n({useScope: 'global'})
 
 const attachmentService = shallowReactive(new AttachmentService())
@@ -304,7 +304,7 @@ watch(() => props.task.id, () => {
 	void reloadAttachments()
 }, {immediate: true})
 
-const loading = computed(() => attachmentService.loading || taskStore.isLoading)
+const loading = computed(() => attachmentService.loading || updateTask.isPending.value)
 
 const isDraggingFiles = ref(false)
 const isDragOverEditor = ref(false)
@@ -579,7 +579,7 @@ function copyUrl(attachment: IAttachment) {
 }
 
 async function setCoverImage(attachment: IAttachment | null) {
-	await taskStore.setCoverImage(props.task, attachment)
+	await updateTask.mutateAsync({...props.task, id: props.task.id!, cover_image_attachment_id: attachment?.id ?? 0})
 	success({message: t('task.attachment.successfullyChangedCoverImage')})
 }
 

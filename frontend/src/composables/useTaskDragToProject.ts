@@ -1,7 +1,8 @@
 import {useI18n} from 'vue-i18n'
 
 import type {TaskResponse} from '@/client/queries/tasks'
-import {useTaskActions} from '@/composables/useTaskActions'
+import {useUpdateTaskMutation} from '@/client/queries/taskMutations'
+import {useTaskDragState} from '@/composables/useTaskDragState'
 import {useProjects} from '@/composables/useProjects'
 import {success} from '@/message'
 
@@ -57,7 +58,8 @@ export interface TaskDragToProjectResult {
  */
 export function useTaskDragToProject() {
 	const {t} = useI18n({useScope: 'global'})
-	const taskStore = useTaskActions()
+	const {draggedTask, setDraggedTask} = useTaskDragState()
+	const updateTask = useUpdateTaskMutation()
 	const projectList = useProjects()
 
 	/**
@@ -72,10 +74,10 @@ export function useTaskDragToProject() {
 		e: { originalEvent?: MouseEvent },
 		onSuccess?: (task: TaskResponse, targetProjectId: number) => void,
 	): Promise<TaskDragToProjectResult> {
-		const draggedTask = taskStore.draggedTask
+		const dragged = draggedTask.value
 
-		if (!draggedTask || !e.originalEvent) {
-			taskStore.setDraggedTask(null)
+		if (!dragged || !e.originalEvent) {
+			setDraggedTask(null)
 			return {moved: false, targetProjectId: null}
 		}
 
@@ -83,21 +85,22 @@ export function useTaskDragToProject() {
 		const mouseY = e.originalEvent.clientY
 		const targetProjectId = findProjectIdAtPosition(mouseX, mouseY)
 
-		if (!targetProjectId || targetProjectId <= 0 || targetProjectId === draggedTask.project_id) {
-			taskStore.setDraggedTask(null)
+		if (!targetProjectId || targetProjectId <= 0 || targetProjectId === dragged.project_id) {
+			setDraggedTask(null)
 			return {moved: false, targetProjectId}
 		}
 
 		const targetProject = projectList.projects[targetProjectId]
 
 		try {
-			await taskStore.update({
-				...draggedTask,
+			await updateTask.mutateAsync({
+				...dragged,
+				id: dragged.id!,
 				project_id: targetProjectId,
 			})
 
 			if (onSuccess) {
-				onSuccess(draggedTask, targetProjectId)
+				onSuccess(dragged, targetProjectId)
 			}
 
 			success({message: t('task.movedToProject', {project: targetProject?.title || t('project.title')})})
@@ -107,7 +110,7 @@ export function useTaskDragToProject() {
 			return {moved: false, targetProjectId}
 		} finally {
 			// Always clears drag state - callers should not clear again
-			taskStore.setDraggedTask(null)
+			setDraggedTask(null)
 		}
 	}
 

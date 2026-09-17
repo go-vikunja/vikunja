@@ -125,7 +125,6 @@ import XLabel from '@/components/tasks/partials/Label.vue'
 import {DATE_RANGES} from '@/components/date/dateRanges'
 import LlamaCool from '@/assets/llama-cool.svg?component'
 import {useAuthStore} from '@/stores/auth'
-import {useTaskActions} from '@/composables/useTaskActions'
 import {useProjects} from '@/composables/useProjects'
 import {useLabels} from '@/composables/useLabels'
 import type {TaskFilterParams} from '@/client/queries/tasks'
@@ -153,7 +152,6 @@ const emit = defineEmits<{
 }>()
 
 const authStore = useAuthStore()
-const taskStore = useTaskActions()
 const projectList = useProjects()
 const {getLabelById} = useLabels()
 
@@ -207,7 +205,7 @@ const pageTitle = computed(() => {
 })
 const hasTasks = computed(() => tasks.value && tasks.value.length > 0)
 const userAuthenticated = computed(() => authStore.authenticated)
-const loading = computed(() => taskStore.isLoading || taskQuery.isFetching.value)
+const loading = taskQuery.isFetching
 const filterIdUsedOnOverview = computed(() => authStore.settings?.frontendSettings?.filterIdUsedOnOverview)
 
 interface dateStrings {

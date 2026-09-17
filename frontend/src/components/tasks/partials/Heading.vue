@@ -72,7 +72,7 @@ import ColorBubble from '@/components/misc/ColorBubble.vue'
 import Done from '@/components/misc/Done.vue'
 
 import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
-import {useTaskActions} from '@/composables/useTaskActions'
+import {useUpdateTaskMutation} from '@/client/queries/taskMutations'
 
 import type {Task as ITask} from '@/client/generated'
 import {getHexColor, getTaskIdentifier} from '@/helpers/task'
@@ -99,8 +99,8 @@ async function copyUrl() {
 	await copy(absoluteURL)
 }
 
-const taskStore = useTaskActions()
-const loading = computed(() => taskStore.isLoading)
+const updateTask = useUpdateTaskMutation()
+const loading = updateTask.isPending
 
 const textIdentifier = computed(() => getTaskIdentifier(props.task))
 
@@ -158,8 +158,9 @@ async function save(element: HTMLElement) {
 
 	try {
 		saving.value = true
-		const newTask = await taskStore.update({
+		const newTask = await updateTask.mutateAsync({
 			...props.task,
+			id: props.task.id!,
 			title,
 		})
 		emit('update:task', newTask)
