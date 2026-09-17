@@ -130,39 +130,28 @@ describe('project queries', () => {
 		expect(sdk.projectsList).not.toHaveBeenCalled()
 	})
 
-	it('loads every page and partitions pseudo projects from real projects', async () => {
-		sdk.projectsList
-			.mockResolvedValueOnce({
-				data: {
-					items: [
-						serverProject({id: 2, title: 'Second', position: 200}),
-						serverProject({id: -1, title: 'Favorites', is_favorite: true, position: -1}),
-						serverProject({id: -3, title: 'Zulu filter'}),
-					],
-					total_pages: 2,
-				},
-			})
-			.mockResolvedValueOnce({
-				data: {
-					items: [
-						serverProject({id: 1, title: 'First', position: 100}),
-						serverProject({id: -2, title: 'Alpha filter'}),
-						serverProject({id: -3, title: 'Zulu filter'}),
-					],
-					total_pages: 2,
-				},
-			})
+	it('requests projects with the maximum page size and partitions pseudo projects from real ones, deduping repeated ids', async () => {
+		sdk.projectsList.mockResolvedValue({
+			data: {
+				items: [
+					serverProject({id: 2, title: 'Second', position: 200}),
+					serverProject({id: -1, title: 'Favorites', is_favorite: true, position: -1}),
+					serverProject({id: -3, title: 'Zulu filter'}),
+					serverProject({id: 1, title: 'First', position: 100}),
+					serverProject({id: -2, title: 'Alpha filter'}),
+					serverProject({id: -3, title: 'Zulu filter'}),
+				],
+				total_pages: 1,
+			},
+		})
 
 		const result = await queryClient.fetchQuery(projectsQuery())
 
 		expect(result.projects.map(project => project.id)).toEqual([1, 2])
 		expect(result.favoriteProject?.id).toBe(-1)
 		expect(result.savedFilterProjects.map(project => project.id)).toEqual([-2, -3])
-		expect(sdk.projectsList).toHaveBeenNthCalledWith(1, {
+		expect(sdk.projectsList).toHaveBeenCalledExactlyOnceWith({
 			query: {is_archived: true, expand: 'permissions', page: 1, per_page: 1000},
-		})
-		expect(sdk.projectsList).toHaveBeenNthCalledWith(2, {
-			query: {is_archived: true, expand: 'permissions', page: 2, per_page: 1000},
 		})
 	})
 

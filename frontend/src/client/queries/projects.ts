@@ -23,6 +23,7 @@ import {removeProjectFromHistory} from '@/modules/projectHistory'
 import {i18n} from '@/i18n'
 
 import {contextMutationOptions} from './contextMutation'
+import {fetchAllPages} from './fetchAllPages'
 
 export type ProjectResponse = Omit<Project,
 	'id' |
@@ -152,20 +153,9 @@ function partitionProjects(projects: Project[]): ProjectListResult {
 }
 
 async function fetchAllProjects(): Promise<ProjectListResult> {
-	const projects: Project[] = []
-	let page = 1
-
-	while (true) {
-		const {data} = await projectsList({
-			query: {is_archived: true, expand: 'permissions', page, per_page: 1000},
-		})
-		projects.push(...(data.items ?? []))
-		if (page >= (data.total_pages ?? 1)) {
-			break
-		}
-		page++
-	}
-
+	const projects = await fetchAllPages(async page => (await projectsList({
+		query: {is_archived: true, expand: 'permissions', page, per_page: 1000},
+	})).data)
 	return partitionProjects(projects)
 }
 
