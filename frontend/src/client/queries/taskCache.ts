@@ -55,6 +55,19 @@ function containsTask(tasks: readonly Task[], id: number): boolean {
 		|| Object.values(task.related_tasks ?? {}).some(children => containsTask(children ?? [], id)))
 }
 
+export function taskQueryKeys(client: QueryClient, id: number): QueryKey[] {
+	return [
+		...client.getQueriesData<TaskResponse>({queryKey: taskKeys.details})
+			.filter(([, task]) => task && containsTask([task], id)),
+		...client.getQueriesData<TaskResponse[]>({queryKey: taskKeys.allLists})
+			.filter(([, tasks]) => tasks && containsTask(tasks, id)),
+		...client.getQueriesData<PaginatedTaskResponse>({queryKey: taskKeys.lists})
+			.filter(([, list]) => list && containsTask(list.items, id)),
+		...client.getQueriesData<BoardData>({queryKey: kanbanKeys.all})
+			.filter(([, board]) => board?.buckets.some(bucket => containsTask(bucket.tasks, id))),
+	].map(([key]) => key)
+}
+
 type CollectionRemoval = {kind: 'move', project: number} | {kind: 'delete'}
 
 function removeTaskFromCollections(client: QueryClient, id: number, removal: CollectionRemoval) {

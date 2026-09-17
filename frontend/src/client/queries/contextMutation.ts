@@ -5,7 +5,7 @@ import {error, success} from '@/message'
 export function contextMutationOptions<TData, TInput, TOptimistic = undefined>(options: {
 	mutationFn: (input: TInput) => Promise<TData>
 	optimistic?: {
-		queryKeys: (input: TInput) => readonly QueryKey[]
+		queryKeys: (input: TInput, client: QueryClient) => readonly QueryKey[]
 		update: (input: TInput, client: QueryClient) => TOptimistic
 	}
 	onSuccess?: (data: TData, input: TInput, client: QueryClient, optimistic: TOptimistic) => void
@@ -19,7 +19,7 @@ export function contextMutationOptions<TData, TInput, TOptimistic = undefined>(o
 			if (!options.optimistic) {
 				return {request, previous: [], optimistic: undefined as TOptimistic}
 			}
-			const queryKeys = options.optimistic.queryKeys(input)
+			const queryKeys = options.optimistic.queryKeys(input, client)
 			await Promise.all(queryKeys.map(queryKey => client.cancelQueries({queryKey})))
 			assertClientRequestContext(request)
 			const previous = queryKeys.flatMap(queryKey => client.getQueriesData({queryKey}))
