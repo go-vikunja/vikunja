@@ -12,10 +12,12 @@
 
 - E2E: invoke the `run-e2e-tests` skill (`mage test:e2e`). Never run `pnpm test:e2e` directly.
 - Prefer e2e tests over component tests. User-visible behaviour (a created item appears, an edit sticks after reload, a delete removes the row) and the "How to verify" steps of a PR belong in `frontend/tests/e2e/`. Extend an existing spec when one covers the page; add one when none does.
+- E2E tests assert stored state, not just a toast: reload the page, and check the API through the `apiContext`/`userToken` fixtures where the UI could lie.
 - Component tests are only for what e2e can't exercise reliably: request races, stale responses after navigation, identity changes mid-request, and similar timing cases. Mocked component tests pass while the real page is broken, so they don't replace an e2e test for the same behaviour.
 - Unit tests: `pnpm vitest run <file>` in `frontend/`. Mock the generated client with `vi.mock('@/client/generated', () => sdk)` and `@/message` when the code toasts.
 - When a component test is justified and reads server data, mount it against a real `QueryClient` seeded through the key factories, and mock only the generated client. Don't mock the composable that owns the behaviour under test; a mocked read hid a table that never updated after mutations. If a mutation invalidates a query, the client mock must answer the refetch with data matching the seeded state.
 - A regression test must fail against the unfixed code. Check that before landing the fix.
+- A test that can't fail is a defect. Examples: asserting that an unseeded cache is `toBeUndefined()`, checking for hidden controls on the viewer's own row (it never shows them), asserting two key literals differ, or calling the fix itself (`observer.reset()`) instead of going through the component.
 - Typecheck with `pnpm typecheck` in `frontend/` and read the log. It has well over a thousand pre-existing errors, so compare the normalized error set against the base branch rather than the count; no new entries allowed:
 
   ```bash
