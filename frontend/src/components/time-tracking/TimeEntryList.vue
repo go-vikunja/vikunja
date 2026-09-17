@@ -118,7 +118,7 @@ import BaseButton from '@/components/base/BaseButton.vue'
 
 import {useProjects} from '@/composables/useProjects'
 import {useAuthStore} from '@/stores/auth'
-import {fetchTaskById} from '@/helpers/fetchTaskById'
+import {ensureTask} from '@/client/queries/tasks'
 import {getProjectTitle} from '@/helpers/getProjectTitle'
 import {formatDate} from '@/helpers/time/formatDate'
 import {useTimeFormat} from '@/composables/useTimeFormat'
@@ -163,7 +163,7 @@ watch(() => props.entries, entries => {
 		if (taskId === 0) {
 			return
 		}
-		fetchTaskById(taskId).then(task => {
+		ensureTask(taskId).then(task => {
 			tasks.value[taskId] = task
 		}).catch(() => {})
 	})
