@@ -138,7 +138,7 @@ import SingleTaskInlineReadonly from '@/components/tasks/partials/SingleTaskInli
 import {useBaseStore} from '@/stores/base'
 import {useProjects} from '@/composables/useProjects'
 import {useCurrentProject} from '@/composables/useCurrentProject'
-import {useTaskActions} from '@/composables/useTaskActions'
+import {useQuickAddTask} from '@/composables/useQuickAddTask'
 import {useAuthStore} from '@/stores/auth'
 import {useLabels} from '@/composables/useLabels'
 
@@ -164,7 +164,7 @@ const projectList = useProjects()
 const createProjectMutation = useCreateProjectMutation()
 const {currentProject: selectedProject} = useCurrentProject()
 const {filterLabelsByQuery, getLabelsByExactTitles} = useLabels()
-const taskStore = useTaskActions()
+const {createNewTask} = useQuickAddTask()
 const authStore = useAuthStore()
 
 const {isQuickAddMode} = useQuickAddMode()
@@ -625,7 +625,7 @@ async function newTask() {
 	if (currentProject.value?.id && currentProject.value.id > 0) {
 		projectId = currentProject.value.id
 	}
-	const task = await taskStore.createNewTask({
+	const task = await createNewTask({
 		title: query.value,
 		project_id: projectId,
 	})
