@@ -26,3 +26,12 @@ cat /tmp/e2e-output.log | tail -20
 ```
 
 Set `VIKUNJA_E2E_SKIP_BUILD=true` to skip rebuilding the API binary when iterating on frontend-only changes.
+
+A full-suite run can fail late for reasons unrelated to the change (login rate limiting after hundreds of logins, license test setup). Re-run the failing specs alone, and on `main`, before attributing a failure to the PR.
+
+## Writing specs
+
+- Multiselect searches on `keyup`. Clear it with key presses (`ControlOrMeta+a`, then `Backspace`); `fill('')` leaves stale results.
+- Focusing the assignee input preloads all project members. Click the result matching the user, not the first one.
+- `dialog[open]` also matches route modals such as project settings. Find a dialog by its name.
+- `User.vue` renders the avatar with an empty `alt` when the username is shown, so don't locate users by avatar alt text.
