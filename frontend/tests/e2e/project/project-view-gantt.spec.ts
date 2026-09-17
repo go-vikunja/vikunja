@@ -90,7 +90,7 @@ test.describe('Project View Gantt', () => {
 		await ProjectFactory.create(1)
 		await ProjectViewFactory.create(1, {id: 2, project_id: 1, view_kind: 1})
 		const taskUpdatePromise = page.waitForResponse(response =>
-			response.url().includes('/tasks/') && response.request().method() === 'POST',
+			response.url().includes('/tasks/') && response.request().method() === 'PATCH',
 		)
 
 		const now = new Date()

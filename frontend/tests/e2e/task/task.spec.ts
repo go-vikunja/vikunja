@@ -137,7 +137,7 @@ test.describe('Task', () => {
 
 		// Wait for the favorite API response
 		const favoritePromise = page.waitForResponse(response =>
-			response.url().includes('/tasks/') && response.request().method() === 'POST',
+			response.url().includes('/tasks/') && response.request().method() === 'PATCH',
 		)
 		await favoriteButton.click()
 		await favoritePromise
@@ -464,6 +464,113 @@ test.describe('Task', () => {
 			await expect(page).toHaveURL(new RegExp(`/projects/${tasks[0].project_id}/`))
 		})
 
+		test('an edit in the task detail shows in the list and the kanban board without a reload', async ({authenticatedPage: page, apiContext, userToken}) => {
+			const [task] = await TaskFactory.create(1, {
+				id: 1,
+				project_id: projects[0].id,
+				title: 'Before rename',
+			}) as Task[]
+			await TaskBucketFactory.create(1, {
+				task_id: task.id,
+				bucket_id: buckets[0].id,
+				project_view_id: buckets[0].project_view_id,
+			})
+
+			await page.goto(`/tasks/${task.id}`)
+			const heading = page.locator('.task-view h1[contenteditable]')
+			await expect(heading).toContainText('Before rename')
+			const renamed = page.waitForResponse(r =>
+				new URL(r.url()).pathname.endsWith(`/tasks/${task.id}`) && r.request().method() === 'PATCH',
+			)
+			await heading.fill('After rename')
+			await heading.press('Enter')
+			expect((await renamed).ok()).toBeTruthy()
+
+			// Client-side navigation only: the cached list and board must already carry the new title.
+			await page.locator('.task-view nav.subtitle a').first().click()
+			await expect(page).toHaveURL(/\/projects\/1\/\d+/)
+			await page.locator(`.switch-view-button[href^="/projects/${projects[0].id}/1"]`).click()
+			await expect(page.locator('.tasks .task').filter({hasText: 'After rename'})).toBeVisible()
+			await expect(page.locator('.tasks .task').filter({hasText: 'Before rename'})).toHaveCount(0)
+
+			await page.locator(`.switch-view-button[href^="/projects/${projects[0].id}/4"]`).click()
+			const card = page.locator('.kanban .bucket .tasks .task')
+			await expect(card.filter({hasText: 'After rename'})).toBeVisible()
+			await expect(card.filter({hasText: 'Before rename'})).toHaveCount(0)
+
+			await page.reload()
+			await expect(card.filter({hasText: 'After rename'})).toBeVisible()
+			await expect(card.filter({hasText: 'Before rename'})).toHaveCount(0)
+
+			const stored = await apiContext.get(`tasks/${task.id}`, {
+				headers: {Authorization: `Bearer ${userToken}`},
+			})
+			expect(stored.ok()).toBe(true)
+			expect((await stored.json()).title).toBe('After rename')
+		})
+
+		test('a task deleted in the detail disappears from the kanban board without a reload', async ({authenticatedPage: page, apiContext, userToken}) => {
+			const [task] = await TaskFactory.create(1, {
+				id: 1,
+				project_id: projects[0].id,
+				title: 'Doomed task',
+			}) as Task[]
+			await TaskBucketFactory.create(1, {
+				task_id: task.id,
+				bucket_id: buckets[0].id,
+				project_view_id: buckets[0].project_view_id,
+			})
+
+			await page.goto(`/projects/${projects[0].id}/4`)
+			const card = page.locator('.kanban .bucket .tasks .task').filter({hasText: task.title})
+			await expect(card).toBeVisible()
+			await card.click()
+
+			await page.locator('.task-view .action-buttons .button').filter({hasText: 'Delete'}).click()
+			await expect(page.locator('dialog[open] .modal-content .modal-header')).toContainText('Delete this task')
+			await page.locator('dialog[open] .modal-content .actions .button').filter({hasText: 'Do it!'}).click()
+			await expect(page.locator('.global-notification')).toContainText('Success')
+
+			await expect(page).toHaveURL(/\/projects\/1\/\d+/)
+			await page.locator(`.switch-view-button[href^="/projects/${projects[0].id}/4"]`).click()
+			await expect(page.locator('.kanban .bucket .tasks')).toBeVisible()
+			await expect(page.locator('.kanban .bucket .tasks .task').filter({hasText: task.title})).toHaveCount(0)
+
+			await page.reload()
+			await expect(page.locator('.kanban .bucket .tasks')).toBeVisible()
+			await expect(page.locator('.kanban .bucket .tasks .task').filter({hasText: task.title})).toHaveCount(0)
+
+			const stored = await apiContext.get(`tasks/${task.id}`, {
+				headers: {Authorization: `Bearer ${userToken}`},
+			})
+			expect(stored.status()).toBe(404)
+		})
+
+		test('leaving a task with unsaved description edits after it was deleted elsewhere does not block navigation', async ({authenticatedPage: page, apiContext, userToken}) => {
+			const [task] = await TaskFactory.create(1, {
+				id: 1,
+				project_id: projects[0].id,
+				description: 'Old Description',
+			}) as Task[]
+
+			await page.goto(`/tasks/${task.id}`)
+			await page.locator('.task-view .details.content.description .tiptap button.done-edit', {timeout: 30_000}).click()
+			const editor = page.locator('.task-view .details.content.description .tiptap__editor .tiptap.ProseMirror')
+			await expect(editor).toBeVisible()
+			await editor.fill('Unsaved description')
+
+			const deleted = await apiContext.delete(`tasks/${task.id}`, {
+				headers: {Authorization: `Bearer ${userToken}`},
+			})
+			expect(deleted.ok()).toBeTruthy()
+
+			await page.locator(`li[data-project-id="${projects[0].id}"] .list-menu-link`).first().click()
+
+			await expect(page).toHaveURL(/\/projects\/1\/\d+/)
+			await expect(page.locator('.switch-view-container')).toBeVisible()
+			await expect(page.locator('.task-view')).toHaveCount(0)
+		})
+
 		test('Can add an assignee to a task', async ({authenticatedPage: page, apiContext, userToken}) => {
 			// Create users with IDs starting at 100 to avoid conflict with logged-in user (ID 1)
 			// Don't truncate to preserve the authenticated user from the fixture
@@ -567,7 +674,7 @@ test.describe('Task', () => {
 			await expect(assignees).toHaveCount(1)
 
 			const saved = page.waitForResponse(r =>
-				r.url().includes(`/tasks/${task.id}`) && r.request().method() === 'POST',
+				r.url().includes(`/tasks/${task.id}`) && r.request().method() === 'PATCH',
 			)
 			await page.locator('.task-view .action-buttons .button').filter({hasText: 'Set Priority'}).click()
 			await page.locator('.task-view .columns.details .column').filter({hasText: 'Priority'}).locator('.select select').selectOption('Urgent')
@@ -911,7 +1018,7 @@ test.describe('Task', () => {
 			await popup.getByRole('textbox', {name: 'Minutes', exact: true}).fill('37')
 
 			const [response] = await Promise.all([
-				page.waitForResponse(r => r.url().endsWith(`/tasks/${tasks[0].id}`) && r.request().method() === 'POST', {timeout: 5000}),
+				page.waitForResponse(r => r.url().endsWith(`/tasks/${tasks[0].id}`) && r.request().method() === 'PATCH', {timeout: 5000}),
 				popup.getByRole('button', {name: 'Confirm', exact: true}).click(),
 			])
 			expect(response.ok()).toBeTruthy()
@@ -1214,8 +1321,8 @@ test.describe('Task', () => {
 
 			// Track whether any task save request fires
 			let saveRequestFired = false
-			await page.route('**/api/v1/tasks/*', async (route) => {
-				if (route.request().method() === 'POST' || route.request().method() === 'PUT') {
+			await page.route('**/api/v2/tasks/*', async (route) => {
+				if (route.request().method() === 'PATCH') {
 					saveRequestFired = true
 				}
 				await route.continue()

@@ -142,6 +142,8 @@ test.describe('Project View Kanban', () => {
 
 		await expect(page.locator('.kanban .bucket:nth-child(2) .tasks')).toContainText(tasks[0].title)
 		await expect(page.locator('.kanban .bucket:nth-child(1) .tasks')).not.toContainText(tasks[0].title)
+		await page.reload()
+		await expect(page.locator('.kanban .bucket:nth-child(2) .tasks')).toContainText(tasks[0].title)
 	})
 
 	test('Recurring task dropped on done bucket moves back to the default bucket', async ({authenticatedPage: page}) => {
@@ -195,6 +197,89 @@ test.describe('Project View Kanban', () => {
 		await page.locator('.kanban .bucket .tasks .task').filter({hasText: tasks[0].title}).click()
 
 		await expect(page).toHaveURL(new RegExp(`/tasks/${tasks[0].id}`), {timeout: 1000})
+	})
+
+	test('Should mark a task done when ctrl-clicking its card', async ({authenticatedPage: page, apiContext, userToken}) => {
+		const [task] = await createTaskWithBuckets(buckets, 1)
+		await page.goto('/projects/1/4')
+
+		const card = page.locator('.kanban .bucket .tasks .task').filter({hasText: task.title}).first()
+		await expect(card).toBeVisible()
+
+		const update = page.waitForResponse(r =>
+			new URL(r.url()).pathname.endsWith(`/tasks/${task.id}`) && r.request().method() === 'PATCH',
+		)
+		// The title link stops ctrl-click propagation, so click the card body.
+		await card.locator('.task-id').click({modifiers: ['ControlOrMeta']})
+		expect((await update).ok()).toBeTruthy()
+
+		await expect(card.locator('.kanban-card__done')).toBeVisible()
+		await expect(page).toHaveURL(/\/projects\/1\/4/)
+
+		const stored = await apiContext.get(`tasks/${task.id}`, {
+			headers: {Authorization: `Bearer ${userToken}`},
+		})
+		expect(stored.ok()).toBe(true)
+		expect((await stored.json()).done).toBe(true)
+	})
+
+	test('Marks a task done and moves its card into the done bucket', async ({authenticatedPage: page, apiContext, userToken}) => {
+		const headers = {Authorization: `Bearer ${userToken}`}
+		const [project] = await ProjectFactory.create(1)
+		const [view] = await ProjectViewFactory.create(1, {
+			id: 20,
+			project_id: project.id,
+			view_kind: 3,
+			bucket_configuration_mode: 1,
+			done_bucket_id: 2,
+		})
+		const localBuckets = await BucketFactory.create(2, {
+			id: '{increment}',
+			project_view_id: view.id,
+		})
+		const [task] = await TaskFactory.create(1, {
+			id: 100,
+			project_id: project.id,
+			title: 'Ctrl click to done',
+			done: false,
+		})
+		await TaskBucketFactory.create(1, {
+			task_id: task.id,
+			bucket_id: localBuckets[0].id,
+			project_view_id: view.id,
+		})
+
+		await page.goto(`/projects/${project.id}/${view.id}`)
+
+		const sourceBucket = page.locator('.kanban .bucket:nth-child(1) .tasks')
+		const doneBucket = page.locator('.kanban .bucket:nth-child(2) .tasks')
+		const card = page.locator('.kanban .bucket .tasks .task').filter({hasText: task.title}).first()
+		await expect(card).toBeVisible()
+		await expect(sourceBucket).toContainText(task.title)
+
+		const update = page.waitForResponse(r =>
+			new URL(r.url()).pathname.endsWith(`/tasks/${task.id}`) && r.request().method() === 'PATCH',
+		)
+		// The title link stops ctrl-click propagation, so click the card body.
+		await card.locator('.task-id').click({modifiers: ['ControlOrMeta']})
+		expect((await update).ok()).toBeTruthy()
+
+		await expect(doneBucket).toContainText(task.title)
+		await expect(sourceBucket).not.toContainText(task.title)
+
+		await page.reload()
+		await expect(doneBucket).toContainText(task.title)
+		await expect(sourceBucket).not.toContainText(task.title)
+
+		const stored = await apiContext.get(`tasks/${task.id}`, {headers})
+		expect(stored.ok()).toBe(true)
+		expect((await stored.json()).done).toBe(true)
+
+		const board = await apiContext.get(`/api/v2/projects/${project.id}/views/${view.id}/buckets/tasks`, {headers})
+		expect(board.ok()).toBeTruthy()
+		const holdingBucket = (await board.json()).items
+			.find(bucket => (bucket.tasks ?? []).some(item => item.id === task.id))
+		expect(holdingBucket?.id).toBe(localBuckets[1].id)
 	})
 
 	test('Should remove a task from the kanban board when moving it to another project', async ({authenticatedPage: page}) => {
@@ -311,6 +396,7 @@ test.describe('Project View Kanban', () => {
 			id: 4,
 			project_id: 1,
 			view_kind: 3,
+			bucket_configuration_mode: 1,
 		})
 		const buckets = await BucketFactory.create(2, {
 			project_view_id: 4,
@@ -338,6 +424,7 @@ test.describe('Project View Kanban', () => {
 			id: 4,
 			project_id: 1,
 			view_kind: 3,
+			bucket_configuration_mode: 1,
 		})
 		const buckets = await BucketFactory.create(2, {
 			project_view_id: 4,
@@ -352,8 +439,7 @@ test.describe('Project View Kanban', () => {
 		// Wait for search results to load and verify searchable task is visible
 		await expect(page.locator('.kanban')).toContainText(searchableTask.title, {timeout: 10000})
 
-		// Verify only one task is shown (the search result) - count task headings
-		await expect(page.locator('main h2')).toHaveCount(1)
+		await expect(page.locator('.kanban .task')).toHaveCount(1)
 	})
 
 	test('Should not show task count by default when bucket has no limit', async ({authenticatedPage: page}) => {
