@@ -143,7 +143,7 @@ import {fetchAttachmentBlobUrl} from '@/helpers/attachments'
 
 import {formatDateLong, formatDisplayDate, formatISO} from '@/helpers/time/formatDate'
 import {colorIsDark} from '@/helpers/color/colorIsDark'
-import {useTaskActions} from '@/composables/useTaskActions'
+import {useUpdateTaskMutation} from '@/client/queries/taskMutations'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 import {playPopSound} from '@/helpers/playPop'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
@@ -160,7 +160,7 @@ const emit = defineEmits<{
 }>()
 
 const router = useRouter()
-const taskActions = useTaskActions()
+const updateTask = useUpdateTaskMutation()
 
 const loadingInternal = ref(false)
 
@@ -193,7 +193,7 @@ async function toggleTaskDone(task: TaskResponse) {
 	
 	loadingInternal.value = true
 	try {
-		const updatedTask = await taskActions.update({
+		const updatedTask = await updateTask.mutateAsync({
 			...task,
 			done: !task.done,
 		})

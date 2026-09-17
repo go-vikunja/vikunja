@@ -5,7 +5,7 @@
 	>
 		<div
 			ref="taskRoot"
-			:class="{'is-loading': taskStore.isLoading}"
+			:class="{'is-loading': isLoading}"
 			class="task loader-container single-task"
 			tabindex="-1"
 			:data-is-overdue="isOverdue || undefined"
@@ -229,7 +229,7 @@ import {success} from '@/message'
 
 import {useProjects} from '@/composables/useProjects'
 import {useCurrentProject} from '@/composables/useCurrentProject'
-import {useTaskActions} from '@/composables/useTaskActions'
+import {useUpdateTaskMutation, useFavoriteTaskMutation} from '@/client/queries/taskMutations'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 import {useIntervalFn} from '@vueuse/core'
 import {playPopSound} from '@/helpers/playPop'
@@ -268,10 +268,14 @@ const {t} = useI18n({useScope: 'global'})
 
 const task = computed(() => props.theTask)
 
-const isRepeating = computed(() => (task.value.repeat_after ?? 0) > 0 || ((task.value.repeat_after ?? 0) === 0 && task.value.repeat_mode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH))
+const isRepeating = computed(() => (task.value.repeat_after ?? 0) > 0
+	|| ((task.value.repeat_after ?? 0) === 0
+		&& task.value.repeat_mode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH))
 
 const projectList = useProjects()
-const taskStore = useTaskActions(true)
+const updateTask = useUpdateTaskMutation(true)
+const favoriteTask = useFavoriteTaskMutation()
+const isLoading = computed(() => updateTask.isPending.value || favoriteTask.isPending.value)
 
 const project = computed(() => projectList.projects[task.value.project_id ?? 0])
 const projectColor = computed(() => project.value?.hex_color ?? '')
@@ -320,8 +324,10 @@ async function markAsDone(checked: boolean, wasReverted: boolean = false) {
 
 	// Fire the request immediately and with the intended done value snapshotted, so a re-render or
 	// teardown during the animation delay can neither drop the save nor make it send a stale state.
-	const updatePromise = taskStore.update({
-		...(wasReverted && isRepeating.value ? oldTask : task.value),
+	const source = wasReverted && isRepeating.value ? oldTask : task.value
+	const updatePromise = updateTask.mutateAsync({
+		...source,
+		id: source.id!,
 		done: checked,
 	}).catch(() => undefined)
 
@@ -363,7 +369,7 @@ function undoDone(checked: boolean) {
 }
 
 async function toggleFavorite() {
-	const updated = await taskStore.toggleFavorite(task.value)
+	const updated = await favoriteTask.mutateAsync({...task.value, id: task.value.id!})
 	emit('taskUpdated', updated)
 }
 
