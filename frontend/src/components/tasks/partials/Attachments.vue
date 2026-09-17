@@ -234,6 +234,7 @@ import ProgressBar from '@/components/misc/ProgressBar.vue'
 import Loading from '@/components/misc/Loading.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
+import AttachmentModel from '@/models/attachment'
 import AttachmentService from '@/services/attachment'
 import {canPreviewAudio, canPreviewImage, previewKind, type PreviewKind} from '@/models/attachment'
 import {getDisplayName} from '@/models/user'
@@ -246,7 +247,7 @@ import {downloadBlob} from '@/helpers/downloadBlob'
 import {getHumanSize} from '@/helpers/getHumanSize'
 import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
 import {error, success} from '@/message'
-import {useTaskStore} from '@/stores/tasks'
+import {useTaskActions} from '@/composables/useTaskActions'
 import {useI18n} from 'vue-i18n'
 import FilePreview from '@/components/tasks/partials/FilePreview.vue'
 import ImageLightbox from '@/components/misc/ImageLightbox.vue'
@@ -262,7 +263,6 @@ const props = withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{
-	'taskChanged': [ITask],
 	'update:attachments': [IAttachment[]],
 }>()
 
@@ -287,12 +287,22 @@ function eventTargetsEditor(event: Event | null | undefined): boolean {
 	return false
 }
 
-const taskStore = useTaskStore()
+const taskStore = useTaskActions()
 const {t} = useI18n({useScope: 'global'})
 
 const attachmentService = shallowReactive(new AttachmentService())
 
-const attachments = computed(() => props.task.attachments ?? [])
+const attachments = ref<IAttachment[]>([])
+async function reloadAttachments() {
+	const id = props.task.id
+	if (!id) return
+	const loaded = await attachmentService.getAll(new AttachmentModel({taskId: id}))
+	if (props.task.id === id) attachments.value = loaded
+}
+watch(() => props.task.id, () => {
+	attachments.value = []
+	void reloadAttachments()
+}, {immediate: true})
 
 const loading = computed(() => attachmentService.loading || taskStore.isLoading)
 
@@ -433,9 +443,10 @@ function uploadNewAttachment() {
 
 async function uploadFilesToTask(files: File[] | FileList) {
 	try {
-		const uploaded = await uploadFiles(attachmentService, props.task.id, files)
+		const uploaded = await uploadFiles(attachmentService, props.task.id!, files)
 		if (uploaded.length > 0) {
-			emit('update:attachments', [...attachments.value, ...uploaded])
+			attachments.value = [...attachments.value, ...uploaded]
+			emit('update:attachments', attachments.value)
 		}
 	} catch (e) {
 		error(e)
@@ -456,6 +467,7 @@ async function deleteAttachment() {
 	try {
 		const r = await attachmentService.delete(attachmentToDelete.value)
 		const updated = attachments.value.filter(a => a.id !== attachmentToDelete.value!.id)
+		attachments.value = updated
 		emit('update:attachments', updated)
 		success(r)
 		setAttachmentToDelete(null)
@@ -563,16 +575,16 @@ async function viewOrDownload(attachment: IAttachment) {
 const copy = useCopyToClipboard()
 
 function copyUrl(attachment: IAttachment) {
-	copy(generateAttachmentUrl(props.task.id, attachment.id))
+	copy(generateAttachmentUrl(props.task.id!, attachment.id))
 }
 
 async function setCoverImage(attachment: IAttachment | null) {
-	const updatedTask = await taskStore.setCoverImage(props.task, attachment)
-	emit('taskChanged', updatedTask)
+	await taskStore.setCoverImage(props.task, attachment)
 	success({message: t('task.attachment.successfullyChangedCoverImage')})
 }
 
 defineExpose({
+	reloadAttachments,
 	openFilePicker: () => filesRef.value?.click(),
 })
 </script>

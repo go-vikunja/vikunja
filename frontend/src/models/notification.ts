@@ -1,7 +1,8 @@
 import AbstractModel from './abstractModel'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import UserModel, {getDisplayName} from '@/models/user'
-import TaskModel from '@/models/task'
+import {getTaskIdentifier} from '@/helpers/task'
+import type {Task} from '@/client/generated'
 import TaskCommentModel from '@/models/taskComment'
 import type {Team} from '@/client/generated'
 import {objectToSnakeCase} from '@/helpers/case'
@@ -11,7 +12,7 @@ import type {IUser} from '@/modelTypes/IUser'
 
 type NotificationData = {
 	doer: UserModel
-	task: TaskModel
+	task: Task
 	comment: TaskCommentModel
 	assignee: UserModel
 	project: Extract<INotification['notification'], {project: unknown}>['project']
@@ -34,6 +35,7 @@ export default class NotificationModel extends AbstractModel<INotification> impl
 
 	constructor(data: Partial<INotification>) {
 		super()
+		const task = data.notification && 'task' in data.notification ? data.notification.task : undefined
 		this.assignData(data)
 		const notification = this.notification as unknown as NotificationData
 
@@ -41,27 +43,27 @@ export default class NotificationModel extends AbstractModel<INotification> impl
 			case NOTIFICATION_NAMES.TASK_COMMENT:
 				this.notification = asNotificationPayload({
 					doer: new UserModel(notification.doer),
-					task: new TaskModel(notification.task),
+					task,
 					comment: new TaskCommentModel(notification.comment),
 				})
 				break
 			case NOTIFICATION_NAMES.TASK_ASSIGNED:
 				this.notification = asNotificationPayload({
 					doer: new UserModel(notification.doer),
-					task: new TaskModel(notification.task),
+					task,
 					assignee: new UserModel(notification.assignee),
 				})
 				break
 			case NOTIFICATION_NAMES.TASK_DELETED:
 				this.notification = asNotificationPayload({
 					doer: new UserModel(notification.doer),
-					task: new TaskModel(notification.task),
+					task,
 				})
 				break
 			case NOTIFICATION_NAMES.TASK_CREATED:
 				this.notification = asNotificationPayload({
 					doer: new UserModel(notification.doer),
-					task: new TaskModel(notification.task),
+					task,
 					project: notification.project,
 				})
 				break
@@ -80,14 +82,14 @@ export default class NotificationModel extends AbstractModel<INotification> impl
 				break
 			case NOTIFICATION_NAMES.TASK_REMINDER:
 				this.notification = asNotificationPayload({
-					task: new TaskModel(notification.task),
+					task,
 					project: notification.project,
 				})
 				break
 			case NOTIFICATION_NAMES.TASK_MENTIONED:
 				this.notification = asNotificationPayload({
 					doer: new UserModel(notification.doer),
-					task: new TaskModel(notification.task),
+					task,
 				})
 				break
 		}
@@ -102,7 +104,7 @@ export default class NotificationModel extends AbstractModel<INotification> impl
 
 		switch (this.name) {
 			case NOTIFICATION_NAMES.TASK_COMMENT:
-				return `commented on ${notification.task.getTextIdentifier()}`
+				return `commented on ${getTaskIdentifier(notification.task)}`
 			case NOTIFICATION_NAMES.TASK_ASSIGNED:
 				who = `${getDisplayName(notification.assignee)}`
 
@@ -110,11 +112,11 @@ export default class NotificationModel extends AbstractModel<INotification> impl
 					who = 'you'
 				}
 
-				return `assigned ${who} to ${notification.task.getTextIdentifier()}`
+				return `assigned ${who} to ${getTaskIdentifier(notification.task)}`
 			case NOTIFICATION_NAMES.TASK_DELETED:
-				return `deleted ${notification.task.getTextIdentifier()}`
+				return `deleted ${getTaskIdentifier(notification.task)}`
 			case NOTIFICATION_NAMES.TASK_CREATED:
-				return `created ${notification.task.getTextIdentifier()}`
+				return `created ${getTaskIdentifier(notification.task)}`
 			case NOTIFICATION_NAMES.PROJECT_CREATED:
 				return `created ${notification.project.title}`
 			case NOTIFICATION_NAMES.TEAM_MEMBER_ADDED:
@@ -126,9 +128,9 @@ export default class NotificationModel extends AbstractModel<INotification> impl
 
 				return `added ${who} to the ${notification.team.name} team`
 			case NOTIFICATION_NAMES.TASK_REMINDER:
-				return `Reminder for ${notification.task.getTextIdentifier()} ${notification.task.title} (${notification.project.title})`
+				return `Reminder for ${getTaskIdentifier(notification.task)} ${notification.task.title} (${notification.project.title})`
 			case NOTIFICATION_NAMES.TASK_MENTIONED:
-				return `${getDisplayName(notification.doer)} mentioned you on ${notification.task.getTextIdentifier()}`
+				return `${getDisplayName(notification.doer)} mentioned you on ${getTaskIdentifier(notification.task)}`
 		}
 
 		return ''

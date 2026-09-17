@@ -1,7 +1,7 @@
 <template>
 	<div
 		class="task"
-		:data-is-overdue="task.due_date <= new Date() && !task.done || undefined"
+		:data-is-overdue="(dueDate && dueDate <= new Date()) && !task.done || undefined"
 	>
 		<span>
 			<span
@@ -20,7 +20,7 @@
 			/>
 
 			<PriorityLabel
-				:priority="task.priority"
+				:priority="task.priority ?? 0"
 				:done="task.done"
 			/>
 
@@ -30,7 +30,7 @@
 				class="parent-tasks"
 			>
 				<template v-for="(pt, i) in task.related_tasks.parenttask">
-					{{ pt.title }}<template v-if="(i + 1) < task.related_tasks.parenttask.length">,&nbsp;</template>
+					{{ pt.title }}<template v-if="(i + 1) < (task.related_tasks.parenttask?.length ?? 0)">,&nbsp;</template>
 				</template>
 				&rsaquo;
 			</span>
@@ -38,21 +38,21 @@
 		</span>
 
 		<Labels
-			v-if="task.labels.length > 0"
+			v-if="(task.labels?.length ?? 0) > 0"
 			class="labels mis-2 mie-1"
-			:labels="task.labels"
+			:labels="task.labels ?? []"
 		/>
 
 		<AssigneeList
-			v-if="task.assignees.length > 0"
-			:assignees="task.assignees"
+			v-if="(task.assignees?.length ?? 0) > 0"
+			:assignees="task.assignees ?? []"
 			:avatar-size="20"
 			class="mis-1"
 			:inline="true"
 		/>
 
 		<span
-			v-if="+new Date(task.due_date) > 0"
+			v-if="dueDate"
 			v-tooltip="formatDateLong(task.due_date)"
 			class="dueDate"
 		>
@@ -66,10 +66,10 @@
 
 		<span>
 			<span
-				v-if="task.attachments.length > 0"
+				v-if="(task.attachments?.length ?? 0) > 0"
 				class="project-task-icon"
 				role="img"
-				:aria-label="$t('task.attributes.attachment', task.attachments.length)"
+				:aria-label="$t('task.attributes.attachment', (task.attachments?.length ?? 0))"
 			>
 				<Icon icon="paperclip" />
 			</span>
@@ -80,7 +80,7 @@
 				<Icon icon="align-left" />
 			</span>
 			<span
-				v-if="task.repeat_after.amount > 0"
+				v-if="(task.repeat_after ?? 0) > 0"
 				class="project-task-icon"
 			>
 				<Icon icon="history" />
@@ -90,18 +90,19 @@
 		<ChecklistSummary :task="task" />
 
 		<progress
-			v-if="task.percent_done > 0"
+			v-if="(task.percent_done ?? 0) > 0"
 			class="progress is-small"
-			:value="task.percent_done * 100"
+			:value="(task.percent_done ?? 0) * 100"
 			max="100"
 		>
-			{{ task.percent_done * 100 }}%
+			{{ (task.percent_done ?? 0) * 100 }}%
 		</progress>
 	</div>
 </template>
 
 <script setup lang="ts">
 import {computed} from 'vue'
+import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 
 import {getHexColor} from '@/helpers/task'
 import type {Task as ITask} from '@/client/generated'
@@ -126,7 +127,8 @@ const props = withDefaults(defineProps<{
 
 const projectList = useProjects()
 
-const project = computed(() => projectList.projects[props.task.project_id])
+const dueDate = computed(() => parseDateOrNull(props.task.due_date))
+const project = computed(() => projectList.projects[props.task.project_id ?? 0])
 </script>
 
 <style lang="scss" scoped>
@@ -150,12 +152,12 @@ const project = computed(() => projectList.projects[props.task.project_id])
 
 	//flex: 1 0 50%;
 
-	.due_date {
+	.dueDate {
 		display: inline-block;
 		margin-inline-start: 5px;
 	}
 
-	&[data-is-overdue] .due_date {
+	&[data-is-overdue] .dueDate {
 		color: var(--danger-text);
 	}
 

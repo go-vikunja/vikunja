@@ -212,7 +212,7 @@
 					{{ $t('user.settings.general.quickAddDefaultRemindersHint') }}
 				</p>
 				<Reminders
-					v-model="settings.frontendSettings.quickAddDefaultReminders"
+					v-model="quickAddDefaultReminders"
 					:default-relative-to="REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE"
 					:allow-absolute="false"
 				/>
@@ -329,7 +329,7 @@ import {useTitle} from '@/composables/useTitle'
 import {useProjects} from '@/composables/useProjects'
 import {useAuthStore} from '@/stores/auth'
 import {useConfigStore} from '@/stores/config'
-import type {IUserSettings} from '@/modelTypes/IUserSettings'
+import {taskRemindersFromSettings, type IUserSettings} from '@/modelTypes/IUserSettings'
 import {isSavedFilterProject} from '@/client/queries/projects'
 import {DEFAULT_PROJECT_VIEW_SETTINGS} from '@/constants/projectView'
 import {PRIORITIES} from '@/constants/priorities'
@@ -443,6 +443,15 @@ const settings = ref<IUserSettings>({
 		// Clone to escape the store's readonly array type.
 		quickAddDefaultReminders: [...(authStore.settings.frontendSettings.quickAddDefaultReminders ?? [])],
 		timeTrackingDefaultStart: authStore.settings.frontendSettings.timeTrackingDefaultStart ?? '09:00',
+	},
+})
+
+const quickAddDefaultReminders = computed({
+	get: () => taskRemindersFromSettings(settings.value.frontendSettings.quickAddDefaultReminders),
+	set: reminders => {
+		settings.value.frontendSettings.quickAddDefaultReminders = reminders.map(reminder => ({
+			relativePeriod: reminder.relative_period,
+		}))
 	},
 })
 

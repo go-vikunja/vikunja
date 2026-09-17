@@ -19,7 +19,7 @@
 				<Multiselect
 					v-model="selectedTask"
 					:placeholder="$t('timeTracking.form.taskSearch')"
-					:loading="taskService.loading"
+					:loading="taskQuery.isFetching.value"
 					:search-results="foundTasks"
 					label="title"
 					@search="findTasks"
@@ -113,22 +113,22 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, shallowReactive, watch, nextTick} from 'vue'
+import {ref, computed, watch, nextTick} from 'vue'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import Multiselect from '@/components/input/Multiselect.vue'
 import Datepicker from '@/components/input/Datepicker.vue'
 import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
 
-import TaskService from '@/services/task'
-import {createTaskDraft} from '@/helpers/task'
+import {useTasks} from '@/composables/useTasks'
+import {ensureTask} from '@/client/queries/tasks'
 import {smartFillStart} from '@/helpers/time/smartFillStart'
 import {useTimeTrackingStore} from '@/stores/timeTracking'
 import {useAuthStore} from '@/stores/auth'
 import {useProjects} from '@/composables/useProjects'
 
 import type {ProjectResponse} from '@/client/queries/projects'
-import type {Task as ITask} from '@/client/generated'
+import type {TaskResponse} from '@/client/queries/tasks'
 import type {ITimeEntry} from '@/modelTypes/ITimeEntry'
 
 const props = withDefaults(defineProps<{
@@ -157,7 +157,7 @@ const isEditing = computed(() => props.entry != null)
 
 const formEl = ref<HTMLFormElement | null>(null)
 const selectedProject = ref<ProjectResponse | null>(null)
-const selectedTask = ref<ITask | null>(null)
+const selectedTask = ref<TaskResponse | null>(null)
 const from = ref<Date | null>(new Date())
 const to = ref<Date | null>(null)
 const comment = ref('')
@@ -176,18 +176,14 @@ watch(selectedProject, project => {
 	}
 })
 
-const taskService = shallowReactive(new TaskService())
-const foundTasks = ref<ITask[]>([])
-async function findTasks(query: string) {
-	if (query === '') {
-		foundTasks.value = []
-		return
-	}
-	const result = await taskService.getAll({}, {s: query, sort_by: 'done'}) as ITask[]
-	foundTasks.value = selectedProject.value === null
-		? result
-		: result.filter(task => task.project_id === selectedProject.value?.id)
-}
+const taskSearch = ref('')
+const taskQuery = useTasks(
+	() => ({project: selectedProject.value?.id, params: {q: taskSearch.value, sort_by: ['done']}}),
+	{enabled: () => taskSearch.value !== ''},
+)
+const foundTasks = taskQuery.tasks
+function findTasks(query: string) { taskSearch.value = query }
+
 
 const canSubmit = computed(() =>
 	// In edit mode the entry already has a valid container; an update that sends
@@ -255,7 +251,7 @@ watch(() => props.entry, async entry => {
 	if (entry.taskId > 0) {
 		selectedProject.value = null
 		try {
-			selectedTask.value = await taskService.get(createTaskDraft({id: entry.taskId})) as ITask
+			selectedTask.value = await ensureTask(entry.taskId)
 		} catch {
 			selectedTask.value = null
 		}

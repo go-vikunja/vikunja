@@ -48,22 +48,22 @@
 							<FancyCheckbox v-model="activeColumns.assignees">
 								{{ $t('task.attributes.assignees') }}
 							</FancyCheckbox>
-							<FancyCheckbox v-model="activeColumns.comment_count">
+							<FancyCheckbox v-model="activeColumns.commentCount">
 								{{ $t('task.attributes.commentCount') }}
 							</FancyCheckbox>
-							<FancyCheckbox v-model="activeColumns.due_date">
+							<FancyCheckbox v-model="activeColumns.dueDate">
 								{{ $t('task.attributes.dueDate') }}
 							</FancyCheckbox>
-							<FancyCheckbox v-model="activeColumns.start_date">
+							<FancyCheckbox v-model="activeColumns.startDate">
 								{{ $t('task.attributes.startDate') }}
 							</FancyCheckbox>
-							<FancyCheckbox v-model="activeColumns.end_date">
+							<FancyCheckbox v-model="activeColumns.endDate">
 								{{ $t('task.attributes.endDate') }}
 							</FancyCheckbox>
-							<FancyCheckbox v-model="activeColumns.percent_done">
+							<FancyCheckbox v-model="activeColumns.percentDone">
 								{{ $t('task.attributes.percentDone') }}
 							</FancyCheckbox>
-							<FancyCheckbox v-model="activeColumns.done_at">
+							<FancyCheckbox v-model="activeColumns.doneAt">
 								{{ $t('task.attributes.doneAt') }}
 							</FancyCheckbox>
 							<FancyCheckbox v-model="activeColumns.created">
@@ -155,7 +155,7 @@
 										{{ $t('task.attributes.assignees') }}
 									</th>
 									<th
-										v-if="activeColumns.due_date"
+										v-if="activeColumns.dueDate"
 										:aria-sort="ariaSort(sortBy.due_date)"
 									>
 										{{ $t('task.attributes.dueDate') }}
@@ -165,11 +165,11 @@
 											@click="sort('due_date', $event)"
 										/>
 									</th>
-									<th v-if="activeColumns.comment_count">
+									<th v-if="activeColumns.commentCount">
 										{{ $t('task.attributes.commentCount') }}
 									</th>
 									<th
-										v-if="activeColumns.start_date"
+										v-if="activeColumns.startDate"
 										:aria-sort="ariaSort(sortBy.start_date)"
 									>
 										{{ $t('task.attributes.startDate') }}
@@ -180,7 +180,7 @@
 										/>
 									</th>
 									<th
-										v-if="activeColumns.end_date"
+										v-if="activeColumns.endDate"
 										:aria-sort="ariaSort(sortBy.end_date)"
 									>
 										{{ $t('task.attributes.endDate') }}
@@ -191,7 +191,7 @@
 										/>
 									</th>
 									<th
-										v-if="activeColumns.percent_done"
+										v-if="activeColumns.percentDone"
 										:aria-sort="ariaSort(sortBy.percent_done)"
 									>
 										{{ $t('task.attributes.percentDone') }}
@@ -202,7 +202,7 @@
 										/>
 									</th>
 									<th
-										v-if="activeColumns.done_at"
+										v-if="activeColumns.doneAt"
 										:aria-sort="ariaSort(sortBy.done_at)"
 									>
 										{{ $t('task.attributes.doneAt') }}
@@ -290,25 +290,25 @@
 										/>
 									</td>
 									<DateTableCell
-										v-if="activeColumns.due_date"
+										v-if="activeColumns.dueDate"
 										:date="t.due_date"
 									/>
-									<td v-if="activeColumns.comment_count">
+									<td v-if="activeColumns.commentCount">
 										<CommentCount :task="t" />
 									</td>
 									<DateTableCell
-										v-if="activeColumns.start_date"
+										v-if="activeColumns.startDate"
 										:date="t.start_date"
 									/>
 									<DateTableCell
-										v-if="activeColumns.end_date"
+										v-if="activeColumns.endDate"
 										:date="t.end_date"
 									/>
-									<td v-if="activeColumns.percent_done">
+									<td v-if="activeColumns.percentDone">
 										{{ t.percent_done * 100 }}%
 									</td>
 									<DateTableCell
-										v-if="activeColumns.done_at"
+										v-if="activeColumns.doneAt"
 										:date="t.done_at"
 									/>
 									<DateTableCell
@@ -323,7 +323,7 @@
 										<User
 											:avatar-size="27"
 											:show-username="false"
-											:user="t.createdBy"
+											:user="t.created_by ?? {}"
 										/>
 									</td>
 								</tr>
@@ -362,7 +362,7 @@ import Popup from '@/components/misc/Popup.vue'
 
 import type {SortBy} from '@/composables/useTaskList'
 import {useTaskList} from '@/composables/useTaskList'
-import type {Task as ITask} from '@/client/generated'
+import type {TaskResponse} from '@/client/queries/tasks'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 import {getTaskIdentifier} from '@/helpers/task'
 import { camelCase } from 'change-case'
@@ -388,15 +388,15 @@ const ACTIVE_COLUMNS_DEFAULT = {
 	priority: false,
 	labels: true,
 	assignees: true,
-	due_date: true,
-	start_date: false,
-	end_date: false,
-	percent_done: false,
+	dueDate: true,
+	startDate: false,
+	endDate: false,
+	percentDone: false,
 	created: false,
 	updated: false,
 	createdBy: false,
-	done_at: false,
-	comment_count: false,
+	doneAt: false,
+	commentCount: false,
 }
 
 const SORT_BY_DEFAULT: SortBy = {
@@ -420,7 +420,7 @@ const {
 	currentPage,
 	sortByParam,
 } = taskList
-const tasks: Ref<ITask[]> = taskList.tasks
+const tasks: Ref<TaskResponse[]> = taskList.tasks
 
 watch(
 	() => activeColumns.value,
@@ -465,7 +465,7 @@ function sort(property: keyof SortBy, event?: MouseEvent) {
 
 function setActiveColumnsSortParam() {
 	sortByParam.value = Object.keys(sortBy.value)
-		.filter(prop => activeColumns.value[camelCase(prop)])
+		.filter(prop => activeColumns.value[camelCase(prop) as keyof typeof activeColumns.value])
 		.reduce((obj, key) => {
 			obj[key] = sortBy.value[key]
 			return obj

@@ -1,6 +1,6 @@
 import type {IAbstract} from './IAbstract'
 import type {IUser} from './IUser'
-import type {ITask} from './ITask'
+import type {Task as ITask} from '@/client/generated'
 import type {ITaskComment} from './ITaskComment'
 import type {Team as ITeam} from '@/client/generated'
 import type {Project} from '@/client/generated'

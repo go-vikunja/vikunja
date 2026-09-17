@@ -124,7 +124,7 @@ const defaultTaskEndDate: DateISO = new Date(new Date(
 async function addGanttTask(title: ITask['title']) {
 	return await addTask({
 		title,
-		projectId: filters.value.projectId,
+		project_id: filters.value.projectId,
 		start_date: defaultTaskStartDate,
 		end_date: defaultTaskEndDate,
 	})

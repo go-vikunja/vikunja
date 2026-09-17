@@ -3,10 +3,11 @@ import {shallowMount, flushPromises} from '@vue/test-utils'
 import {createPinia, setActivePinia} from 'pinia'
 import {QueryClient, VueQueryPlugin} from '@tanstack/vue-query'
 
-vi.mock('@/client/generated', async importOriginal => ({
-	...await importOriginal<object>(),
+const sdk = vi.hoisted(() => ({
 	projectsList: vi.fn(async () => ({data: {items: [], total_pages: 1}})),
 }))
+
+vi.mock('@/client/generated', () => sdk)
 
 import FilterPopup from './FilterPopup.vue'
 
@@ -27,7 +28,7 @@ describe('FilterPopup', () => {
 		const wrapper = mountPopup()
 		const filters = wrapper.findComponent({name: 'Filters'})
 
-		filters.vm.$emit('update:modelValue', {sort_by: ['due_date'], order_by: ['asc'], filter: 'due_date > now', filter_include_nulls: true, s: ''})
+		filters.vm.$emit('update:modelValue', {sort_by: ['due_date'], order_by: ['asc'], filter: 'due_date > now', filter_include_nulls: true, s: '', filter_timezone: 'Europe/Berlin'})
 		filters.vm.$emit('showResults')
 		await flushPromises()
 
@@ -38,6 +39,7 @@ describe('FilterPopup', () => {
 			order_by: ['asc'],
 			filter: 'due_date > now',
 			filter_include_nulls: true,
+			filter_timezone: 'Europe/Berlin',
 			q: '',
 		})
 	})

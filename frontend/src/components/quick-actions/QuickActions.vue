@@ -92,7 +92,7 @@
 							</template>
 							<template v-else-if="r.type === ACTION_TYPE.TASK">
 								<SingleTaskInlineReadonly
-									:task="i"
+									:task="i as ITask"
 									:show-project="true"
 								/>
 								<span
@@ -119,12 +119,12 @@
 </template>
 
 <script setup lang="ts">
-import {type ComponentPublicInstance, computed, ref, shallowReactive, watch, watchEffect, onBeforeUnmount} from 'vue'
+import {type ComponentPublicInstance, computed, ref, watch, watchEffect, onBeforeUnmount} from 'vue'
 import {useQuickAddMode} from '@/composables/useQuickAddMode'
 import {useI18n} from 'vue-i18n'
 import {useRouter} from 'vue-router'
 
-import TaskService from '@/services/task'
+import {useTasks} from '@/composables/useTasks'
 import {useQueries} from '@tanstack/vue-query'
 import {teamsQuery, useCreateTeamMutation} from '@/client/queries/teams'
 import type {Team as ITeam} from '@/client/generated'
@@ -138,7 +138,7 @@ import SingleTaskInlineReadonly from '@/components/tasks/partials/SingleTaskInli
 import {useBaseStore} from '@/stores/base'
 import {useProjects} from '@/composables/useProjects'
 import {useCurrentProject} from '@/composables/useCurrentProject'
-import {useTaskStore} from '@/stores/tasks'
+import {useTaskActions} from '@/composables/useTaskActions'
 import {useAuthStore} from '@/stores/auth'
 import {useLabels} from '@/composables/useLabels'
 
@@ -148,7 +148,7 @@ import {success} from '@/message'
 
 import type {Task as ITask} from '@/client/generated'
 import type {IAbstract} from '@/modelTypes/IAbstract'
-import type {TaskFilterParams} from '@/services/taskCollection'
+import type {TaskFilterParams} from '@/client/queries/tasks'
 import {
 	createProjectDraft,
 	isSavedFilterProject,
@@ -164,7 +164,7 @@ const projectList = useProjects()
 const createProjectMutation = useCreateProjectMutation()
 const {currentProject: selectedProject} = useCurrentProject()
 const {filterLabelsByQuery, getLabelsByExactTitles} = useLabels()
-const taskStore = useTaskStore()
+const taskStore = useTaskActions()
 const authStore = useAuthStore()
 
 const {isQuickAddMode} = useQuickAddMode()
@@ -195,8 +195,14 @@ enum SEARCH_MODE {
 const query = ref('')
 const selectedCmd = ref<Command | null>(null)
 
-const foundTasks = ref<DoAction<ITask>[]>([])
-const taskService = shallowReactive(new TaskService())
+const taskSearchParams = ref<TaskFilterParams | null>(null)
+const taskQuery = useTasks(
+	() => ({params: taskSearchParams.value ?? {}}),
+	{enabled: () => taskSearchParams.value !== null},
+)
+const foundTasks = computed(() => taskSearchParams.value
+	? taskQuery.tasks.value.map(task => ({...task, type: ACTION_TYPE.TASK}))
+	: [])
 
 const createTeamMutation = useCreateTeamMutation()
 
@@ -337,7 +343,7 @@ function isDone(item: unknown): boolean {
 }
 
 const loading = computed(() =>
-	taskService.loading ||
+	taskQuery.isFetching.value ||
 	projectList.isLoading ||
 	teamSearchLoading.value || createTeamMutation.isPending.value,
 )
@@ -450,7 +456,7 @@ function searchTasks() {
 		searchMode.value !== SEARCH_MODE.TASKS &&
 		searchMode.value !== SEARCH_MODE.PROJECTS
 	) {
-		foundTasks.value = []
+		taskSearchParams.value = null
 		return
 	}
 
@@ -484,7 +490,7 @@ function searchTasks() {
 	}
 
 	const params: Partial<TaskFilterParams> = {
-		s: text,
+		q: text,
 		// undone tasks first, most relevant first within each group (relevance is
 		// only honored on backends that can score the search, see the API docs)
 		sort_by: ['done', 'relevance'],
@@ -492,11 +498,7 @@ function searchTasks() {
 	}
 
 	taskSearchTimeout.value = setTimeout(async () => {
-		const r = await taskService.getAll({}, params) as DoAction<ITask>[]
-		foundTasks.value = r.map((t) => {
-			t.type = ACTION_TYPE.TASK
-			return t
-		})
+		taskSearchParams.value = params
 	}, 150)
 }
 
@@ -625,7 +627,7 @@ async function newTask() {
 	}
 	const task = await taskStore.createNewTask({
 		title: query.value,
-		projectId,
+		project_id: projectId,
 	})
 	success({message: t('task.createSuccess')})
 

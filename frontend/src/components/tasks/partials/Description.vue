@@ -42,7 +42,7 @@
 			edit-shortcut="KeyE"
 			:enable-discard-shortcut="true"
 			:enable-mentions="true"
-			:project-id="modelValue.projectId"
+			:project-id="modelValue.project_id"
 			:storage-key="descriptionStorageKey"
 			@update:modelValue="saveWithDelay"
 			@save="save"
@@ -51,7 +51,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, watch, watchEffect, onBeforeUnmount} from 'vue'
+import {ref, computed, watch, onBeforeUnmount} from 'vue'
 import {onBeforeRouteLeave} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 
@@ -61,8 +61,8 @@ import Editor from '@/components/input/AsyncEditor'
 import { clearEditorDraft } from '@/helpers/editorDraftStorage'
 import { isEditorContentEmpty } from '@/helpers/editorContentEmpty'
 import { uploadFilesForEditor } from '@/helpers/attachments'
-import type { ITask } from '@/modelTypes/ITask'
-import { useTaskStore } from '@/stores/tasks'
+import type {Task as ITask} from '@/client/generated'
+import { useTaskActions } from '@/composables/useTaskActions'
 
 export type AttachmentUploadFunction = (file: File, onSuccess: (attachmentUrl: string) => void) => Promise<string>
 
@@ -78,15 +78,20 @@ const emit = defineEmits<{
 
 const description = ref<string>('')
 const hasChanges = ref(false)
-watchEffect(() => {
-	description.value = props.modelValue.description
-	hasChanges.value = false
-})
+watch(
+	() => [props.modelValue.id, props.modelValue.description] as const,
+	([id, value], previous) => {
+		if (id === previous?.[0] && hasChanges.value) return
+		description.value = value ?? ''
+		hasChanges.value = false
+	},
+	{immediate: true},
+)
 
 const saved = ref(false)
 const saving = ref(false)
 
-const taskStore = useTaskStore()
+const taskStore = useTaskActions()
 
 const {t} = useI18n({useScope: 'global'})
 
@@ -214,7 +219,7 @@ async function save() {
 		saved.value = true
 	} catch (error) {
 		// If the task was deleted (404), silently skip saving
-		if (error?.response?.status === 404) {
+		if ((error as {status?: number} | null)?.status === 404) {
 			return
 		}
 		hasChanges.value = true

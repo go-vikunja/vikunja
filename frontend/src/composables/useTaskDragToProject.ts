@@ -1,9 +1,9 @@
 import {useI18n} from 'vue-i18n'
 
-import type {Task as ITask} from '@/client/generated'
-import {useTaskStore} from '@/stores/tasks'
+import type {TaskResponse} from '@/client/queries/tasks'
+import {useTaskActions} from '@/composables/useTaskActions'
 import {useProjects} from '@/composables/useProjects'
-import {success, error} from '@/message'
+import {success} from '@/message'
 
 /**
  * Finds a project ID from elements at a given mouse position.
@@ -57,7 +57,7 @@ export interface TaskDragToProjectResult {
  */
 export function useTaskDragToProject() {
 	const {t} = useI18n({useScope: 'global'})
-	const taskStore = useTaskStore()
+	const taskStore = useTaskActions()
 	const projectList = useProjects()
 
 	/**
@@ -70,7 +70,7 @@ export function useTaskDragToProject() {
 	 */
 	async function handleTaskDropToProject(
 		e: { originalEvent?: MouseEvent },
-		onSuccess?: (task: ITask, targetProjectId: number) => void,
+		onSuccess?: (task: TaskResponse, targetProjectId: number) => void,
 	): Promise<TaskDragToProjectResult> {
 		const draggedTask = taskStore.draggedTask
 
@@ -93,7 +93,7 @@ export function useTaskDragToProject() {
 		try {
 			await taskStore.update({
 				...draggedTask,
-				projectId: targetProjectId,
+				project_id: targetProjectId,
 			})
 
 			if (onSuccess) {
@@ -103,8 +103,7 @@ export function useTaskDragToProject() {
 			success({message: t('task.movedToProject', {project: targetProject?.title || t('project.title')})})
 
 			return {moved: true, targetProjectId}
-		} catch (e) {
-			error(e)
+		} catch {
 			return {moved: false, targetProjectId}
 		} finally {
 			// Always clears drag state - callers should not clear again

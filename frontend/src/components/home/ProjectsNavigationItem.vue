@@ -94,7 +94,7 @@
 import {computed, ref, onUnmounted, watch} from 'vue'
 import {useProjects} from '@/composables/useProjects'
 import {useCurrentProject} from '@/composables/useCurrentProject'
-import {useTaskStore} from '@/stores/tasks'
+import {useTaskDragState} from '@/composables/useTaskDragState'
 import {useStorage} from '@vueuse/core'
 
 import type {ProjectResponse} from '@/client/queries/projects'
@@ -119,12 +119,12 @@ const props = defineProps<{
 	canEditOrder?: boolean,
 }>()
 
-const taskStore = useTaskStore()
+const {draggedTask} = useTaskDragState()
 const isHoveredDuringDrag = ref(false)
 
 // Track mouse position during drag to detect hover (mouseenter doesn't fire during drag)
 function handleMouseMove(e: MouseEvent) {
-	if (!taskStore.draggedTask) {
+	if (!draggedTask.value) {
 		isHoveredDuringDrag.value = false
 		return
 	}
@@ -145,8 +145,8 @@ function handleMouseMove(e: MouseEvent) {
 
 // Only add the listener when a task is being dragged
 // Use capture phase to receive events before Sortable.js can prevent them
-watch(() => taskStore.draggedTask, (draggedTask) => {
-	if (draggedTask) {
+watch(draggedTask, task => {
+	if (task) {
 		document.addEventListener('mousemove', handleMouseMove, true)
 		document.addEventListener('dragover', handleMouseMove, true)
 	} else {
@@ -163,7 +163,7 @@ onUnmounted(() => {
 
 // Show drop target highlight when a task is being dragged and this project is hovered
 const isDropTarget = computed(() => {
-	if (!taskStore.draggedTask || !isHoveredDuringDrag.value) {
+	if (!draggedTask.value || !isHoveredDuringDrag.value) {
 		return false
 	}
 	// Highlight any valid project (not a pseudo project, has write permission)
