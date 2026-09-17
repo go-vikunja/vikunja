@@ -183,6 +183,23 @@ test.describe('Task Bucket Select', () => {
 		})
 	})
 
+	test('Closes the dropdown after changing the bucket', async ({authenticatedPage: page}) => {
+		const {project, view, buckets, task} = await createKanbanTaskInBucket()
+
+		await page.goto(`/projects/${project.id}/${view.id}`)
+		await expect(page.locator('.kanban .bucket .tasks .task').filter({hasText: task.title})).toBeVisible()
+		await page.locator('.kanban .bucket .tasks .task').filter({hasText: task.title}).click()
+		await expect(page).toHaveURL(new RegExp(`/tasks/${task.id}`))
+
+		await page.locator('.task-view .subtitle .bucket-name').click()
+		const dropdownMenu = page.locator('.task-view .subtitle .dropdown-menu')
+		await expect(dropdownMenu).toBeVisible()
+
+		await page.locator('.task-view .subtitle .dropdown-item').filter({hasText: buckets[1].title}).click()
+
+		await expect(dropdownMenu).toBeHidden()
+	})
+
 	test('Keeps action buttons visible after changing the bucket', async ({authenticatedPage: page}) => {
 		const {project, view, buckets, task} = await createKanbanTaskInBucket()
 

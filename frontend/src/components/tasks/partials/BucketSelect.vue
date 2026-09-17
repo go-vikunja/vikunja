@@ -17,14 +17,18 @@
 						/>
 					</BaseButton>
 				</template>
-				<DropdownItem
-					v-for="bucket in buckets"
-					:key="bucket.id"
-					:class="{'is-active': currentBucket?.id === bucket.id}"
-					@click="changeBucket(bucket)"
-				>
-					{{ bucket.title }}
-				</DropdownItem>
+				<template #default="{close}">
+					<div @click="close">
+						<DropdownItem
+							v-for="bucket in buckets"
+							:key="bucket.id"
+							:class="{'is-active': currentBucket?.id === bucket.id}"
+							@click="changeBucket(bucket)"
+						>
+							{{ bucket.title }}
+						</DropdownItem>
+					</div>
+				</template>
 			</Dropdown>
 		</template>
 		<span
