@@ -77,7 +77,7 @@ import {error} from '@/message'
 
 import {useAuthStore} from '@/stores/auth'
 import {useConfigStore} from '@/stores/config'
-import {reportSkippedLabels, useTaskActions} from '@/composables/useTaskActions'
+import {reportSkippedLabels, useQuickAddTask} from '@/composables/useQuickAddTask'
 
 import {useAutoHeightTextarea} from '@/composables/useAutoHeightTextarea'
 
@@ -93,7 +93,7 @@ const {textarea: newTaskInput} = useAutoHeightTextarea(newTaskTitle)
 const {t} = useI18n({useScope: 'global'})
 const authStore = useAuthStore()
 const configStore = useConfigStore()
-const taskStore = useTaskActions()
+const {createNewTasksBulk, findProjectId, ensureLabelsExist, isLoading: loading} = useQuickAddTask()
 const createRelationMutation = useCreateTaskRelationMutation()
 const router = useRouter()
 
@@ -115,8 +115,6 @@ function resetEmptyTitleError() {
 		errorMessage.value = ''
 	}
 }
-
-const loading = computed(() => taskStore.isLoading)
 
 async function addTask() {
 	if (newTaskTitle.value === '') {
@@ -141,7 +139,7 @@ async function addTask() {
 	// check if a new label was created before (because everything happens async).
 	const allLabels = tasksToCreate.map(({title}) => getLabelsFromPrefix(title, authStore.settings.frontendSettings.quickAddMagicMode) ?? [])
 	const requestedLabels = [...new Set(allLabels.flat())]
-	const {skipped} = await taskStore.ensureLabelsExist(requestedLabels, context)
+	const {skipped} = await ensureLabelsExist(requestedLabels, context)
 	assertClientRequestContext(context)
 
 	// Skipped labels (e.g. link shares may not create them) don't block task creation; just tell the user.
@@ -160,7 +158,7 @@ async function addTask() {
 			.map(async ({title, project}) => ({
 				title,
 				project_id: (project !== null
-					? await taskStore.findProjectId({project, projectId: 0})
+					? await findProjectId({project, projectId: 0})
 					: currentProjectId) || authStore.settings.defaultProjectId || 0,
 			})))
 
@@ -176,7 +174,7 @@ async function addTask() {
 		const allCreated: ITask[] = []
 
 		assertClientRequestContext(context)
-		const bulk = await taskStore.createNewTasksBulk(entries)
+		const bulk = await createNewTasksBulk(entries)
 		entries.forEach(({title}, index) => {
 			const task = bulk.tasks[index]
 			if (task === null) {

@@ -310,7 +310,8 @@ import draggable from 'zhyswan-vuedraggable'
 
 import {PERMISSIONS as Permissions} from '@/constants/permissions'
 
-import {useTaskActions} from '@/composables/useTaskActions'
+import {useQuickAddTask} from '@/composables/useQuickAddTask'
+import {useTaskDragState} from '@/composables/useTaskDragState'
 import {useAuthStore} from '@/stores/auth'
 
 import ProjectWrapper from '@/components/project/ProjectWrapper.vue'
@@ -358,7 +359,8 @@ const isCurrentProject = ({projectId: id}: {projectId: number}) => projectId.val
 const updateDefaultBucket = useUpdateProjectViewMutation(t('project.kanban.defaultBucketSavedSuccess'), isCurrentProject)
 const updateDoneBucket = useUpdateProjectViewMutation(t('project.kanban.doneBucketSavedSuccess'), isCurrentProject)
 
-const taskStore = useTaskActions()
+const {createNewTask, isLoading: quickAddLoading} = useQuickAddTask()
+const {setDraggedTask} = useTaskDragState()
 const authStore = useAuthStore()
 
 const alwaysShowBucketTaskCount = computed(() => authStore.settings.frontendSettings.alwaysShowBucketTaskCount)
@@ -506,7 +508,7 @@ function updateBucket(patch: BucketPatch, mutation = updateBucketMutation) {
 const initialLoading = board.isLoading
 const projectIdWithFallback = computed<number>(() => project.value?.id || projectId.value)
 
-const taskLoading = computed(() => taskStore.isLoading || positionMutation.isPending.value)
+const taskLoading = computed(() => quickAddLoading.value || positionMutation.isPending.value)
 
 watch(
 	projectId,
@@ -612,7 +614,7 @@ async function addTaskToBucket(bucketId: number) {
 	}
 	newTaskError.value[bucketId] = false
 
-	await taskStore.createNewTask({
+	await createNewTask({
 		title: newTaskText.value,
 		bucket_id: bucketId,
 		project_id: projectIdWithFallback.value,
@@ -793,7 +795,7 @@ function handleTaskDragStart(e) {
 
 	if (task) {
 		board.startDrag()
-		taskStore.setDraggedTask(task)
+		setDraggedTask(task)
 	}
 	dragstart(bucket)
 }

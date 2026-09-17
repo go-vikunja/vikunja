@@ -189,7 +189,7 @@ import {useI18n} from 'vue-i18n'
 import {useRoute} from 'vue-router'
 
 import {useTasks} from '@/composables/useTasks'
-import {useCreateTaskRelationMutation, useDeleteTaskRelationMutation} from '@/client/queries/taskMutations'
+import {useCreateTaskRelationMutation, useDeleteTaskRelationMutation, useUpdateTaskMutation} from '@/client/queries/taskMutations'
 import {createTaskDraft, getTaskIdentifier} from '@/helpers/task'
 import type {Task as ITask} from '@/client/generated'
 import type {TaskRelation as ITaskRelation} from '@/client/generated'
@@ -203,7 +203,7 @@ import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import QuickAddMagic from '@/components/tasks/partials/QuickAddMagic.vue'
 
 import {error, success} from '@/message'
-import {useTaskActions} from '@/composables/useTaskActions'
+import {useQuickAddTask} from '@/composables/useQuickAddTask'
 import {useProjects} from '@/composables/useProjects'
 import {useAuthStore} from '@/stores/auth'
 import {playPopSound} from '@/helpers/playPop'
@@ -219,7 +219,8 @@ const props = withDefaults(defineProps<{
 	showNoRelationsNotice: false,
 })
 
-const taskStore = useTaskActions()
+const {createNewTask} = useQuickAddTask()
+const updateTask = useUpdateTaskMutation()
 const projectList = useProjects()
 const authStore = useAuthStore()
 const route = useRoute()
@@ -340,13 +341,13 @@ async function removeTaskRelation() {
 }
 
 async function createAndRelateTask(title: string) {
-	const newTask = await taskStore.createNewTask({title, project_id: props.projectId})
+	const newTask = await createNewTask({title, project_id: props.projectId})
 	newTaskRelation.task = newTask
 	await addTaskRelation()
 }
 
 async function toggleTaskDone(task: ITask) {
-	await taskStore.update(task)
+	await updateTask.mutateAsync({...task, id: task.id!})
 	
 	if (task.done) {
 		playPopSound()
