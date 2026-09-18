@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"slices"
-	"strings"
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
@@ -186,13 +185,9 @@ func TestHumaAdminProjects(t *testing.T) {
 		require.NotEmpty(t, ids)
 		assert.True(t, slices.IsSorted(ids), "expected ascending ids, got %v", ids)
 
-		items := list(t, e, admin, "sort_by=owner&order_by=desc")
-		require.NotEmpty(t, items)
-		usernames := make([]string, 0, len(items))
-		for _, item := range items {
-			usernames = append(usernames, item.Owner.Username)
-		}
-		assert.True(t, slices.IsSortedFunc(usernames, func(a, b string) int { return strings.Compare(b, a) }), "expected owners descending, got %v", usernames)
+		// Scoped to plain userN owners: collations disagree on where "_" sorts.
+		ids = listIDs(t, e, admin, "q=1,20,23,38&sort_by=owner&order_by=desc")
+		assert.Equal(t, []int64{38, 20, 23, 1}, ids)
 	})
 
 	t.Run("pairs every sort field with its own order", func(t *testing.T) {
@@ -201,19 +196,9 @@ func TestHumaAdminProjects(t *testing.T) {
 		license.SetForTests([]license.Feature{license.FeatureAdminPanel})
 		defer license.ResetForTests()
 
-		ids := listIDs(t, e, promoteToAdmin(t, 1), "sort_by=owner&order_by=asc&sort_by=id&order_by=desc")
-		require.GreaterOrEqual(t, len(ids), 8)
-		// user1 owns 1, 21, 22, 39 and 40; they come first and in descending id order.
-		assert.Equal(t, []int64{
-			40,
-			39,
-			22,
-			21,
-			1,
-			23,
-			20,
-			38,
-		}, ids[:8])
+		ids := listIDs(t, e, promoteToAdmin(t, 1), "q=1,20,21,23,38&sort_by=owner&order_by=asc&sort_by=id&order_by=desc")
+		// user1 owns 1 and 21, then user12 (23), user13 (20), user15 (38).
+		assert.Equal(t, []int64{21, 1, 23, 20, 38}, ids)
 	})
 
 	t.Run("sorts ascending when order_by is omitted", func(t *testing.T) {
