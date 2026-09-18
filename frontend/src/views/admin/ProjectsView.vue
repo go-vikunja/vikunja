@@ -219,7 +219,7 @@ const searchTerm = ref('')
 const ownerFilter = ref<IAdminUser | null>(null)
 const excludeInboxes = ref(false)
 const sortBy = ref<TableSortState<SortField>>({id: 'desc'})
-const {sort, ariaSort} = useTableSort<SortField>(sortBy, load)
+const {sort, ariaSort} = useTableSort<SortField>(sortBy, reload)
 
 const reassignTarget = ref<AdminProject | null>(null)
 const userResults = ref<IAdminUser[]>([])
