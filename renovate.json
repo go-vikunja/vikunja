@@ -89,15 +89,24 @@
       ]
     },
     {
-      "description": "Never push a scoped override (pkg@N) across majors",
+      "matchManagers": [
+        "github-actions"
+      ],
       "matchDepTypes": [
-        "pnpm.overrides",
-        "overrides"
+        "action"
       ],
+      "groupName": "github-actions",
+      "extends": [
+        "schedule:monthly"
+      ]
+    },
+    {
       "matchUpdateTypes": [
-        "major"
+        "digest"
       ],
-      "enabled": false
+      "extends": [
+        "schedule:monthly"
+      ]
     }
   ]
 }
