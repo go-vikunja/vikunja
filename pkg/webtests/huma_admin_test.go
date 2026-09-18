@@ -19,15 +19,26 @@ package webtests
 import (
 	"encoding/json"
 	"net/http"
+	"slices"
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/user"
 
+	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func setDefaultProject(t *testing.T, userID, projectID int64) {
+	s := db.NewSession()
+	defer s.Close()
+
+	_, err := s.ID(userID).Cols("default_project_id").Update(&user.User{DefaultProjectID: projectID})
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+}
 
 // The error body shape is covered by TestHuma_ErrorShapeIsRFC9457; this test
 // only asserts gate status codes (404 on failure, matching v1).
@@ -97,6 +108,129 @@ func TestHumaAdminProjects(t *testing.T) {
 		// Owner is xorm:"-" and must be hydrated explicitly (project 1 is owned by user1).
 		assert.Contains(t, body, `"username":"user1"`)
 		assert.NotContains(t, body, `"owner":null`)
+	})
+
+	type listedProject struct {
+		ID    int64 `json:"id"`
+		Owner struct {
+			Username string `json:"username"`
+		} `json:"owner"`
+	}
+	list := func(t *testing.T, e *echo.Echo, admin *user.User, query string) []listedProject {
+		res := adminReq(t, e, http.MethodGet, "/api/v2/admin/projects?per_page=1000&"+query, admin, "")
+		require.Equal(t, http.StatusOK, res.Code, res.Body.String())
+		var envelope struct {
+			Items []listedProject `json:"items"`
+		}
+		require.NoError(t, json.Unmarshal(res.Body.Bytes(), &envelope))
+		return envelope.Items
+	}
+	listIDs := func(t *testing.T, e *echo.Echo, admin *user.User, query string) []int64 {
+		items := list(t, e, admin, query)
+		ids := make([]int64, 0, len(items))
+		for _, item := range items {
+			ids = append(ids, item.ID)
+		}
+		return ids
+	}
+
+	t.Run("filters by title search", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		license.SetForTests([]license.Feature{license.FeatureAdminPanel})
+		defer license.ResetForTests()
+
+		ids := listIDs(t, e, promoteToAdmin(t, 1), "q=Project+37")
+		assert.Equal(t, []int64{37}, ids)
+	})
+
+	t.Run("filters by owner", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		license.SetForTests([]license.Feature{license.FeatureAdminPanel})
+		defer license.ResetForTests()
+
+		ids := listIDs(t, e, promoteToAdmin(t, 1), "owner_id=16")
+		assert.Equal(t, []int64{37}, ids)
+	})
+
+	t.Run("excludes inboxes", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		license.SetForTests([]license.Feature{license.FeatureAdminPanel})
+		defer license.ResetForTests()
+
+		admin := promoteToAdmin(t, 1)
+		assert.Subset(t, listIDs(t, e, admin, ""), []int64{4, 37})
+
+		// Project 6 is owned by user6, so pointing user1's default at it must not make it an inbox.
+		setDefaultProject(t, 1, 6)
+
+		// Projects 4 and 37 are the default projects of their own owners, users 3 and 16.
+		ids := listIDs(t, e, admin, "exclude_inboxes=true")
+		assert.NotContains(t, ids, int64(4))
+		assert.NotContains(t, ids, int64(37))
+		assert.Contains(t, ids, int64(6))
+	})
+
+	t.Run("sorts by column", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		license.SetForTests([]license.Feature{license.FeatureAdminPanel})
+		defer license.ResetForTests()
+
+		admin := promoteToAdmin(t, 1)
+
+		ids := listIDs(t, e, admin, "sort_by=id&order_by=asc")
+		require.NotEmpty(t, ids)
+		assert.True(t, slices.IsSorted(ids), "expected ascending ids, got %v", ids)
+
+		// Scoped to plain userN owners: collations disagree on where "_" sorts.
+		ids = listIDs(t, e, admin, "q=1,20,23,38&sort_by=owner&order_by=desc")
+		assert.Equal(t, []int64{38, 20, 23, 1}, ids)
+	})
+
+	t.Run("pairs every sort field with its own order", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		license.SetForTests([]license.Feature{license.FeatureAdminPanel})
+		defer license.ResetForTests()
+
+		ids := listIDs(t, e, promoteToAdmin(t, 1), "q=1,20,21,23,38&sort_by=owner&order_by=asc&sort_by=id&order_by=desc")
+		// user1 owns 1 and 21, then user12 (23), user13 (20), user15 (38).
+		assert.Equal(t, []int64{21, 1, 23, 20, 38}, ids)
+	})
+
+	t.Run("sorts ascending when order_by is omitted", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		license.SetForTests([]license.Feature{license.FeatureAdminPanel})
+		defer license.ResetForTests()
+
+		ids := listIDs(t, e, promoteToAdmin(t, 1), "q=Test1&sort_by=title&sort_by=id")
+		assert.Equal(t, []int64{
+			1,
+			10,
+			11,
+			12,
+			13,
+			14,
+			15,
+			16,
+			17,
+			18,
+			19,
+		}, ids)
+	})
+
+	t.Run("rejects an unknown sort field", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		license.SetForTests([]license.Feature{license.FeatureAdminPanel})
+		defer license.ResetForTests()
+
+		res := adminReq(t, e, http.MethodGet, "/api/v2/admin/projects?sort_by=password", promoteToAdmin(t, 1), "")
+		assert.Equal(t, http.StatusUnprocessableEntity, res.Code, res.Body.String())
 	})
 
 	t.Run("unauthenticated caller gets 401", func(t *testing.T) {

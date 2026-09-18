@@ -103,7 +103,7 @@
 								<tr>
 									<th
 										v-if="activeColumns.index"
-										:aria-sort="ariaSort(sortBy.index)"
+										:aria-sort="ariaSort('index')"
 									>
 										#
 										<Sort
@@ -114,7 +114,7 @@
 									</th>
 									<th
 										v-if="activeColumns.done"
-										:aria-sort="ariaSort(sortBy.done)"
+										:aria-sort="ariaSort('done')"
 									>
 										{{ $t('task.attributes.done') }}
 										<Sort
@@ -128,7 +128,7 @@
 									</th>
 									<th
 										v-if="activeColumns.title"
-										:aria-sort="ariaSort(sortBy.title)"
+										:aria-sort="ariaSort('title')"
 									>
 										{{ $t('task.attributes.title') }}
 										<Sort
@@ -139,7 +139,7 @@
 									</th>
 									<th
 										v-if="activeColumns.priority"
-										:aria-sort="ariaSort(sortBy.priority)"
+										:aria-sort="ariaSort('priority')"
 									>
 										{{ $t('task.attributes.priority') }}
 										<Sort
@@ -156,7 +156,7 @@
 									</th>
 									<th
 										v-if="activeColumns.dueDate"
-										:aria-sort="ariaSort(sortBy.due_date)"
+										:aria-sort="ariaSort('due_date')"
 									>
 										{{ $t('task.attributes.dueDate') }}
 										<Sort
@@ -170,7 +170,7 @@
 									</th>
 									<th
 										v-if="activeColumns.startDate"
-										:aria-sort="ariaSort(sortBy.start_date)"
+										:aria-sort="ariaSort('start_date')"
 									>
 										{{ $t('task.attributes.startDate') }}
 										<Sort
@@ -181,7 +181,7 @@
 									</th>
 									<th
 										v-if="activeColumns.endDate"
-										:aria-sort="ariaSort(sortBy.end_date)"
+										:aria-sort="ariaSort('end_date')"
 									>
 										{{ $t('task.attributes.endDate') }}
 										<Sort
@@ -192,7 +192,7 @@
 									</th>
 									<th
 										v-if="activeColumns.percentDone"
-										:aria-sort="ariaSort(sortBy.percent_done)"
+										:aria-sort="ariaSort('percent_done')"
 									>
 										{{ $t('task.attributes.percentDone') }}
 										<Sort
@@ -203,7 +203,7 @@
 									</th>
 									<th
 										v-if="activeColumns.doneAt"
-										:aria-sort="ariaSort(sortBy.done_at)"
+										:aria-sort="ariaSort('done_at')"
 									>
 										{{ $t('task.attributes.doneAt') }}
 										<Sort
@@ -214,7 +214,7 @@
 									</th>
 									<th
 										v-if="activeColumns.created"
-										:aria-sort="ariaSort(sortBy.created)"
+										:aria-sort="ariaSort('created')"
 									>
 										{{ $t('task.attributes.created') }}
 										<Sort
@@ -225,7 +225,7 @@
 									</th>
 									<th
 										v-if="activeColumns.updated"
-										:aria-sort="ariaSort(sortBy.updated)"
+										:aria-sort="ariaSort('updated')"
 									>
 										{{ $t('task.attributes.updated') }}
 										<Sort
@@ -362,6 +362,7 @@ import Popup from '@/components/misc/Popup.vue'
 
 import type {SortBy} from '@/composables/useTaskList'
 import {useTaskList} from '@/composables/useTaskList'
+import {useTableSort} from '@/composables/useTableSort'
 import type {ITask} from '@/modelTypes/ITask'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 import {getTaskIdentifier} from '@/models/task'
@@ -428,40 +429,7 @@ watch(
 	{deep: true},
 )
 
-function ariaSort(order: 'asc' | 'desc' | 'none' | undefined): 'ascending' | 'descending' | undefined {
-	if (order === 'asc') {
-		return 'ascending'
-	}
-	if (order === 'desc') {
-		return 'descending'
-	}
-	return undefined
-}
-
-// Allow sorting by multiple columns only when ctrl is pressed
-function sort(property: keyof SortBy, event?: MouseEvent) {
-	const ctrlPressed = event?.ctrlKey || event?.metaKey
-
-	const currentOrder = sortBy.value[property]
-	let newOrder: 'asc' | 'desc' | 'none' | undefined = undefined
-	if (typeof currentOrder === 'undefined' || currentOrder === 'none') {
-		newOrder = 'desc'
-	} else if (currentOrder === 'desc') {
-		newOrder = 'asc'
-	}
-
-	if (!ctrlPressed) {
-		sortBy.value = {} as SortBy
-	}
-
-	if (newOrder) {
-		sortBy.value[property] = newOrder
-	} else {
-		delete sortBy.value[property]
-	}
-
-	setActiveColumnsSortParam()
-}
+const {sort, ariaSort} = useTableSort<keyof SortBy>(sortBy, setActiveColumnsSortParam)
 
 function setActiveColumnsSortParam() {
 	sortByParam.value = Object.keys(sortBy.value)

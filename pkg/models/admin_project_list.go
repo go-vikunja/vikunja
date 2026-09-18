@@ -28,6 +28,10 @@ import (
 // non-ReadAll methods inherit from Project and are gated by RequireInstanceAdmin.
 type AdminProjectList struct {
 	Project
+	FilterOwnerID  int64    `xorm:"-" json:"-"`
+	ExcludeInboxes bool     `xorm:"-" json:"-"`
+	SortBy         []string `xorm:"-" json:"-"`
+	OrderBy        []string `xorm:"-" json:"-"`
 }
 
 // ReassignProjectOwner refuses owners scheduled for deletion because DeleteUser cascades to their projects.
@@ -74,5 +78,13 @@ func ReassignProjectOwner(s *xorm.Session, doer *user.User, projectID, newOwnerI
 // @Failure 404 {object} web.HTTPError
 // @Router /admin/projects [get]
 func (l *AdminProjectList) ReadAll(s *xorm.Session, _ web.Auth, search string, page, perPage int) (interface{}, int, int64, error) {
-	return ListAllProjects(s, search, page, perPage, true)
+	return ListAllProjects(s, &ListAllProjectsOptions{
+		Search:         search,
+		Page:           page,
+		PerPage:        perPage,
+		OwnerID:        l.FilterOwnerID,
+		ExcludeInboxes: l.ExcludeInboxes,
+		SortBy:         l.SortBy,
+		OrderBy:        l.OrderBy,
+	})
 }

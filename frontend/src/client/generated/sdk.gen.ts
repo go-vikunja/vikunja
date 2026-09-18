@@ -101,7 +101,7 @@ export const adminOverview = <ThrowOnError extends boolean = true>(options?: Opt
 /**
  * List all projects (admin)
  *
- * Returns every project on the instance, including archived ones and projects the caller does not own. Restricted to instance admins on a licensed instance; unlicensed or non-admin callers get a 404, making the endpoint indistinguishable from one that is not registered.
+ * Returns every project on the instance, including archived ones and projects the caller does not own. q matches title, description and identifier (or a comma-separated list of IDs). Restricted to instance admins on a licensed instance; unlicensed or non-admin callers get a 404, making the endpoint indistinguishable from one that is not registered.
  */
 export const adminProjectsList = <ThrowOnError extends boolean = true>(options?: Options<AdminProjectsListData, ThrowOnError>): RequestResult<AdminProjectsListResponses, AdminProjectsListErrors, ThrowOnError> => (options?.client ?? client).get<AdminProjectsListResponses, AdminProjectsListErrors, ThrowOnError>({
     security: [{

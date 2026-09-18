@@ -5150,6 +5150,22 @@ export type AdminProjectsListData = {
          * Search query; filters the list to items matching this string.
          */
         q?: string;
+        /**
+         * Only return projects owned by this user.
+         */
+        owner_id?: number;
+        /**
+         * Hide projects that are some user's default (inbox) project.
+         */
+        exclude_inboxes?: boolean;
+        /**
+         * Fields to sort by. Repeatable; pair positionally with order_by. owner sorts by the owner's username. Defaults to id descending.
+         */
+        sort_by?: Array<'id' | 'title' | 'owner' | 'created' | 'updated'> | null;
+        /**
+         * Sort order per sort_by field. Repeatable; defaults to asc.
+         */
+        order_by?: Array<'asc' | 'desc'> | null;
     };
     url: '/admin/projects';
 };
