@@ -58,26 +58,6 @@
       ]
     },
     {
-      "groupName": "node",
-      "matchPackageNames": [
-        "node"
-      ],
-      "matchManagers": [
-        "mise",
-        "nvm"
-      ]
-    },
-    {
-      "groupName": "pnpm",
-      "matchPackageNames": [
-        "pnpm"
-      ],
-      "matchManagers": [
-        "mise",
-        "npm"
-      ]
-    },
-    {
       "description": "Transitive pins exist for security only; alerts bypass the schedule",
       "matchDepTypes": [
         "pnpm.overrides",
@@ -114,6 +94,32 @@
       "groupName": "golang.org/x",
       "matchPackageNames": [
         "golang.org/x/**"
+      ]
+    },
+    {
+      "groupName": "node",
+      "matchPackageNames": [
+        "node"
+      ],
+      "matchManagers": [
+        "mise",
+        "nvm"
+      ],
+      "extends": [
+        "schedule:monthly"
+      ]
+    },
+    {
+      "groupName": "pnpm",
+      "matchPackageNames": [
+        "pnpm"
+      ],
+      "matchManagers": [
+        "mise",
+        "npm"
+      ],
+      "extends": [
+        "schedule:monthly"
       ]
     }
   ]
