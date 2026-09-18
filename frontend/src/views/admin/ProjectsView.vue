@@ -226,7 +226,10 @@ const userResults = ref<IAdminUser[]>([])
 const userSearchLoading = ref(false)
 const selectedUser = ref<IAdminUser | null>(null)
 
+let requestId = 0
+
 async function load() {
+	const request = ++requestId
 	loading.value = true
 	try {
 		const sortFields = Object.keys(sortBy.value) as SortField[]
@@ -238,12 +241,19 @@ async function load() {
 			sort_by: sortFields,
 			order_by: sortFields.map(field => sortBy.value[field] as SortOrder),
 		}})
+		if (request !== requestId) {
+			return
+		}
 		projects.value = (data.items ?? []).filter((project): project is AdminProject => project.id !== undefined)
 		totalPages.value = data.total_pages ?? 1
 	} catch (e) {
-		error(e)
+		if (request === requestId) {
+			error(e)
+		}
 	} finally {
-		loading.value = false
+		if (request === requestId) {
+			loading.value = false
+		}
 	}
 }
 
