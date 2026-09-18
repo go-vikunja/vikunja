@@ -23,7 +23,13 @@
 						>
 							<td>{{ p.id }}</td>
 							<td>{{ p.title }}</td>
-							<td>{{ p.owner?.username ?? p.owner?.id }}</td>
+							<td>
+								<User
+									v-if="p.owner"
+									:user="p.owner"
+									:avatar-size="24"
+								/>
+							</td>
 							<td>
 								<TimeDisplay :date="p.created" />
 							</td>
