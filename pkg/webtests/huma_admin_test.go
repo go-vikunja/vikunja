@@ -195,6 +195,49 @@ func TestHumaAdminProjects(t *testing.T) {
 		assert.True(t, slices.IsSortedFunc(usernames, func(a, b string) int { return strings.Compare(b, a) }), "expected owners descending, got %v", usernames)
 	})
 
+	t.Run("pairs every sort field with its own order", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		license.SetForTests([]license.Feature{license.FeatureAdminPanel})
+		defer license.ResetForTests()
+
+		ids := listIDs(t, e, promoteToAdmin(t, 1), "sort_by=owner&order_by=asc&sort_by=id&order_by=desc")
+		require.GreaterOrEqual(t, len(ids), 8)
+		// user1 owns 1, 21, 22, 39 and 40; they come first and in descending id order.
+		assert.Equal(t, []int64{
+			40,
+			39,
+			22,
+			21,
+			1,
+			23,
+			20,
+			38,
+		}, ids[:8])
+	})
+
+	t.Run("sorts ascending when order_by is omitted", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		license.SetForTests([]license.Feature{license.FeatureAdminPanel})
+		defer license.ResetForTests()
+
+		ids := listIDs(t, e, promoteToAdmin(t, 1), "q=Test1&sort_by=title&sort_by=id")
+		assert.Equal(t, []int64{
+			1,
+			10,
+			11,
+			12,
+			13,
+			14,
+			15,
+			16,
+			17,
+			18,
+			19,
+		}, ids)
+	})
+
 	t.Run("rejects an unknown sort field", func(t *testing.T) {
 		e, err := setupTestEnv()
 		require.NoError(t, err)
