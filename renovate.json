@@ -101,11 +101,19 @@
       ]
     },
     {
-      "matchUpdateTypes": [
-        "digest"
+      "groupName": "aws-sdk-go",
+      "matchPackageNames": [
+        "github.com/aws/aws-sdk-go-v2{/,}**",
+        "github.com/aws/smithy-go"
       ],
       "extends": [
         "schedule:monthly"
+      ]
+    },
+    {
+      "groupName": "golang.org/x",
+      "matchPackageNames": [
+        "golang.org/x/**"
       ]
     }
   ]
