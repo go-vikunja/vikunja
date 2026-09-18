@@ -44,8 +44,7 @@ test.describe('Admin projects list', () => {
 		await page.getByPlaceholder('Filter by owner').pressSequentially('bobowner')
 		await page.locator('.admin-projects__toolbar .search-results button', {hasText: 'bobowner'}).click()
 
-		await expect(titles(page)).toHaveCount(2)
-		await expect(titles(page)).not.toContainText(['Alpha project'])
+		await expect(titles(page)).toHaveText(['Bob inbox', 'Charlie project'])
 	})
 
 	test('hides inbox projects', async ({page, apiContext}) => {
@@ -53,8 +52,7 @@ test.describe('Admin projects list', () => {
 
 		await page.getByText('Hide inbox projects').click()
 
-		await expect(titles(page)).toHaveCount(2)
-		await expect(titles(page)).not.toContainText(['Bob inbox'])
+		await expect(titles(page)).toHaveText(['Charlie project', 'Alpha project'])
 	})
 
 	test('sorts by a column', async ({page, apiContext}) => {
