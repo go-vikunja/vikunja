@@ -299,7 +299,7 @@ func getAllRawProjects(s *xorm.Session, a web.Auth, search string, page int, per
 	return prs, resultCount, totalItems, err
 }
 
-// ListAllProjectsOptions narrows and orders ListAllProjects. Archived projects are always included.
+// ListAllProjectsOptions always includes archived projects.
 type ListAllProjectsOptions struct {
 	Search         string
 	Page           int

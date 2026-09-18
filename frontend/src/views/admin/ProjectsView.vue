@@ -271,7 +271,6 @@ function ariaSort(order: SortOrder | undefined): 'ascending' | 'descending' | un
 	return undefined
 }
 
-// Allow sorting by multiple columns only when ctrl is pressed
 function sort(field: SortField, event?: MouseEvent) {
 	const ctrlPressed = event?.ctrlKey || event?.metaKey
 
