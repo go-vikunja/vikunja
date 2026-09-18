@@ -18,7 +18,6 @@ export function useTableSort<Field extends string>(
 		return undefined
 	}
 
-	// Allow sorting by multiple columns only when ctrl is pressed
 	function sort(field: Field, event?: MouseEvent) {
 		const currentOrder = sortBy.value[field]
 		let newOrder: SortOrder | undefined
