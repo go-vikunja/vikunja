@@ -437,7 +437,12 @@
 			"poweredByUnsplash": "Powered by Unsplash",
 			"loadMore": "Weitere Bilder laden",
 			"success": "Der Hintergrund wurde erfolgreich eingestellt!",
-			"removeSuccess": "Der Hintergrund wurde erfolgreich entfernt!"
+			"removeSuccess": "Der Hintergrund wurde erfolgreich entfernt!",
+			"searchError": "Laden der Hintergründe von Unsplash fehlgeschlagen.",
+			"retry": "Erneut versuchen",
+			"setBackground": "Als Projekthintergrund festlegen",
+			"setBackgroundBy": "Foto von {author} als Projekthintergrund festlegen",
+			"noPermission": "Du brauchst Schreibzugriff auf dieses Projekt, um den Hintergrund zu ändern."
 		},
 		"delete": {
 			"title": "„{project}“ löschen",
@@ -1639,7 +1644,8 @@
 		"title": "Über",
 		"version": "Version: {version}",
 		"frontendVersion": "Frontend-Version: {version}",
-		"apiVersion": "API-Version: {version}"
+		"apiVersion": "API-Version: {version}",
+		"proActive": "Pro aktiv"
 	},
 	"timeTracking": {
 		"title": "Zeiterfassung",
