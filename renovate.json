@@ -78,12 +78,26 @@
       ]
     },
     {
-      "groupName": "undici",
-      "matchPackageNames": [
-        "undici",
-        "undici@*"
+      "description": "Transitive pins exist for security only; alerts bypass the schedule",
+      "matchDepTypes": [
+        "pnpm.overrides",
+        "overrides"
       ],
-      "separateMajorMinor": false
+      "groupName": "overrides",
+      "extends": [
+        "schedule:monthly"
+      ]
+    },
+    {
+      "description": "Never push a scoped override (pkg@N) across majors",
+      "matchDepTypes": [
+        "pnpm.overrides",
+        "overrides"
+      ],
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "enabled": false
     }
   ]
 }
