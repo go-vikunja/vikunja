@@ -357,8 +357,12 @@ func ListAllProjects(s *xorm.Session, opts *ListAllProjectsOptions) (projects []
 		conds = append(conds, builder.Eq{"owner_id": opts.OwnerID})
 	}
 	if opts.ExcludeInboxes {
-		conds = append(conds, builder.NotIn("id",
-			builder.Select("default_project_id").From("users").Where(builder.NotNull{"default_project_id"}),
+		// Only the owner's own default project is an inbox; anyone can point their default at a foreign project.
+		conds = append(conds, builder.NotExists(
+			builder.Select("1").From("users").Where(builder.And(
+				builder.Expr("users.id = projects.owner_id"),
+				builder.Expr("users.default_project_id = projects.id"),
+			)),
 		))
 	}
 	var where = builder.Expr("1 = 1")

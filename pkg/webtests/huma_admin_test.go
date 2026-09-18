@@ -32,6 +32,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func setDefaultProject(t *testing.T, userID, projectID int64) {
+	s := db.NewSession()
+	defer s.Close()
+
+	_, err := s.ID(userID).Cols("default_project_id").Update(&user.User{DefaultProjectID: projectID})
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+}
+
 // The error body shape is covered by TestHuma_ErrorShapeIsRFC9457; this test
 // only asserts gate status codes (404 on failure, matching v1).
 func TestHumaAdminProjects(t *testing.T) {
@@ -155,7 +164,10 @@ func TestHumaAdminProjects(t *testing.T) {
 		admin := promoteToAdmin(t, 1)
 		assert.Subset(t, listIDs(t, e, admin, ""), []int64{4, 37})
 
-		// Projects 4 and 37 are default projects of users 2/3 and 16.
+		// Project 6 is owned by user6, so pointing user1's default at it must not make it an inbox.
+		setDefaultProject(t, 1, 6)
+
+		// Projects 4 and 37 are the default projects of their own owners, users 3 and 16.
 		ids := listIDs(t, e, admin, "exclude_inboxes=true")
 		assert.NotContains(t, ids, int64(4))
 		assert.NotContains(t, ids, int64(37))
