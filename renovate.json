@@ -121,6 +121,30 @@
       "extends": [
         "schedule:monthly"
       ]
+    },
+    {
+      "description": "xgo images are rebuilt per go release",
+      "groupName": "go",
+      "matchDepNames": [
+        "go",
+        "ghcr.io/techknowlogick/xgo"
+      ],
+      "matchManagers": [
+        "gomod",
+        "mise",
+        "dockerfile"
+      ],
+      "schedule": [
+        "before 6am on monday"
+      ],
+      "minimumReleaseAge": "2 days"
+    },
+    {
+      "description": "Let renovate move the floating go-1.N.x tag on go minors",
+      "matchDepNames": [
+        "ghcr.io/techknowlogick/xgo"
+      ],
+      "versioning": "regex:^go-(?<major>\\d+)\\.(?<minor>\\d+)\\.x$"
     }
   ]
 }
