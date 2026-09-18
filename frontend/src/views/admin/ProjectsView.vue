@@ -36,88 +36,94 @@
 				/>
 			</div>
 
-			<p v-if="loading">
+			<p v-if="loading && !hasLoaded">
 				{{ $t('misc.loading') }}
 			</p>
 			<template v-else>
-				<table class="table has-actions is-striped is-hoverable is-fullwidth">
-					<thead>
-						<tr>
-							<th :aria-sort="ariaSort('id')">
-								{{ $t('misc.id') }}
-								<Sort
-									:order="sortBy.id"
-									:label="$t('misc.id')"
-									@click="sort('id', $event)"
-								/>
-							</th>
-							<th :aria-sort="ariaSort('title')">
-								{{ $t('project.title') }}
-								<Sort
-									:order="sortBy.title"
-									:label="$t('project.title')"
-									@click="sort('title', $event)"
-								/>
-							</th>
-							<th :aria-sort="ariaSort('owner')">
-								{{ $t('admin.projects.ownerLabel') }}
-								<Sort
-									:order="sortBy.owner"
-									:label="$t('admin.projects.ownerLabel')"
-									@click="sort('owner', $event)"
-								/>
-							</th>
-							<th :aria-sort="ariaSort('created')">
-								{{ $t('task.attributes.created') }}
-								<Sort
-									:order="sortBy.created"
-									:label="$t('task.attributes.created')"
-									@click="sort('created', $event)"
-								/>
-							</th>
-							<th :aria-sort="ariaSort('updated')">
-								{{ $t('task.attributes.updated') }}
-								<Sort
-									:order="sortBy.updated"
-									:label="$t('task.attributes.updated')"
-									@click="sort('updated', $event)"
-								/>
-							</th>
-							<th>{{ $t('navigation.settings') }}</th>
-						</tr>
-					</thead>
-					<tbody>
-						<tr
-							v-for="p in projects"
-							:key="p.id"
-						>
-							<td>{{ p.id }}</td>
-							<td>{{ p.title }}</td>
-							<td>{{ p.owner?.username ?? p.owner?.id }}</td>
-							<td>
-								<TimeDisplay :date="p.created" />
-							</td>
-							<td>
-								<TimeDisplay :date="p.updated" />
-							</td>
-							<td class="actions">
-								<ProjectSettingsDropdown
-									:project="p"
-									:force-all-actions="true"
-								>
-									<template #before-delete>
-										<DropdownItem
-											icon="user-edit"
-											@click="openReassign(p)"
-										>
-											{{ $t('admin.projects.reassignOwner') }}
-										</DropdownItem>
-									</template>
-								</ProjectSettingsDropdown>
-							</td>
-						</tr>
-					</tbody>
-				</table>
+				<div
+					class="loader-container"
+					:class="{'is-loading': loading}"
+					:aria-busy="loading"
+				>
+					<table class="table has-actions is-striped is-hoverable is-fullwidth">
+						<thead>
+							<tr>
+								<th :aria-sort="ariaSort('id')">
+									{{ $t('misc.id') }}
+									<Sort
+										:order="sortBy.id"
+										:label="$t('misc.id')"
+										@click="sort('id', $event)"
+									/>
+								</th>
+								<th :aria-sort="ariaSort('title')">
+									{{ $t('project.title') }}
+									<Sort
+										:order="sortBy.title"
+										:label="$t('project.title')"
+										@click="sort('title', $event)"
+									/>
+								</th>
+								<th :aria-sort="ariaSort('owner')">
+									{{ $t('admin.projects.ownerLabel') }}
+									<Sort
+										:order="sortBy.owner"
+										:label="$t('admin.projects.ownerLabel')"
+										@click="sort('owner', $event)"
+									/>
+								</th>
+								<th :aria-sort="ariaSort('created')">
+									{{ $t('task.attributes.created') }}
+									<Sort
+										:order="sortBy.created"
+										:label="$t('task.attributes.created')"
+										@click="sort('created', $event)"
+									/>
+								</th>
+								<th :aria-sort="ariaSort('updated')">
+									{{ $t('task.attributes.updated') }}
+									<Sort
+										:order="sortBy.updated"
+										:label="$t('task.attributes.updated')"
+										@click="sort('updated', $event)"
+									/>
+								</th>
+								<th>{{ $t('navigation.settings') }}</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr
+								v-for="p in projects"
+								:key="p.id"
+							>
+								<td>{{ p.id }}</td>
+								<td>{{ p.title }}</td>
+								<td>{{ p.owner?.username ?? p.owner?.id }}</td>
+								<td>
+									<TimeDisplay :date="p.created" />
+								</td>
+								<td>
+									<TimeDisplay :date="p.updated" />
+								</td>
+								<td class="actions">
+									<ProjectSettingsDropdown
+										:project="p"
+										:force-all-actions="true"
+									>
+										<template #before-delete>
+											<DropdownItem
+												icon="user-edit"
+												@click="openReassign(p)"
+											>
+												{{ $t('admin.projects.reassignOwner') }}
+											</DropdownItem>
+										</template>
+									</ProjectSettingsDropdown>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
 				<PaginationEmit
 					v-if="totalPages > 1"
 					:total-pages="totalPages"
@@ -212,6 +218,7 @@ type SortField = 'id' | 'title' | 'owner' | 'created' | 'updated'
 
 const projects = ref<AdminProject[]>([])
 const loading = ref(false)
+const hasLoaded = ref(false)
 const currentPage = ref(1)
 const totalPages = ref(1)
 
@@ -246,6 +253,7 @@ async function load() {
 		}
 		projects.value = (data.items ?? []).filter((project): project is AdminProject => project.id !== undefined)
 		totalPages.value = data.total_pages ?? 1
+		hasLoaded.value = true
 	} catch (e) {
 		if (request === requestId) {
 			error(e)
