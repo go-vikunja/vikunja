@@ -12,23 +12,16 @@
       "timeout": 600000
     }
   ],
+  "schedule": [
+    "before 6am on monday"
+  ],
+  "osvVulnerabilityAlerts": true,
   "packageRules": [
-    {
-      "matchPackageNames": [
-        "happy-dom"
-      ],
-      "extends": [
-        "schedule:weekly"
-      ]
-    },
     {
       "groupName": "caniuse-and-related",
       "matchPackageNames": [
         "caniuse-lite",
         "browserslist"
-      ],
-      "extends": [
-        "schedule:weekly"
       ]
     },
     {
@@ -55,28 +48,13 @@
       "matchDepTypes": [
         "devDependencies"
       ],
-      "groupName": "dev-dependencies",
-      "extends": [
-        "schedule:daily"
-      ]
+      "groupName": "dev-dependencies"
     },
     {
       "groupName": "playwright",
       "matchPackageNames": [
         "@playwright/{/,}**",
         "mcr.microsoft.com/playwright"
-      ]
-    },
-    {
-      "description": "Update service containers used in CI at most once a week, in separate PRs",
-      "matchManagers": [
-        "github-actions"
-      ],
-      "matchDatasources": [
-        "docker"
-      ],
-      "extends": [
-        "schedule:weekly"
       ]
     },
     {
