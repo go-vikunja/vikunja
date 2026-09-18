@@ -43,7 +43,7 @@
 				<table class="table has-actions is-striped is-hoverable is-fullwidth">
 					<thead>
 						<tr>
-							<th :aria-sort="ariaSort(sortBy.id)">
+							<th :aria-sort="ariaSort('id')">
 								{{ $t('misc.id') }}
 								<Sort
 									:order="sortBy.id"
@@ -51,7 +51,7 @@
 									@click="sort('id', $event)"
 								/>
 							</th>
-							<th :aria-sort="ariaSort(sortBy.title)">
+							<th :aria-sort="ariaSort('title')">
 								{{ $t('project.title') }}
 								<Sort
 									:order="sortBy.title"
@@ -59,7 +59,7 @@
 									@click="sort('title', $event)"
 								/>
 							</th>
-							<th :aria-sort="ariaSort(sortBy.owner)">
+							<th :aria-sort="ariaSort('owner')">
 								{{ $t('admin.projects.ownerLabel') }}
 								<Sort
 									:order="sortBy.owner"
@@ -67,7 +67,7 @@
 									@click="sort('owner', $event)"
 								/>
 							</th>
-							<th :aria-sort="ariaSort(sortBy.created)">
+							<th :aria-sort="ariaSort('created')">
 								{{ $t('task.attributes.created') }}
 								<Sort
 									:order="sortBy.created"
@@ -75,7 +75,7 @@
 									@click="sort('created', $event)"
 								/>
 							</th>
-							<th :aria-sort="ariaSort(sortBy.updated)">
+							<th :aria-sort="ariaSort('updated')">
 								{{ $t('task.attributes.updated') }}
 								<Sort
 									:order="sortBy.updated"
@@ -201,6 +201,7 @@ import DropdownItem from '@/components/misc/DropdownItem.vue'
 import TimeDisplay from '@/components/misc/TimeDisplay.vue'
 import {error, success} from '@/message'
 import {useI18n} from 'vue-i18n'
+import {useTableSort, type SortOrder, type TableSortState} from '@/composables/useTableSort'
 
 const {t} = useI18n({useScope: 'global'})
 
@@ -208,7 +209,6 @@ const adminUserService = new AdminUserService()
 
 type AdminProject = Project & Required<Pick<Project, 'id'>>
 type SortField = 'id' | 'title' | 'owner' | 'created' | 'updated'
-type SortOrder = 'asc' | 'desc'
 
 const projects = ref<AdminProject[]>([])
 const loading = ref(false)
@@ -218,7 +218,8 @@ const totalPages = ref(1)
 const searchTerm = ref('')
 const ownerFilter = ref<IAdminUser | null>(null)
 const excludeInboxes = ref(false)
-const sortBy = ref<Partial<Record<SortField, SortOrder>>>({id: 'desc'})
+const sortBy = ref<TableSortState<SortField>>({id: 'desc'})
+const {sort, ariaSort} = useTableSort<SortField>(sortBy, load)
 
 const reassignTarget = ref<AdminProject | null>(null)
 const userResults = ref<IAdminUser[]>([])
@@ -260,38 +261,6 @@ function reload() {
 const onSearch = useDebounceFn(reload, 300)
 
 watch([ownerFilter, excludeInboxes], reload)
-
-function ariaSort(order: SortOrder | undefined): 'ascending' | 'descending' | undefined {
-	if (order === 'asc') {
-		return 'ascending'
-	}
-	if (order === 'desc') {
-		return 'descending'
-	}
-	return undefined
-}
-
-function sort(field: SortField, event?: MouseEvent) {
-	const ctrlPressed = event?.ctrlKey || event?.metaKey
-
-	const currentOrder = sortBy.value[field]
-	let newOrder: SortOrder | undefined
-	if (currentOrder === undefined) {
-		newOrder = 'desc'
-	} else if (currentOrder === 'desc') {
-		newOrder = 'asc'
-	}
-
-	const next = ctrlPressed ? {...sortBy.value} : {}
-	if (newOrder) {
-		next[field] = newOrder
-	} else {
-		delete next[field]
-	}
-	sortBy.value = next
-
-	load()
-}
 
 function openReassign(p: AdminProject) {
 	reassignTarget.value = p
