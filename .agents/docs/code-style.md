@@ -15,6 +15,7 @@
 
 ## Frontend
 
+- Same literal rule as Go: object and type literals with more than one property, long import lists and long argument lists go one entry per line with trailing commas, in tests too. Nothing over ~120 columns; split long ternaries and chains at the operator. `frontend/src/client/queries/projects.ts` is the reference.
 - One ref per purpose; a delete target must not share the search selection's ref. After an awaited mutation, clear or close UI state only if it still equals the value captured when the action started, because users keep interacting while requests are pending.
 - Never mutate a parent's `v-model` array or object in place; emit the new value. Editing a copied prop broke assignee removal: the removed user came back on the next save.
 - Don't bind native `disabled` to a control that can hold focus during or after a mutation, including an empty state reached after success; focus drops to `<body>`. Use `aria-disabled` and guard the handler.
