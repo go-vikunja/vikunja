@@ -52,8 +52,8 @@
 						</td>
 						<td v-if="!hideLabelColumn">
 							<RouterLink
-								v-if="row.entry.taskId > 0"
-								:to="{ name: 'task.detail', params: { id: row.entry.taskId } }"
+								v-if="row.entry.task_id > 0"
+								:to="{ name: 'task.detail', params: { id: row.entry.task_id } }"
 							>
 								{{ row.taskIdentifier }}{{ row.taskTitle ? ` - ${row.taskTitle}` : '' }}
 							</RouterLink>
@@ -68,7 +68,7 @@
 							{{ row.seconds === null ? '' : formatDuration(row.seconds) }}
 						</td>
 						<td class="nowrap has-text-right">
-							<template v-if="row.entry.userId === currentUserId">
+							<template v-if="row.entry.user_id === currentUserId">
 								<BaseButton
 									v-tooltip="$t('menu.edit')"
 									v-cy="'editTimeEntry'"
@@ -83,7 +83,7 @@
 									v-cy="'deleteTimeEntry'"
 									class="entry-action entry-delete"
 									:aria-label="$t('misc.delete')"
-									@click="emit('delete', row.entry.id)"
+									@click="emit('delete', row.entry)"
 								>
 									<Icon icon="trash-alt" />
 								</BaseButton>
@@ -111,21 +111,23 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, watch} from 'vue'
+import {computed} from 'vue'
 
 import Card from '@/components/misc/Card.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
 import {useProjects} from '@/composables/useProjects'
 import {useAuthStore} from '@/stores/auth'
-import {ensureTask} from '@/client/queries/tasks'
+import {taskQuery} from '@/client/queries/tasks'
+import {useQueries} from '@tanstack/vue-query'
 import {getProjectTitle} from '@/helpers/getProjectTitle'
 import {formatDate} from '@/helpers/time/formatDate'
+import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {useTimeFormat} from '@/composables/useTimeFormat'
 import {TIME_FORMAT} from '@/constants/timeFormat'
 
-import type {ITimeEntry} from '@/modelTypes/ITimeEntry'
 import type {TaskResponse} from '@/client/queries/tasks'
+import type {TimeEntryResponse as ITimeEntry} from '@/client/queries/timeEntries'
 
 const props = withDefaults(defineProps<{
 	entries: ITimeEntry[]
@@ -143,7 +145,7 @@ const props = withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{
-	delete: [id: number]
+	delete: [entry: ITimeEntry]
 	edit: [entry: ITimeEntry]
 }>()
 
@@ -153,30 +155,33 @@ const {store: timeFormat} = useTimeFormat()
 // Only the author can update/delete (enforced server-side); shared lists include
 // others' entries, so hide the controls on rows the current user doesn't own.
 const authStore = useAuthStore()
-const currentUserId = computed(() => authStore.info?.id)
+const currentUserId = computed(() => authStore.authUser ? authStore.info?.id : undefined)
+
+const taskIds = computed(() => props.hideLabelColumn
+	? []
+	: [...new Set(props.entries.map(entry => entry.task_id).filter(id => id > 0))])
 
 // Entries carry only a task id; the full task (title, identifier, parent project) is resolved lazily.
-const tasks = ref<Record<number, TaskResponse>>({})
+const taskQueries = useQueries({
+	queries: computed(() => taskIds.value.map(id => taskQuery(id))),
+})
+const tasks = computed<Record<number, TaskResponse>>(() => Object.fromEntries(
+	taskQueries.value.flatMap(result => result.data ? [[result.data.id, result.data] as const] : []),
+))
 
-watch(() => props.entries, entries => {
-	entries.forEach(({taskId}) => {
-		if (taskId === 0) {
-			return
-		}
-		ensureTask(taskId).then(task => {
-			tasks.value[taskId] = task
-		}).catch(() => {})
-	})
-}, {immediate: true})
-
-function entrySeconds(entry: ITimeEntry): number {
-	const end = entry.endTime ?? new Date()
-	return Math.floor((end.getTime() - entry.startTime.getTime()) / 1000)
+// null when the entry has no settled duration: still running, or unusable timestamps.
+function entrySeconds(entry: ITimeEntry): number | null {
+	const start = parseDateOrNull(entry.start_time)
+	const end = parseDateOrNull(entry.end_time)
+	if (start === null || end === null) {
+		return null
+	}
+	return Math.floor((end.getTime() - start.getTime()) / 1000)
 }
 
 const rows = computed(() => props.entries.map(entry => {
-	const task = entry.taskId > 0 ? tasks.value[entry.taskId] : undefined
-	const projectId = task?.project_id ?? (entry.projectId > 0 ? entry.projectId : 0)
+	const task = entry.task_id > 0 ? tasks.value[entry.task_id] : undefined
+	const projectId = task?.project_id ?? (entry.project_id > 0 ? entry.project_id : 0)
 	const project = projectId > 0 ? projectList.projects[projectId] : undefined
 	const ancestors = project ? projectList.getAncestors(project) : []
 
@@ -184,10 +189,9 @@ const rows = computed(() => props.entries.map(entry => {
 		entry,
 		// Full ancestor chain (root → leaf), each link-able.
 		projectChain: ancestors.map(p => ({id: p.id, title: getProjectTitle(p)})),
-		taskIdentifier: task ? (task.identifier || `#${task.index}`) : (entry.taskId > 0 ? `#${entry.taskId}` : ''),
+		taskIdentifier: task ? (task.identifier || `#${task.index}`) : (entry.task_id > 0 ? `#${entry.task_id}` : ''),
 		taskTitle: task?.title ?? '',
-		// A running entry (no end) has no settled duration — leave it blank.
-		seconds: entry.endTime !== null ? entrySeconds(entry) : null,
+		seconds: entrySeconds(entry),
 	}
 }))
 
@@ -204,11 +208,12 @@ function formatTime(date: Date): string {
 }
 
 function timeRange(entry: ITimeEntry): string {
-	const start = formatTime(entry.startTime)
-	if (entry.endTime === null) {
-		return `${start} – …`
+	const start = parseDateOrNull(entry.start_time)
+	if (start === null) {
+		return ''
 	}
-	return `${start} – ${formatTime(entry.endTime)}`
+	const end = parseDateOrNull(entry.end_time)
+	return end === null ? `${formatTime(start)} – …` : `${formatTime(start)} – ${formatTime(end)}`
 }
 </script>
 

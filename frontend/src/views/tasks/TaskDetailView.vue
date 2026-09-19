@@ -749,8 +749,9 @@ const taskMutating = computed(() => [
 	markTaskRead,
 ].some(mutation => mutation.isPending.value))
 const configStore = useConfigStore()
-const timeTrackingEnabled = computed(() => configStore.isProFeatureEnabled(PRO_FEATURE.TIME_TRACKING))
 const authStore = useAuthStore()
+const timeTrackingEnabled = computed(() => configStore.isProFeatureEnabled(PRO_FEATURE.TIME_TRACKING)
+	&& !authStore.isLinkShareAuth)
 const baseStore = useBaseStore()
 
 const taskQuery = useTask(
