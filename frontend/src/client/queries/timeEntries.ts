@@ -138,14 +138,18 @@ export function stopTimerMutationOptions() {
 	})
 }
 
+// task_id is 0 for entries booked straight onto a project; those have no task count to adjust.
+export type DeleteTimeEntryInput = {
+	id: number
+	taskId: number
+}
+
 export function deleteTimeEntryMutationOptions() {
 	return contextMutationOptions({
-		mutationFn: async (id: number) => { await timeEntriesDelete({path: {id}}) },
-		onSuccess: (_data, id, client) => {
-			const entry = client.getQueriesData<TimeEntryResponse[]>({queryKey: timeEntryKeys.lists})
-				.flatMap(([, entries]) => entries ?? []).find(entry => entry.id === id)
+		mutationFn: async ({id}: DeleteTimeEntryInput) => { await timeEntriesDelete({path: {id}}) },
+		onSuccess: (_data, {id, taskId}, client) => {
 			removeTimeEntry(client, id)
-			if (entry?.task_id) mapTaskEverywhere(client, entry.task_id, task => ({
+			if (taskId > 0) mapTaskEverywhere(client, taskId, task => ({
 				...task,
 				time_entries_count: task.time_entries_count === undefined ? undefined : Math.max(0, task.time_entries_count - 1),
 			}))

@@ -159,8 +159,11 @@ function onSaved() {
 	showForm.value = false
 }
 
-function onDelete(id: number) {
-	deleteMutation.mutate(id)
+function onDelete(entry: ITimeEntry) {
+	deleteMutation.mutate({
+		id: entry.id,
+		taskId: entry.task_id,
+	})
 }
 
 // --- Filter ---------------------------------------------------------------

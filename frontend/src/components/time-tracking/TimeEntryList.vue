@@ -83,7 +83,7 @@
 									v-cy="'deleteTimeEntry'"
 									class="entry-action entry-delete"
 									:aria-label="$t('misc.delete')"
-									@click="emit('delete', row.entry.id)"
+									@click="emit('delete', row.entry)"
 								>
 									<Icon icon="trash-alt" />
 								</BaseButton>
@@ -144,7 +144,7 @@ const props = withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{
-	delete: [id: number]
+	delete: [entry: ITimeEntry]
 	edit: [entry: ITimeEntry]
 }>()
 

@@ -94,7 +94,10 @@ it('deletes the matching active timer without affecting another user', async () 
 		user_id: 8,
 	}))
 	sdk.timeEntriesDelete.mockResolvedValue({data: undefined})
-	await client.getMutationCache().build(client, deleteTimeEntryMutationOptions()).execute(4)
+	await client.getMutationCache().build(client, deleteTimeEntryMutationOptions()).execute({
+		id: 4,
+		taskId: 1,
+	})
 	expect(client.getQueryData(timeEntryKeys.active(7))).toBeNull()
 	expect(client.getQueryData(timeEntryKeys.active(8))).toMatchObject({id: 5})
 })
