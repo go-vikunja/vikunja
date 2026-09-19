@@ -40,22 +40,22 @@
 			>
 				<figure class="media-left is-hidden-mobile">
 					<UserAvatar
-						:user="c.author ?? {}"
+						:user="c.author"
 						:size="48"
 						class="image is-avatar"
 					/>
 					<figcaption class="is-sr-only">
-						{{ $t('misc.avatarOfUser', {user: getDisplayName(c.author ?? {})}) }}
+						{{ $t('misc.avatarOfUser', {user: getDisplayName(c.author)}) }}
 					</figcaption>
 				</figure>
 				<div class="media-content">
 					<div class="comment-info">
 						<UserAvatar
-							:user="c.author ?? {}"
+							:user="c.author"
 							:size="20"
 							class="image is-avatar d-print-none"
 						/>
-						<strong>{{ getDisplayName(c.author ?? {}) }}</strong>
+						<strong>{{ getDisplayName(c.author) }}</strong>
 						<span
 							v-tooltip="formatDateLong(c.created)"
 							class="has-text-grey"
@@ -113,7 +113,7 @@
 						initial-mode="preview"
 						@update:modelValue="value => changeComment(c, value)"
 						@save="() => {
-							toggleEdit(c)
+							captureEditDraft(c)
 							editComment()
 						}"
 					/>
@@ -422,14 +422,14 @@ async function addComment() {
 	}
 }
 
-function toggleEdit(comment: CommentResponse) {
+function captureEditDraft(comment: CommentResponse) {
 	isCommentEdit.value = true
 	commentEdit.value = {...comment, comment: commentDrafts.value[comment.id] ?? comment.comment}
 }
 
 function changeComment(comment: CommentResponse, text: string) {
 	commentDrafts.value[comment.id] = text
-	toggleEdit(comment)
+	captureEditDraft(comment)
 	editCommentWithDelay()
 }
 
