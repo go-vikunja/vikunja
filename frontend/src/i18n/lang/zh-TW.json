@@ -867,7 +867,14 @@
 			"loading": "載入評論中…",
 			"edited": "編輯於 {date}",
 			"creating": "正在建立評論…",
-			"placeholder": "輸入評論，按「/」以取得更多選項…"
+			"placeholder": "輸入評論，按「/」以取得更多選項…",
+			"comment": "評論",
+			"delete": "刪除此評論"
+		},
+		"deferDueDate": {
+			"1day": "1 天",
+			"3days": "3 天",
+			"1week": "1 周"
 		},
 		"assignee": {
 			"placeholder": "分配給用户…",
@@ -879,7 +886,11 @@
 			"addCreateSuccess": "標籤已成功建立並新增完成。"
 		},
 		"priority": {
-			"unset": "取消設定"
+			"unset": "取消設定",
+			"low": "低",
+			"medium": "中",
+			"high": "高",
+			"urgent": "緊急"
 		},
 		"relation": {
 			"differentProject": "此任務屬於另一個專案。"
@@ -935,15 +946,32 @@
 			"projects": "前往專案頁面"
 		},
 		"list": {
-			"title": "任務清單"
+			"title": "任務清單",
+			"navigateDown": "標示下一個任務",
+			"navigateUp": "標示上一個任務",
+			"open": "打開已標示的任務"
+		},
+		"gantt": {
+			"title": "甘特圖"
 		}
 	},
+	"update": {
+		"available": "有新版本可用！",
+		"do": "立即更新"
+	},
 	"menu": {
+		"edit": "編輯",
+		"archive": "封存",
+		"delete": "刪除",
+		"unarchive": "取消封存",
 		"setBackground": "背景設定",
 		"share": "共享",
 		"createProject": "建立專案",
 		"cantArchiveIsDefault": "您無法封存此專案，因為它是您的預設專案。",
 		"cantDeleteIsDefault": "您無法刪除此專案，因為它是您的預設專案。"
+	},
+	"apiConfig": {
+		"urlPlaceholder": "例如： https://localhost:3456"
 	},
 	"notification": {
 		"explainer": "當您訂閱的動作、專案或任務發生時，通知將會顯示在此處。"
@@ -1001,5 +1029,10 @@
 		"13001": "此鏈接共享需要密碼進行身份驗證，但沒有提供密碼。",
 		"13002": "提供的鏈接共享密碼無效。",
 		"13003": "提供的分享連結令牌無效。"
+	},
+	"about": {
+		"version": "版本：{version}",
+		"frontendVersion": "前端版本: {version}",
+		"apiVersion": "API 版本: {version}"
 	}
 }

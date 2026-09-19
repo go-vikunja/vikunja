@@ -70,6 +70,10 @@
 				"subject": "「%[1]s」(%[2]s) 提醒",
 				"message": "任務「%[1]s」(%[2]s) 提醒。"
 			},
+			"comment": {
+				"subject": "回覆：%[1]s (%[2]s)",
+				"mentioned_subject": "%[1]s 在評論「%[2]s」(%[3]s) 中提及了您"
+			},
 			"assigned": {
 				"subject_to_assignee": "您已被指派至「%[1]s」(%[2]s)",
 				"message_to_assignee": "%[1]s 已將您指派到「%[2]s」。",
@@ -81,6 +85,10 @@
 			"deleted": {
 				"subject": "「%[1]s」(%[2]s) 已被刪除",
 				"message": "%[1]s 已刪除任務「%[2]s」(%[3]s)"
+			},
+			"mentioned": {
+				"subject_new": "%[1]s 在新任務「%[2]s」(%[3]s) 中提及了您",
+				"subject": "%[1]s 在任務「%[2]s」(%[3]s) 中提及了您"
 			},
 			"overdue": {
 				"subject": "任務「%[1]s」(%[2]s) 已逾期",
@@ -122,10 +130,22 @@
 				"working_on_it": "我們已經注意到這個錯誤訊息並正在處理，會盡快解決。"
 			}
 		},
+		"api_token": {
+			"expiring": {
+				"week": {
+					"subject": "您的 API 存取權杖「%[1]s」即將到期"
+				},
+				"day": {
+					"subject": "您的 API 存取權杖「%[1]s」將於明日到期"
+				},
+				"action": "管理 API 存取權杖"
+			}
+		},
 		"common": {
 			"have_nice_day": "祝您有美好的一天！",
 			"copy_url": "如果上方按鈕無法使用，請將以下網址複製到瀏覽器的網址列中：",
 			"actions": {
+				"open_task": "在 Vikunja 中開啟任務",
 				"open_vikunja": "開啟 Vikunja",
 				"open_project": "開啟專案",
 				"open_team": "開啟團隊",
@@ -135,7 +155,11 @@
 				"confirm_email": "確認您的電子郵件地址",
 				"abort_deletion": "取消刪除",
 				"confirm_account_deletion": "確認刪除我的帳號",
-				"change_notification_settings_link": "您可以在這裡 更改通知設定(%[1]s)。"
+				"change_notification_settings_link": "您可以在這裡 更改通知設定(%[1]s)。",
+				"left_comment": "%[1]s 留下了一則評論",
+				"mentioned_you_comment": "%[1]s 在評論中提及了您",
+				"mentioned_you": "%[1]s 提及了您",
+				"mentioned_you_new_task": "%[1]s 在新任務中提及了您"
 			}
 		}
 	},
@@ -146,5 +170,10 @@
 		"since_hours": "一小時｜%[1]d 小時",
 		"since_minutes": "一分鐘｜%[1]d 分鐘",
 		"list_last_separator": "且"
+	},
+	"feeds": {
+		"notifications": {
+			"title": "%[1]s 的 Vikunja 通知"
+		}
 	}
 }
