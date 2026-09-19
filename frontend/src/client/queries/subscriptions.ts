@@ -4,10 +4,7 @@ import {
 	subscriptionsDelete,
 } from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
-import {
-	invalidateTaskMembership,
-	mapTaskEverywhere,
-} from './taskCache'
+import {mapTaskEverywhere} from './taskCache'
 import {taskKeys} from './tasks'
 import {i18n} from '@/i18n'
 
@@ -33,10 +30,7 @@ export function setTaskSubscriptionMutationOptions() {
 				subscription,
 			}))
 		},
-		onSettled: ({taskId}, client) => Promise.all([
-			client.invalidateQueries({queryKey: taskKeys.detail(taskId)}),
-			invalidateTaskMembership(client),
-		]),
+		onSettled: ({taskId}, client) => client.invalidateQueries({queryKey: [...taskKeys.details, taskId]}),
 		successMessage: (_data, {subscribed}) => i18n.global.t(subscribed
 			? 'task.subscription.subscribeSuccessTask'
 			: 'task.subscription.unsubscribeSuccessTask'),
