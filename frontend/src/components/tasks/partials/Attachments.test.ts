@@ -134,6 +134,35 @@ describe('Attachments upload', () => {
 		expect(errorMessage).toHaveBeenCalledTimes(1)
 	})
 
+	it('toasts every per-file failure with its code, which the message alone would lose', async () => {
+		sdk.taskAttachmentsUpload.mockResolvedValue({data: {errors: [
+			{code: 4014},
+			{
+				code: 4015,
+				message: 'file is too large',
+			},
+		]}})
+
+		const wrapper = mountAttachments()
+		await flushPromises()
+
+		const fileInput = wrapper.find('input[type="file"]')
+		Object.defineProperty(fileInput.element, 'files', {
+			value: [new File(['x'], 'too-big.zip', {type: 'application/zip'})],
+			configurable: true,
+		})
+
+		await fileInput.trigger('change')
+		await flushPromises()
+
+		expect(errorMessage).toHaveBeenCalledTimes(2)
+		expect(errorMessage).toHaveBeenNthCalledWith(1, {code: 4014})
+		expect(errorMessage).toHaveBeenNthCalledWith(2, {
+			code: 4015,
+			message: 'file is too large',
+		})
+	})
+
 	it('ignores a drop while another batch is still uploading', async () => {
 		let finishUpload: (result: unknown) => void = () => {}
 		sdk.taskAttachmentsUpload.mockReturnValue(new Promise(resolve => {

@@ -169,6 +169,15 @@ describe('uploadFile', () => {
 		expect(error).not.toHaveBeenCalled()
 	})
 
+	it('forwards the per-file failure itself, so the caller can translate its code', async () => {
+		upload.mockResolvedValue({data: {errors: [
+			{code: 4014},
+			{code: 4015},
+		]}})
+
+		await expect(uploadFile(1, new File([''], 'a.png'))).rejects.toEqual({code: 4014})
+	})
+
 	it('toasts once through the default mutation options', async () => {
 		const failed = new Error('failed to save file: no space left on device')
 		upload.mockRejectedValue(failed)

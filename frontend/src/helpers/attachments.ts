@@ -80,7 +80,9 @@ export async function uploadFile(
 		.execute({taskId, files: [file]})
 	const uploaded = result.success ?? []
 	for (const attachment of uploaded) onSuccess?.(generateAttachmentUrl(taskId, attachment.id!))
-	if (result.errors?.length) throw new Error(result.errors.map(error => error.message).join('\n'))
+	// forwarded verbatim: the caller's toast translates the error code, which a rewrapped message would lose
+	const [failure] = result.errors ?? []
+	if (failure) throw failure
 	return uploaded
 }
 

@@ -449,7 +449,7 @@ async function uploadFilesToTask(files: File[] | FileList) {
 	for (const [index, file] of batch.entries()) {
 		try {
 			const result = await uploadMutation.mutateAsync({taskId, files: [file]})
-			if (result.errors?.length) error({message: result.errors.map(err => err.message).join('\n')})
+			for (const err of result.errors ?? []) error(err)
 		} catch {
 			// mutation already toasts; keep uploading the remaining files
 		}
