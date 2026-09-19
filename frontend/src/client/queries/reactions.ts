@@ -39,20 +39,28 @@ export function changeReaction(current: ReactionUsers = {}, input: ReactionInput
 export function setReactionMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async (input: ReactionInput) => {
-			const call = input.remove ? reactionsDelete : reactionsCreate
-			await call({
+			const request = {
 				path: {
 					entitykind: input.kind,
 					entityid: input.id,
 				},
 				body: {value: input.value},
-			})
+			}
+			if (input.remove) {
+				await reactionsDelete(request)
+				return undefined
+			}
+			return (await reactionsCreate(request)).data
 		},
-		onSuccess: (_data, input, client) => {
+		onSuccess: (data, input, client) => {
 			if (input.kind === 'tasks') {
+				const reacted = {
+					...input,
+					user: data?.user ?? input.user,
+				}
 				mapTaskEverywhere(client, input.id, task => ({
 					...task,
-					reactions: changeReaction(task.reactions, input),
+					reactions: changeReaction(task.reactions, reacted),
 				}))
 			}
 		},

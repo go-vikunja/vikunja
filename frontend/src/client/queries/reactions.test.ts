@@ -36,14 +36,20 @@ it('adds only the current user and preserves other reactions', async () => {
 	}))
 	sdk.reactionsCreate.mockResolvedValue({data: {
 		value: '👍',
-		user: {id: 1},
+		user: {
+			id: 1,
+			name: 'Server Authored',
+		},
 	}})
 	await client.getMutationCache().build(client, setReactionMutationOptions()).execute({
 		kind: 'tasks',
 		id: 1,
 		value: '👍',
 		remove: false,
-		user: {id: 1},
+		user: {
+			id: 1,
+			name: 'Stale Local',
+		},
 	})
 	expect(sdk.reactionsCreate).toHaveBeenCalledWith({
 		path: {
@@ -53,7 +59,13 @@ it('adds only the current user and preserves other reactions', async () => {
 		body: {value: '👍'},
 	})
 	expect(client.getQueryData(taskKeys.detail(1))).toMatchObject({reactions: {
-		'👍': [{id: 2}, {id: 1}],
+		'👍': [
+			{id: 2},
+			{
+				id: 1,
+				name: 'Server Authored',
+			},
+		],
 		'🎉': [{id: 3}],
 	}})
 })
