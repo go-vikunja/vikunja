@@ -56,7 +56,7 @@ export function setReactionMutationOptions() {
 				}))
 			}
 		},
-		onSettled: (_input, client) => invalidateTaskMembership(client, input.kind === 'tasks' ? input.id : undefined),
+		onSettled: (input, client) => invalidateTaskMembership(client, input.kind === 'tasks' ? input.id : undefined),
 	})
 }
 
