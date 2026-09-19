@@ -1,9 +1,11 @@
 import {describe, it, expect, vi} from 'vitest'
+import {nextTick} from 'vue'
 import {mount, flushPromises} from '@vue/test-utils'
 import {createI18n} from 'vue-i18n'
 import {QueryClient, VueQueryPlugin} from '@tanstack/vue-query'
 import {taskKeys, normalizeTask} from '@/client/queries/tasks'
 
+import {reactionsCreate} from '@/client/generated'
 import Reactions from './Reactions.vue'
 import en from '@/i18n/lang/en.json'
 
@@ -36,7 +38,7 @@ vi.mock('vuemoji-picker', () => ({
 
 const i18n = createI18n({legacy: false, locale: 'en', messages: {en}})
 
-function mountReactions(modelValue: Record<string, typeof CURRENT_USER[]>) {
+function mountReactions(modelValue: Record<string, typeof CURRENT_USER[]>, disabled = false) {
 	const queryClient = new QueryClient()
 	queryClient.setQueryData(taskKeys.detail(1), normalizeTask({id: 1, reactions: modelValue}))
 	return mount(Reactions, {
@@ -44,6 +46,7 @@ function mountReactions(modelValue: Record<string, typeof CURRENT_USER[]>) {
 			entityKind: 'tasks' as const,
 			entityId: 1,
 			modelValue,
+			disabled,
 		},
 		global: {
 			plugins: [i18n, [VueQueryPlugin, {queryClient}]],
@@ -55,6 +58,15 @@ function mountReactions(modelValue: Record<string, typeof CURRENT_USER[]>) {
 			directives: {tooltip: {}},
 		},
 	})
+}
+
+function deferReactionCreate() {
+	let resolveCreate: (value: unknown) => void = () => {}
+	const pending = new Promise<unknown>(resolve => {
+		resolveCreate = resolve
+	}) as ReturnType<typeof reactionsCreate>
+	vi.mocked(reactionsCreate).mockReturnValueOnce(pending)
+	return () => resolveCreate({data: {}})
 }
 
 describe('Reactions', () => {
@@ -86,5 +98,29 @@ describe('Reactions', () => {
 		expect(emitted![0][0]).toEqual({})
 		expect(modelValue['🎉']).toBe(users)
 		expect(users).toEqual([CURRENT_USER])
+	})
+
+	it('disables reaction buttons natively when the viewer may not write', () => {
+		const wrapper = mountReactions({'🎉': [OTHER_USER]}, true)
+
+		const button = wrapper.findAll('button')[0]
+		expect(button.attributes('disabled')).toBeDefined()
+		expect(button.attributes('aria-disabled')).toBeUndefined()
+	})
+
+	it('keeps reaction buttons focusable while the mutation is pending', async () => {
+		const resolveCreate = deferReactionCreate()
+		const wrapper = mountReactions({'🎉': [OTHER_USER]})
+
+		await wrapper.findAll('button')[0].trigger('click')
+		await nextTick()
+
+		expect(wrapper.findAll('button')[0].attributes('aria-disabled')).toBe('true')
+		expect(wrapper.findAll('button')[0].attributes('disabled')).toBeUndefined()
+
+		resolveCreate()
+		await flushPromises()
+
+		expect(wrapper.findAll('button')[0].attributes('aria-disabled')).toBeUndefined()
 	})
 })

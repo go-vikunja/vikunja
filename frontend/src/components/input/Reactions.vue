@@ -135,7 +135,8 @@ async function toggleReaction(value: string | number) {
 			v-tooltip="getReactionTooltip(users, value)"
 			class="reaction-button"
 			:class="{'current-user-has-reacted': hasCurrentUserReactedWithEmoji(value)}"
-			:aria-disabled="disabled || reactionMutation.isPending.value"
+			:disabled="disabled"
+			:aria-disabled="reactionMutation.isPending.value || undefined"
 			@click="toggleReaction(value)"
 		>
 			{{ value }} {{ users?.length }}
