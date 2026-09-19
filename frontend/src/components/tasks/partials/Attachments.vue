@@ -11,7 +11,6 @@
 			v-if="editEnabled"
 			id="files"
 			ref="filesRef"
-			:aria-disabled="loading || undefined"
 			multiple
 			type="file"
 			@change="uploadNewAttachment()"
@@ -415,14 +414,16 @@ function attachmentMetaTooltip(attachment: IAttachment): string {
 
 const filesRef = ref<HTMLInputElement | null>(null)
 
-function uploadNewAttachment() {
-	const files = filesRef.value?.files
+async function uploadNewAttachment() {
+	const input = filesRef.value
+	const files = input?.files
 
-	if (loading.value || !files || files.length === 0) {
-		return
+	if (!loading.value && files && files.length > 0) {
+		await uploadFilesToTask(files)
 	}
 
-	uploadFilesToTask(files)
+	// without this, re-picking the same file fires no change event
+	if (input) input.value = ''
 }
 
 async function uploadFilesToTask(files: File[] | FileList) {
