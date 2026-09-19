@@ -1,29 +1,16 @@
 import {useMutation} from '@tanstack/vue-query'
-import {
-	subscriptionsCreate,
-	subscriptionsDelete,
-} from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
+import {setSubscription} from './subscriptionRequests'
 import {mapTaskEverywhere} from './taskCache'
 import {taskKeys} from './tasks'
 import {i18n} from '@/i18n'
 
 export function setTaskSubscriptionMutationOptions() {
 	return contextMutationOptions({
-		mutationFn: async ({taskId, subscribed}: {
+		mutationFn: ({taskId, subscribed}: {
 			taskId: number,
 			subscribed: boolean,
-		}) => {
-			const path = {
-				entity: 'task',
-				entityID: taskId,
-			} as const
-			if (!subscribed) {
-				await subscriptionsDelete({path})
-				return undefined
-			}
-			return (await subscriptionsCreate({path})).data
-		},
+		}) => setSubscription('task', taskId, subscribed),
 		onSuccess: (subscription, {taskId}, client) => {
 			mapTaskEverywhere(client, taskId, task => ({
 				...task,
