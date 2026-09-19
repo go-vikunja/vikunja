@@ -3,7 +3,8 @@ import {createPinia, setActivePinia} from 'pinia'
 import {nextTick, ref} from 'vue'
 import {Editor} from '@tiptap/core'
 import {createEditorExtensions, type EditorExtensionDeps} from './editorExtensions'
-import {clearAttachmentBlobCache} from '@/helpers/attachments'
+import {queryClient} from '@/client/queryClient'
+import {attachmentKeys} from '@/client/queries/attachments'
 
 const {getBlobUrl} = vi.hoisted(() => ({getBlobUrl: vi.fn(async () => ({data: new Blob(['bytes'])}))}))
 
@@ -49,7 +50,7 @@ async function settle() {
 beforeEach(() => {
 	URL.createObjectURL = vi.fn(blob => (blob as Blob & {testUrl?: string}).testUrl ?? 'blob:real-attachment')
 	setActivePinia(createPinia())
-	clearAttachmentBlobCache()
+	queryClient.removeQueries({queryKey: attachmentKeys.blobs})
 	getBlobUrl.mockClear()
 })
 

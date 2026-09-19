@@ -55,10 +55,6 @@ export function fetchAttachmentBlobUrl(attachment: AttachmentIdentity, size?: Pr
 	})
 }
 
-export function clearAttachmentBlobCache() {
-	queryClient.removeQueries({queryKey: attachmentKeys.blobs})
-}
-
 export async function downloadAttachment(attachment: TaskAttachment) {
 	const url = await attachmentBlobUrl({id: attachment.id!, task_id: attachment.task_id!})
 	downloadBlob(url, attachment.file?.name ?? '')

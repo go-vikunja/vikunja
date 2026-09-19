@@ -1,7 +1,9 @@
 import {describe, it, expect, beforeEach, vi} from 'vitest'
 
-import {attachmentBlobUrl, clearAttachmentBlobCache, fetchAttachmentBlobUrl, uploadFilesForEditor} from './attachments'
+import {attachmentBlobUrl, fetchAttachmentBlobUrl, uploadFilesForEditor} from './attachments'
 import {PREVIEW_SIZE} from '@/helpers/attachments'
+import {queryClient} from '@/client/queryClient'
+import {attachmentKeys} from '@/client/queries/attachments'
 
 const {getBlobUrl} = vi.hoisted(() => ({getBlobUrl: vi.fn()}))
 
@@ -12,7 +14,7 @@ const attachment = {task_id: 5, id: 9}
 beforeEach(() => {
 	vi.useRealTimers()
 	URL.createObjectURL = vi.fn(blob => (blob as Blob & {testUrl?: string}).testUrl ?? 'blob:real-attachment')
-	clearAttachmentBlobCache()
+	queryClient.removeQueries({queryKey: attachmentKeys.blobs})
 	getBlobUrl.mockReset()
 	window.URL.revokeObjectURL = vi.fn()
 })
@@ -101,12 +103,12 @@ describe('fetchAttachmentBlobUrl', () => {
 	})
 })
 
-describe('clearAttachmentBlobCache', () => {
+describe('blob cache eviction', () => {
 	it('revokes the cached urls and refetches afterwards', async () => {
 		getBlobUrl.mockResolvedValueOnce({data: Object.assign(new Blob(['bytes']), {testUrl: 'blob:a'})}).mockResolvedValueOnce({data: Object.assign(new Blob(['bytes']), {testUrl: 'blob:b'})})
 		await fetchAttachmentBlobUrl(attachment)
 
-		clearAttachmentBlobCache()
+		queryClient.removeQueries({queryKey: attachmentKeys.blobs})
 
 		expect(window.URL.revokeObjectURL).toHaveBeenCalledWith('blob:a')
 		expect(await fetchAttachmentBlobUrl(attachment)).toBe('blob:b')
