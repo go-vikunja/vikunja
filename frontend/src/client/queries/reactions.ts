@@ -9,10 +9,7 @@ import type {
 	User,
 } from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
-import {
-	invalidateTaskMembership,
-	mapTaskEverywhere,
-} from './taskCache'
+import {invalidateTaskMembership} from './taskCache'
 import {
 	commentKeys,
 	mapCommentEverywhere,

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type {ReactionInput, ReactionUsers} from '@/client/queries/reactions'
 import {VuemojiPicker} from 'vuemoji-picker'
-import {useSetReactionMutation, changeReaction} from '@/client/queries/reactions'
+import {useSetReactionMutation} from '@/client/queries/reactions'
 import BaseButton from '@/components/base/BaseButton.vue'
 import {getDisplayName} from '@/models/user'
 import {useI18n} from 'vue-i18n'
@@ -21,12 +21,12 @@ type ReactionSubject = {
 
 const props = withDefaults(defineProps<ReactionSubject & {
 	entityId: number,
+	modelValue?: ReactionUsers,
 	disabled?: boolean,
 }>(), {
+	modelValue: undefined,
 	disabled: false,
 })
-
-const model = defineModel<ReactionUsers>()
 
 const authStore = useAuthStore()
 const {t} = useI18n()
@@ -57,18 +57,12 @@ async function setReaction(value: string, remove: boolean) {
 			user,
 		}
 	try {
-		const data = await reactionMutation.mutateAsync(input)
-		if (props.entityId !== input.id || props.entityKind !== input.kind) return
-		showEmojiPicker.value = false
-		// Task reactions live in the task cache; a second local copy would race it.
-		if (props.entityKind === 'tasks') return
-		model.value = changeReaction(model.value, {
-			...input,
-			user: data?.user ?? input.user,
-		})
+		await reactionMutation.mutateAsync(input)
 	} catch {
 		return
 	}
+	if (props.entityId !== input.id || props.entityKind !== input.kind) return
+	showEmojiPicker.value = false
 }
 
 function addReaction(value: string) {
@@ -135,8 +129,8 @@ function toggleEmojiPicker() {
 }
 
 function hasCurrentUserReactedWithEmoji(value: string | number): boolean {
-	if (!model.value || !authStore.info) return false
-	const user = model.value[String(value)]?.find(u => u.id === authStore.info!.id)
+	if (!props.modelValue || !authStore.info) return false
+	const user = props.modelValue[String(value)]?.find(u => u.id === authStore.info!.id)
 	return typeof user !== 'undefined'
 }
 
@@ -156,7 +150,7 @@ async function toggleReaction(value: string | number) {
 		class="reactions"
 	>
 		<BaseButton
-			v-for="(users, value) in model"
+			v-for="(users, value) in modelValue"
 			:key="'button' + value"
 			v-tooltip="getReactionTooltip(users, value)"
 			class="reaction-button"
