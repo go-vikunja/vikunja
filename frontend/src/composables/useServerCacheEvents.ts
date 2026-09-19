@@ -1,7 +1,13 @@
-import {onScopeDispose, watch} from 'vue'
+import {
+	onScopeDispose,
+	watch,
+} from 'vue'
 import {useWebSocket} from './useWebSocket'
 import {useAuthStore} from '@/stores/auth'
-import {parseServerCacheEvent, useServerCacheEventMutation} from '@/client/queries/serverEvents'
+import {
+	parseServerCacheEvent,
+	useServerCacheEventMutation,
+} from '@/client/queries/serverEvents'
 
 export function useServerCacheEvents() {
 	const socket = useWebSocket()

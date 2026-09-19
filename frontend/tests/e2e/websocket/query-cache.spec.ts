@@ -1,5 +1,8 @@
 import type {Page} from '@playwright/test'
-import {test, expect} from '../../support/fixtures'
+import {
+	test,
+	expect,
+} from '../../support/fixtures'
 import {LicenseFactory} from '../../factories/license'
 import {ProjectFactory} from '../../factories/project'
 import {ProjectViewFactory} from '../../factories/project_view'
@@ -19,12 +22,29 @@ function waitForSubscription(page: Page, event: string) {
 
 test('comment notifications refresh the open task without a reload', async ({authenticatedPage: page, apiContext, currentUser, userToken}) => {
 	const [commenter] = await UserFactory.create(1, {id: 100}, false)
-	const login = await apiContext.post('login', {data: {username: commenter.username, password: TEST_PASSWORD}})
+	const login = await apiContext.post('login', {data: {
+		username: commenter.username,
+		password: TEST_PASSWORD,
+	}})
 	const {token} = await login.json()
-	await ProjectFactory.create(1, {id: 100, owner_id: 100}, false)
-	await ProjectViewFactory.create(1, {id: 100, project_id: 100}, false)
-	await TaskFactory.create(1, {id: 100, project_id: 100, created_by_id: 100}, false)
-	await UserProjectFactory.create(1, {id: 100, project_id: 100, user_id: currentUser.id}, false)
+	await ProjectFactory.create(1, {
+		id: 100,
+		owner_id: 100,
+	}, false)
+	await ProjectViewFactory.create(1, {
+		id: 100,
+		project_id: 100,
+	}, false)
+	await TaskFactory.create(1, {
+		id: 100,
+		project_id: 100,
+		created_by_id: 100,
+	}, false)
+	await UserProjectFactory.create(1, {
+		id: 100,
+		project_id: 100,
+		user_id: currentUser.id,
+	}, false)
 	const subscribed = waitForSubscription(page, 'notification.created')
 	await page.goto('/tasks/100')
 	await subscribed
@@ -55,7 +75,11 @@ test.describe('timer cache events', () => {
 		const headers = {Authorization: `Bearer ${userToken}`}
 		const created = await apiContext.post('/api/v2/time-entries', {
 			headers,
-			data: {project_id: project.id, start_time: new Date().toISOString(), comment: 'Remote timer'},
+			data: {
+				project_id: project.id,
+				start_time: new Date().toISOString(),
+				comment: 'Remote timer',
+			},
 		})
 		expect(created.ok()).toBeTruthy()
 		const entry = await created.json()

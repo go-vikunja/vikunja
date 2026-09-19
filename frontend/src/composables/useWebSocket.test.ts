@@ -1,7 +1,16 @@
-import {afterEach, expect, it, vi} from 'vitest'
+import {
+	afterEach,
+	expect,
+	it,
+	vi,
+} from 'vitest'
 import {useWebSocket} from './useWebSocket'
 vi.mock('@/helpers/auth', () => ({getToken: () => 'token'}))
-vi.mock('@/client/requestContext', () => ({captureClientRequestContext: () => ({}), isClientRequestContextCurrent: () => true}))
+const session = vi.hoisted(() => ({current: true}))
+vi.mock('@/client/requestContext', () => ({
+	captureClientRequestContext: () => ({}),
+	isClientRequestContextCurrent: () => session.current,
+}))
 class FakeSocket {
 	static OPEN = 1
 	static CONNECTING = 0
@@ -20,6 +29,7 @@ afterEach(() => {
 	useWebSocket().disconnect()
 	vi.unstubAllGlobals()
 	FakeSocket.instances = []
+	session.current = true
 })
 
 it('ignores messages and close callbacks from a replaced connection', () => {
@@ -34,8 +44,27 @@ it('ignores messages and close callbacks from a replaced connection', () => {
 	current.onopen?.()
 	const onTimer = vi.fn()
 	ws.subscribe('timer.created', onTimer)
-	old.onmessage?.(new MessageEvent('message', {data: JSON.stringify({event: 'timer.created', data: {id: 1}})}))
+	old.onmessage?.(new MessageEvent('message', {data: JSON.stringify({
+		event: 'timer.created',
+		data: {id: 1},
+	})}))
 	old.onclose?.()
 	expect(onTimer).not.toHaveBeenCalled()
 	expect(ws.connected.value).toBe(true)
+})
+
+it('drops events after the authenticated session changes', () => {
+	vi.stubGlobal('WebSocket', FakeSocket)
+	window.API_URL = 'http://localhost/api/v1'
+	const ws = useWebSocket()
+	ws.connect()
+	const socket = FakeSocket.instances[0]
+	const onTimer = vi.fn()
+	ws.subscribe('timer.created', onTimer)
+	session.current = false
+	socket.onmessage?.(new MessageEvent('message', {data: JSON.stringify({
+		event: 'timer.created',
+		data: {id: 1},
+	})}))
+	expect(onTimer).not.toHaveBeenCalled()
 })
