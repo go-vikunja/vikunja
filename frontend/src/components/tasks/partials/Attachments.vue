@@ -19,6 +19,7 @@
 		<ProgressBar
 			v-if="uploadProgress > 0"
 			:value="uploadProgress * 100"
+			:aria-label="$t('task.attachment.upload')"
 			is-primary
 		/>
 
@@ -186,6 +187,7 @@
 			<iframe
 				v-if="preview?.kind === 'pdf'"
 				:src="preview.blobUrl"
+				:title="preview.name"
 				class="pdf-preview-iframe"
 			/>
 		</Modal>
