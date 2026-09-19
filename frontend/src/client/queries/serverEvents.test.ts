@@ -32,6 +32,6 @@ it('reconciles timer events without inserting into an unrelated filtered list', 
 	await client.getMutationCache().build(client, serverCacheEventMutationOptions()).execute(event)
 	expect(client.getQueryData(timeEntryKeys.active(7))).toEqual(entry)
 	expect(client.getQueryData(timeEntryKeys.list('task_id = 99', 'UTC'))).toEqual([])
-	await client.getMutationCache().build(client, serverCacheEventMutationOptions()).execute({...event, kind: 'timer.deleted'})
+	await client.getMutationCache().build(client, serverCacheEventMutationOptions()).execute({kind: 'timer.deleted', entry})
 	expect(client.getQueryData(timeEntryKeys.active(7))).toBeNull()
 })
