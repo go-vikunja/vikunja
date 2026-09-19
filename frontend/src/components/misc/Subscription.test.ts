@@ -8,7 +8,7 @@ import {createI18n} from 'vue-i18n'
 import Subscription from './Subscription.vue'
 import en from '@/i18n/lang/en.json'
 
-// vue-i18n compiles the imported messages in place, so expectations cannot read them back from `en`.
+// vue-i18n compiles `en` in place, so expected text can't be read back from it.
 const SUBSCRIBED_THROUGH_PROJECT = 'You are subscribed to this task through its project. Unsubscribing here only stops notifications for this task.'
 const SUBSCRIBED_TASK = 'You are currently subscribed to this task and will receive notifications for changes.'
 
