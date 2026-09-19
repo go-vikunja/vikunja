@@ -40,6 +40,10 @@ it('rejects timer entries that do not belong to the current user', () => {
 	expect(parseServerCacheEvent('timer.created', entry, 7)).toBeNull()
 	expect(parseServerCacheEvent('timer.created', entry, undefined)).toBeNull()
 	expect(parseServerCacheEvent('timer.created', {
+		id: 4,
+		task_id: 1,
+	}, undefined)).toBeNull()
+	expect(parseServerCacheEvent('timer.created', {
 		...entry,
 		user_id: 7,
 	}, 7)).not.toBeNull()
