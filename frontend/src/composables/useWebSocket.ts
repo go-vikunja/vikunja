@@ -1,6 +1,7 @@
 import {ref, readonly} from 'vue'
 
 import {getToken} from '@/helpers/auth'
+import {captureClientRequestContext, isClientRequestContextCurrent} from '@/client/requestContext'
 
 type MessageCallback = (msg: WebSocketEvent) => void
 
@@ -128,6 +129,7 @@ function connect() {
 	authenticated.value = false
 	const url = getWebSocketUrl()
 
+	const context = captureClientRequestContext()
 	try {
 		socket = new WebSocket(url)
 	} catch (e) {
@@ -136,16 +138,22 @@ function connect() {
 		return
 	}
 
+	const connection = socket
+	const isCurrent = () => socket === connection && isClientRequestContextCurrent(context)
 	socket.onopen = () => {
+		if (!isCurrent()) return
 		connected.value = true
 		reconnectAttempt = 0
 		console.debug('WebSocket: connected, sending auth')
 		sendAuth()
 	}
 
-	socket.onmessage = handleMessage
+	socket.onmessage = event => {
+		if (isCurrent()) handleMessage(event)
+	}
 
 	socket.onclose = () => {
+		if (socket !== connection) return
 		connected.value = false
 		authenticated.value = false
 		socket = null
