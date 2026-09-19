@@ -157,7 +157,9 @@ const {store: timeFormat} = useTimeFormat()
 const authStore = useAuthStore()
 const currentUserId = computed(() => authStore.authUser ? authStore.info?.id : undefined)
 
-const taskIds = computed(() => [...new Set(props.entries.map(entry => entry.task_id).filter(id => id > 0))])
+const taskIds = computed(() => props.hideLabelColumn
+	? []
+	: [...new Set(props.entries.map(entry => entry.task_id).filter(id => id > 0))])
 
 // Entries carry only a task id; the full task (title, identifier, parent project) is resolved lazily.
 const taskQueries = useQueries({
