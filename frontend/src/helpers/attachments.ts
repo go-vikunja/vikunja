@@ -1,5 +1,5 @@
 import AttachmentModel from '@/models/attachment'
-import type {IAttachment} from '@/modelTypes/IAttachment'
+import type {TaskAttachment as IAttachment} from '@/client/generated'
 
 import AttachmentService, {type PREVIEW_SIZE} from '@/services/attachment'
 
