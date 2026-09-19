@@ -102,6 +102,13 @@ describe('Reactions', () => {
 		expect(users).toEqual([CURRENT_USER])
 	})
 
+	it('marks the reacted-by-current-user button as pressed', () => {
+		const wrapper = mountReactions({'🎉': [CURRENT_USER], '👍': [OTHER_USER]})
+
+		expect(wrapper.findAll('button')[0].attributes('aria-pressed')).toBe('true')
+		expect(wrapper.findAll('button')[1].attributes('aria-pressed')).toBe('false')
+	})
+
 	it('disables reaction buttons natively when the viewer may not write', () => {
 		const wrapper = mountReactions({'🎉': [OTHER_USER]}, true)
 

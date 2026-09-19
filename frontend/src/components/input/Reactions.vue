@@ -137,6 +137,7 @@ async function toggleReaction(value: string | number) {
 			:class="{'current-user-has-reacted': hasCurrentUserReactedWithEmoji(value)}"
 			:disabled="disabled"
 			:aria-disabled="reactionMutation.isPending.value || undefined"
+			:aria-pressed="hasCurrentUserReactedWithEmoji(value)"
 			@click="toggleReaction(value)"
 		>
 			{{ value }} {{ users?.length }}
