@@ -52,10 +52,10 @@
 						</td>
 						<td v-if="!hideLabelColumn">
 							<RouterLink
-								v-if="row.entry.taskId > 0"
-								:to="{ name: 'task.detail', params: { id: row.entry.taskId } }"
+								v-if="row.entry.task_id > 0"
+								:to="{ name: 'task.detail', params: { id: row.entry.task_id } }"
 							>
-								{{ row.taskIdentifier }}{{ row.taskTitle ? ` - ${row.taskTitle}` : '' }}
+								{{ row.task_identifier }}{{ row.taskTitle ? ` - ${row.taskTitle}` : '' }}
 							</RouterLink>
 						</td>
 						<td class="has-text-grey">
@@ -68,7 +68,7 @@
 							{{ row.seconds === null ? '' : formatDuration(row.seconds) }}
 						</td>
 						<td class="nowrap has-text-right">
-							<template v-if="row.entry.userId === currentUserId">
+							<template v-if="row.entry.user_id === currentUserId">
 								<BaseButton
 									v-tooltip="$t('menu.edit')"
 									v-cy="'editTimeEntry'"
@@ -124,7 +124,7 @@ import {formatDate} from '@/helpers/time/formatDate'
 import {useTimeFormat} from '@/composables/useTimeFormat'
 import {TIME_FORMAT} from '@/constants/timeFormat'
 
-import type {ITimeEntry} from '@/modelTypes/ITimeEntry'
+import type {TimeEntry as ITimeEntry} from '@/client/generated'
 import type {TaskResponse} from '@/client/queries/tasks'
 
 const props = withDefaults(defineProps<{
@@ -170,13 +170,13 @@ watch(() => props.entries, entries => {
 }, {immediate: true})
 
 function entrySeconds(entry: ITimeEntry): number {
-	const end = entry.endTime ?? new Date()
-	return Math.floor((end.getTime() - entry.startTime.getTime()) / 1000)
+	const end = entry.end_time ?? new Date()
+	return Math.floor((end.getTime() - entry.start_time.getTime()) / 1000)
 }
 
 const rows = computed(() => props.entries.map(entry => {
-	const task = entry.taskId > 0 ? tasks.value[entry.taskId] : undefined
-	const projectId = task?.project_id ?? (entry.projectId > 0 ? entry.projectId : 0)
+	const task = entry.task_id > 0 ? tasks.value[entry.task_id] : undefined
+	const projectId = task?.project_id ?? (entry.project_id > 0 ? entry.project_id : 0)
 	const project = projectId > 0 ? projectList.projects[projectId] : undefined
 	const ancestors = project ? projectList.getAncestors(project) : []
 
@@ -184,10 +184,10 @@ const rows = computed(() => props.entries.map(entry => {
 		entry,
 		// Full ancestor chain (root → leaf), each link-able.
 		projectChain: ancestors.map(p => ({id: p.id, title: getProjectTitle(p)})),
-		taskIdentifier: task ? (task.identifier || `#${task.index}`) : (entry.taskId > 0 ? `#${entry.taskId}` : ''),
+		taskIdentifier: task ? (task.identifier || `#${task.index}`) : (entry.task_id > 0 ? `#${entry.task_id}` : ''),
 		taskTitle: task?.title ?? '',
 		// A running entry (no end) has no settled duration — leave it blank.
-		seconds: entry.endTime !== null ? entrySeconds(entry) : null,
+		seconds: entry.end_time !== null ? entrySeconds(entry) : null,
 	}
 }))
 
@@ -204,11 +204,11 @@ function formatTime(date: Date): string {
 }
 
 function timeRange(entry: ITimeEntry): string {
-	const start = formatTime(entry.startTime)
-	if (entry.endTime === null) {
+	const start = formatTime(entry.start_time)
+	if (entry.end_time === null) {
 		return `${start} – …`
 	}
-	return `${start} – ${formatTime(entry.endTime)}`
+	return `${start} – ${formatTime(entry.end_time)}`
 }
 </script>
 

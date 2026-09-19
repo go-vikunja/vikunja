@@ -129,7 +129,7 @@ import {useProjects} from '@/composables/useProjects'
 
 import type {ProjectResponse} from '@/client/queries/projects'
 import type {TaskResponse} from '@/client/queries/tasks'
-import type {ITimeEntry} from '@/modelTypes/ITimeEntry'
+import type {TimeEntry as ITimeEntry} from '@/client/generated'
 
 const props = withDefaults(defineProps<{
 	// When set, the entry is locked to this task and the project/task pickers are hidden.
@@ -203,11 +203,11 @@ function smartFill() {
 // Whichever of task / project is set lands on the payload (XOR — enforced by canSubmit).
 function applyTarget(payload: Partial<ITimeEntry>) {
 	if (props.taskId !== undefined) {
-		payload.taskId = props.taskId
+		payload.task_id = props.taskId
 	} else if (selectedTask.value !== null) {
-		payload.taskId = selectedTask.value.id
+		payload.task_id = selectedTask.value.id
 	} else if (selectedProject.value !== null) {
-		payload.projectId = selectedProject.value.id
+		payload.project_id = selectedProject.value.id
 	}
 }
 
@@ -220,7 +220,7 @@ function buildPayload(includeEnd: boolean): Partial<ITimeEntry> {
 	// Saving a manual entry always has an end (an empty "To" means "until now");
 	// only the Start-timer path omits it to create a running timer.
 	if (includeEnd) {
-		payload.endTime = to.value ?? new Date()
+		payload.end_time = to.value ?? new Date()
 	}
 	return payload
 }
@@ -240,24 +240,24 @@ watch(() => props.entry, async entry => {
 		return
 	}
 	comment.value = entry.comment
-	from.value = entry.startTime
-	to.value = entry.endTime
+	from.value = entry.start_time
+	to.value = entry.end_time
 	// Bring the form into view — the edit button may be far down the list.
 	await nextTick()
 	formEl.value?.scrollIntoView({behavior: 'smooth', block: 'center'})
 	if (props.taskId !== undefined) {
 		return
 	}
-	if (entry.taskId > 0) {
+	if (entry.task_id > 0) {
 		selectedProject.value = null
 		try {
-			selectedTask.value = await ensureTask(entry.taskId)
+			selectedTask.value = await ensureTask(entry.task_id)
 		} catch {
 			selectedTask.value = null
 		}
-	} else if (entry.projectId > 0) {
+	} else if (entry.project_id > 0) {
 		selectedTask.value = null
-		selectedProject.value = projectList.projects[entry.projectId] ?? null
+		selectedProject.value = projectList.projects[entry.project_id] ?? null
 	}
 }, {immediate: true})
 
@@ -270,7 +270,7 @@ async function submit(includeEnd: boolean) {
 		const payload = buildPayload(includeEnd)
 		// A started timer begins now (click time), not when the form first loaded.
 		if (!includeEnd) {
-			payload.startTime = new Date()
+			payload.start_time = new Date()
 		}
 		await timeTrackingStore.createEntry(payload)
 		reset()
@@ -290,10 +290,10 @@ async function submitUpdate() {
 		const payload: Partial<ITimeEntry> & {id: number} = {
 			id: entry.id,
 			comment: comment.value,
-			startTime: from.value ?? entry.startTime,
+			startTime: from.value ?? entry.start_time,
 			// A running entry stays running (null); a completed one can't be reopened,
 			// so keep its end if "To" was cleared (the API rejects clearing it).
-			endTime: entry.endTime === null ? to.value : (to.value ?? entry.endTime),
+			endTime: entry.end_time === null ? to.value : (to.value ?? entry.end_time),
 			taskId: 0,
 			projectId: 0,
 		}
