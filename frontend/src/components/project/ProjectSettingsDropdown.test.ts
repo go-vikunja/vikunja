@@ -72,7 +72,7 @@ describe('ProjectSettingsDropdown subscriptions', () => {
 		expect(wrapper.findComponent(SubscriptionStub).props('modelValue')).toMatchObject({
 			id: 7,
 			entity: 'project',
-			entityId: 1,
+			entity_id: 1,
 		})
 	})
 
