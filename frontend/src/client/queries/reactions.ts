@@ -25,10 +25,15 @@ import {
 
 export type ReactionKind = ReactionsCreateData['path']['entitykind']
 export type ReactionUsers = NonNullable<Task['reactions']>
-type ReactionInput = {
-	kind: ReactionKind,
-	taskId?: number,
+export type ReactionTarget = {
+	kind: 'tasks',
 	id: number,
+} | {
+	kind: 'comments',
+	id: number,
+	taskId: number,
+}
+export type ReactionInput = ReactionTarget & {
 	value: string,
 	remove: boolean,
 	user: Pick<User, 'id' | 'name' | 'username'>,
@@ -69,7 +74,7 @@ export function setReactionMutationOptions() {
 				...input,
 				user: data?.user ?? input.user,
 			}
-			if (input.kind === 'comments' && input.taskId) {
+			if (input.kind === 'comments') {
 				mapCommentEverywhere(client, input.taskId, input.id, comment => ({
 					...comment,
 					reactions: changeReaction(comment.reactions, reacted),
@@ -89,7 +94,7 @@ export function setReactionMutationOptions() {
 		},
 		onSettled: (input, client) => Promise.all([
 			invalidateTaskMembership(client, input.kind === 'tasks' ? input.id : input.taskId),
-			...(input.kind === 'comments' && input.taskId
+			...(input.kind === 'comments'
 				? [client.invalidateQueries({queryKey: commentKeys.task(input.taskId)})] : []),
 		]),
 	})

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type {ReactionKind, ReactionUsers} from '@/client/queries/reactions'
+import type {ReactionInput, ReactionUsers} from '@/client/queries/reactions'
 import {VuemojiPicker} from 'vuemoji-picker'
 import {useSetReactionMutation, changeReaction} from '@/client/queries/reactions'
 import BaseButton from '@/components/base/BaseButton.vue'
@@ -11,10 +11,16 @@ import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 import {useAuthStore} from '@/stores/auth'
 import {useColorScheme} from '@/composables/useColorScheme'
 
-const props = withDefaults(defineProps<{
-	entityKind: ReactionKind,
+type ReactionSubject = {
+	entityKind: 'tasks',
+	taskId?: never,
+} | {
+	entityKind: 'comments',
+	taskId: number,
+}
+
+const props = withDefaults(defineProps<ReactionSubject & {
 	entityId: number,
-	taskId?: number,
 	disabled?: boolean,
 }>(), {
 	disabled: false,
@@ -29,18 +35,27 @@ const {isDark} = useColorScheme()
 
 async function setReaction(value: string, remove: boolean) {
 	if (props.disabled || reactionMutation.isPending.value || !authStore.info) return
-	const input = {
-		kind: props.entityKind,
-		taskId: props.taskId,
-		id: props.entityId,
-		value,
-		remove,
-		user: {
-			id: authStore.info.id,
-			name: authStore.info.name,
-			username: authStore.info.username,
-		},
+	const user = {
+		id: authStore.info.id,
+		name: authStore.info.name,
+		username: authStore.info.username,
 	}
+	const input: ReactionInput = props.entityKind === 'comments'
+		? {
+			kind: 'comments',
+			taskId: props.taskId,
+			id: props.entityId,
+			value,
+			remove,
+			user,
+		}
+		: {
+			kind: 'tasks',
+			id: props.entityId,
+			value,
+			remove,
+			user,
+		}
 	try {
 		const data = await reactionMutation.mutateAsync(input)
 		if (props.entityId !== input.id || props.entityKind !== input.kind) return
