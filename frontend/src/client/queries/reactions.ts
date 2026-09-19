@@ -13,7 +13,10 @@ import {
 	invalidateTaskMembership,
 	mapTaskEverywhere,
 } from './taskCache'
-import {commentKeys, type CommentPage} from './comments'
+import {
+	commentKeys,
+	type CommentPage,
+} from './comments'
 import {
 	taskKeys,
 	type TaskExpansion,
@@ -70,12 +73,18 @@ export function setReactionMutationOptions() {
 				client.setQueriesData<CommentPage>({queryKey: commentKeys.task(input.taskId)}, current => current && ({
 					...current,
 					items: current.items.map(comment => comment.id === input.id
-						? {...comment, reactions: changeReaction(comment.reactions, reacted)} : comment),
+						? {
+							...comment,
+							reactions: changeReaction(comment.reactions, reacted),
+						} : comment),
 				}))
 				mapTaskEverywhere(client, input.taskId, task => ({
 					...task,
 					comments: task.comments?.map(comment => comment.id === input.id
-						? {...comment, reactions: changeReaction(comment.reactions, reacted)} : comment),
+						? {
+							...comment,
+							reactions: changeReaction(comment.reactions, reacted),
+						} : comment),
 				}))
 			}
 			if (input.kind === 'tasks') {
