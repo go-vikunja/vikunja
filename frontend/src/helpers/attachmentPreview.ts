@@ -41,4 +41,3 @@ export function previewKind(attachment: IAttachment): PreviewKind | null {
 	}
 	return null
 }
-
