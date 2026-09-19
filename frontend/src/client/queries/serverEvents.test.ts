@@ -107,6 +107,20 @@ it('stales task collections only for a task they hold', async () => {
 	unsubscribe()
 })
 
+it('does not stale task collections for an open task none of them hold', async () => {
+	const client = new QueryClient()
+	const listKey = taskKeys.allList({project: 2})
+	client.setQueryData(listKey, [normalizeTask({id: 5})])
+	client.setQueryData(taskKeys.detail(9), normalizeTask({id: 9}))
+	const event = parseServerCacheEvent('notification.created', {
+		name: 'task.comment',
+		notification: {task: {id: 9}},
+	}, 7)!
+	await client.getMutationCache().build(client, serverCacheEventMutationOptions()).execute(event)
+	expect(client.getQueryState(listKey)?.isInvalidated).toBe(false)
+	expect(client.getQueryState(taskKeys.detail(9))?.isInvalidated).toBe(true)
+})
+
 it('reconciles timer events without inserting into an unrelated filtered list', async () => {
 	const client = new QueryClient()
 	const entry = normalizeTimeEntry({

@@ -1,6 +1,7 @@
 import {
 	useMutation,
 	type QueryClient,
+	type QueryKey,
 } from '@tanstack/vue-query'
 import type {TimeEntry} from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
@@ -59,13 +60,15 @@ export function parseServerCacheEvent(
 	return null
 }
 
-// A task held by no cached collection can't have changed any of them, so nothing is staled for it.
+const isTaskDetailKey = (key: QueryKey) => taskKeys.details.every((part, index) => key[index] === part)
+
+// Only collections that already hold the task can have gone stale; its own detail key is invalidated anyway.
 async function invalidateCachedTask(client: QueryClient, taskId: number | undefined): Promise<void> {
 	if (!taskId) return
-	const held = taskQueryKeys(client, taskId).length > 0
+	const heldByCollection = taskQueryKeys(client, taskId).some(key => !isTaskDetailKey(key))
 	await Promise.all([
 		client.invalidateQueries({queryKey: taskKeys.detail(taskId)}),
-		...(held ? [invalidateTaskMembership(client)] : []),
+		...(heldByCollection ? [invalidateTaskMembership(client)] : []),
 	])
 }
 
