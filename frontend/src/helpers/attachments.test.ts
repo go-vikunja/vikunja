@@ -1,7 +1,6 @@
 import {describe, it, expect, beforeEach, vi} from 'vitest'
 
 import {attachmentBlobUrl, fetchAttachmentBlobUrl, uploadFilesForEditor} from './attachments'
-import {PREVIEW_SIZE} from '@/helpers/attachments'
 import {queryClient} from '@/client/queryClient'
 import {attachmentKeys} from '@/client/queries/attachments'
 
@@ -74,9 +73,9 @@ describe('fetchAttachmentBlobUrl', () => {
 			.mockResolvedValueOnce({data: Object.assign(new Blob(['bytes']), {testUrl: 'blob:lg'})})
 
 		expect(await fetchAttachmentBlobUrl(attachment)).toBe('blob:original')
-		expect(await fetchAttachmentBlobUrl(attachment, PREVIEW_SIZE.MD)).toBe('blob:md')
-		expect(await fetchAttachmentBlobUrl(attachment, PREVIEW_SIZE.LG)).toBe('blob:lg')
-		expect(await fetchAttachmentBlobUrl(attachment, PREVIEW_SIZE.MD)).toBe('blob:md')
+		expect(await fetchAttachmentBlobUrl(attachment, 'md')).toBe('blob:md')
+		expect(await fetchAttachmentBlobUrl(attachment, 'lg')).toBe('blob:lg')
+		expect(await fetchAttachmentBlobUrl(attachment, 'md')).toBe('blob:md')
 
 		expect(getBlobUrl).toHaveBeenCalledTimes(3)
 	})

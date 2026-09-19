@@ -53,7 +53,6 @@
 
 <script setup lang="ts">
 import {computed, ref, watch} from 'vue'
-import {PREVIEW_SIZE} from '@/helpers/attachments'
 import {fetchAttachmentBlobUrl} from '@/helpers/attachments'
 import type {TaskAttachment as IAttachment} from '@/client/generated'
 import type {AttachmentIdentity} from '@/client/queries/attachments'
@@ -94,7 +93,7 @@ watch(
 		}
 
 		try {
-			const url = await fetchAttachmentBlobUrl(identity, PREVIEW_SIZE.MD)
+			const url = await fetchAttachmentBlobUrl(identity, 'md')
 			// a newer attachment may have won the race while this one was in flight
 			if (active) blobUrl.value = url
 		} catch {

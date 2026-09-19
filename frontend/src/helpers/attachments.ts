@@ -5,13 +5,6 @@ import {attachmentBlob, attachmentKeys, uploadAttachmentsMutationOptions, type A
 import {captureClientRequestContext, assertClientRequestContext} from '@/client/requestContext'
 import {downloadBlob} from '@/helpers/downloadBlob'
 
-export enum PREVIEW_SIZE {
-	SM = 'sm',
-	MD = 'md',
-	LG = 'lg',
-	XL = 'xl',
-}
-
 const isAttachmentBlobKey = (queryKey: QueryKey) =>
 	attachmentKeys.blobs.every((segment, index) => queryKey[index] === segment)
 
