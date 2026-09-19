@@ -52,10 +52,11 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref, watchEffect} from 'vue'
+import {computed, ref, watch} from 'vue'
 import {PREVIEW_SIZE} from '@/helpers/attachments'
-import {attachmentBlobUrl} from '@/helpers/attachments'
+import {fetchAttachmentBlobUrl} from '@/helpers/attachments'
 import type {TaskAttachment as IAttachment} from '@/client/generated'
+import type {AttachmentIdentity} from '@/client/queries/attachments'
 import {canPreviewAudio, canPreviewImage, canPreviewPdf, canPreviewVideo} from '@/helpers/attachmentPreview'
 
 const props = defineProps<{
@@ -67,32 +68,41 @@ const isPdf = computed(() => props.modelValue && canPreviewPdf(props.modelValue)
 const isAudio = computed(() => props.modelValue && canPreviewAudio(props.modelValue))
 const isVideo = computed(() => props.modelValue && canPreviewVideo(props.modelValue))
 
-watchEffect(async onCleanup => {
-	let active = true
-	let ownedUrl: string | undefined
-	blobUrl.value = undefined
-	onCleanup(() => {
-		active = false
-		if (ownedUrl) URL.revokeObjectURL(ownedUrl)
-	})
+const previewIdentity = computed<AttachmentIdentity | null>(() => {
 	const attachment = props.modelValue
-	if (!attachment || !canPreviewImage(attachment)) {
-		return
+	if (!attachment?.id || !attachment.task_id || !canPreviewImage(attachment)) {
+		return null
 	}
-
-	try {
-		const url = await attachmentBlobUrl({id: attachment.id!, task_id: attachment.task_id!}, PREVIEW_SIZE.MD)
-		// a newer attachment may have won the race while this one was in flight
-		if (active) {
-			ownedUrl = url
-			blobUrl.value = url
-		} else {
-			URL.revokeObjectURL(url)
-		}
-	} catch {
-		// fall back to the generic file icon
+	return {
+		id: attachment.id,
+		task_id: attachment.task_id,
 	}
 })
+
+// Keyed on the ids, not the prop object: a list refetch hands over an equal attachment as a new object.
+watch(
+	() => previewIdentity.value && `${previewIdentity.value.task_id}-${previewIdentity.value.id}`,
+	async (_key, _previous, onCleanup) => {
+		const identity = previewIdentity.value
+		let active = true
+		onCleanup(() => {
+			active = false
+		})
+		blobUrl.value = undefined
+		if (identity === null) {
+			return
+		}
+
+		try {
+			const url = await fetchAttachmentBlobUrl(identity, PREVIEW_SIZE.MD)
+			// a newer attachment may have won the race while this one was in flight
+			if (active) blobUrl.value = url
+		} catch {
+			// fall back to the generic file icon
+		}
+	},
+	{immediate: true},
+)
 </script>
 
 <style scoped lang="scss">
