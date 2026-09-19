@@ -34,7 +34,8 @@ export function setTaskSubscriptionMutationOptions() {
 		},
 		onSettled: ({taskId}, client) => invalidateTaskMembership(client, taskId, 'active'),
 		successMessage: (_data, {subscribed}) => i18n.global.t(subscribed
-			? 'task.subscription.subscribeSuccessTask' : 'task.subscription.unsubscribeSuccessTask'),
+			? 'task.subscription.subscribeSuccessTask'
+			: 'task.subscription.unsubscribeSuccessTask'),
 	})
 }
 
