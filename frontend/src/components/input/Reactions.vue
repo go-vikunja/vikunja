@@ -36,13 +36,18 @@ async function setReaction(value: string, remove: boolean) {
 		user: {id: authStore.info.id, name: authStore.info.name, username: authStore.info.username},
 	}
 	try {
-		await reactionMutation.mutateAsync(input)
+		const data = await reactionMutation.mutateAsync(input)
+		if (props.entityId !== input.id || props.entityKind !== input.kind) return
+		showEmojiPicker.value = false
+		// Task reactions live in the task cache, a local copy would race it.
+		if (props.entityKind === 'tasks') return
+		model.value = changeReaction(model.value, {
+			...input,
+			user: data?.user ?? input.user,
+		})
 	} catch {
 		return
 	}
-	if (props.entityId !== input.id || props.entityKind !== input.kind) return
-	showEmojiPicker.value = false
-	model.value = changeReaction(model.value, input)
 }
 
 function addReaction(value: string) {

@@ -5,6 +5,7 @@ import {createI18n} from 'vue-i18n'
 import {QueryClient, VueQueryPlugin} from '@tanstack/vue-query'
 
 import {reactionsCreate} from '@/client/generated'
+import type {ReactionKind} from '@/client/queries/reactions'
 import Reactions from './Reactions.vue'
 import en from '@/i18n/lang/en.json'
 
@@ -16,6 +17,12 @@ const CURRENT_USER = {
 const OTHER_USER = {
 	id: 2,
 	username: 'other',
+}
+
+const SERVER_USER = {
+	id: 1,
+	username: 'current',
+	name: 'Server Authored',
 }
 
 vi.mock('@/stores/auth', () => ({
@@ -41,11 +48,15 @@ vi.mock('vuemoji-picker', () => ({
 
 const i18n = createI18n({legacy: false, locale: 'en', messages: {en}})
 
-function mountReactions(modelValue: Record<string, typeof CURRENT_USER[]>, disabled = false) {
+function mountReactions(
+	modelValue: Record<string, typeof CURRENT_USER[]>,
+	disabled = false,
+	entityKind: ReactionKind = 'tasks',
+) {
 	const queryClient = new QueryClient()
 	return mount(Reactions, {
 		props: {
-			entityKind: 'tasks' as const,
+			entityKind,
 			entityId: 1,
 			modelValue,
 			disabled,
@@ -62,6 +73,12 @@ function mountReactions(modelValue: Record<string, typeof CURRENT_USER[]>, disab
 	})
 }
 
+function mockReactionCreate(data: unknown) {
+	vi.mocked(reactionsCreate).mockReturnValueOnce(
+		Promise.resolve({data}) as ReturnType<typeof reactionsCreate>,
+	)
+}
+
 function deferReactionCreate() {
 	let resolveCreate: (value: unknown) => void = () => {}
 	const pending = new Promise<unknown>(resolve => {
@@ -72,25 +89,36 @@ function deferReactionCreate() {
 }
 
 describe('Reactions', () => {
-	it('emits a new object when adding a reaction', async () => {
+	it('emits a new object with the server user when adding a comment reaction', async () => {
+		mockReactionCreate({user: SERVER_USER})
 		const modelValue = {'🎉': [OTHER_USER]}
-		const wrapper = mountReactions(modelValue)
+		const wrapper = mountReactions(modelValue, false, 'comments')
 
 		await wrapper.findAll('button')[0].trigger('click')
 		await flushPromises()
 
 		const emitted = wrapper.emitted('update:modelValue')
 		expect(emitted).toHaveLength(1)
-		expect(emitted![0][0]).toEqual({'🎉': [OTHER_USER, CURRENT_USER]})
+		expect(emitted![0][0]).toEqual({'🎉': [OTHER_USER, SERVER_USER]})
 		expect(emitted![0][0]).not.toBe(modelValue)
 		expect(modelValue).toEqual({'🎉': [OTHER_USER]})
 		expect(modelValue['🎉']).toHaveLength(1)
 	})
 
-	it('emits a new object without the emoji when removing the last reaction', async () => {
+	it('emits nothing for a task reaction because the task cache holds it', async () => {
+		mockReactionCreate({user: SERVER_USER})
+		const wrapper = mountReactions({'🎉': [OTHER_USER]})
+
+		await wrapper.findAll('button')[0].trigger('click')
+		await flushPromises()
+
+		expect(wrapper.emitted('update:modelValue')).toBeUndefined()
+	})
+
+	it('emits a new object without the emoji when removing the last comment reaction', async () => {
 		const users = [CURRENT_USER]
 		const modelValue = {'🎉': users}
-		const wrapper = mountReactions(modelValue)
+		const wrapper = mountReactions(modelValue, false, 'comments')
 
 		await wrapper.findAll('button')[0].trigger('click')
 		await flushPromises()
@@ -135,7 +163,7 @@ describe('Reactions', () => {
 
 	it('ignores a response that resolves after the entity changed', async () => {
 		const resolveCreate = deferReactionCreate()
-		const wrapper = mountReactions({'🎉': [OTHER_USER]})
+		const wrapper = mountReactions({'🎉': [OTHER_USER]}, false, 'comments')
 
 		await wrapper.findAll('button')[1].trigger('click')
 		await nextTick()
