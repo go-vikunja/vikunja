@@ -24,13 +24,13 @@ import {useI18n} from 'vue-i18n'
 
 import DropdownItem from '@/components/misc/DropdownItem.vue'
 
-import type {Subscription as ISubscription} from '@/client/generated'
+import type {Subscription} from '@/client/generated'
 
 import type { IconProp } from '@fortawesome/fontawesome-svg-core'
 
 const props = withDefaults(defineProps<{
-	modelValue: ISubscription | null,
-	entity: ISubscription['entity'],
+	modelValue: Subscription | null,
+	entity: NonNullable<Subscription['entity']>,
 	entityId: number,
 	type?: 'button' | 'dropdown',
 }>(), {
@@ -53,18 +53,15 @@ const tooltipText = computed(() => {
 			: t('task.subscription.subscribedProjectThroughParentProject')
 	}
 
-	switch (props.entity) {
-		case 'project':
-			return props.modelValue !== null ?
-				t('task.subscription.subscribedProject') :
-				t('task.subscription.notSubscribedProject')
-		case 'task':
-			return props.modelValue !== null ?
-				t('task.subscription.subscribedTask') :
-				t('task.subscription.notSubscribedTask')
+	if (props.entity === 'task') {
+		return props.modelValue !== null
+			? t('task.subscription.subscribedTask')
+			: t('task.subscription.notSubscribedTask')
 	}
 
-	return ''
+	return props.modelValue !== null
+		? t('task.subscription.subscribedProject')
+		: t('task.subscription.notSubscribedProject')
 })
 
 const buttonText = computed(() => props.modelValue ? t('task.subscription.unsubscribe') : t('task.subscription.subscribe'))
