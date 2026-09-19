@@ -224,7 +224,7 @@ it('leaves the entry count alone when an update keeps the same task', async () =
 		id: 1,
 		title: 'same',
 		project_id: 1,
-		time_entries_count: 2,
+		time_entries_count: 0,
 	}))
 	sdk.timeEntriesUpdate.mockResolvedValue({data: {
 		...running,
@@ -236,7 +236,8 @@ it('leaves the entry count alone when an update keeps the same task', async () =
 		previousTaskId: 1,
 		start_time: running.start_time,
 	})
-	expect(client.getQueryData<TaskResponse>(taskKeys.detail(1))?.time_entries_count).toBe(2)
+	// Math.max(0, …) clamp makes an unguarded -1/+1 net to +1 from a 0 seed, unlike the 2 -> 1 -> 2 no-op a nonzero seed would hide.
+	expect(client.getQueryData<TaskResponse>(taskKeys.detail(1))?.time_entries_count).toBe(0)
 })
 
 it('keeps the active timer cached when a still-running entry is updated', async () => {
