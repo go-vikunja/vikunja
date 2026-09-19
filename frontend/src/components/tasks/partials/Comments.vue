@@ -271,7 +271,7 @@ const totalPages = computed(() => commentQuery.data.value?.total_pages ?? 0)
 const createMutation = useCreateCommentMutation()
 const updateMutation = useUpdateCommentMutation()
 const deleteMutation = useDeleteCommentMutation()
-const listPending = computed(() => commentQuery.isPending.value)
+const listPending = computed(() => commentQuery.isLoading.value)
 const loading = computed(() => createMutation.isPending.value || updateMutation.isPending.value)
 const commentDrafts = ref<Record<number, string>>({})
 
