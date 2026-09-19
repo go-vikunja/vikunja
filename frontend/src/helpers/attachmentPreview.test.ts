@@ -1,7 +1,7 @@
 import {describe, it, expect} from 'vitest'
 
-import {canPreviewAudio, canPreviewImage, canPreviewPdf, canPreviewVideo, previewKind} from './attachment'
-import type {IAttachment} from '@/modelTypes/IAttachment'
+import {canPreviewAudio, canPreviewImage, canPreviewPdf, canPreviewVideo, previewKind} from './attachmentPreview'
+import type {TaskAttachment as IAttachment} from '@/client/generated'
 
 function attachment(name: string, mime: string): IAttachment {
 	return {file: {name, mime}} as unknown as IAttachment

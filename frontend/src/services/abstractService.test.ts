@@ -2,12 +2,10 @@ import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest'
 import {AxiosError} from 'axios'
 import type {AxiosInstance, AxiosRequestConfig} from 'axios'
 
-import AttachmentService from './attachment'
 import AbstractService from './abstractService'
 import AbstractModel from '@/models/abstractModel'
 
 import {removeToken, refreshToken, saveToken} from '@/helpers/auth'
-import type {IAttachment} from '@/modelTypes/IAttachment'
 class TestModel extends AbstractModel {
  id = 0
  projectId = 0
@@ -28,7 +26,7 @@ vi.mock('@/helpers/auth', async (importActual) => ({
 }))
 
 function serviceWithBlobResponse(blob: Blob) {
-	const service = new AttachmentService()
+	const service = new TestService()
 	service.http = vi.fn().mockResolvedValue({data: blob}) as unknown as typeof service.http
 	return service
 }
@@ -44,7 +42,7 @@ describe('getBlobUrl', () => {
 		const service = serviceWithBlobResponse(new Blob(['%PDF-1.4'], {type: 'application/pdf'}))
 		const createObjectURL = vi.spyOn(window.URL, 'createObjectURL').mockReturnValue('blob:mock')
 
-		const url = await service.getBlobUrl({taskId: 1, id: 1} as IAttachment)
+		const url = await service.getBlobUrl('/tasks/1/attachments/1')
 
 		expect(url).toBe('blob:mock')
 		const blob = createObjectURL.mock.calls[0][0] as Blob
@@ -54,16 +52,16 @@ describe('getBlobUrl', () => {
 
 	it('rejects when the response has no body', async () => {
 		// Firefox resolves with null instead of an empty blob for an empty response
-		const service = new AttachmentService()
+		const service = new TestService()
 		service.http = vi.fn().mockResolvedValue({data: null}) as unknown as typeof service.http
 
-		await expect(service.getBlobUrl({taskId: 1, id: 4} as IAttachment)).rejects.toThrow(/blob/)
+		await expect(service.getBlobUrl('/tasks/1/attachments/4')).rejects.toThrow(/blob/)
 	})
 
 	it('converts svg blobs to data urls', async () => {
 		const service = serviceWithBlobResponse(new Blob(['<svg xmlns="http://www.w3.org/2000/svg"/>'], {type: 'image/svg+xml'}))
 
-		const url = await service.getBlobUrl({taskId: 1, id: 2} as IAttachment)
+		const url = await service.getBlobUrl('/tasks/1/attachments/2')
 
 		expect(url).toMatch(/^data:image\/svg\+xml/)
 	})
@@ -73,7 +71,7 @@ describe('getBlobUrl', () => {
 		vi.spyOn(window.URL, 'createObjectURL').mockReturnValue('blob:mock')
 		vi.stubGlobal('FileReader', undefined)
 
-		const url = await service.getBlobUrl({taskId: 1, id: 3} as IAttachment)
+		const url = await service.getBlobUrl('/tasks/1/attachments/3')
 
 		expect(url).toBe('blob:mock')
 	})
@@ -88,7 +86,7 @@ describe('getBlobUrl', () => {
 			}
 		})
 
-		const url = await service.getBlobUrl({taskId: 1, id: 4} as IAttachment)
+		const url = await service.getBlobUrl('/tasks/1/attachments/4')
 
 		expect(url).toBe('blob:mock')
 	})

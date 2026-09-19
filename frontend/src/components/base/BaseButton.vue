@@ -123,7 +123,8 @@ defineExpose({
 		outline: transparent;
 	}
 
-	&[disabled] {
+	&[disabled],
+	&[aria-disabled='true'] {
 		cursor: default;
 	}
 }

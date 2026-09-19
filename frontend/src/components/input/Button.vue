@@ -124,7 +124,8 @@ const variantClass = computed<string>(() => VARIANT_CLASS_MAP[props.variant])
 		box-shadow: var(--shadow-xs) !important;
 	}
 
-	&[disabled] {
+	&[disabled],
+	&[aria-disabled='true'] {
 		opacity: 0.5;
 		cursor: not-allowed;
 		pointer-events: none;

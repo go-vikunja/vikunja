@@ -33,7 +33,7 @@ import {common, createLowlight} from 'lowlight'
 
 import type {UploadCallback} from './types'
 import type {Task as ITask} from '@/client/generated'
-import type {IAttachment} from '@/modelTypes/IAttachment'
+import type {TaskAttachment as IAttachment} from '@/client/generated'
 import {fetchAttachmentBlobUrl} from '@/helpers/attachments'
 
 type ImageNodeKey = `${ITask['id']}-${IAttachment['id']}`
@@ -143,7 +143,7 @@ export function createEditorExtensions(deps: EditorExtensionDeps): Extensions {
 					if (!img || !(img instanceof HTMLImageElement)) return
 
 					try {
-						img.src = await fetchAttachmentBlobUrl({taskId, id: attachmentId})
+						img.src = await fetchAttachmentBlobUrl({task_id: taskId, id: attachmentId})
 					} catch {
 						// leave the placeholder src in place
 					}

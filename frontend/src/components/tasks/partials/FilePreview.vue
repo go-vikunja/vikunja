@@ -52,11 +52,11 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref, watchEffect} from 'vue'
-import {PREVIEW_SIZE} from '@/services/attachment'
+import {computed, ref, watch} from 'vue'
 import {fetchAttachmentBlobUrl} from '@/helpers/attachments'
-import type {IAttachment} from '@/modelTypes/IAttachment'
-import {canPreviewAudio, canPreviewImage, canPreviewPdf, canPreviewVideo} from '@/models/attachment'
+import type {TaskAttachment as IAttachment} from '@/client/generated'
+import type {AttachmentIdentity} from '@/client/queries/attachments'
+import {canPreviewAudio, canPreviewImage, canPreviewPdf, canPreviewVideo} from '@/helpers/attachmentPreview'
 
 const props = defineProps<{
 	modelValue?: IAttachment
@@ -67,22 +67,34 @@ const isPdf = computed(() => props.modelValue && canPreviewPdf(props.modelValue)
 const isAudio = computed(() => props.modelValue && canPreviewAudio(props.modelValue))
 const isVideo = computed(() => props.modelValue && canPreviewVideo(props.modelValue))
 
-watchEffect(async () => {
-	const attachment = props.modelValue
-	if (!attachment || !canPreviewImage(attachment)) {
-		return
-	}
+function isPreviewable(attachment?: IAttachment): attachment is IAttachment & AttachmentIdentity {
+	return Boolean(attachment?.id && attachment.task_id && canPreviewImage(attachment))
+}
 
-	try {
-		const url = await fetchAttachmentBlobUrl(attachment, PREVIEW_SIZE.MD)
-		// a newer attachment may have won the race while this one was in flight
-		if (props.modelValue === attachment) {
-			blobUrl.value = url
+// Keyed on the ids, not the prop object: a list refetch hands over an equal attachment as a new object.
+watch(
+	() => isPreviewable(props.modelValue) ? `${props.modelValue.task_id}-${props.modelValue.id}` : null,
+	async (key, _previous, onCleanup) => {
+		blobUrl.value = undefined
+		const attachment = props.modelValue
+		if (key === null || !isPreviewable(attachment)) {
+			return
 		}
-	} catch {
-		// fall back to the generic file icon
-	}
-})
+
+		let stale = false
+		onCleanup(() => {
+			stale = true
+		})
+
+		try {
+			const url = await fetchAttachmentBlobUrl(attachment, 'md')
+			if (!stale) blobUrl.value = url
+		} catch {
+			// keep the generic file icon
+		}
+	},
+	{immediate: true},
+)
 </script>
 
 <style scoped lang="scss">
