@@ -104,7 +104,7 @@
 					:loading="isSaving"
 					@click="startTimer"
 				>
-					{{ $t('timeTracking.form.start_timer') }}
+					{{ $t('timeTracking.form.startTimer') }}
 				</XButton>
 			</template>
 		</div>
