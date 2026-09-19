@@ -28,7 +28,7 @@ let reconnectTimer: ReturnType<typeof setTimeout> | null = null
 const subscriptions = new Map<string, Set<MessageCallback>>()
 const connected = ref(false)
 const authenticated = ref(false)
-const hasLostConnection = ref(false)
+const mayHaveMissedEvents = ref(false)
 let manuallyDisconnected = false
 
 function getWebSocketUrl(): string {
@@ -62,7 +62,7 @@ function closeSocket() {
 	socketContext = null
 	connected.value = false
 	authenticated.value = false
-	hasLostConnection.value = false
+	mayHaveMissedEvents.value = false
 	if (reconnectTimer) {
 		clearTimeout(reconnectTimer)
 		reconnectTimer = null
@@ -110,7 +110,7 @@ function scheduleReconnect() {
 	if (manuallyDisconnected) {
 		return
 	}
-	hasLostConnection.value = true
+	mayHaveMissedEvents.value = true
 
 	if (reconnectTimer) {
 		clearTimeout(reconnectTimer)
@@ -259,6 +259,6 @@ export function useWebSocket() {
 		subscribe,
 		connected: readonly(connected),
 		authenticated: readonly(authenticated),
-		hasLostConnection: readonly(hasLostConnection),
+		mayHaveMissedEvents: readonly(mayHaveMissedEvents),
 	}
 }

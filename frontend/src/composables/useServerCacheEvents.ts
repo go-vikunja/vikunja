@@ -24,7 +24,7 @@ export function useServerCacheEvents() {
 	let hasAuthenticated = socket.authenticated.value
 	watch(socket.authenticated, authenticated => {
 		if (!authenticated) return
-		if (hasAuthenticated || socket.hasLostConnection.value) mutation.mutate({kind: 'reconnect'})
+		if (hasAuthenticated || socket.mayHaveMissedEvents.value) mutation.mutate({kind: 'reconnect'})
 		hasAuthenticated = true
 	})
 	onScopeDispose(() => unsubscribers.forEach(unsubscribe => unsubscribe()))

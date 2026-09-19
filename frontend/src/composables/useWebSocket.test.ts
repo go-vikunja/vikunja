@@ -169,6 +169,23 @@ it('closes a socket whose session changed without waiting for a frame, keeping s
 	}))
 })
 
+it('flags possibly missed events only while a dropped connection is pending a reconnect', () => {
+	vi.useFakeTimers()
+	vi.stubGlobal('WebSocket', FakeSocket)
+	window.API_URL = 'http://localhost/api/v1'
+	const ws = useWebSocket()
+	ws.connect()
+	const socket = FakeSocket.instances[0]
+	socket.onopen?.()
+	expect(ws.mayHaveMissedEvents.value).toBe(false)
+
+	socket.onclose?.()
+	expect(ws.mayHaveMissedEvents.value).toBe(true)
+
+	ws.disconnect()
+	expect(ws.mayHaveMissedEvents.value).toBe(false)
+})
+
 it('leaves a current or absent connection alone', () => {
 	vi.stubGlobal('WebSocket', FakeSocket)
 	window.API_URL = 'http://localhost/api/v1'

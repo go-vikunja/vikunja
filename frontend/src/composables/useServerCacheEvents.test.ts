@@ -29,7 +29,7 @@ const USER_ID = 7
 
 const ws = vi.hoisted(() => ({
 	authenticated: undefined as unknown as Ref<boolean>,
-	hasLostConnection: undefined as unknown as Ref<boolean>,
+	mayHaveMissedEvents: undefined as unknown as Ref<boolean>,
 	handlers: new Map<string, (message: {data: unknown}) => void>(),
 	unsubscribed: [] as string[],
 }))
@@ -37,7 +37,7 @@ const ws = vi.hoisted(() => ({
 vi.mock('./useWebSocket', () => ({
 	useWebSocket: () => ({
 		authenticated: ws.authenticated,
-		hasLostConnection: ws.hasLostConnection,
+		mayHaveMissedEvents: ws.mayHaveMissedEvents,
 		subscribe: (event: string, callback: (message: {data: unknown}) => void) => {
 			ws.handlers.set(event, callback)
 			return () => ws.unsubscribed.push(event)
@@ -56,7 +56,7 @@ let client: QueryClient
 
 beforeEach(() => {
 	ws.authenticated = ref(false)
-	ws.hasLostConnection = ref(false)
+	ws.mayHaveMissedEvents = ref(false)
 	ws.handlers.clear()
 	ws.unsubscribed = []
 	client = new QueryClient()
@@ -126,7 +126,7 @@ it('sweeps on a first authentication that followed a failed connection attempt',
 	client.setQueryData(commentKey, {items: []})
 	mountEvents()
 
-	ws.hasLostConnection.value = true
+	ws.mayHaveMissedEvents.value = true
 	ws.authenticated.value = true
 	await flushPromises()
 
