@@ -103,6 +103,7 @@ it('passes browse filters and timezone to the generated client and concatenates 
 it('patches a stop in loaded lists without inserting into unrelated filters', async () => {
 	const list = timeEntryKeys.list('task_id = 1', 'UTC')
 	const unrelated = timeEntryKeys.list('task_id = 2', 'UTC')
+	const taskList = taskKeys.list({project: 1})
 	client.setQueryData(list, [normalizeTimeEntry(running)])
 	client.setQueryData(unrelated, [normalizeTimeEntry({
 		...running,
@@ -110,6 +111,7 @@ it('patches a stop in loaded lists without inserting into unrelated filters', as
 		task_id: 2,
 	})])
 	client.setQueryData(timeEntryKeys.active(7), normalizeTimeEntry(running))
+	client.setQueryData(taskList, {items: [], total: 0, total_pages: 0})
 	sdk.timeEntriesTimerStop.mockResolvedValue({data: {
 		...running,
 		end_time: '2026-09-19T10:00:00Z',
@@ -121,6 +123,8 @@ it('patches a stop in loaded lists without inserting into unrelated filters', as
 		end_time: '2026-09-19T10:00:00Z',
 	}])
 	expect(client.getQueryData(unrelated)).toMatchObject([{id: 5}])
+	expect(client.getQueryState(taskList)?.isInvalidated).toBe(false)
+	expect(client.getQueryState(list)?.isInvalidated).toBe(true)
 })
 
 it('deletes the matching active timer without affecting another user', async () => {

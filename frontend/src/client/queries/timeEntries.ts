@@ -160,7 +160,8 @@ export function stopTimerMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async () => (await timeEntriesTimerStop()).data,
 		onSuccess: (entry, _input, client) => patchTimeEntry(client, entry),
-		onSettled: (_input, client) => settle(client),
+		// Stopping changes no task-derived data (the entry was already counted at create); settle() would also mark every task list/board stale.
+		onSettled: (_input, client) => client.invalidateQueries({queryKey: timeEntryKeys.all}),
 	})
 }
 
