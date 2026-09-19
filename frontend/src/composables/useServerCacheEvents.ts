@@ -20,8 +20,12 @@ export function useServerCacheEvents() {
 			mutation.mutate(update)
 		}),
 	)
+	// Only a re-authentication after a drop can have missed events; the first one follows the initial fetches.
+	let hasAuthenticated = socket.authenticated.value
 	watch(socket.authenticated, authenticated => {
-		if (authenticated) mutation.mutate({kind: 'reconnect'})
-	}, {immediate: true})
+		if (!authenticated) return
+		if (hasAuthenticated) mutation.mutate({kind: 'reconnect'})
+		hasAuthenticated = true
+	})
 	onScopeDispose(() => unsubscribers.forEach(unsubscribe => unsubscribe()))
 }
