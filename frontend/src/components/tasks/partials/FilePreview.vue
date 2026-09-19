@@ -67,36 +67,30 @@ const isPdf = computed(() => props.modelValue && canPreviewPdf(props.modelValue)
 const isAudio = computed(() => props.modelValue && canPreviewAudio(props.modelValue))
 const isVideo = computed(() => props.modelValue && canPreviewVideo(props.modelValue))
 
-const previewIdentity = computed<AttachmentIdentity | null>(() => {
-	const attachment = props.modelValue
-	if (!attachment?.id || !attachment.task_id || !canPreviewImage(attachment)) {
-		return null
-	}
-	return {
-		id: attachment.id,
-		task_id: attachment.task_id,
-	}
-})
+function isPreviewable(attachment?: IAttachment): attachment is IAttachment & AttachmentIdentity {
+	return Boolean(attachment?.id && attachment.task_id && canPreviewImage(attachment))
+}
 
 // Keyed on the ids, not the prop object: a list refetch hands over an equal attachment as a new object.
 watch(
-	() => previewIdentity.value && `${previewIdentity.value.task_id}-${previewIdentity.value.id}`,
-	async (_key, _previous, onCleanup) => {
-		const identity = previewIdentity.value
-		let active = true
-		onCleanup(() => {
-			active = false
-		})
+	() => isPreviewable(props.modelValue) ? `${props.modelValue.task_id}-${props.modelValue.id}` : null,
+	async (key, _previous, onCleanup) => {
 		blobUrl.value = undefined
-		if (identity === null) {
+		const attachment = props.modelValue
+		if (key === null || !isPreviewable(attachment)) {
 			return
 		}
 
+		let stale = false
+		onCleanup(() => {
+			stale = true
+		})
+
 		try {
-			const url = await fetchAttachmentBlobUrl(identity, 'md')
-			if (active) blobUrl.value = url
+			const url = await fetchAttachmentBlobUrl(attachment, 'md')
+			if (!stale) blobUrl.value = url
 		} catch {
-			// noop
+			// keep the generic file icon
 		}
 	},
 	{immediate: true},
