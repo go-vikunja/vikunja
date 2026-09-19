@@ -1,4 +1,9 @@
-import {describe, it, expect, beforeEach, vi} from 'vitest'
+import {
+	describe,
+	expect,
+	it,
+	vi,
+} from 'vitest'
 import {shallowMount} from '@vue/test-utils'
 import {createPinia, setActivePinia} from 'pinia'
 import {QueryClient, VueQueryPlugin} from '@tanstack/vue-query'
@@ -8,12 +13,18 @@ import {useAuthStore} from '@/stores/auth'
 import {AUTH_TYPES, type AuthType, type IUser} from '@/modelTypes/IUser'
 
 const sdk = vi.hoisted(() => ({
-	projectsList: vi.fn(async () => ({data: {items: [], total_pages: 1}})),
+	projectsList: vi.fn(async () => ({data: {
+		items: [],
+		total_pages: 1,
+	}})),
 	tasksRead: vi.fn(async () => ({data: {}})),
 }))
 
 vi.mock('@/client/generated', () => sdk)
-vi.mock('@/message', () => ({error: vi.fn(), success: vi.fn()}))
+vi.mock('@/message', () => ({
+	error: vi.fn(),
+	success: vi.fn(),
+}))
 
 import TimeEntryList from './TimeEntryList.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
@@ -53,10 +64,6 @@ function mountList(
 }
 
 describe('TimeEntryList', () => {
-	beforeEach(() => {
-		setActivePinia(createPinia())
-	})
-
 	it('renders no NaN for an entry with an unusable start time', () => {
 		const wrapper = mountList([{
 			id: 1,

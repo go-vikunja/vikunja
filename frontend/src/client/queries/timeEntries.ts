@@ -126,7 +126,6 @@ export function createTimeEntryMutationOptions() {
 }
 
 export type UpdateTimeEntryInput = TimeEntryWritable & Required<Pick<TimeEntry, 'id'>> & {
-	// The task the entry was booked on before this edit, so a move can correct both task counts.
 	previousTaskId?: number
 }
 
@@ -182,7 +181,18 @@ export function deleteTimeEntryMutationOptions() {
 	})
 }
 
-export function useCreateTimeEntryMutation() { return useMutation(createTimeEntryMutationOptions()) }
-export function useUpdateTimeEntryMutation() { return useMutation(updateTimeEntryMutationOptions()) }
-export function useStopTimerMutation() { return useMutation(stopTimerMutationOptions()) }
-export function useDeleteTimeEntryMutation() { return useMutation(deleteTimeEntryMutationOptions()) }
+export function useCreateTimeEntryMutation() {
+	return useMutation(createTimeEntryMutationOptions())
+}
+
+export function useUpdateTimeEntryMutation() {
+	return useMutation(updateTimeEntryMutationOptions())
+}
+
+export function useStopTimerMutation() {
+	return useMutation(stopTimerMutationOptions())
+}
+
+export function useDeleteTimeEntryMutation() {
+	return useMutation(deleteTimeEntryMutationOptions())
+}

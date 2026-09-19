@@ -36,7 +36,7 @@ const AppRoute = {template: '<div class="app-route">app route</div>'}
 const LoginRoute = {template: '<div class="login-route">login route</div>'}
 
 let wrapper: VueWrapper | undefined
-let queryClient: QueryClient
+let queryClient: QueryClient | undefined
 
 async function mountApp(path: string) {
 	const router = createRouter({
