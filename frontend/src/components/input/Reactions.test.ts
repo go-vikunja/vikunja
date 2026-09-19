@@ -3,7 +3,6 @@ import {nextTick} from 'vue'
 import {mount, flushPromises} from '@vue/test-utils'
 import {createI18n} from 'vue-i18n'
 import {QueryClient, VueQueryPlugin} from '@tanstack/vue-query'
-import {taskKeys, normalizeTask} from '@/client/queries/tasks'
 
 import {reactionsCreate} from '@/client/generated'
 import Reactions from './Reactions.vue'
@@ -44,7 +43,6 @@ const i18n = createI18n({legacy: false, locale: 'en', messages: {en}})
 
 function mountReactions(modelValue: Record<string, typeof CURRENT_USER[]>, disabled = false) {
 	const queryClient = new QueryClient()
-	queryClient.setQueryData(taskKeys.detail(1), normalizeTask({id: 1, reactions: modelValue}))
 	return mount(Reactions, {
 		props: {
 			entityKind: 'tasks' as const,
