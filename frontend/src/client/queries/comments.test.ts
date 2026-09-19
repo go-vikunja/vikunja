@@ -8,15 +8,19 @@ import {QueryClient} from '@tanstack/vue-query'
 import {
 	commentsQuery,
 	commentKeys,
+	createCommentMutationOptions,
 	deleteCommentMutationOptions,
 	updateCommentMutationOptions,
 } from './comments'
 import {
 	normalizeTask,
 	taskKeys,
+	type TaskResponse,
 } from './tasks'
+
 const sdk = vi.hoisted(() => ({
 	taskCommentsList: vi.fn(),
+	taskCommentsCreate: vi.fn(),
 	taskCommentsDelete: vi.fn(),
 	taskCommentsUpdate: vi.fn(),
 }))
@@ -25,8 +29,12 @@ vi.mock('@/message', () => ({
 	error: vi.fn(),
 	success: vi.fn(),
 }))
+
 let client: QueryClient
-beforeEach(() => { vi.clearAllMocks(); client = new QueryClient() })
+beforeEach(() => {
+	vi.clearAllMocks()
+	client = new QueryClient({defaultOptions: {queries: {retry: false}}})
+})
 
 it('requests the selected task, order and page', async () => {
 	sdk.taskCommentsList.mockResolvedValue({data: {
@@ -64,6 +72,7 @@ it('decrements every cached page total and only expanded task counts', async () 
 		id: 1,
 		comment_count: 2,
 	}))
+	client.setQueryData(taskKeys.detail(1, ['reactions']), normalizeTask({id: 1}))
 	sdk.taskCommentsDelete.mockResolvedValue({data: undefined})
 	await client.getMutationCache().build(client, deleteCommentMutationOptions()).execute({
 		taskId: 1,
@@ -74,6 +83,7 @@ it('decrements every cached page total and only expanded task counts', async () 
 		total_pages: 1,
 	})
 	expect(client.getQueryData(taskKeys.detail(1))).toMatchObject({comment_count: 1})
+	expect(client.getQueryData<TaskResponse>(taskKeys.detail(1, ['reactions']))?.comment_count).toBeUndefined()
 })
 
 it('keeps author, dates and reactions the update response drops', async () => {
@@ -113,5 +123,126 @@ it('keeps author, dates and reactions the update response drops', async () => {
 			updated: '2024-01-02T10:00:00Z',
 			reactions: {'👍': [{id: 1}]},
 		}],
+	})
+	expect(client.getQueryState(commentKeys.page(1, 'asc', 1))?.isInvalidated).toBe(true)
+})
+
+it('prepends onto a full first desc page and drops the last item', async () => {
+	client.setQueryData(commentKeys.page(1, 'desc', 1), {
+		items: [
+			{
+				id: 2,
+				comment: 'newer',
+				reactions: {},
+			},
+			{
+				id: 1,
+				comment: 'older',
+				reactions: {},
+			},
+		],
+		total: 2,
+		total_pages: 1,
+		per_page: 2,
+		page: 1,
+	})
+	sdk.taskCommentsCreate.mockResolvedValue({data: {
+		id: 3,
+		comment: 'newest',
+	}})
+	await client.getMutationCache().build(client, createCommentMutationOptions()).execute({
+		taskId: 1,
+		comment: 'newest',
+	})
+	expect(client.getQueryData(commentKeys.page(1, 'desc', 1))).toEqual({
+		items: [
+			{
+				id: 3,
+				comment: 'newest',
+				reactions: {},
+			},
+			{
+				id: 2,
+				comment: 'newer',
+				reactions: {},
+			},
+		],
+		total: 3,
+		total_pages: 2,
+		per_page: 2,
+		page: 1,
+	})
+})
+
+it('appends onto the last asc page', async () => {
+	client.setQueryData(commentKeys.page(1, 'asc', 2), {
+		items: [{
+			id: 99,
+			comment: 'last',
+			reactions: {},
+		}],
+		total: 99,
+		total_pages: 2,
+		per_page: 50,
+		page: 2,
+	})
+	sdk.taskCommentsCreate.mockResolvedValue({data: {
+		id: 100,
+		comment: 'newest',
+	}})
+	await client.getMutationCache().build(client, createCommentMutationOptions()).execute({
+		taskId: 1,
+		comment: 'newest',
+	})
+	expect(client.getQueryData(commentKeys.page(1, 'asc', 2))).toEqual({
+		items: [
+			{
+				id: 99,
+				comment: 'last',
+				reactions: {},
+			},
+			{
+				id: 100,
+				comment: 'newest',
+				reactions: {},
+			},
+		],
+		total: 100,
+		total_pages: 2,
+		per_page: 50,
+		page: 2,
+	})
+})
+
+it('bumps totals without touching items on a non-last asc page', async () => {
+	client.setQueryData(commentKeys.page(1, 'asc', 1), {
+		items: [{
+			id: 1,
+			comment: 'first',
+			reactions: {},
+		}],
+		total: 51,
+		total_pages: 2,
+		per_page: 50,
+		page: 1,
+	})
+	sdk.taskCommentsCreate.mockResolvedValue({data: {
+		id: 52,
+		comment: 'newest',
+	}})
+	await client.getMutationCache().build(client, createCommentMutationOptions()).execute({
+		taskId: 1,
+		comment: 'newest',
+	})
+	expect(client.getQueryData(commentKeys.page(1, 'asc', 1))).toEqual({
+		items: [{
+			id: 1,
+			comment: 'first',
+			reactions: {},
+		}],
+		total: 52,
+		total_pages: 2,
+		per_page: 50,
+		page: 1,
 	})
 })
