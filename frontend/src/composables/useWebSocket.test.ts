@@ -5,7 +5,12 @@ import {
 	vi,
 } from 'vitest'
 import {useWebSocket} from './useWebSocket'
-vi.mock('@/helpers/auth', () => ({getToken: () => 'token'}))
+import {AUTH_TYPES} from '@/modelTypes/IUser'
+const auth = vi.hoisted(() => ({tokenType: 1}))
+vi.mock('@/helpers/auth', () => ({
+	getToken: () => 'token',
+	getTokenType: () => auth.tokenType,
+}))
 const session = vi.hoisted(() => ({current: true}))
 vi.mock('@/client/requestContext', () => ({
 	captureClientRequestContext: () => ({}),
@@ -21,8 +26,17 @@ class FakeSocket {
 	onclose: (() => void) | null = null
 	onerror: (() => void) | null = null
 	send = vi.fn()
-	close() { this.readyState = 3 }
+	close = vi.fn(() => {
+		this.readyState = 3
+	})
 	constructor() { FakeSocket.instances.push(this) }
+}
+
+function timerFrame() {
+	return new MessageEvent('message', {data: JSON.stringify({
+		event: 'timer.created',
+		data: {id: 1},
+	})})
 }
 
 afterEach(() => {
@@ -30,6 +44,24 @@ afterEach(() => {
 	vi.unstubAllGlobals()
 	FakeSocket.instances = []
 	session.current = true
+	auth.tokenType = AUTH_TYPES.USER
+})
+
+it('routes messages from the current connection to subscribers', () => {
+	vi.stubGlobal('WebSocket', FakeSocket)
+	window.API_URL = 'http://localhost/api/v1'
+	const ws = useWebSocket()
+	ws.connect()
+	const socket = FakeSocket.instances[0]
+	socket.onopen?.()
+	const onTimer = vi.fn()
+	ws.subscribe('timer.created', onTimer)
+	socket.onmessage?.(timerFrame())
+	expect(onTimer).toHaveBeenCalledTimes(1)
+	expect(onTimer).toHaveBeenCalledWith({
+		event: 'timer.created',
+		data: {id: 1},
+	})
 })
 
 it('ignores messages and close callbacks from a replaced connection', () => {
@@ -44,27 +76,38 @@ it('ignores messages and close callbacks from a replaced connection', () => {
 	current.onopen?.()
 	const onTimer = vi.fn()
 	ws.subscribe('timer.created', onTimer)
-	old.onmessage?.(new MessageEvent('message', {data: JSON.stringify({
-		event: 'timer.created',
-		data: {id: 1},
-	})}))
+	old.onmessage?.(timerFrame())
 	old.onclose?.()
 	expect(onTimer).not.toHaveBeenCalled()
 	expect(ws.connected.value).toBe(true)
 })
 
-it('drops events after the authenticated session changes', () => {
+it('closes the socket and reconnects after the authenticated session changes', () => {
 	vi.stubGlobal('WebSocket', FakeSocket)
 	window.API_URL = 'http://localhost/api/v1'
 	const ws = useWebSocket()
 	ws.connect()
-	const socket = FakeSocket.instances[0]
+	const stale = FakeSocket.instances[0]
+	stale.onopen?.()
 	const onTimer = vi.fn()
 	ws.subscribe('timer.created', onTimer)
 	session.current = false
-	socket.onmessage?.(new MessageEvent('message', {data: JSON.stringify({
-		event: 'timer.created',
-		data: {id: 1},
-	})}))
+	stale.onmessage?.(timerFrame())
 	expect(onTimer).not.toHaveBeenCalled()
+	expect(stale.close).toHaveBeenCalledTimes(1)
+	expect(ws.connected.value).toBe(false)
+	expect(ws.authenticated.value).toBe(false)
+
+	session.current = true
+	ws.connect()
+	expect(FakeSocket.instances).toHaveLength(2)
+	expect(FakeSocket.instances[1]).not.toBe(stale)
+})
+
+it('does not open a socket for a link share session', () => {
+	vi.stubGlobal('WebSocket', FakeSocket)
+	window.API_URL = 'http://localhost/api/v1'
+	auth.tokenType = AUTH_TYPES.LINK_SHARE
+	useWebSocket().connect()
+	expect(FakeSocket.instances).toHaveLength(0)
 })

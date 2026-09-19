@@ -1,6 +1,7 @@
 import {ref, readonly} from 'vue'
 
-import {getToken} from '@/helpers/auth'
+import {getToken, getTokenType} from '@/helpers/auth'
+import {AUTH_TYPES} from '@/modelTypes/IUser'
 import {captureClientRequestContext, isClientRequestContextCurrent} from '@/client/requestContext'
 
 type MessageCallback = (msg: WebSocketEvent) => void
@@ -115,13 +116,17 @@ function scheduleReconnect() {
 	}, delay)
 }
 
+// Link share tokens are rejected by the socket, so their session never opens one.
+function mayOpenSocket(): boolean {
+	return getTokenType(getToken()) === AUTH_TYPES.USER
+}
+
 function connect() {
 	if (socket?.readyState === WebSocket.OPEN || socket?.readyState === WebSocket.CONNECTING) {
 		return
 	}
 
-	const token = getToken()
-	if (!token) {
+	if (!mayOpenSocket()) {
 		return
 	}
 
@@ -140,8 +145,25 @@ function connect() {
 
 	const connection = socket
 	const isCurrent = () => socket === connection && isClientRequestContextCurrent(context)
+
+	// An open connection stays authenticated as the identity that opened it, so a session
+	// change has to tear it down instead of only ignoring what it delivers.
+	function dropStaleConnection() {
+		connection.close()
+		if (socket !== connection) {
+			return
+		}
+		socket = null
+		connected.value = false
+		authenticated.value = false
+		scheduleReconnect()
+	}
+
 	socket.onopen = () => {
-		if (!isCurrent()) return
+		if (!isCurrent()) {
+			dropStaleConnection()
+			return
+		}
 		connected.value = true
 		reconnectAttempt = 0
 		console.debug('WebSocket: connected, sending auth')
@@ -149,11 +171,18 @@ function connect() {
 	}
 
 	socket.onmessage = event => {
-		if (isCurrent()) handleMessage(event)
+		if (!isCurrent()) {
+			dropStaleConnection()
+			return
+		}
+		handleMessage(event)
 	}
 
 	socket.onclose = () => {
-		if (socket !== connection) return
+		if (!isCurrent()) {
+			dropStaleConnection()
+			return
+		}
 		connected.value = false
 		authenticated.value = false
 		socket = null
