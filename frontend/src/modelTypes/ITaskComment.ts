@@ -1,7 +1,7 @@
 import type {IAbstract} from './IAbstract'
 import type {IUser} from './IUser'
 import type {Task as ITask} from '@/client/generated'
-import type {IReactionPerEntity} from '@/modelTypes/IReaction'
+import type {TaskComment} from '@/client/generated'
 
 export interface ITaskComment extends IAbstract {
 	id: number
@@ -9,7 +9,7 @@ export interface ITaskComment extends IAbstract {
 	comment: string
 	author: IUser
 	
-	reactions: IReactionPerEntity
+	reactions: NonNullable<TaskComment['reactions']>
 
 	created: Date
 	updated: Date
