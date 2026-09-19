@@ -53,8 +53,8 @@ describe('TimeEntryList', () => {
 		}])
 
 		expect(wrapper.text()).not.toContain('NaN')
-		expect(wrapper.findAll('tbody td').at(1)?.text()).toBe('')
-		expect(wrapper.findAll('tbody td').at(2)?.text()).toBe('')
+		expect(wrapper.findAll('tbody td')[1]?.text()).toBe('')
+		expect(wrapper.findAll('tbody td')[2]?.text()).toBe('')
 	})
 
 	it('shows the duration of a completed entry', () => {
@@ -68,6 +68,6 @@ describe('TimeEntryList', () => {
 			comment: '',
 		}])
 
-		expect(wrapper.findAll('tbody td').at(2)?.text()).toBe('1h 30m')
+		expect(wrapper.findAll('tbody td')[2]?.text()).toBe('1h 30m')
 	})
 })

@@ -7,15 +7,25 @@ import {
 import {QueryClient} from '@tanstack/vue-query'
 import {
 	activeTimerQuery,
+	createTimeEntryMutationOptions,
 	timeEntriesQuery,
 	timeEntryKeys,
 	normalizeTimeEntry,
 	stopTimerMutationOptions,
+	updateTimeEntryMutationOptions,
 	deleteTimeEntryMutationOptions,
+	type TimeEntryResponse,
 } from './timeEntries'
+import {
+	normalizeTask,
+	taskKeys,
+	type TaskResponse,
+} from './tasks'
 const sdk = vi.hoisted(() => ({
 	timeEntriesList: vi.fn(),
+	timeEntriesCreate: vi.fn(),
 	timeEntriesTimerStop: vi.fn(),
+	timeEntriesUpdate: vi.fn(),
 	timeEntriesDelete: vi.fn(),
 }))
 vi.mock('@/client/generated', () => sdk)
@@ -46,13 +56,17 @@ it('hydrates only the current user running timer and keeps ISO dates', async () 
 	})
 })
 
-it('passes browse filters and timezone to the generated client', async () => {
-	sdk.timeEntriesList.mockResolvedValue({data: {
-		items: [running],
-		total_pages: 1,
-	}})
-	await client.fetchQuery(timeEntriesQuery('task_id = 1', 'Europe/Berlin'))
-	expect(sdk.timeEntriesList).toHaveBeenCalledWith({
+it('passes browse filters and timezone to the generated client and concatenates every page', async () => {
+	sdk.timeEntriesList.mockImplementation(({query}) => Promise.resolve({data: {
+		items: [{
+			...running,
+			id: query.page,
+		}],
+		total_pages: 2,
+	}}))
+	const entries = await client.fetchQuery(timeEntriesQuery('task_id = 1', 'Europe/Berlin'))
+	expect(sdk.timeEntriesList).toHaveBeenCalledTimes(2)
+	expect(sdk.timeEntriesList).toHaveBeenNthCalledWith(1, {
 		query: {
 			filter: 'task_id = 1',
 			filter_timezone: 'Europe/Berlin',
@@ -61,6 +75,23 @@ it('passes browse filters and timezone to the generated client', async () => {
 		},
 		signal: expect.any(AbortSignal),
 	})
+	expect(sdk.timeEntriesList).toHaveBeenNthCalledWith(2, expect.objectContaining({
+		query: expect.objectContaining({page: 2}),
+	}))
+	expect(entries).toEqual([
+		{
+			...running,
+			id: 1,
+			project_id: 0,
+			comment: '',
+		},
+		{
+			...running,
+			id: 2,
+			project_id: 0,
+			comment: '',
+		},
+	])
 })
 
 it('patches a stop in loaded lists without inserting into unrelated filters', async () => {
@@ -100,4 +131,73 @@ it('deletes the matching active timer without affecting another user', async () 
 	})
 	expect(client.getQueryData(timeEntryKeys.active(7))).toBeNull()
 	expect(client.getQueryData(timeEntryKeys.active(8))).toMatchObject({id: 5})
+})
+
+it('drops the deleted entry from a loaded list and decrements the task entry count', async () => {
+	const list = timeEntryKeys.list('task_id = 1', 'UTC')
+	const detail = taskKeys.detail(1)
+	client.setQueryData(list, [
+		normalizeTimeEntry(running),
+		normalizeTimeEntry({
+			...running,
+			id: 6,
+		}),
+	])
+	client.setQueryData(detail, normalizeTask({
+		id: 1,
+		title: 'task',
+		project_id: 1,
+		time_entries_count: 2,
+	}))
+	sdk.timeEntriesDelete.mockResolvedValue({data: undefined})
+	await client.getMutationCache().build(client, deleteTimeEntryMutationOptions()).execute({
+		id: 4,
+		taskId: 1,
+	})
+	expect(client.getQueryData<TimeEntryResponse[]>(list)).toMatchObject([{id: 6}])
+	expect(client.getQueryData<TaskResponse>(detail)?.time_entries_count).toBe(1)
+})
+
+it('leaves a loaded list untouched on create and only bumps the task entry count', async () => {
+	const list = timeEntryKeys.list('task_id = 1', 'UTC')
+	const detail = taskKeys.detail(1)
+	client.setQueryData(list, [normalizeTimeEntry(running)])
+	client.setQueryData(detail, normalizeTask({
+		id: 1,
+		title: 'task',
+		project_id: 1,
+		time_entries_count: 1,
+	}))
+	sdk.timeEntriesCreate.mockResolvedValue({data: {
+		...running,
+		id: 9,
+		end_time: '2026-09-19T10:00:00Z',
+	}})
+	await client.getMutationCache().build(client, createTimeEntryMutationOptions()).execute({
+		task_id: 1,
+		start_time: running.start_time,
+		end_time: '2026-09-19T10:00:00Z',
+	})
+	expect(client.getQueryData<TimeEntryResponse[]>(list)).toHaveLength(1)
+	expect(client.getQueryData<TaskResponse>(detail)?.time_entries_count).toBe(2)
+	expect(client.getQueryState(list)?.isInvalidated).toBe(true)
+})
+
+it('keeps the active timer cached when a still-running entry is updated', async () => {
+	client.setQueryData(timeEntryKeys.active(7), normalizeTimeEntry(running))
+	sdk.timeEntriesUpdate.mockResolvedValue({data: {
+		...running,
+		comment: 'renamed',
+	}})
+	await client.getMutationCache().build(client, updateTimeEntryMutationOptions()).execute({
+		id: 4,
+		task_id: 1,
+		comment: 'renamed',
+		start_time: running.start_time,
+	})
+	expect(client.getQueryData<TimeEntryResponse | null>(timeEntryKeys.active(7))).toMatchObject({
+		id: 4,
+		comment: 'renamed',
+		end_time: null,
+	})
 })
