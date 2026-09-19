@@ -1,6 +1,6 @@
 <template>
 	<div
-		v-if="timeTracking.hasActiveTimer"
+		v-if="hasActiveTimer"
 		v-cy="'timerBadge'"
 		class="timer-badge"
 	>
@@ -24,21 +24,21 @@
 </template>
 
 <script setup lang="ts">
-import {ref, reactive, computed, onMounted, onUnmounted} from 'vue'
+import {ref, computed, onMounted, onUnmounted} from 'vue'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import {useTimeTracking} from '@/composables/useTimeTracking'
 import {useStopTimerMutation} from '@/client/queries/timeEntries'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 
-const timeTracking = reactive(useTimeTracking())
+const {activeTimer, hasActiveTimer} = useTimeTracking()
 const stopMutation = useStopTimerMutation()
 
 const now = ref(new Date())
 let interval: ReturnType<typeof setInterval> | undefined
 
 const elapsed = computed(() => {
-	const start = parseDateOrNull(timeTracking.activeTimer?.start_time)
+	const start = parseDateOrNull(activeTimer.value?.start_time)
 	if (start === null) {
 		return ''
 	}

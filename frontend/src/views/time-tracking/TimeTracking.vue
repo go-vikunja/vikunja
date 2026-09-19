@@ -307,7 +307,6 @@ onMounted(async () => {
 	baseStore.setCurrentProject(null)
 	await restoreFromQuery()
 	ready.value = true
-	// One request with the fully-restored filter — no flicker through partial filters.
 })
 
 // DatepickerWithRange only syncs its display from modelValue on change, and it
@@ -326,8 +325,6 @@ watch(filterQuery, q => {
 	}
 	router.replace({query: q}).catch(() => { /* ignore redundant navigation */ })
 })
-
-
 </script>
 
 <style lang="scss" scoped>

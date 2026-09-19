@@ -58,7 +58,7 @@ const showForm = ref(false)
 // Like related tasks: the form is implicit when empty, otherwise behind the +.
 const formVisible = computed(() => entries.value.length === 0 || showForm.value || editingEntry.value !== null)
 
-async function onSaved() {
+function onSaved() {
 	editingEntry.value = null
 	showForm.value = false
 }
