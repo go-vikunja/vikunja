@@ -76,7 +76,6 @@ export function deleteAttachmentMutationOptions() {
 			client.invalidateQueries({queryKey: attachmentKeys.list(taskId)}),
 			client.invalidateQueries({queryKey: taskKeys.all, refetchType: 'none'}),
 		]),
-		successMessage: data => data.message,
 	})
 }
 
