@@ -58,4 +58,17 @@ test('a reaction added in the task detail survives navigating away and back', as
 	const stored = await apiContext.get(`tasks/${task.id}/reactions`, {headers})
 	expect(stored.ok()).toBeTruthy()
 	expect(Object.keys(await stored.json()).sort()).toEqual([...values].sort())
+
+	const removed = page.waitForResponse(r =>
+		new URL(r.url()).pathname.endsWith(`/tasks/${task.id}/reactions/delete`) && r.request().method() === 'POST',
+	)
+	await reactions.locator('.reaction-button').filter({hasText: added!}).click()
+	expect((await removed).ok()).toBeTruthy()
+
+	await expect(reactions.locator('.reaction-button').filter({hasText: added!})).toHaveCount(0)
+	await expect(reactions.locator('.reaction-button').filter({hasText: SEEDED_REACTION})).toBeVisible()
+
+	const afterRemoval = await apiContext.get(`tasks/${task.id}/reactions`, {headers})
+	expect(afterRemoval.ok()).toBeTruthy()
+	expect(Object.keys(await afterRemoval.json())).toEqual([SEEDED_REACTION])
 })
