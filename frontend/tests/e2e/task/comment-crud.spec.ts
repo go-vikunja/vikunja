@@ -15,7 +15,7 @@ test('comment create, edit and delete persist after reload', async ({authenticat
 	await expect(row).toContainText('Original comment')
 	await page.reload()
 	await expect(row).toContainText('Original comment')
-	await row.getByText('Original comment', {exact: true}).click()
+	await row.getByRole('button', {name: 'Edit', exact: true}).click()
 	await row.locator('.tiptap[contenteditable="true"]').fill('Updated comment')
 	await row.getByRole('button', {name: 'Save', exact: true}).click()
 	await expect(row).toContainText('Updated comment')
