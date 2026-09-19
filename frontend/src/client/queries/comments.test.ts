@@ -101,9 +101,19 @@ it('decrements every cached page total and only expanded task counts', async () 
 		taskId: 1,
 		id: 2,
 	})
-	for (const page of [1, 2]) expect(client.getQueryData(commentKeys.page(1, 'asc', page))).toMatchObject({
+	expect(client.getQueryData(commentKeys.page(1, 'asc', 1))).toEqual({
+		items: [{id: 1}],
 		total: 1,
 		total_pages: 1,
+		per_page: 1,
+		page: 1,
+	})
+	expect(client.getQueryData(commentKeys.page(1, 'asc', 2))).toEqual({
+		items: [],
+		total: 1,
+		total_pages: 1,
+		per_page: 1,
+		page: 2,
 	})
 	expect(client.getQueryData(taskKeys.detail(1))).toMatchObject({comment_count: 1})
 	expect(client.getQueryData<TaskResponse>(taskKeys.detail(1, ['reactions']))?.comment_count).toBeUndefined()
