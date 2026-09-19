@@ -97,10 +97,10 @@ export function removeTimeEntry(client: QueryClient, id: number) {
 	)
 }
 
-function settle(client: QueryClient) {
+function settle(client: QueryClient, taskId?: number) {
 	return Promise.all([
 		client.invalidateQueries({queryKey: timeEntryKeys.all}),
-		invalidateTaskMembership(client),
+		invalidateTaskMembership(client, taskId === 0 ? undefined : taskId),
 	])
 }
 
@@ -114,7 +114,7 @@ export function createTimeEntryMutationOptions() {
 				time_entries_count: task.time_entries_count === undefined ? undefined : task.time_entries_count + 1,
 			}))
 		},
-		onSettled: (_input, client) => settle(client),
+		onSettled: (input, client) => settle(client, input.task_id),
 	})
 }
 
@@ -126,7 +126,7 @@ export function updateTimeEntryMutationOptions() {
 				body,
 			})).data,
 		onSuccess: (entry, _input, client) => patchTimeEntry(client, entry),
-		onSettled: (_input, client) => settle(client),
+		onSettled: (input, client) => settle(client, input.task_id),
 	})
 }
 
@@ -154,7 +154,7 @@ export function deleteTimeEntryMutationOptions() {
 				time_entries_count: task.time_entries_count === undefined ? undefined : Math.max(0, task.time_entries_count - 1),
 			}))
 		},
-		onSettled: (_input, client) => settle(client),
+		onSettled: ({taskId}, client) => settle(client, taskId),
 	})
 }
 
