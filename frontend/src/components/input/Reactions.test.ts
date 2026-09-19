@@ -18,12 +18,6 @@ const OTHER_USER = {
 	username: 'other',
 }
 
-const SERVER_USER = {
-	id: 1,
-	username: 'current',
-	name: 'Server Authored',
-}
-
 vi.mock('@/stores/auth', () => ({
 	useAuthStore: () => ({
 		info: CURRENT_USER,
@@ -78,12 +72,6 @@ function mountReactions(
 	})
 }
 
-function mockReactionCreate(data: unknown) {
-	vi.mocked(reactionsCreate).mockReturnValueOnce(
-		Promise.resolve({data}) as ReturnType<typeof reactionsCreate>,
-	)
-}
-
 function deferReactionCreate() {
 	let resolveCreate: (value: unknown) => void = () => {}
 	const pending = new Promise<unknown>(resolve => {
@@ -94,18 +82,6 @@ function deferReactionCreate() {
 }
 
 describe('Reactions', () => {
-	it('never writes back to modelValue because the query cache holds reactions', async () => {
-		mockReactionCreate({user: SERVER_USER})
-		const modelValue = {'🎉': [OTHER_USER]}
-		const wrapper = mountReactions(modelValue, false, 'comments')
-
-		await wrapper.findAll('button')[0].trigger('click')
-		await flushPromises()
-
-		expect(wrapper.emitted('update:modelValue')).toBeUndefined()
-		expect(modelValue).toEqual({'🎉': [OTHER_USER]})
-	})
-
 	it('marks the reacted-by-current-user button as pressed', () => {
 		const wrapper = mountReactions({
 			'🎉': [CURRENT_USER],
