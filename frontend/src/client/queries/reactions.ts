@@ -15,8 +15,10 @@ type ReactionInput = {
 	user: Pick<User, 'id' | 'name' | 'username' | 'bot_owner_id'>,
 }
 
-export function changeReaction(current: ReactionUsers = {}, input: ReactionInput): ReactionUsers {
-	const {[input.value]: users, ...rest} = current
+export function changeReaction(current: ReactionUsers = {}, input: ReactionInput) {
+	const {[input.value]: users, ...rest} = Object.fromEntries(
+		Object.entries(current).map(([value, users]) => [value, users ?? []]),
+	)
 	const remaining = (users ?? []).filter(user => user.id !== input.user.id)
 	if (!input.remove) remaining.push(input.user)
 	return remaining.length ? {...rest, [input.value]: remaining} : rest
