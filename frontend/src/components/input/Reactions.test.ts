@@ -5,7 +5,6 @@ import {createI18n} from 'vue-i18n'
 import {QueryClient, VueQueryPlugin} from '@tanstack/vue-query'
 
 import {reactionsCreate} from '@/client/generated'
-import type {ReactionKind} from '@/client/queries/reactions'
 import Reactions from './Reactions.vue'
 import en from '@/i18n/lang/en.json'
 
@@ -54,12 +53,15 @@ const i18n = createI18n({legacy: false, locale: 'en', messages: {en}})
 function mountReactions(
 	modelValue: Record<string, typeof CURRENT_USER[]>,
 	disabled = false,
-	entityKind: ReactionKind = 'tasks',
+	entityKind: 'tasks' | 'comments' = 'tasks',
 ) {
 	const queryClient = new QueryClient()
+	const subjectProps = entityKind === 'comments'
+		? {entityKind, taskId: 1}
+		: {entityKind}
 	return mount(Reactions, {
 		props: {
-			entityKind,
+			...subjectProps,
 			entityId: 1,
 			modelValue,
 			disabled,
