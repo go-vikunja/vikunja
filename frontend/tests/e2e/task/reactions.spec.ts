@@ -31,7 +31,7 @@ test('a reaction added in the task detail survives navigating away and back', as
 	expect(added).toBeTruthy()
 
 	const created = page.waitForResponse(r =>
-		new URL(r.url()).pathname.endsWith(`/tasks/${task.id}/reactions`) && r.request().method() === 'PUT',
+		new URL(r.url()).pathname.endsWith(`/tasks/${task.id}/reactions`) && r.request().method() === 'POST',
 	)
 	await option.click()
 	expect((await created).ok()).toBeTruthy()

@@ -1,6 +1,8 @@
 import {describe, it, expect, vi} from 'vitest'
 import {mount, flushPromises} from '@vue/test-utils'
 import {createI18n} from 'vue-i18n'
+import {QueryClient, VueQueryPlugin} from '@tanstack/vue-query'
+import {taskKeys, normalizeTask} from '@/client/queries/tasks'
 
 import Reactions from './Reactions.vue'
 import en from '@/i18n/lang/en.json'
@@ -22,12 +24,11 @@ vi.mock('@/stores/auth', () => ({
 	}),
 }))
 
-vi.mock('@/services/reactions', () => ({
-	default: class {
-		create = vi.fn(async () => undefined)
-		delete = vi.fn(async () => undefined)
-	},
+vi.mock('@/client/generated', () => ({
+	reactionsCreate: vi.fn(async () => ({data: {}})),
+	reactionsDelete: vi.fn(async () => ({data: undefined})),
 }))
+vi.mock('@/message', () => ({error: vi.fn(), success: vi.fn()}))
 
 vi.mock('vuemoji-picker', () => ({
 	VuemojiPicker: {template: '<div />'},
@@ -36,6 +37,8 @@ vi.mock('vuemoji-picker', () => ({
 const i18n = createI18n({legacy: false, locale: 'en', messages: {en}})
 
 function mountReactions(modelValue: Record<string, typeof CURRENT_USER[]>) {
+	const queryClient = new QueryClient()
+	queryClient.setQueryData(taskKeys.detail(1), normalizeTask({id: 1, reactions: modelValue}))
 	return mount(Reactions, {
 		props: {
 			entityKind: 'tasks' as const,
@@ -43,7 +46,7 @@ function mountReactions(modelValue: Record<string, typeof CURRENT_USER[]>) {
 			modelValue,
 		},
 		global: {
-			plugins: [i18n],
+			plugins: [i18n, [VueQueryPlugin, {queryClient}]],
 			stubs: {
 				BaseButton: {template: '<button><slot /></button>'},
 				Icon: true,

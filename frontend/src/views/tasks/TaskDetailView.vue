@@ -899,7 +899,6 @@ function attachmentUpload(file: File, onSuccess?: (url: string) => void) {
 
 function setReactions(reactions: ITask['reactions']) {
 	task.value = {...task.value, reactions}
-	taskQuery.refetch()
 }
 
 const heading = ref<HTMLElement | null>(null)
