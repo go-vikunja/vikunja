@@ -8,7 +8,6 @@ import {
 	invalidateTaskMembership,
 	mapTaskEverywhere,
 } from './taskCache'
-import {taskKeys} from './tasks'
 import {i18n} from '@/i18n'
 
 export function setTaskSubscriptionMutationOptions() {
@@ -33,10 +32,7 @@ export function setTaskSubscriptionMutationOptions() {
 				subscription,
 			}))
 		},
-		onSettled: ({taskId}, client) => Promise.all([
-			client.invalidateQueries({queryKey: taskKeys.detail(taskId)}),
-			invalidateTaskMembership(client, taskId),
-		]),
+		onSettled: ({taskId}, client) => invalidateTaskMembership(client, taskId, 'active'),
 		successMessage: (_data, {subscribed}) => i18n.global.t(subscribed
 			? 'task.subscription.subscribeSuccessTask' : 'task.subscription.unsubscribeSuccessTask'),
 	})
