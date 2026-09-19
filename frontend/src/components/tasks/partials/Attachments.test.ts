@@ -12,6 +12,7 @@ const sdk = vi.hoisted(() => ({
 	patchTasksRead: vi.fn(),
 	taskAttachmentsList: vi.fn(async () => ({data: {items: [attachment], total_pages: 1}})),
 	taskAttachmentsUpload: vi.fn(),
+	taskAttachmentsDownload: vi.fn(),
 }))
 
 const {errorMessage} = vi.hoisted(() => ({errorMessage: vi.fn()}))
@@ -72,6 +73,7 @@ afterEach(() => {
 	renderErrors.length = 0
 	document.body.innerHTML = ''
 	sdk.taskAttachmentsUpload.mockReset()
+	sdk.taskAttachmentsDownload.mockReset()
 	errorMessage.mockClear()
 })
 
@@ -108,6 +110,32 @@ function dropFile(file: File) {
 	})
 	document.body.dispatchEvent(event)
 }
+
+describe('Attachments download', () => {
+	it('toasts once when the download fails', async () => {
+		sdk.taskAttachmentsDownload.mockRejectedValue(new Error('network error'))
+
+		const wrapper = mountAttachments()
+		await flushPromises()
+
+		await wrapper.find('.attachment-actions [aria-label="task.attachment.downloadTooltip"]').trigger('click')
+		await flushPromises()
+
+		expect(errorMessage).toHaveBeenCalledTimes(1)
+	})
+
+	it('does not toast when the download aborts because the session changed', async () => {
+		sdk.taskAttachmentsDownload.mockRejectedValue(new DOMException('aborted', 'AbortError'))
+
+		const wrapper = mountAttachments()
+		await flushPromises()
+
+		await wrapper.find('.attachment-actions [aria-label="task.attachment.downloadTooltip"]').trigger('click')
+		await flushPromises()
+
+		expect(errorMessage).not.toHaveBeenCalled()
+	})
+})
 
 describe('Attachments upload', () => {
 	it('uploads the remaining files after one request fails', async () => {

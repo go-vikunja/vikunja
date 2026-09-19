@@ -82,7 +82,7 @@
 							v-tooltip="$t('task.attachment.downloadTooltip')"
 							:aria-label="$t('task.attachment.downloadTooltip')"
 							class="attachment-info-meta-button"
-							@click.prevent.stop="downloadAttachment(a)"
+							@click.prevent.stop="download(a)"
 						>
 							<Icon icon="download" />
 						</BaseButton>
@@ -537,6 +537,16 @@ function setAudioPlayerRef(attachment: IAttachment, el: Element | ComponentPubli
 	audioPlayers.set(attachment.id, el as AudioPreviewInstance)
 }
 
+async function download(attachment: IAttachment) {
+	try {
+		await downloadAttachment(attachment)
+	} catch (e) {
+		if (!isRequestContextAbort(e)) {
+			error(e)
+		}
+	}
+}
+
 async function viewOrDownload(attachment: IAttachment) {
 	if (canPreviewAudio(attachment) && audioPlayers.has(attachment.id!)) {
 		await audioPlayers.get(attachment.id!)!.play()
@@ -545,7 +555,7 @@ async function viewOrDownload(attachment: IAttachment) {
 
 	const kind = previewKind(attachment)
 	if (kind === null) {
-		downloadAttachment(attachment)
+		await download(attachment)
 		return
 	}
 
