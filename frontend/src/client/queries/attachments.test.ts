@@ -17,6 +17,7 @@ import {
 	deleteAttachmentMutationOptions,
 	uploadAttachmentsMutationOptions,
 } from './attachments'
+import {success} from '@/message'
 
 const sdk = vi.hoisted(() => ({
 	taskAttachmentsList: vi.fn(),
@@ -109,5 +110,6 @@ describe('attachments', () => {
 		})
 		expect(client.getQueryCache().getAll()).toHaveLength(before)
 		expect(client.getQueryState(boardKey)?.isInvalidated).toBe(true)
+		expect(success).toHaveBeenCalledWith({message: 'The attachment was successfully deleted.'})
 	})
 })

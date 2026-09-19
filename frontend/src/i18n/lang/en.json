@@ -1193,6 +1193,7 @@
       "delete": "Delete attachment",
       "deleteTooltip": "Delete this attachment",
       "deleteText1": "Are you sure you want to delete the attachment {filename}?",
+      "deleteSuccess": "The attachment was successfully deleted.",
       "copyUrlTooltip": "Copy the url of this attachment for usage in text",
       "setAsCover": "Make cover",
       "unsetAsCover": "Remove cover",

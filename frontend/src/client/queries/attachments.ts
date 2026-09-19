@@ -12,6 +12,7 @@ import type {
 	TaskAttachment,
 	TaskAttachmentsDownloadData,
 } from '@/client/generated'
+import {i18n} from '@/i18n'
 import {contextMutationOptions} from './contextMutation'
 import {fetchAllPages} from './fetchAllPages'
 import {
@@ -110,6 +111,7 @@ export function deleteAttachmentMutationOptions() {
 			client.invalidateQueries({queryKey: attachmentKeys.list(taskId)}),
 			invalidateTaskMembership(client, taskId),
 		]),
+		successMessage: () => i18n.global.t('task.attachment.deleteSuccess'),
 	})
 }
 
