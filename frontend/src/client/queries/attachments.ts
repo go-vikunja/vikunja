@@ -1,11 +1,7 @@
-import {
-	queryOptions,
-	useMutation,
-} from '@tanstack/vue-query'
+import {useMutation} from '@tanstack/vue-query'
 import {
 	taskAttachmentsDelete,
 	taskAttachmentsDownload,
-	taskAttachmentsList,
 	taskAttachmentsUpload,
 } from '@/client/generated'
 import type {
@@ -14,15 +10,13 @@ import type {
 } from '@/client/generated'
 import {i18n} from '@/i18n'
 import {contextMutationOptions} from './contextMutation'
-import {fetchAllPages} from './fetchAllPages'
 import {
 	invalidateTaskMembership,
 	mapTaskEverywhere,
 } from './taskCache'
 
+// The task detail and every list response already carry `attachments`, so there is no list query.
 export const attachmentKeys = {
-	all: ['attachments'] as const,
-	list: (taskId: number) => ['attachments', 'list', taskId] as const,
 	blobs: ['attachments', 'blob'] as const,
 	blobsFor: (taskId: number, id: number) => [...attachmentKeys.blobs, taskId, id] as const,
 	blob: (taskId: number, id: number, size?: PreviewSize) => [...attachmentKeys.blobsFor(taskId, id), size] as const,
@@ -30,21 +24,6 @@ export const attachmentKeys = {
 
 export type PreviewSize = NonNullable<TaskAttachmentsDownloadData['query']>['preview_size']
 export type AttachmentIdentity = Required<Pick<TaskAttachment, 'id' | 'task_id'>>
-
-export function attachmentsQuery(taskId: number) {
-	return queryOptions({
-		queryKey: attachmentKeys.list(taskId),
-		enabled: taskId > 0,
-		queryFn: ({signal}) => fetchAllPages(page => taskAttachmentsList({
-			path: {task: taskId},
-			query: {
-				page,
-				per_page: 1000,
-			},
-			signal,
-		}).then(({data}) => data)),
-	})
-}
 
 export async function attachmentBlob(attachment: AttachmentIdentity, size?: PreviewSize, signal?: AbortSignal) {
 	const {data} = await taskAttachmentsDownload({
@@ -72,20 +51,15 @@ export function uploadAttachmentsMutationOptions(shouldNotify: () => boolean = (
 			})).data,
 		onSuccess: (result, {taskId}, client) => {
 			const uploaded = result.success ?? []
-			const append = (current: TaskAttachment[]) => [
-				...current.filter(item => !uploaded.some(attachment => attachment.id === item.id)),
-				...uploaded,
-			]
-			client.setQueryData<TaskAttachment[]>(attachmentKeys.list(taskId), current => current && append(current))
 			mapTaskEverywhere(client, taskId, task => ({
 				...task,
-				attachments: append(task.attachments),
+				attachments: [
+					...task.attachments.filter(item => !uploaded.some(attachment => attachment.id === item.id)),
+					...uploaded,
+				],
 			}))
 		},
-		onSettled: ({taskId}, client) => Promise.all([
-			client.invalidateQueries({queryKey: attachmentKeys.list(taskId)}),
-			invalidateTaskMembership(client, taskId),
-		]),
+		onSettled: ({taskId}, client) => invalidateTaskMembership(client, taskId),
 		toastError: shouldNotify,
 	})
 }
@@ -101,7 +75,6 @@ export function deleteAttachmentMutationOptions() {
 				attachment: id,
 			}})).data,
 		onSuccess: (_data, {taskId, id}, client) => {
-			client.setQueryData<TaskAttachment[]>(attachmentKeys.list(taskId), current => current?.filter(a => a.id !== id))
 			mapTaskEverywhere(client, taskId, task => ({
 				...task,
 				attachments: task.attachments.filter(a => a.id !== id),
@@ -109,16 +82,13 @@ export function deleteAttachmentMutationOptions() {
 			}))
 			client.removeQueries({queryKey: attachmentKeys.blobsFor(taskId, id)})
 		},
-		onSettled: ({taskId}, client) => Promise.all([
-			client.invalidateQueries({queryKey: attachmentKeys.list(taskId)}),
-			invalidateTaskMembership(client, taskId),
-		]),
+		onSettled: ({taskId}, client) => invalidateTaskMembership(client, taskId),
 		successMessage: () => i18n.global.t('task.attachment.deleteSuccess'),
 	})
 }
 
-export function useUploadAttachmentsMutation() {
-	return useMutation(uploadAttachmentsMutationOptions())
+export function useUploadAttachmentsMutation(shouldNotify?: () => boolean) {
+	return useMutation(uploadAttachmentsMutationOptions(shouldNotify))
 }
 
 export function useDeleteAttachmentMutation() {

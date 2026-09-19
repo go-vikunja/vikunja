@@ -14,6 +14,8 @@ import {
 } from '@vue/test-utils'
 import AudioPreview from './AudioPreview.vue'
 import XButton from '@/components/input/Button.vue'
+import {queryClient} from '@/client/queryClient'
+import {attachmentKeys} from '@/client/queries/attachments'
 import type {TaskAttachment as IAttachment} from '@/client/generated'
 
 const {getBlobUrl} = vi.hoisted(() => ({getBlobUrl: vi.fn()}))
@@ -83,6 +85,7 @@ function deferredBlobUrl() {
 let revokeObjectURL: ReturnType<typeof vi.fn<(url: string) => void>>
 
 beforeEach(() => {
+	queryClient.removeQueries({queryKey: attachmentKeys.blobs})
 	URL.createObjectURL = vi.fn(blob => (blob as Blob & {testUrl?: string}).testUrl ?? 'blob:real-attachment')
 	// happy-dom lacks media methods; plain functions, not vi.fn: a shared prototype mock merges every element's calls.
 	HTMLMediaElement.prototype.play = () => Promise.resolve()

@@ -60,15 +60,13 @@ import Editor from '@/components/input/AsyncEditor'
 
 import { clearEditorDraft } from '@/helpers/editorDraftStorage'
 import { isEditorContentEmpty } from '@/helpers/editorContentEmpty'
-import { uploadFilesForEditor } from '@/helpers/attachments'
+import {generateAttachmentUrl} from '@/helpers/attachments'
 import type {Task as ITask} from '@/client/generated'
+import {useUploadAttachmentsMutation} from '@/client/queries/attachments'
 import {useUpdateTaskMutation} from '@/client/queries/taskMutations'
-
-export type AttachmentUploadFunction = (file: File, onSuccess: (attachmentUrl: string) => void) => Promise<unknown>
 
 const props = defineProps<{
 	modelValue: ITask,
-	attachmentUpload: AttachmentUploadFunction,
 	canWrite: boolean,
 }>()
 
@@ -231,8 +229,21 @@ async function save() {
 	}
 }
 
+// the editor toasts the rejection itself, a mutation toast would duplicate it
+const uploadAttachments = useUploadAttachmentsMutation(() => false)
+
 function uploadCallback(files: File[] | FileList): Promise<string[]> {
-	return uploadFilesForEditor(props.attachmentUpload, files)
+	const taskId = props.modelValue.id!
+	return Promise.all(Array.from(files).map(async file => {
+		const result = await uploadAttachments.mutateAsync({
+			taskId,
+			files: [file],
+		})
+		const [uploaded] = result.success ?? []
+		// forwarded verbatim: the editor's toast translates the error code, which a rewrapped message would lose
+		if (uploaded?.id === undefined) throw result.errors?.[0] ?? new Error('Attachment upload returned no file')
+		return generateAttachmentUrl(taskId, uploaded.id)
+	}))
 }
 </script>
 

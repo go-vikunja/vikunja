@@ -344,7 +344,6 @@
 						<Description
 							:model-value="task"
 							:can-write="canWrite"
-							:attachment-upload="attachmentUpload"
 						/>
 					</div>
 					
@@ -695,7 +694,6 @@ import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 import BucketSelect from '@/components/tasks/partials/BucketSelect.vue'
 import Reactions from '@/components/input/Reactions.vue'
 
-import {uploadFile} from '@/helpers/attachments'
 import {getProjectTitle} from '@/helpers/getProjectTitle'
 import {scrollIntoView} from '@/helpers/scrollIntoView'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
@@ -892,10 +890,6 @@ const canWrite = computed(() => (
 const color = computed(() => getHexColor(task.value.hex_color))
 
 const isModal = computed(() => Boolean(props.backdropView))
-
-function attachmentUpload(file: File, onSuccess?: (url: string) => void) {
-	return uploadFile(props.taskId, file, onSuccess)
-}
 
 function setReactions(reactions: ITask['reactions']) {
 	task.value = {...task.value, reactions}

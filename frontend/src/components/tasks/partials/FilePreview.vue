@@ -52,8 +52,8 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref, watch} from 'vue'
-import {fetchAttachmentBlobUrl} from '@/helpers/attachments'
+import {computed, onBeforeUnmount, ref, watch} from 'vue'
+import {fetchAttachmentUrl, releaseAttachmentUrl} from '@/helpers/attachments'
 import type {TaskAttachment as IAttachment} from '@/client/generated'
 import type {AttachmentIdentity} from '@/client/queries/attachments'
 import {canPreviewAudio, canPreviewImage, canPreviewPdf, canPreviewVideo} from '@/helpers/attachmentPreview'
@@ -75,6 +75,7 @@ function isPreviewable(attachment?: IAttachment): attachment is IAttachment & At
 watch(
 	() => isPreviewable(props.modelValue) ? `${props.modelValue.task_id}-${props.modelValue.id}` : null,
 	async (key, _previous, onCleanup) => {
+		releaseAttachmentUrl(blobUrl.value)
 		blobUrl.value = undefined
 		const attachment = props.modelValue
 		if (key === null || !isPreviewable(attachment)) {
@@ -87,14 +88,20 @@ watch(
 		})
 
 		try {
-			const url = await fetchAttachmentBlobUrl(attachment, 'md')
-			if (!stale) blobUrl.value = url
+			const url = await fetchAttachmentUrl(attachment, 'md')
+			if (stale) {
+				releaseAttachmentUrl(url)
+				return
+			}
+			blobUrl.value = url
 		} catch {
 			// keep the generic file icon
 		}
 	},
 	{immediate: true},
 )
+
+onBeforeUnmount(() => releaseAttachmentUrl(blobUrl.value))
 </script>
 
 <style scoped lang="scss">

@@ -32,7 +32,7 @@ let playing: HTMLAudioElement | null = null
 <script setup lang="ts">
 import {onBeforeUnmount, ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {attachmentBlobUrl} from '@/helpers/attachments'
+import {fetchAttachmentUrl, releaseAttachmentUrl} from '@/helpers/attachments'
 import {isRequestContextAbort} from '@/client/requestContext'
 import type {TaskAttachment as IAttachment} from '@/client/generated'
 import {error} from '@/message'
@@ -58,9 +58,9 @@ async function loadAudio() {
 	loading.value = true
 	const epoch = previewEpoch
 	try {
-		const url = await attachmentBlobUrl({id: props.attachment.id!, task_id: props.attachment.task_id!})
+		const url = await fetchAttachmentUrl({id: props.attachment.id!, task_id: props.attachment.task_id!})
 		if (unmounted || epoch !== previewEpoch) {
-			window.URL.revokeObjectURL(url)
+			releaseAttachmentUrl(url)
 			return
 		}
 		blobUrl.value = url
@@ -81,7 +81,7 @@ function onAudioError() {
 		playing = null
 	}
 
-	window.URL.revokeObjectURL(blobUrl.value)
+	releaseAttachmentUrl(blobUrl.value)
 	blobUrl.value = undefined
 	error({message: t('task.attachment.audioError')})
 }
@@ -117,7 +117,7 @@ function releaseAudio() {
 		playing = null
 	}
 	if (blobUrl.value !== undefined) {
-		window.URL.revokeObjectURL(blobUrl.value)
+		releaseAttachmentUrl(blobUrl.value)
 		blobUrl.value = undefined
 	}
 }

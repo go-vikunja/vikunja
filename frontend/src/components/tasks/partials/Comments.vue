@@ -233,7 +233,8 @@ import TaskCommentModel from '@/models/taskComment'
 import type {ITaskComment} from '@/modelTypes/ITaskComment'
 import type {Task as ITask} from '@/client/generated'
 
-import {uploadFile, uploadFilesForEditor} from '@/helpers/attachments'
+import {generateAttachmentUrl} from '@/helpers/attachments'
+import {useUploadAttachmentsMutation} from '@/client/queries/attachments'
 import {success} from '@/message'
 import {formatDateLong, formatDisplayDate} from '@/helpers/time/formatDate'
 import {clearEditorDraft} from '@/helpers/editorDraftStorage'
@@ -353,11 +354,20 @@ async function waitForEditorRef() {
 }
 
 
+// the editor toasts the rejection itself, a mutation toast would duplicate it
+const uploadAttachments = useUploadAttachmentsMutation(() => false)
+
 function attachmentUpload(files: File[] | FileList): Promise<string[]> {
-	return uploadFilesForEditor(
-		(file, onSuccess) => uploadFile(props.taskId, file, onSuccess),
-		files,
-	)
+	return Promise.all(Array.from(files).map(async file => {
+		const result = await uploadAttachments.mutateAsync({
+			taskId: props.taskId,
+			files: [file],
+		})
+		const [uploaded] = result.success ?? []
+		// forwarded verbatim: the editor's toast translates the error code, which a rewrapped message would lose
+		if (uploaded?.id === undefined) throw result.errors?.[0] ?? new Error('Attachment upload returned no file')
+		return generateAttachmentUrl(props.taskId, uploaded.id)
+	}))
 }
 
 const taskCommentService = shallowReactive(new TaskCommentService())

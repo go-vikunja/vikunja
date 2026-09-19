@@ -13,14 +13,12 @@ import {
 } from './tasks'
 import {
 	attachmentKeys,
-	attachmentsQuery,
 	deleteAttachmentMutationOptions,
 	uploadAttachmentsMutationOptions,
 } from './attachments'
-import {success} from '@/message'
+import {error, success} from '@/message'
 
 const sdk = vi.hoisted(() => ({
-	taskAttachmentsList: vi.fn(),
 	taskAttachmentsUpload: vi.fn(),
 	taskAttachmentsDelete: vi.fn(),
 }))
@@ -37,35 +35,12 @@ beforeEach(() => {
 })
 
 describe('attachments', () => {
-	it('lists through the generated SDK', async () => {
-		sdk.taskAttachmentsList.mockResolvedValue({data: {
-			items: [{
-				id: 3,
-				task_id: 1,
-			}],
-			total_pages: 1,
-		}})
-		expect(await client.fetchQuery(attachmentsQuery(1))).toEqual([{
-			id: 3,
-			task_id: 1,
-		}])
-		expect(sdk.taskAttachmentsList).toHaveBeenCalledWith({
-			path: {task: 1},
-			query: {
-				page: 1,
-				per_page: 1000,
-			},
-			signal: expect.any(AbortSignal),
-		})
-	})
-
 	it('keeps partial upload successes in mounted caches', async () => {
 		const attachment = {
 			id: 3,
 			task_id: 1,
 		}
 		const file = new File(['hello'], 'hello.txt')
-		client.setQueryData(attachmentKeys.list(1), [])
 		client.setQueryData(taskKeys.detail(1), normalizeTask({
 			id: 1,
 			attachments: [],
@@ -84,9 +59,49 @@ describe('attachments', () => {
 			path: {task: 1},
 			body: {files: [file]},
 		})
-		expect(client.getQueryData(attachmentKeys.list(1))).toEqual([attachment])
 		expect(client.getQueryData(taskKeys.detail(1))).toMatchObject({attachments: [attachment]})
-		expect(client.getQueryState(attachmentKeys.list(1))?.isInvalidated).toBe(true)
+		expect(client.getQueryState(taskKeys.detail(1))?.isInvalidated).toBe(true)
+	})
+
+	it('uploads without creating an absent task detail', async () => {
+		const attachment = {
+			id: 3,
+			task_id: 1,
+		}
+		sdk.taskAttachmentsUpload.mockResolvedValue({data: {success: [attachment]}})
+
+		await client.getMutationCache().build(client, uploadAttachmentsMutationOptions())
+			.execute({
+				taskId: 1,
+				files: [new File(['hello'], 'hello.txt')],
+			})
+
+		expect(client.getQueryData(taskKeys.detail(1))).toBeUndefined()
+	})
+
+	it('toasts a failed upload once through the default options', async () => {
+		const failed = new Error('failed to save file: no space left on device')
+		sdk.taskAttachmentsUpload.mockRejectedValue(failed)
+
+		const mutation = client.getMutationCache().build(client, uploadAttachmentsMutationOptions())
+
+		await expect(mutation.execute({
+			taskId: 1,
+			files: [new File([''], 'a.png')],
+		})).rejects.toThrow(failed)
+		expect(error).toHaveBeenCalledExactlyOnceWith(failed)
+	})
+
+	it('leaves the toast to the editor when notifications are suppressed', async () => {
+		sdk.taskAttachmentsUpload.mockRejectedValue(new Error('failed to save file: no space left on device'))
+
+		const mutation = client.getMutationCache().build(client, uploadAttachmentsMutationOptions(() => false))
+
+		await expect(mutation.execute({
+			taskId: 1,
+			files: [new File([''], 'a.png')],
+		})).rejects.toThrow('failed to save file: no space left on device')
+		expect(error).not.toHaveBeenCalled()
 	})
 
 	it('deletes an attachment and clears its cover without creating absent lists', async () => {

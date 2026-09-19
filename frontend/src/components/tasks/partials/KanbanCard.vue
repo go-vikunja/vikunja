@@ -122,7 +122,7 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, ref, watch} from 'vue'
+import {computed, onBeforeUnmount, ref, watch} from 'vue'
 import {useRouter} from 'vue-router'
 
 import {useGlobalNow} from '@/composables/useGlobalNow'
@@ -138,7 +138,7 @@ import {getHexColor, getTaskIdentifier} from '@/helpers/task'
 import type {Task as ITask} from '@/client/generated'
 import type {TaskResponse} from '@/client/queries/tasks'
 import {SUPPORTED_IMAGE_SUFFIX} from '@/helpers/attachmentPreview'
-import {fetchAttachmentBlobUrl} from '@/helpers/attachments'
+import {fetchAttachmentUrl, releaseAttachmentUrl} from '@/helpers/attachments'
 
 import {formatDateLong, formatDisplayDate, formatISO} from '@/helpers/time/formatDate'
 import {colorIsDark} from '@/helpers/color/colorIsDark'
@@ -220,9 +220,14 @@ function openTaskDetail() {
 
 const coverImageBlobUrl = ref<string | null>(null)
 
+function showCoverImage(url: string | null) {
+	releaseAttachmentUrl(coverImageBlobUrl.value)
+	coverImageBlobUrl.value = url
+}
+
 async function maybeDownloadCoverImage() {
 	if (!props.task.cover_image_attachment_id) {
-		coverImageBlobUrl.value = null
+		showCoverImage(null)
 		return
 	}
 
@@ -231,7 +236,7 @@ async function maybeDownloadCoverImage() {
 		return
 	}
 
-	coverImageBlobUrl.value = await fetchAttachmentBlobUrl({id: attachment.id!, task_id: props.task.id}, 'lg')
+	showCoverImage(await fetchAttachmentUrl({id: attachment.id!, task_id: props.task.id}, 'lg'))
 }
 
 watch(
@@ -239,6 +244,8 @@ watch(
 	maybeDownloadCoverImage,
 	{immediate: true},
 )
+
+onBeforeUnmount(() => showCoverImage(null))
 </script>
 
 <style lang="scss" scoped>
