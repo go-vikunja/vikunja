@@ -42,7 +42,7 @@ const elapsed = computed(() => {
 	if (timer === null) {
 		return ''
 	}
-	const seconds = Math.max(0, Math.floor((now.value.getTime() - timer.startTime.getTime()) / 1000))
+	const seconds = Math.max(0, Math.floor((now.value.getTime() - timer.start_time.getTime()) / 1000))
 	const pad = (n: number) => n.toString().padStart(2, '0')
 	const hours = Math.floor(seconds / 3600)
 	const mmss = `${pad(Math.floor((seconds % 3600) / 60))}:${pad(seconds % 60)}`

@@ -138,7 +138,7 @@ import {useProjects} from '@/composables/useProjects'
 import type {ProjectResponse} from '@/client/queries/projects'
 import type {TaskResponse} from '@/client/queries/tasks'
 import type {User as IUser} from '@/client/generated'
-import type {ITimeEntry} from '@/modelTypes/ITimeEntry'
+import type {TimeEntry as ITimeEntry} from '@/client/generated'
 
 const {t} = useI18n()
 const route = useRoute()
