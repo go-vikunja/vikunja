@@ -32,7 +32,7 @@ const DropdownStub = defineComponent({
 const SubscriptionStub = defineComponent({
 	name: 'Subscription',
 	props: {
-		modelValue: {type: Object, default: null},
+		modelValue: {type: Object},
 	},
 	emits: ['toggle'],
 	template: '<div />',
@@ -62,7 +62,7 @@ describe('ProjectSettingsDropdown subscriptions', () => {
 		subscriptionMutation.mutateAsync.mockClear()
 	})
 
-	it('derives the subscription from the cached project', () => {
+	it('passes the project subscription to the subscription button', () => {
 		const wrapper = mountDropdown({
 			id: 1,
 			title: 'Project',
@@ -72,8 +72,14 @@ describe('ProjectSettingsDropdown subscriptions', () => {
 		expect(wrapper.findComponent(SubscriptionStub).props('modelValue')).toMatchObject({
 			id: 7,
 			entity: 'project',
-			entityId: 1,
+			entity_id: 1,
 		})
+	})
+
+	it('passes null for a project without a subscription', () => {
+		const wrapper = mountDropdown({id: 1, title: 'Project'})
+
+		expect(wrapper.findComponent(SubscriptionStub).props('modelValue')).toBeNull()
 	})
 
 	it('toggles the subscription through the project mutation', () => {

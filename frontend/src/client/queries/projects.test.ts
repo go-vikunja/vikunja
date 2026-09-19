@@ -53,6 +53,7 @@ import {
 	setProjectSubscriptionMutationOptions,
 	updateProjectMutationOptions,
 } from './projects'
+import {taskKeys} from './tasks'
 
 function execute<TData, TVariables, TContext>(
 	options: MutationOptions<TData, Error, TVariables, TContext>,
@@ -485,12 +486,13 @@ describe('project drafts and cache mutations', () => {
 		expect(queryClient.getQueryData(projectKeys.detail(9))).toBeUndefined()
 	})
 
-	it('patches the subscription into the cached project and marks sub projects stale without refetching the list', async () => {
+	it('patches the subscription into the cached project and marks sub projects and tasks stale without refetching the list', async () => {
 		const cached = serverProject({id: 1})
 		const child = serverProject({id: 2, parent_project_id: 1})
 		queryClient.setQueryData(listKey, {projects: [cached, child], favoriteProject: null, savedFilterProjects: []})
 		queryClient.setQueryData(projectKeys.detail(1), cached)
 		queryClient.setQueryData(projectKeys.detail(2), child)
+		queryClient.setQueryData(taskKeys.detail(5), {id: 5})
 		const subscription = {id: 7, entity: 'project', entity_id: 1} as const
 		sdk.subscriptionsCreate.mockResolvedValue({data: subscription})
 
@@ -502,6 +504,7 @@ describe('project drafts and cache mutations', () => {
 		expect(queryClient.getQueryState(listKey)?.isInvalidated).toBe(true)
 		expect(queryClient.getQueryState(projectKeys.detail(1))?.isInvalidated).toBe(true)
 		expect(queryClient.getQueryState(projectKeys.detail(2))?.isInvalidated).toBe(true)
+		expect(queryClient.getQueryState(taskKeys.detail(5))?.isInvalidated).toBe(true)
 		expect(sdk.projectsList).not.toHaveBeenCalled()
 
 		sdk.subscriptionsDelete.mockResolvedValue({data: undefined})

@@ -24,6 +24,7 @@ import {i18n} from '@/i18n'
 
 import {contextMutationOptions} from './contextMutation'
 import {fetchAllPages} from './fetchAllPages'
+import {taskKeys} from './tasks'
 
 export type ProjectResponse = Omit<Project,
 	'id' |
@@ -397,6 +398,8 @@ export function setProjectSubscriptionMutationOptions() {
 			return Promise.all([
 				client.invalidateQueries({queryKey: projectKeys.list(), refetchType: 'none'}),
 				...ids.map(id => client.invalidateQueries({queryKey: projectKeys.detail(id)})),
+				// Tasks inherit the project subscription.
+				client.invalidateQueries({queryKey: taskKeys.details}),
 			])
 		},
 		successMessage: (_subscription, {subscribed}) => i18n.global.t(subscribed
