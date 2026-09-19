@@ -11,7 +11,10 @@ import type {Task as ITask} from '@/client/generated'
 const sdk = vi.hoisted(() => ({
 	patchTasksRead: vi.fn(),
 	taskAttachmentsList: vi.fn(async () => ({data: {items: [attachment], total_pages: 1}})),
+	taskAttachmentsUpload: vi.fn(),
 }))
+
+const {errorMessage} = vi.hoisted(() => ({errorMessage: vi.fn()}))
 
 vi.mock('@/client/generated', () => sdk)
 
@@ -20,7 +23,7 @@ vi.mock('vue-i18n', async importOriginal => ({
 	useI18n: () => ({t: (key: string) => key}),
 }))
 
-vi.mock('@/message', () => ({error: vi.fn(), success: vi.fn()}))
+vi.mock('@/message', () => ({error: errorMessage, success: vi.fn()}))
 
 import Attachments from './Attachments.vue'
 
@@ -68,6 +71,8 @@ afterEach(() => {
 	mounted.splice(0).forEach(wrapper => wrapper.unmount())
 	renderErrors.length = 0
 	document.body.innerHTML = ''
+	sdk.taskAttachmentsUpload.mockReset()
+	errorMessage.mockClear()
 })
 
 describe('Attachments delete modal', () => {
@@ -88,5 +93,31 @@ describe('Attachments delete modal', () => {
 		expect(renderErrors).toEqual([])
 		expect(document.querySelector('dialog.modal-dialog')).not.toBeNull()
 		expect(document.body.innerHTML).not.toContain('task.attachment.deleteText1')
+	})
+})
+
+describe('Attachments upload', () => {
+	it('uploads the remaining files after one request fails', async () => {
+		sdk.taskAttachmentsUpload
+			.mockRejectedValueOnce(new Error('413 Payload Too Large'))
+			.mockResolvedValueOnce({data: {success: []}})
+
+		const wrapper = mountAttachments()
+		await flushPromises()
+
+		const fileInput = wrapper.find('input[type="file"]')
+		Object.defineProperty(fileInput.element, 'files', {
+			value: [
+				new File(['x'], 'too-big.zip', {type: 'application/zip'}),
+				new File(['y'], 'cover-image.png', {type: 'image/png'}),
+			],
+			configurable: true,
+		})
+
+		await fileInput.trigger('change')
+		await flushPromises()
+
+		expect(sdk.taskAttachmentsUpload).toHaveBeenCalledTimes(2)
+		expect(errorMessage).toHaveBeenCalledTimes(1)
 	})
 })

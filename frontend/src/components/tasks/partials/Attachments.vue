@@ -432,17 +432,16 @@ async function uploadFilesToTask(files: File[] | FileList) {
 	const taskId = props.task.id!
 	const batch = Array.from(files)
 	uploadProgress.value = 0
-	try {
-		for (const [index, file] of batch.entries()) {
+	for (const [index, file] of batch.entries()) {
+		try {
 			const result = await uploadMutation.mutateAsync({taskId, files: [file]})
-			uploadProgress.value = (index + 1) / batch.length
 			if (result.errors?.length) error({message: result.errors.map(err => err.message).join('\n')})
+		} catch {
+			// mutation already toasts; keep uploading the remaining files
 		}
-	} catch {
-		return
-	} finally {
-		uploadProgress.value = 0
+		uploadProgress.value = (index + 1) / batch.length
 	}
+	uploadProgress.value = 0
 }
 
 const attachmentToDelete = ref<IAttachment | null>(null)
