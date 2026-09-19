@@ -1,4 +1,4 @@
-import {describe, it, expect, afterEach, beforeEach, vi} from 'vitest'
+import {describe, it, expect, afterEach, beforeEach} from 'vitest'
 import {createPinia, setActivePinia} from 'pinia'
 import {ref} from 'vue'
 import {Editor} from '@tiptap/core'
@@ -24,7 +24,6 @@ function createEditor(content: string) {
 		uploadCallback: undefined,
 		uploadAndInsertFiles: () => {},
 		loadedAttachments: ref({}),
-		attachmentService: {getBlobUrl: vi.fn()} as never,
 	}
 
 	editor = new Editor({element: holder, extensions: createEditorExtensions(deps), content})
