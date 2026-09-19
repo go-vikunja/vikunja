@@ -24,16 +24,15 @@ type ReactionInput = {
 	user: Pick<User, 'id' | 'name' | 'username' | 'bot_owner_id'>,
 }
 
+// Chips render in key order, so a toggled emoji keeps its slot instead of moving to the end.
 export function changeReaction(current: ReactionUsers = {}, input: ReactionInput) {
-	const {[input.value]: users, ...rest} = Object.fromEntries(
-		Object.entries(current).map(([value, users]) => [value, users ?? []]),
-	)
-	const remaining = (users ?? []).filter(user => user.id !== input.user.id)
+	const entries = Object.entries(current).map(([value, users]): [string, User[]] => [value, users ?? []])
+	const existing = entries.find(([value]) => value === input.value)
+	const remaining = (existing?.[1] ?? []).filter(user => user.id !== input.user.id)
 	if (!input.remove) remaining.push(input.user)
-	return remaining.length ? {
-		...rest,
-		[input.value]: remaining,
-	} : rest
+	if (existing) existing[1] = remaining
+	else if (remaining.length) entries.push([input.value, remaining])
+	return Object.fromEntries(entries.filter(([value, users]) => value !== input.value || users.length > 0))
 }
 
 export function setReactionMutationOptions() {
