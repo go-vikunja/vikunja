@@ -146,7 +146,7 @@ export function updateCommentMutationOptions() {
 				comment: updated.comment ?? comment.comment,
 			}))
 		},
-		onSettled: ({taskId}, client) => settle(client, taskId),
+		onSettled: ({taskId}, client) => client.invalidateQueries({queryKey: commentKeys.task(taskId)}),
 	})
 }
 
