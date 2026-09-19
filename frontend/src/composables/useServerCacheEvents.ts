@@ -9,11 +9,18 @@ import {
 	useServerCacheEventMutation,
 } from '@/client/queries/serverEvents'
 
+const CACHE_EVENTS = [
+	'timer.created',
+	'timer.updated',
+	'timer.deleted',
+	'notification.created',
+]
+
 export function useServerCacheEvents() {
 	const socket = useWebSocket()
 	const auth = useAuthStore()
 	const mutation = useServerCacheEventMutation()
-	const unsubscribers = ['timer.created', 'timer.updated', 'timer.deleted', 'notification.created'].map(event =>
+	const unsubscribers = CACHE_EVENTS.map(event =>
 		socket.subscribe(event, message => {
 			const update = parseServerCacheEvent(event, message.data, auth.info?.id)
 			if (update) mutation.mutate(update)
