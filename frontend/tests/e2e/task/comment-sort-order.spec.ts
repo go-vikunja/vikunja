@@ -92,7 +92,9 @@ test.describe('Comment sort order', () => {
 		await expect(newCommentEditor).toBeVisible({timeout: 10000})
 		await newCommentEditor.click()
 		await newCommentEditor.fill('Brand new comment')
-		await page.locator('.task-view .comments .media.comment .button:not([disabled])').filter({hasText: 'Comment'}).click()
+		const commentButton = page.locator('.task-view .comments').getByRole('button', {name: 'Comment', exact: true})
+		await expect(commentButton).not.toHaveAttribute('aria-disabled', 'true')
+		await commentButton.click()
 
 		await expect(page.locator('.global-notification')).toContainText('Success')
 
@@ -117,7 +119,9 @@ test.describe('Comment sort order', () => {
 		await expect(newCommentEditor).toBeVisible({timeout: 10000})
 		await newCommentEditor.click()
 		await newCommentEditor.fill('Scroll test comment')
-		await page.locator('.task-view .comments .media.comment .button:not([disabled])').filter({hasText: 'Comment'}).click()
+		const commentButton = page.locator('.task-view .comments').getByRole('button', {name: 'Comment', exact: true})
+		await expect(commentButton).not.toHaveAttribute('aria-disabled', 'true')
+		await commentButton.click()
 
 		await expect(page.locator('.global-notification')).toContainText('Success')
 

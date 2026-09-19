@@ -11,6 +11,7 @@ import {
 	type TaskResponse,
 } from './tasks'
 import {setReactionMutationOptions} from './reactions'
+import {commentKeys} from './comments'
 import {error} from '@/message'
 
 const sdk = vi.hoisted(() => ({
@@ -180,6 +181,7 @@ it('leaves task caches untouched for a comment reaction', async () => {
 	}})
 	await client.getMutationCache().build(client, setReactionMutationOptions()).execute({
 		kind: 'comments',
+		taskId: 1,
 		id: 1,
 		value: '👍',
 		remove: false,
@@ -213,4 +215,51 @@ it('keeps the cache and toasts once when the request fails', async () => {
 	})).rejects.toThrow('nope')
 	expect(client.getQueryData(expandedDetail(1))).toBe(task)
 	expect(error).toHaveBeenCalledTimes(1)
+})
+
+it('patches every cached comment page without staling the task lists', async () => {
+	for (const order of ['asc', 'desc'] as const) client.setQueryData(commentKeys.page(1, order, 1), {
+		items: [{
+			id: 2,
+			comment: 'hi',
+			reactions: {'👍': [{id: 3}]},
+		}],
+		total: 1,
+		total_pages: 1,
+		per_page: 50,
+		page: 1,
+	})
+	client.setQueryData(taskKeys.detail(1), normalizeTask({id: 1}))
+	client.setQueryData(taskKeys.list({project: 1, view: 1}), {
+		items: [],
+		total: 0,
+		total_pages: 0,
+		per_page: 50,
+		page: 1,
+	})
+	const count = client.getQueryCache().getAll().length
+	sdk.reactionsCreate.mockResolvedValue({data: {
+		value: '👍',
+		user: {id: 1},
+	}})
+	await client.getMutationCache().build(client, setReactionMutationOptions()).execute({
+		kind: 'comments',
+		taskId: 1,
+		id: 2,
+		value: '👍',
+		remove: false,
+		user: {id: 1},
+	})
+	for (const order of ['asc', 'desc'] as const) {
+		expect(client.getQueryData(commentKeys.page(1, order, 1))).toMatchObject({
+			items: [{
+				id: 2,
+				reactions: {'👍': [{id: 3}, {id: 1}]},
+			}],
+		})
+		expect(client.getQueryState(commentKeys.page(1, order, 1))?.isInvalidated).toBe(true)
+	}
+	expect(client.getQueryState(taskKeys.detail(1))?.isInvalidated).toBe(false)
+	expect(client.getQueryState(taskKeys.list({project: 1, view: 1}))?.isInvalidated).toBe(false)
+	expect(client.getQueryCache().getAll()).toHaveLength(count)
 })

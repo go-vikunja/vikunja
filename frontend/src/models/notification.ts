@@ -3,7 +3,7 @@ import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import UserModel, {getDisplayName} from '@/models/user'
 import {getTaskIdentifier} from '@/helpers/task'
 import type {Task} from '@/client/generated'
-import TaskCommentModel from '@/models/taskComment'
+import type {TaskComment} from '@/client/generated'
 import type {Team} from '@/client/generated'
 import {objectToSnakeCase} from '@/helpers/case'
 
@@ -13,7 +13,7 @@ import type {IUser} from '@/modelTypes/IUser'
 type NotificationData = {
 	doer: UserModel
 	task: Task
-	comment: TaskCommentModel
+	comment: TaskComment
 	assignee: UserModel
 	project: Extract<INotification['notification'], {project: unknown}>['project']
 	member: UserModel
@@ -36,6 +36,7 @@ export default class NotificationModel extends AbstractModel<INotification> impl
 	constructor(data: Partial<INotification>) {
 		super()
 		const task = data.notification && 'task' in data.notification ? data.notification.task : undefined
+		const comment = data.notification && 'comment' in data.notification ? data.notification.comment : undefined
 		this.assignData(data)
 		const notification = this.notification as unknown as NotificationData
 
@@ -44,7 +45,7 @@ export default class NotificationModel extends AbstractModel<INotification> impl
 				this.notification = asNotificationPayload({
 					doer: new UserModel(notification.doer),
 					task,
-					comment: new TaskCommentModel(notification.comment),
+					comment,
 				})
 				break
 			case NOTIFICATION_NAMES.TASK_ASSIGNED:
