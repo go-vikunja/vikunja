@@ -29,6 +29,7 @@ import {ref, reactive, computed, onMounted, onUnmounted} from 'vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import {useTimeTracking} from '@/composables/useTimeTracking'
 import {useStopTimerMutation} from '@/client/queries/timeEntries'
+import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 
 const timeTracking = reactive(useTimeTracking())
 const stopMutation = useStopTimerMutation()
@@ -37,11 +38,11 @@ const now = ref(new Date())
 let interval: ReturnType<typeof setInterval> | undefined
 
 const elapsed = computed(() => {
-	const timer = timeTracking.activeTimer
-	if (timer === null) {
+	const start = parseDateOrNull(timeTracking.activeTimer?.start_time)
+	if (start === null) {
 		return ''
 	}
-	const seconds = Math.max(0, Math.floor((now.value.getTime() - new Date(timer.start_time ?? '').getTime()) / 1000))
+	const seconds = Math.max(0, Math.floor((now.value.getTime() - start.getTime()) / 1000))
 	const pad = (n: number) => n.toString().padStart(2, '0')
 	const hours = Math.floor(seconds / 3600)
 	const mmss = `${pad(Math.floor((seconds % 3600) / 60))}:${pad(seconds % 60)}`

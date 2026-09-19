@@ -36,6 +36,14 @@ describe('smartFillStart', () => {
 		expect(smartFillStart(entries, '09:00', now)).toEqual(new Date('2026-06-07T10:00:00'))
 	})
 
+	it('ignores entries whose end time is unparseable', () => {
+		const entries = [
+			{...entry(new Date('2026-06-07T09:00:00'), null), end_time: '0001-01-01T00:00:00Z'},
+			{...entry(new Date('2026-06-07T11:00:00'), null), end_time: 'not a date'},
+		]
+		expect(smartFillStart(entries, '08:15', now)).toEqual(new Date('2026-06-07T08:15:00'))
+	})
+
 	it('falls back to the default start time on the current day when there are no entries', () => {
 		expect(smartFillStart([], '08:15', now)).toEqual(new Date('2026-06-07T08:15:00'))
 	})

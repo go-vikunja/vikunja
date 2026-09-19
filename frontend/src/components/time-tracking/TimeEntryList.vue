@@ -122,6 +122,7 @@ import {taskQuery} from '@/client/queries/tasks'
 import {useQueries} from '@tanstack/vue-query'
 import {getProjectTitle} from '@/helpers/getProjectTitle'
 import {formatDate} from '@/helpers/time/formatDate'
+import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {useTimeFormat} from '@/composables/useTimeFormat'
 import {TIME_FORMAT} from '@/constants/timeFormat'
 
@@ -161,9 +162,14 @@ const taskQueries = useQueries({
 })
 const tasks = computed(() => Object.fromEntries(taskQueries.value.flatMap(result => result.data ? [[result.data.id, result.data]] : [])))
 
-function entrySeconds(entry: ITimeEntry): number {
-	const end = entry.end_time ? new Date(entry.end_time) : new Date()
-	return Math.floor((end.getTime() - new Date(entry.start_time ?? '').getTime()) / 1000)
+// null when the entry has no settled duration: still running, or unusable timestamps.
+function entrySeconds(entry: ITimeEntry): number | null {
+	const start = parseDateOrNull(entry.start_time)
+	const end = parseDateOrNull(entry.end_time)
+	if (start === null || end === null) {
+		return null
+	}
+	return Math.floor((end.getTime() - start.getTime()) / 1000)
 }
 
 const rows = computed(() => props.entries.map(entry => {
@@ -178,8 +184,7 @@ const rows = computed(() => props.entries.map(entry => {
 		projectChain: ancestors.map(p => ({id: p.id, title: getProjectTitle(p)})),
 		taskIdentifier: task ? (task.identifier || `#${task.index}`) : (entry.task_id > 0 ? `#${entry.task_id}` : ''),
 		taskTitle: task?.title ?? '',
-		// A running entry (no end) has no settled duration — leave it blank.
-		seconds: entry.end_time ? entrySeconds(entry) : null,
+		seconds: entrySeconds(entry),
 	}
 }))
 
@@ -191,16 +196,17 @@ function formatDuration(seconds: number): string {
 	return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`
 }
 
-function formatTime(date: string | undefined): string {
-	return formatDate(date ?? '', timeFormat.value === TIME_FORMAT.HOURS_24 ? 'HH:mm' : 'hh:mm A')
+function formatTime(date: Date): string {
+	return formatDate(date, timeFormat.value === TIME_FORMAT.HOURS_24 ? 'HH:mm' : 'hh:mm A')
 }
 
 function timeRange(entry: ITimeEntry): string {
-	const start = formatTime(entry.start_time)
-	if (!entry.end_time) {
-		return `${start} – …`
+	const start = parseDateOrNull(entry.start_time)
+	if (start === null) {
+		return ''
 	}
-	return `${start} – ${formatTime(entry.end_time)}`
+	const end = parseDateOrNull(entry.end_time)
+	return end === null ? `${formatTime(start)} – …` : `${formatTime(start)} – ${formatTime(end)}`
 }
 </script>
 
