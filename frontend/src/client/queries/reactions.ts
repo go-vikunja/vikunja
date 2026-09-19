@@ -15,7 +15,7 @@ import {
 } from './taskCache'
 import {
 	commentKeys,
-	type CommentPage,
+	mapCommentEverywhere,
 } from './comments'
 import {
 	taskKeys,
@@ -70,13 +70,9 @@ export function setReactionMutationOptions() {
 				user: data?.user ?? input.user,
 			}
 			if (input.kind === 'comments' && input.taskId) {
-				client.setQueriesData<CommentPage>({queryKey: commentKeys.task(input.taskId)}, current => current && ({
-					...current,
-					items: current.items.map(comment => comment.id === input.id
-						? {
-							...comment,
-							reactions: changeReaction(comment.reactions, reacted),
-						} : comment),
+				mapCommentEverywhere(client, input.taskId, input.id, comment => ({
+					...comment,
+					reactions: changeReaction(comment.reactions, reacted),
 				}))
 			}
 			if (input.kind === 'tasks') {

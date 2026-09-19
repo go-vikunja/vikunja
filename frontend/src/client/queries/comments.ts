@@ -68,6 +68,18 @@ export function commentsQuery(taskId: number, order: CommentOrder, page: number)
 	})
 }
 
+export function mapCommentEverywhere(
+	client: QueryClient,
+	taskId: number,
+	id: number,
+	update: (comment: CommentResponse) => CommentResponse,
+) {
+	client.setQueriesData<CommentPage>({queryKey: commentKeys.task(taskId)}, current => current && ({
+		...current,
+		items: current.items.map(comment => comment.id === id ? update(comment) : comment),
+	}))
+}
+
 function settle(client: QueryClient, taskId: number) {
 	return Promise.all([
 		client.invalidateQueries({queryKey: commentKeys.task(taskId)}),
@@ -129,13 +141,9 @@ export function updateCommentMutationOptions() {
 			})).data,
 		onSuccess: (updated, {taskId, id}, client) => {
 			// The v2 update handler echoes the request body: only the text is real.
-			const merge = (comment: CommentResponse) => normalizeComment({
+			mapCommentEverywhere(client, taskId, id, comment => normalizeComment({
 				...comment,
 				comment: updated.comment ?? comment.comment,
-			})
-			client.setQueriesData<CommentPage>({queryKey: commentKeys.task(taskId)}, current => current && ({
-				...current,
-				items: current.items.map(comment => comment.id === id ? merge(comment) : comment),
 			}))
 		},
 		onSettled: ({taskId}, client) => settle(client, taskId),
