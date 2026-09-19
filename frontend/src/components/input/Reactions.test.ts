@@ -33,7 +33,11 @@ vi.mock('@/client/generated', () => ({
 vi.mock('@/message', () => ({error: vi.fn(), success: vi.fn()}))
 
 vi.mock('vuemoji-picker', () => ({
-	VuemojiPicker: {template: '<div />'},
+	VuemojiPicker: {
+		name: 'VuemojiPicker',
+		template: '<div />',
+		emits: ['emojiClick'],
+	},
 }))
 
 const i18n = createI18n({legacy: false, locale: 'en', messages: {en}})
@@ -122,5 +126,24 @@ describe('Reactions', () => {
 		await flushPromises()
 
 		expect(wrapper.findAll('button')[0].attributes('aria-disabled')).toBeUndefined()
+	})
+
+	it('ignores a response that resolves after the entity changed', async () => {
+		const resolveCreate = deferReactionCreate()
+		const wrapper = mountReactions({'🎉': [OTHER_USER]})
+
+		await wrapper.findAll('button')[1].trigger('click')
+		await nextTick()
+		expect(wrapper.find('.emoji-picker').exists()).toBe(true)
+
+		wrapper.findComponent({name: 'VuemojiPicker'}).vm.$emit('emojiClick', {unicode: '👍'})
+		await nextTick()
+		await wrapper.setProps({entityId: 2})
+
+		resolveCreate()
+		await flushPromises()
+
+		expect(wrapper.emitted('update:modelValue')).toBeUndefined()
+		expect(wrapper.find('.emoji-picker').exists()).toBe(true)
 	})
 })
