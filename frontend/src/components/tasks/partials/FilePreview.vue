@@ -55,7 +55,7 @@
 import {computed, ref, watchEffect} from 'vue'
 import {PREVIEW_SIZE} from '@/services/attachment'
 import {fetchAttachmentBlobUrl} from '@/helpers/attachments'
-import type {IAttachment} from '@/modelTypes/IAttachment'
+import type {TaskAttachment as IAttachment} from '@/client/generated'
 import {canPreviewAudio, canPreviewImage, canPreviewPdf, canPreviewVideo} from '@/models/attachment'
 
 const props = defineProps<{

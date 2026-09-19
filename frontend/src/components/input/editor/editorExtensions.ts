@@ -33,7 +33,7 @@ import {common, createLowlight} from 'lowlight'
 
 import type {UploadCallback} from './types'
 import type {Task as ITask} from '@/client/generated'
-import type {IAttachment} from '@/modelTypes/IAttachment'
+import type {TaskAttachment as IAttachment} from '@/client/generated'
 import {fetchAttachmentBlobUrl} from '@/helpers/attachments'
 
 type ImageNodeKey = `${ITask['id']}-${IAttachment['id']}`

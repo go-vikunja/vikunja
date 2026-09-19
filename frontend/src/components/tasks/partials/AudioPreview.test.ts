@@ -3,7 +3,7 @@ import {nextTick} from 'vue'
 import {mount, flushPromises, type VueWrapper} from '@vue/test-utils'
 import AudioPreview from './AudioPreview.vue'
 import XButton from '@/components/input/Button.vue'
-import type {IAttachment} from '@/modelTypes/IAttachment'
+import type {TaskAttachment as IAttachment} from '@/client/generated'
 
 const {getBlobUrl} = vi.hoisted(() => ({getBlobUrl: vi.fn()}))
 const {errorMessage} = vi.hoisted(() => ({errorMessage: vi.fn()}))
@@ -19,7 +19,7 @@ vi.mock('@/message', () => ({error: errorMessage}))
 vi.mock('vue-i18n', () => ({useI18n: () => ({t: (key: string) => key})}))
 
 function attachment(name: string): IAttachment {
-	return {id: 1, taskId: 1, file: {name, mime: 'audio/mpeg'}} as unknown as IAttachment
+	return {id: 1, task_id: 1, file: {name, mime: 'audio/mpeg'}} as unknown as IAttachment
 }
 
 const mountedPreviews: VueWrapper[] = []
