@@ -75,7 +75,7 @@
 			<template v-if="isEditing">
 				<XButton
 					v-cy="'updateTimeEntry'"
-					:aria-disabled="!canSubmit"
+					:aria-disabled="!canSubmit || undefined"
 					:loading="isSaving"
 					@click="saveEntry"
 				>
@@ -91,7 +91,7 @@
 			<template v-else>
 				<XButton
 					v-cy="'saveTimeEntry'"
-					:aria-disabled="!canSubmit"
+					:aria-disabled="!canSubmit || undefined"
 					:loading="isSaving"
 					@click="saveEntry"
 				>
@@ -100,7 +100,7 @@
 				<XButton
 					v-cy="'startTimer'"
 					variant="secondary"
-					:aria-disabled="!canSubmit"
+					:aria-disabled="!canSubmit || undefined"
 					:loading="isSaving"
 					@click="startTimer"
 				>
