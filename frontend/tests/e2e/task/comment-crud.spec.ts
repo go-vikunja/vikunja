@@ -29,6 +29,7 @@ test('comment create, edit and delete persist after reload', async ({authenticat
 	await page.getByRole('dialog').getByRole('button', {name: 'Do it!'}).click()
 	await expect(row).toHaveCount(0)
 	await page.reload()
+	await expect(page.locator('.comments').getByRole('button', {name: 'Comment', exact: true})).toBeVisible()
 	await expect(row).toHaveCount(0)
 	stored = await apiContext.get(`tasks/${task.id}/comments`, {headers})
 	expect(stored.ok()).toBeTruthy()
