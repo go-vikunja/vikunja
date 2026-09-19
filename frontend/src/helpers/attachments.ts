@@ -23,18 +23,29 @@ queryClient.getQueryCache().subscribe(event => {
 	if (typeof url === 'string') URL.revokeObjectURL(url)
 })
 
+// A blob: url for these inherits our origin and can script; a data: url cannot.
+const SCRIPTABLE_MIME_TYPES = new Set([
+	'image/svg+xml',
+	'text/html',
+	'application/xhtml+xml',
+	'text/xml',
+	'application/xml',
+])
+
 export async function attachmentBlobUrl(attachment: AttachmentIdentity, size?: PreviewSize, signal?: AbortSignal) {
 	const context = captureClientRequestContext()
 	const blob = await attachmentBlob(attachment, size, signal)
 	assertClientRequestContext(context)
 	signal?.throwIfAborted()
-	// A blob: url for an svg inherits our origin and can script; a data: url cannot.
+	const mimeType = blob.type.split(';')[0].trim().toLowerCase()
 	// FileReader is absent in iOS Lockdown Mode and some webviews, fall back to a blob url there.
-	if (blob.type === 'image/svg+xml' && typeof FileReader !== 'undefined') {
-		return new Promise<string>(resolve => {
+	if (SCRIPTABLE_MIME_TYPES.has(mimeType) && typeof FileReader !== 'undefined') {
+		return new Promise<string>((resolve, reject) => {
 			const reader = new FileReader()
-			reader.onload = () => resolve(reader.result as string)
-			reader.onerror = () => resolve(URL.createObjectURL(blob))
+			reader.onload = () => typeof reader.result === 'string'
+				? resolve(reader.result)
+				: reject(new Error('Attachment could not be read as a data url'))
+			reader.onerror = () => reject(reader.error ?? new Error('Attachment could not be read as a data url'))
 			reader.readAsDataURL(blob)
 		})
 	}

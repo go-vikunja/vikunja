@@ -12,6 +12,7 @@ const attachment = {task_id: 5, id: 9}
 
 beforeEach(() => {
 	vi.useRealTimers()
+	vi.unstubAllGlobals()
 	URL.createObjectURL = vi.fn(blob => (blob as Blob & {testUrl?: string}).testUrl ?? 'blob:real-attachment')
 	queryClient.removeQueries({queryKey: attachmentKeys.blobs})
 	getBlobUrl.mockReset()
@@ -23,6 +24,34 @@ describe('attachmentBlobUrl', () => {
 		getBlobUrl.mockResolvedValue({data: new Blob(['<svg />'], {type: 'image/svg+xml'})})
 
 		expect(await attachmentBlobUrl(attachment)).toMatch(/^data:image\/svg\+xml/)
+		expect(URL.createObjectURL).not.toHaveBeenCalled()
+	})
+
+	it('returns an inert data url for svg with a charset parameter', async () => {
+		getBlobUrl.mockResolvedValue({data: new Blob(['<svg />'], {type: 'image/svg+xml; charset=utf-8'})})
+
+		expect(await attachmentBlobUrl(attachment)).toMatch(/^data:image\/svg\+xml/)
+		expect(URL.createObjectURL).not.toHaveBeenCalled()
+	})
+
+	it('returns an inert data url for html, which would otherwise script in our origin', async () => {
+		getBlobUrl.mockResolvedValue({data: new Blob(['<script />'], {type: 'text/html'})})
+
+		expect(await attachmentBlobUrl(attachment)).toMatch(/^data:text\/html/)
+		expect(URL.createObjectURL).not.toHaveBeenCalled()
+	})
+
+	it('rejects when reading fails instead of handing out a scriptable blob url', async () => {
+		getBlobUrl.mockResolvedValue({data: new Blob(['<svg />'], {type: 'image/svg+xml'})})
+		vi.stubGlobal('FileReader', class {
+			onerror: (() => void) | null = null
+			error = new Error('read failed')
+			readAsDataURL() {
+				this.onerror?.()
+			}
+		})
+
+		await expect(attachmentBlobUrl(attachment)).rejects.toThrow('read failed')
 		expect(URL.createObjectURL).not.toHaveBeenCalled()
 	})
 
