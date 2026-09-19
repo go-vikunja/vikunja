@@ -64,7 +64,19 @@ it('sets and clears a task subscription', async () => {
 		entityID: 1,
 	}})
 	expect(success).toHaveBeenLastCalledWith({message: 'You are now unsubscribed to this task'})
+})
+
+it('does not create a cache entry for an unrelated task id', async () => {
+	client.setQueryData(taskKeys.detail(1), normalizeTask({id: 1}))
+	const entryCountBefore = client.getQueryCache().getAll().length
+	sdk.subscriptionsCreate.mockResolvedValue({data: subscription})
+	await client.getMutationCache().build(client, setTaskSubscriptionMutationOptions())
+		.execute({
+			taskId: 99,
+			subscribed: true,
+		})
 	expect(client.getQueryData(taskKeys.detail(99))).toBeUndefined()
+	expect(client.getQueryCache().getAll().length).toBe(entryCountBefore)
 })
 
 it('invalidates every cached detail expansion but leaves task lists alone', async () => {
