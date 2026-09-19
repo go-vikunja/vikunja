@@ -62,15 +62,13 @@ export function serverCacheEventMutationOptions() {
 				else patchTimeEntry(client, event.entry)
 				return Promise.all([
 					client.invalidateQueries({queryKey: timeEntryKeys.all}),
-					invalidateTaskMembership(client, event.entry.task_id),
-					...(event.entry.task_id ? [client.invalidateQueries({queryKey: taskKeys.detail(event.entry.task_id)})] : []),
+					invalidateTaskMembership(client, event.entry.task_id || undefined, 'active'),
 				])
 			}
 			if (event.kind === 'comments') {
 				return Promise.all([
 					client.invalidateQueries({queryKey: commentKeys.task(event.taskId)}),
-					client.invalidateQueries({queryKey: taskKeys.detail(event.taskId)}),
-					invalidateTaskMembership(client, event.taskId),
+					invalidateTaskMembership(client, event.taskId, 'active'),
 				])
 			}
 			return Promise.all([
