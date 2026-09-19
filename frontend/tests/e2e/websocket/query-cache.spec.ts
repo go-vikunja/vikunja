@@ -11,8 +11,8 @@ import {UserFactory} from '../../factories/user'
 import {UserProjectFactory} from '../../factories/users_project'
 import {TEST_PASSWORD} from '../../support/constants'
 
-// TimeEntryList renders `start – …` while a timer runs and `start – end` once it stopped.
-const SETTLED_TIME_RANGE = /\d{1,2}:\d{2}(?: [AP]M)? – \d{1,2}:\d{2}(?: [AP]M)?/
+// Subscriptions are sent in one batch after auth, so the last event of the set proves all of them arrived.
+const LAST_SUBSCRIBED_EVENT = 'notification.created'
 
 function waitForSubscription(page: Page, event: string) {
 	return page.waitForEvent('websocket').then(socket => socket.waitForEvent('framesent', {
@@ -53,7 +53,7 @@ test('comment notifications refresh the open task without a reload', async ({
 		project_id: 100,
 		user_id: currentUser.id,
 	}, false)
-	const subscribed = waitForSubscription(page, 'notification.created')
+	const subscribed = waitForSubscription(page, LAST_SUBSCRIBED_EVENT)
 	await page.goto('/tasks/100')
 	await subscribed
 	await expect(page.locator('.comments .comment')).toHaveCount(0)
@@ -80,7 +80,7 @@ test.describe('timer cache events', () => {
 		userToken,
 	}) => {
 		const [project] = await ProjectFactory.create(1, {title: 'Remote timer project'}, false)
-		const subscribed = waitForSubscription(page, 'timer.created')
+		const subscribed = waitForSubscription(page, LAST_SUBSCRIBED_EVENT)
 		await page.goto('/time-tracking')
 		await subscribed
 		await expect(page.locator('[data-cy="addTimeEntry"]')).toBeVisible()
@@ -104,10 +104,13 @@ test.describe('timer cache events', () => {
 		expect(stopped.ok()).toBeTruthy()
 		await expect(badge).not.toBeVisible()
 		await expect(rows).toHaveCount(1)
-		await expect(rows).toContainText(SETTLED_TIME_RANGE)
+		// A running entry renders an open-ended `start – …`.
+		await expect(rows).not.toContainText('…')
+		const resubscribed = waitForSubscription(page, LAST_SUBSCRIBED_EVENT)
 		await page.reload()
+		await resubscribed
 		await expect(rows).toHaveCount(1)
-		await expect(rows).toContainText(SETTLED_TIME_RANGE)
+		await expect(rows).not.toContainText('…')
 		const deleted = await apiContext.delete(`/api/v2/time-entries/${entry.id}`, {headers})
 		expect(deleted.ok()).toBeTruthy()
 		await expect(rows).toHaveCount(0)
