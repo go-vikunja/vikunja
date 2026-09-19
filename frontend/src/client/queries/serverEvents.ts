@@ -1,4 +1,7 @@
-import {useMutation} from '@tanstack/vue-query'
+import {
+	useMutation,
+	type QueryClient,
+} from '@tanstack/vue-query'
 import type {TimeEntry} from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
 import {
@@ -10,7 +13,10 @@ import {
 } from './timeEntries'
 import {commentKeys} from './comments'
 import {taskKeys} from './tasks'
-import {invalidateTaskMembership} from './taskCache'
+import {
+	invalidateTaskMembership,
+	taskQueryKeys,
+} from './taskCache'
 
 type TimerEvent = 'timer.created' | 'timer.updated' | 'timer.deleted'
 export type ServerCacheEvent =
@@ -53,6 +59,12 @@ export function parseServerCacheEvent(
 	return null
 }
 
+// A task held by no cached collection can't have changed any of them, so nothing is staled for it.
+async function invalidateCachedTask(client: QueryClient, taskId: number | undefined): Promise<void> {
+	if (!taskId || taskQueryKeys(client, taskId).length === 0) return
+	await invalidateTaskMembership(client, taskId, 'active')
+}
+
 export function serverCacheEventMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async (event: ServerCacheEvent) => event,
@@ -62,13 +74,13 @@ export function serverCacheEventMutationOptions() {
 				else patchTimeEntry(client, event.entry)
 				return Promise.all([
 					client.invalidateQueries({queryKey: timeEntryKeys.all}),
-					invalidateTaskMembership(client, event.entry.task_id || undefined, 'active'),
+					invalidateCachedTask(client, event.entry.task_id),
 				])
 			}
 			if (event.kind === 'comments') {
 				return Promise.all([
 					client.invalidateQueries({queryKey: commentKeys.task(event.taskId)}),
-					invalidateTaskMembership(client, event.taskId, 'active'),
+					invalidateCachedTask(client, event.taskId),
 				])
 			}
 			return Promise.all([

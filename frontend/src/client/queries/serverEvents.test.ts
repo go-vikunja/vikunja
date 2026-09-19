@@ -80,6 +80,20 @@ it('invalidates only the notified task comments and detail', async () => {
 	expect(client.getQueryState(taskKeys.detail(1))?.isInvalidated).toBe(true)
 })
 
+it('stales task collections only for a task they hold', async () => {
+	const client = new QueryClient()
+	const listKey = taskKeys.allList({project: 2})
+	client.setQueryData(listKey, [normalizeTask({id: 5})])
+	const commentOn = (taskId: number) => parseServerCacheEvent('notification.created', {
+		name: 'task.comment',
+		notification: {task: {id: taskId}},
+	}, 7)!
+	await client.getMutationCache().build(client, serverCacheEventMutationOptions()).execute(commentOn(1))
+	expect(client.getQueryState(listKey)?.isInvalidated).toBe(false)
+	await client.getMutationCache().build(client, serverCacheEventMutationOptions()).execute(commentOn(5))
+	expect(client.getQueryState(listKey)?.isInvalidated).toBe(true)
+})
+
 it('reconciles timer events without inserting into an unrelated filtered list', async () => {
 	const client = new QueryClient()
 	const entry = normalizeTimeEntry({
