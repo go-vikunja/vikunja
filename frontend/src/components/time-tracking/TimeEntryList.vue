@@ -126,6 +126,7 @@ import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {useTimeFormat} from '@/composables/useTimeFormat'
 import {TIME_FORMAT} from '@/constants/timeFormat'
 
+import type {TaskResponse} from '@/client/queries/tasks'
 import type {TimeEntryResponse as ITimeEntry} from '@/client/queries/timeEntries'
 
 const props = withDefaults(defineProps<{
@@ -156,11 +157,15 @@ const {store: timeFormat} = useTimeFormat()
 const authStore = useAuthStore()
 const currentUserId = computed(() => authStore.info?.id)
 
+const taskIds = computed(() => [...new Set(props.entries.map(entry => entry.task_id).filter(id => id > 0))])
+
 // Entries carry only a task id; the full task (title, identifier, parent project) is resolved lazily.
 const taskQueries = useQueries({
-	queries: computed(() => [...new Set(props.entries.map(entry => entry.task_id).filter(id => id > 0))].map(id => taskQuery(id))),
+	queries: computed(() => taskIds.value.map(id => taskQuery(id))),
 })
-const tasks = computed(() => Object.fromEntries(taskQueries.value.flatMap(result => result.data ? [[result.data.id, result.data]] : [])))
+const tasks = computed<Record<number, TaskResponse>>(() => Object.fromEntries(
+	taskQueries.value.flatMap(result => result.data ? [[result.data.id, result.data] as const] : []),
+))
 
 // null when the entry has no settled duration: still running, or unusable timestamps.
 function entrySeconds(entry: ITimeEntry): number | null {
