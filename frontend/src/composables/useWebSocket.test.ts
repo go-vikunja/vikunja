@@ -133,7 +133,18 @@ it('tears down a socket opened by a previous session instead of reusing it', () 
 	expect(ws.connected.value).toBe(false)
 	expect(ws.authenticated.value).toBe(false)
 
+	session.current = true
+	const current = FakeSocket.instances[1]
+	current.onopen?.()
+	current.onmessage?.(authSuccessFrame())
+	current.send.mockClear()
+
 	ws.subscribe('notification.created', vi.fn())
+	expect(current.send).toHaveBeenCalledTimes(1)
+	expect(current.send).toHaveBeenCalledWith(JSON.stringify({
+		action: 'subscribe',
+		event: 'notification.created',
+	}))
 	expect(stale.send).not.toHaveBeenCalled()
 })
 
