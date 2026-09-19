@@ -5,16 +5,10 @@ import {
 import {useWebSocket} from './useWebSocket'
 import {useAuthStore} from '@/stores/auth'
 import {
+	CACHE_EVENTS,
 	parseServerCacheEvent,
 	useServerCacheEventMutation,
 } from '@/client/queries/serverEvents'
-
-const CACHE_EVENTS = [
-	'timer.created',
-	'timer.updated',
-	'timer.deleted',
-	'notification.created',
-]
 
 export function useServerCacheEvents() {
 	const socket = useWebSocket()

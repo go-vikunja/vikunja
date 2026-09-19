@@ -19,6 +19,15 @@ import {
 	taskQueryKeys,
 } from './taskCache'
 
+export const CACHE_EVENTS = [
+	'timer.created',
+	'timer.updated',
+	'timer.deleted',
+	'notification.created',
+] as const
+
+export type ServerCacheEventName = typeof CACHE_EVENTS[number]
+
 type TimerEvent = 'timer.created' | 'timer.updated' | 'timer.deleted'
 export type ServerCacheEvent =
 	| {
@@ -36,7 +45,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 export function parseServerCacheEvent(
-	event: string,
+	event: ServerCacheEventName,
 	data: unknown,
 	currentUserId: number | undefined,
 ): ServerCacheEvent | null {
