@@ -1,3 +1,4 @@
+import type {QueryKey} from '@tanstack/vue-query'
 import type {TaskAttachment} from '@/client/generated'
 import {queryClient} from '@/client/queryClient'
 import {attachmentBlob, attachmentKeys, uploadAttachmentsMutationOptions, type AttachmentIdentity, type PreviewSize} from '@/client/queries/attachments'
@@ -11,11 +12,16 @@ export enum PREVIEW_SIZE {
 	XL = 'xl',
 }
 
+const isAttachmentBlobKey = (queryKey: QueryKey) =>
+	attachmentKeys.blobs.every((segment, index) => queryKey[index] === segment)
+
 queryClient.getQueryCache().subscribe(event => {
-	if (event.type === 'removed' && event.query.queryKey[0] === 'attachments' && event.query.queryKey[1] === 'blob') {
-		const url = event.query.state.data
-		if (typeof url === 'string') URL.revokeObjectURL(url)
+	if (event.type !== 'removed' || !isAttachmentBlobKey(event.query.queryKey)) {
+		return
 	}
+
+	const url = event.query.state.data
+	if (typeof url === 'string') URL.revokeObjectURL(url)
 })
 
 export async function attachmentBlobUrl(attachment: AttachmentIdentity, size?: PreviewSize, signal?: AbortSignal) {
