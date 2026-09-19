@@ -23,6 +23,17 @@ export async function attachmentBlobUrl(attachment: AttachmentIdentity, size?: P
 	const blob = await attachmentBlob(attachment, size, signal)
 	assertClientRequestContext(context)
 	signal?.throwIfAborted()
+	// A blob: url for an svg inherits our origin and can script; a data: url cannot.
+	// FileReader is absent in iOS Lockdown Mode and some webviews, fall back to a blob url there.
+	if (blob.type === 'image/svg+xml' && typeof FileReader !== 'undefined') {
+		return new Promise<string>(resolve => {
+			const reader = new FileReader()
+			reader.onload = () => resolve(reader.result as string)
+			// A read failure rejects with a ProgressEvent carrying nothing to act on - take the same fallback.
+			reader.onerror = () => resolve(URL.createObjectURL(blob))
+			reader.readAsDataURL(blob)
+		})
+	}
 	return URL.createObjectURL(blob)
 }
 

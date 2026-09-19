@@ -1,6 +1,6 @@
 import {describe, it, expect, beforeEach, vi} from 'vitest'
 
-import {clearAttachmentBlobCache, fetchAttachmentBlobUrl, uploadFilesForEditor} from './attachments'
+import {attachmentBlobUrl, clearAttachmentBlobCache, fetchAttachmentBlobUrl, uploadFilesForEditor} from './attachments'
 import {PREVIEW_SIZE} from '@/helpers/attachments'
 
 const {getBlobUrl} = vi.hoisted(() => ({getBlobUrl: vi.fn()}))
@@ -14,6 +14,22 @@ beforeEach(() => {
 	clearAttachmentBlobCache()
 	getBlobUrl.mockReset()
 	window.URL.revokeObjectURL = vi.fn()
+})
+
+describe('attachmentBlobUrl', () => {
+	it('returns an inert data url for svg, which would otherwise script in our origin', async () => {
+		getBlobUrl.mockResolvedValue({data: new Blob(['<svg xmlns="http://www.w3.org/2000/svg" />'], {type: 'image/svg+xml'})})
+
+		expect(await attachmentBlobUrl(attachment)).toMatch(/^data:image\/svg\+xml/)
+		expect(URL.createObjectURL).not.toHaveBeenCalled()
+	})
+
+	it('returns a blob url for every other mime', async () => {
+		getBlobUrl.mockResolvedValue({data: Object.assign(new Blob(['%PDF'], {type: 'application/pdf'}), {testUrl: 'blob:pdf'})})
+
+		expect(await attachmentBlobUrl(attachment)).toBe('blob:pdf')
+		expect(URL.createObjectURL).toHaveBeenCalledTimes(1)
+	})
 })
 
 describe('fetchAttachmentBlobUrl', () => {
