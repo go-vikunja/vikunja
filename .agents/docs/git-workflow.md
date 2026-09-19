@@ -20,6 +20,7 @@ To implement a plan in isolation, invoke the `prepare-worktree` skill.
 ## Stacked PRs
 
 - One session owns a stack and does every rebase from its own worktree. Don't check out a stack branch in another worktree: git refuses to rebase a branch checked out elsewhere, and `gh stack rebase` aborts.
+- Cascade with recorded tips: note each layer's tip before a fix round, then `git rebase --onto <new lower tip> <recorded old lower tip>` per layer, and push with `--force-with-lease=<branch>:<old tip>`. Never derive the old base from `merge-base` once a lower layer was rebased; it replays the lower layer's commits into the upper one.
 - After rebasing a stack onto `main`, search for imports of modules the stack deletes. New files on `main` can reference them without causing a conflict.
 - When a stack merges as a whole, intermediate PRs may depend on later ones. Say so in each PR body so reviewers don't report those states as bugs.
 - Add a layer with `gh stack add` or `gh stack link`, never plain `gh pr create`; that PR doesn't join the stack.
@@ -33,6 +34,8 @@ To implement a plan in isolation, invoke the `prepare-worktree` skill.
 - Renames of data fields must not touch i18n keypaths or `$t()` keys. Grep the diff for `keypath=` and `t('` before committing; the `sharedBy` to `shared_by` rename rendered raw keys.
 - Order commits the same way in every PR: tests pinning current behaviour, shared test harness, new query module, mechanical consumer switch, behaviour changes, deletion of the legacy files.
 - While a PR is a draft, record corrections as `git commit --fixup <sha>`. Before marking it ready, fold them in with `git rebase -i --autosquash` so reviewers read the final commits, not the iteration history. This is the one exception to never amending or rewriting commits, and it applies only to PRs nobody has reviewed yet.
+- A fixup that touches a test file targets the source commit owning the module, not the test commit. Autosquash moves fixups next to their target, so a fixup of the test commit lands before later source fixups on the same file and conflicts. Dry-run `GIT_SEQUENCE_EDITOR=true git rebase -i --autosquash <base>` in a throwaway worktree after each fix round.
+- Before merge: rebase the whole stack onto `origin/main` first, then autosquash each layer onto the squashed layer below. Check `git diff --numstat <base>..<tip>` per layer is unchanged by the rebase and the tree is identical before and after the squash.
 - Start the PR body with a short review guide: which commits are mechanical and can be skimmed, the few decisions that need real review, deviations from the plan, and any intermediate state that is knowingly broken.
 - One resource per PR. When a PR starts carrying a neighbouring migration, split that into its own PR in the stack.
 
