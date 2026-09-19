@@ -1,4 +1,4 @@
-import type {QueryKey} from '@tanstack/vue-query'
+import {partialMatchKey} from '@tanstack/vue-query'
 import type {TaskAttachment} from '@/client/generated'
 import {queryClient} from '@/client/queryClient'
 import {
@@ -11,11 +11,8 @@ import {
 import {captureClientRequestContext, assertClientRequestContext} from '@/client/requestContext'
 import {downloadBlob} from '@/helpers/downloadBlob'
 
-const isAttachmentBlobKey = (queryKey: QueryKey) =>
-	attachmentKeys.blobs.every((segment, index) => queryKey[index] === segment)
-
 queryClient.getQueryCache().subscribe(event => {
-	if (event.type !== 'removed' || !isAttachmentBlobKey(event.query.queryKey)) {
+	if (event.type !== 'removed' || !partialMatchKey(event.query.queryKey, attachmentKeys.blobs)) {
 		return
 	}
 
