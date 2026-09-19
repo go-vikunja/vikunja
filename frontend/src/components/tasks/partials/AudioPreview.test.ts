@@ -1,6 +1,17 @@
-import {describe, it, expect, beforeEach, afterEach, vi} from 'vitest'
+import {
+describe,
+it,
+expect,
+beforeEach,
+afterEach,
+vi,
+} from 'vitest'
 import {nextTick} from 'vue'
-import {mount, flushPromises, type VueWrapper} from '@vue/test-utils'
+import {
+mount,
+flushPromises,
+type VueWrapper,
+} from '@vue/test-utils'
 import AudioPreview from './AudioPreview.vue'
 import XButton from '@/components/input/Button.vue'
 import type {TaskAttachment as IAttachment} from '@/client/generated'
@@ -18,7 +29,14 @@ vi.mock('vue-i18n', async importOriginal => ({
 }))
 
 function attachment(name: string): IAttachment {
-	return {id: 1, task_id: 1, file: {name, mime: 'audio/mpeg'}} as unknown as IAttachment
+	return {
+id: 1,
+task_id: 1,
+file: {
+name,
+mime: 'audio/mpeg',
+},
+} as unknown as IAttachment
 }
 
 const mountedPreviews: VueWrapper[] = []
@@ -29,7 +47,10 @@ function mountPreview(name = 'memo.mp3') {
 		props: {attachment: attachment(name)},
 		global: {
 			components: {XButton},
-			stubs: {Icon: true, RouterLink: true},
+			stubs: {
+Icon: true,
+RouterLink: true,
+},
 			mocks: {$t: (key: string) => key},
 		},
 	})
@@ -208,4 +229,30 @@ describe('AudioPreview.vue', () => {
 		expect(getBlobUrl).toHaveBeenCalledTimes(1)
 		expect(wrapper.find('audio').exists()).toBe(true)
 	})
+})
+
+ it('revokes the old audio URL when the attachment changes', async () => {
+	getBlobUrl.mockResolvedValueOnce({data: Object.assign(new Blob(['bytes']), {testUrl: 'blob:old'})})
+	const wrapper = mountPreview()
+	await clickPlay(wrapper)
+	await flushPromises()
+	await wrapper.setProps({attachment: {
+...attachment('new.mp3'),
+id: 2,
+}})
+	expect(revokeObjectURL).toHaveBeenCalledWith('blob:old')
+	expect(wrapper.find('audio').exists()).toBe(false)
+})
+
+it('discards audio that arrives after its attachment was replaced', async () => {
+	const resolve = deferredBlobUrl()
+	const wrapper = mountPreview()
+	await clickPlay(wrapper)
+	await wrapper.setProps({attachment: {
+...attachment('new.mp3'),
+id: 2,
+}})
+	resolve('blob:late')
+	await flushPromises()
+	expect(wrapper.find('audio').exists()).toBe(false)
 })

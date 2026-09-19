@@ -30,7 +30,7 @@ let playing: HTMLAudioElement | null = null
 </script>
 
 <script setup lang="ts">
-import {onBeforeUnmount, ref} from 'vue'
+import {onBeforeUnmount, ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {attachmentBlobUrl} from '@/helpers/attachments'
 import type {TaskAttachment as IAttachment} from '@/client/generated'
@@ -46,6 +46,7 @@ const blobUrl = ref<string | undefined>(undefined)
 const playerRef = ref<HTMLAudioElement | null>(null)
 const loading = ref(false)
 let unmounted = false
+let previewEpoch = 0
 
 // Fetched on demand: the download endpoint needs the auth header, so no plain-url streaming.
 async function loadAudio() {
@@ -54,17 +55,18 @@ async function loadAudio() {
 	}
 
 	loading.value = true
+	const epoch = previewEpoch
 	try {
 		const url = await attachmentBlobUrl({id: props.attachment.id!, task_id: props.attachment.task_id!})
-		if (unmounted) {
+		if (unmounted || epoch !== previewEpoch) {
 			window.URL.revokeObjectURL(url)
 			return
 		}
 		blobUrl.value = url
 	} catch (e) {
-		error(e)
+		if (!unmounted && epoch === previewEpoch) error(e)
 	} finally {
-		loading.value = false
+		if (epoch === previewEpoch) loading.value = false
 	}
 }
 
@@ -106,18 +108,23 @@ async function play() {
 	}
 }
 
-onBeforeUnmount(() => {
-	unmounted = true
-
-	// A detached element keeps playing for as long as something references it.
+function releaseAudio() {
+	previewEpoch++
+	loading.value = false
 	if (playing === playerRef.value) {
 		playing?.pause()
 		playing = null
 	}
-
 	if (blobUrl.value !== undefined) {
 		window.URL.revokeObjectURL(blobUrl.value)
+		blobUrl.value = undefined
 	}
+}
+
+watch(() => [props.attachment.task_id, props.attachment.id], releaseAudio, {flush: 'sync'})
+onBeforeUnmount(() => {
+	unmounted = true
+	releaseAudio()
 })
 
 defineExpose({play})
