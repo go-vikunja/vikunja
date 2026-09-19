@@ -740,6 +740,7 @@ const deleteTaskMutation = useDeleteTaskMutation()
 const favoriteTask = useFavoriteTaskMutation()
 const duplicateTask = useDuplicateTaskMutation()
 const markTaskRead = useMarkTaskReadMutation()
+const subscriptionMutation = useSetTaskSubscriptionMutation()
 const taskMutating = computed(() => [
 	updateTask,
 	deleteTaskMutation,
@@ -1206,8 +1207,8 @@ async function changeProject(project: ProjectResponse | null) {
 	baseStore.setCurrentProject(project)
 }
 
-const subscriptionMutation = useSetTaskSubscriptionMutation()
 function toggleSubscription(subscribed: boolean) {
+	if (subscriptionMutation.isPending.value) return
 	subscriptionMutation.mutate({taskId: task.value.id!, subscribed})
 }
 
