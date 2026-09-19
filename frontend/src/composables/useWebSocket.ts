@@ -211,6 +211,15 @@ function connect() {
 	}
 }
 
+// Eager counterpart to the lazy fence in connect(): an in-tab identity change must not leave the
+// previous session's authenticated socket receiving frames until one happens to arrive.
+function closeStaleConnection() {
+	if (!socketContext || isClientRequestContextCurrent(socketContext)) {
+		return
+	}
+	closeSocket()
+}
+
 function disconnect() {
 	manuallyDisconnected = true
 	reconnectAttempt = 0
@@ -246,6 +255,7 @@ export function useWebSocket() {
 	return {
 		connect,
 		disconnect,
+		closeStaleConnection,
 		subscribe,
 		connected: readonly(connected),
 		authenticated: readonly(authenticated),

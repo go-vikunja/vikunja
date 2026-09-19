@@ -49,7 +49,10 @@ vi.mock('@/helpers/redirectToProvider', () => ({
 }))
 
 vi.mock('@/composables/useWebSocket', () => ({
-	useWebSocket: () => ({disconnect: vi.fn()}),
+	useWebSocket: () => ({
+		disconnect: vi.fn(),
+		closeStaleConnection: vi.fn(),
+	}),
 }))
 
 import {useAuthStore} from './auth'

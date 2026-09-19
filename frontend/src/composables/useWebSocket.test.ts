@@ -137,6 +137,53 @@ it('tears down a socket opened by a previous session instead of reusing it', () 
 	expect(stale.send).not.toHaveBeenCalled()
 })
 
+it('closes a socket whose session changed without waiting for a frame, keeping subscriptions', () => {
+	vi.stubGlobal('WebSocket', FakeSocket)
+	window.API_URL = 'http://localhost/api/v1'
+	const ws = useWebSocket()
+	ws.connect()
+	const stale = FakeSocket.instances[0]
+	stale.onopen?.()
+	stale.onmessage?.(authSuccessFrame())
+	ws.subscribe('timer.created', vi.fn())
+	expect(ws.authenticated.value).toBe(true)
+
+	session.current = false
+	ws.closeStaleConnection()
+
+	expect(stale.close).toHaveBeenCalledTimes(1)
+	expect(FakeSocket.instances).toHaveLength(1)
+	expect(ws.connected.value).toBe(false)
+	expect(ws.authenticated.value).toBe(false)
+
+	session.current = true
+	ws.connect()
+	const current = FakeSocket.instances[1]
+	current.onopen?.()
+	current.send.mockClear()
+	current.onmessage?.(authSuccessFrame())
+	expect(current.send).toHaveBeenCalledTimes(1)
+	expect(current.send).toHaveBeenCalledWith(JSON.stringify({
+		action: 'subscribe',
+		event: 'timer.created',
+	}))
+})
+
+it('leaves a current or absent connection alone', () => {
+	vi.stubGlobal('WebSocket', FakeSocket)
+	window.API_URL = 'http://localhost/api/v1'
+	const ws = useWebSocket()
+	ws.closeStaleConnection()
+	expect(FakeSocket.instances).toHaveLength(0)
+
+	ws.connect()
+	const socket = FakeSocket.instances[0]
+	socket.onopen?.()
+	ws.closeStaleConnection()
+	expect(socket.close).not.toHaveBeenCalled()
+	expect(ws.connected.value).toBe(true)
+})
+
 it('does not open a socket for a link share session', () => {
 	vi.stubGlobal('WebSocket', FakeSocket)
 	window.API_URL = 'http://localhost/api/v1'
