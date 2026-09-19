@@ -291,7 +291,9 @@ const attachments = computed(() => attachmentQuery.data.value ?? [])
 const uploadMutation = useUploadAttachmentsMutation()
 const deleteMutation = useDeleteAttachmentMutation()
 const uploadProgress = ref(0)
-const loading = computed(() => uploadMutation.isPending.value || deleteMutation.isPending.value || updateTask.isPending.value)
+const loading = computed(() => uploadMutation.isPending.value
+	|| deleteMutation.isPending.value
+	|| updateTask.isPending.value)
 
 const isDraggingFiles = ref(false)
 const isDragOverEditor = ref(false)
@@ -402,14 +404,14 @@ watch(() => props.editEnabled, enabled => {
 })
 
 function attachmentMetaTooltip(attachment: IAttachment): string {
-	const created_by = t('task.attachment.createdBy', [
+	const createdBy = t('task.attachment.createdBy', [
 		formatDateLong(attachment.created),
 		getDisplayName(attachment.created_by ?? {}),
 	])
 
 	return attachment.file?.mime
-		? `${attachment.file?.mime} · ${created_by}`
-		: created_by
+		? `${attachment.file?.mime} · ${createdBy}`
+		: createdBy
 }
 
 const filesRef = ref<HTMLInputElement | null>(null)
@@ -434,7 +436,7 @@ async function uploadFilesToTask(files: File[] | FileList) {
 		for (const [index, file] of batch.entries()) {
 			const result = await uploadMutation.mutateAsync({taskId, files: [file]})
 			uploadProgress.value = (index + 1) / batch.length
-			if (result.errors?.length) error({message: result.errors.map(error => error.message).join('\n')})
+			if (result.errors?.length) error({message: result.errors.map(err => err.message).join('\n')})
 		}
 	} catch {
 		return

@@ -15,8 +15,6 @@ const sdk = vi.hoisted(() => ({
 
 vi.mock('@/client/generated', () => sdk)
 
-
-
 vi.mock('vue-i18n', async importOriginal => ({
 	...(await importOriginal<typeof import('vue-i18n')>()),
 	useI18n: () => ({t: (key: string) => key}),
@@ -75,7 +73,7 @@ afterEach(() => {
 describe('Attachments delete modal', () => {
 	it('does not render the attachment name after the modal was closed', async () => {
 		const wrapper = mountAttachments()
- await flushPromises()
+		await flushPromises()
 
 		await wrapper.find('.attachment-actions [aria-label="task.attachment.deleteTooltip"]').trigger('click')
 		await nextTick()

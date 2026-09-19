@@ -101,7 +101,8 @@ afterEach(() => {
 
 describe('AudioPreview.vue', () => {
 	it('pauses the player that was running when another one starts', async () => {
-		getBlobUrl.mockResolvedValueOnce({data: Object.assign(new Blob(['bytes']), {testUrl: 'blob:a'})}).mockResolvedValueOnce({data: Object.assign(new Blob(['bytes']), {testUrl: 'blob:b'})})
+		getBlobUrl.mockResolvedValueOnce({data: Object.assign(new Blob(['bytes']), {testUrl: 'blob:a'})})
+			.mockResolvedValueOnce({data: Object.assign(new Blob(['bytes']), {testUrl: 'blob:b'})})
 
 		const first = mountPreview('a.mp3')
 		const second = mountPreview('b.mp3')
@@ -152,7 +153,8 @@ describe('AudioPreview.vue', () => {
 
 	it('surfaces a failed download and leaves the play button usable', async () => {
 		const downloadFailed = new Error('nope')
-		getBlobUrl.mockRejectedValueOnce(downloadFailed).mockResolvedValueOnce({data: Object.assign(new Blob(['bytes']), {testUrl: 'blob:memo'})})
+		getBlobUrl.mockRejectedValueOnce(downloadFailed)
+			.mockResolvedValueOnce({data: Object.assign(new Blob(['bytes']), {testUrl: 'blob:memo'})})
 
 		const wrapper = mountPreview()
 		await clickPlay(wrapper)

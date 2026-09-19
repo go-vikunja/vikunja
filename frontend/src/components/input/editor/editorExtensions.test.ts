@@ -91,7 +91,7 @@ describe('CustomImage attachment id', () => {
 	})
 
 	it('does not let a planted id hijack another image\'s blob url', async () => {
-		const stored = `<p><img src="https://attacker.example/x.png" id="tiptap-image-5-9">` +
+		const stored = '<p><img src="https://attacker.example/x.png" id="tiptap-image-5-9">' +
 			`<img src="#" data-src="${ATTACHMENT_URL}" id="tiptap-image-5-9"></p>`
 		const {editor} = createEditor(stored)
 		await settle()

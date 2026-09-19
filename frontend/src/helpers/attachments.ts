@@ -1,7 +1,13 @@
 import type {QueryKey} from '@tanstack/vue-query'
 import type {TaskAttachment} from '@/client/generated'
 import {queryClient} from '@/client/queryClient'
-import {attachmentBlob, attachmentKeys, uploadAttachmentsMutationOptions, type AttachmentIdentity, type PreviewSize} from '@/client/queries/attachments'
+import {
+	attachmentBlob,
+	attachmentKeys,
+	uploadAttachmentsMutationOptions,
+	type AttachmentIdentity,
+	type PreviewSize,
+} from '@/client/queries/attachments'
 import {captureClientRequestContext, assertClientRequestContext} from '@/client/requestContext'
 import {downloadBlob} from '@/helpers/downloadBlob'
 
@@ -53,7 +59,11 @@ export async function downloadAttachment(attachment: TaskAttachment) {
 	downloadBlob(url, attachment.file?.name ?? '')
 }
 
-export async function uploadFile(taskId: number, file: File, onSuccess?: (url: string) => void): Promise<TaskAttachment[]> {
+export async function uploadFile(
+	taskId: number,
+	file: File,
+	onSuccess?: (url: string) => void,
+): Promise<TaskAttachment[]> {
 	const result = await queryClient.getMutationCache().build(queryClient, uploadAttachmentsMutationOptions())
 		.execute({taskId, files: [file]})
 	const uploaded = result.success ?? []

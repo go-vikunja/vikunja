@@ -20,14 +20,15 @@ beforeEach(() => {
 
 describe('attachmentBlobUrl', () => {
 	it('returns an inert data url for svg, which would otherwise script in our origin', async () => {
-		getBlobUrl.mockResolvedValue({data: new Blob(['<svg xmlns="http://www.w3.org/2000/svg" />'], {type: 'image/svg+xml'})})
+		getBlobUrl.mockResolvedValue({data: new Blob(['<svg />'], {type: 'image/svg+xml'})})
 
 		expect(await attachmentBlobUrl(attachment)).toMatch(/^data:image\/svg\+xml/)
 		expect(URL.createObjectURL).not.toHaveBeenCalled()
 	})
 
 	it('returns a blob url for every other mime', async () => {
-		getBlobUrl.mockResolvedValue({data: Object.assign(new Blob(['%PDF'], {type: 'application/pdf'}), {testUrl: 'blob:pdf'})})
+		const pdf = Object.assign(new Blob(['%PDF'], {type: 'application/pdf'}), {testUrl: 'blob:pdf'})
+		getBlobUrl.mockResolvedValue({data: pdf})
 
 		expect(await attachmentBlobUrl(attachment)).toBe('blob:pdf')
 		expect(URL.createObjectURL).toHaveBeenCalledTimes(1)
@@ -59,7 +60,8 @@ describe('fetchAttachmentBlobUrl', () => {
 
 	it('retries after a rejected fetch', async () => {
 		const failed = new Error('nope')
-		getBlobUrl.mockRejectedValueOnce(failed).mockResolvedValueOnce({data: Object.assign(new Blob(['bytes']), {testUrl: 'blob:a'})})
+		getBlobUrl.mockRejectedValueOnce(failed)
+			.mockResolvedValueOnce({data: Object.assign(new Blob(['bytes']), {testUrl: 'blob:a'})})
 
 		await expect(fetchAttachmentBlobUrl(attachment)).rejects.toThrow(failed)
 		expect(await fetchAttachmentBlobUrl(attachment)).toBe('blob:a')
@@ -93,7 +95,8 @@ describe('fetchAttachmentBlobUrl', () => {
 	})
 
 	it('caches every attachment separately', async () => {
-		getBlobUrl.mockResolvedValueOnce({data: Object.assign(new Blob(['bytes']), {testUrl: 'blob:a'})}).mockResolvedValueOnce({data: Object.assign(new Blob(['bytes']), {testUrl: 'blob:b'})})
+		getBlobUrl.mockResolvedValueOnce({data: Object.assign(new Blob(['bytes']), {testUrl: 'blob:a'})})
+			.mockResolvedValueOnce({data: Object.assign(new Blob(['bytes']), {testUrl: 'blob:b'})})
 
 		expect(await fetchAttachmentBlobUrl({task_id: 5, id: 9})).toBe('blob:a')
 		expect(await fetchAttachmentBlobUrl({task_id: 5, id: 10})).toBe('blob:b')
@@ -104,7 +107,8 @@ describe('fetchAttachmentBlobUrl', () => {
 
 describe('blob cache eviction', () => {
 	it('revokes the cached urls and refetches afterwards', async () => {
-		getBlobUrl.mockResolvedValueOnce({data: Object.assign(new Blob(['bytes']), {testUrl: 'blob:a'})}).mockResolvedValueOnce({data: Object.assign(new Blob(['bytes']), {testUrl: 'blob:b'})})
+		getBlobUrl.mockResolvedValueOnce({data: Object.assign(new Blob(['bytes']), {testUrl: 'blob:a'})})
+			.mockResolvedValueOnce({data: Object.assign(new Blob(['bytes']), {testUrl: 'blob:b'})})
 		await fetchAttachmentBlobUrl(attachment)
 
 		queryClient.removeQueries({queryKey: attachmentKeys.blobs})
