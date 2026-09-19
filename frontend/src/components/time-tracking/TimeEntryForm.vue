@@ -75,7 +75,7 @@
 			<template v-if="isEditing">
 				<XButton
 					v-cy="'updateTimeEntry'"
-					:disabled="!canSubmit"
+					:aria-disabled="!canSubmit || undefined"
 					:loading="isSaving"
 					@click="saveEntry"
 				>
@@ -83,7 +83,6 @@
 				</XButton>
 				<XButton
 					variant="secondary"
-					:disabled="isSaving"
 					@click="cancelEdit"
 				>
 					{{ $t('misc.cancel') }}
@@ -92,7 +91,7 @@
 			<template v-else>
 				<XButton
 					v-cy="'saveTimeEntry'"
-					:disabled="!canSubmit"
+					:aria-disabled="!canSubmit || undefined"
 					:loading="isSaving"
 					@click="saveEntry"
 				>
@@ -101,7 +100,7 @@
 				<XButton
 					v-cy="'startTimer'"
 					variant="secondary"
-					:disabled="!canSubmit"
+					:aria-disabled="!canSubmit || undefined"
 					:loading="isSaving"
 					@click="startTimer"
 				>
@@ -123,13 +122,16 @@ import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
 import {useTasks} from '@/composables/useTasks'
 import {ensureTask} from '@/client/queries/tasks'
 import {smartFillStart} from '@/helpers/time/smartFillStart'
-import {useTimeTrackingStore} from '@/stores/timeTracking'
+import {useCreateTimeEntryMutation, useUpdateTimeEntryMutation} from '@/client/queries/timeEntries'
+import type {UpdateTimeEntryInput} from '@/client/queries/timeEntries'
+import type {TimeEntryWritable} from '@/client/generated'
+import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {useAuthStore} from '@/stores/auth'
 import {useProjects} from '@/composables/useProjects'
 
 import type {ProjectResponse} from '@/client/queries/projects'
 import type {TaskResponse} from '@/client/queries/tasks'
-import type {TimeEntry as ITimeEntry} from '@/client/generated'
+import type {TimeEntryResponse as ITimeEntry} from '@/client/queries/timeEntries'
 
 const props = withDefaults(defineProps<{
 	// When set, the entry is locked to this task and the project/task pickers are hidden.
@@ -149,7 +151,8 @@ const emit = defineEmits<{
 	cancel: []
 }>()
 
-const timeTrackingStore = useTimeTrackingStore()
+const createMutation = useCreateTimeEntryMutation()
+const updateMutation = useUpdateTimeEntryMutation()
 const authStore = useAuthStore()
 const projectList = useProjects()
 
@@ -201,7 +204,7 @@ function smartFill() {
 }
 
 // Whichever of task / project is set lands on the payload (XOR — enforced by canSubmit).
-function applyTarget(payload: Partial<ITimeEntry>) {
+function applyTarget(payload: TimeEntryWritable) {
 	if (props.taskId !== undefined) {
 		payload.task_id = props.taskId
 	} else if (selectedTask.value !== null) {
@@ -211,16 +214,16 @@ function applyTarget(payload: Partial<ITimeEntry>) {
 	}
 }
 
-function buildPayload(includeEnd: boolean): Partial<ITimeEntry> {
-	const payload: Partial<ITimeEntry> = {
+function buildPayload(includeEnd: boolean): TimeEntryWritable {
+	const payload: TimeEntryWritable = {
 		comment: comment.value,
-		startTime: from.value ?? new Date(),
+		start_time: (from.value ?? new Date()).toISOString(),
 	}
 	applyTarget(payload)
 	// Saving a manual entry always has an end (an empty "To" means "until now");
 	// only the Start-timer path omits it to create a running timer.
 	if (includeEnd) {
-		payload.end_time = to.value ?? new Date()
+		payload.end_time = (to.value ?? new Date()).toISOString()
 	}
 	return payload
 }
@@ -234,26 +237,33 @@ function reset() {
 }
 
 // Prefill from the entry being edited; a null entry returns the form to create mode.
-watch(() => props.entry, async entry => {
+watch(() => props.entry, async (entry, _previous, onCleanup) => {
+	let active = true
+	onCleanup(() => { active = false })
 	if (entry == null) {
 		reset()
 		return
 	}
 	comment.value = entry.comment
-	from.value = entry.start_time
-	to.value = entry.end_time
+	from.value = parseDateOrNull(entry.start_time)
+	to.value = parseDateOrNull(entry.end_time)
 	// Bring the form into view — the edit button may be far down the list.
 	await nextTick()
+	if (!active) return
 	formEl.value?.scrollIntoView({behavior: 'smooth', block: 'center'})
 	if (props.taskId !== undefined) {
 		return
 	}
 	if (entry.task_id > 0) {
 		selectedProject.value = null
+		selectedTask.value = null
 		try {
-			selectedTask.value = await ensureTask(entry.task_id)
+			const task = await ensureTask(entry.task_id)
+			if (active && selectedProject.value === null && selectedTask.value === null) {
+				selectedTask.value = task
+			}
 		} catch {
-			selectedTask.value = null
+			return
 		}
 	} else if (entry.project_id > 0) {
 		selectedTask.value = null
@@ -261,20 +271,36 @@ watch(() => props.entry, async entry => {
 	}
 }, {immediate: true})
 
+function draftIdentity() {
+	return JSON.stringify([
+		props.entry?.id,
+		props.taskId,
+		selectedTask.value?.id,
+		selectedProject.value?.id,
+		from.value,
+		to.value,
+		comment.value,
+	])
+}
+
 async function submit(includeEnd: boolean) {
-	if (!canSubmit.value) {
+	if (!canSubmit.value || isSaving.value) {
 		return
 	}
 	isSaving.value = true
+	const draft = draftIdentity()
 	try {
 		const payload = buildPayload(includeEnd)
 		// A started timer begins now (click time), not when the form first loaded.
 		if (!includeEnd) {
-			payload.start_time = new Date()
+			payload.start_time = new Date().toISOString()
 		}
-		await timeTrackingStore.createEntry(payload)
+		await createMutation.mutateAsync(payload)
+		if (draftIdentity() !== draft) return
 		reset()
 		emit('saved')
+	} catch {
+		return
 	} finally {
 		isSaving.value = false
 	}
@@ -282,24 +308,28 @@ async function submit(includeEnd: boolean) {
 
 async function submitUpdate() {
 	const entry = props.entry
-	if (!canSubmit.value || entry == null) {
+	if (!canSubmit.value || isSaving.value || entry == null) {
 		return
 	}
 	isSaving.value = true
+	const draft = draftIdentity()
 	try {
-		const payload: Partial<ITimeEntry> & {id: number} = {
+		const payload: UpdateTimeEntryInput = {
 			id: entry.id,
 			comment: comment.value,
-			startTime: from.value ?? entry.start_time,
+			start_time: from.value?.toISOString() ?? entry.start_time,
 			// A running entry stays running (null); a completed one can't be reopened,
 			// so keep its end if "To" was cleared (the API rejects clearing it).
-			endTime: entry.end_time === null ? to.value : (to.value ?? entry.end_time),
-			taskId: 0,
-			projectId: 0,
+			end_time: to.value?.toISOString() ?? entry.end_time,
+			task_id: 0,
+			project_id: 0,
 		}
 		applyTarget(payload)
-		await timeTrackingStore.updateEntry(payload)
+		await updateMutation.mutateAsync(payload)
+		if (draftIdentity() !== draft) return
 		emit('saved')
+	} catch {
+		return
 	} finally {
 		isSaving.value = false
 	}

@@ -1666,6 +1666,7 @@
       "emptyTask": "No time tracked for this task yet.",
       "emptyFiltered": "No time tracked for the selected filters.",
       "total": "Total",
+      "pageTotal": "Total on this page",
       "time": "Time",
       "duration": "Duration"
     },

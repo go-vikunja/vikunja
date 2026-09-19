@@ -32,17 +32,25 @@
 		>
 			<TimeEntryForm
 				:entry="editingEntry"
-				:recent-entries="timeTrackingStore.browsedEntries"
+				:recent-entries="entries"
 				@saved="onSaved"
 				@cancel="editingEntry = null"
 			/>
 		</Card>
 
 		<TimeEntryList
-			:entries="timeTrackingStore.browsedEntries"
+			:entries="entries"
 			:empty-text="$t('timeTracking.list.emptyFiltered')"
+			:paged="totalPages > 1"
 			@edit="editingEntry = $event"
 			@delete="onDelete"
+		/>
+
+		<PaginationEmit
+			v-if="totalPages > 1"
+			:total-pages="totalPages"
+			:current-page="currentPage"
+			@pageChanged="currentPage = $event"
 		/>
 
 		<Modal
@@ -122,6 +130,7 @@ import Card from '@/components/misc/Card.vue'
 import DatepickerWithRange from '@/components/date/DatepickerWithRange.vue'
 import {DATE_RANGES} from '@/components/date/dateRanges'
 import Multiselect from '@/components/input/Multiselect.vue'
+import PaginationEmit from '@/components/misc/PaginationEmit.vue'
 import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
 import TimeEntryForm from '@/components/time-tracking/TimeEntryForm.vue'
 import TimeEntryList from '@/components/time-tracking/TimeEntryList.vue'
@@ -131,19 +140,20 @@ import {ensureTask} from '@/client/queries/tasks'
 import {searchUsers} from '@/client/queries/userSearch'
 import {useUserSearch} from '@/composables/useUserSearch'
 import {useTitle} from '@/composables/useTitle'
-import {useTimeTrackingStore} from '@/stores/timeTracking'
+import {useTimeEntries} from '@/composables/useTimeTracking'
+import {useDeleteTimeEntryMutation} from '@/client/queries/timeEntries'
 import {useBaseStore} from '@/stores/base'
 import {useProjects} from '@/composables/useProjects'
 
 import type {ProjectResponse} from '@/client/queries/projects'
 import type {TaskResponse} from '@/client/queries/tasks'
 import type {User as IUser} from '@/client/generated'
-import type {TimeEntry as ITimeEntry} from '@/client/generated'
+import type {TimeEntryResponse as ITimeEntry} from '@/client/queries/timeEntries'
 
 const {t} = useI18n()
 const route = useRoute()
 const router = useRouter()
-const timeTrackingStore = useTimeTrackingStore()
+const deleteMutation = useDeleteTimeEntryMutation()
 const baseStore = useBaseStore()
 const projectList = useProjects()
 
@@ -156,11 +166,21 @@ const formVisible = computed(() => showForm.value || editingEntry.value !== null
 function onSaved() {
 	editingEntry.value = null
 	showForm.value = false
-	timeTrackingStore.browseEntries(filter.value)
 }
 
-function onDelete(id: number) {
-	timeTrackingStore.removeEntry(id)
+async function onDelete(entry: ITimeEntry) {
+	if (deleteMutation.isPending.value) {
+		return
+	}
+	try {
+		await deleteMutation.mutateAsync({
+			id: entry.id,
+			taskId: entry.task_id,
+		})
+	} catch {
+		return
+	}
+	currentPage.value = Math.min(currentPage.value, Math.max(1, totalPages.value))
 }
 
 // --- Filter ---------------------------------------------------------------
@@ -264,6 +284,16 @@ const filterQuery = computed(() => {
 })
 
 const ready = ref(false)
+const currentPage = ref(1)
+const {entries, totalPages} = useTimeEntries(() => filter.value, {
+	enabled: ready,
+	keepPrevious: true,
+	page: currentPage,
+})
+
+watch(filter, () => {
+	currentPage.value = 1
+})
 
 async function restoreFromQuery() {
 	const q = route.query
@@ -303,8 +333,6 @@ onMounted(async () => {
 	baseStore.setCurrentProject(null)
 	await restoreFromQuery()
 	ready.value = true
-	// One request with the fully-restored filter — no flicker through partial filters.
-	timeTrackingStore.browseEntries(filter.value)
 })
 
 // DatepickerWithRange only syncs its display from modelValue on change, and it
@@ -322,13 +350,6 @@ watch(filterQuery, q => {
 		return
 	}
 	router.replace({query: q}).catch(() => { /* ignore redundant navigation */ })
-})
-
-watch(filter, value => {
-	if (!ready.value) {
-		return
-	}
-	timeTrackingStore.browseEntries(value)
 })
 </script>
 
