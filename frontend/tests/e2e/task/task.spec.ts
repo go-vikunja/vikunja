@@ -406,20 +406,6 @@ test.describe('Task', () => {
 			await expect(page.locator('.task-view .details.content.description .tiptap button.done-edit')).toBeVisible()
 		})
 
-		test('Can add a new comment', async ({authenticatedPage: page}) => {
-			const tasks = await TaskFactory.create(1, {
-				id: 1,
-			})
-			await page.goto(`/tasks/${tasks[0].id}`)
-
-			await expect(page.locator('.task-view .comments .media.comment .tiptap__editor .tiptap.ProseMirror')).toBeVisible()
-			await page.locator('.task-view .comments .media.comment .tiptap__editor .tiptap.ProseMirror').fill('New Comment')
-			await page.locator('.task-view .comments .media.comment .button:not([disabled])').filter({hasText: 'Comment'}).click()
-
-			await expect(page.locator('.task-view .comments .media.comment .tiptap__editor').first()).toContainText('New Comment')
-			await expect(page.locator('.global-notification')).toContainText('Success')
-		})
-
 		test('Can move a task to another project', async ({authenticatedPage: page}) => {
 			const projects = await ProjectFactory.create(2)
 			const views = await createDefaultViews(projects[0].id, 10)

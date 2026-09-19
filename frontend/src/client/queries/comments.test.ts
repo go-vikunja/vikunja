@@ -40,7 +40,7 @@ beforeEach(() => {
 	client = new QueryClient({defaultOptions: {queries: {retry: false}}})
 })
 
-it('requests the selected task, order and page', async () => {
+it('requests the selected task, order, page and page size', async () => {
 	sdk.taskCommentsList.mockResolvedValue({data: {
 		items: [{id: 4}],
 		page: 2,
@@ -48,7 +48,7 @@ it('requests the selected task, order and page', async () => {
 		total_pages: 2,
 		per_page: 3,
 	}})
-	const result = await client.fetchQuery(commentsQuery(1, 'desc', 2))
+	const result = await client.fetchQuery(commentsQuery(1, 'desc', 2, 3))
 	expect(result.items).toEqual([{
 		id: 4,
 		comment: '',
@@ -59,6 +59,27 @@ it('requests the selected task, order and page', async () => {
 		query: {
 			order_by: 'desc',
 			page: 2,
+			per_page: 3,
+		},
+		signal: expect.any(AbortSignal),
+	})
+})
+
+it('clamps per_page to the v2 maximum', async () => {
+	sdk.taskCommentsList.mockResolvedValue({data: {
+		items: [],
+		page: 1,
+		total: 0,
+		total_pages: 0,
+		per_page: 1000,
+	}})
+	await client.fetchQuery(commentsQuery(1, 'desc', 1, 5000))
+	expect(sdk.taskCommentsList).toHaveBeenCalledWith({
+		path: {task: 1},
+		query: {
+			order_by: 'desc',
+			page: 1,
+			per_page: 1000,
 		},
 		signal: expect.any(AbortSignal),
 	})
@@ -76,18 +97,18 @@ it('keeps the previous page as placeholder for the same task only', () => {
 		per_page: 1,
 		page: 1,
 	}
-	const placeholderData = commentsQuery(1, 'asc', 2).placeholderData as (
+	const placeholderData = commentsQuery(1, 'asc', 2, 1).placeholderData as (
 		previousData: CommentPage | undefined,
 		previousQuery: {queryKey: ReturnType<typeof commentKeys.page>} | undefined,
 	) => CommentPage | undefined
 
-	expect(placeholderData(previousData, {queryKey: commentKeys.page(1, 'asc', 1)})).toBe(previousData)
-	expect(placeholderData(previousData, {queryKey: commentKeys.page(2, 'asc', 1)})).toBeUndefined()
+	expect(placeholderData(previousData, {queryKey: commentKeys.page(1, 'asc', 1, 1)})).toBe(previousData)
+	expect(placeholderData(previousData, {queryKey: commentKeys.page(2, 'asc', 1, 1)})).toBeUndefined()
 	expect(placeholderData(undefined, undefined)).toBeUndefined()
 })
 
 it('decrements every cached page total and only expanded task counts', async () => {
-	for (const page of [1, 2]) client.setQueryData(commentKeys.page(1, 'asc', page), {
+	for (const page of [1, 2]) client.setQueryData(commentKeys.page(1, 'asc', page, 1), {
 		items: [{id: page}],
 		total: 2,
 		total_pages: 2,
@@ -104,14 +125,14 @@ it('decrements every cached page total and only expanded task counts', async () 
 		taskId: 1,
 		id: 2,
 	})
-	expect(client.getQueryData(commentKeys.page(1, 'asc', 1))).toEqual({
+	expect(client.getQueryData(commentKeys.page(1, 'asc', 1, 1))).toEqual({
 		items: [{id: 1}],
 		total: 1,
 		total_pages: 1,
 		per_page: 1,
 		page: 1,
 	})
-	expect(client.getQueryData(commentKeys.page(1, 'asc', 2))).toEqual({
+	expect(client.getQueryData(commentKeys.page(1, 'asc', 2, 1))).toEqual({
 		items: [],
 		total: 1,
 		total_pages: 1,
@@ -123,7 +144,7 @@ it('decrements every cached page total and only expanded task counts', async () 
 })
 
 it('keeps author, dates and reactions the update response drops', async () => {
-	client.setQueryData(commentKeys.page(1, 'asc', 1), {
+	client.setQueryData(commentKeys.page(1, 'asc', 1, 50), {
 		items: [{
 			id: 2,
 			comment: 'before',
@@ -150,7 +171,7 @@ it('keeps author, dates and reactions the update response drops', async () => {
 		id: 2,
 		comment: 'after',
 	})
-	expect(client.getQueryData(commentKeys.page(1, 'asc', 1))).toMatchObject({
+	expect(client.getQueryData(commentKeys.page(1, 'asc', 1, 50))).toMatchObject({
 		items: [{
 			id: 2,
 			comment: 'after',
@@ -160,11 +181,11 @@ it('keeps author, dates and reactions the update response drops', async () => {
 			reactions: {'👍': [{id: 1}]},
 		}],
 	})
-	expect(client.getQueryState(commentKeys.page(1, 'asc', 1))?.isInvalidated).toBe(true)
+	expect(client.getQueryState(commentKeys.page(1, 'asc', 1, 50))?.isInvalidated).toBe(true)
 })
 
 it('prepends onto a full first desc page and drops the last item', async () => {
-	client.setQueryData(commentKeys.page(1, 'desc', 1), {
+	client.setQueryData(commentKeys.page(1, 'desc', 1, 2), {
 		items: [
 			{
 				id: 2,
@@ -190,7 +211,7 @@ it('prepends onto a full first desc page and drops the last item', async () => {
 		taskId: 1,
 		comment: 'newest',
 	})
-	expect(client.getQueryData(commentKeys.page(1, 'desc', 1))).toEqual({
+	expect(client.getQueryData(commentKeys.page(1, 'desc', 1, 2))).toEqual({
 		items: [
 			{
 				id: 3,
@@ -211,7 +232,7 @@ it('prepends onto a full first desc page and drops the last item', async () => {
 })
 
 it('appends onto the last asc page', async () => {
-	client.setQueryData(commentKeys.page(1, 'asc', 2), {
+	client.setQueryData(commentKeys.page(1, 'asc', 2, 50), {
 		items: [{
 			id: 99,
 			comment: 'last',
@@ -230,7 +251,7 @@ it('appends onto the last asc page', async () => {
 		taskId: 1,
 		comment: 'newest',
 	})
-	expect(client.getQueryData(commentKeys.page(1, 'asc', 2))).toEqual({
+	expect(client.getQueryData(commentKeys.page(1, 'asc', 2, 50))).toEqual({
 		items: [
 			{
 				id: 99,
@@ -251,7 +272,7 @@ it('appends onto the last asc page', async () => {
 })
 
 it('stales a mounted page after create without refetching over the insert', async () => {
-	const key = commentKeys.page(1, 'desc', 1)
+	const key = commentKeys.page(1, 'desc', 1, 50)
 	const queryFn = vi.fn(() => ({
 		items: [],
 		total: 0,
@@ -283,7 +304,7 @@ it('stales a mounted page after create without refetching over the insert', asyn
 })
 
 it('bumps totals without touching items on a non-last asc page', async () => {
-	client.setQueryData(commentKeys.page(1, 'asc', 1), {
+	client.setQueryData(commentKeys.page(1, 'asc', 1, 50), {
 		items: [{
 			id: 1,
 			comment: 'first',
@@ -302,7 +323,7 @@ it('bumps totals without touching items on a non-last asc page', async () => {
 		taskId: 1,
 		comment: 'newest',
 	})
-	expect(client.getQueryData(commentKeys.page(1, 'asc', 1))).toEqual({
+	expect(client.getQueryData(commentKeys.page(1, 'asc', 1, 50))).toEqual({
 		items: [{
 			id: 1,
 			comment: 'first',

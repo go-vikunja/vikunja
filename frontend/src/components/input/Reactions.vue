@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import type {ReactionKind, ReactionUsers} from '@/client/queries/reactions'
+import type {ReactionInput, ReactionUsers} from '@/client/queries/reactions'
 import {VuemojiPicker} from 'vuemoji-picker'
-import {useSetReactionMutation, changeReaction} from '@/client/queries/reactions'
+import {useSetReactionMutation} from '@/client/queries/reactions'
 import BaseButton from '@/components/base/BaseButton.vue'
 import {getDisplayName} from '@/models/user'
 import {useI18n} from 'vue-i18n'
@@ -11,15 +11,22 @@ import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 import {useAuthStore} from '@/stores/auth'
 import {useColorScheme} from '@/composables/useColorScheme'
 
-const props = withDefaults(defineProps<{
-	entityKind: ReactionKind,
+type ReactionSubject = {
+	entityKind: 'tasks',
+	taskId?: never,
+} | {
+	entityKind: 'comments',
+	taskId: number,
+}
+
+const props = withDefaults(defineProps<ReactionSubject & {
 	entityId: number,
+	modelValue?: ReactionUsers,
 	disabled?: boolean,
 }>(), {
+	modelValue: undefined,
 	disabled: false,
 })
-
-const model = defineModel<ReactionUsers>()
 
 const authStore = useAuthStore()
 const {t} = useI18n()
@@ -28,30 +35,34 @@ const {isDark} = useColorScheme()
 
 async function setReaction(value: string, remove: boolean) {
 	if (props.disabled || reactionMutation.isPending.value || !authStore.info) return
-	const input = {
-		kind: props.entityKind,
-		id: props.entityId,
-		value,
-		remove,
-		user: {
-			id: authStore.info.id,
-			name: authStore.info.name,
-			username: authStore.info.username,
-		},
+	const user = {
+		id: authStore.info.id,
+		name: authStore.info.name,
+		username: authStore.info.username,
 	}
+	const input: ReactionInput = props.entityKind === 'comments'
+		? {
+			kind: 'comments',
+			taskId: props.taskId,
+			id: props.entityId,
+			value,
+			remove,
+			user,
+		}
+		: {
+			kind: 'tasks',
+			id: props.entityId,
+			value,
+			remove,
+			user,
+		}
 	try {
-		const data = await reactionMutation.mutateAsync(input)
-		if (props.entityId !== input.id || props.entityKind !== input.kind) return
-		showEmojiPicker.value = false
-		// Task reactions live in the task cache; a second local copy would race it.
-		if (props.entityKind === 'tasks') return
-		model.value = changeReaction(model.value, {
-			...input,
-			user: data?.user ?? input.user,
-		})
+		await reactionMutation.mutateAsync(input)
 	} catch {
 		return
 	}
+	if (props.entityId !== input.id || props.entityKind !== input.kind) return
+	showEmojiPicker.value = false
 }
 
 function addReaction(value: string) {
@@ -118,8 +129,8 @@ function toggleEmojiPicker() {
 }
 
 function hasCurrentUserReactedWithEmoji(value: string | number): boolean {
-	if (!model.value || !authStore.info) return false
-	const user = model.value[String(value)]?.find(u => u.id === authStore.info!.id)
+	if (!props.modelValue || !authStore.info) return false
+	const user = props.modelValue[String(value)]?.find(u => u.id === authStore.info!.id)
 	return typeof user !== 'undefined'
 }
 
@@ -139,7 +150,7 @@ async function toggleReaction(value: string | number) {
 		class="reactions"
 	>
 		<BaseButton
-			v-for="(users, value) in model"
+			v-for="(users, value) in modelValue"
 			:key="'button' + value"
 			v-tooltip="getReactionTooltip(users, value)"
 			class="reaction-button"
