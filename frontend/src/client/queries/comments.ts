@@ -12,7 +12,7 @@ export type CommentResponse = Omit<TaskComment, 'id' | 'comment' | 'reactions'> 
 	comment: string,
 	reactions: Record<string, NonNullable<NonNullable<TaskComment['reactions']>[string]>>,
 }
-export type CommentPage = Omit<Required<PaginatedTaskComment>, 'items'> & {items: CommentResponse[]}
+export type CommentPage = Omit<Required<PaginatedTaskComment>, 'items' | '$schema'> & {items: CommentResponse[]}
 export const commentKeys = {
 	all: ['comments'] as const,
 	task: (taskId: number) => ['comments', taskId] as const,
