@@ -43,6 +43,8 @@ export function fetchAttachmentBlobUrl(attachment: AttachmentIdentity, size?: Pr
 		queryKey: attachmentKeys.blob(attachment.task_id, attachment.id, size),
 		queryFn: ({signal}) => attachmentBlobUrl(attachment, size, signal),
 		staleTime: Infinity,
+		// fetchQuery registers no observer, so the default gcTime would revoke a url the editor or a cover still shows
+		gcTime: Infinity,
 		retry: false,
 	})
 }

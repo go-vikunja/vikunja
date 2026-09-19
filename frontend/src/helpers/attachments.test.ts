@@ -10,6 +10,7 @@ vi.mock('@/client/generated', () => ({taskAttachmentsDownload: getBlobUrl}))
 const attachment = {task_id: 5, id: 9}
 
 beforeEach(() => {
+	vi.useRealTimers()
 	URL.createObjectURL = vi.fn(blob => (blob as Blob & {testUrl?: string}).testUrl ?? 'blob:real-attachment')
 	clearAttachmentBlobCache()
 	getBlobUrl.mockReset()
@@ -76,6 +77,18 @@ describe('fetchAttachmentBlobUrl', () => {
 		expect(await fetchAttachmentBlobUrl(attachment, PREVIEW_SIZE.MD)).toBe('blob:md')
 
 		expect(getBlobUrl).toHaveBeenCalledTimes(3)
+	})
+
+	it('keeps the url past the default gc time, while editor images and covers still show it', async () => {
+		vi.useFakeTimers()
+		getBlobUrl.mockResolvedValue({data: Object.assign(new Blob(['bytes']), {testUrl: 'blob:a'})})
+		await fetchAttachmentBlobUrl(attachment)
+
+		await vi.advanceTimersByTimeAsync(6 * 60_000)
+
+		expect(window.URL.revokeObjectURL).not.toHaveBeenCalled()
+		expect(await fetchAttachmentBlobUrl(attachment)).toBe('blob:a')
+		expect(getBlobUrl).toHaveBeenCalledTimes(1)
 	})
 
 	it('caches every attachment separately', async () => {
