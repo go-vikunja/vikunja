@@ -56,6 +56,12 @@ it('hydrates only the current user running timer and keeps ISO dates', async () 
 	})
 })
 
+it('resolves the active timer to null without a request when there is no user id', async () => {
+	const result = await client.fetchQuery(activeTimerQuery(0))
+	expect(result).toBeNull()
+	expect(sdk.timeEntriesList).not.toHaveBeenCalled()
+})
+
 it('passes browse filters and timezone to the generated client and concatenates every page', async () => {
 	sdk.timeEntriesList.mockImplementation(({query}) => Promise.resolve({data: {
 		items: [{

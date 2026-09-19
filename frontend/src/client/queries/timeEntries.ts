@@ -62,6 +62,7 @@ export function activeTimerQuery(userId: number) {
 	return queryOptions({
 		queryKey: timeEntryKeys.active(userId),
 		queryFn: async ({signal}) => {
+			if (userId <= 0) return null
 			const {data} = await timeEntriesList({
 				query: {
 					filter: `user_id = ${userId} && end_time = null`,
