@@ -267,7 +267,7 @@ const filterQuery = computed(() => {
 })
 
 const ready = ref(false)
-const {entries} = useTimeEntries(() => filter.value, ready)
+const {entries} = useTimeEntries(() => filter.value, ready, {keepPrevious: true})
 
 async function restoreFromQuery() {
 	const q = route.query

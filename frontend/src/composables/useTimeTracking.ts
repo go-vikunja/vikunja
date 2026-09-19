@@ -1,5 +1,5 @@
 import {computed, toValue, type MaybeRefOrGetter} from 'vue'
-import {useQuery} from '@tanstack/vue-query'
+import {keepPreviousData, useQuery} from '@tanstack/vue-query'
 import {activeTimerQuery, timeEntriesQuery} from '@/client/queries/timeEntries'
 import {useAuthStore} from '@/stores/auth'
 import {useConfigStore} from '@/stores/config'
@@ -16,12 +16,18 @@ export function useTimeTracking() {
 	return {activeTimer, hasActiveTimer: computed(() => activeTimer.value !== null)}
 }
 
-export function useTimeEntries(filter: MaybeRefOrGetter<string>, enabled: MaybeRefOrGetter<boolean> = true) {
+export function useTimeEntries(
+	filter: MaybeRefOrGetter<string>,
+	enabled: MaybeRefOrGetter<boolean> = true,
+	// Only for consumers whose filter stays inside one scope; a per-task list would show another task's entries.
+	{keepPrevious = false}: {keepPrevious?: boolean} = {},
+) {
 	const auth = useAuthStore()
 	const config = useConfigStore()
 	const query = useQuery(computed(() => ({
 		...timeEntriesQuery(toValue(filter), Intl.DateTimeFormat().resolvedOptions().timeZone),
 		enabled: toValue(enabled) && !auth.isLinkShareAuth && config.isProFeatureEnabled(PRO_FEATURE.TIME_TRACKING),
+		...(keepPrevious ? {placeholderData: keepPreviousData} : {}),
 	})))
 	return {entries: computed(() => query.data.value ?? [])}
 }
