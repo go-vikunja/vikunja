@@ -230,7 +230,7 @@ import UserAvatar from '@/components/misc/UserAvatar.vue'
 import TaskCommentService from '@/services/taskComment'
 import TaskCommentModel from '@/models/taskComment'
 
-import type {ITaskComment} from '@/modelTypes/ITaskComment'
+import type {TaskComment as ITaskComment} from '@/client/generated'
 import type {Task as ITask} from '@/client/generated'
 
 import {generateAttachmentUrl} from '@/helpers/attachments'
