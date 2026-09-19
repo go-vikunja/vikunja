@@ -11,6 +11,7 @@ import {
 	createCommentMutationOptions,
 	deleteCommentMutationOptions,
 	updateCommentMutationOptions,
+	type CommentPage,
 } from './comments'
 import {
 	normalizeTask,
@@ -58,6 +59,28 @@ it('requests the selected task, order and page', async () => {
 		},
 		signal: expect.any(AbortSignal),
 	})
+})
+
+it('keeps the previous page as placeholder for the same task only', () => {
+	const previousData: CommentPage = {
+		items: [{
+			id: 1,
+			comment: 'first',
+			reactions: {},
+		}],
+		total: 2,
+		total_pages: 2,
+		per_page: 1,
+		page: 1,
+	}
+	const placeholderData = commentsQuery(1, 'asc', 2).placeholderData as (
+		previousData: CommentPage | undefined,
+		previousQuery: {queryKey: ReturnType<typeof commentKeys.page>} | undefined,
+	) => CommentPage | undefined
+
+	expect(placeholderData(previousData, {queryKey: commentKeys.page(1, 'asc', 1)})).toBe(previousData)
+	expect(placeholderData(previousData, {queryKey: commentKeys.page(2, 'asc', 1)})).toBeUndefined()
+	expect(placeholderData(undefined, undefined)).toBeUndefined()
 })
 
 it('decrements every cached page total and only expanded task counts', async () => {

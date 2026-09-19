@@ -1,6 +1,7 @@
 import {
 	queryOptions,
 	useMutation,
+	type Query,
 	type QueryClient,
 	type QueryKey,
 } from '@tanstack/vue-query'
@@ -52,7 +53,7 @@ export function normalizeComment(comment: TaskComment): CommentResponse {
 }
 
 export function commentsQuery(taskId: number, order: CommentOrder, page: number) {
-	return queryOptions({
+	return queryOptions<CommentPage, Error, CommentPage, ReturnType<typeof commentKeys.page>>({
 		queryKey: commentKeys.page(taskId, order, page),
 		enabled: taskId > 0,
 		queryFn: async ({signal}): Promise<CommentPage> => {
@@ -72,6 +73,15 @@ export function commentsQuery(taskId: number, order: CommentOrder, page: number)
 				total: data.total ?? 0,
 				total_pages: data.total_pages ?? 0,
 			}
+		},
+		// Not keepPreviousData: it would show the previous task's comments.
+		placeholderData: (
+			previousData: CommentPage | undefined,
+			previousQuery: Query<CommentPage, Error, CommentPage, ReturnType<typeof commentKeys.page>> | undefined,
+		) => {
+			if (!previousQuery) return undefined
+			const [, previousTaskId] = previousQuery.queryKey
+			return previousTaskId === taskId ? previousData : undefined
 		},
 	})
 }
