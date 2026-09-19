@@ -16,11 +16,15 @@ export function useTimeTracking() {
 	return {activeTimer, hasActiveTimer: computed(() => activeTimer.value !== null)}
 }
 
+export type UseTimeEntriesOptions = {
+	enabled?: MaybeRefOrGetter<boolean>
+	// Only for consumers whose filter stays inside one scope; a per-task list would show another task's entries.
+	keepPrevious?: boolean
+}
+
 export function useTimeEntries(
 	filter: MaybeRefOrGetter<string>,
-	enabled: MaybeRefOrGetter<boolean> = true,
-	// Only for consumers whose filter stays inside one scope; a per-task list would show another task's entries.
-	{keepPrevious = false}: {keepPrevious?: boolean} = {},
+	{enabled = true, keepPrevious = false}: UseTimeEntriesOptions = {},
 ) {
 	const auth = useAuthStore()
 	const config = useConfigStore()
