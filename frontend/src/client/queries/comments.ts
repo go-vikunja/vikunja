@@ -78,9 +78,9 @@ function settle(client: QueryClient, taskId: number) {
 export function createCommentMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async ({taskId, comment}: {
-taskId: number,
-comment: string,
-}) =>
+			taskId: number,
+			comment: string,
+		}) =>
 			(await taskCommentsCreate({
 				path: {task: taskId},
 				body: {comment},
@@ -116,10 +116,10 @@ comment: string,
 export function updateCommentMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async ({taskId, id, comment}: {
-taskId: number,
-id: number,
-comment: string,
-}) =>
+			taskId: number,
+			id: number,
+			comment: string,
+		}) =>
 			(await taskCommentsUpdate({
 				path: {
 					task: taskId,
@@ -149,9 +149,9 @@ comment: string,
 export function deleteCommentMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async ({taskId, id}: {
-taskId: number,
-id: number,
-}) =>
+			taskId: number,
+			id: number,
+		}) =>
 			(await taskCommentsDelete({path: {
 				task: taskId,
 				commentid: id,
