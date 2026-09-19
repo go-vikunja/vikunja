@@ -1,9 +1,24 @@
-import {queryOptions, useMutation, type QueryClient} from '@tanstack/vue-query'
-import {taskCommentsCreate, taskCommentsDelete, taskCommentsList, taskCommentsUpdate} from '@/client/generated'
-import type {PaginatedTaskComment, TaskComment, TaskCommentsListData} from '@/client/generated'
+import {
+	queryOptions,
+	useMutation,
+	type QueryClient,
+} from '@tanstack/vue-query'
+import {
+	taskCommentsCreate,
+	taskCommentsDelete,
+	taskCommentsList,
+	taskCommentsUpdate,
+} from '@/client/generated'
+import type {
+	PaginatedTaskComment,
+	TaskComment,
+	TaskCommentsListData,
+} from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
-import {mapTaskEverywhere} from './taskCache'
-import {taskKeys} from './tasks'
+import {
+	invalidateTaskMembership,
+	mapTaskEverywhere,
+} from './taskCache'
 import {i18n} from '@/i18n'
 
 export type CommentOrder = NonNullable<NonNullable<TaskCommentsListData['query']>['order_by']>
@@ -33,7 +48,14 @@ export function commentsQuery(taskId: number, order: CommentOrder, page: number)
 		queryKey: commentKeys.page(taskId, order, page),
 		enabled: taskId > 0,
 		queryFn: async ({signal}): Promise<CommentPage> => {
-			const {data} = await taskCommentsList({path: {task: taskId}, query: {order_by: order, page}, signal})
+			const {data} = await taskCommentsList({
+				path: {task: taskId},
+				query: {
+					order_by: order,
+					page,
+				},
+				signal,
+			})
 			return {
 				...data,
 				items: (data.items ?? []).map(normalizeComment),
@@ -49,14 +71,20 @@ export function commentsQuery(taskId: number, order: CommentOrder, page: number)
 function settle(client: QueryClient, taskId: number) {
 	return Promise.all([
 		client.invalidateQueries({queryKey: commentKeys.task(taskId)}),
-		client.invalidateQueries({queryKey: taskKeys.all, refetchType: 'none'}),
+		invalidateTaskMembership(client, taskId),
 	])
 }
 
 export function createCommentMutationOptions() {
 	return contextMutationOptions({
-		mutationFn: async ({taskId, comment}: {taskId: number, comment: string}) =>
-			(await taskCommentsCreate({path: {task: taskId}, body: {comment}})).data,
+		mutationFn: async ({taskId, comment}: {
+taskId: number,
+comment: string,
+}) =>
+			(await taskCommentsCreate({
+				path: {task: taskId},
+				body: {comment},
+			})).data,
 		onSuccess: (comment, {taskId}, client) => {
 			for (const [key, current] of client.getQueriesData<CommentPage>({queryKey: commentKeys.task(taskId)})) {
 				if (!current) continue
@@ -68,7 +96,12 @@ export function createCommentMutationOptions() {
 				} else if (key[2] === 'asc' && current.page === total_pages) {
 					items = [...items, normalizeComment(comment)]
 				}
-				client.setQueryData(key, {...current, total, total_pages, items})
+				client.setQueryData(key, {
+					...current,
+					total,
+					total_pages,
+					items,
+				})
 			}
 			mapTaskEverywhere(client, taskId, task => ({
 				...task,
@@ -82,8 +115,18 @@ export function createCommentMutationOptions() {
 
 export function updateCommentMutationOptions() {
 	return contextMutationOptions({
-		mutationFn: async ({taskId, id, comment}: {taskId: number, id: number, comment: string}) =>
-			(await taskCommentsUpdate({path: {task: taskId, commentid: id}, body: {comment}})).data,
+		mutationFn: async ({taskId, id, comment}: {
+taskId: number,
+id: number,
+comment: string,
+}) =>
+			(await taskCommentsUpdate({
+				path: {
+					task: taskId,
+					commentid: id,
+				},
+				body: {comment},
+			})).data,
 		onSuccess: (updated, {taskId, id}, client) => {
 			const merge = (comment: TaskComment) => normalizeComment({
 				...comment,
@@ -105,13 +148,24 @@ export function updateCommentMutationOptions() {
 
 export function deleteCommentMutationOptions() {
 	return contextMutationOptions({
-		mutationFn: async ({taskId, id}: {taskId: number, id: number}) =>
-			(await taskCommentsDelete({path: {task: taskId, commentid: id}})).data,
+		mutationFn: async ({taskId, id}: {
+taskId: number,
+id: number,
+}) =>
+			(await taskCommentsDelete({path: {
+				task: taskId,
+				commentid: id,
+			}})).data,
 		onSuccess: (_data, {taskId, id}, client) => {
 			client.setQueriesData<CommentPage>({queryKey: commentKeys.task(taskId)}, current => {
 				if (!current) return current
 				const total = Math.max(0, current.total - 1)
-				return {...current, items: current.items.filter(c => c.id !== id), total, total_pages: Math.ceil(total / current.per_page)}
+				return {
+					...current,
+					items: current.items.filter(c => c.id !== id),
+					total,
+					total_pages: Math.ceil(total / current.per_page),
+				}
 			})
 			mapTaskEverywhere(client, taskId, task => ({
 				...task,
