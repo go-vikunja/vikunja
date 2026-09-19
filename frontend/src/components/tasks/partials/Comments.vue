@@ -26,7 +26,7 @@
 		</h2>
 		<div class="comments">
 			<span
-				v-if="loading && saving === null && !creating"
+				v-if="listPending"
 				class="is-flex is-align-items-center mbs-4 mbe-4 mis-2"
 			>
 				<span class="loader is-inline-block mie-2" />
@@ -265,7 +265,8 @@ const totalPages = computed(() => commentQuery.data.value?.total_pages ?? 0)
 const createMutation = useCreateCommentMutation()
 const updateMutation = useUpdateCommentMutation()
 const deleteMutation = useDeleteCommentMutation()
-const loading = computed(() => commentQuery.isFetching.value || createMutation.isPending.value || updateMutation.isPending.value)
+const listPending = computed(() => commentQuery.isPending.value)
+const loading = computed(() => createMutation.isPending.value || updateMutation.isPending.value)
 const commentDrafts = ref<Record<number, string>>({})
 
 const showDeleteModal = ref(false)
