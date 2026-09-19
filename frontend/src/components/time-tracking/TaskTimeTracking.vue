@@ -64,6 +64,9 @@ function onSaved() {
 }
 
 function onDelete(entry: ITimeEntry) {
+	if (deleteMutation.isPending.value) {
+		return
+	}
 	deleteMutation.mutate({
 		id: entry.id,
 		taskId: entry.task_id,
