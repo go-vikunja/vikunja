@@ -1,10 +1,23 @@
-import {queryOptions, useMutation} from '@tanstack/vue-query'
-import {taskAttachmentsDelete, taskAttachmentsDownload, taskAttachmentsList, taskAttachmentsUpload} from '@/client/generated'
-import type {TaskAttachment, TaskAttachmentsDownloadData} from '@/client/generated'
+import {
+	queryOptions,
+	useMutation,
+} from '@tanstack/vue-query'
+import {
+	taskAttachmentsDelete,
+	taskAttachmentsDownload,
+	taskAttachmentsList,
+	taskAttachmentsUpload,
+} from '@/client/generated'
+import type {
+	TaskAttachment,
+	TaskAttachmentsDownloadData,
+} from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
 import {fetchAllPages} from './fetchAllPages'
-import {mapTaskEverywhere} from './taskCache'
-import {taskKeys} from './tasks'
+import {
+	invalidateTaskMembership,
+	mapTaskEverywhere,
+} from './taskCache'
 
 export const attachmentKeys = {
 	all: ['attachments'] as const,
@@ -22,7 +35,10 @@ export function attachmentsQuery(taskId: number) {
 		enabled: taskId > 0,
 		queryFn: ({signal}) => fetchAllPages(page => taskAttachmentsList({
 			path: {task: taskId},
-			query: {page, per_page: 1000},
+			query: {
+				page,
+				per_page: 1000,
+			},
 			signal,
 		}).then(({data}) => data)),
 	})
@@ -30,7 +46,10 @@ export function attachmentsQuery(taskId: number) {
 
 export async function attachmentBlob(attachment: AttachmentIdentity, size?: PreviewSize, signal?: AbortSignal) {
 	const {data} = await taskAttachmentsDownload({
-		path: {task: attachment.task_id, attachment: attachment.id},
+		path: {
+			task: attachment.task_id,
+			attachment: attachment.id,
+		},
 		query: {preview_size: size},
 		parseAs: 'blob',
 		signal,
@@ -41,8 +60,14 @@ export async function attachmentBlob(attachment: AttachmentIdentity, size?: Prev
 
 export function uploadAttachmentsMutationOptions() {
 	return contextMutationOptions({
-		mutationFn: async ({taskId, files}: {taskId: number, files: File[]}) =>
-			(await taskAttachmentsUpload({path: {task: taskId}, body: {files}})).data,
+		mutationFn: async ({taskId, files}: {
+taskId: number,
+files: File[],
+}) =>
+			(await taskAttachmentsUpload({
+				path: {task: taskId},
+				body: {files},
+			})).data,
 		onSuccess: (result, {taskId}, client) => {
 			const uploaded = result.success ?? []
 			const append = (current: TaskAttachment[]) => [
@@ -50,19 +75,28 @@ export function uploadAttachmentsMutationOptions() {
 				...uploaded,
 			]
 			client.setQueryData<TaskAttachment[]>(attachmentKeys.list(taskId), current => current && append(current))
-			mapTaskEverywhere(client, taskId, task => ({...task, attachments: append(task.attachments)}))
+			mapTaskEverywhere(client, taskId, task => ({
+				...task,
+				attachments: append(task.attachments),
+			}))
 		},
 		onSettled: ({taskId}, client) => Promise.all([
 			client.invalidateQueries({queryKey: attachmentKeys.list(taskId)}),
-			client.invalidateQueries({queryKey: taskKeys.all, refetchType: 'none'}),
+			invalidateTaskMembership(client, taskId),
 		]),
 	})
 }
 
 export function deleteAttachmentMutationOptions() {
 	return contextMutationOptions({
-		mutationFn: async ({taskId, id}: {taskId: number, id: number}) =>
-			(await taskAttachmentsDelete({path: {task: taskId, attachment: id}})).data,
+		mutationFn: async ({taskId, id}: {
+taskId: number,
+id: number,
+}) =>
+			(await taskAttachmentsDelete({path: {
+				task: taskId,
+				attachment: id,
+			}})).data,
 		onSuccess: (_data, {taskId, id}, client) => {
 			client.setQueryData<TaskAttachment[]>(attachmentKeys.list(taskId), current => current?.filter(a => a.id !== id))
 			mapTaskEverywhere(client, taskId, task => ({
@@ -74,7 +108,7 @@ export function deleteAttachmentMutationOptions() {
 		},
 		onSettled: ({taskId}, client) => Promise.all([
 			client.invalidateQueries({queryKey: attachmentKeys.list(taskId)}),
-			client.invalidateQueries({queryKey: taskKeys.all, refetchType: 'none'}),
+			invalidateTaskMembership(client, taskId),
 		]),
 	})
 }
