@@ -122,7 +122,8 @@ function releaseAudio() {
 	}
 }
 
-watch(() => [props.attachment.task_id, props.attachment.id], releaseAudio, {flush: 'sync'})
+// Scalar key: an array getter always compares changed, so every list refetch would kill playback.
+watch(() => `${props.attachment.task_id}-${props.attachment.id}`, releaseAudio, {flush: 'sync'})
 onBeforeUnmount(() => {
 	unmounted = true
 	releaseAudio()

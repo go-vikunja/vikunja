@@ -229,30 +229,42 @@ describe('AudioPreview.vue', () => {
 		expect(getBlobUrl).toHaveBeenCalledTimes(1)
 		expect(wrapper.find('audio').exists()).toBe(true)
 	})
-})
 
-it('revokes the old audio URL when the attachment changes', async () => {
-	getBlobUrl.mockResolvedValueOnce({data: Object.assign(new Blob(['bytes']), {testUrl: 'blob:old'})})
-	const wrapper = mountPreview()
-	await clickPlay(wrapper)
-	await flushPromises()
-	await wrapper.setProps({attachment: {
-		...attachment('new.mp3'),
-		id: 2,
-	}})
-	expect(revokeObjectURL).toHaveBeenCalledWith('blob:old')
-	expect(wrapper.find('audio').exists()).toBe(false)
-})
+	it('revokes the old audio URL when the attachment changes', async () => {
+		getBlobUrl.mockResolvedValueOnce({data: Object.assign(new Blob(['bytes']), {testUrl: 'blob:old'})})
+		const wrapper = mountPreview()
+		await clickPlay(wrapper)
+		await flushPromises()
+		await wrapper.setProps({attachment: {
+			...attachment('new.mp3'),
+			id: 2,
+		}})
+		expect(revokeObjectURL).toHaveBeenCalledWith('blob:old')
+		expect(wrapper.find('audio').exists()).toBe(false)
+	})
 
-it('discards audio that arrives after its attachment was replaced', async () => {
-	const resolve = deferredBlobUrl()
-	const wrapper = mountPreview()
-	await clickPlay(wrapper)
-	await wrapper.setProps({attachment: {
-		...attachment('new.mp3'),
-		id: 2,
-	}})
-	resolve('blob:late')
-	await flushPromises()
-	expect(wrapper.find('audio').exists()).toBe(false)
+	it('keeps playing when a list refetch hands over a new object with the same ids', async () => {
+		getBlobUrl.mockResolvedValue({data: Object.assign(new Blob(['bytes']), {testUrl: 'blob:memo'})})
+		const wrapper = mountPreview()
+		await clickPlay(wrapper)
+		await flushPromises()
+
+		await wrapper.setProps({attachment: attachment('memo.mp3')})
+
+		expect(revokeObjectURL).not.toHaveBeenCalled()
+		expect(wrapper.find('audio').exists()).toBe(true)
+	})
+
+	it('discards audio that arrives after its attachment was replaced', async () => {
+		const resolve = deferredBlobUrl()
+		const wrapper = mountPreview()
+		await clickPlay(wrapper)
+		await wrapper.setProps({attachment: {
+			...attachment('new.mp3'),
+			id: 2,
+		}})
+		resolve('blob:late')
+		await flushPromises()
+		expect(wrapper.find('audio').exists()).toBe(false)
+	})
 })
