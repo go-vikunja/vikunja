@@ -123,6 +123,7 @@ import {useTasks} from '@/composables/useTasks'
 import {ensureTask} from '@/client/queries/tasks'
 import {smartFillStart} from '@/helpers/time/smartFillStart'
 import {useCreateTimeEntryMutation, useUpdateTimeEntryMutation} from '@/client/queries/timeEntries'
+import type {UpdateTimeEntryInput} from '@/client/queries/timeEntries'
 import type {TimeEntryWritable} from '@/client/generated'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {useAuthStore} from '@/stores/auth'
@@ -313,8 +314,9 @@ async function submitUpdate() {
 	isSaving.value = true
 	const draft = draftIdentity()
 	try {
-		const payload: TimeEntryWritable & {id: number} = {
+		const payload: UpdateTimeEntryInput = {
 			id: entry.id,
+			previousTaskId: entry.task_id,
 			comment: comment.value,
 			start_time: from.value?.toISOString() ?? entry.start_time,
 			// A running entry stays running (null); a completed one can't be reopened,

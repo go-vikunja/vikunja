@@ -97,6 +97,16 @@ export function removeTimeEntry(client: QueryClient, id: number) {
 	)
 }
 
+function bumpTaskEntryCount(client: QueryClient, taskId: number, delta: number) {
+	if (taskId <= 0) return
+	mapTaskEverywhere(client, taskId, task => ({
+		...task,
+		time_entries_count: task.time_entries_count === undefined
+			? undefined
+			: Math.max(0, task.time_entries_count + delta),
+	}))
+}
+
 function settle(client: QueryClient, taskId?: number) {
 	return Promise.all([
 		client.invalidateQueries({queryKey: timeEntryKeys.all}),
@@ -109,24 +119,41 @@ export function createTimeEntryMutationOptions() {
 		mutationFn: async (body: TimeEntryWritable) => (await timeEntriesCreate({body})).data,
 		onSuccess: (entry, _input, client) => {
 			patchTimeEntry(client, entry)
-			if (entry.task_id) mapTaskEverywhere(client, entry.task_id, task => ({
-				...task,
-				time_entries_count: task.time_entries_count === undefined ? undefined : task.time_entries_count + 1,
-			}))
+			bumpTaskEntryCount(client, entry.task_id ?? 0, 1)
 		},
 		onSettled: (input, client) => settle(client, input.task_id),
 	})
 }
 
+export type UpdateTimeEntryInput = TimeEntryWritable & Required<Pick<TimeEntry, 'id'>> & {
+	// The task the entry was booked on before this edit, so a move can correct both task counts.
+	previousTaskId?: number
+}
+
 export function updateTimeEntryMutationOptions() {
 	return contextMutationOptions({
-		mutationFn: async ({id, ...body}: TimeEntryWritable & Required<Pick<TimeEntry, 'id'>>) =>
+		mutationFn: async ({
+			id,
+			previousTaskId: _previousTaskId,
+			...body
+		}: UpdateTimeEntryInput) =>
 			(await timeEntriesUpdate({
 				path: {id},
 				body,
 			})).data,
-		onSuccess: (entry, _input, client) => patchTimeEntry(client, entry),
-		onSettled: (input, client) => settle(client, input.task_id),
+		onSuccess: (entry, {previousTaskId}, client) => {
+			patchTimeEntry(client, entry)
+			const taskId = entry.task_id ?? 0
+			if (previousTaskId === undefined || previousTaskId === taskId) return
+			bumpTaskEntryCount(client, previousTaskId, -1)
+			bumpTaskEntryCount(client, taskId, 1)
+		},
+		onSettled: (input, client) => Promise.all([
+			settle(client, input.task_id),
+			...(input.previousTaskId !== undefined && input.previousTaskId !== input.task_id
+				? [invalidateTaskMembership(client, input.previousTaskId === 0 ? undefined : input.previousTaskId)]
+				: []),
+		]),
 	})
 }
 
@@ -149,10 +176,7 @@ export function deleteTimeEntryMutationOptions() {
 		mutationFn: async ({id}: DeleteTimeEntryInput) => { await timeEntriesDelete({path: {id}}) },
 		onSuccess: (_data, {id, taskId}, client) => {
 			removeTimeEntry(client, id)
-			if (taskId > 0) mapTaskEverywhere(client, taskId, task => ({
-				...task,
-				time_entries_count: task.time_entries_count === undefined ? undefined : Math.max(0, task.time_entries_count - 1),
-			}))
+			bumpTaskEntryCount(client, taskId, -1)
 		},
 		onSettled: ({taskId}, client) => settle(client, taskId),
 	})

@@ -189,6 +189,56 @@ it('leaves a loaded list untouched on create and only bumps the task entry count
 	expect(client.getQueryState(list)?.isInvalidated).toBe(true)
 })
 
+it('moves the entry count between both tasks when an update reassigns the task', async () => {
+	client.setQueryData(taskKeys.detail(1), normalizeTask({
+		id: 1,
+		title: 'from',
+		project_id: 1,
+		time_entries_count: 2,
+	}))
+	client.setQueryData(taskKeys.detail(2), normalizeTask({
+		id: 2,
+		title: 'to',
+		project_id: 1,
+		time_entries_count: 5,
+	}))
+	sdk.timeEntriesUpdate.mockResolvedValue({data: {
+		...running,
+		task_id: 2,
+		end_time: '2026-09-19T10:00:00Z',
+	}})
+	await client.getMutationCache().build(client, updateTimeEntryMutationOptions()).execute({
+		id: 4,
+		task_id: 2,
+		previousTaskId: 1,
+		start_time: running.start_time,
+	})
+	expect(client.getQueryData<TaskResponse>(taskKeys.detail(1))?.time_entries_count).toBe(1)
+	expect(client.getQueryData<TaskResponse>(taskKeys.detail(2))?.time_entries_count).toBe(6)
+	expect(client.getQueryState(taskKeys.detail(1))?.isInvalidated).toBe(true)
+	expect(client.getQueryState(taskKeys.detail(2))?.isInvalidated).toBe(true)
+})
+
+it('leaves the entry count alone when an update keeps the same task', async () => {
+	client.setQueryData(taskKeys.detail(1), normalizeTask({
+		id: 1,
+		title: 'same',
+		project_id: 1,
+		time_entries_count: 2,
+	}))
+	sdk.timeEntriesUpdate.mockResolvedValue({data: {
+		...running,
+		end_time: '2026-09-19T10:00:00Z',
+	}})
+	await client.getMutationCache().build(client, updateTimeEntryMutationOptions()).execute({
+		id: 4,
+		task_id: 1,
+		previousTaskId: 1,
+		start_time: running.start_time,
+	})
+	expect(client.getQueryData<TaskResponse>(taskKeys.detail(1))?.time_entries_count).toBe(2)
+})
+
 it('keeps the active timer cached when a still-running entry is updated', async () => {
 	client.setQueryData(timeEntryKeys.active(7), normalizeTimeEntry(running))
 	sdk.timeEntriesUpdate.mockResolvedValue({data: {
