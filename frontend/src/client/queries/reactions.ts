@@ -78,14 +78,6 @@ export function setReactionMutationOptions() {
 							reactions: changeReaction(comment.reactions, reacted),
 						} : comment),
 				}))
-				mapTaskEverywhere(client, input.taskId, task => ({
-					...task,
-					comments: task.comments?.map(comment => comment.id === input.id
-						? {
-							...comment,
-							reactions: changeReaction(comment.reactions, reacted),
-						} : comment),
-				}))
 			}
 			if (input.kind === 'tasks') {
 				// Reactions are expand-only, so patching a copy that never asked for them fakes a complete map.

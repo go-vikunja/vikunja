@@ -129,17 +129,13 @@ export function updateCommentMutationOptions() {
 			})).data,
 		onSuccess: (updated, {taskId, id}, client) => {
 			// The v2 update handler echoes the request body: only the text is real.
-			const merge = (comment: TaskComment) => normalizeComment({
+			const merge = (comment: CommentResponse) => normalizeComment({
 				...comment,
 				comment: updated.comment ?? comment.comment,
 			})
 			client.setQueriesData<CommentPage>({queryKey: commentKeys.task(taskId)}, current => current && ({
 				...current,
 				items: current.items.map(comment => comment.id === id ? merge(comment) : comment),
-			}))
-			mapTaskEverywhere(client, taskId, task => ({
-				...task,
-				comments: task.comments?.map(comment => comment.id === id ? merge(comment) : comment),
 			}))
 		},
 		onSettled: ({taskId}, client) => settle(client, taskId),
@@ -170,7 +166,6 @@ export function deleteCommentMutationOptions() {
 			mapTaskEverywhere(client, taskId, task => ({
 				...task,
 				comment_count: task.comment_count === undefined ? undefined : Math.max(0, task.comment_count - 1),
-				comments: task.comments?.filter(comment => comment.id !== id),
 			}))
 		},
 		onSettled: ({taskId}, client) => settle(client, taskId),
