@@ -123,12 +123,12 @@
 
 		<XButton
 			v-if="editEnabled"
-			:aria-disabled="loading"
+			:aria-disabled="loading || undefined"
 			class="mbe-4"
 			icon="cloud-upload-alt"
 			variant="secondary"
 			:shadow="false"
-			@click="!loading && filesRef?.click()"
+			@click="openFilePicker()"
 		>
 			{{ $t('task.attachment.upload') }}
 		</XButton>
@@ -418,11 +418,19 @@ function attachmentMetaTooltip(attachment: IAttachment): string {
 
 const filesRef = ref<HTMLInputElement | null>(null)
 
+function openFilePicker() {
+	if (loading.value) {
+		return
+	}
+
+	filesRef.value?.click()
+}
+
 async function uploadNewAttachment() {
 	const input = filesRef.value
 	const files = input?.files
 
-	if (!loading.value && files && files.length > 0) {
+	if (files && files.length > 0) {
 		await uploadFilesToTask(files)
 	}
 
@@ -431,6 +439,10 @@ async function uploadNewAttachment() {
 }
 
 async function uploadFilesToTask(files: File[] | FileList) {
+	if (loading.value) {
+		return
+	}
+
 	const taskId = props.task.id!
 	const batch = Array.from(files)
 	uploadProgress.value = 0
@@ -576,9 +588,7 @@ async function setCoverImage(attachment: IAttachment | null) {
 	success({message: t('task.attachment.successfullyChangedCoverImage')})
 }
 
-defineExpose({
-	openFilePicker: () => filesRef.value?.click(),
-})
+defineExpose({openFilePicker})
 </script>
 
 <style lang="scss" scoped>

@@ -96,6 +96,19 @@ describe('Attachments delete modal', () => {
 	})
 })
 
+function dropFile(file: File) {
+	const event = new Event('drop', {bubbles: true, cancelable: true})
+	Object.defineProperty(event, 'dataTransfer', {
+		value: {
+			files: [file],
+			items: [{kind: 'file', type: file.type}],
+			types: ['Files'],
+			dropEffect: 'none',
+		},
+	})
+	document.body.dispatchEvent(event)
+}
+
 describe('Attachments upload', () => {
 	it('uploads the remaining files after one request fails', async () => {
 		sdk.taskAttachmentsUpload
@@ -119,5 +132,31 @@ describe('Attachments upload', () => {
 
 		expect(sdk.taskAttachmentsUpload).toHaveBeenCalledTimes(2)
 		expect(errorMessage).toHaveBeenCalledTimes(1)
+	})
+
+	it('ignores a drop while another batch is still uploading', async () => {
+		let finishUpload: (result: unknown) => void = () => {}
+		sdk.taskAttachmentsUpload.mockReturnValue(new Promise(resolve => {
+			finishUpload = resolve
+		}))
+
+		const wrapper = mountAttachments()
+		await flushPromises()
+
+		const fileInput = wrapper.find('input[type="file"]')
+		Object.defineProperty(fileInput.element, 'files', {
+			value: [new File(['x'], 'first.png', {type: 'image/png'})],
+			configurable: true,
+		})
+		await fileInput.trigger('change')
+		await flushPromises()
+
+		dropFile(new File(['y'], 'second.png', {type: 'image/png'}))
+		await flushPromises()
+
+		expect(sdk.taskAttachmentsUpload).toHaveBeenCalledTimes(1)
+
+		finishUpload({data: {success: []}})
+		await flushPromises()
 	})
 })
