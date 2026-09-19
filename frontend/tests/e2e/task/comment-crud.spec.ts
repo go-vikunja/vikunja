@@ -13,6 +13,7 @@ test('comment create, edit and delete persist after reload', async ({authenticat
 	await page.locator('.comments').getByRole('button', {name: 'Comment', exact: true}).click()
 	const row = page.locator('.comments .comment[id^="comment-"]')
 	await expect(row).toContainText('Original comment')
+	await expect(page.locator('.global-notification')).toContainText('Success')
 	await page.reload()
 	await expect(row).toContainText('Original comment')
 	await row.getByRole('button', {name: 'Edit', exact: true}).click()
