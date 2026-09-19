@@ -146,8 +146,7 @@ function connect() {
 	const connection = socket
 	const isCurrent = () => socket === connection && isClientRequestContextCurrent(context)
 
-	// An open connection stays authenticated as the identity that opened it, so a session
-	// change has to tear it down instead of only ignoring what it delivers.
+	// A connection stays authenticated as whoever opened it, so a session change must tear it down, not just ignore it.
 	function dropStaleConnection() {
 		connection.close()
 		if (socket !== connection) {
