@@ -21,7 +21,7 @@ type ReactionInput = {
 	id: number,
 	value: string,
 	remove: boolean,
-	user: Pick<User, 'id' | 'name' | 'username' | 'bot_owner_id'>,
+	user: Pick<User, 'id' | 'name' | 'username'>,
 }
 
 // Chips render in key order, so a toggled emoji keeps its slot instead of moving to the end.
