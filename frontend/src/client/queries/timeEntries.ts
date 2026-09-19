@@ -95,7 +95,7 @@ export function updateTimeEntryMutationOptions() {
 
 export function stopTimerMutationOptions() {
 	return contextMutationOptions({
-		mutationFn: async (_input: void) => (await timeEntriesTimerStop()).data,
+		mutationFn: async () => (await timeEntriesTimerStop()).data,
 		onSuccess: (entry, _input, client) => patchTimeEntry(client, entry),
 		onSettled: (_input, client) => settle(client),
 	})
@@ -115,6 +115,7 @@ export function deleteTimeEntryMutationOptions() {
 		},
 		onSettled: (_input, client) => settle(client),
 	})
+}
 
 export function useCreateTimeEntryMutation() { return useMutation(createTimeEntryMutationOptions()) }
 export function useUpdateTimeEntryMutation() { return useMutation(updateTimeEntryMutationOptions()) }
