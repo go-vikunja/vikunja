@@ -55,7 +55,7 @@
 								v-if="row.entry.task_id > 0"
 								:to="{ name: 'task.detail', params: { id: row.entry.task_id } }"
 							>
-								{{ row.task_identifier }}{{ row.taskTitle ? ` - ${row.taskTitle}` : '' }}
+								{{ row.taskIdentifier }}{{ row.taskTitle ? ` - ${row.taskTitle}` : '' }}
 							</RouterLink>
 						</td>
 						<td class="has-text-grey">
@@ -111,21 +111,21 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, watch} from 'vue'
+import {computed} from 'vue'
 
 import Card from '@/components/misc/Card.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
 import {useProjects} from '@/composables/useProjects'
 import {useAuthStore} from '@/stores/auth'
-import {ensureTask} from '@/client/queries/tasks'
+import {taskQuery} from '@/client/queries/tasks'
+import {useQueries} from '@tanstack/vue-query'
 import {getProjectTitle} from '@/helpers/getProjectTitle'
 import {formatDate} from '@/helpers/time/formatDate'
 import {useTimeFormat} from '@/composables/useTimeFormat'
 import {TIME_FORMAT} from '@/constants/timeFormat'
 
-import type {TimeEntry as ITimeEntry} from '@/client/generated'
-import type {TaskResponse} from '@/client/queries/tasks'
+import type {TimeEntryResponse as ITimeEntry} from '@/client/queries/timeEntries'
 
 const props = withDefaults(defineProps<{
 	entries: ITimeEntry[]
@@ -156,22 +156,14 @@ const authStore = useAuthStore()
 const currentUserId = computed(() => authStore.info?.id)
 
 // Entries carry only a task id; the full task (title, identifier, parent project) is resolved lazily.
-const tasks = ref<Record<number, TaskResponse>>({})
-
-watch(() => props.entries, entries => {
-	entries.forEach(({taskId}) => {
-		if (taskId === 0) {
-			return
-		}
-		ensureTask(taskId).then(task => {
-			tasks.value[taskId] = task
-		}).catch(() => {})
-	})
-}, {immediate: true})
+const taskQueries = useQueries({
+	queries: computed(() => [...new Set(props.entries.map(entry => entry.task_id).filter(id => id > 0))].map(id => taskQuery(id))),
+})
+const tasks = computed(() => Object.fromEntries(taskQueries.value.flatMap(result => result.data ? [[result.data.id, result.data]] : [])))
 
 function entrySeconds(entry: ITimeEntry): number {
-	const end = entry.end_time ?? new Date()
-	return Math.floor((end.getTime() - entry.start_time.getTime()) / 1000)
+	const end = entry.end_time ? new Date(entry.end_time) : new Date()
+	return Math.floor((end.getTime() - new Date(entry.start_time ?? '').getTime()) / 1000)
 }
 
 const rows = computed(() => props.entries.map(entry => {
@@ -187,7 +179,7 @@ const rows = computed(() => props.entries.map(entry => {
 		taskIdentifier: task ? (task.identifier || `#${task.index}`) : (entry.task_id > 0 ? `#${entry.task_id}` : ''),
 		taskTitle: task?.title ?? '',
 		// A running entry (no end) has no settled duration — leave it blank.
-		seconds: entry.end_time !== null ? entrySeconds(entry) : null,
+		seconds: entry.end_time ? entrySeconds(entry) : null,
 	}
 }))
 
@@ -199,13 +191,13 @@ function formatDuration(seconds: number): string {
 	return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`
 }
 
-function formatTime(date: Date): string {
-	return formatDate(date, timeFormat.value === TIME_FORMAT.HOURS_24 ? 'HH:mm' : 'hh:mm A')
+function formatTime(date: string | undefined): string {
+	return formatDate(date ?? '', timeFormat.value === TIME_FORMAT.HOURS_24 ? 'HH:mm' : 'hh:mm A')
 }
 
 function timeRange(entry: ITimeEntry): string {
 	const start = formatTime(entry.start_time)
-	if (entry.end_time === null) {
+	if (!entry.end_time) {
 		return `${start} – …`
 	}
 	return `${start} – ${formatTime(entry.end_time)}`

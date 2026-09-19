@@ -54,7 +54,7 @@ test.describe('Time tracking', () => {
 			await expect(page.locator('[data-cy="addTimeEntry"]')).toBeVisible()
 		})
 
-		test('logs a manual time entry', async ({authenticatedPage: page}) => {
+		test('logs a manual time entry', async ({authenticatedPage: page, apiContext, userToken}) => {
 			await ProjectFactory.create(1, {title: 'E2E tracked project'}, false)
 
 			await page.goto('/time-tracking')
@@ -69,6 +69,11 @@ test.describe('Time tracking', () => {
 			await form.locator('[data-cy="saveTimeEntry"]').click()
 
 			await expect(page.locator('[data-cy="timeEntry"]').filter({hasText: 'E2E tracked project'})).toBeVisible()
+			await page.reload()
+			await expect(page.locator('[data-cy="timeEntry"]')).toHaveCount(1)
+			const stored = await apiContext.get('/api/v2/time-entries', {headers: {Authorization: `Bearer ${userToken}`}})
+			expect(stored.ok()).toBeTruthy()
+			expect((await stored.json()).items).toEqual([expect.objectContaining({end_time: expect.any(String)})])
 		})
 
 		test('saving with an empty To logs a completed entry, not a running timer', async ({authenticatedPage: page}) => {
@@ -230,7 +235,7 @@ test.describe('Time tracking', () => {
 			await expect(entries.first()).not.toContainText('…')
 		})
 
-		test('edits an entry from the list', async ({authenticatedPage: page}) => {
+		test('edits an entry from the list', async ({authenticatedPage: page, apiContext, userToken}) => {
 			await ProjectFactory.create(1, {id: 1, title: 'Edit project'}, false)
 			await TimeEntryFactory.create(1, {id: 1, project_id: 1, comment: 'original comment'}, false)
 
@@ -249,9 +254,14 @@ test.describe('Time tracking', () => {
 			await expect(entries).toHaveCount(1)
 			await expect(entries.first()).toContainText('edited comment')
 			await expect(entries.first()).not.toContainText('original comment')
+			await page.reload()
+			await expect(entries.first()).toContainText('edited comment')
+			const stored = await apiContext.get('/api/v2/time-entries/1', {headers: {Authorization: `Bearer ${userToken}`}})
+			expect(stored.ok()).toBeTruthy()
+			expect((await stored.json()).comment).toBe('edited comment')
 		})
 
-		test('deletes an entry from the list', async ({authenticatedPage: page}) => {
+		test('deletes an entry from the list', async ({authenticatedPage: page, apiContext, userToken}) => {
 			await ProjectFactory.create(1, {id: 1, title: 'Delete project'}, false)
 			await TimeEntryFactory.create(1, {id: 1, project_id: 1, comment: 'to be deleted'}, false)
 
@@ -261,6 +271,11 @@ test.describe('Time tracking', () => {
 
 			await entries.first().locator('[data-cy="deleteTimeEntry"]').click()
 			await expect(entries).toHaveCount(0)
+			await page.reload()
+			await expect(entries).toHaveCount(0)
+			const stored = await apiContext.get('/api/v2/time-entries', {headers: {Authorization: `Bearer ${userToken}`}})
+			expect(stored.ok()).toBeTruthy()
+			expect((await stored.json()).items ?? []).toEqual([])
 		})
 
 		test('filters by project, reflected in the url and restored on reload', async ({authenticatedPage: page}) => {

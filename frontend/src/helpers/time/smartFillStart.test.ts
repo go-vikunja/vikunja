@@ -1,20 +1,19 @@
 import {describe, it, expect} from 'vitest'
 
 import {smartFillStart} from './smartFillStart'
-import type {ITimeEntry} from '@/modelTypes/ITimeEntry'
+import type {TimeEntry as ITimeEntry} from '@/client/generated'
 
 function entry(startTime: Date, endTime: Date | null): ITimeEntry {
 	return {
 		id: 1,
-		userId: 1,
-		taskId: 0,
-		projectId: 0,
-		startTime,
-		endTime,
+		user_id: 1,
+		task_id: 0,
+		project_id: 0,
+		start_time: startTime.toISOString(),
+		end_time: endTime?.toISOString() ?? null,
 		comment: '',
-		created: startTime,
-		updated: startTime,
-		maxPermission: null,
+		created: startTime.toISOString(),
+		updated: startTime.toISOString(),
 	}
 }
 

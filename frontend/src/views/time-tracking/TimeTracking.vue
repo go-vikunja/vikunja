@@ -32,14 +32,14 @@
 		>
 			<TimeEntryForm
 				:entry="editingEntry"
-				:recent-entries="timeTrackingStore.browsedEntries"
+				:recent-entries="entries"
 				@saved="onSaved"
 				@cancel="editingEntry = null"
 			/>
 		</Card>
 
 		<TimeEntryList
-			:entries="timeTrackingStore.browsedEntries"
+			:entries="entries"
 			:empty-text="$t('timeTracking.list.emptyFiltered')"
 			@edit="editingEntry = $event"
 			@delete="onDelete"
@@ -131,19 +131,20 @@ import {ensureTask} from '@/client/queries/tasks'
 import {searchUsers} from '@/client/queries/userSearch'
 import {useUserSearch} from '@/composables/useUserSearch'
 import {useTitle} from '@/composables/useTitle'
-import {useTimeTrackingStore} from '@/stores/timeTracking'
+import {useTimeEntries} from '@/composables/useTimeTracking'
+import {useDeleteTimeEntryMutation} from '@/client/queries/timeEntries'
 import {useBaseStore} from '@/stores/base'
 import {useProjects} from '@/composables/useProjects'
 
 import type {ProjectResponse} from '@/client/queries/projects'
 import type {TaskResponse} from '@/client/queries/tasks'
 import type {User as IUser} from '@/client/generated'
-import type {TimeEntry as ITimeEntry} from '@/client/generated'
+import type {TimeEntryResponse as ITimeEntry} from '@/client/queries/timeEntries'
 
 const {t} = useI18n()
 const route = useRoute()
 const router = useRouter()
-const timeTrackingStore = useTimeTrackingStore()
+const deleteMutation = useDeleteTimeEntryMutation()
 const baseStore = useBaseStore()
 const projectList = useProjects()
 
@@ -156,11 +157,10 @@ const formVisible = computed(() => showForm.value || editingEntry.value !== null
 function onSaved() {
 	editingEntry.value = null
 	showForm.value = false
-	timeTrackingStore.browseEntries(filter.value)
 }
 
 function onDelete(id: number) {
-	timeTrackingStore.removeEntry(id)
+	deleteMutation.mutate(id)
 }
 
 // --- Filter ---------------------------------------------------------------
@@ -264,6 +264,7 @@ const filterQuery = computed(() => {
 })
 
 const ready = ref(false)
+const {entries} = useTimeEntries(() => filter.value, ready)
 
 async function restoreFromQuery() {
 	const q = route.query
@@ -304,7 +305,6 @@ onMounted(async () => {
 	await restoreFromQuery()
 	ready.value = true
 	// One request with the fully-restored filter — no flicker through partial filters.
-	timeTrackingStore.browseEntries(filter.value)
 })
 
 // DatepickerWithRange only syncs its display from modelValue on change, and it
@@ -324,12 +324,7 @@ watch(filterQuery, q => {
 	router.replace({query: q}).catch(() => { /* ignore redundant navigation */ })
 })
 
-watch(filter, value => {
-	if (!ready.value) {
-		return
-	}
-	timeTrackingStore.browseEntries(value)
-})
+
 </script>
 
 <style lang="scss" scoped>

@@ -10,7 +10,7 @@ export function smartFillStart(recentEntries: ITimeEntry[], defaultStart: string
 	const cap = (start: Date) => (start.getTime() > now.getTime() ? new Date(now) : start)
 
 	const lastEnd = recentEntries
-		.map(entry => entry.end_time)
+		.map(entry => entry.end_time ? new Date(entry.end_time) : null)
 		.filter((end): end is Date => end !== null)
 		.sort((a, b) => b.getTime() - a.getTime())[0]
 	if (lastEnd !== undefined) {

@@ -123,13 +123,15 @@ import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
 import {useTasks} from '@/composables/useTasks'
 import {ensureTask} from '@/client/queries/tasks'
 import {smartFillStart} from '@/helpers/time/smartFillStart'
-import {useTimeTrackingStore} from '@/stores/timeTracking'
+import {useCreateTimeEntryMutation, useUpdateTimeEntryMutation} from '@/client/queries/timeEntries'
+import type {TimeEntryWritable} from '@/client/generated'
+import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {useAuthStore} from '@/stores/auth'
 import {useProjects} from '@/composables/useProjects'
 
 import type {ProjectResponse} from '@/client/queries/projects'
 import type {TaskResponse} from '@/client/queries/tasks'
-import type {TimeEntry as ITimeEntry} from '@/client/generated'
+import type {TimeEntryResponse as ITimeEntry} from '@/client/queries/timeEntries'
 
 const props = withDefaults(defineProps<{
 	// When set, the entry is locked to this task and the project/task pickers are hidden.
@@ -149,7 +151,8 @@ const emit = defineEmits<{
 	cancel: []
 }>()
 
-const timeTrackingStore = useTimeTrackingStore()
+const createMutation = useCreateTimeEntryMutation()
+const updateMutation = useUpdateTimeEntryMutation()
 const authStore = useAuthStore()
 const projectList = useProjects()
 
@@ -201,7 +204,7 @@ function smartFill() {
 }
 
 // Whichever of task / project is set lands on the payload (XOR — enforced by canSubmit).
-function applyTarget(payload: Partial<ITimeEntry>) {
+function applyTarget(payload: TimeEntryWritable) {
 	if (props.taskId !== undefined) {
 		payload.task_id = props.taskId
 	} else if (selectedTask.value !== null) {
@@ -211,16 +214,16 @@ function applyTarget(payload: Partial<ITimeEntry>) {
 	}
 }
 
-function buildPayload(includeEnd: boolean): Partial<ITimeEntry> {
-	const payload: Partial<ITimeEntry> = {
+function buildPayload(includeEnd: boolean): TimeEntryWritable {
+	const payload: TimeEntryWritable = {
 		comment: comment.value,
-		startTime: from.value ?? new Date(),
+		start_time: (from.value ?? new Date()).toISOString(),
 	}
 	applyTarget(payload)
 	// Saving a manual entry always has an end (an empty "To" means "until now");
 	// only the Start-timer path omits it to create a running timer.
 	if (includeEnd) {
-		payload.end_time = to.value ?? new Date()
+		payload.end_time = (to.value ?? new Date()).toISOString()
 	}
 	return payload
 }
@@ -240,8 +243,8 @@ watch(() => props.entry, async entry => {
 		return
 	}
 	comment.value = entry.comment
-	from.value = entry.start_time
-	to.value = entry.end_time
+	from.value = parseDateOrNull(entry.start_time)
+	to.value = parseDateOrNull(entry.end_time)
 	// Bring the form into view — the edit button may be far down the list.
 	await nextTick()
 	formEl.value?.scrollIntoView({behavior: 'smooth', block: 'center'})
@@ -262,7 +265,7 @@ watch(() => props.entry, async entry => {
 }, {immediate: true})
 
 async function submit(includeEnd: boolean) {
-	if (!canSubmit.value) {
+	if (!canSubmit.value || isSaving.value) {
 		return
 	}
 	isSaving.value = true
@@ -270,11 +273,13 @@ async function submit(includeEnd: boolean) {
 		const payload = buildPayload(includeEnd)
 		// A started timer begins now (click time), not when the form first loaded.
 		if (!includeEnd) {
-			payload.start_time = new Date()
+			payload.start_time = new Date().toISOString()
 		}
-		await timeTrackingStore.createEntry(payload)
+		await createMutation.mutateAsync(payload)
 		reset()
 		emit('saved')
+	} catch {
+		return
 	} finally {
 		isSaving.value = false
 	}
@@ -282,24 +287,26 @@ async function submit(includeEnd: boolean) {
 
 async function submitUpdate() {
 	const entry = props.entry
-	if (!canSubmit.value || entry == null) {
+	if (!canSubmit.value || isSaving.value || entry == null) {
 		return
 	}
 	isSaving.value = true
 	try {
-		const payload: Partial<ITimeEntry> & {id: number} = {
+		const payload: TimeEntryWritable & {id: number} = {
 			id: entry.id,
 			comment: comment.value,
-			startTime: from.value ?? entry.start_time,
+			start_time: from.value?.toISOString() ?? entry.start_time,
 			// A running entry stays running (null); a completed one can't be reopened,
 			// so keep its end if "To" was cleared (the API rejects clearing it).
-			endTime: entry.end_time === null ? to.value : (to.value ?? entry.end_time),
-			taskId: 0,
-			projectId: 0,
+			end_time: to.value?.toISOString() ?? entry.end_time,
+			task_id: 0,
+			project_id: 0,
 		}
 		applyTarget(payload)
-		await timeTrackingStore.updateEntry(payload)
+		await updateMutation.mutateAsync(payload)
 		emit('saved')
+	} catch {
+		return
 	} finally {
 		isSaving.value = false
 	}
