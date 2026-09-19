@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import type {ReactionKind} from '@/modelTypes/IReaction'
+import type {ReactionKind, ReactionUsers} from '@/client/queries/reactions'
 import {VuemojiPicker} from 'vuemoji-picker'
 import ReactionService from '@/services/reactions'
 import ReactionModel from '@/models/reaction'
 import BaseButton from '@/components/base/BaseButton.vue'
-import type {User} from '@/client/generated'
-type ReactionUsers = Record<string, Pick<User, 'id' | 'name' | 'username' | 'bot_owner_id'>[] | null>
 import {getDisplayName} from '@/models/user'
 import {useI18n} from 'vue-i18n'
 import {nextTick, onBeforeUnmount, onMounted, ref} from 'vue'
