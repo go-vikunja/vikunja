@@ -76,11 +76,14 @@ it('decrements every cached page total and only expanded task counts', async () 
 	expect(client.getQueryData(taskKeys.detail(1))).toMatchObject({comment_count: 1})
 })
 
-it('preserves reactions omitted from the update response', async () => {
+it('keeps author, dates and reactions the update response drops', async () => {
 	client.setQueryData(commentKeys.page(1, 'asc', 1), {
 		items: [{
 			id: 2,
 			comment: 'before',
+			author: {id: 3},
+			created: '2024-01-01T10:00:00Z',
+			updated: '2024-01-02T10:00:00Z',
 			reactions: {'👍': [{id: 1}]},
 		}],
 		total: 1,
@@ -91,6 +94,10 @@ it('preserves reactions omitted from the update response', async () => {
 	sdk.taskCommentsUpdate.mockResolvedValue({data: {
 		id: 2,
 		comment: 'after',
+		author: null,
+		reactions: null,
+		created: '0001-01-01T00:00:00Z',
+		updated: '0001-01-01T00:00:00Z',
 	}})
 	await client.getMutationCache().build(client, updateCommentMutationOptions()).execute({
 		taskId: 1,
@@ -101,6 +108,9 @@ it('preserves reactions omitted from the update response', async () => {
 		items: [{
 			id: 2,
 			comment: 'after',
+			author: {id: 3},
+			created: '2024-01-01T10:00:00Z',
+			updated: '2024-01-02T10:00:00Z',
 			reactions: {'👍': [{id: 1}]},
 		}],
 	})

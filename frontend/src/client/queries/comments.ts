@@ -128,10 +128,10 @@ export function updateCommentMutationOptions() {
 				body: {comment},
 			})).data,
 		onSuccess: (updated, {taskId, id}, client) => {
+			// The v2 update handler echoes the request body: only the text is real.
 			const merge = (comment: TaskComment) => normalizeComment({
 				...comment,
-				...updated,
-				reactions: updated.reactions ?? comment.reactions,
+				comment: updated.comment ?? comment.comment,
 			})
 			client.setQueriesData<CommentPage>({queryKey: commentKeys.task(taskId)}, current => current && ({
 				...current,
