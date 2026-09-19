@@ -3,7 +3,7 @@
 		v-if="blobUrl"
 		ref="playerRef"
 		:src="blobUrl"
-		:aria-label="attachment.file.name"
+		:aria-label="attachment.file?.name"
 		class="audio-player"
 		controls
 		autoplay
@@ -13,7 +13,7 @@
 	<XButton
 		v-else
 		:loading="loading"
-		:aria-label="$t('task.attachment.playFile', {file: attachment.file.name})"
+		:aria-label="$t('task.attachment.playFile', {file: attachment.file?.name})"
 		class="audio-play"
 		icon="play"
 		variant="secondary"
@@ -32,7 +32,7 @@ let playing: HTMLAudioElement | null = null
 <script setup lang="ts">
 import {onBeforeUnmount, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
-import AttachmentService from '@/services/attachment'
+import {attachmentBlobUrl} from '@/helpers/attachments'
 import type {TaskAttachment as IAttachment} from '@/client/generated'
 import {error} from '@/message'
 
@@ -42,7 +42,6 @@ const props = defineProps<{
 
 const {t} = useI18n({useScope: 'global'})
 
-const attachmentService = new AttachmentService()
 const blobUrl = ref<string | undefined>(undefined)
 const playerRef = ref<HTMLAudioElement | null>(null)
 const loading = ref(false)
@@ -56,7 +55,7 @@ async function loadAudio() {
 
 	loading.value = true
 	try {
-		const url = await attachmentService.getBlobUrl(props.attachment) as string
+		const url = await attachmentBlobUrl({id: props.attachment.id!, task_id: props.attachment.task_id!})
 		if (unmounted) {
 			window.URL.revokeObjectURL(url)
 			return

@@ -53,10 +53,10 @@
 
 <script setup lang="ts">
 import {computed, ref, watchEffect} from 'vue'
-import {PREVIEW_SIZE} from '@/services/attachment'
-import {fetchAttachmentBlobUrl} from '@/helpers/attachments'
+import {PREVIEW_SIZE} from '@/helpers/attachments'
+import {attachmentBlobUrl} from '@/helpers/attachments'
 import type {TaskAttachment as IAttachment} from '@/client/generated'
-import {canPreviewAudio, canPreviewImage, canPreviewPdf, canPreviewVideo} from '@/models/attachment'
+import {canPreviewAudio, canPreviewImage, canPreviewPdf, canPreviewVideo} from '@/helpers/attachmentPreview'
 
 const props = defineProps<{
 	modelValue?: IAttachment
@@ -67,17 +67,27 @@ const isPdf = computed(() => props.modelValue && canPreviewPdf(props.modelValue)
 const isAudio = computed(() => props.modelValue && canPreviewAudio(props.modelValue))
 const isVideo = computed(() => props.modelValue && canPreviewVideo(props.modelValue))
 
-watchEffect(async () => {
+watchEffect(async onCleanup => {
+	let active = true
+	let ownedUrl: string | undefined
+	blobUrl.value = undefined
+	onCleanup(() => {
+		active = false
+		if (ownedUrl) URL.revokeObjectURL(ownedUrl)
+	})
 	const attachment = props.modelValue
 	if (!attachment || !canPreviewImage(attachment)) {
 		return
 	}
 
 	try {
-		const url = await fetchAttachmentBlobUrl(attachment, PREVIEW_SIZE.MD)
+		const url = await attachmentBlobUrl({id: attachment.id!, task_id: attachment.task_id!}, PREVIEW_SIZE.MD)
 		// a newer attachment may have won the race while this one was in flight
-		if (props.modelValue === attachment) {
+		if (active) {
+			ownedUrl = url
 			blobUrl.value = url
+		} else {
+			URL.revokeObjectURL(url)
 		}
 	} catch {
 		// fall back to the generic file icon

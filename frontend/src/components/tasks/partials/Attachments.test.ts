@@ -10,17 +10,12 @@ import type {Task as ITask} from '@/client/generated'
 
 const sdk = vi.hoisted(() => ({
 	patchTasksRead: vi.fn(),
+	taskAttachmentsList: vi.fn(async () => ({data: {items: [attachment], total_pages: 1}})),
 }))
 
 vi.mock('@/client/generated', () => sdk)
 
-vi.mock('@/services/attachment', () => ({
-	default: class {
-		loading = false
-		uploadProgress = 0
- getAll = async () => [attachment]
-	},
-}))
+
 
 vi.mock('vue-i18n', async importOriginal => ({
 	...(await importOriginal<typeof import('vue-i18n')>()),

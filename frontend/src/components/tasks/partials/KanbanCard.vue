@@ -137,8 +137,8 @@ import CommentCount from './CommentCount.vue'
 import {getHexColor, getTaskIdentifier} from '@/helpers/task'
 import type {Task as ITask} from '@/client/generated'
 import type {TaskResponse} from '@/client/queries/tasks'
-import {SUPPORTED_IMAGE_SUFFIX} from '@/models/attachment'
-import {PREVIEW_SIZE} from '@/services/attachment'
+import {SUPPORTED_IMAGE_SUFFIX} from '@/helpers/attachmentPreview'
+import {PREVIEW_SIZE} from '@/helpers/attachments'
 import {fetchAttachmentBlobUrl} from '@/helpers/attachments'
 
 import {formatDateLong, formatDisplayDate, formatISO} from '@/helpers/time/formatDate'
@@ -232,7 +232,7 @@ async function maybeDownloadCoverImage() {
 		return
 	}
 
-	coverImageBlobUrl.value = await fetchAttachmentBlobUrl({id: attachment.id!, taskId: props.task.id}, PREVIEW_SIZE.LG)
+	coverImageBlobUrl.value = await fetchAttachmentBlobUrl({id: attachment.id!, task_id: props.task.id}, PREVIEW_SIZE.LG)
 }
 
 watch(

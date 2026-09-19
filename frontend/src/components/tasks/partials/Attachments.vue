@@ -11,15 +11,15 @@
 			v-if="editEnabled"
 			id="files"
 			ref="filesRef"
-			:disabled="loading || undefined"
+			:aria-disabled="loading || undefined"
 			multiple
 			type="file"
 			@change="uploadNewAttachment()"
 		>
 
 		<ProgressBar
-			v-if="attachmentService.uploadProgress > 0"
-			:value="attachmentService.uploadProgress * 100"
+			v-if="uploadProgress > 0"
+			:value="uploadProgress * 100"
 			is-primary
 		/>
 
@@ -52,7 +52,7 @@
 						@click="viewOrDownload(a)"
 					>
 						<span class="filename">
-							{{ a.file.name }}
+							{{ a.file?.name }}
 							<span
 								v-if="task.cover_image_attachment_id === a.id"
 								class="is-task-cover"
@@ -63,13 +63,13 @@
 					</button>
 					<p class="attachment-info-meta">
 						<User
-							:user="a.created_by"
+							:user="a.created_by ?? {}"
 							:avatar-size="20"
 							:show-username="false"
 							:is-inline="true"
 						/>
 						<span>
-							{{ getHumanSize(a.file.size) }}
+							{{ getHumanSize(a.file?.size ?? 0) }}
 						</span>
 					</p>
 					<AudioPreview
@@ -123,12 +123,12 @@
 
 		<XButton
 			v-if="editEnabled"
-			:disabled="loading"
+			:aria-disabled="loading"
 			class="mbe-4"
 			icon="cloud-upload-alt"
 			variant="secondary"
 			:shadow="false"
-			@click="filesRef?.click()"
+			@click="!loading && filesRef?.click()"
 		>
 			{{ $t('task.attachment.upload') }}
 		</XButton>
@@ -163,7 +163,7 @@
 
 			<template #text>
 				<p v-if="attachmentToDelete">
-					{{ $t('task.attachment.deleteText1', {filename: attachmentToDelete.file.name}) }}<br>
+					{{ $t('task.attachment.deleteText1', {filename: attachmentToDelete.file?.name}) }}<br>
 					<strong class="has-text-white">{{ $t('misc.cannotBeUndone') }}</strong>
 				</p>
 			</template>
@@ -226,7 +226,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, shallowReactive, computed, watch, onMounted, onBeforeUnmount, type ComponentPublicInstance} from 'vue'
+import {ref, computed, watch, onMounted, onBeforeUnmount, type ComponentPublicInstance} from 'vue'
 import {useDropZone} from '@vueuse/core'
 
 import User from '@/components/misc/User.vue'
@@ -234,15 +234,15 @@ import ProgressBar from '@/components/misc/ProgressBar.vue'
 import Loading from '@/components/misc/Loading.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
-import AttachmentModel from '@/models/attachment'
-import AttachmentService from '@/services/attachment'
-import {canPreviewAudio, canPreviewImage, previewKind, type PreviewKind} from '@/models/attachment'
+import {useQuery} from '@tanstack/vue-query'
+import {attachmentsQuery, useUploadAttachmentsMutation, useDeleteAttachmentMutation} from '@/client/queries/attachments'
+import {canPreviewAudio, canPreviewImage, previewKind, type PreviewKind} from '@/helpers/attachmentPreview'
 import {getDisplayName} from '@/models/user'
 import type {TaskAttachment as IAttachment} from '@/client/generated'
 import type {Task as ITask} from '@/client/generated'
 
 import {formatDateLong} from '@/helpers/time/formatDate'
-import {uploadFiles, generateAttachmentUrl} from '@/helpers/attachments'
+import {attachmentBlobUrl, downloadAttachment, generateAttachmentUrl} from '@/helpers/attachments'
 import {downloadBlob} from '@/helpers/downloadBlob'
 import {getHumanSize} from '@/helpers/getHumanSize'
 import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
@@ -261,10 +261,6 @@ const props = withDefaults(defineProps<{
 }>(), {
 	editEnabled: true,
 })
-
-const emit = defineEmits<{
-	'update:attachments': [IAttachment[]],
-}>()
 
 const EDITOR_SELECTOR = '.tiptap, .tiptap__editor, [contenteditable]'
 
@@ -290,21 +286,12 @@ function eventTargetsEditor(event: Event | null | undefined): boolean {
 const updateTask = useUpdateTaskMutation()
 const {t} = useI18n({useScope: 'global'})
 
-const attachmentService = shallowReactive(new AttachmentService())
-
-const attachments = ref<IAttachment[]>([])
-async function reloadAttachments() {
-	const id = props.task.id
-	if (!id) return
-	const loaded = await attachmentService.getAll(new AttachmentModel({taskId: id}))
-	if (props.task.id === id) attachments.value = loaded
-}
-watch(() => props.task.id, () => {
-	attachments.value = []
-	void reloadAttachments()
-}, {immediate: true})
-
-const loading = computed(() => attachmentService.loading || updateTask.isPending.value)
+const attachmentQuery = useQuery(computed(() => attachmentsQuery(props.task.id ?? 0)))
+const attachments = computed(() => attachmentQuery.data.value ?? [])
+const uploadMutation = useUploadAttachmentsMutation()
+const deleteMutation = useDeleteAttachmentMutation()
+const uploadProgress = ref(0)
+const loading = computed(() => uploadMutation.isPending.value || deleteMutation.isPending.value || updateTask.isPending.value)
 
 const isDraggingFiles = ref(false)
 const isDragOverEditor = ref(false)
@@ -417,16 +404,12 @@ watch(() => props.editEnabled, enabled => {
 function attachmentMetaTooltip(attachment: IAttachment): string {
 	const created_by = t('task.attachment.createdBy', [
 		formatDateLong(attachment.created),
-		getDisplayName(attachment.created_by),
+		getDisplayName(attachment.created_by ?? {}),
 	])
 
-	return attachment.file.mime
-		? `${attachment.file.mime} · ${created_by}`
+	return attachment.file?.mime
+		? `${attachment.file?.mime} · ${created_by}`
 		: created_by
-}
-
-function downloadAttachment(attachment: IAttachment) {
-	attachmentService.download(attachment)
 }
 
 const filesRef = ref<HTMLInputElement | null>(null)
@@ -434,7 +417,7 @@ const filesRef = ref<HTMLInputElement | null>(null)
 function uploadNewAttachment() {
 	const files = filesRef.value?.files
 
-	if (!files || files.length === 0) {
+	if (loading.value || !files || files.length === 0) {
 		return
 	}
 
@@ -442,14 +425,19 @@ function uploadNewAttachment() {
 }
 
 async function uploadFilesToTask(files: File[] | FileList) {
+	const taskId = props.task.id!
+	const batch = Array.from(files)
+	uploadProgress.value = 0
 	try {
-		const uploaded = await uploadFiles(attachmentService, props.task.id!, files)
-		if (uploaded.length > 0) {
-			attachments.value = [...attachments.value, ...uploaded]
-			emit('update:attachments', attachments.value)
+		for (const [index, file] of batch.entries()) {
+			const result = await uploadMutation.mutateAsync({taskId, files: [file]})
+			uploadProgress.value = (index + 1) / batch.length
+			if (result.errors?.length) error({message: result.errors.map(error => error.message).join('\n')})
 		}
-	} catch (e) {
-		error(e)
+	} catch {
+		return
+	} finally {
+		uploadProgress.value = 0
 	}
 }
 
@@ -464,16 +452,13 @@ async function deleteAttachment() {
 		return
 	}
 
+	const target = attachmentToDelete.value
 	try {
-		const r = await attachmentService.delete(attachmentToDelete.value)
-		const updated = attachments.value.filter(a => a.id !== attachmentToDelete.value!.id)
-		attachments.value = updated
-		emit('update:attachments', updated)
-		success(r)
-		setAttachmentToDelete(null)
-	} catch (e) {
-		error(e)
+		await deleteMutation.mutateAsync({taskId: props.task.id!, id: target.id!})
+	} catch {
+		return
 	}
+	if (attachmentToDelete.value === target) setAttachmentToDelete(null)
 }
 
 interface Preview {
@@ -528,7 +513,7 @@ const audioPlayers = new Map<IAttachment['id'], AudioPreviewInstance>()
 
 function setAudioPlayerRef(attachment: IAttachment, el: Element | ComponentPublicInstance | null) {
 	if (el === null) {
-		audioPlayers.delete(attachment.id)
+		audioPlayers.delete(attachment.id!)
 		return
 	}
 
@@ -536,8 +521,8 @@ function setAudioPlayerRef(attachment: IAttachment, el: Element | ComponentPubli
 }
 
 async function viewOrDownload(attachment: IAttachment) {
-	if (canPreviewAudio(attachment) && audioPlayers.has(attachment.id)) {
-		await audioPlayers.get(attachment.id)!.play()
+	if (canPreviewAudio(attachment) && audioPlayers.has(attachment.id!)) {
+		await audioPlayers.get(attachment.id!)!.play()
 		return
 	}
 
@@ -556,14 +541,14 @@ async function viewOrDownload(attachment: IAttachment) {
 	previewLoading.value = kind === 'video'
 
 	try {
-		const blobUrl = await attachmentService.getBlobUrl(attachment)
+		const blobUrl = await attachmentBlobUrl({id: attachment.id!, task_id: attachment.task_id!})
 		// stale response: revoke without assigning, the img may still be decoding the current url
 		if (requestToken !== previewRequestToken) {
 			URL.revokeObjectURL(blobUrl)
 			return
 		}
 		previewLoading.value = false
-		replacePreview({kind, blobUrl, name: attachment.file.name})
+		replacePreview({kind, blobUrl, name: attachment.file?.name ?? ''})
 	} catch (e) {
 		if (requestToken === previewRequestToken) {
 			previewLoading.value = false
@@ -575,7 +560,7 @@ async function viewOrDownload(attachment: IAttachment) {
 const copy = useCopyToClipboard()
 
 function copyUrl(attachment: IAttachment) {
-	copy(generateAttachmentUrl(props.task.id!, attachment.id))
+	copy(generateAttachmentUrl(props.task.id!, attachment.id!))
 }
 
 async function setCoverImage(attachment: IAttachment | null) {
@@ -584,7 +569,6 @@ async function setCoverImage(attachment: IAttachment | null) {
 }
 
 defineExpose({
-	reloadAttachments,
 	openFilePicker: () => filesRef.value?.click(),
 })
 </script>

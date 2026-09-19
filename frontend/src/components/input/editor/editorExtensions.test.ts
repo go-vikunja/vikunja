@@ -5,14 +5,9 @@ import {Editor} from '@tiptap/core'
 import {createEditorExtensions, type EditorExtensionDeps} from './editorExtensions'
 import {clearAttachmentBlobCache} from '@/helpers/attachments'
 
-const {getBlobUrl} = vi.hoisted(() => ({getBlobUrl: vi.fn(async () => 'blob:real-attachment')}))
+const {getBlobUrl} = vi.hoisted(() => ({getBlobUrl: vi.fn(async () => ({data: new Blob(['bytes'])}))}))
 
-vi.mock('@/services/attachment', async importOriginal => ({
-	...await importOriginal<typeof import('@/services/attachment')>(),
-	default: class {
-		getBlobUrl = getBlobUrl
-	},
-}))
+vi.mock('@/client/generated', () => ({taskAttachmentsDownload: getBlobUrl}))
 
 const API_URL = 'http://localhost:3456/api/v1'
 window.API_URL = API_URL
@@ -52,6 +47,7 @@ async function settle() {
 }
 
 beforeEach(() => {
+	URL.createObjectURL = vi.fn(blob => (blob as Blob & {testUrl?: string}).testUrl ?? 'blob:real-attachment')
 	setActivePinia(createPinia())
 	clearAttachmentBlobCache()
 	getBlobUrl.mockClear()
