@@ -279,7 +279,7 @@ const newCommentText = ref('')
 const saved = ref<ITask['id'] | null>(null)
 const saving = ref<ITask['id'] | null>(null)
 
-const currentUserId = computed(() => authStore.info?.id)
+const currentUserId = computed(() => authStore.info?.id ?? null)
 const enabled = computed(() => configStore.taskCommentsEnabled)
 const actions = computed(() => {
 	if (!props.canWrite) {
