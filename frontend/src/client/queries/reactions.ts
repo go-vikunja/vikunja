@@ -62,7 +62,7 @@ export function setReactionMutationOptions() {
 				...input,
 				user: data?.user ?? input.user,
 			}
-			// Reactions only exist on copies that expanded them; patching any other would pass a partial map off as complete.
+			// Reactions are expand-only, so patching a copy that never asked for them fakes a complete map.
 			for (const [key, cached] of client.getQueriesData<TaskResponse>({queryKey: taskKeys.details})) {
 				const expand = key[DETAIL_KEY_EXPANSION] as TaskExpansion | undefined
 				if (cached?.id !== input.id || !expand?.includes('reactions')) continue

@@ -43,7 +43,7 @@ async function setReaction(value: string, remove: boolean) {
 		const data = await reactionMutation.mutateAsync(input)
 		if (props.entityId !== input.id || props.entityKind !== input.kind) return
 		showEmojiPicker.value = false
-		// Task reactions live in the task cache, a local copy would race it.
+		// Task reactions live in the task cache; a second local copy would race it.
 		if (props.entityKind === 'tasks') return
 		model.value = changeReaction(model.value, {
 			...input,
