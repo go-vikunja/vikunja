@@ -2,7 +2,11 @@ import {ref, readonly} from 'vue'
 
 import {getToken, getTokenType} from '@/helpers/auth'
 import {AUTH_TYPES} from '@/modelTypes/IUser'
-import {captureClientRequestContext, isClientRequestContextCurrent} from '@/client/requestContext'
+import {
+	captureClientRequestContext,
+	isClientRequestContextCurrent,
+	type ClientRequestContext,
+} from '@/client/requestContext'
 
 type MessageCallback = (msg: WebSocketEvent) => void
 
@@ -18,6 +22,7 @@ const RECONNECT_BASE_DELAY = 1000
 const RECONNECT_MAX_DELAY = 30000
 
 let socket: WebSocket | null = null
+let socketContext: ClientRequestContext | null = null
 let reconnectAttempt = 0
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null
 const subscriptions = new Map<string, Set<MessageCallback>>()
@@ -50,6 +55,18 @@ function resubscribeAll() {
 	}
 }
 
+function closeSocket() {
+	socket?.close()
+	socket = null
+	socketContext = null
+	connected.value = false
+	authenticated.value = false
+	if (reconnectTimer) {
+		clearTimeout(reconnectTimer)
+		reconnectTimer = null
+	}
+}
+
 function handleMessage(event: MessageEvent) {
 	let msg: WebSocketEvent
 	try {
@@ -72,10 +89,7 @@ function handleMessage(event: MessageEvent) {
 	if (msg.error === 'invalid_token' || msg.error === 'auth_required') {
 		console.warn('WebSocket: auth failed:', msg.error)
 		manuallyDisconnected = true
-		authenticated.value = false
-		connected.value = false
-		socket?.close()
-		socket = null
+		closeSocket()
 		return
 	}
 
@@ -122,6 +136,11 @@ function mayOpenSocket(): boolean {
 }
 
 function connect() {
+	// A connection stays authenticated as whoever opened it, so a session change must tear it down, never adopt it.
+	if (socketContext && !isClientRequestContextCurrent(socketContext)) {
+		closeSocket()
+	}
+
 	if (socket?.readyState === WebSocket.OPEN || socket?.readyState === WebSocket.CONNECTING) {
 		return
 	}
@@ -142,19 +161,17 @@ function connect() {
 		scheduleReconnect()
 		return
 	}
+	socketContext = context
 
 	const connection = socket
 	const isCurrent = () => socket === connection && isClientRequestContextCurrent(context)
 
-	// A connection stays authenticated as whoever opened it, so a session change must tear it down, not just ignore it.
 	function dropStaleConnection() {
-		connection.close()
 		if (socket !== connection) {
+			connection.close()
 			return
 		}
-		socket = null
-		connected.value = false
-		authenticated.value = false
+		closeSocket()
 		scheduleReconnect()
 	}
 
@@ -182,9 +199,7 @@ function connect() {
 			dropStaleConnection()
 			return
 		}
-		connected.value = false
-		authenticated.value = false
-		socket = null
+		closeSocket()
 		scheduleReconnect()
 	}
 
@@ -195,17 +210,8 @@ function connect() {
 
 function disconnect() {
 	manuallyDisconnected = true
-	if (reconnectTimer) {
-		clearTimeout(reconnectTimer)
-		reconnectTimer = null
-	}
 	reconnectAttempt = 0
-	if (socket) {
-		socket.close()
-		socket = null
-	}
-	connected.value = false
-	authenticated.value = false
+	closeSocket()
 	subscriptions.clear()
 }
 
