@@ -29,11 +29,12 @@ import type {Subscription} from '@/client/generated'
 import type { IconProp } from '@fortawesome/fontawesome-svg-core'
 
 const props = withDefaults(defineProps<{
-	modelValue: Subscription | null,
+	modelValue?: Subscription | null,
 	entity: NonNullable<Subscription['entity']>,
 	entityId: number,
 	type?: 'button' | 'dropdown',
 }>(), {
+	modelValue: null,
 	type: 'button',
 })
 
