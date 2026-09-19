@@ -91,6 +91,7 @@ import {useRouteWithModal} from '@/composables/useRouteWithModal'
 import {useRenewTokenOnFocus} from '@/composables/useRenewTokenOnFocus'
 import {useSidebarResize} from '@/composables/useSidebarResize'
 import {useWebSocket} from '@/composables/useWebSocket'
+import {useServerCacheEvents} from '@/composables/useServerCacheEvents'
 import {useAuthStore} from '@/stores/auth'
 
 const authStore = useAuthStore()
@@ -141,6 +142,7 @@ watch(() => route.name as string, (routeName) => {
 
 useRenewTokenOnFocus()
 
+useServerCacheEvents()
 const {connect} = useWebSocket()
 connect()
 

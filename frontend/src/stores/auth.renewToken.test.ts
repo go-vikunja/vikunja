@@ -29,7 +29,11 @@ vi.mock('@/client/queryClient', () => ({
 }))
 
 vi.mock('@/composables/useWebSocket', () => ({
-	useWebSocket: () => ({disconnect: vi.fn(), connect: vi.fn()}),
+	useWebSocket: () => ({
+		disconnect: vi.fn(),
+		connect: vi.fn(),
+		closeStaleConnection: vi.fn(),
+	}),
 }))
 
 function fakeHttp() {
