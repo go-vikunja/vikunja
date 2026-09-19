@@ -355,7 +355,6 @@
 						:entity-id="task.id"
 						class="details d-print-none"
 						:disabled="!canWrite"
-						@update:modelValue="setReactions"
 					/>
 
 					<!-- Attachments -->
@@ -895,11 +894,6 @@ const isModal = computed(() => Boolean(props.backdropView))
 
 function attachmentUpload(file: File, onSuccess?: (url: string) => void) {
 	return uploadFile(props.taskId, file, onSuccess)
-}
-
-function setReactions(reactions: ITask['reactions']) {
-	task.value = {...task.value, reactions}
-	taskQuery.refetch()
 }
 
 const heading = ref<HTMLElement | null>(null)

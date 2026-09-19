@@ -1,11 +1,8 @@
 <script setup lang="ts">
-import type {ReactionKind} from '@/modelTypes/IReaction'
+import type {ReactionKind, ReactionUsers} from '@/client/queries/reactions'
 import {VuemojiPicker} from 'vuemoji-picker'
-import ReactionService from '@/services/reactions'
-import ReactionModel from '@/models/reaction'
+import {useSetReactionMutation, changeReaction} from '@/client/queries/reactions'
 import BaseButton from '@/components/base/BaseButton.vue'
-import type {User} from '@/client/generated'
-type ReactionUsers = Record<string, Pick<User, 'id' | 'name' | 'username' | 'bot_owner_id'>[] | null>
 import {getDisplayName} from '@/models/user'
 import {useI18n} from 'vue-i18n'
 import {nextTick, onBeforeUnmount, onMounted, ref} from 'vue'
@@ -26,49 +23,43 @@ const model = defineModel<ReactionUsers>()
 
 const authStore = useAuthStore()
 const {t} = useI18n()
-const reactionService = new ReactionService()
+const reactionMutation = useSetReactionMutation()
 const {isDark} = useColorScheme()
 
-async function addReaction(value: string) {
-	const reaction = new ReactionModel({
-		id: props.entityId,
+async function setReaction(value: string, remove: boolean) {
+	if (props.disabled || reactionMutation.isPending.value || !authStore.info) return
+	const input = {
 		kind: props.entityKind,
+		id: props.entityId,
 		value,
-	})
-	await reactionService.create(reaction)
-	showEmojiPicker.value = false
-
-	if (!authStore.info) return
-
-	const current = model.value ?? {}
-	model.value = {
-		...current,
-		[reaction.value]: [
-			...(current[reaction.value] ?? []),
-			authStore.info,
-		],
+		remove,
+		user: {
+			id: authStore.info.id,
+			name: authStore.info.name,
+			username: authStore.info.username,
+		},
+	}
+	try {
+		const data = await reactionMutation.mutateAsync(input)
+		if (props.entityId !== input.id || props.entityKind !== input.kind) return
+		showEmojiPicker.value = false
+		// Task reactions live in the task cache; a second local copy would race it.
+		if (props.entityKind === 'tasks') return
+		model.value = changeReaction(model.value, {
+			...input,
+			user: data?.user ?? input.user,
+		})
+	} catch {
+		return
 	}
 }
 
-async function removeReaction(value: string) {
-	const reaction = new ReactionModel({
-		id: props.entityId,
-		kind: props.entityKind,
-		value,
-	})
-	await reactionService.delete(reaction)
-	showEmojiPicker.value = false
+function addReaction(value: string) {
+	return setReaction(value, false)
+}
 
-	if (!model.value) return
-
-	const {[reaction.value]: reacted, ...rest} = model.value
-	const remaining = (reacted ?? []).filter(u => u.id !== authStore.info?.id)
-	model.value = remaining.length === 0
-		? rest
-		: {
-			...rest,
-			[reaction.value]: remaining,
-		}
+function removeReaction(value: string) {
+	return setReaction(value, true)
 }
 
 function getReactionTooltip(users: ReactionUsers[string], value: string | number) {
@@ -153,7 +144,9 @@ async function toggleReaction(value: string | number) {
 			v-tooltip="getReactionTooltip(users, value)"
 			class="reaction-button"
 			:class="{'current-user-has-reacted': hasCurrentUserReactedWithEmoji(value)}"
-			:disabled
+			:disabled="disabled"
+			:aria-disabled="reactionMutation.isPending.value || undefined"
+			:aria-pressed="hasCurrentUserReactedWithEmoji(value)"
 			@click="toggleReaction(value)"
 		>
 			{{ value }} {{ users?.length }}
