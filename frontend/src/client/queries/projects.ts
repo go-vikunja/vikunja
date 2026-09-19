@@ -8,8 +8,6 @@ import {
 	projectsRead,
 	projectsUpdate,
 	patchProjectsRead,
-	subscriptionsCreate,
-	subscriptionsDelete,
 } from '@/client/generated'
 import type {
 	Project,
@@ -25,6 +23,8 @@ import {i18n} from '@/i18n'
 import {contextMutationOptions} from './contextMutation'
 import {fetchAllPages} from './fetchAllPages'
 import {API_MAX_PER_PAGE} from './pagination'
+import {setSubscription} from './subscriptionRequests'
+import {taskKeys} from './tasks'
 
 export type ProjectResponse = Omit<Project,
 	'id' |
@@ -373,15 +373,8 @@ export function patchProjectFavoriteMutationOptions() {
 
 export function setProjectSubscriptionMutationOptions() {
 	return contextMutationOptions({
-		mutationFn: async ({projectId, subscribed}: {projectId: number; subscribed: boolean}) => {
-			const path = {entity: 'project', entityID: projectId} as const
-			if (!subscribed) {
-				await subscriptionsDelete({path})
-				return undefined
-			}
-			const {data} = await subscriptionsCreate({path})
-			return data
-		},
+		mutationFn: ({projectId, subscribed}: {projectId: number; subscribed: boolean}) =>
+			setSubscription('project', projectId, subscribed),
 		onSuccess: (subscription, {projectId}, client) => {
 			client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
 				current ? mapProjectNavigationItem(current, projectId, project => ({...project, subscription})) : current,
@@ -398,6 +391,8 @@ export function setProjectSubscriptionMutationOptions() {
 			return Promise.all([
 				client.invalidateQueries({queryKey: projectKeys.list(), refetchType: 'none'}),
 				...ids.map(id => client.invalidateQueries({queryKey: projectKeys.detail(id)})),
+				// Tasks inherit the project subscription.
+				client.invalidateQueries({queryKey: taskKeys.details}),
 			])
 		},
 		successMessage: (_subscription, {subscribed}) => i18n.global.t(subscribed
