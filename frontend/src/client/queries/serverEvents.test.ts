@@ -23,7 +23,7 @@ vi.mock('@/message', () => ({
 	success: vi.fn(),
 }))
 
-it('ignores acknowledgements and unrelated notifications', () => {
+it('ignores malformed payloads and unrelated notifications', () => {
 	expect(parseServerCacheEvent('timer.created', undefined, 7)).toBeNull()
 	expect(parseServerCacheEvent('notification.created', {name: 'team.member.added'}, 7)).toBeNull()
 })
@@ -108,6 +108,7 @@ it('reconciles timer events without inserting into an unrelated filtered list', 
 	await client.getMutationCache().build(client, serverCacheEventMutationOptions()).execute(event)
 	expect(client.getQueryData(timeEntryKeys.active(7))).toEqual(entry)
 	expect(client.getQueryData(timeEntryKeys.list('task_id = 99', 'UTC'))).toEqual([])
+	expect(client.getQueryState(timeEntryKeys.list('task_id = 99', 'UTC'))?.isInvalidated).toBe(true)
 	await client.getMutationCache().build(client, serverCacheEventMutationOptions()).execute({
 		kind: 'timer.deleted',
 		entry,
@@ -121,7 +122,7 @@ it('refreshes task details and marks board membership stale after reconnecting',
 		id: 1,
 		comment_count: 0,
 	}))
-	const boardKey = [...kanbanKeys.all, 'board']
+	const boardKey = kanbanKeys.board(1, 1)
 	client.setQueryData(boardKey, {buckets: []})
 	await client.getMutationCache().build(client, serverCacheEventMutationOptions()).execute({kind: 'reconnect'})
 	expect(client.getQueryState(boardKey)?.isInvalidated).toBe(true)
