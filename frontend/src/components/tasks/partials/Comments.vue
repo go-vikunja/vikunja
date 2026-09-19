@@ -63,7 +63,7 @@
 							{{ formatDisplayDate(c.created) }}
 						</span>
 						<span
-							v-if="+new Date(c.created ?? '') !== +new Date(c.updated ?? '')"
+							v-if="c.created && c.updated && c.created !== c.updated"
 							v-tooltip="formatDateLong(c.updated)"
 						>
 							· {{ $t('task.comment.edited', {date: formatDisplayDate(c.updated)}) }}
