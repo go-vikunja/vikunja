@@ -55,7 +55,7 @@
 								v-if="row.entry.task_id > 0"
 								:to="{ name: 'task.detail', params: { id: row.entry.task_id } }"
 							>
-								{{ row.task_identifier }}{{ row.taskTitle ? ` - ${row.taskTitle}` : '' }}
+								{{ row.taskIdentifier }}{{ row.taskTitle ? ` - ${row.taskTitle}` : '' }}
 							</RouterLink>
 						</td>
 						<td class="has-text-grey">
@@ -83,7 +83,7 @@
 									v-cy="'deleteTimeEntry'"
 									class="entry-action entry-delete"
 									:aria-label="$t('misc.delete')"
-									@click="emit('delete', row.entry.id)"
+									@click="emit('delete', row.entry)"
 								>
 									<Icon icon="trash-alt" />
 								</BaseButton>
@@ -97,7 +97,7 @@
 							:colspan="hideLabelColumn ? 2 : 4"
 							class="has-text-weight-bold"
 						>
-							{{ $t('timeTracking.list.total') }}
+							{{ $t(paged ? 'timeTracking.list.pageTotal' : 'timeTracking.list.total') }}
 						</td>
 						<td class="nowrap has-text-right has-text-weight-bold">
 							{{ formatDuration(totalSeconds) }}
@@ -111,21 +111,23 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, watch} from 'vue'
+import {computed} from 'vue'
 
 import Card from '@/components/misc/Card.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
 import {useProjects} from '@/composables/useProjects'
 import {useAuthStore} from '@/stores/auth'
-import {ensureTask} from '@/client/queries/tasks'
+import {taskQuery} from '@/client/queries/tasks'
+import {useQueries} from '@tanstack/vue-query'
 import {getProjectTitle} from '@/helpers/getProjectTitle'
 import {formatDate} from '@/helpers/time/formatDate'
+import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {useTimeFormat} from '@/composables/useTimeFormat'
 import {TIME_FORMAT} from '@/constants/timeFormat'
 
-import type {TimeEntry as ITimeEntry} from '@/client/generated'
 import type {TaskResponse} from '@/client/queries/tasks'
+import type {TimeEntryResponse as ITimeEntry} from '@/client/queries/timeEntries'
 
 const props = withDefaults(defineProps<{
 	entries: ITimeEntry[]
@@ -136,14 +138,17 @@ const props = withDefaults(defineProps<{
 	card?: boolean
 	// Override the empty-state message (defaults to the per-day wording).
 	emptyText?: string
+	// The entries are one page of a longer list, so the footer sum is page-local.
+	paged?: boolean
 }>(), {
 	hideLabelColumn: false,
 	card: true,
 	emptyText: '',
+	paged: false,
 })
 
 const emit = defineEmits<{
-	delete: [id: number]
+	delete: [entry: ITimeEntry]
 	edit: [entry: ITimeEntry]
 }>()
 
@@ -153,25 +158,28 @@ const {store: timeFormat} = useTimeFormat()
 // Only the author can update/delete (enforced server-side); shared lists include
 // others' entries, so hide the controls on rows the current user doesn't own.
 const authStore = useAuthStore()
-const currentUserId = computed(() => authStore.info?.id)
+const currentUserId = computed(() => authStore.authUser ? authStore.info?.id : undefined)
+
+const taskIds = computed(() => props.hideLabelColumn
+	? []
+	: [...new Set(props.entries.map(entry => entry.task_id).filter(id => id > 0))])
 
 // Entries carry only a task id; the full task (title, identifier, parent project) is resolved lazily.
-const tasks = ref<Record<number, TaskResponse>>({})
+const taskQueries = useQueries({
+	queries: computed(() => taskIds.value.map(id => taskQuery(id))),
+})
+const tasks = computed<Record<number, TaskResponse>>(() => Object.fromEntries(
+	taskQueries.value.flatMap(result => result.data ? [[result.data.id, result.data] as const] : []),
+))
 
-watch(() => props.entries, entries => {
-	entries.forEach(({taskId}) => {
-		if (taskId === 0) {
-			return
-		}
-		ensureTask(taskId).then(task => {
-			tasks.value[taskId] = task
-		}).catch(() => {})
-	})
-}, {immediate: true})
-
-function entrySeconds(entry: ITimeEntry): number {
-	const end = entry.end_time ?? new Date()
-	return Math.floor((end.getTime() - entry.start_time.getTime()) / 1000)
+// null when the entry has no settled duration: still running, or unusable timestamps.
+function entrySeconds(entry: ITimeEntry): number | null {
+	const start = parseDateOrNull(entry.start_time)
+	const end = parseDateOrNull(entry.end_time)
+	if (start === null || end === null) {
+		return null
+	}
+	return Math.floor((end.getTime() - start.getTime()) / 1000)
 }
 
 const rows = computed(() => props.entries.map(entry => {
@@ -186,8 +194,7 @@ const rows = computed(() => props.entries.map(entry => {
 		projectChain: ancestors.map(p => ({id: p.id, title: getProjectTitle(p)})),
 		taskIdentifier: task ? (task.identifier || `#${task.index}`) : (entry.task_id > 0 ? `#${entry.task_id}` : ''),
 		taskTitle: task?.title ?? '',
-		// A running entry (no end) has no settled duration — leave it blank.
-		seconds: entry.end_time !== null ? entrySeconds(entry) : null,
+		seconds: entrySeconds(entry),
 	}
 }))
 
@@ -204,11 +211,12 @@ function formatTime(date: Date): string {
 }
 
 function timeRange(entry: ITimeEntry): string {
-	const start = formatTime(entry.start_time)
-	if (entry.end_time === null) {
-		return `${start} – …`
+	const start = parseDateOrNull(entry.start_time)
+	if (start === null) {
+		return ''
 	}
-	return `${start} – ${formatTime(entry.end_time)}`
+	const end = parseDateOrNull(entry.end_time)
+	return end === null ? `${formatTime(start)} – …` : `${formatTime(start)} – ${formatTime(end)}`
 }
 </script>
 

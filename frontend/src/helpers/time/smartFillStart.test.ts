@@ -1,20 +1,19 @@
 import {describe, it, expect} from 'vitest'
 
 import {smartFillStart} from './smartFillStart'
-import type {ITimeEntry} from '@/modelTypes/ITimeEntry'
+import type {TimeEntry as ITimeEntry} from '@/client/generated'
 
 function entry(startTime: Date, endTime: Date | null): ITimeEntry {
 	return {
 		id: 1,
-		userId: 1,
-		taskId: 0,
-		projectId: 0,
-		startTime,
-		endTime,
+		user_id: 1,
+		task_id: 0,
+		project_id: 0,
+		start_time: startTime.toISOString(),
+		end_time: endTime?.toISOString() ?? null,
 		comment: '',
-		created: startTime,
-		updated: startTime,
-		maxPermission: null,
+		created: startTime.toISOString(),
+		updated: startTime.toISOString(),
 	}
 }
 
@@ -35,6 +34,14 @@ describe('smartFillStart', () => {
 			entry(new Date('2026-06-07T13:00:00'), null),
 		]
 		expect(smartFillStart(entries, '09:00', now)).toEqual(new Date('2026-06-07T10:00:00'))
+	})
+
+	it('ignores entries whose end time is unparseable', () => {
+		const entries = [
+			{...entry(new Date('2026-06-07T09:00:00'), null), end_time: '0001-01-01T00:00:00Z'},
+			{...entry(new Date('2026-06-07T11:00:00'), null), end_time: 'not a date'},
+		]
+		expect(smartFillStart(entries, '08:15', now)).toEqual(new Date('2026-06-07T08:15:00'))
 	})
 
 	it('falls back to the default start time on the current day when there are no entries', () => {

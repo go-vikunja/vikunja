@@ -28,9 +28,16 @@
 			:entries="entries"
 			:card="false"
 			:empty-text="$t('timeTracking.list.emptyTask')"
+			:paged="totalPages > 1"
 			hide-label-column
 			@edit="editingEntry = $event"
 			@delete="onDelete"
+		/>
+		<PaginationEmit
+			v-if="totalPages > 1"
+			:total-pages="totalPages"
+			:current-page="currentPage"
+			@pageChanged="currentPage = $event"
 		/>
 	</div>
 </template>
@@ -38,47 +45,49 @@
 <script setup lang="ts">
 import {ref, computed, watch} from 'vue'
 
+import PaginationEmit from '@/components/misc/PaginationEmit.vue'
 import TimeEntryForm from '@/components/time-tracking/TimeEntryForm.vue'
 import TimeEntryList from '@/components/time-tracking/TimeEntryList.vue'
 
-import {useTimeEntryService} from '@/services/timeEntry'
-import {useTimeTrackingStore} from '@/stores/timeTracking'
+import {useTimeEntries} from '@/composables/useTimeTracking'
+import {useDeleteTimeEntryMutation} from '@/client/queries/timeEntries'
 
-import type {TimeEntry as ITimeEntry} from '@/client/generated'
+import type {TimeEntryResponse as ITimeEntry} from '@/client/queries/timeEntries'
 
 const props = defineProps<{
 	taskId: number
 }>()
 
-const timeTrackingStore = useTimeTrackingStore()
-const entries = ref<ITimeEntry[]>([])
+const currentPage = ref(1)
+const {entries, totalPages} = useTimeEntries(() => `task_id = ${props.taskId}`, {page: currentPage})
+const deleteMutation = useDeleteTimeEntryMutation()
 const editingEntry = ref<ITimeEntry | null>(null)
 const showForm = ref(false)
+
+watch(() => props.taskId, () => {
+	currentPage.value = 1
+})
 
 // Like related tasks: the form is implicit when empty, otherwise behind the +.
 const formVisible = computed(() => entries.value.length === 0 || showForm.value || editingEntry.value !== null)
 
-async function load() {
-	const {items} = await useTimeEntryService().getAll({
-		filter: `task_id = ${props.taskId}`,
-		perPage: 250,
-	})
-	entries.value = items
-}
-
-async function onSaved() {
+function onSaved() {
 	editingEntry.value = null
 	showForm.value = false
-	await load()
 }
 
-async function onDelete(id: number) {
-	await timeTrackingStore.removeEntry(id)
-	await load()
+async function onDelete(entry: ITimeEntry) {
+	if (deleteMutation.isPending.value) {
+		return
+	}
+	try {
+		await deleteMutation.mutateAsync({
+			id: entry.id,
+			taskId: entry.task_id,
+		})
+	} catch {
+		return
+	}
+	currentPage.value = Math.min(currentPage.value, Math.max(1, totalPages.value))
 }
-
-watch(() => props.taskId, load, {immediate: true})
-// The header badge can start/stop the timer without going through this form;
-// reload so the row reflects the stop (its new end time).
-watch(() => timeTrackingStore.activeTimer, load)
 </script>
