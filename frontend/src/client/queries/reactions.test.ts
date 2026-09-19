@@ -165,6 +165,9 @@ it('patches only the copies that expanded reactions', async () => {
 	expect(cachedReactions(1)).toEqual({'👍': [{id: 2}, {id: 1}]})
 	expect(client.getQueryData(taskKeys.detail(1))).toBe(task)
 	expect(client.getQueryData<TaskResponse[]>(taskKeys.allList({project: 1}))?.[0]).toBe(task)
+	expect(client.getQueryState(expandedDetail(1))?.isInvalidated).toBe(false)
+	expect(client.getQueryState(taskKeys.detail(1))?.isInvalidated).toBe(false)
+	expect(client.getQueryState(taskKeys.allList({project: 1}))?.isInvalidated).toBe(false)
 })
 
 it('leaves task caches untouched for a comment reaction', async () => {
