@@ -156,7 +156,7 @@ export function createTimeEntryMutationOptions() {
 
 export type UpdateTimeEntryInput = TimeEntryWritable & Required<Pick<TimeEntry, 'id'>>
 
-function cachedTaskIdOf(client: QueryClient, id: number): number | undefined {
+export function cachedTaskIdOf(client: QueryClient, id: number): number | undefined {
 	for (const [, page] of client.getQueriesData<TimeEntryPage>({queryKey: timeEntryKeys.lists})) {
 		const cached = page?.items.find(entry => entry.id === id)
 		if (cached) return cached.task_id

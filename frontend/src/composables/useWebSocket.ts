@@ -1,6 +1,12 @@
 import {ref, readonly} from 'vue'
 
-import {getToken} from '@/helpers/auth'
+import {getToken, getTokenType} from '@/helpers/auth'
+import {AUTH_TYPES} from '@/modelTypes/IUser'
+import {
+	captureClientRequestContext,
+	isClientRequestContextCurrent,
+	type ClientRequestContext,
+} from '@/client/requestContext'
 
 type MessageCallback = (msg: WebSocketEvent) => void
 
@@ -16,11 +22,14 @@ const RECONNECT_BASE_DELAY = 1000
 const RECONNECT_MAX_DELAY = 30000
 
 let socket: WebSocket | null = null
+let socketContext: ClientRequestContext | null = null
 let reconnectAttempt = 0
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null
 const subscriptions = new Map<string, Set<MessageCallback>>()
 const connected = ref(false)
 const authenticated = ref(false)
+const mayHaveMissedEvents = ref(false)
+const subscribedAt = ref(0)
 let manuallyDisconnected = false
 
 function getWebSocketUrl(): string {
@@ -48,6 +57,20 @@ function resubscribeAll() {
 	}
 }
 
+function closeSocket() {
+	socket?.close()
+	socket = null
+	socketContext = null
+	connected.value = false
+	authenticated.value = false
+	mayHaveMissedEvents.value = false
+	subscribedAt.value = 0
+	if (reconnectTimer) {
+		clearTimeout(reconnectTimer)
+		reconnectTimer = null
+	}
+}
+
 function handleMessage(event: MessageEvent) {
 	let msg: WebSocketEvent
 	try {
@@ -62,6 +85,8 @@ function handleMessage(event: MessageEvent) {
 		authenticated.value = true
 		console.debug('WebSocket: authenticated')
 		resubscribeAll()
+		// The server never acks a subscribe, so the send time is the earliest point events can reach us.
+		subscribedAt.value = Date.now()
 		return
 	}
 
@@ -70,10 +95,7 @@ function handleMessage(event: MessageEvent) {
 	if (msg.error === 'invalid_token' || msg.error === 'auth_required') {
 		console.warn('WebSocket: auth failed:', msg.error)
 		manuallyDisconnected = true
-		authenticated.value = false
-		connected.value = false
-		socket?.close()
-		socket = null
+		closeSocket()
 		return
 	}
 
@@ -92,6 +114,7 @@ function scheduleReconnect() {
 	if (manuallyDisconnected) {
 		return
 	}
+	mayHaveMissedEvents.value = true
 
 	if (reconnectTimer) {
 		clearTimeout(reconnectTimer)
@@ -114,13 +137,22 @@ function scheduleReconnect() {
 	}, delay)
 }
 
+// Link share tokens are rejected by the socket, so their session never opens one.
+function mayOpenSocket(): boolean {
+	return getTokenType(getToken()) === AUTH_TYPES.USER
+}
+
 function connect() {
+	// A connection stays authenticated as whoever opened it, so a session change must tear it down, never adopt it.
+	if (socketContext && !isClientRequestContextCurrent(socketContext)) {
+		closeSocket()
+	}
+
 	if (socket?.readyState === WebSocket.OPEN || socket?.readyState === WebSocket.CONNECTING) {
 		return
 	}
 
-	const token = getToken()
-	if (!token) {
+	if (!mayOpenSocket()) {
 		return
 	}
 
@@ -128,6 +160,7 @@ function connect() {
 	authenticated.value = false
 	const url = getWebSocketUrl()
 
+	const context = captureClientRequestContext()
 	try {
 		socket = new WebSocket(url)
 	} catch (e) {
@@ -135,20 +168,45 @@ function connect() {
 		scheduleReconnect()
 		return
 	}
+	socketContext = context
+
+	const connection = socket
+	const isCurrent = () => socket === connection && isClientRequestContextCurrent(context)
+
+	function dropStaleConnection() {
+		if (socket !== connection) {
+			connection.close()
+			return
+		}
+		closeSocket()
+		scheduleReconnect()
+	}
 
 	socket.onopen = () => {
+		if (!isCurrent()) {
+			dropStaleConnection()
+			return
+		}
 		connected.value = true
 		reconnectAttempt = 0
 		console.debug('WebSocket: connected, sending auth')
 		sendAuth()
 	}
 
-	socket.onmessage = handleMessage
+	socket.onmessage = event => {
+		if (!isCurrent()) {
+			dropStaleConnection()
+			return
+		}
+		handleMessage(event)
+	}
 
 	socket.onclose = () => {
-		connected.value = false
-		authenticated.value = false
-		socket = null
+		if (!isCurrent()) {
+			dropStaleConnection()
+			return
+		}
+		closeSocket()
 		scheduleReconnect()
 	}
 
@@ -157,19 +215,19 @@ function connect() {
 	}
 }
 
+// Eager counterpart to the lazy fence in connect(): an in-tab identity change must not leave the
+// previous session's authenticated socket receiving frames until one happens to arrive.
+function closeStaleConnection() {
+	if (!socketContext || isClientRequestContextCurrent(socketContext)) {
+		return
+	}
+	closeSocket()
+}
+
 function disconnect() {
 	manuallyDisconnected = true
-	if (reconnectTimer) {
-		clearTimeout(reconnectTimer)
-		reconnectTimer = null
-	}
 	reconnectAttempt = 0
-	if (socket) {
-		socket.close()
-		socket = null
-	}
-	connected.value = false
-	authenticated.value = false
+	closeSocket()
 	subscriptions.clear()
 }
 
@@ -201,8 +259,11 @@ export function useWebSocket() {
 	return {
 		connect,
 		disconnect,
+		closeStaleConnection,
 		subscribe,
 		connected: readonly(connected),
 		authenticated: readonly(authenticated),
+		mayHaveMissedEvents: readonly(mayHaveMissedEvents),
+		subscribedAt: readonly(subscribedAt),
 	}
 }

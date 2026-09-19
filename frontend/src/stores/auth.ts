@@ -124,6 +124,7 @@ export const useAuthStore = defineStore('auth', () => {
 	// Identity-bound caches survive same-user object replacements.
 	watch(identityKey, () => {
 		queryClient.clear()
+		useWebSocket().closeStaleConnection()
 	}, {flush: 'sync'})
 
 	function setIsLoading(newIsLoading: boolean) {
