@@ -15,9 +15,8 @@ export function useServerCacheEvents() {
 	const mutation = useServerCacheEventMutation()
 	const unsubscribers = ['timer.created', 'timer.updated', 'timer.deleted', 'notification.created'].map(event =>
 		socket.subscribe(event, message => {
-			const update = parseServerCacheEvent(event, message.data)
-			if (!update || ('entry' in update && update.entry.user_id !== auth.info?.id)) return
-			mutation.mutate(update)
+			const update = parseServerCacheEvent(event, message.data, auth.info?.id)
+			if (update) mutation.mutate(update)
 		}),
 	)
 	// Only a re-authentication after a drop can have missed events; the first one follows the initial fetches.

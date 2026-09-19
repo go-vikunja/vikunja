@@ -24,8 +24,45 @@ vi.mock('@/message', () => ({
 }))
 
 it('ignores acknowledgements and unrelated notifications', () => {
-	expect(parseServerCacheEvent('timer.created', undefined)).toBeNull()
-	expect(parseServerCacheEvent('notification.created', {name: 'team.member.added'})).toBeNull()
+	expect(parseServerCacheEvent('timer.created', undefined, 7)).toBeNull()
+	expect(parseServerCacheEvent('notification.created', {name: 'team.member.added'}, 7)).toBeNull()
+})
+
+it('rejects timer entries that do not belong to the current user', () => {
+	const entry = {
+		id: 4,
+		user_id: 8,
+		task_id: 1,
+	}
+	expect(parseServerCacheEvent('timer.created', entry, 7)).toBeNull()
+	expect(parseServerCacheEvent('timer.created', entry, undefined)).toBeNull()
+	expect(parseServerCacheEvent('timer.created', {
+		...entry,
+		user_id: 7,
+	}, 7)).not.toBeNull()
+})
+
+it('rejects timer entries with an unusable id or task id', () => {
+	expect(parseServerCacheEvent('timer.created', {
+		id: 0,
+		user_id: 7,
+	}, 7)).toBeNull()
+	expect(parseServerCacheEvent('timer.created', {
+		id: 4,
+		user_id: 7,
+		task_id: '1',
+	}, 7)).toBeNull()
+})
+
+it('rejects comment notifications without a usable task id', () => {
+	expect(parseServerCacheEvent('notification.created', {
+		name: 'task.comment',
+		notification: {},
+	}, 7)).toBeNull()
+	expect(parseServerCacheEvent('notification.created', {
+		name: 'task.comment',
+		notification: {task: {id: 0}},
+	}, 7)).toBeNull()
 })
 
 it('invalidates only the notified task comments and detail', async () => {
@@ -36,7 +73,7 @@ it('invalidates only the notified task comments and detail', async () => {
 	const event = parseServerCacheEvent('notification.created', {
 		name: 'task.comment',
 		notification: {task: {id: 1}},
-	})!
+	}, 7)!
 	await client.getMutationCache().build(client, serverCacheEventMutationOptions()).execute(event)
 	expect(client.getQueryState(commentKeys.page(1, 'asc', 1))?.isInvalidated).toBe(true)
 	expect(client.getQueryState(commentKeys.page(2, 'asc', 1))?.isInvalidated).toBe(false)
@@ -53,7 +90,7 @@ it('reconciles timer events without inserting into an unrelated filtered list', 
 	})
 	client.setQueryData(timeEntryKeys.active(7), null)
 	client.setQueryData(timeEntryKeys.list('task_id = 99', 'UTC'), [])
-	const event = parseServerCacheEvent('timer.created', entry)!
+	const event = parseServerCacheEvent('timer.created', entry, 7)!
 	await client.getMutationCache().build(client, serverCacheEventMutationOptions()).execute(event)
 	expect(client.getQueryData(timeEntryKeys.active(7))).toEqual(entry)
 	expect(client.getQueryData(timeEntryKeys.list('task_id = 99', 'UTC'))).toEqual([])
