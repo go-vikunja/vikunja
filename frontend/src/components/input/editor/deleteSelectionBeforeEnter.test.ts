@@ -23,7 +23,6 @@ function createEditor(content: string) {
 		getEditor: () => editor,
 		uploadCallback: undefined,
 		uploadAndInsertFiles: () => {},
-		loadedAttachments: ref({}),
 	}
 
 	editor = new Editor({element: holder, extensions: createEditorExtensions(deps), content})

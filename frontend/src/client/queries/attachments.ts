@@ -21,7 +21,6 @@ import {
 } from './taskCache'
 
 export const attachmentKeys = {
-	all: ['attachments'] as const,
 	list: (taskId: number) => ['attachments', 'list', taskId] as const,
 	blobs: ['attachments', 'blob'] as const,
 	blobsFor: (taskId: number, id: number) => [...attachmentKeys.blobs, taskId, id] as const,

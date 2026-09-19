@@ -89,6 +89,22 @@ describe('attachments', () => {
 		expect(client.getQueryState(attachmentKeys.list(1))?.isInvalidated).toBe(true)
 	})
 
+	it('uploads without creating an absent list', async () => {
+		const attachment = {
+			id: 3,
+			task_id: 1,
+		}
+		sdk.taskAttachmentsUpload.mockResolvedValue({data: {success: [attachment]}})
+
+		await client.getMutationCache().build(client, uploadAttachmentsMutationOptions())
+			.execute({
+				taskId: 1,
+				files: [new File(['hello'], 'hello.txt')],
+			})
+
+		expect(client.getQueryData(attachmentKeys.list(1))).toBeUndefined()
+	})
+
 	it('deletes an attachment and clears its cover without creating absent lists', async () => {
 		client.setQueryData(taskKeys.detail(1), normalizeTask({
 			id: 1,
