@@ -36,7 +36,10 @@ vi.mock('@/client/generated', () => ({
 	reactionsCreate: vi.fn(async () => ({data: {}})),
 	reactionsDelete: vi.fn(async () => ({data: undefined})),
 }))
-vi.mock('@/message', () => ({error: vi.fn(), success: vi.fn()}))
+vi.mock('@/message', () => ({
+	error: vi.fn(),
+	success: vi.fn(),
+}))
 
 vi.mock('vuemoji-picker', () => ({
 	VuemojiPicker: {
@@ -131,7 +134,10 @@ describe('Reactions', () => {
 	})
 
 	it('marks the reacted-by-current-user button as pressed', () => {
-		const wrapper = mountReactions({'🎉': [CURRENT_USER], '👍': [OTHER_USER]})
+		const wrapper = mountReactions({
+			'🎉': [CURRENT_USER],
+			'👍': [OTHER_USER],
+		})
 
 		expect(wrapper.findAll('button')[0].attributes('aria-pressed')).toBe('true')
 		expect(wrapper.findAll('button')[1].attributes('aria-pressed')).toBe('false')

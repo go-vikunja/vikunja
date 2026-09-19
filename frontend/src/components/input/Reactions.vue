@@ -33,7 +33,11 @@ async function setReaction(value: string, remove: boolean) {
 		id: props.entityId,
 		value,
 		remove,
-		user: {id: authStore.info.id, name: authStore.info.name, username: authStore.info.username},
+		user: {
+			id: authStore.info.id,
+			name: authStore.info.name,
+			username: authStore.info.username,
+		},
 	}
 	try {
 		const data = await reactionMutation.mutateAsync(input)
