@@ -354,7 +354,6 @@
 						:entity-id="task.id"
 						class="details d-print-none"
 						:disabled="!canWrite"
-						@update:modelValue="setReactions"
 					/>
 
 					<!-- Attachments -->
@@ -890,11 +889,6 @@ const canWrite = computed(() => (
 const color = computed(() => getHexColor(task.value.hex_color))
 
 const isModal = computed(() => Boolean(props.backdropView))
-
-function setReactions(reactions: ITask['reactions']) {
-	task.value = {...task.value, reactions}
-	taskQuery.refetch()
-}
 
 const heading = ref<HTMLElement | null>(null)
 
