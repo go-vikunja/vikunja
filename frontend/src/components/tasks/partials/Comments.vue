@@ -457,7 +457,10 @@ function editCommentWithDelay() {
 
 async function editComment() {
 	const draft = commentEdit.value
-	if (!draft?.comment) return
+	if (!draft?.comment) {
+		isCommentEdit.value = false
+		return
+	}
 	if (changeTimeout.value !== null) clearTimeout(changeTimeout.value)
 	const taskId = props.taskId
 	saving.value = draft.id
