@@ -454,7 +454,7 @@
 						<TaskSubscription
 							entity="task"
 							:entity-id="task.id"
-							:model-value="task.subscription ? subscriptionFromApi(task.subscription) : null"
+							:model-value="task.subscription ?? null"
 							@toggle="toggleSubscription"
 						/>
 						<XButton
@@ -719,8 +719,7 @@ import {useTaskDetailShortcuts} from '@/composables/useTaskDetailShortcuts'
 
 import {error, success} from '@/message'
 import type {Action as MessageAction} from '@/message'
-import {subscriptionsCreate, subscriptionsDelete} from '@/client/generated'
-import {subscriptionFromApi} from '@/models/subscription'
+import {useSetTaskSubscriptionMutation} from '@/client/queries/subscriptions'
 
 const props = defineProps<{
 	taskId: number,
@@ -1207,17 +1206,9 @@ async function changeProject(project: ProjectResponse | null) {
 	baseStore.setCurrentProject(project)
 }
 
-async function toggleSubscription(subscribed: boolean) {
-	const path = {entity: 'task', entityID: task.value.id!} as const
-	if (subscribed) {
-		await subscriptionsCreate({path})
-		await taskQuery.refetch()
-		success({message: t('task.subscription.subscribeSuccessTask')})
-		return
-	}
-	await subscriptionsDelete({path})
-	await taskQuery.refetch()
-	success({message: t('task.subscription.unsubscribeSuccessTask')})
+const subscriptionMutation = useSetTaskSubscriptionMutation()
+function toggleSubscription(subscribed: boolean) {
+	subscriptionMutation.mutate({taskId: task.value.id!, subscribed})
 }
 
 async function toggleFavorite() {

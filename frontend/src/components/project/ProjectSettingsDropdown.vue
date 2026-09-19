@@ -134,7 +134,6 @@ import DropdownItem from '@/components/misc/DropdownItem.vue'
 import Subscription from '@/components/misc/Subscription.vue'
 import type {Project} from '@/client/generated'
 import type {Subscription as ISubscription} from '@/client/generated'
-import {subscriptionFromApi} from '@/models/subscription'
 
 import {isSavedFilterProject, useSetProjectSubscriptionMutation} from '@/client/queries/projects'
 import {useConfigStore} from '@/stores/config'
@@ -151,7 +150,7 @@ const props = withDefaults(defineProps<{
 const subscriptionMutation = useSetProjectSubscriptionMutation()
 const subscription = computed<ISubscription | null>(() => {
 	const value = props.project.subscription
-	return value ? subscriptionFromApi(value) : null
+	return value ?? null
 })
 
 const configStore = useConfigStore()
