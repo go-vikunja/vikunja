@@ -11,15 +11,15 @@
 			v-if="editEnabled"
 			id="files"
 			ref="filesRef"
-			:disabled="loading || undefined"
 			multiple
 			type="file"
 			@change="uploadNewAttachment()"
 		>
 
 		<ProgressBar
-			v-if="attachmentService.uploadProgress > 0"
-			:value="attachmentService.uploadProgress * 100"
+			v-if="uploadBatch !== null"
+			:value="uploadProgress"
+			:aria-label="$t('task.attachment.upload')"
 			is-primary
 		/>
 
@@ -52,7 +52,7 @@
 						@click="viewOrDownload(a)"
 					>
 						<span class="filename">
-							{{ a.file.name }}
+							{{ a.file?.name }}
 							<span
 								v-if="task.cover_image_attachment_id === a.id"
 								class="is-task-cover"
@@ -63,13 +63,13 @@
 					</button>
 					<p class="attachment-info-meta">
 						<User
-							:user="a.created_by"
+							:user="a.created_by ?? {}"
 							:avatar-size="20"
 							:show-username="false"
 							:is-inline="true"
 						/>
 						<span>
-							{{ getHumanSize(a.file.size) }}
+							{{ getHumanSize(a.file?.size ?? 0) }}
 						</span>
 					</p>
 					<AudioPreview
@@ -82,7 +82,7 @@
 							v-tooltip="$t('task.attachment.downloadTooltip')"
 							:aria-label="$t('task.attachment.downloadTooltip')"
 							class="attachment-info-meta-button"
-							@click.prevent.stop="downloadAttachment(a)"
+							@click.prevent.stop="download(a)"
 						>
 							<Icon icon="download" />
 						</BaseButton>
@@ -123,12 +123,12 @@
 
 		<XButton
 			v-if="editEnabled"
-			:disabled="loading"
+			:aria-disabled="loading || undefined"
 			class="mbe-4"
 			icon="cloud-upload-alt"
 			variant="secondary"
 			:shadow="false"
-			@click="filesRef?.click()"
+			@click="openFilePicker()"
 		>
 			{{ $t('task.attachment.upload') }}
 		</XButton>
@@ -163,7 +163,7 @@
 
 			<template #text>
 				<p v-if="attachmentToDelete">
-					{{ $t('task.attachment.deleteText1', {filename: attachmentToDelete.file.name}) }}<br>
+					{{ $t('task.attachment.deleteText1', {filename: attachmentToDelete.file?.name}) }}<br>
 					<strong class="has-text-white">{{ $t('misc.cannotBeUndone') }}</strong>
 				</p>
 			</template>
@@ -187,6 +187,7 @@
 			<iframe
 				v-if="preview?.kind === 'pdf'"
 				:src="preview.blobUrl"
+				:title="preview.name"
 				class="pdf-preview-iframe"
 			/>
 		</Modal>
@@ -226,7 +227,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, shallowReactive, computed, watch, onMounted, onBeforeUnmount, type ComponentPublicInstance} from 'vue'
+import {ref, computed, nextTick, watch, onMounted, onBeforeUnmount, type ComponentPublicInstance} from 'vue'
 import {useDropZone} from '@vueuse/core'
 
 import User from '@/components/misc/User.vue'
@@ -234,19 +235,20 @@ import ProgressBar from '@/components/misc/ProgressBar.vue'
 import Loading from '@/components/misc/Loading.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
-import AttachmentModel from '@/models/attachment'
-import AttachmentService from '@/services/attachment'
-import {canPreviewAudio, canPreviewImage, previewKind, type PreviewKind} from '@/models/attachment'
+import {useQuery} from '@tanstack/vue-query'
+import {attachmentsQuery, useUploadAttachmentsMutation, useDeleteAttachmentMutation} from '@/client/queries/attachments'
+import {canPreviewAudio, canPreviewImage, previewKind, type PreviewKind} from '@/helpers/attachmentPreview'
 import {getDisplayName} from '@/models/user'
 import type {TaskAttachment as IAttachment} from '@/client/generated'
 import type {Task as ITask} from '@/client/generated'
 
 import {formatDateLong} from '@/helpers/time/formatDate'
-import {uploadFiles, generateAttachmentUrl} from '@/helpers/attachments'
+import {attachmentBlobUrl, downloadAttachment, generateAttachmentUrl} from '@/helpers/attachments'
 import {downloadBlob} from '@/helpers/downloadBlob'
 import {getHumanSize} from '@/helpers/getHumanSize'
 import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
 import {error, success} from '@/message'
+import {isRequestContextAbort} from '@/client/requestContext'
 import {useUpdateTaskMutation} from '@/client/queries/taskMutations'
 import {useI18n} from 'vue-i18n'
 import FilePreview from '@/components/tasks/partials/FilePreview.vue'
@@ -261,10 +263,6 @@ const props = withDefaults(defineProps<{
 }>(), {
 	editEnabled: true,
 })
-
-const emit = defineEmits<{
-	'update:attachments': [IAttachment[]],
-}>()
 
 const EDITOR_SELECTOR = '.tiptap, .tiptap__editor, [contenteditable]'
 
@@ -290,21 +288,22 @@ function eventTargetsEditor(event: Event | null | undefined): boolean {
 const updateTask = useUpdateTaskMutation()
 const {t} = useI18n({useScope: 'global'})
 
-const attachmentService = shallowReactive(new AttachmentService())
-
-const attachments = ref<IAttachment[]>([])
-async function reloadAttachments() {
-	const id = props.task.id
-	if (!id) return
-	const loaded = await attachmentService.getAll(new AttachmentModel({taskId: id}))
-	if (props.task.id === id) attachments.value = loaded
-}
-watch(() => props.task.id, () => {
-	attachments.value = []
-	void reloadAttachments()
-}, {immediate: true})
-
-const loading = computed(() => attachmentService.loading || updateTask.isPending.value)
+const attachmentQuery = useQuery(computed(() => attachmentsQuery(props.task.id ?? 0)))
+const attachments = computed(() => attachmentQuery.data.value ?? [])
+const uploadMutation = useUploadAttachmentsMutation()
+const deleteMutation = useDeleteAttachmentMutation()
+const uploadBatch = ref<{
+	completed: number,
+	total: number,
+} | null>(null)
+// the fetch client reports no byte progress, so the first file can only be shown as indeterminate
+const uploadProgress = computed(() => uploadBatch.value === null || uploadBatch.value.completed === 0
+	? undefined
+	: (uploadBatch.value.completed / uploadBatch.value.total) * 100)
+const loading = computed(() => uploadBatch.value !== null
+	|| uploadMutation.isPending.value
+	|| deleteMutation.isPending.value
+	|| updateTask.isPending.value)
 
 const isDraggingFiles = ref(false)
 const isDragOverEditor = ref(false)
@@ -415,42 +414,64 @@ watch(() => props.editEnabled, enabled => {
 })
 
 function attachmentMetaTooltip(attachment: IAttachment): string {
-	const created_by = t('task.attachment.createdBy', [
+	const createdBy = t('task.attachment.createdBy', [
 		formatDateLong(attachment.created),
-		getDisplayName(attachment.created_by),
+		getDisplayName(attachment.created_by ?? {}),
 	])
 
-	return attachment.file.mime
-		? `${attachment.file.mime} · ${created_by}`
-		: created_by
-}
-
-function downloadAttachment(attachment: IAttachment) {
-	attachmentService.download(attachment)
+	return attachment.file?.mime
+		? `${attachment.file?.mime} · ${createdBy}`
+		: createdBy
 }
 
 const filesRef = ref<HTMLInputElement | null>(null)
 
-function uploadNewAttachment() {
-	const files = filesRef.value?.files
-
-	if (!files || files.length === 0) {
+function openFilePicker() {
+	if (loading.value) {
 		return
 	}
 
-	uploadFilesToTask(files)
+	filesRef.value?.click()
+}
+
+async function uploadNewAttachment() {
+	const input = filesRef.value
+	const files = input?.files
+
+	if (files && files.length > 0) {
+		await uploadFilesToTask(files)
+	}
+
+	// without this, re-picking the same file fires no change event
+	if (input) input.value = ''
 }
 
 async function uploadFilesToTask(files: File[] | FileList) {
-	try {
-		const uploaded = await uploadFiles(attachmentService, props.task.id!, files)
-		if (uploaded.length > 0) {
-			attachments.value = [...attachments.value, ...uploaded]
-			emit('update:attachments', attachments.value)
-		}
-	} catch (e) {
-		error(e)
+	if (loading.value) {
+		return
 	}
+
+	const taskId = props.task.id!
+	const batch = Array.from(files)
+	uploadBatch.value = {
+		completed: 0,
+		total: batch.length,
+	}
+	for (const [index, file] of batch.entries()) {
+		try {
+			const result = await uploadMutation.mutateAsync({taskId, files: [file]})
+			for (const err of result.errors ?? []) error(err)
+		} catch {
+			// mutation already toasts; keep uploading the remaining files
+		}
+		uploadBatch.value = {
+			completed: index + 1,
+			total: batch.length,
+		}
+	}
+	// render the finished bar before it disappears
+	await nextTick()
+	uploadBatch.value = null
 }
 
 const attachmentToDelete = ref<IAttachment | null>(null)
@@ -464,16 +485,13 @@ async function deleteAttachment() {
 		return
 	}
 
+	const target = attachmentToDelete.value
 	try {
-		const r = await attachmentService.delete(attachmentToDelete.value)
-		const updated = attachments.value.filter(a => a.id !== attachmentToDelete.value!.id)
-		attachments.value = updated
-		emit('update:attachments', updated)
-		success(r)
-		setAttachmentToDelete(null)
-	} catch (e) {
-		error(e)
+		await deleteMutation.mutateAsync({taskId: props.task.id!, id: target.id!})
+	} catch {
+		return
 	}
+	if (attachmentToDelete.value === target) setAttachmentToDelete(null)
 }
 
 interface Preview {
@@ -528,22 +546,32 @@ const audioPlayers = new Map<IAttachment['id'], AudioPreviewInstance>()
 
 function setAudioPlayerRef(attachment: IAttachment, el: Element | ComponentPublicInstance | null) {
 	if (el === null) {
-		audioPlayers.delete(attachment.id)
+		audioPlayers.delete(attachment.id!)
 		return
 	}
 
 	audioPlayers.set(attachment.id, el as AudioPreviewInstance)
 }
 
+async function download(attachment: IAttachment) {
+	try {
+		await downloadAttachment(attachment)
+	} catch (e) {
+		if (!isRequestContextAbort(e)) {
+			error(e)
+		}
+	}
+}
+
 async function viewOrDownload(attachment: IAttachment) {
-	if (canPreviewAudio(attachment) && audioPlayers.has(attachment.id)) {
-		await audioPlayers.get(attachment.id)!.play()
+	if (canPreviewAudio(attachment) && audioPlayers.has(attachment.id!)) {
+		await audioPlayers.get(attachment.id!)!.play()
 		return
 	}
 
 	const kind = previewKind(attachment)
 	if (kind === null) {
-		downloadAttachment(attachment)
+		await download(attachment)
 		return
 	}
 
@@ -556,26 +584,29 @@ async function viewOrDownload(attachment: IAttachment) {
 	previewLoading.value = kind === 'video'
 
 	try {
-		const blobUrl = await attachmentService.getBlobUrl(attachment)
+		const blobUrl = await attachmentBlobUrl({id: attachment.id!, task_id: attachment.task_id!})
 		// stale response: revoke without assigning, the img may still be decoding the current url
 		if (requestToken !== previewRequestToken) {
 			URL.revokeObjectURL(blobUrl)
 			return
 		}
 		previewLoading.value = false
-		replacePreview({kind, blobUrl, name: attachment.file.name})
+		replacePreview({kind, blobUrl, name: attachment.file?.name ?? ''})
 	} catch (e) {
-		if (requestToken === previewRequestToken) {
-			previewLoading.value = false
+		if (requestToken !== previewRequestToken) {
+			return
 		}
-		error(e)
+		previewLoading.value = false
+		if (!isRequestContextAbort(e)) {
+			error(e)
+		}
 	}
 }
 
 const copy = useCopyToClipboard()
 
 function copyUrl(attachment: IAttachment) {
-	copy(generateAttachmentUrl(props.task.id!, attachment.id))
+	copy(generateAttachmentUrl(props.task.id!, attachment.id!))
 }
 
 async function setCoverImage(attachment: IAttachment | null) {
@@ -583,10 +614,7 @@ async function setCoverImage(attachment: IAttachment | null) {
 	success({message: t('task.attachment.successfullyChangedCoverImage')})
 }
 
-defineExpose({
-	reloadAttachments,
-	openFilePicker: () => filesRef.value?.click(),
-})
+defineExpose({openFilePicker})
 </script>
 
 <style lang="scss" scoped>

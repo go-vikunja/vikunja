@@ -98,6 +98,9 @@ describe('attachments', () => {
 		sdk.taskAttachmentsDelete.mockResolvedValue({data: {message: 'deleted'}})
 		const boardKey = [...kanbanKeys.all, 'test-board']
 		client.setQueryData(boardKey, {buckets: []})
+		client.setQueryData(attachmentKeys.blob(1, 3), 'blob:original')
+		client.setQueryData(attachmentKeys.blob(1, 3, 'md'), 'blob:md')
+		client.setQueryData(attachmentKeys.blob(1, 4), 'blob:other')
 		const before = client.getQueryCache().getAll().length
 		await client.getMutationCache().build(client, deleteAttachmentMutationOptions())
 			.execute({
@@ -108,7 +111,10 @@ describe('attachments', () => {
 			attachments: [],
 			cover_image_attachment_id: 0,
 		})
-		expect(client.getQueryCache().getAll()).toHaveLength(before)
+		expect(client.getQueryData(attachmentKeys.blob(1, 3))).toBeUndefined()
+		expect(client.getQueryData(attachmentKeys.blob(1, 3, 'md'))).toBeUndefined()
+		expect(client.getQueryData(attachmentKeys.blob(1, 4))).toBe('blob:other')
+		expect(client.getQueryCache().getAll()).toHaveLength(before - 2)
 		expect(client.getQueryState(boardKey)?.isInvalidated).toBe(true)
 		expect(success).toHaveBeenCalledWith({message: 'The attachment was successfully deleted.'})
 	})

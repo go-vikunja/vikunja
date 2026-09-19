@@ -46,6 +46,17 @@ async function fenceResponseBody(
 		return response
 	}
 
+	// Handing the drained blob back fences without the clone's second copy of a large download.
+	if (response.ok && options.parseAs === 'blob') {
+		const blob = await response.blob()
+		assertClientRequestContext(context)
+		return new Response(blob, {
+			status: response.status,
+			statusText: response.statusText,
+			headers: response.headers,
+		})
+	}
+
 	await response.clone().arrayBuffer()
 	assertClientRequestContext(context)
 	return response

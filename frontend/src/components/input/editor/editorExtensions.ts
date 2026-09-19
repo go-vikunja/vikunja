@@ -143,7 +143,7 @@ export function createEditorExtensions(deps: EditorExtensionDeps): Extensions {
 					if (!img || !(img instanceof HTMLImageElement)) return
 
 					try {
-						img.src = await fetchAttachmentBlobUrl({taskId, id: attachmentId})
+						img.src = await fetchAttachmentBlobUrl({task_id: taskId, id: attachmentId})
 					} catch {
 						// leave the placeholder src in place
 					}

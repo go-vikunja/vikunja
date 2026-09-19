@@ -3,7 +3,7 @@
 		v-if="blobUrl"
 		ref="playerRef"
 		:src="blobUrl"
-		:aria-label="attachment.file.name"
+		:aria-label="attachment.file?.name"
 		class="audio-player"
 		controls
 		autoplay
@@ -13,7 +13,7 @@
 	<XButton
 		v-else
 		:loading="loading"
-		:aria-label="$t('task.attachment.playFile', {file: attachment.file.name})"
+		:aria-label="$t('task.attachment.playFile', {file: attachment.file?.name})"
 		class="audio-play"
 		icon="play"
 		variant="secondary"
@@ -30,9 +30,10 @@ let playing: HTMLAudioElement | null = null
 </script>
 
 <script setup lang="ts">
-import {onBeforeUnmount, ref} from 'vue'
+import {onBeforeUnmount, ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
-import AttachmentService from '@/services/attachment'
+import {attachmentBlobUrl} from '@/helpers/attachments'
+import {isRequestContextAbort} from '@/client/requestContext'
 import type {TaskAttachment as IAttachment} from '@/client/generated'
 import {error} from '@/message'
 
@@ -42,11 +43,11 @@ const props = defineProps<{
 
 const {t} = useI18n({useScope: 'global'})
 
-const attachmentService = new AttachmentService()
 const blobUrl = ref<string | undefined>(undefined)
 const playerRef = ref<HTMLAudioElement | null>(null)
 const loading = ref(false)
 let unmounted = false
+let previewEpoch = 0
 
 // Fetched on demand: the download endpoint needs the auth header, so no plain-url streaming.
 async function loadAudio() {
@@ -55,17 +56,18 @@ async function loadAudio() {
 	}
 
 	loading.value = true
+	const epoch = previewEpoch
 	try {
-		const url = await attachmentService.getBlobUrl(props.attachment) as string
-		if (unmounted) {
+		const url = await attachmentBlobUrl({id: props.attachment.id!, task_id: props.attachment.task_id!})
+		if (unmounted || epoch !== previewEpoch) {
 			window.URL.revokeObjectURL(url)
 			return
 		}
 		blobUrl.value = url
 	} catch (e) {
-		error(e)
+		if (!unmounted && epoch === previewEpoch && !isRequestContextAbort(e)) error(e)
 	} finally {
-		loading.value = false
+		if (epoch === previewEpoch) loading.value = false
 	}
 }
 
@@ -107,18 +109,24 @@ async function play() {
 	}
 }
 
-onBeforeUnmount(() => {
-	unmounted = true
-
-	// A detached element keeps playing for as long as something references it.
+function releaseAudio() {
+	previewEpoch++
+	loading.value = false
 	if (playing === playerRef.value) {
 		playing?.pause()
 		playing = null
 	}
-
 	if (blobUrl.value !== undefined) {
 		window.URL.revokeObjectURL(blobUrl.value)
+		blobUrl.value = undefined
 	}
+}
+
+// Scalar key: an array getter always compares changed, so every list refetch would kill playback.
+watch(() => `${props.attachment.task_id}-${props.attachment.id}`, releaseAudio, {flush: 'sync'})
+onBeforeUnmount(() => {
+	unmounted = true
+	releaseAudio()
 })
 
 defineExpose({play})
