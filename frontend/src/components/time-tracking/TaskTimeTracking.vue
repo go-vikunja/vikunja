@@ -44,7 +44,7 @@ import TimeEntryList from '@/components/time-tracking/TimeEntryList.vue'
 import {useTimeEntryService} from '@/services/timeEntry'
 import {useTimeTrackingStore} from '@/stores/timeTracking'
 
-import type {ITimeEntry} from '@/modelTypes/ITimeEntry'
+import type {TimeEntry as ITimeEntry} from '@/client/generated'
 
 const props = defineProps<{
 	taskId: number
