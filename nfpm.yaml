@@ -38,6 +38,8 @@ contents:
   - src: /opt/vikunja/vikunja
     dst: /usr/local/bin/vikunja
     type: "symlink"
+  - dst: /var/lib/vikunja
+    type: dir
   - src: vikunja.service
     dst: /usr/lib/systemd/system/vikunja.service
   - src: vikunja.initd
