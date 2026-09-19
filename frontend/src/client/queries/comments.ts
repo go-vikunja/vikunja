@@ -2,6 +2,7 @@ import {
 	queryOptions,
 	useMutation,
 	type QueryClient,
+	type QueryKey,
 } from '@tanstack/vue-query'
 import {
 	taskCommentsCreate,
@@ -32,6 +33,13 @@ export const commentKeys = {
 	all: ['comments'] as const,
 	task: (taskId: number) => ['comments', taskId] as const,
 	page: (taskId: number, order: CommentOrder, page: number) => ['comments', taskId, order, page] as const,
+	orderOf: (key: QueryKey): CommentOrder | undefined => key[0] === 'comments'
+		? key[2] as CommentOrder
+		: undefined,
+}
+
+function totalPagesOf(page: CommentPage, total: number) {
+	return page.per_page > 0 ? Math.ceil(total / page.per_page) : page.total_pages
 }
 
 export function normalizeComment(comment: TaskComment): CommentResponse {
@@ -101,11 +109,12 @@ export function createCommentMutationOptions() {
 			for (const [key, current] of client.getQueriesData<CommentPage>({queryKey: commentKeys.task(taskId)})) {
 				if (!current) continue
 				const total = current.total + 1
-				const total_pages = Math.ceil(total / current.per_page)
+				const total_pages = totalPagesOf(current, total)
+				const order = commentKeys.orderOf(key)
 				let items = current.items
-				if (key[2] === 'desc' && current.page === 1) {
+				if (order === 'desc' && current.page === 1) {
 					items = [normalizeComment(comment), ...items].slice(0, current.per_page)
-				} else if (key[2] === 'asc' && current.page === total_pages) {
+				} else if (order === 'asc' && current.page === total_pages) {
 					items = [...items, normalizeComment(comment)]
 				}
 				client.setQueryData(key, {
@@ -168,7 +177,7 @@ export function deleteCommentMutationOptions() {
 					...current,
 					items: current.items.filter(c => c.id !== id),
 					total,
-					total_pages: Math.ceil(total / current.per_page),
+					total_pages: totalPagesOf(current, total),
 				}
 			})
 			mapTaskEverywhere(client, taskId, task => ({
