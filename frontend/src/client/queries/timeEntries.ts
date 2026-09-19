@@ -61,7 +61,6 @@ export function timeEntriesQuery(filter: string, timezone: string) {
 export function activeTimerQuery(userId: number) {
 	return queryOptions({
 		queryKey: timeEntryKeys.active(userId),
-		enabled: userId > 0,
 		queryFn: async ({signal}) => {
 			const {data} = await timeEntriesList({
 				query: {

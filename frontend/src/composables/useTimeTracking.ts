@@ -17,10 +17,11 @@ export function useTimeTracking() {
 }
 
 export function useTimeEntries(filter: MaybeRefOrGetter<string>, enabled: MaybeRefOrGetter<boolean> = true) {
+	const auth = useAuthStore()
 	const config = useConfigStore()
 	const query = useQuery(computed(() => ({
 		...timeEntriesQuery(toValue(filter), Intl.DateTimeFormat().resolvedOptions().timeZone),
-		enabled: toValue(enabled) && config.isProFeatureEnabled(PRO_FEATURE.TIME_TRACKING),
+		enabled: toValue(enabled) && !auth.isLinkShareAuth && config.isProFeatureEnabled(PRO_FEATURE.TIME_TRACKING),
 	})))
-	return {entries: computed(() => query.data.value ?? []), isPending: query.isPending}
+	return {entries: computed(() => query.data.value ?? [])}
 }
