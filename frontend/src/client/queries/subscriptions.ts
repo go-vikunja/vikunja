@@ -14,9 +14,9 @@ import {i18n} from '@/i18n'
 export function setTaskSubscriptionMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async ({taskId, subscribed}: {
-taskId: number,
-subscribed: boolean,
-}) => {
+			taskId: number,
+			subscribed: boolean,
+		}) => {
 			const path = {
 				entity: 'task',
 				entityID: taskId,
