@@ -24,7 +24,7 @@ import {useI18n} from 'vue-i18n'
 
 import DropdownItem from '@/components/misc/DropdownItem.vue'
 
-import type {ISubscription} from '@/modelTypes/ISubscription'
+import type {Subscription as ISubscription} from '@/client/generated'
 
 import type { IconProp } from '@fortawesome/fontawesome-svg-core'
 
@@ -44,7 +44,7 @@ const emit = defineEmits<{
 const {t} = useI18n({useScope: 'global'})
 
 const isInherited = computed(() => props.modelValue !== null &&
-	(props.modelValue.entity !== props.entity || props.modelValue.entityId !== props.entityId))
+	(props.modelValue.entity !== props.entity || props.modelValue.entity_id !== props.entityId))
 
 const tooltipText = computed(() => {
 	if (isInherited.value) {
