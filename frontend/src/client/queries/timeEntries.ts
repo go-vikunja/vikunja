@@ -1,16 +1,38 @@
-import {queryOptions, useMutation, type QueryClient} from '@tanstack/vue-query'
-import {timeEntriesCreate, timeEntriesDelete, timeEntriesList, timeEntriesTimerStop, timeEntriesUpdate} from '@/client/generated'
-import type {TimeEntry, TimeEntryWritable} from '@/client/generated'
+import {
+	queryOptions,
+	useMutation,
+	type QueryClient,
+} from '@tanstack/vue-query'
+import {
+	timeEntriesCreate,
+	timeEntriesDelete,
+	timeEntriesList,
+	timeEntriesTimerStop,
+	timeEntriesUpdate,
+} from '@/client/generated'
+import type {
+	TimeEntry,
+	TimeEntryWritable,
+} from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
 import {fetchAllPages} from './fetchAllPages'
-import {mapTaskEverywhere} from './taskCache'
-import {taskKeys} from './tasks'
+import {
+	invalidateTaskMembership,
+	mapTaskEverywhere,
+} from './taskCache'
 
 export type TimeEntryResponse = Omit<TimeEntry, 'id' | 'user_id' | 'task_id' | 'project_id' | 'comment'> &
 	Required<Pick<TimeEntry, 'id' | 'user_id' | 'task_id' | 'project_id' | 'comment'>>
 
 export function normalizeTimeEntry(entry: TimeEntry): TimeEntryResponse {
-	return {...entry, id: entry.id ?? 0, user_id: entry.user_id ?? 0, task_id: entry.task_id ?? 0, project_id: entry.project_id ?? 0, comment: entry.comment ?? ''}
+	return {
+		...entry,
+		id: entry.id ?? 0,
+		user_id: entry.user_id ?? 0,
+		task_id: entry.task_id ?? 0,
+		project_id: entry.project_id ?? 0,
+		comment: entry.comment ?? '',
+	}
 }
 
 export const timeEntryKeys = {
@@ -25,7 +47,13 @@ export function timeEntriesQuery(filter: string, timezone: string) {
 	return queryOptions({
 		queryKey: timeEntryKeys.list(filter, timezone),
 		queryFn: async ({signal}) => (await fetchAllPages(page => timeEntriesList({
-			query: {filter, filter_timezone: timezone, per_page: 250, page}, signal,
+			query: {
+				filter,
+				filter_timezone: timezone,
+				per_page: 250,
+				page,
+			},
+			signal,
 		}).then(({data}) => data))).map(normalizeTimeEntry),
 	})
 }
@@ -35,7 +63,13 @@ export function activeTimerQuery(userId: number) {
 		queryKey: timeEntryKeys.active(userId),
 		enabled: userId > 0,
 		queryFn: async ({signal}) => {
-			const {data} = await timeEntriesList({query: {filter: `user_id = ${userId} && end_time = null`, per_page: 1}, signal})
+			const {data} = await timeEntriesList({
+				query: {
+					filter: `user_id = ${userId} && end_time = null`,
+					per_page: 1,
+				},
+				signal,
+			})
 			return data.items?.[0] ? normalizeTimeEntry(data.items[0]) : null
 		},
 	})
@@ -66,7 +100,7 @@ export function removeTimeEntry(client: QueryClient, id: number) {
 function settle(client: QueryClient) {
 	return Promise.all([
 		client.invalidateQueries({queryKey: timeEntryKeys.all}),
-		client.invalidateQueries({queryKey: taskKeys.all, refetchType: 'none'}),
+		invalidateTaskMembership(client),
 	])
 }
 
@@ -87,7 +121,10 @@ export function createTimeEntryMutationOptions() {
 export function updateTimeEntryMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async ({id, ...body}: TimeEntryWritable & Required<Pick<TimeEntry, 'id'>>) =>
-			(await timeEntriesUpdate({path: {id}, body})).data,
+			(await timeEntriesUpdate({
+				path: {id},
+				body,
+			})).data,
 		onSuccess: (entry, _input, client) => patchTimeEntry(client, entry),
 		onSettled: (_input, client) => settle(client),
 	})
