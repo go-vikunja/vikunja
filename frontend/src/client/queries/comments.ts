@@ -12,7 +12,6 @@ import {
 	taskCommentsUpdate,
 } from '@/client/generated'
 import type {
-	PaginatedTaskComment,
 	TaskComment,
 	TaskCommentsListData,
 } from '@/client/generated'
@@ -21,6 +20,11 @@ import {
 	invalidateTaskMembership,
 	mapTaskEverywhere,
 } from './taskCache'
+import {
+	pageSizeFor,
+	totalPagesFor,
+	type Paginated,
+} from './pagination'
 import {i18n} from '@/i18n'
 
 export type CommentOrder = NonNullable<NonNullable<TaskCommentsListData['query']>['order_by']>
@@ -29,18 +33,15 @@ export type CommentResponse = Omit<TaskComment, 'id' | 'comment' | 'reactions'> 
 	comment: string,
 	reactions: Record<string, NonNullable<NonNullable<TaskComment['reactions']>[string]>>,
 }
-export type CommentPage = Omit<Required<PaginatedTaskComment>, 'items' | '$schema'> & {items: CommentResponse[]}
+export type CommentPage = Paginated<CommentResponse>
 export const commentKeys = {
 	all: ['comments'] as const,
 	task: (taskId: number) => ['comments', taskId] as const,
-	page: (taskId: number, order: CommentOrder, page: number) => ['comments', taskId, order, page] as const,
+	page: (taskId: number, order: CommentOrder, page: number, perPage: number) =>
+		['comments', taskId, order, page, perPage] as const,
 	orderOf: (key: QueryKey): CommentOrder | undefined => key[0] === 'comments'
 		? key[2] as CommentOrder
 		: undefined,
-}
-
-function totalPagesOf(page: CommentPage, total: number) {
-	return page.per_page > 0 ? Math.ceil(total / page.per_page) : page.total_pages
 }
 
 export function normalizeComment(comment: TaskComment): CommentResponse {
@@ -52,9 +53,10 @@ export function normalizeComment(comment: TaskComment): CommentResponse {
 	}
 }
 
-export function commentsQuery(taskId: number, order: CommentOrder, page: number) {
+export function commentsQuery(taskId: number, order: CommentOrder, page: number, perPage: number) {
+	const clampedPerPage = pageSizeFor(perPage)
 	return queryOptions<CommentPage, Error, CommentPage, ReturnType<typeof commentKeys.page>>({
-		queryKey: commentKeys.page(taskId, order, page),
+		queryKey: commentKeys.page(taskId, order, page, clampedPerPage),
 		enabled: taskId > 0,
 		queryFn: async ({signal}): Promise<CommentPage> => {
 			const {data} = await taskCommentsList({
@@ -62,6 +64,7 @@ export function commentsQuery(taskId: number, order: CommentOrder, page: number)
 				query: {
 					order_by: order,
 					page,
+					per_page: clampedPerPage,
 				},
 				signal,
 			})
@@ -69,7 +72,7 @@ export function commentsQuery(taskId: number, order: CommentOrder, page: number)
 				...data,
 				items: (data.items ?? []).map(normalizeComment),
 				page: data.page ?? page,
-				per_page: data.per_page ?? 50,
+				per_page: data.per_page ?? clampedPerPage,
 				total: data.total ?? 0,
 				total_pages: data.total_pages ?? 0,
 			}
@@ -84,6 +87,18 @@ export function commentsQuery(taskId: number, order: CommentOrder, page: number)
 			return previousTaskId === taskId ? previousData : undefined
 		},
 	})
+}
+
+export function mapCommentEverywhere(
+	client: QueryClient,
+	taskId: number,
+	id: number,
+	update: (comment: CommentResponse) => CommentResponse,
+) {
+	client.setQueriesData<CommentPage>({queryKey: commentKeys.task(taskId)}, current => current && ({
+		...current,
+		items: current.items.map(comment => comment.id === id ? update(comment) : comment),
+	}))
 }
 
 function settle(client: QueryClient, taskId: number) {
@@ -107,7 +122,7 @@ export function createCommentMutationOptions() {
 			for (const [key, current] of client.getQueriesData<CommentPage>({queryKey: commentKeys.task(taskId)})) {
 				if (!current) continue
 				const total = current.total + 1
-				const total_pages = totalPagesOf(current, total)
+				const total_pages = totalPagesFor(current, total)
 				const order = commentKeys.orderOf(key)
 				let items = current.items
 				if (order === 'desc' && current.page === 1) {
@@ -154,17 +169,9 @@ export function updateCommentMutationOptions() {
 			})).data,
 		onSuccess: (updated, {taskId, id}, client) => {
 			// The v2 update handler echoes the request body: only the text is real.
-			const merge = (comment: TaskComment) => normalizeComment({
+			mapCommentEverywhere(client, taskId, id, comment => normalizeComment({
 				...comment,
 				comment: updated.comment ?? comment.comment,
-			})
-			client.setQueriesData<CommentPage>({queryKey: commentKeys.task(taskId)}, current => current && ({
-				...current,
-				items: current.items.map(comment => comment.id === id ? merge(comment) : comment),
-			}))
-			mapTaskEverywhere(client, taskId, task => ({
-				...task,
-				comments: task.comments?.map(comment => comment.id === id ? merge(comment) : comment),
 			}))
 		},
 		onSettled: ({taskId}, client) => client.invalidateQueries({queryKey: commentKeys.task(taskId)}),
@@ -189,13 +196,12 @@ export function deleteCommentMutationOptions() {
 					...current,
 					items: current.items.filter(c => c.id !== id),
 					total,
-					total_pages: totalPagesOf(current, total),
+					total_pages: totalPagesFor(current, total),
 				}
 			})
 			mapTaskEverywhere(client, taskId, task => ({
 				...task,
 				comment_count: task.comment_count === undefined ? undefined : Math.max(0, task.comment_count - 1),
-				comments: task.comments?.filter(comment => comment.id !== id),
 			}))
 		},
 		onSettled: ({taskId}, client) => settle(client, taskId),
@@ -203,6 +209,14 @@ export function deleteCommentMutationOptions() {
 	})
 }
 
-export function useCreateCommentMutation() { return useMutation(createCommentMutationOptions()) }
-export function useUpdateCommentMutation() { return useMutation(updateCommentMutationOptions()) }
-export function useDeleteCommentMutation() { return useMutation(deleteCommentMutationOptions()) }
+export function useCreateCommentMutation() {
+	return useMutation(createCommentMutationOptions())
+}
+
+export function useUpdateCommentMutation() {
+	return useMutation(updateCommentMutationOptions())
+}
+
+export function useDeleteCommentMutation() {
+	return useMutation(deleteCommentMutationOptions())
+}

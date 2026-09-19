@@ -4,22 +4,30 @@ import {
 	reactionsDelete,
 } from '@/client/generated'
 import type {
-	ReactionsCreateData,
 	Task,
 	User,
 } from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
+import {
+	commentKeys,
+	mapCommentEverywhere,
+} from './comments'
 import {
 	taskKeys,
 	type TaskExpansion,
 	type TaskResponse,
 } from './tasks'
 
-export type ReactionKind = ReactionsCreateData['path']['entitykind']
 export type ReactionUsers = NonNullable<Task['reactions']>
-type ReactionInput = {
-	kind: ReactionKind,
+type ReactionTarget = {
+	kind: 'tasks',
 	id: number,
+} | {
+	kind: 'comments',
+	id: number,
+	taskId: number,
+}
+export type ReactionInput = ReactionTarget & {
 	value: string,
 	remove: boolean,
 	user: Pick<User, 'id' | 'name' | 'username'>,
@@ -56,20 +64,31 @@ export function setReactionMutationOptions() {
 			return (await reactionsCreate(request)).data
 		},
 		onSuccess: (data, input, client) => {
-			if (input.kind !== 'tasks') return
 			const reacted = {
 				...input,
 				user: data?.user ?? input.user,
 			}
-			// Reactions are expand-only, so patching a copy that never asked for them fakes a complete map.
-			for (const [key, cached] of client.getQueriesData<TaskResponse>({queryKey: taskKeys.details})) {
-				const expand = key[DETAIL_KEY_EXPANSION] as TaskExpansion | undefined
-				if (cached?.id !== input.id || !expand?.includes('reactions')) continue
-				client.setQueryData<TaskResponse>(key, {
-					...cached,
-					reactions: changeReaction(cached.reactions, reacted),
-				})
+			if (input.kind === 'comments') {
+				mapCommentEverywhere(client, input.taskId, input.id, comment => ({
+					...comment,
+					reactions: changeReaction(comment.reactions, reacted),
+				}))
 			}
+			if (input.kind === 'tasks') {
+				// Reactions are expand-only, so patching a copy that never asked for them fakes a complete map.
+				for (const [key, cached] of client.getQueriesData<TaskResponse>({queryKey: taskKeys.details})) {
+					const expand = key[DETAIL_KEY_EXPANSION] as TaskExpansion | undefined
+					if (cached?.id !== input.id || !expand?.includes('reactions')) continue
+					client.setQueryData<TaskResponse>(key, {
+						...cached,
+						reactions: changeReaction(cached.reactions, reacted),
+					})
+				}
+			}
+		},
+		onSettled: async (input, client) => {
+			if (input.kind !== 'comments') return
+			await client.invalidateQueries({queryKey: commentKeys.task(input.taskId)})
 		},
 	})
 }
