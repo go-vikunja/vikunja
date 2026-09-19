@@ -74,7 +74,9 @@ export async function uploadFile(
 	file: File,
 	onSuccess?: (url: string) => void,
 ): Promise<TaskAttachment[]> {
-	const result = await queryClient.getMutationCache().build(queryClient, uploadAttachmentsMutationOptions())
+	// the editor callers toast the rejection themselves, a mutation toast would duplicate it
+	const options = uploadAttachmentsMutationOptions(() => false)
+	const result = await queryClient.getMutationCache().build(queryClient, options)
 		.execute({taskId, files: [file]})
 	const uploaded = result.success ?? []
 	for (const attachment of uploaded) onSuccess?.(generateAttachmentUrl(taskId, attachment.id!))

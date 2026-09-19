@@ -60,7 +60,7 @@ export async function attachmentBlob(attachment: AttachmentIdentity, size?: Prev
 	return data
 }
 
-export function uploadAttachmentsMutationOptions() {
+export function uploadAttachmentsMutationOptions(shouldNotify: () => boolean = () => true) {
 	return contextMutationOptions({
 		mutationFn: async ({taskId, files}: {
 			taskId: number,
@@ -86,6 +86,7 @@ export function uploadAttachmentsMutationOptions() {
 			client.invalidateQueries({queryKey: attachmentKeys.list(taskId)}),
 			invalidateTaskMembership(client, taskId),
 		]),
+		toastError: shouldNotify,
 	})
 }
 

@@ -1,12 +1,23 @@
 import {describe, it, expect, beforeEach, vi} from 'vitest'
 
-import {attachmentBlobUrl, fetchAttachmentBlobUrl, uploadFilesForEditor} from './attachments'
+import {attachmentBlobUrl, fetchAttachmentBlobUrl, uploadFile, uploadFilesForEditor} from './attachments'
 import {queryClient} from '@/client/queryClient'
-import {attachmentKeys} from '@/client/queries/attachments'
+import {attachmentKeys, uploadAttachmentsMutationOptions} from '@/client/queries/attachments'
+import {error} from '@/message'
 
-const {getBlobUrl} = vi.hoisted(() => ({getBlobUrl: vi.fn()}))
+const {getBlobUrl, upload} = vi.hoisted(() => ({
+	getBlobUrl: vi.fn(),
+	upload: vi.fn(),
+}))
 
-vi.mock('@/client/generated', () => ({taskAttachmentsDownload: getBlobUrl}))
+vi.mock('@/client/generated', () => ({
+	taskAttachmentsDownload: getBlobUrl,
+	taskAttachmentsUpload: upload,
+}))
+vi.mock('@/message', () => ({
+	error: vi.fn(),
+	success: vi.fn(),
+}))
 
 const attachment = {task_id: 5, id: 9}
 
@@ -16,6 +27,8 @@ beforeEach(() => {
 	URL.createObjectURL = vi.fn(blob => (blob as Blob & {testUrl?: string}).testUrl ?? 'blob:real-attachment')
 	queryClient.removeQueries({queryKey: attachmentKeys.blobs})
 	getBlobUrl.mockReset()
+	upload.mockReset()
+	vi.mocked(error).mockClear()
 	window.URL.revokeObjectURL = vi.fn()
 })
 
@@ -144,6 +157,27 @@ describe('blob cache eviction', () => {
 
 		expect(window.URL.revokeObjectURL).toHaveBeenCalledWith('blob:a')
 		expect(await fetchAttachmentBlobUrl(attachment)).toBe('blob:b')
+	})
+})
+
+describe('uploadFile', () => {
+	it('leaves the single toast to the caller it rejects into', async () => {
+		upload.mockRejectedValue(new Error('failed to save file: no space left on device'))
+
+		await expect(uploadFile(1, new File([''], 'a.png')))
+			.rejects.toThrow('failed to save file: no space left on device')
+		expect(error).not.toHaveBeenCalled()
+	})
+
+	it('toasts once through the default mutation options', async () => {
+		const failed = new Error('failed to save file: no space left on device')
+		upload.mockRejectedValue(failed)
+
+		const mutation = queryClient.getMutationCache().build(queryClient, uploadAttachmentsMutationOptions())
+
+		await expect(mutation.execute({taskId: 1, files: [new File([''], 'a.png')]})).rejects.toThrow(failed)
+		expect(error).toHaveBeenCalledTimes(1)
+		expect(error).toHaveBeenCalledWith(failed)
 	})
 })
 
