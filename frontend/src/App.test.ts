@@ -4,6 +4,7 @@ import {setActivePinia, createPinia} from 'pinia'
 import {createI18n} from 'vue-i18n'
 import {createRouter, createMemoryHistory} from 'vue-router'
 import App from '@/App.vue'
+import {QueryClient, VueQueryPlugin} from '@tanstack/vue-query'
 import {useAuthStore} from '@/stores/auth'
 import {AUTH_TYPES} from '@/modelTypes/IUser'
 import en from '@/i18n/lang/en.json'
@@ -35,6 +36,7 @@ const AppRoute = {template: '<div class="app-route">app route</div>'}
 const LoginRoute = {template: '<div class="login-route">login route</div>'}
 
 let wrapper: VueWrapper | undefined
+let queryClient: QueryClient
 
 async function mountApp(path: string) {
 	const router = createRouter({
@@ -47,9 +49,10 @@ async function mountApp(path: string) {
 	await router.push(path)
 	await router.isReady()
 
+	queryClient = new QueryClient({defaultOptions: {queries: {retry: false}}})
 	wrapper = mount(App, {
 		global: {
-			plugins: [i18n, router],
+			plugins: [i18n, router, [VueQueryPlugin, {queryClient}]],
 			stubs: {
 				Ready: {template: '<div><slot /></div>'},
 				NoAuthWrapper: {template: '<div class="no-auth"><slot /></div>'},
@@ -75,6 +78,7 @@ describe('App layout', () => {
 	afterEach(() => {
 		wrapper?.unmount()
 		wrapper = undefined
+		queryClient?.clear()
 	})
 
 	// Logout clears the user before the navigation to /login lands. Rendering the

@@ -75,7 +75,7 @@
 			<template v-if="isEditing">
 				<XButton
 					v-cy="'updateTimeEntry'"
-					:disabled="!canSubmit"
+					:aria-disabled="!canSubmit"
 					:loading="isSaving"
 					@click="saveEntry"
 				>
@@ -83,7 +83,6 @@
 				</XButton>
 				<XButton
 					variant="secondary"
-					:disabled="isSaving"
 					@click="cancelEdit"
 				>
 					{{ $t('misc.cancel') }}
@@ -92,7 +91,7 @@
 			<template v-else>
 				<XButton
 					v-cy="'saveTimeEntry'"
-					:disabled="!canSubmit"
+					:aria-disabled="!canSubmit"
 					:loading="isSaving"
 					@click="saveEntry"
 				>
@@ -101,7 +100,7 @@
 				<XButton
 					v-cy="'startTimer'"
 					variant="secondary"
-					:disabled="!canSubmit"
+					:aria-disabled="!canSubmit"
 					:loading="isSaving"
 					@click="startTimer"
 				>
@@ -237,7 +236,9 @@ function reset() {
 }
 
 // Prefill from the entry being edited; a null entry returns the form to create mode.
-watch(() => props.entry, async entry => {
+watch(() => props.entry, async (entry, _previous, onCleanup) => {
+	let active = true
+	onCleanup(() => { active = false })
 	if (entry == null) {
 		reset()
 		return
@@ -247,16 +248,21 @@ watch(() => props.entry, async entry => {
 	to.value = parseDateOrNull(entry.end_time)
 	// Bring the form into view — the edit button may be far down the list.
 	await nextTick()
+	if (!active) return
 	formEl.value?.scrollIntoView({behavior: 'smooth', block: 'center'})
 	if (props.taskId !== undefined) {
 		return
 	}
 	if (entry.task_id > 0) {
 		selectedProject.value = null
+		selectedTask.value = null
 		try {
-			selectedTask.value = await ensureTask(entry.task_id)
+			const task = await ensureTask(entry.task_id)
+			if (active && selectedProject.value === null && selectedTask.value === null) {
+				selectedTask.value = task
+			}
 		} catch {
-			selectedTask.value = null
+			return
 		}
 	} else if (entry.project_id > 0) {
 		selectedTask.value = null
@@ -264,11 +270,24 @@ watch(() => props.entry, async entry => {
 	}
 }, {immediate: true})
 
+function draftIdentity() {
+	return JSON.stringify([
+		props.entry?.id,
+		props.taskId,
+		selectedTask.value?.id,
+		selectedProject.value?.id,
+		from.value,
+		to.value,
+		comment.value,
+	])
+}
+
 async function submit(includeEnd: boolean) {
 	if (!canSubmit.value || isSaving.value) {
 		return
 	}
 	isSaving.value = true
+	const draft = draftIdentity()
 	try {
 		const payload = buildPayload(includeEnd)
 		// A started timer begins now (click time), not when the form first loaded.
@@ -276,6 +295,7 @@ async function submit(includeEnd: boolean) {
 			payload.start_time = new Date().toISOString()
 		}
 		await createMutation.mutateAsync(payload)
+		if (draftIdentity() !== draft) return
 		reset()
 		emit('saved')
 	} catch {
@@ -291,6 +311,7 @@ async function submitUpdate() {
 		return
 	}
 	isSaving.value = true
+	const draft = draftIdentity()
 	try {
 		const payload: TimeEntryWritable & {id: number} = {
 			id: entry.id,
@@ -304,6 +325,7 @@ async function submitUpdate() {
 		}
 		applyTarget(payload)
 		await updateMutation.mutateAsync(payload)
+		if (draftIdentity() !== draft) return
 		emit('saved')
 	} catch {
 		return

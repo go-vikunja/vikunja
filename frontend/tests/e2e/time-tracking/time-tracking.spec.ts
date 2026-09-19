@@ -261,6 +261,48 @@ test.describe('Time tracking', () => {
 			expect((await stored.json()).comment).toBe('edited comment')
 		})
 
+		test('keeps a newer draft when an earlier update finishes', async ({
+			authenticatedPage: page,
+			apiContext,
+			userToken,
+		}) => {
+			await ProjectFactory.create(1, {
+				id: 1,
+				title: 'Draft project',
+			}, false)
+			await TimeEntryFactory.create(1, {
+				id: 1,
+				project_id: 1,
+				comment: 'original',
+			}, false)
+			await page.goto('/time-tracking')
+			await page.locator('[data-cy="editTimeEntry"]').click()
+			const comment = page.locator('[data-cy="timeEntryComment"]')
+			await comment.fill('first draft')
+			let release!: () => void
+			let received!: () => void
+			const responseGate = new Promise<void>(resolve => { release = resolve })
+			const requestReceived = new Promise<void>(resolve => { received = resolve })
+			await page.route('**/api/v2/time-entries/1', async route => {
+				if (route.request().method() !== 'PUT') return route.continue()
+				const response = await route.fetch()
+				received()
+				await responseGate
+				await route.fulfill({response})
+			})
+			await page.locator('[data-cy="updateTimeEntry"]').click()
+			await requestReceived
+			await comment.fill('newer draft')
+			release()
+			await expect(page.locator('[data-cy="timeEntry"]')).toContainText('first draft')
+			await expect(page.locator('[data-cy="updateTimeEntry"]')).not.toHaveClass(/is-loading/)
+			await expect(comment).toHaveValue('newer draft')
+			const stored = await apiContext.get('/api/v2/time-entries/1', {
+				headers: {Authorization: `Bearer ${userToken}`},
+			})
+			expect((await stored.json()).comment).toBe('first draft')
+		})
+
 		test('deletes an entry from the list', async ({authenticatedPage: page, apiContext, userToken}) => {
 			await ProjectFactory.create(1, {id: 1, title: 'Delete project'}, false)
 			await TimeEntryFactory.create(1, {id: 1, project_id: 1, comment: 'to be deleted'}, false)
