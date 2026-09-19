@@ -1,9 +1,18 @@
 import {useMutation} from '@tanstack/vue-query'
-import {reactionsCreate, reactionsDelete} from '@/client/generated'
-import type {ReactionsCreateData, Task, User} from '@/client/generated'
+import {
+	reactionsCreate,
+	reactionsDelete,
+} from '@/client/generated'
+import type {
+	ReactionsCreateData,
+	Task,
+	User,
+} from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
-import {mapTaskEverywhere} from './taskCache'
-import {taskKeys} from './tasks'
+import {
+	invalidateTaskMembership,
+	mapTaskEverywhere,
+} from './taskCache'
 
 export type ReactionKind = ReactionsCreateData['path']['entitykind']
 export type ReactionUsers = NonNullable<Task['reactions']>
@@ -21,21 +30,33 @@ export function changeReaction(current: ReactionUsers = {}, input: ReactionInput
 	)
 	const remaining = (users ?? []).filter(user => user.id !== input.user.id)
 	if (!input.remove) remaining.push(input.user)
-	return remaining.length ? {...rest, [input.value]: remaining} : rest
+	return remaining.length ? {
+		...rest,
+		[input.value]: remaining,
+	} : rest
 }
 
 export function setReactionMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async (input: ReactionInput) => {
 			const call = input.remove ? reactionsDelete : reactionsCreate
-			await call({path: {entitykind: input.kind, entityid: input.id}, body: {value: input.value}})
+			await call({
+				path: {
+					entitykind: input.kind,
+					entityid: input.id,
+				},
+				body: {value: input.value},
+			})
 		},
 		onSuccess: (_data, input, client) => {
 			if (input.kind === 'tasks') {
-				mapTaskEverywhere(client, input.id, task => ({...task, reactions: changeReaction(task.reactions, input)}))
+				mapTaskEverywhere(client, input.id, task => ({
+					...task,
+					reactions: changeReaction(task.reactions, input),
+				}))
 			}
 		},
-		onSettled: (_input, client) => client.invalidateQueries({queryKey: taskKeys.all, refetchType: 'none'}),
+		onSettled: (_input, client) => invalidateTaskMembership(client, input.kind === 'tasks' ? input.id : undefined),
 	})
 }
 
