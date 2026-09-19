@@ -1,79 +1,91 @@
-import AttachmentModel from '@/models/attachment'
-import type {TaskAttachment as IAttachment} from '@/client/generated'
+import {partialMatchKey} from '@tanstack/vue-query'
+import type {TaskAttachment} from '@/client/generated'
+import {queryClient} from '@/client/queryClient'
+import {
+	attachmentBlob,
+	attachmentKeys,
+	uploadAttachmentsMutationOptions,
+	type AttachmentIdentity,
+	type PreviewSize,
+} from '@/client/queries/attachments'
+import {captureClientRequestContext, assertClientRequestContext} from '@/client/requestContext'
+import {downloadBlob} from '@/helpers/downloadBlob'
 
-import AttachmentService, {type PREVIEW_SIZE} from '@/services/attachment'
-
-const blobService = new AttachmentService()
-const blobUrlCache = new Map<string, string>()
-const pendingBlobRequests = new Map<string, Promise<string>>()
-
-/**
- * Blob urls are shared between every consumer, so callers must not revoke them.
- * Use clearAttachmentBlobCache() instead.
- */
-export function fetchAttachmentBlobUrl(attachment: Pick<IAttachment, 'id' | 'taskId'>, size?: PREVIEW_SIZE): Promise<string> {
-	const key = `${attachment.taskId}-${attachment.id}-${size ?? ''}`
-
-	const cached = blobUrlCache.get(key)
-	if (cached !== undefined) {
-		return Promise.resolve(cached)
+queryClient.getQueryCache().subscribe(event => {
+	if (event.type !== 'removed' || !partialMatchKey(event.query.queryKey, attachmentKeys.blobs)) {
+		return
 	}
 
-	const pending = pendingBlobRequests.get(key)
-	if (pending !== undefined) {
-		return pending
+	const url = event.query.state.data
+	if (typeof url === 'string') URL.revokeObjectURL(url)
+})
+
+// A blob: url for an svg inherits our origin and can script; a data: url cannot.
+const SCRIPTABLE_MIME_TYPE = 'image/svg+xml'
+
+export async function attachmentBlobUrl(attachment: AttachmentIdentity, size?: PreviewSize, signal?: AbortSignal) {
+	const context = captureClientRequestContext()
+	const blob = await attachmentBlob(attachment, size, signal)
+	assertClientRequestContext(context)
+	signal?.throwIfAborted()
+	const mimeType = blob.type.split(';')[0].trim().toLowerCase()
+	// FileReader is absent in iOS Lockdown Mode and some webviews, fall back to a blob url there.
+	if (mimeType === SCRIPTABLE_MIME_TYPE && typeof FileReader !== 'undefined') {
+		return new Promise<string>((resolve, reject) => {
+			const reader = new FileReader()
+			reader.onload = () => {
+				// the identity can change while the read runs, so the pre-read fence has to be repeated
+				try {
+					assertClientRequestContext(context)
+					signal?.throwIfAborted()
+				} catch (fenced) {
+					reject(fenced)
+					return
+				}
+				if (typeof reader.result === 'string') {
+					resolve(reader.result)
+					return
+				}
+				reject(new Error('Attachment could not be read as a data url'))
+			}
+			reader.onerror = () => reject(reader.error ?? new Error('Attachment could not be read as a data url'))
+			reader.readAsDataURL(blob)
+		})
 	}
-
-	const request = blobService.getBlobUrl(attachment, size)
-		.then(url => {
-			blobUrlCache.set(key, url)
-			pendingBlobRequests.delete(key)
-			return url
-		})
-		.catch(e => {
-			// drop the rejected promise, else every retry rethrows it
-			pendingBlobRequests.delete(key)
-			throw e
-		})
-
-	pendingBlobRequests.set(key, request)
-	return request
+	return URL.createObjectURL(blob)
 }
 
-export function clearAttachmentBlobCache() {
-	blobUrlCache.forEach(url => window.URL.revokeObjectURL(url))
-	blobUrlCache.clear()
-	pendingBlobRequests.clear()
-}
-
-export async function uploadFile(taskId: number, file: File, onSuccess?: (url: string) => void): Promise<IAttachment[]> {
-	const attachmentService = new AttachmentService()
-	const files = [file]
-
-	return await uploadFiles(attachmentService, taskId, files, onSuccess)
-}
-
-export async function uploadFiles(
-	attachmentService: AttachmentService,
-	taskId: number,
-	files: File[] | FileList,
-	onSuccess?: (attachmentUrl: string) => void,
-): Promise<IAttachment[]> {
-	const attachmentModel = new AttachmentModel({taskId})
-	const response = await attachmentService.create(attachmentModel, files)
-	console.debug(`Uploaded attachments for task ${taskId}, response was`, response)
-
-	const uploaded: IAttachment[] = []
-	response.success?.map((attachment: IAttachment) => {
-		uploaded.push(attachment)
-		onSuccess?.(generateAttachmentUrl(taskId, attachment.id))
+// Shared editor/board URLs live until their query is evicted; callers must not revoke them.
+export function fetchAttachmentBlobUrl(attachment: AttachmentIdentity, size?: PreviewSize): Promise<string> {
+	return queryClient.fetchQuery({
+		queryKey: attachmentKeys.blob(attachment.task_id, attachment.id, size),
+		queryFn: ({signal}) => attachmentBlobUrl(attachment, size, signal),
+		staleTime: Infinity,
+		// fetchQuery registers no observer, so the default gcTime would revoke a url the editor or a cover still shows
+		gcTime: Infinity,
+		retry: false,
 	})
+}
 
-	if (response.errors !== null) {
-		const messages = response.errors.map((e: {message: string}) => e.message)
-		throw new Error(messages.join('\n'))
-	}
+export async function downloadAttachment(attachment: TaskAttachment) {
+	const url = await attachmentBlobUrl({id: attachment.id!, task_id: attachment.task_id!})
+	downloadBlob(url, attachment.file?.name ?? '')
+}
 
+export async function uploadFile(
+	taskId: number,
+	file: File,
+	onSuccess?: (url: string) => void,
+): Promise<TaskAttachment[]> {
+	// the editor callers toast the rejection themselves, a mutation toast would duplicate it
+	const options = uploadAttachmentsMutationOptions(() => false)
+	const result = await queryClient.getMutationCache().build(queryClient, options)
+		.execute({taskId, files: [file]})
+	const uploaded = result.success ?? []
+	for (const attachment of uploaded) onSuccess?.(generateAttachmentUrl(taskId, attachment.id!))
+	// forwarded verbatim: the caller's toast translates the error code, which a rewrapped message would lose
+	const [failure] = result.errors ?? []
+	if (failure) throw failure
 	return uploaded
 }
 

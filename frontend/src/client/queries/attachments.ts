@@ -24,7 +24,8 @@ export const attachmentKeys = {
 	all: ['attachments'] as const,
 	list: (taskId: number) => ['attachments', 'list', taskId] as const,
 	blobs: ['attachments', 'blob'] as const,
-	blob: (taskId: number, id: number, size?: PreviewSize) => ['attachments', 'blob', taskId, id, size] as const,
+	blobsFor: (taskId: number, id: number) => [...attachmentKeys.blobs, taskId, id] as const,
+	blob: (taskId: number, id: number, size?: PreviewSize) => [...attachmentKeys.blobsFor(taskId, id), size] as const,
 }
 
 export type PreviewSize = NonNullable<TaskAttachmentsDownloadData['query']>['preview_size']
@@ -59,7 +60,7 @@ export async function attachmentBlob(attachment: AttachmentIdentity, size?: Prev
 	return data
 }
 
-export function uploadAttachmentsMutationOptions() {
+export function uploadAttachmentsMutationOptions(shouldNotify: () => boolean = () => true) {
 	return contextMutationOptions({
 		mutationFn: async ({taskId, files}: {
 			taskId: number,
@@ -85,6 +86,7 @@ export function uploadAttachmentsMutationOptions() {
 			client.invalidateQueries({queryKey: attachmentKeys.list(taskId)}),
 			invalidateTaskMembership(client, taskId),
 		]),
+		toastError: shouldNotify,
 	})
 }
 
@@ -105,7 +107,7 @@ export function deleteAttachmentMutationOptions() {
 				attachments: task.attachments.filter(a => a.id !== id),
 				cover_image_attachment_id: task.cover_image_attachment_id === id ? 0 : task.cover_image_attachment_id,
 			}))
-			client.removeQueries({queryKey: ['attachments', 'blob', taskId, id]})
+			client.removeQueries({queryKey: attachmentKeys.blobsFor(taskId, id)})
 		},
 		onSettled: ({taskId}, client) => Promise.all([
 			client.invalidateQueries({queryKey: attachmentKeys.list(taskId)}),

@@ -64,7 +64,7 @@ import { uploadFilesForEditor } from '@/helpers/attachments'
 import type {Task as ITask} from '@/client/generated'
 import {useUpdateTaskMutation} from '@/client/queries/taskMutations'
 
-export type AttachmentUploadFunction = (file: File, onSuccess: (attachmentUrl: string) => void) => Promise<string>
+export type AttachmentUploadFunction = (file: File, onSuccess: (attachmentUrl: string) => void) => Promise<unknown>
 
 const props = defineProps<{
 	modelValue: ITask,

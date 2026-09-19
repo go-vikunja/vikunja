@@ -3,16 +3,12 @@ import {createPinia, setActivePinia} from 'pinia'
 import {nextTick, ref} from 'vue'
 import {Editor} from '@tiptap/core'
 import {createEditorExtensions, type EditorExtensionDeps} from './editorExtensions'
-import {clearAttachmentBlobCache} from '@/helpers/attachments'
+import {queryClient} from '@/client/queryClient'
+import {attachmentKeys} from '@/client/queries/attachments'
 
-const {getBlobUrl} = vi.hoisted(() => ({getBlobUrl: vi.fn(async () => 'blob:real-attachment')}))
+const {getBlobUrl} = vi.hoisted(() => ({getBlobUrl: vi.fn(async () => ({data: new Blob(['bytes'])}))}))
 
-vi.mock('@/services/attachment', async importOriginal => ({
-	...await importOriginal<typeof import('@/services/attachment')>(),
-	default: class {
-		getBlobUrl = getBlobUrl
-	},
-}))
+vi.mock('@/client/generated', () => ({taskAttachmentsDownload: getBlobUrl}))
 
 const API_URL = 'http://localhost:3456/api/v1'
 window.API_URL = API_URL
@@ -52,8 +48,9 @@ async function settle() {
 }
 
 beforeEach(() => {
+	URL.createObjectURL = vi.fn(blob => (blob as Blob & {testUrl?: string}).testUrl ?? 'blob:real-attachment')
 	setActivePinia(createPinia())
-	clearAttachmentBlobCache()
+	queryClient.removeQueries({queryKey: attachmentKeys.blobs})
 	getBlobUrl.mockClear()
 })
 
@@ -94,7 +91,7 @@ describe('CustomImage attachment id', () => {
 	})
 
 	it('does not let a planted id hijack another image\'s blob url', async () => {
-		const stored = `<p><img src="https://attacker.example/x.png" id="tiptap-image-5-9">` +
+		const stored = '<p><img src="https://attacker.example/x.png" id="tiptap-image-5-9">' +
 			`<img src="#" data-src="${ATTACHMENT_URL}" id="tiptap-image-5-9"></p>`
 		const {editor} = createEditor(stored)
 		await settle()

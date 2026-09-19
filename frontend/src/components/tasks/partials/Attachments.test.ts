@@ -10,24 +10,21 @@ import type {Task as ITask} from '@/client/generated'
 
 const sdk = vi.hoisted(() => ({
 	patchTasksRead: vi.fn(),
+	taskAttachmentsList: vi.fn(async () => ({data: {items: [attachment], total_pages: 1}})),
+	taskAttachmentsUpload: vi.fn(),
+	taskAttachmentsDownload: vi.fn(),
 }))
+
+const {errorMessage} = vi.hoisted(() => ({errorMessage: vi.fn()}))
 
 vi.mock('@/client/generated', () => sdk)
-
-vi.mock('@/services/attachment', () => ({
-	default: class {
-		loading = false
-		uploadProgress = 0
- getAll = async () => [attachment]
-	},
-}))
 
 vi.mock('vue-i18n', async importOriginal => ({
 	...(await importOriginal<typeof import('vue-i18n')>()),
 	useI18n: () => ({t: (key: string) => key}),
 }))
 
-vi.mock('@/message', () => ({error: vi.fn(), success: vi.fn()}))
+vi.mock('@/message', () => ({error: errorMessage, success: vi.fn()}))
 
 import Attachments from './Attachments.vue'
 
@@ -56,7 +53,6 @@ function mountAttachments() {
 				User: true,
 				FilePreview: true,
 				AudioPreview: true,
-				ProgressBar: true,
 				ImageLightbox: true,
 				RouterLink: true,
 			},
@@ -75,12 +71,15 @@ afterEach(() => {
 	mounted.splice(0).forEach(wrapper => wrapper.unmount())
 	renderErrors.length = 0
 	document.body.innerHTML = ''
+	sdk.taskAttachmentsUpload.mockReset()
+	sdk.taskAttachmentsDownload.mockReset()
+	errorMessage.mockClear()
 })
 
 describe('Attachments delete modal', () => {
 	it('does not render the attachment name after the modal was closed', async () => {
 		const wrapper = mountAttachments()
- await flushPromises()
+		await flushPromises()
 
 		await wrapper.find('.attachment-actions [aria-label="task.attachment.deleteTooltip"]').trigger('click')
 		await nextTick()
@@ -95,5 +94,190 @@ describe('Attachments delete modal', () => {
 		expect(renderErrors).toEqual([])
 		expect(document.querySelector('dialog.modal-dialog')).not.toBeNull()
 		expect(document.body.innerHTML).not.toContain('task.attachment.deleteText1')
+	})
+})
+
+function dropFile(file: File) {
+	const event = new Event('drop', {bubbles: true, cancelable: true})
+	Object.defineProperty(event, 'dataTransfer', {
+		value: {
+			files: [file],
+			items: [{kind: 'file', type: file.type}],
+			types: ['Files'],
+			dropEffect: 'none',
+		},
+	})
+	document.body.dispatchEvent(event)
+}
+
+async function pickFiles(wrapper: VueWrapper, files: File[]) {
+	const fileInput = wrapper.find('input[type="file"]')
+	Object.defineProperty(fileInput.element, 'files', {
+		value: files,
+		configurable: true,
+	})
+	await fileInput.trigger('change')
+	await flushPromises()
+}
+
+describe('Attachments download', () => {
+	it('toasts once when the download fails', async () => {
+		sdk.taskAttachmentsDownload.mockRejectedValue(new Error('network error'))
+
+		const wrapper = mountAttachments()
+		await flushPromises()
+
+		await wrapper.find('.attachment-actions [aria-label="task.attachment.downloadTooltip"]').trigger('click')
+		await flushPromises()
+
+		expect(errorMessage).toHaveBeenCalledTimes(1)
+	})
+
+	it('does not toast when the download aborts because the session changed', async () => {
+		sdk.taskAttachmentsDownload.mockRejectedValue(new DOMException('aborted', 'AbortError'))
+
+		const wrapper = mountAttachments()
+		await flushPromises()
+
+		await wrapper.find('.attachment-actions [aria-label="task.attachment.downloadTooltip"]').trigger('click')
+		await flushPromises()
+
+		expect(errorMessage).not.toHaveBeenCalled()
+	})
+})
+
+describe('Attachments upload', () => {
+	it('uploads the remaining files after one request fails', async () => {
+		sdk.taskAttachmentsUpload
+			.mockRejectedValueOnce(new Error('413 Payload Too Large'))
+			.mockResolvedValueOnce({data: {success: []}})
+
+		const wrapper = mountAttachments()
+		await flushPromises()
+
+		const fileInput = wrapper.find('input[type="file"]')
+		Object.defineProperty(fileInput.element, 'files', {
+			value: [
+				new File(['x'], 'too-big.zip', {type: 'application/zip'}),
+				new File(['y'], 'cover-image.png', {type: 'image/png'}),
+			],
+			configurable: true,
+		})
+
+		await fileInput.trigger('change')
+		await flushPromises()
+
+		expect(sdk.taskAttachmentsUpload).toHaveBeenCalledTimes(2)
+		expect(errorMessage).toHaveBeenCalledTimes(1)
+	})
+
+	it('toasts every per-file failure with its code, which the message alone would lose', async () => {
+		sdk.taskAttachmentsUpload.mockResolvedValue({data: {errors: [
+			{code: 4014},
+			{
+				code: 4015,
+				message: 'file is too large',
+			},
+		]}})
+
+		const wrapper = mountAttachments()
+		await flushPromises()
+
+		const fileInput = wrapper.find('input[type="file"]')
+		Object.defineProperty(fileInput.element, 'files', {
+			value: [new File(['x'], 'too-big.zip', {type: 'application/zip'})],
+			configurable: true,
+		})
+
+		await fileInput.trigger('change')
+		await flushPromises()
+
+		expect(errorMessage).toHaveBeenCalledTimes(2)
+		expect(errorMessage).toHaveBeenNthCalledWith(1, {code: 4014})
+		expect(errorMessage).toHaveBeenNthCalledWith(2, {
+			code: 4015,
+			message: 'file is too large',
+		})
+	})
+
+	it('shows the bar for the whole of a single-file upload', async () => {
+		let finishUpload: (result: unknown) => void = () => {}
+		sdk.taskAttachmentsUpload.mockReturnValue(new Promise(resolve => {
+			finishUpload = resolve
+		}))
+
+		const wrapper = mountAttachments()
+		await flushPromises()
+
+		expect(wrapper.find('progress').exists()).toBe(false)
+
+		await pickFiles(wrapper, [new File(['x'], 'cover-image.png', {type: 'image/png'})])
+
+		const bar = wrapper.find('progress')
+		expect(bar.exists()).toBe(true)
+		expect(bar.attributes('value')).toBeUndefined()
+		expect(bar.attributes('aria-label')).toBe('task.attachment.upload')
+
+		finishUpload({data: {success: []}})
+		await flushPromises()
+
+		expect(wrapper.find('progress').exists()).toBe(false)
+	})
+
+	it('advances the bar by one file as each upload completes', async () => {
+		const finishers: ((result: unknown) => void)[] = []
+		sdk.taskAttachmentsUpload.mockImplementation(() => new Promise(resolve => {
+			finishers.push(resolve)
+		}))
+
+		const wrapper = mountAttachments()
+		await flushPromises()
+
+		await pickFiles(wrapper, [
+			new File(['a'], 'a.png', {type: 'image/png'}),
+			new File(['b'], 'b.png', {type: 'image/png'}),
+			new File(['c'], 'c.png', {type: 'image/png'}),
+			new File(['d'], 'd.png', {type: 'image/png'}),
+		])
+
+		expect(wrapper.find('progress').attributes('value')).toBeUndefined()
+
+		for (const completed of [1, 2, 3]) {
+			finishers[completed - 1]({data: {success: []}})
+			await flushPromises()
+
+			expect(wrapper.find('progress').attributes('value')).toBe(`${completed * 25}`)
+		}
+
+		finishers[3]({data: {success: []}})
+		await flushPromises()
+
+		expect(wrapper.find('progress').exists()).toBe(false)
+	})
+
+	it('ignores a drop while another batch is still uploading', async () => {
+		let finishUpload: (result: unknown) => void = () => {}
+		sdk.taskAttachmentsUpload.mockReturnValue(new Promise(resolve => {
+			finishUpload = resolve
+		}))
+
+		const wrapper = mountAttachments()
+		await flushPromises()
+
+		const fileInput = wrapper.find('input[type="file"]')
+		Object.defineProperty(fileInput.element, 'files', {
+			value: [new File(['x'], 'first.png', {type: 'image/png'})],
+			configurable: true,
+		})
+		await fileInput.trigger('change')
+		await flushPromises()
+
+		dropFile(new File(['y'], 'second.png', {type: 'image/png'}))
+		await flushPromises()
+
+		expect(sdk.taskAttachmentsUpload).toHaveBeenCalledTimes(1)
+
+		finishUpload({data: {success: []}})
+		await flushPromises()
 	})
 })

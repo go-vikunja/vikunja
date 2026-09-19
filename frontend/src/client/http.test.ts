@@ -69,6 +69,24 @@ function deferredJsonResponse() {
 	return {bodyFinished, bodyStarted, response}
 }
 
+function deferredBlobResponse() {
+	const bodyStarted = deferred<void>()
+	const bodyFinished = deferred<void>()
+	const response = new Response(new ReadableStream({
+		async pull(controller) {
+			bodyStarted.resolve()
+			await bodyFinished.promise
+			controller.enqueue(new TextEncoder().encode('attachment bytes'))
+			controller.close()
+		},
+	}, {highWaterMark: 0}), {
+		status: 200,
+		headers: {'Content-Type': 'application/octet-stream'},
+	})
+
+	return {bodyFinished, bodyStarted, response}
+}
+
 function deferredErrorResponse() {
 	const bodyStarted = deferred<void>()
 	const bodyFinished = deferred<void>()
@@ -233,6 +251,43 @@ describe('configureApiClient', () => {
 		}))
 
 		const request = client.get({url: '/probe'})
+		await bodyStarted.promise
+		auth.sessionEpoch++
+		bodyFinished.resolve()
+
+		await expect(request).rejects.toMatchObject({name: 'AbortError'})
+	})
+
+	it('fences a blob response without buffering a second copy', async () => {
+		auth.token = 'session-token'
+		auth.type = 1
+		const blobResponse = new Response(new Blob(['attachment bytes']), {
+			status: 200,
+			headers: {'Content-Type': 'application/octet-stream'},
+		})
+		const clone = vi.spyOn(blobResponse, 'clone')
+		responses = [blobResponse]
+
+		const {data} = await client.get({
+			url: '/probe',
+			parseAs: 'blob',
+		})
+
+		expect(clone).not.toHaveBeenCalled()
+		expect(data).toBeInstanceOf(Blob)
+		expect(await (data as Blob).text()).toBe('attachment bytes')
+	})
+
+	it('rejects when the session changes while reading a blob response body', async () => {
+		auth.token = 'session-token'
+		auth.type = 1
+		const {bodyFinished, bodyStarted, response} = deferredBlobResponse()
+		responses = [response]
+
+		const request = client.get({
+			url: '/probe',
+			parseAs: 'blob',
+		})
 		await bodyStarted.promise
 		auth.sessionEpoch++
 		bodyFinished.resolve()

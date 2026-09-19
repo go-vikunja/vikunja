@@ -367,7 +367,6 @@
 							:ref="e => { setFieldRef('attachments', e); attachmentsRef = e as any }"
 							:edit-enabled="canWrite"
 							:task="task"
-							@update:attachments="onAttachmentsUpdated"
 						/>
 					</div>
 
@@ -673,8 +672,6 @@ import {SHORTCUTS} from '@/constants/shortcuts'
 import BaseButton from '@/components/base/BaseButton.vue'
 
 // partials
-import {useQueryClient} from '@tanstack/vue-query'
-import {replaceTaskEverywhere} from '@/client/queries/taskCache'
 import Attachments from '@/components/tasks/partials/Attachments.vue'
 import TaskTimeTracking from '@/components/time-tracking/TaskTimeTracking.vue'
 import ChecklistSummary from '@/components/tasks/partials/ChecklistSummary.vue'
@@ -757,7 +754,6 @@ const timeTrackingEnabled = computed(() => configStore.isProFeatureEnabled(PRO_F
 const authStore = useAuthStore()
 const baseStore = useBaseStore()
 
-const queryClient = useQueryClient()
 const taskQuery = useTask(
 	() => props.taskId ?? 0,
 	() => [
@@ -897,23 +893,13 @@ const color = computed(() => getHexColor(task.value.hex_color))
 
 const isModal = computed(() => Boolean(props.backdropView))
 
-async function attachmentUpload(file: File, onSuccess?: (url: string) => void) {
-	const uploaded = await uploadFile(props.taskId, file, onSuccess)
-	if (uploaded.length > 0) {
-		onAttachmentsUpdated()
-		await attachmentsRef.value?.reloadAttachments()
-	}
-	return uploaded
+function attachmentUpload(file: File, onSuccess?: (url: string) => void) {
+	return uploadFile(props.taskId, file, onSuccess)
 }
 
 function setReactions(reactions: ITask['reactions']) {
 	task.value = {...task.value, reactions}
 	taskQuery.refetch()
-}
-
-async function onAttachmentsUpdated() {
-	const result = await taskQuery.refetch()
-	if (result.data) replaceTaskEverywhere(queryClient, result.data)
 }
 
 const heading = ref<HTMLElement | null>(null)

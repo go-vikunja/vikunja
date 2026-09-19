@@ -72,7 +72,7 @@ async function addLabelToTaskAndVerify(page: Page, labelTitle: string) {
 
 async function uploadAttachmentAndVerify(page: Page, taskId: number, file = 'tests/fixtures/image.jpg') {
 	const uploadAttachmentPromise = page.waitForResponse(response =>
-		response.url().includes(`/tasks/${taskId}/attachments`) && response.request().method() === 'PUT',
+		response.url().includes(`/api/v2/tasks/${taskId}/attachments`) && response.request().method() === 'POST',
 	)
 	// The "Add Attachments" button triggers openFilePicker() which may open
 	// a native file chooser (especially inside a <dialog>). Handle it via the
@@ -1161,7 +1161,7 @@ test.describe('Task', () => {
 			await page.goto(`/tasks/${tasks[0].id}`)
 
 			const uploadAttachmentPromise = page.waitForResponse(response =>
-				response.url().includes(`/tasks/${tasks[0].id}/attachments`) && response.request().method() === 'PUT',
+				response.url().includes(`/api/v2/tasks/${tasks[0].id}/attachments`) && response.request().method() === 'POST',
 			)
 
 			const editor = page.locator('.task-view .details.content.description .tiptap__editor .tiptap.ProseMirror')
@@ -1396,13 +1396,20 @@ test.describe('Task', () => {
 			await expect(page.locator('.task-view .columns.details .column').filter({hasText: 'Progress'}).locator('.select select')).toHaveValue('0.5')
 		})
 
-		test('Can add an attachment to a task', async ({authenticatedPage: page}) => {
+		test('Can add an attachment to a task', async ({authenticatedPage: page, apiContext, userToken}) => {
 			const tasks = await TaskFactory.create(1, {
 				id: 1,
 			})
 			await page.goto(`/tasks/${tasks[0].id}`)
 
 			await uploadAttachmentAndVerify(page, tasks[0].id)
+			await page.reload()
+			await expect(page.locator('.attachments .files .attachment')).toHaveCount(1)
+			const stored = await apiContext.get(`tasks/${tasks[0].id}/attachments`, {
+				headers: {Authorization: `Bearer ${userToken}`},
+			})
+			expect(stored.ok()).toBeTruthy()
+			expect(await stored.json()).toHaveLength(1)
 		})
 
 		test('Can add an attachment to a task and see it appearing on kanban', async ({authenticatedPage: page}) => {
@@ -1454,7 +1461,7 @@ test.describe('Task', () => {
 			expect(blob.size).toBeGreaterThan(0)
 		})
 
-		test('Can delete an attachment', async ({authenticatedPage: page}) => {
+		test('Can delete an attachment', async ({authenticatedPage: page, apiContext, userToken}) => {
 			const tasks = await TaskFactory.create(1, {
 				id: 1,
 				project_id: projects[0].id,
@@ -1470,6 +1477,7 @@ test.describe('Task', () => {
 				'.attachments .attachments .files .attachment .attachment-info-meta-button:has(svg[data-icon="trash-can"])',
 			).first()
 			await expect(deleteButton).toBeVisible()
+			await expect(page.locator('.attachments .attachments .files .attachment')).toHaveCount(1)
 
 			const deleted = page.waitForResponse(r =>
 				/\/tasks\/\d+\/attachments\/\d+/.test(r.url()) && r.request().method() === 'DELETE',
@@ -1481,6 +1489,16 @@ test.describe('Task', () => {
 			await deleted
 
 			await expect(page.locator('.attachments .attachments .files .attachment')).toHaveCount(0)
+			await page.reload()
+			// toHaveCount(0) alone would also pass on a page that has not rendered the task yet;
+			// the attachments section itself collapses once the last attachment is gone
+			await expect(page.locator('.task-view h1[contenteditable]')).toContainText(tasks[0].title)
+			await expect(page.locator('.attachments .files .attachment')).toHaveCount(0)
+			const stored = await apiContext.get(`tasks/${tasks[0].id}/attachments`, {
+				headers: {Authorization: `Bearer ${userToken}`},
+			})
+			expect(stored.ok()).toBeTruthy()
+			expect(await stored.json()).toEqual([])
 		})
 
 		test('read-only shared user cannot delete attachments', async ({authenticatedPage: page, apiContext, currentUser}) => {
