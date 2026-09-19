@@ -3,7 +3,10 @@ import {
 	it,
 	vi,
 } from 'vitest'
-import {QueryClient} from '@tanstack/vue-query'
+import {
+	QueryClient,
+	QueryObserver,
+} from '@tanstack/vue-query'
 import {
 	parseServerCacheEvent,
 	serverCacheEventMutationOptions,
@@ -83,7 +86,13 @@ it('invalidates only the notified task comments and detail', async () => {
 it('stales task collections only for a task they hold', async () => {
 	const client = new QueryClient()
 	const listKey = taskKeys.allList({project: 2})
-	client.setQueryData(listKey, [normalizeTask({id: 5})])
+	const queryFn = vi.fn(() => [normalizeTask({id: 5})])
+	const unsubscribe = new QueryObserver(client, {
+		queryKey: listKey,
+		queryFn,
+	}).subscribe(() => {})
+	await vi.waitFor(() => expect(queryFn).toHaveBeenCalledTimes(1))
+	client.setQueryData(taskKeys.detail(5), normalizeTask({id: 5}))
 	const commentOn = (taskId: number) => parseServerCacheEvent('notification.created', {
 		name: 'task.comment',
 		notification: {task: {id: taskId}},
@@ -92,6 +101,10 @@ it('stales task collections only for a task they hold', async () => {
 	expect(client.getQueryState(listKey)?.isInvalidated).toBe(false)
 	await client.getMutationCache().build(client, serverCacheEventMutationOptions()).execute(commentOn(5))
 	expect(client.getQueryState(listKey)?.isInvalidated).toBe(true)
+	expect(client.getQueryState(listKey)?.fetchStatus).toBe('idle')
+	expect(queryFn).toHaveBeenCalledTimes(1)
+	expect(client.getQueryState(taskKeys.detail(5))?.isInvalidated).toBe(true)
+	unsubscribe()
 })
 
 it('reconciles timer events without inserting into an unrelated filtered list', async () => {

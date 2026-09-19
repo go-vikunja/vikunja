@@ -61,8 +61,12 @@ export function parseServerCacheEvent(
 
 // A task held by no cached collection can't have changed any of them, so nothing is staled for it.
 async function invalidateCachedTask(client: QueryClient, taskId: number | undefined): Promise<void> {
-	if (!taskId || taskQueryKeys(client, taskId).length === 0) return
-	await invalidateTaskMembership(client, taskId, 'active')
+	if (!taskId) return
+	const held = taskQueryKeys(client, taskId).length > 0
+	await Promise.all([
+		client.invalidateQueries({queryKey: taskKeys.detail(taskId)}),
+		...(held ? [invalidateTaskMembership(client)] : []),
+	])
 }
 
 export function serverCacheEventMutationOptions() {
