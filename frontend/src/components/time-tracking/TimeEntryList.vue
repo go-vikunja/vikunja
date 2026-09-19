@@ -155,7 +155,7 @@ const {store: timeFormat} = useTimeFormat()
 // Only the author can update/delete (enforced server-side); shared lists include
 // others' entries, so hide the controls on rows the current user doesn't own.
 const authStore = useAuthStore()
-const currentUserId = computed(() => authStore.info?.id)
+const currentUserId = computed(() => authStore.authUser ? authStore.info?.id : undefined)
 
 const taskIds = computed(() => [...new Set(props.entries.map(entry => entry.task_id).filter(id => id > 0))])
 
