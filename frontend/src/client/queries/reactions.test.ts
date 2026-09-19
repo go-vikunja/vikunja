@@ -18,7 +18,7 @@ it('adds only the current user and preserves other reactions', async () => {
 	await client.getMutationCache().build(client, setReactionMutationOptions()).execute({
 		kind: 'tasks', id: 1, value: '👍', remove: false, user: {id: 1},
 	})
-	expect(sdk.reactionsCreate).toHaveBeenCalledWith({path: {kind: 'tasks', id: 1}, body: {value: '👍'}})
+	expect(sdk.reactionsCreate).toHaveBeenCalledWith({path: {entitykind: 'tasks', entityid: 1}, body: {value: '👍'}})
 	expect(client.getQueryData(taskKeys.detail(1))).toMatchObject({reactions: {'👍': [{id: 2}, {id: 1}], '🎉': [{id: 3}]}})
 })
 
