@@ -4,7 +4,6 @@ import {
 	reactionsDelete,
 } from '@/client/generated'
 import type {
-	ReactionsCreateData,
 	Task,
 	User,
 } from '@/client/generated'
@@ -20,9 +19,8 @@ import {
 	type TaskResponse,
 } from './tasks'
 
-export type ReactionKind = ReactionsCreateData['path']['entitykind']
 export type ReactionUsers = NonNullable<Task['reactions']>
-export type ReactionTarget = {
+type ReactionTarget = {
 	kind: 'tasks',
 	id: number,
 } | {
