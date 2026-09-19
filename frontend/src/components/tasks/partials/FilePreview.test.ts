@@ -67,7 +67,7 @@ describe('FilePreview.vue', () => {
 		expect(getBlobUrl).toHaveBeenCalledTimes(1)
 	})
 
-	it('requests the md preview and never revokes the cache-owned url', async () => {
+	it('requests the md preview and revokes the url it owns when it unmounts', async () => {
 		getBlobUrl.mockResolvedValue({data: Object.assign(new Blob(['bytes']), {testUrl: 'blob:md'})})
 
 		const wrapper = mountPreview()
@@ -80,10 +80,22 @@ describe('FilePreview.vue', () => {
 			},
 			query: {preview_size: 'md'},
 		}))
+		expect(window.URL.revokeObjectURL).not.toHaveBeenCalled()
 
 		wrapper.unmount()
 		mountedPreviews.length = 0
 
-		expect(window.URL.revokeObjectURL).not.toHaveBeenCalled()
+		expect(window.URL.revokeObjectURL).toHaveBeenCalledExactlyOnceWith('blob:md')
+	})
+
+	it('hands every preview of the same attachment its own url over one request', async () => {
+		getBlobUrl.mockResolvedValue({data: Object.assign(new Blob(['bytes']), {testUrl: 'blob:md'})})
+
+		mountPreview()
+		mountPreview()
+		await flushPromises()
+
+		expect(getBlobUrl).toHaveBeenCalledTimes(1)
+		expect(URL.createObjectURL).toHaveBeenCalledTimes(2)
 	})
 })

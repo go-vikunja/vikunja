@@ -1,7 +1,7 @@
 import {describe, it, expect, vi, afterEach} from 'vitest'
-import {nextTick} from 'vue'
+import {defineComponent, h, nextTick} from 'vue'
 import {mount, flushPromises, type VueWrapper} from '@vue/test-utils'
-import {QueryClient, VueQueryPlugin} from '@tanstack/vue-query'
+import {QueryClient, useQuery, VueQueryPlugin} from '@tanstack/vue-query'
 import Modal from '@/components/misc/Modal.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import XButton from '@/components/input/Button.vue'
@@ -10,9 +10,10 @@ import type {Task as ITask} from '@/client/generated'
 
 const sdk = vi.hoisted(() => ({
 	patchTasksRead: vi.fn(),
-	taskAttachmentsList: vi.fn(async () => ({data: {items: [attachment], total_pages: 1}})),
+	tasksRead: vi.fn(),
 	taskAttachmentsUpload: vi.fn(),
 	taskAttachmentsDownload: vi.fn(),
+	taskAttachmentsDelete: vi.fn(),
 }))
 
 const {errorMessage} = vi.hoisted(() => ({errorMessage: vi.fn()}))
@@ -26,6 +27,7 @@ vi.mock('vue-i18n', async importOriginal => ({
 
 vi.mock('@/message', () => ({error: errorMessage, success: vi.fn()}))
 
+import {normalizeTask, taskKeys, taskQuery} from '@/client/queries/tasks'
 import Attachments from './Attachments.vue'
 
 const attachment = {
@@ -41,12 +43,27 @@ const task = {id: 1, attachments: [attachment]} as unknown as ITask
 const mounted: VueWrapper[] = []
 const renderErrors: unknown[] = []
 
+// Mirrors TaskDetailView: the task detail query owns the attachment list, the component only renders it.
+const TaskHost = defineComponent({
+	setup() {
+		const query = useQuery(taskQuery(1))
+		return () => query.data.value === undefined
+			? null
+			: h(Attachments, {task: query.data.value as ITask})
+	},
+})
+
 function mountAttachments() {
-	const wrapper = mount(Attachments, {
+	const queryClient = new QueryClient({defaultOptions: {queries: {
+		retry: false,
+		staleTime: Infinity,
+	}}})
+	queryClient.setQueryData(taskKeys.detail(1), normalizeTask(task))
+
+	const wrapper = mount(TaskHost, {
 		attachTo: document.body,
-		props: {task},
 		global: {
-			plugins: [[VueQueryPlugin, {queryClient: new QueryClient({defaultOptions: {queries: {retry: false}}})}]],
+			plugins: [[VueQueryPlugin, {queryClient}]],
 			components: {XButton, BaseButton, Modal},
 			stubs: {
 				Icon: true,
@@ -71,8 +88,10 @@ afterEach(() => {
 	mounted.splice(0).forEach(wrapper => wrapper.unmount())
 	renderErrors.length = 0
 	document.body.innerHTML = ''
+	sdk.tasksRead.mockReset()
 	sdk.taskAttachmentsUpload.mockReset()
 	sdk.taskAttachmentsDownload.mockReset()
+	sdk.taskAttachmentsDelete.mockReset()
 	errorMessage.mockClear()
 })
 
@@ -253,6 +272,48 @@ describe('Attachments upload', () => {
 		await flushPromises()
 
 		expect(wrapper.find('progress').exists()).toBe(false)
+	})
+
+	it('renders the uploaded file without refetching the task', async () => {
+		sdk.taskAttachmentsUpload.mockResolvedValue({data: {success: [{
+			id: 2,
+			task_id: 1,
+			file: {
+				name: 'cover-image.png',
+				size: 42,
+				mime: 'image/png',
+			},
+		}]}})
+
+		const wrapper = mountAttachments()
+		await flushPromises()
+
+		expect(wrapper.findAll('.attachment')).toHaveLength(1)
+
+		await pickFiles(wrapper, [new File(['x'], 'cover-image.png', {type: 'image/png'})])
+
+		expect(wrapper.findAll('.attachment')).toHaveLength(2)
+		expect(wrapper.text()).toContain('cover-image.png')
+		expect(sdk.tasksRead).not.toHaveBeenCalled()
+	})
+
+	it('drops the deleted row without refetching the task', async () => {
+		sdk.taskAttachmentsDelete.mockResolvedValue({data: {message: 'deleted'}})
+
+		const wrapper = mountAttachments()
+		await flushPromises()
+
+		await wrapper.find('.attachment-actions [aria-label="task.attachment.deleteTooltip"]').trigger('click')
+		await nextTick()
+		wrapper.findComponent(Modal).vm.$emit('submit')
+		await flushPromises()
+
+		expect(sdk.taskAttachmentsDelete).toHaveBeenCalledWith({path: {
+			task: 1,
+			attachment: 1,
+		}})
+		expect(wrapper.findAll('.attachment')).toHaveLength(0)
+		expect(sdk.tasksRead).not.toHaveBeenCalled()
 	})
 
 	it('ignores a drop while another batch is still uploading', async () => {

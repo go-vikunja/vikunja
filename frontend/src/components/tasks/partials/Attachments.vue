@@ -235,15 +235,14 @@ import ProgressBar from '@/components/misc/ProgressBar.vue'
 import Loading from '@/components/misc/Loading.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
-import {useQuery} from '@tanstack/vue-query'
-import {attachmentsQuery, useUploadAttachmentsMutation, useDeleteAttachmentMutation} from '@/client/queries/attachments'
+import {useUploadAttachmentsMutation, useDeleteAttachmentMutation} from '@/client/queries/attachments'
 import {canPreviewAudio, canPreviewImage, previewKind, type PreviewKind} from '@/helpers/attachmentPreview'
 import {getDisplayName} from '@/models/user'
 import type {TaskAttachment as IAttachment} from '@/client/generated'
 import type {Task as ITask} from '@/client/generated'
 
 import {formatDateLong} from '@/helpers/time/formatDate'
-import {attachmentBlobUrl, downloadAttachment, generateAttachmentUrl} from '@/helpers/attachments'
+import {downloadAttachment, fetchAttachmentUrl, generateAttachmentUrl, releaseAttachmentUrl} from '@/helpers/attachments'
 import {downloadBlob} from '@/helpers/downloadBlob'
 import {getHumanSize} from '@/helpers/getHumanSize'
 import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
@@ -288,8 +287,7 @@ function eventTargetsEditor(event: Event | null | undefined): boolean {
 const updateTask = useUpdateTaskMutation()
 const {t} = useI18n({useScope: 'global'})
 
-const attachmentQuery = useQuery(computed(() => attachmentsQuery(props.task.id ?? 0)))
-const attachments = computed(() => attachmentQuery.data.value ?? [])
+const attachments = computed(() => props.task.attachments ?? [])
 const uploadMutation = useUploadAttachmentsMutation()
 const deleteMutation = useDeleteAttachmentMutation()
 const uploadBatch = ref<{
@@ -506,9 +504,7 @@ const previewFailed = ref(false)
 let previewRequestToken = 0
 
 function replacePreview(next: Preview | null) {
-	if (preview.value !== null) {
-		URL.revokeObjectURL(preview.value.blobUrl)
-	}
+	releaseAttachmentUrl(preview.value?.blobUrl)
 	preview.value = next
 }
 
@@ -584,10 +580,10 @@ async function viewOrDownload(attachment: IAttachment) {
 	previewLoading.value = kind === 'video'
 
 	try {
-		const blobUrl = await attachmentBlobUrl({id: attachment.id!, task_id: attachment.task_id!})
-		// stale response: revoke without assigning, the img may still be decoding the current url
+		const blobUrl = await fetchAttachmentUrl({id: attachment.id!, task_id: attachment.task_id!})
+		// stale response: release without assigning, the img may still be decoding the current url
 		if (requestToken !== previewRequestToken) {
-			URL.revokeObjectURL(blobUrl)
+			releaseAttachmentUrl(blobUrl)
 			return
 		}
 		previewLoading.value = false

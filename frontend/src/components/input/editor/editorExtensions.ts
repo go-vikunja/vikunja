@@ -34,7 +34,7 @@ import {common, createLowlight} from 'lowlight'
 import type {UploadCallback} from './types'
 import type {Task as ITask} from '@/client/generated'
 import type {TaskAttachment as IAttachment} from '@/client/generated'
-import {fetchAttachmentBlobUrl} from '@/helpers/attachments'
+import {fetchAttachmentUrl, releaseAttachmentUrl} from '@/helpers/attachments'
 
 type ImageNodeKey = `${ITask['id']}-${IAttachment['id']}`
 
@@ -99,7 +99,30 @@ export function createEditorExtensions(deps: EditorExtensionDeps): Extensions {
 		uploadAndInsertFiles,
 	} = deps
 
+	// One url per image node, reused across re-renders and released with the editor that handed it out.
+	const imageUrls = new Map<ImageNodeKey, string>()
+
+	async function resolveImageUrl(nodeKey: ImageNodeKey, taskId: number, attachmentId: number): Promise<string> {
+		const cached = imageUrls.get(nodeKey)
+		if (cached !== undefined) {
+			return cached
+		}
+
+		const url = await fetchAttachmentUrl({task_id: taskId, id: attachmentId})
+		const won = imageUrls.get(nodeKey)
+		if (won !== undefined) {
+			releaseAttachmentUrl(url)
+			return won
+		}
+		imageUrls.set(nodeKey, url)
+		return url
+	}
+
 	const CustomImage = Image.extend({
+		onDestroy() {
+			imageUrls.forEach(releaseAttachmentUrl)
+			imageUrls.clear()
+		},
 		addAttributes() {
 			return {
 				src: {
@@ -143,7 +166,7 @@ export function createEditorExtensions(deps: EditorExtensionDeps): Extensions {
 					if (!img || !(img instanceof HTMLImageElement)) return
 
 					try {
-						img.src = await fetchAttachmentBlobUrl({task_id: taskId, id: attachmentId})
+						img.src = await resolveImageUrl(nodeKey, taskId, attachmentId)
 					} catch {
 						// leave the placeholder src in place
 					}
