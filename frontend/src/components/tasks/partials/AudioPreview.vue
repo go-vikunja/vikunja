@@ -33,7 +33,7 @@ let playing: HTMLAudioElement | null = null
 import {onBeforeUnmount, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 import AttachmentService from '@/services/attachment'
-import type {IAttachment} from '@/modelTypes/IAttachment'
+import type {TaskAttachment as IAttachment} from '@/client/generated'
 import {error} from '@/message'
 
 const props = defineProps<{

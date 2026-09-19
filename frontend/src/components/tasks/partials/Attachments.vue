@@ -63,7 +63,7 @@
 					</button>
 					<p class="attachment-info-meta">
 						<User
-							:user="a.createdBy"
+							:user="a.created_by"
 							:avatar-size="20"
 							:show-username="false"
 							:is-inline="true"
@@ -238,7 +238,7 @@ import AttachmentModel from '@/models/attachment'
 import AttachmentService from '@/services/attachment'
 import {canPreviewAudio, canPreviewImage, previewKind, type PreviewKind} from '@/models/attachment'
 import {getDisplayName} from '@/models/user'
-import type {IAttachment} from '@/modelTypes/IAttachment'
+import type {TaskAttachment as IAttachment} from '@/client/generated'
 import type {Task as ITask} from '@/client/generated'
 
 import {formatDateLong} from '@/helpers/time/formatDate'
@@ -415,14 +415,14 @@ watch(() => props.editEnabled, enabled => {
 })
 
 function attachmentMetaTooltip(attachment: IAttachment): string {
-	const createdBy = t('task.attachment.createdBy', [
+	const created_by = t('task.attachment.createdBy', [
 		formatDateLong(attachment.created),
-		getDisplayName(attachment.createdBy),
+		getDisplayName(attachment.created_by),
 	])
 
 	return attachment.file.mime
-		? `${attachment.file.mime} · ${createdBy}`
-		: createdBy
+		? `${attachment.file.mime} · ${created_by}`
+		: created_by
 }
 
 function downloadAttachment(attachment: IAttachment) {

@@ -5,7 +5,7 @@ import {QueryClient, VueQueryPlugin} from '@tanstack/vue-query'
 import Modal from '@/components/misc/Modal.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import XButton from '@/components/input/Button.vue'
-import type {IAttachment} from '@/modelTypes/IAttachment'
+import type {TaskAttachment as IAttachment} from '@/client/generated'
 import type {Task as ITask} from '@/client/generated'
 
 const sdk = vi.hoisted(() => ({
@@ -33,10 +33,10 @@ import Attachments from './Attachments.vue'
 
 const attachment = {
 	id: 1,
-	taskId: 1,
+	task_id: 1,
 	file: {name: 'invoice.pdf', size: 1234, mime: 'application/pdf'},
-	created: new Date(),
-	createdBy: {id: 1, username: 'demo'},
+	created: new Date().toISOString(),
+	created_by: {id: 1, username: 'demo'},
 } as unknown as IAttachment
 
 const task = {id: 1, attachments: [attachment]} as unknown as ITask
