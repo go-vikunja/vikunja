@@ -14,6 +14,7 @@ import {useColorScheme} from '@/composables/useColorScheme'
 const props = withDefaults(defineProps<{
 	entityKind: ReactionKind,
 	entityId: number,
+	taskId?: number,
 	disabled?: boolean,
 }>(), {
 	disabled: false,
@@ -30,6 +31,7 @@ async function setReaction(value: string, remove: boolean) {
 	if (props.disabled || reactionMutation.isPending.value || !authStore.info) return
 	const input = {
 		kind: props.entityKind,
+		taskId: props.taskId,
 		id: props.entityId,
 		value,
 		remove,

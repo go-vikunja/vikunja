@@ -26,7 +26,7 @@
 		</h2>
 		<div class="comments">
 			<span
-				v-if="taskCommentService.loading && saving === null && !creating"
+				v-if="loading && saving === null && !creating"
 				class="is-flex is-align-items-center mbs-4 mbe-4 mis-2"
 			>
 				<span class="loader is-inline-block mie-2" />
@@ -40,22 +40,22 @@
 			>
 				<figure class="media-left is-hidden-mobile">
 					<UserAvatar
-						:user="c.author"
+						:user="c.author ?? {}"
 						:size="48"
 						class="image is-avatar"
 					/>
 					<figcaption class="is-sr-only">
-						{{ $t('misc.avatarOfUser', {user: getDisplayName(c.author)}) }}
+						{{ $t('misc.avatarOfUser', {user: getDisplayName(c.author ?? {})}) }}
 					</figcaption>
 				</figure>
 				<div class="media-content">
 					<div class="comment-info">
 						<UserAvatar
-							:user="c.author"
+							:user="c.author ?? {}"
 							:size="20"
 							class="image is-avatar d-print-none"
 						/>
-						<strong>{{ getDisplayName(c.author) }}</strong>
+						<strong>{{ getDisplayName(c.author ?? {}) }}</strong>
 						<span
 							v-tooltip="formatDateLong(c.created)"
 							class="has-text-grey"
@@ -63,7 +63,7 @@
 							{{ formatDisplayDate(c.created) }}
 						</span>
 						<span
-							v-if="+new Date(c.created) !== +new Date(c.updated)"
+							v-if="+new Date(c.created ?? '') !== +new Date(c.updated ?? '')"
 							v-tooltip="formatDateLong(c.updated)"
 						>
 							· {{ $t('task.comment.edited', {date: formatDisplayDate(c.updated)}) }}
@@ -81,7 +81,7 @@
 						<CustomTransition name="fade">
 							<span
 								v-if="
-									taskCommentService.loading &&
+									loading &&
 										saving === c.id
 								"
 								class="is-inline-flex"
@@ -91,7 +91,7 @@
 							</span>
 							<span
 								v-else-if="
-									!taskCommentService.loading &&
+									!loading &&
 										saved === c.id
 								"
 								class="has-text-success"
@@ -101,8 +101,8 @@
 						</CustomTransition>
 					</div>
 					<Editor
-						v-model="c.comment"
-						:is-edit-enabled="canWrite && c.author.id === currentUserId"
+						:model-value="commentDrafts[c.id] ?? c.comment"
+						:is-edit-enabled="canWrite && c.author?.id === currentUserId"
 						:upload-callback="attachmentUpload"
 						:upload-enabled="true"
 						:bottom-actions="actions[c.id]"
@@ -111,30 +111,26 @@
 						:enable-mentions="true"
 						:project-id="projectId"
 						initial-mode="preview"
-						@update:modelValue="
-							() => {
-								toggleEdit(c)
-								editCommentWithDelay()
-							}
-						"
+						@update:modelValue="value => changeComment(c, value)"
 						@save="() => {
 							toggleEdit(c)
 							editComment()
 						}"
 					/>
 					<Reactions 
-						v-model="c.reactions"
+						:model-value="c.reactions"
 						class="mbs-2 d-print-none"
 						entity-kind="comments"
 						:entity-id="c.id"
+						:task-id="taskId"
 						:disabled="!canWrite"
 					/>
 				</div>
 			</div>
 
 			<PaginationEmit
-				v-if="taskCommentService.totalPages > 1"
-				:total-pages="taskCommentService.totalPages"
+				v-if="totalPages > 1"
+				:total-pages="totalPages"
 				:current-page="currentPage"
 				@pageChanged="changePage"
 			/>
@@ -158,7 +154,7 @@
 					<div class="form">
 						<CustomTransition name="fade">
 							<span
-								v-if="taskCommentService.loading && creating"
+								v-if="loading && creating"
 								class="is-inline-flex"
 							>
 								<span class="loader is-inline-block mie-2" />
@@ -172,7 +168,7 @@
 								v-model="newCommentText"
 								:class="{
 									'is-loading':
-										taskCommentService.loading &&
+										loading &&
 										!isCommentEdit,
 								}"
 								:upload-callback="attachmentUpload"
@@ -185,8 +181,8 @@
 						</div>
 						<div class="field">
 							<XButton
-								:loading="taskCommentService.loading && !isCommentEdit"
-								:disabled="newCommentText === ''"
+								:loading="loading && !isCommentEdit"
+								:aria-disabled="newCommentText === '' || creating"
 								@click="addComment()"
 							>
 								{{ $t('task.comment.comment') }}
@@ -218,7 +214,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, reactive, computed, nextTick, provide, shallowReactive, watch} from 'vue'
+import {ref, computed, nextTick, provide, watch, onBeforeUnmount} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import BaseButton from '@/components/base/BaseButton.vue'
@@ -227,14 +223,12 @@ import Editor from '@/components/input/AsyncEditor'
 import PaginationEmit from '@/components/misc/PaginationEmit.vue'
 import UserAvatar from '@/components/misc/UserAvatar.vue'
 
-import TaskCommentService from '@/services/taskComment'
-import TaskCommentModel from '@/models/taskComment'
+import {useQuery} from '@tanstack/vue-query'
+import {commentsQuery, useCreateCommentMutation, useUpdateCommentMutation, useDeleteCommentMutation, type CommentResponse} from '@/client/queries/comments'
 
-import type {TaskComment as ITaskComment} from '@/client/generated'
 import type {Task as ITask} from '@/client/generated'
 
 import {uploadFile, uploadFilesForEditor} from '@/helpers/attachments'
-import {success} from '@/message'
 import {formatDateLong, formatDisplayDate} from '@/helpers/time/formatDate'
 import {clearEditorDraft} from '@/helpers/editorDraftStorage'
 import {getDisplayName} from '@/models/user'
@@ -248,8 +242,7 @@ const props = withDefaults(defineProps<{
 	taskId: number,
 	projectId: number,
 	canWrite?: boolean
-	initialComments?: ITaskComment[]
-}>(), {
+	}>(), {
 	canWrite: true,
 })
 
@@ -262,20 +255,31 @@ const authStore = useAuthStore()
 const localSortOrder = ref<'asc' | 'desc' | null>(null)
 const commentSortOrder = computed(() => localSortOrder.value ?? authStore.settings.frontendSettings.commentSortOrder ?? 'asc')
 
-const comments = ref<ITaskComment[]>([])
+const currentPage = ref(1)
+const commentQuery = useQuery(computed(() => ({
+	...commentsQuery(props.taskId, commentSortOrder.value, currentPage.value),
+	enabled: configStore.taskCommentsEnabled && props.taskId > 0,
+})))
+const comments = computed(() => commentQuery.data.value?.items ?? [])
+const totalPages = computed(() => commentQuery.data.value?.total_pages ?? 0)
+const createMutation = useCreateCommentMutation()
+const updateMutation = useUpdateCommentMutation()
+const deleteMutation = useDeleteCommentMutation()
+const loading = computed(() => commentQuery.isFetching.value || createMutation.isPending.value || updateMutation.isPending.value)
+const commentDrafts = ref<Record<number, string>>({})
 
 const showDeleteModal = ref(false)
-const commentToDelete = reactive(new TaskCommentModel())
+const commentToDelete = ref<number | null>(null)
 
 const isCommentEdit = ref(false)
-const commentEdit = reactive(new TaskCommentModel())
+const commentEdit = ref<CommentResponse | null>(null)
 
 const newCommentText = ref('')
 
 const saved = ref<ITask['id'] | null>(null)
 const saving = ref<ITask['id'] | null>(null)
 
-const currentUserId = computed(() => authStore.info.id)
+const currentUserId = computed(() => authStore.info?.id)
 const enabled = computed(() => configStore.taskCommentsEnabled)
 const actions = computed(() => {
 	if (!props.canWrite) {
@@ -286,7 +290,7 @@ const actions = computed(() => {
 			action: () => startReplyTo(comment),
 			title: t('task.comment.reply'),
 		}]
-		if (comment.author.id === currentUserId.value) {
+		if (comment.author?.id === currentUserId.value) {
 			list.push({
 				action: () => toggleDelete(comment.id),
 				title: t('misc.delete'),
@@ -298,8 +302,6 @@ const actions = computed(() => {
 
 const frontendUrl = computed(() => configStore.frontendUrl)
 const commentStorageKey = computed(() => `task-comment-${props.taskId}`)
-
-const currentPage = ref(1)
 
 const commentsRef = ref<HTMLElement | null>(null)
 const newCommentEditor = ref<{setReplyContent: (html: string) => Promise<void>} | null>(null)
@@ -324,7 +326,7 @@ function stripMentionsForQuote(html: string): string {
 	return doc.body.firstElementChild?.innerHTML ?? ''
 }
 
-async function startReplyTo(parent: ITaskComment) {
+async function startReplyTo(parent: CommentResponse) {
 	const body = stripMentionsForQuote(parent.comment ?? '')
 	const draft = `<blockquote data-comment-id="${parent.id}">${body}</blockquote><p></p>`
 	if (!editorActive.value) {
@@ -360,35 +362,9 @@ function attachmentUpload(files: File[] | FileList): Promise<string[]> {
 	)
 }
 
-const taskCommentService = shallowReactive(new TaskCommentService())
-
-async function loadComments(taskId: number) {
-	if (!enabled.value) {
-		return
-	}
-
-	if (currentPage.value === 1) {
-		taskCommentService.totalPages = 0
-		taskCommentService.resultCount = 0
-	}
-
-	commentEdit.taskId = taskId
-	commentToDelete.taskId = taskId
-
-	if (commentSortOrder.value === 'asc' && typeof props.initialComments !== 'undefined' && currentPage.value === 1) {
-		if (props.initialComments.length < configStore.maxItemsPerPage) {
-			comments.value = props.initialComments
-			return
-		}
-	}
-
-	comments.value = await taskCommentService.getAll({taskId}, {order_by: commentSortOrder.value}, currentPage.value)
-}
-
 async function changePage(page: number) {
 	commentsRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' })
 	currentPage.value = page
-	await loadComments(props.taskId)
 }
 
 async function toggleSortOrder() {
@@ -408,121 +384,104 @@ async function toggleSortOrder() {
 	} else {
 		localSortOrder.value = newOrder
 	}
-	if (taskCommentService.totalPages > 1) {
-		currentPage.value = 1
-		await loadComments(props.taskId)
-	} else {
-		comments.value.reverse()
-	}
+	currentPage.value = 1
 }
 
-watch(
-	() => [props.taskId, props.initialComments],
-	() => {
-		currentPage.value = 1 // Reset to first page when task changes
-		loadComments(props.taskId)
-	},
-	{immediate: true},
-)
+watch(() => props.taskId, () => {
+	currentPage.value = 1
+	commentDrafts.value = {}
+	commentEdit.value = null
+	commentToDelete.value = null
+	showDeleteModal.value = false
+	if (changeTimeout.value !== null) clearTimeout(changeTimeout.value)
+})
+
 
 const editorActive = ref(true)
 const creating = ref(false)
 
 async function addComment() {
-	if (newCommentText.value === '') {
-		return
-	}
-
+	if (!newCommentText.value || creating.value) return
+	const taskId = props.taskId
+	const text = newCommentText.value
 	creating.value = true
-
 	try {
-		const newComment = new TaskCommentModel()
-		newComment.taskId = props.taskId
-		newComment.comment = newCommentText.value
-		const comment = await taskCommentService.create(newComment)
-
-		if (commentSortOrder.value === 'desc' && currentPage.value > 1) {
-			currentPage.value = 1
-			await loadComments(props.taskId)
-		} else if (commentSortOrder.value === 'desc') {
-			comments.value.unshift(comment)
-		} else {
-			comments.value.push(comment)
+		await createMutation.mutateAsync({taskId, comment: text})
+		if (props.taskId !== taskId) return
+		currentPage.value = commentSortOrder.value === 'desc' ? 1 : Math.max(1, totalPages.value)
+		if (newCommentText.value === text) {
+			newCommentText.value = ''
+			clearEditorDraft(commentStorageKey.value)
 		}
-		newCommentText.value = ''
-
-		// Ensure draft is cleared from localStorage
-		clearEditorDraft(commentStorageKey.value)
-
-		if (commentSortOrder.value === 'desc') {
-			commentsRef.value?.scrollIntoView({behavior: 'smooth', block: 'start', inline: 'nearest'})
-		}
-
-		success({message: t('task.comment.addedSuccess')})
+		if (commentSortOrder.value === 'desc') commentsRef.value?.scrollIntoView({behavior: 'smooth', block: 'start'})
+	} catch {
+		return
 	} finally {
 		creating.value = false
 	}
 }
 
-function toggleEdit(comment: ITaskComment) {
-	isCommentEdit.value = !isCommentEdit.value
-	Object.assign(commentEdit, comment)
+function toggleEdit(comment: CommentResponse) {
+	isCommentEdit.value = true
+	commentEdit.value = {...comment, comment: commentDrafts.value[comment.id] ?? comment.comment}
 }
 
-function toggleDelete(commentId: ITaskComment['id']) {
-	showDeleteModal.value = !showDeleteModal.value
-	commentToDelete.id = commentId
+function changeComment(comment: CommentResponse, text: string) {
+	commentDrafts.value[comment.id] = text
+	toggleEdit(comment)
+	editCommentWithDelay()
+}
+
+function toggleDelete(id: number) {
+	commentToDelete.value = id
+	showDeleteModal.value = true
 }
 
 const changeTimeout = ref<ReturnType<typeof setTimeout> | null>(null)
+let savedTimeout: ReturnType<typeof setTimeout> | undefined
+onBeforeUnmount(() => {
+	if (changeTimeout.value !== null) clearTimeout(changeTimeout.value)
+	clearTimeout(savedTimeout)
+})
 
-async function editCommentWithDelay() {
-	if (changeTimeout.value !== null) {
-		clearTimeout(changeTimeout.value)
-	}
-
-	changeTimeout.value = setTimeout(async () => {
-		await editComment()
-	}, 5000)
+function editCommentWithDelay() {
+	if (changeTimeout.value !== null) clearTimeout(changeTimeout.value)
+	changeTimeout.value = setTimeout(editComment, 5000)
 }
 
 async function editComment() {
-	if (commentEdit.comment === '') {
-		return
-	}
-
-	if (changeTimeout.value !== null) {
-		clearTimeout(changeTimeout.value)
-	}
-
-	saving.value = commentEdit.id
-
-	commentEdit.taskId = props.taskId
+	const draft = commentEdit.value
+	if (!draft?.comment) return
+	if (changeTimeout.value !== null) clearTimeout(changeTimeout.value)
+	const taskId = props.taskId
+	saving.value = draft.id
 	try {
-		const comment = await taskCommentService.update(commentEdit)
-		for (let c = 0; c < comments.value.length; c++) {
-			if (comments.value[c].id === commentEdit.id) {
-				comments.value[c] = comment
-			}
-		}
-		saved.value = commentEdit.id
-		setTimeout(() => {
-			saved.value = null
-		}, 2000)
+		await updateMutation.mutateAsync({taskId, id: draft.id, comment: draft.comment})
+		if (props.taskId !== taskId) return
+		if (commentDrafts.value[draft.id] === draft.comment) delete commentDrafts.value[draft.id]
+		saved.value = draft.id
+		clearTimeout(savedTimeout)
+		savedTimeout = setTimeout(() => { saved.value = null }, 2000)
+	} catch {
+		return
 	} finally {
 		isCommentEdit.value = false
 		saving.value = null
 	}
 }
 
-async function deleteComment(commentToDelete: ITaskComment) {
+async function deleteComment(id: number | null) {
+	if (id === null) return
+	const taskId = props.taskId
 	try {
-		await taskCommentService.delete(commentToDelete)
-		const index = comments.value.findIndex(({id}) => id === commentToDelete.id)
-		comments.value.splice(index, 1)
-		success({message: t('task.comment.deleteSuccess')})
-	} finally {
+		await deleteMutation.mutateAsync({taskId, id})
+	} catch {
+		return
+	}
+	if (props.taskId === taskId && commentToDelete.value === id) {
 		showDeleteModal.value = false
+		commentToDelete.value = null
+		currentPage.value = Math.min(currentPage.value, Math.max(1, totalPages.value))
 	}
 }
 

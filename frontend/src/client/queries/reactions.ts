@@ -9,7 +9,11 @@ import type {
 	User,
 } from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
-import {invalidateTaskMembership} from './taskCache'
+import {
+	invalidateTaskMembership,
+	mapTaskEverywhere,
+} from './taskCache'
+import {commentKeys, type CommentPage} from './comments'
 import {
 	taskKeys,
 	type TaskExpansion,
@@ -20,6 +24,7 @@ export type ReactionKind = ReactionsCreateData['path']['entitykind']
 export type ReactionUsers = NonNullable<Task['reactions']>
 type ReactionInput = {
 	kind: ReactionKind,
+	taskId?: number,
 	id: number,
 	value: string,
 	remove: boolean,
@@ -57,24 +62,39 @@ export function setReactionMutationOptions() {
 			return (await reactionsCreate(request)).data
 		},
 		onSuccess: (data, input, client) => {
-			if (input.kind !== 'tasks') return
 			const reacted = {
 				...input,
 				user: data?.user ?? input.user,
 			}
-			// Reactions are expand-only, so patching a copy that never asked for them fakes a complete map.
-			for (const [key, cached] of client.getQueriesData<TaskResponse>({queryKey: taskKeys.details})) {
-				const expand = key[DETAIL_KEY_EXPANSION] as TaskExpansion | undefined
-				if (cached?.id !== input.id || !expand?.includes('reactions')) continue
-				client.setQueryData<TaskResponse>(key, {
-					...cached,
-					reactions: changeReaction(cached.reactions, reacted),
-				})
+			if (input.kind === 'comments' && input.taskId) {
+				client.setQueriesData<CommentPage>({queryKey: commentKeys.task(input.taskId)}, current => current && ({
+					...current,
+					items: current.items.map(comment => comment.id === input.id
+						? {...comment, reactions: changeReaction(comment.reactions, reacted)} : comment),
+				}))
+				mapTaskEverywhere(client, input.taskId, task => ({
+					...task,
+					comments: task.comments?.map(comment => comment.id === input.id
+						? {...comment, reactions: changeReaction(comment.reactions, reacted)} : comment),
+				}))
+			}
+			if (input.kind === 'tasks') {
+				// Reactions are expand-only, so patching a copy that never asked for them fakes a complete map.
+				for (const [key, cached] of client.getQueriesData<TaskResponse>({queryKey: taskKeys.details})) {
+					const expand = key[DETAIL_KEY_EXPANSION] as TaskExpansion | undefined
+					if (cached?.id !== input.id || !expand?.includes('reactions')) continue
+					client.setQueryData<TaskResponse>(key, {
+						...cached,
+						reactions: changeReaction(cached.reactions, reacted),
+					})
+				}
 			}
 		},
-		onSettled: (input, client) => input.kind === 'tasks'
-			? invalidateTaskMembership(client, input.id)
-			: Promise.resolve(),
+		onSettled: (input, client) => Promise.all([
+			invalidateTaskMembership(client, input.kind === 'tasks' ? input.id : input.taskId),
+			...(input.kind === 'comments' && input.taskId
+				? [client.invalidateQueries({queryKey: commentKeys.task(input.taskId)})] : []),
+		]),
 	})
 }
 
