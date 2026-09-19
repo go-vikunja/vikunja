@@ -224,7 +224,13 @@ import PaginationEmit from '@/components/misc/PaginationEmit.vue'
 import UserAvatar from '@/components/misc/UserAvatar.vue'
 
 import {useQuery} from '@tanstack/vue-query'
-import {commentsQuery, useCreateCommentMutation, useUpdateCommentMutation, useDeleteCommentMutation, type CommentResponse} from '@/client/queries/comments'
+import {
+	commentsQuery,
+	useCreateCommentMutation,
+	useUpdateCommentMutation,
+	useDeleteCommentMutation,
+	type CommentResponse,
+} from '@/client/queries/comments'
 
 import type {Task as ITask} from '@/client/generated'
 
@@ -241,8 +247,8 @@ import {commentReplyContextKey, scrollAndHighlightComment} from '@/components/ta
 const props = withDefaults(defineProps<{
 	taskId: number,
 	projectId: number,
-	canWrite?: boolean
-	}>(), {
+	canWrite?: boolean,
+}>(), {
 	canWrite: true,
 })
 
@@ -396,7 +402,6 @@ watch(() => props.taskId, () => {
 	showDeleteModal.value = false
 	if (changeTimeout.value !== null) clearTimeout(changeTimeout.value)
 })
-
 
 const editorActive = ref(true)
 const creating = ref(false)

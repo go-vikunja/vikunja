@@ -190,6 +190,14 @@ export function deleteCommentMutationOptions() {
 	})
 }
 
-export function useCreateCommentMutation() { return useMutation(createCommentMutationOptions()) }
-export function useUpdateCommentMutation() { return useMutation(updateCommentMutationOptions()) }
-export function useDeleteCommentMutation() { return useMutation(deleteCommentMutationOptions()) }
+export function useCreateCommentMutation() {
+	return useMutation(createCommentMutationOptions())
+}
+
+export function useUpdateCommentMutation() {
+	return useMutation(updateCommentMutationOptions())
+}
+
+export function useDeleteCommentMutation() {
+	return useMutation(deleteCommentMutationOptions())
+}
