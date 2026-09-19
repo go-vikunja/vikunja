@@ -92,11 +92,9 @@ export function setReactionMutationOptions() {
 				}
 			}
 		},
-		onSettled: (input, client) => Promise.all([
-			invalidateTaskMembership(client, input.kind === 'tasks' ? input.id : input.taskId),
-			...(input.kind === 'comments'
-				? [client.invalidateQueries({queryKey: commentKeys.task(input.taskId)})] : []),
-		]),
+		onSettled: (input, client) => input.kind === 'comments'
+			? client.invalidateQueries({queryKey: commentKeys.task(input.taskId)})
+			: invalidateTaskMembership(client, input.id),
 	})
 }
 
