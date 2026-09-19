@@ -28,12 +28,16 @@ beforeEach(() => {
 	client = new QueryClient()
 })
 
+function expandedDetail(id: number) {
+	return taskKeys.detail(id, ['reactions'])
+}
+
 function cachedReactions(id: number) {
-	return client.getQueryData<TaskResponse>(taskKeys.detail(id))?.reactions ?? {}
+	return client.getQueryData<TaskResponse>(expandedDetail(id))?.reactions ?? {}
 }
 
 it('adds only the current user and preserves other reactions', async () => {
-	client.setQueryData(taskKeys.detail(1), normalizeTask({
+	client.setQueryData(expandedDetail(1), normalizeTask({
 		id: 1,
 		reactions: {
 			'👍': [{id: 2}],
@@ -64,7 +68,7 @@ it('adds only the current user and preserves other reactions', async () => {
 		},
 		body: {value: '👍'},
 	})
-	expect(client.getQueryData(taskKeys.detail(1))).toMatchObject({reactions: {
+	expect(client.getQueryData(expandedDetail(1))).toMatchObject({reactions: {
 		'👍': [
 			{id: 2},
 			{
@@ -77,7 +81,7 @@ it('adds only the current user and preserves other reactions', async () => {
 })
 
 it('removes only the caller and leaves unmounted details absent', async () => {
-	client.setQueryData(taskKeys.detail(1), normalizeTask({
+	client.setQueryData(expandedDetail(1), normalizeTask({
 		id: 1,
 		reactions: {'👍': [{id: 1}, {id: 2}]},
 	}))
@@ -96,7 +100,7 @@ it('removes only the caller and leaves unmounted details absent', async () => {
 		},
 		body: {value: '👍'},
 	})
-	expect(client.getQueryData(taskKeys.detail(1))).toMatchObject({reactions: {'👍': [{id: 2}]}})
+	expect(client.getQueryData(expandedDetail(1))).toMatchObject({reactions: {'👍': [{id: 2}]}})
 	const count = client.getQueryCache().getAll().length
 	await client.getMutationCache().build(client, setReactionMutationOptions()).execute({
 		kind: 'tasks',
@@ -109,7 +113,7 @@ it('removes only the caller and leaves unmounted details absent', async () => {
 })
 
 it('keeps the emoji order stable when toggling an existing reaction', async () => {
-	client.setQueryData(taskKeys.detail(1), normalizeTask({
+	client.setQueryData(expandedDetail(1), normalizeTask({
 		id: 1,
 		reactions: {
 			'🎉': [{id: 3}],
@@ -137,6 +141,30 @@ it('keeps the emoji order stable when toggling an existing reaction', async () =
 	})
 	expect(Object.keys(cachedReactions(1))).toEqual(['🎉', '👍', '❤️'])
 	expect(cachedReactions(1)['👍']).toEqual([{id: 2}, {id: 1}])
+})
+
+it('patches only the copies that expanded reactions', async () => {
+	const task = normalizeTask({
+		id: 1,
+		reactions: {'👍': [{id: 2}]},
+	})
+	client.setQueryData(expandedDetail(1), task)
+	client.setQueryData(taskKeys.detail(1), task)
+	client.setQueryData(taskKeys.allList({project: 1}), [task])
+	sdk.reactionsCreate.mockResolvedValue({data: {
+		value: '👍',
+		user: {id: 1},
+	}})
+	await client.getMutationCache().build(client, setReactionMutationOptions()).execute({
+		kind: 'tasks',
+		id: 1,
+		value: '👍',
+		remove: false,
+		user: {id: 1},
+	})
+	expect(cachedReactions(1)).toEqual({'👍': [{id: 2}, {id: 1}]})
+	expect(client.getQueryData(taskKeys.detail(1))).toBe(task)
+	expect(client.getQueryData<TaskResponse[]>(taskKeys.allList({project: 1}))?.[0]).toBe(task)
 })
 
 it('leaves task caches untouched for a comment reaction', async () => {
@@ -174,7 +202,7 @@ it('keeps the cache and toasts once when the request fails', async () => {
 		id: 1,
 		reactions: {'👍': [{id: 2}]},
 	})
-	client.setQueryData(taskKeys.detail(1), task)
+	client.setQueryData(expandedDetail(1), task)
 	sdk.reactionsCreate.mockRejectedValue(new Error('nope'))
 	await expect(client.getMutationCache().build(client, setReactionMutationOptions()).execute({
 		kind: 'tasks',
@@ -183,6 +211,6 @@ it('keeps the cache and toasts once when the request fails', async () => {
 		remove: false,
 		user: {id: 1},
 	})).rejects.toThrow('nope')
-	expect(client.getQueryData(taskKeys.detail(1))).toBe(task)
+	expect(client.getQueryData(expandedDetail(1))).toBe(task)
 	expect(error).toHaveBeenCalledTimes(1)
 })

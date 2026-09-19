@@ -9,10 +9,12 @@ import type {
 	User,
 } from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
+import {invalidateTaskMembership} from './taskCache'
 import {
-	invalidateTaskMembership,
-	mapTaskEverywhere,
-} from './taskCache'
+	taskKeys,
+	type TaskExpansion,
+	type TaskResponse,
+} from './tasks'
 
 export type ReactionKind = ReactionsCreateData['path']['entitykind']
 export type ReactionUsers = NonNullable<Task['reactions']>
@@ -23,6 +25,9 @@ type ReactionInput = {
 	remove: boolean,
 	user: Pick<User, 'id' | 'name' | 'username'>,
 }
+
+// taskKeys.detail(id, expand) puts the expansion last.
+const DETAIL_KEY_EXPANSION = 3
 
 // Chips render in key order, so a toggled emoji keeps its slot instead of moving to the end.
 export function changeReaction(current: ReactionUsers = {}, input: ReactionInput) {
@@ -52,15 +57,19 @@ export function setReactionMutationOptions() {
 			return (await reactionsCreate(request)).data
 		},
 		onSuccess: (data, input, client) => {
-			if (input.kind === 'tasks') {
-				const reacted = {
-					...input,
-					user: data?.user ?? input.user,
-				}
-				mapTaskEverywhere(client, input.id, task => ({
-					...task,
-					reactions: changeReaction(task.reactions, reacted),
-				}))
+			if (input.kind !== 'tasks') return
+			const reacted = {
+				...input,
+				user: data?.user ?? input.user,
+			}
+			// Reactions only exist on copies that expanded them; patching any other would pass a partial map off as complete.
+			for (const [key, cached] of client.getQueriesData<TaskResponse>({queryKey: taskKeys.details})) {
+				const expand = key[DETAIL_KEY_EXPANSION] as TaskExpansion | undefined
+				if (cached?.id !== input.id || !expand?.includes('reactions')) continue
+				client.setQueryData<TaskResponse>(key, {
+					...cached,
+					reactions: changeReaction(cached.reactions, reacted),
+				})
 			}
 		},
 		onSettled: (input, client) => input.kind === 'tasks'
