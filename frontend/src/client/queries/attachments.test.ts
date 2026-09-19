@@ -1,21 +1,21 @@
 import {
-beforeEach,
-describe,
-expect,
-it,
-vi,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	vi,
 } from 'vitest'
 import {QueryClient} from '@tanstack/vue-query'
 import {kanbanKeys} from './kanban'
 import {
-normalizeTask,
-taskKeys,
+	normalizeTask,
+	taskKeys,
 } from './tasks'
 import {
-attachmentKeys,
-attachmentsQuery,
-deleteAttachmentMutationOptions,
-uploadAttachmentsMutationOptions,
+	attachmentKeys,
+	attachmentsQuery,
+	deleteAttachmentMutationOptions,
+	uploadAttachmentsMutationOptions,
 } from './attachments'
 
 const sdk = vi.hoisted(() => ({
@@ -25,8 +25,8 @@ const sdk = vi.hoisted(() => ({
 }))
 vi.mock('@/client/generated', () => sdk)
 vi.mock('@/message', () => ({
-error: vi.fn(),
-success: vi.fn(),
+	error: vi.fn(),
+	success: vi.fn(),
 }))
 
 let client: QueryClient
@@ -38,51 +38,51 @@ beforeEach(() => {
 describe('attachments', () => {
 	it('lists through the generated SDK', async () => {
 		sdk.taskAttachmentsList.mockResolvedValue({data: {
-items: [{
-id: 3,
-task_id: 1,
-}],
-total_pages: 1,
-}})
+			items: [{
+				id: 3,
+				task_id: 1,
+			}],
+			total_pages: 1,
+		}})
 		expect(await client.fetchQuery(attachmentsQuery(1))).toEqual([{
-id: 3,
-task_id: 1,
-}])
+			id: 3,
+			task_id: 1,
+		}])
 		expect(sdk.taskAttachmentsList).toHaveBeenCalledWith({
 			path: {task: 1},
 			query: {
-page: 1,
-per_page: 1000,
-},
+				page: 1,
+				per_page: 1000,
+			},
 			signal: expect.any(AbortSignal),
 		})
 	})
 
 	it('keeps partial upload successes in mounted caches', async () => {
 		const attachment = {
-id: 3,
-task_id: 1,
-}
+			id: 3,
+			task_id: 1,
+		}
 		const file = new File(['hello'], 'hello.txt')
 		client.setQueryData(attachmentKeys.list(1), [])
 		client.setQueryData(taskKeys.detail(1), normalizeTask({
-id: 1,
-attachments: [],
-}))
+			id: 1,
+			attachments: [],
+		}))
 		sdk.taskAttachmentsUpload.mockResolvedValue({data: {
-success: [attachment],
-errors: [{message: 'full'}],
-}})
+			success: [attachment],
+			errors: [{message: 'full'}],
+		}})
 		const result = await client.getMutationCache().build(client, uploadAttachmentsMutationOptions())
 			.execute({
-taskId: 1,
-files: [file],
-})
+				taskId: 1,
+				files: [file],
+			})
 		expect(result.errors).toEqual([{message: 'full'}])
 		expect(sdk.taskAttachmentsUpload).toHaveBeenCalledWith({
-path: {task: 1},
-body: {files: [file]},
-})
+			path: {task: 1},
+			body: {files: [file]},
+		})
 		expect(client.getQueryData(attachmentKeys.list(1))).toEqual([attachment])
 		expect(client.getQueryData(taskKeys.detail(1))).toMatchObject({attachments: [attachment]})
 		expect(client.getQueryState(attachmentKeys.list(1))?.isInvalidated).toBe(true)
@@ -100,13 +100,13 @@ body: {files: [file]},
 		const before = client.getQueryCache().getAll().length
 		await client.getMutationCache().build(client, deleteAttachmentMutationOptions())
 			.execute({
-taskId: 1,
-id: 3,
-})
+				taskId: 1,
+				id: 3,
+			})
 		expect(client.getQueryData(taskKeys.detail(1))).toMatchObject({
-attachments: [],
-cover_image_attachment_id: 0,
-})
+			attachments: [],
+			cover_image_attachment_id: 0,
+		})
 		expect(client.getQueryCache().getAll()).toHaveLength(before)
 		expect(client.getQueryState(boardKey)?.isInvalidated).toBe(true)
 	})

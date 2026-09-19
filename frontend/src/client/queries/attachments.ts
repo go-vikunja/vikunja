@@ -61,9 +61,9 @@ export async function attachmentBlob(attachment: AttachmentIdentity, size?: Prev
 export function uploadAttachmentsMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async ({taskId, files}: {
-taskId: number,
-files: File[],
-}) =>
+			taskId: number,
+			files: File[],
+		}) =>
 			(await taskAttachmentsUpload({
 				path: {task: taskId},
 				body: {files},
@@ -90,9 +90,9 @@ files: File[],
 export function deleteAttachmentMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async ({taskId, id}: {
-taskId: number,
-id: number,
-}) =>
+			taskId: number,
+			id: number,
+		}) =>
 			(await taskAttachmentsDelete({path: {
 				task: taskId,
 				attachment: id,
