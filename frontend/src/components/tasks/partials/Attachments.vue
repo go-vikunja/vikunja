@@ -247,6 +247,7 @@ import {downloadBlob} from '@/helpers/downloadBlob'
 import {getHumanSize} from '@/helpers/getHumanSize'
 import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
 import {error, success} from '@/message'
+import {isRequestContextAbort} from '@/client/requestContext'
 import {useUpdateTaskMutation} from '@/client/queries/taskMutations'
 import {useI18n} from 'vue-i18n'
 import FilePreview from '@/components/tasks/partials/FilePreview.vue'
@@ -550,10 +551,13 @@ async function viewOrDownload(attachment: IAttachment) {
 		previewLoading.value = false
 		replacePreview({kind, blobUrl, name: attachment.file?.name ?? ''})
 	} catch (e) {
-		if (requestToken === previewRequestToken) {
-			previewLoading.value = false
+		if (requestToken !== previewRequestToken) {
+			return
 		}
-		error(e)
+		previewLoading.value = false
+		if (!isRequestContextAbort(e)) {
+			error(e)
+		}
 	}
 }
 

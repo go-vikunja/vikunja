@@ -33,6 +33,7 @@ let playing: HTMLAudioElement | null = null
 import {onBeforeUnmount, ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {attachmentBlobUrl} from '@/helpers/attachments'
+import {isRequestContextAbort} from '@/client/requestContext'
 import type {TaskAttachment as IAttachment} from '@/client/generated'
 import {error} from '@/message'
 
@@ -64,7 +65,7 @@ async function loadAudio() {
 		}
 		blobUrl.value = url
 	} catch (e) {
-		if (!unmounted && epoch === previewEpoch) error(e)
+		if (!unmounted && epoch === previewEpoch && !isRequestContextAbort(e)) error(e)
 	} finally {
 		if (epoch === previewEpoch) loading.value = false
 	}
