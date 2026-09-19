@@ -1477,6 +1477,7 @@ test.describe('Task', () => {
 				'.attachments .attachments .files .attachment .attachment-info-meta-button:has(svg[data-icon="trash-can"])',
 			).first()
 			await expect(deleteButton).toBeVisible()
+			await expect(page.locator('.attachments .attachments .files .attachment')).toHaveCount(1)
 
 			const deleted = page.waitForResponse(r =>
 				/\/tasks\/\d+\/attachments\/\d+/.test(r.url()) && r.request().method() === 'DELETE',
@@ -1489,6 +1490,8 @@ test.describe('Task', () => {
 
 			await expect(page.locator('.attachments .attachments .files .attachment')).toHaveCount(0)
 			await page.reload()
+			// toHaveCount(0) alone would also pass on a page that has not rendered the section yet
+			await expect(page.locator('.attachments .button').filter({hasText: 'Upload'})).toBeVisible()
 			await expect(page.locator('.attachments .files .attachment')).toHaveCount(0)
 			const stored = await apiContext.get(`tasks/${tasks[0].id}/attachments`, {
 				headers: {Authorization: `Bearer ${userToken}`},
