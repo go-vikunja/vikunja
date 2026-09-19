@@ -34,7 +34,6 @@ export async function attachmentBlobUrl(attachment: AttachmentIdentity, size?: P
 		return new Promise<string>(resolve => {
 			const reader = new FileReader()
 			reader.onload = () => resolve(reader.result as string)
-			// A read failure rejects with a ProgressEvent carrying nothing to act on - take the same fallback.
 			reader.onerror = () => resolve(URL.createObjectURL(blob))
 			reader.readAsDataURL(blob)
 		})

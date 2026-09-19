@@ -94,10 +94,9 @@ watch(
 
 		try {
 			const url = await fetchAttachmentBlobUrl(identity, 'md')
-			// a newer attachment may have won the race while this one was in flight
 			if (active) blobUrl.value = url
 		} catch {
-			// fall back to the generic file icon
+			// noop
 		}
 	},
 	{immediate: true},
