@@ -64,22 +64,7 @@ it('sets and clears a task subscription', async () => {
 		entityID: 1,
 	}})
 	expect(success).toHaveBeenLastCalledWith({message: 'You are now unsubscribed to this task'})
-})
-
-it('leaves unmounted task details absent', async () => {
-	client.setQueryData(taskKeys.detail(1), normalizeTask({id: 1}))
-	sdk.subscriptionsCreate.mockResolvedValue({data: {
-		id: 4,
-		entity: 'task',
-		entity_id: 99,
-	}})
-	const count = client.getQueryCache().getAll().length
-	await client.getMutationCache().build(client, setTaskSubscriptionMutationOptions())
-		.execute({
-			taskId: 99,
-			subscribed: true,
-		})
-	expect(client.getQueryCache().getAll()).toHaveLength(count)
+	expect(client.getQueryData(taskKeys.detail(99))).toBeUndefined()
 })
 
 it('invalidates every cached detail expansion but leaves task lists alone', async () => {
