@@ -90,15 +90,13 @@ const ERROR_CODE_NO_REFRESH_TOKEN = 16005
 
 interface RefreshFailure {
 	cause?: {
-		response?: {
-			status?: number
-			data?: {code?: number}
-		}
+		status?: number
+		code?: number
 	}
 }
 
-function refreshFailureResponse(e: unknown) {
-	return (e as RefreshFailure | undefined)?.cause?.response
+function refreshFailureProblem(e: unknown) {
+	return (e as RefreshFailure | undefined)?.cause
 }
 
 // A race-loser's refresh fails but the rotated cookie is already valid, so a
@@ -109,7 +107,7 @@ async function refreshTokenWithRetry(persist: boolean): Promise<void> {
 	try {
 		await refreshToken(persist)
 	} catch (e) {
-		if (refreshFailureResponse(e)?.data?.code === ERROR_CODE_NO_REFRESH_TOKEN) {
+		if (refreshFailureProblem(e)?.code === ERROR_CODE_NO_REFRESH_TOKEN) {
 			throw e
 		}
 		await refreshToken(persist)
@@ -442,7 +440,7 @@ export const useAuthStore = defineStore('auth', () => {
 						jwtWithFailedRefresh = jwt
 						// A kept stale JWT makes every later page load refresh again.
 						// Skip the removal if another tab stored a fresh token meanwhile.
-						if (refreshFailureResponse(e)?.status === 401 && localStorage.getItem('token') === jwt) {
+						if (refreshFailureProblem(e)?.status === 401 && localStorage.getItem('token') === jwt) {
 							removeToken()
 						}
 					}
