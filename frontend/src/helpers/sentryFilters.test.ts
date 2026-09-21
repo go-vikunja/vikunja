@@ -1,5 +1,4 @@
 import {describe, it, expect} from 'vitest'
-import {AxiosError} from 'axios'
 
 import {shouldDropEvent, stripNavigationFragment} from './sentryFilters'
 
@@ -15,16 +14,16 @@ function browserDomException(message: string, name: string, code: number): DOMEx
 }
 
 describe('shouldDropEvent', () => {
-	it('drops a plain AxiosError', () => {
-		expect(shouldDropEvent(new AxiosError('Request failed'))).toBe(true)
+	it('drops a plain fetch error', () => {
+		expect(shouldDropEvent(new TypeError('Failed to fetch'))).toBe(true)
 	})
 
-	it('drops an error wrapping an AxiosError as cause', () => {
-		expect(shouldDropEvent(errorWithCause('Error renewing token: ', new AxiosError('Request failed')))).toBe(true)
+	it('drops an error wrapping a fetch error as cause', () => {
+		expect(shouldDropEvent(errorWithCause('Error renewing token: ', new TypeError('Failed to fetch')))).toBe(true)
 	})
 
-	it('drops an error with an AxiosError two levels deep', () => {
-		const inner = errorWithCause('inner', new AxiosError('Request failed'))
+	it('drops an error with a fetch error two levels deep', () => {
+		const inner = errorWithCause('inner', new TypeError('Failed to fetch'))
 
 		expect(shouldDropEvent(errorWithCause('outer', inner))).toBe(true)
 	})
