@@ -34,6 +34,8 @@ test.describe('TOTP', () => {
 
 		await expect(page.locator('.global-notification')).toContainText('Success')
 		await expect(page.getByRole('button', {name: 'Enroll'})).toBeVisible()
+		await page.reload()
+		await expect(page.getByRole('button', {name: 'Enroll'})).toBeVisible()
 	})
 
 	test('rejects wrong passcode during enrollment', async ({authenticatedPage: page}) => {
