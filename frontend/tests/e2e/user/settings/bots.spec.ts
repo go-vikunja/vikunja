@@ -40,5 +40,5 @@ test('manages a bot and its scoped token across reloads', async ({authenticatedP
 	await expect(card).toHaveCount(0)
 	const response = await apiContext.get('/api/v2/user/bots', {headers: {Authorization: `Bearer ${userToken}`}})
 	expect(response.ok()).toBe(true)
-	expect((await response.json()).items ?? []).toEqual([])
+	expect((await response.json()).items).toEqual([])
 })
