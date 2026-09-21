@@ -186,7 +186,7 @@ func TestBotUser_ManageDisabled(t *testing.T) {
 				assert.Equal(t, int64(1), total)
 				assert.Equal(t, bot.ID, result.([]*APIToken)[0].OwnerID)
 				_, _, _, err = token.ReadAll(s, other, "", 1, 50)
-				require.Error(t, err)
+				require.True(t, user.IsErrBotNotOwned(err))
 				allowed, err := token.CanDelete(s, owner)
 				require.NoError(t, err)
 				require.True(t, allowed)
