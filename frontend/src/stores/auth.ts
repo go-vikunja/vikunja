@@ -247,7 +247,14 @@ export const useAuthStore = defineStore('auth', () => {
 		removeToken()
 
 		try {
-			const response = await authLogin({body: {username: credentials.username, password: credentials.password, totp_passcode: credentials.totpPasscode, long_token: credentials.longToken}})
+			const response = await authLogin({
+				body: {
+					username: credentials.username,
+					password: credentials.password,
+					totp_passcode: credentials.totpPasscode,
+					long_token: credentials.longToken,
+				},
+			})
 			adoptSession(response.data.token, true)
 
 			// Tell others the user is authenticated
