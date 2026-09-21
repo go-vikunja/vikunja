@@ -95,7 +95,6 @@ export function createUserSettingsDraft(data: UserGeneralSettings = {}): UserSet
 			sidebar_width: null,
 			comment_sort_order: 'asc',
 			desktop_quick_entry_shortcut: 'CmdOrCtrl+Shift+A',
-			quick_add_default_reminders: [],
 			default_due_time: undefined,
 			time_tracking_default_start: '09:00',
 			...frontend,
