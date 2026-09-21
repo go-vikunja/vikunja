@@ -29,9 +29,6 @@ vi.mock('@/helpers/auth', () => ({
 	}),
 }))
 
-
-
-
 vi.mock('@/router', () => ({
 	default: {push: vi.fn()},
 }))

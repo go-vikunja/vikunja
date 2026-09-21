@@ -37,9 +37,6 @@ vi.mock('@/composables/useWebSocket', () => ({
 	}),
 }))
 
-
-
-
 vi.mock('@/helpers/redirectToProvider', () => ({
 	getRedirectUrlFromCurrentFrontendPath: vi.fn(),
 	redirectToProvider: vi.fn(),
