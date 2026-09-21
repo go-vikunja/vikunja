@@ -85,12 +85,16 @@ function cancelEditName(bot: IUser) {
 }
 
 async function saveBotName(bot: IUser) {
+	const draft = nameDraft.value[bot.id]
 	const updated = {
 		...bot,
-		name: (nameDraft.value[bot.id] ?? '').trim(),
+		name: (draft ?? '').trim(),
 	}
 	try {
 		await updateMutation.mutateAsync({id: bot.id, body: updated})
+		if (nameDraft.value[bot.id] !== draft) {
+			return
+		}
 		editingName.value[bot.id] = false
 		delete nameDraft.value[bot.id]
 	} catch { /* Mutation reports the error. */ }
