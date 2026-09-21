@@ -55,10 +55,10 @@ vi.mock('@/composables/useTaskDragToProject', () => ({
 vi.mock('@/stores/auth', () => ({
 	useAuthStore: () => ({
 		settings: {
-			frontendSettings: {
-				alwaysShowBucketTaskCount: false,
-				quickAddMagicMode: 'vikunja',
-				quickAddDefaultReminders: [],
+			frontend_settings: {
+				always_show_bucket_task_count: false,
+				quick_add_magic_mode: 'vikunja',
+				quick_add_default_reminders: [],
 			},
 		},
 	}),

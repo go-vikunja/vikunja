@@ -96,8 +96,13 @@ test.describe('User Settings', () => {
 		const nameInput = page.locator('.general-settings input.input').first()
 		await expect(nameInput).toBeVisible({timeout: 10000})
 		await expect(nameInput).toBeEnabled()
+		await nameInput.fill('Settings Migration')
+		await page.locator('[data-cy=saveGeneralSettings]').click()
+		await expect(page.locator('.global-notification')).toContainText('Success')
+		await page.reload()
+		await expect(nameInput).toHaveValue('Settings Migration')
 	})
-	test('Updates the week start day', async ({authenticatedPage: page}) => {
+	test('Updates the week start day', async ({authenticatedPage: page, apiContext, userToken}) => {
 		await page.goto('/user/settings/general')
 		await page.waitForLoadState('networkidle')
 
@@ -115,15 +120,15 @@ test.describe('User Settings', () => {
 
 		// Intercept the API request to verify it contains the correct setting
 		const settingsUpdatePromise = page.waitForResponse(response =>
-			response.url().includes('user/settings/general') && response.request().method() === 'POST',
+			response.url().includes('/api/v2/user/settings/general') && response.request().method() === 'PUT',
 		)
 
 		await saveButton.click()
 
 		const response = await settingsUpdatePromise
-		const requestData = JSON.parse(response.request().postData() || '{}')
-		expect(requestData.week_start).toBe(3)
 		expect(response.ok()).toBe(true)
+		const storedUser = await apiContext.get('user', {headers: {Authorization: `Bearer ${userToken}`}})
+		expect((await storedUser.json()).settings.week_start).toBe(3)
 
 		await expect(page.locator('.global-notification')).toContainText('Success')
 

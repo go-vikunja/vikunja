@@ -1,3 +1,5 @@
+import {queryClient} from '@/client/queryClient'
+import {accountKeys} from '@/client/queries/account'
 import {describe, it, expect, beforeEach, afterEach, vi} from 'vitest'
 import {mount, flushPromises, type VueWrapper} from '@vue/test-utils'
 import {setActivePinia, createPinia} from 'pinia'
@@ -86,6 +88,11 @@ describe('TOTP settings', () => {
 		configStore.totp_enabled = true
 		const authStore = useAuthStore()
 		authStore.setUser({
+			id: 1,
+			username: 'user1',
+			is_local_user: true,
+		})
+		queryClient.setQueryData(accountKeys.user(1), {
 			id: 1,
 			username: 'user1',
 			is_local_user: true,

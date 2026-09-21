@@ -23,9 +23,13 @@ vi.mock('@/router', () => ({
 	default: {push: routerPushMock},
 }))
 
-vi.mock('@/client/queryClient', () => ({
-	queryClient: {clear: vi.fn()},
-}))
+vi.mock('@/client/queryClient', async () => {
+ const {QueryClient} = await import('@tanstack/vue-query')
+ const queryClient = new QueryClient({defaultOptions: {queries: {retry: false}}})
+ const clear = queryClient.clear.bind(queryClient)
+ queryClient.clear = () => {clear(); }
+ return {queryClient}
+})
 
 vi.mock('@/composables/useWebSocket', () => ({
 	useWebSocket: () => ({

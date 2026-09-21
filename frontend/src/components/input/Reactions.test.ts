@@ -21,7 +21,7 @@ const OTHER_USER = {
 vi.mock('@/stores/auth', () => ({
 	useAuthStore: () => ({
 		info: CURRENT_USER,
-		settings: {frontendSettings: {colorSchema: 'light'}},
+		settings: {frontend_settings: {color_schema: 'light'}},
 	}),
 }))
 

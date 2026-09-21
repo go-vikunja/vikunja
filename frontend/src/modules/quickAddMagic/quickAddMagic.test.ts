@@ -1,3 +1,5 @@
+import {queryClient} from '@/client/queryClient'
+import {accountKeys} from '@/client/queries/account'
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest'
 
 import {parseTaskText, PrefixMode} from '.'
@@ -10,20 +12,21 @@ import type {IRepeatAfter} from '@/types/IRepeatAfter'
 import {setActivePinia, createPinia} from 'pinia'
 import {useAuthStore} from '@/stores/auth'
 
-function setDefaultDueTime(defaultDueTime?: string) {
+function setDefaultDueTime(default_due_time?: string) {
 	const authStore = useAuthStore()
-	authStore.setUserSettings({
+	queryClient.setQueryData(accountKeys.user(0), {settings: {
 		...authStore.settings,
-		frontendSettings: {
-			...authStore.settings.frontendSettings,
-			defaultDueTime,
+		frontend_settings: {
+			...authStore.settings.frontend_settings,
+			default_due_time,
 		},
-	})
+	}})
 }
 
 describe('Parse Task Text', () => {
 	beforeEach(() => {
 		vi.useFakeTimers()
+		queryClient.clear()
 		setActivePinia(createPinia())
 		useAuthStore()
 	})
