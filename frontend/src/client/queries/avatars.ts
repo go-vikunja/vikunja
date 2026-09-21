@@ -36,7 +36,13 @@ export function avatarProviderQuery() {
 
 export function updateAvatarProviderMutationOptions() {
 	return contextMutationOptions({
-		mutationFn: async ({provider}: {username: string; provider: string}) => (await userSetAvatarProvider({body: {avatar_provider: provider}})).data,
+		mutationFn: async ({provider}: {
+			username: string,
+			provider: string,
+		}) => {
+			const {data} = await userSetAvatarProvider({body: {avatar_provider: provider}})
+			return data
+		},
 		onSettled: ({username}, client) => Promise.all([
 			client.invalidateQueries({queryKey: avatarKeys.provider}),
 			client.invalidateQueries({queryKey: avatarKeys.user(username)}),
@@ -51,8 +57,15 @@ export function useUpdateAvatarProviderMutation() {
 
 export function uploadAvatarMutationOptions() {
 	return contextMutationOptions({
-		// The upload fails without a file name on the multipart part.
-		mutationFn: async ({blob}: {username: string; blob: Blob}) => (await userAvatarUpload({body: {avatar: new File([blob], 'avatar.png', {type: blob.type})}})).data,
+		mutationFn: async ({blob}: {
+			username: string,
+			blob: Blob,
+		}) => {
+			// The upload fails without a file name on the multipart part.
+			const avatar = new File([blob], 'avatar.png', {type: blob.type})
+			const {data} = await userAvatarUpload({body: {avatar}})
+			return data
+		},
 		onSettled: ({username}, client) => Promise.all([
 			client.invalidateQueries({queryKey: avatarKeys.provider}),
 			client.invalidateQueries({queryKey: avatarKeys.user(username)}),
