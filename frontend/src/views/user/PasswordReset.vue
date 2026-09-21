@@ -73,6 +73,8 @@ const errorMsg = ref('')
 const successMessage = ref('')
 
 async function resetPassword() {
+	if (passwordResetMutation.isPending.value) return
+
 	errorMsg.value = ''
 	const token = route.query.userPasswordReset as string
 
