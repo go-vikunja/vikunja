@@ -1,5 +1,14 @@
 import {useMutation, type QueryClient} from '@tanstack/vue-query'
-import {userUpdateEmail, userCancelEmailUpdate, userResendEmailConfirmation, userShow, type UserInfoBody, type UserUpdateEmailRequestWritable} from '@/client/generated'
+import {
+	userUpdateEmail,
+	userCancelEmailUpdate,
+	userResendEmailConfirmation,
+	userShow,
+} from '@/client/generated'
+import type {
+	UserInfoBody,
+	UserUpdateEmailRequestWritable,
+} from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
 import {accountKeys} from './account'
 import {i18n} from '@/i18n'
@@ -17,7 +26,12 @@ export function updateEmailMutationOptions() {
 			},
 			onSuccess: (account, _input, client) => reconcileAccount(account, client),
 			onSettled: (_input, client) => client.invalidateQueries({queryKey: accountKeys.current}),
-			successMessage: account => i18n.global.t(account.pending_email ? 'user.settings.updateEmailPendingSuccess' : 'user.settings.updateEmailSuccess'),
+			successMessage: account => {
+				const key = account.pending_email
+					? 'user.settings.updateEmailPendingSuccess'
+					: 'user.settings.updateEmailSuccess'
+				return i18n.global.t(key)
+			},
 		}),
 		// Input holds the plaintext password.
 		gcTime: 0,
