@@ -77,7 +77,7 @@
 
 
 <script setup lang="ts">
-import {computed, ref, watch} from 'vue'
+import {computed, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {Cropper} from 'vue-advanced-cropper'
 import 'vue-advanced-cropper/dist/style.css'
@@ -108,10 +108,11 @@ const updateProvider = useUpdateAvatarProviderMutation()
 const upload = useUploadAvatarMutation()
 const saving = computed(() => updateProvider.isPending.value || upload.isPending.value)
 const loading = ref(false)
-const avatarProvider = ref<string>()
-watch(providerQuery.data, data => {
-	if (avatarProvider.value === undefined && data) avatarProvider.value = data.avatar_provider ?? 'default'
-}, {immediate: true})
+const pickedProvider = ref<string>()
+const avatarProvider = computed({
+	get: () => pickedProvider.value ?? providerQuery.data.value?.avatar_provider ?? 'default',
+	set: (provider: string) => pickedProvider.value = provider,
+})
 
 function updateAvatarStatus() {
 	const username = authStore.info?.username
