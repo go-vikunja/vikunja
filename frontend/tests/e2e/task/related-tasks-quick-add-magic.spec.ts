@@ -140,7 +140,7 @@ test.describe('Related tasks quick add magic', () => {
 	test('Keeps the title literal when quick add magic is disabled', async ({page, apiContext}) => {
 		const user = (await UserFactory.create(1, {
 			frontend_settings: JSON.stringify({
-				quickAddMagicMode: 'disabled',
+				quick_add_magic_mode: 'disabled',
 			}),
 		}))[0]
 		const project = (await ProjectFactory.create(1, {id: 1, title: 'Project A', owner_id: user.id}))[0]

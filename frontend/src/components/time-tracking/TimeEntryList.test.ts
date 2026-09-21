@@ -43,10 +43,6 @@ function mountList(
 		type: authType,
 		exp: 0,
 	})
-	authStore.setUser({
-		id: 1,
-		username: 'user',
-	})
 
 	return shallowMount(TimeEntryList, {
 		props: {

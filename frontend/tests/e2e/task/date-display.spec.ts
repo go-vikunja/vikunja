@@ -71,7 +71,7 @@ test.describe('Date display setting', () => {
 	Object.entries(expectedFormats12h).forEach(([format, expected]) => {
 		test(`shows ${format} with 12h time format`, async ({page, apiContext}) => {
 			const user = (await UserFactory.create(1, {
-				frontend_settings: JSON.stringify({dateDisplay: format, timeFormat: TIME_FORMAT.HOURS_12}),
+				frontend_settings: JSON.stringify({date_display: format, time_format: TIME_FORMAT.HOURS_12}),
 			}))[0]
 			const project = (await ProjectFactory.create(1, {owner_id: user.id}))[0]
 			const task = (await TaskFactory.create(1, {
@@ -92,7 +92,7 @@ test.describe('Date display setting', () => {
 	Object.entries(expectedFormats24h).forEach(([format, expected]) => {
 		test(`shows ${format} with 24h time format`, async ({page, apiContext}) => {
 			const user = (await UserFactory.create(1, {
-				frontend_settings: JSON.stringify({dateDisplay: format, timeFormat: TIME_FORMAT.HOURS_24}),
+				frontend_settings: JSON.stringify({date_display: format, time_format: TIME_FORMAT.HOURS_24}),
 			}))[0]
 			const project = (await ProjectFactory.create(1, {owner_id: user.id}))[0]
 			const task = (await TaskFactory.create(1, {
