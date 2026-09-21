@@ -13,6 +13,7 @@ import {
 	timeEntryKeys,
 	type TimeEntryResponse,
 } from './timeEntries'
+import {notificationKeys} from './notifications'
 import {commentKeys} from './comments'
 import {taskKeys} from './tasks'
 import {
@@ -43,6 +44,7 @@ export type ServerCacheEvent =
 		kind: 'subscribed',
 		since: number,
 	}
+	| {kind: 'notifications'}
 	| {kind: 'reconnect'}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -71,6 +73,7 @@ export function parseServerCacheEvent(
 			taskId: task.id,
 		}
 	}
+	if (event === 'notification.created' && typeof data.id === 'number' && data.id > 0) return {kind: 'notifications'}
 	return null
 }
 
@@ -78,6 +81,7 @@ const startsWith = (key: QueryKey, prefix: readonly unknown[]) => prefix.every((
 const isTaskDetailKey = (key: QueryKey) => startsWith(key, taskKeys.details)
 
 const SUBSCRIBE_SWEEP_KEYS = [
+	notificationKeys.all,
 	timeEntryKeys.all,
 	commentKeys.all,
 	taskKeys.details,
@@ -109,9 +113,11 @@ export function serverCacheEventMutationOptions() {
 					...(previousTaskId === event.entry.task_id ? [] : [invalidateCachedTask(client, previousTaskId)]),
 				])
 			}
+			if (event.kind === 'notifications') return client.invalidateQueries({queryKey: notificationKeys.all})
 			if (event.kind === 'comments') {
 				return Promise.all([
 					client.invalidateQueries({queryKey: commentKeys.task(event.taskId)}),
+					client.invalidateQueries({queryKey: notificationKeys.all}),
 					invalidateCachedTask(client, event.taskId),
 				])
 			}
@@ -125,6 +131,7 @@ export function serverCacheEventMutationOptions() {
 			}
 			return Promise.all([
 				client.invalidateQueries({queryKey: timeEntryKeys.all}),
+				client.invalidateQueries({queryKey: notificationKeys.all}),
 				client.invalidateQueries({queryKey: commentKeys.all}),
 				client.invalidateQueries({queryKey: taskKeys.details}),
 				invalidateTaskMembership(client),
