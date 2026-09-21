@@ -42,11 +42,28 @@ describe('UserAvatar', () => {
 			query: {size: 40},
 			parseAs: 'blob',
 		}))
-		expect(first.find('img').attributes('src')).toBe('blob:avatar')
+		const image = first.find('img')
+		expect(image.attributes('src')).toBe('blob:avatar')
+		expect(image.attributes('width')).toBe('40')
+		expect(image.attributes('height')).toBe('40')
+		expect(image.attributes('alt')).toBe('')
 		expect(URL.createObjectURL).toHaveBeenCalledTimes(2)
 		first.unmount()
 		expect(URL.revokeObjectURL).toHaveBeenCalledTimes(1)
 		expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:avatar')
+	})
+	it('uses the alt prop when one is passed', async () => {
+		const wrapper = mountAvatar({user: {username: 'sam'}, alt: "sam's profile image"})
+		await flushPromises()
+		expect(wrapper.find('img').attributes('alt')).toBe("sam's profile image")
+	})
+	it('does not refetch when rerendered with an equal user object', async () => {
+		const wrapper = mountAvatar({user: {username: 'sam'}, size: 40})
+		await flushPromises()
+		await wrapper.setProps({user: {username: 'sam'}})
+		await flushPromises()
+		expect(sdk.avatarGet).toHaveBeenCalledTimes(1)
+		expect(wrapper.find('img').attributes('src')).toBe('blob:avatar')
 	})
 	it('does not display a late response for a previous user', async () => {
 		let resolveFirst!: (value: {data: Blob}) => void
@@ -66,6 +83,7 @@ describe('UserAvatar', () => {
 		await flushPromises()
 		expect(sdk.avatarGet).not.toHaveBeenCalled()
 		expect(wrapper.find('img').exists()).toBe(false)
+		expect(wrapper.attributes('style')).toContain('--user-avatar-size: 40px')
 		sdk.avatarGet.mockRejectedValue(new Error('missing'))
 		await wrapper.setProps({user: {username: 'missing'}})
 		await flushPromises()
