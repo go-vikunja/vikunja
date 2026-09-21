@@ -1,12 +1,19 @@
 import {test, expect} from '../../support/fixtures'
-import {Factory} from '../../support/factory'
+import {NotificationFactory} from '../../factories/notification'
 import {ProjectFactory} from '../../factories/project'
 import {TaskFactory} from '../../factories/task'
 
 test('notification read and clear state survives reload', async ({authenticatedPage: page, currentUser, apiContext, userToken}) => {
 	const [project] = await ProjectFactory.create(1, {owner_id: currentUser.id})
 	const [task] = await TaskFactory.create(1, {project_id: project.id, created_by_id: currentUser.id})
-	await Factory.seed('notifications', [1, 2].map(id => ({id, notifiable_id: currentUser.id, project_id: project.id, name: 'task.comment', notification: JSON.stringify({doer: currentUser, task}), created: new Date().toISOString()})))
+	await NotificationFactory.create(2, {
+		notifiable_id: currentUser.id,
+		project_id: project.id,
+		notification: JSON.stringify({
+			doer: currentUser,
+			task,
+		}),
+	})
 	await page.goto('/')
 	const open = () => page.locator('.notifications .trigger-button').click()
 	const rows = page.locator('.single-notification')
