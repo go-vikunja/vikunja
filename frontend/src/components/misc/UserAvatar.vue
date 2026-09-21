@@ -37,7 +37,7 @@ const avatar = useQuery(computed(() => ({
 	...avatarQuery(props.user?.username ?? '', props.size),
 	enabled: Boolean(props.user?.username),
 })), queryClient)
-const src = useObjectUrl(computed(() => props.user?.username ? avatar.data.value : undefined))
+const src = useObjectUrl(avatar.data)
 </script>
 
 <style lang="scss">
