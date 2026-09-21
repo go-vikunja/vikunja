@@ -1,14 +1,8 @@
 import {getApiV2BaseUrl} from '@/helpers/fetcher'
 import {authRefreshToken} from '@/client/generated'
-import {createClient} from '@/client/generated/client'
+import {publicClient} from '@/client/publicClient'
 import {isDesktopApp, refreshDesktopToken} from '@/helpers/desktopAuth'
 import {clearServerClock, recordServerClock} from '@/helpers/serverClock'
-
-// Cookie-only: the shared client injects Authorization and answers a 401 by calling refreshToken(), which is this call.
-const refreshClient = createClient({
-	credentials: 'include',
-	throwOnError: true,
-})
 
 let savedToken: string | null = null
 
@@ -173,7 +167,7 @@ async function doRefresh(persist: boolean): Promise<void> {
 		// We hold the lock and no one else refreshed — make the API call.
 		try {
 			// A per-request baseUrl skips mergeConfigs (utils.gen.ts), the only place a trailing slash is stripped.
-			const response = await authRefreshToken({client: refreshClient, baseUrl: getApiV2BaseUrl().replace(/\/$/, '')})
+			const response = await authRefreshToken({client: publicClient, baseUrl: getApiV2BaseUrl().replace(/\/$/, '')})
 			if (loggedOutSinceStart()) {
 				return
 			}

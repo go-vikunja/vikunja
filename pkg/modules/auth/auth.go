@@ -476,6 +476,24 @@ func SessionIDFromContext(c *echo.Context) string {
 	return sid
 }
 
+// SessionUserIDFromContext returns the user id of a user JWT, or 0 for link
+// shares, API tokens and unauthenticated requests.
+func SessionUserIDFromContext(c *echo.Context) int64 {
+	jwtinf, ok := c.Get("user").(*jwt.Token)
+	if !ok {
+		return 0
+	}
+	claims, ok := jwtinf.Claims.(jwt.MapClaims)
+	if !ok {
+		return 0
+	}
+	if typ, ok := claims["type"].(float64); !ok || int(typ) != AuthTypeUser {
+		return 0
+	}
+	id, _ := claims["id"].(float64)
+	return int64(id)
+}
+
 // GetAuthFromContext retrieves the authenticated web.Auth from a plain
 // context.Context, bridging Huma handlers to Vikunja's echo JWT flow. The
 // humabridge group middleware stashes the *echo.Context under EchoContextKey

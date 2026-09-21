@@ -2,6 +2,7 @@ import type {Page} from '@playwright/test'
 import {test, expect} from '../../support/fixtures'
 import {UserFactory} from '../../factories/user'
 import {ProjectFactory} from '../../factories/project'
+import {setupApiUrl} from '../../support/authenticateUser'
 import {TEST_PASSWORD} from '../../support/constants'
 
 interface LoginCredentials {
@@ -38,6 +39,7 @@ async function login(page: Page): Promise<void> {
 
 test.describe('Login', () => {
 	test.beforeEach(async ({page, apiContext}) => {
+		await setupApiUrl(page)
 		await UserFactory.create(1, {username: credentials.username})
 		await page.clock.setFixedTime(new Date(1625656161057)) // 13:00
 	})
