@@ -41,6 +41,14 @@ const THIRD_PARTY_INJECTION_PATTERNS = [
 	/wkwebview api client did not respond/i,
 ]
 
+// fetch() rejects with a bare TypeError, so the message text is the only signal the request never landed.
+const NETWORK_ERROR_PATTERNS = [
+	/failed to fetch/i,
+	/fetch failed/i,
+	/load failed/i,
+	/networkerror/i,
+]
+
 const THIRD_PARTY_URL_PATTERN = /^(?:(?:chrome|moz|safari-web|safari|ms-browser)-extension:|iabjs:)/i
 
 type SentryEventLike = {
@@ -57,7 +65,8 @@ type SentryEventLike = {
 }
 
 function isRequestError(e: unknown): boolean {
-	if (e instanceof AxiosError || (e instanceof TypeError && /failed to fetch|fetch failed|load failed|networkerror/i.test(e.message))) {
+	if (e instanceof AxiosError
+		|| (e instanceof TypeError && NETWORK_ERROR_PATTERNS.some(pattern => pattern.test(e.message)))) {
 		return true
 	}
 
