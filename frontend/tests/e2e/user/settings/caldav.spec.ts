@@ -1,8 +1,12 @@
+import type {Page} from '@playwright/test'
 import {test, expect} from '../../../support/fixtures'
 import {gotoUserSettings} from '../../../support/userSettings'
 import {TokenFactory} from '../../../factories/token'
 
 test.describe('CalDAV', () => {
+	// Rows carrying a <td> are the data rows; this drops the <th>-only header row.
+	const dataRows = (page: Page) => page.locator('table.table tr').filter({has: page.locator('td')})
+
 	test('generates a token that authenticates against the caldav endpoint', async ({
 		authenticatedPage: page, currentUser, apiContext,
 	}) => {
@@ -13,7 +17,7 @@ test.describe('CalDAV', () => {
 		)
 		await page.getByRole('button', {name: 'Create a CalDAV token'}).click()
 		await created
-		await expect(page.locator('table.table tr').filter({has: page.locator('td')})).toHaveCount(1)
+		await expect(dataRows(page)).toHaveCount(1)
 
 		// Banner renders the one-time token string; capture it.
 		const banner = page.locator('.message').filter({hasText: 'Here is your new token'})
@@ -32,7 +36,7 @@ test.describe('CalDAV', () => {
 		expect(resp.status()).toBeLessThan(300)
 		await page.reload()
 		await expect(banner).toHaveCount(0)
-		await expect(page.locator('table.table tr').filter({has: page.locator('td')})).toHaveCount(1)
+		await expect(dataRows(page)).toHaveCount(1)
 	})
 
 	test('deleting a token revokes caldav access', async ({
@@ -43,18 +47,16 @@ test.describe('CalDAV', () => {
 		await TokenFactory.create(1, {user_id: currentUser.id, kind: 4, token: tokenValue}, false)
 
 		await gotoUserSettings(page, 'caldav')
-		// Filter to data rows (rows containing a <td>) to exclude the <th>-only header row.
-		const dataRows = page.locator('table.table tr').filter({has: page.locator('td')})
-		await expect(dataRows).toHaveCount(1)
+		await expect(dataRows(page)).toHaveCount(1)
 
 		const deleted = page.waitForResponse(r =>
 			/\/user\/settings\/token\/caldav\/\d+/.test(r.url()) && r.request().method() === 'DELETE',
 		)
-		await dataRows.getByRole('button', {name: 'Delete'}).click()
+		await dataRows(page).getByRole('button', {name: 'Delete'}).click()
 		await deleted
-		await expect(dataRows).toHaveCount(0)
+		await expect(dataRows(page)).toHaveCount(0)
 		await page.reload()
-		await expect(dataRows).toHaveCount(0)
+		await expect(dataRows(page)).toHaveCount(0)
 		const stored = await apiContext.get('user/settings/token/caldav', {
 			headers: {Authorization: `Bearer ${userToken}`},
 		})
