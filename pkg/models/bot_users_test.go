@@ -128,3 +128,64 @@ func TestBotUser_Delete(t *testing.T) {
 	del := &BotUser{User: user.User{ID: bot.ID}}
 	require.NoError(t, del.Delete(s, owner))
 }
+
+func TestBotUser_ManageDisabled(t *testing.T) {
+	for _, operation := range []string{"read", "update", "delete", "tokens"} {
+		t.Run(operation, func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+			owner := &user.User{ID: 1}
+			other := &user.User{ID: 2}
+			bot := &BotUser{User: user.User{Username: "bot-disabled"}}
+			require.NoError(t, bot.Create(s, owner))
+			_, err := s.ID(bot.ID).Cols("status").Update(&user.User{Status: user.StatusDisabled})
+			require.NoError(t, err)
+			_, err = user.GetUserByID(s, bot.ID)
+			require.True(t, user.IsErrAccountDisabled(err))
+			target := &BotUser{User: user.User{ID: bot.ID}}
+			switch operation {
+			case "read":
+				allowed, _, err := target.CanRead(s, owner)
+				require.NoError(t, err)
+				require.True(t, allowed)
+				allowed, _, err = target.CanRead(s, other)
+				require.NoError(t, err)
+				require.False(t, allowed)
+				require.NoError(t, target.ReadOne(s, owner))
+				assert.Equal(t, user.StatusDisabled, target.Status)
+			case "update":
+				allowed, err := target.CanUpdate(s, owner)
+				require.NoError(t, err)
+				require.True(t, allowed)
+				allowed, err = target.CanUpdate(s, other)
+				require.NoError(t, err)
+				require.False(t, allowed)
+				target.Status = user.StatusActive
+				require.NoError(t, target.Update(s, owner))
+				assert.Equal(t, user.StatusActive, target.Status)
+			case "delete":
+				allowed, err := target.CanDelete(s, owner)
+				require.NoError(t, err)
+				require.True(t, allowed)
+				allowed, err = target.CanDelete(s, other)
+				require.NoError(t, err)
+				require.False(t, allowed)
+				require.NoError(t, target.Delete(s, owner))
+			case "tokens":
+				token := &APIToken{OwnerID: bot.ID, Title: "Disabled bot token"}
+				require.NoError(t, token.Create(s, owner))
+				_, _, _, err = token.ReadAll(s, owner, "", 1, 50)
+				require.NoError(t, err)
+				_, _, _, err = token.ReadAll(s, other, "", 1, 50)
+				require.Error(t, err)
+				allowed, err := token.CanDelete(s, owner)
+				require.NoError(t, err)
+				require.True(t, allowed)
+				allowed, err = token.CanDelete(s, other)
+				require.NoError(t, err)
+				require.False(t, allowed)
+			}
+		})
+	}
+}
