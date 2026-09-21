@@ -31,7 +31,7 @@ export default [
 			'vikunja/icon-button-accessible-name': 'error',
 			'no-restricted-imports': ['error', {
 				paths: [{name: 'axios', message: 'Use the generated v2 client.'}],
-				patterns: [{group: ['axios/*', '@/services', '@/services/**', '@/models', '@/models/**', '@/modelTypes', '@/modelTypes/**', '@/helpers/fetcher'], message: 'Use generated API types and resource queries.'}],
+				patterns: [{group: ['axios/*', '@/services', '@/services/**', '@/models', '@/models/**', '@/modelTypes', '@/modelTypes/**', '@/helpers/fetcher', '@/helpers/case'], message: 'Use generated API types and resource queries.'}],
 			}],
 
 			'quotes': ['error', 'single'],
