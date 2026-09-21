@@ -87,8 +87,11 @@ async function resetPassword() {
 	try {
 		const {message} = await passwordResetMutation.mutateAsync({new_password: credentials.password, token})
 		successMessage.value = message ?? t('error.success')
+		credentials.password = ''
 	} catch (e) {
 		errorMsg.value = getErrorText(e)
+	} finally {
+		passwordResetMutation.reset()
 	}
 }
 </script>
