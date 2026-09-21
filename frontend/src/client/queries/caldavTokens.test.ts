@@ -9,7 +9,7 @@ it('returns the one-time secret without putting it in the shared list cache', as
 	const client = new QueryClient()
 	client.setQueryData(caldavTokenKeys.all, [{id: 1}])
 	sdk.caldavTokensCreate.mockResolvedValue({data: {id: 2, token: 'one-time-secret'}})
-	const created = await client.getMutationCache().build(client, createCaldavTokenMutationOptions()).execute()
+	const created = await client.getMutationCache().build(client, createCaldavTokenMutationOptions()).execute(undefined)
 	expect(created.token).toBe('one-time-secret')
 	expect(client.getQueryData(caldavTokenKeys.all)).toEqual([{id: 1}])
 	expect(client.getQueryState(caldavTokenKeys.all)?.isInvalidated).toBe(true)
