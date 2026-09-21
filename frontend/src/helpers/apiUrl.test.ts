@@ -1,5 +1,5 @@
 import {describe, it, expect, afterEach} from 'vitest'
-import {getApiBaseUrl} from './apiUrl'
+import {getApiBaseUrl, getLegacyApiBaseUrl} from './apiUrl'
 
 describe('API base URL', () => {
 	const originalApiUrl = window.API_URL
@@ -18,5 +18,14 @@ describe('API base URL', () => {
 	])('normalizes %s without changing the deployment prefix', (input, expected) => {
 		window.API_URL = input
 		expect(getApiBaseUrl()).toBe(expected)
+	})
+
+	it.each([
+		['/api/v2', '/api/v1/'],
+		['/api/v1', '/api/v1/'],
+		['https://api.example/custom', 'https://api.example/custom/'],
+	])('downgrades %s back to the legacy base', (input, expected) => {
+		window.API_URL = input
+		expect(getLegacyApiBaseUrl()).toBe(expected)
 	})
 })
