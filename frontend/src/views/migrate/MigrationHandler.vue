@@ -41,6 +41,13 @@
 				/>
 				<template v-else>
 					<p>{{ $t('migrate.authorize', {name: migrator.name}) }}</p>
+					<Message
+						v-if="migrationError"
+						variant="danger"
+						class="mbe-4"
+					>
+						{{ migrationError }}
+					</Message>
 					<XButton
 						:loading="isBusy"
 						:disabled="isBusy || undefined"
