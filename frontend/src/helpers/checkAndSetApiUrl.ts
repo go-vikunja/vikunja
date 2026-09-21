@@ -1,10 +1,9 @@
 import {useConfigStore} from '@/stores/config'
 import {configureApiClient} from '@/client/http'
 import {queryClient} from '@/client/queryClient'
-import {getApiBaseUrl} from '@/helpers/apiUrl'
+import {API_PATH_SUFFIX, getApiBaseUrl} from '@/helpers/apiUrl'
 
 const API_DEFAULT_PORT = '3456'
-const API_PATH_SUFFIX = '/api/v2'
 
 export const ERROR_NO_API_URL = 'noApiUrlProvided'
 
