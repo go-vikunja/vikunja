@@ -9,6 +9,11 @@ function errorWithCause(message: string, cause: unknown): Error {
 	return Object.assign(new Error(message), {cause})
 }
 
+// happy-dom's DOMException lacks the legacy numeric `code` that browsers set.
+function browserDomException(message: string, name: string, code: number): DOMException {
+	return Object.assign(new DOMException(message, name), {code})
+}
+
 describe('shouldDropEvent', () => {
 	it('drops a plain AxiosError', () => {
 		expect(shouldDropEvent(new AxiosError('Request failed'))).toBe(true)
@@ -26,6 +31,32 @@ describe('shouldDropEvent', () => {
 
 	it('drops an error-like object with code and message', () => {
 		expect(shouldDropEvent({code: 'ECONNABORTED', message: 'timeout'})).toBe(true)
+	})
+
+	it('drops a v1 api error body', () => {
+		expect(shouldDropEvent({code: 1001, message: 'The user does not exist.'})).toBe(true)
+	})
+
+	it('drops a v2 problem body with its detail copied to message', () => {
+		const problem = {status: 400, code: 2002, detail: 'invalid data'}
+
+		expect(shouldDropEvent({...problem, message: problem.detail})).toBe(true)
+	})
+
+	it('drops an error wrapping an api error body as cause', () => {
+		expect(shouldDropEvent(errorWithCause('outer', {code: 1001, message: 'The user does not exist.'}))).toBe(true)
+	})
+
+	it('keeps a DOMException', () => {
+		expect(shouldDropEvent(browserDomException('Failed to execute \'insertBefore\' on \'Node\'', 'NotFoundError', 8))).toBe(false)
+	})
+
+	it('keeps an error wrapping a DOMException as cause', () => {
+		expect(shouldDropEvent(errorWithCause('outer', browserDomException('The operation was aborted.', 'AbortError', 20)))).toBe(false)
+	})
+
+	it('keeps an error with a node-style code', () => {
+		expect(shouldDropEvent(Object.assign(new Error('boom'), {code: 'ERR_SOMETHING'}))).toBe(false)
 	})
 
 	it('keeps a plain error', () => {

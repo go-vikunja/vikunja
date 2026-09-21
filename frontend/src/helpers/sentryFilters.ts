@@ -61,12 +61,21 @@ function isRequestError(e: unknown): boolean {
 		return true
 	}
 
-	if (typeof e !== 'object' || e === null) {
+	return isApiErrorBody(e)
+}
+
+// API error bodies are thrown as parsed JSON, so they are always plain objects.
+// Requiring that keeps out DOMException and other Error subclasses, which also
+// carry a `code` and a `message`.
+function isApiErrorBody(e: unknown): boolean {
+	if (typeof e !== 'object' || e === null || Object.getPrototypeOf(e) !== Object.prototype) {
 		return false
 	}
 
-	return typeof (e as {code?: unknown}).code !== 'undefined'
-		&& typeof (e as {message?: unknown}).message !== 'undefined'
+	const {code, message} = e as {code?: unknown, message?: unknown}
+
+	return (typeof code === 'number' || typeof code === 'string')
+		&& typeof message === 'string'
 }
 
 export function isChunkLoadError(message: unknown): boolean {
