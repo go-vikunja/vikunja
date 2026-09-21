@@ -124,5 +124,23 @@ describe('config store', () => {
 
 			await expect(store.update()).rejects.toBeInstanceOf(InvalidApiUrlProvidedError)
 		})
+
+		it('normalizes a non-Error rejection into InvalidApiUrlProvidedError', async () => {
+			sdk.info.mockRejectedValue({
+				code: 4001,
+				message: 'not found',
+			})
+			const store = useConfigStore()
+
+			await expect(store.update()).rejects.toBeInstanceOf(InvalidApiUrlProvidedError)
+		})
+
+		it('passes an Error rejection through unwrapped', async () => {
+			const failure = new TypeError('Failed to fetch')
+			sdk.info.mockRejectedValue(failure)
+			const store = useConfigStore()
+
+			await expect(store.update()).rejects.toBe(failure)
+		})
 	})
 })
