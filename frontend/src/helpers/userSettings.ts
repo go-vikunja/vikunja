@@ -51,6 +51,15 @@ export interface ExtraSettingsLinks {
 	[key: string]: ExtraSettingsLink
 }
 
+function isHttpUrl(url: string): boolean {
+	try {
+		const {protocol} = new URL(url, window.location.origin)
+		return protocol === 'http:' || protocol === 'https:'
+	} catch {
+		return false
+	}
+}
+
 export type UserSettings = Required<Omit<UserGeneralSettings, '$schema' | 'frontend_settings' | 'extra_settings_links' | 'language'>> & {
 	frontend_settings: FrontendSettings
 	extra_settings_links: ExtraSettingsLinks
@@ -71,10 +80,18 @@ export function createUserSettingsDraft(data: UserGeneralSettings = {}): UserSet
 		week_start: data.week_start ?? 0,
 		timezone: data.timezone ?? '',
 		language: (data.language || getBrowserLanguage()) as SupportedLocale,
-		extra_settings_links: Object.fromEntries(Object.entries(data.extra_settings_links ?? {}).filter((entry): entry is [string, ExtraSettingsLink] => {
-			const value = entry[1]
-			return !!value && typeof value === 'object' && 'text' in value && typeof value.text === 'string' && 'url' in value && typeof value.url === 'string'
-		})),
+		extra_settings_links: Object.fromEntries(
+			Object.entries(data.extra_settings_links ?? {}).filter((entry): entry is [string, ExtraSettingsLink] => {
+				const value = entry[1]
+				return !!value
+					&& typeof value === 'object'
+					&& 'text' in value
+					&& typeof value.text === 'string'
+					&& 'url' in value
+					&& typeof value.url === 'string'
+					&& isHttpUrl(value.url)
+			}),
+		),
 		frontend_settings: {
 			play_sound_when_done: true,
 			quick_add_magic_mode: PrefixMode.Default,
