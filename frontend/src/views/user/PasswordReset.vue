@@ -56,6 +56,7 @@ import {useRoute} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 
 import {useResetPasswordMutation} from '@/client/queries/passwords'
+import {isRequestContextAbort} from '@/client/requestContext'
 import Message from '@/components/misc/Message.vue'
 import {getErrorText} from '@/message'
 import Password from '@/components/input/Password.vue'
@@ -89,6 +90,7 @@ async function resetPassword() {
 		successMessage.value = message ?? t('error.success')
 		credentials.password = ''
 	} catch (e) {
+		if (isRequestContextAbort(e)) return
 		errorMsg.value = getErrorText(e)
 	} finally {
 		passwordResetMutation.reset()

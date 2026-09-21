@@ -59,6 +59,7 @@
 import {ref} from 'vue'
 
 import {useRequestPasswordResetMutation} from '@/client/queries/passwords'
+import {isRequestContextAbort} from '@/client/requestContext'
 import Message from '@/components/misc/Message.vue'
 import {getErrorText} from '@/message'
 import FormField from '@/components/input/FormField.vue'
@@ -74,6 +75,7 @@ async function requestPasswordReset() {
 		await passwordResetMutation.mutateAsync(passwordReset.value)
 		isSuccess.value = true
 	} catch (e) {
+		if (isRequestContextAbort(e)) return
 		errorMsg.value = getErrorText(e)
 	}
 }
