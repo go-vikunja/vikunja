@@ -321,7 +321,7 @@ import FormInput from '@/components/input/FormInput.vue'
 import FormSelect from '@/components/input/FormSelect.vue'
 import FormCheckbox from '@/components/input/FormCheckbox.vue'
 
-import {SUPPORTED_LOCALES} from '@/i18n'
+import {SUPPORTED_LOCALES, setLanguage} from '@/i18n'
 import {useQuery} from '@tanstack/vue-query'
 import {timezonesQuery} from '@/client/queries/account'
 import {formatDisplayDateFormat} from '@/helpers/time/formatDate'
@@ -522,10 +522,12 @@ const hasFilters = computed(() => projectList.projectsArray.some(isSavedFilterPr
 const loading = updateUserSettings.isPending
 
 async function updateSettings() {
+	const {language, ...withoutLanguage} = settings.value
 	try {
 		await updateUserSettings.mutateAsync({
-			settings: {...settings.value, ...(configStore.demo_mode_enabled ? {language: undefined} : {})},
+			settings: configStore.demo_mode_enabled ? withoutLanguage : settings.value,
 		})
+		if (configStore.demo_mode_enabled) await setLanguage(language)
 	} catch { return }
 	initialSettings.value = JSON.parse(JSON.stringify(settings.value))
 	isDirty.value = false
