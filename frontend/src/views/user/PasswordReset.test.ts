@@ -38,6 +38,7 @@ describe('PasswordReset', () => {
 		await flushPromises()
 
 		expect(errors).toEqual([])
+		expect(resetPassword).toHaveBeenCalledWith({body: {new_password: 'new-password', token: 'token'}})
 		expect(wrapper.text()).toContain('Failed to fetch')
 	})
 })

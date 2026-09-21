@@ -3,6 +3,7 @@ import {describe, it, expect, vi} from 'vitest'
 import {mount, flushPromises} from '@vue/test-utils'
 import {createI18n} from 'vue-i18n'
 import RequestPasswordReset from './RequestPasswordReset.vue'
+import FormField from '@/components/input/FormField.vue'
 import en from '@/i18n/lang/en.json'
 
 const {requestResetPassword} = vi.hoisted(() => ({requestResetPassword: vi.fn()}))
@@ -29,10 +30,12 @@ describe('RequestPasswordReset', () => {
 			},
 		})
 
+		wrapper.findComponent(FormField).vm.$emit('update:modelValue', 'user@example.com')
 		await wrapper.find('form').trigger('submit')
 		await flushPromises()
 
 		expect(errors).toEqual([])
+		expect(requestResetPassword).toHaveBeenCalledWith({body: {email: 'user@example.com'}})
 		expect(wrapper.text()).toContain('Failed to fetch')
 	})
 })
