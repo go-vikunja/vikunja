@@ -18,11 +18,11 @@ describe('shouldDropEvent', () => {
 		expect(shouldDropEvent(new TypeError('Failed to fetch'))).toBe(true)
 	})
 
-	it('drops an error wrapping an fetch error as cause', () => {
+	it('drops an error wrapping a fetch error as cause', () => {
 		expect(shouldDropEvent(errorWithCause('Error renewing token: ', new TypeError('Failed to fetch')))).toBe(true)
 	})
 
-	it('drops an error with an fetch error two levels deep', () => {
+	it('drops an error with a fetch error two levels deep', () => {
 		const inner = errorWithCause('inner', new TypeError('Failed to fetch'))
 
 		expect(shouldDropEvent(errorWithCause('outer', inner))).toBe(true)
