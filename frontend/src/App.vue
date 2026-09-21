@@ -106,8 +106,7 @@ const confirmDeletion = useConfirmDeletionMutation()
 
 watch(() => route.query.accountDeletionConfirm, async token => {
 	if (typeof token !== 'string' || !token) return
-	// Drop the single-use token from the address bar before spending it, so it never
-	// reaches Sentry replays, breadcrumbs or the saved last visited route.
+	// The URL reaches Sentry replays and lastVisited, so drop the single-use token before spending it.
 	const query = {...route.query}
 	delete query.accountDeletionConfirm
 	await router.replace({path: route.path, query, hash: route.hash})
@@ -116,7 +115,6 @@ watch(() => route.query.accountDeletionConfirm, async token => {
 	} catch {
 		return
 	} finally {
-		// Evicts the single-use token from the mutation cache.
 		confirmDeletion.reset()
 	}
 }, {immediate: true})

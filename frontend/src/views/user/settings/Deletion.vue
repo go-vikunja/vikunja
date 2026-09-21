@@ -141,7 +141,6 @@ async function cancelDeletion() {
 	} catch {
 		return
 	} finally {
-		// Evicts the plaintext password from the mutation cache.
 		cancelMutation.reset()
 	}
 	password.value = ''

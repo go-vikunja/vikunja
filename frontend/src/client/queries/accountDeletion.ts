@@ -28,7 +28,7 @@ export function confirmDeletionMutationOptions() {
 		...contextMutationOptions({
 			mutationFn: async (token: string) => {
 				await userDeletionConfirm({body: {token}})
-				// The deletion is already applied; a failing re-read must not report it as failed.
+				// The write already landed; a failing re-read must not fail the mutation.
 				return userShow().then(({data}) => data).catch(() => undefined)
 			},
 			onSuccess: (account, _input, client) => {
@@ -37,7 +37,6 @@ export function confirmDeletionMutationOptions() {
 			onSettled: (_input, client) => client.invalidateQueries({queryKey: accountKeys.current}),
 			successMessage: () => i18n.global.t('user.deletion.confirmSuccess'),
 		}),
-		// Input holds the single-use confirmation token.
 		gcTime: 0,
 	}
 }
@@ -51,7 +50,6 @@ export function cancelDeletionMutationOptions() {
 		...contextMutationOptions({
 			mutationFn: async (password: string) => {
 				await userDeletionCancel({body: {password}})
-				// The cancellation is already applied; a failing re-read must not report it as failed.
 				return userShow().then(({data}) => data).catch(() => undefined)
 			},
 			onSuccess: (account, _input, client) => {
@@ -60,7 +58,6 @@ export function cancelDeletionMutationOptions() {
 			onSettled: (_input, client) => client.invalidateQueries({queryKey: accountKeys.current}),
 			successMessage: () => i18n.global.t('user.deletion.scheduledCancelSuccess'),
 		}),
-		// Input holds the plaintext password.
 		gcTime: 0,
 	}
 }
