@@ -1,6 +1,7 @@
 import {it, expect, vi} from 'vitest'
 import {QueryClient} from '@tanstack/vue-query'
 import {adminKeys, adminUsersQuery, updateAdminUserMutationOptions, deleteAdminUserMutationOptions} from './admin'
+import {accountKeys} from './account'
 const sdk = vi.hoisted(() => ({
 	adminUsersList: vi.fn(),
 	adminUsersPatchAdmin: vi.fn(),
@@ -34,4 +35,21 @@ it('deletion stales users and overview without inventing a page total', async ()
 	expect(client.getQueryState(adminKeys.usersPage('', 1))?.isInvalidated).toBe(true)
 	expect(client.getQueryState(adminKeys.overview)?.isInvalidated).toBe(true)
 	expect(client.getQueryData(adminKeys.usersPage('', 1))).toEqual(page)
+})
+it('demoting the acting admin flips is_admin in the account cache', async () => {
+	const client = new QueryClient()
+	client.setQueryData(accountKeys.user(1), {id: 1, username: 'admin', is_admin: true})
+	sdk.adminUsersPatchAdmin.mockResolvedValue({data: {id: 1, username: 'admin', is_admin: false}})
+	await client.getMutationCache().build(client, updateAdminUserMutationOptions())
+		.execute({id: 1, is_admin: false})
+	expect(client.getQueryData(accountKeys.user(1))).toEqual({id: 1, username: 'admin', is_admin: false})
+})
+it('demoting another user leaves the account cache alone', async () => {
+	const client = new QueryClient()
+	const account = {id: 1, username: 'admin', is_admin: true}
+	client.setQueryData(accountKeys.user(1), account)
+	sdk.adminUsersPatchAdmin.mockResolvedValue({data: {id: 2, username: 'other', is_admin: false}})
+	await client.getMutationCache().build(client, updateAdminUserMutationOptions())
+		.execute({id: 2, is_admin: false})
+	expect(client.getQueryData(accountKeys.user(1))).toEqual(account)
 })
