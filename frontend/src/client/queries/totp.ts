@@ -22,7 +22,11 @@ export function totpQuery() {
 export function totpQrQuery() {
 	return queryOptions({
 		queryKey: totpKeys.qr,
-		queryFn: async ({signal}) => (await totpQrcode({signal, parseAs: 'blob'})).data,
+		queryFn: async ({signal}) => {
+			const {data} = await totpQrcode({signal, parseAs: 'blob'})
+			if (!(data instanceof Blob)) throw new Error('TOTP QR response was not an image')
+			return data
+		},
 		gcTime: 0,
 	})
 }
