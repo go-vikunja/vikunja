@@ -14,10 +14,14 @@ export function caldavTokensQuery() {
 }
 
 export function createCaldavTokenMutationOptions() {
-	return contextMutationOptions({
-		mutationFn: async () => (await caldavTokensCreate()).data,
-		onSettled: (_input, client) => client.invalidateQueries({queryKey: caldavTokenKeys.all}),
-	})
+	return {
+		...contextMutationOptions({
+			mutationFn: async () => (await caldavTokensCreate()).data,
+			onSettled: (_input, client) => client.invalidateQueries({queryKey: caldavTokenKeys.all}),
+		}),
+		// Result holds the plaintext token.
+		gcTime: 0,
+	}
 }
 
 export function useCreateCaldavTokenMutation() {
