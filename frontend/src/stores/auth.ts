@@ -28,6 +28,15 @@ export type SessionUser = UserInfoBody & {
 	exp: number
 }
 
+export type JwtClaims = {
+	id: number,
+	type: AuthType,
+	exp: number,
+	username?: string,
+	is_admin?: boolean,
+	sid?: string,
+}
+
 import type {IUserSettings} from '@/modelTypes/IUserSettings'
 import router from '@/router'
 import {useConfigStore} from '@/stores/config'
@@ -367,12 +376,11 @@ export const useAuthStore = defineStore('auth', () => {
 					.split('.')[1]
 					.replace(/-/g, '+')
 					.replace(/_/g, '/')
-				const payload = JSON.parse(atob(base64))
-				const jwtUser = (payload)
-				jwtUserType = jwtUser.type
+				const payload = JSON.parse(atob(base64)) as JwtClaims
+				jwtUserType = payload.type
 				const ts = Math.round((new Date()).getTime() / MILLISECONDS_A_SECOND)
 
-				isAuthenticated = jwtUser.exp >= ts
+				isAuthenticated = payload.exp >= ts
 				currentSessionId.value = payload.sid ?? null
 
 				if (isAuthenticated) {
@@ -389,15 +397,15 @@ export const useAuthStore = defineStore('auth', () => {
 					// between /share/:hash/auth and the project view forever.
 					if (
 						info.value === null ||
-						info.value.id !== jwtUser.id ||
-						info.value.type !== jwtUser.type
+						info.value.id !== payload.id ||
+						info.value.type !== payload.type
 					) {
-						setUser(jwtUser, false)
+						setUser(payload, false)
 					} else {
 						// Always keep exp in sync so token renewal checks stay accurate
-						info.value.exp = jwtUser.exp
+						info.value.exp = payload.exp
 					}
-				} else if (jwtUser.type === AUTH_TYPES.USER) {
+				} else if (payload.type === AUTH_TYPES.USER) {
 					// JWT expired but this is a user session — attempt a cookie-based
 					// refresh before giving up. This lets users who reopen the app
 					// after the short JWT TTL seamlessly resume their session.
@@ -406,14 +414,13 @@ export const useAuthStore = defineStore('auth', () => {
 						const freshJwt = getToken()
 						if (freshJwt) {
 							const b64 = freshJwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
-							const p = JSON.parse(atob(b64))
-							const freshUser = (p)
-							isAuthenticated = freshUser.exp >= ts
+							const p = JSON.parse(atob(b64)) as JwtClaims
+							isAuthenticated = p.exp >= ts
 							currentSessionId.value = p.sid ?? null
-							if (info.value === null || info.value.id !== freshUser.id) {
-								setUser(freshUser, false)
+							if (info.value === null || info.value.id !== p.id) {
+								setUser(p, false)
 							} else {
-								info.value.exp = freshUser.exp
+								info.value.exp = p.exp
 							}
 						}
 					} catch {
