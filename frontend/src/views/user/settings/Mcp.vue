@@ -4,9 +4,8 @@ import {useNow} from '@vueuse/core'
 import {useI18n} from 'vue-i18n'
 import {useQuery} from '@tanstack/vue-query'
 import {apiTokensQuery, mcpInfoQuery, useDeleteApiTokenMutation} from '@/client/queries/apiTokens'
-import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import type {ApiToken as IApiToken} from '@/client/generated'
-import type {ApiTokenPreset, ApiTokenPresetGroups} from '@/helpers/apiToken'
+import {isApiTokenExpired, type ApiTokenPreset, type ApiTokenPresetGroups} from '@/helpers/apiToken'
 import ApiTokenForm from '@/components/token/ApiTokenForm.vue'
 import McpClientGuide from '@/components/token/McpClientGuide.vue'
 import XButton from '@/components/input/Button.vue'
@@ -149,13 +148,13 @@ async function deleteToken() {
 							<tr
 								v-for="token in tokens"
 								:key="token.id"
-								:class="{'mcp-token-expired': (parseDateOrNull(token.expires_at)?.getTime() ?? Infinity) < now.getTime()}"
+								:class="{'mcp-token-expired': isApiTokenExpired(token, now.getTime())}"
 							>
 								<td>{{ token.title }}</td>
 								<td>
 									{{ formatDisplayDate(token.expires_at) }}
 									<p
-										v-if="(parseDateOrNull(token.expires_at)?.getTime() ?? Infinity) < now.getTime()"
+										v-if="isApiTokenExpired(token, now.getTime())"
 										class="has-text-danger"
 									>
 										{{ t('user.settings.apiTokens.expired', {ago: formatDateSince(token.expires_at)}) }}

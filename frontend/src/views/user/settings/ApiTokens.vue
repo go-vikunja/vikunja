@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {useQuery} from '@tanstack/vue-query'
 import {apiTokensQuery, useDeleteApiTokenMutation} from '@/client/queries/apiTokens'
-import {parseDateOrNull} from '@/helpers/parseDateOrNull'
+import {isApiTokenExpired} from '@/helpers/apiToken'
 import {computed, onMounted, ref} from 'vue'
 import {useRoute} from 'vue-router'
 import {formatDateSince, formatDisplayDate} from '@/helpers/time/formatDate'
@@ -120,7 +120,7 @@ function onTokenCreated(token: IApiToken) {
 						<td>
 							{{ formatDisplayDate(tk.expires_at) }}
 							<p
-								v-if="(parseDateOrNull(tk.expires_at)?.getTime() ?? Infinity) < Date.now()"
+								v-if="isApiTokenExpired(tk)"
 								class="has-text-danger"
 							>
 								{{ $t('user.settings.apiTokens.expired', {ago: formatDateSince(tk.expires_at)}) }}
