@@ -1,4 +1,9 @@
-vi.mock('@/client/generated', () => ({authLogin: httpPostMock, authLogout: httpPostMock, tokenRenew: httpPostMock, userShow: vi.fn(async () => ({data: {}}))}))
+vi.mock('@/client/generated', () => ({
+	authLogin: sdk.authLogin,
+	authLogout: sdk.authLogout,
+	tokenRenew: sdk.tokenRenew,
+	userShow: sdk.userShow,
+}))
 import {describe, it, expect, beforeEach, vi} from 'vitest'
 import {setActivePinia, createPinia} from 'pinia'
 import {nextTick} from 'vue'
@@ -6,8 +11,14 @@ import {nextTick} from 'vue'
 import {useAuthStore} from './auth'
 import {AUTH_TYPES} from '@/constants/auth'
 
-const {httpPostMock, queryClientClearMock, refreshTokenMock, routerPushMock, getTokenMock} = vi.hoisted(() => ({
-	httpPostMock: vi.fn(),
+const sdk = vi.hoisted(() => ({
+	authLogin: vi.fn(),
+	authLogout: vi.fn(),
+	tokenRenew: vi.fn(),
+	userShow: vi.fn(),
+}))
+
+const {queryClientClearMock, refreshTokenMock, routerPushMock, getTokenMock} = vi.hoisted(() => ({
 	queryClientClearMock: vi.fn(),
 	refreshTokenMock: vi.fn(),
 	routerPushMock: vi.fn(),
@@ -48,6 +59,12 @@ vi.mock('@/helpers/redirectToProvider', () => ({
 	redirectToProviderOnLogout: vi.fn(),
 }))
 
+function resetSdkMocks() {
+	for (const operation of Object.values(sdk)) {
+		operation.mockReset().mockResolvedValue({data: {}})
+	}
+}
+
 // A refresh failure that looks like a real network/HTTP error so renewToken's
 // "is this a genuine logout?" check (it inspects the error cause's status) fires.
 function refreshError() {
@@ -71,7 +88,7 @@ function freshUserJwt() {
 describe('auth store renewToken retry (issue #2863)', () => {
 	beforeEach(() => {
 		setActivePinia(createPinia())
-		httpPostMock.mockReset().mockResolvedValue({data: {}})
+		resetSdkMocks()
 		refreshTokenMock.mockReset()
 		queryClientClearMock.mockReset()
 		routerPushMock.mockReset()
@@ -143,7 +160,7 @@ describe('auth store logout query lifecycle', () => {
 	beforeEach(() => {
 		setActivePinia(createPinia())
 		localStorage.clear()
-		httpPostMock.mockReset().mockResolvedValue({data: {}})
+		resetSdkMocks()
 		queryClientClearMock.mockReset()
 		routerPushMock.mockReset().mockResolvedValue(undefined)
 	})
@@ -196,7 +213,7 @@ describe('auth store logout query lifecycle', () => {
 describe('auth store query identity lifecycle', () => {
 	beforeEach(() => {
 		setActivePinia(createPinia())
-		httpPostMock.mockReset().mockResolvedValue({data: {}})
+		resetSdkMocks()
 		queryClientClearMock.mockReset()
 	})
 
@@ -238,7 +255,7 @@ describe('auth store query identity lifecycle', () => {
 
 	it('preserves server data when authentication fails without an identity transition', async () => {
 		await seedIdentity(1, AUTH_TYPES.USER)
-		httpPostMock.mockRejectedValueOnce(new Error('invalid credentials'))
+		sdk.authLogin.mockRejectedValueOnce(new Error('invalid credentials'))
 
 		await expect(useAuthStore().login({username: 'user', password: 'wrong'})).rejects.toThrow('invalid credentials')
 		await nextTick()
