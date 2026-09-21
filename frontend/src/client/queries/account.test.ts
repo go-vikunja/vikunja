@@ -1,6 +1,7 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest'
 import {QueryClient} from '@tanstack/vue-query'
 import {accountKeys, updateSettingsMutationOptions} from './account'
+import {invalidateAvatarCache} from '@/helpers/user'
 const sdk = vi.hoisted(() => ({userUpdateSettings: vi.fn(), userShow: vi.fn(), userGetAvatarProvider: vi.fn()}))
 vi.mock('@/client/generated', () => sdk)
 vi.mock('@/message', () => ({error: vi.fn(), success: vi.fn()}))
@@ -10,12 +11,36 @@ describe('account settings mutations', () => {
 	beforeEach(() => {vi.clearAllMocks()})
 	it('merges settings into the current account while preserving profile facts', async () => {
 		const client = new QueryClient()
-		client.setQueryData(accountKeys.user(1), {id: 1, is_admin: true, name: 'Same', settings: {name: 'Same'}})
+		const previous = {
+			id: 1,
+			is_admin: true,
+			name: 'Old',
+			settings: {name: 'Old'},
+		}
+		client.setQueryData(accountKeys.user(1), previous)
 		sdk.userUpdateSettings.mockResolvedValue({data: {}})
-		const settings = {name: 'Same', frontend_settings: {sidebar_width: 280}}
-		await client.getMutationCache().build(client, updateSettingsMutationOptions()).execute({settings, showMessage: false})
+		sdk.userGetAvatarProvider.mockResolvedValue({data: {avatar_provider: 'initials'}})
+		const settings = {
+			name: 'New',
+			frontend_settings: {sidebar_width: 280},
+		}
+
+		await client.getMutationCache()
+			.build(client, updateSettingsMutationOptions())
+			.execute({settings, showMessage: false})
+
 		expect(sdk.userUpdateSettings).toHaveBeenCalledWith({body: settings})
-		expect(client.getQueryData(accountKeys.user(1))).toMatchObject({id: 1, is_admin: true, settings})
+		expect(client.getQueryData(accountKeys.user(1))).toEqual({
+			id: 1,
+			is_admin: true,
+			name: 'New',
+			settings: {
+				name: 'New',
+				frontend_settings: {sidebar_width: 280},
+			},
+		})
+		await vi.waitFor(() => expect(invalidateAvatarCache).toHaveBeenCalledTimes(1))
+		expect(invalidateAvatarCache).toHaveBeenCalledWith(previous)
 	})
 	it('leaves cached settings intact when the server rejects an update', async () => {
 		const client = new QueryClient()
