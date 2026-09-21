@@ -32,4 +32,26 @@ describe('createUserSettingsDraft', () => {
 
 		expect(settings.language).toBe('fr-FR')
 	})
+
+	it('drops extra settings links whose url is not http(s)', () => {
+		const settings = createUserSettingsDraft({
+			extra_settings_links: {
+				a: {
+					text: 'x',
+					url: 'javascript:alert(1)',
+				},
+				b: {
+					text: 'y',
+					url: '/settings',
+				},
+			},
+		})
+
+		expect(settings.extra_settings_links).toEqual({
+			b: {
+				text: 'y',
+				url: '/settings',
+			},
+		})
+	})
 })
