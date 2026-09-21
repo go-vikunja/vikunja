@@ -1,12 +1,8 @@
-import {useMutation, type QueryClient} from '@tanstack/vue-query'
-import {userDeletionRequest, userDeletionConfirm, userDeletionCancel, userShow, type UserInfoBody} from '@/client/generated'
+import {useMutation} from '@tanstack/vue-query'
+import {userDeletionRequest, userDeletionConfirm, userDeletionCancel, userShow} from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
-import {accountKeys} from './account'
+import {accountKeys, reconcileAccount} from './account'
 import {i18n} from '@/i18n'
-
-function reconcileAccount(account: UserInfoBody, client: QueryClient) {
-	client.setQueriesData<UserInfoBody>({queryKey: accountKeys.current}, current => current ? account : current)
-}
 
 export function requestDeletionMutationOptions() {
 	return {
