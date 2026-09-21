@@ -22,8 +22,8 @@ const authOperations = {
 	'trello': migrationTrelloAuth,
 	'microsoft-todo': migrationMicrosoftTodoAuth,
 }
-export function migrationAuthQuery(provider: keyof typeof authOperations) {
-	return queryOptions({queryKey: ['migration', provider, 'auth'], queryFn: async ({signal}) => (await authOperations[provider]({signal})).data})
+export function migrationAuthMutationOptions() {
+	return contextMutationOptions({mutationFn: async (provider: keyof typeof authOperations) => (await authOperations[provider]()).data, toastError: () => false})
 }
 const fileOperations = {
 	'ticktick': migrationTicktickMigrate,
