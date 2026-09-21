@@ -10,6 +10,7 @@ import {
 import {captureClientRequestContext, assertClientRequestContext} from '@/client/requestContext'
 import {contextMutationOptions} from './contextMutation'
 import {fetchAllPages} from './fetchAllPages'
+import {API_MAX_PER_PAGE} from './pagination'
 import {projectKeys} from './projects'
 import {accountKeys} from './account'
 import {i18n} from '@/i18n'
@@ -34,7 +35,7 @@ export function adminUsersQuery(q = '', page = 1) {
 	return queryOptions({queryKey: adminKeys.usersPage(q, page), queryFn: async ({signal}) => (await adminUsersList({query: {q, page}, signal})).data})
 }
 export function adminUserSearchQuery(q: string) {
-	return queryOptions({queryKey: adminKeys.userSearch(q), queryFn: ({signal}) => fetchAllPages(async page => (await adminUsersList({query: {q, page}, signal})).data)})
+	return queryOptions({queryKey: adminKeys.userSearch(q), queryFn: ({signal}) => fetchAllPages(async page => (await adminUsersList({query: {q, page, per_page: API_MAX_PER_PAGE}, signal})).data)})
 }
 export function adminProjectsQuery(page: number) {
 	return queryOptions({queryKey: adminKeys.projectsPage(page), queryFn: async ({signal}) => (await adminProjectsList({query: {page}, signal})).data})
@@ -43,7 +44,7 @@ export function adminInvitesQuery(page: number) {
 	return queryOptions({queryKey: adminKeys.invitesPage(page), queryFn: async ({signal}) => (await adminInviteLinksList({query: {page}, signal})).data})
 }
 export function adminTeamsQuery(q: string) {
-	return queryOptions({queryKey: adminKeys.teams(q), queryFn: ({signal}) => fetchAllPages(async page => (await adminTeamsList({query: {q, page}, signal})).data)})
+	return queryOptions({queryKey: adminKeys.teams(q), queryFn: ({signal}) => fetchAllPages(async page => (await adminTeamsList({query: {q, page, per_page: API_MAX_PER_PAGE}, signal})).data)})
 }
 function patchUser(client: QueryClient, updated: AdminUser | undefined) {
 	if (!updated?.id) return
