@@ -1,6 +1,7 @@
 import {queryOptions, useMutation} from '@tanstack/vue-query'
 import {sessionsList, sessionsDelete, type Session} from '@/client/generated'
 import {fetchAllPages} from './fetchAllPages'
+import {API_MAX_PER_PAGE} from './pagination'
 import {contextMutationOptions} from './contextMutation'
 import {i18n} from '@/i18n'
 
@@ -9,7 +10,7 @@ export const sessionKeys = {all: ['sessions'] as const}
 export function sessionsQuery() {
 	return queryOptions({
 		queryKey: sessionKeys.all,
-		queryFn: ({signal}) => fetchAllPages(async page => (await sessionsList({query: {page}, signal})).data),
+		queryFn: ({signal}) => fetchAllPages(async page => (await sessionsList({query: {page, per_page: API_MAX_PER_PAGE}, signal})).data),
 	})
 }
 

@@ -9,7 +9,12 @@ it('loads the first session page through the generated operation', async () => {
 	const client = new QueryClient()
 	sdk.sessionsList.mockResolvedValue({data: {items: [{id: 'one'}], total_pages: 1}})
 	expect(await client.fetchQuery(sessionsQuery())).toEqual([{id: 'one'}])
-	expect(sdk.sessionsList).toHaveBeenCalledWith(expect.objectContaining({query: {page: 1}}))
+	expect(sdk.sessionsList).toHaveBeenCalledWith(expect.objectContaining({
+		query: {
+			page: 1,
+			per_page: 1000,
+		},
+	}))
 })
 it('removes a revoked session from an existing cache and marks the list stale', async () => {
 	const client = new QueryClient()
