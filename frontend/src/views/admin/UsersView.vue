@@ -368,7 +368,7 @@ function statusLabel(status: number | undefined): string {
 		case 1: return t('admin.users.statusEmailConfirmation')
 		case 2: return t('admin.users.statusDisabled')
 		case 3: return t('admin.users.statusLocked')
-		default: return String(status)
+		default: return status === undefined ? '' : String(status)
 	}
 }
 const statusOptions = computed(() => [0, 1, 2, 3].map(value => ({value, label: statusLabel(value)})))
