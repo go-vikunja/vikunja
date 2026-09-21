@@ -128,7 +128,7 @@ import ProjectSettingsDropdown from '@/components/project/ProjectSettingsDropdow
 import DropdownItem from '@/components/misc/DropdownItem.vue'
 import TimeDisplay from '@/components/misc/TimeDisplay.vue'
 const currentPage = ref(1)
-const {data, isFetching: loading} = useQuery(computed(() => adminProjectsQuery(currentPage.value)))
+const {data, isPending: loading} = useQuery(computed(() => adminProjectsQuery(currentPage.value)))
 type AdminProject = Project & {id: number}
 const projects = computed(() => (data.value?.items ?? []).filter((p): p is AdminProject => p.id !== undefined))
 const totalPages = computed(() => data.value?.total_pages ?? 1)

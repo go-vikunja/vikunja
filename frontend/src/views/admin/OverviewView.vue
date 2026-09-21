@@ -132,7 +132,7 @@ import {useConfigStore} from '@/stores/config'
 
 const configStore = useConfigStore()
 
-const {data, isFetching: loading} = useQuery(adminOverviewQuery())
+const {data, isPending: loading} = useQuery(adminOverviewQuery())
 
 const expiresInDays = computed<number | null>(() => {
 	const expires_at = data.value?.license?.expires_at
