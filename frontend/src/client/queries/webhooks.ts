@@ -6,7 +6,9 @@ import {i18n} from '@/i18n'
 
 export type WebhookScope = {kind: 'project', projectId: number} | {kind: 'user'}
 export const webhookKeys = {
-	list: (scope: WebhookScope) => ['webhooks', scope.kind, scope.kind === 'project' ? scope.projectId : 0, 'list'] as const,
+	list: (scope: WebhookScope) => scope.kind === 'project'
+		? ['webhooks', 'list', 'project', scope.projectId] as const
+		: ['webhooks', 'list', 'user'] as const,
 	events: (kind: WebhookScope['kind']) => ['webhooks', 'events', kind] as const,
 }
 export function webhooksQuery(scope: WebhookScope) {
