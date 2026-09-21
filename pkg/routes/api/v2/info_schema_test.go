@@ -24,6 +24,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// license.Feature is a uint that marshals as a string through its pointer-receiver
+// MarshalJSON, so Huma advertised integer while the wire carried strings.
 func TestInfoFeatureSchema(t *testing.T) {
 	config.InitDefaultConfig()
 	e := echo.New()
