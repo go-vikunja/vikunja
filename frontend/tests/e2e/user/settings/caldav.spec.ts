@@ -9,7 +9,7 @@ test.describe('CalDAV', () => {
 		await gotoUserSettings(page, 'caldav')
 
 		const created = page.waitForResponse(r =>
-			r.url().includes('/user/settings/token/caldav') && r.request().method() === 'PUT',
+			r.url().includes('/user/settings/token/caldav') && r.request().method() === 'POST',
 		)
 		await page.getByRole('button', {name: 'Create a CalDAV token'}).click()
 		await created
@@ -29,6 +29,9 @@ test.describe('CalDAV', () => {
 			headers: {Authorization: `Basic ${basic}`, Depth: '0'},
 		})
 		expect(resp.status()).toBeLessThan(300)
+		await page.reload()
+		await expect(banner).toHaveCount(0)
+		await expect(page.locator('table.table tr').filter({has: page.locator('td')})).toHaveCount(1)
 	})
 
 	test('deleting a token revokes caldav access', async ({
@@ -48,6 +51,8 @@ test.describe('CalDAV', () => {
 		)
 		await dataRows.getByRole('button', {name: 'Delete'}).click()
 		await deleted
+		await expect(dataRows).toHaveCount(0)
+		await page.reload()
 		await expect(dataRows).toHaveCount(0)
 
 		// NOTE: the factory seeds the plaintext token as-is, but caldav tokens are
