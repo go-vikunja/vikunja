@@ -1,6 +1,7 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest'
 import {QueryClient} from '@tanstack/vue-query'
-import {success} from '@/message'
+import {error, success} from '@/message'
+import {queryClient} from '@/client/queryClient'
 import {
 	avatarKeys,
 	avatarQuery,
@@ -54,10 +55,47 @@ describe('avatar mutations', () => {
 })
 
 describe('avatarQuery', () => {
-	beforeEach(() => vi.clearAllMocks())
+	beforeEach(() => {
+		vi.clearAllMocks()
+		vi.unstubAllGlobals()
+	})
+	it('fails without a global error toast', async () => {
+		const cause = {
+			status: 503,
+			detail: 'unavailable',
+		}
+		sdk.avatarGet.mockRejectedValue(cause)
+		await expect(queryClient.fetchQuery(avatarQuery('sam', 50))).rejects.toBe(cause)
+		expect(error).not.toHaveBeenCalled()
+		queryClient.clear()
+	})
 	it('rejects a response that is not a blob', async () => {
 		const client = new QueryClient()
 		sdk.avatarGet.mockResolvedValue({data: {message: 'not an image'}})
-		await expect(client.fetchQuery(avatarQuery('sam', 50))).rejects.toThrow('Avatar response was not an image')
+		await expect(client.fetchQuery(avatarQuery('sam', 50))).rejects.toThrow('Avatar response was not a blob')
+	})
+	it('caches a non-svg response as bytes', async () => {
+		const client = new QueryClient()
+		const png = new Blob(['bytes'], {type: 'image/png'})
+		sdk.avatarGet.mockResolvedValue({data: png})
+		await expect(client.fetchQuery(avatarQuery('sam', 50))).resolves.toBe(png)
+	})
+	it('downgrades an svg response to an inert data url', async () => {
+		const client = new QueryClient()
+		sdk.avatarGet.mockResolvedValue({data: new Blob(['<svg />'], {type: 'image/svg+xml'})})
+		await expect(client.fetchQuery(avatarQuery('sam', 50)))
+			.resolves.toBe('data:image/svg+xml;base64,PHN2ZyAvPg==')
+	})
+	it('downgrades an svg response with a charset parameter', async () => {
+		const client = new QueryClient()
+		sdk.avatarGet.mockResolvedValue({data: new Blob(['<svg />'], {type: 'image/svg+xml; charset=utf-8'})})
+		await expect(client.fetchQuery(avatarQuery('sam', 50))).resolves.toMatch(/^data:image\/svg\+xml/)
+	})
+	it('falls back to bytes for svg when FileReader is missing', async () => {
+		const client = new QueryClient()
+		const svg = new Blob(['<svg />'], {type: 'image/svg+xml'})
+		sdk.avatarGet.mockResolvedValue({data: svg})
+		vi.stubGlobal('FileReader', undefined)
+		await expect(client.fetchQuery(avatarQuery('sam', 50))).resolves.toBe(svg)
 	})
 })

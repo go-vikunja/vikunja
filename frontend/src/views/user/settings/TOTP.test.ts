@@ -32,16 +32,6 @@ vi.mock('@/message', () => ({
 	error: vi.fn(),
 }))
 
-// Avoid the avatar request triggered by setUser.
-vi.mock('@/helpers/user', async (importOriginal) => {
-	const original = await importOriginal<typeof import('@/helpers/user')>()
-	return {
-		...original,
-		fetchAvatarBlobUrl: vi.fn(async () => ''),
-		invalidateAvatarCache: vi.fn(),
-	}
-})
-
 const i18n = createI18n({legacy: false, locale: 'en', messages: {en}})
 
 let wrapper: VueWrapper | undefined

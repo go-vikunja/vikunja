@@ -23,16 +23,6 @@ vi.mock('@/helpers/fetcher', () => {
 	return {AuthenticatedHTTPFactory: httpStub, HTTPFactory: httpStub}
 })
 
-// Avoid the avatar request triggered by setUser.
-vi.mock('@/helpers/user', async (importOriginal) => {
-	const original = await importOriginal<typeof import('@/helpers/user')>()
-	return {
-		...original,
-		fetchAvatarBlobUrl: vi.fn(async () => ''),
-		invalidateAvatarCache: vi.fn(),
-	}
-})
-
 vi.mock('@/message', () => ({
 	success: vi.fn(),
 	error: vi.fn(),
