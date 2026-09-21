@@ -61,7 +61,7 @@
 					/>
 					<User
 						v-if="notificationDoer(n)"
-						:user="notificationDoer(n)"
+						:user="notificationDoer(n)!"
 						:show-username="false"
 						:avatar-size="16"
 					/>
