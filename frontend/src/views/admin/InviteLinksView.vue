@@ -78,7 +78,7 @@
 			v-if="totalPages > 1"
 			:total-pages="totalPages"
 			:current-page="page"
-			@pageChanged="loadLinks"
+			@pageChanged="goToPage"
 		/>
 
 		<Modal
@@ -240,7 +240,7 @@ const teamResults = computed(() => teamData.value ?? [])
 const minimumExpiry = ref('')
 const form = reactive({name: '', maxUses: '' as string | number, expiresAt: '', skipEmailConfirm: false})
 
-function loadLinks(nextPage = page.value) { page.value = nextPage }
+function goToPage(nextPage = page.value) { page.value = nextPage }
 
 function openCreate() {
 	Object.assign(form, {name: '', maxUses: '', expiresAt: '', skipEmailConfirm: false})
@@ -278,7 +278,7 @@ async function submitCreate() {
 		})
 		const base = configStore.frontend_url || new URL(import.meta.env.BASE_URL, window.location.origin).toString()
 		createdUrl.value = new URL(`register#invite-link=${encodeURIComponent(link.token!)}`, base.endsWith('/') ? base : `${base}/`).toString()
-		loadLinks(1)
+		goToPage(1)
 	} catch { /* Mutation reports the error. */ }
 	finally { createMutation.reset() }
 }
@@ -289,7 +289,7 @@ async function deleteLink() {
 		const nextPage = links.value.length === 1 && page.value > 1 ? page.value - 1 : page.value
 		await deleteMutation.mutateAsync(pendingDelete.value.id)
 		pendingDelete.value = null
-		loadLinks(nextPage)
+		goToPage(nextPage)
 	} catch { /* Mutation reports the error. */ }
 }
 
