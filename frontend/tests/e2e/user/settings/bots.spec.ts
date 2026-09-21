@@ -4,8 +4,8 @@ import {gotoUserSettings} from '../../../support/userSettings'
 test('manages a bot and its scoped token across reloads', async ({authenticatedPage: page, apiContext, userToken}) => {
 	await gotoUserSettings(page, 'bots')
 	await page.getByPlaceholder('bot-myassistant').fill('assistant')
-	await page.locator('.create-form input').nth(1).fill('Original name')
-	await page.locator('.create-form button').click()
+	await page.getByPlaceholder('My Assistant').fill('Original name')
+	await page.getByRole('button', {name: 'Create bot', exact: true}).click()
 	const card = page.locator('.bot-card')
 	await expect(card).toContainText('bot-assistant')
 	await card.getByRole('button', {name: 'Edit', exact: true}).click()
