@@ -51,6 +51,10 @@ describe('task queries', () => {
 		})
 		expect(task.related_tasks.subtask[0]).toMatchObject({id: 2, title: 'Child', labels: [], related_tasks: {}})
 	})
+	it('keeps related tasks one level deep like the API', () => {
+		const task = normalizeTask({id: 1, related_tasks: {subtask: [{id: 2, related_tasks: {parenttask: [{id: 1}]}}]}})
+		expect(task.related_tasks.subtask[0].related_tasks).toEqual({})
+	})
 	it('leaves expand-only fields absent', () => {
 		const task = normalizeTask({id: 1})
 		for (const field of [

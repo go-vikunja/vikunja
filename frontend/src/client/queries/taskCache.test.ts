@@ -105,6 +105,20 @@ describe('task cache reconciliation', () => {
 			pages: {3: 1},
 		})
 	})
+	it('updates a parent and its subtask one after the other without recursing forever', () => {
+		const client = new QueryClient()
+		const list = taskKeys.allList({project: 1})
+		client.setQueryData(list, [
+			normalizeTask({id: 1, project_id: 1, related_tasks: {subtask: [{id: 2, project_id: 1}]}}),
+			normalizeTask({id: 2, project_id: 1, related_tasks: {parenttask: [{id: 1, project_id: 1}]}}),
+		])
+		const cached = (id: number) => client.getQueryData<TaskResponse[]>(list)!.find(task => task.id === id)!
+		replaceTaskEverywhere(client, {...cached(2), title: 'moved child'})
+		replaceTaskEverywhere(client, {...cached(1), title: 'moved parent'})
+		const [parent, child] = client.getQueryData<TaskResponse[]>(list)!
+		expect(parent.related_tasks.subtask).toMatchObject([{id: 2, title: 'moved child', related_tasks: {}}])
+		expect(child.related_tasks.parenttask).toMatchObject([{id: 1, title: 'moved parent', related_tasks: {}}])
+	})
 	it('drops a card from the board it was dragged out of, but not from other boards', () => {
 		const client = new QueryClient()
 		const dragged = normalizeTask({id: 2, project_id: 1, title: 'dragged'})

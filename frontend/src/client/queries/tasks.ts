@@ -126,7 +126,8 @@ export function normalizeTask(task: Task): TaskResponse {
 		attachments: task.attachments ?? [],
 		related_tasks: Object.fromEntries(
 			Object.entries(task.related_tasks ?? {})
-				.map(([kind, related]) => [kind, (related ?? []).map(normalizeTask)]),
+				// The API nests relations one level deep; deeper copies can cycle back to the task.
+				.map(([kind, related]) => [kind, (related ?? []).map(child => normalizeTask({...child, related_tasks: {}}))]),
 		),
 		reactions: Object.fromEntries(
 			Object.entries(task.reactions ?? {})
