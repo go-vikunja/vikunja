@@ -322,6 +322,7 @@ import FormSelect from '@/components/input/FormSelect.vue'
 import FormCheckbox from '@/components/input/FormCheckbox.vue'
 
 import {SUPPORTED_LOCALES, setLanguage} from '@/i18n'
+import {error} from '@/message'
 import {useQuery} from '@tanstack/vue-query'
 import {timezonesQuery} from '@/client/queries/account'
 import {formatDisplayDateFormat} from '@/helpers/time/formatDate'
@@ -529,7 +530,7 @@ async function updateSettings() {
 		await updateUserSettings.mutateAsync({
 			settings: configStore.demo_mode_enabled ? withoutLanguage : settings.value,
 		})
-		if (configStore.demo_mode_enabled) await setLanguage(language)
+		if (configStore.demo_mode_enabled) setLanguage(language).catch(error)
 	} catch { return }
 	initialSettings.value = JSON.parse(JSON.stringify(settings.value))
 	isDirty.value = false
