@@ -136,7 +136,7 @@
 								:aria-label="$t('admin.inviteLinks.teams')"
 								:search-results="teamResults"
 								:loading="loadingTeams"
-								@search="searchTeams"
+								@search="teamSearch = $event"
 							/>
 						</template>
 					</FormField>
@@ -199,7 +199,7 @@
 
 <script setup lang="ts">
 import {computed, reactive, ref} from 'vue'
-import {useClipboard, useDebounceFn} from '@vueuse/core'
+import {useClipboard} from '@vueuse/core'
 import {formatDate} from '@/helpers/time/formatDate'
 import {useI18n} from 'vue-i18n'
 import Card from '@/components/misc/Card.vue'
@@ -250,8 +250,6 @@ function openCreate() {
 	createOpen.value = true
 	teamSearch.value = ''
 }
-
-const searchTeams = useDebounceFn((query: string) => { teamSearch.value = query }, 250)
 
 function closeCreate() {
 	if (creating.value) return
