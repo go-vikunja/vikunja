@@ -1,16 +1,27 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest'
 import {QueryClient} from '@tanstack/vue-query'
-import {avatarKeys, updateAvatarProviderMutationOptions} from './avatars'
-const sdk = vi.hoisted(() => ({userSetAvatarProvider: vi.fn()}))
+import {success} from '@/message'
+import {
+	avatarKeys,
+	avatarQuery,
+	updateAvatarProviderMutationOptions,
+	uploadAvatarMutationOptions,
+} from './avatars'
+const sdk = vi.hoisted(() => ({
+	avatarGet: vi.fn(),
+	userSetAvatarProvider: vi.fn(),
+	userAvatarUpload: vi.fn(),
+}))
 vi.mock('@/client/generated', () => sdk)
 vi.mock('@/message', () => ({error: vi.fn(), success: vi.fn()}))
 
-describe('avatar provider mutations', () => {
+describe('avatar mutations', () => {
 	beforeEach(() => vi.clearAllMocks())
 	it('invalidates every size of the changed avatar without touching another user', async () => {
 		const client = new QueryClient()
 		for (const size of [20, 50]) client.setQueryData(avatarKeys.image('sam', size), new Blob())
 		client.setQueryData(avatarKeys.image('other', 50), new Blob())
+		client.setQueryData(avatarKeys.provider, {avatar_provider: 'default'})
 		sdk.userSetAvatarProvider.mockResolvedValue({data: {}})
 		await client.getMutationCache().build(client, updateAvatarProviderMutationOptions()).execute({
 			username: 'sam',
@@ -19,5 +30,34 @@ describe('avatar provider mutations', () => {
 		expect(sdk.userSetAvatarProvider).toHaveBeenCalledWith({body: {avatar_provider: 'initials'}})
 		for (const size of [20, 50]) expect(client.getQueryState(avatarKeys.image('sam', size))?.isInvalidated).toBe(true)
 		expect(client.getQueryState(avatarKeys.image('other', 50))?.isInvalidated).toBe(false)
+		expect(client.getQueryState(avatarKeys.provider)?.isInvalidated).toBe(true)
+		expect(success).toHaveBeenCalledTimes(1)
+	})
+	it('uploads the blob as a named png and invalidates the avatar and the provider', async () => {
+		const client = new QueryClient()
+		client.setQueryData(avatarKeys.image('sam', 50), new Blob())
+		client.setQueryData(avatarKeys.image('other', 50), new Blob())
+		client.setQueryData(avatarKeys.provider, {avatar_provider: 'upload'})
+		sdk.userAvatarUpload.mockResolvedValue({data: {}})
+		await client.getMutationCache().build(client, uploadAvatarMutationOptions()).execute({
+			username: 'sam',
+			blob: new Blob(['bytes'], {type: 'image/png'}),
+		})
+		const {avatar} = sdk.userAvatarUpload.mock.calls[0][0].body
+		expect(avatar.name).toBe('avatar.png')
+		expect(avatar.type).toBe('image/png')
+		expect(client.getQueryState(avatarKeys.image('sam', 50))?.isInvalidated).toBe(true)
+		expect(client.getQueryState(avatarKeys.image('other', 50))?.isInvalidated).toBe(false)
+		expect(client.getQueryState(avatarKeys.provider)?.isInvalidated).toBe(true)
+		expect(success).toHaveBeenCalledTimes(1)
+	})
+})
+
+describe('avatarQuery', () => {
+	beforeEach(() => vi.clearAllMocks())
+	it('rejects a response that is not a blob', async () => {
+		const client = new QueryClient()
+		sdk.avatarGet.mockResolvedValue({data: {message: 'not an image'}})
+		await expect(client.fetchQuery(avatarQuery('sam', 50))).rejects.toThrow('Avatar response was not an image')
 	})
 })
