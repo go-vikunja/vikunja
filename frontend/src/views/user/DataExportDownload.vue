@@ -57,7 +57,11 @@ async function download() {
 
 	try {
 		await downloadMutation.mutateAsync(password.value)
+	} catch {
+		return
+	} finally {
+		// Evicts the plaintext password and the export Blob from the mutation cache.
 		downloadMutation.reset()
-	} catch { return }
+	}
 }
 </script>
