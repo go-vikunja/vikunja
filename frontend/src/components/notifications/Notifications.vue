@@ -150,12 +150,10 @@ function hidePopup(e: MouseEvent) {
 async function to(n: DatabaseNotification) {
 	const route = notificationRoute(n)
 	if (!route || !n.id) return
-	try {
-		await readMutation.mutateAsync(n.id)
-		showNotifications.value = false
-		const failure = await router.push(route)
-		if (isNavigationFailure(failure, NavigationFailureType.duplicated)) router.go(0)
-	} catch { /* Mutation reports the error. */ }
+	readMutation.mutate(n.id)
+	showNotifications.value = false
+	const failure = await router.push(route)
+	if (isNavigationFailure(failure, NavigationFailureType.duplicated)) router.go(0)
 }
 
 function markAllRead() { readAllMutation.mutate() }
