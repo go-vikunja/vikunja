@@ -19,9 +19,12 @@ export function useConfirmDeletionMutation() {
 	return useMutation(contextMutationOptions({
 		mutationFn: async (token: string) => {
 			await userDeletionConfirm({body: {token}})
-			return (await userShow()).data
+			// The deletion is already applied; a failing re-read must not report it as failed.
+			return userShow().then(({data}) => data).catch(() => undefined)
 		},
-		onSuccess: (account, _input, client) => reconcileAccount(account, client),
+		onSuccess: (account, _input, client) => {
+			if (account) reconcileAccount(account, client)
+		},
 		onSettled: (_input, client) => client.invalidateQueries({queryKey: accountKeys.current}),
 		successMessage: () => i18n.global.t('user.deletion.confirmSuccess'),
 	}))
@@ -31,9 +34,12 @@ export function cancelDeletionMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async (password: string) => {
 			await userDeletionCancel({body: {password}})
-			return (await userShow()).data
+			// The cancellation is already applied; a failing re-read must not report it as failed.
+			return userShow().then(({data}) => data).catch(() => undefined)
 		},
-		onSuccess: (account, _input, client) => reconcileAccount(account, client),
+		onSuccess: (account, _input, client) => {
+			if (account) reconcileAccount(account, client)
+		},
 		onSettled: (_input, client) => client.invalidateQueries({queryKey: accountKeys.current}),
 		successMessage: () => i18n.global.t('user.deletion.scheduledCancelSuccess'),
 	})
