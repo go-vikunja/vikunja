@@ -17,9 +17,14 @@ const post = vi.hoisted(() => vi.fn(() => {
 	})
 }))
 
+const apiUrls = vi.hoisted(() => ({
+	base: '/api/v2/',
+	legacy: '/api/v1/',
+}))
+
 vi.mock('@/helpers/apiUrl', () => ({
-	getApiBaseUrl: () => '/api/v2/',
-	getLegacyApiBaseUrl: () => '/api/v1/',
+	getApiBaseUrl: () => apiUrls.base,
+	getLegacyApiBaseUrl: () => apiUrls.legacy,
 }))
 
 vi.mock('@/client/generated', () => ({authRefreshToken: post}))
@@ -235,6 +240,8 @@ describe('refreshToken v1 cookie fallback', () => {
 		post.mockClear()
 		removeToken()
 		localStorage.clear()
+		apiUrls.base = '/api/v2/'
+		apiUrls.legacy = '/api/v1/'
 	})
 
 	it.each([
@@ -258,6 +265,18 @@ describe('refreshToken v1 cookie fallback', () => {
 		await expect(refreshToken(true)).rejects.toThrow('Error renewing token')
 
 		expect(post).toHaveBeenCalledTimes(1)
+		expect(localStorage.getItem('token')).toBeNull()
+	})
+
+	it('does not retry when the deployment has no version suffix to swap', async () => {
+		apiUrls.base = 'https://api.example/custom/'
+		apiUrls.legacy = 'https://api.example/custom/'
+		post.mockRejectedValueOnce({status: 401})
+
+		await expect(refreshToken(true)).rejects.toThrow('Error renewing token')
+
+		expect(post).toHaveBeenCalledTimes(1)
+		expect(post).toHaveBeenNthCalledWith(1, expect.objectContaining({baseUrl: 'https://api.example/custom'}))
 		expect(localStorage.getItem('token')).toBeNull()
 	})
 

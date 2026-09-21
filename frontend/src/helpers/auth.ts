@@ -163,19 +163,21 @@ async function doRefresh(persist: boolean): Promise<void> {
 
 		// We hold the lock and no one else refreshed — make the API call.
 		try {
+			const baseUrl = getApiBaseUrl().replace(/\/$/, '')
+			const legacyBaseUrl = getLegacyApiBaseUrl().replace(/\/$/, '')
 			let response
 			// A per-request baseUrl skips mergeConfigs (utils.gen.ts), the only place a trailing slash is stripped.
 			try {
-				response = await authRefreshToken({client: publicClient, baseUrl: getApiBaseUrl().replace(/\/$/, '')})
+				response = await authRefreshToken({client: publicClient, baseUrl})
 			} catch (e) {
-				if ((e as {status?: number})?.status === 429) {
+				if ((e as {status?: number})?.status === 429 || legacyBaseUrl === baseUrl) {
 					throw e
 				}
 				if (loggedOutSinceStart()) {
 					return
 				}
 				// Migrate the old path-scoped refresh cookie; all other requests use v2.
-				response = await authRefreshToken({client: publicClient, baseUrl: getLegacyApiBaseUrl().replace(/\/$/, '')})
+				response = await authRefreshToken({client: publicClient, baseUrl: legacyBaseUrl})
 			}
 			if (loggedOutSinceStart()) {
 				return
