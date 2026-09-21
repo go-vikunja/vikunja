@@ -12,6 +12,7 @@ import type {
 	User,
 } from '@/client/generated'
 import {fetchAllPages} from './fetchAllPages'
+import {API_MAX_PER_PAGE, type Paginated} from './pagination'
 import {queryClient} from '@/client/queryClient'
 
 export type TaskFilterParams = Omit<NonNullable<TasksListData['query']>, 'format' | 'page'>
@@ -71,19 +72,7 @@ export type TaskResponse = Omit<TaskReadOneBody,
 	reactions: Record<string, User[]>
 }
 
-export type PaginatedTaskResponse = Omit<PaginatedTask,
-	'items' |
-	'total' |
-	'page' |
-	'per_page' |
-	'total_pages'
-> & {
-	items: TaskResponse[]
-	total: number
-	page: number
-	per_page: number
-	total_pages: number
-}
+export type PaginatedTaskResponse = Omit<PaginatedTask, keyof Paginated<unknown>> & Paginated<TaskResponse>
 
 export function getDefaultTaskFilterParams(): TaskFilterParams {
 	return {
@@ -211,7 +200,7 @@ export function ensureTask(id: number, expand: TaskExpansion = []) {
 }
 
 export function allTasksQuery(scope: TaskScope) {
-	const exhaustiveScope = {...scope, params: {...scope.params, per_page: 1000}}
+	const exhaustiveScope = {...scope, params: {...scope.params, per_page: API_MAX_PER_PAGE}}
 	return queryOptions({
 		queryKey: taskKeys.allList(scope),
 		queryFn: ({signal}) => fetchAllPages(

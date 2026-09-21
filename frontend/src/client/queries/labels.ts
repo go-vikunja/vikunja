@@ -10,6 +10,7 @@ import {
 import type {Label, LabelWritable} from '@/client/generated'
 import {queryClient} from '@/client/queryClient'
 import {fetchAllPages} from './fetchAllPages'
+import {API_MAX_PER_PAGE} from './pagination'
 import {colorFromHex} from '@/helpers/color/colorFromHex'
 import {i18n} from '@/i18n'
 import {success} from '@/message'
@@ -34,7 +35,7 @@ export function createLabelDraft(label: Partial<LabelWritable> = {}): LabelDraft
 }
 
 function fetchAllLabels(): Promise<Label[]> {
-	return fetchAllPages(async page => (await labelsList({query: {page, per_page: 1000}})).data)
+	return fetchAllPages(async page => (await labelsList({query: {page, per_page: API_MAX_PER_PAGE}})).data)
 }
 
 export function sortLabelsAlphabetically(labels: Label[], locale = i18n.global.locale.value): Label[] {

@@ -24,6 +24,7 @@ import {i18n} from '@/i18n'
 
 import {contextMutationOptions} from './contextMutation'
 import {fetchAllPages} from './fetchAllPages'
+import {API_MAX_PER_PAGE} from './pagination'
 
 export type ProjectResponse = Omit<Project,
 	'id' |
@@ -154,7 +155,7 @@ function partitionProjects(projects: Project[]): ProjectListResult {
 
 async function fetchAllProjects(): Promise<ProjectListResult> {
 	const projects = await fetchAllPages(async page => (await projectsList({
-		query: {is_archived: true, expand: 'permissions', page, per_page: 1000},
+		query: {is_archived: true, expand: 'permissions', page, per_page: API_MAX_PER_PAGE},
 	})).data)
 	return partitionProjects(projects)
 }

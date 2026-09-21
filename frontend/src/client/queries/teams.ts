@@ -3,6 +3,7 @@ import {teamsList, teamsRead, teamsCreate, teamsUpdate, teamsDelete, teamsMember
 import type {Team, TeamReadBody, TeamWritable, TeamMemberWritable} from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
 import {fetchAllPages} from './fetchAllPages'
+import {API_MAX_PER_PAGE} from './pagination'
 import {projectKeys} from './projects'
 import {userSearchKeys} from './userSearch'
 import {i18n} from '@/i18n'
@@ -20,7 +21,7 @@ export function createTeamDraft(team: TeamWritable = {}): Required<TeamWritable>
 export function teamsQuery(search = '', includePublic = false) {
 	return queryOptions({
 		queryKey: teamKeys.list(search, includePublic),
-		queryFn: ({signal}) => fetchAllPages(async page => (await teamsList({query: {q: search, include_public: includePublic, page, per_page: 1000}, signal})).data),
+		queryFn: ({signal}) => fetchAllPages(async page => (await teamsList({query: {q: search, include_public: includePublic, page, per_page: API_MAX_PER_PAGE}, signal})).data),
 	})
 }
 
