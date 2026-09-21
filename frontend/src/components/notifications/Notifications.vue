@@ -57,7 +57,7 @@
 				>
 					<div
 						class="read-indicator"
-						:class="{'read': n.readAt !== null}"
+						:class="{'read': n.read_at !== null}"
 					/>
 					<User
 						v-if="n.notification.doer"
@@ -135,7 +135,7 @@ const showNotifications = ref(false)
 const popup = ref<HTMLElement | null>(null)
 
 const unreadNotifications = computed(() => {
-	return notifications.value.filter(n => n.readAt === null).length
+	return notifications.value.filter(n => n.read_at === null).length
 })
 const notifications = computed(() => {
 	return allNotifications.value ? allNotifications.value.filter(n => n.name !== '') : []
@@ -260,7 +260,7 @@ async function markAllRead() {
 	await notificationService.markAllRead()
 	success({message: t('notification.markAllReadSuccess')})
 
-	notifications.value.forEach(n => n.readAt = new Date())
+	notifications.value.forEach(n => n.read_at = new Date())
 }
 
 async function clearAll() {
