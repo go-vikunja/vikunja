@@ -1,7 +1,7 @@
-import UserModel from '@/models/user'
+import AbstractModel from './abstractModel'
 import type {IAdminUser} from '@/modelTypes/IAdminUser'
 
-export default class AdminUserModel extends UserModel implements IAdminUser {
+export default class AdminUserModel extends AbstractModel<IAdminUser> implements IAdminUser {
 	declare status: number
 	declare isAdmin: boolean
 	declare issuer: string
@@ -9,6 +9,7 @@ export default class AdminUserModel extends UserModel implements IAdminUser {
 	declare authProvider?: string
 
 	constructor(data: Partial<IAdminUser> = {}) {
-		super(data)
+		super()
+		this.assignData(data)
 	}
 }

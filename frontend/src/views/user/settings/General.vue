@@ -21,7 +21,7 @@
 				v-if="isExternalUser"
 				class="help"
 			>
-				{{ $t('user.settings.general.externalUserNameChange', {provider: authStore.info.authProvider}) }}
+				{{ $t('user.settings.general.externalUserNameChange', {provider: authStore.info.auth_provider}) }}
 			</p>
 			<FormField
 				:label="$t('user.settings.general.defaultProject')"

@@ -89,7 +89,7 @@ describe('TOTP settings', () => {
 			id: 1,
 			username: 'user1',
 			is_local_user: true,
-		} as never)
+		})
 	})
 
 	afterEach(() => {
