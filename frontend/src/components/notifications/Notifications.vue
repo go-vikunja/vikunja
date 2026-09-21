@@ -58,7 +58,9 @@
 					<div
 						class="read-indicator"
 						:class="{'read': n.read}"
-					/>
+					>
+						<span class="is-sr-only">{{ n.read ? $t('notification.read') : $t('notification.unread') }}</span>
+					</div>
 					<User
 						v-if="n.doer"
 						:user="n.doer"

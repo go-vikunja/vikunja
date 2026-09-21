@@ -25,6 +25,10 @@ it('loads every page and patches only the read notification in an existing list'
 		},
 	}))
 	await client.fetchQuery(notificationsQuery())
+	expect(sdk.notificationsList).toHaveBeenNthCalledWith(1, {
+		query: {page: 1, per_page: 1000},
+		signal: expect.anything(),
+	})
 	sdk.notificationsMarkRead.mockResolvedValue({data: {id: 1, read_at: '2026-09-21T12:00:00Z'}})
 	await client.getMutationCache().build(client, markNotificationReadMutationOptions()).execute(1)
 	expect(client.getQueryData(notificationKeys.all)).toEqual([{id: 1, read_at: '2026-09-21T12:00:00Z'}, {id: 2}])
