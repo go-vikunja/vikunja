@@ -94,7 +94,6 @@ import {useObjectUrl} from '@vueuse/core'
 import {totpQuery, totpQrQuery, useEnrollTotpMutation, useEnableTotpMutation, useDisableTotpMutation} from '@/client/queries/totp'
 import FormField from '@/components/input/FormField.vue'
 
-
 import {useTitle} from '@/composables/useTitle'
 import {useConfigStore} from '@/stores/config'
 import {useAuthStore} from '@/stores/auth'
