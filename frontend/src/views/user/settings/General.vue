@@ -331,7 +331,7 @@ import {useTitle} from '@/composables/useTitle'
 import {useProjects} from '@/composables/useProjects'
 import {useAuthStore} from '@/stores/auth'
 import {useConfigStore} from '@/stores/config'
-import {createUserSettingsDraft, taskRemindersFromSettings, type UserSettingsResponse} from '@/helpers/userSettings'
+import {createUserSettingsDraft, taskRemindersFromSettings, type UserSettings} from '@/helpers/userSettings'
 import {isSavedFilterProject} from '@/client/queries/projects'
 import {DEFAULT_PROJECT_VIEW_SETTINGS} from '@/constants/projectView'
 import {PRIORITIES} from '@/constants/priorities'
@@ -437,7 +437,7 @@ const quick_add_default_reminders = computed({
 	},
 })
 
-const initialSettings = ref<UserSettingsResponse>()
+const initialSettings = ref<UserSettings>()
 const isDirty = ref(false)
 
 onBeforeMount(() => {
@@ -465,7 +465,7 @@ function enforceBackgroundBrightnessBounds() {
 	}
 }
 
-function useAvailableTimezones(settingsRef: Ref<UserSettingsResponse>) {
+function useAvailableTimezones(settingsRef: Ref<UserSettings>) {
 	const zones = useQuery(timezonesQuery())
 	const searchText = ref('')
 	const availableTimezones = computed(() => [...(zones.data.value ?? [])].sort().map(value => ({value, label: value.replace(/_/g, ' ')})))

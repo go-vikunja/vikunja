@@ -46,7 +46,7 @@ export interface ExtraSettingsLinks {
 
 import type {UserGeneralSettings} from '@/client/generated'
 
-export type UserSettingsResponse = Required<Omit<UserGeneralSettings, '$schema' | 'frontend_settings' | 'extra_settings_links' | 'language'>> & {
+export type UserSettings = Required<Omit<UserGeneralSettings, '$schema' | 'frontend_settings' | 'extra_settings_links' | 'language'>> & {
 	frontend_settings: FrontendSettings
 	extra_settings_links: ExtraSettingsLinks
 	language: SupportedLocale
@@ -60,7 +60,7 @@ import {DATE_DISPLAY} from '@/constants/dateDisplay'
 import {TIME_FORMAT} from '@/constants/timeFormat'
 import {RELATION_KIND} from '@/types/IRelationKind'
 
-export function createUserSettingsDraft(data: UserGeneralSettings = {}): UserSettingsResponse {
+export function createUserSettingsDraft(data: UserGeneralSettings = {}): UserSettings {
 	const frontend = typeof data.frontend_settings === 'object' && data.frontend_settings !== null
 		? data.frontend_settings as Partial<FrontendSettings> : {}
 	return {
