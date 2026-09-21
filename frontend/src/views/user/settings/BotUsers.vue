@@ -11,12 +11,11 @@ import ApiTokenForm from '@/components/token/ApiTokenForm.vue'
 import {botsQuery, useCreateBotMutation, useUpdateBotMutation, useDeleteBotMutation} from '@/client/queries/bots'
 import {useQueries, useQuery} from '@tanstack/vue-query'
 import {botApiTokensQuery, useDeleteApiTokenMutation} from '@/client/queries/apiTokens'
-import type {BotUser} from '@/client/generated'
-import type {ApiToken as IApiToken} from '@/client/generated'
+import type {ApiToken, BotUser} from '@/client/generated'
 import {formatDisplayDate} from '@/helpers/time/formatDate'
 import {getErrorText} from '@/message'
 
-type IUser = BotUser & Required<Pick<BotUser, 'id'>>
+type Bot = BotUser & Required<Pick<BotUser, 'id'>>
 
 const STATUS_ACTIVE = 0
 const STATUS_DISABLED = 2
@@ -29,7 +28,7 @@ const createMutation = useCreateBotMutation()
 const updateMutation = useUpdateBotMutation()
 const deleteMutation = useDeleteBotMutation()
 const deleteTokenMutation = useDeleteApiTokenMutation()
-const bots = computed(() => (botData.value ?? []).filter((bot): bot is IUser => typeof bot.id === 'number' && bot.id > 0))
+const bots = computed(() => (botData.value ?? []).filter((bot): bot is Bot => typeof bot.id === 'number' && bot.id > 0))
 const newBotUsername = ref('')
 const newBotName = ref('')
 const createError = ref<string | null>(null)
@@ -46,7 +45,7 @@ const editingName = ref<Record<number, boolean>>({})
 const nameDraft = ref<Record<number, string>>({})
 
 const showDeleteModal = ref<boolean>(false)
-const botToDelete = ref<IUser>()
+const botToDelete = ref<Bot>()
 
 async function createBot() {
 	createError.value = null
@@ -66,7 +65,7 @@ async function createBot() {
 	}
 }
 
-async function toggleBotStatus(bot: IUser) {
+async function toggleBotStatus(bot: Bot) {
 	const updated = {
 		...bot,
 		status: bot.status === STATUS_ACTIVE ? STATUS_DISABLED : STATUS_ACTIVE,
@@ -74,17 +73,17 @@ async function toggleBotStatus(bot: IUser) {
 	try { await updateMutation.mutateAsync({id: bot.id, body: updated}) } catch { /* Mutation reports the error. */ }
 }
 
-function startEditName(bot: IUser) {
+function startEditName(bot: Bot) {
 	nameDraft.value[bot.id] = bot.name ?? ''
 	editingName.value[bot.id] = true
 }
 
-function cancelEditName(bot: IUser) {
+function cancelEditName(bot: Bot) {
 	editingName.value[bot.id] = false
 	delete nameDraft.value[bot.id]
 }
 
-async function saveBotName(bot: IUser) {
+async function saveBotName(bot: Bot) {
 	const draft = nameDraft.value[bot.id]
 	const updated = {
 		...bot,
@@ -113,12 +112,12 @@ async function deleteBot() {
 	} catch { /* Mutation reports the error. */ }
 }
 
-function onTokenCreated(bot: IUser, token: IApiToken) {
+function onTokenCreated(bot: Bot, token: ApiToken) {
 	newTokensByBot.value[bot.id] = token.token ?? ''
 	showTokenForm.value[bot.id] = false
 }
 
-async function deleteToken(token: IApiToken) {
+async function deleteToken(token: ApiToken) {
 	if (!token.id) return
 	try { await deleteTokenMutation.mutateAsync(token.id) } catch { /* Mutation reports the error. */ }
 }
@@ -277,7 +276,7 @@ async function deleteToken(token: IApiToken) {
 					<ApiTokenForm
 						v-if="showTokenForm[bot.id]"
 						:owner-id="bot.id"
-						@created="(token: IApiToken) => onTokenCreated(bot, token)"
+						@created="(token: ApiToken) => onTokenCreated(bot, token)"
 						@cancel="showTokenForm[bot.id] = false"
 					/>
 					<XButton
