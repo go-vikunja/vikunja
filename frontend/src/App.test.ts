@@ -92,17 +92,12 @@ describe('App layout', () => {
 			type: AUTH_TYPES.USER,
 			exp: 0,
 		})
-		authStore.setUser({
-			id: 1,
-			username: 'user1',
-		})
 
 		await mountApp('/labels')
 		expect(wrapper!.findComponent({name: 'ContentAuth'}).exists()).toBe(true)
 
 		authStore.setAuthenticated(false)
 		authStore.setSession(null)
-		authStore.setUser(null)
 		await flushPromises()
 
 		expect(wrapper!.find('.no-auth').exists()).toBe(true)
