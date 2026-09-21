@@ -11,17 +11,20 @@ import type {ProFeature} from '@/constants/proFeatures'
 import {InvalidApiUrlProvidedError} from '@/helpers/checkAndSetApiUrl'
 
 export type ConfigState = Required<Omit<VikunjaInfos,
- '$schema' | 'auth' | 'legal' | 'available_migrators' | 'enabled_background_providers' | 'enabled_pro_features'
+	'$schema' | 'auth' | 'legal' | 'available_migrators' | 'enabled_background_providers' | 'enabled_pro_features'
 >> & {
- available_migrators: string[]
- enabled_background_providers: string[]
- enabled_pro_features: string[]
- legal: Required<NonNullable<VikunjaInfos['legal']>>
- auth: {
-  local: Required<NonNullable<AuthInfo['local']>>
-  ldap: Required<NonNullable<AuthInfo['ldap']>>
-  openid_connect: {enabled: boolean; providers: IProvider[]}
- }
+	available_migrators: string[]
+	enabled_background_providers: string[]
+	enabled_pro_features: string[]
+	legal: Required<NonNullable<VikunjaInfos['legal']>>
+	auth: {
+		local: Required<NonNullable<AuthInfo['local']>>
+		ldap: Required<NonNullable<AuthInfo['ldap']>>
+		openid_connect: {
+			enabled: boolean,
+			providers: IProvider[],
+		}
+	}
 }
 
 const publicClient = createClient({throwOnError: true})
