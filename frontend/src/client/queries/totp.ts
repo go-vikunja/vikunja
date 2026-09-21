@@ -49,7 +49,8 @@ export function useEnableTotpMutation() {
 			client.setQueryData<Totp>(totpKeys.current, current => current ? {enabled: true} : current)
 			client.removeQueries({queryKey: totpKeys.qr})
 		},
-		onSettled: (_input, client) => client.invalidateQueries({queryKey: totpKeys.current}),
+		// Enabling revokes every session, so a refetch would only 401.
+		onSettled: (_input, client) => client.invalidateQueries({queryKey: totpKeys.current, refetchType: 'none'}),
 		successMessage: () => i18n.global.t('user.settings.totp.confirmSuccess'),
 	}))
 }
