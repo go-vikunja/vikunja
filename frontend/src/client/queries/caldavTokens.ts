@@ -33,6 +33,6 @@ export function useDeleteCaldavTokenMutation() {
 		mutationFn: async (id: number) => (await caldavTokensDelete({path: {id}})).data,
 		onSuccess: (_data, id, client) => client.setQueryData<Token[]>(caldavTokenKeys.all, current => current?.filter(token => token.id !== id)),
 		onSettled: (_input, client) => client.invalidateQueries({queryKey: caldavTokenKeys.all}),
-		successMessage: () => i18n.global.t('error.success'),
+		successMessage: () => i18n.global.t('user.settings.caldav.deleteSuccess'),
 	}))
 }
