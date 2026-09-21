@@ -49,8 +49,23 @@ function fakeHttp() {
 
 vi.mock('@/helpers/fetcher', () => ({
 	apiV2Url: (path: string) => `/api/v2/${path}`,
+	getApiV2BaseUrl: () => '/api/v2/',
 	HTTPFactory: () => fakeHttp(),
 	AuthenticatedHTTPFactory: () => fakeHttp(),
+}))
+
+vi.mock('@/client/generated', async (importOriginal) => ({
+	...await importOriginal<typeof import('@/client/generated')>(),
+	authLogin: () => server.post('login'),
+	authLogout: () => server.post('user/logout'),
+	authRefreshToken: () => server.post('user/token/refresh'),
+	tokenRenew: () => server.post('user/token'),
+	userShow: async () => ({
+		data: {
+			id: 1,
+			username: 'user1',
+		},
+	}),
 }))
 
 vi.mock('@/router', () => ({
@@ -106,7 +121,7 @@ describe('auth store with a skewed browser clock', () => {
 		server.refreshFails = false
 		server.post.mockReset().mockImplementation(async (url: string) => {
 			if (url.includes('token/refresh') && server.refreshFails) {
-				throw {response: {status: 401}}
+				throw {status: 401}
 			}
 			if (url === 'user/logout') {
 				return {data: {}}

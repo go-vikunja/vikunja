@@ -48,7 +48,8 @@ test.describe('Registration', () => {
 			await page.locator('#username').fill(username)
 			await page.locator('#email').fill(email)
 			await page.locator('#password').fill('12345678')
-			const login = page.waitForResponse(response => response.url() === `${apiUrl}/login` && response.request().method() === 'POST')
+			const loginUrl = `${apiUrl.replace(/\/api\/v1$/, '/api/v2')}/login`
+			const login = page.waitForResponse(response => response.url() === loginUrl && response.request().method() === 'POST')
 			await page.locator('#register-submit').click()
 			expect((await login).status()).toBe(412)
 			await expect(page.locator('div.message.success')).toContainText('check your inbox')

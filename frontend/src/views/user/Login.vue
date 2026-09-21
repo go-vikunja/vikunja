@@ -115,6 +115,7 @@
 </template>
 
 <script setup lang="ts">
+import type {VikunjaErrorModel} from '@/client/generated'
 import {computed, onBeforeMount, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useRoute, useRouter} from 'vue-router'
@@ -131,6 +132,7 @@ import {getAutoRedirectProvider, redirectToProvider} from '@/helpers/redirectToP
 import {useRedirectToLastVisited} from '@/composables/useRedirectToLastVisited'
 import {isDesktopApp} from '@/helpers/desktopAuth'
 import {REDIRECT_HASH_PREFIX} from '@/constants/redirectHash'
+import {ERROR_CODE_TOTP_REQUIRED} from '@/constants/auth'
 
 import {useAuthStore, JUST_LOGGED_OUT_KEY} from '@/stores/auth'
 import {useConfigStore} from '@/stores/config'
@@ -239,7 +241,7 @@ async function submit() {
 
 		redirectIfSaved()
 	} catch (e) {
-		if (e.response?.data.code === 1017 && !credentials.totpPasscode) {
+		if ((e as VikunjaErrorModel)?.code === ERROR_CODE_TOTP_REQUIRED && !credentials.totpPasscode) {
 			return
 		}
 
