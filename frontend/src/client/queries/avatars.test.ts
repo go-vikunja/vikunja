@@ -23,7 +23,10 @@ describe('avatar mutations', () => {
 		client.setQueryData(avatarKeys.image('other', 50), new Blob())
 		client.setQueryData(avatarKeys.provider, {avatar_provider: 'default'})
 		sdk.userSetAvatarProvider.mockResolvedValue({data: {}})
-		await client.getMutationCache().build(client, updateAvatarProviderMutationOptions()).execute({username: 'sam', provider: 'initials'})
+		await client.getMutationCache().build(client, updateAvatarProviderMutationOptions()).execute({
+			username: 'sam',
+			provider: 'initials',
+		})
 		expect(sdk.userSetAvatarProvider).toHaveBeenCalledWith({body: {avatar_provider: 'initials'}})
 		for (const size of [20, 50]) expect(client.getQueryState(avatarKeys.image('sam', size))?.isInvalidated).toBe(true)
 		expect(client.getQueryState(avatarKeys.image('other', 50))?.isInvalidated).toBe(false)

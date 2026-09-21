@@ -14,7 +14,6 @@ function mountAvatar(props: InstanceType<typeof UserAvatar>['$props']) {
 
 beforeEach(() => {
 	queryClient.clear()
-	queryClient.setDefaultOptions({queries: {retry: false, staleTime: Infinity}})
 	sdk.avatarGet.mockReset().mockResolvedValue({data: new Blob(['avatar'])})
 	vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:avatar')
 	vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
@@ -30,7 +29,11 @@ describe('UserAvatar', () => {
 		mountAvatar({user: {username: 'sam'}, size: 40})
 		await flushPromises()
 		expect(sdk.avatarGet).toHaveBeenCalledTimes(1)
-		expect(sdk.avatarGet).toHaveBeenCalledWith(expect.objectContaining({path: {username: 'sam'}, query: {size: 40}, parseAs: 'blob'}))
+		expect(sdk.avatarGet).toHaveBeenCalledWith(expect.objectContaining({
+			path: {username: 'sam'},
+			query: {size: 40},
+			parseAs: 'blob',
+		}))
 		expect(first.find('img').attributes('src')).toBe('blob:avatar')
 		first.unmount()
 		expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:avatar')
