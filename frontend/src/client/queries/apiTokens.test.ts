@@ -1,7 +1,13 @@
 import {it, expect, vi} from 'vitest'
 import {QueryClient} from '@tanstack/vue-query'
 import {apiTokenKeys, apiTokensQuery, createApiTokenMutationOptions, deleteApiTokenMutationOptions} from './apiTokens'
-const sdk = vi.hoisted(() => ({tokensList: vi.fn(), tokensCreate: vi.fn(), tokensDelete: vi.fn(), tokenRoutes: vi.fn(), mcpInfo: vi.fn()}))
+const sdk = vi.hoisted(() => ({
+	tokensList: vi.fn(),
+	tokensCreate: vi.fn(),
+	tokensDelete: vi.fn(),
+	tokenRoutes: vi.fn(),
+	mcpInfo: vi.fn(),
+}))
 vi.mock('@/client/generated', () => sdk)
 vi.mock('@/message', () => ({success: vi.fn(), error: vi.fn()}))
 
