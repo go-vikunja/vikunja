@@ -16,10 +16,14 @@ function mountAvatar(props: InstanceType<typeof UserAvatar>['$props']) {
 	return wrapper
 }
 
+function taggedBlob(testUrl: string) {
+	return Object.assign(new Blob([testUrl]), {testUrl})
+}
+
 beforeEach(() => {
 	queryClient = new QueryClient({defaultOptions: {queries: {retry: false}}})
-	sdk.avatarGet.mockReset().mockResolvedValue({data: new Blob(['avatar'])})
-	vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:avatar')
+	sdk.avatarGet.mockReset().mockResolvedValue({data: taggedBlob('blob:avatar')})
+	vi.spyOn(URL, 'createObjectURL').mockImplementation(blob => (blob as Blob & {testUrl?: string}).testUrl ?? 'blob:untagged')
 	vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
 })
 afterEach(() => {
@@ -39,18 +43,22 @@ describe('UserAvatar', () => {
 			parseAs: 'blob',
 		}))
 		expect(first.find('img').attributes('src')).toBe('blob:avatar')
+		expect(URL.createObjectURL).toHaveBeenCalledTimes(2)
 		first.unmount()
+		expect(URL.revokeObjectURL).toHaveBeenCalledTimes(1)
 		expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:avatar')
 	})
 	it('does not display a late response for a previous user', async () => {
 		let resolveFirst!: (value: {data: Blob}) => void
 		sdk.avatarGet.mockReturnValueOnce(new Promise(resolve => {resolveFirst = resolve}))
+		sdk.avatarGet.mockResolvedValue({data: taggedBlob('blob:new')})
 		const wrapper = mountAvatar({user: {username: 'old'}})
 		await wrapper.setProps({user: {username: 'new'}})
 		await flushPromises()
-		expect(wrapper.find('img').exists()).toBe(true)
-		resolveFirst({data: new Blob(['old'])})
+		expect(wrapper.find('img').attributes('src')).toBe('blob:new')
+		resolveFirst({data: taggedBlob('blob:old')})
 		await flushPromises()
+		expect(wrapper.find('img').attributes('src')).toBe('blob:new')
 		expect(URL.createObjectURL).toHaveBeenCalledTimes(1)
 	})
 	it('renders a placeholder without a user or when loading fails', async () => {
