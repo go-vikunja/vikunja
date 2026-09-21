@@ -11,6 +11,17 @@ it('loads all pages with the bot owner filter', async () => {
 	expect(await client.fetchQuery(apiTokensQuery(5))).toEqual([{id: 1}, {id: 2}])
 	expect(sdk.tokensList).toHaveBeenLastCalledWith(expect.objectContaining({query: {page: 2, owner_id: 5}}))
 })
+it('omits the owner filter for the signed-in user', async () => {
+	const client = new QueryClient()
+	sdk.tokensList.mockResolvedValue({data: {items: [{id: 1}], total_pages: 1}})
+	expect(await client.fetchQuery(apiTokensQuery())).toEqual([{id: 1}])
+	expect(sdk.tokensList).toHaveBeenCalledWith(expect.objectContaining({
+		query: {
+			page: 1,
+			owner_id: undefined,
+		},
+	}))
+})
 it('never stores a newly created plaintext token in a list cache', async () => {
 	const client = new QueryClient()
 	client.setQueryData(apiTokenKeys.list(0), [{id: 1}])
