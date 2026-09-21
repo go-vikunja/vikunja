@@ -1,4 +1,4 @@
-import {useQuery} from '@tanstack/vue-query'
+import {CancelledError, useQuery} from '@tanstack/vue-query'
 import {currentUserQuery, refreshCurrentUser} from '@/client/queries/account'
 import {createUserSettingsDraft} from '@/helpers/userSettings'
 import {computed, readonly, ref, watch} from 'vue'
@@ -412,6 +412,8 @@ export const useAuthStore = defineStore('auth', () => {
 
 			return newUser
 		} catch (e) {
+			if (e instanceof CancelledError) return
+
 			const problem = e as VikunjaErrorModel
 			if (problem?.status === 401 || problem?.status === 403) {
 				await logout()
