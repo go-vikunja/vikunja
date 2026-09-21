@@ -66,7 +66,8 @@ describe('notificationText', () => {
 	})
 
 	it('names the project for a created project', () => {
-		expect(notificationText(notification(NOTIFICATION_NAMES.PROJECT_CREATED, {project: PROJECT}))).toBe('created Docs')
+		const created = notification(NOTIFICATION_NAMES.PROJECT_CREATED, {project: PROJECT})
+		expect(notificationText(created)).toBe('created Docs')
 	})
 
 	it('spells out task and project for a reminder', () => {
@@ -133,7 +134,8 @@ describe('notificationRoute', () => {
 describe('notificationDoer', () => {
 	it('returns the doer only when the payload carries one with an id', () => {
 		expect(notificationDoer(notification(NOTIFICATION_NAMES.TASK_COMMENT, {doer: ANA}))).toEqual(ANA)
-		expect(notificationDoer(notification(NOTIFICATION_NAMES.TASK_COMMENT, {doer: {username: 'ana'}}))).toBeUndefined()
+		const withoutId = notification(NOTIFICATION_NAMES.TASK_COMMENT, {doer: {username: 'ana'}})
+		expect(notificationDoer(withoutId)).toBeUndefined()
 		expect(notificationDoer(notification(NOTIFICATION_NAMES.TASK_COMMENT, {}))).toBeUndefined()
 		expect(notificationDoer({})).toBeUndefined()
 	})

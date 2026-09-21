@@ -1,13 +1,29 @@
 import {it, expect, vi} from 'vitest'
 import {QueryClient} from '@tanstack/vue-query'
-import {notificationKeys, notificationsQuery, markNotificationReadMutationOptions, markAllNotificationsReadMutationOptions, clearNotificationsMutationOptions} from './notifications'
-const sdk = vi.hoisted(() => ({notificationsList: vi.fn(), notificationsMarkRead: vi.fn(), notificationsMarkAllRead: vi.fn(), notificationsDeleteAll: vi.fn()}))
+import {
+	notificationKeys,
+	notificationsQuery,
+	markNotificationReadMutationOptions,
+	markAllNotificationsReadMutationOptions,
+	clearNotificationsMutationOptions,
+} from './notifications'
+const sdk = vi.hoisted(() => ({
+	notificationsList: vi.fn(),
+	notificationsMarkRead: vi.fn(),
+	notificationsMarkAllRead: vi.fn(),
+	notificationsDeleteAll: vi.fn(),
+}))
 vi.mock('@/client/generated', () => sdk)
 vi.mock('@/message', () => ({success: vi.fn(), error: vi.fn()}))
 
 it('loads every page and patches only the read notification in an existing list', async () => {
 	const client = new QueryClient()
-	sdk.notificationsList.mockImplementation(({query}) => Promise.resolve({data: {items: [{id: query.page}], total_pages: 2}}))
+	sdk.notificationsList.mockImplementation(({query}) => Promise.resolve({
+		data: {
+			items: [{id: query.page}],
+			total_pages: 2,
+		},
+	}))
 	await client.fetchQuery(notificationsQuery())
 	sdk.notificationsMarkRead.mockResolvedValue({data: {id: 1, read_at: '2026-09-21T12:00:00Z'}})
 	await client.getMutationCache().build(client, markNotificationReadMutationOptions()).execute(1)
