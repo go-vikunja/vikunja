@@ -66,8 +66,6 @@ const isValid = computed(() => validatePassword(passwordUpdate.new_password) ===
 async function updatePassword() {
 	try {
 		await passwordUpdateMutation.mutateAsync(passwordUpdate)
-		passwordUpdate.new_password = ''
-		passwordUpdate.old_password = ''
 	} catch { return }
 }
 </script>
