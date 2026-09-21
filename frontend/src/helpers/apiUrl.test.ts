@@ -1,8 +1,15 @@
-import {describe, it, expect} from 'vitest'
+import {describe, it, expect, afterEach} from 'vitest'
 import {getApiBaseUrl} from './apiUrl'
 
 describe('API base URL', () => {
+	const originalApiUrl = window.API_URL
+
+	afterEach(() => {
+		window.API_URL = originalApiUrl
+	})
+
 	it.each([
+		['/api/v1', '/api/v2/'],
 		['/api/v2', '/api/v2/'],
 		['https://api.example/root/api/v2/', 'https://api.example/root/api/v2/'],
 		['https://api.example/root/api/v1', 'https://api.example/root/api/v2/'],
