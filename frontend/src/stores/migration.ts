@@ -12,7 +12,9 @@ const MAX_CONSECUTIVE_FAILURES = 5
 
 const GENERIC_FAILURE_KEY = 'migrate.failure.reported'
 
-const FAILURE_KEYS: Record<string, string> = {
+type MigrationErrorKind = 'reported' | 'interrupted' | 'credentials' | 'queue' | 'upload' | 'detail'
+
+const FAILURE_KEYS: Partial<Record<MigrationErrorKind, string>> = {
 	reported: GENERIC_FAILURE_KEY,
 	interrupted: 'migrate.failure.interrupted',
 	credentials: 'migrate.failure.credentials',
@@ -30,8 +32,13 @@ export const useMigrationStore = defineStore('migration', () => {
 	const errorKind = computed(() => isFinished.value ? status.data.value?.error_kind ?? '' : '')
 	const errorMessage = computed(() => isFinished.value ? status.data.value?.error_message ?? '' : '')
 	const hasFailed = computed(() => errorKind.value !== '')
-	const failureKey = computed(() => errorKind.value === 'detail' && errorMessage.value !== ''
-		? 'migrate.migrationFailed' : FAILURE_KEYS[errorKind.value] ?? GENERIC_FAILURE_KEY)
+	const failureKey = computed(() => {
+		if (errorKind.value === 'detail' && errorMessage.value !== '') {
+			return 'migrate.migrationFailed'
+		}
+		// A kind a newer api adds is unknown here and would otherwise render an empty message.
+		return FAILURE_KEYS[errorKind.value as MigrationErrorKind] ?? GENERIC_FAILURE_KEY
+	})
 
 	let timeout: ReturnType<typeof setTimeout> | undefined
 	let generation = 0
