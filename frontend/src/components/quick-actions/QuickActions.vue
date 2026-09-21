@@ -169,7 +169,6 @@ const authStore = useAuthStore()
 const {isQuickAddMode} = useQuickAddMode()
 
 type QuickActionItem = Command | ITask | ProjectResponse | (ITeam & {title: string}) | Label
-type DoAction<Type = QuickActionItem> = Type
 
 enum ACTION_TYPE {
 	CMD = 'cmd',
@@ -542,27 +541,27 @@ if (isQuickAddMode) {
 	})
 }
 
-async function doAction(type: ACTION_TYPE, item: DoAction) {
+async function doAction(type: ACTION_TYPE, item: QuickActionItem) {
 	switch (type) {
 		case ACTION_TYPE.PROJECT:
 			closeQuickActions()
 			if (!isQuickAddMode) {
 				await router.push({
 					name: 'project.index',
-					params: {projectId: (item as DoAction<ProjectResponse>).id},
+					params: {projectId: (item as ProjectResponse).id},
 				})
 			}
 			break
 		case ACTION_TYPE.TASK:
 			if (isQuickAddMode) {
 				const channel = new BroadcastChannel('vikunja-task-updates')
-				channel.postMessage({type: 'task-created-open', taskId: (item as DoAction<ITask>).id})
+				channel.postMessage({type: 'task-created-open', taskId: (item as ITask).id})
 				channel.close()
 				window.quickEntry?.showMainWindow()
 			} else {
 				await router.push({
 					name: 'task.detail',
-					params: {id: (item as DoAction<ITask>).id},
+					params: {id: (item as ITask).id},
 				})
 			}
 			closeQuickActions()
@@ -572,13 +571,13 @@ async function doAction(type: ACTION_TYPE, item: DoAction) {
 			if (!isQuickAddMode) {
 				await router.push({
 					name: 'teams.edit',
-					params: {id: (item as DoAction<ITeam>).id},
+					params: {id: (item as ITeam).id},
 				})
 			}
 			break
 		case ACTION_TYPE.CMD:
 			query.value = ''
-			selectedCmd.value = item as DoAction<Command>
+			selectedCmd.value = item as Command
 			searchInput.value?.focus()
 			break
 		case ACTION_TYPE.LABELS:
