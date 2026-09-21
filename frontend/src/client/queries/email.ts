@@ -1,21 +1,14 @@
-import {useMutation, type QueryClient} from '@tanstack/vue-query'
+import {useMutation} from '@tanstack/vue-query'
 import {
 	userUpdateEmail,
 	userCancelEmailUpdate,
 	userResendEmailConfirmation,
 	userShow,
 } from '@/client/generated'
-import type {
-	UserInfoBody,
-	UserUpdateEmailRequestWritable,
-} from '@/client/generated'
+import type {UserUpdateEmailRequestWritable} from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
-import {accountKeys} from './account'
+import {accountKeys, reconcileAccount} from './account'
 import {i18n} from '@/i18n'
-
-function reconcileAccount(account: UserInfoBody, client: QueryClient) {
-	client.setQueriesData<UserInfoBody>({queryKey: accountKeys.current}, current => current ? account : current)
-}
 
 export function updateEmailMutationOptions() {
 	return {
