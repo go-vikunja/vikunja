@@ -50,6 +50,7 @@
 
 
 <script setup lang="ts">
+import type {VikunjaErrorModel} from '@/client/generated'
 import {ref, computed, onMounted} from 'vue'
 import {useRoute} from 'vue-router'
 import {useI18n} from 'vue-i18n'
@@ -62,6 +63,7 @@ import {redirectToProvider} from '@/helpers/redirectToProvider'
 
 import {useAuthStore} from '@/stores/auth'
 import {useConfigStore} from '@/stores/config'
+import {ERROR_CODE_TOTP_REQUIRED} from '@/constants/auth'
 import type {IProvider} from '@/types/IProvider'
 
 defineOptions({name: 'Auth'})
@@ -124,8 +126,7 @@ async function authenticateWithCode() {
 
 		redirectIfSaved()
 	} catch (e) {
-		const err = e as {code?: number}
-		if (err?.code === 1017) {
+		if ((e as VikunjaErrorModel)?.code === ERROR_CODE_TOTP_REQUIRED) {
 			needsTotp.value = true
 			return
 		}

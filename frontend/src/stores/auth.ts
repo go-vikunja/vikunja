@@ -28,7 +28,7 @@ import {
 	redirectToProvider,
 	redirectToProviderOnLogout,
 } from '@/helpers/redirectToProvider'
-import {AUTH_TYPES, type AuthType} from '@/constants/auth'
+import {AUTH_TYPES, ERROR_CODE_TOTP_REQUIRED, type AuthType} from '@/constants/auth'
 
 import type {IUserSettings} from '@/modelTypes/IUserSettings'
 import router from '@/router'
@@ -254,7 +254,7 @@ export const useAuthStore = defineStore('auth', () => {
 			await checkAuth()
 		} catch (e) {
 			if (
-				(e as VikunjaErrorModel)?.code === 1017 &&
+				(e as VikunjaErrorModel)?.code === ERROR_CODE_TOTP_REQUIRED &&
 				!credentials.totpPasscode
 			) {
 				setNeedsTotpPasscode(true)
