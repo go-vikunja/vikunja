@@ -112,10 +112,16 @@ export const useConfigStore = defineStore('config', () => {
 	}
 
 	async function update(): Promise<boolean> {
-		const {data: config} = await info({
-			client: publicClient,
-			baseUrl: getApiV2BaseUrl().replace(/\/$/, ''),
-		})
+		let config: VikunjaInfos
+		try {
+			const response = await info({
+				client: publicClient,
+				baseUrl: getApiV2BaseUrl().replace(/\/$/, ''),
+			})
+			config = response.data
+		} catch (e) {
+			throw e instanceof Error ? e : new InvalidApiUrlProvidedError()
+		}
 
 		if (typeof config.version === 'undefined') {
 			throw new InvalidApiUrlProvidedError()
