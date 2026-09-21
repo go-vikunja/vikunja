@@ -28,11 +28,15 @@ export function useCreateCaldavTokenMutation() {
 	return useMutation(createCaldavTokenMutationOptions())
 }
 
-export function useDeleteCaldavTokenMutation() {
-	return useMutation(contextMutationOptions({
+export function deleteCaldavTokenMutationOptions() {
+	return contextMutationOptions({
 		mutationFn: async (id: number) => (await caldavTokensDelete({path: {id}})).data,
 		onSuccess: (_data, id, client) => client.setQueryData<Token[]>(caldavTokenKeys.all, current => current?.filter(token => token.id !== id)),
 		onSettled: (_input, client) => client.invalidateQueries({queryKey: caldavTokenKeys.all}),
 		successMessage: () => i18n.global.t('user.settings.caldav.deleteSuccess'),
-	}))
+	})
+}
+
+export function useDeleteCaldavTokenMutation() {
+	return useMutation(deleteCaldavTokenMutationOptions())
 }
