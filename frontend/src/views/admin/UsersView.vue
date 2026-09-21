@@ -325,7 +325,7 @@ import FormSelect from '@/components/input/FormSelect.vue'
 import FormCheckbox from '@/components/input/FormCheckbox.vue'
 import TimeDisplay from '@/components/misc/TimeDisplay.vue'
 
-type IAdminUser = AdminUser & {id: number}
+type AdminUserRow = AdminUser & {id: number}
 const {t} = useI18n({useScope: 'global'})
 const authStore = useAuthStore()
 const currentUserId = computed(() => authStore.info?.id)
@@ -333,7 +333,7 @@ const searchTerm = ref('')
 const search = ref('')
 const currentPage = ref(1)
 const {data, isPending: loading} = useQuery(computed(() => adminUsersQuery(search.value, currentPage.value)))
-const users = computed(() => (data.value?.items ?? []).filter((u): u is IAdminUser => u.id !== undefined))
+const users = computed(() => (data.value?.items ?? []).filter((u): u is AdminUserRow => u.id !== undefined))
 const totalPages = computed(() => data.value?.total_pages ?? 1)
 const createMutation = useCreateAdminUserMutation()
 const updateMutation = useUpdateAdminUserMutation()
@@ -345,8 +345,8 @@ const {isPending: saving} = updateMutation
 const {isPending: settingPassword} = passwordMutation
 const {isPending: sendingResetEmail} = resetMutation
 const {isPending: deleting} = deleteMutation
-const detailTarget = ref<IAdminUser | null>(null)
-const pendingDelete = ref<IAdminUser | null>(null)
+const detailTarget = ref<AdminUserRow | null>(null)
+const pendingDelete = ref<AdminUserRow | null>(null)
 const deleteMode = ref<DeleteUserMode | null>(null)
 const createOpen = ref(false)
 const editable = reactive({is_admin: false, status: 0})
@@ -374,7 +374,7 @@ function statusLabel(status: number | undefined): string {
 const statusOptions = computed(() => [0, 1, 2, 3].map(value => ({value, label: statusLabel(value)})))
 function goToPage(page: number) { currentPage.value = page }
 const onSearch = useDebounceFn(() => { currentPage.value = 1; search.value = searchTerm.value }, 300)
-function openDetails(u: IAdminUser) { detailTarget.value = u }
+function openDetails(u: AdminUserRow) { detailTarget.value = u }
 function closeDetail() { detailTarget.value = null }
 function openCreate() { Object.assign(createForm, emptyCreateForm()); createOpen.value = true }
 function closeCreate() { if (!creating.value) createOpen.value = false }
