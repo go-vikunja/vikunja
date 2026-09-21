@@ -1,6 +1,5 @@
 import WebSocket from 'ws'
-
-const API_URL = process.env.API_URL || 'http://localhost:3456/api/v1'
+import {apiV1Url} from './apiUrl'
 
 export interface WsMessage {
 	event?: string
@@ -14,7 +13,7 @@ export interface WsMessage {
  * Returns the WebSocket URL derived from the API base URL.
  */
 export function getWsUrl(): string {
-	return API_URL.replace(/\/+$/, '').replace(/^http/, 'ws') + '/ws'
+	return apiV1Url().replace(/^http/, 'ws') + '/ws'
 }
 
 /**

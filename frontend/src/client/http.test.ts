@@ -114,7 +114,7 @@ describe('configureApiClient', () => {
 	let responses: Response[]
 
 	beforeEach(() => {
-		window.API_URL = 'https://api.example.com/root/api/v1'
+		window.API_URL = 'https://api.example.com/root'
 		auth.token = null
 		auth.type = null
 		auth.id = 1
@@ -141,8 +141,8 @@ describe('configureApiClient', () => {
 		expect(requests[0].credentials).toBe('include')
 	})
 
-	it('supports a root-relative API base', async () => {
-		window.API_URL = '/api/v1'
+	it('supports the same-origin default', async () => {
+		window.API_URL = ''
 		configureApiClient()
 
 		await client.get({url: '/probe'})
@@ -184,7 +184,7 @@ describe('configureApiClient', () => {
 
 		const request = client.get({url: '/probe'})
 		await vi.waitFor(() => expect(requests).toHaveLength(1))
-		window.API_URL = 'https://other.example/api/v1'
+		window.API_URL = 'https://other.example'
 		configureApiClient()
 		response.resolve(ok())
 
@@ -192,7 +192,7 @@ describe('configureApiClient', () => {
 	})
 
 	it('rejects a request built for an outdated configured API before sending', async () => {
-		window.API_URL = 'https://other.example/api/v1'
+		window.API_URL = 'https://other.example'
 
 		await expect(client.get({url: '/probe'})).rejects.toMatchObject({name: 'AbortError'})
 
@@ -200,9 +200,9 @@ describe('configureApiClient', () => {
 	})
 
 	it('rejects an outdated nested API base before sending', async () => {
-		window.API_URL = 'https://api.example.com/root/api/v2/tenant-a/api/v1'
+		window.API_URL = 'https://api.example.com/root/tenant-a'
 		configureApiClient()
-		window.API_URL = 'https://api.example.com/root/api/v1'
+		window.API_URL = 'https://api.example.com/root'
 
 		await expect(client.get({url: '/probe'})).rejects.toMatchObject({name: 'AbortError'})
 
@@ -210,7 +210,7 @@ describe('configureApiClient', () => {
 	})
 
 	it('treats an extra trailing slash as the same API base', async () => {
-		window.API_URL = 'https://api.example.com/root/api/v2//'
+		window.API_URL = 'https://api.example.com/root//'
 		configureApiClient()
 		window.API_URL = 'https://api.example.com/root/api/v1'
 
@@ -229,7 +229,7 @@ describe('configureApiClient', () => {
 	})
 
 	it('rejects a root-relative API base that canonicalizes to another origin', async () => {
-		window.API_URL = '/\\evil.example/api/v1'
+		window.API_URL = '/\\evil.example'
 		configureApiClient()
 		auth.token = 'current-token'
 
@@ -239,7 +239,7 @@ describe('configureApiClient', () => {
 	})
 
 	it('rejects a whitespace-obscured cross-origin API base', async () => {
-		window.API_URL = '/\t/evil.example/api/v1'
+		window.API_URL = '/\t/evil.example'
 		configureApiClient()
 		auth.token = 'current-token'
 

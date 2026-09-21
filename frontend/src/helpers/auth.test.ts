@@ -17,14 +17,10 @@ const post = vi.hoisted(() => vi.fn(() => {
 	})
 }))
 
-const apiUrls = vi.hoisted(() => ({
-	base: '/api/v2',
-	legacy: '/api/v1',
-}))
+const apiUrls = vi.hoisted(() => ({base: '/api/v2'}))
 
 vi.mock('@/helpers/apiUrl', () => ({
 	getApiBaseUrl: () => apiUrls.base,
-	getLegacyApiBaseUrl: () => apiUrls.legacy,
 }))
 
 vi.mock('@/client/generated', () => ({authRefreshToken: post}))
@@ -213,12 +209,10 @@ describe('refreshToken across a server switch', () => {
 		removeToken()
 		localStorage.clear()
 		apiUrls.base = 'http://first/api/v2'
-		apiUrls.legacy = 'http://first/api/v1'
 	})
 
 	afterEach(() => {
 		apiUrls.base = '/api/v2'
-		apiUrls.legacy = '/api/v1'
 	})
 
 	it('does not save the token when the user switched servers while the refresh was in flight', async () => {
@@ -240,8 +234,6 @@ describe('refreshToken failure', () => {
 		post.mockClear()
 		removeToken()
 		localStorage.clear()
-		apiUrls.base = '/api/v2'
-		apiUrls.legacy = '/api/v1'
 	})
 
 	it('rejects after the single v2 request fails', async () => {

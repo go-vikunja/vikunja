@@ -6,7 +6,7 @@ import {TextSelection} from '@tiptap/pm/state'
 
 import {createEditorExtensions, type EditorExtensionDeps} from './editorExtensions'
 
-window.API_URL = 'http://localhost:3456/api/v1'
+window.API_URL = 'http://localhost:3456'
 
 function createEditor(content: string) {
 	const holder = document.createElement('div')

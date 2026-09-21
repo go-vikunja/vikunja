@@ -2,7 +2,8 @@ import {i18n} from '@/i18n'
 import {notify} from '@kyvg/vue3-notification'
 
 export function getErrorText(r): string {
-	const data = r?.reason?.response?.data || r?.response?.data || r
+	// The dev unhandledrejection handler passes the PromiseRejectionEvent.
+	const data = r?.reason ?? r
 
 	if (data?.code) {
 		const path = `error.${data.code}`
@@ -21,7 +22,7 @@ export function getErrorText(r): string {
 	// v2 errors are RFC 9457 problem+json, which carries `detail` instead of `message`.
 	let message = data?.message || data?.detail || r.message
 	
-	const causeMessage = r.cause?.detail ?? r.cause?.response?.data?.message ?? r.cause?.message
+	const causeMessage = r.cause?.detail ?? r.cause?.message
 	if (typeof causeMessage !== 'undefined') {
 		message += ' ' + causeMessage
 	}

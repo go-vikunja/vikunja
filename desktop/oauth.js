@@ -14,11 +14,10 @@ function generateCodeChallenge(verifier) {
 	return crypto.createHash('sha256').update(verifier).digest('base64url')
 }
 
-function buildAuthorizationUrl(frontendUrl, codeChallenge) {
+// apiUrl is the stored API base without an /api/vN suffix.
+function buildAuthorizationUrl(apiUrl, codeChallenge) {
 	// the authorize page is served by the frontend, not the api
-	let base = frontendUrl.replace(/\/+$/, '').replace(/\/api\/v[12]$/, '')
-
-	const url = new URL(base)
+	const url = new URL(apiUrl.replace(/\/+$/, ''))
 	url.pathname = url.pathname.replace(/\/+$/, '') + '/oauth/authorize'
 	url.searchParams.set('response_type', 'code')
 	url.searchParams.set('client_id', CLIENT_ID)
@@ -75,11 +74,7 @@ function postJSON(url, body) {
 }
 
 function getTokenEndpoint(apiUrl) {
-	let base = apiUrl.replace(/\/+$/, '')
-	if (!/\/api\/v[12]$/.test(base)) {
-		base += '/api/v2'
-	}
-	return `${base}/oauth/token`
+	return `${apiUrl.replace(/\/+$/, '')}/api/v2/oauth/token`
 }
 
 async function exchangeCodeForTokens(apiUrl, code) {

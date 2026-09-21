@@ -2,6 +2,7 @@ import {randomBytes} from 'node:crypto'
 import type {APIRequestContext} from '@playwright/test'
 import {test, expect} from '../../../support/fixtures'
 import {TEST_PASSWORD} from '../../../support/constants'
+import {apiRootUrl} from '../../../support/apiUrl'
 
 async function confirmationLink(request: APIRequestContext, mailpitUrl: string, address: string) {
 	let messageId = ''
@@ -40,8 +41,7 @@ test('stores an email update when mail confirmation is disabled', async ({authen
 
 test('keeps the new address pending until it is cancelled', async ({browser, baseURL, request}) => {
 	const publicUrl = new URL('/', baseURL).href
-	const apiUrl = (process.env.MAILER_API_URL || 'http://127.0.0.1:3457/api/v1').replace(/\/$/, '')
-	const apiV2Url = apiUrl.replace(/\/api\/v1$/, '/api/v2')
+	const apiUrl = apiRootUrl(process.env.MAILER_API_URL || 'http://127.0.0.1:3457')
 	const mailpitUrl = process.env.MAILPIT_URL || 'http://127.0.0.1:8025'
 	const username = `pending-email-${randomBytes(8).toString('hex')}`
 	const email = `${username}@example.com`
@@ -67,7 +67,7 @@ test('keeps the new address pending until it is cancelled', async ({browser, bas
 		await page.getByRole('button', {name: 'Login', exact: true}).click()
 		await expect(page).toHaveURL(publicUrl)
 
-		const login = await request.post(`${apiUrl}/login`, {
+		const login = await request.post(`${apiUrl}/api/v1/login`, {
 			data: {
 				username,
 				password,
@@ -76,7 +76,7 @@ test('keeps the new address pending until it is cancelled', async ({browser, bas
 		expect(login.ok()).toBe(true)
 		const headers = {Authorization: `Bearer ${(await login.json()).token}`}
 		const storedPendingEmail = async () => {
-			const response = await request.get(`${apiV2Url}/user`, {headers})
+			const response = await request.get(`${apiUrl}/api/v2/user`, {headers})
 			expect(response.status()).toBe(200)
 			return (await response.json()).pending_email ?? ''
 		}

@@ -29,7 +29,7 @@ class FakeSocket {
 	close = vi.fn(() => {
 		this.readyState = 3
 	})
-	constructor() { FakeSocket.instances.push(this) }
+	constructor(public url: string) { FakeSocket.instances.push(this) }
 }
 
 function timerFrame() {
@@ -57,7 +57,7 @@ afterEach(() => {
 
 it('routes messages from the current connection to subscribers', () => {
 	vi.stubGlobal('WebSocket', FakeSocket)
-	window.API_URL = 'http://localhost/api/v1'
+	window.API_URL = 'http://localhost'
 	const ws = useWebSocket()
 	ws.connect()
 	const socket = FakeSocket.instances[0]
@@ -74,7 +74,7 @@ it('routes messages from the current connection to subscribers', () => {
 
 it('ignores messages and close callbacks from a replaced connection', () => {
 	vi.stubGlobal('WebSocket', FakeSocket)
-	window.API_URL = 'http://localhost/api/v1'
+	window.API_URL = 'http://localhost'
 	const ws = useWebSocket()
 	ws.connect()
 	const old = FakeSocket.instances[0]
@@ -93,7 +93,7 @@ it('ignores messages and close callbacks from a replaced connection', () => {
 it('closes the socket and reconnects after the authenticated session changes', () => {
 	vi.useFakeTimers()
 	vi.stubGlobal('WebSocket', FakeSocket)
-	window.API_URL = 'http://localhost/api/v1'
+	window.API_URL = 'http://localhost'
 	const ws = useWebSocket()
 	ws.connect()
 	const stale = FakeSocket.instances[0]
@@ -115,7 +115,7 @@ it('closes the socket and reconnects after the authenticated session changes', (
 
 it('tears down a socket opened by a previous session instead of reusing it', () => {
 	vi.stubGlobal('WebSocket', FakeSocket)
-	window.API_URL = 'http://localhost/api/v1'
+	window.API_URL = 'http://localhost'
 	const ws = useWebSocket()
 	ws.connect()
 	const stale = FakeSocket.instances[0]
@@ -150,7 +150,7 @@ it('tears down a socket opened by a previous session instead of reusing it', () 
 
 it('closes a socket whose session changed without waiting for a frame, keeping subscriptions', () => {
 	vi.stubGlobal('WebSocket', FakeSocket)
-	window.API_URL = 'http://localhost/api/v1'
+	window.API_URL = 'http://localhost'
 	const ws = useWebSocket()
 	ws.connect()
 	const stale = FakeSocket.instances[0]
@@ -183,7 +183,7 @@ it('closes a socket whose session changed without waiting for a frame, keeping s
 it('flags possibly missed events only while a dropped connection is pending a reconnect', () => {
 	vi.useFakeTimers()
 	vi.stubGlobal('WebSocket', FakeSocket)
-	window.API_URL = 'http://localhost/api/v1'
+	window.API_URL = 'http://localhost'
 	const ws = useWebSocket()
 	ws.connect()
 	const socket = FakeSocket.instances[0]
@@ -199,7 +199,7 @@ it('flags possibly missed events only while a dropped connection is pending a re
 
 it('leaves a current or absent connection alone', () => {
 	vi.stubGlobal('WebSocket', FakeSocket)
-	window.API_URL = 'http://localhost/api/v1'
+	window.API_URL = 'http://localhost'
 	const ws = useWebSocket()
 	ws.closeStaleConnection()
 	expect(FakeSocket.instances).toHaveLength(0)
@@ -214,8 +214,20 @@ it('leaves a current or absent connection alone', () => {
 
 it('does not open a socket for a link share session', () => {
 	vi.stubGlobal('WebSocket', FakeSocket)
-	window.API_URL = 'http://localhost/api/v1'
+	window.API_URL = 'http://localhost'
 	auth.tokenType = AUTH_TYPES.LINK_SHARE
 	useWebSocket().connect()
 	expect(FakeSocket.instances).toHaveLength(0)
+})
+
+it.each([
+	['http://localhost', 'ws://localhost/api/v2/ws'],
+	['https://x/prefix', 'wss://x/prefix/api/v2/ws'],
+	['https://x/prefix/api/v1', 'wss://x/prefix/api/v2/ws'],
+	['', 'ws://localhost:3000/api/v2/ws'],
+])('connects to the v2 socket under %o', (apiUrl, socketUrl) => {
+	vi.stubGlobal('WebSocket', FakeSocket)
+	window.API_URL = apiUrl
+	useWebSocket().connect()
+	expect(FakeSocket.instances.map(socket => socket.url)).toEqual([socketUrl])
 })

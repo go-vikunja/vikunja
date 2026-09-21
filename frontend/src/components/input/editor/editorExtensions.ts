@@ -36,11 +36,11 @@ import type {UploadCallback} from './types'
 import type {Task as ITask} from '@/client/generated'
 import type {TaskAttachment as IAttachment} from '@/client/generated'
 import {fetchAttachmentUrl, releaseAttachmentUrl} from '@/helpers/attachments'
-import {getApiBaseUrl} from '@/helpers/apiUrl'
+import {getApiRootUrl} from '@/helpers/apiUrl'
 
 type ImageNodeKey = `${ITask['id']}-${IAttachment['id']}`
 
-// descriptions stored before the v2 flip still carry an /api/v1 src, so the version segment is matched, not compared
+// stored srcs predate the v2 flip, so the version segment is matched, not compared
 const ATTACHMENT_URL = /^(.*?)(?:\/api\/v[12])?\/tasks\/(\d+)\/attachments\/(\d+)$/
 
 interface AttachmentRef {
@@ -58,8 +58,7 @@ function parseAttachmentUrl(url: unknown): AttachmentRef | null {
 		return null
 	}
 
-	const base = getApiBaseUrl().replace(/\/api\/v[12]$/, '')
-	if (match[1] !== base) {
+	if (match[1] !== getApiRootUrl()) {
 		return null
 	}
 

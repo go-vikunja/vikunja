@@ -10,10 +10,10 @@ const {getBlobUrl} = vi.hoisted(() => ({getBlobUrl: vi.fn(async () => ({data: ne
 
 vi.mock('@/client/generated', () => ({taskAttachmentsDownload: getBlobUrl}))
 
-const API_URL = 'http://localhost:3456/api/v1'
+const API_URL = 'http://localhost:3456'
 window.API_URL = API_URL
 
-const ATTACHMENT_URL = `${API_URL}/tasks/5/attachments/9`
+const ATTACHMENT_URL = `${API_URL}/api/v2/tasks/5/attachments/9`
 
 function createEditor(content: string) {
 	const holder = document.createElement('div')
@@ -91,9 +91,11 @@ describe('CustomImage attachment id', () => {
 		expect(img.src).toBe('blob:real-attachment')
 	})
 
-	it('resolves a v1 stored src once the api url upgraded to v2', async () => {
-		window.API_URL = 'http://localhost:3456/api/v2'
-		const {editor} = createEditor(`<p><img src="${ATTACHMENT_URL}"></p>`)
+	it.each([
+		`${API_URL}/api/v1/tasks/5/attachments/9`,
+		`${API_URL}/tasks/5/attachments/9`,
+	])('resolves the older stored src %s', async src => {
+		const {editor} = createEditor(`<p><img src="${src}"></p>`)
 		await settle()
 
 		const img = editor.view.dom.querySelector('img')!

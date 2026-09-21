@@ -2,6 +2,7 @@ import {randomBytes} from 'node:crypto'
 import {test, expect} from '../../support/fixtures'
 import {UserFactory} from '../../factories/user'
 import {setupApiUrl} from '../../support/authenticateUser'
+import {apiRootUrl} from '../../support/apiUrl'
 
 test.describe('Registration', () => {
 	test.beforeEach(async ({page}) => {
@@ -33,7 +34,7 @@ test.describe('Registration', () => {
 
 	test('Should show a confirmation notice when the email needs to be verified', async ({browser, baseURL, request}) => {
 		const publicUrl = new URL('/', baseURL).href
-		const apiUrl = (process.env.MAILER_API_URL || 'http://127.0.0.1:3457/api/v1').replace(/\/$/, '')
+		const apiUrl = apiRootUrl(process.env.MAILER_API_URL || 'http://127.0.0.1:3457')
 		const mailpitUrl = process.env.MAILPIT_URL || 'http://127.0.0.1:8025'
 		const username = `unconfirmed-${randomBytes(8).toString('hex')}`
 		const email = `${username}@example.com`
@@ -48,7 +49,7 @@ test.describe('Registration', () => {
 			await page.locator('#username').fill(username)
 			await page.locator('#email').fill(email)
 			await page.locator('#password').fill('12345678')
-			const loginUrl = `${apiUrl.replace(/\/api\/v1$/, '/api/v2')}/login`
+			const loginUrl = `${apiUrl}/api/v2/login`
 			const login = page.waitForResponse(response => response.url() === loginUrl && response.request().method() === 'POST')
 			await page.locator('#register-submit').click()
 			expect((await login).status()).toBe(412)
