@@ -1,6 +1,7 @@
 import {queryOptions, useMutation} from '@tanstack/vue-query'
 import {notificationsList, notificationsMarkRead, notificationsMarkAllRead, notificationsDeleteAll, type DatabaseNotification} from '@/client/generated'
 import {fetchAllPages} from './fetchAllPages'
+import {API_MAX_PER_PAGE} from './pagination'
 import {contextMutationOptions} from './contextMutation'
 import {i18n} from '@/i18n'
 
@@ -9,7 +10,7 @@ export const notificationKeys = {all: ['notifications'] as const}
 export function notificationsQuery() {
 	return queryOptions({
 		queryKey: notificationKeys.all,
-		queryFn: ({signal}) => fetchAllPages(async page => (await notificationsList({query: {page}, signal})).data),
+		queryFn: ({signal}) => fetchAllPages(async page => (await notificationsList({query: {page, per_page: API_MAX_PER_PAGE}, signal})).data),
 	})
 }
 
