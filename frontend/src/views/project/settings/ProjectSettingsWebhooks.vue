@@ -1,73 +1,24 @@
 <script lang="ts" setup>
-import {ref, computed, watchEffect} from 'vue'
+import {computed, watchEffect} from 'vue'
 import {useRoute} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 import {useTitle} from '@vueuse/core'
-
-import type {IWebhook} from '@/modelTypes/IWebhook'
-
+import {useQuery} from '@tanstack/vue-query'
 import CreateEdit from '@/components/misc/CreateEdit.vue'
 import WebhookManager from '@/components/misc/WebhookManager.vue'
-
 import {useBaseStore} from '@/stores/base'
-import WebhookService from '@/services/webhook'
-import {success} from '@/message'
-import {ensureProject, type ProjectResponse} from '@/client/queries/projects'
+import {projectQuery} from '@/client/queries/projects'
 
 defineOptions({name: 'ProjectSettingWebhooks'})
-
 const {t} = useI18n({useScope: 'global'})
-
-const project = ref<ProjectResponse>()
 useTitle(t('project.webhooks.title'))
-
-async function loadProject(projectId: number) {
-	const newProject = await ensureProject(projectId)
-	useBaseStore().setCurrentProject(newProject)
-	project.value = newProject
-	await loadWebhooks()
-}
-
 const route = useRoute()
-const projectId = computed(() => route.params.projectId !== undefined
-	? parseInt(route.params.projectId as string)
-	: undefined,
-)
-
-watchEffect(() => projectId.value !== undefined && loadProject(projectId.value))
-
-const webhooks = ref<IWebhook[]>([])
-const webhookService = new WebhookService()
-const availableEvents = ref<string[]>([])
-const loading = ref(false)
-
-async function loadWebhooks() {
-	if (!project.value) return
-	loading.value = true
-	try {
-		webhooks.value = await webhookService.getAll({projectId: project.value.id} as IWebhook)
-		availableEvents.value = await webhookService.getAvailableEvents()
-	} finally {
-		loading.value = false
-	}
-}
-
-async function handleCreate(webhook: IWebhook) {
-	if (!project.value) return
-	webhook.projectId = project.value.id
-	const created = await webhookService.create(webhook)
-	webhooks.value.push(created)
-}
-
-async function handleDelete(webhookId: number) {
-	if (!project.value) return
-	await webhookService.delete({
-		id: webhookId,
-		projectId: project.value.id,
-	} as IWebhook)
-	success({message: t('project.webhooks.deleteSuccess')})
-	await loadWebhooks()
-}
+const baseStore = useBaseStore()
+const projectId = computed(() => Number(route.params.projectId))
+const {data: project} = useQuery(computed(() => ({...projectQuery(projectId.value), enabled: projectId.value > 0})))
+watchEffect(() => {
+	if (project.value?.id === projectId.value) baseStore.setCurrentProject(project.value)
+})
 </script>
 
 <template>
@@ -77,11 +28,9 @@ async function handleDelete(webhookId: number) {
 		:wide="true"
 	>
 		<WebhookManager
-			:webhooks="webhooks"
-			:available-events="availableEvents"
-			:loading="loading"
-			@create="handleCreate"
-			@delete="handleDelete"
+			v-if="projectId > 0"
+			:key="projectId"
+			:scope="{kind: 'project', projectId}"
 		/>
 	</CreateEdit>
 </template>
