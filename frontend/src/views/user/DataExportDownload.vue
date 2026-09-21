@@ -18,7 +18,7 @@
 
 		<XButton
 			v-focus
-			:loading="dataExportService.loading"
+			:loading="downloadMutation.isPending.value"
 			class="mbs-4 mie-4"
 			@click="download()"
 		>
@@ -35,26 +35,29 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, reactive} from 'vue'
-import DataExportService from '@/services/dataExport'
+import {ref, computed} from 'vue'
+import {useDownloadExportMutation} from '@/client/queries/dataExport'
 import FormField from '@/components/input/FormField.vue'
 import {useAuthStore} from '@/stores/auth'
 
-const dataExportService = reactive(new DataExportService())
+const downloadMutation = useDownloadExportMutation()
 const password = ref('')
 const errPasswordRequired = ref(false)
-const passwordInput = ref(null)
+const passwordInput = ref<InstanceType<typeof FormField>>()
 
 const authStore = useAuthStore()
 const isLocalUser = computed(() => authStore.info?.is_local_user)
 
-function download() {
+async function download() {
 	if (password.value === '' && isLocalUser.value) {
 		errPasswordRequired.value = true
-		passwordInput.value.focus()
+		passwordInput.value?.focus()
 		return
 	}
 
-	dataExportService.download(password.value)
+	try {
+		await downloadMutation.mutateAsync(password.value)
+		downloadMutation.reset()
+	} catch { return }
 }
 </script>

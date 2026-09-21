@@ -1,7 +1,7 @@
 <template>
 	<Card :title="$t('user.export.title')">
 		<Message
-			v-if="exportInfo"
+			v-if="exportInfo && exportExpires"
 			class="mbe-4"
 		>
 			<div class="export-message">
@@ -11,8 +11,8 @@
 						scope="global"
 					>
 						<time
-							v-tooltip="formatDateLong(exportInfo.expires)"
-							:datetime="formatISO(exportInfo.expires)"
+							v-tooltip="formatDateLong(exportExpires)"
+							:datetime="formatISO(exportExpires)"
 						>
 							{{ formattedExpiresDate }}
 						</time>
@@ -46,7 +46,7 @@
 		</template>
 
 		<XButton
-			:loading="dataExportService.loading"
+			:loading="requestMutation.isPending.value"
 			class="is-fullwidth mbs-4"
 			@click="requestDataExport()"
 		>
@@ -56,12 +56,13 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, shallowReactive, onMounted} from 'vue'
+import {ref, computed} from 'vue'
 import {useI18n} from 'vue-i18n'
 
-import DataExportService from '@/services/dataExport'
+import {useQuery} from '@tanstack/vue-query'
+import {dataExportQuery, useRequestExportMutation} from '@/client/queries/dataExport'
+import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {useTitle} from '@/composables/useTitle'
-import {success} from '@/message'
 import {useAuthStore} from '@/stores/auth'
 import {formatISO, formatDateLong, formatDisplayDate} from '@/helpers/time/formatDate'
 
@@ -75,29 +76,16 @@ const authStore = useAuthStore()
 
 useTitle(() => `${t('user.export.title')} - ${t('user.settings.title')}`)
 
-const dataExportService = shallowReactive(new DataExportService())
-interface ExportInfo {
-	id: number
-	size: number
-	created: string
-	expires: string
-}
-const exportInfo = ref<ExportInfo | null>(null)
+const status = useQuery(dataExportQuery())
+const exportInfo = computed(() => status.data.value?.id ? status.data.value : null)
+const exportExpires = computed(() => parseDateOrNull(exportInfo.value?.expires))
+const requestMutation = useRequestExportMutation()
 const password = ref('')
 const errPasswordRequired = ref(false)
 const isLocalUser = computed(() => authStore.info?.is_local_user)
 const passwordInput = ref()
 
-const formattedExpiresDate = computed(() => exportInfo.value ? formatDisplayDate(new Date(exportInfo.value.expires)) : '')
-
-onMounted(async () => {
-	try {
-		const data = await dataExportService.status()
-		exportInfo.value = data?.id ? data : null
-	} catch {
-		exportInfo.value = null
-	}
-})
+const formattedExpiresDate = computed(() => exportExpires.value ? formatDisplayDate(exportExpires.value) : '')
 
 async function requestDataExport() {
 	if (password.value === '' && isLocalUser.value) {
@@ -106,8 +94,9 @@ async function requestDataExport() {
 		return
 	}
 
-	await dataExportService.request(password.value)
-	success({message: t('user.export.success')})
+	try {
+		await requestMutation.mutateAsync(password.value)
+	} catch { return }
 	password.value = ''
 }
 </script>
