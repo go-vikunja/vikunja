@@ -23,7 +23,8 @@ function taggedBlob(testUrl: string) {
 beforeEach(() => {
 	queryClient = new QueryClient({defaultOptions: {queries: {retry: false}}})
 	sdk.avatarGet.mockReset().mockResolvedValue({data: taggedBlob('blob:avatar')})
-	vi.spyOn(URL, 'createObjectURL').mockImplementation(blob => (blob as Blob & {testUrl?: string}).testUrl ?? 'blob:untagged')
+	vi.spyOn(URL, 'createObjectURL')
+		.mockImplementation(blob => (blob as Blob & {testUrl?: string}).testUrl ?? 'blob:untagged')
 	vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
 })
 afterEach(() => {
