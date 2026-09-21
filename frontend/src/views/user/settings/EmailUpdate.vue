@@ -68,11 +68,9 @@
 import {reactive, computed, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 
-import EmailUpdateService from '@/services/emailUpdate'
-import EmailUpdateModel from '@/models/emailUpdate'
+import {useUpdateEmailMutation, useCancelEmailUpdateMutation, useResendEmailConfirmationMutation} from '@/client/queries/email'
 import FormField from '@/components/input/FormField.vue'
 import Message from '@/components/misc/Message.vue'
-import {success} from '@/message'
 import {useTitle} from '@/composables/useTitle'
 import {useAuthStore} from '@/stores/auth'
 
@@ -85,8 +83,10 @@ const authStore = useAuthStore()
 const isLocalUser = computed(() => authStore.info?.is_local_user)
 const pendingEmail = computed(() => authStore.info?.pending_email)
 
-const emailUpdate = reactive(new EmailUpdateModel())
-const emailUpdateService = new EmailUpdateService()
+const emailUpdate = reactive({new_email: '', password: ''})
+const updateMutation = useUpdateEmailMutation()
+const cancelMutation = useCancelEmailUpdateMutation()
+const resendMutation = useResendEmailConfirmationMutation()
 const pendingAction = ref<'save' | 'resend' | 'cancel' | null>(null)
 
 async function runAction(name: 'save' | 'resend' | 'cancel', fn: () => Promise<void>) {
@@ -96,6 +96,8 @@ async function runAction(name: 'save' | 'resend' | 'cancel', fn: () => Promise<v
 	pendingAction.value = name
 	try {
 		await fn()
+	} catch {
+		return
 	} finally {
 		pendingAction.value = null
 	}
@@ -103,29 +105,21 @@ async function runAction(name: 'save' | 'resend' | 'cancel', fn: () => Promise<v
 
 function updateEmail() {
 	return runAction('save', async () => {
-		await emailUpdateService.update(emailUpdate)
+		await updateMutation.mutateAsync(emailUpdate)
 		emailUpdate.new_email = ''
 		emailUpdate.password = ''
-		await authStore.refreshUserInfo()
-		success({message: authStore.info?.pending_email
-			? t('user.settings.updateEmailPendingSuccess')
-			: t('user.settings.updateEmailSuccess'),
-		})
 	})
 }
 
 function resendConfirmation() {
 	return runAction('resend', async () => {
-		await emailUpdateService.resend()
-		success({message: t('user.settings.updateEmailResendSuccess')})
+		await resendMutation.mutateAsync()
 	})
 }
 
 function cancelEmailUpdate() {
 	return runAction('cancel', async () => {
-		await emailUpdateService.cancel()
-		success({message: t('user.settings.updateEmailCancelSuccess')})
-		await authStore.refreshUserInfo()
+		await cancelMutation.mutateAsync()
 	})
 }
 </script>
