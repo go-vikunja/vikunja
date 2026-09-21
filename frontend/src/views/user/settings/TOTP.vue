@@ -6,7 +6,7 @@
 		<XButton
 			v-if="!totp.enabled && !totp.secret"
 			:loading="enrollMutation.isPending.value"
-			@click="totpEnroll()"
+			@click="enrollMutation.mutate()"
 		>
 			{{ $t('user.settings.totp.enroll') }}
 		</XButton>
@@ -119,10 +119,6 @@ const totpQR = useObjectUrl(computed(() => isEnrolling.value ? qr.data.value : u
 const enrollMutation = useEnrollTotpMutation()
 const enableMutation = useEnableTotpMutation()
 const disableMutation = useDisableTotpMutation()
-
-async function totpEnroll() {
-	try { await enrollMutation.mutateAsync() } catch { return }
-}
 
 async function totpConfirm() {
 	try {
