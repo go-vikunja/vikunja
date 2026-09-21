@@ -52,15 +52,15 @@ function route(query: RouteLocation['query'] = {}) {
 	} as unknown as RouteLocation
 }
 
-function authStoreStub({pendingEmail = 'new@example.com', ...overrides}: {pendingEmail?: string} & Record<string, unknown> = {}) {
-	const server = {pendingEmail}
+function authStoreStub({pending_email = 'new@example.com', ...overrides}: {pending_email?: string} & Record<string, unknown> = {}) {
+	const server = {pending_email}
 	const store = {
 		authUser: true,
 		authLinkShare: false,
 		// stale on purpose: this session was opened before the change was requested elsewhere
-		info: {pendingEmail: ''},
+		info: {pending_email: ''},
 		verifyEmail: vi.fn(async () => {
-			server.pendingEmail = ''
+			server.pending_email = ''
 			return true
 		}),
 		refreshUserInfo: vi.fn(async () => {
@@ -107,7 +107,7 @@ describe('getAuthForRoute email confirmation', () => {
 	})
 
 	it('does not claim success when nothing was pending', async () => {
-		const authStore = authStoreStub({pendingEmail: '', info: {pendingEmail: 'stale@example.com'}})
+		const authStore = authStoreStub({pending_email: '', info: {pending_email: 'stale@example.com'}})
 
 		const result = await getAuthForRoute(route({userEmailConfirm: 'token-123'}), authStore)
 

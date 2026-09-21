@@ -91,7 +91,7 @@ import {useMediaQuery} from '@vueuse/core'
 import type {Task as ITask} from '@/client/generated'
 import {getTaskIdentifier} from '@/helpers/task'
 import {formatDisplayDate} from '@/helpers/time/formatDate'
-import {getDisplayName} from '@/models/user'
+import {getDisplayName} from '@/helpers/user'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 import {getTopLayerContainer} from '@/helpers/getTopLayerContainer'
 

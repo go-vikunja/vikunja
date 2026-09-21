@@ -18,8 +18,8 @@ vi.mock('@/helpers/fetcher', () => {
 })
 
 // Avoid the avatar request triggered by setUser.
-vi.mock('@/models/user', async (importOriginal) => {
-	const original = await importOriginal<typeof import('@/models/user')>()
+vi.mock('@/helpers/user', async (importOriginal) => {
+	const original = await importOriginal<typeof import('@/helpers/user')>()
 	return {
 		...original,
 		fetchAvatarBlobUrl: vi.fn(async () => ''),
@@ -94,7 +94,7 @@ describe('General user settings', () => {
 		useAuthStore().setUser({
 			id: 1,
 			username: 'user1',
-			isLocalUser: false,
+			is_local_user: false,
 			authProvider: 'keycloak',
 		} as never)
 

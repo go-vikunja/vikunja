@@ -31,7 +31,7 @@ import {computed} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import UserAvatar from '@/components/misc/UserAvatar.vue'
-import {getDisplayName} from '@/models/user'
+import {getDisplayName} from '@/helpers/user'
 import type {User as IUser} from '@/client/generated'
 
 const props = withDefaults(defineProps<{

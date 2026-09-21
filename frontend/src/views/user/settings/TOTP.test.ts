@@ -30,8 +30,8 @@ vi.mock('@/message', () => ({
 }))
 
 // Avoid the avatar request triggered by setUser.
-vi.mock('@/models/user', async (importOriginal) => {
-	const original = await importOriginal<typeof import('@/models/user')>()
+vi.mock('@/helpers/user', async (importOriginal) => {
+	const original = await importOriginal<typeof import('@/helpers/user')>()
 	return {
 		...original,
 		fetchAvatarBlobUrl: vi.fn(async () => ''),
@@ -88,7 +88,7 @@ describe('TOTP settings', () => {
 		authStore.setUser({
 			id: 1,
 			username: 'user1',
-			isLocalUser: true,
+			is_local_user: true,
 		} as never)
 	})
 

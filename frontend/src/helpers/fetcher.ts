@@ -1,7 +1,7 @@
 import axios from 'axios'
 import type {AxiosRequestConfig} from 'axios'
 import {getToken, getTokenType, refreshToken} from '@/helpers/auth'
-import {AUTH_TYPES} from '@/modelTypes/IUser'
+import {AUTH_TYPES} from '@/constants/auth'
 
 /**
  * Returns the API base URL with a guaranteed trailing slash.

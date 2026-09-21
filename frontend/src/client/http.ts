@@ -8,7 +8,7 @@ import {
 } from '@/client/requestContext'
 import {getToken, getTokenIdentity, refreshToken} from '@/helpers/auth'
 import {getApiV2BaseUrl} from '@/helpers/fetcher'
-import {AUTH_TYPES} from '@/modelTypes/IUser'
+import {AUTH_TYPES} from '@/constants/auth'
 
 async function getProblemCode(response: Response): Promise<number | null> {
 	try {

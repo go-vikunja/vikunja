@@ -2,10 +2,10 @@ import {describe, it, expect, afterEach, beforeEach, vi} from 'vitest'
 import {mount, flushPromises, type VueWrapper} from '@vue/test-utils'
 
 import UserAvatar from './UserAvatar.vue'
-import {avatarCacheVersions, fetchAvatarBlobUrl, invalidateAvatarCache} from '@/models/user'
+import {avatarCacheVersions, fetchAvatarBlobUrl, invalidateAvatarCache} from '@/helpers/user'
 
-vi.mock('@/models/user', async (importOriginal) => {
-	const original = await importOriginal<typeof import('@/models/user')>()
+vi.mock('@/helpers/user', async (importOriginal) => {
+	const original = await importOriginal<typeof import('@/helpers/user')>()
 	return {
 		...original,
 		fetchAvatarBlobUrl: vi.fn(async () => 'blob:avatar'),

@@ -44,7 +44,7 @@ import {nodeViewProps, NodeViewWrapper, NodeViewContent} from '@tiptap/vue-3'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import UserAvatar from '@/components/misc/UserAvatar.vue'
-import {getDisplayName} from '@/models/user'
+import {getDisplayName} from '@/helpers/user'
 import {commentReplyContextKey} from '@/components/tasks/partials/commentReplyContext'
 
 const props = defineProps(nodeViewProps)

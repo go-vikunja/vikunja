@@ -43,7 +43,7 @@ import XLabel from '@/components/tasks/partials/Label.vue'
 import User from '@/components/misc/User.vue'
 import { ref, watch } from 'vue'
 import type { Label } from '@/client/generated'
-import type { IUser } from '@/modelTypes/IUser'
+import type {User as IUser} from '@/client/generated'
 import type { AutocompleteItem } from './FilterAutocomplete'
 
 interface Props {
