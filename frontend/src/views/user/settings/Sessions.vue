@@ -39,7 +39,10 @@ async function deleteSession() {
 </script>
 
 <template>
-	<Card :title="$t('user.settings.sessions.title')">
+	<Card
+		:title="$t('user.settings.sessions.title')"
+		:loading="sessionQuery.isPending.value"
+	>
 		<p class="mbe-4">
 			{{ $t('user.settings.sessions.description') }}
 		</p>
