@@ -4,7 +4,7 @@ import {gotoUserSettings} from '../../../support/userSettings'
 import {TokenFactory} from '../../../factories/token'
 
 test.describe('CalDAV', () => {
-	// Rows carrying a <td> are the data rows; this drops the <th>-only header row.
+	// Filter to data rows (rows containing a <td>) to exclude the <th>-only header row.
 	const dataRows = (page: Page) => page.locator('table.table tr').filter({has: page.locator('td')})
 
 	test('generates a token that authenticates against the caldav endpoint', async ({

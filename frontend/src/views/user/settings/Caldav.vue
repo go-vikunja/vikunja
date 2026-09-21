@@ -10,6 +10,7 @@
 			v-model="caldavUrl"
 			type="text"
 			readonly
+			:aria-label="$t('user.settings.caldav.urlLabel')"
 		>
 			<template #addon>
 				<XButton
@@ -89,7 +90,7 @@
 		<XButton
 			icon="plus"
 			class="mbe-4"
-			:loading="service.loading"
+			:loading="createMutation.isPending.value"
 			@click="createToken"
 		>
 			{{ $t('user.settings.caldav.createToken') }}
@@ -107,17 +108,17 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, ref, shallowReactive} from 'vue'
+import {computed, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import {CALDAV_DOCS} from '@/urls'
 import {useTitle} from '@/composables/useTitle'
 import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
-import {success} from '@/message'
 import BaseButton from '@/components/base/BaseButton.vue'
 import Message from '@/components/misc/Message.vue'
 import FormField from '@/components/input/FormField.vue'
-import CaldavTokenService from '@/services/caldavToken'
+import {useQuery} from '@tanstack/vue-query'
+import {caldavTokensQuery, useCreateCaldavTokenMutation, useDeleteCaldavTokenMutation} from '@/client/queries/caldavTokens'
 import { formatDateShort } from '@/helpers/time/formatDate'
 import type {Token} from '@/client/generated'
 import {useConfigStore} from '@/stores/config'
@@ -128,27 +129,29 @@ const copy = useCopyToClipboard()
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => `${t('user.settings.caldav.title')} - ${t('user.settings.title')}`)
 
-const service = shallowReactive(new CaldavTokenService())
-const tokens = ref<Token[]>([])
-
-service.getAll().then((result: Token[]) => {
-	tokens.value = result
-})
-
+const authStore = useAuthStore()
+const configStore = useConfigStore()
+const caldav_enabled = computed(() => configStore.caldav_enabled)
+const tokenQuery = useQuery(computed(() => ({...caldavTokensQuery(), enabled: caldav_enabled.value})))
+const tokens = computed(() => tokenQuery.data.value ?? [])
+const createMutation = useCreateCaldavTokenMutation()
+const deleteMutation = useDeleteCaldavTokenMutation()
 const newToken = ref<Token>()
+
 async function createToken() {
-	newToken.value = await service.create({}) as Token
-	tokens.value.push(newToken.value)
+	try {
+		newToken.value = await createMutation.mutateAsync()
+	} catch { return }
 }
 
 async function deleteToken(token: Token) {
-	const r = await service.delete(token)
-	tokens.value = tokens.value.filter(({id}) => id !== token.id)
-	success(r)
+	if (!token.id) return
+	try {
+		await deleteMutation.mutateAsync(token.id)
+		if (newToken.value?.id === token.id) newToken.value = undefined
+	} catch { return }
 }
 
-const authStore = useAuthStore()
-const configStore = useConfigStore()
 const username = computed(() => authStore.info?.username)
 const caldavUrl = computed(() => `${configStore.apiBase}/dav/principals/${username.value}/`)
 const isLocalUser = computed(() => authStore.info?.is_local_user)
