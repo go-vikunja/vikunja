@@ -33,7 +33,7 @@ test.describe('Registration', () => {
 
 	test('Should show a confirmation notice when the email needs to be verified', async ({browser, baseURL, request}) => {
 		const publicUrl = new URL('/', baseURL).href
-		const apiUrl = (process.env.MAILER_API_URL || 'http://127.0.0.1:3457/api/v1').replace(/\/$/, '')
+		const apiUrl = (process.env.MAILER_API_URL || 'http://127.0.0.1:3457/api/v2').replace(/\/$/, '').replace(/\/api\/v1$/, '/api/v2')
 		const mailpitUrl = process.env.MAILPIT_URL || 'http://127.0.0.1:8025'
 		const username = `unconfirmed-${randomBytes(8).toString('hex')}`
 		const email = `${username}@example.com`
