@@ -1,5 +1,5 @@
 import {queryOptions, useMutation} from '@tanstack/vue-query'
-import {migrationCsvStatus, migrationMicrosoftTodoStatus, migrationPlankaStatus, migrationTicktickStatus, migrationTodoistStatus, migrationTrelloStatus, migrationVikunjaFileStatus, migrationWekanStatus, migrationTodoistAuth, migrationTrelloAuth, migrationMicrosoftTodoAuth, migrationCsvMigrate, migrationMicrosoftTodoMigrate, migrationPlankaMigrate, migrationTicktickMigrate, migrationTodoistMigrate, migrationTrelloMigrate, migrationVikunjaFileMigrate, migrationWekanMigrate, migrationCsvDetect, migrationCsvPreview, type MigrationCredentialsBodyWritable, type MigrationMigrateBodyWritable, type MigrationCsvMigrateData} from '@/client/generated'
+import {migrationCsvStatus, migrationMicrosoftTodoStatus, migrationPlankaStatus, migrationTicktickStatus, migrationTodoistStatus, migrationTrelloStatus, migrationVikunjaFileStatus, migrationWekanStatus, migrationTodoistAuth, migrationTrelloAuth, migrationMicrosoftTodoAuth, migrationCsvMigrate, migrationMicrosoftTodoMigrate, migrationPlankaMigrate, migrationTicktickMigrate, migrationTodoistMigrate, migrationTrelloMigrate, migrationVikunjaFileMigrate, migrationWekanMigrate, migrationCsvDetect, migrationCsvPreview, type MigrationCredentialsBodyWritable, type MigrationMigrateBodyWritable, type MigrationCsvMigrateData, type MigrationCsvPreviewData} from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
 import {projectKeys} from './projects'
 import {taskKeys} from './tasks'
@@ -69,7 +69,7 @@ export function detectCsvMutationOptions() {
 	return contextMutationOptions({mutationFn: async (file: File) => (await migrationCsvDetect({body: {import: file}})).data, toastError: () => false})
 }
 export function previewCsvMutationOptions() {
-	return contextMutationOptions({mutationFn: async (body: MigrationCsvMigrateData['body']) => (await migrationCsvPreview({body})).data, toastError: () => false})
+	return contextMutationOptions({mutationFn: async (body: MigrationCsvPreviewData['body']) => (await migrationCsvPreview({body})).data, toastError: () => false})
 }
 
 export const useMigrationAuthMutation = () => useMutation(migrationAuthMutationOptions())
