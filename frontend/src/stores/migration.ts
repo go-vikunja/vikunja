@@ -57,13 +57,21 @@ export const useMigrationStore = defineStore('migration', () => {
 		let finishedErrorKind = ''
 		try {
 			const result = await queryClient.fetchQuery(migrationStatusQuery(provider.value))
-			if (myGeneration !== generation || !isClientRequestContextCurrent(request)) return
+			if (myGeneration !== generation) return
+			if (!isClientRequestContextCurrent(request)) {
+				stop()
+				return
+			}
 			accepted.value = true
 			failures = 0
 			finishedAt = parseDateOrNull(result?.finished_at)
 			finishedErrorKind = result?.error_kind ?? ''
 		} catch {
-			if (myGeneration !== generation || !isClientRequestContextCurrent(request)) return
+			if (myGeneration !== generation) return
+			if (!isClientRequestContextCurrent(request)) {
+				stop()
+				return
+			}
 			failures++
 		}
 		if (finishedAt !== null) {
