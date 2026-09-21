@@ -181,7 +181,7 @@ const passwordHelp = computed(() => {
 	return te(key) ? t(key) : ''
 })
 
-const status = useQuery(computed(() => migrationStatusQuery(migrator.value.id)))
+const status = useQuery(computed(() => ({...migrationStatusQuery(migrator.value.id), enabled: false})))
 const migrationRunning = computed(() => startedHere.value || (parseDateOrNull(status.data.value?.started_at) !== null && parseDateOrNull(status.data.value?.finished_at) === null))
 const previousMigrationFinishedAt = computed(() => !confirmedAgain.value && !startedHere.value && !migrator.value.isFileMigrator ? parseDateOrNull(status.data.value?.finished_at) : null)
 useTitle(() => t('migrate.titleService', {name: migrator.value.name}))
