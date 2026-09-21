@@ -377,10 +377,7 @@ export const useAuthStore = defineStore('auth', () => {
 			if (isAuthenticated && jwtUserType !== AUTH_TYPES.LINK_SHARE) {
 				const user = await refreshUserInfo()
 				if (!user) {
-					// refreshUserInfo() did not return a user — either the
-					// token vanished or a 4xx triggered logout(). Bail out
-					// so the stale local `isAuthenticated` doesn't override
-					// the auth state that logout() already set.
+					// refreshUserInfo() bailed (logout, cancelled query or vanished token) — don't override the auth state it left behind.
 					return
 				}
 			}
