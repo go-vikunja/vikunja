@@ -84,7 +84,7 @@ async function create() {
 	showNewForm.value = false
 }
 
-function confirmDelete(webhookId: number | undefined) {
+function confirmDelete(webhookId: number) {
 	webhookIdToDelete.value = webhookId
 	showDeleteModal.value = true
 }
@@ -93,6 +93,7 @@ function doDelete() {
 	if (webhookIdToDelete.value) {
 		deleteMutation.mutate({scope: props.scope, id: webhookIdToDelete.value})
 	}
+	webhookIdToDelete.value = undefined
 	showDeleteModal.value = false
 }
 </script>
@@ -237,7 +238,7 @@ function doDelete() {
 							danger
 							icon="trash-alt"
 							:aria-label="$t('project.webhooks.delete')"
-							@click="() => confirmDelete(w.id)"
+							@click="() => w.id && confirmDelete(w.id)"
 						/>
 					</td>
 				</tr>
