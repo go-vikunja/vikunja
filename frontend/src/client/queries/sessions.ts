@@ -16,7 +16,9 @@ export function sessionsQuery() {
 
 export function deleteSessionMutationOptions() {
 	return contextMutationOptions({
-		mutationFn: async (id: string) => (await sessionsDelete({path: {session: id}})).data,
+		mutationFn: async (id: string) => {
+			await sessionsDelete({path: {session: id}})
+		},
 		onSuccess: (_data, id, client) => client.setQueryData<Session[]>(sessionKeys.all, current => current?.filter(session => session.id !== id)),
 		onSettled: (_id, client) => client.invalidateQueries({queryKey: sessionKeys.all}),
 		successMessage: () => i18n.global.t('user.settings.sessions.deleteSuccess'),
