@@ -175,6 +175,8 @@ func TestBotUser_ManageDisabled(t *testing.T) {
 				require.NoError(t, err)
 				require.False(t, allowed)
 				require.NoError(t, target.Delete(s, owner))
+				_, err = user.GetUserByID(s, bot.ID)
+				require.True(t, user.IsErrUserDoesNotExist(err))
 			case "tokens":
 				token := &APIToken{OwnerID: bot.ID, Title: "Disabled bot token"}
 				require.NoError(t, token.Create(s, owner))
