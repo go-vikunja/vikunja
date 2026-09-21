@@ -12,6 +12,7 @@ import FormField from '@/components/input/FormField.vue'
 import type {ApiToken as IApiToken} from '@/client/generated'
 type IApiPermission = NonNullable<IApiToken['permissions']>
 import type {ApiTokenRoutes, ApiTokenPreset} from '@/helpers/apiToken'
+import {parseScopesFromQuery} from '@/helpers/parseScopesFromQuery'
 
 const props = withDefaults(defineProps<{
 	ownerId?: number,
@@ -124,16 +125,7 @@ watch(availableRoutes, routes => {
 	}
 
 	if (props.initialScopes) {
-		const requestedScopes: Record<string, string[]> = {}
-		for (const scope of props.initialScopes.split(',')) {
-			const [group, permission] = scope.split(':')
-			if (group && permission) {
-				if (!requestedScopes[group]) {
-					requestedScopes[group] = []
-				}
-				requestedScopes[group].push(permission)
-			}
-		}
+		const requestedScopes = parseScopesFromQuery(props.initialScopes)
 		for (const [group, permissions] of Object.entries(requestedScopes)) {
 			if (newTokenPermissions.value[group]) {
 				for (const permission of permissions) {
