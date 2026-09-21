@@ -114,9 +114,10 @@ watch(providerQuery.data, data => {
 }, {immediate: true})
 
 async function updateAvatarStatus() {
-	if (!avatarProvider.value) return
+	const username = authStore.info?.username
+	if (!username || !avatarProvider.value) return
 	try {
-		await updateProvider.mutateAsync({username: authStore.info?.username ?? '', provider: avatarProvider.value})
+		await updateProvider.mutateAsync({username, provider: avatarProvider.value})
 	} catch { return }
 }
 
@@ -124,6 +125,8 @@ const cropper = ref()
 const isCropAvatar = ref(false)
 
 async function uploadAvatar() {
+	const username = authStore.info?.username
+	if (!username) return
 	loading.value = true
 	const {canvas} = cropper.value.getResult()
 
@@ -135,7 +138,7 @@ async function uploadAvatar() {
 	try {
 		const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve))
 		if (!blob) return
-		await upload.mutateAsync({username: authStore.info?.username ?? '', blob})
+		await upload.mutateAsync({username, blob})
 	} catch {
 		return
 	} finally {
