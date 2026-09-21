@@ -1,6 +1,6 @@
 import {describe, it, expect, beforeEach, afterEach, vi} from 'vitest'
 import {mount, flushPromises, type VueWrapper} from '@vue/test-utils'
-import {setActivePinia, createPinia} from 'pinia'
+import {setActivePinia, createPinia, type Pinia} from 'pinia'
 import {createI18n} from 'vue-i18n'
 import {createRouter, createMemoryHistory} from 'vue-router'
 import App from '@/App.vue'
@@ -10,12 +10,14 @@ import {AUTH_TYPES} from '@/constants/auth'
 import en from '@/i18n/lang/en.json'
 
 const sdk = vi.hoisted(() => ({
+	info: vi.fn(),
 	userDeletionConfirm: vi.fn(),
 	userShow: vi.fn(),
 }))
 
 vi.mock('@/client/generated', async importOriginal => ({
 	...await importOriginal<typeof import('@/client/generated')>(),
+	info: sdk.info,
 	userDeletionConfirm: sdk.userDeletionConfirm,
 	userShow: sdk.userShow,
 }))
@@ -29,6 +31,8 @@ const LoginRoute = {template: '<div class="login-route">login route</div>'}
 
 let wrapper: VueWrapper | undefined
 let queryClient: QueryClient | undefined
+// Store actions left running by an earlier test re-activate that test's pinia.
+let pinia: Pinia
 
 async function mountApp(path: string) {
 	const router = createRouter({
@@ -44,7 +48,7 @@ async function mountApp(path: string) {
 	queryClient = new QueryClient({defaultOptions: {queries: {retry: false}}})
 	wrapper = mount(App, {
 		global: {
-			plugins: [i18n, router, [VueQueryPlugin, {queryClient}]],
+			plugins: [pinia, i18n, router, [VueQueryPlugin, {queryClient}]],
 			stubs: {
 				Ready: {template: '<div><slot /></div>'},
 				NoAuthWrapper: {template: '<div class="no-auth"><slot /></div>'},
@@ -65,7 +69,7 @@ async function mountApp(path: string) {
 }
 
 function login() {
-	const authStore = useAuthStore()
+	const authStore = useAuthStore(pinia)
 	authStore.setAuthenticated(true)
 	authStore.setSession({
 		id: 1,
@@ -77,7 +81,10 @@ function login() {
 
 describe('App layout', () => {
 	beforeEach(() => {
-		setActivePinia(createPinia())
+		pinia = createPinia()
+		setActivePinia(pinia)
+		// Resolving would let hydration run checkAuth and log the test user out.
+		sdk.info.mockReturnValue(new Promise(() => {}))
 		sdk.userDeletionConfirm.mockResolvedValue({})
 		sdk.userShow.mockResolvedValue({
 			data: {

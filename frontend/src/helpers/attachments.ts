@@ -8,6 +8,7 @@ import {
 } from '@/client/queries/attachments'
 import {captureClientRequestContext, assertClientRequestContext} from '@/client/requestContext'
 import {downloadBlob} from '@/helpers/downloadBlob'
+import {getApiBaseUrl} from '@/helpers/apiUrl'
 
 // A blob: url for an svg inherits our origin and can script; a data: url cannot.
 const SCRIPTABLE_MIME_TYPE = 'image/svg+xml'
@@ -66,5 +67,5 @@ export async function downloadAttachment(attachment: TaskAttachment) {
 }
 
 export function generateAttachmentUrl(taskId: number, attachmentId: number) {
-	return `${window.API_URL}/tasks/${taskId}/attachments/${attachmentId}`
+	return `${getApiBaseUrl()}/tasks/${taskId}/attachments/${attachmentId}`
 }

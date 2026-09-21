@@ -1718,7 +1718,7 @@ test.describe('Task', () => {
 			// recognize it as an attachment URL and load it with authentication
 			await TaskFactory.create(1, {
 				id: 1,
-				description: `<img src="${apiUrl}/tasks/${tasks[0].id}/attachments/${success[0].id}" alt="test image">`,
+				description: `<img src="${apiUrl}/api/v2/tasks/${tasks[0].id}/attachments/${success[0].id}" alt="test image">`,
 			})
 
 			await page.goto(`/tasks/${tasks[0].id}`)

@@ -1,17 +1,20 @@
-export const API_PATH_SUFFIX = '/api/v2'
+const API_VERSION_SUFFIX = /\/api\/v[12]$/
 
-// upgrades a stored v1 base to v2; whatever deployment prefix sits in front of it is kept
-export function getApiBaseUrl(): string {
-	const base = (window.API_URL ?? '').replace(/\/$/, '')
-	if (base === '') {
+// Stored without /api/vN ('' = same origin); values saved before that still carry one.
+export function normalizeApiUrl(url: string): string {
+	return url.replace(/\/+$/, '').replace(API_VERSION_SUFFIX, '')
+}
+
+export function getApiRootUrl(): string {
+	if (typeof window.API_URL !== 'string') {
 		throw new InvalidApiUrlProvidedError()
 	}
 
-	return base.replace(/\/api\/v1$/, API_PATH_SUFFIX)
+	return normalizeApiUrl(window.API_URL)
 }
 
-export function getLegacyApiBaseUrl(): string {
-	return getApiBaseUrl().replace(/\/api\/v2$/, '/api/v1')
+export function getApiBaseUrl(): string {
+	return `${getApiRootUrl()}/api/v2`
 }
 
 export class NoApiUrlProvidedError extends Error {

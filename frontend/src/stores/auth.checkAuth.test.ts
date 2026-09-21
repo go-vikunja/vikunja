@@ -10,24 +10,6 @@ const {postMock} = vi.hoisted(() => ({
 	postMock: vi.fn(),
 }))
 
-function fakeHttp() {
-	return {
-		post: postMock,
-		get: vi.fn().mockResolvedValue({data: {}}),
-		interceptors: {
-			request: {use: vi.fn()},
-			response: {use: vi.fn()},
-		},
-	}
-}
-
-vi.mock('@/helpers/fetcher', () => ({
-	getApiV2BaseUrl: () => '/api/v2/',
-	HTTPFactory: () => fakeHttp(),
-	AuthenticatedHTTPFactory: () => fakeHttp(),
-	getApiBaseUrl: () => 'http://localhost/api/v1/',
-}))
-
 vi.mock('@/client/generated', async (importOriginal) => ({
 	...await importOriginal<typeof import('@/client/generated')>(),
 	authRefreshToken: postMock,

@@ -11,11 +11,12 @@ import {useI18n} from 'vue-i18n'
 import Message from '@/components/misc/Message.vue'
 import type {ApiToken as IApiToken} from '@/client/generated'
 import ApiTokenForm from '@/components/token/ApiTokenForm.vue'
+import {getApiBaseUrl} from '@/helpers/apiUrl'
 
 const {data, isFetching} = useQuery(apiTokensQuery())
 const tokens = computed(() => data.value ?? [])
 const deleteMutation = useDeleteApiTokenMutation()
-const apiDocsUrl = window.API_URL + '/docs'
+const apiDocsUrl = `${getApiBaseUrl()}/docs`
 const showCreateForm = ref(false)
 const tokenCreatedSuccessMessage = ref('')
 

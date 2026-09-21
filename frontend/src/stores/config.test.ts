@@ -44,7 +44,7 @@ describe('config store', () => {
 
 	describe('public configuration transport', () => {
 		beforeEach(() => {
-			window.API_URL = 'https://example.test/api/v1/'
+			window.API_URL = 'https://example.test'
 		})
 
 		it('keeps wire fields', async () => {
@@ -175,7 +175,7 @@ describe('config store', () => {
 
 		it('does not apply a response for an API that is no longer configured', async () => {
 			sdk.info.mockImplementation(async () => {
-				window.API_URL = 'https://other.test/api/v1/'
+				window.API_URL = 'https://other.test'
 				return {data: {version: 'v2'}}
 			})
 			const store = useConfigStore()
@@ -183,6 +183,19 @@ describe('config store', () => {
 			await expect(store.update()).resolves.toBe(false)
 
 			expect(store.version).toBe('')
+		})
+	})
+
+	describe('apiBase', () => {
+		it.each([
+			['', 'http://localhost:3000'],
+			['/prefix', 'http://localhost:3000/prefix'],
+			['https://x', 'https://x'],
+			['https://x/prefix/', 'https://x/prefix'],
+			['https://x/prefix/api/v1', 'https://x/prefix'],
+		])('resolves %o to an absolute base for non-API links', (apiUrl, base) => {
+			window.API_URL = apiUrl
+			expect(useConfigStore().apiBase).toBe(base)
 		})
 	})
 })

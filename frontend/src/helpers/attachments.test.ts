@@ -1,6 +1,6 @@
 import {describe, it, expect, beforeEach, vi} from 'vitest'
 
-import {fetchAttachmentBlob, fetchAttachmentUrl, releaseAttachmentUrl} from './attachments'
+import {fetchAttachmentBlob, fetchAttachmentUrl, generateAttachmentUrl, releaseAttachmentUrl} from './attachments'
 import {queryClient} from '@/client/queryClient'
 import {attachmentKeys} from '@/client/queries/attachments'
 
@@ -217,5 +217,12 @@ describe('releaseAttachmentUrl', () => {
 		releaseAttachmentUrl(undefined)
 
 		expect(window.URL.revokeObjectURL).not.toHaveBeenCalled()
+	})
+})
+
+describe('generateAttachmentUrl', () => {
+	it('points at the attachment under the configured API base', () => {
+		requestContext.apiBaseUrl = 'https://x/prefix/api/v2'
+		expect(generateAttachmentUrl(5, 9)).toBe('https://x/prefix/api/v2/tasks/5/attachments/9')
 	})
 })

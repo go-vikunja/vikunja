@@ -1,8 +1,7 @@
 import {computed, reactive, toRefs} from 'vue'
 import {acceptHMRUpdate, defineStore} from 'pinia'
-import {parseURL} from 'ufo'
 
-import {getApiBaseUrl, InvalidApiUrlProvidedError} from '@/helpers/apiUrl'
+import {getApiBaseUrl, getApiRootUrl, InvalidApiUrlProvidedError} from '@/helpers/apiUrl'
 import {canonicalApiBaseUrl} from '@/client/requestContext'
 import {info, type VikunjaInfos, type AuthInfo} from '@/client/generated'
 import {publicClient} from '@/client/publicClient'
@@ -92,15 +91,7 @@ export const useConfigStore = defineStore('config', () => {
 	const state: ConfigState = reactive(defaultConfig())
 
 	const migratorsEnabled = computed(() => state.available_migrators?.length > 0)
-	const apiBase = computed(() => {
-		const {host, protocol, pathname} = parseURL(window.API_URL)
-
-		// Keep the deployment prefix for non-API links.
-		const basePath = pathname
-			.replace(/\/api\/v[12]\/?$/, '')
-			.replace(/\/+$/, '')
-		return `${protocol}//${host}${basePath}`
-	})
+	const apiBase = computed(() => new URL(`${getApiRootUrl()}/`, window.location.origin).href.replace(/\/$/, ''))
 
 	function setConfig(config: VikunjaInfos) {
 		const {$schema: _schema, ...wire} = config

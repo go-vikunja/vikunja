@@ -30,30 +30,6 @@ function issueToken(): string {
 	return `header.${btoa(JSON.stringify(payload))}.signature`
 }
 
-function fakeHttp() {
-	return {
-		post: server.post,
-		get: vi.fn().mockResolvedValue({
-			data: {
-				id: 1,
-				username: 'user1',
-				settings: {},
-			},
-		}),
-		interceptors: {
-			request: {use: vi.fn()},
-			response: {use: vi.fn()},
-		},
-	}
-}
-
-vi.mock('@/helpers/fetcher', () => ({
-	apiV2Url: (path: string) => `/api/v2/${path}`,
-	getApiV2BaseUrl: () => '/api/v2/',
-	HTTPFactory: () => fakeHttp(),
-	AuthenticatedHTTPFactory: () => fakeHttp(),
-}))
-
 vi.mock('@/client/generated', async (importOriginal) => ({
 	...await importOriginal<typeof import('@/client/generated')>(),
 	authLogin: () => server.post('login'),

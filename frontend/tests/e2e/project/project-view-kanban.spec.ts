@@ -458,8 +458,8 @@ test.describe('Project View Kanban', () => {
 
 		// Enable the alwaysShowBucketTaskCount setting
 		await updateUserSettings(apiContext, userToken, {
-			frontendSettings: {
-				alwaysShowBucketTaskCount: true,
+			frontend_settings: {
+				always_show_bucket_task_count: true,
 			},
 		})
 

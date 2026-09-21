@@ -20,9 +20,9 @@
 <script>
 	//
 	// This variable points the frontend to the api.
-	// It has to be the full url, including the last /api/v2 part and port.
-	// You can change this if your api is not reachable on the same port as the frontend.
-	window.API_URL = '/api/v2'
+	// Leave it empty when the api is served from the same origin as the frontend. Otherwise set it to the
+	// url the api is reachable at, including the port and any sub path but without the /api/v2 part.
+	window.API_URL = ''
 </script>
 </body>
 </html>

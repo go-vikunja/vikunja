@@ -1,6 +1,7 @@
 import {ref, readonly} from 'vue'
 
 import {getToken, getTokenType} from '@/helpers/auth'
+import {getApiBaseUrl} from '@/helpers/apiUrl'
 import {AUTH_TYPES} from '@/constants/auth'
 import {
 	captureClientRequestContext,
@@ -33,9 +34,9 @@ const subscribedAt = ref(0)
 let manuallyDisconnected = false
 
 function getWebSocketUrl(): string {
-	const base = window.API_URL.replace(/\/+$/, '')
-	const wsProtocol = base.startsWith('https') ? 'wss' : 'ws'
-	return base.replace(/^https?/, wsProtocol) + '/ws'
+	const url = new URL(`${getApiBaseUrl()}/ws`, window.location.origin)
+	url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:'
+	return url.href
 }
 
 function sendMessage(msg: object) {
