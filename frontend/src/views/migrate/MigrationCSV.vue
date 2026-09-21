@@ -355,7 +355,14 @@ async function performImport() {
 	error.value = ''
 
 	try {
-		await startMigration.mutateAsync({kind: 'csv', provider: 'csv', body: {import: selectedFile.value, config: JSON.stringify(config.value)}})
+		await startMigration.mutateAsync({
+			kind: 'csv',
+			provider: 'csv',
+			body: {
+				import: selectedFile.value,
+				config: JSON.stringify(config.value),
+			},
+		})
 		migrationStore.start('csv')
 		step.value = 'success'
 	} catch (e) {

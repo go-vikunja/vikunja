@@ -3,7 +3,11 @@ import {acceptHMRUpdate, defineStore} from 'pinia'
 import {useMutation, useQuery} from '@tanstack/vue-query'
 import {queryClient} from '@/client/queryClient'
 import {captureClientRequestContext, isClientRequestContextCurrent} from '@/client/requestContext'
-import {migrationStatusQuery, migrationCompletedMutationOptions, type MigrationProvider} from '@/client/queries/migration'
+import {
+	migrationStatusQuery,
+	migrationCompletedMutationOptions,
+	type MigrationProvider,
+} from '@/client/queries/migration'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 
 const POLL_INTERVAL = 3000

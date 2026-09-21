@@ -1,6 +1,12 @@
 import type {ColumnMapping} from '@/client/generated'
 
-export type CsvImportDraft = {delimiter: string, quote_char: string, date_format: string, skip_rows: number, mapping: ColumnMapping[]}
+export type CsvImportDraft = {
+	delimiter: string,
+	quote_char: string,
+	date_format: string,
+	skip_rows: number,
+	mapping: ColumnMapping[],
+}
 
 export const TASK_ATTRIBUTES: NonNullable<ColumnMapping['attribute']>[] = [
 	'title',

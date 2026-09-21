@@ -192,8 +192,15 @@ const passwordHelp = computed(() => {
 })
 
 const status = useQuery(computed(() => ({...migrationStatusQuery(migrator.value.id), enabled: false})))
-const migrationRunning = computed(() => startedHere.value || (parseDateOrNull(status.data.value?.started_at) !== null && parseDateOrNull(status.data.value?.finished_at) === null))
-const previousMigrationFinishedAt = computed(() => !confirmedAgain.value && !startedHere.value && !migrator.value.isFileMigrator ? parseDateOrNull(status.data.value?.finished_at) : null)
+const migrationRunning = computed(() => {
+	if (startedHere.value) return true
+	return parseDateOrNull(status.data.value?.started_at) !== null
+		&& parseDateOrNull(status.data.value?.finished_at) === null
+})
+const previousMigrationFinishedAt = computed(() => {
+	if (confirmedAgain.value || startedHere.value || migrator.value.isFileMigrator) return null
+	return parseDateOrNull(status.data.value?.finished_at)
+})
 useTitle(() => t('migrate.titleService', {name: migrator.value.name}))
 
 const migrationStore = useMigrationStore()
