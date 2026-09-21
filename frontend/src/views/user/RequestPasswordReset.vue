@@ -27,7 +27,7 @@
 		>
 			<FormField
 				id="email"
-				v-model="passwordReset.email"
+				v-model="email"
 				v-focus
 				:label="$t('user.auth.email')"
 				name="email"
@@ -65,14 +65,14 @@ import {getErrorText} from '@/message'
 import FormField from '@/components/input/FormField.vue'
 
 const passwordResetMutation = useRequestPasswordResetMutation()
-const passwordReset = ref({email: ''})
+const email = ref('')
 const errorMsg = ref('')
 const isSuccess = ref(false)
 
 async function requestPasswordReset() {
 	errorMsg.value = ''
 	try {
-		await passwordResetMutation.mutateAsync(passwordReset.value)
+		await passwordResetMutation.mutateAsync({email: email.value})
 		isSuccess.value = true
 	} catch (e) {
 		if (isRequestContextAbort(e)) return
