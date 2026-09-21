@@ -6,6 +6,7 @@ import {setActivePinia, createPinia} from 'pinia'
 import {computed} from 'vue'
 
 import {useConfigStore} from './config'
+import {InvalidApiUrlProvidedError} from '@/helpers/checkAndSetApiUrl'
 
 describe('config store', () => {
 	beforeEach(() => {
@@ -42,15 +43,86 @@ describe('config store', () => {
 	})
 
 	describe('public configuration transport', () => {
-		it('keeps wire fields and normalizes missing collections', async () => {
+		beforeEach(() => {
 			window.API_URL = 'https://example.test/api/v1/'
-			sdk.info.mockResolvedValue({data: {version: 'v2', enabled_pro_features: ['admin_panel']}})
+		})
+
+		it('keeps wire fields', async () => {
+			sdk.info.mockResolvedValue({
+				data: {
+					version: 'v2',
+					enabled_pro_features: ['admin_panel'],
+				},
+			})
 			const store = useConfigStore()
+
 			await store.update()
+
 			expect(sdk.info).toHaveBeenCalledWith(expect.objectContaining({baseUrl: 'https://example.test/api/v2'}))
+			expect(store.version).toBe('v2')
 			expect(store.enabled_pro_features).toEqual(['admin_panel'])
+		})
+
+		it('normalizes null collections to empty arrays', async () => {
+			sdk.info.mockResolvedValue({
+				data: {
+					version: 'v2',
+					enabled_pro_features: null,
+					available_migrators: null,
+					enabled_background_providers: null,
+					auth: {
+						openid_connect: {
+							enabled: true,
+							providers: null,
+						},
+					},
+				},
+			})
+			const store = useConfigStore()
+
+			await store.update()
+
+			expect(store.version).toBe('v2')
+			expect(store.enabled_pro_features).toEqual([])
 			expect(store.available_migrators).toEqual([])
+			expect(store.enabled_background_providers).toEqual([])
+			expect(store.auth.openid_connect.enabled).toBe(true)
 			expect(store.auth.openid_connect.providers).toEqual([])
+		})
+
+		it('fills missing provider fields with defaults', async () => {
+			sdk.info.mockResolvedValue({
+				data: {
+					version: 'v2',
+					auth: {
+						openid_connect: {
+							enabled: true,
+							providers: [{key: 'x'}],
+						},
+					},
+				},
+			})
+			const store = useConfigStore()
+
+			await store.update()
+
+			expect(store.auth.openid_connect.providers).toEqual([
+				{
+					key: 'x',
+					name: '',
+					auth_url: '',
+					client_id: '',
+					logout_url: '',
+					scope: 'openid email profile',
+				},
+			])
+		})
+
+		it('rejects when the response carries no version', async () => {
+			sdk.info.mockResolvedValue({data: {}})
+			const store = useConfigStore()
+
+			await expect(store.update()).rejects.toBeInstanceOf(InvalidApiUrlProvidedError)
 		})
 	})
 })
