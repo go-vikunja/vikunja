@@ -30,5 +30,7 @@ test('notification read and clear state survives reload', async ({authenticatedP
 	await expect(rows).toHaveCount(0)
 	const response = await apiContext.get('/api/v2/notifications', {headers: {Authorization: `Bearer ${userToken}`}})
 	expect(response.ok()).toBe(true)
-	expect((await response.json()).items ?? []).toEqual([])
+	const body = await response.json()
+	expect(body.items).toEqual([])
+	expect(body.total).toBe(0)
 })
