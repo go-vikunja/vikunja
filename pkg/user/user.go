@@ -723,6 +723,9 @@ func UpdateUser(s *xorm.Session, user *User, forceOverride bool) (updatedUser *U
 	// Check if we have a valid time zone
 	if user.Timezone == "" {
 		user.Timezone = config.GetTimeZone().String()
+		if user.Timezone == "" {
+			user.Timezone = "UTC"
+		}
 	}
 
 	_, err = time.LoadLocation(user.Timezone)
