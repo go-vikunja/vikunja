@@ -34,7 +34,7 @@ useTitle(() => t('migrate.title'))
 
 const configStore = useConfigStore()
 const available_migrators = computed(() => configStore.available_migrators
-	.filter((id): id is keyof typeof MIGRATORS => Object.hasOwn(MIGRATORS, id))
+	.filter((id): id is keyof typeof MIGRATORS => Object.prototype.hasOwnProperty.call(MIGRATORS, id))
 	.map((id) => MIGRATORS[id])
 	.filter((item) => Boolean(item)),
 )
