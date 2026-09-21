@@ -1,5 +1,7 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest'
-import {QueryClient} from '@tanstack/vue-query'
+import {defineComponent, h} from 'vue'
+import {mount} from '@vue/test-utils'
+import {QueryClient, VueQueryPlugin} from '@tanstack/vue-query'
 import {
 	detectCsvMutationOptions,
 	migrationAuthMutationOptions,
@@ -7,7 +9,11 @@ import {
 	migrationStatusQuery,
 	previewCsvMutationOptions,
 	startMigrationMutationOptions,
+	useStartMigrationMutation,
+	type MigrationProvider,
+	type StartMigrationInput,
 } from './migration'
+import {MIGRATORS, isMigratorOfKind} from '@/views/migrate/migrators'
 
 const sdk = vi.hoisted(() => ({
 	migrationCsvStatus: vi.fn(),
@@ -34,6 +40,42 @@ const sdk = vi.hoisted(() => ({
 }))
 vi.mock('@/client/generated', () => sdk)
 vi.mock('@/message', () => ({success: vi.fn(), error: vi.fn()}))
+
+function startInputFor(provider: MigrationProvider): StartMigrationInput {
+	const file = new File(['export'], 'export.json')
+	if (isMigratorOfKind(provider, 'file')) {
+		return {
+			kind: 'file',
+			provider,
+			file,
+		}
+	}
+	if (isMigratorOfKind(provider, 'oauth')) {
+		return {
+			kind: 'oauth',
+			provider,
+			body: {code: 'code'},
+		}
+	}
+	if (isMigratorOfKind(provider, 'credentials')) {
+		return {
+			kind: 'credentials',
+			provider,
+			body: {url: 'https://planka.example'},
+		}
+	}
+	if (isMigratorOfKind(provider, 'csv')) {
+		return {
+			kind: 'csv',
+			provider,
+			body: {
+				import: file,
+				config: '{}',
+			},
+		}
+	}
+	throw new Error(`${provider} has no migration kind`)
+}
 
 describe('migration queries', () => {
 	beforeEach(() => vi.resetAllMocks())
@@ -131,6 +173,19 @@ describe('migration queries', () => {
 		expect(sdk.migrationCsvMigrate).toHaveBeenCalledWith({body})
 	})
 
+	it.each(Object.values(MIGRATORS).map(({id}) => id))(
+		'starts a %s migration through exactly one operation',
+		async provider => {
+			const client = new QueryClient()
+			const migrateOperations = Object.entries(sdk).filter(([name]) => name.endsWith('Migrate'))
+			for (const [, operation] of migrateOperations) operation.mockResolvedValue({data: {}})
+
+			await client.getMutationCache().build(client, startMigrationMutationOptions()).execute(startInputFor(provider))
+
+			expect(migrateOperations.filter(([, operation]) => operation.mock.calls.length > 0)).toHaveLength(1)
+		},
+	)
+
 	it('invalidates the status of the provider it started and no other', async () => {
 		const client = new QueryClient()
 		client.setQueryData(migrationKeys.status('todoist'), {started_at: null})
@@ -147,8 +202,34 @@ describe('migration queries', () => {
 		expect(client.getQueryState(migrationKeys.status('trello'))?.isInvalidated).toBe(false)
 	})
 
-	it('keeps the started migration input out of the mutation cache', () => {
-		expect(startMigrationMutationOptions().gcTime).toBe(0)
+	it('keeps the started migration input out of the mutation cache', async () => {
+		const client = new QueryClient()
+		sdk.migrationPlankaMigrate.mockResolvedValue({data: {}})
+		let mutation!: ReturnType<typeof useStartMigrationMutation>
+		const wrapper = mount(defineComponent({
+			setup() {
+				mutation = useStartMigrationMutation()
+				return () => h('div')
+			},
+		}), {
+			global: {
+				plugins: [[VueQueryPlugin, {queryClient: client}]],
+			},
+		})
+
+		await mutation.mutateAsync({
+			kind: 'credentials',
+			provider: 'planka',
+			body: {
+				url: 'https://planka.example',
+				username: 'user',
+				password: 'secret',
+			},
+		})
+		await new Promise(resolve => setTimeout(resolve))
+
+		expect(client.getMutationCache().getAll()).toEqual([])
+		wrapper.unmount()
 	})
 
 	it('detects and previews a csv through the csv operations', async () => {

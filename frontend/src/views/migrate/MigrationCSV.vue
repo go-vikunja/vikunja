@@ -204,22 +204,17 @@
 </template>
 
 <script setup lang="ts">
-import {computed, nextTick, ref, shallowReactive, watch} from 'vue'
+import {computed, nextTick, ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import Message from '@/components/misc/Message.vue'
 import SingleTaskInProject from '@/components/tasks/partials/SingleTaskInProject.vue'
 import {createTaskDraft} from '@/helpers/task'
 
-import CSVMigrationService, {
-	type DetectionResult,
-	type ImportConfig,
-	type PreviewResult,
-	TASK_ATTRIBUTES,
-	SUPPORTED_DELIMITERS,
-	SUPPORTED_DATE_FORMATS,
-} from '@/services/migrator/csvMigration'
+import {TASK_ATTRIBUTES, SUPPORTED_DELIMITERS, SUPPORTED_DATE_FORMATS, type CsvImportDraft} from './csvImport'
+import {useDetectCsvMutation, usePreviewCsvMutation, useStartMigrationMutation} from '@/client/queries/migration'
 
+import {isRequestContextAbort} from '@/client/requestContext'
 import {useTitle} from '@/composables/useTitle'
 import {useMigrationStore} from '@/stores/migration'
 import {getErrorText} from '@/message'
@@ -231,17 +226,19 @@ const {t} = useI18n({useScope: 'global'})
 
 useTitle(() => t('migrate.titleService', {name: 'CSV'}))
 
-const csvService = shallowReactive(new CSVMigrationService())
+const detect = useDetectCsvMutation()
+const preview = usePreviewCsvMutation()
+const startMigration = useStartMigrationMutation()
 
 const migrationStore = useMigrationStore()
 
 const step = ref<Step>('upload')
 const error = ref('')
-const isLoading = ref(false)
+const isLoading = computed(() => detect.isPending.value || preview.isPending.value || startMigration.isPending.value)
 const uploadInput = ref<HTMLInputElement | null>(null)
 const selectedFile = ref<File | null>(null)
-const detectionResult = ref<DetectionResult | null>(null)
-const previewResult = ref<PreviewResult | null>(null)
+const detectionResult = detect.data
+const previewResult = preview.data
 const resultMessage = ref<InstanceType<typeof Message> | null>(null)
 
 // the triggering button unmounts when the step switches, so move focus to the result message
@@ -253,7 +250,7 @@ watch(step, async (newStep) => {
 	resultMessage.value?.$el?.focus()
 })
 
-const config = ref<ImportConfig>({
+const config = ref<CsvImportDraft>({
 	delimiter: ',',
 	quote_char: '"',
 	date_format: '2006-01-02',
@@ -263,7 +260,7 @@ const config = ref<ImportConfig>({
 
 const previewTasks = computed(() => {
 	if (!previewResult.value) return []
-	return previewResult.value.tasks.map((pt, i) => createTaskDraft({
+	return (previewResult.value.tasks ?? []).map((pt, i) => createTaskDraft({
 		id: -(i + 1),
 		title: pt.title || t('migrate.csv.untitled'),
 		description: pt.description || '',
@@ -319,19 +316,17 @@ async function handleFileUpload() {
 
 	selectedFile.value = files[0]
 	error.value = ''
-	isLoading.value = true
 
 	try {
-		const result = await csvService.detect(selectedFile.value)
-		detectionResult.value = result
+		const result = await detect.mutateAsync(selectedFile.value)
 
 		// Apply detected values
 		config.value = {
-			delimiter: result.delimiter,
-			quote_char: result.quote_char,
-			date_format: result.date_format,
+			delimiter: result?.delimiter ?? ',',
+			quote_char: result?.quote_char ?? '"',
+			date_format: result?.date_format ?? '2006-01-02',
 			skip_rows: 0,
-			mapping: result.suggested_mapping,
+			mapping: structuredClone(result?.suggested_mapping ?? []),
 		}
 
 		// Get initial preview
@@ -339,48 +334,47 @@ async function handleFileUpload() {
 
 		step.value = 'mapping'
 	} catch (e) {
-		error.value = getErrorText(e)
-	} finally {
-		isLoading.value = false
+		if (!isRequestContextAbort(e)) error.value = getErrorText(e)
 	}
 }
 
 async function updatePreview() {
 	if (!selectedFile.value) return
 
-	isLoading.value = true
 	try {
-		previewResult.value = await csvService.preview(selectedFile.value, config.value)
+		await preview.mutateAsync({import: selectedFile.value, config: JSON.stringify(config.value)})
 	} catch (e) {
-		error.value = getErrorText(e)
-		previewResult.value = null
-	} finally {
-		isLoading.value = false
+		if (!isRequestContextAbort(e)) error.value = getErrorText(e)
+		preview.reset()
 	}
 }
 
 async function performImport() {
 	if (!selectedFile.value || !hasValidMapping.value) return
 
-	isLoading.value = true
 	error.value = ''
 
 	try {
-		await csvService.migrate(selectedFile.value, config.value)
-		migrationStore.start(csvService)
+		await startMigration.mutateAsync({
+			kind: 'csv',
+			provider: 'csv',
+			body: {
+				import: selectedFile.value,
+				config: JSON.stringify(config.value),
+			},
+		})
+		migrationStore.start('csv')
 		step.value = 'success'
 	} catch (e) {
-		error.value = getErrorText(e)
-	} finally {
-		isLoading.value = false
+		if (!isRequestContextAbort(e)) error.value = getErrorText(e)
 	}
 }
 
 function resetToUpload() {
 	step.value = 'upload'
 	selectedFile.value = null
-	detectionResult.value = null
-	previewResult.value = null
+	detect.reset()
+	preview.reset()
 	error.value = ''
 	if (uploadInput.value) {
 		uploadInput.value.value = ''
