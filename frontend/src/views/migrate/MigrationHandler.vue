@@ -144,10 +144,9 @@ import {useI18n} from 'vue-i18n'
 
 import Logo from '@/assets/logo.svg?component'
 import Message from '@/components/misc/Message.vue'
-import MigrationCredentialsForm from './MigrationCredentialsForm.vue'
+import MigrationCredentialsForm, {type PlankaCredentials} from './MigrationCredentialsForm.vue'
 
 import {useQuery} from '@tanstack/vue-query'
-import type {MigrationCredentialsBodyWritable} from '@/client/generated'
 import {migrationStatusQuery, useMigrationAuthMutation, useStartMigrationMutation} from '@/client/queries/migration'
 
 import {isRequestContextAbort} from '@/client/requestContext'
@@ -241,7 +240,7 @@ watch(migrationRunning, async (running) => {
 	resultMessage.value?.$el?.focus()
 })
 
-async function migrate(credentialsConfig?: MigrationCredentialsBodyWritable) {
+async function migrate(credentialsConfig?: PlankaCredentials) {
 	const provider = migrator.value.id
 	confirmedAgain.value = true
 	migrationError.value = ''
