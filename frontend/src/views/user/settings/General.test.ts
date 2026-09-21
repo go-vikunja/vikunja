@@ -14,15 +14,6 @@ import en from '@/i18n/lang/en.json'
 
 vi.mock('@/client/generated', () => ({userTimezones: vi.fn(async () => ({data: []}))}))
 
-vi.mock('@/helpers/fetcher', () => {
-	const httpStub = () => ({
-		get: vi.fn(async () => ({data: []})),
-		post: vi.fn(async () => ({data: {}})),
-		interceptors: {request: {use: vi.fn()}, response: {use: vi.fn()}},
-	})
-	return {AuthenticatedHTTPFactory: httpStub, HTTPFactory: httpStub}
-})
-
 vi.mock('@/message', () => ({
 	success: vi.fn(),
 	error: vi.fn(),
