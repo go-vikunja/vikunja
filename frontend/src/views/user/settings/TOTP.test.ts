@@ -58,6 +58,7 @@ async function mountAndSettle() {
 // Enabled responses omit the secret, so the UI must rely on `enabled` alone.
 describe('TOTP settings', () => {
 	beforeEach(() => {
+		queryClient.clear()
 		setActivePinia(createPinia())
 		errors = []
 		get.mockReset()
