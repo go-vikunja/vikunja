@@ -2,6 +2,7 @@ import {queryOptions} from '@tanstack/vue-query'
 import {migrationCsvStatus, migrationMicrosoftTodoStatus, migrationPlankaStatus, migrationTicktickStatus, migrationTodoistStatus, migrationTrelloStatus, migrationVikunjaFileStatus, migrationWekanStatus, migrationTodoistAuth, migrationTrelloAuth, migrationMicrosoftTodoAuth, migrationCsvMigrate, migrationMicrosoftTodoMigrate, migrationPlankaMigrate, migrationTicktickMigrate, migrationTodoistMigrate, migrationTrelloMigrate, migrationVikunjaFileMigrate, migrationWekanMigrate, migrationCsvDetect, migrationCsvPreview, type MigrationCredentialsBodyWritable, type MigrationMigrateBodyWritable, type MigrationCsvMigrateData} from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
 import {projectKeys} from './projects'
+import {taskKeys} from './tasks'
 const statusOperations = {
 	'csv': migrationCsvStatus,
 	'microsoft-todo': migrationMicrosoftTodoStatus,
@@ -57,7 +58,7 @@ export function startMigrationMutationOptions() {
 export function migrationCompletedMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async () => undefined,
-		onSettled: (_input, client) => client.invalidateQueries({queryKey: projectKeys.all}),
+		onSettled: (_input, client) => Promise.all([client.invalidateQueries({queryKey: projectKeys.all}), client.invalidateQueries({queryKey: taskKeys.all})]),
 	})
 }
 export function detectCsvMutationOptions() {
