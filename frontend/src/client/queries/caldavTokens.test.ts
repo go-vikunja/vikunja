@@ -1,6 +1,12 @@
 import {it, expect, vi} from 'vitest'
 import {QueryClient} from '@tanstack/vue-query'
-import {caldavTokenKeys, caldavTokensQuery, createCaldavTokenMutationOptions, deleteCaldavTokenMutationOptions} from './caldavTokens'
+import {
+	caldavTokenKeys,
+	caldavTokensQuery,
+	createCaldavTokenMutationOptions,
+	deleteCaldavTokenMutationOptions,
+} from './caldavTokens'
+import {API_MAX_PER_PAGE} from './pagination'
 const sdk = vi.hoisted(() => ({
 	caldavTokensCreate: vi.fn(),
 	caldavTokensList: vi.fn(),
@@ -31,7 +37,12 @@ it('loads the first token page through the generated operation', async () => {
 	const client = new QueryClient()
 	sdk.caldavTokensList.mockResolvedValue({data: {items: [{id: 1}], total_pages: 1}})
 	expect(await client.fetchQuery(caldavTokensQuery())).toEqual([{id: 1}])
-	expect(sdk.caldavTokensList).toHaveBeenCalledWith(expect.objectContaining({query: {page: 1}}))
+	expect(sdk.caldavTokensList).toHaveBeenCalledWith(expect.objectContaining({
+		query: {
+			page: 1,
+			per_page: API_MAX_PER_PAGE,
+		},
+	}))
 })
 
 it('removes a deleted token from an existing cache and marks the list stale', async () => {
