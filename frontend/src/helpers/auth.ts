@@ -3,7 +3,7 @@ import {authRefreshToken} from '@/client/generated'
 import {createClient} from '@/client/generated/client'
 import {isDesktopApp, refreshDesktopToken} from '@/helpers/desktopAuth'
 
-// Cookie-only: the shared client injects Authorization and answers a 401 by calling refreshToken(), which is this call.
+// Own client: the shared one injects Authorization and answers a 401 by calling refreshToken() — this is that call.
 const refreshClient = createClient({
 	credentials: 'include',
 	throwOnError: true,

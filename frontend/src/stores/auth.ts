@@ -231,8 +231,7 @@ export const useAuthStore = defineStore('auth', () => {
 		lastUserInfoRefresh.value = new Date()
 	}
 
-	// Resetting the debounce makes the following checkAuth() parse the new JWT
-	// instead of silently returning due to the 1-minute throttle.
+	// The debounce reset makes the following checkAuth() parse the new JWT instead of returning early.
 	function adoptSession(token: string | undefined, persist: boolean) {
 		if (!token) throw new Error('Authentication response has no token')
 		saveToken(token, persist)
