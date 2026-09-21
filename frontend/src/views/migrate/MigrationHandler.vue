@@ -120,9 +120,18 @@
 </template>
 
 <script lang="ts">
+function isKnownMigrator(service: unknown) {
+	return Object.prototype.hasOwnProperty.call(MIGRATORS, service as string)
+}
+
 export default {
 	beforeRouteEnter(to) {
-		if (MIGRATORS[to.params.service as keyof typeof MIGRATORS] === undefined) {
+		if (!isKnownMigrator(to.params.service)) {
+			return {name: 'not-found'}
+		}
+	},
+	beforeRouteUpdate(to) {
+		if (!isKnownMigrator(to.params.service)) {
 			return {name: 'not-found'}
 		}
 	},
