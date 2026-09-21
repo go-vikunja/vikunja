@@ -11,6 +11,7 @@ export function sessionsQuery() {
 	return queryOptions({
 		queryKey: sessionKeys.all,
 		queryFn: ({signal}) => fetchAllPages(async page => (await sessionsList({query: {page, per_page: API_MAX_PER_PAGE}, signal})).data),
+		staleTime: 0,
 	})
 }
 
