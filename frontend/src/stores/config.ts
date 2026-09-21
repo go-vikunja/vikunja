@@ -83,7 +83,10 @@ export const useConfigStore = defineStore('config', () => {
 	})
 
 	function setConfig(config: VikunjaInfos) {
-		Object.assign(state, config, {
+		const {$schema: _schema, ...wire} = config
+		Reflect.deleteProperty(wire, '__proto__')
+
+		Object.assign(state, wire, {
 			available_migrators: config.available_migrators ?? [],
 			enabled_background_providers: config.enabled_background_providers ?? [],
 			enabled_pro_features: config.enabled_pro_features ?? [],
