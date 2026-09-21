@@ -11,6 +11,7 @@ import McpClientGuide from '@/components/token/McpClientGuide.vue'
 import XButton from '@/components/input/Button.vue'
 import FormField from '@/components/input/FormField.vue'
 import Message from '@/components/misc/Message.vue'
+import ErrorMessage from '@/components/misc/Error.vue'
 import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
 import {useTitle} from '@/composables/useTitle'
 import {formatDateSince, formatDisplayDate} from '@/helpers/time/formatDate'
@@ -81,6 +82,7 @@ async function deleteToken() {
 				rel="noreferrer"
 			>{{ t('user.settings.mcp.more') }}</a>
 		</p>
+		<ErrorMessage v-if="loadFailed" />
 		<XButton
 			v-if="loadFailed"
 			@click="load"
