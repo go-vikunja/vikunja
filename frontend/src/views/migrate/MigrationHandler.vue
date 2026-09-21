@@ -42,8 +42,8 @@
 				<template v-else>
 					<p>{{ $t('migrate.authorize', {name: migrator.name}) }}</p>
 					<XButton
-						:loading="isMigrating"
-						:disabled="isMigrating || undefined"
+						:loading="isBusy"
+						:disabled="isBusy || undefined"
 						:href="authUrl"
 						:open-external-in-new-tab="false"
 					>
@@ -162,7 +162,8 @@ const progressDotsCount = ref(PROGRESS_DOTS_COUNT)
 const authUrl = ref('')
 const auth = useMigrationAuthMutation()
 const startMigration = useStartMigrationMutation()
-const isMigrating = computed(() => startMigration.isPending.value || auth.isPending.value)
+const isMigrating = computed(() => startMigration.isPending.value)
+const isBusy = computed(() => isMigrating.value || auth.isPending.value)
 const confirmedAgain = ref(false)
 const startedHere = ref(false)
 
