@@ -44,13 +44,17 @@ export function useUpdateAvatarProviderMutation() {
 	return useMutation(updateAvatarProviderMutationOptions())
 }
 
-export function useUploadAvatarMutation() {
-	return useMutation(contextMutationOptions({
+export function uploadAvatarMutationOptions() {
+	return contextMutationOptions({
 		mutationFn: async ({blob}: {username: string; blob: Blob}) => (await userAvatarUpload({body: {avatar: new File([blob], 'avatar.jpg', {type: blob.type})}})).data,
 		onSettled: ({username}, client) => Promise.all([
 			client.invalidateQueries({queryKey: avatarKeys.provider}),
 			client.invalidateQueries({queryKey: avatarKeys.user(username)}),
 		]),
 		successMessage: () => i18n.global.t('user.settings.avatar.setSuccess'),
-	}))
+	})
+}
+
+export function useUploadAvatarMutation() {
+	return useMutation(uploadAvatarMutationOptions())
 }
