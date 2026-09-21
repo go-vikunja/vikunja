@@ -41,6 +41,6 @@ it('rejects a download response that is not a file', async () => {
 	const client = new QueryClient()
 	sdk.userExportDownload.mockResolvedValue({data: {message: 'wrong password'}})
 	await expect(client.getMutationCache().build(client, downloadExportMutationOptions()).execute('password'))
-		.rejects.toThrow('Export response was not a file')
+		.rejects.toThrow('Export response was not a blob')
 	expect(downloadBlob).not.toHaveBeenCalled()
 })
