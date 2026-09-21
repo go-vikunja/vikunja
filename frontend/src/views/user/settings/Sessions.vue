@@ -7,23 +7,23 @@ import {useAuthStore} from '@/stores/auth'
 import {success} from '@/message'
 import {formatDateSince} from '@/helpers/time/formatDate'
 import SessionService from '@/services/session'
-import type {ISession} from '@/modelTypes/ISession'
+import type {Session} from '@/client/generated'
 
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => `${t('user.settings.sessions.title')} - ${t('user.settings.title')}`)
 
 const authStore = useAuthStore()
 const service = shallowReactive(new SessionService())
-const sessions = ref<ISession[]>([])
+const sessions = ref<Session[]>([])
 
 const showDeleteModal = ref(false)
-const sessionToDelete = ref<ISession | null>(null)
+const sessionToDelete = ref<Session | null>(null)
 
-service.getAll().then((result: ISession[]) => {
+service.getAll().then((result: Session[]) => {
 	sessions.value = result
 })
 
-function confirmDelete(session: ISession) {
+function confirmDelete(session: Session) {
 	sessionToDelete.value = session
 	showDeleteModal.value = true
 }
@@ -66,7 +66,7 @@ async function deleteSession() {
 						:key="session.id"
 					>
 						<td>
-							{{ session.deviceInfo }}
+							{{ session.device_info }}
 							<span
 								v-if="session.id === authStore.currentSessionId"
 								class="tag is-primary mis-2"
@@ -74,8 +74,8 @@ async function deleteSession() {
 								{{ $t('user.settings.sessions.current') }}
 							</span>
 						</td>
-						<td>{{ session.ipAddress }}</td>
-						<td>{{ formatDateSince(session.lastActive) }}</td>
+						<td>{{ session.ip_address }}</td>
+						<td>{{ formatDateSince(session.last_active) }}</td>
 						<td class="has-text-end">
 							<XButton
 								v-if="session.id !== authStore.currentSessionId"
