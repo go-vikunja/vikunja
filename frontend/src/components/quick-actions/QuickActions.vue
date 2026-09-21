@@ -336,8 +336,8 @@ const results = computed<Result[]>(() => {
 	].filter((i) => i.items.length > 0)
 })
 
-function isDone(item: unknown): boolean {
-	return Boolean((item as ITask | undefined)?.done)
+function isDone(item: QuickActionItem): boolean {
+	return 'done' in item && Boolean(item.done)
 }
 
 const loading = computed(() =>
