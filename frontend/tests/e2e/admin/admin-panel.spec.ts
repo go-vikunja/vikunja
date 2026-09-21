@@ -92,5 +92,5 @@ test('admin user changes persist and license removal rejects new requests', asyn
 	expect((await users.json()).items ?? []).toEqual([])
 	await LicenseFactory.disable()
 	const blocked = await apiContext.get('/api/v2/admin/users', {headers})
-	expect(blocked.status()).toBe(403)
+	expect(blocked.status()).toBe(404)
 })
