@@ -16,6 +16,8 @@ export function totpQuery() {
 				throw cause
 			}
 		},
+		// The enrollment secret must not outlive the view.
+		gcTime: 0,
 	})
 }
 
