@@ -9,15 +9,19 @@ function reconcileAccount(account: UserInfoBody, client: QueryClient) {
 }
 
 export function updateEmailMutationOptions() {
-	return contextMutationOptions({
-		mutationFn: async (body: UserUpdateEmailRequestWritable) => {
-			await userUpdateEmail({body})
-			return (await userShow()).data
-		},
-		onSuccess: (account, _input, client) => reconcileAccount(account, client),
-		onSettled: (_input, client) => client.invalidateQueries({queryKey: accountKeys.current}),
-		successMessage: account => i18n.global.t(account.pending_email ? 'user.settings.updateEmailPendingSuccess' : 'user.settings.updateEmailSuccess'),
-	})
+	return {
+		...contextMutationOptions({
+			mutationFn: async (body: UserUpdateEmailRequestWritable) => {
+				await userUpdateEmail({body})
+				return (await userShow()).data
+			},
+			onSuccess: (account, _input, client) => reconcileAccount(account, client),
+			onSettled: (_input, client) => client.invalidateQueries({queryKey: accountKeys.current}),
+			successMessage: account => i18n.global.t(account.pending_email ? 'user.settings.updateEmailPendingSuccess' : 'user.settings.updateEmailSuccess'),
+		}),
+		// Input holds the plaintext password.
+		gcTime: 0,
+	}
 }
 
 export function useUpdateEmailMutation() {
