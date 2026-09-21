@@ -1774,7 +1774,8 @@
       "deleteConfirm": "Delete “{name}”? People will no longer be able to register with this link. Existing accounts will stay active.",
       "deleted": "Invite link deleted.",
       "empty": "No invite links yet. Create a link to invite people to this instance.",
-      "futureExpiry": "Choose an expiry in the future."
+      "futureExpiry": "Choose an expiry in the future.",
+      "creatorDeleted": "Deleted user"
     }
   }
 }

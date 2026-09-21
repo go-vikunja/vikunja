@@ -52,7 +52,7 @@
 								:avatar-size="24"
 							/>
 							<template v-else>
-								#{{ link.created_by_id }}
+								{{ $t('admin.inviteLinks.creatorDeleted') }}
 							</template>
 						</td>
 						<td>
