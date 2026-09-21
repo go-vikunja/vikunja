@@ -10,9 +10,14 @@ import {MILLISECONDS_A_DAY} from '@/constants/date'
 import Datepicker from '@/components/input/Datepicker.vue'
 import FormField from '@/components/input/FormField.vue'
 import type {ApiToken as IApiToken} from '@/client/generated'
-type IApiPermission = NonNullable<IApiToken['permissions']>
 import type {ApiTokenRoutes, ApiTokenPreset} from '@/helpers/apiToken'
 import {parseScopesFromQuery} from '@/helpers/parseScopesFromQuery'
+
+type IApiPermission = NonNullable<IApiToken['permissions']>
+type ApiTokenDraft = ApiTokenWritable & {
+	title: string,
+	permissions: IApiPermission,
+}
 
 const props = withDefaults(defineProps<{
 	ownerId?: number,
@@ -45,8 +50,23 @@ function expiryDateIn(days: number) {
 	return new Date(Date.now() + days * MILLISECONDS_A_DAY)
 }
 
-const availableRoutes = computed<ApiTokenRoutes>(() => Object.fromEntries(Object.entries(props.routes ?? routesData.value ?? {}).sort(([a], [b]) => a === 'other' ? 1 : b === 'other' ? -1 : 0)))
-function emptyDraft(): ApiTokenWritable & {title: string, permissions: IApiPermission} { return {title: '', permissions: {}} }
+function otherGroupLast<T>([a]: [string, T], [b]: [string, T]): number {
+	if (a === 'other') return 1
+	if (b === 'other') return -1
+	return 0
+}
+
+const availableRoutes = computed<ApiTokenRoutes>(() => Object.fromEntries(
+	Object.entries(props.routes ?? routesData.value ?? {}).sort(otherGroupLast),
+))
+
+function emptyDraft(): ApiTokenDraft {
+	return {
+		title: '',
+		permissions: {},
+	}
+}
+
 const newToken = ref(emptyDraft())
 const newTokenExpiry = ref<string | number>(DEFAULT_EXPIRY_DAYS)
 const newTokenExpiryCustom = ref<Date | null>(expiryDateIn(DEFAULT_EXPIRY_DAYS))
