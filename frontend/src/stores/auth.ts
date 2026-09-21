@@ -23,6 +23,18 @@ import {AUTH_TYPES} from '@/constants/auth'
 import type {UserInfoBody} from '@/client/generated'
 import type {AuthType} from '@/constants/auth'
 
+import type {IUserSettings} from '@/modelTypes/IUserSettings'
+import router from '@/router'
+import {useConfigStore} from '@/stores/config'
+import UserSettingsModel from '@/models/userSettings'
+import {MILLISECONDS_A_SECOND} from '@/constants/date'
+import {PrefixMode} from '@/modules/quickAddMagic'
+import {DATE_DISPLAY} from '@/constants/dateDisplay'
+import {TIME_FORMAT} from '@/constants/timeFormat'
+import {RELATION_KIND} from '@/types/IRelationKind'
+import type {IProvider} from '@/types/IProvider'
+import {queryClient} from '@/client/queryClient'
+
 export type SessionUser = UserInfoBody & {
 	type: AuthType
 	exp: number
@@ -36,18 +48,6 @@ export type JwtClaims = {
 	is_admin?: boolean,
 	sid?: string,
 }
-
-import type {IUserSettings} from '@/modelTypes/IUserSettings'
-import router from '@/router'
-import {useConfigStore} from '@/stores/config'
-import UserSettingsModel from '@/models/userSettings'
-import {MILLISECONDS_A_SECOND} from '@/constants/date'
-import {PrefixMode} from '@/modules/quickAddMagic'
-import {DATE_DISPLAY} from '@/constants/dateDisplay'
-import {TIME_FORMAT} from '@/constants/timeFormat'
-import {RELATION_KIND} from '@/types/IRelationKind'
-import type {IProvider} from '@/types/IProvider'
-import {queryClient} from '@/client/queryClient'
 
 // Set on explicit logout so the login page won't immediately bounce the user
 // back to the OIDC provider. Lives in sessionStorage so it survives the
