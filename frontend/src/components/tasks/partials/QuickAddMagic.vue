@@ -129,7 +129,7 @@ const authStore = useAuthStore()
 const {isQuickAddMode} = useQuickAddMode()
 
 const visible = ref(false)
-const mode = computed(() => authStore.settings.frontendSettings.quickAddMagicMode)
+const mode = computed(() => authStore.settings.frontend_settings.quick_add_magic_mode)
 
 const prefixes = computed(() => PREFIXES[mode.value])
 

@@ -43,7 +43,7 @@
 				layout="two-col"
 			>
 				<FormSelect
-					v-model="settings.frontendSettings.defaultView"
+					v-model="settings.frontend_settings.default_view"
 					:options="defaultViewOptions"
 				/>
 			</FormField>
@@ -52,7 +52,7 @@
 				layout="two-col"
 			>
 				<FormSelect
-					v-model="settings.frontendSettings.minimumPriority"
+					v-model="settings.frontend_settings.minimum_priority"
 					:options="minimumPriorityOptions"
 				/>
 			</FormField>
@@ -61,7 +61,7 @@
 				layout="two-col"
 			>
 				<FormInput
-					v-model="settings.frontendSettings.defaultDueTime"
+					v-model="settings.frontend_settings.default_due_time"
 					type="time"
 				/>
 			</FormField>
@@ -79,24 +79,24 @@
 				/>
 			</FormField>
 			<FormCheckbox
-				v-model="settings.frontendSettings.showLastViewed"
+				v-model="settings.frontend_settings.show_last_viewed"
 				:label="$t('user.settings.general.showLastViewed')"
 			/>
 			<FormCheckbox
-				v-model="settings.emailRemindersEnabled"
+				v-model="settings.email_reminders_enabled"
 				:label="$t('user.settings.general.emailReminders')"
 			/>
 			<FormCheckbox
-				v-model="settings.overdueTasksRemindersEnabled"
+				v-model="settings.overdue_tasks_reminders_enabled"
 				:label="$t('user.settings.general.overdueReminders')"
 			/>
 			<FormField
-				v-if="settings.overdueTasksRemindersEnabled"
+				v-if="settings.overdue_tasks_reminders_enabled"
 				:label="$t('user.settings.general.overdueTasksRemindersTime')"
 				layout="two-col"
 			>
 				<FormInput
-					v-model="settings.overdueTasksRemindersTime"
+					v-model="settings.overdue_tasks_reminders_time"
 					type="time"
 					@keyup.enter="updateSettings"
 				/>
@@ -139,7 +139,7 @@
 				layout="two-col"
 			>
 				<FormSelect
-					v-model.number="settings.weekStart"
+					v-model.number="settings.week_start"
 					v-cy="'weekStartSelect'"
 					:options="weekStartOptions"
 				/>
@@ -149,17 +149,17 @@
 				layout="two-col"
 			>
 				<FormSelect
-					v-model="settings.frontendSettings.dateDisplay"
+					v-model="settings.frontend_settings.date_display"
 					:options="dateDisplayOptions"
 				/>
 			</FormField>
 			<FormField
-				v-if="settings.frontendSettings.dateDisplay !== 'relative'"
+				v-if="settings.frontend_settings.date_display !== 'relative'"
 				:label="$t('user.settings.general.timeFormat')"
 				layout="two-col"
 			>
 				<FormSelect
-					v-model="settings.frontendSettings.timeFormat"
+					v-model="settings.frontend_settings.time_format"
 					:options="timeFormatOptions"
 				/>
 			</FormField>
@@ -169,7 +169,7 @@
 				layout="two-col"
 			>
 				<FormInput
-					v-model="settings.frontendSettings.timeTrackingDefaultStart"
+					v-model="settings.frontend_settings.time_tracking_default_start"
 					type="time"
 				/>
 			</FormField>
@@ -187,7 +187,7 @@
 				layout="two-col"
 			>
 				<FormSelect
-					v-model="settings.frontendSettings.colorSchema"
+					v-model="settings.frontend_settings.color_schema"
 					:options="colorSchemeOptions"
 				/>
 			</FormField>
@@ -196,12 +196,12 @@
 				layout="two-col"
 			>
 				<FormSelect
-					v-model="settings.frontendSettings.quickAddMagicMode"
+					v-model="settings.frontend_settings.quick_add_magic_mode"
 					:options="quickAddMagicModeOptions"
 				/>
 			</FormField>
 			<div
-				v-if="settings.frontendSettings.quickAddMagicMode !== PrefixMode.Disabled"
+				v-if="settings.frontend_settings.quick_add_magic_mode !== PrefixMode.Disabled"
 				class="field"
 			>
 				<label class="label">{{ $t('user.settings.general.quickAddDefaultReminders') }}</label>
@@ -212,7 +212,7 @@
 					{{ $t('user.settings.general.quickAddDefaultRemindersHint') }}
 				</p>
 				<Reminders
-					v-model="quickAddDefaultReminders"
+					v-model="quick_add_default_reminders"
 					:default-relative-to="REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE"
 					:allow-absolute="false"
 				/>
@@ -222,20 +222,20 @@
 				layout="two-col"
 			>
 				<FormSelect
-					v-model="settings.frontendSettings.defaultTaskRelationType"
+					v-model="settings.frontend_settings.default_task_relation_type"
 					:options="defaultTaskRelationTypeOptions"
 				/>
 			</FormField>
 			<FormCheckbox
-				v-model="settings.frontendSettings.playSoundWhenDone"
+				v-model="settings.frontend_settings.play_sound_when_done"
 				:label="$t('user.settings.general.playSoundWhenDone')"
 			/>
 			<FormCheckbox
-				v-model="settings.frontendSettings.allowIconChanges"
+				v-model="settings.frontend_settings.allow_icon_changes"
 				:label="$t('user.settings.general.allowIconChanges')"
 			/>
 			<FormCheckbox
-				v-model="settings.frontendSettings.alwaysShowBucketTaskCount"
+				v-model="settings.frontend_settings.always_show_bucket_task_count"
 				:label="$t('user.settings.general.alwaysShowBucketTaskCount')"
 			/>
 			<FormField
@@ -243,7 +243,7 @@
 				layout="two-col"
 			>
 				<FormInput
-					v-model.number="settings.frontendSettings.backgroundBrightness"
+					v-model.number="settings.frontend_settings.background_brightness"
 					type="number"
 					min="0"
 					max="100"
@@ -265,7 +265,7 @@
 				layout="two-col"
 			>
 				<ShortcutRecorder
-					v-model="settings.frontendSettings.desktopQuickEntryShortcut"
+					v-model="settings.frontend_settings.desktop_quick_entry_shortcut"
 					@update:modelValue="updateSettings"
 				/>
 			</FormField>
@@ -279,11 +279,11 @@
 	>
 		<div class="field-group">
 			<FormCheckbox
-				v-model="settings.discoverableByName"
+				v-model="settings.discoverable_by_name"
 				:label="$t('user.settings.general.discoverableByName')"
 			/>
 			<FormCheckbox
-				v-model="settings.discoverableByEmail"
+				v-model="settings.discoverable_by_email"
 				:label="$t('user.settings.general.discoverableByEmail')"
 			/>
 		</div>
@@ -329,7 +329,7 @@ import {useTitle} from '@/composables/useTitle'
 import {useProjects} from '@/composables/useProjects'
 import {useAuthStore} from '@/stores/auth'
 import {useConfigStore} from '@/stores/config'
-import {taskRemindersFromSettings, type IUserSettings} from '@/modelTypes/IUserSettings'
+import {taskRemindersFromSettings, type UserSettingsResponse} from '@/helpers/userSettings'
 import {isSavedFilterProject} from '@/client/queries/projects'
 import {DEFAULT_PROJECT_VIEW_SETTINGS} from '@/constants/projectView'
 import {PRIORITIES} from '@/constants/priorities'
@@ -384,8 +384,8 @@ const dateDisplayOptions = computed(() => [
 	{value: DATE_DISPLAY.MM_SLASH_DD_YYYY, label: t('user.settings.general.dateDisplayOptions.mm/dd/yyyy')},
 	{value: DATE_DISPLAY.DD_SLASH_MM_YYYY, label: t('user.settings.general.dateDisplayOptions.dd/mm/yyyy')},
 	{value: DATE_DISPLAY.YYYY_SLASH_MM_DD, label: t('user.settings.general.dateDisplayOptions.yyyy/mm/dd')},
-	{value: DATE_DISPLAY.DAY_MONTH_YEAR, label: formatDisplayDateFormat(new Date(), DATE_DISPLAY.DAY_MONTH_YEAR, settings.value?.frontendSettings?.timeFormat)},
-	{value: DATE_DISPLAY.WEEKDAY_DAY_MONTH_YEAR, label: formatDisplayDateFormat(new Date(), DATE_DISPLAY.WEEKDAY_DAY_MONTH_YEAR, settings.value?.frontendSettings?.timeFormat)},
+	{value: DATE_DISPLAY.DAY_MONTH_YEAR, label: formatDisplayDateFormat(new Date(), DATE_DISPLAY.DAY_MONTH_YEAR, settings.value?.frontend_settings?.time_format)},
+	{value: DATE_DISPLAY.WEEKDAY_DAY_MONTH_YEAR, label: formatDisplayDateFormat(new Date(), DATE_DISPLAY.WEEKDAY_DAY_MONTH_YEAR, settings.value?.frontend_settings?.time_format)},
 ])
 
 const timeFormatOptions = computed(() => [
@@ -423,39 +423,39 @@ const authStore = useAuthStore()
 const configStore = useConfigStore()
 const timeTrackingEnabled = computed(() => configStore.isProFeatureEnabled(PRO_FEATURE.TIME_TRACKING))
 
-const settings = ref<IUserSettings>({
+const settings = ref<UserSettingsResponse>({
 	...authStore.settings,
-	frontendSettings: {
+	frontend_settings: {
 		// Sub objects get exported as read only as well, so we need to 
 		// explicitly spread the object here to allow modification
-		...authStore.settings.frontendSettings,
+		...authStore.settings.frontend_settings,
 		// Add fallback for old settings that don't have the default view set
-		defaultView: authStore.settings.frontendSettings.defaultView ?? DEFAULT_PROJECT_VIEW_SETTINGS.FIRST,
+		default_view: authStore.settings.frontend_settings.default_view ?? DEFAULT_PROJECT_VIEW_SETTINGS.FIRST,
 		// Add fallback for old settings that don't have the minimum priority set
-		minimumPriority: authStore.settings.frontendSettings.minimumPriority ?? PRIORITIES.MEDIUM,
+		minimum_priority: authStore.settings.frontend_settings.minimum_priority ?? PRIORITIES.MEDIUM,
 		// Add fallback for old settings that don't have the logo change setting set
-		allowIconChanges: authStore.settings.frontendSettings.allowIconChanges ?? true,
-		dateDisplay: authStore.settings.frontendSettings.dateDisplay ?? DATE_DISPLAY.RELATIVE,
+		allow_icon_changes: authStore.settings.frontend_settings.allow_icon_changes ?? true,
+		date_display: authStore.settings.frontend_settings.date_display ?? DATE_DISPLAY.RELATIVE,
 		// Add fallback for old settings that don't have the time format set
-		timeFormat: authStore.settings.frontendSettings.timeFormat ?? TIME_FORMAT.HOURS_12,
+		time_format: authStore.settings.frontend_settings.time_format ?? TIME_FORMAT.HOURS_12,
 		// Add fallback for old settings that don't have the default task relation type set
-		defaultTaskRelationType: authStore.settings.frontendSettings.defaultTaskRelationType ?? 'related',
+		default_task_relation_type: authStore.settings.frontend_settings.default_task_relation_type ?? 'related',
 		// Clone to escape the store's readonly array type.
-		quickAddDefaultReminders: [...(authStore.settings.frontendSettings.quickAddDefaultReminders ?? [])],
-		timeTrackingDefaultStart: authStore.settings.frontendSettings.timeTrackingDefaultStart ?? '09:00',
+		quick_add_default_reminders: [...(authStore.settings.frontend_settings.quick_add_default_reminders ?? [])],
+		time_tracking_default_start: authStore.settings.frontend_settings.time_tracking_default_start ?? '09:00',
 	},
 })
 
-const quickAddDefaultReminders = computed({
-	get: () => taskRemindersFromSettings(settings.value.frontendSettings.quickAddDefaultReminders),
+const quick_add_default_reminders = computed({
+	get: () => taskRemindersFromSettings(settings.value.frontend_settings.quick_add_default_reminders),
 	set: reminders => {
-		settings.value.frontendSettings.quickAddDefaultReminders = reminders.map(reminder => ({
+		settings.value.frontend_settings.quick_add_default_reminders = reminders.map(reminder => ({
 			relativePeriod: reminder.relative_period,
 		}))
 	},
 })
 
-const initialSettings = ref<IUserSettings>()
+const initialSettings = ref<UserSettingsResponse>()
 const isDirty = ref(false)
 
 onBeforeMount(() => {
@@ -479,8 +479,8 @@ watch(
 		}
 		initialSettings.value = JSON.parse(JSON.stringify({
 			...newVal,
-			frontendSettings: {
-				...newVal.frontendSettings,
+			frontend_settings: {
+				...newVal.frontend_settings,
 			},
 		}))
 		isDirty.value = !isEqual(settings.value, initialSettings.value)
@@ -489,18 +489,18 @@ watch(
 )
 
 function enforceBackgroundBrightnessBounds() {
-	const value = Number(settings.value.frontendSettings.backgroundBrightness)
+	const value = Number(settings.value.frontend_settings.background_brightness)
     
 	if (!value || isNaN(value)) {
-		settings.value.frontendSettings.backgroundBrightness = null
+		settings.value.frontend_settings.background_brightness = null
 	} else if (value < 0) {
-		settings.value.frontendSettings.backgroundBrightness = 0
+		settings.value.frontend_settings.background_brightness = 0
 	} else if (value > 100) {
-		settings.value.frontendSettings.backgroundBrightness = 100
+		settings.value.frontend_settings.background_brightness = 100
 	}
 }
 
-function useAvailableTimezones(settingsRef: Ref<IUserSettings>) {
+function useAvailableTimezones(settingsRef: Ref<UserSettingsResponse>) {
 	const availableTimezones = ref<{value: string, label: string}[]>([])
 	const searchResults = ref<{value: string, label: string}[]>([])
 
@@ -578,9 +578,9 @@ watch(
 		}
 		settings.value = {
 			...authStore.settings,
-			frontendSettings: {
-				...authStore.settings.frontendSettings,
-				quickAddDefaultReminders: [...(authStore.settings.frontendSettings.quickAddDefaultReminders ?? [])],
+			frontend_settings: {
+				...authStore.settings.frontend_settings,
+				quick_add_default_reminders: [...(authStore.settings.frontend_settings.quick_add_default_reminders ?? [])],
 			},
 		}
 	},
@@ -589,15 +589,15 @@ watch(
 
 const projectList = useProjects()
 const defaultProject = computed({
-	get: () => projectList.projects[settings.value.defaultProjectId],
+	get: () => projectList.projects[settings.value.default_project_id],
 	set(l) {
-		settings.value.defaultProjectId = l ? l.id : DEFAULT_PROJECT_ID
+		settings.value.default_project_id = l ? l.id : DEFAULT_PROJECT_ID
 	},
 })
 const filterUsedInOverview = computed({
-	get: () => projectList.projects[settings.value.frontendSettings.filterIdUsedOnOverview],
+	get: () => projectList.projects[settings.value.frontend_settings.filter_id_used_on_overview],
 	set(l) {
-		settings.value.frontendSettings.filterIdUsedOnOverview = l ? l.id : null
+		settings.value.frontend_settings.filter_id_used_on_overview = l ? l.id : null
 	},
 })
 const hasFilters = computed(() => projectList.projectsArray.some(isSavedFilterProject))

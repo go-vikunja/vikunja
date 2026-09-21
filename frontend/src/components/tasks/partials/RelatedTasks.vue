@@ -235,7 +235,7 @@ const isSaving = computed(() => createRelation.isPending.value || deleteRelation
 const relatedTasks = computed(() => props.initialRelatedTasks ?? {})
 
 const newTaskRelation: TaskRelation = reactive({
-	kind: authStore.settings.frontendSettings.defaultTaskRelationType as IRelationKind,
+	kind: authStore.settings.frontend_settings.default_task_relation_type as IRelationKind,
 	task: createTaskDraft(),
 })
 
@@ -307,7 +307,7 @@ async function addTaskRelation() {
 		relation_kind: newTaskRelation.kind,
 	})
 	newTaskRelation.task = createTaskDraft()
-	newTaskRelation.kind = authStore.settings.frontendSettings.defaultTaskRelationType as IRelationKind
+	newTaskRelation.kind = authStore.settings.frontend_settings.default_task_relation_type as IRelationKind
 	saved.value = true
 	showNewRelationForm.value = false
 	setTimeout(() => {

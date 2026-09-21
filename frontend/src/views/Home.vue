@@ -25,7 +25,7 @@
 		/>
 		<ImportHint v-if="tasksLoaded" />
 		<div
-			v-if="authStore.settings.frontendSettings.showLastViewed !== false && projectHistory.length > 0"
+			v-if="authStore.settings.frontend_settings.show_last_viewed !== false && projectHistory.length > 0"
 			class="is-max-width-desktop has-text-start mbs-4"
 		>
 			<h2>{{ $t('home.lastViewed') }}</h2>
