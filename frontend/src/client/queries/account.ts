@@ -16,7 +16,11 @@ export function currentUserQuery(id = 0, type = 1) {
 }
 
 export function refreshCurrentUser(id = 0) {
-	return queryClient.fetchQuery({...currentUserQuery(id), staleTime: 0})
+	return queryClient.fetchQuery({
+		...currentUserQuery(id),
+		staleTime: 0,
+		retry: false,
+	})
 }
 
 export function timezonesQuery() {
