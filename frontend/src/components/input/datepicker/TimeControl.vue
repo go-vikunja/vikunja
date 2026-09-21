@@ -109,8 +109,8 @@ const emit = defineEmits<{
 
 const PRESETS = [9, 12, 17]
 
-const {store: timeFormat} = useTimeFormat()
-const is24h = computed(() => timeFormat.value === TIME_FORMAT.HOURS_24)
+const {store: time_format} = useTimeFormat()
+const is24h = computed(() => time_format.value === TIME_FORMAT.HOURS_24)
 
 const pad = (n: number) => String(n).padStart(2, '0')
 

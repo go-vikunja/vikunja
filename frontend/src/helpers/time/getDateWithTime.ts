@@ -1,12 +1,12 @@
 import {calculateNearestHours} from '@/helpers/time/calculateNearestHours'
 import {useAuthStore} from '@/stores/auth'
 
-export function parseUserDefaultTime(defaultDueTime?: string): {hours: number, minutes: number} | null {
-	if (!defaultDueTime) {
+export function parseUserDefaultTime(default_due_time?: string): {hours: number, minutes: number} | null {
+	if (!default_due_time) {
 		return null
 	}
 
-	const match = /^(\d{2}):(\d{2})$/.exec(defaultDueTime)
+	const match = /^(\d{2}):(\d{2})$/.exec(default_due_time)
 	if (!match) {
 		return null
 	}
@@ -21,8 +21,8 @@ export function parseUserDefaultTime(defaultDueTime?: string): {hours: number, m
 }
 
 export function getDefaultTimeParts(date: Date): {hours: number, minutes: number} {
-	const defaultDueTime = useAuthStore().settings.frontendSettings.defaultDueTime
-	const parsedTime = parseUserDefaultTime(defaultDueTime)
+	const default_due_time = useAuthStore().settings.frontend_settings.default_due_time
+	const parsedTime = parseUserDefaultTime(default_due_time)
 
 	if (parsedTime !== null) {
 		return parsedTime
@@ -36,7 +36,7 @@ export function getDefaultTimeParts(date: Date): {hours: number, minutes: number
 
 export function getDateWithTime(date: Date): Date {
 	const newDate = new Date(date)
-	const defaultDueTime = getDefaultTimeParts(newDate)
-	newDate.setHours(defaultDueTime.hours, defaultDueTime.minutes, 0, 0)
+	const default_due_time = getDefaultTimeParts(newDate)
+	newDate.setHours(default_due_time.hours, default_due_time.minutes, 0, 0)
 	return newDate
 }

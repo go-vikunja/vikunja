@@ -398,7 +398,7 @@ const hintText = computed(() => {
 		}
 	}
 	const prefixes =
-		PREFIXES[authStore.settings.frontendSettings.quickAddMagicMode] ?? PREFIXES[PrefixMode.Default]
+		PREFIXES[authStore.settings.frontend_settings.quick_add_magic_mode] ?? PREFIXES[PrefixMode.Default]
 	return t('quickActions.hint', prefixes)
 })
 
@@ -410,7 +410,7 @@ const availableCmds = computed(() => {
 	]
 })
 
-const parsedQuery = computed(() => parseTaskText(query.value, authStore.settings.frontendSettings.quickAddMagicMode))
+const parsedQuery = computed(() => parseTaskText(query.value, authStore.settings.frontend_settings.quick_add_magic_mode))
 
 const searchMode = computed(() => {
 	if (query.value === '') {
@@ -621,7 +621,7 @@ async function doCmd() {
 }
 
 async function newTask() {
-	let projectId = authStore.settings.defaultProjectId
+	let projectId = authStore.settings.default_project_id
 	if (currentProject.value?.id && currentProject.value.id > 0) {
 		projectId = currentProject.value.id
 	}

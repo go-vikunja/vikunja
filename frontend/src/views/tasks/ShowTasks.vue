@@ -183,8 +183,8 @@ const filteredLabels = computed(() => {
 
 const savedFilterIgnored = computed(() => {
 	return filteredLabels.value.length > 0
-		&& filterIdUsedOnOverview.value
-		&& typeof projectList.projects[filterIdUsedOnOverview.value] !== 'undefined'
+		&& filter_id_used_on_overview.value
+		&& typeof projectList.projects[filter_id_used_on_overview.value] !== 'undefined'
 })
 
 const pageTitle = computed(() => {
@@ -206,7 +206,7 @@ const pageTitle = computed(() => {
 const hasTasks = computed(() => tasks.value && tasks.value.length > 0)
 const userAuthenticated = computed(() => authStore.authenticated)
 const loading = taskQuery.isFetching
-const filterIdUsedOnOverview = computed(() => authStore.settings?.frontendSettings?.filterIdUsedOnOverview)
+const filter_id_used_on_overview = computed(() => authStore.settings?.frontend_settings?.filter_id_used_on_overview)
 
 interface dateStrings {
 	dateFrom: string,
@@ -303,7 +303,7 @@ watch(
 	[
 		() => props.dateFrom,
 		() => props.dateTo,
-		filterIdUsedOnOverview,
+		filter_id_used_on_overview,
 		() => props.showOverdue,
 		() => props.showNulls,
 		() => props.labelIds,

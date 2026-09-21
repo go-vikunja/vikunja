@@ -6,9 +6,9 @@ export interface CalendarCell {
 }
 
 // Always 6 rows so the grid never jumps in height between months.
-export function buildMonthGrid(year: number, month: number, weekStart: number): CalendarCell[] {
+export function buildMonthGrid(year: number, month: number, week_start: number): CalendarCell[] {
 	const first = new Date(year, month, 1)
-	const lead = (first.getDay() - weekStart + 7) % 7
+	const lead = (first.getDay() - week_start + 7) % 7
 	const gridStart = addDays(first, -lead)
 
 	return Array.from({length: 42}, (_, i) => {
@@ -17,6 +17,6 @@ export function buildMonthGrid(year: number, month: number, weekStart: number): 
 	})
 }
 
-export function weekdayOrder(weekStart: number): number[] {
-	return Array.from({length: 7}, (_, i) => (i + weekStart) % 7)
+export function weekdayOrder(week_start: number): number[] {
+	return Array.from({length: 7}, (_, i) => (i + week_start) % 7)
 }

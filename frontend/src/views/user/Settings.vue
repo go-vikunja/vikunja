@@ -1,7 +1,7 @@
 <template>
 	<SideNavShell
 		:navigation-items="navigationItems"
-		:extra-links="extraSettingsLinks"
+		:extra-links="extra_settings_links"
 	/>
 </template>
 
@@ -98,5 +98,5 @@ const navigationItems = computed(() => {
 	return items.filter(({condition}) => condition !== false)
 })
 
-const extraSettingsLinks = computed(() => Object.values(authStore.settings.extraSettingsLinks ?? {}))
+const extra_settings_links = computed(() => Object.values(authStore.settings.extra_settings_links ?? {}))
 </script>

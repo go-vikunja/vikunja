@@ -18,7 +18,7 @@
 				class="app-container-background background-fade-in d-print-none"
 				:style="{
 					'background-image': background && `url(${background})`,
-					'filter': backgroundBrightness && `brightness(${backgroundBrightness}%)`
+					'filter': background_brightness && `brightness(${background_brightness}%)`
 				}"
 			/>
 			<Navigation class="d-print-none" />
@@ -30,7 +30,7 @@
 					{ 'is-menu-enabled': menuActive },
 					$route.name,
 				]"
-				:style="{'--sidebar-width': sidebarWidth}"
+				:style="{'--sidebar-width': sidebar_width}"
 			>
 				<BaseButton
 					v-show="menuActive"
@@ -95,11 +95,11 @@ import {useServerCacheEvents} from '@/composables/useServerCacheEvents'
 import {useAuthStore} from '@/stores/auth'
 
 const authStore = useAuthStore()
-const backgroundBrightness = computed(() =>
-	authStore.settings?.frontendSettings?.backgroundBrightness,
+const background_brightness = computed(() =>
+	authStore.settings?.frontend_settings?.background_brightness,
 )
 
-const {sidebarWidth} = useSidebarResize()
+const {sidebar_width} = useSidebarResize()
 
 const {routeWithModal, currentModal, closeModal} = useRouteWithModal()
 

@@ -125,8 +125,8 @@ const isMobile = useIsMobile()
 
 const dialogTitle = computed(() => props.title || props.chooseDateLabel)
 
-const {store: timeFormat} = useTimeFormat()
-const summaryFormat = computed(() => timeFormat.value === TIME_FORMAT.HOURS_24 ? 'ddd, ll HH:mm' : 'ddd, ll hh:mm A')
+const {store: time_format} = useTimeFormat()
+const summaryFormat = computed(() => time_format.value === TIME_FORMAT.HOURS_24 ? 'ddd, ll HH:mm' : 'ddd, ll hh:mm A')
 
 const date = ref<Date | null>(null)
 const show = ref(false)

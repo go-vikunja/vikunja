@@ -30,7 +30,7 @@ import {
 } from '@/helpers/redirectToProvider'
 import {AUTH_TYPES, ERROR_CODE_TOTP_REQUIRED, type AuthType} from '@/constants/auth'
 
-import type {IUserSettings} from '@/modelTypes/IUserSettings'
+import type {UserSettingsResponse} from '@/helpers/userSettings'
 import router from '@/router'
 import {useConfigStore} from '@/stores/config'
 import UserSettingsModel from '@/models/userSettings'
@@ -125,7 +125,7 @@ export const useAuthStore = defineStore('auth', () => {
 	
 	const session = ref<SessionClaims | null>(null)
 	const info = ref<UserInfoBody | null>(null)
-	const settings = ref<IUserSettings>(new UserSettingsModel())
+	const settings = ref<UserSettingsResponse>(new UserSettingsModel())
 	
 	const currentSessionId = ref<string | null>(null)
 	const lastUserInfoRefresh = ref<Date | null>(null)
@@ -175,7 +175,7 @@ export const useAuthStore = defineStore('auth', () => {
 		}
 	}
 
-	function setUserSettings(newSettings: IUserSettings) {
+	function setUserSettings(newSettings: UserSettingsResponse) {
 		loadSettings(newSettings)
 		info.value = {
 			...info.value,
@@ -183,31 +183,31 @@ export const useAuthStore = defineStore('auth', () => {
 		}
 	}
 	
-	function loadSettings(newSettings: IUserSettings) {
+	function loadSettings(newSettings: UserSettingsResponse) {
 		settings.value = new UserSettingsModel({
 			...newSettings,
-			frontendSettings: {
+			frontend_settings: {
 				// Need to set default settings here in case the user does not have any saved in the api already
-				playSoundWhenDone: true,
-				quickAddMagicMode: PrefixMode.Default,
-				colorSchema: 'auto',
-				allowIconChanges: true,
-				dateDisplay: DATE_DISPLAY.RELATIVE,
-				timeFormat: TIME_FORMAT.HOURS_24,
-				defaultTaskRelationType: RELATION_KIND.RELATED,
-				backgroundBrightness: 100,
-				showLastViewed: true,
-				sidebarWidth: null,
-				commentSortOrder: 'asc',
-				desktopQuickEntryShortcut: 'CmdOrCtrl+Shift+A',
-				defaultDueTime: undefined,
-				...newSettings.frontendSettings,
+				play_sound_when_done: true,
+				quick_add_magic_mode: PrefixMode.Default,
+				color_schema: 'auto',
+				allow_icon_changes: true,
+				date_display: DATE_DISPLAY.RELATIVE,
+				time_format: TIME_FORMAT.HOURS_24,
+				default_task_relation_type: RELATION_KIND.RELATED,
+				background_brightness: 100,
+				show_last_viewed: true,
+				sidebar_width: null,
+				comment_sort_order: 'asc',
+				desktop_quick_entry_shortcut: 'CmdOrCtrl+Shift+A',
+				default_due_time: undefined,
+				...newSettings.frontend_settings,
 			},
 		})
 
 		// Sync the quick entry shortcut to the desktop app when settings are loaded
 		window.vikunjaDesktop?.updateQuickEntryShortcut(
-			settings.value.frontendSettings.desktopQuickEntryShortcut || '',
+			settings.value.frontend_settings.desktop_quick_entry_shortcut || '',
 		)
 	}
 
@@ -514,7 +514,7 @@ export const useAuthStore = defineStore('auth', () => {
 		settings,
 		showMessage = true,
 	}: {
-		settings: IUserSettings,
+		settings: UserSettingsResponse,
 		showMessage: boolean,
 	}) {
 		const userSettingsService = new UserSettingsService()

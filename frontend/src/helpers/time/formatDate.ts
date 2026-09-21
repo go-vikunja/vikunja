@@ -79,13 +79,13 @@ export function useWeekDayFromDate() {
 }
 
 export function formatDisplayDate(date: Date | string | null | undefined) {
-	const {store: dateDisplay} = useDateDisplay()
-	const {store: timeFormat} = useTimeFormat()
+	const {store: date_display} = useDateDisplay()
+	const {store: time_format} = useTimeFormat()
 
-	return formatDisplayDateFormat(date, dateDisplay.value, timeFormat.value)	
+	return formatDisplayDateFormat(date, date_display.value, time_format.value)	
 }
 
-export function formatDisplayDateFormat(date: Date | string | null | undefined, format: DateDisplay, timeFormat?: TimeFormat) {
+export function formatDisplayDateFormat(date: Date | string | null | undefined, format: DateDisplay, time_format?: TimeFormat) {
 	const parsed = toDate(date)
 	if (parsed === null) {
 		return ''
@@ -94,7 +94,7 @@ export function formatDisplayDateFormat(date: Date | string | null | undefined, 
 	// Determine the time format string to use
 	// For 24-hour: HH:mm (24-hour format)
 	// For 12-hour: hh:mm A (explicit 12-hour format with AM/PM, ignoring locale default)
-	const timeFormatString = timeFormat === TIME_FORMAT.HOURS_24 ? 'HH:mm' : 'hh:mm A'
+	const timeFormatString = time_format === TIME_FORMAT.HOURS_24 ? 'HH:mm' : 'hh:mm A'
 
 	switch (format) {
 		case DATE_DISPLAY.MM_DD_YYYY:
@@ -110,11 +110,11 @@ export function formatDisplayDateFormat(date: Date | string | null | undefined, 
 		case DATE_DISPLAY.YYYY_SLASH_MM_DD:
 			return formatDate(parsed, `YYYY/MM/DD ${timeFormatString}`)
 		case DATE_DISPLAY.DAY_MONTH_YEAR: {
-			const hour12 = timeFormat !== TIME_FORMAT.HOURS_24
+			const hour12 = time_format !== TIME_FORMAT.HOURS_24
 			return new Intl.DateTimeFormat(i18n.global.locale.value, {day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: 'numeric', hour12}).format(parsed)
 		}
 		case DATE_DISPLAY.WEEKDAY_DAY_MONTH_YEAR: {
-			const hour12 = timeFormat !== TIME_FORMAT.HOURS_24
+			const hour12 = time_format !== TIME_FORMAT.HOURS_24
 			return new Intl.DateTimeFormat(i18n.global.locale.value, {weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: 'numeric', hour12}).format(parsed)
 		}
 		case DATE_DISPLAY.RELATIVE:

@@ -20,8 +20,8 @@
 				class="comment-sort-button"
 				@click="toggleSortOrder"
 			>
-				<Icon :icon="commentSortOrder === 'asc' ? 'arrow-down-short-wide' : 'arrow-up-short-wide'" />
-				{{ commentSortOrder === 'asc' ? $t('task.comment.sortOldestFirst') : $t('task.comment.sortNewestFirst') }}
+				<Icon :icon="comment_sort_order === 'asc' ? 'arrow-down-short-wide' : 'arrow-up-short-wide'" />
+				{{ comment_sort_order === 'asc' ? $t('task.comment.sortOldestFirst') : $t('task.comment.sortNewestFirst') }}
 			</BaseButton>
 		</h2>
 		<div class="comments">
@@ -138,7 +138,7 @@
 			<div
 				v-if="canWrite"
 				class="media comment d-print-none"
-				:class="{'new-comment-top': commentSortOrder === 'desc'}"
+				:class="{'new-comment-top': comment_sort_order === 'desc'}"
 			>
 				<figure class="media-left is-hidden-mobile">
 					<UserAvatar
@@ -261,11 +261,11 @@ const configStore = useConfigStore()
 const authStore = useAuthStore()
 
 const localSortOrder = ref<'asc' | 'desc' | null>(null)
-const commentSortOrder = computed(() => localSortOrder.value ?? authStore.settings.frontendSettings.commentSortOrder ?? 'asc')
+const comment_sort_order = computed(() => localSortOrder.value ?? authStore.settings.frontend_settings.comment_sort_order ?? 'asc')
 
 const currentPage = ref(1)
 const commentQuery = useQuery(computed(() => ({
-	...commentsQuery(props.taskId, commentSortOrder.value, currentPage.value, configStore.max_items_per_page),
+	...commentsQuery(props.taskId, comment_sort_order.value, currentPage.value, configStore.max_items_per_page),
 	enabled: configStore.task_comments_enabled && props.taskId > 0,
 })))
 const comments = computed(() => commentQuery.data.value?.items ?? [])
@@ -385,15 +385,15 @@ async function changePage(page: number) {
 }
 
 async function toggleSortOrder() {
-	const newOrder = commentSortOrder.value === 'asc' ? 'desc' : 'asc'
+	const newOrder = comment_sort_order.value === 'asc' ? 'desc' : 'asc'
 	if (!authStore.isLinkShareAuth) {
 		await authStore.saveUserSettings({
 			settings: {
 				...authStore.settings,
-				frontendSettings: {
-					...authStore.settings.frontendSettings,
-					commentSortOrder: newOrder,
-					quickAddDefaultReminders: [...(authStore.settings.frontendSettings.quickAddDefaultReminders ?? [])],
+				frontend_settings: {
+					...authStore.settings.frontend_settings,
+					comment_sort_order: newOrder,
+					quick_add_default_reminders: [...(authStore.settings.frontend_settings.quick_add_default_reminders ?? [])],
 				},
 			},
 			showMessage: false,
@@ -426,12 +426,12 @@ async function addComment() {
 	try {
 		await createMutation.mutateAsync({taskId, comment: text})
 		if (props.taskId !== taskId) return
-		currentPage.value = commentSortOrder.value === 'desc' ? 1 : Math.max(1, totalPages.value)
+		currentPage.value = comment_sort_order.value === 'desc' ? 1 : Math.max(1, totalPages.value)
 		if (newCommentText.value === text) {
 			newCommentText.value = ''
 			clearEditorDraft(commentStorageKey.value)
 		}
-		if (commentSortOrder.value === 'desc') commentsRef.value?.scrollIntoView({behavior: 'smooth', block: 'start'})
+		if (comment_sort_order.value === 'desc') commentsRef.value?.scrollIntoView({behavior: 'smooth', block: 'start'})
 	} catch {
 		return
 	} finally {

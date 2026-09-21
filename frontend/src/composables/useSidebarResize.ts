@@ -25,7 +25,7 @@ function setupWatcher(authStore: ReturnType<typeof useAuthStore>) {
 	watcherInitialized = true
 
 	watch(
-		() => authStore.settings?.frontendSettings?.sidebarWidth,
+		() => authStore.settings?.frontend_settings?.sidebar_width,
 		(newWidth) => {
 			if (isResizing.value) return
 
@@ -47,7 +47,7 @@ export function useSidebarResize() {
 		if (initialized) return
 		initialized = true
 
-		const savedWidth = authStore.settings?.frontendSettings?.sidebarWidth
+		const savedWidth = authStore.settings?.frontend_settings?.sidebar_width
 		if (savedWidth !== null && savedWidth !== undefined) {
 			currentWidth.value = clampWidth(savedWidth)
 		}
@@ -56,7 +56,7 @@ export function useSidebarResize() {
 	// Register settings watcher only once
 	setupWatcher(authStore)
 
-	const sidebarWidth = computed(() => {
+	const sidebar_width = computed(() => {
 		if (isMobile.value) {
 			return '70vw'
 		}
@@ -124,16 +124,16 @@ export function useSidebarResize() {
 	}
 
 	async function saveWidth() {
-		const savedWidth = authStore.settings?.frontendSettings?.sidebarWidth
+		const savedWidth = authStore.settings?.frontend_settings?.sidebar_width
 		// Only save if width actually changed
 		if (savedWidth === currentWidth.value) return
 
 		const newSettings = {
 			...authStore.settings,
-			frontendSettings: {
-				...authStore.settings.frontendSettings,
-				sidebarWidth: currentWidth.value,
-				quickAddDefaultReminders: [...(authStore.settings.frontendSettings.quickAddDefaultReminders ?? [])],
+			frontend_settings: {
+				...authStore.settings.frontend_settings,
+				sidebar_width: currentWidth.value,
+				quick_add_default_reminders: [...(authStore.settings.frontend_settings.quick_add_default_reminders ?? [])],
 			},
 		}
 		await authStore.saveUserSettings({
@@ -146,7 +146,7 @@ export function useSidebarResize() {
 	onUnmounted(stopResize)
 
 	return {
-		sidebarWidth,
+		sidebar_width,
 		currentWidth,
 		isResizing,
 		startResize,

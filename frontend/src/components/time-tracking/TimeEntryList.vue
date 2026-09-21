@@ -153,7 +153,7 @@ const emit = defineEmits<{
 }>()
 
 const projectList = useProjects()
-const {store: timeFormat} = useTimeFormat()
+const {store: time_format} = useTimeFormat()
 
 // Only the author can update/delete (enforced server-side); shared lists include
 // others' entries, so hide the controls on rows the current user doesn't own.
@@ -207,7 +207,7 @@ function formatDuration(seconds: number): string {
 }
 
 function formatTime(date: Date): string {
-	return formatDate(date, timeFormat.value === TIME_FORMAT.HOURS_24 ? 'HH:mm' : 'hh:mm A')
+	return formatDate(date, time_format.value === TIME_FORMAT.HOURS_24 ? 'HH:mm' : 'hh:mm A')
 }
 
 function timeRange(entry: ITimeEntry): string {

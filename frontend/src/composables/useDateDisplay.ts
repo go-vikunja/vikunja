@@ -4,6 +4,6 @@ import {useAuthStore} from '@/stores/auth'
 
 export const useDateDisplay = createSharedComposable(() => {
 	const authStore = useAuthStore()
-	const store = computed(() => authStore.settings.frontendSettings.dateDisplay)
+	const store = computed(() => authStore.settings.frontend_settings.date_display)
 	return {store}
 })

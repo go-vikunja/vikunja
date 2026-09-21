@@ -143,7 +143,7 @@ const emit = defineEmits<{
 }>()
 
 const authStore = useAuthStore()
-const weekStart = computed(() => authStore.settings.weekStart ?? 0)
+const week_start = computed(() => authStore.settings.week_start ?? 0)
 
 const today = startOfDay(new Date())
 const root = ref<HTMLElement | null>(null)
@@ -159,7 +159,7 @@ function monthOf(date: Date) {
 	return {year: date.getFullYear(), month: date.getMonth()}
 }
 
-const cells = computed(() => buildMonthGrid(view.value.year, view.value.month, weekStart.value)
+const cells = computed(() => buildMonthGrid(view.value.year, view.value.month, week_start.value)
 	.map(cell => ({...cell, classes: cellClasses(cell)})))
 
 // Follow outside changes (shortcut, v-model) but stay put when the new value is already on screen.
@@ -204,7 +204,7 @@ function setYear(event: Event) {
 }
 
 // Dayjs 'dd' gives the locale's two-letter weekday; a fixed reference week avoids DST oddities.
-const weekdayLabels = computed(() => weekdayOrder(weekStart.value)
+const weekdayLabels = computed(() => weekdayOrder(week_start.value)
 	.map(day => formatDate(new Date(2024, 0, 7 + day), 'dd')))
 
 function dateKey(date: Date) {
