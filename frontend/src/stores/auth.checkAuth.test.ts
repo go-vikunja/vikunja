@@ -22,10 +22,15 @@ function fakeHttp() {
 }
 
 vi.mock('@/helpers/fetcher', () => ({
-	apiV2Url: (path: string) => `/api/v2/${path}`,
+	getApiV2BaseUrl: () => '/api/v2/',
 	HTTPFactory: () => fakeHttp(),
 	AuthenticatedHTTPFactory: () => fakeHttp(),
 	getApiBaseUrl: () => 'http://localhost/api/v1/',
+}))
+
+vi.mock('@/client/generated', async (importOriginal) => ({
+	...await importOriginal<typeof import('@/client/generated')>(),
+	authRefreshToken: postMock,
 }))
 
 vi.mock('@/router', () => ({
@@ -57,16 +62,11 @@ const STALE_JWT = `header.${btoa(JSON.stringify({
 }))}.signature`
 
 function refreshRejection(status: number, code?: number) {
-	return {
-		response: {
-			status,
-			data: {code},
-		},
-	}
+	return {status, code}
 }
 
 function refreshCalls() {
-	return postMock.mock.calls.filter(([url]) => url === '/api/v2/user/token/refresh').length
+	return postMock.mock.calls.length
 }
 
 describe('auth store checkAuth refresh (issue #4023)', () => {
