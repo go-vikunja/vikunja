@@ -1,7 +1,8 @@
-import {it, expect, vi} from 'vitest'
+import {beforeEach, it, expect, vi} from 'vitest'
 import {QueryClient} from '@tanstack/vue-query'
+import {success} from '@/message'
 import {accountKeys} from './account'
-import {updateEmailMutationOptions} from './email'
+import {cancelEmailUpdateMutationOptions, updateEmailMutationOptions} from './email'
 const sdk = vi.hoisted(() => ({
 	userUpdateEmail: vi.fn(),
 	userCancelEmailUpdate: vi.fn(),
@@ -10,6 +11,10 @@ const sdk = vi.hoisted(() => ({
 }))
 vi.mock('@/client/generated', () => sdk)
 vi.mock('@/message', () => ({success: vi.fn(), error: vi.fn()}))
+
+beforeEach(() => {
+	vi.clearAllMocks()
+})
 
 it('replaces cached account facts with the server-confirmed email state', async () => {
 	const client = new QueryClient()
@@ -20,4 +25,28 @@ it('replaces cached account facts with the server-confirmed email state', async 
 	await client.getMutationCache().build(client, updateEmailMutationOptions()).execute({new_email: 'next@example.test', password: 'secret'})
 	expect(sdk.userUpdateEmail).toHaveBeenCalledWith({body: {new_email: 'next@example.test', password: 'secret'}})
 	expect(client.getQueryData(accountKeys.user(1))).toEqual(account)
+	expect(success).toHaveBeenCalledWith({message: 'We\'ve sent a confirmation link to your new address. Your current address stays active until you confirm.'})
+})
+
+it('reports an immediate change when the server confirms without a pending email', async () => {
+	const client = new QueryClient()
+	client.setQueryData(accountKeys.user(1), {id: 1, email: 'old@example.test', pending_email: ''})
+	sdk.userUpdateEmail.mockResolvedValue({data: {}})
+	const account = {id: 1, email: 'next@example.test', pending_email: ''}
+	sdk.userShow.mockResolvedValue({data: account})
+	await client.getMutationCache().build(client, updateEmailMutationOptions()).execute({new_email: 'next@example.test', password: 'secret'})
+	expect(client.getQueryData(accountKeys.user(1))).toEqual(account)
+	expect(success).toHaveBeenCalledWith({message: 'Your email address was successfully updated.'})
+})
+
+it('clears the cached pending email when the change is cancelled', async () => {
+	const client = new QueryClient()
+	client.setQueryData(accountKeys.user(1), {id: 1, email: 'old@example.test', pending_email: 'next@example.test'})
+	sdk.userCancelEmailUpdate.mockResolvedValue({data: {}})
+	const account = {id: 1, email: 'old@example.test', pending_email: ''}
+	sdk.userShow.mockResolvedValue({data: account})
+	await client.getMutationCache().build(client, cancelEmailUpdateMutationOptions()).execute(undefined)
+	expect(sdk.userCancelEmailUpdate).toHaveBeenCalledTimes(1)
+	expect(client.getQueryData(accountKeys.user(1))).toEqual(account)
+	expect(success).toHaveBeenCalledWith({message: 'The email change was cancelled.'})
 })
