@@ -112,15 +112,10 @@
 </template>
 
 <script setup lang="ts">
-import {ref, onMounted} from 'vue'
-import {
-	adminProjectsList,
-	adminProjectsPatchOwner,
-} from '@/client/generated'
-import type {Project} from '@/client/generated'
-import type {IAdminUser} from '@/modelTypes/IAdminUser'
-import AdminUserService from '@/services/admin/userService'
-import AdminUserModel from '@/models/adminUser'
+import {ref, computed} from 'vue'
+import {useQuery} from '@tanstack/vue-query'
+import type {AdminUser, Project} from '@/client/generated'
+import {adminProjectsQuery, adminUserSearchQuery, useReassignAdminProjectMutation} from '@/client/queries/admin'
 import Card from '@/components/misc/Card.vue'
 import Modal from '@/components/misc/Modal.vue'
 import PaginationEmit from '@/components/misc/PaginationEmit.vue'
@@ -131,83 +126,29 @@ import User from '@/components/misc/User.vue'
 import ProjectSettingsDropdown from '@/components/project/ProjectSettingsDropdown.vue'
 import DropdownItem from '@/components/misc/DropdownItem.vue'
 import TimeDisplay from '@/components/misc/TimeDisplay.vue'
-import {error, success} from '@/message'
-import {useI18n} from 'vue-i18n'
-
-const {t} = useI18n({useScope: 'global'})
-
-const adminUserService = new AdminUserService()
-
-type AdminProject = Project & Required<Pick<Project, 'id'>>
-
-const projects = ref<AdminProject[]>([])
-const loading = ref(false)
 const currentPage = ref(1)
-const totalPages = ref(1)
-
+const {data, isFetching: loading} = useQuery(computed(() => adminProjectsQuery(currentPage.value)))
+type AdminProject = Project & {id: number}
+const projects = computed(() => (data.value?.items ?? []).filter((p): p is AdminProject => p.id !== undefined))
+const totalPages = computed(() => data.value?.total_pages ?? 1)
 const reassignTarget = ref<AdminProject | null>(null)
-const userResults = ref<IAdminUser[]>([])
-const userSearchLoading = ref(false)
-const selectedUser = ref<IAdminUser | null>(null)
-
-async function load() {
-	loading.value = true
-	try {
-		const {data} = await adminProjectsList({query: {page: currentPage.value}})
-		projects.value = (data.items ?? []).filter((project): project is AdminProject => project.id !== undefined)
-		totalPages.value = data.total_pages ?? 1
-	} catch (e) {
-		error(e)
-	} finally {
-		loading.value = false
-	}
-}
-
-function goToPage(page: number) {
-	currentPage.value = page
-	load()
-}
-
-function openReassign(p: AdminProject) {
-	reassignTarget.value = p
-	userResults.value = []
-	selectedUser.value = null
-}
-
-async function searchUsers(query: string) {
-	if (!query || query.length < 2) {
-		userResults.value = []
-		return
-	}
-	userSearchLoading.value = true
-	try {
-		userResults.value = await adminUserService.getAll(new AdminUserModel(), {s: query})
-	} catch (e) {
-		error(e)
-	} finally {
-		userSearchLoading.value = false
-	}
-}
-
+const selectedUser = ref<AdminUser | null>(null)
+const search = ref('')
+const {data: searchData, isFetching: userSearchLoading} = useQuery(computed(() => ({...adminUserSearchQuery(search.value), enabled: !!reassignTarget.value && search.value.length >= 2})))
+const userResults = computed(() => search.value.length >= 2 ? searchData.value ?? [] : [])
+const reassignMutation = useReassignAdminProjectMutation()
+function goToPage(page: number) { currentPage.value = page }
+function openReassign(p: AdminProject) { reassignTarget.value = p; selectedUser.value = null; search.value = '' }
+function searchUsers(query: string) { search.value = query }
 async function doReassign() {
-	if (!reassignTarget.value || !selectedUser.value) return
 	const target = reassignTarget.value
-	const newOwnerId = selectedUser.value.id
-	reassignTarget.value = null
+	const ownerId = selectedUser.value?.id
+	if (!target || !ownerId) return
 	try {
-		const {data: updated} = await adminProjectsPatchOwner({
-			path: {id: target.id},
-			body: {owner_id: newOwnerId},
-		})
-		const idx = projects.value.findIndex(x => x.id === target.id)
-		if (idx !== -1) projects.value[idx] = {...projects.value[idx], ...updated}
-		success({message: t('admin.projects.reassignedSuccess')})
-	} catch (e) {
-		error(e)
-	}
+		await reassignMutation.mutateAsync({id: target.id, ownerId})
+		if (reassignTarget.value?.id === target.id) reassignTarget.value = null
+	} catch { /* Mutation reports the error. */ }
 }
-
-onMounted(load)
 </script>
 
 <style lang="scss" scoped>

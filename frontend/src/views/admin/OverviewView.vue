@@ -48,11 +48,11 @@
 						{{ totalShares }}
 					</p>
 					<p class="admin-overview__hint admin-overview__shares-breakdown">
-						{{ data.shares.link_shares }} {{ $t('admin.overview.linkSharesShort') }}
+						{{ data.shares?.link_shares }} {{ $t('admin.overview.linkSharesShort') }}
 						<span aria-hidden="true">·</span>
-						{{ data.shares.team_shares }} {{ $t('admin.overview.teamSharesShort') }}
+						{{ data.shares?.team_shares }} {{ $t('admin.overview.teamSharesShort') }}
 						<span aria-hidden="true">·</span>
-						{{ data.shares.user_shares }} {{ $t('admin.overview.userSharesShort') }}
+						{{ data.shares?.user_shares }} {{ $t('admin.overview.userSharesShort') }}
 					</p>
 				</div>
 				<div class="admin-overview__card admin-overview__card--version">
@@ -70,7 +70,7 @@
 					<dl class="admin-overview__kv">
 						<dt>{{ $t('admin.overview.licenseValidUntil') }}</dt>
 						<dd>
-							<TimeDisplay :date="data.license.expires_at" />
+							<TimeDisplay :date="data.license?.expires_at" />
 							<span
 								v-if="expiresInDays !== null"
 								class="admin-overview__hint"
@@ -81,24 +81,24 @@
 						<dt>{{ $t('admin.overview.licenseLastVerified') }}</dt>
 						<dd>
 							<TimeDisplay
-								:date="data.license.validated_at"
+								:date="data.license?.validated_at"
 								mode="relative"
 								:fallback="$t('admin.overview.licenseNever')"
 							/>
 							<span
-								v-if="data.license.last_check_failed"
+								v-if="data.license?.last_check_failed"
 								class="has-text-danger admin-overview__hint"
 							>
 								({{ $t('admin.overview.licenseLastCheckFailed') }})
 							</span>
 						</dd>
-						<template v-if="data.license.features.length">
+						<template v-if="data.license?.features?.length">
 							<dt>{{ $t('admin.overview.licenseFeatures') }}</dt>
-							<dd>{{ data.license.features.join(', ') }}</dd>
+							<dd>{{ data.license?.features?.join(', ') }}</dd>
 						</template>
-						<template v-if="data.license.instance_id">
+						<template v-if="data.license?.instance_id">
 							<dt>{{ $t('admin.overview.licenseInstance') }}</dt>
-							<dd><code>{{ data.license.instance_id }}</code></dd>
+							<dd><code>{{ data.license?.instance_id }}</code></dd>
 						</template>
 					</dl>
 					<p class="admin-overview__card-action">
@@ -121,21 +121,18 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, onMounted} from 'vue'
+import {computed} from 'vue'
 import dayjs from 'dayjs'
 import Card from '@/components/misc/Card.vue'
 import Icon from '@/components/misc/Icon'
 import TimeDisplay from '@/components/misc/TimeDisplay.vue'
-import AdminOverviewService from '@/services/admin/overviewService'
-import type {IAdminOverview} from '@/modelTypes/IAdminOverview'
+import {useQuery} from '@tanstack/vue-query'
+import {adminOverviewQuery} from '@/client/queries/admin'
 import {useConfigStore} from '@/stores/config'
-import {error} from '@/message'
 
-const adminOverviewService = new AdminOverviewService()
 const configStore = useConfigStore()
 
-const data = ref<IAdminOverview | null>(null)
-const loading = ref(false)
+const {data, isFetching: loading} = useQuery(adminOverviewQuery())
 
 const expiresInDays = computed<number | null>(() => {
 	const expires_at = data.value?.license?.expires_at
@@ -146,19 +143,9 @@ const expiresInDays = computed<number | null>(() => {
 const totalShares = computed<number>(() => {
 	const shares = data.value?.shares
 	if (!shares) return 0
-	return shares.link_shares + shares.team_shares + shares.user_shares
+	return (shares.link_shares ?? 0) + (shares.team_shares ?? 0) + (shares.user_shares ?? 0)
 })
 
-onMounted(async () => {
-	loading.value = true
-	try {
-		data.value = await adminOverviewService.getOverview()
-	} catch (e) {
-		error(e)
-	} finally {
-		loading.value = false
-	}
-})
 </script>
 
 <style lang="scss" scoped>
