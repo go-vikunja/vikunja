@@ -12,13 +12,13 @@
 				>{{ $t('user.settings.newPassword') }}</label>
 				<Password
 					:validate-initially="true"
-					@update:modelValue="v => passwordUpdate.newPassword = v"
+					@update:modelValue="v => passwordUpdate.new_password = v"
 					@submit="updatePassword"
 				/>
 			</div>
 			<FormField
 				id="currentPassword"
-				v-model="passwordUpdate.oldPassword"
+				v-model="passwordUpdate.old_password"
 				:label="$t('user.settings.currentPassword')"
 				autocomplete="current-password"
 				:placeholder="$t('user.settings.currentPasswordPlaceholder')"
@@ -63,7 +63,7 @@ useTitle(() => `${t('user.settings.newPasswordTitle')} - ${t('user.settings.titl
 
 const authStore = useAuthStore()
 const isLocalUser = computed(() => authStore.info?.is_local_user)
-const isValid = computed(() => validatePassword(passwordUpdate.newPassword) === true && passwordUpdate.oldPassword !== '')
+const isValid = computed(() => validatePassword(passwordUpdate.new_password) === true && passwordUpdate.old_password !== '')
 
 async function updatePassword() {
 	await passwordUpdateService.update(passwordUpdate)
