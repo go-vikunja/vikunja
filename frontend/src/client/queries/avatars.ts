@@ -61,7 +61,7 @@ export function uploadAvatarMutationOptions() {
 			username: string,
 			blob: Blob,
 		}) => {
-			// The upload fails without a file name on the multipart part.
+			// The upload fails without a file name.
 			const avatar = new File([blob], 'avatar.png', {type: blob.type})
 			const {data} = await userAvatarUpload({body: {avatar}})
 			return data
