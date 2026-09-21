@@ -57,6 +57,11 @@ function timeEntryPage(items: TimeEntryResponse[]): TimeEntryPage {
 it('ignores malformed payloads', () => {
 	expect(parseServerCacheEvent('timer.created', undefined, 7)).toBeNull()
 	expect(parseServerCacheEvent('notification.created', 'task.comment', 7)).toBeNull()
+	expect(parseServerCacheEvent('notification.created', {name: 'team.member.added'}, 7)).toBeNull()
+	expect(parseServerCacheEvent('notification.created', {
+		id: 0,
+		name: 'team.member.added',
+	}, 7)).toBeNull()
 })
 
 it('rejects timer entries that do not belong to the current user', () => {
