@@ -34,27 +34,27 @@ import (
 
 // VikunjaInfos holds public information about this Vikunja instance.
 type VikunjaInfos struct {
-	Version                    string            `json:"version" doc:"The Vikunja version this instance runs."`
-	FrontendURL                string            `json:"frontend_url" doc:"The publicly configured frontend URL of this instance."`
-	Motd                       string            `json:"motd" doc:"The message of the day, shown to all users."`
-	LinkSharingEnabled         bool              `json:"link_sharing_enabled" doc:"Whether sharing projects via public links is enabled."`
-	MaxFileSize                string            `json:"max_file_size" doc:"The maximum allowed upload size, as a human-readable string (e.g. 20MB)."`
-	MaxItemsPerPage            int               `json:"max_items_per_page" doc:"The maximum number of items a paginated endpoint returns per page."`
-	AvailableMigrators         []string          `json:"available_migrators" doc:"The migrators enabled on this instance."`
-	TaskAttachmentsEnabled     bool              `json:"task_attachments_enabled" doc:"Whether task attachments are enabled."`
-	EnabledBackgroundProviders []string          `json:"enabled_background_providers" doc:"The project-background providers enabled on this instance (e.g. upload, unsplash)."`
-	TotpEnabled                bool              `json:"totp_enabled" doc:"Whether TOTP two-factor authentication is enabled."`
-	Legal                      LegalInfo         `json:"legal" doc:"Links to the instance's legal documents."`
-	CaldavEnabled              bool              `json:"caldav_enabled" doc:"Whether the CalDAV interface is enabled."`
-	AuthInfo                   AuthInfo          `json:"auth" doc:"The authentication methods enabled on this instance."`
-	EmailRemindersEnabled      bool              `json:"email_reminders_enabled" doc:"Whether email reminders are enabled."`
-	UserDeletionEnabled        bool              `json:"user_deletion_enabled" doc:"Whether users may delete their own account."`
-	TaskCommentsEnabled        bool              `json:"task_comments_enabled" doc:"Whether task comments are enabled."`
-	DemoModeEnabled            bool              `json:"demo_mode_enabled" doc:"Whether this instance runs in demo mode (data is periodically reset)."`
-	WebhooksEnabled            bool              `json:"webhooks_enabled" doc:"Whether webhooks are enabled."`
-	PublicTeamsEnabled         bool              `json:"public_teams_enabled" doc:"Whether public teams are enabled."`
-	AllowIconChanges           bool              `json:"allow_icon_changes" doc:"Whether users may change project icons."`
-	EnabledProFeatures         []license.Feature `json:"enabled_pro_features" doc:"The licensed pro features enabled on this instance."`
+	Version                    string    `json:"version" doc:"The Vikunja version this instance runs."`
+	FrontendURL                string    `json:"frontend_url" doc:"The publicly configured frontend URL of this instance."`
+	Motd                       string    `json:"motd" doc:"The message of the day, shown to all users."`
+	LinkSharingEnabled         bool      `json:"link_sharing_enabled" doc:"Whether sharing projects via public links is enabled."`
+	MaxFileSize                string    `json:"max_file_size" doc:"The maximum allowed upload size, as a human-readable string (e.g. 20MB)."`
+	MaxItemsPerPage            int       `json:"max_items_per_page" doc:"The maximum number of items a paginated endpoint returns per page."`
+	AvailableMigrators         []string  `json:"available_migrators" doc:"The migrators enabled on this instance."`
+	TaskAttachmentsEnabled     bool      `json:"task_attachments_enabled" doc:"Whether task attachments are enabled."`
+	EnabledBackgroundProviders []string  `json:"enabled_background_providers" doc:"The project-background providers enabled on this instance (e.g. upload, unsplash)."`
+	TotpEnabled                bool      `json:"totp_enabled" doc:"Whether TOTP two-factor authentication is enabled."`
+	Legal                      LegalInfo `json:"legal" doc:"Links to the instance's legal documents."`
+	CaldavEnabled              bool      `json:"caldav_enabled" doc:"Whether the CalDAV interface is enabled."`
+	AuthInfo                   AuthInfo  `json:"auth" doc:"The authentication methods enabled on this instance."`
+	EmailRemindersEnabled      bool      `json:"email_reminders_enabled" doc:"Whether email reminders are enabled."`
+	UserDeletionEnabled        bool      `json:"user_deletion_enabled" doc:"Whether users may delete their own account."`
+	TaskCommentsEnabled        bool      `json:"task_comments_enabled" doc:"Whether task comments are enabled."`
+	DemoModeEnabled            bool      `json:"demo_mode_enabled" doc:"Whether this instance runs in demo mode (data is periodically reset)."`
+	WebhooksEnabled            bool      `json:"webhooks_enabled" doc:"Whether webhooks are enabled."`
+	PublicTeamsEnabled         bool      `json:"public_teams_enabled" doc:"Whether public teams are enabled."`
+	AllowIconChanges           bool      `json:"allow_icon_changes" doc:"Whether users may change project icons."`
+	EnabledProFeatures         []string  `json:"enabled_pro_features" doc:"The licensed pro features enabled on this instance."`
 	// ConcurrentWrites reports whether the configured database can handle concurrent writes. It is false on SQLite, where overlapping write transactions deadlock, so clients should serialize batched writes instead of firing them in parallel.
 	ConcurrentWrites bool `json:"concurrent_writes" doc:"Whether the configured database supports concurrent writes. False on SQLite; clients should serialize batched writes when this is false."`
 }
@@ -110,7 +110,7 @@ func BuildInfo() VikunjaInfos {
 		PublicTeamsEnabled:     config.ServiceEnablePublicTeams.GetBool(),
 		AllowIconChanges:       config.ServiceAllowIconChanges.GetBool(),
 		ConcurrentWrites:       config.DatabaseType.GetString() != "sqlite",
-		EnabledProFeatures:     license.EnabledProFeatures(),
+		EnabledProFeatures:     []string{},
 		AvailableMigrators: []string{
 			(&vikunja_file.FileMigrator{}).Name(),
 			(&ticktick.Migrator{}).Name(),
@@ -134,6 +134,10 @@ func BuildInfo() VikunjaInfos {
 				Enabled: config.AuthOpenIDEnabled.GetBool(),
 			},
 		},
+	}
+
+	for _, feature := range license.EnabledProFeatures() {
+		info.EnabledProFeatures = append(info.EnabledProFeatures, feature.String())
 	}
 
 	providers, err := openid.GetAllProviders()
