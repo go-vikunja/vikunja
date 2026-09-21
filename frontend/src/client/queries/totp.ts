@@ -4,7 +4,10 @@ import type {VikunjaErrorModel} from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
 import {i18n} from '@/i18n'
 
-export const totpKeys = {current: ['totp'] as const, qr: ['totp-qr'] as const}
+export const totpKeys = {
+	current: ['totp'] as const,
+	qr: ['totp-qr'] as const,
+}
 
 export function totpQuery() {
 	return queryOptions({
