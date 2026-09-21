@@ -1,5 +1,12 @@
-import {apiV2Url, HTTPFactory} from '@/helpers/fetcher'
+import {getApiBaseUrl, getApiV2BaseUrl} from '@/helpers/fetcher'
+import {authRefreshToken} from '@/client/generated'
+import {createClient} from '@/client/generated/client'
 import {isDesktopApp, refreshDesktopToken} from '@/helpers/desktopAuth'
+
+const refreshClient = createClient({
+	credentials: 'include',
+	throwOnError: true,
+})
 
 let savedToken: string | null = null
 
@@ -107,7 +114,8 @@ export async function refreshToken(persist: boolean): Promise<void> {
 async function doRefresh(persist: boolean): Promise<void> {
 	// Snapshot the epoch so we can tell if a logout happened while we awaited.
 	const epochAtStart = authEpoch
-	const loggedOutSinceStart = () => authEpoch !== epochAtStart
+	const serverAtStart = window.API_URL
+	const loggedOutSinceStart = () => authEpoch !== epochAtStart || window.API_URL !== serverAtStart
 
 	// Capture the tokens before waiting for the lock so we can detect
 	// if another tab refreshed while we were queued.
@@ -159,13 +167,12 @@ async function doRefresh(persist: boolean): Promise<void> {
 		}
 
 		// We hold the lock and no one else refreshed — make the API call.
-		const HTTP = HTTPFactory()
 		try {
 			let response
 			try {
-				response = await HTTP.post(apiV2Url('user/token/refresh'))
+				response = await authRefreshToken({client: refreshClient, baseUrl: getApiV2BaseUrl().replace(/\/$/, '')})
 			} catch (e) {
-				if ((e as {response?: {status?: number}})?.response?.status === 429) {
+				if ((e as {status?: number})?.status === 429) {
 					throw e
 				}
 				if (loggedOutSinceStart()) {
@@ -174,11 +181,12 @@ async function doRefresh(persist: boolean): Promise<void> {
 				// Pre-v2 browsers only hold the v1-path cookie, and some deployments
 				// can't reach v2 at all; v1 re-seeds both cookies.
 				// Drop this fallback once pre-v2 clients have cycled out.
-				response = await HTTP.post('user/token/refresh')
+				response = await authRefreshToken({client: refreshClient, baseUrl: getApiBaseUrl().replace(/\/$/, '')})
 			}
 			if (loggedOutSinceStart()) {
 				return
 			}
+			if (!response.data.token) throw new Error('Refresh response has no token')
 			saveToken(response.data.token, persist)
 		} catch (e) {
 			throw new Error('Error renewing token: ', {cause: e})

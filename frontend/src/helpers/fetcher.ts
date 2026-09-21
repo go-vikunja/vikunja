@@ -54,7 +54,7 @@ async function doRefresh(): Promise<string | null> {
 	} catch (e) {
 		// A 429 means the refresh endpoint is already rate-limited; retrying
 		// would just send another request into the same exhausted window.
-		if ((e as {cause?: {response?: {status?: number}}})?.cause?.response?.status === 429) {
+		if ((e as {cause?: {status?: number}})?.cause?.status === 429) {
 			console.warn('[Vikunja] Token refresh rate-limited, not retrying')
 			return null
 		}
