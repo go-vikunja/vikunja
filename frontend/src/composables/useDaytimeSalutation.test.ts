@@ -42,7 +42,7 @@ function setUser() {
 		name: 'Ada',
 		username: 'ada',
 		type: AUTH_TYPES.LINK_SHARE,
-		created: new Date('2024-01-15T10:00:00Z'),
+		created: '2024-01-15T10:00:00Z',
 	} as never, false)
 }
 
