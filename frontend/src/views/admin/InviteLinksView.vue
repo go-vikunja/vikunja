@@ -313,7 +313,7 @@ async function submitCreate() {
 			expires_at: expiresAt?.toISOString() ?? null,
 			skip_email_confirm: form.skipEmailConfirm,
 		}})
-		const base = configStore.frontendUrl || new URL(import.meta.env.BASE_URL, window.location.origin).toString()
+		const base = configStore.frontend_url || new URL(import.meta.env.BASE_URL, window.location.origin).toString()
 		createdUrl.value = new URL(`register#invite-link=${encodeURIComponent(link.token!)}`, base.endsWith('/') ? base : `${base}/`).toString()
 		await loadLinks(1)
 	} catch (e) {

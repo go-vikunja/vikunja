@@ -16,7 +16,7 @@ vi.mock('@/stores/auth', () => ({
 }))
 
 vi.mock('@/stores/config', () => ({
-	useConfigStore: () => ({enabledBackgroundProviders: []}),
+	useConfigStore: () => ({enabled_background_providers: []}),
 }))
 
 const DropdownStub = defineComponent({

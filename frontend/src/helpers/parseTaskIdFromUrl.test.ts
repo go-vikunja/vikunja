@@ -50,7 +50,7 @@ describe('parseTaskIdFromUrl', () => {
 	})
 
 	it('accepts urls from the configured frontend url', () => {
-		useConfigStore().frontendUrl = 'https://vikunja.example.com/'
+		useConfigStore().frontend_url = 'https://vikunja.example.com/'
 
 		expect(parseTaskIdFromUrl('https://vikunja.example.com/tasks/9')).toBe(9)
 		expect(parseTaskIdFromUrl('http://localhost:3000/tasks/9')).toBe(9)
@@ -60,7 +60,7 @@ describe('parseTaskIdFromUrl', () => {
 	})
 
 	it('respects a path in the configured frontend url', () => {
-		useConfigStore().frontendUrl = 'https://example.com/vikunja/'
+		useConfigStore().frontend_url = 'https://example.com/vikunja/'
 
 		expect(parseTaskIdFromUrl('https://example.com/vikunja/tasks/9')).toBe(9)
 		expect(parseTaskIdFromUrl('https://example.com/tasks/9')).toBeNull()
@@ -72,7 +72,7 @@ describe('parseTaskIdFromUrl', () => {
 	})
 
 	it('falls back to the current origin when the configured frontend url is malformed', () => {
-		useConfigStore().frontendUrl = 'not a url'
+		useConfigStore().frontend_url = 'not a url'
 
 		expect(parseTaskIdFromUrl('http://localhost:3000/tasks/9')).toBe(9)
 		expect(parseTaskIdFromUrl('https://vikunja.example.com/tasks/9')).toBeNull()

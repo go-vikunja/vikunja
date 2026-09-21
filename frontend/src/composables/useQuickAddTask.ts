@@ -127,7 +127,7 @@ export function useQuickAddTask() {
 		await runWrites(labels, label => {
 			assertClientRequestContext(context)
 			return addLabel.mutateAsync({taskId: task.id!, label: {...label, id: label.id!}})
-		}, config.concurrentWrites)
+		}, config.concurrent_writes)
 		return {task: {...task, labels: [...(task.labels ?? []), ...labels]}, skipped}
 	}
 
@@ -136,7 +136,7 @@ export function useQuickAddTask() {
 		await runWrites(built.task.assignees ?? [], user => {
 			assertClientRequestContext(context)
 			return addAssignee.mutateAsync({taskId: task.id!, user: {...user, id: user.id!}})
-		}, config.concurrentWrites)
+		}, config.concurrent_writes)
 		return addLabelsToTask(
 			{task: {...task, assignees: built.task.assignees}, parsedLabels: built.parsedLabels},
 			context,
@@ -167,7 +167,7 @@ export function useQuickAddTask() {
 			} catch {
 				assertClientRequestContext(context)
 			}
-		}, config.concurrentWrites)
+		}, config.concurrent_writes)
 		return result
 	}
 

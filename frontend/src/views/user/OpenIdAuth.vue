@@ -88,7 +88,7 @@ function pendingTotpKey(provider: string): string {
 }
 
 function findProvider(providerKey: string): IProvider | undefined {
-	return configStore.auth.openidConnect.providers?.find((p: IProvider) => p.key === providerKey)
+	return configStore.auth.openid_connect.providers?.find((p: IProvider) => p.key === providerKey)
 }
 
 async function authenticateWithCode() {
