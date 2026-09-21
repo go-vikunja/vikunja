@@ -201,6 +201,35 @@ describe('refreshToken in-flight dedup', () => {
 	})
 })
 
+describe('refreshToken across a server switch', () => {
+	const originalApiUrl = window.API_URL
+
+	beforeEach(() => {
+		resolvePost = null
+		post.mockClear()
+		removeToken()
+		localStorage.clear()
+		window.API_URL = 'http://first/api/v1/'
+	})
+
+	afterEach(() => {
+		window.API_URL = originalApiUrl
+	})
+
+	it('does not save the token when the user switched servers while the refresh was in flight', async () => {
+		const p = refreshToken(true)
+		expect(post).toHaveBeenCalledTimes(1)
+
+		window.API_URL = 'http://second/api/v1/'
+
+		settlePost()
+		await p
+
+		expect(localStorage.getItem('token')).toBeNull()
+		expect(getToken()).toBeNull()
+	})
+})
+
 describe('refreshToken v1 cookie fallback', () => {
 	beforeEach(() => {
 		post.mockClear()
