@@ -5,7 +5,7 @@ import {useBaseStore} from '@/stores/base'
 import {useTasks} from '@/composables/useTasks'
 const configStore = useConfigStore()
 const baseStore = useBaseStore()
-const migratorsEnabled = computed(() => configStore.availableMigrators?.length > 0)
+const migratorsEnabled = computed(() => configStore.available_migrators?.length > 0)
 const query = useTasks({params: {per_page: 1}}, {enabled: () => migratorsEnabled.value && !baseStore.hasTasks})
 const loading = query.isFetching
 const show = computed(() => migratorsEnabled.value

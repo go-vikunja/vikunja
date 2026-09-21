@@ -111,7 +111,7 @@ const router = createRouter({
 					component: () => import('@/views/user/settings/Caldav.vue'),
 					beforeEnter: async () => {
 						const {useConfigStore} = await import('@/stores/config')
-						if (!useConfigStore().caldavEnabled) {
+						if (!useConfigStore().caldav_enabled) {
 							return {name: 'user.settings.general'}
 						}
 					},
@@ -157,7 +157,7 @@ const router = createRouter({
 					component: () => import('@/views/user/settings/TOTP.vue'),
 					beforeEnter: async () => {
 						const {useConfigStore} = await import('@/stores/config')
-						if (!useConfigStore().totpEnabled || !useAuthStore().info?.is_local_user) {
+						if (!useConfigStore().totp_enabled || !useAuthStore().info?.is_local_user) {
 							return {name: 'user.settings.general'}
 						}
 					},

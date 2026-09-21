@@ -265,8 +265,8 @@ const commentSortOrder = computed(() => localSortOrder.value ?? authStore.settin
 
 const currentPage = ref(1)
 const commentQuery = useQuery(computed(() => ({
-	...commentsQuery(props.taskId, commentSortOrder.value, currentPage.value, configStore.maxItemsPerPage),
-	enabled: configStore.taskCommentsEnabled && props.taskId > 0,
+	...commentsQuery(props.taskId, commentSortOrder.value, currentPage.value, configStore.max_items_per_page),
+	enabled: configStore.task_comments_enabled && props.taskId > 0,
 })))
 const comments = computed(() => commentQuery.data.value?.items ?? [])
 const totalPages = computed(() => commentQuery.data.value?.total_pages ?? 0)
@@ -289,7 +289,7 @@ const saved = ref<ITask['id'] | null>(null)
 const saving = ref<ITask['id'] | null>(null)
 
 const currentUserId = computed(() => authStore.info?.id ?? null)
-const enabled = computed(() => configStore.taskCommentsEnabled)
+const enabled = computed(() => configStore.task_comments_enabled)
 const actions = computed(() => {
 	if (!props.canWrite) {
 		return {}
@@ -309,7 +309,7 @@ const actions = computed(() => {
 	}))
 })
 
-const frontendUrl = computed(() => configStore.frontendUrl)
+const frontend_url = computed(() => configStore.frontend_url)
 const commentStorageKey = computed(() => `task-comment-${props.taskId}`)
 
 const commentsRef = ref<HTMLElement | null>(null)
@@ -519,7 +519,7 @@ async function deleteComment(id: number | null) {
 }
 
 function getCommentUrl(commentId: string) {
-	const baseUrl = frontendUrl.value.endsWith('/') ? frontendUrl.value.slice(0, -1) : frontendUrl.value
+	const baseUrl = frontend_url.value.endsWith('/') ? frontend_url.value.slice(0, -1) : frontend_url.value
 	const url = new URL(location.pathname + location.search, baseUrl)
 	url.hash = `comment-${commentId}`
 	return url.toString()

@@ -76,21 +76,21 @@ function redirectToSpecifiedProvider() {
 		const redirectToProviderValue = searchParams.get('redirectToProvider')
 
 		if (
-			auth.openidConnect.providers?.length === 1
+			auth.openid_connect.providers?.length === 1
 			&& (window.location.pathname.startsWith('/login') || window.location.pathname === '/') // Kinda hacky, but prevents an endless loop.
 			&& (redirectToProviderValue === null
 				|| redirectToProviderValue === 'true'
 				|| redirectToProviderValue === '1')
  		) {
-			redirectToProvider(auth.openidConnect.providers[0])
+			redirectToProvider(auth.openid_connect.providers[0])
 		}
 
 		// let's try to find the provider to logon to !
-		const wantedProvider = auth.openidConnect.providers?.find(p => p.key === redirectToProviderValue)
+		const wantedProvider = auth.openid_connect.providers?.find(p => p.key === redirectToProviderValue)
 		if (wantedProvider) {
 			redirectToProvider(wantedProvider)
 		}
-		console.warn(`Could not find provider to redirect to.\nWanted: ${wantedProvider}\nAvailable: ${auth.openidConnect.providers?.map(p => p.key)}`)
+		console.warn(`Could not find provider to redirect to.\nWanted: ${wantedProvider}\nAvailable: ${auth.openid_connect.providers?.map(p => p.key)}`)
 	}
 }
 
@@ -317,7 +317,7 @@ export const useAuthStore = defineStore('auth', () => {
 		setIsLoading(true)
 		setLoggedInVia(null)
 
-		const fullProvider: IProvider = configStore.auth.openidConnect.providers.find((p: IProvider) => p.key === provider)
+		const fullProvider: IProvider = configStore.auth.openid_connect.providers.find((p: IProvider) => p.key === provider)
 
 		const data: Record<string, string> = {
 			code: code,
@@ -523,7 +523,7 @@ export const useAuthStore = defineStore('auth', () => {
 		try {
 			const oldName = info.value?.name
 			let settingsUpdate = {...settings}
-			if (configStore.demoModeEnabled) {
+			if (configStore.demo_mode_enabled) {
 				settingsUpdate = {
 					...settingsUpdate,
 					language: null,
@@ -614,7 +614,7 @@ export const useAuthStore = defineStore('auth', () => {
 			window.location.href = oidcLogoutUrl
 			return
 		}
-		const fullProvider: IProvider|undefined = configStore.auth.openidConnect.providers?.find((p: IProvider) => p.key === loggedInVia)
+		const fullProvider: IProvider|undefined = configStore.auth.openid_connect.providers?.find((p: IProvider) => p.key === loggedInVia)
 		if (fullProvider && redirectToProviderOnLogout(fullProvider)) {
 			return
 		}

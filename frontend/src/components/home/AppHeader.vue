@@ -102,14 +102,14 @@
 					{{ $t('admin.title') }}
 				</DropdownItem>
 				<DropdownItem
-					v-if="imprintUrl"
-					:href="imprintUrl"
+					v-if="imprint_url"
+					:href="imprint_url"
 				>
 					{{ $t('navigation.imprint') }}
 				</DropdownItem>
 				<DropdownItem
-					v-if="privacyPolicyUrl"
-					:href="privacyPolicyUrl"
+					v-if="privacy_policy_url"
+					:href="privacy_policy_url"
 				>
 					{{ $t('navigation.privacy') }}
 				</DropdownItem>
@@ -175,8 +175,8 @@ const pageTitle = computed(() => {
 const authStore = useAuthStore()
 
 const configStore = useConfigStore()
-const imprintUrl = computed(() => configStore.legal.imprintUrl)
-const privacyPolicyUrl = computed(() => configStore.legal.privacyPolicyUrl)
+const imprint_url = computed(() => configStore.legal.imprint_url)
+const privacy_policy_url = computed(() => configStore.legal.privacy_policy_url)
 const adminPanelEnabled = computed(() => configStore.isProFeatureEnabled(PRO_FEATURE.ADMIN_PANEL))
 </script>
 

@@ -20,12 +20,12 @@ useTitle(() => t('user.settings.title'))
 const configStore = useConfigStore()
 const authStore = useAuthStore()
 
-const totpEnabled = computed(() => configStore.totpEnabled)
-const caldavEnabled = computed(() => configStore.caldavEnabled)
+const totp_enabled = computed(() => configStore.totp_enabled)
+const caldav_enabled = computed(() => configStore.caldav_enabled)
 const migratorsEnabled = computed(() => configStore.migratorsEnabled)
 const isLocalUser = computed(() => authStore.info?.is_local_user)
-const userDeletionEnabled = computed(() => configStore.userDeletionEnabled)
-const webhooksEnabled = computed(() => configStore.webhooksEnabled)
+const user_deletion_enabled = computed(() => configStore.user_deletion_enabled)
+const webhooks_enabled = computed(() => configStore.webhooks_enabled)
 
 const navigationItems = computed(() => {
 	const items = [
@@ -50,7 +50,7 @@ const navigationItems = computed(() => {
 		{
 			title: t('user.settings.totp.title'),
 			routeName: 'user.settings.totp',
-			condition: totpEnabled.value && isLocalUser.value,
+			condition: totp_enabled.value && isLocalUser.value,
 		},
 		{
 			title: t('user.export.title'),
@@ -65,7 +65,7 @@ const navigationItems = computed(() => {
 		{
 			title: t('user.settings.caldav.title'),
 			routeName: 'user.settings.caldav',
-			condition: caldavEnabled.value,
+			condition: caldav_enabled.value,
 		},
 		{
 			title: 'MCP',
@@ -86,7 +86,7 @@ const navigationItems = computed(() => {
 		{
 			title: t('user.settings.webhooks.title'),
 			routeName: 'user.settings.webhooks',
-			condition: webhooksEnabled.value,
+			condition: webhooks_enabled.value,
 		},
 		{
 			title: t('user.settings.bots.title'),
@@ -95,7 +95,7 @@ const navigationItems = computed(() => {
 		{
 			title: t('user.deletion.title'),
 			routeName: 'user.settings.deletion',
-			condition: userDeletionEnabled.value,
+			condition: user_deletion_enabled.value,
 		},
 	]
 

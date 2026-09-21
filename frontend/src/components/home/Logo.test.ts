@@ -9,7 +9,7 @@ vi.mock('@/stores/auth', () => ({
 }))
 
 vi.mock('@/stores/config', () => ({
-	useConfigStore: () => ({allowIconChanges: false}),
+	useConfigStore: () => ({allow_icon_changes: false}),
 }))
 
 vi.mock('@/composables/useColorScheme', () => ({

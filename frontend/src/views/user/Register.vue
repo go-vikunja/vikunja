@@ -18,7 +18,7 @@
 			</RouterLink>
 		</template>
 	</template>
-	<div v-else-if="isInvite || configStore.auth.local.registrationEnabled">
+	<div v-else-if="isInvite || configStore.auth.local.registration_enabled">
 		<Message
 			v-if="isInvite && inviteState.status === 'ready' && inviteState.link.teams?.length"
 			class="mbe-4"
@@ -102,7 +102,7 @@
 			</XButton>
 
 			<Message
-				v-if="configStore.demoModeEnabled"
+				v-if="configStore.demo_mode_enabled"
 				variant="warning"
 				class="mbs-4"
 			>
