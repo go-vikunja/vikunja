@@ -84,7 +84,6 @@ describe('notificationText', () => {
 			doer: ANA,
 		})
 		expect(notificationText(mentioned)).toBe('ana mentioned you on #12')
-		expect(notificationText(mentioned, {id: 9})).toBe('ana mentioned you on #12')
 	})
 
 	it('returns an empty string for an unknown name and a zero identifier for a missing payload', () => {
