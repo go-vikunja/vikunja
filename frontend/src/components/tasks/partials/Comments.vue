@@ -389,6 +389,7 @@ async function changePage(page: number) {
 async function toggleSortOrder() {
 	const newOrder = comment_sort_order.value === 'asc' ? 'desc' : 'asc'
 	if (!authStore.isLinkShareAuth) {
+		localSortOrder.value = newOrder
 		try {
 			await updateUserSettings.mutateAsync({
 				settings: {
@@ -401,7 +402,11 @@ async function toggleSortOrder() {
 				},
 				showMessage: false,
 			})
-		} catch { return }
+		} catch {
+			return
+		} finally {
+			localSortOrder.value = null
+		}
 	} else {
 		localSortOrder.value = newOrder
 	}
