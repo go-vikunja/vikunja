@@ -141,9 +141,10 @@ const newToken = ref<Token>()
 async function createToken() {
 	try {
 		newToken.value = await createMutation.mutateAsync()
+	} catch { return } finally {
 		// Detaching the observer lets gcTime: 0 drop the cached token.
 		createMutation.reset()
-	} catch { return }
+	}
 }
 
 async function deleteToken(token: Token) {
