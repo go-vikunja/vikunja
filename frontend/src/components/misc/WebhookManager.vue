@@ -21,7 +21,8 @@ import {isValidHttpUrl} from '@/helpers/isValidHttpUrl'
 
 const props = defineProps<{scope: WebhookScope}>()
 const {data: webhookData, isFetching, isPending} = useQuery(computed(() => webhooksQuery(props.scope)))
-const {data: eventData} = useQuery(computed(() => webhookEventsQuery(props.scope.kind)))
+const {data: eventData, isPending: isEventsPending} = useQuery(computed(() => webhookEventsQuery(props.scope.kind)))
+const isLoadingInitial = computed(() => isPending.value || isEventsPending.value)
 const webhooks = computed(() => webhookData.value ?? [])
 const availableEvents = computed(() => eventData.value ?? [])
 const createMutation = useCreateWebhookMutation()
@@ -112,7 +113,7 @@ function doDelete() {
 <template>
 	<div
 		class="loader-container"
-		:class="{'is-loading': isPending}"
+		:class="{'is-loading': isLoadingInitial}"
 	>
 		<XButton
 			v-if="!(webhooks?.length === 0 || showNewForm)"
@@ -124,7 +125,7 @@ function doDelete() {
 		</XButton>
 
 		<div
-			v-if="!isPending && (webhooks?.length === 0 || showNewForm)"
+			v-if="!isLoadingInitial && (webhooks?.length === 0 || showNewForm)"
 			class="p-4"
 		>
 			<FormField
