@@ -94,7 +94,12 @@ async function requestDataExport() {
 
 	try {
 		await requestMutation.mutateAsync(password.value)
-	} catch { return }
+	} catch {
+		return
+	} finally {
+		// Evicts the plaintext password from the mutation cache.
+		requestMutation.reset()
+	}
 	password.value = ''
 }
 </script>
