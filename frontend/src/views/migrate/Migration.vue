@@ -4,7 +4,7 @@
 		<p>{{ $t('migrate.description') }}</p>
 		<div class="migration-services">
 			<RouterLink
-				v-for="{name, id, icon, isCSVMigrator} in availableMigrators"
+				v-for="{name, id, icon, isCSVMigrator} in available_migrators"
 				:key="id"
 				class="migration-service-link"
 				:to="isCSVMigrator ? {name: 'migrate.csv'} : {name: 'migrate.service', params: {service: id}}"
@@ -33,7 +33,8 @@ const {t} = useI18n({useScope: 'global'})
 useTitle(() => t('migrate.title'))
 
 const configStore = useConfigStore()
-const availableMigrators = computed(() => configStore.availableMigrators
+const available_migrators = computed(() => configStore.available_migrators
+	.filter((id): id is keyof typeof MIGRATORS => Object.hasOwn(MIGRATORS, id))
 	.map((id) => MIGRATORS[id])
 	.filter((item) => Boolean(item)),
 )
