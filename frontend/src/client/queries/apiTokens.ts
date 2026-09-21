@@ -23,10 +23,14 @@ export function mcpInfoQuery() {
 	return queryOptions({queryKey: apiTokenKeys.mcp, queryFn: async ({signal}) => (await mcpInfo({signal})).data})
 }
 export function createApiTokenMutationOptions() {
-	return contextMutationOptions({
-		mutationFn: async (body: ApiTokenWritable) => (await tokensCreate({body})).data,
-		onSettled: (_body, client) => client.invalidateQueries({queryKey: apiTokenKeys.lists}),
-	})
+	return {
+		...contextMutationOptions({
+			mutationFn: async (body: ApiTokenWritable) => (await tokensCreate({body})).data,
+			onSettled: (_body, client) => client.invalidateQueries({queryKey: apiTokenKeys.lists}),
+		}),
+		// Response carries the plaintext token.
+		gcTime: 0,
+	}
 }
 export function deleteApiTokenMutationOptions() {
 	return contextMutationOptions({
