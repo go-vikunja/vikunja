@@ -5,7 +5,7 @@ import {
 	adminProjectsList, adminProjectsPatchOwner, adminInviteLinksList, adminInviteLinksCreate,
 	adminInviteLinksDelete, adminTeamsList,
 	type AdminUser, type PaginatedAdminUser, type CreateUserBodyWritable, type UserInfoBody,
-	type AdminInviteLinksCreateData,
+	type CreateInviteLinkBodyWritable,
 } from '@/client/generated'
 import {captureClientRequestContext, assertClientRequestContext} from '@/client/requestContext'
 import {contextMutationOptions} from './contextMutation'
@@ -120,7 +120,7 @@ export function reassignAdminProjectMutationOptions() {
 export function createAdminInviteMutationOptions() {
 	return {
 		...contextMutationOptions({
-			mutationFn: async (body: AdminInviteLinksCreateData['body']) => (await adminInviteLinksCreate({body})).data,
+			mutationFn: async (body: CreateInviteLinkBodyWritable) => (await adminInviteLinksCreate({body})).data,
 			onSettled: (_input, client) => client.invalidateQueries({queryKey: adminKeys.invites}),
 		}),
 		// Result holds the one-time invite token.
