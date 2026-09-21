@@ -4,7 +4,7 @@ import {
 	adminUsersSetPassword, adminUsersPasswordResetEmail, adminUsersDelete,
 	adminProjectsList, adminProjectsPatchOwner, adminInviteLinksList, adminInviteLinksCreate,
 	adminInviteLinksDelete, adminTeamsList,
-	type AdminUser, type PaginatedAdminUser, type CreateUserBodyWritable, type User,
+	type AdminUser, type PaginatedAdminUser, type CreateUserBodyWritable, type UserInfoBody,
 	type AdminInviteLinksCreateData,
 } from '@/client/generated'
 import {captureClientRequestContext, assertClientRequestContext} from '@/client/requestContext'
@@ -49,7 +49,7 @@ export function adminTeamsQuery(q: string) {
 function patchUser(client: QueryClient, updated: AdminUser | undefined) {
 	if (!updated?.id) return
 	client.setQueriesData<PaginatedAdminUser>({queryKey: adminKeys.users}, current => current && ({...current, items: current.items?.map(u => u.id === updated.id ? updated : u)}))
-	client.setQueriesData<User>({queryKey: accountKeys.current}, current => current?.id === updated.id ? {...current, is_admin: updated.is_admin} : current)
+	client.setQueriesData<UserInfoBody>({queryKey: accountKeys.current}, current => current?.id === updated.id ? {...current, is_admin: updated.is_admin} : current)
 }
 function invalidateUsers(client: QueryClient) {
 	return Promise.all([
