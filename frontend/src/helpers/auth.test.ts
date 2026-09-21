@@ -17,9 +17,8 @@ const post = vi.hoisted(() => vi.fn(() => {
 	})
 }))
 
-vi.mock('@/helpers/fetcher', () => ({
-	getApiV2BaseUrl: () => '/api/v2/',
-	getApiBaseUrl: () => '/api/v1/',
+vi.mock('@/helpers/apiUrl', () => ({
+	getApiBaseUrl: () => '/api/v2/',
 }))
 
 vi.mock('@/client/generated', () => ({authRefreshToken: post}))

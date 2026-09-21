@@ -1,5 +1,5 @@
 import {getAuthSessionEpoch, getToken, getTokenIdentity} from '@/helpers/auth'
-import {getApiV2BaseUrl} from '@/helpers/fetcher'
+import {getApiBaseUrl} from '@/helpers/apiUrl'
 
 export type ClientRequestContext = {
 	identity: ReturnType<typeof getTokenIdentity>
@@ -11,7 +11,7 @@ export function captureClientRequestContext(): ClientRequestContext {
 	return {
 		identity: getTokenIdentity(getToken()),
 		authSessionEpoch: getAuthSessionEpoch(),
-		apiV2BaseUrl: getApiV2BaseUrl(),
+		apiV2BaseUrl: getApiBaseUrl(),
 	}
 }
 

@@ -31,22 +31,8 @@ vi.mock('@/helpers/auth', () => ({
 	}),
 }))
 
-vi.mock('@/helpers/fetcher', () => ({
-	AuthenticatedHTTPFactory: () => fakeHttp(),
-	HTTPFactory: () => fakeHttp(),
-}))
 
-function fakeHttp() {
-	return {
-		post: auth.post,
-		get: vi.fn(),
-		request: vi.fn(),
-		interceptors: {
-			request: {use: vi.fn()},
-			response: {use: vi.fn()},
-		},
-	}
-}
+
 
 vi.mock('@/router', () => ({
 	default: {push: vi.fn(), isReady: vi.fn().mockResolvedValue(undefined)},

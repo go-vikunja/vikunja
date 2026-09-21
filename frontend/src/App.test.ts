@@ -9,22 +9,6 @@ import {useAuthStore} from '@/stores/auth'
 import {AUTH_TYPES} from '@/constants/auth'
 import en from '@/i18n/lang/en.json'
 
-vi.mock('@/helpers/fetcher', async importOriginal => {
-	const httpStub = () => Object.assign(
-		vi.fn(async () => ({data: new Blob()})),
-		{
-			get: vi.fn(async () => ({data: []})),
-			post: vi.fn(async () => ({data: {}})),
-			interceptors: {request: {use: vi.fn()}, response: {use: vi.fn()}},
-		},
-	)
-	return {
-		...await importOriginal<typeof import('@/helpers/fetcher')>(),
-		AuthenticatedHTTPFactory: httpStub,
-		HTTPFactory: httpStub,
-	}
-})
-
 const sdk = vi.hoisted(() => ({
 	userDeletionConfirm: vi.fn(),
 	userShow: vi.fn(),

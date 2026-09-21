@@ -4,7 +4,7 @@ import {beforeEach, describe, expect, it, vi} from 'vitest'
 const sdk = vi.hoisted(() => ({sharesList: vi.fn(), sharesCreate: vi.fn(), sharesDelete: vi.fn()}))
 vi.mock('@/client/generated', () => sdk)
 vi.mock('@/message', () => ({success: vi.fn(), error: vi.fn()}))
-vi.mock('@/helpers/fetcher', () => ({getApiV2BaseUrl: () => '/api/v2/'}))
+vi.mock('@/helpers/apiUrl', () => ({getApiBaseUrl: () => '/api/v2/'}))
 vi.mock('@/helpers/auth', () => ({getAuthSessionEpoch: () => 1, getToken: () => null, getTokenIdentity: () => null}))
 
 import {linkShareKeys, linkSharesQuery, createLinkShareDraft, createLinkShareMutationOptions, deleteLinkShareMutationOptions} from './linkShares'

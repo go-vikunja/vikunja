@@ -23,9 +23,9 @@ vi.mock(import('@/helpers/auth'), async importOriginal => ({
 	getToken: () => null,
 	getTokenIdentity: () => requestContext.identity,
 }))
-vi.mock(import('@/helpers/fetcher'), async importOriginal => ({
+vi.mock(import('@/helpers/apiUrl'), async importOriginal => ({
 	...await importOriginal(),
-	getApiV2BaseUrl: () => requestContext.apiV2BaseUrl,
+	getApiBaseUrl: () => requestContext.apiV2BaseUrl,
 }))
 
 const attachment = {task_id: 5, id: 9}

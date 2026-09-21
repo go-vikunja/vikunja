@@ -27,8 +27,8 @@ vi.mock('@/helpers/auth', () => ({
 	getToken: () => null,
 	getTokenIdentity: () => requestContext.identity,
 }))
-vi.mock('@/helpers/fetcher', () => ({
-	getApiV2BaseUrl: () => requestContext.apiV2BaseUrl,
+vi.mock('@/helpers/apiUrl', () => ({
+	getApiBaseUrl: () => requestContext.apiV2BaseUrl,
 }))
 
 import {

@@ -2,7 +2,7 @@ import {computed, reactive, toRefs} from 'vue'
 import {acceptHMRUpdate, defineStore} from 'pinia'
 import {parseURL} from 'ufo'
 
-import {getApiV2BaseUrl} from '@/helpers/fetcher'
+import {getApiBaseUrl} from '@/helpers/apiUrl'
 import {info, type VikunjaInfos, type AuthInfo} from '@/client/generated'
 import {publicClient} from '@/client/publicClient'
 import {captureClientRequestContext, isClientRequestContextCurrent} from '@/client/requestContext'
@@ -144,7 +144,7 @@ export const useConfigStore = defineStore('config', () => {
 		try {
 			const response = await info({
 				client: publicClient,
-				baseUrl: getApiV2BaseUrl().replace(/\/$/, ''),
+				baseUrl: getApiBaseUrl().replace(/\/$/, ''),
 			})
 			config = response.data
 		} catch (e) {
