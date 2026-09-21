@@ -40,19 +40,17 @@ describe('config store', () => {
 			expect(enabled.value).toBe(true)
 		})
 	})
-})
 
-
-describe('public configuration transport', () => {
- it('keeps wire fields and normalizes missing collections', async () => {
-  setActivePinia(createPinia())
-  window.API_URL = 'https://example.test/api/v1/'
-  sdk.info.mockResolvedValue({data: {version: 'v2', enabled_pro_features: ['admin_panel']}})
-  const store = useConfigStore()
-  await store.update()
-  expect(sdk.info).toHaveBeenCalledWith(expect.objectContaining({baseUrl: 'https://example.test/api/v2'}))
-  expect(store.enabled_pro_features).toEqual(['admin_panel'])
-  expect(store.available_migrators).toEqual([])
-  expect(store.auth.openid_connect.providers).toEqual([])
- })
+	describe('public configuration transport', () => {
+		it('keeps wire fields and normalizes missing collections', async () => {
+			window.API_URL = 'https://example.test/api/v1/'
+			sdk.info.mockResolvedValue({data: {version: 'v2', enabled_pro_features: ['admin_panel']}})
+			const store = useConfigStore()
+			await store.update()
+			expect(sdk.info).toHaveBeenCalledWith(expect.objectContaining({baseUrl: 'https://example.test/api/v2'}))
+			expect(store.enabled_pro_features).toEqual(['admin_panel'])
+			expect(store.available_migrators).toEqual([])
+			expect(store.auth.openid_connect.providers).toEqual([])
+		})
+	})
 })
