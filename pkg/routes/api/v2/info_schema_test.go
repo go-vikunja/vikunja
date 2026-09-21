@@ -31,5 +31,9 @@ func TestInfoFeatureSchema(t *testing.T) {
 	RegisterInfoRoutes(api)
 	schema := api.OpenAPI().Components.Schemas.Map()["VikunjaInfos"]
 	require.NotNil(t, schema)
-	require.Equal(t, "string", schema.Properties["enabled_pro_features"].Items.Type)
+	features := schema.Properties["enabled_pro_features"]
+	require.NotNil(t, features)
+	require.Equal(t, "array", features.Type)
+	require.NotNil(t, features.Items)
+	require.Equal(t, "string", features.Items.Type)
 }
