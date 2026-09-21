@@ -130,7 +130,8 @@ useTitle(() => `${t('user.settings.caldav.title')} - ${t('user.settings.title')}
 
 const authStore = useAuthStore()
 const configStore = useConfigStore()
-const tokenQuery = useQuery(computed(() => ({...caldavTokensQuery(), enabled: configStore.caldav_enabled})))
+const caldav_enabled = computed(() => configStore.caldav_enabled)
+const tokenQuery = useQuery(computed(() => ({...caldavTokensQuery(), enabled: caldav_enabled.value})))
 const tokens = computed(() => tokenQuery.data.value ?? [])
 const createMutation = useCreateCaldavTokenMutation()
 const deleteMutation = useDeleteCaldavTokenMutation()
