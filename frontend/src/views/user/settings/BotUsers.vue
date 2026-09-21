@@ -59,7 +59,7 @@ async function createBot() {
 		payload.name = trimmedName
 	}
 	try {
-		const created = await botService.create((payload))
+		const created = await botService.create(payload)
 		bots.value.push(created as IUser)
 		newBotUsername.value = ''
 		newBotName.value = ''
@@ -71,10 +71,10 @@ async function createBot() {
 }
 
 async function toggleBotStatus(bot: IUser) {
-	const updated = ({
+	const updated = {
 		...bot,
 		status: bot.status === STATUS_ACTIVE ? STATUS_DISABLED : STATUS_ACTIVE,
-	})
+	}
 	const result = await botService.update(updated) as IUser
 	const idx = bots.value.findIndex(b => b.id === bot.id)
 	if (idx >= 0) {
@@ -93,10 +93,10 @@ function cancelEditName(bot: IUser) {
 }
 
 async function saveBotName(bot: IUser) {
-	const updated = ({
+	const updated = {
 		...bot,
 		name: (nameDraft.value[bot.id] ?? '').trim(),
-	})
+	}
 	const result = await botService.update(updated) as IUser
 	const idx = bots.value.findIndex(b => b.id === bot.id)
 	if (idx >= 0) {

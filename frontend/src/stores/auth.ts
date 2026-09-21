@@ -167,12 +167,12 @@ export const useAuthStore = defineStore('auth', () => {
 
 	function setUserSettings(newSettings: IUserSettings) {
 		loadSettings(newSettings)
-		info.value = ({
+		info.value = {
 			...info.value !== null ? info.value : {},
 			name: newSettings.name,
 			type: info.value?.type ?? AUTH_TYPES.UNKNOWN,
 			exp: info.value?.exp ?? 0,
-		})
+		}
 	}
 	
 	function loadSettings(newSettings: IUserSettings) {
@@ -459,11 +459,11 @@ export const useAuthStore = defineStore('auth', () => {
 		const HTTP = AuthenticatedHTTPFactory()
 		try {
 			const response = await HTTP.get('user')
-			const newUser = ({
+			const newUser = {
 				...response.data,
 				...(info.value?.type && {type: info.value?.type}),
 				...(info.value?.exp && {exp: info.value?.exp}),
-			})
+			}
 
 			if (newUser.settings?.language) {
 				await setLanguage(newUser.settings.language)
