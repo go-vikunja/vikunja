@@ -1,5 +1,11 @@
 import {queryOptions, useMutation} from '@tanstack/vue-query'
-import {notificationsList, notificationsMarkRead, notificationsMarkAllRead, notificationsDeleteAll, type DatabaseNotification} from '@/client/generated'
+import {
+	notificationsList,
+	notificationsMarkRead,
+	notificationsMarkAllRead,
+	notificationsDeleteAll,
+	type DatabaseNotification,
+} from '@/client/generated'
 import {fetchAllPages} from './fetchAllPages'
 import {API_MAX_PER_PAGE} from './pagination'
 import {contextMutationOptions} from './contextMutation'
@@ -10,14 +16,23 @@ export const notificationKeys = {all: ['notifications'] as const}
 export function notificationsQuery() {
 	return queryOptions({
 		queryKey: notificationKeys.all,
-		queryFn: ({signal}) => fetchAllPages(async page => (await notificationsList({query: {page, per_page: API_MAX_PER_PAGE}, signal})).data),
+		queryFn: ({signal}) => fetchAllPages(async page => (await notificationsList({
+			query: {page, per_page: API_MAX_PER_PAGE},
+			signal,
+		})).data),
 	})
 }
 
 export function markNotificationReadMutationOptions() {
 	return contextMutationOptions({
-		mutationFn: async (id: number) => (await notificationsMarkRead({path: {notificationid: id}, body: {read: true}})).data,
-		onSuccess: (updated, id, client) => client.setQueryData<DatabaseNotification[]>(notificationKeys.all, current => current?.map(row => row.id === id ? {...row, ...updated} : row)),
+		mutationFn: async (id: number) => (await notificationsMarkRead({
+			path: {notificationid: id},
+			body: {read: true},
+		})).data,
+		onSuccess: (updated, id, client) => client.setQueryData<DatabaseNotification[]>(
+			notificationKeys.all,
+			current => current?.map(row => row.id === id ? {...row, ...updated} : row),
+		),
 		onSettled: (_id, client) => client.invalidateQueries({queryKey: notificationKeys.all}),
 	})
 }
@@ -31,7 +46,10 @@ export function markAllNotificationsReadMutationOptions() {
 export function clearNotificationsMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async () => (await notificationsDeleteAll()).data,
-		onSuccess: (_data, _input, client) => client.setQueryData<DatabaseNotification[]>(notificationKeys.all, current => current && []),
+		onSuccess: (_data, _input, client) => client.setQueryData<DatabaseNotification[]>(
+			notificationKeys.all,
+			current => current && [],
+		),
 		onSettled: (_input, client) => client.invalidateQueries({queryKey: notificationKeys.all}),
 		successMessage: () => i18n.global.t('notification.clearAllSuccess'),
 	})
