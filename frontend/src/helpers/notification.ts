@@ -68,7 +68,14 @@ export function notificationText(n: DatabaseNotification, user: Pick<User, 'id'>
 
 export function notificationRoute(n: DatabaseNotification): RouteLocationRaw | null {
 	const payload = record(n.notification)
-	if (['task.comment', 'task.assigned', 'task.reminder', 'task.mentioned', 'task.created'].includes(n.name ?? '')) {
+	const taskNames = [
+		NOTIFICATION_NAMES.TASK_COMMENT,
+		NOTIFICATION_NAMES.TASK_ASSIGNED,
+		NOTIFICATION_NAMES.TASK_REMINDER,
+		NOTIFICATION_NAMES.TASK_MENTIONED,
+		NOTIFICATION_NAMES.TASK_CREATED,
+	] as string[]
+	if (taskNames.includes(n.name ?? '')) {
 		const id = record(payload.task).id
 		return typeof id === 'number' && id > 0 ? {name: 'task.detail', params: {id}} : null
 	}
