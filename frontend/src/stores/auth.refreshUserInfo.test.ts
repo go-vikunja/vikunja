@@ -24,11 +24,9 @@ vi.mock('@/router', () => ({
 }))
 
 vi.mock('@/client/queryClient', async () => {
- const {QueryClient} = await import('@tanstack/vue-query')
- const queryClient = new QueryClient({defaultOptions: {queries: {retry: false}}})
- const clear = queryClient.clear.bind(queryClient)
- queryClient.clear = () => {clear(); }
- return {queryClient}
+	const {QueryClient} = await import('@tanstack/vue-query')
+	const queryClient = new QueryClient({defaultOptions: {queries: {retry: false}}})
+	return {queryClient}
 })
 
 vi.mock('@/composables/useWebSocket', () => ({
