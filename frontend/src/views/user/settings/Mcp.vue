@@ -21,12 +21,11 @@ defineOptions({name: 'McpSettings'})
 
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => `MCP - ${t('user.settings.title')}`)
-const {data: info, isPending: infoPending, isError: infoError, refetch: refreshInfo} = useQuery(mcpInfoQuery())
+const {data: info, isPending: infoPending, isError: infoError} = useQuery(mcpInfoQuery())
 const {
 	data: allTokens,
 	isPending: tokensPending,
 	isError: tokensError,
-	refetch: refreshTokens,
 } = useQuery(apiTokensQuery())
 const deleteMutation = useDeleteApiTokenMutation()
 const endpoint = computed(() => info.value?.endpoint ?? '')
@@ -61,8 +60,6 @@ function onTokenCreated(token: IApiToken) {
 	showCreateForm.value = false
 }
 
-function load() { void Promise.all([refreshInfo(), refreshTokens()]) }
-
 function done() { newToken.value = '' }
 
 async function deleteToken() {
@@ -88,12 +85,6 @@ async function deleteToken() {
 			>{{ t('user.settings.mcp.more') }}</a>
 		</p>
 		<ErrorMessage v-if="loadFailed" />
-		<XButton
-			v-if="loadFailed"
-			@click="load"
-		>
-			{{ t('sharing.retry') }}
-		</XButton>
 		<template v-if="info">
 			<label
 				class="label"
