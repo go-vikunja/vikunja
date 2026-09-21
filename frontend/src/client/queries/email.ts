@@ -28,8 +28,8 @@ export function useUpdateEmailMutation() {
 	return useMutation(updateEmailMutationOptions())
 }
 
-export function useCancelEmailUpdateMutation() {
-	return useMutation(contextMutationOptions({
+export function cancelEmailUpdateMutationOptions() {
+	return contextMutationOptions({
 		mutationFn: async () => {
 			await userCancelEmailUpdate()
 			return (await userShow()).data
@@ -37,12 +37,20 @@ export function useCancelEmailUpdateMutation() {
 		onSuccess: (account, _input, client) => reconcileAccount(account, client),
 		onSettled: (_input, client) => client.invalidateQueries({queryKey: accountKeys.current}),
 		successMessage: () => i18n.global.t('user.settings.updateEmailCancelSuccess'),
-	}))
+	})
+}
+
+export function useCancelEmailUpdateMutation() {
+	return useMutation(cancelEmailUpdateMutationOptions())
+}
+
+export function resendEmailConfirmationMutationOptions() {
+	return contextMutationOptions({
+		mutationFn: async () => (await userResendEmailConfirmation()).data,
+		successMessage: () => i18n.global.t('user.settings.updateEmailResendSuccess'),
+	})
 }
 
 export function useResendEmailConfirmationMutation() {
-	return useMutation(contextMutationOptions({
-		mutationFn: async () => (await userResendEmailConfirmation()).data,
-		successMessage: () => i18n.global.t('user.settings.updateEmailResendSuccess'),
-	}))
+	return useMutation(resendEmailConfirmationMutationOptions())
 }

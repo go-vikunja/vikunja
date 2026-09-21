@@ -2,7 +2,12 @@ import {it, expect, vi} from 'vitest'
 import {QueryClient} from '@tanstack/vue-query'
 import {accountKeys} from './account'
 import {updateEmailMutationOptions} from './email'
-const sdk = vi.hoisted(() => ({userUpdateEmail: vi.fn(), userShow: vi.fn()}))
+const sdk = vi.hoisted(() => ({
+	userUpdateEmail: vi.fn(),
+	userCancelEmailUpdate: vi.fn(),
+	userResendEmailConfirmation: vi.fn(),
+	userShow: vi.fn(),
+}))
 vi.mock('@/client/generated', () => sdk)
 vi.mock('@/message', () => ({success: vi.fn(), error: vi.fn()}))
 
