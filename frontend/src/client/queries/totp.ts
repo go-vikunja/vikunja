@@ -16,7 +16,7 @@ export function totpQuery() {
 			try {
 				return (await totpGet({signal})).data
 			} catch (cause) {
-				// 1016 = TOTP not enrolled for this user.
+				// 1016 = TOTP not enrolled.
 				if ((cause as VikunjaErrorModel)?.code === 1016) return {enabled: false}
 				throw cause
 			}
@@ -60,7 +60,7 @@ export function enableTotpMutationOptions() {
 			client.setQueryData<Totp>(totpKeys.current, current => current ? {enabled: true} : current)
 			client.removeQueries({queryKey: totpKeys.qr})
 		},
-		// Enabling revokes every session, so a refetch would only 401.
+		// Enabling revokes every session; a refetch would 401.
 		onSettled: (_input, client) => client.invalidateQueries({queryKey: totpKeys.current, refetchType: 'none'}),
 		successMessage: () => i18n.global.t('user.settings.totp.confirmSuccess'),
 	})
