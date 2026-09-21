@@ -19,6 +19,8 @@ test('manages a bot and its scoped token across reloads', async ({authenticatedP
 	await expect(card.locator('.status')).toHaveText('Disabled')
 	await card.getByRole('button', {name: 'Enable', exact: true}).click()
 	await expect(card.locator('.status')).toHaveText('Active')
+	await page.reload()
+	await expect(card.locator('.status')).toHaveText('Active')
 	await card.getByRole('button', {name: 'Create token', exact: true}).click()
 	await card.locator('#apiTokenTitle').fill('Bot token')
 	await card.getByRole('button', {name: 'Read only', exact: true}).click()
