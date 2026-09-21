@@ -42,12 +42,13 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import {validatePassword} from '@/helpers/validatePasswort'
 
 const props = withDefaults(defineProps<{
-	modelValue: string,
+	modelValue?: string,
 	// This prop is a workaround to trigger validation from the outside when the user never had focus in the input.
 	validateInitially?: boolean,
 	validateMinLength?: boolean,
 	autocomplete?: string,
 }>(), {
+	modelValue: '',
 	validateMinLength: true,
 	autocomplete: 'current-password',
 })

@@ -10,17 +10,14 @@ import type {
 	UserChangePasswordRequestWritable,
 } from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
+import {useSecretMutation} from './secretMutation'
 import {i18n} from '@/i18n'
 
-export function usePasswordResetMutation() {
-	return useMutation({
-		...contextMutationOptions({
-			mutationFn: async (body: PasswordResetWritable) => (await authPasswordReset({body})).data,
-			toastError: () => false,
-		}),
-		// Input holds the plaintext password.
-		gcTime: 0,
-	})
+export function useResetPasswordMutation() {
+	return useSecretMutation(contextMutationOptions({
+		mutationFn: async (body: PasswordResetWritable) => (await authPasswordReset({body})).data,
+		toastError: () => false,
+	}))
 }
 
 export function useRequestPasswordResetMutation() {
@@ -31,12 +28,8 @@ export function useRequestPasswordResetMutation() {
 }
 
 export function useChangePasswordMutation() {
-	return useMutation({
-		...contextMutationOptions({
-			mutationFn: async (body: UserChangePasswordRequestWritable) => (await userChangePassword({body})).data,
-			successMessage: () => i18n.global.t('user.settings.passwordUpdateSuccess'),
-		}),
-		// Input holds the plaintext password.
-		gcTime: 0,
-	})
+	return useSecretMutation(contextMutationOptions({
+		mutationFn: async (body: UserChangePasswordRequestWritable) => (await userChangePassword({body})).data,
+		successMessage: () => i18n.global.t('user.settings.passwordUpdateSuccess'),
+	}))
 }
