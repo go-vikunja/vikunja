@@ -1,11 +1,26 @@
 import {queryOptions, useMutation, type QueryClient} from '@tanstack/vue-query'
 import {
-	adminOverview, adminUsersList, adminUsersCreate, adminUsersPatchAdmin, adminUsersPatchStatus,
-	adminUsersSetPassword, adminUsersPasswordResetEmail, adminUsersDelete,
-	adminProjectsList, adminProjectsPatchOwner, adminInviteLinksList, adminInviteLinksCreate,
-	adminInviteLinksDelete, adminTeamsList,
-	type AdminUser, type PaginatedAdminUser, type CreateUserBodyWritable, type UserInfoBody,
-	type CreateInviteLinkBodyWritable,
+	adminOverview,
+	adminUsersList,
+	adminUsersCreate,
+	adminUsersPatchAdmin,
+	adminUsersPatchStatus,
+	adminUsersSetPassword,
+	adminUsersPasswordResetEmail,
+	adminUsersDelete,
+	adminProjectsList,
+	adminProjectsPatchOwner,
+	adminInviteLinksList,
+	adminInviteLinksCreate,
+	adminInviteLinksDelete,
+	adminTeamsList,
+} from '@/client/generated'
+import type {
+	AdminUser,
+	PaginatedAdminUser,
+	CreateUserBodyWritable,
+	CreateInviteLinkBodyWritable,
+	UserInfoBody,
 } from '@/client/generated'
 import {captureClientRequestContext, assertClientRequestContext} from '@/client/requestContext'
 import {contextMutationOptions} from './contextMutation'
@@ -16,6 +31,7 @@ import {accountKeys} from './account'
 import {i18n} from '@/i18n'
 
 export type DeleteUserMode = 'now' | 'scheduled'
+
 export const adminKeys = {
 	all: ['admin'] as const,
 	overview: ['admin', 'overview'] as const,
@@ -29,29 +45,67 @@ export const adminKeys = {
 	invitesPage: (page: number) => ['admin', 'invites', page] as const,
 	teams: (q: string) => ['admin', 'teams', q] as const,
 }
+
 export function adminOverviewQuery() {
-	return queryOptions({queryKey: adminKeys.overview, queryFn: async ({signal}) => (await adminOverview({signal})).data})
+	return queryOptions({
+		queryKey: adminKeys.overview,
+		queryFn: async ({signal}) => (await adminOverview({signal})).data,
+	})
 }
+
 export function adminUsersQuery(q = '', page = 1) {
-	return queryOptions({queryKey: adminKeys.usersPage(q, page), queryFn: async ({signal}) => (await adminUsersList({query: {q, page}, signal})).data})
+	return queryOptions({
+		queryKey: adminKeys.usersPage(q, page),
+		queryFn: async ({signal}) => (await adminUsersList({query: {q, page}, signal})).data,
+	})
 }
+
 export function adminUserSearchQuery(q: string) {
-	return queryOptions({queryKey: adminKeys.userSearch(q), queryFn: ({signal}) => fetchAllPages(async page => (await adminUsersList({query: {q, page, per_page: API_MAX_PER_PAGE}, signal})).data)})
+	return queryOptions({
+		queryKey: adminKeys.userSearch(q),
+		queryFn: ({signal}) => fetchAllPages(async page => (await adminUsersList({
+			query: {q, page, per_page: API_MAX_PER_PAGE},
+			signal,
+		})).data),
+	})
 }
+
 export function adminProjectsQuery(page: number) {
-	return queryOptions({queryKey: adminKeys.projectsPage(page), queryFn: async ({signal}) => (await adminProjectsList({query: {page}, signal})).data})
+	return queryOptions({
+		queryKey: adminKeys.projectsPage(page),
+		queryFn: async ({signal}) => (await adminProjectsList({query: {page}, signal})).data,
+	})
 }
+
 export function adminInvitesQuery(page: number) {
-	return queryOptions({queryKey: adminKeys.invitesPage(page), queryFn: async ({signal}) => (await adminInviteLinksList({query: {page}, signal})).data})
+	return queryOptions({
+		queryKey: adminKeys.invitesPage(page),
+		queryFn: async ({signal}) => (await adminInviteLinksList({query: {page}, signal})).data,
+	})
 }
+
 export function adminTeamsQuery(q: string) {
-	return queryOptions({queryKey: adminKeys.teams(q), queryFn: ({signal}) => fetchAllPages(async page => (await adminTeamsList({query: {q, page, per_page: API_MAX_PER_PAGE}, signal})).data)})
+	return queryOptions({
+		queryKey: adminKeys.teams(q),
+		queryFn: ({signal}) => fetchAllPages(async page => (await adminTeamsList({
+			query: {q, page, per_page: API_MAX_PER_PAGE},
+			signal,
+		})).data),
+	})
 }
+
 function patchUser(client: QueryClient, updated: AdminUser | undefined) {
 	if (!updated?.id) return
-	client.setQueriesData<PaginatedAdminUser>({queryKey: adminKeys.users}, current => current && ({...current, items: current.items?.map(u => u.id === updated.id ? updated : u)}))
-	client.setQueriesData<UserInfoBody>({queryKey: accountKeys.current}, current => current?.id === updated.id ? {...current, is_admin: updated.is_admin} : current)
+	client.setQueriesData<PaginatedAdminUser>(
+		{queryKey: adminKeys.users},
+		current => current && ({...current, items: current.items?.map(u => u.id === updated.id ? updated : u)}),
+	)
+	client.setQueriesData<UserInfoBody>(
+		{queryKey: accountKeys.current},
+		current => current?.id === updated.id ? {...current, is_admin: updated.is_admin} : current,
+	)
 }
+
 function invalidateUsers(client: QueryClient) {
 	return Promise.all([
 		client.invalidateQueries({queryKey: adminKeys.users}),
@@ -59,6 +113,7 @@ function invalidateUsers(client: QueryClient) {
 		client.invalidateQueries({queryKey: adminKeys.overview}),
 	])
 }
+
 export function createAdminUserMutationOptions() {
 	return {
 		...contextMutationOptions({
@@ -70,6 +125,7 @@ export function createAdminUserMutationOptions() {
 		gcTime: 0,
 	}
 }
+
 export function updateAdminUserMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async ({id, is_admin, status}: {id: number, is_admin?: boolean, status?: number}) => {
@@ -85,10 +141,14 @@ export function updateAdminUserMutationOptions() {
 		successMessage: data => i18n.global.t('admin.users.updatedSuccess', {username: data?.username}),
 	})
 }
+
 export function setAdminUserPasswordMutationOptions() {
 	return {
 		...contextMutationOptions({
-			mutationFn: async ({id, password}: {id: number, password: string}) => (await adminUsersSetPassword({path: {id}, body: {new_password: password}})).data,
+			mutationFn: async ({id, password}: {id: number, password: string}) => (await adminUsersSetPassword({
+				path: {id},
+				body: {new_password: password},
+			})).data,
 			onSuccess: (updated, _input, client) => patchUser(client, updated),
 			onSettled: (_input, client) => invalidateUsers(client),
 			successMessage: data => i18n.global.t('admin.users.setPasswordSuccess', {username: data.username}),
@@ -97,26 +157,45 @@ export function setAdminUserPasswordMutationOptions() {
 		gcTime: 0,
 	}
 }
+
 export function resetAdminUserPasswordMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async ({id}: {id: number, username?: string}) => (await adminUsersPasswordResetEmail({path: {id}})).data,
 		successMessage: (_data, {username}) => i18n.global.t('admin.users.sendResetEmailSuccess', {username}),
 	})
 }
+
 export function deleteAdminUserMutationOptions() {
 	return contextMutationOptions({
-		mutationFn: async ({id, mode}: {id: number, mode: DeleteUserMode, username?: string}) => (await adminUsersDelete({path: {id}, query: {mode}})).data,
-		onSettled: (_input, client) => Promise.all([client.invalidateQueries({queryKey: adminKeys.all}), client.invalidateQueries({queryKey: projectKeys.all})]),
-		successMessage: (_data, {mode, username}) => i18n.global.t(mode === 'now' ? 'admin.users.deletedSuccess' : 'admin.users.deleteScheduledSuccess', {username}),
+		mutationFn: async ({id, mode}: {id: number, mode: DeleteUserMode, username?: string}) => (await adminUsersDelete({
+			path: {id},
+			query: {mode},
+		})).data,
+		onSettled: (_input, client) => Promise.all([
+			client.invalidateQueries({queryKey: adminKeys.all}),
+			client.invalidateQueries({queryKey: projectKeys.all}),
+		]),
+		successMessage: (_data, {mode, username}) => i18n.global.t(
+			mode === 'now' ? 'admin.users.deletedSuccess' : 'admin.users.deleteScheduledSuccess',
+			{username},
+		),
 	})
 }
+
 export function reassignAdminProjectMutationOptions() {
 	return contextMutationOptions({
-		mutationFn: async ({id, ownerId}: {id: number, ownerId: number}) => (await adminProjectsPatchOwner({path: {id}, body: {owner_id: ownerId}})).data,
-		onSettled: (_input, client) => Promise.all([client.invalidateQueries({queryKey: adminKeys.projects}), client.invalidateQueries({queryKey: projectKeys.all})]),
+		mutationFn: async ({id, ownerId}: {id: number, ownerId: number}) => (await adminProjectsPatchOwner({
+			path: {id},
+			body: {owner_id: ownerId},
+		})).data,
+		onSettled: (_input, client) => Promise.all([
+			client.invalidateQueries({queryKey: adminKeys.projects}),
+			client.invalidateQueries({queryKey: projectKeys.all}),
+		]),
 		successMessage: () => i18n.global.t('admin.projects.reassignedSuccess'),
 	})
 }
+
 export function createAdminInviteMutationOptions() {
 	return {
 		...contextMutationOptions({
@@ -127,6 +206,7 @@ export function createAdminInviteMutationOptions() {
 		gcTime: 0,
 	}
 }
+
 export function deleteAdminInviteMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async (id: number) => (await adminInviteLinksDelete({path: {id}})).data,
@@ -134,6 +214,7 @@ export function deleteAdminInviteMutationOptions() {
 		successMessage: () => i18n.global.t('admin.inviteLinks.deleted'),
 	})
 }
+
 export function useCreateAdminUserMutation() { return useMutation(createAdminUserMutationOptions()) }
 export function useUpdateAdminUserMutation() { return useMutation(updateAdminUserMutationOptions()) }
 export function useSetAdminUserPasswordMutation() { return useMutation(setAdminUserPasswordMutationOptions()) }
