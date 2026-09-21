@@ -109,8 +109,8 @@ export async function refreshToken(persist: boolean): Promise<void> {
 async function doRefresh(persist: boolean): Promise<void> {
 	// Snapshot the epoch so we can tell if a logout happened while we awaited.
 	const epochAtStart = authEpoch
-	const serverAtStart = window.API_URL
-	const loggedOutSinceStart = () => authEpoch !== epochAtStart || window.API_URL !== serverAtStart
+	const serverAtStart = getApiBaseUrl()
+	const loggedOutSinceStart = () => authEpoch !== epochAtStart || getApiBaseUrl() !== serverAtStart
 
 	// Capture the tokens before waiting for the lock so we can detect
 	// if another tab refreshed while we were queued.
