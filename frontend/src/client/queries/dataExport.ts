@@ -15,11 +15,15 @@ export function dataExportQuery() {
 }
 
 export function requestExportMutationOptions() {
-	return contextMutationOptions({
-		mutationFn: async (password: string) => (await userExportRequest({body: {password}})).data,
-		onSettled: (_input, client) => client.invalidateQueries({queryKey: exportKeys.status}),
-		successMessage: () => i18n.global.t('user.export.success'),
-	})
+	return {
+		...contextMutationOptions({
+			mutationFn: async (password: string) => (await userExportRequest({body: {password}})).data,
+			onSettled: (_input, client) => client.invalidateQueries({queryKey: exportKeys.status}),
+			successMessage: () => i18n.global.t('user.export.success'),
+		}),
+		// Input holds the plaintext password.
+		gcTime: 0,
+	}
 }
 
 export function useRequestExportMutation() {
@@ -27,12 +31,16 @@ export function useRequestExportMutation() {
 }
 
 export function useDownloadExportMutation() {
-	return useMutation(contextMutationOptions({
-		mutationFn: async (password: string) => {
-			const {data} = await userExportDownload({body: {password}, parseAs: 'blob'})
-			if (!(data instanceof Blob)) throw new Error('Export response was not a file')
-			return data
-		},
-		onSuccess: blob => downloadBlob(URL.createObjectURL(blob), 'vikunja-export.zip'),
-	}))
+	return useMutation({
+		...contextMutationOptions({
+			mutationFn: async (password: string) => {
+				const {data} = await userExportDownload({body: {password}, parseAs: 'blob'})
+				if (!(data instanceof Blob)) throw new Error('Export response was not a file')
+				return data
+			},
+			onSuccess: blob => downloadBlob(URL.createObjectURL(blob), 'vikunja-export.zip'),
+		}),
+		// Input holds the plaintext password.
+		gcTime: 0,
+	})
 }
