@@ -35,8 +35,40 @@ import type {UploadCallback} from './types'
 import type {Task as ITask} from '@/client/generated'
 import type {TaskAttachment as IAttachment} from '@/client/generated'
 import {fetchAttachmentUrl, releaseAttachmentUrl} from '@/helpers/attachments'
+import {getApiBaseUrl} from '@/helpers/apiUrl'
 
 type ImageNodeKey = `${ITask['id']}-${IAttachment['id']}`
+
+// descriptions stored before the v2 flip still carry an /api/v1 src, so the version segment is matched, not compared
+const ATTACHMENT_URL = /^(.*?)(?:\/api\/v[12])?\/tasks\/(\d+)\/attachments\/(\d+)$/
+
+interface AttachmentRef {
+	taskId: number
+	attachmentId: number
+}
+
+function parseAttachmentUrl(url: unknown): AttachmentRef | null {
+	if (typeof url !== 'string') {
+		return null
+	}
+
+	const match = ATTACHMENT_URL.exec(url)
+	if (match === null) {
+		return null
+	}
+
+	const base = getApiBaseUrl()
+		.replace(/\/$/, '')
+		.replace(/\/api\/v[12]$/, '')
+	if (match[1] !== base) {
+		return null
+	}
+
+	return {
+		taskId: Number(match[2]),
+		attachmentId: Number(match[3]),
+	}
+}
 
 export interface EditorExtensionDeps {
 	t: (key: string) => string
@@ -145,13 +177,10 @@ export function createEditorExtensions(deps: EditorExtensionDeps): Extensions {
 			}
 		},
 		renderHTML({HTMLAttributes}) {
-			if (HTMLAttributes.src?.startsWith(window.API_URL) || HTMLAttributes['data-src']?.startsWith(window.API_URL)) {
-				const imageUrl = HTMLAttributes['data-src'] ?? HTMLAttributes.src
-
-				// The url is something like /tasks/<id>/attachments/<id>
-				const parts = imageUrl.slice(window.API_URL.length + 1).split('/')
-				const taskId = Number(parts[1])
-				const attachmentId = Number(parts[3])
+			const imageUrl = HTMLAttributes['data-src'] ?? HTMLAttributes.src
+			const attachment = parseAttachmentUrl(imageUrl)
+			if (attachment !== null) {
+				const {taskId, attachmentId} = attachment
 				const nodeKey: ImageNodeKey = `${taskId}-${attachmentId}`
 				const id = 'tiptap-image-' + nodeKey
 
