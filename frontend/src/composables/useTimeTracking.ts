@@ -38,7 +38,7 @@ export function useTimeEntries(
 			toValue(filter),
 			Intl.DateTimeFormat().resolvedOptions().timeZone,
 			toValue(page),
-			config.maxItemsPerPage,
+			config.max_items_per_page,
 		),
 		enabled: toValue(enabled) && !auth.isLinkShareAuth && config.isProFeatureEnabled(PRO_FEATURE.TIME_TRACKING),
 		...(keepPrevious ? {placeholderData: keepPreviousData} : {}),

@@ -45,7 +45,7 @@ const configStore = useConfigStore()
 
 const {data} = useQuery(computed(() => ({...projectTeamSharesQuery(props.projectId), enabled: props.projectId > 0})))
 const search = ref('')
-const {teams, isFetching} = useTeams({search, includePublic: () => configStore.publicTeamsEnabled, enabled: () => search.value !== ''})
+const {teams, isFetching} = useTeams({search, includePublic: () => configStore.public_teams_enabled, enabled: () => search.value !== ''})
 
 const createShare = useCreateProjectTeamShareMutation()
 const updateShare = useUpdateProjectTeamShareMutation()

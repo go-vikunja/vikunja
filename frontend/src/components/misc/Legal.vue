@@ -23,8 +23,8 @@ import {useConfigStore} from '@/stores/config'
 
 const configStore = useConfigStore()
 
-const imprintUrl = computed(() => configStore.legal.imprintUrl)
-const privacyPolicyUrl = computed(() => configStore.legal.privacyPolicyUrl)
+const imprintUrl = computed(() => configStore.legal.imprint_url)
+const privacyPolicyUrl = computed(() => configStore.legal.privacy_policy_url)
 </script>
 
 <style lang="scss" scoped>

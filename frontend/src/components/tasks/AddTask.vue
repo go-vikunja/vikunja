@@ -212,7 +212,7 @@ async function addTask() {
 		}
 
 		try {
-			await runWrites(tasksToCreate, createRelation, configStore.concurrentWrites)
+			await runWrites(tasksToCreate, createRelation, configStore.concurrent_writes)
 		} catch (e) {
 			// The tasks themselves exist by now — reporting and moving on beats
 			// restoring the input and letting the user duplicate all of them.
