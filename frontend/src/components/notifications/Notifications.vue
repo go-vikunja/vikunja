@@ -109,7 +109,12 @@
 import {computed, onMounted, onUnmounted, ref} from 'vue'
 import {useRouter, isNavigationFailure, NavigationFailureType} from 'vue-router'
 import {useQuery} from '@tanstack/vue-query'
-import {notificationsQuery, useMarkNotificationReadMutation, useMarkAllNotificationsReadMutation, useClearNotificationsMutation} from '@/client/queries/notifications'
+import {
+	notificationsQuery,
+	useMarkNotificationReadMutation,
+	useMarkAllNotificationsReadMutation,
+	useClearNotificationsMutation,
+} from '@/client/queries/notifications'
 import {notificationDoer, notificationRoute, notificationText} from '@/helpers/notification'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import BaseButton from '@/components/base/BaseButton.vue'
