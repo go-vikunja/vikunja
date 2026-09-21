@@ -74,6 +74,8 @@ describe('task domain helpers', () => {
 		expect(
 			mapTasksDeep(tasks, 2, task => mergeTask(task, {id: 2, title: 'new child'}))[0].related_tasks?.subtask,
 		).toEqual([{id: 2, title: 'new child'}])
+		const cyclic: Task = {id: 1, related_tasks: {subtask: [{id: 2, related_tasks: {parenttask: [{id: 1}]}}]}}
+		expect(mapTasksDeep([cyclic], 1, task => mergeTask(task, cyclic))).toEqual([cyclic])
 		expect(removeTask(tasks, 2)[0].related_tasks?.subtask).toEqual([])
 		expect(removeTask(tasks, 1)).toEqual([])
 		expect(tasks[0].title).toBe('old')

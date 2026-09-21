@@ -81,12 +81,13 @@ export function mergeTask(task: Task, updated: Task): Task {
 
 export function mapTasksDeep(tasks: readonly Task[], id: number, update: (task: Task) => Task): Task[] {
 	return tasks.map(task => {
-		const next = task.id === id ? update(task) : task
-		if (!next.related_tasks) return next
+		// The updater's relations may contain the task itself again, so never descend into them.
+		if (task.id === id) return update(task)
+		if (!task.related_tasks) return task
 		return {
-			...next,
+			...task,
 			related_tasks: Object.fromEntries(
-				Object.entries(next.related_tasks)
+				Object.entries(task.related_tasks)
 					.map(([kind, children]) => [kind, mapTasksDeep(children ?? [], id, update)]),
 			),
 		}
