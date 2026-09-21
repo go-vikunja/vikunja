@@ -8,6 +8,7 @@ import {formatDateSince} from '@/helpers/time/formatDate'
 import {useQuery} from '@tanstack/vue-query'
 import {sessionsQuery, useDeleteSessionMutation} from '@/client/queries/sessions'
 import type {Session} from '@/client/generated'
+import ErrorMessage from '@/components/misc/Error.vue'
 
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => `${t('user.settings.sessions.title')} - ${t('user.settings.title')}`)
@@ -41,6 +42,8 @@ async function deleteSession() {
 		<p class="mbe-4">
 			{{ $t('user.settings.sessions.description') }}
 		</p>
+
+		<ErrorMessage v-if="sessionQuery.isError.value" />
 
 		<div
 			v-if="sessions.length > 0"
@@ -87,7 +90,7 @@ async function deleteSession() {
 			</table>
 		</div>
 
-		<p v-else>
+		<p v-else-if="!sessionQuery.isPending.value && !sessionQuery.isError.value">
 			{{ $t('user.settings.sessions.noOtherSessions') }}
 		</p>
 
