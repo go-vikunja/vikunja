@@ -212,7 +212,12 @@ import TimeDisplay from '@/components/misc/TimeDisplay.vue'
 import User from '@/components/misc/User.vue'
 import PaginationEmit from '@/components/misc/PaginationEmit.vue'
 import {useQuery} from '@tanstack/vue-query'
-import {adminInvitesQuery, adminTeamsQuery, useCreateAdminInviteMutation, useDeleteAdminInviteMutation} from '@/client/queries/admin'
+import {
+	adminInvitesQuery,
+	adminTeamsQuery,
+	useCreateAdminInviteMutation,
+	useDeleteAdminInviteMutation,
+} from '@/client/queries/admin'
 import type {UserInviteLink, InviteLinkTeam} from '@/client/generated'
 import {useConfigStore} from '@/stores/config'
 import {useTitle} from '@/composables/useTitle'
@@ -235,7 +240,10 @@ const deleteMutation = useDeleteAdminInviteMutation()
 const {isPending: deleting} = deleteMutation
 const selectedTeams = ref<InviteLinkTeam[]>([])
 const teamSearch = ref('')
-const {data: teamData, isFetching: loadingTeams} = useQuery(computed(() => ({...adminTeamsQuery(teamSearch.value), enabled: createOpen.value})))
+const {data: teamData, isFetching: loadingTeams} = useQuery(computed(() => ({
+	...adminTeamsQuery(teamSearch.value),
+	enabled: createOpen.value,
+})))
 const teamResults = computed(() => teamData.value ?? [])
 const minimumExpiry = ref('')
 const form = reactive({name: '', maxUses: '' as string | number, expiresAt: '', skipEmailConfirm: false})
@@ -277,7 +285,10 @@ async function submitCreate() {
 			skip_email_confirm: form.skipEmailConfirm,
 		})
 		const base = configStore.frontend_url || new URL(import.meta.env.BASE_URL, window.location.origin).toString()
-		createdUrl.value = new URL(`register#invite-link=${encodeURIComponent(link.token!)}`, base.endsWith('/') ? base : `${base}/`).toString()
+		createdUrl.value = new URL(
+			`register#invite-link=${encodeURIComponent(link.token!)}`,
+			base.endsWith('/') ? base : `${base}/`,
+		).toString()
 		goToPage(1)
 	} catch { /* Mutation reports the error. */ }
 	finally { createMutation.reset() }

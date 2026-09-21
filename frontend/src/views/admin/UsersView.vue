@@ -311,7 +311,15 @@
 import {ref, computed, reactive, watch} from 'vue'
 import {useQuery} from '@tanstack/vue-query'
 import type {AdminUser, CreateUserBodyWritable} from '@/client/generated'
-import {adminUsersQuery, useCreateAdminUserMutation, useUpdateAdminUserMutation, useSetAdminUserPasswordMutation, useResetAdminUserPasswordMutation, useDeleteAdminUserMutation, type DeleteUserMode} from '@/client/queries/admin'
+import {
+	adminUsersQuery,
+	useCreateAdminUserMutation,
+	useUpdateAdminUserMutation,
+	useSetAdminUserPasswordMutation,
+	useResetAdminUserPasswordMutation,
+	useDeleteAdminUserMutation,
+	type DeleteUserMode,
+} from '@/client/queries/admin'
 import {useDebounceFn} from '@vueuse/core'
 import {useI18n} from 'vue-i18n'
 import {useAuthStore} from '@/stores/auth'
@@ -352,10 +360,19 @@ const createOpen = ref(false)
 const editable = reactive({is_admin: false, status: 0})
 const newPassword = ref('')
 function emptyCreateForm(): Required<CreateUserBodyWritable> {
-	return {username: '', email: '', name: '', password: '', language: '', is_admin: false, skip_email_confirm: false}
+	return {
+		username: '',
+		email: '',
+		name: '',
+		password: '',
+		language: '',
+		is_admin: false,
+		skip_email_confirm: false,
+	}
 }
 const createForm = reactive(emptyCreateForm())
-const hasChanges = computed(() => detailTarget.value && (editable.is_admin !== !!detailTarget.value.is_admin || editable.status !== detailTarget.value.status))
+const hasChanges = computed(() => detailTarget.value
+	&& (editable.is_admin !== !!detailTarget.value.is_admin || editable.status !== detailTarget.value.status))
 watch(detailTarget, u => {
 	newPassword.value = ''
 	if (!u) return
@@ -373,10 +390,16 @@ function statusLabel(status: number | undefined): string {
 }
 const statusOptions = computed(() => [0, 1, 2, 3].map(value => ({value, label: statusLabel(value)})))
 function goToPage(page: number) { currentPage.value = page }
-const onSearch = useDebounceFn(() => { currentPage.value = 1; search.value = searchTerm.value }, 300)
+const onSearch = useDebounceFn(() => {
+	currentPage.value = 1
+	search.value = searchTerm.value
+}, 300)
 function openDetails(u: AdminUserRow) { detailTarget.value = u }
 function closeDetail() { detailTarget.value = null }
-function openCreate() { Object.assign(createForm, emptyCreateForm()); createOpen.value = true }
+function openCreate() {
+	Object.assign(createForm, emptyCreateForm())
+	createOpen.value = true
+}
 function closeCreate() { if (!creating.value) createOpen.value = false }
 async function submitCreate() {
 	try {
@@ -389,7 +412,8 @@ async function saveChanges() {
 	const target = detailTarget.value
 	if (!target) return
 	try {
-		await updateMutation.mutateAsync({id: target.id,
+		await updateMutation.mutateAsync({
+			id: target.id,
 			is_admin: editable.is_admin !== !!target.is_admin ? editable.is_admin : undefined,
 			status: editable.status !== target.status ? editable.status : undefined,
 		})

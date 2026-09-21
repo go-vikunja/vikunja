@@ -135,12 +135,19 @@ const totalPages = computed(() => data.value?.total_pages ?? 1)
 const reassignTarget = ref<AdminProject | null>(null)
 const selectedUser = ref<AdminUser | null>(null)
 const search = ref('')
-const {data: searchData, isFetching: userSearchLoading} = useQuery(computed(() => ({...adminUserSearchQuery(search.value), enabled: !!reassignTarget.value && search.value.length >= 2})))
+const {data: searchData, isFetching: userSearchLoading} = useQuery(computed(() => ({
+	...adminUserSearchQuery(search.value),
+	enabled: !!reassignTarget.value && search.value.length >= 2,
+})))
 const userResults = computed(() => search.value.length >= 2 ? searchData.value ?? [] : [])
 const reassignMutation = useReassignAdminProjectMutation()
 const {isPending: reassigning} = reassignMutation
 function goToPage(page: number) { currentPage.value = page }
-function openReassign(p: AdminProject) { reassignTarget.value = p; selectedUser.value = null; search.value = '' }
+function openReassign(p: AdminProject) {
+	reassignTarget.value = p
+	selectedUser.value = null
+	search.value = ''
+}
 function closeReassign() { if (!reassigning.value) reassignTarget.value = null }
 function searchUsers(query: string) { search.value = query }
 async function doReassign() {
