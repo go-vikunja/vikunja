@@ -46,7 +46,8 @@ export function useUpdateAvatarProviderMutation() {
 
 export function uploadAvatarMutationOptions() {
 	return contextMutationOptions({
-		mutationFn: async ({blob}: {username: string; blob: Blob}) => (await userAvatarUpload({body: {avatar: new File([blob], 'avatar.jpg', {type: blob.type})}})).data,
+		// The upload fails without a file name on the multipart part.
+		mutationFn: async ({blob}: {username: string; blob: Blob}) => (await userAvatarUpload({body: {avatar: new File([blob], 'avatar.png', {type: blob.type})}})).data,
 		onSettled: ({username}, client) => Promise.all([
 			client.invalidateQueries({queryKey: avatarKeys.provider}),
 			client.invalidateQueries({queryKey: avatarKeys.user(username)}),
