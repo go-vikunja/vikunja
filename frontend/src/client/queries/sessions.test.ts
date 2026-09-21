@@ -15,6 +15,7 @@ it('loads the first session page through the generated operation', async () => {
 			per_page: 1000,
 		},
 	}))
+	expect(sdk.sessionsList).toHaveBeenCalledTimes(1)
 })
 it('removes a revoked session from an existing cache and marks the list stale', async () => {
 	const client = new QueryClient()
