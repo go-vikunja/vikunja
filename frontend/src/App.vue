@@ -113,7 +113,12 @@ watch(() => route.query.accountDeletionConfirm, async token => {
 	await router.replace({path: route.path, query, hash: route.hash})
 	try {
 		await confirmDeletion.mutateAsync(token)
-	} catch { return }
+	} catch {
+		return
+	} finally {
+		// Evicts the single-use token from the mutation cache.
+		confirmDeletion.reset()
+	}
 }, {immediate: true})
 
 setLanguage(authStore.settings.language ?? DEFAULT_LANGUAGE)
