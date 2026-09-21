@@ -1,4 +1,4 @@
-import {queryOptions} from '@tanstack/vue-query'
+import {queryOptions, useMutation} from '@tanstack/vue-query'
 import {migrationCsvStatus, migrationMicrosoftTodoStatus, migrationPlankaStatus, migrationTicktickStatus, migrationTodoistStatus, migrationTrelloStatus, migrationVikunjaFileStatus, migrationWekanStatus, migrationTodoistAuth, migrationTrelloAuth, migrationMicrosoftTodoAuth, migrationCsvMigrate, migrationMicrosoftTodoMigrate, migrationPlankaMigrate, migrationTicktickMigrate, migrationTodoistMigrate, migrationTrelloMigrate, migrationVikunjaFileMigrate, migrationWekanMigrate, migrationCsvDetect, migrationCsvPreview, type MigrationCredentialsBodyWritable, type MigrationMigrateBodyWritable, type MigrationCsvMigrateData} from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
 import {projectKeys} from './projects'
@@ -71,3 +71,8 @@ export function detectCsvMutationOptions() {
 export function previewCsvMutationOptions() {
 	return contextMutationOptions({mutationFn: async (body: MigrationCsvMigrateData['body']) => (await migrationCsvPreview({body})).data, toastError: () => false})
 }
+
+export const useMigrationAuthMutation = () => useMutation(migrationAuthMutationOptions())
+export const useStartMigrationMutation = () => useMutation(startMigrationMutationOptions())
+export const useDetectCsvMutation = () => useMutation(detectCsvMutationOptions())
+export const usePreviewCsvMutation = () => useMutation(previewCsvMutationOptions())

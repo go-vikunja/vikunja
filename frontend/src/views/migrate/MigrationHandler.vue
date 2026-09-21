@@ -137,9 +137,9 @@ import Logo from '@/assets/logo.svg?component'
 import Message from '@/components/misc/Message.vue'
 import MigrationCredentialsForm from './MigrationCredentialsForm.vue'
 
-import {useMutation, useQuery} from '@tanstack/vue-query'
+import {useQuery} from '@tanstack/vue-query'
 import type {MigrationCredentialsBodyWritable} from '@/client/generated'
-import {migrationStatusQuery, migrationAuthMutationOptions, startMigrationMutationOptions} from '@/client/queries/migration'
+import {migrationStatusQuery, useMigrationAuthMutation, useStartMigrationMutation} from '@/client/queries/migration'
 
 import {formatDateLong} from '@/helpers/time/formatDate'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
@@ -160,8 +160,8 @@ const {t, te} = useI18n({useScope: 'global'})
 
 const progressDotsCount = ref(PROGRESS_DOTS_COUNT)
 const authUrl = ref('')
-const auth = useMutation(migrationAuthMutationOptions())
-const startMigration = useMutation(startMigrationMutationOptions())
+const auth = useMigrationAuthMutation()
+const startMigration = useStartMigrationMutation()
 const isMigrating = computed(() => startMigration.isPending.value || auth.isPending.value)
 const confirmedAgain = ref(false)
 const startedHere = ref(false)

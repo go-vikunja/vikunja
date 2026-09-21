@@ -211,9 +211,8 @@ import Message from '@/components/misc/Message.vue'
 import SingleTaskInProject from '@/components/tasks/partials/SingleTaskInProject.vue'
 import {createTaskDraft} from '@/helpers/task'
 
-import {useMutation} from '@tanstack/vue-query'
 import {TASK_ATTRIBUTES, SUPPORTED_DELIMITERS, SUPPORTED_DATE_FORMATS, type CsvImportDraft} from './csvImport'
-import {detectCsvMutationOptions, previewCsvMutationOptions, startMigrationMutationOptions} from '@/client/queries/migration'
+import {useDetectCsvMutation, usePreviewCsvMutation, useStartMigrationMutation} from '@/client/queries/migration'
 
 import {useTitle} from '@/composables/useTitle'
 import {useMigrationStore} from '@/stores/migration'
@@ -226,9 +225,9 @@ const {t} = useI18n({useScope: 'global'})
 
 useTitle(() => t('migrate.titleService', {name: 'CSV'}))
 
-const detect = useMutation(detectCsvMutationOptions())
-const preview = useMutation(previewCsvMutationOptions())
-const startMigration = useMutation(startMigrationMutationOptions())
+const detect = useDetectCsvMutation()
+const preview = usePreviewCsvMutation()
+const startMigration = useStartMigrationMutation()
 
 const migrationStore = useMigrationStore()
 
