@@ -52,28 +52,28 @@
 					v-for="n in notifications"
 					:key="n.id"
 					class="single-notification"
-					:class="{'is-clickable': notificationRoute(n)}"
+					:class="{'is-clickable': n.route}"
 					@click="() => to(n)"
 				>
 					<div
 						class="read-indicator"
-						:class="{'read': parseDateOrNull(n.read_at) !== null}"
+						:class="{'read': n.read}"
 					/>
 					<User
-						v-if="notificationDoer(n)"
-						:user="notificationDoer(n)!"
+						v-if="n.doer"
+						:user="n.doer"
 						:show-username="false"
 						:avatar-size="16"
 					/>
 					<div class="detail">
 						<div>
 							<span
-								v-if="notificationDoer(n)"
+								v-if="n.doer"
 								class="has-text-weight-bold mie-1"
 							>
-								{{ getDisplayName(notificationDoer(n)) }}
+								{{ n.doerName }}
 							</span>
-							{{ notificationText(n, authStore.info) }}
+							{{ n.text }}
 						</div>
 						<span
 							v-tooltip="formatDateLong(n.created)"
@@ -109,7 +109,6 @@
 import {computed, onMounted, onUnmounted, ref} from 'vue'
 import {useRouter, isNavigationFailure, NavigationFailureType} from 'vue-router'
 import {useQuery} from '@tanstack/vue-query'
-import type {DatabaseNotification} from '@/client/generated'
 import {notificationsQuery, useMarkNotificationReadMutation, useMarkAllNotificationsReadMutation, useClearNotificationsMutation} from '@/client/queries/notifications'
 import {notificationDoer, notificationRoute, notificationText} from '@/helpers/notification'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
@@ -133,8 +132,21 @@ const {data} = useQuery(computed(() => ({
 const readMutation = useMarkNotificationReadMutation()
 const readAllMutation = useMarkAllNotificationsReadMutation()
 const clearMutation = useClearNotificationsMutation()
-const notifications = computed(() => (data.value ?? []).filter(n => n.name))
-const unreadNotifications = computed(() => notifications.value.filter(n => !parseDateOrNull(n.read_at)).length)
+const notifications = computed(() => (data.value ?? []).flatMap(n => {
+	if (!n.name || !n.id) return []
+	const doer = notificationDoer(n)
+	return [{
+		id: n.id,
+		created: n.created,
+		doer,
+		doerName: getDisplayName(doer),
+		text: notificationText(n, authStore.info),
+		route: notificationRoute(n),
+		read: parseDateOrNull(n.read_at) !== null,
+	}]
+}))
+type NotificationRow = typeof notifications.value[number]
+const unreadNotifications = computed(() => notifications.value.filter(n => !n.read).length)
 const showNotifications = ref(false)
 const popup = ref<HTMLElement | null>(null)
 
@@ -147,12 +159,11 @@ function hidePopup(e: MouseEvent) {
 	}
 }
 
-async function to(n: DatabaseNotification) {
-	const route = notificationRoute(n)
-	if (!route || !n.id) return
+async function to(n: NotificationRow) {
+	if (!n.route) return
 	readMutation.mutate(n.id)
 	showNotifications.value = false
-	const failure = await router.push(route)
+	const failure = await router.push(n.route)
 	if (isNavigationFailure(failure, NavigationFailureType.duplicated)) router.go(0)
 }
 
