@@ -10,6 +10,7 @@
 			v-model="caldavUrl"
 			type="text"
 			readonly
+			:aria-label="$t('user.settings.caldav.urlLabel')"
 		>
 			<template #addon>
 				<XButton
