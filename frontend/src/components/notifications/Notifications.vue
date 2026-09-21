@@ -53,7 +53,7 @@
 					:key="n.id"
 					class="single-notification"
 					:class="{'is-clickable': n.route}"
-					@click="() => to(n)"
+					@click="to(n)"
 				>
 					<div
 						class="read-indicator"
