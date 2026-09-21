@@ -3,7 +3,8 @@ import {useI18n} from 'vue-i18n'
 import {defineStore, acceptHMRUpdate} from 'pinia'
 import {useQuery} from '@tanstack/vue-query'
 
-import {checkAndSetApiUrl, ERROR_NO_API_URL, InvalidApiUrlProvidedError, NoApiUrlProvidedError} from '@/helpers/checkAndSetApiUrl'
+import {checkAndSetApiUrl, ERROR_NO_API_URL} from '@/helpers/checkAndSetApiUrl'
+import {InvalidApiUrlProvidedError, NoApiUrlProvidedError} from '@/helpers/apiUrl'
 import {isDesktopApp} from '@/helpers/desktopAuth'
 
 import {useMenuActive} from '@/composables/useMenuActive'

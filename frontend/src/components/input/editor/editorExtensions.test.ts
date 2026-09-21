@@ -48,6 +48,7 @@ async function settle() {
 }
 
 beforeEach(() => {
+	window.API_URL = API_URL
 	URL.createObjectURL = vi.fn(blob => (blob as Blob & {testUrl?: string}).testUrl ?? 'blob:real-attachment')
 	setActivePinia(createPinia())
 	queryClient.removeQueries({queryKey: attachmentKeys.blobs})
@@ -88,6 +89,25 @@ describe('CustomImage attachment id', () => {
 		const img = editor.view.dom.querySelector('img')!
 		expect(img.id).toBe('tiptap-image-5-9')
 		expect(img.src).toBe('blob:real-attachment')
+	})
+
+	it('resolves a v1 stored src once the api url upgraded to v2', async () => {
+		window.API_URL = 'http://localhost:3456/api/v2'
+		const {editor} = createEditor(`<p><img src="${ATTACHMENT_URL}"></p>`)
+		await settle()
+
+		const img = editor.view.dom.querySelector('img')!
+		expect(img.id).toBe('tiptap-image-5-9')
+		expect(img.src).toBe('blob:real-attachment')
+	})
+
+	it('leaves an image on another host alone', async () => {
+		const {editor} = createEditor('<p><img src="https://attacker.example/tasks/5/attachments/9"></p>')
+		await settle()
+
+		const img = editor.view.dom.querySelector('img')!
+		expect(img.src).toBe('https://attacker.example/tasks/5/attachments/9')
+		expect(getBlobUrl).not.toHaveBeenCalled()
 	})
 
 	it('does not let a planted id hijack another image\'s blob url', async () => {
