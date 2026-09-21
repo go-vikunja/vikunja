@@ -99,8 +99,13 @@ test.describe('Suggestion popup positioning', () => {
 		// The page has to actually scroll for this test to mean anything.
 		expect(Math.abs(anchorAfter!.y - anchorBefore!.y)).toBeGreaterThan(50)
 
-		const offsetBefore = popupBefore!.y - anchorBefore!.y
-		const offsetAfter = popupAfter!.y - anchorAfter!.y
-		expect(Math.abs(offsetAfter - offsetBefore)).toBeLessThan(15)
+		expect(popupBefore).not.toBeNull()
+		expect(popupAfter).not.toBeNull()
+		for (const [anchor, box] of [[anchorBefore!, popupBefore!], [anchorAfter!, popupAfter!]]) {
+			const below = Math.abs(box.y - anchor.y - anchor.height - 8)
+			const above = Math.abs(anchor.y - box.y - box.height - 8)
+			expect(Math.min(below, above)).toBeLessThan(15)
+			expect(Math.abs(box.x - anchor.x)).toBeLessThan(20)
+		}
 	})
 })
