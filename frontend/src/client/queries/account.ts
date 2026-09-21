@@ -1,4 +1,4 @@
-import {queryOptions, useMutation} from '@tanstack/vue-query'
+import {queryOptions, useMutation, type QueryClient} from '@tanstack/vue-query'
 import {
 	userShow,
 	userUpdateSettings,
@@ -16,6 +16,10 @@ export const accountKeys = {
 	current: ['account', 'current'] as const,
 	user: (id: number, type = 1) => ['account', 'current', id, type] as const,
 	timezones: ['account', 'timezones'] as const,
+}
+
+export function reconcileAccount(account: UserInfoBody, client: QueryClient) {
+	client.setQueriesData<UserInfoBody>({queryKey: accountKeys.current}, current => current ? account : current)
 }
 
 export function currentUserQuery(id = 0, type = 1) {
