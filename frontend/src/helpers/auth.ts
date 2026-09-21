@@ -170,6 +170,7 @@ async function doRefresh(persist: boolean): Promise<void> {
 		// We hold the lock and no one else refreshed — make the API call.
 		try {
 			let response
+			// A per-request baseUrl skips mergeConfigs (utils.gen.ts), the only place a trailing slash is stripped.
 			try {
 				response = await authRefreshToken({client: refreshClient, baseUrl: getApiV2BaseUrl().replace(/\/$/, '')})
 			} catch (e) {
