@@ -116,7 +116,7 @@ function doDelete() {
 		:class="{'is-loading': isLoadingInitial}"
 	>
 		<XButton
-			v-if="!(webhooks?.length === 0 || showNewForm)"
+			v-if="!(webhooks.length === 0 || showNewForm)"
 			icon="plus"
 			class="mbe-4"
 			@click="showNewForm = true"
@@ -125,7 +125,7 @@ function doDelete() {
 		</XButton>
 
 		<div
-			v-if="!isLoadingInitial && (webhooks?.length === 0 || showNewForm)"
+			v-if="!isLoadingInitial && (webhooks.length === 0 || showNewForm)"
 			class="p-4"
 		>
 			<FormField
@@ -216,7 +216,7 @@ function doDelete() {
 		</div>
 
 		<table
-			v-if="webhooks?.length > 0"
+			v-if="webhooks.length > 0"
 			class="table has-actions is-striped is-hoverable is-fullwidth"
 		>
 			<thead>
