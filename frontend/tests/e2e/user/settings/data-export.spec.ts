@@ -27,7 +27,6 @@ test.describe('Data export', () => {
 		expect(download.suggestedFilename()).toBe('vikunja-export.zip')
 		const bytes = await readFile((await download.path())!)
 		expect(bytes.subarray(0, 2).toString()).toBe('PK')
-
 	})
 
 	test('rejects export with wrong password', async ({authenticatedPage: page}) => {
