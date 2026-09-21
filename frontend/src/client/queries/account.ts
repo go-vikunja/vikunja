@@ -4,6 +4,7 @@ import {queryClient} from '@/client/queryClient'
 import {contextMutationOptions} from './contextMutation'
 import {invalidateAvatarCache} from '@/helpers/user'
 import {i18n, setLanguage, type SupportedLocale} from '@/i18n'
+import {error} from '@/message'
 
 export const accountKeys = {
 	current: ['account', 'current'] as const,
@@ -40,7 +41,7 @@ export function updateSettingsMutationOptions() {
 				name: settings.name ?? current.name,
 				settings: {...current.settings, ...settings},
 			} : current)
-			if (settings.language) void setLanguage(settings.language as SupportedLocale)
+			if (settings.language) setLanguage(settings.language as SupportedLocale).catch(error)
 			if (previous && previous.name !== settings.name) {
 				void userGetAvatarProvider().then(({data}) => {
 					if (data.avatar_provider === 'initials') invalidateAvatarCache(previous)
