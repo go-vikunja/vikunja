@@ -78,7 +78,12 @@ async function create() {
 
 	try {
 		await createMutation.mutateAsync({scope: props.scope, body: newWebhook.value})
-	} catch { return }
+	} catch {
+		return
+	} finally {
+		// Evicts the plaintext secret and basic auth password from the mutation cache.
+		createMutation.reset()
+	}
 	newWebhook.value = emptyDraft()
 	initEvents(availableEvents.value)
 	showNewForm.value = false
