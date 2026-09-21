@@ -580,15 +580,17 @@ async function doAction(type: ACTION_TYPE, item: QuickActionItem) {
 			selectedCmd.value = item as Command
 			searchInput.value?.focus()
 			break
-		case ACTION_TYPE.LABELS:
-			if (/\s/.test(item.title ?? '')) {
-				query.value = '*"' + item.title + '"'
+		case ACTION_TYPE.LABELS: {
+			const title = item.title ?? ''
+			if (/\s/.test(title)) {
+				query.value = '*"' + title + '"'
 			} else {
-				query.value = '*' + item.title
+				query.value = '*' + title
 			}
 			searchInput.value?.focus()
 			searchTasks()
 			break
+		}
 	}
 }
 
