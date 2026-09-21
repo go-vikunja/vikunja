@@ -86,7 +86,7 @@ async function resetPassword() {
 
 	try {
 		const {message} = await passwordResetMutation.mutateAsync({new_password: credentials.password, token})
-		successMessage.value = message ?? t('misc.success')
+		successMessage.value = message ?? t('error.success')
 	} catch (e) {
 		errorMsg.value = getErrorText(e)
 	}
