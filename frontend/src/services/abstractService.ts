@@ -1,4 +1,4 @@
-import {AuthenticatedHTTPFactory} from '@/helpers/fetcher'
+import {AuthenticatedHTTPFactory} from '@/helpers/apiUrl'
 import type {Method} from 'axios'
 
 import {objectToSnakeCase} from '@/helpers/case'

@@ -7,7 +7,6 @@ import {projectKeys, type ProjectResponse} from '@/client/queries/projects'
 
 const auth = vi.hoisted(() => ({
 	token: null as string | null,
-	post: vi.fn(),
 }))
 
 const sdk = vi.hoisted(() => ({
@@ -30,23 +29,6 @@ vi.mock('@/helpers/auth', () => ({
 		auth.token = token
 	}),
 }))
-
-vi.mock('@/helpers/fetcher', () => ({
-	AuthenticatedHTTPFactory: () => fakeHttp(),
-	HTTPFactory: () => fakeHttp(),
-}))
-
-function fakeHttp() {
-	return {
-		post: auth.post,
-		get: vi.fn(),
-		request: vi.fn(),
-		interceptors: {
-			request: {use: vi.fn()},
-			response: {use: vi.fn()},
-		},
-	}
-}
 
 vi.mock('@/router', () => ({
 	default: {push: vi.fn(), isReady: vi.fn().mockResolvedValue(undefined)},
@@ -125,7 +107,6 @@ describe('base store identity reset', () => {
 	beforeEach(() => {
 		setActivePinia(createPinia())
 		auth.token = null
-		auth.post.mockReset()
 		queryClient.clear()
 		Object.values(sdk).forEach(mock => mock.mockReset())
 		window.URL.revokeObjectURL = vi.fn()

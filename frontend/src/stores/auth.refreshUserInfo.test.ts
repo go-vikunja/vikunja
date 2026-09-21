@@ -37,11 +37,6 @@ vi.mock('@/composables/useWebSocket', () => ({
 	}),
 }))
 
-vi.mock('@/helpers/fetcher', async importOriginal => ({
-	...await importOriginal<typeof import('@/helpers/fetcher')>(),
-	getApiBaseUrl: () => 'http://localhost/api/v1/',
-}))
-
 vi.mock('@/helpers/redirectToProvider', () => ({
 	getRedirectUrlFromCurrentFrontendPath: vi.fn(),
 	redirectToProvider: vi.fn(),

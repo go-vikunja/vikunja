@@ -1,4 +1,4 @@
-import {getApiV2BaseUrl} from '@/helpers/fetcher'
+import {getApiBaseUrl} from '@/helpers/apiUrl'
 import {authRefreshToken} from '@/client/generated'
 import {publicClient} from '@/client/publicClient'
 import {isDesktopApp, refreshDesktopToken} from '@/helpers/desktopAuth'
@@ -167,7 +167,7 @@ async function doRefresh(persist: boolean): Promise<void> {
 		// We hold the lock and no one else refreshed — make the API call.
 		try {
 			// A per-request baseUrl skips mergeConfigs (utils.gen.ts), the only place a trailing slash is stripped.
-			const response = await authRefreshToken({client: publicClient, baseUrl: getApiV2BaseUrl().replace(/\/$/, '')})
+			const response = await authRefreshToken({client: publicClient, baseUrl: getApiBaseUrl().replace(/\/$/, '')})
 			if (loggedOutSinceStart()) {
 				return
 			}
