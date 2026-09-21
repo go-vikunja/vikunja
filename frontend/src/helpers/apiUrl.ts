@@ -1,6 +1,6 @@
 export const API_PATH_SUFFIX = '/api/v2'
 
-// upgrades a stored v1 base to v2; whatever deployment prefix sits in front of it is kept
+// upgrades a v1 base to v2, keeping the deployment prefix in front of it
 export function getApiBaseUrl(): string {
 	const url = window.API_URL
 	return (url?.endsWith('/') ? url : url + '/').replace(/\/api\/v1\/$/, `${API_PATH_SUFFIX}/`)

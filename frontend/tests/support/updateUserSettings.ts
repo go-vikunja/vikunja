@@ -1,7 +1,6 @@
 import type {APIRequestContext} from '@playwright/test'
 import {snakeCase} from 'change-case'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function objectToSnakeCase(value: any): any {
 	if (Array.isArray(value)) {
 		return value.map(objectToSnakeCase)

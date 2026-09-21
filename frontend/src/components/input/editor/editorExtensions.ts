@@ -39,7 +39,7 @@ import {getApiBaseUrl} from '@/helpers/apiUrl'
 
 type ImageNodeKey = `${ITask['id']}-${IAttachment['id']}`
 
-// descriptions stored before the v2 flip still carry an /api/v1 src, so the version segment is matched, not compared
+// stored srcs predate the v2 flip, so the version segment is matched, not compared
 const ATTACHMENT_URL = /^(.*?)(?:\/api\/v[12])?\/tasks\/(\d+)\/attachments\/(\d+)$/
 
 interface AttachmentRef {
