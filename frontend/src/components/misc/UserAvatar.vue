@@ -19,7 +19,6 @@ import {computed} from 'vue'
 import {useQuery} from '@tanstack/vue-query'
 import {useObjectUrl} from '@vueuse/core'
 import {avatarQuery} from '@/client/queries/avatars'
-import {queryClient} from '@/client/queryClient'
 import type {User as IUser} from '@/client/generated'
 
 const props = withDefaults(defineProps<{
@@ -36,7 +35,7 @@ const props = withDefaults(defineProps<{
 const avatar = useQuery(computed(() => ({
 	...avatarQuery(props.user?.username ?? '', props.size),
 	enabled: Boolean(props.user?.username),
-})), queryClient)
+})))
 const src = useObjectUrl(avatar.data)
 </script>
 

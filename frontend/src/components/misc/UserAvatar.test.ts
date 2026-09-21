@@ -1,19 +1,23 @@
 import {describe, it, expect, afterEach, beforeEach, vi} from 'vitest'
 import {mount, flushPromises, type VueWrapper} from '@vue/test-utils'
-import {queryClient} from '@/client/queryClient'
+import {QueryClient, VueQueryPlugin} from '@tanstack/vue-query'
 import UserAvatar from './UserAvatar.vue'
 
 const sdk = vi.hoisted(() => ({avatarGet: vi.fn()}))
 vi.mock('@/client/generated', () => sdk)
 const wrappers: VueWrapper[] = []
+let queryClient: QueryClient
 function mountAvatar(props: InstanceType<typeof UserAvatar>['$props']) {
-	const wrapper = mount(UserAvatar, {props})
+	const wrapper = mount(UserAvatar, {
+		props,
+		global: {plugins: [[VueQueryPlugin, {queryClient}]]},
+	})
 	wrappers.push(wrapper)
 	return wrapper
 }
 
 beforeEach(() => {
-	queryClient.clear()
+	queryClient = new QueryClient({defaultOptions: {queries: {retry: false}}})
 	sdk.avatarGet.mockReset().mockResolvedValue({data: new Blob(['avatar'])})
 	vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:avatar')
 	vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
