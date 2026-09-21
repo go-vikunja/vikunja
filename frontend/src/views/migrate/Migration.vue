@@ -4,10 +4,10 @@
 		<p>{{ $t('migrate.description') }}</p>
 		<div class="migration-services">
 			<RouterLink
-				v-for="{name, id, icon, isCSVMigrator} in availableMigrators"
+				v-for="{name, id, icon, kind} in availableMigrators"
 				:key="id"
 				class="migration-service-link"
-				:to="isCSVMigrator ? {name: 'migrate.csv'} : {name: 'migrate.service', params: {service: id}}"
+				:to="kind === 'csv' ? {name: 'migrate.csv'} : {name: 'migrate.service', params: {service: id}}"
 			>
 				<img
 					class="migration-service-image"
@@ -24,7 +24,7 @@
 import {computed} from 'vue'
 import {useI18n} from 'vue-i18n'
 
-import {MIGRATORS} from './migrators'
+import {MIGRATORS, type Migrator} from './migrators'
 import {useTitle} from '@/composables/useTitle'
 import {useConfigStore} from '@/stores/config'
 
@@ -35,7 +35,7 @@ useTitle(() => t('migrate.title'))
 const configStore = useConfigStore()
 const availableMigrators = computed(() => configStore.available_migrators
 	.filter((id): id is keyof typeof MIGRATORS => Object.prototype.hasOwnProperty.call(MIGRATORS, id))
-	.map((id) => MIGRATORS[id]),
+	.map((id): Migrator => MIGRATORS[id]),
 )
 </script>
 
