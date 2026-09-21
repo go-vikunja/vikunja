@@ -21,7 +21,8 @@ export const adminKeys = {
 	overview: ['admin', 'overview'] as const,
 	users: ['admin', 'users'] as const,
 	usersPage: (q: string, page: number) => ['admin', 'users', q, page] as const,
-	userSearch: (q: string) => ['admin', 'userSearch', q] as const,
+	userSearches: ['admin', 'userSearch'] as const,
+	userSearch: (q: string) => [...adminKeys.userSearches, q] as const,
 	projects: ['admin', 'projects'] as const,
 	projectsPage: (page: number) => ['admin', 'projects', page] as const,
 	invites: ['admin', 'invites'] as const,
@@ -54,7 +55,7 @@ function patchUser(client: QueryClient, updated: AdminUser | undefined) {
 function invalidateUsers(client: QueryClient) {
 	return Promise.all([
 		client.invalidateQueries({queryKey: adminKeys.users}),
-		client.invalidateQueries({queryKey: ['admin', 'userSearch']}),
+		client.invalidateQueries({queryKey: adminKeys.userSearches}),
 		client.invalidateQueries({queryKey: adminKeys.overview}),
 	])
 }
