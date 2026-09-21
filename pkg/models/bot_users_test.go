@@ -164,6 +164,9 @@ func TestBotUser_ManageDisabled(t *testing.T) {
 				target.Status = user.StatusActive
 				require.NoError(t, target.Update(s, owner))
 				assert.Equal(t, user.StatusActive, target.Status)
+				reloaded, err := user.GetUserByID(s, bot.ID)
+				require.NoError(t, err)
+				assert.Equal(t, user.StatusActive, reloaded.Status)
 			case "delete":
 				allowed, err := target.CanDelete(s, owner)
 				require.NoError(t, err)
