@@ -400,11 +400,15 @@ function openCreate() {
 	Object.assign(createForm, emptyCreateForm())
 	createOpen.value = true
 }
-function closeCreate() { if (!creating.value) createOpen.value = false }
+function closeCreate() {
+	if (creating.value) return
+	createOpen.value = false
+	Object.assign(createForm, emptyCreateForm())
+}
 async function submitCreate() {
 	try {
 		await createMutation.mutateAsync({...createForm, language: createForm.language || undefined})
-		createOpen.value = false
+		closeCreate()
 	} catch { /* Mutation reports the error. */ }
 	finally { createMutation.reset() }
 }
