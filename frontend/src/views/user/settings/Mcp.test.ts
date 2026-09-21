@@ -5,7 +5,7 @@ import {createPinia, setActivePinia} from 'pinia'
 import Mcp from './Mcp.vue'
 import en from '@/i18n/lang/en.json'
 import type {ConnectionSettings} from '@/client/generated'
-import type {ApiTokenPreset} from '@/modelTypes/IApiTokenSettings'
+import type {ApiTokenPreset} from '@/helpers/apiToken'
 
 const sdk = vi.hoisted(() => ({mcpInfo: vi.fn()}))
 vi.mock('@/client/generated', () => sdk)
