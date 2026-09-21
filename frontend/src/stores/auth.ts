@@ -38,7 +38,7 @@ export type SessionUser = UserInfoBody & {
 	exp: number
 }
 
-export type JwtClaims = {
+type JwtClaims = {
 	id: number,
 	type: AuthType,
 	exp: number,
