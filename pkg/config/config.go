@@ -297,6 +297,9 @@ var timezone *time.Location
 // it way easier, especially when testing.
 func GetTimeZone() *time.Location {
 	tz := ServiceTimeZone.GetString()
+	if tz == "" {
+		tz = "UTC"
+	}
 	if timezone == nil || timezone.String() != tz {
 		loc, err := time.LoadLocation(tz)
 		if err != nil {
