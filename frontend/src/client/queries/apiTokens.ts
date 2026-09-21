@@ -26,7 +26,7 @@ export function createApiTokenMutationOptions() {
 	return {
 		...contextMutationOptions({
 			mutationFn: async (body: ApiTokenWritable) => (await tokensCreate({body})).data,
-			onSettled: (_body, client) => client.invalidateQueries({queryKey: apiTokenKeys.lists}),
+			onSettled: (body, client) => client.invalidateQueries({queryKey: apiTokenKeys.list(body.owner_id ?? 0)}),
 		}),
 		// Response carries the plaintext token.
 		gcTime: 0,
