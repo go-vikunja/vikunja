@@ -82,7 +82,7 @@ test.describe('Link shares', () => {
 
 	// The anonymous link share tests below don't use the `authenticatedPage`
 	// fixture (which wires up the API URL via `login()`), so they'd otherwise
-	// hit the default `window.API_URL = '/api/v1'` relative path baked into
+	// hit the default `window.API_URL = '/api/v2'` relative path baked into
 	// index.html and never reach the API running on a different port.
 	test.beforeEach(async ({page}) => {
 		await setupApiUrl(page)
