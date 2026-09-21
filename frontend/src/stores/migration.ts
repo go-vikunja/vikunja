@@ -1,6 +1,6 @@
 import {computed, ref, onScopeDispose} from 'vue'
 import {acceptHMRUpdate, defineStore} from 'pinia'
-import {useQuery} from '@tanstack/vue-query'
+import {useMutation, useQuery} from '@tanstack/vue-query'
 import {queryClient} from '@/client/queryClient'
 import {captureClientRequestContext, isClientRequestContextCurrent} from '@/client/requestContext'
 import {migrationStatusQuery, migrationCompletedMutationOptions, type MigrationProvider} from '@/client/queries/migration'
@@ -25,6 +25,7 @@ export const useMigrationStore = defineStore('migration', () => {
 	const provider = ref<MigrationProvider>('csv')
 	const accepted = ref(false)
 	const status = useQuery(computed(() => ({...migrationStatusQuery(provider.value), enabled: false})), queryClient)
+	const completed = useMutation(migrationCompletedMutationOptions(), queryClient)
 	const isFinished = computed(() => accepted.value && parseDateOrNull(status.data.value?.finished_at) !== null)
 	const errorKind = computed(() => isFinished.value ? status.data.value?.error_kind ?? '' : '')
 	const errorMessage = computed(() => isFinished.value ? status.data.value?.error_message ?? '' : '')
@@ -52,20 +53,22 @@ export const useMigrationStore = defineStore('migration', () => {
 			stop()
 			return
 		}
+		let finishedAt: Date | null = null
+		let finishedErrorKind = ''
 		try {
 			const result = await queryClient.fetchQuery(migrationStatusQuery(provider.value))
 			if (myGeneration !== generation || !isClientRequestContextCurrent(request)) return
 			accepted.value = true
 			failures = 0
-			if (parseDateOrNull(result?.finished_at) !== null) {
-				if (!result?.error_kind) {
-					await queryClient.getMutationCache().build(queryClient, migrationCompletedMutationOptions()).execute(undefined)
-				}
-				return
-			}
+			finishedAt = parseDateOrNull(result?.finished_at)
+			finishedErrorKind = result?.error_kind ?? ''
 		} catch {
 			if (myGeneration !== generation || !isClientRequestContextCurrent(request)) return
 			failures++
+		}
+		if (finishedAt !== null) {
+			if (finishedErrorKind === '') completed.mutate(undefined)
+			return
 		}
 		if (failures >= MAX_CONSECUTIVE_FAILURES || Date.now() >= deadline) return
 		timeout = setTimeout(poll, POLL_INTERVAL)
