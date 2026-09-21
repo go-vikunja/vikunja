@@ -105,7 +105,12 @@ async function runAction(name: 'save' | 'resend' | 'cancel', fn: () => Promise<v
 
 function updateEmail() {
 	return runAction('save', async () => {
-		await updateMutation.mutateAsync(emailUpdate)
+		try {
+			await updateMutation.mutateAsync(emailUpdate)
+		} finally {
+			// Evicts the plaintext password from the mutation cache.
+			updateMutation.reset()
+		}
 		emailUpdate.new_email = ''
 		emailUpdate.password = ''
 	})
