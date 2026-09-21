@@ -231,6 +231,14 @@ export const useAuthStore = defineStore('auth', () => {
 		lastUserInfoRefresh.value = new Date()
 	}
 
+	// Resetting the debounce makes the following checkAuth() parse the new JWT
+	// instead of silently returning due to the 1-minute throttle.
+	function adoptSession(token: string | undefined, persist: boolean) {
+		if (!token) throw new Error('Authentication response has no token')
+		saveToken(token, persist)
+		lastUserInfoRefresh.value = null
+	}
+
 	// Logs a user in with a set of credentials.
 	async function login(credentials) {
 		setIsLoading(true)
@@ -240,10 +248,7 @@ export const useAuthStore = defineStore('auth', () => {
 
 		try {
 			const response = await authLogin({body: {username: credentials.username, password: credentials.password, totp_passcode: credentials.totpPasscode, long_token: credentials.longToken}})
-			// Save the token to local storage for later use
-			if (!response.data.token) throw new Error('Authentication response has no token')
-			saveToken(response.data.token, true)
-			lastUserInfoRefresh.value = null
+			adoptSession(response.data.token, true)
 
 			// Tell others the user is authenticated
 			await checkAuth()
@@ -320,10 +325,7 @@ export const useAuthStore = defineStore('auth', () => {
 		removeToken()
 		try {
 			const response = await authOpenidCallback({path: {provider}, body: data})
-			// Save the token to local storage for later use
-			if (!response.data.token) throw new Error('Authentication response has no token')
-			saveToken(response.data.token, true)
-			lastUserInfoRefresh.value = null
+			adoptSession(response.data.token, true)
 			setLoggedInVia(provider)
 
 			// Tell others the user is authenticated
@@ -337,8 +339,7 @@ export const useAuthStore = defineStore('auth', () => {
 		setIsLoading(true)
 		try {
 			removeToken()
-			saveToken(tokens.access_token, true)
-			lastUserInfoRefresh.value = null
+			adoptSession(tokens.access_token, true)
 			localStorage.setItem('desktopOAuthRefreshToken', tokens.refresh_token)
 			await checkAuth()
 		} finally {
@@ -348,11 +349,7 @@ export const useAuthStore = defineStore('auth', () => {
 
 	async function linkShareAuth({hash, password}) {
 		const response = await authenticateLinkShare({path: {share: hash}, body: {password}})
-		if (!response.data.token) throw new Error('Authentication response has no token')
-		saveToken(response.data.token, false)
-		// Reset the debounce so checkAuth() actually parses the new link share
-		// JWT instead of silently returning due to the 1-minute throttle.
-		lastUserInfoRefresh.value = null
+		adoptSession(response.data.token, false)
 		await checkAuth()
 		if (!response.data.project_id) throw new Error('Link share response has no project')
 		return {...response.data, project_id: response.data.project_id}
