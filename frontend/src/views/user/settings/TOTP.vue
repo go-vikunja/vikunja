@@ -10,7 +10,7 @@
 		>
 			{{ $t('user.settings.totp.enroll') }}
 		</XButton>
-		<template v-else-if="totp.secret && !totp.enabled">
+		<template v-else-if="isEnrolling">
 			<p>
 				{{ $t('user.settings.totp.finishSetupPart1') }}
 				<strong>{{ totp.secret }}</strong><br>
@@ -113,8 +113,9 @@ const status = useQuery(computed(() => ({
 	enabled: Boolean(configStore.totp_enabled && isLocalUser.value),
 })))
 const totp = computed(() => status.data.value ?? {})
-const qr = useQuery(computed(() => ({...totpQrQuery(), enabled: Boolean(totp.value.secret) && !totp.value.enabled})))
-const totpQR = useObjectUrl(computed(() => totp.value.secret && !totp.value.enabled ? qr.data.value : undefined))
+const isEnrolling = computed(() => Boolean(totp.value.secret) && !totp.value.enabled)
+const qr = useQuery(computed(() => ({...totpQrQuery(), enabled: isEnrolling.value})))
+const totpQR = useObjectUrl(computed(() => isEnrolling.value ? qr.data.value : undefined))
 const enrollMutation = useEnrollTotpMutation()
 const enableMutation = useEnableTotpMutation()
 const disableMutation = useDisableTotpMutation()
