@@ -178,7 +178,10 @@ func TestBotUser_ManageDisabled(t *testing.T) {
 				_, err = user.GetUserByID(s, bot.ID)
 				require.True(t, user.IsErrUserDoesNotExist(err))
 			case "tokens":
-				token := &APIToken{OwnerID: bot.ID, Title: "Disabled bot token"}
+				token := &APIToken{
+					OwnerID: bot.ID,
+					Title:   "Disabled bot token",
+				}
 				require.NoError(t, token.Create(s, owner))
 				result, count, total, err := token.ReadAll(s, owner, "", 1, 50)
 				require.NoError(t, err)
