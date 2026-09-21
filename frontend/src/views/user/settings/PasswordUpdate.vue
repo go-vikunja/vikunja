@@ -11,9 +11,9 @@
 					for="password"
 				>{{ $t('user.settings.newPassword') }}</label>
 				<Password
-					v-model="passwordUpdate.new_password"
 					:validate-initially="true"
 					@submit="updatePassword"
+					@update:modelValue="v => passwordUpdate.new_password = v"
 				/>
 			</div>
 			<FormField
