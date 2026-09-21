@@ -137,18 +137,24 @@ async function deleteToken(token: ApiToken) {
 				:label="$t('user.auth.username')"
 				:error="createError"
 			>
-				<input
-					v-model="newBotUsername"
-					class="input"
-					placeholder="bot-myassistant"
-				>
+				<template #default="{id}">
+					<input
+						:id="id"
+						v-model="newBotUsername"
+						class="input"
+						placeholder="bot-myassistant"
+					>
+				</template>
 			</FormField>
 			<FormField :label="$t('admin.users.nameLabel')">
-				<input
-					v-model="newBotName"
-					class="input"
-					:placeholder="$t('user.settings.bots.namePlaceholder')"
-				>
+				<template #default="{id}">
+					<input
+						:id="id"
+						v-model="newBotName"
+						class="input"
+						:placeholder="$t('user.settings.bots.namePlaceholder')"
+					>
+				</template>
 			</FormField>
 			<XButton
 				:loading="createMutation.isPending.value"
