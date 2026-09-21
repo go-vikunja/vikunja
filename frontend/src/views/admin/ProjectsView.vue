@@ -65,7 +65,7 @@
 			<Modal
 				v-if="reassignTarget"
 				variant="hint-modal"
-				@close="reassignTarget = null"
+				@close="closeReassign"
 			>
 				<Card
 					class="has-no-shadow"
@@ -93,13 +93,14 @@
 					<template #footer>
 						<XButton
 							variant="tertiary"
-							@click="reassignTarget = null"
+							@click="closeReassign"
 						>
 							{{ $t('misc.cancel') }}
 						</XButton>
 						<XButton
 							variant="primary"
-							:disabled="!selectedUser"
+							:disabled="!selectedUser || reassigning"
+							:loading="reassigning"
 							@click="doReassign()"
 						>
 							{{ $t('admin.projects.reassignOwner') }}
@@ -137,13 +138,15 @@ const search = ref('')
 const {data: searchData, isFetching: userSearchLoading} = useQuery(computed(() => ({...adminUserSearchQuery(search.value), enabled: !!reassignTarget.value && search.value.length >= 2})))
 const userResults = computed(() => search.value.length >= 2 ? searchData.value ?? [] : [])
 const reassignMutation = useReassignAdminProjectMutation()
+const {isPending: reassigning} = reassignMutation
 function goToPage(page: number) { currentPage.value = page }
 function openReassign(p: AdminProject) { reassignTarget.value = p; selectedUser.value = null; search.value = '' }
+function closeReassign() { if (!reassigning.value) reassignTarget.value = null }
 function searchUsers(query: string) { search.value = query }
 async function doReassign() {
 	const target = reassignTarget.value
 	const ownerId = selectedUser.value?.id
-	if (!target || !ownerId) return
+	if (!target || !ownerId || reassigning.value) return
 	try {
 		await reassignMutation.mutateAsync({id: target.id, ownerId})
 		if (reassignTarget.value?.id === target.id) reassignTarget.value = null
