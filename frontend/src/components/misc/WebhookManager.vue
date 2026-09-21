@@ -3,7 +3,13 @@ import {computed, ref, watch} from 'vue'
 
 import type {WebhookWritable} from '@/client/generated'
 import {useQuery} from '@tanstack/vue-query'
-import {webhooksQuery, webhookEventsQuery, useCreateWebhookMutation, useDeleteWebhookMutation, type WebhookScope} from '@/client/queries/webhooks'
+import {
+	webhooksQuery,
+	webhookEventsQuery,
+	useCreateWebhookMutation,
+	useDeleteWebhookMutation,
+	type WebhookScope,
+} from '@/client/queries/webhooks'
 import BaseButton from '@/components/base/BaseButton.vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import FormField from '@/components/input/FormField.vue'
