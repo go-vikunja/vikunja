@@ -1,5 +1,33 @@
 import {queryOptions, useMutation} from '@tanstack/vue-query'
-import {migrationCsvStatus, migrationMicrosoftTodoStatus, migrationPlankaStatus, migrationTicktickStatus, migrationTodoistStatus, migrationTrelloStatus, migrationVikunjaFileStatus, migrationWekanStatus, migrationTodoistAuth, migrationTrelloAuth, migrationMicrosoftTodoAuth, migrationCsvMigrate, migrationMicrosoftTodoMigrate, migrationPlankaMigrate, migrationTicktickMigrate, migrationTodoistMigrate, migrationTrelloMigrate, migrationVikunjaFileMigrate, migrationWekanMigrate, migrationCsvDetect, migrationCsvPreview, type MigrationCredentialsBodyWritable, type MigrationMigrateBodyWritable, type MigrationCsvMigrateData, type MigrationCsvPreviewData} from '@/client/generated'
+import {
+	migrationCsvStatus,
+	migrationMicrosoftTodoStatus,
+	migrationPlankaStatus,
+	migrationTicktickStatus,
+	migrationTodoistStatus,
+	migrationTrelloStatus,
+	migrationVikunjaFileStatus,
+	migrationWekanStatus,
+	migrationTodoistAuth,
+	migrationTrelloAuth,
+	migrationMicrosoftTodoAuth,
+	migrationCsvMigrate,
+	migrationMicrosoftTodoMigrate,
+	migrationPlankaMigrate,
+	migrationTicktickMigrate,
+	migrationTodoistMigrate,
+	migrationTrelloMigrate,
+	migrationVikunjaFileMigrate,
+	migrationWekanMigrate,
+	migrationCsvDetect,
+	migrationCsvPreview,
+} from '@/client/generated'
+import type {
+	MigrationCredentialsBodyWritable,
+	MigrationMigrateBodyWritable,
+	MigrationCsvMigrateData,
+	MigrationCsvPreviewData,
+} from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
 import {projectKeys} from './projects'
 import {taskKeys} from './tasks'
@@ -14,9 +42,16 @@ const statusOperations = {
 	'wekan': migrationWekanStatus,
 }
 export type MigrationProvider = keyof typeof statusOperations
-export const migrationKeys = {status: (provider: MigrationProvider) => ['migration', provider, 'status'] as const}
+export const migrationKeys = {
+	status: (provider: MigrationProvider) => ['migration', provider, 'status'] as const,
+}
 export function migrationStatusQuery(provider: MigrationProvider) {
-	return queryOptions({queryKey: migrationKeys.status(provider), queryFn: async ({signal}) => (await statusOperations[provider]({signal})).data, staleTime: 0, retry: false})
+	return queryOptions({
+		queryKey: migrationKeys.status(provider),
+		queryFn: async ({signal}) => (await statusOperations[provider]({signal})).data,
+		staleTime: 0,
+		retry: false,
+	})
 }
 const authOperations = {
 	'todoist': migrationTodoistAuth,
@@ -24,7 +59,10 @@ const authOperations = {
 	'microsoft-todo': migrationMicrosoftTodoAuth,
 }
 export function migrationAuthMutationOptions() {
-	return contextMutationOptions({mutationFn: async (provider: keyof typeof authOperations) => (await authOperations[provider]()).data, toastError: () => false})
+	return contextMutationOptions({
+		mutationFn: async (provider: keyof typeof authOperations) => (await authOperations[provider]()).data,
+		toastError: () => false,
+	})
 }
 const fileOperations = {
 	'ticktick': migrationTicktickMigrate,
@@ -37,10 +75,26 @@ const oauthOperations = {
 	'microsoft-todo': migrationMicrosoftTodoMigrate,
 }
 export type StartMigrationInput =
-	| {kind: 'file', provider: keyof typeof fileOperations, file: File}
-	| {kind: 'oauth', provider: keyof typeof oauthOperations, body: MigrationMigrateBodyWritable}
-	| {kind: 'credentials', provider: 'planka', body: MigrationCredentialsBodyWritable}
-	| {kind: 'csv', provider: 'csv', body: MigrationCsvMigrateData['body']}
+	| {
+		kind: 'file',
+		provider: keyof typeof fileOperations,
+		file: File,
+	}
+	| {
+		kind: 'oauth',
+		provider: keyof typeof oauthOperations,
+		body: MigrationMigrateBodyWritable,
+	}
+	| {
+		kind: 'credentials',
+		provider: 'planka',
+		body: MigrationCredentialsBodyWritable,
+	}
+	| {
+		kind: 'csv',
+		provider: 'csv',
+		body: MigrationCsvMigrateData['body'],
+	}
 export function startMigrationMutationOptions() {
 	return {
 		...contextMutationOptions({
@@ -62,14 +116,23 @@ export function startMigrationMutationOptions() {
 export function migrationCompletedMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async () => undefined,
-		onSettled: (_input, client) => Promise.all([client.invalidateQueries({queryKey: projectKeys.all}), client.invalidateQueries({queryKey: taskKeys.all})]),
+		onSettled: (_input, client) => Promise.all([
+			client.invalidateQueries({queryKey: projectKeys.all}),
+			client.invalidateQueries({queryKey: taskKeys.all}),
+		]),
 	})
 }
 export function detectCsvMutationOptions() {
-	return contextMutationOptions({mutationFn: async (file: File) => (await migrationCsvDetect({body: {import: file}})).data, toastError: () => false})
+	return contextMutationOptions({
+		mutationFn: async (file: File) => (await migrationCsvDetect({body: {import: file}})).data,
+		toastError: () => false,
+	})
 }
 export function previewCsvMutationOptions() {
-	return contextMutationOptions({mutationFn: async (body: MigrationCsvPreviewData['body']) => (await migrationCsvPreview({body})).data, toastError: () => false})
+	return contextMutationOptions({
+		mutationFn: async (body: MigrationCsvPreviewData['body']) => (await migrationCsvPreview({body})).data,
+		toastError: () => false,
+	})
 }
 
 export const useMigrationAuthMutation = () => useMutation(migrationAuthMutationOptions())
