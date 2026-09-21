@@ -8,8 +8,9 @@ import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import {MILLISECONDS_A_DAY} from '@/constants/date'
 import Datepicker from '@/components/input/Datepicker.vue'
 import FormField from '@/components/input/FormField.vue'
-import type {IApiToken, IApiPermission} from '@/modelTypes/IApiToken'
-import type {ApiTokenRoutes, ApiTokenPreset} from '@/modelTypes/IApiTokenSettings'
+import type {ApiToken as IApiToken} from '@/client/generated'
+type IApiPermission = NonNullable<IApiToken['permissions']>
+import type {ApiTokenRoutes, ApiTokenPreset} from '@/helpers/apiToken'
 
 const props = withDefaults(defineProps<{
 	ownerId?: number,
@@ -261,7 +262,7 @@ async function createToken() {
 
 	const expiry = Number(newTokenExpiry.value)
 	if (!isNaN(expiry)) {
-		newToken.value.expiresAt = expiryDateIn(expiry)
+		newToken.value.expires_at = expiryDateIn(expiry)
 	} else {
 		const customExpiry = newTokenExpiryCustom.value === null ? null : new Date(newTokenExpiryCustom.value)
 		if (customExpiry === null || isNaN(customExpiry.getTime()) || customExpiry <= new Date()) {
@@ -269,11 +270,11 @@ async function createToken() {
 			return
 		}
 		newTokenExpiryValid.value = true
-		newToken.value.expiresAt = customExpiry
+		newToken.value.expires_at = customExpiry
 	}
 
 	if (props.ownerId > 0) {
-		(newToken.value as IApiToken & {ownerId: number}).ownerId = props.ownerId
+		(newToken.value as IApiToken & {owner_id: number}).owner_id = props.ownerId
 	}
 
 	const token = await service.create(newToken.value)

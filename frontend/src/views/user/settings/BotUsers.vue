@@ -12,7 +12,7 @@ import BotUserService from '@/services/botUser'
 import ApiTokenService from '@/services/apiToken'
 import type {BotUser} from '@/client/generated'
 import type {IAbstract} from '@/modelTypes/IAbstract'
-import type {IApiToken} from '@/modelTypes/IApiToken'
+import type {ApiToken as IApiToken} from '@/client/generated'
 import {formatDisplayDate} from '@/helpers/time/formatDate'
 
 type IUser = BotUser & Required<Pick<BotUser, 'id'>> & IAbstract
@@ -263,7 +263,7 @@ onMounted(loadBots)
 								:key="token.id"
 							>
 								<td>{{ token.title }}</td>
-								<td>{{ formatDisplayDate(token.expiresAt) }}</td>
+								<td>{{ formatDisplayDate(token.expires_at) }}</td>
 								<td>{{ formatDisplayDate(token.created) }}</td>
 								<td class="has-text-end">
 									<XButton

@@ -7,7 +7,7 @@ import XButton from '@/components/input/Button.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import {useI18n} from 'vue-i18n'
 import Message from '@/components/misc/Message.vue'
-import type {IApiToken} from '@/modelTypes/IApiToken'
+import type {ApiToken as IApiToken} from '@/client/generated'
 import ApiTokenForm from '@/components/token/ApiTokenForm.vue'
 
 const service = new ApiTokenService()
@@ -122,12 +122,12 @@ function onTokenCreated(token: IApiToken) {
 							</template>
 						</td>
 						<td>
-							{{ formatDisplayDate(tk.expiresAt) }}
+							{{ formatDisplayDate(tk.expires_at) }}
 							<p
-								v-if="tk.expiresAt < new Date()"
+								v-if="tk.expires_at < new Date()"
 								class="has-text-danger"
 							>
-								{{ $t('user.settings.apiTokens.expired', {ago: formatDateSince(tk.expiresAt)}) }}
+								{{ $t('user.settings.apiTokens.expired', {ago: formatDateSince(tk.expires_at)}) }}
 							</p>
 						</td>
 						<td>{{ formatDisplayDate(tk.created) }}</td>

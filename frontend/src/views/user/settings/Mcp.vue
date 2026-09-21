@@ -4,8 +4,8 @@ import {useNow} from '@vueuse/core'
 import {useI18n} from 'vue-i18n'
 import ApiTokenService from '@/services/apiToken'
 import {mcpInfo, type ConnectionSettings} from '@/client/generated'
-import type {IApiToken} from '@/modelTypes/IApiToken'
-import type {ApiTokenPreset, ApiTokenPresetGroups} from '@/modelTypes/IApiTokenSettings'
+import type {ApiToken as IApiToken} from '@/client/generated'
+import type {ApiTokenPreset, ApiTokenPresetGroups} from '@/helpers/apiToken'
 import ApiTokenForm from '@/components/token/ApiTokenForm.vue'
 import McpClientGuide from '@/components/token/McpClientGuide.vue'
 import XButton from '@/components/input/Button.vue'
@@ -181,16 +181,16 @@ async function deleteToken() {
 							<tr
 								v-for="token in tokens"
 								:key="token.id"
-								:class="{'mcp-token-expired': token.expiresAt < now}"
+								:class="{'mcp-token-expired': token.expires_at < now}"
 							>
 								<td>{{ token.title }}</td>
 								<td>
-									{{ formatDisplayDate(token.expiresAt) }}
+									{{ formatDisplayDate(token.expires_at) }}
 									<p
-										v-if="token.expiresAt < now"
+										v-if="token.expires_at < now"
 										class="has-text-danger"
 									>
-										{{ t('user.settings.apiTokens.expired', {ago: formatDateSince(token.expiresAt)}) }}
+										{{ t('user.settings.apiTokens.expired', {ago: formatDateSince(token.expires_at)}) }}
 									</p>
 								</td>
 								<td>{{ formatDisplayDate(token.created) }}</td>
