@@ -1,5 +1,14 @@
 import {useMutation} from '@tanstack/vue-query'
-import {authPasswordReset, authPasswordToken, userChangePassword, type PasswordResetWritable, type PasswordTokenRequestWritable, type UserChangePasswordRequestWritable} from '@/client/generated'
+import {
+	authPasswordReset,
+	authPasswordToken,
+	userChangePassword,
+} from '@/client/generated'
+import type {
+	PasswordResetWritable,
+	PasswordTokenRequestWritable,
+	UserChangePasswordRequestWritable,
+} from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
 import {i18n} from '@/i18n'
 
