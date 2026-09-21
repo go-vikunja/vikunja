@@ -22,7 +22,7 @@ import {useI18n} from 'vue-i18n'
 
 import {getErrorText} from '@/message'
 import Message from '@/components/misc/Message.vue'
-import {AuthenticatedHTTPFactory} from '@/helpers/fetcher'
+import {oauthAuthorize} from '@/client/generated'
 
 defineOptions({name: 'OAuthAuthorize'})
 
@@ -51,18 +51,18 @@ async function authorize() {
 	}
 
 	try {
-		const HTTP = AuthenticatedHTTPFactory()
-		const response = await HTTP.post('oauth/authorize', {
-			response_type: route.query.response_type,
-			client_id: route.query.client_id,
-			redirect_uri: route.query.redirect_uri,
-			state: route.query.state,
-			code_challenge: route.query.code_challenge,
-			code_challenge_method: route.query.code_challenge_method,
-		})
+		const response = await oauthAuthorize({body: {
+			response_type: String(route.query.response_type ?? ''),
+			client_id: String(route.query.client_id ?? ''),
+			redirect_uri: String(route.query.redirect_uri ?? ''),
+			state: String(route.query.state ?? ''),
+			code_challenge: String(route.query.code_challenge ?? ''),
+			code_challenge_method: String(route.query.code_challenge_method ?? ''),
+		}})
 
 		const {code, redirect_uri, state} = response.data
 
+		if (!redirect_uri || !code) throw new Error('Authorization response is incomplete')
 		const redirectUrl = new URL(redirect_uri)
 		redirectUrl.searchParams.set('code', code)
 		if (state) {

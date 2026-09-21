@@ -36,6 +36,7 @@
 </template>
 
 <script lang="ts" setup>
+import type {VikunjaErrorModel} from '@/client/generated'
 import {ref, computed} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
@@ -124,35 +125,36 @@ function useAuth() {
 			baseStore.setLogoVisible(logoVisible)
 
 			return redirectToProject(projectId)
-		} catch (e) {
-			if (e?.response?.data?.code === 13001) {
+		} catch (cause) {
+			const e = cause as VikunjaErrorModel
+			if (e?.code === 13001) {
 				authenticateWithPassword.value = true
 				return
 			}
 
 			// Handle generic 403 errors that might occur after initial auth
-			if (e?.response?.status === 403 && !e?.response?.data?.code) {
+			if (e?.status === 403 && !e?.code) {
 				errorMessage.value = t('sharing.accessDenied')
 				authenticateWithPassword.value = false
 				return
 			}
 			
 			// Handle network/server errors
-			if (e?.response?.status >= 500 || !e?.response) {
+			if ((e?.status ?? 0) >= 500 || !e?.status) {
 				errorMessage.value = t('sharing.serverError')
 				authenticateWithPassword.value = false
 				return
 			}
 			
-			// Never log the error object itself: AxiosError.config.data holds the plaintext share password.
-			console.error('Link share authentication error:', e?.response?.status, e?.response?.data?.code)
+			// Log only status and code; authentication failures can include secrets.
+			console.error('Link share authentication error:', e?.status, e?.code)
 
 			// TODO: Put this logic in a global errorMessage handler method which checks all auth codes
 			let err = t('sharing.error')
-			if (e?.response?.data?.message) {
-				err = e.response.data.message
+			if (e?.detail) {
+				err = e.detail
 			}
-			if (e?.response?.data?.code === 13002) {
+			if (e?.code === 13002) {
 				err = t('sharing.invalidPassword')
 				authenticateWithPassword.value = true
 			}

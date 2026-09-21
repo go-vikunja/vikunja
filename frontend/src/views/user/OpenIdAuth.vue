@@ -124,8 +124,8 @@ async function authenticateWithCode() {
 
 		redirectIfSaved()
 	} catch (e) {
-		const err = e as {response?: {data?: {code?: number}}}
-		if (err?.response?.data?.code === 1017) {
+		const err = e as {code?: number}
+		if (err?.code === 1017) {
 			needsTotp.value = true
 			return
 		}

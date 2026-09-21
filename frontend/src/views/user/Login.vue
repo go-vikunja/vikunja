@@ -115,6 +115,7 @@
 </template>
 
 <script setup lang="ts">
+import type {VikunjaErrorModel} from '@/client/generated'
 import {computed, onBeforeMount, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useRoute, useRouter} from 'vue-router'
@@ -239,7 +240,7 @@ async function submit() {
 
 		redirectIfSaved()
 	} catch (e) {
-		if (e.response?.data.code === 1017 && !credentials.totpPasscode) {
+		if ((e as VikunjaErrorModel)?.code === 1017 && !credentials.totpPasscode) {
 			return
 		}
 

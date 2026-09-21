@@ -57,7 +57,7 @@ type SentryEventLike = {
 }
 
 function isRequestError(e: unknown): boolean {
-	if (e instanceof AxiosError) {
+	if (e instanceof AxiosError || (e instanceof TypeError && /failed to fetch|fetch failed|load failed|networkerror/i.test(e.message))) {
 		return true
 	}
 
@@ -72,7 +72,9 @@ function isApiErrorBody(e: unknown): boolean {
 		return false
 	}
 
-	const {code, message} = e as {code?: unknown, message?: unknown}
+	const {code, message, status, detail} = e as {code?: unknown, message?: unknown, status?: unknown, detail?: unknown}
+
+	if (typeof status === 'number' && status >= 400 && typeof detail === 'string') return true
 
 	return (typeof code === 'number' || typeof code === 'string')
 		&& typeof message === 'string'
