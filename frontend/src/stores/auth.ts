@@ -349,9 +349,9 @@ export const useAuthStore = defineStore('auth', () => {
 
 	async function linkShareAuth({hash, password}) {
 		const response = await authenticateLinkShare({path: {share: hash}, body: {password}})
+		if (!response.data.project_id) throw new Error('Link share response has no project')
 		adoptSession(response.data.token, false)
 		await checkAuth()
-		if (!response.data.project_id) throw new Error('Link share response has no project')
 		return {...response.data, project_id: response.data.project_id}
 	}
 
