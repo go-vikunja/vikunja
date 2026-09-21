@@ -102,7 +102,7 @@
 							</template>
 							<template v-else>
 								<span
-									v-if="'id' in i && (i.id ?? 0) < -1"
+									v-if="isSavedFilterProject(i as Partial<ProjectResponse>)"
 									class="saved-filter-icon icon"
 								>
 									<Icon icon="filter" />
