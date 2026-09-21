@@ -10,7 +10,7 @@ import {
 	authConfirmEmail,
 	tokenRenew,
 	userShow,
-} from '@/client/generated' 
+} from '@/client/generated'
 import {getBrowserLanguage, i18n, setLanguage, type SupportedLocale} from '@/i18n'
 import {objectToCamelCase} from '@/helpers/case'
 import {getDisplayName, invalidateAvatarCache} from '@/helpers/user'
