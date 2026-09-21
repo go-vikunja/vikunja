@@ -38,19 +38,23 @@ export function totpQrQuery() {
 	})
 }
 
-export function useEnrollTotpMutation() {
-	return useMutation(contextMutationOptions({
+export function enrollTotpMutationOptions() {
+	return contextMutationOptions({
 		mutationFn: async () => (await totpEnroll()).data,
 		onSuccess: (data, _input, client) => {
 			client.removeQueries({queryKey: totpKeys.qr})
 			client.setQueryData<Totp>(totpKeys.current, current => current ? data : current)
 		},
 		onSettled: (_input, client) => client.invalidateQueries({queryKey: totpKeys.current}),
-	}))
+	})
 }
 
-export function useEnableTotpMutation() {
-	return useMutation(contextMutationOptions({
+export function useEnrollTotpMutation() {
+	return useMutation(enrollTotpMutationOptions())
+}
+
+export function enableTotpMutationOptions() {
+	return contextMutationOptions({
 		mutationFn: async (passcode: string) => (await totpEnable({body: {passcode}})).data,
 		onSuccess: (_data, _input, client) => {
 			client.setQueryData<Totp>(totpKeys.current, current => current ? {enabled: true} : current)
@@ -59,7 +63,11 @@ export function useEnableTotpMutation() {
 		// Enabling revokes every session, so a refetch would only 401.
 		onSettled: (_input, client) => client.invalidateQueries({queryKey: totpKeys.current, refetchType: 'none'}),
 		successMessage: () => i18n.global.t('user.settings.totp.confirmSuccess'),
-	}))
+	})
+}
+
+export function useEnableTotpMutation() {
+	return useMutation(enableTotpMutationOptions())
 }
 
 export function disableTotpMutationOptions() {
