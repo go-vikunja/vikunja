@@ -40,14 +40,11 @@ export default [
 					{
 						group: [
 							'axios/*',
-							'@/services',
-							'@/services/**',
-							'@/models',
-							'@/models/**',
-							'@/modelTypes',
-							'@/modelTypes/**',
+							'**/services',
 							'**/services/**',
+							'**/models',
 							'**/models/**',
+							'**/modelTypes',
 							'**/modelTypes/**',
 						],
 						message: 'Use generated API types and resource queries.',
