@@ -71,7 +71,7 @@
 				<XButton
 					variant="tertiary"
 					class="mis-2"
-					@click="totpDisableForm = false"
+					@click="closeDisableForm()"
 				>
 					{{ $t('misc.cancel') }}
 				</XButton>
@@ -127,11 +127,15 @@ async function totpConfirm() {
 	} catch { return }
 }
 
+function closeDisableForm() {
+	totpDisableForm.value = false
+	totpDisablePassword.value = ''
+}
+
 async function totpDisable() {
 	try {
 		await disableMutation.mutateAsync(totpDisablePassword.value)
-		totpDisablePassword.value = ''
-		totpDisableForm.value = false
+		closeDisableForm()
 	} catch { return }
 }
 </script>
