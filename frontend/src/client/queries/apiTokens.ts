@@ -17,7 +17,7 @@ export function apiTokensQuery(ownerId = 0) {
 	})
 }
 export function apiTokenRoutesQuery() {
-	return queryOptions({queryKey: apiTokenKeys.routes, queryFn: async ({signal}) => (await tokenRoutes({signal})).data})
+	return queryOptions({queryKey: apiTokenKeys.routes, queryFn: async ({signal}) => (await tokenRoutes({signal})).data, staleTime: Infinity})
 }
 export function mcpInfoQuery() {
 	return queryOptions({queryKey: apiTokenKeys.mcp, queryFn: async ({signal}) => (await mcpInfo({signal})).data})
