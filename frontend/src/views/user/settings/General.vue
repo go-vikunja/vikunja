@@ -306,6 +306,7 @@
 
 
 <script setup lang="ts">
+import {useUpdateSettingsMutation} from '@/client/queries/account'
 import {computed, watch, ref, onBeforeMount} from 'vue'
 import {useI18n} from 'vue-i18n'
 import isEqual from 'fast-deep-equal'
@@ -321,7 +322,8 @@ import FormSelect from '@/components/input/FormSelect.vue'
 import FormCheckbox from '@/components/input/FormCheckbox.vue'
 
 import {SUPPORTED_LOCALES} from '@/i18n'
-import {AuthenticatedHTTPFactory} from '@/helpers/fetcher'
+import {useQuery} from '@tanstack/vue-query'
+import {timezonesQuery} from '@/client/queries/account'
 import {formatDisplayDateFormat} from '@/helpers/time/formatDate'
 
 import {useTitle} from '@/composables/useTitle'
@@ -329,7 +331,7 @@ import {useTitle} from '@/composables/useTitle'
 import {useProjects} from '@/composables/useProjects'
 import {useAuthStore} from '@/stores/auth'
 import {useConfigStore} from '@/stores/config'
-import {taskRemindersFromSettings, type UserSettingsResponse} from '@/helpers/userSettings'
+import {createUserSettingsDraft, taskRemindersFromSettings, type UserSettingsResponse} from '@/helpers/userSettings'
 import {isSavedFilterProject} from '@/client/queries/projects'
 import {DEFAULT_PROJECT_VIEW_SETTINGS} from '@/constants/projectView'
 import {PRIORITIES} from '@/constants/priorities'
@@ -420,37 +422,17 @@ const languageOptions = computed(() =>
 )
 
 const authStore = useAuthStore()
+const updateUserSettings = useUpdateSettingsMutation()
 const configStore = useConfigStore()
 const timeTrackingEnabled = computed(() => configStore.isProFeatureEnabled(PRO_FEATURE.TIME_TRACKING))
 
-const settings = ref<UserSettingsResponse>({
-	...authStore.settings,
-	frontend_settings: {
-		// Sub objects get exported as read only as well, so we need to 
-		// explicitly spread the object here to allow modification
-		...authStore.settings.frontend_settings,
-		// Add fallback for old settings that don't have the default view set
-		default_view: authStore.settings.frontend_settings.default_view ?? DEFAULT_PROJECT_VIEW_SETTINGS.FIRST,
-		// Add fallback for old settings that don't have the minimum priority set
-		minimum_priority: authStore.settings.frontend_settings.minimum_priority ?? PRIORITIES.MEDIUM,
-		// Add fallback for old settings that don't have the logo change setting set
-		allow_icon_changes: authStore.settings.frontend_settings.allow_icon_changes ?? true,
-		date_display: authStore.settings.frontend_settings.date_display ?? DATE_DISPLAY.RELATIVE,
-		// Add fallback for old settings that don't have the time format set
-		time_format: authStore.settings.frontend_settings.time_format ?? TIME_FORMAT.HOURS_12,
-		// Add fallback for old settings that don't have the default task relation type set
-		default_task_relation_type: authStore.settings.frontend_settings.default_task_relation_type ?? 'related',
-		// Clone to escape the store's readonly array type.
-		quick_add_default_reminders: [...(authStore.settings.frontend_settings.quick_add_default_reminders ?? [])],
-		time_tracking_default_start: authStore.settings.frontend_settings.time_tracking_default_start ?? '09:00',
-	},
-})
+const settings = ref(createUserSettingsDraft(authStore.settings))
 
 const quick_add_default_reminders = computed({
 	get: () => taskRemindersFromSettings(settings.value.frontend_settings.quick_add_default_reminders),
 	set: reminders => {
 		settings.value.frontend_settings.quick_add_default_reminders = reminders.map(reminder => ({
-			relativePeriod: reminder.relative_period,
+			relative_period: reminder.relative_period,
 		}))
 	},
 })
@@ -471,23 +453,6 @@ watch(
 	{deep: true},
 )
 
-watch(
-	() => authStore.settings,
-	(newVal) => {
-		if (Object.keys(settings.value).length !== 0) {
-			return
-		}
-		initialSettings.value = JSON.parse(JSON.stringify({
-			...newVal,
-			frontend_settings: {
-				...newVal.frontend_settings,
-			},
-		}))
-		isDirty.value = !isEqual(settings.value, initialSettings.value)
-	},
-	{deep: true},
-)
-
 function enforceBackgroundBrightnessBounds() {
 	const value = Number(settings.value.frontend_settings.background_brightness)
     
@@ -501,41 +466,12 @@ function enforceBackgroundBrightnessBounds() {
 }
 
 function useAvailableTimezones(settingsRef: Ref<UserSettingsResponse>) {
-	const availableTimezones = ref<{value: string, label: string}[]>([])
-	const searchResults = ref<{value: string, label: string}[]>([])
+	const zones = useQuery(timezonesQuery())
+	const searchText = ref('')
+	const availableTimezones = computed(() => [...(zones.data.value ?? [])].sort().map(value => ({value, label: value.replace(/_/g, ' ')})))
+	const searchResults = computed(() => availableTimezones.value.filter(zone => zone.label.toLowerCase().includes(searchText.value.toLowerCase())))
+	function search(query: string) {searchText.value = query}
 
-	// Load timezones from API
-	const HTTP = AuthenticatedHTTPFactory()
-	HTTP.get('user/timezones')
-		.then(r => {
-			if (r.data) {
-				// Transform timezones into objects with value/label pairs
-				availableTimezones.value = r.data
-					.sort((a, b) => a.localeCompare(b))
-					.map((tz: string) => ({
-						value: tz,
-						label: tz.replace(/_/g, ' '),
-					}))
-				
-				// Initial populate of search results
-				searchResults.value = [...availableTimezones.value]
-				return
-			}
-			
-			availableTimezones.value = []
-		})
-	
-	// Search function that filters available timezones
-	function search(query: string) {
-		if (query === '') {
-			searchResults.value = [...availableTimezones.value]
-			return
-		}
-
-		searchResults.value = availableTimezones.value
-			.filter(tz => tz.label.toLowerCase().includes(query.toLowerCase()))
-	}
-	
 	const timezoneObject = computed({
 		get: () => ({
 			value: settingsRef.value.timezone,
@@ -569,24 +505,6 @@ const {
 
 const isExternalUser = computed(() => authStore.info?.is_local_user === false)
 
-watch(
-	() => authStore.settings,
-	() => {
-		// Only set setting if we don't have edited values yet to avoid overriding
-		if (Object.keys(settings.value).length !== 0) {
-			return
-		}
-		settings.value = {
-			...authStore.settings,
-			frontend_settings: {
-				...authStore.settings.frontend_settings,
-				quick_add_default_reminders: [...(authStore.settings.frontend_settings.quick_add_default_reminders ?? [])],
-			},
-		}
-	},
-	{immediate: true},
-)
-
 const projectList = useProjects()
 const defaultProject = computed({
 	get: () => projectList.projects[settings.value.default_project_id],
@@ -601,12 +519,14 @@ const filterUsedInOverview = computed({
 	},
 })
 const hasFilters = computed(() => projectList.projectsArray.some(isSavedFilterProject))
-const loading = computed(() => authStore.isLoadingGeneralSettings)
+const loading = updateUserSettings.isPending
 
 async function updateSettings() {
-	await authStore.saveUserSettings({
-		settings: {...settings.value},
-	})
+	try {
+		await updateUserSettings.mutateAsync({
+			settings: {...settings.value, ...(configStore.demo_mode_enabled ? {language: undefined} : {})},
+		})
+	} catch { return }
 	initialSettings.value = JSON.parse(JSON.stringify(settings.value))
 	isDirty.value = false
 }

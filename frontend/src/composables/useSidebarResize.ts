@@ -1,3 +1,4 @@
+import {useUpdateSettingsMutation} from '@/client/queries/account'
 import {ref, computed, onMounted, onUnmounted, watch} from 'vue'
 import {useAuthStore} from '@/stores/auth'
 
@@ -40,6 +41,7 @@ function setupWatcher(authStore: ReturnType<typeof useAuthStore>) {
 
 export function useSidebarResize() {
 	const authStore = useAuthStore()
+	const updateUserSettings = useUpdateSettingsMutation()
 	const isMobile = useIsMobile()
 
 	// Initialize width from settings only once
@@ -136,10 +138,12 @@ export function useSidebarResize() {
 				quick_add_default_reminders: [...(authStore.settings.frontend_settings.quick_add_default_reminders ?? [])],
 			},
 		}
-		await authStore.saveUserSettings({
-			settings: newSettings,
-			showMessage: false,
-		})
+		try {
+			await updateUserSettings.mutateAsync({
+				settings: newSettings,
+				showMessage: false,
+			})
+		} catch { return }
 	}
 
 	// Cleanup on unmount

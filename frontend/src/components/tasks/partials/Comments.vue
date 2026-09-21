@@ -215,6 +215,7 @@
 </template>
 
 <script setup lang="ts">
+import {useUpdateSettingsMutation} from '@/client/queries/account'
 import {ref, computed, nextTick, provide, watch, onBeforeUnmount} from 'vue'
 import {useI18n} from 'vue-i18n'
 
@@ -259,6 +260,7 @@ const copy = useCopyToClipboard()
 const {t} = useI18n({useScope: 'global'})
 const configStore = useConfigStore()
 const authStore = useAuthStore()
+const updateUserSettings = useUpdateSettingsMutation()
 
 const localSortOrder = ref<'asc' | 'desc' | null>(null)
 const comment_sort_order = computed(() => localSortOrder.value ?? authStore.settings.frontend_settings.comment_sort_order ?? 'asc')
@@ -387,17 +389,19 @@ async function changePage(page: number) {
 async function toggleSortOrder() {
 	const newOrder = comment_sort_order.value === 'asc' ? 'desc' : 'asc'
 	if (!authStore.isLinkShareAuth) {
-		await authStore.saveUserSettings({
-			settings: {
-				...authStore.settings,
-				frontend_settings: {
-					...authStore.settings.frontend_settings,
-					comment_sort_order: newOrder,
-					quick_add_default_reminders: [...(authStore.settings.frontend_settings.quick_add_default_reminders ?? [])],
+		try {
+			await updateUserSettings.mutateAsync({
+				settings: {
+					...authStore.settings,
+					frontend_settings: {
+						...authStore.settings.frontend_settings,
+						comment_sort_order: newOrder,
+						quick_add_default_reminders: [...(authStore.settings.frontend_settings.quick_add_default_reminders ?? [])],
+					},
 				},
-			},
-			showMessage: false,
-		})
+				showMessage: false,
+			})
+		} catch { return }
 	} else {
 		localSortOrder.value = newOrder
 	}

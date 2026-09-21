@@ -1,3 +1,6 @@
+import {useQuery} from '@tanstack/vue-query'
+import {currentUserQuery, refreshCurrentUser} from '@/client/queries/account'
+import {createUserSettingsDraft} from '@/helpers/userSettings'
 import {computed, readonly, ref, watch} from 'vue'
 import {acceptHMRUpdate, defineStore} from 'pinia'
 
@@ -9,20 +12,15 @@ import {
 	authLogout,
 	authConfirmEmail,
 	tokenRenew,
-	userShow,
 } from '@/client/generated'
 import {getBrowserLanguage, i18n, setLanguage, type SupportedLocale} from '@/i18n'
-import {objectToCamelCase} from '@/helpers/case'
 import {getDisplayName, invalidateAvatarCache} from '@/helpers/user'
-import AvatarService from '@/services/avatar'
 import type {RegisterUserRequestWritable, UserInfoBody, VikunjaErrorModel} from '@/client/generated'
 import {registerViaInviteLink} from '@/client/inviteLink'
 import {parseValidationErrors} from '@/helpers/parseValidationErrors'
-import UserSettingsService from '@/services/userSettings'
 import {getToken, refreshToken, removeToken, saveToken} from '@/helpers/auth'
 import {useWebSocket} from '@/composables/useWebSocket'
 import {setModuleLoading} from '@/stores/helper'
-import {success, error} from '@/message'
 import {
 	getRedirectUrlFromCurrentFrontendPath,
 	redirectToProvider,
@@ -30,15 +28,9 @@ import {
 } from '@/helpers/redirectToProvider'
 import {AUTH_TYPES, ERROR_CODE_TOTP_REQUIRED, type AuthType} from '@/constants/auth'
 
-import type {UserSettingsResponse} from '@/helpers/userSettings'
 import router from '@/router'
 import {useConfigStore} from '@/stores/config'
-import UserSettingsModel from '@/models/userSettings'
 import {MILLISECONDS_A_SECOND} from '@/constants/date'
-import {PrefixMode} from '@/modules/quickAddMagic'
-import {DATE_DISPLAY} from '@/constants/dateDisplay'
-import {TIME_FORMAT} from '@/constants/timeFormat'
-import {RELATION_KIND} from '@/types/IRelationKind'
 import type {IProvider} from '@/types/IProvider'
 import {queryClient} from '@/client/queryClient'
 
@@ -123,14 +115,25 @@ export const useAuthStore = defineStore('auth', () => {
 	const authenticated = ref(false)
 	const needsTotpPasscode = ref(false)
 	
-	const session = ref<SessionClaims | null>(null)
-	const info = ref<UserInfoBody | null>(null)
-	const settings = ref<UserSettingsResponse>(new UserSettingsModel())
+	const session = ref<JwtClaims | null>(null)
+	const account = useQuery(computed(() => ({
+		...currentUserQuery(session.value?.id ?? 0, session.value?.type ?? AUTH_TYPES.USER),
+		enabled: false,
+	})), queryClient)
+	// The JWT carries id and username, so the header renders before GET /user answers.
+	const info = computed(() => {
+		if (!session.value) return null
+		const current = account.data.value?.id === session.value.id ? account.data.value : undefined
+		return current ?? userFromClaims(session.value)
+	})
+	const settings = computed(() => createUserSettingsDraft(account.data.value?.settings))
+	watch(() => settings.value.frontend_settings.desktop_quick_entry_shortcut, shortcut => {
+		window.vikunjaDesktop?.updateQuickEntryShortcut(shortcut || '')
+	})
 	
 	const currentSessionId = ref<string | null>(null)
 	const lastUserInfoRefresh = ref<Date | null>(null)
 	const isLoading = ref(false)
-	const isLoadingGeneralSettings = ref(false)
 
 	const authUser = computed(() => authenticated.value && session.value?.type === AUTH_TYPES.USER)
 
@@ -142,73 +145,17 @@ export const useAuthStore = defineStore('auth', () => {
 
 	const identityKey = computed(() => `${session.value?.id ?? ''}:${session.value?.type ?? ''}`)
 
-	// Identity-bound caches survive same-user object replacements.
-	watch(identityKey, () => {
-		queryClient.clear()
-		useWebSocket().closeStaleConnection()
-	}, {flush: 'sync'})
-
 	function setIsLoading(newIsLoading: boolean) {
 		isLoading.value = newIsLoading 
 	}
 
-	function setIsLoadingGeneralSettings(isLoading: boolean) {
-		isLoadingGeneralSettings.value = isLoading 
-	}
-
-	function setSession(claims: SessionClaims | null) {
+	function setSession(claims: JwtClaims | null) {
+		const identityChanged = session.value?.id !== claims?.id || session.value?.type !== claims?.type
+		if (identityChanged) queryClient.clear()
+		const usernameChanged = session.value?.username !== claims?.username
 		session.value = claims
-	}
-
-	function setUser(newUser: UserInfoBody | null, saveSettings = true) {
-		// checkAuth() calls this on every navigation; only drop the avatar cache on an actual account change.
-		const userChanged = info.value?.username !== newUser?.username
-		info.value = newUser
-		if (newUser !== null && !isLinkShareAuth.value) {
-			if (userChanged) {
-				invalidateAvatar()
-			}
-
-			if (saveSettings && newUser.settings) {
-				loadSettings(new UserSettingsModel(objectToCamelCase(newUser.settings)))
-			}
-		}
-	}
-
-	function setUserSettings(newSettings: UserSettingsResponse) {
-		loadSettings(newSettings)
-		info.value = {
-			...info.value,
-			name: newSettings.name,
-		}
-	}
-	
-	function loadSettings(newSettings: UserSettingsResponse) {
-		settings.value = new UserSettingsModel({
-			...newSettings,
-			frontend_settings: {
-				// Need to set default settings here in case the user does not have any saved in the api already
-				play_sound_when_done: true,
-				quick_add_magic_mode: PrefixMode.Default,
-				color_schema: 'auto',
-				allow_icon_changes: true,
-				date_display: DATE_DISPLAY.RELATIVE,
-				time_format: TIME_FORMAT.HOURS_24,
-				default_task_relation_type: RELATION_KIND.RELATED,
-				background_brightness: 100,
-				show_last_viewed: true,
-				sidebar_width: null,
-				comment_sort_order: 'asc',
-				desktop_quick_entry_shortcut: 'CmdOrCtrl+Shift+A',
-				default_due_time: undefined,
-				...newSettings.frontend_settings,
-			},
-		})
-
-		// Sync the quick entry shortcut to the desktop app when settings are loaded
-		window.vikunjaDesktop?.updateQuickEntryShortcut(
-			settings.value.frontend_settings.desktop_quick_entry_shortcut || '',
-		)
+		if (identityChanged) useWebSocket().closeStaleConnection()
+		if (usernameChanged && claims) invalidateAvatar()
 	}
 
 	function setAuthenticated(newAuthenticated: boolean) {
@@ -404,13 +351,7 @@ export const useAuthStore = defineStore('auth', () => {
 					// their user id would keep the USER session and never flip
 					// `authLinkShare` to true, causing the router guard to bounce
 					// between /share/:hash/auth and the project view forever.
-					const isNewIdentity = session.value === null ||
-						session.value.id !== payload.id ||
-						session.value.type !== payload.type
 					setSession(payload)
-					if (isNewIdentity) {
-						setUser(userFromClaims(payload), false)
-					}
 				} else if (payload.type === AUTH_TYPES.USER) {
 					// JWT expired but this is a user session — attempt a cookie-based
 					// refresh before giving up. This lets users who reopen the app
@@ -423,11 +364,7 @@ export const useAuthStore = defineStore('auth', () => {
 							const p = JSON.parse(atob(b64)) as JwtClaims
 							isAuthenticated = p.exp >= ts
 							currentSessionId.value = p.sid ?? null
-							const isNewIdentity = session.value === null || session.value.id !== p.id
 							setSession(p)
-							if (isNewIdentity) {
-								setUser(userFromClaims(p), false)
-							}
 						}
 					} catch {
 						// Refresh failed — stay unauthenticated
@@ -452,7 +389,6 @@ export const useAuthStore = defineStore('auth', () => {
 		setAuthenticated(isAuthenticated)
 		if (!isAuthenticated) {
 			setSession(null)
-			setUser(null)
 			redirectToSpecifiedProvider()
 		}
 		
@@ -466,14 +402,12 @@ export const useAuthStore = defineStore('auth', () => {
 		}
 
 		try {
-			const response = await userShow()
-			const newUser = response.data
+			const newUser = await refreshCurrentUser(session.value?.id ?? 0)
 
 			if (newUser.settings?.language) {
 				await setLanguage(newUser.settings.language as SupportedLocale)
 			}
 
-			setUser(newUser)
 			updateLastUserRefresh()
 
 			return newUser
@@ -510,44 +444,6 @@ export const useAuthStore = defineStore('auth', () => {
 		return false
 	}
 
-	async function saveUserSettings({
-		settings,
-		showMessage = true,
-	}: {
-		settings: UserSettingsResponse,
-		showMessage: boolean,
-	}) {
-		const userSettingsService = new UserSettingsService()
-
-		const cancel = setModuleLoading(setIsLoadingGeneralSettings)
-		try {
-			const oldName = info.value?.name
-			let settingsUpdate = {...settings}
-			if (configStore.demo_mode_enabled) {
-				settingsUpdate = {
-					...settingsUpdate,
-					language: null,
-				}
-			}
-			const updateSettingsPromise = userSettingsService.update(settingsUpdate)
-			setUserSettings(settingsUpdate)
-			await setLanguage(settings.language)
-			await updateSettingsPromise
-			if (oldName !== undefined && oldName !== settingsUpdate.name) {
-				const {avatarProvider} = await (new AvatarService()).get({})
-				if (avatarProvider === 'initials') {
-					invalidateAvatar()
-				}
-			}
-			if (showMessage) {
-				success({message: i18n.global.t('user.settings.general.savedSuccess')})
-			}
-		} catch (e) {
-			error(e)
-		} finally {
-			cancel()
-		}
-	}
 
 	/**
 	 * Renews the api token and saves it to local storage
@@ -600,7 +496,6 @@ export const useAuthStore = defineStore('auth', () => {
 		lastUserInfoRefresh.value = null
 		setAuthenticated(false)
 		setSession(null)
-		setUser(null)
 		window.localStorage.clear() // Clear all settings and history we might have saved in local storage.
 
 		sessionStorage.setItem(JUST_LOGGED_OUT_KEY, 'true')
@@ -644,12 +539,8 @@ export const useAuthStore = defineStore('auth', () => {
 		isLoading: readonly(isLoading),
 		setIsLoading,
 
-		isLoadingGeneralSettings: readonly(isLoadingGeneralSettings),
-		setIsLoadingGeneralSettings,
 
 		setSession,
-		setUser,
-		setUserSettings,
 		setAuthenticated,
 		setNeedsTotpPasscode,
 
@@ -665,7 +556,6 @@ export const useAuthStore = defineStore('auth', () => {
 		checkAuth,
 		refreshUserInfo,
 		verifyEmail,
-		saveUserSettings,
 		renewToken,
 		logout,
 	}
