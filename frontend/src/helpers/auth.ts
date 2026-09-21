@@ -174,10 +174,8 @@ async function doRefresh(persist: boolean): Promise<void> {
 				if (loggedOutSinceStart()) {
 					return
 				}
-				// Pre-v2 browsers only hold the v1-path cookie, and some deployments
-				// can't reach v2 at all; v1 re-seeds both cookies.
-				// Drop this fallback once pre-v2 clients have cycled out.
-				response = await authRefreshToken({client: publicClient, baseUrl: getApiBaseUrl().replace(/\/$/, '')})
+				// Migrate the old path-scoped refresh cookie; all other requests use v2.
+				response = await authRefreshToken({client: publicClient, baseUrl: getApiBaseUrl().replace(/\/api\/v2\/$/, '/api/v1/').replace(/\/$/, '')})
 			}
 			if (loggedOutSinceStart()) {
 				return

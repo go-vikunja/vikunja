@@ -102,7 +102,7 @@
 							</template>
 							<template v-else>
 								<span
-									v-if="i.id < -1"
+									v-if="'id' in i && (i.id ?? 0) < -1"
 									class="saved-filter-icon icon"
 								>
 									<Icon icon="filter" />
@@ -146,8 +146,7 @@ import {getHistory} from '@/modules/projectHistory'
 import {parseTaskText, PREFIXES, PrefixMode} from '@/modules/quickAddMagic'
 import {success} from '@/message'
 
-import type {Task as ITask} from '@/client/generated'
-import type {IAbstract} from '@/modelTypes/IAbstract'
+import type {Task as ITask, Label} from '@/client/generated'
 import type {TaskFilterParams} from '@/client/queries/tasks'
 import {
 	createProjectDraft,
@@ -169,7 +168,8 @@ const authStore = useAuthStore()
 
 const {isQuickAddMode} = useQuickAddMode()
 
-type DoAction<Type> = { type: ACTION_TYPE } & Type
+type QuickActionItem = Command | ITask | ProjectResponse | (ITeam & {title: string}) | Label
+type DoAction<Type = QuickActionItem> = Type
 
 enum ACTION_TYPE {
 	CMD = 'cmd',
@@ -299,7 +299,7 @@ interface Result {
 	title: string
 	// singular, unlike the plural group heading in `title`: it is announced per item
 	typeLabel: string
-	items: DoAction<IAbstract>
+	items: QuickActionItem[]
 }
 
 const results = computed<Result[]>(() => {
@@ -337,7 +337,6 @@ const results = computed<Result[]>(() => {
 	].filter((i) => i.items.length > 0)
 })
 
-// `unknown` because Result.items isn't typed as an array, so v-for widens each item to its property union
 function isDone(item: unknown): boolean {
 	return Boolean((item as ITask | undefined)?.done)
 }
@@ -583,7 +582,7 @@ async function doAction(type: ACTION_TYPE, item: DoAction) {
 			searchInput.value?.focus()
 			break
 		case ACTION_TYPE.LABELS:
-			if (/\s/.test(item.title)) {
+			if (/\s/.test(item.title ?? '')) {
 				query.value = '*"' + item.title + '"'
 			} else {
 				query.value = '*' + item.title

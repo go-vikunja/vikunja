@@ -44,6 +44,15 @@ describe('checkAndSetApiUrl query lifecycle', () => {
 		expect(localStorage.getItem('API_URL')).toBe('https://new.example.com/root/api/v2')
 	})
 
+	it('keeps pending queries when a v1 URL resolves to the same v2 server', async () => {
+		window.API_URL = 'https://old.example.com/api/v1'
+		mocks.update.mockResolvedValue(true)
+		await checkAndSetApiUrl(window.API_URL)
+		expect(window.API_URL).toBe('https://old.example.com/api/v2')
+		expect(mocks.clear).not.toHaveBeenCalled()
+		expect(mocks.configure).not.toHaveBeenCalled()
+	})
+
 	it('keeps the current client and cache when the server does not change', async () => {
 		mocks.update.mockResolvedValue(true)
 
