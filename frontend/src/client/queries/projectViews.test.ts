@@ -15,7 +15,7 @@ const sdk = vi.hoisted(() => ({
 const requestContext = vi.hoisted(() => ({
 	identity: {id: 1, type: 1} as {id: number; type: number} | null,
 	sessionEpoch: 1,
-	apiV2BaseUrl: 'https://identity-a.example/api/v2/',
+	apiBaseUrl: 'https://identity-a.example/api/v2/',
 }))
 
 vi.mock('@/client/generated', () => sdk)
@@ -26,7 +26,7 @@ vi.mock('@/helpers/auth', () => ({
 	getTokenIdentity: () => requestContext.identity,
 }))
 vi.mock('@/helpers/apiUrl', () => ({
-	getApiBaseUrl: () => requestContext.apiV2BaseUrl,
+	getApiBaseUrl: () => requestContext.apiBaseUrl,
 }))
 
 import {
@@ -66,7 +66,7 @@ function embeddedViews(client = queryClient) {
 beforeEach(() => {
 	requestContext.identity = {id: 1, type: 1}
 	requestContext.sessionEpoch = 1
-	requestContext.apiV2BaseUrl = 'https://identity-a.example/api/v2/'
+	requestContext.apiBaseUrl = 'https://identity-a.example/api/v2/'
 })
 
 describe('project view queries', () => {

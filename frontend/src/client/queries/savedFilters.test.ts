@@ -17,7 +17,7 @@ const sdk = vi.hoisted(() => ({
 const requestContext = vi.hoisted(() => ({
 	identity: {id: 1, type: 1} as {id: number; type: number} | null,
 	sessionEpoch: 1,
-	apiV2BaseUrl: 'https://identity-a.example/api/v2/',
+	apiBaseUrl: 'https://identity-a.example/api/v2/',
 }))
 
 vi.mock('@/message', () => ({success: vi.fn(), error: vi.fn()}))
@@ -28,7 +28,7 @@ vi.mock('@/helpers/auth', () => ({
 	getTokenIdentity: () => requestContext.identity,
 }))
 vi.mock('@/helpers/apiUrl', () => ({
-	getApiBaseUrl: () => requestContext.apiV2BaseUrl,
+	getApiBaseUrl: () => requestContext.apiBaseUrl,
 }))
 
 import {
@@ -83,7 +83,7 @@ const emptyProjectList: ProjectListResult = {
 beforeEach(() => {
 	requestContext.identity = {id: 1, type: 1}
 	requestContext.sessionEpoch = 1
-	requestContext.apiV2BaseUrl = 'https://identity-a.example/api/v2/'
+	requestContext.apiBaseUrl = 'https://identity-a.example/api/v2/'
 })
 
 describe('saved filter queries', () => {
@@ -301,7 +301,7 @@ describe('saved filter mutations after the request context changes', () => {
 	describe.each([
 		['identity', () => { requestContext.identity = {id: 2, type: 1} }],
 		['session', () => { requestContext.sessionEpoch++ }],
-		['API URL', () => { requestContext.apiV2BaseUrl = 'https://identity-b.example/api/v2/' }],
+		['API URL', () => { requestContext.apiBaseUrl = 'https://identity-b.example/api/v2/' }],
 	] as const)('after the %s changes', (_name, switchContext) => {
 		it.each(delayedMutationCases)('discards a delayed $name completion', async ({mock, run, response}) => {
 			queryClient.setQueryData(listKey, emptyProjectList)
