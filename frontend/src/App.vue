@@ -109,7 +109,8 @@ watch(() => route.query.accountDeletionConfirm, async token => {
 	// The URL reaches Sentry replays and lastVisited, so drop the single-use token before spending it.
 	const query = {...route.query}
 	delete query.accountDeletionConfirm
-	await router.replace({path: route.path, query, hash: route.hash})
+	// A failed strip must not skip spending the token.
+	await router.replace({path: route.path, query, hash: route.hash}).catch(() => {})
 	try {
 		await confirmDeletion.mutateAsync(token)
 	} catch {
