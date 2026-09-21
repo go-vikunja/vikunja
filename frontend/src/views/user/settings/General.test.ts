@@ -95,7 +95,7 @@ describe('General user settings', () => {
 			id: 1,
 			username: 'user1',
 			is_local_user: false,
-			authProvider: 'keycloak',
+			auth_provider: 'keycloak',
 		} as never)
 
 		wrapper = await mountComponent()
