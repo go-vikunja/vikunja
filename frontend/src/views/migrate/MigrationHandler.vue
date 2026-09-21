@@ -260,6 +260,7 @@ async function migrate(credentialsConfig?: PlankaCredentials) {
 			if (!credentialsConfig) return
 			await startMigration.mutateAsync({kind: 'credentials', provider, body: credentialsConfig})
 		} else if (provider === 'todoist' || provider === 'trello' || provider === 'microsoft-todo') {
+			if (!migratorAuthCode.value) return
 			await startMigration.mutateAsync({kind: 'oauth', provider, body: {code: migratorAuthCode.value}})
 		} else return
 		migrationStore.start(provider)
