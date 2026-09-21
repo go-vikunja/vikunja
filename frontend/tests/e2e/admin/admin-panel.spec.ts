@@ -83,8 +83,10 @@ test('admin user changes persist and license removal rejects new requests', asyn
 	await row.getByRole('button', {name: 'Details', exact: true}).click()
 	await dialog.getByRole('button', {name: 'Delete', exact: true}).click()
 	await dialog.getByRole('button', {name: 'Delete now', exact: true}).click()
+	await expect(page.locator('tbody tr')).not.toHaveCount(0)
 	await expect(row).toHaveCount(0)
 	await page.reload()
+	await expect(page.locator('tbody tr')).not.toHaveCount(0)
 	await expect(row).toHaveCount(0)
 	const headers = {Authorization: `Bearer ${token}`}
 	const users = await apiContext.get('/api/v2/admin/users?q=managed-user', {headers})
