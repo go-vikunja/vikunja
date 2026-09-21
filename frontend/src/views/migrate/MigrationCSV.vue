@@ -212,7 +212,7 @@ import SingleTaskInProject from '@/components/tasks/partials/SingleTaskInProject
 import {createTaskDraft} from '@/helpers/task'
 
 import {useMutation} from '@tanstack/vue-query'
-import {TASK_ATTRIBUTES, SUPPORTED_DELIMITERS, SUPPORTED_DATE_FORMATS, type CsvImportDraft} from '@/helpers/migration'
+import {TASK_ATTRIBUTES, SUPPORTED_DELIMITERS, SUPPORTED_DATE_FORMATS, type CsvImportDraft} from './csvImport'
 import {detectCsvMutationOptions, previewCsvMutationOptions, startMigrationMutationOptions} from '@/client/queries/migration'
 
 import {useTitle} from '@/composables/useTitle'
