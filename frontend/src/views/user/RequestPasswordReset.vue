@@ -40,7 +40,7 @@
 			<div class="is-flex">
 				<XButton
 					type="submit"
-					:loading="passwordResetService.loading"
+					:loading="passwordResetMutation.isPending.value"
 				>
 					{{ $t('user.auth.resetPasswordAction') }}
 				</XButton>
@@ -56,23 +56,22 @@
 </template>
 
 <script setup lang="ts">
-import {ref, shallowReactive} from 'vue'
+import {ref} from 'vue'
 
-import PasswordResetModel from '@/models/passwordReset'
-import PasswordResetService from '@/services/passwordReset'
+import {useRequestPasswordResetMutation} from '@/client/queries/passwords'
 import Message from '@/components/misc/Message.vue'
 import {getErrorText} from '@/message'
 import FormField from '@/components/input/FormField.vue'
 
-const passwordResetService = shallowReactive(new PasswordResetService())
-const passwordReset = ref(new PasswordResetModel())
+const passwordResetMutation = useRequestPasswordResetMutation()
+const passwordReset = ref({email: ''})
 const errorMsg = ref('')
 const isSuccess = ref(false)
 
 async function requestPasswordReset() {
 	errorMsg.value = ''
 	try {
-		await passwordResetService.requestResetPassword(passwordReset.value)
+		await passwordResetMutation.mutateAsync(passwordReset.value)
 		isSuccess.value = true
 	} catch (e) {
 		errorMsg.value = getErrorText(e)
