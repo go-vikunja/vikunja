@@ -10,6 +10,7 @@ export function dataExportQuery() {
 	return queryOptions({
 		queryKey: exportKeys.status,
 		queryFn: async ({signal}): Promise<UserExportStatus | null> => (await userExportStatus({signal})).data ?? null,
+		// The export completes server-side, so a remount must not serve a pre-completion status.
 		staleTime: 0,
 	})
 }
