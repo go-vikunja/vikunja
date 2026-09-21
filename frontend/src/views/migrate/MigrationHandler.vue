@@ -267,7 +267,7 @@ async function migrate(credentialsConfig?: PlankaCredentials) {
 	} catch (cause) {
 		if (!isRequestContextAbort(cause)) migrationError.value = getErrorText(cause)
 	} finally {
-		// Evicts the plaintext Planka password from the mutation cache.
+		// Evicts the plaintext password from the mutation cache.
 		startMigration.reset()
 	}
 }

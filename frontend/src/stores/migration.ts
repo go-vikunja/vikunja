@@ -40,7 +40,7 @@ export const useMigrationStore = defineStore('migration', () => {
 		if (errorKind.value === 'detail' && errorMessage.value !== '') {
 			return 'migrate.migrationFailed'
 		}
-		// A kind a newer api adds is unknown here and would otherwise render an empty message.
+		// A newer api can report a kind this table does not have.
 		return FAILURE_KEYS[errorKind.value as MigrationErrorKind] ?? GENERIC_FAILURE_KEY
 	})
 
