@@ -55,6 +55,8 @@ test.describe('Invite links', () => {
 		await page.context().clearCookies()
 
 		const guest = await browser.newContext({baseURL})
+		// Own context: hand-clearing the guest's token races its boot-time refresh.
+		const stranger = await browser.newContext({baseURL})
 		try {
 			const guestPage = await guest.newPage()
 			await setupApiUrl(guestPage)
@@ -74,16 +76,14 @@ test.describe('Invite links', () => {
 			const teams = await apiContext.get('teams', {headers: {Authorization: `Bearer ${token}`}})
 			expect(teams.ok()).toBeTruthy()
 			expect((await teams.json()).map((entry: {id: number}) => entry.id)).toContain(team.id)
-			const deadPage = await guest.newPage()
+			const deadPage = await stranger.newPage()
 			await setupApiUrl(deadPage)
-			await deadPage.goto('/login')
-			await deadPage.evaluate(() => localStorage.removeItem('token'))
-			await guest.clearCookies()
 			await deadPage.goto(new URL(url).pathname + new URL(url).hash)
 			await expect(deadPage.getByText('This invite link is invalid or expired.')).toBeVisible()
 			await expect(deadPage.locator('#registerform')).not.toBeVisible()
 		} finally {
 			await guest.close()
+			await stranger.close()
 		}
 		await login(page, apiContext, admin)
 		await page.goto('/admin/invite-links')
