@@ -1,12 +1,17 @@
 import {queryOptions, useMutation} from '@tanstack/vue-query'
 import {avatarGet, userAvatarUpload, userGetAvatarProvider, userSetAvatarProvider} from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
+import {queryClient} from '@/client/queryClient'
 import {i18n} from '@/i18n'
 
 export const avatarKeys = {
 	user: (username: string) => ['avatars', username] as const,
 	image: (username: string, size: number) => ['avatars', username, size] as const,
 	provider: ['avatar-provider'] as const,
+}
+
+export function invalidateAvatarQueries(username: string) {
+	void queryClient.invalidateQueries({queryKey: avatarKeys.user(username)})
 }
 
 export function avatarQuery(username: string, size: number) {
