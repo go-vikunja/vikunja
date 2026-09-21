@@ -58,10 +58,7 @@ function onTokenCreated(token: IApiToken) {
 
 function load() { void Promise.all([refreshInfo(), refreshTokens()]) }
 
-function done() {
-	newToken.value = ''
-	void refreshTokens()
-}
+function done() { newToken.value = '' }
 
 async function deleteToken() {
 	const token = tokenToDelete.value

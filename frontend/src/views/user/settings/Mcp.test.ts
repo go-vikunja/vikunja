@@ -66,7 +66,7 @@ describe('MCP settings', () => {
 		await flushPromises()
 		expect(wrapper.findComponent({name: 'McpClientGuide'}).exists()).toBe(false)
 		expect(wrapper.html()).not.toContain('tk_secret')
-		expect(getAll).toHaveBeenCalledTimes(2)
+		expect(getAll).toHaveBeenCalledTimes(1)
 	})
 
 	it.each<ConnectionSettings>([
