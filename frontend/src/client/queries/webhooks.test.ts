@@ -20,7 +20,7 @@ const sdk = vi.hoisted(() => ({
 vi.mock('@/client/generated', () => sdk)
 vi.mock('@/message', () => ({success: vi.fn(), error: vi.fn()}))
 
-it('uses separate operations and caches for user and project subscriptions', async () => {
+it('uses separate operations and caches for user and project webhooks', async () => {
 	const client = new QueryClient()
 	sdk.webhooksList.mockResolvedValue({data: {items: [{id: 1}], total_pages: 1}})
 	sdk.userWebhooksList.mockResolvedValue({data: {items: [{id: 2}], total_pages: 1}})
