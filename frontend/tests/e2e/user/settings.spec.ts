@@ -99,6 +99,7 @@ test.describe('User Settings', () => {
 		await nameInput.fill('Settings Migration')
 		await page.locator('[data-cy=saveGeneralSettings]').click()
 		await expect(page.locator('.global-notification')).toContainText('Success')
+		await expect(page.locator('.username')).toHaveText('Settings Migration')
 		await page.reload()
 		await expect(nameInput).toHaveValue('Settings Migration')
 	})
