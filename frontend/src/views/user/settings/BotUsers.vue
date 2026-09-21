@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {computed, onMounted, ref} from 'vue'
+import {computed, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useTitle} from '@/composables/useTitle'
 
@@ -8,15 +8,14 @@ import FormField from '@/components/input/FormField.vue'
 import Message from '@/components/misc/Message.vue'
 import ApiTokenForm from '@/components/token/ApiTokenForm.vue'
 
-import BotUserService from '@/services/botUser'
-import {useQueries} from '@tanstack/vue-query'
+import {botsQuery, useCreateBotMutation, useUpdateBotMutation, useDeleteBotMutation} from '@/client/queries/bots'
+import {useQueries, useQuery} from '@tanstack/vue-query'
 import {botApiTokensQuery, useDeleteApiTokenMutation} from '@/client/queries/apiTokens'
 import type {BotUser} from '@/client/generated'
-import type {IAbstract} from '@/modelTypes/IAbstract'
 import type {ApiToken as IApiToken} from '@/client/generated'
 import {formatDisplayDate} from '@/helpers/time/formatDate'
 
-type IUser = BotUser & Required<Pick<BotUser, 'id'>> & IAbstract
+type IUser = BotUser & Required<Pick<BotUser, 'id'>>
 
 const STATUS_ACTIVE = 0
 const STATUS_DISABLED = 2
@@ -24,9 +23,12 @@ const STATUS_DISABLED = 2
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => t('user.settings.bots.title'))
 
-const botService = new BotUserService()
+const {data: botData} = useQuery(botsQuery())
+const createMutation = useCreateBotMutation()
+const updateMutation = useUpdateBotMutation()
+const deleteMutation = useDeleteBotMutation()
 const deleteTokenMutation = useDeleteApiTokenMutation()
-const bots = ref<IUser[]>([])
+const bots = computed(() => (botData.value ?? []).filter((bot): bot is IUser => typeof bot.id === 'number' && bot.id > 0))
 const newBotUsername = ref('')
 const newBotName = ref('')
 const createError = ref<string | null>(null)
@@ -45,27 +47,22 @@ const nameDraft = ref<Record<number, string>>({})
 const showDeleteModal = ref<boolean>(false)
 const botToDelete = ref<IUser>()
 
-async function loadBots() {
-	bots.value = await botService.getAll() as IUser[]
-}
-
 async function createBot() {
 	createError.value = null
 	const username = newBotUsername.value.startsWith('bot-') ? newBotUsername.value : `bot-${newBotUsername.value}`
-	const payload: IUser = {id: 0, maxPermission: null, username}
+	const payload: Pick<BotUser, 'username' | 'name'> = {username}
 	const trimmedName = newBotName.value.trim()
 	if (trimmedName !== '') {
 		payload.name = trimmedName
 	}
 	try {
-		const created = await botService.create(payload)
-		bots.value.push(created as IUser)
+		await createMutation.mutateAsync(payload)
 		newBotUsername.value = ''
 		newBotName.value = ''
 		showCreateForm.value = false
 	} catch (e: unknown) {
-		const err = e as {response?: {data?: {message?: string}}}
-		createError.value = err?.response?.data?.message ?? String(e)
+		const err = e as {detail?: string}
+		createError.value = err.detail ?? String(e)
 	}
 }
 
@@ -74,11 +71,7 @@ async function toggleBotStatus(bot: IUser) {
 		...bot,
 		status: bot.status === STATUS_ACTIVE ? STATUS_DISABLED : STATUS_ACTIVE,
 	}
-	const result = await botService.update(updated) as IUser
-	const idx = bots.value.findIndex(b => b.id === bot.id)
-	if (idx >= 0) {
-		bots.value[idx] = result
-	}
+	try { await updateMutation.mutateAsync({id: bot.id, body: updated}) } catch { /* Mutation reports the error. */ }
 }
 
 function startEditName(bot: IUser) {
@@ -96,13 +89,11 @@ async function saveBotName(bot: IUser) {
 		...bot,
 		name: (nameDraft.value[bot.id] ?? '').trim(),
 	}
-	const result = await botService.update(updated) as IUser
-	const idx = bots.value.findIndex(b => b.id === bot.id)
-	if (idx >= 0) {
-		bots.value[idx] = result
-	}
-	editingName.value[bot.id] = false
-	delete nameDraft.value[bot.id]
+	try {
+		await updateMutation.mutateAsync({id: bot.id, body: updated})
+		editingName.value[bot.id] = false
+		delete nameDraft.value[bot.id]
+	} catch { /* Mutation reports the error. */ }
 }
 
 async function deleteBot() {
@@ -110,10 +101,12 @@ async function deleteBot() {
 	if (!bot) {
 		return
 	}
-	await botService.delete(bot)
-	bots.value = bots.value.filter(b => b.id !== bot.id)
 	showDeleteModal.value = false
 	botToDelete.value = undefined
+	try {
+		await deleteMutation.mutateAsync(bot.id)
+		delete newTokensByBot.value[bot.id]
+	} catch { /* Mutation reports the error. */ }
 }
 
 function onTokenCreated(bot: IUser, token: IApiToken) {
@@ -126,7 +119,6 @@ async function deleteToken(token: IApiToken) {
 	try { await deleteTokenMutation.mutateAsync(token.id) } catch { /* Mutation reports the error. */ }
 }
 
-onMounted(loadBots)
 </script>
 
 <template>
@@ -155,7 +147,10 @@ onMounted(loadBots)
 					:placeholder="$t('user.settings.bots.namePlaceholder')"
 				>
 			</FormField>
-			<XButton @click="createBot">
+			<XButton
+				:loading="createMutation.isPending.value"
+				@click="createBot"
+			>
 				{{ $t('user.settings.bots.create') }}
 			</XButton>
 		</div>
