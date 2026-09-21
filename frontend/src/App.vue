@@ -42,8 +42,7 @@
 
 <script lang="ts" setup>
 import {computed, watch} from 'vue'
-import {useRoute} from 'vue-router'
-import {useI18n} from 'vue-i18n'
+import {useRoute, useRouter} from 'vue-router'
 import isTouchDevice from 'is-touch-device'
 
 import Notification from '@/components/misc/Notification.vue'
@@ -70,8 +69,7 @@ import DemoMode from '@/components/home/DemoMode.vue'
 import {AUTH_ROUTE_NAMES} from '@/constants/authRouteNames'
 import {useQuickAddMode} from '@/composables/useQuickAddMode'
 
-const importAccountDeleteService = () => import('@/services/accountDelete')
-import {success} from '@/message'
+import {useConfirmDeletionMutation} from '@/client/queries/accountDeletion'
 
 const authStore = useAuthStore()
 const baseStore = useBaseStore()
@@ -103,21 +101,20 @@ const showNoAuthRoute = computed(() => typeof route.name === 'string' && AUTH_RO
 useBodyClass('is-touch', isTouchDevice())
 const keyboardShortcutsActive = computed(() => baseStore.keyboardShortcutsActive)
 
-const {t} = useI18n({useScope: 'global'})
+const router = useRouter()
+const confirmDeletion = useConfirmDeletionMutation()
 
-// setup account deletion verification
-const accountDeletionConfirm = computed(() => route.query?.accountDeletionConfirm as (string | undefined))
-watch(accountDeletionConfirm, async (accountDeletionConfirm) => {
-	if (accountDeletionConfirm === undefined) {
-		return
-	}
-
-	const AccountDeleteService = (await importAccountDeleteService()).default
-	const accountDeletionService = new AccountDeleteService()
-	await accountDeletionService.confirm(accountDeletionConfirm)
-	success({message: t('user.deletion.confirmSuccess')})
-	authStore.refreshUserInfo()
-}, { immediate: true })
+watch(() => route.query.accountDeletionConfirm, async token => {
+	if (typeof token !== 'string' || !token) return
+	try {
+		await confirmDeletion.mutateAsync(token)
+		if (route.query.accountDeletionConfirm === token) {
+			const query = {...route.query}
+			delete query.accountDeletionConfirm
+			await router.replace({path: route.path, query, hash: route.hash})
+		}
+	} catch { return }
+}, {immediate: true})
 
 setLanguage(authStore.settings.language ?? DEFAULT_LANGUAGE)
 useColorScheme()
