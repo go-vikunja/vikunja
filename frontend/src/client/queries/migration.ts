@@ -42,18 +42,22 @@ export type StartMigrationInput =
 	| {kind: 'credentials', provider: 'planka', body: MigrationCredentialsBodyWritable}
 	| {kind: 'csv', provider: 'csv', body: MigrationCsvMigrateData['body']}
 export function startMigrationMutationOptions() {
-	return contextMutationOptions({
-		mutationFn: async (input: StartMigrationInput) => {
-			switch (input.kind) {
-				case 'file': return (await fileOperations[input.provider]({body: {import: input.file}})).data
-				case 'oauth': return (await oauthOperations[input.provider]({body: input.body})).data
-				case 'credentials': return (await migrationPlankaMigrate({body: input.body})).data
-				case 'csv': return (await migrationCsvMigrate({body: input.body})).data
-			}
-		},
-		onSettled: ({provider}, client) => client.invalidateQueries({queryKey: migrationKeys.status(provider)}),
-		toastError: () => false,
-	})
+	return {
+		...contextMutationOptions({
+			mutationFn: async (input: StartMigrationInput) => {
+				switch (input.kind) {
+					case 'file': return (await fileOperations[input.provider]({body: {import: input.file}})).data
+					case 'oauth': return (await oauthOperations[input.provider]({body: input.body})).data
+					case 'credentials': return (await migrationPlankaMigrate({body: input.body})).data
+					case 'csv': return (await migrationCsvMigrate({body: input.body})).data
+				}
+			},
+			onSettled: ({provider}, client) => client.invalidateQueries({queryKey: migrationKeys.status(provider)}),
+			toastError: () => false,
+		}),
+		// Input holds the plaintext Planka password.
+		gcTime: 0,
+	}
 }
 export function migrationCompletedMutationOptions() {
 	return contextMutationOptions({

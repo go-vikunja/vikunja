@@ -247,6 +247,9 @@ async function migrate(credentialsConfig?: MigrationCredentialsBodyWritable) {
 		if (provider === migrator.value.id) startedHere.value = true
 	} catch (cause) {
 		migrationError.value = getErrorText(cause)
+	} finally {
+		// Evicts the plaintext Planka password from the mutation cache.
+		startMigration.reset()
 	}
 }
 function confirmMigrateAgain() {
