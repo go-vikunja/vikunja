@@ -55,7 +55,7 @@ func (b *BotUser) isOwner(s *xorm.Session, a web.Auth) (bool, error) {
 		return false, err
 	}
 
-	u, err := user.GetUserByID(s, b.ID)
+	u, err := getBotManagementUser(s, b.ID)
 	if err != nil {
 		if user.IsErrUserDoesNotExist(err) {
 			return false, nil
