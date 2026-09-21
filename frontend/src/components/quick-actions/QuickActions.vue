@@ -200,7 +200,7 @@ const taskQuery = useTasks(
 	{enabled: () => taskSearchParams.value !== null},
 )
 const foundTasks = computed(() => taskSearchParams.value
-	? taskQuery.tasks.value.map(task => ({...task, type: ACTION_TYPE.TASK}))
+	? taskQuery.tasks.value
 	: [])
 
 const createTeamMutation = useCreateTeamMutation()
