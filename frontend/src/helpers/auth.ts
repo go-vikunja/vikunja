@@ -1,6 +1,14 @@
-import {apiV2Url, HTTPFactory} from '@/helpers/fetcher'
+import {getApiV2BaseUrl} from '@/helpers/fetcher'
+import {authRefreshToken} from '@/client/generated'
+import {createClient} from '@/client/generated/client'
 import {isDesktopApp, refreshDesktopToken} from '@/helpers/desktopAuth'
 import {clearServerClock, recordServerClock} from '@/helpers/serverClock'
+
+// Cookie-only: the shared client injects Authorization and answers a 401 by calling refreshToken(), which is this call.
+const refreshClient = createClient({
+	credentials: 'include',
+	throwOnError: true,
+})
 
 let savedToken: string | null = null
 
@@ -110,7 +118,8 @@ export async function refreshToken(persist: boolean): Promise<void> {
 async function doRefresh(persist: boolean): Promise<void> {
 	// Snapshot the epoch so we can tell if a logout happened while we awaited.
 	const epochAtStart = authEpoch
-	const loggedOutSinceStart = () => authEpoch !== epochAtStart
+	const serverAtStart = window.API_URL
+	const loggedOutSinceStart = () => authEpoch !== epochAtStart || window.API_URL !== serverAtStart
 
 	// Capture the tokens before waiting for the lock so we can detect
 	// if another tab refreshed while we were queued.
@@ -162,12 +171,13 @@ async function doRefresh(persist: boolean): Promise<void> {
 		}
 
 		// We hold the lock and no one else refreshed — make the API call.
-		const HTTP = HTTPFactory()
 		try {
-			const response = await HTTP.post(apiV2Url('user/token/refresh'))
+			// A per-request baseUrl skips mergeConfigs (utils.gen.ts), the only place a trailing slash is stripped.
+			const response = await authRefreshToken({client: refreshClient, baseUrl: getApiV2BaseUrl().replace(/\/$/, '')})
 			if (loggedOutSinceStart()) {
 				return
 			}
+			if (!response.data.token) throw new Error('Refresh response has no token')
 			saveToken(response.data.token, persist)
 		} catch (e) {
 			throw new Error('Error renewing token: ', {cause: e})
