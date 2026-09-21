@@ -6,7 +6,7 @@ import {getBrowserLanguage, i18n, setLanguage} from '@/i18n'
 import {objectToSnakeCase, objectToCamelCase} from '@/helpers/case'
 import {getDisplayName, invalidateAvatarCache} from '@/helpers/user'
 import AvatarService from '@/services/avatar'
-import type {RegisterUserRequestWritable} from '@/client/generated'
+import type {RegisterUserRequestWritable, UserInfoBody} from '@/client/generated'
 import {registerViaInviteLink} from '@/client/inviteLink'
 import {parseValidationErrors} from '@/helpers/parseValidationErrors'
 import UserSettingsService from '@/services/userSettings'
@@ -19,9 +19,7 @@ import {
 	redirectToProvider,
 	redirectToProviderOnLogout,
 } from '@/helpers/redirectToProvider'
-import {AUTH_TYPES} from '@/constants/auth'
-import type {UserInfoBody} from '@/client/generated'
-import type {AuthType} from '@/constants/auth'
+import {AUTH_TYPES, type AuthType} from '@/constants/auth'
 
 import type {IUserSettings} from '@/modelTypes/IUserSettings'
 import router from '@/router'
