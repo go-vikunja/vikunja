@@ -3374,7 +3374,7 @@ export type VikunjaInfos = {
     /**
      * The licensed pro features enabled on this instance.
      */
-    enabled_pro_features?: Array<number> | null;
+    enabled_pro_features?: Array<string> | null;
     /**
      * The publicly configured frontend URL of this instance.
      */
@@ -4938,7 +4938,7 @@ export type VikunjaInfosWritable = {
     /**
      * The licensed pro features enabled on this instance.
      */
-    enabled_pro_features?: Array<number> | null;
+    enabled_pro_features?: Array<string> | null;
     /**
      * The publicly configured frontend URL of this instance.
      */
