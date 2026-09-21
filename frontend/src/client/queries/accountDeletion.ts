@@ -15,8 +15,8 @@ export function useRequestDeletionMutation() {
 	}))
 }
 
-export function useConfirmDeletionMutation() {
-	return useMutation(contextMutationOptions({
+export function confirmDeletionMutationOptions() {
+	return contextMutationOptions({
 		mutationFn: async (token: string) => {
 			await userDeletionConfirm({body: {token}})
 			// The deletion is already applied; a failing re-read must not report it as failed.
@@ -27,7 +27,11 @@ export function useConfirmDeletionMutation() {
 		},
 		onSettled: (_input, client) => client.invalidateQueries({queryKey: accountKeys.current}),
 		successMessage: () => i18n.global.t('user.deletion.confirmSuccess'),
-	}))
+	})
+}
+
+export function useConfirmDeletionMutation() {
+	return useMutation(confirmDeletionMutationOptions())
 }
 
 export function cancelDeletionMutationOptions() {
