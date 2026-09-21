@@ -14,7 +14,7 @@ import {formatDateShort} from '@/helpers/time/formatDate'
 import {isValidHttpUrl} from '@/helpers/isValidHttpUrl'
 
 const props = defineProps<{scope: WebhookScope}>()
-const {data: webhookData, isFetching} = useQuery(computed(() => webhooksQuery(props.scope)))
+const {data: webhookData, isFetching, isPending} = useQuery(computed(() => webhooksQuery(props.scope)))
 const {data: eventData} = useQuery(computed(() => webhookEventsQuery(props.scope.kind)))
 const webhooks = computed(() => webhookData.value ?? [])
 const availableEvents = computed(() => eventData.value ?? [])
@@ -98,7 +98,10 @@ function doDelete() {
 </script>
 
 <template>
-	<div>
+	<div
+		class="loader-container"
+		:class="{'is-loading': isPending}"
+	>
 		<XButton
 			v-if="!(webhooks?.length === 0 || showNewForm)"
 			icon="plus"
@@ -109,7 +112,7 @@ function doDelete() {
 		</XButton>
 
 		<div
-			v-if="webhooks?.length === 0 || showNewForm"
+			v-if="!isPending && (webhooks?.length === 0 || showNewForm)"
 			class="p-4"
 		>
 			<FormField
