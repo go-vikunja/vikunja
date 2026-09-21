@@ -17,6 +17,9 @@
 		ref="button"
 		:to="to"
 		class="base-button"
+		:aria-disabled="ariaDisabled || undefined"
+		@click.capture="swallowWhenAriaDisabled"
+		@keydown.enter="swallowWhenAriaDisabled"
 	>
 		<slot />
 	</RouterLink>
@@ -27,6 +30,8 @@
 		:href="href"
 		rel="noreferrer noopener nofollow"
 		:target="openExternalInNewTab ? '_blank' : undefined"
+		:aria-disabled="ariaDisabled || undefined"
+		@click="swallowWhenAriaDisabled"
 	>
 		<slot />
 	</a>
@@ -36,7 +41,8 @@
 		:type="type"
 		class="base-button base-button--type-button"
 		:disabled="disabled || undefined"
-		@click="(event: MouseEvent) => emit('click', event)"
+		:aria-disabled="ariaDisabled || undefined"
+		@click="onClick"
 	>
 		<slot />
 	</button>
@@ -67,6 +73,8 @@ import type {RouteLocationRaw} from 'vue-router'
 export interface BaseButtonProps extends /* @vue-ignore */ HTMLAttributes {
 	type?: BaseButtonTypes
 	disabled?: boolean
+	// Soft disable: native `disabled` would drop focus mid-mutation.
+	ariaDisabled?: boolean
 	to?: RouteLocationRaw
 	href?: string
 	openExternalInNewTab?: boolean
@@ -76,15 +84,34 @@ export type BaseButtonEmits = {
 	click: [payload: MouseEvent]
 }
 
-withDefaults(defineProps<BaseButtonProps>(), {
+const props = withDefaults(defineProps<BaseButtonProps>(), {
 	type: BASE_BUTTON_TYPES_MAP.BUTTON,
 	disabled: false,
+	ariaDisabled: false,
 	to: undefined,
 	href: undefined,
 	openExternalInNewTab: true,
 })
 
 const emit = defineEmits<BaseButtonEmits>()
+
+function swallowWhenAriaDisabled(event: Event): boolean {
+	if (!props.ariaDisabled) {
+		return false
+	}
+
+	event.preventDefault()
+	event.stopPropagation()
+	return true
+}
+
+function onClick(event: MouseEvent) {
+	if (swallowWhenAriaDisabled(event)) {
+		return
+	}
+
+	emit('click', event)
+}
 
 const button = ref<HTMLElement | null>(null)
 
@@ -123,7 +150,8 @@ defineExpose({
 		outline: transparent;
 	}
 
-	&[disabled] {
+	&[disabled],
+	&[aria-disabled='true'] {
 		cursor: default;
 	}
 }
