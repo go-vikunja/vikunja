@@ -58,7 +58,7 @@ export function useSidebarResize() {
 	// Register settings watcher only once
 	setupWatcher(authStore)
 
-	const sidebar_width = computed(() => {
+	const sidebarWidthStyle = computed(() => {
 		if (isMobile.value) {
 			return '70vw'
 		}
@@ -150,7 +150,7 @@ export function useSidebarResize() {
 	onUnmounted(stopResize)
 
 	return {
-		sidebar_width,
+		sidebarWidthStyle,
 		currentWidth,
 		isResizing,
 		startResize,

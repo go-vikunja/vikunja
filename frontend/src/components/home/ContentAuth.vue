@@ -30,7 +30,7 @@
 					{ 'is-menu-enabled': menuActive },
 					$route.name,
 				]"
-				:style="{'--sidebar-width': sidebar_width}"
+				:style="{'--sidebar-width': sidebarWidthStyle}"
 			>
 				<BaseButton
 					v-show="menuActive"
@@ -99,7 +99,7 @@ const background_brightness = computed(() =>
 	authStore.settings?.frontend_settings?.background_brightness,
 )
 
-const {sidebar_width} = useSidebarResize()
+const {sidebarWidthStyle} = useSidebarResize()
 
 const {routeWithModal, currentModal, closeModal} = useRouteWithModal()
 

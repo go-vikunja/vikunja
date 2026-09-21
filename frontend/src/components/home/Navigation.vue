@@ -2,7 +2,7 @@
 	<aside
 		:class="{'is-active': baseStore.menuActive, 'is-resizing': isResizing}"
 		class="menu-container"
-		:style="{'--sidebar-width': sidebar_width}"
+		:style="{'--sidebar-width': sidebarWidthStyle}"
 	>
 		<nav
 			class="menu top-menu"
@@ -161,7 +161,7 @@ const configStore = useConfigStore()
 
 const timeTrackingEnabled = computed(() => configStore.isProFeatureEnabled(PRO_FEATURE.TIME_TRACKING))
 
-const {sidebar_width, isResizing, startResize, isMobile} = useSidebarResize()
+const {sidebarWidthStyle, isResizing, startResize, isMobile} = useSidebarResize()
 
 const projects = computed(() => projectList.notArchivedRootProjects)
 const favoriteProjects = computed(() => projectList.favoriteProjects)
