@@ -81,6 +81,8 @@ export default async function setupSentry(app: App, router: Router) {
 			if (target instanceof HTMLImageElement) {
 				// An empty, blank or fragment-only src resolves to the page itself, which is never an image.
 				if (!target.src || withoutFragment(target.src) === withoutFragment(document.URL)) return
+				// Users can put any src into their descriptions and comments, a broken one is not our bug.
+				if (target.closest('[data-user-content]')) return
 
 				Sentry.captureMessage(
 					`Failed to load image: ${target.src}`,

@@ -12,6 +12,7 @@
 			<div
 				v-if="htmlDescription !== ''"
 				class="has-text-start"
+				data-user-content
 				v-html="htmlDescription"
 			/>
 			<p
