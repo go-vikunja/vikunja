@@ -280,9 +280,9 @@ async function submitCreate() {
 		})
 		const base = configStore.frontend_url || new URL(import.meta.env.BASE_URL, window.location.origin).toString()
 		createdUrl.value = new URL(`register#invite-link=${encodeURIComponent(link.token!)}`, base.endsWith('/') ? base : `${base}/`).toString()
-		createMutation.reset()
 		loadLinks(1)
 	} catch { /* Mutation reports the error. */ }
+	finally { createMutation.reset() }
 }
 
 async function deleteLink() {

@@ -381,9 +381,9 @@ function closeCreate() { if (!creating.value) createOpen.value = false }
 async function submitCreate() {
 	try {
 		await createMutation.mutateAsync({...createForm, language: createForm.language || undefined})
-		createMutation.reset()
 		createOpen.value = false
 	} catch { /* Mutation reports the error. */ }
+	finally { createMutation.reset() }
 }
 async function saveChanges() {
 	const target = detailTarget.value
@@ -401,9 +401,9 @@ async function setPassword() {
 	if (!target || !newPassword.value) return
 	try {
 		await passwordMutation.mutateAsync({id: target.id, password: newPassword.value})
-		passwordMutation.reset()
 		if (detailTarget.value?.id === target.id) newPassword.value = ''
 	} catch { /* Mutation reports the error. */ }
+	finally { passwordMutation.reset() }
 }
 function sendResetEmail() {
 	if (detailTarget.value) resetMutation.mutate({id: detailTarget.value.id, username: detailTarget.value.username})
