@@ -1,27 +1,24 @@
 <script setup lang="ts">
-import {ref, shallowReactive} from 'vue'
+import {ref, computed} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import {useTitle} from '@/composables/useTitle'
 import {useAuthStore} from '@/stores/auth'
-import {success} from '@/message'
 import {formatDateSince} from '@/helpers/time/formatDate'
-import SessionService from '@/services/session'
+import {useQuery} from '@tanstack/vue-query'
+import {sessionsQuery, useDeleteSessionMutation} from '@/client/queries/sessions'
 import type {Session} from '@/client/generated'
 
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => `${t('user.settings.sessions.title')} - ${t('user.settings.title')}`)
 
 const authStore = useAuthStore()
-const service = shallowReactive(new SessionService())
-const sessions = ref<Session[]>([])
+const sessionQuery = useQuery(sessionsQuery())
+const sessions = computed(() => sessionQuery.data.value ?? [])
+const deleteMutation = useDeleteSessionMutation()
 
 const showDeleteModal = ref(false)
 const sessionToDelete = ref<Session | null>(null)
-
-service.getAll().then((result: Session[]) => {
-	sessions.value = result
-})
 
 function confirmDelete(session: Session) {
 	sessionToDelete.value = session
@@ -29,13 +26,13 @@ function confirmDelete(session: Session) {
 }
 
 async function deleteSession() {
-	if (!sessionToDelete.value) return
+	if (!sessionToDelete.value?.id) return
 
-	await service.delete(sessionToDelete.value)
-	sessions.value = sessions.value.filter(({id}) => id !== sessionToDelete.value?.id)
+	try {
+		await deleteMutation.mutateAsync(sessionToDelete.value.id)
+	} catch { return }
 	showDeleteModal.value = false
 	sessionToDelete.value = null
-	success({message: t('user.settings.sessions.deleteSuccess')})
 }
 </script>
 
