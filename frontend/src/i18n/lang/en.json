@@ -229,6 +229,7 @@
         "tokensHowTo": "For CalDAV authentication you can use either your normal account password or a dedicated CalDAV token.",
         "createToken": "Create a CalDAV token",
         "tokenCreated": "Here is your new token: {token}",
+        "deleteSuccess": "The CalDAV token was deleted successfully.",
         "wontSeeItAgain": "Write it down or save it securely — you will not be able to see it again.",
         "mustUseToken": "You need to create a CalDAV token to use CalDAV with any third-party client. Enter the token in the password field of your client.",
         "usernameIs": "Your username for CalDAV is: {0}",
