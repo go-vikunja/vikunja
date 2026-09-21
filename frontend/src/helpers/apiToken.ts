@@ -10,7 +10,7 @@ export interface ApiTokenPreset {
 	label?: string
 }
 
-// An expiry the boundary parser rejects means "no expiry", not "expired".
+// An unparseable expiry means "no expiry", not "expired".
 export function isApiTokenExpired(token: ApiToken, now: number = Date.now()): boolean {
 	return (parseDateOrNull(token.expires_at)?.getTime() ?? Infinity) < now
 }
