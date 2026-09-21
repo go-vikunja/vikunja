@@ -91,7 +91,13 @@ import {useI18n} from 'vue-i18n'
 
 import {useQuery} from '@tanstack/vue-query'
 import {useObjectUrl} from '@vueuse/core'
-import {totpQuery, totpQrQuery, useEnrollTotpMutation, useEnableTotpMutation, useDisableTotpMutation} from '@/client/queries/totp'
+import {
+	totpQuery,
+	totpQrQuery,
+	useEnrollTotpMutation,
+	useEnableTotpMutation,
+	useDisableTotpMutation,
+} from '@/client/queries/totp'
 import FormField from '@/components/input/FormField.vue'
 
 import {useTitle} from '@/composables/useTitle'
