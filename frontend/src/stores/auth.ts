@@ -495,7 +495,8 @@ export const useAuthStore = defineStore('auth', () => {
 				await authConfirmEmail({body: {token}})
 				return true
 			} catch(e) {
-				throw new Error((e as VikunjaErrorModel)?.detail, {cause: e})
+				const problem = e as {detail?: string, message?: string}
+				throw new Error(problem?.detail ?? problem?.message ?? 'Error confirming email', {cause: e})
 			} finally {
 				localStorage.removeItem('emailConfirmToken')
 				stopLoading()
