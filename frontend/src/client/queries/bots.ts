@@ -1,5 +1,13 @@
 import {queryOptions, useMutation} from '@tanstack/vue-query'
-import {botsList, botsCreate, botsUpdate, botsDelete, type BotUser, type BotUserWritable, type BotUserReadBodyWritable} from '@/client/generated'
+import {
+	botsList,
+	botsCreate,
+	botsUpdate,
+	botsDelete,
+	type BotUser,
+	type BotUserWritable,
+	type BotUserReadBodyWritable,
+} from '@/client/generated'
 import {fetchAllPages} from './fetchAllPages'
 import {contextMutationOptions} from './contextMutation'
 import {apiTokenKeys} from './apiTokens'
@@ -20,8 +28,14 @@ export function createBotMutationOptions() {
 }
 export function updateBotMutationOptions() {
 	return contextMutationOptions({
-		mutationFn: async ({id, body}: {id: number, body: BotUserReadBodyWritable}) => (await botsUpdate({path: {bot: id}, body})).data,
-		onSuccess: (updated, {id}, client) => client.setQueryData<BotUser[]>(botKeys.all, current => current?.map(bot => bot.id === id ? updated : bot)),
+		mutationFn: async ({id, body}: {
+			id: number,
+			body: BotUserReadBodyWritable,
+		}) => (await botsUpdate({path: {bot: id}, body})).data,
+		onSuccess: (updated, {id}, client) => client.setQueryData<BotUser[]>(
+			botKeys.all,
+			current => current?.map(bot => bot.id === id ? updated : bot),
+		),
 		onSettled: (_input, client) => client.invalidateQueries({queryKey: botKeys.all}),
 	})
 }
