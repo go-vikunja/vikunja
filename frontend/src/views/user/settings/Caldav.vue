@@ -119,7 +119,7 @@ import Message from '@/components/misc/Message.vue'
 import FormField from '@/components/input/FormField.vue'
 import CaldavTokenService from '@/services/caldavToken'
 import { formatDateShort } from '@/helpers/time/formatDate'
-import type {ICaldavToken} from '@/modelTypes/ICaldavToken'
+import type {Token} from '@/client/generated'
 import {useConfigStore} from '@/stores/config'
 import {useAuthStore} from '@/stores/auth'
 
@@ -129,19 +129,19 @@ const {t} = useI18n({useScope: 'global'})
 useTitle(() => `${t('user.settings.caldav.title')} - ${t('user.settings.title')}`)
 
 const service = shallowReactive(new CaldavTokenService())
-const tokens = ref<ICaldavToken[]>([])
+const tokens = ref<Token[]>([])
 
-service.getAll().then((result: ICaldavToken[]) => {
+service.getAll().then((result: Token[]) => {
 	tokens.value = result
 })
 
-const newToken = ref<ICaldavToken>()
+const newToken = ref<Token>()
 async function createToken() {
-	newToken.value = await service.create({}) as ICaldavToken
+	newToken.value = await service.create({}) as Token
 	tokens.value.push(newToken.value)
 }
 
-async function deleteToken(token: ICaldavToken) {
+async function deleteToken(token: Token) {
 	const r = await service.delete(token)
 	tokens.value = tokens.value.filter(({id}) => id !== token.id)
 	success(r)
