@@ -108,7 +108,10 @@ const configStore = useConfigStore()
 const authStore = useAuthStore()
 const isLocalUser = computed(() => authStore.info?.is_local_user)
 
-const status = useQuery(computed(() => ({...totpQuery(), enabled: configStore.totp_enabled && isLocalUser.value})))
+const status = useQuery(computed(() => ({
+	...totpQuery(),
+	enabled: Boolean(configStore.totp_enabled && isLocalUser.value),
+})))
 const totp = computed(() => status.data.value ?? {})
 const qr = useQuery(computed(() => ({...totpQrQuery(), enabled: Boolean(totp.value.secret) && !totp.value.enabled})))
 const totpQR = useObjectUrl(computed(() => totp.value.secret && !totp.value.enabled ? qr.data.value : undefined))
