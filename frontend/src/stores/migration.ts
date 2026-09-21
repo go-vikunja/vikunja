@@ -1,9 +1,10 @@
-import {computed, ref} from 'vue'
+import {computed, ref, onScopeDispose} from 'vue'
 import {acceptHMRUpdate, defineStore} from 'pinia'
-
-import type {MigrationErrorKind, MigrationStatus} from '@/services/migrator/abstractMigration'
+import {useQuery} from '@tanstack/vue-query'
+import {queryClient} from '@/client/queryClient'
+import {captureClientRequestContext, isClientRequestContextCurrent} from '@/client/requestContext'
+import {migrationStatusQuery, migrationCompletedMutationOptions, type MigrationProvider} from '@/client/queries/migration'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
-import {refreshProjects} from '@/client/queries/projects'
 
 const POLL_INTERVAL = 3000
 const POLL_DEADLINE = 20 * 60 * 1000
@@ -11,9 +12,7 @@ const MAX_CONSECUTIVE_FAILURES = 5
 
 const GENERIC_FAILURE_KEY = 'migrate.failure.reported'
 
-// A kind missing here - including one a newer api adds - falls back to the generic text
-// instead of rendering an empty message.
-const FAILURE_KEYS: Partial<Record<MigrationErrorKind, string>> = {
+const FAILURE_KEYS: Record<string, string> = {
 	reported: GENERIC_FAILURE_KEY,
 	interrupted: 'migrate.failure.interrupted',
 	credentials: 'migrate.failure.credentials',
@@ -21,99 +20,67 @@ const FAILURE_KEYS: Partial<Record<MigrationErrorKind, string>> = {
 	upload: 'migrate.failure.upload',
 }
 
-export interface MigrationStatusSource {
-	getStatus(): Promise<MigrationStatus>
-}
-
-// The migrate response only confirms the job started, not that it finished. Polling lives in a
-// store so that leaving the migration view does not kill it - the import keeps creating projects.
+// Keep polling when the import view unmounts.
 export const useMigrationStore = defineStore('migration', () => {
-	const isFinished = ref(false)
-	const errorKind = ref<MigrationErrorKind>('')
-	const errorMessage = ref('')
+	const provider = ref<MigrationProvider>('csv')
+	const accepted = ref(false)
+	const status = useQuery(computed(() => ({...migrationStatusQuery(provider.value), enabled: false})), queryClient)
+	const isFinished = computed(() => accepted.value && parseDateOrNull(status.data.value?.finished_at) !== null)
+	const errorKind = computed(() => isFinished.value ? status.data.value?.error_kind ?? '' : '')
+	const errorMessage = computed(() => isFinished.value ? status.data.value?.error_message ?? '' : '')
+	const hasFailed = computed(() => errorKind.value !== '')
+	const failureKey = computed(() => errorKind.value === 'detail' && errorMessage.value !== ''
+		? 'migrate.migrationFailed' : FAILURE_KEYS[errorKind.value] ?? GENERIC_FAILURE_KEY)
 
-	let source: MigrationStatusSource | null = null
 	let timeout: ReturnType<typeof setTimeout> | undefined
 	let generation = 0
 	let deadline = 0
 	let failures = 0
-
-	const hasFailed = computed(() => errorKind.value !== '')
-
-	const failureKey = computed(() => {
-		if (errorKind.value === 'detail' && errorMessage.value !== '') {
-			return 'migrate.migrationFailed'
-		}
-		return FAILURE_KEYS[errorKind.value] ?? GENERIC_FAILURE_KEY
-	})
+	let request = captureClientRequestContext()
 
 	function stop() {
 		generation++
+		accepted.value = false
 		clearTimeout(timeout)
 		timeout = undefined
-	}
-
-	async function applyStatus({finished_at, error_kind, error_message}: MigrationStatus) {
-		if (parseDateOrNull(finished_at) === null) {
-			return false
-		}
-
-		isFinished.value = true
-		errorKind.value = error_kind ?? ''
-		errorMessage.value = error_message ?? ''
-		if (!hasFailed.value) {
-			await refreshProjects()
-		}
-		return true
+		void queryClient.cancelQueries({queryKey: migrationStatusQuery(provider.value).queryKey})
 	}
 
 	async function poll() {
 		const myGeneration = generation
-
+		if (!isClientRequestContextCurrent(request)) {
+			stop()
+			return
+		}
 		try {
-			const status = await source?.getStatus()
-			if (myGeneration !== generation || status === undefined) {
-				return
-			}
+			const result = await queryClient.fetchQuery(migrationStatusQuery(provider.value))
+			if (myGeneration !== generation || !isClientRequestContextCurrent(request)) return
+			accepted.value = true
 			failures = 0
-
-			if (await applyStatus(status)) {
+			if (parseDateOrNull(result?.finished_at) !== null) {
+				if (!result?.error_kind) {
+					await queryClient.getMutationCache().build(queryClient, migrationCompletedMutationOptions()).execute(undefined)
+				}
 				return
 			}
 		} catch {
-			if (myGeneration !== generation) {
-				return
-			}
+			if (myGeneration !== generation || !isClientRequestContextCurrent(request)) return
 			failures++
 		}
-
-		// Giving up keeps isFinished false, so the "we will email you" copy stays true.
-		if (failures >= MAX_CONSECUTIVE_FAILURES || Date.now() >= deadline) {
-			return
-		}
-
+		if (failures >= MAX_CONSECUTIVE_FAILURES || Date.now() >= deadline) return
 		timeout = setTimeout(poll, POLL_INTERVAL)
 	}
 
-	function start(statusSource: MigrationStatusSource) {
+	function start(nextProvider: MigrationProvider) {
 		stop()
-		source = statusSource
-		isFinished.value = false
-		errorKind.value = ''
-		errorMessage.value = ''
+		provider.value = nextProvider
+		request = captureClientRequestContext()
 		failures = 0
 		deadline = Date.now() + POLL_DEADLINE
 		timeout = setTimeout(poll, POLL_INTERVAL)
 	}
-
-	return {
-		isFinished,
-		errorMessage,
-		hasFailed,
-		failureKey,
-		start,
-		stop,
-	}
+	onScopeDispose(stop)
+	return {isFinished, errorMessage, hasFailed, failureKey, start, stop}
 })
 
 if (import.meta.hot) {

@@ -3,11 +3,12 @@ import {describe, it, expect, beforeEach, afterEach, vi} from 'vitest'
 
 import {useMigrationStore} from './migration'
 import type {Status as MigrationStatus} from '@/client/generated'
+import {removeToken} from '@/helpers/auth'
 import {queryClient} from '@/client/queryClient'
 import {projectKeys} from '@/client/queries/projects'
 
 const {getStatus} = vi.hoisted(() => ({getStatus: vi.fn()}))
-vi.mock('@/client/generated', () => new Proxy({}, {get: (_target, name) => String(name).startsWith('migration') ? getStatus : undefined}))
+vi.mock('@/client/generated', async importOriginal => ({...await importOriginal<typeof import('@/client/generated')>(), migrationCsvStatus: getStatus}))
 vi.mock('@/message', () => ({error: vi.fn(), success: vi.fn()}))
 
 const POLL_INTERVAL = 3000
@@ -192,4 +193,15 @@ describe('migration store', () => {
 		expect(store.isFinished).toBe(false)
 		expect(store.hasFailed).toBe(false)
 	})
+	it('stops polling after the account session changes', async () => {
+		getStatus.mockResolvedValue(status())
+		const store = useMigrationStore()
+		store.start('csv')
+		await tick()
+		removeToken()
+		await tick()
+		expect(getStatus).toHaveBeenCalledTimes(1)
+		expect(store.isFinished).toBe(false)
+	})
+
 })
