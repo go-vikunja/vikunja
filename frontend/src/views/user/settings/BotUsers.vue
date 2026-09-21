@@ -12,9 +12,10 @@ import BotUserService from '@/services/botUser'
 import ApiTokenService from '@/services/apiToken'
 import type {BotUser} from '@/client/generated'
 import type {IAbstract} from '@/modelTypes/IAbstract'
-type IUser = BotUser & Required<Pick<BotUser, 'id'>> & IAbstract
 import type {IApiToken} from '@/modelTypes/IApiToken'
 import {formatDisplayDate} from '@/helpers/time/formatDate'
+
+type IUser = BotUser & Required<Pick<BotUser, 'id'>> & IAbstract
 
 const STATUS_ACTIVE = 0
 const STATUS_DISABLED = 2
