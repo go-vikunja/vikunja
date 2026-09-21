@@ -18,6 +18,7 @@ import {
 	type TimeEntryResponse,
 } from './timeEntries'
 import {commentKeys} from './comments'
+import {notificationKeys} from './notifications'
 import {
 	taskKeys,
 	normalizeTask,
@@ -103,6 +104,31 @@ it('falls back to an inbox refresh for notifications it cannot route', () => {
 		name: 'task.comment',
 		notification: {task: {id: 0}},
 	}, 7)).toEqual({kind: 'notifications'})
+})
+
+it.each([
+	'notification',
+	'comment',
+	'reconnect',
+	'subscribe',
+])('invalidates notification data on %s without replacing it with the event payload', async kind => {
+	const client = new QueryClient()
+	client.setQueryData(notificationKeys.all, [{id: 1}], {updatedAt: 10})
+	const event = kind === 'reconnect'
+		? {kind: 'reconnect'} as const
+		: kind === 'subscribe'
+			? {
+				kind: 'subscribed',
+				since: 20,
+			} as const
+			: parseServerCacheEvent('notification.created', {
+				id: 2,
+				name: kind === 'comment' ? 'task.comment' : 'team.member.added',
+				notification: {task: {id: 3}},
+			}, 7)!
+	await client.getMutationCache().build(client, serverCacheEventMutationOptions()).execute(event)
+	expect(client.getQueryData(notificationKeys.all)).toEqual([{id: 1}])
+	expect(client.getQueryState(notificationKeys.all)?.isInvalidated).toBe(true)
 })
 
 it('invalidates only the notified task comments and detail', async () => {
