@@ -46,7 +46,7 @@ const showDeleteModal = ref(false)
 const webhookIdToDelete = ref<number>()
 
 function validateTargetUrl() {
-	webhookTargetUrlValid.value = isValidHttpUrl(newWebhook.value.targetUrl)
+	webhookTargetUrlValid.value = isValidHttpUrl(newWebhook.value.target_url)
 }
 
 function getSelectedEventsArray() {
@@ -110,7 +110,7 @@ function doDelete() {
 		>
 			<FormField
 				id="targetUrl"
-				v-model="newWebhook.targetUrl"
+				v-model="newWebhook.target_url"
 				:label="$t('project.webhooks.targetUrl')"
 				required
 				:placeholder="$t('project.webhooks.targetUrl')"
@@ -145,7 +145,7 @@ function doDelete() {
 					<template #default="{id}">
 						<FormInput
 							:id="id"
-							v-model="newWebhook.basicAuthUser"
+							v-model="newWebhook.basic_auth_user"
 						/>
 					</template>
 				</FormField>
@@ -153,7 +153,7 @@ function doDelete() {
 					<template #default="{id}">
 						<FormInput
 							:id="id"
-							v-model="newWebhook.basicAuthPassword"
+							v-model="newWebhook.basic_auth_password"
 						/>
 					</template>
 				</FormField>
@@ -213,14 +213,14 @@ function doDelete() {
 					:key="w.id"
 				>
 					<td class="webhook-target-url">
-						{{ w.targetUrl }}
+						{{ w.target_url }}
 					</td>
 					<td>{{ w.events.join(', ') }}</td>
 					<td>{{ formatDateShort(w.created) }}</td>
 					<td>
 						<User
 							:avatar-size="25"
-							:user="w.createdBy"
+							:user="w.created_by"
 						/>
 					</td>
 
