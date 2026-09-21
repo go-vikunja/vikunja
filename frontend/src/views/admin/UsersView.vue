@@ -40,7 +40,7 @@
 							<td>{{ u.id }}</td>
 							<td>{{ u.username }}</td>
 							<td>{{ u.email }}</td>
-							<td>{{ u.authProvider || $t('admin.users.issuerLocal') }}</td>
+							<td>{{ u.auth_provider || $t('admin.users.issuerLocal') }}</td>
 							<td>{{ statusLabel(u.status) }}</td>
 							<td>
 								<TimeDisplay :date="u.created" />
@@ -80,7 +80,7 @@
 						<dd>{{ detailTarget.email }}</dd>
 						<dt>{{ $t('admin.users.issuer') }}</dt>
 						<dd>
-							{{ detailTarget.authProvider || $t('admin.users.issuerLocal') }}
+							{{ detailTarget.auth_provider || $t('admin.users.issuerLocal') }}
 						</dd>
 						<template v-if="detailTarget.issuer?.startsWith('http')">
 							<dt>{{ $t('admin.users.issuerUrl') }}</dt>
@@ -105,7 +105,7 @@
 					</dl>
 
 					<FormCheckbox
-						v-model="editable.isAdmin"
+						v-model="editable.is_admin"
 						:label="$t('admin.users.isAdminLabel')"
 					/>
 
@@ -119,7 +119,7 @@
 						</template>
 					</FormField>
 
-					<template v-if="!detailTarget.authProvider">
+					<template v-if="!detailTarget.auth_provider">
 						<FormField :label="$t('admin.users.newPasswordLabel')">
 							<template #default="{id}">
 								<FormInput
@@ -236,11 +236,11 @@
 						</template>
 					</FormField>
 					<FormCheckbox
-						v-model="createForm.isAdmin"
+						v-model="createForm.is_admin"
 						:label="$t('admin.users.isAdminLabel')"
 					/>
 					<FormCheckbox
-						v-model="createForm.skipEmailConfirm"
+						v-model="createForm.skip_email_confirm"
 						:label="$t('admin.users.skipEmailConfirm')"
 					/>
 
@@ -344,7 +344,7 @@ const deleting = ref(false)
 const deleteMode = ref<DeleteUserMode | null>(null)
 const createOpen = ref(false)
 const creating = ref(false)
-const editable = reactive({isAdmin: false, status: 0})
+const editable = reactive({is_admin: false, status: 0})
 const newPassword = ref('')
 const settingPassword = ref(false)
 const sendingResetEmail = ref(false)
@@ -356,8 +356,8 @@ function emptyCreateForm(): Required<Pick<CreateAdminUserBody, 'username' | 'ema
 		name: '',
 		password: '',
 		language: '',
-		isAdmin: false,
-		skipEmailConfirm: false,
+		is_admin: false,
+		skip_email_confirm: false,
 	}
 }
 
@@ -365,14 +365,14 @@ const createForm = reactive(emptyCreateForm())
 
 const hasChanges = computed(() => {
 	if (!detailTarget.value) return false
-	return editable.isAdmin !== !!detailTarget.value.isAdmin
+	return editable.is_admin !== !!detailTarget.value.is_admin
 		|| editable.status !== detailTarget.value.status
 })
 
 watch(detailTarget, (u) => {
 	newPassword.value = ''
 	if (!u) return
-	editable.isAdmin = !!u.isAdmin
+	editable.is_admin = !!u.is_admin
 	editable.status = u.status
 })
 
@@ -444,8 +444,8 @@ async function submitCreate() {
 		}
 		if (createForm.name) body.name = createForm.name
 		if (createForm.language) body.language = createForm.language
-		if (createForm.isAdmin) body.isAdmin = true
-		if (createForm.skipEmailConfirm) body.skipEmailConfirm = true
+		if (createForm.is_admin) body.is_admin = true
+		if (createForm.skip_email_confirm) body.skip_email_confirm = true
 		const created = await adminUserService.createUser(body)
 		users.value = [created, ...users.value]
 		success({message: t('admin.users.createdSuccess', {username: created.username})})
@@ -468,8 +468,8 @@ async function saveChanges() {
 	saving.value = true
 	try {
 		let latest: IAdminUser = target
-		if (editable.isAdmin !== !!target.isAdmin) {
-			latest = await adminUserService.setAdmin(target.id, editable.isAdmin)
+		if (editable.is_admin !== !!target.is_admin) {
+			latest = await adminUserService.setAdmin(target.id, editable.is_admin)
 		}
 		if (editable.status !== target.status) {
 			latest = await adminUserService.setStatus(target.id, editable.status)
