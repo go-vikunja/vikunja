@@ -117,7 +117,15 @@ describe('ApiTokenForm', () => {
 		for (const checkbox of locked) expect((checkbox.element as HTMLInputElement).checked).toBe(true)
 		await wrapper.find('form').trigger('submit')
 		await flushPromises()
-		expect(create).toHaveBeenCalledWith(expect.objectContaining({body: expect.objectContaining({permissions: {mcp: ['access'], tasks: ['read_all']}})}))
+		expect(create).toHaveBeenCalledWith(expect.objectContaining({
+			body: expect.objectContaining({
+				expires_at: expect.stringMatching(/^\d{4}-/),
+				permissions: {
+					mcp: ['access'],
+					tasks: ['read_all'],
+				},
+			}),
+		}))
 		expect(mounted.errors).toEqual([])
 	})
 
@@ -134,8 +142,41 @@ describe('ApiTokenForm', () => {
 		await wrapper.findAll('input[type="checkbox"]')[0].setValue(false)
 		await wrapper.find('form').trigger('submit')
 		await flushPromises()
-		expect(create).toHaveBeenCalledWith(expect.objectContaining({body: expect.objectContaining({permissions: {tasks: ['read_all']}})}))
+		expect(create).toHaveBeenCalledWith(expect.objectContaining({
+			body: expect.objectContaining({
+				expires_at: expect.stringMatching(/^\d{4}-/),
+				permissions: {tasks: ['read_all']},
+			}),
+		}))
 		expect(mounted.errors).toEqual([])
 	})
 
+	it('sends the bot owner id when created for a bot', async () => {
+		const mounted = mountForm({
+			ownerId: 7,
+			initialTitle: 'Bot token',
+			routes: {
+				tasks: {read_all: {path: '/api/v2/tasks', method: 'GET'}},
+			},
+			presets: [
+				{
+					id: 'readOnly',
+					groups: {'*': ['read_all']},
+				},
+			],
+		})
+		wrapper = mounted.wrapper
+		await flushPromises()
+		await wrapper.get('.preset-buttons button').trigger('click')
+		await wrapper.find('form').trigger('submit')
+		await flushPromises()
+		expect(create).toHaveBeenCalledWith(expect.objectContaining({
+			body: expect.objectContaining({
+				owner_id: 7,
+				expires_at: expect.stringMatching(/^\d{4}-/),
+				permissions: {tasks: ['read_all']},
+			}),
+		}))
+		expect(mounted.errors).toEqual([])
+	})
 })
