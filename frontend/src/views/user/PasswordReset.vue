@@ -89,7 +89,7 @@ async function resetPassword() {
 
 	try {
 		const {message} = await passwordResetMutation.mutateAsync({new_password: credentials.password, token})
-		successMessage.value = message ?? t('error.success')
+		successMessage.value = message ?? t('user.settings.passwordUpdateSuccess')
 		credentials.password = ''
 	} catch (e) {
 		if (isRequestContextAbort(e)) return
