@@ -2,7 +2,11 @@ import {beforeEach, it, expect, vi} from 'vitest'
 import {QueryClient} from '@tanstack/vue-query'
 import {success} from '@/message'
 import {accountKeys} from './account'
-import {cancelEmailUpdateMutationOptions, updateEmailMutationOptions} from './email'
+import {
+	cancelEmailUpdateMutationOptions,
+	resendEmailConfirmationMutationOptions,
+	updateEmailMutationOptions,
+} from './email'
 const sdk = vi.hoisted(() => ({
 	userUpdateEmail: vi.fn(),
 	userCancelEmailUpdate: vi.fn(),
@@ -49,4 +53,12 @@ it('clears the cached pending email when the change is cancelled', async () => {
 	expect(sdk.userCancelEmailUpdate).toHaveBeenCalledTimes(1)
 	expect(client.getQueryData(accountKeys.user(1))).toEqual(account)
 	expect(success).toHaveBeenCalledWith({message: 'The email change was cancelled.'})
+})
+
+it('reports a resent confirmation link', async () => {
+	const client = new QueryClient()
+	sdk.userResendEmailConfirmation.mockResolvedValue({data: {}})
+	await client.getMutationCache().build(client, resendEmailConfirmationMutationOptions()).execute(undefined)
+	expect(sdk.userResendEmailConfirmation).toHaveBeenCalledTimes(1)
+	expect(success).toHaveBeenCalledWith({message: 'We\'ve sent you a new confirmation link.'})
 })
