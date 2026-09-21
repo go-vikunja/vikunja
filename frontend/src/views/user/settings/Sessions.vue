@@ -27,6 +27,7 @@ function confirmDelete(session: Session) {
 }
 
 async function deleteSession() {
+	if (deleteMutation.isPending.value) return
 	if (!sessionToDelete.value?.id) return
 
 	try {
