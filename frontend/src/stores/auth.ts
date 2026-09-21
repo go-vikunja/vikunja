@@ -129,7 +129,7 @@ export const useAuthStore = defineStore('auth', () => {
 	const settings = computed(() => createUserSettingsDraft(account.data.value?.settings))
 	watch(() => settings.value.frontend_settings.desktop_quick_entry_shortcut, shortcut => {
 		window.vikunjaDesktop?.updateQuickEntryShortcut(shortcut || '')
-	})
+	}, {immediate: true})
 	
 	const currentSessionId = ref<string | null>(null)
 	const lastUserInfoRefresh = ref<Date | null>(null)
