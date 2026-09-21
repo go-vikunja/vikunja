@@ -21,15 +21,6 @@ vi.mock('@/helpers/fetcher', () => {
 	return {AuthenticatedHTTPFactory: httpStub, HTTPFactory: httpStub}
 })
 
-vi.mock('@/helpers/user', async (importOriginal) => {
-	const original = await importOriginal<typeof import('@/helpers/user')>()
-	return {
-		...original,
-		fetchAvatarBlobUrl: vi.fn(async () => ''),
-		invalidateAvatarCache: vi.fn(),
-	}
-})
-
 const i18n = createI18n({legacy: false, locale: 'en', messages: {en}})
 
 const AppRoute = {template: '<div class="app-route">app route</div>'}

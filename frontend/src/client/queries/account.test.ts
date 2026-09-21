@@ -8,7 +8,7 @@ import {
 	type UserInfoResponse,
 } from './account'
 import {queryClient} from '@/client/queryClient'
-import {invalidateAvatarCache} from '@/helpers/user'
+import {invalidateAvatarQueries} from './avatars'
 
 const sdk = vi.hoisted(() => ({
 	userUpdateSettings: vi.fn(),
@@ -20,7 +20,7 @@ vi.mock('@/message', () => ({
 	error: vi.fn(),
 	success: vi.fn(),
 }))
-vi.mock('@/helpers/user', () => ({invalidateAvatarCache: vi.fn()}))
+vi.mock('./avatars', () => ({invalidateAvatarQueries: vi.fn()}))
 
 const SERVER_ACCOUNT = {
 	id: 1,
@@ -48,6 +48,7 @@ describe('account settings mutations', () => {
 		const previous = {
 			id: 1,
 			is_admin: true,
+			username: 'ada',
 			name: 'Old',
 			settings: {name: 'Old'},
 		}
@@ -76,14 +77,15 @@ describe('account settings mutations', () => {
 		expect(merged).toEqual({
 			id: 1,
 			is_admin: true,
+			username: 'ada',
 			name: 'New',
 			settings: {
 				name: 'New',
 				frontend_settings: {sidebar_width: 280},
 			},
 		})
-		await vi.waitFor(() => expect(invalidateAvatarCache).toHaveBeenCalledTimes(1))
-		expect(invalidateAvatarCache).toHaveBeenCalledWith(previous)
+		await vi.waitFor(() => expect(invalidateAvatarQueries).toHaveBeenCalledTimes(1))
+		expect(invalidateAvatarQueries).toHaveBeenCalledWith('ada')
 	})
 
 	it('reconciles the account with what the server stored', async () => {
