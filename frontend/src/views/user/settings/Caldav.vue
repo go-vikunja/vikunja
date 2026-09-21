@@ -140,7 +140,7 @@ const newToken = ref<Token>()
 async function createToken() {
 	try {
 		newToken.value = await createMutation.mutateAsync()
-		// Detaching the observer lets gcTime: 0 drop the cached token; newToken holds the only copy.
+		// Detaching the observer lets gcTime: 0 drop the cached token.
 		createMutation.reset()
 	} catch { return }
 }
