@@ -29,7 +29,6 @@ export type ConfigState = Required<Omit<VikunjaInfos,
 
 const publicClient = createClient({throwOnError: true})
 
-// These are the api defaults.
 function defaultConfig(): ConfigState {
 	return {
 		version: '',
