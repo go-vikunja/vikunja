@@ -111,7 +111,7 @@ const totpDisablePassword = ref('')
 const configStore = useConfigStore()
 const authStore = useAuthStore()
 const totpEnabled = computed(() => configStore.totpEnabled)
-const isLocalUser = computed(() => authStore.info?.isLocalUser)
+const isLocalUser = computed(() => authStore.info?.is_local_user)
 
 totpStatus()
 

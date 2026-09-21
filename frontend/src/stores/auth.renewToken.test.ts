@@ -3,7 +3,7 @@ import {setActivePinia, createPinia} from 'pinia'
 import {nextTick} from 'vue'
 
 import {useAuthStore} from './auth'
-import {AUTH_TYPES} from '@/modelTypes/IUser'
+import {AUTH_TYPES} from '@/constants/auth'
 
 const {httpPostMock, queryClientClearMock, refreshTokenMock, routerPushMock, getTokenMock} = vi.hoisted(() => ({
 	httpPostMock: vi.fn(),

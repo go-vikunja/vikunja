@@ -5,7 +5,7 @@ import MentionList from './MentionList.vue'
 import { getPopupContainer } from '../popupContainer'
 import { createSuggestionPopup, type SuggestionPopup } from '../suggestionPopup'
 import {searchProjectUsers} from '@/client/queries/userSearch'
-import { getDisplayName } from '@/models/user'
+import { getDisplayName } from '@/helpers/user'
 import type { MentionNodeAttrs } from '@tiptap/extension-mention'
 
 interface MentionItem extends MentionNodeAttrs {

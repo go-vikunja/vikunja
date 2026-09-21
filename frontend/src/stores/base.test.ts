@@ -1,7 +1,7 @@
 import {createPinia, setActivePinia} from 'pinia'
 import {beforeEach, describe, expect, it, vi} from 'vitest'
 
-import {AUTH_TYPES} from '@/modelTypes/IUser'
+import {AUTH_TYPES} from '@/constants/auth'
 import {queryClient} from '@/client/queryClient'
 import {projectKeys, type ProjectResponse} from '@/client/queries/projects'
 

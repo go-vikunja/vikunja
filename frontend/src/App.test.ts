@@ -6,7 +6,7 @@ import {createRouter, createMemoryHistory} from 'vue-router'
 import App from '@/App.vue'
 import {QueryClient, VueQueryPlugin} from '@tanstack/vue-query'
 import {useAuthStore} from '@/stores/auth'
-import {AUTH_TYPES} from '@/modelTypes/IUser'
+import {AUTH_TYPES} from '@/constants/auth'
 import en from '@/i18n/lang/en.json'
 
 vi.mock('@/helpers/fetcher', () => {
@@ -21,8 +21,8 @@ vi.mock('@/helpers/fetcher', () => {
 	return {AuthenticatedHTTPFactory: httpStub, HTTPFactory: httpStub}
 })
 
-vi.mock('@/models/user', async (importOriginal) => {
-	const original = await importOriginal<typeof import('@/models/user')>()
+vi.mock('@/helpers/user', async (importOriginal) => {
+	const original = await importOriginal<typeof import('@/helpers/user')>()
 	return {
 		...original,
 		fetchAvatarBlobUrl: vi.fn(async () => ''),

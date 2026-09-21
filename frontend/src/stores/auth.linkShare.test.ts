@@ -3,7 +3,7 @@ import {beforeEach, describe, expect, it, vi} from 'vitest'
 
 import {queryClient} from '@/client/queryClient'
 import {labelKeys} from '@/client/queries/labels'
-import {AUTH_TYPES, type AuthType} from '@/modelTypes/IUser'
+import {AUTH_TYPES, type AuthType} from '@/constants/auth'
 
 const auth = vi.hoisted(() => ({
 	token: null as string | null,
