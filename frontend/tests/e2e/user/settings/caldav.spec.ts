@@ -13,6 +13,7 @@ test.describe('CalDAV', () => {
 		)
 		await page.getByRole('button', {name: 'Create a CalDAV token'}).click()
 		await created
+		await expect(page.locator('table.table tr').filter({has: page.locator('td')})).toHaveCount(1)
 
 		// Banner renders the one-time token string; capture it.
 		const banner = page.locator('.message').filter({hasText: 'Here is your new token'})
