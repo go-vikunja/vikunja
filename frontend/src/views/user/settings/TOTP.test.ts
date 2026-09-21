@@ -12,11 +12,20 @@ import {AUTH_TYPES} from '@/constants/auth'
 import en from '@/i18n/lang/en.json'
 
 const {get, enroll, enable, disable, qrcode} = vi.hoisted(() => ({
-	get: vi.fn(), enroll: vi.fn(), enable: vi.fn(), disable: vi.fn(),
+	get: vi.fn(),
+	enroll: vi.fn(),
+	enable: vi.fn(),
+	disable: vi.fn(),
 	qrcode: vi.fn(async () => ({data: new Blob(['fake-jpeg-bytes'])})),
 }))
 
-vi.mock('@/client/generated', () => ({totpGet: get, totpEnroll: enroll, totpEnable: enable, totpDisable: disable, totpQrcode: qrcode}))
+vi.mock('@/client/generated', () => ({
+	totpGet: get,
+	totpEnroll: enroll,
+	totpEnable: enable,
+	totpDisable: disable,
+	totpQrcode: qrcode,
+}))
 
 vi.mock('@/message', () => ({
 	success: vi.fn(),
@@ -58,6 +67,7 @@ async function mountAndSettle() {
 // Enabled responses omit the secret, so the UI must rely on `enabled` alone.
 describe('TOTP settings', () => {
 	beforeEach(() => {
+		queryClient.clear()
 		setActivePinia(createPinia())
 		errors = []
 		get.mockReset()
@@ -94,6 +104,39 @@ describe('TOTP settings', () => {
 		expect(w.text()).toContain('Enroll')
 		expect(qrcode).not.toHaveBeenCalled()
 		expect(errors).toEqual([])
+	})
+
+	it('offers enrollment only once the status is known', async () => {
+		let settleStatus: (reason: unknown) => void = () => {}
+		get.mockReturnValueOnce(new Promise((_resolve, reject) => {
+			settleStatus = reject
+		}))
+
+		const w = await mountAndSettle()
+
+		expect(w.text()).not.toContain('Enroll')
+		settleStatus({code: 1016})
+		await flushPromises()
+		expect(w.text()).toContain('Enroll')
+	})
+
+	it('keeps the enrollment secret out of the mutation cache once enrolled', async () => {
+		get.mockRejectedValueOnce({code: 1016})
+		const enrolled = {
+			secret: 'SHAREDSECRET',
+			enabled: false,
+			url: 'otpauth://totp/x',
+		}
+		enroll.mockResolvedValueOnce({data: enrolled})
+		get.mockResolvedValueOnce({data: enrolled})
+
+		const w = await mountAndSettle()
+		await w.findAll('button').find(b => b.text() === 'Enroll')!.trigger('click')
+		await flushPromises()
+
+		expect(enroll).toHaveBeenCalledTimes(1)
+		expect(w.text()).toContain('SHAREDSECRET')
+		await vi.waitFor(() => expect(queryClient.getMutationCache().getAll()).toEqual([]))
 	})
 
 	it('shows the enrollment UI with the qrcode while enrollment is incomplete', async () => {
