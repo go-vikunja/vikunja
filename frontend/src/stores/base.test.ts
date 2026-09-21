@@ -7,7 +7,6 @@ import {projectKeys, type ProjectResponse} from '@/client/queries/projects'
 
 const auth = vi.hoisted(() => ({
 	token: null as string | null,
-	post: vi.fn(),
 }))
 
 const sdk = vi.hoisted(() => ({
@@ -111,7 +110,6 @@ describe('base store identity reset', () => {
 	beforeEach(() => {
 		setActivePinia(createPinia())
 		auth.token = null
-		auth.post.mockReset()
 		queryClient.clear()
 		Object.values(sdk).forEach(mock => mock.mockReset())
 		window.URL.revokeObjectURL = vi.fn()
