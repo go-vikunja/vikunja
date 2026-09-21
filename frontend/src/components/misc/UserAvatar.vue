@@ -15,9 +15,11 @@
 </template>
 
 <script lang="ts" setup>
-import {ref, watch} from 'vue'
-
-import {avatarCacheVersions, fetchAvatarBlobUrl} from '@/helpers/user'
+import {computed} from 'vue'
+import {useQuery} from '@tanstack/vue-query'
+import {useObjectUrl} from '@vueuse/core'
+import {avatarQuery} from '@/client/queries/avatars'
+import {queryClient} from '@/client/queryClient'
 import type {User as IUser} from '@/client/generated'
 
 const props = withDefaults(defineProps<{
@@ -31,32 +33,11 @@ const props = withDefaults(defineProps<{
 	alt: '',
 })
 
-const src = ref<string>()
-
-// Guards against a slow fetch for a previous user overwriting a newer one.
-let fetchToken = 0
-
-watch(
-	[() => props.user?.username, () => props.size, () => avatarCacheVersions.get(props.user?.username ?? '')],
-	async () => {
-		const token = ++fetchToken
-		src.value = undefined
-
-		if (!props.user?.username) {
-			return
-		}
-
-		try {
-			const url = await fetchAvatarBlobUrl(props.user, props.size)
-			if (token === fetchToken) {
-				src.value = url
-			}
-		} catch {
-			// A missing avatar isn't worth a user-visible error; used to end up in Sentry unhandled.
-		}
-	},
-	{immediate: true},
-)
+const avatar = useQuery(computed(() => ({
+	...avatarQuery(props.user?.username ?? '', props.size),
+	enabled: Boolean(props.user?.username),
+})), queryClient)
+const src = useObjectUrl(computed(() => props.user?.username ? avatar.data.value : undefined))
 </script>
 
 <style lang="scss">

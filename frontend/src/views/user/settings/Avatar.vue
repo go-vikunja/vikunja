@@ -5,7 +5,7 @@
 		</Message>
 
 		<Message v-else-if="avatarProvider === 'openid'">
-			{{ $t('user.settings.avatar.openid', {provider: authStore.info.auth_provider}) }}
+			{{ $t('user.settings.avatar.openid', {provider: authStore.info?.auth_provider}) }}
 		</Message>
 
 		<template v-else>
@@ -36,7 +36,7 @@
 
 				<XButton
 					v-if="!isCropAvatar"
-					:loading="avatarService.loading || loading"
+					:loading="saving || loading"
 					@click="avatarUploadInput.click()"
 				>
 					{{ $t('user.settings.avatar.uploadAvatar') }}
@@ -51,7 +51,7 @@
 					/>
 					<XButton
 						v-cy="'uploadAvatar'"
-						:loading="avatarService.loading || loading"
+						:loading="saving || loading"
 						@click="uploadAvatar"
 					>
 						{{ $t('user.settings.avatar.uploadAvatar') }}
@@ -64,7 +64,7 @@
 				class="mbs-2"
 			>
 				<XButton
-					:loading="avatarService.loading || loading"
+					:loading="saving || loading"
 					class="is-fullwidth"
 					@click="updateAvatarStatus()"
 				>
@@ -77,15 +77,14 @@
 
 
 <script setup lang="ts">
-import {computed, ref, shallowReactive} from 'vue'
+import {computed, ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {Cropper} from 'vue-advanced-cropper'
 import 'vue-advanced-cropper/dist/style.css'
 
-import AvatarService from '@/services/avatar'
-import AvatarModel from '@/models/avatar'
+import {useQuery} from '@tanstack/vue-query'
+import {avatarProviderQuery, useUpdateAvatarProviderMutation, useUploadAvatarMutation} from '@/client/queries/avatars'
 import {useTitle} from '@/composables/useTitle'
-import {success} from '@/message'
 import {useAuthStore} from '@/stores/auth'
 import Message from '@/components/misc/Message.vue'
 
@@ -104,25 +103,21 @@ const AVATAR_PROVIDERS = computed(() => ({
 
 useTitle(() => `${t('user.settings.avatar.title')} - ${t('user.settings.title')}`)
 
-const avatarService = shallowReactive(new AvatarService())
-// Separate variable because some things we're doing in browser take a bit
+const providerQuery = useQuery(avatarProviderQuery())
+const updateProvider = useUpdateAvatarProviderMutation()
+const upload = useUploadAvatarMutation()
+const saving = computed(() => updateProvider.isPending.value || upload.isPending.value)
 const loading = ref(false)
-
-
-const avatarProvider = ref('')
-
-async function avatarStatus() {
-	const {avatarProvider: currentProvider} = await avatarService.get({})
-	avatarProvider.value = currentProvider
-}
-
-avatarStatus()
-
+const avatarProvider = ref<string>()
+watch(providerQuery.data, data => {
+	if (avatarProvider.value === undefined && data) avatarProvider.value = data.avatar_provider ?? 'default'
+}, {immediate: true})
 
 async function updateAvatarStatus() {
-	await avatarService.update(new AvatarModel({avatarProvider: avatarProvider.value}))
-	success({message: t('user.settings.avatar.statusUpdateSuccess')})
-	authStore.invalidateAvatar()
+	if (!avatarProvider.value) return
+	try {
+		await updateProvider.mutateAsync({username: authStore.info?.username ?? '', provider: avatarProvider.value})
+	} catch { return }
 }
 
 const cropper = ref()
@@ -138,10 +133,11 @@ async function uploadAvatar() {
 	}
 
 	try {
-		const blob = await new Promise(resolve => canvas.toBlob(blob => resolve(blob)))
-		await avatarService.create(blob)
-		success({message: t('user.settings.avatar.setSuccess')})
-		authStore.invalidateAvatar()
+		const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve))
+		if (!blob) return
+		await upload.mutateAsync({username: authStore.info?.username ?? '', blob})
+	} catch {
+		return
 	} finally {
 		loading.value = false
 		isCropAvatar.value = false

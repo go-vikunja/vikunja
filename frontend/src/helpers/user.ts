@@ -1,76 +1,9 @@
-import {nextTick, reactive} from 'vue'
 import type {User} from '@/client/generated'
-
-
-import AvatarService from '@/services/avatar'
-
-const avatarService = new AvatarService()
-const avatarCache = new Map<string, string>()
-const pendingRequests = new Map<string, Promise<string>>()
-
-// Bumped on invalidation so components rendering that user's cached avatar refetch it.
-export const avatarCacheVersions = reactive(new Map<string, number>())
-
-// Returns undefined, never '': Vue renders src="" which the browser resolves to the page
-// URL and reports as a failed image load.
-export async function fetchAvatarBlobUrl(user: Pick<User, 'username'>, size = 50): Promise<string | undefined> {
-	if (!user || !user.username) {
-		return undefined
-	}
-	const key = `${user.username}-${size}`
-
-	const cached = avatarCache.get(key)
-	if (cached) {
-		return cached
-	}
-
-	const pending = pendingRequests.get(key)
-	if (pending) {
-		return await pending
-	}
-
-	const requestPromise = avatarService.getBlobUrl(`/avatar/${user.username}?size=${size}`)
-		.then(url => {
-			avatarCache.set(key, url)
-			pendingRequests.delete(key)
-			return url
-		})
-		.catch(error => {
-			pendingRequests.delete(key)
-			throw error
-		})
-	
-	pendingRequests.set(key, requestPromise)
-	return await requestPromise
-}
+import {avatarKeys} from '@/client/queries/avatars'
+import {queryClient} from '@/client/queryClient'
 
 export function invalidateAvatarCache(user: Pick<User, 'username'>) {
-	if (!user || !user.username) {
-		return
-	}
-
-	const staleUrls: string[] = []
-	for (const key of Array.from(avatarCache.keys())) {
-		if (key.startsWith(`${user.username}-`)) {
-			const url = avatarCache.get(key)
-			if (url) {
-				staleUrls.push(url)
-			}
-			avatarCache.delete(key)
-		}
-	}
-
-	for (const key of Array.from(pendingRequests.keys())) {
-		if (key.startsWith(`${user.username}-`)) {
-			pendingRequests.delete(key)
-		}
-	}
-
-	avatarCacheVersions.set(user.username, (avatarCacheVersions.get(user.username) ?? 0) + 1)
-
-	// Only after the version bump rendered: revoking a url a live <img> still holds
-	// breaks it on the next re-decode (print, content-visibility).
-	void nextTick(() => staleUrls.forEach(url => window.URL.revokeObjectURL(url)))
+	if (user?.username) void queryClient.invalidateQueries({queryKey: avatarKeys.user(user.username)})
 }
 
 export type UserWithId = User & {id: number}
