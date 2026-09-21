@@ -87,7 +87,7 @@ async function create() {
 	} catch {
 		return
 	} finally {
-		// Evicts the plaintext secret and basic auth password from the mutation cache.
+		// Evicts the plaintext credentials from the mutation cache.
 		createMutation.reset()
 	}
 	newWebhook.value = emptyDraft()

@@ -48,7 +48,7 @@ export function createWebhookMutationOptions() {
 				: userWebhooksCreate({body}))).data,
 			onSettled: ({scope}, client) => client.invalidateQueries({queryKey: webhookKeys.list(scope)}),
 		}),
-		// Input holds the plaintext secret and basic auth password.
+		// Input holds plaintext credentials.
 		gcTime: 0,
 	}
 }
