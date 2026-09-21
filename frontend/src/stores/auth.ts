@@ -543,7 +543,6 @@ export const useAuthStore = defineStore('auth', () => {
 		setAuthenticated,
 		setNeedsTotpPasscode,
 
-		invalidateAvatar,
 		updateLastUserRefresh,
 
 		login,
