@@ -55,15 +55,19 @@ export function useEnableTotpMutation() {
 }
 
 export function disableTotpMutationOptions() {
-	return contextMutationOptions({
-		mutationFn: async (password: string) => (await totpDisable({body: {password}})).data,
-		onSuccess: (_data, _input, client) => {
-			client.setQueryData<Totp>(totpKeys.current, current => current ? {enabled: false} : current)
-			client.removeQueries({queryKey: totpKeys.qr})
-		},
-		onSettled: (_input, client) => client.invalidateQueries({queryKey: totpKeys.current}),
-		successMessage: () => i18n.global.t('user.settings.totp.disableSuccess'),
-	})
+	return {
+		...contextMutationOptions({
+			mutationFn: async (password: string) => (await totpDisable({body: {password}})).data,
+			onSuccess: (_data, _input, client) => {
+				client.setQueryData<Totp>(totpKeys.current, current => current ? {enabled: false} : current)
+				client.removeQueries({queryKey: totpKeys.qr})
+			},
+			onSettled: (_input, client) => client.invalidateQueries({queryKey: totpKeys.current}),
+			successMessage: () => i18n.global.t('user.settings.totp.disableSuccess'),
+		}),
+		// Input holds the plaintext password.
+		gcTime: 0,
+	}
 }
 
 export function useDisableTotpMutation() {
