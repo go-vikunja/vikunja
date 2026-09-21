@@ -1,0 +1,30 @@
+import {it, expect, vi} from 'vitest'
+import {QueryClient} from '@tanstack/vue-query'
+import {adminKeys, adminUsersQuery, updateAdminUserMutationOptions, deleteAdminUserMutationOptions} from './admin'
+const sdk = vi.hoisted(() => ({adminUsersList: vi.fn(), adminUsersPatchAdmin: vi.fn(), adminUsersPatchStatus: vi.fn(), adminUsersDelete: vi.fn()}))
+vi.mock('@/client/generated', () => sdk)
+vi.mock('@/message', () => ({success: vi.fn(), error: vi.fn()}))
+
+it('uses server pagination and search and invalidates all user pages after a partial update fails', async () => {
+	const client = new QueryClient()
+	sdk.adminUsersList.mockResolvedValue({data: {items: [{id: 1}], total: 100, total_pages: 2}})
+	await client.fetchQuery(adminUsersQuery('name', 2))
+	client.setQueryData(adminKeys.usersPage('', 1), {items: [{id: 2}], total: 100, total_pages: 2})
+	sdk.adminUsersPatchAdmin.mockResolvedValue({data: {id: 1, is_admin: true}})
+	sdk.adminUsersPatchStatus.mockRejectedValue(new Error('status rejected'))
+	await expect(client.getMutationCache().build(client, updateAdminUserMutationOptions()).execute({id: 1, is_admin: true, status: 2})).rejects.toThrow('status rejected')
+	expect(sdk.adminUsersList).toHaveBeenCalledWith(expect.objectContaining({query: {q: 'name', page: 2}}))
+	expect(client.getQueryState(adminKeys.usersPage('name', 2))?.isInvalidated).toBe(true)
+	expect(client.getQueryState(adminKeys.usersPage('', 1))?.isInvalidated).toBe(true)
+})
+it('deletion stales users and overview without inventing a page total', async () => {
+	const client = new QueryClient()
+	const page = {items: [{id: 1}], total: 101, total_pages: 3}
+	client.setQueryData(adminKeys.usersPage('', 1), page)
+	client.setQueryData(adminKeys.overview, {users: 101})
+	sdk.adminUsersDelete.mockResolvedValue({})
+	await client.getMutationCache().build(client, deleteAdminUserMutationOptions()).execute({id: 1, mode: 'now', username: 'Old'})
+	expect(client.getQueryState(adminKeys.usersPage('', 1))?.isInvalidated).toBe(true)
+	expect(client.getQueryState(adminKeys.overview)?.isInvalidated).toBe(true)
+	expect(client.getQueryData(adminKeys.usersPage('', 1))).toEqual(page)
+})
