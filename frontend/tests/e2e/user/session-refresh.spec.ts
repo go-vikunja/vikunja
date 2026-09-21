@@ -43,7 +43,7 @@ test.describe('Session refresh and retry interceptor', () => {
 		// We navigate to the sessions page to trigger this call, avoiding
 		// a race with the proactive refresh that fires on page reload.
 		let intercepted = false
-		await page.route(/\/api\/v1\/user\/sessions/, async (route) => {
+		await page.route(/\/api\/v2\/user\/sessions/, async (route) => {
 			if (!intercepted && route.request().method() === 'GET') {
 				intercepted = true
 				await route.fulfill({
