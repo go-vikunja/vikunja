@@ -14,6 +14,7 @@ import {botApiTokensQuery, useDeleteApiTokenMutation} from '@/client/queries/api
 import type {BotUser} from '@/client/generated'
 import type {ApiToken as IApiToken} from '@/client/generated'
 import {formatDisplayDate} from '@/helpers/time/formatDate'
+import {getErrorText} from '@/message'
 
 type IUser = BotUser & Required<Pick<BotUser, 'id'>>
 
@@ -61,8 +62,7 @@ async function createBot() {
 		newBotName.value = ''
 		showCreateForm.value = false
 	} catch (e: unknown) {
-		const err = e as {detail?: string}
-		createError.value = err.detail ?? String(e)
+		createError.value = getErrorText(e)
 	}
 }
 
