@@ -78,7 +78,7 @@ watch(
 
 const authStore = useAuthStore()
 // Noon when the user has no default due time configured.
-const defaultTime = computed(() => parseUserDefaultTime(authStore.settings.frontendSettings.defaultDueTime) ?? {hours: 12, minutes: 0})
+const defaultTime = computed(() => parseUserDefaultTime(authStore.settings.frontend_settings.default_due_time) ?? {hours: 12, minutes: 0})
 
 function update(value: Date | null) {
 	// The calendar only compares days, so a picked day can still carry a time before minDate.

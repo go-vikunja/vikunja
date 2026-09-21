@@ -197,7 +197,7 @@ const canSubmit = computed(() =>
 function smartFill() {
 	from.value = smartFillStart(
 		props.recentEntries,
-		authStore.settings.frontendSettings.timeTrackingDefaultStart ?? '09:00',
+		authStore.settings.frontend_settings.time_tracking_default_start ?? '09:00',
 		new Date(),
 	)
 	to.value = new Date()
