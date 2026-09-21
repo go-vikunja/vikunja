@@ -1,7 +1,7 @@
 <template>
 	<Card :title="$t('user.export.title')">
 		<Message
-			v-if="exportInfo && exportExpires"
+			v-if="exportInfo"
 			class="mbe-4"
 		>
 			<div class="export-message">
@@ -11,8 +11,8 @@
 						scope="global"
 					>
 						<time
-							v-tooltip="formatDateLong(exportExpires)"
-							:datetime="formatISO(exportExpires)"
+							v-tooltip="formatDateLong(exportInfo?.expires)"
+							:datetime="formatISO(exportInfo?.expires)"
 						>
 							{{ formattedExpiresDate }}
 						</time>
@@ -61,7 +61,6 @@ import {useI18n} from 'vue-i18n'
 
 import {useQuery} from '@tanstack/vue-query'
 import {dataExportQuery, useRequestExportMutation} from '@/client/queries/dataExport'
-import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {useTitle} from '@/composables/useTitle'
 import {useAuthStore} from '@/stores/auth'
 import {formatISO, formatDateLong, formatDisplayDate} from '@/helpers/time/formatDate'
@@ -78,14 +77,13 @@ useTitle(() => `${t('user.export.title')} - ${t('user.settings.title')}`)
 
 const status = useQuery(dataExportQuery())
 const exportInfo = computed(() => status.data.value?.id ? status.data.value : null)
-const exportExpires = computed(() => parseDateOrNull(exportInfo.value?.expires))
 const requestMutation = useRequestExportMutation()
 const password = ref('')
 const errPasswordRequired = ref(false)
 const isLocalUser = computed(() => authStore.info?.is_local_user)
 const passwordInput = ref()
 
-const formattedExpiresDate = computed(() => exportExpires.value ? formatDisplayDate(exportExpires.value) : '')
+const formattedExpiresDate = computed(() => formatDisplayDate(exportInfo.value?.expires))
 
 async function requestDataExport() {
 	if (password.value === '' && isLocalUser.value) {
