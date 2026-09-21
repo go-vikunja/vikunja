@@ -116,7 +116,7 @@ const avatarProvider = computed({
 
 function updateAvatarStatus() {
 	const username = authStore.info?.username
-	if (!username || !avatarProvider.value) return
+	if (!username || (pickedProvider.value === undefined && providerQuery.data.value === undefined)) return
 	updateProvider.mutate({username, provider: avatarProvider.value})
 }
 
