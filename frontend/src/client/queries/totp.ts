@@ -1,5 +1,6 @@
 import {queryOptions, useMutation} from '@tanstack/vue-query'
 import {totpGet, totpEnroll, totpEnable, totpDisable, totpQrcode, type Totp} from '@/client/generated'
+import type {VikunjaErrorModel} from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
 import {i18n} from '@/i18n'
 
@@ -12,7 +13,8 @@ export function totpQuery() {
 			try {
 				return (await totpGet({signal})).data
 			} catch (cause) {
-				if ((cause as {code?: number})?.code === 1016) return {enabled: false}
+				// 1016 = TOTP not enrolled for this user.
+				if ((cause as VikunjaErrorModel)?.code === 1016) return {enabled: false}
 				throw cause
 			}
 		},
