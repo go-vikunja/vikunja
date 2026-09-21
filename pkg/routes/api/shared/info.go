@@ -92,6 +92,12 @@ type LegalInfo struct {
 // BuildInfo assembles the public instance information returned by GET /info on
 // both API versions.
 func BuildInfo() VikunjaInfos {
+	enabledProFeatures := license.EnabledProFeatures()
+	proFeatureNames := make([]string, 0, len(enabledProFeatures))
+	for _, feature := range enabledProFeatures {
+		proFeatureNames = append(proFeatureNames, feature.String())
+	}
+
 	info := VikunjaInfos{
 		Version:                version.Version,
 		FrontendURL:            config.ServicePublicURL.GetString(),
@@ -110,7 +116,7 @@ func BuildInfo() VikunjaInfos {
 		PublicTeamsEnabled:     config.ServiceEnablePublicTeams.GetBool(),
 		AllowIconChanges:       config.ServiceAllowIconChanges.GetBool(),
 		ConcurrentWrites:       config.DatabaseType.GetString() != "sqlite",
-		EnabledProFeatures:     []string{},
+		EnabledProFeatures:     proFeatureNames,
 		AvailableMigrators: []string{
 			(&vikunja_file.FileMigrator{}).Name(),
 			(&ticktick.Migrator{}).Name(),
@@ -134,10 +140,6 @@ func BuildInfo() VikunjaInfos {
 				Enabled: config.AuthOpenIDEnabled.GetBool(),
 			},
 		},
-	}
-
-	for _, feature := range license.EnabledProFeatures() {
-		info.EnabledProFeatures = append(info.EnabledProFeatures, feature.String())
 	}
 
 	providers, err := openid.GetAllProviders()
