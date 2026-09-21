@@ -3,12 +3,13 @@ import {tokensList, tokensCreate, tokensDelete, tokenRoutes, mcpInfo, type ApiTo
 import {fetchAllPages} from './fetchAllPages'
 import {contextMutationOptions} from './contextMutation'
 
+const apiTokenKeyRoot = ['apiTokens'] as const
 export const apiTokenKeys = {
-	all: ['apiTokens'] as const,
-	lists: ['apiTokens', 'list'] as const,
-	list: (ownerId: number) => ['apiTokens', 'list', ownerId] as const,
-	routes: ['apiTokens', 'routes'] as const,
-	mcp: ['apiTokens', 'mcp'] as const,
+	all: apiTokenKeyRoot,
+	lists: [...apiTokenKeyRoot, 'list'] as const,
+	list: (ownerId: number) => [...apiTokenKeys.lists, ownerId] as const,
+	routes: [...apiTokenKeyRoot, 'routes'] as const,
+	mcp: [...apiTokenKeyRoot, 'mcp'] as const,
 }
 export function apiTokensQuery(ownerId = 0) {
 	return queryOptions({
