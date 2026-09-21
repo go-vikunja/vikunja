@@ -468,7 +468,9 @@ function enforceBackgroundBrightnessBounds() {
 function useAvailableTimezones(settingsRef: Ref<UserSettings>) {
 	const zones = useQuery(timezonesQuery())
 	const searchText = ref('')
-	const availableTimezones = computed(() => [...(zones.data.value ?? [])].sort().map(value => ({value, label: value.replace(/_/g, ' ')})))
+	const availableTimezones = computed(() => [...(zones.data.value ?? [])]
+		.sort((a, b) => a.localeCompare(b))
+		.map(value => ({value, label: value.replace(/_/g, ' ')})))
 	const searchResults = computed(() => availableTimezones.value.filter(zone => zone.label.toLowerCase().includes(searchText.value.toLowerCase())))
 	function search(query: string) {searchText.value = query}
 
