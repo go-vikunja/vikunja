@@ -12,11 +12,20 @@ import {AUTH_TYPES} from '@/constants/auth'
 import en from '@/i18n/lang/en.json'
 
 const {get, enroll, enable, disable, qrcode} = vi.hoisted(() => ({
-	get: vi.fn(), enroll: vi.fn(), enable: vi.fn(), disable: vi.fn(),
+	get: vi.fn(),
+	enroll: vi.fn(),
+	enable: vi.fn(),
+	disable: vi.fn(),
 	qrcode: vi.fn(async () => ({data: new Blob(['fake-jpeg-bytes'])})),
 }))
 
-vi.mock('@/client/generated', () => ({totpGet: get, totpEnroll: enroll, totpEnable: enable, totpDisable: disable, totpQrcode: qrcode}))
+vi.mock('@/client/generated', () => ({
+	totpGet: get,
+	totpEnroll: enroll,
+	totpEnable: enable,
+	totpDisable: disable,
+	totpQrcode: qrcode,
+}))
 
 vi.mock('@/message', () => ({
 	success: vi.fn(),
