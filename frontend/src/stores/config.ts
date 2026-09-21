@@ -29,9 +29,9 @@ export type ConfigState = Required<Omit<VikunjaInfos,
 
 const publicClient = createClient({throwOnError: true})
 
-export const useConfigStore = defineStore('config', () => {
-	const state: ConfigState = reactive({
-		// These are the api defaults.
+// These are the api defaults.
+function defaultConfig(): ConfigState {
+	return {
 		version: '',
 		email_reminders_enabled: true,
 		frontend_url: '',
@@ -69,7 +69,11 @@ export const useConfigStore = defineStore('config', () => {
 		allow_icon_changes: true,
 		enabled_pro_features: [],
 		concurrent_writes: false,
-	})
+	}
+}
+
+export const useConfigStore = defineStore('config', () => {
+	const state: ConfigState = reactive(defaultConfig())
 
 	const migratorsEnabled = computed(() => state.available_migrators?.length > 0)
 	const apiBase = computed(() => {
@@ -85,15 +89,16 @@ export const useConfigStore = defineStore('config', () => {
 	function setConfig(config: VikunjaInfos) {
 		const {$schema: _schema, ...wire} = config
 		Reflect.deleteProperty(wire, '__proto__')
+		const defaults = defaultConfig()
 
 		Object.assign(state, wire, {
 			available_migrators: config.available_migrators ?? [],
 			enabled_background_providers: config.enabled_background_providers ?? [],
 			enabled_pro_features: config.enabled_pro_features ?? [],
-			legal: {...state.legal, ...config.legal},
+			legal: {...defaults.legal, ...config.legal},
 			auth: {
-				local: {...state.auth.local, ...config.auth?.local},
-				ldap: {...state.auth.ldap, ...config.auth?.ldap},
+				local: {...defaults.auth.local, ...config.auth?.local},
+				ldap: {...defaults.auth.ldap, ...config.auth?.ldap},
 				openid_connect: {
 					enabled: config.auth?.openid_connect?.enabled ?? false,
 					providers: (config.auth?.openid_connect?.providers ?? []).map(provider => ({
