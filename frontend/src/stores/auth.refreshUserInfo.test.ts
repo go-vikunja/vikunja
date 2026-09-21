@@ -1,6 +1,6 @@
+vi.mock('@/client/generated', () => ({userShow: httpGetMock}))
 import {describe, it, expect, beforeEach, vi} from 'vitest'
 import {setActivePinia, createPinia} from 'pinia'
-import {AxiosError, AxiosHeaders} from 'axios'
 
 import {useAuthStore} from './auth'
 import {shouldDropEvent} from '@/helpers/sentryFilters'
@@ -72,20 +72,13 @@ describe('auth store refreshUserInfo failures', () => {
 	})
 
 	it('throws an error sentry drops on a network error', async () => {
-		httpGetMock.mockRejectedValue(new AxiosError('Network Error', AxiosError.ERR_NETWORK))
+		httpGetMock.mockRejectedValue(new TypeError('Failed to fetch'))
 
 		expect(shouldDropEvent(await refreshError())).toBe(true)
 	})
 
 	it('throws an error that shows the server message on a 5xx', async () => {
-		const config = {headers: new AxiosHeaders()}
-		httpGetMock.mockRejectedValue(new AxiosError('Request failed with status code 500', AxiosError.ERR_BAD_RESPONSE, config, null, {
-			status: 500,
-			statusText: 'Internal Server Error',
-			headers: {},
-			config,
-			data: {message: 'Internal server error'},
-		}))
+		httpGetMock.mockRejectedValue({status: 500, detail: 'Internal server error'})
 
 		const e = await refreshError()
 

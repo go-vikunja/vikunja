@@ -1,3 +1,4 @@
+vi.mock('@/client/generated', () => ({authLinkShare: auth.post, tokenRenew: auth.post}))
 import {createPinia, setActivePinia} from 'pinia'
 import {beforeEach, describe, expect, it, vi} from 'vitest'
 

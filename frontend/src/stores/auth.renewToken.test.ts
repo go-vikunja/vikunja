@@ -1,3 +1,4 @@
+vi.mock('@/client/generated', () => ({authLogin: httpPostMock, authLogout: httpPostMock, tokenRenew: httpPostMock, userShow: vi.fn(async () => ({data: {}}))}))
 import {describe, it, expect, beforeEach, vi} from 'vitest'
 import {setActivePinia, createPinia} from 'pinia'
 import {nextTick} from 'vue'
@@ -64,7 +65,7 @@ vi.mock('@/helpers/redirectToProvider', () => ({
 // "is this a genuine logout?" check (it inspects the error cause's status) fires.
 function refreshError() {
 	return new Error('Error renewing token: ', {
-		cause: {response: {status: 401}},
+		cause: {status: 401},
 	})
 }
 

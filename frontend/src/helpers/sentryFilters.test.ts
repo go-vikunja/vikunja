@@ -259,3 +259,13 @@ describe('stripNavigationFragment', () => {
 		expect(stripNavigationFragment(span)).toBe(span)
 	})
 })
+
+
+describe('generated transport errors', () => {
+	it('drops v2 problems without legacy message fields', () => {
+		expect(shouldDropEvent({status: 500, detail: 'Unavailable'})).toBe(true)
+	})
+	it('drops fetch network failures', () => {
+		expect(shouldDropEvent(new TypeError('Failed to fetch'))).toBe(true)
+	})
+})
