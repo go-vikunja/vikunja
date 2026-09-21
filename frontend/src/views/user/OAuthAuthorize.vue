@@ -41,6 +41,8 @@ const requiredParams = [
 	'code_challenge_method',
 ] as const
 
+const q = (v: unknown) => typeof v === 'string' ? v : undefined
+
 async function authorize() {
 	// Validate required query parameters
 	const missing = requiredParams.filter(p => !route.query[p])
@@ -52,12 +54,12 @@ async function authorize() {
 
 	try {
 		const response = await oauthAuthorize({body: {
-			response_type: String(route.query.response_type ?? ''),
-			client_id: String(route.query.client_id ?? ''),
-			redirect_uri: String(route.query.redirect_uri ?? ''),
-			state: String(route.query.state ?? ''),
-			code_challenge: String(route.query.code_challenge ?? ''),
-			code_challenge_method: String(route.query.code_challenge_method ?? ''),
+			response_type: q(route.query.response_type),
+			client_id: q(route.query.client_id),
+			redirect_uri: q(route.query.redirect_uri),
+			state: q(route.query.state),
+			code_challenge: q(route.query.code_challenge),
+			code_challenge_method: q(route.query.code_challenge_method),
 		}})
 
 		const {code, redirect_uri, state} = response.data
