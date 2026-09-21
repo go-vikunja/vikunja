@@ -142,7 +142,6 @@ function onTokenCreated(token: IApiToken) {
 
 		<ApiTokenForm
 			v-if="showCreateForm"
-			:loading="isFetching || deleteMutation.isPending.value"
 			:initial-title="initialTitle"
 			:initial-scopes="initialScopes"
 			@created="onTokenCreated"

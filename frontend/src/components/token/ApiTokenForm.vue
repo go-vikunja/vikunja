@@ -16,7 +16,6 @@ import {parseScopesFromQuery} from '@/helpers/parseScopesFromQuery'
 
 const props = withDefaults(defineProps<{
 	ownerId?: number,
-	loading?: boolean,
 	initialTitle?: string,
 	initialScopes?: string,
 	routes?: ApiTokenRoutes,
@@ -24,7 +23,6 @@ const props = withDefaults(defineProps<{
 	lockedScopes?: IApiPermission,
 }>(), {
 	ownerId: 0,
-	loading: false,
 	initialTitle: '',
 	initialScopes: '',
 	routes: undefined,
@@ -414,7 +412,7 @@ async function createToken() {
 			{{ $t('user.settings.apiTokens.permissionRequired') }}
 		</p>
 		<XButton
-			:loading="loading || createMutation.isPending.value"
+			:loading="createMutation.isPending.value"
 			type="submit"
 		>
 			{{ $t('user.settings.apiTokens.createToken') }}
