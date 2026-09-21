@@ -12,7 +12,7 @@ import type {
 import {contextMutationOptions} from './contextMutation'
 import {i18n} from '@/i18n'
 
-export function usePasswordResetMutation() {
+export function useResetPasswordMutation() {
 	return useMutation({
 		...contextMutationOptions({
 			mutationFn: async (body: PasswordResetWritable) => (await authPasswordReset({body})).data,

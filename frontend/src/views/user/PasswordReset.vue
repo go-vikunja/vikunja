@@ -55,7 +55,7 @@ import {ref, reactive} from 'vue'
 import {useRoute} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 
-import {usePasswordResetMutation} from '@/client/queries/passwords'
+import {useResetPasswordMutation} from '@/client/queries/passwords'
 import Message from '@/components/misc/Message.vue'
 import {getErrorText} from '@/message'
 import Password from '@/components/input/Password.vue'
@@ -67,7 +67,7 @@ const credentials = reactive({
 const route = useRoute()
 const {t} = useI18n()
 
-const passwordResetMutation = usePasswordResetMutation()
+const passwordResetMutation = useResetPasswordMutation()
 const errorMsg = ref('')
 const successMessage = ref('')
 
