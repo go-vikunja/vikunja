@@ -22,7 +22,12 @@ defineOptions({name: 'McpSettings'})
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => `MCP - ${t('user.settings.title')}`)
 const {data: info, isPending: infoPending, isError: infoError, refetch: refreshInfo} = useQuery(mcpInfoQuery())
-const {data: allTokens, isPending: tokensPending, isError: tokensError, refetch: refreshTokens} = useQuery(apiTokensQuery())
+const {
+	data: allTokens,
+	isPending: tokensPending,
+	isError: tokensError,
+	refetch: refreshTokens,
+} = useQuery(apiTokensQuery())
 const deleteMutation = useDeleteApiTokenMutation()
 const endpoint = computed(() => info.value?.endpoint ?? '')
 const tokens = computed(() => (allTokens.value ?? []).filter(token => token.permissions?.mcp?.includes('access')))

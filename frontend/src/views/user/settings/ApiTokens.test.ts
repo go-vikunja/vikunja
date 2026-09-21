@@ -30,11 +30,11 @@ const tokens = [
 
 let stored = tokens.slice()
 const {getAll, del} = vi.hoisted(() => ({
-getAll: vi.fn(async () => ({data: {items: stored.slice(), total_pages: 1}})),
-del: vi.fn(async ({path}: {path: {id: number}}) => {
-	stored = stored.filter(token => token.id !== path.id)
-	return {}
-}),
+	getAll: vi.fn(async () => ({data: {items: stored.slice(), total_pages: 1}})),
+	del: vi.fn(async ({path}: {path: {id: number}}) => {
+		stored = stored.filter(token => token.id !== path.id)
+		return {}
+	}),
 }))
 vi.mock('@/client/generated', () => ({tokensList: getAll, tokensDelete: del}))
 vi.mock('@/message', () => ({success: vi.fn(), error: vi.fn()}))
@@ -52,7 +52,11 @@ async function mountPage() {
 
 	const wrapper = mount(ApiTokens, {
 		global: {
-			plugins: [i18n, router, [VueQueryPlugin, {queryClient: new QueryClient({defaultOptions: {queries: {retry: false}}})}]],
+			plugins: [
+				i18n,
+				router,
+				[VueQueryPlugin, {queryClient: new QueryClient({defaultOptions: {queries: {retry: false}}})}],
+			],
 			components: {Modal},
 			directives: {cy: testid},
 			stubs: {

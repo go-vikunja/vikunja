@@ -8,14 +8,29 @@ import en from '@/i18n/lang/en.json'
 import type {ConnectionSettings} from '@/client/generated'
 import type {ApiTokenPreset} from '@/helpers/apiToken'
 
-const sdk = vi.hoisted(() => ({mcpInfo: vi.fn(), tokensList: vi.fn()}))
+const sdk = vi.hoisted(() => ({
+	mcpInfo: vi.fn(),
+	tokensList: vi.fn(),
+}))
 vi.mock('@/client/generated', () => sdk)
 vi.mock('@/composables/useTitle', () => ({useTitle: vi.fn()}))
 
 const getAll = sdk.tokensList
 const tokenRows = [
-	{id: 1, title: 'My assistant', permissions: {mcp: ['access']}, expires_at: '2036-01-01T00:00:00Z', created: '2026-01-01T00:00:00Z'},
-	{id: 2, title: 'Private API token', permissions: {tasks: ['read_all']}, expires_at: '2036-01-01T00:00:00Z', created: '2026-01-01T00:00:00Z'},
+	{
+		id: 1,
+		title: 'My assistant',
+		permissions: {mcp: ['access']},
+		expires_at: '2036-01-01T00:00:00Z',
+		created: '2026-01-01T00:00:00Z',
+	},
+	{
+		id: 2,
+		title: 'Private API token',
+		permissions: {tasks: ['read_all']},
+		expires_at: '2036-01-01T00:00:00Z',
+		created: '2026-01-01T00:00:00Z',
+	},
 ]
 let wrapper: VueWrapper
 beforeEach(() => {
@@ -34,7 +49,10 @@ afterEach(() => wrapper?.unmount())
 function mountSettings() {
 	wrapper = mount(Mcp, {
 		global: {
-			plugins: [createI18n({legacy: false, locale: 'en', messages: {en}}), [VueQueryPlugin, {queryClient: new QueryClient({defaultOptions: {queries: {retry: false}}})}]],
+			plugins: [
+				createI18n({legacy: false, locale: 'en', messages: {en}}),
+				[VueQueryPlugin, {queryClient: new QueryClient({defaultOptions: {queries: {retry: false}}})}],
+			],
 			stubs: {
 				Card: {template: '<div><slot /></div>'},
 				ApiTokenForm: true,

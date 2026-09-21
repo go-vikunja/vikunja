@@ -7,17 +7,17 @@ import {VueQueryPlugin, QueryClient} from '@tanstack/vue-query'
 import en from '@/i18n/lang/en.json'
 
 const {getAvailableRoutes, create} = vi.hoisted(() => ({
-getAvailableRoutes: vi.fn(async () => ({data: {
-	tasks: {
-		create: {path: '/api/v1/projects/:project/tasks', method: 'PUT'},
-		read_all: {path: '/api/v1/tasks', method: 'GET'},
-	},
-	projects: {
-		read_all: {path: '/api/v1/projects', method: 'GET'},
-		read_one: {path: '/api/v1/projects/:project', method: 'GET'},
-	},
-} })),
-create: vi.fn(async ({body}: {body: Record<string, unknown>}) => ({data: {...body, id: 1, token: 'tk_test'}})),
+	getAvailableRoutes: vi.fn(async () => ({data: {
+		tasks: {
+			create: {path: '/api/v1/projects/:project/tasks', method: 'PUT'},
+			read_all: {path: '/api/v1/tasks', method: 'GET'},
+		},
+		projects: {
+			read_all: {path: '/api/v1/projects', method: 'GET'},
+			read_one: {path: '/api/v1/projects/:project', method: 'GET'},
+		},
+	}})),
+	create: vi.fn(async ({body}: {body: Record<string, unknown>}) => ({data: {...body, id: 1, token: 'tk_test'}})),
 }))
 
 vi.mock('@/client/generated', () => ({tokenRoutes: getAvailableRoutes, tokensCreate: create}))
@@ -101,7 +101,10 @@ describe('ApiTokenForm', () => {
 			initialTitle: 'MCP',
 			routes: {
 				mcp: {access: {path: '/api/v2/mcp', method: 'ANY'}},
-				tasks: {read_all: {path: '/api/v2/tasks', method: 'GET'}, create: {path: '/api/v2/projects/:project/tasks', method: 'POST'}},
+				tasks: {
+					read_all: {path: '/api/v2/tasks', method: 'GET'},
+					create: {path: '/api/v2/projects/:project/tasks', method: 'POST'},
+				},
 			},
 			presets: [{id: 'readOnly', groups: {'*': ['read_all']}}],
 			lockedScopes: {mcp: ['access']},
@@ -132,7 +135,12 @@ describe('ApiTokenForm', () => {
 	it('keeps a locked permission when deselecting its partially locked group', async () => {
 		const mounted = mountForm({
 			initialTitle: 'MCP',
-			routes: {tasks: {read_all: {path: '/api/v2/tasks', method: 'GET'}, create: {path: '/api/v2/projects/:project/tasks', method: 'POST'}}},
+			routes: {
+				tasks: {
+					read_all: {path: '/api/v2/tasks', method: 'GET'},
+					create: {path: '/api/v2/projects/:project/tasks', method: 'POST'},
+				},
+			},
 			presets: [{id: 'fullAccess', groups: {'*': '*'}}],
 			lockedScopes: {tasks: ['read_all']},
 		})
