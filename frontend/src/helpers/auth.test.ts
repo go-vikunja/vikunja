@@ -207,20 +207,16 @@ describe('refreshToken in-flight dedup', () => {
 })
 
 describe('refreshToken across a server switch', () => {
-	const originalApiUrl = window.API_URL
-
 	beforeEach(() => {
 		resolvePost = null
 		post.mockClear()
 		removeToken()
 		localStorage.clear()
-		window.API_URL = 'http://first/api/v1/'
 		apiUrls.base = 'http://first/api/v2/'
 		apiUrls.legacy = 'http://first/api/v1/'
 	})
 
 	afterEach(() => {
-		window.API_URL = originalApiUrl
 		apiUrls.base = '/api/v2/'
 		apiUrls.legacy = '/api/v1/'
 	})
@@ -229,7 +225,6 @@ describe('refreshToken across a server switch', () => {
 		const p = refreshToken(true)
 		expect(post).toHaveBeenCalledTimes(1)
 
-		window.API_URL = 'http://second/api/v1/'
 		apiUrls.base = 'http://second/api/v2/'
 
 		settlePost()
