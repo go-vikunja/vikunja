@@ -1491,11 +1491,14 @@
     "title": "Notifications",
     "none": "You don't have any notifications. Have a nice day!",
     "explainer": "Notifications will appear here when actions, projects or tasks you subscribed to happen.",
+    "read": "Read",
+    "unread": "Unread",
     "markAllRead": "Mark all notifications as read",
     "markAllReadSuccess": "Successfully marked all notifications as read.",
     "subscribeFeed": "Subscribe to notifications via Atom feed",
     "clearAll": "Clear notifications",
-    "clearAllSuccess": "All notifications have been cleared."
+    "clearAllSuccess": "All notifications have been cleared.",
+    "loadMore": "Load older notifications"
   },
   "quickActions": {
     "title": "Search and quick actions",
