@@ -14,6 +14,7 @@ import type {
 	WebhookWritable,
 } from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
+import {useSecretMutation} from './secretMutation'
 import {fetchAllPages} from './fetchAllPages'
 import {i18n} from '@/i18n'
 
@@ -41,16 +42,12 @@ export function webhookEventsQuery(kind: WebhookScope['kind']) {
 	})
 }
 export function createWebhookMutationOptions() {
-	return {
-		...contextMutationOptions({
-			mutationFn: async ({scope, body}: {scope: WebhookScope, body: WebhookWritable}) => (await (scope.kind === 'project'
-				? webhooksCreate({path: {project: scope.projectId}, body})
-				: userWebhooksCreate({body}))).data,
-			onSettled: ({scope}, client) => client.invalidateQueries({queryKey: webhookKeys.list(scope)}),
-		}),
-		// Input holds the plaintext secret and basic auth password.
-		gcTime: 0,
-	}
+	return contextMutationOptions({
+		mutationFn: async ({scope, body}: {scope: WebhookScope, body: WebhookWritable}) => (await (scope.kind === 'project'
+			? webhooksCreate({path: {project: scope.projectId}, body})
+			: userWebhooksCreate({body}))).data,
+		onSettled: ({scope}, client) => client.invalidateQueries({queryKey: webhookKeys.list(scope)}),
+	})
 }
 export function deleteWebhookMutationOptions() {
 	return contextMutationOptions({
@@ -65,5 +62,5 @@ export function deleteWebhookMutationOptions() {
 		successMessage: () => i18n.global.t('project.webhooks.deleteSuccess'),
 	})
 }
-export function useCreateWebhookMutation() { return useMutation(createWebhookMutationOptions()) }
+export function useCreateWebhookMutation() { return useSecretMutation(createWebhookMutationOptions()) }
 export function useDeleteWebhookMutation() { return useMutation(deleteWebhookMutationOptions()) }
