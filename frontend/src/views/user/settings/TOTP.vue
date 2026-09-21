@@ -135,7 +135,12 @@ function closeDisableForm() {
 async function totpDisable() {
 	try {
 		await disableMutation.mutateAsync(totpDisablePassword.value)
-		closeDisableForm()
-	} catch { return }
+	} catch {
+		return
+	} finally {
+		// Evicts the plaintext password from the mutation cache.
+		disableMutation.reset()
+	}
+	closeDisableForm()
 }
 </script>
