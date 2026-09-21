@@ -59,11 +59,15 @@ function invalidateUsers(client: QueryClient) {
 	])
 }
 export function createAdminUserMutationOptions() {
-	return contextMutationOptions({
-		mutationFn: async (body: CreateUserBodyWritable) => (await adminUsersCreate({body})).data,
-		onSettled: (_body, client) => invalidateUsers(client),
-		successMessage: data => i18n.global.t('admin.users.createdSuccess', {username: data.username}),
-	})
+	return {
+		...contextMutationOptions({
+			mutationFn: async (body: CreateUserBodyWritable) => (await adminUsersCreate({body})).data,
+			onSettled: (_body, client) => invalidateUsers(client),
+			successMessage: data => i18n.global.t('admin.users.createdSuccess', {username: data.username}),
+		}),
+		// Input holds the plaintext password.
+		gcTime: 0,
+	}
 }
 export function updateAdminUserMutationOptions() {
 	return contextMutationOptions({
@@ -81,12 +85,16 @@ export function updateAdminUserMutationOptions() {
 	})
 }
 export function setAdminUserPasswordMutationOptions() {
-	return contextMutationOptions({
-		mutationFn: async ({id, password}: {id: number, password: string}) => (await adminUsersSetPassword({path: {id}, body: {new_password: password}})).data,
-		onSuccess: (updated, _input, client) => patchUser(client, updated),
-		onSettled: (_input, client) => invalidateUsers(client),
-		successMessage: data => i18n.global.t('admin.users.setPasswordSuccess', {username: data.username}),
-	})
+	return {
+		...contextMutationOptions({
+			mutationFn: async ({id, password}: {id: number, password: string}) => (await adminUsersSetPassword({path: {id}, body: {new_password: password}})).data,
+			onSuccess: (updated, _input, client) => patchUser(client, updated),
+			onSettled: (_input, client) => invalidateUsers(client),
+			successMessage: data => i18n.global.t('admin.users.setPasswordSuccess', {username: data.username}),
+		}),
+		// Input holds the plaintext password.
+		gcTime: 0,
+	}
 }
 export function resetAdminUserPasswordMutationOptions() {
 	return contextMutationOptions({
@@ -109,10 +117,14 @@ export function reassignAdminProjectMutationOptions() {
 	})
 }
 export function createAdminInviteMutationOptions() {
-	return contextMutationOptions({
-		mutationFn: async (body: AdminInviteLinksCreateData['body']) => (await adminInviteLinksCreate({body})).data,
-		onSettled: (_input, client) => client.invalidateQueries({queryKey: adminKeys.invites}),
-	})
+	return {
+		...contextMutationOptions({
+			mutationFn: async (body: AdminInviteLinksCreateData['body']) => (await adminInviteLinksCreate({body})).data,
+			onSettled: (_input, client) => client.invalidateQueries({queryKey: adminKeys.invites}),
+		}),
+		// Result holds the one-time invite token.
+		gcTime: 0,
+	}
 }
 export function deleteAdminInviteMutationOptions() {
 	return contextMutationOptions({
