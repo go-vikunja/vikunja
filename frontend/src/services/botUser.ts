@@ -1,8 +1,8 @@
 import AbstractService from '@/services/abstractService'
-import type {IUser} from '@/modelTypes/IUser'
-import UserModel from '@/models/user'
+import type {BotUser as IUser} from '@/client/generated'
+import type {IAbstract} from '@/modelTypes/IAbstract'
 
-export default class BotUserService extends AbstractService<IUser> {
+export default class BotUserService extends AbstractService<IUser & IAbstract> {
 	constructor() {
 		super({
 			create: '/user/bots',
@@ -14,6 +14,6 @@ export default class BotUserService extends AbstractService<IUser> {
 	}
 
 	modelFactory(data: Partial<IUser>) {
-		return new UserModel(data)
+		return {id: 0, maxPermission: null, ...data}
 	}
 }

@@ -93,11 +93,11 @@ describe('auth store renewToken retry (issue #2863)', () => {
 	function setupExpiredUserSession(store: ReturnType<typeof useAuthStore>) {
 		store.setAuthenticated(true)
 		// Expired exp so renewToken treats a refresh failure as a real logout.
-		store.setUser({
+		store.setSession({
 			id: 1,
 			type: AUTH_TYPES.USER,
 			exp: Math.floor(Date.now() / 1000) - 60,
-		} as never, false)
+		})
 	}
 
 	it('does NOT log out when the first refresh fails but the retry succeeds', async () => {
@@ -162,7 +162,11 @@ describe('auth store logout query lifecycle', () => {
 
 	it('clears server data before navigating away', async () => {
 		const store = useAuthStore()
-		store.setUser({id: 1, type: AUTH_TYPES.USER} as never, false)
+		store.setSession({
+			id: 1,
+			type: AUTH_TYPES.USER,
+			exp: 0,
+		})
 		queryClientClearMock.mockReset()
 
 		await store.logout()
@@ -174,7 +178,11 @@ describe('auth store logout query lifecycle', () => {
 	it('clears browser data after reactive logout cleanup', async () => {
 		const store = useAuthStore()
 		store.setAuthenticated(true)
-		store.setUser({id: 1, type: AUTH_TYPES.USER} as never, false)
+		store.setSession({
+			id: 1,
+			type: AUTH_TYPES.USER,
+			exp: 0,
+		})
 		queryClientClearMock.mockReset()
 		localStorage.setItem('projectHistory', '[{"id":1}]')
 
@@ -205,7 +213,11 @@ describe('auth store query identity lifecycle', () => {
 	})
 
 	async function seedIdentity(id: number, type: AUTH_TYPES) {
-		useAuthStore().setUser({id, type} as never, false)
+		useAuthStore().setSession({
+			id,
+			type,
+			exp: 0,
+		})
 		await nextTick()
 		queryClientClearMock.mockReset()
 	}
@@ -213,7 +225,11 @@ describe('auth store query identity lifecycle', () => {
 	it('clears server data when changing users', async () => {
 		await seedIdentity(1, AUTH_TYPES.USER)
 
-		useAuthStore().setUser({id: 2, type: AUTH_TYPES.USER} as never, false)
+		useAuthStore().setSession({
+			id: 2,
+			type: AUTH_TYPES.USER,
+			exp: 0,
+		})
 		await nextTick()
 
 		expect(queryClientClearMock).toHaveBeenCalledOnce()
@@ -222,7 +238,11 @@ describe('auth store query identity lifecycle', () => {
 	it('clears server data when changing from user to link share', async () => {
 		await seedIdentity(1, AUTH_TYPES.USER)
 
-		useAuthStore().setUser({id: 1, type: AUTH_TYPES.LINK_SHARE} as never, false)
+		useAuthStore().setSession({
+			id: 1,
+			type: AUTH_TYPES.LINK_SHARE,
+			exp: 0,
+		})
 		await nextTick()
 
 		expect(queryClientClearMock).toHaveBeenCalledOnce()
@@ -241,7 +261,11 @@ describe('auth store query identity lifecycle', () => {
 	it('preserves server data when renewing the same identity', async () => {
 		await seedIdentity(1, AUTH_TYPES.USER)
 
-		useAuthStore().setUser({id: 1, type: AUTH_TYPES.USER, exp: 42} as never, false)
+		useAuthStore().setSession({
+			id: 1,
+			type: AUTH_TYPES.USER,
+			exp: 42,
+		})
 		await nextTick()
 
 		expect(queryClientClearMock).not.toHaveBeenCalled()

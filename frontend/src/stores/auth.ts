@@ -3,10 +3,10 @@ import {acceptHMRUpdate, defineStore} from 'pinia'
 
 import {AuthenticatedHTTPFactory, HTTPFactory} from '@/helpers/fetcher'
 import {getBrowserLanguage, i18n, setLanguage} from '@/i18n'
-import {objectToSnakeCase} from '@/helpers/case'
-import UserModel, {getDisplayName, invalidateAvatarCache} from '@/models/user'
+import {objectToSnakeCase, objectToCamelCase} from '@/helpers/case'
+import {getDisplayName, invalidateAvatarCache} from '@/helpers/user'
 import AvatarService from '@/services/avatar'
-import type {RegisterUserRequestWritable} from '@/client/generated'
+import type {RegisterUserRequestWritable, UserInfoBody} from '@/client/generated'
 import {registerViaInviteLink} from '@/client/inviteLink'
 import {parseValidationErrors} from '@/helpers/parseValidationErrors'
 import UserSettingsService from '@/services/userSettings'
@@ -20,7 +20,8 @@ import {
 	redirectToProvider,
 	redirectToProviderOnLogout,
 } from '@/helpers/redirectToProvider'
-import {AUTH_TYPES, type IUser} from '@/modelTypes/IUser'
+import {AUTH_TYPES, type AuthType} from '@/constants/auth'
+
 import type {IUserSettings} from '@/modelTypes/IUserSettings'
 import router from '@/router'
 import {useConfigStore} from '@/stores/config'
@@ -31,6 +32,26 @@ import {TIME_FORMAT} from '@/constants/timeFormat'
 import {RELATION_KIND} from '@/types/IRelationKind'
 import type {IProvider} from '@/types/IProvider'
 import {queryClient} from '@/client/queryClient'
+
+export type SessionClaims = {
+	id: number,
+	type: AuthType,
+	exp: number,
+}
+
+type JwtClaims = SessionClaims & {
+	username?: string,
+	is_admin?: boolean,
+	sid?: string,
+}
+
+function userFromClaims({id, username, is_admin}: JwtClaims): UserInfoBody {
+	return {
+		id,
+		username,
+		is_admin,
+	}
+}
 
 // Set on explicit logout so the login page won't immediately bounce the user
 // back to the OIDC provider. Lives in sessionStorage so it survives the
@@ -113,7 +134,8 @@ export const useAuthStore = defineStore('auth', () => {
 	const authenticated = ref(false)
 	const needsTotpPasscode = ref(false)
 	
-	const info = ref<IUser | null>(null)
+	const session = ref<SessionClaims | null>(null)
+	const info = ref<UserInfoBody | null>(null)
 	const settings = ref<IUserSettings>(new UserSettingsModel())
 	
 	const currentSessionId = ref<string | null>(null)
@@ -123,25 +145,15 @@ export const useAuthStore = defineStore('auth', () => {
 	const isLoading = ref(false)
 	const isLoadingGeneralSettings = ref(false)
 
-	const authUser = computed(() => {
-		return authenticated.value && (
-			info.value &&
-			info.value.type === AUTH_TYPES.USER
-		)
-	})
+	const authUser = computed(() => authenticated.value && session.value?.type === AUTH_TYPES.USER)
 
-	const authLinkShare = computed(() => {
-		return authenticated.value && (
-			info.value &&
-			info.value.type === AUTH_TYPES.LINK_SHARE
-		)
-	})
+	const authLinkShare = computed(() => authenticated.value && session.value?.type === AUTH_TYPES.LINK_SHARE)
 
 	const userDisplayName = computed(() => info.value ? getDisplayName(info.value) : undefined)
 	
-	const isLinkShareAuth = computed(() => info.value?.type === AUTH_TYPES.LINK_SHARE)
+	const isLinkShareAuth = computed(() => session.value?.type === AUTH_TYPES.LINK_SHARE)
 
-	const identityKey = computed(() => `${info.value?.id ?? ''}:${info.value?.type ?? ''}`)
+	const identityKey = computed(() => `${session.value?.id ?? ''}:${session.value?.type ?? ''}`)
 
 	// Identity-bound caches survive same-user object replacements.
 	watch(identityKey, () => {
@@ -157,7 +169,11 @@ export const useAuthStore = defineStore('auth', () => {
 		isLoadingGeneralSettings.value = isLoading 
 	}
 
-	function setUser(newUser: IUser | null, saveSettings = true) {
+	function setSession(claims: SessionClaims | null) {
+		session.value = claims
+	}
+
+	function setUser(newUser: UserInfoBody | null, saveSettings = true) {
 		// checkAuth() calls this on every navigation; only drop the avatar cache on an actual account change.
 		const userChanged = info.value?.username !== newUser?.username
 		info.value = newUser
@@ -167,17 +183,17 @@ export const useAuthStore = defineStore('auth', () => {
 			}
 
 			if (saveSettings && newUser.settings) {
-				loadSettings(newUser.settings)
+				loadSettings(new UserSettingsModel(objectToCamelCase(newUser.settings)))
 			}
 		}
 	}
 
 	function setUserSettings(newSettings: IUserSettings) {
 		loadSettings(newSettings)
-		info.value = new UserModel({
-			...info.value !== null ? info.value : {},
+		info.value = {
+			...info.value,
 			name: newSettings.name,
-		})
+		}
 	}
 	
 	function loadSettings(newSettings: IUserSettings) {
@@ -379,10 +395,9 @@ export const useAuthStore = defineStore('auth', () => {
 					.split('.')[1]
 					.replace(/-/g, '+')
 					.replace(/_/g, '/')
-				const payload = JSON.parse(atob(base64))
-				const jwtUser = new UserModel(payload)
-				jwtUserType = jwtUser.type
-				isAuthenticated = jwtUser.exp >= serverNowSeconds()
+				const payload = JSON.parse(atob(base64)) as JwtClaims
+				jwtUserType = payload.type
+				isAuthenticated = payload.exp >= serverNowSeconds()
 				currentSessionId.value = payload.sid ?? null
 
 				if (isAuthenticated) {
@@ -394,20 +409,17 @@ export const useAuthStore = defineStore('auth', () => {
 					// shares share the same numeric ID space, so a USER and a
 					// LINK_SHARE can have the same `id`. Without the type check, a
 					// logged-in user opening a link share whose id collides with
-					// their user id would keep the USER `info.value` and never flip
+					// their user id would keep the USER session and never flip
 					// `authLinkShare` to true, causing the router guard to bounce
 					// between /share/:hash/auth and the project view forever.
-					if (
-						info.value === null ||
-						info.value.id !== jwtUser.id ||
-						info.value.type !== jwtUser.type
-					) {
-						setUser(jwtUser, false)
-					} else {
-						// Always keep exp in sync so token renewal checks stay accurate
-						info.value.exp = jwtUser.exp
+					const isNewIdentity = session.value === null ||
+						session.value.id !== payload.id ||
+						session.value.type !== payload.type
+					setSession(payload)
+					if (isNewIdentity) {
+						setUser(userFromClaims(payload), false)
 					}
-				} else if (jwtUser.type === AUTH_TYPES.USER && jwt !== jwtWithFailedRefresh) {
+				} else if (payload.type === AUTH_TYPES.USER && jwt !== jwtWithFailedRefresh) {
 					// JWT expired but this is a user session — attempt a cookie-based
 					// refresh before giving up. This lets users who reopen the app
 					// after the short JWT TTL seamlessly resume their session.
@@ -416,15 +428,14 @@ export const useAuthStore = defineStore('auth', () => {
 						const freshJwt = getToken()
 						if (freshJwt) {
 							const b64 = freshJwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
-							const p = JSON.parse(atob(b64))
-							const freshUser = new UserModel(p)
+							const p = JSON.parse(atob(b64)) as JwtClaims
 							// The server just issued it, so it's valid even if our clock disagrees.
 							isAuthenticated = true
 							currentSessionId.value = p.sid ?? null
-							if (info.value === null || info.value.id !== freshUser.id) {
-								setUser(freshUser, false)
-							} else {
-								info.value.exp = freshUser.exp
+							const isNewIdentity = session.value === null || session.value.id !== p.id
+							setSession(p)
+							if (isNewIdentity) {
+								setUser(userFromClaims(p), false)
 							}
 						}
 					} catch (e) {
@@ -454,6 +465,7 @@ export const useAuthStore = defineStore('auth', () => {
 
 		setAuthenticated(isAuthenticated)
 		if (!isAuthenticated) {
+			setSession(null)
 			setUser(null)
 			redirectToSpecifiedProvider()
 		}
@@ -470,13 +482,9 @@ export const useAuthStore = defineStore('auth', () => {
 		const HTTP = AuthenticatedHTTPFactory()
 		try {
 			const response = await HTTP.get('user')
-			const newUser = new UserModel({
-				...response.data,
-				...(info.value?.type && {type: info.value?.type}),
-				...(info.value?.exp && {exp: info.value?.exp}),
-			})
+			const newUser = response.data as UserInfoBody
 
-			if (newUser.settings.language) {
+			if (newUser.settings?.language) {
 				await setLanguage(newUser.settings.language)
 			}
 
@@ -578,7 +586,7 @@ export const useAuthStore = defineStore('auth', () => {
 			// Only logout if the JWT has actually expired and we can't refresh.
 			// If the JWT is still valid, the proactive refresh failure is harmless
 			// — the 401 interceptor will handle it when the token really expires.
-			const isExpired = !info.value?.exp || info.value.exp < serverNowSeconds()
+			const isExpired = !session.value?.exp || session.value.exp < serverNowSeconds()
 			if (isExpired && (e?.cause?.request?.status || e?.cause?.response?.status)) {
 				await logout()
 			}
@@ -604,6 +612,7 @@ export const useAuthStore = defineStore('auth', () => {
 		const loggedInVia = getLoggedInVia()
 		lastUserInfoRefresh.value = null
 		setAuthenticated(false)
+		setSession(null)
 		setUser(null)
 		window.localStorage.clear() // Clear all settings and history we might have saved in local storage.
 
@@ -632,6 +641,7 @@ export const useAuthStore = defineStore('auth', () => {
 		authenticated: readonly(authenticated),
 		needsTotpPasscode: readonly(needsTotpPasscode),
 
+		session: readonly(session),
 		info: readonly(info),
 		settings: readonly(settings),
 
@@ -650,6 +660,7 @@ export const useAuthStore = defineStore('auth', () => {
 		isLoadingGeneralSettings: readonly(isLoadingGeneralSettings),
 		setIsLoadingGeneralSettings,
 
+		setSession,
 		setUser,
 		setUserSettings,
 		setAuthenticated,
