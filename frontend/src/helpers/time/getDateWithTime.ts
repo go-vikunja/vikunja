@@ -36,7 +36,7 @@ export function getDefaultTimeParts(date: Date): {hours: number, minutes: number
 
 export function getDateWithTime(date: Date): Date {
 	const newDate = new Date(date)
-	const default_due_time = getDefaultTimeParts(newDate)
-	newDate.setHours(default_due_time.hours, default_due_time.minutes, 0, 0)
+	const timeParts = getDefaultTimeParts(newDate)
+	newDate.setHours(timeParts.hours, timeParts.minutes, 0, 0)
 	return newDate
 }
