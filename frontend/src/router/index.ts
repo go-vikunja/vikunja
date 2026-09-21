@@ -510,7 +510,7 @@ export async function getAuthForRoute(to: RouteLocation, authStore) {
 				return {name: 'user.settings.email-update'}
 			}
 		} catch (e) {
-			// verifyEmail rethrows with the axios error as cause; the i18n code lookup needs the original
+			// Keep the original API error code for translation.
 			error((e as {cause?: unknown})?.cause ?? e)
 		}
 		return {name: 'home'}

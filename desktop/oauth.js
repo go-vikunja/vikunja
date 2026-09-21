@@ -15,8 +15,8 @@ function generateCodeChallenge(verifier) {
 }
 
 function buildAuthorizationUrl(frontendUrl, codeChallenge) {
-	// Strip trailing slash and /api/v1 suffix to get the frontend origin
-	let base = frontendUrl.replace(/\/+$/, '').replace(/\/api\/v1$/, '')
+	// the authorize page is served by the frontend, not the api
+	let base = frontendUrl.replace(/\/+$/, '').replace(/\/api\/v[12]$/, '')
 
 	const url = new URL(base)
 	url.pathname = url.pathname.replace(/\/+$/, '') + '/oauth/authorize'
@@ -76,8 +76,8 @@ function postJSON(url, body) {
 
 function getTokenEndpoint(apiUrl) {
 	let base = apiUrl.replace(/\/+$/, '')
-	if (!base.endsWith('/api/v1')) {
-		base += '/api/v1'
+	if (!/\/api\/v[12]$/.test(base)) {
+		base += '/api/v2'
 	}
 	return `${base}/oauth/token`
 }

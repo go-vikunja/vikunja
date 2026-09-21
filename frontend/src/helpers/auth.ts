@@ -1,4 +1,5 @@
 import {getApiBaseUrl} from '@/helpers/apiUrl'
+import {canonicalApiBaseUrl} from '@/client/requestContext'
 import {authRefreshToken} from '@/client/generated'
 import {publicClient} from '@/client/publicClient'
 import {isDesktopApp, refreshDesktopToken} from '@/helpers/desktopAuth'
@@ -112,8 +113,8 @@ export async function refreshToken(persist: boolean): Promise<void> {
 async function doRefresh(persist: boolean): Promise<void> {
 	// Snapshot the epoch so we can tell if a logout happened while we awaited.
 	const epochAtStart = authEpoch
-	const serverAtStart = window.API_URL
-	const loggedOutSinceStart = () => authEpoch !== epochAtStart || window.API_URL !== serverAtStart
+	const serverAtStart = getApiBaseUrl()
+	const loggedOutSinceStart = () => authEpoch !== epochAtStart || getApiBaseUrl() !== serverAtStart
 
 	// Capture the tokens before waiting for the lock so we can detect
 	// if another tab refreshed while we were queued.
@@ -166,8 +167,8 @@ async function doRefresh(persist: boolean): Promise<void> {
 
 		// We hold the lock and no one else refreshed — make the API call.
 		try {
-			// A per-request baseUrl skips mergeConfigs (utils.gen.ts), the only place a trailing slash is stripped.
-			const response = await authRefreshToken({client: publicClient, baseUrl: getApiBaseUrl().replace(/\/$/, '')})
+			const baseUrl = canonicalApiBaseUrl(getApiBaseUrl())
+			const response = await authRefreshToken({client: publicClient, baseUrl})
 			if (loggedOutSinceStart()) {
 				return
 			}

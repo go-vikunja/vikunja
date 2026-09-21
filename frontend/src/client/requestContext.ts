@@ -37,7 +37,7 @@ export function isRequestContextAbort(cause: unknown): boolean {
 	return (cause as {name?: string} | null)?.name === 'AbortError'
 }
 
-function canonicalApiBaseUrl(apiBaseUrl: unknown): string {
+export function canonicalApiBaseUrl(apiBaseUrl: unknown): string {
 	if (typeof apiBaseUrl !== 'string') {
 		throw new DOMException('Invalid client API URL', 'AbortError')
 	}
@@ -55,7 +55,7 @@ function canonicalApiBaseUrl(apiBaseUrl: unknown): string {
 		) {
 			throw new DOMException('Invalid client API URL', 'AbortError')
 		}
-		return normalized.toString()
+		return normalized.toString().replace(/\/$/, '')
 	} catch (error) {
 		if (isRequestContextAbort(error)) {
 			throw error
@@ -72,10 +72,7 @@ export function assertClientRequestMatchesContext(
 	assertClientRequestContext(context)
 
 	const requestUrl = new URL(request.url, window.location.origin)
-	const expectedConfiguredBaseUrl = context.apiBaseUrl.endsWith('/')
-		? context.apiBaseUrl.slice(0, -1)
-		: context.apiBaseUrl
-	if (canonicalApiBaseUrl(configuredApiBaseUrl) !== canonicalApiBaseUrl(expectedConfiguredBaseUrl)) {
+	if (canonicalApiBaseUrl(configuredApiBaseUrl) !== canonicalApiBaseUrl(context.apiBaseUrl)) {
 		throw new DOMException('Client request API changed', 'AbortError')
 	}
 

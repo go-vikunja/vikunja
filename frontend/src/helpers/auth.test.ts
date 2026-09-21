@@ -17,8 +17,14 @@ const post = vi.hoisted(() => vi.fn(() => {
 	})
 }))
 
+const apiUrls = vi.hoisted(() => ({
+	base: '/api/v2',
+	legacy: '/api/v1',
+}))
+
 vi.mock('@/helpers/apiUrl', () => ({
-	getApiBaseUrl: () => '/api/v2/',
+	getApiBaseUrl: () => apiUrls.base,
+	getLegacyApiBaseUrl: () => apiUrls.legacy,
 }))
 
 vi.mock('@/client/generated', () => ({authRefreshToken: post}))
@@ -119,7 +125,7 @@ describe('refreshToken in-flight dedup', () => {
 		expect(requestSpy).toHaveBeenCalledWith('vikunja-token-refresh', expect.any(Function))
 		// ...and the in-flight dedup still collapsed both calls into one POST.
 		expect(post).toHaveBeenCalledTimes(1)
-		expect(post).toHaveBeenCalledWith(expect.objectContaining({baseUrl: '/api/v2'}))
+		expect(post).toHaveBeenCalledWith(expect.objectContaining({baseUrl: 'http://localhost:3000/api/v2'}))
 	})
 
 	it('coalesces concurrent calls into a single POST on insecure HTTP (no Web Locks)', async () => {
@@ -201,25 +207,25 @@ describe('refreshToken in-flight dedup', () => {
 })
 
 describe('refreshToken across a server switch', () => {
-	const originalApiUrl = window.API_URL
-
 	beforeEach(() => {
 		resolvePost = null
 		post.mockClear()
 		removeToken()
 		localStorage.clear()
-		window.API_URL = 'http://first/api/v1/'
+		apiUrls.base = 'http://first/api/v2'
+		apiUrls.legacy = 'http://first/api/v1'
 	})
 
 	afterEach(() => {
-		window.API_URL = originalApiUrl
+		apiUrls.base = '/api/v2'
+		apiUrls.legacy = '/api/v1'
 	})
 
 	it('does not save the token when the user switched servers while the refresh was in flight', async () => {
 		const p = refreshToken(true)
 		expect(post).toHaveBeenCalledTimes(1)
 
-		window.API_URL = 'http://second/api/v1/'
+		apiUrls.base = 'http://second/api/v2'
 
 		settlePost()
 		await p
@@ -234,6 +240,8 @@ describe('refreshToken failure', () => {
 		post.mockClear()
 		removeToken()
 		localStorage.clear()
+		apiUrls.base = '/api/v2'
+		apiUrls.legacy = '/api/v1'
 	})
 
 	it('rejects after the single v2 request fails', async () => {
@@ -242,7 +250,7 @@ describe('refreshToken failure', () => {
 		await expect(refreshToken(true)).rejects.toThrow('Error renewing token')
 
 		expect(post).toHaveBeenCalledOnce()
-		expect(post).toHaveBeenCalledWith(expect.objectContaining({baseUrl: '/api/v2'}))
+		expect(post).toHaveBeenCalledWith(expect.objectContaining({baseUrl: 'http://localhost:3000/api/v2'}))
 		expect(localStorage.getItem('token')).toBeNull()
 	})
 })
