@@ -5,7 +5,14 @@ import type {Priority} from '@/constants/priorities'
 import type {DateDisplay} from '@/constants/dateDisplay'
 import type {TimeFormat} from '@/constants/timeFormat'
 import type {IRelationKind} from '@/types/IRelationKind'
-import type {TaskReminder} from '@/client/generated'
+import type {TaskReminder, UserGeneralSettings} from '@/client/generated'
+import {getBrowserLanguage} from '@/i18n'
+import {PrefixMode} from '@/modules/quickAddMagic'
+import {DEFAULT_PROJECT_VIEW_SETTINGS} from '@/constants/projectView'
+import {PRIORITIES} from '@/constants/priorities'
+import {DATE_DISPLAY} from '@/constants/dateDisplay'
+import {TIME_FORMAT} from '@/constants/timeFormat'
+import {RELATION_KIND} from '@/types/IRelationKind'
 
 export interface FrontendSettings {
 	play_sound_when_done: boolean
@@ -44,21 +51,11 @@ export interface ExtraSettingsLinks {
 	[key: string]: ExtraSettingsLink
 }
 
-import type {UserGeneralSettings} from '@/client/generated'
-
 export type UserSettings = Required<Omit<UserGeneralSettings, '$schema' | 'frontend_settings' | 'extra_settings_links' | 'language'>> & {
 	frontend_settings: FrontendSettings
 	extra_settings_links: ExtraSettingsLinks
 	language: SupportedLocale
 }
-
-import {getBrowserLanguage} from '@/i18n'
-import {PrefixMode} from '@/modules/quickAddMagic'
-import {DEFAULT_PROJECT_VIEW_SETTINGS} from '@/constants/projectView'
-import {PRIORITIES} from '@/constants/priorities'
-import {DATE_DISPLAY} from '@/constants/dateDisplay'
-import {TIME_FORMAT} from '@/constants/timeFormat'
-import {RELATION_KIND} from '@/types/IRelationKind'
 
 export function createUserSettingsDraft(data: UserGeneralSettings = {}): UserSettings {
 	const frontend = typeof data.frontend_settings === 'object' && data.frontend_settings !== null
