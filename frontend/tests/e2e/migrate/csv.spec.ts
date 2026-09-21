@@ -8,7 +8,7 @@ test('CSV detection, preview and import persist after reload', async ({authentic
 	await expect(page.locator('.success-step [role=status]')).toContainText(/successfully|finished/i, {timeout: 20000})
 	await page.goto('/')
 	await page.reload()
-	await expect(page.getByRole('link', {name: 'CSV project', exact: true}).first()).toContainText('CSV project')
+	await expect(page.locator('.tasks')).toContainText('Imported CSV task')
 	const stored = await apiContext.get('/api/v2/tasks', {headers: {Authorization: `Bearer ${userToken}`}})
 	expect(stored.ok()).toBe(true)
 	expect((await stored.json()).items).toContainEqual(expect.objectContaining({title: 'Imported CSV task', description: 'Stored description'}))
