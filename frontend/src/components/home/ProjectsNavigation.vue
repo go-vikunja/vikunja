@@ -11,13 +11,13 @@
 		filter=".drag-disabled"
 		:component-data="{
 			type: 'transition-group',
-			name: !drag ? 'flip-list' : null,
+			name: !isDraggingProject ? 'flip-list' : null,
 			class: [
 				'menu-list can-be-hidden',
 				{ 'dragging-disabled': !canEditOrder }
 			],
 		}"
-		@start="() => drag = true"
+		@start="() => isDraggingProject = true"
 		@end="saveProjectPosition"
 	>
 		<template #item="{element: project}">
@@ -44,6 +44,7 @@ import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 import {useUpdateProjectMutation, type ProjectResponse} from '@/client/queries/projects'
 
 import {useProjects} from '@/composables/useProjects'
+import {useProjectDragState} from '@/composables/useProjectDragState'
 
 const props = defineProps<{
 	modelValue?: ProjectResponse[],
@@ -54,7 +55,7 @@ const emit = defineEmits<{
 	(e: 'update:modelValue', projects: ProjectResponse[]): void
 }>()
 
-const drag = ref(false)
+const {isDraggingProject} = useProjectDragState()
 
 const projectList = useProjects()
 const updateMutation = useUpdateProjectMutation()
@@ -62,18 +63,32 @@ const updateMutation = useUpdateProjectMutation()
 // Vue draggable will modify the projects list as it changes their position which will not work on a prop.
 // Hence, we'll clone the prop and work on the clone.
 const availableProjects = ref<ProjectResponse[]>([])
+// Mid-drag, Sortable has moved the dragged item's DOM node, possibly into another list. Patching
+// the list then anchors on that node, throws NotFoundError and leaves the sidebar half patched.
+let projectsChangedDuringDrag: ProjectResponse[] | null = null
 watch(
 	() => props.modelValue,
 	projects => {
+		if (isDraggingProject.value) {
+			projectsChangedDuringDrag = projects || []
+			return
+		}
 		availableProjects.value = projects || []
 	},
 	{immediate: true},
 )
+watch(isDraggingProject, dragging => {
+	if (dragging || projectsChangedDuringDrag === null) {
+		return
+	}
+	availableProjects.value = projectsChangedDuringDrag
+	projectsChangedDuringDrag = null
+})
 
 const projectUpdating = ref<Record<number, boolean>>({})
 
 async function saveProjectPosition(e: SortableEvent) {
-	drag.value = false
+	isDraggingProject.value = false
 	if (!e.newIndex && e.newIndex !== 0) return
 
 	const projectsActive = availableProjects.value
