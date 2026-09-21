@@ -36,7 +36,7 @@ test.describe('CalDAV', () => {
 	})
 
 	test('deleting a token revokes caldav access', async ({
-		authenticatedPage: page, currentUser,
+		authenticatedPage: page, currentUser, apiContext, userToken,
 	}) => {
 		const tokenValue = 'fixed-caldav-token-123456789012345678901234567890'
 		// kind=4 is TokenCaldavAuth (see pkg/user/token.go)
@@ -55,6 +55,10 @@ test.describe('CalDAV', () => {
 		await expect(dataRows).toHaveCount(0)
 		await page.reload()
 		await expect(dataRows).toHaveCount(0)
+		const stored = await apiContext.get('user/settings/token/caldav', {
+			headers: {Authorization: `Bearer ${userToken}`},
+		})
+		expect(await stored.json()).toEqual([])
 
 		// NOTE: the factory seeds the plaintext token as-is, but caldav tokens are
 		// stored bcrypt-hashed. We assert the row is gone in the UI rather than
