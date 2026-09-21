@@ -30,8 +30,8 @@ export function useRequestExportMutation() {
 	return useMutation(requestExportMutationOptions())
 }
 
-export function useDownloadExportMutation() {
-	return useMutation({
+export function downloadExportMutationOptions() {
+	return {
 		...contextMutationOptions({
 			mutationFn: async (password: string) => {
 				const {data} = await userExportDownload({body: {password}, parseAs: 'blob'})
@@ -42,5 +42,9 @@ export function useDownloadExportMutation() {
 		}),
 		// Input holds the plaintext password.
 		gcTime: 0,
-	})
+	}
+}
+
+export function useDownloadExportMutation() {
+	return useMutation(downloadExportMutationOptions())
 }
