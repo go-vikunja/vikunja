@@ -1,6 +1,6 @@
 import AbstractModel from './abstractModel'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
-import UserModel, {getDisplayName} from '@/models/user'
+import {getDisplayName} from '@/helpers/user'
 import {getTaskIdentifier} from '@/helpers/task'
 import type {Task} from '@/client/generated'
 import type {TaskComment} from '@/client/generated'
@@ -8,15 +8,15 @@ import type {Team} from '@/client/generated'
 import {objectToSnakeCase} from '@/helpers/case'
 
 import {NOTIFICATION_NAMES, type INotification} from '@/modelTypes/INotification'
-import type {IUser} from '@/modelTypes/IUser'
+import type {User as IUser} from '@/client/generated'
 
 type NotificationData = {
-	doer: UserModel
+	doer: IUser
 	task: Task
 	comment: TaskComment
-	assignee: UserModel
+	assignee: IUser
 	project: Extract<INotification['notification'], {project: unknown}>['project']
-	member: UserModel
+	member: IUser
 	team: Team
 }
 
@@ -38,46 +38,46 @@ export default class NotificationModel extends AbstractModel<INotification> impl
 		const task = data.notification && 'task' in data.notification ? data.notification.task : undefined
 		const comment = data.notification && 'comment' in data.notification ? data.notification.comment : undefined
 		this.assignData(data)
-		const notification = this.notification as unknown as NotificationData
+		const notification = data.notification as unknown as NotificationData
 
 		switch (this.name) {
 			case NOTIFICATION_NAMES.TASK_COMMENT:
 				this.notification = asNotificationPayload({
-					doer: new UserModel(notification.doer),
+					doer: notification.doer,
 					task,
 					comment,
 				})
 				break
 			case NOTIFICATION_NAMES.TASK_ASSIGNED:
 				this.notification = asNotificationPayload({
-					doer: new UserModel(notification.doer),
+					doer: notification.doer,
 					task,
-					assignee: new UserModel(notification.assignee),
+					assignee: notification.assignee,
 				})
 				break
 			case NOTIFICATION_NAMES.TASK_DELETED:
 				this.notification = asNotificationPayload({
-					doer: new UserModel(notification.doer),
+					doer: notification.doer,
 					task,
 				})
 				break
 			case NOTIFICATION_NAMES.TASK_CREATED:
 				this.notification = asNotificationPayload({
-					doer: new UserModel(notification.doer),
+					doer: notification.doer,
 					task,
 					project: notification.project,
 				})
 				break
 			case NOTIFICATION_NAMES.PROJECT_CREATED:
 				this.notification = asNotificationPayload({
-					doer: new UserModel(notification.doer),
+					doer: notification.doer,
 					project: notification.project,
 				})
 				break
 			case NOTIFICATION_NAMES.TEAM_MEMBER_ADDED:
 				this.notification = asNotificationPayload({
-					doer: new UserModel(notification.doer),
-					member: new UserModel(notification.member),
+					doer: notification.doer,
+					member: notification.member,
 					team: objectToSnakeCase(notification.team) as Team,
 				})
 				break
@@ -89,7 +89,7 @@ export default class NotificationModel extends AbstractModel<INotification> impl
 				break
 			case NOTIFICATION_NAMES.TASK_MENTIONED:
 				this.notification = asNotificationPayload({
-					doer: new UserModel(notification.doer),
+					doer: notification.doer,
 					task,
 				})
 				break

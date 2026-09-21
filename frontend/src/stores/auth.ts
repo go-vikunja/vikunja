@@ -3,8 +3,8 @@ import {acceptHMRUpdate, defineStore} from 'pinia'
 
 import {AuthenticatedHTTPFactory, HTTPFactory} from '@/helpers/fetcher'
 import {getBrowserLanguage, i18n, setLanguage} from '@/i18n'
-import {objectToSnakeCase} from '@/helpers/case'
-import UserModel, {getDisplayName, invalidateAvatarCache} from '@/models/user'
+import {objectToSnakeCase, objectToCamelCase} from '@/helpers/case'
+import {getDisplayName, invalidateAvatarCache} from '@/helpers/user'
 import AvatarService from '@/services/avatar'
 import type {RegisterUserRequestWritable} from '@/client/generated'
 import {registerViaInviteLink} from '@/client/inviteLink'
@@ -19,7 +19,15 @@ import {
 	redirectToProvider,
 	redirectToProviderOnLogout,
 } from '@/helpers/redirectToProvider'
-import {AUTH_TYPES, type IUser} from '@/modelTypes/IUser'
+import {AUTH_TYPES} from '@/constants/auth'
+import type {UserInfoBody} from '@/client/generated'
+import type {AuthType} from '@/constants/auth'
+
+export type SessionUser = UserInfoBody & {
+	type: AuthType
+	exp: number
+}
+
 import type {IUserSettings} from '@/modelTypes/IUserSettings'
 import router from '@/router'
 import {useConfigStore} from '@/stores/config'
@@ -93,7 +101,7 @@ export const useAuthStore = defineStore('auth', () => {
 	const authenticated = ref(false)
 	const needsTotpPasscode = ref(false)
 	
-	const info = ref<IUser | null>(null)
+	const info = ref<SessionUser | null>(null)
 	const settings = ref<IUserSettings>(new UserSettingsModel())
 	
 	const currentSessionId = ref<string | null>(null)
@@ -135,7 +143,7 @@ export const useAuthStore = defineStore('auth', () => {
 		isLoadingGeneralSettings.value = isLoading 
 	}
 
-	function setUser(newUser: IUser | null, saveSettings = true) {
+	function setUser(newUser: SessionUser | null, saveSettings = true) {
 		// checkAuth() calls this on every navigation; only drop the avatar cache on an actual account change.
 		const userChanged = info.value?.username !== newUser?.username
 		info.value = newUser
@@ -145,16 +153,18 @@ export const useAuthStore = defineStore('auth', () => {
 			}
 
 			if (saveSettings && newUser.settings) {
-				loadSettings(newUser.settings)
+				loadSettings(new UserSettingsModel(objectToCamelCase(newUser.settings)))
 			}
 		}
 	}
 
 	function setUserSettings(newSettings: IUserSettings) {
 		loadSettings(newSettings)
-		info.value = new UserModel({
+		info.value = ({
 			...info.value !== null ? info.value : {},
 			name: newSettings.name,
+			type: info.value?.type ?? AUTH_TYPES.UNKNOWN,
+			exp: info.value?.exp ?? 0,
 		})
 	}
 	
@@ -358,7 +368,7 @@ export const useAuthStore = defineStore('auth', () => {
 					.replace(/-/g, '+')
 					.replace(/_/g, '/')
 				const payload = JSON.parse(atob(base64))
-				const jwtUser = new UserModel(payload)
+				const jwtUser = (payload)
 				jwtUserType = jwtUser.type
 				const ts = Math.round((new Date()).getTime() / MILLISECONDS_A_SECOND)
 
@@ -397,7 +407,7 @@ export const useAuthStore = defineStore('auth', () => {
 						if (freshJwt) {
 							const b64 = freshJwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
 							const p = JSON.parse(atob(b64))
-							const freshUser = new UserModel(p)
+							const freshUser = (p)
 							isAuthenticated = freshUser.exp >= ts
 							currentSessionId.value = p.sid ?? null
 							if (info.value === null || info.value.id !== freshUser.id) {
@@ -444,13 +454,13 @@ export const useAuthStore = defineStore('auth', () => {
 		const HTTP = AuthenticatedHTTPFactory()
 		try {
 			const response = await HTTP.get('user')
-			const newUser = new UserModel({
+			const newUser = ({
 				...response.data,
 				...(info.value?.type && {type: info.value?.type}),
 				...(info.value?.exp && {exp: info.value?.exp}),
 			})
 
-			if (newUser.settings.language) {
+			if (newUser.settings?.language) {
 				await setLanguage(newUser.settings.language)
 			}
 

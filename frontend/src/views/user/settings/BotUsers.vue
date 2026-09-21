@@ -10,8 +10,9 @@ import ApiTokenForm from '@/components/token/ApiTokenForm.vue'
 
 import BotUserService from '@/services/botUser'
 import ApiTokenService from '@/services/apiToken'
-import UserModel from '@/models/user'
-import type {IUser} from '@/modelTypes/IUser'
+import type {BotUser} from '@/client/generated'
+import type {IAbstract} from '@/modelTypes/IAbstract'
+type IUser = BotUser & Required<Pick<BotUser, 'id'>> & IAbstract
 import type {IApiToken} from '@/modelTypes/IApiToken'
 import {formatDisplayDate} from '@/helpers/time/formatDate'
 
@@ -52,13 +53,13 @@ async function loadTokens(botId: number) {
 async function createBot() {
 	createError.value = null
 	const username = newBotUsername.value.startsWith('bot-') ? newBotUsername.value : `bot-${newBotUsername.value}`
-	const payload: Partial<IUser> = {username}
+	const payload: IUser = {id: 0, maxPermission: null, username}
 	const trimmedName = newBotName.value.trim()
 	if (trimmedName !== '') {
 		payload.name = trimmedName
 	}
 	try {
-		const created = await botService.create(new UserModel(payload))
+		const created = await botService.create((payload))
 		bots.value.push(created as IUser)
 		newBotUsername.value = ''
 		newBotName.value = ''
@@ -70,7 +71,7 @@ async function createBot() {
 }
 
 async function toggleBotStatus(bot: IUser) {
-	const updated = new UserModel({
+	const updated = ({
 		...bot,
 		status: bot.status === STATUS_ACTIVE ? STATUS_DISABLED : STATUS_ACTIVE,
 	})
@@ -92,7 +93,7 @@ function cancelEditName(bot: IUser) {
 }
 
 async function saveBotName(bot: IUser) {
-	const updated = new UserModel({
+	const updated = ({
 		...bot,
 		name: (nameDraft.value[bot.id] ?? '').trim(),
 	})

@@ -1,6 +1,5 @@
 import AbstractModel from '@/models/abstractModel'
 import type {IWebhook} from '@/modelTypes/IWebhook'
-import UserModel from '@/models/user'
 
 export default class WebhookModel extends AbstractModel<IWebhook> implements IWebhook {
 	id = 0
@@ -20,7 +19,7 @@ export default class WebhookModel extends AbstractModel<IWebhook> implements IWe
 		super()
 		this.assignData(data)
 
-		this.createdBy = new UserModel(this.createdBy)
+		this.createdBy = data.createdBy ?? (data as {created_by?: IWebhook['createdBy']}).created_by ?? null
 
 		this.created = new Date(this.created)
 		this.updated = new Date(this.updated)
