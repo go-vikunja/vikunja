@@ -19,6 +19,7 @@ test.describe('Data export', () => {
 		}, {timeout: 30000}).toBeGreaterThan(0)
 		await page.reload()
 		await page.getByRole('link', {name: 'Download', exact: true}).click()
+		await expect(page.getByRole('heading', {name: 'Download your exported Vikunja data', exact: true})).toBeVisible()
 		await page.locator('#currentPasswordDataExport').fill(TEST_PASSWORD)
 		const downloaded = page.waitForEvent('download')
 		await page.getByRole('button', {name: 'Download', exact: true}).click()
