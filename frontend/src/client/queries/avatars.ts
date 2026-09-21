@@ -17,6 +17,8 @@ export function avatarQuery(username: string, size: number) {
 			if (!(data instanceof Blob)) throw new Error('Avatar response was not an image')
 			return data
 		},
+		staleTime: Infinity,
+		retry: false,
 	})
 }
 

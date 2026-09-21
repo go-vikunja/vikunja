@@ -14,7 +14,6 @@ function mountAvatar(props: InstanceType<typeof UserAvatar>['$props']) {
 
 beforeEach(() => {
 	queryClient.clear()
-	queryClient.setDefaultOptions({queries: {retry: false, staleTime: Infinity}})
 	sdk.avatarGet.mockReset().mockResolvedValue({data: new Blob(['avatar'])})
 	vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:avatar')
 	vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
