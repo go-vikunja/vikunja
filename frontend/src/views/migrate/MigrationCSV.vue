@@ -214,6 +214,7 @@ import {createTaskDraft} from '@/helpers/task'
 import {TASK_ATTRIBUTES, SUPPORTED_DELIMITERS, SUPPORTED_DATE_FORMATS, type CsvImportDraft} from './csvImport'
 import {useDetectCsvMutation, usePreviewCsvMutation, useStartMigrationMutation} from '@/client/queries/migration'
 
+import {isRequestContextAbort} from '@/client/requestContext'
 import {useTitle} from '@/composables/useTitle'
 import {useMigrationStore} from '@/stores/migration'
 import {getErrorText} from '@/message'
@@ -333,7 +334,7 @@ async function handleFileUpload() {
 
 		step.value = 'mapping'
 	} catch (e) {
-		error.value = getErrorText(e)
+		if (!isRequestContextAbort(e)) error.value = getErrorText(e)
 	}
 }
 
@@ -343,7 +344,7 @@ async function updatePreview() {
 	try {
 		await preview.mutateAsync({import: selectedFile.value, config: JSON.stringify(config.value)})
 	} catch (e) {
-		error.value = getErrorText(e)
+		if (!isRequestContextAbort(e)) error.value = getErrorText(e)
 		preview.reset()
 	}
 }
@@ -358,7 +359,7 @@ async function performImport() {
 		migrationStore.start('csv')
 		step.value = 'success'
 	} catch (e) {
-		error.value = getErrorText(e)
+		if (!isRequestContextAbort(e)) error.value = getErrorText(e)
 	}
 }
 

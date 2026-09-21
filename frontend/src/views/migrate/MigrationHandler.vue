@@ -141,6 +141,8 @@ import {useQuery} from '@tanstack/vue-query'
 import type {MigrationCredentialsBodyWritable} from '@/client/generated'
 import {migrationStatusQuery, useMigrationAuthMutation, useStartMigrationMutation} from '@/client/queries/migration'
 
+import {isRequestContextAbort} from '@/client/requestContext'
+
 import {formatDateLong} from '@/helpers/time/formatDate'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 
@@ -207,7 +209,7 @@ async function initMigration() {
 		migratorAuthCode.value = location.hash.startsWith(prefix) ? location.hash.substring(prefix.length) : props.code ?? ''
 		if (migratorAuthCode.value && previousMigrationFinishedAt.value === null) await migrate()
 	} catch (cause) {
-		migrationError.value = getErrorText(cause)
+		if (!isRequestContextAbort(cause)) migrationError.value = getErrorText(cause)
 	}
 }
 watch(() => props.service, () => {
@@ -248,7 +250,7 @@ async function migrate(credentialsConfig?: MigrationCredentialsBodyWritable) {
 		migrationStore.start(provider)
 		if (provider === migrator.value.id) startedHere.value = true
 	} catch (cause) {
-		migrationError.value = getErrorText(cause)
+		if (!isRequestContextAbort(cause)) migrationError.value = getErrorText(cause)
 	} finally {
 		// Evicts the plaintext Planka password from the mutation cache.
 		startMigration.reset()
