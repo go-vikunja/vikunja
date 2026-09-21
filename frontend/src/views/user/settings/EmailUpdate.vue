@@ -32,7 +32,7 @@
 		<form @submit.prevent="updateEmail">
 			<FormField
 				id="newEmail"
-				v-model="emailUpdate.newEmail"
+				v-model="emailUpdate.new_email"
 				:label="$t('user.settings.updateEmailNew')"
 				:placeholder="$t('user.auth.emailPlaceholder')"
 				type="email"
@@ -104,7 +104,7 @@ async function runAction(name: 'save' | 'resend' | 'cancel', fn: () => Promise<v
 function updateEmail() {
 	return runAction('save', async () => {
 		await emailUpdateService.update(emailUpdate)
-		emailUpdate.newEmail = ''
+		emailUpdate.new_email = ''
 		emailUpdate.password = ''
 		await authStore.refreshUserInfo()
 		success({message: authStore.info?.pending_email
