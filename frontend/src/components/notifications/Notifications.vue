@@ -49,31 +49,31 @@
 					</div>
 				</div>
 				<div
-					v-for="(n, index) in notifications"
+					v-for="n in notifications"
 					:key="n.id"
 					class="single-notification"
-					:class="{'is-clickable': notificationHasRoute(n)}"
-					@click="() => notificationHasRoute(n) && to(n, index)()"
+					:class="{'is-clickable': notificationRoute(n)}"
+					@click="() => to(n)"
 				>
 					<div
 						class="read-indicator"
-						:class="{'read': n.read_at !== null}"
+						:class="{'read': parseDateOrNull(n.read_at) !== null}"
 					/>
 					<User
-						v-if="n.notification.doer"
-						:user="n.notification.doer"
+						v-if="notificationDoer(n)"
+						:user="notificationDoer(n)"
 						:show-username="false"
 						:avatar-size="16"
 					/>
 					<div class="detail">
 						<div>
 							<span
-								v-if="n.notification.doer"
+								v-if="notificationDoer(n)"
 								class="has-text-weight-bold mie-1"
 							>
-								{{ getDisplayName(n.notification.doer) }}
+								{{ getDisplayName(notificationDoer(n)) }}
 							</span>
-							{{ n.toText(userInfo) }}
+							{{ notificationText(n, authStore.info) }}
 						</div>
 						<span
 							v-tooltip="formatDateLong(n.created)"
@@ -106,107 +106,40 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, onMounted, onUnmounted, ref, watch} from 'vue'
-import {useRouter, isNavigationFailure, NavigationFailureType, type RouteLocationRaw} from 'vue-router'
-
-import NotificationService from '@/services/notification'
-import NotificationModel from '@/models/notification'
+import {computed, onMounted, onUnmounted, ref} from 'vue'
+import {useRouter, isNavigationFailure, NavigationFailureType} from 'vue-router'
+import {useQuery} from '@tanstack/vue-query'
+import type {DatabaseNotification} from '@/client/generated'
+import {notificationsQuery, useMarkNotificationReadMutation, useMarkAllNotificationsReadMutation, useClearNotificationsMutation} from '@/client/queries/notifications'
+import {notificationDoer, notificationRoute, notificationText} from '@/helpers/notification'
+import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import BaseButton from '@/components/base/BaseButton.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import User from '@/components/misc/User.vue'
-import {NOTIFICATION_NAMES as names, type INotification} from '@/modelTypes/INotification'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 import {formatDateLong, formatDisplayDate} from '@/helpers/time/formatDate'
 import {getDisplayName} from '@/helpers/user'
 import {useAuthStore} from '@/stores/auth'
 import {useWebSocket} from '@/composables/useWebSocket'
 import XButton from '@/components/input/Button.vue'
-import {success} from '@/message'
-import {useI18n} from 'vue-i18n'
 
-const {subscribe, connected: wsConnected} = useWebSocket()
-
+const {authenticated} = useWebSocket()
 const authStore = useAuthStore()
 const router = useRouter()
-const {t} = useI18n()
-
-const allNotifications = ref<NotificationModel[]>([])
+const {data} = useQuery(computed(() => ({
+	...notificationsQuery(),
+	refetchInterval: authenticated.value ? false : 10_000,
+})))
+const readMutation = useMarkNotificationReadMutation()
+const readAllMutation = useMarkAllNotificationsReadMutation()
+const clearMutation = useClearNotificationsMutation()
+const notifications = computed(() => (data.value ?? []).filter(n => n.name))
+const unreadNotifications = computed(() => notifications.value.filter(n => !parseDateOrNull(n.read_at)).length)
 const showNotifications = ref(false)
 const popup = ref<HTMLElement | null>(null)
 
-const unreadNotifications = computed(() => {
-	return notifications.value.filter(n => n.read_at === null).length
-})
-const notifications = computed(() => {
-	return allNotifications.value ? allNotifications.value.filter(n => n.name !== '') : []
-})
-const userInfo = computed(() => authStore.info)
-
-let unsubscribeWs: (() => void) | null = null
-let pollInterval: ReturnType<typeof setInterval> | null = null
-
-const POLL_INTERVAL = 10000
-
-onMounted(async () => {
-	// Initial load via REST - wrapped in try/catch so the rest of setup
-	// (click handler, WS subscription, polling) still runs if this fails
-	try {
-		await loadNotifications()
-	} catch (e) {
-		console.warn('Failed to load initial notifications:', e)
-	}
-
-	document.addEventListener('click', hidePopup)
-
-	// Subscribe to real-time notifications
-	unsubscribeWs = subscribe('notification.created', (msg) => {
-		if (msg.event === 'notification.created' && msg.data) {
-			const notification = new NotificationModel(msg.data as Partial<INotification>)
-			// Avoid duplicates if the same notification was already loaded via REST
-			const exists = allNotifications.value.some(n => n.id === notification.id)
-			if (!exists) {
-				allNotifications.value = [notification, ...allNotifications.value]
-			}
-		}
-	})
-
-	// Fallback polling when WebSocket is not available
-	startPollingFallback()
-})
-
-// Reload notifications when WebSocket disconnects to catch any events
-// that may have been missed during the disconnect window
-watch(wsConnected, (isConnected, wasConnected) => {
-	if (wasConnected && !isConnected) {
-		loadNotifications().catch(e => console.warn('Failed to reload notifications after WS disconnect:', e))
-	}
-})
-
-onUnmounted(() => {
-	document.removeEventListener('click', hidePopup)
-	unsubscribeWs?.()
-	stopPollingFallback()
-})
-
-function startPollingFallback() {
-	pollInterval = setInterval(async () => {
-		if (!wsConnected.value && document.visibilityState === 'visible') {
-			await loadNotifications()
-		}
-	}, POLL_INTERVAL)
-}
-
-function stopPollingFallback() {
-	if (pollInterval) {
-		clearInterval(pollInterval)
-		pollInterval = null
-	}
-}
-
-async function loadNotifications() {
-	const notificationService = new NotificationService()
-	allNotifications.value = await notificationService.getAll() as NotificationModel[]
-}
+onMounted(() => document.addEventListener('click', hidePopup))
+onUnmounted(() => document.removeEventListener('click', hidePopup))
 
 function hidePopup(e: MouseEvent) {
 	if (showNotifications.value && popup.value !== null) {
@@ -214,61 +147,19 @@ function hidePopup(e: MouseEvent) {
 	}
 }
 
-function getNotificationRoute(n: INotification): RouteLocationRaw | null {
-	switch (n.name) {
-		case names.TASK_COMMENT:
-		case names.TASK_ASSIGNED:
-		case names.TASK_REMINDER:
-		case names.TASK_MENTIONED:
-		case names.TASK_CREATED:
-			return {name: 'task.detail', params: {id: (n.notification as {task: {id: number}}).task.id}}
-		case names.PROJECT_CREATED:
-			return {name: 'task.index', params: {projectId: (n.notification as {project: {id: number}}).project.id}}
-		case names.TEAM_MEMBER_ADDED:
-			return {name: 'teams.edit', params: {id: (n.notification as {team: {id: number}}).team.id}}
-		default:
-			return null
-	}
-}
-
-function notificationHasRoute(n: INotification): boolean {
-	return getNotificationRoute(n) !== null
-}
-
-function to(n: INotification, index: number) {
-	return async () => {
-		const route = getNotificationRoute(n)
-		if (route === null) return
-		
-		const failure = await router.push(route)
-		if (isNavigationFailure(failure, NavigationFailureType.duplicated)) {
-			router.go(0)
-		}
-
-		n.read = true
-		if (allNotifications.value[index]) {
-			const notificationService = new NotificationService()
-			Object.assign(allNotifications.value[index], await notificationService.update(n))
-		}
-
+async function to(n: DatabaseNotification) {
+	const route = notificationRoute(n)
+	if (!route || !n.id) return
+	try {
+		await readMutation.mutateAsync(n.id)
 		showNotifications.value = false
-	}
+		const failure = await router.push(route)
+		if (isNavigationFailure(failure, NavigationFailureType.duplicated)) router.go(0)
+	} catch { /* Mutation reports the error. */ }
 }
 
-async function markAllRead() {
-	const notificationService = new NotificationService()
-	await notificationService.markAllRead()
-	success({message: t('notification.markAllReadSuccess')})
-
-	notifications.value.forEach(n => n.read_at = new Date())
-}
-
-async function clearAll() {
-	const notificationService = new NotificationService()
-	await notificationService.delete(new NotificationModel({}))
-	success({message: t('notification.clearAllSuccess')})
-	allNotifications.value = []
-}
+function markAllRead() { readAllMutation.mutate() }
+function clearAll() { clearMutation.mutate() }
 </script>
 
 <style lang="scss" scoped>
