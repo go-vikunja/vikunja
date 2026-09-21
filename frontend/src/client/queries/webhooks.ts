@@ -41,12 +41,16 @@ export function webhookEventsQuery(kind: WebhookScope['kind']) {
 	})
 }
 export function createWebhookMutationOptions() {
-	return contextMutationOptions({
-		mutationFn: async ({scope, body}: {scope: WebhookScope, body: WebhookWritable}) => (await (scope.kind === 'project'
-			? webhooksCreate({path: {project: scope.projectId}, body})
-			: userWebhooksCreate({body}))).data,
-		onSettled: ({scope}, client) => client.invalidateQueries({queryKey: webhookKeys.list(scope)}),
-	})
+	return {
+		...contextMutationOptions({
+			mutationFn: async ({scope, body}: {scope: WebhookScope, body: WebhookWritable}) => (await (scope.kind === 'project'
+				? webhooksCreate({path: {project: scope.projectId}, body})
+				: userWebhooksCreate({body}))).data,
+			onSettled: ({scope}, client) => client.invalidateQueries({queryKey: webhookKeys.list(scope)}),
+		}),
+		// Input holds the plaintext secret and basic auth password.
+		gcTime: 0,
+	}
 }
 export function deleteWebhookMutationOptions() {
 	return contextMutationOptions({
