@@ -49,7 +49,7 @@ describe('UserAvatar', () => {
 		expect(image.attributes('height')).toBe('40')
 		expect(image.attributes('alt')).toBe('')
 		expect(URL.createObjectURL).toHaveBeenCalledTimes(2)
-		first.unmount()
+		wrappers.splice(wrappers.indexOf(first), 1)[0].unmount()
 		expect(URL.revokeObjectURL).toHaveBeenCalledTimes(1)
 		expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:avatar')
 	})
