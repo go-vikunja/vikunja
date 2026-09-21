@@ -87,7 +87,7 @@ describe('notificationText', () => {
 		expect(notificationText(mentioned, {id: 9})).toBe('ana mentioned you on #12')
 	})
 
-	it('returns an empty string for an unknown name or a missing payload', () => {
+	it('returns an empty string for an unknown name and a zero identifier for a missing payload', () => {
 		expect(notificationText(notification('task.exploded', {task: TASK}))).toBe('')
 		expect(notificationText(notification(NOTIFICATION_NAMES.TASK_COMMENT, null))).toBe('commented on #0')
 	})
