@@ -53,9 +53,9 @@ function timeEntryPage(items: TimeEntryResponse[]): TimeEntryPage {
 	}
 }
 
-it('ignores malformed payloads and unrelated notifications', () => {
+it('ignores malformed payloads', () => {
 	expect(parseServerCacheEvent('timer.created', undefined, 7)).toBeNull()
-	expect(parseServerCacheEvent('notification.created', {name: 'team.member.added'}, 7)).toBeNull()
+	expect(parseServerCacheEvent('notification.created', 'task.comment', 7)).toBeNull()
 })
 
 it('rejects timer entries that do not belong to the current user', () => {
@@ -88,15 +88,21 @@ it('rejects timer entries with an unusable id or task id', () => {
 	}, 7)).toBeNull()
 })
 
-it('rejects comment notifications without a usable task id', () => {
+it('falls back to an inbox refresh for notifications it cannot route', () => {
 	expect(parseServerCacheEvent('notification.created', {
+		id: 5,
+		name: 'team.member.added',
+	}, 7)).toEqual({kind: 'notifications'})
+	expect(parseServerCacheEvent('notification.created', {
+		id: 5,
 		name: 'task.comment',
 		notification: {},
-	}, 7)).toBeNull()
+	}, 7)).toEqual({kind: 'notifications'})
 	expect(parseServerCacheEvent('notification.created', {
+		id: 5,
 		name: 'task.comment',
 		notification: {task: {id: 0}},
-	}, 7)).toBeNull()
+	}, 7)).toEqual({kind: 'notifications'})
 })
 
 it('invalidates only the notified task comments and detail', async () => {
