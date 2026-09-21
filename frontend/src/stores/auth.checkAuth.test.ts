@@ -3,7 +3,7 @@ import {setActivePinia, createPinia} from 'pinia'
 
 import {useAuthStore} from './auth'
 import {removeToken} from '@/helpers/auth'
-import {AUTH_TYPES} from '@/modelTypes/IUser'
+import {AUTH_TYPES} from '@/constants/auth'
 
 // Real @/helpers/auth so the counts cover its dedupe; only the transport is mocked.
 const {postMock} = vi.hoisted(() => ({
