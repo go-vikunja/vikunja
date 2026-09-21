@@ -3,9 +3,11 @@ import {mount, flushPromises, type VueWrapper} from '@vue/test-utils'
 import {setActivePinia, createPinia} from 'pinia'
 import {createI18n} from 'vue-i18n'
 import ApiTokenForm from './ApiTokenForm.vue'
+import {VueQueryPlugin, QueryClient} from '@tanstack/vue-query'
 import en from '@/i18n/lang/en.json'
 
-const getAvailableRoutes = vi.fn(async () => ({
+const {getAvailableRoutes, create} = vi.hoisted(() => ({
+getAvailableRoutes: vi.fn(async () => ({data: {
 	tasks: {
 		create: {path: '/api/v1/projects/:project/tasks', method: 'PUT'},
 		read_all: {path: '/api/v1/tasks', method: 'GET'},
@@ -14,16 +16,12 @@ const getAvailableRoutes = vi.fn(async () => ({
 		read_all: {path: '/api/v1/projects', method: 'GET'},
 		read_one: {path: '/api/v1/projects/:project', method: 'GET'},
 	},
+} })),
+create: vi.fn(async ({body}: {body: Record<string, unknown>}) => ({data: {...body, id: 1, token: 'tk_test'}})),
 }))
-const create = vi.fn(async (token: Record<string, unknown>) => ({...token, id: 1, token: 'tk_test'}))
 
-vi.mock('@/services/apiToken', () => ({
-	default: class {
-		loading = false
-		getAvailableRoutes = getAvailableRoutes
-		create = create
-	},
-}))
+vi.mock('@/client/generated', () => ({tokenRoutes: getAvailableRoutes, tokensCreate: create}))
+vi.mock('@/message', () => ({success: vi.fn(), error: vi.fn()}))
 
 const i18n = createI18n({legacy: false, locale: 'en', messages: {en}})
 
@@ -32,7 +30,7 @@ function mountForm(props = {}) {
 	const wrapper = mount(ApiTokenForm, {
 		props,
 		global: {
-			plugins: [i18n],
+			plugins: [i18n, [VueQueryPlugin, {queryClient: new QueryClient({defaultOptions: {queries: {retry: false}}})}]],
 			stubs: {
 				XButton: {template: '<button v-bind="$attrs"><slot /></button>'},
 				Datepicker: true,
@@ -119,7 +117,7 @@ describe('ApiTokenForm', () => {
 		for (const checkbox of locked) expect((checkbox.element as HTMLInputElement).checked).toBe(true)
 		await wrapper.find('form').trigger('submit')
 		await flushPromises()
-		expect(create).toHaveBeenCalledWith(expect.objectContaining({permissions: {mcp: ['access'], tasks: ['read_all']}}))
+		expect(create).toHaveBeenCalledWith(expect.objectContaining({body: expect.objectContaining({permissions: {mcp: ['access'], tasks: ['read_all']}})}))
 		expect(mounted.errors).toEqual([])
 	})
 
@@ -136,7 +134,7 @@ describe('ApiTokenForm', () => {
 		await wrapper.findAll('input[type="checkbox"]')[0].setValue(false)
 		await wrapper.find('form').trigger('submit')
 		await flushPromises()
-		expect(create).toHaveBeenCalledWith(expect.objectContaining({permissions: {tasks: ['read_all']}}))
+		expect(create).toHaveBeenCalledWith(expect.objectContaining({body: expect.objectContaining({permissions: {tasks: ['read_all']}})}))
 		expect(mounted.errors).toEqual([])
 	})
 

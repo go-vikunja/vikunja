@@ -6,6 +6,7 @@ import {createRouter, createMemoryHistory} from 'vue-router'
 import ApiTokens from '@/views/user/settings/ApiTokens.vue'
 import Modal from '@/components/misc/Modal.vue'
 import testid from '@/directives/testid'
+import {VueQueryPlugin, QueryClient} from '@tanstack/vue-query'
 import en from '@/i18n/lang/en.json'
 
 const tokens = [
@@ -14,29 +15,29 @@ const tokens = [
 		title: 'chrome-quick-add',
 		token: '',
 		permissions: {tasks: ['create', 'read_all']},
-		expiresAt: new Date('2036-01-01'),
-		created: new Date('2026-01-01'),
+		expires_at: '2036-01-01T00:00:00Z',
+		created: '2026-01-01T00:00:00Z',
 	},
 	{
 		id: 2,
 		title: 'backup-sync',
 		token: '',
 		permissions: {tasks: ['read_all']},
-		expiresAt: new Date('2036-01-01'),
-		created: new Date('2026-01-01'),
+		expires_at: '2036-01-01T00:00:00Z',
+		created: '2026-01-01T00:00:00Z',
 	},
 ]
 
-const getAll = vi.fn(async () => tokens.slice())
-const del = vi.fn(async () => ({}))
-
-vi.mock('@/services/apiToken', () => ({
-	default: class {
-		loading = false
-		getAll = getAll
-		delete = del
-	},
+let stored = tokens.slice()
+const {getAll, del} = vi.hoisted(() => ({
+getAll: vi.fn(async () => ({data: {items: stored.slice(), total_pages: 1}})),
+del: vi.fn(async ({path}: {path: {id: number}}) => {
+	stored = stored.filter(token => token.id !== path.id)
+	return {}
+}),
 }))
+vi.mock('@/client/generated', () => ({tokensList: getAll, tokensDelete: del}))
+vi.mock('@/message', () => ({success: vi.fn(), error: vi.fn()}))
 
 const i18n = createI18n({legacy: false, locale: 'en', messages: {en}})
 
@@ -51,7 +52,7 @@ async function mountPage() {
 
 	const wrapper = mount(ApiTokens, {
 		global: {
-			plugins: [i18n, router],
+			plugins: [i18n, router, [VueQueryPlugin, {queryClient: new QueryClient({defaultOptions: {queries: {retry: false}}})}]],
 			components: {Modal},
 			directives: {cy: testid},
 			stubs: {
@@ -107,6 +108,7 @@ describe('ApiTokens settings page', () => {
 		setActivePinia(createPinia())
 		document.body.innerHTML = ''
 		del.mockClear()
+		stored = tokens.slice()
 	})
 
 	afterEach(() => {
@@ -126,7 +128,7 @@ describe('ApiTokens settings page', () => {
 		await settleCloseTransition()
 
 		expect(del).toHaveBeenCalledTimes(1)
-		expect(del).toHaveBeenCalledWith(expect.objectContaining({id: 1}))
+		expect(del).toHaveBeenCalledWith({path: {id: 1}})
 		expect(document.querySelector('dialog.modal-dialog')).toBeNull()
 
 		const rows = wrapper.findAll('tbody tr')
@@ -165,7 +167,7 @@ describe('ApiTokens settings page', () => {
 		await settleCloseTransition()
 
 		expect(del).toHaveBeenCalledTimes(1)
-		expect(del).toHaveBeenCalledWith(expect.objectContaining({id: 1}))
+		expect(del).toHaveBeenCalledWith({path: {id: 1}})
 		expect(runtimeErrorMessages(errors)).toEqual([])
 	})
 })

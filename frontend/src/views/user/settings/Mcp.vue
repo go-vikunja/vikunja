@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import {computed, onMounted, ref, shallowReactive} from 'vue'
+import {computed, ref} from 'vue'
 import {useNow} from '@vueuse/core'
 import {useI18n} from 'vue-i18n'
-import ApiTokenService from '@/services/apiToken'
-import {mcpInfo, type ConnectionSettings} from '@/client/generated'
+import {useQuery} from '@tanstack/vue-query'
+import {apiTokensQuery, mcpInfoQuery, useDeleteApiTokenMutation} from '@/client/queries/apiTokens'
+import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import type {ApiToken as IApiToken} from '@/client/generated'
 import type {ApiTokenPreset, ApiTokenPresetGroups} from '@/helpers/apiToken'
 import ApiTokenForm from '@/components/token/ApiTokenForm.vue'
@@ -14,19 +15,19 @@ import Message from '@/components/misc/Message.vue'
 import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
 import {useTitle} from '@/composables/useTitle'
 import {formatDateSince, formatDisplayDate} from '@/helpers/time/formatDate'
-import {error} from '@/message'
 import {MCP_HELP} from '@/urls'
 
 defineOptions({name: 'McpSettings'})
 
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => `MCP - ${t('user.settings.title')}`)
-const service = shallowReactive(new ApiTokenService())
-const info = ref<ConnectionSettings>()
+const {data: info, isPending: infoPending, isError: infoError, refetch: refreshInfo} = useQuery(mcpInfoQuery())
+const {data: allTokens, isPending: tokensPending, isError: tokensError, refetch: refreshTokens} = useQuery(apiTokensQuery())
+const deleteMutation = useDeleteApiTokenMutation()
 const endpoint = computed(() => info.value?.endpoint ?? '')
-const tokens = ref<IApiToken[]>([])
-const loading = ref(true)
-const loadFailed = ref(false)
+const tokens = computed(() => (allTokens.value ?? []).filter(token => token.permissions?.mcp?.includes('access')))
+const loading = computed(() => infoPending.value || tokensPending.value)
+const loadFailed = computed(() => infoError.value || tokensError.value)
 const showCreateForm = ref(false)
 const newToken = ref('')
 const tokenToDelete = ref<IApiToken>()
@@ -50,54 +51,24 @@ const initialScopes = computed(() => Object.entries(info.value?.presets?.typed ?
 	.flatMap(([group, permissions]) => (permissions ?? []).map(permission => `${group}:${permission}`))
 	.join(','))
 
-async function refreshTokens() {
-	const allTokens = await service.getAll()
-	for (let page = 2; page <= service.totalPages; page++) {
-		allTokens.push(...await service.getAll(undefined, {}, page))
-	}
-	tokens.value = allTokens.filter(token => token.permissions.mcp?.includes('access'))
-}
-
-async function load() {
-	loading.value = true
-	loadFailed.value = false
-	try {
-		const [result] = await Promise.all([mcpInfo(), refreshTokens()])
-		info.value = result.data
-	} catch (e) {
-		loadFailed.value = true
-		error(e)
-	} finally {
-		loading.value = false
-	}
-}
-onMounted(load)
-
 function onTokenCreated(token: IApiToken) {
-	newToken.value = token.token
+	newToken.value = token.token ?? ''
 	showCreateForm.value = false
 }
 
-async function done() {
+function load() { void Promise.all([refreshInfo(), refreshTokens()]) }
+
+function done() {
 	newToken.value = ''
-	try {
-		await refreshTokens()
-	} catch (e) {
-		error(e)
-	}
+	void refreshTokens()
 }
 
 async function deleteToken() {
 	const token = tokenToDelete.value
-	if (!token) return
+	if (!token?.id) return
 	tokenToDelete.value = undefined
 	showDeleteModal.value = false
-	try {
-		await service.delete(token)
-		tokens.value = tokens.value.filter(({id}) => id !== token.id)
-	} catch (e) {
-		error(e)
-	}
+	try { await deleteMutation.mutateAsync(token.id) } catch { /* Mutation reports the error. */ }
 }
 </script>
 
@@ -181,13 +152,13 @@ async function deleteToken() {
 							<tr
 								v-for="token in tokens"
 								:key="token.id"
-								:class="{'mcp-token-expired': token.expires_at < now}"
+								:class="{'mcp-token-expired': (parseDateOrNull(token.expires_at)?.getTime() ?? Infinity) < now.getTime()}"
 							>
 								<td>{{ token.title }}</td>
 								<td>
 									{{ formatDisplayDate(token.expires_at) }}
 									<p
-										v-if="token.expires_at < now"
+										v-if="(parseDateOrNull(token.expires_at)?.getTime() ?? Infinity) < now.getTime()"
 										class="has-text-danger"
 									>
 										{{ t('user.settings.apiTokens.expired', {ago: formatDateSince(token.expires_at)}) }}
