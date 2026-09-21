@@ -6,7 +6,7 @@ import {mount} from '@vue/test-utils'
 
 import {useDaytimeSalutation} from './useDaytimeSalutation'
 import {useAuthStore} from '@/stores/auth'
-import {AUTH_TYPES} from '@/modelTypes/IUser'
+import {AUTH_TYPES} from '@/constants/auth'
 import en from '@/i18n/lang/en.json'
 
 function makeDate(iso: string): Date {

@@ -1,5 +1,5 @@
 import type {IAbstract} from './IAbstract'
-import type {IUser} from './IUser'
+import type {User as IUser} from '@/client/generated'
 import type {Task as ITask} from '@/client/generated'
 import type {TaskComment as ITaskComment} from '@/client/generated'
 import type {Team as ITeam} from '@/client/generated'

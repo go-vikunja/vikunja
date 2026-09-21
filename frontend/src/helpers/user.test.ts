@@ -1,8 +1,8 @@
 import {describe, it, expect, vi} from 'vitest'
 import {nextTick} from 'vue'
 
-import {fetchAvatarBlobUrl, getDisplayName, invalidateAvatarCache} from '@/models/user'
-import type {IUser} from '@/modelTypes/IUser'
+import {fetchAvatarBlobUrl, getDisplayName, invalidateAvatarCache} from '@/helpers/user'
+import type {User as IUser} from '@/client/generated'
 
 const {getBlobUrl} = vi.hoisted(() => ({getBlobUrl: vi.fn()}))
 
@@ -15,17 +15,7 @@ vi.mock('@/services/avatar', () => ({
 function makeUser(overrides: Partial<IUser> = {}): IUser {
 	return {
 		id: 1,
-		email: 'test@example.com',
 		username: 'testuser',
-		name: '',
-		exp: 0,
-		type: 1,
-		created: new Date(),
-		updated: new Date(),
-		settings: {} as IUser['settings'],
-		isLocalUser: true,
-		pendingEmail: '',
-		deletionScheduledAt: null,
 		...overrides,
 	}
 }

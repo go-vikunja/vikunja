@@ -62,7 +62,7 @@ const {t} = useI18n({useScope: 'global'})
 useTitle(() => `${t('user.settings.newPasswordTitle')} - ${t('user.settings.title')}`)
 
 const authStore = useAuthStore()
-const isLocalUser = computed(() => authStore.info?.isLocalUser)
+const isLocalUser = computed(() => authStore.info?.is_local_user)
 const isValid = computed(() => validatePassword(passwordUpdate.newPassword) === true && passwordUpdate.oldPassword !== '')
 
 async function updatePassword() {

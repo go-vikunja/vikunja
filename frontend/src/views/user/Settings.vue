@@ -23,7 +23,7 @@ const authStore = useAuthStore()
 const totpEnabled = computed(() => configStore.totpEnabled)
 const caldavEnabled = computed(() => configStore.caldavEnabled)
 const migratorsEnabled = computed(() => configStore.migratorsEnabled)
-const isLocalUser = computed(() => authStore.info?.isLocalUser)
+const isLocalUser = computed(() => authStore.info?.is_local_user)
 const userDeletionEnabled = computed(() => configStore.userDeletionEnabled)
 const webhooksEnabled = computed(() => configStore.webhooksEnabled)
 

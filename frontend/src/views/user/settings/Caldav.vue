@@ -152,5 +152,5 @@ const configStore = useConfigStore()
 const username = computed(() => authStore.info?.username)
 const caldavUrl = computed(() => `${configStore.apiBase}/dav/principals/${username.value}/`)
 const caldavEnabled = computed(() => configStore.caldavEnabled)
-const isLocalUser = computed(() => authStore.info?.isLocalUser)
+const isLocalUser = computed(() => authStore.info?.is_local_user)
 </script>

@@ -84,7 +84,7 @@ const projectHistory = computed(() => {
 
 const tasksLoaded = ref(false)
 
-const deletionScheduledAt = computed(() => parseDateOrNull(authStore.info?.deletionScheduledAt))
+const deletionScheduledAt = computed(() => parseDateOrNull(authStore.info?.deletion_scheduled_at))
 
 // Extract label IDs from query parameter
 const labelIds = computed(() => {

@@ -85,7 +85,7 @@ interface ExportInfo {
 const exportInfo = ref<ExportInfo | null>(null)
 const password = ref('')
 const errPasswordRequired = ref(false)
-const isLocalUser = computed(() => authStore.info?.isLocalUser)
+const isLocalUser = computed(() => authStore.info?.is_local_user)
 const passwordInput = ref()
 
 const formattedExpiresDate = computed(() => exportInfo.value ? formatDisplayDate(new Date(exportInfo.value.expires)) : '')

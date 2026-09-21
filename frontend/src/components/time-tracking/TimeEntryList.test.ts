@@ -10,7 +10,8 @@ import {QueryClient, VueQueryPlugin} from '@tanstack/vue-query'
 
 import {normalizeTimeEntry} from '@/client/queries/timeEntries'
 import {useAuthStore} from '@/stores/auth'
-import {AUTH_TYPES, type AuthType, type IUser} from '@/modelTypes/IUser'
+import {AUTH_TYPES, type AuthType} from '@/constants/auth'
+import type {SessionUser} from '@/stores/auth'
 
 const sdk = vi.hoisted(() => ({
 	projectsList: vi.fn(async () => ({data: {
@@ -42,7 +43,7 @@ function mountList(
 		id: 1,
 		type: authType,
 		username: 'user',
-	} as IUser)
+	} as SessionUser)
 
 	return shallowMount(TimeEntryList, {
 		props: {
