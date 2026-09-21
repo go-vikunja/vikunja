@@ -3,6 +3,7 @@ import {projectUsersList, projectUsersCreate, projectUsersUpdate, projectUsersDe
 import type {UserWithPermission, TeamWithPermission} from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
 import {fetchAllPages} from './fetchAllPages'
+import {API_MAX_PER_PAGE} from './pagination'
 import {projectKeys} from './projects'
 import {userSearchKeys} from './userSearch'
 import {PERMISSIONS, type Permission} from '@/constants/permissions'
@@ -39,7 +40,7 @@ type TeamShareInput = {projectId: number, teamId: number}
 export function projectUserSharesQuery(projectId: number) {
 	return queryOptions({
 		queryKey: projectShareKeys.users(projectId),
-		queryFn: ({signal}) => fetchAllPages(async page => (await projectUsersList({path: {project: projectId}, query: {page, per_page: 1000}, signal})).data),
+		queryFn: ({signal}) => fetchAllPages(async page => (await projectUsersList({path: {project: projectId}, query: {page, per_page: API_MAX_PER_PAGE}, signal})).data),
 	})
 }
 
@@ -79,7 +80,7 @@ export const useDeleteProjectUserShareMutation = () => useMutation(deleteProject
 export function projectTeamSharesQuery(projectId: number) {
 	return queryOptions({
 		queryKey: projectShareKeys.teams(projectId),
-		queryFn: ({signal}) => fetchAllPages(async page => (await projectTeamsList({path: {project: projectId}, query: {page, per_page: 1000}, signal})).data),
+		queryFn: ({signal}) => fetchAllPages(async page => (await projectTeamsList({path: {project: projectId}, query: {page, per_page: API_MAX_PER_PAGE}, signal})).data),
 	})
 }
 

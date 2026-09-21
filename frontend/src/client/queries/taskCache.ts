@@ -3,6 +3,7 @@ import type {Task} from '@/client/generated'
 import {mapTasksDeep, mergeTask, removeTask} from '@/helpers/task'
 import {normalizeTask, taskKeys, type PaginatedTaskResponse, type TaskResponse} from './tasks'
 import {kanbanKeys, type BoardData} from './kanban'
+import {totalPagesFor} from './pagination'
 
 // Applies `update` to every cached copy of task `id` (detail, lists, boards, nested relations),
 // so a mutation response patches all mounted views without refetching them.
@@ -94,7 +95,7 @@ function removeTaskFromCollections(client: QueryClient, id: number, removal: Col
 		const removed = removedPerScope.get(scopeOf(key))
 		if (!list || !removed) continue
 		const total = Math.max(0, list.total - removed)
-		const total_pages = list.per_page > 0 ? Math.ceil(total / list.per_page) : list.total_pages
+		const total_pages = totalPagesFor(list, total)
 		client.setQueryData(key, {...list, total, total_pages})
 	}
 	for (const [key, board] of client.getQueriesData<BoardData>({queryKey: kanbanKeys.all})) {
