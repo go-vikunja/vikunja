@@ -1,6 +1,6 @@
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest'
 
-import {AUTH_TYPES} from '@/modelTypes/IUser'
+import {AUTH_TYPES} from '@/constants/auth'
 
 // Issue #4006: exp is set by the server clock; the browser clock may disagree by more than the JWT TTL.
 
