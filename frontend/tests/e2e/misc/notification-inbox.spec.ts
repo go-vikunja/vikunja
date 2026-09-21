@@ -19,6 +19,7 @@ test('notification read and clear state survives reload', async ({authenticatedP
 	await open()
 	await expect(page.locator('.single-notification .read-indicator.read')).toHaveCount(1)
 	await page.getByRole('button', {name: 'Mark all notifications as read'}).click()
+	await expect(page.locator('.single-notification .read-indicator.read')).toHaveCount(2)
 	await page.reload()
 	await open()
 	await expect(page.locator('.single-notification .read-indicator.read')).toHaveCount(2)
