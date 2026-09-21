@@ -120,7 +120,6 @@ async function deleteToken(token: ApiToken) {
 	if (!token.id) return
 	try { await deleteTokenMutation.mutateAsync(token.id) } catch { /* Mutation reports the error. */ }
 }
-
 </script>
 
 <template>
