@@ -33,19 +33,8 @@ vi.mock('@/composables/useWebSocket', () => ({
 	}),
 }))
 
-function fakeHttp() {
-	return {
-		get: httpGetMock,
-		interceptors: {
-			request: {use: vi.fn()},
-			response: {use: vi.fn()},
-		},
-	}
-}
-
-vi.mock('@/helpers/fetcher', () => ({
-	HTTPFactory: () => fakeHttp(),
-	AuthenticatedHTTPFactory: () => fakeHttp(),
+vi.mock('@/helpers/fetcher', async importOriginal => ({
+	...await importOriginal<typeof import('@/helpers/fetcher')>(),
 	getApiBaseUrl: () => 'http://localhost/api/v1/',
 }))
 
