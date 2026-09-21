@@ -34,10 +34,9 @@ const newBotName = ref('')
 const createError = ref<string | null>(null)
 const showCreateForm = ref(false)
 
-const queryableBots = computed(() => bots.value.filter(bot => bot.id > 0))
-const tokenQueries = useQueries({queries: computed(() => queryableBots.value.map(bot => botApiTokensQuery(bot.id)))})
+const tokenQueries = useQueries({queries: computed(() => bots.value.map(bot => botApiTokensQuery(bot.id)))})
 const tokensByBot = computed(() => Object.fromEntries(
-	queryableBots.value.map((bot, index) => [bot.id, tokenQueries.value[index]?.data ?? []]),
+	bots.value.map((bot, index) => [bot.id, tokenQueries.value[index]?.data ?? []]),
 ))
 const newTokensByBot = ref<Record<number, string>>({})
 const showTokenForm = ref<Record<number, boolean>>({})
@@ -278,22 +277,20 @@ async function deleteToken(token: ApiToken) {
 						</tbody>
 					</table>
 				</div>
-				<template v-if="bot.id > 0">
-					<ApiTokenForm
-						v-if="showTokenForm[bot.id]"
-						:owner-id="bot.id"
-						@created="(token: ApiToken) => onTokenCreated(bot, token)"
-						@cancel="showTokenForm[bot.id] = false"
-					/>
-					<XButton
-						v-else
-						icon="plus"
-						class="mbe-4"
-						@click="showTokenForm[bot.id] = true"
-					>
-						{{ $t('user.settings.apiTokens.createToken') }}
-					</XButton>
-				</template>
+				<ApiTokenForm
+					v-if="showTokenForm[bot.id]"
+					:owner-id="bot.id"
+					@created="(token: ApiToken) => onTokenCreated(bot, token)"
+					@cancel="showTokenForm[bot.id] = false"
+				/>
+				<XButton
+					v-else
+					icon="plus"
+					class="mbe-4"
+					@click="showTokenForm[bot.id] = true"
+				>
+					{{ $t('user.settings.apiTokens.createToken') }}
+				</XButton>
 			</div>
 		</div>
 
