@@ -102,6 +102,7 @@
 
 			<EditorContent
 				class="tiptap__editor"
+				data-user-content
 				:class="{'tiptap__editor-is-edit-enabled': isEditing}"
 				:editor="editor"
 				@dblclick="setEditIfApplicable"

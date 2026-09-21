@@ -15,12 +15,12 @@ vi.mock('@sentry/vue', () => ({
 
 import setupSentry from './sentry'
 
-function failImage(src: string | null) {
+function failImage(src: string | null, parent: HTMLElement = document.body) {
 	const img = document.createElement('img')
 	if (src !== null) {
 		img.setAttribute('src', src)
 	}
-	document.body.appendChild(img)
+	parent.appendChild(img)
 	img.dispatchEvent(new Event('error'))
 	img.remove()
 }
@@ -48,6 +48,20 @@ describe('sentry image load errors', () => {
 		['page url', window.location.href],
 	])('skips a %s src resolving to the page itself', (_, src) => {
 		failImage(src)
+
+		expect(captureMessage).not.toHaveBeenCalled()
+	})
+
+	it('skips a broken image inside user content', () => {
+		const container = document.createElement('div')
+		container.setAttribute('data-user-content', '')
+		const paragraph = document.createElement('p')
+		container.appendChild(paragraph)
+		document.body.appendChild(container)
+
+		// <img src="x"> in a task description at /tasks/3434 (FRONTEND-OSS-263)
+		failImage('x', paragraph)
+		container.remove()
 
 		expect(captureMessage).not.toHaveBeenCalled()
 	})
