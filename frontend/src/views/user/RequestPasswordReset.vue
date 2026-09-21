@@ -27,7 +27,7 @@
 		>
 			<FormField
 				id="email"
-				v-model="passwordReset.email"
+				v-model="email"
 				v-focus
 				:label="$t('user.auth.email')"
 				name="email"
@@ -40,7 +40,7 @@
 			<div class="is-flex">
 				<XButton
 					type="submit"
-					:loading="passwordResetService.loading"
+					:loading="passwordResetMutation.isPending.value"
 				>
 					{{ $t('user.auth.resetPasswordAction') }}
 				</XButton>
@@ -56,25 +56,26 @@
 </template>
 
 <script setup lang="ts">
-import {ref, shallowReactive} from 'vue'
+import {ref} from 'vue'
 
-import PasswordResetModel from '@/models/passwordReset'
-import PasswordResetService from '@/services/passwordReset'
+import {useRequestPasswordResetMutation} from '@/client/queries/passwords'
+import {isRequestContextAbort} from '@/client/requestContext'
 import Message from '@/components/misc/Message.vue'
 import {getErrorText} from '@/message'
 import FormField from '@/components/input/FormField.vue'
 
-const passwordResetService = shallowReactive(new PasswordResetService())
-const passwordReset = ref(new PasswordResetModel())
+const passwordResetMutation = useRequestPasswordResetMutation()
+const email = ref('')
 const errorMsg = ref('')
 const isSuccess = ref(false)
 
 async function requestPasswordReset() {
 	errorMsg.value = ''
 	try {
-		await passwordResetService.requestResetPassword(passwordReset.value)
+		await passwordResetMutation.mutateAsync({email: email.value})
 		isSuccess.value = true
 	} catch (e) {
+		if (isRequestContextAbort(e)) return
 		errorMsg.value = getErrorText(e)
 	}
 }
