@@ -194,6 +194,7 @@ async function initMigration() {
 		if (provider !== migrator.value.id) return
 		if (current.isError) throw current.error
 		if (migrationRunning.value) {
+			startedHere.value = true
 			migrationStore.start(provider)
 			return
 		}
