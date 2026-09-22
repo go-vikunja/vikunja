@@ -309,7 +309,6 @@ const actions = computed(() => {
 	}))
 })
 
-const frontend_url = computed(() => configStore.frontend_url)
 const commentStorageKey = computed(() => `task-comment-${props.taskId}`)
 
 const commentsRef = ref<HTMLElement | null>(null)
@@ -519,7 +518,8 @@ async function deleteComment(id: number | null) {
 }
 
 function getCommentUrl(commentId: string) {
-	const baseUrl = frontend_url.value.endsWith('/') ? frontend_url.value.slice(0, -1) : frontend_url.value
+	const frontendUrl = configStore.frontend_url
+	const baseUrl = frontendUrl.endsWith('/') ? frontendUrl.slice(0, -1) : frontendUrl
 	const url = new URL(location.pathname + location.search, baseUrl)
 	url.hash = `comment-${commentId}`
 	return url.toString()

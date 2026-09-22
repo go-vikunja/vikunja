@@ -83,7 +83,7 @@
 				{{ $t('user.auth.login') }}
 			</XButton>
 			<p
-				v-if="registration_enabled"
+				v-if="registrationEnabled"
 				class="mbs-2"
 			>
 				{{ $t('user.auth.noAccountYet') }}
@@ -102,7 +102,7 @@
 			class="mbs-4"
 		>
 			<XButton
-				v-for="(p, k) in openid_connect.providers"
+				v-for="(p, k) in openidConnect.providers"
 				:key="k"
 				variant="secondary"
 				class="is-fullwidth mbs-2"
@@ -148,12 +148,12 @@ const authStore = useAuthStore()
 const configStore = useConfigStore()
 const {redirectIfSaved} = useRedirectToLastVisited()
 
-const registration_enabled = computed(() => configStore.auth.local.registration_enabled)
+const registrationEnabled = computed(() => configStore.auth.local.registration_enabled)
 const localAuthEnabled = computed(() => configStore.auth.local.enabled)
 const ldapAuthEnabled = computed(() => configStore.auth.ldap.enabled)
 
-const openid_connect = computed(() => configStore.auth.openid_connect)
-const hasOpenIdProviders = computed(() => openid_connect.value.enabled && openid_connect.value.providers?.length > 0)
+const openidConnect = computed(() => configStore.auth.openid_connect)
+const hasOpenIdProviders = computed(() => openidConnect.value.enabled && openidConnect.value.providers?.length > 0)
 
 const isLoading = computed(() => authStore.isLoading)
 const isDesktop = isDesktopApp()
@@ -192,8 +192,8 @@ onBeforeMount(() => {
 	const autoRedirectProvider = getAutoRedirectProvider({
 		localAuthEnabled: localAuthEnabled.value,
 		ldapAuthEnabled: ldapAuthEnabled.value,
-		openIdEnabled: openid_connect.value.enabled,
-		providers: openid_connect.value.providers ?? [],
+		openIdEnabled: openidConnect.value.enabled,
+		providers: openidConnect.value.providers ?? [],
 		isDesktopApp: isDesktop,
 		justLoggedOut,
 		hasCopyableRedirect: route.hash.startsWith(REDIRECT_HASH_PREFIX),

@@ -1,6 +1,6 @@
 <template>
 	<Card
-		v-if="user_deletion_enabled"
+		v-if="configStore.user_deletion_enabled"
 		:title="$t('user.deletion.title')"
 	>
 		<template v-if="deletionScheduledAt !== null">
@@ -104,7 +104,6 @@ const errPasswordRequired = ref(false)
 const authStore = useAuthStore()
 const configStore = useConfigStore()
 
-const user_deletion_enabled = computed(() => configStore.user_deletion_enabled)
 const deletionScheduledAt = computed(() => parseDateOrNull(authStore.info?.deletion_scheduled_at))
 
 const isLocalUser = computed(() => authStore.info?.is_local_user)

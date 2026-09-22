@@ -1,6 +1,6 @@
 <template>
 	<Card
-		v-if="caldav_enabled"
+		v-if="configStore.caldav_enabled"
 		:title="$t('user.settings.caldav.title')"
 	>
 		<p>
@@ -151,6 +151,5 @@ const authStore = useAuthStore()
 const configStore = useConfigStore()
 const username = computed(() => authStore.info?.username)
 const caldavUrl = computed(() => `${configStore.apiBase}/dav/principals/${username.value}/`)
-const caldav_enabled = computed(() => configStore.caldav_enabled)
 const isLocalUser = computed(() => authStore.info?.is_local_user)
 </script>
