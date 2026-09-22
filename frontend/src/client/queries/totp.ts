@@ -1,6 +1,7 @@
 import {queryOptions, useMutation} from '@tanstack/vue-query'
 import {totpGet, totpEnroll, totpEnable, totpDisable, totpQrcode, type Totp} from '@/client/generated'
 import type {VikunjaErrorModel} from '@/client/generated'
+import {expectBlob} from './blobResponse'
 import {contextMutationOptions} from './contextMutation'
 import {i18n} from '@/i18n'
 
@@ -31,8 +32,7 @@ export function totpQrQuery() {
 		queryKey: totpKeys.qr,
 		queryFn: async ({signal}) => {
 			const {data} = await totpQrcode({signal, parseAs: 'blob'})
-			if (!(data instanceof Blob)) throw new Error('TOTP QR response was not an image')
-			return data
+			return expectBlob(data, 'TOTP QR')
 		},
 		gcTime: 0,
 	})
