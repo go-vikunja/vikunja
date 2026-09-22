@@ -9,6 +9,7 @@ import type {
 	TaskAttachmentsDownloadData,
 } from '@/client/generated'
 import {i18n} from '@/i18n'
+import {expectBlob} from './blobResponse'
 import {contextMutationOptions} from './contextMutation'
 import {
 	invalidateTaskMembership,
@@ -35,8 +36,7 @@ export async function attachmentBlob(attachment: AttachmentIdentity, size?: Prev
 		parseAs: 'blob',
 		signal,
 	})
-	if (!(data instanceof Blob)) throw new Error('Attachment response was not a blob')
-	return data
+	return expectBlob(data, 'Attachment')
 }
 
 export function uploadAttachmentsMutationOptions(shouldNotify: () => boolean = () => true) {

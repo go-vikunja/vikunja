@@ -9,6 +9,7 @@ import {
 	projectsBackgroundUpload,
 } from '@/client/generated'
 import type {Image, Project} from '@/client/generated'
+import {expectBlob} from '@/client/queries/blobResponse'
 import {contextMutationOptions} from '@/client/queries/contextMutation'
 import {mapProjectNavigationItem, projectKeys} from '@/client/queries/projects'
 import type {ProjectListResult, ProjectResponse} from '@/client/queries/projects'
@@ -19,13 +20,6 @@ export const projectBackgroundKeys = {
 	project: (projectId: number) => ['project-backgrounds', 'project', projectId] as const,
 	search: (query: string) => ['project-backgrounds', 'unsplash', 'search', query] as const,
 	thumbnail: (imageId: string) => ['project-backgrounds', 'unsplash', 'thumbnail', imageId] as const,
-}
-
-function asBackgroundBlob(data: unknown): Blob {
-	if (!(data instanceof Blob)) {
-		throw new Error('Background response was not an image')
-	}
-	return data
 }
 
 export function unsplashAuthor(info: unknown): {author: string, author_name: string} | null {
@@ -48,7 +42,7 @@ export function projectBackgroundQuery(projectId: number) {
 		queryKey: projectBackgroundKeys.project(projectId),
 		queryFn: async () => {
 			const {data} = await projectsBackgroundGet({path: {project: projectId}})
-			return asBackgroundBlob(data)
+			return expectBlob(data, 'Background')
 		},
 	})
 }
@@ -74,7 +68,7 @@ export function unsplashBackgroundThumbnailQuery(imageId: string) {
 		queryKey: projectBackgroundKeys.thumbnail(imageId),
 		queryFn: async () => {
 			const {data} = await backgroundsUnsplashThumb({path: {image: imageId}})
-			return asBackgroundBlob(data)
+			return expectBlob(data, 'Background')
 		},
 	})
 }
