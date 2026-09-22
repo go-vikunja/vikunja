@@ -37,13 +37,17 @@ function runSalutation(now: Ref<Date>): string | undefined {
 
 function setUser() {
 	const authStore = useAuthStore()
+	authStore.setSession({
+		id: 42,
+		type: AUTH_TYPES.LINK_SHARE,
+		exp: 0,
+	})
 	authStore.setUser({
 		id: 42,
 		name: 'Ada',
 		username: 'ada',
-		type: AUTH_TYPES.LINK_SHARE,
 		created: '2024-01-15T10:00:00Z',
-	} as never, false)
+	}, false)
 }
 
 describe('useDaytimeSalutation', () => {
