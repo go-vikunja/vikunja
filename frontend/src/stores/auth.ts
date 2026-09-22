@@ -479,8 +479,7 @@ export const useAuthStore = defineStore('auth', () => {
 			return newUser
 		} catch (e) {
 			const problem = e as VikunjaErrorModel
-			if(((problem?.status ?? 0) >= 400 && (problem?.status ?? 0) < 500) ||
-				problem?.detail === 'missing, malformed, expired or otherwise invalid token provided') {
+			if ((problem?.status ?? 0) >= 400 && (problem?.status ?? 0) < 500) {
 				await logout()
 				return
 			}
@@ -575,7 +574,7 @@ export const useAuthStore = defineStore('auth', () => {
 			// — the 401 interceptor will handle it when the token really expires.
 			const nowInSeconds = Date.now() / MILLISECONDS_A_SECOND
 			const isExpired = !session.value?.exp || session.value.exp < nowInSeconds
-			if (isExpired && (e?.cause?.request?.status || e?.cause?.status)) {
+			if (isExpired && e?.cause?.status) {
 				await logout()
 			}
 		}
