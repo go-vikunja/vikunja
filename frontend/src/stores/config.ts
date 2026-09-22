@@ -4,7 +4,8 @@ import {parseURL} from 'ufo'
 
 import {getApiV2BaseUrl} from '@/helpers/fetcher'
 import {info, type VikunjaInfos, type AuthInfo} from '@/client/generated'
-import {createClient} from '@/client/generated/client'
+import {publicClient} from '@/client/publicClient'
+import {captureClientRequestContext, isClientRequestContextCurrent} from '@/client/requestContext'
 
 import type {IProvider} from '@/types/IProvider'
 import type {ProFeature} from '@/constants/proFeatures'
@@ -27,7 +28,23 @@ export type ConfigState = Required<Omit<VikunjaInfos,
 	}
 }
 
-const publicClient = createClient({throwOnError: true})
+// These reach window.location.href (redirectToProvider) and :href, where a javascript: value
+// would run on our own origin.
+const NAVIGABLE_URL_SCHEMES = [
+	'http:',
+	'https:',
+]
+
+function navigableUrl(url: string | undefined): string {
+	if (!url) {
+		return ''
+	}
+	try {
+		return NAVIGABLE_URL_SCHEMES.includes(new URL(url, window.location.origin).protocol) ? url : ''
+	} catch {
+		return ''
+	}
+}
 
 function defaultConfig(): ConfigState {
 	return {
@@ -94,7 +111,10 @@ export const useConfigStore = defineStore('config', () => {
 			available_migrators: config.available_migrators ?? [],
 			enabled_background_providers: config.enabled_background_providers ?? [],
 			enabled_pro_features: config.enabled_pro_features ?? [],
-			legal: {...defaults.legal, ...config.legal},
+			legal: {
+				imprint_url: navigableUrl(config.legal?.imprint_url),
+				privacy_policy_url: navigableUrl(config.legal?.privacy_policy_url),
+			},
 			auth: {
 				local: {...defaults.auth.local, ...config.auth?.local},
 				ldap: {...defaults.auth.ldap, ...config.auth?.ldap},
@@ -104,9 +124,9 @@ export const useConfigStore = defineStore('config', () => {
 						...provider,
 						name: provider.name ?? '',
 						key: provider.key ?? '',
-						auth_url: provider.auth_url ?? '',
+						auth_url: navigableUrl(provider.auth_url),
 						client_id: provider.client_id ?? '',
-						logout_url: provider.logout_url ?? '',
+						logout_url: navigableUrl(provider.logout_url),
 						scope: provider.scope ?? 'openid email profile',
 					})),
 				},
@@ -119,6 +139,7 @@ export const useConfigStore = defineStore('config', () => {
 	}
 
 	async function update(): Promise<boolean> {
+		const request = captureClientRequestContext()
 		let config: VikunjaInfos
 		try {
 			const response = await info({
@@ -132,6 +153,11 @@ export const useConfigStore = defineStore('config', () => {
 
 		if (typeof config.version === 'undefined') {
 			throw new InvalidApiUrlProvidedError()
+		}
+
+		// A newer probe already owns window.API_URL; writing this answer would stomp it.
+		if (!isClientRequestContextCurrent(request)) {
+			return false
 		}
 
 		setConfig(config)
