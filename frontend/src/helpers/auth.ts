@@ -1,13 +1,7 @@
 import {getApiBaseUrl, getApiV2BaseUrl} from '@/helpers/fetcher'
 import {authRefreshToken} from '@/client/generated'
-import {createClient} from '@/client/generated/client'
+import {publicClient} from '@/client/publicClient'
 import {isDesktopApp, refreshDesktopToken} from '@/helpers/desktopAuth'
-
-// Own client: the shared one injects Authorization and answers a 401 by calling refreshToken() — this is that call.
-const refreshClient = createClient({
-	credentials: 'include',
-	throwOnError: true,
-})
 
 let savedToken: string | null = null
 
@@ -172,7 +166,7 @@ async function doRefresh(persist: boolean): Promise<void> {
 			let response
 			// A per-request baseUrl skips mergeConfigs (utils.gen.ts), the only place a trailing slash is stripped.
 			try {
-				response = await authRefreshToken({client: refreshClient, baseUrl: getApiV2BaseUrl().replace(/\/$/, '')})
+				response = await authRefreshToken({client: publicClient, baseUrl: getApiV2BaseUrl().replace(/\/$/, '')})
 			} catch (e) {
 				if ((e as {status?: number})?.status === 429) {
 					throw e
@@ -183,7 +177,7 @@ async function doRefresh(persist: boolean): Promise<void> {
 				// Pre-v2 browsers only hold the v1-path cookie, and some deployments
 				// can't reach v2 at all; v1 re-seeds both cookies.
 				// Drop this fallback once pre-v2 clients have cycled out.
-				response = await authRefreshToken({client: refreshClient, baseUrl: getApiBaseUrl().replace(/\/$/, '')})
+				response = await authRefreshToken({client: publicClient, baseUrl: getApiBaseUrl().replace(/\/$/, '')})
 			}
 			if (loggedOutSinceStart()) {
 				return
