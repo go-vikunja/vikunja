@@ -4,6 +4,24 @@ import {contextMutationOptions} from './contextMutation'
 import {queryClient} from '@/client/queryClient'
 import {i18n} from '@/i18n'
 
+// A blob: url for an svg inherits our origin and can script; a data: url cannot.
+const SCRIPTABLE_MIME_TYPE = 'image/svg+xml'
+
+function readAsDataUrl(blob: Blob) {
+	return new Promise<string>((resolve, reject) => {
+		const reader = new FileReader()
+		reader.onload = () => {
+			if (typeof reader.result === 'string') {
+				resolve(reader.result)
+				return
+			}
+			reject(new Error('Avatar could not be read as a data url'))
+		}
+		reader.onerror = () => reject(reader.error ?? new Error('Avatar could not be read as a data url'))
+		reader.readAsDataURL(blob)
+	})
+}
+
 export const avatarKeys = {
 	user: (username: string) => ['avatars', username] as const,
 	image: (username: string, size: number) => ['avatars', username, size] as const,
@@ -20,7 +38,10 @@ export function avatarQuery(username: string, size: number) {
 		queryFn: async ({signal}) => {
 			const {data} = await avatarGet({path: {username}, query: {size}, parseAs: 'blob', signal})
 			if (!(data instanceof Blob)) throw new Error('Avatar response was not an image')
-			return data
+			const isScriptable = data.type.split(';')[0].trim().toLowerCase() === SCRIPTABLE_MIME_TYPE
+			// FileReader is absent in iOS Lockdown Mode and some webviews, fall back to a blob url there.
+			if (!isScriptable || typeof FileReader === 'undefined') return data
+			return readAsDataUrl(data)
 		},
 		staleTime: Infinity,
 		retry: false,

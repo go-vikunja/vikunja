@@ -79,6 +79,13 @@ describe('UserAvatar', () => {
 		expect(wrapper.find('img').attributes('src')).toBe('blob:new')
 		expect(URL.createObjectURL).toHaveBeenCalledTimes(1)
 	})
+	it('renders an svg avatar through a data url, never a blob url', async () => {
+		sdk.avatarGet.mockResolvedValue({data: new Blob(['<svg />'], {type: 'image/svg+xml'})})
+		const wrapper = mountAvatar({user: {username: 'sam'}})
+		await vi.waitFor(() => expect(wrapper.find('img').exists()).toBe(true))
+		expect(wrapper.find('img').attributes('src')).toBe('data:image/svg+xml;base64,PHN2ZyAvPg==')
+		expect(URL.createObjectURL).not.toHaveBeenCalled()
+	})
 	it('renders a placeholder without a user or when loading fails', async () => {
 		const wrapper = mountAvatar({user: null, size: 40})
 		await flushPromises()

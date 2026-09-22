@@ -36,7 +36,10 @@ const avatar = useQuery(computed(() => ({
 	...avatarQuery(props.user?.username ?? '', props.size),
 	enabled: Boolean(props.user?.username),
 })))
-const src = useObjectUrl(avatar.data)
+// An svg avatar arrives as an inert data: url, everything else as bytes this component owns a url for.
+const bytes = computed(() => avatar.data.value instanceof Blob ? avatar.data.value : undefined)
+const objectUrl = useObjectUrl(bytes)
+const src = computed(() => typeof avatar.data.value === 'string' ? avatar.data.value : objectUrl.value)
 </script>
 
 <style lang="scss">
