@@ -7,6 +7,7 @@ import {createI18n} from 'vue-i18n'
 import TOTP from './TOTP.vue'
 import {useConfigStore} from '@/stores/config'
 import {useAuthStore} from '@/stores/auth'
+import {AUTH_TYPES} from '@/constants/auth'
 import en from '@/i18n/lang/en.json'
 
 const get = vi.fn()
@@ -87,10 +88,10 @@ describe('TOTP settings', () => {
 		const configStore = useConfigStore()
 		configStore.totp_enabled = true
 		const authStore = useAuthStore()
-		authStore.setUser({
+		authStore.setSession({
 			id: 1,
-			username: 'user1',
-			is_local_user: true,
+			type: AUTH_TYPES.USER,
+			exp: 0,
 		})
 		queryClient.setQueryData(accountKeys.user(1), {
 			id: 1,

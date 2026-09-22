@@ -44,12 +44,6 @@ async function setUser() {
 		type: AUTH_TYPES.USER,
 		exp: 0,
 	})
-	authStore.setUser({
-		id: 42,
-		name: 'Ada',
-		username: 'ada',
-		created: '2024-01-15T10:00:00Z',
-	})
 	queryClient.setQueryData(accountKeys.user(42), {id: 42, name: 'Ada', created: '2024-01-15T10:00:00Z'})
 	await nextTick()
 }

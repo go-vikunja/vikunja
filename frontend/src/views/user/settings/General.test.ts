@@ -7,6 +7,7 @@ import {setActivePinia, createPinia} from 'pinia'
 import {createI18n} from 'vue-i18n'
 import {createRouter, createMemoryHistory} from 'vue-router'
 import General from './General.vue'
+import {AUTH_TYPES} from '@/constants/auth'
 import testid from '@/directives/testid'
 import {useAuthStore} from '@/stores/auth'
 import en from '@/i18n/lang/en.json'
@@ -86,7 +87,7 @@ describe('General user settings', () => {
 
 	// Logout cleared the user while this view was still the current route (FRONTEND-OSS-2CJ).
 	it('renders without a logged in user', async () => {
-		useAuthStore().setUser(null)
+		useAuthStore().setSession(null)
 
 		wrapper = await mountComponent()
 		await flushPromises()
@@ -96,11 +97,10 @@ describe('General user settings', () => {
 	})
 
 	it('marks a non-local user as external', async () => {
-		useAuthStore().setUser({
+		useAuthStore().setSession({
 			id: 1,
-			username: 'user1',
-			is_local_user: false,
-			auth_provider: 'keycloak',
+			type: AUTH_TYPES.USER,
+			exp: 0,
 		})
 		queryClient.setQueryData(accountKeys.user(1), {
 			id: 1,
