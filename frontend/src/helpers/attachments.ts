@@ -19,6 +19,8 @@ export function fetchAttachmentBlob(attachment: AttachmentIdentity, size?: Previ
 		queryFn: ({signal}) => attachmentBlob(attachment, size, signal),
 		staleTime: Infinity,
 		retry: false,
+		// Every caller reports the failure itself, together with the data-url step that follows.
+		meta: {handlesError: true},
 	})
 }
 
