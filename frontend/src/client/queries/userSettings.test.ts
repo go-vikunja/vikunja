@@ -1,40 +1,49 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest'
 
 import type {SupportedLocale} from '@/i18n'
-import {createUserSettingsDraft} from './userSettings'
+import {createUserSettingsDraft, normalizeUserSettings} from './account'
 
-describe('createUserSettingsDraft', () => {
+describe('normalizeUserSettings', () => {
 	beforeEach(() => {
 		vi.stubGlobal('navigator', {language: 'de-DE'})
 	})
 
 	it('falls back to the browser language when the api returns an empty language', () => {
 		// The api sends a plain string, which can be outside the SupportedLocale union
-		const settings = createUserSettingsDraft({language: '' as SupportedLocale})
+		const settings = normalizeUserSettings({language: '' as SupportedLocale})
 
 		expect(settings.language).toBe('de-DE')
 	})
 
 	it('falls back to the browser language when the api returns null', () => {
-		const settings = createUserSettingsDraft({language: null as never})
+		const settings = normalizeUserSettings({language: null as never})
 
 		expect(settings.language).toBe('de-DE')
 	})
 
 	it('falls back to the browser language when no language is passed', () => {
-		const settings = createUserSettingsDraft({})
+		const settings = normalizeUserSettings({})
 
 		expect(settings.language).toBe('de-DE')
 	})
 
 	it('keeps the language returned by the api', () => {
-		const settings = createUserSettingsDraft({language: 'fr-FR'})
+		const settings = normalizeUserSettings({language: 'fr-FR'})
 
 		expect(settings.language).toBe('fr-FR')
 	})
 
+	it('gives the form a draft that does not share nested objects with the read path', () => {
+		const stored = normalizeUserSettings({frontend_settings: {quick_add_default_reminders: [{relative_period: 60}]}})
+		const draft = createUserSettingsDraft(stored)
+
+		draft.frontend_settings.quick_add_default_reminders[0].relative_period = 120
+
+		expect(stored.frontend_settings.quick_add_default_reminders[0].relative_period).toBe(60)
+	})
+
 	it('drops extra settings links whose url is not http(s)', () => {
-		const settings = createUserSettingsDraft({
+		const settings = normalizeUserSettings({
 			extra_settings_links: {
 				a: {
 					text: 'x',

@@ -1,6 +1,5 @@
 import {CancelledError, useQuery} from '@tanstack/vue-query'
-import {currentUserQuery, refreshCurrentUser} from '@/client/queries/account'
-import {createUserSettingsDraft} from '@/helpers/userSettings'
+import {currentUserQuery, normalizeUserSettings, refreshCurrentUser} from '@/client/queries/account'
 import {computed, readonly, ref, watch} from 'vue'
 import {acceptHMRUpdate, defineStore} from 'pinia'
 
@@ -46,11 +45,11 @@ type JwtClaims = SessionClaims & {
 	sid?: string,
 }
 
-function userFromClaims({id, username, is_admin}: JwtClaims): UserInfoBody {
+// is_admin is deliberately absent: it comes from GET /user, never from the unverified JWT.
+function userFromClaims({id, username}: JwtClaims): UserInfoBody {
 	return {
 		id,
 		username,
-		is_admin,
 	}
 }
 
@@ -116,17 +115,16 @@ export const useAuthStore = defineStore('auth', () => {
 	const needsTotpPasscode = ref(false)
 	
 	const session = ref<JwtClaims | null>(null)
+	// The query key carries the identity and setSession() clears the cache, so a cached account
+	// always belongs to the current session.
 	const account = useQuery(computed(() => ({
 		...currentUserQuery(session.value?.id ?? 0, session.value?.type ?? AUTH_TYPES.USER),
-		enabled: false,
+		enabled: authenticated.value && session.value?.type === AUTH_TYPES.USER,
 	})), queryClient)
+	const currentAccount = computed(() => account.data.value ?? null)
 	// The JWT carries id and username, so the header renders before GET /user answers.
-	const info = computed(() => {
-		if (!session.value) return null
-		const current = account.data.value?.id === session.value.id ? account.data.value : undefined
-		return current ?? userFromClaims(session.value)
-	})
-	const settings = computed(() => createUserSettingsDraft(account.data.value?.settings))
+	const info = computed(() => currentAccount.value ?? (session.value ? userFromClaims(session.value) : null))
+	const settings = computed(() => normalizeUserSettings(account.data.value?.settings))
 	watch(() => settings.value.frontend_settings.desktop_quick_entry_shortcut, shortcut => {
 		window.vikunjaDesktop?.updateQuickEntryShortcut(shortcut || '')
 	}, {immediate: true})
@@ -399,7 +397,7 @@ export const useAuthStore = defineStore('auth', () => {
 		}
 
 		try {
-			const newUser = await refreshCurrentUser(session.value?.id ?? 0)
+			const newUser = await refreshCurrentUser(session.value?.id ?? 0, session.value?.type ?? AUTH_TYPES.USER)
 
 			if (newUser.settings?.language) {
 				await setLanguage(newUser.settings.language as SupportedLocale)
@@ -523,6 +521,7 @@ export const useAuthStore = defineStore('auth', () => {
 		needsTotpPasscode: readonly(needsTotpPasscode),
 
 		session: readonly(session),
+		currentAccount,
 		info: readonly(info),
 		settings: readonly(settings),
 

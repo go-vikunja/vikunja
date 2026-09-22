@@ -6,7 +6,6 @@ import type {DateDisplay} from '@/constants/dateDisplay'
 import type {TimeFormat} from '@/constants/timeFormat'
 import type {IRelationKind} from '@/types/IRelationKind'
 import type {TaskReminder, UserGeneralSettings} from '@/client/generated'
-import {getBrowserLanguage} from '@/i18n'
 import {PrefixMode} from '@/modules/quickAddMagic'
 import {DEFAULT_PROJECT_VIEW_SETTINGS} from '@/constants/projectView'
 import {PRIORITIES} from '@/constants/priorities'
@@ -51,7 +50,7 @@ export interface ExtraSettingsLinks {
 	[key: string]: ExtraSettingsLink
 }
 
-function isHttpUrl(url: string): boolean {
+export function isNavigableUrl(url: string): boolean {
 	try {
 		const {protocol} = new URL(url, window.location.origin)
 		return protocol === 'http:' || protocol === 'https:'
@@ -66,53 +65,28 @@ export type UserSettings = Required<Omit<UserGeneralSettings, '$schema' | 'front
 	language: SupportedLocale
 }
 
-export function createUserSettingsDraft(data: UserGeneralSettings = {}): UserSettings {
-	const frontend = typeof data.frontend_settings === 'object' && data.frontend_settings !== null
-		? data.frontend_settings as Partial<FrontendSettings> : {}
+// A const would read PrefixMode at module-init time, which the import cycle through
+// @/modules/quickAddMagic leaves undefined.
+export function defaultFrontendSettings(): FrontendSettings {
 	return {
-		name: data.name ?? '',
-		email_reminders_enabled: data.email_reminders_enabled ?? true,
-		discoverable_by_name: data.discoverable_by_name ?? false,
-		discoverable_by_email: data.discoverable_by_email ?? false,
-		overdue_tasks_reminders_enabled: data.overdue_tasks_reminders_enabled ?? true,
-		overdue_tasks_reminders_time: data.overdue_tasks_reminders_time ?? '09:00',
-		default_project_id: data.default_project_id ?? 0,
-		week_start: data.week_start ?? 0,
-		timezone: data.timezone ?? '',
-		language: (data.language || getBrowserLanguage()) as SupportedLocale,
-		extra_settings_links: Object.fromEntries(
-			Object.entries(data.extra_settings_links ?? {}).filter((entry): entry is [string, ExtraSettingsLink] => {
-				const value = entry[1]
-				return !!value
-					&& typeof value === 'object'
-					&& 'text' in value
-					&& typeof value.text === 'string'
-					&& 'url' in value
-					&& typeof value.url === 'string'
-					&& isHttpUrl(value.url)
-			}),
-		),
-		frontend_settings: {
-			play_sound_when_done: true,
-			quick_add_magic_mode: PrefixMode.Default,
-			color_schema: 'auto',
-			allow_icon_changes: true,
-			filter_id_used_on_overview: null,
-			default_view: DEFAULT_PROJECT_VIEW_SETTINGS.FIRST,
-			minimum_priority: PRIORITIES.MEDIUM,
-			date_display: DATE_DISPLAY.RELATIVE,
-			time_format: TIME_FORMAT.HOURS_24,
-			default_task_relation_type: RELATION_KIND.RELATED,
-			background_brightness: null,
-			always_show_bucket_task_count: false,
-			show_last_viewed: true,
-			sidebar_width: null,
-			comment_sort_order: 'asc',
-			desktop_quick_entry_shortcut: 'CmdOrCtrl+Shift+A',
-			default_due_time: undefined,
-			time_tracking_default_start: '09:00',
-			...frontend,
-			quick_add_default_reminders: (frontend.quick_add_default_reminders ?? []).map(reminder => ({...reminder})),
-		},
+		play_sound_when_done: true,
+		quick_add_magic_mode: PrefixMode.Default,
+		color_schema: 'auto',
+		allow_icon_changes: true,
+		filter_id_used_on_overview: null,
+		default_view: DEFAULT_PROJECT_VIEW_SETTINGS.FIRST,
+		minimum_priority: PRIORITIES.MEDIUM,
+		date_display: DATE_DISPLAY.RELATIVE,
+		time_format: TIME_FORMAT.HOURS_24,
+		default_task_relation_type: RELATION_KIND.RELATED,
+		background_brightness: null,
+		always_show_bucket_task_count: false,
+		show_last_viewed: true,
+		sidebar_width: null,
+		comment_sort_order: 'asc',
+		desktop_quick_entry_shortcut: 'CmdOrCtrl+Shift+A',
+		default_due_time: undefined,
+		time_tracking_default_start: '09:00',
+		quick_add_default_reminders: [],
 	}
 }

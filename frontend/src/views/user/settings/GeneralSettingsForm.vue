@@ -212,7 +212,7 @@
 					{{ $t('user.settings.general.quickAddDefaultRemindersHint') }}
 				</p>
 				<Reminders
-					v-model="quick_add_default_reminders"
+					v-model="quickAddDefaultReminders"
 					:default-relative-to="REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE"
 					:allow-absolute="false"
 				/>
@@ -306,7 +306,7 @@
 
 
 <script setup lang="ts">
-import {useUpdateSettingsMutation} from '@/client/queries/account'
+import {createUserSettingsDraft, useUpdateSettingsMutation, type AccountIdentity} from '@/client/queries/account'
 import {computed, watch, ref, onBeforeMount} from 'vue'
 import {useI18n} from 'vue-i18n'
 import isEqual from 'fast-deep-equal'
@@ -332,7 +332,7 @@ import {useTitle} from '@/composables/useTitle'
 import {useProjects} from '@/composables/useProjects'
 import {useAuthStore} from '@/stores/auth'
 import {useConfigStore} from '@/stores/config'
-import {createUserSettingsDraft, taskRemindersFromSettings, type UserSettings} from '@/helpers/userSettings'
+import {taskRemindersFromSettings, type UserSettings} from '@/helpers/userSettings'
 import {isSavedFilterProject} from '@/client/queries/projects'
 import {DEFAULT_PROJECT_VIEW_SETTINGS} from '@/constants/projectView'
 import {PRIORITIES} from '@/constants/priorities'
@@ -345,7 +345,9 @@ import ShortcutRecorder from '@/components/misc/ShortcutRecorder.vue'
 import Reminders from '@/components/tasks/partials/Reminders.vue'
 import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 
-defineOptions({name: 'UserSettingsGeneral'})
+const props = defineProps<{identity: AccountIdentity}>()
+
+defineOptions({name: 'UserSettingsGeneralForm'})
 
 const isDesktop = isDesktopApp()
 
@@ -429,7 +431,7 @@ const timeTrackingEnabled = computed(() => configStore.isProFeatureEnabled(PRO_F
 
 const settings = ref(createUserSettingsDraft(authStore.settings))
 
-const quick_add_default_reminders = computed({
+const quickAddDefaultReminders = computed({
 	get: () => taskRemindersFromSettings(settings.value.frontend_settings.quick_add_default_reminders),
 	set: reminders => {
 		settings.value.frontend_settings.quick_add_default_reminders = reminders.map(reminder => ({
@@ -528,6 +530,8 @@ async function updateSettings() {
 	const {language, ...withoutLanguage} = settings.value
 	try {
 		await updateUserSettings.mutateAsync({
+			id: props.identity.id,
+			type: props.identity.type,
 			settings: configStore.demo_mode_enabled ? withoutLanguage : settings.value,
 		})
 		if (configStore.demo_mode_enabled) setLanguage(language).catch(error)
