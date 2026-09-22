@@ -61,7 +61,7 @@ describe('avatarQuery', () => {
 	it('rejects a response that is not a blob', async () => {
 		const client = new QueryClient()
 		sdk.avatarGet.mockResolvedValue({data: {message: 'not an image'}})
-		await expect(client.fetchQuery(avatarQuery('sam', 50))).rejects.toThrow('Avatar response was not an image')
+		await expect(client.fetchQuery(avatarQuery('sam', 50))).rejects.toThrow('Avatar response was not a blob')
 	})
 	it('caches a non-svg response as bytes', async () => {
 		const client = new QueryClient()

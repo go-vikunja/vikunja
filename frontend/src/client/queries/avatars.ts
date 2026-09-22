@@ -1,5 +1,6 @@
 import {queryOptions, useMutation} from '@tanstack/vue-query'
 import {avatarGet, userAvatarUpload, userGetAvatarProvider, userSetAvatarProvider} from '@/client/generated'
+import {expectBlob} from './blobResponse'
 import {contextMutationOptions} from './contextMutation'
 import {queryClient} from '@/client/queryClient'
 import {i18n} from '@/i18n'
@@ -37,11 +38,11 @@ export function avatarQuery(username: string, size: number) {
 		queryKey: avatarKeys.image(username, size),
 		queryFn: async ({signal}) => {
 			const {data} = await avatarGet({path: {username}, query: {size}, parseAs: 'blob', signal})
-			if (!(data instanceof Blob)) throw new Error('Avatar response was not an image')
-			const isScriptable = data.type.split(';')[0].trim().toLowerCase() === SCRIPTABLE_MIME_TYPE
+			const blob = expectBlob(data, 'Avatar')
+			const isScriptable = blob.type.split(';')[0].trim().toLowerCase() === SCRIPTABLE_MIME_TYPE
 			// FileReader is absent in iOS Lockdown Mode and some webviews, fall back to a blob url there.
-			if (!isScriptable || typeof FileReader === 'undefined') return data
-			return readAsDataUrl(data)
+			if (!isScriptable || typeof FileReader === 'undefined') return blob
+			return readAsDataUrl(blob)
 		},
 		staleTime: Infinity,
 		retry: false,
