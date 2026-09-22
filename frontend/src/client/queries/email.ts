@@ -1,4 +1,4 @@
-import {useMutation} from '@tanstack/vue-query'
+import {useMutation, type QueryClient} from '@tanstack/vue-query'
 import {
 	userUpdateEmail,
 	userCancelEmailUpdate,
@@ -7,18 +7,28 @@ import {
 } from '@/client/generated'
 import type {UserUpdateEmailRequestWritable} from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
-import {accountKeys, reconcileAccount} from './account'
+import {
+	accountKeys,
+	normalizeUserInfo,
+	reconcileAccount,
+	type AccountIdentity,
+	type UserInfoResponse,
+} from './account'
 import {i18n} from '@/i18n'
+
+function writeAccount(account: UserInfoResponse, {id, type}: AccountIdentity, client: QueryClient) {
+	client.setQueryData<UserInfoResponse>(accountKeys.user(id, type), current => current ? account : current)
+}
 
 export function updateEmailMutationOptions() {
 	return {
 		...contextMutationOptions({
-			mutationFn: async (body: UserUpdateEmailRequestWritable) => {
+			mutationFn: async ({body}: AccountIdentity & {body: UserUpdateEmailRequestWritable}) => {
 				await userUpdateEmail({body})
-				return (await userShow()).data
+				return normalizeUserInfo((await userShow()).data)
 			},
-			onSuccess: (account, _input, client) => reconcileAccount(account, client),
-			onSettled: (_input, client) => client.invalidateQueries({queryKey: accountKeys.current}),
+			onSuccess: writeAccount,
+			onSettled: reconcileAccount,
 			successMessage: account => {
 				const key = account.pending_email
 					? 'user.settings.updateEmailPendingSuccess'
@@ -36,13 +46,13 @@ export function useUpdateEmailMutation() {
 }
 
 export function cancelEmailUpdateMutationOptions() {
-	return contextMutationOptions({
+	return contextMutationOptions<UserInfoResponse, AccountIdentity>({
 		mutationFn: async () => {
 			await userCancelEmailUpdate()
-			return (await userShow()).data
+			return normalizeUserInfo((await userShow()).data)
 		},
-		onSuccess: (account, _input, client) => reconcileAccount(account, client),
-		onSettled: (_input, client) => client.invalidateQueries({queryKey: accountKeys.current}),
+		onSuccess: writeAccount,
+		onSettled: reconcileAccount,
 		successMessage: () => i18n.global.t('user.settings.updateEmailCancelSuccess'),
 	})
 }
@@ -52,8 +62,12 @@ export function useCancelEmailUpdateMutation() {
 }
 
 export function resendEmailConfirmationMutationOptions() {
-	return contextMutationOptions({
-		mutationFn: async () => (await userResendEmailConfirmation()).data,
+	return contextMutationOptions<void, AccountIdentity>({
+		mutationFn: async () => {
+			await userResendEmailConfirmation()
+		},
+		// A cooldown rejection means another device already moved the pending state on.
+		onSettled: reconcileAccount,
 		successMessage: () => i18n.global.t('user.settings.updateEmailResendSuccess'),
 	})
 }

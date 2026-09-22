@@ -73,6 +73,7 @@ import FormField from '@/components/input/FormField.vue'
 import Message from '@/components/misc/Message.vue'
 import {useTitle} from '@/composables/useTitle'
 import {useAuthStore} from '@/stores/auth'
+import {AUTH_TYPES} from '@/constants/auth'
 
 defineOptions({name: 'UserSettingsUpdateEmail'})
 
@@ -82,6 +83,10 @@ useTitle(() => `${t('user.settings.updateEmailTitle')} - ${t('user.settings.titl
 const authStore = useAuthStore()
 const isLocalUser = computed(() => authStore.info?.is_local_user)
 const pendingEmail = computed(() => authStore.info?.pending_email)
+const identity = computed(() => ({
+	id: authStore.session?.id ?? 0,
+	type: authStore.session?.type ?? AUTH_TYPES.USER,
+}))
 
 const emailUpdate = reactive({new_email: '', password: ''})
 const updateMutation = useUpdateEmailMutation()
@@ -107,7 +112,10 @@ function updateEmail() {
 	return runAction('save', async () => {
 		const submitted = {...emailUpdate}
 		try {
-			await updateMutation.mutateAsync(submitted)
+			await updateMutation.mutateAsync({
+				...identity.value,
+				body: submitted,
+			})
 		} finally {
 			// Evicts the plaintext password from the mutation cache.
 			updateMutation.reset()
@@ -123,13 +131,13 @@ function updateEmail() {
 
 function resendConfirmation() {
 	return runAction('resend', async () => {
-		await resendMutation.mutateAsync()
+		await resendMutation.mutateAsync(identity.value)
 	})
 }
 
 function cancelEmailUpdate() {
 	return runAction('cancel', async () => {
-		await cancelMutation.mutateAsync()
+		await cancelMutation.mutateAsync(identity.value)
 	})
 }
 </script>

@@ -145,7 +145,8 @@ function applySettingsUpdate(
 	}
 }
 
-function reconcileAccount({id, type}: AccountIdentity, client: QueryClient) {
+// The account query is mounted for every user session, so an invalidation actually refetches.
+export function reconcileAccount({id, type}: AccountIdentity, client: QueryClient) {
 	return client.fetchQuery({
 		...currentUserQuery(id, type),
 		staleTime: 0,
