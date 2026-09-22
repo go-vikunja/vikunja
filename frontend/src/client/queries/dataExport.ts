@@ -1,5 +1,6 @@
 import {queryOptions, useMutation} from '@tanstack/vue-query'
 import {userExportStatus, userExportRequest, userExportDownload, type UserExportStatus} from '@/client/generated'
+import {expectBlob} from './blobResponse'
 import {contextMutationOptions} from './contextMutation'
 import {downloadBlob} from '@/helpers/downloadBlob'
 import {i18n} from '@/i18n'
@@ -36,8 +37,7 @@ export function downloadExportMutationOptions() {
 		...contextMutationOptions({
 			mutationFn: async (password: string) => {
 				const {data} = await userExportDownload({body: {password}, parseAs: 'blob'})
-				if (!(data instanceof Blob)) throw new Error('Export response was not a file')
-				return data
+				return expectBlob(data, 'Export')
 			},
 			onSuccess: blob => downloadBlob(URL.createObjectURL(blob), 'vikunja-export.zip'),
 		}),
