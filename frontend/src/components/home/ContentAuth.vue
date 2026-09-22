@@ -18,7 +18,7 @@
 				class="app-container-background background-fade-in d-print-none"
 				:style="{
 					'background-image': background && `url(${background})`,
-					'filter': background_brightness && `brightness(${background_brightness}%)`
+					'filter': backgroundBrightness && `brightness(${backgroundBrightness}%)`
 				}"
 			/>
 			<Navigation class="d-print-none" />
@@ -95,7 +95,7 @@ import {useServerCacheEvents} from '@/composables/useServerCacheEvents'
 import {useAuthStore} from '@/stores/auth'
 
 const authStore = useAuthStore()
-const background_brightness = computed(() =>
+const backgroundBrightness = computed(() =>
 	authStore.settings?.frontend_settings?.background_brightness,
 )
 

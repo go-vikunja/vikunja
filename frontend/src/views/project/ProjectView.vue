@@ -55,12 +55,12 @@ function redirectToDefaultViewIfNecessary() {
 		// Ideally, we would do that in the router redirect, but the projects (and therefore, the views) 
 		// are not always loaded then.
 
-		const default_view  = authStore.settings.frontend_settings.default_view
+		const defaultView  = authStore.settings.frontend_settings.default_view
 		const views = currentProject.value?.views ?? []
 
 		let view
-		if (default_view !== DEFAULT_PROJECT_VIEW_SETTINGS.FIRST) {
-			view = views.find(view => view.view_kind === default_view)
+		if (defaultView !== DEFAULT_PROJECT_VIEW_SETTINGS.FIRST) {
+			view = views.find(view => view.view_kind === defaultView)
 		}
 
 		// Use the first view as fallback if the default view is not available

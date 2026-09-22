@@ -1,6 +1,6 @@
 <template>
 	<span
-		v-if="!done && (showAll || priority >= minimum_priority)"
+		v-if="!done && (showAll || priority >= minimumPriority)"
 		:class="{
 			'negligible': priority <= priorities.LOW,
 			'not-so-high': priority > priorities.LOW && priority < priorities.HIGH,
@@ -45,7 +45,7 @@ withDefaults(defineProps<{
 
 const authStore = useAuthStore()
 
-const minimum_priority = computed(() => {
+const minimumPriority = computed(() => {
 	return authStore.settings.frontend_settings.minimum_priority || priorities.MEDIUM
 })
 </script>
