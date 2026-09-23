@@ -401,7 +401,7 @@ func syncUserAvatarFromOpenID(s *xorm.Session, u *user.User, pictureURL string) 
 // fallbackSearchUsers builds the ordered list of local-user lookups used to link an OIDC
 // login to an existing account when the provider has email and/or username fallback enabled.
 // GetUserWithEmail ANDs all non-zero fields, so the email (when set) is combined with each
-// username candidate.
+// username candidate before falling back to email alone.
 func fallbackSearchUsers(cl *claims, provider *Provider, idToken *oidc.IDToken) []*user.User {
 	// Only a verified email may link to an existing account — an unverified one lets an
 	// attacker asserting a victim's email take over their local account (GHSA-xv7q-fvmc-jx96).
@@ -430,10 +430,10 @@ func fallbackSearchUsers(cl *claims, provider *Provider, idToken *oidc.IDToken) 
 			searches = append(searches, &user.User{Issuer: user.IssuerLocal, Username: preferred, Email: fallbackEmail})
 		}
 	}
-	// Email-only lookup when no username candidates were added. Only with a real,
-	// verified email — an empty email would degenerate to an issuer-only lookup and
-	// link an arbitrary local user.
-	if len(searches) == 0 && emailFallbackAllowed && cl.Email != "" {
+	// Email-only lookup last, so enabling both fallbacks never matches less than email
+	// fallback alone. Only with a real, verified email — an empty email would degenerate
+	// to an issuer-only lookup and link an arbitrary local user.
+	if emailFallbackAllowed && cl.Email != "" {
 		searches = append(searches, &user.User{Issuer: user.IssuerLocal, Email: cl.Email})
 	}
 
