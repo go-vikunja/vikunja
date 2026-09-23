@@ -1,4 +1,5 @@
-import {describe, expect, it} from 'vitest'
+import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest'
+import {createPinia, setActivePinia} from 'pinia'
 import {
 	createTaskDraft,
 	createReminderDraft,
@@ -18,8 +19,13 @@ import {parseTaskText, PREFIXES, PrefixMode, type ParsedTaskText} from '@/module
 import type {Bucket, Task} from '@/client/generated'
 import type {IRepeatAfter} from '@/types/IRepeatAfter'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
+import {useAuthStore} from '@/stores/auth'
+import UserSettingsModel from '@/models/userSettings'
 
 describe('task domain helpers', () => {
+	beforeEach(() => {
+		setActivePinia(createPinia())
+	})
 	it('fills wire defaults for fields explicitly set to undefined', () => {
 		expect(createTaskDraft({title: ' New task ', due_date: '2026-09-17T12:00:00Z'})).toMatchObject({
 			title: 'New task',
@@ -170,6 +176,41 @@ describe('task domain helpers', () => {
 		expect(task.title).toBe('Task')
 		expect(task.repeat_mode).toBe(TASK_REPEAT_MODES.REPEAT_MODE_MONTH)
 		expect(task.repeat_after).toBe(0)
+	})
+	describe('repeating quick add without a date', () => {
+		afterEach(() => {
+			vi.useRealTimers()
+		})
+		it('sets the first due date to today at the default due time', () => {
+			vi.useFakeTimers()
+			vi.setSystemTime(new Date(2026, 8, 23, 9, 15))
+			const settings = new UserSettingsModel()
+			settings.frontendSettings.defaultDueTime = '14:30'
+			useAuthStore().setUserSettings(settings)
+			const defaults = [{relative_period: -900, relative_to: 'due_date'}]
+			const parsed = parseTaskText('Call mom every day', PrefixMode.Default)
+			const task = buildQuickAddTask(
+				parsed,
+				{title: 'Call mom every day', project_id: 1},
+				PREFIXES[PrefixMode.Default],
+				[],
+				defaults,
+			)
+			expect(task.due_date).toBe(new Date(2026, 8, 23, 14, 30).toISOString())
+			expect(task.reminders).toEqual(defaults)
+		})
+		it('keeps an explicitly parsed date', () => {
+			vi.useFakeTimers()
+			vi.setSystemTime(new Date(2026, 8, 23, 9, 15))
+			const parsed = parseTaskText('Call mom every day at 11:42', PrefixMode.Default)
+			const task = buildQuickAddTask(
+				parsed,
+				{title: 'Call mom every day at 11:42', project_id: 1},
+				PREFIXES[PrefixMode.Default],
+				[],
+			)
+			expect(task.due_date).toBe(new Date(2026, 8, 23, 11, 42).toISOString())
+		})
 	})
 	it('retains embedded resources omitted from a task write response', () => {
 		const task = {id: 1, labels: [{id: 2}], related_tasks: {subtask: [{id: 3}]}, assignees: [{id: 4}]}
