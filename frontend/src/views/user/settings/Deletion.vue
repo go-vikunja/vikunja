@@ -89,6 +89,7 @@ import {formatDateSince, formatDisplayDate} from '@/helpers/time/formatDate'
 import {useTitle} from '@/composables/useTitle'
 import {useAuthStore} from '@/stores/auth'
 import {useConfigStore} from '@/stores/config'
+import {AUTH_TYPES} from '@/constants/auth'
 import FormField from '@/components/input/FormField.vue'
 
 defineOptions({name: 'UserSettingsDeletion'})
@@ -137,7 +138,11 @@ async function cancelDeletion() {
 	}
 
 	try {
-		await cancelMutation.mutateAsync(password.value)
+		await cancelMutation.mutateAsync({
+			id: authStore.session?.id ?? 0,
+			type: authStore.session?.type ?? AUTH_TYPES.USER,
+			password: password.value,
+		})
 	} catch {
 		return
 	} finally {

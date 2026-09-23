@@ -67,6 +67,7 @@ import QuickAddOverlay from '@/components/quick-actions/QuickAddOverlay.vue'
 import AddToHomeScreen from '@/components/home/AddToHomeScreen.vue'
 import DemoMode from '@/components/home/DemoMode.vue'
 import {AUTH_ROUTE_NAMES} from '@/constants/authRouteNames'
+import {AUTH_TYPES} from '@/constants/auth'
 import {useQuickAddMode} from '@/composables/useQuickAddMode'
 
 import {useConfirmDeletionMutation} from '@/client/queries/accountDeletion'
@@ -118,7 +119,11 @@ watch(accountDeletionToken, async token => {
 	// A failed strip must not skip spending the token.
 	await router.replace({path: route.path, query, hash: route.hash}).catch(() => {})
 	try {
-		await confirmDeletion.mutateAsync(token)
+		await confirmDeletion.mutateAsync({
+			id: authStore.session?.id ?? 0,
+			type: authStore.session?.type ?? AUTH_TYPES.USER,
+			token,
+		})
 	} catch {
 		return
 	} finally {
