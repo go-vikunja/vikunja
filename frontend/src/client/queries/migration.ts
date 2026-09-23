@@ -45,10 +45,13 @@ export type MigrationProvider = keyof typeof statusOperations
 export const migrationKeys = {
 	status: (provider: MigrationProvider) => ['migration', provider, 'status'] as const,
 }
+export async function fetchMigrationStatus(provider: MigrationProvider, signal?: AbortSignal) {
+	return (await statusOperations[provider]({signal})).data
+}
 export function migrationStatusQuery(provider: MigrationProvider) {
 	return queryOptions({
 		queryKey: migrationKeys.status(provider),
-		queryFn: async ({signal}) => (await statusOperations[provider]({signal})).data,
+		queryFn: ({signal}) => fetchMigrationStatus(provider, signal),
 		staleTime: 0,
 		retry: false,
 	})

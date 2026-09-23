@@ -12,6 +12,7 @@ vi.mock('@/client/generated', async importOriginal => ({...await importOriginal<
 vi.mock('@/message', () => ({error: vi.fn(), success: vi.fn()}))
 
 const POLL_INTERVAL = 3000
+const POLL_DEADLINE = 20 * 60 * 1000
 const NEVER = '0001-01-01T00:00:00Z'
 
 function status(overrides: Partial<MigrationStatus> = {}) {
@@ -24,7 +25,7 @@ function status(overrides: Partial<MigrationStatus> = {}) {
 	}}
 }
 
-// Lets the poll's awaited promises settle between timer ticks.
+// Lets the query settle its immediate fetch, then run one poll interval.
 async function tick() {
 	await vi.advanceTimersByTimeAsync(POLL_INTERVAL)
 }
@@ -61,7 +62,7 @@ describe('migration store', () => {
 		await tick()
 		await tick()
 
-		expect(getStatus).toHaveBeenCalledTimes(2)
+		expect(getStatus).toHaveBeenCalledTimes(3)
 		expect(store.isFinished).toBe(false)
 	})
 
@@ -169,12 +170,13 @@ describe('migration store', () => {
 		const store = useMigrationStore()
 		store.start('csv')
 
-		await vi.advanceTimersByTimeAsync(20 * 60 * 1000)
-		const callsAtDeadline = getStatus.mock.calls.length
+		await vi.advanceTimersByTimeAsync(POLL_DEADLINE)
+		// the fetch the enabled query runs right away, plus one per interval up to the deadline
+		expect(getStatus).toHaveBeenCalledTimes(POLL_DEADLINE / POLL_INTERVAL + 1)
 		await tick()
 		await tick()
 
-		expect(getStatus).toHaveBeenCalledTimes(callsAtDeadline)
+		expect(getStatus).toHaveBeenCalledTimes(POLL_DEADLINE / POLL_INTERVAL + 1)
 		expect(store.isFinished).toBe(false)
 	})
 
@@ -193,14 +195,33 @@ describe('migration store', () => {
 		expect(store.isFinished).toBe(false)
 		expect(store.hasFailed).toBe(false)
 	})
+	it('polls again when a finished provider is started a second time', async () => {
+		getStatus.mockResolvedValue(status({finished_at: '2024-01-15T10:05:00Z'}))
+		const store = useMigrationStore()
+		store.start('csv')
+		await tick()
+		expect(store.isFinished).toBe(true)
+
+		getStatus.mockResolvedValue(status())
+		store.start('csv')
+		await tick()
+
+		expect(getStatus).toHaveBeenCalledTimes(2)
+		expect(store.isFinished).toBe(false)
+	})
+
 	it('stops polling after the account session changes', async () => {
 		getStatus.mockResolvedValue(status())
 		const store = useMigrationStore()
 		store.start('csv')
 		await tick()
+		expect(getStatus).toHaveBeenCalledTimes(2)
+
 		removeToken()
 		await tick()
-		expect(getStatus).toHaveBeenCalledTimes(1)
+		await tick()
+
+		expect(getStatus).toHaveBeenCalledTimes(2)
 		expect(store.isFinished).toBe(false)
 	})
 

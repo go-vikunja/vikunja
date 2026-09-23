@@ -1,9 +1,10 @@
-import {computed, ref, onScopeDispose} from 'vue'
+import {computed, ref, onScopeDispose, watch} from 'vue'
 import {acceptHMRUpdate, defineStore} from 'pinia'
-import {useMutation, useQuery} from '@tanstack/vue-query'
+import {queryOptions, useMutation, useQuery} from '@tanstack/vue-query'
 import {queryClient} from '@/client/queryClient'
 import {captureClientRequestContext, isClientRequestContextCurrent} from '@/client/requestContext'
 import {
+	fetchMigrationStatus,
 	migrationStatusQuery,
 	migrationCompletedMutationOptions,
 	type MigrationProvider,
@@ -12,7 +13,7 @@ import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 
 const POLL_INTERVAL = 3000
 const POLL_DEADLINE = 20 * 60 * 1000
-const MAX_CONSECUTIVE_FAILURES = 5
+const POLL_RETRIES = 4
 
 const GENERIC_FAILURE_KEY = 'migrate.failure.reported'
 
@@ -29,10 +30,49 @@ const FAILURE_KEYS: Partial<Record<MigrationErrorKind, string>> = {
 // Keep polling when the import view unmounts.
 export const useMigrationStore = defineStore('migration', () => {
 	const provider = ref<MigrationProvider>('csv')
-	const accepted = ref(false)
-	const status = useQuery(computed(() => ({...migrationStatusQuery(provider.value), enabled: false})), queryClient)
+	const startedAt = ref<number | null>(null)
+	let request = captureClientRequestContext()
+
+	function stop() {
+		startedAt.value = null
+	}
+
+	const status = useQuery(computed(() => {
+		const polledProvider = provider.value
+		const runStartedAt = startedAt.value
+		return queryOptions({
+			...migrationStatusQuery(polledProvider),
+			enabled: runStartedAt !== null,
+			retry: POLL_RETRIES,
+			retryDelay: POLL_INTERVAL,
+			refetchIntervalInBackground: true,
+			queryFn: ({signal}) => {
+				// A run belongs to the session and server that started it; a later one must not adopt it.
+				if (!isClientRequestContextCurrent(request)) {
+					stop()
+					throw new DOMException('Client request context changed', 'AbortError')
+				}
+				return fetchMigrationStatus(polledProvider, signal)
+			},
+			refetchInterval: ({state}) => {
+				if (runStartedAt === null || Date.now() >= runStartedAt + POLL_DEADLINE) {
+					return false
+				}
+				// Cache state older than the run is the previous import's and says nothing about this one.
+				if (state.status === 'error' && state.errorUpdatedAt >= runStartedAt) {
+					return false
+				}
+				if (state.dataUpdatedAt >= runStartedAt && parseDateOrNull(state.data?.finished_at) !== null) {
+					return false
+				}
+				return POLL_INTERVAL
+			},
+		})
+	}), queryClient)
+
 	const completed = useMutation(migrationCompletedMutationOptions(), queryClient)
-	const isFinished = computed(() => accepted.value && parseDateOrNull(status.data.value?.finished_at) !== null)
+	const hasRunResult = computed(() => startedAt.value !== null && status.dataUpdatedAt.value >= startedAt.value)
+	const isFinished = computed(() => hasRunResult.value && parseDateOrNull(status.data.value?.finished_at) !== null)
 	const errorKind = computed(() => isFinished.value ? status.data.value?.error_kind ?? '' : '')
 	const errorMessage = computed(() => isFinished.value ? status.data.value?.error_message ?? '' : '')
 	const hasFailed = computed(() => errorKind.value !== '')
@@ -44,62 +84,16 @@ export const useMigrationStore = defineStore('migration', () => {
 		return FAILURE_KEYS[errorKind.value as MigrationErrorKind] ?? GENERIC_FAILURE_KEY
 	})
 
-	let timeout: ReturnType<typeof setTimeout> | undefined
-	let generation = 0
-	let deadline = 0
-	let failures = 0
-	let request = captureClientRequestContext()
-
-	function stop() {
-		generation++
-		accepted.value = false
-		clearTimeout(timeout)
-		timeout = undefined
-		void queryClient.cancelQueries({queryKey: migrationStatusQuery(provider.value).queryKey})
-	}
-
-	async function poll() {
-		const myGeneration = generation
-		if (!isClientRequestContextCurrent(request)) {
-			stop()
-			return
+	watch(isFinished, finished => {
+		if (finished && !hasFailed.value) {
+			completed.mutate(undefined)
 		}
-		let finishedAt: Date | null = null
-		let finishedErrorKind = ''
-		try {
-			const result = await queryClient.fetchQuery(migrationStatusQuery(provider.value))
-			if (myGeneration !== generation) return
-			if (!isClientRequestContextCurrent(request)) {
-				stop()
-				return
-			}
-			accepted.value = true
-			failures = 0
-			finishedAt = parseDateOrNull(result?.finished_at)
-			finishedErrorKind = result?.error_kind ?? ''
-		} catch {
-			if (myGeneration !== generation) return
-			if (!isClientRequestContextCurrent(request)) {
-				stop()
-				return
-			}
-			failures++
-		}
-		if (finishedAt !== null) {
-			if (finishedErrorKind === '') completed.mutate(undefined)
-			return
-		}
-		if (failures >= MAX_CONSECUTIVE_FAILURES || Date.now() >= deadline) return
-		timeout = setTimeout(poll, POLL_INTERVAL)
-	}
+	})
 
 	function start(nextProvider: MigrationProvider) {
-		stop()
 		provider.value = nextProvider
 		request = captureClientRequestContext()
-		failures = 0
-		deadline = Date.now() + POLL_DEADLINE
-		timeout = setTimeout(poll, POLL_INTERVAL)
+		startedAt.value = Date.now()
 	}
 	onScopeDispose(stop)
 	return {isFinished, errorMessage, hasFailed, failureKey, start, stop}
