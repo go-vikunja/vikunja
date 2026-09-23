@@ -1,15 +1,20 @@
-import {it, expect, vi} from 'vitest'
-import {QueryClient} from '@tanstack/vue-query'
+import {beforeEach, it, expect, vi} from 'vitest'
+import {QueryClient, QueryObserver} from '@tanstack/vue-query'
 import {adminKeys, adminUsersQuery, updateAdminUserMutationOptions, deleteAdminUserMutationOptions} from './admin'
-import {accountKeys} from './account'
+import {accountKeys, currentUserQuery} from './account'
 const sdk = vi.hoisted(() => ({
 	adminUsersList: vi.fn(),
 	adminUsersPatchAdmin: vi.fn(),
 	adminUsersPatchStatus: vi.fn(),
 	adminUsersDelete: vi.fn(),
+	userShow: vi.fn(),
 }))
 vi.mock('@/client/generated', () => sdk)
 vi.mock('@/message', () => ({success: vi.fn(), error: vi.fn()}))
+
+beforeEach(() => {
+	vi.resetAllMocks()
+})
 
 it('uses server pagination and search and invalidates all user pages after a partial update fails', async () => {
 	const client = new QueryClient()
@@ -52,4 +57,64 @@ it('demoting another user leaves the account cache alone', async () => {
 	await client.getMutationCache().build(client, updateAdminUserMutationOptions())
 		.execute({id: 2, is_admin: false})
 	expect(client.getQueryData(accountKeys.user(1))).toEqual(account)
+})
+it('refetches the acting admin account when a self-targeting update fails halfway', async () => {
+	const client = new QueryClient()
+	sdk.userShow.mockResolvedValue({
+		data: {
+			id: 1,
+			username: 'admin',
+			is_admin: true,
+		},
+	})
+	const unsubscribe = new QueryObserver(client, currentUserQuery(1)).subscribe(() => {})
+	await vi.waitFor(() => expect(client.getQueryData(accountKeys.user(1))).toMatchObject({is_admin: true}))
+	sdk.adminUsersPatchAdmin.mockResolvedValue({
+		data: {
+			id: 1,
+			is_admin: false,
+		},
+	})
+	sdk.adminUsersPatchStatus.mockRejectedValue(new Error('status rejected'))
+	sdk.userShow.mockResolvedValue({
+		data: {
+			id: 1,
+			username: 'admin',
+			is_admin: false,
+		},
+	})
+	await expect(client.getMutationCache().build(client, updateAdminUserMutationOptions()).execute({
+		id: 1,
+		is_admin: false,
+		status: 2,
+	})).rejects.toThrow('status rejected')
+	expect(sdk.userShow).toHaveBeenCalledTimes(2)
+	expect(client.getQueryData(accountKeys.user(1))).toMatchObject({is_admin: false})
+	unsubscribe()
+})
+it('does not refetch the acting admin account when another user is updated', async () => {
+	const client = new QueryClient()
+	sdk.userShow.mockResolvedValue({
+		data: {
+			id: 1,
+			username: 'admin',
+			is_admin: true,
+		},
+	})
+	const unsubscribe = new QueryObserver(client, currentUserQuery(1)).subscribe(() => {})
+	await vi.waitFor(() => expect(sdk.userShow).toHaveBeenCalledTimes(1))
+	sdk.adminUsersPatchAdmin.mockResolvedValue({
+		data: {
+			id: 2,
+			is_admin: false,
+		},
+	})
+	sdk.adminUsersPatchStatus.mockRejectedValue(new Error('status rejected'))
+	await expect(client.getMutationCache().build(client, updateAdminUserMutationOptions()).execute({
+		id: 2,
+		is_admin: false,
+		status: 2,
+	})).rejects.toThrow('status rejected')
+	expect(sdk.userShow).toHaveBeenCalledTimes(1)
+	unsubscribe()
 })

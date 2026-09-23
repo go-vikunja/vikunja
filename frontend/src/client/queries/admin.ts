@@ -20,14 +20,13 @@ import type {
 	PaginatedAdminUser,
 	CreateUserBodyWritable,
 	CreateInviteLinkBodyWritable,
-	UserInfoBody,
 } from '@/client/generated'
 import {captureClientRequestContext, assertClientRequestContext} from '@/client/requestContext'
 import {contextMutationOptions} from './contextMutation'
 import {fetchAllPages} from './fetchAllPages'
 import {API_MAX_PER_PAGE} from './pagination'
 import {projectKeys} from './projects'
-import {accountKeys} from './account'
+import {accountKeys, type UserInfoResponse} from './account'
 import {i18n} from '@/i18n'
 
 export type DeleteUserMode = 'now' | 'scheduled'
@@ -100,9 +99,9 @@ function patchUser(client: QueryClient, updated: AdminUser | undefined) {
 		{queryKey: adminKeys.users},
 		current => current && ({...current, items: current.items?.map(u => u.id === updated.id ? updated : u)}),
 	)
-	client.setQueriesData<UserInfoBody>(
-		{queryKey: accountKeys.current},
-		current => current?.id === updated.id ? {...current, is_admin: updated.is_admin} : current,
+	client.setQueryData<UserInfoResponse>(
+		accountKeys.user(updated.id),
+		current => current ? {...current, is_admin: updated.is_admin ?? current.is_admin} : current,
 	)
 }
 
@@ -137,7 +136,11 @@ export function updateAdminUserMutationOptions() {
 			return updated
 		},
 		onSuccess: (updated, _input, client) => patchUser(client, updated),
-		onSettled: (_input, client) => invalidateUsers(client),
+		onSettled: ({id}, client) => Promise.all([
+			invalidateUsers(client),
+			// A self-targeting call that failed halfway must not leave the acting admin's is_admin stale.
+			client.invalidateQueries({queryKey: accountKeys.user(id)}),
+		]),
 		successMessage: data => i18n.global.t('admin.users.updatedSuccess', {username: data?.username}),
 	})
 }
