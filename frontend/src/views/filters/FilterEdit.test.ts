@@ -29,6 +29,8 @@ vi.mock('@/client/generated', async importOriginal => ({
 	filtersUpdate: async (input: unknown) => ({data: await savedFilter.update(input)}),
 }))
 vi.mock('@/message', () => messages)
+// Stubbing the async editor still fires its loader; TipTap then imports after teardown.
+vi.mock('@/components/input/AsyncEditor', () => ({default: {name: 'Editor', render: () => null}}))
 vi.mock('vue-router', async importOriginal => ({
 	...await importOriginal<typeof import('vue-router')>(),
 	useRouter: () => router,
