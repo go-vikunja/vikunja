@@ -21,7 +21,7 @@
 				v-if="isExternalUser"
 				class="help"
 			>
-				{{ $t('user.settings.general.externalUserNameChange', {provider: authStore.info.auth_provider}) }}
+				{{ $t('user.settings.general.externalUserNameChange', {provider: authStore.info?.auth_provider}) }}
 			</p>
 			<FormField
 				:label="$t('user.settings.general.defaultProject')"
@@ -307,7 +307,7 @@
 
 <script setup lang="ts">
 import {createUserSettingsDraft, useUpdateSettingsMutation, type AccountIdentity} from '@/client/queries/account'
-import {computed, watch, ref, onBeforeMount} from 'vue'
+import {computed, watch, ref, onBeforeMount, type Ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 import isEqual from 'fast-deep-equal'
 
@@ -518,7 +518,10 @@ const defaultProject = computed({
 	},
 })
 const filterUsedInOverview = computed({
-	get: () => projectList.projects[settings.value.frontend_settings.filter_id_used_on_overview],
+	get: () => {
+		const filterId = settings.value.frontend_settings.filter_id_used_on_overview
+		return filterId === null ? undefined : projectList.projects[filterId]
+	},
 	set(l) {
 		settings.value.frontend_settings.filter_id_used_on_overview = l ? l.id : null
 	},

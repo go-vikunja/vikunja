@@ -1,4 +1,5 @@
 import {queryOptions, useMutation, type QueryClient} from '@tanstack/vue-query'
+import type {DeepReadonly} from 'vue'
 import {
 	userShow,
 	userUpdateSettings,
@@ -84,7 +85,7 @@ export function normalizeUserSettings(data: UserGeneralSettings = {}): UserSetti
 }
 
 // The edit form mutates its copy, so it must not share nested objects with the read path.
-export function createUserSettingsDraft(settings: UserSettings): UserSettings {
+export function createUserSettingsDraft(settings: DeepReadonly<UserSettings>): UserSettings {
 	return {
 		...settings,
 		extra_settings_links: {...settings.extra_settings_links},

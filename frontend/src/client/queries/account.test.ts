@@ -4,6 +4,7 @@ import {
 	accountKeys,
 	updateFrontendSettingsMutationOptions,
 	updateSettingsMutationOptions,
+	type UserInfoResponse,
 } from './account'
 import {queryClient} from '@/client/queryClient'
 import {invalidateAvatarCache} from '@/helpers/user'
@@ -123,7 +124,7 @@ describe('account settings mutations', () => {
 				settings: {name: 'Rejected'},
 			})).rejects.toEqual({status: 403})
 
-		expect(client.getQueryData(accountKeys.user(1))?.settings).toEqual({name: 'Original'})
+		expect(client.getQueryData<UserInfoResponse>(accountKeys.user(1))?.settings).toEqual({name: 'Original'})
 	})
 
 	it('writes one frontend setting back together with every stored setting', async () => {
