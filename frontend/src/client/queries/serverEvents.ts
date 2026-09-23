@@ -37,14 +37,13 @@ export type ServerCacheEvent =
 		entry: TimeEntryResponse,
 	}
 	| {
-		kind: 'comments',
-		taskId: number,
+		kind: 'notifications',
+		taskId?: number,
 	}
 	| {
 		kind: 'subscribed',
 		since: number,
 	}
-	| {kind: 'notifications'}
 	| {kind: 'reconnect'}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -66,14 +65,15 @@ export function parseServerCacheEvent(
 			entry: normalizeTimeEntry(data as TimeEntry),
 		}
 	}
-	if (event === 'notification.created' && data.name === 'task.comment' && isRecord(data.notification)) {
-		const task = data.notification.task
-		if (isRecord(task) && typeof task.id === 'number' && task.id > 0) return {
-			kind: 'comments',
-			taskId: task.id,
+	if (event === 'notification.created') {
+		const task = data.name === 'task.comment' && isRecord(data.notification) ? data.notification.task : undefined
+		const taskId = isRecord(task) && typeof task.id === 'number' && task.id > 0 ? task.id : undefined
+		if (taskId === undefined && !(typeof data.id === 'number' && data.id > 0)) return null
+		return {
+			kind: 'notifications',
+			taskId,
 		}
 	}
-	if (event === 'notification.created' && typeof data.id === 'number' && data.id > 0) return {kind: 'notifications'}
 	return null
 }
 
@@ -113,12 +113,14 @@ export function serverCacheEventMutationOptions() {
 					...(previousTaskId === event.entry.task_id ? [] : [invalidateCachedTask(client, previousTaskId)]),
 				])
 			}
-			if (event.kind === 'notifications') return client.invalidateQueries({queryKey: notificationKeys.all})
-			if (event.kind === 'comments') {
+			if (event.kind === 'notifications') {
+				const taskId = event.taskId
 				return Promise.all([
-					client.invalidateQueries({queryKey: commentKeys.task(event.taskId)}),
 					client.invalidateQueries({queryKey: notificationKeys.all}),
-					invalidateCachedTask(client, event.taskId),
+					...(taskId === undefined ? [] : [
+						client.invalidateQueries({queryKey: commentKeys.task(taskId)}),
+						invalidateCachedTask(client, taskId),
+					]),
 				])
 			}
 			if (event.kind === 'subscribed') {

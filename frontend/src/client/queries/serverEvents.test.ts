@@ -145,6 +145,10 @@ it('invalidates only the notified task comments and detail', async () => {
 		name: 'task.comment',
 		notification: {task: {id: 1}},
 	}, 7)!
+	expect(event).toEqual({
+		kind: 'notifications',
+		taskId: 1,
+	})
 	await client.getMutationCache().build(client, serverCacheEventMutationOptions()).execute(event)
 	expect(client.getQueryState(commentKeys.page(1, 'asc', 1, 50))?.isInvalidated).toBe(true)
 	expect(client.getQueryState(commentKeys.page(2, 'asc', 1, 50))?.isInvalidated).toBe(false)
