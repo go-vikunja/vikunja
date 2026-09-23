@@ -143,6 +143,21 @@ describe('auth store renewToken retry (issue #2863)', () => {
 		expect(routerPushMock).toHaveBeenCalledWith({name: 'user.login'})
 	})
 
+	it('does not log out when the refresh of an expired session is rate limited', async () => {
+		const store = useAuthStore()
+		setupExpiredUserSession(store)
+
+		refreshTokenMock.mockRejectedValue(new Error('Error renewing token: ', {
+			cause: {status: 429, detail: 'rate limit exceeded'},
+		}))
+
+		await store.renewToken()
+
+		expect(refreshTokenMock).toHaveBeenCalledTimes(2)
+		expect(store.authenticated).toBe(true)
+		expect(routerPushMock).not.toHaveBeenCalled()
+	})
+
 	it('retries exactly once (no infinite loop) when the session is genuinely dead', async () => {
 		const store = useAuthStore()
 		setupExpiredUserSession(store)
