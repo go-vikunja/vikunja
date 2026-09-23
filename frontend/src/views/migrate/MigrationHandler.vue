@@ -198,7 +198,11 @@ const passwordHelp = computed(() => {
 	return te(key) ? t(key) : ''
 })
 
-const status = useQuery(computed(() => ({...migrationStatusQuery(migrator.value.id), enabled: false})))
+const status = useQuery(computed(() => ({
+	...migrationStatusQuery(migrator.value.id),
+	enabled: false,
+	meta: {handlesError: true},
+})))
 const migrationRunning = computed(() => {
 	if (startedHere.value) return true
 	return parseDateOrNull(status.data.value?.started_at) !== null
