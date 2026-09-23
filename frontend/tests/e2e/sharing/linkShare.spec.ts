@@ -290,7 +290,7 @@ test.describe('Link share: permission tiers', () => {
 		await expect(page.locator('h1.title')).toContainText(projects[0].title)
 		await expect(page).toHaveURL(`/projects/${projects[0].id}/1#share-auth-token=${share.hash}`)
 
-		await expect(page.locator('.input[placeholder="Add a task…"]')).toHaveCount(0)
+		await expect(page.locator('.task-add .add-task-textarea')).toHaveCount(0)
 	})
 
 	test('READ_WRITE link share shows add-task', async ({page}) => {
@@ -309,7 +309,7 @@ test.describe('Link share: permission tiers', () => {
 		await expect(page.locator('h1.title')).toContainText(projects[0].title)
 		await expect(page).toHaveURL(`/projects/${projects[0].id}/1#share-auth-token=${share.hash}`)
 
-		await expect(page.locator('.input[placeholder="Add a task…"]')).toBeVisible()
+		await expect(page.locator('.task-add .add-task-textarea')).toBeVisible()
 	})
 })
 
@@ -332,7 +332,7 @@ test.describe('Link share: quick add magic labels', () => {
 		await page.goto(`/share/${share.hash}/auth`)
 		await expect(page.locator('h1.title')).toContainText(projects[0].title)
 
-		const addTaskInput = page.locator('.input[placeholder="Add a task…"]')
+		const addTaskInput = page.locator('.task-add .add-task-textarea')
 		await addTaskInput.fill('New task via share *unknownlabel')
 		await addTaskInput.press('Enter')
 
