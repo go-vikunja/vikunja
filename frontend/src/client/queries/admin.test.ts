@@ -67,7 +67,10 @@ it('refetches the acting admin account when a self-targeting update fails halfwa
 			is_admin: true,
 		},
 	})
-	const unsubscribe = new QueryObserver(client, currentUserQuery(1)).subscribe(() => {})
+	const unsubscribe = new QueryObserver(client, {
+		queryKey: accountKeys.user(1),
+		queryFn: currentUserQuery(1).queryFn,
+	}).subscribe(() => {})
 	await vi.waitFor(() => expect(client.getQueryData(accountKeys.user(1))).toMatchObject({is_admin: true}))
 	sdk.adminUsersPatchAdmin.mockResolvedValue({
 		data: {
@@ -101,7 +104,10 @@ it('does not refetch the acting admin account when another user is updated', asy
 			is_admin: true,
 		},
 	})
-	const unsubscribe = new QueryObserver(client, currentUserQuery(1)).subscribe(() => {})
+	const unsubscribe = new QueryObserver(client, {
+		queryKey: accountKeys.user(1),
+		queryFn: currentUserQuery(1).queryFn,
+	}).subscribe(() => {})
 	await vi.waitFor(() => expect(sdk.userShow).toHaveBeenCalledTimes(1))
 	sdk.adminUsersPatchAdmin.mockResolvedValue({
 		data: {
