@@ -24,7 +24,6 @@ import {useAuthStore} from '@/stores/auth'
 const baseStore = useBaseStore()
 const authStore = useAuthStore()
 
-// Gate here, not in App.vue: unmounting would miss the one-time swUpdated event fired on the login page
 const updateAvailable = computed(() => baseStore.updateAvailable && authStore.authenticated)
 const registration = ref<ServiceWorkerRegistration | null>(null)
 const refreshing = ref(false)
