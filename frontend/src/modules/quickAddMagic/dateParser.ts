@@ -5,6 +5,8 @@ import {replaceAll} from '@/helpers/replaceAll'
 export interface dateParseResult {
 	newText: string,
 	date: Date | null,
+	// Substrings stripped from the text, each removed case-insensitively everywhere.
+	removed: string[],
 }
 
 interface dateFoundResult {
@@ -93,7 +95,8 @@ export const parseDate = (text: string, now: Date = new Date()): dateParseResult
 	parsed = getDayFromText(text, now)
 	if (parsed.date !== null) {
 		const month = getMonthFromText(text, parsed.date)
-		return addTimeToDate(month.newText, month.date, parsed.foundText)
+		const result = addTimeToDate(month.newText, month.date, parsed.foundText)
+		return {...result, removed: month.found ? [month.found, ...result.removed] : result.removed}
 	}
 
 	parsed = getDateFromTextIn(text, now)
@@ -113,6 +116,7 @@ export const parseDate = (text: string, now: Date = new Date()): dateParseResult
 		return {
 			newText: replaceAll(text, parsed.foundText, ''),
 			date: parsed.date,
+			removed: parsed.foundText ? [parsed.foundText] : [],
 		}
 	}
 
@@ -122,12 +126,6 @@ export const parseDate = (text: string, now: Date = new Date()): dateParseResult
 const addTimeToDate = (text: string, date: Date, previousMatch: string | null): dateParseResult => {
 	previousMatch = previousMatch?.trim() || ''
 	text = replaceAll(text, previousMatch, '')
-	if (previousMatch === null) {
-		return {
-			newText: text,
-			date: null,
-		}
-	}
 
 	const timeRegex = ' (at|@) ([0-9][0-9]?(:[0-9][0-9])?( ?(a|p)m)?)'
 	const matcher = new RegExp(timeRegex, 'ig')
@@ -159,6 +157,7 @@ const addTimeToDate = (text: string, date: Date, previousMatch: string | null): 
 	return {
 		newText: replaceAll(text, replace, '').trim(),
 		date,
+		removed: [previousMatch, replace].filter(Boolean),
 	}
 }
 
@@ -377,6 +376,7 @@ const getMonthFromText = (text: string, date: Date) => {
 		return {
 			newText: text,
 			date,
+			found: null,
 		}
 	}
 
@@ -385,6 +385,7 @@ const getMonthFromText = (text: string, date: Date) => {
 	return {
 		newText: replaceAll(text, results[0], ''),
 		date,
+		found: results[0],
 	}
 }
 

@@ -8,6 +8,7 @@ export const getRepeats = (text: string): repeatParsedResult => {
 		return {
 			textWithoutMatched: text,
 			repeats: null,
+			matchedText: null,
 		}
 	}
 
@@ -106,6 +107,7 @@ export const getRepeats = (text: string): repeatParsedResult => {
 
 	return {
 		textWithoutMatched: text.replace(matchedText, ''),
+		matchedText,
 		repeats: {
 			amount,
 			type,

@@ -3,6 +3,7 @@ import type {IRepeatAfter} from '@/types/IRepeatAfter'
 export interface repeatParsedResult {
 	textWithoutMatched: string,
 	repeats: IRepeatAfter | null,
+	matchedText: string | null,
 }
 
 export interface ParsedTaskText {
