@@ -9,7 +9,7 @@ import {useAuthStore} from '@/stores/auth'
 import {AUTH_TYPES} from '@/constants/auth'
 import en from '@/i18n/lang/en.json'
 
-vi.mock('@/helpers/fetcher', () => {
+vi.mock('@/helpers/fetcher', async importOriginal => {
 	const httpStub = () => Object.assign(
 		vi.fn(async () => ({data: new Blob()})),
 		{
@@ -18,8 +18,25 @@ vi.mock('@/helpers/fetcher', () => {
 			interceptors: {request: {use: vi.fn()}, response: {use: vi.fn()}},
 		},
 	)
-	return {AuthenticatedHTTPFactory: httpStub, HTTPFactory: httpStub}
+	return {
+		...await importOriginal<typeof import('@/helpers/fetcher')>(),
+		AuthenticatedHTTPFactory: httpStub,
+		HTTPFactory: httpStub,
+	}
 })
+
+const sdk = vi.hoisted(() => ({
+	userDeletionConfirm: vi.fn(),
+	userShow: vi.fn(),
+}))
+
+vi.mock('@/client/generated', async importOriginal => ({
+	...await importOriginal<typeof import('@/client/generated')>(),
+	userDeletionConfirm: sdk.userDeletionConfirm,
+	userShow: sdk.userShow,
+}))
+
+vi.mock('@/message', () => ({success: vi.fn(), error: vi.fn()}))
 
 const i18n = createI18n({legacy: false, locale: 'en', messages: {en}})
 
@@ -63,10 +80,31 @@ async function mountApp(path: string) {
 	return {router}
 }
 
+function login() {
+	const authStore = useAuthStore()
+	authStore.setAuthenticated(true)
+	authStore.setSession({
+		id: 1,
+		type: AUTH_TYPES.USER,
+		exp: 0,
+	})
+	return authStore
+}
+
 describe('App layout', () => {
-	beforeEach(() => setActivePinia(createPinia()))
+	beforeEach(() => {
+		setActivePinia(createPinia())
+		sdk.userDeletionConfirm.mockResolvedValue({})
+		sdk.userShow.mockResolvedValue({
+			data: {
+				id: 1,
+				deletion_scheduled_at: '2030-01-01T00:00:00Z',
+			},
+		})
+	})
 
 	afterEach(() => {
+		vi.clearAllMocks()
 		wrapper?.unmount()
 		wrapper = undefined
 		queryClient?.clear()
@@ -76,13 +114,7 @@ describe('App layout', () => {
 	// still-current app route in the logged out shell remounts components that
 	// dereference authStore.info (FRONTEND-OSS-2CJ, FRONTEND-OSS-2CH).
 	it('does not render an app route in the logged out shell after the user is cleared', async () => {
-		const authStore = useAuthStore()
-		authStore.setAuthenticated(true)
-		authStore.setSession({
-			id: 1,
-			type: AUTH_TYPES.USER,
-			exp: 0,
-		})
+		const authStore = login()
 
 		await mountApp('/labels')
 		expect(wrapper!.findComponent({name: 'ContentAuth'}).exists()).toBe(true)
@@ -93,5 +125,25 @@ describe('App layout', () => {
 
 		expect(wrapper!.find('.no-auth').exists()).toBe(true)
 		expect(wrapper!.find('.app-route').exists()).toBe(false)
+	})
+
+	it('keeps the deletion confirmation token in the url while logged out', async () => {
+		const {router} = await mountApp('/login?accountDeletionConfirm=token-1')
+
+		expect(sdk.userDeletionConfirm).not.toHaveBeenCalled()
+		expect(router.currentRoute.value.query.accountDeletionConfirm).toBe('token-1')
+	})
+
+	it('spends the deletion confirmation token once when the user logs in', async () => {
+		const {router} = await mountApp('/login?accountDeletionConfirm=token-1')
+		expect(sdk.userDeletionConfirm).not.toHaveBeenCalled()
+
+		login()
+		await flushPromises()
+		await flushPromises()
+
+		expect(sdk.userDeletionConfirm).toHaveBeenCalledTimes(1)
+		expect(sdk.userDeletionConfirm).toHaveBeenCalledWith({body: {token: 'token-1'}})
+		expect(router.currentRoute.value.query.accountDeletionConfirm).toBeUndefined()
 	})
 })

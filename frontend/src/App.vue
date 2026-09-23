@@ -104,8 +104,14 @@ const keyboardShortcutsActive = computed(() => baseStore.keyboardShortcutsActive
 const router = useRouter()
 const confirmDeletion = useConfirmDeletionMutation()
 
-watch(() => route.query.accountDeletionConfirm, async token => {
-	if (typeof token !== 'string' || !token) return
+// Without a session the token would burn on an unauthenticated request, so keep it in the URL until login lands.
+const accountDeletionToken = computed(() => {
+	const token = route.query.accountDeletionConfirm
+	return authStore.authUser && typeof token === 'string' ? token : ''
+})
+
+watch(accountDeletionToken, async token => {
+	if (!token) return
 	// The URL reaches Sentry replays and lastVisited, so drop the single-use token before spending it.
 	const query = {...route.query}
 	delete query.accountDeletionConfirm
