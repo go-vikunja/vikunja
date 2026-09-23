@@ -3,6 +3,7 @@ import {REPEAT_TYPES, type IRepeatAfter} from '@/types/IRepeatAfter'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 import {secondsToPeriod, periodToSeconds} from '@/helpers/time/period'
+import {getDateWithTime} from '@/helpers/time/getDateWithTime'
 import {cleanupItemText, PREFIXES, type ParsedTaskText, type PrefixMode} from '@/modules/quickAddMagic'
 
 export function createTaskDraft(data: Partial<Task> = {}): Task {
@@ -162,7 +163,8 @@ export function buildQuickAddTask(
 	const title = prefixes?.assignee
 		? cleanupItemText(parsed.text, assignees.map(user => user.match), prefixes.assignee)
 		: parsed.text
-	const dueDate = parsed.date?.toISOString()
+	// Without a due date, a repeating task never becomes due.
+	const dueDate = (parsed.date ?? (parsed.repeats ? getDateWithTime(new Date()) : null))?.toISOString()
 	return createTaskDraft({
 		...input,
 		title,
