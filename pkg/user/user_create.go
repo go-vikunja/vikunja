@@ -78,9 +78,6 @@ func CreateUser(s *xorm.Session, user *User, options ...CreateUserOptions) (newU
 	user.Timezone = config.DefaultSettingsTimezone.GetString()
 	if user.Timezone == "" {
 		user.Timezone = config.GetTimeZone().String()
-		if user.Timezone == "" {
-			user.Timezone = "UTC"
-		}
 	}
 
 	if user.Language == "" {
