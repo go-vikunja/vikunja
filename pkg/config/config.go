@@ -823,9 +823,18 @@ func InitConfig() {
 		MigrationMicrosoftTodoRedirectURL.Set(ServicePublicURL.GetString() + "migrate/microsoft-todo")
 	}
 
+	if tz := ServiceTimeZone.GetString(); tz == "" {
+		log.Warning("service.timezone is not configured, falling back to UTC")
+		ServiceTimeZone.Set("UTC")
+	} else if _, err := time.LoadLocation(tz); err != nil {
+		log.Warningf("Configured service.timezone %q is invalid (%s), falling back to UTC", tz, err)
+		ServiceTimeZone.Set("UTC")
+	}
+
 	if tz := DefaultSettingsTimezone.GetString(); tz == "" {
 		DefaultSettingsTimezone.Set(ServiceTimeZone.GetString())
 	} else if _, err := time.LoadLocation(tz); err != nil {
+		log.Warningf("Configured defaultsettings.timezone %q is invalid (%s), falling back to %s", tz, err, ServiceTimeZone.GetString())
 		DefaultSettingsTimezone.Set(ServiceTimeZone.GetString())
 	}
 

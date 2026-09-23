@@ -44,6 +44,17 @@ func TestUserTimezoneDefaultFallback(t *testing.T) {
 	assert.NotEmpty(t, updated.Timezone)
 	_, err = time.LoadLocation(updated.Timezone)
 	require.NoError(t, err)
+
+	created, err := CreateUser(s, &User{
+		Username: "tzfallbackuser",
+		Email:    "tzfallbackuser@example.com",
+		Password: "testpassword",
+		Timezone: "",
+	})
+	require.NoError(t, err)
+	assert.NotEmpty(t, created.Timezone)
+	_, err = time.LoadLocation(created.Timezone)
+	require.NoError(t, err)
 }
 
 func TestCreateBotUser(t *testing.T) {
