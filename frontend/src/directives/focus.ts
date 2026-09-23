@@ -14,6 +14,8 @@ function getFocusableElement(el: HTMLElement): HTMLElement | null {
 	return el.querySelector<HTMLElement>('input, select, textarea, [contenteditable="true"]')
 }
 
+export const isAutoFocusViewport = () => window.innerWidth > 769
+
 const focus = <Directive<HTMLElement, string>>{
 	// When the bound element is inserted into the DOM...
 	mounted(el, {modifiers}) {
@@ -21,7 +23,7 @@ const focus = <Directive<HTMLElement, string>>{
 		// auto focusing elements on mobile can be annoying since in these cases the
 		// keyboard always pops up and takes half of the available space on the screen.
 		// The threshhold is the same as the breakpoints in css.
-		if (window.innerWidth > 769 || modifiers?.always) {
+		if (isAutoFocusViewport() || modifiers?.always) {
 			const target = getFocusableElement(el)
 			target?.focus()
 		}
