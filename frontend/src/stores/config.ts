@@ -2,14 +2,14 @@ import {computed, reactive, toRefs} from 'vue'
 import {acceptHMRUpdate, defineStore} from 'pinia'
 import {parseURL} from 'ufo'
 
-import {getApiBaseUrl} from '@/helpers/apiUrl'
+import {getApiBaseUrl, InvalidApiUrlProvidedError} from '@/helpers/apiUrl'
+import {canonicalApiBaseUrl} from '@/client/requestContext'
 import {info, type VikunjaInfos, type AuthInfo} from '@/client/generated'
 import {publicClient} from '@/client/publicClient'
 import {captureClientRequestContext, isClientRequestContextCurrent} from '@/client/requestContext'
 
 import type {IProvider} from '@/types/IProvider'
 import type {ProFeature} from '@/constants/proFeatures'
-import {InvalidApiUrlProvidedError} from '@/helpers/checkAndSetApiUrl'
 
 export type ConfigState = Required<Omit<VikunjaInfos,
 	'$schema' | 'auth' | 'legal' | 'available_migrators' | 'enabled_background_providers' | 'enabled_pro_features'
@@ -144,7 +144,7 @@ export const useConfigStore = defineStore('config', () => {
 		try {
 			const response = await info({
 				client: publicClient,
-				baseUrl: getApiBaseUrl().replace(/\/$/, ''),
+				baseUrl: canonicalApiBaseUrl(getApiBaseUrl()),
 			})
 			config = response.data
 		} catch (e) {

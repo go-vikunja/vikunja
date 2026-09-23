@@ -1,4 +1,5 @@
 import {getApiBaseUrl, getLegacyApiBaseUrl} from '@/helpers/apiUrl'
+import {canonicalApiBaseUrl} from '@/client/requestContext'
 import {authRefreshToken} from '@/client/generated'
 import {publicClient} from '@/client/publicClient'
 import {isDesktopApp, refreshDesktopToken} from '@/helpers/desktopAuth'
@@ -163,10 +164,9 @@ async function doRefresh(persist: boolean): Promise<void> {
 
 		// We hold the lock and no one else refreshed — make the API call.
 		try {
-			const baseUrl = getApiBaseUrl().replace(/\/$/, '')
-			const legacyBaseUrl = getLegacyApiBaseUrl().replace(/\/$/, '')
+			const baseUrl = canonicalApiBaseUrl(getApiBaseUrl())
+			const legacyBaseUrl = canonicalApiBaseUrl(getLegacyApiBaseUrl())
 			let response
-			// A per-request baseUrl skips mergeConfigs (utils.gen.ts), the only place a trailing slash is stripped.
 			try {
 				response = await authRefreshToken({client: publicClient, baseUrl})
 			} catch (e) {

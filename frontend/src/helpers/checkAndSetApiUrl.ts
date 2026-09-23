@@ -1,27 +1,16 @@
 import {useConfigStore} from '@/stores/config'
 import {configureApiClient} from '@/client/http'
 import {queryClient} from '@/client/queryClient'
-import {API_PATH_SUFFIX, getApiBaseUrl} from '@/helpers/apiUrl'
+import {
+	API_PATH_SUFFIX,
+	getApiBaseUrl,
+	InvalidApiUrlProvidedError,
+	NoApiUrlProvidedError,
+} from '@/helpers/apiUrl'
 
 const API_DEFAULT_PORT = '3456'
 
 export const ERROR_NO_API_URL = 'noApiUrlProvided'
-
-export class NoApiUrlProvidedError extends Error {
-	constructor() {
-		super()
-		this.message = 'No API URL provided'
-		this.name = 'NoApiUrlProvidedError'
-	}
-}
-
-export class InvalidApiUrlProvidedError extends Error {
-	constructor() {
-		super()
-		this.message = 'The provided API URL is invalid.'
-		this.name = 'InvalidApiUrlProvidedError'
-	}
-}
 
 /**
  * Join a base pathname with the API_DEFAULT_PATH, normalizing slashes between them.
@@ -70,7 +59,7 @@ export const checkAndSetApiUrl = (pUrl: string | undefined | null): Promise<stri
 	const origPathname = urlToCheck.pathname
 
 	const oldUrl = window.API_URL
-	const oldApiBase = getApiBaseUrl()
+	const oldApiBase = oldUrl ? getApiBaseUrl() : null
 	window.API_URL = urlToCheck.toString()
 
 	const configStore = useConfigStore()

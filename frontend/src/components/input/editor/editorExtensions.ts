@@ -57,9 +57,7 @@ function parseAttachmentUrl(url: unknown): AttachmentRef | null {
 		return null
 	}
 
-	const base = getApiBaseUrl()
-		.replace(/\/$/, '')
-		.replace(/\/api\/v[12]$/, '')
+	const base = getApiBaseUrl().replace(/\/api\/v[12]$/, '')
 	if (match[1] !== base) {
 		return null
 	}
