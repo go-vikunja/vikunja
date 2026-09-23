@@ -59,7 +59,7 @@ If the migration touches user-supplied paths, filenames, or import blobs (restor
 ## Model and frontend sync
 
 - If the migration adds or changes a field, update the struct in `pkg/models/` with matching xorm tags.
-- Update the TypeScript interface in `frontend/src/modelTypes/` to match the Go struct shape. Frontend services must match backend model structure exactly.
+- Frontend types come from the generated client. If the field is exposed over `/api/v2`, update the route/schema, run `mage generate:frontend-client` and commit the regenerated `frontend/src/client/generated`.
 
 ## Testing
 
