@@ -16,18 +16,29 @@ const apiTokenKeyRoot = ['apiTokens'] as const
 export const apiTokenKeys = {
 	all: apiTokenKeyRoot,
 	lists: [...apiTokenKeyRoot, 'list'] as const,
+	ownList: [...apiTokenKeyRoot, 'list', 'self'] as const,
 	list: (ownerId: number) => [...apiTokenKeys.lists, ownerId] as const,
 	routes: [...apiTokenKeyRoot, 'routes'] as const,
 	mcp: [...apiTokenKeyRoot, 'mcp'] as const,
 }
 
-export function apiTokensQuery(ownerId = 0) {
+export function apiTokensQuery() {
+	return queryOptions({
+		queryKey: apiTokenKeys.ownList,
+		queryFn: ({signal}) => fetchAllPages(async page => (await tokensList({
+			query: {page},
+			signal,
+		})).data),
+	})
+}
+
+export function botApiTokensQuery(ownerId: number) {
 	return queryOptions({
 		queryKey: apiTokenKeys.list(ownerId),
 		queryFn: ({signal}) => fetchAllPages(async page => (await tokensList({
 			query: {
 				page,
-				owner_id: ownerId || undefined,
+				owner_id: ownerId,
 			},
 			signal,
 		})).data),
@@ -53,7 +64,11 @@ export function createApiTokenMutationOptions() {
 	return {
 		...contextMutationOptions({
 			mutationFn: async (body: ApiTokenWritable) => (await tokensCreate({body})).data,
-			onSettled: (body, client) => client.invalidateQueries({queryKey: apiTokenKeys.list(body.owner_id ?? 0)}),
+			onSettled: (body, client) => client.invalidateQueries({
+				queryKey: body.owner_id === undefined
+					? apiTokenKeys.ownList
+					: apiTokenKeys.list(body.owner_id),
+			}),
 		}),
 		// Response carries the plaintext token.
 		gcTime: 0,

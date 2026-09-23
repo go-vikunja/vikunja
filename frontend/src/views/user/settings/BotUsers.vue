@@ -10,7 +10,7 @@ import ApiTokenForm from '@/components/token/ApiTokenForm.vue'
 
 import BotUserService from '@/services/botUser'
 import {useQueries} from '@tanstack/vue-query'
-import {apiTokensQuery, useDeleteApiTokenMutation} from '@/client/queries/apiTokens'
+import {botApiTokensQuery, useDeleteApiTokenMutation} from '@/client/queries/apiTokens'
 import type {BotUser} from '@/client/generated'
 import type {IAbstract} from '@/modelTypes/IAbstract'
 import type {ApiToken as IApiToken} from '@/client/generated'
@@ -33,7 +33,7 @@ const createError = ref<string | null>(null)
 const showCreateForm = ref(false)
 
 const queryableBots = computed(() => bots.value.filter(bot => bot.id > 0))
-const tokenQueries = useQueries({queries: computed(() => queryableBots.value.map(bot => apiTokensQuery(bot.id)))})
+const tokenQueries = useQueries({queries: computed(() => queryableBots.value.map(bot => botApiTokensQuery(bot.id)))})
 const tokensByBot = computed(() => Object.fromEntries(
 	queryableBots.value.map((bot, index) => [bot.id, tokenQueries.value[index]?.data ?? []]),
 ))
@@ -274,20 +274,22 @@ onMounted(loadBots)
 						</tbody>
 					</table>
 				</div>
-				<ApiTokenForm
-					v-if="showTokenForm[bot.id]"
-					:owner-id="bot.id"
-					@created="(token: IApiToken) => onTokenCreated(bot, token)"
-					@cancel="showTokenForm[bot.id] = false"
-				/>
-				<XButton
-					v-else
-					icon="plus"
-					class="mbe-4"
-					@click="showTokenForm[bot.id] = true"
-				>
-					{{ $t('user.settings.apiTokens.createToken') }}
-				</XButton>
+				<template v-if="bot.id > 0">
+					<ApiTokenForm
+						v-if="showTokenForm[bot.id]"
+						:owner-id="bot.id"
+						@created="(token: IApiToken) => onTokenCreated(bot, token)"
+						@cancel="showTokenForm[bot.id] = false"
+					/>
+					<XButton
+						v-else
+						icon="plus"
+						class="mbe-4"
+						@click="showTokenForm[bot.id] = true"
+					>
+						{{ $t('user.settings.apiTokens.createToken') }}
+					</XButton>
+				</template>
 			</div>
 		</div>
 

@@ -27,7 +27,7 @@ const props = withDefaults(defineProps<{
 	presets?: ApiTokenPreset[],
 	lockedScopes?: IApiPermission,
 }>(), {
-	ownerId: 0,
+	ownerId: undefined,
 	initialTitle: '',
 	initialScopes: '',
 	routes: undefined,
@@ -279,7 +279,7 @@ async function createToken() {
 		newToken.value.expires_at = customExpiry.toISOString()
 	}
 
-	if (props.ownerId > 0) {
+	if (props.ownerId !== undefined) {
 		newToken.value.owner_id = props.ownerId
 	}
 
