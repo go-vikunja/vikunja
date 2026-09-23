@@ -18,11 +18,11 @@
 ## Frontend clients
 
 - Always consume new API routes through the generated functions and types in `frontend/src/client/generated`. Use their snake_case fields directly.
-- `frontend/src/models`, `frontend/src/modelTypes`, and `frontend/src/services` are the legacy v1 architecture. They are being migrated gradually and will be removed. Do not add models, interfaces, or service wrappers there for new routes; existing code can remain until migrated.
+- `frontend/src/models`, `frontend/src/modelTypes`, `frontend/src/services`, `helpers/fetcher`, and Axios are gone. `frontend/eslint.config.js` errors on importing any of them — there is nothing left to port and no exception to extend.
 - After adding or changing a v2 route or schema, run `mage generate:frontend-client` and commit the generated output. Never hand-edit it. `mage check:frontend-client` verifies it is current and generation is repeatable.
 - Reuse the shared client configuration in `frontend/src/client/http.ts`. Put shared query/cache behavior in `frontend/src/client/queries/` when needed; do not duplicate the generated transport layer.
 - List queries that load every page use `fetchAllPages` (in `frontend/src/client/queries/`). Mutations fenced to the client request context use `contextMutationOptions`; its `optimistic` option does the cancel, snapshot and rollback. Its `toastError` option sees the mutation input, not the error, so it cannot suppress a single status.
-- Failures throw the parsed problem body: `status`, `code`, `detail` are top-level and there is no Axios `.response`. When switching a consumer off the legacy services, grep it for `response?.status`, `response.status` and `response.data`; every hit is dead after the switch (`Description.vue` kept a `error.response.status === 404` guard that never matched and blocked navigation).
+- Failures throw the parsed problem body: `status`, `code`, `detail` are top-level and there is no Axios `.response`. Watch for leftover `response?.status`, `response.status` or `response.data` checks copied from old Axios-era code; they are always dead (`Description.vue` kept a `error.response.status === 404` guard that never matched and blocked navigation).
 - Every resource gets one `XResponse` type plus `normalizeX()` applied in each `queryFn` (`ProjectResponse`, `TaskResponse`). Guaranteed fields are exactly the backend fields without `omitempty`; date strings, nullable pointers and expand-only fields stay optional. Merge write responses raw and normalize the result; normalizing the response first replaces cached expansions with `[]`.
 
 ### Query cache (TanStack Query)
