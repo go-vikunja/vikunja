@@ -83,6 +83,7 @@ function isApiErrorBody(e: unknown): boolean {
 
 	const {code, message, status, detail} = e as {code?: unknown, message?: unknown, status?: unknown, detail?: unknown}
 
+	if (typeof status === 'number' && status >= 500) return false
 	if (typeof status === 'number' && status >= 400 && typeof detail === 'string') return true
 
 	return (typeof code === 'number' || typeof code === 'string')
