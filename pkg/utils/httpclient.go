@@ -34,9 +34,8 @@ import (
 	"golang.org/x/net/idna"
 )
 
-// NewHTTPClient returns a proxy-aware client without the SSRF guard, for admin-configured endpoints.
-// Use NewSSRFSafeHTTPClient when users control the target url.
-func NewHTTPClient() *http.Client {
+// NewUnguardedHTTPClient returns a proxy-aware client without the SSRF guard, for admin-configured endpoints.
+func NewUnguardedHTTPClient() *http.Client {
 	proxy, _ := outgoingProxy()
 	return newHTTPClient(proxy)
 }

@@ -775,7 +775,7 @@ func TestOIDCRequestsUseConfiguredProxy(t *testing.T) {
 
 	config.OutgoingRequestsProxyURL.Set(proxy.URL)
 	previousClient := httpClient
-	httpClient = sync.OnceValue(utils.NewHTTPClient)
+	httpClient = sync.OnceValue(utils.NewUnguardedHTTPClient)
 	t.Cleanup(func() {
 		config.OutgoingRequestsProxyURL.Set("")
 		httpClient = previousClient
