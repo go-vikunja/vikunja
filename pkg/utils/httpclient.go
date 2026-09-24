@@ -18,7 +18,7 @@ package utils
 
 import (
 	"context"
-	"encoding/base64"
+	"fmt"
 	"net"
 	"net/http"
 	"net/url"
@@ -38,23 +38,8 @@ import (
 // Use NewSSRFSafeHTTPClient when users control the target url.
 func NewHTTPClient() *http.Client {
 	transport := http.DefaultTransport.(*http.Transport).Clone()
-	// Not http.ProxyFromEnvironment: it caches the env on first use.
-	proxyFunc := httpproxy.FromEnvironment().ProxyFunc()
-	transport.Proxy = func(req *http.Request) (*url.URL, error) {
-		return proxyFunc(req.URL)
-	}
-
-	proxyURL := config.OutgoingRequestsProxyURL.GetString()
-	proxyPassword := config.OutgoingRequestsProxyPassword.GetString()
-
-	if proxyURL != "" && proxyPassword != "" {
-		parsedURL, _ := url.Parse(proxyURL)
-		transport.Proxy = http.ProxyURL(parsedURL)
-		transport.ProxyConnectHeader = http.Header{
-			"Proxy-Authorization": []string{"Basic " + base64.StdEncoding.EncodeToString([]byte("vikunja:"+proxyPassword))},
-			"User-Agent":          []string{"Vikunja/" + version.Version},
-		}
-	}
+	transport.Proxy = configuredProxy()
+	transport.ProxyConnectHeader = http.Header{"User-Agent": []string{"Vikunja/" + version.Version}}
 
 	return &http.Client{
 		Timeout:   time.Duration(config.OutgoingRequestsTimeoutSeconds.GetInt()) * time.Second,
@@ -75,6 +60,31 @@ func NewSSRFSafeHTTPClient() *http.Client {
 		guardProxiedDials(client.Transport.(*http.Transport))
 	}
 	return client
+}
+
+func configuredProxy() func(*http.Request) (*url.URL, error) {
+	raw := config.OutgoingRequestsProxyURL.GetString()
+	if raw == "" {
+		// Not http.ProxyFromEnvironment: it caches the env on first use.
+		proxyFunc := httpproxy.FromEnvironment().ProxyFunc()
+		return func(req *http.Request) (*url.URL, error) {
+			return proxyFunc(req.URL)
+		}
+	}
+
+	proxyURL, err := url.Parse(raw)
+	if err != nil || proxyURL.Host == "" {
+		// The raw value may contain credentials, keep it out of the error.
+		invalid := fmt.Errorf("invalid %s", config.OutgoingRequestsProxyURL)
+		return func(*http.Request) (*url.URL, error) {
+			return nil, invalid
+		}
+	}
+
+	if password := config.OutgoingRequestsProxyPassword.GetString(); password != "" && proxyURL.User == nil {
+		proxyURL.User = url.UserPassword("vikunja", password)
+	}
+	return http.ProxyURL(proxyURL)
 }
 
 // guardProxiedDials applies the SSRF guard to every dial except the one to the

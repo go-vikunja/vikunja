@@ -18,8 +18,10 @@ package utils
 
 import (
 	"context"
+	"encoding/base64"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -174,10 +176,51 @@ func TestNewSSRFSafeHTTPClientProxy(t *testing.T) {
 
 	t.Run("uses the configured proxy on a non-routable address", func(t *testing.T) {
 		proxy := newFakeProxy(t)
-		setProxyConfig(t, proxy.URL, "secret")
+		setProxyConfig(t, proxy.URL, "")
 
 		require.NoError(t, get(t, NewSSRFSafeHTTPClient(), proxiedTarget))
 		assert.Equal(t, int32(1), proxy.hits.Load())
+		assert.Empty(t, proxy.proxyAuth.Load())
+	})
+
+	t.Run("prefers the configured proxy over the environment", func(t *testing.T) {
+		envProxy := newFakeProxy(t)
+		proxy := newFakeProxy(t)
+		t.Setenv("HTTP_PROXY", envProxy.URL)
+		setProxyConfig(t, proxy.URL, "")
+
+		require.NoError(t, get(t, NewSSRFSafeHTTPClient(), proxiedTarget))
+		assert.Equal(t, int32(1), proxy.hits.Load())
+		assert.Equal(t, int32(0), envProxy.hits.Load())
+	})
+
+	t.Run("authenticates as vikunja with the proxy password", func(t *testing.T) {
+		proxy := newFakeProxy(t)
+		setProxyConfig(t, proxy.URL, "secret")
+
+		require.NoError(t, get(t, NewSSRFSafeHTTPClient(), proxiedTarget))
+		assert.Equal(t, "Basic "+base64.StdEncoding.EncodeToString([]byte("vikunja:secret")), proxy.proxyAuth.Load())
+	})
+
+	t.Run("authenticates with credentials from the proxy url", func(t *testing.T) {
+		proxy := newFakeProxy(t)
+		proxyURL, err := url.Parse(proxy.URL)
+		require.NoError(t, err)
+		proxyURL.User = url.UserPassword("alice", "hunter2")
+		setProxyConfig(t, proxyURL.String(), "")
+
+		require.NoError(t, get(t, NewSSRFSafeHTTPClient(), proxiedTarget))
+		assert.Equal(t, "Basic "+base64.StdEncoding.EncodeToString([]byte("alice:hunter2")), proxy.proxyAuth.Load())
+	})
+
+	t.Run("fails closed on an invalid proxy url", func(t *testing.T) {
+		config.OutgoingRequestsAllowNonRoutableIPs.Set("true")
+		defer config.OutgoingRequestsAllowNonRoutableIPs.Set("false")
+		target := newFakeProxy(t)
+		setProxyConfig(t, "not a url", "")
+
+		require.Error(t, get(t, NewSSRFSafeHTTPClient(), target.URL))
+		assert.Equal(t, int32(0), target.hits.Load())
 	})
 
 	t.Run("still blocks direct non-routable targets when a proxy is set", func(t *testing.T) {
@@ -202,7 +245,7 @@ func TestNewHTTPClient(t *testing.T) {
 
 	t.Run("uses the configured proxy", func(t *testing.T) {
 		proxy := newFakeProxy(t)
-		setProxyConfig(t, proxy.URL, "secret")
+		setProxyConfig(t, proxy.URL, "")
 
 		require.NoError(t, get(t, NewHTTPClient(), "http://vikunja-proxy-test.invalid/"))
 		assert.Equal(t, int32(1), proxy.hits.Load())
