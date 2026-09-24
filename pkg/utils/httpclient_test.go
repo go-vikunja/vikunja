@@ -22,12 +22,14 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
 
+	"code.dny.dev/ssrf"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -120,6 +122,8 @@ func TestNewSSRFSafeHTTPClient(t *testing.T) {
 	})
 }
 
+const redirectToProxyPath = "/redirect-to-proxy"
+
 type fakeProxy struct {
 	*httptest.Server
 	hits      atomic.Int32
@@ -134,6 +138,10 @@ func newFakeProxy(t *testing.T) *fakeProxy {
 	p.Server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		p.hits.Add(1)
 		p.proxyAuth.Store(r.Header.Get("Proxy-Authorization"))
+		if r.URL.Path == redirectToProxyPath {
+			http.Redirect(w, r, p.URL, http.StatusTemporaryRedirect)
+			return
+		}
 		w.WriteHeader(http.StatusOK)
 	}))
 	t.Cleanup(p.Close)
@@ -148,6 +156,19 @@ func setProxyConfig(t *testing.T, proxyURL, password string) {
 		config.OutgoingRequestsProxyURL.Set("")
 		config.OutgoingRequestsProxyPassword.Set("")
 	})
+}
+
+// setProxyEnv sets both cases because httpproxy prefers the lowercase variables.
+func setProxyEnv(t *testing.T, httpProxy string) {
+	t.Helper()
+	for name, value := range map[string]string{
+		"HTTP_PROXY":  httpProxy,
+		"HTTPS_PROXY": "",
+		"NO_PROXY":    "",
+	} {
+		t.Setenv(name, value)
+		t.Setenv(strings.ToLower(name), value)
+	}
 }
 
 func get(t *testing.T, client *http.Client, target string) error {
@@ -232,6 +253,62 @@ func TestNewSSRFSafeHTTPClientProxy(t *testing.T) {
 		require.Error(t, get(t, NewSSRFSafeHTTPClient(), target.URL))
 		assert.Equal(t, int32(0), target.hits.Load())
 	})
+
+	t.Run("uses a scheme-less HTTP_PROXY on a non-routable address", func(t *testing.T) {
+		proxy := newFakeProxy(t)
+		setProxyEnv(t, strings.TrimPrefix(proxy.URL, "http://"))
+
+		require.NoError(t, get(t, NewSSRFSafeHTTPClient(), proxiedTarget))
+		assert.Equal(t, int32(1), proxy.hits.Load())
+	})
+
+	t.Run("blocks direct requests to the proxy address", func(t *testing.T) {
+		proxy := newFakeProxy(t)
+		setProxyEnv(t, proxy.URL)
+		client := NewSSRFSafeHTTPClient()
+
+		require.NoError(t, get(t, client, proxiedTarget))
+		require.ErrorIs(t, get(t, client, proxy.URL), ssrf.ErrProhibitedIP)
+		assert.Equal(t, int32(1), proxy.hits.Load())
+	})
+
+	t.Run("blocks redirects to the proxy address", func(t *testing.T) {
+		proxy := newFakeProxy(t)
+		setProxyEnv(t, proxy.URL)
+
+		require.ErrorIs(t, get(t, NewSSRFSafeHTTPClient(), "http://vikunja-proxy-test.invalid"+redirectToProxyPath), ssrf.ErrProhibitedIP)
+		assert.Equal(t, int32(1), proxy.hits.Load())
+	})
+
+	t.Run("blocks direct requests to the proxy address for an unproxied scheme", func(t *testing.T) {
+		proxy := newFakeProxy(t)
+		setProxyEnv(t, proxy.URL)
+		client := NewSSRFSafeHTTPClient()
+		proxyURL, err := url.Parse(proxy.URL)
+		require.NoError(t, err)
+
+		require.NoError(t, get(t, client, proxiedTarget))
+		require.ErrorIs(t, get(t, client, "https://"+proxyURL.Host+"/"), ssrf.ErrProhibitedIP)
+		assert.Equal(t, int32(1), proxy.hits.Load())
+	})
+}
+
+func TestProxyDialAddr(t *testing.T) {
+	for raw, want := range map[string]string{
+		"http://proxy":               "proxy:80",
+		"https://proxy":              "proxy:443",
+		"socks5://proxy":             "proxy:1080",
+		"http://proxy:3128":          "proxy:3128",
+		"http://[2001:db8::1]":       "[2001:db8::1]:80",
+		"https://[2001:db8::1]:8443": "[2001:db8::1]:8443",
+		"http://bücher.example":      "xn--bcher-kva.example:80",
+	} {
+		t.Run(raw, func(t *testing.T) {
+			u, err := url.Parse(raw)
+			require.NoError(t, err)
+			assert.Equal(t, want, proxyDialAddr(u))
+		})
+	}
 }
 
 func TestNewHTTPClient(t *testing.T) {

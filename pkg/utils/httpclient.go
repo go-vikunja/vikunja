@@ -22,14 +22,16 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"sync"
+	"strings"
 	"time"
+	"unicode/utf8"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/version"
 
 	"code.dny.dev/ssrf"
 	"golang.org/x/net/http/httpproxy"
+	"golang.org/x/net/idna"
 )
 
 // NewHTTPClient returns an *http.Client for admin-configured endpoints such as
@@ -57,7 +59,7 @@ func NewHTTPClient() *http.Client {
 func NewSSRFSafeHTTPClient() *http.Client {
 	client := NewHTTPClient()
 	if !config.OutgoingRequestsAllowNonRoutableIPs.GetBool() {
-		guardProxiedDials(client.Transport.(*http.Transport))
+		guardProxiedDials(client.Transport.(*http.Transport), proxyDialAddrs())
 	}
 	return client
 }
@@ -90,15 +92,17 @@ func configuredProxy() func(*http.Request) (*url.URL, error) {
 // guardProxiedDials applies the SSRF guard to every dial except the one to the
 // admin-configured proxy, which usually lives on a private network. Proxied
 // targets are resolved by the proxy, so filtering them is the proxy's job.
-func guardProxiedDials(transport *http.Transport) {
-	var proxyAddrs sync.Map
+func guardProxiedDials(transport *http.Transport, proxyAddrs map[string]struct{}) {
 	proxy := transport.Proxy
 	transport.Proxy = func(req *http.Request) (*url.URL, error) {
 		u, err := proxy(req)
-		if u != nil {
-			proxyAddrs.Store(proxyDialAddr(u), struct{}{})
+		if err != nil || u != nil {
+			return u, err
 		}
-		return u, err
+		if _, isProxy := proxyAddrs[proxyDialAddr(req.URL)]; isProxy {
+			return nil, fmt.Errorf("direct request to the outgoing proxy: %w", ssrf.ErrProhibitedIP)
+		}
+		return nil, nil
 	}
 
 	dialer := &net.Dialer{Timeout: 30 * time.Second, KeepAlive: 30 * time.Second}
@@ -108,18 +112,64 @@ func guardProxiedDials(transport *http.Transport) {
 		Control:   ssrf.New(ssrf.WithAnyPort()).Safe,
 	}
 	transport.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
-		if _, isProxy := proxyAddrs.Load(addr); isProxy {
+		if _, isProxy := proxyAddrs[addr]; isProxy {
 			return dialer.DialContext(ctx, network, addr)
 		}
 		return guarded.DialContext(ctx, network, addr)
 	}
 }
 
-// proxyDialAddr mirrors the address net/http dials for a proxy URL.
+// proxyDialAddrs returns the dial addresses of every proxy configuredProxy may pick.
+func proxyDialAddrs() map[string]struct{} {
+	var proxies []*url.URL
+	if raw := config.OutgoingRequestsProxyURL.GetString(); raw != "" {
+		if u, err := url.Parse(raw); err == nil && u.Host != "" {
+			proxies = append(proxies, u)
+		}
+	} else {
+		env := httpproxy.FromEnvironment()
+		for _, raw := range []string{env.HTTPProxy, env.HTTPSProxy} {
+			if u := parseEnvProxy(raw); u != nil {
+				proxies = append(proxies, u)
+			}
+		}
+	}
+
+	addrs := make(map[string]struct{}, len(proxies))
+	for _, u := range proxies {
+		addrs[proxyDialAddr(u)] = struct{}{}
+	}
+	return addrs
+}
+
+// parseEnvProxy mirrors httpproxy's parsing, which accepts values without a scheme.
+func parseEnvProxy(raw string) *url.URL {
+	if raw == "" {
+		return nil
+	}
+	u, err := url.Parse(raw)
+	if err != nil || u.Scheme == "" || u.Host == "" {
+		if u, err := url.Parse("http://" + raw); err == nil {
+			return u
+		}
+	}
+	if err != nil {
+		return nil
+	}
+	return u
+}
+
+// proxyDialAddr mirrors the address net/http dials for a url.
 func proxyDialAddr(u *url.URL) string {
+	host := u.Hostname()
+	if strings.IndexFunc(host, func(r rune) bool { return r >= utf8.RuneSelf }) >= 0 {
+		if ascii, err := idna.Lookup.ToASCII(host); err == nil {
+			host = ascii
+		}
+	}
 	port := u.Port()
 	if port == "" {
 		port = map[string]string{"http": "80", "https": "443", "socks5": "1080", "socks5h": "1080"}[u.Scheme]
 	}
-	return net.JoinHostPort(u.Hostname(), port)
+	return net.JoinHostPort(host, port)
 }
