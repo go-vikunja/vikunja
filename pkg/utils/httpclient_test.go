@@ -118,59 +118,100 @@ func TestNewSSRFSafeHTTPClient(t *testing.T) {
 	})
 }
 
+type fakeProxy struct {
+	*httptest.Server
+	hits      atomic.Int32
+	proxyAuth atomic.Value
+}
+
 // newFakeProxy answers every request itself, so a hit proves the client routed through it.
-func newFakeProxy(t *testing.T) (*httptest.Server, *atomic.Int32) {
+func newFakeProxy(t *testing.T) *fakeProxy {
 	t.Helper()
-	var hits atomic.Int32
-	proxy := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		hits.Add(1)
+	p := &fakeProxy{}
+	p.proxyAuth.Store("")
+	p.Server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		p.hits.Add(1)
+		p.proxyAuth.Store(r.Header.Get("Proxy-Authorization"))
 		w.WriteHeader(http.StatusOK)
 	}))
-	t.Cleanup(proxy.Close)
-	return proxy, &hits
+	t.Cleanup(p.Close)
+	return p
+}
+
+func setProxyConfig(t *testing.T, proxyURL, password string) {
+	t.Helper()
+	config.OutgoingRequestsProxyURL.Set(proxyURL)
+	config.OutgoingRequestsProxyPassword.Set(password)
+	t.Cleanup(func() {
+		config.OutgoingRequestsProxyURL.Set("")
+		config.OutgoingRequestsProxyPassword.Set("")
+	})
+}
+
+func get(t *testing.T, client *http.Client, target string) error {
+	t.Helper()
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, target, nil)
+	require.NoError(t, err)
+	resp, err := client.Do(req) //nolint:gosec // testing outgoing clients
+	if err == nil {
+		resp.Body.Close()
+	}
+	return err
 }
 
 func TestNewSSRFSafeHTTPClientProxy(t *testing.T) {
 	config.OutgoingRequestsAllowNonRoutableIPs.Set("false")
+	const proxiedTarget = "http://vikunja-proxy-test.invalid/"
 
 	t.Run("uses HTTP_PROXY from the environment", func(t *testing.T) {
-		proxy, hits := newFakeProxy(t)
+		proxy := newFakeProxy(t)
 		t.Setenv("HTTP_PROXY", proxy.URL)
 		t.Setenv("NO_PROXY", "")
 
-		req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://vikunja-proxy-test.invalid/", nil)
-		require.NoError(t, err)
-		resp, err := NewSSRFSafeHTTPClient().Do(req) //nolint:gosec // testing SSRF-safe client
-		require.NoError(t, err)
-		defer resp.Body.Close()
-		assert.Equal(t, int32(1), hits.Load())
+		require.NoError(t, get(t, NewSSRFSafeHTTPClient(), proxiedTarget))
+		assert.Equal(t, int32(1), proxy.hits.Load())
 	})
 
 	t.Run("uses the configured proxy on a non-routable address", func(t *testing.T) {
-		proxy, hits := newFakeProxy(t)
-		config.OutgoingRequestsProxyURL.Set(proxy.URL)
-		config.OutgoingRequestsProxyPassword.Set("secret")
-		defer config.OutgoingRequestsProxyURL.Set("")
-		defer config.OutgoingRequestsProxyPassword.Set("")
+		proxy := newFakeProxy(t)
+		setProxyConfig(t, proxy.URL, "secret")
 
-		req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://vikunja-proxy-test.invalid/", nil)
-		require.NoError(t, err)
-		resp, err := NewSSRFSafeHTTPClient().Do(req) //nolint:gosec // testing SSRF-safe client
-		require.NoError(t, err)
-		defer resp.Body.Close()
-		assert.Equal(t, int32(1), hits.Load())
+		require.NoError(t, get(t, NewSSRFSafeHTTPClient(), proxiedTarget))
+		assert.Equal(t, int32(1), proxy.hits.Load())
 	})
 
 	t.Run("still blocks direct non-routable targets when a proxy is set", func(t *testing.T) {
-		proxy, _ := newFakeProxy(t)
-		target, targetHits := newFakeProxy(t)
+		proxy := newFakeProxy(t)
+		target := newFakeProxy(t)
 		t.Setenv("HTTP_PROXY", proxy.URL)
 
 		// Loopback targets bypass the env proxy, so this dial is direct.
-		req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, target.URL, nil)
-		require.NoError(t, err)
-		_, err = NewSSRFSafeHTTPClient().Do(req) //nolint:bodyclose,gosec // testing SSRF-safe client
-		require.Error(t, err)
-		assert.Equal(t, int32(0), targetHits.Load())
+		require.Error(t, get(t, NewSSRFSafeHTTPClient(), target.URL))
+		assert.Equal(t, int32(0), target.hits.Load())
+	})
+}
+
+func TestNewHTTPClient(t *testing.T) {
+	t.Run("reaches non-routable targets", func(t *testing.T) {
+		config.OutgoingRequestsAllowNonRoutableIPs.Set("false")
+		target := newFakeProxy(t)
+
+		require.NoError(t, get(t, NewHTTPClient(), target.URL))
+		assert.Equal(t, int32(1), target.hits.Load())
+	})
+
+	t.Run("uses the configured proxy", func(t *testing.T) {
+		proxy := newFakeProxy(t)
+		setProxyConfig(t, proxy.URL, "secret")
+
+		require.NoError(t, get(t, NewHTTPClient(), "http://vikunja-proxy-test.invalid/"))
+		assert.Equal(t, int32(1), proxy.hits.Load())
+	})
+
+	t.Run("has timeout from config", func(t *testing.T) {
+		config.OutgoingRequestsTimeoutSeconds.Set("15")
+		defer config.OutgoingRequestsTimeoutSeconds.Set("30")
+
+		assert.Equal(t, 15*time.Second, NewHTTPClient().Timeout)
 	})
 }
