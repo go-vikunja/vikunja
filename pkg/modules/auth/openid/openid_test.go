@@ -447,6 +447,58 @@ func TestGetOrCreateUser(t *testing.T) {
 		assert.Equal(t, user.IssuerLocal, u.Issuer, "User should be a local one")
 		assert.Equal(t, 11, int(u.ID), "user id 11 expected")
 	})
+	t.Run("ProviderFallback: both enabled, username mismatch still links on verified email", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		usersBefore, err := s.Count(&user.User{})
+		require.NoError(t, err)
+
+		cl := &claims{
+			Email:             "user11@example.com",
+			EmailVerified:     true,
+			PreferredUsername: "someone-else",
+		}
+		provider := &Provider{
+			UsernameFallback: true,
+			EmailFallback:    true,
+		}
+		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "c0ffee00-dead-beef-cafe-000000000011"}
+
+		u, err := getOrCreateUser(s, cl, provider, idToken)
+		require.NoError(t, err)
+		assert.Equal(t, 11, int(u.ID), "user id 11 expected")
+		assert.Equal(t, user.IssuerLocal, u.Issuer, "User should be a local one")
+
+		usersAfter, err := s.Count(&user.User{})
+		require.NoError(t, err)
+		assert.Equal(t, usersBefore, usersAfter, "no new user should have been created")
+	})
+	t.Run("ProviderFallback: both enabled, username mismatch and unverified email creates a new user", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		cl := &claims{
+			Email:             "user11@example.com",
+			EmailVerified:     false,
+			PreferredUsername: "attackerUser",
+		}
+		provider := &Provider{
+			UsernameFallback: true,
+			EmailFallback:    true,
+		}
+		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "attacker-subject"}
+
+		u, err := getOrCreateUser(s, cl, provider, idToken)
+		require.NoError(t, err)
+		err = s.Commit()
+		require.NoError(t, err)
+
+		assert.NotEqual(t, 11, int(u.ID), "must not link to user 11 via an unverified email")
+		assert.Equal(t, "https://some.issuer", u.Issuer, "a new separate account should have been created")
+	})
 }
 
 // TestMergeClaims tests the mergeClaims function with different configurations including forceUserInfo
