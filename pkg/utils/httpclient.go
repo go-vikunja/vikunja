@@ -34,9 +34,7 @@ import (
 	"golang.org/x/net/idna"
 )
 
-// NewHTTPClient returns an *http.Client for admin-configured endpoints such as
-// OIDC providers. It routes requests through the proxy from outgoingrequests
-// config, falling back to the HTTP_PROXY, HTTPS_PROXY and NO_PROXY env vars.
+// NewHTTPClient returns a proxy-aware client without the SSRF guard, for admin-configured endpoints.
 // Use NewSSRFSafeHTTPClient when users control the target url.
 func NewHTTPClient() *http.Client {
 	transport := http.DefaultTransport.(*http.Transport).Clone()
@@ -49,9 +47,7 @@ func NewHTTPClient() *http.Client {
 	}
 }
 
-// NewSSRFSafeHTTPClient returns a NewHTTPClient that blocks connections to
-// non-globally-routable IP addresses (loopback, private ranges, link-local,
-// etc.) unless outgoingrequests.allownonroutableips is set to true.
+// NewSSRFSafeHTTPClient blocks non-globally-routable targets unless outgoingrequests.allownonroutableips is set.
 //
 // Deprecated webhooks.* config keys are migrated to outgoingrequests.* at
 // config init time (see config.InitDefaultConfig), so this function only
@@ -93,9 +89,7 @@ func configuredProxy() func(*http.Request) (*url.URL, error) {
 	return http.ProxyURL(proxyURL)
 }
 
-// guardProxiedDials applies the SSRF guard to every dial except the one to the
-// admin-configured proxy, which usually lives on a private network. Proxied
-// targets are resolved by the proxy, so filtering them is the proxy's job.
+// The proxy dial is exempt: it is admin-chosen, often private, and resolves proxied targets itself.
 func guardProxiedDials(transport *http.Transport, proxyAddrs map[string]struct{}) {
 	proxy := transport.Proxy
 	transport.Proxy = func(req *http.Request) (*url.URL, error) {
@@ -123,7 +117,6 @@ func guardProxiedDials(transport *http.Transport, proxyAddrs map[string]struct{}
 	}
 }
 
-// proxyDialAddrs returns the dial addresses of every proxy configuredProxy may pick.
 func proxyDialAddrs() map[string]struct{} {
 	var proxies []*url.URL
 	if raw := config.OutgoingRequestsProxyURL.GetString(); raw != "" {
