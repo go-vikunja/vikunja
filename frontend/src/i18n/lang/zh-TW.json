@@ -5,6 +5,10 @@
 	},
 	"home": {
 		"welcomeNight": "晚上好，{username}！",
+		"welcomeNightOwl": "夜貓子 {username}，哈囉",
+		"welcomeNightBurning": "{username}，還在熬夜打拼嗎？",
+		"welcomeNightQuiet": "{username}，勿擾模式時段",
+		"welcomeNightLate": "{username}，時間不早了",
 		"welcomeMorning": "早安，{username}！",
 		"welcomeDay": "嗨~，{username}！",
 		"welcomeEvening": "午安，{username}！",
@@ -422,6 +426,9 @@
 			"deleteSuccess": "Webhook 已成功刪除。",
 			"create": "建立 Webhook",
 			"secret": "密鑰",
+			"basicauthuser": "基本認證使用者",
+			"basicauthpassword": "基本認證密碼",
+			"basicauthlink": "使用基本認證？",
 			"secretHint": "若有提供，所有發送到 webhook 目標 URL 的請求將使用 HMAC 簽名。",
 			"secretDocs": "請參考文件以了解更多關於密鑰的說明。"
 		},
@@ -786,6 +793,7 @@
 			"belongsToProject": "此任務屬於專案「{project}」",
 			"back": "返回專案",
 			"due": "截止至 {at}",
+			"scrollToBottom": "滾動至底部",
 			"organization": "機構",
 			"management": "管理",
 			"dateAndTime": "日期與時間",
@@ -869,12 +877,23 @@
 			"creating": "正在建立評論…",
 			"placeholder": "輸入評論，按「/」以取得更多選項…",
 			"comment": "評論",
-			"delete": "刪除此評論"
+			"delete": "刪除此評論",
+			"deleteText1": "確定要刪除此評論嗎？",
+			"deleteSuccess": "已成功刪除評論。",
+			"addedSuccess": "已成功新增評論。",
+			"permalink": "複製此評論的永久連結"
+		},
+		"mention": {
+			"noUsersFound": "找不到使用者"
 		},
 		"deferDueDate": {
+			"title": "延後到期日",
 			"1day": "1 天",
 			"3days": "3 天",
 			"1week": "1 周"
+		},
+		"description": {
+			"placeholder": "輸入描述，按 '/' 查看更多選項……"
 		},
 		"assignee": {
 			"placeholder": "分配給用户…",
@@ -883,7 +902,15 @@
 			"unassignSuccess": "已取消分配給用户。"
 		},
 		"label": {
-			"addCreateSuccess": "標籤已成功建立並新增完成。"
+			"placeholder": "輸入以新增標籤……",
+			"createPlaceholder": "新增為新標籤",
+			"addSuccess": "已成功新增標籤。",
+			"removeSuccess": "已成功移除標籤。",
+			"addCreateSuccess": "標籤已成功建立並新增完成。",
+			"delete": {
+				"header": "刪除此標籤",
+				"text1": "確定要刪除此標籤嗎？"
+			}
 		},
 		"priority": {
 			"unset": "取消設定",
@@ -895,6 +922,10 @@
 		"relation": {
 			"differentProject": "此任務屬於另一個專案。"
 		},
+		"reminder": {
+			"custom": "自定義",
+			"dateAndTime": "日期與時間"
+		},
 		"quickAddMagic": {
 			"intro": "建立任務時，您可以使用特殊關鍵字直接為新建立的任務添加屬性。這可以讓您更快速地為任務加入常用屬性。",
 			"label2": "Vikunja 會先檢查標籤是否已存在，如果不存在則會建立該標籤。",
@@ -904,36 +935,63 @@
 			"project2": "如果專案不存在將會返回錯誤。",
 			"project3": "若要使用空格，只需在專案名稱前後加上 \" 或 '。",
 			"project4": "例如：{prefix}\"專案名稱含空格\"。",
+			"dateAndTime": "日期與時間",
 			"dateTime": "將日期格式與 “{time}” （或 {timePM}）組合以設定時間。",
+			"repeats": "重複的任務",
 			"repeatsDescription": "將任務設定為間隔重複，只需在任務文本中添加“{suffix}”即可。 內容必須是數字，並且可以省略使用類型（參見示例）。"
 		}
 	},
 	"team": {
+		"title": "團隊",
 		"create": {
 			"title": "創建團隊",
 			"success": "團隊已成功建立。"
 		},
 		"edit": {
+			"members": "團隊成員",
 			"search": "輸入以搜索用户…",
+			"addUser": "加入到團隊",
+			"makeMember": "設為一般成員",
+			"makeAdmin": "設為管理員",
+			"success": "團隊已更新。",
+			"madeMember": "該團隊成員已成為一般成員。",
+			"madeAdmin": "該團隊成員已成為管理員。",
 			"mustSelectUser": "請選擇一個用户。",
 			"delete": {
-				"text2": "所有團隊成員將失去對與此團隊共享的專案的存取權。此操作無法復原！"
+				"header": "刪除此團隊",
+				"text1": "確定要刪除此團隊及其所有成員嗎？",
+				"text2": "所有團隊成員將失去對與此團隊共享的專案的存取權。此操作無法復原！",
+				"success": "團隊已刪除。"
 			},
 			"deleteUser": {
 				"header": "從團隊中刪除用户",
+				"text1": "確定要將此使用者移出團隊嗎？",
 				"text2": "他們將失去對此團隊可存取的所有專案的權限。此操作無法復原！",
 				"success": "此用户已成功從團隊中刪除。"
 			},
 			"leave": {
-				"text2": "您將失去對此團隊可存取的所有專案的權限。如果您改變主意，需要由團隊管理員重新將您加入。"
+				"title": "離開團隊",
+				"text1": "確定要離開此團隊嗎？",
+				"text2": "您將失去對此團隊可存取的所有專案的權限。如果您改變主意，需要由團隊管理員重新將您加入。",
+				"success": "您已成功離開團隊。"
 			}
 		},
 		"attributes": {
+			"name": "團隊名稱",
+			"namePlaceholder": "在此輸入團隊名稱……",
+			"nameRequired": "請指定名稱。",
+			"description": "描述",
+			"descriptionPlaceholder": "在此描述團隊，按 '/' 取得更多選項……",
+			"admin": "管理員",
+			"member": "一般成員",
+			"isPublic": "公開團隊",
 			"isPublicDescription": "使此團隊可公開被搜尋。啟用後，即使非直接成員，任何人也可以與此團隊共享專案。"
 		}
 	},
 	"keyboardShortcuts": {
+		"title": "鍵盤快捷鍵",
 		"task": {
+			"title": "任務頁面",
 			"assign": "分配此任務給一個用户",
 			"move": "將此任務移至其他專案",
 			"openProject": "開啟此任務所屬的專案"
@@ -973,17 +1031,25 @@
 	"apiConfig": {
 		"urlPlaceholder": "例如： https://localhost:3456"
 	},
+	"loadingError": {
+		"contact": "聯繫我們"
+	},
 	"notification": {
 		"explainer": "當您訂閱的動作、專案或任務發生時，通知將會顯示在此處。"
 	},
 	"quickActions": {
 		"hint": "您可以使用 {project} 將搜尋範圍限制在特定專案。將 {project} 或 {label}（標籤）與搜尋查詢結合，可搜尋具有這些標籤或屬於該專案的任務。使用 {assignee} 則僅搜尋團隊。",
+		"tasks": "任務",
 		"projects": "項目",
+		"teams": "團隊",
+		"labels": "標籤",
 		"newProject": "輸入新專案的標題…",
 		"createTask": "在目前專案（{title}）中建立任務",
 		"createProject": "建立專案",
 		"cmds": {
-			"newProject": "新專案"
+			"newTask": "新增任務",
+			"newProject": "新專案",
+			"newTeam": "新增團隊"
 		}
 	},
 	"error": {
@@ -1028,9 +1094,12 @@
 		"11002": "已儲存的篩選器無法用於分享連結。",
 		"13001": "此鏈接共享需要密碼進行身份驗證，但沒有提供密碼。",
 		"13002": "提供的鏈接共享密碼無效。",
-		"13003": "提供的分享連結令牌無效。"
+		"13003": "提供的分享連結令牌無效。",
+		"error": "錯誤",
+		"success": "成功"
 	},
 	"about": {
+		"title": "關於",
 		"version": "版本：{version}",
 		"frontendVersion": "前端版本: {version}",
 		"apiVersion": "API 版本: {version}"

@@ -7,6 +7,11 @@
 			"welcome": "歡迎來到 Vikunja！",
 			"confirm": "請點選以下連結以確認您的信箱："
 		},
+		"email_change": {
+			"subject": "您的 Vikunja 帳號已提出變更電子郵件地址的申請",
+			"requested": "有人請求將您帳號的電子郵件地址變更為 %[1]s。您目前的電子郵件地址，在確認變更之前仍將保持有效。",
+			"warning": "若非您本人所為，請立即修改密碼，並立即前往帳號設定取消變更請求。"
+		},
 		"password": {
 			"changed": {
 				"subject": "您的密碼已變更",
@@ -14,7 +19,7 @@
 				"warning": "若您未曾進行此操作，那可能表示有人盜用了您的帳號。請聯絡您的伺服器管理員。"
 			},
 			"reset": {
-				"subject": "重置您的Vikunja 密碼",
+				"subject": "重置您的 Vikunja 密碼",
 				"instructions": "請點選以下連結以重設您的密碼：",
 				"valid_duration": "連結將在 24 小時後失效。"
 			}
@@ -86,6 +91,10 @@
 				"subject": "「%[1]s」(%[2]s) 已被刪除",
 				"message": "%[1]s 已刪除任務「%[2]s」(%[3]s)"
 			},
+			"created": {
+				"subject": "已建立「%[1]s」（%[2]s）",
+				"message": "%[1]s 建立了任務「%[2]s」（%[3]s）"
+			},
 			"mentioned": {
 				"subject_new": "%[1]s 在新任務「%[2]s」(%[3]s) 中提及了您",
 				"subject": "%[1]s 在任務「%[2]s」(%[3]s) 中提及了您"
@@ -94,6 +103,9 @@
 				"subject": "任務「%[1]s」(%[2]s) 已逾期",
 				"message": "任務「%[1]s」(%[2]s) 提醒：該任務已逾期 %[3]s，尚未完成。",
 				"multiple_subject": "您的逾期任務",
+				"multiple_message": "您有逾期的任務：",
+				"assigned_heading": "指派給您",
+				"followed_heading": "您關注的任務",
 				"overdue_since": "自 %[1]s 起",
 				"overdue_now": "現在",
 				"overdue": "逾期 %[1]s"
@@ -133,10 +145,12 @@
 		"api_token": {
 			"expiring": {
 				"week": {
-					"subject": "您的 API 存取權杖「%[1]s」即將到期"
+					"subject": "您的 API 存取權杖「%[1]s」即將到期",
+					"message": "您的 API 權杖「%[1]s」將於 %[2]s（%[3]s 後）到期。若您仍有使用需求，請於到期前建立新的 API 權杖。"
 				},
 				"day": {
-					"subject": "您的 API 存取權杖「%[1]s」將於明日到期"
+					"subject": "您的 API 存取權杖「%[1]s」將於明日到期",
+					"message": "您的 API 權杖「%[1]s」將於 %[2]s（%[3]s 後）到期。若您仍有使用需求，請於到期前建立新的 API 權杖。"
 				},
 				"action": "管理 API 存取權杖"
 			}
@@ -155,7 +169,7 @@
 				"confirm_email": "確認您的電子郵件地址",
 				"abort_deletion": "取消刪除",
 				"confirm_account_deletion": "確認刪除我的帳號",
-				"change_notification_settings_link": "您可以在這裡 更改通知設定(%[1]s)。",
+				"change_notification_settings_link": "您可以在這裡變更通知設定 (%[1]s)。",
 				"left_comment": "%[1]s 留下了一則評論",
 				"mentioned_you_comment": "%[1]s 在評論中提及了您",
 				"mentioned_you": "%[1]s 提及了您",
