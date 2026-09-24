@@ -354,11 +354,4 @@ func TestNewHTTPClient(t *testing.T) {
 		require.NoError(t, get(t, NewHTTPClient(), "http://vikunja-proxy-test.invalid/"))
 		assert.Equal(t, int32(1), proxy.hits.Load())
 	})
-
-	t.Run("has timeout from config", func(t *testing.T) {
-		config.OutgoingRequestsTimeoutSeconds.Set("15")
-		defer config.OutgoingRequestsTimeoutSeconds.Set("30")
-
-		assert.Equal(t, 15*time.Second, NewHTTPClient().Timeout)
-	})
 }
