@@ -17,11 +17,19 @@
 package openid
 
 import (
+	"context"
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"net/http/httputil"
+	"sync"
 	"testing"
 	"time"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
+	"code.vikunja.io/api/pkg/utils"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
@@ -742,4 +750,55 @@ func TestEmailVerifiedClaimDecoding(t *testing.T) {
 			assert.Equal(t, want, bool(cl.EmailVerified))
 		})
 	}
+}
+
+func TestOIDCRequestsUseConfiguredProxy(t *testing.T) {
+	defer CleanupSavedOpenIDProviders()
+
+	server := newMockOIDCServerWithAuthMethods([]string{authMethodPost}, func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusUnauthorized)
+		_, _ = w.Write([]byte(`{"error":"invalid_client"}`))
+	})
+	defer server.Close()
+
+	var mu sync.Mutex
+	var proxiedPaths []string
+	forward := &httputil.ReverseProxy{Rewrite: func(*httputil.ProxyRequest) {}}
+	proxy := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		mu.Lock()
+		proxiedPaths = append(proxiedPaths, r.URL.Path)
+		mu.Unlock()
+		forward.ServeHTTP(w, r)
+	}))
+	defer proxy.Close()
+
+	config.OutgoingRequestsProxyURL.Set(proxy.URL)
+	previousClient := httpClient
+	httpClient = sync.OnceValue(utils.NewHTTPClient)
+	t.Cleanup(func() {
+		config.OutgoingRequestsProxyURL.Set("")
+		httpClient = previousClient
+	})
+
+	config.AuthOpenIDEnabled.Set(true)
+	config.AuthOpenIDProviders.Set(map[string]interface{}{
+		"provider1": map[string]interface{}{
+			"name":         "Provider One",
+			"authurl":      server.URL,
+			"clientid":     "client1",
+			"clientsecret": "secret1",
+		},
+	})
+	_ = keyvalue.Del("openid_providers")
+	_ = keyvalue.Del("openid_provider_provider1")
+
+	_, _, _, _, err := exchangeOidcTokens(context.Background(), &Callback{Code: "code"}, "provider1")
+	var detailedErr *models.ErrOpenIDBadRequestWithDetails
+	require.ErrorAs(t, err, &detailedErr)
+
+	mu.Lock()
+	defer mu.Unlock()
+	assert.Contains(t, proxiedPaths, "/.well-known/openid-configuration")
+	assert.Contains(t, proxiedPaths, "/token")
 }
