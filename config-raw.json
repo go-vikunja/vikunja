@@ -1094,7 +1094,7 @@
                 {
                     "key": "proxyurl",
                     "default_value": "",
-                    "comment": "The URL of [a mole instance](https://github.com/frain-dev/mole) to use to proxy outgoing HTTP requests. Applies to webhooks, avatar downloads, and migration imports. You should use this and configure appropriately if you're not the only one using your Vikunja instance. More info about why: https://webhooks.fyi/best-practices/webhook-providers#implement-security-on-egress-communication. Must be used in combination with `outgoingrequests.proxypassword`."
+                    "comment": "The URL of [a mole instance](https://github.com/frain-dev/mole) to use to proxy outgoing HTTP requests. Applies to webhooks, avatar downloads, migration imports, and the license check. You should use this and configure appropriately if you're not the only one using your Vikunja instance. More info about why: https://webhooks.fyi/best-practices/webhook-providers#implement-security-on-egress-communication. Must be used in combination with `outgoingrequests.proxypassword`. If not set, the standard `HTTP_PROXY`, `HTTPS_PROXY` and `NO_PROXY` environment variables are used. Connections to the proxy itself are exempt from the `allownonroutableips` check, since the proxy resolves proxied targets."
                 },
                 {
                     "key": "proxypassword",
