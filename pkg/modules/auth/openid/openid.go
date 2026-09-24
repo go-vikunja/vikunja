@@ -25,6 +25,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
@@ -126,9 +127,11 @@ func (p *Provider) setOicdProvider() (err error) {
 	return err
 }
 
+var httpClient = sync.OnceValue(utils.NewHTTPClient)
+
 // httpClientContext makes go-oidc and oauth2 use the proxy-aware client.
 func httpClientContext() context.Context {
-	return oidc.ClientContext(context.Background(), utils.NewHTTPClient())
+	return oidc.ClientContext(context.Background(), httpClient())
 }
 
 func (p *Provider) Issuer() (issuerURL string, err error) {
