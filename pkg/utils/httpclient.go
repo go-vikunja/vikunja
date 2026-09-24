@@ -37,14 +37,8 @@ import (
 // NewHTTPClient returns a proxy-aware client without the SSRF guard, for admin-configured endpoints.
 // Use NewSSRFSafeHTTPClient when users control the target url.
 func NewHTTPClient() *http.Client {
-	transport := http.DefaultTransport.(*http.Transport).Clone()
-	transport.Proxy = configuredProxy()
-	transport.ProxyConnectHeader = http.Header{"User-Agent": []string{"Vikunja/" + version.Version}}
-
-	return &http.Client{
-		Timeout:   time.Duration(config.OutgoingRequestsTimeoutSeconds.GetInt()) * time.Second,
-		Transport: transport,
-	}
+	proxy, _ := outgoingProxy()
+	return newHTTPClient(proxy)
 }
 
 // NewSSRFSafeHTTPClient blocks non-globally-routable targets unless outgoingrequests.allownonroutableips is set.
@@ -53,21 +47,29 @@ func NewHTTPClient() *http.Client {
 // config init time (see config.InitDefaultConfig), so this function only
 // reads the new keys.
 func NewSSRFSafeHTTPClient() *http.Client {
-	client := NewHTTPClient()
+	proxy, proxyAddrs := outgoingProxy()
+	client := newHTTPClient(proxy)
 	if !config.OutgoingRequestsAllowNonRoutableIPs.GetBool() {
-		guardProxiedDials(client.Transport.(*http.Transport), proxyDialAddrs())
+		guardProxiedDials(client.Transport.(*http.Transport), proxyAddrs)
 	}
 	return client
 }
 
-func configuredProxy() func(*http.Request) (*url.URL, error) {
+func newHTTPClient(proxy func(*http.Request) (*url.URL, error)) *http.Client {
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport.Proxy = proxy
+	transport.ProxyConnectHeader = http.Header{"User-Agent": []string{"Vikunja/" + version.Version}}
+
+	return &http.Client{
+		Timeout:   time.Duration(config.OutgoingRequestsTimeoutSeconds.GetInt()) * time.Second,
+		Transport: transport,
+	}
+}
+
+func outgoingProxy() (func(*http.Request) (*url.URL, error), map[string]struct{}) {
 	raw := config.OutgoingRequestsProxyURL.GetString()
 	if raw == "" {
-		// Not http.ProxyFromEnvironment: it caches the env on first use.
-		proxyFunc := httpproxy.FromEnvironment().ProxyFunc()
-		return func(req *http.Request) (*url.URL, error) {
-			return proxyFunc(req.URL)
-		}
+		return environmentProxy()
 	}
 
 	proxyURL, err := url.Parse(raw)
@@ -76,7 +78,7 @@ func configuredProxy() func(*http.Request) (*url.URL, error) {
 		invalid := fmt.Errorf("invalid %s, expected a url like http://host:port", config.OutgoingRequestsProxyURL)
 		return func(*http.Request) (*url.URL, error) {
 			return nil, invalid
-		}
+		}, nil
 	}
 
 	if password := config.OutgoingRequestsProxyPassword.GetString(); password != "" {
@@ -86,7 +88,28 @@ func configuredProxy() func(*http.Request) (*url.URL, error) {
 			proxyURL.User = url.UserPassword(proxyURL.User.Username(), password)
 		}
 	}
-	return http.ProxyURL(proxyURL)
+	return http.ProxyURL(proxyURL), map[string]struct{}{proxyDialAddr(proxyURL): {}}
+}
+
+func environmentProxy() (func(*http.Request) (*url.URL, error), map[string]struct{}) {
+	// Not http.ProxyFromEnvironment: it caches the env on first use.
+	env := httpproxy.FromEnvironment()
+	proxyFunc := env.ProxyFunc()
+
+	unrestricted := *env
+	// NO_PROXY must not hide a proxy that other hosts still use.
+	unrestricted.NoProxy = ""
+	probe := unrestricted.ProxyFunc()
+	addrs := make(map[string]struct{}, 2)
+	for _, scheme := range []string{"http", "https"} {
+		if u, err := probe(&url.URL{Scheme: scheme, Host: "probe.invalid"}); err == nil && u != nil {
+			addrs[proxyDialAddr(u)] = struct{}{}
+		}
+	}
+
+	return func(req *http.Request) (*url.URL, error) {
+		return proxyFunc(req.URL)
+	}, addrs
 }
 
 // The proxy dial is exempt: it is admin-chosen, often private, and resolves proxied targets itself.
@@ -115,31 +138,6 @@ func guardProxiedDials(transport *http.Transport, proxyAddrs map[string]struct{}
 		}
 		return guarded.DialContext(ctx, network, addr)
 	}
-}
-
-func proxyDialAddrs() map[string]struct{} {
-	var proxies []*url.URL
-	if raw := config.OutgoingRequestsProxyURL.GetString(); raw != "" {
-		if u, err := url.Parse(raw); err == nil && u.Host != "" {
-			proxies = append(proxies, u)
-		}
-	} else {
-		env := *httpproxy.FromEnvironment()
-		// NO_PROXY must not hide a proxy that other hosts still use.
-		env.NoProxy = ""
-		proxyFunc := env.ProxyFunc()
-		for _, scheme := range []string{"http", "https"} {
-			if u, err := proxyFunc(&url.URL{Scheme: scheme, Host: "probe.invalid"}); err == nil && u != nil {
-				proxies = append(proxies, u)
-			}
-		}
-	}
-
-	addrs := make(map[string]struct{}, len(proxies))
-	for _, u := range proxies {
-		addrs[proxyDialAddr(u)] = struct{}{}
-	}
-	return addrs
 }
 
 // proxyDialAddr mirrors the address net/http dials for a url.
