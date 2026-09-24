@@ -77,7 +77,7 @@ func configuredProxy() func(*http.Request) (*url.URL, error) {
 	proxyURL, err := url.Parse(raw)
 	if err != nil || proxyURL.Host == "" {
 		// The raw value may contain credentials, keep it out of the error.
-		invalid := fmt.Errorf("invalid %s", config.OutgoingRequestsProxyURL)
+		invalid := fmt.Errorf("invalid %s, expected a url like http://host:port", config.OutgoingRequestsProxyURL)
 		return func(*http.Request) (*url.URL, error) {
 			return nil, invalid
 		}
