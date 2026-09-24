@@ -325,7 +325,7 @@ func checkOpenIDProvider(key string, rawProvider interface{}) (CheckResult, stri
 		}, ""
 	}
 
-	client := utils.NewHTTPClient()
+	client := utils.NewUnguardedHTTPClient()
 	client.Timeout = 5 * time.Second
 	resp, err := client.Do(req) // #nosec G704 -- URL is from configured OIDC provider endpoints
 	if err != nil {
