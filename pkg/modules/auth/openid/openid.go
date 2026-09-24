@@ -129,7 +129,6 @@ func (p *Provider) setOicdProvider() (err error) {
 
 var httpClient = sync.OnceValue(utils.NewHTTPClient)
 
-// withHTTPClient makes go-oidc and oauth2 use the proxy-aware client.
 func withHTTPClient(ctx context.Context) context.Context {
 	return oidc.ClientContext(ctx, httpClient())
 }
