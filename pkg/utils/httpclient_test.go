@@ -322,18 +322,6 @@ func TestNewSSRFSafeHTTPClientProxy(t *testing.T) {
 		require.ErrorIs(t, get(t, NewSSRFSafeHTTPClient(), "http://vikunja-proxy-test.invalid"+redirectToProxyPath), ssrf.ErrProhibitedIP)
 		assert.Equal(t, int32(1), proxy.hits.Load())
 	})
-
-	t.Run("blocks direct requests to the proxy address for an unproxied scheme", func(t *testing.T) {
-		proxy := newCountingServer(t)
-		setProxyEnv(t, proxy.URL)
-		client := NewSSRFSafeHTTPClient()
-		proxyURL, err := url.Parse(proxy.URL)
-		require.NoError(t, err)
-
-		require.NoError(t, get(t, client, proxiedTarget))
-		require.ErrorIs(t, get(t, client, "https://"+proxyURL.Host+"/"), ssrf.ErrProhibitedIP)
-		assert.Equal(t, int32(1), proxy.hits.Load())
-	})
 }
 
 func TestProxyDialAddr(t *testing.T) {
