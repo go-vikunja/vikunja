@@ -145,4 +145,32 @@ func TestNewSSRFSafeHTTPClientProxy(t *testing.T) {
 		defer resp.Body.Close()
 		assert.Equal(t, int32(1), hits.Load())
 	})
+
+	t.Run("uses the configured proxy on a non-routable address", func(t *testing.T) {
+		proxy, hits := newFakeProxy(t)
+		config.OutgoingRequestsProxyURL.Set(proxy.URL)
+		config.OutgoingRequestsProxyPassword.Set("secret")
+		defer config.OutgoingRequestsProxyURL.Set("")
+		defer config.OutgoingRequestsProxyPassword.Set("")
+
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://vikunja-proxy-test.invalid/", nil)
+		require.NoError(t, err)
+		resp, err := NewSSRFSafeHTTPClient().Do(req) //nolint:gosec // testing SSRF-safe client
+		require.NoError(t, err)
+		defer resp.Body.Close()
+		assert.Equal(t, int32(1), hits.Load())
+	})
+
+	t.Run("still blocks direct non-routable targets when a proxy is set", func(t *testing.T) {
+		proxy, _ := newFakeProxy(t)
+		target, targetHits := newFakeProxy(t)
+		t.Setenv("HTTP_PROXY", proxy.URL)
+
+		// Loopback targets bypass the env proxy, so this dial is direct.
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, target.URL, nil)
+		require.NoError(t, err)
+		_, err = NewSSRFSafeHTTPClient().Do(req) //nolint:bodyclose,gosec // testing SSRF-safe client
+		require.Error(t, err)
+		assert.Equal(t, int32(0), targetHits.Load())
+	})
 }
