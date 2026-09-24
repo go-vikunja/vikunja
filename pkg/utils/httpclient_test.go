@@ -20,6 +20,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -114,5 +115,34 @@ func TestNewSSRFSafeHTTPClient(t *testing.T) {
 		require.NoError(t, err)
 		defer resp.Body.Close()
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
+	})
+}
+
+// newFakeProxy answers every request itself, so a hit proves the client routed through it.
+func newFakeProxy(t *testing.T) (*httptest.Server, *atomic.Int32) {
+	t.Helper()
+	var hits atomic.Int32
+	proxy := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		hits.Add(1)
+		w.WriteHeader(http.StatusOK)
+	}))
+	t.Cleanup(proxy.Close)
+	return proxy, &hits
+}
+
+func TestNewSSRFSafeHTTPClientProxy(t *testing.T) {
+	config.OutgoingRequestsAllowNonRoutableIPs.Set("false")
+
+	t.Run("uses HTTP_PROXY from the environment", func(t *testing.T) {
+		proxy, hits := newFakeProxy(t)
+		t.Setenv("HTTP_PROXY", proxy.URL)
+		t.Setenv("NO_PROXY", "")
+
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://vikunja-proxy-test.invalid/", nil)
+		require.NoError(t, err)
+		resp, err := NewSSRFSafeHTTPClient().Do(req) //nolint:gosec // testing SSRF-safe client
+		require.NoError(t, err)
+		defer resp.Body.Close()
+		assert.Equal(t, int32(1), hits.Load())
 	})
 }

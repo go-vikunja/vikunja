@@ -27,12 +27,14 @@ import (
 	"code.vikunja.io/api/pkg/version"
 
 	"code.dny.dev/ssrf"
+	"golang.org/x/net/http/httpproxy"
 )
 
 // NewSSRFSafeHTTPClient returns an *http.Client with SSRF protection applied.
 // It blocks connections to non-globally-routable IP addresses (loopback,
 // private ranges, link-local, etc.) unless outgoingrequests.allownonroutableips
-// is set to true. It also configures proxy settings from outgoingrequests config.
+// is set to true. It routes requests through the proxy from outgoingrequests
+// config, falling back to the HTTP_PROXY, HTTPS_PROXY and NO_PROXY env vars.
 //
 // Deprecated webhooks.* config keys are migrated to outgoingrequests.* at
 // config init time (see config.InitDefaultConfig), so this function only
@@ -41,7 +43,9 @@ func NewSSRFSafeHTTPClient() *http.Client {
 	client := &http.Client{
 		Timeout: time.Duration(config.OutgoingRequestsTimeoutSeconds.GetInt()) * time.Second,
 	}
-	transport := &http.Transport{}
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	// Not http.ProxyFromEnvironment: it caches the env on first use.
+	transport.Proxy = proxyFromEnv(httpproxy.FromEnvironment().ProxyFunc())
 
 	if !config.OutgoingRequestsAllowNonRoutableIPs.GetBool() {
 		guardian := ssrf.New(ssrf.WithAnyPort())
@@ -64,4 +68,10 @@ func NewSSRFSafeHTTPClient() *http.Client {
 
 	client.Transport = transport
 	return client
+}
+
+func proxyFromEnv(proxyFunc func(*url.URL) (*url.URL, error)) func(*http.Request) (*url.URL, error) {
+	return func(req *http.Request) (*url.URL, error) {
+		return proxyFunc(req.URL)
+	}
 }
