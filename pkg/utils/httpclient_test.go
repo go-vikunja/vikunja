@@ -299,6 +299,22 @@ func TestNewSSRFSafeHTTPClientProxy(t *testing.T) {
 		assert.Equal(t, int32(1), proxy.hits.Load())
 	})
 
+	t.Run("blocks direct requests to a fullwidth alias of the proxy address", func(t *testing.T) {
+		proxy := newCountingServer(t)
+		setProxyEnv(t, proxy.URL)
+		proxyURL, err := url.Parse(proxy.URL)
+		require.NoError(t, err)
+		fullwidthHost := strings.Map(func(r rune) rune {
+			if r >= '0' && r <= '9' {
+				return r - '0' + '０'
+			}
+			return r
+		}, proxyURL.Hostname())
+
+		require.ErrorIs(t, get(t, NewSSRFSafeHTTPClient(), "http://"+fullwidthHost+":"+proxyURL.Port()+"/"), ssrf.ErrProhibitedIP)
+		assert.Equal(t, int32(0), proxy.hits.Load())
+	})
+
 	t.Run("blocks redirects to the proxy address", func(t *testing.T) {
 		proxy := newCountingServer(t)
 		setProxyEnv(t, proxy.URL)

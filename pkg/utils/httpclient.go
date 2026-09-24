@@ -143,6 +143,7 @@ func guardProxiedDials(transport *http.Transport, proxyAddrs map[string]struct{}
 // proxyDialAddr mirrors the address net/http dials for a url.
 func proxyDialAddr(u *url.URL) string {
 	host := u.Hostname()
+	// net/http dials IDNA-mapped hosts, so fullwidth aliases must match too.
 	if strings.IndexFunc(host, func(r rune) bool { return r >= utf8.RuneSelf }) >= 0 {
 		if ascii, err := idna.Lookup.ToASCII(host); err == nil {
 			host = ascii
