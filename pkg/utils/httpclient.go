@@ -83,8 +83,12 @@ func configuredProxy() func(*http.Request) (*url.URL, error) {
 		}
 	}
 
-	if password := config.OutgoingRequestsProxyPassword.GetString(); password != "" && proxyURL.User == nil {
-		proxyURL.User = url.UserPassword("vikunja", password)
+	if password := config.OutgoingRequestsProxyPassword.GetString(); password != "" {
+		if proxyURL.User == nil {
+			proxyURL.User = url.UserPassword("vikunja", password)
+		} else if _, hasPassword := proxyURL.User.Password(); !hasPassword {
+			proxyURL.User = url.UserPassword(proxyURL.User.Username(), password)
+		}
 	}
 	return http.ProxyURL(proxyURL)
 }

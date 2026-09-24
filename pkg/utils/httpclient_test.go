@@ -234,6 +234,17 @@ func TestNewSSRFSafeHTTPClientProxy(t *testing.T) {
 		assert.Equal(t, "Basic "+base64.StdEncoding.EncodeToString([]byte("alice:hunter2")), proxy.proxyAuth.Load())
 	})
 
+	t.Run("adds the proxy password to a proxy url username", func(t *testing.T) {
+		proxy := newFakeProxy(t)
+		proxyURL, err := url.Parse(proxy.URL)
+		require.NoError(t, err)
+		proxyURL.User = url.User("alice")
+		setProxyConfig(t, proxyURL.String(), "secret")
+
+		require.NoError(t, get(t, NewSSRFSafeHTTPClient(), proxiedTarget))
+		assert.Equal(t, "Basic "+base64.StdEncoding.EncodeToString([]byte("alice:secret")), proxy.proxyAuth.Load())
+	})
+
 	t.Run("fails closed on an invalid proxy url", func(t *testing.T) {
 		config.OutgoingRequestsAllowNonRoutableIPs.Set("true")
 		defer config.OutgoingRequestsAllowNonRoutableIPs.Set("false")
