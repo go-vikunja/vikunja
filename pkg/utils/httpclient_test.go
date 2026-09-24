@@ -360,12 +360,12 @@ func TestProxyDialAddr(t *testing.T) {
 	}
 }
 
-func TestNewHTTPClient(t *testing.T) {
+func TestNewUnguardedHTTPClient(t *testing.T) {
 	t.Run("reaches non-routable targets", func(t *testing.T) {
 		config.OutgoingRequestsAllowNonRoutableIPs.Set("false")
 		target := newCountingServer(t)
 
-		require.NoError(t, get(t, NewHTTPClient(), target.URL))
+		require.NoError(t, get(t, NewUnguardedHTTPClient(), target.URL))
 		assert.Equal(t, int32(1), target.hits.Load())
 	})
 
@@ -373,7 +373,7 @@ func TestNewHTTPClient(t *testing.T) {
 		proxy := newCountingServer(t)
 		setProxyConfig(t, proxy.URL, "")
 
-		require.NoError(t, get(t, NewHTTPClient(), "http://vikunja-proxy-test.invalid/"))
+		require.NoError(t, get(t, NewUnguardedHTTPClient(), "http://vikunja-proxy-test.invalid/"))
 		assert.Equal(t, int32(1), proxy.hits.Load())
 	})
 }

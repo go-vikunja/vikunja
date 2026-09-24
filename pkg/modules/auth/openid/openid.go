@@ -127,7 +127,7 @@ func (p *Provider) setOicdProvider() (err error) {
 	return err
 }
 
-var httpClient = sync.OnceValue(utils.NewHTTPClient)
+var httpClient = sync.OnceValue(utils.NewUnguardedHTTPClient)
 
 func withHTTPClient(ctx context.Context) context.Context {
 	return oidc.ClientContext(ctx, httpClient())

@@ -34,9 +34,10 @@ import (
 	"golang.org/x/net/idna"
 )
 
-// NewHTTPClient returns a proxy-aware client without the SSRF guard, for admin-configured endpoints.
-// Use NewSSRFSafeHTTPClient when users control the target url.
-func NewHTTPClient() *http.Client {
+type proxyDialAddrs map[string]struct{}
+
+// NewUnguardedHTTPClient returns a proxy-aware client without the SSRF guard, for admin-configured endpoints.
+func NewUnguardedHTTPClient() *http.Client {
 	proxy, _ := outgoingProxy()
 	return newHTTPClient(proxy)
 }
@@ -66,7 +67,7 @@ func newHTTPClient(proxy func(*http.Request) (*url.URL, error)) *http.Client {
 	}
 }
 
-func outgoingProxy() (func(*http.Request) (*url.URL, error), map[string]struct{}) {
+func outgoingProxy() (func(*http.Request) (*url.URL, error), proxyDialAddrs) {
 	raw := config.OutgoingRequestsProxyURL.GetString()
 	if raw == "" {
 		return environmentProxy()
@@ -88,10 +89,10 @@ func outgoingProxy() (func(*http.Request) (*url.URL, error), map[string]struct{}
 			proxyURL.User = url.UserPassword(proxyURL.User.Username(), password)
 		}
 	}
-	return http.ProxyURL(proxyURL), map[string]struct{}{proxyDialAddr(proxyURL): {}}
+	return http.ProxyURL(proxyURL), proxyDialAddrs{proxyDialAddr(proxyURL): {}}
 }
 
-func environmentProxy() (func(*http.Request) (*url.URL, error), map[string]struct{}) {
+func environmentProxy() (func(*http.Request) (*url.URL, error), proxyDialAddrs) {
 	// Not http.ProxyFromEnvironment: it caches the env on first use.
 	env := httpproxy.FromEnvironment()
 	proxyFunc := env.ProxyFunc()
@@ -100,7 +101,7 @@ func environmentProxy() (func(*http.Request) (*url.URL, error), map[string]struc
 	// NO_PROXY must not hide a proxy that other hosts still use.
 	unrestricted.NoProxy = ""
 	probe := unrestricted.ProxyFunc()
-	addrs := make(map[string]struct{}, 2)
+	addrs := make(proxyDialAddrs, 2)
 	for _, scheme := range []string{"http", "https"} {
 		if u, err := probe(&url.URL{Scheme: scheme, Host: "probe.invalid"}); err == nil && u != nil {
 			addrs[proxyDialAddr(u)] = struct{}{}
@@ -113,7 +114,7 @@ func environmentProxy() (func(*http.Request) (*url.URL, error), map[string]struc
 }
 
 // The proxy dial is exempt: it is admin-chosen, often private, and resolves proxied targets itself.
-func guardProxiedDials(transport *http.Transport, proxyAddrs map[string]struct{}) {
+func guardProxiedDials(transport *http.Transport, proxyAddrs proxyDialAddrs) {
 	proxy := transport.Proxy
 	transport.Proxy = func(req *http.Request) (*url.URL, error) {
 		u, err := proxy(req)
