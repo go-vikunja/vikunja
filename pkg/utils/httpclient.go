@@ -124,9 +124,12 @@ func proxyDialAddrs() map[string]struct{} {
 			proxies = append(proxies, u)
 		}
 	} else {
-		env := httpproxy.FromEnvironment()
-		for _, raw := range []string{env.HTTPProxy, env.HTTPSProxy} {
-			if u := parseEnvProxy(raw); u != nil {
+		env := *httpproxy.FromEnvironment()
+		// NO_PROXY must not hide a proxy that other hosts still use.
+		env.NoProxy = ""
+		proxyFunc := env.ProxyFunc()
+		for _, scheme := range []string{"http", "https"} {
+			if u, err := proxyFunc(&url.URL{Scheme: scheme, Host: "probe.invalid"}); err == nil && u != nil {
 				proxies = append(proxies, u)
 			}
 		}
@@ -137,23 +140,6 @@ func proxyDialAddrs() map[string]struct{} {
 		addrs[proxyDialAddr(u)] = struct{}{}
 	}
 	return addrs
-}
-
-// parseEnvProxy mirrors httpproxy's parsing, which accepts values without a scheme.
-func parseEnvProxy(raw string) *url.URL {
-	if raw == "" {
-		return nil
-	}
-	u, err := url.Parse(raw)
-	if err != nil || u.Scheme == "" || u.Host == "" {
-		if u, err := url.Parse("http://" + raw); err == nil {
-			return u
-		}
-	}
-	if err != nil {
-		return nil
-	}
-	return u
 }
 
 // proxyDialAddr mirrors the address net/http dials for a url.
