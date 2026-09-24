@@ -164,12 +164,12 @@ func setProxyConfig(t *testing.T, proxyURL, password string) {
 }
 
 // setProxyEnv sets both cases because httpproxy prefers the lowercase variables.
-func setProxyEnv(t *testing.T, httpProxy, httpsProxy string) {
+func setProxyEnv(t *testing.T, httpProxy, httpsProxy, noProxy string) {
 	t.Helper()
 	for name, value := range map[string]string{
 		"HTTP_PROXY":  httpProxy,
 		"HTTPS_PROXY": httpsProxy,
-		"NO_PROXY":    "",
+		"NO_PROXY":    noProxy,
 	} {
 		t.Setenv(name, value)
 		t.Setenv(strings.ToLower(name), value)
@@ -193,7 +193,7 @@ func TestNewSSRFSafeHTTPClientProxy(t *testing.T) {
 
 	t.Run("uses HTTP_PROXY from the environment", func(t *testing.T) {
 		proxy := newCountingServer(t)
-		setProxyEnv(t, proxy.URL, "")
+		setProxyEnv(t, proxy.URL, "", "")
 
 		require.NoError(t, get(t, NewSSRFSafeHTTPClient(), proxiedTarget))
 		assert.Equal(t, int32(1), proxy.hits.Load())
@@ -211,7 +211,7 @@ func TestNewSSRFSafeHTTPClientProxy(t *testing.T) {
 	t.Run("prefers the configured proxy over the environment", func(t *testing.T) {
 		envProxy := newCountingServer(t)
 		proxy := newCountingServer(t)
-		setProxyEnv(t, envProxy.URL, "")
+		setProxyEnv(t, envProxy.URL, "", "")
 		setProxyConfig(t, proxy.URL, "")
 
 		require.NoError(t, get(t, NewSSRFSafeHTTPClient(), proxiedTarget))
@@ -274,7 +274,7 @@ func TestNewSSRFSafeHTTPClientProxy(t *testing.T) {
 	t.Run("still blocks direct non-routable targets when a proxy is set", func(t *testing.T) {
 		proxy := newCountingServer(t)
 		target := newCountingServer(t)
-		setProxyEnv(t, proxy.URL, "")
+		setProxyEnv(t, proxy.URL, "", "")
 
 		// Loopback targets bypass the env proxy, so this dial is direct.
 		require.ErrorIs(t, get(t, NewSSRFSafeHTTPClient(), target.URL), ssrf.ErrProhibitedIP)
@@ -283,7 +283,7 @@ func TestNewSSRFSafeHTTPClientProxy(t *testing.T) {
 
 	t.Run("uses HTTPS_PROXY on a non-routable address", func(t *testing.T) {
 		proxy := newCountingServer(t)
-		setProxyEnv(t, "", proxy.URL)
+		setProxyEnv(t, "", proxy.URL, "")
 
 		err := get(t, NewSSRFSafeHTTPClient(), "https://vikunja-proxy-test.invalid/")
 		require.Error(t, err)
@@ -293,7 +293,7 @@ func TestNewSSRFSafeHTTPClientProxy(t *testing.T) {
 
 	t.Run("uses a scheme-less HTTP_PROXY on a non-routable address", func(t *testing.T) {
 		proxy := newCountingServer(t)
-		setProxyEnv(t, strings.TrimPrefix(proxy.URL, "http://"), "")
+		setProxyEnv(t, strings.TrimPrefix(proxy.URL, "http://"), "", "")
 
 		require.NoError(t, get(t, NewSSRFSafeHTTPClient(), proxiedTarget))
 		assert.Equal(t, int32(1), proxy.hits.Load())
@@ -301,7 +301,7 @@ func TestNewSSRFSafeHTTPClientProxy(t *testing.T) {
 
 	t.Run("blocks direct requests to the proxy address", func(t *testing.T) {
 		proxy := newCountingServer(t)
-		setProxyEnv(t, proxy.URL, "")
+		setProxyEnv(t, proxy.URL, "", "")
 		client := NewSSRFSafeHTTPClient()
 
 		require.NoError(t, get(t, client, proxiedTarget))
@@ -311,7 +311,7 @@ func TestNewSSRFSafeHTTPClientProxy(t *testing.T) {
 
 	t.Run("blocks direct requests to a fullwidth alias of the proxy address", func(t *testing.T) {
 		proxy := newCountingServer(t)
-		setProxyEnv(t, proxy.URL, "")
+		setProxyEnv(t, proxy.URL, "", "")
 		proxyURL, err := url.Parse(proxy.URL)
 		require.NoError(t, err)
 		fullwidthHost := strings.Map(func(r rune) rune {
@@ -327,9 +327,17 @@ func TestNewSSRFSafeHTTPClientProxy(t *testing.T) {
 
 	t.Run("blocks redirects to the proxy address", func(t *testing.T) {
 		proxy := newCountingServer(t)
-		setProxyEnv(t, proxy.URL, "")
+		setProxyEnv(t, proxy.URL, "", "")
 
 		require.ErrorIs(t, get(t, NewSSRFSafeHTTPClient(), "http://vikunja-proxy-test.invalid"+redirectToProxyPath), ssrf.ErrProhibitedIP)
+		assert.Equal(t, int32(1), proxy.hits.Load())
+	})
+
+	t.Run("ignores NO_PROXY when probing for the proxy's own dial address", func(t *testing.T) {
+		proxy := newCountingServer(t)
+		setProxyEnv(t, proxy.URL, "", ".invalid")
+
+		require.NoError(t, get(t, NewSSRFSafeHTTPClient(), "http://vikunja-proxy-test.example/"))
 		assert.Equal(t, int32(1), proxy.hits.Load())
 	})
 }
