@@ -1099,7 +1099,7 @@
                 {
                     "key": "proxypassword",
                     "default_value": "",
-                    "comment": "The proxy password for authenticating against the proxy with the username `vikunja`. Ignored when `outgoingrequests.proxyurl` contains credentials."
+                    "comment": "The proxy password. Used with the username from `outgoingrequests.proxyurl`, or `vikunja` if the URL has none. Ignored when `outgoingrequests.proxyurl` already contains a password."
                 }
             ]
         },
