@@ -115,7 +115,7 @@ func init() {
 func (p *Provider) setOicdProvider() (err error) {
 	err = utils.RetryWithBackoff(fmt.Sprintf("OpenID Connect provider '%s'", p.Name), func() error {
 		var providerErr error
-		p.openIDProvider, providerErr = oidc.NewProvider(context.Background(), p.OriginalAuthURL)
+		p.openIDProvider, providerErr = oidc.NewProvider(httpClientContext(), p.OriginalAuthURL)
 		return providerErr
 	})
 
@@ -124,6 +124,11 @@ func (p *Provider) setOicdProvider() (err error) {
 	}
 
 	return err
+}
+
+// httpClientContext makes go-oidc and oauth2 use the proxy-aware client.
+func httpClientContext() context.Context {
+	return oidc.ClientContext(context.Background(), utils.NewHTTPClient())
 }
 
 func (p *Provider) Issuer() (issuerURL string, err error) {
@@ -577,7 +582,8 @@ func getClaims(provider *Provider, oauth2Token *oauth2.Token, idToken *oidc.IDTo
 	}
 
 	if provider.ForceUserInfo || cl.Email == "" || cl.Name == "" || cl.PreferredUsername == "" || cl.Picture == "" {
-		info, err := provider.openIDProvider.UserInfo(context.Background(), provider.Oauth2Config.TokenSource(context.Background(), oauth2Token))
+		ctx := httpClientContext()
+		info, err := provider.openIDProvider.UserInfo(ctx, provider.Oauth2Config.TokenSource(ctx, oauth2Token))
 		if err != nil {
 			log.Errorf("Error getting userinfo for provider %s: %v", provider.Name, err)
 			return nil, err
@@ -619,7 +625,7 @@ func exchangeOidcTokens(cb *Callback, providerKey string) (*Provider, *oauth2.To
 
 	provider.Oauth2Config.RedirectURL = cb.RedirectURL
 	// Parse the access & ID token
-	oauth2Token, err := provider.Oauth2Config.Exchange(context.Background(), cb.Code)
+	oauth2Token, err := provider.Oauth2Config.Exchange(httpClientContext(), cb.Code)
 	if err != nil {
 		log.Debugf("Token exchange failed for provider %s using token_endpoint_auth_method %s", provider.Key, authStyleName(provider.Oauth2Config.Endpoint.AuthStyle))
 
