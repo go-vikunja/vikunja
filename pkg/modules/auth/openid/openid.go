@@ -116,7 +116,7 @@ func init() {
 func (p *Provider) setOicdProvider() (err error) {
 	err = utils.RetryWithBackoff(fmt.Sprintf("OpenID Connect provider '%s'", p.Name), func() error {
 		var providerErr error
-		p.openIDProvider, providerErr = oidc.NewProvider(httpClientContext(), p.OriginalAuthURL)
+		p.openIDProvider, providerErr = oidc.NewProvider(withHTTPClient(context.Background()), p.OriginalAuthURL)
 		return providerErr
 	})
 
@@ -129,9 +129,9 @@ func (p *Provider) setOicdProvider() (err error) {
 
 var httpClient = sync.OnceValue(utils.NewHTTPClient)
 
-// httpClientContext makes go-oidc and oauth2 use the proxy-aware client.
-func httpClientContext() context.Context {
-	return oidc.ClientContext(context.Background(), httpClient())
+// withHTTPClient makes go-oidc and oauth2 use the proxy-aware client.
+func withHTTPClient(ctx context.Context) context.Context {
+	return oidc.ClientContext(ctx, httpClient())
 }
 
 func (p *Provider) Issuer() (issuerURL string, err error) {
@@ -230,10 +230,7 @@ func HandleCallback(c *echo.Context) error {
 // ErrOpenIDBadRequestWithDetails error keeps its provider detail so v1 can render
 // its bespoke body and v2 can map it to RFC 9457.
 func AuthenticateCallback(ctx context.Context, cb *Callback, providerKey string) (*user.User, *models.SessionOIDCData, error) {
-	// ctx is threaded through only to dispatch the login event; the OIDC token
-	// exchange, claim verification and user/avatar sync run on their own
-	// background contexts, exactly as the v1 callback always did.
-	provider, oauthToken, idToken, rawIDToken, err := exchangeOidcTokens(cb, providerKey) //nolint:contextcheck
+	provider, oauthToken, idToken, rawIDToken, err := exchangeOidcTokens(ctx, cb, providerKey)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -244,7 +241,7 @@ func AuthenticateCallback(ctx context.Context, cb *Callback, providerKey string)
 		ProviderKey: providerKey,
 	}
 
-	cl, err := getClaims(provider, oauthToken, idToken) //nolint:contextcheck
+	cl, err := getClaims(ctx, provider, oauthToken, idToken)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -575,7 +572,7 @@ func mergeClaims(cl *claims, cl2 *claims, forceUserInfo bool) error {
 	return nil
 }
 
-func getClaims(provider *Provider, oauth2Token *oauth2.Token, idToken *oidc.IDToken) (*claims, error) {
+func getClaims(ctx context.Context, provider *Provider, oauth2Token *oauth2.Token, idToken *oidc.IDToken) (*claims, error) {
 
 	cl := &claims{}
 	err := idToken.Claims(cl)
@@ -585,7 +582,7 @@ func getClaims(provider *Provider, oauth2Token *oauth2.Token, idToken *oidc.IDTo
 	}
 
 	if provider.ForceUserInfo || cl.Email == "" || cl.Name == "" || cl.PreferredUsername == "" || cl.Picture == "" {
-		ctx := httpClientContext()
+		ctx = withHTTPClient(ctx)
 		info, err := provider.openIDProvider.UserInfo(ctx, provider.Oauth2Config.TokenSource(ctx, oauth2Token))
 		if err != nil {
 			log.Errorf("Error getting userinfo for provider %s: %v", provider.Name, err)
@@ -615,8 +612,8 @@ func getClaims(provider *Provider, oauth2Token *oauth2.Token, idToken *oidc.IDTo
 // and verifies the returned ID token. It takes an already-bound Callback so it
 // can be shared by the v1 echo handler (which binds from the request) and the v2
 // Huma handler (which binds via its typed body).
-func exchangeOidcTokens(cb *Callback, providerKey string) (*Provider, *oauth2.Token, *oidc.IDToken, string, error) {
-	provider, err := GetProvider(providerKey)
+func exchangeOidcTokens(ctx context.Context, cb *Callback, providerKey string) (*Provider, *oauth2.Token, *oidc.IDToken, string, error) {
+	provider, err := GetProvider(providerKey) //nolint:contextcheck // GetProvider is shared with context-less startup callers.
 	if err != nil {
 		return nil, nil, nil, "", err
 	}
@@ -628,7 +625,7 @@ func exchangeOidcTokens(cb *Callback, providerKey string) (*Provider, *oauth2.To
 
 	provider.Oauth2Config.RedirectURL = cb.RedirectURL
 	// Parse the access & ID token
-	oauth2Token, err := provider.Oauth2Config.Exchange(httpClientContext(), cb.Code)
+	oauth2Token, err := provider.Oauth2Config.Exchange(withHTTPClient(ctx), cb.Code)
 	if err != nil {
 		log.Debugf("Token exchange failed for provider %s using token_endpoint_auth_method %s", provider.Key, authStyleName(provider.Oauth2Config.Endpoint.AuthStyle))
 
@@ -664,7 +661,7 @@ func exchangeOidcTokens(cb *Callback, providerKey string) (*Provider, *oauth2.To
 	verifier := provider.openIDProvider.Verifier(&oidc.Config{ClientID: provider.ClientID})
 
 	// Parse and verify ID Token payload.
-	idToken, err := verifier.Verify(context.Background(), rawIDToken)
+	idToken, err := verifier.Verify(ctx, rawIDToken)
 	if err != nil {
 		log.Errorf("Error verifying token for provider %s: %v", provider.Name, err)
 		return nil, nil, nil, "", err
