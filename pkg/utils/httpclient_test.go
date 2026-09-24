@@ -122,17 +122,17 @@ func TestNewSSRFSafeHTTPClient(t *testing.T) {
 
 const redirectToProxyPath = "/redirect-to-proxy"
 
-type fakeProxy struct {
+type countingServer struct {
 	*httptest.Server
 	hits      atomic.Int32
 	proxyAuth atomic.Value
 	userAgent atomic.Value
 }
 
-// newFakeProxy answers every request itself, so a hit proves the client routed through it.
-func newFakeProxy(t *testing.T) *fakeProxy {
+// newCountingServer answers every request itself, so a hit proves the client routed through it.
+func newCountingServer(t *testing.T) *countingServer {
 	t.Helper()
-	p := &fakeProxy{}
+	p := &countingServer{}
 	p.proxyAuth.Store("")
 	p.userAgent.Store("")
 	p.Server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -192,7 +192,7 @@ func TestNewSSRFSafeHTTPClientProxy(t *testing.T) {
 	const proxiedTarget = "http://vikunja-proxy-test.invalid/"
 
 	t.Run("uses HTTP_PROXY from the environment", func(t *testing.T) {
-		proxy := newFakeProxy(t)
+		proxy := newCountingServer(t)
 		setProxyEnv(t, proxy.URL)
 
 		require.NoError(t, get(t, NewSSRFSafeHTTPClient(), proxiedTarget))
@@ -200,7 +200,7 @@ func TestNewSSRFSafeHTTPClientProxy(t *testing.T) {
 	})
 
 	t.Run("uses the configured proxy on a non-routable address", func(t *testing.T) {
-		proxy := newFakeProxy(t)
+		proxy := newCountingServer(t)
 		setProxyConfig(t, proxy.URL, "")
 
 		require.NoError(t, get(t, NewSSRFSafeHTTPClient(), proxiedTarget))
@@ -209,8 +209,8 @@ func TestNewSSRFSafeHTTPClientProxy(t *testing.T) {
 	})
 
 	t.Run("prefers the configured proxy over the environment", func(t *testing.T) {
-		envProxy := newFakeProxy(t)
-		proxy := newFakeProxy(t)
+		envProxy := newCountingServer(t)
+		proxy := newCountingServer(t)
 		setProxyEnv(t, envProxy.URL)
 		setProxyConfig(t, proxy.URL, "")
 
@@ -220,7 +220,7 @@ func TestNewSSRFSafeHTTPClientProxy(t *testing.T) {
 	})
 
 	t.Run("authenticates as vikunja with the proxy password", func(t *testing.T) {
-		proxy := newFakeProxy(t)
+		proxy := newCountingServer(t)
 		setProxyConfig(t, proxy.URL, "secret")
 
 		require.NoError(t, get(t, NewSSRFSafeHTTPClient(), proxiedTarget))
@@ -228,7 +228,7 @@ func TestNewSSRFSafeHTTPClientProxy(t *testing.T) {
 	})
 
 	t.Run("authenticates with credentials from the proxy url", func(t *testing.T) {
-		proxy := newFakeProxy(t)
+		proxy := newCountingServer(t)
 		proxyURL, err := url.Parse(proxy.URL)
 		require.NoError(t, err)
 		proxyURL.User = url.UserPassword("alice", "hunter2")
@@ -239,7 +239,7 @@ func TestNewSSRFSafeHTTPClientProxy(t *testing.T) {
 	})
 
 	t.Run("authenticates the CONNECT request for https targets", func(t *testing.T) {
-		proxy := newFakeProxy(t)
+		proxy := newCountingServer(t)
 		setProxyConfig(t, proxy.URL, "secret")
 
 		require.Error(t, get(t, NewSSRFSafeHTTPClient(), "https://vikunja-proxy-test.invalid/"))
@@ -249,7 +249,7 @@ func TestNewSSRFSafeHTTPClientProxy(t *testing.T) {
 	})
 
 	t.Run("adds the proxy password to a proxy url username", func(t *testing.T) {
-		proxy := newFakeProxy(t)
+		proxy := newCountingServer(t)
 		proxyURL, err := url.Parse(proxy.URL)
 		require.NoError(t, err)
 		proxyURL.User = url.User("alice")
@@ -262,7 +262,7 @@ func TestNewSSRFSafeHTTPClientProxy(t *testing.T) {
 	t.Run("fails closed on an invalid proxy url", func(t *testing.T) {
 		config.OutgoingRequestsAllowNonRoutableIPs.Set("true")
 		t.Cleanup(func() { config.OutgoingRequestsAllowNonRoutableIPs.Set("false") })
-		target := newFakeProxy(t)
+		target := newCountingServer(t)
 		setProxyConfig(t, "http://alice:hunter2@", "")
 
 		err := get(t, NewSSRFSafeHTTPClient(), target.URL)
@@ -272,8 +272,8 @@ func TestNewSSRFSafeHTTPClientProxy(t *testing.T) {
 	})
 
 	t.Run("still blocks direct non-routable targets when a proxy is set", func(t *testing.T) {
-		proxy := newFakeProxy(t)
-		target := newFakeProxy(t)
+		proxy := newCountingServer(t)
+		target := newCountingServer(t)
 		setProxyEnv(t, proxy.URL)
 
 		// Loopback targets bypass the env proxy, so this dial is direct.
@@ -282,7 +282,7 @@ func TestNewSSRFSafeHTTPClientProxy(t *testing.T) {
 	})
 
 	t.Run("uses a scheme-less HTTP_PROXY on a non-routable address", func(t *testing.T) {
-		proxy := newFakeProxy(t)
+		proxy := newCountingServer(t)
 		setProxyEnv(t, strings.TrimPrefix(proxy.URL, "http://"))
 
 		require.NoError(t, get(t, NewSSRFSafeHTTPClient(), proxiedTarget))
@@ -290,7 +290,7 @@ func TestNewSSRFSafeHTTPClientProxy(t *testing.T) {
 	})
 
 	t.Run("blocks direct requests to the proxy address", func(t *testing.T) {
-		proxy := newFakeProxy(t)
+		proxy := newCountingServer(t)
 		setProxyEnv(t, proxy.URL)
 		client := NewSSRFSafeHTTPClient()
 
@@ -300,7 +300,7 @@ func TestNewSSRFSafeHTTPClientProxy(t *testing.T) {
 	})
 
 	t.Run("blocks redirects to the proxy address", func(t *testing.T) {
-		proxy := newFakeProxy(t)
+		proxy := newCountingServer(t)
 		setProxyEnv(t, proxy.URL)
 
 		require.ErrorIs(t, get(t, NewSSRFSafeHTTPClient(), "http://vikunja-proxy-test.invalid"+redirectToProxyPath), ssrf.ErrProhibitedIP)
@@ -308,7 +308,7 @@ func TestNewSSRFSafeHTTPClientProxy(t *testing.T) {
 	})
 
 	t.Run("blocks direct requests to the proxy address for an unproxied scheme", func(t *testing.T) {
-		proxy := newFakeProxy(t)
+		proxy := newCountingServer(t)
 		setProxyEnv(t, proxy.URL)
 		client := NewSSRFSafeHTTPClient()
 		proxyURL, err := url.Parse(proxy.URL)
@@ -341,14 +341,14 @@ func TestProxyDialAddr(t *testing.T) {
 func TestNewHTTPClient(t *testing.T) {
 	t.Run("reaches non-routable targets", func(t *testing.T) {
 		config.OutgoingRequestsAllowNonRoutableIPs.Set("false")
-		target := newFakeProxy(t)
+		target := newCountingServer(t)
 
 		require.NoError(t, get(t, NewHTTPClient(), target.URL))
 		assert.Equal(t, int32(1), target.hits.Load())
 	})
 
 	t.Run("uses the configured proxy", func(t *testing.T) {
-		proxy := newFakeProxy(t)
+		proxy := newCountingServer(t)
 		setProxyConfig(t, proxy.URL, "")
 
 		require.NoError(t, get(t, NewHTTPClient(), "http://vikunja-proxy-test.invalid/"))
