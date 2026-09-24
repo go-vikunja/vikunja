@@ -17,11 +17,25 @@
 package openid
 
 import (
+	"context"
+	"crypto"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
+	"math/big"
+	"net/http"
+	"net/http/httptest"
+	"net/http/httputil"
+	"sync"
 	"testing"
 	"time"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
+	"code.vikunja.io/api/pkg/utils"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
@@ -742,4 +756,138 @@ func TestEmailVerifiedClaimDecoding(t *testing.T) {
 			assert.Equal(t, want, bool(cl.EmailVerified))
 		})
 	}
+}
+
+func TestOIDCRequestsUseConfiguredProxy(t *testing.T) {
+	defer CleanupSavedOpenIDProviders()
+
+	server := newMockOIDCServerWithAuthMethods([]string{authMethodPost}, func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusUnauthorized)
+		_, _ = w.Write([]byte(`{"error":"invalid_client"}`))
+	})
+	defer server.Close()
+
+	var mu sync.Mutex
+	var proxiedPaths []string
+	forward := &httputil.ReverseProxy{Rewrite: func(*httputil.ProxyRequest) {}}
+	proxy := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		mu.Lock()
+		proxiedPaths = append(proxiedPaths, r.URL.Path)
+		mu.Unlock()
+		forward.ServeHTTP(w, r)
+	}))
+	defer proxy.Close()
+
+	config.OutgoingRequestsProxyURL.Set(proxy.URL)
+	previousClient := httpClient
+	httpClient = sync.OnceValue(utils.NewHTTPClient)
+	t.Cleanup(func() {
+		config.OutgoingRequestsProxyURL.Set("")
+		httpClient = previousClient
+	})
+
+	config.AuthOpenIDEnabled.Set(true)
+	config.AuthOpenIDProviders.Set(map[string]interface{}{
+		"provider1": map[string]interface{}{
+			"name":         "Provider One",
+			"authurl":      server.URL,
+			"clientid":     "client1",
+			"clientsecret": "secret1",
+		},
+	})
+	_ = keyvalue.Del("openid_providers")
+	_ = keyvalue.Del("openid_provider_provider1")
+
+	_, _, _, _, err := exchangeOidcTokens(context.Background(), &Callback{Code: "code"}, "provider1")
+	var detailedErr *models.ErrOpenIDBadRequestWithDetails
+	require.ErrorAs(t, err, &detailedErr)
+
+	mu.Lock()
+	defer mu.Unlock()
+	assert.Contains(t, proxiedPaths, "/.well-known/openid-configuration")
+	assert.Contains(t, proxiedPaths, "/token")
+}
+
+// go-oidc fetches the JWKS with the client captured by oidc.NewProvider, not the Verify context.
+func TestOIDCIDTokenVerificationUsesConfiguredProxy(t *testing.T) {
+	defer CleanupSavedOpenIDProviders()
+
+	key, err := rsa.GenerateKey(rand.Reader, 2048)
+	require.NoError(t, err)
+	b64 := base64.RawURLEncoding.EncodeToString
+
+	var server *httptest.Server
+	mux := http.NewServeMux()
+	mux.HandleFunc("/.well-known/openid-configuration", func(w http.ResponseWriter, _ *http.Request) {
+		_ = json.NewEncoder(w).Encode(map[string]string{
+			"issuer":                 server.URL,
+			"authorization_endpoint": server.URL + "/auth",
+			"token_endpoint":         server.URL + "/token",
+			"jwks_uri":               server.URL + "/jwks",
+		})
+	})
+	mux.HandleFunc("/jwks", func(w http.ResponseWriter, _ *http.Request) {
+		_ = json.NewEncoder(w).Encode(map[string]any{"keys": []map[string]string{{
+			"kty": "RSA", "alg": "RS256", "use": "sig", "kid": "test",
+			"n": b64(key.N.Bytes()),
+			"e": b64(big.NewInt(int64(key.E)).Bytes()),
+		}}})
+	})
+	mux.HandleFunc("/token", func(w http.ResponseWriter, _ *http.Request) {
+		header := b64([]byte(`{"alg":"RS256","kid":"test","typ":"JWT"}`))
+		payload, _ := json.Marshal(map[string]any{
+			"iss": server.URL, "aud": "client1", "sub": "user1",
+			"iat": time.Now().Unix(), "exp": time.Now().Add(time.Hour).Unix(),
+		})
+		signingInput := header + "." + b64(payload)
+		digest := sha256.Sum256([]byte(signingInput))
+		signature, _ := rsa.SignPKCS1v15(rand.Reader, key, crypto.SHA256, digest[:])
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"access_token": "access", "token_type": "Bearer", "expires_in": 3600,
+			"id_token": signingInput + "." + b64(signature),
+		})
+	})
+	server = httptest.NewServer(mux)
+	defer server.Close()
+
+	var mu sync.Mutex
+	var proxiedPaths []string
+	forward := &httputil.ReverseProxy{Rewrite: func(*httputil.ProxyRequest) {}}
+	proxy := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		mu.Lock()
+		proxiedPaths = append(proxiedPaths, r.URL.Path)
+		mu.Unlock()
+		forward.ServeHTTP(w, r)
+	}))
+	defer proxy.Close()
+
+	config.OutgoingRequestsProxyURL.Set(proxy.URL)
+	previousClient := httpClient
+	httpClient = sync.OnceValue(utils.NewUnguardedHTTPClient)
+	t.Cleanup(func() {
+		config.OutgoingRequestsProxyURL.Set("")
+		httpClient = previousClient
+	})
+
+	config.AuthOpenIDEnabled.Set(true)
+	config.AuthOpenIDProviders.Set(map[string]interface{}{
+		"provider1": map[string]interface{}{
+			"name":         "Provider One",
+			"authurl":      server.URL,
+			"clientid":     "client1",
+			"clientsecret": "secret1",
+		},
+	})
+	_ = keyvalue.Del("openid_providers")
+	_ = keyvalue.Del("openid_provider_provider1")
+
+	_, _, idToken, _, err := exchangeOidcTokens(context.Background(), &Callback{Code: "code"}, "provider1")
+	require.NoError(t, err)
+	assert.Equal(t, "user1", idToken.Subject)
+
+	mu.Lock()
+	defer mu.Unlock()
+	assert.Contains(t, proxiedPaths, "/jwks")
 }
