@@ -98,6 +98,13 @@ func TestHumaWebPushSubscriptions(t *testing.T) {
 	rec = humaRequest(t, e, http.MethodPut, "/api/v2/user/settings/web-push/subscriptions/ec35ec57-c51d-4d5f-a1d3-219982df56c0", body, user2Token, "")
 	assert.Equal(t, http.StatusConflict, rec.Code, "body: %s", rec.Body.String())
 
+	rec = humaRequest(t, e, http.MethodDelete, path, "", user2Token, "")
+	require.Equal(t, http.StatusNoContent, rec.Code)
+	db.AssertCount(t, "web_push_subscriptions", builder.Eq{"user_id": testuser1.ID, "device_id": deviceID}, 1)
+
+	rec = humaRequest(t, e, http.MethodPost, path+"/test", "", user2Token, "")
+	assert.Equal(t, http.StatusNotFound, rec.Code)
+
 	rec = humaRequest(t, e, http.MethodDelete, path, "", user1Token, "")
 	require.Equal(t, http.StatusNoContent, rec.Code, "body: %s", rec.Body.String())
 	db.AssertMissing(t, "web_push_subscriptions", map[string]any{"user_id": testuser1.ID, "device_id": deviceID})

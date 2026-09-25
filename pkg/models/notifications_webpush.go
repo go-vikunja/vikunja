@@ -63,7 +63,7 @@ func (n *UndoneTaskOverdueNotification) ToWebPush(lang string) *notifications.We
 func (n *UndoneTasksOverdueNotification) ToWebPush(lang string) *notifications.WebPushMessage {
 	return &notifications.WebPushMessage{
 		Title: "Vikunja",
-		Body:  i18n.T(lang, "notifications.web_push.overdue_count", len(n.Tasks)),
+		Body:  i18n.T(lang, "notifications.web_push.overdue_count", len(n.Assigned)+len(n.Followed)),
 		URL:   "/",
 	}
 }

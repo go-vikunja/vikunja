@@ -28,6 +28,17 @@ import (
 	"xorm.io/builder"
 )
 
+type webPushTestSession struct {
+	ID            string `xorm:"varchar(36) not null unique pk"`
+	UserID        int64
+	TokenHash     string    `xorm:"varchar(64) not null unique index"`
+	LastActive    time.Time `xorm:"not null"`
+	IsLongSession bool      `xorm:"not null default false"`
+	Created       time.Time `xorm:"created"`
+}
+
+func (*webPushTestSession) TableName() string { return "sessions" }
+
 type webPushHTTPClientFunc func(*http.Request) (*http.Response, error)
 
 func (f webPushHTTPClientFunc) Do(request *http.Request) (*http.Response, error) {
@@ -57,20 +68,22 @@ func setupWebPushTest(t *testing.T) WebPushSubscriptionInput {
 
 	s := db.NewSession()
 	defer s.Close()
-	_, err = s.Exec("DELETE FROM web_push_deliveries")
+	_, err = s.Where("id > ?", 0).Delete(&WebPushDelivery{})
 	require.NoError(t, err)
-	_, err = s.Exec("DELETE FROM web_push_subscriptions")
+	_, err = s.Where("id > ?", 0).Delete(&WebPushSubscription{})
 	require.NoError(t, err)
-	_, err = s.Exec("DELETE FROM sessions")
+	_, err = s.Where("id <> ?", "").Delete(&webPushSessionState{})
 	require.NoError(t, err)
-	_, err = s.Insert(&webPushSessionState{
+	_, err = s.Insert(&webPushTestSession{
 		ID:         "550e8400-e29b-41d4-a716-446655440001",
+		TokenHash:  "push-test-session-one",
 		UserID:     1,
 		LastActive: time.Now(),
 	})
 	require.NoError(t, err)
-	_, err = s.Insert(&webPushSessionState{
+	_, err = s.Insert(&webPushTestSession{
 		ID:         "550e8400-e29b-41d4-a716-446655440002",
+		TokenHash:  "push-test-session-two",
 		UserID:     2,
 		LastActive: time.Now(),
 	})
@@ -91,6 +104,7 @@ func TestWebPushSubscriptionLifecycle(t *testing.T) {
 
 	first, err := UpsertWebPushSubscription(s, 1, "550e8400-e29b-41d4-a716-446655440001", "9a34527d-1357-4c64-8171-6d6e25f01d62", input)
 	require.NoError(t, err)
+	require.NoError(t, enqueueWebPush(s, 1, "refresh-pending", &WebPushMessage{Title: "Vikunja", Body: "Pending", URL: "/"}, time.Hour))
 	require.NoError(t, s.Commit())
 	s.Close()
 	require.Positive(t, first.ID)
@@ -101,6 +115,7 @@ func TestWebPushSubscriptionLifecycle(t *testing.T) {
 	require.NoError(t, s.Commit())
 	s.Close()
 	assert.Equal(t, first.ID, refreshed.ID, "upsert must preserve the device row")
+	db.AssertCount(t, "web_push_deliveries", builder.Eq{"subscription_id": first.ID}, 1)
 
 	s = db.NewSession()
 	_, err = UpsertWebPushSubscription(s, 2, "550e8400-e29b-41d4-a716-446655440002", "ec35ec57-c51d-4d5f-a1d3-219982df56c0", input)
@@ -135,7 +150,7 @@ func TestWebPushQueueDurabilityAndDeduplication(t *testing.T) {
 	require.NoError(t, s.Commit())
 	s.Close()
 
-	message := &WebPushMessage{Title: "Vikunja", Body: "A task changed", URL: "/tasks/1"}
+	message := &WebPushMessage{Title: "Vikunja", Body: strings.Repeat("é", 2000), URL: "/tasks/1"}
 	s = db.NewSession()
 	require.NoError(t, enqueueWebPush(s, 1, "notification:123", message, time.Hour))
 	require.NoError(t, enqueueWebPush(s, 1, "notification:123", message, time.Hour))
@@ -222,6 +237,10 @@ func TestWebPushLeaseRecoveryAndRelease(t *testing.T) {
 	recoveredAfterCrash, err := claimWebPushDeliveries("restart-worker", time.Now())
 	require.NoError(t, err)
 	require.Len(t, recoveredAfterCrash, 1, "an expired lease must recover work after an ungraceful restart")
+
+	rescheduleWebPushDelivery(recovered[0], errors.New("late failure"), "")
+	deleteWebPushDelivery(recovered[0])
+	db.AssertExists(t, "web_push_deliveries", map[string]any{"id": recovered[0].ID, "lease_owner": "restart-worker", "attempts": 0}, false)
 }
 
 func TestSendWebPushTestAccepted(t *testing.T) {
@@ -339,7 +358,7 @@ func TestInactiveOrDeletedSessionStillDelivers(t *testing.T) {
 	// it is revoked only on explicit logout, account deletion, disabling push,
 	// or a Gone response from the push service.
 	s = db.NewSession()
-	_, err = s.Exec("DELETE FROM sessions WHERE id = ?", "550e8400-e29b-41d4-a716-446655440001")
+	_, err = s.Where("id = ?", "550e8400-e29b-41d4-a716-446655440001").Delete(&webPushSessionState{})
 	require.NoError(t, err)
 	require.NoError(t, s.Commit())
 	s.Close()

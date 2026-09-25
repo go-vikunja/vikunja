@@ -20,6 +20,7 @@ import {
 	enableWebPush,
 	getWebPushAvailability,
 	getWebPushState,
+	unsubscribeWebPushLocally,
 	reconcileWebPushSubscription,
 } from './webPush'
 
@@ -65,6 +66,15 @@ describe('Web Push browser integration', () => {
 		deleteRequest.mockReset().mockResolvedValue({data: {}})
 		post.mockReset().mockResolvedValue({data: {}})
 		installBrowserMocks()
+	})
+
+	it('finishes logout when no service worker is registered', async () => {
+		Object.defineProperty(navigator, 'serviceWorker', {
+			configurable: true,
+			value: {ready: new Promise(() => {}), getRegistration: vi.fn().mockResolvedValue(undefined)},
+		})
+
+		await unsubscribeWebPushLocally()
 	})
 
 	it('reports server and permission states before offering enable', () => {

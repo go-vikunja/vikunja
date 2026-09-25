@@ -195,8 +195,8 @@ export async function unsubscribeWebPushLocally(): Promise<void> {
 	if (!supportsWebPush()) {
 		return
 	}
-	const registration = await getRegistration()
-	await (await registration.pushManager.getSubscription())?.unsubscribe()
+	const registration = await navigator.serviceWorker.getRegistration()
+	await (await registration?.pushManager.getSubscription())?.unsubscribe()
 }
 
 export async function sendWebPushTest(): Promise<void> {

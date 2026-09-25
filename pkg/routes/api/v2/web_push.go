@@ -18,6 +18,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/i18n"
 	"code.vikunja.io/api/pkg/modules/auth"
+	"code.vikunja.io/api/pkg/modules/humabridge"
 	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
 
@@ -66,13 +67,12 @@ func RegisterWebPushRoutes(api huma.API) {
 		Tags:        tags,
 	}, webPushSubscriptionUpsert)
 	Register(api, huma.Operation{
-		OperationID:   "web-push-subscription-delete",
-		Summary:       "Disable Web Push on this device",
-		Description:   "Removes the current user's device subscription and all pending deliveries.",
-		Method:        http.MethodDelete,
-		Path:          "/user/settings/web-push/subscriptions/{device_id}",
-		DefaultStatus: http.StatusNoContent,
-		Tags:          tags,
+		OperationID: "web-push-subscription-delete",
+		Summary:     "Disable Web Push on this device",
+		Description: "Removes the current user's device subscription and all pending deliveries.",
+		Method:      http.MethodDelete,
+		Path:        "/user/settings/web-push/subscriptions/{device_id}",
+		Tags:        tags,
 	}, webPushSubscriptionDelete)
 	Register(api, huma.Operation{
 		OperationID:   "web-push-subscription-test",
@@ -92,7 +92,7 @@ func webPushSession(ctx context.Context) (userID int64, sessionID string, err er
 	if err != nil {
 		return 0, "", err
 	}
-	ec := echoContextFromCtx(ctx)
+	ec := humabridge.EchoContextFrom(ctx)
 	if ec == nil {
 		return 0, "", huma.Error401Unauthorized("invalid or missing authentication")
 	}
@@ -109,7 +109,7 @@ func webPushSubscriptionUpsert(ctx context.Context, in *struct {
 }) (*webPushSubscriptionBody, error) {
 	userID, sessionID, err := webPushSession(ctx)
 	if err != nil {
-		return nil, err
+		return nil, translateDomainError(err)
 	}
 	var expiration *time.Time
 	if in.Body.ExpirationTime != nil {
@@ -134,10 +134,14 @@ func webPushSubscriptionUpsert(ctx context.Context, in *struct {
 		if errors.As(err, &invalidSession) {
 			return nil, huma.Error403Forbidden(err.Error())
 		}
-		return nil, huma.Error422UnprocessableEntity(err.Error())
+		var invalidInput notifications.ErrWebPushInputInvalid
+		if errors.As(err, &invalidInput) {
+			return nil, huma.Error422UnprocessableEntity(err.Error())
+		}
+		return nil, translateDomainError(err)
 	}
 	if err := s.Commit(); err != nil {
-		return nil, err
+		return nil, translateDomainError(err)
 	}
 	return &webPushSubscriptionBody{Body: webPushSubscriptionOutput{
 		ID: subscription.ID, DeviceID: subscription.DeviceID, Created: subscription.Created, Updated: subscription.Updated,
@@ -149,16 +153,16 @@ func webPushSubscriptionDelete(ctx context.Context, in *struct {
 }) (*emptyBody, error) {
 	userID, sessionID, err := webPushSession(ctx)
 	if err != nil {
-		return nil, err
+		return nil, translateDomainError(err)
 	}
 	s := db.NewSession()
 	defer s.Close()
 	if err := notifications.DeleteWebPushSubscription(s, userID, sessionID, in.DeviceID); err != nil {
 		_ = s.Rollback()
-		return nil, err
+		return nil, translateDomainError(err)
 	}
 	if err := s.Commit(); err != nil {
-		return nil, err
+		return nil, translateDomainError(err)
 	}
 	return &emptyBody{}, nil
 }
@@ -168,7 +172,7 @@ func webPushSubscriptionTest(ctx context.Context, in *struct {
 }) (*webPushTestBody, error) {
 	userID, sessionID, err := webPushSession(ctx)
 	if err != nil {
-		return nil, err
+		return nil, translateDomainError(err)
 	}
 	s := db.NewSession()
 	defer s.Close()
@@ -182,6 +186,10 @@ func webPushSubscriptionTest(ctx context.Context, in *struct {
 		URL:   "/",
 	})
 	if err != nil {
+		var notFound notifications.ErrWebPushSubscriptionNotFound
+		if errors.As(err, &notFound) {
+			return nil, huma.Error404NotFound(err.Error())
+		}
 		var invalidSubscription notifications.ErrWebPushSubscriptionInvalid
 		if errors.As(err, &invalidSubscription) {
 			if commitErr := s.Commit(); commitErr != nil {

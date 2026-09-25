@@ -41,7 +41,7 @@ func TestPersistedNotificationsHaveWebPushPayloads(t *testing.T) {
 		{"api token week", &APITokenExpiringWeekNotification{User: target, Token: token}, "/user/settings/api-tokens"},
 		{"api token day", &APITokenExpiringDayNotification{User: target, Token: token}, "/user/settings/api-tokens"},
 		{"single overdue", &UndoneTaskOverdueNotification{User: target, Task: task, Project: project}, "/tasks/42"},
-		{"overdue summary", &UndoneTasksOverdueNotification{User: target, Tasks: map[int64]*Task{task.ID: task}, Projects: map[int64]*Project{project.ID: project}}, "/"},
+		{"overdue summary", &UndoneTasksOverdueNotification{User: target, Assigned: map[int64]*Task{task.ID: task}, Projects: map[int64]*Project{project.ID: project}}, "/"},
 	}
 
 	for _, test := range tests {

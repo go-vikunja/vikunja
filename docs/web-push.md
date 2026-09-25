@@ -1,6 +1,6 @@
 # Web Push notifications
 
-Vikunja can deliver task activity, explicit task reminders, API token expiry notices and daily overdue summaries to installed Progressive Web Apps. Task data remains online-only. This feature does not add offline task editing or background synchronization.
+Vikunja can deliver task activity, explicit task reminders, API token expiry notices and daily overdue summaries to installed Progressive Web Apps.
 
 ## Requirements
 
@@ -26,15 +26,15 @@ webpush:
   privatekey: "base64url-private-key"
 ```
 
-`service.publicurl` is used as the VAPID contact subject. Web Push uses the common `outgoingrequests.proxyurl`, `outgoingrequests.proxypassword`, `outgoingrequests.timeoutseconds` and `outgoingrequests.allownonroutableips` settings.
+The VAPID contact uses `mailer.fromemail`, falling back to `webmaster@<public-host>` from `service.publicurl`. Web Push uses the common `outgoingrequests.proxyurl`, `outgoingrequests.proxypassword`, `outgoingrequests.timeoutseconds` and `outgoingrequests.allownonroutableips` settings.
 
 Back up both VAPID keys and reuse them across upgrades and deployments. Replacing the pair invalidates existing browser subscriptions, so every device must enable notifications again.
 
 ## User behavior
 
-Each user enables Push notifications on this device from General Settings. The browser permission prompt appears only after the user presses Enable. A subscription belongs to the current device, user and Vikunja session. Logout, remote session revocation, password changes, session expiry and account deletion invalidate it.
+Each user enables Push notifications on this device from General Settings. The browser permission prompt appears only after the user presses Enable. A subscription belongs to the current device, user and Vikunja session. Logout, remote session revocation, password changes and account deletion invalidate it. Subscriptions survive login inactivity so notifications can arrive while the app is closed.
 
-When Vikunja is visible, the open app refreshes its notification list instead of showing a system notification. Test notifications are always visible. When the app is hidden or closed, the operating system shows the notification. Clicking it opens the relevant task or settings page and marks the related in-app notification read when possible.
+The operating system shows notifications even when Vikunja is visible. Visible tabs also refresh their notification lists. Clicking it opens the relevant task or settings page and marks the related in-app notification read when possible.
 
 The existing overdue reminder enabled and time settings control both email and Push overdue summaries. The task email checkbox remains email-only, so explicit task reminders can still reach a Push-enabled device when reminder emails are off.
 
