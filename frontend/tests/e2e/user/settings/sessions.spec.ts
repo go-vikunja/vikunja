@@ -48,6 +48,8 @@ test.describe('Sessions', () => {
 			headers: {Cookie: `vikunja_refresh_token=${rawToken}`},
 		})
 		expect(after.status()).toBe(401)
+		await page.reload()
+		await expect(page.locator('table.table tbody tr')).toHaveCount(1)
 	})
 
 	test('current session cannot be deleted from the UI', async ({authenticatedPage: page}) => {
