@@ -1,18 +1,23 @@
+import type {Page} from '@playwright/test'
 import {test, expect} from '../../../support/fixtures'
 import {gotoUserSettings} from '../../../support/userSettings'
 import {TokenFactory} from '../../../factories/token'
 
 test.describe('CalDAV', () => {
+	// Filter to data rows (rows containing a <td>) to exclude the <th>-only header row.
+	const dataRows = (page: Page) => page.locator('table.table tr').filter({has: page.locator('td')})
+
 	test('generates a token that authenticates against the caldav endpoint', async ({
 		authenticatedPage: page, currentUser, apiContext,
 	}) => {
 		await gotoUserSettings(page, 'caldav')
 
 		const created = page.waitForResponse(r =>
-			r.url().includes('/user/settings/token/caldav') && r.request().method() === 'PUT',
+			r.url().includes('/user/settings/token/caldav') && r.request().method() === 'POST',
 		)
 		await page.getByRole('button', {name: 'Create a CalDAV token'}).click()
 		await created
+		await expect(dataRows(page)).toHaveCount(1)
 
 		// Banner renders the one-time token string; capture it.
 		const banner = page.locator('.message').filter({hasText: 'Here is your new token'})
@@ -29,26 +34,33 @@ test.describe('CalDAV', () => {
 			headers: {Authorization: `Basic ${basic}`, Depth: '0'},
 		})
 		expect(resp.status()).toBeLessThan(300)
+		await page.reload()
+		await expect(banner).toHaveCount(0)
+		await expect(dataRows(page)).toHaveCount(1)
 	})
 
 	test('deleting a token revokes caldav access', async ({
-		authenticatedPage: page, currentUser,
+		authenticatedPage: page, currentUser, apiContext, userToken,
 	}) => {
 		const tokenValue = 'fixed-caldav-token-123456789012345678901234567890'
 		// kind=4 is TokenCaldavAuth (see pkg/user/token.go)
 		await TokenFactory.create(1, {user_id: currentUser.id, kind: 4, token: tokenValue}, false)
 
 		await gotoUserSettings(page, 'caldav')
-		// Filter to data rows (rows containing a <td>) to exclude the <th>-only header row.
-		const dataRows = page.locator('table.table tr').filter({has: page.locator('td')})
-		await expect(dataRows).toHaveCount(1)
+		await expect(dataRows(page)).toHaveCount(1)
 
 		const deleted = page.waitForResponse(r =>
 			/\/user\/settings\/token\/caldav\/\d+/.test(r.url()) && r.request().method() === 'DELETE',
 		)
-		await dataRows.getByRole('button', {name: 'Delete'}).click()
+		await dataRows(page).getByRole('button', {name: 'Delete'}).click()
 		await deleted
-		await expect(dataRows).toHaveCount(0)
+		await expect(dataRows(page)).toHaveCount(0)
+		await page.reload()
+		await expect(dataRows(page)).toHaveCount(0)
+		const stored = await apiContext.get('user/settings/token/caldav', {
+			headers: {Authorization: `Bearer ${userToken}`},
+		})
+		expect(await stored.json()).toEqual([])
 
 		// NOTE: the factory seeds the plaintext token as-is, but caldav tokens are
 		// stored bcrypt-hashed. We assert the row is gone in the UI rather than
