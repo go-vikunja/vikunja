@@ -363,7 +363,7 @@ const {createNewTask, isLoading: quickAddLoading} = useQuickAddTask()
 const {setDraggedTask} = useTaskDragState()
 const authStore = useAuthStore()
 
-const alwaysShowBucketTaskCount = computed(() => authStore.settings.frontendSettings.alwaysShowBucketTaskCount)
+const alwaysShowBucketTaskCount = computed(() => authStore.settings.frontend_settings.always_show_bucket_task_count)
 const {handleTaskDropToProject} = useTaskDragToProject()
 const positionMutation = useUpdateTaskPositionMutation()
 const moveMutation = useMoveTaskMutation()

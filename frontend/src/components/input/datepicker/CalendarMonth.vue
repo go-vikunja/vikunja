@@ -143,7 +143,7 @@ const emit = defineEmits<{
 }>()
 
 const authStore = useAuthStore()
-const weekStart = computed(() => authStore.settings.weekStart ?? 0)
+const weekStart = computed(() => authStore.settings.week_start ?? 0)
 
 const today = startOfDay(new Date())
 const root = ref<HTMLElement | null>(null)

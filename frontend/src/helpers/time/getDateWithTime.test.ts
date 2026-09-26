@@ -1,22 +1,25 @@
+import {queryClient} from '@/client/queryClient'
+import {accountKeys} from '@/client/queries/account'
 import {beforeEach, describe, expect, it, vi} from 'vitest'
 import {setActivePinia, createPinia} from 'pinia'
 
 import {getDateWithTime, getDefaultTimeParts, parseUserDefaultTime} from './getDateWithTime'
 import {useAuthStore} from '@/stores/auth'
 
-function setDefaultDueTime(defaultDueTime?: string) {
+function setDefaultDueTime(default_due_time?: string) {
 	const authStore = useAuthStore()
-	authStore.setUserSettings({
+	queryClient.setQueryData(accountKeys.user(0), {settings: {
 		...authStore.settings,
-		frontendSettings: {
-			...authStore.settings.frontendSettings,
-			defaultDueTime,
+		frontend_settings: {
+			...authStore.settings.frontend_settings,
+			default_due_time,
 		},
-	})
+	}})
 }
 
 describe('getDateWithTime', () => {
 	beforeEach(() => {
+		queryClient.clear()
 		setActivePinia(createPinia())
 		useAuthStore()
 	})

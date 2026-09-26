@@ -1,12 +1,18 @@
+import {VueQueryPlugin} from '@tanstack/vue-query'
+import {queryClient} from '@/client/queryClient'
+import {accountKeys} from '@/client/queries/account'
 import {describe, it, expect, beforeEach, afterEach, vi} from 'vitest'
 import {mount, flushPromises, type VueWrapper} from '@vue/test-utils'
 import {setActivePinia, createPinia} from 'pinia'
 import {createI18n} from 'vue-i18n'
 import {createRouter, createMemoryHistory} from 'vue-router'
 import General from './General.vue'
+import {AUTH_TYPES} from '@/constants/auth'
 import testid from '@/directives/testid'
 import {useAuthStore} from '@/stores/auth'
 import en from '@/i18n/lang/en.json'
+
+vi.mock('@/client/generated', () => ({userTimezones: vi.fn(async () => ({data: []}))}))
 
 vi.mock('@/helpers/fetcher', () => {
 	const httpStub = () => ({
@@ -47,7 +53,7 @@ async function mountComponent() {
 
 	return mount(General, {
 		global: {
-			plugins: [i18n, router],
+			plugins: [i18n, router, [VueQueryPlugin, {queryClient}]],
 			directives: {cy: testid, focus: () => {}},
 			stubs: {
 				Card: {template: '<div><slot /></div>'},
@@ -81,7 +87,7 @@ describe('General user settings', () => {
 
 	// Logout cleared the user while this view was still the current route (FRONTEND-OSS-2CJ).
 	it('renders without a logged in user', async () => {
-		useAuthStore().setUser(null)
+		useAuthStore().setSession(null)
 
 		wrapper = await mountComponent()
 		await flushPromises()
@@ -91,7 +97,12 @@ describe('General user settings', () => {
 	})
 
 	it('marks a non-local user as external', async () => {
-		useAuthStore().setUser({
+		useAuthStore().setSession({
+			id: 1,
+			type: AUTH_TYPES.USER,
+			exp: 0,
+		})
+		queryClient.setQueryData(accountKeys.user(1), {
 			id: 1,
 			username: 'user1',
 			is_local_user: false,

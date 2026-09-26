@@ -215,6 +215,7 @@
 </template>
 
 <script setup lang="ts">
+import {useUpdateFrontendSettingsMutation} from '@/client/queries/account'
 import {ref, computed, nextTick, provide, watch, onBeforeUnmount} from 'vue'
 import {useI18n} from 'vue-i18n'
 
@@ -259,9 +260,10 @@ const copy = useCopyToClipboard()
 const {t} = useI18n({useScope: 'global'})
 const configStore = useConfigStore()
 const authStore = useAuthStore()
+const updateFrontendSettings = useUpdateFrontendSettingsMutation()
 
 const localSortOrder = ref<'asc' | 'desc' | null>(null)
-const commentSortOrder = computed(() => localSortOrder.value ?? authStore.settings.frontendSettings.commentSortOrder ?? 'asc')
+const commentSortOrder = computed(() => localSortOrder.value ?? authStore.settings.frontend_settings.comment_sort_order ?? 'asc')
 
 const currentPage = ref(1)
 const commentQuery = useQuery(computed(() => ({
@@ -386,18 +388,20 @@ async function changePage(page: number) {
 
 async function toggleSortOrder() {
 	const newOrder = commentSortOrder.value === 'asc' ? 'desc' : 'asc'
-	if (!authStore.isLinkShareAuth) {
-		await authStore.saveUserSettings({
-			settings: {
-				...authStore.settings,
-				frontendSettings: {
-					...authStore.settings.frontendSettings,
-					commentSortOrder: newOrder,
-					quickAddDefaultReminders: [...(authStore.settings.frontendSettings.quickAddDefaultReminders ?? [])],
-				},
-			},
-			showMessage: false,
-		})
+	const session = authStore.session
+	if (session && !authStore.isLinkShareAuth) {
+		localSortOrder.value = newOrder
+		try {
+			await updateFrontendSettings.mutateAsync({
+				id: session.id,
+				type: session.type,
+				frontendSettings: {comment_sort_order: newOrder},
+			})
+		} catch {
+			return
+		} finally {
+			localSortOrder.value = null
+		}
 	} else {
 		localSortOrder.value = newOrder
 	}

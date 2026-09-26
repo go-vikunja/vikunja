@@ -74,7 +74,6 @@ describe('link share auth query lifecycle', () => {
 			type: AUTH_TYPES.USER,
 			exp: 0,
 		})
-		store.setUser({id: 1}, false)
 		queryClient.setQueryData(labelKeys.all, [{id: 1, title: 'private'}])
 		queryClient.setQueryData(['projects'], [{id: 1, title: 'private'}])
 		const linkToken = jwt(AUTH_TYPES.LINK_SHARE, 2)

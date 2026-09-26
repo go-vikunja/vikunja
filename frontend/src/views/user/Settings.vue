@@ -98,5 +98,5 @@ const navigationItems = computed(() => {
 	return items.filter(({condition}) => condition !== false)
 })
 
-const extraSettingsLinks = computed(() => Object.values(authStore.settings.extraSettingsLinks ?? {}))
+const extraSettingsLinks = computed(() => Object.values(authStore.settings.extra_settings_links ?? {}))
 </script>
