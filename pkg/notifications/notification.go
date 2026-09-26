@@ -18,7 +18,9 @@ package notifications
 
 import (
 	"encoding/json"
+	"fmt"
 	"slices"
+	"time"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
@@ -130,7 +132,27 @@ type Notifiable interface {
 // For persisted notifications the mail is queued from DatabaseNotification.AfterInsert,
 // i.e. only once the row is committed, so a rolled-back transaction (and its
 // event-handler retry) cannot duplicate mails (#2971).
-func Notify(notifiable Notifiable, notification Notification, sessions ...*xorm.Session) (err error) {
+func Notify(notifiable Notifiable, notification Notification, sessions ...*xorm.Session) error {
+	return NotifyWithOptions(notifiable, notification, NotifyOptions{
+		Mail:     true,
+		Database: true,
+		WebPush:  true,
+		PushTTL:  24 * time.Hour,
+	}, sessions...)
+}
+
+// NotifyOptions selects delivery channels independently. DeliveryKey is required
+// for push-only notifications and overrides the database notification id key.
+type NotifyOptions struct {
+	Mail        bool
+	Database    bool
+	WebPush     bool
+	DeliveryKey string
+	PushTTL     time.Duration
+}
+
+// NotifyWithOptions routes one notification through the selected channels.
+func NotifyWithOptions(notifiable Notifiable, notification Notification, options NotifyOptions, sessions ...*xorm.Session) (err error) {
 	if isUnderTest {
 		sentTestNotifications = append(sentTestNotifications, notification)
 		return nil
@@ -146,13 +168,64 @@ func Notify(notifiable Notifiable, notification Notification, sessions ...*xorm.
 	if len(sessions) > 0 && sessions[0] != nil {
 		s = sessions[0]
 	}
-
-	mailDeferred, err := notifyDB(notifiable, notification, s)
-	if err != nil || mailDeferred {
-		return err
+	ownsSession := false
+	if s == nil && (options.Database || options.WebPush) {
+		s = db.NewSession()
+		defer s.Close()
+		ownsSession = true
 	}
 
-	return notifyMail(notifiable, notification)
+	var databaseNotification *DatabaseNotification
+	if options.Database {
+		databaseNotification, err = insertDatabaseNotification(s, notifiable, notification, options.Mail)
+		if err != nil {
+			if ownsSession {
+				_ = s.Rollback()
+			}
+			return err
+		}
+	}
+
+	if options.WebPush {
+		pushable, ok := notification.(WebPushable)
+		if ok {
+			message := pushable.ToWebPush(notifiable.Lang())
+			if message != nil {
+				deliveryKey := options.DeliveryKey
+				if deliveryKey == "" && databaseNotification != nil {
+					deliveryKey = fmt.Sprintf("notification:%d", databaseNotification.ID)
+					message.NotificationID = databaseNotification.ID
+				}
+				if deliveryKey != "" {
+					ttl := options.PushTTL
+					if ttl <= 0 {
+						ttl = 24 * time.Hour
+					}
+					if err = enqueueWebPush(s, notifiable.RouteForDB(), deliveryKey, message, ttl); err != nil {
+						if ownsSession {
+							_ = s.Rollback()
+						}
+						return err
+					}
+				}
+			}
+		}
+	}
+
+	if ownsSession {
+		if err = s.Commit(); err != nil {
+			return err
+		}
+		if options.WebPush {
+			wakeWebPushWorker()
+		}
+	}
+
+	mailDeferred := databaseNotification != nil && options.Mail
+	if options.Mail && !mailDeferred {
+		return notifyMail(notifiable, notification)
+	}
+	return nil
 }
 
 func notifyMail(notifiable Notifiable, notification Notification) error {
@@ -180,20 +253,16 @@ func notifyMail(notifiable Notifiable, notification Notification) error {
 	return SendMail(mail, notifiable.Lang())
 }
 
-// notifyDB inserts the notification row if the notification has a DB
-// representation. mailDeferred reports that the mail will be queued from
-// AfterInsert once the (possibly caller-owned) transaction commits, so the
-// caller must not send it.
-func notifyDB(notifiable Notifiable, notification Notification, existingSession *xorm.Session) (mailDeferred bool, err error) {
-
+// insertDatabaseNotification inserts the notification row using the caller's transaction.
+func insertDatabaseNotification(s *xorm.Session, notifiable Notifiable, notification Notification, sendMail bool) (*DatabaseNotification, error) {
 	dbContent := notification.ToDB()
 	if dbContent == nil {
-		return false, nil
+		return nil, nil
 	}
 
 	content, err := json.Marshal(dbContent)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 
 	dbNotification := &DatabaseNotification{
@@ -202,6 +271,7 @@ func notifyDB(notifiable Notifiable, notification Notification, existingSession 
 		Name:         notification.Name(),
 		notification: notification,
 		notifiable:   notifiable,
+		sendMail:     sendMail,
 	}
 
 	if subject, is := notification.(SubjectID); is {
@@ -209,19 +279,9 @@ func notifyDB(notifiable Notifiable, notification Notification, existingSession 
 	}
 	dbNotification.ProjectID = ProjectIDOf(notification)
 
-	if existingSession != nil {
-		_, err = existingSession.Insert(dbNotification)
-		return err == nil, err
-	}
-
-	s := db.NewSession()
-	defer s.Close()
-
 	_, err = s.Insert(dbNotification)
 	if err != nil {
-		_ = s.Rollback()
-		return false, err
+		return nil, err
 	}
-
-	return true, s.Commit()
+	return dbNotification, nil
 }
