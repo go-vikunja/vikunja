@@ -5,10 +5,48 @@
 	},
 	"home": {
 		"welcomeNight": "Godnat {username}!",
+		"welcomeNightOwl": "Hej, natteravn {username}",
+		"welcomeNightBurning": "Arbejder du til langt ud på natten, {username}?",
+		"welcomeNightQuiet": "Stille timer, {username}",
+		"welcomeNightLate": "Det er sent, {username}",
+		"welcomeNightMoonlit": "Planlægning i måneskin, {username}?",
 		"welcomeMorning": "Godmorgen {username}!",
+		"welcomeMorningHey": "Hej {username}, er du klar?",
+		"welcomeMorningFresh": "En ny start, {username}",
+		"welcomeMorningCoffee": "Kaffe og opgaver, {username}?",
+		"welcomeMorningRise": "Stå op og læg planer, {username}",
+		"welcomeMorningBack": "Velkommen tilbage, {username}",
+		"welcomeMondayFresh": "En ny uge, {username}",
+		"welcomeTuesday": "God tirsdag, {username}",
+		"welcomeWednesdayMid": "Det er allerede midt på ugen, {username}",
+		"welcomeThursday": "Vi er næsten fremme, {username}",
+		"welcomeFridayPush": "Fredagsopdatering, {username}?",
+		"welcomeSaturday": "Weekendtilstand, {username}",
+		"welcomeSundaySession": "Søndagsmøde, {username}?",
 		"welcomeDay": "Hej {username}!",
+		"welcomeDayBack": "Så er vi i gang igen, {username}",
+		"welcomeDayFocus": "Lad os koncentrere os, {username}",
+		"welcomeDayKeepGoing": "Fortsæt, {username}",
+		"welcomeDayWhatsNext": "Hvad sker der nu, {username}?",
+		"welcomeDayGood": "God eftermiddag, {username}",
 		"welcomeEvening": "Godaften {username}!",
-		"lastViewed": "Sidst vist"
+		"welcomeEveningWind": "Er du ved at slappe af, {username}?",
+		"welcomeEveningReturns": "{username} vender tilbage",
+		"welcomeEveningWrap": "Er det tid til at runde af, {username}?",
+		"welcomeEveningOneMore": "Er der ellers noget, {username}?",
+		"welcomeEveningStill": "Er du stadig i gang, {username}?",
+		"lastViewed": "Sidst vist",
+		"addToHomeScreen": "Føj denne app til din startskærm for at få hurtigere adgang og en bedre oplevelse.",
+		"goToOverview": "Gå til oversigt",
+		"project": {
+			"importText": "Importer dine projekter og opgaver fra andre tjenester til Vikunja:",
+			"import": "Importer dine data til Vikunja"
+		}
+	},
+	"demo": {
+		"title": "Denne instans kører i demo-tilstand. Brug den ikke til rigtige data!",
+		"everythingWillBeDeleted": "Alt vil blive slettet med jævne mellemrum!",
+		"accountWillBeDeleted": "Din konto vil blive slettet, herunder alle projekter, opgaver og vedhæftede filer, du måtte have oprettet."
 	},
 	"ready": {
 		"loading": "Vikunja er ved at indlæse…",
@@ -28,9 +66,11 @@
 			"email": "E-mailadresse",
 			"emailPlaceholder": "f.eks. frederic{'@'}vikunja.io",
 			"password": "Kodeord",
+			"passwordPlaceholder": "Din adgangskode",
 			"forgotPassword": "Har du glemt din adgangskode?",
 			"resetPassword": "Nulstil din adgangskode",
 			"resetPasswordAction": "Send mig et link til nulstilling af adgangskode",
+			"resetPasswordSuccess": "Tjek din indbakke! Du skulle have modtaget en e-mail med instruktioner om, hvordan du nulstiller din adgangskode.",
 			"confirmEmailSuccess": "Du har bekræftet din e-mail! Du kan logge ind nu.",
 			"totpTitle": "To Faktor Godkendelseskode",
 			"totpPlaceholder": "f.eks. 123456",
@@ -39,48 +79,162 @@
 			"loginWith": "Log ind med {provider}",
 			"authenticating": "Godkender…",
 			"openIdStateError": "Indholdet stemmer ikke overens, nægter at fortsætte!",
+			"openIdGeneralError": "Der opstod en fejl under godkendelsen hos tredjeparten.",
+			"openIdTotpSubmit": "Fortsæt",
+			"oauthMissingParams": "Der mangler obligatoriske OAuth-parametre: {params}",
+			"oauthRedirectedToApp": "Du er blevet omdirigeret til appen. Du kan nu lukke denne fane.",
+			"desktopTryDemo": "Prøv demoen",
+			"desktopCustomServer": "Brugerdefineret server-URL",
+			"desktopCustomServerDescription": "Indtast URL-adressen til din Vikunja-server for at komme i gang.",
+			"desktopWaitingForAuth": "Venter på godkendelse…",
+			"desktopOAuthError": "Godkendelse mislykkedes: {error}",
 			"logout": "Log ud",
 			"emailInvalid": "Indtast venligst en gyldig e-mailadresse.",
 			"usernameRequired": "Angiv venligst et brugernavn.",
+			"usernameMustNotContainSpace": "Brugernavnet må ikke indeholde mellemrum.",
+			"usernameMustNotLookLikeUrl": "Brugernavnet må ikke ligne en URL.",
 			"passwordRequired": "Angiv venligst en adgangskode.",
+			"passwordNotMin": "Adgangskoden skal bestå af mindst 8 tegn.",
+			"passwordNotMax": "Adgangskoden må højst bestå af 72 tegn.",
 			"showPassword": "Vis adgangskoden",
 			"hidePassword": "Skjul adgangskoden",
 			"noAccountYet": "Har du ikke en konto endnu?",
 			"alreadyHaveAnAccount": "Har du allerede en konto?",
-			"remember": "Forbliv logget ind"
+			"remember": "Forbliv logget ind",
+			"registrationDisabled": "Registrering er slået fra.",
+			"registrationFailed": "Der opstod en fejl under registreringen. Kontroller dine oplysninger, og prøv igen.",
+			"registrationConfirmEmail": "Din konto blev oprettet! Kontroller venligst din indbakke og klik på bekræftelseslinket i den e-mail du har modtaget, inden du logger på.",
+			"inviteInvalid": "Invitaionslinket er ugyldigt eller udløbet.",
+			"inviteLoadFailed": "Kunne ikke indlæse inviationen. Prøv venligst igen.",
+			"inviteTeams": "Du deltager i: {teams}"
 		},
 		"settings": {
+			"bots": {
+				"title": "Bot brugere",
+				"namePlaceholder": "Min assistent",
+				"create": "Opret bot",
+				"enable": "Aktiver",
+				"badge": "Bot",
+				"delete": {
+					"header": "Slet denne bot bruger",
+					"text1": "Er du sikker på at du ænsker at slette bot brugeren \"{username}\"?"
+				}
+			},
 			"title": "Indstillinger",
 			"newPasswordTitle": "Opdater din adgangskode",
+			"newPassword": "Ny adgangskode",
+			"currentPassword": "Nuværende adgangskode",
 			"currentPasswordPlaceholder": "Din nuværende adgangskode",
 			"passwordUpdateSuccess": "Adgangskoden blev ændret.",
 			"updateEmailTitle": "Opdater din e-mailadresse",
+			"updateEmailNew": "Ny e-mailadresse",
+			"updateEmailSuccess": "Din e-mailadresse blev opdateret.",
+			"updateEmailPending": "Din nye e-mailadresse {email} afventer bekræftelse. Indtil du klikker på linket som vi har sendt, så forbliver din aktuelle e-mailadresse aktiv.",
+			"updateEmailResend": "Gensend bekræftelses e-mail",
+			"updateEmailResendSuccess": "Vi har sendt dig et nyt bekræftelseslink.",
+			"updateEmailCancel": "Annuller ændring",
+			"updateEmailCancelSuccess": "E-mail ændringen blev annulleret.",
+			"updateEmailConfirmed": "Din nye e-mailadresse er bekræftet.",
 			"general": {
 				"title": "Generelle Indstillinger",
+				"name": "Mit navn",
+				"newName": "Det nye navn",
 				"savedSuccess": "Indstillingerne er gemt.",
+				"emailReminders": "Send mig påmindelser om opgaver via e-mail",
 				"overdueReminders": "Send mig en oversigt over mine ufærdige opgaver hver dag",
+				"discoverableByName": "Tillad andre brugere at tilføje mig som medlem af teams eller projekter, når de søger efter mit navn",
+				"discoverableByEmail": "Giv andre brugere mulighed for at tilføje mig som medlem af teams eller projekter, når de søger efter min fulde e-mailadresse",
 				"playSoundWhenDone": "Afspil en lyd, når du markerer opgaver som udført",
+				"allowIconChanges": "Vis særlige logoer på bestemte tidspunkter",
+				"alwaysShowBucketTaskCount": "Vis altid antallet af opgaver i Kanban kolonner",
+				"defaultTaskRelationType": "Standardtype for opgaverelation",
 				"weekStart": "Ugen starter på en",
 				"weekStartSunday": "Søndag",
 				"weekStartMonday": "Mandag",
+				"weekStartTuesday": "Tirsdag",
+				"weekStartWednesday": "Onsdag",
+				"weekStartThursday": "Torsdag",
+				"weekStartFriday": "Fredag",
+				"weekStartSaturday": "Lørdag",
 				"language": "Sprog",
-				"overdueTasksRemindersTime": "Forfaldne opgaver påmindelse e-mail tidspunkt"
+				"defaultProject": "Standardprojekt",
+				"defaultView": "Standardvisning",
+				"timezone": "Tidszone",
+				"overdueTasksRemindersTime": "Forfaldne opgaver påmindelse e-mail tidspunkt",
+				"quickAddDefaultReminders": "Standardpåmindelser ved hurtig tilføjelse",
+				"quickAddDefaultRemindersDescription": "Disse påmindelser tilføjes automatisk til alle opgaver, der oprettes via hurtigtilføjelse, og som har en forfaldsdato.",
+				"quickAddDefaultRemindersHint": "Tilføj en eller flere påmindelser i forhold til opgavens forfaldsdato. Lad feltet være tomt for at deaktivere funktionen.",
+				"filterUsedOnOverview": "Gemte filtre, der bruges på oversigtssiden",
+				"showLastViewed": "Vis de senest viste projekter på oversigtssiden",
+				"minimumPriority": "Laveste synlige opgaveprioritet",
+				"dateDisplay": "Format for datoangivelse",
+				"dateDisplayOptions": {
+					"relative": "Relativ (fx for 3 dage siden)",
+					"mm-dd-yyyy": "MM-DD-ÅÅÅÅ",
+					"dd-mm-yyyy": "DD-MM-ÅÅÅÅ",
+					"yyyy-mm-dd": "YYYY-MM-DD",
+					"mm/dd/yyyy": "MM/DD/ÅÅÅÅ",
+					"dd/mm/yyyy": "DD/MM/ÅÅÅÅ",
+					"yyyy/mm/dd": "ÅÅÅÅ/MM/DD"
+				},
+				"timeFormat": "Tidsformat",
+				"defaultDueTime": "Standard forfaldstid",
+				"defaultDueTimeDescription": "Andvendt som standard tidspunkt når en opgaves forfaldsdato angives uden at specificere et tidspunkt, inkluderer datovælger valg og Hurtig tilføjelses magi.",
+				"timeTrackingDefaultStart": "Tidssporing smart-udfyldnings starttidspunkt",
+				"timeFormatOptions": {
+					"12h": "12 timer (AM/PM)",
+					"24h": "24-timers format (TT:MM)"
+				},
+				"externalUserNameChange": "Dit navn administreres af din login-udbyder ({provider}). Hvis du vil ændre det, skal du i stedet opdatere det der."
+			},
+			"sections": {
+				"personalInformation": "Personlig information",
+				"taskAndNotifications": "Projekter og opgaver",
+				"privacy": "Privatliv",
+				"localization": "Oversættelse",
+				"appearance": "Udseende og adfærd",
+				"desktop": "Desktop app"
+			},
+			"desktop": {
+				"quickEntryShortcut": "Genvej til hurtig indtastning",
+				"shortcutRecorderPlaceholder": "Klik her for at oprette en genvej",
+				"shortcutRecorderRecording": "Tryk på en tastkombination…",
+				"shortcutRecorderClear": "Ryd genvej"
 			},
 			"totp": {
 				"title": "To-faktor godkendelse",
 				"enroll": "Tilmeld",
+				"finishSetupPart1": "For at afslutte opsætningen skal du bruge denne kode i din TOTP app (Google Authenticator eller lignende):",
 				"finishSetupPart2": "Herefter skal du indtaste en kode fra din app nedenfor.",
 				"scanQR": "Alternativt kan du scanne denne QR-kode:",
 				"passcode": "Kode",
+				"passcodePlaceholder": "En kode genereret af din TOTP app",
+				"confirmNotice": "Når du har aktiveret tofaktorgodkendelse, bliver du logget af alle sessioner og skal logge på igen.",
 				"setupSuccess": "Du har aktiveret to-faktor autentificering!",
 				"enterPassword": "Indtast venligst din adgangskode",
 				"disable": "Deaktiver to-faktor autentificering",
+				"confirmSuccess": "Du har nu aktiveret tofaktorgodkendelse!",
 				"disableSuccess": "To faktor godkendelse blev deaktiveret."
 			},
 			"caldav": {
 				"title": "CalDAV",
+				"howTo": "Du kan forbinde Vikunja med CalDAV klienter for at se, og administrere alle dine opgaver fra forskellige klienter. Indtast denne URL i din klient:",
 				"more": "Mere information om CalDAV i Vikunja",
-				"tokens": "CalDAV Tokens"
+				"tokens": "CalDAV Tokens",
+				"tokensHowTo": "Til CalDAV godkendelse kan du enten bruge din normale kontoadgangskode eller et særligt CalDAV token.",
+				"createToken": "Opret et CalDAV token",
+				"tokenCreated": "Her er dit nye token: {token}",
+				"wontSeeItAgain": "Skriv det ned eller gem det et sikkert sted — du vil ikke kunne se det igen.",
+				"mustUseToken": "Du skal oprette et CalDAV token for at kunne bruge CalDAV med en tredjepartsklient. Indtast tokenet i feltet til adgangskode i din klient.",
+				"usernameIs": "Dit brugernavn til CalDAV er: {0}",
+				"apiTokenHint": "Du kan også bruge et API token med CalDAV rettighed. Opret et i {link}."
+			},
+			"feeds": {
+				"title": "Atom feed",
+				"howTo": "Du kan abonnere på dine Vikunja notifikationer fra enhver Atom kompatibel feedlæser. Anvend følgende URL:",
+				"usernameIs": "Dit brugernavn til feedet er: {0}",
+				"apiTokenHint": "Godkend med et API token som har {scope} rettigheden. Opret en i {link}.",
+				"tokenTitle": "Atom feed"
 			},
 			"avatar": {
 				"title": "Profilbillede",
@@ -90,7 +244,9 @@
 				"upload": "Upload",
 				"uploadAvatar": "Upload Profilbillede",
 				"statusUpdateSuccess": "Profilbillede status blev opdateret!",
-				"setSuccess": "Profilbilledet er blevet indstillet!"
+				"setSuccess": "Profilbilledet er blevet indstillet!",
+				"ldap": "Din avatar synkroniseres automatisk fra din organisations katalogtjeneste (LDAP). Du kan spørge dit IT team om, hvordan du ændrer den.",
+				"openid": "Din avatar synkroniseres automatisk fra din login udbyder ({provider}). Hvis du vil ændre den, skal du i stedet opdatere den der."
 			},
 			"quickAddMagic": {
 				"title": "Hurtigtilføjelsemagi Tilstand",
@@ -105,11 +261,63 @@
 					"system": "System",
 					"dark": "Mørk"
 				}
+			},
+			"backgroundBrightness": {
+				"title": "Baggrundslysstyrke"
+			},
+			"webhooks": {
+				"title": "Webhook beskeder",
+				"description": "Konfigurer webhook URL'er til at modtage POST anmodninger, når der udløses påmindelser eller forfaldne begivenheder. Disse webhooks modtager begivenheder fra alle dine projekter."
+			},
+			"apiTokens": {
+				"title": "API tokens",
+				"apiDocs": "Se dokumentationen til API'et",
+				"createAToken": "Opret et token",
+				"createToken": "Opret token",
+				"30d": "30 Dage",
+				"60d": "60 dage",
+				"90d": "90 dage",
+				"titleRequired": "Titlen er obligatorisk",
+				"expiryInvalid": "Vælg venligst en udløbsdato i fremtiden."
+			},
+			"sessions": {
+				"lastActive": "Senest aktiv",
+				"delete": {
+					"header": "Annuller session"
+				},
+				"deleteSuccess": "Sessionen er blevet annulleret. Det kan tage op til 10 minutter, før sessionen udløber helt.",
+				"noOtherSessions": "Der er ingen andre aktive sessioner."
+			},
+			"mcp": {
+				"intro": "Forbind en AI assistent til dine opgaver, projekter, og labels med Model Context Protocol (MCP).",
+				"more": "Mere information om MCP i Vikunja",
+				"endpoint": "MCP endpoint",
+				"tokens": "MCP tokens",
+				"manageTokens": "Administrer alle API tokens",
+				"created": "Dit MCP token er klar. Vælg din klient nedenfor, for at forbinde.",
+				"client": "Hvilken klient anvender du?",
+				"chooseClient": "Vælg en klient",
+				"clientHelp": "{client} opsætningsguide",
+				"typedPreset": "Værktøjer med typer læs + skriv",
+				"clients": {
+					"claudeCode": {
+						"command": "Kør denne kommando i en terminal: {value}",
+						"verify": "Start en Claude Code session og kør /mcp for at kontrollere forbindelsen."
+					},
+					"codex": {
+						"command": "Tilføj MCP serveren: {value}"
+					},
+					"other": {
+						"title": "Andet"
+					}
+				}
 			}
 		},
 		"deletion": {
 			"title": "Slet din Vikunja konto",
+			"text1": "Sletningen af din konto er permanent og kan ikke fortrydes. Vi sletter alle dine projekter, opgaver og alt, hvad der er knyttet hertil.",
 			"text2": "For at fortsætte, skal du indtaste din adgangskode. Du vil modtage en e-mail med yderligere instruktioner.",
+			"text3": "Klik på knappen nedenfor for at fortsætte. Du vil modtage en e-mail med yderligere instruktioner.",
 			"confirm": "Slet min konto",
 			"requestSuccess": "Anmodningen blev gennemført. Du vil modtage en e-mail med yderligere instruktioner.",
 			"passwordRequired": "Indtast venligst din adgangskode.",
@@ -117,6 +325,7 @@
 			"scheduled": "Vi sletter din Vikunja-konto {date} ({dateSince}).",
 			"scheduledCancel": "Klik her for at annullere sletningen af din konto.",
 			"scheduledCancelText": "For at annullere sletningen af din konto, skal du indtaste din adgangskode nedenfor:",
+			"scheduledCancelButton": "Hvis du vil annullere sletningen af din konto, skal du klikke på knappen nedenfor:",
 			"scheduledCancelConfirm": "Annuller sletningen af min konto",
 			"scheduledCancelSuccess": "Vi sletter ikke din konto."
 		},
@@ -125,7 +334,190 @@
 			"descriptionPasswordRequired": "Indtast venligst din adgangskode for at fortsætte:",
 			"request": "Anmod om en kopi af mine Vikunja-data",
 			"success": "Du har anmodet om dine Vikunja-data! Vi sender dig en e-mail, når den er klar til hentning.",
-			"downloadTitle": "Download dine eksporterede Vikunja-data"
+			"downloadTitle": "Download dine eksporterede Vikunja-data",
+			"ready": "Din eksport er klar til download. Du kan downloade den indtil kl. {0}.",
+			"requestNew": "Anmod om en ny eksport"
+		}
+	},
+	"project": {
+		"archivedMessage": "Dette projekt er arkiveret. Det er ikke muligt at oprette nye opgaver eller redigere eksisterende opgaver i forbindelse med det.",
+		"archived": "Arkiveret",
+		"showArchived": "Vis arkiverede",
+		"title": "Titel",
+		"color": "Farve",
+		"projects": "Projekter",
+		"parent": "Overordnet projekt",
+		"search": "Skriv for at søge efter et projekt…",
+		"searchSelect": "Klik eller tryk på Enter for at vælge dette projekt",
+		"shared": "Delte Projekter",
+		"noDescriptionAvailable": "Der findes ingen projektbeskrivelse.",
+		"inboxTitle": "Indbakke",
+		"myOpenTasksFilterTitle": "Min åbne opgaver",
+		"favorite": "Marker dette projekt som favorit",
+		"unfavorite": "Fjern dette projekt fra favoritterne",
+		"openSettingsMenu": "Åbn menuen med projektindstillinger",
+		"description": "Projektbeskrivelse",
+		"favoriteDescription": "I dette projekt er alle opgaver markeret som favoritter.",
+		"create": {
+			"header": "Nyt projekt",
+			"titlePlaceholder": "Projektets titel skal stå her…",
+			"addTitleRequired": "Angiv venligst en titel.",
+			"createdSuccess": "Projektet blev oprettet."
+		},
+		"delete": {
+			"text2": "Dette omfatter alle opgaver og KAN IKKE FORTRYDES!",
+			"success": "Projektet blev slettet.",
+			"tasksToDelete": "Dette vil uigenkaldeligt slette ca. {count} opgaver.",
+			"tasksAndChildProjectsToDelete": "Dette vil uigenkaldeligt slette ca. {tasks} opgaver og {projects} projekter.",
+			"noTasksToDelete": "Dette projekt indeholder ingen opgaver, så det bør være sikkert at slette det."
+		},
+		"duplicate": {
+			"title": "Kopier dette projekt",
+			"label": "Kopier",
+			"text": "Vælg et overordnet projekt, der skal indeholde det duplikerede projekt:"
+		},
+		"edit": {
+			"header": "Rediger dette projekt",
+			"title": "Rediger \"{project}\"",
+			"titlePlaceholder": "Her skal projektets titel stå…",
+			"identifierTooltip": "Projektidentifikatoren kan bruges til entydigt at identificere en opgave på tværs af projekter. Du kan lade feltet stå tomt for at deaktivere den.",
+			"identifier": "Projektidentifikator",
+			"description": "Beskrivelse",
+			"descriptionPlaceholder": "Indtast en beskrivelse af dette projekt, tryk på '/' for at se flere muligheder…",
+			"color": "Farve",
+			"success": "Projektet blev opdateret uden problemer."
+		},
+		"share": {
+			"header": "Del dette projekt",
+			"title": "Del \"{project}\"",
+			"share": "Del",
+			"links": {
+				"title": "Del links",
+				"what": "Hvad er et delingslink?",
+				"explanation": "Med delingslinks kan du nemt dele et projekt med andre brugere, der ikke har en konto på Vikunja.",
+				"create": "Opret et link til deling",
+				"name": "Navn (valgfrit)",
+				"namePlaceholder": "f.eks. Lorem Ipsum",
+				"nameExplanation": "Alle handlinger, der udføres via dette link, vises med navnet.",
+				"password": "Adgangskode (valgfrit)",
+				"passwordExplanation": "Når brugeren logger ind, skal vedkommende indtaste denne adgangskode.",
+				"noName": "Der er ikke angivet noget navn",
+				"remove": "Fjern et link",
+				"removeText": "Er du sikker på, at du vil slette dette link? Det vil ikke længere være muligt at få adgang til dette projekt via dette link. Dette kan ikke fortrydes!",
+				"createSuccess": "Linket er nu oprettet.",
+				"deleteSuccess": "Linket er blevet slettet",
+				"view": "Vis",
+				"sharedBy": "Delt af {0}"
+			},
+			"userTeam": {
+				"typeUser": "bruger | brugere",
+				"typeTeam": "hold | hold",
+				"shared": "Delt med disse {type}",
+				"you": "Dig",
+				"notShared": "Er endnu ikke delt med nogen {type}.",
+				"removeHeader": "Fjern et {type} fra {sharable}",
+				"removeText": "Er du sikker på, at du vil slette dette {sharable} fra {type}? Dette kan ikke fortrydes!",
+				"removeSuccess": "{sharable} blev fjernet fra {type}.",
+				"addedSuccess": "{type} er blevet tilføjet.",
+				"updatedSuccess": "{type} er blevet tilføjet."
+			},
+			"permission": {
+				"title": "Tilladelse",
+				"read": "Læs kun",
+				"readWrite": "Læs og skriv",
+				"admin": "Administrator"
+			},
+			"attributes": {
+				"link": "Link",
+				"delete": "Slet"
+			}
+		},
+		"first": {
+			"title": "Første visning"
+		},
+		"list": {
+			"title": "Liste",
+			"add": "Tilføj",
+			"addPlaceholder": "Opret en opgave…",
+			"empty": "Dette projekt er i øjeblikket tomt.",
+			"newTaskCta": "Opret en opgave.",
+			"editTask": "Rediger Opgave",
+			"sort": "Sorter"
+		},
+		"gantt": {
+			"title": "Gantt",
+			"size": "Størrelse",
+			"default": "Standard",
+			"month": "Måned",
+			"day": "Dag",
+			"hour": "Time",
+			"chartLabel": "Projekt Gantt diagram",
+			"taskBarsForRow": "Opgavebjælker for række {rowId}",
+			"taskBarLabel": "Opgave: {task}. Fra {startDate} til {endDate}. {dateType}. Klik for at redigere, træk for at flytte.",
+			"scheduledDates": "Planlagte datoer",
+			"estimatedDates": "Estimerede datoer",
+			"resizeStartDate": "Ændr startdatoen for opgave {task}",
+			"resizeEndDate": "Ændr slutdatoen for opgave {task}",
+			"timelineHeader": "Overskrift til tidslinje med måneder og dage",
+			"monthLabel": "Måned: {month}",
+			"dayLabel": "Dag: {date}, {weekday}",
+			"dayLabelToday": "I dag: {date}, {weekday}",
+			"taskAriaLabel": "Opgave: {task}",
+			"taskAriaLabelById": "Opgave {id}",
+			"partialDatesStart": "Kun startdato (varighed ubestemt)",
+			"partialDatesEnd": "Kun slutdato (åben varighed)",
+			"expandGroup": "Udvid gruppe: {task}"
+		},
+		"table": {
+			"title": "Tabel",
+			"columns": "Kolonner"
+		},
+		"kanban": {
+			"title": "Kanban",
+			"limit": "Grænse: {limit}",
+			"doneBucket": "Kolonnen Færdig",
+			"doneBucketHint": "Alle opgaver, der flyttes til denne kolonne, markeres automatisk som afsluttet.",
+			"doneBucketHintExtended": "Alle opgaver, der flyttes over i kolonnen »Færdig«, markeres automatisk som færdige. Alle opgaver, der er markeret som færdige andetsteds, flyttes ligeledes.",
+			"doneBucketSavedSuccess": "Kolonnen Færdig er nu gemt.",
+			"defaultBucket": "Standardkolonne",
+			"defaultBucketHint": "Når du opretter opgaver uden at angive en kolonne, føjes de til denne kolonne.",
+			"defaultBucketSavedSuccess": "Standardkolonnen er blevet gemt.",
+			"deleteLast": "Du kan ikke fjerne den sidste kolonne.",
+			"addTaskPlaceholder": "Indtast titlen på den nye opgave…",
+			"addTask": "Opret en opgave",
+			"addBucket": "Opret en kolonne",
+			"addBucketPlaceholder": "Indtast titlen på den nye kolonne…",
+			"deleteHeaderBucket": "Slet kolonnen",
+			"deleteBucketText1": "Er du sikker på, at du vil slette denne kolonne?",
+			"deleteBucketText2": "Dette sletter ikke nogen opgaver, men flytter dem til standardkolonnen.",
+			"deleteBucketSuccess": "Kolonnen er blevet slettet.",
+			"bucketTitleSavedSuccess": "Navnet på kolonnen er blevet gemt.",
+			"bucketLimitSavedSuccess": "Kolonne grænsen er blevet gemt.",
+			"collapse": "Skjul denne kolonne",
+			"bucketLimitReached": "Du har nået kolonnegrænsen. Fjern nogle opgaver, eller hæv grænsen for at kunne tilføje nye opgaver.",
+			"bucketOptions": "Kolonneindstillinger"
+		},
+		"webhooks": {
+			"deleteSuccess": "Webhooken er blevet slettet.",
+			"create": "Opret webhook",
+			"secret": "Hemmelighed",
+			"basicauthuser": "Bruger til Basic Auth",
+			"basicauthpassword": "Adgangskode til Basic Auth",
+			"secretDocs": "Se dokumentationen for at få flere oplysninger om, hvordan du bruger hemmeligheder."
+		},
+		"views": {
+			"header": "Rediger visninger",
+			"title": "Titel",
+			"actions": "Handlinger",
+			"kind": "Type",
+			"bucketConfigMode": "Konfigurationstilstand for kolonne",
+			"bucketConfig": "Kolonnekonfiguration",
+			"bucketConfigManual": "Manuel",
+			"filter": "Filter",
+			"create": "Opret visning",
+			"createSuccess": "Visningen blev oprettet.",
+			"titleRequired": "Angiv venligst en titel.",
+			"delete": "Slet denne visning"
 		}
 	},
 	"filters": {
@@ -327,6 +719,9 @@
 			"doneAt": "Udført {0}",
 			"updateSuccess": "Opgaven blev gemt.",
 			"deleteSuccess": "Opgaven er blevet slettet.",
+			"noBucket": "Ingen kolonne",
+			"bucketSelectLabel": "Kanban kolonne: {bucket}",
+			"bucketChangedSuccess": "Opgavekolonnen er blevet ændret.",
 			"due": "Forfalder {at}",
 			"delete": {
 				"header": "Slet denne opgave",
@@ -642,7 +1037,10 @@
 		"8003": "Du har ikke adgang til denne etiket.",
 		"9001": "Rettigheden er ugyldig.",
 		"10001": "Kurven findes ikke.",
+		"10002": "Kolonnen hører ikke til det projekt.",
+		"10003": "Du kan ikke fjerne den sidste kolonne i et projekt.",
 		"10004": "Du kan ikke tilføje opgaven til denne kurv, da den allerede overskrider grænsen for opgaver, den kan holde.",
+		"10005": "Der kan kun være én færdig kolonne per projekt.",
 		"11001": "Det gemte filter eksisterer ikke.",
 		"11002": "Gemte filtre er ikke tilgængelige for delingslink.",
 		"12001": "Enhedstypen for abonnementet er ugyldigt.",
