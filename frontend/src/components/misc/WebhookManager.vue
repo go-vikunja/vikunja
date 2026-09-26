@@ -1,8 +1,15 @@
 <script lang="ts" setup>
-import {ref, watch} from 'vue'
+import {computed, ref, watch} from 'vue'
 
-import type {IWebhook} from '@/modelTypes/IWebhook'
-import WebhookModel from '@/models/webhook'
+import type {WebhookWritable} from '@/client/generated'
+import {useQuery} from '@tanstack/vue-query'
+import {
+	webhooksQuery,
+	webhookEventsQuery,
+	useCreateWebhookMutation,
+	useDeleteWebhookMutation,
+	type WebhookScope,
+} from '@/client/queries/webhooks'
 import BaseButton from '@/components/base/BaseButton.vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import FormField from '@/components/input/FormField.vue'
@@ -12,22 +19,24 @@ import User from '@/components/misc/User.vue'
 import {formatDateShort} from '@/helpers/time/formatDate'
 import {isValidHttpUrl} from '@/helpers/isValidHttpUrl'
 
-const props = defineProps<{
-	webhooks: IWebhook[]
-	availableEvents: string[]
-	loading?: boolean
-}>()
-
-const emit = defineEmits<{
-	create: [webhook: IWebhook]
-	delete: [webhookId: number]
-}>()
+const props = defineProps<{scope: WebhookScope}>()
+const {data: webhookData, isFetching, isPending} = useQuery(computed(() => webhooksQuery(props.scope)))
+const {data: eventData, isPending: isEventsPending} = useQuery(computed(() => webhookEventsQuery(props.scope.kind)))
+const isLoadingInitial = computed(() => isPending.value || isEventsPending.value)
+const webhooks = computed(() => webhookData.value ?? [])
+const availableEvents = computed(() => eventData.value ?? [])
+const createMutation = useCreateWebhookMutation()
+const deleteMutation = useDeleteWebhookMutation()
+const loading = computed(() => isFetching.value || createMutation.isPending.value || deleteMutation.isPending.value)
+function emptyDraft(): WebhookWritable & {target_url: string} {
+	return {target_url: '', secret: '', basic_auth_user: '', basic_auth_password: '', events: []}
+}
 
 defineOptions({name: 'WebhookManager'})
 
 const showNewForm = ref(false)
 const showBasicAuth = ref(false)
-const newWebhook = ref(new WebhookModel())
+const newWebhook = ref(emptyDraft())
 const newWebhookEvents = ref<Record<string, boolean>>({})
 
 function initEvents(events: string[]) {
@@ -36,7 +45,7 @@ function initEvents(events: string[]) {
 	)
 }
 
-watch(() => props.availableEvents, (events) => {
+watch(availableEvents, (events) => {
 	if (events) initEvents(events)
 }, {immediate: true})
 
@@ -46,7 +55,7 @@ const showDeleteModal = ref(false)
 const webhookIdToDelete = ref<number>()
 
 function validateTargetUrl() {
-	webhookTargetUrlValid.value = isValidHttpUrl(newWebhook.value.targetUrl)
+	webhookTargetUrlValid.value = isValidHttpUrl(newWebhook.value.target_url)
 }
 
 function getSelectedEventsArray() {
@@ -60,7 +69,7 @@ function validateSelectedEvents() {
 	selectedEventsValid.value = events.length > 0
 }
 
-function create() {
+async function create() {
 	validateTargetUrl()
 	if (!webhookTargetUrlValid.value) {
 		return
@@ -74,9 +83,16 @@ function create() {
 		return
 	}
 
-	emit('create', newWebhook.value)
-	newWebhook.value = new WebhookModel()
-	initEvents(props.availableEvents)
+	try {
+		await createMutation.mutateAsync({scope: props.scope, body: newWebhook.value})
+	} catch {
+		return
+	} finally {
+		// Evicts the plaintext credentials from the mutation cache.
+		createMutation.reset()
+	}
+	newWebhook.value = emptyDraft()
+	initEvents(availableEvents.value)
 	showNewForm.value = false
 }
 
@@ -87,16 +103,20 @@ function confirmDelete(webhookId: number) {
 
 function doDelete() {
 	if (webhookIdToDelete.value) {
-		emit('delete', webhookIdToDelete.value)
+		deleteMutation.mutate({scope: props.scope, id: webhookIdToDelete.value})
 	}
+	webhookIdToDelete.value = undefined
 	showDeleteModal.value = false
 }
 </script>
 
 <template>
-	<div>
+	<div
+		class="loader-container"
+		:class="{'is-loading': isLoadingInitial}"
+	>
 		<XButton
-			v-if="!(webhooks?.length === 0 || showNewForm)"
+			v-if="!(webhooks.length === 0 || showNewForm)"
 			icon="plus"
 			class="mbe-4"
 			@click="showNewForm = true"
@@ -105,12 +125,12 @@ function doDelete() {
 		</XButton>
 
 		<div
-			v-if="webhooks?.length === 0 || showNewForm"
+			v-if="!isLoadingInitial && (webhooks.length === 0 || showNewForm)"
 			class="p-4"
 		>
 			<FormField
 				id="targetUrl"
-				v-model="newWebhook.targetUrl"
+				v-model="newWebhook.target_url"
 				:label="$t('project.webhooks.targetUrl')"
 				required
 				:placeholder="$t('project.webhooks.targetUrl')"
@@ -145,7 +165,7 @@ function doDelete() {
 					<template #default="{id}">
 						<FormInput
 							:id="id"
-							v-model="newWebhook.basicAuthUser"
+							v-model="newWebhook.basic_auth_user"
 						/>
 					</template>
 				</FormField>
@@ -153,7 +173,7 @@ function doDelete() {
 					<template #default="{id}">
 						<FormInput
 							:id="id"
-							v-model="newWebhook.basicAuthPassword"
+							v-model="newWebhook.basic_auth_password"
 						/>
 					</template>
 				</FormField>
@@ -188,6 +208,7 @@ function doDelete() {
 			</div>
 			<XButton
 				icon="plus"
+				:loading="loading"
 				@click="create"
 			>
 				{{ $t('project.webhooks.create') }}
@@ -195,7 +216,7 @@ function doDelete() {
 		</div>
 
 		<table
-			v-if="webhooks?.length > 0"
+			v-if="webhooks.length > 0"
 			class="table has-actions is-striped is-hoverable is-fullwidth"
 		>
 			<thead>
@@ -213,14 +234,14 @@ function doDelete() {
 					:key="w.id"
 				>
 					<td class="webhook-target-url">
-						{{ w.targetUrl }}
+						{{ w.target_url }}
 					</td>
-					<td>{{ w.events.join(', ') }}</td>
+					<td>{{ (w.events ?? []).join(', ') }}</td>
 					<td>{{ formatDateShort(w.created) }}</td>
 					<td>
 						<User
 							:avatar-size="25"
-							:user="w.createdBy"
+							:user="w.created_by ?? {}"
 						/>
 					</td>
 
@@ -229,7 +250,7 @@ function doDelete() {
 							danger
 							icon="trash-alt"
 							:aria-label="$t('project.webhooks.delete')"
-							@click="() => confirmDelete(w.id)"
+							@click="() => w.id && confirmDelete(w.id)"
 						/>
 					</td>
 				</tr>
