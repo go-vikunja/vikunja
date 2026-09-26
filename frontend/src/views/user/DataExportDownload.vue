@@ -46,7 +46,7 @@ const errPasswordRequired = ref(false)
 const passwordInput = ref(null)
 
 const authStore = useAuthStore()
-const isLocalUser = computed(() => authStore.info?.isLocalUser)
+const isLocalUser = computed(() => authStore.info?.is_local_user)
 
 function download() {
 	if (password.value === '' && isLocalUser.value) {

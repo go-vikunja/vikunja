@@ -5,7 +5,7 @@ import {
 	vi,
 } from 'vitest'
 import {useWebSocket} from './useWebSocket'
-import {AUTH_TYPES} from '@/modelTypes/IUser'
+import {AUTH_TYPES} from '@/constants/auth'
 const auth = vi.hoisted(() => ({tokenType: 1}))
 vi.mock('@/helpers/auth', () => ({
 	getToken: () => 'token',

@@ -105,9 +105,9 @@ const authStore = useAuthStore()
 const configStore = useConfigStore()
 
 const userDeletionEnabled = computed(() => configStore.userDeletionEnabled)
-const deletionScheduledAt = computed(() => parseDateOrNull(authStore.info?.deletionScheduledAt))
+const deletionScheduledAt = computed(() => parseDateOrNull(authStore.info?.deletion_scheduled_at))
 
-const isLocalUser = computed(() => authStore.info?.isLocalUser)
+const isLocalUser = computed(() => authStore.info?.is_local_user)
 
 const passwordInput = ref()
 

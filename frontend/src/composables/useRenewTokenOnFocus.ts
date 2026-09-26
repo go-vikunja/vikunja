@@ -12,7 +12,7 @@ export function useRenewTokenOnFocus() {
 	const router = useRouter()
 	const authStore = useAuthStore()
 
-	const userInfo = computed(() => authStore.info)
+	const session = computed(() => authStore.session)
 	const authenticated = computed(() => authStore.authenticated)
 	const refreshTimer = ref<ReturnType<typeof setTimeout> | null>(null)
 
@@ -28,12 +28,12 @@ export function useRenewTokenOnFocus() {
 	function scheduleProactiveRefresh() {
 		clearRefreshTimer()
 
-		if (!authenticated.value || !userInfo.value?.exp) {
+		if (!authenticated.value || !session.value) {
 			return
 		}
 
 		const nowInSeconds = Date.now() / MILLISECONDS_A_SECOND
-		const expiresIn = userInfo.value.exp - nowInSeconds
+		const expiresIn = session.value.exp - nowInSeconds
 		const refreshIn = Math.max(expiresIn - REFRESH_BUFFER_SECONDS, 0)
 
 		refreshTimer.value = setTimeout(() => {
@@ -41,9 +41,9 @@ export function useRenewTokenOnFocus() {
 		}, refreshIn * MILLISECONDS_A_SECOND)
 	}
 
-	// Re-schedule whenever the user info (and thus exp) changes.
+	// Re-schedule whenever the session (and thus exp) changes.
 	watch(
-		() => userInfo.value?.exp,
+		() => session.value?.exp,
 		() => scheduleProactiveRefresh(),
 	)
 
@@ -66,8 +66,8 @@ export function useRenewTokenOnFocus() {
 		}
 
 		const nowInSeconds = Date.now() / MILLISECONDS_A_SECOND
-		const expiresIn = userInfo.value
-			? userInfo.value.exp - nowInSeconds
+		const expiresIn = session.value
+			? session.value.exp - nowInSeconds
 			: 0
 
 		// If the token is already expired, try to refresh immediately.

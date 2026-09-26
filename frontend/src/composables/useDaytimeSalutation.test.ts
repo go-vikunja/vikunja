@@ -6,7 +6,7 @@ import {mount} from '@vue/test-utils'
 
 import {useDaytimeSalutation} from './useDaytimeSalutation'
 import {useAuthStore} from '@/stores/auth'
-import {AUTH_TYPES} from '@/modelTypes/IUser'
+import {AUTH_TYPES} from '@/constants/auth'
 import en from '@/i18n/lang/en.json'
 
 function makeDate(iso: string): Date {
@@ -37,13 +37,17 @@ function runSalutation(now: Ref<Date>): string | undefined {
 
 function setUser() {
 	const authStore = useAuthStore()
+	authStore.setSession({
+		id: 42,
+		type: AUTH_TYPES.LINK_SHARE,
+		exp: 0,
+	})
 	authStore.setUser({
 		id: 42,
 		name: 'Ada',
 		username: 'ada',
-		type: AUTH_TYPES.LINK_SHARE,
-		created: new Date('2024-01-15T10:00:00Z'),
-	} as never, false)
+		created: '2024-01-15T10:00:00Z',
+	}, false)
 }
 
 describe('useDaytimeSalutation', () => {

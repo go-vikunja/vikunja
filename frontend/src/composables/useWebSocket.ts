@@ -1,7 +1,7 @@
 import {ref, readonly} from 'vue'
 
 import {getToken, getTokenType} from '@/helpers/auth'
-import {AUTH_TYPES} from '@/modelTypes/IUser'
+import {AUTH_TYPES} from '@/constants/auth'
 import {
 	captureClientRequestContext,
 	isClientRequestContextCurrent,

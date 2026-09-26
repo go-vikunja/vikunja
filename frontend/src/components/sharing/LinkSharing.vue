@@ -205,7 +205,7 @@ import {linkSharesQuery, createLinkShareDraft, useCreateLinkShareMutation, useDe
 import {PERMISSIONS} from '@/constants/permissions'
 import FormField from '@/components/input/FormField.vue'
 import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
-import {getDisplayName} from '@/models/user'
+import {getDisplayName} from '@/helpers/user'
 import {useConfigStore} from '@/stores/config'
 import {useProjectViews} from '@/composables/useProjectViews'
 

@@ -1,5 +1,5 @@
 import type {IAbstract} from './IAbstract'
-import type {IUser} from '@/modelTypes/IUser'
+import type {User as IUser} from '@/client/generated'
 
 export interface IWebhook extends IAbstract {
 	id: number

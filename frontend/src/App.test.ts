@@ -6,7 +6,7 @@ import {createRouter, createMemoryHistory} from 'vue-router'
 import App from '@/App.vue'
 import {QueryClient, VueQueryPlugin} from '@tanstack/vue-query'
 import {useAuthStore} from '@/stores/auth'
-import {AUTH_TYPES} from '@/modelTypes/IUser'
+import {AUTH_TYPES} from '@/constants/auth'
 import en from '@/i18n/lang/en.json'
 
 vi.mock('@/helpers/fetcher', () => {
@@ -21,8 +21,8 @@ vi.mock('@/helpers/fetcher', () => {
 	return {AuthenticatedHTTPFactory: httpStub, HTTPFactory: httpStub}
 })
 
-vi.mock('@/models/user', async (importOriginal) => {
-	const original = await importOriginal<typeof import('@/models/user')>()
+vi.mock('@/helpers/user', async (importOriginal) => {
+	const original = await importOriginal<typeof import('@/helpers/user')>()
 	return {
 		...original,
 		fetchAvatarBlobUrl: vi.fn(async () => ''),
@@ -87,12 +87,21 @@ describe('App layout', () => {
 	it('does not render an app route in the logged out shell after the user is cleared', async () => {
 		const authStore = useAuthStore()
 		authStore.setAuthenticated(true)
-		authStore.setUser({id: 1, username: 'user1', type: AUTH_TYPES.USER} as never)
+		authStore.setSession({
+			id: 1,
+			type: AUTH_TYPES.USER,
+			exp: 0,
+		})
+		authStore.setUser({
+			id: 1,
+			username: 'user1',
+		})
 
 		await mountApp('/labels')
 		expect(wrapper!.findComponent({name: 'ContentAuth'}).exists()).toBe(true)
 
 		authStore.setAuthenticated(false)
+		authStore.setSession(null)
 		authStore.setUser(null)
 		await flushPromises()
 

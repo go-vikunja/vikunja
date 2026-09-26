@@ -46,7 +46,7 @@ import {useAuthStore} from '@/stores/auth'
 import {useAddTaskAssigneeMutation, useRemoveTaskAssigneeMutation} from '@/client/queries/taskMutations'
 
 import type {User as IUser} from '@/client/generated'
-import {getDisplayName, type UserWithId} from '@/models/user'
+import {getDisplayName, type UserWithId} from '@/helpers/user'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 
 const props = withDefaults(defineProps<{

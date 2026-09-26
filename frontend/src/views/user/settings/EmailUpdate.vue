@@ -82,8 +82,8 @@ const {t} = useI18n({useScope: 'global'})
 useTitle(() => `${t('user.settings.updateEmailTitle')} - ${t('user.settings.title')}`)
 
 const authStore = useAuthStore()
-const isLocalUser = computed(() => authStore.info?.isLocalUser)
-const pendingEmail = computed(() => authStore.info?.pendingEmail)
+const isLocalUser = computed(() => authStore.info?.is_local_user)
+const pendingEmail = computed(() => authStore.info?.pending_email)
 
 const emailUpdate = reactive(new EmailUpdateModel())
 const emailUpdateService = new EmailUpdateService()
@@ -107,7 +107,7 @@ function updateEmail() {
 		emailUpdate.newEmail = ''
 		emailUpdate.password = ''
 		await authStore.refreshUserInfo()
-		success({message: authStore.info?.pendingEmail
+		success({message: authStore.info?.pending_email
 			? t('user.settings.updateEmailPendingSuccess')
 			: t('user.settings.updateEmailSuccess'),
 		})

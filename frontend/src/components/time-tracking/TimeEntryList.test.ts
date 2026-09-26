@@ -10,7 +10,7 @@ import {QueryClient, VueQueryPlugin} from '@tanstack/vue-query'
 
 import {normalizeTimeEntry} from '@/client/queries/timeEntries'
 import {useAuthStore} from '@/stores/auth'
-import {AUTH_TYPES, type AuthType, type IUser} from '@/modelTypes/IUser'
+import {AUTH_TYPES, type AuthType} from '@/constants/auth'
 
 const sdk = vi.hoisted(() => ({
 	projectsList: vi.fn(async () => ({data: {
@@ -38,11 +38,15 @@ function mountList(
 	setActivePinia(pinia)
 	const authStore = useAuthStore()
 	authStore.setAuthenticated(true)
-	authStore.setUser({
+	authStore.setSession({
 		id: 1,
 		type: authType,
+		exp: 0,
+	})
+	authStore.setUser({
+		id: 1,
 		username: 'user',
-	} as IUser)
+	})
 
 	return shallowMount(TimeEntryList, {
 		props: {

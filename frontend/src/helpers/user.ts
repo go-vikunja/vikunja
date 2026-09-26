@@ -1,11 +1,7 @@
 import {nextTick, reactive} from 'vue'
 import type {User} from '@/client/generated'
 
-import AbstractModel from './abstractModel'
-import UserSettingsModel from '@/models/userSettings'
 
-import { AUTH_TYPES, type IUser, type AuthType } from '@/modelTypes/IUser'
-import type { IUserSettings } from '@/modelTypes/IUserSettings'
 import AvatarService from '@/services/avatar'
 
 const avatarService = new AvatarService()
@@ -48,7 +44,7 @@ export async function fetchAvatarBlobUrl(user: Pick<User, 'username'>, size = 50
 	return await requestPromise
 }
 
-export function invalidateAvatarCache(user: Pick<IUser, 'username'>) {
+export function invalidateAvatarCache(user: Pick<User, 'username'>) {
 	if (!user || !user.username) {
 		return
 	}
@@ -83,35 +79,3 @@ export function getDisplayName(user: Pick<User, 'name' | 'username'> | null | un
 	return user?.name || user?.username || ''
 }
 
-export default class UserModel extends AbstractModel<IUser> implements IUser {
-	id = 0
-	email = ''
-	username = ''
-	name = ''
-	exp = 0
-	type: AuthType = AUTH_TYPES.UNKNOWN
-
-	created: Date
-	updated: Date
-	settings: IUserSettings
-
-	isLocalUser: boolean
-	pendingEmail = ''
-	deletionScheduledAt: null
-	isAdmin?: boolean
-	botOwnerId = 0
-
-	constructor(data: Partial<IUser> = {}) {
-		super()
-		this.assignData(data)
-
-		this.created = new Date(this.created)
-		this.updated = new Date(this.updated)
-
-		this.settings = new UserSettingsModel(this.settings || {})
-	}
-
-	get isBot(): boolean {
-		return (this.botOwnerId ?? 0) > 0
-	}
-}

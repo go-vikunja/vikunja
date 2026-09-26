@@ -157,7 +157,7 @@ const router = createRouter({
 					component: () => import('@/views/user/settings/TOTP.vue'),
 					beforeEnter: async () => {
 						const {useConfigStore} = await import('@/stores/config')
-						if (!useConfigStore().totpEnabled || !useAuthStore().info?.isLocalUser) {
+						if (!useConfigStore().totpEnabled || !useAuthStore().info?.is_local_user) {
 							return {name: 'user.settings.general'}
 						}
 					},
@@ -502,10 +502,10 @@ export async function getAuthForRoute(to: RouteLocation, authStore) {
 		try {
 			// info may predate a change requested in another session; re-read before judging.
 			await authStore.refreshUserInfo()
-			const hadPending = !!authStore.info?.pendingEmail
+			const hadPending = !!authStore.info?.pending_email
 			await authStore.verifyEmail(confirmToken)
 			await authStore.refreshUserInfo()
-			if (hadPending && !authStore.info?.pendingEmail) {
+			if (hadPending && !authStore.info?.pending_email) {
 				success({message: i18n.global.t('user.settings.updateEmailConfirmed')})
 				return {name: 'user.settings.email-update'}
 			}
@@ -601,10 +601,10 @@ router.beforeEach(async (to, from) => {
 		const configStore = useConfigStore()
 		const featureOn = configStore.isProFeatureEnabled(PRO_FEATURE.ADMIN_PANEL)
 		// isAdmin comes from /user, not the JWT; force-fetch in case checkAuth() was debounced.
-		if (authStore.info?.isAdmin === undefined) {
+		if (authStore.info?.is_admin === undefined) {
 			await authStore.refreshUserInfo()
 		}
-		const isAdmin = authStore.info?.isAdmin === true
+		const isAdmin = authStore.info?.is_admin === true
 		if (!featureOn || !isAdmin) {
 			return {name: 'not-found'}
 		}

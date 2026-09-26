@@ -8,7 +8,7 @@ import {
 } from '@/client/requestContext'
 import {getToken, getTokenIdentity, refreshToken} from '@/helpers/auth'
 import {getApiV2BaseUrl} from '@/helpers/fetcher'
-import {AUTH_TYPES} from '@/modelTypes/IUser'
+import {AUTH_TYPES} from '@/constants/auth'
 
 async function getProblemCode(response: Response): Promise<number | null> {
 	try {
@@ -16,6 +16,24 @@ async function getProblemCode(response: Response): Promise<number | null> {
 		return typeof problem.code === 'number' ? problem.code : null
 	} catch {
 		return null
+	}
+}
+
+// Only a parsed JSON body; Error instances come from the transport or our own interceptors.
+function isWireProblem(error: unknown): error is Record<string, unknown> {
+	return typeof error === 'object' && error !== null && Object.getPrototypeOf(error) === Object.prototype
+}
+
+// Echo rejects some /api/v2 requests before Huma (rate limits, invalid JWT) and answers with a
+// v1-shaped body, so the top-level status/detail of api.md only holds once we stamp it on.
+function normalizeProblemBody(error: unknown, response: Response | undefined): unknown {
+	if (!response || !isWireProblem(error) || typeof error.status === 'number') {
+		return error
+	}
+	return {
+		...error,
+		status: response.status,
+		detail: error.detail ?? error.message,
 	}
 }
 
@@ -155,4 +173,6 @@ export function configureApiClient(): void {
 		const retryResponse = await (options.fetch ?? globalThis.fetch)(retry)
 		return fenceResponseBody(retryResponse, context, options)
 	})
+
+	client.interceptors.error.use((error, response) => normalizeProblemBody(error, response))
 }
