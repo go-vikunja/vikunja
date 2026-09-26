@@ -52,7 +52,7 @@
 								:avatar-size="24"
 							/>
 							<template v-else>
-								#{{ link.created_by_id }}
+								{{ $t('admin.inviteLinks.creatorDeleted') }}
 							</template>
 						</td>
 						<td>
@@ -78,7 +78,7 @@
 			v-if="totalPages > 1"
 			:total-pages="totalPages"
 			:current-page="page"
-			@pageChanged="loadLinks"
+			@pageChanged="goToPage"
 		/>
 
 		<Modal
@@ -136,7 +136,7 @@
 								:aria-label="$t('admin.inviteLinks.teams')"
 								:search-results="teamResults"
 								:loading="loadingTeams"
-								@search="searchTeams"
+								@search="teamSearch = $event"
 							/>
 						</template>
 					</FormField>
@@ -198,8 +198,8 @@
 </template>
 
 <script setup lang="ts">
-import {onMounted, reactive, ref} from 'vue'
-import {useClipboard, useDebounceFn} from '@vueuse/core'
+import {computed, reactive, ref} from 'vue'
+import {useClipboard} from '@vueuse/core'
 import {formatDate} from '@/helpers/time/formatDate'
 import {useI18n} from 'vue-i18n'
 import Card from '@/components/misc/Card.vue'
@@ -211,81 +211,53 @@ import Multiselect from '@/components/input/Multiselect.vue'
 import TimeDisplay from '@/components/misc/TimeDisplay.vue'
 import User from '@/components/misc/User.vue'
 import PaginationEmit from '@/components/misc/PaginationEmit.vue'
-import {adminInviteLinksList, adminInviteLinksCreate, adminInviteLinksDelete, adminTeamsList} from '@/client/generated'
+import {useQuery} from '@tanstack/vue-query'
+import {
+	adminInvitesQuery,
+	adminTeamsQuery,
+	useCreateAdminInviteMutation,
+	useDeleteAdminInviteMutation,
+} from '@/client/queries/admin'
 import type {UserInviteLink, InviteLinkTeam} from '@/client/generated'
 import {useConfigStore} from '@/stores/config'
 import {useTitle} from '@/composables/useTitle'
-import {error, success} from '@/message'
+import {error} from '@/message'
 
 const {t} = useI18n()
 useTitle(() => t('admin.inviteLinks.title'))
 const configStore = useConfigStore()
 const {copy, copied} = useClipboard({legacy: true})
-const links = ref<UserInviteLink[]>([])
 const page = ref(1)
-const totalPages = ref(0)
-const loading = ref(false)
+const {data, isPending: loading} = useQuery(computed(() => adminInvitesQuery(page.value)))
+const links = computed(() => data.value?.items ?? [])
+const totalPages = computed(() => data.value?.total_pages ?? 0)
 const createOpen = ref(false)
-const creating = ref(false)
+const createMutation = useCreateAdminInviteMutation()
+const {isPending: creating} = createMutation
 const createdUrl = ref('')
 const pendingDelete = ref<UserInviteLink | null>(null)
-const deleting = ref(false)
+const deleteMutation = useDeleteAdminInviteMutation()
+const {isPending: deleting} = deleteMutation
 const selectedTeams = ref<InviteLinkTeam[]>([])
-const teamResults = ref<InviteLinkTeam[]>([])
-const loadingTeams = ref(false)
+const teamSearch = ref('')
+const {data: teamData, isFetching: loadingTeams} = useQuery(computed(() => ({
+	...adminTeamsQuery(teamSearch.value),
+	enabled: createOpen.value,
+})))
+const teamResults = computed(() => teamData.value ?? [])
 const minimumExpiry = ref('')
-let initialTeams: InviteLinkTeam[] = []
-let teamCount = 0
 const form = reactive({name: '', maxUses: '' as string | number, expiresAt: '', skipEmailConfirm: false})
 
-async function loadLinks(nextPage = page.value) {
-	page.value = nextPage
-	loading.value = true
-	try {
-		const {data} = await adminInviteLinksList({query: {page: nextPage}})
-		links.value = data.items ?? []
-		totalPages.value = data.total_pages ?? 0
-	} catch (e) {
-		error(e)
-	} finally {
-		loading.value = false
-	}
-}
+function goToPage(nextPage = page.value) { page.value = nextPage }
 
-async function openCreate() {
+function openCreate() {
 	Object.assign(form, {name: '', maxUses: '', expiresAt: '', skipEmailConfirm: false})
 	selectedTeams.value = []
 	createdUrl.value = ''
 	minimumExpiry.value = formatDate(new Date(Date.now() + 60_000), 'YYYY-MM-DD[T]HH:mm')
 	createOpen.value = true
-	loadingTeams.value = true
-	try {
-		const {data} = await adminTeamsList({query: {per_page: 100}})
-		initialTeams = data.items ?? []
-		teamResults.value = initialTeams
-		teamCount = data.total ?? 0
-	} catch (e) {
-		error(e)
-	} finally {
-		loadingTeams.value = false
-	}
+	teamSearch.value = ''
 }
-
-const searchTeams = useDebounceFn(async (query: string) => {
-	if (teamCount <= initialTeams.length) {
-		teamResults.value = initialTeams.filter(team => (team.name ?? '').toLowerCase().includes(query.toLowerCase()))
-		return
-	}
-	loadingTeams.value = true
-	try {
-		const {data} = await adminTeamsList({query: {q: query, per_page: 100}})
-		teamResults.value = data.items ?? []
-	} catch (e) {
-		error(e)
-	} finally {
-		loadingTeams.value = false
-	}
-}, 250)
 
 function closeCreate() {
 	if (creating.value) return
@@ -304,39 +276,32 @@ async function submitCreate() {
 		error({message: t('admin.inviteLinks.futureExpiry')})
 		return
 	}
-	creating.value = true
 	try {
-		const {data: link} = await adminInviteLinksCreate({body: {
+		const link = await createMutation.mutateAsync({
 			name: form.name,
 			team_ids: selectedTeams.value.map(team => team.id).filter((id): id is number => id !== undefined),
 			max_uses: form.maxUses === '' ? null : Number(form.maxUses),
 			expires_at: expiresAt?.toISOString() ?? null,
 			skip_email_confirm: form.skipEmailConfirm,
-		}})
+		})
 		const base = configStore.frontend_url || new URL(import.meta.env.BASE_URL, window.location.origin).toString()
-		createdUrl.value = new URL(`register#invite-link=${encodeURIComponent(link.token!)}`, base.endsWith('/') ? base : `${base}/`).toString()
-		await loadLinks(1)
-	} catch (e) {
-		error(e)
-	} finally {
-		creating.value = false
-	}
+		createdUrl.value = new URL(
+			`register#invite-link=${encodeURIComponent(link.token!)}`,
+			base.endsWith('/') ? base : `${base}/`,
+		).toString()
+		goToPage(1)
+	} catch { /* Mutation reports the error. */ }
+	finally { createMutation.reset() }
 }
 
 async function deleteLink() {
 	if (pendingDelete.value?.id === undefined || deleting.value) return
-	deleting.value = true
 	try {
-		await adminInviteLinksDelete({path: {id: pendingDelete.value.id}})
+		const nextPage = links.value.length === 1 && page.value > 1 ? page.value - 1 : page.value
+		await deleteMutation.mutateAsync(pendingDelete.value.id)
 		pendingDelete.value = null
-		success({message: t('admin.inviteLinks.deleted')})
-		await loadLinks(links.value.length === 1 && page.value > 1 ? page.value - 1 : page.value)
-	} catch (e) {
-		error(e)
-	} finally {
-		deleting.value = false
-	}
+		goToPage(nextPage)
+	} catch { /* Mutation reports the error. */ }
 }
 
-onMounted(() => loadLinks())
 </script>

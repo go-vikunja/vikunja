@@ -40,7 +40,7 @@
 							<td>{{ u.id }}</td>
 							<td>{{ u.username }}</td>
 							<td>{{ u.email }}</td>
-							<td>{{ u.authProvider || $t('admin.users.issuerLocal') }}</td>
+							<td>{{ u.auth_provider || $t('admin.users.issuerLocal') }}</td>
 							<td>{{ statusLabel(u.status) }}</td>
 							<td>
 								<TimeDisplay :date="u.created" />
@@ -80,7 +80,7 @@
 						<dd>{{ detailTarget.email }}</dd>
 						<dt>{{ $t('admin.users.issuer') }}</dt>
 						<dd>
-							{{ detailTarget.authProvider || $t('admin.users.issuerLocal') }}
+							{{ detailTarget.auth_provider || $t('admin.users.issuerLocal') }}
 						</dd>
 						<template v-if="detailTarget.issuer?.startsWith('http')">
 							<dt>{{ $t('admin.users.issuerUrl') }}</dt>
@@ -105,7 +105,7 @@
 					</dl>
 
 					<FormCheckbox
-						v-model="editable.isAdmin"
+						v-model="editable.is_admin"
 						:label="$t('admin.users.isAdminLabel')"
 					/>
 
@@ -119,7 +119,7 @@
 						</template>
 					</FormField>
 
-					<template v-if="!detailTarget.authProvider">
+					<template v-if="!detailTarget.auth_provider">
 						<FormField :label="$t('admin.users.newPasswordLabel')">
 							<template #default="{id}">
 								<FormInput
@@ -236,11 +236,11 @@
 						</template>
 					</FormField>
 					<FormCheckbox
-						v-model="createForm.isAdmin"
+						v-model="createForm.is_admin"
 						:label="$t('admin.users.isAdminLabel')"
 					/>
 					<FormCheckbox
-						v-model="createForm.skipEmailConfirm"
+						v-model="createForm.skip_email_confirm"
 						:label="$t('admin.users.skipEmailConfirm')"
 					/>
 
@@ -308,14 +308,21 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, onMounted, reactive, watch} from 'vue'
+import {ref, computed, reactive, watch} from 'vue'
+import {useQuery} from '@tanstack/vue-query'
+import type {AdminUser, CreateUserBodyWritable} from '@/client/generated'
+import {
+	adminUsersQuery,
+	useCreateAdminUserMutation,
+	useUpdateAdminUserMutation,
+	useSetAdminUserPasswordMutation,
+	useResetAdminUserPasswordMutation,
+	useDeleteAdminUserMutation,
+	type DeleteUserMode,
+} from '@/client/queries/admin'
 import {useDebounceFn} from '@vueuse/core'
 import {useI18n} from 'vue-i18n'
 import {useAuthStore} from '@/stores/auth'
-import AdminUserService, {type CreateAdminUserBody, type DeleteUserMode} from '@/services/admin/userService'
-import AdminUserModel from '@/models/adminUser'
-import type {IAdminUser} from '@/modelTypes/IAdminUser'
-import {error, success} from '@/message'
 import Card from '@/components/misc/Card.vue'
 import Modal from '@/components/misc/Modal.vue'
 import PaginationEmit from '@/components/misc/PaginationEmit.vue'
@@ -326,223 +333,125 @@ import FormSelect from '@/components/input/FormSelect.vue'
 import FormCheckbox from '@/components/input/FormCheckbox.vue'
 import TimeDisplay from '@/components/misc/TimeDisplay.vue'
 
+type AdminUserRow = AdminUser & {id: number}
 const {t} = useI18n({useScope: 'global'})
 const authStore = useAuthStore()
 const currentUserId = computed(() => authStore.info?.id)
-
-const adminUserService = new AdminUserService()
-
-const users = ref<IAdminUser[]>([])
-const loading = ref(false)
 const searchTerm = ref('')
+const search = ref('')
 const currentPage = ref(1)
-const totalPages = ref(1)
-const detailTarget = ref<IAdminUser | null>(null)
-const pendingDelete = ref<IAdminUser | null>(null)
-const saving = ref(false)
-const deleting = ref(false)
+const {data, isPending: loading} = useQuery(computed(() => adminUsersQuery(search.value, currentPage.value)))
+const users = computed(() => (data.value?.items ?? []).filter((u): u is AdminUserRow => u.id !== undefined))
+const totalPages = computed(() => data.value?.total_pages ?? 1)
+const createMutation = useCreateAdminUserMutation()
+const updateMutation = useUpdateAdminUserMutation()
+const passwordMutation = useSetAdminUserPasswordMutation()
+const resetMutation = useResetAdminUserPasswordMutation()
+const deleteMutation = useDeleteAdminUserMutation()
+const {isPending: creating} = createMutation
+const {isPending: saving} = updateMutation
+const {isPending: settingPassword} = passwordMutation
+const {isPending: sendingResetEmail} = resetMutation
+const {isPending: deleting} = deleteMutation
+const detailTarget = ref<AdminUserRow | null>(null)
+const pendingDelete = ref<AdminUserRow | null>(null)
 const deleteMode = ref<DeleteUserMode | null>(null)
 const createOpen = ref(false)
-const creating = ref(false)
-const editable = reactive({isAdmin: false, status: 0})
+const editable = reactive({is_admin: false, status: 0})
 const newPassword = ref('')
-const settingPassword = ref(false)
-const sendingResetEmail = ref(false)
-
-function emptyCreateForm(): Required<Pick<CreateAdminUserBody, 'username' | 'email'>> & CreateAdminUserBody {
+function emptyCreateForm(): Required<CreateUserBodyWritable> {
 	return {
 		username: '',
 		email: '',
 		name: '',
 		password: '',
 		language: '',
-		isAdmin: false,
-		skipEmailConfirm: false,
+		is_admin: false,
+		skip_email_confirm: false,
 	}
 }
-
 const createForm = reactive(emptyCreateForm())
-
-const hasChanges = computed(() => {
-	if (!detailTarget.value) return false
-	return editable.isAdmin !== !!detailTarget.value.isAdmin
-		|| editable.status !== detailTarget.value.status
-})
-
-watch(detailTarget, (u) => {
+const hasChanges = computed(() => detailTarget.value
+	&& (editable.is_admin !== !!detailTarget.value.is_admin || editable.status !== detailTarget.value.status))
+watch(detailTarget, u => {
 	newPassword.value = ''
 	if (!u) return
-	editable.isAdmin = !!u.isAdmin
-	editable.status = u.status
+	editable.is_admin = !!u.is_admin
+	editable.status = u.status ?? 0
 })
-
-function statusLabel(status: number): string {
+function statusLabel(status: number | undefined): string {
 	switch (status) {
 		case 0: return t('admin.users.statusActive')
 		case 1: return t('admin.users.statusEmailConfirmation')
 		case 2: return t('admin.users.statusDisabled')
 		case 3: return t('admin.users.statusLocked')
-		default: return String(status)
+		default: return status === undefined ? '' : String(status)
 	}
 }
-
-const statusOptions = computed(() => [
-	{value: 0, label: t('admin.users.statusActive')},
-	{value: 1, label: t('admin.users.statusEmailConfirmation')},
-	{value: 2, label: t('admin.users.statusDisabled')},
-	{value: 3, label: t('admin.users.statusLocked')},
-])
-
-async function load() {
-	loading.value = true
-	try {
-		const params = searchTerm.value ? {s: searchTerm.value} : {}
-		users.value = await adminUserService.getAll(new AdminUserModel(), params, currentPage.value)
-		totalPages.value = adminUserService.totalPages || 1
-	} catch (e) {
-		error(e)
-	} finally {
-		loading.value = false
-	}
-}
-
-function goToPage(page: number) {
-	currentPage.value = page
-	load()
-}
-
+const statusOptions = computed(() => [0, 1, 2, 3].map(value => ({value, label: statusLabel(value)})))
+function goToPage(page: number) { currentPage.value = page }
 const onSearch = useDebounceFn(() => {
-	// Reset to page 1 so a narrower search doesn't strand the UI on an empty page.
 	currentPage.value = 1
-	load()
+	search.value = searchTerm.value
 }, 300)
-
-function openDetails(u: IAdminUser) {
-	detailTarget.value = u
-}
-
-function closeDetail() {
-	detailTarget.value = null
-}
-
+function openDetails(u: AdminUserRow) { detailTarget.value = u }
+function closeDetail() { detailTarget.value = null }
 function openCreate() {
 	Object.assign(createForm, emptyCreateForm())
 	createOpen.value = true
 }
-
 function closeCreate() {
+	if (creating.value) return
 	createOpen.value = false
+	Object.assign(createForm, emptyCreateForm())
 }
-
 async function submitCreate() {
-	creating.value = true
 	try {
-		const body: CreateAdminUserBody = {
-			username: createForm.username,
-			email: createForm.email,
-			password: createForm.password,
-		}
-		if (createForm.name) body.name = createForm.name
-		if (createForm.language) body.language = createForm.language
-		if (createForm.isAdmin) body.isAdmin = true
-		if (createForm.skipEmailConfirm) body.skipEmailConfirm = true
-		const created = await adminUserService.createUser(body)
-		users.value = [created, ...users.value]
-		success({message: t('admin.users.createdSuccess', {username: created.username})})
-		createOpen.value = false
-	} catch (e) {
-		error(e)
-	} finally {
-		creating.value = false
-	}
+		await createMutation.mutateAsync({...createForm, language: createForm.language || undefined})
+		closeCreate()
+	} catch { /* Mutation reports the error. */ }
+	finally { createMutation.reset() }
 }
-
-function replaceUser(updated: IAdminUser) {
-	const idx = users.value.findIndex(x => x.id === updated.id)
-	if (idx !== -1) users.value[idx] = updated
-}
-
 async function saveChanges() {
-	if (!detailTarget.value) return
 	const target = detailTarget.value
-	saving.value = true
+	if (!target) return
 	try {
-		let latest: IAdminUser = target
-		if (editable.isAdmin !== !!target.isAdmin) {
-			latest = await adminUserService.setAdmin(target.id, editable.isAdmin)
-		}
-		if (editable.status !== target.status) {
-			latest = await adminUserService.setStatus(target.id, editable.status)
-		}
-		replaceUser(latest)
-		success({message: t('admin.users.updatedSuccess', {username: latest.username})})
-		detailTarget.value = null
-	} catch (e) {
-		error(e)
-	} finally {
-		saving.value = false
-	}
+		await updateMutation.mutateAsync({
+			id: target.id,
+			is_admin: editable.is_admin !== !!target.is_admin ? editable.is_admin : undefined,
+			status: editable.status !== target.status ? editable.status : undefined,
+		})
+		if (detailTarget.value?.id === target.id) detailTarget.value = null
+	} catch { /* Mutation reports the error. */ }
 }
-
 async function setPassword() {
-	if (!detailTarget.value || !newPassword.value) return
-	settingPassword.value = true
-	try {
-		const latest = await adminUserService.setPassword(detailTarget.value.id, newPassword.value)
-		replaceUser(latest)
-		success({message: t('admin.users.setPasswordSuccess', {username: latest.username})})
-		newPassword.value = ''
-	} catch (e) {
-		error(e)
-	} finally {
-		settingPassword.value = false
-	}
-}
-
-async function sendResetEmail() {
-	if (!detailTarget.value) return
 	const target = detailTarget.value
-	sendingResetEmail.value = true
+	if (!target || !newPassword.value) return
 	try {
-		await adminUserService.sendPasswordResetEmail(target.id)
-		success({message: t('admin.users.sendResetEmailSuccess', {username: target.username})})
-	} catch (e) {
-		error(e)
-	} finally {
-		sendingResetEmail.value = false
-	}
+		await passwordMutation.mutateAsync({id: target.id, password: newPassword.value})
+		if (detailTarget.value?.id === target.id) newPassword.value = ''
+	} catch { /* Mutation reports the error. */ }
+	finally { passwordMutation.reset() }
 }
-
+function sendResetEmail() {
+	if (detailTarget.value) resetMutation.mutate({id: detailTarget.value.id, username: detailTarget.value.username})
+}
 function cancelDelete() {
 	if (deleting.value) return
 	pendingDelete.value = null
 	deleteMode.value = null
 }
-
 async function doDelete(mode: DeleteUserMode) {
-	if (!pendingDelete.value || deleting.value) return
 	const target = pendingDelete.value
-	deleting.value = true
+	if (!target || deleting.value) return
 	deleteMode.value = mode
 	try {
-		await adminUserService.deleteUser(target.id, mode)
-		if (mode === 'now') {
-			users.value = users.value.filter(x => x.id !== target.id)
-			success({message: t('admin.users.deletedSuccess', {username: target.username})})
-		} else {
-			success({message: t('admin.users.deleteScheduledSuccess', {username: target.username})})
-		}
+		await deleteMutation.mutateAsync({id: target.id, mode, username: target.username})
 		pendingDelete.value = null
 		detailTarget.value = null
-	} catch (e) {
-		error(e)
-	} finally {
-		deleting.value = false
-		deleteMode.value = null
-	}
+	} catch { /* Mutation reports the error. */ }
+	finally { deleteMode.value = null }
 }
-
-onMounted(load)
 </script>
 
 <style lang="scss" scoped>
