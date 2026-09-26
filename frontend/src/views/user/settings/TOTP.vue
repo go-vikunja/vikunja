@@ -1,6 +1,6 @@
 <template>
 	<Card
-		v-if="totpEnabled && isLocalUser"
+		v-if="configStore.totp_enabled && isLocalUser"
 		:title="$t('user.settings.totp.title')"
 	>
 		<XButton
@@ -110,13 +110,12 @@ const totpDisablePassword = ref('')
 
 const configStore = useConfigStore()
 const authStore = useAuthStore()
-const totpEnabled = computed(() => configStore.totpEnabled)
 const isLocalUser = computed(() => authStore.info?.is_local_user)
 
 totpStatus()
 
 async function totpStatus() {
-	if (!totpEnabled.value || !isLocalUser.value) {
+	if (!configStore.totp_enabled || !isLocalUser.value) {
 		return
 	}
 	try {

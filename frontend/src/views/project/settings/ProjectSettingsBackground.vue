@@ -150,8 +150,8 @@ const configStore = useConfigStore()
 
 useTitle(() => t('project.background.title'))
 
-const unsplashBackgroundEnabled = computed(() => configStore.enabledBackgroundProviders.includes('unsplash'))
-const uploadBackgroundEnabled = computed(() => configStore.enabledBackgroundProviders.includes('upload'))
+const unsplashBackgroundEnabled = computed(() => configStore.enabled_background_providers.includes('unsplash'))
+const uploadBackgroundEnabled = computed(() => configStore.enabled_background_providers.includes('upload'))
 const projectId = computed(() => Number(route.params.projectId))
 const project = useQuery(computed(() => projectQuery(projectId.value)))
 const canWrite = computed(() => project.data.value !== undefined && (project.data.value.max_permission ?? 0) >= PERMISSIONS.READ_WRITE)

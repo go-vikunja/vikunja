@@ -17,16 +17,12 @@ export const redirectToProvider = (provider: IProvider) => {
 	const state = createRandomID(24)
 	localStorage.setItem('state', state)
 
-	let scope = 'openid email profile'
-	if (provider.scope !== null){
-		scope = provider.scope
-	}
-	window.location.href = `${provider.authUrl}?client_id=${provider.clientId}&redirect_uri=${redirectUrl}&response_type=code&scope=${scope}&state=${state}`
+	window.location.href = `${provider.auth_url}?client_id=${provider.client_id}&redirect_uri=${redirectUrl}&response_type=code&scope=${provider.scope}&state=${state}`
 }
 
 export const redirectToProviderOnLogout = (provider: IProvider): boolean => {
-	if (provider.logoutUrl.length > 0) {
-		window.location.href = `${provider.logoutUrl}`
+	if (provider.logout_url.length > 0) {
+		window.location.href = `${provider.logout_url}`
 		return true
 	}
 	return false

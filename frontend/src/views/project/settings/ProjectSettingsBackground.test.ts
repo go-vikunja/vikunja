@@ -60,7 +60,7 @@ vi.mock('@tanstack/vue-query', async importOriginal => {
 })
 
 vi.mock('@/stores/config', () => ({
-	useConfigStore: () => ({enabledBackgroundProviders: ['unsplash', 'upload']}),
+	useConfigStore: () => ({enabled_background_providers: ['unsplash', 'upload']}),
 }))
 
 vi.mock('@/message', () => ({error: vi.fn(), success}))

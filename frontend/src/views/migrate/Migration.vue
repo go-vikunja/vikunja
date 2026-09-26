@@ -33,9 +33,9 @@ const {t} = useI18n({useScope: 'global'})
 useTitle(() => t('migrate.title'))
 
 const configStore = useConfigStore()
-const availableMigrators = computed(() => configStore.availableMigrators
-	.map((id) => MIGRATORS[id])
-	.filter((item) => Boolean(item)),
+const availableMigrators = computed(() => configStore.available_migrators
+	.filter((id): id is keyof typeof MIGRATORS => Object.prototype.hasOwnProperty.call(MIGRATORS, id))
+	.map((id) => MIGRATORS[id]),
 )
 </script>
 

@@ -44,5 +44,5 @@ import {useConfigStore} from '@/stores/config'
 const configStore = useConfigStore()
 const apiVersion = computed(() => configStore.version)
 const versionsEqual = computed(() => apiVersion.value === frontendVersion)
-const proActive = computed(() => configStore.enabledProFeatures.length > 0)
+const proActive = computed(() => configStore.enabled_pro_features.length > 0)
 </script>

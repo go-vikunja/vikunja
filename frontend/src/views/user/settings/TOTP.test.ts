@@ -83,7 +83,7 @@ describe('TOTP settings', () => {
 		qrcode.mockClear()
 
 		const configStore = useConfigStore()
-		configStore.totpEnabled = true
+		configStore.totp_enabled = true
 		const authStore = useAuthStore()
 		authStore.setUser({
 			id: 1,

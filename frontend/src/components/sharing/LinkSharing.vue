@@ -266,7 +266,7 @@ const selectedViews = computed(() => {
 
 const shareLinks = computed(() => Object.fromEntries(linkShares.value.map(share => {
 	const viewId = selectedViews.value[share.id]
-	return [share.id, `${configStore.frontendUrl}share/${share.hash}/auth${viewId ? `?view=${viewId}` : ''}`]
+	return [share.id, `${configStore.frontend_url}share/${share.hash}/auth${viewId ? `?view=${viewId}` : ''}`]
 })))
 </script>
 

@@ -148,11 +148,11 @@ const authStore = useAuthStore()
 const configStore = useConfigStore()
 const {redirectIfSaved} = useRedirectToLastVisited()
 
-const registrationEnabled = computed(() => configStore.auth.local.registrationEnabled)
+const registrationEnabled = computed(() => configStore.auth.local.registration_enabled)
 const localAuthEnabled = computed(() => configStore.auth.local.enabled)
 const ldapAuthEnabled = computed(() => configStore.auth.ldap.enabled)
 
-const openidConnect = computed(() => configStore.auth.openidConnect)
+const openidConnect = computed(() => configStore.auth.openid_connect)
 const hasOpenIdProviders = computed(() => openidConnect.value.enabled && openidConnect.value.providers?.length > 0)
 
 const isLoading = computed(() => authStore.isLoading)

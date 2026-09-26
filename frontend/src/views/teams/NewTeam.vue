@@ -18,7 +18,7 @@
 			@keyup.enter="createTeam"
 		/>
 		<FormField
-			v-if="configStore.publicTeamsEnabled"
+			v-if="configStore.public_teams_enabled"
 			:label="$t('team.attributes.isPublic')"
 		>
 			<FancyCheckbox

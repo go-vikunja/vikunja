@@ -175,8 +175,8 @@ const pageTitle = computed(() => {
 const authStore = useAuthStore()
 
 const configStore = useConfigStore()
-const imprintUrl = computed(() => configStore.legal.imprintUrl)
-const privacyPolicyUrl = computed(() => configStore.legal.privacyPolicyUrl)
+const imprintUrl = computed(() => configStore.legal.imprint_url)
+const privacyPolicyUrl = computed(() => configStore.legal.privacy_policy_url)
 const adminPanelEnabled = computed(() => configStore.isProFeatureEnabled(PRO_FEATURE.ADMIN_PANEL))
 </script>
 
