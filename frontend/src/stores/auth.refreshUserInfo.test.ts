@@ -1,24 +1,26 @@
+vi.mock('@/client/generated', () => ({userShow: httpGetMock}))
 import {describe, it, expect, beforeEach, vi} from 'vitest'
 import {setActivePinia, createPinia} from 'pinia'
-import {AxiosError, AxiosHeaders} from 'axios'
 
 import {useAuthStore} from './auth'
 import {shouldDropEvent} from '@/helpers/sentryFilters'
 import {getErrorText} from '@/message'
 
-const {httpGetMock} = vi.hoisted(() => ({
+const {httpGetMock, routerPushMock, getTokenMock} = vi.hoisted(() => ({
 	httpGetMock: vi.fn(),
+	routerPushMock: vi.fn(),
+	getTokenMock: vi.fn(),
 }))
 
 vi.mock('@/helpers/auth', () => ({
 	refreshToken: vi.fn(),
-	getToken: () => 'token',
+	getToken: getTokenMock,
 	saveToken: vi.fn(),
-	removeToken: vi.fn(),
+	removeToken: () => getTokenMock.mockReturnValue(null),
 }))
 
 vi.mock('@/router', () => ({
-	default: {push: vi.fn()},
+	default: {push: routerPushMock},
 }))
 
 vi.mock('@/client/queryClient', () => ({
@@ -33,19 +35,8 @@ vi.mock('@/composables/useWebSocket', () => ({
 	}),
 }))
 
-function fakeHttp() {
-	return {
-		get: httpGetMock,
-		interceptors: {
-			request: {use: vi.fn()},
-			response: {use: vi.fn()},
-		},
-	}
-}
-
-vi.mock('@/helpers/fetcher', () => ({
-	HTTPFactory: () => fakeHttp(),
-	AuthenticatedHTTPFactory: () => fakeHttp(),
+vi.mock('@/helpers/fetcher', async importOriginal => ({
+	...await importOriginal<typeof import('@/helpers/fetcher')>(),
 	getApiBaseUrl: () => 'http://localhost/api/v1/',
 }))
 
@@ -68,28 +59,46 @@ describe('auth store refreshUserInfo failures', () => {
 	beforeEach(() => {
 		setActivePinia(createPinia())
 		httpGetMock.mockReset()
+		routerPushMock.mockReset()
+		getTokenMock.mockReset().mockReturnValue('token')
 		vi.spyOn(console, 'error').mockImplementation(() => {})
 	})
 
 	it('throws an error sentry drops on a network error', async () => {
-		httpGetMock.mockRejectedValue(new AxiosError('Network Error', AxiosError.ERR_NETWORK))
+		httpGetMock.mockRejectedValue(new TypeError('Failed to fetch'))
 
 		expect(shouldDropEvent(await refreshError())).toBe(true)
 	})
 
-	it('throws an error that shows the server message on a 5xx', async () => {
-		const config = {headers: new AxiosHeaders()}
-		httpGetMock.mockRejectedValue(new AxiosError('Request failed with status code 500', AxiosError.ERR_BAD_RESPONSE, config, null, {
-			status: 500,
-			statusText: 'Internal Server Error',
-			headers: {},
-			config,
-			data: {message: 'Internal server error'},
-		}))
+	it('throws an error sentry reports and that shows the server message on a 5xx', async () => {
+		httpGetMock.mockRejectedValue({status: 500, detail: 'Internal server error'})
 
 		const e = await refreshError()
 
-		expect(shouldDropEvent(e)).toBe(true)
+		expect(shouldDropEvent(e)).toBe(false)
 		expect(getErrorText(e)).toBe('Error while refreshing user info: Internal server error')
+	})
+
+	it.each([401, 403])('logs out on a %i', async status => {
+		const store = useAuthStore()
+		store.setAuthenticated(true)
+		httpGetMock.mockRejectedValue({status, detail: 'invalid token'})
+
+		await expect(store.refreshUserInfo()).resolves.toBeUndefined()
+
+		expect(store.authenticated).toBe(false)
+		expect(routerPushMock).toHaveBeenCalledWith({name: 'user.login'})
+	})
+
+	it.each([404, 429])('keeps the session and throws on a %i', async status => {
+		const store = useAuthStore()
+		store.setAuthenticated(true)
+		httpGetMock.mockRejectedValue({status, detail: 'rejected'})
+
+		const e = await refreshError()
+
+		expect(getErrorText(e)).toBe('Error while refreshing user info: rejected')
+		expect(store.authenticated).toBe(true)
+		expect(routerPushMock).not.toHaveBeenCalled()
 	})
 })

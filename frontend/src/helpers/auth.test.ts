@@ -18,9 +18,11 @@ const post = vi.hoisted(() => vi.fn(() => {
 }))
 
 vi.mock('@/helpers/fetcher', () => ({
-	apiV2Url: (path: string) => `/api/v2/${path}`,
-	HTTPFactory: () => ({post}),
+	getApiV2BaseUrl: () => '/api/v2/',
+	getApiBaseUrl: () => '/api/v1/',
 }))
+
+vi.mock('@/client/generated', () => ({authRefreshToken: post}))
 
 const desktop = vi.hoisted(() => ({
 	isDesktop: false,
@@ -118,7 +120,7 @@ describe('refreshToken in-flight dedup', () => {
 		expect(requestSpy).toHaveBeenCalledWith('vikunja-token-refresh', expect.any(Function))
 		// ...and the in-flight dedup still collapsed both calls into one POST.
 		expect(post).toHaveBeenCalledTimes(1)
-		expect(post).toHaveBeenCalledWith('/api/v2/user/token/refresh')
+		expect(post).toHaveBeenCalledWith(expect.objectContaining({baseUrl: '/api/v2'}))
 	})
 
 	it('coalesces concurrent calls into a single POST on insecure HTTP (no Web Locks)', async () => {
@@ -199,6 +201,35 @@ describe('refreshToken in-flight dedup', () => {
 	})
 })
 
+describe('refreshToken across a server switch', () => {
+	const originalApiUrl = window.API_URL
+
+	beforeEach(() => {
+		resolvePost = null
+		post.mockClear()
+		removeToken()
+		localStorage.clear()
+		window.API_URL = 'http://first/api/v1/'
+	})
+
+	afterEach(() => {
+		window.API_URL = originalApiUrl
+	})
+
+	it('does not save the token when the user switched servers while the refresh was in flight', async () => {
+		const p = refreshToken(true)
+		expect(post).toHaveBeenCalledTimes(1)
+
+		window.API_URL = 'http://second/api/v1/'
+
+		settlePost()
+		await p
+
+		expect(localStorage.getItem('token')).toBeNull()
+		expect(getToken()).toBeNull()
+	})
+})
+
 describe('refreshToken v1 cookie fallback', () => {
 	beforeEach(() => {
 		post.mockClear()
@@ -207,8 +238,8 @@ describe('refreshToken v1 cookie fallback', () => {
 	})
 
 	it.each([
-		['401', {response: {status: 401}}],
-		['404 (e.g. misconfigured API_URL)', {response: {status: 404}}],
+		['401', {status: 401}],
+		['404 (e.g. misconfigured API_URL)', {status: 404}],
 		['no response (e.g. network/CORS error)', new Error('Network Error')],
 	])('retries against v1 when the v2 refresh fails with %s', async (_label, rejection) => {
 		post.mockRejectedValueOnce(rejection)
@@ -216,13 +247,13 @@ describe('refreshToken v1 cookie fallback', () => {
 
 		await refreshToken(true)
 
-		expect(post).toHaveBeenNthCalledWith(1, '/api/v2/user/token/refresh')
-		expect(post).toHaveBeenNthCalledWith(2, 'user/token/refresh')
+		expect(post).toHaveBeenNthCalledWith(1, expect.objectContaining({baseUrl: '/api/v2'}))
+		expect(post).toHaveBeenNthCalledWith(2, expect.objectContaining({baseUrl: '/api/v1'}))
 		expect(localStorage.getItem('token')).toBe(FAKE_TOKEN)
 	})
 
 	it('does not retry against v1 when the v2 refresh is rate limited (429)', async () => {
-		post.mockRejectedValueOnce({response: {status: 429}})
+		post.mockRejectedValueOnce({status: 429})
 
 		await expect(refreshToken(true)).rejects.toThrow('Error renewing token')
 
@@ -235,7 +266,7 @@ describe('refreshToken v1 cookie fallback', () => {
 		// a logout landing in the gap before the v1 fallback would otherwise fire.
 		post.mockImplementationOnce(() => {
 			removeToken()
-			return Promise.reject({response: {status: 404}})
+			return Promise.reject({status: 404})
 		})
 
 		await refreshToken(true)

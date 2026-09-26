@@ -259,3 +259,33 @@ describe('stripNavigationFragment', () => {
 		expect(stripNavigationFragment(span)).toBe(span)
 	})
 })
+
+describe('generated transport errors', () => {
+	it('drops 4xx v2 problems without legacy message fields', () => {
+		expect(shouldDropEvent({status: 404, detail: 'Not found'})).toBe(true)
+	})
+
+	it('drops a rate-limited Echo body once its status is stamped on', () => {
+		expect(shouldDropEvent({
+			message: 'rate limit exceeded',
+			status: 429,
+			detail: 'rate limit exceeded',
+		})).toBe(true)
+	})
+
+	it('reports 5xx v2 problems', () => {
+		expect(shouldDropEvent({status: 500, detail: 'Unavailable'})).toBe(false)
+	})
+
+	it('reports a 5xx Echo body once its status is stamped on', () => {
+		expect(shouldDropEvent({
+			message: 'Internal Server Error',
+			status: 500,
+			detail: 'Internal Server Error',
+		})).toBe(false)
+	})
+
+	it('drops fetch network failures', () => {
+		expect(shouldDropEvent(new TypeError('Failed to fetch'))).toBe(true)
+	})
+})
