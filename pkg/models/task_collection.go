@@ -106,7 +106,9 @@ func validateTaskField(fieldName string) error {
 		taskPropertyAssignees,
 		taskPropertyLabels,
 		taskPropertyReminders,
-		taskPropertyCreatedBy:
+		taskPropertyCreatedBy,
+		taskPropertyRelations,
+		taskPropertyOpenRelations:
 		return nil
 	}
 
