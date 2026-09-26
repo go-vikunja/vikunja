@@ -5,27 +5,16 @@
 	>
 		<div class="add-task__field field">
 			<p class="control task-input-wrapper">
-				<label
-					class="is-sr-only"
-					:for="textareaId"
-				>
-					{{ $t('project.list.addPlaceholder') }}
-				</label>
 				<span class="icon is-small task-icon">
 					<Icon icon="tasks" />
 				</span>
-				<textarea
-					:id="textareaId"
+				<QuickAddInput
 					ref="newTaskInput"
 					v-model="newTaskTitle"
-					v-focus
-					class="add-task-textarea input"
-					:class="{'textarea-empty': newTaskTitle === ''}"
+					autofocus
 					:placeholder="$t('project.list.addPlaceholder')"
-					rows="1"
 					@keydown="resetEmptyTitleError"
-					@keydown.enter="handleEnter"
-					@keydown.esc="blurTaskInput"
+					@submit="addTask"
 				/>
 				<QuickAddMagic
 					:highlight-hint-icon="taskAddHovered"
@@ -60,7 +49,7 @@
 <script setup lang="ts">
 import {assertClientRequestContext, captureClientRequestContext} from '@/client/requestContext'
 import {useCreateTaskRelationMutation} from '@/client/queries/taskMutations'
-import {computed, ref} from 'vue'
+import {ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useElementHover} from '@vueuse/core'
 import {useRouter} from 'vue-router'
@@ -70,6 +59,7 @@ import type {Task as ITask} from '@/client/generated'
 
 import Expandable from '@/components/base/Expandable.vue'
 import QuickAddMagic from '@/components/tasks/partials/QuickAddMagic.vue'
+import QuickAddInput from '@/components/tasks/partials/QuickAddInput.vue'
 import {parseSubtasksViaIndention, type TaskWithParent} from '@/helpers/parseSubtasksViaIndention'
 import {getLabelsFromPrefix} from '@/modules/quickAddMagic'
 import {runWrites} from '@/helpers/runWrites'
@@ -79,16 +69,12 @@ import {useAuthStore} from '@/stores/auth'
 import {useConfigStore} from '@/stores/config'
 import {reportSkippedLabels, useQuickAddTask} from '@/composables/useQuickAddTask'
 
-import {useAutoHeightTextarea} from '@/composables/useAutoHeightTextarea'
-
 const emit = defineEmits<{
 	tasksAdded: [tasks: ITask[]],
 }>()
 
-const textareaId = computed(() => `task-add-textarea-${Math.random().toString(36).substr(2, 9)}`)
-
 const newTaskTitle = ref('')
-const {textarea: newTaskInput} = useAutoHeightTextarea(newTaskTitle)
+const newTaskInput = ref<InstanceType<typeof QuickAddInput> | null>(null)
 
 const {t} = useI18n({useScope: 'global'})
 const authStore = useAuthStore()
@@ -238,27 +224,8 @@ async function addTask() {
 	}
 }
 
-function handleEnter(e: KeyboardEvent) {
-	// when pressing shift + enter we want to continue as we normally would. Otherwise, we want to create 
-	// the new task(s). The vue event modifier don't allow this, hence this method.
-	if (e.shiftKey) {
-		return
-	}
-
-	if (e.isComposing) {
-		return
-	}
-
-	e.preventDefault()
-	addTask()
-}
-
 function focusTaskInput() {
 	newTaskInput.value?.focus()
-}
-
-function blurTaskInput() {
-	newTaskInput.value?.blur()
 }
 
 defineExpose({
@@ -288,10 +255,6 @@ defineExpose({
 	position: relative;
 	flex-shrink: 1;
 	flex-grow: 1;
-
-	textarea {
-		padding-inline: 2.5rem;
-	}
 
 	.icon {
 		color: var(--grey-300);
@@ -324,17 +287,6 @@ defineExpose({
 			margin: 0 !important;
 		}
 	}
-}
-
-.add-task-textarea {
-	transition: border-color $transition;
-	resize: none;
-}
-
-// Adding this class when the textarea has no text prevents the textarea from wrapping the placeholder.
-.textarea-empty {
-	white-space: nowrap;
-	text-overflow: ellipsis;
 }
 
 .control .icon {
