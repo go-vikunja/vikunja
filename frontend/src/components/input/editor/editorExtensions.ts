@@ -24,6 +24,7 @@ import {DeleteSelectionBeforeEnter} from './deleteSelectionBeforeEnter'
 import {BlockquoteWithCommentId} from './blockquoteWithCommentId'
 import {TaskLink, LINK_HTML_ATTRIBUTES} from './taskLink'
 import {createClipboardParser, fillRequiredContent, repairSliceContent} from './contentRepair'
+import {htmlHasFormatting} from './clipboardHtml'
 
 import Commands from './commands'
 import suggestionSetup from './suggestion'
@@ -223,13 +224,18 @@ export function createEditorExtensions(deps: EditorExtensionDeps): Extensions {
 								return false
 							}
 
+							// Rich clipboard content was never markdown source, converting it
+							// would drop the formatting the browser already gave us.
+							if (htmlHasFormatting(event.clipboardData?.getData('text/html') || '')) {
+								return false
+							}
+
 							const hasMarkdownSyntax = new RegExp('[*`_\\[\\]#-]').test(text)
 							if (!hasMarkdownSyntax) {
 								return false
 							}
 
-							const html = marked.parse(text) as string
-							const parsed = createNodeFromContent(html, this.editor.schema, {
+							const parsed = createNodeFromContent(marked.parse(text) as string, this.editor.schema, {
 								parseOptions: {preserveWhitespace: 'full', ...this.editor.options.parseOptions},
 							})
 

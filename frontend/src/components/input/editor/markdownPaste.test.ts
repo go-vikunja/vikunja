@@ -31,15 +31,20 @@ function createEditor(content: string) {
 	return editor
 }
 
-function paste(editor: Editor, text: string) {
+function paste(editor: Editor, text: string, html = '') {
 	const event = {
 		clipboardData: {
 			items: [],
-			getData: (type: string) => type === 'text/plain' ? text : '',
+			getData: (type: string) => {
+				if (type === 'text/plain') {
+					return text
+				}
+				return type === 'text/html' ? html : ''
+			},
 		},
 	} as unknown as ClipboardEvent
 
-	editor.view.someProp('handlePaste', handler => handler(editor.view, event, Slice.empty))
+	return editor.view.someProp('handlePaste', handler => handler(editor.view, event, Slice.empty))
 }
 
 beforeEach(() => {
@@ -80,5 +85,30 @@ describe('pasting markdown', () => {
 		paste(editor, '- a\n- b\n')
 
 		expect(editor.getHTML()).toBe('<p>hello </p><ul><li><p>a</p></li><li><p>b</p></li></ul><p>world</p>')
+	})
+})
+
+// Pasting rich text whose plain text happens to contain markdown characters used to
+// throw the formatting away, see #4019.
+describe('pasting html alongside markdown characters', () => {
+	it.each([
+		['a link', '<meta charset="utf-8"><p>see <a href="https://vikunja.io">the docs</a> - now</p>'],
+		['bold text', '<b>bold</b> text - here'],
+		['a list', '<ul><li>a - b</li></ul>'],
+	])('leaves %s to the clipboard parser', (_name, html) => {
+		const editor = createEditor('<p></p>')
+
+		expect(paste(editor, 'text - with markdown chars', html)).toBeFalsy()
+	})
+
+	it.each([
+		['plain span soup from a code editor', '<div style="color: #d4d4d4"><span># Heading</span></div>'],
+		['no html at all', ''],
+	])('still converts markdown when the clipboard holds %s', (_name, html) => {
+		const editor = createEditor('<p></p>')
+
+		paste(editor, '# Heading\n', html)
+
+		expect(editor.getHTML()).toContain('<h1>Heading</h1>')
 	})
 })
