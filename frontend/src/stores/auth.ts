@@ -13,7 +13,8 @@ import {
 	tokenRenew,
 } from '@/client/generated'
 import {getBrowserLanguage, i18n, setLanguage, type SupportedLocale} from '@/i18n'
-import {getDisplayName, invalidateAvatarCache} from '@/helpers/user'
+import {getDisplayName} from '@/helpers/user'
+import {invalidateAvatarQueries} from '@/client/queries/avatars'
 import type {RegisterUserRequestWritable, UserInfoBody, VikunjaErrorModel} from '@/client/generated'
 import {registerViaInviteLink} from '@/client/inviteLink'
 import {parseValidationErrors} from '@/helpers/parseValidationErrors'
@@ -166,10 +167,10 @@ export const useAuthStore = defineStore('auth', () => {
 	}
 
 	function invalidateAvatar() {
-		if (!info.value || !info.value.username) {
+		if (!info.value?.username) {
 			return
 		}
-		invalidateAvatarCache(info.value)
+		invalidateAvatarQueries(info.value.username)
 	}
 
 	function updateLastUserRefresh() {
@@ -542,7 +543,6 @@ export const useAuthStore = defineStore('auth', () => {
 		setAuthenticated,
 		setNeedsTotpPasscode,
 
-		invalidateAvatar,
 		updateLastUserRefresh,
 
 		login,
