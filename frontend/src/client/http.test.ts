@@ -27,6 +27,12 @@ const problem = (code: number, detail = 'request failed') => new Response(JSON.s
 	headers: {'Content-Type': 'application/problem+json'},
 })
 
+// Echo rejects some /api/v2 requests before Huma and answers with a v1-shaped body.
+const echoError = (status: number, body: {code?: number, message: string}) => new Response(JSON.stringify(body), {
+	status,
+	headers: {'Content-Type': 'application/json'},
+})
+
 const ok = () => new Response(JSON.stringify({ok: true}), {
 	status: 200,
 	headers: {'Content-Type': 'application/json'},
@@ -567,5 +573,64 @@ describe('configureApiClient', () => {
 
 		expect(auth.refreshToken).toHaveBeenCalledOnce()
 		expect(requests).toHaveLength(2)
+	})
+
+	it('stamps the response status onto an Echo error body', async () => {
+		responses = [echoError(429, {message: 'Too Many Requests'})]
+
+		await expect(client.get({url: '/probe'})).rejects.toEqual({
+			message: 'Too Many Requests',
+			detail: 'Too Many Requests',
+			status: 429,
+		})
+	})
+
+	it('keeps the Echo error code while stamping the status', async () => {
+		responses = [echoError(401, {
+			code: 11,
+			message: 'missing, malformed, expired or otherwise invalid token provided',
+		})]
+
+		await expect(client.get({url: '/probe'})).rejects.toEqual({
+			code: 11,
+			message: 'missing, malformed, expired or otherwise invalid token provided',
+			detail: 'missing, malformed, expired or otherwise invalid token provided',
+			status: 401,
+		})
+	})
+
+	it('leaves a problem body that already carries a status untouched', async () => {
+		responses = [new Response(JSON.stringify({
+			status: 403,
+			code: 4004,
+			detail: 'forbidden',
+		}), {
+			status: 403,
+			headers: {'Content-Type': 'application/problem+json'},
+		})]
+
+		await expect(client.get({url: '/probe'})).rejects.toEqual({
+			status: 403,
+			code: 4004,
+			detail: 'forbidden',
+		})
+	})
+
+	it('leaves a non-object error body untouched', async () => {
+		responses = [new Response('<html>gateway down</html>', {
+			status: 502,
+			headers: {'Content-Type': 'text/html'},
+		})]
+
+		await expect(client.get({url: '/probe'})).rejects.toBe('<html>gateway down</html>')
+	})
+
+	it('leaves a transport failure untouched', async () => {
+		const failure = new TypeError('Failed to fetch')
+		vi.stubGlobal('fetch', vi.fn(async () => {
+			throw failure
+		}))
+
+		await expect(client.get({url: '/probe'})).rejects.toBe(failure)
 	})
 })
