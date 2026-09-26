@@ -108,7 +108,9 @@ import {useI18n} from 'vue-i18n'
 import FormField from '@/components/input/FormField.vue'
 import Message from '@/components/misc/Message.vue'
 
-import type {MigrationConfig} from '@/services/migrator/abstractMigration'
+export type PlankaCredentials =
+	| {url: string, token: string}
+	| {url: string, username: string, password: string}
 
 const props = withDefaults(defineProps<{
 	migratorName: string,
@@ -122,7 +124,7 @@ const props = withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{
-	submit: [config: MigrationConfig],
+	submit: [config: PlankaCredentials],
 	clearError: [],
 }>()
 

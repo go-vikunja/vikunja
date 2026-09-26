@@ -1,4 +1,4 @@
-import wunderlistIcon from './icons/wunderlist.jpg'
+import type {MigrationProvider} from '@/client/queries/migration'
 import todoistIcon from './icons/todoist.svg?url'
 import trelloIcon from './icons/trello.svg?url'
 import microsoftTodoIcon from './icons/microsoft-todo.svg?url'
@@ -9,7 +9,7 @@ import csvIcon from './icons/csv.svg?url'
 import plankaIcon from './icons/planka.png?url'
 
 export interface Migrator {
-	id: string
+	id: MigrationProvider
 	name: string
 	isFileMigrator?: boolean
 	isCSVMigrator?: boolean
@@ -18,16 +18,7 @@ export interface Migrator {
 	icon: string
 }
 
-interface IMigratorRecord {
-	[key: Migrator['id']]: Migrator
- }
-
 export const MIGRATORS = {
-	wunderlist: {
-		id: 'wunderlist',
-		name: 'Wunderlist',
-		icon: wunderlistIcon,
-	},
 	todoist: {
 		id: 'todoist',
 		name: 'Todoist',
@@ -74,4 +65,4 @@ export const MIGRATORS = {
 		icon: plankaIcon,
 		isCredentialsMigrator: true,
 	},
-} as const satisfies IMigratorRecord
+} as const satisfies Record<MigrationProvider, Migrator>

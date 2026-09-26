@@ -1,18 +1,24 @@
-import {computed, ref} from 'vue'
+import {computed, ref, onScopeDispose, watch} from 'vue'
 import {acceptHMRUpdate, defineStore} from 'pinia'
-
-import type {MigrationErrorKind, MigrationStatus} from '@/services/migrator/abstractMigration'
+import {queryOptions, useMutation, useQuery} from '@tanstack/vue-query'
+import {queryClient} from '@/client/queryClient'
+import {captureClientRequestContext, isClientRequestContextCurrent} from '@/client/requestContext'
+import {
+	fetchMigrationStatus,
+	migrationStatusQuery,
+	migrationCompletedMutationOptions,
+	type MigrationProvider,
+} from '@/client/queries/migration'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
-import {refreshProjects} from '@/client/queries/projects'
 
 const POLL_INTERVAL = 3000
 const POLL_DEADLINE = 20 * 60 * 1000
-const MAX_CONSECUTIVE_FAILURES = 5
+const POLL_RETRIES = 4
 
 const GENERIC_FAILURE_KEY = 'migrate.failure.reported'
 
-// A kind missing here - including one a newer api adds - falls back to the generic text
-// instead of rendering an empty message.
+type MigrationErrorKind = 'reported' | 'interrupted' | 'credentials' | 'queue' | 'upload' | 'detail'
+
 const FAILURE_KEYS: Partial<Record<MigrationErrorKind, string>> = {
 	reported: GENERIC_FAILURE_KEY,
 	interrupted: 'migrate.failure.interrupted',
@@ -21,99 +27,76 @@ const FAILURE_KEYS: Partial<Record<MigrationErrorKind, string>> = {
 	upload: 'migrate.failure.upload',
 }
 
-export interface MigrationStatusSource {
-	getStatus(): Promise<MigrationStatus>
-}
-
-// The migrate response only confirms the job started, not that it finished. Polling lives in a
-// store so that leaving the migration view does not kill it - the import keeps creating projects.
+// Keep polling when the import view unmounts.
 export const useMigrationStore = defineStore('migration', () => {
-	const isFinished = ref(false)
-	const errorKind = ref<MigrationErrorKind>('')
-	const errorMessage = ref('')
+	const provider = ref<MigrationProvider>('csv')
+	const startedAt = ref<number | null>(null)
+	let request = captureClientRequestContext()
 
-	let source: MigrationStatusSource | null = null
-	let timeout: ReturnType<typeof setTimeout> | undefined
-	let generation = 0
-	let deadline = 0
-	let failures = 0
+	function stop() {
+		startedAt.value = null
+	}
 
+	const status = useQuery(computed(() => {
+		const polledProvider = provider.value
+		const runStartedAt = startedAt.value
+		return queryOptions({
+			...migrationStatusQuery(polledProvider),
+			enabled: runStartedAt !== null,
+			retry: POLL_RETRIES,
+			retryDelay: POLL_INTERVAL,
+			refetchIntervalInBackground: true,
+			queryFn: ({signal}) => {
+				// A run belongs to the session and server that started it; a later one must not adopt it.
+				if (!isClientRequestContextCurrent(request)) {
+					stop()
+					throw new DOMException('Client request context changed', 'AbortError')
+				}
+				return fetchMigrationStatus(polledProvider, signal)
+			},
+			refetchInterval: ({state}) => {
+				if (runStartedAt === null || Date.now() >= runStartedAt + POLL_DEADLINE) {
+					return false
+				}
+				// Cache state older than the run is the previous import's and says nothing about this one.
+				if (state.status === 'error' && state.errorUpdatedAt >= runStartedAt) {
+					return false
+				}
+				if (state.dataUpdatedAt >= runStartedAt && parseDateOrNull(state.data?.finished_at) !== null) {
+					return false
+				}
+				return POLL_INTERVAL
+			},
+		})
+	}), queryClient)
+
+	const completed = useMutation(migrationCompletedMutationOptions(), queryClient)
+	const hasRunResult = computed(() => startedAt.value !== null && status.dataUpdatedAt.value >= startedAt.value)
+	const isFinished = computed(() => hasRunResult.value && parseDateOrNull(status.data.value?.finished_at) !== null)
+	const errorKind = computed(() => isFinished.value ? status.data.value?.error_kind ?? '' : '')
+	const errorMessage = computed(() => isFinished.value ? status.data.value?.error_message ?? '' : '')
 	const hasFailed = computed(() => errorKind.value !== '')
-
 	const failureKey = computed(() => {
 		if (errorKind.value === 'detail' && errorMessage.value !== '') {
 			return 'migrate.migrationFailed'
 		}
-		return FAILURE_KEYS[errorKind.value] ?? GENERIC_FAILURE_KEY
+		// A newer api can report a kind this table does not have.
+		return FAILURE_KEYS[errorKind.value as MigrationErrorKind] ?? GENERIC_FAILURE_KEY
 	})
 
-	function stop() {
-		generation++
-		clearTimeout(timeout)
-		timeout = undefined
-	}
-
-	async function applyStatus({finished_at, error_kind, error_message}: MigrationStatus) {
-		if (parseDateOrNull(finished_at) === null) {
-			return false
+	watch(isFinished, finished => {
+		if (finished && !hasFailed.value) {
+			completed.mutate(undefined)
 		}
+	})
 
-		isFinished.value = true
-		errorKind.value = error_kind ?? ''
-		errorMessage.value = error_message ?? ''
-		if (!hasFailed.value) {
-			await refreshProjects()
-		}
-		return true
+	function start(nextProvider: MigrationProvider) {
+		provider.value = nextProvider
+		request = captureClientRequestContext()
+		startedAt.value = Date.now()
 	}
-
-	async function poll() {
-		const myGeneration = generation
-
-		try {
-			const status = await source?.getStatus()
-			if (myGeneration !== generation || status === undefined) {
-				return
-			}
-			failures = 0
-
-			if (await applyStatus(status)) {
-				return
-			}
-		} catch {
-			if (myGeneration !== generation) {
-				return
-			}
-			failures++
-		}
-
-		// Giving up keeps isFinished false, so the "we will email you" copy stays true.
-		if (failures >= MAX_CONSECUTIVE_FAILURES || Date.now() >= deadline) {
-			return
-		}
-
-		timeout = setTimeout(poll, POLL_INTERVAL)
-	}
-
-	function start(statusSource: MigrationStatusSource) {
-		stop()
-		source = statusSource
-		isFinished.value = false
-		errorKind.value = ''
-		errorMessage.value = ''
-		failures = 0
-		deadline = Date.now() + POLL_DEADLINE
-		timeout = setTimeout(poll, POLL_INTERVAL)
-	}
-
-	return {
-		isFinished,
-		errorMessage,
-		hasFailed,
-		failureKey,
-		start,
-		stop,
-	}
+	onScopeDispose(stop)
+	return {isFinished, errorMessage, hasFailed, failureKey, start, stop}
 })
 
 if (import.meta.hot) {

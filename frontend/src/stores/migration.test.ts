@@ -2,30 +2,30 @@ import {setActivePinia, createPinia} from 'pinia'
 import {describe, it, expect, beforeEach, afterEach, vi} from 'vitest'
 
 import {useMigrationStore} from './migration'
-import type {MigrationStatus} from '@/services/migrator/abstractMigration'
+import type {Status as MigrationStatus} from '@/client/generated'
+import {removeToken} from '@/helpers/auth'
+import {queryClient} from '@/client/queryClient'
+import {projectKeys} from '@/client/queries/projects'
 
-const {refreshProjectsMock} = vi.hoisted(() => ({
-	refreshProjectsMock: vi.fn(),
-}))
-
-vi.mock('@/client/queries/projects', () => ({
-	refreshProjects: refreshProjectsMock,
-}))
+const {getStatus} = vi.hoisted(() => ({getStatus: vi.fn()}))
+vi.mock('@/client/generated', async importOriginal => ({...await importOriginal<typeof import('@/client/generated')>(), migrationCsvStatus: getStatus}))
+vi.mock('@/message', () => ({error: vi.fn(), success: vi.fn()}))
 
 const POLL_INTERVAL = 3000
+const POLL_DEADLINE = 20 * 60 * 1000
 const NEVER = '0001-01-01T00:00:00Z'
 
-function status(overrides: Partial<MigrationStatus> = {}): MigrationStatus {
-	return {
+function status(overrides: Partial<MigrationStatus> = {}) {
+	return {data: {
 		started_at: '2024-01-15T10:00:00Z',
 		finished_at: NEVER,
 		error_kind: '',
 		error_message: '',
 		...overrides,
-	}
+	}}
 }
 
-// Lets the poll's awaited promises settle between timer ticks.
+// Lets the query settle its immediate fetch, then run one poll interval.
 async function tick() {
 	await vi.advanceTimersByTimeAsync(POLL_INTERVAL)
 }
@@ -34,15 +34,19 @@ describe('migration store', () => {
 	beforeEach(() => {
 		vi.useFakeTimers()
 		setActivePinia(createPinia())
-		refreshProjectsMock.mockReset()
+		getStatus.mockReset()
+		queryClient.clear()
+		queryClient.setQueryData(projectKeys.list(), {projects: []})
 	})
 
 	afterEach(() => {
+		useMigrationStore().stop()
+		queryClient.clear()
 		vi.useRealTimers()
 	})
 
 	it('does not poll until a view starts it', async () => {
-		const getStatus = vi.fn().mockResolvedValue(status())
+		getStatus.mockResolvedValue(status())
 		useMigrationStore()
 
 		await tick()
@@ -51,54 +55,54 @@ describe('migration store', () => {
 	})
 
 	it('keeps polling while the migration runs', async () => {
-		const getStatus = vi.fn().mockResolvedValue(status())
+		getStatus.mockResolvedValue(status())
 		const store = useMigrationStore()
-		store.start({getStatus})
+		store.start('csv')
 
 		await tick()
 		await tick()
 
-		expect(getStatus).toHaveBeenCalledTimes(2)
+		expect(getStatus).toHaveBeenCalledTimes(3)
 		expect(store.isFinished).toBe(false)
 	})
 
 	it('finishes and reloads the projects on success', async () => {
-		const getStatus = vi.fn().mockResolvedValue(status({finished_at: '2024-01-15T10:05:00Z'}))
+		getStatus.mockResolvedValue(status({finished_at: '2024-01-15T10:05:00Z'}))
 		const store = useMigrationStore()
-		store.start({getStatus})
+		store.start('csv')
 
 		await tick()
 		await tick()
 
 		expect(store.isFinished).toBe(true)
 		expect(store.hasFailed).toBe(false)
-		expect(refreshProjectsMock).toHaveBeenCalledTimes(1)
+		expect(queryClient.getQueryState(projectKeys.list())?.isInvalidated).toBe(true)
 		expect(getStatus).toHaveBeenCalledTimes(1)
 	})
 
 	it('does not reload the projects when the migration failed', async () => {
-		const getStatus = vi.fn().mockResolvedValue(status({
+		getStatus.mockResolvedValue(status({
 			finished_at: '2024-01-15T10:05:00Z',
 			error_kind: 'interrupted',
 		}))
 		const store = useMigrationStore()
-		store.start({getStatus})
+		store.start('csv')
 
 		await tick()
 
 		expect(store.hasFailed).toBe(true)
 		expect(store.failureKey).toBe('migrate.failure.interrupted')
-		expect(refreshProjectsMock).not.toHaveBeenCalled()
+		expect(queryClient.getQueryState(projectKeys.list())?.isInvalidated).toBe(false)
 	})
 
 	it('renders a detail failure with the raw message', async () => {
-		const getStatus = vi.fn().mockResolvedValue(status({
+		getStatus.mockResolvedValue(status({
 			finished_at: '2024-01-15T10:05:00Z',
 			error_kind: 'detail',
 			error_message: 'row 4 has no title',
 		}))
 		const store = useMigrationStore()
-		store.start({getStatus})
+		store.start('csv')
 
 		await tick()
 
@@ -107,12 +111,12 @@ describe('migration store', () => {
 	})
 
 	it('falls back to the generic text for a kind it does not know', async () => {
-		const getStatus = vi.fn().mockResolvedValue(status({
+		getStatus.mockResolvedValue(status({
 			finished_at: '2024-01-15T10:05:00Z',
 			error_kind: 'something-new' as never,
 		}))
 		const store = useMigrationStore()
-		store.start({getStatus})
+		store.start('csv')
 
 		await tick()
 
@@ -120,9 +124,9 @@ describe('migration store', () => {
 	})
 
 	it('stop cancels the poller', async () => {
-		const getStatus = vi.fn().mockResolvedValue(status())
+		getStatus.mockResolvedValue(status())
 		const store = useMigrationStore()
-		store.start({getStatus})
+		store.start('csv')
 		store.stop()
 
 		await tick()
@@ -132,12 +136,12 @@ describe('migration store', () => {
 	})
 
 	it('ignores the response of a poll started before stop', async () => {
-		let resolveStatus: (s: MigrationStatus) => void = () => {}
-		const getStatus = vi.fn().mockReturnValue(new Promise<MigrationStatus>(resolve => {
+		let resolveStatus: (s: ReturnType<typeof status>) => void = () => {}
+		getStatus.mockReturnValue(new Promise<ReturnType<typeof status>>(resolve => {
 			resolveStatus = resolve
 		}))
 		const store = useMigrationStore()
-		store.start({getStatus})
+		store.start('csv')
 
 		await tick()
 		store.stop()
@@ -145,13 +149,13 @@ describe('migration store', () => {
 		await tick()
 
 		expect(store.isFinished).toBe(false)
-		expect(refreshProjectsMock).not.toHaveBeenCalled()
+		expect(queryClient.getQueryState(projectKeys.list())?.isInvalidated).toBe(false)
 	})
 
 	it('gives up after the consecutive failure cap', async () => {
-		const getStatus = vi.fn().mockRejectedValue(new Error('nope'))
+		getStatus.mockRejectedValue(new Error('nope'))
 		const store = useMigrationStore()
-		store.start({getStatus})
+		store.start('csv')
 
 		for (let i = 0; i < 10; i++) {
 			await tick()
@@ -162,31 +166,63 @@ describe('migration store', () => {
 	})
 
 	it('gives up once the deadline passed', async () => {
-		const getStatus = vi.fn().mockResolvedValue(status())
+		getStatus.mockResolvedValue(status())
 		const store = useMigrationStore()
-		store.start({getStatus})
+		store.start('csv')
 
-		await vi.advanceTimersByTimeAsync(20 * 60 * 1000)
-		const callsAtDeadline = getStatus.mock.calls.length
+		await vi.advanceTimersByTimeAsync(POLL_DEADLINE)
+		// the fetch the enabled query runs right away, plus one per interval up to the deadline
+		expect(getStatus).toHaveBeenCalledTimes(POLL_DEADLINE / POLL_INTERVAL + 1)
 		await tick()
 		await tick()
 
-		expect(getStatus).toHaveBeenCalledTimes(callsAtDeadline)
+		expect(getStatus).toHaveBeenCalledTimes(POLL_DEADLINE / POLL_INTERVAL + 1)
 		expect(store.isFinished).toBe(false)
 	})
 
 	it('start resets the state of a previous migration', async () => {
-		const failed = vi.fn().mockResolvedValue(status({
+		getStatus.mockResolvedValue(status({
 			finished_at: '2024-01-15T10:05:00Z',
 			error_kind: 'queue',
 		}))
 		const store = useMigrationStore()
-		store.start({getStatus: failed})
+		store.start('csv')
 		await tick()
 
-		store.start({getStatus: vi.fn().mockResolvedValue(status())})
+		getStatus.mockResolvedValue(status())
+		store.start('csv')
 
 		expect(store.isFinished).toBe(false)
 		expect(store.hasFailed).toBe(false)
 	})
+	it('polls again when a finished provider is started a second time', async () => {
+		getStatus.mockResolvedValue(status({finished_at: '2024-01-15T10:05:00Z'}))
+		const store = useMigrationStore()
+		store.start('csv')
+		await tick()
+		expect(store.isFinished).toBe(true)
+
+		getStatus.mockResolvedValue(status())
+		store.start('csv')
+		await tick()
+
+		expect(getStatus).toHaveBeenCalledTimes(2)
+		expect(store.isFinished).toBe(false)
+	})
+
+	it('stops polling after the account session changes', async () => {
+		getStatus.mockResolvedValue(status())
+		const store = useMigrationStore()
+		store.start('csv')
+		await tick()
+		expect(getStatus).toHaveBeenCalledTimes(2)
+
+		removeToken()
+		await tick()
+		await tick()
+
+		expect(getStatus).toHaveBeenCalledTimes(2)
+		expect(store.isFinished).toBe(false)
+	})
+
 })
