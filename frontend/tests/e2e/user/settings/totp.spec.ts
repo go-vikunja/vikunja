@@ -18,7 +18,7 @@ test.describe('TOTP', () => {
 		await page.locator('#totpConfirmPasscode').fill(code)
 		await page.getByRole('button', {name: 'Confirm'}).click()
 
-		// TOTP.vue:152 calls authStore.logout() on confirm success.
+		// Confirm success logs out.
 		await expect(page).toHaveURL(/\/login/)
 	})
 
@@ -33,6 +33,8 @@ test.describe('TOTP', () => {
 		await page.locator('.card').getByRole('button', {name: 'Disable'}).last().click()
 
 		await expect(page.locator('.global-notification')).toContainText('Success')
+		await expect(page.getByRole('button', {name: 'Enroll'})).toBeVisible()
+		await page.reload()
 		await expect(page.getByRole('button', {name: 'Enroll'})).toBeVisible()
 	})
 
