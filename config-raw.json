@@ -1089,17 +1089,17 @@
                 {
                     "key": "allownonroutableips",
                     "default_value": "false",
-                    "comment": "If set to true, outgoing HTTP requests (webhooks, avatar downloads, migration imports) may resolve to non-globally-routable IP addresses. When false (the default), Vikunja blocks these to prevent SSRF attacks. Set to true only if you need these to reach services on your internal network."
+                    "comment": "If set to true, outgoing HTTP requests (webhooks, avatar downloads, migration imports, and the license check) may resolve to non-globally-routable IP addresses. When false (the default), Vikunja blocks these to prevent SSRF attacks. Requests sent through a proxy are not checked, since the proxy resolves the target: filtering them is the proxy's job, and a generic forward proxy does not filter. Set to true only if you need these to reach services on your internal network."
                 },
                 {
                     "key": "proxyurl",
                     "default_value": "",
-                    "comment": "The URL of [a mole instance](https://github.com/frain-dev/mole) to use to proxy outgoing HTTP requests. Applies to webhooks, avatar downloads, migration imports, and the license check. You should use this and configure appropriately if you're not the only one using your Vikunja instance. More info about why: https://webhooks.fyi/best-practices/webhook-providers#implement-security-on-egress-communication. Must be used in combination with `outgoingrequests.proxypassword`. If not set, the standard `HTTP_PROXY`, `HTTPS_PROXY` and `NO_PROXY` environment variables are used. Connections to the proxy itself are exempt from the `allownonroutableips` check, since the proxy resolves proxied targets."
+                    "comment": "The URL of an HTTP proxy, for example [a mole instance](https://github.com/frain-dev/mole), to use for outgoing HTTP requests: webhooks, avatar downloads, migration imports, OpenID Connect, and the license check. You should use this and configure appropriately if you're not the only one using your Vikunja instance. More info about why: https://webhooks.fyi/best-practices/webhook-providers#implement-security-on-egress-communication. Credentials can be part of the URL (`http://user:password@proxy:3128`) or set with `outgoingrequests.proxypassword`. If not set, the standard `HTTP_PROXY`, `HTTPS_PROXY` and `NO_PROXY` environment variables are used. Connections to the proxy itself are exempt from the `allownonroutableips` check, since the proxy resolves proxied targets."
                 },
                 {
                     "key": "proxypassword",
                     "default_value": "",
-                    "comment": "The proxy password for authenticating against the proxy."
+                    "comment": "The proxy password. Used with the username from `outgoingrequests.proxyurl`, or `vikunja` if the URL has none. Ignored when `outgoingrequests.proxyurl` already contains a password."
                 }
             ]
         },
