@@ -39,7 +39,7 @@
 			<div class="field is-grouped">
 				<div class="control">
 					<XButton
-						:loading="passwordResetService.loading"
+						:loading="passwordResetMutation.isPending.value"
 						@click="resetPassword"
 					>
 						{{ $t('user.auth.resetPassword') }}
@@ -55,8 +55,8 @@ import {ref, reactive} from 'vue'
 import {useRoute} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 
-import PasswordResetModel from '@/models/passwordReset'
-import PasswordResetService from '@/services/passwordReset'
+import {useResetPasswordMutation} from '@/client/queries/passwords'
+import {isRequestContextAbort} from '@/client/requestContext'
 import Message from '@/components/misc/Message.vue'
 import {getErrorText} from '@/message'
 import Password from '@/components/input/Password.vue'
@@ -68,11 +68,13 @@ const credentials = reactive({
 const route = useRoute()
 const {t} = useI18n()
 
-const passwordResetService = reactive(new PasswordResetService())
+const passwordResetMutation = useResetPasswordMutation()
 const errorMsg = ref('')
 const successMessage = ref('')
 
 async function resetPassword() {
+	if (passwordResetMutation.isPending.value) return
+
 	errorMsg.value = ''
 	const token = route.query.userPasswordReset as string
 
@@ -85,12 +87,15 @@ async function resetPassword() {
 		return
 	}
 
-	const passwordReset = new PasswordResetModel({newPassword: credentials.password, token: token})
 	try {
-		const {message} = await passwordResetService.resetPassword(passwordReset)
-		successMessage.value = message
+		const {message} = await passwordResetMutation.mutateAsync({new_password: credentials.password, token})
+		successMessage.value = message ?? t('user.settings.passwordUpdateSuccess')
+		credentials.password = ''
 	} catch (e) {
+		if (isRequestContextAbort(e)) return
 		errorMsg.value = getErrorText(e)
+	} finally {
+		passwordResetMutation.reset()
 	}
 }
 </script>

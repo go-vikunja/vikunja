@@ -2,7 +2,7 @@
 	<Card
 		v-if="isLocalUser"
 		:title="$t('user.settings.newPasswordTitle')"
-		:loading="passwordUpdateService.loading"
+		:loading="passwordUpdateMutation.isPending.value"
 	>
 		<form @submit.prevent="updatePassword">
 			<div class="field">
@@ -12,13 +12,13 @@
 				>{{ $t('user.settings.newPassword') }}</label>
 				<Password
 					:validate-initially="true"
-					@update:modelValue="v => passwordUpdate.newPassword = v"
 					@submit="updatePassword"
+					@update:modelValue="v => passwordUpdate.new_password = v"
 				/>
 			</div>
 			<FormField
 				id="currentPassword"
-				v-model="passwordUpdate.oldPassword"
+				v-model="passwordUpdate.old_password"
 				:label="$t('user.settings.currentPassword')"
 				autocomplete="current-password"
 				:placeholder="$t('user.settings.currentPasswordPlaceholder')"
@@ -28,7 +28,7 @@
 		</form>
 
 		<XButton
-			:loading="passwordUpdateService.loading"
+			:loading="passwordUpdateMutation.isPending.value"
 			:disabled="!isValid"
 			class="is-fullwidth mbs-4"
 			@click="updatePassword"
@@ -40,33 +40,36 @@
 
 
 <script setup lang="ts">
-import {reactive, shallowReactive, computed} from 'vue'
+import {reactive, computed} from 'vue'
 import {useI18n} from 'vue-i18n'
 
-import PasswordUpdateService from '@/services/passwordUpdateService'
-import PasswordUpdateModel from '@/models/passwordUpdate'
+import {useChangePasswordMutation} from '@/client/queries/passwords'
 import FormField from '@/components/input/FormField.vue'
 import Password from '@/components/input/Password.vue'
 
 import {useTitle} from '@/composables/useTitle'
-import {success} from '@/message'
 import {useAuthStore} from '@/stores/auth'
 import {validatePassword} from '@/helpers/validatePasswort'
 
 defineOptions({name: 'UserSettingsPasswordUpdate'})
 
-const passwordUpdateService = shallowReactive(new PasswordUpdateService())
-const passwordUpdate = reactive(new PasswordUpdateModel())
+const passwordUpdateMutation = useChangePasswordMutation()
+const passwordUpdate = reactive({new_password: '', old_password: ''})
 
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => `${t('user.settings.newPasswordTitle')} - ${t('user.settings.title')}`)
 
 const authStore = useAuthStore()
 const isLocalUser = computed(() => authStore.info?.is_local_user)
-const isValid = computed(() => validatePassword(passwordUpdate.newPassword) === true && passwordUpdate.oldPassword !== '')
+const isValid = computed(() => validatePassword(passwordUpdate.new_password) === true && passwordUpdate.old_password !== '')
 
 async function updatePassword() {
-	await passwordUpdateService.update(passwordUpdate)
-	success({message: t('user.settings.passwordUpdateSuccess')})
+	try {
+		await passwordUpdateMutation.mutateAsync(passwordUpdate)
+	} catch {
+		return
+	} finally {
+		passwordUpdateMutation.reset()
+	}
 }
 </script>
