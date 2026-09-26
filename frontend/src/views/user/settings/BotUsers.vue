@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {onMounted, ref} from 'vue'
+import {computed, onMounted, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useTitle} from '@/composables/useTitle'
 
@@ -9,10 +9,11 @@ import Message from '@/components/misc/Message.vue'
 import ApiTokenForm from '@/components/token/ApiTokenForm.vue'
 
 import BotUserService from '@/services/botUser'
-import ApiTokenService from '@/services/apiToken'
+import {useQueries} from '@tanstack/vue-query'
+import {botApiTokensQuery, useDeleteApiTokenMutation} from '@/client/queries/apiTokens'
 import type {BotUser} from '@/client/generated'
 import type {IAbstract} from '@/modelTypes/IAbstract'
-import type {IApiToken} from '@/modelTypes/IApiToken'
+import type {ApiToken as IApiToken} from '@/client/generated'
 import {formatDisplayDate} from '@/helpers/time/formatDate'
 
 type IUser = BotUser & Required<Pick<BotUser, 'id'>> & IAbstract
@@ -24,14 +25,18 @@ const {t} = useI18n({useScope: 'global'})
 useTitle(() => t('user.settings.bots.title'))
 
 const botService = new BotUserService()
-const tokenService = new ApiTokenService()
+const deleteTokenMutation = useDeleteApiTokenMutation()
 const bots = ref<IUser[]>([])
 const newBotUsername = ref('')
 const newBotName = ref('')
 const createError = ref<string | null>(null)
 const showCreateForm = ref(false)
 
-const tokensByBot = ref<Record<number, IApiToken[]>>({})
+const queryableBots = computed(() => bots.value.filter(bot => bot.id > 0))
+const tokenQueries = useQueries({queries: computed(() => queryableBots.value.map(bot => botApiTokensQuery(bot.id)))})
+const tokensByBot = computed(() => Object.fromEntries(
+	queryableBots.value.map((bot, index) => [bot.id, tokenQueries.value[index]?.data ?? []]),
+))
 const newTokensByBot = ref<Record<number, string>>({})
 const showTokenForm = ref<Record<number, boolean>>({})
 const editingName = ref<Record<number, boolean>>({})
@@ -42,13 +47,6 @@ const botToDelete = ref<IUser>()
 
 async function loadBots() {
 	bots.value = await botService.getAll() as IUser[]
-	for (const bot of bots.value) {
-		await loadTokens(bot.id)
-	}
-}
-
-async function loadTokens(botId: number) {
-	tokensByBot.value[botId] = await tokenService.getAll({}, {owner_id: botId}) as IApiToken[]
 }
 
 async function createBot() {
@@ -119,14 +117,13 @@ async function deleteBot() {
 }
 
 function onTokenCreated(bot: IUser, token: IApiToken) {
-	newTokensByBot.value[bot.id] = token.token
+	newTokensByBot.value[bot.id] = token.token ?? ''
 	showTokenForm.value[bot.id] = false
-	loadTokens(bot.id)
 }
 
-async function deleteToken(bot: IUser, token: IApiToken) {
-	await tokenService.delete(token)
-	await loadTokens(bot.id)
+async function deleteToken(token: IApiToken) {
+	if (!token.id) return
+	try { await deleteTokenMutation.mutateAsync(token.id) } catch { /* Mutation reports the error. */ }
 }
 
 onMounted(loadBots)
@@ -263,12 +260,12 @@ onMounted(loadBots)
 								:key="token.id"
 							>
 								<td>{{ token.title }}</td>
-								<td>{{ formatDisplayDate(token.expiresAt) }}</td>
+								<td>{{ formatDisplayDate(token.expires_at) }}</td>
 								<td>{{ formatDisplayDate(token.created) }}</td>
 								<td class="has-text-end">
 									<XButton
 										variant="secondary"
-										@click="deleteToken(bot, token)"
+										@click="deleteToken(token)"
 									>
 										{{ $t('misc.delete') }}
 									</XButton>
@@ -277,20 +274,22 @@ onMounted(loadBots)
 						</tbody>
 					</table>
 				</div>
-				<ApiTokenForm
-					v-if="showTokenForm[bot.id]"
-					:owner-id="bot.id"
-					@created="(token: IApiToken) => onTokenCreated(bot, token)"
-					@cancel="showTokenForm[bot.id] = false"
-				/>
-				<XButton
-					v-else
-					icon="plus"
-					class="mbe-4"
-					@click="showTokenForm[bot.id] = true"
-				>
-					{{ $t('user.settings.apiTokens.createToken') }}
-				</XButton>
+				<template v-if="bot.id > 0">
+					<ApiTokenForm
+						v-if="showTokenForm[bot.id]"
+						:owner-id="bot.id"
+						@created="(token: IApiToken) => onTokenCreated(bot, token)"
+						@cancel="showTokenForm[bot.id] = false"
+					/>
+					<XButton
+						v-else
+						icon="plus"
+						class="mbe-4"
+						@click="showTokenForm[bot.id] = true"
+					>
+						{{ $t('user.settings.apiTokens.createToken') }}
+					</XButton>
+				</template>
 			</div>
 		</div>
 

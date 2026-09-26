@@ -68,3 +68,31 @@ test.describe('API Tokens', () => {
 		await expect(titleInput).toBeVisible()
 	})
 })
+
+test('creates and revokes a scoped token with stored state surviving reload', async ({authenticatedPage: page, apiContext}) => {
+	await page.goto('/user/settings/api-tokens?title=Stored%20token&scopes=tasks:read_all')
+	const tasksGroup = page.locator('.mbe-2').filter({
+		has: page.getByRole('checkbox', {name: 'Checkbox tasks', exact: true}),
+	})
+	await expect(page.locator('#apiTokenTitle')).toHaveValue('Stored token')
+	await expect(tasksGroup.getByRole('checkbox', {name: 'Checkbox read all', exact: true})).toBeChecked()
+	const created = page.waitForResponse(r => r.url().endsWith('/api/v2/tokens') && r.request().method() === 'POST')
+	await page.getByRole('button', {name: 'Create token', exact: true}).click()
+	const response = await created
+	expect(response.ok()).toBe(true)
+	const token = await response.json()
+	await expect(page.locator('.message')).toContainText(token.token)
+	await expect(page.locator('tbody')).toContainText('Stored token')
+	await page.reload()
+	await expect(page.locator('tbody')).toContainText('Stored token')
+	await expect(page.locator('body')).not.toContainText(token.token)
+	const usable = await apiContext.get('/api/v2/tasks', {headers: {Authorization: `Bearer ${token.token}`}})
+	expect(usable.ok()).toBe(true)
+	await page.getByRole('button', {name: 'Delete', exact: true}).click()
+	await page.locator('[data-cy="modalPrimary"]').click()
+	await expect(page.locator('tbody tr')).toHaveCount(0)
+	await page.reload()
+	await expect(page.locator('tbody tr')).toHaveCount(0)
+	const revoked = await apiContext.get('/api/v2/tasks', {headers: {Authorization: `Bearer ${token.token}`}})
+	expect(revoked.status()).toBe(401)
+})

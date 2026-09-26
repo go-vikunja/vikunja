@@ -1,17 +1,20 @@
 <script setup lang="ts">
-import ApiTokenService from '@/services/apiToken'
-import {onMounted, ref} from 'vue'
+import {useQuery} from '@tanstack/vue-query'
+import {apiTokensQuery, useDeleteApiTokenMutation} from '@/client/queries/apiTokens'
+import {isApiTokenExpired} from '@/helpers/apiToken'
+import {computed, onMounted, ref} from 'vue'
 import {useRoute} from 'vue-router'
 import {formatDateSince, formatDisplayDate} from '@/helpers/time/formatDate'
 import XButton from '@/components/input/Button.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import {useI18n} from 'vue-i18n'
 import Message from '@/components/misc/Message.vue'
-import type {IApiToken} from '@/modelTypes/IApiToken'
+import type {ApiToken as IApiToken} from '@/client/generated'
 import ApiTokenForm from '@/components/token/ApiTokenForm.vue'
 
-const service = new ApiTokenService()
-const tokens = ref<IApiToken[]>([])
+const {data, isFetching} = useQuery(apiTokensQuery())
+const tokens = computed(() => data.value ?? [])
+const deleteMutation = useDeleteApiTokenMutation()
 const apiDocsUrl = window.API_URL + '/docs'
 const showCreateForm = ref(false)
 const tokenCreatedSuccessMessage = ref('')
@@ -26,9 +29,7 @@ const route = useRoute()
 const initialTitle = ref('')
 const initialScopes = ref('')
 
-onMounted(async () => {
-	tokens.value = await service.getAll()
-
+onMounted(() => {
 	// Apply query parameters if present
 	const titleParam = Array.isArray(route.query.title) ? route.query.title[0] : route.query.title
 	const scopesParam = Array.isArray(route.query.scopes) ? route.query.scopes[0] : route.query.scopes
@@ -46,16 +47,12 @@ onMounted(async () => {
 
 async function deleteToken() {
 	const token = tokenToDelete.value
-	if (!token) {
+	if (!token?.id) {
 		return
 	}
 	tokenToDelete.value = undefined
 	showDeleteModal.value = false
-	await service.delete(token)
-	const index = tokens.value.findIndex(el => el.id === token.id)
-	if (index !== -1) {
-		tokens.value.splice(index, 1)
-	}
+	try { await deleteMutation.mutateAsync(token.id) } catch { /* Mutation reports the error. */ }
 }
 
 function formatPermissionTitle(title: string): string {
@@ -64,7 +61,6 @@ function formatPermissionTitle(title: string): string {
 
 function onTokenCreated(token: IApiToken) {
 	tokenCreatedSuccessMessage.value = t('user.settings.apiTokens.tokenCreatedSuccess', {token: token.token})
-	tokens.value.push(token)
 	showCreateForm.value = false
 }
 </script>
@@ -117,17 +113,17 @@ function onTokenCreated(token: IApiToken) {
 								:key="'permission-' + p"
 							>
 								<strong>{{ formatPermissionTitle(p) }}:</strong>
-								{{ v.map(formatPermissionTitle).join(', ') }}
+								{{ (v ?? []).map(formatPermissionTitle).join(', ') }}
 								<br>
 							</template>
 						</td>
 						<td>
-							{{ formatDisplayDate(tk.expiresAt) }}
+							{{ formatDisplayDate(tk.expires_at) }}
 							<p
-								v-if="tk.expiresAt < new Date()"
+								v-if="isApiTokenExpired(tk)"
 								class="has-text-danger"
 							>
-								{{ $t('user.settings.apiTokens.expired', {ago: formatDateSince(tk.expiresAt)}) }}
+								{{ $t('user.settings.apiTokens.expired', {ago: formatDateSince(tk.expires_at)}) }}
 							</p>
 						</td>
 						<td>{{ formatDisplayDate(tk.created) }}</td>
@@ -146,7 +142,6 @@ function onTokenCreated(token: IApiToken) {
 
 		<ApiTokenForm
 			v-if="showCreateForm"
-			:loading="service.loading"
 			:initial-title="initialTitle"
 			:initial-scopes="initialScopes"
 			@created="onTokenCreated"
@@ -157,7 +152,7 @@ function onTokenCreated(token: IApiToken) {
 			v-else
 			icon="plus"
 			class="mbe-4"
-			:loading="service.loading"
+			:loading="isFetching || deleteMutation.isPending.value"
 			@click="() => showCreateForm = true"
 		>
 			{{ $t('user.settings.apiTokens.createAToken') }}

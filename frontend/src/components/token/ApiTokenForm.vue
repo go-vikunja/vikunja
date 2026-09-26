@@ -1,27 +1,33 @@
 <script setup lang="ts">
-import {computed, onMounted, ref, watch} from 'vue'
+import {computed, ref, watch} from 'vue'
 import {useNow} from '@vueuse/core'
 import XButton from '@/components/input/Button.vue'
-import ApiTokenService from '@/services/apiToken'
-import ApiTokenModel from '@/models/apiTokenModel'
+import {useQuery} from '@tanstack/vue-query'
+import {apiTokenRoutesQuery, useCreateApiTokenMutation} from '@/client/queries/apiTokens'
+import type {ApiTokenWritable} from '@/client/generated'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import {MILLISECONDS_A_DAY} from '@/constants/date'
 import Datepicker from '@/components/input/Datepicker.vue'
 import FormField from '@/components/input/FormField.vue'
-import type {IApiToken, IApiPermission} from '@/modelTypes/IApiToken'
-import type {ApiTokenRoutes, ApiTokenPreset} from '@/modelTypes/IApiTokenSettings'
+import type {ApiToken as IApiToken} from '@/client/generated'
+import type {ApiTokenRoutes, ApiTokenPreset} from '@/helpers/apiToken'
+import {parseScopesFromQuery} from '@/helpers/parseScopesFromQuery'
+
+type IApiPermission = NonNullable<IApiToken['permissions']>
+type ApiTokenDraft = ApiTokenWritable & {
+	title: string,
+	permissions: IApiPermission,
+}
 
 const props = withDefaults(defineProps<{
 	ownerId?: number,
-	loading?: boolean,
 	initialTitle?: string,
 	initialScopes?: string,
 	routes?: ApiTokenRoutes,
 	presets?: ApiTokenPreset[],
 	lockedScopes?: IApiPermission,
 }>(), {
-	ownerId: 0,
-	loading: false,
+	ownerId: undefined,
 	initialTitle: '',
 	initialScopes: '',
 	routes: undefined,
@@ -34,7 +40,8 @@ const emit = defineEmits<{
 	cancel: []
 }>()
 
-const service = new ApiTokenService()
+const createMutation = useCreateApiTokenMutation()
+const {data: routesData} = useQuery(computed(() => ({...apiTokenRoutesQuery(), enabled: props.routes === undefined})))
 const now = useNow({interval: 60_000})
 
 const DEFAULT_EXPIRY_DAYS = 30
@@ -43,8 +50,24 @@ function expiryDateIn(days: number) {
 	return new Date(Date.now() + days * MILLISECONDS_A_DAY)
 }
 
-const availableRoutes = ref<ApiTokenRoutes>({})
-const newToken = ref<IApiToken>(new ApiTokenModel())
+function otherGroupLast<T>([a]: [string, T], [b]: [string, T]): number {
+	if (a === 'other') return 1
+	if (b === 'other') return -1
+	return 0
+}
+
+const availableRoutes = computed<ApiTokenRoutes>(() => Object.fromEntries(
+	Object.entries(props.routes ?? routesData.value ?? {}).sort(otherGroupLast),
+))
+
+function emptyDraft(): ApiTokenDraft {
+	return {
+		title: '',
+		permissions: {},
+	}
+}
+
+const newToken = ref(emptyDraft())
 const newTokenExpiry = ref<string | number>(DEFAULT_EXPIRY_DAYS)
 const newTokenExpiryCustom = ref<Date | null>(expiryDateIn(DEFAULT_EXPIRY_DAYS))
 
@@ -107,17 +130,10 @@ const defaultPresets: ApiTokenPreset[] = [
 
 const presets = computed(() => props.presets ?? defaultPresets)
 
-onMounted(async () => {
-	const allRoutes: ApiTokenRoutes = props.routes ?? await service.getAvailableRoutes()
-
-	const routesAvailable: ApiTokenRoutes = {}
-	const keys = Object.keys(allRoutes)
-	keys.sort((a, b) => (a === 'other' ? 1 : b === 'other' ? -1 : 0))
-	keys.forEach(key => {
-		routesAvailable[key] = allRoutes[key]
-	})
-
-	availableRoutes.value = routesAvailable
+let initialized = false
+watch(availableRoutes, routes => {
+	if (initialized || Object.keys(routes).length === 0) return
+	initialized = true
 	resetPermissions()
 
 	// Apply initial values from props (e.g. from query parameters)
@@ -127,16 +143,7 @@ onMounted(async () => {
 	}
 
 	if (props.initialScopes) {
-		const requestedScopes: Record<string, string[]> = {}
-		for (const scope of props.initialScopes.split(',')) {
-			const [group, permission] = scope.split(':')
-			if (group && permission) {
-				if (!requestedScopes[group]) {
-					requestedScopes[group] = []
-				}
-				requestedScopes[group].push(permission)
-			}
-		}
+		const requestedScopes = parseScopesFromQuery(props.initialScopes)
 		for (const [group, permissions] of Object.entries(requestedScopes)) {
 			if (newTokenPermissions.value[group]) {
 				for (const permission of permissions) {
@@ -148,7 +155,7 @@ onMounted(async () => {
 			}
 		}
 	}
-})
+}, {immediate: true})
 
 function resetPermissions() {
 	newTokenPermissions.value = {}
@@ -261,7 +268,7 @@ async function createToken() {
 
 	const expiry = Number(newTokenExpiry.value)
 	if (!isNaN(expiry)) {
-		newToken.value.expiresAt = expiryDateIn(expiry)
+		newToken.value.expires_at = expiryDateIn(expiry).toISOString()
 	} else {
 		const customExpiry = newTokenExpiryCustom.value === null ? null : new Date(newTokenExpiryCustom.value)
 		if (customExpiry === null || isNaN(customExpiry.getTime()) || customExpiry <= new Date()) {
@@ -269,18 +276,22 @@ async function createToken() {
 			return
 		}
 		newTokenExpiryValid.value = true
-		newToken.value.expiresAt = customExpiry
+		newToken.value.expires_at = customExpiry.toISOString()
 	}
 
-	if (props.ownerId > 0) {
-		(newToken.value as IApiToken & {ownerId: number}).ownerId = props.ownerId
+	if (props.ownerId !== undefined) {
+		newToken.value.owner_id = props.ownerId
 	}
 
-	const token = await service.create(newToken.value)
+	let token: IApiToken
+	try {
+		token = await createMutation.mutateAsync(newToken.value)
+		createMutation.reset()
+	} catch { return }
 
 	// Reset before emitting: parents hide the form in their `created` handler, so
 	// anything after the emit would write to a component that's already unmounting.
-	newToken.value = new ApiTokenModel()
+	newToken.value = emptyDraft()
 	newTokenExpiry.value = DEFAULT_EXPIRY_DAYS
 	newTokenExpiryCustom.value = expiryDateIn(DEFAULT_EXPIRY_DAYS)
 	newTokenExpiryValid.value = true
@@ -421,7 +432,7 @@ async function createToken() {
 			{{ $t('user.settings.apiTokens.permissionRequired') }}
 		</p>
 		<XButton
-			:loading="loading"
+			:loading="createMutation.isPending.value"
 			type="submit"
 		>
 			{{ $t('user.settings.apiTokens.createToken') }}
