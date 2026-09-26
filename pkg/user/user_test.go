@@ -30,6 +30,33 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestUserTimezoneDefaultFallback(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	u := &User{
+		ID:       1,
+		Timezone: "",
+	}
+	updated, err := UpdateUser(s, u, false)
+	require.NoError(t, err)
+	assert.NotEmpty(t, updated.Timezone)
+	_, err = time.LoadLocation(updated.Timezone)
+	require.NoError(t, err)
+
+	created, err := CreateUser(s, &User{
+		Username: "tzfallbackuser",
+		Email:    "tzfallbackuser@example.com",
+		Password: "testpassword",
+		Timezone: "",
+	})
+	require.NoError(t, err)
+	assert.NotEmpty(t, created.Timezone)
+	_, err = time.LoadLocation(created.Timezone)
+	require.NoError(t, err)
+}
+
 func TestCreateBotUser(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)

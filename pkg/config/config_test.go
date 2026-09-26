@@ -149,3 +149,25 @@ func TestResolvePath(t *testing.T) {
 		})
 	}
 }
+
+func TestTimezoneFallback(t *testing.T) {
+	t.Run("empty service.timezone falls back to UTC", func(t *testing.T) {
+		initConfigFromYAML(t, "service:\n  timezone: \"\"\n")
+		assert.Equal(t, "UTC", ServiceTimeZone.GetString())
+		assert.Equal(t, "UTC", DefaultSettingsTimezone.GetString())
+	})
+	t.Run("invalid service.timezone falls back to UTC", func(t *testing.T) {
+		initConfigFromYAML(t, "service:\n  timezone: Invalid/Nonexistent\n")
+		assert.Equal(t, "UTC", ServiceTimeZone.GetString())
+		assert.Equal(t, "UTC", DefaultSettingsTimezone.GetString())
+	})
+	t.Run("valid service.timezone is preserved", func(t *testing.T) {
+		initConfigFromYAML(t, "service:\n  timezone: America/New_York\n")
+		assert.Equal(t, "America/New_York", ServiceTimeZone.GetString())
+		assert.Equal(t, "America/New_York", DefaultSettingsTimezone.GetString())
+	})
+	t.Run("invalid defaultsettings.timezone falls back to service.timezone", func(t *testing.T) {
+		initConfigFromYAML(t, "service:\n  timezone: Europe/Berlin\ndefaultsettings:\n  timezone: Bad/Timezone\n")
+		assert.Equal(t, "Europe/Berlin", DefaultSettingsTimezone.GetString())
+	})
+}
