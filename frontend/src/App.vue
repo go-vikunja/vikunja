@@ -42,8 +42,7 @@
 
 <script lang="ts" setup>
 import {computed, watch} from 'vue'
-import {useRoute} from 'vue-router'
-import {useI18n} from 'vue-i18n'
+import {useRoute, useRouter} from 'vue-router'
 import isTouchDevice from 'is-touch-device'
 
 import Notification from '@/components/misc/Notification.vue'
@@ -68,10 +67,10 @@ import QuickAddOverlay from '@/components/quick-actions/QuickAddOverlay.vue'
 import AddToHomeScreen from '@/components/home/AddToHomeScreen.vue'
 import DemoMode from '@/components/home/DemoMode.vue'
 import {AUTH_ROUTE_NAMES} from '@/constants/authRouteNames'
+import {AUTH_TYPES} from '@/constants/auth'
 import {useQuickAddMode} from '@/composables/useQuickAddMode'
 
-const importAccountDeleteService = () => import('@/services/accountDelete')
-import {success} from '@/message'
+import {useConfirmDeletionMutation} from '@/client/queries/accountDeletion'
 
 const authStore = useAuthStore()
 const baseStore = useBaseStore()
@@ -103,21 +102,34 @@ const showNoAuthRoute = computed(() => typeof route.name === 'string' && AUTH_RO
 useBodyClass('is-touch', isTouchDevice())
 const keyboardShortcutsActive = computed(() => baseStore.keyboardShortcutsActive)
 
-const {t} = useI18n({useScope: 'global'})
+const router = useRouter()
+const confirmDeletion = useConfirmDeletionMutation()
 
-// setup account deletion verification
-const accountDeletionConfirm = computed(() => route.query?.accountDeletionConfirm as (string | undefined))
-watch(accountDeletionConfirm, async (accountDeletionConfirm) => {
-	if (accountDeletionConfirm === undefined) {
+// Without a session the token would burn on an unauthenticated request, so keep it in the URL until login lands.
+const accountDeletionToken = computed(() => {
+	const token = route.query.accountDeletionConfirm
+	return authStore.authUser && typeof token === 'string' ? token : ''
+})
+
+watch(accountDeletionToken, async token => {
+	if (!token) return
+	// The URL reaches Sentry replays and lastVisited, so drop the single-use token before spending it.
+	const query = {...route.query}
+	delete query.accountDeletionConfirm
+	// A failed strip must not skip spending the token.
+	await router.replace({path: route.path, query, hash: route.hash}).catch(() => {})
+	try {
+		await confirmDeletion.mutateAsync({
+			id: authStore.session?.id ?? 0,
+			type: authStore.session?.type ?? AUTH_TYPES.USER,
+			token,
+		})
+	} catch {
 		return
+	} finally {
+		confirmDeletion.reset()
 	}
-
-	const AccountDeleteService = (await importAccountDeleteService()).default
-	const accountDeletionService = new AccountDeleteService()
-	await accountDeletionService.confirm(accountDeletionConfirm)
-	success({message: t('user.deletion.confirmSuccess')})
-	authStore.refreshUserInfo()
-}, { immediate: true })
+}, {immediate: true})
 
 setLanguage(authStore.settings.language ?? DEFAULT_LANGUAGE)
 useColorScheme()

@@ -34,7 +34,7 @@
 			</form>
 
 			<XButton
-				:loading="accountDeleteService.loading"
+				:loading="loading"
 				class="is-fullwidth mbs-4"
 				@click="cancelDeletion()"
 			>
@@ -69,7 +69,7 @@
 			</p>
 
 			<XButton
-				:loading="accountDeleteService.loading"
+				:loading="loading"
 				class="is-fullwidth mbs-4 is-danger"
 				@click="deleteAccount()"
 			>
@@ -80,16 +80,16 @@
 </template>
 
 <script setup lang="ts">
-import {ref, shallowReactive, computed} from 'vue'
+import {ref, computed} from 'vue'
 import {useI18n} from 'vue-i18n'
 
-import AccountDeleteService from '@/services/accountDelete'
+import {useRequestDeletionMutation, useCancelDeletionMutation} from '@/client/queries/accountDeletion'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {formatDateSince, formatDisplayDate} from '@/helpers/time/formatDate'
 import {useTitle} from '@/composables/useTitle'
-import {success} from '@/message'
 import {useAuthStore} from '@/stores/auth'
 import {useConfigStore} from '@/stores/config'
+import {AUTH_TYPES} from '@/constants/auth'
 import FormField from '@/components/input/FormField.vue'
 
 defineOptions({name: 'UserSettingsDeletion'})
@@ -97,7 +97,9 @@ defineOptions({name: 'UserSettingsDeletion'})
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => `${t('user.deletion.title')} - ${t('user.settings.title')}`)
 
-const accountDeleteService = shallowReactive(new AccountDeleteService())
+const requestMutation = useRequestDeletionMutation()
+const cancelMutation = useCancelDeletionMutation()
+const loading = computed(() => requestMutation.isPending.value || cancelMutation.isPending.value)
 const password = ref('')
 const errPasswordRequired = ref(false)
 
@@ -117,8 +119,14 @@ async function deleteAccount() {
 		return
 	}
 
-	await accountDeleteService.request(password.value)
-	success({message: t('user.deletion.requestSuccess')})
+	try {
+		await requestMutation.mutateAsync(password.value)
+	} catch {
+		return
+	} finally {
+		// Evicts the plaintext password from the mutation cache.
+		requestMutation.reset()
+	}
 	password.value = ''
 }
 
@@ -129,9 +137,17 @@ async function cancelDeletion() {
 		return
 	}
 
-	await accountDeleteService.cancel(password.value)
-	success({message: t('user.deletion.scheduledCancelSuccess')})
-	authStore.refreshUserInfo()
+	try {
+		await cancelMutation.mutateAsync({
+			id: authStore.session?.id ?? 0,
+			type: authStore.session?.type ?? AUTH_TYPES.USER,
+			password: password.value,
+		})
+	} catch {
+		return
+	} finally {
+		cancelMutation.reset()
+	}
 	password.value = ''
 }
 </script>
