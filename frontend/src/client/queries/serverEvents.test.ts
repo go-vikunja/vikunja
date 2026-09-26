@@ -18,6 +18,7 @@ import {
 	type TimeEntryResponse,
 } from './timeEntries'
 import {commentKeys} from './comments'
+import {notificationKeys} from './notifications'
 import {
 	taskKeys,
 	normalizeTask,
@@ -53,9 +54,14 @@ function timeEntryPage(items: TimeEntryResponse[]): TimeEntryPage {
 	}
 }
 
-it('ignores malformed payloads and unrelated notifications', () => {
+it('ignores malformed payloads', () => {
 	expect(parseServerCacheEvent('timer.created', undefined, 7)).toBeNull()
+	expect(parseServerCacheEvent('notification.created', 'task.comment', 7)).toBeNull()
 	expect(parseServerCacheEvent('notification.created', {name: 'team.member.added'}, 7)).toBeNull()
+	expect(parseServerCacheEvent('notification.created', {
+		id: 0,
+		name: 'team.member.added',
+	}, 7)).toBeNull()
 })
 
 it('rejects timer entries that do not belong to the current user', () => {
@@ -88,15 +94,46 @@ it('rejects timer entries with an unusable id or task id', () => {
 	}, 7)).toBeNull()
 })
 
-it('rejects comment notifications without a usable task id', () => {
+it('falls back to an inbox refresh for notifications it cannot route', () => {
 	expect(parseServerCacheEvent('notification.created', {
+		id: 5,
+		name: 'team.member.added',
+	}, 7)).toEqual({kind: 'notifications'})
+	expect(parseServerCacheEvent('notification.created', {
+		id: 5,
 		name: 'task.comment',
 		notification: {},
-	}, 7)).toBeNull()
+	}, 7)).toEqual({kind: 'notifications'})
 	expect(parseServerCacheEvent('notification.created', {
+		id: 5,
 		name: 'task.comment',
 		notification: {task: {id: 0}},
-	}, 7)).toBeNull()
+	}, 7)).toEqual({kind: 'notifications'})
+})
+
+it.each([
+	'notification',
+	'comment',
+	'reconnect',
+	'subscribe',
+])('invalidates notification data on %s without replacing it with the event payload', async kind => {
+	const client = new QueryClient()
+	client.setQueryData(notificationKeys.all, [{id: 1}], {updatedAt: 10})
+	const event = kind === 'reconnect'
+		? {kind: 'reconnect'} as const
+		: kind === 'subscribe'
+			? {
+				kind: 'subscribed',
+				since: 20,
+			} as const
+			: parseServerCacheEvent('notification.created', {
+				id: 2,
+				name: kind === 'comment' ? 'task.comment' : 'team.member.added',
+				notification: {task: {id: 3}},
+			}, 7)!
+	await client.getMutationCache().build(client, serverCacheEventMutationOptions()).execute(event)
+	expect(client.getQueryData(notificationKeys.all)).toEqual([{id: 1}])
+	expect(client.getQueryState(notificationKeys.all)?.isInvalidated).toBe(true)
 })
 
 it('invalidates only the notified task comments and detail', async () => {
@@ -108,6 +145,10 @@ it('invalidates only the notified task comments and detail', async () => {
 		name: 'task.comment',
 		notification: {task: {id: 1}},
 	}, 7)!
+	expect(event).toEqual({
+		kind: 'notifications',
+		taskId: 1,
+	})
 	await client.getMutationCache().build(client, serverCacheEventMutationOptions()).execute(event)
 	expect(client.getQueryState(commentKeys.page(1, 'asc', 1, 50))?.isInvalidated).toBe(true)
 	expect(client.getQueryState(commentKeys.page(2, 'asc', 1, 50))?.isInvalidated).toBe(false)
