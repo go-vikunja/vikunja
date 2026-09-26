@@ -1,5 +1,3 @@
-import {AxiosError} from 'axios'
-
 // Failed requests are surfaced to the user through the UI already, and an
 // expired session (401 on token refresh) is expected rather than a bug.
 // Errors wrapping one of them via `cause` count too.
@@ -65,8 +63,7 @@ type SentryEventLike = {
 }
 
 function isRequestError(e: unknown): boolean {
-	if (e instanceof AxiosError
-		|| (e instanceof TypeError && NETWORK_ERROR_PATTERNS.some(pattern => pattern.test(e.message)))) {
+	if (e instanceof TypeError && NETWORK_ERROR_PATTERNS.some(pattern => pattern.test(e.message))) {
 		return true
 	}
 

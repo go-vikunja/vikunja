@@ -1,5 +1,19 @@
 import type {APIRequestContext} from '@playwright/test'
-import {objectToSnakeCase} from '../../src/helpers/case'
+import {snakeCase} from 'change-case'
+
+function objectToSnakeCase(value: any): any {
+	if (Array.isArray(value)) {
+		return value.map(objectToSnakeCase)
+	}
+
+	if (value === null || typeof value !== 'object' || value instanceof Date) {
+		return value
+	}
+
+	return Object.fromEntries(
+		Object.entries(value).map(([key, entry]) => [snakeCase(key), objectToSnakeCase(entry)]),
+	)
+}
 
 export async function updateUserSettings(apiContext: APIRequestContext, token: string, settings: any) {
 	const apiUrl = (process.env.API_URL || 'http://localhost:3456/api/v1').replace(/\/+$/, '')

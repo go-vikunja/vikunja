@@ -1,6 +1,6 @@
 import {describe, it, expect, beforeEach, afterEach, vi} from 'vitest'
 import {mount, flushPromises, type VueWrapper} from '@vue/test-utils'
-import {setActivePinia, createPinia} from 'pinia'
+import {setActivePinia, createPinia, type Pinia} from 'pinia'
 import {createI18n} from 'vue-i18n'
 import {createRouter, createMemoryHistory} from 'vue-router'
 import App from '@/App.vue'
@@ -8,22 +8,6 @@ import {QueryClient, VueQueryPlugin} from '@tanstack/vue-query'
 import {useAuthStore} from '@/stores/auth'
 import {AUTH_TYPES} from '@/constants/auth'
 import en from '@/i18n/lang/en.json'
-
-vi.mock('@/helpers/fetcher', async importOriginal => {
-	const httpStub = () => Object.assign(
-		vi.fn(async () => ({data: new Blob()})),
-		{
-			get: vi.fn(async () => ({data: []})),
-			post: vi.fn(async () => ({data: {}})),
-			interceptors: {request: {use: vi.fn()}, response: {use: vi.fn()}},
-		},
-	)
-	return {
-		...await importOriginal<typeof import('@/helpers/fetcher')>(),
-		AuthenticatedHTTPFactory: httpStub,
-		HTTPFactory: httpStub,
-	}
-})
 
 const sdk = vi.hoisted(() => ({
 	userDeletionConfirm: vi.fn(),
@@ -45,6 +29,8 @@ const LoginRoute = {template: '<div class="login-route">login route</div>'}
 
 let wrapper: VueWrapper | undefined
 let queryClient: QueryClient | undefined
+// Store actions left running by an earlier test re-activate that test's pinia.
+let pinia: Pinia
 
 async function mountApp(path: string) {
 	const router = createRouter({
@@ -60,7 +46,7 @@ async function mountApp(path: string) {
 	queryClient = new QueryClient({defaultOptions: {queries: {retry: false}}})
 	wrapper = mount(App, {
 		global: {
-			plugins: [i18n, router, [VueQueryPlugin, {queryClient}]],
+			plugins: [pinia, i18n, router, [VueQueryPlugin, {queryClient}]],
 			stubs: {
 				Ready: {template: '<div><slot /></div>'},
 				NoAuthWrapper: {template: '<div class="no-auth"><slot /></div>'},
@@ -81,7 +67,7 @@ async function mountApp(path: string) {
 }
 
 function login() {
-	const authStore = useAuthStore()
+	const authStore = useAuthStore(pinia)
 	authStore.setAuthenticated(true)
 	authStore.setSession({
 		id: 1,
@@ -93,7 +79,8 @@ function login() {
 
 describe('App layout', () => {
 	beforeEach(() => {
-		setActivePinia(createPinia())
+		pinia = createPinia()
+		setActivePinia(pinia)
 		sdk.userDeletionConfirm.mockResolvedValue({})
 		sdk.userShow.mockResolvedValue({
 			data: {

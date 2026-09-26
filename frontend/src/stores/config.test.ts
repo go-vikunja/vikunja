@@ -6,7 +6,7 @@ import {setActivePinia, createPinia} from 'pinia'
 import {computed} from 'vue'
 
 import {useConfigStore} from './config'
-import {InvalidApiUrlProvidedError} from '@/helpers/checkAndSetApiUrl'
+import {InvalidApiUrlProvidedError} from '@/helpers/apiUrl'
 
 describe('config store', () => {
 	beforeEach(() => {

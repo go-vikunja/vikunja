@@ -22,7 +22,7 @@ vi.mock('@/client/queryClient', () => ({
 
 describe('checkAndSetApiUrl query lifecycle', () => {
 	beforeEach(() => {
-		window.API_URL = 'https://old.example.com/api/v1'
+		window.API_URL = 'https://old.example.com/api/v2'
 		localStorage.clear()
 		mocks.clear.mockReset()
 		mocks.configure.mockReset()
@@ -32,16 +32,31 @@ describe('checkAndSetApiUrl query lifecycle', () => {
 	it('reconfigures the client and clears cache after accepting a different server', async () => {
 		mocks.update.mockResolvedValue(true)
 
-		await expect(checkAndSetApiUrl('https://new.example.com/api/v1')).resolves.toBe('https://new.example.com/api/v1')
+		await expect(checkAndSetApiUrl('https://new.example.com/api/v2')).resolves.toBe('https://new.example.com/api/v2')
 
 		expect(mocks.configure).toHaveBeenCalledOnce()
 		expect(mocks.clear).toHaveBeenCalledOnce()
 	})
 
+	it('upgrades a saved v1 server URL before probing it', async () => {
+		mocks.update.mockResolvedValue(true)
+		await expect(checkAndSetApiUrl('https://new.example.com/root/api/v1')).resolves.toBe('https://new.example.com/root/api/v2')
+		expect(localStorage.getItem('API_URL')).toBe('https://new.example.com/root/api/v2')
+	})
+
+	it('keeps pending queries when a v1 URL resolves to the same v2 server', async () => {
+		window.API_URL = 'https://old.example.com/api/v1'
+		mocks.update.mockResolvedValue(true)
+		await checkAndSetApiUrl(window.API_URL)
+		expect(window.API_URL).toBe('https://old.example.com/api/v2')
+		expect(mocks.clear).not.toHaveBeenCalled()
+		expect(mocks.configure).not.toHaveBeenCalled()
+	})
+
 	it('keeps the current client and cache when the server does not change', async () => {
 		mocks.update.mockResolvedValue(true)
 
-		await checkAndSetApiUrl('https://old.example.com/api/v1')
+		await checkAndSetApiUrl('https://old.example.com/api/v2')
 
 		expect(mocks.configure).not.toHaveBeenCalled()
 		expect(mocks.clear).not.toHaveBeenCalled()
@@ -52,7 +67,7 @@ describe('checkAndSetApiUrl query lifecycle', () => {
 
 		await expect(checkAndSetApiUrl('https://new.example.com')).rejects.toThrow('unreachable')
 
-		expect(window.API_URL).toBe('https://old.example.com/api/v1')
+		expect(window.API_URL).toBe('https://old.example.com/api/v2')
 		expect(mocks.configure).not.toHaveBeenCalled()
 		expect(mocks.clear).not.toHaveBeenCalled()
 	})

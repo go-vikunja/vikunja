@@ -102,7 +102,7 @@
 							</template>
 							<template v-else>
 								<span
-									v-if="i.id < -1"
+									v-if="isSavedFilterProject(i as Partial<ProjectResponse>)"
 									class="saved-filter-icon icon"
 								>
 									<Icon icon="filter" />
@@ -146,8 +146,7 @@ import {getHistory} from '@/modules/projectHistory'
 import {parseTaskText, PREFIXES, PrefixMode} from '@/modules/quickAddMagic'
 import {success} from '@/message'
 
-import type {Task as ITask} from '@/client/generated'
-import type {IAbstract} from '@/modelTypes/IAbstract'
+import type {Task as ITask, Label} from '@/client/generated'
 import type {TaskFilterParams} from '@/client/queries/tasks'
 import {
 	createProjectDraft,
@@ -169,7 +168,7 @@ const authStore = useAuthStore()
 
 const {isQuickAddMode} = useQuickAddMode()
 
-type DoAction<Type> = { type: ACTION_TYPE } & Type
+type QuickActionItem = Command | ITask | ProjectResponse | (ITeam & {title: string}) | Label
 
 enum ACTION_TYPE {
 	CMD = 'cmd',
@@ -201,7 +200,7 @@ const taskQuery = useTasks(
 	{enabled: () => taskSearchParams.value !== null},
 )
 const foundTasks = computed(() => taskSearchParams.value
-	? taskQuery.tasks.value.map(task => ({...task, type: ACTION_TYPE.TASK}))
+	? taskQuery.tasks.value
 	: [])
 
 const createTeamMutation = useCreateTeamMutation()
@@ -299,7 +298,7 @@ interface Result {
 	title: string
 	// singular, unlike the plural group heading in `title`: it is announced per item
 	typeLabel: string
-	items: DoAction<IAbstract>
+	items: QuickActionItem[]
 }
 
 const results = computed<Result[]>(() => {
@@ -337,9 +336,8 @@ const results = computed<Result[]>(() => {
 	].filter((i) => i.items.length > 0)
 })
 
-// `unknown` because Result.items isn't typed as an array, so v-for widens each item to its property union
-function isDone(item: unknown): boolean {
-	return Boolean((item as ITask | undefined)?.done)
+function isDone(item: QuickActionItem): boolean {
+	return 'done' in item && Boolean(item.done)
 }
 
 const loading = computed(() =>
@@ -543,27 +541,27 @@ if (isQuickAddMode) {
 	})
 }
 
-async function doAction(type: ACTION_TYPE, item: DoAction) {
+async function doAction(type: ACTION_TYPE, item: QuickActionItem) {
 	switch (type) {
 		case ACTION_TYPE.PROJECT:
 			closeQuickActions()
 			if (!isQuickAddMode) {
 				await router.push({
 					name: 'project.index',
-					params: {projectId: (item as DoAction<ProjectResponse>).id},
+					params: {projectId: (item as ProjectResponse).id},
 				})
 			}
 			break
 		case ACTION_TYPE.TASK:
 			if (isQuickAddMode) {
 				const channel = new BroadcastChannel('vikunja-task-updates')
-				channel.postMessage({type: 'task-created-open', taskId: (item as DoAction<ITask>).id})
+				channel.postMessage({type: 'task-created-open', taskId: (item as ITask).id})
 				channel.close()
 				window.quickEntry?.showMainWindow()
 			} else {
 				await router.push({
 					name: 'task.detail',
-					params: {id: (item as DoAction<ITask>).id},
+					params: {id: (item as ITask).id},
 				})
 			}
 			closeQuickActions()
@@ -573,24 +571,26 @@ async function doAction(type: ACTION_TYPE, item: DoAction) {
 			if (!isQuickAddMode) {
 				await router.push({
 					name: 'teams.edit',
-					params: {id: (item as DoAction<ITeam>).id},
+					params: {id: (item as ITeam).id},
 				})
 			}
 			break
 		case ACTION_TYPE.CMD:
 			query.value = ''
-			selectedCmd.value = item as DoAction<Command>
+			selectedCmd.value = item as Command
 			searchInput.value?.focus()
 			break
-		case ACTION_TYPE.LABELS:
-			if (/\s/.test(item.title)) {
-				query.value = '*"' + item.title + '"'
+		case ACTION_TYPE.LABELS: {
+			const title = item.title ?? ''
+			if (/\s/.test(title)) {
+				query.value = '*"' + title + '"'
 			} else {
-				query.value = '*' + item.title
+				query.value = '*' + title
 			}
 			searchInput.value?.focus()
 			searchTasks()
 			break
+		}
 	}
 }
 

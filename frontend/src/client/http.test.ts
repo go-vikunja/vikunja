@@ -2,6 +2,7 @@ import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest'
 
 import {client} from './generated/client.gen'
 import {configureApiClient} from './http'
+import {InvalidApiUrlProvidedError} from '@/helpers/apiUrl'
 
 const auth = vi.hoisted(() => ({
 	token: null as string | null,
@@ -208,22 +209,22 @@ describe('configureApiClient', () => {
 		expect(requests).toHaveLength(0)
 	})
 
-	it('rejects an outdated API base with an extra trailing slash', async () => {
+	it('treats an extra trailing slash as the same API base', async () => {
 		window.API_URL = 'https://api.example.com/root/api/v2//'
 		configureApiClient()
 		window.API_URL = 'https://api.example.com/root/api/v1'
 
-		await expect(client.get({url: '/probe'})).rejects.toMatchObject({name: 'AbortError'})
+		await client.get({url: '/probe'})
 
-		expect(requests).toHaveLength(0)
+		expect(requests[0].url).toBe('https://api.example.com/root/api/v2/probe')
 	})
 
-	it('rejects a missing API base before sending', async () => {
+	it('refuses to configure a missing API base and sends nothing', async () => {
 		window.API_URL = undefined as unknown as string
-		configureApiClient()
 
-		await expect(client.get({url: '/probe'})).rejects.toMatchObject({name: 'AbortError'})
+		expect(() => configureApiClient()).toThrow(InvalidApiUrlProvidedError)
 
+		await expect(client.get({url: '/probe'})).rejects.toBeInstanceOf(InvalidApiUrlProvidedError)
 		expect(requests).toHaveLength(0)
 	})
 

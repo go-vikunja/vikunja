@@ -21,7 +21,7 @@ const sdk = vi.hoisted(() => ({
 const requestContext = vi.hoisted(() => ({
 	identity: {id: 1, type: 1} as {id: number; type: number} | null,
 	sessionEpoch: 1,
-	apiV2BaseUrl: 'https://identity-a.example/api/v2/',
+	apiBaseUrl: 'https://identity-a.example/api/v2/',
 }))
 
 vi.mock('@/message', () => ({success: vi.fn()}))
@@ -31,8 +31,8 @@ vi.mock('@/helpers/auth', () => ({
 	getToken: () => null,
 	getTokenIdentity: () => requestContext.identity,
 }))
-vi.mock('@/helpers/fetcher', () => ({
-	getApiV2BaseUrl: () => requestContext.apiV2BaseUrl,
+vi.mock('@/helpers/apiUrl', () => ({
+	getApiBaseUrl: () => requestContext.apiBaseUrl,
 }))
 
 import {
@@ -92,7 +92,7 @@ function serverProject(overrides: Partial<ProjectResponse> = {}): ProjectRespons
 beforeEach(() => {
 	requestContext.identity = {id: 1, type: 1}
 	requestContext.sessionEpoch = 1
-	requestContext.apiV2BaseUrl = 'https://identity-a.example/api/v2/'
+	requestContext.apiBaseUrl = 'https://identity-a.example/api/v2/'
 })
 
 describe('project queries', () => {
@@ -252,7 +252,7 @@ describe('project drafts and cache mutations', () => {
 	describe.each([
 		['identity', () => { requestContext.identity = {id: 2, type: 1} }],
 		['session', () => { requestContext.sessionEpoch++ }],
-		['API URL', () => { requestContext.apiV2BaseUrl = 'https://identity-b.example/api/v2/' }],
+		['API URL', () => { requestContext.apiBaseUrl = 'https://identity-b.example/api/v2/' }],
 	] as const)('after the %s changes', (_name, switchContext) => {
 		it.each(delayedMutationCases)('discards a delayed $name completion', async ({mock, run, response}) => {
 			const identityAProject = serverProject({title: 'Identity A project'})

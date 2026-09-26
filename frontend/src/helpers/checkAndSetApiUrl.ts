@@ -1,27 +1,16 @@
 import {useConfigStore} from '@/stores/config'
 import {configureApiClient} from '@/client/http'
 import {queryClient} from '@/client/queryClient'
+import {
+	API_PATH_SUFFIX,
+	getApiBaseUrl,
+	InvalidApiUrlProvidedError,
+	NoApiUrlProvidedError,
+} from '@/helpers/apiUrl'
 
 const API_DEFAULT_PORT = '3456'
-const API_PATH_SUFFIX = '/api/v1'
 
 export const ERROR_NO_API_URL = 'noApiUrlProvided'
-
-export class NoApiUrlProvidedError extends Error {
-	constructor() {
-		super()
-		this.message = 'No API URL provided'
-		this.name = 'NoApiUrlProvidedError'
-	}
-}
-
-export class InvalidApiUrlProvidedError extends Error {
-	constructor() {
-		super()
-		this.message = 'The provided API URL is invalid.'
-		this.name = 'InvalidApiUrlProvidedError'
-	}
-}
 
 /**
  * Join a base pathname with the API_DEFAULT_PATH, normalizing slashes between them.
@@ -66,9 +55,11 @@ export const checkAndSetApiUrl = (pUrl: string | undefined | null): Promise<stri
 		throw new InvalidApiUrlProvidedError()
 	}
 
+	urlToCheck.pathname = urlToCheck.pathname.replace(/\/api\/v1\/?$/, API_PATH_SUFFIX)
 	const origPathname = urlToCheck.pathname
 
 	const oldUrl = window.API_URL
+	const oldApiBase = oldUrl ? getApiBaseUrl() : null
 	window.API_URL = urlToCheck.toString()
 
 	const configStore = useConfigStore()
@@ -77,7 +68,7 @@ export const checkAndSetApiUrl = (pUrl: string | undefined | null): Promise<stri
 	return configStore.update()
 		.catch(e => {
 			console.warn(`Could not fetch 'info' from the provided endpoint ${pUrl} on ${window.API_URL}/info. Some automatic fallback will be tried.`)
-			// Check if it is reachable at the base path + /api/v1 via http
+			// Check if it is reachable at the base path + /api/v2 via http
 			if (!hasApiPath(urlToCheck.pathname)) {
 				urlToCheck.pathname = joinPath(urlToCheck.pathname, API_PATH_SUFFIX)
 				window.API_URL = urlToCheck.toString()
@@ -86,7 +77,7 @@ export const checkAndSetApiUrl = (pUrl: string | undefined | null): Promise<stri
 			throw e
 		})
 		.catch(e => {
-			// Check if it is reachable at the base path + /api/v1 via https
+			// Check if it is reachable at the base path + /api/v2 via https
 			urlToCheck.pathname = origPathname
 			if (!hasApiPath(urlToCheck.pathname)) {
 				urlToCheck.pathname = joinPath(urlToCheck.pathname, API_PATH_SUFFIX)
@@ -105,7 +96,7 @@ export const checkAndSetApiUrl = (pUrl: string | undefined | null): Promise<stri
 			throw e
 		})
 		.catch(e => {
-			// Check if it is reachable at :API_DEFAULT_PORT with base path + /api/v1
+			// Check if it is reachable at :API_DEFAULT_PORT with base path + /api/v2
 			urlToCheck.pathname = origPathname
 			if (!hasApiPath(urlToCheck.pathname)) {
 				urlToCheck.pathname = joinPath(urlToCheck.pathname, API_PATH_SUFFIX)
@@ -120,7 +111,7 @@ export const checkAndSetApiUrl = (pUrl: string | undefined | null): Promise<stri
 		})
 		.then(success => {
 			if (success) {
-				if (window.API_URL !== oldUrl) {
+				if (getApiBaseUrl() !== oldApiBase) {
 					configureApiClient()
 					queryClient.clear()
 				}

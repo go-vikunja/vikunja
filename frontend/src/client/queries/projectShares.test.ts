@@ -5,7 +5,7 @@ import {projectKeys} from './projects'
 const sdk = vi.hoisted(() => ({projectUsersList: vi.fn(), projectUsersCreate: vi.fn(), projectUsersUpdate: vi.fn(), projectUsersDelete: vi.fn(), projectTeamsList: vi.fn(), projectTeamsCreate: vi.fn(), projectTeamsUpdate: vi.fn(), projectTeamsDelete: vi.fn()}))
 vi.mock('@/client/generated', () => sdk)
 vi.mock('@/message', () => ({success: vi.fn(), error: vi.fn()}))
-vi.mock('@/helpers/fetcher', () => ({getApiV2BaseUrl: () => '/api/v2/'}))
+vi.mock('@/helpers/apiUrl', () => ({getApiBaseUrl: () => '/api/v2/'}))
 vi.mock('@/helpers/auth', () => ({getAuthSessionEpoch: () => 1, getToken: () => null, getTokenIdentity: () => null}))
 
 import {projectShareKeys, projectUserSharesQuery, projectTeamSharesQuery, normalizeSharePermission, createProjectUserShareMutationOptions, updateProjectUserShareMutationOptions, deleteProjectUserShareMutationOptions, createProjectTeamShareMutationOptions, updateProjectTeamShareMutationOptions, deleteProjectTeamShareMutationOptions} from './projectShares'

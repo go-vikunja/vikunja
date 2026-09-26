@@ -39,7 +39,10 @@ if (window.API_URL.endsWith('/')) {
 	window.API_URL = window.API_URL.slice(0, -1)
 }
 
-configureApiClient()
+// Without an API URL the client stays unconfigured until checkAndSetApiUrl() accepts one from Ready.vue.
+if (window.API_URL) {
+	configureApiClient()
+}
 
 // directives
 import focus from '@/directives/focus'

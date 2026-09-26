@@ -1,4 +1,5 @@
-import {getApiBaseUrl, getApiV2BaseUrl} from '@/helpers/fetcher'
+import {getApiBaseUrl, getLegacyApiBaseUrl} from '@/helpers/apiUrl'
+import {canonicalApiBaseUrl} from '@/client/requestContext'
 import {authRefreshToken} from '@/client/generated'
 import {publicClient} from '@/client/publicClient'
 import {isDesktopApp, refreshDesktopToken} from '@/helpers/desktopAuth'
@@ -109,8 +110,8 @@ export async function refreshToken(persist: boolean): Promise<void> {
 async function doRefresh(persist: boolean): Promise<void> {
 	// Snapshot the epoch so we can tell if a logout happened while we awaited.
 	const epochAtStart = authEpoch
-	const serverAtStart = window.API_URL
-	const loggedOutSinceStart = () => authEpoch !== epochAtStart || window.API_URL !== serverAtStart
+	const serverAtStart = getApiBaseUrl()
+	const loggedOutSinceStart = () => authEpoch !== epochAtStart || getApiBaseUrl() !== serverAtStart
 
 	// Capture the tokens before waiting for the lock so we can detect
 	// if another tab refreshed while we were queued.
@@ -163,21 +164,20 @@ async function doRefresh(persist: boolean): Promise<void> {
 
 		// We hold the lock and no one else refreshed — make the API call.
 		try {
+			const baseUrl = canonicalApiBaseUrl(getApiBaseUrl())
+			const legacyBaseUrl = canonicalApiBaseUrl(getLegacyApiBaseUrl())
 			let response
-			// A per-request baseUrl skips mergeConfigs (utils.gen.ts), the only place a trailing slash is stripped.
 			try {
-				response = await authRefreshToken({client: publicClient, baseUrl: getApiV2BaseUrl().replace(/\/$/, '')})
+				response = await authRefreshToken({client: publicClient, baseUrl})
 			} catch (e) {
-				if ((e as {status?: number})?.status === 429) {
+				if ((e as {status?: number})?.status === 429 || legacyBaseUrl === baseUrl) {
 					throw e
 				}
 				if (loggedOutSinceStart()) {
 					return
 				}
-				// Pre-v2 browsers only hold the v1-path cookie, and some deployments
-				// can't reach v2 at all; v1 re-seeds both cookies.
-				// Drop this fallback once pre-v2 clients have cycled out.
-				response = await authRefreshToken({client: publicClient, baseUrl: getApiBaseUrl().replace(/\/$/, '')})
+				// Migrate the old path-scoped refresh cookie; all other requests use v2.
+				response = await authRefreshToken({client: publicClient, baseUrl: legacyBaseUrl})
 			}
 			if (loggedOutSinceStart()) {
 				return

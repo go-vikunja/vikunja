@@ -1,17 +1,17 @@
 import {getAuthSessionEpoch, getToken, getTokenIdentity} from '@/helpers/auth'
-import {getApiV2BaseUrl} from '@/helpers/fetcher'
+import {getApiBaseUrl} from '@/helpers/apiUrl'
 
 export type ClientRequestContext = {
 	identity: ReturnType<typeof getTokenIdentity>
 	authSessionEpoch: number
-	apiV2BaseUrl: string
+	apiBaseUrl: string
 }
 
 export function captureClientRequestContext(): ClientRequestContext {
 	return {
 		identity: getTokenIdentity(getToken()),
 		authSessionEpoch: getAuthSessionEpoch(),
-		apiV2BaseUrl: getApiV2BaseUrl(),
+		apiBaseUrl: getApiBaseUrl(),
 	}
 }
 
@@ -23,7 +23,7 @@ export function isClientRequestContextCurrent(context: ClientRequestContext): bo
 
 	return identityMatches &&
 		current.authSessionEpoch === context.authSessionEpoch &&
-		current.apiV2BaseUrl === context.apiV2BaseUrl
+		current.apiBaseUrl === context.apiBaseUrl
 }
 
 export function assertClientRequestContext(context: ClientRequestContext): void {
@@ -37,7 +37,7 @@ export function isRequestContextAbort(cause: unknown): boolean {
 	return (cause as {name?: string} | null)?.name === 'AbortError'
 }
 
-function canonicalApiBaseUrl(apiBaseUrl: unknown): string {
+export function canonicalApiBaseUrl(apiBaseUrl: unknown): string {
 	if (typeof apiBaseUrl !== 'string') {
 		throw new DOMException('Invalid client API URL', 'AbortError')
 	}
@@ -55,7 +55,7 @@ function canonicalApiBaseUrl(apiBaseUrl: unknown): string {
 		) {
 			throw new DOMException('Invalid client API URL', 'AbortError')
 		}
-		return normalized.toString()
+		return normalized.toString().replace(/\/$/, '')
 	} catch (error) {
 		if (isRequestContextAbort(error)) {
 			throw error
@@ -67,23 +67,20 @@ function canonicalApiBaseUrl(apiBaseUrl: unknown): string {
 export function assertClientRequestMatchesContext(
 	request: Request,
 	context: ClientRequestContext,
-	configuredApiV2BaseUrl: unknown,
+	configuredApiBaseUrl: unknown,
 ): void {
 	assertClientRequestContext(context)
 
 	const requestUrl = new URL(request.url, window.location.origin)
-	const expectedConfiguredBaseUrl = context.apiV2BaseUrl.endsWith('/')
-		? context.apiV2BaseUrl.slice(0, -1)
-		: context.apiV2BaseUrl
-	if (canonicalApiBaseUrl(configuredApiV2BaseUrl) !== canonicalApiBaseUrl(expectedConfiguredBaseUrl)) {
+	if (canonicalApiBaseUrl(configuredApiBaseUrl) !== canonicalApiBaseUrl(context.apiBaseUrl)) {
 		throw new DOMException('Client request API changed', 'AbortError')
 	}
 
-	const apiV2BaseUrl = new URL(context.apiV2BaseUrl, window.location.origin)
-	if (!apiV2BaseUrl.pathname.endsWith('/')) {
-		apiV2BaseUrl.pathname += '/'
+	const apiBaseUrl = new URL(context.apiBaseUrl, window.location.origin)
+	if (!apiBaseUrl.pathname.endsWith('/')) {
+		apiBaseUrl.pathname += '/'
 	}
-	if (requestUrl.origin !== apiV2BaseUrl.origin || !requestUrl.pathname.startsWith(apiV2BaseUrl.pathname)) {
+	if (requestUrl.origin !== apiBaseUrl.origin || !requestUrl.pathname.startsWith(apiBaseUrl.pathname)) {
 		throw new DOMException('Client request API changed', 'AbortError')
 	}
 }
