@@ -156,6 +156,12 @@ var webCmd = &cobra.Command{
 			ReadHeaderTimeout: 10 * time.Second,
 		}
 
+		useTLS := setupCustomTLS(server)
+		protocol := "HTTP"
+		if useTLS {
+			protocol = "HTTPS"
+		}
+
 		// Start server
 		go func() {
 			if config.AutoTLSEnabled.GetBool() {
@@ -171,11 +177,19 @@ var webCmd = &cobra.Command{
 				if err != nil {
 					log.Fatalf("Failed to setup unix socket: %v", err)
 				}
-				log.Infof("HTTP server listening on unix socket %s", config.ServiceUnixSocket.GetString())
-				err = server.Serve(listener)
+				log.Infof("%s server listening on unix socket %s", protocol, config.ServiceUnixSocket.GetString())
+				if useTLS {
+					err = server.ServeTLS(listener, "", "")
+				} else {
+					err = server.Serve(listener)
+				}
 			} else {
-				log.Infof("HTTP server listening on %s", config.ServiceInterface.GetString())
-				err = server.ListenAndServe()
+				log.Infof("%s server listening on %s", protocol, config.ServiceInterface.GetString())
+				if useTLS {
+					err = server.ListenAndServeTLS("", "")
+				} else {
+					err = server.ListenAndServe()
+				}
 			}
 
 			if err != nil && !errors.Is(err, http.ErrServerClosed) {

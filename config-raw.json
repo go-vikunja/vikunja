@@ -44,6 +44,16 @@
                     "comment": "Permission bits for the Unix socket. Note that octal values must be prefixed by \"0o\", e.g. 0o660"
                 },
                 {
+                    "key": "tlscert",
+                    "default_value": "",
+                    "comment": "Path to a PEM encoded TLS certificate (including the full chain). If set together with `service.tlskey`, Vikunja serves HTTPS on `service.interface` (or `service.unixsocket`) using this certificate. Cannot be combined with `autotls.enabled`.\nSend Vikunja a SIGHUP to reload the certificate and key from disk without a restart, e.g. after renewing them."
+                },
+                {
+                    "key": "tlskey",
+                    "default_value": "",
+                    "comment": "Path to the PEM encoded private key belonging to `service.tlscert`. Both options must be set to enable TLS."
+                },
+                {
                     "key": "publicurl",
                     "default_value": "",
                     "comment": "The public facing URL where your users can reach Vikunja. Used in emails and for the communication between api and frontend. The url must be a valid http or https url. This setting is required when cors.enable is true."

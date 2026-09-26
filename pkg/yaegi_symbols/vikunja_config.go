@@ -189,6 +189,8 @@ func init() {
 		"ServicePublicURL":                           reflect.ValueOf(config.ServicePublicURL),
 		"ServiceRootpath":                            reflect.ValueOf(config.ServiceRootpath),
 		"ServiceSecret":                              reflect.ValueOf(config.ServiceSecret),
+		"ServiceTLSCert":                             reflect.ValueOf(config.ServiceTLSCert),
+		"ServiceTLSKey":                              reflect.ValueOf(config.ServiceTLSKey),
 		"ServiceTestingtoken":                        reflect.ValueOf(config.ServiceTestingtoken),
 		"ServiceTimeZone":                            reflect.ValueOf(config.ServiceTimeZone),
 		"ServiceTrustedProxies":                      reflect.ValueOf(config.ServiceTrustedProxies),

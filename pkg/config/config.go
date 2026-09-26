@@ -49,6 +49,8 @@ const (
 	ServiceInterface                      Key = `service.interface`
 	ServiceUnixSocket                     Key = `service.unixsocket`
 	ServiceUnixSocketMode                 Key = `service.unixsocketmode`
+	ServiceTLSCert                        Key = `service.tlscert`
+	ServiceTLSKey                         Key = `service.tlskey`
 	ServicePublicURL                      Key = `service.publicurl`
 	ServiceEnableCaldav                   Key = `service.enablecaldav`
 	ServiceRootpath                       Key = `service.rootpath`
@@ -378,6 +380,8 @@ func initDefaultConfig() {
 	ServiceJWTTTLShort.setDefault(600)    // 10 minutes
 	ServiceInterface.setDefault(":3456")
 	ServiceUnixSocket.setDefault("")
+	ServiceTLSCert.setDefault("")
+	ServiceTLSKey.setDefault("")
 	ServicePublicURL.setDefault("")
 	ServiceEnableCaldav.setDefault(true)
 
