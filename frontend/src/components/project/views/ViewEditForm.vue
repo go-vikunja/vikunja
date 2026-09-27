@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {onBeforeMount, ref, watch} from 'vue'
+import {computed, onBeforeMount, ref, watch} from 'vue'
 
 import type {ProjectView, ProjectViewWritable, TaskCollection} from '@/client/generated'
 import type {EditableTaskCollection} from '@/types/EditableTaskCollection'
@@ -40,6 +40,16 @@ type LoadedProjectView = Omit<ProjectViewDraft, 'filter' | 'bucket_configuration
 		bucket_configuration: Array<{title: string, filter: EditableTaskCollection}>
 	}
 
+// include_subprojects is optional on the filter, so the checkbox needs a boolean fallback.
+const includeSubprojects = computed({
+	get: () => view.value?.filter?.include_subprojects ?? false,
+	set: (value: boolean) => {
+		if (view.value?.filter) {
+			view.value.filter.include_subprojects = value
+		}
+	},
+})
+
 const {isPending, getLabelByExactTitle, getLabelById} = useLabels()
 const projectList = useProjects()
 
@@ -72,6 +82,8 @@ const transformFilterFromApi = (filterInput?: TaskCollection): EditableTaskColle
 	}
 
 	filter.filter_include_nulls = filterInput?.filter_include_nulls ?? false
+
+	filter.include_subprojects = filterInput?.include_subprojects ?? false
 
 	return filter
 }
@@ -166,6 +178,7 @@ function save() {
 			filter: '',
 			filter_include_nulls: filterInput?.filter_include_nulls ?? false,
 			s: '',
+			include_subprojects: filterInput?.include_subprojects ?? false,
 		}
 		if (hasFilterQuery(filterString)) {
 			filter.filter = filterString
@@ -256,6 +269,18 @@ function handleBubbleSave(event: FocusEvent) {
 
 		<div class="is-size-7 mbe-2">
 			<FilterInputDocs />
+		</div>
+
+		<div
+			v-if="view.view_kind !== 'kanban'"
+			class="field mbe-3"
+		>
+			<FancyCheckbox
+				v-model="includeSubprojects"
+				v-tooltip="$t('project.views.includeSubprojectsHint')"
+			>
+				{{ $t('project.views.includeSubprojects') }}
+			</FancyCheckbox>
 		</div>
 
 		<div class="field mbe-3">
