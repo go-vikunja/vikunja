@@ -114,6 +114,7 @@ import Pagination from '@/components/misc/Pagination.vue'
 import SortPopup from '@/components/project/partials/SortPopup.vue'
 
 import {useTaskList} from '@/composables/useTaskList'
+import {useIncludeSubprojects} from '@/composables/useIncludeSubprojects'
 import {useTaskDragToProject} from '@/composables/useTaskDragToProject'
 import {useCurrentProject} from '@/composables/useCurrentProject'
 import {shouldShowTaskInListView} from '@/composables/useTaskListFiltering'
@@ -140,6 +141,14 @@ const projectId = toRef(props, 'projectId')
 
 defineOptions({name: 'List'})
 
+const baseStore = useBaseStore()
+const {setDraggedTask} = useTaskDragState()
+const {handleTaskDropToProject} = useTaskDragToProject()
+const {currentProject: project} = useCurrentProject()
+const currentView = computed(() => project.value?.views.find(v => v.id === props.viewId))
+
+const includeSubprojects = useIncludeSubprojects(() => currentView.value)
+
 const ctaVisible = ref(false)
 
 const drag = ref(false)
@@ -159,6 +168,7 @@ const {
 	() => projectId.value === -1
 		? ['comment_count', 'is_unread']
 		: ['subtasks', 'comment_count', 'is_unread'],
+	() => includeSubprojects.value,
 )
 const showLoading = useDelayedLoading(loading)
 
@@ -172,11 +182,6 @@ const tasks = computed({
 watch([projectId, () => props.viewId], () => { dragTasks.value = null })
 
 const isPositionSorting = computed(() => 'position' in sortByParam.value)
-
-const baseStore = useBaseStore()
-const {setDraggedTask} = useTaskDragState()
-const {handleTaskDropToProject} = useTaskDragToProject()
-const {currentProject: project} = useCurrentProject()
 
 const canWrite = computed(() => {
 	return typeof project.value?.max_permission === 'number' &&
@@ -230,10 +235,18 @@ async function saveTaskPosition(e: { originalEvent?: MouseEvent, to: HTMLElement
 
 		// Check if dropped on a sidebar project
 		const {moved} = await handleTaskDropToProject(e, (task) => {
+			// The target project may still be in this list, so let the reload decide.
+			if (includeSubprojects.value) {
+				return
+			}
+
 			tasks.value = tasks.value.filter(t => t.id !== task.id)
 		})
 
 		if (moved) {
+			if (includeSubprojects.value) {
+				await loadTasks()
+			}
 			return
 		}
 
