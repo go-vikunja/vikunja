@@ -1,7 +1,7 @@
 import {shallowMount, flushPromises} from '@vue/test-utils'
 import {describe, expect, it, vi, beforeEach} from 'vitest'
 import {QueryClient, VueQueryPlugin} from '@tanstack/vue-query'
-import {nextTick} from 'vue'
+import {nextTick, ref} from 'vue'
 import {createRouter, createMemoryHistory} from 'vue-router'
 import {createPinia} from 'pinia'
 import draggable from 'zhyswan-vuedraggable'
@@ -17,6 +17,9 @@ const {tasksPositionUpdate: updatePosition} = sdk
 vi.mock('@/client/generated', () => sdk)
 vi.mock('@/stores/auth', () => ({useAuthStore: () => ({settings: {timezone: 'UTC'}})}))
 vi.mock('@/message', () => ({error: vi.fn()}))
+vi.mock('@/composables/useIncludeSubprojects', () => ({
+	useIncludeSubprojects: () => ref(false),
+}))
 vi.mock('@/composables/useTaskDragToProject', () => ({
 	useTaskDragToProject: () => ({
 		handleTaskDropToProject: async () => ({moved: false, targetProjectId: null}),
