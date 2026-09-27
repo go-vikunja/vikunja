@@ -2,6 +2,7 @@ import {describe, it, expect} from 'vitest'
 import {mount} from '@vue/test-utils'
 import {createI18n} from 'vue-i18n'
 import {createRouter, createMemoryHistory} from 'vue-router'
+import {createPinia} from 'pinia'
 
 import GanttChart from './GanttChart.vue'
 import GanttTimelineHeader from './GanttTimelineHeader.vue'
@@ -35,7 +36,7 @@ function mountChart(isLoading: boolean) {
 			defaultTaskEndDate: FILTERS.dateTo,
 		},
 		global: {
-			plugins: [i18n, router],
+			plugins: [i18n, router, createPinia()],
 		},
 	})
 }
