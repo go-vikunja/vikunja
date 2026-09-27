@@ -125,4 +125,10 @@ func RegisterListeners() {
 	events.RegisterListener((&models.TimeEntryCreatedEvent{}).Name(), &TimeEntryListener{wsEvent: "timer.created"})
 	events.RegisterListener((&models.TimeEntryUpdatedEvent{}).Name(), &TimeEntryListener{wsEvent: "timer.updated"})
 	events.RegisterListener((&models.TimeEntryDeletedEvent{}).Name(), &TimeEntryListener{wsEvent: "timer.deleted"})
+	events.RegisterListener((&models.TaskCreatedEvent{}).Name(), &TaskEventListener{wsEvent: "task.created"})
+	events.RegisterListener((&models.TaskUpdatedEvent{}).Name(), &TaskEventListener{wsEvent: "task.updated"})
+	events.RegisterListener((&models.TaskDeletedEvent{}).Name(), &TaskEventListener{wsEvent: "task.deleted"})
+	events.RegisterListener((&models.TaskCommentCreatedEvent{}).Name(), &TaskCommentEventListener{wsEvent: "task.comment.created"})
+	events.RegisterListener((&models.TaskCommentUpdatedEvent{}).Name(), &TaskCommentEventListener{wsEvent: "task.comment.edited"})
+	events.RegisterListener((&models.TaskCommentDeletedEvent{}).Name(), &TaskCommentEventListener{wsEvent: "task.comment.deleted"})
 }

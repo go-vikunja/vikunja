@@ -19,10 +19,15 @@ package websocket
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
+	"strings"
 	"sync"
 	"time"
 
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 
 	"github.com/coder/websocket"
@@ -171,8 +176,11 @@ func (c *Connection) handleAuth(ctx context.Context, token string) bool {
 		return true
 	}
 
-	userID, err := auth.GetUserIDFromToken(token)
+	userID, err := c.authenticate(token)
 	if err != nil {
+		// The exact reason stays in the server log only: clients get the same
+		// generic error for an expired, malformed or unknown token so the
+		// auth message cannot be used as a token-probing oracle.
 		log.Debugf("WebSocket: auth failed: %v", err)
 		// Write the error directly to the websocket since ReadLoop will close the
 		// connection immediately after we return false, before WriteLoop can drain the channel.
@@ -196,6 +204,31 @@ func (c *Connection) handleAuth(ctx context.Context, token string) bool {
 
 	log.Debugf("WebSocket: user %d authenticated", userID)
 	return true
+}
+
+// authenticate resolves the auth message's token to a user ID, accepting both
+// a JWT (as issued by the login flow) and an API token (the tk_-prefixed
+// tokens from the API tokens endpoints). The returned error is only for the
+// server log; callers must translate every failure into the same generic
+// client-facing error.
+func (c *Connection) authenticate(token string) (int64, error) {
+	if strings.HasPrefix(token, models.APITokenPrefix) {
+		s := db.NewSession()
+		defer s.Close()
+
+		_, u, err := models.ValidateTokenAndGetOwner(s, token)
+		if err != nil {
+			return 0, fmt.Errorf("validating API token: %w", err)
+		}
+		if u == nil {
+			// ValidateTokenAndGetOwner deliberately does not distinguish
+			// invalid, expired and disabled-owner tokens.
+			return 0, errors.New("API token is invalid, expired, or its owner is disabled")
+		}
+		return u.ID, nil
+	}
+
+	return auth.GetUserIDFromToken(token)
 }
 
 // writeMessageDirect writes a message directly to the websocket, bypassing the send channel.
@@ -267,6 +300,12 @@ var validEvents = map[string]bool{
 	"timer.created":        true,
 	"timer.updated":        true,
 	"timer.deleted":        true,
+	"task.created":         true,
+	"task.updated":         true,
+	"task.deleted":         true,
+	"task.comment.created": true,
+	"task.comment.edited":  true,
+	"task.comment.deleted": true,
 }
 
 func isValidEvent(event string) bool {
