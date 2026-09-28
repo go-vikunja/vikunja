@@ -31,7 +31,7 @@ function page(pageNumber: number, items: BotUser[], total = 3) {
 	}
 }
 
-it('loads one page of bots with a fixed page size', async () => {
+it('loads one page of bots at the server default page size', async () => {
 	const client = new QueryClient()
 	sdk.botsList.mockResolvedValue({data: {
 		items: [{id: 21}],
@@ -48,10 +48,7 @@ it('loads one page of bots with a fixed page size', async () => {
 		total_pages: 2,
 	})
 	expect(sdk.botsList).toHaveBeenCalledOnce()
-	expect(sdk.botsList).toHaveBeenCalledWith(expect.objectContaining({query: {
-		page: 2,
-		per_page: 20,
-	}}))
+	expect(sdk.botsList).toHaveBeenCalledWith(expect.objectContaining({query: {page: 2}}))
 	expect(client.getQueryData(botKeys.list(2))).toBeDefined()
 })
 it('creating a bot stales every cached page', async () => {
