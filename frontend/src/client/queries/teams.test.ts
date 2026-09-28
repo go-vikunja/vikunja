@@ -13,6 +13,7 @@ vi.mock('@/message', () => ({success: vi.fn(), error: vi.fn()}))
 vi.mock('@/helpers/auth', () => ({getAuthSessionEpoch: () => session.epoch, getToken: () => null, getTokenIdentity: () => null}))
 vi.mock('@/helpers/apiUrl', () => ({getApiBaseUrl: () => '/api/v2/'}))
 
+import {PICKER_PAGE_SIZE} from './pagination'
 import {teamKeys, teamsPageQuery, teamSearchQuery, createTeamMutationOptions, updateTeamMutationOptions, deleteTeamMutationOptions, addTeamMemberMutationOptions, removeTeamMemberMutationOptions, leaveTeamMutationOptions, toggleTeamMemberAdminMutationOptions} from './teams'
 
 function teamPage(items: Team[], page = 1, total = items.length) {
@@ -50,10 +51,7 @@ describe('teams', () => {
 		})
 		expect(sdk.teamsList).toHaveBeenCalledTimes(1)
 		expect(sdk.teamsList).toHaveBeenCalledWith({
-			query: {
-				page: 2,
-				per_page: 25,
-			},
+			query: {page: 2},
 			signal: expect.any(AbortSignal),
 		})
 	})
@@ -70,7 +68,7 @@ describe('teams', () => {
 				q: 'ops',
 				include_public: true,
 				page: 1,
-				per_page: 10,
+				per_page: PICKER_PAGE_SIZE,
 			},
 			signal: expect.any(AbortSignal),
 		})

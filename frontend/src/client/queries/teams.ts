@@ -1,16 +1,29 @@
-import {queryOptions, useMutation, type QueryClient} from '@tanstack/vue-query'
+import {
+	keepPreviousData,
+	queryOptions,
+	useMutation,
+	type QueryClient,
+} from '@tanstack/vue-query'
 import {teamsList, teamsRead, teamsCreate, teamsUpdate, teamsDelete, teamsMembersAdd, teamsMembersRemove, teamsMembersToggleAdmin} from '@/client/generated'
 import type {Team, TeamReadBody, TeamWritable, TeamMemberWritable} from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
-import {fetchAllPages} from './fetchAllPages'
-import {API_MAX_PER_PAGE} from './pagination'
+import {
+	PICKER_PAGE_SIZE,
+	removeFromPages,
+	toPaginated,
+	type Paginated,
+} from './pagination'
 import {projectKeys} from './projects'
 import {userSearchKeys} from './userSearch'
 import {i18n} from '@/i18n'
 
+export type TeamPage = Paginated<Team>
+
 export const teamKeys = {
 	lists: ['teams', 'list'] as const,
-	list: (search = '', includePublic = false) => [...teamKeys.lists, search, includePublic] as const,
+	list: (page: number) => [...teamKeys.lists, page] as const,
+	searches: ['teams', 'search'] as const,
+	search: (search: string, includePublic = false) => [...teamKeys.searches, search, includePublic] as const,
 	detail: (id: number) => ['teams', 'detail', id] as const,
 }
 
@@ -18,10 +31,35 @@ export function createTeamDraft(team: TeamWritable = {}): Required<TeamWritable>
 	return {name: team.name ?? '', description: team.description ?? '', is_public: team.is_public ?? false}
 }
 
-export function teamsQuery(search = '', includePublic = false) {
+export function teamsPageQuery(page: number) {
 	return queryOptions({
-		queryKey: teamKeys.list(search, includePublic),
-		queryFn: ({signal}) => fetchAllPages(async page => (await teamsList({query: {q: search, include_public: includePublic, page, per_page: API_MAX_PER_PAGE}, signal})).data),
+		queryKey: teamKeys.list(page),
+		queryFn: async ({signal}): Promise<TeamPage> => {
+			const {data} = await teamsList({
+				query: {page},
+				signal,
+			})
+			return toPaginated(data, page)
+		},
+		placeholderData: keepPreviousData,
+	})
+}
+
+export function teamSearchQuery(search: string, includePublic = false) {
+	return queryOptions({
+		queryKey: teamKeys.search(search, includePublic),
+		queryFn: async ({signal}) => {
+			const {data} = await teamsList({
+				query: {
+					q: search,
+					include_public: includePublic,
+					page: 1,
+					per_page: PICKER_PAGE_SIZE,
+				},
+				signal,
+			})
+			return data.items ?? []
+		},
 	})
 }
 
@@ -34,12 +72,23 @@ export function teamQuery(id: number) {
 
 function updateCachedTeam(client: QueryClient, id: number, update: (team: TeamReadBody) => TeamReadBody) {
 	client.setQueryData<TeamReadBody>(teamKeys.detail(id), current => current ? update(current) : current)
-	client.setQueriesData<Team[]>({queryKey: teamKeys.lists}, current => current?.map(team => team.id === id ? update(team) : team))
+	client.setQueriesData<TeamPage>({queryKey: teamKeys.lists}, current => current && ({
+		...current,
+		items: current.items.map(team => team.id === id ? update(team) : team),
+	}))
+	client.setQueriesData<Team[]>({queryKey: teamKeys.searches}, current => current?.map(team => team.id === id ? update(team) : team))
+}
+
+function removeCachedTeam(client: QueryClient, id: number) {
+	removeFromPages<Team>(client, teamKeys.lists, team => team.id === id)
+	client.setQueriesData<Team[]>({queryKey: teamKeys.searches}, current => current?.filter(team => team.id !== id))
+	client.removeQueries({queryKey: teamKeys.detail(id), exact: true})
 }
 
 async function invalidateTeams(client: QueryClient, id?: number) {
 	await Promise.all([
 		client.invalidateQueries({queryKey: teamKeys.lists}),
+		client.invalidateQueries({queryKey: teamKeys.searches}),
 		...(id ? [client.invalidateQueries({queryKey: teamKeys.detail(id)})] : []),
 	])
 }
@@ -64,10 +113,7 @@ export function updateTeamMutationOptions() {
 export function deleteTeamMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async (id: number) => { await teamsDelete({path: {id}}) },
-		onSuccess: (_data, id, client) => {
-			client.setQueriesData<Team[]>({queryKey: teamKeys.lists}, current => current?.filter(team => team.id !== id))
-			client.removeQueries({queryKey: teamKeys.detail(id), exact: true})
-		},
+		onSuccess: (_data, id, client) => removeCachedTeam(client, id),
 		onSettled: (_id, client) => invalidateTeams(client),
 		successMessage: () => i18n.global.t('team.edit.delete.success'),
 	})
