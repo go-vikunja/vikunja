@@ -1,6 +1,7 @@
 import {test, expect} from '../../../support/fixtures'
 import {SessionFactory, hashSessionToken} from '../../../factories/session'
 import {gotoUserSettings} from '../../../support/userSettings'
+import {serverPageSize} from '../../../support/pagination'
 
 test.describe('Sessions', () => {
 	test('lists the current session and other sessions', async ({
@@ -53,33 +54,36 @@ test.describe('Sessions', () => {
 	})
 
 	test('pages the session list and steps back after revoking the last row of a page', async ({
-		authenticatedPage: page, currentUser,
+		authenticatedPage: page, currentUser, apiContext,
 	}) => {
-		await SessionFactory.create(25, {
+		const pageSize = await serverPageSize(apiContext)
+		const oldest = `192.0.2.${pageSize}`
+		await SessionFactory.create(pageSize, {
 			user_id: currentUser.id,
+			token_hash: (i: number) => hashSessionToken(`paging-${i}`),
 			ip_address: (i: number) => `192.0.2.${i}`,
 			last_active: (i: number) => new Date(Date.now() - i * 60_000).toISOString(),
 		}, false)
 
 		await gotoUserSettings(page, 'sessions')
 		const rows = page.locator('table.table tbody tr')
-		await expect(rows).toHaveCount(25)
+		await expect(rows).toHaveCount(pageSize)
 		await expect(page.locator('.tag.is-primary')).toContainText('Current')
 
 		await page.getByRole('link', {name: 'Goto page 2'}).click()
 		await expect(page).toHaveURL(/[?&]page=2/)
 		await expect(rows).toHaveCount(1)
-		await expect(rows).toContainText('192.0.2.25')
+		await expect(rows).toContainText(oldest)
 
 		await rows.getByRole('button', {name: 'Delete'}).click()
 		await page.locator('dialog[open] .modal-content .actions .button').filter({hasText: 'Do it!'}).click()
 		await expect(page).not.toHaveURL(/[?&]page=2/)
-		await expect(rows).toHaveCount(25)
+		await expect(rows).toHaveCount(pageSize)
 		await expect(page.getByRole('navigation', {name: 'pagination'})).toHaveCount(0)
 
 		await page.reload()
-		await expect(rows).toHaveCount(25)
-		await expect(page.locator('tr', {hasText: '192.0.2.25'})).toHaveCount(0)
+		await expect(rows).toHaveCount(pageSize)
+		await expect(page.locator('tr', {hasText: oldest})).toHaveCount(0)
 	})
 
 	test('current session cannot be deleted from the UI', async ({authenticatedPage: page}) => {

@@ -36,10 +36,7 @@ it('loads only the requested session page', async () => {
 		total_pages: 2,
 	})
 	expect(sdk.sessionsList).toHaveBeenCalledWith(expect.objectContaining({
-		query: {
-			page: 2,
-			per_page: 25,
-		},
+		query: {page: 2},
 	}))
 	expect(sdk.sessionsList).toHaveBeenCalledTimes(1)
 })

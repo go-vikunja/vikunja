@@ -1,16 +1,44 @@
-import {queryOptions, useMutation} from '@tanstack/vue-query'
-import {sessionsList, sessionsDelete, type Session} from '@/client/generated'
-import {fetchAllPages} from './fetchAllPages'
-import {API_MAX_PER_PAGE} from './pagination'
+import {
+	keepPreviousData,
+	queryOptions,
+	useMutation,
+} from '@tanstack/vue-query'
+import {
+	sessionsList,
+	sessionsDelete,
+	type Session,
+} from '@/client/generated'
+import {
+	totalPagesFor,
+	type Paginated,
+} from './pagination'
 import {contextMutationOptions} from './contextMutation'
 import {i18n} from '@/i18n'
 
-export const sessionKeys = {all: ['sessions'] as const}
+export type SessionPage = Paginated<Session>
 
-export function sessionsQuery() {
+export const sessionKeys = {
+	all: ['sessions'] as const,
+	list: (page: number) => ['sessions', 'list', page] as const,
+}
+
+export function sessionsQuery(page: number) {
 	return queryOptions({
-		queryKey: sessionKeys.all,
-		queryFn: ({signal}) => fetchAllPages(async page => (await sessionsList({query: {page, per_page: API_MAX_PER_PAGE}, signal})).data),
+		queryKey: sessionKeys.list(page),
+		queryFn: async ({signal}): Promise<SessionPage> => {
+			const {data} = await sessionsList({
+				query: {page},
+				signal,
+			})
+			return {
+				items: data.items ?? [],
+				page: data.page ?? page,
+				per_page: data.per_page ?? 0,
+				total: data.total ?? 0,
+				total_pages: data.total_pages ?? 0,
+			}
+		},
+		placeholderData: keepPreviousData,
 		staleTime: 0,
 	})
 }
@@ -20,7 +48,16 @@ export function deleteSessionMutationOptions() {
 		mutationFn: async (id: string) => {
 			await sessionsDelete({path: {session: id}})
 		},
-		onSuccess: (_data, id, client) => client.setQueryData<Session[]>(sessionKeys.all, current => current?.filter(session => session.id !== id)),
+		onSuccess: (_data, id, client) => client.setQueriesData<SessionPage>({queryKey: sessionKeys.all}, current => {
+			if (!current) return current
+			const total = Math.max(0, current.total - 1)
+			return {
+				...current,
+				items: current.items.filter(session => session.id !== id),
+				total,
+				total_pages: totalPagesFor(current, total),
+			}
+		}),
 		onSettled: (_id, client) => client.invalidateQueries({queryKey: sessionKeys.all}),
 		successMessage: () => i18n.global.t('user.settings.sessions.deleteSuccess'),
 	})
