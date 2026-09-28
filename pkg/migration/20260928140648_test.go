@@ -20,48 +20,50 @@ import (
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/models"
 
 	"github.com/stretchr/testify/require"
 )
 
-type labels20260928140648 struct {
-	ID    int64  `xorm:"bigint autoincr not null unique pk"`
-	Title string `xorm:"varchar(250) not null"`
-}
-
-func (labels20260928140648) TableName() string {
-	return "labels"
-}
-
-type labelTasks20260928140648 struct {
-	ID      int64 `xorm:"bigint autoincr not null unique pk"`
-	TaskID  int64 `xorm:"bigint not null"`
-	LabelID int64 `xorm:"bigint not null"`
-}
-
-func (labelTasks20260928140648) TableName() string {
-	return "label_tasks"
-}
-
 func TestDeleteOrphanedLabelTasks20260928140648(t *testing.T) {
 	x, err := db.CreateTestEngine()
 	require.NoError(t, err)
-	require.NoError(t, x.Sync2(labels20260928140648{}, labelTasks20260928140648{}))
+	// The full model structs, not a partial one: with VIKUNJA_TESTS_USE_CONFIG
+	// the engine is the db every other test package shares, and a partial sync
+	// would leave those tables missing columns for all of them.
+	require.NoError(t, x.Sync2(&models.Label{}, &models.LabelTask{}))
 
-	_, err = x.Insert(&labels20260928140648{ID: 1, Title: "still here"})
+	keptLabel := &models.Label{Title: "kept 20260928140648", CreatedByID: 1}
+	_, err = x.Insert(keptLabel)
 	require.NoError(t, err)
-	_, err = x.Insert(
-		&labelTasks20260928140648{ID: 1, TaskID: 1, LabelID: 1},
-		&labelTasks20260928140648{ID: 2, TaskID: 1, LabelID: 42},
-	)
+	goneLabel := &models.Label{Title: "gone 20260928140648", CreatedByID: 1}
+	_, err = x.Insert(goneLabel)
+	require.NoError(t, err)
+
+	kept := &models.LabelTask{TaskID: 1, LabelID: keptLabel.ID}
+	orphan := &models.LabelTask{TaskID: 1, LabelID: goneLabel.ID}
+	_, err = x.Insert(kept, orphan)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		_, err := x.In("id", kept.ID, orphan.ID).Delete(&models.LabelTask{})
+		require.NoError(t, err)
+		_, err = x.In("id", keptLabel.ID, goneLabel.ID).Delete(&models.Label{})
+		require.NoError(t, err)
+	})
+
+	_, err = x.ID(goneLabel.ID).Delete(&models.Label{})
 	require.NoError(t, err)
 
 	require.NoError(t, deleteOrphanedLabelTasks20260928140648(x))
 
-	var remaining []*labelTasks20260928140648
-	require.NoError(t, x.Find(&remaining))
-	require.Len(t, remaining, 1)
-	require.Equal(t, int64(1), remaining[0].LabelID)
+	has, err := x.ID(orphan.ID).Exist(&models.LabelTask{})
+	require.NoError(t, err)
+	require.False(t, has, "orphaned label_tasks row should be gone")
+
+	has, err = x.ID(kept.ID).Exist(&models.LabelTask{})
+	require.NoError(t, err)
+	require.True(t, has, "label_tasks row of an existing label must stay")
 
 	// Idempotent once there is nothing left to clean.
 	require.NoError(t, deleteOrphanedLabelTasks20260928140648(x))
