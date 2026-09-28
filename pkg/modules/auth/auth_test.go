@@ -20,12 +20,15 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGetAuthFromContext_NoEchoContext(t *testing.T) {
@@ -73,6 +76,75 @@ func TestIsUnusableRefreshToken(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert.Equal(t, tt.want, IsUnusableRefreshToken(tt.err))
+		})
+	}
+}
+
+func TestIssuedJWTsCarryIssuedAt(t *testing.T) {
+	for _, key := range []config.Key{
+		config.ServiceSecret,
+		config.ServiceJWTTTL,
+		config.ServiceJWTTTLShort,
+	} {
+		original := key.GetString()
+		t.Cleanup(func() { key.Set(original) })
+	}
+	config.ServiceSecret.Set("test-secret")
+	config.ServiceJWTTTL.Set(3600)
+	config.ServiceJWTTTLShort.Set(600)
+
+	parseClaims := func(t *testing.T, token string) jwt.MapClaims {
+		parsed, err := jwt.Parse(token, func(_ *jwt.Token) (any, error) {
+			return []byte("test-secret"), nil
+		})
+		require.NoError(t, err)
+		return parsed.Claims.(jwt.MapClaims)
+	}
+
+	tests := []struct {
+		name  string
+		issue func() (string, error)
+		ttl   int64
+	}{
+		{
+			name: "user",
+			issue: func() (string, error) {
+				return NewUserJWTAuthtoken(&user.User{
+					ID:       1,
+					Username: "user1",
+				}, "session-id")
+			},
+			ttl: 600,
+		},
+		{
+			name: "link share",
+			issue: func() (string, error) {
+				return NewLinkShareJWTAuthtoken(&models.LinkSharing{
+					ID:        1,
+					Hash:      "hash",
+					ProjectID: 1,
+				})
+			},
+			ttl: 3600,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			before := time.Now().Unix()
+			token, err := tt.issue()
+			require.NoError(t, err)
+			after := time.Now().Unix()
+
+			claims := parseClaims(t, token)
+			iat, ok := claims["iat"].(float64)
+			require.True(t, ok, "iat claim missing")
+			exp, ok := claims["exp"].(float64)
+			require.True(t, ok, "exp claim missing")
+
+			assert.GreaterOrEqual(t, int64(iat), before)
+			assert.LessOrEqual(t, int64(iat), after)
+			assert.Equal(t, tt.ttl, int64(exp-iat))
 		})
 	}
 }
