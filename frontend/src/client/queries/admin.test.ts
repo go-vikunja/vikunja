@@ -4,6 +4,7 @@ import {
 	adminKeys,
 	adminUsersQuery,
 	adminUserSearchQuery,
+	adminTeamsQuery,
 	updateAdminUserMutationOptions,
 	deleteAdminUserMutationOptions,
 } from './admin'
@@ -13,6 +14,7 @@ const sdk = vi.hoisted(() => ({
 	adminUsersPatchAdmin: vi.fn(),
 	adminUsersPatchStatus: vi.fn(),
 	adminUsersDelete: vi.fn(),
+	adminTeamsList: vi.fn(),
 	userShow: vi.fn(),
 }))
 vi.mock('@/client/generated', () => sdk)
@@ -54,6 +56,18 @@ it('updating a user stales the user picker results', async () => {
 	await client.getMutationCache().build(client, updateAdminUserMutationOptions())
 		.execute({id: 1, is_admin: true})
 	expect(client.getQueryState(adminKeys.userSearch('name'))?.isInvalidated).toBe(true)
+})
+it('team picker fetches only the first page of matches', async () => {
+	const client = new QueryClient()
+	sdk.adminTeamsList.mockResolvedValue({data: {items: [{id: 1}], total: 100, total_pages: 5}})
+	expect(await client.fetchQuery(adminTeamsQuery('team'))).toEqual([{id: 1}])
+	expect(sdk.adminTeamsList).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
+		query: {
+			page: 1,
+			per_page: 20,
+			q: 'team',
+		},
+	}))
 })
 it('deletion stales users and overview without inventing a page total', async () => {
 	const client = new QueryClient()
