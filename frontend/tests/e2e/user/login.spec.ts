@@ -71,6 +71,35 @@ test.describe('Login', () => {
 		await expect(page).toHaveURL(/\/login/)
 	})
 
+	test('Should refresh an expired token without a refresh cookie once and then drop it', async ({page}) => {
+		const refreshRequests: string[] = []
+		page.on('request', request => {
+			if (request.url().includes('/user/token/refresh')) {
+				refreshRequests.push(request.url())
+			}
+		})
+
+		// exp is relative to the fixed clock from beforeEach.
+		const payload = Buffer.from(JSON.stringify({
+			id: 1,
+			type: 1,
+			exp: Math.floor(1625656161057 / 1000) - 3600,
+		})).toString('base64')
+		await page.goto('/login')
+		await page.evaluate(token => localStorage.setItem('token', token), `header.${payload}.signature`)
+
+		await page.goto('/')
+		await expect(page).toHaveURL(/\/login/)
+		await expect(page.locator('input[id=username]')).toBeVisible()
+		await expect.poll(() => page.evaluate(() => localStorage.getItem('token'))).toBeNull()
+		expect(refreshRequests).toHaveLength(1)
+		expect(refreshRequests[0]).toContain('/api/v2/')
+
+		await page.reload()
+		await expect(page.locator('input[id=username]')).toBeVisible()
+		expect(refreshRequests).toHaveLength(1)
+	})
+
 	test('Should not show login form inside authenticated app shell after login', async ({page}) => {
 		await page.goto('/login')
 

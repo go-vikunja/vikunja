@@ -104,6 +104,31 @@ describe('auth store checkAuth refresh (issue #4023)', () => {
 		expect(refreshCalls()).toBe(callsAfterFirstCheck)
 	})
 
+	it('refreshes once and not again this boot when no refresh cookie was sent', async () => {
+		localStorage.setItem('token', STALE_JWT)
+		postMock.mockRejectedValue(refreshRejection(401, 16005))
+		const store = useAuthStore()
+
+		await store.checkAuth()
+
+		expect(refreshCalls()).toBe(1)
+		expect(localStorage.getItem('token')).toBeNull()
+
+		await store.checkAuth()
+
+		expect(refreshCalls()).toBe(1)
+	})
+
+	it('retries once when the refresh token was rotated away', async () => {
+		localStorage.setItem('token', STALE_JWT)
+		postMock.mockRejectedValue(refreshRejection(401, 16002))
+		const store = useAuthStore()
+
+		await store.checkAuth()
+
+		expect(refreshCalls()).toBe(2)
+	})
+
 	it('keeps the token on a rate limit but does not refresh it again this boot', async () => {
 		localStorage.setItem('token', STALE_JWT)
 		postMock.mockRejectedValue(refreshRejection(429))

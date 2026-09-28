@@ -64,19 +64,35 @@ function redirectToSpecifiedProvider() {
 	}
 }
 
-// A race-loser's refresh fails but the rotated cookie is already valid, so a
-// second attempt succeeds — recovering what would otherwise be a spurious
-// logout. Exactly one retry: a genuinely dead session still logs out, no loop.
-async function refreshTokenWithRetry(persist: boolean): Promise<void> {
-	try {
-		await refreshToken(persist)
-	} catch {
-		await refreshToken(persist)
+// pkg/models ErrCodeNoRefreshToken
+const ERROR_CODE_NO_REFRESH_TOKEN = 16005
+
+interface RefreshFailure {
+	cause?: {
+		response?: {
+			status?: number
+			data?: {code?: number}
+		}
 	}
 }
 
 function refreshFailureResponse(e: unknown) {
-	return (e as {cause?: {response?: {status?: number, data?: {code?: number}}}})?.cause?.response
+	return (e as RefreshFailure | undefined)?.cause?.response
+}
+
+// A race-loser's refresh fails but the rotated cookie is already valid, so a
+// second attempt succeeds — recovering what would otherwise be a spurious
+// logout. Exactly one retry: a genuinely dead session still logs out, no loop.
+// Without a cookie there is nothing another caller could have rotated.
+async function refreshTokenWithRetry(persist: boolean): Promise<void> {
+	try {
+		await refreshToken(persist)
+	} catch (e) {
+		if (refreshFailureResponse(e)?.data?.code === ERROR_CODE_NO_REFRESH_TOKEN) {
+			throw e
+		}
+		await refreshToken(persist)
+	}
 }
 
 function getLoggedInVia(): string | null {
