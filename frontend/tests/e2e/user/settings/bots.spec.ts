@@ -1,5 +1,6 @@
 import {test, expect} from '../../../support/fixtures'
 import {gotoUserSettings} from '../../../support/userSettings'
+import {serverPageSize} from '../../../support/pagination'
 
 test('manages a bot and its scoped token across reloads', async ({authenticatedPage: page, apiContext, userToken}) => {
 	await gotoUserSettings(page, 'bots')
@@ -46,7 +47,8 @@ test('manages a bot and its scoped token across reloads', async ({authenticatedP
 })
 
 test('pages through bots and leaves an emptied last page', async ({authenticatedPage: page, apiContext, userToken}) => {
-	for (let i = 1; i <= 21; i++) {
+	const pageSize = await serverPageSize(apiContext)
+	for (let i = 1; i <= pageSize + 1; i++) {
 		const response = await apiContext.post('/api/v2/user/bots', {
 			headers: {Authorization: `Bearer ${userToken}`},
 			data: {username: `bot-paged-${i}`},
@@ -55,13 +57,13 @@ test('pages through bots and leaves an emptied last page', async ({authenticated
 	}
 	await gotoUserSettings(page, 'bots')
 	const cards = page.locator('.bot-card')
-	await expect(cards).toHaveCount(20)
+	await expect(cards).toHaveCount(pageSize)
 	await page.getByRole('link', {name: 'Goto page 2'}).click()
 	await expect(page).toHaveURL(/[?&]page=2/)
 	await expect(cards).toHaveCount(1)
 	await cards.locator('.bot-actions').getByRole('button', {name: 'Delete', exact: true}).click()
 	await page.locator('[data-cy="modalPrimary"]').click()
 	await expect(page).not.toHaveURL(/[?&]page=2/)
-	await expect(cards).toHaveCount(20)
+	await expect(cards).toHaveCount(pageSize)
 	await expect(page.getByRole('link', {name: 'Goto page 2'})).toHaveCount(0)
 })

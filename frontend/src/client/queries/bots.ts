@@ -1,4 +1,4 @@
-import {queryOptions, useMutation} from '@tanstack/vue-query'
+import {keepPreviousData, queryOptions, useMutation} from '@tanstack/vue-query'
 import {
 	botsList,
 	botsCreate,
@@ -8,15 +8,30 @@ import {
 	type BotUserWritable,
 	type BotUserUpdateBodyWritable,
 } from '@/client/generated'
-import {fetchAllPages} from './fetchAllPages'
 import {contextMutationOptions} from './contextMutation'
 import {apiTokenKeys} from './apiTokens'
+import {
+	removeFromPages,
+	toPaginated,
+	type Paginated,
+} from './pagination'
 
-export const botKeys = {all: ['bots'] as const}
-export function botsQuery() {
+export type BotPage = Paginated<BotUser>
+export const botKeys = {
+	all: ['bots'] as const,
+	list: (page: number) => ['bots', 'list', page] as const,
+}
+export function botsQuery(page: number) {
 	return queryOptions({
-		queryKey: botKeys.all,
-		queryFn: ({signal}) => fetchAllPages(async page => (await botsList({query: {page}, signal})).data),
+		queryKey: botKeys.list(page),
+		queryFn: async ({signal}): Promise<BotPage> => {
+			const {data} = await botsList({
+				query: {page},
+				signal,
+			})
+			return toPaginated(data, page)
+		},
+		placeholderData: keepPreviousData,
 	})
 }
 export function createBotMutationOptions() {
@@ -32,9 +47,12 @@ export function updateBotMutationOptions() {
 			id: number,
 			body: BotUserUpdateBodyWritable,
 		}) => (await botsUpdate({path: {bot: id}, body})).data,
-		onSuccess: (updated, {id}, client) => client.setQueryData<BotUser[]>(
-			botKeys.all,
-			current => current?.map(bot => bot.id === id ? updated : bot),
+		onSuccess: (updated, {id}, client) => client.setQueriesData<BotPage>(
+			{queryKey: botKeys.all},
+			current => current && {
+				...current,
+				items: current.items.map(bot => bot.id === id ? updated : bot),
+			},
 		),
 		onSettled: (_input, client) => client.invalidateQueries({queryKey: botKeys.all}),
 	})
@@ -43,7 +61,7 @@ export function deleteBotMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async (id: number) => (await botsDelete({path: {bot: id}})).data,
 		onSuccess: (_data, id, client) => {
-			client.setQueryData<BotUser[]>(botKeys.all, current => current?.filter(bot => bot.id !== id))
+			removeFromPages<BotUser>(client, botKeys.all, bot => bot.id === id)
 			client.removeQueries({queryKey: apiTokenKeys.list(id)})
 		},
 		onSettled: (_id, client) => client.invalidateQueries({queryKey: botKeys.all}),
