@@ -38,6 +38,25 @@ test.describe('Team', () => {
 		}
 	})
 
+	test('Paginates the team list', async ({authenticatedPage: page}) => {
+		await TeamMemberFactory.create(30, {
+			team_id: '{increment}',
+		})
+		await TeamFactory.create(30, {
+			id: '{increment}',
+		})
+
+		await page.goto('/teams')
+		await expect(page.locator('ul.teams li')).toHaveCount(25)
+
+		await page.getByRole('link', {name: 'Goto page 2'}).click()
+		await expect(page).toHaveURL(/[?&]page=2/)
+		await expect(page.locator('ul.teams li')).toHaveCount(5)
+
+		await page.reload()
+		await expect(page.locator('ul.teams li')).toHaveCount(5)
+	})
+
 	test('Allows an admin to edit the team', async ({authenticatedPage: page}) => {
 		await TeamMemberFactory.create(1, {
 			team_id: 1,
