@@ -1046,3 +1046,20 @@ func TestLabelVisibleCondIsValid(t *testing.T) {
 		})
 	}
 }
+
+// Regression for #4026: label_tasks has no soft-delete column, so a deleted
+// label used to leave its task associations behind forever.
+func TestLabel_DeleteRemovesTaskAssociations(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	// Label 8 was created by user 1 and is attached to task 34.
+	l := &Label{ID: 8}
+	require.NoError(t, l.Delete(s, &user.User{ID: 1}))
+	require.NoError(t, s.Commit())
+
+	db.AssertMissing(t, "labels", map[string]interface{}{"id": 8})
+	db.AssertMissing(t, "label_tasks", map[string]interface{}{"label_id": 8})
+	db.AssertExists(t, "label_tasks", map[string]interface{}{"label_id": 4, "task_id": 1}, false)
+}
