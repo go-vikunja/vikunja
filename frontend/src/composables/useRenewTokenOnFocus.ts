@@ -4,6 +4,7 @@ import {useEventListener} from '@vueuse/core'
 
 import {useAuthStore} from '@/stores/auth'
 import {MILLISECONDS_A_SECOND} from '@/constants/date'
+import {serverNowSeconds} from '@/helpers/serverClock'
 
 // Refresh the token 60 seconds before it expires to avoid API calls hitting 401.
 const REFRESH_BUFFER_SECONDS = 60
@@ -32,8 +33,7 @@ export function useRenewTokenOnFocus() {
 			return
 		}
 
-		const nowInSeconds = Date.now() / MILLISECONDS_A_SECOND
-		const expiresIn = userInfo.value.exp - nowInSeconds
+		const expiresIn = userInfo.value.exp - serverNowSeconds()
 		const refreshIn = Math.max(expiresIn - REFRESH_BUFFER_SECONDS, 0)
 
 		refreshTimer.value = setTimeout(() => {
@@ -65,9 +65,8 @@ export function useRenewTokenOnFocus() {
 			return
 		}
 
-		const nowInSeconds = Date.now() / MILLISECONDS_A_SECOND
 		const expiresIn = userInfo.value
-			? userInfo.value.exp - nowInSeconds
+			? userInfo.value.exp - serverNowSeconds()
 			: 0
 
 		// If the token is already expired, try to refresh immediately.
