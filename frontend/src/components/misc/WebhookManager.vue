@@ -10,22 +10,30 @@ import {
 	useDeleteWebhookMutation,
 	type WebhookScope,
 } from '@/client/queries/webhooks'
+import {useClampedPage} from '@/composables/useClampedPage'
 import BaseButton from '@/components/base/BaseButton.vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import FormField from '@/components/input/FormField.vue'
 import FormInput from '@/components/input/FormInput.vue'
 import Expandable from '@/components/base/Expandable.vue'
 import User from '@/components/misc/User.vue'
+import PaginationEmit from '@/components/misc/PaginationEmit.vue'
 import {formatDateShort} from '@/helpers/time/formatDate'
 import {isValidHttpUrl} from '@/helpers/isValidHttpUrl'
 import {useDelayedLoading} from '@/composables/useDelayedLoading'
 
 const props = defineProps<{scope: WebhookScope}>()
-const {data: webhookData, isFetching, isPending} = useQuery(computed(() => webhooksQuery(props.scope)))
+const currentPage = ref(1)
+const {data: webhookData, isFetching, isPending, isPlaceholderData} = useQuery(computed(() => webhooksQuery(props.scope, currentPage.value)))
 const {data: eventData, isPending: isEventsPending} = useQuery(computed(() => webhookEventsQuery(props.scope.kind)))
 const isLoadingInitial = computed(() => isPending.value || isEventsPending.value)
 const showInitialLoader = useDelayedLoading(isLoadingInitial)
-const webhooks = computed(() => webhookData.value ?? [])
+const reloading = useDelayedLoading(isPlaceholderData)
+const webhooks = computed(() => webhookData.value?.items ?? [])
+// total, not items: a page emptied by a delete is [] until the page clamps.
+const hasWebhooks = computed(() => (webhookData.value?.total ?? 0) > 0)
+const totalPages = computed(() => webhookData.value?.total_pages ?? 0)
+useClampedPage(currentPage, {data: webhookData, isPlaceholderData})
 const availableEvents = computed(() => eventData.value ?? [])
 const createMutation = useCreateWebhookMutation()
 const deleteMutation = useDeleteWebhookMutation()
@@ -112,10 +120,10 @@ function doDelete() {
 <template>
 	<div
 		class="loader-container"
-		:class="{'is-loading': showInitialLoader}"
+		:class="{'is-loading': showInitialLoader || reloading}"
 	>
 		<XButton
-			v-if="!(webhooks.length === 0 || showNewForm)"
+			v-if="hasWebhooks && !showNewForm"
 			icon="plus"
 			class="mbe-4"
 			@click="showNewForm = true"
@@ -124,7 +132,7 @@ function doDelete() {
 		</XButton>
 
 		<div
-			v-if="!isLoadingInitial && (webhooks.length === 0 || showNewForm)"
+			v-if="!isLoadingInitial && (!hasWebhooks || showNewForm)"
 			class="p-4"
 		>
 			<FormField
@@ -255,6 +263,11 @@ function doDelete() {
 				</tr>
 			</tbody>
 		</table>
+		<PaginationEmit
+			:total-pages="totalPages"
+			:current-page="currentPage"
+			@pageChanged="currentPage = $event"
+		/>
 
 		<Modal
 			:enabled="showDeleteModal"

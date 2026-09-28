@@ -20,7 +20,8 @@ import type {
 import {contextMutationOptions} from './contextMutation'
 import {useSecretMutation} from './secretMutation'
 import {
-	totalPagesFor,
+	removeFromPages,
+	toPaginated,
 	type Paginated,
 } from './pagination'
 import {i18n} from '@/i18n'
@@ -49,13 +50,7 @@ export function webhooksQuery(scope: WebhookScope, page: number) {
 					query,
 					signal,
 				}))
-			return {
-				items: data.items ?? [],
-				page: data.page ?? page,
-				per_page: data.per_page ?? 0,
-				total: data.total ?? 0,
-				total_pages: data.total_pages ?? 0,
-			}
+			return toPaginated(data, page)
 		},
 		placeholderData: keepPreviousData,
 	})
@@ -81,19 +76,7 @@ export function deleteWebhookMutationOptions() {
 		mutationFn: async ({scope, id}: {scope: WebhookScope, id: number}) => (await (scope.kind === 'project'
 			? webhooksDelete({path: {project: scope.projectId, webhook: id}})
 			: userWebhooksDelete({path: {webhook: id}}))).data,
-		onSuccess: (_data, {scope, id}, client) => client.setQueriesData<WebhookPage>(
-			{queryKey: webhookKeys.scope(scope)},
-			current => {
-				if (!current) return current
-				const total = Math.max(0, current.total - 1)
-				return {
-					...current,
-					items: current.items.filter(webhook => webhook.id !== id),
-					total,
-					total_pages: totalPagesFor(current, total),
-				}
-			},
-		),
+		onSuccess: (_data, {scope, id}, client) => removeFromPages<Webhook>(client, webhookKeys.scope(scope), webhook => webhook.id === id),
 		onSettled: ({scope}, client) => client.invalidateQueries({queryKey: webhookKeys.scope(scope)}),
 		successMessage: () => i18n.global.t('project.webhooks.deleteSuccess'),
 	})
