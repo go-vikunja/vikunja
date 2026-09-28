@@ -5,6 +5,7 @@ import {TeamProjectFactory} from '../../factories/team_project'
 import {UserFactory} from '../../factories/user'
 import {createProjects} from '../project/prepareProjects'
 import {login, setupApiUrl} from '../../support/authenticateUser'
+import {serverPageSize} from '../../support/pagination'
 
 test.describe('Team', () => {
 	test('Creates a new team', async ({authenticatedPage: page}) => {
@@ -38,16 +39,17 @@ test.describe('Team', () => {
 		}
 	})
 
-	test('Paginates the team list', async ({authenticatedPage: page}) => {
-		await TeamMemberFactory.create(30, {
+	test('Paginates the team list', async ({authenticatedPage: page, apiContext}) => {
+		const pageSize = await serverPageSize(apiContext)
+		await TeamMemberFactory.create(pageSize + 5, {
 			team_id: '{increment}',
 		})
-		await TeamFactory.create(30, {
+		await TeamFactory.create(pageSize + 5, {
 			id: '{increment}',
 		})
 
 		await page.goto('/teams')
-		await expect(page.locator('ul.teams li')).toHaveCount(25)
+		await expect(page.locator('ul.teams li')).toHaveCount(pageSize)
 
 		await page.getByRole('link', {name: 'Goto page 2'}).click()
 		await expect(page).toHaveURL(/[?&]page=2/)

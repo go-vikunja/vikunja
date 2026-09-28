@@ -1,13 +1,22 @@
 import {computed, toValue, type MaybeRefOrGetter} from 'vue'
 import {useQuery} from '@tanstack/vue-query'
-import {teamQuery, teamsQuery} from '@/client/queries/teams'
+import {teamQuery, teamSearchQuery, teamsPageQuery} from '@/client/queries/teams'
 
-export function useTeams({search = '', includePublic = false, enabled = true}: {
-	search?: MaybeRefOrGetter<string>
+export function useTeamsPage(page: MaybeRefOrGetter<number>) {
+	const query = useQuery(computed(() => teamsPageQuery(toValue(page))))
+	return {
+		...query,
+		teams: computed(() => query.data.value?.items ?? []),
+		totalPages: computed(() => query.data.value?.total_pages ?? 0),
+	}
+}
+
+export function useTeamSearch({search, includePublic = false, enabled = true}: {
+	search: MaybeRefOrGetter<string>
 	includePublic?: MaybeRefOrGetter<boolean>
 	enabled?: MaybeRefOrGetter<boolean>
-} = {}) {
-	const query = useQuery(computed(() => ({...teamsQuery(toValue(search), toValue(includePublic)), enabled: toValue(enabled)})))
+}) {
+	const query = useQuery(computed(() => ({...teamSearchQuery(toValue(search), toValue(includePublic)), enabled: toValue(enabled)})))
 	return {...query, teams: computed(() => query.data.value ?? [])}
 }
 
