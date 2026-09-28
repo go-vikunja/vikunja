@@ -126,7 +126,7 @@ import {useRouter} from 'vue-router'
 
 import {useTasks} from '@/composables/useTasks'
 import {useQueries} from '@tanstack/vue-query'
-import {teamsQuery, useCreateTeamMutation} from '@/client/queries/teams'
+import {teamSearchQuery, useCreateTeamMutation} from '@/client/queries/teams'
 import type {Team as ITeam} from '@/client/generated'
 import {refDebounced} from '@vueuse/core'
 
@@ -499,7 +499,7 @@ const teamSearches = refDebounced(computed(() => parsedQuery.value.assignees), 1
 const teamQueries = useQueries({
 	queries: computed(() => active.value && query.value !== '' && selectedCmd.value === null &&
 		(searchMode.value === SEARCH_MODE.ALL || searchMode.value === SEARCH_MODE.TEAMS)
-		? teamSearches.value.map(search => teamsQuery(search)) : []),
+		? teamSearches.value.map(search => teamSearchQuery(search)) : []),
 })
 const foundTeams = computed(() => teamQueries.value.flatMap(result => result.data ?? []).map(team => ({...team, title: team.name ?? ''})))
 const teamSearchLoading = computed(() => teamQueries.value.some(result => result.isFetching))
