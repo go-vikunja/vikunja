@@ -448,6 +448,9 @@ func getValueForField(field reflect.StructField, rawValue string, loc *time.Loca
 	switch field.Type.Kind() {
 	case reflect.Int64:
 		value, err = strconv.ParseInt(rawValue, 10, 64)
+	case reflect.Int:
+		// Enum types such as TaskRepeatMode are plain ints.
+		value, err = strconv.ParseInt(rawValue, 10, 64)
 	case reflect.Float64:
 		value, err = strconv.ParseFloat(rawValue, 64)
 	case reflect.String:

@@ -62,6 +62,22 @@ func TestParseFilter(t *testing.T) {
 		assert.Equal(t, "project_id", result[0].field)
 		assert.Equal(t, int64(4234), result[0].value)
 	})
+	t.Run("int enum field", func(t *testing.T) {
+		result, err := getTaskFiltersFromFilterString("repeat_mode = 1", "UTC")
+
+		require.NoError(t, err)
+		require.Len(t, result, 1)
+		assert.Equal(t, "repeat_mode", result[0].field)
+		assert.Equal(t, int64(1), result[0].value)
+	})
+	t.Run("int enum field in", func(t *testing.T) {
+		result, err := getTaskFiltersFromFilterString("repeat_mode in 0,2", "UTC")
+
+		require.NoError(t, err)
+		require.Len(t, result, 1)
+		assert.Equal(t, taskFilterComparatorIn, result[0].comparator)
+		assert.Equal(t, []interface{}{int64(0), int64(2)}, result[0].value)
+	})
 	t.Run("in", func(t *testing.T) {
 		result, err := getTaskFiltersFromFilterString("project_id in 1,2,3", "UTC")
 

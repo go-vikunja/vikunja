@@ -53,6 +53,8 @@ export const AVAILABLE_FILTER_FIELDS = [
 	'done',
 	'priority',
 	'percentDone',
+	'repeatAfter',
+	'repeatMode',
 ]
 
 export const FILTER_OPERATORS = [
