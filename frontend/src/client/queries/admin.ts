@@ -34,6 +34,8 @@ import {i18n} from '@/i18n'
 export type DeleteUserMode = 'now' | 'scheduled'
 export type AdminProjectsQuery = NonNullable<AdminProjectsListData['query']>
 
+const PICKER_PAGE_SIZE = 20
+
 export const adminKeys = {
 	all: ['admin'] as const,
 	overview: ['admin', 'overview'] as const,
@@ -65,10 +67,10 @@ export function adminUsersQuery(q = '', page = 1) {
 export function adminUserSearchQuery(q: string) {
 	return queryOptions({
 		queryKey: adminKeys.userSearch(q),
-		queryFn: ({signal}) => fetchAllPages(async page => (await adminUsersList({
-			query: {q, page, per_page: API_MAX_PER_PAGE},
+		queryFn: async ({signal}) => (await adminUsersList({
+			query: {page: 1, per_page: PICKER_PAGE_SIZE, q},
 			signal,
-		})).data),
+		})).data.items ?? [],
 	})
 }
 
