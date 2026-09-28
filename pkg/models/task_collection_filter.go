@@ -59,6 +59,8 @@ type taskFilter struct {
 	comparator taskFilterComparator
 	isNumeric  bool
 	join       taskFilterConcatinator
+	// Only set on nested groups: include nulls for this group even if the rest of the filter doesn't.
+	includeNulls bool
 }
 
 // clampDateToDriverRange lifts boundaries with year < 1 back into year 1:

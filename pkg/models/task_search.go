@@ -189,6 +189,8 @@ func convertFiltersToDBFilterCond(rawFilters []*taskFilter, includeNulls bool) (
 // convertFiltersToDBFilterCondWithAlias builds the filter condition against the
 // given task table alias. Passing "parent_tasks" lets the subtask-expansion root
 // condition ask "does the parent satisfy the filter" (see #2646).
+//
+//nolint:gocyclo
 func convertFiltersToDBFilterCondWithAlias(rawFilters []*taskFilter, includeNulls bool, taskAlias string) (filterCond builder.Cond, err error) {
 
 	var dbFilters = make([]builder.Cond, 0, len(rawFilters))
@@ -200,7 +202,7 @@ func convertFiltersToDBFilterCondWithAlias(rawFilters []*taskFilter, includeNull
 		f := rawFilters[i]
 
 		if nested, is := f.value.([]*taskFilter); is {
-			nestedDBFilters, err := convertFiltersToDBFilterCondWithAlias(nested, includeNulls, taskAlias)
+			nestedDBFilters, err := convertFiltersToDBFilterCondWithAlias(nested, includeNulls || f.includeNulls, taskAlias)
 			if err != nil {
 				return nil, err
 			}
