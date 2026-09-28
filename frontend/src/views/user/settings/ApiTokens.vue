@@ -4,17 +4,24 @@ import {apiTokensQuery, useDeleteApiTokenMutation} from '@/client/queries/apiTok
 import {isApiTokenExpired} from '@/helpers/apiToken'
 import {computed, onMounted, ref} from 'vue'
 import {useRoute} from 'vue-router'
+import {useRouteQuery} from '@vueuse/router'
+import {normalizePageNumber} from '@/client/queries/pagination'
+import {useClampedPage} from '@/composables/useClampedPage'
 import {formatDateSince, formatDisplayDate} from '@/helpers/time/formatDate'
 import XButton from '@/components/input/Button.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import {useI18n} from 'vue-i18n'
 import Message from '@/components/misc/Message.vue'
+import Pagination from '@/components/misc/Pagination.vue'
 import type {ApiToken as IApiToken} from '@/client/generated'
 import ApiTokenForm from '@/components/token/ApiTokenForm.vue'
 import {getApiBaseUrl} from '@/helpers/apiUrl'
 
-const {data, isFetching} = useQuery(apiTokensQuery())
-const tokens = computed(() => data.value ?? [])
+const page = useRouteQuery('page', '1', {transform: normalizePageNumber})
+const {data, isFetching, isPlaceholderData} = useQuery(computed(() => apiTokensQuery(page.value)))
+useClampedPage(page, {data, isPlaceholderData})
+const tokens = computed(() => data.value?.items ?? [])
+const totalPages = computed(() => data.value?.total_pages ?? 0)
 const deleteMutation = useDeleteApiTokenMutation()
 const apiDocsUrl = `${getApiBaseUrl()}/docs`
 const showCreateForm = ref(false)
@@ -53,7 +60,9 @@ async function deleteToken() {
 	}
 	tokenToDelete.value = undefined
 	showDeleteModal.value = false
-	try { await deleteMutation.mutateAsync(token.id) } catch { /* Mutation reports the error. */ }
+	try {
+		await deleteMutation.mutateAsync(token.id)
+	} catch { /* Mutation reports the error. */ }
 }
 
 function formatPermissionTitle(title: string): string {
@@ -140,6 +149,11 @@ function onTokenCreated(token: IApiToken) {
 				</tbody>
 			</table>
 		</div>
+
+		<Pagination
+			:total-pages="totalPages"
+			:current-page="page"
+		/>
 
 		<ApiTokenForm
 			v-if="showCreateForm"

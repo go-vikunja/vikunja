@@ -1,16 +1,18 @@
 <script setup lang="ts">
-import {computed, ref} from 'vue'
+import {computed, ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useTitle} from '@/composables/useTitle'
 
 import XButton from '@/components/input/Button.vue'
 import FormField from '@/components/input/FormField.vue'
 import Message from '@/components/misc/Message.vue'
+import PaginationEmit from '@/components/misc/PaginationEmit.vue'
 import ApiTokenForm from '@/components/token/ApiTokenForm.vue'
 
 import {botsQuery, useCreateBotMutation, useUpdateBotMutation, useDeleteBotMutation} from '@/client/queries/bots'
 import {useQueries, useQuery} from '@tanstack/vue-query'
 import {botApiTokensQuery, useDeleteApiTokenMutation} from '@/client/queries/apiTokens'
+import {clampPage} from '@/client/queries/pagination'
 import type {ApiToken, BotUser} from '@/client/generated'
 import {formatDisplayDate} from '@/helpers/time/formatDate'
 import {getErrorText} from '@/message'
@@ -34,10 +36,21 @@ const newBotName = ref('')
 const createError = ref<string | null>(null)
 const showCreateForm = ref(false)
 
-const tokenQueries = useQueries({queries: computed(() => bots.value.map(bot => botApiTokensQuery(bot.id)))})
-const tokensByBot = computed(() => Object.fromEntries(
-	bots.value.map((bot, index) => [bot.id, tokenQueries.value[index]?.data ?? []]),
+const tokenPages = ref<Record<number, number>>({})
+const tokenQueries = useQueries({queries: computed(() => bots.value.map(bot => botApiTokensQuery(
+	bot.id,
+	tokenPages.value[bot.id] ?? 1,
+)))})
+const tokenPageByBot = computed(() => Object.fromEntries(
+	bots.value.map((bot, index) => [bot.id, tokenQueries.value[index]?.data]),
 ))
+watch(tokenQueries, results => bots.value.forEach((bot, index) => {
+	const result = results[index]
+	if (!result) return
+	const current = tokenPages.value[bot.id] ?? 1
+	const clamped = clampPage(current, result)
+	if (clamped !== current) tokenPages.value[bot.id] = clamped
+}))
 const newTokensByBot = ref<Record<number, string>>({})
 const showTokenForm = ref<Record<number, boolean>>({})
 const editingName = ref<Record<number, boolean>>({})
@@ -108,6 +121,7 @@ async function deleteBot() {
 	try {
 		await deleteMutation.mutateAsync(bot.id)
 		delete newTokensByBot.value[bot.id]
+		delete tokenPages.value[bot.id]
 	} catch { /* Mutation reports the error. */ }
 }
 
@@ -242,7 +256,7 @@ async function deleteToken(token: ApiToken) {
 					<code>{{ newTokensByBot[bot.id] }}</code>
 				</Message>
 				<div
-					v-if="(tokensByBot[bot.id] ?? []).length > 0"
+					v-if="(tokenPageByBot[bot.id]?.items ?? []).length > 0"
 					class="has-horizontal-overflow"
 				>
 					<table class="table">
@@ -258,7 +272,7 @@ async function deleteToken(token: ApiToken) {
 						</thead>
 						<tbody>
 							<tr
-								v-for="token in tokensByBot[bot.id] ?? []"
+								v-for="token in tokenPageByBot[bot.id]?.items ?? []"
 								:key="token.id"
 							>
 								<td>{{ token.title }}</td>
@@ -276,6 +290,11 @@ async function deleteToken(token: ApiToken) {
 						</tbody>
 					</table>
 				</div>
+				<PaginationEmit
+					:total-pages="tokenPageByBot[bot.id]?.total_pages ?? 0"
+					:current-page="tokenPages[bot.id] ?? 1"
+					@pageChanged="(page: number) => tokenPages[bot.id] = page"
+				/>
 				<p
 					v-if="bot.status !== STATUS_ACTIVE"
 					class="help"

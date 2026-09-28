@@ -3,7 +3,7 @@ import {computed, ref} from 'vue'
 import {useNow} from '@vueuse/core'
 import {useI18n} from 'vue-i18n'
 import {useQuery} from '@tanstack/vue-query'
-import {apiTokensQuery, mcpInfoQuery, useDeleteApiTokenMutation} from '@/client/queries/apiTokens'
+import {allApiTokensQuery, mcpInfoQuery, useDeleteApiTokenMutation} from '@/client/queries/apiTokens'
 import type {ApiToken as IApiToken} from '@/client/generated'
 import {isApiTokenExpired, type ApiTokenPreset, type ApiTokenPresetGroups} from '@/helpers/apiToken'
 import ApiTokenForm from '@/components/token/ApiTokenForm.vue'
@@ -26,7 +26,7 @@ const {
 	data: allTokens,
 	isPending: tokensPending,
 	isError: tokensError,
-} = useQuery(apiTokensQuery())
+} = useQuery(allApiTokensQuery())
 const deleteMutation = useDeleteApiTokenMutation()
 const endpoint = computed(() => info.value?.endpoint ?? '')
 const tokens = computed(() => (allTokens.value ?? []).filter(token => token.permissions?.mcp?.includes('access')))

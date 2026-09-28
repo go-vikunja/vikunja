@@ -183,6 +183,17 @@ describe('ApiTokens settings page', () => {
 		expect(runtimeErrorMessages(errors)).toEqual([])
 	})
 
+	it('moves an out-of-range page in the route to the last page', async () => {
+		const mounted = await mountPage('/user/settings/api-tokens?page=3')
+		wrapper = mounted.wrapper
+		await flushPromises()
+
+		expect(mounted.router.currentRoute.value.query.page).toBe('1')
+		expect(getAll).toHaveBeenLastCalledWith(expect.objectContaining({query: {page: 1}}))
+		expect(wrapper.findAll('tbody tr')).toHaveLength(tokens.length)
+		expect(runtimeErrorMessages(mounted.errors)).toEqual([])
+	})
+
 	it('loads the page from the route and steps back once its last token is deleted', async () => {
 		stored = [
 			...tokens,
