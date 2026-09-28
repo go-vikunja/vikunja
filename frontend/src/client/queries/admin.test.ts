@@ -1,6 +1,11 @@
 import {beforeEach, it, expect, vi} from 'vitest'
 import {QueryClient, QueryObserver} from '@tanstack/vue-query'
-import {adminKeys, adminUsersQuery, updateAdminUserMutationOptions, deleteAdminUserMutationOptions} from './admin'
+import {
+	adminKeys,
+	adminUsersQuery,
+	updateAdminUserMutationOptions,
+	deleteAdminUserMutationOptions,
+} from './admin'
 import {accountKeys, currentUserQuery} from './account'
 const sdk = vi.hoisted(() => ({
 	adminUsersList: vi.fn(),
@@ -28,6 +33,14 @@ it('uses server pagination and search and invalidates all user pages after a par
 	expect(sdk.adminUsersList).toHaveBeenCalledWith(expect.objectContaining({query: {q: 'name', page: 2}}))
 	expect(client.getQueryState(adminKeys.usersPage('name', 2))?.isInvalidated).toBe(true)
 	expect(client.getQueryState(adminKeys.usersPage('', 1))?.isInvalidated).toBe(true)
+})
+it('updating a user stales the user picker results', async () => {
+	const client = new QueryClient()
+	client.setQueryData(adminKeys.userSearch('name'), [{id: 1}])
+	sdk.adminUsersPatchAdmin.mockResolvedValue({data: {id: 1, is_admin: true}})
+	await client.getMutationCache().build(client, updateAdminUserMutationOptions())
+		.execute({id: 1, is_admin: true})
+	expect(client.getQueryState(adminKeys.userSearch('name'))?.isInvalidated).toBe(true)
 })
 it('deletion stales users and overview without inventing a page total', async () => {
 	const client = new QueryClient()
