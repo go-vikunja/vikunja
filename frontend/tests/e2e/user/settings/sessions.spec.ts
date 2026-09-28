@@ -52,6 +52,36 @@ test.describe('Sessions', () => {
 		await expect(page.locator('table.table tbody tr')).toHaveCount(1)
 	})
 
+	test('pages the session list and steps back after revoking the last row of a page', async ({
+		authenticatedPage: page, currentUser,
+	}) => {
+		await SessionFactory.create(25, {
+			user_id: currentUser.id,
+			ip_address: (i: number) => `192.0.2.${i}`,
+			last_active: (i: number) => new Date(Date.now() - i * 60_000).toISOString(),
+		}, false)
+
+		await gotoUserSettings(page, 'sessions')
+		const rows = page.locator('table.table tbody tr')
+		await expect(rows).toHaveCount(25)
+		await expect(page.locator('.tag.is-primary')).toContainText('Current')
+
+		await page.getByRole('link', {name: 'Goto page 2'}).click()
+		await expect(page).toHaveURL(/[?&]page=2/)
+		await expect(rows).toHaveCount(1)
+		await expect(rows).toContainText('192.0.2.25')
+
+		await rows.getByRole('button', {name: 'Delete'}).click()
+		await page.locator('dialog[open] .modal-content .actions .button').filter({hasText: 'Do it!'}).click()
+		await expect(page).not.toHaveURL(/[?&]page=2/)
+		await expect(rows).toHaveCount(25)
+		await expect(page.getByRole('navigation', {name: 'pagination'})).toHaveCount(0)
+
+		await page.reload()
+		await expect(rows).toHaveCount(25)
+		await expect(page.locator('tr', {hasText: '192.0.2.25'})).toHaveCount(0)
+	})
+
 	test('current session cannot be deleted from the UI', async ({authenticatedPage: page}) => {
 		await gotoUserSettings(page, 'sessions')
 		const currentRow = page.locator('tr', {has: page.locator('.tag.is-primary')})
