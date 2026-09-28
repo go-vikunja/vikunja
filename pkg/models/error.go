@@ -2479,6 +2479,32 @@ func (err *ErrRefreshTokenAlreadyUsed) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrNoRefreshToken represents an error where the refresh request carried no
+// refresh-token cookie, so retrying it cannot succeed.
+type ErrNoRefreshToken struct{}
+
+// IsErrNoRefreshToken checks if an error is ErrNoRefreshToken.
+func IsErrNoRefreshToken(err error) bool {
+	_, ok := err.(*ErrNoRefreshToken)
+	return ok
+}
+
+func (err *ErrNoRefreshToken) Error() string {
+	return "No refresh token provided"
+}
+
+// ErrCodeNoRefreshToken holds the unique world-error code of this error
+const ErrCodeNoRefreshToken = 16005
+
+// HTTPError holds the http error description
+func (err *ErrNoRefreshToken) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusUnauthorized,
+		Code:     ErrCodeNoRefreshToken,
+		Message:  "No refresh token provided.",
+	}
+}
+
 // ====================
 // OAuth Server Errors
 // ====================
