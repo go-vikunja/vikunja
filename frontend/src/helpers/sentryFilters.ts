@@ -167,6 +167,35 @@ export function shouldDropEvent(originalException: unknown, event?: SentryEventL
 }
 
 
+// Only a resource the browser fetched can fail for a reason we own: a wrong
+// path, a stale deploy, a 404. data:, blob: and cid: srcs carry their own bytes,
+// so an error there is undecodable bytes, not a load failure, and the payload
+// ends up in the issue title where it defeats grouping.
+const FETCHED_RESOURCE_PROTOCOLS = new Set(['http:', 'https:'])
+
+export function isReportableResourceUrl(url: string, pageUrl: string): boolean {
+	let resource: URL
+	let page: URL
+	try {
+		resource = new URL(url)
+		page = new URL(pageUrl)
+	} catch {
+		// A src the browser could not resolve at all, e.g. an empty one.
+		return false
+	}
+
+	if (!FETCHED_RESOURCE_PROTOCOLS.has(resource.protocol)) {
+		return false
+	}
+
+	// An empty, blank or fragment-only src resolves to the page itself, which is never a resource.
+	resource.hash = ''
+	page.hash = ''
+
+	return resource.href !== page.href
+}
+
+
 export function stripNavigationFragment<T>(span: T): T {
 	if (!span || typeof span !== 'object' || !('op' in span) || typeof span.op !== 'string' ||
 		!('description' in span) || typeof span.description !== 'string' ||

@@ -1,11 +1,7 @@
 import type {App} from 'vue'
 import type {Router} from 'vue-router'
-import {redactSensitiveParams, shouldDropEvent, stripNavigationFragment} from './helpers/sentryFilters'
+import {isReportableResourceUrl, redactSensitiveParams, shouldDropEvent, stripNavigationFragment} from './helpers/sentryFilters'
 import {VERSION} from './version.json'
-
-function withoutFragment(url: string) {
-	return url.split('#')[0]
-}
 
 export default async function setupSentry(app: App, router: Router) {
 	const Sentry = await import('@sentry/vue')
@@ -84,8 +80,7 @@ export default async function setupSentry(app: App, router: Router) {
 			const target = event.target
 
 			if (target instanceof HTMLImageElement) {
-				// An empty, blank or fragment-only src resolves to the page itself, which is never an image.
-				if (!target.src || withoutFragment(target.src) === withoutFragment(document.URL)) return
+				if (!isReportableResourceUrl(target.src, document.URL)) return
 				// Users can put any src into their descriptions and comments, a broken one is not our bug.
 				if (target.closest('[data-user-content]')) return
 
@@ -94,6 +89,8 @@ export default async function setupSentry(app: App, router: Router) {
 					'warning',
 				)
 			} else if (target instanceof HTMLLinkElement) {
+				if (!isReportableResourceUrl(target.href, document.URL)) return
+
 				Sentry.captureMessage(
 					`Failed to load css: ${target.href}`,
 					'warning',
