@@ -87,7 +87,8 @@ func TestHumaRefreshToken(t *testing.T) {
 	t.Run("missing cookie", func(t *testing.T) {
 		rec := refreshRequest(e, "")
 		assert.Equal(t, http.StatusUnauthorized, rec.Code)
-		// The frontend falls back to v1 on this 401, which needs the cookie intact.
+		// The frontend skips its refresh retry on this code.
+		assert.Contains(t, rec.Body.String(), `"code":16005`)
 		assert.Empty(t, refreshCookiePaths(rec), "a missing cookie must not send any refresh cookie")
 	})
 

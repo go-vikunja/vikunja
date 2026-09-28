@@ -99,6 +99,19 @@ func TestSessions(t *testing.T) {
 		assert.Contains(t, rec.Body.String(), "token")
 	})
 
+	t.Run("Refresh without a cookie", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v1/user/token/refresh", strings.NewReader(""))
+		rec := httptest.NewRecorder()
+
+		err = apiv1.RefreshToken(e.NewContext(req, rec))
+		require.Error(t, err)
+		assert.Equal(t, http.StatusUnauthorized, getHTTPErrorCode(err))
+		assertHandlerErrorCode(t, err, models.ErrCodeNoRefreshToken)
+	})
+
 	t.Run("Refresh with invalid token", func(t *testing.T) {
 		e, err := setupTestEnv()
 		require.NoError(t, err)
