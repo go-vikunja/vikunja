@@ -32,7 +32,7 @@
 import {computed, ref} from 'vue'
 import {useQuery} from '@tanstack/vue-query'
 import {projectTeamSharesQuery, useCreateProjectTeamShareMutation, useUpdateProjectTeamShareMutation, useDeleteProjectTeamShareMutation} from '@/client/queries/projectShares'
-import {useTeams} from '@/composables/useTeams'
+import {useTeamSearch} from '@/composables/useTeams'
 import {useConfigStore} from '@/stores/config'
 import SharingList from '@/components/sharing/SharingList.vue'
 
@@ -45,7 +45,7 @@ const configStore = useConfigStore()
 
 const {data} = useQuery(computed(() => ({...projectTeamSharesQuery(props.projectId), enabled: props.projectId > 0})))
 const search = ref('')
-const {teams, isFetching} = useTeams({search, includePublic: () => configStore.public_teams_enabled, enabled: () => search.value !== ''})
+const {teams, isFetching} = useTeamSearch({search, includePublic: () => configStore.public_teams_enabled, enabled: () => search.value !== ''})
 
 const createShare = useCreateProjectTeamShareMutation()
 const updateShare = useUpdateProjectTeamShareMutation()
