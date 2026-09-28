@@ -164,21 +164,7 @@ async function doRefresh(persist: boolean): Promise<void> {
 		// We hold the lock and no one else refreshed — make the API call.
 		const HTTP = HTTPFactory()
 		try {
-			let response
-			try {
-				response = await HTTP.post(apiV2Url('user/token/refresh'))
-			} catch (e) {
-				if ((e as {response?: {status?: number}})?.response?.status === 429) {
-					throw e
-				}
-				if (loggedOutSinceStart()) {
-					return
-				}
-				// Pre-v2 browsers only hold the v1-path cookie, and some deployments
-				// can't reach v2 at all; v1 re-seeds both cookies.
-				// Drop this fallback once pre-v2 clients have cycled out.
-				response = await HTTP.post('user/token/refresh')
-			}
+			const response = await HTTP.post(apiV2Url('user/token/refresh'))
 			if (loggedOutSinceStart()) {
 				return
 			}

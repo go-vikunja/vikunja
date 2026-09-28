@@ -199,48 +199,20 @@ describe('refreshToken in-flight dedup', () => {
 	})
 })
 
-describe('refreshToken v1 cookie fallback', () => {
+describe('refreshToken failure', () => {
 	beforeEach(() => {
 		post.mockClear()
 		removeToken()
 		localStorage.clear()
 	})
 
-	it.each([
-		['401', {response: {status: 401}}],
-		['404 (e.g. misconfigured API_URL)', {response: {status: 404}}],
-		['no response (e.g. network/CORS error)', new Error('Network Error')],
-	])('retries against v1 when the v2 refresh fails with %s', async (_label, rejection) => {
-		post.mockRejectedValueOnce(rejection)
-		post.mockResolvedValueOnce({data: {token: FAKE_TOKEN}})
-
-		await refreshToken(true)
-
-		expect(post).toHaveBeenNthCalledWith(1, '/api/v2/user/token/refresh')
-		expect(post).toHaveBeenNthCalledWith(2, 'user/token/refresh')
-		expect(localStorage.getItem('token')).toBe(FAKE_TOKEN)
-	})
-
-	it('does not retry against v1 when the v2 refresh is rate limited (429)', async () => {
-		post.mockRejectedValueOnce({response: {status: 429}})
+	it('rejects after the single v2 request fails', async () => {
+		post.mockRejectedValueOnce({response: {status: 401}})
 
 		await expect(refreshToken(true)).rejects.toThrow('Error renewing token')
 
-		expect(post).toHaveBeenCalledTimes(1)
-		expect(localStorage.getItem('token')).toBeNull()
-	})
-
-	it('does not fall back to v1 when logout happens between the v2 failure and the fallback call', async () => {
-		// removeToken() runs synchronously as part of the v2 call rejecting, simulating
-		// a logout landing in the gap before the v1 fallback would otherwise fire.
-		post.mockImplementationOnce(() => {
-			removeToken()
-			return Promise.reject({response: {status: 404}})
-		})
-
-		await refreshToken(true)
-
-		expect(post).toHaveBeenCalledTimes(1)
+		expect(post).toHaveBeenCalledOnce()
+		expect(post).toHaveBeenCalledWith('/api/v2/user/token/refresh')
 		expect(localStorage.getItem('token')).toBeNull()
 	})
 })
