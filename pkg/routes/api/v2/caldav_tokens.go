@@ -53,7 +53,7 @@ func RegisterCalDAVTokenRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "caldav-tokens-list",
 		Summary:     "List CalDAV tokens",
-		Description: "Returns the authenticated user's CalDAV tokens. Only the id and creation date are returned — never the token value, which is shown once on creation.",
+		Description: "Returns the authenticated user's CalDAV tokens, oldest first. Only the id and creation date are returned — never the token value, which is shown once on creation.",
 		Method:      http.MethodGet,
 		Path:        "/user/settings/token/caldav",
 		Tags:        tags,
@@ -96,11 +96,11 @@ func caldavTokensList(ctx context.Context, in *ListParams) (*caldavTokenListBody
 	if err != nil {
 		return nil, translateDomainError(err)
 	}
-	tokens, err := user.GetCaldavTokens(u)
+	tokens, total, err := user.GetCaldavTokensPage(u, in.Page, in.PerPage)
 	if err != nil {
 		return nil, translateDomainError(err)
 	}
-	return &caldavTokenListBody{Body: NewPaginated(tokens, int64(len(tokens)), in.Page, in.PerPage)}, nil
+	return &caldavTokenListBody{Body: NewPaginated(tokens, total, in.Page, in.PerPage)}, nil
 }
 
 func caldavTokensDelete(ctx context.Context, in *struct {

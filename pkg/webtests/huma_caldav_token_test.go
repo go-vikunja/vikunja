@@ -99,6 +99,37 @@ func TestHumaCalDAVToken(t *testing.T) {
 	})
 }
 
+// Pins #4001: the list used to return every token on every page.
+func TestHumaCalDAVToken_Pagination(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	token := humaTokenFor(t, &testuser1)
+
+	created := make([]int64, 0, 3)
+	for range 3 {
+		rec := humaRequest(t, e, http.MethodPost, "/api/v2/user/settings/token/caldav", "", token, "")
+		require.Equal(t, http.StatusCreated, rec.Code, "body: %s", rec.Body.String())
+		var tk struct {
+			ID int64 `json:"id"`
+		}
+		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &tk))
+		created = append(created, tk.ID)
+	}
+
+	pageOne := humaRequest(t, e, http.MethodGet, "/api/v2/user/settings/token/caldav?page=1&per_page=2", "", token, "")
+	require.Equal(t, http.StatusOK, pageOne.Code, "body: %s", pageOne.Body.String())
+	pageTwo := humaRequest(t, e, http.MethodGet, "/api/v2/user/settings/token/caldav?page=2&per_page=2", "", token, "")
+	require.Equal(t, http.StatusOK, pageTwo.Code, "body: %s", pageTwo.Body.String())
+
+	env := paginationEnvelopeFrom(t, pageTwo.Body.Bytes())
+	assert.EqualValues(t, 3, env.Total)
+	assert.EqualValues(t, 2, env.TotalPages)
+	assert.Equal(t, 2, env.Page)
+
+	assert.Equal(t, created[:2], caldavTokenIDsFromList(t, pageOne.Body.Bytes()), "body: %s", pageOne.Body.String())
+	assert.Equal(t, created[2:], caldavTokenIDsFromList(t, pageTwo.Body.Bytes()), "body: %s", pageTwo.Body.String())
+}
+
 // TestHumaCalDAVToken_LinkShareForbidden ports v1's implicit guard: a link share
 // is not a user, so create / list / delete all refuse it (403).
 func TestHumaCalDAVToken_LinkShareForbidden(t *testing.T) {

@@ -3941,7 +3941,7 @@ export const userUpdateSettings = <ThrowOnError extends boolean = true>(options:
 /**
  * List CalDAV tokens
  *
- * Returns the authenticated user's CalDAV tokens. Only the id and creation date are returned — never the token value, which is shown once on creation.
+ * Returns the authenticated user's CalDAV tokens, oldest first. Only the id and creation date are returned — never the token value, which is shown once on creation.
  */
 export const caldavTokensList = <ThrowOnError extends boolean = true>(options?: Options<CaldavTokensListData, ThrowOnError>): RequestResult<CaldavTokensListResponses, CaldavTokensListErrors, ThrowOnError> => (options?.client ?? client).get<CaldavTokensListResponses, CaldavTokensListErrors, ThrowOnError>({
     security: [{
