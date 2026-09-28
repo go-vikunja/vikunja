@@ -757,3 +757,50 @@ func TestWebhookDeliveryListenerSkipsErrorReporting(t *testing.T) {
 	require.Error(t, err)
 	assert.Equal(t, "true", msg.Metadata.Get(events.MetadataSkipErrorReporting))
 }
+
+// Existing rows must follow the task's done state into and out of the view's done bucket.
+func TestUpdateTasksInSavedFilterViews_DoneBucket(t *testing.T) {
+	setup := func(t *testing.T, taskID int64, startInDoneBucket bool) (view *ProjectView, defaultBucket, doneBucket *Bucket) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		view, defaultBucket = createKanbanFilterView(t, s, 9999, 9999, 1, "project = 1")
+		doneBucket = &Bucket{ProjectViewID: view.ID, Title: "done", CreatedByID: 1}
+		_, err := s.Insert(doneBucket)
+		require.NoError(t, err)
+		view.DoneBucketID = doneBucket.ID
+		_, err = s.ID(view.ID).Cols("done_bucket_id").Update(view)
+		require.NoError(t, err)
+
+		startBucket := defaultBucket
+		if startInDoneBucket {
+			startBucket = doneBucket
+		}
+		_, err = s.Insert(&TaskBucket{TaskID: taskID, ProjectViewID: view.ID, BucketID: startBucket.ID})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		_ = s.Close()
+		return
+	}
+
+	t.Run("done task moves to done bucket", func(t *testing.T) {
+		view, _, doneBucket := setup(t, 2, false)
+
+		events.TestListener(t, &TaskUpdatedEvent{
+			Task: &Task{ID: 2, ProjectID: 1, Done: true},
+			Doer: &user.User{ID: 1},
+		}, &UpdateTaskInSavedFilterViews{})
+
+		db.AssertExists(t, "task_buckets", map[string]interface{}{"task_id": 2, "project_view_id": view.ID, "bucket_id": doneBucket.ID}, false)
+	})
+
+	t.Run("undone task moves out of done bucket", func(t *testing.T) {
+		view, defaultBucket, _ := setup(t, 1, true)
+
+		events.TestListener(t, &TaskUpdatedEvent{
+			Task: &Task{ID: 1, ProjectID: 1, Done: false},
+			Doer: &user.User{ID: 1},
+		}, &UpdateTaskInSavedFilterViews{})
+
+		db.AssertExists(t, "task_buckets", map[string]interface{}{"task_id": 1, "project_view_id": view.ID, "bucket_id": defaultBucket.ID}, false)
+	})
+}
