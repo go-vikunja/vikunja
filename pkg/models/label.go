@@ -131,6 +131,12 @@ func (l *Label) Update(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /labels/{id} [delete]
 func (l *Label) Delete(s *xorm.Session, _ web.Auth) (err error) {
+	// No FK cascade in the schema, so the associations must go explicitly.
+	_, err = s.Where("label_id = ?", l.ID).Delete(&LabelTask{})
+	if err != nil {
+		return err
+	}
+
 	_, err = s.ID(l.ID).Delete(&Label{})
 	return err
 }
