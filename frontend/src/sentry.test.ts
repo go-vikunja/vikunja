@@ -53,6 +53,20 @@ describe('sentry image load errors', () => {
 		expect(captureMessage).not.toHaveBeenCalled()
 	})
 
+	it.each([
+		// FRONTEND-OSS-2KK: the generated default avatar, handed to the <img> as a data url
+		['data', 'data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMTAwIDEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIi8+'],
+		// FRONTEND-OSS-26S: an avatar or attachment preview blob url
+		['blob', 'blob:https://app.vikunja.cloud/47479b89-bed9-427b-a859-a447f21d5034'],
+		// FRONTEND-OSS-2FZ: a mail client's inline attachment
+		['cid', 'cid:part1.abcdef@example.com'],
+		['filesystem', 'filesystem:https://app.vikunja.cloud/temporary/avatar.png'],
+	])('skips a %s src, whose bytes never went over the network', (_, src) => {
+		failImage(src)
+
+		expect(captureMessage).not.toHaveBeenCalled()
+	})
+
 	it('skips a broken image inside user content', () => {
 		const container = document.createElement('div')
 		container.setAttribute('data-user-content', '')
@@ -63,6 +77,29 @@ describe('sentry image load errors', () => {
 		// <img src="x"> in a task description at /tasks/3434 (FRONTEND-OSS-263)
 		failImage('x', paragraph)
 		container.remove()
+
+		expect(captureMessage).not.toHaveBeenCalled()
+	})
+})
+
+describe('sentry css load errors', () => {
+	function failStylesheet(href: string) {
+		const link = document.createElement('link')
+		// No rel="stylesheet": happy-dom would try to fetch it for real.
+		link.setAttribute('href', href)
+		document.body.appendChild(link)
+		link.dispatchEvent(new Event('error'))
+		link.remove()
+	}
+
+	it('reports a stylesheet that failed to load', () => {
+		failStylesheet('https://example.com/missing.css')
+
+		expect(captureMessage).toHaveBeenCalledWith('Failed to load css: https://example.com/missing.css', 'warning')
+	})
+
+	it('skips a blob href, whose bytes never went over the network', () => {
+		failStylesheet('blob:https://app.vikunja.cloud/47479b89-bed9-427b-a859-a447f21d5034')
 
 		expect(captureMessage).not.toHaveBeenCalled()
 	})

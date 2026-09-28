@@ -1,6 +1,6 @@
 import {describe, it, expect} from 'vitest'
 
-import {redactSensitiveParams, shouldDropEvent, stripNavigationFragment} from './sentryFilters'
+import {isReportableResourceUrl, redactSensitiveParams, shouldDropEvent, stripNavigationFragment} from './sentryFilters'
 
 // Object.assign instead of `new Error(msg, {cause})`: the vitest tsconfig
 // targets a lib without the two-argument Error constructor.
@@ -317,5 +317,35 @@ describe('redactSensitiveParams', () => {
 			level: 'error',
 			count: 1,
 		})
+	})
+})
+
+describe('isReportableResourceUrl', () => {
+	const page = 'https://app.vikunja.cloud/tasks/395132'
+
+	it.each([
+		'https://app.vikunja.cloud/assets/logo.png',
+		'http://127.0.0.1:8080/assets/logo.png',
+		'https://app.vikunja.cloud/tasks/395132/cover.png',
+	])('reports %s, which the browser fetched over the network', url => {
+		expect(isReportableResourceUrl(url, page)).toBe(true)
+	})
+
+	it.each([
+		'data:image/svg+xml;base64,PHN2ZyAvPg==',
+		'blob:https://app.vikunja.cloud/47479b89-bed9-427b-a859-a447f21d5034',
+		'cid:part1.abcdef@example.com',
+		'filesystem:https://app.vikunja.cloud/temporary/avatar.png',
+		'about:blank',
+	])('skips %s, whose bytes never went over the network', url => {
+		expect(isReportableResourceUrl(url, page)).toBe(false)
+	})
+
+	it.each(['', ' ', 'not a url'])('skips an unresolvable src: %j', url => {
+		expect(isReportableResourceUrl(url, page)).toBe(false)
+	})
+
+	it.each([page, `${page}#`, `${page}#section`])('skips %s, which is the page itself', url => {
+		expect(isReportableResourceUrl(url, `${page}#other`)).toBe(false)
 	})
 })
