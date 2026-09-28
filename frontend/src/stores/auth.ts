@@ -75,6 +75,10 @@ async function refreshTokenWithRetry(persist: boolean): Promise<void> {
 	}
 }
 
+function refreshFailureResponse(e: unknown) {
+	return (e as {cause?: {response?: {status?: number, data?: {code?: number}}}})?.cause?.response
+}
+
 function getLoggedInVia(): string | null {
 	return localStorage.getItem('loggedInViaProvider')
 }
@@ -98,6 +102,8 @@ export const useAuthStore = defineStore('auth', () => {
 	
 	const currentSessionId = ref<string | null>(null)
 	const lastUserInfoRefresh = ref<Date | null>(null)
+	// Stops every navigation of this boot from re-refreshing a token whose refresh already failed.
+	let jwtWithFailedRefresh: string | null = null
 	const isLoading = ref(false)
 	const isLoadingGeneralSettings = ref(false)
 
@@ -385,7 +391,7 @@ export const useAuthStore = defineStore('auth', () => {
 						// Always keep exp in sync so token renewal checks stay accurate
 						info.value.exp = jwtUser.exp
 					}
-				} else if (jwtUser.type === AUTH_TYPES.USER) {
+				} else if (jwtUser.type === AUTH_TYPES.USER && jwt !== jwtWithFailedRefresh) {
 					// JWT expired but this is a user session — attempt a cookie-based
 					// refresh before giving up. This lets users who reopen the app
 					// after the short JWT TTL seamlessly resume their session.
@@ -405,8 +411,13 @@ export const useAuthStore = defineStore('auth', () => {
 								info.value.exp = freshUser.exp
 							}
 						}
-					} catch {
-						// Refresh failed — stay unauthenticated
+					} catch (e) {
+						jwtWithFailedRefresh = jwt
+						// A kept stale JWT makes every later page load refresh again.
+						// Skip the removal if another tab stored a fresh token meanwhile.
+						if (refreshFailureResponse(e)?.status === 401 && localStorage.getItem('token') === jwt) {
+							removeToken()
+						}
 					}
 				}
 			} catch (_) {
