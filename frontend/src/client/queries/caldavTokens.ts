@@ -17,8 +17,6 @@ import {contextMutationOptions} from './contextMutation'
 import {useSecretMutation} from './secretMutation'
 import {i18n} from '@/i18n'
 
-const PER_PAGE = 25
-
 export type CaldavTokenPage = Paginated<Token>
 
 export const caldavTokenKeys = {
@@ -31,16 +29,13 @@ export function caldavTokensQuery(page: number) {
 		queryKey: caldavTokenKeys.list(page),
 		queryFn: async ({signal}): Promise<CaldavTokenPage> => {
 			const {data} = await caldavTokensList({
-				query: {
-					page,
-					per_page: PER_PAGE,
-				},
+				query: {page},
 				signal,
 			})
 			return {
 				items: data.items ?? [],
 				page: data.page ?? page,
-				per_page: data.per_page ?? PER_PAGE,
+				per_page: data.per_page ?? 0,
 				total: data.total ?? 0,
 				total_pages: data.total_pages ?? 0,
 			}

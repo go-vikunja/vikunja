@@ -65,10 +65,7 @@ it('requests only the asked-for page', async () => {
 	expect(await client.fetchQuery(caldavTokensQuery(2))).toEqual(tokenPage(2, [3], 3))
 	expect(sdk.caldavTokensList).toHaveBeenCalledTimes(1)
 	expect(sdk.caldavTokensList).toHaveBeenCalledWith(expect.objectContaining({
-		query: {
-			page: 2,
-			per_page: 25,
-		},
+		query: {page: 2},
 	}))
 })
 
