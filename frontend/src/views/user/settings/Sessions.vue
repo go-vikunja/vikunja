@@ -1,21 +1,33 @@
 <script setup lang="ts">
-import {ref, computed} from 'vue'
+import {
+	ref,
+	computed,
+	watch,
+} from 'vue'
 import {useI18n} from 'vue-i18n'
+import {useRouteQuery} from '@vueuse/router'
 
 import {useTitle} from '@/composables/useTitle'
 import {useAuthStore} from '@/stores/auth'
 import {formatDateSince} from '@/helpers/time/formatDate'
 import {useQuery} from '@tanstack/vue-query'
 import {sessionsQuery, useDeleteSessionMutation} from '@/client/queries/sessions'
+import {normalizePageNumber} from '@/client/queries/tasks'
 import type {Session} from '@/client/generated'
 import ErrorMessage from '@/components/misc/Error.vue'
+import Pagination from '@/components/misc/Pagination.vue'
 
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => `${t('user.settings.sessions.title')} - ${t('user.settings.title')}`)
 
 const authStore = useAuthStore()
-const sessionQuery = useQuery(sessionsQuery())
-const sessions = computed(() => sessionQuery.data.value ?? [])
+const page = useRouteQuery('page', '1', {transform: normalizePageNumber})
+const sessionQuery = useQuery(computed(() => sessionsQuery(page.value)))
+const sessions = computed(() => sessionQuery.data.value?.items ?? [])
+const totalPages = computed(() => sessionQuery.data.value?.total_pages ?? 0)
+watch([page, totalPages], ([current, last]) => {
+	if (last > 0 && current > last) page.value = last
+}, {immediate: true})
 const deleteMutation = useDeleteSessionMutation()
 
 const showDeleteModal = ref(false)
@@ -51,7 +63,8 @@ async function deleteSession() {
 
 		<div
 			v-if="sessions.length > 0"
-			class="has-horizontal-overflow"
+			class="has-horizontal-overflow loader-container"
+			:class="{'is-loading': sessionQuery.isPlaceholderData.value}"
 		>
 			<table class="table">
 				<thead>
@@ -97,6 +110,11 @@ async function deleteSession() {
 		<p v-else-if="!sessionQuery.isPending.value && !sessionQuery.isError.value">
 			{{ $t('user.settings.sessions.noOtherSessions') }}
 		</p>
+
+		<Pagination
+			:total-pages="totalPages"
+			:current-page="page"
+		/>
 
 		<Modal
 			:enabled="showDeleteModal"
