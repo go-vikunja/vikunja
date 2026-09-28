@@ -6,7 +6,6 @@ import {
 	webhookEventsQuery,
 	createWebhookMutationOptions,
 	deleteWebhookMutationOptions,
-	WEBHOOKS_PER_PAGE,
 } from './webhooks'
 const sdk = vi.hoisted(() => ({
 	webhooksList: vi.fn(),
@@ -22,13 +21,15 @@ vi.mock('@/client/generated', () => sdk)
 vi.mock('@/message', () => ({success: vi.fn(), error: vi.fn()}))
 beforeEach(() => vi.clearAllMocks())
 
+const PER_PAGE = 25
+
 function webhookPage(items: {id: number}[], page = 1, total = items.length) {
 	return {
 		items,
 		page,
-		per_page: WEBHOOKS_PER_PAGE,
+		per_page: PER_PAGE,
 		total,
-		total_pages: Math.ceil(total / WEBHOOKS_PER_PAGE),
+		total_pages: Math.ceil(total / PER_PAGE),
 	}
 }
 
@@ -40,32 +41,26 @@ it('requests one page of the scoped list', async () => {
 	expect(await client.fetchQuery(webhooksQuery({kind: 'user'}, 1))).toEqual({
 		items: [],
 		page: 1,
-		per_page: WEBHOOKS_PER_PAGE,
+		per_page: 0,
 		total: 0,
 		total_pages: 0,
 	})
 	expect(sdk.webhooksList).toHaveBeenCalledTimes(1)
 	expect(sdk.webhooksList).toHaveBeenCalledWith({
 		path: {project: 7},
-		query: {
-			page: 2,
-			per_page: 25,
-		},
+		query: {page: 2},
 		signal: expect.anything(),
 	})
 	expect(sdk.userWebhooksList).toHaveBeenCalledTimes(1)
 	expect(sdk.userWebhooksList).toHaveBeenCalledWith({
-		query: {
-			page: 1,
-			per_page: 25,
-		},
+		query: {page: 1},
 		signal: expect.anything(),
 	})
 })
 it('removes a deleted project webhook from every cached page of that project only', async () => {
 	const client = new QueryClient()
 	const project = {kind: 'project', projectId: 7} as const
-	const page1 = Array.from({length: 25}, (_, i) => ({id: i + 1}))
+	const page1 = Array.from({length: PER_PAGE}, (_, i) => ({id: i + 1}))
 	client.setQueryData(webhookKeys.list(project, 1), webhookPage(page1, 1, 26))
 	client.setQueryData(webhookKeys.list(project, 2), webhookPage([{id: 26}], 2, 26))
 	client.setQueryData(webhookKeys.list({kind: 'project', projectId: 8}, 1), webhookPage([{id: 26}]))
