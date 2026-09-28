@@ -44,3 +44,24 @@ test('manages a bot and its scoped token across reloads', async ({authenticatedP
 	expect(response.ok()).toBe(true)
 	expect((await response.json()).items).toEqual([])
 })
+
+test('pages through bots and leaves an emptied last page', async ({authenticatedPage: page, apiContext, userToken}) => {
+	for (let i = 1; i <= 21; i++) {
+		const response = await apiContext.post('/api/v2/user/bots', {
+			headers: {Authorization: `Bearer ${userToken}`},
+			data: {username: `bot-paged-${i}`},
+		})
+		expect(response.ok()).toBe(true)
+	}
+	await gotoUserSettings(page, 'bots')
+	const cards = page.locator('.bot-card')
+	await expect(cards).toHaveCount(20)
+	await page.getByRole('link', {name: 'Goto page 2'}).click()
+	await expect(page).toHaveURL(/[?&]page=2/)
+	await expect(cards).toHaveCount(1)
+	await cards.locator('.bot-actions').getByRole('button', {name: 'Delete', exact: true}).click()
+	await page.locator('[data-cy="modalPrimary"]').click()
+	await expect(page).not.toHaveURL(/[?&]page=2/)
+	await expect(cards).toHaveCount(20)
+	await expect(page.getByRole('link', {name: 'Goto page 2'})).toHaveCount(0)
+})
