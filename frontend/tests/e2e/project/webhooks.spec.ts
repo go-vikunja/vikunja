@@ -73,4 +73,38 @@ test.describe('Project webhooks', () => {
 		const overflow = await table.evaluate(el => el.getBoundingClientRect().width - el.parentElement!.clientWidth)
 		expect(overflow).toBeLessThanOrEqual(1)
 	})
+
+	test('pages the list and deletes a webhook on a later page', async ({authenticatedPage: page, currentUser}) => {
+		await WebhookFactory.create(26, {
+			project_id: 1,
+			target_url: i => `https://example.com/hook-${i}`,
+			created_by_id: currentUser.id,
+		})
+
+		await page.goto('/projects/1/settings/webhooks')
+		await page.waitForLoadState('networkidle')
+
+		const rows = page.locator('table.table tbody tr')
+		await expect(rows).toHaveCount(25)
+
+		const secondPage = page.waitForResponse(r =>
+			r.url().includes('/projects/1/webhooks') && r.url().includes('page=2') && r.request().method() === 'GET',
+		)
+		await page.getByRole('button', {name: 'Goto page 2'}).click()
+		await secondPage
+		await expect(rows).toHaveCount(1)
+
+		const deleted = page.waitForResponse(r =>
+			r.url().match(/\/projects\/1\/webhooks\/\d+/) !== null && r.request().method() === 'DELETE',
+		)
+		await rows.first().locator('.button.is-danger').click()
+		await page.locator('dialog[open] .modal-content .actions .button').filter({hasText: 'Do it!'}).click()
+		await deleted
+
+		await expect(rows).toHaveCount(25)
+		await expect(page.locator('nav.pagination')).toHaveCount(0)
+		await page.reload()
+		await expect(rows).toHaveCount(25)
+		await expect(page.locator('nav.pagination')).toHaveCount(0)
+	})
 })
