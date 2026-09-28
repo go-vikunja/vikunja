@@ -111,3 +111,56 @@ func TestBasicAuth(t *testing.T) {
 		assert.Equal(t, int64(13), u.ID)
 	})
 }
+
+func TestAuthenticateFeedURLToken(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	for _, tc := range []struct {
+		name  string
+		token string
+	}{
+		{
+			name:  "empty",
+			token: "",
+		},
+		{
+			name:  "not an api token",
+			token: "plaintextpassword",
+		},
+		{
+			name:  "prefix only",
+			token: "tk_",
+		},
+		{
+			name:  "unknown token",
+			token: "tk_nonexistent_token_value_aaaaaaaaaaaaaaaa",
+		},
+		{
+			name:  "token without feeds scope",
+			token: tasksScopedTokenOwner1,
+		},
+		{
+			name:  "caldav-only token",
+			token: caldavOnlyToken,
+		},
+		{
+			name:  "expired token",
+			token: expiredTasksToken,
+		},
+	} {
+		t.Run("rejects "+tc.name, func(t *testing.T) {
+			u, err := AuthenticateFeedURLToken(s, tc.token)
+			require.NoError(t, err)
+			assert.Nil(t, u)
+		})
+	}
+
+	t.Run("accepts valid token with feeds scope", func(t *testing.T) {
+		u, err := AuthenticateFeedURLToken(s, feedsTokenUser13Valid)
+		require.NoError(t, err)
+		require.NotNil(t, u)
+		assert.Equal(t, int64(13), u.ID)
+	})
+}
