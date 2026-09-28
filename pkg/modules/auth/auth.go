@@ -189,14 +189,16 @@ func NewUserJWTAuthtoken(u *user.User, sessionID string) (token string, err erro
 	t := jwt.New(jwt.SigningMethodHS256)
 
 	var ttl = time.Duration(config.ServiceJWTTTLShort.GetInt64())
-	var exp = time.Now().Add(time.Second * ttl).Unix()
+	now := time.Now()
 
 	claims := t.Claims.(jwt.MapClaims)
 	claims["type"] = AuthTypeUser
 	claims["id"] = u.ID
 	claims["username"] = u.Username
 	claims["is_admin"] = u.IsAdmin
-	claims["exp"] = exp
+	// The frontend derives its clock offset from iat, so exp is judged by server time.
+	claims["iat"] = now.Unix()
+	claims["exp"] = now.Add(time.Second * ttl).Unix()
 	claims["sid"] = sessionID
 	claims["jti"] = uuid.New().String()
 
@@ -208,7 +210,7 @@ func NewLinkShareJWTAuthtoken(share *models.LinkSharing) (token string, err erro
 	t := jwt.New(jwt.SigningMethodHS256)
 
 	var ttl = time.Duration(config.ServiceJWTTTL.GetInt64())
-	var exp = time.Now().Add(time.Second * ttl).Unix()
+	now := time.Now()
 
 	// Set claims
 	claims := t.Claims.(jwt.MapClaims)
@@ -218,7 +220,8 @@ func NewLinkShareJWTAuthtoken(share *models.LinkSharing) (token string, err erro
 	claims["project_id"] = share.ProjectID
 	claims["permission"] = share.Permission
 	claims["sharedByID"] = share.SharedByID
-	claims["exp"] = exp
+	claims["iat"] = now.Unix()
+	claims["exp"] = now.Add(time.Second * ttl).Unix()
 
 	// Generate encoded token and send it as response.
 	return t.SignedString([]byte(config.ServiceSecret.GetString()))
