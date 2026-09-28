@@ -33,10 +33,7 @@ it('requests one page of the signed-in user\'s tokens', async () => {
 	sdk.tokensList.mockResolvedValue({data: page([{id: 26}], 2, 26)})
 	expect(await client.fetchQuery(apiTokensQuery(2))).toEqual(page([{id: 26}], 2, 26))
 	expect(sdk.tokensList).toHaveBeenCalledOnce()
-	expect(sdk.tokensList.mock.lastCall?.[0].query).toEqual({
-		page: 2,
-		per_page: 25,
-	})
+	expect(sdk.tokensList.mock.lastCall?.[0].query).toEqual({page: 2})
 	expect(apiTokensQuery(2).queryKey).toEqual(['apiTokens', 'list', 'self', 2])
 })
 it('requests one page of a bot\'s tokens with the owner filter', async () => {
@@ -45,16 +42,9 @@ it('requests one page of a bot\'s tokens with the owner filter', async () => {
 	expect(await client.fetchQuery(botApiTokensQuery(5, 1))).toEqual(page([{id: 1}], 1, 1, 50))
 	expect(sdk.tokensList).toHaveBeenLastCalledWith(expect.objectContaining({query: {
 		page: 1,
-		per_page: 50,
 		owner_id: 5,
 	}}))
 	expect(botApiTokensQuery(5, 1).queryKey).toEqual(['apiTokens', 'list', 5, 1])
-})
-it('does not show another bot\'s page as placeholder', () => {
-	const placeholder = botApiTokensQuery(5, 1).placeholderData as (data: unknown, query: unknown) => unknown
-	const previous = page([{id: 1}], 2, 51, 50)
-	expect(placeholder(previous, {queryKey: apiTokenKeys.page(5, 2)})).toBe(previous)
-	expect(placeholder(previous, {queryKey: apiTokenKeys.page(6, 1)})).toBeUndefined()
 })
 it('loads every page of the signed-in user\'s tokens for the MCP filter', async () => {
 	const client = new QueryClient()

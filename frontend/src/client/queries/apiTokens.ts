@@ -1,4 +1,8 @@
-import {queryOptions, useMutation} from '@tanstack/vue-query'
+import {
+	keepPreviousData,
+	queryOptions,
+	useMutation,
+} from '@tanstack/vue-query'
 import {
 	tokensList,
 	tokensCreate,
@@ -11,6 +15,13 @@ import {
 import {fetchAllPages} from './fetchAllPages'
 import {contextMutationOptions} from './contextMutation'
 import {useSecretMutation} from './secretMutation'
+import {
+	removeFromPages,
+	toPaginated,
+	type Paginated,
+} from './pagination'
+
+export type ApiTokenPage = Paginated<ApiToken>
 
 const apiTokenKeyRoot = ['apiTokens'] as const
 
@@ -18,14 +29,29 @@ export const apiTokenKeys = {
 	all: apiTokenKeyRoot,
 	lists: [...apiTokenKeyRoot, 'list'] as const,
 	ownList: [...apiTokenKeyRoot, 'list', 'self'] as const,
+	ownPage: (page: number) => [...apiTokenKeys.ownList, page] as const,
 	list: (ownerId: number) => [...apiTokenKeys.lists, ownerId] as const,
+	page: (ownerId: number, page: number) => [...apiTokenKeys.list(ownerId), page] as const,
+	// Unpaged, so the MCP page can filter by permission client-side.
+	ownAll: [...apiTokenKeyRoot, 'all'] as const,
 	routes: [...apiTokenKeyRoot, 'routes'] as const,
 	mcp: [...apiTokenKeyRoot, 'mcp'] as const,
 }
 
-export function apiTokensQuery() {
+export function apiTokensQuery(page: number) {
 	return queryOptions({
-		queryKey: apiTokenKeys.ownList,
+		queryKey: apiTokenKeys.ownPage(page),
+		queryFn: async ({signal}) => toPaginated((await tokensList({
+			query: {page},
+			signal,
+		})).data, page),
+		placeholderData: keepPreviousData,
+	})
+}
+
+export function allApiTokensQuery() {
+	return queryOptions({
+		queryKey: apiTokenKeys.ownAll,
 		queryFn: ({signal}) => fetchAllPages(async page => (await tokensList({
 			query: {page},
 			signal,
@@ -33,16 +59,16 @@ export function apiTokensQuery() {
 	})
 }
 
-export function botApiTokensQuery(ownerId: number) {
+export function botApiTokensQuery(ownerId: number, page: number) {
 	return queryOptions({
-		queryKey: apiTokenKeys.list(ownerId),
-		queryFn: ({signal}) => fetchAllPages(async page => (await tokensList({
+		queryKey: apiTokenKeys.page(ownerId, page),
+		queryFn: async ({signal}) => toPaginated((await tokensList({
 			query: {
 				page,
 				owner_id: ownerId,
 			},
 			signal,
-		})).data),
+		})).data, page),
 	})
 }
 
@@ -64,22 +90,26 @@ export function mcpInfoQuery() {
 export function createApiTokenMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async (body: ApiTokenWritable) => (await tokensCreate({body})).data,
-		onSettled: (body, client) => client.invalidateQueries({
-			queryKey: body.owner_id === undefined
-				? apiTokenKeys.ownList
-				: apiTokenKeys.list(body.owner_id),
-		}),
+		onSettled: (body, client) => body.owner_id === undefined
+			? Promise.all([
+				client.invalidateQueries({queryKey: apiTokenKeys.ownList}),
+				client.invalidateQueries({queryKey: apiTokenKeys.ownAll}),
+			])
+			: client.invalidateQueries({queryKey: apiTokenKeys.list(body.owner_id)}),
 	})
 }
 
 export function deleteApiTokenMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async (id: number) => (await tokensDelete({path: {id}})).data,
-		onSuccess: (_data, id, client) => client.setQueriesData<ApiToken[]>(
-			{queryKey: apiTokenKeys.lists},
-			current => current?.filter(token => token.id !== id),
-		),
-		onSettled: (_id, client) => client.invalidateQueries({queryKey: apiTokenKeys.lists}),
+		onSuccess: (_data, id, client) => {
+			client.setQueryData<ApiToken[]>(apiTokenKeys.ownAll, current => current?.filter(token => token.id !== id))
+			removeFromPages<ApiToken>(client, apiTokenKeys.lists, token => token.id === id)
+		},
+		onSettled: (_id, client) => Promise.all([
+			client.invalidateQueries({queryKey: apiTokenKeys.lists}),
+			client.invalidateQueries({queryKey: apiTokenKeys.ownAll}),
+		]),
 	})
 }
 
