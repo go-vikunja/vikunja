@@ -46,6 +46,7 @@
 
 <script setup lang="ts">
 import {computed, onScopeDispose, ref, watch, watchEffect} from 'vue'
+import {onClickOutside, onKeyStroke} from '@vueuse/core'
 import {autoUpdate, computePosition, flip, offset, shift, size, type Placement} from '@floating-ui/dom'
 
 import Modal from '@/components/misc/Modal.vue'
@@ -117,6 +118,12 @@ const popup = ref<HTMLElement | null>(null)
 const isMobile = useIsMobile()
 const asSheet = computed(() => props.sheetOnMobile && isMobile.value)
 
+// The Popover API shipped in Safari 17 and Firefox 125. Older browsers leave the box in the normal
+// flow instead of the top layer, so CSS hides it while closed and the handlers below dismiss it.
+function hasPopoverApi(el: HTMLElement) {
+	return typeof el.showPopover === 'function'
+}
+
 let popoverShown = false
 
 function onToggle(event: Event) {
@@ -139,8 +146,8 @@ function onToggle(event: Event) {
 // openValue unchanged, and only reconciling against the popover's real state shows it again.
 watchEffect(() => {
 	const el = popup.value
-	if (!el) {
-		// Switching to the mobile sheet unmounts the box; a remounted one is never showing.
+	// No box (the mobile sheet unmounts it) or no Popover API: nothing is showing.
+	if (!el || !hasPopoverApi(el)) {
 		popoverShown = false
 		return
 	}
@@ -158,6 +165,22 @@ watchEffect(() => {
 		popoverShown = false
 	}
 }, {flush: 'post'})
+
+// Stands in for the light dismiss and the Escape handling a native popover gets from the browser.
+function dismissWithoutPopoverApi() {
+	if (!openValue.value || asSheet.value || !popup.value || hasPopoverApi(popup.value)) {
+		return
+	}
+
+	closedByLightDismiss = true
+	setTimeout(() => {
+		closedByLightDismiss = false
+	})
+	close()
+}
+
+onClickOutside(popup, dismissWithoutPopoverApi)
+onKeyStroke('Escape', dismissWithoutPopoverApi)
 
 const floatingStyle = ref<Record<string, string>>({})
 // 4rem app header ($navbar-height) plus a small margin.
@@ -231,6 +254,18 @@ onScopeDispose(() => {
 
 		@starting-style {
 			opacity: 0;
+		}
+	}
+
+	// Without the Popover API the box neither hides itself while closed nor paints in the top layer,
+	// so do both here. 40 clears the app header's 30.
+	@supports not selector(:popover-open) {
+		z-index: 40;
+		display: none;
+
+		&.is-open {
+			display: block;
+			opacity: 1;
 		}
 	}
 }
