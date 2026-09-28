@@ -96,3 +96,28 @@ test('creates and revokes a scoped token with stored state surviving reload', as
 	const revoked = await apiContext.get('/api/v2/tasks', {headers: {Authorization: `Bearer ${token.token}`}})
 	expect(revoked.status()).toBe(401)
 })
+
+test('pages through more tokens than fit on one page', async ({authenticatedPage: page, apiContext, userToken}) => {
+	for (let i = 1; i <= 26; i++) {
+		const response = await apiContext.post('/api/v2/tokens', {
+			headers: {Authorization: `Bearer ${userToken}`},
+			data: {
+				title: `Paged token ${i}`,
+				permissions: {tasks: ['read_all']},
+				expires_at: '2099-01-01T00:00:00Z',
+			},
+		})
+		expect(response.ok()).toBe(true)
+	}
+	await page.goto('/user/settings/api-tokens')
+	await expect(page.locator('tbody tr')).toHaveCount(25)
+	await page.locator('nav.pagination').getByText('2', {exact: true}).click()
+	await expect(page).toHaveURL(/[?&]page=2/)
+	await expect(page.locator('tbody tr')).toHaveCount(1)
+	await page.reload()
+	await expect(page.locator('tbody tr')).toHaveCount(1)
+	await page.getByRole('button', {name: 'Delete', exact: true}).click()
+	await page.locator('[data-cy="modalPrimary"]').click()
+	await expect(page.locator('tbody tr')).toHaveCount(25)
+	await expect(page.locator('nav.pagination')).toHaveCount(0)
+})

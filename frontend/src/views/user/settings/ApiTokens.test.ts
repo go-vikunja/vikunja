@@ -30,7 +30,13 @@ const tokens = [
 
 let stored = tokens.slice()
 const {getAll, del} = vi.hoisted(() => ({
-	getAll: vi.fn(async () => ({data: {items: stored.slice(), total_pages: 1}})),
+	getAll: vi.fn(async ({query}: {query: {page: number, per_page: number}}) => ({data: {
+		items: stored.slice((query.page - 1) * query.per_page, query.page * query.per_page),
+		page: query.page,
+		per_page: query.per_page,
+		total: stored.length,
+		total_pages: Math.ceil(stored.length / query.per_page),
+	}})),
 	del: vi.fn(async ({path}: {path: {id: number}}) => {
 		stored = stored.filter(token => token.id !== path.id)
 		return {}
@@ -41,13 +47,13 @@ vi.mock('@/message', () => ({success: vi.fn(), error: vi.fn()}))
 
 const i18n = createI18n({legacy: false, locale: 'en', messages: {en}})
 
-async function mountPage() {
+async function mountPage(path = '/user/settings/api-tokens') {
 	const errors: unknown[] = []
 	const router = createRouter({
 		history: createMemoryHistory(),
 		routes: [{path: '/user/settings/api-tokens', name: 'user.settings.apiTokens', component: ApiTokens}],
 	})
-	await router.push('/user/settings/api-tokens')
+	await router.push(path)
 	await router.isReady()
 
 	const wrapper = mount(ApiTokens, {
@@ -78,7 +84,7 @@ async function mountPage() {
 		attachTo: document.body,
 	})
 	await flushPromises()
-	return {wrapper, errors}
+	return {wrapper, errors, router}
 }
 
 async function openDeleteModalForFirstToken(wrapper: VueWrapper) {
@@ -112,6 +118,7 @@ describe('ApiTokens settings page', () => {
 		setActivePinia(createPinia())
 		document.body.innerHTML = ''
 		del.mockClear()
+		getAll.mockClear()
 		stored = tokens.slice()
 	})
 
@@ -173,5 +180,40 @@ describe('ApiTokens settings page', () => {
 		expect(del).toHaveBeenCalledTimes(1)
 		expect(del).toHaveBeenCalledWith({path: {id: 1}})
 		expect(runtimeErrorMessages(errors)).toEqual([])
+	})
+
+	it('loads the page from the route and steps back once its last token is deleted', async () => {
+		stored = [
+			...tokens,
+			...Array.from({length: 23}, (_, index) => ({
+				...tokens[1],
+				id: index + 3,
+				title: `token-${index + 3}`,
+			})),
+		]
+		stored.push({
+			...tokens[0],
+			id: 99,
+			title: 'last-page-token',
+		})
+		const mounted = await mountPage('/user/settings/api-tokens?page=2')
+		wrapper = mounted.wrapper
+
+		expect(getAll).toHaveBeenLastCalledWith(expect.objectContaining({query: {
+			page: 2,
+			per_page: 25,
+		}}))
+		expect(wrapper.findAll('tbody tr')).toHaveLength(1)
+		expect(wrapper.find('nav.pagination').exists()).toBe(true)
+
+		const confirmBtn = await openDeleteModalForFirstToken(wrapper)
+		confirmBtn.click()
+		await settleCloseTransition()
+
+		expect(del).toHaveBeenCalledWith({path: {id: 99}})
+		expect(mounted.router.currentRoute.value.query.page).toBe('1')
+		expect(wrapper.findAll('tbody tr')).toHaveLength(25)
+		expect(wrapper.find('nav.pagination').exists()).toBe(false)
+		expect(runtimeErrorMessages(mounted.errors)).toEqual([])
 	})
 })
