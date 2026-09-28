@@ -2,6 +2,7 @@ import type {Page} from '@playwright/test'
 import {test, expect} from '../../../support/fixtures'
 import {gotoUserSettings} from '../../../support/userSettings'
 import {TokenFactory} from '../../../factories/token'
+import {serverPageSize} from '../../../support/pagination'
 
 test.describe('CalDAV', () => {
 	// Filter to data rows (rows containing a <td>) to exclude the <th>-only header row.
@@ -65,5 +66,30 @@ test.describe('CalDAV', () => {
 		// NOTE: the factory seeds the plaintext token as-is, but caldav tokens are
 		// stored bcrypt-hashed. We assert the row is gone in the UI rather than
 		// probing caldav with the seeded value.
+	})
+
+	test('pages through tokens and steps back after deleting the last row of a page', async ({authenticatedPage: page, currentUser, apiContext}) => {
+		const pageSize = await serverPageSize(apiContext)
+		const seeded = await TokenFactory.create(pageSize + 1, {
+			user_id: currentUser.id,
+			kind: 4,
+		}, false)
+		const newestId = String(seeded[seeded.length - 1].id)
+
+		await gotoUserSettings(page, 'caldav')
+		await expect(dataRows(page)).toHaveCount(pageSize)
+
+		await page.getByRole('link', {name: 'Goto page 2'}).click()
+		await expect(page).toHaveURL(/[?&]page=2/)
+		await expect(dataRows(page)).toHaveCount(1)
+		await expect(dataRows(page).locator('td').first()).toHaveText(newestId)
+
+		await page.reload()
+		await expect(dataRows(page)).toHaveCount(1)
+
+		await dataRows(page).getByRole('button', {name: 'Delete'}).click()
+		await expect(page).not.toHaveURL(/[?&]page=2/)
+		await expect(dataRows(page)).toHaveCount(pageSize)
+		await expect(page.getByRole('navigation', {name: 'pagination'})).toHaveCount(0)
 	})
 })

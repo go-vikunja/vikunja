@@ -51,33 +51,42 @@
 			</i18n-t>
 		</p>
 
-		<table
+		<div
 			v-if="tokens.length > 0"
-			class="table"
+			class="loader-container"
+			:class="{'is-loading': tokenQuery.isPlaceholderData.value}"
 		>
-			<tr>
-				<th>{{ $t('misc.id') }}</th>
-				<th>{{ $t('misc.created') }}</th>
-				<th class="has-text-end">
-					{{ $t('misc.actions') }}
-				</th>
-			</tr>
-			<tr
-				v-for="tk in tokens"
-				:key="tk.id"
-			>
-				<td>{{ tk.id }}</td>
-				<td>{{ formatDateShort(tk.created) }}</td>
-				<td class="has-text-end">
-					<XButton
-						variant="secondary"
-						@click="deleteToken(tk)"
-					>
-						{{ $t('misc.delete') }}
-					</XButton>
-				</td>
-			</tr>
-		</table>
+			<table class="table">
+				<tr>
+					<th>{{ $t('misc.id') }}</th>
+					<th>{{ $t('misc.created') }}</th>
+					<th class="has-text-end">
+						{{ $t('misc.actions') }}
+					</th>
+				</tr>
+				<tr
+					v-for="tk in tokens"
+					:key="tk.id"
+				>
+					<td>{{ tk.id }}</td>
+					<td>{{ formatDateShort(tk.created) }}</td>
+					<td class="has-text-end">
+						<XButton
+							variant="secondary"
+							@click="deleteToken(tk)"
+						>
+							{{ $t('misc.delete') }}
+						</XButton>
+					</td>
+				</tr>
+			</table>
+		</div>
+
+		<Pagination
+			v-if="totalPages > 1"
+			:total-pages="totalPages"
+			:current-page="page"
+		/>
 
 		<Message
 			v-if="newToken"
@@ -110,15 +119,19 @@
 <script lang="ts" setup>
 import {computed, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
+import {useRouteQuery} from '@vueuse/router'
 
 import {CALDAV_DOCS} from '@/urls'
 import {useTitle} from '@/composables/useTitle'
+import {useClampedPage} from '@/composables/useClampedPage'
 import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
 import BaseButton from '@/components/base/BaseButton.vue'
 import Message from '@/components/misc/Message.vue'
 import FormField from '@/components/input/FormField.vue'
+import Pagination from '@/components/misc/Pagination.vue'
 import {useQuery} from '@tanstack/vue-query'
 import {caldavTokensQuery, useCreateCaldavTokenMutation, useDeleteCaldavTokenMutation} from '@/client/queries/caldavTokens'
+import {normalizePageNumber} from '@/client/queries/pagination'
 import { formatDateShort } from '@/helpers/time/formatDate'
 import type {Token} from '@/client/generated'
 import {useConfigStore} from '@/stores/config'
@@ -132,8 +145,14 @@ useTitle(() => `${t('user.settings.caldav.title')} - ${t('user.settings.title')}
 const authStore = useAuthStore()
 const configStore = useConfigStore()
 const caldav_enabled = computed(() => configStore.caldav_enabled)
-const tokenQuery = useQuery(computed(() => ({...caldavTokensQuery(), enabled: caldav_enabled.value})))
-const tokens = computed(() => tokenQuery.data.value ?? [])
+const page = useRouteQuery('page', '1', {transform: normalizePageNumber})
+const tokenQuery = useQuery(computed(() => ({
+	...caldavTokensQuery(page.value),
+	enabled: caldav_enabled.value,
+})))
+const tokens = computed(() => tokenQuery.data.value?.items ?? [])
+const totalPages = computed(() => tokenQuery.data.value?.total_pages ?? 0)
+useClampedPage(page, tokenQuery)
 const createMutation = useCreateCaldavTokenMutation()
 const deleteMutation = useDeleteCaldavTokenMutation()
 const newToken = ref<Token>()
