@@ -102,6 +102,7 @@
 			"alreadyHaveAnAccount": "Har du allerede en konto?",
 			"remember": "Forbliv logget ind",
 			"registrationDisabled": "Registrering er slået fra.",
+			"passwordResetTokenMissing": "Der mangler et adgangskode nulstillingstoken.",
 			"registrationFailed": "Der opstod en fejl under registreringen. Kontroller dine oplysninger, og prøv igen.",
 			"registrationConfirmEmail": "Din konto blev oprettet! Kontroller venligst din indbakke og klik på bekræftelseslinket i den e-mail du har modtaget, inden du logger på.",
 			"inviteInvalid": "Invitaionslinket er ugyldigt eller udløbet.",
@@ -111,13 +112,15 @@
 		"settings": {
 			"bots": {
 				"title": "Bot brugere",
+				"description": "Bot bruger er kun API brugere som du ejer. De kan tilføjes til projekter, tilknyttes opgaver, og godkendes med API tokens. De kan ikke logge interaktivt på.",
 				"namePlaceholder": "Min assistent",
 				"create": "Opret bot",
 				"enable": "Aktiver",
 				"badge": "Bot",
 				"delete": {
 					"header": "Slet denne bot bruger",
-					"text1": "Er du sikker på at du ænsker at slette bot brugeren \"{username}\"?"
+					"text1": "Er du sikker på at du ænsker at slette bot brugeren \"{username}\"?",
+					"text2": "Dette kan ikke fortrydes. Ethvert API token der tilhører denne bot vil blive trukket tilbage."
 				}
 			},
 			"title": "Indstillinger",
@@ -130,6 +133,7 @@
 			"updateEmailNew": "Ny e-mailadresse",
 			"updateEmailSuccess": "Din e-mailadresse blev opdateret.",
 			"updateEmailPending": "Din nye e-mailadresse {email} afventer bekræftelse. Indtil du klikker på linket som vi har sendt, så forbliver din aktuelle e-mailadresse aktiv.",
+			"updateEmailPendingSuccess": "Vi har sendt et bekræftelseslink til din nye e-mailadresse. Din aktuelle e-mailadresse forbliver aktiv indtil du bekræfter via linket.",
 			"updateEmailResend": "Gensend bekræftelses e-mail",
 			"updateEmailResendSuccess": "Vi har sendt dig et nyt bekræftelseslink.",
 			"updateEmailCancel": "Annuller ændring",
@@ -271,6 +275,7 @@
 			},
 			"apiTokens": {
 				"title": "API tokens",
+				"general": "Med API tokens kan du bruge Vikunjas API uden brugeroplysninger.",
 				"apiDocs": "Se dokumentationen til API'et",
 				"createAToken": "Opret et token",
 				"createToken": "Opret token",
@@ -278,12 +283,34 @@
 				"60d": "60 dage",
 				"90d": "90 dage",
 				"titleRequired": "Titlen er obligatorisk",
-				"expiryInvalid": "Vælg venligst en udløbsdato i fremtiden."
+				"expiryInvalid": "Vælg venligst en udløbsdato i fremtiden.",
+				"permissionRequired": "Vælg mindst én rettighed fra listen.",
+				"expired": "Dette token er udløbet {ago}.",
+				"presets": {
+					"title": "Hurtige forudindstillinger",
+					"tasks": "Opgavehåndtering",
+					"projects": "Projektstyring",
+					"fullAccess": "Fuld adgang"
+				},
+				"delete": {
+					"header": "Slet dette token",
+					"text1": "Er du sikker på, at du vil slette tokenet \"{token}\"?"
+				},
+				"attributes": {
+					"title": "Titel",
+					"titlePlaceholder": "Indtast en titel, du kan genkende senere",
+					"expiresAt": "Udløber snart"
+				}
 			},
 			"sessions": {
+				"title": "Sessioner",
+				"deviceInfo": "Enhed",
+				"ipAddress": "IP adresse",
 				"lastActive": "Senest aktiv",
+				"current": "Nuværende session",
 				"delete": {
-					"header": "Annuller session"
+					"header": "Annuller session",
+					"text": "Er du sikker på, at du vil afbryde denne session? Enheden vil blive logget af. Det kan tage op til 10 minutter, før sessionen er helt afsluttet."
 				},
 				"deleteSuccess": "Sessionen er blevet annulleret. Det kan tage op til 10 minutter, før sessionen udløber helt.",
 				"noOtherSessions": "Der er ingen andre aktive sessioner."
@@ -305,6 +332,7 @@
 						"verify": "Start en Claude Code session og kør /mcp for at kontrollere forbindelsen."
 					},
 					"codex": {
+						"environment": "Sæt token i dit skal miljø: {value}",
 						"command": "Tilføj MCP serveren: {value}"
 					},
 					"other": {
@@ -362,9 +390,29 @@
 			"header": "Nyt projekt",
 			"titlePlaceholder": "Projektets titel skal stå her…",
 			"addTitleRequired": "Angiv venligst en titel.",
-			"createdSuccess": "Projektet blev oprettet."
+			"createdSuccess": "Projektet blev oprettet.",
+			"addProjectRequired": "Angiv et projekt, eller angiv et standardprojekt i indstillingerne."
+		},
+		"archive": {
+			"title": "Arkiver \"{project}\"",
+			"archive": "Arkiver dette projekt",
+			"unarchive": "Fjern arkiveringen af dette projekt",
+			"unarchiveText": "Du vil kunne oprette opgaver eller redigere dem."
+		},
+		"background": {
+			"title": "Indstil projektbaggrund",
+			"remove": "Fjern baggrund",
+			"upload": "Vælg en baggrund fra din computer",
+			"searchPlaceholder": "Søg efter en baggrund…",
+			"poweredByUnsplash": "Leveret af Unsplash",
+			"loadMore": "Indlæs flere billeder",
+			"removeSuccess": "Baggrunden er nu fjernet!",
+			"retry": "Prøv igen"
 		},
 		"delete": {
+			"title": "Slet \"{project}\"",
+			"header": "Slet dette projekt",
+			"text1": "Er du sikker på, at du vil slette dette projekt og alt dets indhold?",
 			"text2": "Dette omfatter alle opgaver og KAN IKKE FORTRYDES!",
 			"success": "Projektet blev slettet.",
 			"tasksToDelete": "Dette vil uigenkaldeligt slette ca. {count} opgaver.",
@@ -540,6 +588,61 @@
 		"edit": {
 			"title": "Rediger Dette Gemte Filter",
 			"success": "Filteret blev slettet."
+		},
+		"query": {
+			"help": {
+				"fields": {
+					"startDate": "Opgavens startdato",
+					"endDate": "Opgavens slutdato",
+					"doneAt": "Dato og klokkeslæt for, hvornår opgaven blev afsluttet",
+					"assignees": "De personer, der har fået tildelt opgaven",
+					"labels": "De etiketter, der er knyttet til opgaven",
+					"project": "Det projekt, opgaven hører under (gælder kun for gemte filtre, ikke på projektniveau)",
+					"reminders": "Hvis man søger på opgaver med en påmindelse som datofelt, vises alle opgaver, hvor mindst én påmindelse matcher søgningen",
+					"created": "Dato og klokkeslæt for, hvornår opgaven blev oprettet",
+					"updated": "Tidspunktet og datoen for den seneste ændring af opgaven"
+				},
+				"operators": {
+					"intro": "De tilgængelige operatorer til filtrering omfatter:",
+					"notEqual": "Ikke lig med",
+					"greaterThan": "Større end",
+					"greaterThanOrEqual": "Større end eller lig med",
+					"lessThan": "Mindre end",
+					"lessThanOrEqual": "Mindre end eller lig med",
+					"like": "Matcher et mønster (ved hjælp af jokertegn %)",
+					"in": "Matcher enhver værdi i en kommasepareret liste over værdier",
+					"notIn": "Matcher enhver værdi, der ikke findes i en kommasepareret liste over værdier"
+				},
+				"logicalOperators": {
+					"intro": "For at kombinere flere betingelser kan du bruge følgende logiske operatorer:",
+					"parentheses": "Parenteser til gruppering af betingelser"
+				},
+				"examples": {
+					"intro": "Her er nogle eksempler på filterforespørgsler:",
+					"priorityEqual": "Viser opgaver med prioritetsniveau 4",
+					"dueDatePast": "Viser opgaver med en forfaldsdato, der ligger i fortiden",
+					"undoneHighPriority": "Viser uafsluttede opgaver med prioritetsniveau 3 eller højere",
+					"assigneesIn": "Matcher opgaver, der er tildelt enten \"bruger1\" eller \"bruger2\"",
+					"priorityOneOrTwoPastDue": "Viser opgaver med prioritetsniveau 1 eller 2 og en forfaldsdato, der ligger i fortiden"
+				}
+			}
+		}
+	},
+	"sorting": {
+		"manually": "Manuelt",
+		"apply": "Anvend sortering",
+		"description": "Vælg, hvordan opgaverne på denne liste skal sorteres. Når du sorterer manuelt, kan du trække og slippe opgaverne for at ændre rækkefølgen.",
+		"options": {
+			"titleAsc": "Titel (A–Z)",
+			"titleDesc": "Titel (Z–A)",
+			"priorityDesc": "Prioritet (højest først)",
+			"dueDateDesc": "Forfaldsdato (seneste først)",
+			"startDateDesc": "Startdato (seneste først)",
+			"endDateDesc": "Slutdato (seneste først)",
+			"createdDesc": "Oprettet (nyeste først)",
+			"createdAsc": "Oprettet (ældste først)",
+			"updatedDesc": "Opdateret (nyeste først)",
+			"updatedAsc": "Opdateret (ældste først)"
 		}
 	},
 	"migrate": {
@@ -554,7 +657,9 @@
 		"alreadyMigrated2": "Du kan godt importere igen, men kan der kan opstå dubletter. Er du sikker?",
 		"confirm": "Jeg er sikker, start migreringen nu!",
 		"importUpload": "For at importere data fra {name} til Vikunja, skal du klikke på knappen nedenfor for at vælge en fil.",
-		"upload": "Upload fil"
+		"upload": "Upload fil",
+		"migrationStartedWillReciveEmail": "Vikunja importerer nu dine lister/projekter, opgaver, noter, påmindelser og filer fra {service}. Da dette vil tage et stykke tid, sender vi dig en e-mail, når det er færdigt. Du kan lukke dette vindue nu.",
+		"migrationInProgress": "Der er i øjeblikket en overførsel i gang. Vent venligst, indtil den er færdig."
 	},
 	"label": {
 		"title": "Etiketter",
@@ -616,9 +721,16 @@
 		"id": "ID",
 		"created": "Oprettet den",
 		"actions": "Handlinger",
-		"cannotBeUndone": "Dette kan ikke fortrydes!"
+		"cannotBeUndone": "Dette kan ikke fortrydes!",
+		"videoLoadFailed": "Denne video kan ikke afspilles i din browser.",
+		"closeQuickActions": "Luk hurtighandlinger",
+		"skipToContent": "Spring til hovedindhold",
+		"dateRange": "Datoområde",
+		"notSet": "Ikke sat",
+		"user": "Bruger"
 	},
 	"input": {
+		"projectColor": "Projektfarve",
 		"resetColor": "Nulstil Farve",
 		"datepicker": {
 			"today": "I dag",
@@ -627,21 +739,60 @@
 			"thisWeekend": "Denne weekend",
 			"laterThisWeek": "Senere Denne Uge",
 			"nextWeek": "Næste uge",
-			"chooseDate": "Vælg en dato"
+			"nextWeekend": "Næste weekend",
+			"endOfMonth": "Slut på måneden",
+			"inAMonth": "Om en måned",
+			"chooseDate": "Vælg en dato",
+			"quickSelect": "Hurtig valg",
+			"clear": "Ryd",
+			"previousMonth": "Forrige måned",
+			"nextMonth": "Næste måned",
+			"time": {
+				"hours": "Timer",
+				"minutes": "Minutter",
+				"hourUp": "En time senere",
+				"hourDown": "En time tidligere",
+				"minuteUp": "Fem minutter senere",
+				"minuteDown": "Fem minutter tidligere"
+			},
+			"month": "Måned",
+			"year": "År"
 		},
 		"editor": {
 			"edit": "Rediger",
+			"label": "Rich tekst editor",
 			"heading1": "Overskrift 1",
+			"heading1Tooltip": "Stor sektionsoverskrift.",
 			"heading2": "Overskrift 2",
 			"heading3": "Overskrift 3",
 			"bold": "Fed",
 			"italic": "Kursiv",
 			"strikethrough": "Gennemstreget",
 			"code": "Kode",
+			"codeTooltip": "Indsæt et kodestykke.",
 			"quote": "Citat",
+			"bulletList": "Punktliste",
+			"bulletListTooltip": "Lav en enkel punktopstilling.",
+			"orderedListTooltip": "Opret en nummereret liste.",
 			"link": "Link",
+			"urlPlaceholder": "URL",
 			"image": "Billede",
-			"horizontalRule": "Horisontal Linje"
+			"imageTooltip": "Upload et billede fra din computer.",
+			"altText": "Alt tekst",
+			"altTextPlaceholder": "Beskriv billedet",
+			"toolbarLabel": "Tekstformatering",
+			"horizontalRule": "Horisontal Linje",
+			"horizontalRuleTooltip": "Opdel en sektion.",
+			"text": "Tekst",
+			"textTooltip": "Du skal bare begynde at skrive med almindelig tekst.",
+			"taskList": "Opgaveliste",
+			"undo": "Fortryd",
+			"redo": "Gentag",
+			"placeholder": "Skriv noget tekst, eller tryk på '/' for at se flere muligheder…",
+			"table": {
+				"title": "Tabel",
+				"insert": "Indsæt tabel"
+			}
 		},
 		"multiselect": {
 			"selectPlaceholder": "Klik eller tryk på Enter for at vælge"
@@ -696,33 +847,61 @@
 		}
 	},
 	"task": {
+		"new": "Opret en opgave",
 		"createSuccess": "Opgaven blev oprettet.",
+		"bulkCreateUnexpectedResponse": "Serveren returnerede et uventet antal af oprettede opgaver.",
+		"addReminder": "Tilføj en påmindelse…",
+		"removeReminder": "Fjern denne reminder",
 		"doneSuccess": "Opgaven blev markeret som udført.",
 		"undoneSuccess": "Opgaven fik fjernet sin udført-markering.",
+		"readOnlyCheckbox": "Du har kun læseadgang til denne opgave og kan ikke markere den som afsluttet.",
+		"movedToProject": "Opgaven blev flyttet til {project}.",
+		"undo": "Fortryd",
 		"checklistTotal": "{checked} af {total} opgaver",
 		"checklistAllDone": "{total} opgaver",
 		"show": {
 			"titleCurrent": "Aktuelle Opgaver",
+			"noDates": "Vis opgaver uden dato",
 			"overdue": "Vis forfaldne opgaver",
 			"fromuntil": "Opgaver fra {from} indtil {until}",
 			"select": "Vælg et datointerval",
-			"noTasks": "Intet at gøre — Hav en dejlig dag!"
+			"noTasks": "Intet at gøre — Hav en dejlig dag!",
+			"filterByLabel": "Filtrering efter etiket {label}",
+			"clearLabelFilter": "Ryd filter for etiketter",
+			"savedFilterIgnored": "Det gemte filter for startsiden anvendes ikke, når du viser opgaver efter etiket."
 		},
 		"detail": {
 			"chooseDueDate": "Klik her for at angive en forfaldsdato",
 			"chooseStartDate": "Klik her for at angive en startdato",
 			"chooseEndDate": "Klik her for at angive en slutdato",
+			"removeDueDate": "Fjern forfaldsdato",
+			"removeStartDate": "Fjern startdato",
+			"removeEndDate": "Fjern slutdato",
+			"removeRepeat": "Fjern gentagelsesinterval",
+			"removeAssignee": "Fjern {user} som tilknyttet",
+			"move": "Flyt opgaven til et andet projekt",
 			"done": "Markér opgave som udført!",
 			"undone": "Markér opgave som ikke-udført",
 			"created": "Oprettet {0} af {1}",
 			"updated": "Opdateret {0}",
 			"doneAt": "Udført {0}",
+			"titleRequired": "Opgavetitlen må ikke være tom.",
 			"updateSuccess": "Opgaven blev gemt.",
 			"deleteSuccess": "Opgaven er blevet slettet.",
+			"duplicateSuccess": "Opgaven er blevet duplikeret.",
 			"noBucket": "Ingen kolonne",
 			"bucketSelectLabel": "Kanban kolonne: {bucket}",
 			"bucketChangedSuccess": "Opgavekolonnen er blevet ændret.",
+			"belongsToProject": "Denne opgave hører til projektet '{project}'",
+			"back": "Tilbage til projektet",
 			"due": "Forfalder {at}",
+			"closeTaskDetail": "Luk opgavedetaljer",
+			"title": "Opgavedetaljer",
+			"markAsDone": "Marker '{task}' som udført",
+			"scrollToBottom": "Rul ned til bunden",
+			"organization": "Organisation",
+			"management": "Styring",
+			"dateAndTime": "Dato og tid",
 			"delete": {
 				"header": "Slet denne opgave",
 				"text1": "Er du sikker på, at du vil slette denne opgave?",
@@ -739,7 +918,10 @@
 				"repeatAfter": "Angiv Gentagelsesinterval",
 				"percentDone": "Indstil Fremskridt",
 				"attachments": "Tilføj Vedhæftninger",
+				"timeTracking": "Sporingstid",
 				"relatedTasks": "Tilføj Relation",
+				"moveProject": "Flyt",
+				"duplicate": "Dupliker",
 				"color": "Indstil Farve",
 				"delete": "Slet",
 				"favorite": "Tilføj til Favoritter",
@@ -758,18 +940,26 @@
 			"labels": "Etiketter",
 			"percentDone": "Fremskridt",
 			"priority": "Prioritet",
+			"project": "Projekt",
 			"relatedTasks": "Relaterede Opgaver",
 			"reminders": "Påmindelser",
 			"repeat": "Gentag",
+			"comment": "{count} kommentar | {count} kommentarer",
+			"attachment": "{count} vedhæftning | {count} vedhæftninger",
 			"startDate": "Startdato",
 			"title": "Titel",
-			"updated": "Opdateret"
+			"updated": "Opdateret",
+			"doneAt": "Udført i"
 		},
 		"subscription": {
+			"subscribedProject": "Du er i øjeblikket tilmeldt dette projekt og vil modtage besked, når der sker ændringer.",
+			"notSubscribedProject": "Du følger ikke dette projekt og modtager derfor ikke besked om ændringer.",
 			"subscribedTask": "Du abonnerer på denne opgave og vil modtage notifikationer om ændringer.",
 			"notSubscribedTask": "Du abonnerer ikke på denne opgave og modtager ikke notifikationer om ændringer.",
 			"subscribe": "Abonner",
 			"unsubscribe": "Afmeld",
+			"subscribeSuccessProject": "Du er nu tilmeldt dette projekt",
+			"unsubscribeSuccessProject": "Du er nu afmeldt dette projekt",
 			"subscribeSuccessTask": "Du abonnerer nu på denne opgave",
 			"unsubscribeSuccessTask": "Du er nu afmeldt denne opgave"
 		},
@@ -786,18 +976,26 @@
 			"setAsCover": "Gør til forsidebillede",
 			"unsetAsCover": "Fjern forsidebillede",
 			"successfullyChangedCoverImage": "Forsidebilledet blev ændret.",
-			"usedAsCover": "Forsidebillede"
+			"usedAsCover": "Forsidebillede",
+			"play": "Afspil",
+			"playFile": "Afspil {file}"
 		},
 		"comment": {
 			"title": "Kommentarer",
 			"loading": "Indlæser kommentarer…",
 			"edited": "redigeret {date}",
 			"creating": "Opretter kommentar…",
+			"placeholder": "Skriv din kommentar, tryk på '/' for at se flere muligheder…",
 			"comment": "Kommentar",
 			"delete": "Slet denne kommentar",
 			"deleteText1": "Er du sikker på du vil slette denne kommentar?",
 			"deleteSuccess": "Kommentaren blev slettet.",
-			"addedSuccess": "Din kommentar blev tilføjet."
+			"addedSuccess": "Din kommentar blev tilføjet.",
+			"permalink": "Kopier permalink til denne kommentar",
+			"sortOldestFirst": "Ældste først",
+			"reply": "Svar",
+			"jumpToOriginal": "Hop til original kommentar",
+			"deletedComment": "slettet kommentar"
 		},
 		"deferDueDate": {
 			"title": "Udsæt forfaldsdato",
@@ -948,15 +1146,32 @@
 			"reminder": "Administrer påmindelser om denne opgave",
 			"description": "Slå redigering af opgavebeskrivelse til/fra"
 		},
+		"project": {
+			"switchToTableView": "Skift til tabelvisning"
+		},
 		"navigation": {
 			"title": "Navigation",
 			"overview": "Gå til oversigt",
 			"upcoming": "Gå til kommende opgaver",
 			"labels": "Naviger til etiketter",
-			"teams": "Naviger til hold"
+			"teams": "Naviger til hold",
+			"projects": "Gå til projekter"
+		},
+		"list": {
+			"title": "Opgaveliste",
+			"navigateDown": "Fremhæv næste opgave",
+			"navigateUp": "Fremhæv forrige opgave"
+		},
+		"gantt": {
+			"moveTaskLeft": "Flyt opgaven til en tidligere dato",
+			"expandTaskLeft": "Flyt opgavens startdato frem",
+			"expandTaskRight": "Udskyd opgavens slutdato",
+			"shrinkTaskLeft": "Reducer opgaven fra startdatoen",
+			"shrinkTaskRight": "Reducer opgaven fra slutdatoen"
 		}
 	},
 	"update": {
+		"available": "Der er en opdatering tilgængelig!",
 		"do": "Opdater nu"
 	},
 	"menu": {
@@ -965,7 +1180,12 @@
 		"duplicate": "Dupliker",
 		"delete": "Slet",
 		"unarchive": "Tilbagekald",
-		"share": "Del"
+		"setBackground": "Baggrundsindstillinger",
+		"share": "Del",
+		"createProject": "Opret projekt",
+		"cantArchiveIsDefault": "Du kan ikke arkivere dette, da det er dit standardprojekt.",
+		"cantDeleteIsDefault": "Du kan ikke slette dette, da det er dit standardprojekt.",
+		"views": "Visninger"
 	},
 	"apiConfig": {
 		"url": "Vikunja URL",
