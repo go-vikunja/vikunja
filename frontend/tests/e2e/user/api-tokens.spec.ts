@@ -1,4 +1,5 @@
 import {test, expect} from '../../support/fixtures'
+import {serverPageSize} from '../../support/pagination'
 
 test.describe('API Tokens', () => {
 	test('Pre-populates title from query parameter', async ({authenticatedPage: page}) => {
@@ -98,7 +99,8 @@ test('creates and revokes a scoped token with stored state surviving reload', as
 })
 
 test('pages through more tokens than fit on one page', async ({authenticatedPage: page, apiContext, userToken}) => {
-	for (let i = 1; i <= 26; i++) {
+	const pageSize = await serverPageSize(apiContext)
+	for (let i = 1; i <= pageSize + 1; i++) {
 		const response = await apiContext.post('/api/v2/tokens', {
 			headers: {Authorization: `Bearer ${userToken}`},
 			data: {
@@ -110,7 +112,7 @@ test('pages through more tokens than fit on one page', async ({authenticatedPage
 		expect(response.ok()).toBe(true)
 	}
 	await page.goto('/user/settings/api-tokens')
-	await expect(page.locator('tbody tr')).toHaveCount(25)
+	await expect(page.locator('tbody tr')).toHaveCount(pageSize)
 	await page.locator('nav.pagination').getByText('2', {exact: true}).click()
 	await expect(page).toHaveURL(/[?&]page=2/)
 	await expect(page.locator('tbody tr')).toHaveCount(1)
@@ -118,6 +120,6 @@ test('pages through more tokens than fit on one page', async ({authenticatedPage
 	await expect(page.locator('tbody tr')).toHaveCount(1)
 	await page.getByRole('button', {name: 'Delete', exact: true}).click()
 	await page.locator('[data-cy="modalPrimary"]').click()
-	await expect(page.locator('tbody tr')).toHaveCount(25)
+	await expect(page.locator('tbody tr')).toHaveCount(pageSize)
 	await expect(page.locator('nav.pagination')).toHaveCount(0)
 })

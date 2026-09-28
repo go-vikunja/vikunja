@@ -28,14 +28,15 @@ const tokens = [
 	},
 ]
 
+const SERVER_PER_PAGE = 50
 let stored = tokens.slice()
 const {getAll, del} = vi.hoisted(() => ({
-	getAll: vi.fn(async ({query}: {query: {page: number, per_page: number}}) => ({data: {
-		items: stored.slice((query.page - 1) * query.per_page, query.page * query.per_page),
+	getAll: vi.fn(async ({query}: {query: {page: number}}) => ({data: {
+		items: stored.slice((query.page - 1) * SERVER_PER_PAGE, query.page * SERVER_PER_PAGE),
 		page: query.page,
-		per_page: query.per_page,
+		per_page: SERVER_PER_PAGE,
 		total: stored.length,
-		total_pages: Math.ceil(stored.length / query.per_page),
+		total_pages: Math.ceil(stored.length / SERVER_PER_PAGE),
 	}})),
 	del: vi.fn(async ({path}: {path: {id: number}}) => {
 		stored = stored.filter(token => token.id !== path.id)
@@ -185,7 +186,7 @@ describe('ApiTokens settings page', () => {
 	it('loads the page from the route and steps back once its last token is deleted', async () => {
 		stored = [
 			...tokens,
-			...Array.from({length: 23}, (_, index) => ({
+			...Array.from({length: SERVER_PER_PAGE - tokens.length}, (_, index) => ({
 				...tokens[1],
 				id: index + 3,
 				title: `token-${index + 3}`,
@@ -199,10 +200,7 @@ describe('ApiTokens settings page', () => {
 		const mounted = await mountPage('/user/settings/api-tokens?page=2')
 		wrapper = mounted.wrapper
 
-		expect(getAll).toHaveBeenLastCalledWith(expect.objectContaining({query: {
-			page: 2,
-			per_page: 25,
-		}}))
+		expect(getAll).toHaveBeenLastCalledWith(expect.objectContaining({query: {page: 2}}))
 		expect(wrapper.findAll('tbody tr')).toHaveLength(1)
 		expect(wrapper.find('nav.pagination').exists()).toBe(true)
 
@@ -212,7 +210,7 @@ describe('ApiTokens settings page', () => {
 
 		expect(del).toHaveBeenCalledWith({path: {id: 99}})
 		expect(mounted.router.currentRoute.value.query.page).toBe('1')
-		expect(wrapper.findAll('tbody tr')).toHaveLength(25)
+		expect(wrapper.findAll('tbody tr')).toHaveLength(SERVER_PER_PAGE)
 		expect(wrapper.find('nav.pagination').exists()).toBe(false)
 		expect(runtimeErrorMessages(mounted.errors)).toEqual([])
 	})
