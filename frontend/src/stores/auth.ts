@@ -11,6 +11,7 @@ import {registerViaInviteLink} from '@/client/inviteLink'
 import {parseValidationErrors} from '@/helpers/parseValidationErrors'
 import UserSettingsService from '@/services/userSettings'
 import {getToken, refreshToken, removeToken, saveToken} from '@/helpers/auth'
+import {serverNowSeconds} from '@/helpers/serverClock'
 import {useWebSocket} from '@/composables/useWebSocket'
 import {setModuleLoading} from '@/stores/helper'
 import {success, error} from '@/message'
@@ -24,7 +25,6 @@ import type {IUserSettings} from '@/modelTypes/IUserSettings'
 import router from '@/router'
 import {useConfigStore} from '@/stores/config'
 import UserSettingsModel from '@/models/userSettings'
-import {MILLISECONDS_A_SECOND} from '@/constants/date'
 import {PrefixMode} from '@/modules/quickAddMagic'
 import {DATE_DISPLAY} from '@/constants/dateDisplay'
 import {TIME_FORMAT} from '@/constants/timeFormat'
@@ -360,9 +360,7 @@ export const useAuthStore = defineStore('auth', () => {
 				const payload = JSON.parse(atob(base64))
 				const jwtUser = new UserModel(payload)
 				jwtUserType = jwtUser.type
-				const ts = Math.round((new Date()).getTime() / MILLISECONDS_A_SECOND)
-
-				isAuthenticated = jwtUser.exp >= ts
+				isAuthenticated = jwtUser.exp >= serverNowSeconds()
 				currentSessionId.value = payload.sid ?? null
 
 				if (isAuthenticated) {
@@ -398,7 +396,8 @@ export const useAuthStore = defineStore('auth', () => {
 							const b64 = freshJwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
 							const p = JSON.parse(atob(b64))
 							const freshUser = new UserModel(p)
-							isAuthenticated = freshUser.exp >= ts
+							// The server just issued it, so it's valid even if our clock disagrees.
+							isAuthenticated = true
 							currentSessionId.value = p.sid ?? null
 							if (info.value === null || info.value.id !== freshUser.id) {
 								setUser(freshUser, false)
@@ -552,8 +551,7 @@ export const useAuthStore = defineStore('auth', () => {
 			// Only logout if the JWT has actually expired and we can't refresh.
 			// If the JWT is still valid, the proactive refresh failure is harmless
 			// — the 401 interceptor will handle it when the token really expires.
-			const nowInSeconds = Date.now() / MILLISECONDS_A_SECOND
-			const isExpired = !info.value?.exp || info.value.exp < nowInSeconds
+			const isExpired = !info.value?.exp || info.value.exp < serverNowSeconds()
 			if (isExpired && (e?.cause?.request?.status || e?.cause?.response?.status)) {
 				await logout()
 			}

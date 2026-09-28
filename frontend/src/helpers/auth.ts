@@ -1,5 +1,6 @@
 import {apiV2Url, HTTPFactory} from '@/helpers/fetcher'
 import {isDesktopApp, refreshDesktopToken} from '@/helpers/desktopAuth'
+import {clearServerClock, recordServerClock} from '@/helpers/serverClock'
 
 let savedToken: string | null = null
 
@@ -12,6 +13,7 @@ export const saveToken = (token: string, persist: boolean) => {
 	if (persist) {
 		localStorage.setItem('token', token)
 	}
+	recordServerClock(getTokenPayload(token)?.iat, persist)
 }
 
 /**
@@ -57,6 +59,7 @@ export const removeToken = () => {
 	savedToken = null
 	localStorage.removeItem('token')
 	localStorage.removeItem('desktopOAuthRefreshToken')
+	clearServerClock()
 
 	// Bump the epoch and drop the in-flight refresh so a refresh that started
 	// before this logout can't re-persist a token after we cleared it.
