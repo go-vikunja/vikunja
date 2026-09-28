@@ -1,6 +1,7 @@
 import {test, expect} from '../../support/fixtures'
 import {ProjectFactory} from '../../factories/project'
 import {WebhookFactory} from '../../factories/webhook'
+import {serverPageSize} from '../../support/pagination'
 
 test.describe('Project webhooks', () => {
 	test.beforeEach(async ({currentUser}) => {
@@ -74,8 +75,9 @@ test.describe('Project webhooks', () => {
 		expect(overflow).toBeLessThanOrEqual(1)
 	})
 
-	test('pages the list and deletes a webhook on a later page', async ({authenticatedPage: page, currentUser}) => {
-		await WebhookFactory.create(26, {
+	test('pages the list and deletes a webhook on a later page', async ({authenticatedPage: page, currentUser, apiContext}) => {
+		const pageSize = await serverPageSize(apiContext)
+		await WebhookFactory.create(pageSize + 1, {
 			project_id: 1,
 			target_url: i => `https://example.com/hook-${i}`,
 			created_by_id: currentUser.id,
@@ -85,7 +87,7 @@ test.describe('Project webhooks', () => {
 		await page.waitForLoadState('networkidle')
 
 		const rows = page.locator('table.table tbody tr')
-		await expect(rows).toHaveCount(25)
+		await expect(rows).toHaveCount(pageSize)
 
 		const secondPage = page.waitForResponse(r =>
 			r.url().includes('/projects/1/webhooks') && r.url().includes('page=2') && r.request().method() === 'GET',
@@ -101,10 +103,10 @@ test.describe('Project webhooks', () => {
 		await page.locator('dialog[open] .modal-content .actions .button').filter({hasText: 'Do it!'}).click()
 		await deleted
 
-		await expect(rows).toHaveCount(25)
+		await expect(rows).toHaveCount(pageSize)
 		await expect(page.locator('nav.pagination')).toHaveCount(0)
 		await page.reload()
-		await expect(rows).toHaveCount(25)
+		await expect(rows).toHaveCount(pageSize)
 		await expect(page.locator('nav.pagination')).toHaveCount(0)
 	})
 })
