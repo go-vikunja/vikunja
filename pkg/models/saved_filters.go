@@ -365,7 +365,7 @@ type viewTask struct {
 // Existing bucket and position rows are preloaded so the per-task loop issues no
 // existence queries; default bucket ids are memoized on first use.
 type filterViewState struct {
-	hasBucket        map[viewTask]bool
+	bucketIDs        map[viewTask]int64
 	hasPosition      map[viewTask]bool
 	defaultBucketIDs map[int64]int64
 }
@@ -386,7 +386,7 @@ func (state *filterViewState) defaultBucketID(s *xorm.Session, view *ProjectView
 
 func preloadFilterViewState(s *xorm.Session, viewsByTask map[int64][]filterView) (state *filterViewState, err error) {
 	state = &filterViewState{
-		hasBucket:        map[viewTask]bool{},
+		bucketIDs:        map[viewTask]int64{},
 		hasPosition:      map[viewTask]bool{},
 		defaultBucketIDs: map[int64]int64{},
 	}
@@ -421,7 +421,7 @@ func preloadFilterViewState(s *xorm.Session, viewsByTask map[int64][]filterView)
 		return nil, err
 	}
 	for _, tb := range taskBuckets {
-		state.hasBucket[viewTask{viewID: tb.ProjectViewID, taskID: tb.TaskID}] = true
+		state.bucketIDs[viewTask{viewID: tb.ProjectViewID, taskID: tb.TaskID}] = tb.BucketID
 	}
 
 	taskPositions := []*TaskPosition{}
@@ -437,12 +437,19 @@ func preloadFilterViewState(s *xorm.Session, viewsByTask map[int64][]filterView)
 }
 
 func addTaskToFilterView(s *xorm.Session, filter *SavedFilter, view *ProjectView, task *Task, state *filterViewState) (taskBucket *TaskBucket, taskPosition *TaskPosition, err error) {
-	if !state.hasBucket[viewTask{viewID: view.ID, taskID: task.ID}] {
-		bucketID, err := state.defaultBucketID(s, view)
+	currentBucketID, hasBucket := state.bucketIDs[viewTask{viewID: view.ID, taskID: task.ID}]
+	var bucketID int64
+	switch {
+	case task.Done && view.DoneBucketID != 0:
+		bucketID = view.DoneBucketID
+	case !hasBucket || (view.DoneBucketID != 0 && currentBucketID == view.DoneBucketID):
+		bucketID, err = state.defaultBucketID(s, view)
 		if err != nil {
 			return nil, nil, err
 		}
+	}
 
+	if bucketID != 0 && bucketID != currentBucketID {
 		taskBucket = &TaskBucket{
 			BucketID:      bucketID,
 			TaskID:        task.ID,
@@ -608,7 +615,7 @@ func addTaskToFilterViews(s *xorm.Session, task *Task, views []filterView, state
 		}
 
 		if taskBucket != nil {
-			if err := insertTaskBuckets(s, taskBucket.ProjectViewID, taskBucket.BucketID, []int64{task.ID}); err != nil {
+			if err := taskBucket.upsert(s); err != nil {
 				return err
 			}
 		}
