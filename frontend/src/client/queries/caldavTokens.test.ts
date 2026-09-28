@@ -17,14 +17,24 @@ const sdk = vi.hoisted(() => ({
 vi.mock('@/client/generated', () => sdk)
 vi.mock('@/message', () => ({success: vi.fn(), error: vi.fn()}))
 
+function tokenPage(page: number, ids: number[], total: number) {
+	return {
+		items: ids.map(id => ({id})),
+		page,
+		per_page: 2,
+		total,
+		total_pages: Math.ceil(total / 2),
+	}
+}
+
 it('returns the one-time secret without putting it in the shared list cache', async () => {
 	const client = new QueryClient()
-	client.setQueryData(caldavTokenKeys.all, [{id: 1}])
+	client.setQueryData(caldavTokenKeys.list(1), tokenPage(1, [1], 1))
 	sdk.caldavTokensCreate.mockResolvedValue({data: {id: 2, token: 'one-time-secret'}})
 	const created = await client.getMutationCache().build(client, createCaldavTokenMutationOptions()).execute(undefined)
 	expect(created.token).toBe('one-time-secret')
-	expect(client.getQueryData(caldavTokenKeys.all)).toEqual([{id: 1}])
-	expect(client.getQueryState(caldavTokenKeys.all)?.isInvalidated).toBe(true)
+	expect(client.getQueryData(caldavTokenKeys.list(1))).toEqual(tokenPage(1, [1], 1))
+	expect(client.getQueryState(caldavTokenKeys.list(1))?.isInvalidated).toBe(true)
 })
 
 it('does not keep the one-time secret in the mutation cache', async () => {
@@ -49,31 +59,34 @@ it('does not keep the one-time secret in the mutation cache', async () => {
 	wrapper.unmount()
 })
 
-it('loads the tokens from the first page only', async () => {
+it('requests only the asked-for page', async () => {
 	const client = new QueryClient()
-	sdk.caldavTokensList.mockResolvedValue({
-		data: {
-			items: [{id: 1}, {id: 2}],
-			total_pages: 2,
-		},
-	})
-	expect(await client.fetchQuery(caldavTokensQuery())).toEqual([{id: 1}, {id: 2}])
+	sdk.caldavTokensList.mockResolvedValue({data: tokenPage(2, [3], 3)})
+	expect(await client.fetchQuery(caldavTokensQuery(2))).toEqual(tokenPage(2, [3], 3))
 	expect(sdk.caldavTokensList).toHaveBeenCalledTimes(1)
-	expect(sdk.caldavTokensList).toHaveBeenCalledWith(expect.objectContaining({query: {page: 1}}))
+	expect(sdk.caldavTokensList).toHaveBeenCalledWith(expect.objectContaining({
+		query: {
+			page: 2,
+			per_page: 25,
+		},
+	}))
 })
 
 it('treats a missing token list as empty', async () => {
 	const client = new QueryClient()
 	sdk.caldavTokensList.mockResolvedValue({data: {items: null}})
-	expect(await client.fetchQuery(caldavTokensQuery())).toEqual([])
+	expect((await client.fetchQuery(caldavTokensQuery(1))).items).toEqual([])
 })
 
-it('removes a deleted token from an existing cache and marks the list stale', async () => {
+it('removes a deleted token and rewrites the totals on every cached page', async () => {
 	const client = new QueryClient()
-	client.setQueryData(caldavTokenKeys.all, [{id: 1}, {id: 2}])
+	client.setQueryData(caldavTokenKeys.list(1), tokenPage(1, [1, 2], 3))
+	client.setQueryData(caldavTokenKeys.list(2), tokenPage(2, [3], 3))
 	sdk.caldavTokensDelete.mockResolvedValue({})
 	await client.getMutationCache().build(client, deleteCaldavTokenMutationOptions()).execute(2)
 	expect(sdk.caldavTokensDelete).toHaveBeenCalledWith({path: {id: 2}})
-	expect(client.getQueryData(caldavTokenKeys.all)).toEqual([{id: 1}])
-	expect(client.getQueryState(caldavTokenKeys.all)?.isInvalidated).toBe(true)
+	expect(client.getQueryData(caldavTokenKeys.list(1))).toEqual(tokenPage(1, [1], 2))
+	expect(client.getQueryData(caldavTokenKeys.list(2))).toEqual(tokenPage(2, [3], 2))
+	expect(client.getQueryState(caldavTokenKeys.list(1))?.isInvalidated).toBe(true)
+	expect(client.getQueryState(caldavTokenKeys.list(2))?.isInvalidated).toBe(true)
 })
