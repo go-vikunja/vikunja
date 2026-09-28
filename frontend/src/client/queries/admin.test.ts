@@ -3,6 +3,7 @@ import {QueryClient, QueryObserver} from '@tanstack/vue-query'
 import {
 	adminKeys,
 	adminUsersQuery,
+	adminUserSearchQuery,
 	updateAdminUserMutationOptions,
 	deleteAdminUserMutationOptions,
 } from './admin'
@@ -33,6 +34,18 @@ it('uses server pagination and search and invalidates all user pages after a par
 	expect(sdk.adminUsersList).toHaveBeenCalledWith(expect.objectContaining({query: {q: 'name', page: 2}}))
 	expect(client.getQueryState(adminKeys.usersPage('name', 2))?.isInvalidated).toBe(true)
 	expect(client.getQueryState(adminKeys.usersPage('', 1))?.isInvalidated).toBe(true)
+})
+it('user picker fetches only the first page of matches', async () => {
+	const client = new QueryClient()
+	sdk.adminUsersList.mockResolvedValue({data: {items: [{id: 1}], total: 100, total_pages: 5}})
+	expect(await client.fetchQuery(adminUserSearchQuery('name'))).toEqual([{id: 1}])
+	expect(sdk.adminUsersList).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
+		query: {
+			page: 1,
+			per_page: 20,
+			q: 'name',
+		},
+	}))
 })
 it('updating a user stales the user picker results', async () => {
 	const client = new QueryClient()
