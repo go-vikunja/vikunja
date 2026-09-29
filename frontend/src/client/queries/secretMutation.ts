@@ -17,7 +17,10 @@ export function useSecretMutation<TData = unknown, TError = DefaultError, TVaria
 		try {
 			return await mutation.mutateAsync(...args)
 		} finally {
-			mutation.reset()
+			// A newer call may already be pending on this observer; resetting would detach it.
+			if (!mutation.isPending.value) {
+				mutation.reset()
+			}
 		}
 	}
 	return {
