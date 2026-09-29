@@ -237,9 +237,6 @@ async function add(projectId: number) {
 		await createMutation.mutateAsync({projectId, share: draft.value})
 	} catch {
 		return
-	} finally {
-		// Evicts the plaintext password from the mutation cache.
-		createMutation.reset()
 	}
 	if (props.projectId === projectId) {
 		draft.value = createLinkShareDraft()

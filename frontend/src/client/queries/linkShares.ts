@@ -2,6 +2,7 @@ import {queryOptions, useMutation, type QueryClient} from '@tanstack/vue-query'
 import {sharesCreate, sharesDelete, sharesList} from '@/client/generated'
 import type {LinkSharing, LinkSharingWritable} from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
+import {useSecretMutation} from './secretMutation'
 import {fetchAllPages} from './fetchAllPages'
 import {API_MAX_PER_PAGE} from './pagination'
 import {normalizeSharePermission} from './projectShares'
@@ -27,18 +28,14 @@ function invalidateLinkShares(client: QueryClient, projectId: number) {
 }
 
 export function createLinkShareMutationOptions() {
-	return {
-		...contextMutationOptions({
-			mutationFn: async ({projectId, share}: {projectId: number, share: LinkSharingWritable}) => (await sharesCreate({path: {project: projectId}, body: createLinkShareDraft(share)})).data,
-			onSuccess: (created, {projectId}, client) => {
-				client.setQueryData<LinkSharing[]>(linkShareKeys.list(projectId), current => current ? [...current, created] : current)
-			},
-			onSettled: ({projectId}, client) => invalidateLinkShares(client, projectId),
-			successMessage: () => i18n.global.t('project.share.links.createSuccess'),
-		}),
-		// Input holds the plaintext password.
-		gcTime: 0,
-	}
+	return contextMutationOptions({
+		mutationFn: async ({projectId, share}: {projectId: number, share: LinkSharingWritable}) => (await sharesCreate({path: {project: projectId}, body: createLinkShareDraft(share)})).data,
+		onSuccess: (created, {projectId}, client) => {
+			client.setQueryData<LinkSharing[]>(linkShareKeys.list(projectId), current => current ? [...current, created] : current)
+		},
+		onSettled: ({projectId}, client) => invalidateLinkShares(client, projectId),
+		successMessage: () => i18n.global.t('project.share.links.createSuccess'),
+	})
 }
 
 export function deleteLinkShareMutationOptions() {
@@ -52,5 +49,5 @@ export function deleteLinkShareMutationOptions() {
 	})
 }
 
-export const useCreateLinkShareMutation = () => useMutation(createLinkShareMutationOptions())
+export const useCreateLinkShareMutation = () => useSecretMutation(createLinkShareMutationOptions())
 export const useDeleteLinkShareMutation = () => useMutation(deleteLinkShareMutationOptions())
