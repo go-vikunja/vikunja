@@ -49,6 +49,30 @@ describe('useSecretMutation', () => {
 		expect(client.getMutationCache().getAll()).toEqual([])
 	})
 
+	it('keeps a newer pending call when an older one settles', async () => {
+		let resolveFirst!: (token: string) => void
+		let resolveSecond!: (token: string) => void
+		mutationFn
+			.mockReturnValueOnce(new Promise(done => { resolveFirst = done }))
+			.mockReturnValueOnce(new Promise(done => { resolveSecond = done }))
+
+		const first = mutation.mutateAsync('first')
+		await vi.waitFor(() => expect(mutation.variables.value).toBe('first'))
+		const second = mutation.mutateAsync('second')
+		await vi.waitFor(() => expect(mutation.variables.value).toBe('second'))
+
+		resolveFirst('token-1')
+		expect(await first).toBe('token-1')
+		expect(mutation.isPending.value).toBe(true)
+		expect(mutation.variables.value).toBe('second')
+
+		resolveSecond('token-2')
+		expect(await second).toBe('token-2')
+		expect(mutation.variables.value).toBeUndefined()
+		await settleGc()
+		expect(client.getMutationCache().getAll()).toEqual([])
+	})
+
 	it('drops the variables once mutateAsync rejects', async () => {
 		const cause = new Error('wrong password')
 		mutationFn.mockRejectedValue(cause)
