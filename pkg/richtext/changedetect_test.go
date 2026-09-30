@@ -42,6 +42,12 @@ func TestChanged(t *testing.T) {
 			want:     true,
 		},
 		{
+			name:     "capitalization only edit",
+			stored:   "<p>hello</p>",
+			incoming: "Hello",
+			want:     true,
+		},
+		{
 			name:     "line ending only difference",
 			stored:   "<p>line one</p><p>line two</p>",
 			incoming: "line one\r\n\r\nline two",
