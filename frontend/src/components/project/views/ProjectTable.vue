@@ -463,9 +463,9 @@ function sort(property: keyof SortBy, event?: MouseEvent) {
 }
 
 function setActiveColumnsSortParam() {
-	sortByParam.value = Object.keys(sortBy.value)
+	sortByParam.value = (Object.keys(sortBy.value) as (keyof SortBy)[])
 		.filter(prop => activeColumns.value[camelCase(prop) as keyof typeof activeColumns.value])
-		.reduce((obj, key) => {
+		.reduce<SortBy>((obj, key) => {
 			obj[key] = sortBy.value[key]
 			return obj
 		}, {})
