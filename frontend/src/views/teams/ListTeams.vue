@@ -53,6 +53,7 @@ import {useRouteQuery} from '@vueuse/router'
 import Card from '@/components/misc/Card.vue'
 import Pagination from '@/components/misc/Pagination.vue'
 import {normalizePageNumber} from '@/client/queries/pagination'
+import {useClampedPage} from '@/composables/useClampedPage'
 import {useTeamsPage} from '@/composables/useTeams'
 import { useTitle } from '@/composables/useTitle'
 import {useDelayedLoading} from '@/composables/useDelayedLoading'
@@ -61,7 +62,9 @@ const { t } = useI18n({useScope: 'global'})
 useTitle(() => t('team.title'))
 
 const page = useRouteQuery('page', '1', {transform: normalizePageNumber})
-const {teams, totalPages, isFetching} = useTeamsPage(page)
+const teamsPage = useTeamsPage(page)
+const {teams, totalPages, isFetching} = teamsPage
+useClampedPage(page, teamsPage)
 const loading = useDelayedLoading(isFetching)
 </script>
 

@@ -64,6 +64,10 @@ test.describe('Team', () => {
 
 		await page.reload()
 		await expect(rows).toHaveCount(5)
+
+		await page.goto('/teams?page=99')
+		await expect(page).toHaveURL(/[?&]page=2(&|$)/)
+		await expect(rows).toHaveCount(5)
 	})
 
 	test('Allows an admin to edit the team', async ({authenticatedPage: page}) => {
