@@ -1,5 +1,5 @@
 import {watch, type Ref} from 'vue'
-import type {RouteLocationNormalized, RouteLocationRaw, LocationQueryRaw} from 'vue-router'
+import type {RouteLocationNormalized, LocationQueryRaw} from 'vue-router'
 
 import {useViewFiltersStore} from '@/stores/viewFilters'
 
@@ -54,7 +54,7 @@ function ganttGetDefaultFilters(projectId: number, viewId: number): GanttFilters
 }
 
 // FIXME: use zod for this
-function ganttFiltersToRoute(filters: GanttFilters): RouteLocationRaw {
+function ganttFiltersToRoute(filters: GanttFilters) {
 	let query: Record<string, string> = {}
 	if (
 		filters.dateFrom !== getDefaultDateFrom() ||
