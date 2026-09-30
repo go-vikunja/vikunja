@@ -196,10 +196,8 @@ func init() {
 		"ServiceUnixSocketMode":                      reflect.ValueOf(config.ServiceUnixSocketMode),
 		"SetConfigFile":                              reflect.ValueOf(config.SetConfigFile),
 		"SetMaxFileSizeMBytesFromString":             reflect.ValueOf(config.SetMaxFileSizeMBytesFromString),
-		"WebhooksAllowNonRoutableIPs":                reflect.ValueOf(config.WebhooksAllowNonRoutableIPs),
 		"WebhooksEnabled":                            reflect.ValueOf(config.WebhooksEnabled),
 		"WebhooksProxyPassword":                      reflect.ValueOf(config.WebhooksProxyPassword),
-		"WebhooksProxyURL":                           reflect.ValueOf(config.WebhooksProxyURL),
 		"WebhooksTimeoutSeconds":                     reflect.ValueOf(config.WebhooksTimeoutSeconds),
 
 		// type definitions
