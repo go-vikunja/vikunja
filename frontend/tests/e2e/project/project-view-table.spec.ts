@@ -47,6 +47,29 @@ test.describe('Project View Table', () => {
 		await expect(page.locator('.project-table table.table th').filter({hasText: /^Done$/})).not.toBeVisible()
 	})
 
+	test('Should show every priority for open and completed tasks', async ({authenticatedPage: page}) => {
+		await createProjects(1)
+		const priorities = ['Unset', 'Low', 'Medium', 'High', 'Urgent', 'DO NOW']
+		const tasks = await TaskFactory.create(priorities.length * 2, {
+			project_id: 1,
+			title: (i: number) => `Priority task ${i}`,
+			priority: (i: number) => (i - 1) % priorities.length,
+			done: (i: number) => i > priorities.length,
+		})
+		await page.goto('/projects/1/3')
+		await page.getByRole('button', {name: 'Columns', exact: true}).click()
+		await page.locator('.columns-filter').getByText('Priority', {exact: true}).click()
+		await page.getByRole('button', {name: 'Columns', exact: true}).click()
+
+		for (const task of tasks) {
+			const row = page.locator('.project-table tbody tr').filter({
+				has: page.getByRole('link', {name: task.title, exact: true}),
+			})
+			await expect(row).toBeVisible()
+			await expect(row.locator('.priority-label')).toHaveText(priorities[task.priority])
+		}
+	})
+
 	test('Should navigate to the task when the title is clicked', async ({authenticatedPage: page}) => {
 		await createProjects(1)
 		await TaskFactory.create(5, {
