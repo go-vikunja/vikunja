@@ -39,8 +39,8 @@ const router = createRouter({
 
 		// Otherwise just scroll to the top
 		return {
-			'inset-inline-start': 0,
-			'inset-block-start': 0,
+			left: 0,
+			top: 0,
 		}
 	},
 	routes: [
