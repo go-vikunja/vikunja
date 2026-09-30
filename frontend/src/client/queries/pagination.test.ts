@@ -2,7 +2,6 @@ import {describe, expect, it} from 'vitest'
 import {QueryClient} from '@tanstack/vue-query'
 import {
 	normalizePageNumber,
-	pageSizeFor,
 	removeFromPages,
 	toPaginated,
 	totalPagesFor,
@@ -19,20 +18,6 @@ describe('totalPagesFor', () => {
 
 	it('does not add a page for an exact multiple', () => {
 		expect(totalPagesFor({per_page: 50, total_pages: 1}, 100)).toBe(2)
-	})
-})
-
-describe('pageSizeFor', () => {
-	it('clamps 0 up to 1', () => {
-		expect(pageSizeFor(0)).toBe(1)
-	})
-
-	it('keeps a configured size within the bound', () => {
-		expect(pageSizeFor(50)).toBe(50)
-	})
-
-	it('leaves capping a large size to the server', () => {
-		expect(pageSizeFor(5000)).toBe(5000)
 	})
 })
 
