@@ -551,17 +551,17 @@ func migrateDeprecatedWebhookKeys() {
 
 // Silently ignoring these could drop a proxy or an SSRF setting.
 var removedConfigKeys = []struct {
-	key         string
-	replacement Key
+	key  string
+	hint string
 }{
-	{"webhooks.proxyurl", OutgoingRequestsProxyURL},
-	{"webhooks.allownonroutableips", OutgoingRequestsAllowNonRoutableIPs},
+	{"webhooks.proxyurl", "use " + string(OutgoingRequestsProxyURL) + " instead"},
+	{"webhooks.allownonroutableips", "use " + string(OutgoingRequestsAllowNonRoutableIPs) + " instead"},
 }
 
 func checkRemovedConfigKeys() error {
 	for _, removed := range removedConfigKeys {
 		if viper.IsSet(removed.key) {
-			return fmt.Errorf("config key %q was removed, use %q instead", removed.key, removed.replacement)
+			return fmt.Errorf("config key %q was removed, %s", removed.key, removed.hint)
 		}
 	}
 	return nil
