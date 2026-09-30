@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest'
-import {transformFilterStringForApi, transformFilterStringFromApi} from '@/helpers/filters'
+import {hasFilterQuery, transformFilterStringForApi, transformFilterStringFromApi} from '@/helpers/filters'
 
 const nullTitleToIdResolver = (title: string) => null
 const nullIdToTitleResolver = (id: number) => null
@@ -419,7 +419,7 @@ describe('Filter Transformation', () => {
 	describe('To API', () => {
 		for (const [c, snakeCase] of Object.entries(fieldCases)) {
 			it('should transform all filter params for ' + c + ' to snake_case', () => {
-				const transformed = transformFilterStringFromApi(snakeCase + ' = ipsum', nullTitleToIdResolver, nullTitleToIdResolver)
+				const transformed = transformFilterStringFromApi(snakeCase + ' = ipsum', nullIdToTitleResolver, nullIdToTitleResolver)
 
 				expect(transformed).toBe(c + ' = ipsum')
 			})
@@ -587,5 +587,12 @@ describe('Filter Transformation', () => {
 
 			expect(transformed).toBe('priority = 2 && project = My Project')
 		})
+	})
+})
+
+describe('hasFilterQuery', () => {
+	it('returns a boolean for a filter expression', () => {
+		expect(hasFilterQuery('done = false')).toBe(true)
+		expect(hasFilterQuery('hello')).toBe(false)
 	})
 })
