@@ -31,16 +31,16 @@ export const formatDate = (date: Date | string | null | undefined, f: string) =>
 		return ''
 	}
 
-	const locale = DAYJS_LOCALE_MAPPING[i18n.global.locale.value.toLowerCase()] ?? 'en'
+	const locale = DAYJS_LOCALE_MAPPING[i18n.global.locale.value.toLowerCase() as keyof typeof DAYJS_LOCALE_MAPPING] ?? 'en'
 
 	return dayjs(parsed).locale(locale).format(f)
 }
 
-export function formatDateLong(date) {
+export function formatDateLong(date: Date | string | null | undefined) {
 	return formatDate(date, 'LLLL')
 }
 
-export function formatDateShort(date) {
+export function formatDateShort(date: Date | string | null | undefined) {
 	return formatDate(date, 'lll')
 }
 
@@ -50,7 +50,7 @@ export const formatDateSince = (date: Date | string | null | undefined) => {
 		return ''
 	}
 
-	const locale = DAYJS_LOCALE_MAPPING[i18n.global.locale.value.toLowerCase()] ?? 'en'
+	const locale = DAYJS_LOCALE_MAPPING[i18n.global.locale.value.toLowerCase() as keyof typeof DAYJS_LOCALE_MAPPING] ?? 'en'
 
 	// Computing the relative string against the shared, ticking `now` (instead of fromNow's
 	// internal Date.now()) makes every reactive caller re-render on the 60s tick, so open views
