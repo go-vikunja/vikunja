@@ -218,7 +218,12 @@ export const useAuthStore = defineStore('auth', () => {
 	}
 
 	// Logs a user in with a set of credentials.
-	async function login(credentials) {
+	async function login(credentials: {
+		username?: string,
+		password?: string,
+		totpPasscode?: string,
+		longToken?: boolean,
+	}) {
 		setIsLoading(true)
 
 		// Delete an eventually preexisting old token
@@ -255,7 +260,7 @@ export const useAuthStore = defineStore('auth', () => {
 	 * Registers a new user and logs them in.
 	 * Not sure if this is the right place to put the logic in, maybe a separate js component would be better suited. 
 	 */
-	async function register(credentials, language: string|null = null, viaInvite = false) {
+	async function register(credentials: RegisterUserRequestWritable, language: string|null = null, viaInvite = false) {
 		setIsLoading(true)
 		
 		if (!language) {
@@ -332,7 +337,7 @@ export const useAuthStore = defineStore('auth', () => {
 		}
 	}
 
-	async function linkShareAuth({hash, password}) {
+	async function linkShareAuth({hash, password}: {hash: string, password?: string}) {
 		const response = await authenticateLinkShare({path: {share: hash}, body: {password}})
 		if (!response.data.project_id) throw new Error('Link share response has no project')
 		adoptSession(response.data.token, false)
