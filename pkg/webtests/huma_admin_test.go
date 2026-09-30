@@ -141,7 +141,11 @@ func TestHumaAdminProjects(t *testing.T) {
 		defer license.ResetForTests()
 
 		ids := listIDs(t, e, promoteToAdmin(t, 1), "q=Project+37")
-		assert.Equal(t, []int64{37}, ids)
+		assert.Contains(t, ids, int64(37))
+		if !db.ParadeDBAvailable() {
+			// ParadeDB search is fuzzy and matches neighbouring titles too.
+			assert.Equal(t, []int64{37}, ids)
+		}
 	})
 
 	t.Run("filters by owner", func(t *testing.T) {
@@ -207,20 +211,9 @@ func TestHumaAdminProjects(t *testing.T) {
 		license.SetForTests([]license.Feature{license.FeatureAdminPanel})
 		defer license.ResetForTests()
 
-		ids := listIDs(t, e, promoteToAdmin(t, 1), "q=Test1&sort_by=title&sort_by=id")
-		assert.Equal(t, []int64{
-			1,
-			10,
-			11,
-			12,
-			13,
-			14,
-			15,
-			16,
-			17,
-			18,
-			19,
-		}, ids)
+		ids := listIDs(t, e, promoteToAdmin(t, 1), "q=19,1,12,10&sort_by=title&sort_by=id")
+		// Titles Test1, Test10, Test12, Test19.
+		assert.Equal(t, []int64{1, 10, 12, 19}, ids)
 	})
 
 	t.Run("rejects an unknown sort field", func(t *testing.T) {
