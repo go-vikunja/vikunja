@@ -301,7 +301,12 @@ export const useAuthStore = defineStore('auth', () => {
 		setIsLoading(true)
 		setLoggedInVia(null)
 
-		const fullProvider: IProvider = configStore.auth.openid_connect.providers.find((p: IProvider) => p.key === provider)
+		const fullProvider = configStore.auth.openid_connect.providers.find((p: IProvider) => p.key === provider)
+
+		if (!fullProvider) {
+			setIsLoading(false)
+			throw new Error(`Unknown OpenID provider: ${provider}`)
+		}
 
 		const data: Record<string, string> = {
 			code: code,

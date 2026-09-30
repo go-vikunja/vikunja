@@ -6,13 +6,15 @@ import {removeToken} from '@/helpers/auth'
 import {AUTH_TYPES} from '@/constants/auth'
 
 // Real @/helpers/auth so the counts cover its dedupe; only the transport is mocked.
-const {postMock} = vi.hoisted(() => ({
+const {postMock, openidCallbackMock} = vi.hoisted(() => ({
 	postMock: vi.fn(),
+	openidCallbackMock: vi.fn(),
 }))
 
 vi.mock('@/client/generated', async (importOriginal) => ({
 	...await importOriginal<typeof import('@/client/generated')>(),
 	authRefreshToken: postMock,
+	authOpenidCallback: openidCallbackMock,
 }))
 
 vi.mock('@/router', () => ({
@@ -143,5 +145,18 @@ describe('auth store checkAuth refresh (issue #4023)', () => {
 		await store.checkAuth()
 
 		expect(localStorage.getItem('token')).toBe(otherTabJwt)
+	})
+})
+
+
+describe('OpenID provider lookup', () => {
+	it('rejects an unknown provider and clears loading', async () => {
+		setActivePinia(createPinia())
+		const store = useAuthStore()
+		openidCallbackMock.mockReset()
+		await expect(store.openIdAuth({provider: 'missing', code: 'code'}))
+			.rejects.toThrow('Unknown OpenID provider: missing')
+		expect(openidCallbackMock).not.toHaveBeenCalled()
+		expect(store.isLoading).toBe(false)
 	})
 })
