@@ -153,6 +153,7 @@
 							:loading="userSearchLoading"
 							:placeholder="$t('admin.searchUsersPlaceholder')"
 							:search-results="userResults"
+							:total-results="searchData?.total"
 							label="username"
 							@search="searchUsers"
 						>

@@ -135,6 +135,7 @@
 								label="name"
 								:aria-label="$t('admin.inviteLinks.teams')"
 								:search-results="teamResults"
+								:total-results="teamData?.total"
 								:loading="loadingTeams"
 								@search="teamSearch = $event"
 							/>
