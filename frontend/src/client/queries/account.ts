@@ -1,4 +1,4 @@
-import {queryOptions, useMutation, type QueryClient} from '@tanstack/vue-query'
+import {queryOptions, mutationOptions, useMutation, type QueryClient} from '@tanstack/vue-query'
 import type {DeepReadonly} from 'vue'
 import {
 	userShow,
@@ -175,7 +175,7 @@ function withFrontendSettings(
 }
 
 export function updateSettingsMutationOptions() {
-	return {
+	return mutationOptions({
 		...contextMutationOptions({
 			mutationFn: async ({settings}: AccountIdentity & {
 				settings: UserGeneralSettingsWritable
@@ -191,7 +191,7 @@ export function updateSettingsMutationOptions() {
 				: i18n.global.t('user.settings.general.savedSuccess'),
 		}),
 		scope: ACCOUNT_SETTINGS_SCOPE,
-	}
+	})
 }
 
 export function useUpdateSettingsMutation() {
@@ -201,7 +201,7 @@ export function useUpdateSettingsMutation() {
 // PUT /user/settings/general is a full replace, so one frontend flag can only be stored together
 // with every other setting the server currently holds.
 export function updateFrontendSettingsMutationOptions() {
-	return {
+	return mutationOptions({
 		...contextMutationOptions({
 			mutationFn: async ({id, type, frontendSettings}: AccountIdentity & {
 				frontendSettings: Partial<FrontendSettings>
@@ -230,7 +230,7 @@ export function updateFrontendSettingsMutationOptions() {
 			onSettled: reconcileAccount,
 		}),
 		scope: ACCOUNT_SETTINGS_SCOPE,
-	}
+	})
 }
 
 export function useUpdateFrontendSettingsMutation() {
