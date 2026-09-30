@@ -54,6 +54,12 @@ func TestChanged(t *testing.T) {
 			want:     false,
 		},
 		{
+			name:     "CRLF character references in code block",
+			stored:   "<pre><code>a&#13;&#10;b</code></pre>",
+			incoming: "```\na\nb\n```",
+			want:     false,
+		},
+		{
 			name:     "trailing whitespace only difference",
 			stored:   "<p>same</p>",
 			incoming: "same\n\n   ",
