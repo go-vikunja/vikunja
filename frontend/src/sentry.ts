@@ -14,6 +14,8 @@ export default async function setupSentry(app: App, router: Router) {
 		app,
 		dsn: window.SENTRY_DSN ?? '',
 		release: `vikunja-frontend@${VERSION}`,
+		// Props of login and password forms hold plaintext credentials.
+		attachProps: false,
 
 		// cache offline errors
 		transport: Sentry.makeBrowserOfflineTransport(Sentry.makeFetchTransport),
