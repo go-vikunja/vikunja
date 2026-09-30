@@ -152,7 +152,7 @@ describe('project queries', () => {
 		expect(result.favoriteProject?.id).toBe(-1)
 		expect(result.savedFilterProjects.map(project => project.id)).toEqual([-2, -3])
 		expect(sdk.projectsList).toHaveBeenCalledExactlyOnceWith({
-			query: {is_archived: true, expand: 'permissions', page: 1, per_page: 1000},
+			query: {is_archived: true, expand: 'permissions', page: 1},
 		})
 	})
 

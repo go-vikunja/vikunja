@@ -20,7 +20,7 @@ describe('link shares', () => {
 		sdk.sharesList.mockResolvedValueOnce({data: {items: [{id: 1}], total_pages: 1}})
 		expect(await client.fetchQuery(linkSharesQuery(7))).toEqual([{id: 1}])
 		expect(sdk.sharesList).toHaveBeenCalledOnce()
-		expect(sdk.sharesList).toHaveBeenCalledWith({path: {project: 7}, query: {page: 1, per_page: 1000}, signal: expect.any(AbortSignal)})
+		expect(sdk.sharesList).toHaveBeenCalledWith({path: {project: 7}, query: {page: 1}, signal: expect.any(AbortSignal)})
 	})
 
 	it('creates with a password, caches only the returned share and invalidates only its project', async () => {
