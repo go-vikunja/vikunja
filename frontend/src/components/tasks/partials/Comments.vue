@@ -268,7 +268,7 @@ const commentSortOrder = computed(() => localSortOrder.value ?? authStore.settin
 
 const currentPage = ref(1)
 const commentQuery = useQuery(computed(() => ({
-	...commentsQuery(props.taskId, commentSortOrder.value, currentPage.value, configStore.max_items_per_page),
+	...commentsQuery(props.taskId, commentSortOrder.value, currentPage.value),
 	enabled: configStore.task_comments_enabled && props.taskId > 0,
 })))
 const comments = computed(() => commentQuery.data.value?.items ?? [])

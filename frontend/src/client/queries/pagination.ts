@@ -21,11 +21,6 @@ export function totalPagesFor(
 	return page.per_page > 0 ? Math.ceil(total / page.per_page) : page.total_pages
 }
 
-// The server caps per_page itself; it only rejects values below 1.
-export function pageSizeFor(configured: number): number {
-	return Math.max(configured, 1)
-}
-
 type PaginatedResponse<T> = {
 	items?: T[] | null,
 	page?: number,

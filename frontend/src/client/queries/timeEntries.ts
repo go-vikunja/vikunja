@@ -16,7 +16,7 @@ import type {
 } from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
 import {
-	pageSizeFor,
+	toPaginated,
 	totalPagesFor,
 	type Paginated,
 } from './pagination'
@@ -44,34 +44,27 @@ export function normalizeTimeEntry(entry: TimeEntry): TimeEntryResponse {
 export const timeEntryKeys = {
 	all: ['time-entries'] as const,
 	lists: ['time-entries', 'list'] as const,
-	list: (filter: string, timezone: string, page: number, perPage: number) =>
-		['time-entries', 'list', filter, timezone, page, perPage] as const,
+	list: (filter: string, timezone: string, page: number) => ['time-entries', 'list', filter, timezone, page] as const,
 	activeTimers: ['time-entries', 'active'] as const,
 	active: (userId: number) => ['time-entries', 'active', userId] as const,
 }
 
-export function timeEntriesQuery(filter: string, timezone: string, page: number, perPage: number) {
-	const clampedPerPage = pageSizeFor(perPage)
+export function timeEntriesQuery(filter: string, timezone: string, page: number) {
 	return queryOptions({
-		queryKey: timeEntryKeys.list(filter, timezone, page, clampedPerPage),
+		queryKey: timeEntryKeys.list(filter, timezone, page),
 		queryFn: async ({signal}): Promise<TimeEntryPage> => {
 			const {data} = await timeEntriesList({
 				query: {
 					filter,
 					filter_timezone: timezone,
 					page,
-					per_page: clampedPerPage,
 				},
 				signal,
 			})
-			return {
+			return toPaginated({
 				...data,
-				items: (data.items ?? []).map(normalizeTimeEntry),
-				page: data.page ?? page,
-				per_page: data.per_page ?? clampedPerPage,
-				total: data.total ?? 0,
-				total_pages: data.total_pages ?? 0,
-			}
+				items: data.items?.map(normalizeTimeEntry),
+			}, page)
 		},
 	})
 }

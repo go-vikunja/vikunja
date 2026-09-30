@@ -138,8 +138,8 @@ it.each([
 
 it('invalidates only the notified task comments and detail', async () => {
 	const client = new QueryClient()
-	client.setQueryData(commentKeys.page(1, 'asc', 1, 50), {items: []})
-	client.setQueryData(commentKeys.page(2, 'asc', 1, 50), {items: []})
+	client.setQueryData(commentKeys.page(1, 'asc', 1), {items: []})
+	client.setQueryData(commentKeys.page(2, 'asc', 1), {items: []})
 	client.setQueryData(taskKeys.detail(1), normalizeTask({id: 1}))
 	const event = parseServerCacheEvent('notification.created', {
 		name: 'task.comment',
@@ -150,8 +150,8 @@ it('invalidates only the notified task comments and detail', async () => {
 		taskId: 1,
 	})
 	await client.getMutationCache().build(client, serverCacheEventMutationOptions()).execute(event)
-	expect(client.getQueryState(commentKeys.page(1, 'asc', 1, 50))?.isInvalidated).toBe(true)
-	expect(client.getQueryState(commentKeys.page(2, 'asc', 1, 50))?.isInvalidated).toBe(false)
+	expect(client.getQueryState(commentKeys.page(1, 'asc', 1))?.isInvalidated).toBe(true)
+	expect(client.getQueryState(commentKeys.page(2, 'asc', 1))?.isInvalidated).toBe(false)
 	expect(client.getQueryState(taskKeys.detail(1))?.isInvalidated).toBe(true)
 })
 
@@ -195,7 +195,7 @@ it('does not stale task collections for an open task none of them hold', async (
 
 it('refetches an open list for a created timer without inserting it or refetching the active key', async () => {
 	const client = new QueryClient()
-	const listKey = timeEntryKeys.list('task_id = 99', 'UTC', 1, 50)
+	const listKey = timeEntryKeys.list('task_id = 99', 'UTC', 1)
 	const queryFn = vi.fn(() => timeEntryPage([]))
 	const activeFn = vi.fn(() => null)
 	const unsubscribe = new QueryObserver(client, {
@@ -220,7 +220,7 @@ it('refetches an open list for a created timer without inserting it or refetchin
 
 it('patches an updated timer into an open list without refetching it', async () => {
 	const client = new QueryClient()
-	const listKey = timeEntryKeys.list('task_id = 99', 'UTC', 1, 50)
+	const listKey = timeEntryKeys.list('task_id = 99', 'UTC', 1)
 	const queryFn = vi.fn(() => timeEntryPage([RUNNING_ENTRY]))
 	const unsubscribe = new QueryObserver(client, {
 		queryKey: listKey,
@@ -243,7 +243,7 @@ it('patches an updated timer into an open list without refetching it', async () 
 
 it('invalidates both tasks when an updated timer moves to another task', async () => {
 	const client = new QueryClient()
-	client.setQueryData(timeEntryKeys.list('task_id = 3', 'UTC', 1, 50), timeEntryPage([TASK_ENTRY]))
+	client.setQueryData(timeEntryKeys.list('task_id = 3', 'UTC', 1), timeEntryPage([TASK_ENTRY]))
 	client.setQueryData(taskKeys.detail(3), normalizeTask({id: 3}))
 	client.setQueryData(taskKeys.detail(4), normalizeTask({id: 4}))
 	const event = parseServerCacheEvent('timer.updated', {
@@ -257,7 +257,7 @@ it('invalidates both tasks when an updated timer moves to another task', async (
 
 it('invalidates only the timer task when an update keeps it there', async () => {
 	const client = new QueryClient()
-	client.setQueryData(timeEntryKeys.list('task_id = 3', 'UTC', 1, 50), timeEntryPage([TASK_ENTRY]))
+	client.setQueryData(timeEntryKeys.list('task_id = 3', 'UTC', 1), timeEntryPage([TASK_ENTRY]))
 	client.setQueryData(taskKeys.detail(3), normalizeTask({id: 3}))
 	client.setQueryData(taskKeys.detail(4), normalizeTask({id: 4}))
 	const event = parseServerCacheEvent('timer.updated', {
@@ -284,7 +284,7 @@ it('invalidates only the new task when the updated timer is not cached', async (
 
 it('removes a deleted timer from an open list without refetching it', async () => {
 	const client = new QueryClient()
-	const listKey = timeEntryKeys.list('task_id = 99', 'UTC', 1, 50)
+	const listKey = timeEntryKeys.list('task_id = 99', 'UTC', 1)
 	const queryFn = vi.fn(() => timeEntryPage([RUNNING_ENTRY]))
 	const unsubscribe = new QueryObserver(client, {
 		queryKey: listKey,
@@ -304,7 +304,7 @@ it('removes a deleted timer from an open list without refetching it', async () =
 
 it('refetches only cache families that loaded before the first subscription', async () => {
 	const client = new QueryClient()
-	const listKey = timeEntryKeys.list('task_id = 99', 'UTC', 1, 50)
+	const listKey = timeEntryKeys.list('task_id = 99', 'UTC', 1)
 	const queryFn = vi.fn(() => timeEntryPage([]))
 	const unsubscribe = new QueryObserver(client, {
 		queryKey: listKey,
@@ -312,7 +312,7 @@ it('refetches only cache families that loaded before the first subscription', as
 	}).subscribe(() => {})
 	await vi.waitFor(() => expect(queryFn).toHaveBeenCalledTimes(1))
 	const since = Date.now() + 1000
-	const commentKey = commentKeys.page(1, 'asc', 1, 50)
+	const commentKey = commentKeys.page(1, 'asc', 1)
 	const boardKey = kanbanKeys.board(1, 1)
 	client.setQueryData(commentKey, {items: []}, {updatedAt: since - 1})
 	client.setQueryData(taskKeys.detail(1), normalizeTask({id: 1}), {updatedAt: since + 1})
@@ -330,7 +330,7 @@ it('refetches only cache families that loaded before the first subscription', as
 
 it('leaves a query still loading at the first subscription untouched', async () => {
 	const client = new QueryClient()
-	const listKey = timeEntryKeys.list('task_id = 1', 'UTC', 1, 50)
+	const listKey = timeEntryKeys.list('task_id = 1', 'UTC', 1)
 	const queryFn = vi.fn(() => new Promise<TimeEntryPage>(() => {}))
 	const unsubscribe = new QueryObserver(client, {
 		queryKey: listKey,

@@ -108,7 +108,7 @@ it('ignores an event for another user', async () => {
 })
 
 it('sweeps only on a re-authentication after a drop', async () => {
-	const commentKey = commentKeys.page(1, 'asc', 1, 50)
+	const commentKey = commentKeys.page(1, 'asc', 1)
 	const subscribedAt = Date.now()
 	client.setQueryData(commentKey, {items: []}, {updatedAt: subscribedAt + 1})
 	mountEvents()
@@ -128,8 +128,8 @@ it('sweeps only on a re-authentication after a drop', async () => {
 
 it('reconciles only queries loaded before the first subscription', async () => {
 	const subscribedAt = Date.now()
-	const beforeKey = commentKeys.page(1, 'asc', 1, 50)
-	const afterKey = commentKeys.page(2, 'asc', 1, 50)
+	const beforeKey = commentKeys.page(1, 'asc', 1)
+	const afterKey = commentKeys.page(2, 'asc', 1)
 	client.setQueryData(beforeKey, {items: []}, {updatedAt: subscribedAt - 1})
 	client.setQueryData(afterKey, {items: []}, {updatedAt: subscribedAt + 1})
 	mountEvents()
@@ -144,7 +144,7 @@ it('reconciles only queries loaded before the first subscription', async () => {
 })
 
 it('sweeps on a first authentication that followed a failed connection attempt', async () => {
-	const commentKey = commentKeys.page(1, 'asc', 1, 50)
+	const commentKey = commentKeys.page(1, 'asc', 1)
 	const subscribedAt = Date.now()
 	client.setQueryData(commentKey, {items: []}, {updatedAt: subscribedAt + 1})
 	mountEvents()
