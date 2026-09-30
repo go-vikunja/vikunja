@@ -3,6 +3,14 @@ import {describe, it, expect} from 'vitest'
 import {getErrorText} from './index'
 
 describe('getErrorText', () => {
+	it.each([null, undefined])('handles an empty rejection reason (%s)', reason => {
+		expect(getErrorText(reason)).toBe('')
+	})
+
+	it('handles a string rejection reason', () => {
+		expect(getErrorText('Request failed')).toBe('Request failed')
+	})
+
 	it('interpolates i18n_params into the translated error message', () => {
 		const text = getErrorText({
 			code: 14002,
