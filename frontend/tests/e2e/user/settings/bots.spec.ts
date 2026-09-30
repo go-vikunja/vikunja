@@ -88,3 +88,19 @@ test('shows a bot created past the first page on its page', async ({authenticate
 	await expect(cards).toHaveCount(1)
 	await expect(cards).toContainText('bot-overflow')
 })
+
+test('clamps an out-of-range page to the last page', async ({authenticatedPage: page, apiContext, userToken}) => {
+	const pageSize = await serverPageSize(apiContext)
+	for (let i = 1; i <= pageSize + 1; i++) {
+		const response = await apiContext.post('/api/v2/user/bots', {
+			headers: {Authorization: `Bearer ${userToken}`},
+			data: {username: `bot-clamped-${i}`},
+		})
+		expect(response.ok()).toBe(true)
+	}
+	await page.goto('/user/settings/bots?page=99')
+	await expect(page).toHaveURL(/[?&]page=2(&|$)/)
+	const cards = page.locator('.bot-card')
+	await expect(cards).toHaveCount(1)
+	await expect(cards).toContainText(`bot-clamped-${pageSize + 1}`)
+})
