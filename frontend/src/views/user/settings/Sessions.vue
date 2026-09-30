@@ -2,12 +2,12 @@
 import {
 	ref,
 	computed,
-	watch,
 } from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useRouteQuery} from '@vueuse/router'
 
 import {useTitle} from '@/composables/useTitle'
+import {useClampedPage} from '@/composables/useClampedPage'
 import {useAuthStore} from '@/stores/auth'
 import {formatDateSince} from '@/helpers/time/formatDate'
 import {useQuery} from '@tanstack/vue-query'
@@ -25,9 +25,7 @@ const page = useRouteQuery('page', '1', {transform: normalizePageNumber})
 const sessionQuery = useQuery(computed(() => sessionsQuery(page.value)))
 const sessions = computed(() => sessionQuery.data.value?.items ?? [])
 const totalPages = computed(() => sessionQuery.data.value?.total_pages ?? 0)
-watch([page, totalPages], ([current, last]) => {
-	if (last > 0 && current > last) page.value = last
-}, {immediate: true})
+useClampedPage(page, sessionQuery)
 const deleteMutation = useDeleteSessionMutation()
 
 const showDeleteModal = ref(false)
