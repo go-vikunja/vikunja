@@ -283,14 +283,14 @@ export function createProjectMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async (project: ProjectWritable) => {
 			const {data} = await projectsCreate({body: projectBody(project)})
-			return normalizeProject(data)
+			return normalizeProject({...data, max_permission: PERMISSIONS.ADMIN})
 		},
 		onSuccess: (created, _input, client) => {
 			client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
 				current ? replaceProjectInList(current, created) : current,
 			)
 		},
-		onSettled: (_input, client) => client.invalidateQueries({queryKey: projectKeys.list()}),
+		onSettled: (_input, client) => client.invalidateQueries({queryKey: projectKeys.list(), refetchType: 'none'}),
 		successMessage: () => i18n.global.t('project.create.createdSuccess'),
 		toastError,
 	})
@@ -308,15 +308,22 @@ export function updateProjectMutationOptions(successMessage?: string) {
 		optimistic: {
 			queryKeys: ({id}) => [projectKeys.list(), projectKeys.detail(id)],
 			update: ({id, ...project}, client) => {
+				const previous = getCachedProject(id, client)
+				const refetchList = !previous
+					|| previous.is_archived !== project.is_archived
+					|| previous.parent_project_id !== project.parent_project_id
 				client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
 					current ? mapProjectNavigationItem(current, id, existing => normalizeProject({...existing, ...project})) : current,
 				)
 				client.setQueryData<ProjectResponse>(projectKeys.detail(id), current =>
 					current ? normalizeProject({...current, ...project}) : current,
 				)
+				return {refetchList}
 			},
 		},
-		onSuccess: (updated, _input, client) => {
+		onSuccess: (updated, input, client, context) => {
+			// Position healing renumbers siblings whose new positions are absent from the response.
+			context.refetchList ||= updated.position !== input.position
 			client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
 				current ? mapProjectNavigationItem(current, updated.id, previous =>
 					mergeProjectMetadata(previous, updated),
@@ -326,8 +333,12 @@ export function updateProjectMutationOptions(successMessage?: string) {
 				current ? mergeProjectMetadata(current, updated) : current,
 			)
 		},
-		onSettled: ({id}, client) => Promise.all([
-			client.invalidateQueries({queryKey: projectKeys.list()}),
+		onSettled: ({id}, client, context) => Promise.all([
+			// Archive and parent changes affect descendants beyond the patched project.
+			client.invalidateQueries({
+				queryKey: projectKeys.list(),
+				refetchType: context.refetchList ? 'active' : 'none',
+			}),
 			client.invalidateQueries({queryKey: projectKeys.detail(id)}),
 		]),
 		successMessage: () => successMessage,
@@ -364,7 +375,7 @@ export function patchProjectFavoriteMutationOptions() {
 			)
 		},
 		onSettled: ({id}, client) => Promise.all([
-			client.invalidateQueries({queryKey: projectKeys.list()}),
+			client.invalidateQueries({queryKey: projectKeys.list(), refetchType: 'none'}),
 			client.invalidateQueries({queryKey: projectKeys.detail(id)}),
 		]),
 		toastError,
@@ -427,7 +438,7 @@ export function deleteProjectMutationOptions() {
 			ids.forEach(projectId => client.removeQueries({queryKey: projectKeys.detail(projectId)}))
 			removeProjectFromHistory({id})
 		},
-		onSettled: (_input, client) => client.invalidateQueries({queryKey: projectKeys.list()}),
+		onSettled: (_input, client) => client.invalidateQueries({queryKey: projectKeys.list(), refetchType: 'none'}),
 		successMessage: () => i18n.global.t('project.delete.success'),
 		toastError,
 	})
@@ -454,7 +465,7 @@ export function duplicateProjectMutationOptions() {
 				current ? replaceProjectInList(current, duplicate) : current,
 			)
 		},
-		onSettled: (_input, client) => client.invalidateQueries({queryKey: projectKeys.list()}),
+		onSettled: (_input, client) => client.invalidateQueries({queryKey: projectKeys.list(), refetchType: 'none'}),
 		successMessage: () => i18n.global.t('project.duplicate.success'),
 		toastError,
 	})
