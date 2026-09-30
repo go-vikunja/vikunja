@@ -227,7 +227,6 @@ const (
 	WebhooksEnabled             Key = `webhooks.enabled`
 	WebhooksTimeoutSeconds      Key = `webhooks.timeoutseconds`
 	WebhooksProxyURL            Key = `webhooks.proxyurl`
-	WebhooksProxyPassword       Key = `webhooks.proxypassword`
 	WebhooksAllowNonRoutableIPs Key = `webhooks.allownonroutableips`
 
 	AuditEnabled           Key = `audit.enabled`
@@ -237,7 +236,6 @@ const (
 
 	OutgoingRequestsAllowNonRoutableIPs Key = `outgoingrequests.allownonroutableips`
 	OutgoingRequestsProxyURL            Key = `outgoingrequests.proxyurl`
-	OutgoingRequestsProxyPassword       Key = `outgoingrequests.proxypassword`
 	OutgoingRequestsTimeoutSeconds      Key = `outgoingrequests.timeoutseconds`
 
 	AutoTLSEnabled     Key = `autotls.enabled`
@@ -549,12 +547,28 @@ func initDefaultConfig() {
 		log.Warningf("Config key %q is deprecated and will be removed in a future release. Please use %q instead.", WebhooksProxyURL, OutgoingRequestsProxyURL)
 		OutgoingRequestsProxyURL.Set(proxyURL)
 	}
-	if proxyPassword := WebhooksProxyPassword.GetString(); proxyPassword != "" && OutgoingRequestsProxyPassword.GetString() == "" {
-		log.Warningf("Config key %q is deprecated and will be removed in a future release. Please use %q instead.", WebhooksProxyPassword, OutgoingRequestsProxyPassword)
-		OutgoingRequestsProxyPassword.Set(proxyPassword)
-	}
 	// License
 	LicenseKey.setDefault("")
+}
+
+// Silently ignoring these would leave the proxy rejecting every request with a 407.
+var removedConfigKeys = []struct {
+	key  string
+	hint string
+}{
+	{"outgoingrequests.proxypassword", proxyCredentialsHint},
+	{"webhooks.proxypassword", proxyCredentialsHint},
+}
+
+const proxyCredentialsHint = "put the proxy credentials into " + string(OutgoingRequestsProxyURL) + " instead, like http://vikunja:<url-encoded password>@mole:8080"
+
+func checkRemovedConfigKeys() error {
+	for _, removed := range removedConfigKeys {
+		if viper.IsSet(removed.key) {
+			return fmt.Errorf("config key %q was removed, %s", removed.key, removed.hint)
+		}
+	}
+	return nil
 }
 
 // generateServiceSecretIfEmpty sets a random service.secret when none was configured.
@@ -775,6 +789,10 @@ func InitConfig() {
 	generateServiceSecretIfEmpty()
 
 	applyDefaultLogLevels()
+
+	if err := checkRemovedConfigKeys(); err != nil {
+		log.Fatal(err.Error())
+	}
 
 	if _, err := url.ParseRequestURI(AvatarGravatarBaseURL.GetString()); err != nil {
 		log.Fatalf("Could not parse gravatarbaseurl: %s", err)

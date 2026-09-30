@@ -149,3 +149,32 @@ func TestResolvePath(t *testing.T) {
 		})
 	}
 }
+
+func TestCheckRemovedConfigKeys(t *testing.T) {
+	for _, key := range []string{"outgoingrequests.proxypassword", "webhooks.proxypassword"} {
+		t.Run(key+" is rejected", func(t *testing.T) {
+			viper.Reset()
+			t.Cleanup(viper.Reset)
+			viper.Set(key, "secret")
+
+			err := checkRemovedConfigKeys()
+			require.ErrorContains(t, err, key)
+			assert.ErrorContains(t, err, "outgoingrequests.proxyurl")
+		})
+	}
+	t.Run("proxypassword is rejected from the environment", func(t *testing.T) {
+		viper.Reset()
+		t.Cleanup(viper.Reset)
+		t.Setenv("VIKUNJA_OUTGOINGREQUESTS_PROXYPASSWORD", "secret")
+		require.NoError(t, setConfigFromEnv())
+
+		assert.ErrorContains(t, checkRemovedConfigKeys(), "outgoingrequests.proxypassword")
+	})
+	t.Run("passes without removed keys", func(t *testing.T) {
+		viper.Reset()
+		t.Cleanup(viper.Reset)
+		viper.Set("outgoingrequests.proxyurl", "http://vikunja:secret@mole:8080")
+
+		assert.NoError(t, checkRemovedConfigKeys())
+	})
+}

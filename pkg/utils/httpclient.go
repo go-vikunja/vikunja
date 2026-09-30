@@ -82,13 +82,6 @@ func outgoingProxy() (func(*http.Request) (*url.URL, error), proxyDialAddrs) {
 		}, nil
 	}
 
-	if password := config.OutgoingRequestsProxyPassword.GetString(); password != "" {
-		if proxyURL.User == nil {
-			proxyURL.User = url.UserPassword("vikunja", password)
-		} else if _, hasPassword := proxyURL.User.Password(); !hasPassword {
-			proxyURL.User = url.UserPassword(proxyURL.User.Username(), password)
-		}
-	}
 	return http.ProxyURL(proxyURL), proxyDialAddrs{proxyDialAddr(proxyURL): {}}
 }
 
