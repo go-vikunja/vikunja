@@ -231,7 +231,7 @@ describe('auth store query identity lifecycle', () => {
 		queryClientClearMock.mockReset()
 	})
 
-	async function seedIdentity(id: number, type: AUTH_TYPES) {
+	async function seedIdentity(id: number, type: typeof AUTH_TYPES[keyof typeof AUTH_TYPES]) {
 		useAuthStore().setSession({
 			id,
 			type,
