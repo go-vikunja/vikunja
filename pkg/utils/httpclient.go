@@ -45,7 +45,7 @@ func NewUnguardedHTTPClient() *http.Client {
 // NewSSRFSafeHTTPClient blocks non-globally-routable targets unless outgoingrequests.allownonroutableips is set.
 //
 // Deprecated webhooks.* config keys are migrated to outgoingrequests.* at
-// config init time (see config.InitDefaultConfig), so this function only
+// config init time (see config.InitConfig), so this function only
 // reads the new keys.
 func NewSSRFSafeHTTPClient() *http.Client {
 	proxy, proxyAddrs := outgoingProxy()

@@ -149,3 +149,29 @@ func TestResolvePath(t *testing.T) {
 		})
 	}
 }
+
+func TestDeprecatedWebhookKeysMigration(t *testing.T) {
+	t.Run("migrates webhooks.* from the config file", func(t *testing.T) {
+		initConfigFromYAML(t, "webhooks:\n  proxyurl: http://mole:8080\n  proxypassword: secret\n  allownonroutableips: true\n")
+
+		assert.Equal(t, "http://mole:8080", OutgoingRequestsProxyURL.GetString())
+		assert.Equal(t, "secret", OutgoingRequestsProxyPassword.GetString())
+		assert.True(t, OutgoingRequestsAllowNonRoutableIPs.GetBool())
+	})
+	t.Run("migrates webhooks.* from the environment", func(t *testing.T) {
+		t.Setenv("VIKUNJA_WEBHOOKS_PROXYURL", "http://mole:8080")
+		t.Setenv("VIKUNJA_WEBHOOKS_PROXYPASSWORD", "secret")
+		t.Setenv("VIKUNJA_WEBHOOKS_ALLOWNONROUTABLEIPS", "true")
+		initConfigFromYAML(t, "")
+
+		assert.Equal(t, "http://mole:8080", OutgoingRequestsProxyURL.GetString())
+		assert.Equal(t, "secret", OutgoingRequestsProxyPassword.GetString())
+		assert.True(t, OutgoingRequestsAllowNonRoutableIPs.GetBool())
+	})
+	t.Run("outgoingrequests.* wins over webhooks.*", func(t *testing.T) {
+		initConfigFromYAML(t, "webhooks:\n  proxyurl: http://old:8080\n  proxypassword: old\noutgoingrequests:\n  proxyurl: http://new:8080\n  proxypassword: new\n")
+
+		assert.Equal(t, "http://new:8080", OutgoingRequestsProxyURL.GetString())
+		assert.Equal(t, "new", OutgoingRequestsProxyPassword.GetString())
+	})
+}
