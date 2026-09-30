@@ -162,7 +162,7 @@ func (sess *Session) ReadAll(s *xorm.Session, a web.Auth, _ string, page int, pe
 
 	err = s.
 		Where(where).
-		OrderBy("last_active DESC").
+		OrderBy("last_active DESC, id DESC").
 		Limit(getLimitFromPageIndex(page, perPage)).
 		Find(&sessions)
 	if err != nil {
