@@ -22,8 +22,8 @@ describe('project shares', () => {
 		sdk.projectTeamsList.mockResolvedValue({data: {items: [{id: 2}], total_pages: 1}})
 		expect(await client.fetchQuery(projectUserSharesQuery(7))).toEqual([{id: 1}])
 		expect(await client.fetchQuery(projectTeamSharesQuery(7))).toEqual([{id: 2}])
-		expect(sdk.projectUsersList).toHaveBeenCalledExactlyOnceWith({path: {project: 7}, query: {page: 1, per_page: 1000}, signal: expect.any(AbortSignal)})
-		expect(sdk.projectTeamsList).toHaveBeenCalledExactlyOnceWith({path: {project: 7}, query: {page: 1, per_page: 1000}, signal: expect.any(AbortSignal)})
+		expect(sdk.projectUsersList).toHaveBeenCalledExactlyOnceWith({path: {project: 7}, query: {page: 1}, signal: expect.any(AbortSignal)})
+		expect(sdk.projectTeamsList).toHaveBeenCalledExactlyOnceWith({path: {project: 7}, query: {page: 1}, signal: expect.any(AbortSignal)})
 	})
 
 	it.each([undefined, -1, 3, '2', null])('defaults invalid permission %s to read', permission => {

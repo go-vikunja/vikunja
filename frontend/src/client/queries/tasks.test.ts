@@ -201,7 +201,7 @@ describe('task queries', () => {
 		expect(tasks[0]).toEqual(normalizeTask({id: 1}))
 		expect(sdk.projectViewTasksList).toHaveBeenLastCalledWith(expect.objectContaining({
 			path: {project: 1, view: 2},
-			query: {page: 3, per_page: 1000},
+			query: {page: 3},
 		}))
 	})
 })

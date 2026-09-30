@@ -4,7 +4,6 @@ import type {LinkSharing, LinkSharingWritable} from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
 import {useSecretMutation} from './secretMutation'
 import {fetchAllPages} from './fetchAllPages'
-import {API_MAX_PER_PAGE} from './pagination'
 import {normalizeSharePermission} from './projectShares'
 import {i18n} from '@/i18n'
 
@@ -19,7 +18,7 @@ export function createLinkShareDraft(share: LinkSharingWritable = {}): Required<
 export function linkSharesQuery(projectId: number) {
 	return queryOptions({
 		queryKey: linkShareKeys.list(projectId),
-		queryFn: ({signal}) => fetchAllPages(async page => (await sharesList({path: {project: projectId}, query: {page, per_page: API_MAX_PER_PAGE}, signal})).data),
+		queryFn: ({signal}) => fetchAllPages(async page => (await sharesList({path: {project: projectId}, query: {page}, signal})).data),
 	})
 }
 

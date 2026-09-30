@@ -46,13 +46,13 @@ describe('labels query', () => {
 		sdk.labelsDelete.mockReset()
 	})
 
-	it('requests labels with the maximum page size', async () => {
+	it('requests labels with the server default page size', async () => {
 		sdk.labelsList.mockResolvedValue({data: {items: labels, total_pages: 1}})
 
 		const result = await queryClient.fetchQuery(labelsQuery())
 
 		expect(result).toEqual(labels)
-		expect(sdk.labelsList).toHaveBeenCalledExactlyOnceWith({query: {page: 1, per_page: 1000}})
+		expect(sdk.labelsList).toHaveBeenCalledExactlyOnceWith({query: {page: 1}})
 	})
 
 	it('sorts labels by title without changing the cached array', () => {
