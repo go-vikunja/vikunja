@@ -22,6 +22,7 @@
 					:value="displayHours"
 					:aria-label="$t('input.datepicker.time.hours')"
 					@change="onInput('hours', $event)"
+					@keydown.enter.stop.prevent="confirm('hours', $event)"
 					@keydown.up.prevent="step('hours', 1)"
 					@keydown.down.prevent="step('hours', -1)"
 				>
@@ -53,6 +54,7 @@
 					:value="pad(minutes)"
 					:aria-label="$t('input.datepicker.time.minutes')"
 					@change="onInput('minutes', $event)"
+					@keydown.enter.stop.prevent="confirm('minutes', $event)"
 					@keydown.up.prevent="step('minutes', 1)"
 					@keydown.down.prevent="step('minutes', -1)"
 				>
@@ -105,6 +107,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
 	update: [value: {hours: number, minutes: number}]
+	confirm: []
 }>()
 
 const PRESETS = [9, 12, 17]
@@ -148,6 +151,11 @@ async function onInput(part: 'hours' | 'minutes', event: Event) {
 	}
 
 	target.value = part === 'hours' ? displayHours.value : pad(props.minutes)
+}
+
+async function confirm(part: 'hours' | 'minutes', event: KeyboardEvent) {
+	await onInput(part, event)
+	emit('confirm')
 }
 
 function toggleMeridiem() {
