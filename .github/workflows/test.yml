@@ -484,7 +484,7 @@ jobs:
           # processes don't survive step boundaries on GH runners.
           nohup ./vikunja web > /tmp/vikunja.log 2>&1 &
           API_PID=$!
-          trap "kill $API_PID 2>/dev/null || true" EXIT
+          trap 'kill "$API_PID" 2>/dev/null || true' EXIT
           for i in $(seq 1 60); do
             if curl -sf http://127.0.0.1:3456/api/v1/info >/dev/null 2>&1; then
               echo "API ready after ${i}s"
