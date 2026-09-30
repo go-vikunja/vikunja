@@ -117,6 +117,7 @@
         "namePlaceholder": "My Assistant",
         "create": "Create bot",
         "enable": "Enable",
+        "tokensInactive": "API tokens of a disabled bot are rejected. Enable the bot to create or use tokens.",
         "badge": "Bot",
         "delete": {
           "header": "Delete this bot user",
