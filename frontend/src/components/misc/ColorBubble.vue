@@ -9,7 +9,7 @@
 import type { DataType } from 'csstype'
 
 defineProps< {
-	color: DataType.Color,
+	color?: DataType.Color,
 }>()
 </script>
 
