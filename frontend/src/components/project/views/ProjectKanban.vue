@@ -23,7 +23,7 @@
 					:class="{ 'is-loading': initialLoading }"
 					class="kanban kanban-bucket-container loader-container"
 				>
-					<draggable
+					<BucketDraggable
 						v-bind="DRAG_OPTIONS"
 						:model-value="buckets"
 						group="buckets"
@@ -149,7 +149,7 @@
 									</Dropdown>
 								</div>
 
-								<draggable
+								<TaskDraggable
 									v-bind="DRAG_OPTIONS"
 									:handle="taskDragHandle"
 									:delay="isTouchDevice ? 300 : 1000"
@@ -234,10 +234,10 @@
 											/>
 										</li>
 									</template>
-								</draggable>
+								</TaskDraggable>
 							</li>
 						</template>
-					</draggable>
+					</BucketDraggable>
 
 					<div
 						v-if="canWrite && !initialLoading && buckets.length > 0"
@@ -306,7 +306,8 @@ import {useQuery, useQueryClient} from '@tanstack/vue-query'
 import {useRouter} from 'vue-router'
 import {useRouteQuery} from '@vueuse/router'
 import {useI18n} from 'vue-i18n'
-import draggable from 'zhyswan-vuedraggable'
+import {draggableFor} from '@/components/base/Draggable'
+import type {SortableEvent} from 'sortablejs'
 
 import {PERMISSIONS as Permissions} from '@/constants/permissions'
 
@@ -340,6 +341,8 @@ const props = defineProps<{
 	projectId: number,
 	viewId: number,
 }>()
+const BucketDraggable = draggableFor<BucketResponse>()
+const TaskDraggable = draggableFor<TaskResponse>()
 
 const projectId = toRef(props, 'projectId')
 

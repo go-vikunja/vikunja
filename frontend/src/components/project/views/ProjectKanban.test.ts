@@ -196,7 +196,7 @@ describe('ProjectKanban', () => {
 	})
 
 	it('does not refetch the board after a task was dropped on another project', async () => {
-		const wrapper = await mountKanban({draggable: DRAGGABLE_STUB})
+		const wrapper = await mountKanban({BucketDraggable: DRAGGABLE_STUB, TaskDraggable: DRAGGABLE_STUB})
 		drop.result = {moved: true, targetProjectId: 2}
 		loadBoard.mockClear()
 
@@ -207,7 +207,7 @@ describe('ProjectKanban', () => {
 	})
 
 	it('drops the card from a saved filter board when the task moved to another project', async () => {
-		const wrapper = await mountKanban({draggable: DRAGGABLE_STUB}, -2)
+		const wrapper = await mountKanban({BucketDraggable: DRAGGABLE_STUB, TaskDraggable: DRAGGABLE_STUB}, -2)
 		drop.result = {moved: true, targetProjectId: 2}
 
 		taskDraggable(wrapper).vm.$emit('end', taskDragEndEvent(11))
@@ -218,7 +218,7 @@ describe('ProjectKanban', () => {
 	})
 
 	it('leaves a real project board to the mutation when the task moved to another project', async () => {
-		const wrapper = await mountKanban({draggable: DRAGGABLE_STUB})
+		const wrapper = await mountKanban({BucketDraggable: DRAGGABLE_STUB, TaskDraggable: DRAGGABLE_STUB})
 		drop.result = {moved: true, targetProjectId: 2}
 
 		taskDraggable(wrapper).vm.$emit('end', taskDragEndEvent(11))
@@ -229,7 +229,7 @@ describe('ProjectKanban', () => {
 	})
 
 	it('re-enables the add task input once the create settles, without a board request', async () => {
-		const wrapper = await mountKanban({draggable: DRAGGABLE_STUB})
+		const wrapper = await mountKanban({BucketDraggable: DRAGGABLE_STUB, TaskDraggable: DRAGGABLE_STUB})
 		let resolveCreate!: (value: unknown) => void
 		sdk.tasksCreate.mockImplementation(() => new Promise(resolve => { resolveCreate = resolve }))
 
@@ -251,7 +251,7 @@ describe('ProjectKanban', () => {
 	it('closes the add task input when the created task fills the bucket limit', async () => {
 		loadBoard.mockResolvedValue({data: {items: [{...buckets[0], count: 1, limit: 2}, buckets[1], buckets[2]]}})
 		sdk.tasksCreate.mockResolvedValue({data: {id: 12, title: 'New task', project_id: 1, bucket_id: 1}})
-		const wrapper = await mountKanban({draggable: DRAGGABLE_STUB})
+		const wrapper = await mountKanban({BucketDraggable: DRAGGABLE_STUB, TaskDraggable: DRAGGABLE_STUB})
 
 		;(wrapper.vm as unknown as {toggleShowNewTaskInput: (id: number) => void}).toggleShowNewTaskInput(1)
 		await nextTick()
