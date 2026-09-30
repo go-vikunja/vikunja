@@ -83,8 +83,7 @@ export const i18n = createI18n({
 	},
 	messages: {
 		[DEFAULT_LANGUAGE]: langEN,
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	} as Record<SupportedLocale, any>,
+	} as Record<SupportedLocale, typeof langEN>,
 })
 
 export async function setLanguage(lang: SupportedLocale): Promise<SupportedLocale | undefined> {
