@@ -210,6 +210,7 @@ func (t *APIToken) ReadAll(s *xorm.Session, a web.Auth, search string, page int,
 
 	err = s.
 		Where(where).
+		OrderBy("id ASC").
 		Limit(getLimitFromPageIndex(page, perPage)).
 		Find(&tokens)
 	if err != nil {
