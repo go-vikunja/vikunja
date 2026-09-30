@@ -539,8 +539,13 @@ func initDefaultConfig() {
 	PluginsDir.setDefault(ResolvePath("plugins"))
 	PluginsLoader.setDefault("native")
 
-	// Migrate deprecated webhook config keys to outgoingrequests.*
-	// This allows removing the old keys in a single place later.
+	// License
+	LicenseKey.setDefault("")
+}
+
+// migrateDeprecatedWebhookKeys must run after the config file and env are
+// loaded, before that only defaults are visible.
+func migrateDeprecatedWebhookKeys() {
 	if WebhooksAllowNonRoutableIPs.GetBool() && !OutgoingRequestsAllowNonRoutableIPs.GetBool() {
 		log.Warningf("Config key %q is deprecated and will be removed in a future release. Please use %q instead.", WebhooksAllowNonRoutableIPs, OutgoingRequestsAllowNonRoutableIPs)
 		OutgoingRequestsAllowNonRoutableIPs.Set("true")
@@ -553,8 +558,6 @@ func initDefaultConfig() {
 		log.Warningf("Config key %q is deprecated and will be removed in a future release. Please use %q instead.", WebhooksProxyPassword, OutgoingRequestsProxyPassword)
 		OutgoingRequestsProxyPassword.Set(proxyPassword)
 	}
-	// License
-	LicenseKey.setDefault("")
 }
 
 // generateServiceSecretIfEmpty sets a random service.secret when none was configured.
@@ -771,6 +774,8 @@ func InitConfig() {
 			ServiceSecret.Set(ServiceJWTSecret.GetString())
 		}
 	}
+
+	migrateDeprecatedWebhookKeys()
 
 	generateServiceSecretIfEmpty()
 

@@ -39,7 +39,7 @@ import (
 // config, falling back to the HTTP_PROXY, HTTPS_PROXY and NO_PROXY env vars.
 //
 // Deprecated webhooks.* config keys are migrated to outgoingrequests.* at
-// config init time (see config.InitDefaultConfig), so this function only
+// config init time (see config.InitConfig), so this function only
 // reads the new keys.
 func NewSSRFSafeHTTPClient() *http.Client {
 	client := &http.Client{
