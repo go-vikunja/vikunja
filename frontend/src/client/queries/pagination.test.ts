@@ -1,8 +1,10 @@
 import {describe, expect, it} from 'vitest'
+import {QueryClient} from '@tanstack/vue-query'
 import {
 	API_MAX_PER_PAGE,
 	normalizePageNumber,
 	pageSizeFor,
+	removeFromPages,
 	toPaginated,
 	totalPagesFor,
 } from './pagination'
@@ -61,5 +63,38 @@ describe('normalizePageNumber', () => {
 		[['1', '2'], 1],
 	])('normalizes page %s to %i', (raw, expected) => {
 		expect(normalizePageNumber(raw)).toBe(expected)
+	})
+})
+
+describe('removeFromPages', () => {
+	type Item = {id: number}
+	const page = (items: Item[], page: number, total: number) => ({
+		items,
+		page,
+		per_page: 2,
+		total,
+		total_pages: Math.ceil(total / 2),
+	})
+
+	it('drops the item and decrements every page of the scope that held it', () => {
+		const client = new QueryClient()
+		client.setQueryData(['things', 'list', 'a', 1], page([{id: 1}, {id: 2}], 1, 3))
+		client.setQueryData(['things', 'list', 'a', 2], page([{id: 3}], 2, 3))
+		client.setQueryData(['things', 'list', 'b', 1], page([{id: 4}, {id: 5}], 1, 3))
+
+		removeFromPages<Item>(client, ['things', 'list'], item => item.id === 3)
+
+		expect(client.getQueryData(['things', 'list', 'a', 1])).toEqual(page([{id: 1}, {id: 2}], 1, 2))
+		expect(client.getQueryData(['things', 'list', 'a', 2])).toEqual(page([], 2, 2))
+		expect(client.getQueryData(['things', 'list', 'b', 1])).toEqual(page([{id: 4}, {id: 5}], 1, 3))
+	})
+
+	it('leaves the cache untouched when no cached page holds the item', () => {
+		const client = new QueryClient()
+		client.setQueryData(['things', 'list', 'a', 1], page([{id: 1}], 1, 3))
+
+		removeFromPages<Item>(client, ['things', 'list'], item => item.id === 9)
+
+		expect(client.getQueryData(['things', 'list', 'a', 1])).toEqual(page([{id: 1}], 1, 3))
 	})
 })
