@@ -92,7 +92,7 @@ const labelIds = computed(() => {
 	if (!labelsParam) {
 		return undefined
 	}
-	return Array.isArray(labelsParam) ? labelsParam : [labelsParam]
+	return Array.isArray(labelsParam) ? labelsParam.filter((id): id is string => id !== null) : [labelsParam]
 })
 
 // This is to reload the tasks list after adding a new task through the global task add.
