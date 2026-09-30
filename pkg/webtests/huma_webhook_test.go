@@ -18,8 +18,11 @@ package webtests
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
+	"sort"
 	"strings"
 	"testing"
 
@@ -106,6 +109,34 @@ func TestHumaWebhook(t *testing.T) {
 			_, err := forbidden.testReadAllWithUser(nil, nil)
 			require.Error(t, err)
 			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
+		})
+		t.Run("Pagination is ordered by id, stable across pages", func(t *testing.T) {
+			// project 1 already holds fixture webhook #1; add three more so
+			// page contents can be pinned by id rather than just counted.
+			created := make([]int64, 0, 3)
+			for i := 0; i < 3; i++ {
+				rec, err := owned.testCreateWithUser(nil, nil,
+					fmt.Sprintf(`{"target_url":"https://example.com/page-%d","events":["task.updated"]}`, i))
+				require.NoError(t, err)
+				var wh struct {
+					ID int64 `json:"id"`
+				}
+				require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &wh))
+				created = append(created, wh.ID)
+			}
+			want := append([]int64{1}, created...)
+			sort.Slice(want, func(i, j int) bool { return want[i] < want[j] })
+
+			rec, err := owned.testReadAllWithUser(url.Values{"per_page": {"2"}, "page": {"1"}}, nil)
+			require.NoError(t, err)
+			page1 := webhookIDsFromReadAll(t, rec.Body.Bytes())
+
+			rec, err = owned.testReadAllWithUser(url.Values{"per_page": {"2"}, "page": {"2"}}, nil)
+			require.NoError(t, err)
+			page2 := webhookIDsFromReadAll(t, rec.Body.Bytes())
+
+			assert.Equal(t, want[:2], page1, "page 1 must list the two lowest ids in ascending order")
+			assert.Equal(t, want[2:], page2, "page 2 must list the remaining ids in ascending order")
 		})
 	})
 
