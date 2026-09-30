@@ -488,7 +488,13 @@ const router = createRouter({
 	],
 })
 
-export async function getAuthForRoute(to: RouteLocation, authStore) {
+export async function getAuthForRoute(to: RouteLocation, authStore: {
+	authUser: boolean,
+	authLinkShare: boolean,
+	info: {pending_email?: string} | null,
+	verifyEmail: (token: string) => Promise<unknown>,
+	refreshUserInfo: () => Promise<unknown>,
+}) {
 	// vue-router already decoded to.hash once, so slicing off the prefix yields the original
 	// fullPath (e.g. /oauth/authorize?...) losslessly — no extra decodeURIComponent needed.
 	const redirectDest = to.name === 'user.login' && to.hash.startsWith(REDIRECT_HASH_PREFIX)
