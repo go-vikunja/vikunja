@@ -1,3 +1,5 @@
+import {SENSITIVE_QUERY_PARAMS} from '@/helpers/sensitiveQueryParams'
+
 // Failed requests are surfaced to the user through the UI already, and an
 // expired session (401 on token refresh) is expected rather than a bug.
 // Errors wrapping one of them via `cause` count too.
@@ -173,4 +175,24 @@ export function stripNavigationFragment<T>(span: T): T {
 	}
 	// Navigation timings retain the initial fragment after history.replaceState.
 	return {...span, description: span.description.split('#')[0]}
+}
+
+const SENSITIVE_PARAM_PATTERN = new RegExp(`((?:^|[?&#]|%3F|%26)(?:${SENSITIVE_QUERY_PARAMS.join('|')})(?:=|%3D))[^&#\\s"']*`, 'gi')
+
+export function redactSensitiveParams<T>(value: T): T {
+	if (typeof value === 'string') {
+		return value.replace(SENSITIVE_PARAM_PATTERN, '$1[Filtered]') as T
+	}
+
+	if (Array.isArray(value)) {
+		return value.map(redactSensitiveParams) as T
+	}
+
+	if (value && typeof value === 'object' && Object.getPrototypeOf(value) === Object.prototype) {
+		return Object.fromEntries(
+			Object.entries(value).map(([key, v]) => [key, redactSensitiveParams(v)]),
+		) as T
+	}
+
+	return value
 }

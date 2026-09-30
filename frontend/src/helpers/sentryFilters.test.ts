@@ -1,6 +1,6 @@
 import {describe, it, expect} from 'vitest'
 
-import {shouldDropEvent, stripNavigationFragment} from './sentryFilters'
+import {redactSensitiveParams, shouldDropEvent, stripNavigationFragment} from './sentryFilters'
 
 // Object.assign instead of `new Error(msg, {cause})`: the vitest tsconfig
 // targets a lib without the two-argument Error constructor.
@@ -286,5 +286,36 @@ describe('generated transport errors', () => {
 
 	it('drops fetch network failures', () => {
 		expect(shouldDropEvent(new TypeError('Failed to fetch'))).toBe(true)
+	})
+})
+
+describe('redactSensitiveParams', () => {
+	it.each([
+		['https://vikunja.example/?userPasswordReset=abc123', 'https://vikunja.example/?userPasswordReset=[Filtered]'],
+		['/login?foo=1&accountDeletionConfirm=abc123&bar=2', '/login?foo=1&accountDeletionConfirm=[Filtered]&bar=2'],
+		['/?userEmailConfirm=abc123#hash', '/?userEmailConfirm=[Filtered]#hash'],
+		['userPasswordReset=abc123', 'userPasswordReset=[Filtered]'],
+		['/login%3FuserPasswordReset%3Dabc123', '/login%3FuserPasswordReset%3D[Filtered]'],
+		['/tasks/1?view=list', '/tasks/1?view=list'],
+	])('redacts %s', (input, expected) => {
+		expect(redactSensitiveParams(input)).toBe(expected)
+	})
+
+	it('redacts nested strings in an event', () => {
+		const event = {
+			request: {url: 'https://vikunja.example/?userPasswordReset=abc123'},
+			breadcrumbs: [{category: 'navigation', data: {from: '/', to: '/?accountDeletionConfirm=abc123'}}],
+			urls: ['https://vikunja.example/?userEmailConfirm=abc123'],
+			level: 'error',
+			count: 1,
+		}
+
+		expect(redactSensitiveParams(event)).toEqual({
+			request: {url: 'https://vikunja.example/?userPasswordReset=[Filtered]'},
+			breadcrumbs: [{category: 'navigation', data: {from: '/', to: '/?accountDeletionConfirm=[Filtered]'}}],
+			urls: ['https://vikunja.example/?userEmailConfirm=[Filtered]'],
+			level: 'error',
+			count: 1,
+		})
 	})
 })
