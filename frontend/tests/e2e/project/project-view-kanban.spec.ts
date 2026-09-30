@@ -4,6 +4,10 @@ import {ProjectFactory} from '../../factories/project'
 import {TaskFactory} from '../../factories/task'
 import {ProjectViewFactory} from '../../factories/project_view'
 import {TaskBucketFactory} from '../../factories/task_buckets'
+import {UserFactory} from '../../factories/user'
+import {UserProjectFactory} from '../../factories/users_project'
+import {TaskAssigneeFactory} from '../../factories/task_assignee'
+import {LabelFactory} from '../../factories/labels'
 import {createTasksWithPriorities, createTasksWithSearch} from '../../support/filterTestHelpers'
 import {updateUserSettings} from '../../support/updateUserSettings'
 
@@ -496,5 +500,194 @@ test.describe('Project View Kanban', () => {
 		const limitSpan = page.locator('.kanban .bucket .bucket-header span.limit').first()
 		await expect(limitSpan).toBeVisible()
 		await expect(limitSpan).toContainText('2/10')
+	})
+})
+
+type FilterBucket = {
+	title: string
+	filter: string
+}
+
+test.describe('Project View Kanban with filter buckets', () => {
+	async function createFilterBoard(apiContext, userToken, buckets: (users) => FilterBucket[]) {
+		const headers = {Authorization: `Bearer ${userToken}`}
+		const [project] = await ProjectFactory.create(1)
+		const users = await UserFactory.create(2, {id: (i: number) => 100 + i}, false)
+		await UserProjectFactory.create(2, {
+			project_id: project.id,
+			user_id: (i: number) => users[i - 1].id,
+			permission: 1,
+		})
+		const response = await apiContext.post(`/api/v2/projects/${project.id}/views`, {
+			headers,
+			data: {
+				title: 'Assignments',
+				view_kind: 'kanban',
+				bucket_configuration_mode: 'filter',
+				bucket_configuration: buckets(users).map(({title, filter}) => ({
+					title,
+					filter: {filter},
+				})),
+			},
+		})
+		expect(response.ok()).toBeTruthy()
+		return {
+			project,
+			view: await response.json(),
+			users,
+			headers,
+		}
+	}
+
+	async function getTask(apiContext, headers, id: number) {
+		return (await apiContext.get(`/api/v2/tasks/${id}`, {headers})).json()
+	}
+
+	const bucketTasks = (page, position: number) => page.locator(`.kanban .bucket:nth-child(${position}) .tasks`)
+
+	test('Dragging between assignee buckets reassigns the task', async ({
+		authenticatedPage: page,
+		apiContext,
+		userToken,
+	}) => {
+		const {project, view, users: [first, second], headers} = await createFilterBoard(apiContext, userToken, ([a, b]) => [
+			{
+				title: 'Unassigned',
+				filter: `assignees not in ${a.username}, ${b.username}`,
+			},
+			{
+				title: 'First',
+				filter: `assignees in ${a.username}`,
+			},
+			{
+				title: 'Second',
+				filter: `assignees in ${b.username}`,
+			},
+		])
+		const [task] = await TaskFactory.create(1, {project_id: project.id})
+		await TaskAssigneeFactory.create(1, {
+			task_id: task.id,
+			user_id: first.id,
+		})
+
+		await page.goto(`/projects/${project.id}/${view.id}`)
+		await bucketTasks(page, 2).locator('.task').filter({hasText: task.title}).dragTo(bucketTasks(page, 3))
+
+		await expect(bucketTasks(page, 3)).toContainText(task.title)
+		await expect(bucketTasks(page, 2)).not.toContainText(task.title)
+		await expect.poll(async () => (await getTask(apiContext, headers, task.id)).assignees?.map(user => user.username))
+			.toEqual([second.username])
+		await page.reload()
+		await expect(bucketTasks(page, 3)).toContainText(task.title)
+	})
+
+	test('Dropping on a multi-clause bucket applies every value', async ({
+		authenticatedPage: page,
+		apiContext,
+		userToken,
+	}) => {
+		const [label] = await LabelFactory.create(1)
+		const {project, view, users: [first], headers} = await createFilterBoard(apiContext, userToken, ([a]) => [
+			{
+				title: 'Unassigned',
+				filter: `assignees not in ${a.username}`,
+			},
+			{
+				title: 'First in progress',
+				filter: `labels in ${label.id} && assignees in ${a.username}`,
+			},
+		])
+		const [task] = await TaskFactory.create(1, {project_id: project.id})
+
+		await page.goto(`/projects/${project.id}/${view.id}`)
+		await bucketTasks(page, 1).locator('.task').filter({hasText: task.title}).dragTo(bucketTasks(page, 2))
+
+		await expect.poll(async () => {
+			const stored = await getTask(apiContext, headers, task.id)
+			return {
+				assignees: stored.assignees?.map(user => user.username),
+				labels: stored.labels?.map(item => item.id),
+			}
+		}).toEqual({
+			assignees: [first.username],
+			labels: [label.id],
+		})
+		await page.reload()
+		await expect(bucketTasks(page, 2)).toContainText(task.title)
+		await expect(bucketTasks(page, 1)).not.toContainText(task.title)
+	})
+
+	test('Refuses drops onto a bucket whose filter cannot be applied', async ({
+		authenticatedPage: page,
+		apiContext,
+		userToken,
+	}) => {
+		const {project, view, users: [first], headers} = await createFilterBoard(apiContext, userToken, ([a]) => [
+			{
+				title: 'Unassigned',
+				filter: `assignees not in ${a.username}`,
+			},
+			{
+				title: 'Urgent',
+				filter: 'priority > 3',
+			},
+			{
+				title: 'First',
+				filter: `assignees in ${a.username}`,
+			},
+		])
+		const [task] = await TaskFactory.create(1, {
+			project_id: project.id,
+			priority: 1,
+		})
+
+		await page.goto(`/projects/${project.id}/${view.id}`)
+		const card = page.locator('.kanban .task').filter({hasText: task.title})
+		await card.dragTo(bucketTasks(page, 2))
+		await expect(bucketTasks(page, 1)).toContainText(task.title)
+		await expect(bucketTasks(page, 2)).not.toContainText(task.title)
+		await expect(page.locator('.kanban .tasks.dragging-disabled')).toHaveCount(0)
+
+		await card.dragTo(bucketTasks(page, 3))
+		await expect.poll(async () => (await getTask(apiContext, headers, task.id)).assignees?.map(user => user.username))
+			.toEqual([first.username])
+		expect((await getTask(apiContext, headers, task.id)).priority).toBe(1)
+	})
+
+	test('Refreshes read-only buckets that depend on the changed assignee', async ({
+		authenticatedPage: page,
+		apiContext,
+		userToken,
+	}) => {
+		const {project, view, users: [first]} = await createFilterBoard(apiContext, userToken, ([a, b]) => [
+			{
+				title: 'First',
+				filter: `assignees in ${a.username}`,
+			},
+			{
+				title: 'Second',
+				filter: `assignees in ${b.username}`,
+			},
+			{
+				title: 'Either',
+				filter: `assignees in ${b.username} || priority > 3`,
+			},
+		])
+		const [task] = await TaskFactory.create(1, {
+			project_id: project.id,
+			priority: 1,
+		})
+		await TaskAssigneeFactory.create(1, {
+			task_id: task.id,
+			user_id: first.id,
+		})
+
+		await page.goto(`/projects/${project.id}/${view.id}`)
+		await expect(bucketTasks(page, 3)).not.toContainText(task.title)
+		await bucketTasks(page, 1).locator('.task').filter({hasText: task.title}).dragTo(bucketTasks(page, 2))
+
+		await expect(bucketTasks(page, 2)).toContainText(task.title)
+		await expect(bucketTasks(page, 3)).toContainText(task.title)
+		await expect(bucketTasks(page, 1)).not.toContainText(task.title)
 	})
 })

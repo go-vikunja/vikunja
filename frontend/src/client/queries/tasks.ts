@@ -198,6 +198,10 @@ export function ensureTask(id: number, expand: TaskExpansion = []) {
 	return queryClient.ensureQueryData(taskQuery(id, expand))
 }
 
+export function refreshTask(id: number) {
+	return queryClient.fetchQuery({...taskQuery(id), staleTime: 0})
+}
+
 export function allTasksQuery(scope: TaskScope) {
 	const exhaustiveScope = {...scope, params: {...scope.params, per_page: API_MAX_PER_PAGE}}
 	return queryOptions({

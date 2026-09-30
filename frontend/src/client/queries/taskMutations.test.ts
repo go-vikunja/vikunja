@@ -14,6 +14,7 @@ import {
 	createTaskMutationOptions,
 	deleteTaskMutationOptions,
 	duplicateTaskMutationOptions,
+	moveTaskBetweenFilterBucketsMutationOptions,
 	moveTaskMutationOptions,
 	taskWriteBody,
 	updateTaskMutationOptions,
@@ -26,7 +27,9 @@ const sdk = vi.hoisted(() => ({
 	patchTasksRead: vi.fn(),
 	projectTasksList: vi.fn(),
 	projectViewBucketsTasksList: vi.fn(),
+	taskAssigneesBulk: vi.fn(),
 	taskAssigneesCreate: vi.fn(),
+	taskLabelsCreate: vi.fn(),
 	taskBucketUpdate: vi.fn(),
 	tasksBulkCreate: vi.fn(),
 	tasksCreate: vi.fn(),
@@ -547,6 +550,128 @@ describe('task mutations', () => {
 		expect(queryFn).toHaveBeenCalledTimes(1)
 		expect(sdk.projectViewBucketsTasksList).not.toHaveBeenCalled()
 		expect(sdk.bucketsList).not.toHaveBeenCalled()
+		unsubscribe()
+	})
+})
+
+describe('moving a task between filter buckets', () => {
+	const alice = {
+		id: 7,
+		username: 'alice',
+	}
+	const bob = {
+		id: 8,
+		username: 'bob',
+	}
+	const input = {
+		project: 1,
+		view: 2,
+		params: {},
+		taskId: 1,
+		labels: [{
+			add: true,
+			label: {id: 5, title: 'in progress'},
+		}],
+		assignees: [bob],
+		position: 250,
+		placement: {
+			filters: [
+				[{field: 'assignees' as const, negated: false, values: ['alice']}],
+				[{field: 'assignees' as const, negated: false, values: ['bob']}],
+			],
+			includeNulls: false,
+			target: 1,
+			index: 0,
+		},
+	}
+
+	async function watchFilterBoard() {
+		const client = new QueryClient()
+		sdk.projectViewBucketsTasksList.mockResolvedValue({
+			data: {
+				items: [
+					{id: 0, count: 1, tasks: [{id: 1, position: 100, assignees: [alice]}]},
+					{id: 1, count: 0, tasks: []},
+				],
+			},
+		})
+		const board = kanbanQuery(1, 2, {})
+		const unsubscribe = new QueryObserver(client, {queryKey: board.queryKey, queryFn: board.queryFn})
+			.subscribe(() => {})
+		await vi.waitFor(() => expect(client.getQueryData(board.queryKey)).toBeDefined())
+		sdk.projectViewBucketsTasksList.mockClear()
+		return {client, key: board.queryKey, unsubscribe}
+	}
+
+	const writes: string[] = []
+
+	beforeEach(() => {
+		writes.length = 0
+		sdk.taskLabelsCreate.mockImplementation(async () => {
+			writes.push('label')
+			return {data: {}}
+		})
+		sdk.taskAssigneesBulk.mockImplementation(async () => {
+			writes.push('assignees')
+			return {data: {}}
+		})
+	})
+
+	it('writes the assignees after everything else', async () => {
+		const {client, unsubscribe} = await watchFilterBoard()
+		sdk.tasksPositionUpdate.mockImplementation(async () => {
+			writes.push('position')
+			return {data: {position: 250}}
+		})
+
+		await client.getMutationCache()
+			.build(client, moveTaskBetweenFilterBucketsMutationOptions())
+			.execute(input)
+
+		expect(writes).toEqual(['label', 'position', 'assignees'])
+		unsubscribe()
+	})
+
+	it('patches the task into every bucket it matches without refetching the board', async () => {
+		const {client, key, unsubscribe} = await watchFilterBoard()
+		sdk.tasksPositionUpdate.mockResolvedValue({data: {position: 250}})
+
+		await client.getMutationCache()
+			.build(client, moveTaskBetweenFilterBucketsMutationOptions())
+			.execute(input)
+
+		const board = client.getQueryData<BoardData>(key)!
+		expect(board.buckets[0]).toMatchObject({count: 0, tasks: []})
+		expect(board.buckets[1]).toMatchObject({
+			count: 1,
+			tasks: [{id: 1, position: 250, assignees: [bob], labels: [{id: 5}]}],
+		})
+		expect(sdk.projectViewBucketsTasksList).not.toHaveBeenCalled()
+		unsubscribe()
+	})
+
+	it('refetches the board when the position save fails after the writes', async () => {
+		const {client, unsubscribe} = await watchFilterBoard()
+		sdk.tasksPositionUpdate.mockRejectedValue(new Error('offline'))
+
+		await expect(client.getMutationCache()
+			.build(client, moveTaskBetweenFilterBucketsMutationOptions())
+			.execute(input)).rejects.toThrow('offline')
+
+		expect(sdk.taskLabelsCreate).toHaveBeenCalled()
+		expect(sdk.projectViewBucketsTasksList).toHaveBeenCalledTimes(1)
+		unsubscribe()
+	})
+
+	it('refetches instead of patching when the client cannot evaluate membership', async () => {
+		const {client, unsubscribe} = await watchFilterBoard()
+		sdk.tasksPositionUpdate.mockResolvedValue({data: {position: 250}})
+
+		await client.getMutationCache()
+			.build(client, moveTaskBetweenFilterBucketsMutationOptions())
+			.execute({...input, placement: null})
+
+		expect(sdk.projectViewBucketsTasksList).toHaveBeenCalledTimes(1)
 		unsubscribe()
 	})
 })

@@ -1,8 +1,9 @@
 import {hashKey, type QueryClient, type QueryKey} from '@tanstack/vue-query'
 import type {Task} from '@/client/generated'
 import {mapTasksDeep, mergeTask, removeTask} from '@/helpers/task'
+import {matchesBucketFilter, type BucketFilterClause} from '@/helpers/filterBuckets'
 import {normalizeTask, taskKeys, type PaginatedTaskResponse, type TaskResponse} from './tasks'
-import {kanbanKeys, type BoardData} from './kanban'
+import {kanbanKeys, type BoardData, type BucketResponse} from './kanban'
 import {totalPagesFor} from './pagination'
 
 // Applies `update` to every cached copy of task `id` (detail, lists, boards, nested relations),
@@ -105,18 +106,57 @@ function removeTaskFromCollections(client: QueryClient, id: number, removal: Col
 	}
 }
 
+function removeFromBucket(bucket: BucketResponse, id: number, remove: TaskRemoval): BucketResponse {
+	const tasks = remove(bucket.tasks, id)
+	if (!tasks) return bucket
+	return {...bucket, tasks, count: Math.max(0, bucket.count - (bucket.tasks.length - tasks.length))}
+}
+
 function removeFromBoard(board: BoardData, id: number, remove: TaskRemoval): BoardData | undefined {
-	const buckets = board.buckets.map(bucket => {
-		const tasks = remove(bucket.tasks, id)
-		if (!tasks) return bucket
-		return {...bucket, tasks, count: Math.max(0, bucket.count - (bucket.tasks.length - tasks.length))}
-	})
+	const buckets = board.buckets.map(bucket => removeFromBucket(bucket, id, remove))
 	return buckets.some((bucket, index) => bucket !== board.buckets[index]) ? {...board, buckets} : undefined
 }
 
 // A move keeps pseudo-project boards (membership is server-decided), so the drag source drops its own card.
 export function removeTaskFromBoard(client: QueryClient, key: QueryKey, id: number) {
 	client.setQueryData<BoardData>(key, board => board && removeFromBoard(board, id, dropMembership))
+}
+
+export type FilterBucketPlacement = {
+	filters: (BucketFilterClause[] | null)[]
+	includeNulls: boolean
+	target: number
+	index: number
+}
+
+export function placeTaskInFilterBuckets(
+	client: QueryClient,
+	key: QueryKey,
+	id: number,
+	placement: FilterBucketPlacement,
+) {
+	client.setQueryData<BoardData>(key, board => {
+		const task = board?.buckets.flatMap(bucket => bucket.tasks).find(item => item.id === id)
+		if (!board || !task) return board
+		const buckets = board.buckets.map(bucket => {
+			const clauses = placement.filters[bucket.id]
+			if (!clauses) return bucket
+			const present = bucket.tasks.some(item => item.id === id)
+			if (present === matchesBucketFilter(task, clauses, placement.includeNulls)) return bucket
+			if (present) return removeFromBucket(bucket, id, dropMembership)
+			const tasks = [...bucket.tasks]
+			tasks.splice(bucket.id === placement.target ? placement.index : 0, 0, task)
+			return {
+				...bucket,
+				count: bucket.count + 1,
+				tasks,
+			}
+		})
+		return {
+			...board,
+			buckets,
+		}
+	})
 }
 
 export function replaceTaskEverywhere(client: QueryClient, updated: Task) {

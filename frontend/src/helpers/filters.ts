@@ -1,6 +1,6 @@
 import {snakeCase} from 'change-case'
 
-function trimQuotes(str: string): string {
+export function trimQuotes(str: string): string {
 
 	str = str.trim()
 
